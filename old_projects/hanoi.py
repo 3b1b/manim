@@ -198,7 +198,7 @@ class CountingScene(Scene):
             digit = TexMobject(str(num % self.base))
             if place >= len(self.power_colors):
                 self.power_colors += self.power_colors
-            digit.highlight(self.power_colors[place])
+            digit.set_color(self.power_colors[place])
             digit.scale(self.num_scale_factor)
             digit.move_to(result, RIGHT)
             digit.shift(place*(self.digit_width+SMALL_BUFF)*LEFT)
@@ -326,7 +326,7 @@ class TowersOfHanoiScene(Scene):
         ])
         for number, disk in enumerate(self.disks):
             label = TexMobject(str(number))
-            label.highlight(BLACK)
+            label.set_color(BLACK)
             label.scale_to_fit_height(self.disk_height/2)
             label.move_to(disk)
             disk.add(label)
@@ -548,9 +548,9 @@ class IntroduceKeith(Scene):
         one_width = bubble.content[1].get_width()        
         for mob in bubble.content[:8]:
             if abs(mob.get_width() - zero_width) < 0.01:
-                mob.highlight(GREEN)
+                mob.set_color(GREEN)
             else:
-                mob.highlight(YELLOW)
+                mob.set_color(YELLOW)
 
         bubble.resize_to_content()
         bubble.pin_to(keith)
@@ -595,7 +595,7 @@ class IntroduceKeith(Scene):
         )
         self.play(Blink(keith))
         bubble.write("But \\emph{analyzing} puzzles!")
-        VGroup(*bubble.content[3:12]).highlight(YELLOW)
+        VGroup(*bubble.content[3:12]).set_color(YELLOW)
         self.play(
             keith.change_mode, "hooray",
             Transform(original_content, bubble.content)
@@ -699,7 +699,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
             label.save_state()
             self.play(
                 label.scale_in_place, 2,
-                label.highlight, YELLOW,
+                label.set_color, YELLOW,
                 last.restore,
                 run_time = 0.5
             )
@@ -747,7 +747,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
     def cannot_move_disk_onto_smaller_disk(self):
         also_not_allowed = TextMobject("Not allowed")
         also_not_allowed.to_edge(UP)
-        also_not_allowed.highlight(RED)
+        also_not_allowed.set_color(RED)
         cross = TexMobject("\\times")
         cross.set_fill(RED, opacity = 0.5)
 
@@ -775,14 +775,14 @@ class ExampleFirstMoves(TowersOfHanoiScene):
         self.wait()
         self.play(
             self.disks[0].set_fill, YELLOW,
-            self.disks[0].label.highlight, BLACK
+            self.disks[0].label.set_color, BLACK
         )
         self.wait()
         self.move_disk(0)
         self.wait()
         self.play(
             self.disks[1].set_fill, YELLOW_D,
-            self.disks[1].label.highlight, BLACK
+            self.disks[1].label.set_color, BLACK
         )
         self.move_disk_to_peg(1, 1)
         cross.replace(self.disks[1])
@@ -898,10 +898,10 @@ class IntroduceBase10(Scene):
         number.generate_target()
 
         for color, digit, term in zip(colors, number.target, expansion):
-            digit.highlight(color)
-            term.highlight(color)
+            digit.set_color(color)
+            term.set_color(color)
             arrow = Arrow(digit, term.get_top())
-            arrow.highlight(color)
+            arrow.set_color(color)
             arrows.add(arrow)
         expansion.save_state()
         for digit, term in zip(number, expansion):
@@ -1039,8 +1039,8 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         binary_digits = TextMobject("bi", "nary digi", "ts", arg_separator = "")
         for mob in bits, binary_digits:
             mob.next_to(brace, DOWN, buff = SMALL_BUFF)
-        VGroup(brace, bits, binary_digits).highlight(BLUE)
-        binary_digits[1].highlight(BLUE_E)
+        VGroup(brace, bits, binary_digits).set_color(BLUE)
+        binary_digits[1].set_color(BLUE_E)
         self.play(
             GrowFromCenter(brace),
             Write(bits)
@@ -1085,7 +1085,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         self.wait()
         curr_content = bubble.content
         bubble.write("$1 \\! \\cdot \\! 2+$", "$0$")
-        bubble.content[0][0].highlight(self.power_colors[1])
+        bubble.content[0][0].set_color(self.power_colors[1])
         self.play(
             Transform(curr_content, bubble.content),
             randy.change_mode, "pondering",
@@ -1096,9 +1096,9 @@ class IntroduceBinaryCounting(BinaryCountingScene):
 
         #Up to 11
         zero = bubble.content[-1]
-        zero.highlight(self.power_colors[0])
+        zero.set_color(self.power_colors[0])
         one = TexMobject("1").replace(zero, dim_to_match = 1)
-        one.highlight(zero.get_color())
+        one.set_color(zero.get_color())
         self.play(Blink(randy))
         self.increment(added_anims = [Transform(zero, one)])
         self.wait()
@@ -1112,7 +1112,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         )
         colors = reversed(self.power_colors[:3])
         for piece, color in zip(bubble.content.submobjects, colors):
-            piece[0].highlight(color)
+            piece[0].set_color(color)
         self.increment(added_anims = [Transform(curr_content, bubble.content)])
         four_brace = Brace(self.number_mob[-1])
         fours_place = four_brace.get_text("Four's place")
@@ -1178,13 +1178,13 @@ class BinaryCountingAtEveryScale(Scene):
 
         lower_brace = Brace(VGroup(*curr_bits[1:]))
         do_a_thing = lower_brace.get_text("Do a thing")
-        VGroup(lower_brace, do_a_thing).highlight(YELLOW)
+        VGroup(lower_brace, do_a_thing).set_color(YELLOW)
         upper_brace = Brace(curr_bits, UP)
         roll_over = upper_brace.get_text("Roll over")
-        VGroup(upper_brace, roll_over).highlight(MAROON_B)
+        VGroup(upper_brace, roll_over).set_color(MAROON_B)
         again = TextMobject("again")
         again.next_to(do_a_thing, RIGHT, 2*SMALL_BUFF)
-        again.highlight(YELLOW)
+        again.set_color(YELLOW)
 
         self.add(curr_bits, lower_brace, do_a_thing)
 
@@ -1199,8 +1199,8 @@ class BinaryCountingAtEveryScale(Scene):
 
         for bit_mob in bit_mobs:
             curr_bits.align_data(bit_mob)
-            bit_mob.highlight(YELLOW)
-            bit_mob[0].highlight(MAROON_B)
+            bit_mob.set_color(YELLOW)
+            bit_mob[0].set_color(MAROON_B)
         self.play(get_run_through(bit_mobs[1:2**(self.num_bits-1)]))
         self.play(*map(FadeIn, [upper_brace, roll_over]))
         self.play(Transform(
@@ -1388,7 +1388,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         for bit_mob in bit_mobs:
             bit_mob.align_data(self.curr_bit_mob)
             for bit, disk in zip(bit_mob, reversed(list(self.disks))):
-                bit.highlight(disk.get_color())
+                bit.set_color(disk.get_color())
         bit_mobs.next_to(self.peg_labels, DOWN)
 
         self.add(self.curr_bit_mob)
@@ -1470,14 +1470,14 @@ class RecursiveSolution(TowersOfHanoiScene):
             "Move disk 3,",
             "Move 3-tower",
         )
-        sub_steps[1].highlight(GREEN)
+        sub_steps[1].set_color(GREEN)
         sub_step_brace = Brace(sub_steps, UP)
         sub_sub_steps = TextMobject(
             "Move 2-tower,",
             "Move disk 2,",
             "Move 2-tower",
         )
-        sub_sub_steps[1].highlight(RED)
+        sub_sub_steps[1].set_color(RED)
         sub_sub_steps_brace = Brace(sub_sub_steps, UP)
         steps = VGroup(
             title, sub_step_brace, sub_steps, 
@@ -1564,7 +1564,7 @@ class RecursiveSolution(TowersOfHanoiScene):
         self.disk_tracker = [set([]), set([0, 1, 2]), set([3])]
         arc = Arc(-5*np.pi/6, start_angle = 5*np.pi/6)
         arc.add_tip()
-        arc.highlight(YELLOW)
+        arc.set_color(YELLOW)
         arc.scale_to_fit_width(
             VGroup(*self.pegs[1:]).get_width()*0.8
         )
@@ -1574,7 +1574,7 @@ class RecursiveSolution(TowersOfHanoiScene):
         self.play(
             ShowCreation(arc),
             Write(q_mark),
-            sub_steps[-1].highlight, YELLOW
+            sub_steps[-1].set_color, YELLOW
         )
         self.wait()
         self.play(
@@ -1959,7 +1959,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
     }
     def construct(self):
         title = TextMobject("Constrained", "Towers of Hanoi")
-        title.highlight_by_tex("Constrained", YELLOW)
+        title.set_color_by_tex("Constrained", YELLOW)
         title.to_edge(UP)
 
         self.play(Write(title))
@@ -1996,7 +1996,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         for curved_arrow in curved_arrows:
             for arc in curved_arrow:
                 arc.add_tip(tip_length = 0.15)
-                arc.highlight(YELLOW)
+                arc.set_color(YELLOW)
         peg_sets = (self.pegs[:2], self.pegs[1:])
         for curved_arrow, pegs in zip(curved_arrows, peg_sets):
             peg_group = VGroup(*pegs)
@@ -2011,7 +2011,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         big_curved_arrow.scale_to_fit_width(0.9*self.pegs.get_width())
         big_curved_arrow.next_to(self.pegs, UP)
         big_curved_arrow.add_tip(tip_length = 0.4)
-        big_curved_arrow.highlight(WHITE)
+        big_curved_arrow.set_color(WHITE)
         self.big_curved_arrow = big_curved_arrow
 
 class StillRecruse(Scene):
@@ -2055,14 +2055,14 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
                 "\\, Move %d-tower, \\,"%d,
                 "Move disk %d,"%d,
                 "Move %d-tower"%d,
-            ).highlight_by_tex("Move disk %d,"%d, color)
+            ).set_color_by_tex("Move disk %d,"%d, color)
             for d, color in (3, GREEN), (2, RED), (1, BLUE_C)
         ]
         sub_steps, sub_sub_steps = subdivisions[:2]
         for steps in subdivisions:
             steps.scale_to_fit_width(FRAME_WIDTH-1)
         subdivisions.append(
-            TextMobject("\\tiny Move disk 0, Move disk 0").highlight(BLUE)
+            TextMobject("\\tiny Move disk 0, Move disk 0").set_color(BLUE)
         )
         braces = [
             Brace(steps, UP)
@@ -2104,12 +2104,12 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         #Talk about tower blocking
         tower = VGroup(*self.disks[:self.num_disks-1])
         blocking = TextMobject("Still\\\\", "Blocking")
-        blocking.highlight(RED)
+        blocking.set_color(RED)
         blocking.to_edge(LEFT)
         blocking.shift(2*UP)
         arrow = Arrow(blocking.get_bottom(), tower.get_top(), buff = SMALL_BUFF)
         new_arrow = Arrow(blocking.get_bottom(), self.pegs[1], buff = SMALL_BUFF)
-        VGroup(arrow, new_arrow).highlight(RED)
+        VGroup(arrow, new_arrow).set_color(RED)
 
         self.play(
             Write(blocking[1]),
@@ -2160,10 +2160,10 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.play(FadeOut(self.eyes))
 
         #Ask about subproblem
-        sub_sub_steps_brace.highlight(WHITE)
+        sub_sub_steps_brace.set_color(WHITE)
         self.move_subtower_to_peg(self.num_disks-1, 0, added_anims = [
             steps_to_fade.fade, 0.7,
-            sub_steps[2].highlight, WHITE,
+            sub_steps[2].set_color, WHITE,
             sub_steps[2].scale_in_place, 1.2,
             FadeIn(sub_sub_steps_brace)
         ])
@@ -2311,7 +2311,7 @@ class CompareNumberSystems(Scene):
         binary.to_corner(UP+RIGHT).shift(LEFT)
         ternary = TextMobject("Ternary")
         ternary.to_edge(UP)
-        ternary.highlight(YELLOW)
+        ternary.set_color(YELLOW)
         titles = [base_ten, binary, ternary]
 
         zero_to_nine = TextMobject("""
@@ -2430,7 +2430,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
 
         title = TextMobject("Count to " + "2"*self.num_trits)
         for i, color in enumerate(colors):
-            title[-i-1].highlight(color)
+            title[-i-1].set_color(color)
         steps = VGroup(*map(TextMobject, [
             "Count to %s,"%("2"*(self.num_trits-1)),
             "Roll over,",
@@ -2441,8 +2441,8 @@ class TernaryCountingSelfSimilarPattern(Scene):
         steps.arrange_submobjects(RIGHT)
         for step in steps[::2]:
             for i, color in enumerate(colors[:-1]):
-                step[-i-2].highlight(color)
-        VGroup(*steps[1::2]).highlight(colors[-1])
+                step[-i-2].set_color(color)
+        VGroup(*steps[1::2]).set_color(colors[-1])
         steps.scale_to_fit_width(FRAME_WIDTH-1)
         brace = Brace(steps, UP)
         word_group = VGroup(title, brace, steps)
@@ -2460,7 +2460,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
         for trits in ternary_mobs:
             trits.align_data(curr_ternary_mob)
             for trit, color in zip(trits, colors):
-                trit.highlight(color)
+                trit.set_color(color)
         def get_increment():
             return Transform(
                 curr_ternary_mob, ternary_mob_iter.next(),
@@ -2563,12 +2563,12 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
         color = YELLOW
         brace = braces[0]
         word = words[0]
-        words[0].highlight(color)
+        words[0].set_color(color)
         self.increment_number()        
         self.play(
             FadeIn(brace),
             Write(word, run_time = 1),
-            self.curr_ternary_mob[0].highlight, color
+            self.curr_ternary_mob[0].set_color, color
         )
         self.wait()
         self.play(
@@ -2577,19 +2577,19 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
         )
         self.move_next_disk(stay_on_peg = True)
         self.wait()
-        self.ternary_mobs[2][0].highlight(color)
+        self.ternary_mobs[2][0].set_color(color)
         self.increment_number()
         self.move_next_disk(stay_on_peg = True)
         self.wait()
         
         #Count 10
         color = MAROON_B
-        words[1].highlight(color)
+        words[1].set_color(color)
         self.increment_number()
         self.play(
             Transform(brace, braces[1]),
             Transform(word, words[1]),
-            self.curr_ternary_mob[1].highlight, color
+            self.curr_ternary_mob[1].set_color, color
         )
         self.wait()
         self.play(
@@ -2607,7 +2607,7 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
 
         #Count to 100
         color = RED
-        words[2].highlight(color)
+        words[2].set_color(color)
 
         self.wait()
         self.increment_number()
@@ -2687,7 +2687,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
         self.prepare_disks()
 
         for parens, disk in zip(parentheticals, reversed(list(self.disks))):
-            VGroup(parens, parens.brace, parens.three).highlight(disk.get_color())
+            VGroup(parens, parens.brace, parens.three).set_color(disk.get_color())
             self.play(
                 Write(parens, run_time = 1),
                 FadeIn(disk)
@@ -2787,7 +2787,7 @@ class RepeatingConfiguraiton(Scene):
         self.play(Write(title))
         self.play(
             ShowCreation(special_arrows),
-            special_dots.highlight, RED
+            special_dots.set_color, RED
         )
         self.wait()
         self.play(
@@ -3025,7 +3025,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             arc.scale_to_fit_width(0.8*node.target.towers.get_width())
             arc.next_to(node.target.towers, UP)
             arc.add_tip()
-            arc.highlight(YELLOW)
+            arc.set_color(YELLOW)
             node.arc = arc
 
         self.play(*map(MoveToTarget, nodes))
@@ -3057,9 +3057,9 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             self.zoom_into_node(n)
         self.zoom_into_node(0, 1)
         self.play(
-            self.disks[0].highlight, YELLOW,
+            self.disks[0].set_color, YELLOW,
             *[
-                ApplyMethod(disk.label.highlight, BLACK)
+                ApplyMethod(disk.label.set_color, BLACK)
                 for disk in self.disks[0]
             ]
         )
@@ -3082,9 +3082,9 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
         index_pair = self.index_pairs[0]
         self.zoom_into_node(index_pair[0], self.scale)
         self.play(
-            self.disks[self.scale-1].highlight, self.disk_color,
+            self.disks[self.scale-1].set_color, self.disk_color,
             *[
-                ApplyMethod(disk.label.highlight, BLACK)
+                ApplyMethod(disk.label.set_color, BLACK)
                 for disk in self.disks[self.scale-1]
             ]
         )
@@ -3228,7 +3228,7 @@ class PatreonThanks(Scene):
 
         n_patrons = len(self.specific_patrons)
         special_thanks = TextMobject("Special thanks to:")
-        special_thanks.highlight(YELLOW)
+        special_thanks.set_color(YELLOW)
         special_thanks.shift(3*UP)
 
         left_patrons = VGroup(*map(TextMobject, 
@@ -3376,8 +3376,8 @@ class Part1Thumbnail(Scene):
         self.add(sierpinski)
 
         binary = TexMobject("01011")
-        binary.highlight_by_tex("0", GREEN)
-        binary.highlight_by_tex("1", BLUE)
+        binary.set_color_by_tex("0", GREEN)
+        binary.set_color_by_tex("1", BLUE)
         binary.gradient_highlight(GREEN, RED)
         binary.add_background_rectangle()
         binary.background_rectangle.set_fill(opacity = 0.5)

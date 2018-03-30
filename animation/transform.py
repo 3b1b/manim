@@ -109,9 +109,9 @@ class GrowFromPoint(Transform):
         target = mobject.copy()
         point_mob = Point(point)
         if self.point_color:
-            point_mob.highlight(self.point_color)
+            point_mob.set_color(self.point_color)
         mobject.replace(point_mob)
-        mobject.highlight(point_mob.get_color())
+        mobject.set_color(point_mob.get_color())
         Transform.__init__(self, mobject, target, **kwargs)
 
 class GrowFromCenter(GrowFromPoint):
@@ -214,7 +214,7 @@ class Indicate(Transform):
         digest_config(self, kwargs)
         target = mobject.copy()
         target.scale_in_place(self.scale_factor)
-        target.highlight(self.color)
+        target.set_color(self.color)
         Transform.__init__(self, mobject, target, **kwargs)
 
 class CircleIndicate(Indicate):
@@ -260,7 +260,7 @@ class ApplyPointwiseFunction(ApplyMethod):
 
 class FadeToColor(ApplyMethod):
     def __init__(self, mobject, color, **kwargs):
-        ApplyMethod.__init__(self, mobject.highlight, color, **kwargs)
+        ApplyMethod.__init__(self, mobject.set_color, color, **kwargs)
 
 class ScaleInPlace(ApplyMethod):
     def __init__(self, mobject, scale_factor, **kwargs):

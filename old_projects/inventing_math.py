@@ -100,7 +100,7 @@ def zero_to_one_interval():
 
 def draw_you(with_bubble = False):
     result = PiCreature()
-    result.give_straight_face().highlight("grey")
+    result.give_straight_face().set_color("grey")
     result.to_corner(LEFT+DOWN)
     result.rewire_part_attributes()
     if with_bubble:
@@ -215,10 +215,10 @@ class ClearlyNonsense(Scene):
             (FRAME_X_RADIUS-0.5)*RIGHT + DOWN, 
             tail = (max(this_way.points[:,0]), -1, 0)
         )
-        how_here.highlight("red")
-        neg_1_arrow.highlight("red")
-        this_way.highlight("yellow")
-        right_arrow.highlight("yellow")
+        how_here.set_color("red")
+        neg_1_arrow.set_color("red")
+        this_way.set_color("yellow")
+        right_arrow.set_color("yellow")
 
         self.play(Transform(
             div_sum, 
@@ -241,7 +241,7 @@ class OutlineOfVideo(Scene):
             conv_sum.get_left(),
             conv_sum.get_right()
         ).rotate(np.pi, RIGHT).shift(0.75*UP*conv_sum.get_height())
-        dots = conv_sum.split()[-2].highlight("green")
+        dots = conv_sum.split()[-2].set_color("green")
         dots.sort_points()
         arrow = Arrow(
             dots.get_bottom(),
@@ -254,7 +254,7 @@ class OutlineOfVideo(Scene):
         for mob in div_sum, u_brace:
             mob.shift(DOWN)
         texts = [
-            TextMobject(words).highlight("yellow")
+            TextMobject(words).set_color("yellow")
             for words in [
                 "1. Discover this",
                 "2. Clarify what this means",
@@ -263,7 +263,7 @@ class OutlineOfVideo(Scene):
             ]
         ]
         last_one_split = texts[-1].split()
-        last_one_split[1].highlight("skyblue")
+        last_one_split[1].set_color("skyblue")
         texts[-1] = Mobject(*last_one_split)
         texts[0].shift(overbrace.get_top()+texts[0].get_height()*UP)
         texts[1].shift(sum([
@@ -302,8 +302,8 @@ class OutlineOfVideo(Scene):
 # #             \\end{itemize}
 # #             """
 # #         ], size = "\\Small")
-# #         text.scale(1.5).to_edge(LEFT).shift(UP).highlight("white")
-# #         text.highlight("green", lambda (x, y, z) : x < -FRAME_X_RADIUS + 1)
+# #         text.scale(1.5).to_edge(LEFT).shift(UP).set_color("white")
+# #         text.set_color("green", lambda (x, y, z) : x < -FRAME_X_RADIUS + 1)
 # #         line_one_first, equation, line_one_last, line_two = text.split()
 # #         line_two.shift(2*DOWN)
 # #         div_sum = divergent_sum().scale(0.5).shift(3*UP)
@@ -330,7 +330,7 @@ class OutlineOfVideo(Scene):
 #         sum_mob.shift(2*UP)
 #         define.shift(2*DOWN)
 #         define_parts = define.split()
-#         define_parts[1].highlight("skyblue")
+#         define_parts[1].set_color("skyblue")
 
 #         self.add(sum_mob)
 #         self.play(FadeIn(discover))
@@ -348,7 +348,7 @@ class YouAsMathematician(Scene):
         arrow = Arrow(you.get_center(), direction = LEFT)
         arrow.nudge(you.get_width())
         for mob in arrow, explanation:
-            mob.highlight("yellow")
+            mob.set_color("yellow")
         equation = convergent_sum()
         bubble.add_content(equation)
         equation_parts = equation.split()
@@ -433,7 +433,7 @@ class ZoomInOnInterval(Scene):
         interval = zero_to_one_interval().split()
 
         new_line = deepcopy(number_line)
-        new_line.highlight("black", lambda (x,y,z) : x < 0 or x > 1 or y < -0.2)
+        new_line.set_color("black", lambda (x,y,z) : x < 0 or x > 1 or y < -0.2)
         # height = new_line.get_height()
         new_line.scale(2*INTERVAL_RADIUS)
         new_line.shift(INTERVAL_RADIUS*LEFT)
@@ -485,7 +485,7 @@ class DanceDotOnInterval(Scene):
             shift_val = 2*RIGHT*INTERVAL_RADIUS*(1-prop)*(prop**count)
             start = dots[0].get_center()
             line = Line(start, start + shift_val*RIGHT)
-            line.highlight(color_range.next())
+            line.set_color(color_range.next())
             self.play(
                 ApplyMethod(dots[0].shift, shift_val),
                 ShowCreation(line)
@@ -513,10 +513,10 @@ class DanceDotOnInterval(Scene):
         partial_sums = TexMobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
         partial_sums.scale(1.5).to_edge(UP)
         partial_sum_parts = partial_sums.split()
-        partial_sum_parts[0].highlight("yellow")
+        partial_sum_parts[0].set_color("yellow")
 
         for x in range(0, len(partial_sum_parts), 4):
-            partial_sum_parts[x+2].highlight("yellow")
+            partial_sum_parts[x+2].set_color("yellow")
             self.play(*[
                 FadeIn(partial_sum_parts[y])
                 for y in range(x, x+4)
@@ -529,14 +529,14 @@ class OrganizePartialSums(Scene):
         partial_sums.scale(1.5).to_edge(UP)
         partial_sum_parts = partial_sums.split()
         for x in [0] + range(2, len(partial_sum_parts), 4):
-            partial_sum_parts[x].highlight("yellow")
+            partial_sum_parts[x].set_color("yellow")
         pure_sums = [
             partial_sum_parts[x] 
             for x in range(0, len(partial_sum_parts), 4)
         ]
         new_pure_sums = deepcopy(pure_sums)
         for pure_sum, count in zip(new_pure_sums, it.count(3, -1.2)):
-            pure_sum.center().scale(1/1.25).highlight("white")
+            pure_sum.center().scale(1/1.25).set_color("white")
             pure_sum.to_edge(LEFT).shift(2*RIGHT+count*UP)
 
         self.add(*partial_sum_parts)
@@ -566,7 +566,7 @@ class SeeNumbersApproachOne(Scene):
     def construct(self):
         interval = zero_to_one_interval()
         arrow = Arrow(INTERVAL_RADIUS*RIGHT, tail=ORIGIN).nudge()
-        arrow.shift(DOWN).highlight("yellow")
+        arrow.shift(DOWN).set_color("yellow")
         num_dots = 6
         colors = Color("green").range_to("yellow", num_dots)
         dots = Mobject(*[
@@ -575,7 +575,7 @@ class SeeNumbersApproachOne(Scene):
             ).scale(1+1.0/2.0**x).shift(
                 INTERVAL_RADIUS*RIGHT +\
                 (INTERVAL_RADIUS/2.0**x)*LEFT
-            ).highlight(colors.next())
+            ).set_color(colors.next())
             for x in range(num_dots)
         ])
 
@@ -592,7 +592,7 @@ class OneAndInfiniteSumAreTheSameThing(Scene):
         one, equals, inf_sum = TexMobject([
             "1", "=", "\\sum_{n=1}^\\infty \\frac{1}{2^n}"
         ]).split()
-        point = Point(equals.get_center()).highlight("black")
+        point = Point(equals.get_center()).set_color("black")
 
         self.add(one.shift(LEFT))
         self.wait()
@@ -613,7 +613,7 @@ class HowDoYouDefineInfiniteSums(Scene):
             ["How", " do", " you,\\\\", "\\emph{define}"],
             size = "\\Huge"
         ).shift(UP).split()
-        text[-1].shift(3*DOWN).highlight("skyblue")
+        text[-1].shift(3*DOWN).set_color("skyblue")
         sum_mob = TexMobject("\\sum_{n=0}^\\infty{a_n}")
         text[-1].shift(LEFT)
         sum_mob.shift(text[-1].get_center()+2*RIGHT)
@@ -637,14 +637,14 @@ class LessAboutNewThoughts(Scene):
             "Generating", " new", " thoughts", "$\\rightarrow$",
             "useful definitions"
         ], size = "\\large").split()
-        gen_cross = TexMobject("\\hline").highlight("red")
+        gen_cross = TexMobject("\\hline").set_color("red")
         new_cross = deepcopy(gen_cross)
         for cross, mob in [(gen_cross, generating), (new_cross, new)]:
             cross.replace(mob)
             cross.stretch_to_fit_height(0.03)
-        disecting = TextMobject("Disecting").highlight("green")
+        disecting = TextMobject("Disecting").set_color("green")
         disecting.shift(generating.get_center() + 0.6*UP)
-        old = TextMobject("old").highlight("green")
+        old = TextMobject("old").set_color("green")
         old.shift(new.get_center()+0.6*UP)
 
         kwargs = {"run_time" : 0.25}
@@ -690,11 +690,11 @@ class ListOfPartialSums(Scene):
         )
         self.wait()
         self.play(*[
-            ApplyMethod(s.highlight, "yellow", rate_func = there_and_back)
+            ApplyMethod(s.set_color, "yellow", rate_func = there_and_back)
             for s in sums
         ])
         self.wait()
-        self.add(one.highlight("green"))
+        self.add(one.set_color("green"))
         self.wait()
 
 
@@ -711,7 +711,7 @@ class ShowDecreasingDistance(Scene):
         horiz_line = Line(vert_line0.end, vert_line1.end)
         lines = [vert_line0, vert_line1, horiz_line]
         for line in lines:
-            line.highlight("green")
+            line.set_color("green")
         dots = Mobject(*[
             Dot().scale(1.0/(n+1)).shift((1+partial_sum(n))*RIGHT)
             for n in range(10)
@@ -724,7 +724,7 @@ class ShowDecreasingDistance(Scene):
             ApplyMethod(vert_line0.shift, RIGHT),
             Transform(
                 horiz_line, 
-                Line(vert_line0.end+RIGHT, vert_line1.end).highlight("green")
+                Line(vert_line0.end+RIGHT, vert_line1.end).set_color("green")
             ),
             ShowCreation(dots),
             run_time = 2.5
@@ -754,7 +754,7 @@ class CircleZoomInOnOne(Scene):
 
         self.add(number_line, dots)
         self.play(
-            Transform(circle, Point(2*RIGHT).highlight("white")),
+            Transform(circle, Point(2*RIGHT).set_color("white")),
             run_time = 5.0
         )
 
@@ -848,7 +848,7 @@ class DefineInfiniteSum(Scene):
             "\\text{\\emph{Define} }",
             "\\sum_{n = 0}^\\infty a_n = X"
         ]).split()
-        define.highlight("skyblue")
+        define.set_color("skyblue")
         expression = Mobject(define, infinite_sum)
 
         self.add(expression)
@@ -864,7 +864,7 @@ class DefineInfiniteSum(Scene):
             Line(FRAME_Y_RADIUS*UP+side, side+bottom)
         ]
         self.play(*[
-            ShowCreation(line.highlight("white"))
+            ShowCreation(line.set_color("white"))
             for line in lines
         ])
         self.wait()
@@ -894,7 +894,7 @@ class DefineInfiniteSum(Scene):
         esses = np.array(terms)[range(0, len(terms), 3)]
         other_terms = filter(lambda m : m not in esses, terms)
         self.play(*[
-            ApplyMethod(ess.highlight, "yellow")
+            ApplyMethod(ess.set_color, "yellow")
             for ess in esses
         ])
 
@@ -916,7 +916,7 @@ class DefineInfiniteSum(Scene):
         ])
 
         lines = [
-            Line(x+0.25*DOWN, x+0.25*UP).highlight("white")
+            Line(x+0.25*DOWN, x+0.25*UP).set_color("white")
             for y in [-1, -0.01, 1, 0.01]
             for x in [ex_point+y*RIGHT]
         ]
@@ -937,7 +937,7 @@ class YouJustInventedSomeMath(Scene):
             mob.shift(1.3*DOWN)
         # you = draw_you().center().rewire_part_attributes()
         # smile = PiCreature().mouth.center().shift(you.mouth.get_center())
-        you = PiCreature().highlight("grey")
+        you = PiCreature().set_color("grey")
         you.center().rewire_part_attributes()
 
         self.add(you)
@@ -1202,7 +1202,7 @@ class PlugNumbersIntoRightside(Scene):
             num.scale(scale_factor)
             num.shift(rhs[1].get_center())
             num.shift(0.1*RIGHT + 0.08*UP)
-            num.highlight("green")
+            num.set_color("green")
             if num_string == "(-1)":
                 num.shift(0.3*RIGHT)
         right_words = TextMobject(
@@ -1219,8 +1219,8 @@ class PlugNumbersIntoRightside(Scene):
             lhs.get_center() + 0.3*DOWN,
             tail = left_words.get_center() + 0.3*UP
         ))
-        right_words.highlight("green")
-        left_words.highlight("yellow")
+        right_words.set_color("green")
+        left_words.set_color("yellow")
 
 
         self.add(lhs, *rhs)
@@ -1331,7 +1331,7 @@ class ListPartialDivergentSums(Scene):
         self.play(FadeIn(words), ShowCreation(arrow))
         for x in range(0, len(terms), 2):
             self.play(
-                ApplyMethod(terms[x].highlight, "green"),
+                ApplyMethod(terms[x].set_color, "green"),
                 run_time = 0.1
             )
         self.wait()
@@ -1364,7 +1364,7 @@ class SumPowersOfTwoAnimation(Scene):
         topbrace = Underbrace(top_brace_left, right).rotate(np.pi, RIGHT)
         bottombrace = Underbrace(bottom_brace_left, right)
         colors = Color("yellow").range_to("purple", iterations)
-        curr_dots.highlight(colors.next())
+        curr_dots.set_color(colors.next())
         equation = TexMobject(
             "1+2+4+\\cdots+2^n=2^{n+1} - 1",
             size = "\\Huge"
@@ -1391,7 +1391,7 @@ class SumPowersOfTwoAnimation(Scene):
             shift_val = (2**n)*(dot_width+dot_buff)
             right += shift_val
             new_dots = Mobject(new_dot, curr_dots)
-            new_dots.highlight(colors.next()).shift(shift_val)
+            new_dots.set_color(colors.next()).shift(shift_val)
             alt_bottombrace = deepcopy(bottombrace).shift(shift_val)
             alt_bottom_num = deepcopy(bottom_num).shift(shift_val)
             alt_topbrace = deepcopy(alt_bottombrace).rotate(np.pi, RIGHT)
@@ -1457,7 +1457,7 @@ class PretendTheyDoApproachNegativeOne(RearrangeEquation):
                (lambda n : str(2**(n+1)), ["\\vdots", da, "0"]),
             ]
         ]
-        columns[-1].highlight()
+        columns[-1].set_color()
         columns[2].shift(0.2*DOWN)
         shift_val = 3*RIGHT
         for column in columns:
@@ -1526,7 +1526,7 @@ class DistanceIsAFunction(Scene):
                 ("2", "3", "7"),
                 ("\\frac{1}{2}", "100", "\\frac{4}{5}"),
             ]
-            dist.highlight("orange")
+            dist.set_color("orange")
             self.add(dist)
             self.wait()
         elif mode == "Euclidian":
@@ -1546,7 +1546,7 @@ class DistanceIsAFunction(Scene):
                 ("3", "7", "\\frac{1}{4}"),
                 ("\\frac{3}{2}", "1", "2"),
             ]
-            dist.highlight("green")
+            dist.set_color("green")
             self.add(dist)
             self.wait()
         example_mobs = [
@@ -1619,9 +1619,9 @@ class NameShiftInvarianceProperty(Scene):
         label = TextMobject("Shifted values")
         label.shift(u_brace.get_center()+0.5*DOWN)
         name = TextMobject("``Shift Invariance''")
-        name.highlight("green").to_edge(UP)
+        name.set_color("green").to_edge(UP)
         for mob in u_brace, label:
-            mob.highlight("yellow")
+            mob.set_color("yellow")
 
         self.add(prop)
         self.play(ShimmerIn(label), ShimmerIn(u_brace))
@@ -1711,18 +1711,18 @@ class RoomsAndSubrooms(Scene):
         b_set = [1.5*UP, 1.5*DOWN]
         c_set = [LEFT, RIGHT]
         rectangle_groups = [
-            [Rectangle(7, 12).highlight(colors[0])],
+            [Rectangle(7, 12).set_color(colors[0])],
             [
-                Rectangle(6, 5).shift(a).highlight(colors[1])
+                Rectangle(6, 5).shift(a).set_color(colors[1])
                 for a in a_set
             ],
             [
-                Rectangle(2, 4).shift(a + b).highlight(colors[2])
+                Rectangle(2, 4).shift(a + b).set_color(colors[2])
                 for a in a_set
                 for b in b_set
             ],
             [
-                Rectangle(1, 1).shift(a+b+c).highlight(colors[3])
+                Rectangle(1, 1).shift(a+b+c).set_color(colors[3])
                 for a in a_set
                 for b in b_set
                 for c in c_set
@@ -1787,7 +1787,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
             )
             rect.sort_points(np.linalg.norm)
             rect.to_edge(LEFT, buff = 0.2).shift(n*side_buff*RIGHT)
-            rect.highlight(colors[n])
+            rect.set_color(colors[n])
             rectangles.append(rect)
         for rect in rectangles:
             self.play(ShowCreation(rect))
@@ -1911,7 +1911,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
             )
             for pair in sample(pairs, min(10, len(pairs))):
                 for index in pair:
-                    num_mobs[index].highlight("green")
+                    num_mobs[index].set_color("green")
                 self.play(*[
                     ApplyMethod(
                         num_mobs[index].rotate_in_place, np.pi/10, 
@@ -1921,7 +1921,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 ])
                 self.wait()
                 for index in pair:
-                    num_mobs[index].highlight("white")
+                    num_mobs[index].set_color("white")
 
     @staticmethod
     def clear_way_for_text(text, mobjects):
@@ -1945,7 +1945,7 @@ class DeduceWhereNegativeOneFalls(Scene):
         colors = list(get_room_colors())
         num_labels = len(colors)
         texts = [
-            Mobject(parts[0], parts[1].highlight(color))
+            Mobject(parts[0], parts[1].set_color(color))
             for count, color in zip(it.count(), colors)
             for parts in [TextMobject([
                 "Represented (heuristically) \\\\ by being in the same \\\\", 
@@ -2010,17 +2010,17 @@ class PAdicMetric(Scene):
     def construct(self):
         p_str, text = TextMobject(["$p$", "-adic metric"]).shift(2*UP).split()
         primes = [TexMobject(str(p)) for p in [2, 3, 5, 7, 11, 13, 17, 19, 23]]
-        p_str.highlight("yellow")
+        p_str.set_color("yellow")
         colors = Color("green").range_to("skyblue", len(primes))
         new_numbers = TextMobject("Completely new types of numbers!")
-        new_numbers.highlight("skyblue").shift(2.3*DOWN)
+        new_numbers.set_color("skyblue").shift(2.3*DOWN)
         arrow = Arrow(2*DOWN, tail = 1.7*UP)
 
         curr = deepcopy(p_str)
         self.add(curr, text)
         self.wait()        
         for prime, count in zip(primes, it.count()):
-            prime.scale(1.0).highlight(colors.next())
+            prime.scale(1.0).set_color(colors.next())
             prime.shift(center_of_mass([p_str.get_top(), p_str.get_center()]))
             self.play(DelayByOrder(Transform(curr, prime)))
             self.wait()
@@ -2040,7 +2040,7 @@ class PAdicMetric(Scene):
             ),
             DelayByOrder(Transform(
                 start,
-                Point(arrow.points[0]).highlight("white")
+                Point(arrow.points[0]).set_color("white")
             ))
         )
         self.play(ShimmerIn(end))
@@ -2068,7 +2068,7 @@ class FuzzyDiscoveryToNewMath(Scene):
             Line(UP, ORIGIN),
         ]
         for line, char in zip(triangle_lines, ["a", "c", "b"]):
-            line.highlight("blue")
+            line.set_color("blue")
             char_mob = TexMobject(char).scale(0.25)
             line.add(char_mob.shift(line.get_center()))
         triangle = Mobject(*triangle_lines)
@@ -2162,7 +2162,7 @@ class DiscoveryAndInvention(Scene):
         for color in Color("yellow").range_to("red", 4):
             for arrow in arrows:
                 self.play(
-                    ShowCreation(deepcopy(arrow).highlight(color)),
+                    ShowCreation(deepcopy(arrow).set_color(color)),
                     run_time = 0.25
                 )
 

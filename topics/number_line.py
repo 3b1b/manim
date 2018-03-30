@@ -135,7 +135,7 @@ class NumberLine(VMobject):
         vect = (end - start)/np.linalg.norm(end-start)
         arrow = Arrow(start, end + MED_SMALL_BUFF*vect, buff = 0)
         tip = arrow.tip
-        tip.highlight(self.color)
+        tip.set_color(self.color)
         self.tip = tip
         self.add(tip)
 

@@ -69,7 +69,7 @@ class SectionTwo(Scene):
 class HilbertCurveIsPerfect(Scene):
     def construct(self):
         curve = HilbertCurve(order = 6)
-        curve.highlight(WHITE)
+        curve.set_color(WHITE)
         colored_curve = curve.copy()
         colored_curve.thin_out(3)
         lion = ImageMobject("lion", invert = False)
@@ -196,7 +196,7 @@ class NotPixelatedSpace(Scene):
         self.wait()
         self.play(Transform(grid, space_mobject, run_time = 5))
         self.remove(grid)
-        self.highlight_region(space_region, DARK_GREY)
+        self.set_color_region(space_region, DARK_GREY)
         self.wait()
         self.add(infinitely, detailed)
         self.wait()
@@ -204,7 +204,7 @@ class NotPixelatedSpace(Scene):
         self.play(ShowCreation(arrows))
         self.wait()
         self.clear()
-        self.highlight_region(space_region, DARK_GREY)
+        self.set_color_region(space_region, DARK_GREY)
         self.play(ShowCreation(line))
         self.play(Transform(line, curve, run_time = 5))
 
@@ -331,7 +331,7 @@ class PseudoHilbertCurvesDontFillSpace(Scene):
         square.corner.add_line(ORIGIN, 3*RIGHT)
         square.digest_mobject_attrs()
         square.scale(2**(-5))
-        square.corner.highlight(
+        square.corner.set_color(
             Color(rgb = curve.rgbas[curve.get_num_points()/3])
         )
         square.shift(
@@ -486,7 +486,7 @@ class ContinuityRequired(Scene):
             "\\emph{continuous}", 
             "if it is to represent a curve."
         ])
-        words.split()[1].highlight(YELLOW_C)
+        words.split()[1].set_color(YELLOW_C)
         self.add(words)
         self.wait()
 
@@ -522,14 +522,14 @@ class FormalDefinitionOfContinuity(Scene):
         Mobject.align_data(self.spiril1, self.spiril2)
         self.output = Mobject(self.spiril1, self.spiril2)
         self.output.ingest_submobjects()
-        self.output.highlight(GREEN_A)
+        self.output.set_color(GREEN_A)
 
         self.interval = UnitInterval()
         self.interval.scale_to_fit_width(FRAME_X_RADIUS-1)
         self.interval.to_edge(LEFT)
 
         self.input_dot = Dot(color = self.input_color)
-        self.output_dot = self.input_dot.copy().highlight(self.output_color)
+        self.output_dot = self.input_dot.copy().set_color(self.output_color)
         left, right = self.interval.get_left(), self.interval.get_right()
         self.input_homotopy = lambda (x, y, z, t) : (x, y, t) + interpolate(left, right, t)
         output_size = self.output.get_num_points()-1
@@ -861,7 +861,7 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
         text.to_edge(UP)
         text_parts = text.split()
         for index in 1, -1:
-            text_parts[index].highlight()
+            text_parts[index].set_color()
         starters = Mobject(*func_parts + [
             Point(mob.get_center(), stroke_width=1)
             for mob in text_parts[5:]
@@ -880,10 +880,10 @@ class FollowManyPoints(Scene):
         ])
         parts = text.split()
         parts[-1].next_to(Mobject(*parts[:-1]), DOWN)
-        parts[-1].highlight(BLUE)
-        parts[3].highlight(BLUE)
-        parts[1].highlight()
-        parts[-2].highlight()
+        parts[-1].set_color(BLUE)
+        parts[3].set_color(BLUE)
+        parts[1].set_color()
+        parts[-2].set_color()
         text.to_edge(UP)
         curve = UnitInterval()
         curve.sort_points(lambda p : p[0])
@@ -926,7 +926,7 @@ class FormalDefinitionOfHilbertCurve(Scene):
         text.to_edge(UP)
         x1 = text.split()[1]
         x2 = text.split()[-2]
-        x2.highlight(BLUE)
+        x2.set_color(BLUE)
         explanation = TextMobject("Actual Hilbert curve function")
         exp_arrow = Arrow(explanation, text.split()[0])
         curve = UnitInterval()
@@ -944,7 +944,7 @@ class FormalDefinitionOfHilbertCurve(Scene):
         self.remove(explanation, exp_arrow)
         self.play(ShowCreation(curve))
         self.play(
-            ApplyMethod(x1.highlight, BLUE),
+            ApplyMethod(x1.set_color, BLUE),
             ShowCreation(x_arrow), 
             ShowCreation(dot)
         )
@@ -978,8 +978,8 @@ class ThreeThingsToProve(Scene):
             "=\\lim_{n \\to \\infty}\\text{PHC}_n(", "x", ")"
         ])
         definition.to_edge(UP)
-        definition.split()[1].highlight(BLUE)
-        definition.split()[-2].highlight(BLUE)
+        definition.split()[1].set_color(BLUE)
+        definition.split()[-2].set_color(BLUE)
         intro = TextMobject("Three things need to be proven")
         prove_that = TextMobject("Prove that HC is $\\dots$")
         prove_that.scale(0.7)
@@ -994,9 +994,9 @@ class ThreeThingsToProve(Scene):
             "Each point in the unit square is an output of HC",
             "\\end{enumerate}",
         ]).split()
-        items[1].highlight(GREEN)
-        items[3].highlight(YELLOW_C)
-        items[5].highlight(MAROON)
+        items[1].set_color(GREEN)
+        items[3].set_color(YELLOW_C)
+        items[5].set_color(MAROON)
         Mobject(*items).to_edge(RIGHT)
 
         self.add(definition)
@@ -1062,7 +1062,7 @@ class ColorIntervals(Scene):
                 brace_anim = ApplyMethod(brace.shift, 2*RIGHT)
             self.play(
                 ApplyMethod(
-                    number_line.highlight,
+                    number_line.set_color,
                     RED,
                     lambda p : p[0] > n-6.2 and p[0] < n-4 and p[1] > -0.4
                 ),

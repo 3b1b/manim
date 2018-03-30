@@ -49,8 +49,8 @@ class OpeningQuote(Scene):
             if self.quote_arg_separator == " ":
                 quote[0].shift(0.2*RIGHT)
                 quote[-1].shift(0.2*LEFT)
-        for term, color in self.highlighted_quote_terms.items():
-            quote.highlight_by_tex(term, color)
+        for term, color in self.set_colored_quote_terms.items():
+            quote.set_color_by_tex(term, color)
         quote.to_edge(UP)
         if quote.get_width() > max_width:
             quote.scale_to_fit_width(max_width)
@@ -59,7 +59,7 @@ class OpeningQuote(Scene):
     def get_author(self, quote):
         author = TextMobject("\\Large -" + self.author)
         author.next_to(quote, DOWN)
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         return author
 
 class PatreonThanks(Scene):

@@ -103,8 +103,8 @@ class Chapter8OpeningQuote(OpeningQuote, PiCreatureScene):
             "\\sin(", "h", ")\\cos(\\theta)\\big] - \\sin(\\theta) \\over", "h}",
             "= \\dots"
         )
-        result.highlight_by_tex("h", GREEN, substring = False)
-        result.highlight_by_tex("d\\theta", GREEN)
+        result.set_color_by_tex("h", GREEN, substring = False)
+        result.set_color_by_tex("d\\theta", GREEN)
 
         result.scale_to_fit_width(FRAME_WIDTH - 2*MED_SMALL_BUFF)
         return result
@@ -122,13 +122,13 @@ class ThisVideo(TeacherStudentsScene):
             "\\int_0^T", "v(t)", "\\,dt", 
             "=", "v(T)"
         )
-        formula.highlight_by_tex("v", VELOCITY_COLOR)
+        formula.set_color_by_tex("v", VELOCITY_COLOR)
         formula.next_to(self.teacher.get_corner(UP+LEFT), UP, MED_LARGE_BUFF)
 
         self.play(FadeIn(series, submobject_mode = "lagged_start"))
         self.play(
             this_video.shift, this_video.get_height()*DOWN/2,
-            this_video.highlight, YELLOW,
+            this_video.set_color, YELLOW,
             self.teacher.change_mode, "raise_right_hand",
         )
         self.play(Write(VGroup(integral, v_t, dt)))
@@ -140,7 +140,7 @@ class ThisVideo(TeacherStudentsScene):
         self.play(
             this_video.restore,
             next_video.shift, next_video.get_height()*DOWN/2,
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             integral[0].copy().next_to, next_video, DOWN, MED_LARGE_BUFF,
             FadeOut(formula),
             *it.chain(*[
@@ -178,7 +178,7 @@ class InCarRestrictedView(ShowSpeedometer):
 
         dots = VGroup(*map(Dot, [self.point_A, self.point_B]))
         line = Line(*dots, buff = 0)
-        line.highlight(DISTANCE_COLOR)
+        line.set_color(DISTANCE_COLOR)
         brace = Brace(line, DOWN)
         brace_text = brace.get_text("Distance traveled?")
 
@@ -298,7 +298,7 @@ class PlotVelocity(GraphScene):
             for t in times
         ]
         dots = VGroup(*[Dot(p, radius = 0.07) for p in points])
-        dots.highlight(VELOCITY_COLOR)
+        dots.set_color(VELOCITY_COLOR)
 
         pre_dots = VGroup()
         dot_intro_anims = []
@@ -355,7 +355,7 @@ class PlotVelocity(GraphScene):
             color = VELOCITY_COLOR
         )
         graph_label = TexMobject("v(t)", "=t(8-t)")
-        graph_label.highlight_by_tex("v(t)", VELOCITY_COLOR)
+        graph_label.set_color_by_tex("v(t)", VELOCITY_COLOR)
         graph_label.next_to(
             graph.point_from_proportion(7./8.),
             UP+RIGHT
@@ -418,8 +418,8 @@ class AskAboutAntiderivative(PlotVelocity):
 
     def write_s_formula(self):
         ds_dt = TexMobject("ds", "\\over\\,", "dt")
-        ds_dt.highlight_by_tex("ds", DISTANCE_COLOR)
-        ds_dt.highlight_by_tex("dt", TIME_COLOR)
+        ds_dt.set_color_by_tex("ds", DISTANCE_COLOR)
+        ds_dt.set_color_by_tex("dt", TIME_COLOR)
         ds_dt.next_to(self.graph_label, UP, LARGE_BUFF)
 
         v_t = self.graph_label.get_part_by_tex("v(t)")
@@ -441,9 +441,9 @@ class AskAboutAntiderivative(PlotVelocity):
         words = TexMobject(
             "{d(", "???", ") \\over \\,", "dt}", "=", "t(8-t)"
         )
-        words.highlight_by_tex("t(8-t)", VELOCITY_COLOR)
-        words.highlight_by_tex("???", DISTANCE_COLOR)
-        words.highlight_by_tex("dt", TIME_COLOR)
+        words.set_color_by_tex("t(8-t)", VELOCITY_COLOR)
+        words.set_color_by_tex("???", DISTANCE_COLOR)
+        words.set_color_by_tex("dt", TIME_COLOR)
         words.scale(0.7)
 
         self.play(FadeIn(randy))
@@ -490,10 +490,10 @@ class Antiderivative(PiCreatureScene):
     def get_functions(self, left_tex, right_tex):
         left = TexMobject(left_tex)
         left.shift(2*LEFT)
-        left.highlight(DISTANCE_COLOR)
+        left.set_color(DISTANCE_COLOR)
         right = TexMobject(right_tex)
         right.shift(2*RIGHT)
-        right.highlight(VELOCITY_COLOR)
+        right.set_color(VELOCITY_COLOR)
         result = VGroup(left, right)
         result.shift(UP)
         return result
@@ -511,7 +511,7 @@ class Antiderivative(PiCreatureScene):
             arc.add_tip()
         top_arc.next_to(top_line, UP)
         bottom_arc.next_to(bottom_line, DOWN)
-        bottom_arc.highlight(MAROON_B)
+        bottom_arc.set_color(MAROON_B)
 
         return arcs
 
@@ -521,7 +521,7 @@ class Antiderivative(PiCreatureScene):
         derivative.next_to(top_arc, UP)
         antiderivative = TextMobject("``Antiderivative''")
         antiderivative.next_to(bottom_arc, DOWN)
-        antiderivative.highlight(bottom_arc.get_color())
+        antiderivative.set_color(bottom_arc.get_color())
 
         return VGroup(derivative, antiderivative)
 
@@ -611,15 +611,15 @@ class ConstantVelocityPlot(PlotVelocity):
         v_label = right_brace.get_text(
             "$10 \\frac{\\text{meters}}{\\text{second}}$",
         )
-        v_label.highlight(VELOCITY_COLOR)
+        v_label.set_color(VELOCITY_COLOR)
         t_label = top_brace.get_text(
             "8 seconds"
         )
-        t_label.highlight(TIME_COLOR)
+        t_label.set_color(TIME_COLOR)
 
         s_label = TexMobject("10", "\\times",  "8", "\\text{ meters}")
-        s_label.highlight_by_tex("10", VELOCITY_COLOR)
-        s_label.highlight_by_tex("8", TIME_COLOR)
+        s_label.set_color_by_tex("10", VELOCITY_COLOR)
+        s_label.set_color_by_tex("8", TIME_COLOR)
         s_label.move_to(rect)
 
         self.play(
@@ -657,7 +657,7 @@ class ConstantVelocityPlot(PlotVelocity):
         self.play(FadeIn(randy))
         self.play(randy.change_mode, "pondering")
         self.play(
-            self.area_rect.highlight, YELLOW,
+            self.area_rect.set_color, YELLOW,
             *map(Animation, self.get_mobjects()),
             rate_func = there_and_back
         )
@@ -684,7 +684,7 @@ class ConstantVelocityPlot(PlotVelocity):
             axis.main_line.copy()
             for axis in self.x_axis, self.y_axis
         ])
-        lines.highlight(TIME_COLOR)
+        lines.set_color(TIME_COLOR)
         square = Square(
             stroke_color = BLACK,
             stroke_width = 1,
@@ -821,13 +821,13 @@ class PiecewiseConstantPlot(PlotVelocity):
     def show_piecewise_constant_graph(self):
         pw_constant_graph = self.get_pw_constant_graph()
         alt_lines = [
-            line.copy().highlight(YELLOW)
+            line.copy().set_color(YELLOW)
             for line in pw_constant_graph[:4]
         ]
         for line in alt_lines:
             line.start_dot = Dot(line.get_start())
             line.end_dot = Dot(line.get_end())
-            VGroup(line.start_dot, line.end_dot).highlight(line.get_color())
+            VGroup(line.start_dot, line.end_dot).set_color(line.get_color())
         line = alt_lines[0]
 
         faders = [self.v_graph, self.v_graph_label]
@@ -928,7 +928,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             "$dt$", "$=0.25$"
         )
         example_text.to_corner(UP+RIGHT)
-        example_text.highlight_by_tex("dt", YELLOW)
+        example_text.set_color_by_tex("dt", YELLOW)
 
         self.play(ReplacementTransform(
             rects, target_rects,
@@ -1054,7 +1054,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             for group in v_lines, h_lines, height_labels
         ]))
         self.play(
-            v_lines[0].highlight, RED,
+            v_lines[0].set_color, RED,
             rate_func = there_and_back,
         )
         self.wait()
@@ -1158,7 +1158,7 @@ class PiecewiseConstantPlot(PlotVelocity):
 
         for mob, tex in (self.v_t, "v(t)"), (self.dt_label, "dt"):
             self.play(ReplacementTransform(
-                mob.copy().highlight(YELLOW), 
+                mob.copy().set_color(YELLOW), 
                 integral.get_part_by_tex(tex),
                 run_time = 2
             ))
@@ -1181,7 +1181,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             morty.change_mode, "raise_right_hand",
             morty.look, UP+RIGHT,
             dt_copy.next_to, morty.get_corner(UP+RIGHT), UP,
-            dt_copy.highlight, YELLOW
+            dt_copy.set_color, YELLOW
         )
         self.play(Blink(morty))
         self.play(
@@ -1267,7 +1267,7 @@ class PiecewiseConstantPlot(PlotVelocity):
 
         cross = TexMobject("\\times")
         cross.replace(self.sum_word, stretch = True)
-        cross.highlight(RED)
+        cross.set_color(RED)
         brace = Brace(self.integral, DOWN)
         dt_to_0 = brace.get_text("$dt \\to 0$")
 
@@ -1367,7 +1367,7 @@ class PiecewiseConstantPlot(PlotVelocity):
                 self.coords_to_point(x, y)
                 for x in xs
             ])
-            line.highlight(self.v_graph.get_color())
+            line.set_color(self.v_graph.get_color())
             result.add(line)
         return result
 
@@ -1380,7 +1380,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             for t in np.linspace(0, 8, len(rects)+1)
             for point in [self.coords_to_point(t, 0)]
         ])
-        ticks.highlight(YELLOW)
+        ticks.set_color(YELLOW)
         return ticks
 
 class DontKnowHowToHandleNonConstant(TeacherStudentsScene):
@@ -1404,7 +1404,7 @@ class CarJourneyApproximation(Scene):
             TextMobject("Real motion (smooth)").shift(3*UP),
             TextMobject(self.bottom_words).shift(0.5*DOWN),
         ]
-        words[1].highlight(GREEN)
+        words[1].set_color(GREEN)
 
 
         self.add(h_line, *cars + words)
@@ -1560,7 +1560,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         moving_T = self.T_label_group[0]
 
         s_T = TexMobject("s(T)", "= ")
-        s_T.highlight_by_tex("s", DISTANCE_COLOR)
+        s_T.set_color_by_tex("s", DISTANCE_COLOR)
         s_T.next_to(integral, LEFT)
 
         int_arrow, s_arrow = [
@@ -1635,9 +1635,9 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
 
         ds_label = TexMobject("ds")
         ds_label.next_to(rect, RIGHT, LARGE_BUFF, UP)
-        ds_label.highlight(DISTANCE_COLOR)
+        ds_label.set_color(DISTANCE_COLOR)
         ds_arrow = Arrow(ds_label.get_left(), rect.get_left())
-        ds_arrow.highlight(WHITE)
+        ds_arrow.set_color(WHITE)
 
         v_brace = Brace(rect, LEFT, buff = SMALL_BUFF)
         v_T_label = v_brace.get_text("$v(T)$", buff = SMALL_BUFF)
@@ -1677,7 +1677,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         formula2 = TexMobject("{ds", "\\over\\,", "dT}", "=", "v(T)")
         for formula in formula1, formula2:
             formula.next_to(self.v_graph_label, UP, LARGE_BUFF)
-            formula.highlight_by_tex("ds", DISTANCE_COLOR)
+            formula.set_color_by_tex("ds", DISTANCE_COLOR)
 
         self.play(
             DrawBorderThenFill(self.rect),
@@ -1767,7 +1767,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
             new_v_line = self.get_vertical_line_to_graph(
                 t_max, self.v_graph
             )
-            new_v_line.highlight(v_line.get_color())
+            new_v_line.set_color(v_line.get_color())
             T_label.move_to(new_v_line.get_bottom(), UP)
 
             #Fade close to 0
@@ -1789,21 +1789,21 @@ class DirectInterpretationOfDsDt(TeacherStudentsScene):
         ds, over, dt, of_T, equals, v = equation
         equation.next_to(self.get_pi_creatures(), UP, LARGE_BUFF)
         equation.shift(RIGHT)
-        v.highlight(VELOCITY_COLOR)
+        v.set_color(VELOCITY_COLOR)
 
         s_words = TextMobject("Tiny change in", "distance")
         s_words.next_to(ds, UP+LEFT, LARGE_BUFF)
         s_words.shift_onto_screen()
         s_arrow = Arrow(s_words[1].get_bottom(), ds.get_left())
         s_words.add(s_arrow)
-        s_words.highlight(DISTANCE_COLOR)
+        s_words.set_color(DISTANCE_COLOR)
 
         t_words = TextMobject("Tiny change in", "time")
         t_words.next_to(dt, DOWN+LEFT)
         t_words.to_edge(LEFT)
         t_arrow = Arrow(t_words[1].get_top(), dt.get_left())
         t_words.add(t_arrow)
-        t_words.highlight(TIME_COLOR)
+        t_words.set_color(TIME_COLOR)
 
         self.add(ds, over, dt, of_T)
         for words, part in (s_words, ds), (t_words, dt):
@@ -1815,7 +1815,7 @@ class DirectInterpretationOfDsDt(TeacherStudentsScene):
                 ),
                 self.students[1].change_mode, "raise_right_hand"
             )
-            self.play(part.highlight, words.get_color())
+            self.play(part.set_color, words.get_color())
         self.wait()
         self.play(Write(VGroup(equals, v)))
         self.change_student_modes(*["pondering"]*3)
@@ -1833,7 +1833,7 @@ class FindAntiderivative(Antiderivative):
         q_marks, rhs = functions = self.get_functions("???", "t(8-t)")
         expanded_rhs = TexMobject("8t - t^2")
         expanded_rhs.move_to(rhs, LEFT)
-        expanded_rhs.highlight(rhs.get_color())
+        expanded_rhs.set_color(rhs.get_color())
         self.v_part1 = VGroup(*expanded_rhs[:2])
         self.v_part2 = VGroup(*expanded_rhs[2:])
         for part in self.v_part1, self.v_part2:
@@ -1902,7 +1902,7 @@ class FindAntiderivative(Antiderivative):
         self.play(four.shift, DOWN)
         self.play(FadeOut(two_t))
         self.play(self.v_part1.restore)
-        self.play(four.highlight, DISTANCE_COLOR)
+        self.play(four.set_color, DISTANCE_COLOR)
         self.wait(2)
 
         self.s_part1 = four_t_squared
@@ -1983,7 +1983,7 @@ class FindAntiderivative(Antiderivative):
             for d in range(1, 8)
         ]
         for plus_C in plus_Cs:
-            plus_C.highlight(YELLOW)
+            plus_C.set_color(YELLOW)
             plus_C.move_to(s_group, RIGHT)
         plus_C = plus_Cs[0]
 
@@ -2017,11 +2017,11 @@ class GraphSPlusC(GraphDistanceVsTime):
             6, graph, line_class = DashedLine
         )
         v_line.scale_in_place(2)
-        v_line.highlight(WHITE)
+        v_line.set_color(WHITE)
         graph_label, plus_C = full_label = TexMobject(
             "s(t) = 4t^2 - \\frac{1}{3}t^3", "+C"
         )
-        plus_C.highlight(YELLOW)
+        plus_C.set_color(YELLOW)
         full_label.next_to(graph.points[-1], DOWN)
         full_label.to_edge(RIGHT)
 
@@ -2089,7 +2089,7 @@ class LowerBound(AreaIsDerivative):
 
     def drag_right_endpoint_to_zero(self):
         zero_integral = self.get_integral("0", "0")
-        zero_integral[1].highlight(YELLOW)
+        zero_integral[1].set_color(YELLOW)
         zero_int_bounds = list(reversed(
             zero_integral.get_parts_by_tex("0")
         ))
@@ -2101,7 +2101,7 @@ class LowerBound(AreaIsDerivative):
         self.integral.save_state()
         equals_zero = TexMobject("=0")
         equals_zero.next_to(zero_integral, RIGHT)
-        equals_zero.highlight(GREEN)
+        equals_zero.set_color(GREEN)
 
         self.change_area_bounds(0, 0, run_time = 3)
         self.play(ReplacementTransform(
@@ -2139,7 +2139,7 @@ class LowerBound(AreaIsDerivative):
             part.brace.save_state()
 
         antideriv_text = at_T.brace.get_text("Antiderivative", buff = SMALL_BUFF)
-        antideriv_text.highlight(MAROON_B)
+        antideriv_text.set_color(MAROON_B)
         value_at_eight = at_eight.brace.get_text(
             "%.2f"%s_func(8)
         )
@@ -2205,9 +2205,9 @@ class LowerBound(AreaIsDerivative):
         ]
         tex_mobs = [new_integral]+new_antideriv_diff[1::2]+numbers
         for tex_mob in tex_mobs:
-            tex_mob.highlight_by_tex("1", RED)
-            tex_mob.highlight_by_tex("7", GREEN)
-            tex_mob.highlight_by_tex("\\frac{1}{3}", WHITE)
+            tex_mob.set_color_by_tex("1", RED)
+            tex_mob.set_color_by_tex("7", GREEN)
+            tex_mob.set_color_by_tex("\\frac{1}{3}", WHITE)
 
         self.change_area_bounds(1, 7, run_time = 2)
         self.play(
@@ -2226,7 +2226,7 @@ class LowerBound(AreaIsDerivative):
     def add_constant_to_antiderivative(self):
         antideriv_diff = self.antideriv_diff
         plus_fives = VGroup(*[TexMobject("+5") for i in range(2)])
-        plus_fives.highlight(YELLOW)
+        plus_fives.set_color(YELLOW)
         for five, part in zip(plus_fives, antideriv_diff[1::2]):
             five.next_to(part, DOWN)
         group = VGroup(
@@ -2271,7 +2271,7 @@ class LowerBound(AreaIsDerivative):
                 "4", s, "^2", "-", "\\frac{1}{3}", s, "^3"
                 "\\right))"
             )
-            part.highlight_by_tex(s, YELLOW, substring = False)
+            part.set_color_by_tex(s, YELLOW, substring = False)
             parts.append(part)
         result = VGroup(
             TexMobject("="), parts[0], 
@@ -2306,8 +2306,8 @@ class FundamentalTheorem(GraphScene):
         integral = TexMobject("\\int", "^b", "_a", "f(x)", "\\,dx")
         integral.next_to(ORIGIN, LEFT)
         integral.to_edge(UP)
-        integral.highlight_by_tex("a", self.lower_bound_color)
-        integral.highlight_by_tex("b", self.upper_bound_color)
+        integral.set_color_by_tex("a", self.lower_bound_color)
+        integral.set_color_by_tex("b", self.upper_bound_color)
         graph = self.get_graph(
             lambda x : -0.01*x*(x-3)*(x-6)*(x-12) + 3,
         )
@@ -2407,8 +2407,8 @@ class FundamentalTheorem(GraphScene):
         deriv_F = deriv.get_part_by_tex("F")
         deriv.next_to(self.integral, DOWN, MED_LARGE_BUFF)
         rhs = TexMobject(*"=F(b)-F(a)")
-        rhs.highlight_by_tex("a", self.lower_bound_color)
-        rhs.highlight_by_tex("b", self.upper_bound_color)
+        rhs.set_color_by_tex("a", self.lower_bound_color)
+        rhs.set_color_by_tex("b", self.upper_bound_color)
         rhs.next_to(self.integral, RIGHT)
 
         self.play(Write(deriv))
@@ -2481,9 +2481,9 @@ class FundamentalTheorem(GraphScene):
             self.rhs.set_fill, None, 1,
         )
         for label, line in reversed(zip(self.bound_labels, self.v_lines)):
-            new_line = line.copy().highlight(YELLOW)
+            new_line = line.copy().set_color(YELLOW)
             label.save_state()
-            self.play(label.highlight, YELLOW)
+            self.play(label.set_color, YELLOW)
             self.play(ShowCreation(new_line))
             self.play(ShowCreation(line))
             self.remove(new_line)
@@ -2553,7 +2553,7 @@ class NegativeArea(GraphScene):
 
     def write_negative_area(self):
         words = TextMobject("Negative area")
-        words.highlight(RED)
+        words.set_color(RED)
         words.next_to(
             self.coords_to_point(7, -2),
             RIGHT,
@@ -2617,11 +2617,11 @@ class NegativeArea(GraphScene):
         brace = Brace(self.nose_lines, DOWN, buff = 0)
         equation = TexMobject("ds", "=", "v(t)", "dt")
         equation.next_to(brace, DOWN, SMALL_BUFF, LEFT)
-        equation.highlight_by_tex("ds", DISTANCE_COLOR)
-        equation.highlight_by_tex("dt", TIME_COLOR)
+        equation.set_color_by_tex("ds", DISTANCE_COLOR)
+        equation.set_color_by_tex("dt", TIME_COLOR)
 
         negative = TextMobject("Negative")
-        negative.highlight(RED)
+        negative.set_color(RED)
         negative.next_to(equation.get_corner(UP+RIGHT), UP, LARGE_BUFF)
         ds_arrow, v_arrow = arrows = VGroup(*[
             Arrow(
@@ -2664,7 +2664,7 @@ class NegativeArea(GraphScene):
         dt_brace = Brace(rect, UP, buff = 0)
         v_brace = Brace(rect, LEFT, buff = 0)
         dt_label = dt_brace.get_text("$dt$", buff = SMALL_BUFF)
-        dt_label.highlight(YELLOW)
+        dt_label.set_color(YELLOW)
         v_label = v_brace.get_text("$v(t)$", buff = SMALL_BUFF)
         v_label.add_background_rectangle()
 
@@ -2719,7 +2719,7 @@ class NextVideo(TeacherStudentsScene):
 
         self.play(FadeIn(series, submobject_mode = "lagged_start"))
         self.play(
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             next_video.shift, next_video.get_height()*DOWN/2,
             self.teacher.change_mode, "raise_right_hand"
         )

@@ -139,14 +139,14 @@ class CheckOutMathologer(PiCreatureScene):
         logo.scale_to_fit_height(self.logo_height)
         logo.to_corner(UP+LEFT)
         if self.logo_color is not None:
-            logo.highlight(self.logo_color)
+            logo.set_color(self.logo_color)
             logo.stroke_width = 1
         return logo
 
     def get_logo_intro_animation(self, logo):
         logo.save_state()
         logo.shift(DOWN)
-        logo.highlight(BLACK)
+        logo.set_color(BLACK)
         return ApplyMethod(logo.restore)
 
 class IntroduceStolenNecklaceProblem(ThreeDScene):
@@ -603,7 +603,7 @@ class WriteWords(Scene):
     }
     def construct(self):
         words = TextMobject(self.words)
-        words.highlight(self.color)
+        words.set_color(self.color)
         words.scale_to_fit_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         self.play(Write(words))
@@ -692,7 +692,7 @@ class TemperaturePressurePlane(GraphScene):
 
     def add_example_coordinates(self):
         dot = Dot(self.coords_to_point(*self.example_point_coords))
-        dot.highlight(YELLOW)
+        dot.set_color(YELLOW)
         tex = TexMobject("(25^\\circ\\text{C}, 101 \\text{ kPa})")
         tex.next_to(dot, UP+RIGHT, buff = SMALL_BUFF)
 
@@ -710,7 +710,7 @@ class TemperaturePressurePlane(GraphScene):
         point = self.coords_to_point(*self.example_point_coords)
         path.shift(point)
 
-        path.highlight(GREEN)
+        path.set_color(GREEN)
 
         self.play(ShowCreation(path, run_time = 10, rate_func = None))
         self.wait()
@@ -783,7 +783,7 @@ class WalkEquatorPostTransform(GraphScene):
     def walk_equator(self):
         equator = self.great_arc_images[0]
         dots = VGroup(Dot(), Dot())
-        dots.highlight(MAROON_B)
+        dots.set_color(MAROON_B)
         dot_movement = self.get_arc_walk_dot_movement(equator, dots)
         dot_movement.update(0)
 
@@ -820,7 +820,7 @@ class WalkEquatorPostTransform(GraphScene):
         tilted_eq = self.great_arc_images[1]
 
         dots = VGroup(Dot(), Dot())
-        dots.highlight(MAROON_B)
+        dots.set_color(MAROON_B)
         dot_movement = self.get_arc_walk_dot_movement(tilted_eq, dots)
         dot_movement.update(0)
 
@@ -903,7 +903,7 @@ class WalkEquatorPostTransform(GraphScene):
             rate_func = lambda t : 0.455*smooth(t)
         )
         self.play(
-            dots.highlight, YELLOW,
+            dots.set_color, YELLOW,
             dots.scale_in_place, 1.2,
             rate_func = there_and_back
         )
@@ -942,8 +942,8 @@ class WalkEquatorPostTransform(GraphScene):
             for s in np.arange(0, 1, 1./self.num_great_arcs)
             # for s in [0]
         ])
-        curves.highlight(YELLOW)
-        curves[0].highlight(RED)
+        curves.set_color(YELLOW)
+        curves[0].set_color(RED)
         for curve in curves:
             antipodal_x_diff = lambda x : \
                 curve.point_from_proportion(x+0.5)[0]-\
@@ -974,7 +974,7 @@ class WalkEquatorPostTransform(GraphScene):
         ]))
         full_curve = VMobject(close_new_points = True)
         full_curve.set_points_smoothly(points + [points[0]])
-        full_curve.highlight(MAROON_B)
+        full_curve.set_color(MAROON_B)
         first_half = full_curve.copy().pointwise_become_partial(
             full_curve, 0, 0.5
         )
@@ -1049,7 +1049,7 @@ class PointsIn3D(Scene):
         for index, subindex_list in (1, [1, 2, 4, 5, 7, 8]), (3, [0, 2, 4, 6, 8, 10]):
             colors = np.repeat(self.colors, 2)
             for subindex, color in zip(subindex_list, colors):
-                sphere_def[index][subindex].highlight(color)
+                sphere_def[index][subindex].set_color(color)
 
         point_ex = TextMobject(
             "For example, ", 
@@ -1057,7 +1057,7 @@ class PointsIn3D(Scene):
             arg_separator = ""
         )
         for index, color in zip([2, 4, 6], self.colors):
-            point_ex[index].highlight(color)
+            point_ex[index].set_color(color)
         point_ex.scale(0.8)
         point_ex.next_to(
             sphere_def[1], UP+RIGHT,
@@ -1115,7 +1115,7 @@ class WritePointCoordinates(Scene):
             arg_separator = ""
         )
         for index, color in zip([1, 3, 5], self.colors):
-            coords[index].highlight(color)
+            coords[index].set_color(color)
         return coords
 
 class WriteAntipodalCoordinates(WritePointCoordinates):
@@ -1130,8 +1130,8 @@ class WriteAntipodalCoordinates(WritePointCoordinates):
             arg_separator = ""
         )
         for index, color in zip([2, 5, 8], self.colors):
-            coords[index].highlight(color)
-            coords[index-1].highlight(self.sign_color)
+            coords[index].set_color(color)
+            coords[index-1].set_color(self.sign_color)
         return coords
 
 class GeneralizeBorsukUlam(Scene):
@@ -1182,8 +1182,8 @@ class GeneralizeBorsukUlam(Scene):
             for d in range(1, 1+self.n_dims)
         ])
         for square, color in zip(squares, self.colors):
-            square[0].highlight(color)
-            square[-1].highlight(color)
+            square[0].set_color(color)
+            square[-1].set_color(color)
         plusses = [TexMobject("+") for x in range(self.n_dims-1)]
         plusses += [TexMobject("=1")]
         condition = VGroup(*it.chain(*zip(squares, plusses)))
@@ -1198,7 +1198,7 @@ class GeneralizeBorsukUlam(Scene):
         ]))
         tup = TexMobject(*["("] + mid_parts + ["x_%d"%self.n_dims, ")"])
         for index, color in zip(it.count(1, 2), self.colors):
-            tup[index].highlight(color)
+            tup[index].set_color(color)
 
         return tup
 
@@ -1209,8 +1209,8 @@ class GeneralizeBorsukUlam(Scene):
         ]))
         tup = TexMobject(*["("] + mid_parts + ["-", "x_%d"%self.n_dims, ")"])
         for index, color in zip(it.count(1, 3), self.colors):
-            tup[index].highlight(self.negative_color)
-            tup[index+1].highlight(color)
+            tup[index].set_color(self.negative_color)
+            tup[index+1].set_color(color)
 
         return tup
 
@@ -1224,7 +1224,7 @@ class GeneralizeBorsukUlam(Scene):
         # ]))
         # tup = TexMobject(*["("] + mid_parts + ["y_%d"%n_dims, ")"])
         # for index, color in zip(it.count(1, 2), colors):
-        #     tup[index].highlight(color)
+        #     tup[index].set_color(color)
 
         # return tup
 
@@ -1289,7 +1289,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.color_necklace()
         self.find_continuous_fair_division()
         self.show_continuous_fair_division()
-        self.highlight_continuous_groups()
+        self.set_color_continuous_groups()
         self.mention_equivalence_to_discrete_case()
         self.shift_divide_off_tick_marks()
 
@@ -1504,7 +1504,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
 
         self.groups = groups
 
-    def highlight_continuous_groups(self):
+    def set_color_continuous_groups(self):
         top_group = VGroup(self.groups[0], self.groups[2])
         bottom_group = self.groups[1]
         boxes = VGroup()
@@ -1535,7 +1535,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.play(Write(weight_description))
         self.wait()
 
-        self.highlight_box = boxes
+        self.set_color_box = boxes
         self.weight_description = weight_description
 
     def mention_equivalence_to_discrete_case(self):
@@ -1611,7 +1611,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         words.shift(2*UP)
         arrow1 = Arrow(words.get_bottom(), left_segment.parts[0].get_right())
         arrow2 = Arrow(words.get_bottom(), right_segment.parts[1].get_left())
-        VGroup(words, arrow1, arrow2).highlight(RED)
+        VGroup(words, arrow1, arrow2).set_color(RED)
 
         self.play(Write(words), ShowCreation(arrow1))
         self.wait()
@@ -1765,13 +1765,13 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
             VGroup(
                 brace.label,
                 brace.concrete_label
-            ).highlight(YELLOW)
+            ).set_color(YELLOW)
 
         words = TextMobject(
             "1) Choose", "$a$, $b$, $c$", "so that", "$a+b+c = 1$"
         )
-        words[1].highlight(YELLOW)
-        words[3].highlight(YELLOW)
+        words[1].set_color(YELLOW)
+        words[3].set_color(YELLOW)
         words.to_corner(UP+LEFT)
 
         self.play(*it.chain(*[
@@ -1884,7 +1884,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         ]
         for point, arrow_pair in zip(pre_arrow_points, arrow_pairs):
             for arrow, color in zip(arrow_pair, [GREEN, RED]):
-                arrow.highlight(color)
+                arrow.set_color(color)
                 arrow.move_to(point.get_center())
         return arrow_pairs, pre_arrow_points
 
@@ -1893,7 +1893,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
             *it.chain(*[
                 [
                     line.rotate_in_place, np.pi/12, vect,
-                    line.highlight, RED
+                    line.set_color, RED
                 ]
                 for line, vect in zip(self.v_lines, [OUT, IN])
             ]),
@@ -1927,13 +1927,13 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
     def get_tuple(self):
         tup = TexMobject("(x, y, z)")
         for i, color in zip([1, 3, 5], self.colors):
-            tup[i].highlight(color)
+            tup[i].set_color(color)
         return tup
 
     def get_condition(self):
         condition = TexMobject("x^2+y^2+z^2 = 1")
         for i, color in zip([0, 3, 6], self.colors):
-            VGroup(*condition[i:i+2]).highlight(color)
+            VGroup(*condition[i:i+2]).set_color(color)
         return condition
 
     def add_sphere_set(self):
@@ -1952,7 +1952,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
         )
         for i in 1, 3:
             for j, color in zip([0, 3, 6], self.colors):
-                VGroup(*choice_one_words[i][j:j+2]).highlight(color)
+                VGroup(*choice_one_words[i][j:j+2]).set_color(color)
         choice_one_words.to_corner(UP+LEFT)
 
         choice_two_words = TextMobject(
@@ -1969,7 +1969,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
 
     def show_example_choices(self):
         choices = VGroup(*[
-            TexMobject(*tex).highlight(color)
+            TexMobject(*tex).set_color(color)
             for color, tex in zip(self.colors, [
                 ("x", "^2 = ", "1/6"),
                 ("y", "^2 = ", "1/3"),
@@ -2008,7 +2008,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
                 sqrt.scale(0.6)
             sqrts.arrange_submobjects(DOWN)
             sqrts.next_to(choice, RIGHT, buff = LARGE_BUFF)
-            sqrts.highlight(choice.get_color())
+            sqrts.set_color(choice.get_color())
 
             arrows = VGroup(*[
                 Arrow(
@@ -2049,7 +2049,7 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
         )
         for i, j_list in (0, [1, 3, 5]), (2, [0, 3, 6]):
             for j, color in zip(j_list, self.xyz_colors):
-                label[i][j].highlight(color)
+                label[i][j].set_color(color)
         label.to_corner(UP+RIGHT)
 
         ghost_sphere_point = VectorizedPoint()
@@ -2079,7 +2079,7 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
                 "$%s^2$"%char, "$= 1/%d$"%denom,
                 buff = SMALL_BUFF
             )
-            brace.label.highlight(color)
+            brace.label.set_color(color)
             if brace.label.get_right()[0] > brace.get_right()[0]:
                 brace.label.next_to(
                     brace, UP, buff = SMALL_BUFF,
@@ -2113,8 +2113,8 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
                 for sign in "+", "-"
             ]
             for choice, color in zip(choices, [GREEN, RED]):
-                # choice[0].highlight(brace.label.get_color())
-                choice[2].highlight(color)
+                # choice[0].set_color(brace.label.get_color())
+                choice[2].set_color(color)
                 choice.scale(0.8)
                 choice.move_to(group)
                 if choice.get_width() > 0.8*group.get_width():
@@ -2147,7 +2147,7 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
     def ask_about_antipodal_pairs(self):
         question = TextMobject("What do antipodal points signify?")
         question.move_to(self.sphere_point_label, LEFT)
-        question.highlight(MAROON_B)
+        question.set_color(MAROON_B)
         antipodal_tex = TexMobject(
             "(x, y, z) \\rightarrow (-x, -y, -z)"
         )
@@ -2380,7 +2380,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     def add_sphere_arrow(self):
         up_down_arrow = TexMobject("\\updownarrow")
         up_down_arrow.scale(1.5)
-        up_down_arrow.highlight(YELLOW)
+        up_down_arrow.set_color(YELLOW)
         up_down_arrow.next_to(self.necklace, DOWN, buff = LARGE_BUFF)
 
         to_plane_arrow = Arrow(

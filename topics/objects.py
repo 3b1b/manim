@@ -173,7 +173,7 @@ class PartyHat(SVGMobject):
         self.dots = VGroup(*self[self.NUM_FRILLS+1:])
 
         self.frills.gradient_highlight(*self.frills_colors)
-        self.cone.highlight(self.cone_color)
+        self.cone.set_color(self.cone_color)
         self.dots.gradient_highlight(*self.dots_colors)
 
 class Laptop(VGroup):

@@ -63,7 +63,7 @@ class AverageOfContinuousVariable(GraphScene):
             line_class = DashedLine
         )
         for line, color in zip(boundary_lines, self.bound_colors):
-            line.highlight(color)
+            line.set_color(color)
         v_line = self.get_vertical_line_to_graph(
             self.bounds[0], graph, color = YELLOW,
         )
@@ -112,7 +112,7 @@ class ThisVideo(TeacherStudentsScene):
             bubble_kwargs = {"height" : 3},
             added_anims = [
                 this_video.shift, this_video.get_height()*DOWN/2,
-                this_video.highlight, YELLOW,
+                this_video.set_color, YELLOW,
             ]
         )
         self.change_student_modes(*["pondering"]*3)
@@ -233,7 +233,7 @@ class LengthOfDayGraph(GraphScene):
         self.setup_axes()
         self.add_graph()
         self.show_solar_pannel()
-        self.highlight_summer_months()
+        self.set_color_summer_months()
         self.mention_constants()
 
     def add_graph(self):
@@ -246,8 +246,8 @@ class LengthOfDayGraph(GraphScene):
         )
         graph_label = TexMobject("2.7\\sin(2\\pi x/365) + 12.4")
         graph_label.to_corner(UP+RIGHT).shift(LEFT)
-        VGroup(*graph_label[3:6]).highlight(graph.get_color())
-        graph_label[9].highlight(YELLOW)
+        VGroup(*graph_label[3:6]).set_color(graph.get_color())
+        graph_label[9].set_color(YELLOW)
 
         self.remove(x_label, y_label)
         for label in y_label, x_label:
@@ -317,7 +317,7 @@ class LengthOfDayGraph(GraphScene):
         self.play(Blink(randy))
         self.play(*map(FadeOut, [randy, panels]))
 
-    def highlight_summer_months(self):
+    def set_color_summer_months(self):
         summer_rect = Rectangle()
         summer_rect.set_stroke(width = 0)
         summer_rect.set_fill(YELLOW, opacity = 0.25)
@@ -359,7 +359,7 @@ class LengthOfDayGraph(GraphScene):
 
         self.play(*[
             ApplyFunction(
-                lambda c : c.scale_in_place(0.9).shift(SMALL_BUFF*DOWN).highlight(RED),
+                lambda c : c.scale_in_place(0.9).shift(SMALL_BUFF*DOWN).set_color(RED),
                 constant,
                 run_time = 3,
                 rate_func = squish_rate_func(there_and_back, a, a+0.7)
@@ -404,7 +404,7 @@ class AverageOfFiniteSet(Scene):
         brace = Brace(lines.target, UP)
 
         labels = VGroup(*[
-            TexMobject(str(d)).next_to(line, UP).highlight(line.get_color())
+            TexMobject(str(d)).next_to(line, UP).set_color(line.get_color())
             for d, line in zip(lengths, lines)
         ])
         plusses = [TexMobject("+") for x in range(len(lengths)-1)]
@@ -510,7 +510,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
 
         h_line = Line(LEFT, RIGHT)
         h_line.scale_to_fit_width(start_lines.get_width())
-        h_line.highlight(WHITE)
+        h_line.set_color(WHITE)
         h_line.next_to(sum_eq, DOWN, aligned_edge = LEFT)
 
         infinity = TexMobject("\\infty")
@@ -540,7 +540,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
             self.coords_to_point(bound, 0)
             for bound in self.bounds
         ])
-        VGroup(arrow, input_range).highlight(RED)
+        VGroup(arrow, input_range).set_color(RED)
 
         self.play(FadeIn(arrow))
         self.play(
@@ -815,7 +815,7 @@ class IntegralOfSine(FiniteSample):
             self.coords_to_point(bound, 0)
             for bound in self.bounds
         ])
-        input_range.highlight(RED)
+        input_range.set_color(RED)
 
         #Bring back average
         self.play(
@@ -846,7 +846,7 @@ class IntegralOfSine(FiniteSample):
         v_lines = self.v_lines
         self.play(*[
             ApplyFunction(
-                lambda l : l.shift(0.5*UP).highlight(GREEN),
+                lambda l : l.shift(0.5*UP).set_color(GREEN),
                 line,
                 rate_func = squish_rate_func(
                     there_and_back, a, a+0.3
@@ -858,7 +858,7 @@ class IntegralOfSine(FiniteSample):
                 np.linspace(0, 0.7, len(self.v_lines))
             )
         ] + [
-            num_samples_copy.highlight, GREEN
+            num_samples_copy.set_color, GREEN
         ])
         self.play(FadeOut(v_lines))
         self.wait()
@@ -1009,7 +1009,7 @@ class LetsSolveThis(TeacherStudentsScene):
             "?"
         )
         for tex_mob in expression, question:
-            tex_mob.highlight_by_tex("sin", BLUE)
+            tex_mob.set_color_by_tex("sin", BLUE)
         self.add(expression)
 
         self.teacher_says("Let's compute it.")
@@ -1034,7 +1034,7 @@ class Antiderivative(AverageOfSineStart):
         self.show_difference_in_antiderivative()
         self.comment_on_area()
         self.divide_by_pi()
-        self.highlight_antiderivative_fraction()
+        self.set_color_antiderivative_fraction()
         self.show_slope()
         self.bring_back_derivative()
         self.show_tangent_slope()
@@ -1053,8 +1053,8 @@ class Antiderivative(AverageOfSineStart):
                 lambda x : -np.sin(x),
             ]
         ]
-        VGroup(cos, neg_cos).highlight(self.antideriv_color)
-        VGroup(sin, neg_sin).highlight(self.deriv_color)
+        VGroup(cos, neg_cos).set_color(self.antideriv_color)
+        VGroup(sin, neg_sin).set_color(self.deriv_color)
         labels = ["\\cos(x)", "-\\cos(x)", "\\sin(x)", "-\\sin(x)"]
         x_vals = [2*np.pi, 2*np.pi, 5*np.pi/2, 5*np.pi/2]
         vects = [UP, DOWN, UP, DOWN]
@@ -1072,8 +1072,8 @@ class Antiderivative(AverageOfSineStart):
                 "{d(", F, ")", "\\over\\,", "dx}", "(x)", 
                 "=", f, "(x)"
             )
-            deriv.highlight_by_tex(F, self.antideriv_color)
-            deriv.highlight_by_tex(f, self.deriv_color)
+            deriv.set_color_by_tex(F, self.antideriv_color)
+            deriv.set_color_by_tex(f, self.deriv_color)
             deriv.to_edge(UP)
             derivs.append(deriv)
         cos_deriv, neg_cos_deriv = derivs
@@ -1184,10 +1184,10 @@ class Antiderivative(AverageOfSineStart):
         ]
 
         for tex_mob in integral, rhs:
-            tex_mob.highlight_by_tex("sin", self.deriv_color)
-            tex_mob.highlight_by_tex("cos", self.antideriv_color)
-            tex_mob.highlight_by_tex("0", YELLOW)
-            tex_mob.highlight_by_tex("\\pi", YELLOW)
+            tex_mob.set_color_by_tex("sin", self.deriv_color)
+            tex_mob.set_color_by_tex("cos", self.antideriv_color)
+            tex_mob.set_color_by_tex("0", YELLOW)
+            tex_mob.set_color_by_tex("\\pi", YELLOW)
 
         self.play(
             Write(integral),
@@ -1238,7 +1238,7 @@ class Antiderivative(AverageOfSineStart):
 
         pi = self.x_axis_labels[1]
         #Horrible hack
-        black_pi = pi.copy().highlight(BLACK)
+        black_pi = pi.copy().set_color(BLACK)
         self.add(black_pi, pi)
 
         cos_tex = self.rhs.get_part_by_tex("cos")
@@ -1311,7 +1311,7 @@ class Antiderivative(AverageOfSineStart):
         ])
         for tex_mob in pi_minus_zeros:
             for tex in "pi", "0":
-                tex_mob.highlight_by_tex(tex, YELLOW)
+                tex_mob.set_color_by_tex(tex, YELLOW)
 
         answer = TexMobject(" = \\frac{2}{\\pi}")
         answer.next_to(
@@ -1370,7 +1370,7 @@ class Antiderivative(AverageOfSineStart):
             equals
         )
 
-    def highlight_antiderivative_fraction(self):
+    def set_color_antiderivative_fraction(self):
         fraction = self.antiderivative_fraction
         big_rect = Rectangle(
             stroke_width = 0,
@@ -1401,11 +1401,11 @@ class Antiderivative(AverageOfSineStart):
             self.zero_dot.get_center(),
             self.pi_dot.get_center(),
         )
-        line.highlight(RED)
+        line.set_color(RED)
         line.scale_in_place(1.2)
 
-        new_v_line = self.v_line.copy().highlight(RED)
-        new_h_line = self.h_line.copy().highlight(RED)
+        new_v_line = self.v_line.copy().set_color(RED)
+        new_h_line = self.h_line.copy().set_color(RED)
 
         pi = TexMobject("\\pi")
         pi.next_to(self.h_line, DOWN)
@@ -1476,12 +1476,12 @@ class GeneralAverage(AverageOfContinuousVariable):
             for x in self.bounds
         ])
         for line, color in zip(v_lines, self.bound_colors):
-            line.highlight(color)
+            line.set_color(color)
         labels = map(TexMobject, "ab")
         for line, label in zip(v_lines, labels):
             vect = line.get_start()-line.get_end()
             label.next_to(line, vect/np.linalg.norm(vect))
-            label.highlight(line.get_color())
+            label.set_color(line.get_color())
 
         self.y_axis_label_mob.shift(0.7*LEFT)
 
@@ -1517,8 +1517,8 @@ class GeneralAverage(AverageOfContinuousVariable):
             "\\over", "b", "-", "a}"
         )
         for color, tex in zip(self.bound_colors, "ab"):
-            fraction.highlight_by_tex(tex, color)
-        fraction.highlight_by_tex("displaystyle", WHITE)
+            fraction.set_color_by_tex(tex, color)
+        fraction.set_color_by_tex("displaystyle", WHITE)
         integral = VGroup(*fraction[:5])
         denominator = VGroup(*fraction[5:])
         average.next_to(fraction.get_part_by_tex("over"), LEFT)
@@ -1633,7 +1633,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         )
         for line in v_lines:
             if self.y_axis.point_to_number(line.get_end()) < 0:
-                line.highlight(RED)
+                line.set_color(RED)
             line.save_state()
 
         line_pair = VGroup(*v_lines[6:8])
@@ -1644,7 +1644,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         approx = TexMobject("\\approx")
         rhs = TexMobject("{b", "-", "a", "\\over", "dx}")
         for tex, color in zip("ab", self.bound_colors):
-            rhs.highlight_by_tex(tex, color)
+            rhs.set_color_by_tex(tex, color)
         expression = VGroup(num_samples, approx, rhs)
         expression.arrange_submobjects(RIGHT)
         expression.next_to(self.y_axis, RIGHT)
@@ -1738,7 +1738,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         for new_v_lines in new_v_lines_list:
             for line in new_v_lines:
                 if self.y_axis.point_to_number(line.get_end()) < 0:
-                    line.highlight(RED)
+                    line.set_color(RED)
 
         for new_v_lines in new_v_lines_list:
             self.play(Transform(
@@ -1778,8 +1778,8 @@ class GeneralAntiderivative(GeneralAverage):
             "\\over", "b", "-", "a}"
         )
         for tex, color in zip("ab", self.bound_colors):
-            fraction.highlight_by_tex(tex, color)
-        fraction.highlight_by_tex("display", WHITE)
+            fraction.set_color_by_tex(tex, color)
+        fraction.set_color_by_tex("display", WHITE)
 
         fraction.scale(0.8)
         fraction.next_to(self.y_axis, RIGHT)
@@ -1806,8 +1806,8 @@ class GeneralAntiderivative(GeneralAverage):
         deriv = TexMobject(
             "{dF", "\\over", "dx}", "(x)", "=", "f(x)"
         )
-        deriv.highlight_by_tex("dF", antideriv_graph.get_color())
-        deriv.highlight_by_tex("f(x)", BLUE)
+        deriv.set_color_by_tex("dF", antideriv_graph.get_color())
+        deriv.set_color_by_tex("f(x)", BLUE)
         deriv.next_to(
             antideriv_graph_label, DOWN, MED_LARGE_BUFF, LEFT
         )
@@ -1834,7 +1834,7 @@ class GeneralAntiderivative(GeneralAverage):
             "b", "-", "a}"
         )
         for tex, color in zip("abF", self.bound_colors+[YELLOW]):
-            new_fraction.highlight_by_tex(tex, color)
+            new_fraction.set_color_by_tex(tex, color)
         new_fraction.next_to(
             self.fraction.get_part_by_tex("over"), RIGHT,
             align_using_submobjects = True
@@ -1892,7 +1892,7 @@ class GeneralAntiderivative(GeneralAverage):
 
         v_line = Line(b_point, interim_point)
         h_line = Line(interim_point, a_point)
-        VGroup(v_line, h_line).highlight(WHITE)
+        VGroup(v_line, h_line).set_color(WHITE)
         brace = Brace(v_line, RIGHT, buff = SMALL_BUFF)
 
         graph_within_bounds = self.get_graph(
@@ -1936,7 +1936,7 @@ class GeneralAntiderivative(GeneralAverage):
 
     def draw_slope(self):
         line = Line(*self.graph_points_at_bounds)
-        line.highlight(PINK)
+        line.set_color(PINK)
         line.scale_in_place(1.3)
 
         self.play(ShowCreation(line, run_time = 2))
@@ -1987,7 +1987,7 @@ class ASecondIntegralSensation(TeacherStudentsScene):
         )
         continuum.next_to(finite_average, RIGHT, 2)
         line = Line(continuum.get_left(), continuum.get_right())
-        line.highlight(YELLOW)
+        line.set_color(YELLOW)
         arrow = Arrow(DOWN+RIGHT, ORIGIN)
         arrow.next_to(line.get_start(), DOWN+RIGHT, SMALL_BUFF)
 

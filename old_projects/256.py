@@ -46,7 +46,7 @@ def get_google_logo():
 class LastVideo(Scene):
     def construct(self):
         title = TextMobject("Crypto", "currencies", arg_separator = "")
-        title[0].highlight(YELLOW)
+        title[0].set_color(YELLOW)
         title.scale(1.5)
         title.to_edge(UP)
         screen_rect = ScreenRectangle(height = 6)
@@ -82,7 +82,7 @@ class BreakUp2To256(PiCreatureScene):
         number, possibilities = expression = TextMobject(
             "$2^{256}$", "possibilities"
         )
-        number.highlight(YELLOW)
+        number.set_color(YELLOW)
         expression.next_to(brace, RIGHT)
 
         words = TextMobject("Seems big...I guess...")
@@ -121,7 +121,7 @@ class BreakUp2To256(PiCreatureScene):
             subexpression = TextMobject(
                 "$2^{32}$", "possibilities"
             )
-            subexpression[0].highlight(GREEN)
+            subexpression[0].set_color(GREEN)
             subexpression.next_to(subgroup, RIGHT)
             subexpressions.add(subexpression)
 
@@ -145,7 +145,7 @@ class BreakUp2To256(PiCreatureScene):
             new_subexpression = TextMobject(
                 "4 Billion", "possibilities"
             )
-            new_subexpression[0].highlight(YELLOW)
+            new_subexpression[0].set_color(YELLOW)
             new_subexpression.move_to(subexpression, LEFT)
             new_subexpressions.add(new_subexpression)
 
@@ -174,7 +174,7 @@ class BreakUp2To256(PiCreatureScene):
             [t[0], t[2]] for t in target
         ]))
         target_four_billions = VGroup(*[t[1] for t in target])
-        target_four_billions.highlight(YELLOW)
+        target_four_billions.set_color(YELLOW)
         four_billions, to_fade = [
             VGroup(*[se[i] for se in self.subexpressions])
             for i in range(2)
@@ -242,7 +242,7 @@ class MainBreakdown(Scene):
         top_line.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         top_line.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         top_line.to_edge(UP)
-        four_billions.highlight(YELLOW)
+        four_billions.set_color(YELLOW)
         self.add(top_line)
 
         self.top_line = top_line
@@ -260,7 +260,7 @@ class MainBreakdown(Scene):
         )
         name = TextMobject("Graphics", "Processing", "Unit")
         for word in name:
-            word[0].highlight(BLUE)
+            word[0].set_color(BLUE)
         name.to_edge(LEFT)
         gpu.next_to(name, UP)
 
@@ -338,7 +338,7 @@ class MainBreakdown(Scene):
         laptop.to_edge(RIGHT)
         new_rate_words = TextMobject("4 Billion", "Hashes/sec")
         new_rate_words.move_to(rate_words)
-        new_rate_words[0].highlight(BLUE)
+        new_rate_words[0].set_color(BLUE)
 
         hps, h_line, target_laptop = self.get_fraction(
             0, TextMobject("H/s"), Laptop()
@@ -372,10 +372,10 @@ class MainBreakdown(Scene):
         self.wait()
         self.play(
             Transform(
-                rate_words[0], four_billion.copy().highlight(BLUE),
+                rate_words[0], four_billion.copy().set_color(BLUE),
                 remover = True,
             ),
-            four_billion.highlight, BLUE,
+            four_billion.set_color, BLUE,
             Transform(rate_words[1], hps),
         )
         self.play(
@@ -506,7 +506,7 @@ class MainBreakdown(Scene):
     def four_billion_galxies(self):
         self.create_four_billion_copies(4, self.get_galaxy())
         num, h_line, denom = fraction = self.get_fraction(
-            4, self.get_galaxy(), TextMobject("GGSC").highlight(BLUE)
+            4, self.get_galaxy(), TextMobject("GGSC").set_color(BLUE)
         )
 
         name = TextMobject(
@@ -514,7 +514,7 @@ class MainBreakdown(Scene):
             arg_separator = ""
         )
         for word in name:
-            word[0].highlight(BLUE)
+            word[0].set_color(BLUE)
         name.next_to(self.group_of_four_billion_things, UP)
 
         self.play(Write(name))
@@ -554,7 +554,7 @@ class MainBreakdown(Scene):
             self.play(
                 fb.scale, 1.3,
                 fb.next_to, words, LEFT, 
-                fb.highlight, BLUE,
+                fb.set_color, BLUE,
                 Write(words)
             )
             self.wait()
@@ -569,7 +569,7 @@ class MainBreakdown(Scene):
         )
         words.next_to(four_billion, DOWN, buff = MED_LARGE_BUFF)
         words.to_edge(RIGHT)
-        words[1].highlight(BLUE)
+        words[1].set_color(BLUE)
 
         self.play(
             Write(VGroup(*words[::2])),
@@ -582,7 +582,7 @@ class MainBreakdown(Scene):
 
     def create_four_billion_copies(self, index, mobject):
         four_billion = self.four_billions[index]
-        four_billion.highlight(BLUE)
+        four_billion.set_color(BLUE)
         four_billion.save_state()
 
         group = VGroup(*[
@@ -681,7 +681,7 @@ class MainBreakdown(Scene):
 class WriteTWoTo160(Scene):
     def construct(self):
         mob = TextMobject("$2^{160}$ ", "Hashes/sec")
-        mob[0].highlight(BLUE)
+        mob[0].set_color(BLUE)
         mob.scale(2)
         self.play(Write(mob))
         self.wait()
@@ -724,7 +724,7 @@ class StateOfBitcoin(TeacherStudentsScene):
         )
         gpu.shift(0.5*FRAME_X_RADIUS*RIGHT)
         gpu_name = TextMobject("GPU")
-        gpu_name.highlight(BLUE)
+        gpu_name.set_color(BLUE)
         gpu_name.next_to(gpu, UP)
         gpu_group = VGroup(gpu, gpu_name)
         gpu_group.to_edge(UP)
@@ -735,7 +735,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             "Application", "Specific\\\\", "Integrated", "Circuit"
         )
         for word in asic:
-            word[0].highlight(YELLOW)
+            word[0].set_color(YELLOW)
         asic.move_to(gpu)
         asic.to_edge(UP)
         asic.shift(LEFT)
@@ -749,7 +749,7 @@ class StateOfBitcoin(TeacherStudentsScene):
         circuit.next_to(asic, RIGHT)
         asic_rate = TextMobject("Trillion hashes/sec")
         asic_rate.next_to(asic, DOWN, MED_LARGE_BUFF)
-        asic_rate.highlight(GREEN)
+        asic_rate.set_color(GREEN)
 
         self.play(
             Write(title),
@@ -804,7 +804,7 @@ class QAndA(PiCreatureScene):
         )
         num_subscriber_words.to_edge(UP)
         num_subscriber_words.shift(RIGHT)
-        num_subscriber_words.highlight_by_tex("subscribers", RED)
+        num_subscriber_words.set_color_by_tex("subscribers", RED)
 
         q_and_a = TextMobject("Q\\&A")
         q_and_a.next_to(self.pi_creature.get_corner(UP+LEFT), UP)
@@ -815,7 +815,7 @@ class QAndA(PiCreatureScene):
         reddit = TextMobject("reddit.com/r/3blue1brown")
         reddit.next_to(num_subscriber_words, DOWN, LARGE_BUFF)
         twitter = TextMobject("@3blue1brown")
-        twitter.highlight(BLUE_C)
+        twitter.set_color(BLUE_C)
         twitter.next_to(reddit, DOWN)
 
         self.play(Write(num_subscriber_words))
@@ -883,7 +883,7 @@ class Thumbnail(Scene):
     def construct(self):
         num = TexMobject("2^{256}")
         num.scale_to_fit_height(2)
-        num.highlight(BLUE_C)
+        num.set_color(BLUE_C)
         num.set_stroke(BLUE_B, 3)
         num.shift(MED_SMALL_BUFF*UP)
         num.add_background_rectangle(opacity = 1)
@@ -906,7 +906,7 @@ class Thumbnail(Scene):
         secure = TextMobject("Secure?")
         secure.scale(4)
         secure.shift(FRAME_Y_RADIUS*DOWN/2)
-        secure.highlight(RED)
+        secure.set_color(RED)
         secure.set_stroke(RED_A, 3)
 
         lock = SVGMobject(

@@ -438,7 +438,7 @@ class ListenToAllPixels(Scene):
         vibration_copy.mobject.stroke_width = 1
         sub_vibrations = [
             Vibrate(
-                string.copy().shift((n-1)*UP).highlight(colors[n]),
+                string.copy().shift((n-1)*UP).set_color(colors[n]),
                 overtones = 1,
                 spatial_period = 6./(n+1),
                 temporal_period = 1./(n+1),
@@ -743,7 +743,7 @@ class Order1PseudoHilbertCurve(Scene):
         cluster.center()
         cluster.scale(0.7)
         cluster.to_edge(UP, buff = 0.3)
-        cluster.highlight(GREEN)
+        cluster.set_color(GREEN)
         grid1 = Grid(1, 1)
         grid2 = Grid(2, 2)
         curve = HilbertCurve(order = 1)
@@ -770,7 +770,7 @@ class Order2PseudoHilbertCurve(Scene):
     def construct(self):
         words = TextMobject("Order 2 Pseudo-Hilbert Curve")
         words.to_edge(UP, buff = 0.3)
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         grid2 = Grid(2, 2)
         grid4 = Grid(4, 4, stroke_width = 2)
         # order_1_curve = HilbertCurve(order = 1)
@@ -815,7 +815,7 @@ class Order2PseudoHilbertCurve(Scene):
 class Order3PseudoHilbertCurve(Scene):
     def construct(self):
         words = TextMobject("Order 3 Pseudo-Hilbert Curve")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         words.to_edge(UP)
         grid4 = Mobject(
             Grid(2, 2),
@@ -899,7 +899,7 @@ class UseOrder8(Scene):
         mathy, bubble = get_mathy_and_bubble()
         bubble.write("For a 256x256 pixel array...")
         words = TextMobject("Order 8 Pseudo-Hilbert Curve")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         words.to_edge(UP, buff = 0.3)
         curve = HilbertCurve(order = 8)
 
@@ -957,7 +957,7 @@ class RandyWithHeadphones(Scene):
         headphones.scale(0.1)
         headphones.stretch(2, 0)
         headphones.shift(1.2*UP+0.05*LEFT)
-        headphones.highlight(GREY)
+        headphones.set_color(GREY)
         randy = Randolph()
 
         self.add(randy, headphones)

@@ -50,9 +50,9 @@ class OpeningQuote(Scene):
         )
         words.to_edge(UP)    
         for mob in words.submobjects[27:27+11]:
-            mob.highlight(GREEN)
+            mob.set_color(GREEN)
         author = TextMobject("-Hermann Weyl")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
@@ -151,7 +151,7 @@ class DifferentConceptions(Scene):
             ).shift(
                 random.uniform(0, 4)*RIGHT + \
                 random.uniform(-1, 2)*UP
-            ).highlight(random_color())
+            ).set_color(random_color())
             for x in range(5)
         ])
 
@@ -238,13 +238,13 @@ class DifferentConceptions(Scene):
         house.to_edge(LEFT).shift(UP)
         square_footage_words.next_to(house, RIGHT)
         square_footage_words.shift(0.5*UP)
-        square_footage_words.highlight(RED)
+        square_footage_words.set_color(RED)
         price_words.next_to(square_footage_words, DOWN, aligned_edge = LEFT)
-        price_words.highlight(GREEN)
+        price_words.set_color(GREEN)
         square_footage.next_to(square_footage_words)
-        square_footage.highlight(RED)
+        square_footage.set_color(RED)
         price.next_to(price_words)
-        price.highlight(GREEN)
+        price.set_color(GREEN)
 
         vector = Matrix([square_footage.copy(), price.copy()])
         vector.next_to(house, RIGHT).shift(0.25*UP)
@@ -252,8 +252,8 @@ class DifferentConceptions(Scene):
         not_equals = TexMobject("\\ne")
         not_equals.next_to(vector)
         alt_vector = Matrix([
-            TextMobject("300{,}000\\text{ ft}^2").highlight(RED),
-            TextMobject("\\$2{,}600").highlight(GREEN)
+            TextMobject("300{,}000\\text{ ft}^2").set_color(RED),
+            TextMobject("\\$2{,}600").set_color(GREEN)
         ])
         alt_vector.next_to(not_equals)
 
@@ -336,15 +336,15 @@ class DifferentConceptions(Scene):
         syms.center().shift(2*UP)
 
         statement = TextMobject("We'll ignore him \\\\ for now")
-        statement.highlight(PINK)
+        statement.set_color(PINK)
         statement.scale_to_fit_width(arrays.get_width())
         statement.next_to(arrays, DOWN, buff = 1.5)
         circle = Circle()
         circle.shift(syms.get_bottom())
 
-        VMobject(v_arrow, v_array, v_sym).highlight(v_color)
-        VMobject(w_arrow, w_array, w_sym).highlight(w_color)
-        VMobject(sum_arrow, sum_array).highlight(sum_color)
+        VMobject(v_arrow, v_array, v_sym).set_color(v_color)
+        VMobject(w_arrow, w_array, w_sym).set_color(w_color)
+        VMobject(sum_arrow, sum_array).set_color(sum_color)
 
         self.play(
             Write(syms), Write(arrays),
@@ -366,8 +366,8 @@ class DifferentConceptions(Scene):
 
     def add_scaling(self, arrows, syms, arrays):
         s_arrows = VMobject(
-            TexMobject("2"), Vector([1, 1]).highlight(YELLOW), 
-            TexMobject("="), Vector([2, 2]).highlight(WHITE)
+            TexMobject("2"), Vector([1, 1]).set_color(YELLOW), 
+            TexMobject("="), Vector([2, 2]).set_color(WHITE)
         )
         s_arrows.arrange_submobjects(RIGHT)
         s_arrows.scale(0.75)
@@ -375,7 +375,7 @@ class DifferentConceptions(Scene):
 
         s_arrays = VMobject(
             TexMobject("2"), 
-            matrix_to_mobject([3, -5]).highlight(YELLOW),
+            matrix_to_mobject([3, -5]).set_color(YELLOW),
             TextMobject("="),
             matrix_to_mobject(["2(3)", "2(-5)"])
         )
@@ -384,7 +384,7 @@ class DifferentConceptions(Scene):
         s_arrays.next_to(arrays, DOWN)
 
         s_syms = TexMobject(["2", "\\vec{\\textbf{v}}"])
-        s_syms.split()[-1].highlight(YELLOW)
+        s_syms.split()[-1].set_color(YELLOW)
         s_syms.next_to(syms, DOWN)
 
         self.play(
@@ -403,7 +403,7 @@ class DifferentConceptions(Scene):
 
     def restore_creatures(self, creatures):
         self.play(*[
-            ApplyFunction(lambda m : m.change_mode("plain").highlight(m.color), pi)
+            ApplyFunction(lambda m : m.change_mode("plain").set_color(m.color), pi)
             for pi in creatures
         ] + [
             ApplyMethod(pi.title.set_fill, WHITE, 1.0)
@@ -472,11 +472,11 @@ class HowIWantYouToThinkAboutVectors(Scene):
         ]))
         colors = [GREEN_B, MAROON_B, PINK]
         for v, color in zip(other_vectors.split(), colors):
-            v.highlight(color)
+            v.set_color(color)
         shift_val = 4*RIGHT+DOWN
 
         dot = Dot(radius = 0.1)
-        dot.highlight(RED)
+        dot.set_color(RED)
         tail_word = TextMobject("Tail")
         tail_word.shift(0.5*DOWN+2.5*LEFT)
         line = Line(tail_word, dot)
@@ -558,14 +558,14 @@ class CoordinateSystemWalkthrough(VectorScene):
         x_tick_marks = number_line.get_tick_marks()
         y_tick_marks = x_tick_marks.copy().rotate(np.pi/2)
         tick_marks = VMobject(x_tick_marks, y_tick_marks)
-        tick_marks.highlight(WHITE)
+        tick_marks.set_color(WHITE)
         plane_lines = filter(
             lambda m : isinstance(m, Line),
             plane.submobject_family()
         )
         origin_words = TextMobject("Origin")
         origin_words.shift(2*UP+2*LEFT)
-        dot = Dot(radius = 0.1).highlight(RED)
+        dot = Dot(radius = 0.1).set_color(RED)
         line = Line(origin_words.get_bottom(), dot.get_corner(UP+LEFT))
 
         unit_brace = Brace(Line(RIGHT, 2*RIGHT))
@@ -615,15 +615,15 @@ class CoordinateSystemWalkthrough(VectorScene):
         vector = Vector([-2, 3])
         x_line = Line(ORIGIN, -2*RIGHT)
         y_line = Line(-2*RIGHT, -2*RIGHT+3*UP)
-        x_line.highlight(X_COLOR)
-        y_line.highlight(Y_COLOR)
+        x_line.set_color(X_COLOR)
+        y_line.set_color(Y_COLOR)
 
         array = vector_coordinate_label(vector)
         x_label, y_label = array.get_mob_matrix().flatten()
         x_label_copy = x_label.copy()
-        x_label_copy.highlight(X_COLOR)
+        x_label_copy.set_color(X_COLOR)
         y_label_copy = y_label.copy()
-        y_label_copy.highlight(Y_COLOR)
+        y_label_copy.set_color(Y_COLOR)
 
         point = Dot(4*LEFT+2*UP)
         point_word = TextMobject("(-4, 2) as \\\\ a point")
@@ -643,7 +643,7 @@ class CoordinateSystemWalkthrough(VectorScene):
         self.play(FadeIn(point))
         self.wait()
         self.play(ApplyFunction(
-            lambda m : m.scale_in_place(1.25).highlight(YELLOW),
+            lambda m : m.scale_in_place(1.25).set_color(YELLOW),
             array.get_brackets(),
             rate_func = there_and_back
         ))
@@ -659,7 +659,7 @@ class LabeledThreeDVector(Scene):
 
 class WriteZ(Scene):
     def construct(self):
-        z = TexMobject("z").highlight(Z_COLOR)
+        z = TexMobject("z").set_color(Z_COLOR)
         z.scale_to_fit_height(4)
         self.play(Write(z, run_time = 2))
         self.wait(3)
@@ -670,9 +670,9 @@ class Write3DVector(Scene):
         array = Matrix([2, 1, 3]).scale(2)
         x, y, z = array.get_mob_matrix().flatten()
         brackets = array.get_brackets()
-        x.highlight(X_COLOR)
-        y.highlight(Y_COLOR)
-        z.highlight(Z_COLOR)
+        x.set_color(X_COLOR)
+        y.set_color(Y_COLOR)
+        z.set_color(Z_COLOR)
 
         self.add(brackets)
         for mob in x, y, z:
@@ -891,9 +891,9 @@ class VectorAdditionNumerically(VectorScene):
         ])
         for i, (var, starter) in enumerate(zip(variables, starters)):
             if i%2 == 0:
-                var.highlight(X_COLOR)
+                var.set_color(X_COLOR)
             else:
-                var.highlight(Y_COLOR)
+                var.set_color(Y_COLOR)
             var.scale(VECTOR_LABEL_SCALE_FACTOR)
             var.move_to(starter)
         self.play(
@@ -917,7 +917,7 @@ class VectorAdditionNumerically(VectorScene):
 class MultiplicationByANumberIntro(Scene):
     def construct(self):
         v = TexMobject("\\vec{\\textbf{v}}")
-        v.highlight(YELLOW)
+        v.set_color(YELLOW)
         nums = map(TexMobject, ["2", "\\dfrac{1}{3}", "-1.8"])
         for mob in [v] + nums:
             mob.scale(1.5)
@@ -979,8 +979,8 @@ class ShowScalarMultiplication(VectorScene):
         self.play(Write(factor_mob, run_time = 1))
         self.wait()
         self.play(
-            ApplyMethod(v.copy().highlight, DARK_GREY),
-            ApplyMethod(v_label.copy().highlight, DARK_GREY),
+            ApplyMethod(v.copy().set_color, DARK_GREY),
+            ApplyMethod(v_label.copy().set_color, DARK_GREY),
             Transform(factor_mob, factor_in_label),
             Transform(v.copy(), scaled_vector),
             Transform(v_label.copy(), label_remainder),
@@ -1048,8 +1048,8 @@ class ScalingNumerically(VectorScene):
         two_v_elems = two_v_coords.get_mob_matrix().flatten()
         x_sym, y_sym = map(TexMobject, ["x", "y"])
         two_x_sym, two_y_sym = map(TexMobject, ["2x", "2y"])
-        VMobject(x_sym, two_x_sym).highlight(X_COLOR)
-        VMobject(y_sym, two_y_sym).highlight(Y_COLOR)
+        VMobject(x_sym, two_x_sym).set_color(X_COLOR)
+        VMobject(y_sym, two_y_sym).set_color(Y_COLOR)
         syms = [x_sym, y_sym, two_x_sym, two_y_sym]
         VMobject(*syms).scale(VECTOR_LABEL_SCALE_FACTOR)
         for sym, num in zip(syms, [x, y] + list(two_v_elems)):
@@ -1095,7 +1095,7 @@ class FollowingVideos(UpcomingSeriesOfVidoes):
 
         UpcomingSeriesOfVidoes.construct(self)
         last_video = self.mobjects[-1]
-        self.play(ApplyMethod(last_video.highlight, YELLOW))
+        self.play(ApplyMethod(last_video.set_color, YELLOW))
         self.wait()
         everything = VMobject(*self.mobjects)
         everything.remove(last_video)
@@ -1206,7 +1206,7 @@ class DataAnalyst(Scene):
         self.wait()
         self.play(
             ApplyMethod(plane.fade, 0.7),
-            ApplyMethod(vects.highlight, DARK_GREY),
+            ApplyMethod(vects.set_color, DARK_GREY),
             ShowCreation(ellipse)
         )
         self.wait(3)

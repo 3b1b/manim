@@ -78,12 +78,13 @@ class VMobject(Mobject):
             family = family
         )
 
-    def highlight(self, color, family = True):
+    def set_color(self, color, family = True):
         self.set_style_data(
             stroke_color = color, 
             fill_color = color,
             family = family
         )
+        self.color = color
         return self
 
     def match_style(self, vmobject):
@@ -150,7 +151,7 @@ class VMobject(Mobject):
 
     def color_using_background_image(self, background_image_file):
         self.background_image_file = background_image_file
-        self.highlight(WHITE)
+        self.set_color(WHITE)
         for submob in self.submobjects:
             submob.color_using_background_image(background_image_file)
         return self

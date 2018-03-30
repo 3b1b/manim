@@ -284,7 +284,7 @@ class TryManyPaths(PathSlidingScene):
             Line(3*UP+LEFT, LEFT),
             Arc(angle = np.pi/2, start_angle = np.pi),
             Line(DOWN, DOWN+3*RIGHT)
-        ).ingest_submobjects().highlight(GREEN)
+        ).ingest_submobjects().set_color(GREEN)
         paths = [
             Arc(
                 angle = np.pi/2, 
@@ -409,11 +409,11 @@ class MinimalPotentialEnergy(Scene):
             density = 3*DEFAULT_POINT_DENSITY_1D
         )
         graph.stretch_to_fit_width(2*horiz_radius)
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
         min_point = Dot(graph.get_bottom())
         nature_finds = TextMobject("Nature finds this point")
         nature_finds.scale(0.5)
-        nature_finds.highlight(GREEN)
+        nature_finds.set_color(GREEN)
         nature_finds.shift(2*RIGHT+3*UP)
         arrow = Arrow(
             nature_finds.get_bottom(), min_point, 
@@ -438,7 +438,7 @@ class MinimalPotentialEnergy(Scene):
         for words in last_side_words:
             words.next_to(side_words_start, DOWN)
         for words in top_words[1], last_side_words[1]:
-            words.highlight(RED)
+            words.set_color(RED)
 
         self.add(
             axes, top_words[0], side_words_start, 
@@ -650,7 +650,7 @@ class DefineCurveWithKnob(PathSlidingScene):
         self.path = self.get_path()
         self.path.shift(1.5*DOWN)
         self.path.show()
-        self.path.highlight(BLACK)        
+        self.path.set_color(BLACK)        
 
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)
@@ -673,7 +673,7 @@ class DefineCurveWithKnob(PathSlidingScene):
         d_angle = angle-self.last_angle
         self.knob.rotate_in_place(d_angle)
         self.last_angle = angle
-        self.path.highlight(BLUE_D, lambda p : p[0] < point[0])
+        self.path.set_color(BLUE_D, lambda p : p[0] < point[0])
 
 
 

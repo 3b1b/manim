@@ -52,14 +52,14 @@ class LogoGeneration(Scene):
             self.interpolation_factor
         )
         for mob, color in [(iris, self.sphere_brown), (circle, self.circle_brown)]:
-            mob.highlight(color, lambda (x, y, z) : x < 0 and y > 0)
-            mob.highlight(
+            mob.set_color(color, lambda (x, y, z) : x < 0 and y > 0)
+            mob.set_color(
                 "black", 
                 lambda point: np.linalg.norm(point) < \
                               self.inner_radius_ratio*self.radius
             )
         self.name_mob = TextMobject("3Blue1Brown").center()
-        self.name_mob.highlight("grey")
+        self.name_mob.set_color("grey")
         self.name_mob.shift(2*DOWN)
 
         self.play(Transform(

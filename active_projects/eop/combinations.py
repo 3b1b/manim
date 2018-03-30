@@ -77,7 +77,7 @@ class Male(TexMobject):
         digest_config(self, kwargs)
         TexMobject.__init__(self, self.tex, **kwargs)
         self.scale_to_fit_height(self.height)
-        self.highlight(self.color)
+        self.set_color(self.color)
 
 class Female(Male):
     CONFIG = {
@@ -183,7 +183,7 @@ class ExperienceProblemSolver(PiCreatureScene):
         for row in rows:
             for num in row:
                 n = float(num.get_tex_string())
-                num.highlight(interpolate_color(
+                num.set_color(interpolate_color(
                     BLUE, YELLOW, n/10.0
                 ))
 
@@ -280,8 +280,8 @@ class InitialFiveChooseThreeExample(Scene):
             number = TexMobject(str(choose(n, k)))
             equation = VGroup(binomial, TexMobject("="), number)
             equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-            equation.highlight(YELLOW)
-            equation[1].highlight(WHITE)
+            equation.set_color(YELLOW)
+            equation[1].set_color(WHITE)
             binomial_equations.add(equation)
 
         for stack, eq in zip(stacks, binomial_equations):
@@ -338,7 +338,7 @@ class InitialFiveChooseThreeExample(Scene):
             line.ones = ones
             self.play(LaggedStart(
                 ApplyMethod, ones,
-                lambda mob : (mob.highlight, YELLOW),
+                lambda mob : (mob.set_color, YELLOW),
                 rate_func = there_and_back,
                 lag_ratio = 0.7,
                 run_time = 1,
@@ -352,7 +352,7 @@ class InitialFiveChooseThreeExample(Scene):
             brace = Brace(VGroup(*stack[:i+1]), LEFT)
             number.next_to(brace, LEFT)
             line.save_state()
-            line.highlight(YELLOW)
+            line.set_color(YELLOW)
             self.add(number, brace)
             self.wait(0.25)
             self.remove(number, brace)
@@ -390,7 +390,7 @@ class InitialFiveChooseThreeExample(Scene):
     def walk_though_notation(self):
         equation = self.binomial_equations[3]
         rect = SurroundingRectangle(equation[0])
-        rect.highlight(WHITE)
+        rect.set_color(WHITE)
         words = TextMobject("``5 choose 3''")
         words.next_to(rect, UP)
 
@@ -423,7 +423,7 @@ class InitialFiveChooseThreeExample(Scene):
                 ones = line.ones
                 ones.save_state()
                 self.play(
-                    ones.highlight, YELLOW,
+                    ones.set_color, YELLOW,
                     last_ones.restore,
                     morty.look_at, ones,
                     run_time = 0.25
@@ -434,10 +434,10 @@ class InitialFiveChooseThreeExample(Scene):
     ####
 
     def get_obj1(self):
-        return TexMobject("1").highlight(self.one_color)
+        return TexMobject("1").set_color(self.one_color)
 
     def get_obj2(self):
-        return TexMobject("0").highlight(self.zero_color)
+        return TexMobject("0").set_color(self.zero_color)
 
 class SixChooseThreeExample(InitialFiveChooseThreeExample):
     CONFIG = {
@@ -469,8 +469,8 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             "{%d \\choose %d}"%(self.n, self.k),
             "=", str(choose(self.n, self.k))
         )
-        equation.highlight(YELLOW)
-        equation.highlight_by_tex("=", WHITE)
+        equation.set_color(YELLOW)
+        equation.set_color_by_tex("=", WHITE)
         equation.next_to(stack, RIGHT, LARGE_BUFF)
 
         self.add(equation)
@@ -492,15 +492,15 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
 
         brace = Brace(line, UP)
         n_options = TextMobject(str(self.n), "options")
-        n_options.highlight_by_tex(str(self.n), YELLOW)
+        n_options.set_color_by_tex(str(self.n), YELLOW)
         n_options.next_to(brace, UP)
         arrows = VGroup(*[
             Vector(0.5*UP).next_to(one, DOWN, SMALL_BUFF)
             for one in line.ones
         ])
-        arrows.highlight(self.one_color)
+        arrows.set_color(self.one_color)
         choose_k = TextMobject("Choose", str(self.k), "of them")
-        choose_k.highlight_by_tex(str(self.k), YELLOW)
+        choose_k.set_color_by_tex(str(self.k), YELLOW)
         choose_k.next_to(arrows, DOWN)
 
         self.play(
@@ -525,7 +525,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             num = TexMobject(str(i+1))
             num.next_to(brace, LEFT)
             line.ones.save_state()
-            line.ones.highlight(YELLOW)
+            line.ones.set_color(YELLOW)
             line.ones.set_stroke(RED, 1)
             self.add(brace, num)
             self.wait(0.15)
@@ -540,7 +540,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         lhs.next_to(num, LEFT)
         coming_soon = TextMobject("Coming soon...")
         coming_soon.next_to(lhs, UP)
-        coming_soon.highlight(MAROON_B)
+        coming_soon.set_color(MAROON_B)
 
         self.play(*map(FadeIn, [lhs, coming_soon]))
         self.wait()
@@ -564,7 +564,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
                 ones = line.ones
                 ones.save_state()
                 self.play(
-                    ones.highlight, YELLOW,
+                    ones.set_color, YELLOW,
                     ones.set_stroke, RED, 1,
                     last_ones.restore,
                     run_time = 0.2
@@ -672,14 +672,14 @@ class SixChooseThreeInOtherContext(Scene):
 #             number = TexMobject(str(choose(n, k)))
 #             equation = VGroup(binomial, TexMobject("="), number)
 #             equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-#             equation.highlight(YELLOW)
-#             equation[1].highlight(WHITE)
+#             equation.set_color(YELLOW)
+#             equation[1].set_color(WHITE)
 #             binomial_equations.add(equation)
 #         new_words = TextMobject("``Binomial coefficients''")
 
 #         stacks = get_stacks(
-#             TexMobject("x").highlight(BLUE),
-#             TexMobject("y").highlight(RED),
+#             TexMobject("x").set_color(BLUE),
+#             TexMobject("y").set_color(RED),
 #             n
 #         )
 #         stacks.to_edge(DOWN, buff = LARGE_BUFF)
@@ -717,10 +717,10 @@ class SixChooseThreeInOtherContext(Scene):
 #         line.scale(FRAME_X_RADIUS)
 #         line.next_to(top_stacks, DOWN)
 
-#         x = TexMobject("x").highlight(BLUE)
-#         y = TexMobject("y").highlight(RED)
+#         x = TexMobject("x").set_color(BLUE)
+#         y = TexMobject("y").set_color(RED)
 #         add_x, add_y = [
-#             TextMobject("Prepend", "$%s$"%s).highlight_by_tex(s, color)
+#             TextMobject("Prepend", "$%s$"%s).set_color_by_tex(s, color)
 #             for s, color in ("x", BLUE), ("y", RED)
 #         ]
 #         add_x.to_corner(UP+LEFT)
@@ -798,8 +798,8 @@ class SixChooseThreeInOtherContext(Scene):
 #                 str(choose(n+1, k))
 #             )
 #             term[0].scale(0.85, about_point = term[0].get_right())
-#             term[0].highlight(YELLOW)
-#             term[2].highlight(YELLOW)
+#             term[0].set_color(YELLOW)
+#             term[2].set_color(YELLOW)
 #             term.scale(0.85)
 #             term.next_to(top_stack.target, UP)
 
@@ -830,8 +830,8 @@ class SixChooseThreeInOtherContext(Scene):
 
 #     def add_stack(self):
 #         n, k = self.n, self.k
-#         x = TexMobject("x").highlight(BLUE)
-#         y = TexMobject("y").highlight(RED)
+#         x = TexMobject("x").set_color(BLUE)
+#         y = TexMobject("y").set_color(RED)
 #         stack = get_stack(x, y, n, k)
 #         stack.scale_to_fit_height(self.stack_height)
 #         stack.shift(FRAME_X_RADIUS*LEFT/2)
@@ -884,7 +884,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         choose_words = TextMobject("Choose %d"%k)
 #         choose_words.scale(0.9)
 #         choose_words.next_to(letter_set, DOWN)
-#         choose_words.highlight(YELLOW)
+#         choose_words.set_color(YELLOW)
 
 #         self.revert_to_original_skipping_status()
 #         self.play(Write(letter_set, run_time = 1))
@@ -894,9 +894,9 @@ class SixChooseThreeInOtherContext(Scene):
 #         )
 #         self.wait()
 #         for subset, subset_mob in zip(letter_subsets, subset_mobs):
-#             VGroup(subset_mob, *subset).highlight(BLUE)
+#             VGroup(subset_mob, *subset).set_color(BLUE)
 #             self.wait(0.5)
-#             VGroup(*subset).highlight(WHITE)
+#             VGroup(*subset).set_color(WHITE)
 #         self.wait()
 
 #         self.set_variables_as_attrs(
@@ -960,9 +960,9 @@ class SixChooseThreeInOtherContext(Scene):
 #             "{n \\choose k} = {n! \\over (n-k)!k!}", 
 #         )
 #         for i in 1, 5, 9:
-#             formula[i].highlight(BLUE)
+#             formula[i].set_color(BLUE)
 #         for i in 2, 11, 14:
-#             formula[i].highlight(YELLOW)
+#             formula[i].set_color(YELLOW)
 
 #         self.student_thinks(formula, student_index = 1)
 #         self.play(self.teacher.change, "sassy")
@@ -1017,7 +1017,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         prob_words = VGroup(*[
             TextMobject(
                 "Probability of", str(n), "women?"
-            ).highlight_by_tex(str(n), YELLOW)
+            ).set_color_by_tex(str(n), YELLOW)
             for n in range(self.n_people_per_lineup+1)
         ])
         prob_words.arrange_submobjects(DOWN)
@@ -1079,7 +1079,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         )
         n_possibilities.next_to(self.title, DOWN)
         twos = VGroup(*n_possibilities[-2::-1])
-        twos.highlight(YELLOW)
+        twos.set_color(YELLOW)
         two_anims = [
             ReplacementTransform(
                 VectorizedPoint(twos[0].get_center()), 
@@ -1124,7 +1124,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
 
         eq_32 = TexMobject("=", "32")
         eq_32.move_to(twos.get_right())
-        eq_32.highlight_by_tex("32", YELLOW)
+        eq_32.set_color_by_tex("32", YELLOW)
         self.play(
             n_possibilities[-1].next_to, eq_32, RIGHT,
             twos.next_to, eq_32, LEFT,
@@ -1183,8 +1183,8 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
             )
             equation[0].scale_in_place(0.6)
             equation.arrange_submobjects(RIGHT, SMALL_BUFF)
-            equation.highlight(YELLOW)
-            equation.highlight_by_tex("=", WHITE)
+            equation.set_color(YELLOW)
+            equation.set_color_by_tex("=", WHITE)
             equation.next_to(stack, UP)
             equations.add(equation)
 
@@ -1243,7 +1243,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
                 "=", "{\\quad \\over", "32}",
                 "\\approx", "%0.3f"%(choose(n, k)/32.0)
             )
-            prob_words.highlight_by_tex_to_color_map({
+            prob_words.set_color_by_tex_to_color_map({
                 "female" : MAROON_B,
                 "32" : YELLOW,
             })
@@ -1270,7 +1270,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
             Circle().replace(num, dim_to_match = 1).scale_in_place(1.5)
             for num in numbers
         ])
-        circles.highlight(WHITE)
+        circles.set_color(WHITE)
 
         self.play(LaggedStart(FadeIn, question))
         self.play(LaggedStart(ShowCreationThenDestruction, circles))
@@ -1343,7 +1343,7 @@ class TeacherHoldingSomething(TeacherStudentsScene):
 #     def construct(self):
 #         title = TexMobject("2^6 =", "64", "\\text{ Possibilities}")
 #         title.to_edge(UP, buff = MED_SMALL_BUFF)
-#         title.highlight_by_tex("64", YELLOW)
+#         title.set_color_by_tex("64", YELLOW)
 #         man, woman = Male(), Female()
 #         stacks = get_stacks(man, woman, 6, vertical_buff = SMALL_BUFF)
 #         stacks.scale_to_fit_height(6.25)
@@ -1373,7 +1373,7 @@ class TeacherHoldingSomething(TeacherStudentsScene):
 #         self.wait()
 #         self.play(LaggedStart(
 #             ApplyMethod, women_groups,
-#             lambda m : (m.highlight, PINK),
+#             lambda m : (m.set_color, PINK),
 #             lag_ratio = 0.1,
 #             rate_func = wiggle,
 #             run_time = 6,
@@ -1385,7 +1385,7 @@ class TeacherHoldingSomething(TeacherStudentsScene):
 #         question = TextMobject(
 #             "How many groups \\\\ of 7 with 3 ", "$\\female$", "?"
 #         )
-#         question.highlight_by_tex("female", MAROON_B)
+#         question.set_color_by_tex("female", MAROON_B)
 #         question.shift(1.5*UP)
 
 #         self.add(question)
@@ -1464,7 +1464,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
 
         eq_16 = TexMobject("=", "16")
         eq_16.move_to(twos.get_right())
-        eq_16.highlight_by_tex("16", YELLOW)
+        eq_16.set_color_by_tex("16", YELLOW)
         self.play(
             n_possibilities[-1].next_to, eq_16, RIGHT,
             twos.next_to, eq_16, LEFT,
@@ -1512,7 +1512,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
             self.play(ShowCreation(rect))
             for n, lineup in enumerate(stack):
                 lineup_copy = lineup.copy()
-                lineup_copy.highlight(YELLOW)
+                lineup_copy.set_color(YELLOW)
                 number = TexMobject(str(n+1))
                 number.next_to(stack, UP)
                 self.add(lineup_copy, number)
@@ -1578,9 +1578,9 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
 
         #Fill extra slot
         add_man = TextMobject("Add", "$\\male$")
-        add_man.highlight_by_tex("male", BLUE)
+        add_man.set_color_by_tex("male", BLUE)
         add_woman = TextMobject("Add", "$\\female$")
-        add_woman.highlight_by_tex("female", MAROON_B)
+        add_woman.set_color_by_tex("female", MAROON_B)
 
         add_man.next_to(ORIGIN, DOWN).to_edge(LEFT)
         add_woman.to_corner(UP+LEFT)
@@ -1654,7 +1654,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
 
         new_numbers.add_to_back(bottom_stacks.numbers[0].copy())
         new_numbers.add(top_stacks.numbers[-1].copy())
-        new_numbers.highlight(PINK)
+        new_numbers.set_color(PINK)
         self.play(Write(new_numbers, run_time = 3))
         self.wait()
 
@@ -1912,7 +1912,7 @@ class IntroducePascalsTriangle(Scene):
                 line.next_to(num, LEFT)
             else:
                 line.next_to(num, DOWN, MED_LARGE_BUFF)
-            self.highlight_num(num)
+            self.set_color_num(num)
             self.add(line)
             if n < self.max_n:
                 self.wait(0.25)
@@ -1924,12 +1924,12 @@ class IntroducePascalsTriangle(Scene):
             num = rows[self.max_n][k]
             line = get_stack(Female(), Male(), self.max_n, k)[0]
             line.next_to(num, DOWN, MED_LARGE_BUFF)
-            self.highlight_num(num)
+            self.set_color_num(num)
             self.add(line)
             self.wait(0.5)
             self.dehighlight_num(num)
             self.remove(line)
-        num.highlight(YELLOW)
+        num.set_color(YELLOW)
         num.scale_in_place(1.2)
         self.add(line)
         self.wait()
@@ -1965,7 +1965,7 @@ class IntroducePascalsTriangle(Scene):
             "P(4", "\\female", "\\text{ out of }", "9", ")", "="
         )
         expr.move_to(num.get_left())
-        expr.highlight_by_tex("female", MAROON_B)
+        expr.set_color_by_tex("female", MAROON_B)
         nine_choose_four_term = self.nine_choose_four_term.copy()
         nine_choose_four_term.generate_target()
         nine_choose_four_term.target.scale(1./1.2)
@@ -1998,7 +1998,7 @@ class IntroducePascalsTriangle(Scene):
         show_random_lines(6)
         self.play(
             self.nine_choose_four_term.scale_in_place, 1./1.2,
-            self.nine_choose_four_term.highlight, WHITE,
+            self.nine_choose_four_term.set_color, WHITE,
             *map(FadeOut, [
                 expr, nine_choose_four_term,
                 over_512, eq_result, self.curr_line
@@ -2045,12 +2045,12 @@ class IntroducePascalsTriangle(Scene):
 
     ###
 
-    def highlight_num(self, num):
-        num.highlight(YELLOW)
+    def set_color_num(self, num):
+        num.set_color(YELLOW)
         num.scale_in_place(1.2)
 
     def dehighlight_num(self, num):
-        num.highlight(WHITE)
+        num.set_color(WHITE)
         num.scale_in_place(1.0/1.2)
 
 class StacksApproachBellCurve(Scene):
@@ -2315,7 +2315,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         self.wait()
         self.play(
             ReplacementTransform(line_rect, full_line_rect),
-            triplet.highlight, YELLOW
+            triplet.set_color, YELLOW
         )
         self.wait(2)
         self.play(
@@ -2336,7 +2336,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             aligned_edge = UP,
         )
         updownarrow = TexMobject("\\Updownarrow")
-        updownarrow.highlight(YELLOW)
+        updownarrow.set_color(YELLOW)
         updownarrow.next_to(triplet, DOWN, SMALL_BUFF)
         permutations = VGroup()
         for indices in it.permutations(range(len(triplet))):
@@ -2350,7 +2350,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
 
         words = TextMobject("``Order doesn't matter''")
         words.scale(0.75)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         words.next_to(permutations, DOWN)
 
         self.play(ReplacementTransform(
@@ -2392,7 +2392,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
 
         q_marks = TextMobject("???")
         q_marks.next_to(odm_words, DOWN)
-        q_marks.highlight(YELLOW)
+        q_marks.set_color(YELLOW)
 
         self.play(
             LaggedStart(
@@ -2418,12 +2418,12 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
 
         line.sort_submobjects(lambda p : p[0])
         words = VGroup(*map(TextMobject, ["First", "Second", "Fifth"]))
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         words.scale(0.75)
         word_arrow_groups = VGroup()
         for i, word in zip([0, 1, 4], words):
             arrow = Vector(0.5*DOWN)
-            arrow.highlight(YELLOW)
+            arrow.set_color(YELLOW)
             arrow.next_to(line[i], UP, SMALL_BUFF)
             word.next_to(arrow, UP, SMALL_BUFF)
             word_arrow_groups.add(VGroup(word, arrow))
@@ -2450,7 +2450,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
                 lambda m : "1" in m.get_tex_string(),
                 line
             )).copy()
-            ones.highlight(YELLOW)
+            ones.set_color(YELLOW)
             all_ones.add(ones)
 
         self.play(
@@ -2538,11 +2538,11 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
             "Choose 3 people randomly.\\\\",
             "Probability", "Ali", "is one of them?"
         )
-        words.highlight_by_tex("Ali", self.people[0].get_color())
+        words.set_color_by_tex("Ali", self.people[0].get_color())
         words.next_to(pi_name_groups, DOWN, 2*LARGE_BUFF)
 
-        checkmark = TexMobject("\\checkmark").highlight(GREEN)
-        cross = TexMobject("\\times").highlight(RED)
+        checkmark = TexMobject("\\checkmark").set_color(GREEN)
+        cross = TexMobject("\\times").set_color(RED)
         for mob in checkmark, cross:
             mob.scale(2)
             mob.next_to(self.braces, DOWN, aligned_edge = LEFT)
@@ -2599,7 +2599,7 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
             "{5 \\choose 3}", "=", "10",
             buff = MED_LARGE_BUFF
         )
-        total_count.highlight(BLUE)
+        total_count.set_color(BLUE)
         self.play(
             GrowFromCenter(brace),
             Write(total_count),
@@ -2631,7 +2631,7 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
 
         self.play(
             ShowCreation(rect),
-            alis.highlight, YELLOW
+            alis.set_color, YELLOW
         )
         for pair in it.combinations(names[1:], 2):
             arrows = VGroup()
@@ -2658,7 +2658,7 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
 
         for x in range(20):
             name_rect = SurroundingRectangle(random.choice(name_triplets))
-            name_rect.highlight(BLUE)
+            name_rect.set_color(BLUE)
             name_rect.set_fill(BLUE, opacity = 0.25)
             self.play(Animation(name_rect, run_time = 0))
             self.wait(0.25)
@@ -3089,8 +3089,8 @@ class NineChooseFourExample(HowToComputeNChooseK):
     def show_n_choose_k_pattern(self):
         n, k = self.n, self.k
         stack = get_stack(
-            TexMobject("1").highlight(PINK),
-            TexMobject("0").highlight(BLUE),
+            TexMobject("1").set_color(PINK),
+            TexMobject("0").set_color(BLUE),
             n, k
         )
         l = len(stack)
@@ -3184,7 +3184,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
             mob.cross = Cross(mob)
             mob.cross.set_stroke("red", 5)
         two = TexMobject("2")
-        two.highlight(eight.get_fill_color())
+        two.set_color(eight.get_fill_color())
         two.next_to(eight, UP)
         rhs.next_to(fraction, RIGHT)
 
@@ -3251,7 +3251,7 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
         #Go through numerators
         for num, name in zip(top_numbers[::2], chosen_names):
             rect = SurroundingRectangle(num)
-            name.target.highlight(num.get_color())
+            name.target.set_color(num.get_color())
             self.play(
                 ShowCreationThenDestruction(rect),
                 MoveToTarget(name),
@@ -3297,7 +3297,7 @@ class ABCNotBCA(Scene):
     def construct(self):
         words = TextMobject("If order mattered:")
         equation = TextMobject("(A, B, C) $\\ne$ (B, C, A)")
-        equation.highlight(YELLOW)
+        equation.set_color(YELLOW)
         equation.next_to(words, DOWN)
         group = VGroup(words, equation)
         group.scale_to_fit_width(FRAME_WIDTH - 1)
@@ -3317,9 +3317,9 @@ class ShowFormula(Scene):
             "k \\cdot (k-1) \\cdots 2 \\cdot 1}"
         )
         for i, j in (0, 1), (2, 0), (2, 3), (2, 11):
-            general_formula[i][j].highlight(BLUE)
+            general_formula[i][j].set_color(BLUE)
         for i, j in (0, 2), (2, 13), (4, 0), (4, 3):
-            general_formula[i][j].highlight(YELLOW)
+            general_formula[i][j].set_color(YELLOW)
         formulas = VGroup(specific_formula, general_formula)
         formulas.arrange_submobjects(DOWN, buff = 2)
         formulas.to_edge(UP)
@@ -3355,8 +3355,8 @@ class SumsToPowerOf2(Scene):
 
     def setup_stacks(self):
         stacks = get_stacks(
-            TexMobject("1").highlight(PINK),
-            TexMobject("0").highlight(BLUE),
+            TexMobject("1").set_color(PINK),
+            TexMobject("0").set_color(BLUE),
             n = self.n,
             vertical_buff = SMALL_BUFF,
         )
@@ -3398,11 +3398,11 @@ class SumsToPowerOf2(Scene):
         sum_group.shift(MED_LARGE_BUFF*RIGHT)
 
         for i, line in zip(it.count(1), lines):
-            line_copy = line.copy().highlight(YELLOW)
+            line_copy = line.copy().set_color(YELLOW)
             number = Integer(i)
             number.scale(1.5)
             number.to_edge(UP)
-            VGroup(number, line_copy).highlight(YELLOW)
+            VGroup(number, line_copy).set_color(YELLOW)
             self.add(line_copy, number)
             self.wait(0.15)
             self.remove(line_copy, number)
@@ -3411,7 +3411,7 @@ class SumsToPowerOf2(Scene):
         self.wait()
 
         sum_result.target = TexMobject(str(2**self.n))
-        sum_result.target.highlight(sum_result.get_color())
+        sum_result.target.set_color(sum_result.get_color())
         sum_result.target.next_to(sum_group, RIGHT)
         rhs.next_to(sum_result.target, RIGHT, aligned_edge = DOWN)
         self.play(
@@ -3472,7 +3472,7 @@ class SumsToPowerOf2(Scene):
             str(2**self.alt_n), 
             "=", "2^{%d}"%(self.alt_n)
         )
-        rhs[0].highlight(YELLOW)
+        rhs[0].set_color(YELLOW)
         rhs.next_to(sum_group, RIGHT)
 
         self.play(
@@ -3518,20 +3518,20 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
             "Bi", "nomials",
             arg_separator = "",
         )
-        binomial_word.highlight_by_tex("Bi", YELLOW)
-        binomial_word.highlight_by_tex("nomials", WHITE)
+        binomial_word.set_color_by_tex("Bi", YELLOW)
+        binomial_word.set_color_by_tex("nomials", WHITE)
         binomial_word.next_to(example_binomials, LEFT, buff = 1.5)
         arrows = VGroup(*[
             Arrow(binomial_word.get_right(), binom.get_left())
             for binom in example_binomials
         ])
-        arrows.highlight(BLUE)
+        arrows.set_color(BLUE)
 
         two_variables = TextMobject("Two", "variables")
         two_variables.next_to(binomial_word, DOWN)
         two_variables.shift(SMALL_BUFF*LEFT)
         for tv, bw in zip(two_variables, binomial_word):
-            tv.highlight(bw.get_color())
+            tv.set_color(bw.get_color())
 
         self.student_says(
             "Why are they called \\\\ ``binomial coefficients''?"
@@ -3646,13 +3646,13 @@ class CombinationsPatreonEndScreen(PatreonEndScreen):
 class Thumbnail(Scene):
     def construct(self):
         n_choose_k = TexMobject("n \\choose k")
-        n_choose_k[1].highlight(YELLOW)
-        n_choose_k[2].highlight(YELLOW)
+        n_choose_k[1].set_color(YELLOW)
+        n_choose_k[2].set_color(YELLOW)
         n_choose_k.scale(2)
         n_choose_k.to_edge(UP)
         stacks = get_stacks(
-            TexMobject("1").highlight(PINK),
-            TexMobject("0").highlight(BLUE),
+            TexMobject("1").set_color(PINK),
+            TexMobject("0").set_color(BLUE),
             n = 5, vertical_buff = SMALL_BUFF,
         )
         stacks.to_edge(DOWN)

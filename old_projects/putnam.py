@@ -42,12 +42,12 @@ class IntroducePutnam(Scene):
     def construct(self):
         title = TextMobject("Putnam Competition")
         title.to_edge(UP, buff = MED_SMALL_BUFF)
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         six_hours = TextMobject("6", "hours")
         three_hours = TextMobject("3", "hours")
         for mob in six_hours, three_hours:
             mob.next_to(title, DOWN, MED_LARGE_BUFF)
-            # mob.highlight(BLUE)
+            # mob.set_color(BLUE)
         three_hours.shift(FRAME_X_RADIUS*LEFT/2)
         three_hours_copy = three_hours.copy()
         three_hours_copy.shift(FRAME_X_RADIUS*RIGHT)
@@ -74,7 +74,7 @@ class IntroducePutnam(Scene):
         out_of_tens = VGroup()
         for question in flat_questions:
             out_of_ten = TexMobject("/10")
-            out_of_ten.highlight(GREEN)
+            out_of_ten.set_color(GREEN)
             out_of_ten.move_to(question)
             dist = rects[0].get_width() - 1.2
             out_of_ten.shift(dist*RIGHT)
@@ -82,13 +82,13 @@ class IntroducePutnam(Scene):
 
         out_of_120 = TexMobject("/120")
         out_of_120.next_to(title, RIGHT, LARGE_BUFF)
-        out_of_120.highlight(GREEN)
+        out_of_120.set_color(GREEN)
 
         out_of_120.generate_target()
         out_of_120.target.to_edge(RIGHT, LARGE_BUFF)
         median = TexMobject("2")
         median.next_to(out_of_120.target, LEFT, SMALL_BUFF)
-        median.highlight(RED)
+        median.set_color(RED)
         median.align_to(out_of_120[-1])
         median_words = TextMobject("Typical median $\\rightarrow$")
         median_words.next_to(median, LEFT)
@@ -109,7 +109,7 @@ class IntroducePutnam(Scene):
                 text = TextMobject("\\dots %s \\dots"%s)
                 text.scale(0.7)
                 text.next_to(question, RIGHT)
-                text.highlight(color)
+                text.set_color(color)
                 difficulties.add(text)
 
 
@@ -186,7 +186,7 @@ class NatureOf5sAnd6s(TeacherStudentsScene):
             self.teacher.get_corner(UP+LEFT), UP,
         )
         new_words = TextMobject("\\dots Potentially very elegant \\dots")
-        new_words.highlight(GREEN)
+        new_words.set_color(GREEN)
         new_words.scale_to_fit_height(mover.target[1].get_height())
         new_words.next_to(mover.target[0], RIGHT, SMALL_BUFF)
 
@@ -235,7 +235,7 @@ class IntroduceTetrahedron(ExternallyAnimatedScene):
 class IntroduceTetrahedronSupplement(Scene):
     def construct(self):
         title = TextMobject("4", "random$^*$ points on sphere")
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         question = TextMobject("Probability that this tetrahedron \\\\ contains the sphere's center?")
         question.next_to(title, DOWN, MED_LARGE_BUFF)
         group = VGroup(title, question)
@@ -245,7 +245,7 @@ class IntroduceTetrahedronSupplement(Scene):
         for n in range(1, 4):
             num = TextMobject(str(n))
             num.replace(title[0], dim_to_match = 1)
-            num.highlight(YELLOW)
+            num.set_color(YELLOW)
             self.add(num)
             self.wait(0.7)
             self.remove(num)
@@ -351,7 +351,7 @@ class TwoDCase(Scene):
             "contains the center", "?",
             arg_separator = "",
         )
-        question.highlight_by_tex("center", self.center_color)
+        question.set_color_by_tex("center", self.center_color)
         question.scale(0.8)
         question.to_corner(UP+RIGHT)
         self.question = question
@@ -499,7 +499,7 @@ class TwoDCase(Scene):
             "{\\text{Length of arc}", "\\over",
             "\\text{Circumference}}"
         )
-        answer.highlight_by_tex("arc", BLUE)
+        answer.set_color_by_tex("arc", BLUE)
         answer.scale(0.8)
         answer.next_to(arrow, RIGHT)
         equals = TexMobject("=")
@@ -550,7 +550,7 @@ class TwoDCase(Scene):
         ninety_degrees = TexMobject("90^\\circ")
         ninety_degrees.next_to(elbow, DOWN+RIGHT, buff = 0)
         proportion = DecimalNumber(0.25)
-        proportion.highlight(self.center_color)
+        proportion.set_color(self.center_color)
         # proportion.next_to(arc.point_from_proportion(0.5), DOWN, MED_LARGE_BUFF)
         proportion.next_to(self.arc_size_arrow, DOWN)
         def proportion_update_func(alpha):
@@ -629,7 +629,7 @@ class TwoDCase(Scene):
         triangle = self.triangle
 
         one_fourth = TexMobject("1/4")
-        one_fourth.highlight(BLUE)
+        one_fourth.set_color(BLUE)
         one_fourth.next_to(self.question, DOWN)
 
         self.triangle_update.update(1)
@@ -660,7 +660,7 @@ class TwoDCase(Scene):
         point_mobs = self.point_mobs = VGroup(*[
             Dot().move_to(point) for point in points            
         ])
-        point_mobs.highlight(self.point_color)
+        point_mobs.set_color(self.point_color)
         return point_mobs
 
     def get_point_mob_labels(self):
@@ -668,7 +668,7 @@ class TwoDCase(Scene):
             TexMobject("P_%d"%(i+1))
             for i in range(len(self.point_mobs))
         ])
-        point_labels.highlight(self.point_mobs.get_color())
+        point_labels.set_color(self.point_mobs.get_color())
         self.point_labels = point_labels
         return point_labels
 
@@ -686,7 +686,7 @@ class TwoDCase(Scene):
             )
             line.rotate(angle)
             line.shift(self.center)
-            line.highlight(self.point_color)
+            line.set_color(self.point_color)
             lines.add(line)
         self.center_lines = lines
         return lines
@@ -706,9 +706,9 @@ class TwoDCase(Scene):
             points = [pm.get_center() for pm in point_mobs]
             triangle.set_points_as_corners(points)
             if self.points_contain_center(points):
-                triangle.highlight(self.positive_triangle_color)
+                triangle.set_color(self.positive_triangle_color)
             else:
-                triangle.highlight(self.negative_triangle_color)
+                triangle.set_color(self.negative_triangle_color)
             return triangle
         return UpdateFromFunc(triangle, update_triangle)
 
@@ -825,7 +825,7 @@ class AverageSizeOfSphericalTriangleSectionSupplement(Scene):
             "Average size of \\\\", "this section", "?",
             arg_separator = ""
         )
-        words.highlight_by_tex("section", GREEN)
+        words.set_color_by_tex("section", GREEN)
         words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
         self.play(Write(words))
@@ -888,7 +888,7 @@ class RevisitTwoDCase(TwoDCase):
             "=", "1/4"
         )
         title.to_edge(UP, buff = MED_SMALL_BUFF)
-        title.highlight_by_tex("1/4", BLUE)
+        title.set_color_by_tex("1/4", BLUE)
         four = title[-1][-1]
         four_circle = Circle(color = YELLOW)
         four_circle.replace(four, dim_to_match = 1)
@@ -914,8 +914,8 @@ class RevisitTwoDCase(TwoDCase):
                 else:
                     self.n_out += 1
                 nums = map(Integer, [self.n_in, self.n_in, self.n_out])
-                VGroup(*nums[:2]).highlight(self.positive_triangle_color)
-                VGroup(*nums[2:]).highlight(self.negative_triangle_color)
+                VGroup(*nums[:2]).set_color(self.positive_triangle_color)
+                VGroup(*nums[2:]).set_color(self.negative_triangle_color)
                 for num, placeholder, position in zip(nums, placeholders, positions):
                     num.move_to(placeholder, position)
                 decimal = DecimalNumber(float(self.n_in)/(self.n_in + self.n_out))
@@ -1001,7 +1001,7 @@ class RevisitTwoDCase(TwoDCase):
         words.scale(0.8)
         words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
-        words[1].highlight(YELLOW)
+        words[1].set_color(YELLOW)
 
         point_label_groups = VGroup()
         for point_mob, label in zip(self.point_mobs, self.point_labels):
@@ -1263,7 +1263,7 @@ class Rewrite3DRandomProcedure(Scene):
         words.scale(0.8)
         words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
-        words[1].highlight(YELLOW)
+        words[1].set_color(YELLOW)
         cross = Cross(words[0])
         cross.set_stroke(RED, 6)
 
@@ -1291,7 +1291,7 @@ class ThreeDAnswer(Scene):
         )
         words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
-        words[1].highlight(BLUE)
+        words[1].set_color(BLUE)
 
         self.play(Write(words))
         self.wait(2)
@@ -1341,8 +1341,8 @@ class ProblemSolvingTakeaways(Scene):
                 "Try reframing the question \\\\ around new constructs",
             ]
         ])
-        points[0].highlight(BLUE)
-        points[1].highlight(YELLOW)
+        points[0].set_color(BLUE)
+        points[1].set_color(YELLOW)
         points.arrange_submobjects(
             DOWN, buff = LARGE_BUFF,
             aligned_edge = LEFT
@@ -1381,7 +1381,7 @@ class BrilliantPuzzle(PiCreatureScene):
             arrow.tip.shift(SMALL_BUFF*arrow.get_vector())
             arrow.tip.shift(-0.1*SMALL_BUFF*arrow.tip.get_center())
             # arrow.shift(-MED_SMALL_BUFF*arrow.get_vector())
-            arrow.highlight(RED)
+            arrow.set_color(RED)
             arrow.pointing_right = True
             arrows.add(arrow)
             s1.arrow = arrow
@@ -1449,7 +1449,7 @@ class BrilliantPuzzle(PiCreatureScene):
         else:
             target_color = RED
             target_angle = np.pi + np.pi/4
-        arrow.target.highlight(target_color)
+        arrow.target.set_color(target_color)
         arrow.target.rotate(
             target_angle, 
             about_point = arrow.student.get_center()
@@ -1533,8 +1533,8 @@ class AddedPromoWords(Scene):
         )
         words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
-        words.highlight_by_tex("2^8", YELLOW)
-        words.highlight_by_tex("pi", PINK)
+        words.set_color_by_tex("2^8", YELLOW)
+        words.set_color_by_tex("pi", PINK)
 
         self.play(Write(words))
         self.wait()

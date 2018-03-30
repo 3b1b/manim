@@ -69,7 +69,7 @@ class Arc(VMobject):
 
 
         
-        self.highlight(self.get_color())
+        self.set_color(self.get_color())
         return self
 
 

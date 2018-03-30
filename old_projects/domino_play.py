@@ -164,7 +164,7 @@ class SimpleVelocityGraph(GraphScene):
             self.add(dot)
             dots.add(dot)
             if note == "twist":
-                dot.highlight(RED)
+                dot.set_color(RED)
         self.dots = dots
 
     def add_label_to_last_dot(self, label, color = WHITE):
@@ -172,7 +172,7 @@ class SimpleVelocityGraph(GraphScene):
         label = TextMobject(label)
         label.scale(0.75)
         label.next_to(dot, UP, buff = MED_SMALL_BUFF)
-        label.highlight(color)
+        label.set_color(color)
         label.shift_onto_screen()
         self.label = label
         self.add(label)
@@ -601,7 +601,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
 
         felt = TextMobject("Felt")
         hardwood = TextMobject("Hardwood")
-        hardwood.highlight(RED)
+        hardwood.set_color(RED)
         words = VGroup(felt, hardwood)
 
         self.force_skipping()
@@ -681,7 +681,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         self.play(GrowArrow(arrow))
         self.play(
             dot2.shift, MED_SMALL_BUFF*UP,
-            dot2.highlight, PINK,
+            dot2.set_color, PINK,
             rate_func = wiggle
         )
         self.wait()
@@ -758,8 +758,8 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
     ###
 
     def color_graph(self, graph, color1 = BLUE, color2 = WHITE, n_starts = 20):
-        graph.highlight(color2)
-        VGroup(*graph.dots[:11] + graph.lines[:10]).highlight(color1)
+        graph.set_color(color2)
+        VGroup(*graph.dots[:11] + graph.lines[:10]).set_color(color1)
 
     def get_smoothed_velocity_graph(self, velocities):
         n = self.moving_average_n
@@ -820,7 +820,7 @@ class ShowAllSteadyStateVelocities(SimpleVelocityGraph):
                 color = color
             )
             label.scale(0.5)
-            label.highlight(color)
+            label.set_color(color)
 
             dot = Dot(color = color)
             dot.scale(0.5)
@@ -869,7 +869,7 @@ class Test(Scene):
             angle = -np.arcsin(2*spacing/domino1.get_height())
         )
         arc2.shift(domino1.get_right())
-        arc2.highlight(BLUE)
+        arc2.set_color(BLUE)
         arcs = VGroup(arc1, arc2)
         for arc, vect in zip(arcs, [DOWN+RIGHT, RIGHT]):
             arc_copy = arc.copy()

@@ -36,7 +36,7 @@ class PhysicalIntuition(Scene):
             Arrow(ORIGIN, np.sqrt(2)*point)
             for point in compass_directions(4, RIGHT+UP)
         ])
-        arrows.highlight(YELLOW)
+        arrows.set_color(YELLOW)
         arrows.ingest_submobjects()
         all_arrows = Mobject(*[
             arrows.copy().scale(0.3/(x)).shift(x*RIGHT)
@@ -49,7 +49,7 @@ class PhysicalIntuition(Scene):
         terms.shift(2*UP)
         plane = NumberPlane(color = BLUE_E)
         axes = Mobject(NumberLine(), NumberLine().rotate(np.pi/2))
-        axes.highlight(WHITE)
+        axes.set_color(WHITE)
 
         for term in terms.split():
             self.play(ShimmerIn(term, run_time = 0.5))
@@ -148,7 +148,7 @@ class StayedUpAllNight(Scene):
             use_cache = False
         )
         solution.stroke_width = 3
-        solution.highlight(GREY)
+        solution.set_color(GREY)
         solution.scale_to_fit_width(5)
         solution.to_corner(UP+RIGHT)
         newton = ImageMobject("Old_Newton", invert = False)
@@ -174,7 +174,7 @@ class StayedUpAllNight(Scene):
         ], size = "\\small")
         newton_complaint.to_edge(UP, buff = 0.2)
         dunned = newton_complaint.split()[1]
-        dunned.highlight()
+        dunned.set_color()
         dunned_def = TextMobject("(old timey term for making \\\\ demands on someone)")
         dunned_def.scale(0.7)
         dunned_def.next_to(phil_trans, LEFT)
@@ -403,7 +403,7 @@ class ShortestPathProblem(Scene):
         )
         path.scale(6/(2*np.pi))
         path.shift(point_a - path.points[0])
-        path.highlight(RED)
+        path.set_color(RED)
         line = Line(point_a, point_b)
         words = TextMobject("Shortest path from $A$ to $B$")
         words.to_edge(UP)

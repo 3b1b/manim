@@ -39,7 +39,7 @@ class Chapter1(Scene):
         arrow = Vector(2*UP+RIGHT)
         vs = TextMobject("vs.")
         array = Matrix([1, 2])
-        array.highlight(TEAL)
+        array.set_color(TEAL)
         everyone = VMobject(arrow, vs, array)
         everyone.arrange_submobjects(RIGHT, buff = 0.5)
         everyone.scale_to_fit_height(4)
@@ -129,8 +129,8 @@ class Chapter10(LinearTransformationScene):
     def construct(self):
         v_tex = "\\vec{\\textbf{v}}"
         eq = TexMobject("A", v_tex, "=", "\\lambda", v_tex)
-        eq.highlight_by_tex(v_tex, YELLOW)
-        eq.highlight_by_tex("\\lambda", MAROON_B)
+        eq.set_color_by_tex(v_tex, YELLOW)
+        eq.set_color_by_tex("\\lambda", MAROON_B)
         eq.scale(3)
         eq.add_background_rectangle()
         eq.shift(2*DOWN)        
@@ -141,9 +141,9 @@ class Chapter10(LinearTransformationScene):
         , arg_separator = "")
         title.scale(2.5)
         title.to_edge(UP)
-        # title.highlight_by_tex("Eigen", MAROON_B)
-        title[0].highlight(YELLOW)
-        title[2].highlight(MAROON_B)
+        # title.set_color_by_tex("Eigen", MAROON_B)
+        title[0].set_color(YELLOW)
+        title[2].set_color(MAROON_B)
         title.add_background_rectangle()
 
 

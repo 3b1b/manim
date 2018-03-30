@@ -22,7 +22,7 @@ def logo_to_circle():
     small_circle = Circle(
         density = CIRCLE_DENSITY,
         color = 'skyblue'
-    ).scale(LOGO_RADIUS).highlight(
+    ).scale(LOGO_RADIUS).set_color(
         DARK_BROWN, lambda (x, y, z) : x < 0 and y > 0
     )
     big_circle = Circle(density = CIRCLE_DENSITY).scale(RADIUS)
@@ -62,7 +62,7 @@ def count_sections(*radians):
         last_num = None
         for reg, count in zip(regions, it.count(1)):
             number = TexMobject(str(count)).shift((RADIUS, 3, 0))
-            sc.highlight_region(reg)
+            sc.set_color_region(reg)
             rt = 1.0 / (x**0.8)
             sc.add(number)
             sc.remove(last_num)
@@ -227,7 +227,7 @@ def next_few_videos(*radians):
         for point1, point2 in it.combinations(points, 2)
     ])
     thumbnail = Mobject(circle, dots, lines)
-    frame = VideoIcon().highlight(
+    frame = VideoIcon().set_color(
         "black",
         lambda point : np.linalg.norm(point) < 0.5
     )

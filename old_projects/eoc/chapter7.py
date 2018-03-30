@@ -75,8 +75,8 @@ class ThisVideo(TeacherStudentsScene):
         ]
         deriv_tex, this_tex, integral_tex = tex_mobs
         for tex_mob, brace in zip(tex_mobs, braces):
-            tex_mob.highlight_by_tex("f", GREEN)
-            tex_mob.highlight_by_tex("dx", YELLOW)
+            tex_mob.set_color_by_tex("f", GREEN)
+            tex_mob.set_color_by_tex("dx", YELLOW)
             tex_mob.next_to(brace, DOWN)
         integral_tex.shift(LARGE_BUFF*RIGHT)
 
@@ -96,7 +96,7 @@ class ThisVideo(TeacherStudentsScene):
                 Write(tex_mob, run_time = 2)
             )
         self.play(
-            this_video.highlight, YELLOW,
+            this_video.set_color, YELLOW,
             GrowFromCenter(this_brace),
             self.get_teacher().change_mode, "raise_right_hand",
             self.get_teacher().look_at, this_video
@@ -154,7 +154,7 @@ class LimitJustMeansApproach(PiCreatureScene):
 
     def get_limit_expression(self):
         lim = TexMobject("\\lim_", "{dx", " \\to 0}")
-        lim.highlight_by_tex("dx", self.dx_color)
+        lim.set_color_by_tex("dx", self.dx_color)
         ratio = self.get_expression("dx")
         ratio.next_to(lim, RIGHT)
         limit_expression = VGroup(lim, ratio)
@@ -177,7 +177,7 @@ class LimitJustMeansApproach(PiCreatureScene):
         result = TexMobject(
             "{(2 + ", str(dx), ")^3 - 2^3 \\over", str(dx)
         )
-        result.highlight_by_tex(dx, self.dx_color)
+        result.set_color_by_tex(dx, self.dx_color)
         return result
 
 class Goals(Scene):
@@ -237,9 +237,9 @@ class RefreshOnDerivativeDefinition(GraphScene):
         derivative = TexMobject(
             "{df", "\\over \\,", "dx}", "(", str(self.start_x), ")"
         )
-        derivative.highlight_by_tex("df", self.df_color)
-        derivative.highlight_by_tex("dx", self.dx_color)
-        derivative.highlight_by_tex(str(self.start_x), RED)
+        derivative.set_color_by_tex("df", self.df_color)
+        derivative.set_color_by_tex("dx", self.dx_color)
+        derivative.set_color_by_tex(str(self.start_x), RED)
         df = derivative.get_part_by_tex("df")
         dx = derivative.get_part_by_tex("dx")
         input_x = derivative.get_part_by_tex(str(self.start_x))
@@ -247,7 +247,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
         derivative.save_state()
         deriv_brace = Brace(derivative)
         dx_to_0 = TexMobject("dx", "\\to 0")
-        dx_to_0.highlight_by_tex("dx", self.dx_color)
+        dx_to_0.set_color_by_tex("dx", self.dx_color)
         dx_to_0.next_to(deriv_brace, DOWN)
 
         #Introduce graph
@@ -299,9 +299,9 @@ class RefreshOnDerivativeDefinition(GraphScene):
             "-", "f", "(", str(self.start_x), ")",
             "\\over \\,", "dx"
         )
-        new_deriv.highlight_by_tex("dx", self.dx_color)
-        new_deriv.highlight_by_tex("f", self.df_color)
-        new_deriv.highlight_by_tex(str(self.start_x), RED)
+        new_deriv.set_color_by_tex("dx", self.dx_color)
+        new_deriv.set_color_by_tex("f", self.df_color)
+        new_deriv.set_color_by_tex(str(self.start_x), RED)
         deriv_to_new_deriv = dict([
             (
                 VGroup(derivative.get_part_by_tex(s)), 
@@ -351,7 +351,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
         for sf, color in (1.2, YELLOW), (1/1.2, WHITE):
             self.play(
                 lim.scale_in_place, sf,
-                lim.highlight, color,
+                lim.set_color, color,
                 submobject_mode = "lagged_start"
             )
         self.wait(2)
@@ -433,7 +433,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             dx_list_replacement = [
                 TexMobject(
                     tex
-                ).highlight(self.dx_color).move_to(dx, DOWN)
+                ).set_color(self.dx_color).move_to(dx, DOWN)
                 for dx in dx_list
             ]
             self.play(
@@ -477,7 +477,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             built in
         """)
         d_words.next_to(d_circles, DOWN)
-        d_words.highlight(d_circles[0].get_color())
+        d_words.set_color(d_circles[0].get_color())
 
         lhs_rect, rhs_rect = rects = [
             Rectangle(color = GREEN_B).replace(
@@ -493,7 +493,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         """)
         formal_definition_words.scale_to_fit_width(rhs_rect.get_width())
         formal_definition_words.next_to(rhs_rect, UP)
-        formal_definition_words.highlight(rhs_rect.get_color())
+        formal_definition_words.set_color(rhs_rect.get_color())
         formal_definition_words.add_background_rectangle()
 
         df = VGroup(lhs.get_part_by_tex("df"))
@@ -574,7 +574,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             buff = LARGE_BUFF, 
         ) 
         arrow = Arrow(words.get_top(), self.rhs_rect.get_bottom())
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
 
         h_group = VGroup(
             self.rhs[1].get_part_by_tex("dx"),
@@ -585,7 +585,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         dx_group = VGroup()
         for h in h_group:
             dx = TexMobject("dx")
-            dx.highlight(h.get_color())
+            dx.set_color(h.get_color())
             dx.replace(h, dim_to_match = 1)
             dx_group.add(dx)
         moving_dx = dx_group[0]       
@@ -629,7 +629,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         dx = self.ss_group.dx_label
         dx.save_state()
         h = TexMobject("h")
-        h.highlight(dx.get_color())
+        h.set_color(dx.get_color())
         h.replace(dx, dim_to_match = 1)
         self.play(Transform(dx, h, path_arc = np.pi))
         self.play(Indicate(dx))
@@ -664,7 +664,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
             "2" : RED
         }
         for tex, color in tex_to_color.items():
-            definition.highlight_by_tex(tex, color)
+            definition.set_color_by_tex(tex, color)
         definition.scale(0.8)
         definition.to_corner(UP+LEFT)
         dx_group = VGroup(*definition.get_parts_by_tex("dx"))
@@ -684,7 +684,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
             statement.h, statement.dx = [
                 VGroup(*statement.get_parts_by_tex(
                     tex, substring = False
-                )).highlight(GREEN)
+                )).set_color(GREEN)
                 for tex in "$h$", "$dx$"
             ]
 
@@ -782,9 +782,9 @@ class GoalsListed(Scene):
             self.play(FadeIn(goal))
             self.wait()
         for i, goal in enumerate(goals):
-            anims = [goal.highlight, YELLOW]
+            anims = [goal.set_color, YELLOW]
             if i > 0:
-                anims += [goals[i-1].highlight, WHITE]
+                anims += [goals[i-1].set_color, WHITE]
             self.play(*anims)
             self.wait()
 
@@ -835,7 +835,7 @@ class GraphLimitExpression(GraphScene):
         }
         for tex_mob in expression, limit, derivative:
             for tex, color in tex_to_color.items():
-                tex_mob.highlight_by_tex(tex, color)
+                tex_mob.set_color_by_tex(tex, color)
             tex_mob.next_to(ORIGIN, RIGHT, LARGE_BUFF)
             tex_mob.to_edge(UP)
 
@@ -882,7 +882,7 @@ class GraphLimitExpression(GraphScene):
         )
         self.wait()
 
-        colored_graph = graph.copy().highlight(YELLOW)
+        colored_graph = graph.copy().set_color(YELLOW)
         self.play(ShowCreation(colored_graph))
         self.wait()
         self.play(ShowCreation(graph))
@@ -900,20 +900,20 @@ class GraphLimitExpression(GraphScene):
         h_equals_0 = TexMobject("h", "=", "0", "?")
         h_equals_0.next_to(self.graph_origin, UP+RIGHT, LARGE_BUFF)
         for tex in "h", "0":
-            h_equals_0.highlight_by_tex(tex, GREEN)
+            h_equals_0.set_color_by_tex(tex, GREEN)
 
         arrow = Arrow(h_equals_0.get_left(), self.graph_origin)
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
 
         new_expression = expression.deepcopy()
         h_group = VGroup(*new_expression.get_parts_by_tex("h"))
         for h in h_group:
             zero = TexMobject("0")
-            zero.highlight(h.get_color())
+            zero.set_color(h.get_color())
             zero.replace(h, dim_to_match = 1)
             Transform(h, zero).update(1)
         rhs = TexMobject("=", "{\\, 0\\,", "\\over \\,", "0\\,}")
-        rhs.highlight_by_tex("0", GREEN)
+        rhs.set_color_by_tex("0", GREEN)
         rhs.next_to(new_expression, RIGHT)
         equation = VGroup(new_expression, rhs)
         equation.next_to(expression, DOWN, buff = LARGE_BUFF)
@@ -1333,11 +1333,11 @@ class LimitCounterExample(GraphLimitExpression):
         limit = TexMobject(
             "\\lim", "_{h", "\\to 0}", "f(", "h", ")"
         )
-        limit.highlight_by_tex("h", GREEN)
+        limit.set_color_by_tex("h", GREEN)
         limit.move_to(self.coords_to_point(2, 1.5))
 
         words = TextMobject("is not defined")
-        words.highlight(RED)
+        words.set_color(RED)
         words.next_to(limit, RIGHT, align_using_submobjects = True)
 
         limit_group = VGroup(limit, words)
@@ -1457,7 +1457,7 @@ class PrefaceToEpsilonDeltaDefinition(TeacherStudentsScene):
             "It's a glimpse of\\\\",
             "real analysis"
         )
-        words.highlight_by_tex("real", YELLOW)
+        words.set_color_by_tex("real", YELLOW)
         self.teacher_says(
             words, 
             bubble_kwargs = {"height" : 3, "width" : 6}
@@ -1762,10 +1762,10 @@ class TheoryHeavy(TeacherStudentsScene):
         derivative = VGroup(lhs, equals, rhs)
         derivative.arrange_submobjects(RIGHT)
         for tex_mob in derivative:
-            tex_mob.highlight_by_tex("x", RED)
-            tex_mob.highlight_by_tex("h", GREEN)
-            tex_mob.highlight_by_tex("dx", GREEN)
-            tex_mob.highlight_by_tex("f", YELLOW)
+            tex_mob.set_color_by_tex("x", RED)
+            tex_mob.set_color_by_tex("h", GREEN)
+            tex_mob.set_color_by_tex("dx", GREEN)
+            tex_mob.set_color_by_tex("f", YELLOW)
         derivative.next_to(self.get_pi_creatures(), UP, buff = MED_LARGE_BUFF)
 
         lim = rhs.get_part_by_tex("lim")
@@ -1884,11 +1884,11 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
 
     def setup_axes(self):
         GraphScene.setup_axes(self)
-        self.x_axis_label_mob.highlight(self.x_color)
+        self.x_axis_label_mob.set_color(self.x_color)
 
     def introduce_function(self):
         graph = self.get_graph(self.func)
-        colored_graph = graph.copy().highlight(YELLOW)
+        colored_graph = graph.copy().set_color(YELLOW)
         func_label = self.get_func_label()
         func_label.next_to(ORIGIN, RIGHT, buff = LARGE_BUFF)
         func_label.to_edge(UP)
@@ -1920,7 +1920,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
     def show_non_definedness_at_one(self):
         morty = self.get_primary_pi_creature()
         words = TexMobject("\\text{Try }", "x", "=1")
-        words.highlight_by_tex("x", self.x_color, substring = False)
+        words.set_color_by_tex("x", self.x_color, substring = False)
 
         v_line, alt_v_line = [
             self.get_vertical_line_to_graph(
@@ -1946,7 +1946,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         func_1_group.add_to_back(BackgroundRectangle(func_1_group))
 
         lim = TexMobject("\\lim", "_{x", "\\to 1}")
-        lim.highlight_by_tex("x", self.x_color)
+        lim.set_color_by_tex("x", self.x_color)
         lim.move_to(self.func_label, LEFT)
         self.func_label.generate_target()
         self.func_label.target.next_to(lim, RIGHT)
@@ -2191,8 +2191,8 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         d_labels = []
         for tex_args, arrow in tex_arrow_pairs:
             label = TexMobject(*tex_args)
-            label.highlight_by_tex("x", self.x_color)
-            label.highlight_by_tex("dx", self.dx_color)
+            label.set_color_by_tex("x", self.x_color)
+            label.set_color_by_tex("dx", self.dx_color)
             label.scale(zoom_tex_scale_factor)
             label.next_to(arrow, RIGHT, buff = SMALL_BUFF/self.zoom_factor)
             d_labels.append(label)
@@ -2336,11 +2336,11 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             buff = MED_SMALL_BUFF/self.zoom_factor,
             aligned_edge = LEFT
         )
-        equation.highlight_by_tex("x", self.x_color)
-        equation.highlight_by_tex("1", self.x_color)
+        equation.set_color_by_tex("x", self.x_color)
+        equation.set_color_by_tex("1", self.x_color)
         dot_one = TexMobject("\\cdot", "1")
         dot_one.scale(zoom_tex_scale_factor)
-        dot_one.highlight(self.x_color)
+        dot_one.set_color(self.x_color)
         dot_one.move_to(x, DOWN+LEFT)
 
         self.play(x.move_to, eq_x)
@@ -2440,7 +2440,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             "{\\sin(\\pi ", in_tex, ")", " \\over \\,",
             in_tex, "^2 - 1}"
         )
-        result.highlight_by_tex(in_tex, self.x_color)
+        result.set_color_by_tex(in_tex, self.x_color)
         return result
 
     def get_epsilon_delta_group(self, delta, **kwargs):
@@ -2465,11 +2465,11 @@ class DerivativeLimitReciprocity(Scene):
     def construct(self):
         arrow = Arrow(LEFT, RIGHT, color = WHITE)
         lim = TexMobject("\\lim", "_{h", "\\to 0}")
-        lim.highlight_by_tex("h", GREEN)
+        lim.set_color_by_tex("h", GREEN)
         lim.next_to(arrow, LEFT)
         deriv = TexMobject("{df", "\\over\\,", "dx}")
-        deriv.highlight_by_tex("dx", GREEN)
-        deriv.highlight_by_tex("df", YELLOW)
+        deriv.set_color_by_tex("dx", GREEN)
+        deriv.set_color_by_tex("df", YELLOW)
         deriv.next_to(arrow, RIGHT)
 
         self.play(FadeIn(lim, submobject_mode = "lagged_start"))
@@ -2520,7 +2520,7 @@ class GeneralLHoptial(LHopitalExample):
         a_label = TexMobject("x = a")
         a_label.next_to(a_dot, UP, LARGE_BUFF)
         a_arrow = Arrow(a_label.get_bottom(), a_dot, buff = SMALL_BUFF)
-        VGroup(a_dot, a_label, a_arrow).highlight(self.x_color)
+        VGroup(a_dot, a_label, a_arrow).set_color(self.x_color)
 
         self.play(ShowCreation(f_graph), Write(f_label))
         self.play(ShowCreation(g_graph), Write(g_label))
@@ -2559,7 +2559,7 @@ class GeneralLHoptial(LHopitalExample):
         frac_a = self.get_frac("a", self.x_color)
         frac_x = self.get_frac("x")
         lim = TexMobject("\\lim", "_{x", "\\to", "a}")
-        lim.highlight_by_tex("a", self.x_color)
+        lim.set_color_by_tex("a", self.x_color)
         equals_zero_over_zero = TexMobject(
             "=", "{\\, 0 \\,", "\\over \\,", "0 \\,}"
         )
@@ -2645,8 +2645,8 @@ class GeneralLHoptial(LHopitalExample):
                 "\\frac{d%s}{dx}"%char, "(", "a", ")", "\\,dx"
             )
             label.scale(zoom_tex_scale_factor)
-            label.highlight_by_tex("a", self.x_color)
-            label.highlight_by_tex("frac", arrow.get_color())
+            label.set_color_by_tex("a", self.x_color)
+            label.set_color_by_tex("frac", arrow.get_color())
             label.next_to(arrow, RIGHT, z_small_buff)
             v_labels.append(label)
         df_label, dg_label = v_labels
@@ -2672,9 +2672,9 @@ class GeneralLHoptial(LHopitalExample):
             "\\over \\,",
             "\\frac{dg}{dx}", "(", "a", ")", "\\,dx}",
         )
-        deriv_ratio.highlight_by_tex("a", self.x_color)
-        deriv_ratio.highlight_by_tex("df", self.f_color)
-        deriv_ratio.highlight_by_tex("dg", self.g_color)
+        deriv_ratio.set_color_by_tex("a", self.x_color)
+        deriv_ratio.set_color_by_tex("df", self.f_color)
+        deriv_ratio.set_color_by_tex("dg", self.g_color)
         deriv_ratio.move_to(q_marks, LEFT)
 
         dxs = VGroup(*deriv_ratio.get_parts_by_tex("\\,dx"))
@@ -2712,7 +2712,7 @@ class GeneralLHoptial(LHopitalExample):
         equation = VGroup(lhs, rhs)
         equation.to_corner(UP+RIGHT)
         for part in equation:
-            part.highlight_by_tex("0", self.x_color)
+            part.set_color_by_tex("0", self.x_color)
         brace = Brace(lhs, DOWN)
         brace_text = brace.get_text("Looks like 0/0")
         brace_text.add_background_rectangle()
@@ -2778,7 +2778,7 @@ class GeneralLHoptial(LHopitalExample):
         for dollar, alpha in zip(dollars, np.linspace(0, 1, len(dollars))):
             angle = alpha*np.pi
             dollar.move_to(np.sin(angle)*RIGHT + np.cos(angle)*UP)
-        dollars.highlight(GREEN)
+        dollars.set_color(GREEN)
         dollars.next_to(arrow, RIGHT, MED_LARGE_BUFF)
         dollars[0].set_fill(opacity = 0)
         dollars.save_state()
@@ -2818,9 +2818,9 @@ class GeneralLHoptial(LHopitalExample):
             "{f", "(", input_tex, ")", "\\over \\,",
             "g", "(", input_tex, ")}"
         )
-        result.highlight_by_tex("f", self.f_color)
-        result.highlight_by_tex("g", self.g_color)
-        result.highlight_by_tex(input_tex, color)
+        result.set_color_by_tex("f", self.f_color)
+        result.set_color_by_tex("g", self.g_color)
+        result.set_color_by_tex(input_tex, color)
 
         result.numerator = VGroup(*result[:4])
         result.denominator = VGroup(*result[-4:])
@@ -2838,10 +2838,10 @@ class CannotUseLHopital(TeacherStudentsScene):
             "\\over \\,", "h}"
         )
         deriv.to_edge(UP)
-        deriv.highlight_by_tex("x", RED)
-        deriv.highlight_by_tex("dx", GREEN)
-        deriv.highlight_by_tex("h", GREEN)
-        deriv.highlight_by_tex("e^", YELLOW)
+        deriv.set_color_by_tex("x", RED)
+        deriv.set_color_by_tex("dx", GREEN)
+        deriv.set_color_by_tex("h", GREEN)
+        deriv.set_color_by_tex("e^", YELLOW)
 
         self.play(
             Write(deriv),
@@ -2860,8 +2860,8 @@ class CannotUseLHopital(TeacherStudentsScene):
             "\\text{That requires knowing }",
             "{d(e^x)", "\\over \\,", "dx}"
         )
-        answer.highlight_by_tex("e^", YELLOW)
-        answer.highlight_by_tex("dx", GREEN)
+        answer.set_color_by_tex("e^", YELLOW)
+        answer.set_color_by_tex("dx", GREEN)
         self.teacher_says(
             answer,
             bubble_kwargs = {"height" : 2.5},
@@ -2883,15 +2883,15 @@ class NextVideo(TeacherStudentsScene):
             "{dF", "\\over \\,", "dx}", "(x)", "dx"
         )
         for tex_mob in integral, ftc:
-            tex_mob.highlight_by_tex("dx", GREEN)
-            tex_mob.highlight_by_tex("f", YELLOW)
-            tex_mob.highlight_by_tex("F", YELLOW)
+            tex_mob.set_color_by_tex("dx", GREEN)
+            tex_mob.set_color_by_tex("f", YELLOW)
+            tex_mob.set_color_by_tex("F", YELLOW)
             tex_mob.next_to(brace, DOWN)
 
         self.add(series)
         self.play(
             GrowFromCenter(brace),
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             self.get_teacher().change_mode, "raise_right_hand",
             self.get_teacher().look_at, next_video
         )
@@ -2960,7 +2960,7 @@ class Chapter7PatreonThanks(PatreonThanks):
 class Thumbnail(Scene):
     def construct(self):
         lim = TexMobject("\\lim", "_{h", "\\to 0}")
-        lim.highlight_by_tex("h", GREEN)
+        lim.set_color_by_tex("h", GREEN)
         lim.scale_to_fit_height(5)
         self.add(lim)
 

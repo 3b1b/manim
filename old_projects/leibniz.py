@@ -215,7 +215,7 @@ class Introduction(PiCreatureScene):
 
         morty = self.get_primary_pi_creature()
         video = VideoIcon()
-        video.highlight(TEAL)
+        video.set_color(TEAL)
         video.next_to(morty.get_corner(UP+LEFT), UP)
 
         self.play(
@@ -263,7 +263,7 @@ class Introduction(PiCreatureScene):
         )
         for title in titles:
             title.next_to(screen, UP)
-            title.highlight(YELLOW)
+            title.set_color(YELLOW)
         self.play(
             ShowCreation(screen),
             FadeIn(titles[0])
@@ -287,7 +287,7 @@ class Introduction(PiCreatureScene):
         label = TexMobject("1 + 2i")
         label.add_background_rectangle()
         label.next_to(dot, UP+RIGHT, buff = SMALL_BUFF)
-        label.highlight(YELLOW)
+        label.set_color(YELLOW)
         plane.label = label
         plane.add(dot, label)
         return plane
@@ -296,7 +296,7 @@ class Introduction(PiCreatureScene):
         result = TexMobject("\\pi", "=", "%.8f\\dots"%np.pi)
         pi = result.get_part_by_tex("pi")
         pi.scale(2, about_point = pi.get_right())
-        pi.highlight(MAROON_B)
+        pi.set_color(MAROON_B)
         return result
 
 class ShowSum(TeacherStudentsScene):
@@ -347,7 +347,7 @@ class ShowSum(TeacherStudentsScene):
             "\\frac{\\pi}{4}", "=", 
         )
         lhs.next_to(sum_mob, LEFT)
-        lhs.highlight_by_tex("pi", YELLOW)
+        lhs.set_color_by_tex("pi", YELLOW)
         sum_arrow = Arrow(
             lhs.get_part_by_tex("pi").get_bottom(),
             sum_point
@@ -490,7 +490,7 @@ class CertainRegularityInPrimes(LatticePointScene):
             "+", "\\frac{1}{5}", "-", "\\frac{1}{7}",
             "+\\cdots"
         )
-        formula.highlight_by_tex("pi", YELLOW)
+        formula.set_color_by_tex("pi", YELLOW)
         formula.add_background_rectangle()
         formula.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         self.add_foreground_mobject(formula)
@@ -541,9 +541,9 @@ class Outline(PiCreatureScene):
             TextMobject("5. Shift perspective"),
         )
         for step in steps[1:3]:
-            step.highlight_by_tex("1", RED, substring = False)
-            step.highlight_by_tex("i", RED, substring = False)
-            step.highlight_by_tex("4", GREEN, substring = False)
+            step.set_color_by_tex("1", RED, substring = False)
+            step.set_color_by_tex("i", RED, substring = False)
+            step.set_color_by_tex("4", GREEN, substring = False)
         steps.arrange_submobjects(
             DOWN, 
             buff = MED_LARGE_BUFF,
@@ -557,7 +557,7 @@ class Outline(PiCreatureScene):
         question = TexMobject("\\pi", "=???")
         pi = question.get_part_by_tex("pi")
         pi.scale(2, about_point = pi.get_right())
-        pi.highlight(YELLOW)
+        pi.set_color(YELLOW)
         question.next_to(self.pi_creature.body, LEFT, aligned_edge = UP)
         self.think(
             "Who am I really?",
@@ -659,8 +659,8 @@ class Outline(PiCreatureScene):
             arrow.next_to(chi, DOWN, SMALL_BUFF)
             arrows.add(arrow)
             value = TexMobject(str(chi_func(n)))
-            value.highlight_by_tex("1", BLUE)
-            value.highlight_by_tex("-1", GREEN)
+            value.set_color_by_tex("1", BLUE)
+            value.set_color_by_tex("-1", GREEN)
             value.next_to(arrow, DOWN)
             numerators.add(value)
         group = VGroup(chis, arrows, numerators)
@@ -807,7 +807,7 @@ class CountLatticePoints(LatticePointScene):
     def draw_lattice_points_in_circle(self):
         circle = self.get_circle()
         radius = Line(ORIGIN, circle.get_right())
-        radius.highlight(RED)
+        radius.set_color(RED)
         brace = Brace(radius, DOWN, buff = SMALL_BUFF)
         radius_label = brace.get_text(
             str(self.max_lattice_point_radius),
@@ -874,13 +874,13 @@ class CountLatticePoints(LatticePointScene):
         radius_10_eq, radius_million_eq, radius_R_eq = equations
         for eq in equations:
             for tex_mob in eq:
-                tex_mob.highlight_by_tex("0", BLUE)
+                tex_mob.set_color_by_tex("0", BLUE)
         radius_10_eq.to_corner(UP+LEFT)
         radius_million_eq.next_to(radius_10_eq, DOWN, LARGE_BUFF)
         radius_million_eq.to_edge(LEFT)
         brace = Brace(radius_million_eq, DOWN)
         brace.add(brace.get_text("More accurate"))
-        brace.highlight(YELLOW)
+        brace.set_color(YELLOW)
 
         background = FullScreenFadeRectangle(opacity = 0.9)
 
@@ -906,7 +906,7 @@ class CountLatticePoints(LatticePointScene):
             arg_separator = ""
         )
         alt_count.to_corner(UP+LEFT)
-        alt_count.highlight_by_tex("something", MAROON_B)
+        alt_count.set_color_by_tex("something", MAROON_B)
         self.radius_R_eq.next_to(alt_count, RIGHT)
 
         final_group = VGroup(
@@ -1024,9 +1024,9 @@ class CountThroughRings(LatticePointScene):
         x_spot = self.plane.coords_to_point(x, 0)
         radial_line = Line(self.plane_center, dot)
         h_line = Line(self.plane_center, x_spot)
-        h_line.highlight(GREEN)
+        h_line.set_color(GREEN)
         v_line = Line(x_spot, dot)
-        v_line.highlight(RED)
+        v_line.set_color(RED)
 
         distance = TexMobject("\\sqrt{a^2 + b^2}")
         distance_num = TexMobject("\\sqrt{%d}"%(x**2 + y**2))
@@ -1088,7 +1088,7 @@ class CountThroughRings(LatticePointScene):
         left_counts = VGroup()
         left_roots = VGroup()
         for mob in left_list:
-            mob[1].highlight(YELLOW)
+            mob[1].set_color(YELLOW)
             left_counts.add(VGroup(mob[1]))
             mob.add_background_rectangle()
             left_roots.add(VGroup(mob[0], mob[1][0]))
@@ -1104,7 +1104,7 @@ class CountThroughRings(LatticePointScene):
             TexMobject("%d, "%count)
             for count in counts
         ])
-        top_list.highlight(YELLOW)
+        top_list.set_color(YELLOW)
         top_list.arrange_submobjects(RIGHT, aligned_edge = DOWN)
         top_list.scale_to_fit_width(FRAME_WIDTH - MED_LARGE_BUFF)
         top_list.to_edge(UP, buff = SMALL_BUFF)
@@ -1221,8 +1221,8 @@ class LookAtExampleRing(LatticePointScene):
         for label in labels:
             label.x = label[1]
             label.y = label[3]
-            label.x.highlight(x_color)
-            label.y.highlight(y_color)
+            label.x.set_color(x_color)
+            label.y.set_color(y_color)
             label.add_background_rectangle()
 
         for label, point in zip(labels, points):
@@ -1244,8 +1244,8 @@ class LookAtExampleRing(LatticePointScene):
         for tex_mob in sums_of_squares:
             tex_mob.x = tex_mob[0]
             tex_mob.y = tex_mob[3]
-            tex_mob.x.highlight(x_color)
-            tex_mob.y.highlight(y_color)
+            tex_mob.x.set_color(x_color)
+            tex_mob.y.set_color(y_color)
             tex_mob.add_background_rectangle()
             tex_mob.to_corner(UP+RIGHT)
 
@@ -1269,7 +1269,7 @@ class LookAtExampleRing(LatticePointScene):
         curr_sum_of_squares = sums_of_squares[0]
         self.play(
             Write(curr_label),
-            curr_label.point.highlight, PINK
+            curr_label.point.set_color, PINK
         )
         x, y = curr_label.x.copy(), curr_label.y.copy()
         self.play(
@@ -1286,8 +1286,8 @@ class LookAtExampleRing(LatticePointScene):
         for label, sum_of_squares in zip(labels, sums_of_squares)[1:]:
             self.play(
                 ReplacementTransform(curr_label, label),
-                label.point.highlight, PINK,
-                curr_label.point.highlight, self.dot_color
+                label.point.set_color, PINK,
+                curr_label.point.set_color, self.dot_color
             )
             curr_label = label
             self.play(
@@ -1324,8 +1324,8 @@ class LookAtExampleRing(LatticePointScene):
         circle = self.get_circle(radius = R)
         radius, root_label = self.get_radial_line_with_label(R)
         equation = TexMobject("11 \\ne ", "a", "^2", "+", "b", "^2")
-        equation.highlight_by_tex("a", GREEN)
-        equation.highlight_by_tex("b", RED)
+        equation.set_color_by_tex("a", GREEN)
+        equation.set_color_by_tex("b", RED)
         equation.add_background_rectangle()
         equation.to_corner(UP+RIGHT)
 
@@ -1411,25 +1411,25 @@ class IntroduceComplexConjugate(LatticePointScene):
         x_point = self.plane.coords_to_point(x, 0)
         h_arrow = Arrow(self.plane_center, x_point, buff = 0)
         v_arrow = Arrow(x_point, point, buff = 0)
-        h_arrow.highlight(x_color)
-        v_arrow.highlight(y_color)
+        h_arrow.set_color(x_color)
+        v_arrow.set_color(y_color)
         x_coord = TexMobject(str(x))
         x_coord.next_to(h_arrow, DOWN, SMALL_BUFF)
-        x_coord.highlight(x_color)
+        x_coord.set_color(x_color)
         x_coord.add_background_rectangle()
         y_coord = TexMobject(str(y))
         imag_y_coord = TexMobject(str(y) + "i")
         for coord in y_coord, imag_y_coord:
             coord.next_to(v_arrow, RIGHT, SMALL_BUFF)
-            coord.highlight(y_color)
+            coord.set_color(y_color)
             coord.add_background_rectangle()
 
         tuple_label = TexMobject(str((x, y)))
-        tuple_label[1].highlight(x_color)
-        tuple_label[3].highlight(y_color)
+        tuple_label[1].set_color(x_color)
+        tuple_label[3].set_color(y_color)
         complex_label = TexMobject("%d+%di"%(x, y))
-        complex_label[0].highlight(x_color)
-        complex_label[2].highlight(y_color)
+        complex_label[0].set_color(x_color)
+        complex_label[2].set_color(y_color)
         for label in tuple_label, complex_label:
             label.add_background_rectangle()
             label.next_to(dot, UP+RIGHT, buff = 0)
@@ -1495,8 +1495,8 @@ class IntroduceComplexConjugate(LatticePointScene):
         equation.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
         equation.shift(MED_LARGE_BUFF*DOWN)
         for tex_mob in equation:
-            tex_mob.highlight_by_tex(str(x), self.x_color)
-            tex_mob.highlight_by_tex(str(y), self.y_color)
+            tex_mob.set_color_by_tex(str(x), self.x_color)
+            tex_mob.set_color_by_tex(str(y), self.y_color)
             tex_mob.add_background_rectangle()
 
         dot = Dot(
@@ -1504,8 +1504,8 @@ class IntroduceComplexConjugate(LatticePointScene):
             color = self.dot_color
         )
         label = TexMobject("%d-%di"%(x, y))
-        label[0].highlight(self.x_color)
-        label[2].highlight(self.y_color)
+        label[0].set_color(self.x_color)
+        label[2].set_color(self.y_color)
         label.add_background_rectangle()
         label.next_to(dot, DOWN+RIGHT, buff = 0)
 
@@ -1584,8 +1584,8 @@ class IntroduceComplexConjugate(LatticePointScene):
         alt_y_term = TexMobject("+", str(y), "^2")
         alt_y_term.move_to(expansion[1], LEFT)
         for tex_mob in list(expansion) + [alt_y_term]:
-            tex_mob.highlight_by_tex(str(x), self.x_color)
-            tex_mob.highlight_by_tex(str(y), self.y_color)
+            tex_mob.set_color_by_tex(str(x), self.x_color)
+            tex_mob.set_color_by_tex(str(y), self.y_color)
             tex_mob.rect = BackgroundRectangle(tex_mob)
 
         x1 = self.equation[-2][1][1]
@@ -1707,7 +1707,7 @@ class IntroduceComplexConjugate(LatticePointScene):
 
         self.play(ShowCreation(top_dot.line))
         mover = VGroup(
-            top_dot.line.copy().highlight(PINK), 
+            top_dot.line.copy().set_color(PINK), 
             top_dot.copy()
         )
         self.play(FadeIn(
@@ -1767,8 +1767,8 @@ class NameGaussianIntegers(LatticePointScene):
         )
         a = label.get_part_by_tex("a")
         b = label.get_part_by_tex("b")
-        a.highlight(GREEN)
-        b.highlight(RED)
+        a.set_color(GREEN)
+        b.set_color(RED)
         label.add_background_rectangle()
         label.to_corner(UP+RIGHT)
         integers = TextMobject("Integers")
@@ -1856,8 +1856,8 @@ class NameGaussianIntegers(LatticePointScene):
             dot.equation = equation
 
             for mob in label, equation:
-                mob.highlight_by_tex(x_str, GREEN, substring = False)
-                mob.highlight_by_tex(y_str, RED, substring = False)
+                mob.set_color_by_tex(x_str, GREEN, substring = False)
+                mob.set_color_by_tex(y_str, RED, substring = False)
 
             dot.line_pair = VGroup(*[
                 Line(
@@ -1877,8 +1877,8 @@ class NameGaussianIntegers(LatticePointScene):
         last_dot = None
         for dot in self.circle_dots:
             anims = [
-                dot.highlight, PINK,
-                dot.conjugate_dot.highlight, PINK,
+                dot.set_color, PINK,
+                dot.conjugate_dot.set_color, PINK,
             ]
             if last_dot is None:
                 anims += [
@@ -1888,8 +1888,8 @@ class NameGaussianIntegers(LatticePointScene):
                 anims += map(ShowCreation, dot.line_pair)
             else:
                 anims += [
-                    last_dot.highlight, self.dot_color,
-                    last_dot.conjugate_dot.highlight, self.dot_color,
+                    last_dot.set_color, self.dot_color,
+                    last_dot.conjugate_dot.set_color, self.dot_color,
                     ReplacementTransform(last_dot.equation, dot.equation),
                     ReplacementTransform(last_dot.label, dot.label),
                     ReplacementTransform(last_dot.line_pair, dot.line_pair),
@@ -1914,14 +1914,14 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
         ]))
         for alt_rhs in alt_rhs_list:
             if "\\ne" in alt_rhs.get_tex_string():
-                alt_rhs.highlight(RED)
+                alt_rhs.set_color(RED)
             else:
-                alt_rhs.highlight(GREEN)
+                alt_rhs.set_color(GREEN)
             alt_rhs.move_to(equation.get_right())
         number.save_state()
         number.next_to(self.teacher, UP+LEFT)
         title = TextMobject("Almost", "Unique factorization")
-        title.highlight_by_tex("Almost", YELLOW)
+        title.set_color_by_tex("Almost", YELLOW)
         title.to_edge(UP)
 
         self.play(
@@ -2000,11 +2000,11 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             ]
         ]
         five_dot = dots[0]
-        five_dot.highlight(YELLOW)
+        five_dot.set_color(YELLOW)
         p_dots = VGroup(*dots[1:])
         p1_dot, p2_dot, p3_dot, p4_dot, p5_dot, p6_dot = p_dots
-        VGroup(p1_dot, p3_dot, p5_dot).highlight(PINK)
-        VGroup(p2_dot, p4_dot, p6_dot).highlight(RED)
+        VGroup(p1_dot, p3_dot, p5_dot).set_color(PINK)
+        VGroup(p2_dot, p4_dot, p6_dot).set_color(RED)
 
         labels = [
             TexMobject(tex).add_background_rectangle()
@@ -2043,7 +2043,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
         )
         VGroup(
             times_i, times_neg_i, times_i_arc, times_neg_i_arc
-        ).highlight(MAROON_B)
+        ).set_color(MAROON_B)
 
         gaussian_prime = TextMobject("$\\Rightarrow$ ``Gaussian prime''")
         gaussian_prime.add_background_rectangle()
@@ -2161,13 +2161,13 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
         expression.shift(2*UP)
         two = expression.get_part_by_tex("2")
         five = expression.get_part_by_tex("5")
-        two.highlight(BLUE)
-        five.highlight(GREEN)
+        two.set_color(BLUE)
+        five.set_color(GREEN)
         two.factors = TexMobject("(1+i)", "(1-i)")
         five.factors = TexMobject("(2+i)", "(2-i)")
         for mob, vect in (two, DOWN), (five, UP):
             mob.factors.next_to(mob, vect, LARGE_BUFF)
-            mob.factors.highlight(mob.get_color())
+            mob.factors.set_color(mob.get_color())
             mob.arrows = VGroup(*[
                 Arrow(
                     mob.get_edge_center(vect),
@@ -2235,14 +2235,14 @@ class FactorizationPattern(Scene):
             Dot(self.number_line.number_to_point(prime))
             for prime in primes
         ])
-        dots.highlight(GREEN)
+        dots.set_color(GREEN)
         prime_mobs = VGroup(*map(TexMobject, map(str, primes)))
         arrows = VGroup()
         for prime_mob, dot in zip(prime_mobs, dots):
             prime_mob.next_to(dot, UP, LARGE_BUFF)
-            prime_mob.highlight(dot.get_color())
+            prime_mob.set_color(dot.get_color())
             arrow = Arrow(prime_mob, dot, buff = SMALL_BUFF)
-            arrow.highlight(dot.get_color())
+            arrow.set_color(dot.get_color())
             arrows.add(arrow)
 
         factorizations = VGroup(*[
@@ -2291,14 +2291,14 @@ class FactorizationPattern(Scene):
             Dot(self.number_line.number_to_point(prime))
             for prime in primes
         ])
-        dots.highlight(RED)
+        dots.set_color(RED)
         prime_mobs = VGroup(*map(TexMobject, map(str, primes)))
         arrows = VGroup()
         for prime_mob, dot in zip(prime_mobs, dots):
             prime_mob.next_to(dot, UP, LARGE_BUFF)
-            prime_mob.highlight(dot.get_color())
+            prime_mob.set_color(dot.get_color())
             arrow = Arrow(prime_mob, dot, buff = SMALL_BUFF)
-            arrow.highlight(dot.get_color())
+            arrow.set_color(dot.get_color())
             arrows.add(arrow)
 
         words = TextMobject("Already Gaussian primes")
@@ -2358,7 +2358,7 @@ class FactorizationPattern(Scene):
         two = TexMobject("2")
         two.next_to(two_dot, UP, LARGE_BUFF)
         arrow = Arrow(two, two_dot, buff = SMALL_BUFF)
-        VGroup(two_dot, two, arrow).highlight(YELLOW)
+        VGroup(two_dot, two, arrow).set_color(YELLOW)
 
         mover = two.copy()
         mover.generate_target()
@@ -2375,7 +2375,7 @@ class FactorizationPattern(Scene):
         times_i = TexMobject("\\times i")
         # times_i.scale(1.5)
         times_i.next_to(time_i_arrow, DOWN)
-        times_i.highlight(time_i_arrow.get_color())
+        times_i.set_color(time_i_arrow.get_color())
         words = TextMobject("You'll see why this matters...")
         words.next_to(times_i, DOWN)
         words.shift_onto_screen()
@@ -2419,13 +2419,13 @@ class FactorTwo(LatticePointScene):
     }
     def construct(self):
         two_dot = Dot(self.plane.coords_to_point(2, 0))
-        two_dot.highlight(YELLOW)
+        two_dot.set_color(YELLOW)
         factor_dots = VGroup(*[
             Dot(self.plane.coords_to_point(1, u))
             for u in 1, -1
         ])
         two_label = TexMobject("2").next_to(two_dot, DOWN)
-        two_label.highlight(YELLOW)
+        two_label.set_color(YELLOW)
         two_label.add_background_rectangle()
         factor_labels = VGroup(*[
             TexMobject(tex).add_background_rectangle().next_to(dot, vect)
@@ -2433,11 +2433,11 @@ class FactorTwo(LatticePointScene):
                 ["1+i", "1-i"], factor_dots, [UP, DOWN]
             )
         ])
-        VGroup(factor_labels, factor_dots).highlight(MAROON_B)
+        VGroup(factor_labels, factor_dots).set_color(MAROON_B)
 
         for dot in it.chain(factor_dots, [two_dot]):
             line = Line(self.plane_center, dot.get_center())
-            line.highlight(dot.get_color())
+            line.set_color(dot.get_color())
             dot.add(line)
 
         self.play(
@@ -2455,7 +2455,7 @@ class FactorTwo(LatticePointScene):
         ])
         self.wait(2)
         dot_copy = factor_dots[1].copy()
-        dot_copy.highlight(RED)
+        dot_copy.set_color(RED)
         for angle in np.pi/2, -np.pi/2:
             self.play(Rotate(dot_copy, angle, run_time = 2))
             self.wait(2)
@@ -2505,7 +2505,7 @@ class IntroduceRecipe(Scene):
         strings = ("a", "b", self.N_string)
         colors = (self.x_color, self.y_color, self.N_color)
         for tex, color in zip(strings, colors):
-            title.highlight_by_tex(tex, color, substring = False)
+            title.set_color_by_tex(tex, color, substring = False)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
         h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
@@ -2553,11 +2553,11 @@ class IntroduceRecipe(Scene):
             mob.underlying_number = factor
             y = complex(factor).imag
             if y == 0:
-                mob.highlight(self.i_zero_color)
+                mob.set_color(self.i_zero_color)
             elif y > 0:
-                mob.highlight(self.i_positive_color)
+                mob.set_color(self.i_positive_color)
             elif y < 0:
-                mob.highlight(self.i_negative_color)
+                mob.set_color(self.i_negative_color)
         movers = VGroup()
         mover = self.integer_factorization[0].copy()
         mover.target = factorization[0]
@@ -2727,7 +2727,7 @@ class IntroduceRecipe(Scene):
             product_mob = TexMobject(
                 self.complex_number_to_tex(product)
             )
-            product_mob.highlight(color)
+            product_mob.set_color(color)
             product_mob.next_to(line, DOWN)
             product_mobjects.add(product_mob)
         self.product_mobjects = product_mobjects
@@ -2892,7 +2892,7 @@ class WriteAlternateLastStep(IntroduceRecipe):
         output_words, arrow = self.output_label_group
         cross = TexMobject("\\times")
         cross.replace(output_words, stretch = True)
-        cross.highlight(RED)
+        cross.set_color(RED)
         
         self.add(output_words, arrow)
         self.play(Write(cross))
@@ -2921,7 +2921,7 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
         ])
         for words, color in zip(words_group, self.colors):
             words.add_background_rectangle()
-            words.highlight(color)
+            words.set_color(color)
         words_group.arrange_submobjects(DOWN, aligned_edge = LEFT)
         words_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         angles = [np.pi/2, np.pi, -np.pi/2]
@@ -2935,7 +2935,7 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
             dots_copy = original_dots.copy()
             self.play(
                 dots_copy.rotate, angle,
-                dots_copy.highlight, color,
+                dots_copy.set_color, color,
                 path_arc = angle
             )
             self.wait()
@@ -3272,8 +3272,8 @@ class SummarizeCountingRule(Show125Circle):
         self.play(FadeIn(factorization))
         self.wait()
         self.play(
-            five.highlight, GREEN,
-            thirteen.highlight, GREEN,
+            five.set_color, GREEN,
+            thirteen.set_color, GREEN,
             FadeIn(five_brace),
             FadeIn(thirteen_brace),
         )
@@ -3287,7 +3287,7 @@ class SummarizeCountingRule(Show125Circle):
             )
         self.wait()
         self.play(
-            three.highlight, RED,
+            three.set_color, RED,
             FadeIn(three_brace)
         )
         self.wait()
@@ -3318,11 +3318,11 @@ class SummarizeCountingRule(Show125Circle):
 
         equals_four = TexMobject("=", "4")
         four = equals_four.get_part_by_tex("4")
-        four.highlight(YELLOW)
+        four.set_color(YELLOW)
         final_choice_words = TextMobject(
             "Mutiply", "by $1$, $i$, $-1$ or $-i$"
         )
-        final_choice_words.highlight(YELLOW)
+        final_choice_words.set_color(YELLOW)
         final_choice_words.next_to(four, DOWN, LARGE_BUFF, LEFT)
         final_choice_words.to_edge(RIGHT)
         final_choice_arrow = Arrow(
@@ -3422,7 +3422,7 @@ class FactorsOfTwoNeitherHelpNorHurt(TeacherStudentsScene):
         words = TextMobject(
             "Factors of", "$2^k$", "neither \\\\ help nor hurt"
         )
-        words.highlight_by_tex("2", YELLOW)
+        words.set_color_by_tex("2", YELLOW)
         self.teacher_says(words)
         self.change_student_modes(*["pondering"]*3)
         self.wait(3)
@@ -3559,7 +3559,7 @@ class IntroduceChi(FactorizationPattern):
             arrows.add(arrow)
             value = TexMobject(str(chi_func(n)))
             for tex, color in zip(["1", "-1", "0"], self.colors):
-                value.highlight_by_tex(tex, color)
+                value.set_color_by_tex(tex, color)
             value.next_to(arrow, UP)
             numbers.add(value)
         group = VGroup(chis, arrows, numbers)
@@ -3617,7 +3617,7 @@ class IntroduceChi(FactorizationPattern):
             for brace, n in zip(braces, [x, y, x*y]):
                 output = chi_func(n)
                 label = brace.get_tex(str(output))
-                label.highlight(self.number_to_color(output))
+                label.set_color(self.number_to_color(output))
                 brace.add(label)
                 expression.add(brace)
             expressions.add(expression)
@@ -3651,7 +3651,7 @@ class IntroduceChi(FactorizationPattern):
             label.scale(0.8)
             label.next_to(dot, UP, LARGE_BUFF)
             arrow = Arrow(label, dot, buff = SMALL_BUFF)
-            VGroup(dot, label, arrow).highlight(color)
+            VGroup(dot, label, arrow).set_color(color)
             dots.add(dot)
             arrows.add(arrow)
             labels.add(label)
@@ -3691,9 +3691,9 @@ class IntroduceChi(FactorizationPattern):
         result.inputs = VGroup()
         for n in truncated_numbers:
             num_mob = result.get_part_by_tex(str(n), substring = False)
-            num_mob.highlight(color)
+            num_mob.set_color(color)
             result.inputs.add(num_mob)
-        result.highlight_by_tex(output, color, substring = False)
+        result.set_color_by_tex(output, color, substring = False)
         return result
 
     def number_to_color(self, n):
@@ -3727,7 +3727,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             "5", "^3",
         )
         for tex, color in zip(["5", "3", "2"], self.colors):
-            factorization.highlight_by_tex(tex, color, substring = False)
+            factorization.set_color_by_tex(tex, color, substring = False)
         factorization.to_edge(UP)
         factorization.shift(LEFT)
 
@@ -3739,7 +3739,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
         )
         count.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         for i, color in zip([3, 2, 1], self.colors):
-            count[i][1].highlight(color)
+            count[i][1].set_color(color)
         count.next_to(
             factorization.get_part_by_tex("="), DOWN,
             buff = LARGE_BUFF,
@@ -3774,8 +3774,8 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
                 args += ["\\chi(", str(n), "^%d"%i, ")", "+"]
             args[-1] = ")"
             factor = TexMobject(*args)
-            factor.highlight_by_tex(str(n), color, substring = False)
-            factor.highlight_by_tex("1", color, substring = False)
+            factor.set_color_by_tex(str(n), color, substring = False)
+            factor.set_color_by_tex("1", color, substring = False)
             factor.scale(0.8)
             expression.add(factor)
         expression.arrange_submobjects(
@@ -3828,7 +3828,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             chi_sum, count, base, exp = group
             brace = Brace(chi_sum, DOWN)
             evaluation = brace.get_tex(*tex)
-            evaluation.highlight(base.get_color())
+            evaluation.set_color(base.get_color())
             evaluation_rect = BackgroundRectangle(evaluation)
 
             self.play(FadeIn(rect), Animation(group))
@@ -3846,7 +3846,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
                 count_num = count[1]
                 new_count = TexMobject("0")
                 new_count.replace(count_num, dim_to_match = 1)
-                new_count.highlight(count_num.get_color())
+                new_count.set_color(count_num.get_color())
                 evaluation_point = VectorizedPoint(evaluation[-4].get_right())
                 chi_sum_point = VectorizedPoint(chi_sum[-7].get_right())
                 new_brace = Brace(VGroup(*chi_sum[:-6]), DOWN)
@@ -3918,7 +3918,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             "45", "=", "3", "^2", "\\cdot", "5",
         )
         for tex, color in zip(["5", "3",], [GREEN, RED]):
-            factorization.highlight_by_tex(tex, color, substring = False)
+            factorization.set_color_by_tex(tex, color, substring = False)
         factorization.to_edge(UP)
         factorization.shift(1.7*LEFT)
 
@@ -3938,7 +3938,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             args[-1] = ")"
             factor = TexMobject(*args)
             for part in factor[1::2]:
-                part[2].highlight(color)
+                part[2].set_color(color)
             factor.scale(0.8)
             expression.add(factor)
         expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
@@ -3953,7 +3953,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         ])
         for brace, num, color in zip(braces, [1, 2], [RED, GREEN]):
             num_mob = brace.get_tex(str(num), buff = SMALL_BUFF)
-            num_mob.highlight(color)
+            num_mob.set_color(color)
             brace.add(num_mob)
 
         self.play(
@@ -4052,7 +4052,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         for product in products:
             chi_mob = TexMobject("\\chi(", str(product), ")")
             product_mob = chi_mob.get_part_by_tex(str(product))
-            product_mob.highlight(color)
+            product_mob.set_color(color)
             product_mobs.add(product_mob)
             divisor_sum.add(chi_mob)
             chi_mobs.add(chi_mob)
@@ -4066,7 +4066,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         prime_pairs = self.prime_pairs.copy()
         for prime_pair, product_mob in zip(prime_pairs, product_mobs):
             prime_pair.target = product_mob.copy()
-            prime_pair.target.highlight(YELLOW)
+            prime_pair.target.set_color(YELLOW)
 
         braces = VGroup(*[Brace(m, DOWN) for m in chi_mobs])
         for brace, product in zip(braces, products):
@@ -4083,7 +4083,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             lag_ratio = 0.25,
         ))
         self.remove(prime_pairs)
-        product_mobs.highlight(YELLOW)
+        product_mobs.set_color(YELLOW)
         self.wait(2)
         self.play(LaggedStart(
             ApplyMethod,
@@ -4120,7 +4120,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
     def introduce_points(self):
         circle = self.get_circle(radius = self.max_lattice_point_radius)
         radius = Line(ORIGIN, circle.get_right())
-        radius.highlight(RED)
+        radius.set_color(RED)
         R = TexMobject("R").next_to(radius, UP)
         R_rect = BackgroundRectangle(R)
         R_group = VGroup(R_rect, R)
@@ -4318,7 +4318,7 @@ class AddUpGrid(Scene):
                 if N%d != 0:
                     continue
                 chi_mob = TexMobject("\\chi(", str(d), ")")
-                chi_mob[1].highlight(YELLOW)
+                chi_mob[1].set_color(YELLOW)
                 chi_mob.d = d
                 chi_mobs.add(chi_mob)
                 chi_sum.add(chi_mob)
@@ -4381,7 +4381,7 @@ class AddUpGrid(Scene):
             ])
             for numbers in [6, 12], [2, 3, 5, 7, 11]
         ]
-        prime_rects.highlight(GREEN)
+        prime_rects.set_color(GREEN)
 
         randy = Randolph().flip()
         randy.next_to(self.chi_mobs, RIGHT)
@@ -4464,7 +4464,7 @@ class AddUpGrid(Scene):
                 TexMobject("+")
             )
             term.arrange_submobjects(RIGHT, SMALL_BUFF)
-            term[1][1].highlight(YELLOW)
+            term[1][1].set_color(YELLOW)
             full_sum.add(term)
         full_sum.arrange_submobjects(RIGHT, SMALL_BUFF)
         full_sum.scale(0.7)
@@ -4612,7 +4612,7 @@ class AddUpGrid(Scene):
         pi_sum.scale(0.9)
         pi = pi_sum.get_part_by_tex("pi")
         pi.scale(2, about_point = pi.get_left())
-        pi.highlight(YELLOW)
+        pi.set_color(YELLOW)
         pi_sum.shift(
             self.alt_rhs[-1].get_bottom(),
             MED_SMALL_BUFF*DOWN,
@@ -4660,7 +4660,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
             title.move_to(circle)
             title.to_edge(UP, buff = SMALL_BUFF)
             circle.next_to(title, DOWN, SMALL_BUFF)
-            title.highlight(color)
+            title.set_color(color)
             circle.title = title
             circles.add(circle)
         new_number_systems = TextMobject(
@@ -4672,7 +4672,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
         new_number_systems.next_to(circles[0].get_top(), DOWN, MED_SMALL_BUFF)
         new_number_systems.shift(MED_LARGE_BUFF*(DOWN+2*LEFT))
         gaussian_integers.next_to(new_number_systems, DOWN)
-        gaussian_integers.highlight(BLUE)
+        gaussian_integers.set_color(BLUE)
         circles[0].words = VGroup(new_number_systems, gaussian_integers)
 
         zeta = TexMobject("\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}")
@@ -4684,7 +4684,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
         zeta.next_to(circles[1].get_top(), DOWN, MED_LARGE_BUFF)
         zeta.shift(MED_LARGE_BUFF*RIGHT)
         L_function.next_to(zeta, DOWN, MED_LARGE_BUFF)
-        L_function.highlight(YELLOW)
+        L_function.set_color(YELLOW)
         circles[1].words = VGroup(zeta, L_function)
 
         mid_words = TextMobject("Where\\\\ we \\\\ were")
@@ -4828,7 +4828,7 @@ class Thumbnail(Scene):
             y = i//n_cols
             prime_mob.shift(x*x_spacing*RIGHT + y*y_spacing*DOWN)
             prime_mobs.add(prime_mob)
-            prime_mob.highlight({
+            prime_mob.set_color({
                 -1 : YELLOW,
                 0 : RED,
                 1 : BLUE_C,

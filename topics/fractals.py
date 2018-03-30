@@ -156,7 +156,7 @@ class PentagonalPiCreatureFractal(PentagonalFractal):
         for pi, color in zip(internal_pis, colors):
             pi.init_colors()
             pi.body.set_stroke(color, width = 0.5)
-            pi.highlight(color)
+            pi.set_color(color)
 
     def get_seed_shape(self):
         return Randolph(mode = "shruggie")
@@ -190,7 +190,7 @@ class PiCreatureFractal(VMobject):
         random.seed(self.random_seed)
         for pi in reversed(internal_pis):
             color = random.choice(self.colors)
-            pi.highlight(color)
+            pi.set_color(color)
             pi.set_stroke(color, width = 0)
 
 

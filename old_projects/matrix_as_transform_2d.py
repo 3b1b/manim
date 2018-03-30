@@ -72,7 +72,7 @@ class ShowMultiplication(NumberLineScene):
         copied_num_mobs = deepcopy(self.number_mobs)
         self.play(
             ApplyFunction(
-                lambda m : m.shift(DOWN).highlight("lightgreen"), 
+                lambda m : m.shift(DOWN).set_color("lightgreen"), 
                 copied_line
             ), *[
                 ApplyMethod(mob.shift, DOWN)
@@ -101,7 +101,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
         def shift_zero((x, y, z)):
             return (2*x+4, y, z)
         self.nonlinear = TextMobject("Not a Linear Transform")
-        self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
+        self.nonlinear.set_color(LIGHT_RED).to_edge(UP, buff = 1.5)
         pairs = [
             (sinx_plux_x, "numbers don't remain evenly spaced"),
             (shift_zero, "zero does not remain fixed")
@@ -118,7 +118,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
             "density" : 5*DEFAULT_POINT_DENSITY_1D,
         }
         NumberLineScene.construct(self, **config)
-        words = TextMobject(explanation).highlight(LIGHT_RED)
+        words = TextMobject(explanation).set_color(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
         self.add(words)
 
@@ -301,7 +301,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         def shift_zero((x, y, z)):
             return (2*x + 3*y + 4, -1*x+y+2, z)
         self.nonlinear = TextMobject("Nonlinear Transform")
-        self.nonlinear.highlight(LIGHT_RED)
+        self.nonlinear.set_color(LIGHT_RED)
         self.nonlinear.to_edge(UP, buff = 1.5)
         pairs = [
             (squiggle, "lines do not remain straight"),
@@ -323,7 +323,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         number_plane = NumberPlane(**config)
         numbers = number_plane.get_coordinate_labels()
         words = TextMobject(explanation)
-        words.highlight(LIGHT_RED)
+        words.set_color(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
 
         self.add(number_plane, *numbers)
@@ -358,9 +358,9 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         image = disp.paint_region(region, color = WHITE)
         self.blackness = TextMobject("")
         ImageMobject.generate_points_from_image_array(self.blackness, image)
-        self.blackness.highlight(BLACK)
+        self.blackness.set_color(BLACK)
         rectangle = Rectangle(width = 7, height=1.7)
-        rectangle.highlight(WHITE)
+        rectangle.set_color(WHITE)
         rectangle.shift(self.blackness.get_center())
         self.blackness.add(rectangle)
         self.blackness.scale_in_place(0.95)
@@ -379,7 +379,7 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             "These might look like they keep lines straight...",
             "but diagonal lines get curved"
         ]).to_edge(UP, buff = 1.5).split()
-        phrase2.highlight(LIGHT_RED)
+        phrase2.set_color(LIGHT_RED)
         diagonal = Line(
             DOWN*FRAME_Y_RADIUS+LEFT*FRAME_X_RADIUS,
             UP*FRAME_Y_RADIUS+RIGHT*FRAME_X_RADIUS,
@@ -429,9 +429,9 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         image = disp.paint_region(region, color = WHITE)
         self.blackness = TextMobject("")
         ImageMobject.generate_points_from_image_array(self.blackness, image)
-        self.blackness.highlight(BLACK)
+        self.blackness.set_color(BLACK)
         rectangle = Rectangle(width = 9, height=1.5)
-        rectangle.highlight(WHITE)
+        rectangle.set_color(WHITE)
         rectangle.shift(self.blackness.get_center())
         self.blackness.add(rectangle)
         self.blackness.scale_in_place(0.95)

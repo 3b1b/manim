@@ -48,9 +48,9 @@ class CountingScene(Scene):
                 self.add(num_mob)
             if mode == "highlight":
                 original_color = mob.color
-                mob.highlight(color)
+                mob.set_color(color)
                 self.wait(frame_time)
-                mob.highlight(original_color)
+                mob.set_color(original_color)
             if mode == "show_creation":
                 self.play(ShowCreation(mob, run_time = frame_time))
             if mode == "show":
@@ -75,7 +75,7 @@ class CountingScene(Scene):
             num_mob = TexMobject(str(count))
             num_mob.center().shift(num_offset)
             self.add(num_mob)
-            self.highlight_region(region)
+            self.set_color_region(region)
             self.wait(frame_time)
             if mode == "one_at_a_time":
                 self.reset_background()

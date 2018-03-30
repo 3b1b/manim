@@ -240,7 +240,7 @@ class LeviSolution(CycloidScene):
         tangent_line = Line(3*LEFT, 3*RIGHT)
         tangent_line.rotate(line_angle-np.pi/2)
         tangent_line.shift(self.p_point)
-        tangent_line.highlight(arc_color)
+        tangent_line.set_color(arc_color)
         right_angle_symbol = Mobject(
             Line(UP, UP+RIGHT),
             Line(UP+RIGHT, RIGHT)
@@ -382,7 +382,7 @@ class LeviSolution(CycloidScene):
         self.play(FadeIn(triangle1))
         self.wait()
         self.play(Transform(triangle1, triangle2))
-        self.play(ApplyMethod(triangle1.highlight, MAROON))
+        self.play(ApplyMethod(triangle1.set_color, MAROON))
         self.wait()
         self.remove(triangle1)
         self.add(y_line)

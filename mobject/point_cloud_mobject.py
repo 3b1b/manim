@@ -30,11 +30,12 @@ class PMobject(Mobject):
         self.rgbas = np.append(self.rgbas, rgbas, axis = 0)
         return self
 
-    def highlight(self, color = YELLOW_C, family = True):
+    def set_color(self, color = YELLOW_C, family = True):
         rgba = color_to_rgba(color)
         mobs = self.family_members_with_points() if family else [self]
         for mob in mobs:
             mob.rgbas[:,:] = rgba
+        self.color = color
         return self
 
     # def gradient_highlight(self, start_color, end_color):

@@ -122,8 +122,8 @@ class CircleConstants(Scene):
 
         self.circle_arc = Arc(angle = 0.004, radius = RADIUS)
         self.radius = Line(ORIGIN, RADIUS * RIGHT)
-        self.radius.highlight(RADIUS_COLOR)
-        self.circle_arc.highlight(CIRCUM_COLOR)
+        self.radius.set_color(RADIUS_COLOR)
+        self.circle_arc.set_color(CIRCUM_COLOR)
 
         self.pi_equals = TexMobject("\pi\\approx", color = CIRCUM_COLOR)
         self.decimal = DecimalNumber(0, color = CIRCUM_COLOR)
@@ -249,7 +249,7 @@ def get_circle_drawing_terms(radius = 1, positioning_func = lambda m : m.center(
     circle = Circle(color = YELLOW, radius = 1.25)
     positioning_func(circle)
     radius = Line(circle.get_center(), circle.points[0])
-    radius.highlight(WHITE)
+    radius.set_color(WHITE)
     one = TexMobject("1")
     one.scale(0.75)
     one_update = UpdateFromFunc(
@@ -297,9 +297,9 @@ class PiTauDebate(PiCreatureScene):
         self.add(pi, tau)
 
         pi_value = TextMobject("3.1415...!")
-        pi_value.highlight(BLUE)
+        pi_value.set_color(BLUE)
         tau_value = TextMobject("6.2831...!")
-        tau_value.highlight(GREEN)
+        tau_value.set_color(GREEN)
 
         self.play(PiCreatureSays(
             pi, pi_value,
@@ -436,7 +436,7 @@ class ManyFormulas(Scene):
         circle = Circle(color = YELLOW, radius = 2)
         circle.to_edge(RIGHT)
         radius = Line(circle.get_center(), circle.get_right())
-        radius.highlight(WHITE)
+        radius.set_color(WHITE)
 
         angle_groups = VGroup()
         for denom in 5, 4, 3, 2:
@@ -525,7 +525,7 @@ class EulerWrites628(Scene):
             "``Let", "$\\pi$", "be the", "circumference", 
             "of a circle whose", "radius = 1''",
         )
-        words.highlight_by_tex_to_color_map({
+        words.set_color_by_tex_to_color_map({
             "circumference" : YELLOW,
             "radius" : GREEN,
         })
@@ -549,7 +549,7 @@ class EulerWrites628(Scene):
             "="
         )
         perimeter.next_to(brace, UP, submobject_to_align = perimeter[1], buff = SMALL_BUFF)
-        perimeter[0][0].highlight(GREEN)
+        perimeter[0][0].set_color(GREEN)
 
         self.play(FadeInFromDown(image))
         self.play(
@@ -563,7 +563,7 @@ class EulerWrites628(Scene):
         self.play(
             pi.scale, 2,
             pi.shift, DOWN, 
-            pi.highlight, GREEN
+            pi.set_color, GREEN
         )
         self.wait()
         self.play(
@@ -599,12 +599,12 @@ class HeroAndVillain(Scene):
         good_euler_label.next_to(good_euler, DOWN)
         tau_words = TextMobject("Used 6.2831...")
         tau_words.next_to(good_euler, UP)
-        tau_words.highlight(GREEN)
+        tau_words.set_color(GREEN)
 
         bad_euler_label = TextMobject("Also Euler...")
         bad_euler_label.next_to(bad_euler, DOWN)
         pi_words = TextMobject("Used 3.1415...")
-        pi_words.highlight(RED)
+        pi_words.set_color(RED)
         pi_words.next_to(bad_euler, UP)
 
         self.play(
@@ -648,7 +648,7 @@ class AnalysisQuote(Scene):
 
         HIGHLIGHT_COLOR= GREEN
         for mob in text, pi_formula:
-            mob.highlight_by_tex_to_color_map({
+            mob.set_color_by_tex_to_color_map({
                 "semicircumference" : HIGHLIGHT_COLOR,
                 "3.14" : HIGHLIGHT_COLOR,
                 "\pi" : HIGHLIGHT_COLOR
@@ -658,8 +658,8 @@ class AnalysisQuote(Scene):
             radius = 1,
             positioning_func = lambda circ : circ.next_to(text, DOWN, LARGE_BUFF)
         )
-        terms[0].highlight(HIGHLIGHT_COLOR)
-        terms[-1].highlight(HIGHLIGHT_COLOR)
+        terms[0].set_color(HIGHLIGHT_COLOR)
+        terms[-1].set_color(HIGHLIGHT_COLOR)
 
         pi_formula.next_to(terms, DOWN, buff = 0)
         pi_formula.align_to(text, alignment_vect = RIGHT)
@@ -689,9 +689,9 @@ class QuarterTurn(Scene):
         self.wait()
 
         pi_halves = TexMobject("\\pi", "/2")
-        pi_halves[0].highlight(RED)
+        pi_halves[0].set_color(RED)
         tau_fourths = TexMobject("\\tau", "/4")
-        tau_fourths[0].highlight(GREEN)
+        tau_fourths[0].set_color(GREEN)
         for mob in pi_halves, tau_fourths:
             mob.next_to(decimal, UP)
 
@@ -717,7 +717,7 @@ class UsingTheta(Scene):
 
         radius = Line(ORIGIN, circle.get_right())
         arc = Arc(radius = 0.5, angle = TAU, num_anchors = 200)
-        arc.highlight(GREEN)
+        arc.set_color(GREEN)
         start_arc = arc.copy()
 
         theta = TexMobject("\\theta", "=")
@@ -788,7 +788,7 @@ class EulerThinking(Scene):
             "Should $\\pi$ represent \\\\", "3.1415...", 
             "or", "6.2831...", "?"
         )
-        pi_vs_tau.highlight_by_tex_to_color_map({
+        pi_vs_tau.set_color_by_tex_to_color_map({
             "3.14" : GREEN,    
             "6.28" : RED,
         })
@@ -906,14 +906,14 @@ class AskPuzzle(TeacherStudentsScene):
             "\\frac{1}{n^2} + \\cdots = ", "\\,???"
         )
         series[0].gradient_highlight(BLUE_C, BLUE_B)
-        series[1].highlight(YELLOW)
+        series[1].set_color(YELLOW)
 
         question = TextMobject(
             "How should we think about\\\\",
             "$\\displaystyle \\sum_{n=1}^\\infty \\frac{1}{n^s}$",
             "for arbitrary $s$?"
         )
-        question[1].highlight(BLUE)
+        question[1].set_color(BLUE)
         question[0].shift(SMALL_BUFF*UP)
 
         response = TextMobject(
@@ -921,7 +921,7 @@ class AskPuzzle(TeacherStudentsScene):
             "$\\displaystyle \\sum_{n = 1}^{\\infty}$", 
             "?"
         )
-        response[1].highlight(BLUE)
+        response[1].set_color(BLUE)
 
         self.teacher_says(series)
         self.change_all_student_modes("pondering", look_at_arg = series)
@@ -1000,7 +1000,7 @@ class SpecialThanks(Scene):
         title = TextMobject("Special thanks to:")
         title.to_edge(UP, LARGE_BUFF)
         title.scale(1.5)
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         h_line = Line(LEFT, RIGHT).scale(4)
         h_line.next_to(title, DOWN)
         h_line.set_stroke(WHITE, 1)
@@ -1030,7 +1030,7 @@ class EndScene(PatreonEndScreen):
         watch_basel = TextMobject(
             "One such actual piece of math", "(quite pretty!)",
         )
-        watch_basel[0].highlight(YELLOW)
+        watch_basel[0].set_color(YELLOW)
         watch_basel.next_to(basel_screen, DOWN, submobject_to_align = watch_basel[0])
 
         self.add(watch_basel)

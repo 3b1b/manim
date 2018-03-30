@@ -204,7 +204,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         edge = label.get_edge_center(-dot_to_label_dir)
         buff = 0.1
         label.shift(point - edge + buff*dot_to_label_dir)
-        label.highlight(YELLOW)
+        label.set_color(YELLOW)
 
         self.add_mobjects_among(locals().values())
 

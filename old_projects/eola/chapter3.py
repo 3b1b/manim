@@ -35,10 +35,10 @@ class OpeningQuote(Scene):
         ])
         words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
-        words.split()[1].highlight(GREEN)
-        words.split()[3].highlight(BLUE)
+        words.split()[1].set_color(GREEN)
+        words.split()[3].set_color(BLUE)
         author = TextMobject("-Morpheus")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.next_to(words, DOWN, buff = 0.5)
         comment = TextMobject("""
             (Surprisingly apt words on the importance 
@@ -57,7 +57,7 @@ class Introduction(TeacherStudentsScene):
     def construct(self):
         title = TextMobject(["Matrices as", "Linear transformations"])
         title.to_edge(UP)
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         linear_transformations = title.split()[1]
         self.add(*title.split())
         self.setup()
@@ -105,7 +105,7 @@ class DescribeTransformation(Scene):
         linear, transformation = title.split()
         brace = Brace(transformation, DOWN)
         function = TextMobject("function").next_to(brace, DOWN)
-        function.highlight(YELLOW)
+        function.set_color(YELLOW)
 
         self.play(Write(title))
         self.wait()
@@ -136,10 +136,10 @@ class DescribeTransformation(Scene):
         output_vect.next_to(L_of_v, RIGHT, buff = 1)
 
         vector_input_words = TextMobject("Vector input")
-        vector_input_words.highlight(MAROON_C)
+        vector_input_words.set_color(MAROON_C)
         vector_input_words.next_to(input_vect, DOWN)
         vector_output_words = TextMobject("Vector output")
-        vector_output_words.highlight(BLUE)
+        vector_output_words.set_color(BLUE)
         vector_output_words.next_to(output_vect, DOWN)
 
         self.play(Write(f_of_x, run_time = 1))
@@ -186,8 +186,8 @@ class WhyConfuseWithTerminology(TeacherStudentsScene):
             "suggests \\\\ that you think using",
             "movement",
         ])
-        statement.split()[1].highlight(BLUE)
-        statement.split()[-1].highlight(YELLOW)
+        statement.split()[1].set_color(BLUE)
+        statement.split()[-1].set_color(YELLOW)
         self.teacher_says(statement, width = 10)
         self.play(*[
             ApplyMethod(student.change_mode, "happy")
@@ -227,7 +227,7 @@ class ThinkinfOfFunctionsAsGraphs(VectorScene):
         )
         self.clear()
         words = TextMobject(["Instead think about", "\\emph{movement}"])
-        words.split()[-1].highlight(YELLOW)
+        words.split()[-1].set_color(YELLOW)
         self.play(Write(words))
         self.wait()
 
@@ -244,7 +244,7 @@ class TransformJustOneVector(VectorScene):
         for v, word in (v1, "Input"), (v2, "Output"):
             v.label = TextMobject("%s vector"%word)
             v.label.next_to(v.get_end(), UP)
-            v.label.highlight(v.get_color())
+            v.label.set_color(v.get_color())
             self.play(ShowCreation(v))
             self.play(Write(v.label))
         self.wait()
@@ -391,10 +391,10 @@ class LookToWordLinear(Scene):
         linear_brace = Brace(linear, DOWN)
         transformation_brace = Brace(transformation, DOWN)
         function = TextMobject("function")
-        function.highlight(YELLOW)
+        function.set_color(YELLOW)
         function.next_to(transformation_brace, DOWN)
         new_sub_word = TextMobject("What does this mean?")
-        new_sub_word.highlight(BLUE)
+        new_sub_word.set_color(BLUE)
         new_sub_word.next_to(linear_brace, DOWN)
 
         self.add(
@@ -453,7 +453,7 @@ class ToThePedants(Scene):
             I've said is equivalent to the formal definition
             (which I'll get to later in the series).
         """])
-        words.split()[0].highlight(RED)
+        words.split()[0].set_color(RED)
         words.to_edge(UP)
         self.add(words)
         self.wait()
@@ -480,7 +480,7 @@ class SimpleNonlinearTransformationScene(LinearTransformationScene):
         self.apply_nonlinear_transformation(self.func)
         words = TextMobject(self.words)
         words.to_corner(UP+RIGHT)
-        words.highlight(RED)
+        words.set_color(RED)
         words.add_background_rectangle()
         self.play(Write(words))
         self.wait()
@@ -523,7 +523,7 @@ class SneakyNonlinearTransformationExplained(SneakyNonlinearTransformation):
         )
         diag.insert_n_anchor_points(20)
         diag.change_anchor_mode("smooth")
-        diag.highlight(YELLOW)
+        diag.set_color(YELLOW)
         self.play(ShowCreation(diag))
         self.add_transformable_mobject(diag)
 
@@ -543,8 +543,8 @@ class GridLinesRemainParallel(SimpleLinearTransformationScene):
             "evenly spaced",
         ])
         glr, p, a, es = text.split()
-        p.highlight(YELLOW)
-        es.highlight(GREEN)
+        p.set_color(YELLOW)
+        es.set_color(GREEN)
         text.add_background_rectangle()
         text.shift(-text.get_bottom())
         self.play(Write(text))
@@ -577,7 +577,7 @@ class YetAnotherLinearTransformation(SimpleLinearTransformationScene):
         )
         words.add_background_rectangle()
         words.to_edge(UP)
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         formula = TexMobject([
             matrix_to_tex_string(["x_\\text{in}", "y_\\text{in}"]),
             "\\rightarrow ???? \\rightarrow",
@@ -713,9 +713,9 @@ class TrackBasisVectorsExample(LinearTransformationScene):
             "\\hat{\\jmath}",
         ])
         v, equals_neg_1, i_hat, plus_2, j_hat = v_def.split()
-        v.highlight(YELLOW)
-        i_hat.highlight(X_COLOR)
-        j_hat.highlight(Y_COLOR)
+        v.set_color(YELLOW)
+        i_hat.set_color(X_COLOR)
+        j_hat.set_color(Y_COLOR)
         v_def.add_background_rectangle()
         v_def.to_corner(UP + LEFT)
         self.v_def = v_def
@@ -730,9 +730,9 @@ class TrackBasisVectorsExample(LinearTransformationScene):
             "(\\text{Transformed } \\hat{\\jmath})",
         ])
         v, equals_neg_1, i_hat, plus_2, j_hat = rule.split()
-        v.highlight(YELLOW)
-        i_hat.highlight(X_COLOR)
-        j_hat.highlight(Y_COLOR)
+        v.set_color(YELLOW)
+        i_hat.set_color(X_COLOR)
+        j_hat.set_color(Y_COLOR)
         rule.scale(0.85)
         rule.next_to(self.v_def, DOWN, buff = 0.2)
         rule.to_edge(LEFT)
@@ -746,8 +746,8 @@ class TrackBasisVectorsExample(LinearTransformationScene):
     def show_basis_vector_coords(self):
         i_coords = matrix_to_mobject(self.transposed_matrix[0])
         j_coords = matrix_to_mobject(self.transposed_matrix[1])
-        i_coords.highlight(X_COLOR)
-        j_coords.highlight(Y_COLOR)
+        i_coords.set_color(X_COLOR)
+        j_coords.set_color(Y_COLOR)
         for coords in i_coords, j_coords:
             coords.add_background_rectangle()
             coords.scale(0.7)
@@ -761,8 +761,8 @@ class TrackBasisVectorsExample(LinearTransformationScene):
             matrix_to_tex_string(self.transposed_matrix[1]),
         ])
         equals_neg_1, i_hat, plus_2, j_hat = calculation.split()
-        i_hat.highlight(X_COLOR)
-        j_hat.highlight(Y_COLOR)
+        i_hat.set_color(X_COLOR)
+        j_hat.set_color(Y_COLOR)
         calculation.scale(0.8)
         calculation.next_to(self.linear_map_rule, DOWN)
         calculation.to_edge(LEFT)
@@ -832,14 +832,14 @@ class DeduceResultWithGeneralCoordinates(Scene):
         j_coords.next_to(j_hat_to, RIGHT, buff = 0.1)
         i_group = VMobject(i_hat_to, i_coords)
         j_group = VMobject(j_hat_to, j_coords)
-        i_group.highlight(X_COLOR)
-        j_group.highlight(Y_COLOR)
+        i_group.set_color(X_COLOR)
+        j_group.set_color(Y_COLOR)
         i_group.next_to(ORIGIN, LEFT, buff = 1).to_edge(UP)
         j_group.next_to(ORIGIN, RIGHT, buff = 1).to_edge(UP)
 
         vect = Matrix(["x", "y"])
         x, y = vect.get_mob_matrix().flatten()
-        VMobject(x, y).highlight(YELLOW)
+        VMobject(x, y).set_color(YELLOW)
         rto = TexMobject("\\rightarrow")
         equals = TexMobject("=")
         plus = TexMobject("+")
@@ -847,13 +847,13 @@ class DeduceResultWithGeneralCoordinates(Scene):
         row2 = TexMobject("-2x + 0y")
         VMobject(
             row1.split()[0], row2.split()[0], row2.split()[1]
-        ).highlight(X_COLOR)
+        ).set_color(X_COLOR)
         VMobject(
             row1.split()[1], row1.split()[4], row2.split()[2], row2.split()[5]
-        ).highlight(YELLOW)
+        ).set_color(YELLOW)
         VMobject(
             row1.split()[3], row2.split()[4]
-        ).highlight(Y_COLOR)
+        ).set_color(Y_COLOR)
         result = Matrix([row1, row2])
         result.show()
         vect_group = VMobject(
@@ -893,8 +893,8 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             new_j_coords.move_to(j_coords)
             i_coords = new_i_coords
             j_coords = new_j_coords
-        i_coords.highlight(X_COLOR)
-        j_coords.highlight(Y_COLOR)
+        i_coords.set_color(X_COLOR)
+        j_coords.set_color(Y_COLOR)
         i_brackets = i_coords.get_brackets()
         j_brackets = j_coords.get_brackets()
         for coords in i_coords, j_coords:
@@ -951,8 +951,8 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         i_circle, j_circle = col_circles
         i_message = TextMobject("Where $\\hat{\\imath}$ lands")
         j_message = TextMobject("Where $\\hat{\\jmath}$ lands")
-        i_message.highlight(X_COLOR)
-        j_message.highlight(Y_COLOR)
+        i_message.set_color(X_COLOR)
+        j_message.set_color(Y_COLOR)
         i_message.next_to(i_circle, DOWN, buff = 2, aligned_edge = RIGHT)
         j_message.next_to(j_circle, DOWN, buff = 2, aligned_edge = LEFT)
         i_arrow = Arrow(i_message, i_circle)
@@ -1036,10 +1036,10 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             row.arrange_submobjects(RIGHT, buff = 0.1)
         final_sum = Matrix([row1, row2])
         row1, row2 = final_sum.get_mob_matrix().flatten()
-        row1.split()[0].highlight(X_COLOR)
-        row2.split()[0].highlight(X_COLOR)
-        row1.split()[3].highlight(Y_COLOR)
-        row2.split()[3].highlight(Y_COLOR)
+        row1.split()[0].set_color(X_COLOR)
+        row2.split()[0].set_color(X_COLOR)
+        row1.split()[3].set_color(Y_COLOR)
+        row2.split()[3].set_color(Y_COLOR)
         equals = TexMobject("=")
         equals.next_to(formula, RIGHT)
         final_sum.next_to(equals, RIGHT)
@@ -1061,7 +1061,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         brace = Brace(formula, DOWN)
         brace_words = TextMobject("Where all the intuition is")
         brace_words.next_to(brace, DOWN)
-        brace_words.highlight(YELLOW)
+        brace_words.set_color(YELLOW)
 
         self.play(
             Transform(
@@ -1101,16 +1101,16 @@ class ColumnsToBasisVectors(LinearTransformationScene):
         matrix_mob.to_corner(UP+LEFT)
         matrix_mob.add_background_to_entries()
         col1 = VMobject(*matrix_mob.get_mob_matrix()[:,0])
-        col1.highlight(X_COLOR)
+        col1.set_color(X_COLOR)
         col2 = VMobject(*matrix_mob.get_mob_matrix()[:,1])
-        col2.highlight(Y_COLOR)
+        col2.set_color(Y_COLOR)
         matrix_brackets = matrix_mob.get_brackets()
         matrix_background = BackgroundRectangle(matrix_mob)
         self.add_foreground_mobject(matrix_background, matrix_mob)
 
         if vector_coords is not None:
             vector = Matrix(vector_coords)
-            VMobject(*vector.get_mob_matrix().flatten()).highlight(YELLOW)
+            VMobject(*vector.get_mob_matrix().flatten()).set_color(YELLOW)
             vector.scale_to_fit_height(matrix_mob.get_height())
             vector.next_to(matrix_mob, RIGHT)
             vector_background = BackgroundRectangle(vector)
@@ -1118,8 +1118,8 @@ class ColumnsToBasisVectors(LinearTransformationScene):
 
         new_i = Vector(matrix[:,0])
         new_j = Vector(matrix[:,1])
-        i_label = vector_coordinate_label(new_i).highlight(X_COLOR)
-        j_label = vector_coordinate_label(new_j).highlight(Y_COLOR)
+        i_label = vector_coordinate_label(new_i).set_color(X_COLOR)
+        j_label = vector_coordinate_label(new_j).set_color(Y_COLOR)
         i_coords = VMobject(*i_label.get_mob_matrix().flatten())
         j_coords = VMobject(*j_label.get_mob_matrix().flatten())
         i_brackets = i_label.get_brackets()
@@ -1214,8 +1214,8 @@ class Describe90DegreeRotation(LinearTransformationScene):
         matrix_background = BackgroundRectangle(matrix)
         col1 = VMobject(*matrix.get_mob_matrix()[:,0])
         col2 = VMobject(*matrix.get_mob_matrix()[:,1])
-        col1.highlight(X_COLOR)
-        col2.highlight(Y_COLOR)
+        col1.set_color(X_COLOR)
+        col2.set_color(Y_COLOR)
         self.add_foreground_mobject(matrix_background, matrix.get_brackets())
 
         self.wait()
@@ -1226,7 +1226,7 @@ class Describe90DegreeRotation(LinearTransformationScene):
 
         for vect, color, col in [(self.i_hat, X_COLOR, col1), (self.j_hat, Y_COLOR, col2)]:
             label = vector_coordinate_label(vect)
-            label.highlight(color)
+            label.set_color(color)
             background = BackgroundRectangle(label)
             coords = VMobject(*label.get_mob_matrix().flatten())
             brackets = label.get_brackets()
@@ -1245,7 +1245,7 @@ class Describe90DegreeRotation(LinearTransformationScene):
 
     def show_vector(self, matrix):
         vector = Matrix(["x", "y"])
-        VMobject(*vector.get_mob_matrix().flatten()).highlight(YELLOW)
+        VMobject(*vector.get_mob_matrix().flatten()).set_color(YELLOW)
         vector.scale_to_fit_height(matrix.get_height())
         vector.next_to(matrix, RIGHT)
         v_background = BackgroundRectangle(vector)
@@ -1285,7 +1285,7 @@ class LinearlyDependentColumns(ColumnsToBasisVectors):
         subtitle.next_to(title, DOWN)
         title.add(subtitle)
         title.shift(UP).to_edge(LEFT)
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         self.add_foreground_mobject(title)
         self.move_matrix_columns([[2, 1], [-2, -1]])
 
@@ -1359,7 +1359,7 @@ class TransformationsAreFunctions(Scene):
             "function"
         ])
         title_start, function = title.split()
-        function.highlight(YELLOW)
+        function.set_color(YELLOW)
         title.to_edge(UP)
 
         equation = TexMobject([
@@ -1370,18 +1370,18 @@ class TransformationsAreFunctions(Scene):
             "\\vec{\\textbf{w}}",
         ])
         L, lp, _input, equals, _output = equation.split()
-        L.highlight(YELLOW)
-        _input.highlight(MAROON_C)
-        _output.highlight(BLUE)
+        L.set_color(YELLOW)
+        _input.set_color(MAROON_C)
+        _output.set_color(BLUE)
         equation.scale(2)
         equation.next_to(title, DOWN, buff = 1)
 
         starting_vector = TextMobject("Starting vector")
         starting_vector.shift(DOWN+3*LEFT)
-        starting_vector.highlight(MAROON_C)
+        starting_vector.set_color(MAROON_C)
         ending_vector = TextMobject("The vector where it lands")
         ending_vector.shift(DOWN).to_edge(RIGHT)
-        ending_vector.highlight(BLUE)
+        ending_vector.set_color(BLUE)
 
         func_arrow = Arrow(function.get_bottom(), L.get_top(), color = YELLOW)
         start_arrow = Arrow(starting_vector.get_top(), _input.get_bottom(), color = MAROON_C)
@@ -1479,18 +1479,18 @@ class TryingToVisualizeFourDimensions(Scene):
             \\right]
         """)
         formula.next_to(randy, RIGHT)
-        formula.split()[3].highlight(X_COLOR)
-        formula.split()[4].highlight(Y_COLOR)
-        VMobject(*formula.split()[9:9+4]).highlight(MAROON_C)
-        VMobject(*formula.split()[13:13+4]).highlight(BLUE)
+        formula.split()[3].set_color(X_COLOR)
+        formula.split()[4].set_color(Y_COLOR)
+        VMobject(*formula.split()[9:9+4]).set_color(MAROON_C)
+        VMobject(*formula.split()[13:13+4]).set_color(BLUE)
         thought = TextMobject("""
             Do I imagine plotting 
             $(x, y, 2x+y, x+2y)$???
         """)
-        thought.split()[-17].highlight(X_COLOR)
-        thought.split()[-15].highlight(Y_COLOR)
-        VMobject(*thought.split()[-13:-13+4]).highlight(MAROON_C)
-        VMobject(*thought.split()[-8:-8+4]).highlight(BLUE)
+        thought.split()[-17].set_color(X_COLOR)
+        thought.split()[-15].set_color(Y_COLOR)
+        VMobject(*thought.split()[-13:-13+4]).set_color(MAROON_C)
+        VMobject(*thought.split()[-8:-8+4]).set_color(BLUE)
 
         bubble.position_mobject_inside(thought)
         thought.shift(0.2*UP)
@@ -1563,7 +1563,7 @@ class AdditivityProperty(LinearTransformationScene):
                 linear transformations
             """)
             title.to_edge(UP)
-            title.highlight(YELLOW)
+            title.set_color(YELLOW)
             title.add_background_rectangle()
             self.play(Write(title))
             added_anims.append(Animation(title))
@@ -1670,7 +1670,7 @@ class MoveAroundAllVectors(LinearTransformationScene):
                 if v is not vector
             ])
             self.wait()
-            self.add(vector.copy().highlight(DARK_GREY))
+            self.add(vector.copy().set_color(DARK_GREY))
         else:
             for vector in vectors.split():
                 self.add_vector(vector, animate = False)

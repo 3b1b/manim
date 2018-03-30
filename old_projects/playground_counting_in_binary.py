@@ -130,7 +130,7 @@ class ClearLeftSide(SceneFromVideo):
     def construct(self, scenename):
         path = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, scenename + ".mp4")
         SceneFromVideo.construct(self, path)
-        self.highlight_region_over_time_range(
+        self.set_color_region_over_time_range(
             Region(lambda x, y : x < -1, shape = self.shape)
         )
 

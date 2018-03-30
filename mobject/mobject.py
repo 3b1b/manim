@@ -453,7 +453,7 @@ class Mobject(Container):
     ## Match other mobvject properties
 
     def match_color(self, mobject):
-        return self.highlight(mobject.get_color())
+        return self.set_color(mobject.get_color())
 
     def match_dim(self, mobject, dim, **kwargs):
         return self.rescale_to_fit(
@@ -472,7 +472,7 @@ class Mobject(Container):
 
     ## Color functions
 
-    def highlight(self, color = YELLOW_C, family = True):
+    def set_color(self, color = YELLOW_C, family = True):
         """
         Condition is function which takes in one arguments, (x, y, z).
         Here it just recurses to submobjects, but in subclasses this 
@@ -481,7 +481,8 @@ class Mobject(Container):
         """
         if family:
             for submob in self.submobjects:
-                submob.highlight(color, family = family)
+                submob.set_color(color, family = family)
+        self.color = color
         return self
 
     def gradient_highlight(self, *colors):
@@ -496,13 +497,13 @@ class Mobject(Container):
         if len(colors) == 0:
             raise Exception("Need at least one color")
         elif len(colors) == 1:
-            return self.highlight(*colors)
+            return self.set_color(*colors)
 
         mobs = self.family_members_with_points()
         new_colors = color_gradient(colors, len(mobs))
 
         for mob, color in zip(mobs, new_colors):
-            mob.highlight(color, family = False)
+            mob.set_color(color, family = False)
         return self
 
     def submobject_radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
@@ -514,17 +515,12 @@ class Mobject(Container):
             t = np.linalg.norm(mob.get_center() - center)/radius
             t = min(t,1)
             mob_color = interpolate_color(inner_color, outer_color, t)
-            mob.highlight(mob_color, family = False)
+            mob.set_color(mob_color, family = False)
 
-        return self
-
-    def set_color(self, color):
-        self.highlight(color)
-        self.color = Color(color)
         return self
 
     def to_original_color(self):
-        self.highlight(self.color)
+        self.set_color(self.color)
         return self
 
     # Some objects (e.g., VMobjects) have special fading
@@ -540,7 +536,7 @@ class Mobject(Container):
             start = color_to_rgb(self.get_color())
             end = color_to_rgb(color)
             new_rgb = interpolate(start, end, alpha)
-            self.highlight(Color(rgb = new_rgb), family = False)
+            self.set_color(Color(rgb = new_rgb), family = False)
         return self
 
     def fade_to(self, color, alpha):

@@ -81,7 +81,7 @@ class HappyTauDayWords(Scene):
         words = TextMobject("Happy Tau Day Everybody!").scale(2)
         tau = TauCreature().move_to(2*LEFT + UP)
         pi = PiCreature().move_to(2*RIGHT + 3*DOWN)
-        pi.highlight("red")
+        pi.set_color("red")
         self.add(words, tau, pi)
         self.wait()
         self.play(BlinkPiCreature(tau))
@@ -180,7 +180,7 @@ class TauPoem(Scene):
     def line0(self):
         two, pi = TexMobject(["2", "\\pi"]).scale(2).split()
         self.add(two, pi)
-        two_copy = deepcopy(two).rotate(np.pi/10).highlight("yellow")
+        two_copy = deepcopy(two).rotate(np.pi/10).set_color("yellow")
         self.play(Transform(
             two, two_copy,
             rate_func = squish_rate_func(
@@ -197,7 +197,7 @@ class TauPoem(Scene):
         sphere = Mobject()
         sphere.interpolate(
             two_pi, 
-            Sphere().highlight("yellow"),
+            Sphere().set_color("yellow"),
             0.8
         )
         self.add(two_pi)
@@ -224,7 +224,7 @@ class TauPoem(Scene):
         ))
         blinked = deepcopy(tau).blink()
         for eye in blinked.eyes:
-            eye.highlight("black")
+            eye.set_color("black")
         self.add(*set(tau.parts).difference(tau.white_parts))
         self.play(*[
             Transform(*eyes)
@@ -252,7 +252,7 @@ class TauPoem(Scene):
 
     def pi_speaking(self, text):
         pi = PiCreature()
-        pi.highlight("red").give_straight_face()
+        pi.set_color("red").give_straight_face()
         pi.shift(3*DOWN + LEFT)
         bubble = SpeechBubble().speak_from(pi)
         bubble.write(text)
@@ -263,7 +263,7 @@ class TauPoem(Scene):
         self.add(pi)
         self.wait()
         self.play(Transform(
-            Point(bubble.tip).highlight("black"),
+            Point(bubble.tip).set_color("black"),
             bubble
         ))
 
@@ -293,7 +293,7 @@ class TauPoem(Scene):
     def line7(self):
         bubble = ThoughtBubble()
         heart = ImageMobject("heart")
-        heart.scale(0.5).shift(DOWN).highlight("red")
+        heart.scale(0.5).shift(DOWN).set_color("red")
         for mob in bubble, heart:
             mob.sort_points(np.linalg.norm)
 
@@ -319,26 +319,26 @@ class TauPoem(Scene):
             Transform(pi.left_leg, tau.leg),
             Transform(
                 pi.right_leg, 
-                Point(pi.right_leg.points[0,:]).highlight("black")
+                Point(pi.right_leg.points[0,:]).set_color("black")
             ),
             Transform(pi.mouth, tau.mouth),
             CounterclockwiseTransform(
                 two, 
-                Dot(two.get_center()).highlight("black")
+                Dot(two.get_center()).set_color("black")
             )
         )
 
     def line9(self):
         tau = TauCreature()
-        pi = PiCreature().highlight("red").give_straight_face()
+        pi = PiCreature().set_color("red").give_straight_face()
         pi.scale(0.2).move_to(tau.arm.points[-1,:])
-        point = Point(pi.get_center()).highlight("black")
+        point = Point(pi.get_center()).set_color("black")
         vanish_local = 3*(LEFT + UP)
         new_pi = deepcopy(pi)
         new_pi.scale(0.01)
         new_pi.rotate(np.pi)
         new_pi.shift(vanish_local)
-        Mobject.highlight(new_pi, "black")
+        Mobject.set_color(new_pi, "black")
 
         self.add(tau)
         self.wait()
@@ -391,12 +391,12 @@ class TauPoem(Scene):
         grid = Grid(radius = radius).shift(grid_center)
         circle = Circle().scale(interval_size).shift(grid_center)
         grid.add(TexMobject("e^{ix}").shift(grid_center+UP+RIGHT))
-        circle.highlight("white")
+        circle.set_color("white")
         tau_line = Line(
             *[np.pi*interval_size*vect for vect in LEFT, RIGHT],
             density = 5*DEFAULT_POINT_DENSITY_1D
         )
-        tau_line.highlight("red")
+        tau_line.set_color("red")
         tau = TexMobject("\\tau")
         tau.shift(tau_line.get_center() + 0.5*UP)
 
@@ -445,7 +445,7 @@ class TauPoem(Scene):
         )
         self.add(pi)
         self.play(
-            Transform(Point(bubble.tip).highlight("black"), bubble)
+            Transform(Point(bubble.tip).set_color("black"), bubble)
         )
 
     def line15(self):
@@ -460,7 +460,7 @@ class TauPoem(Scene):
 
         self.add(pi, bubble, *formula)
         self.wait(2)
-        self.play(ApplyMethod(half.highlight, "yellow"))
+        self.play(ApplyMethod(half.set_color, "yellow"))
 
     def line16(self):
         self.add(TexMobject(
@@ -495,7 +495,7 @@ class TauPoem(Scene):
             Line(ORIGIN, DOWN)
         ]
         for line in lines:
-            line.highlight("red")
+            line.set_color("red")
 
         self.play(ApplyFunction(trianglify, circle, run_time = 2.0))
         self.add(tau_r, r)
@@ -510,7 +510,7 @@ class TauPoem(Scene):
         tau.shift_eyes()
         tau.move_to(DOWN)
         pi = PiCreature()
-        pi.highlight("red")
+        pi.set_color("red")
         pi.move_to(DOWN + 3*LEFT)
         mad_tau = deepcopy(tau).make_mean()
         mad_tau.arm.wag(0.5*UP, LEFT, 2.0)

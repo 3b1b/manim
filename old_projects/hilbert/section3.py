@@ -100,7 +100,7 @@ class InfiniteResultsFiniteWorld(Scene):
         self.clear()
         self.add(left_mob, arrow, right_mob)
         ex = TextMobject("\\times")
-        ex.highlight(RED)
+        ex.set_color(RED)
         # ex.shift(arrow.get_center())
         middle = TexMobject(
             "\\sum_{n=0}^N 2^n \\equiv -1 \\mod 2^{N+1}"
@@ -150,7 +150,7 @@ class InfiniteResultsFiniteWorld(Scene):
         self.add(left_mob, arrow, right_mob)
         words = TextMobject("is equivalent to")
         words.shift(0.25*LEFT)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         new_left = left_mob.copy().shift(RIGHT)
         new_right = right_mob.copy()
         new_right.shift(
@@ -230,29 +230,29 @@ class InfiniteObjectsEncapsulateFiniteObjects(Scene):
             ]
         ]
         
-        words[0].highlight(RED)
+        words[0].set_color(RED)
         words[1].next_to(words[0])
-        words[2].highlight(GREEN).next_to(words[1])
+        words[2].set_color(GREEN).next_to(words[1])
         Mobject(*words).center().to_edge(UP)
         infinite_objects = [
             TexMobject(
                 "\\sum_{n=0}^\\infty", 
                 size = "\\normal"
-            ).highlight(RED_E),
+            ).set_color(RED_E),
             Sierpinski(order = 8).scale(0.3),
             TextMobject(
                 "$\\exists$ something infinite $\\dots$"
-            ).highlight(RED_B)
+            ).set_color(RED_B)
         ]
         finite_objects = [
             TexMobject(
                 "\\sum_{n=0}^N",
                 size = "\\normal"
-            ).highlight(GREEN_E),
+            ).set_color(GREEN_E),
             self.get_triangles(),
             TextMobject(
                 "$\\forall$ finite somethings $\\dots$"
-            ).highlight(GREEN_B)
+            ).set_color(GREEN_B)
         ]
         for infinite, finite, n in zip(infinite_objects, finite_objects, it.count(1, 2)):
             infinite.next_to(words[0], DOWN, buff = n)

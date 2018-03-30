@@ -47,7 +47,7 @@ class TrigRepresentationsScene(Scene):
         self.axes = Axes(
             unit_size = self.unit_length,
         )
-        self.axes.highlight(self.axes_color)
+        self.axes.set_color(self.axes_color)
         self.add(self.axes)
 
     def init_circle(self):
@@ -76,7 +76,7 @@ class TrigRepresentationsScene(Scene):
         )
         theta = TexMobject("\\theta")
         theta.shift(1.5*arc.point_from_proportion(0.5))
-        theta.highlight(self.theta_color)
+        theta.set_color(self.theta_color)
         theta.scale_to_fit_height(self.theta_height)
         line = Line(ORIGIN, self.get_circle_point())
         dot = Dot(line.get_end(), radius = 0.05)
@@ -161,13 +161,13 @@ class IntroduceCSC(TrigRepresentationsScene):
         CSC = TextMobject("C", "S", "C", arg_separator = "")
         csc_of_theta = TextMobject("c", "s", "c", "(\\theta)", arg_separator = "")
         csc, of_theta = VGroup(*csc_of_theta[:3]), csc_of_theta[-1]
-        of_theta[1].highlight(YELLOW)
+        of_theta[1].set_color(YELLOW)
         CSC.move_to(csc, DOWN)
 
         csc_line = self.get_trig_line("csc")
         csc_line.set_stroke(width = 8)
         cot_line = self.get_trig_line("cot")
-        cot_line.highlight(WHITE)
+        cot_line.set_color(WHITE)
         brace = Brace(csc_line, LEFT)
 
         self.play(Write(Cam_S_C))
@@ -193,7 +193,7 @@ class IntroduceCSC(TrigRepresentationsScene):
         self.play(ShowCreation(cot_line))
         self.play(
             ShowCreation(csc_line),
-            csc.highlight, csc_line.get_color(),
+            csc.set_color, csc_line.get_color(),
         )
         self.wait(3)
 
@@ -352,7 +352,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
 
         self.change_mode("pondering")
         for frac, text in (tan_frac, tan_text), (cot_frac, cot_text):
-            VGroup(frac[5], frac[-2]).highlight(YELLOW)
+            VGroup(frac[5], frac[-2]).set_color(YELLOW)
             frac.scale_in_place(0.7)
             text.save_state()
             text.next_to(frac, LEFT)
@@ -366,7 +366,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.wait()
 
         self.play(
-            self.theta_group[-1].highlight, YELLOW,
+            self.theta_group[-1].set_color, YELLOW,
             ShowCreation(line),
             self.pi_creature.change_mode, 'pondering'
         )
@@ -435,7 +435,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         csc_group.add(csc_dot)
 
         for text, frac in (sec_text, sec_frac), (csc_text, csc_frac):
-            frac[-2].highlight(YELLOW)
+            frac[-2].set_color(YELLOW)
             frac.scale_in_place(0.7)
             text.save_state()
             text.next_to(frac, LEFT)
@@ -532,16 +532,16 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         )
         frac1 = TexMobject("\\frac{\\sin(\\theta)}{1}")
         frac1.next_to(opp_over_hyp)
-        frac1[-4].highlight(YELLOW)
+        frac1[-4].set_color(YELLOW)
         frac2 = TexMobject("= \\frac{1}{\\csc(\\theta)}")
         frac2.next_to(frac1)
-        frac2[-2].highlight(YELLOW)
+        frac2[-2].set_color(YELLOW)
         frac_group = VGroup(opp_over_hyp, frac1, frac2)
         frac_group.scale_to_fit_width(FRAME_X_RADIUS-1)
         frac_group.next_to(ORIGIN, RIGHT).to_edge(UP)
 
         question = TextMobject("Why is this $\\theta$?")
-        question.highlight(YELLOW)
+        question.set_color(YELLOW)
         question.to_corner(UP+RIGHT)
         arrow = Arrow(question.get_bottom(), arc_theta)
 
@@ -705,10 +705,10 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         )
         brace.rotate(angle)
         brace.shift(line.get_center())
-        brace.highlight(line.get_color())
+        brace.set_color(line.get_color())
         text = TexMobject("\\%s(\\theta)"%func_name)
         text.scale(0.75)
-        text[-2].highlight(self.theta_color)
+        text[-2].set_color(self.theta_color)
         text.add_background_rectangle()
         text.next_to(brace.get_center_of_mass(), vect, buff = 1.2*MED_SMALL_BUFF)
         return VGroup(line, brace, text)
@@ -760,11 +760,11 @@ class RenameAllInTermsOfSine(Scene):
         self.wait()
         for mob, rhs_mob in zip(mobs, rhs_mobs):
             rhs_mob.next_to(mob)
-            rhs_mob.highlight(sin.target_color)
+            rhs_mob.set_color(sin.target_color)
             mob.save_state()
             mob.generate_target()
             VGroup(mob.target, rhs_mob).move_to(mob)
-        sin.target.highlight(sin.target_color)
+        sin.target.set_color(sin.target_color)
         self.play(*it.chain(*[
             map(MoveToTarget, mobs),
             [Write(rhs_mobs)]
@@ -776,13 +776,13 @@ class RenameAllInTermsOfSine(Scene):
             anims += [
                 FadeOut(rhs_mob),
                 mob.restore,
-                mob.highlight, mob.target_color,
+                mob.set_color, mob.target_color,
             ]
         self.play(*anims)
         self.wait()
 
         new_rhs_mobs = [
-            TexMobject("=\\frac{1}{\\%s(\\theta)}"%s).highlight(color)
+            TexMobject("=\\frac{1}{\\%s(\\theta)}"%s).set_color(color)
             for s, color in [
                 ("cos", cos.target_color),
                 ("tan", tan.target_color),
@@ -824,8 +824,8 @@ class MisMatchOfCoPrefix(TeacherStudentsScene):
         )
         self.random_blink()
         self.play(
-            VGroup(*eq1[-9:-7]).highlight, YELLOW,
-            VGroup(*eq2[:2]).highlight, YELLOW,
+            VGroup(*eq1[-9:-7]).set_color, YELLOW,
+            VGroup(*eq2[:2]).set_color, YELLOW,
             *[
                 ApplyMethod(pi.change_mode, "confused")
                 for pi in self.get_students()

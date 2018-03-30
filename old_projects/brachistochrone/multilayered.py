@@ -228,7 +228,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
             )
             eq_mob.shift(layer.get_center()+2*LEFT)
             v_eq = eq_mob.split()
-            v_eq[0].highlight(layer.get_color())
+            v_eq[0].set_color(layer.get_color())
             path = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
             path.shift(layer.get_center())
             brace_endpoints = Mobject(
@@ -375,7 +375,7 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         self.freeze_background()
 
         cycloid = Cycloid(end_theta = np.pi)
-        cycloid.highlight(YELLOW)
+        cycloid.set_color(YELLOW)
         chopped_cycloid = cycloid.copy()
         n = cycloid.get_num_points()
         chopped_cycloid.filter_out(lambda p : p[1] > 1 and p[0] < 0)

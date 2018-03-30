@@ -162,7 +162,7 @@ class CountingScene(Scene):
             digit = TexMobject(str(self.get_place_num(num, place)))
             if place >= len(self.digit_place_colors):
                 self.digit_place_colors += self.digit_place_colors
-            digit.highlight(self.digit_place_colors[place])
+            digit.set_color(self.digit_place_colors[place])
             digit.scale(self.num_scale_factor)
             digit.next_to(result, LEFT, buff = SMALL_BUFF, aligned_edge = DOWN)
             result.add(digit)

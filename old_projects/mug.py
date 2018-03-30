@@ -211,7 +211,7 @@ class UtilitiesPuzzleScene(Scene):
         words = TextMobject("No crossing!")
         words.next_to(arrow, UP, buff = SMALL_BUFF)
         result = VGroup(words, arrow)
-        result.highlight("RED")
+        result.set_color("RED")
         return result
 
     def get_region(self, *bounding_edges):
@@ -290,7 +290,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
         )
 
         eulers = TexMobject(*"V-E+F=2")
-        eulers.highlight_by_tex_to_color_map({
+        eulers.set_color_by_tex_to_color_map({
             "V" : RED,
             "E" : GREEN,
             "F" : BLUE,
@@ -505,7 +505,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
             is impossible.
         """)
         meta_puzzle_words.next_to(group.target, UP)
-        meta_puzzle_words.highlight(BLUE)
+        meta_puzzle_words.set_color(BLUE)
 
         self.play(
             MoveToTarget(group),
@@ -552,7 +552,7 @@ class IntroduceGraph(PiCreatureScene):
 
         vertices_word = TextMobject("Vertices")
         vertices_word.to_edge(RIGHT, buff = LARGE_BUFF)
-        vertices_word.highlight(YELLOW)
+        vertices_word.set_color(YELLOW)
 
         vertex_arrows = VGroup(*[
             Arrow(vertices_word.get_left(), dot)
@@ -633,14 +633,14 @@ class IsK33Planar(UtilitiesPuzzleScene):
         almost_solution_lines = self.get_almost_solution_lines()
 
         question = TextMobject("Is", "this graph", "planar?")
-        question.highlight_by_tex("this graph", YELLOW)
+        question.set_color_by_tex("this graph", YELLOW)
         question.to_edge(UP)
         brace = Brace(question.get_part_by_tex("graph"), DOWN, buff = SMALL_BUFF)
         fancy_name = brace.get_text(
             "``Complete bipartite graph $K_{3, 3}$''",
             buff = SMALL_BUFF
         )
-        fancy_name.highlight(YELLOW)
+        fancy_name.set_color(YELLOW)
 
         self.add(question)
         self.convert_objects_to_dots()
@@ -673,7 +673,7 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
         )
         words.to_edge(UP)
         eulers = words.get_part_by_tex("V-E+F")
-        eulers.highlight(GREEN)
+        eulers.set_color(GREEN)
         non_eulers = VGroup(*filter(lambda m : m is not eulers, words))
 
         self.add(words)
@@ -685,10 +685,10 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
 
         know_eulers = TextMobject("Know about \\\\ Euler's formula")
         know_eulers.next_to(pi1, DOWN)
-        know_eulers.highlight(GREEN)
+        know_eulers.set_color(GREEN)
         dont = TextMobject("Don't")
         dont.next_to(pi2, DOWN)
-        dont.highlight(RED)
+        dont.set_color(RED)
 
         self.play(
             FadeIn(know_eulers),
@@ -855,7 +855,7 @@ class IntroduceRegions(UtilitiesPuzzleScene):
         regions.submobjects.insert(0, back_region)
         front_regions = VGroup(*regions[1:])
 
-        back_region.highlight(BLUE_E)
+        back_region.set_color(BLUE_E)
         front_regions.gradient_highlight(GREEN_E, MAROON_E)
 
         return flat_lines, line_groups, regions
@@ -936,7 +936,7 @@ class AskAboutRegions(IntroduceRegions):
             count = new_count
 
             region.save_state()
-            anims = [ApplyMethod(region.highlight, YELLOW)]
+            anims = [ApplyMethod(region.set_color, YELLOW)]
             if last_region:
                 anims.append(ApplyMethod(last_region.restore))
             anims.append(Animation(front_regions))
@@ -1217,7 +1217,7 @@ class LightUpNodes(IntroduceRegions):
 
     def get_plus_one_anim(self, count):
         plus_one = TexMobject("+1")
-        plus_one.highlight(YELLOW)
+        plus_one.set_color(YELLOW)
         plus_one.move_to(count)
         plus_one.next_to(count, DOWN)
         plus_one.generate_target()
@@ -1287,11 +1287,11 @@ class ShowRule(TeacherStudentsScene):
             word_mob.next_to(ORIGIN, UP, SMALL_BUFF)
             word_mob.rotate(arrow.get_angle())
             word_mob.shift(arrow.get_center())
-            word_mob.highlight(GREEN)
+            word_mob.set_color(GREEN)
             arrow.add(word_mob)
-        new_vertex.highlight(YELLOW)
-        new_edge.highlight(BLUE)
-        new_region.highlight(RED)
+        new_vertex.set_color(YELLOW)
+        new_edge.set_color(BLUE)
+        new_region.set_color(RED)
         rule = VGroup(new_edge, arrows, new_vertex, new_region)
         rule.center().to_edge(UP)
 
@@ -1404,7 +1404,7 @@ class ConcludeFiveRegions(LightUpNodes):
             self.side_lines
         ))
         side_lines_rect = SurroundingRectangle(on_screen_side_lines)
-        side_lines_rect.highlight(WHITE)
+        side_lines_rect.set_color(WHITE)
 
         self.play(ShowCreation(side_lines_rect))
         self.wait()
@@ -1435,9 +1435,9 @@ class ConcludeFiveRegions(LightUpNodes):
         #Conclude
         words = TextMobject("Last line must \\\\ introduce 5th region")
         words.scale(0.8)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         rect = SurroundingRectangle(self.f_count)
-        rect.highlight(BLUE)
+        rect.set_color(BLUE)
         words.next_to(rect, DOWN)
         randy = Randolph().flip()
         randy.scale(0.5)
@@ -1544,8 +1544,8 @@ class FiveRegionsFourEdgesEachGraph(Scene):
         )
         words.arrange_submobjects(DOWN)
         words.to_edge(UP)
-        words[0][0].highlight(self.f_colors[0])
-        words[1][0].highlight(self.e_color)
+        words[0][0].set_color(self.f_colors[0])
+        words[1][0].set_color(self.e_color)
 
         squares = VGroup(*[Square() for x in range(5)])
         squares.scale(0.5)
@@ -1689,7 +1689,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             for edge in region.edges:
                 new_count = Integer(count.number + 1)
                 new_count.replace(count, dim_to_match = 1)
-                new_count.highlight(count.get_color())
+                new_count.set_color(count.get_color())
                 self.play(
                     ShowCreation(edge),
                     FadeOut(count),
@@ -1795,7 +1795,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         points *= 0.75
         points += DOWN
         vertices = VGroup(*map(Dot, points))
-        vertices.highlight(YELLOW)
+        vertices.set_color(YELLOW)
         edges = VGroup(*[
             VGroup(*[
                 Line(p1, p2, color = WHITE)
@@ -1867,7 +1867,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         words = TextMobject("``Euler's characteristic formula''")
         words.next_to(counts.target, DOWN)
         words.shift(MED_LARGE_BUFF*RIGHT)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
 
         for group in groups:
             self.play(
@@ -1975,7 +1975,7 @@ class QuestionWrapper(Scene):
             "this proof break down?",
         )
         question.to_edge(UP)
-        question.highlight_by_tex("specifically", YELLOW)
+        question.set_color_by_tex("specifically", YELLOW)
         screen_rect = ScreenRectangle(height = 5.5)
         screen_rect.next_to(question, DOWN)
 

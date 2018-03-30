@@ -183,7 +183,7 @@ class GraphScene(Scene):
         ):
         label = TexMobject(label)
         color = color or graph.get_color()
-        label.highlight(color)
+        label.set_color(color)
         if x_val is None:
             #Search from right to left
             for x in np.linspace(self.x_max, self.x_min, 100):
@@ -384,7 +384,7 @@ class GraphScene(Scene):
                 np.sign(dx)*DOWN,
                 buff = group.dx_label.get_height()/2
             )
-            group.dx_label.highlight(group.dx_line.get_color())
+            group.dx_label.set_color(group.dx_line.get_color())
 
         if df_label is not None:
             group.df_label.next_to(
@@ -392,7 +392,7 @@ class GraphScene(Scene):
                 np.sign(dx)*RIGHT,
                 buff = group.df_label.get_height()/2
             )
-            group.df_label.highlight(group.df_line.get_color())
+            group.df_label.set_color(group.df_line.get_color())
 
         if include_secant_line:
             secant_line_color = secant_line_color or self.default_derivative_color

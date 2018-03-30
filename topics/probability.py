@@ -577,7 +577,7 @@ class PlayingCard(VGroup):
             self.get_corner(UP+LEFT), DOWN+RIGHT,
             buff = MED_LARGE_BUFF*width
         )
-        value_mob.highlight(symbol.get_color())
+        value_mob.set_color(symbol.get_color())
         corner_symbol = symbol.copy()
         corner_symbol.scale_to_fit_width(width)
         corner_symbol.next_to(

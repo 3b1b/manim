@@ -35,7 +35,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
     }
     def construct(self):
         self.cycloid = Cycloid(end_theta = np.pi)
-        self.cycloid.highlight(YELLOW)
+        self.cycloid.set_color(YELLOW)
         self.top = self.cycloid.get_top()[1]
         self.bottom = self.cycloid.get_bottom()[1]-1
         self.generate_layers()

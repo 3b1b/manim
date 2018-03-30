@@ -94,7 +94,7 @@ class PiCreature(SVGMobject):
         copy_mobject.name_parts()
         return copy_mobject
 
-    def highlight(self, color):
+    def set_color(self, color):
         self.body.set_fill(color)
         return self
 

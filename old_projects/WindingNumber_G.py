@@ -123,7 +123,7 @@ class IntroSceneWrapper(PiCreatureScene):
                 3y
             \\end{array}\\right]
         """)
-        # xy_equation.highlight_by_tex_to_color_map({
+        # xy_equation.set_color_by_tex_to_color_map({
         #     "x" : BLUE,
         #     "y" : YELLOW
         # })
@@ -131,11 +131,11 @@ class IntroSceneWrapper(PiCreatureScene):
         xy_equation.next_to(solver, DOWN, MED_LARGE_BUFF)
 
         z_equation = TexMobject("z", "^5", "+", "z", "+", "1", "=", "0")
-        z_equation.highlight_by_tex("z", GREEN)
+        z_equation.set_color_by_tex("z", GREEN)
         z_equation.move_to(xy_equation, UP)
 
         zeta = TexMobject("\\zeta(s) = 0")
-        zeta[2].highlight(GREEN)
+        zeta[2].set_color(GREEN)
         zeta.next_to(z_equation, DOWN, MED_LARGE_BUFF)
 
         self.play(Write(solver))
@@ -543,12 +543,12 @@ class Introduce1DFunctionCase(Scene):
         if mention_signs:
             if too_high:
                 sign_word = TextMobject("Positive")
-                sign_word.highlight(GREEN)
+                sign_word.set_color(GREEN)
                 sign_word.scale(0.7)
                 sign_word.next_to(arrow.get_end(), RIGHT)
             else:
                 sign_word = TextMobject("Negative")
-                sign_word.highlight(RED)
+                sign_word.set_color(RED)
                 sign_word.scale(0.7)
                 sign_word.next_to(arrow.get_end(), LEFT)
             sign_word.add_background_rectangle()
@@ -598,7 +598,7 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
             equation.add(tex_mob)
         find_sqrt_2 = self.find_sqrt_2
         rect = SurroundingRectangle(VGroup(equation, find_sqrt_2))
-        rect.highlight(WHITE)
+        rect.set_color(WHITE)
 
         f_graph = self.squared_graph
         g_graph = self.two_graph
@@ -670,7 +670,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
         for equation in root_two_equations:
             equation.sort_submobjects_alphabetically()
             for part in equation.get_parts_by_tex("text"):
-                part[2:-1].highlight(YELLOW)
+                part[2:-1].set_color(YELLOW)
                 part[2:-1].scale(0.9)
             equation.move_to(self.hold_up_spot, DOWN)
 
@@ -713,7 +713,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
         complex_group = VGroup(complex_equation, z_def)
         complex_group.arrange_submobjects(DOWN)
         for tex in complex_group:
-            tex.highlight_by_tex("z", GREEN)
+            tex.set_color_by_tex("z", GREEN)
         complex_group.move_to(self.hold_up_spot, DOWN)
 
         self.play(
@@ -879,8 +879,8 @@ class IntroduceInputOutputScene(InputOutputScene):
         out_dot = in_dot.target
         for mob in in_dot, out_dot:
             mob.scale(1.5)
-        in_dot.highlight(YELLOW)
-        out_dot.highlight(PINK)
+        in_dot.set_color(YELLOW)
+        out_dot.set_color(PINK)
 
         input_label_arrow = Vector(DOWN+RIGHT)
         input_label_arrow.next_to(in_dot, UP+LEFT, SMALL_BUFF)
@@ -1015,8 +1015,8 @@ class IntroduceVectorField(IntroduceInputOutputScene):
         out_dot_continual_update = self.get_output_dot_continual_update(in_dot, out_dot)
         for mob in in_dot, out_dot:
             mob.scale(1.5)
-        in_dot.highlight(YELLOW)
-        out_dot.highlight(PINK)
+        in_dot.set_color(YELLOW)
+        out_dot.set_color(PINK)
 
         out_vector = Arrow(
             LEFT, RIGHT, 
@@ -1255,7 +1255,7 @@ class DotsHoppingToColor(InputOutputScene):
         self.play(
             FadeIn(output_coloring), 
             Animation(output_plane),
-            output_plane.white_parts.highlight, BLACK,
+            output_plane.white_parts.set_color, BLACK,
             output_plane.lines_to_fade.set_stroke, {"width" : 0},
         )
         self.wait()
@@ -1284,7 +1284,7 @@ class DotsHoppingToColor(InputOutputScene):
         self.play(
             FadeIn(input_coloring),
             Animation(input_plane),
-            input_plane.white_parts.highlight, BLACK,
+            input_plane.white_parts.set_color, BLACK,
             input_plane.lines_to_fade.set_stroke, {"width" : 0},
             FadeOut(dots),
         )
@@ -1304,7 +1304,7 @@ class DotsHoppingToColor(InputOutputScene):
             stroke_width = 3,
             stroke_color = WHITE,
         )
-        inspector.add(*inspector.copy().highlight(BLACK).shift((TAU/24)*UP))
+        inspector.add(*inspector.copy().set_color(BLACK).shift((TAU/24)*UP))
         inspector.apply_complex_function(np.exp)
         inspector.scale(0.15)
 
@@ -1317,7 +1317,7 @@ class DotsHoppingToColor(InputOutputScene):
         )
         pink_points_label = TextMobject("Pink points")
         pink_points_label.scale(0.7)
-        pink_points_label.highlight(BLACK)
+        pink_points_label.set_color(BLACK)
 
         self.play(
             inspector.move_to, input_plane.coords_to_point(-2.75, 2.75),
@@ -1385,7 +1385,7 @@ class DotsHoppingToColor(InputOutputScene):
             dot.scale(1.5)
         self.play(
             FadeOut(input_coloring),
-            input_plane.white_parts.highlight, WHITE,
+            input_plane.white_parts.set_color, WHITE,
             LaggedStart(GrowFromCenter, dots)
         )
         self.wait()
@@ -1454,8 +1454,8 @@ class Rearrange2DEquation(AltTeacherStudentsScene):
         zero_eq = brace.get_tex("%s = %s"%(f_tex, zero_tex))
 
         for equation in equations:
-            equation.highlight_by_tex(g_tex, BLUE)
-            equation.highlight_by_tex(h_tex, YELLOW)
+            equation.set_color_by_tex(g_tex, BLUE)
+            equation.set_color_by_tex(h_tex, YELLOW)
             equation.sort_submobjects_alphabetically()
 
 
@@ -1667,7 +1667,7 @@ class DirectionOfA2DFunctionAlongABoundary(InputOutputScene):
             lambda ov : ov.put_start_and_end_on(
                 output_plane.coords_to_point(0, 0),
                 rect_image.points[-1]
-            ).highlight(get_color())
+            ).set_color(get_color())
         )
 
         dot = Dot()
@@ -1680,7 +1680,7 @@ class DirectionOfA2DFunctionAlongABoundary(InputOutputScene):
         def update_in_vect(in_vect):
             in_vect.put_start_and_end_on(ORIGIN, 0.5*RIGHT)
             in_vect.rotate(get_angle())
-            in_vect.highlight(get_color())
+            in_vect.set_color(get_color())
             in_vect.shift(get_input_point() - in_vect.get_start())
             return in_vect
         in_vect_update_anim = UpdateFromFunc(in_vect, update_in_vect)
@@ -1724,7 +1724,7 @@ class AskAboutHowToGeneralizeSigns(AltTeacherStudentsScene):
         question = TextMobject(
             "Wait...what would \\\\ positive and negative \\\\ be in 2d?",
         )
-        # question.highlight_by_tex_to_color_map({
+        # question.set_color_by_tex_to_color_map({
         #     "+" : "green", 
         #     "textminus" : "red"
         # })
@@ -1767,7 +1767,7 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
            alignment = "",
         )
         hypothesis[0].next_to(hypothesis[1:], UP)
-        hypothesis[0].highlight(YELLOW)
+        hypothesis[0].set_color(YELLOW)
         s = hypothesis[1].get_tex_string()
         s = filter(lambda c : c not in string.whitespace, s)
         n = s.index("colors")
@@ -1824,7 +1824,7 @@ class ForeverNarrowingLoop(InputOutputScene):
         input_coloring, output_coloring = colorings = VGroup(*self.get_colorings())
         input_plane, output_plane = planes = VGroup(*self.get_planes())
         for plane in planes:
-            plane.white_parts.highlight(BLACK)
+            plane.white_parts.set_color(BLACK)
             plane.lines_to_fade.set_stroke(width = 0)
 
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
@@ -1837,7 +1837,7 @@ class ForeverNarrowingLoop(InputOutputScene):
                 for coloring in colorings
             ],
             [
-                ApplyMethod(plane.white_parts.highlight, WHITE)
+                ApplyMethod(plane.white_parts.set_color, WHITE)
                 for plane in planes
             ]
         ), run_time = 2)
@@ -1965,7 +1965,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
         all_squares.set_stroke(width = 6)
 
         for square in all_squares:
-            square.highlight(WHITE)
+            square.set_color(WHITE)
             square.color_using_background_image(self.background_image_file)
 
         question = TextMobject("Does my border go through every color?")
@@ -1975,11 +1975,11 @@ class FailureOfComposition(ColorMappedObjectsScene):
         for square in all_squares:
             if square is big_square:
                 square.answer = TextMobject("Yes")
-                square.answer.highlight(GREEN)
+                square.answer.set_color(GREEN)
                 yes_answers.add(square.answer)
             else:
                 square.answer = TextMobject("No")
-                square.answer.highlight(RED)
+                square.answer.set_color(RED)
                 no_answers.add(square.answer)
             square.answer.move_to(square)
 
@@ -2092,7 +2092,7 @@ class PathContainingZero(InputOutputScene, PiCreatureScene):
         planes = VGroup(*self.get_planes())
         self.input_plane, self.output_plane = planes
         for plane in planes:
-            # plane.white_parts.highlight(BLACK)
+            # plane.white_parts.set_color(BLACK)
             plane.lines_to_fade.set_stroke(width = 0)
 
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
@@ -2779,11 +2779,11 @@ class ShowComplexFunction(Scene):
 
         fx_label = TexMobject("f(x) = x^5 - x - 1")
         fx_label.next_to(fx_dot, DOWN, SMALL_BUFF)
-        fx_label.highlight(YELLOW)
+        fx_label.set_color(YELLOW)
         fx_label.add_background_rectangle()
         fx_label.generate_target()
         fx_label.target.move_to(title)
-        fx_label.target[1].highlight(WHITE)
+        fx_label.target[1].set_color(WHITE)
 
         self.play(
             Write(plane),
@@ -2847,7 +2847,7 @@ class WindingNumbersInInputOutputContext(PathContainingZero):
         )
         update_out_arrow_color = ContinualUpdateFromFunc(
             out_arrow,
-            lambda a : a.highlight(rev_to_color(a.get_angle()/TAU))
+            lambda a : a.set_color(rev_to_color(a.get_angle()/TAU))
         )
         self.add(update_out_arrow, update_out_arrow_color)
 
@@ -2961,7 +2961,7 @@ class EndingCredits(Scene):
 class MentionQAndA(Scene):
     def construct(self):
         title = TextMobject("Q\\&A with ", "Ben", "and", "Sridhar\\\\", "at", "Patreon")
-        title.highlight_by_tex_to_color_map({
+        title.set_color_by_tex_to_color_map({
             "Ben" : MAROON,
             "Sridhar" : YELLOW,
         })
@@ -3000,7 +3000,7 @@ class TickingClock(Scene):
         lines = [clock.hour_hand, clock.minute_hand]
         def update_line(line):
             rev = line.get_angle()/TAU
-            line.highlight(rev_to_color(rev))
+            line.set_color(rev_to_color(rev))
 
         for line in lines:
             self.add(ContinualUpdateFromFunc(line, update_line))
@@ -3082,7 +3082,7 @@ class MentionFree(PiCreatureScene):
         items.next_to(morty, UP, LARGE_BUFF)
         right_x = morty.get_right()[0]
         for item in items:
-            item[1].highlight(GREEN)
+            item[1].set_color(GREEN)
             item.shift((right_x - item[0].get_right()[0])*RIGHT)
 
         self.play(
