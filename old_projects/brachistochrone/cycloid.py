@@ -77,7 +77,7 @@ class CycloidScene(Scene):
         self.circle.add(radial_line)
 
     def generate_ceiling(self):
-        self.ceiling = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        self.ceiling = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
         self.ceiling.shift(self.cycloid.get_top()[1]*UP)
 
     def draw_cycloid(self, run_time = 3, *anims, **kwargs):
@@ -551,7 +551,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
             words1.next_to(arrow, LEFT)
             words2.next_to(arrow, RIGHT)
             words = Mobject(words1, arrow, words2)
-            words.scale_to_fit_width(2*SPACE_WIDTH-1)
+            words.scale_to_fit_width(2*SPACE_X_RADIUS-1)
             words.to_edge(UP, buff = 0.2)
             words.to_edge(LEFT)
 

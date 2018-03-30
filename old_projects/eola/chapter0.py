@@ -59,7 +59,7 @@ class OpeningQuote(Scene):
             """, 
             organize_left_to_right = False
         )
-        words.scale_to_fit_width(2*(SPACE_WIDTH-1))
+        words.scale_to_fit_width(2*(SPACE_X_RADIUS-1))
         words.to_edge(UP)        
         for mob in words.submobjects[48:49+13]:
             mob.highlight(GREEN)
@@ -76,7 +76,7 @@ class VideoIcon(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, "video_icon", **kwargs)
         self.center()
-        self.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        self.scale_to_fit_width(2*SPACE_X_RADIUS/12.)
         self.set_stroke(color = WHITE, width = 0)
         self.set_fill(color = WHITE, opacity = 1)
 
@@ -271,11 +271,11 @@ class NumericVsGeometric(Scene):
         geometric = TextMobject("Geometric intuition")
         for mob in numeric, geometric:
             mob.to_corner(UP+LEFT)
-        geometric.shift(SPACE_WIDTH*RIGHT)
-        hline = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        geometric.shift(SPACE_X_RADIUS*RIGHT)
+        hline = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
         hline.next_to(numeric, DOWN)
         hline.to_edge(LEFT, buff = 0)
-        vline = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        vline = Line(SPACE_Y_RADIUS*UP, SPACE_Y_RADIUS*DOWN)
         for mob in hline, vline:
             mob.highlight(GREEN)
 
@@ -294,7 +294,7 @@ class NumericVsGeometric(Scene):
             "\\\\ &=",
             matrix_to_tex_string([[1], [-1]]),
         ]))
-        matrix_vector_product.scale_to_fit_width(SPACE_WIDTH-0.5)
+        matrix_vector_product.scale_to_fit_width(SPACE_X_RADIUS-0.5)
         matrix_vector_product.next_to(self.vline, LEFT)
 
         self.play(
@@ -309,15 +309,15 @@ class NumericVsGeometric(Scene):
         digest_locals(self)
 
     def clear_way_for_geometric(self):
-        new_line = Line(SPACE_HEIGHT*LEFT, SPACE_HEIGHT*RIGHT)
-        new_line.shift((SPACE_HEIGHT+1)*DOWN)
+        new_line = Line(SPACE_Y_RADIUS*LEFT, SPACE_Y_RADIUS*RIGHT)
+        new_line.shift((SPACE_Y_RADIUS+1)*DOWN)
         self.play(
             Transform(self.vline, new_line),
             Transform(self.hline, new_line),
-            ApplyMethod(self.numeric.shift, (2*SPACE_HEIGHT+1)*DOWN),
+            ApplyMethod(self.numeric.shift, (2*SPACE_Y_RADIUS+1)*DOWN),
             ApplyMethod(
                 self.matrix_vector_product.shift, 
-                (2*SPACE_HEIGHT+1)*DOWN
+                (2*SPACE_Y_RADIUS+1)*DOWN
             ),
             ApplyMethod(self.geometric.to_edge, LEFT)
         )
@@ -671,7 +671,7 @@ class LinearAlgebraIntuitions(Scene):
     def construct(self):
         title = TextMobject("Preview of core visual intuitions")
         title.to_edge(UP)
-        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
         h_line.next_to(title, DOWN)
         h_line.highlight(BLUE_E)
         intuitions = [
@@ -832,7 +832,7 @@ class TableOfContents(Scene):
         title = TextMobject("Essence of Linear Algebra")
         title.highlight(BLUE)
         title.to_corner(UP+LEFT)
-        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
         h_line.next_to(title, DOWN)
         h_line.to_edge(LEFT, buff = 0)
         chapters = VMobject(*map(TextMobject, [
@@ -884,7 +884,7 @@ class TableOfContents(Scene):
     def series_of_videos(self, chapters):
         icon = SVGMobject("video_icon")
         icon.center()
-        icon.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        icon.scale_to_fit_width(2*SPACE_X_RADIUS/12.)
         icon.set_stroke(color = WHITE, width = 0)
         icons = [icon.copy() for chapter in chapters.split()]
         colors = Color(BLUE_A).range_to(BLUE_D, len(icons))

@@ -35,12 +35,12 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
 
     def construct(self, *multipliers):
         norm = abs(reduce(op.mul, multipliers, 1))
-        shrink_factor = SPACE_WIDTH/max(SPACE_WIDTH, norm)
+        shrink_factor = SPACE_X_RADIUS/max(SPACE_X_RADIUS, norm)
         plane_config = {
             "density" : norm*DEFAULT_POINT_DENSITY_1D,
             "unit_to_spatial_width" : shrink_factor,
-            "x_radius" : shrink_factor*SPACE_WIDTH,
-            "y_radius" : shrink_factor*SPACE_HEIGHT,
+            "x_radius" : shrink_factor*SPACE_X_RADIUS,
+            "y_radius" : shrink_factor*SPACE_Y_RADIUS,
         }
         ComplexMultiplication.construct(self, multipliers[0], **plane_config)
 
@@ -115,7 +115,7 @@ class ConjugateDivisionExample(ComplexMultiplication):
     ]
 
     def construct(self, num):
-        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*SPACE_WIDTH)
+        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*SPACE_X_RADIUS)
         self.draw_dot("1", 1, True)
         self.draw_dot("\\bar z", self.multiplier)
         self.apply_multiplication()
@@ -140,7 +140,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
         norm = abs(w)
         theta = np.log(w).imag
         radius = norm**(1./n)
-        zoom_value = (SPACE_HEIGHT-0.5)/radius
+        zoom_value = (SPACE_Y_RADIUS-0.5)/radius
         plane_config["unit_to_spatial_width"] = zoom_value
         plane = ComplexPlane(**plane_config)
         circle = Circle(
@@ -181,7 +181,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         radius = max([abs(n.imag) for r, n in reps_and_nums]) + 1
         plane_config = {
             "color" : "grey",
-            "unit_to_spatial_width" : SPACE_HEIGHT / radius,
+            "unit_to_spatial_width" : SPACE_Y_RADIUS / radius,
         }
         plane_config.update(DEFAULT_PLANE_CONFIG)
         self.plane = ComplexPlane(**plane_config)

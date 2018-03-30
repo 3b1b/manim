@@ -110,8 +110,8 @@ class EMWave(ContinualAnimationGroup):
         "frequency" : 0.25,
         "n_vectors" : 40,
         "propogation_direction" : RIGHT,
-        "start_point" : SPACE_WIDTH*LEFT + DOWN + OUT,
-        "length" : 2*SPACE_WIDTH,
+        "start_point" : SPACE_X_RADIUS*LEFT + DOWN + OUT,
+        "length" : 2*SPACE_X_RADIUS,
         "amplitude" : 1,
         "rotation" : 0,
         "A_vect" : [0, 0, 1],
@@ -194,7 +194,7 @@ class WavePacket(Animation):
     CONFIG = {
         "EMWave_config" : {
             "wave_number" : 0,
-            "start_point" : SPACE_WIDTH*LEFT,
+            "start_point" : SPACE_X_RADIUS*LEFT,
             "phi_vect" : np.ones(3)*np.pi/4,
         },
         "em_wave" : None,
@@ -203,7 +203,7 @@ class WavePacket(Animation):
         "packet_width" : 6,
         "include_E_vects" : True,
         "include_M_vects" : True,
-        "filter_distance" : SPACE_WIDTH,
+        "filter_distance" : SPACE_X_RADIUS,
         "get_filtered" : False,
         "remover" : True,
         "width" : 2*np.pi,
@@ -308,7 +308,7 @@ class FilterScene(ThreeDScene):
         "filter_x_coordinates" : [0],
         "pol_filter_configs" : [{}],
         "EMWave_config" : {
-            "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT
+            "start_point" : SPACE_X_RADIUS*LEFT + DOWN+OUT
         },
         "axes_config" : {},
         "start_phi" : 0.8*np.pi/2,
@@ -340,7 +340,7 @@ class FilterScene(ThreeDScene):
 
     def get_filter_absorption_animation(self, pol_filter, photon):
         x = pol_filter.get_center()[0]
-        alpha = (x + SPACE_WIDTH) / (2*SPACE_WIDTH)
+        alpha = (x + SPACE_X_RADIUS) / (2*SPACE_X_RADIUS)
         return ApplyMethod(
             pol_filter.set_fill, RED,
             run_time = photon.run_time,
@@ -379,7 +379,7 @@ class DirectionOfPolarizationScene(FilterScene):
     def setup_rectangles(self):
         rect1 = Rectangle(
             height = 2*self.em_wave.amplitude,
-            width = SPACE_WIDTH + 0.25,
+            width = SPACE_X_RADIUS + 0.25,
             stroke_color = BLUE,
             fill_color = BLUE,
             fill_opacity = 0.2,
@@ -502,7 +502,7 @@ class Goal(PiCreatureScene):
 
         goal = TextMobject("Goal: ")
         goal.highlight(YELLOW)
-        goal.shift(SPACE_WIDTH*LEFT/2 + UP)
+        goal.shift(SPACE_X_RADIUS*LEFT/2 + UP)
         weirdness = TextMobject("Eye-catching quantum weirdness")
         weirdness.next_to(goal, RIGHT)
         cross = Cross(weirdness)
@@ -791,7 +791,7 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         M_vect.shift(SMALL_BUFF*M_vect.get_vector())
 
         particle.save_state()
-        particle.shift(2*SPACE_WIDTH*LEFT)
+        particle.shift(2*SPACE_X_RADIUS*LEFT)
 
         self.play(
             particle.restore,
@@ -876,7 +876,7 @@ class CurlRelationBetweenFields(ThreeDScene):
         self.second_loop_in_E()
 
     def add_axes(self):
-        self.add(ThreeDAxes(x_axis_radius = SPACE_WIDTH))
+        self.add(ThreeDAxes(x_axis_radius = SPACE_X_RADIUS))
 
     def loop_in_E(self):
         E_vects = VGroup(*[
@@ -975,7 +975,7 @@ class WriteCurlEquations(Scene):
         )
         eqs = VGroup(eq1, eq2)
         eqs.arrange_submobjects(DOWN, buff = LARGE_BUFF)
-        eqs.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        eqs.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
         eqs.to_edge(LEFT)
         for eq in eqs:
             eq.highlight_by_tex_to_color_map({
@@ -1085,7 +1085,7 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
         "EMWave_config" : {
             "requires_start_up" : False,
             "amplitude" : 2,
-            "start_point" : SPACE_WIDTH*LEFT,
+            "start_point" : SPACE_X_RADIUS*LEFT,
             "A_vect" : [0, 1, 0],
             "start_up_time" : 0,
         }
@@ -1562,7 +1562,7 @@ class ChangeFromHorizontalToVerticallyPolarized(DirectionOfPolarizationScene):
     CONFIG = {
         "filter_x_coordinates" : [],
         "EMWave_config" : {
-            "start_point" : SPACE_WIDTH*LEFT,
+            "start_point" : SPACE_X_RADIUS*LEFT,
             "A_vect" : [0, 2, 0],
         }
     }
@@ -1901,7 +1901,7 @@ class FromBracketFootnote(Scene):
             arg_separator = ""
         )
         words.highlight_by_tex("ket", YELLOW)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         self.add(words)
 
 class Ay(Scene):
@@ -1959,7 +1959,7 @@ class AlternateBasis(ShowTipToTailSum):
         new_plane = NumberPlane(
             x_unit_size = 2,
             y_unit_size = 2,
-            y_radius = SPACE_WIDTH,
+            y_radius = SPACE_X_RADIUS,
             secondary_line_ratio = 0,
         )
         new_plane.add_coordinates()
@@ -2020,14 +2020,14 @@ class AlternateBasis(ShowTipToTailSum):
 class WriteBasis(Scene):
     def construct(self):
         words = TextMobject("Choice of ``basis''")
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         self.play(Write(words))
         self.wait()
 
 class ShowPolarizingFilter(DirectionOfPolarizationScene):
     CONFIG = {
         "EMWave_config" : {
-            "start_point" : SPACE_WIDTH*LEFT,
+            "start_point" : SPACE_X_RADIUS*LEFT,
         },
         "apply_filter" : True,
     }
@@ -2205,7 +2205,7 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
 class NamePolarizingFilter(Scene):
     def construct(self):
         words = TextMobject("Polarizing filter")
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         self.play(Write(words))
         self.wait()
 
@@ -2214,7 +2214,7 @@ class EnergyOfWavesWavePortion(DirectWaveOutOfScreen):
         "EMWave_config" : {
             "A_vect" : [0, 1, 1],
             "amplitude" : 4,
-            "start_point" : SPACE_WIDTH*LEFT + 2*DOWN,
+            "start_point" : SPACE_X_RADIUS*LEFT + 2*DOWN,
         }
     }
     def construct(self):
@@ -2435,7 +2435,7 @@ class DescribePhoton(ThreeDScene):
 
         self.set_camera_position(phi = 0.8*np.pi/2, theta = -np.pi/4)
         em_wave = EMWave(
-            start_point = SPACE_WIDTH*LEFT,
+            start_point = SPACE_X_RADIUS*LEFT,
             A_vect = [0, 1, 1],
             wave_number = 0,
             amplitude = 3,
@@ -2521,7 +2521,7 @@ class DescribePhoton(ThreeDScene):
             secondary_color = DARK_GREY,
             x_unit_size = 2,
             y_unit_size = 2,
-            y_radius = SPACE_WIDTH,
+            y_radius = SPACE_X_RADIUS,
         )
         plane.add_coordinates(x_vals = range(-3, 4), y_vals = [])
         plane.rotate(np.pi/2, RIGHT)
@@ -2902,14 +2902,14 @@ class SeeCommentInDescription(Scene):
             vs. double-headed arrows
             \\end{flushleft}
         """)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         words.to_corner(DOWN+LEFT)
         self.add(words)
 
 class SeeCommentInDescriptionAgain(Scene):
     def construct(self):
         words = TextMobject("$^*$Again, see description")
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         words.to_corner(DOWN+LEFT)
         self.add(words)
 
@@ -2924,7 +2924,7 @@ class ShootPhotonThroughFilter(DirectionOfPolarizationScene):
         "EMWave_config" : {
             "wave_number" : 0,
             "A_vect" : [0, 1, 1],
-            "start_point" : SPACE_WIDTH*LEFT,
+            "start_point" : SPACE_X_RADIUS*LEFT,
             "amplitude" : np.sqrt(2),
         },
         "pol_filter_configs" : [{
@@ -3450,7 +3450,7 @@ class PhotonAtSlightAngle(ThreeFilters):
         "EMWave_config" : {
             "wave_number" : 0,
             "A_vect" : [0, np.sin(np.pi/8), np.cos(np.pi/8)],
-            "start_point" : SPACE_WIDTH*LEFT,
+            "start_point" : SPACE_X_RADIUS*LEFT,
             "amplitude" : 2,
         },
         "axes_config" : {
@@ -3853,7 +3853,7 @@ class PhotonAtSlightAngle(ThreeFilters):
 
     def get_blocked_photon(self, **kwargs):
         return self.get_photon(
-            filter_distance = SPACE_WIDTH + 3, 
+            filter_distance = SPACE_X_RADIUS + 3, 
             get_filtered = True,
             **kwargs
         )
@@ -4202,7 +4202,7 @@ class ClockwisePhotonInsert(Scene):
         )
         eq.highlight(BLUE)
         VGroup(*it.chain(eq[:4], eq[-5:])).highlight(WHITE)
-        eq.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        eq.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
         eq.to_edge(LEFT)
         self.add(eq)
 
@@ -4304,7 +4304,7 @@ class Footnote(Scene):
             from quantum mechanics conventions.
             \\end{flushleft}
         """)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
         self.add(words)
 
 

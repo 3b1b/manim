@@ -31,7 +31,7 @@ class OpeningQuote(Scene):
             "can be shortened by 50\\% if one",
             "throws the matrices out."
         ])
-        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
         words.to_edge(UP)
         words.split()[1].highlight(GREEN)
         words.split()[3].highlight(BLUE)
@@ -235,8 +235,8 @@ class RecapOver(TeacherStudentsScene):
 class TwoSuccessiveTransformations(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : 2*SPACE_X_RADIUS,
+            "y_radius" : 2*SPACE_X_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -249,8 +249,8 @@ class TwoSuccessiveTransformations(LinearTransformationScene):
 class RotationThenShear(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : SPACE_X_RADIUS,
+            "y_radius" : 2*SPACE_X_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -817,8 +817,8 @@ class FirstShearThenRotation(LinearTransformationScene):
         "t_matrix1" : [[1, 0], [1, 1]],        
         "t_matrix2" : [[0, 1], [-1, 0]],
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH, 
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : 2*SPACE_X_RADIUS, 
+            "y_radius" : 2*SPACE_X_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -1078,7 +1078,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Linear transformations in three dimensions
         """)
-        title.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        title.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)

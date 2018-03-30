@@ -10,8 +10,8 @@ from scene import Scene
 class NumberLine(VMobject):
     CONFIG = {
         "color" : BLUE,
-        "x_min" : -SPACE_WIDTH,
-        "x_max" : SPACE_WIDTH,
+        "x_min" : -SPACE_X_RADIUS,
+        "x_max" : SPACE_X_RADIUS,
         "unit_size" : 1,
         "tick_size" : 0.1,
         "tick_frequency" : 1,
@@ -160,10 +160,10 @@ class Axes(VGroup):
         "x_axis_config" : {},
         "y_axis_config" : {},
         "z_axis_config" : {},
-        "x_min" : -SPACE_WIDTH,
-        "x_max" : SPACE_WIDTH,
-        "y_min" : -SPACE_HEIGHT,
-        "y_max" : SPACE_HEIGHT,
+        "x_min" : -SPACE_X_RADIUS,
+        "x_max" : SPACE_X_RADIUS,
+        "y_min" : -SPACE_Y_RADIUS,
+        "y_max" : SPACE_Y_RADIUS,
         "z_min" : -3.5,
         "z_max" : 3.5,
         "z_normal" : DOWN,
@@ -276,10 +276,10 @@ class NumberPlane(VMobject):
     }
     def generate_points(self):
         if self.x_radius is None:
-            center_to_edge = (SPACE_WIDTH + abs(self.center_point[0])) 
+            center_to_edge = (SPACE_X_RADIUS + abs(self.center_point[0])) 
             self.x_radius = center_to_edge / self.x_unit_size
         if self.y_radius is None:
-            center_to_edge = (SPACE_HEIGHT + abs(self.center_point[1])) 
+            center_to_edge = (SPACE_Y_RADIUS + abs(self.center_point[1])) 
             self.y_radius = center_to_edge / self.y_unit_size
         self.axes = VMobject()
         self.main_lines = VMobject()

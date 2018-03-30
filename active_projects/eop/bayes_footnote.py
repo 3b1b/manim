@@ -271,7 +271,7 @@ class OneInOneThousandHaveDisease(Scene):
             ]).arrange_submobjects(DOWN, SMALL_BUFF)
             for x in range(40)
         ]).arrange_submobjects(RIGHT, SMALL_BUFF)
-        all_creatures.scale_to_fit_width(2*SPACE_WIDTH - 4)
+        all_creatures.scale_to_fit_width(2*SPACE_X_RADIUS - 4)
         all_creatures.next_to(title, DOWN)
         randy = all_creatures[0][0]
         all_creatures[0].remove(randy)
@@ -444,7 +444,7 @@ class RephraseQuestion(Scene):
             """,
         ]))
         words.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
-        words.scale_to_fit_width(2*(SPACE_WIDTH - MED_LARGE_BUFF))
+        words.scale_to_fit_width(2*(SPACE_X_RADIUS - MED_LARGE_BUFF))
 
         prior = TextMobject("Prior")
         prior.highlight(GREEN)
@@ -872,8 +872,8 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
         special_group = subgroups[-5]
         special_group.add(self.sick_one)
         subgroups.generate_target()
-        width_factor = 2*SPACE_WIDTH/subgroups.get_width()
-        height_factor = 2*SPACE_HEIGHT/subgroups.get_height()
+        width_factor = 2*SPACE_X_RADIUS/subgroups.get_width()
+        height_factor = 2*SPACE_Y_RADIUS/subgroups.get_height()
         subgroups.target.stretch_in_place(width_factor, 0)
         subgroups.target.stretch_in_place(height_factor, 1)
         for subgroup in subgroups.target:
@@ -1369,14 +1369,14 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
 
 class CompareNumbersInBothExamples(Scene):
     def construct(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         v_line.shift(MED_LARGE_BUFF*LEFT)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         h_line.to_edge(UP, buff = 1.25*LARGE_BUFF)
         titles = VGroup()
         for word, vect in ("Disease", LEFT), ("Telepathy", RIGHT):
             title = TextMobject("%s example"%word)
-            title.shift(vect*SPACE_WIDTH/2.0)
+            title.shift(vect*SPACE_X_RADIUS/2.0)
             title.to_edge(UP)
             titles.add(title)
         priors = VGroup(*[
@@ -1401,7 +1401,7 @@ class CompareNumbersInBothExamples(Scene):
                 mob.highlight_by_tex("+", GREEN)
                 mob.highlight_by_tex("Correct", GREEN)
                 mob.scale(0.8)
-                mob.shift(vect*SPACE_WIDTH/2)
+                mob.shift(vect*SPACE_X_RADIUS/2)
 
         self.play(
             LaggedStart(FadeIn, titles, lag_ratio = 0.7),

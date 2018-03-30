@@ -277,7 +277,7 @@ class Mobject(Container):
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
-        target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
+        target_point = np.sign(direction) * (SPACE_X_RADIUS, SPACE_Y_RADIUS, 0)
         point_to_align = self.get_critical_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
@@ -345,7 +345,7 @@ class Mobject(Container):
         return self
 
     def shift_onto_screen(self, **kwargs):
-        space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
+        space_lengths = [SPACE_X_RADIUS, SPACE_Y_RADIUS]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
@@ -356,13 +356,13 @@ class Mobject(Container):
         return self
 
     def is_off_screen(self):
-        if self.get_left()[0] > SPACE_WIDTH:
+        if self.get_left()[0] > SPACE_X_RADIUS:
             return True
-        if self.get_right()[0] < -SPACE_WIDTH:
+        if self.get_right()[0] < -SPACE_X_RADIUS:
             return True
-        if self.get_bottom()[1] > SPACE_HEIGHT:
+        if self.get_bottom()[1] > SPACE_Y_RADIUS:
             return True
-        if self.get_top()[1] < -SPACE_HEIGHT:
+        if self.get_top()[1] < -SPACE_Y_RADIUS:
             return True
         return False
 

@@ -327,8 +327,8 @@ class SelfSimilarFractalsAsSubset(Scene):
 
     def add_general_fractals(self):
         big_rectangle = Rectangle(
-            width = 2*SPACE_WIDTH - MED_LARGE_BUFF,
-            height = 2*SPACE_HEIGHT - MED_LARGE_BUFF,
+            width = 2*SPACE_X_RADIUS - MED_LARGE_BUFF,
+            height = 2*SPACE_Y_RADIUS - MED_LARGE_BUFF,
         )
         title = TextMobject("Fractals")
         title.scale(1.5)
@@ -371,15 +371,15 @@ class ConstrastSmoothAndFractal(Scene):
         "fractal_dimension" : 1.21,
     }
     def construct(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         smooth = TextMobject("Smooth")
-        smooth.shift(SPACE_WIDTH*LEFT/2)
+        smooth.shift(SPACE_X_RADIUS*LEFT/2)
         fractal = TextMobject("Fractal")
-        fractal.shift(SPACE_WIDTH*RIGHT/2)
+        fractal.shift(SPACE_X_RADIUS*RIGHT/2)
         VGroup(smooth, fractal).to_edge(UP)
         background_rectangle = Rectangle(
-            height = 2*SPACE_HEIGHT,
-            width = SPACE_WIDTH,
+            height = 2*SPACE_Y_RADIUS,
+            width = SPACE_X_RADIUS,
         )
         background_rectangle.to_edge(RIGHT, buff = 0)
         background_rectangle.set_fill(BLACK, 1)
@@ -394,13 +394,13 @@ class ConstrastSmoothAndFractal(Scene):
         anchors = britain.get_anchors()
         smooth_britain = VMobject()
         smooth_britain.set_points_smoothly(anchors[::10])
-        smooth_britain.center().shift(SPACE_WIDTH*LEFT/2)
+        smooth_britain.center().shift(SPACE_X_RADIUS*LEFT/2)
         index = np.argmax(smooth_britain.get_anchors()[:,0])
         smooth_britain.zoom_point = smooth_britain.point_from_proportion(
             self.britain_zoom_point_proportion
         )
 
-        britain.shift(SPACE_WIDTH*RIGHT/2)
+        britain.shift(SPACE_X_RADIUS*RIGHT/2)
         britain.zoom_point = britain.point_from_proportion(
             self.britain_zoom_point_proportion
         )
@@ -468,7 +468,7 @@ class InfiniteKochZoom(Scene):
 
 class ShowIdealizations(Scene):
     def construct(self):
-        arrow = DoubleArrow(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        arrow = DoubleArrow(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
         arrow.shift(DOWN)
         left_words = TextMobject("Idealization \\\\ as smooth")
         middle_words = TextMobject("Nature")
@@ -635,7 +635,7 @@ class FourSelfSimilarShapes(Scene):
             "Line", "Square", "Cube", "Sierpinski"
         ]))
         for title, x in zip(titles, np.linspace(-0.75, 0.75, 4)):
-            title.shift(x*SPACE_WIDTH*RIGHT)
+            title.shift(x*SPACE_X_RADIUS*RIGHT)
         titles.to_edge(UP)
         return titles
 
@@ -857,7 +857,7 @@ class ScaledLineMass(Scene):
         shape = self.get_shape()
         shape.scale_to_fit_width(self.shape_width)
         shape.center()
-        shape.shift(SPACE_WIDTH*RIGHT/2 + self.vert_distance*UP)
+        shape.shift(SPACE_X_RADIUS*RIGHT/2 + self.vert_distance*UP)
 
         big_brace = Brace(shape, self.brace_direction)
         big_brace_text = big_brace.get_text("$1$")
@@ -979,14 +979,14 @@ class DefineTwoDimensional(PiCreatureScene):
         self.title = title
 
     def add_h_line(self):
-        self.h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        self.h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         self.add(self.h_line)
 
     def add_shape(self):
         shape = self.get_shape()
         shape.scale_to_fit_width(self.shape_width)
         shape.next_to(self.title, DOWN, buff = MED_LARGE_BUFF)
-        # self.shape.shift(SPACE_HEIGHT*UP/2)
+        # self.shape.shift(SPACE_Y_RADIUS*UP/2)
         self.mass_color = shape.get_color()
         self.add(shape)
 
@@ -1207,10 +1207,10 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
     }
     def construct(self):
         length = TextMobject("Length = $\\infty$")
-        length.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
+        length.shift(SPACE_X_RADIUS*LEFT/2).to_edge(UP)
         area = TextMobject("Area = $0$")
-        area.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        area.shift(SPACE_X_RADIUS*RIGHT/2).to_edge(UP)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         self.add(length, area, v_line)
 
         curve = self.get_curve(order = self.curve_start_order)
@@ -1239,12 +1239,12 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
         # curve = ShowSierpinskiCurve.get_curve(self, order)
         curve = SierpinskiCurve(order = order)
         curve.scale_to_fit_height(4).center()
-        curve.shift(SPACE_WIDTH*LEFT/2)
+        curve.shift(SPACE_X_RADIUS*LEFT/2)
         return curve
 
     def get_sierpinski(self, order):
         result = Sierpinski(order = order)
-        result.shift(SPACE_WIDTH*RIGHT/2)
+        result.shift(SPACE_X_RADIUS*RIGHT/2)
         return result
 
 class FractionalAnalogOfLengthAndArea(Scene):
@@ -1450,14 +1450,14 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
 
     def add_curve(self):
         seed_label = TextMobject("Seed")
-        seed_label.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
+        seed_label.shift(SPACE_X_RADIUS*RIGHT/2).to_edge(UP)
         seed = self.get_curve(order = 1)
         seed.next_to(seed_label, DOWN)
 
         curve = seed.copy()
 
         resulting_fractal = TextMobject("Resulting fractal")
-        resulting_fractal.shift(SPACE_WIDTH*RIGHT/2)
+        resulting_fractal.shift(SPACE_X_RADIUS*RIGHT/2)
 
         self.add(seed_label, seed)
         self.wait()
@@ -1731,17 +1731,17 @@ class BoxCountingScene(Scene):
         "corner_rect_left_extension" : 0,
     }
     def setup(self):
-        self.num_rows = 2*int(SPACE_HEIGHT/self.box_width)+1
-        self.num_cols = 2*int(SPACE_WIDTH/self.box_width)+1
+        self.num_rows = 2*int(SPACE_Y_RADIUS/self.box_width)+1
+        self.num_cols = 2*int(SPACE_X_RADIUS/self.box_width)+1
 
     def get_grid(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         v_lines = VGroup(*[
             v_line.copy().shift(u*x*self.box_width*RIGHT)
             for x in range(self.num_cols/2+1)
             for u in [-1, 1]
         ])
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         h_lines = VGroup(*[
             h_line.copy().shift(u*y*self.box_width*UP)
             for y in range(self.num_rows/2+1)
@@ -1811,8 +1811,8 @@ class BoxCountingScene(Scene):
 
     def get_corner_rect(self):
         rect = Rectangle(
-            height = SPACE_HEIGHT/2,
-            width = SPACE_WIDTH+self.corner_rect_left_extension,
+            height = SPACE_Y_RADIUS/2,
+            width = SPACE_X_RADIUS+self.corner_rect_left_extension,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.8
@@ -2736,14 +2736,14 @@ class CompareBritainAndNorway(Scene):
         norway.to_corner(UP+RIGHT, buff = 0)
         fractalify(norway, order = 1, dimension = 1.5)
         anchors = list(norway.get_anchors())
-        anchors.append(SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP)
+        anchors.append(SPACE_X_RADIUS*RIGHT+SPACE_Y_RADIUS*UP)
         norway.set_points_as_corners(anchors)
 
         britain = Britain(
             fill_opacity = 0,
             stroke_width = 2
         )
-        britain.shift(SPACE_WIDTH*LEFT/2)
+        britain.shift(SPACE_X_RADIUS*LEFT/2)
         britain.to_edge(UP)
         fractalify(britain, order = 1, dimension = 1.21)
 
@@ -2779,8 +2779,8 @@ class CompareOceansLabels(Scene):
         label1 = TextMobject("Dimension $\\approx 2.05$")
         label2 = TextMobject("Dimension $\\approx 2.3$")
 
-        label1.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
-        label2.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
+        label1.shift(SPACE_X_RADIUS*LEFT/2).to_edge(UP)
+        label2.shift(SPACE_X_RADIUS*RIGHT/2).to_edge(UP)
 
         self.play(Write(label1))
         self.wait()
@@ -2798,8 +2798,8 @@ class FractalNonFractalFlowChart(Scene):
         man_made = TextMobject("Probably \\\\ man-made")
 
         is_fractal.to_edge(UP)
-        nature.shift(SPACE_WIDTH*LEFT/2)
-        man_made.shift(SPACE_WIDTH*RIGHT/2)
+        nature.shift(SPACE_X_RADIUS*LEFT/2)
+        man_made.shift(SPACE_X_RADIUS*RIGHT/2)
 
         yes_arrow = Arrow(
             is_fractal.get_bottom(),
@@ -2953,7 +2953,7 @@ class Thumbnail(Scene):
         koch_curve = QuadraticKoch(order = 6, monochromatic = True)
         koch_curve.set_stroke(width = 0)
         koch_curve.set_fill(BLUE)
-        koch_curve.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        koch_curve.scale_to_fit_height(1.5*SPACE_Y_RADIUS)
         koch_curve.to_edge(DOWN, buff = SMALL_BUFF)
 
         self.add(koch_curve, title)

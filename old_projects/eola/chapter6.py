@@ -187,8 +187,8 @@ class StockPrices(Scene):
     def construct(self):
         self.add(TextMobject("Stock prices").to_edge(UP))
 
-        x_axis = Line(ORIGIN, SPACE_WIDTH*RIGHT)
-        y_axis = Line(ORIGIN, SPACE_HEIGHT*UP)
+        x_axis = Line(ORIGIN, SPACE_X_RADIUS*RIGHT)
+        y_axis = Line(ORIGIN, SPACE_Y_RADIUS*UP)
         everyone = VMobject(x_axis, y_axis)
         stock_lines = []
         for color in TEAL, PINK, YELLOW, RED, BLUE:
@@ -673,7 +673,7 @@ class ShowBijectivity(LinearTransformationScene):
             Vector([x, y])
             for x, y in it.product(*[
                 np.arange(-int(val)+0.5, int(val)+0.5)
-                for val in SPACE_WIDTH, SPACE_HEIGHT
+                for val in SPACE_X_RADIUS, SPACE_Y_RADIUS
             ])
         ])
         vectors.submobject_gradient_highlight(BLUE_E, PINK)
@@ -833,8 +833,8 @@ class DescribeInverse(LinearTransformationScene):
             label_mob.add_background_rectangle()
             m.add(brace, label_mob)
             text.add(m)
-            if text.get_width() > 2*SPACE_WIDTH-1:
-                text.scale_to_fit_width(2*SPACE_WIDTH-1)
+            if text.get_width() > 2*SPACE_X_RADIUS-1:
+                text.scale_to_fit_width(2*SPACE_X_RADIUS-1)
             text.center().to_corner(UP+RIGHT)
         matrix.highlight(PINK)
         inv_matrix.highlight(YELLOW)
@@ -1530,8 +1530,8 @@ class NameColumnSpace(Scene):
 class IHatShear(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : 2*SPACE_X_RADIUS,
+            "y_radius" : 2*SPACE_X_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -1631,8 +1631,8 @@ class OriginIsAlwaysInColumnSpace(LinearTransformationScene):
 class FullRankCase(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : 2*SPACE_X_RADIUS,
+            "y_radius" : 2*SPACE_X_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -2024,7 +2024,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Nonsquare matrices
         """)
-        title.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        title.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)

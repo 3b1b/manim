@@ -308,7 +308,7 @@ class GraphScene(Scene):
         ])
 
     def generate_treeified_spanning_tree(self):
-        bottom = -SPACE_HEIGHT + 1
+        bottom = -SPACE_Y_RADIUS + 1
         x_sep = 1
         y_sep = 2
         if not hasattr(self, "spanning_tree"):
@@ -380,7 +380,7 @@ class GraphScene(Scene):
             Dot(point).highlight("green")
             for point in self.dual_points
         ]
-        self.dual_vertices[-1] = Circle().scale(SPACE_WIDTH + SPACE_HEIGHT)
+        self.dual_vertices[-1] = Circle().scale(SPACE_X_RADIUS + SPACE_Y_RADIUS)
         self.dual_points[-1] = point_at_infinity
 
         self.dual_edges = []
@@ -402,7 +402,7 @@ class GraphScene(Scene):
                         self.points[pair[0]],
                         self.points[pair[1]]
                     ]) - new_point
-                    new_point += SPACE_WIDTH*vect/np.linalg.norm(vect)
+                    new_point += SPACE_X_RADIUS*vect/np.linalg.norm(vect)
                     dual_point_pair[i] = new_point
             self.dual_edges.append(
                 Line(*dual_point_pair).highlight()

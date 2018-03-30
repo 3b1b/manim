@@ -106,7 +106,7 @@ class Chapter8OpeningQuote(OpeningQuote, PiCreatureScene):
         result.highlight_by_tex("h", GREEN, substring = False)
         result.highlight_by_tex("d\\theta", GREEN)
 
-        result.scale_to_fit_width(2*SPACE_WIDTH - 2*MED_SMALL_BUFF)
+        result.scale_to_fit_width(2*SPACE_X_RADIUS - 2*MED_SMALL_BUFF)
         return result
 
 class ThisVideo(TeacherStudentsScene):
@@ -372,7 +372,7 @@ class Chapter2Wrapper(Scene):
         title = TextMobject(self.title)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = WHITE)
-        rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        rect.scale_to_fit_height(1.5*SPACE_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1399,7 +1399,7 @@ class CarJourneyApproximation(Scene):
     def construct(self):
         points = [5*LEFT + v for v in UP, 2*DOWN]
         cars = [Car().move_to(point) for point in points]
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         words = [
             TextMobject("Real motion (smooth)").shift(3*UP),
             TextMobject(self.bottom_words).shift(0.5*DOWN),

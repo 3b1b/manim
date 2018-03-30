@@ -93,7 +93,7 @@ def get_slot_group(
     slot_group.to_edge(RIGHT)
     slot_group.bool_list = bool_list
 
-    total_height = SPACE_HEIGHT
+    total_height = SPACE_Y_RADIUS
     base = 2.3
 
     for i, line in enumerate(lines):
@@ -1256,7 +1256,7 @@ class ExampleConditional(Scene):
         rhs.highlight_by_tex("0.925", YELLOW)
         rhs.next_to(prob, RIGHT)
         expression = VGroup(prob, rhs)
-        expression.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        expression.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         expression.center().to_edge(DOWN)
 
         self.play(Write(expression))
@@ -1296,7 +1296,7 @@ class WritePSecond(Scene):
         rhs = TexMobject("= 0.8")
         rhs.next_to(prob, RIGHT)
         prob.add(rhs)
-        prob.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        prob.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         prob.center().to_edge(DOWN)
         self.play(Write(prob))
 
@@ -1833,7 +1833,7 @@ class ShowFullDistribution(Scene):
             "P(", "\\text{Correct}", ")", "=", "0.8"
         )
         new_prob.highlight_by_tex("Correct", GREEN)
-        new_prob.shift(SPACE_WIDTH*RIGHT/2)
+        new_prob.shift(SPACE_X_RADIUS*RIGHT/2)
         new_prob.to_edge(UP)
 
         alt_ps = 0.5, 0.65, 0.25
@@ -2538,7 +2538,7 @@ class CycleThroughPatterns(NameBinomial):
         )
         question.highlight_by_tex("male", BLUE)
         question.highlight_by_tex("female", MAROON_B)
-        question.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        question.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         question.to_edge(UP, buff = LARGE_BUFF)
         self.add(question)
 
@@ -3200,7 +3200,7 @@ class AssumeOrderDoesntMatter(Scene):
                 equals.next_to(prob, RIGHT)
                 prob.add(equals)
             prob_group.arrange_submobjects(RIGHT)
-            max_width = 2*SPACE_WIDTH - 1
+            max_width = 2*SPACE_X_RADIUS - 1
             if prob_group.get_width() > max_width:
                 prob_group.scale_to_fit_width(max_width)
         prob_groups.arrange_submobjects(DOWN, buff = 0.7)
@@ -3244,7 +3244,7 @@ class AssumeOrderDoesntMatter(Scene):
         self.play(
             LaggedStart(
                 ApplyMethod, self.assumption_group,
-                lambda m : (m.shift, 2*SPACE_HEIGHT*DOWN),
+                lambda m : (m.shift, 2*SPACE_Y_RADIUS*DOWN),
                 remover = True,
             ),
             ApplyMethod(
@@ -3553,8 +3553,8 @@ class Thumbnail(DangerInProbability):
         chart = BarChart(
             values = values,
             label_y_axis = False,
-            width = 2*SPACE_WIDTH - 3,
-            height = 1.5*SPACE_HEIGHT
+            width = 2*SPACE_X_RADIUS - 3,
+            height = 1.5*SPACE_Y_RADIUS
         )
         chart.to_edge(DOWN)
         self.add(chart)

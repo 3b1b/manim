@@ -385,7 +385,7 @@ class HartlAndPalais(Scene):
             color = WHITE,
             stroke_width = 1,
         )
-        hartl_rect.scale_to_fit_width(SPACE_WIDTH - 1)
+        hartl_rect.scale_to_fit_width(SPACE_X_RADIUS - 1)
         hartl_rect.to_edge(LEFT)
         palais_rect = hartl_rect.copy()
         palais_rect.to_edge(RIGHT)
@@ -505,7 +505,7 @@ class EulerWrites628(Scene):
     }
     def construct(self):
         image = ImageMobject(os.path.join(RESOURCE_DIR, "dalembert_zoom"))
-        image.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        image.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         image.to_edge(UP, buff = MED_SMALL_BUFF)
         image.fade(0.15)
         rect = Rectangle(
@@ -591,8 +591,8 @@ class HeroAndVillain(Scene):
         for mob in pictures:
             mob.scale_to_fit_height(5)
 
-        good_euler.move_to(SPACE_WIDTH*LEFT/2)
-        bad_euler.move_to(SPACE_WIDTH*RIGHT/2)
+        good_euler.move_to(SPACE_X_RADIUS*LEFT/2)
+        bad_euler.move_to(SPACE_X_RADIUS*RIGHT/2)
         bad_euler_pixelated.move_to(bad_euler)
 
         good_euler_label = TextMobject("Leonhard Euler")
@@ -626,7 +626,7 @@ class HeroAndVillain(Scene):
 class AnalysisQuote(Scene):
     def construct(self):
         analysis = get_image("Analysis_page_showing_pi")
-        analysis.scale_to_fit_height(2*SPACE_HEIGHT)
+        analysis.scale_to_fit_height(2*SPACE_Y_RADIUS)
         analysis.to_edge(LEFT, buff = 0)
 
         text = TextMobject(
@@ -642,7 +642,7 @@ class AnalysisQuote(Scene):
         pi_formula = TexMobject(
             "\\pi", "=", "{ \\text{semicircumference}", "\\over", "\\text{radius}}"
         )
-        text.scale_to_fit_width(SPACE_WIDTH)
+        text.scale_to_fit_width(SPACE_X_RADIUS)
         text.next_to(analysis, RIGHT, LARGE_BUFF)
         text.to_edge(UP)
 
@@ -767,7 +767,7 @@ class ThingsNamedAfterEuler(Scene):
             "Euler totient function (number theory)",
         ]))
         group.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
 
         self.play(LaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
         self.wait()
@@ -1036,7 +1036,7 @@ class EndScene(PatreonEndScreen):
         self.add(watch_basel)
         # self.add(basel_screen)
 
-        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line = DashedLine(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
         line.next_to(watch_basel, DOWN)
         self.add(line)
 
@@ -1061,7 +1061,7 @@ class EndScene(PatreonEndScreen):
         instagram_logo.next_to(instagram_line, LEFT, SMALL_BUFF)
         instagram = Group(instagram_logo, instagram_line)
         instagram.next_to(line, DOWN)
-        instagram.shift(SPACE_WIDTH*RIGHT/2)
+        instagram.shift(SPACE_X_RADIUS*RIGHT/2)
         self.add(instagram)
 
 
@@ -1096,7 +1096,7 @@ class Thumbnail(Scene):
         formula.scale(2)
         pi.scale(1.5, about_edge = RIGHT)
         formula.set_stroke(BLUE, 1)
-        formula.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        formula.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
         # formula.shift(0.5*RIGHT)
         self.add(formula)
 

@@ -504,8 +504,8 @@ class IntroScene(PiCreatureScene):
         euler_words.next_to(euler, DOWN)
         euler.add(euler_words)
 
-        pietro.next_to(SPACE_WIDTH*LEFT, LEFT)
-        euler.next_to(SPACE_WIDTH*RIGHT, RIGHT)
+        pietro.next_to(SPACE_X_RADIUS*LEFT, LEFT)
+        euler.next_to(SPACE_X_RADIUS*RIGHT, RIGHT)
 
         pi_answer = self.pi_answer = TexMobject("{\\pi^2 \\over 6}")
         pi_answer.highlight(YELLOW)
@@ -519,7 +519,7 @@ class IntroScene(PiCreatureScene):
         pi = pi_answer[0]
         pi_rect = SurroundingRectangle(pi, color = RED)
         pi_rect.save_state()
-        pi_rect.scale_to_fit_height(SPACE_HEIGHT)
+        pi_rect.scale_to_fit_height(SPACE_Y_RADIUS)
         pi_rect.center()
         pi_rect.set_stroke(width = 0)
         squared = pi_answer[1]
@@ -534,7 +534,7 @@ class IntroScene(PiCreatureScene):
         self.number_line_group.save_state()
         self.play(
             pietro.next_to, ORIGIN, LEFT, LARGE_BUFF,
-            self.number_line_group.next_to, SPACE_HEIGHT*DOWN, DOWN,
+            self.number_line_group.next_to, SPACE_Y_RADIUS*DOWN, DOWN,
             morty.change, "pondering",
         )
         self.wait(2)
@@ -762,7 +762,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
         semi_circle.highlight(YELLOW)
 
         VGroup(radius, semi_circle).move_to(
-            SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/2,
+            SPACE_X_RADIUS*LEFT/2 + SPACE_Y_RADIUS*UP/2,
         )
 
         decimal = DecimalNumber(0)
@@ -795,7 +795,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
         )
         to_shift_down.generate_target()
         for part in to_shift_down.target:
-            part.move_to(2*SPACE_HEIGHT*DOWN)
+            part.move_to(2*SPACE_Y_RADIUS*DOWN)
 
         basel_sum = self.formulas[0]
 
@@ -917,8 +917,8 @@ class MathematicalWebOfConnections(PiCreatureScene):
     def create_pi_creatures(self):
         jerk = PiCreature(color = GREEN_D)
         randy = Randolph().flip()
-        jerk.move_to(0.5*SPACE_WIDTH*LEFT).to_edge(DOWN)
-        randy.move_to(0.5*SPACE_WIDTH*RIGHT).to_edge(DOWN)
+        jerk.move_to(0.5*SPACE_X_RADIUS*LEFT).to_edge(DOWN)
+        randy.move_to(0.5*SPACE_X_RADIUS*RIGHT).to_edge(DOWN)
 
         return VGroup(jerk, randy)
 
@@ -1431,7 +1431,7 @@ class EarthScene(IntroduceScreen):
     CONFIG = {
         "screen_height" : 0.5,
         "screen_thickness" : 0,
-        "radius" : 100 + SPACE_WIDTH,
+        "radius" : 100 + SPACE_X_RADIUS,
         "source_point" : 100*LEFT,
         "min_ray_angle" : -1.65*DEGREES,
         "max_ray_angle" : 1.65*DEGREES,
@@ -1446,7 +1446,7 @@ class EarthScene(IntroduceScreen):
         earth.replace(earth_circle)
 
         black_rect = Rectangle(
-            height = 2*SPACE_HEIGHT,
+            height = 2*SPACE_Y_RADIUS,
             width = earth_radius + LARGE_BUFF,
             stroke_width = 0,
             fill_color = BLACK,
@@ -1906,7 +1906,7 @@ class OtherInstanceOfInverseSquareLaw(Scene):
     def construct(self):
         title = TextMobject("Where the inverse square law shows up")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
@@ -1938,7 +1938,7 @@ class OtherInstanceOfInverseSquareLaw(Scene):
 
 class ScreensIntroWrapper(TeacherStudentsScene):
     def construct(self):
-        point = VectorizedPoint(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/2)
+        point = VectorizedPoint(SPACE_X_RADIUS*LEFT/2 + SPACE_Y_RADIUS*UP/2)
         self.play(self.teacher.change, "raise_right_hand")
         self.change_student_modes(
             "pondering", "erm", "confused",
@@ -2359,12 +2359,12 @@ class MathologerVideoWrapper(Scene):
         logo = ImageMobject("mathologer_logo")
         logo.scale_to_fit_height(1)
         logo.to_corner(UP+LEFT)
-        logo.shift(2*SPACE_WIDTH*RIGHT)
+        logo.shift(2*SPACE_X_RADIUS*RIGHT)
         screen = ScreenRectangle(height = 5.5)
         screen.next_to(title, DOWN)
 
         self.play(
-            logo.shift, 2*SPACE_WIDTH*LEFT,
+            logo.shift, 2*SPACE_X_RADIUS*LEFT,
             LaggedStart(FadeIn, title),
             run_time = 2
         )
@@ -2458,7 +2458,7 @@ class SimpleIPTProof(Scene):
 
 class WeCanHaveMoreFunThanThat(TeacherStudentsScene):
     def construct(self):
-        point = VectorizedPoint(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/2)
+        point = VectorizedPoint(SPACE_X_RADIUS*LEFT/2 + SPACE_Y_RADIUS*UP/2)
         self.teacher_says(
             "We can have \\\\ more fun than that!",
             target_mode = "hooray"
@@ -3729,8 +3729,8 @@ class PondScene(ThreeDScene):
         self.wait()        
 
         covering_rectangle = Rectangle(
-            width = SPACE_WIDTH * scale,
-            height = 2 * SPACE_HEIGHT * scale,
+            width = SPACE_X_RADIUS * scale,
+            height = 2 * SPACE_Y_RADIUS * scale,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 1,
@@ -3786,14 +3786,14 @@ class CenterOfLargerCircleOverlayText(Scene):
         arrow = Vector(DOWN+LEFT, color = WHITE)
         arrow.shift(words.get_bottom() + SMALL_BUFF*DOWN - arrow.get_start())
         group = VGroup(words, arrow)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
         group.to_edge(UP)
         self.add(group)
 
 class DiameterWordOverlay(Scene):
     def construct(self):
         word = TextMobject("Diameter")
-        word.scale_to_fit_width(SPACE_WIDTH)
+        word.scale_to_fit_width(SPACE_X_RADIUS)
         word.rotate(-45*DEGREES)
         self.play(Write(word))
         self.wait()

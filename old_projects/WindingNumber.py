@@ -359,7 +359,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
 
             x_guess_label_caption = TextMobject("New guess: x = ", fill_color = midColor)
             x_guess_label_num = DecimalNumber(midX, fill_color = midColor)
-            x_guess_label_num.move_to(0.9 * SPACE_HEIGHT * DOWN)
+            x_guess_label_num.move_to(0.9 * SPACE_Y_RADIUS * DOWN)
             x_guess_label_caption.next_to(x_guess_label_num, LEFT)
             x_guess_label = Group(x_guess_label_caption, x_guess_label_num)
             y_guess_label_caption = TextMobject(", y = ", fill_color = midColor)
@@ -492,7 +492,7 @@ def plane_zeta((x, y)):
     return (float(answer.real), float(answer.imag))
 
 def rescaled_plane_zeta((x, y)):
-    return plane_zeta((x/SPACE_WIDTH, 8*y))
+    return plane_zeta((x/SPACE_X_RADIUS, 8*y))
 
 # Returns a function from 2-ples to 2-ples
 # This function is specified by a list of (x, y, z) tuples, 
@@ -1558,8 +1558,8 @@ class VectorField(Scene):
         num_plane = NumberPlane()
         self.add(num_plane)
 
-        x_min, y_min = num_plane.point_to_coords(SPACE_WIDTH * LEFT + SPACE_HEIGHT * UP)
-        x_max, y_max = num_plane.point_to_coords(SPACE_WIDTH * RIGHT + SPACE_HEIGHT * DOWN)
+        x_min, y_min = num_plane.point_to_coords(SPACE_X_RADIUS * LEFT + SPACE_Y_RADIUS * UP)
+        x_max, y_max = num_plane.point_to_coords(SPACE_X_RADIUS * RIGHT + SPACE_Y_RADIUS * DOWN)
 
         x_points = np.linspace(x_min, x_max, self.granularity)
         y_points = np.linspace(y_min, y_max, self.granularity)
@@ -1791,17 +1791,17 @@ class Initial2dFuncSceneMorphing(Initial2dFuncSceneBase):
     }
 
     def setup(self):
-        split_line = DashedLine(SPACE_HEIGHT * UP, SPACE_HEIGHT * DOWN)
-        self.num_plane = NumberPlane(x_radius = SPACE_WIDTH/2)
+        split_line = DashedLine(SPACE_Y_RADIUS * UP, SPACE_Y_RADIUS * DOWN)
+        self.num_plane = NumberPlane(x_radius = SPACE_X_RADIUS/2)
         self.num_plane.to_edge(LEFT, buff = 0)
         self.num_plane.prepare_for_nonlinear_transform()
         self.add(self.num_plane, split_line)
 
     def squash_onto_left(self, object):
-        object.shift(SPACE_WIDTH/2 * LEFT)
+        object.shift(SPACE_X_RADIUS/2 * LEFT)
 
     def squash_onto_right(self, object):
-        object.shift(SPACE_WIDTH/2 * RIGHT)
+        object.shift(SPACE_X_RADIUS/2 * RIGHT)
 
     def obj_draw(self, input_object):
         output_object = input_object.copy()
@@ -1820,10 +1820,10 @@ class Initial2dFuncSceneMorphing(Initial2dFuncSceneBase):
         right_plane.center()
         right_plane.prepare_for_nonlinear_transform()
         right_plane.apply_function(self.func)
-        right_plane.shift(SPACE_WIDTH/2 * RIGHT)
+        right_plane.shift(SPACE_X_RADIUS/2 * RIGHT)
         self.right_plane = right_plane
         crappy_cropper = FullScreenFadeRectangle(fill_opacity = 1)
-        crappy_cropper.stretch_to_fit_width(SPACE_WIDTH)
+        crappy_cropper.stretch_to_fit_width(SPACE_X_RADIUS)
         crappy_cropper.to_edge(LEFT, buff = 0)
         self.play(
             ReplacementTransform(self.num_plane.copy(), right_plane),
@@ -1847,7 +1847,7 @@ class DemonstrateColorMapping(ColorMappedObjectsScene):
         # self.add_foreground_mobject(output_plane_label)
 
         if self.show_full_color_map:
-            bright_background = Rectangle(width = 2 * SPACE_WIDTH + 1, height = 2 * SPACE_HEIGHT + 1, fill_opacity = 1)
+            bright_background = Rectangle(width = 2 * SPACE_X_RADIUS + 1, height = 2 * SPACE_Y_RADIUS + 1, fill_opacity = 1)
             bright_background.color_using_background_image(self.background_image_file)
             dim_background = bright_background.copy()
             dim_background.fill_opacity = 0.3
@@ -2711,10 +2711,10 @@ class NotFoundScene(Scene):
         self.wait()
 
 criticalStripYScale = 100
-criticalStrip = Axes(x_min = -0.5, x_max = 1.5, x_axis_config = {"unit_size" : SPACE_WIDTH, 
+criticalStrip = Axes(x_min = -0.5, x_max = 1.5, x_axis_config = {"unit_size" : SPACE_X_RADIUS, 
     "number_at_center" : 0.5}, 
     y_min = -criticalStripYScale, y_max = criticalStripYScale, 
-    y_axis_config = {"unit_size" : fdiv(SPACE_HEIGHT, criticalStripYScale)})
+    y_axis_config = {"unit_size" : fdiv(SPACE_Y_RADIUS, criticalStripYScale)})
 
 class ZetaViz(PureColorMap):
     CONFIG = {

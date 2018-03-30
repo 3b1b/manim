@@ -22,15 +22,15 @@ class Camera(object):
         # Note 2: While pixel_shape indicates the actual full height
         # and width of the pixel array, space_shape indicates only 
         # half the height and half the width of space (extending from
-        # -space_height to +space_height vertically and from 
-        # -space_widtdh to +space_width horizontally)
+        # -SPACE_Y_RADIUS to +SPACE_Y_RADIUS vertically and from 
+        # -SPACE_X_RADIUS to +SPACE_X_RADIUS horizontally)
         # TODO: Rename these to SPACE_X_RADIUS, SPACE_Y_RADIUS
-        "space_shape" : (SPACE_HEIGHT, SPACE_WIDTH),
+        "space_shape" : (SPACE_Y_RADIUS, SPACE_X_RADIUS),
         "space_center" : ORIGIN,
         "background_color" : BLACK,
         #Points in vectorized mobjects with norm greater
         #than this value will be rescaled.
-        "max_allowable_norm" : 2*SPACE_WIDTH,
+        "max_allowable_norm" : 2*SPACE_X_RADIUS,
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
         "background_alpha" : 0, #Out of rgb_max_val
@@ -63,12 +63,12 @@ class Camera(object):
         remains fixed while the other changes accordingly.
         """
         aspect_ratio = float(self.pixel_shape[1])/self.pixel_shape[0]
-        space_height, space_width = self.space_shape
+        space_y_radius, space_y_radius = self.space_shape
         if fixed_dimension == 0:
-            space_width = aspect_ratio*space_height
+            space_y_radius = aspect_ratio*space_y_radius
         else:
-            space_height = space_width/aspect_ratio
-        self.space_shape = (space_height, space_width)
+            space_y_radius = space_y_radius/aspect_ratio
+        self.space_shape = (space_y_radius, space_y_radius)
 
     def init_background(self):
         if self.background_image is not None:

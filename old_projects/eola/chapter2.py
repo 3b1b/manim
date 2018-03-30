@@ -206,7 +206,7 @@ class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
             are the ``basis vectors'' \\\\
             of the $xy$ coordinate system
         """)
-        text.scale_to_fit_width(SPACE_WIDTH-1)
+        text.scale_to_fit_width(SPACE_X_RADIUS-1)
         text.to_corner(UP+RIGHT)
         VMobject(*text.split()[:2]).highlight(X_COLOR)
         VMobject(*text.split()[5:7]).highlight(Y_COLOR)
@@ -460,7 +460,7 @@ class NameLinearCombinations(Scene):
         ])
         words.split()[1].highlight(v_color)
         words.split()[3].highlight(w_color)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         words.to_edge(UP)
 
         equation = TexMobject([
@@ -601,7 +601,7 @@ class DefineSpan(Scene):
             $\\vec{\\textbf{w}}$ is the \\\\ set of all their
             linear combinations.
         """)
-        definition.scale_to_fit_width(2*SPACE_WIDTH-1)
+        definition.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         definition.to_edge(UP)
         def_mobs = np.array(definition.split())
         VMobject(*def_mobs[4:4+4]).highlight(PINK)
@@ -708,7 +708,7 @@ class VectorsOnALine(VectorsToDotsScene):
         return [
             Vector(a*np.array([1.5, 1]))
             for a in np.linspace(
-                -SPACE_HEIGHT, SPACE_HEIGHT, self.num_vectors
+                -SPACE_Y_RADIUS, SPACE_Y_RADIUS, self.num_vectors
             )
         ]
 
@@ -732,18 +732,18 @@ class VectorsInThePlane(VectorsToDotsScene):
     def get_vectors(self):
         return [
             Vector([x, y])
-            for x in np.arange(-int(SPACE_WIDTH)-0.5, int(SPACE_WIDTH)+0.5)
-            for y in np.arange(-int(SPACE_HEIGHT)-0.5, int(SPACE_HEIGHT)+0.5)
+            for x in np.arange(-int(SPACE_X_RADIUS)-0.5, int(SPACE_X_RADIUS)+0.5)
+            for y in np.arange(-int(SPACE_Y_RADIUS)-0.5, int(SPACE_Y_RADIUS)+0.5)
         ]
 
     def play_final_animation(self, vectors, rate_functions):
         h_line = Line(
-            SPACE_WIDTH*RIGHT, SPACE_WIDTH*LEFT,
+            SPACE_X_RADIUS*RIGHT, SPACE_X_RADIUS*LEFT,
             stroke_width = 0.5,
             color = BLUE_E
         )
         v_line = Line(
-            SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN,
+            SPACE_Y_RADIUS*UP, SPACE_Y_RADIUS*DOWN,
             stroke_width = 0.5,
             color = BLUE_E
         )
@@ -834,7 +834,7 @@ class LinearCombinationOfThreeVectorsText(Scene):
         VMobject(*text.split()[-9:-7]).highlight(BLUE)
         VMobject(*text.split()[-3:-1]).highlight(RED_C)
         VMobject(*text.split()[:17]).highlight(GREEN)        
-        text.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        text.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         text.to_edge(UP)
 
         equation = TextMobject("""$
@@ -896,7 +896,7 @@ class SpanCasesWords(Scene):
         VMobject(*words2.split()[10:13]).highlight(RED)
 
         for words in words1, words2:
-            words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+            words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         self.play(Write(words1))
         self.wait()
         self.play(Transform(words1, words2))
@@ -933,7 +933,7 @@ class LinearDependentWords(Scene):
         rest.highlight(YELLOW)
 
         for words in words1, words2:
-            words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+            words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
 
         self.play(Write(words1))
         self.wait()
@@ -1253,7 +1253,7 @@ class TechnicalDefinitionOfBasis(Scene):
         b.highlight(BLUE)
         li.highlight(GREEN)
         s.highlight(YELLOW)
-        definition.scale_to_fit_width(2*SPACE_WIDTH-1)
+        definition.scale_to_fit_width(2*SPACE_X_RADIUS-1)
 
         self.add(title)
         self.play(Write(definition))

@@ -7,7 +7,7 @@ class LayOutPlan(Scene):
         title = TextMobject("Plan")
         title.scale(1.5)
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH - 1)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS - 1)
         h_line.next_to(title, DOWN)
 
         items = BulletedList(
@@ -19,7 +19,7 @@ class LayOutPlan(Scene):
         self.add(items)
 
         rect = ScreenRectangle()
-        rect.scale_to_fit_width(2*SPACE_WIDTH - items.get_width() - 2)
+        rect.scale_to_fit_width(2*SPACE_X_RADIUS - items.get_width() - 2)
         rect.next_to(items, RIGHT, MED_LARGE_BUFF)
 
         self.play(
@@ -381,7 +381,7 @@ class GetLostInNotation(PiCreatureScene):
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
 
-        circle = Circle(radius = 3*SPACE_WIDTH)
+        circle = Circle(radius = 3*SPACE_X_RADIUS)
         circle.set_fill(WHITE, 0)
         circle.set_stroke(WHITE, 0)
 
@@ -1390,7 +1390,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
 class WriteHebbian(Scene):
     def construct(self):
         words = TextMobject("Hebbian theory")
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         words.to_edge(UP)
         self.play(Write(words))
         self.wait()
@@ -1477,7 +1477,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
 
     def setup_grid(self):
         h_lines = VGroup(*[
-            Line(LEFT, RIGHT).scale(0.85*SPACE_WIDTH)
+            Line(LEFT, RIGHT).scale(0.85*SPACE_X_RADIUS)
             for x in range(6)
         ])
         h_lines.arrange_submobjects(DOWN, buff = 1)
@@ -1486,7 +1486,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         h_lines.to_edge(LEFT, buff = 0)
 
         v_lines = VGroup(*[
-            Line(UP, DOWN).scale(SPACE_HEIGHT - MED_LARGE_BUFF)
+            Line(UP, DOWN).scale(SPACE_Y_RADIUS - MED_LARGE_BUFF)
             for x in range(self.n_examples + 1)
         ])
         v_lines.arrange_submobjects(RIGHT, buff = 1.4)

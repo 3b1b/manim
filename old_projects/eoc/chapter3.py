@@ -69,14 +69,14 @@ class PoseAbstractDerivative(TeacherStudentsScene):
 
 class ContrastAbstractAndConcrete(Scene):
     def construct(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         l_title = TextMobject("Abstract functions")
-        l_title.shift(SPACE_WIDTH*LEFT/2)
+        l_title.shift(SPACE_X_RADIUS*LEFT/2)
         l_title.to_edge(UP)
         r_title = TextMobject("Applications")
-        r_title.shift(SPACE_WIDTH*RIGHT/2)
+        r_title.shift(SPACE_X_RADIUS*RIGHT/2)
         r_title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         h_line.shift((r_title.get_bottom()[1]-MED_SMALL_BUFF)*UP)
 
         functions = VGroup(*map(TexMobject, [
@@ -90,7 +90,7 @@ class ContrastAbstractAndConcrete(Scene):
             aligned_edge = LEFT,
             buff = LARGE_BUFF
         )
-        functions.shift(SPACE_WIDTH*LEFT/2)
+        functions.shift(SPACE_X_RADIUS*LEFT/2)
         functions[-1].shift(MED_LARGE_BUFF*RIGHT)
 
         self.add(l_title, r_title)
@@ -171,7 +171,7 @@ class ContrastAbstractAndConcrete(Scene):
         pis.scale_to_fit_height(3)
         pis.center()
         pis.to_edge(DOWN, buff = SMALL_BUFF)
-        pis.shift(SPACE_WIDTH*RIGHT/2.)
+        pis.shift(SPACE_X_RADIUS*RIGHT/2.)
 
         anims = []
         for index, pi in enumerate(pis):
@@ -224,7 +224,7 @@ class ListOfRules(PiCreatureScene):
             aligned_edge = LEFT,
         )
         rules[-1].shift(MED_LARGE_BUFF*RIGHT)
-        rules.scale_to_fit_height(2*SPACE_HEIGHT-1)
+        rules.scale_to_fit_height(2*SPACE_Y_RADIUS-1)
         rules.next_to(self.pi_creature, RIGHT)
         rules.to_edge(DOWN)
 
@@ -381,7 +381,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         self.disactivate_zooming()
         self.play(
             ApplyMethod(
-                everything.shift, 2*SPACE_WIDTH*LEFT,
+                everything.shift, 2*SPACE_X_RADIUS*LEFT,
                 rate_func = lambda t : running_start(t, -0.1)
             ),
             self.pi_creature.change_mode, "happy"
@@ -857,7 +857,7 @@ class NudgeSideLengthOfCube(Scene):
 
     def add_title(self):
         title = TexMobject("f(x) = x^3")
-        title.shift(SPACE_WIDTH*LEFT/2)
+        title.shift(SPACE_X_RADIUS*LEFT/2)
         title.to_edge(UP)
         self.play(Write(title))
         self.wait()
@@ -957,7 +957,7 @@ class NudgeSideLengthOfCube(Scene):
         self.shrink_dx("Faces are introduced")
         face = self.faces[0]
         face.save_state()
-        self.play(face.shift, SPACE_WIDTH*RIGHT)
+        self.play(face.shift, SPACE_X_RADIUS*RIGHT)
         x_squared_dx.next_to(face, LEFT)
         self.play(Write(x_squared_dx, run_time = 1))
         self.wait()
@@ -1229,11 +1229,11 @@ class GraphOfXCubed(GraphScene):
     CONFIG = {
         "x_min" : -6,
         "x_max" : 6,
-        "x_axis_width" : 2*SPACE_WIDTH,
+        "x_axis_width" : 2*SPACE_X_RADIUS,
         "x_labeled_nums" : range(-6, 7),
         "y_min" : -35,
         "y_max" : 35,
-        "y_axis_height" : 2*SPACE_HEIGHT,
+        "y_axis_height" : 2*SPACE_Y_RADIUS,
         "y_tick_frequency" : 5,
         "y_labeled_nums" : range(-30, 40, 10),
         "graph_origin" : ORIGIN,
@@ -1331,7 +1331,7 @@ class PatternForPowerRule(PiCreatureScene):
             DOWN, aligned_edge = LEFT,
             buff = MED_LARGE_BUFF
         )
-        derivatives.scale_to_fit_height(2*SPACE_HEIGHT-1)
+        derivatives.scale_to_fit_height(2*SPACE_Y_RADIUS-1)
         derivatives.to_edge(LEFT)
 
         self.play(FadeIn(derivatives[0]))
@@ -1629,7 +1629,7 @@ class ReactToFullExpansion(Scene):
 class OneOverX(PiCreatureScene, GraphScene):
     CONFIG = {
         "unit_length" : 3.0,    
-        "graph_origin" : (SPACE_WIDTH - LARGE_BUFF)*LEFT + 2*DOWN,
+        "graph_origin" : (SPACE_X_RADIUS - LARGE_BUFF)*LEFT + 2*DOWN,
         "rectangle_color_kwargs" : {
             "fill_color" : BLUE,
             "fill_opacity" : 0.5,
@@ -2175,7 +2175,7 @@ class DerivativeOfSineIsSlope(Scene):
             "\\frac{d(\\sin(\\theta))}{d\\theta} = ",
             "\\text{Slope of this graph}"
         )
-        tex.scale_to_fit_width(2*SPACE_WIDTH-1)
+        tex.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         tex.to_edge(DOWN)
         VGroup(*tex[0][2:8]).highlight(BLUE)
         VGroup(*tex[1][-9:]).highlight(BLUE)
@@ -2247,7 +2247,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
             ORIGIN, self.example_radians*self.unit_length*UP,
             color = YELLOW,
         )
-        line.shift(SPACE_WIDTH*RIGHT/3).to_edge(UP)
+        line.shift(SPACE_X_RADIUS*RIGHT/3).to_edge(UP)
         line.insert_n_anchor_points(10)
         line.make_smooth()
 
@@ -2827,12 +2827,12 @@ class Thumbnail(NudgeSideLengthOfCube):
         )
         VGroup(*formula[:5]).highlight(YELLOW)
         VGroup(*formula[-3:]).highlight(GREEN_B)
-        formula.scale_to_fit_width(SPACE_WIDTH-1)
+        formula.scale_to_fit_width(SPACE_X_RADIUS-1)
         formula.to_edge(RIGHT)
         self.add(formula)
 
         title = TextMobject("Geometric derivatives")
-        title.scale_to_fit_width(2*SPACE_WIDTH-1)
+        title.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         title.to_edge(UP)
         self.add(title)
 

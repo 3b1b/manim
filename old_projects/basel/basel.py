@@ -2078,7 +2078,7 @@ class IPTScene1(PiCreatureScene):
 
         # use the following for the zoomed inset
         if show_detail:
-            self.camera.space_shape = (0.02 * SPACE_HEIGHT, 0.02 * SPACE_WIDTH)
+            self.camera.space_shape = (0.02 * SPACE_Y_RADIUS, 0.02 * SPACE_X_RADIUS)
             self.camera.space_center = C
             SCREEN_SCALE = 0.01
             SCREEN_THICKNESS = 0.02
@@ -3873,8 +3873,8 @@ class PondScene(ThreeDScene):
 
 
         covering_rectangle = Rectangle(
-            width = SPACE_WIDTH * scale,
-            height = 2 * SPACE_HEIGHT * scale,
+            width = SPACE_X_RADIUS * scale,
+            height = 2 * SPACE_Y_RADIUS * scale,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 1,

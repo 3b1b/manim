@@ -35,7 +35,7 @@ class OpeningQuote(Scene):
         self.play(Write(self.author, run_time = 3))
         self.wait()
 
-    def get_quote(self, max_width = 2*SPACE_WIDTH-1):
+    def get_quote(self, max_width = 2*SPACE_X_RADIUS-1):
         text_mobject_kwargs = {
             "alignment" : "",
             "arg_separator" : self.quote_arg_separator,
@@ -148,17 +148,17 @@ class PatreonEndScreen(PatreonThanks):
     def scroll_through_patrons(self):
         logo_box = Square(side_length = 2.5)
         logo_box.to_corner(DOWN+LEFT, buff = MED_LARGE_BUFF)
-        total_width = SPACE_WIDTH - logo_box.get_right()[0]
+        total_width = SPACE_X_RADIUS - logo_box.get_right()[0]
 
         black_rect = Rectangle(
             fill_color = BLACK,
             fill_opacity = 1,
             stroke_width = 0,
-            width = 2*SPACE_WIDTH,
-            height = 1.1*SPACE_HEIGHT
+            width = 2*SPACE_X_RADIUS,
+            height = 1.1*SPACE_Y_RADIUS
         )
         black_rect.to_edge(UP, buff = 0)
-        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line = DashedLine(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
         line.move_to(black_rect, DOWN)
         line.shift(SMALL_BUFF*SMALL_BUFF*DOWN)
         self.add(line)
@@ -183,7 +183,7 @@ class PatreonEndScreen(PatreonThanks):
         columns.to_edge(RIGHT)
 
         self.play(
-            columns.next_to, SPACE_HEIGHT*DOWN, UP, LARGE_BUFF,
+            columns.next_to, SPACE_Y_RADIUS*DOWN, UP, LARGE_BUFF,
             columns.to_edge, RIGHT, 
             Animation(black_rect),
             rate_func = None,

@@ -543,20 +543,20 @@ class CirclesSpheresSumsSquares(ExternallyAnimatedScene):
 class BackAndForth(Scene):
     def construct(self):
         analytic = TextMobject("Analytic")
-        analytic.shift(SPACE_WIDTH*LEFT/2)
+        analytic.shift(SPACE_X_RADIUS*LEFT/2)
         analytic.to_edge(UP, buff = MED_SMALL_BUFF)
         geometric = TextMobject("Geometric")
-        geometric.shift(SPACE_WIDTH*RIGHT/2)
+        geometric.shift(SPACE_X_RADIUS*RIGHT/2)
         geometric.to_edge(UP, buff = MED_SMALL_BUFF)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         h_line.to_edge(UP, LARGE_BUFF)
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         self.add(analytic, geometric, h_line, v_line)
 
         pair = TexMobject("(", "x", ",", "y", ")")
-        pair.shift(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/3)
+        pair.shift(SPACE_X_RADIUS*LEFT/2 + SPACE_Y_RADIUS*UP/3)
         triplet = TexMobject("(", "x", ",", "y", ",", "z", ")")
-        triplet.shift(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*DOWN/2)
+        triplet.shift(SPACE_X_RADIUS*LEFT/2 + SPACE_Y_RADIUS*DOWN/2)
         for mob in pair, triplet:
             arrow = DoubleArrow(LEFT, RIGHT)
             arrow.move_to(mob)
@@ -572,7 +572,7 @@ class BackAndForth(Scene):
         plane_group = VGroup(plane, circle)
         plane_group.scale(0.4)
         plane_group.next_to(h_line, DOWN, SMALL_BUFF)
-        plane_group.shift(SPACE_WIDTH*RIGHT/2)
+        plane_group.shift(SPACE_X_RADIUS*RIGHT/2)
 
 
         self.play(Write(pair))
@@ -804,20 +804,20 @@ class OfferAHybrid(SliderScene):
     def construct(self):
         self.remove(self.sliders)
         titles = self.get_titles()
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         h_line.next_to(titles, DOWN)
         v_lines = VGroup(*[
-            Line(UP, DOWN).scale(SPACE_HEIGHT)
+            Line(UP, DOWN).scale(SPACE_Y_RADIUS)
             for x in range(2)
         ])
         v_lines.generate_target()
         for line, vect in zip(v_lines.target, [LEFT, RIGHT]):
-            line.shift(vect*SPACE_WIDTH/3)
+            line.shift(vect*SPACE_X_RADIUS/3)
 
         equation = TexMobject("x^2 + y^2 + z^2 = 1")
         equation.generate_target()
-        equation.shift(SPACE_WIDTH*LEFT/2)
-        equation.target.shift(2*SPACE_WIDTH*LEFT/3)
+        equation.shift(SPACE_X_RADIUS*LEFT/2)
+        equation.target.shift(2*SPACE_X_RADIUS*LEFT/3)
 
         self.add(titles, h_line, v_lines, equation)
         self.wait()
@@ -836,10 +836,10 @@ class OfferAHybrid(SliderScene):
         titles[1].highlight(BLUE)
         titles.generate_target()
         titles[1].scale_in_place(0.001)
-        titles[0].shift(SPACE_WIDTH*LEFT/2)
-        titles.target[0].shift(2*SPACE_WIDTH*LEFT/3)
-        titles[2].shift(SPACE_WIDTH*RIGHT/2)
-        titles.target[2].shift(2*SPACE_WIDTH*RIGHT/3)
+        titles[0].shift(SPACE_X_RADIUS*LEFT/2)
+        titles.target[0].shift(2*SPACE_X_RADIUS*LEFT/3)
+        titles[2].shift(SPACE_X_RADIUS*RIGHT/2)
+        titles.target[2].shift(2*SPACE_X_RADIUS*RIGHT/3)
         return titles
 
 class TODOBoxExample(TODOStub):
@@ -1766,7 +1766,7 @@ class ThreeDCubeCorners(Scene):
         name = TextMobject("Corners: ")
         name.next_to(coordinates[0], LEFT)
         group = VGroup(name, coordinates)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
         group.to_edge(LEFT)
 
         self.play(Write(name, run_time = 2))
@@ -2480,7 +2480,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         title = TextMobject(
             "$2 \\!\\times\\! 2 \\!\\times\\! 2 \\!\\times\\! 2$ box vertices:"
         )
-        title.shift(SPACE_WIDTH*LEFT/2)
+        title.shift(SPACE_X_RADIUS*LEFT/2)
         title.to_edge(UP)
 
         coordinates = list(it.product(*4*[[1, -1]]))
@@ -3110,7 +3110,7 @@ class ThreeDOuterBoundingBoxWords(Scene):
             "$4 \\!\\times\\! 4\\!\\times\\! 4$ outer\\\\",
             "bounding box"
         )
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         words.to_edge(DOWN)
         words.highlight(MAROON_B)
 
@@ -3544,7 +3544,7 @@ class Podcast(TeacherStudentsScene):
         title = TextMobject("Podcast!")
         title.scale(1.5)
         title.to_edge(UP)
-        title.shift(SPACE_WIDTH*LEFT/2)
+        title.shift(SPACE_X_RADIUS*LEFT/2)
         self.add(title)
 
         q_and_a = TextMobject("Q\\&A Followup")

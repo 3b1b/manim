@@ -143,7 +143,7 @@ class Introduction(TeacherStudentsScene):
             *it.chain(*[
                 [
                     pi.change_mode, mode,
-                    pi.look_at, SPACE_HEIGHT*UP
+                    pi.look_at, SPACE_Y_RADIUS*UP
                 ]
                 for pi, mode in zip(self.get_pi_creatures(), [
                     "speaking", "pondering", "confused", "confused",
@@ -666,8 +666,8 @@ class SnapshotOfACar(Scene):
         car.scale(1.5)
         car.move_to(3*LEFT+DOWN)
         flash_box = Rectangle(
-            width = 2*SPACE_WIDTH,
-            height = 2*SPACE_HEIGHT,
+            width = 2*SPACE_X_RADIUS,
+            height = 2*SPACE_Y_RADIUS,
             stroke_width = 0,
             fill_color = WHITE,
             fill_opacity = 1,
@@ -723,8 +723,8 @@ class CompareTwoTimes(Scene):
         state2.to_corner(DOWN+LEFT)
 
         dividers = VGroup(
-            Line(SPACE_WIDTH*LEFT, RIGHT),
-            Line(RIGHT+SPACE_HEIGHT*UP, RIGHT+SPACE_HEIGHT*DOWN),
+            Line(SPACE_X_RADIUS*LEFT, RIGHT),
+            Line(RIGHT+SPACE_Y_RADIUS*UP, RIGHT+SPACE_Y_RADIUS*DOWN),
         )
         dividers.highlight(GREY)
 
@@ -1992,7 +1992,7 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
         self.wait(3)
 
         series = VideoSeries()
-        series.scale_to_fit_width(2*SPACE_WIDTH-1)
+        series.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         series.to_edge(UP)
         this_video = series[1]
         next_video = series[2]
@@ -2008,7 +2008,7 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
 
 class ContrastConcreteDtWithLimit(Scene):
     def construct(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         self.add(v_line)
 
         l_title = TextMobject("""
@@ -2020,7 +2020,7 @@ class ContrastConcreteDtWithLimit(Scene):
         VGroup(*r_title[:2]).highlight(TIME_COLOR)
         for title, vect in (l_title, LEFT), (r_title, RIGHT):
             title.to_edge(UP)
-            title.shift(SPACE_WIDTH*vect/2)
+            title.shift(SPACE_X_RADIUS*vect/2)
             self.add(title)
 
         l_formula = TexMobject("""
@@ -2040,7 +2040,7 @@ class ContrastConcreteDtWithLimit(Scene):
             l_formula[27:29],
             l_formula[35:37],
         )).highlight(TIME_COLOR)
-        l_formula.scale_to_fit_width(SPACE_WIDTH-MED_LARGE_BUFF)
+        l_formula.scale_to_fit_width(SPACE_X_RADIUS-MED_LARGE_BUFF)
         l_formula.to_edge(LEFT)
 
         l_brace = Brace(l_formula, DOWN)
@@ -2051,7 +2051,7 @@ class ContrastConcreteDtWithLimit(Scene):
             "\\frac{d(t^3)}{dt} = 3t^2"
         )
         VGroup(*r_formula[6:8]).highlight(TIME_COLOR)
-        r_formula.shift(SPACE_WIDTH*RIGHT/2)
+        r_formula.shift(SPACE_X_RADIUS*RIGHT/2)
         r_brace = Brace(r_formula, DOWN)
         r_text = r_brace.get_text("Simple")
         r_text.highlight(GREEN)
@@ -2427,7 +2427,7 @@ class TinyMovement(ZoomedScene):
 class NextVideos(TeacherStudentsScene):
     def construct(self):
         series = VideoSeries()
-        series.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        series.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         series.to_edge(UP)
         series[1].highlight(YELLOW)
         self.add(series)
@@ -2592,7 +2592,7 @@ class Thumbnail(SecantLineToTangentLine):
         VGroup(*self.get_mobjects()).fade(0.4)
 
         title = TextMobject("Derivative paradox")
-        title.scale_to_fit_width(2*SPACE_WIDTH-1)
+        title.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         title.to_edge(UP)
         title.add_background_rectangle()
         title.gradient_highlight(GREEN, YELLOW)

@@ -40,7 +40,7 @@ from helpers import *
 
 
 def get_time_line():
-    length = 5.2*SPACE_WIDTH
+    length = 5.2*SPACE_X_RADIUS
     year_range = 400
     time_line = NumberLine(
         numerical_radius = year_range/2,
@@ -123,8 +123,8 @@ class AskMathematicianFriend(Scene):
 class TimeLineAboutSpaceFilling(Scene):
     def construct(self):
         curve = PeanoCurve(order = 5)
-        curve.stretch_to_fit_width(2*SPACE_WIDTH)
-        curve.stretch_to_fit_height(2*SPACE_HEIGHT)
+        curve.stretch_to_fit_width(2*SPACE_X_RADIUS)
+        curve.stretch_to_fit_height(2*SPACE_Y_RADIUS)
         curve_start = curve.copy()
         curve_start.apply_over_attr_arrays(
             lambda arr : arr[:200]
@@ -525,7 +525,7 @@ class FormalDefinitionOfContinuity(Scene):
         self.output.highlight(GREEN_A)
 
         self.interval = UnitInterval()
-        self.interval.scale_to_fit_width(SPACE_WIDTH-1)
+        self.interval.scale_to_fit_width(SPACE_X_RADIUS-1)
         self.interval.to_edge(LEFT)
 
         self.input_dot = Dot(color = self.input_color)
@@ -574,12 +574,12 @@ class FormalDefinitionOfContinuity(Scene):
     def label_spaces(self):
         input_space = TextMobject("Input Space")
         input_space.to_edge(UP)        
-        input_space.shift(LEFT*SPACE_WIDTH/2)
+        input_space.shift(LEFT*SPACE_X_RADIUS/2)
         output_space = TextMobject("Output Space")
         output_space.to_edge(UP)
-        output_space.shift(RIGHT*SPACE_WIDTH/2)
+        output_space.shift(RIGHT*SPACE_X_RADIUS/2)
         line = Line(
-            UP*SPACE_HEIGHT, DOWN*SPACE_HEIGHT, 
+            UP*SPACE_Y_RADIUS, DOWN*SPACE_Y_RADIUS, 
             color = WHITE
         )
         self.play(
@@ -1012,7 +1012,7 @@ class ThreeThingsToProve(Scene):
 class TilingSpace(Scene):
     def construct(self):
         coords_set = [ORIGIN]
-        for n in range(int(2*SPACE_WIDTH)):
+        for n in range(int(2*SPACE_X_RADIUS)):
             for vect in UP, RIGHT:
                 for k in range(n):
                     new_coords = coords_set[-1]+((-1)**n)*vect

@@ -68,10 +68,10 @@ class InfiniteResultsFiniteWorld(Scene):
         right_mobs = [right_words, right_formula]
         for mob in left_mobs:
             mob.to_edge(RIGHT, buff = 1)
-            mob.shift(SPACE_WIDTH*LEFT)
+            mob.shift(SPACE_X_RADIUS*LEFT)
         for mob in right_mobs:
             mob.to_edge(LEFT, buff = 1)
-            mob.shift(SPACE_WIDTH*RIGHT)
+            mob.shift(SPACE_X_RADIUS*RIGHT)
         arrow = Arrow(left_words, right_words)
         right_overwords.next_to(right_formula, UP)
 

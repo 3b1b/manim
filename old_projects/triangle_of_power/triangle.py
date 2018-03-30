@@ -778,7 +778,7 @@ class TowerExponentFrame(Scene):
             $7{,}625{,}597{,}484{,}987$.  But with the triangle
             of power, the difference is crystal clear:
         """)
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         words.to_edge(UP)
         top1 = TOP(TOP(3, 3), 3)
         top2 = TOP(3, (TOP(3, 3)))

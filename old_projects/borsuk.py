@@ -52,7 +52,7 @@ class Jewel(VMobject):
 
 class Necklace(VMobject):
     CONFIG = {
-        "width" : 2*SPACE_WIDTH - 1,
+        "width" : 2*SPACE_X_RADIUS - 1,
         "jewel_buff" : MED_SMALL_BUFF,
         "chain_color" : GREY,
         "default_colors" : [(4, BLUE), (6, WHITE), (4, GREEN)]
@@ -95,7 +95,7 @@ class Necklace(VMobject):
 class FromPreviousTopologyVideo(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(2*SPACE_HEIGHT-2)
+        rect.scale_to_fit_height(2*SPACE_Y_RADIUS-2)
         title = TextMobject("From original ``Who cares about topology'' video")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -604,7 +604,7 @@ class WriteWords(Scene):
     def construct(self):
         words = TextMobject(self.words)
         words.highlight(self.color)
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         words.to_edge(DOWN)
         self.play(Write(words))
         self.wait(2)
@@ -800,7 +800,7 @@ class WalkEquatorPostTransform(GraphScene):
             equator, dots,
             rate_func = lambda t : 2*proportion*smooth(t)
         ))
-        v_line = DashedLine(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        v_line = DashedLine(SPACE_Y_RADIUS*UP, SPACE_Y_RADIUS*DOWN)
         v_line.shift(dots.get_center()[0]*RIGHT)
         self.play(ShowCreation(v_line))
         self.wait()
@@ -834,7 +834,7 @@ class WalkEquatorPostTransform(GraphScene):
             tilted_eq, dots,
             rate_func = lambda t : 2*proportion*smooth(t)
         ))
-        v_line = DashedLine(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        v_line = DashedLine(SPACE_Y_RADIUS*UP, SPACE_Y_RADIUS*DOWN)
         v_line.shift(dots.get_center()[0]*RIGHT)
         self.play(ShowCreation(v_line))
         self.wait()
@@ -996,7 +996,7 @@ class AntipodalWalkAroundTransverseLoop(ExternallyAnimatedScene):
 
 class MentionGenerality(TeacherStudentsScene, ThreeDScene):
     def construct(self):
-        necklace = Necklace(width = SPACE_WIDTH)
+        necklace = Necklace(width = SPACE_X_RADIUS)
         necklace.shift(2*UP)
         necklace.to_edge(RIGHT)
         arrow = TexMobject("\\Leftrightarrow")
@@ -1277,7 +1277,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         "forced_binary_choices" : (0, 1, 0),
         "show_matching_after_divvying" : True,
         "necklace_center" : ORIGIN,
-        "necklace_width" : 2*SPACE_WIDTH - 3,
+        "necklace_width" : 2*SPACE_X_RADIUS - 3,
         "random_seed" : 0,
         "num_continuous_division_searches" : 4,
     }
@@ -1510,7 +1510,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         boxes = VGroup()
         for group in top_group, bottom_group:
             box = Rectangle(
-                width = 2*SPACE_WIDTH-2,
+                width = 2*SPACE_X_RADIUS-2,
                 height = group.get_height()+SMALL_BUFF,
                 stroke_width = 0,
                 fill_color = WHITE,
@@ -1666,7 +1666,7 @@ class ThinkAboutTheChoices(TeacherStudentsScene):
         """)
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = SPACE_WIDTH*RIGHT+SPACE_HEIGHT*DOWN
+            look_at_arg = SPACE_X_RADIUS*RIGHT+SPACE_Y_RADIUS*DOWN
         )
         self.wait(3)
 
@@ -1908,7 +1908,7 @@ class CompareThisToSphereChoice(TeacherStudentsScene):
         """)
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = SPACE_WIDTH*RIGHT+SPACE_HEIGHT*DOWN
+            look_at_arg = SPACE_X_RADIUS*RIGHT+SPACE_Y_RADIUS*DOWN
         )
         self.wait(3)
 
@@ -1981,7 +1981,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             buff = LARGE_BUFF,
             aligned_edge = LEFT
         )
-        choices.scale_to_fit_height(SPACE_HEIGHT)
+        choices.scale_to_fit_height(SPACE_Y_RADIUS)
         choices.to_edge(LEFT)
         choices.shift(DOWN)
 
@@ -2318,7 +2318,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     def add_necklace(self):
         random.seed(self.random_seed)
         ChoicesInNecklaceCutting.add_necklace(self)
-        self.necklace.scale_to_fit_width(SPACE_WIDTH-1)
+        self.necklace.scale_to_fit_width(SPACE_X_RADIUS-1)
         self.necklace.to_edge(UP, buff = LARGE_BUFF)
         self.necklace.to_edge(LEFT, buff = SMALL_BUFF)
         self.add(self.necklace)
@@ -2337,7 +2337,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
             VGroup(*plane_class.get_top_level_mobjects())
             for plane_class in plane_classes
         ])
-        planes.scale_to_fit_width(SPACE_WIDTH)
+        planes.scale_to_fit_width(SPACE_X_RADIUS)
         planes.to_edge(RIGHT)
         self.example_coords = plane_classes[0].example_coords[0]
 
@@ -2433,7 +2433,7 @@ class JewelPairPlane(GraphScene):
 class WhatThisMappingActuallyLooksLikeWords(Scene):
     def construct(self):
         words = TextMobject("What this mapping actually looks like")
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         words.to_edge(DOWN)
 
         self.play(Write(words))

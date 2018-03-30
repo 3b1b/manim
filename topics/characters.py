@@ -704,7 +704,7 @@ class TeacherStudentsScene(PiCreatureScene):
             run_time = 2
         )
 
-    def zoom_in_on_thought_bubble(self, bubble = None, radius = SPACE_HEIGHT+SPACE_WIDTH):
+    def zoom_in_on_thought_bubble(self, bubble = None, radius = SPACE_Y_RADIUS+SPACE_X_RADIUS):
         if bubble is None:
             for pi in self.get_pi_creatures():
                 if hasattr(pi, "bubble") and isinstance(pi.bubble, ThoughtBubble):

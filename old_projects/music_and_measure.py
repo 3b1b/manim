@@ -491,7 +491,7 @@ class LongSine(Mobject1D):
 
 class DecomposeMusicalNote(Scene):
     def construct(self):
-        line = Line(SPACE_HEIGHT*DOWN, SPACE_HEIGHT*UP)
+        line = Line(SPACE_Y_RADIUS*DOWN, SPACE_Y_RADIUS*UP)
         sine = LongSine()
         kwargs = {
             "run_time" : 4.0,
@@ -513,7 +513,7 @@ class DecomposeMusicalNote(Scene):
 
 class DecomposeTwoFrequencies(Scene):
     def construct(self):
-        line = Line(SPACE_HEIGHT*DOWN, SPACE_HEIGHT*UP)
+        line = Line(SPACE_Y_RADIUS*DOWN, SPACE_Y_RADIUS*UP)
         sine1 = LongSine().shift(2*UP).highlight("yellow")
         sine2 = LongSine().shift(DOWN).highlight("lightgreen")
         sine1.stretch(2.0/3, 0)
@@ -556,11 +556,11 @@ class PatternInFrequencies(Scene):
         return "%d_to_%d"%(num1, num2)
 
     def construct(self, num1, num2, color):
-        big_line = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        big_line = Line(SPACE_Y_RADIUS*UP, SPACE_Y_RADIUS*DOWN)
         big_line.highlight("white").shift(2*LEFT)
         line_template = Line(UP, DOWN)
         line_template.shift(2*UP+2*LEFT)
-        setup_width = 2*SPACE_WIDTH
+        setup_width = 2*SPACE_X_RADIUS
         num_top_lines = int(setup_width)
         num_bot_lines = int(setup_width*num1/num2)
         top_lines = Mobject(*[
@@ -667,8 +667,8 @@ class ConstructPiano(Scene):
             key.stroke_width = 1
             key_copy = deepcopy(key).to_corner(DOWN+LEFT)
             key_copy.scale_in_place(0.25)
-            key_copy.shift(1.8*random.random()*SPACE_WIDTH*RIGHT)
-            key_copy.shift(1.8*random.random()*SPACE_HEIGHT*UP)
+            key_copy.shift(1.8*random.random()*SPACE_X_RADIUS*RIGHT)
+            key_copy.shift(1.8*random.random()*SPACE_Y_RADIUS*UP)
             key_copy.rotate(2*np.pi*random.random())
             anims.append(Transform(key_copy, key))
         self.play(*anims, run_time = 3.0)
@@ -762,7 +762,7 @@ class PianoTuning(Scene):
 
 class PowersOfTwelfthRoot(Scene):
     def construct(self):
-        max_height = SPACE_HEIGHT-0.5
+        max_height = SPACE_Y_RADIUS-0.5
         min_height = -max_height
         num_terms = 11
         mob_list = []
@@ -883,9 +883,9 @@ class AllValuesBetween1And2(NumberLineScene):
             self.wait(0.5)
             points = map(self.number_line.number_to_point, [approx, irrational])
             distance = np.linalg.norm(points[1]-points[0])
-            if distance < 0.3*SPACE_WIDTH and num_zooms < max_num_zooms:
+            if distance < 0.3*SPACE_X_RADIUS and num_zooms < max_num_zooms:
                 num_zooms += 1
-                new_distance = 0.75*SPACE_WIDTH
+                new_distance = 0.75*SPACE_X_RADIUS
                 self.zoom_in_on(irrational, new_distance/distance)
                 for mob in irr_mob, bot_arrow:
                     mob.shift(mob.get_center()[0]*LEFT)
@@ -1005,7 +1005,7 @@ class SumOfIntervalsMustBeLessThan1(IntervalScene):
         IntervalScene.construct(self)
         self.add_fraction_ticks()
         anims = []
-        last_plus = Point((SPACE_WIDTH-0.5)*LEFT+2*UP)        
+        last_plus = Point((SPACE_X_RADIUS-0.5)*LEFT+2*UP)        
         for num in np.arange(0, 1.1, .1):
             open_interval, line = self.add_open_interval(num, 0.1)
             self.remove(line)
@@ -1159,7 +1159,7 @@ class StepsToSolution(IntervalScene):
             denom_to_mobs[frac.denominator].append(mob)
             mob_copy = deepcopy(mob).center()
             mob_copy.shift((2.4-mob_copy.get_bottom()[1])*UP)
-            mob_copy.shift((-SPACE_WIDTH+self.spacing*count)*RIGHT)
+            mob_copy.shift((-SPACE_X_RADIUS+self.spacing*count)*RIGHT)
             comma = TextMobject(",").next_to(mob_copy, buff = 0.1, aligned_edge = DOWN)
             anims.append(Transform(mob, mob_copy))
             commas.add(comma)
@@ -1167,7 +1167,7 @@ class StepsToSolution(IntervalScene):
         new_ticks = []
         for tick, count in zip(ticks.split(), it.count(1)):
             tick_copy = deepcopy(tick).center().shift(1.6*UP)
-            tick_copy.shift((-SPACE_WIDTH+self.spacing*count)*RIGHT)
+            tick_copy.shift((-SPACE_X_RADIUS+self.spacing*count)*RIGHT)
             new_ticks.append(tick_copy)
         new_ticks = Mobject(*new_ticks)
         anims.append(DelayByOrder(Transform(ticks, new_ticks)))
@@ -1194,7 +1194,7 @@ class StepsToSolution(IntervalScene):
         self.wait()
         to_remove = [self.number_line] + self.number_mobs
         self.play(*[
-            ApplyMethod(mob.shift, 2*SPACE_WIDTH*RIGHT)
+            ApplyMethod(mob.shift, 2*SPACE_X_RADIUS*RIGHT)
             for mob in to_remove
         ])
         self.remove(*to_remove)

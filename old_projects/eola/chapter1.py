@@ -28,7 +28,7 @@ import random
 
 def plane_wave_homotopy(x, y, z, t):
     norm = np.linalg.norm([x, y])
-    tau = interpolate(5, -5, t) + norm/SPACE_WIDTH
+    tau = interpolate(5, -5, t) + norm/SPACE_X_RADIUS
     alpha = sigmoid(tau)
     return [x, y + 0.5*np.sin(2*np.pi*alpha)-t*SMALL_BUFF/2, z]
 
@@ -299,7 +299,7 @@ class DifferentConceptions(Scene):
             house, square_footage, price, brackets, brace, 
             two_dimensional, title
         )
-        self.play(ApplyMethod(everything.shift, 2*SPACE_WIDTH*LEFT))
+        self.play(ApplyMethod(everything.shift, 2*SPACE_X_RADIUS*LEFT))
         self.remove(everything)
 
 
@@ -1101,10 +1101,10 @@ class FollowingVideos(UpcomingSeriesOfVidoes):
         everything.remove(last_video)
         big_last_video = last_video.copy()
         big_last_video.center()
-        big_last_video.scale_to_fit_height(2.5*SPACE_HEIGHT)
+        big_last_video.scale_to_fit_height(2.5*SPACE_Y_RADIUS)
         big_last_video.set_fill(opacity = 0)
         self.play(
-            ApplyMethod(everything.shift, 2*SPACE_WIDTH*LEFT),
+            ApplyMethod(everything.shift, 2*SPACE_X_RADIUS*LEFT),
             Transform(last_video, big_last_video),
             run_time = 2
         )

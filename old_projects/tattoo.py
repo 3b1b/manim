@@ -336,7 +336,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         cot_group = self.get_line_brace_text("cot")
         tan_text = tan_group[-1]
         cot_text = cot_group[-1]
-        line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         line.rotate(self.theta_value)
         line.move_to(self.theta_group[-1])
         line.set_stroke(width = 2)
@@ -537,7 +537,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         frac2.next_to(frac1)
         frac2[-2].highlight(YELLOW)
         frac_group = VGroup(opp_over_hyp, frac1, frac2)
-        frac_group.scale_to_fit_width(SPACE_WIDTH-1)
+        frac_group.scale_to_fit_width(SPACE_X_RADIUS-1)
         frac_group.next_to(ORIGIN, RIGHT).to_edge(UP)
 
         question = TextMobject("Why is this $\\theta$?")

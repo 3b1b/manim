@@ -44,7 +44,7 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
         "EMWave_config" : {
             "wave_number" : 0,
             "A_vect" : [0, 1, 1],
-            "start_point" : SPACE_WIDTH*LEFT + DOWN + 1.5*OUT,
+            "start_point" : SPACE_X_RADIUS*LEFT + DOWN + 1.5*OUT,
         },
         "start_theta" : -0.9*np.pi,
         "target_theta" : -0.6*np.pi,
@@ -168,7 +168,7 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
         "target_theta" : -0.6*np.pi,
         "EMWave_config" : {
             "A_vect" : [0, 0, 1],
-            "start_point" : SPACE_WIDTH*LEFT + DOWN + OUT,
+            "start_point" : SPACE_X_RADIUS*LEFT + DOWN + OUT,
         },
         "apply_filter" : False,
     }
@@ -216,7 +216,7 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
         self.continual_update()
         return [
             WavePacket(
-                filter_distance = SPACE_WIDTH + x,
+                filter_distance = SPACE_X_RADIUS + x,
                 get_filtered = True,
                 em_wave = self.em_wave.copy(),
                 run_time = 1,
@@ -569,9 +569,9 @@ class AngleToProbabilityChart(Scene):
         )
         right_title.next_to(left_title, RIGHT, LARGE_BUFF)
 
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         h_line.to_edge(UP, buff = 2)
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
         v_line.next_to(left_title, RIGHT, MED_LARGE_BUFF)
         v_line.to_edge(UP, buff = 0)
         VGroup(h_line, v_line).highlight(BLUE)
@@ -690,7 +690,7 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
                 lambda x : x, 0.5, 1
             )
             added_anims = []
-            if photon.filter_distance == SPACE_WIDTH + 2:
+            if photon.filter_distance == SPACE_X_RADIUS + 2:
                 absorption = self.get_filter_absorption_animation(
                     self.second_filter, photon
                 )
@@ -929,7 +929,7 @@ class ForgetPreviousActions(ShowVariousFilterPairs):
         "start_theta" : -0.6*np.pi,
         "EMWave_config" : {
             "wave_number" : 0,
-            "start_point" : SPACE_WIDTH*LEFT + DOWN,
+            "start_point" : SPACE_X_RADIUS*LEFT + DOWN,
         },
         "apply_filter" : False,
     }
@@ -1012,7 +1012,7 @@ class ForgetPreviousActions(ShowVariousFilterPairs):
     def shoot_photon(self):
         photon = random.choice(self.photons)
         added_anims = []
-        if photon.filter_distance == SPACE_WIDTH + 2:
+        if photon.filter_distance == SPACE_X_RADIUS + 2:
             added_anims.append(
                 ApplyMethod(
                     self.second_filter.highlight, RED,
@@ -1565,7 +1565,7 @@ class VennDiagramProofByContradiction(Scene):
         A.generate_target()
         A.target.scale(4)
         A.target.shift(
-            (SPACE_HEIGHT-MED_LARGE_BUFF)*UP - \
+            (SPACE_Y_RADIUS-MED_LARGE_BUFF)*UP - \
             A.target.get_top()
         )
         A.label.generate_target()
@@ -1771,7 +1771,7 @@ class VennDiagramProofByContradiction(Scene):
             ApplyMethod(
                 m.scale, 0.7, 
                 method_kwargs = {
-                    "about_point" : SPACE_HEIGHT*DOWN
+                    "about_point" : SPACE_Y_RADIUS*DOWN
                 }
             )
             for m in everything

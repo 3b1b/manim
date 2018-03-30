@@ -664,7 +664,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         dot1, dot2 = dots[21], dots[41]
         rect = Rectangle(
             width = dot2.get_center()[0] - dot1.get_center()[0],
-            height = SPACE_HEIGHT - self.x_axis.get_center()[1],
+            height = SPACE_Y_RADIUS - self.x_axis.get_center()[1],
             stroke_width = 0,
             fill_color = YELLOW,
             fill_opacity = 0.5

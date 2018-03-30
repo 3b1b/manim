@@ -486,7 +486,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
     def talk_through_one_line(self):
         line = self.stack[8]
         line.save_state()
-        distance = SPACE_WIDTH/2
+        distance = SPACE_X_RADIUS/2
 
         self.play(line.shift, distance*LEFT)
 
@@ -546,7 +546,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         self.wait()
         self.play(
             ApplyMethod(
-                lhs.shift, 0.65*SPACE_WIDTH*(LEFT+UP),
+                lhs.shift, 0.65*SPACE_X_RADIUS*(LEFT+UP),
                 path_arc = np.pi/2,
                 rate_func = running_start,
                 remover = True,
@@ -618,7 +618,7 @@ class SixChooseThreeInOtherContext(Scene):
             line = VGroup(*[arrow.tip.copy() for arrow in arrows])
             line.arrange_submobjects(RIGHT, buff = 0.5*SMALL_BUFF)
             if last_line is None:
-                line.shift(SPACE_WIDTH*RIGHT/2)
+                line.shift(SPACE_X_RADIUS*RIGHT/2)
                 line.to_edge(UP)
                 self.play(
                     ShowCreation(arrows),
@@ -714,7 +714,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         top_stacks.to_edge(UP, buff = MED_SMALL_BUFF)
 
 #         line = Line(LEFT, RIGHT, color = WHITE)
-#         line.scale(SPACE_WIDTH)
+#         line.scale(SPACE_X_RADIUS)
 #         line.next_to(top_stacks, DOWN)
 
 #         x = TexMobject("x").highlight(BLUE)
@@ -834,7 +834,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         y = TexMobject("y").highlight(RED)
 #         stack = get_stack(x, y, n, k)
 #         stack.scale_to_fit_height(self.stack_height)
-#         stack.shift(SPACE_WIDTH*LEFT/2)
+#         stack.shift(SPACE_X_RADIUS*LEFT/2)
 #         stack.to_edge(DOWN)
 #         numbers = VGroup(*[
 #             TexMobject("%d"%(d+1))
@@ -867,7 +867,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             "E", ")"
 #         )
 #         letters = VGroup(*letter_set[1::2])
-#         letter_set.shift(SPACE_WIDTH*RIGHT/2)
+#         letter_set.shift(SPACE_X_RADIUS*RIGHT/2)
 #         letter_set.to_edge(UP)
 
 #         letter_subsets = list(it.combinations(letters, k))
@@ -878,7 +878,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             for letter_subset in letter_subsets
 #         ]).arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
 #         subset_mobs.scale_to_fit_height(self.stack_height)
-#         subset_mobs.shift(SPACE_WIDTH*RIGHT/2)
+#         subset_mobs.shift(SPACE_X_RADIUS*RIGHT/2)
 #         subset_mobs.to_edge(DOWN)
 
 #         choose_words = TextMobject("Choose %d"%k)
@@ -1530,7 +1530,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
         top_stacks = bottom_stacks.deepcopy()
         top_group = VGroup(top_stacks, top_stacks.numbers)
 
-        h_line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line = DashedLine(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
 
         #Initial split
         self.play(
@@ -1667,8 +1667,8 @@ class BuildUpFromStart(Scene):
         stacks.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         stacks.numbers = self.get_numbers(stacks)
 
-        max_width = 2*SPACE_WIDTH - 3
-        max_height = SPACE_HEIGHT - 1
+        max_width = 2*SPACE_X_RADIUS - 3
+        max_height = SPACE_Y_RADIUS - 1
 
         self.add(stacks, stacks.numbers)
         for x in range(self.n_iterations):
@@ -2021,7 +2021,7 @@ class IntroducePascalsTriangle(Scene):
             if n == 0:
                 line.add(Line(LEFT, RIGHT).scale(0.1).set_stroke(BLACK, 0))
             line.arrange_submobjects(RIGHT, SMALL_BUFF)
-            line.shift(SPACE_WIDTH*RIGHT/2 + SPACE_HEIGHT*UP/2)
+            line.shift(SPACE_X_RADIUS*RIGHT/2 + SPACE_Y_RADIUS*UP/2)
             brace = Brace(line, UP)
             if n == 1:
                 label = "1 Person"
@@ -2066,8 +2066,8 @@ class StacksApproachBellCurve(Scene):
         numbers = VGroup(Integer(1))
         numbers.next_to(bars, UP, SMALL_BUFF)
 
-        max_width = 2*SPACE_WIDTH - 2
-        max_height = SPACE_HEIGHT - 1.5
+        max_width = 2*SPACE_X_RADIUS - 2
+        max_height = SPACE_Y_RADIUS - 1.5
 
         for x in range(self.n_iterations):
             if x == 0:
@@ -3300,7 +3300,7 @@ class ABCNotBCA(Scene):
         equation.highlight(YELLOW)
         equation.next_to(words, DOWN)
         group = VGroup(words, equation)
-        group.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        group.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
         group.to_edge(DOWN)
         self.add(words, equation)
 

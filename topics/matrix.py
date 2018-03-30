@@ -199,7 +199,7 @@ class NumericalMatrixMultiplication(Scene):
         equals = TexMobject("=")
         everything = VMobject(left, right, equals, result)
         everything.arrange_submobjects()
-        everything.scale_to_fit_width(2*SPACE_WIDTH-1)
+        everything.scale_to_fit_width(2*SPACE_X_RADIUS-1)
         self.add(everything)
 
 

@@ -67,8 +67,8 @@ class ThisWasConfusing(TeacherStudentsScene):
 class SlopeOfCircleExample(ZoomedScene):
     CONFIG = {
         "plane_kwargs" : {
-            "x_radius" : SPACE_WIDTH/SPACE_UNIT_TO_PLANE_UNIT,
-            "y_radius" : SPACE_HEIGHT/SPACE_UNIT_TO_PLANE_UNIT,
+            "x_radius" : SPACE_X_RADIUS/SPACE_UNIT_TO_PLANE_UNIT,
+            "y_radius" : SPACE_Y_RADIUS/SPACE_UNIT_TO_PLANE_UNIT,
             "space_unit_to_x_unit" : SPACE_UNIT_TO_PLANE_UNIT,
             "space_unit_to_y_unit" : SPACE_UNIT_TO_PLANE_UNIT,
         },
@@ -383,8 +383,8 @@ class SlopeOfCircleExample(ZoomedScene):
         q_marks.next_to(morty, UP)
 
         rect = Rectangle(
-            width = SPACE_WIDTH - SMALL_BUFF, 
-            height = SPACE_HEIGHT - SMALL_BUFF,
+            width = SPACE_X_RADIUS - SMALL_BUFF, 
+            height = SPACE_Y_RADIUS - SMALL_BUFF,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.8,
@@ -403,7 +403,7 @@ class SlopeOfCircleExample(ZoomedScene):
             FadeIn(rect),
             FadeIn(morty),            
             equation.next_to, ORIGIN, DOWN, MED_LARGE_BUFF,
-            equation.shift, SPACE_WIDTH*RIGHT/2,
+            equation.shift, SPACE_X_RADIUS*RIGHT/2,
         )
         self.play(
             morty.change_mode, "confused",
@@ -1279,7 +1279,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
         circle_scene = LightweightCircleExample()
         circle_mobs = VGroup(*circle_scene.get_top_level_mobjects())
         for mobs, vect in (ladder_mobs, LEFT), (circle_mobs, RIGHT):
-            mobs.scale_to_fit_height(SPACE_HEIGHT-MED_LARGE_BUFF)
+            mobs.scale_to_fit_height(SPACE_Y_RADIUS-MED_LARGE_BUFF)
             mobs.next_to(
                 self.pi_creature.get_corner(UP+vect), UP,
                 buff = SMALL_BUFF,
@@ -1446,7 +1446,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         s_expression.next_to(brace, UP, buff = SMALL_BUFF)
 
         group = VGroup(equation, s_expression, brace)
-        group.shift(2*SPACE_WIDTH*LEFT/3)
+        group.shift(2*SPACE_X_RADIUS*LEFT/3)
         group.to_edge(UP, buff = MED_SMALL_BUFF)
 
         s.save_state()
@@ -1582,7 +1582,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         lil_rect.shift(0.05*lil_rect.get_width()*LEFT)
         lil_rect.shift(0.2*lil_rect.get_height()*DOWN)
         lil_rect.save_state()
-        lil_rect.scale_to_fit_height(SPACE_HEIGHT - MED_LARGE_BUFF)
+        lil_rect.scale_to_fit_height(SPACE_Y_RADIUS - MED_LARGE_BUFF)
         lil_rect.move_to(s_label, UP)
         lil_rect.shift(MED_SMALL_BUFF*UP)
         self.wait()
@@ -1885,7 +1885,7 @@ class AlternateExample(ZoomedScene):
 
         plane = NumberPlane(
             space_unit_to_x_unit = 0.75,
-            x_radius = 2*SPACE_WIDTH,
+            x_radius = 2*SPACE_X_RADIUS,
         )
         plane.fade()
         plane.add_coordinates()
@@ -2083,7 +2083,7 @@ class AlternateExample(ZoomedScene):
         mnemonic.highlight_by_tex("d-Right", RED)
         mnemonic.highlight_by_tex("d-Left", GREEN)
         mnemonic.add_background_rectangle()
-        mnemonic.scale_to_fit_width(SPACE_WIDTH-2*MED_LARGE_BUFF)
+        mnemonic.scale_to_fit_width(SPACE_X_RADIUS-2*MED_LARGE_BUFF)
         mnemonic.next_to(ORIGIN, UP)
         mnemonic.to_edge(LEFT)
 
@@ -2093,7 +2093,7 @@ class AlternateExample(ZoomedScene):
         )
         derivative.highlight_by_tex("dx", GREEN)
         derivative.highlight_by_tex("dy", RED)
-        derivative.scale_to_fit_width(SPACE_WIDTH - 2*MED_LARGE_BUFF)
+        derivative.scale_to_fit_width(SPACE_X_RADIUS - 2*MED_LARGE_BUFF)
         derivative.next_to(
             brace, DOWN, 
             buff = MED_LARGE_BUFF,
@@ -2289,7 +2289,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         graph = FunctionGraph(
             np.log, 
             x_min = 0.01, 
-            x_max = SPACE_WIDTH,
+            x_max = SPACE_X_RADIUS,
             num_steps = 100
         )
         formula = TexMobject("y = \\ln(x)")
@@ -2321,7 +2321,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
         def update_label(label):
             point = dot.get_center()
-            vect = point - SPACE_HEIGHT*(DOWN+RIGHT)
+            vect = point - SPACE_Y_RADIUS*(DOWN+RIGHT)
             vect = vect/np.linalg.norm(vect)
             label.move_to(
                 point + vect*0.5*label.get_width()
@@ -2358,7 +2358,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
     def slope_gives_derivative(self):
         dot = self.dot
         point = dot.get_center()
-        line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
         slope = 1./point[0]
         line.rotate(np.arctan(slope))
         line.move_to(point)
@@ -2562,7 +2562,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         graph = FunctionGraph(
             lambda x : 1./x, 
             x_min = 0.1,
-            x_max = SPACE_WIDTH,
+            x_max = SPACE_X_RADIUS,
             num_steps = 100,
             color = PINK,
         )

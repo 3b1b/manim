@@ -169,7 +169,7 @@ class BreakUp2To256(PiCreatureScene):
         ])
         target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         target.to_edge(UP)
-        target.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        target.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
         parens = VGroup(*it.chain(*[
             [t[0], t[2]] for t in target
         ]))
@@ -240,7 +240,7 @@ class MainBreakdown(Scene):
             top_line.add(mob)
             four_billions.add(mob[1])
         top_line.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        top_line.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        top_line.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
         top_line.to_edge(UP)
         four_billions.highlight(YELLOW)
         self.add(top_line)
@@ -596,8 +596,8 @@ class MainBreakdown(Scene):
         group.add(dots)
         group.add(*[group[0].copy() for x in range(2)])
         group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        group.scale_to_fit_height(SPACE_HEIGHT)
-        max_width = 1.25*SPACE_WIDTH
+        group.scale_to_fit_height(SPACE_Y_RADIUS)
+        max_width = 1.25*SPACE_X_RADIUS
         if group.get_width() > max_width:
             group.scale_to_fit_width(max_width)
         group.to_corner(DOWN+RIGHT)
@@ -722,7 +722,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             height = 1,
             fill_color = LIGHT_GREY,
         )
-        gpu.shift(0.5*SPACE_WIDTH*RIGHT)
+        gpu.shift(0.5*SPACE_X_RADIUS*RIGHT)
         gpu_name = TextMobject("GPU")
         gpu_name.highlight(BLUE)
         gpu_name.next_to(gpu, UP)
@@ -843,7 +843,7 @@ class QAndA(PiCreatureScene):
             ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
             for y in range(cols)
         ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        dots.scale_to_fit_width(2*SPACE_WIDTH - 2*LARGE_BUFF)
+        dots.scale_to_fit_width(2*SPACE_X_RADIUS - 2*LARGE_BUFF)
         dots.next_to(self.pi_creature, UP)
         dots = VGroup(*it.chain(*dots))
         top = dots.get_top()
@@ -900,12 +900,12 @@ class Thumbnail(Scene):
             if i%(n_chars/4) == 0:
                 new_str += " \\\\ "
         background_num = TexMobject(new_str)
-        background_num.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        background_num.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
         background_num.set_fill(opacity = 0.2)
 
         secure = TextMobject("Secure?")
         secure.scale(4)
-        secure.shift(SPACE_HEIGHT*DOWN/2)
+        secure.shift(SPACE_Y_RADIUS*DOWN/2)
         secure.highlight(RED)
         secure.set_stroke(RED_A, 3)
 
