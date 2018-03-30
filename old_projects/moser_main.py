@@ -8,12 +8,7 @@ from random import random, randint
 import sys
 import inspect
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene, GraphScene, PascalsTriangleScene
+from big_ol_pile_of_manim_imports import *
 from script_wrapper import command_line_create_scene
 
 RADIUS            = FRAME_Y_RADIUS - 0.1

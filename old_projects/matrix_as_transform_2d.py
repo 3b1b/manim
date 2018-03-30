@@ -5,10 +5,7 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-from helpers import *
-
-from scene import Scene
-from number_line import NumberLineScene
+from big_ol_pile_of_manim_imports import *
 
 ARROW_CONFIG = {"stroke_width" : 2*DEFAULT_POINT_THICKNESS}
 LIGHT_RED = RED_E

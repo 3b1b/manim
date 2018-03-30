@@ -1,22 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.combinatorics import PascalsTriangle
-from scene import Scene
-from mobject.svg_mobject import *
-
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 
 class TrigAnimation(Animation):

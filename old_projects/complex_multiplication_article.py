@@ -5,13 +5,7 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
-from topics.complex_numbers import *
+from big_ol_pile_of_manim_imports import *
 
 DEFAULT_PLANE_CONFIG = {
     "stroke_width" : 2*DEFAULT_POINT_THICKNESS

@@ -1,11 +1,4 @@
-import numpy as np
-from animation.transform import ApplyMethod, Transform
-from constants import RIGHT, FRAME_X_RADIUS, UP
-from helpers import counterclockwise_path, straight_path
-from point_cloud_mobject import Point
-from scene import Scene
-from topics.geometry import Line
-from topics.number_line import NumberLine
+from big_ol_pile_of_manim_imports import *
 
 class NumberLineScene(Scene):
     def construct(self, **number_line_config):

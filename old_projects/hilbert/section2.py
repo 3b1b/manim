@@ -1,42 +1,10 @@
-from mobject import Mobject, Point, Mobject1D
-from mobject.tex_mobject import \
-    TexMobject, TextMobject, Brace
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromRegion
-
-from scene import Scene
-
-from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction, \
-    ShrinkToCenter, ShimmerIn, FadeOut, FadeIn
-from animation.simple_animations import \
-    ShowCreation, Homotopy
-from animation.meta_animations import \
-    DelayByOrder, TransformAnimations
-from animation.playground import Vibrate
-
-from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point, Circle
-from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician
-from topics.number_line import UnitInterval, NumberLine
-from topics.three_dimensions import Stars
-from topics.functions import ParametricFunction
-
-from mobject.region import  region_from_polygon_vertices, Region
-
+from big_ol_pile_of_manim_imports import *
 import displayer as disp
-
 from hilbert.curves import \
     TransformOverIncreasingOrders, FlowSnake, HilbertCurve, \
     SnakeCurve, PeanoCurve
 from hilbert.section1 import get_mathy_and_bubble
-
 from scipy.spatial.distance import cdist
-
-from helpers import *
 
 
 def get_time_line():

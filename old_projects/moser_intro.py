@@ -5,12 +5,7 @@ import itertools as it
 import operator as op
 from copy import deepcopy
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
+from big_ol_pile_of_manim_imports import *
 
 RADIUS = FRAME_Y_RADIUS - 0.1
 CIRCLE_DENSITY = DEFAULT_POINT_DENSITY_1D*RADIUS

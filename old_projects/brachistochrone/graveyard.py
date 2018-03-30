@@ -1,28 +1,9 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
+from big_ol_pile_of_manim_imports import *
 
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import *
-from topics.characters import Randolph, Mathematician
-from topics.functions import *
-from topics.number_line import *
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from brachistochrone.curves import Cycloid
+from old_projects.brachistochrone.curves import Cycloid
 
 class MultilayeredGlass(PhotonScene, ZoomedScene):
     CONFIG = {

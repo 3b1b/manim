@@ -6,14 +6,8 @@ from copy import deepcopy
 import sys
 from fractions import Fraction, gcd
 
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
+from big_ol_pile_of_manim_imports import *
 from inventing_math import Underbrace
-
-from topics.number_line import NumberLineScene
 
 import random
 

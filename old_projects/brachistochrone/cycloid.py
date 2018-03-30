@@ -1,27 +1,5 @@
-import numpy as np
-import itertools as it
-
-from helpers import *
-
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import Randolph
-from topics.functions import *
-from mobject.region import  Region
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from camera import Camera
-from brachistochrone.curves import *
+from big_ol_pile_of_manim_imports import *
+from old_projects.brachistochrone.curves import *
 
 class RollAlongVector(Animation):
     CONFIG = {

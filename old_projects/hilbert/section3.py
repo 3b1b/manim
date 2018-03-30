@@ -1,29 +1,4 @@
-from mobject import Mobject, Point
-from mobject.tex_mobject import \
-    TexMobject, TextMobject, Brace
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromRegion
-
-from scene import Scene
-
-from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction,\
-    TransformAnimations, ShimmerIn, FadeOut, FadeIn
-from animation.simple_animations import \
-    ShowCreation, DelayByOrder
-from animation.playground import Vibrate
-
-from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point, Polygon
-from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician, Mortimer
-from topics.number_line import UnitInterval
-from topics.three_dimensions import Stars
-
-from mobject.region import  region_from_polygon_vertices
-
+from big_ol_pile_of_manim_imports import *
 import displayer as disp
 
 from hilbert.curves import \
@@ -31,8 +6,6 @@ from hilbert.curves import \
     SnakeCurve, Sierpinski
 from hilbert.section1 import get_mathy_and_bubble
 
-
-from helpers import *
 
 
 

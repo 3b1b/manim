@@ -1,40 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from helpers import *
 import scipy
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from topics.common_scenes import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from scene.moving_camera_scene import *
-from camera import Camera
-from mobject import *
-from mobject.image_mobject import *
-from mobject.vectorized_mobject import *
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.graph_scene import *
-from topics.light import *
-
-from old_projects.fourier import *
+from big_ol_pile_of_manim_imports import *
 
 
 FREQUENCY_COLOR = RED
