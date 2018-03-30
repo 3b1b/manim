@@ -1,25 +1,4 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
+from big_ol_pile_of_manim_imports import *
 
 class OpeningQuote(Scene):
     def construct(self):
@@ -33,13 +12,13 @@ class OpeningQuote(Scene):
             into...(dramatic pause)...""",
             "the third dimension."
         ])
-        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
-        words.split()[0].highlight(YELLOW)
-        words.split()[2].highlight(YELLOW)
+        words.split()[0].set_color(YELLOW)
+        words.split()[2].set_color(YELLOW)
 
         three_d = words.submobjects.pop()
-        three_d.highlight(BLUE)
+        three_d.set_color(BLUE)
         self.play(FadeIn(words))
         self.play(Write(three_d))
         self.wait(2)
@@ -73,18 +52,18 @@ class SymbolicThreeDTransform(Scene):
     def construct(self):
         in_vect = Matrix(self.input_coords)
         out_vect = Matrix(self.output_coords)
-        in_vect.highlight(BLUE)
-        out_vect.highlight(GREEN)
+        in_vect.set_color(BLUE)
+        out_vect.set_color(GREEN)
         func = TexMobject("L(\\vec{\\textbf{v}})")
         point = VectorizedPoint(func.get_center())
         in_vect.next_to(func, LEFT, buff = 1)
         out_vect.next_to(func, RIGHT, buff = 1)
         in_words = TextMobject("Input")
         in_words.next_to(in_vect, DOWN)
-        in_words.highlight(BLUE_C)
+        in_words.set_color(BLUE_C)
         out_words = TextMobject("Output")
         out_words.next_to(out_vect, DOWN)
-        out_words.highlight(GREEN_C)
+        out_words.set_color(GREEN_C)
 
 
         title = TextMobject(self.title)
@@ -122,7 +101,7 @@ class IHatJHatKHatWritten(Scene):
         for char, color in zip(["\\imath", "\\jmath", "k"], [X_COLOR, Y_COLOR, Z_COLOR]):
             sym = TexMobject("{\\hat{%s}}"%char)
             sym.scale(3)
-            sym.highlight(color)
+            sym.set_color(color)
             self.play(Write(sym))
             self.wait()
             self.clear()
@@ -134,24 +113,24 @@ class PutTogether3x3Matrix(Scene):
         "col3" : [1, 0, 1],
     }
     def construct(self):
-        i_to = TexMobject("\\hat{\\imath} \\to").highlight(X_COLOR)
-        j_to = TexMobject("\\hat{\\jmath} \\to").highlight(Y_COLOR)
-        k_to = TexMobject("\\hat{k} \\to").highlight(Z_COLOR)
+        i_to = TexMobject("\\hat{\\imath} \\to").set_color(X_COLOR)
+        j_to = TexMobject("\\hat{\\jmath} \\to").set_color(Y_COLOR)
+        k_to = TexMobject("\\hat{k} \\to").set_color(Z_COLOR)
         i_array = Matrix(self.col1)
         j_array = Matrix(self.col2)
         k_array = Matrix(self.col3)
         everything = VMobject(
-            i_to, i_array, TexMobject("=").highlight(BLACK),
-            j_to, j_array, TexMobject("=").highlight(BLACK),
-            k_to, k_array, TexMobject("=").highlight(BLACK),
+            i_to, i_array, TexMobject("=").set_color(BLACK),
+            j_to, j_array, TexMobject("=").set_color(BLACK),
+            k_to, k_array, TexMobject("=").set_color(BLACK),
         )
         everything.arrange_submobjects(RIGHT, buff = 0.1)
-        everything.scale_to_fit_width(2*SPACE_WIDTH-1)
+        everything.scale_to_fit_width(FRAME_WIDTH-1)
         everything.to_edge(DOWN)
 
-        i_array.highlight(X_COLOR)
-        j_array.highlight(Y_COLOR)
-        k_array.highlight(Z_COLOR)
+        i_array.set_color(X_COLOR)
+        j_array.set_color(Y_COLOR)
+        k_array.set_color(Z_COLOR)
         arrays = [i_array, j_array, k_array]
         matrix = Matrix(reduce(
             lambda a1, a2 : np.append(a1, a2, axis = 1),
@@ -205,7 +184,7 @@ class ShowVCoordinateMeaning(Scene):
     }
     def construct(self):
         v = TexMobject(self.v_str)
-        v.highlight(YELLOW)
+        v.set_color(YELLOW)
         eq = TexMobject("=")
         coords = Matrix(["x", "y", "z"])
         eq2 = eq.copy()
@@ -232,13 +211,13 @@ class ShowVCoordinateMeaning(Scene):
         new_x, new_y, new_z = lin_comb_parts[[0, 3, 6]]
         i, j, k = lin_comb_parts[[1, 4, 7]]
         plusses = lin_comb_parts[[2, 5]]
-        i.highlight(X_COLOR)
-        j.highlight(Y_COLOR)
-        k.highlight(Z_COLOR)
+        i.set_color(X_COLOR)
+        j.set_color(Y_COLOR)
+        k.set_color(Z_COLOR)
 
         everything = VMobject(v, eq, coords, eq2, lin_comb)
         everything.arrange_submobjects(buff = 0.2)
-        everything.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        everything.scale_to_fit_width(FRAME_WIDTH - 1)
         everything.to_edge(DOWN)
         if not self.post_transform:
             lin_comb.shift(0.35*UP)
@@ -287,7 +266,7 @@ class ShowMatrixVectorMultiplication(Scene):
             z, col3
         )
         everything.arrange_submobjects(buff = 0.1)
-        everything.scale_to_fit_width(2*SPACE_WIDTH-1)
+        everything.scale_to_fit_width(FRAME_WIDTH-1)
         result = VMobject(x, col1, plus1, y, col2, plus2, z, col3)
 
         trips = [
@@ -319,11 +298,11 @@ class ShowMatrixVectorMultiplication(Scene):
         for o_col, col, start_coord, coord, sym, color in sexts:
             o_col = VMobject(*o_col)
             self.play(
-                start_coord.highlight, YELLOW,
-                o_col.highlight, color
+                start_coord.set_color, YELLOW,
+                o_col.set_color, color
             )
-            coord.highlight(YELLOW)
-            col.highlight(color)
+            coord.set_color(YELLOW)
+            col.set_color(color)
             self.play(
                 Write(col.get_brackets()),
                 Transform(
@@ -345,8 +324,8 @@ class ShowMatrixMultiplication(Scene):
         right = Matrix(np.arange(9).reshape((3, 3)))
         left = Matrix(np.random.random_integers(-5, 5, (3, 3)))
         VMobject(left, right).arrange_submobjects(buff = 0.1)
-        right.highlight_columns(X_COLOR, Y_COLOR, Z_COLOR)
-        left.highlight(PINK)
+        right.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        left.set_color(PINK)
 
         trips = [
             (right, DOWN, "First transformation"),
@@ -361,7 +340,7 @@ class ShowMatrixMultiplication(Scene):
             braces.append(brace)
         right_brace, left_brace = braces
 
-        VMobject(*self.get_mobjects()).scale_to_fit_width(2*SPACE_WIDTH-1)
+        VMobject(*self.get_mobjects()).scale_to_fit_width(FRAME_WIDTH-1)
 
         self.add(right, left)
         self.play(Write(right_brace))
@@ -404,7 +383,7 @@ class SymbolicThreeDToTwoDTransform(SymbolicThreeDTransform):
 class QuestionsToPonder(Scene):
     def construct(self):
         title = TextMobject("Questions to ponder")
-        title.highlight(YELLOW).to_edge(UP)
+        title.set_color(YELLOW).to_edge(UP)
         self.add(title)
         questions = VMobject(*map(TextMobject, [
             "1. Can you visualize these transformations?",
@@ -423,7 +402,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: The determinant
         """)
-        title.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        title.scale_to_fit_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)

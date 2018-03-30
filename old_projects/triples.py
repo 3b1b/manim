@@ -1,34 +1,5 @@
-from helpers import *
 import fractions
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.complex_numbers import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.common_scenes import PatreonThanks
+from big_ol_pile_of_manim_imports import *
 
 A_COLOR = BLUE
 B_COLOR = GREEN
@@ -50,7 +21,7 @@ class IntroduceTriples(TeacherStudentsScene):
     def construct(self):
         title = TexMobject("a", "^2", "+", "b", "^2", "=", "c", "^2")
         for color, char in zip(SIDE_COLORS, "abc"):
-            title.highlight_by_tex(char, color)
+            title.set_color_by_tex(char, color)
         title.to_corner(UP + RIGHT)
 
         triples = [
@@ -124,7 +95,7 @@ class IntroduceTriples(TeacherStudentsScene):
                 str(a), "^2", "+", str(b), "^2", "=", str(c), "^2"
             )
             for num, color in zip([a, b, c], SIDE_COLORS):
-                equation.highlight_by_tex(str(num), color)
+                equation.set_color_by_tex(str(num), color)
             equation.next_to(title, DOWN, MED_LARGE_BUFF)
             equation.shift_onto_screen()
             
@@ -141,14 +112,14 @@ class IntroduceTriples(TeacherStudentsScene):
             self.play(self.teacher.change_mode, "happy")
             for start, target in zip([a_square, b_square], c_square_parts):
                 mover = start.copy().set_fill(opacity = 0)
-                target.highlight(start.get_color())
+                target.set_color(start.get_color())
                 self.play(ReplacementTransform(
                     mover, target,
                     run_time = 2,
                     path_arc = np.pi/2
                 ))
             self.play(Write(equation))
-            self.play(c_square.highlight, C_COLOR)
+            self.play(c_square.set_color, C_COLOR)
             self.wait()
             self.play(*map(FadeOut, [full_group, equation]))
 
@@ -163,7 +134,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
         ]
         for expression in expressions:
             for char, color in zip("abc", SIDE_COLORS):
-                expression.highlight_by_tex(char, color)
+                expression.set_color_by_tex(char, color)
             expression.next_to(self.get_pi_creatures(), UP, buff = 1.3)
         square_expression = expressions[0]
         low_expression = expressions[1]
@@ -176,7 +147,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
         low_text = low_brace.get_text(
             "No integer solutions", buff = SMALL_BUFF
         )
-        low_text.highlight(RED)
+        low_text.set_color(RED)
 
         self.add(square_expression, top_brace, top_text)
         self.change_student_modes(*["pondering"]*3)
@@ -210,7 +181,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
 class WritePythagoreanTriple(Scene):
     def construct(self):
         words = TextMobject("``Pythagorean triple''")
-        words.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         words.to_corner(DOWN+LEFT)
         self.play(Write(words))
         self.wait(2)
@@ -227,7 +198,7 @@ class ShowManyTriples(Scene):
         titles = VGroup()
         for i, (a, b, c) in enumerate(triples):
             triangle = Polygon(ORIGIN, a*RIGHT, a*RIGHT+b*UP)
-            triangle.highlight(WHITE)
+            triangle.set_color(WHITE)
             max_width = max_height = 4
             triangle.scale_to_fit_height(max_height)
             if triangle.get_width() > max_width:
@@ -236,7 +207,7 @@ class ShowManyTriples(Scene):
             num_strings = map(str, (a, b, c))
             labels = map(TexMobject, num_strings)
             for label, color in zip(labels, SIDE_COLORS):
-                label.highlight(color)
+                label.set_color(color)
             labels[0].next_to(triangle, DOWN)
             labels[1].next_to(triangle, RIGHT)
             labels[2].next_to(triangle.get_center(), UP+LEFT)
@@ -246,14 +217,14 @@ class ShowManyTriples(Scene):
                 str(a), "^2", "+", str(b), "^2", "=", str(c), "^2"
             )
             for num, color in zip([a, b, c], SIDE_COLORS):
-                title.highlight_by_tex(str(num), color)
+                title.set_color_by_tex(str(num), color)
             title.next_to(triangle, UP, LARGE_BUFF)
             title.generate_target()
             title.target.scale(0.5)
 
             title.target.move_to(
-                (-SPACE_WIDTH + MED_LARGE_BUFF + 2.7*(i//8))*RIGHT + \
-                (SPACE_HEIGHT - MED_LARGE_BUFF - (i%8))*UP,
+                (-FRAME_X_RADIUS + MED_LARGE_BUFF + 2.7*(i//8))*RIGHT + \
+                (FRAME_Y_RADIUS - MED_LARGE_BUFF - (i%8))*UP,
                 UP+LEFT
             )
 
@@ -328,7 +299,7 @@ class BabylonianTablets(Scene):
             triple = TexMobject(tex)
             triples.add(triple)
         triples.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        triples.scale_to_fit_height(2*SPACE_HEIGHT - LARGE_BUFF)
+        triples.scale_to_fit_height(FRAME_HEIGHT - LARGE_BUFF)
         triples.to_edge(RIGHT)
 
         self.add(title)
@@ -355,7 +326,7 @@ class PythagoreanProof(Scene):
     def add_title(self):
         title = TexMobject("a^2", "+", "b^2", "=", "c^2")
         for color, char in zip(SIDE_COLORS, "abc"):
-            title.highlight_by_tex(char, color)
+            title.set_color_by_tex(char, color)
         title.to_edge(UP)
         self.add(title)
         self.title = title
@@ -430,7 +401,7 @@ class PythagoreanProof(Scene):
     def add_labels_to_squares(self, squares, side_labels):
         for label, square in zip(side_labels, squares):
             label.target = TexMobject(label.get_tex_string() + "^2")
-            label.target.highlight(label.get_color())
+            label.target.set_color(label.get_color())
             # label.target.scale(0.7)
             label.target.move_to(square)
             square.add(label)
@@ -440,8 +411,8 @@ class PythagoreanProof(Scene):
     def add_new_triangles(self, triangle, added_triangles):
         brace = Brace(added_triangles, DOWN)
         label = TexMobject("a", "+", "b")
-        label.highlight_by_tex("a", A_COLOR)
-        label.highlight_by_tex("b", B_COLOR)
+        label.set_color_by_tex("a", A_COLOR)
+        label.set_color_by_tex("b", B_COLOR)
         label.next_to(brace, DOWN)
 
         self.play(ReplacementTransform(
@@ -467,7 +438,7 @@ class PythagoreanProof(Scene):
     def get_triangle_side_labels(self, triangle):
         a, b, c = map(TexMobject, "abc")
         for mob, color in zip([a, b, c], SIDE_COLORS):
-            mob.highlight(color)
+            mob.set_color(color)
         a.next_to(triangle, DOWN)
         b.next_to(triangle, RIGHT)
         c.next_to(triangle.get_center(), LEFT)
@@ -688,7 +659,7 @@ class ReframeOnLattice(PiCreatureScene):
         tuple_label.add_background_rectangle()
         tuple_label.next_to(dot, RIGHT, SMALL_BUFF)
         line = Line(self.plane.get_center_point(), point)
-        line.highlight(dot.get_color())
+        line.set_color(dot.get_color())
         distance_labels = VGroup()
         for tex in "2^2 + 1^2", "5":
             pre_label = TexMobject("\\sqrt{%s}"%tex)
@@ -765,7 +736,7 @@ class ReframeOnLattice(PiCreatureScene):
             color = MAROON_B
         )
         square_label = TexMobject("z \\to z^2")
-        square_label.highlight(arrow.get_color())
+        square_label.set_color(arrow.get_color())
         square_label.add_background_rectangle()
         square_label.next_to(
             arrow.point_from_proportion(0.5), 
@@ -875,7 +846,7 @@ class ReframeOnLattice(PiCreatureScene):
         example_label = self.example_label
         distance_label = self.distance_label
 
-        alt_line = line.copy().highlight(RED)
+        alt_line = line.copy().set_color(RED)
         arc = Arc(
             angle = line.get_angle(),
             radius = 0.7,
@@ -960,10 +931,10 @@ class ReframeOnLattice(PiCreatureScene):
 
     def get_all_plane_dots(self):
         x_min, y_min = map(int, self.plane.point_to_coords(
-            SPACE_WIDTH*LEFT + SPACE_HEIGHT*DOWN
+            FRAME_X_RADIUS*LEFT + FRAME_Y_RADIUS*DOWN
         ))
         x_max, y_max = map(int, self.plane.point_to_coords(
-            SPACE_WIDTH*RIGHT + SPACE_HEIGHT*UP
+            FRAME_X_RADIUS*RIGHT + FRAME_Y_RADIUS*UP
         ))
         result = VGroup(*[
             Dot(
@@ -1036,7 +1007,7 @@ class OneMoreExample(Scene):
         point = self.plane.coords_to_point(3, 2)
         dot = Dot(point, color = self.dot_color)
         line = Line(self.plane.get_center_point(), point)
-        line.highlight(dot.get_color())
+        line.set_color(dot.get_color())
         number_label = TexMobject("3+2i")
         number_label.add_background_rectangle()
         number_label.next_to(dot, RIGHT, SMALL_BUFF)
@@ -1087,19 +1058,19 @@ class OneMoreExample(Scene):
         top_line = TexMobject("(3+2i)", "(3+2i)")
         for part in top_line:
             for i, color in zip([1, 3], [BLUE, YELLOW]):
-                part[i].highlight(color)
+                part[i].set_color(color)
         second_line = TexMobject(
             "\\big( 3^2 + (2i)^2 \\big) + " + \
             "\\big(3 \\cdot 2 + 2 \\cdot 3 \\big)i"
         )
         for i in 1, 12, 18:
-            second_line[i].highlight(BLUE)
+            second_line[i].set_color(BLUE)
         for i in 5, 14, 16:
-            second_line[i].highlight(YELLOW)
+            second_line[i].set_color(YELLOW)
         second_line.scale(0.9)
         final_line = TexMobject("5 + 12i")
         for i in 0, 2, 3:
-            final_line[i].highlight(GREEN)
+            final_line[i].set_color(GREEN)
         lines = VGroup(top_line, second_line, final_line)
         lines.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         lines.next_to(rect.get_top(), DOWN)
@@ -1169,7 +1140,7 @@ class OneMoreExample(Scene):
         point = self.plane.coords_to_point(5, 12)
         dot = Dot(point, color = GREEN)
         line = Line(self.plane.get_center_point(), point)
-        line.highlight(dot.get_color())
+        line.set_color(dot.get_color())
         distance_label = TexMobject("13")
         distance_label.add_background_rectangle()
         distance_label.next_to(line.get_center(), UP+LEFT, SMALL_BUFF)
@@ -1231,7 +1202,7 @@ class GeneralExample(OneMoreExample):
         zero_point = self.plane.number_to_point(0)
         dot = Dot(z_point, color = self.dot_color)
         line = Line(zero_point, z_point)
-        line.highlight(dot.get_color())
+        line.set_color(dot.get_color())
         label = TexMobject(complex_string_with_i(z))
         label.add_background_rectangle()
         label.next_to(dot, RIGHT, SMALL_BUFF)
@@ -1239,7 +1210,7 @@ class GeneralExample(OneMoreExample):
         square_point = self.plane.number_to_point(z**2)
         square_dot = Dot(square_point, color = self.square_color)
         square_line = Line(zero_point, square_point)
-        square_line.highlight(square_dot.get_color())
+        square_line.set_color(square_dot.get_color())
         square_label = TexMobject(complex_string_with_i(z**2))
         square_label.add_background_rectangle()
         square_label.next_to(square_dot, UP+RIGHT, SMALL_BUFF)
@@ -1254,10 +1225,10 @@ class GeneralExample(OneMoreExample):
             # buff = SMALL_BUFF,
             path_arc = np.pi/2
         )
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
         z_to_z_squared = TexMobject("z", "\\to", "z^2")
-        z_to_z_squared.highlight_by_tex("z", dot.get_color())
-        z_to_z_squared.highlight_by_tex("z^2", square_dot.get_color())
+        z_to_z_squared.set_color_by_tex("z", dot.get_color())
+        z_to_z_squared.set_color_by_tex("z^2", square_dot.get_color())
         z_to_z_squared.next_to(
             arrow.point_from_proportion(0.5), 
             RIGHT, MED_SMALL_BUFF
@@ -1323,7 +1294,7 @@ class BoringExample(GeneralExample):
         arrow.next_to(self.square_label, RIGHT)
         triple = TexMobject("0^2 + 8^2 = 8^2")
         for part, color in zip(triple[::3], SIDE_COLORS):
-            part.highlight(color)
+            part.set_color(color)
         triple.add_background_rectangle()
         triple.next_to(arrow, RIGHT)
 
@@ -1421,17 +1392,17 @@ class WriteGeneralFormula(GeneralExample):
         rect.to_corner(UP+LEFT, buff = 0)
         top_line = TexMobject("(u+vi)(u+vi)")
         for i in 1, 7:
-            top_line[i].highlight(U_COLOR)
-            top_line[i+2].highlight(V_COLOR)
+            top_line[i].set_color(U_COLOR)
+            top_line[i+2].set_color(V_COLOR)
         top_line.next_to(rect.get_top(), DOWN)
         second_line = TexMobject(
             "\\big(", "u^2 - v^2", "\\big)", "+",
             "\\big(", "2uv", "\\big)", "i"
         )
         for i, j in (1, 0), (5, 1):
-            second_line[i][j].highlight(U_COLOR)
+            second_line[i][j].set_color(U_COLOR)
         for i, j in (1, 3), (5, 2):
-            second_line[i][j].highlight(V_COLOR)
+            second_line[i][j].set_color(V_COLOR)
         second_line.next_to(top_line, DOWN, MED_LARGE_BUFF)
         real_part = second_line[1]
         imag_part = second_line[5]
@@ -1445,7 +1416,7 @@ class WriteGeneralFormula(GeneralExample):
         real_part_line = Line(zero_point, real_part_point)
         imag_part_line = Line(real_part_point, square_point)
         for line in real_part_line, imag_part_line:
-            line.highlight(self.square_color)
+            line.set_color(self.square_color)
 
 
         self.play(*map(FadeIn, [rect, top_line, second_line]))
@@ -1471,8 +1442,8 @@ class WriteGeneralFormula(GeneralExample):
 
     def draw_triangle(self):
         hyp_length = TexMobject("u", "^2", "+", "v", "^2")
-        hyp_length.highlight_by_tex("u", U_COLOR)
-        hyp_length.highlight_by_tex("v", V_COLOR)
+        hyp_length.set_color_by_tex("u", U_COLOR)
+        hyp_length.set_color_by_tex("v", V_COLOR)
         hyp_length.add_background_rectangle()
         line = self.square_line
         hyp_length.next_to(line.get_center(), UP, SMALL_BUFF)
@@ -1495,7 +1466,7 @@ class WriteGeneralFormula(GeneralExample):
 
     def show_uv_to_triples(self):
         rect = self.corner_rect.copy()
-        rect.stretch_to_fit_height(2*SPACE_HEIGHT)
+        rect.stretch_to_fit_height(FRAME_HEIGHT)
         rect.move_to(self.corner_rect.get_bottom(), UP)
 
         h_line = Line(rect.get_left(), rect.get_right())
@@ -1521,8 +1492,8 @@ class WriteGeneralFormula(GeneralExample):
         for u, v in pairs:
             a, b, c = u**2 - v**2, 2*u*v, u**2 + v**2
             pair_mob = TexMobject("(", str(u), ",", str(v), ")")
-            pair_mob.highlight_by_tex(str(u), U_COLOR)
-            pair_mob.highlight_by_tex(str(v), V_COLOR)
+            pair_mob.set_color_by_tex(str(u), U_COLOR)
+            pair_mob.set_color_by_tex(str(v), V_COLOR)
             triple_mob = TexMobject("(%d, %d, %d)"%(a, b, c))
             pair_mobs.add(pair_mob)
             triple_mobs.add(triple_mob)
@@ -1572,8 +1543,8 @@ class VisualizeZSquared(Scene):
         self.show_more_triangles()
 
     def add_plane(self):
-        width = (SPACE_WIDTH+abs(self.plane_center[0]))/self.final_unit_size
-        height = (SPACE_HEIGHT+abs(self.plane_center[1]))/self.final_unit_size
+        width = (FRAME_X_RADIUS+abs(self.plane_center[0]))/self.final_unit_size
+        height = (FRAME_Y_RADIUS+abs(self.plane_center[1]))/self.final_unit_size
         background_plane = ComplexPlane(
             x_radius = width,
             y_radius = height,
@@ -1614,8 +1585,8 @@ class VisualizeZSquared(Scene):
 
     def write_z_to_z_squared(self):
         z_to_z_squared = TexMobject("z", "\\to", "z^2")
-        z_to_z_squared.highlight_by_tex("z", YELLOW)
-        z_to_z_squared.highlight_by_tex("z^2", MAROON_B)
+        z_to_z_squared.set_color_by_tex("z", YELLOW)
+        z_to_z_squared.set_color_by_tex("z^2", MAROON_B)
         z_to_z_squared.add_background_rectangle()
         z_to_z_squared.to_edge(UP)
         z_to_z_squared.shift(2*RIGHT)
@@ -1698,7 +1669,7 @@ class VisualizeZSquared(Scene):
     def draw_dots(self):
         min_corner, max_corner = [
             self.background_plane.point_to_coords(
-                u*SPACE_WIDTH*RIGHT + u*SPACE_HEIGHT*UP
+                u*FRAME_X_RADIUS*RIGHT + u*FRAME_Y_RADIUS*UP
             )
             for u in -1, 1
         ]
@@ -1831,15 +1802,15 @@ class VisualizeZSquared(Scene):
     ###
 
     def get_color_grid(self):
-        width = (SPACE_WIDTH+abs(self.plane_center[0]))/self.initial_unit_size
-        height = (SPACE_HEIGHT+abs(self.plane_center[1]))/self.initial_unit_size
+        width = (FRAME_X_RADIUS+abs(self.plane_center[0]))/self.initial_unit_size
+        height = (FRAME_Y_RADIUS+abs(self.plane_center[1]))/self.initial_unit_size
         color_grid = ComplexPlane(
             x_radius = width,
             y_radius = int(height),
             secondary_line_ratio = 0,
             stroke_width = 2,
         )
-        color_grid.main_lines.gradient_highlight(
+        color_grid.main_lines.set_color_by_gradient(
             *[GREEN, RED, MAROON_B, TEAL]*2
         )
         color_grid.remove(color_grid.axes[0])
@@ -1956,8 +1927,8 @@ class PointsWeMiss(VisualizeZSquared):
             TexMobject(complex_string_with_i(z))
             for z in z_list
         ])
-        labels.highlight(RED)
-        labels[2].highlight(GREEN)
+        labels.set_color(RED)
+        labels[2].set_color(GREEN)
         rhss = VGroup()
         for label, dot in zip(labels, dots):
             label.add_background_rectangle()
@@ -2004,8 +1975,8 @@ class PointsWeMiss(VisualizeZSquared):
             TexMobject(complex_string_with_i(z))
             for z in z_list
         ])
-        labels[0].highlight(RED)
-        labels[1].highlight(GREEN)
+        labels[0].set_color(RED)
+        labels[1].set_color(GREEN)
         rhss = VGroup()
         for label, dot in zip(labels, dots):
             label.add_background_rectangle()
@@ -2052,8 +2023,8 @@ class PointsWeMissAreMultiplesOfOnesWeHit(TeacherStudentsScene):
             "is \\\\ a multiple of one we",
             "hit"
         )
-        words.highlight_by_tex("miss", RED)
-        words.highlight_by_tex("hit", GREEN)
+        words.set_color_by_tex("miss", RED)
+        words.set_color_by_tex("hit", GREEN)
         self.teacher_says(words)
         self.change_student_modes(*["pondering"]*3)
         self.wait(2)
@@ -2079,7 +2050,7 @@ class DrawSingleRadialLine(PointsWeMiss):
             Dot(self.background_plane.coords_to_point(3*k, 4*k))
             for k in 2, 3, 5
         ])
-        added_dots.highlight(GREEN)
+        added_dots.set_color(GREEN)
 
         self.play(GrowFromCenter(dot))
         self.play(Indicate(dot))
@@ -2150,7 +2121,7 @@ class DrawRadialLines(PointsWeMiss):
                     continue
                 coord_strings.add(str(new_coords))
                 point = self.background_plane.coords_to_point(*new_coords)
-                if abs(point[0]) > SPACE_WIDTH or abs(point[1]) > SPACE_HEIGHT:
+                if abs(point[0]) > FRAME_X_RADIUS or abs(point[1]) > FRAME_Y_RADIUS:
                     continue
                 new_dot = Dot(
                     point, color = GREEN,
@@ -2159,7 +2130,7 @@ class DrawRadialLines(PointsWeMiss):
                 new_dots.add(new_dot)
             line = Line(self.plane_center, dot.get_center())
             line.scale(
-                2*SPACE_WIDTH/line.get_length(),
+                FRAME_WIDTH/line.get_length(),
                 about_point = self.plane_center
             )
             line.set_stroke(width = 1)
@@ -2174,7 +2145,7 @@ class DrawRadialLines(PointsWeMiss):
 
         self.play(
             dot.scale_in_place, 2,
-            dot.highlight, RED
+            dot.set_color, RED
         )
         self.play(ReplacementTransform(dot, line))
         self.wait()
@@ -2192,7 +2163,7 @@ class DrawRadialLines(PointsWeMiss):
         for dot in seed_dots:
             dot.generate_target()
             dot.target.scale_in_place(1.5)
-            dot.target.highlight(RED)
+            dot.target.set_color(RED)
 
         self.play(LaggedStart(
             MoveToTarget, seed_dots,
@@ -2266,7 +2237,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
             )
             dot = Dot(point, color = YELLOW)
             line = Line(self.plane_center, point)
-            line.highlight(dot.get_color())
+            line.set_color(dot.get_color())
             label = TexMobject(
                 "{"+str(x), "\\over", str(int(norm))+"}",
                 "+", 
@@ -2296,7 +2267,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
         top_line = TexMobject(
             "a", "^2", "+", "b", "^2", "=", "c", "^2 \\phantom{1}"
         )
-        top_line.shift(SPACE_WIDTH*RIGHT/2)
+        top_line.shift(FRAME_X_RADIUS*RIGHT/2)
         top_line.to_corner(UP + LEFT)
         top_line.shift(RIGHT)
         top_rect = BackgroundRectangle(top_line)
@@ -2317,7 +2288,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
         )
         circle_label.next_to(second_line, DOWN, MED_LARGE_BUFF)
         circle_label.shift_onto_screen()
-        circle_label.highlight_by_tex("x^2", GREEN)
+        circle_label.set_color_by_tex("x^2", GREEN)
         circle_label.add_background_rectangle()
         circle_arrow = Arrow(
             circle_label.get_bottom(),
@@ -2392,7 +2363,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
         )
         dot = Dot(point, color = YELLOW)
         line = Line(self.plane_center, point)
-        line.highlight(dot.get_color())
+        line.set_color(dot.get_color())
         x, y = rational_point_group.coords
         label = TexMobject(str(x), "+", str(y), "i")
         label.next_to(dot, UP+RIGHT, buff = 0)
@@ -2498,7 +2469,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
 
     def draw_infinitely_many_lines(self):
         lines = VGroup(*[
-            Line(ORIGIN, 2*SPACE_WIDTH*vect)
+            Line(ORIGIN, FRAME_WIDTH*vect)
             for vect in compass_directions(1000)
         ])
 
@@ -2793,8 +2764,8 @@ class FinalProof(RationalPointsOnUnitCircle):
             color = WHITE
         )
         z_to_z_squared = TexMobject("z", "\\to", "z^2")
-        z_to_z_squared.highlight_by_tex("z", YELLOW)
-        z_to_z_squared.highlight_by_tex("z^2", MAROON_B)
+        z_to_z_squared.set_color_by_tex("z", YELLOW)
+        z_to_z_squared.set_color_by_tex("z^2", MAROON_B)
         z_to_z_squared.add_background_rectangle()
         z_to_z_squared.next_to(
             z_to_z_squared_arrow.point_from_proportion(0.5),
@@ -2974,7 +2945,7 @@ class BitOfCircleGeometry(Scene):
             )
 
             group = VGroup(line1, line2, dot1, dot2)
-            group.highlight(color)
+            group.set_color(color)
             group.add(arc, label)
             if len(groups) == 0:
                 self.play(*map(ShowCreation, [dot1, dot2]))

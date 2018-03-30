@@ -2,33 +2,14 @@ import numpy as np
 import itertools as it
 import os
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import *
-from topics.characters import Randolph, Mathematician
-from topics.functions import ParametricFunction, FunctionGraph
-from topics.number_line import NumberPlane
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
-from generate_logo import LogoGeneration
+from big_ol_pile_of_manim_imports import *
 from brachistochrone.drawing_images import sort_by_color
 
 class Intro(Scene):
     def construct(self):
         logo = ImageMobject("LogoGeneration", invert = False)
         name_mob = TextMobject("3Blue1Brown").center()
-        name_mob.highlight("grey")
+        name_mob.set_color("grey")
         name_mob.shift(2*DOWN)
         self.add(name_mob, logo)
 
@@ -160,10 +141,10 @@ class DisectBrachistochroneWord(Scene):
         overbrace2 = Brace(word.split()[-1], UP)
         shortest = TextMobject("Shortest")
         shortest.next_to(overbrace1, UP)
-        shortest.highlight(YELLOW)
+        shortest.set_color(YELLOW)
         time = TextMobject("Time")
         time.next_to(overbrace2, UP)
-        time.highlight(YELLOW)
+        time.set_color(YELLOW)
         chrono_example = TextMobject("""
             As in ``Chronological'' \\\\
             or ``Synchronize''
@@ -171,7 +152,7 @@ class DisectBrachistochroneWord(Scene):
         chrono_example.scale(0.5)
         chrono_example.to_edge(RIGHT)
         chrono_example.shift(2*UP)
-        chrono_example.highlight(BLUE_D)
+        chrono_example.set_color(BLUE_D)
         chrono_arrow = Arrow(
             word.get_right(), 
             chrono_example.get_bottom(), 
@@ -181,7 +162,7 @@ class DisectBrachistochroneWord(Scene):
         brachy_example.scale(0.5)
         brachy_example.to_edge(LEFT)
         brachy_example.shift(2*DOWN)
-        brachy_example.highlight(GREEN)
+        brachy_example.set_color(GREEN)
         brachy_arrow = Arrow(
             word.get_left(),
             brachy_example.get_top(), 
@@ -199,7 +180,7 @@ class DisectBrachistochroneWord(Scene):
         for mob in latin, greek:
             mob.to_edge(LEFT)
         question_mark = TextMobject("?").next_to(greek, buff = 0.1)
-        stars = Stars().highlight(BLACK)
+        stars = Stars().set_color(BLACK)
         stars.scale(0.5).shift(question_mark.get_center())
 
         self.play(Transform(original_word, word), ShowCreation(dots))
@@ -265,11 +246,11 @@ class CircleOfIdeas(Scene):
         words = map(TextMobject, [
             "optics", "calculus", "mechanics", "geometry", "history"
         ])
-        words[0].highlight(YELLOW)
-        words[1].highlight(BLUE_D)
-        words[2].highlight(GREY)
-        words[3].highlight(GREEN)
-        words[4].highlight(MAROON)
+        words[0].set_color(YELLOW)
+        words[1].set_color(BLUE_D)
+        words[2].set_color(GREY)
+        words[3].set_color(GREEN)
+        words[4].set_color(MAROON)
         brachistochrone = TextMobject("Brachistochrone")
         displayed_words = []
         for word in words:
@@ -284,7 +265,7 @@ class CircleOfIdeas(Scene):
         self.play(*self.get_spinning_anims(displayed_words))
         self.play(*[
             Transform(
-                word, word.copy().highlight(BLACK).center().scale(0.1),
+                word, word.copy().set_color(BLACK).center().scale(0.1),
                 path_func = path_along_arc(np.pi),
                 rate_func = None,
                 run_time = 2
@@ -319,7 +300,7 @@ class FermatsPrincipleStatement(Scene):
             fastest path possible.
             """
         ])
-        words.split()[0].highlight(BLUE)
+        words.split()[0].set_color(BLUE)
         everything = MobjectFromRegion(Region())
         everything.scale(0.9)
         angles = np.apply_along_axis(
@@ -342,7 +323,7 @@ class FermatsPrincipleStatement(Scene):
             Animation(words)
         )
         self.play(
-            ApplyMethod(everything.highlight, WHITE),
+            ApplyMethod(everything.set_color, WHITE),
         )
         self.wait()
 
@@ -385,7 +366,7 @@ class VideoProgression(Scene):
             FadeOut(light_in_two),
             GrowFromCenter(snells),
             DelayByOrder(
-                ApplyMethod(arrow2.highlight, BLUE_D)
+                ApplyMethod(arrow2.set_color, BLUE_D)
             )
         )
         self.wait()
@@ -393,7 +374,7 @@ class VideoProgression(Scene):
             FadeOut(optics),
             GrowFromCenter(multi),
             DelayByOrder(
-                ApplyMethod(arrow1.highlight, BLUE_D)
+                ApplyMethod(arrow1.set_color, BLUE_D)
             )
         )
         self.wait()
@@ -414,7 +395,7 @@ class BalanceCompetingFactors(Scene):
         
     def construct(self, *words):
         factor1, factor2 = [
-            TextMobject("Factor %d"%x).highlight(c)
+            TextMobject("Factor %d"%x).set_color(c)
             for x, c in [
                 (1, RED_D),
                 (2, BLUE_D)
@@ -424,10 +405,10 @@ class BalanceCompetingFactors(Scene):
         for word in factor1, factor2, real_factor1, real_factor2:
             word.shift(0.2*UP-word.get_bottom())
         for f1 in factor1, real_factor1:
-            f1.highlight(RED_D)
+            f1.set_color(RED_D)
             f1.shift(2*LEFT)
         for f2 in factor2, real_factor2:
-            f2.highlight(BLUE_D)
+            f2.set_color(BLUE_D)
             f2.shift(2*RIGHT)      
         line = Line(
             factor1.get_left(),

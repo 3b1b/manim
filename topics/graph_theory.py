@@ -276,7 +276,7 @@ class GraphScene(Scene):
         next_in_cycle = it.cycle(cycle)
         next_in_cycle.next()#jump one ahead
         self.traced_cycle = Mobject(*[
-            Line(self.points[i], self.points[j]).highlight(color)
+            Line(self.points[i], self.points[j]).set_color(color)
             for i, j in zip(cycle, next_in_cycle)
         ])
         self.play(
@@ -303,12 +303,12 @@ class GraphScene(Scene):
             Line(
                 self.points[pair[0]],
                 self.points[pair[1]]
-            ).highlight(color)
+            ).set_color(color)
             for pair in self.spanning_tree_index_pairs
         ])
 
     def generate_treeified_spanning_tree(self):
-        bottom = -SPACE_HEIGHT + 1
+        bottom = -FRAME_Y_RADIUS + 1
         x_sep = 1
         y_sep = 2
         if not hasattr(self, "spanning_tree"):
@@ -362,7 +362,7 @@ class GraphScene(Scene):
             for index in indices
         ]
         self.treeified_spanning_tree = Mobject(*[
-            Line(new_points[i], new_points[j]).highlight(color)
+            Line(new_points[i], new_points[j]).set_color(color)
             for i, j in self.spanning_tree_index_pairs
         ])
 
@@ -377,10 +377,10 @@ class GraphScene(Scene):
             for cycle in cycles
         ]
         self.dual_vertices = [
-            Dot(point).highlight("green")
+            Dot(point).set_color("green")
             for point in self.dual_points
         ]
-        self.dual_vertices[-1] = Circle().scale(SPACE_WIDTH + SPACE_HEIGHT)
+        self.dual_vertices[-1] = Circle().scale(FRAME_X_RADIUS + FRAME_Y_RADIUS)
         self.dual_points[-1] = point_at_infinity
 
         self.dual_edges = []
@@ -402,10 +402,10 @@ class GraphScene(Scene):
                         self.points[pair[0]],
                         self.points[pair[1]]
                     ]) - new_point
-                    new_point += SPACE_WIDTH*vect/np.linalg.norm(vect)
+                    new_point += FRAME_X_RADIUS*vect/np.linalg.norm(vect)
                     dual_point_pair[i] = new_point
             self.dual_edges.append(
-                Line(*dual_point_pair).highlight()
+                Line(*dual_point_pair).set_color()
             )
 
 

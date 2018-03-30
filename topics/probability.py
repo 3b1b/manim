@@ -342,7 +342,7 @@ class BarChart(VGroup):
             )
             bar.move_to((2*i+1)*buff*RIGHT, DOWN+LEFT)
             bars.add(bar)
-        bars.gradient_highlight(*self.bar_colors)
+        bars.set_color_by_gradient(*self.bar_colors)
 
         bar_labels = VGroup()
         for bar, name in zip(bars, self.bar_names):
@@ -577,7 +577,7 @@ class PlayingCard(VGroup):
             self.get_corner(UP+LEFT), DOWN+RIGHT,
             buff = MED_LARGE_BUFF*width
         )
-        value_mob.highlight(symbol.get_color())
+        value_mob.set_color(symbol.get_color())
         corner_symbol = symbol.copy()
         corner_symbol.scale_to_fit_width(width)
         corner_symbol.next_to(

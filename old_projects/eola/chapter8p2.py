@@ -1,25 +1,4 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
+from big_ol_pile_of_manim_imports import *
 from eola.chapter5 import get_det_text
 from eola.chapter8 import *
 
@@ -36,12 +15,12 @@ class OpeningQuote(Scene):
             "in which the proof is obvious.",
             arg_separator = " "
         )
-        words.highlight_by_tex("difficulty of a proof:", RED)
-        words.highlight_by_tex("paint a landscape", GREEN)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words.set_color_by_tex("difficulty of a proof:", RED)
+        words.set_color_by_tex("paint a landscape", GREEN)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Pierre Deligne")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
@@ -55,13 +34,13 @@ class CrossProductSymbols(Scene):
         equation = TexMobject(
             v_tex, "\\times", w_tex, "=", p_tex
         )
-        equation.highlight_by_tex(v_tex, V_COLOR)
-        equation.highlight_by_tex(w_tex, W_COLOR)
-        equation.highlight_by_tex(p_tex, P_COLOR)
+        equation.set_color_by_tex(v_tex, V_COLOR)
+        equation.set_color_by_tex(w_tex, W_COLOR)
+        equation.set_color_by_tex(p_tex, P_COLOR)
         brace = Brace(equation[-1])
         brace.stretch_to_fit_width(0.7)
         vector_text = brace.get_text("Vector")
-        vector_text.highlight(RED)
+        vector_text.set_color(RED)
         self.add(equation)
         self.play(*map(Write, [brace, vector_text]))
         self.wait()
@@ -75,8 +54,8 @@ class BruteForceVerification(Scene):
         w = Matrix(["w_1", "w_2", "w_3"])
         v1, v2, v3 = v.get_entries()
         w1, w2, w3 = w.get_entries()
-        v.highlight(V_COLOR)
-        w.highlight(W_COLOR)
+        v.set_color(V_COLOR)
+        w.set_color(W_COLOR)
         def get_term(e1, e2, e3, e4):
             group = VGroup(
                 e1.copy(), e2.copy(), 
@@ -103,13 +82,13 @@ class BruteForceVerification(Scene):
             verify computationally
         """)
         computation_words.scale(0.75)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         computation_words.to_edge(UP, buff = MED_SMALL_BUFF/2)
         h_line.next_to(computation_words, DOWN)
         formula_word.next_to(h_line, UP, buff = MED_SMALL_BUFF)
-        computation_words.shift(SPACE_WIDTH*RIGHT/2)
-        formula_word.shift(SPACE_WIDTH*LEFT/2)
+        computation_words.shift(FRAME_X_RADIUS*RIGHT/2)
+        formula_word.shift(FRAME_X_RADIUS*LEFT/2)
 
         cross_product.next_to(formula_word, DOWN, buff = LARGE_BUFF)
 
@@ -141,12 +120,12 @@ class BruteForceVerification(Scene):
             "(||", w_tex, "||)",
             "\\sin(", "\\theta", ")"
         )
-        last_point = h_line.get_center()+SPACE_WIDTH*RIGHT/2
-        max_width = SPACE_WIDTH-1
+        last_point = h_line.get_center()+FRAME_X_RADIUS*RIGHT/2
+        max_width = FRAME_X_RADIUS-1
         for mob in v_dot, w_dot, theta_def, length_check:
-            mob.highlight_by_tex(v_tex, V_COLOR)
-            mob.highlight_by_tex(w_tex, W_COLOR)
-            mob.highlight_by_tex("\\theta", GREEN)
+            mob.set_color_by_tex(v_tex, V_COLOR)
+            mob.set_color_by_tex(w_tex, W_COLOR)
+            mob.set_color_by_tex("\\theta", GREEN)
             mob.next_to(last_point, DOWN, buff = MED_SMALL_BUFF)
             if mob.get_width() > max_width:
                 mob.scale_to_fit_width(max_width)
@@ -164,10 +143,10 @@ class Prerequisites(Scene):
     def construct(self):
         title = TextMobject("Prerequisites")
         title.to_edge(UP)
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
 
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_width(SPACE_WIDTH - 1)
+        rect.scale_to_fit_width(FRAME_X_RADIUS - 1)
         left_rect, right_rect = [
             rect.copy().shift(DOWN/2).to_edge(edge)
             for edge in LEFT, RIGHT
@@ -201,7 +180,7 @@ class Prerequisites(Scene):
 class DualityReview(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Quick", "duality", "review")
-        words[1].gradient_highlight(BLUE, YELLOW)
+        words[1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(words, target_mode = "surprised")
         self.change_student_modes("pondering")
         self.random_blink(2)
@@ -212,14 +191,14 @@ class DotProductToTransformSymbol(Scene):
     }
     def construct(self):
         v_mob = TexMobject(get_vect_tex("v"))
-        v_mob.highlight(V_COLOR)
+        v_mob.set_color(V_COLOR)
 
         matrix = Matrix([self.vect_coords])
         vector = Matrix(self.vect_coords)
-        matrix.highlight_columns(X_COLOR, Y_COLOR)
-        vector.highlight_columns(YELLOW)
+        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        vector.set_color_columns(YELLOW)
         _input = Matrix(["x", "y"])
-        _input.get_entries().gradient_highlight(X_COLOR, Y_COLOR)
+        _input.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         left_input, right_input = [_input.copy() for x in range(2)]
         dot, equals = map(TexMobject, ["\\cdot", "="])
         equation = VGroup(
@@ -276,7 +255,7 @@ class MathematicalWild(Scene):
             transformation
             to the number line
         """)
-        bubble.content.highlight(BLUE)
+        bubble.content.set_color(BLUE)
         bubble.content.shift(MED_SMALL_BUFF*UP/2)
         bubble.remove(*bubble[:-1])
         bubble.add(bubble.content)
@@ -284,7 +263,7 @@ class MathematicalWild(Scene):
         vector = Vector([1, 2])
         vector.move_to(randy.get_corner(UP+LEFT), aligned_edge = DOWN+LEFT)
         dual_words = TextMobject("Dual vector")
-        dual_words.gradient_highlight(BLUE, YELLOW)
+        dual_words.set_color_by_gradient(BLUE, YELLOW)
         dual_words.next_to(vector, LEFT)
 
         self.add(randy)
@@ -306,9 +285,9 @@ class MathematicalWild(Scene):
 class ThreeStepPlan(Scene):
     def construct(self):
         title = TextMobject("The plan")
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
 
         v_tex, w_tex = get_vect_tex(*"vw")
@@ -329,10 +308,10 @@ class ThreeStepPlan(Scene):
             )
         ]
         linear, transformation = steps[0][1:1+2]
-        steps[0].highlight_by_tex(v_text, V_COLOR)
-        steps[0].highlight_by_tex(w_text, W_COLOR)
-        steps[1][1].gradient_highlight(BLUE, YELLOW)
-        steps[2].highlight_by_tex(cross_text, P_COLOR)
+        steps[0].set_color_by_tex(v_text, V_COLOR)
+        steps[0].set_color_by_tex(w_text, W_COLOR)
+        steps[1][1].set_color_by_gradient(BLUE, YELLOW)
+        steps[2].set_color_by_tex(cross_text, P_COLOR)
         VGroup(*steps).arrange_submobjects(
             DOWN, aligned_edge = LEFT, buff = LARGE_BUFF
         ).next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
@@ -373,9 +352,9 @@ class ThreeStepPlan(Scene):
             ["v_%d"%d for d in range(1, 4)],
             ["w_%d"%d for d in range(1, 4)],
         ]).T)
-        matrix.highlight_columns(X_COLOR, V_COLOR, W_COLOR)
-        matrix.get_mob_matrix()[1, 0].highlight(Y_COLOR)
-        matrix.get_mob_matrix()[2, 0].highlight(Z_COLOR)
+        matrix.set_color_columns(X_COLOR, V_COLOR, W_COLOR)
+        matrix.get_mob_matrix()[1, 0].set_color(Y_COLOR)
+        matrix.get_mob_matrix()[2, 0].set_color(Z_COLOR)
         VGroup(*matrix.get_mob_matrix()[1, 1:]).shift(0.15*DOWN)
         VGroup(*matrix.get_mob_matrix()[2, 1:]).shift(0.35*DOWN)
         det_text = get_det_text(matrix)
@@ -395,8 +374,8 @@ class DefineDualTransform(Scene):
         title = TextMobject("What a student might think")
         title.not_real = TextMobject("Not the real cross product")
         for mob in title, title.not_real:
-            mob.scale_to_fit_width(SPACE_WIDTH - 1)
-            mob.highlight(RED)
+            mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
+            mob.set_color(RED)
             mob.to_edge(UP)
         self.add(title)
         self.title = title
@@ -412,8 +391,8 @@ class DefineDualTransform(Scene):
         defs_equals = VGroup()
         definitions = VGroup()
         for array, tex_mob, color in zip(arrays, tex_mobs, colors):
-            array.highlight_columns(color)
-            tex_mob.highlight(color)
+            array.set_color_columns(color)
+            tex_mob.set_color(color)
             equals = TexMobject("=")
             definition = VGroup(tex_mob, equals, array)
             definition.arrange_submobjects(RIGHT)
@@ -446,7 +425,7 @@ class DefineDualTransform(Scene):
         final_mobs.next_to(self.title, DOWN, buff = MED_SMALL_BUFF)
 
         for mob in definitions, final_mobs:
-            mob.scale_to_fit_width(SPACE_WIDTH - 1)
+            mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
 
         for array in arrays:
             brackets = array.get_brackets()
@@ -563,10 +542,10 @@ class DefineDualTransform(Scene):
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
         q_marks = VGroup(*map(TextMobject, "???"))
         q_marks.scale(2)
-        q_marks.gradient_highlight(*colors)
+        q_marks.set_color_by_gradient(*colors)
 
         title = VGroup(TextMobject("This function is linear"))
-        title.highlight(GREEN)
+        title.set_color(GREEN)
         title.to_edge(UP)
         matrix = Matrix([list(q_marks.copy())])
         matrix.scale_to_fit_height(self.func_tex.get_height()/2)
@@ -627,13 +606,13 @@ class DefineDualTransform(Scene):
         p_coords = VGroup(*map(TexMobject, [
             "p_%d"%d for d in range(1, 4)
         ]))
-        p_coords.highlight(RED)        
+        p_coords.set_color(RED)        
         p_array = Matrix(list(p_coords))
         p_array.scale_to_fit_height(dual_vector.get_height())
         p_array.move_to(dual_vector, aligned_edge = RIGHT)
         p_brace = Brace(p_array, UP)
         p_tex = TexMobject(get_vect_tex("p"))
-        p_tex.highlight(P_COLOR)
+        p_tex.set_color(P_COLOR)
         p_brace.put_at_tip(p_tex)
 
         self.play(
@@ -725,7 +704,7 @@ class DefineDualTransform(Scene):
         cross_components.next_to(dot_components, RIGHT)
         for quint in quints:
             self.play(*[
-                ApplyMethod(mob.highlight, YELLOW)
+                ApplyMethod(mob.set_color, YELLOW)
                 for mob in quint
             ])
             self.wait(0.5)
@@ -770,8 +749,8 @@ class DefineDualTransform(Scene):
             "has \\\\ the property that"
         )
         question.to_edge(UP)
-        question.highlight(YELLOW)
-        question.highlight_by_tex(p_tex, P_COLOR)
+        question.set_color(YELLOW)
+        question.set_color_by_tex(p_tex, P_COLOR)
         everything.target = everything.copy()
         everything.target.next_to(
             question, DOWN, buff = MED_SMALL_BUFF
@@ -827,7 +806,7 @@ class DotProductWords(Scene):
         p_tex = "$%s$"%get_vect_tex("p")
         p_mob = TextMobject(p_tex)
         p_mob.scale(1.5)
-        p_mob.highlight(P_COLOR)
+        p_mob.set_color(P_COLOR)
         input_array = Matrix(list("xyz"))
         dot_product = VGroup(p_mob, Dot(radius = 0.07), input_array)
         dot_product.arrange_submobjects(buff = MED_SMALL_BUFF/2)
@@ -838,13 +817,13 @@ class DotProductWords(Scene):
             ("(Length of ", p_tex, ")",)
         ]))
         times = TexMobject("\\times")
-        words[1].highlight_by_tex(p_tex, P_COLOR)
+        words[1].set_color_by_tex(p_tex, P_COLOR)
         words[0].next_to(equals, RIGHT)
         words[1].next_to(words[0], DOWN, aligned_edge = LEFT)
         times.next_to(words[0], RIGHT)
 
         everyone = VGroup(dot_product, equals, times, words)
-        everyone.center().scale_to_fit_width(SPACE_WIDTH - 1)
+        everyone.center().scale_to_fit_width(FRAME_X_RADIUS - 1)
         self.add(dot_product)
         self.play(Write(equals))
         self.play(Write(words[0]))
@@ -872,11 +851,11 @@ class GeometricVolumeWords(Scene):
                 "perpendicular to", v_tex, "and", w_tex, ")"
             )
         )
-        words[0].highlight_by_tex("parallelogram", BLUE)
-        words[1].highlight_by_tex(v_tex, ORANGE)
-        words[1].highlight_by_tex(w_tex, W_COLOR)
+        words[0].set_color_by_tex("parallelogram", BLUE)
+        words[1].set_color_by_tex(v_tex, ORANGE)
+        words[1].set_color_by_tex(w_tex, W_COLOR)
         words.arrange_submobjects(RIGHT)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN, buff = SMALL_BUFF)
         for word in words:
             self.play(Write(word))
@@ -898,9 +877,9 @@ class CrossVectorEmphasisWords(Scene):
             TextMobject("Length = (Area of ", "parallelogram", ")")
         ]
         for word in words:
-            word.highlight_by_tex(v_tex, ORANGE)
-            word.highlight_by_tex(w_tex, W_COLOR)
-            word.highlight_by_tex("parallelogram", BLUE)
+            word.set_color_by_tex(v_tex, ORANGE)
+            word.set_color_by_tex(w_tex, W_COLOR)
+            word.set_color_by_tex("parallelogram", BLUE)
             self.play(Write(word))
             self.wait()
             self.play(FadeOut(word))
@@ -923,8 +902,8 @@ class ChangeOfBasisPreview(LinearTransformationScene):
     CONFIG = {
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 0
         },
         "t_matrix" : [[2, 1], [-1, 1]],
@@ -968,8 +947,8 @@ class ChangeOfBasisPreview(LinearTransformationScene):
         )
         self.play(
             randy.change_mode, "erm",
-            self.i_hat.highlight, self.i_target_color,
-            self.j_hat.highlight, self.j_target_color,
+            self.i_hat.set_color, self.i_target_color,
+            self.j_hat.set_color, self.j_target_color,
         )
         self.i_hat.color = self.i_target_color
         self.j_hat.color = self.j_target_color

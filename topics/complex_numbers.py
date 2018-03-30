@@ -99,13 +99,13 @@ class ComplexTransformationScene(Scene):
 
     def paint_plane(self, plane):
         for lines in plane.main_lines, plane.secondary_lines:
-            lines.gradient_highlight(
+            lines.set_color_by_gradient(
                 self.vert_start_color,
                 self.vert_end_color,
                 self.horiz_start_color,
                 self.horiz_end_color,
             )
-        # plane.axes.gradient_highlight(
+        # plane.axes.set_color_by_gradient(
         #     self.horiz_start_color,
         #     self.vert_start_color
         # )
@@ -231,11 +231,11 @@ class ComplexPlane(NumberPlane):
             "color" : self.color,
             "density" : self.density,
         }
-        for radius in np.arange(circle_freq, SPACE_WIDTH, circle_freq):
+        for radius in np.arange(circle_freq, FRAME_X_RADIUS, circle_freq):
             self.add(Circle(radius = radius, **config))
         for angle in np.arange(0, 2*np.pi, angle_freq):
             end_point = np.cos(angle)*RIGHT + np.sin(angle)*UP
-            end_point *= SPACE_WIDTH
+            end_point *= FRAME_X_RADIUS
             self.add(Line(ORIGIN, end_point, **config))
         return self
 

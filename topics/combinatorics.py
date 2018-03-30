@@ -6,7 +6,7 @@ from mobject.tex_mobject import TexMobject
 from scene import Scene
 
 
-DEFAULT_COUNT_NUM_OFFSET = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
+DEFAULT_COUNT_NUM_OFFSET = (FRAME_X_RADIUS - 1, FRAME_Y_RADIUS - 1, 0)
 DEFAULT_COUNT_RUN_TIME   = 5.0
 
 class CountingScene(Scene):
@@ -48,9 +48,9 @@ class CountingScene(Scene):
                 self.add(num_mob)
             if mode == "highlight":
                 original_color = mob.color
-                mob.highlight(color)
+                mob.set_color(color)
                 self.wait(frame_time)
-                mob.highlight(original_color)
+                mob.set_color(original_color)
             if mode == "show_creation":
                 self.play(ShowCreation(mob, run_time = frame_time))
             if mode == "show":
@@ -75,7 +75,7 @@ class CountingScene(Scene):
             num_mob = TexMobject(str(count))
             num_mob.center().shift(num_offset)
             self.add(num_mob)
-            self.highlight_region(region)
+            self.set_color_region(region)
             self.wait(frame_time)
             if mode == "one_at_a_time":
                 self.reset_background()
@@ -87,8 +87,8 @@ class CountingScene(Scene):
 class PascalsTriangle(VMobject):
     CONFIG = {
         "nrows" : 7,
-        "height" : 2*SPACE_HEIGHT - 1,
-        "width" : 1.5*SPACE_WIDTH,
+        "height" : FRAME_HEIGHT - 1,
+        "width" : 1.5*FRAME_X_RADIUS,
         "portion_to_fill" : 0.7
     }    
     def generate_points(self):

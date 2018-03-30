@@ -1,25 +1,4 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
+from big_ol_pile_of_manim_imports import *
 
 from ka_playgrounds.circuits import Resistor, Source, LongResistor
 
@@ -30,11 +9,11 @@ class OpeningQuote(Scene):
             "2x3 matrix.",
             "Some of you, to my great amusement, actually tried to do this.''" 
         )
-        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
-        words[1].highlight(GREEN)
+        words[1].set_color(GREEN)
         author = TextMobject("-(Via mathprofessorquotes.com, no name listed)")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.scale(0.7)
         author.next_to(words, DOWN, buff = 0.5)
 
@@ -60,13 +39,13 @@ class ColumnsRepresentBasisVectors(Scene):
             TextMobject("Where $\\hat{\\%smath}$ lands"%char)
             for char in "i", "j"
         ]
-        i_hat_words.highlight(X_COLOR)
+        i_hat_words.set_color(X_COLOR)
         i_hat_words.next_to(ORIGIN, LEFT).to_edge(UP)
-        j_hat_words.highlight(Y_COLOR)
+        j_hat_words.set_color(Y_COLOR)
         j_hat_words.next_to(ORIGIN, RIGHT).to_edge(UP)
         question = TextMobject("How to interpret?")
         question.next_to(matrix, UP)
-        question.highlight(YELLOW)
+        question.set_color(YELLOW)
 
         self.add(matrix)
         self.play(Write(question, run_time = 2))
@@ -82,7 +61,7 @@ class ColumnsRepresentBasisVectors(Scene):
                 Write(words, run_time = 1),
                 ShowCreation(arrow),
                 *[
-                    ApplyMethod(m.highlight, words.get_color())
+                    ApplyMethod(m.set_color, words.get_color())
                     for m in matrix.get_mob_matrix()[:,i]
                 ]
             )
@@ -114,11 +93,11 @@ class Symbolic2To3DTransform(Scene):
     def construct(self):
         func = TexMobject("L(", "\\vec{\\textbf{v}}", ")")
         input_array = Matrix([2, 7])
-        input_array.highlight(YELLOW)
+        input_array.set_color(YELLOW)
         in_arrow = Arrow(LEFT, RIGHT, color = input_array.get_color())
-        func[1].highlight(input_array.get_color())
+        func[1].set_color(input_array.get_color())
         output_array = Matrix([1, 8, 2])
-        output_array.highlight(PINK)
+        output_array.set_color(PINK)
         out_arrow = Arrow(LEFT, RIGHT, color = output_array.get_color())
         VMobject(
             input_array, in_arrow, func, out_arrow, output_array
@@ -128,8 +107,8 @@ class Symbolic2To3DTransform(Scene):
         input_words = input_brace.get_text("2d input")
         output_brace = Brace(output_array, UP)
         output_words = output_brace.get_text("3d output")
-        input_words.highlight(input_array.get_color())
-        output_words.highlight(output_array.get_color())
+        input_words.set_color(input_array.get_color())
+        output_words.set_color(output_array.get_color())
 
 
         self.add(func, input_array)
@@ -185,14 +164,14 @@ class DescribeColumnsInSpecificTransformation(Scene):
             [-1, 1],
             [-2, 1],
         ])
-        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR)
         mob_matrix = matrix.get_mob_matrix()
         i_col, j_col = [VMobject(*mob_matrix[:,i]) for i in 0, 1]
         for col, char, vect in zip([i_col, j_col], ["i", "j"], [UP, DOWN]):
             color = col[0].get_color()
             col.words = TextMobject("Where $\\hat\\%smath$ lands"%char)
             col.words.next_to(matrix, vect, buff = LARGE_BUFF)
-            col.words.highlight(color)
+            col.words.set_color(color)
             col.arrow = Arrow(
                 col.words.get_edge_center(-vect),
                 col.get_edge_center(vect),
@@ -216,13 +195,13 @@ class CountRowsAndColumns(Scene):
             [-1, 1],
             [-2, 1],
         ])
-        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR)
         rows_brace = Brace(matrix, LEFT)
         rows_words = rows_brace.get_text("3", "rows")
-        rows_words.highlight(PINK)
+        rows_words.set_color(PINK)
         cols_brace = Brace(matrix, UP)
         cols_words = cols_brace.get_text("2", "columns")
-        cols_words.highlight(TEAL)
+        cols_words.set_color(TEAL)
         title = TexMobject("3", "\\times", "2", "\\text{ matrix}")
         title.to_edge(UP)
 
@@ -250,7 +229,7 @@ class WriteColumnSpaceDefinition(Scene):
             [-1, 1],
             [-2, 1],
         ])
-        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR)
 
         brace = Brace(matrix)
         words = VMobject(
@@ -260,8 +239,8 @@ class WriteColumnSpaceDefinition(Scene):
         )
         words.arrange_submobjects(DOWN, buff = 0.1)
         words.next_to(brace, DOWN)
-        words[0][0].highlight(PINK)
-        words[2].highlight(TEAL)
+        words[0][0].set_color(PINK)
+        words[2].set_color(TEAL)
         words[0].add_background_rectangle()
         words[2].add_background_rectangle()
         VMobject(matrix, brace, words).center()
@@ -297,7 +276,7 @@ class MatrixInTheWild(Scene):
             ShowCreation(bubble),
             randy.change_mode, "pondering"
         )
-        # self.play(matrix.highlight_columns, X_COLOR, Y_COLOR)
+        # self.play(matrix.set_color_columns, X_COLOR, Y_COLOR)
         self.wait()
         for x in range(3):
             self.play(Blink(randy))
@@ -319,18 +298,18 @@ class MatrixInTheWild(Scene):
 
         top_brace = Brace(matrix, UP)
         top_words = top_brace.get_text("3 basis vectors")
-        top_words.submobject_gradient_highlight(GREEN, RED, BLUE)
+        top_words.set_submobject_colors_by_gradient(GREEN, RED, BLUE)
         side_brace = Brace(matrix, RIGHT)
         side_words = side_brace.get_text("""
             2 coordinates for
             each landing spots
         """)
-        side_words.highlight(YELLOW)
+        side_words.set_color(YELLOW)
 
         self.play(
             GrowFromCenter(top_brace),
             Write(top_words),
-            matrix.highlight_columns, X_COLOR, Y_COLOR, Z_COLOR
+            matrix.set_color_columns, X_COLOR, Y_COLOR, Z_COLOR
         )
         self.play(randy.change_mode, "happy")
         self.play(
@@ -355,8 +334,8 @@ class ThreeDToTwoDOutput(LinearTransformationScene):
         "show_basis_vectors" : False,
         "foreground_plane_kwargs" : {
             "color" : GREY,
-            "x_radius" : SPACE_WIDTH,
-            "y_radius" : SPACE_HEIGHT,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_Y_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -395,11 +374,11 @@ class Symbolic2To1DTransform(Scene):
     def construct(self):
         func = TexMobject("L(", "\\vec{\\textbf{v}}", ")")
         input_array = Matrix([2, 7])
-        input_array.highlight(YELLOW)
+        input_array.set_color(YELLOW)
         in_arrow = Arrow(LEFT, RIGHT, color = input_array.get_color())
-        func[1].highlight(input_array.get_color())
+        func[1].set_color(input_array.get_color())
         output_array = Matrix([1.8])
-        output_array.highlight(PINK)
+        output_array.set_color(PINK)
         out_arrow = Arrow(LEFT, RIGHT, color = output_array.get_color())
         VMobject(
             input_array, in_arrow, func, out_arrow, output_array
@@ -409,8 +388,8 @@ class Symbolic2To1DTransform(Scene):
         input_words = input_brace.get_text("2d input")
         output_brace = Brace(output_array, UP)
         output_words = output_brace.get_text("1d output")
-        input_words.highlight(input_array.get_color())
-        output_words.highlight(output_array.get_color())
+        input_words.set_color(input_array.get_color())
+        output_words.set_color(output_array.get_color())
 
 
         self.add(func, input_array)
@@ -441,8 +420,8 @@ class TwoDTo1DTransform(LinearTransformationScene):
     CONFIG = {
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : SPACE_WIDTH,
-            "y_radius" : SPACE_HEIGHT,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_Y_RADIUS,
             "secondary_line_ratio" : 1
         },
         "t_matrix" : [[1, 0], [2, 0]],
@@ -480,7 +459,7 @@ class TwoDTo1DTransform(LinearTransformationScene):
             )
             direction = UP if vect is self.i_hat else DOWN
             vect.words.next_to(vect.get_end(), direction, buff = LARGE_BUFF)
-            vect.words.highlight(vect.get_color())
+            vect.words.set_color(vect.get_color())
         matrix = Matrix([[1, 2]])
         matrix_words = TextMobject("Transformation matrix: ")
         matrix_group = VMobject(matrix_words, matrix)
@@ -506,7 +485,7 @@ class TwoDTo1DTransformWithDots(TwoDTo1DTransform):
              Dot(offset + a*vect, radius = 0.075)
              for a in np.linspace(-2, 3, 18)
         ])
-        dots.submobject_gradient_highlight(YELLOW_B, YELLOW_C)
+        dots.set_submobject_colors_by_gradient(YELLOW_B, YELLOW_C)
         func = self.get_matrix_transformation(self.t_matrix)
         new_dots = VMobject(*[
             Dot(
@@ -534,7 +513,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Dot products and duality
         """)
-        title.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        title.scale_to_fit_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
@@ -562,8 +541,8 @@ class DotProductPreview(VectorScene):
 
 
     def add_symbols(self):
-        v = matrix_to_mobject(self.v_coords).highlight(self.v_color)
-        w = matrix_to_mobject(self.w_coords).highlight(self.w_color)
+        v = matrix_to_mobject(self.v_coords).set_color(self.v_color)
+        w = matrix_to_mobject(self.w_coords).set_color(self.w_color)
         v.add_background_rectangle()
         w.add_background_rectangle()
         dot = TexMobject("\\cdot")
@@ -583,7 +562,7 @@ class DotProductPreview(VectorScene):
         line.rotate(self.v.get_angle())
         self.play(Write(line), Animation(self.v))
         self.play(
-            line.highlight, self.v.get_color(), 
+            line.set_color, self.v.get_color(), 
             Animation(self.v),
             rate_func = there_and_back
         )
@@ -623,8 +602,8 @@ class DotProductPreview(VectorScene):
             ("\\text{Scale by }", "||\\vec{\\textbf{v}}||",),
             ("\\text{Length of}", "\\text{ scaled projection}",),
         ]))
-        length_texs[1][1].highlight(self.v_color)
-        length_texs[2][1].highlight(self.w_color)
+        length_texs[1][1].set_color(self.v_color)
+        length_texs[2][1].set_color(self.w_color)
         for brace, tex_mob in zip(braces, length_texs):
             tex_mob.add_background_rectangle()
             brace.put_at_tip(tex_mob, buff = SMALL_BUFF)

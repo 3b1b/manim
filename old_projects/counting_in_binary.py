@@ -5,12 +5,7 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene, SceneFromVideo
+from big_ol_pile_of_manim_imports import *
 from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "counting_in_binary/"
@@ -107,8 +102,8 @@ class Hand(ImageMobject):
     def shrink(self):
         self.scale_in_place(0.8).to_edge(DOWN, buff = 0.0)
 
-    # def highlight_thumb(self, color = "yellow"):
-    #     self.highlight(
+    # def set_color_thumb(self, color = "yellow"):
+    #     self.set_color(
     #         color = color,
     #         condition = lambda p : p[0] > 4.5 and p[1] > -1.5
     #     )
@@ -338,7 +333,7 @@ class ShowIncrementRule(Scene):
 
     def get_arrow_set(self, num):
         arrow = TexMobject("\\downarrow", size = "\\Huge")
-        arrow.highlight("green")
+        arrow.set_color("green")
         arrow.shift(-arrow.get_bottom())
         if num == 12:
             tips = [(4, 1, 0)]
@@ -392,7 +387,7 @@ class MindFindsShortcuts(Scene):
         )
         self.wait()
         self.play(
-            Transform(compound, Arrow(hand, seven).highlight("yellow")),
+            Transform(compound, Arrow(hand, seven).set_color("yellow")),
             ShimmerIn(TextMobject("Directly recognize").shift(1.5*DOWN+2*RIGHT))
         )
         self.wait()
@@ -415,11 +410,11 @@ class MindFindsShortcuts(Scene):
         self.wait()
         self.play(
             Transform(
-                deepcopy(hands[16]).highlight("black").center().shift(hands[23].get_center()),
+                deepcopy(hands[16]).set_color("black").center().shift(hands[23].get_center()),
                 hands[16]
             ),
             Transform(
-                deepcopy(hands[7]).highlight("black").center().shift(hands[23].get_center()),
+                deepcopy(hands[7]).set_color("black").center().shift(hands[23].get_center()),
                 hands[7]
             ),
             Animation(hands[23]),

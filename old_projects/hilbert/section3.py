@@ -1,29 +1,4 @@
-from mobject import Mobject, Point
-from mobject.tex_mobject import \
-    TexMobject, TextMobject, Brace
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromRegion
-
-from scene import Scene
-
-from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction,\
-    TransformAnimations, ShimmerIn, FadeOut, FadeIn
-from animation.simple_animations import \
-    ShowCreation, DelayByOrder
-from animation.playground import Vibrate
-
-from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point, Polygon
-from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician, Mortimer
-from topics.number_line import UnitInterval
-from topics.three_dimensions import Stars
-
-from mobject.region import  region_from_polygon_vertices
-
+from big_ol_pile_of_manim_imports import *
 import displayer as disp
 
 from hilbert.curves import \
@@ -31,8 +6,6 @@ from hilbert.curves import \
     SnakeCurve, Sierpinski
 from hilbert.section1 import get_mathy_and_bubble
 
-
-from helpers import *
 
 
 
@@ -68,10 +41,10 @@ class InfiniteResultsFiniteWorld(Scene):
         right_mobs = [right_words, right_formula]
         for mob in left_mobs:
             mob.to_edge(RIGHT, buff = 1)
-            mob.shift(SPACE_WIDTH*LEFT)
+            mob.shift(FRAME_X_RADIUS*LEFT)
         for mob in right_mobs:
             mob.to_edge(LEFT, buff = 1)
-            mob.shift(SPACE_WIDTH*RIGHT)
+            mob.shift(FRAME_X_RADIUS*RIGHT)
         arrow = Arrow(left_words, right_words)
         right_overwords.next_to(right_formula, UP)
 
@@ -100,7 +73,7 @@ class InfiniteResultsFiniteWorld(Scene):
         self.clear()
         self.add(left_mob, arrow, right_mob)
         ex = TextMobject("\\times")
-        ex.highlight(RED)
+        ex.set_color(RED)
         # ex.shift(arrow.get_center())
         middle = TexMobject(
             "\\sum_{n=0}^N 2^n \\equiv -1 \\mod 2^{N+1}"
@@ -150,7 +123,7 @@ class InfiniteResultsFiniteWorld(Scene):
         self.add(left_mob, arrow, right_mob)
         words = TextMobject("is equivalent to")
         words.shift(0.25*LEFT)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         new_left = left_mob.copy().shift(RIGHT)
         new_right = right_mob.copy()
         new_right.shift(
@@ -230,29 +203,29 @@ class InfiniteObjectsEncapsulateFiniteObjects(Scene):
             ]
         ]
         
-        words[0].highlight(RED)
+        words[0].set_color(RED)
         words[1].next_to(words[0])
-        words[2].highlight(GREEN).next_to(words[1])
+        words[2].set_color(GREEN).next_to(words[1])
         Mobject(*words).center().to_edge(UP)
         infinite_objects = [
             TexMobject(
                 "\\sum_{n=0}^\\infty", 
                 size = "\\normal"
-            ).highlight(RED_E),
+            ).set_color(RED_E),
             Sierpinski(order = 8).scale(0.3),
             TextMobject(
                 "$\\exists$ something infinite $\\dots$"
-            ).highlight(RED_B)
+            ).set_color(RED_B)
         ]
         finite_objects = [
             TexMobject(
                 "\\sum_{n=0}^N",
                 size = "\\normal"
-            ).highlight(GREEN_E),
+            ).set_color(GREEN_E),
             self.get_triangles(),
             TextMobject(
                 "$\\forall$ finite somethings $\\dots$"
-            ).highlight(GREEN_B)
+            ).set_color(GREEN_B)
         ]
         for infinite, finite, n in zip(infinite_objects, finite_objects, it.count(1, 2)):
             infinite.next_to(words[0], DOWN, buff = n)

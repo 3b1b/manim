@@ -9,27 +9,7 @@ import random
 from scipy.spatial.distance import cdist
 from scipy import ndimage
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from mobject.tex_mobject import TextMobject, TexMobject    
-
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
-    FadeIn, FadeOut, GrowFromCenter, ShimmerIn, ApplyMethod
-from animation.simple_animations import \
-    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import \
-    Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point
-from topics.characters import Randolph, Mathematician, ThoughtBubble
-from topics.functions import ParametricFunction
-from topics.number_line import NumberPlane
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
+from big_ol_pile_of_manim_imports import *
 
 
 DEFAULT_GAUSS_BLUR_CONFIG = {

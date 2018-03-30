@@ -8,7 +8,7 @@ from helpers import *
 class Stars(Mobject1D):
     CONFIG = {
         "stroke_width" : 1,
-        "radius"          : SPACE_WIDTH,
+        "radius"          : FRAME_X_RADIUS,
         "num_points"      : 1000,
     }
     def generate_points(self):

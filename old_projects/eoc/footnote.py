@@ -1,34 +1,7 @@
-from helpers import *
 import scipy
 import math
 
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.graph_scene import GraphScene
+from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter1 import Car, MoveCar
 from old_projects.eoc.chapter10 import derivative
 
@@ -40,11 +13,11 @@ from old_projects.eoc.chapter10 import derivative
 class Introduce(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Next up is \\\\", "Taylor series")
-        words.highlight_by_tex("Taylor", BLUE)
+        words.set_color_by_tex("Taylor", BLUE)
         derivs = VGroup(*[
             TexMobject(
                 "{d", "^%d"%n, "f \\over dx", "^%d}"%n
-            ).highlight_by_tex(str(n), YELLOW)
+            ).set_color_by_tex(str(n), YELLOW)
             for n in range(2, 5)
         ])
         derivs.next_to(self.teacher, UP, LARGE_BUFF)
@@ -131,7 +104,7 @@ class SecondDerivativeGraphically(GraphScene):
     def show_derivative(self):
         deriv = TexMobject("\\frac{df}{dx}")
         deriv.next_to(self.graph_label, DOWN, MED_LARGE_BUFF)
-        deriv.highlight(self.deriv_color)
+        deriv.set_color(self.deriv_color)
         ss_group = self.get_secant_slope_group(
             1, self.graph,
             dx = 0.01,
@@ -159,7 +132,7 @@ class SecondDerivativeGraphically(GraphScene):
     def write_second_derivative(self):
         second_deriv = TexMobject("\\frac{d^2 f}{dx^2}")
         second_deriv.next_to(self.deriv, DOWN, MED_LARGE_BUFF)
-        second_deriv.highlight(self.second_deriv_color)
+        second_deriv.set_color(self.second_deriv_color)
         points = [
             self.input_to_graph_point(x, self.graph)
             for x in self.x2, self.x3
@@ -350,7 +323,7 @@ class IntroduceNotation(TeacherStudentsScene):
         d_over_dx = VGroup(d, overs[1], dxs[1])
 
         d2f_over_dx2 = TexMobject("{d^2 f", "\\over", "dx", "^2}")
-        d2f_over_dx2.highlight_by_tex("dx", YELLOW)
+        d2f_over_dx2.set_color_by_tex("dx", YELLOW)
 
         for mob in clunky_deriv, d2f_over_dx2:
             mob.next_to(self.teacher, UP+LEFT)
@@ -361,7 +334,7 @@ class IntroduceNotation(TeacherStudentsScene):
             circle.scale_in_place(1.3)
             mob.circle = circle
         dx_to_zero = TexMobject("dx \\to 0")
-        dx_to_zero.highlight(YELLOW)
+        dx_to_zero.set_color(YELLOW)
         dx_to_zero.next_to(clunky_deriv, UP+LEFT)
 
         self.student_says(
@@ -389,7 +362,7 @@ class IntroduceNotation(TeacherStudentsScene):
         self.play(
             FadeOut(denominator.circle),
             Write(dx_to_zero),
-            dxs.highlight, YELLOW
+            dxs.set_color, YELLOW
         )
         self.wait()
         self.play(
@@ -522,7 +495,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             )
             df_lines.add(df_line)
             df_label = TexMobject("df_%d"%i)
-            df_label.highlight(YELLOW)
+            df_label.set_color(YELLOW)
             df_label.scale(0.8)
             df_label.next_to(df_line.get_center(), UP+LEFT, MED_LARGE_BUFF)
             df_arrow = Arrow(
@@ -590,7 +563,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             df_labels[0].get_height()/ddf.get_height(), 
             about_point = ddf.get_right()
         )
-        ddf.highlight(MAROON_B)
+        ddf.set_color(MAROON_B)
 
         self.play(
             *map(MoveToTarget, [df_dx_groups, df_labels]),
@@ -635,7 +608,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         )
         ddf_over_dx_squared.scale(0.8)
         ddf_over_dx_squared.move_to(self.ddf, RIGHT)
-        ddf_over_dx_squared.highlight_by_tex("df", self.ddf.get_color())
+        ddf_over_dx_squared.set_color_by_tex("df", self.ddf.get_color())
         parens = VGroup(
             ddf_over_dx_squared[0][1],
             ddf_over_dx_squared[0][4],
@@ -647,7 +620,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         left_shifter = ddf_over_dx_squared[2][4]
 
         exp_two = TexMobject("2")
-        exp_two.highlight(self.ddf.get_color())
+        exp_two.set_color(self.ddf.get_color())
         exp_two.scale(0.5)
         exp_two.move_to(right_shifter.get_corner(UP+RIGHT), LEFT)
         exp_two.shift(MED_SMALL_BUFF*RIGHT)
@@ -726,8 +699,8 @@ class SecondDerivativeAsAcceleration(Scene):
             "{d^2 s \\over dt^2}(t)",  "\\Leftrightarrow",
             "\\text{Acceleration}"
         )
-        a_words.highlight_by_tex("d^2 s", MAROON_B)
-        a_words.highlight_by_tex("Acceleration", YELLOW)
+        a_words.set_color_by_tex("d^2 s", MAROON_B)
+        a_words.set_color_by_tex("Acceleration", YELLOW)
         a_words.to_corner(UP+RIGHT )
         self.add(a_words)
         self.show_car_movement()
@@ -766,24 +739,24 @@ class SecondDerivativeAsAcceleration(Scene):
             for scene in s_scene, v_scene, a_scene, j_scene
         ]
         for i, graph in enumerate(graphs):
-            graph.scale_to_fit_height(SPACE_HEIGHT)
+            graph.scale_to_fit_height(FRAME_Y_RADIUS)
             graph.to_corner(UP+LEFT)
             graph.shift(i*DOWN/2.0)
 
         s_words = TexMobject(
             "s(t)", "\\Leftrightarrow", "\\text{Displacement}"
         )
-        s_words.highlight_by_tex("s(t)", s_scene.graph.get_color())
+        s_words.set_color_by_tex("s(t)", s_scene.graph.get_color())
         v_words = TexMobject(
             "\\frac{ds}{dt}(t)", "\\Leftrightarrow", 
             "\\text{Velocity}"
         )
-        v_words.highlight_by_tex("ds", v_scene.graph.get_color())
+        v_words.set_color_by_tex("ds", v_scene.graph.get_color())
         j_words = TexMobject(
             "\\frac{d^3 s}{dt^3}(t)", "\\Leftrightarrow", 
             "\\text{Jerk}"
         )
-        j_words.highlight_by_tex("d^3", j_scene.graph.get_color())
+        j_words.set_color_by_tex("d^3", j_scene.graph.get_color())
         self.a_words.generate_target()
         words_group = VGroup(s_words, v_words, self.a_words.target, j_words)
         words_group.arrange_submobjects(
@@ -910,8 +883,8 @@ class Thumbnail(SecondDerivativeGraphically):
         self.graph.set_stroke(GREEN, width = 8)
 
         tex = TexMobject("{d^n f", "\\over", "dx^n}")
-        tex.highlight_by_tex("d^n", YELLOW)
-        tex.highlight_by_tex("dx", BLUE)
+        tex.set_color_by_tex("d^n", YELLOW)
+        tex.set_color_by_tex("dx", BLUE)
         tex.scale_to_fit_height(4)
         tex.to_edge(UP)
 

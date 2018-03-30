@@ -14,7 +14,7 @@ class ZoomedScene(Scene):
     which part of the screen is zoomed in on.
     """
     CONFIG = {
-        "zoomed_canvas_space_shape" : (3, 3),
+        "zoomed_canvas_frame_shape" : (3, 3),
         "zoomed_canvas_center"      : None,
         "zoomed_canvas_corner"      : UP+RIGHT,
         "zoomed_canvas_corner_buff" : DEFAULT_MOBJECT_TO_EDGE_BUFFER,
@@ -47,7 +47,7 @@ class ZoomedScene(Scene):
         return self.big_rectangle
 
     def generate_big_rectangle(self):
-        height, width = self.zoomed_canvas_space_shape
+        height, width = self.zoomed_canvas_frame_shape
         self.big_rectangle = Rectangle(
             height = height,
             width = width,

@@ -69,7 +69,7 @@ class Arc(VMobject):
 
 
         
-        self.highlight(self.get_color())
+        self.set_color(self.get_color())
         return self
 
 
@@ -721,7 +721,7 @@ class ScreenRectangle(Rectangle):
 
 class FullScreenRectangle(ScreenRectangle):
     CONFIG = {
-        "height" : 2*SPACE_HEIGHT,
+        "height" : FRAME_HEIGHT,
     }
 
 class FullScreenFadeRectangle(FullScreenRectangle):

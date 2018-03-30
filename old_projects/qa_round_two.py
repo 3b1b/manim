@@ -1,38 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.graph_scene import *
-
+from big_ol_pile_of_manim_imports import *
 from old_projects.efvgt import get_confetti_animations
 
 
@@ -63,7 +32,7 @@ class Announcements(PiCreatureScene):
             aligned_edge = LEFT,
         )
         announcements.next_to(underline, DOWN, LARGE_BUFF, aligned_edge = LEFT)
-        announcements.gradient_highlight(GREEN, YELLOW)
+        announcements.set_color_by_gradient(GREEN, YELLOW)
 
         self.play(
             Write(title),
@@ -143,7 +112,7 @@ class PowersOfTwo(Scene):
         curr_po2_outline = curr_po2[-1].copy()
         curr_po2_outline.set_fill(opacity = 0)
         curr_po2_outline.set_stroke(width = 2)
-        curr_po2_outline.gradient_highlight(
+        curr_po2_outline.set_color_by_gradient(
             YELLOW, RED, PINK, PURPLE, BLUE, GREEN
         )
 
@@ -190,7 +159,7 @@ class PiHoldingScreen(PiCreatureScene):
 class QuestionsLink(Scene):
     def construct(self):
         link = TextMobject("https://3b1b.co/questions")
-        link.scale_to_fit_width(2*SPACE_WIDTH)
+        link.scale_to_fit_width(FRAME_WIDTH)
         link.to_edge(DOWN)
         self.play(Write(link))
         self.wait()
@@ -198,12 +167,12 @@ class QuestionsLink(Scene):
 class Thumbnail(Scene):
     def construct(self):
         equation = TexMobject("2^{19} = " + "{:,}".format(2**19))
-        equation.scale_to_fit_width(SPACE_WIDTH)
+        equation.scale_to_fit_width(FRAME_X_RADIUS)
         equation.to_edge(DOWN, buff = LARGE_BUFF)
 
         q_and_a = TextMobject("Q\\&A \\\\ Round 2")
-        q_and_a.gradient_highlight(BLUE, YELLOW)
-        q_and_a.scale_to_fit_width(SPACE_WIDTH)
+        q_and_a.set_color_by_gradient(BLUE, YELLOW)
+        q_and_a.scale_to_fit_width(FRAME_X_RADIUS)
         q_and_a.to_edge(UP, buff = LARGE_BUFF)
 
         eater = ImageMobject("eater", height = 3)

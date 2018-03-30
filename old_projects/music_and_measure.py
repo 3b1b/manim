@@ -6,14 +6,8 @@ from copy import deepcopy
 import sys
 from fractions import Fraction, gcd
 
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
+from big_ol_pile_of_manim_imports import *
 from inventing_math import Underbrace
-
-from topics.number_line import NumberLineScene
 
 import random
 
@@ -187,7 +181,7 @@ class IntervalScene(NumberLineScene):
             tick_rad *= scale_factor
         frac_mob.shift(point + frac_mob.get_height()*UP)
         tick = Line(point + DOWN*tick_rad, point + UP*tick_rad)
-        tick.highlight("yellow")
+        tick.set_color("yellow")
         self.add(frac_mob, tick)
         return frac_mob, tick
 
@@ -198,7 +192,7 @@ class IntervalScene(NumberLineScene):
             point = self.number_line.number_to_point(frac)
             tick_rad = 2.0*long_tick_size/frac.denominator
             tick = Line(point+tick_rad*DOWN, point+tick_rad*UP)
-            tick.highlight("yellow")
+            tick.set_color("yellow")
             all_ticks.append(tick)
         all_ticks = Mobject(*all_ticks)
         if run_time > 0:
@@ -244,7 +238,7 @@ class IntervalScene(NumberLineScene):
             center_point+spatial_width*RIGHT/2
         )
         interval_line.do_in_place(interval_line.sort_points, np.linalg.norm)
-        interval_line.highlight(color)
+        interval_line.set_color(color)
         if run_time > 0:
             squished_interval = deepcopy(open_interval).stretch_to_fit_width(0)
             self.play(
@@ -265,7 +259,7 @@ class TwoChallenges(Scene):
         two.shift(DOWN).to_edge(LEFT)
         notes = ImageMobject("musical_notes").scale(0.3)
         notes.next_to(one)
-        notes.highlight("blue")
+        notes.set_color("blue")
         measure = TextMobject("Measure Theory").next_to(two)
         probability = TextMobject("Probability")
         probability.next_to(measure).shift(DOWN+RIGHT)
@@ -274,7 +268,7 @@ class TwoChallenges(Scene):
         arrow_to_prob = Arrow(measure, probability)
         arrow_to_int = Arrow(measure, integration)
         for arrow in arrow_to_prob, arrow_to_int:
-            arrow.highlight("yellow")
+            arrow.set_color("yellow")
 
 
         self.add(two_challenges)
@@ -299,7 +293,7 @@ class MeasureTheoryToHarmony(IntervalScene):
         all_mobs.sort_points()
         self.clear()
         radius = self.interval.radius
-        line = Line(radius*LEFT, radius*RIGHT).highlight("white")
+        line = Line(radius*LEFT, radius*RIGHT).set_color("white")
         self.play(DelayByOrder(Transform(all_mobs, line)))
         self.clear()
         self.play(Vibrate(rate_func = smooth))
@@ -400,7 +394,7 @@ class JustByAnalyzingTheNumber(Scene):
         self.add(r_equals)
         for num in nums:
             mob = TexMobject(str(num)).next_to(r_equals)
-            mob.highlight()
+            mob.set_color()
             mob.sort_points()
             if last:
                 self.play(DelayByOrder(Transform(last, mob, run_time = 0.5)))
@@ -433,10 +427,10 @@ class QuestionAndAnswer(Scene):
             "with sufficiently low denominator",
             size = "\\small"
         ).scale(1.5)
-        correction1.highlight("yellow")
+        correction1.set_color("yellow")
         correction1.next_to(A).shift(2*answer.get_height()*DOWN)
         answer = answer.split()
-        answer[1].highlight("green")
+        answer[1].set_color("green")
         temp_answer_end = deepcopy(answer[-1]).next_to(answer[0], buff = 0.2)
 
         self.add(Q, A, question, twotwenty, r220)
@@ -491,7 +485,7 @@ class LongSine(Mobject1D):
 
 class DecomposeMusicalNote(Scene):
     def construct(self):
-        line = Line(SPACE_HEIGHT*DOWN, SPACE_HEIGHT*UP)
+        line = Line(FRAME_Y_RADIUS*DOWN, FRAME_Y_RADIUS*UP)
         sine = LongSine()
         kwargs = {
             "run_time" : 4.0,
@@ -513,9 +507,9 @@ class DecomposeMusicalNote(Scene):
 
 class DecomposeTwoFrequencies(Scene):
     def construct(self):
-        line = Line(SPACE_HEIGHT*DOWN, SPACE_HEIGHT*UP)
-        sine1 = LongSine().shift(2*UP).highlight("yellow")
-        sine2 = LongSine().shift(DOWN).highlight("lightgreen")
+        line = Line(FRAME_Y_RADIUS*DOWN, FRAME_Y_RADIUS*UP)
+        sine1 = LongSine().shift(2*UP).set_color("yellow")
+        sine2 = LongSine().shift(DOWN).set_color("lightgreen")
         sine1.stretch(2.0/3, 0)
         comp = Mobject(sine1, sine2)
 
@@ -540,7 +534,7 @@ class FlashOnXProximity(Animation):
     def update_mobject(self, alpha):
         for mob in self.close_mobjects:
             if np.min(np.abs(mob.points[:,0] - self.x_val)) < 0.1:
-                self.mobject.highlight()
+                self.mobject.set_color()
                 return
         self.mobject.to_original_color()
 
@@ -556,11 +550,11 @@ class PatternInFrequencies(Scene):
         return "%d_to_%d"%(num1, num2)
 
     def construct(self, num1, num2, color):
-        big_line = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
-        big_line.highlight("white").shift(2*LEFT)
+        big_line = Line(FRAME_Y_RADIUS*UP, FRAME_Y_RADIUS*DOWN)
+        big_line.set_color("white").shift(2*LEFT)
         line_template = Line(UP, DOWN)
         line_template.shift(2*UP+2*LEFT)
-        setup_width = 2*SPACE_WIDTH
+        setup_width = FRAME_WIDTH
         num_top_lines = int(setup_width)
         num_bot_lines = int(setup_width*num1/num2)
         top_lines = Mobject(*[
@@ -572,8 +566,8 @@ class PatternInFrequencies(Scene):
             deepcopy(line_template).shift(k*RIGHT)
             for k in range(num_bot_lines)
         ])
-        bottom_lines.highlight("blue")
-        top_lines.highlight(color)
+        bottom_lines.set_color("blue")
+        top_lines.set_color(color)
         kwargs = {
             "run_time" : 10,
             "rate_func" : None
@@ -608,9 +602,9 @@ class CompareFractionComplexity(Scene):
         arrow1 = Arrow(UP, ORIGIN).next_to(frac0[0], UP)
         arrow2 = Arrow(UP, ORIGIN).next_to(frac1[0], UP)
         simple = TextMobject("Simple").next_to(arrow1, UP)
-        simple.highlight("green")
+        simple.set_color("green")
         complicated = TextMobject("Complicated").next_to(arrow2, UP)
-        complicated.highlight("red")
+        complicated.set_color("red")
         indicates = TextMobject("Indicates complexity").shift(2*DOWN)
         arrow3 = Arrow(indicates.get_top(), frac0[1])
         arrow4 = Arrow(indicates.get_top(), frac1[1])
@@ -624,7 +618,7 @@ class CompareFractionComplexity(Scene):
         ])
         self.wait()
         self.play(*[
-            DelayByOrder(ApplyMethod(frac[1].highlight, "yellow"))
+            DelayByOrder(ApplyMethod(frac[1].set_color, "yellow"))
             for frac in frac0, frac1
         ])
         self.play(
@@ -637,12 +631,12 @@ class CompareFractionComplexity(Scene):
 class IrrationalGang(Scene):
     def construct(self):
         randy = Randolph()
-        randy.mouth.highlight(randy.DEFAULT_COLOR)
+        randy.mouth.set_color(randy.DEFAULT_COLOR)
         randy.sync_parts()
         sqrt13 = TexMobject("\\sqrt{13}").shift(2*LEFT)
-        sqrt13.highlight("green")
+        sqrt13.set_color("green")
         zeta3 = TexMobject("\\zeta(3)").shift(2*RIGHT)
-        zeta3.highlight("grey")
+        zeta3.set_color("grey")
         eyes = Mobject(*randy.eyes)
         eyes.scale(0.5)
         sqrt13.add(eyes.next_to(sqrt13, UP, buff = 0).shift(0.25*RIGHT))
@@ -667,8 +661,8 @@ class ConstructPiano(Scene):
             key.stroke_width = 1
             key_copy = deepcopy(key).to_corner(DOWN+LEFT)
             key_copy.scale_in_place(0.25)
-            key_copy.shift(1.8*random.random()*SPACE_WIDTH*RIGHT)
-            key_copy.shift(1.8*random.random()*SPACE_HEIGHT*UP)
+            key_copy.shift(1.8*random.random()*FRAME_X_RADIUS*RIGHT)
+            key_copy.shift(1.8*random.random()*FRAME_Y_RADIUS*UP)
             key_copy.rotate(2*np.pi*random.random())
             anims.append(Transform(key_copy, key))
         self.play(*anims, run_time = 3.0)
@@ -687,14 +681,14 @@ class PianoTuning(Scene):
             deepcopy(semicircle).shift(jump*k*RIGHT)
             for k in range(23)
         ])
-        semicircles.highlight("white")
+        semicircles.set_color("white")
         semicircles.next_to(piano, UP, buff = 0)
         semicircles.shift(0.05*RIGHT)
         semicircles.sort_points(lambda p : p[0])
         first_jump = semicircles.split()[0]
         twelfth_root = TexMobject("2^{\\left(\\frac{1}{12}\\right)}")
         twelfth_root.scale(0.75).next_to(first_jump, UP, buff = 1.5)
-        line = Line(twelfth_root, first_jump).highlight("grey")
+        line = Line(twelfth_root, first_jump).set_color("grey")
         self.keys = piano.split()
         self.semicircles = semicircles.split()
 
@@ -722,7 +716,7 @@ class PianoTuning(Scene):
         low = self.keys[whole_notes_to_base]
         high = self.keys[whole_notes_to_base + interval - 1]
         u_brace = Underbrace(low.get_bottom(), high.get_bottom())
-        u_brace.highlight("yellow")
+        u_brace.set_color("yellow")
         ratio = TexMobject("2^{\\left(\\frac{%d}{12}\\right)}"%half_steps)
         ratio.next_to(u_brace, DOWN, buff = 0.2)
         semicircles = self.semicircles[half_notes_to_base:half_notes_to_base+half_steps]
@@ -740,9 +734,9 @@ class PianoTuning(Scene):
         should_be = TextMobject("Should be $\\frac{%d}{%d}$"%num_den)
         should_be.next_to(u_brace, DOWN)
 
-        self.play(ApplyMethod(low.highlight, colors[0]))
+        self.play(ApplyMethod(low.set_color, colors[0]))
         self.play(
-            ApplyMethod(high.highlight, colors[interval]),
+            ApplyMethod(high.set_color, colors[interval]),
             Transform(Point(u_brace.get_left()), u_brace),
         )
         self.wait()
@@ -762,7 +756,7 @@ class PianoTuning(Scene):
 
 class PowersOfTwelfthRoot(Scene):
     def construct(self):
-        max_height = SPACE_HEIGHT-0.5
+        max_height = FRAME_Y_RADIUS-0.5
         min_height = -max_height
         num_terms = 11
         mob_list = []
@@ -802,7 +796,7 @@ class PowersOfTwelfthRoot(Scene):
                 "with", str(percent_error)[:4] + "\\%", "error"
             ])
             error_string = error_string.split()
-            error_string[1].highlight()
+            error_string[1].set_color()
             error_string = Mobject(*error_string)
             error_string.scale(approx_form.get_height()/error_string.get_height())
             error_string.next_to(frac_mob)
@@ -826,8 +820,8 @@ class SupposeThereIsASavant(Scene):
                 "notes whose frequencies have a rational ratio"
         words = words.split(" ")
         word_mobs = TextMobject(words).split()
-        word_mobs[4].highlight()
-        word_mobs[5].highlight()
+        word_mobs[4].set_color()
+        word_mobs[5].set_color()
         for word, word_mob in zip(words, word_mobs):
             self.add(word_mob)
             self.wait(0.1*len(word))
@@ -883,9 +877,9 @@ class AllValuesBetween1And2(NumberLineScene):
             self.wait(0.5)
             points = map(self.number_line.number_to_point, [approx, irrational])
             distance = np.linalg.norm(points[1]-points[0])
-            if distance < 0.3*SPACE_WIDTH and num_zooms < max_num_zooms:
+            if distance < 0.3*FRAME_X_RADIUS and num_zooms < max_num_zooms:
                 num_zooms += 1
-                new_distance = 0.75*SPACE_WIDTH
+                new_distance = 0.75*FRAME_X_RADIUS
                 self.zoom_in_on(irrational, new_distance/distance)
                 for mob in irr_mob, bot_arrow:
                     mob.shift(mob.get_center()[0]*LEFT)
@@ -1005,7 +999,7 @@ class SumOfIntervalsMustBeLessThan1(IntervalScene):
         IntervalScene.construct(self)
         self.add_fraction_ticks()
         anims = []
-        last_plus = Point((SPACE_WIDTH-0.5)*LEFT+2*UP)        
+        last_plus = Point((FRAME_X_RADIUS-0.5)*LEFT+2*UP)        
         for num in np.arange(0, 1.1, .1):
             open_interval, line = self.add_open_interval(num, 0.1)
             self.remove(line)
@@ -1036,7 +1030,7 @@ class RationalsAreDense(IntervalScene):
         words = TextMobject(["Rationals are", "\\emph{dense}", "in the reals"])
         words.shift(2*UP)
         words = words.split()
-        words[1].highlight()
+        words[1].set_color()
 
         self.add(words[0])
         self.play(ShimmerIn(words[1]))
@@ -1084,9 +1078,9 @@ class HowCanYouNotCoverEntireInterval(IntervalScene):
         left  = self.number_line.number_to_point(0)
         right = self.number_line.number_to_point(1)
         full_line = Line(left, right)
-        full_line.highlight("red")
-        # dot = Dot().shift(left).highlight("red")
-        # point = Point(left).highlight("red")
+        full_line.set_color("red")
+        # dot = Dot().shift(left).set_color("red")
+        # point = Point(left).set_color("red")
         intervals = []
         for num in np.arange(0, 1.1, .1):
             open_interval, line = self.add_open_interval(num, 0.1)
@@ -1159,7 +1153,7 @@ class StepsToSolution(IntervalScene):
             denom_to_mobs[frac.denominator].append(mob)
             mob_copy = deepcopy(mob).center()
             mob_copy.shift((2.4-mob_copy.get_bottom()[1])*UP)
-            mob_copy.shift((-SPACE_WIDTH+self.spacing*count)*RIGHT)
+            mob_copy.shift((-FRAME_X_RADIUS+self.spacing*count)*RIGHT)
             comma = TextMobject(",").next_to(mob_copy, buff = 0.1, aligned_edge = DOWN)
             anims.append(Transform(mob, mob_copy))
             commas.add(comma)
@@ -1167,7 +1161,7 @@ class StepsToSolution(IntervalScene):
         new_ticks = []
         for tick, count in zip(ticks.split(), it.count(1)):
             tick_copy = deepcopy(tick).center().shift(1.6*UP)
-            tick_copy.shift((-SPACE_WIDTH+self.spacing*count)*RIGHT)
+            tick_copy.shift((-FRAME_X_RADIUS+self.spacing*count)*RIGHT)
             new_ticks.append(tick_copy)
         new_ticks = Mobject(*new_ticks)
         anims.append(DelayByOrder(Transform(ticks, new_ticks)))
@@ -1176,7 +1170,7 @@ class StepsToSolution(IntervalScene):
         self.wait()
         for denom in range(2, 10):
             for mob in denom_to_mobs[denom]:
-                mob.highlight("green")
+                mob.set_color("green")
             self.wait()
             for mob in denom_to_mobs[denom]:
                 mob.to_original_color()
@@ -1194,7 +1188,7 @@ class StepsToSolution(IntervalScene):
         self.wait()
         to_remove = [self.number_line] + self.number_mobs
         self.play(*[
-            ApplyMethod(mob.shift, 2*SPACE_WIDTH*RIGHT)
+            ApplyMethod(mob.shift, FRAME_WIDTH*RIGHT)
             for mob in to_remove
         ])
         self.remove(*to_remove)
@@ -1279,7 +1273,7 @@ class OurSumCanBeArbitrarilySmall(Scene):
         ]).split()
         self.add(words[0])
         self.wait()
-        self.play(ShimmerIn(words[1].highlight()))
+        self.play(ShimmerIn(words[1].set_color()))
         self.wait()
 
 class ProofDoesNotEqualIntuition(Scene):
@@ -1482,8 +1476,8 @@ class ShiftSetupByOne(IntervalScene):
             "\\emph{precisely}", "those 1\\% covered by the intervals"
         ]).shift(2*UP)
         words = words.split()
-        words[1].highlight()
-        words[3].highlight()
+        words[1].set_color()
+        words[3].set_color()
         self.add(*words)
         self.play(ShowCreation(
             Mobject(*intervals),
@@ -1507,7 +1501,7 @@ class FinalEquivalence(IntervalScene):
         arrow = TexMobject("\\Leftrightarrow")
         top_words = TextMobject("Harmonious numbers are rare,")
         bot_words = TextMobject("even for the savant")
-        bot_words.highlight().next_to(top_words, DOWN)
+        bot_words.set_color().next_to(top_words, DOWN)
         words = Mobject(top_words, bot_words)
         words.next_to(arrow)
 

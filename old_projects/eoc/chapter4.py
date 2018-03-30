@@ -1,34 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-
-from topics.common_scenes import OpeningQuote, PatreonThanks
-from topics.graph_scene import *
+from big_ol_pile_of_manim_imports import *
 
 SINE_COLOR = BLUE
 X_SQUARED_COLOR = GREEN
@@ -77,7 +47,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         self.add(series)
         self.play(
             FadeIn(brace),
-            last_video.highlight, YELLOW
+            last_video.set_color, YELLOW
         )
         for rule in simple_rules:
             self.play(
@@ -95,7 +65,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
             last_video.restore,            
             Animation(simple_rules),
             brace.next_to, this_video, DOWN,
-            this_video.highlight, YELLOW
+            this_video.set_color, YELLOW
         )
 
         #Combination rules
@@ -115,10 +85,10 @@ class TransitionFromLastVideo(TeacherStudentsScene):
                 self.play(inner_func.shift, 0.5*UP)
                 added_anims = [
                     inner_func.shift, 0.5*DOWN,
-                    inner_func.highlight, YELLOW
+                    inner_func.set_color, YELLOW
                 ]
             self.play(
-                interior.highlight, YELLOW,
+                interior.set_color, YELLOW,
                 *added_anims,
                 submobject_mode = "lagged_start"
             )
@@ -149,7 +119,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         top_group = VGroup(series, simple_rules, brace)
         combination_rules.save_state()
         self.play(
-            top_group.next_to, SPACE_HEIGHT*UP, UP,
+            top_group.next_to, FRAME_Y_RADIUS*UP, UP,
             combination_rules.to_edge, UP,
         )
         pairs = [
@@ -164,7 +134,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
                 self.get_teacher().change_mode, "plain",
             )
             self.wait()
-            answer[1].highlight(GREEN)
+            answer[1].set_color(GREEN)
             self.play(
                 Transform(question, answer),
                 self.get_teacher().change_mode, "hooray",
@@ -211,12 +181,12 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         ])
 
         for word, part in zip(words, reversed(parts)):
-            word.highlight(YELLOW)
+            word.set_color(YELLOW)
             word.next_to(monster, UP)
             self.play(
                 FadeIn(word),
                 part.scale_in_place, 1.2,
-                part.highlight, YELLOW
+                part.set_color, YELLOW
             )
             self.wait()
             self.play(*map(FadeOut, [word, part]))
@@ -246,7 +216,7 @@ class DampenedSpring(Scene):
         for spring in compact_spring, extended_spring:
             spring.scale(0.5)
             spring.rotate(np.pi/6, UP)
-            spring.highlight(GREY)
+            spring.set_color(GREY)
             spring.shift(-spring.points[0] + 3*LEFT)
 
         moving_spring = compact_spring.copy()
@@ -275,7 +245,7 @@ class ComingUp(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
         rect.set_stroke(WHITE)
-        rect.scale_to_fit_height(2*SPACE_HEIGHT-2)
+        rect.scale_to_fit_height(FRAME_HEIGHT-2)
         title = TextMobject("Coming up...")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -299,10 +269,10 @@ class PreSumRuleDiscussion(Scene):
             "=", "\\frac{dg}{dx}", "+", "\\frac{dh}{dx}"
         )
         for formula in specific, general:
-            formula[1].highlight(SINE_COLOR)
-            formula[6].highlight(SINE_COLOR)
-            formula[3].highlight(X_SQUARED_COLOR)
-            formula[8].highlight(X_SQUARED_COLOR)
+            formula[1].set_color(SINE_COLOR)
+            formula[6].set_color(SINE_COLOR)
+            formula[3].set_color(X_SQUARED_COLOR)
+            formula[8].set_color(X_SQUARED_COLOR)
         VGroup(specific, general).arrange_submobjects(DOWN, buff = LARGE_BUFF)
 
         #Add on rules
@@ -326,7 +296,7 @@ class PreSumRuleDiscussion(Scene):
             else:
                 part = specific[i]
                 self.play(
-                    part.highlight, YELLOW,
+                    part.set_color, YELLOW,
                     part.scale_in_place, 1.2,
                     rate_func = there_and_back
                 )
@@ -338,7 +308,7 @@ class SumRule(GraphScene):
         "y_labeled_nums" : [],
         "y_axis_label" : "",
         "x_max" : 4,
-        "x_axis_width" : 2*SPACE_WIDTH,
+        "x_axis_width" : FRAME_WIDTH,
         "y_max" : 3,
         "graph_origin" : 2.5*DOWN + 2.5*LEFT,
         "graph_label_x_value" : 1.5,
@@ -361,9 +331,9 @@ class SumRule(GraphScene):
     def write_function(self):
         func_mob = TexMobject("f(x)", "=", "\\sin(x)", "+", "x^2")
         func_mob.scale(self.tex_scale_factor)
-        func_mob.highlight_by_tex("f(x)", SUM_COLOR)
-        func_mob.highlight_by_tex("\\sin(x)", SINE_COLOR)
-        func_mob.highlight_by_tex("x^2", X_SQUARED_COLOR)
+        func_mob.set_color_by_tex("f(x)", SUM_COLOR)
+        func_mob.set_color_by_tex("\\sin(x)", SINE_COLOR)
+        func_mob.set_color_by_tex("x^2", X_SQUARED_COLOR)
         func_mob.to_corner(UP+LEFT)
         self.add(func_mob)
 
@@ -504,7 +474,7 @@ class SumRule(GraphScene):
                 buff = SMALL_BUFF,
                 min_num_quads = 2,
             )
-            line.brace.highlight(line.get_color())
+            line.brace.set_color(line.get_color())
             line.brace.add_background_rectangle()
             line.brace_text = line.brace.get_text("$%s$"%tex)
             line.brace_text.scale(
@@ -574,9 +544,9 @@ class SumRule(GraphScene):
         df, equals, d_sine, plus, d_x_squared = deriv_mob = TexMobject(
             "df", "=", "d(\\sin(x))", "+", "d(x^2)"
         )
-        df.highlight(SUM_COLOR)
-        d_sine.highlight(SINE_COLOR)
-        d_x_squared.highlight(X_SQUARED_COLOR)
+        df.set_color(SUM_COLOR)
+        d_sine.set_color(SINE_COLOR)
+        d_x_squared.set_color(X_SQUARED_COLOR)
         deriv_mob.scale(self.tex_scale_factor)
         deriv_mob.next_to(
             self.func_mob, DOWN, 
@@ -628,9 +598,9 @@ class SumRule(GraphScene):
         expanded_deriv = TexMobject(
             "df", "=", "\\cos(x)", "\\,dx", "+", "2x", "\\,dx"
         )
-        expanded_deriv.highlight_by_tex("df", SUM_COLOR)
-        VGroup(*expanded_deriv[2:4]).highlight(SINE_COLOR)
-        VGroup(*expanded_deriv[5:7]).highlight(X_SQUARED_COLOR)
+        expanded_deriv.set_color_by_tex("df", SUM_COLOR)
+        VGroup(*expanded_deriv[2:4]).set_color(SINE_COLOR)
+        VGroup(*expanded_deriv[5:7]).set_color(X_SQUARED_COLOR)
         expanded_deriv.scale(self.tex_scale_factor)
         expanded_deriv.next_to(
             self.deriv_mob, DOWN,
@@ -642,9 +612,9 @@ class SumRule(GraphScene):
         rearranged_deriv = TexMobject(
             "{df \\over", "dx}", "=", "\\cos(x)", "+", "2x"
         )
-        rearranged_deriv[0].highlight(SUM_COLOR)
-        rearranged_deriv[3].highlight(SINE_COLOR)
-        rearranged_deriv[5].highlight(X_SQUARED_COLOR)
+        rearranged_deriv[0].set_color(SUM_COLOR)
+        rearranged_deriv[3].set_color(SINE_COLOR)
+        rearranged_deriv[5].set_color(X_SQUARED_COLOR)
         rearranged_deriv.scale(self.tex_scale_factor)
         rearranged_deriv.move_to(expanded_deriv, UP+LEFT)
         deriv_target_indices = [0, 2, 3, 1, 4, 5, 1]
@@ -664,7 +634,7 @@ class SumRule(GraphScene):
         ]
         def indicate(mob):
             self.play(
-                mob.highlight, YELLOW,
+                mob.set_color, YELLOW,
                 mob.scale_in_place, 1.2,
                 rate_func = there_and_back
             )
@@ -676,7 +646,7 @@ class SumRule(GraphScene):
             new_label.add_background_rectangle()
             new_label.scale(self.tex_scale_factor)
             new_label.move_to(old_label, RIGHT)
-            new_label.highlight(old_label.get_color())
+            new_label.set_color(old_label.get_color())
 
             self.play(FocusOn(old_label))
             indicate(old_label)
@@ -707,8 +677,8 @@ class DiscussProducts(TeacherStudentsScene):
             "\\left(\\frac{d(x^2)}{dx}\\right)",
         )
         not_equals = wrong_product_rule[1]
-        wrong_product_rule[2].highlight(SINE_COLOR)
-        wrong_product_rule[3].highlight(X_SQUARED_COLOR)
+        wrong_product_rule[2].set_color(SINE_COLOR)
+        wrong_product_rule[3].set_color(X_SQUARED_COLOR)
         wrong_product_rule.next_to(
             self.get_teacher().get_corner(UP+LEFT),
             UP,
@@ -729,7 +699,7 @@ class DiscussProducts(TeacherStudentsScene):
             "pondering", "confused", "erm",
             added_anims = [
                 not_equals.scale_in_place, 1.3,
-                not_equals.highlight, RED
+                not_equals.set_color, RED
             ]
         )
         self.wait()
@@ -789,9 +759,9 @@ class NotGraphsForProducts(GraphScene):
         ))
         words = TextMobject("Not the best visualization")
         words.scale(1.5)
-        words.shift(SPACE_HEIGHT*UP/2)
+        words.shift(FRAME_Y_RADIUS*UP/2)
         words.add_background_rectangle()
-        words.highlight(RED)
+        words.set_color(RED)
         self.play(
             everything.fade,
             Write(words)
@@ -876,7 +846,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         graph.move_to(x_axis.number_to_point(0), DOWN+LEFT)
 
         label = TexMobject("\\sin(x)")
-        label.highlight(SINE_COLOR)
+        label.set_color(SINE_COLOR)
         label.next_to(graph, UP)
 
         y_axis = x_axis.copy()
@@ -924,7 +894,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             "\\text{Area}"
         )
         f_def.to_corner(UP+RIGHT)
-        f_def[-1].highlight(self.box_kwargs["fill_color"])
+        f_def[-1].set_color(self.box_kwargs["fill_color"])
 
         box, labels = self.box_label_group
 
@@ -987,7 +957,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         dx = TexMobject("dx")
         dx.scale(0.7)
         dx.next_to(brace, UP, buff = SMALL_BUFF)
-        dx.highlight(dx_line.get_color())
+        dx.set_color(dx_line.get_color())
 
         return VGroup(dx_line, brace, dx)
 
@@ -1024,7 +994,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
                 aligned_edge = aligned_edge,
                 buff = SMALL_BUFF
             )
-            label.highlight(df_boxes[0].get_color())
+            label.set_color(df_boxes[0].get_color())
             result.add(VGroup(brace, label))
         return result
 
@@ -1042,7 +1012,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         deriv.to_edge(RIGHT)
         for submob, tex in zip(deriv, deriv.expression_parts):
             if tex.startswith("d"):
-                submob.highlight(self.df_box_kwargs["fill_color"])
+                submob.set_color(self.df_box_kwargs["fill_color"])
         bottom_box_area = VGroup(*deriv[2:4])
         right_box_area = VGroup(*deriv[5:7])
 
@@ -1072,22 +1042,22 @@ class IntroduceProductAsArea(ReconfigurableScene):
         deriv.submobjects[4] = df_boxes_copy[1]
         self.wait()
 
-        self.highlight_right_boxes()
-        self.highlight_bottom_boxes()
+        self.set_color_right_boxes()
+        self.set_color_bottom_boxes()
         self.describe_bottom_box(bottom_box_area)
         self.describe_right_box(right_box_area)
         self.ignore_corner()
 
         # self.add(deriv)
 
-    def highlight_boxes_and_label(self, boxes, label):
+    def set_color_boxes_and_label(self, boxes, label):
         boxes.save_state()
         label.save_state()
 
         self.play(GrowFromCenter(label))
         self.play(
-            boxes.highlight, RED,
-            label.highlight, RED,
+            boxes.set_color, RED,
+            label.set_color, RED,
         )
         self.play(
             label[1].scale_in_place, 1.1,
@@ -1096,14 +1066,14 @@ class IntroduceProductAsArea(ReconfigurableScene):
         self.play(boxes.restore, label.restore)
         self.wait()
 
-    def highlight_right_boxes(self):
-        self.highlight_boxes_and_label(
+    def set_color_right_boxes(self):
+        self.set_color_boxes_and_label(
             VGroup(*self.df_boxes[1:]),
             self.df_box_labels[0]
         )
 
-    def highlight_bottom_boxes(self):
-        self.highlight_boxes_and_label(
+    def set_color_bottom_boxes(self):
+        self.set_color_boxes_and_label(
             VGroup(*self.df_boxes[:-1]),
             self.df_box_labels[1]
         )
@@ -1162,21 +1132,21 @@ class IntroduceProductAsArea(ReconfigurableScene):
         corner.save_state()
         corner_copy = VGroup(*self.df_boxes_copy[-2:])
         words = TextMobject("Ignore")
-        words.highlight(RED)
+        words.set_color(RED)
         words.next_to(corner_copy, LEFT, buff = LARGE_BUFF)
         words.shift(MED_SMALL_BUFF*DOWN)
         arrow = Arrow(words, corner_copy, buff = SMALL_BUFF, color = RED)
 
         self.play(
-            corner.highlight, RED,
-            corner_copy.highlight, RED,
+            corner.set_color, RED,
+            corner_copy.set_color, RED,
         )
         self.wait()
         self.play(Write(words), ShowCreation(arrow))
         self.wait()
         self.play(*map(FadeOut, [words, arrow, corner_copy]))
         self.wait()
-        corner_copy.highlight(BLACK)
+        corner_copy.set_color(BLACK)
 
     def show_thinner_dx(self):
         self.transition_to_alt_config(dx = self.tiny_dx)
@@ -1211,7 +1181,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             for submob, tex in zip(new_deriv, new_deriv.expression_parts):
                 for substr in "df", "dx", self.top_func_derivative, self.side_func_derivative:
                     if substr in tex:
-                        submob.highlight(color)
+                        submob.set_color(color)
             new_deriv.scale(0.9)
             new_deriv.next_to(self.deriv, DOWN, buff = MED_LARGE_BUFF)
             new_deriv.shift_onto_screen()
@@ -1219,7 +1189,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         def indicate(mob):
             self.play(
                 mob.scale_in_place, 1.2,
-                mob.highlight, YELLOW,
+                mob.set_color, YELLOW,
                 rate_func = there_and_back
             )
 
@@ -1295,7 +1265,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             "``Left ", "d(Right) ", "+", " Right ", "d(Left)", "''",
             arg_separator = ""
         )
-        VGroup(words[1], words[4]).highlight(self.df_boxes[0].get_color())
+        VGroup(words[1], words[4]).set_color(self.df_boxes[0].get_color())
         words.scale(0.7)
         words.next_to(morty.get_corner(UP+LEFT), UP)
         words.shift_onto_screen()
@@ -1403,7 +1373,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
 class WriteDXSquared(Scene):
     def construct(self):
         term = TexMobject("(...)(dx)^2")
-        term.highlight(RED)
+        term.set_color(RED)
         self.play(Write(term))
         self.wait()
 
@@ -1420,7 +1390,7 @@ class MneumonicExample(TeacherStudentsScene):
         )
         deriv = TexMobject("\\sin(x)", "2x", "+", "x^2", "\\cos(x)")
         for mob in words, deriv:
-            VGroup(mob[1], mob[4]).highlight(GREEN)
+            VGroup(mob[1], mob[4]).set_color(GREEN)
             mob.next_to(deriv_q, DOWN, buff = MED_LARGE_BUFF)
         deriv.shift(words[2].get_center()-deriv[2].get_center())
 
@@ -1505,9 +1475,9 @@ class ShoveXSquaredInSine(Scene):
         title.to_edge(UP)
 
         sine = TexMobject("g(", "x", ")", "=", "\\sin(", "x", ")")
-        sine.highlight(SINE_COLOR)
+        sine.set_color(SINE_COLOR)
         x_squared = TexMobject("h(x)", "=", "x^2")
-        x_squared.highlight(X_SQUARED_COLOR)
+        x_squared.set_color(X_SQUARED_COLOR)
         group = VGroup(sine, x_squared)
         group.arrange_submobjects(buff = LARGE_BUFF)
         group.shift(UP)
@@ -1515,9 +1485,9 @@ class ShoveXSquaredInSine(Scene):
             "g(", "h(x)", ")", "=", "\\sin(", "x^2", ")"
         )
         for i in 0, 2, 4, 6:
-            composition[i].highlight(SINE_COLOR)
+            composition[i].set_color(SINE_COLOR)
         for i in 1, 5:
-            composition[i].highlight(X_SQUARED_COLOR)
+            composition[i].set_color(X_SQUARED_COLOR)
         composition.next_to(group, DOWN, buff = LARGE_BUFF)
 
         brace = Brace(VGroup(*composition[-3:]), DOWN)
@@ -1623,14 +1593,14 @@ class ThreeLinesChainRule(ReconfigurableScene):
     def draw_function_arrows(self):
         lines, line_labels = self.line_group
         labels = VGroup(*[
-            TexMobject("(\\dots)^2").highlight(X_SQUARED_COLOR), 
-            TexMobject("\\sin(\\dots)").highlight(SINE_COLOR)
+            TexMobject("(\\dots)^2").set_color(X_SQUARED_COLOR), 
+            TexMobject("\\sin(\\dots)").set_color(SINE_COLOR)
         ])
         arrows = VGroup()
         for lines_subset, label in zip([lines[:2], lines[1:]], labels):
             arrow = Arc(start_angle = np.pi/3, angle = -2*np.pi/3)
             arrow.add_tip()
-            arrow.highlight(label.get_color())
+            arrow.set_color(label.get_color())
             arrow.next_to(VGroup(*lines_subset))
             arrows.add(arrow)
             label.next_to(arrow, RIGHT)
@@ -1692,14 +1662,14 @@ class ThreeLinesChainRule(ReconfigurableScene):
             nudge_line = Line(start, end)
             nudge_line.set_stroke(color, width = 6)
             brace = Brace(nudge_line, DOWN, buff = SMALL_BUFF)
-            brace.highlight(color)
+            brace.set_color(color)
             func_label = config["func_label"]
             if len(func_label) == 1:
                 text = "$d%s$"%func_label
             else:
                 text = "$d(%s)$"%func_label
             brace.text = brace.get_text(text, buff = SMALL_BUFF)
-            brace.text.highlight(color)
+            brace.text.set_color(color)
             brace.add(brace.text)
 
             line.add(nudge_line)
@@ -1920,10 +1890,10 @@ class GeneralizeChainRule(Scene):
         example.shift(RIGHT)
         general.next_to(example, DOWN, buff = 1.5*LARGE_BUFF)
         for mob in example, general:
-            mob.highlight(SINE_COLOR)
-            mob[0].highlight(WHITE)
+            mob.set_color(SINE_COLOR)
+            mob[0].set_color(WHITE)
             for tex in "x^2", "2x", "(x)", "{dh", " dx}":
-                mob.highlight_by_tex(tex, X_SQUARED_COLOR, substring = True)
+                mob.set_color_by_tex(tex, X_SQUARED_COLOR, substring = True)
 
         example_outer = VGroup(*example[1:4])
         example_inner = example[2]
@@ -1972,7 +1942,7 @@ class GeneralizeChainRule(Scene):
             self.wait()
         self.wait()
         self.play(*it.chain(*[
-            [mob.scale_in_place, 1.2, mob.highlight, YELLOW]
+            [mob.scale_in_place, 1.2, mob.set_color, YELLOW]
             for mob in example_inner, d_example_inner
         ]), rate_func = there_and_back)
         self.play(Transform(
@@ -2020,7 +1990,7 @@ class GeneralizeChainRule(Scene):
         #Name chain rule
         name = TextMobject("``Chain rule''")
         name.scale(1.2)
-        name.highlight(YELLOW)
+        name.set_color(YELLOW)
         name.to_corner(UP+LEFT)
         self.play(Write(name))
         self.wait()
@@ -2097,7 +2067,7 @@ class GeneralizeChainRule(Scene):
             strike.stretch(2, dim = 0)
             strike.rotate(-np.pi/12)
             strike.move_to(dh)
-            strike.highlight(RED)
+            strike.set_color(RED)
             strikes.add(strike)
         self.play(Write(strikes))
         self.play(morty.change_mode, "hooray")
@@ -2214,7 +2184,7 @@ class NextVideo(TeacherStudentsScene):
         self.add(series)        
         self.play(
             next_video.shift, 0.5*DOWN,
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             self.get_teacher().change_mode, "raise_right_hand"
         )
         self.wait()
@@ -2291,7 +2261,7 @@ class Thumbnail(IntroduceProductAsArea):
         blg[1][1].next_to(df_boxes[-1], RIGHT)
         df_box_labels = self.get_df_box_labels(df_boxes)
         blg.add(df_boxes, df_box_labels)
-        blg.scale_to_fit_height(2*SPACE_HEIGHT-2*MED_LARGE_BUFF)
+        blg.scale_to_fit_height(FRAME_HEIGHT-2*MED_LARGE_BUFF)
         blg.center()
         self.add(blg)
 

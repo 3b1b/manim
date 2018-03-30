@@ -1,27 +1,5 @@
-import numpy as np
-import itertools as it
-
-from helpers import *
-
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import Randolph
-from topics.functions import *
-from mobject.region import  Region
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from camera import Camera
-from brachistochrone.curves import *
+from big_ol_pile_of_manim_imports import *
+from old_projects.brachistochrone.curves import *
 
 class RollAlongVector(Animation):
     CONFIG = {
@@ -77,7 +55,7 @@ class CycloidScene(Scene):
         self.circle.add(radial_line)
 
     def generate_ceiling(self):
-        self.ceiling = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        self.ceiling = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         self.ceiling.shift(self.cycloid.get_top()[1]*UP)
 
     def draw_cycloid(self, run_time = 3, *anims, **kwargs):
@@ -240,7 +218,7 @@ class LeviSolution(CycloidScene):
         tangent_line = Line(3*LEFT, 3*RIGHT)
         tangent_line.rotate(line_angle-np.pi/2)
         tangent_line.shift(self.p_point)
-        tangent_line.highlight(arc_color)
+        tangent_line.set_color(arc_color)
         right_angle_symbol = Mobject(
             Line(UP, UP+RIGHT),
             Line(UP+RIGHT, RIGHT)
@@ -382,7 +360,7 @@ class LeviSolution(CycloidScene):
         self.play(FadeIn(triangle1))
         self.wait()
         self.play(Transform(triangle1, triangle2))
-        self.play(ApplyMethod(triangle1.highlight, MAROON))
+        self.play(ApplyMethod(triangle1.set_color, MAROON))
         self.wait()
         self.remove(triangle1)
         self.add(y_line)
@@ -551,7 +529,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
             words1.next_to(arrow, LEFT)
             words2.next_to(arrow, RIGHT)
             words = Mobject(words1, arrow, words2)
-            words.scale_to_fit_width(2*SPACE_WIDTH-1)
+            words.scale_to_fit_width(FRAME_WIDTH-1)
             words.to_edge(UP, buff = 0.2)
             words.to_edge(LEFT)
 

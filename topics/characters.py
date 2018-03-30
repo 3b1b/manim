@@ -94,7 +94,7 @@ class PiCreature(SVGMobject):
         copy_mobject.name_parts()
         return copy_mobject
 
-    def highlight(self, color):
+    def set_color(self, color):
         self.body.set_fill(color)
         return self
 
@@ -704,7 +704,7 @@ class TeacherStudentsScene(PiCreatureScene):
             run_time = 2
         )
 
-    def zoom_in_on_thought_bubble(self, bubble = None, radius = SPACE_HEIGHT+SPACE_WIDTH):
+    def zoom_in_on_thought_bubble(self, bubble = None, radius = FRAME_Y_RADIUS+FRAME_X_RADIUS):
         if bubble is None:
             for pi in self.get_pi_creatures():
                 if hasattr(pi, "bubble") and isinstance(pi.bubble, ThoughtBubble):
