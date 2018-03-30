@@ -30,7 +30,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         "num_variables" : 3,
         "top_color" : BLUE_E,
         "bottom_color" : BLUE_A,
-        "zoomed_canvas_space_shape" : (5, 5),
+        "zoomed_canvas_frame_shape" : (5, 5),
         "square_color" : GREEN_B,
     }
     def construct(self):

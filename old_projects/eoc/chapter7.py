@@ -1860,7 +1860,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         "parabola_color" : YELLOW,
         "zoomed_canvas_corner" : DOWN+LEFT,
         "zoom_factor" : 10,
-        "zoomed_canvas_space_shape" : (5, 5),
+        "zoomed_canvas_frame_shape" : (5, 5),
         "zoomed_canvas_corner_buff" : MED_SMALL_BUFF,
         "zoomed_rect_center_coords" : (1 + 0.1, -0.03),
     }

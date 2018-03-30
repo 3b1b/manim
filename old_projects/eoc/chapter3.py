@@ -246,7 +246,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         "little_rect_nudge" : 0.5*(1.5*UP+RIGHT),
         "graph_origin" : 2.5*DOWN + LEFT,
         "zoomed_canvas_corner" : UP+LEFT,
-        "zoomed_canvas_space_shape" : (4, 4),
+        "zoomed_canvas_frame_shape" : (4, 4),
     }
     def construct(self):
         self.draw_graph()
@@ -2504,7 +2504,7 @@ class LookToFunctionsMeaning(TeacherStudentsScene):
 class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
     CONFIG = {
         "zoom_factor" : 10,
-        "zoomed_canvas_space_shape" : (3, 4.5),    
+        "zoomed_canvas_frame_shape" : (3, 4.5),
         "include_radial_line_dot" : False,
         "remove_angle_label" : False,
         "theta_label" : "",

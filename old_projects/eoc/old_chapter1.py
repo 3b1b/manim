@@ -1399,7 +1399,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
 
 class DerivativeAsTangentLine(ZoomedScene):
     CONFIG = {
-        "zoomed_canvas_space_shape" : (4, 4),
+        "zoomed_canvas_frame_shape" : (4, 4),
         "zoom_factor" : 10,
         "R_min" : 0,
         "R_max" : 2.5,

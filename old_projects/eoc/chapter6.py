@@ -1418,7 +1418,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
 class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
     CONFIG = {
         "zoomed_canvas_corner" : DOWN+RIGHT,
-        "zoomed_canvas_space_shape" : (3, 4),
+        "zoomed_canvas_frame_shape" : (3, 4),
     }
     def construct(self):
         self.setup_plane()
@@ -1863,7 +1863,7 @@ class AlternateExample(ZoomedScene):
         "example_color" : MAROON_B,
         "zoom_factor" : 10,
         "zoomed_canvas_corner" : DOWN+RIGHT,
-        "zoomed_canvas_space_shape" : (3, 4),
+        "zoomed_canvas_frame_shape" : (3, 4),
     }
     def construct(self): 
         self.add_plane()
