@@ -14,7 +14,7 @@ from scene import Scene
 class CountingScene(Scene):
     CONFIG = {
         "digit_place_colors" : [YELLOW, MAROON_B, RED, GREEN, BLUE, PURPLE_D],
-        "counting_dot_starting_position" : (SPACE_X_RADIUS-1)*RIGHT + (SPACE_Y_RADIUS-1)*UP,
+        "counting_dot_starting_position" : (FRAME_X_RADIUS-1)*RIGHT + (FRAME_Y_RADIUS-1)*UP,
         "count_dot_starting_radius" : 0.5,
         "dot_configuration_height" : 2,
         "ones_configuration_location" : UP+2*RIGHT,

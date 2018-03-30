@@ -82,7 +82,7 @@ class ListSteps(Scene):
     def construct(self):
         title = TextMobject("Two part chapter")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         randy = Randolph().flip().to_corner(DOWN+RIGHT)
         randy.look(UP+LEFT)
@@ -445,19 +445,19 @@ class ContrastDotAndCross(Scene):
     def add_t_chart(self):
         for word, vect, color in ("Dot", LEFT, BLUE_C), ("Cross", RIGHT, YELLOW):
             title = TextMobject("%s product"%word)
-            title.shift(vect*SPACE_X_RADIUS/2)
+            title.shift(vect*FRAME_X_RADIUS/2)
             title.to_edge(UP)
             title.highlight(color)
             self.add(title)
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
-        l_h_line = Line(LEFT, ORIGIN).scale(SPACE_X_RADIUS)
-        r_h_line = Line(ORIGIN, RIGHT).scale(SPACE_X_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
+        l_h_line = Line(LEFT, ORIGIN).scale(FRAME_X_RADIUS)
+        r_h_line = Line(ORIGIN, RIGHT).scale(FRAME_X_RADIUS)
         r_h_line.next_to(title, DOWN)
         l_h_line.next_to(r_h_line, LEFT, buff = 0)
         self.add(v_line, l_h_line, r_h_line)
         self.l_h_line, self.r_h_line = l_h_line, r_h_line
 
-    def add_dot_products(self, max_width = SPACE_X_RADIUS-1, dims = [2, 5]):
+    def add_dot_products(self, max_width = FRAME_X_RADIUS-1, dims = [2, 5]):
         colors = [X_COLOR, Y_COLOR, Z_COLOR, MAROON_B, TEAL]
         last_mob = self.l_h_line
         dot_products = []
@@ -593,7 +593,7 @@ class ContrastDotAndCross(Scene):
         self.only_3d_text = brace_text
 
     def add_2d_cross_product(self):
-        h_line = DashedLine(ORIGIN, SPACE_X_RADIUS*RIGHT)
+        h_line = DashedLine(ORIGIN, FRAME_X_RADIUS*RIGHT)
         h_line.next_to(self.only_3d_text, DOWN, buff = MED_SMALL_BUFF/2)
         h_line.to_edge(RIGHT, buff = 0)
         arrays = np.random.randint(0, 9, (2, 2))
@@ -653,7 +653,7 @@ class PrereqDeterminant(Scene):
         title = TextMobject("""
             Prerequisite: Understanding determinants
         """)
-        title.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        title.scale_to_fit_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
@@ -970,7 +970,7 @@ class Define2dCrossProduct(LinearTransformationScene):
         anticommute = TexMobject(
             v_tex, "\\times", w_tex, "=-", w_tex, "\\times", v_tex
         )
-        anticommute.shift(SPACE_X_RADIUS*RIGHT/2)
+        anticommute.shift(FRAME_X_RADIUS*RIGHT/2)
         anticommute.to_edge(UP)
         anticommute.highlight_by_tex(v_tex, V_COLOR)
         anticommute.highlight_by_tex(w_tex, W_COLOR)
@@ -1326,14 +1326,14 @@ class WriteCrossProductProperties(Scene):
             "(parallelogram's area)"
         )
         length_words.highlight_by_tex(p_cash, P_COLOR)
-        length_words.scale_to_fit_width(SPACE_X_RADIUS - 1)
+        length_words.scale_to_fit_width(FRAME_X_RADIUS - 1)
         length_words.highlight_by_tex("(parallelogram's area)", BLUE)
         length_words.next_to(VGroup(cross_product, vector), DOWN, buff = LARGE_BUFF)
         perpendicular = TextMobject(
             "\\centering Perpendicular to",
             v_cash, "and", w_cash
         )
-        perpendicular.scale_to_fit_width(SPACE_X_RADIUS - 1)        
+        perpendicular.scale_to_fit_width(FRAME_X_RADIUS - 1)        
         perpendicular.highlight_by_tex(v_cash, V_COLOR)
         perpendicular.highlight_by_tex(w_cash, W_COLOR)
         perpendicular.next_to(length_words, DOWN, buff = LARGE_BUFF)

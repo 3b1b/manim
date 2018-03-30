@@ -607,7 +607,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
             buff = SMALL_BUFF,
             aligned_edge = DOWN
         )
-        # numerator.scale_to_fit_width(SPACE_X_RADIUS)
+        # numerator.scale_to_fit_width(FRAME_X_RADIUS)
         numerator.scale(0.5)
         numerator.move_to(self.coords_to_point(3*np.pi/2, 0))
         numerator.to_edge(UP)
@@ -992,7 +992,7 @@ class IntegralOfSine(FiniteSample):
 class Approx31(Scene):
     def construct(self):
         tex = TexMobject("\\approx 31")
-        tex.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
+        tex.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         tex.to_edge(LEFT)
         self.play(Write(tex))
         self.wait(3)
@@ -1377,8 +1377,8 @@ class Antiderivative(AverageOfSineStart):
             fill_color = BLACK,
             fill_opacity = 0.75,
         )
-        big_rect.scale_to_fit_width(2*SPACE_X_RADIUS)
-        big_rect.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        big_rect.scale_to_fit_width(FRAME_WIDTH)
+        big_rect.scale_to_fit_height(FRAME_HEIGHT)
         morty = Mortimer()
         morty.to_corner(DOWN+RIGHT)
 
@@ -1966,7 +1966,7 @@ class LastVideoWrapper(Scene):
         title.to_edge(UP)
         rect = Rectangle(height = 9, width = 16)
         rect.set_stroke(WHITE)
-        rect.scale_to_fit_height(1.5*SPACE_Y_RADIUS)
+        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.play(Write(title), ShowCreation(rect))
@@ -2146,8 +2146,8 @@ class Thumbnail(GraphScene):
             fill_color = BLUE_E,
             fill_opacity = 0.5,
         )
-        triangle.stretch_to_fit_width(2*SPACE_X_RADIUS)
-        triangle.stretch_to_fit_height(2*SPACE_Y_RADIUS)
+        triangle.stretch_to_fit_width(FRAME_WIDTH)
+        triangle.stretch_to_fit_height(FRAME_HEIGHT)
         triangle.to_corner(UP+LEFT, buff = 0)
 
         alt_triangle = triangle.copy()

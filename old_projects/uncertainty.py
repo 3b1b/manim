@@ -608,7 +608,7 @@ class ShowPlan(PiCreatureScene):
         title = TextMobject("The plan")
         title.scale(1.5)
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
@@ -805,7 +805,7 @@ class TwoCarsAtRedLight(Scene):
         )
         car2.pi_creature.highlight(GREY_BROWN)
         car1.start_point = car1.get_corner(DOWN+RIGHT)
-        car1.shift(SPACE_X_RADIUS*LEFT)
+        car1.shift(FRAME_X_RADIUS*LEFT)
 
         #Pull up car
         self.add(cars)
@@ -1088,7 +1088,7 @@ class VariousMusicalNotes(Scene):
                 graph_update_anim,
                 **kwargs
             )
-        change_width_anim(SPACE_X_RADIUS).update(1)
+        change_width_anim(FRAME_X_RADIUS).update(1)
         graph_update_anim.update(0)
 
         phrases = [
@@ -1102,7 +1102,7 @@ class VariousMusicalNotes(Scene):
 
 
         #Show graphs and phrases
-        widths = [SPACE_X_RADIUS, 1, 0.2]
+        widths = [FRAME_X_RADIUS, 1, 0.2]
         for width, phrase in zip(widths, phrases):
             brace = Brace(Line(LEFT, RIGHT), UP)
             brace.stretch(width, 0)
@@ -1152,8 +1152,8 @@ class VariousMusicalNotes(Scene):
 
         long_graph = FunctionGraph(
             lambda x : 0.5*np.sin(freq*x),
-            x_min = -2*SPACE_X_RADIUS,
-            x_max = 2*SPACE_X_RADIUS,
+            x_min = -FRAME_WIDTH,
+            x_max = FRAME_WIDTH,
             num_anchor_points = 1000
         )
         long_graph.highlight(BLUE)
@@ -1471,7 +1471,7 @@ class CenterOfMassDescription(FourierRecapScene):
         circle_plane = self.get_circle_plane()
         circle_plane.save_state()
         circle_plane.generate_target()
-        circle_plane.target.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        circle_plane.target.scale_to_fit_height(FRAME_HEIGHT)
         circle_plane.target.center()
         circle_plane.target.axes.set_stroke(width = 2)
         circle_plane.target.main_lines.set_stroke(width = 2)
@@ -1728,7 +1728,7 @@ class FocusRectangleInsert(FourierRecapScene):
         self.setup_axes()
         self.clear()
         point = self.frequency_axes.coords_to_point(5, 0.25)
-        rect = ScreenRectangle(height = 2.1*SPACE_Y_RADIUS)
+        rect = ScreenRectangle(height = 2.1*FRAME_Y_RADIUS)
         rect.set_stroke(YELLOW, 2)
         self.add(rect)
         self.wait()
@@ -2381,7 +2381,7 @@ class RadarOperatorUncertainty(Scene):
 
         echo_object = Square()
         echo_object.move_to(dish)
-        echo_object.shift(SPACE_X_RADIUS*RIGHT)
+        echo_object.shift(FRAME_X_RADIUS*RIGHT)
         pulse = RadarPulse(dish, echo_object, speed = 6)
 
         plane = Plane().scale(0.5)
@@ -2994,7 +2994,7 @@ class IntroduceDeBroglie(Scene):
             numbers_with_elongated_ticks = range(1900, 1941, 10),
             color = BLUE_D
         )
-        time_line.stretch_to_fit_width(2*SPACE_X_RADIUS - picture.get_width() - 2)
+        time_line.stretch_to_fit_width(FRAME_WIDTH - picture.get_width() - 2)
         time_line.add_numbers(*time_line.numbers_with_elongated_ticks)
         time_line.next_to(picture, RIGHT, MED_LARGE_BUFF, DOWN)
 
@@ -3182,7 +3182,7 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         VGroup(xi, xi_words, added_xi_words, xi_arrow).highlight(self.xi_color)
 
         axes = Axes(
-            x_min = 0, x_max = 2*SPACE_X_RADIUS,
+            x_min = 0, x_max = FRAME_WIDTH,
             y_min = -1, y_max = 1,
         )
         axes.center().to_edge(UP, buff = -0.5)
@@ -3386,7 +3386,7 @@ class SortOfDopplerEffect(PiCreatureScene):
     }
     def setup(self):
         PiCreatureScene.setup(self)
-        rect = self.screen_rect = ScreenRectangle(height = 2*SPACE_Y_RADIUS)
+        rect = self.screen_rect = ScreenRectangle(height = FRAME_HEIGHT)
         rect.set_stroke(width = 0)
         self.camera = MovingCamera(
             rect, **self.camera_config
@@ -3410,8 +3410,8 @@ class SortOfDopplerEffect(PiCreatureScene):
             func = lambda x : 0.5*np.cos(omega*t - k*x)
             graph = FunctionGraph(
                 func,
-                x_min = -5*SPACE_X_RADIUS,
-                x_max = SPACE_X_RADIUS,
+                x_min = -5*FRAME_X_RADIUS,
+                x_max = FRAME_X_RADIUS,
                 color = color,
             )
             return VGroup(graph, *[
@@ -3420,7 +3420,7 @@ class SortOfDopplerEffect(PiCreatureScene):
                     color = color
                 )
                 for x in np.arange(
-                    -4*SPACE_X_RADIUS, SPACE_X_RADIUS, 
+                    -4*FRAME_X_RADIUS, FRAME_X_RADIUS, 
                     self.arrow_spacing
                 )
             ])
@@ -3475,7 +3475,7 @@ class SortOfDopplerEffect(PiCreatureScene):
             ),
         )
         self.play(
-            screen_rect.move_to, rect.get_right()+SPACE_X_RADIUS*LEFT,
+            screen_rect.move_to, rect.get_right()+FRAME_X_RADIUS*LEFT,
             k_tracker.shift, 2*LEFT,
         )
 
@@ -3514,7 +3514,7 @@ class SortOfDopplerEffect(PiCreatureScene):
 class HangingWeightsScene(MovingCameraScene):
     CONFIG = {
         "frequency" : 0.5,
-        "ceiling_radius" : 3*SPACE_X_RADIUS,
+        "ceiling_radius" : 3*FRAME_X_RADIUS,
         "n_springs" : 72,
         "amplitude" : 0.6,
         "spring_radius" : 0.15,
@@ -3669,7 +3669,7 @@ class HangingWeightsScene(MovingCameraScene):
         self.einstein = einstein
 
     def moving_reference_frame(self):
-        rect = ScreenRectangle(height = 2.1*SPACE_Y_RADIUS)
+        rect = ScreenRectangle(height = 2.1*FRAME_Y_RADIUS)
         rect_movement = AmbientMovement(rect, direction = LEFT, rate = 2)
         camera_frame = self.camera_frame
 
@@ -3681,7 +3681,7 @@ class HangingWeightsScene(MovingCameraScene):
             FadeOut(self.einstein),
         )
         self.play(camera_frame.scale, 3, {"about_point" : 2*UP})
-        self.play(rect.shift, 2*SPACE_X_RADIUS*RIGHT, path_arc = -TAU/2)
+        self.play(rect.shift, FRAME_WIDTH*RIGHT, path_arc = -TAU/2)
         self.add(rect_movement)
         self.wait(3)
 
@@ -3929,7 +3929,7 @@ class FourierTransformOfWaveFunction(Scene):
 
         sinusoid = axes.get_graph(
             lambda x : 0.5*np.cos(TAU*x),
-            x_min = -SPACE_X_RADIUS, x_max = 3*SPACE_X_RADIUS,
+            x_min = -FRAME_X_RADIUS, x_max = 3*FRAME_X_RADIUS,
         )
         sinusoid.to_edge(UP, buff = SMALL_BUFF)
 
@@ -4390,7 +4390,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         dot_gdw = dot_cloud.gaussian_distribution_wrapper
         dot_gdw.scale_to_fit_width(1)
         dot_gdw.rotate(TAU/8)
-        dot_gdw.move_to(SPACE_X_RADIUS*RIGHT/2),
+        dot_gdw.move_to(FRAME_X_RADIUS*RIGHT/2),
 
         vector_cloud = ProbabalisticVectorCloud(
             center_func = dot_gdw.get_center
@@ -4457,7 +4457,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         self.play(
             ApplyMethod(
                 VGroup(dot_gdw, vector_gdw ).shift, 
-                SPACE_X_RADIUS*RIGHT,
+                FRAME_X_RADIUS*RIGHT,
                 rate_func = running_start
             )
         )
@@ -4652,7 +4652,7 @@ class PuzzleStatement(Scene):
             to determine who we send.  Can we make sure we don't send
              the weakest person?
         """, alignment = "")
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.next_to(group, DOWN, LARGE_BUFF)
         self.play(LaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
         self.wait(2)

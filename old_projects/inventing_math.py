@@ -167,7 +167,7 @@ class IntroduceDivergentSum(Scene):
             brace.stretch_to_fit_width(
                 max(equation[x].points[:,0]) - min_x_coord
             )
-            brace.to_edge(LEFT, buff = SPACE_X_RADIUS+min_x_coord)
+            brace.to_edge(LEFT, buff = FRAME_X_RADIUS+min_x_coord)
             if sum_value:
                 self.remove(sum_value)
             sum_value = TexMobject(str(2**(x+1) - 1))
@@ -180,7 +180,7 @@ class IntroduceDivergentSum(Scene):
         )
         end_brace = deepcopy(brace).stretch_to_fit_width(
             max(ellipses.points[:,0])-min_x_coord
-        ).to_edge(LEFT, buff = SPACE_X_RADIUS+min_x_coord)
+        ).to_edge(LEFT, buff = FRAME_X_RADIUS+min_x_coord)
         kwargs = {"run_time" : 5.0, "rate_func" : rush_into}        
         flip_through = FlipThroughNumbers(
             lambda x : 2**(x+1)-1,
@@ -204,7 +204,7 @@ class ClearlyNonsense(Scene):
         number_line = NumberLine().add_numbers()
         div_sum = divergent_sum()
         this_way = TextMobject("Sum goes this way...")
-        this_way.to_edge(LEFT).shift(RIGHT*(SPACE_X_RADIUS+1) + DOWN)
+        this_way.to_edge(LEFT).shift(RIGHT*(FRAME_X_RADIUS+1) + DOWN)
         how_here = TextMobject("How does it end up here?")
         how_here.shift(1.5*UP+LEFT)
         neg_1_arrow = Arrow(
@@ -212,7 +212,7 @@ class ClearlyNonsense(Scene):
             tail=how_here.get_center()+0.5*DOWN
         )
         right_arrow = Arrow(
-            (SPACE_X_RADIUS-0.5)*RIGHT + DOWN, 
+            (FRAME_X_RADIUS-0.5)*RIGHT + DOWN, 
             tail = (max(this_way.points[:,0]), -1, 0)
         )
         how_here.highlight("red")
@@ -303,7 +303,7 @@ class OutlineOfVideo(Scene):
 # #             """
 # #         ], size = "\\Small")
 # #         text.scale(1.5).to_edge(LEFT).shift(UP).highlight("white")
-# #         text.highlight("green", lambda (x, y, z) : x < -SPACE_X_RADIUS + 1)
+# #         text.highlight("green", lambda (x, y, z) : x < -FRAME_X_RADIUS + 1)
 # #         line_one_first, equation, line_one_last, line_two = text.split()
 # #         line_two.shift(2*DOWN)
 # #         div_sum = divergent_sum().scale(0.5).shift(3*UP)
@@ -390,7 +390,7 @@ class YouAsMathematician(Scene):
         self.clear()
         self.play(
             ApplyPointwiseFunction(
-                lambda p : 3*SPACE_X_RADIUS*p/np.linalg.norm(p),                
+                lambda p : 3*FRAME_X_RADIUS*p/np.linalg.norm(p),                
                 everything
             ),
             *[
@@ -779,7 +779,7 @@ class CircleZoomInOnOne(Scene):
 class ZoomInOnOne(Scene):
     def construct(self):
         num_iterations = 8
-        number_line = NumberLine(interval_size = 1, radius = SPACE_X_RADIUS+2)
+        number_line = NumberLine(interval_size = 1, radius = FRAME_X_RADIUS+2)
         number_line.filter_out(lambda (x, y, z):abs(y)>0.1)
         nl_with_nums = deepcopy(number_line).add_numbers()
         self.play(ApplyMethod(nl_with_nums.shift, 2*LEFT))
@@ -860,8 +860,8 @@ class DefineInfiniteSum(Scene):
         bottom = (min(expression.points[:,1]) - buff)*UP
         side   = (max(expression.points[:,0]) + buff)*RIGHT
         lines = [
-            Line(SPACE_X_RADIUS*LEFT+bottom, side+bottom),
-            Line(SPACE_Y_RADIUS*UP+side, side+bottom)
+            Line(FRAME_X_RADIUS*LEFT+bottom, side+bottom),
+            Line(FRAME_Y_RADIUS*UP+side, side+bottom)
         ]
         self.play(*[
             ShowCreation(line.highlight("white"))
@@ -963,8 +963,8 @@ class SeekMoreGeneralTruths(Scene):
             "&\\sum_{n = 0}^\\infty" + summand + "= ? \\\\"
             for summand in summands
         ], size = "")
-        sums.stretch_to_fit_height(2*SPACE_Y_RADIUS-1)
-        sums.shift((SPACE_Y_RADIUS-0.5-max(sums.points[:,1]))*UP)
+        sums.stretch_to_fit_height(FRAME_HEIGHT-1)
+        sums.shift((FRAME_Y_RADIUS-0.5-max(sums.points[:,1]))*UP)
 
         for qsum in sums.split():
             qsum.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
@@ -1355,7 +1355,7 @@ class SumPowersOfTwoAnimation(Scene):
         dot = Dot(density = 3*DEFAULT_POINT_DENSITY_1D).scale(1.5)
         dot_width = dot.get_width()*RIGHT
         dot_buff = 0.2*RIGHT
-        left = (SPACE_X_RADIUS-1)*LEFT
+        left = (FRAME_X_RADIUS-1)*LEFT
         right = left + 2*dot_width + dot_buff
         top_brace_left = left+dot_width+dot_buff+0.3*DOWN
         bottom_brace_left = left + 0.3*DOWN
@@ -1739,8 +1739,8 @@ class RoomsAndSubrooms(Scene):
 
 class RoomsAndSubroomsWithNumbers(Scene):
     def construct(self):
-        zero_local = (SPACE_X_RADIUS-0.5)*LEFT
-        zero_one_width = SPACE_X_RADIUS-0.3
+        zero_local = (FRAME_X_RADIUS-0.5)*LEFT
+        zero_one_width = FRAME_X_RADIUS-0.3
 
         zero, power_mobs = self.draw_numbers(zero_local, zero_one_width)
         self.wait()
@@ -1782,7 +1782,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
         rectangles = []
         for n in range(4):
             rect = Rectangle(
-                2*SPACE_Y_RADIUS-(n+2)*upper_buff, 
+                FRAME_HEIGHT-(n+2)*upper_buff, 
                 zero_one_width/(2**n)-0.85*(n+1)*side_buff
             )
             rect.sort_points(np.linalg.norm)
@@ -2049,12 +2049,12 @@ class PAdicMetric(Scene):
 class FuzzyDiscoveryToNewMath(Scene):
     def construct(self):
         fuzzy = TextMobject("Fuzzy Discovery")
-        fuzzy.to_edge(UP).shift(SPACE_X_RADIUS*LEFT/2)
+        fuzzy.to_edge(UP).shift(FRAME_X_RADIUS*LEFT/2)
         new_math = TextMobject("New Math")
-        new_math.to_edge(UP).shift(SPACE_X_RADIUS*RIGHT/2)
+        new_math.to_edge(UP).shift(FRAME_X_RADIUS*RIGHT/2)
         lines = Mobject(
-            Line(DOWN*SPACE_Y_RADIUS, UP*SPACE_Y_RADIUS),
-            Line(3*UP+LEFT*SPACE_X_RADIUS, 3*UP+RIGHT*SPACE_X_RADIUS)
+            Line(DOWN*FRAME_Y_RADIUS, UP*FRAME_Y_RADIUS),
+            Line(3*UP+LEFT*FRAME_X_RADIUS, 3*UP+RIGHT*FRAME_X_RADIUS)
         )
         fuzzy_discoveries = [
             TexMobject("a^2 + b^2 = c^2"),
@@ -2094,7 +2094,7 @@ class FuzzyDiscoveryToNewMath(Scene):
             math.scale(0.65)
             for mob in disc, math:
                 mob.to_edge(LEFT).shift(count*UP)
-            math.shift(SPACE_X_RADIUS*RIGHT)
+            math.shift(FRAME_X_RADIUS*RIGHT)
             midpoints.append(count*UP)
 
         self.add(fuzzy, lines)

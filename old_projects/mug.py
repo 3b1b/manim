@@ -47,7 +47,7 @@ class HappyHolidays(TeacherStudentsScene):
         self.add(self.get_snowflakes())
         self.change_student_modes(
             *["hooray"]*3,
-            look_at_arg = SPACE_Y_RADIUS*UP,
+            look_at_arg = FRAME_Y_RADIUS*UP,
             added_anims = [self.teacher.change, "hooray"]
         )
         self.play(LaggedStart(
@@ -55,7 +55,7 @@ class HappyHolidays(TeacherStudentsScene):
         ), Animation(self.pi_creatures))
         self.change_student_modes(
             "happy", "wave_2", "wave_1",
-            look_at_arg = SPACE_Y_RADIUS*UP,
+            look_at_arg = FRAME_Y_RADIUS*UP,
         )
         self.look_at(self.teacher.get_corner(UP+LEFT))
         self.wait(2)
@@ -94,7 +94,7 @@ class HappyHolidays(TeacherStudentsScene):
         ])
         def random_confetti_spiral(mob, **kwargs):
             return ConfettiSpiril(
-                mob, x_start = 2*random.random()*SPACE_X_RADIUS - SPACE_X_RADIUS,
+                mob, x_start = 2*random.random()*FRAME_X_RADIUS - FRAME_X_RADIUS,
                 **kwargs
             )
         snowflake_spirils = LaggedStart(
@@ -286,7 +286,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
         objects.generate_target()
         objects.target.scale(0.5)
         objects.target.move_to(
-            (SPACE_Y_RADIUS*DOWN + SPACE_X_RADIUS*LEFT)/2
+            (FRAME_Y_RADIUS*DOWN + FRAME_X_RADIUS*LEFT)/2
         )
 
         eulers = TexMobject(*"V-E+F=2")
@@ -1079,7 +1079,7 @@ class LightUpNodes(IntroduceRegions):
             TextMobject("\\# Regions"),
         ]
         for title, vect in zip(titles, [LEFT, ORIGIN, RIGHT]):
-            title.shift(SPACE_X_RADIUS*vect/2)
+            title.shift(FRAME_X_RADIUS*vect/2)
             title.to_edge(UP)
             underline = Line(LEFT, RIGHT)
             underline.stretch_to_fit_width(title.get_width())

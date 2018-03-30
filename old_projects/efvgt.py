@@ -74,9 +74,9 @@ class ConfettiSpiril(Animation):
     }
     def __init__(self, mobject, **kwargs):
         digest_config(self, kwargs)
-        mobject.next_to(self.x_start*RIGHT + SPACE_Y_RADIUS*UP, UP)
+        mobject.next_to(self.x_start*RIGHT + FRAME_Y_RADIUS*UP, UP)
         self.total_vert_shift = \
-            2*SPACE_Y_RADIUS + mobject.get_height() + 2*MED_SMALL_BUFF
+            FRAME_HEIGHT + mobject.get_height() + 2*MED_SMALL_BUFF
         
         Animation.__init__(self, mobject, **kwargs)
 
@@ -107,7 +107,7 @@ def get_confetti_animations(num_confetti_squares):
     confetti_spirils = [
         ConfettiSpiril(
             square,
-            x_start = 2*random.random()*SPACE_X_RADIUS - SPACE_X_RADIUS,
+            x_start = 2*random.random()*FRAME_X_RADIUS - FRAME_X_RADIUS,
             rate_func = squish_rate_func(lambda t : t, a, a+0.5)
         )
         for a, square in zip(
@@ -462,7 +462,7 @@ class SymmetriesOfSquare(ThreeDScene):
         bottom_squares = VGroup(*all_squares[4:])
         bottom_squares.next_to(top_squares, DOWN, buff = LARGE_BUFF)
 
-        all_squares.scale_to_fit_width(2*SPACE_X_RADIUS-2*LARGE_BUFF)
+        all_squares.scale_to_fit_width(FRAME_WIDTH-2*LARGE_BUFF)
         all_squares.center()
         all_squares.to_edge(DOWN, buff = LARGE_BUFF)
 
@@ -1127,7 +1127,7 @@ class DihedralGroupStructure(SymmetriesOfSquare):
                 "axis" : axis,
             }
         expression.arrange_submobjects()
-        expression.scale_to_fit_width(SPACE_X_RADIUS+1)
+        expression.scale_to_fit_width(FRAME_X_RADIUS+1)
         expression.to_edge(RIGHT, buff = SMALL_BUFF)
         for square in s1, s2, s3:
             square.remove(square.action_illustration)
@@ -1166,9 +1166,9 @@ class DihedralGroupStructure(SymmetriesOfSquare):
         target.scale(self.filed_sum_scale_factor)
         y_index = self.num_sum_expressions%self.num_rows
         y_prop = float(y_index)/(self.num_rows-1)
-        y = interpolate(SPACE_Y_RADIUS-LARGE_BUFF, -SPACE_Y_RADIUS+LARGE_BUFF, y_prop)
+        y = interpolate(FRAME_Y_RADIUS-LARGE_BUFF, -FRAME_Y_RADIUS+LARGE_BUFF, y_prop)
         x_index = self.num_sum_expressions//self.num_rows
-        x_spacing = 2*SPACE_X_RADIUS/3
+        x_spacing = FRAME_WIDTH/3
         x = (x_index-1)*x_spacing
 
         target.move_to(x*RIGHT + y*UP)
@@ -1193,7 +1193,7 @@ class ThisIsAVeryGeneralIdea(Scene):
         ]))
         numbers = examples[-1]
         examples.arrange_submobjects(buff = LARGE_BUFF)
-        examples.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        examples.scale_to_fit_width(FRAME_WIDTH-1)
         examples.move_to(UP)
 
         lines = VGroup(*[
@@ -1257,8 +1257,8 @@ class AdditiveGroupOfReals(Scene):
         "number_line_center" : UP,
         "shadow_line_center" : DOWN,
         "zero_color" : GREEN_B,
-        "x_min" : -2*SPACE_X_RADIUS,
-        "x_max" : 2*SPACE_X_RADIUS,
+        "x_min" : -FRAME_WIDTH,
+        "x_max" : FRAME_WIDTH,
     }
     def construct(self):
         self.add_number_line()
@@ -1456,10 +1456,10 @@ class AdditiveGroupOfReals(Scene):
 
 class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
     CONFIG = {
-        "x_min" : -2*int(SPACE_X_RADIUS),
-        "x_max" : 2*int(SPACE_X_RADIUS),
-        "y_min" : -2*SPACE_Y_RADIUS,
-        "y_max" : 2*SPACE_Y_RADIUS,
+        "x_min" : -2*int(FRAME_X_RADIUS),
+        "x_max" : 2*int(FRAME_X_RADIUS),
+        "y_min" : -FRAME_HEIGHT,
+        "y_max" : FRAME_HEIGHT,
         "example_points" : [
             complex(3, 2),
             complex(1, -3),
@@ -1730,13 +1730,13 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
 class SchizophrenicNumbers(Scene):
     def construct(self):
         v_line = DashedLine(
-            SPACE_Y_RADIUS*UP,
-            SPACE_Y_RADIUS*DOWN
+            FRAME_Y_RADIUS*UP,
+            FRAME_Y_RADIUS*DOWN
         )
         left_title = TextMobject("Additive group")
-        left_title.shift(SPACE_X_RADIUS*LEFT/2)
+        left_title.shift(FRAME_X_RADIUS*LEFT/2)
         right_title = TextMobject("Multiplicative group")
-        right_title.shift(SPACE_X_RADIUS*RIGHT/2)
+        right_title.shift(FRAME_X_RADIUS*RIGHT/2)
         VGroup(left_title, right_title).to_edge(UP)
         self.add(v_line, left_title, right_title)
 
@@ -1755,7 +1755,7 @@ class SchizophrenicNumbers(Scene):
             number.eyes = Eyes(number[0], height = 0.1)
             number.add(number.eyes)
         numbers[3].eyes.next_to(numbers[3][1], UP, buff = 0)
-        numbers.shift(SPACE_X_RADIUS*LEFT/2)
+        numbers.shift(FRAME_X_RADIUS*LEFT/2)
 
         self.play(FadeIn(numbers))
         self.blink_numbers(numbers)
@@ -1763,7 +1763,7 @@ class SchizophrenicNumbers(Scene):
         self.add(numbers.copy())
         for number in numbers:
             number.generate_target()
-            number.target.shift(SPACE_X_RADIUS*RIGHT)
+            number.target.shift(FRAME_X_RADIUS*RIGHT)
             number.target.eyes.save_state()
             number.target.highlight(MULTIPLIER_COLOR)
             number.target.eyes.restore()
@@ -1797,8 +1797,8 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
     CONFIG = {
         "number_line_center" : 0.5*UP,
         "shadow_line_center" : 1.5*DOWN,
-        "x_min" : -3*SPACE_X_RADIUS,
-        "x_max" : 3*SPACE_X_RADIUS,
+        "x_min" : -3*FRAME_X_RADIUS,
+        "x_max" : 3*FRAME_X_RADIUS,
         "positive_reals_color" : MAROON_B,
     }
     def setup(self):
@@ -1944,7 +1944,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
     def every_positive_number_association(self):
         positive_reals_line = Line(
             self.shadow_line.number_to_point(0),
-            self.shadow_line.number_to_point(SPACE_X_RADIUS),
+            self.shadow_line.number_to_point(FRAME_X_RADIUS),
             color = self.positive_reals_color
         )
         positive_reals_words = TextMobject("All positive reals")
@@ -2061,8 +2061,8 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
 class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
     CONFIG = {
         "dot_radius" : Dot.CONFIG["radius"],
-        "y_min" : -3*SPACE_Y_RADIUS,
-        "y_max" : 3*SPACE_Y_RADIUS,
+        "y_min" : -3*FRAME_Y_RADIUS,
+        "y_max" : 3*FRAME_Y_RADIUS,
     }
     def construct(self):
         self.add_plane()
@@ -2297,7 +2297,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
         self.wait()
 
     def show_break_down(self):
-        positive_reals = Line(ORIGIN, SPACE_X_RADIUS*RIGHT)
+        positive_reals = Line(ORIGIN, FRAME_X_RADIUS*RIGHT)
         positive_reals.highlight(MAROON_B)
         circle = Circle(
             radius = self.z_to_point(1)[0],
@@ -2559,8 +2559,8 @@ class ExponentsAsHomomorphism(Scene):
         },
         "bottom_line_center" : 2.5*DOWN,
         "bottom_line_config" : {
-            "x_min" : -2*SPACE_X_RADIUS,
-            "x_max" : 2*SPACE_X_RADIUS,
+            "x_min" : -FRAME_WIDTH,
+            "x_max" : FRAME_WIDTH,
         }
     }
     def construct(self):
@@ -2869,9 +2869,9 @@ class ComplexExponentiationAbstract():
         self.wait()
 
     def add_vertical_line(self):
-        line = Line(SPACE_Y_RADIUS*UP, SPACE_Y_RADIUS*DOWN)
+        line = Line(FRAME_Y_RADIUS*UP, FRAME_Y_RADIUS*DOWN)
         line.set_stroke(color = self.color, width = 10)
-        line.shift(-SPACE_X_RADIUS*self.vect/2)
+        line.shift(-FRAME_X_RADIUS*self.vect/2)
         self.add(line)
         self.add_foreground_mobjects(line)
 
@@ -2891,7 +2891,7 @@ class ComplexExponentiationAbstract():
 
     def add_arrow(self):
         arrow = Arrow(LEFT, RIGHT, color = WHITE)
-        arrow.move_to(-SPACE_X_RADIUS*self.vect/2 + 2*UP)
+        arrow.move_to(-FRAME_X_RADIUS*self.vect/2 + 2*UP)
         arrow.set_stroke(width = 6),
         func_mob = TexMobject("2^x")    
         func_mob.next_to(arrow, UP, aligned_edge = LEFT)
@@ -2909,9 +2909,9 @@ class ComplexExponentiationAbstract():
         )
 
     def draw_real_line(self):
-        line = VGroup(Line(ORIGIN, SPACE_X_RADIUS*RIGHT))
+        line = VGroup(Line(ORIGIN, FRAME_X_RADIUS*RIGHT))
         if self.vect[0] < 0:
-            line.add(Line(ORIGIN, SPACE_X_RADIUS*LEFT))
+            line.add(Line(ORIGIN, FRAME_X_RADIUS*LEFT))
         line.highlight(RED)
 
         self.play(*map(ShowCreation, line), run_time = 3)
@@ -2945,7 +2945,7 @@ class ComplexExponentiationAbstract():
         formula[-1].highlight(MULTIPLIER_COLOR)
         formula.scale(1.5)
         formula.next_to(ORIGIN, UP)
-        formula.shift(-SPACE_X_RADIUS*self.vect/2)
+        formula.shift(-FRAME_X_RADIUS*self.vect/2)
         for part in formula:
             part.add_to_back(BackgroundRectangle(part))
 
@@ -2977,8 +2977,8 @@ class ComplexExponentiationAdderHalf(
 
     def highlight_vertical_line(self):
         line = VGroup(
-            Line(ORIGIN, SPACE_Y_RADIUS*UP),
-            Line(ORIGIN, SPACE_Y_RADIUS*DOWN),
+            Line(ORIGIN, FRAME_Y_RADIUS*UP),
+            Line(ORIGIN, FRAME_Y_RADIUS*DOWN),
         )
         line.highlight(YELLOW)
 
@@ -2998,8 +2998,8 @@ class ComplexExponentiationAdderHalf(
 
     def highlight_unit_circle(self):
         line = VGroup(
-            Line(ORIGIN, SPACE_Y_RADIUS*UP),
-            Line(ORIGIN, SPACE_Y_RADIUS*DOWN),
+            Line(ORIGIN, FRAME_Y_RADIUS*UP),
+            Line(ORIGIN, FRAME_Y_RADIUS*DOWN),
         )
         line.highlight(YELLOW)
         for submob in line:
@@ -3010,7 +3010,7 @@ class ComplexExponentiationAdderHalf(
             Circle().flip(RIGHT),
         )
         circle.highlight(YELLOW)
-        circle.shift(SPACE_X_RADIUS*RIGHT)
+        circle.shift(FRAME_X_RADIUS*RIGHT)
 
         self.play(ReplacementTransform(
             line, circle, run_time = 3
@@ -3102,11 +3102,11 @@ class ComplexExponentiationMultiplierHalf(
 
     def highlight_unit_circle(self):
         line = VGroup(
-            Line(ORIGIN, SPACE_Y_RADIUS*UP),
-            Line(ORIGIN, SPACE_Y_RADIUS*DOWN),
+            Line(ORIGIN, FRAME_Y_RADIUS*UP),
+            Line(ORIGIN, FRAME_Y_RADIUS*DOWN),
         )
         line.highlight(YELLOW)
-        line.shift(SPACE_X_RADIUS*LEFT)
+        line.shift(FRAME_X_RADIUS*LEFT)
         for submob in line:
             submob.insert_n_anchor_points(10)
             submob.make_smooth()

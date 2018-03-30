@@ -376,14 +376,14 @@ class TransitionAwayFromSlide(PathSlidingScene):
             arrow.copy().shift(vect)
             for vect in 3*LEFT, ORIGIN, 3*RIGHT
         ])
-        arrows.shift(2*SPACE_X_RADIUS*RIGHT)
+        arrows.shift(FRAME_WIDTH*RIGHT)
         self.add(arrows)
 
         self.add(self.cycloid)
         self.slide(randy, self.cycloid)
         everything = Mobject(*self.mobjects)
         self.play(ApplyMethod(
-            everything.shift, 4*SPACE_X_RADIUS*LEFT,
+            everything.shift, 4*FRAME_X_RADIUS*LEFT,
             run_time = 2,
             rate_func = rush_into
         ))

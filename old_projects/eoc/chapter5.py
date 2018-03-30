@@ -1258,7 +1258,7 @@ class Chapter4Wrapper(Scene):
         title = TextMobject("Chapter 4 chain rule intuition")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9)
-        rect.scale_to_fit_height(1.5*SPACE_Y_RADIUS)
+        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1622,7 +1622,7 @@ class ManyExponentialForms(TeacherStudentsScene):
         ]
         group = VGroup(lhs, *rhs_list)
         group.arrange_submobjects(RIGHT)
-        group.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
+        group.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         group.next_to(self.get_pi_creatures(), UP, 2*LARGE_BUFF)
         for part in group:
             part.highlight_by_tex("t", YELLOW)

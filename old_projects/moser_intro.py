@@ -12,7 +12,7 @@ from constants import *
 from mobject.region import  *
 from scene import Scene
 
-RADIUS = SPACE_Y_RADIUS - 0.1
+RADIUS = FRAME_Y_RADIUS - 0.1
 CIRCLE_DENSITY = DEFAULT_POINT_DENSITY_1D*RADIUS
 
 
@@ -231,7 +231,7 @@ def next_few_videos(*radians):
         "black",
         lambda point : np.linalg.norm(point) < 0.5
     )
-    big_frame = deepcopy(frame).scale(SPACE_X_RADIUS)
+    big_frame = deepcopy(frame).scale(FRAME_X_RADIUS)
     frame.shift((-5, 0, 0))
 
     sc.add(thumbnail)

@@ -38,7 +38,7 @@ class OpeningQuote(Scene):
         )
         words.highlight_by_tex("difficulty of a proof:", RED)
         words.highlight_by_tex("paint a landscape", GREEN)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Pierre Deligne")
         author.highlight(YELLOW)
@@ -103,13 +103,13 @@ class BruteForceVerification(Scene):
             verify computationally
         """)
         computation_words.scale(0.75)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         computation_words.to_edge(UP, buff = MED_SMALL_BUFF/2)
         h_line.next_to(computation_words, DOWN)
         formula_word.next_to(h_line, UP, buff = MED_SMALL_BUFF)
-        computation_words.shift(SPACE_X_RADIUS*RIGHT/2)
-        formula_word.shift(SPACE_X_RADIUS*LEFT/2)
+        computation_words.shift(FRAME_X_RADIUS*RIGHT/2)
+        formula_word.shift(FRAME_X_RADIUS*LEFT/2)
 
         cross_product.next_to(formula_word, DOWN, buff = LARGE_BUFF)
 
@@ -141,8 +141,8 @@ class BruteForceVerification(Scene):
             "(||", w_tex, "||)",
             "\\sin(", "\\theta", ")"
         )
-        last_point = h_line.get_center()+SPACE_X_RADIUS*RIGHT/2
-        max_width = SPACE_X_RADIUS-1
+        last_point = h_line.get_center()+FRAME_X_RADIUS*RIGHT/2
+        max_width = FRAME_X_RADIUS-1
         for mob in v_dot, w_dot, theta_def, length_check:
             mob.highlight_by_tex(v_tex, V_COLOR)
             mob.highlight_by_tex(w_tex, W_COLOR)
@@ -167,7 +167,7 @@ class Prerequisites(Scene):
         title.highlight(YELLOW)
 
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_width(SPACE_X_RADIUS - 1)
+        rect.scale_to_fit_width(FRAME_X_RADIUS - 1)
         left_rect, right_rect = [
             rect.copy().shift(DOWN/2).to_edge(edge)
             for edge in LEFT, RIGHT
@@ -308,7 +308,7 @@ class ThreeStepPlan(Scene):
         title = TextMobject("The plan")
         title.highlight(YELLOW)
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
 
         v_tex, w_tex = get_vect_tex(*"vw")
@@ -395,7 +395,7 @@ class DefineDualTransform(Scene):
         title = TextMobject("What a student might think")
         title.not_real = TextMobject("Not the real cross product")
         for mob in title, title.not_real:
-            mob.scale_to_fit_width(SPACE_X_RADIUS - 1)
+            mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
             mob.highlight(RED)
             mob.to_edge(UP)
         self.add(title)
@@ -446,7 +446,7 @@ class DefineDualTransform(Scene):
         final_mobs.next_to(self.title, DOWN, buff = MED_SMALL_BUFF)
 
         for mob in definitions, final_mobs:
-            mob.scale_to_fit_width(SPACE_X_RADIUS - 1)
+            mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
 
         for array in arrays:
             brackets = array.get_brackets()
@@ -844,7 +844,7 @@ class DotProductWords(Scene):
         times.next_to(words[0], RIGHT)
 
         everyone = VGroup(dot_product, equals, times, words)
-        everyone.center().scale_to_fit_width(SPACE_X_RADIUS - 1)
+        everyone.center().scale_to_fit_width(FRAME_X_RADIUS - 1)
         self.add(dot_product)
         self.play(Write(equals))
         self.play(Write(words[0]))
@@ -876,7 +876,7 @@ class GeometricVolumeWords(Scene):
         words[1].highlight_by_tex(v_tex, ORANGE)
         words[1].highlight_by_tex(w_tex, W_COLOR)
         words.arrange_submobjects(RIGHT)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN, buff = SMALL_BUFF)
         for word in words:
             self.play(Write(word))
@@ -923,8 +923,8 @@ class ChangeOfBasisPreview(LinearTransformationScene):
     CONFIG = {
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 0
         },
         "t_matrix" : [[2, 1], [-1, 1]],

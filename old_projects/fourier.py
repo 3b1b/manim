@@ -348,7 +348,7 @@ class AddingPureFrequencies(PiCreatureScene):
         self.play(*it.chain(
             map(MoveToTarget, movers),
             [
-                ApplyMethod(mob.shift, SPACE_Y_RADIUS*DOWN, remover = True)
+                ApplyMethod(mob.shift, FRAME_Y_RADIUS*DOWN, remover = True)
                 for mob in  randy, speaker
             ]
         ))
@@ -374,7 +374,7 @@ class AddingPureFrequencies(PiCreatureScene):
         top_axes_point = axes.coords_to_point(x, self.equilibrium_height)
         x_point = np.array(top_axes_point)
         x_point[1] = 0
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS).move_to(x_point)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS).move_to(x_point)
 
         self.revert_to_original_skipping_status()
         self.play(GrowFromCenter(v_line))
@@ -415,7 +415,7 @@ class AddingPureFrequencies(PiCreatureScene):
         D_axes = self.D_axes
 
         rect = Rectangle(
-            height = 2.5*SPACE_Y_RADIUS,
+            height = 2.5*FRAME_Y_RADIUS,
             width = MED_SMALL_BUFF,
             stroke_width = 0,
             fill_color = YELLOW,
@@ -606,7 +606,7 @@ class BreakApartSum(Scene):
                 "unit_size" : 0.5,
             },
         )
-        axes.stretch_to_fit_width(2*SPACE_X_RADIUS - 2)
+        axes.stretch_to_fit_width(FRAME_WIDTH - 2)
         axes.stretch_to_fit_height(3)
         axes.center()
         axes.to_edge(LEFT)
@@ -2266,7 +2266,7 @@ class BeforeGettingToTheFullMath(TeacherStudentsScene):
         self.wait()
         self.play(
             ApplyMethod(
-                formula.next_to, SPACE_X_RADIUS*RIGHT, RIGHT,
+                formula.next_to, FRAME_X_RADIUS*RIGHT, RIGHT,
                 path_arc = TAU/16,
                 rate_func = running_start,
             ),
@@ -2402,7 +2402,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
             ReplacementTransform(time_axes.labels[0].copy(), freq_label),
             GrowArrow(arrow),
             Write(ft_words),
-            VGroup(randy, speaker).shift, SPACE_Y_RADIUS*DOWN,
+            VGroup(randy, speaker).shift, FRAME_Y_RADIUS*DOWN,
         )
         self.remove(randy, speaker)
         self.wait()
@@ -2562,7 +2562,7 @@ class ApplyFourierToFourier(DrawFrequencyPlot):
             ),
         )
         self.play(
-            wound_up_graph.next_to, SPACE_X_RADIUS*LEFT, LEFT,
+            wound_up_graph.next_to, FRAME_X_RADIUS*LEFT, LEFT,
             remover = True
         )
         self.wait()
@@ -2611,8 +2611,8 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         "initial_winding_frequency" : 0.1,
         "circle_plane_config" : {
             "unit_size" : 2,
-            "y_radius" : SPACE_Y_RADIUS+LARGE_BUFF,
-            "x_radius" : SPACE_X_RADIUS+LARGE_BUFF
+            "y_radius" : FRAME_Y_RADIUS+LARGE_BUFF,
+            "x_radius" : FRAME_X_RADIUS+LARGE_BUFF
         }
     }
     def construct(self):
@@ -3861,7 +3861,7 @@ class BoundsAtInfinity(SummarizeFormula):
         graph = self.graph
 
         time_interval = self.get_time_interval(-2, 2)
-        wide_interval = self.get_time_interval(-SPACE_X_RADIUS, SPACE_X_RADIUS)
+        wide_interval = self.get_time_interval(-FRAME_X_RADIUS, FRAME_X_RADIUS)
         bounds = VGroup(*reversed(expression.get_parts_by_tex("t_")))
         bound_rects = VGroup(*[
             SurroundingRectangle(b, buff = 0.5*SMALL_BUFF)
@@ -3988,8 +3988,8 @@ class ShowUncertaintyPrinciple(Scene):
         title = TextMobject("Uncertainty principle")
         self.add(title)
         top_axes = Axes(
-            x_min = -SPACE_X_RADIUS,
-            x_max = SPACE_X_RADIUS,
+            x_min = -FRAME_X_RADIUS,
+            x_max = FRAME_X_RADIUS,
             y_min = 0,
             y_max = 3,
             y_axis_config = {
@@ -4295,7 +4295,7 @@ class Thumbnail(Scene):
 
         self.clear()
         title.center().to_edge(UP)
-        pol_graphs.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        pol_graphs.scale_to_fit_width(FRAME_WIDTH - 1)
         pol_graphs.center()
         title.move_to(pol_graphs)
         title.shift(SMALL_BUFF*LEFT)

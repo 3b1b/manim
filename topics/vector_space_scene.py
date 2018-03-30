@@ -218,8 +218,8 @@ class VectorScene(Scene):
             vector = vector.get_end() - vector.get_start()
         elif len(vector) == 2:
             vector = np.append(np.array(vector), 0.0)
-        x_max = int(SPACE_X_RADIUS + abs(vector[0]))
-        y_max = int(SPACE_Y_RADIUS + abs(vector[1]))
+        x_max = int(FRAME_X_RADIUS + abs(vector[0]))
+        y_max = int(FRAME_Y_RADIUS + abs(vector[1]))
         dots = VMobject(*[
             Dot(x*RIGHT + y*UP)
             for x in range(-x_max, x_max)
@@ -242,8 +242,8 @@ class LinearTransformationScene(VectorScene):
         "include_background_plane" : True,
         "include_foreground_plane" : True,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 0
         },
         "background_plane_kwargs" : {

@@ -721,7 +721,7 @@ class ScreenRectangle(Rectangle):
 
 class FullScreenRectangle(ScreenRectangle):
     CONFIG = {
-        "height" : 2*SPACE_Y_RADIUS,
+        "height" : FRAME_HEIGHT,
     }
 
 class FullScreenFadeRectangle(FullScreenRectangle):

@@ -58,7 +58,7 @@ class ShowMultiplication(NumberLineScene):
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
         if abs(num) < 1:
-            config["numerical_radius"] = SPACE_X_RADIUS/num
+            config["numerical_radius"] = FRAME_X_RADIUS/num
 
         NumberLineScene.construct(self, **config)
         if show_original_line:
@@ -159,8 +159,8 @@ class ShowTwoThenThree(ShowMultiplication):
 class TransformScene2D(Scene):
     def add_number_plane(self, density_factor = 1, use_faded_lines = True):
         config = {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "density" : DEFAULT_POINT_DENSITY_1D*density_factor,
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
@@ -315,8 +315,8 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def apply_function(self, function, explanation):
         self.clear()
         config = {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "density" : 3*DEFAULT_POINT_DENSITY_1D,
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
@@ -369,8 +369,8 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
 class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def construct(self):
         config = {
-            "x_radius" : 1.2*SPACE_X_RADIUS,
-            "y_radius" : 1.2*SPACE_X_RADIUS,
+            "x_radius" : 0.6*FRAME_WIDTH,
+            "y_radius" : 0.6*FRAME_WIDTH,
             "density" : 10*DEFAULT_POINT_DENSITY_1D,
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
@@ -381,12 +381,12 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         ]).to_edge(UP, buff = 1.5).split()
         phrase2.highlight(LIGHT_RED)
         diagonal = Line(
-            DOWN*SPACE_Y_RADIUS+LEFT*SPACE_X_RADIUS,
-            UP*SPACE_Y_RADIUS+RIGHT*SPACE_X_RADIUS,
+            DOWN*FRAME_Y_RADIUS+LEFT*FRAME_X_RADIUS,
+            UP*FRAME_Y_RADIUS+RIGHT*FRAME_X_RADIUS,
             density = 10*DEFAULT_POINT_DENSITY_1D
         )
         def sunrise((x, y, z)):
-            return ((SPACE_Y_RADIUS+y)*x, y, z)
+            return ((FRAME_Y_RADIUS+y)*x, y, z)
 
         def squished((x, y, z)):
             return (x + np.sin(x), y+np.sin(y), z)

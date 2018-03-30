@@ -55,14 +55,14 @@ class LatticePointScene(Scene):
     }
     def setup(self):
         if self.x_radius is None:
-            self.x_radius = self.y_radius*SPACE_X_RADIUS/SPACE_Y_RADIUS
+            self.x_radius = self.y_radius*FRAME_X_RADIUS/FRAME_Y_RADIUS
         plane = ComplexPlane(
             y_radius = self.y_radius,
             x_radius = self.x_radius,
             secondary_line_ratio = self.secondary_line_ratio,
             radius = self.plane_color
         )
-        plane.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        plane.scale_to_fit_height(FRAME_HEIGHT)
         plane.shift(self.plane_center)
         self.add(plane)
         self.plane = plane
@@ -148,8 +148,8 @@ class LatticePointScene(Scene):
         ])
 
     def add_axis_labels(self, spacing = 2):
-        x_max = int(self.plane.point_to_coords(SPACE_X_RADIUS*RIGHT)[0])
-        y_max = int(self.plane.point_to_coords(SPACE_Y_RADIUS*UP)[1])
+        x_max = int(self.plane.point_to_coords(FRAME_X_RADIUS*RIGHT)[0])
+        y_max = int(self.plane.point_to_coords(FRAME_Y_RADIUS*UP)[1])
         x_range = range(spacing, x_max, spacing)
         y_range = range(spacing, y_max, spacing)
         for r in x_range, y_range:
@@ -226,7 +226,7 @@ class Introduction(PiCreatureScene):
         self.play(
             Write(primes, run_time = 2),
             morty.change_mode, "happy",
-            video.scale_to_fit_height, 2*SPACE_X_RADIUS,
+            video.scale_to_fit_height, FRAME_WIDTH,
             video.center,
             video.set_fill, None, 0
         )
@@ -664,7 +664,7 @@ class Outline(PiCreatureScene):
             value.next_to(arrow, DOWN)
             numerators.add(value)
         group = VGroup(chis, arrows, numerators)
-        group.scale_to_fit_width(1.3*SPACE_X_RADIUS)
+        group.scale_to_fit_width(1.3*FRAME_X_RADIUS)
         group.to_corner(DOWN+LEFT)
 
         self.play(FadeIn(self.steps[3]))
@@ -1106,7 +1106,7 @@ class CountThroughRings(LatticePointScene):
         ])
         top_list.highlight(YELLOW)
         top_list.arrange_submobjects(RIGHT, aligned_edge = DOWN)
-        top_list.scale_to_fit_width(2*SPACE_X_RADIUS - MED_LARGE_BUFF)
+        top_list.scale_to_fit_width(FRAME_WIDTH - MED_LARGE_BUFF)
         top_list.to_edge(UP, buff = SMALL_BUFF)
         top_rect = BackgroundRectangle(top_list)
 
@@ -1351,11 +1351,11 @@ class Given2DThinkComplex(TeacherStudentsScene):
     def construct(self):
         tex = TextMobject("2D $\\Leftrightarrow$ Complex numbers")
         plane = ComplexPlane(
-            x_radius = 0.6*SPACE_X_RADIUS,
-            y_radius = 0.6*SPACE_Y_RADIUS,
+            x_radius = 0.6*FRAME_X_RADIUS,
+            y_radius = 0.6*FRAME_Y_RADIUS,
         )
         plane.add_coordinates()
-        plane.scale_to_fit_height(SPACE_Y_RADIUS)
+        plane.scale_to_fit_height(FRAME_Y_RADIUS)
         plane.to_corner(UP+LEFT)
 
         self.teacher_says(tex)
@@ -2507,7 +2507,7 @@ class IntroduceRecipe(Scene):
         for tex, color in zip(strings, colors):
             title.highlight_by_tex(tex, color, substring = False)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
         N_mob = title.get_part_by_tex(self.N_string)
@@ -2542,7 +2542,7 @@ class IntroduceRecipe(Scene):
         factorization = TexMobject(
             "=", *map(self.complex_number_to_tex, factors)
         )
-        max_width = 2*SPACE_X_RADIUS - 2
+        max_width = FRAME_WIDTH - 2
         if factorization.get_width() > max_width:
             factorization.scale_to_fit_width(max_width)
         factorization.next_to(
@@ -3563,7 +3563,7 @@ class IntroduceChi(FactorizationPattern):
             value.next_to(arrow, UP)
             numbers.add(value)
         group = VGroup(chis, arrows, numbers)
-        group.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
+        group.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         group.to_edge(DOWN, buff = LARGE_BUFF)
 
         self.play(*[
@@ -4007,7 +4007,7 @@ class ExpandCountWith45(SummarizeCountingRule):
                 expansion.add(plus)
         expansion.add(rp)
         expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        expansion.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
+        expansion.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         expansion.next_to(ORIGIN, UP)
         rect = BackgroundRectangle(expansion)
         rect.stretch_in_place(1.5, 1)
@@ -4252,7 +4252,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             TexMobject("\\sqrt{R^2}")
         )
         radicals.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
-        radicals.scale_to_fit_height(2*SPACE_Y_RADIUS - MED_LARGE_BUFF)
+        radicals.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         radicals.to_edge(DOWN, buff = MED_SMALL_BUFF)
         radicals.to_edge(LEFT)
         for radical in radicals:
@@ -4279,7 +4279,7 @@ class AddUpGrid(Scene):
         self.add(self.radicals)
 
     def add_row_lines(self):
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS - MED_LARGE_BUFF)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS - MED_LARGE_BUFF)
         h_line.set_stroke(WHITE, 1)
         row_lines = VGroup(*[
             h_line.copy().next_to(
@@ -4430,7 +4430,7 @@ class AddUpGrid(Scene):
             fill_color = average_color(BLUE_E, BLACK),
             fill_opacity = 1,
             height = 1.15,
-            width = 2*SPACE_X_RADIUS - 2*MED_SMALL_BUFF,
+            width = FRAME_WIDTH - 2*MED_SMALL_BUFF,
         )
         rect.move_to(3*LEFT, LEFT)
         rect.to_edge(UP, buff = SMALL_BUFF)
@@ -4472,7 +4472,7 @@ class AddUpGrid(Scene):
 
         for column, term in zip(chi_mob_columns, full_sum):
             rect = SurroundingRectangle(column)
-            rect.stretch_to_fit_height(2*SPACE_Y_RADIUS)
+            rect.stretch_to_fit_height(FRAME_HEIGHT)
             rect.move_to(column, UP)
             rect.set_stroke(width = 0)
             rect.set_fill(YELLOW, 0.3)
@@ -4492,7 +4492,7 @@ class AddUpGrid(Scene):
             if term is full_sum[2]:
                 vect = sum([
                     self.count_rect.get_left()[0],
-                    SPACE_X_RADIUS,
+                    FRAME_X_RADIUS,
                     -MED_SMALL_BUFF,
                 ])*LEFT
                 self.play(*[
@@ -4654,7 +4654,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
             circle.set_fill(color, opacity = 0.3)
             circle.stretch_to_fit_width(7)
             circle.stretch_to_fit_height(4)
-            circle.shift(SPACE_X_RADIUS*vect/3.0 + LEFT)
+            circle.shift(FRAME_X_RADIUS*vect/3.0 + LEFT)
             title = TextMobject("%s \\\\ number theory"%adj)
             title.scale(0.7)
             title.move_to(circle)

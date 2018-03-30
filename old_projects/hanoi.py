@@ -30,7 +30,7 @@ class CountingScene(Scene):
     CONFIG = {
         "base" : 10,
         "power_colors" : [YELLOW, MAROON_B, RED, GREEN, BLUE, PURPLE_D],
-        "counting_dot_starting_position" : (SPACE_X_RADIUS-1)*RIGHT + (SPACE_Y_RADIUS-1)*UP,
+        "counting_dot_starting_position" : (FRAME_X_RADIUS-1)*RIGHT + (FRAME_Y_RADIUS-1)*UP,
         "count_dot_starting_radius" : 0.5,
         "dot_configuration_height" : 2,
         "ones_configuration_location" : UP+2*RIGHT,
@@ -534,7 +534,7 @@ class IntroduceKeith(Scene):
         keith = Keith(mode = "dance_kick")
         keith_image = ImageMobject("keith_schwarz", invert = False)
         # keith_image = Rectangle()
-        keith_image.scale_to_fit_height(2*SPACE_Y_RADIUS - 2)
+        keith_image.scale_to_fit_height(FRAME_HEIGHT - 2)
         keith_image.next_to(ORIGIN, LEFT)
         keith.move_to(keith_image, DOWN+RIGHT)
         morty.next_to(keith, buff = LARGE_BUFF, aligned_edge = DOWN)
@@ -992,7 +992,7 @@ class RhythmOfDecimalCounting(CountingScene):
 class DecimalCountingAtHundredsScale(CountingScene):
     CONFIG = {
         "power_colors" : [RED, GREEN, BLUE, PURPLE_D],
-        "counting_dot_starting_position" : (SPACE_X_RADIUS+1)*RIGHT + (SPACE_Y_RADIUS-2)*UP,
+        "counting_dot_starting_position" : (FRAME_X_RADIUS+1)*RIGHT + (FRAME_Y_RADIUS-2)*UP,
         "ones_configuration_location" : 2*UP+5.7*RIGHT,
         "num_start_location" : DOWN + 3*RIGHT
     }
@@ -1141,8 +1141,8 @@ class IntroduceBinaryCounting(BinaryCountingScene):
 
     def show_self_similarity(self):
         cover_rect = Rectangle()
-        cover_rect.scale_to_fit_width(2*SPACE_X_RADIUS)
-        cover_rect.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        cover_rect.scale_to_fit_width(FRAME_WIDTH)
+        cover_rect.scale_to_fit_height(FRAME_HEIGHT)
         cover_rect.set_stroke(width = 0)
         cover_rect.set_fill(BLACK, opacity = 0.85)
         big_dot = self.curr_configurations[-1][0].copy()
@@ -1152,7 +1152,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         )
         self.play(
             big_dot.center,
-            big_dot.scale_to_fit_height, 2*SPACE_Y_RADIUS-2,
+            big_dot.scale_to_fit_height, FRAME_HEIGHT-2,
             big_dot.to_edge, LEFT,
             run_time = 5
         )
@@ -2060,7 +2060,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         ]
         sub_steps, sub_sub_steps = subdivisions[:2]
         for steps in subdivisions:
-            steps.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+            steps.scale_to_fit_width(FRAME_WIDTH-1)
         subdivisions.append(
             TextMobject("\\tiny Move disk 0, Move disk 0").highlight(BLUE)
         )
@@ -2219,7 +2219,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         smaller_subdivision.set_fill(opacity = 0)
         self.play(
             steps.shift, 
-            (SPACE_Y_RADIUS-sub_sub_steps.get_top()[1]-MED_SMALL_BUFF)*UP,
+            (FRAME_Y_RADIUS-sub_sub_steps.get_top()[1]-MED_SMALL_BUFF)*UP,
             self.eyes.look_at_anim(steps)
         )
         self.play(ApplyMethod(
@@ -2388,7 +2388,7 @@ class CompareNumberSystems(Scene):
 class IntroduceTernaryCounting(CountingScene):
     CONFIG = {
         "base" : 3,
-        "counting_dot_starting_position" : (SPACE_X_RADIUS-1)*RIGHT + (SPACE_Y_RADIUS-1)*UP,
+        "counting_dot_starting_position" : (FRAME_X_RADIUS-1)*RIGHT + (FRAME_Y_RADIUS-1)*UP,
         "count_dot_starting_radius" : 0.5,
         "dot_configuration_height" : 1,
         "ones_configuration_location" : UP+2*RIGHT,
@@ -2443,7 +2443,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
             for i, color in enumerate(colors[:-1]):
                 step[-i-2].highlight(color)
         VGroup(*steps[1::2]).highlight(colors[-1])
-        steps.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        steps.scale_to_fit_width(FRAME_WIDTH-1)
         brace = Brace(steps, UP)
         word_group = VGroup(title, brace, steps)
         word_group.arrange_submobjects(DOWN)
@@ -2720,7 +2720,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
             for d in range(self.num_disks)
         ]))
         parentheticals.arrange_submobjects()
-        parentheticals.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        parentheticals.scale_to_fit_width(FRAME_WIDTH-1)
         parentheticals.next_to(top_mob, DOWN)
         for parens in parentheticals:
             brace = Brace(parens)
@@ -2758,7 +2758,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
 class ThisIsMostEfficientText(Scene):
     def construct(self):
         text = TextMobject("This is the most efficient solution")
-        text.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        text.scale_to_fit_width(FRAME_WIDTH - 1)
         text.to_edge(DOWN)
         self.play(Write(text))
         self.wait(2)
@@ -2882,7 +2882,7 @@ class SierpinskiGraphScene(Scene):
             self.nodes.add(node)
         if self.include_towers:
             self.add_towers_to_nodes()
-        self.nodes.scale_to_fit_height(2*SPACE_Y_RADIUS-2)
+        self.nodes.scale_to_fit_height(FRAME_HEIGHT-2)
         self.nodes.to_edge(UP)
 
     def get_node_circles(self, order = 3):
@@ -2967,10 +2967,10 @@ class SierpinskiGraphScene(Scene):
             for index in node_indices
         ])
         everything = VGroup(*self.get_mobjects())
-        if nodes.get_width()/nodes.get_height() > SPACE_X_RADIUS/SPACE_Y_RADIUS:
-            scale_factor = (2*SPACE_X_RADIUS-2)/nodes.get_width()
+        if nodes.get_width()/nodes.get_height() > FRAME_X_RADIUS/FRAME_Y_RADIUS:
+            scale_factor = (FRAME_WIDTH-2)/nodes.get_width()
         else:
-            scale_factor = (2*SPACE_Y_RADIUS-2)/nodes.get_height()
+            scale_factor = (FRAME_HEIGHT-2)/nodes.get_height()
         self.play(
             everything.shift, -nodes.get_center(),
             everything.scale, scale_factor
@@ -3003,7 +3003,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             node = self.nodes[index]
             node.save_state()
             self.play(
-                node.scale_to_fit_height, 2*SPACE_Y_RADIUS-2,
+                node.scale_to_fit_height, FRAME_HEIGHT-2,
                 node.next_to, ORIGIN, vect
             )
             self.wait()

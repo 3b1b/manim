@@ -38,7 +38,7 @@ class MultilayeredScene(Scene):
     def get_layers(self, n_layers = None):
         if n_layers is None:
             n_layers = self.n_layers
-        width = 2*SPACE_X_RADIUS
+        width = FRAME_WIDTH
         height = float(self.total_glass_height)/n_layers
         rgb_pair = [
             np.array(Color(color).get_rgb())
@@ -75,7 +75,7 @@ class MultilayeredScene(Scene):
 
     def get_continuous_glass(self):
         result = self.RectClass(
-            width = 2*SPACE_X_RADIUS,
+            width = FRAME_WIDTH,
             height = self.total_glass_height,
         )
         result.sort_points(lambda p : -p[1])
@@ -107,10 +107,10 @@ class TwoToMany(MultilayeredScene):
 
     def get_glass(self):
         return self.RectClass(
-            height = SPACE_Y_RADIUS,
-            width = 2*SPACE_X_RADIUS,
+            height = FRAME_Y_RADIUS,
+            width = FRAME_WIDTH,
             color = BLUE_E
-        ).shift(SPACE_Y_RADIUS*DOWN/2)
+        ).shift(FRAME_Y_RADIUS*DOWN/2)
 
 
 class RaceLightInLayers(MultilayeredScene, PhotonScene):
@@ -119,7 +119,7 @@ class RaceLightInLayers(MultilayeredScene, PhotonScene):
     }
     def construct(self):
         self.add_layers()
-        line = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
+        line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         lines = [
             line.copy().shift(layer.get_center())
             for layer in self.layers
@@ -180,7 +180,7 @@ class ShowDiscretePath(MultilayeredScene, PhotonScene):
                 angle_of_vector(start_point-end_point)-np.pi/2
             )
         self.discrete_path.add_line(
-            points[end], SPACE_X_RADIUS*RIGHT+(tops[-1]-0.5)*UP
+            points[end], FRAME_X_RADIUS*RIGHT+(tops[-1]-0.5)*UP
         )
 
 class NLayers(MultilayeredScene):
@@ -229,7 +229,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
             eq_mob.shift(layer.get_center()+2*LEFT)
             v_eq = eq_mob.split()
             v_eq[0].highlight(layer.get_color())
-            path = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
+            path = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
             path.shift(layer.get_center())
             brace_endpoints = Mobject(
                 Point(self.top),

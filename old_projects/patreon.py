@@ -92,7 +92,7 @@ class SideGigToFullTime(Scene):
         self.play(
             ApplyMethod(
                 dollar_signs.shift, 
-                (SPACE_Y_RADIUS+1)*DOWN,
+                (FRAME_Y_RADIUS+1)*DOWN,
                 submobject_mode = "lagged_start"
             ),
             morty.change_mode, "guilty",
@@ -195,10 +195,10 @@ class TwoTypesOfVideos(Scene):
     def construct(self):
         morty = Mortimer().shift(2*DOWN)
         stand_alone = TextMobject("Standalone videos")
-        stand_alone.shift(SPACE_X_RADIUS*LEFT/2)
+        stand_alone.shift(FRAME_X_RADIUS*LEFT/2)
         stand_alone.to_edge(UP)
         series = TextMobject("Series")
-        series.shift(SPACE_X_RADIUS*RIGHT/2)
+        series.shift(FRAME_X_RADIUS*RIGHT/2)
         series.to_edge(UP)
         box = Rectangle(width = 16, height = 9, color = WHITE)
         box.scale_to_fit_height(3)
@@ -215,7 +215,7 @@ class TwoTypesOfVideos(Scene):
             ]
         ])
         series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
-        series_list.scale_to_fit_width(SPACE_X_RADIUS-2)
+        series_list.scale_to_fit_width(FRAME_X_RADIUS-2)
         series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
 

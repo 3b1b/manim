@@ -14,7 +14,7 @@ class Vibrate(Animation):
         "temporal_period" : 1,
         "overtones"       : 4,
         "amplitude"       : 0.5,
-        "radius"          : SPACE_X_RADIUS/2,
+        "radius"          : FRAME_X_RADIUS/2,
         "run_time"        : 3.0,
         "rate_func"      : None
     }

@@ -1155,7 +1155,7 @@ class GraphLimitExpression(GraphScene):
         delta,
         limit_x = 0,
         dashed_line_stroke_width = 3,
-        dashed_line_length = 2*SPACE_Y_RADIUS,
+        dashed_line_length = FRAME_HEIGHT,
         input_range_color = YELLOW,
         input_range_stroke_width = 6,
         ):
@@ -1239,11 +1239,11 @@ class LimitCounterExample(GraphLimitExpression):
         "x_min" : -8,
         "x_max" : 8,
         "x_labeled_nums" : range(-8, 10, 2),
-        "x_axis_width" : 2*SPACE_X_RADIUS - LARGE_BUFF,
+        "x_axis_width" : FRAME_WIDTH - LARGE_BUFF,
         "y_min" : -4,
         "y_max" : 4,
         "y_labeled_nums" : range(-2, 4, 1),
-        "y_axis_height" : 2*SPACE_Y_RADIUS+2*LARGE_BUFF,
+        "y_axis_height" : FRAME_HEIGHT+2*LARGE_BUFF,
         "graph_origin" : DOWN,
         "graph_color" : BLUE,
         "hole_radius" : 0.075,
@@ -1614,7 +1614,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
 
     def get_epsilon_group(self, epsilon, limit_value = 12):
         result = VGroup()
-        line_length = 2*SPACE_Y_RADIUS
+        line_length = FRAME_HEIGHT
         lines = [
             Line(
                 ORIGIN, line_length*RIGHT,
@@ -1838,12 +1838,12 @@ class TheoryHeavy(TeacherStudentsScene):
 class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, ReconfigurableScene):
     CONFIG = {
         "graph_origin" : ORIGIN,
-        "x_axis_width" : 2*SPACE_X_RADIUS,
+        "x_axis_width" : FRAME_WIDTH,
         "x_min" : -5,
         "x_max" : 5,
         "x_labeled_nums" : range(-6, 8, 2),
         "x_axis_label" : "$x$",
-        "y_axis_height" : 2*SPACE_Y_RADIUS,
+        "y_axis_height" : FRAME_HEIGHT,
         "y_min" : -3.1,
         "y_max" : 3.1,
         "y_bottom_tick" : -4,
@@ -2028,7 +2028,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         rhs = TexMobject("= %.4f\\dots"%result)
         rhs.next_to(label, RIGHT)
         approx_group = VGroup(label, rhs)
-        approx_group.scale_to_fit_width(SPACE_X_RADIUS-2*MED_LARGE_BUFF)
+        approx_group.scale_to_fit_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
         approx_group.next_to(ORIGIN, UP, buff = MED_LARGE_BUFF)
         approx_group.to_edge(RIGHT)
 
@@ -2115,8 +2115,8 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         )
         fader = VGroup(*[
             Rectangle(
-                width = 2*SPACE_X_RADIUS,
-                height = 2*SPACE_Y_RADIUS,
+                width = FRAME_WIDTH,
+                height = FRAME_HEIGHT,
                 stroke_width = 0,
                 fill_opacity = 0.75,
                 fill_color = BLACK,
@@ -2721,7 +2721,7 @@ class GeneralLHoptial(LHopitalExample):
             "``", "L'Hôpital's", " rule", "''",
             arg_separator = ""
         )
-        name.shift(SPACE_X_RADIUS*RIGHT/2)
+        name.shift(FRAME_X_RADIUS*RIGHT/2)
         name.to_edge(UP)
 
         self.play(Write(lhs))

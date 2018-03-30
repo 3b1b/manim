@@ -188,7 +188,7 @@ class GraphScene(Scene):
             #Search from right to left
             for x in np.linspace(self.x_max, self.x_min, 100):
                 point = self.input_to_graph_point(x, graph)
-                if point[1] < SPACE_Y_RADIUS:
+                if point[1] < FRAME_Y_RADIUS:
                     break
             x_val = x
         label.next_to(

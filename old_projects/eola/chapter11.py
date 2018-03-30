@@ -62,7 +62,7 @@ class OpeningQuote(Scene):
         )
         words.highlight_by_tex("axioms,", BLUE)
         words.highlight_by_tex("difficult for the uninitiated", RED)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Vladmir Arnold")
         author.highlight(YELLOW)
@@ -96,8 +96,8 @@ class WhatIsA2DVector(LinearTransformationScene):
         "show_basis_vectors" : False,
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 1
         },
     }
@@ -340,8 +340,8 @@ class ManyCoordinateSystems(LinearTransformationScene):
         "v_coords" : [2, 1],
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 1
         },
     }
@@ -422,8 +422,8 @@ class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
         "include_background_plane" : False,
         "show_basis_vectors" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 1
         },
     }
@@ -679,7 +679,7 @@ class AddTwoFunctions(FunctionGraphScene):
 
         curr_x_point = f_lines[0].get_start()
         sum_def = self.get_sum_definition(DecimalNumber(curr_x_point[0]))
-        # sum_def.scale_to_fit_width(SPACE_X_RADIUS-1)
+        # sum_def.scale_to_fit_width(FRAME_X_RADIUS-1)
         sum_def.to_corner(UP+LEFT)
         arrow = Arrow(sum_def[2].get_bottom(), curr_x_point, color = WHITE)        
         prefix = sum_def[0]
@@ -924,7 +924,7 @@ class FromVectorsToFunctions(VectorScene):
     def bring_in_functions(self):
         everything = VGroup(*self.get_mobjects())
         axes = Axes()
-        axes.shift(2*SPACE_X_RADIUS*LEFT)
+        axes.shift(FRAME_WIDTH*LEFT)
 
         fg_scene_config = FunctionGraphScene.CONFIG
         graph = FunctionGraph(fg_scene_config["default_functions"][0])
@@ -952,7 +952,7 @@ class FromVectorsToFunctions(VectorScene):
         ))
         self.wait()
         self.play(*[
-            ApplyMethod(mob.shift, 2*SPACE_X_RADIUS*RIGHT)
+            ApplyMethod(mob.shift, FRAME_WIDTH*RIGHT)
             for mob in axes, everything
         ] + [Animation(words)]
         )
@@ -1055,8 +1055,8 @@ class ManyFunctions(FunctionGraphScene):
         def func(x):
             return sum([c*x**(i) for i, c, in enumerate(coefs)])
         graph = self.get_function_graph(func, animate = False)
-        if graph.get_height() > 2*SPACE_Y_RADIUS:
-            graph.stretch_to_fit_height(2*SPACE_Y_RADIUS)
+        if graph.get_height() > FRAME_HEIGHT:
+            graph.stretch_to_fit_height(FRAME_HEIGHT)
             graph.shift(graph.point_from_proportion(0.5)[1]*DOWN)
             graph.shift(interpolate(-3, 3, random.random())*UP)
         graph.highlight(random_bright_color())
@@ -1086,8 +1086,8 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         "w_coords" : [1, 1],
         "v_coords" : [1, -2],        
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 1
         },
     }
@@ -1104,7 +1104,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         )
         title.add_background_rectangle()
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
 
         v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "vw"]
@@ -1449,7 +1449,7 @@ class PolynomialsHaveArbitrarilyLargeDegree(Scene):
         arrow = TexMobject("\\Rightarrow").scale(1.5)
 
         brace = Brace(
-            Line(UP, DOWN).scale(SPACE_Y_RADIUS).shift(SPACE_X_RADIUS*RIGHT),
+            Line(UP, DOWN).scale(FRAME_Y_RADIUS).shift(FRAME_X_RADIUS*RIGHT),
             LEFT
         )
         words = TextMobject("Infinitely many")
@@ -1936,12 +1936,12 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
         r_title = TextMobject("Alternate names when \\\\ applied to functions")
         for title, vect in (l_title, LEFT), (r_title, RIGHT):
             title.to_edge(UP)
-            title.shift(vect*SPACE_X_RADIUS/2)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+            title.shift(vect*FRAME_X_RADIUS/2)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.shift(
             VGroup(l_title, r_title).get_bottom()[1]*UP + SMALL_BUFF*DOWN
         )
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         VGroup(h_line, v_line).highlight(BLUE)
 
         self.add(l_title, r_title)
@@ -1961,7 +1961,7 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
         for concepts, vect in (lin_alg_concepts, LEFT), (function_concepts, RIGHT):
             concepts.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
             concepts.next_to(h_line, DOWN, buff = LARGE_BUFF)
-            concepts.shift(vect*SPACE_X_RADIUS/2)
+            concepts.shift(vect*FRAME_X_RADIUS/2)
             concepts.gradient_highlight(YELLOW_B, YELLOW_C)
 
             for concept in concepts:
@@ -2049,20 +2049,20 @@ class ShowVectorSpaces(Scene):
     def construct(self):
         title = TextMobject("Vector spaces")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
 
         v_lines = [
             Line(
-                h_line.get_center(), SPACE_Y_RADIUS*DOWN
-            ).shift(vect*SPACE_X_RADIUS/3.)
+                h_line.get_center(), FRAME_Y_RADIUS*DOWN
+            ).shift(vect*FRAME_X_RADIUS/3.)
             for vect in LEFT, RIGHT
         ]
         vectors = self.get_vectors()
-        vectors.shift(LEFT*SPACE_X_RADIUS*(2./3))
+        vectors.shift(LEFT*FRAME_X_RADIUS*(2./3))
         arrays = self.get_arrays()
         functions = self.get_functions()
-        functions.shift(RIGHT*SPACE_X_RADIUS*(2./3))
+        functions.shift(RIGHT*FRAME_X_RADIUS*(2./3))
 
         self.add(h_line, *v_lines)
         self.play(ShowCreation(
@@ -2112,7 +2112,7 @@ class ShowVectorSpaces(Scene):
                 lambda x : x**2 - 1,
             ]
         ])
-        functions.stretch_to_fit_width(SPACE_X_RADIUS/2.)
+        functions.stretch_to_fit_width(FRAME_X_RADIUS/2.)
         functions.stretch_to_fit_height(6)
         functions.gradient_highlight(YELLOW, MAROON_B)
         functions.center()
@@ -2185,7 +2185,7 @@ class ListAxioms(Scene):
     def construct(self):
         title = TextMobject("Rules for vectors addition and scaling")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
@@ -2244,7 +2244,7 @@ class ListAxioms(Scene):
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
-        axioms.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        axioms.scale_to_fit_width(FRAME_WIDTH-1)
         axioms.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(FadeIn(
@@ -2256,7 +2256,7 @@ class ListAxioms(Scene):
         axioms_word = TextMobject("``Axioms''")
         axioms_word.highlight(YELLOW)
         axioms_word.scale(2)
-        axioms_word.shift(SPACE_X_RADIUS*RIGHT/2, SPACE_Y_RADIUS*DOWN/2)
+        axioms_word.shift(FRAME_X_RADIUS*RIGHT/2, FRAME_Y_RADIUS*DOWN/2)
         self.play(Write(axioms_word, run_time = 3))
         self.wait()
 
@@ -2324,7 +2324,7 @@ class VectorSpaceOfPiCreatures(Scene):
             for y in range(4)
         ]).arrange_submobjects(DOWN, buff = 1.5)
         creatures = VGroup(*it.chain(*creatures))
-        creatures.scale_to_fit_height(2*SPACE_Y_RADIUS-1)
+        creatures.scale_to_fit_height(FRAME_HEIGHT-1)
         for pi in creatures:
             pi.change_mode(random.choice([
                 "pondering", "pondering",

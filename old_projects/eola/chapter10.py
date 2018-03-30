@@ -42,7 +42,7 @@ class OpeningQuote(Scene):
         )
         words.highlight_by_tex("mathematics", BLUE)
         words.highlight_by_tex("music", BLUE)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Serge Lang")
         author.highlight(YELLOW)
@@ -127,13 +127,13 @@ class ManyPrerequisites(Scene):
     def construct(self):
         title = TextMobject("Many prerequisites")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title)
         self.play(ShowCreation(h_line))
 
         rect = Rectangle(height = 9, width = 16, color = BLUE)
-        rect.scale_to_fit_width(SPACE_X_RADIUS-2)
+        rect.scale_to_fit_width(FRAME_X_RADIUS-2)
         rects = [rect]+[rect.copy() for i in range(3)]
         words = [
             "Linear transformations",
@@ -148,7 +148,7 @@ class ManyPrerequisites(Scene):
 
         Matrix(np.array(rects).reshape((2, 2)))
         rects = VGroup(*rects)
-        rects.scale_to_fit_height(2*SPACE_Y_RADIUS - 1.5)
+        rects.scale_to_fit_height(FRAME_HEIGHT - 1.5)
         rects.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(Write(rects[0]))
@@ -290,7 +290,7 @@ class IHatAsEigenVector(ExampleTranformationScene):
         x_axis = self.plane.axes[0]
         targets = [
             self.i_hat.copy().scale(val)
-            for val in -SPACE_X_RADIUS, SPACE_X_RADIUS, 1
+            for val in -FRAME_X_RADIUS, FRAME_X_RADIUS, 1
         ]
         lines = [
             Line(v1.get_end(), v2.get_end(), color = YELLOW)
@@ -329,7 +329,7 @@ class AllXAxisVectorsAreEigenvectors(ExampleTranformationScene):
     def construct(self):
         vectors = VGroup(*[
             self.add_vector(u*x*RIGHT, animate = False)
-            for x in reversed(range(1, int(SPACE_X_RADIUS)+1))
+            for x in reversed(range(1, int(FRAME_X_RADIUS)+1))
             for u in -1, 1
         ])
         vectors.gradient_highlight(YELLOW, X_COLOR)
@@ -411,14 +411,14 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
         self.foreground_mobjects.remove(self.matrix)
         x_vectors = VGroup(*[
             self.add_vector(u*x*RIGHT, animate = False)
-            for x in range(int(SPACE_X_RADIUS)+1, 0, -1)
+            for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
             for u in -1, 1
         ])
         x_vectors.gradient_highlight(YELLOW, X_COLOR)
         self.remove(x_vectors)
         sneak_vectors = VGroup(*[
             self.add_vector(u*x*(LEFT+UP), animate = False)
-            for x in np.arange(int(SPACE_Y_RADIUS), 0, -0.5)
+            for x in np.arange(int(FRAME_Y_RADIUS), 0, -0.5)
             for u in -1, 1
         ])
         sneak_vectors.gradient_highlight(MAROON_B, YELLOW)
@@ -452,8 +452,8 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
 
         non_eigen = Vector([1, 1], color = PINK)
         non_eigen_span = Line(
-            -SPACE_Y_RADIUS*non_eigen.get_end(), 
-            SPACE_Y_RADIUS*non_eigen.get_end(), 
+            -FRAME_Y_RADIUS*non_eigen.get_end(), 
+            FRAME_Y_RADIUS*non_eigen.get_end(), 
             color = RED
         )
         non_eigen_words = TextMobject("""
@@ -504,8 +504,8 @@ class EigenvalueNegativeOneHalf(LinearTransformationScene):
     CONFIG = {
         "t_matrix" : [[0.5, -1], [-1, 0.5]],
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 0
         },
         "include_background_plane" : False
@@ -523,8 +523,8 @@ class EigenvalueNegativeOneHalf(LinearTransformationScene):
         words.add_background_rectangle()
         words.next_to(vector.get_end(), RIGHT)
         span = Line(
-            -SPACE_Y_RADIUS*vector.get_end(), 
-            SPACE_Y_RADIUS*vector.get_end(),
+            -FRAME_Y_RADIUS*vector.get_end(), 
+            FRAME_Y_RADIUS*vector.get_end(),
             color = MAROON_B
         )
 
@@ -1029,8 +1029,8 @@ class TweakLambda(LinearTransformationScene):
         "t_matrix" : [[2, 1], [2, 3]],
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 1
         },
     }
@@ -1155,8 +1155,8 @@ class ShowEigenVectorAfterComputing(LinearTransformationScene):
         "v_coords" : [2, -1],
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 1
         },
     }
@@ -1624,7 +1624,7 @@ class SolveRotationEigenvalues(Rotate90Degrees):
             transformation.
         """, alignment = "")
         interesting_tidbit.add_background_rectangle()
-        interesting_tidbit.scale_to_fit_height(SPACE_Y_RADIUS-0.5)
+        interesting_tidbit.scale_to_fit_height(FRAME_Y_RADIUS-0.5)
         interesting_tidbit.to_corner(DOWN+RIGHT)
         self.play(FadeIn(interesting_tidbit))
         self.wait()
@@ -1634,8 +1634,8 @@ class ShearExample(RevisitExampleTransformation):
         "t_matrix" : [[1, 0], [1, 1]],
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 1
         },
     }
@@ -1655,7 +1655,7 @@ class ShearExample(RevisitExampleTransformation):
     def point_out_eigenvectors(self):
         vectors = VGroup(*[
             self.add_vector(u*x*RIGHT, animate = False)
-            for x in range(int(SPACE_X_RADIUS)+1, 0, -1)
+            for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
             for u in -1, 1
         ])
         vectors.gradient_highlight(YELLOW, X_COLOR)
@@ -2115,8 +2115,8 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         "show_basis_vectors" : False,
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 0
         },
     }

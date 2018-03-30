@@ -6,7 +6,7 @@ from mobject.tex_mobject import TexMobject
 from scene import Scene
 
 
-DEFAULT_COUNT_NUM_OFFSET = (SPACE_X_RADIUS - 1, SPACE_Y_RADIUS - 1, 0)
+DEFAULT_COUNT_NUM_OFFSET = (FRAME_X_RADIUS - 1, FRAME_Y_RADIUS - 1, 0)
 DEFAULT_COUNT_RUN_TIME   = 5.0
 
 class CountingScene(Scene):
@@ -87,8 +87,8 @@ class CountingScene(Scene):
 class PascalsTriangle(VMobject):
     CONFIG = {
         "nrows" : 7,
-        "height" : 2*SPACE_Y_RADIUS - 1,
-        "width" : 1.5*SPACE_X_RADIUS,
+        "height" : FRAME_HEIGHT - 1,
+        "width" : 1.5*FRAME_X_RADIUS,
         "portion_to_fill" : 0.7
     }    
     def generate_points(self):

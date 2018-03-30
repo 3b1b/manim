@@ -210,7 +210,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
 class WritePythagoreanTriple(Scene):
     def construct(self):
         words = TextMobject("``Pythagorean triple''")
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
+        words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         words.to_corner(DOWN+LEFT)
         self.play(Write(words))
         self.wait(2)
@@ -252,8 +252,8 @@ class ShowManyTriples(Scene):
             title.target.scale(0.5)
 
             title.target.move_to(
-                (-SPACE_X_RADIUS + MED_LARGE_BUFF + 2.7*(i//8))*RIGHT + \
-                (SPACE_Y_RADIUS - MED_LARGE_BUFF - (i%8))*UP,
+                (-FRAME_X_RADIUS + MED_LARGE_BUFF + 2.7*(i//8))*RIGHT + \
+                (FRAME_Y_RADIUS - MED_LARGE_BUFF - (i%8))*UP,
                 UP+LEFT
             )
 
@@ -328,7 +328,7 @@ class BabylonianTablets(Scene):
             triple = TexMobject(tex)
             triples.add(triple)
         triples.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        triples.scale_to_fit_height(2*SPACE_Y_RADIUS - LARGE_BUFF)
+        triples.scale_to_fit_height(FRAME_HEIGHT - LARGE_BUFF)
         triples.to_edge(RIGHT)
 
         self.add(title)
@@ -960,10 +960,10 @@ class ReframeOnLattice(PiCreatureScene):
 
     def get_all_plane_dots(self):
         x_min, y_min = map(int, self.plane.point_to_coords(
-            SPACE_X_RADIUS*LEFT + SPACE_Y_RADIUS*DOWN
+            FRAME_X_RADIUS*LEFT + FRAME_Y_RADIUS*DOWN
         ))
         x_max, y_max = map(int, self.plane.point_to_coords(
-            SPACE_X_RADIUS*RIGHT + SPACE_Y_RADIUS*UP
+            FRAME_X_RADIUS*RIGHT + FRAME_Y_RADIUS*UP
         ))
         result = VGroup(*[
             Dot(
@@ -1495,7 +1495,7 @@ class WriteGeneralFormula(GeneralExample):
 
     def show_uv_to_triples(self):
         rect = self.corner_rect.copy()
-        rect.stretch_to_fit_height(2*SPACE_Y_RADIUS)
+        rect.stretch_to_fit_height(FRAME_HEIGHT)
         rect.move_to(self.corner_rect.get_bottom(), UP)
 
         h_line = Line(rect.get_left(), rect.get_right())
@@ -1572,8 +1572,8 @@ class VisualizeZSquared(Scene):
         self.show_more_triangles()
 
     def add_plane(self):
-        width = (SPACE_X_RADIUS+abs(self.plane_center[0]))/self.final_unit_size
-        height = (SPACE_Y_RADIUS+abs(self.plane_center[1]))/self.final_unit_size
+        width = (FRAME_X_RADIUS+abs(self.plane_center[0]))/self.final_unit_size
+        height = (FRAME_Y_RADIUS+abs(self.plane_center[1]))/self.final_unit_size
         background_plane = ComplexPlane(
             x_radius = width,
             y_radius = height,
@@ -1698,7 +1698,7 @@ class VisualizeZSquared(Scene):
     def draw_dots(self):
         min_corner, max_corner = [
             self.background_plane.point_to_coords(
-                u*SPACE_X_RADIUS*RIGHT + u*SPACE_Y_RADIUS*UP
+                u*FRAME_X_RADIUS*RIGHT + u*FRAME_Y_RADIUS*UP
             )
             for u in -1, 1
         ]
@@ -1831,8 +1831,8 @@ class VisualizeZSquared(Scene):
     ###
 
     def get_color_grid(self):
-        width = (SPACE_X_RADIUS+abs(self.plane_center[0]))/self.initial_unit_size
-        height = (SPACE_Y_RADIUS+abs(self.plane_center[1]))/self.initial_unit_size
+        width = (FRAME_X_RADIUS+abs(self.plane_center[0]))/self.initial_unit_size
+        height = (FRAME_Y_RADIUS+abs(self.plane_center[1]))/self.initial_unit_size
         color_grid = ComplexPlane(
             x_radius = width,
             y_radius = int(height),
@@ -2150,7 +2150,7 @@ class DrawRadialLines(PointsWeMiss):
                     continue
                 coord_strings.add(str(new_coords))
                 point = self.background_plane.coords_to_point(*new_coords)
-                if abs(point[0]) > SPACE_X_RADIUS or abs(point[1]) > SPACE_Y_RADIUS:
+                if abs(point[0]) > FRAME_X_RADIUS or abs(point[1]) > FRAME_Y_RADIUS:
                     continue
                 new_dot = Dot(
                     point, color = GREEN,
@@ -2159,7 +2159,7 @@ class DrawRadialLines(PointsWeMiss):
                 new_dots.add(new_dot)
             line = Line(self.plane_center, dot.get_center())
             line.scale(
-                2*SPACE_X_RADIUS/line.get_length(),
+                FRAME_WIDTH/line.get_length(),
                 about_point = self.plane_center
             )
             line.set_stroke(width = 1)
@@ -2296,7 +2296,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
         top_line = TexMobject(
             "a", "^2", "+", "b", "^2", "=", "c", "^2 \\phantom{1}"
         )
-        top_line.shift(SPACE_X_RADIUS*RIGHT/2)
+        top_line.shift(FRAME_X_RADIUS*RIGHT/2)
         top_line.to_corner(UP + LEFT)
         top_line.shift(RIGHT)
         top_rect = BackgroundRectangle(top_line)
@@ -2498,7 +2498,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
 
     def draw_infinitely_many_lines(self):
         lines = VGroup(*[
-            Line(ORIGIN, 2*SPACE_X_RADIUS*vect)
+            Line(ORIGIN, FRAME_WIDTH*vect)
             for vect in compass_directions(1000)
         ])
 

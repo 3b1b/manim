@@ -88,7 +88,7 @@ class OpeningQuote(Scene):
             "numbers.",
             "''",
         ], arg_separator = "")
-        # words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        # words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].highlight(BLUE)
         words.split()[3].highlight(GREEN)
@@ -131,8 +131,8 @@ class StretchingTransformation(LinearTransformationScene):
 class SquishingTransformation(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 3*SPACE_X_RADIUS,
-            "y_radius" : 3*SPACE_X_RADIUS,
+            "x_radius" : 3*FRAME_X_RADIUS,
+            "y_radius" : 3*FRAME_X_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -430,8 +430,8 @@ class DeterminantIsOneHalf(NameDeterminant):
     CONFIG = {
         "t_matrix" : [[0.5, -0.5], [0.5, 0.5]],
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_X_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 0
         },
     }
@@ -451,7 +451,7 @@ class NextFewVideos(Scene):
     def construct(self):
         icon = SVGMobject("video_icon")
         icon.center()
-        icon.scale_to_fit_width(2*SPACE_X_RADIUS/12.)
+        icon.scale_to_fit_width(FRAME_WIDTH/12.)
         icon.set_stroke(color = WHITE, width = 0)
         icon.set_fill(WHITE, opacity = 1)
         icons = VMobject(*[icon.copy() for x in range(10)])
@@ -511,9 +511,9 @@ class NegativeDeterminant(Scene):
 
 class FlipSpaceOver(Scene):
     def construct(self):
-        plane1 = NumberPlane(y_radius = SPACE_X_RADIUS)
+        plane1 = NumberPlane(y_radius = FRAME_X_RADIUS)
         plane2 = NumberPlane(
-            y_radius = SPACE_X_RADIUS,
+            y_radius = FRAME_X_RADIUS,
             color = RED_D, secondary_color = RED_E
         )
         axis = UP
@@ -1057,7 +1057,7 @@ class FullFormulaExplanation(LinearTransformationScene):
 
         formula.next_to(det_text, RIGHT)
         everyone = VMobject(det_text, matrix, formula)
-        everyone.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        everyone.scale_to_fit_width(FRAME_WIDTH - 1)
         everyone.next_to(DOWN, DOWN)
         background_rect = BackgroundRectangle(everyone)
         self.play(
@@ -1150,7 +1150,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Inverse matrices, column space and null space
         """)
-        title.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        title.scale_to_fit_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)

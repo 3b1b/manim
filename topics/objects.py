@@ -267,7 +267,7 @@ class PatreonLogo(SVGMobject):
 class VideoIcon(SVGMobject):
     CONFIG = {
         "file_name" : "video_icon",
-        "width" : 2*SPACE_X_RADIUS/12.,
+        "width" : FRAME_WIDTH/12.,
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
@@ -286,7 +286,7 @@ class VideoSeries(VGroup):
         videos = [VideoIcon() for x in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
         self.arrange_submobjects()
-        self.scale_to_fit_width(2*SPACE_X_RADIUS-MED_LARGE_BUFF)
+        self.scale_to_fit_width(FRAME_WIDTH-MED_LARGE_BUFF)
         self.gradient_highlight(*self.gradient_colors)
 
 class Headphones(SVGMobject):

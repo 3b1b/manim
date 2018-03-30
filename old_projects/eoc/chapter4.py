@@ -149,7 +149,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         top_group = VGroup(series, simple_rules, brace)
         combination_rules.save_state()
         self.play(
-            top_group.next_to, SPACE_Y_RADIUS*UP, UP,
+            top_group.next_to, FRAME_Y_RADIUS*UP, UP,
             combination_rules.to_edge, UP,
         )
         pairs = [
@@ -275,7 +275,7 @@ class ComingUp(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
         rect.set_stroke(WHITE)
-        rect.scale_to_fit_height(2*SPACE_Y_RADIUS-2)
+        rect.scale_to_fit_height(FRAME_HEIGHT-2)
         title = TextMobject("Coming up...")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -338,7 +338,7 @@ class SumRule(GraphScene):
         "y_labeled_nums" : [],
         "y_axis_label" : "",
         "x_max" : 4,
-        "x_axis_width" : 2*SPACE_X_RADIUS,
+        "x_axis_width" : FRAME_WIDTH,
         "y_max" : 3,
         "graph_origin" : 2.5*DOWN + 2.5*LEFT,
         "graph_label_x_value" : 1.5,
@@ -789,7 +789,7 @@ class NotGraphsForProducts(GraphScene):
         ))
         words = TextMobject("Not the best visualization")
         words.scale(1.5)
-        words.shift(SPACE_Y_RADIUS*UP/2)
+        words.shift(FRAME_Y_RADIUS*UP/2)
         words.add_background_rectangle()
         words.highlight(RED)
         self.play(
@@ -2291,7 +2291,7 @@ class Thumbnail(IntroduceProductAsArea):
         blg[1][1].next_to(df_boxes[-1], RIGHT)
         df_box_labels = self.get_df_box_labels(df_boxes)
         blg.add(df_boxes, df_box_labels)
-        blg.scale_to_fit_height(2*SPACE_Y_RADIUS-2*MED_LARGE_BUFF)
+        blg.scale_to_fit_height(FRAME_HEIGHT-2*MED_LARGE_BUFF)
         blg.center()
         self.add(blg)
 

@@ -33,7 +33,7 @@ class OpeningQuote(Scene):
             "is. You have to",
             "see it for yourself.",
         ])
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].highlight(GREEN)
         words.split()[3].highlight(BLUE)
@@ -71,7 +71,7 @@ class Introduction(TeacherStudentsScene):
         everything = VMobject(*self.get_mobjects())
         def spread_out(p):
             p = p + 2*DOWN
-            return (SPACE_X_RADIUS+SPACE_Y_RADIUS)*p/np.linalg.norm(p)
+            return (FRAME_X_RADIUS+FRAME_Y_RADIUS)*p/np.linalg.norm(p)
         self.play(
             ApplyPointwiseFunction(spread_out, everything),
             ApplyFunction(
@@ -216,7 +216,7 @@ class ThinkinfOfFunctionsAsGraphs(VectorScene):
         self.wait()
 
         def collapse_func(p):
-            return np.dot(p, [RIGHT, RIGHT, OUT]) + (SPACE_Y_RADIUS+1)*DOWN
+            return np.dot(p, [RIGHT, RIGHT, OUT]) + (FRAME_Y_RADIUS+1)*DOWN
         self.play(
             ApplyPointwiseFunction(collapse_func, axes),
             ApplyPointwiseFunction(collapse_func, graph),
@@ -267,8 +267,8 @@ class TransformManyVectors(LinearTransformationScene):
         self.lock_in_faded_grid()
         vectors = VMobject(*[
             Vector([x, y])
-            for x in np.arange(-int(SPACE_X_RADIUS)+0.5, int(SPACE_X_RADIUS)+0.5)
-            for y in np.arange(-int(SPACE_Y_RADIUS)+0.5, int(SPACE_Y_RADIUS)+0.5)
+            for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
+            for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
         vectors.submobject_gradient_highlight(PINK, YELLOW)
         t_matrix = self.transposed_matrix
@@ -325,8 +325,8 @@ class TransformInfiniteGrid(LinearTransformationScene):
     CONFIG = {
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
         },
         "show_basis_vectors" : False
     }
@@ -343,8 +343,8 @@ class TransformInfiniteGridWithBackground(TransformInfiniteGrid):
     CONFIG = {
         "include_background_plane" : True,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 0
         },
 
@@ -355,8 +355,8 @@ class ApplyComplexFunction(LinearTransformationScene):
         "function" : lambda z : 0.5*z**2,
         "show_basis_vectors" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : SPACE_X_RADIUS,
-            "y_radius" : SPACE_Y_RADIUS,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_Y_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -507,8 +507,8 @@ class SneakyNonlinearTransformation(SimpleNonlinearTransformationScene):
     }
     def func(self, point):
         x, y, z = point
-        new_x = np.sign(x)*SPACE_X_RADIUS*smooth(abs(x) / SPACE_X_RADIUS)
-        new_y = np.sign(y)*SPACE_Y_RADIUS*smooth(abs(y) / SPACE_Y_RADIUS)
+        new_x = np.sign(x)*FRAME_X_RADIUS*smooth(abs(x) / FRAME_X_RADIUS)
+        new_y = np.sign(y)*FRAME_Y_RADIUS*smooth(abs(y) / FRAME_Y_RADIUS)
         return [new_x, new_y, 0]
 
 class SneakyNonlinearTransformationExplained(SneakyNonlinearTransformation):
@@ -518,8 +518,8 @@ class SneakyNonlinearTransformationExplained(SneakyNonlinearTransformation):
     def setup(self):
         LinearTransformationScene.setup(self)
         diag = Line(
-            SPACE_Y_RADIUS*LEFT+SPACE_Y_RADIUS*DOWN,
-            SPACE_Y_RADIUS*RIGHT + SPACE_Y_RADIUS*UP
+            FRAME_Y_RADIUS*LEFT+FRAME_Y_RADIUS*DOWN,
+            FRAME_Y_RADIUS*RIGHT + FRAME_Y_RADIUS*UP
         )
         diag.insert_n_anchor_points(20)
         diag.change_anchor_mode("smooth")
@@ -788,8 +788,8 @@ class WatchManyVectorsMove(TransformManyVectors):
         self.setup()
         vectors = VMobject(*[
             Vector([x, y])
-            for x in np.arange(-int(SPACE_X_RADIUS)+0.5, int(SPACE_X_RADIUS)+0.5)
-            for y in np.arange(-int(SPACE_Y_RADIUS)+0.5, int(SPACE_Y_RADIUS)+0.5)
+            for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
+            for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
         vectors.submobject_gradient_highlight(PINK, YELLOW)
         dots = self.vectors_to_dots(vectors)        
@@ -1327,7 +1327,7 @@ class FinalSlide(Scene):
             definition is actually equivalent to the two properties 
             above.
         """, enforce_new_line_structure = False)
-        text.scale_to_fit_height(2*SPACE_Y_RADIUS - 2)
+        text.scale_to_fit_height(FRAME_HEIGHT - 2)
         text.to_edge(UP)
         self.add(text)
         self.wait()
@@ -1421,7 +1421,7 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
         self.wait()
 
         def collapse_func(p):
-            return np.dot(p, [RIGHT, RIGHT, OUT]) + (SPACE_Y_RADIUS+1)*DOWN
+            return np.dot(p, [RIGHT, RIGHT, OUT]) + (FRAME_Y_RADIUS+1)*DOWN
         self.play(
             ApplyPointwiseFunction(
                 collapse_func, axes, 
@@ -1648,8 +1648,8 @@ class MoveAroundAllVectors(LinearTransformationScene):
         self.setup()
         vectors = VMobject(*[
             Vector([x, y])
-            for x in np.arange(-int(SPACE_X_RADIUS)+0.5, int(SPACE_X_RADIUS)+0.5)
-            for y in np.arange(-int(SPACE_Y_RADIUS)+0.5, int(SPACE_Y_RADIUS)+0.5)
+            for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
+            for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
         vectors.submobject_gradient_highlight(PINK, YELLOW)
         dots = self.get_dots(vectors)

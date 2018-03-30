@@ -158,7 +158,7 @@ class TauPoem(Scene):
 
     def first_word_to_last_digit(self):
         if self.line_num == 19:
-            shift_val = SPACE_Y_RADIUS*DOWN
+            shift_val = FRAME_Y_RADIUS*DOWN
             self.new_digit.shift(shift_val)
             self.play(ApplyMethod(
                 self.first_digits.shift, shift_val, run_time = 2.0
@@ -359,9 +359,9 @@ class TauPoem(Scene):
         f_copy = deepcopy(formulae)
         for mob, count in zip(f_copy, it.count()):
             if count%3 == 0:
-                mob.to_edge(LEFT).shift(RIGHT*(SPACE_X_RADIUS-1))
+                mob.to_edge(LEFT).shift(RIGHT*(FRAME_X_RADIUS-1))
             else:
-                mob.shift(2*SPACE_X_RADIUS*RIGHT)
+                mob.shift(FRAME_WIDTH*RIGHT)
         self.play(*[
             Transform(*mobs, run_time = 2.0)
             for mobs in zip(formulae, f_copy)
@@ -369,9 +369,9 @@ class TauPoem(Scene):
 
     def line12(self):
         interval_size = 0.5
-        axes_center = SPACE_X_RADIUS*LEFT/2
-        grid_center = SPACE_X_RADIUS*RIGHT/2
-        radius = SPACE_X_RADIUS / 2.0
+        axes_center = FRAME_X_RADIUS*LEFT/2
+        grid_center = FRAME_X_RADIUS*RIGHT/2
+        radius = FRAME_X_RADIUS / 2.0
         axes = Axes(
             radius = radius,
             interval_size = interval_size

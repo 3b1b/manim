@@ -30,7 +30,7 @@ mpmath.mp.dps = 7
 
 
 def zeta(z):
-    max_norm = SPACE_X_RADIUS
+    max_norm = FRAME_X_RADIUS
     try:
         return np.complex(mpmath.zeta(z))
     except:
@@ -51,7 +51,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
             "run_time" : 5,
         },
         "x_min" : 1,
-        "x_max" : int(SPACE_X_RADIUS+2),
+        "x_max" : int(FRAME_X_RADIUS+2),
         "extra_lines_x_min" : -2,
         "extra_lines_x_max" : 4,
         "extra_lines_y_min" : -2,
@@ -1027,7 +1027,7 @@ class FromRealToComplex(ComplexTransformationScene):
 
     def transition_to_spiril_sum(self):
         zeta = self.get_zeta_definition("2+i", "1.15 - 0.44i")
-        zeta.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        zeta.scale_to_fit_width(FRAME_WIDTH-1)
         zeta.to_corner(UP+LEFT)
         lines, output_dot = self.get_sum_lines(complex(2, 1))
 
@@ -1076,16 +1076,16 @@ class FromRealToComplex(ComplexTransformationScene):
 
     def show_domain_of_convergence(self, opacity = 0.2):
         domain = Rectangle(
-            width = SPACE_X_RADIUS-2,
-            height = 2*SPACE_Y_RADIUS,
+            width = FRAME_X_RADIUS-2,
+            height = FRAME_HEIGHT,
             stroke_width = 0,
             fill_color = YELLOW,
             fill_opacity = opacity,
         )
         domain.to_edge(RIGHT, buff = 0)
         anti_domain = Rectangle(
-            width = SPACE_X_RADIUS+2,
-            height = 2*SPACE_Y_RADIUS,
+            width = FRAME_X_RADIUS+2,
+            height = FRAME_HEIGHT,
             stroke_width = 0,
             fill_color = RED,
             fill_opacity = opacity,
@@ -1217,7 +1217,7 @@ class TerritoryOfExponents(ComplexTransformationScene):
         familiar_territory.highlight(YELLOW)
         familiar_territory.next_to(ORIGIN, UP+RIGHT)
         familiar_territory.shift(2*UP)
-        real_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        real_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         real_line.highlight(YELLOW)
         arrow1 = Arrow(familiar_territory.get_bottom(), real_line.get_left())
         arrow2 = Arrow(familiar_territory.get_bottom(), real_line.get_right())
@@ -1226,8 +1226,8 @@ class TerritoryOfExponents(ComplexTransformationScene):
         extended_realm = TextMobject("Extended realm")
         extended_realm.move_to(familiar_territory)
         full_plane = Rectangle(
-            width = 2*SPACE_X_RADIUS,
-            height = 2*SPACE_Y_RADIUS,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             fill_color = YELLOW,
             fill_opacity = 0.3
         )
@@ -1306,9 +1306,9 @@ class ComplexExponentiation(Scene):
         self.imag_exponent = imag_part
 
     def add_on_planes(self):
-        left_plane = NumberPlane(x_radius = (SPACE_X_RADIUS-1)/2)
+        left_plane = NumberPlane(x_radius = (FRAME_X_RADIUS-1)/2)
         left_plane.to_edge(LEFT, buff = 0)
-        imag_line = Line(DOWN, UP).scale(SPACE_Y_RADIUS)
+        imag_line = Line(DOWN, UP).scale(FRAME_Y_RADIUS)
         imag_line.highlight(YELLOW).fade(0.3)
         imag_line.move_to(left_plane.get_center())
         left_plane.add(imag_line)
@@ -1317,7 +1317,7 @@ class ComplexExponentiation(Scene):
         left_title.highlight(YELLOW)
         left_title.next_to(left_plane.get_top(), DOWN)
 
-        right_plane = NumberPlane(x_radius = (SPACE_X_RADIUS-1)/2)
+        right_plane = NumberPlane(x_radius = (FRAME_X_RADIUS-1)/2)
         right_plane.to_edge(RIGHT, buff = 0)
         unit_circle = Circle()
         unit_circle.highlight(MAROON_B).fade(0.3)
@@ -1709,8 +1709,8 @@ class VisualizingSSquared(ComplexTransformationScene):
         self.plane.next_to(ORIGIN, UP, buff = 0.01)
         self.plane.add(self.plane.copy().rotate(np.pi, RIGHT))
         self.plane.add(
-            Line(ORIGIN, SPACE_X_RADIUS*RIGHT, color = self.horiz_end_color),
-            Line(ORIGIN, SPACE_X_RADIUS*LEFT, color = self.horiz_end_color),
+            Line(ORIGIN, FRAME_X_RADIUS*RIGHT, color = self.horiz_end_color),
+            Line(ORIGIN, FRAME_X_RADIUS*LEFT, color = self.horiz_end_color),
         )
         self.add(self.plane)
 
@@ -1754,7 +1754,7 @@ class VisualizingSSquared(ComplexTransformationScene):
 class ShowZetaOnHalfPlane(ZetaTransformationScene):
     CONFIG = {
         "x_min" : 1,
-        "x_max" : int(SPACE_X_RADIUS+2),
+        "x_max" : int(FRAME_X_RADIUS+2),
     }
     def construct(self):
         self.add_title()
@@ -1824,7 +1824,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         words.shift(LEFT+UP)
 
         line = Line(*map(self.z_to_point, [
-            complex(np.euler_gamma, u*SPACE_Y_RADIUS)
+            complex(np.euler_gamma, u*FRAME_Y_RADIUS)
             for u in 1, -1
         ]))
         line.highlight(YELLOW)
@@ -1849,7 +1849,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
             VGroup(*[
                 Line(
                     vert_vect+RIGHT,
-                    vert_vect+(SPACE_X_RADIUS+1)*horiz_vect
+                    vert_vect+(FRAME_X_RADIUS+1)*horiz_vect
                 )
                 for vert_vect in UP, DOWN
             ])
@@ -1976,7 +1976,7 @@ class ShowConditionalDefinition(Scene):
 class SquiggleOnExtensions(ZetaTransformationScene):
     CONFIG = {
         "x_min" : 1,
-        "x_max" : int(SPACE_X_RADIUS+2),
+        "x_max" : int(FRAME_X_RADIUS+2),
     }
     def construct(self):
         self.show_negative_one()
@@ -2038,7 +2038,7 @@ class SquiggleOnExtensions(ZetaTransformationScene):
             ])
         def mixed_scalar_func(point):
             x, y, z = point
-            scalar = 1 + (gamma-x)/(gamma+SPACE_X_RADIUS)
+            scalar = 1 + (gamma-x)/(gamma+FRAME_X_RADIUS)
             return np.array([
                 (scalar**2)*x,
                 (scalar**3)*y,
@@ -2046,7 +2046,7 @@ class SquiggleOnExtensions(ZetaTransformationScene):
             ])
         def alt_mixed_scalar_func(point):
             x, y, z = point
-            scalar = 1 + (gamma-x)/(gamma+SPACE_X_RADIUS)
+            scalar = 1 + (gamma-x)/(gamma+FRAME_X_RADIUS)
             return np.array([
                 (scalar**5)*x,
                 (scalar**2)*y,
@@ -2668,7 +2668,7 @@ class ManyIntersectingLinesPostZeta(ManyIntersectingLinesPreZeta):
 
 class ManyIntersectingLinesPreSSquared(ManyIntersectingLinesPreZeta):
     CONFIG = {
-        "x_min" : -int(SPACE_X_RADIUS),
+        "x_min" : -int(FRAME_X_RADIUS),
         "apply_zeta" : False,
         "lines_center" : ORIGIN,
         "nudge_size" : 0.9,
@@ -2854,7 +2854,7 @@ class DiscussZeros(ZetaTransformationScene):
 
     def show_critical_strip(self):
         strip = Rectangle(
-            height = 2*SPACE_Y_RADIUS,
+            height = FRAME_HEIGHT,
             width = 1
         )
         strip.next_to(ORIGIN, RIGHT, buff = 0)
@@ -2877,8 +2877,8 @@ class DiscussZeros(ZetaTransformationScene):
         ])
         new_dots.highlight(YELLOW)
         critical_line = Line(
-            0.5*RIGHT+SPACE_Y_RADIUS*DOWN,
-            0.5*RIGHT+SPACE_Y_RADIUS*UP,
+            0.5*RIGHT+FRAME_Y_RADIUS*DOWN,
+            0.5*RIGHT+FRAME_Y_RADIUS*UP,
             color = YELLOW
         )
 
@@ -3004,15 +3004,15 @@ class HighlightCriticalLineAgain(DiscussZeros):
         self.add(title)
 
         strip = Rectangle(
-            height = 2*SPACE_Y_RADIUS,
+            height = FRAME_HEIGHT,
             width = 1
         )
         strip.next_to(ORIGIN, RIGHT, buff = 0)
         strip.set_stroke(width = 0)
         strip.set_fill(YELLOW, opacity = 0.3)
         line = Line(
-            0.5*RIGHT+SPACE_Y_RADIUS*UP,
-            0.5*RIGHT+SPACE_Y_RADIUS*DOWN,
+            0.5*RIGHT+FRAME_Y_RADIUS*UP,
+            0.5*RIGHT+FRAME_Y_RADIUS*DOWN,
             color = YELLOW
         )
         randy = Randolph().to_corner(DOWN+LEFT)
@@ -3296,18 +3296,18 @@ class Thumbnail(ZetaTransformationScene):
         self.plane.set_stroke(width = 4)
 
         div_sum = TexMobject("-\\frac{1}{12} = ", "1+2+3+4+\\cdots")
-        div_sum.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        div_sum.scale_to_fit_width(FRAME_WIDTH-1)
         div_sum.to_edge(DOWN)
         div_sum.highlight(YELLOW)
         for mob in div_sum.submobjects:
             mob.add_to_back(BackgroundRectangle(mob))
 
         zeta = TexMobject("\\zeta(s)")
-        zeta.scale_to_fit_height(SPACE_Y_RADIUS-1)
+        zeta.scale_to_fit_height(FRAME_Y_RADIUS-1)
         zeta.to_corner(UP+LEFT)
 
         million = TexMobject("\\$1{,}000{,}000")
-        million.scale_to_fit_width(SPACE_X_RADIUS+1)
+        million.scale_to_fit_width(FRAME_X_RADIUS+1)
         million.to_edge(UP+RIGHT)
         million.highlight(GREEN_B)
         million.add_background_rectangle()

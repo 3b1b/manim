@@ -438,7 +438,7 @@ class ExampleThrees(PiCreatureScene):
 
         alt_threes = VGroup(*self.three_mobs[1:])
         alt_threes.arrange_submobjects(DOWN)
-        alt_threes.scale_to_fit_height(2*SPACE_Y_RADIUS - 2)
+        alt_threes.scale_to_fit_height(FRAME_HEIGHT - 2)
         alt_threes.to_edge(RIGHT)
 
         for alt_three in alt_threes:
@@ -604,7 +604,7 @@ class WriteAProgram(Scene):
 
         choices = VGroup(*[TexMobject(str(n)) for n in range(10)])
         choices.arrange_submobjects(DOWN)
-        choices.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
+        choices.scale_to_fit_height(FRAME_HEIGHT - 1)
         choices.next_to(arrow, RIGHT)
 
         self.play(
@@ -885,7 +885,7 @@ class AlternateNeuralNetworks(PiCreatureScene):
             ex[0].next_to(arrow, LEFT)
             ex[1].next_to(arrow, RIGHT)
             ex.submobjects.insert(1, arrow)
-        examples.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        examples.scale_to_fit_width(FRAME_WIDTH - 1)
         examples.next_to(morty, UP).to_edge(RIGHT)
 
         maybe_words = TextMobject("Maybe future videos?")
@@ -1826,7 +1826,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             edge.save_state()
             edge[1].set_opacity(0)
         equation = self.get_equation(loop.target, *edges.target)
-        equation.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        equation.scale_to_fit_width(FRAME_WIDTH - 1)
         equation.to_edge(UP)
         symbols = VGroup(*equation[1::2])
 
@@ -2153,7 +2153,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             word
         )
         sequence.arrange_submobjects(RIGHT)
-        sequence.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        sequence.scale_to_fit_width(FRAME_WIDTH - 1)
         sequence.to_edge(UP)
 
         audio_label.next_to(audio, DOWN)
@@ -2982,7 +2982,7 @@ class BiasForInactiviyWords(Scene):
     def construct(self):
         words = TextMobject("Bias for inactivity")
         words.highlight(BLUE)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
 
         self.play(Write(words))
@@ -3931,7 +3931,7 @@ class SigmoidAppliedToVector(Scene):
                 \\sigma(x) \\\\ \\sigma(y) \\\\ \\sigma(z)
             \\end{array}\\right]
         """)
-        tex.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        tex.scale_to_fit_width(FRAME_WIDTH - 1)
         tex.to_edge(DOWN)
         indices = it.chain(
             [0], range(1, 5), range(16, 16+4),
@@ -4421,7 +4421,7 @@ class IntroduceReLU(IntroduceSigmoid):
         self.play(
             ApplyMethod(
                 VGroup(cross, sigmoid_title).shift, 
-                SPACE_X_RADIUS*RIGHT,
+                FRAME_X_RADIUS*RIGHT,
                 rate_func = running_start
             ),
             FadeOut(old_school),
@@ -4447,7 +4447,7 @@ class IntroduceReLU(IntroduceSigmoid):
         graph.highlight(YELLOW)
         char = self.x_axis_label.replace("$", "")
         equation = TextMobject("ReLU($%s$) = max$(0, %s)$"%(char, char))
-        equation.shift(SPACE_X_RADIUS*LEFT/2)
+        equation.shift(FRAME_X_RADIUS*LEFT/2)
         equation.to_edge(UP)
         equation.add_background_rectangle()
         name = TextMobject("Rectified linear unit")
@@ -4556,9 +4556,9 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
     ###
     def create_pi_creatures(self):
         morty = Mortimer()
-        morty.shift(SPACE_X_RADIUS*RIGHT/2).to_edge(DOWN)
+        morty.shift(FRAME_X_RADIUS*RIGHT/2).to_edge(DOWN)
         lisha = PiCreature(color = BLUE_C)
-        lisha.shift(SPACE_X_RADIUS*LEFT/2).to_edge(DOWN)
+        lisha.shift(FRAME_X_RADIUS*LEFT/2).to_edge(DOWN)
         self.morty, self.lisha = morty, lisha
         return morty, lisha
 
@@ -4588,7 +4588,7 @@ class Thumbnail(NetworkScene):
     }
     def construct(self):
         network_mob = self.network_mob
-        network_mob.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
+        network_mob.scale_to_fit_height(FRAME_HEIGHT - 1)
         for layer in network_mob.layers:
             layer.neurons.set_stroke(width = 5)
 

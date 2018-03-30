@@ -718,7 +718,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
 
         self.play(
             ApplyMethod(
-                to_remove.next_to, SPACE_X_RADIUS*RIGHT, RIGHT,
+                to_remove.next_to, FRAME_X_RADIUS*RIGHT, RIGHT,
                 remover = True,
                 rate_func = running_start,
                 path_arc = -TAU/4,
@@ -740,7 +740,7 @@ class InputOutputScene(Scene):
     CONFIG = {
         "plane_width" : 6,
         "plane_height" : 6,
-        "x_shift" : SPACE_X_RADIUS/2,
+        "x_shift" : FRAME_X_RADIUS/2,
         "y_shift" : MED_LARGE_BUFF,
         "output_scalar" : 10,
         "non_renormalized_func" : plane_func_by_wind_spec(
@@ -813,7 +813,7 @@ class InputOutputScene(Scene):
             plane.add_coordinates(x_vals = range(-2, 3), y_vals = range(-2, 3))
             plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
             plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
-            plane.move_to(vect*SPACE_X_RADIUS/2 + self.y_shift*DOWN)
+            plane.move_to(vect*FRAME_X_RADIUS/2 + self.y_shift*DOWN)
             label = TextMobject(text)
             label.scale(1.5)
             label.add_background_rectangle()
@@ -828,7 +828,7 @@ class InputOutputScene(Scene):
         return planes
 
     def get_v_line(self):
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_stroke(WHITE, 5)
         return v_line
 
@@ -1160,7 +1160,7 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         laptop.rotate(-TAU/12, DOWN)
         laptop.rotate(-5*TAU/24, LEFT)
         laptop.rotate(TAU/8, LEFT)
-        laptop.scale(2.3*SPACE_X_RADIUS/laptop.screen_plate.get_width())
+        laptop.scale(2.3*FRAME_X_RADIUS/laptop.screen_plate.get_width())
         laptop.shift(-laptop.screen_plate.get_center() + 0.1*IN)
         should_shade_in_3d(laptop)
 
@@ -1208,8 +1208,8 @@ class EveryOutputPointHasAColor(ColorMappedObjectsScene):
 
         dots = VGroup()
         step = self.dot_spacing
-        for x in np.arange(-SPACE_X_RADIUS, SPACE_X_RADIUS+step, step):
-            for y in np.arange(-SPACE_Y_RADIUS, SPACE_Y_RADIUS+step, step):
+        for x in np.arange(-FRAME_X_RADIUS, FRAME_X_RADIUS+step, step):
+            for y in np.arange(-FRAME_Y_RADIUS, FRAME_Y_RADIUS+step, step):
                 dot = Dot(color = WHITE)
                 dot.color_using_background_image(self.background_image_file)
                 dot.move_to(x*RIGHT + y*UP)
@@ -1242,8 +1242,8 @@ class DotsHoppingToColor(InputOutputScene):
         dots = self.get_dots(input_plane, output_plane)
 
         right_half_block = Rectangle(
-            height = 2*SPACE_Y_RADIUS,
-            width = SPACE_X_RADIUS - SMALL_BUFF,
+            height = FRAME_HEIGHT,
+            width = FRAME_X_RADIUS - SMALL_BUFF,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.8,
@@ -1292,7 +1292,7 @@ class DotsHoppingToColor(InputOutputScene):
 
         #Cover output half
         right_half_block.save_state()
-        right_half_block.next_to(SPACE_X_RADIUS*RIGHT, RIGHT)
+        right_half_block.next_to(FRAME_X_RADIUS*RIGHT, RIGHT)
         self.play(right_half_block.restore)
         self.wait()
 
@@ -1333,7 +1333,7 @@ class DotsHoppingToColor(InputOutputScene):
             Write(pink_points_label)
         )
         self.wait()
-        self.play(right_half_block.next_to, SPACE_X_RADIUS*RIGHT, RIGHT)
+        self.play(right_half_block.next_to, FRAME_X_RADIUS*RIGHT, RIGHT)
         inspector_image_update_anim.update(0)
         self.play(ReplacementTransform(
             inspector.copy(), inspector_image,
@@ -1827,7 +1827,7 @@ class ForeverNarrowingLoop(InputOutputScene):
             plane.white_parts.highlight(BLACK)
             plane.lines_to_fade.set_stroke(width = 0)
 
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_stroke(WHITE, 5)
 
         self.add(colorings, v_line, planes)
@@ -2095,7 +2095,7 @@ class PathContainingZero(InputOutputScene, PiCreatureScene):
             # plane.white_parts.highlight(BLACK)
             plane.lines_to_fade.set_stroke(width = 0)
 
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_stroke(WHITE, 5)
 
         self.add(colorings, planes)
@@ -2931,7 +2931,7 @@ class AllOfTheVideos(Scene):
             rect.set_stroke(WHITE, 1)
             image.add(rect)
         images.arrange_submobjects_in_grid(n, n, buff = 0)
-        images.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        images.scale_to_fit_height(FRAME_HEIGHT)
         random.shuffle(images.submobjects)
 
         self.play(LaggedStart(FadeIn, images, run_time = 4))
@@ -2995,7 +2995,7 @@ class TickingClock(Scene):
     }
     def construct(self):
         clock = Clock()
-        clock.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
+        clock.scale_to_fit_height(FRAME_HEIGHT - 1)
         clock.to_edge(LEFT)
         lines = [clock.hour_hand, clock.minute_hand]
         def update_line(line):

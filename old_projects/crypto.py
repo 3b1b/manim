@@ -240,7 +240,7 @@ class DisectQuestion(TeacherStudentsScene):
             "Proof of work, ",
             "Cryptographic hash functions, \\dots"
         )
-        topics.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
+        topics.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         topics.to_edge(UP)
         topics.highlight_by_tex("Digital", BLUE)
         topics.highlight_by_tex("Proof", GREEN)
@@ -282,7 +282,7 @@ class CryptocurrencyEquation(Scene):
             "= Cryptocurrency"
         )
         VGroup(*parts[-1][1:]).highlight(YELLOW)
-        parts.scale_to_fit_width(2*SPACE_X_RADIUS - LARGE_BUFF)
+        parts.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
 
         for part in parts:
             self.play(FadeIn(part))
@@ -398,7 +398,7 @@ class NoCommentOnSpeculation(TeacherStudentsScene):
         self.play(ShowCreation(cross))
         group.add(cross)
         self.play(
-            group.shift, 2*SPACE_X_RADIUS*RIGHT,
+            group.shift, FRAME_WIDTH*RIGHT,
             self.teacher.change, "happy"
         )
         self.wait()
@@ -418,7 +418,7 @@ class NoCommentOnSpeculation(TeacherStudentsScene):
         self.wait()
         self.play(
             VGroup(mining_graphic, mining_cross).shift,
-            2*SPACE_X_RADIUS*RIGHT
+            FRAME_WIDTH*RIGHT
         )
         black_words = TextMobject("Random words\\\\Blah blah")
         black_words.highlight(BLACK)
@@ -1586,7 +1586,7 @@ class CharlieRacksUpDebt(SignedLedgerScene):
             if pi is not self.charlie
         ])
         self.play(
-            self.charlie.shift, SPACE_X_RADIUS*RIGHT,
+            self.charlie.shift, FRAME_X_RADIUS*RIGHT,
             rate_func = running_start
         )
         self.play(*[
@@ -2063,7 +2063,7 @@ class BigDifferenceBetweenLDAndCryptocurrencies(Scene):
         words.scale(1.5)
         words.to_edge(UP)
         for word, vect in zip(words, [RIGHT, LEFT]):
-            word.shift(SPACE_X_RADIUS*vect/2)
+            word.shift(FRAME_X_RADIUS*vect/2)
 
         self.add(logos)
         self.wait()
@@ -2077,7 +2077,7 @@ class BigDifferenceBetweenLDAndCryptocurrencies(Scene):
 class DistributedLedgerScene(LedgerScene):
     def get_large_network(self):
         network = self.get_network()
-        network.scale_to_fit_height(2*SPACE_Y_RADIUS - LARGE_BUFF)
+        network.scale_to_fit_height(FRAME_HEIGHT - LARGE_BUFF)
         network.center()
         for pi in self.pi_creatures:
             pi.label.scale(0.8, about_point = pi.get_bottom())
@@ -2187,7 +2187,7 @@ class TransitionToDistributedLedger(DistributedLedgerScene):
             for pi in self.pi_creatures
         ])
         self.play(
-            group.scale_to_fit_height, 2*SPACE_Y_RADIUS - 2,
+            group.scale_to_fit_height, FRAME_HEIGHT - 2,
             group.center
         )
         self.wait(2)
@@ -2288,7 +2288,7 @@ class BobDoubtsBroadcastTransaction(DistributedLedgerScene):
 
     def bob_receives_transaction(self):
         bob, charlie = self.bob, self.charlie
-        corner = SPACE_Y_RADIUS*UP + SPACE_X_RADIUS*LEFT
+        corner = FRAME_Y_RADIUS*UP + FRAME_X_RADIUS*LEFT
 
         payment = TextMobject(
             "Alice", "pays", "Bob", "10 LD"
@@ -2344,7 +2344,7 @@ class YouListeningToBroadcasts(LedgerScene):
         ])
         self.remove(self.ledger)
         corners = [
-            SPACE_X_RADIUS*RIGHT*u1 + SPACE_Y_RADIUS*UP*u2
+            FRAME_X_RADIUS*RIGHT*u1 + FRAME_Y_RADIUS*UP*u2
             for u1, u2 in (-1, 1), (1, 1), (-1, -1)
         ]
         you = self.you
@@ -3361,7 +3361,7 @@ class FromBankToDecentralizedSystem(DistributedBlockChainScene):
         self.play(ShowCreation(cross))
         self.wait()
         self.play(
-            group.next_to, SPACE_X_RADIUS*RIGHT, RIGHT,
+            group.next_to, FRAME_X_RADIUS*RIGHT, RIGHT,
             rate_func = running_start,
             path_arc = -np.pi/6,
         )
@@ -3868,7 +3868,7 @@ class TwoBlockChains(DistributedBlockChainScene):
         randy.change("raise_right_hand", chain)
 
         corners = [
-            u1*SPACE_X_RADIUS*RIGHT + u2*SPACE_Y_RADIUS*UP
+            u1 * FRAME_X_RADIUS*RIGHT + u2 * FRAME_Y_RADIUS*UP
             for u1, u2 in it.product(*[[-1, 1]]*2)
         ]
         moving_blocks = chain.blocks[1:]
@@ -3925,7 +3925,7 @@ class TwoBlockChains(DistributedBlockChainScene):
 
         chain = block_chains[1]
         chain.save_state()
-        corner = SPACE_X_RADIUS*LEFT + SPACE_Y_RADIUS*UP
+        corner = FRAME_X_RADIUS*LEFT + FRAME_Y_RADIUS*UP
         chain.next_to(corner, UP+LEFT)
         self.play(
             randy.change, "confused", chain,
@@ -3982,7 +3982,7 @@ class TwoBlockChains(DistributedBlockChainScene):
         self.wait()
 
         arrow_block = arrow_block.copy()
-        arrow_block.next_to(SPACE_X_RADIUS*RIGHT, RIGHT)
+        arrow_block.next_to(FRAME_X_RADIUS*RIGHT, RIGHT)
         self.play(
             ApplyMethod(
                 arrow_block.next_to, block_chains[0], RIGHT, 0,
@@ -4479,7 +4479,7 @@ class WhenToTrustANewBlock(DistributedBlockChainScene):
         block = blocks[-1].copy()
         arrow = arrows[-1].copy()
         VGroup(block, arrow).next_to(blocks[-1], RIGHT, buff = 0)
-        corner = SPACE_X_RADIUS*RIGHT + SPACE_Y_RADIUS*UP
+        corner = FRAME_X_RADIUS*RIGHT + FRAME_Y_RADIUS*UP
         block.save_state()
         block.next_to(corner, UP+RIGHT)
 
@@ -4505,7 +4505,7 @@ class MainIdeas(Scene):
         title = TextMobject("Main ideas")
         title.scale(1.5)
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(SPACE_X_RADIUS)
+        h_line.scale_to_fit_width(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         VGroup(title, h_line).to_corner(UP+LEFT)
 
@@ -4625,7 +4625,7 @@ class VariableProofOfWork(WhenToTrustANewBlock):
         ])
         everyone = VGroup(target, *copies)
         everyone.arrange_submobjects(DOWN)
-        everyone.scale_to_fit_height(2*SPACE_Y_RADIUS - LARGE_BUFF)
+        everyone.scale_to_fit_height(FRAME_HEIGHT - LARGE_BUFF)
         everyone.to_corner(UP+LEFT)
 
         self.play(Transform(miner_block, target))
@@ -4668,7 +4668,7 @@ class CompareBlockTimes(Scene):
         title.scale(1.5)
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(SPACE_X_RADIUS)
+        h_line.scale_to_fit_width(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN, SMALL_BUFF)
 
         examples = VGroup(
@@ -4730,7 +4730,7 @@ class BlockRewards(Scene):
         title.add(logo)
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(SPACE_X_RADIUS)
+        h_line.scale_to_fit_width(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, logo, h_line)
 
@@ -4847,7 +4847,7 @@ class TransactionFeeExample(PiCreatureScene):
     def create_pi_creature(self):
         alice = PiCreature(color = BLUE_C)
         alice.to_edge(DOWN)
-        alice.shift(SPACE_X_RADIUS*LEFT/2)
+        alice.shift(FRAME_X_RADIUS*LEFT/2)
         return alice
 
 class ShowBitcoinBlockSize(LedgerScene):
@@ -5269,7 +5269,7 @@ class Thumbnail(DistributedBlockChainScene):
         block_chain = self.get_block_chain()
         block_chain.arrows.highlight(RED)
         block_chain.blocks.gradient_highlight(BLUE, GREEN)
-        block_chain.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        block_chain.scale_to_fit_width(FRAME_WIDTH-1)
         block_chain.set_stroke(width = 12)
         self.add(block_chain)
 

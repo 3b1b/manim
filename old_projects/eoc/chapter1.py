@@ -250,7 +250,7 @@ class Introduction(TeacherStudentsScene):
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        this_video.scale_to_fit_height(FRAME_HEIGHT)
         self.this_video = this_video
 
 
@@ -386,8 +386,8 @@ class Introduction(TeacherStudentsScene):
         arrow = Arrow(invent_calculus, student)
 
         fader = Rectangle(
-            width = 2*SPACE_X_RADIUS,
-            height = 2*SPACE_Y_RADIUS,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.5,
@@ -410,7 +410,7 @@ class Introduction(TeacherStudentsScene):
 class PreviewFrame(Scene):
     def construct(self):
         frame = Rectangle(height = 9, width = 16, color = WHITE)
-        frame.scale_to_fit_height(1.5*SPACE_Y_RADIUS)
+        frame.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
 
         colors = iter(color_gradient([BLUE, YELLOW], 3))
         titles = [
@@ -1439,7 +1439,7 @@ class GraphRectangles(CircleScene, GraphScene):
 
         arranged_group.add(last_ring.target)
         arranged_group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
-        arranged_group.scale_to_fit_height(2*SPACE_Y_RADIUS-1)
+        arranged_group.scale_to_fit_height(FRAME_HEIGHT-1)
         arranged_group.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
         for mob in tex_mobs:
             mob.scale_in_place(0.7)
@@ -2064,7 +2064,7 @@ class AreaUnderParabola(GraphScene):
 
         v_lines = VGroup(*[
             DashedLine(
-                2*SPACE_Y_RADIUS*UP, ORIGIN,
+                FRAME_HEIGHT*UP, ORIGIN,
                 color = RED
             ).move_to(self.coords_to_point(x, 0), DOWN)
             for x in 0, self.default_right_x
@@ -2616,7 +2616,7 @@ class AlternateAreaUnderCurve(PlayingTowardsDADX):
 class NextVideoWrapper(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(1.5*SPACE_Y_RADIUS)
+        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
         titles = [
             TextMobject("Chapter %d:"%d, s)
             for d, s in [

@@ -55,7 +55,7 @@ class OpeningQuote(Scene):
             "No one can say how it happens. "
             "You either believe it or you don't.",
         )
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
         words[0].highlight(YELLOW)
         words[2].highlight("#fd9c2b")
@@ -105,7 +105,7 @@ class ThisSeriesOrdering(RandolphScene):
         self.randy.rotate(np.pi, UP)
         title.scale(1.2).highlight(BLUE)
         title.to_corner(UP+LEFT)
-        line = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT, color = WHITE)
+        line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT, color = WHITE)
         line.next_to(title, DOWN, buff = SMALL_BUFF)
         line.to_edge(LEFT, buff = 0)
 
@@ -128,7 +128,7 @@ class ThisSeriesOrdering(RandolphScene):
         chapters.arrange_submobjects(
             DOWN, buff = SMALL_BUFF, aligned_edge = LEFT
         )
-        chapters.scale_to_fit_height(1.5*SPACE_Y_RADIUS)
+        chapters.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
         chapters.next_to(line, DOWN, buff = SMALL_BUFF)
         chapters.to_edge(RIGHT)
 
@@ -316,7 +316,7 @@ class GeometricInterpretation(VectorScene):
         self.proj_vect = self.w if self.project_onto_v else self.v
 
     def line(self):
-        line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         line.rotate(self.stable_vect.get_angle())
         self.play(ShowCreation(line), Animation(self.stable_vect))
         self.wait()
@@ -473,7 +473,7 @@ class ShowQualitativeDotProductValues(VectorScene):
         )
         shadow_opposite = shadow.copy().scale(-1)
         line = Line(LEFT, RIGHT, color = WHITE)
-        line.scale(SPACE_X_RADIUS)
+        line.scale(FRAME_X_RADIUS)
         line.rotate(v.get_angle())
         proj_line = Line(w.get_end(), shadow.get_end(), color = GREY)
 
@@ -551,7 +551,7 @@ class SymmetricVAndW(VectorScene):
             v1.proj_line = Line(
                 v1.get_end(), v1.proj.get_end(), color = GREY
             )
-        line_of_symmetry = DashedLine(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
+        line_of_symmetry = DashedLine(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         line_of_symmetry.rotate(np.mean([v.get_angle(), w.get_angle()]))
         line_of_symmetry_words = TextMobject("Line of symmetry")
         line_of_symmetry_words.add_background_rectangle()
@@ -700,8 +700,8 @@ class TwoDToOneDScene(LinearTransformationScene):
     CONFIG = {
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : SPACE_X_RADIUS,
-            "y_radius" : SPACE_Y_RADIUS,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_Y_RADIUS,
             "secondary_line_ratio" : 1
         },
         "t_matrix" : [[2, 0], [1, 0]]
@@ -797,7 +797,7 @@ class OkayToIgnoreFormalProperties(Scene):
     def construct(self):
         title = TextMobject("Formal linearity properties")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "v", "w"]
         additivity = TexMobject(
@@ -841,14 +841,14 @@ class FormalVsVisual(Scene):
         title = TextMobject("Linearity")
         title.highlight(BLUE)
         title.to_edge(UP)
-        line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         line.next_to(title, DOWN)
-        v_line = Line(line.get_center(), SPACE_Y_RADIUS*DOWN)
+        v_line = Line(line.get_center(), FRAME_Y_RADIUS*DOWN)
 
         formal = TextMobject("Formal definition")
         visual = TextMobject("Visual intuition")
-        formal.next_to(line, DOWN).shift(SPACE_X_RADIUS*LEFT/2)
-        visual.next_to(line, DOWN).shift(SPACE_X_RADIUS*RIGHT/2)
+        formal.next_to(line, DOWN).shift(FRAME_X_RADIUS*LEFT/2)
+        visual.next_to(line, DOWN).shift(FRAME_X_RADIUS*RIGHT/2)
 
         v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in "v", "w"]
         additivity = TexMobject(
@@ -1358,14 +1358,14 @@ class SomeKindOfConnection(Scene):
         "v_coords" : [2, 3]
     }
     def construct(self):
-        width = SPACE_X_RADIUS-1
+        width = FRAME_X_RADIUS-1
         plane = NumberPlane(x_radius = 4, y_radius = 6)
         squish_plane = plane.copy()
         i_hat = Vector([1, 0], color = X_COLOR)
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(SPACE_X_RADIUS)
+        plane.scale_to_fit_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -1374,7 +1374,7 @@ class SomeKindOfConnection(Scene):
         )
         squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
         squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))        
-        squish_plane.scale(width/(2*SPACE_X_RADIUS))
+        squish_plane.scale(width/(FRAME_WIDTH))
         plane.add(j_hat, i_hat)
 
         number_line = NumberLine().stretch_to_fit_width(width)
@@ -1382,7 +1382,7 @@ class SomeKindOfConnection(Scene):
         squish_plane.move_to(number_line)
 
         numbers = number_line.get_numbers(*range(-6, 8, 2))
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.highlight(GREY)
         v_line.set_stroke(width = 10)
 
@@ -1514,8 +1514,8 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
 
 
     def get_vectors(self, num_vectors = 10, randomize = True):
-        x_max = SPACE_X_RADIUS - 1
-        y_max = SPACE_Y_RADIUS - 1
+        x_max = FRAME_X_RADIUS - 1
+        y_max = FRAME_Y_RADIUS - 1
         x_vals = np.linspace(-x_max, x_max, num_vectors)
         y_vals = np.linspace(y_max, -y_max, num_vectors)
         if randomize:
@@ -1743,7 +1743,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
 
     def show_symmetry(self, vect, coord, coord_landing_spot):
         starting_mobjects = list(self.get_mobjects())
-        line = DashedLine(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
+        line = DashedLine(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         words = TextMobject("Line of symmetry")
         words.next_to(ORIGIN, UP+LEFT)
         words.shift(LEFT)
@@ -2046,14 +2046,14 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         "v_coords" : [4, 1]
     }
     def construct(self):
-        width = SPACE_X_RADIUS-1
+        width = FRAME_X_RADIUS-1
         plane = NumberPlane(x_radius = 6, y_radius = 7)
         squish_plane = plane.copy()
         i_hat = Vector([1, 0], color = X_COLOR)
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(SPACE_X_RADIUS)
+        plane.scale_to_fit_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -2062,7 +2062,7 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         )
         squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))
         squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
-        squish_plane.scale(width/(2*SPACE_X_RADIUS))
+        squish_plane.scale(width/(FRAME_WIDTH))
         plane.add(i_hat, j_hat)
 
         number_line = NumberLine().stretch_to_fit_width(width)
@@ -2070,7 +2070,7 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         squish_plane.move_to(number_line)
 
         numbers = number_line.get_numbers(*range(-6, 8, 2))
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.highlight(GREY)
         v_line.set_stroke(width = 10)
 
@@ -2234,14 +2234,14 @@ class WhatTheVectorWantsToBe(Scene):
         "v_coords" : [2, 4]
     }
     def construct(self):
-        width = SPACE_X_RADIUS-1
+        width = FRAME_X_RADIUS-1
         plane = NumberPlane(x_radius = 6, y_radius = 7)
         squish_plane = plane.copy()
         i_hat = Vector([1, 0], color = X_COLOR)
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(SPACE_X_RADIUS)
+        plane.scale_to_fit_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -2250,7 +2250,7 @@ class WhatTheVectorWantsToBe(Scene):
         )
         squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
         squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))        
-        squish_plane.scale(width/(2*SPACE_X_RADIUS))
+        squish_plane.scale(width/(FRAME_WIDTH))
         plane.add(j_hat, i_hat)
 
         number_line = NumberLine().stretch_to_fit_width(width)
@@ -2258,7 +2258,7 @@ class WhatTheVectorWantsToBe(Scene):
         squish_plane.move_to(number_line)
 
         numbers = number_line.get_numbers(*range(-6, 8, 2))
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.highlight(GREY)
         v_line.set_stroke(width = 10)
 

@@ -50,8 +50,8 @@ class Chapter2(LinearTransformationScene):
         self.lock_in_faded_grid()
         vectors = VMobject(*[
             Vector([x, y])
-            for x in np.arange(-int(SPACE_X_RADIUS)+0.5, int(SPACE_X_RADIUS)+0.5)
-            for y in np.arange(-int(SPACE_Y_RADIUS)+0.5, int(SPACE_Y_RADIUS)+0.5)
+            for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
+            for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
         vectors.submobject_gradient_highlight(PINK, BLUE_E)
         words = TextMobject("Span")
@@ -118,8 +118,8 @@ class Chapter9(Scene):
 class Chapter10(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_X_RADIUS,
-            "y_radius" : 2*SPACE_Y_RADIUS,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 1
 
         },

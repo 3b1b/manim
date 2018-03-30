@@ -193,7 +193,7 @@ class FocusOn(Transform):
     def __init__(self, mobject_or_point, **kwargs):
         digest_config(self, kwargs)
         big_dot = Dot(
-            radius = SPACE_X_RADIUS+SPACE_Y_RADIUS,
+            radius = FRAME_X_RADIUS+FRAME_Y_RADIUS,
             stroke_width = 0,
             fill_color = self.color,
             fill_opacity = 0,

@@ -16,7 +16,7 @@ from mobject.region import  *
 from scene import Scene, GraphScene, PascalsTriangleScene
 from script_wrapper import command_line_create_scene
 
-RADIUS            = SPACE_Y_RADIUS - 0.1
+RADIUS            = FRAME_Y_RADIUS - 0.1
 CIRCLE_DENSITY    = DEFAULT_POINT_DENSITY_1D*RADIUS
 MOVIE_PREFIX      = "moser/"
 RADIANS           = np.arange(0, 6, 6.0/7)
@@ -53,7 +53,7 @@ class CircleScene(Scene):
         self.lines = [Line(p1, p2) for p1, p2 in it.combinations(self.points, 2)]
         self.n_equals = TexMobject(
             "n=%d"%len(radians),
-        ).shift((-SPACE_X_RADIUS+1, SPACE_Y_RADIUS-1.5, 0))
+        ).shift((-FRAME_X_RADIUS+1, FRAME_Y_RADIUS-1.5, 0))
         self.add(self.circle, self.n_equals, *self.dots + self.lines)
 
 
@@ -151,7 +151,7 @@ class MoserPattern(CircleScene):
         self.remove(*self.dots + self.lines + [self.n_equals])
         n_equals, num = TexMobject(["n=", "10"]).split()
         for mob in n_equals, num:
-            mob.shift((-SPACE_X_RADIUS + 1.5, SPACE_Y_RADIUS - 1.5, 0))
+            mob.shift((-FRAME_X_RADIUS + 1.5, FRAME_Y_RADIUS - 1.5, 0))
         self.add(n_equals)
         for n in range(1, len(radians)+1):
             self.add(*self.dots[:n])
@@ -206,7 +206,7 @@ class HardProblemsSimplerQuestions(Scene):
             mob.scale(scale_factor)
         fermat["2"].shift(right_center)
         fermat["3"].shift(left_center)
-        fermat["n"].shift((0, SPACE_Y_RADIUS - 1, 0))
+        fermat["n"].shift((0, FRAME_Y_RADIUS - 1, 0))
         shift_val = right_center - fermat2.get_center()
         fermat2.shift(shift_val)
         fermat2_jargon.shift(shift_val)
@@ -269,10 +269,10 @@ class HardProblemsSimplerQuestions(Scene):
         self.play(
             Transform(
                 all_mobjects,
-                Point((SPACE_X_RADIUS, 0, 0))
+                Point((FRAME_X_RADIUS, 0, 0))
             ),
             Transform(
-                Point((-SPACE_X_RADIUS, 0, 0)), 
+                Point((-FRAME_X_RADIUS, 0, 0)), 
                 Mobject(*CircleScene(RADIANS).mobjects)
             )
         )
@@ -526,7 +526,7 @@ class IllustrateNChooseK(Scene):
         for mob in nrange_mobs:
             mob.shift((0, 2, 0))
         for mob in form1, count, form2:
-            mob.scale(0.75).shift((0, -SPACE_Y_RADIUS + 1, 0))
+            mob.scale(0.75).shift((0, -FRAME_Y_RADIUS + 1, 0))
         count_center = count.get_center()
         for mob in tuple_mobs:
             mob.scale(0.6)
@@ -587,7 +587,7 @@ class IntersectionPointCorrespondances(CircleScene):
         for mob in line_statement, dots_statement:
             mob.center()
             mob.scale(0.7)
-            mob.shift((SPACE_X_RADIUS-2, SPACE_Y_RADIUS - 1, 0))
+            mob.shift((FRAME_X_RADIUS-2, FRAME_Y_RADIUS - 1, 0))
         fade_outs = []
         line_highlights = []
         dot_highlights = []
@@ -682,7 +682,7 @@ class GraphsAndEulersFormulaJoke(Scene):
             lambda t : (10*t, ((10*t)**3 - 10*t), 0),
             expected_measure = 40.0
         )
-        graph.filter_out(lambda (x, y, z) : abs(y) > SPACE_Y_RADIUS)
+        graph.filter_out(lambda (x, y, z) : abs(y) > FRAME_Y_RADIUS)
         self.add(axes)
         self.play(ShowCreation(graph), run_time = 1.0)
         eulers = TexMobject("e^{\pi i} = -1").shift((0, 3, 0))
@@ -694,11 +694,11 @@ class GraphsAndEulersFormulaJoke(Scene):
         self.add(eulers)
         self.play(CounterclockwiseTransform(
             Mobject(axes, graph),
-            Point((-SPACE_X_RADIUS, SPACE_Y_RADIUS, 0))
+            Point((-FRAME_X_RADIUS, FRAME_Y_RADIUS, 0))
         ))
         self.play(CounterclockwiseTransform(
             eulers,
-            Point((SPACE_X_RADIUS, SPACE_Y_RADIUS, 0))
+            Point((FRAME_X_RADIUS, FRAME_Y_RADIUS, 0))
         ))
 
 class DefiningGraph(GraphScene):
@@ -785,7 +785,7 @@ class EulersFormula(GraphScene):
             for key, mob in zip(terms, TexMobjects(terms))
         ])
         for mob in form.values():
-            mob.shift((0, SPACE_Y_RADIUS-0.7, 0))
+            mob.shift((0, FRAME_Y_RADIUS-0.7, 0))
         formula = Mobject(*[form[k] for k in form.keys() if k != "=2"])
         new_form = dict([
             (key, deepcopy(mob).shift((0, -0.7, 0)))
@@ -882,7 +882,7 @@ class ShowMoserGraphLines(CircleScene):
             r"{n \choose 2}",r"&+2{n \choose 4}\\",r"&+n"
         ]).split()
         for mob in n, plus_n_choose_4, n_choose_2, plus_2_n_choose_4, plus_n:
-            mob.shift((SPACE_X_RADIUS - 2, SPACE_Y_RADIUS-1, 0))
+            mob.shift((FRAME_X_RADIUS - 2, FRAME_Y_RADIUS-1, 0))
         self.chop_lines_at_intersection_points()
         self.add(*self.intersection_dots)
         small_lines = [
@@ -1143,7 +1143,7 @@ class ApplyEulerToMoser(CircleScene):
         self.play(
             Transform(
                 Mobject(plus2[4], n1[4], minus[4], n[4]),
-                Point((SPACE_X_RADIUS, SPACE_Y_RADIUS, 0))
+                Point((FRAME_X_RADIUS, FRAME_Y_RADIUS, 0))
             ),
             *[
                 Transform(d[4], d[5])
@@ -1301,7 +1301,7 @@ class PascalsTriangleNChooseKExample(PascalsTriangleScene):
         formula_terms = left, n_mob, k_mob, right = TexMobject([
             r"\left(", str(n), r"\atop %d"%k, r"\right)"
         ])
-        formula_center = (SPACE_X_RADIUS - 1, SPACE_Y_RADIUS - 1, 0)
+        formula_center = (FRAME_X_RADIUS - 1, FRAME_Y_RADIUS - 1, 0)
         self.remove(*triangle_terms)
         self.add(*formula_terms)
         self.wait()
@@ -1486,7 +1486,7 @@ class MoserSolutionInPascal(PascalsTriangleScene):
             self.remove(*above_terms)
         self.wait()
         terms_sum = TexMobject(str(moser_function(n)))
-        terms_sum.shift((SPACE_X_RADIUS-1, terms[0].get_center()[1], 0))
+        terms_sum.shift((FRAME_X_RADIUS-1, terms[0].get_center()[1], 0))
         terms_sum.highlight(term_color)
         self.play(Transform(Mobject(*terms), terms_sum))
 
@@ -1541,7 +1541,7 @@ class ExplainNChoose2Formula(Scene):
             str(n), "(%d-1)"%n, r"\over{2}"
         ]).split()
         for part in n_mob, n_minus_1, over_2:
-            part.shift((SPACE_X_RADIUS-1.5, SPACE_Y_RADIUS-1, 0))
+            part.shift((FRAME_X_RADIUS-1.5, FRAME_Y_RADIUS-1, 0))
 
         self.add(parens, n_mob)
         up_unit = np.array((0, height, 0))
@@ -1685,7 +1685,7 @@ class IntersectionChoppingExamples(Scene):
         for pairs, exp in [(pairs1, "3 + 2(2) = 7"), 
                            (pairs2, "4 + 2(3) = 10")]:
             lines = [Line(*pair).scale(2) for pair in pairs]
-            self.add(TexMobject(exp).shift((0, SPACE_Y_RADIUS-1, 0)))
+            self.add(TexMobject(exp).shift((0, FRAME_Y_RADIUS-1, 0)))
             self.add(*lines)
             self.wait()
             self.play(*[

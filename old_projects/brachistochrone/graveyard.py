@@ -74,7 +74,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
     def get_continuous_background(self):
         glass = FilledRectangle(
             height = self.top-self.bottom,
-            width = 2*SPACE_X_RADIUS,
+            width = FRAME_WIDTH,
         )
         glass.sort_points(lambda p : -p[1])
         glass.shift((self.top-glass.get_top()[1])*UP)
@@ -132,7 +132,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 angle_of_vector(start_point-end_point)-np.pi/2
             )
         self.discrete_path.add_line(
-            points[end], SPACE_X_RADIUS*RIGHT+(self.layer_tops[-1]-1)*UP
+            points[end], FRAME_X_RADIUS*RIGHT+(self.layer_tops[-1]-1)*UP
         )
 
     def show_layer_variables(self):
@@ -154,8 +154,8 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
             eq_mob.shift(midpoint)
             v_eq = eq_mob.split()
             center_paths.append(Line(
-                midpoint+SPACE_X_RADIUS*LEFT, 
-                midpoint+SPACE_X_RADIUS*RIGHT
+                midpoint+FRAME_X_RADIUS*LEFT, 
+                midpoint+FRAME_X_RADIUS*RIGHT
             ))            
             brace_endpoints = Mobject(
                 Point(self.top*UP+x*RIGHT),

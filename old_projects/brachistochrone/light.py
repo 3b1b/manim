@@ -133,7 +133,7 @@ class PhotonThroughLens(MultipathPhotonScene):
         focal_point = 2*RIGHT
         return [
             Mobject(
-                Line(SPACE_X_RADIUS*LEFT + fc[1]*UP, fc),
+                Line(FRAME_X_RADIUS*LEFT + fc[1]*UP, fc),
                 Line(fc, sc),
                 Line(sc, focal_point),
                 Line(focal_point, 6*focal_point-5*sc)
@@ -153,7 +153,7 @@ class TransitionToOptics(PhotonThroughLens):
         if not self.has_started:
             self.has_started = True
             everything = Mobject(*self.mobjects)
-            vect = 2*SPACE_X_RADIUS*RIGHT
+            vect = FRAME_WIDTH*RIGHT
             everything.shift(vect)
             self.play(ApplyMethod(
                 everything.shift, -vect,
@@ -164,7 +164,7 @@ class TransitionToOptics(PhotonThroughLens):
 
 class PhotonOffMirror(MultipathPhotonScene):
     def construct(self):
-        self.mirror = Line(*SPACE_Y_RADIUS*np.array([DOWN, UP]))
+        self.mirror = Line(*FRAME_Y_RADIUS*np.array([DOWN, UP]))
         self.mirror.highlight(GREY)
         self.add(self.mirror)
         self.run_along_paths()
@@ -201,11 +201,11 @@ class PhotonsInWater(MultipathPhotonScene):
         start_point = x*RIGHT + y*UP
         angles = np.arange(np.pi/18, np.pi/3, np.pi/18)
         midpoints = y*np.arctan(angles)
-        end_points = midpoints + SPACE_Y_RADIUS*np.arctan(2*angles)
+        end_points = midpoints + FRAME_Y_RADIUS*np.arctan(2*angles)
         return [
             Mobject(
                 Line(start_point, [midpoint, 0, 0]),
-                Line([midpoint, 0, 0], [end_point, -SPACE_Y_RADIUS, 0])
+                Line([midpoint, 0, 0], [end_point, -FRAME_Y_RADIUS, 0])
             ).ingest_submobjects()
             for midpoint, end_point in zip(midpoints, end_points)
         ]
@@ -282,7 +282,7 @@ class ShowMultiplePathsThroughLens(ShowMultiplePathsScene):
 
 class ShowMultiplePathsOffMirror(ShowMultiplePathsScene):
     def construct(self):
-        mirror = Line(*SPACE_Y_RADIUS*np.array([DOWN, UP]))
+        mirror = Line(*FRAME_Y_RADIUS*np.array([DOWN, UP]))
         mirror.highlight(GREY)
         self.add(mirror)
         ShowMultiplePathsScene.construct(self)
@@ -399,9 +399,9 @@ class PhtonBendsInWater(PhotonScene, ZoomedScene):
         kwargs = {
             "density" : self.zoom_factor*DEFAULT_POINT_DENSITY_1D
         }
-        top_line = Line(SPACE_Y_RADIUS*UP+2*LEFT, ORIGIN, **kwargs)
-        extension = Line(ORIGIN, SPACE_Y_RADIUS*DOWN+2*RIGHT, **kwargs)
-        bottom_line = Line(ORIGIN, SPACE_Y_RADIUS*DOWN+RIGHT, **kwargs)
+        top_line = Line(FRAME_Y_RADIUS*UP+2*LEFT, ORIGIN, **kwargs)
+        extension = Line(ORIGIN, FRAME_Y_RADIUS*DOWN+2*RIGHT, **kwargs)
+        bottom_line = Line(ORIGIN, FRAME_Y_RADIUS*DOWN+RIGHT, **kwargs)
         path1 = Mobject(top_line, extension)
         path2 = Mobject(top_line, bottom_line)
         for mob in path1, path2:
@@ -437,7 +437,7 @@ class LightIsFasterInAirThanWater(ShowMultiplePathsInWater):
         glass = Region(lambda x, y : y < 0, color = BLUE_E)
         equation = TexMobject("v_{\\text{air}} > v_{\\text{water}}")
         equation.to_edge(UP)
-        path = Line(SPACE_X_RADIUS*LEFT, SPACE_X_RADIUS*RIGHT)
+        path = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         path1 = path.copy().shift(2*UP)
         path2 = path.copy().shift(2*DOWN)
 

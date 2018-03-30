@@ -766,7 +766,7 @@ class SecondDerivativeAsAcceleration(Scene):
             for scene in s_scene, v_scene, a_scene, j_scene
         ]
         for i, graph in enumerate(graphs):
-            graph.scale_to_fit_height(SPACE_Y_RADIUS)
+            graph.scale_to_fit_height(FRAME_Y_RADIUS)
             graph.to_corner(UP+LEFT)
             graph.shift(i*DOWN/2.0)
 

@@ -399,7 +399,7 @@ class Pendulum(ReconfigurableScene):
 
     def get_ceiling(self):
         line = Line(LEFT, RIGHT, color = GREY)
-        line.scale(SPACE_X_RADIUS)
+        line.scale(FRAME_X_RADIUS)
         line.move_to(self.anchor_point[1]*UP)
         return line
 
@@ -1365,8 +1365,8 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         )
         self.quadratic_graph = self.get_quadratic_graph()
         self.big_rect = Rectangle(
-            height = 2*SPACE_Y_RADIUS,
-            width = 2*SPACE_X_RADIUS,
+            height = FRAME_HEIGHT,
+            width = FRAME_WIDTH,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.5,
@@ -1898,7 +1898,7 @@ class EachTermControlsOneDerivative(Scene):
             buff = LARGE_BUFF,
             aligned_edge = UP
         )
-        deriv_words.scale_to_fit_width(2*SPACE_X_RADIUS - MED_LARGE_BUFF)
+        deriv_words.scale_to_fit_width(FRAME_WIDTH - MED_LARGE_BUFF)
         deriv_words.to_edge(UP)
 
         for const, deriv, color in zip(consts, deriv_words, colors):
@@ -2150,7 +2150,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         )))
         group.add(TexMobject("\\vdots"))
         group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
-        group.scale_to_fit_height(2*SPACE_Y_RADIUS - MED_LARGE_BUFF)
+        group.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0, color in zip(derivs_at_x, derivs_at_zero, self.colors):
             for d in dx, d0:
@@ -2303,7 +2303,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             for arg in "x", "0", "a"
         ]
         derivs_at_x.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
-        derivs_at_x.scale_to_fit_height(2*SPACE_Y_RADIUS - MED_LARGE_BUFF)
+        derivs_at_x.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         derivs_at_x.to_edge(LEFT)
         zeros = VGroup(*[
             deriv.get_part_by_tex("0")
@@ -2503,7 +2503,7 @@ class ThisIsAStandardFormula(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["sad"]*3,
-            look_at_arg = SPACE_Y_RADIUS*UP
+            look_at_arg = FRAME_Y_RADIUS*UP
         )
         self.wait(2)
 
@@ -2563,7 +2563,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
         )))
         group.add(TexMobject("\\vdots"))
         group.arrange_submobjects(DOWN, buff = 2*SMALL_BUFF)
-        group.scale_to_fit_height(2*SPACE_Y_RADIUS - MED_LARGE_BUFF)
+        group.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0 in zip(derivs_at_x, derivs_at_zero):
             for d in dx, d0:
@@ -3021,8 +3021,8 @@ class AskAboutInfiniteSum(TeacherStudentsScene):
 
     def ask_question(self):
         big_rect = Rectangle(
-            width = 2*SPACE_X_RADIUS,
-            height = 2*SPACE_Y_RADIUS,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             stroke_width = 0,
             fill_color =  BLACK,
             fill_opacity = 0.7,
@@ -3597,7 +3597,7 @@ class MoreToBeSaid(TeacherStudentsScene):
         words.to_edge(UP)
         fade_rect = FullScreenFadeRectangle()
         rect = Rectangle(height = 9, width = 16)        
-        rect.scale_to_fit_height(SPACE_Y_RADIUS)
+        rect.scale_to_fit_height(FRAME_Y_RADIUS)
         rect.to_corner(UP+RIGHT)
         randy = self.get_students()[1]
 
@@ -3686,7 +3686,7 @@ class Thumbnail(ExampleApproximationWithSine):
         self.add(cos_graph, quad_graph, quartic)
 
         title = TextMobject("Taylor Series")
-        title.scale_to_fit_width(1.5*SPACE_X_RADIUS)
+        title.scale_to_fit_width(1.5*FRAME_X_RADIUS)
         title.add_background_rectangle()
         title.to_edge(UP)
         self.add(title)

@@ -33,7 +33,7 @@ class OpeningQuote(Scene):
             into...(dramatic pause)...""",
             "the third dimension."
         ])
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[0].highlight(YELLOW)
         words.split()[2].highlight(YELLOW)
@@ -146,7 +146,7 @@ class PutTogether3x3Matrix(Scene):
             k_to, k_array, TexMobject("=").highlight(BLACK),
         )
         everything.arrange_submobjects(RIGHT, buff = 0.1)
-        everything.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        everything.scale_to_fit_width(FRAME_WIDTH-1)
         everything.to_edge(DOWN)
 
         i_array.highlight(X_COLOR)
@@ -238,7 +238,7 @@ class ShowVCoordinateMeaning(Scene):
 
         everything = VMobject(v, eq, coords, eq2, lin_comb)
         everything.arrange_submobjects(buff = 0.2)
-        everything.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        everything.scale_to_fit_width(FRAME_WIDTH - 1)
         everything.to_edge(DOWN)
         if not self.post_transform:
             lin_comb.shift(0.35*UP)
@@ -287,7 +287,7 @@ class ShowMatrixVectorMultiplication(Scene):
             z, col3
         )
         everything.arrange_submobjects(buff = 0.1)
-        everything.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        everything.scale_to_fit_width(FRAME_WIDTH-1)
         result = VMobject(x, col1, plus1, y, col2, plus2, z, col3)
 
         trips = [
@@ -361,7 +361,7 @@ class ShowMatrixMultiplication(Scene):
             braces.append(brace)
         right_brace, left_brace = braces
 
-        VMobject(*self.get_mobjects()).scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        VMobject(*self.get_mobjects()).scale_to_fit_width(FRAME_WIDTH-1)
 
         self.add(right, left)
         self.play(Write(right_brace))
@@ -423,7 +423,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: The determinant
         """)
-        title.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        title.scale_to_fit_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)

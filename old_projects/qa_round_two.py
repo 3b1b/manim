@@ -190,7 +190,7 @@ class PiHoldingScreen(PiCreatureScene):
 class QuestionsLink(Scene):
     def construct(self):
         link = TextMobject("https://3b1b.co/questions")
-        link.scale_to_fit_width(2*SPACE_X_RADIUS)
+        link.scale_to_fit_width(FRAME_WIDTH)
         link.to_edge(DOWN)
         self.play(Write(link))
         self.wait()
@@ -198,12 +198,12 @@ class QuestionsLink(Scene):
 class Thumbnail(Scene):
     def construct(self):
         equation = TexMobject("2^{19} = " + "{:,}".format(2**19))
-        equation.scale_to_fit_width(SPACE_X_RADIUS)
+        equation.scale_to_fit_width(FRAME_X_RADIUS)
         equation.to_edge(DOWN, buff = LARGE_BUFF)
 
         q_and_a = TextMobject("Q\\&A \\\\ Round 2")
         q_and_a.gradient_highlight(BLUE, YELLOW)
-        q_and_a.scale_to_fit_width(SPACE_X_RADIUS)
+        q_and_a.scale_to_fit_width(FRAME_X_RADIUS)
         q_and_a.to_edge(UP, buff = LARGE_BUFF)
 
         eater = ImageMobject("eater", height = 3)

@@ -600,8 +600,8 @@ class FacebookGraphAsAbstractSet(Scene):
         friendships = TextMobject("\\textbf{Friendships}")
         friendships.shift(3*RIGHT).to_edge(UP)
         lines = Mobject(
-            Line(UP*SPACE_Y_RADIUS, DOWN*SPACE_Y_RADIUS),
-            Line(LEFT*SPACE_X_RADIUS + 3*UP, RIGHT*SPACE_X_RADIUS + 3*UP)
+            Line(UP*FRAME_Y_RADIUS, DOWN*FRAME_Y_RADIUS),
+            Line(LEFT*FRAME_X_RADIUS + 3*UP, RIGHT*FRAME_X_RADIUS + 3*UP)
         ).highlight("white")
 
         self.add(accounts, friendships, lines)
@@ -626,13 +626,13 @@ class ExamplesOfGraphs(GraphScene):
             ["Objects \\quad\\quad ", "Thing that connects objects"]
         )).to_corner().shift(0.5*RIGHT).split()
         horizontal_line = Line(
-            (-SPACE_X_RADIUS, SPACE_Y_RADIUS-1, 0),
-            (max(notions.points[:,0]), SPACE_Y_RADIUS-1, 0)
+            (-FRAME_X_RADIUS, FRAME_Y_RADIUS-1, 0),
+            (max(notions.points[:,0]), FRAME_Y_RADIUS-1, 0)
         )
         vert_line_x_val = min(notions.points[:,0]) - buff
         vertical_line = Line(
-            (vert_line_x_val, SPACE_Y_RADIUS, 0),
-            (vert_line_x_val,-SPACE_Y_RADIUS, 0)
+            (vert_line_x_val, FRAME_Y_RADIUS, 0),
+            (vert_line_x_val,-FRAME_Y_RADIUS, 0)
         )
         objects_and_notions = [
             ("Facebook accounts", "Friendship"),
@@ -651,7 +651,7 @@ class ExamplesOfGraphs(GraphScene):
         for (obj, notion), height in zip(objects_and_notions, it.count(2, -1)):
             obj_mob = TextMobject(obj, size = "\\small").to_edge(LEFT)
             not_mob = TextMobject(notion, size = "\\small").to_edge(LEFT)
-            not_mob.shift((vert_line_x_val + SPACE_X_RADIUS)*RIGHT)
+            not_mob.shift((vert_line_x_val + FRAME_X_RADIUS)*RIGHT)
             obj_mob.shift(height*UP)
             not_mob.shift(height*UP)
 
@@ -773,10 +773,10 @@ class DrawDualGraph(GraphScene):
         outer_region_mob  = region_mobs.pop()
         outer_dual_vertex = self.dual_vertices.pop()
         internal_edges = filter(
-            lambda e : abs(e.start[0]) < SPACE_X_RADIUS and \
-                       abs(e.end[0]) < SPACE_X_RADIUS and \
-                       abs(e.start[1]) < SPACE_Y_RADIUS and \
-                       abs(e.end[1]) < SPACE_Y_RADIUS,
+            lambda e : abs(e.start[0]) < FRAME_X_RADIUS and \
+                       abs(e.end[0]) < FRAME_X_RADIUS and \
+                       abs(e.start[1]) < FRAME_Y_RADIUS and \
+                       abs(e.end[1]) < FRAME_Y_RADIUS,
             self.dual_edges
         )
         external_edges = filter(
@@ -794,7 +794,7 @@ class DrawDualGraph(GraphScene):
         self.wait()
         self.reset_background()
         self.play(ApplyFunction(
-            lambda p : (SPACE_X_RADIUS + SPACE_Y_RADIUS)*p/np.linalg.norm(p),
+            lambda p : (FRAME_X_RADIUS + FRAME_Y_RADIUS)*p/np.linalg.norm(p),
             outer_region_mob
         ))
         self.wait()
@@ -849,9 +849,9 @@ class ListOfCorrespondances(Scene):
                 mob.shift(height*UP)
             arrow_xs = this_arrow.points[:,0]
             left.to_edge(RIGHT)
-            left.shift((min(arrow_xs) - SPACE_X_RADIUS, 0, 0))
+            left.shift((min(arrow_xs) - FRAME_X_RADIUS, 0, 0))
             right.to_edge(LEFT)
-            right.shift((max(arrow_xs) + SPACE_X_RADIUS, 0, 0))
+            right.shift((max(arrow_xs) + FRAME_X_RADIUS, 0, 0))
             lines.append(Mobject(left, right, this_arrow))
         last = None
         for line in lines:

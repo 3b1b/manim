@@ -30,7 +30,7 @@ class OpeningQuote(Scene):
             "2x3 matrix.",
             "Some of you, to my great amusement, actually tried to do this.''" 
         )
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words[1].highlight(GREEN)
         author = TextMobject("-(Via mathprofessorquotes.com, no name listed)")
@@ -355,8 +355,8 @@ class ThreeDToTwoDOutput(LinearTransformationScene):
         "show_basis_vectors" : False,
         "foreground_plane_kwargs" : {
             "color" : GREY,
-            "x_radius" : SPACE_X_RADIUS,
-            "y_radius" : SPACE_Y_RADIUS,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_Y_RADIUS,
             "secondary_line_ratio" : 0
         },
     }
@@ -441,8 +441,8 @@ class TwoDTo1DTransform(LinearTransformationScene):
     CONFIG = {
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : SPACE_X_RADIUS,
-            "y_radius" : SPACE_Y_RADIUS,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_Y_RADIUS,
             "secondary_line_ratio" : 1
         },
         "t_matrix" : [[1, 0], [2, 0]],
@@ -534,7 +534,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Dot products and duality
         """)
-        title.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        title.scale_to_fit_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)

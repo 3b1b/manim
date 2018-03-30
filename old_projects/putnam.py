@@ -48,9 +48,9 @@ class IntroducePutnam(Scene):
         for mob in six_hours, three_hours:
             mob.next_to(title, DOWN, MED_LARGE_BUFF)
             # mob.highlight(BLUE)
-        three_hours.shift(SPACE_X_RADIUS*LEFT/2)
+        three_hours.shift(FRAME_X_RADIUS*LEFT/2)
         three_hours_copy = three_hours.copy()
-        three_hours_copy.shift(SPACE_X_RADIUS*RIGHT)
+        three_hours_copy.shift(FRAME_X_RADIUS*RIGHT)
 
         question_groups = VGroup(*[
             VGroup(*[
@@ -58,7 +58,7 @@ class IntroducePutnam(Scene):
                 for i in range(1, 7)
             ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
             for c in "A", "B"
-        ]).arrange_submobjects(RIGHT, buff = SPACE_X_RADIUS - MED_SMALL_BUFF)
+        ]).arrange_submobjects(RIGHT, buff = FRAME_X_RADIUS - MED_SMALL_BUFF)
         question_groups.to_edge(LEFT)
         question_groups.to_edge(DOWN, MED_LARGE_BUFF)
         flat_questions = VGroup(*it.chain(*question_groups))
@@ -67,7 +67,7 @@ class IntroducePutnam(Scene):
         for questions in question_groups:
             rect = SurroundingRectangle(questions, buff = MED_SMALL_BUFF)
             rect.set_stroke(WHITE, 2)
-            rect.stretch_to_fit_width(SPACE_X_RADIUS - 1)
+            rect.stretch_to_fit_width(FRAME_X_RADIUS - 1)
             rect.move_to(questions.get_left() + MED_SMALL_BUFF*LEFT, LEFT)
             rects.add(rect)
 
@@ -196,7 +196,7 @@ class NatureOf5sAnd6s(TeacherStudentsScene):
         )
         self.change_student_modes(*["pondering"]*3)
         self.play(Transform(mover[1], new_words))
-        self.look_at((SPACE_X_RADIUS*RIGHT + SPACE_Y_RADIUS*UP)/2)
+        self.look_at((FRAME_X_RADIUS*RIGHT + FRAME_Y_RADIUS*UP)/2)
         self.wait(4)
 
 
@@ -239,7 +239,7 @@ class IntroduceTetrahedronSupplement(Scene):
         question = TextMobject("Probability that this tetrahedron \\\\ contains the sphere's center?")
         question.next_to(title, DOWN, MED_LARGE_BUFF)
         group = VGroup(title, question)
-        group.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        group.scale_to_fit_width(FRAME_WIDTH-1)
         group.to_edge(DOWN)
 
         for n in range(1, 4):
@@ -826,7 +826,7 @@ class AverageSizeOfSphericalTriangleSectionSupplement(Scene):
             arg_separator = ""
         )
         words.highlight_by_tex("section", GREEN)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
         self.play(Write(words))
         self.wait(3)
@@ -1289,7 +1289,7 @@ class ThreeDAnswer(Scene):
             "Probability that the tetrahedron contains center:", 
             "$\\frac{1}{8}$"
         )
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
         words[1].highlight(BLUE)
 
@@ -1531,7 +1531,7 @@ class AddedPromoWords(Scene):
             "First", "$2^8$", "vistors get",
             "$(e^\\pi - \\pi)\\%$", "off"
         )
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
         words.highlight_by_tex("2^8", YELLOW)
         words.highlight_by_tex("pi", PINK)

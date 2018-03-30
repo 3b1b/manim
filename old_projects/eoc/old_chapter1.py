@@ -245,7 +245,7 @@ class Introduction(TeacherStudentsScene):
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        this_video.scale_to_fit_height(FRAME_HEIGHT)
         self.this_video = this_video
 
         words = TextMobject(
@@ -276,7 +276,7 @@ class Introduction(TeacherStudentsScene):
             ]
         )
         def homotopy(x, y, z, t):
-            alpha = (0.7*x + SPACE_X_RADIUS)/(2*SPACE_X_RADIUS)
+            alpha = (0.7*x + FRAME_X_RADIUS)/(FRAME_WIDTH)
             beta = squish_rate_func(smooth, alpha-0.15, alpha+0.15)(t)
             return (x, y - 0.3*np.sin(np.pi*beta), z)
         self.play(
@@ -372,7 +372,7 @@ class Introduction(TeacherStudentsScene):
         this_video = self.this_video
         self.remove(this_video)
         this_video.generate_target()
-        this_video.target.scale_to_fit_height(2*SPACE_Y_RADIUS)
+        this_video.target.scale_to_fit_height(FRAME_HEIGHT)
         this_video.target.center()        
         this_video.target.set_fill(opacity = 0)
 
@@ -633,8 +633,8 @@ class IntroduceTinyChangeInArea(CircleScene):
         self.wait()
 
         big_rect = Rectangle(
-            width = 2*SPACE_X_RADIUS,
-            height = 2*SPACE_Y_RADIUS,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             fill_color = BLACK, 
             fill_opacity = 0.85,
             stroke_width = 0,
@@ -1558,7 +1558,7 @@ class DerivativeAsTangentLine(ZoomedScene):
 
     def show_tangent_lines(self):
         R = self.R_to_zoom_in_on
-        line = Line(LEFT, RIGHT).scale(SPACE_Y_RADIUS)
+        line = Line(LEFT, RIGHT).scale(FRAME_Y_RADIUS)
         line.highlight(MAROON_B)
         line.rotate(self.angle_of_tangent(R))
         line.move_to(self.graph_point(R))
@@ -2489,7 +2489,7 @@ class CalculusInANutshell(CircleScene):
         first.set_fill(YELLOW)
         first.save_state()
         first.center()
-        first.scale_to_fit_height(SPACE_Y_RADIUS*2)
+        first.scale_to_fit_height(FRAME_Y_RADIUS*2)
         first.set_fill(opacity = 0)
         everything = VGroup(*self.get_mobjects())
         everything.generate_target()

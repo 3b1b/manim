@@ -1,6 +1,6 @@
 import numpy as np
 from animation.transform import ApplyMethod, Transform
-from constants import RIGHT, SPACE_X_RADIUS, UP
+from constants import RIGHT, FRAME_X_RADIUS, UP
 from helpers import counterclockwise_path, straight_path
 from point_cloud_mobject import Point
 from scene import Scene
@@ -16,7 +16,7 @@ class NumberLineScene(Scene):
 
     def zoom_in_on(self, number, zoom_factor, run_time = 2.0):
         unit_length_to_spatial_width = self.number_line.unit_length_to_spatial_width*zoom_factor
-        radius = SPACE_X_RADIUS/unit_length_to_spatial_width
+        radius = FRAME_X_RADIUS/unit_length_to_spatial_width
         tick_frequency = 10**(np.floor(np.log10(radius)))
         left_tick = tick_frequency*(np.ceil((number-radius)/tick_frequency))
         new_number_line = NumberLine(

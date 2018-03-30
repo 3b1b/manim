@@ -67,7 +67,7 @@ class OpeningQuote(Scene):
         )
         words.highlight_by_tex("same name ", BLUE)
         words.highlight_by_tex("different things", MAROON_B)
-        # words.scale_to_fit_width(2*SPACE_X_RADIUS - 2)
+        # words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Henri Poincar\\'e.")
         author.highlight(YELLOW)
@@ -82,8 +82,8 @@ class LinearCombinationScene(LinearTransformationScene):
     CONFIG = {
         "include_background_plane" : False,
         "foreground_plane_kwargs" : {
-            "x_radius" : SPACE_X_RADIUS,
-            "y_radius" : SPACE_Y_RADIUS,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_Y_RADIUS,
             "secondary_line_ratio" : 1
         },
     }
@@ -340,8 +340,8 @@ class JenniferScene(LinearCombinationScene):
         "b1_coords" : [2, 1],
         "b2_coords" : [-1, 1],
         "foreground_plane_kwargs" : {
-            "x_radius" : SPACE_X_RADIUS,
-            "y_radius" : SPACE_X_RADIUS,
+            "x_radius" : FRAME_X_RADIUS,
+            "y_radius" : FRAME_X_RADIUS,
         },
     }
     def setup(self):
@@ -1437,7 +1437,7 @@ class Prerequisites(Scene):
     def construct(self):
         title = TextMobject("Prerequisites")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
 
         self.add(title, h_line)
@@ -1741,7 +1741,7 @@ class HowToTranslateAMatrix(Scene):
     def add_title(self):
         title = TextMobject("How to translate a matrix")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title)
         self.play(ShowCreation(h_line))

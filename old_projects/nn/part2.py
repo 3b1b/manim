@@ -123,7 +123,7 @@ class ShowPlan(Scene):
     def construct(self):
         title = TextMobject("Plan").scale(1.5)
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_X_RADIUS)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.highlight(WHITE)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
@@ -354,7 +354,7 @@ class PreviewLearning(NetworkScene):
 class BackpropComingLaterWords(Scene):
     def construct(self):
         words = TextMobject("(Backpropagation be \\\\ the next video)")
-        words.scale_to_fit_width(2*SPACE_X_RADIUS-1)
+        words.scale_to_fit_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         self.add(words)
 
@@ -499,7 +499,7 @@ class MNistDescription(Scene):
             group.arrange_submobjects_in_grid(
                 n_rows = self.n_rows_per_grid,
             )
-            group.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
+            group.scale_to_fit_height(FRAME_HEIGHT - 1)
             if i == 0:
                 self.play(
                     LaggedStart(FadeIn, group),
@@ -1253,9 +1253,9 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         self.show_cost_function()
 
     def setup_sides(self):
-        v_line = Line(UP, DOWN).scale(SPACE_Y_RADIUS)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         network_mob = self.network_mob
-        network_mob.scale_to_fit_width(SPACE_X_RADIUS - 1)
+        network_mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
         network_mob.to_corner(DOWN+LEFT)
 
         self.add(v_line)
@@ -1263,7 +1263,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
 
     def show_network_as_a_function(self):
         title = TextMobject("Neural network function")
-        title.shift(SPACE_X_RADIUS*RIGHT/2)
+        title.shift(FRAME_X_RADIUS*RIGHT/2)
         title.to_edge(UP)
         underline = Line(LEFT, RIGHT)
         underline.stretch_to_fit_width(title.get_width())
@@ -1855,7 +1855,7 @@ class TwoVariableInputSpace(Scene):
 
     def add_plane(self):
         plane = NumberPlane(
-            x_radius = SPACE_X_RADIUS/2
+            x_radius = FRAME_X_RADIUS/2
         )
         plane.add_coordinates()
         name = TextMobject("Input space")
@@ -1877,7 +1877,7 @@ class TwoVariableInputSpace(Scene):
         point = self.plane.coords_to_point(2, 1)
         dot = Dot(point, color = YELLOW)
         dot.save_state()
-        dot.move_to(SPACE_Y_RADIUS*UP + SPACE_X_RADIUS*RIGHT/2)
+        dot.move_to(FRAME_Y_RADIUS*UP + FRAME_X_RADIUS*RIGHT/2)
         dot.fade(1)
         arrows = VGroup(*[
             Arrow(ORIGIN, vect).shift(point)
@@ -1982,7 +1982,7 @@ class GradientDescentAlgorithm(Scene):
             TextMobject("Repeat."),
         )
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_corner(DOWN+LEFT)
 
         for word in words[:2]:
@@ -1996,7 +1996,7 @@ class GradientDescentName(Scene):
     def construct(self):
         words = TextMobject("Gradient descent")
         words.highlight(BLUE)
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
 
         self.play(Write(words, run_time = 2))
@@ -2118,7 +2118,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
 class DotsInsert(Scene):
     def construct(self):
         dots = TexMobject("\\vdots")
-        dots.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
+        dots.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(dots)
 
 class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
@@ -2193,7 +2193,7 @@ class NonSpatialGradientIntuition(Scene):
         "w_color" : YELLOW,
         "positive_color" : BLUE,
         "negative_color" : RED,
-        "vect_height" : SPACE_Y_RADIUS - MED_LARGE_BUFF,
+        "vect_height" : FRAME_Y_RADIUS - MED_LARGE_BUFF,
         "text_scale_value" : 0.7,
     }
     def construct(self):
@@ -2483,7 +2483,7 @@ class TwoGradientInterpretationsIn2D(Scene):
             "C(", "x, y", ")", "=", 
             "\\frac{3}{2}x^2", "+", "\\frac{1}{2}y^2",
         )
-        func.shift(SPACE_X_RADIUS*LEFT/2).to_edge(UP)
+        func.shift(FRAME_X_RADIUS*LEFT/2).to_edge(UP)
 
         grad = TexMobject("\\nabla", "C(", "1, 1", ")", "=")
         vect = TexMobject(
@@ -3051,7 +3051,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
             network_mob.edge_groups[0],
             network_mob.layers[:2]
         ))
-        shift_val = SPACE_X_RADIUS*LEFT + MED_LARGE_BUFF*RIGHT - \
+        shift_val = FRAME_X_RADIUS*LEFT + MED_LARGE_BUFF*RIGHT - \
                     to_keep.get_left()
         self.play(
             to_fade.shift, shift_val,
@@ -3075,7 +3075,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
                 pixel.set_fill(color, opacity = abs(shade)**(0.3))
             pixel_arrays.add(pixel_array)
         pixel_arrays.arrange_submobjects_in_grid(buff = MED_LARGE_BUFF)
-        pixel_arrays.scale_to_fit_height(2*SPACE_Y_RADIUS - 2.5)
+        pixel_arrays.scale_to_fit_height(FRAME_HEIGHT - 2.5)
         pixel_arrays.to_corner(DOWN+RIGHT)
 
         for pixel_array in pixel_arrays:
@@ -3486,7 +3486,7 @@ class ConvolutionalNetworkPreview(Scene):
         vect = get_organized_images()[9][0]
         image = PixelsFromVect(vect)
         image.set_stroke(width = 1)
-        image.scale_to_fit_height(2*SPACE_Y_RADIUS - 1)
+        image.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(image)
 
         kernels = [
@@ -3544,7 +3544,7 @@ class RandomlyLabeledImageData(Scene):
             x = i//5
             y = i%5
             group = self.get_training_group(image_name, label_name)
-            group.shift(4.5*LEFT + x*SPACE_X_RADIUS*RIGHT)
+            group.shift(4.5*LEFT + x*FRAME_X_RADIUS*RIGHT)
             group.shift(3*UP + 1.5*y*DOWN)
             groups.add(group)
             labels.add(group[-1])
@@ -3728,7 +3728,7 @@ class ManyMinimaWords(Scene):
             "Many local minima,\\\\",
             "roughly equal quality"
         )
-        words.scale_to_fit_width(2*SPACE_X_RADIUS - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
         self.play(Write(words))
         self.wait()
