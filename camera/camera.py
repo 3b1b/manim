@@ -16,7 +16,7 @@ import time
 class Camera(object):
     CONFIG = {
         "background_image" : None,
-        "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
+        "pixel_shape" : (DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH),
         # Note: frame_shape will be resized to match pixel_shape
         "frame_shape" : (FRAME_HEIGHT, FRAME_WIDTH),
         "space_center" : ORIGIN,
