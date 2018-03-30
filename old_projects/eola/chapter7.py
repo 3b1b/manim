@@ -867,7 +867,7 @@ class FormalVsVisual(Scene):
             Line of dots evenly spaced
             dots remains evenly spaced
         """)
-        visual_statement.submobject_gradient_highlight(YELLOW, MAROON_B)
+        visual_statement.set_submobject_colors_by_gradient(YELLOW, MAROON_B)
 
         properties = VMobject(additivity, scaling)
         properties.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
@@ -1016,7 +1016,7 @@ class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
              Dot(offset + a*vect, radius = 0.075)
              for a in np.linspace(-2, 3, 18)
         ])
-        dots.submobject_gradient_highlight(YELLOW_B, YELLOW_C)
+        dots.set_submobject_colors_by_gradient(YELLOW_B, YELLOW_C)
         func = lambda p : (p[0]**2 - p[1]**2)*RIGHT
         new_dots = VMobject(*[
             Dot(

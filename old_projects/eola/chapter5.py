@@ -455,7 +455,7 @@ class NextFewVideos(Scene):
         icon.set_stroke(color = WHITE, width = 0)
         icon.set_fill(WHITE, opacity = 1)
         icons = VMobject(*[icon.copy() for x in range(10)])
-        icons.submobject_gradient_highlight(BLUE_A, BLUE_D)
+        icons.set_submobject_colors_by_gradient(BLUE_A, BLUE_D)
         icons.arrange_submobjects(RIGHT)
         icons.to_edge(LEFT)
 
@@ -753,8 +753,8 @@ class NameParallelepiped(Scene):
         word.scale(2)
         pp_part1 = VMobject(*word.split()[:len(word.split())/2])
         pp_part2 = VMobject(*word.split()[len(word.split())/2:])
-        pp_part1.submobject_gradient_highlight(X_COLOR, Y_COLOR)
-        pp_part2.submobject_gradient_highlight(Y_COLOR, Z_COLOR)
+        pp_part1.set_submobject_colors_by_gradient(X_COLOR, Y_COLOR)
+        pp_part2.set_submobject_colors_by_gradient(Y_COLOR, Z_COLOR)
         self.play(Write(word))
         self.wait(2)
 
@@ -773,8 +773,8 @@ class DeterminantIsVolumeOfParallelepiped(Scene):
         pp = words.split()[1]
         pp_part1 = VMobject(*pp.split()[:len(pp.split())/2])
         pp_part2 = VMobject(*pp.split()[len(pp.split())/2:])
-        pp_part1.submobject_gradient_highlight(X_COLOR, Y_COLOR)
-        pp_part2.submobject_gradient_highlight(Y_COLOR, Z_COLOR)
+        pp_part1.set_submobject_colors_by_gradient(X_COLOR, Y_COLOR)
+        pp_part2.set_submobject_colors_by_gradient(Y_COLOR, Z_COLOR)
 
         words.next_to(eq, RIGHT)
 

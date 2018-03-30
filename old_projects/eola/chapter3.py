@@ -270,7 +270,7 @@ class TransformManyVectors(LinearTransformationScene):
             for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
             for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
-        vectors.submobject_gradient_highlight(PINK, YELLOW)
+        vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         t_matrix = self.transposed_matrix
         transformed_vectors = VMobject(*[
             Vector(
@@ -791,7 +791,7 @@ class WatchManyVectorsMove(TransformManyVectors):
             for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
             for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
-        vectors.submobject_gradient_highlight(PINK, YELLOW)
+        vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         dots = self.vectors_to_dots(vectors)        
         self.play(ShowCreation(dots, submobject_mode = "lagged_start"))
         self.play(Transform(
@@ -1651,7 +1651,7 @@ class MoveAroundAllVectors(LinearTransformationScene):
             for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
             for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
-        vectors.submobject_gradient_highlight(PINK, YELLOW)
+        vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         dots = self.get_dots(vectors)
 
         self.wait()

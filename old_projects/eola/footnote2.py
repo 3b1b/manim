@@ -319,7 +319,7 @@ class MatrixInTheWild(Scene):
 
         top_brace = Brace(matrix, UP)
         top_words = top_brace.get_text("3 basis vectors")
-        top_words.submobject_gradient_highlight(GREEN, RED, BLUE)
+        top_words.set_submobject_colors_by_gradient(GREEN, RED, BLUE)
         side_brace = Brace(matrix, RIGHT)
         side_words = side_brace.get_text("""
             2 coordinates for
@@ -506,7 +506,7 @@ class TwoDTo1DTransformWithDots(TwoDTo1DTransform):
              Dot(offset + a*vect, radius = 0.075)
              for a in np.linspace(-2, 3, 18)
         ])
-        dots.submobject_gradient_highlight(YELLOW_B, YELLOW_C)
+        dots.set_submobject_colors_by_gradient(YELLOW_B, YELLOW_C)
         func = self.get_matrix_transformation(self.t_matrix)
         new_dots = VMobject(*[
             Dot(

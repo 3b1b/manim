@@ -228,7 +228,7 @@ class MachineLearningNetwork(Scene):
         for l_layer, r_layer in zip(layers, layers[1:]):
             for l_node, r_node in it.product(l_layer.split(), r_layer.split()):
                 lines.add(Line(l_node, r_node))
-        lines.submobject_gradient_highlight(BLUE_E, BLUE_A)
+        lines.set_submobject_colors_by_gradient(BLUE_E, BLUE_A)
         for mob in VMobject(*layers), lines:
             self.play(Write(mob), run_time = 2)
         self.wait()
@@ -502,7 +502,7 @@ class SystemOfEquations(Scene):
             mob.words.shift_onto_screen()
             mob.symbol = TexMobject(mob.symbol)
             mob.brace.put_at_tip(mob.symbol)
-        x_array.words.submobject_gradient_highlight(
+        x_array.words.set_submobject_colors_by_gradient(
             X_COLOR, Y_COLOR, Z_COLOR
         )
         x_array.symbol.set_color(PINK)
@@ -636,7 +636,7 @@ class SystemOfTwoEquationsTwoUnknowns(Scene):
         matrix = Matrix([[2, 2], [1, 3]])
         v = Matrix([-4, -1])
         x = Matrix(["x", "y"])
-        x.get_entries().submobject_gradient_highlight(X_COLOR, Y_COLOR)
+        x.get_entries().set_submobject_colors_by_gradient(X_COLOR, Y_COLOR)
         matrix_system = VMobject(
             matrix, x, TexMobject("="), v
         )
@@ -676,7 +676,7 @@ class ShowBijectivity(LinearTransformationScene):
                 for val in FRAME_X_RADIUS, FRAME_Y_RADIUS
             ])
         ])
-        vectors.submobject_gradient_highlight(BLUE_E, PINK)
+        vectors.set_submobject_colors_by_gradient(BLUE_E, PINK)
         dots = VMobject(*[
             Dot(v.get_end(), color = v.get_color())
             for v in vectors.split()
@@ -1124,7 +1124,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
         input_vectors = VMobject(*[
             Vector([x+2, x]) for x in np.arange(-4, 4.5, 0.5)
         ])
-        input_vectors.submobject_gradient_highlight(PINK, YELLOW)
+        input_vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         output_vector = Vector([4, 2], color = YELLOW)
 
         grid = VMobject(self.plane, self.i_hat, self.j_hat)
@@ -1151,7 +1151,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
             "Must map to \\\\",
             "multiple vectors"
         )
-        multiple_outputs.split()[1].submobject_gradient_highlight(YELLOW, PINK)
+        multiple_outputs.split()[1].set_submobject_colors_by_gradient(YELLOW, PINK)
         multiple_outputs.next_to(ORIGIN, DOWN).to_edge(RIGHT)
         multiple_outputs.add_background_rectangle()
         self.play(Write(multiple_outputs, run_time = 2))
@@ -1725,7 +1725,7 @@ class NameNullSpace(LinearTransformationScene):
             Vector(a*vect + offset)
             for a in np.linspace(-5, 5, 18)
         ])
-        vectors.submobject_gradient_highlight(PINK, YELLOW)
+        vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         return vectors
 
 class ThreeDNullSpaceIsLine(Scene):

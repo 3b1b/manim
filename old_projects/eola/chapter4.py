@@ -288,7 +288,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
             "and a",
             "shear"
         ])
-        words.split()[0].submobject_gradient_highlight(YELLOW, PINK, use_color_range_to = False)
+        words.split()[0].set_submobject_colors_by_gradient(YELLOW, PINK, use_color_range_to = False)
         words.split()[2].set_color(YELLOW)
         words.split()[4].set_color(PINK)
         words.add_background_rectangle()
@@ -432,7 +432,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
             brace.set_color(matrix.get_color())
             text.set_color(matrix.get_color())
             matrix.add(brace, text)
-        comp_matrix.split()[-1].submobject_gradient_highlight(TEAL, PINK)
+        comp_matrix.split()[-1].set_submobject_colors_by_gradient(TEAL, PINK)
 
         self.add(vect)
         groups = [
@@ -524,7 +524,7 @@ class MoreComplicatedExampleVisually(LinearTransformationScene):
         comp_matrix = Matrix([["?", "?"], ["?", "?"]])        
         m1_mob.set_color(YELLOW)
         m2_mob.set_color(PINK)
-        comp_matrix.get_entries().submobject_gradient_highlight(YELLOW, PINK)
+        comp_matrix.get_entries().set_submobject_colors_by_gradient(YELLOW, PINK)
 
         equals = TexMobject("=")
         equals.next_to(comp_matrix, LEFT)
@@ -892,7 +892,7 @@ class AskAssociativityQuestion(Scene):
         rhs = VMobject(lp, a, b, rp, c)##Align order to lhs
         eq = TexMobject("=")
         q_marks = TextMobject("???")
-        q_marks.submobject_gradient_highlight(TEAL_B, TEAL_D)
+        q_marks.set_submobject_colors_by_gradient(TEAL_B, TEAL_D)
         q_marks.next_to(eq, UP)
         lhs.next_to(eq, LEFT)
         rhs.next_to(eq, RIGHT)
