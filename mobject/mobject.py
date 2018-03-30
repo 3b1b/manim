@@ -486,14 +486,14 @@ class Mobject(Container):
         return self
 
     def set_color_by_gradient(self, *colors):
-        self.submobject_gradient_highlight(*colors)
+        self.set_submobject_colors_by_gradient(*colors)
         return self
 
-    def radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
-        self.submobject_radial_gradient_highlight(center, radius, inner_color, outer_color)
+    def set_colors_by_radial_gradient(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+        self.set_submobject_colors_by_radial_gradient(center, radius, inner_color, outer_color)
         return self
 
-    def submobject_gradient_highlight(self, *colors):
+    def set_submobject_colors_by_gradient(self, *colors):
         if len(colors) == 0:
             raise Exception("Need at least one color")
         elif len(colors) == 1:
@@ -506,7 +506,7 @@ class Mobject(Container):
             mob.set_color(color, family = False)
         return self
 
-    def submobject_radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+    def set_submobject_colors_by_radial_gradient(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
         mobs = self.family_members_with_points()
         if center == None:
             center = self.get_center()

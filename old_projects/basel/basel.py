@@ -404,7 +404,7 @@ class IntroScene(PiCreatureScene):
             self.rects.add(rect)
             lines.add(line)
 
-        #self.rects.radial_gradient_highlight(ORIGIN, 5, YELLOW, BLUE)
+        #self.rects.set_colors_by_radial_gradient(ORIGIN, 5, YELLOW, BLUE)
         
         self.little_euler_terms = VGroup()
         for i in range(1,7):

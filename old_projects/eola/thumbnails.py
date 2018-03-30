@@ -53,7 +53,7 @@ class Chapter2(LinearTransformationScene):
             for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
             for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
-        vectors.submobject_gradient_highlight(PINK, BLUE_E)
+        vectors.set_submobject_colors_by_gradient(PINK, BLUE_E)
         words = TextMobject("Span")
         words.scale(3)
         words.to_edge(UP)
