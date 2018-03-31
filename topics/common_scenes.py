@@ -20,7 +20,6 @@ from topics.geometry import Rectangle
 from topics.geometry import Square
 from topics.objects import PatreonLogo
 
-
 class OpeningQuote(Scene):
     CONFIG = {
         "quote" : [],

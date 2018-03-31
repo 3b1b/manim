@@ -1,4 +1,3 @@
-# from mobject.mobject import Mobject, Point, Mobject1D
 from animation.creation import ShowCreation
 from animation.transform import Transform
 from characters import PiCreature
@@ -72,7 +71,6 @@ def fractalification_iteration(vmobject, dimension = 1.05, num_inserted_anchors_
     ]
     return vmobject
 
-
 class SelfSimilarFractal(VMobject):
     CONFIG = {
         "order" : 5,
@@ -117,7 +115,6 @@ class SelfSimilarFractal(VMobject):
     def arrange_subparts(self, *subparts):
         raise Exception("Not implemented")
 
-
 class Sierpinski(SelfSimilarFractal):
     def get_seed_shape(self):
         return Polygon(
@@ -128,7 +125,6 @@ class Sierpinski(SelfSimilarFractal):
         tri1, tri2, tri3 = subparts
         tri1.move_to(tri2.get_corner(DOWN+LEFT), UP)
         tri3.move_to(tri2.get_corner(DOWN+RIGHT), UP)
-
 
 class DiamondFractal(SelfSimilarFractal):
     CONFIG = {
@@ -144,7 +140,6 @@ class DiamondFractal(SelfSimilarFractal):
         for part, vect in zip(subparts, compass_directions(start_vect = UP+RIGHT)):
             part.next_to(ORIGIN, vect, buff = 0)
         VGroup(*subparts).rotate(np.pi/4, about_point = ORIGIN)
-
 
 class PentagonalFractal(SelfSimilarFractal):
     CONFIG = {
@@ -181,7 +176,6 @@ class PentagonalPiCreatureFractal(PentagonalFractal):
         for part in subparts:
             part.rotate(2*np.pi/5, about_point = ORIGIN)
         PentagonalFractal.arrange_subparts(self, *subparts)
-
 
 class PiCreatureFractal(VMobject):
     CONFIG = {
@@ -242,7 +236,6 @@ class PiCreatureFractal(VMobject):
     #     VMobject.init_colors(self)
     #     self.set_color_by_gradient(*self.colors)
 
-
 class WonkyHexagonFractal(SelfSimilarFractal):
     CONFIG = {
         "num_subparts" : 7
@@ -296,7 +289,6 @@ class JaggedCurvePiece(VMobject):
         indices = np.linspace(0, len(anchors)-1, n+len(anchors)).astype('int')
         self.set_points_as_corners(anchors[indices])
 
-
 class FractalCurve(VMobject):
     CONFIG = {
         "radius"      : 3,
@@ -334,7 +326,6 @@ class FractalCurve(VMobject):
 
     def get_anchor_points(self):
         raise Exception("Not implemented")
-
 
 class LindenmayerCurve(FractalCurve):
     CONFIG = {
@@ -375,7 +366,6 @@ class LindenmayerCurve(FractalCurve):
                 curr = curr + step
                 result.append(curr)
         return np.array(result) - center_of_mass(result)
-
 
 class SelfSimilarSpaceFillingCurve(FractalCurve):
     CONFIG = {
@@ -420,8 +410,6 @@ class SelfSimilarSpaceFillingCurve(FractalCurve):
     def generate_grid(self):
         raise Exception("Not implemented")
 
-
-
 class HilbertCurve(SelfSimilarSpaceFillingCurve):
     CONFIG = {
         "offsets" : [
@@ -435,7 +423,6 @@ class HilbertCurve(SelfSimilarSpaceFillingCurve):
             str(RIGHT+DOWN) : RIGHT+DOWN,
         },
      }
-
 
 class HilbertCurve3D(SelfSimilarSpaceFillingCurve):
     CONFIG = {
@@ -471,7 +458,6 @@ class HilbertCurve3D(SelfSimilarSpaceFillingCurve):
         copy /= self.scale_factor,
         copy += offset*self.radius*self.radius_scale_factor
         return copy
-
 
 class PeanoCurve(SelfSimilarSpaceFillingCurve):
     CONFIG = {
@@ -607,7 +593,6 @@ class KochCurve(KochSnowFlake):
     CONFIG = {
         "axiom" : "A--"
     }
-        
 
 class QuadraticKoch(LindenmayerCurve):
     CONFIG = {
@@ -621,7 +606,6 @@ class QuadraticKoch(LindenmayerCurve):
         "start_step"   : RIGHT,
         "angle"        : np.pi/2
     }
-
 
 class QuadraticKochIsland(QuadraticKoch):
     CONFIG = {

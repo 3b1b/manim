@@ -39,6 +39,10 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from mobject.vectorized_mobject import *
 
+from pi_creature.pi_creature import *
+from pi_creature.pi_creature_animations import *
+from pi_creature.pi_creature_scene import *
+
 from scene.moving_camera_scene import *
 from scene.reconfigurable_scene import *
 from scene.scene import *
@@ -46,7 +50,6 @@ from scene.scene_from_video import *
 from scene.zoomed_scene import *
 
 from topics.arithmetic import *
-from topics.characters import *
 from topics.combinatorics import *
 from topics.common_scenes import *
 from topics.complex_numbers import *

@@ -108,8 +108,6 @@ class Arc(VMobject):
         
         return self
 
-
-
 class ArcBetweenPoints(Arc):
 
     def __init__(self, start_point, end_point, angle = TAU/4, **kwargs):
@@ -150,14 +148,12 @@ class CurvedArrow(ArcBetweenPoints):
         else:
             ArcBetweenPoints.__init__(self, end_point, start_point, angle = -angle, **kwargs)
             self.add_tip(at_start = False, at_end = True)
-        
 
 class CurvedDoubleArrow(ArcBetweenPoints):
 
     def __init__(self, start_point, end_point, angle = TAU/4, **kwargs):
         ArcBetweenPoints.__init__(self, start_point, end_point, angle = angle, **kwargs)
         self.add_tip(at_start = True, at_end = True)
-
 
 class Circle(Arc):
     CONFIG = {

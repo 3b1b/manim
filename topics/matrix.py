@@ -39,7 +39,6 @@ def matrix_to_tex_string(matrix):
     ]
     return prefix + " \\\\ ".join(rows) + suffix
 
-
 def matrix_to_mobject(matrix):
     return TexMobject(matrix_to_tex_string(matrix))
 
@@ -138,8 +137,6 @@ class Matrix(VMobject):
 
     def get_brackets(self):
         return self.brackets
-
-
 
 class NumericalMatrixMultiplication(Scene):
     CONFIG = {

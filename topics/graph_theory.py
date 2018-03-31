@@ -30,7 +30,6 @@ class Graph():
     def __str__(self):
         return self.__class__.__name__
 
-
 class CubeGraph(Graph):
     """
      5  7
@@ -66,7 +65,6 @@ class CubeGraph(Graph):
             [7, 5, 1, 3],
             [4, 6, 7, 5],#By convention, last region will be "outside"
         ]
-
 
 class SampleGraph(Graph):
     """
@@ -115,7 +113,6 @@ class SampleGraph(Graph):
             (4, 5, 6, 7, 8, 3, 2),
         ]
 
-
 class OctohedronGraph(Graph):
     """
            3
@@ -155,7 +152,6 @@ class OctohedronGraph(Graph):
             (3, 4, 5),
         ]
 
-
 class CompleteGraph(Graph):
     def __init__(self, num_vertices, radius = 3):
         self.num_vertices = num_vertices
@@ -172,7 +168,6 @@ class CompleteGraph(Graph):
 
     def __str__(self):
         return Graph.__str__(self) + str(self.num_vertices)
-
 
 class GraphScene(Scene):
     args_list = [

@@ -18,7 +18,6 @@ from utils.paths import path_along_arc
 from utils.space_ops import R3_to_complex
 from utils.space_ops import complex_to_R3
 
-
 class ComplexTransformationScene(Scene):
     CONFIG = {
         "plane_config" : {},
