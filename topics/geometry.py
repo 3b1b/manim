@@ -1,5 +1,8 @@
 from constants import *
 
+import itertools as it
+import numpy as np
+
 from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from utils.bezier import interpolate

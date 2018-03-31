@@ -1,6 +1,6 @@
 import numpy as np
 
-from scene.scene import Scene
+from .scene import Scene
 from animation.transform import Transform
 from mobject.mobject import Mobject
 

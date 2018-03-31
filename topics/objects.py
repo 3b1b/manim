@@ -5,7 +5,7 @@ from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject, Brace
 
-from animation import Animation
+from animation.animation import Animation
 from animation.simple_animations import Rotating
 from animation.compositions import LaggedStart, AnimationGroup
 from animation.transform import ApplyMethod, FadeIn, GrowFromCenter

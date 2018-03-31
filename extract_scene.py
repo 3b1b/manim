@@ -14,7 +14,7 @@ import subprocess as sp
 from constants import *
 from scene.scene import Scene
 from camera.camera import Camera
-from utils.sound import play_error_sound, play_finish_sound
+from utils.sounds import play_error_sound, play_finish_sound
 
 HELP_MESSAGE = """
    Usage:

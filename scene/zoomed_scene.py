@@ -1,10 +1,11 @@
 import numpy as np
 
-from scene.scene import Scene
+from .scene import Scene
 from animation.transform import FadeIn
 from mobject.mobject import Mobject
 from topics.geometry import Rectangle
-from camera import MovingCamera, Camera
+from camera.camera import Camera
+from camera.camera import MovingCamera
 
 from constants import *
 

@@ -1,5 +1,6 @@
 import numpy as np
 import operator as op
+import itertools as it
 import os
 import copy
 from PIL import Image

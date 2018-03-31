@@ -1,7 +1,7 @@
 
 from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from mobject.tex_mobject import TexMobject
-from animation import Animation
+from animation.animation import Animation
 from animation.continual_animation import ContinualAnimation
 from topics.geometry import BackgroundRectangle
 from scene.scene import Scene

@@ -1,5 +1,5 @@
 from colour import Color
-from numpy import np
+import numpy as np
 import random
 
 from utils.bezier import interpolate

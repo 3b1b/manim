@@ -4,7 +4,7 @@ from scene.scene import Scene
 from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
-from animation import Animation    
+from animation.animation import Animation    
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write

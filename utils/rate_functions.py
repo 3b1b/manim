@@ -1,5 +1,6 @@
 import numpy as np
 from utils.simple_functions import sigmoid
+from utils.bezier import bezier
 
 def smooth(t, inflection = 10.0):
     error = sigmoid(-inflection / 2)

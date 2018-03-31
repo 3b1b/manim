@@ -1,8 +1,9 @@
 import re
+from colour import Color
 
 from constants import *
-from mobject.mobject import Mobject
-from utils.bezier import bezier, partial_bezier_points, 
+from .mobject import Mobject
+from utils.bezier import bezier, partial_bezier_points
 from utils.bezier import interpolate, get_smooth_handle_points, is_closed
 from utils.color import color_to_rgb
 from utils.color import interpolate_color

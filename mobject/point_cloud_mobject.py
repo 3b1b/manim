@@ -1,7 +1,7 @@
 from constants import *
-from mobject.mobject import Mobject
+from .mobject import Mobject
 from utils.bezier import interpolate
-from utils.color import color_to_rgb, color_to_rgba, rgba_to_color, 
+from utils.color import color_to_rgb, color_to_rgba, rgba_to_color
 from utils.color import color_gradient
 from utils.color import interpolate_color
 from utils.config_ops import digest_config

@@ -7,6 +7,7 @@ from utils.config_ops import digest_config
 
 import collections
 import sys
+import operator as op
 
 TEX_MOB_SCALE_FACTOR = 0.05
 

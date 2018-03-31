@@ -6,8 +6,9 @@ import warnings
 
 from constants import *
 
-from animation import Animation
-from mobject.mobject import Mobject, Point, VMobject, Group
+from .animation import Animation
+from mobject.mobject import Mobject, Group
+from mobject.vectorized_mobject import VMobject, VectorizedPoint
 from topics.geometry import Dot, Circle
 from utils.config_ops import digest_config
 from utils.iterables import adjacent_pairs
@@ -112,7 +113,7 @@ class GrowFromPoint(Transform):
     def __init__(self, mobject, point, **kwargs):
         digest_config(self, kwargs)
         target = mobject.copy()
-        point_mob = Point(point)
+        point_mob = VectorizedPoint(point)
         if self.point_color:
             point_mob.set_color(self.point_color)
         mobject.replace(point_mob)

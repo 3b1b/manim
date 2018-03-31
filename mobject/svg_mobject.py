@@ -1,4 +1,6 @@
 from xml.dom import minidom
+import itertools as it
+import re
 import warnings
 
 from constants import *

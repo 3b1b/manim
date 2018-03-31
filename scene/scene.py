@@ -10,13 +10,15 @@ import copy
 from tqdm import tqdm as ProgressDisplay
 import inspect
 import subprocess as sp
+import random
 
 from constants import *
 
 from camera.camera import Camera
 from tk_scene import TkSceneRoot
-from mobject.mobject import Mobject, VMobject
-from animation import Animation
+from mobject.mobject import Mobject
+from mobject.vectorized_mobject import VMobject
+from animation.animation import Animation
 from animation.transform import MoveToTarget
 from animation.continual_animation import ContinualAnimation
 from utils.iterables import list_update

@@ -1,10 +1,10 @@
 from constants import *
 
 
-from mobject import VGroup
+from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from number_line import NumberPlane
-from animation import Animation
+from animation.animation import Animation
 from animation.transform import ApplyPointwiseFunction, MoveToTarget
 from animation.simple_animations import Homotopy, ShowCreation, \
     SmoothedVectorizedHomotopy

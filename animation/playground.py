@@ -1,9 +1,10 @@
 import numpy as np
 import operator as op
 
-from animation import Animation
+from .animation import Animation
 from transform import Transform
-from mobject.mobject import Mobject1D, Mobject
+from mobject.mobject import Mobject
+from mobject.point_cloud_mobject import Mobject1D
 from topics.geometry import Line
 from utils.paths import path_along_arc
 

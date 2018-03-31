@@ -1,6 +1,5 @@
 from constants import *
 
-from mobject.mobject import Mobject1D
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject
 from topics.geometry import Line, Arrow
