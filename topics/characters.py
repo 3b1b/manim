@@ -1,6 +1,6 @@
-from helpers import *
+from constants import *
 
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TextMobject, TexMobject
@@ -12,7 +12,9 @@ from animation import Animation
 from animation.transform import *
 from animation.simple_animations import Write, ShowCreation
 from animation.compositions import AnimationGroup
-from scene import Scene
+from scene.scene import Scene
+from utils.config_ops import digest_config
+from utils.rate_functions import there_and_back, squish_rate_func
 
 
 PI_CREATURE_DIR = os.path.join(MEDIA_DIR, "designs", "PiCreature")

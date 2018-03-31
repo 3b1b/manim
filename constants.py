@@ -1,6 +1,12 @@
 import os
 import numpy as np
 
+# Things anyone wishing to use this repository for their
+# own use will want to change this
+MEDIA_DIR = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder")
+#
+
+
 DEFAULT_PIXEL_HEIGHT = 1080
 DEFAULT_PIXEL_WIDTH  = 1920
 
@@ -66,10 +72,6 @@ RIGHT_SIDE = FRAME_X_RADIUS*RIGHT
 TAU = 2*np.pi
 DEGREES = TAU/360
 
-# Change this to point to where you want 
-# animation files to output
-MEDIA_DIR = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder")
-
 ANIMATIONS_DIR = os.path.join(MEDIA_DIR, "animations")
 RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
 SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
@@ -100,12 +102,10 @@ TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
 
-
 FFMPEG_BIN = "ffmpeg"
 
 
 ### Colors ###
-
 
 COLOR_MAP = {
     "DARK_BLUE"   : "#236B8E",

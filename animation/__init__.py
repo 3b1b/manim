@@ -3,5 +3,3 @@ __all__ = [
     "simple_animations",
     "transform"
 ]
-
-from animation import Animation

@@ -1,7 +1,7 @@
 import numpy as np
 
-from scene import Scene
-from mobject import Mobject
+from scene.scene import Scene
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from animation.transform import ApplyPointwiseFunction, Transform, \
@@ -10,7 +10,7 @@ from animation.simple_animations import ShowCreation, Write
 from topics.number_line import NumberPlane, Axes
 from topics.geometry import Vector, Line, Circle, Arrow, Dot, BackgroundRectangle
 
-from helpers import *
+from constants import *
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8
 

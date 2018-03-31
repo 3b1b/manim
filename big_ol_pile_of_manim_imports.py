@@ -14,7 +14,6 @@ as a convenience for scripts createing scenes for videos
 """
 
 from constants import *
-from helpers import *
 
 from animation.animation import *
 from animation.compositions import *
@@ -58,6 +57,19 @@ from topics.objects import *
 from topics.probability import *
 from topics.three_dimensions import *
 from topics.vector_space_scene import *
+
+from utils.bezier import *
+from utils.color import *
+from utils.config_ops import *
+from utils.images import *
+from utils.iterables import *
+from utils.linear_algebra import *
+from utils.paths import *
+from utils.rate_functions import *
+from utils.simple_functions import *
+from utils.sounds import *
+from utils.space_ops import *
+from utils.strings import *
 
 from special_animations import *
 

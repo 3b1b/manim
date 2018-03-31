@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helpers import *
+from constants import *
 
 from mobject.tex_mobject import TexMobject
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.image_mobject import ImageMobject
 from mobject.vectorized_mobject import *
 
@@ -21,9 +21,9 @@ from topics.functions import *
 from topics.number_line import *
 from topics.numerals import *
 #from topics.combinatorics import *
-from scene import Scene
+from scene.scene import Scene
 from scene.zoomed_scene import *
-from camera import Camera
+from camera.camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.three_dimensions import *

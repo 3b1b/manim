@@ -3,9 +3,9 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-from helpers import *
+from constants import *
 
-from scene import Scene
+from scene.scene import Scene
 from geometry import Polygon
 from mobject.region import  region_from_polygon_vertices, region_from_line_boundary
 

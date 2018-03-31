@@ -1,12 +1,12 @@
 import numpy as np
 
-from scene import Scene
+from scene.scene import Scene
 from animation.transform import FadeIn
-from mobject import Mobject
+from mobject.mobject import Mobject
 from topics.geometry import Rectangle
 from camera import MovingCamera, Camera
 
-from helpers import *
+from constants import *
 
 class ZoomedScene(Scene):
     """

@@ -3,7 +3,7 @@ import cv2
 import itertools as it
 from tqdm import tqdm as show_progress
 
-from scene import Scene
+from scene.scene import Scene
 
 
 class SceneFromVideo(Scene):

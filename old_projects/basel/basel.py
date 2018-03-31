@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from helpers import *
+from constants import *
 
 from mobject.tex_mobject import TexMobject
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.image_mobject import ImageMobject
 from mobject.vectorized_mobject import *
 
@@ -19,8 +19,8 @@ from topics.characters import *
 from topics.functions import *
 from topics.number_line import *
 from topics.numerals import *
-from scene import Scene
-from camera import Camera
+from scene.scene import Scene
+from camera.camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.three_dimensions import *

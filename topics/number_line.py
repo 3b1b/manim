@@ -1,11 +1,14 @@
-from helpers import *
+from constants import *
 
-from mobject import Mobject1D
+from mobject.mobject import Mobject1D
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject
 from topics.geometry import Line, Arrow
 from topics.functions import ParametricFunction
-from scene import Scene
+from scene.scene import Scene
+from utils.bezier import interpolate
+from utils.config_ops import digest_config
+from utils.space_ops import angle_of_vector
 
 class NumberLine(VMobject):
     CONFIG = {

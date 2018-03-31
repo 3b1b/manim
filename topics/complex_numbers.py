@@ -1,4 +1,4 @@
-from helpers import *
+from constants import *
 
 
 from mobject import VGroup
@@ -8,7 +8,11 @@ from animation import Animation
 from animation.transform import ApplyPointwiseFunction, MoveToTarget
 from animation.simple_animations import Homotopy, ShowCreation, \
     SmoothedVectorizedHomotopy
-from scene import Scene
+from scene.scene import Scene
+from utils.config_ops import instantiate
+from utils.config_ops import digest_config
+from utils.paths import path_along_arc
+from utils.space_ops import complex_to_R3, R3_to_complex
 
 
 class ComplexTransformationScene(Scene):

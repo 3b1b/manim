@@ -11,9 +11,10 @@ import imp
 import os
 import subprocess as sp
 
-from helpers import *
-from scene import Scene
-from camera import Camera
+from constants import *
+from scene.scene import Scene
+from camera.camera import Camera
+from utils.sound import play_error_sound, play_finish_sound
 
 HELP_MESSAGE = """
    Usage:

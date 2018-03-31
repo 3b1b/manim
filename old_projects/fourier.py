@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from helpers import *
+from constants import *
 import scipy
 
 from big_ol_pile_of_manim_imports import *

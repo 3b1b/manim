@@ -3,10 +3,11 @@ import operator as op
 
 from animation import Animation
 from transform import Transform
-from mobject import Mobject1D, Mobject
+from mobject.mobject import Mobject1D, Mobject
 from topics.geometry import Line
+from utils.paths import path_along_arc
 
-from helpers import *
+from constants import *
 
 class Vibrate(Animation):
     CONFIG = {

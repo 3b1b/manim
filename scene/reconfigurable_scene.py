@@ -1,10 +1,10 @@
 import numpy as np
 
-from scene import Scene
+from scene.scene import Scene
 from animation.transform import Transform
-from mobject import Mobject
+from mobject.mobject import Mobject
 
-from helpers import *
+from constants import *
 
 class ReconfigurableScene(Scene):
     CONFIG = {

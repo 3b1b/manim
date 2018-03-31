@@ -5,10 +5,10 @@ import sys
 import os.path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from helpers import *
+from constants import *
 
 from mobject.tex_mobject import TexMobject
-from mobject import Mobject, Group
+from mobject.mobject import Mobject, Group
 from mobject.image_mobject import ImageMobject
 from mobject.vectorized_mobject import *
 
@@ -29,10 +29,10 @@ from topics.three_dimensions import *
 from topics.objects import *
 from topics.probability import *
 from topics.complex_numbers import *
-from scene import Scene
+from scene.scene import Scene
 from scene.reconfigurable_scene import ReconfigurableScene
 from scene.zoomed_scene import *
-from camera import Camera
+from camera.camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 

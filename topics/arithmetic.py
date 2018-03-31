@@ -1,8 +1,8 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
-from scene import Scene
+from constants import *
+from scene.scene import Scene
 from animation import Animation
 from mobject.tex_mobject import TexMobject
 

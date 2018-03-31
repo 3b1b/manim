@@ -1,5 +1,5 @@
 
-from helpers import *
+from constants import *
 
 from scene.scene import Scene
 from animation import Animation

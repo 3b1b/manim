@@ -11,7 +11,7 @@ from mobject import *
 from constants import *
 from mobject.region import  *
 import displayer as disp
-from scene import Scene, GraphScene
+from scene.scene import Scene, GraphScene
 from scene.graphs import *
 from moser_main import EulersFormula
 from script_wrapper import command_line_create_scene

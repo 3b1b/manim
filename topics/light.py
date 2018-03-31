@@ -1,7 +1,7 @@
-from helpers import *
+from constants import *
 
 from mobject.tex_mobject import TexMobject
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import *
 
 from animation.animation import Animation
@@ -13,13 +13,17 @@ from animation.continual_animation import *
 from animation.playground import *
 from topics.geometry import *
 from topics.functions import *
-from scene import Scene
-from camera import Camera
+from scene.scene import Scene
+from camera.camera import Camera
 from mobject.svg_mobject import *
 from topics.three_dimensions import *
 
 from scipy.spatial import ConvexHull
 from traceback import *
+
+from utils.space_ops import rotation_matrix, z_to_vector
+from utils.space_ops import rotate_vector, angle_between, angle_between_vectors
+from utils.space_ops import project_along_vector
 
 
 LIGHT_COLOR = YELLOW

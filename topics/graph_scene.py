@@ -1,6 +1,6 @@
-from helpers import *
+from constants import *
 
-from scene import Scene
+from scene.scene import Scene
 # from topics.geometry import 
 from mobject.tex_mobject import TexMobject, TextMobject
 from mobject.vectorized_mobject import VGroup, VectorizedPoint
@@ -9,6 +9,10 @@ from animation.transform import Transform
 from topics.number_line import NumberLine
 from topics.functions import ParametricFunction
 from topics.geometry import Rectangle, DashedLine, Line
+from utils.bezier import interpolate
+from utils.color import invert_color
+from utils.color import color_gradient
+from utils.space_ops import angle_of_vector
 
 class GraphScene(Scene):
     CONFIG = {

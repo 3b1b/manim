@@ -3,9 +3,11 @@ import numpy as np
 import operator as op
 from random import random
 
-from helpers import *
+from constants import *
 
-from scene import Scene
+from scene.scene import Scene
+from utils.rate_functions import there_and_back
+from utils.space_ops import center_of_mass
 
 
 class Graph():

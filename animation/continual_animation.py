@@ -1,7 +1,9 @@
-from helpers import *
-from mobject import Mobject, Group
+from constants import *
+from mobject.mobject import Mobject, Group
 from simple_animations import MaintainPositionRelativeTo
 import copy
+from utils.config_ops import instantiate
+from utils.config_ops import digest_config
 
 class ContinualAnimation(object):
     CONFIG = {

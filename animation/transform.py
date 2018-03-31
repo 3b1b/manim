@@ -4,11 +4,16 @@ import inspect
 import copy
 import warnings
 
-from helpers import *
+from constants import *
 
 from animation import Animation
-from mobject import Mobject, Point, VMobject, Group
+from mobject.mobject import Mobject, Point, VMobject, Group
 from topics.geometry import Dot, Circle
+from utils.config_ops import digest_config
+from utils.iterables import adjacent_pairs
+from utils.paths import straight_path, path_along_arc, counterclockwise_path
+from utils.rate_functions import smooth, there_and_back
+from utils.rate_functions import squish_rate_func
 
 class Transform(Animation):
     CONFIG = {

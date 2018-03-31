@@ -10,7 +10,7 @@ from animation import *
 from mobject import *
 from constants import *
 from mobject.region import  *
-from scene import Scene, SceneFromVideo
+from scene.scene import Scene, SceneFromVideo
 from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "counting_in_binary/"

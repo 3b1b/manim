@@ -3,9 +3,10 @@ import itertools as it
 from PIL import Image
 from copy import deepcopy
 
-from mobject import Mobject
+from mobject.mobject import Mobject
+from utils.iterables import adjacent_pairs
 
-from helpers import *
+from constants import *
 
 #TODO, this whole class should be something vectorized.
 class Region(Mobject):

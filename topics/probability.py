@@ -1,17 +1,22 @@
-from helpers import *
+from constants import *
 
-from scene import Scene
+from scene.scene import Scene
 
 from animation.animation import Animation
 from animation.transform import Transform, MoveToTarget
 from animation.simple_animations import UpdateFromFunc
 
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject, Brace
-
 from topics.geometry import Circle, Line, Rectangle, Square, Arc, Polygon
+
+from utils.bezier import interpolate
+from utils.color import color_gradient, average_color
+from utils.config_ops import digest_config
+from utils.iterables import tuplify
+from utils.space_ops import center_of_mass
 
 EPSILON = 0.0001
 
