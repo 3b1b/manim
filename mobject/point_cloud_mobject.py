@@ -1,5 +1,11 @@
+from constants import *
 from .mobject import Mobject
-from helpers import *
+from utils.bezier import interpolate
+from utils.color import color_to_rgb, color_to_rgba, rgba_to_color
+from utils.color import color_gradient
+from utils.color import interpolate_color
+from utils.config_ops import digest_config
+from utils.iterables import stretch_array_to_length
 
 class PMobject(Mobject):
     def init_points(self):
@@ -30,15 +36,16 @@ class PMobject(Mobject):
         self.rgbas = np.append(self.rgbas, rgbas, axis = 0)
         return self
 
-    def highlight(self, color = YELLOW_C, family = True):
+    def set_color(self, color = YELLOW_C, family = True):
         rgba = color_to_rgba(color)
         mobs = self.family_members_with_points() if family else [self]
         for mob in mobs:
             mob.rgbas[:,:] = rgba
+        self.color = color
         return self
 
-    # def gradient_highlight(self, start_color, end_color):
-    def gradient_highlight(self, *colors):
+    # def set_color_by_gradient(self, start_color, end_color):
+    def set_color_by_gradient(self, *colors):
         self.rgbas = np.array(map(
             color_to_rgba, 
             color_gradient(colors, len(self.points))
@@ -54,7 +61,7 @@ class PMobject(Mobject):
             ])
         return self
 
-    def radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+    def set_colors_by_radial_gradient(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
         start_rgba, end_rgba = map(color_to_rgba, [start_color, end_color])
         if center == None:
             center = self.get_center()

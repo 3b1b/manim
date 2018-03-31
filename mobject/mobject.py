@@ -1,13 +1,21 @@
 import numpy as np
 import operator as op
+import itertools as it
 import os
 import copy
 from PIL import Image
 from colour import Color
 
-from helpers import *
+from constants import *
+from container.container import Container
+from utils.bezier import interpolate
+from utils.color import color_to_rgb, color_gradient
+from utils.color import interpolate_color
+from utils.iterables import remove_list_redundancies, list_update
+from utils.paths import straight_path
+from utils.space_ops import rotation_matrix, angle_of_vector
+from utils.space_ops import complex_to_R3, R3_to_complex
 
-from container import *
 
 #TODO: Explain array_attrs
 
@@ -87,7 +95,7 @@ class Mobject(Container):
 
     def get_image(self, camera = None):
         if camera is None:
-            from camera import Camera
+            from camera.camera import Camera
             camera = Camera()
         camera.capture_mobject(self)
         return camera.get_image()
@@ -277,7 +285,7 @@ class Mobject(Container):
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
-        target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
+        target_point = np.sign(direction) * (FRAME_X_RADIUS, FRAME_Y_RADIUS, 0)
         point_to_align = self.get_critical_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
@@ -345,7 +353,7 @@ class Mobject(Container):
         return self
 
     def shift_onto_screen(self, **kwargs):
-        space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
+        space_lengths = [FRAME_X_RADIUS, FRAME_Y_RADIUS]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
@@ -356,13 +364,13 @@ class Mobject(Container):
         return self
 
     def is_off_screen(self):
-        if self.get_left()[0] > SPACE_WIDTH:
+        if self.get_left()[0] > FRAME_X_RADIUS:
             return True
-        if self.get_right()[0] < -SPACE_WIDTH:
+        if self.get_right()[0] < -FRAME_X_RADIUS:
             return True
-        if self.get_bottom()[1] > SPACE_HEIGHT:
+        if self.get_bottom()[1] > FRAME_Y_RADIUS:
             return True
-        if self.get_top()[1] < -SPACE_HEIGHT:
+        if self.get_top()[1] < -FRAME_Y_RADIUS:
             return True
         return False
 
@@ -453,7 +461,7 @@ class Mobject(Container):
     ## Match other mobvject properties
 
     def match_color(self, mobject):
-        return self.highlight(mobject.get_color())
+        return self.set_color(mobject.get_color())
 
     def match_dim(self, mobject, dim, **kwargs):
         return self.rescale_to_fit(
@@ -472,7 +480,7 @@ class Mobject(Container):
 
     ## Color functions
 
-    def highlight(self, color = YELLOW_C, family = True):
+    def set_color(self, color = YELLOW_C, family = True):
         """
         Condition is function which takes in one arguments, (x, y, z).
         Here it just recurses to submobjects, but in subclasses this 
@@ -481,31 +489,32 @@ class Mobject(Container):
         """
         if family:
             for submob in self.submobjects:
-                submob.highlight(color, family = family)
+                submob.set_color(color, family = family)
+        self.color = color
         return self
 
-    def gradient_highlight(self, *colors):
-        self.submobject_gradient_highlight(*colors)
+    def set_color_by_gradient(self, *colors):
+        self.set_submobject_colors_by_gradient(*colors)
         return self
 
-    def radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
-        self.submobject_radial_gradient_highlight(center, radius, inner_color, outer_color)
+    def set_colors_by_radial_gradient(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+        self.set_submobject_colors_by_radial_gradient(center, radius, inner_color, outer_color)
         return self
 
-    def submobject_gradient_highlight(self, *colors):
+    def set_submobject_colors_by_gradient(self, *colors):
         if len(colors) == 0:
             raise Exception("Need at least one color")
         elif len(colors) == 1:
-            return self.highlight(*colors)
+            return self.set_color(*colors)
 
         mobs = self.family_members_with_points()
         new_colors = color_gradient(colors, len(mobs))
 
         for mob, color in zip(mobs, new_colors):
-            mob.highlight(color, family = False)
+            mob.set_color(color, family = False)
         return self
 
-    def submobject_radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+    def set_submobject_colors_by_radial_gradient(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
         mobs = self.family_members_with_points()
         if center == None:
             center = self.get_center()
@@ -514,17 +523,12 @@ class Mobject(Container):
             t = np.linalg.norm(mob.get_center() - center)/radius
             t = min(t,1)
             mob_color = interpolate_color(inner_color, outer_color, t)
-            mob.highlight(mob_color, family = False)
+            mob.set_color(mob_color, family = False)
 
-        return self
-
-    def set_color(self, color):
-        self.highlight(color)
-        self.color = Color(color)
         return self
 
     def to_original_color(self):
-        self.highlight(self.color)
+        self.set_color(self.color)
         return self
 
     # Some objects (e.g., VMobjects) have special fading
@@ -540,7 +544,7 @@ class Mobject(Container):
             start = color_to_rgb(self.get_color())
             end = color_to_rgb(color)
             new_rgb = interpolate(start, end, alpha)
-            self.highlight(Color(rgb = new_rgb), family = False)
+            self.set_color(Color(rgb = new_rgb), family = False)
         return self
 
     def fade_to(self, color, alpha):
@@ -753,6 +757,12 @@ class Mobject(Container):
             ])
         )
         return self
+
+    def print_submobject_family(self, n_tabs = 0):
+        """For debugging purposes"""
+        print "\t"*n_tabs, self, id(self)
+        for submob in self.submobjects:
+            submob.print_mobject_family(n_tabs + 1)
 
     ## Alignment
     def align_data(self, mobject):

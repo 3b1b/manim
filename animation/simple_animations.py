@@ -1,14 +1,17 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
+from constants import *
 
 import warnings
-from mobject import Mobject, Group
+from mobject.mobject import Mobject, Group
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
-from animation import Animation
+from .animation import Animation
 from transform import Transform
+from utils.bezier import interpolate
+from utils.config_ops import digest_config
+from utils.rate_functions import smooth, double_smooth, there_and_back, wiggle
 
 class Rotating(Animation):
     CONFIG = {

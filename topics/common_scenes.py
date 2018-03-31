@@ -1,8 +1,8 @@
 
-from helpers import *
+from constants import *
 
 from scene.scene import Scene
-from animation import Animation
+from animation.animation import Animation
 from animation.simple_animations import Write, DrawBorderThenFill
 from animation.compositions import LaggedStart
 from animation.transform import FadeIn, FadeOut, ApplyMethod
@@ -35,7 +35,7 @@ class OpeningQuote(Scene):
         self.play(Write(self.author, run_time = 3))
         self.wait()
 
-    def get_quote(self, max_width = 2*SPACE_WIDTH-1):
+    def get_quote(self, max_width = FRAME_WIDTH-1):
         text_mobject_kwargs = {
             "alignment" : "",
             "arg_separator" : self.quote_arg_separator,
@@ -49,8 +49,8 @@ class OpeningQuote(Scene):
             if self.quote_arg_separator == " ":
                 quote[0].shift(0.2*RIGHT)
                 quote[-1].shift(0.2*LEFT)
-        for term, color in self.highlighted_quote_terms.items():
-            quote.highlight_by_tex(term, color)
+        for term, color in self.set_colored_quote_terms.items():
+            quote.set_color_by_tex(term, color)
         quote.to_edge(UP)
         if quote.get_width() > max_width:
             quote.scale_to_fit_width(max_width)
@@ -59,7 +59,7 @@ class OpeningQuote(Scene):
     def get_author(self, quote):
         author = TextMobject("\\Large -" + self.author)
         author.next_to(quote, DOWN)
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         return author
 
 class PatreonThanks(Scene):
@@ -148,17 +148,17 @@ class PatreonEndScreen(PatreonThanks):
     def scroll_through_patrons(self):
         logo_box = Square(side_length = 2.5)
         logo_box.to_corner(DOWN+LEFT, buff = MED_LARGE_BUFF)
-        total_width = SPACE_WIDTH - logo_box.get_right()[0]
+        total_width = FRAME_X_RADIUS - logo_box.get_right()[0]
 
         black_rect = Rectangle(
             fill_color = BLACK,
             fill_opacity = 1,
             stroke_width = 0,
-            width = 2*SPACE_WIDTH,
-            height = 1.1*SPACE_HEIGHT
+            width = FRAME_WIDTH,
+            height = 1.1*FRAME_Y_RADIUS
         )
         black_rect.to_edge(UP, buff = 0)
-        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line = DashedLine(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         line.move_to(black_rect, DOWN)
         line.shift(SMALL_BUFF*SMALL_BUFF*DOWN)
         self.add(line)
@@ -183,7 +183,7 @@ class PatreonEndScreen(PatreonThanks):
         columns.to_edge(RIGHT)
 
         self.play(
-            columns.next_to, SPACE_HEIGHT*DOWN, UP, LARGE_BUFF,
+            columns.next_to, FRAME_Y_RADIUS*DOWN, UP, LARGE_BUFF,
             columns.to_edge, RIGHT, 
             Animation(black_rect),
             rate_func = None,

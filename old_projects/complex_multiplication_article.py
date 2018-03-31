@@ -5,13 +5,7 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
-from topics.complex_numbers import *
+from big_ol_pile_of_manim_imports import *
 
 DEFAULT_PLANE_CONFIG = {
     "stroke_width" : 2*DEFAULT_POINT_THICKNESS
@@ -35,12 +29,12 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
 
     def construct(self, *multipliers):
         norm = abs(reduce(op.mul, multipliers, 1))
-        shrink_factor = SPACE_WIDTH/max(SPACE_WIDTH, norm)
+        shrink_factor = FRAME_X_RADIUS/max(FRAME_X_RADIUS, norm)
         plane_config = {
             "density" : norm*DEFAULT_POINT_DENSITY_1D,
             "unit_to_spatial_width" : shrink_factor,
-            "x_radius" : shrink_factor*SPACE_WIDTH,
-            "y_radius" : shrink_factor*SPACE_HEIGHT,
+            "x_radius" : shrink_factor*FRAME_X_RADIUS,
+            "y_radius" : shrink_factor*FRAME_Y_RADIUS,
         }
         ComplexMultiplication.construct(self, multipliers[0], **plane_config)
 
@@ -115,7 +109,7 @@ class ConjugateDivisionExample(ComplexMultiplication):
     ]
 
     def construct(self, num):
-        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*SPACE_WIDTH)
+        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*FRAME_X_RADIUS)
         self.draw_dot("1", 1, True)
         self.draw_dot("\\bar z", self.multiplier)
         self.apply_multiplication()
@@ -140,7 +134,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
         norm = abs(w)
         theta = np.log(w).imag
         radius = norm**(1./n)
-        zoom_value = (SPACE_HEIGHT-0.5)/radius
+        zoom_value = (FRAME_Y_RADIUS-0.5)/radius
         plane_config["unit_to_spatial_width"] = zoom_value
         plane = ComplexPlane(**plane_config)
         circle = Circle(
@@ -181,7 +175,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         radius = max([abs(n.imag) for r, n in reps_and_nums]) + 1
         plane_config = {
             "color" : "grey",
-            "unit_to_spatial_width" : SPACE_HEIGHT / radius,
+            "unit_to_spatial_width" : FRAME_Y_RADIUS / radius,
         }
         plane_config.update(DEFAULT_PLANE_CONFIG)
         self.plane = ComplexPlane(**plane_config)
@@ -204,7 +198,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         edge = label.get_edge_center(-dot_to_label_dir)
         buff = 0.1
         label.shift(point - edge + buff*dot_to_label_dir)
-        label.highlight(YELLOW)
+        label.set_color(YELLOW)
 
         self.add_mobjects_among(locals().values())
 

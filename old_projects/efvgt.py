@@ -1,34 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.complex_numbers import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-
-from topics.common_scenes import PatreonThanks
+from big_ol_pile_of_manim_imports import *
 
 ADDER_COLOR = GREEN
 MULTIPLIER_COLOR = YELLOW
@@ -74,9 +44,9 @@ class ConfettiSpiril(Animation):
     }
     def __init__(self, mobject, **kwargs):
         digest_config(self, kwargs)
-        mobject.next_to(self.x_start*RIGHT + SPACE_HEIGHT*UP, UP)
+        mobject.next_to(self.x_start*RIGHT + FRAME_Y_RADIUS*UP, UP)
         self.total_vert_shift = \
-            2*SPACE_HEIGHT + mobject.get_height() + 2*MED_SMALL_BUFF
+            FRAME_HEIGHT + mobject.get_height() + 2*MED_SMALL_BUFF
         
         Animation.__init__(self, mobject, **kwargs)
 
@@ -107,7 +77,7 @@ def get_confetti_animations(num_confetti_squares):
     confetti_spirils = [
         ConfettiSpiril(
             square,
-            x_start = 2*random.random()*SPACE_WIDTH - SPACE_WIDTH,
+            x_start = 2*random.random()*FRAME_X_RADIUS - FRAME_X_RADIUS,
             rate_func = squish_rate_func(lambda t : t, a, a+0.5)
         )
         for a, square in zip(
@@ -284,8 +254,8 @@ class QuickExplanation(ComplexTransformationScene):
             "=",
             "i", "e^{it}"
         )
-        equation[0].highlight(self.velocity_color)
-        equation[-1].highlight(self.position_color)
+        equation[0].set_color(self.velocity_color)
+        equation[-1].set_color(self.position_color)
         equation.add_background_rectangle()        
         brace = Brace(equation, UP)
         equation.add(brace)
@@ -294,8 +264,8 @@ class QuickExplanation(ComplexTransformationScene):
             "$90^\\circ$ \\\\ rotation", 
             "of", "position vector"
         )
-        brace_text[0].highlight(self.velocity_color)
-        brace_text[-1].highlight(self.position_color)
+        brace_text[0].set_color(self.velocity_color)
+        brace_text[-1].set_color(self.position_color)
         brace_text.add_background_rectangle()
         brace_text.scale(0.8)
         brace_text.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
@@ -328,7 +298,7 @@ class QuickExplanation(ComplexTransformationScene):
         )
 
         v_vector = s_vector.copy().rotate(np.pi/2)
-        v_vector.highlight(self.velocity_color)
+        v_vector.set_color(self.velocity_color)
         circle = Circle(
             radius = self.z_to_point(1)[0],
             color = self.position_color
@@ -462,7 +432,7 @@ class SymmetriesOfSquare(ThreeDScene):
         bottom_squares = VGroup(*all_squares[4:])
         bottom_squares.next_to(top_squares, DOWN, buff = LARGE_BUFF)
 
-        all_squares.scale_to_fit_width(2*SPACE_WIDTH-2*LARGE_BUFF)
+        all_squares.scale_to_fit_width(FRAME_WIDTH-2*LARGE_BUFF)
         all_squares.center()
         all_squares.to_edge(DOWN, buff = LARGE_BUFF)
 
@@ -470,7 +440,7 @@ class SymmetriesOfSquare(ThreeDScene):
         self.play(ReplacementTransform(self.title, new_title))
         self.title = new_title
         self.play(*[
-            ApplyMethod(mob.highlight, GREY)
+            ApplyMethod(mob.set_color, GREY)
             for mob in self.title[1:]
         ])
 
@@ -693,9 +663,9 @@ class CircleSymmetries(Scene):
 
     def associate_rotations_with_points(self):
         zero_dot = Dot(self.circle.point_from_proportion(0))
-        zero_dot.highlight(RED)
+        zero_dot.set_color(RED)
         zero_arrow = Arrow(UP+RIGHT, ORIGIN)
-        zero_arrow.highlight(zero_dot.get_color())
+        zero_arrow.set_color(zero_dot.get_color())
         zero_arrow.next_to(zero_dot, UP+RIGHT, buff = SMALL_BUFF)
 
         self.play(
@@ -711,7 +681,7 @@ class CircleSymmetries(Scene):
             vect = np.sign(point)
             arrow = Arrow(vect, ORIGIN)
             arrow.next_to(dot, vect, buff = SMALL_BUFF)
-            arrow.highlight(dot.get_color())
+            arrow.set_color(dot.get_color())
             angle = alpha*2*np.pi
 
             self.play(
@@ -747,7 +717,7 @@ class CircleSymmetries(Scene):
             self.circle.get_center(), 
             self.circle.point_from_proportion(0)
         )
-        static_radius = radius.copy().highlight(GREY)
+        static_radius = radius.copy().set_color(GREY)
 
         self.play(ShowCreation(radius))
         self.add(static_radius, radius)
@@ -793,7 +763,7 @@ class GroupOfCubeSymmetries(ThreeDScene):
 
     def get_cube(self):
         cube = Cube(fill_opacity = self.cube_opacity)
-        cube.gradient_highlight(*self.cube_colors)
+        cube.set_color_by_gradient(*self.cube_colors)
         if self.put_randy_on_cube:
             randy = Randolph(mode = "pondering")
             # randy.pupils.shift(0.01*OUT)
@@ -906,13 +876,13 @@ class AddCircleSymmetries(CircleSymmetries):
 
         colors = [BLUE, YELLOW, GREEN]
         for color, arc, term in zip(colors, arcs, equation[::2]):
-            arc.highlight(color)
-            term.highlight(color)
+            arc.set_color(color)
+            term.set_color(color)
 
         self.play(FadeIn(circle))
         self.add_radial_line()
         alt_radius = circle.radius.copy()
-        alt_radius.highlight(GREY)
+        alt_radius.set_color(GREY)
         alt_circle = circle.copy()
         equals = TexMobject("=")
         equals.move_to(circle)
@@ -1009,7 +979,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
         times = TexMobject("\\times")
         times.scale(1.5)
         times.move_to(plus)
-        times.highlight(RED)
+        times.set_color(RED)
         self.wait()
         self.play(ReplacementTransform(plus, times))
         self.play(Indicate(times))
@@ -1127,7 +1097,7 @@ class DihedralGroupStructure(SymmetriesOfSquare):
                 "axis" : axis,
             }
         expression.arrange_submobjects()
-        expression.scale_to_fit_width(SPACE_WIDTH+1)
+        expression.scale_to_fit_width(FRAME_X_RADIUS+1)
         expression.to_edge(RIGHT, buff = SMALL_BUFF)
         for square in s1, s2, s3:
             square.remove(square.action_illustration)
@@ -1166,9 +1136,9 @@ class DihedralGroupStructure(SymmetriesOfSquare):
         target.scale(self.filed_sum_scale_factor)
         y_index = self.num_sum_expressions%self.num_rows
         y_prop = float(y_index)/(self.num_rows-1)
-        y = interpolate(SPACE_HEIGHT-LARGE_BUFF, -SPACE_HEIGHT+LARGE_BUFF, y_prop)
+        y = interpolate(FRAME_Y_RADIUS-LARGE_BUFF, -FRAME_Y_RADIUS+LARGE_BUFF, y_prop)
         x_index = self.num_sum_expressions//self.num_rows
-        x_spacing = 2*SPACE_WIDTH/3
+        x_spacing = FRAME_WIDTH/3
         x = (x_index-1)*x_spacing
 
         target.move_to(x*RIGHT + y*UP)
@@ -1183,7 +1153,7 @@ class ThisIsAVeryGeneralIdea(Scene):
     def construct(self):
         groups = TextMobject("Groups")
         groups.to_edge(UP)
-        groups.highlight(BLUE)
+        groups.set_color(BLUE)
 
         examples = VGroup(*map(TextMobject, [
             "Square matrices \\\\ \\small (Where $\\det(M) \\ne 0$)",
@@ -1193,14 +1163,14 @@ class ThisIsAVeryGeneralIdea(Scene):
         ]))
         numbers = examples[-1]
         examples.arrange_submobjects(buff = LARGE_BUFF)
-        examples.scale_to_fit_width(2*SPACE_WIDTH-1)
+        examples.scale_to_fit_width(FRAME_WIDTH-1)
         examples.move_to(UP)
 
         lines = VGroup(*[
             Line(groups.get_bottom(), ex.get_top(), buff = MED_SMALL_BUFF)
             for ex in examples
         ])
-        lines.highlight(groups.get_color())
+        lines.set_color(groups.get_color())
 
         self.add(groups)
 
@@ -1227,14 +1197,14 @@ class ThisIsAVeryGeneralIdea(Scene):
         sub_categories.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
         sub_categories.next_to(numbers, DOWN, 1.5*LARGE_BUFF)
         sub_categories.to_edge(RIGHT)
-        sub_categories[0].highlight(ADDER_COLOR)
-        sub_categories[1].highlight(MULTIPLIER_COLOR)
+        sub_categories[0].set_color(ADDER_COLOR)
+        sub_categories[1].set_color(MULTIPLIER_COLOR)
 
         sub_lines = VGroup(*[
             Line(numbers.get_bottom(), sc.get_top(), buff = MED_SMALL_BUFF)
             for sc in sub_categories
         ])
-        sub_lines.highlight(numbers.get_color())
+        sub_lines.set_color(numbers.get_color())
 
         self.play(*it.chain(
             map(ShowCreation, sub_lines),
@@ -1257,8 +1227,8 @@ class AdditiveGroupOfReals(Scene):
         "number_line_center" : UP,
         "shadow_line_center" : DOWN,
         "zero_color" : GREEN_B,
-        "x_min" : -2*SPACE_WIDTH,
-        "x_max" : 2*SPACE_WIDTH,
+        "x_min" : -FRAME_WIDTH,
+        "x_max" : FRAME_WIDTH,
     }
     def construct(self):
         self.add_number_line()
@@ -1286,7 +1256,7 @@ class AdditiveGroupOfReals(Scene):
             line.add_numbers()
         shadow_line.numbers.fade(0.25)
         shadow_line.save_state()
-        shadow_line.highlight(BLACK)
+        shadow_line.set_color(BLACK)
         shadow_line.move_to(number_line)
 
 
@@ -1302,7 +1272,7 @@ class AdditiveGroupOfReals(Scene):
             zero_point = self.number_line.number_to_point(0)            
             num_point = self.number_line.number_to_point(num)
             arrow = Arrow(zero_point, num_point, buff = 0)
-            arrow.highlight(ADDER_COLOR)
+            arrow.set_color(ADDER_COLOR)
             arrow.shift(MED_LARGE_BUFF*UP)
 
             self.play(ShowCreation(arrow))
@@ -1327,7 +1297,7 @@ class AdditiveGroupOfReals(Scene):
         arrow = Arrow(dot, color = self.zero_color)
         words = TextMobject("Follow zero")
         words.next_to(arrow.get_start(), UP)
-        words.highlight(self.zero_color)
+        words.set_color(self.zero_color)
 
         self.play(
             ShowCreation(arrow),
@@ -1376,8 +1346,8 @@ class AdditiveGroupOfReals(Scene):
 
     def get_write_name_of_group_anim(self):
         new_title = TextMobject("Additive group of real numbers")
-        VGroup(*new_title[-len("realnumbers"):]).highlight(BLUE)
-        VGroup(*new_title[:len("Additive")]).highlight(ADDER_COLOR)
+        VGroup(*new_title[-len("realnumbers"):]).set_color(BLUE)
+        VGroup(*new_title[:len("Additive")]).set_color(ADDER_COLOR)
         new_title.to_edge(UP)
         return Transform(self.title, new_title)
 
@@ -1440,26 +1410,26 @@ class AdditiveGroupOfReals(Scene):
         zero_point = self.number_line.number_to_point(0)            
         num_point = self.number_line.number_to_point(num)
         arrow = Arrow(zero_point, num_point, buff = 0)
-        arrow.highlight(ADDER_COLOR)
+        arrow.set_color(ADDER_COLOR)
         arrow.shift(MED_SMALL_BUFF*UP)
         if num == 0:
             arrow = DashedLine(UP, ORIGIN)
             arrow.move_to(zero_point)
         elif num < 0:
-            arrow.highlight(RED)
+            arrow.set_color(RED)
             arrow.shift(SMALL_BUFF*UP)
         sign = "+" if num >= 0 else ""
         num_mob = TexMobject(sign + str(num))
         num_mob.next_to(arrow, UP)
-        num_mob.highlight(arrow.get_color())
+        num_mob.set_color(arrow.get_color())
         return zero_point, num_point, arrow, num_mob
 
 class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
     CONFIG = {
-        "x_min" : -2*int(SPACE_WIDTH),
-        "x_max" : 2*int(SPACE_WIDTH),
-        "y_min" : -2*SPACE_HEIGHT,
-        "y_max" : 2*SPACE_HEIGHT,
+        "x_min" : -2*int(FRAME_X_RADIUS),
+        "x_max" : 2*int(FRAME_X_RADIUS),
+        "y_min" : -FRAME_HEIGHT,
+        "y_max" : FRAME_HEIGHT,
         "example_points" : [
             complex(3, 2),
             complex(1, -3),
@@ -1496,11 +1466,11 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
             Dot(self.z_to_point(complex(0, i)))
             for i in range(1, 4)
         ])
-        dots.highlight(YELLOW)
+        dots.set_color(YELLOW)
         labels = VGroup(*self.imag_labels[-3:])
 
         arrow = Arrow(ORIGIN, dots[-1].get_center(), buff = 0)
-        arrow.highlight(ADDER_COLOR)
+        arrow.set_color(ADDER_COLOR)
 
         self.plane.save_state()
         for dot, label in zip(dots, labels):
@@ -1533,15 +1503,15 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
         point = self.z_to_point(z)
         dot = Dot(point, color = YELLOW)
         arrow = Vector(point, buff = dot.radius)
-        arrow.highlight(dot.get_color())
+        arrow.set_color(dot.get_color())
         label = TexMobject("%d + %di"%(z.real, z.imag))
         label.next_to(point, UP)
-        label.highlight(dot.get_color())
+        label.set_color(dot.get_color())
         label.add_background_rectangle()
 
         real_arrow = Vector(self.z_to_point(z.real))
         imag_arrow = Vector(self.z_to_point(z - z.real))
-        VGroup(real_arrow, imag_arrow).highlight(ADDER_COLOR)
+        VGroup(real_arrow, imag_arrow).set_color(ADDER_COLOR)
 
         self.play(
             Write(label),
@@ -1598,7 +1568,7 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
             "%d %di"%(z2.real, z2.imag)
         )
         label2.next_to(point2, UP+RIGHT)
-        label2.highlight(dot2.get_color())
+        label2.set_color(dot2.get_color())
         label2.add_background_rectangle()
 
         self.play(ShowCreation(arrow2))
@@ -1694,8 +1664,8 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
         title = TextMobject(
             "Additive", "group of", "complex numbers"
         )
-        title[0].highlight(ADDER_COLOR)
-        title[2].highlight(BLUE)
+        title[0].set_color(ADDER_COLOR)
+        title[2].set_color(BLUE)
         title.add_background_rectangle()
         title.to_edge(UP, buff = MED_SMALL_BUFF)
 
@@ -1730,13 +1700,13 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
 class SchizophrenicNumbers(Scene):
     def construct(self):
         v_line = DashedLine(
-            SPACE_HEIGHT*UP,
-            SPACE_HEIGHT*DOWN
+            FRAME_Y_RADIUS*UP,
+            FRAME_Y_RADIUS*DOWN
         )
         left_title = TextMobject("Additive group")
-        left_title.shift(SPACE_WIDTH*LEFT/2)
+        left_title.shift(FRAME_X_RADIUS*LEFT/2)
         right_title = TextMobject("Multiplicative group")
-        right_title.shift(SPACE_WIDTH*RIGHT/2)
+        right_title.shift(FRAME_X_RADIUS*RIGHT/2)
         VGroup(left_title, right_title).to_edge(UP)
         self.add(v_line, left_title, right_title)
 
@@ -1748,14 +1718,14 @@ class SchizophrenicNumbers(Scene):
             TexMobject("2-i").shift(DOWN+RIGHT),
         )
         for number in numbers:
-            number.highlight(ADDER_COLOR)
+            number.set_color(ADDER_COLOR)
             number.scale(1.5)            
             if isinstance(number, PiCreature):
                 continue
             number.eyes = Eyes(number[0], height = 0.1)
             number.add(number.eyes)
         numbers[3].eyes.next_to(numbers[3][1], UP, buff = 0)
-        numbers.shift(SPACE_WIDTH*LEFT/2)
+        numbers.shift(FRAME_X_RADIUS*LEFT/2)
 
         self.play(FadeIn(numbers))
         self.blink_numbers(numbers)
@@ -1763,9 +1733,9 @@ class SchizophrenicNumbers(Scene):
         self.add(numbers.copy())
         for number in numbers:
             number.generate_target()
-            number.target.shift(SPACE_WIDTH*RIGHT)
+            number.target.shift(FRAME_X_RADIUS*RIGHT)
             number.target.eyes.save_state()
-            number.target.highlight(MULTIPLIER_COLOR)
+            number.target.set_color(MULTIPLIER_COLOR)
             number.target.eyes.restore()
         self.play(*[
             MoveToTarget(
@@ -1797,8 +1767,8 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
     CONFIG = {
         "number_line_center" : 0.5*UP,
         "shadow_line_center" : 1.5*DOWN,
-        "x_min" : -3*SPACE_WIDTH,
-        "x_max" : 3*SPACE_WIDTH,
+        "x_min" : -3*FRAME_X_RADIUS,
+        "x_max" : 3*FRAME_X_RADIUS,
         "positive_reals_color" : MAROON_B,
     }
     def setup(self):
@@ -1841,9 +1811,9 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
 
     def show_zero_fixed_in_place(self):
         arrow = Arrow(self.zero_point + UP, self.zero_point, buff = 0)
-        arrow.highlight(ADDER_COLOR)
+        arrow.set_color(ADDER_COLOR)
         words = TextMobject("Fix zero")
-        words.highlight(ADDER_COLOR)
+        words.set_color(ADDER_COLOR)
         words.next_to(arrow, UP)
 
         self.play(
@@ -1866,7 +1836,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         words = TextMobject("Follow one")
         words.next_to(arrow.get_start(), UP)
         for mob in dot, arrow, words:
-            mob.highlight(MULTIPLIER_COLOR)
+            mob.set_color(MULTIPLIER_COLOR)
 
         three_line, half_line = [
             DashedLine(
@@ -1886,7 +1856,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         )
         half_label = TexMobject("1/2")
         half_label.scale(0.7)
-        half_label.highlight(MULTIPLIER_COLOR)
+        half_label.set_color(MULTIPLIER_COLOR)
         half_label.next_to(half_arrow.get_start(), LEFT, buff = SMALL_BUFF)
         
         self.play(
@@ -1944,11 +1914,11 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
     def every_positive_number_association(self):
         positive_reals_line = Line(
             self.shadow_line.number_to_point(0),
-            self.shadow_line.number_to_point(SPACE_WIDTH),
+            self.shadow_line.number_to_point(FRAME_X_RADIUS),
             color = self.positive_reals_color
         )
         positive_reals_words = TextMobject("All positive reals")
-        positive_reals_words.highlight(self.positive_reals_color)
+        positive_reals_words.set_color(self.positive_reals_color)
         positive_reals_words.next_to(positive_reals_line, UP)
         positive_reals_words.add_background_rectangle()
 
@@ -2001,7 +1971,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         words.submobjects.insert(2, TexMobject("="))
         words.arrange_submobjects(RIGHT)
         top_words = VGroup(*words[:2])
-        top_words.highlight(MULTIPLIER_COLOR)
+        top_words.set_color(MULTIPLIER_COLOR)
         bottom_words = VGroup(*words[2:])
         bottom_words.next_to(top_words, DOWN)
         words.scale(0.8)
@@ -2030,10 +2000,10 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         new_title.to_edge(UP)
         VGroup(
             *new_title[:len("Multiplicative")]
-        ).highlight(MULTIPLIER_COLOR)
+        ).set_color(MULTIPLIER_COLOR)
         VGroup(
             *new_title[-len("positiverealnumbers"):]
-        ).highlight(self.positive_reals_color)
+        ).set_color(self.positive_reals_color)
 
         self.play(Transform(self.title, new_title))
         self.wait()
@@ -2061,8 +2031,8 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
 class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
     CONFIG = {
         "dot_radius" : Dot.CONFIG["radius"],
-        "y_min" : -3*SPACE_HEIGHT,
-        "y_max" : 3*SPACE_HEIGHT,
+        "y_min" : -3*FRAME_Y_RADIUS,
+        "y_max" : 3*FRAME_Y_RADIUS,
     }
     def construct(self):
         self.add_plane()
@@ -2094,8 +2064,8 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
             "complex numbers"
         )
         title.to_edge(UP)
-        title[0].highlight(MULTIPLIER_COLOR)
-        title[2].highlight(BLUE)
+        title[0].set_color(MULTIPLIER_COLOR)
+        title[2].set_color(BLUE)
         title.add_background_rectangle()
 
         self.play(Write(title, run_time = 2))
@@ -2107,9 +2077,9 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
             UP+1.25*LEFT, ORIGIN, 
             buff = 2*self.dot_radius
         )
-        zero_arrow.highlight(ADDER_COLOR)
+        zero_arrow.set_color(ADDER_COLOR)
         zero_words = TextMobject("Fix zero")
-        zero_words.highlight(ADDER_COLOR)
+        zero_words.set_color(ADDER_COLOR)
         zero_words.add_background_rectangle()
         zero_words.next_to(zero_arrow.get_start(), UP)
 
@@ -2120,7 +2090,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
             color = MULTIPLIER_COLOR,
         )
         one_words = TextMobject("Drag one")
-        one_words.highlight(MULTIPLIER_COLOR)
+        one_words.set_color(MULTIPLIER_COLOR)
         one_words.add_background_rectangle()
         one_words.next_to(one_arrow.get_start(), UP)
 
@@ -2156,9 +2126,9 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
     def show_action_at_i(self):
         i_point = self.z_to_point(complex(0, 1))
         i_dot = Dot(i_point)
-        i_dot.highlight(RED)
+        i_dot.set_color(RED)
         i_arrow = Arrow(i_point+UP+LEFT, i_point)
-        i_arrow.highlight(i_dot.get_color())
+        i_arrow.set_color(i_dot.get_color())
 
         arc = Arc(
             start_angle = np.pi/24,
@@ -2167,7 +2137,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
             num_anchors = 20,
         )
         arc.add_tip(tip_length = 0.15)
-        arc.highlight(YELLOW)
+        arc.set_color(YELLOW)
 
         self.play(
             ShowCreation(i_arrow),
@@ -2216,7 +2186,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
         equation.add_background_rectangle()
         equation.next_to(ORIGIN, RIGHT)
         equation.shift(1.5*UP)
-        equation.highlight(MULTIPLIER_COLOR)
+        equation.set_color(MULTIPLIER_COLOR)
 
         self.play(Write(equation, run_time = 2))
         self.wait()
@@ -2251,7 +2221,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
         brace_text.scale(0.7, about_point = brace.get_top())
         brace.rotate(angle)
         brace_text.rotate(angle).rotate_in_place(-angle)
-        VGroup(brace, brace_text).highlight(MAROON_B)
+        VGroup(brace, brace_text).set_color(MAROON_B)
         arc = Arc(angle, color = WHITE, radius = 0.5)
         angle_label = TexMobject("30^\\circ")
         angle_label.scale(0.7)
@@ -2259,7 +2229,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
             arc, RIGHT, 
             buff = SMALL_BUFF, aligned_edge = DOWN
         )
-        angle_label.highlight(MULTIPLIER_COLOR)
+        angle_label.set_color(MULTIPLIER_COLOR)
 
         self.play(
             Write(label),
@@ -2297,8 +2267,8 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
         self.wait()
 
     def show_break_down(self):
-        positive_reals = Line(ORIGIN, SPACE_WIDTH*RIGHT)
-        positive_reals.highlight(MAROON_B)
+        positive_reals = Line(ORIGIN, FRAME_X_RADIUS*RIGHT)
+        positive_reals.set_color(MAROON_B)
         circle = Circle(
             radius = self.z_to_point(1)[0],
             color = MULTIPLIER_COLOR
@@ -2328,7 +2298,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
         ]
         for z in z_list:
             dot = Dot(self.z_to_point(z))
-            dot.highlight(WHITE)
+            dot.set_color(WHITE)
             dot.save_state()
             dot.move_to(self.plane.one_dot)
             dot.set_fill(opacity = 1)
@@ -2433,8 +2403,8 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
 
         general_equation = TexMobject("2^{x+y}=", "2^x", "2^y")
         general_equation.to_edge(UP, buff = MED_LARGE_BUFF)
-        general_equation[0].highlight(GREEN_B)
-        VGroup(*general_equation[1:]).highlight(MULTIPLIER_COLOR)
+        general_equation[0].set_color(GREEN_B)
+        VGroup(*general_equation[1:]).set_color(MULTIPLIER_COLOR)
         self.play(*[
             ReplacementTransform(
                 mob.copy(), term, run_time = 2
@@ -2523,7 +2493,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
         self.play(
             imag_power.move_to, UP,
             imag_power.scale_in_place, 1.5,
-            imag_power.highlight, BLUE,
+            imag_power.set_color, BLUE,
             self.exponential_rule.to_edge, RIGHT,
             self.get_teacher().change_mode, "speaking"
         )
@@ -2559,8 +2529,8 @@ class ExponentsAsHomomorphism(Scene):
         },
         "bottom_line_center" : 2.5*DOWN,
         "bottom_line_config" : {
-            "x_min" : -2*SPACE_WIDTH,
-            "x_max" : 2*SPACE_WIDTH,
+            "x_min" : -FRAME_WIDTH,
+            "x_max" : FRAME_WIDTH,
         }
     }
     def construct(self):
@@ -2579,10 +2549,10 @@ class ExponentsAsHomomorphism(Scene):
         rhs = VGroup(*equation[5:])
         lhs_brace = Brace(lhs, UP)
         lhs_text = lhs_brace.get_text("Add inputs")
-        lhs_text.highlight(GREEN_B)
+        lhs_text.set_color(GREEN_B)
         rhs_brace = Brace(rhs, DOWN)
         rhs_text = rhs_brace.get_text("Multiply outputs")
-        rhs_text.highlight(MULTIPLIER_COLOR)
+        rhs_text.set_color(MULTIPLIER_COLOR)
 
         self.add(equation)
         for brace, text in (lhs_brace, lhs_text), (rhs_brace, rhs_text):
@@ -2609,7 +2579,7 @@ class ExponentsAsHomomorphism(Scene):
             adders.center,
             adders.space_out_submobjects, 2,
             adders.to_edge, UP,
-            adders.highlight, GREEN_B,
+            adders.set_color, GREEN_B,
             FadeOut(self.lhs_brace_group),
             Write(top_line)
         )
@@ -2633,7 +2603,7 @@ class ExponentsAsHomomorphism(Scene):
             multipliers.space_out_submobjects, 4,
             multipliers.next_to, self.bottom_line_center, 
                 UP, MED_LARGE_BUFF,
-            multipliers.highlight, YELLOW,
+            multipliers.set_color, YELLOW,
             FadeOut(self.rhs_brace_group),
             Write(bottom_line),
         )
@@ -2691,7 +2661,7 @@ class ExponentsAsHomomorphism(Scene):
         target_texs += ["2^{%d}"%x for x in inputs]
         for mob, target_tex in zip(terms, target_texs):
             target = TexMobject(target_tex)
-            target.highlight(mob[0].get_color())
+            target.set_color(mob[0].get_color())
             target.move_to(mob, DOWN)
             if mob in self.adders:
                 target.to_edge(UP)
@@ -2831,9 +2801,9 @@ class DihedralCubeHomomorphism(GroupOfCubeSymmetries, SymmetriesOfSquare):
             if i == 2:
                 for group, color in (homo_group, YELLOW), (morph_group, BLUE):
                     part, remainder = group[0], VGroup(*group[1:])
-                    remainder.highlight(color)
+                    remainder.set_color(color)
                     self.play(
-                        part.highlight, color,
+                        part.set_color, color,
                         FadeIn(remainder)
                     )
 
@@ -2856,8 +2826,8 @@ class ComplexExponentiationAbstract():
         self.draw_real_line()
         self.show_real_actions(*example_inputs)
         self.show_pure_imaginary_actions(*example_inputs)
-        self.highlight_vertical_line()
-        self.highlight_unit_circle()
+        self.set_color_vertical_line()
+        self.set_color_unit_circle()
         self.show_pure_imaginary_actions(*example_inputs)
         self.walk_input_up_vertical()
         self.change_base(self.new_base, str(self.new_base))
@@ -2869,9 +2839,9 @@ class ComplexExponentiationAbstract():
         self.wait()
 
     def add_vertical_line(self):
-        line = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        line = Line(FRAME_Y_RADIUS*UP, FRAME_Y_RADIUS*DOWN)
         line.set_stroke(color = self.color, width = 10)
-        line.shift(-SPACE_WIDTH*self.vect/2)
+        line.shift(-FRAME_X_RADIUS*self.vect/2)
         self.add(line)
         self.add_foreground_mobjects(line)
 
@@ -2884,14 +2854,14 @@ class ComplexExponentiationAbstract():
     def add_title(self):
         title = TextMobject(self.group_type, "group")
         title.scale(0.8)
-        title[0].highlight(self.color)
+        title[0].set_color(self.color)
         title.add_background_rectangle()
         title.to_edge(UP, buff = MED_SMALL_BUFF)
         self.add_foreground_mobjects(title)
 
     def add_arrow(self):
         arrow = Arrow(LEFT, RIGHT, color = WHITE)
-        arrow.move_to(-SPACE_WIDTH*self.vect/2 + 2*UP)
+        arrow.move_to(-FRAME_X_RADIUS*self.vect/2 + 2*UP)
         arrow.set_stroke(width = 6),
         func_mob = TexMobject("2^x")    
         func_mob.next_to(arrow, UP, aligned_edge = LEFT)
@@ -2909,10 +2879,10 @@ class ComplexExponentiationAbstract():
         )
 
     def draw_real_line(self):
-        line = VGroup(Line(ORIGIN, SPACE_WIDTH*RIGHT))
+        line = VGroup(Line(ORIGIN, FRAME_X_RADIUS*RIGHT))
         if self.vect[0] < 0:
-            line.add(Line(ORIGIN, SPACE_WIDTH*LEFT))
-        line.highlight(RED)
+            line.add(Line(ORIGIN, FRAME_X_RADIUS*LEFT))
+        line.set_color(RED)
 
         self.play(*map(ShowCreation, line), run_time = 3)
         self.add_foreground_mobjects(line)
@@ -2941,11 +2911,11 @@ class ComplexExponentiationAbstract():
 
     def write_eulers_formula(self):
         formula = TexMobject("e^", "{\\pi", "i}", "=", "-1")
-        VGroup(*formula[1:3]).highlight(ADDER_COLOR)
-        formula[-1].highlight(MULTIPLIER_COLOR)
+        VGroup(*formula[1:3]).set_color(ADDER_COLOR)
+        formula[-1].set_color(MULTIPLIER_COLOR)
         formula.scale(1.5)
         formula.next_to(ORIGIN, UP)
-        formula.shift(-SPACE_WIDTH*self.vect/2)
+        formula.shift(-FRAME_X_RADIUS*self.vect/2)
         for part in formula:
             part.add_to_back(BackgroundRectangle(part))
 
@@ -2975,12 +2945,12 @@ class ComplexExponentiationAdderHalf(
             *kwargs.get("added_anims", [])
         )
 
-    def highlight_vertical_line(self):
+    def set_color_vertical_line(self):
         line = VGroup(
-            Line(ORIGIN, SPACE_HEIGHT*UP),
-            Line(ORIGIN, SPACE_HEIGHT*DOWN),
+            Line(ORIGIN, FRAME_Y_RADIUS*UP),
+            Line(ORIGIN, FRAME_Y_RADIUS*DOWN),
         )
-        line.highlight(YELLOW)
+        line.set_color(YELLOW)
 
         self.play(
             FadeOut(self.real_line),
@@ -2996,12 +2966,12 @@ class ComplexExponentiationAdderHalf(
         self.foreground_mobjects = [line] + self.foreground_mobjects
         self.vertical_line = line
 
-    def highlight_unit_circle(self):
+    def set_color_unit_circle(self):
         line = VGroup(
-            Line(ORIGIN, SPACE_HEIGHT*UP),
-            Line(ORIGIN, SPACE_HEIGHT*DOWN),
+            Line(ORIGIN, FRAME_Y_RADIUS*UP),
+            Line(ORIGIN, FRAME_Y_RADIUS*DOWN),
         )
-        line.highlight(YELLOW)
+        line.set_color(YELLOW)
         for submob in line:
             submob.insert_n_anchor_points(10)
             submob.make_smooth()
@@ -3009,8 +2979,8 @@ class ComplexExponentiationAdderHalf(
             Circle(),
             Circle().flip(RIGHT),
         )
-        circle.highlight(YELLOW)
-        circle.shift(SPACE_WIDTH*RIGHT)
+        circle.set_color(YELLOW)
+        circle.shift(FRAME_X_RADIUS*RIGHT)
 
         self.play(ReplacementTransform(
             line, circle, run_time = 3
@@ -3020,7 +2990,7 @@ class ComplexExponentiationAdderHalf(
 
     def walk_input_up_vertical(self):
         arrow = Arrow(ORIGIN, UP, buff = 0, tip_length = 0.15)
-        arrow.highlight(GREEN)
+        arrow.set_color(GREEN)
         brace = Brace(arrow, RIGHT, buff = SMALL_BUFF)
         brace_text = brace.get_text("1 unit")
         brace_text.add_background_rectangle()
@@ -3095,18 +3065,18 @@ class ComplexExponentiationMultiplierHalf(
         kwargs["run_time"] = run_time
         self.multiply_by_z(self.base**z, **kwargs)
 
-    def highlight_vertical_line(self):
+    def set_color_vertical_line(self):
         self.play(FadeOut(self.real_line))
         self.foreground_mobjects.remove(self.real_line)
         self.wait(2)
 
-    def highlight_unit_circle(self):
+    def set_color_unit_circle(self):
         line = VGroup(
-            Line(ORIGIN, SPACE_HEIGHT*UP),
-            Line(ORIGIN, SPACE_HEIGHT*DOWN),
+            Line(ORIGIN, FRAME_Y_RADIUS*UP),
+            Line(ORIGIN, FRAME_Y_RADIUS*DOWN),
         )
-        line.highlight(YELLOW)
-        line.shift(SPACE_WIDTH*LEFT)
+        line.set_color(YELLOW)
+        line.shift(FRAME_X_RADIUS*LEFT)
         for submob in line:
             submob.insert_n_anchor_points(10)
             submob.make_smooth()
@@ -3114,7 +3084,7 @@ class ComplexExponentiationMultiplierHalf(
             Circle(),
             Circle().flip(RIGHT),
         )
-        circle.highlight(YELLOW)
+        circle.set_color(YELLOW)
 
         self.play(ReplacementTransform(
             line, circle, run_time = 3
@@ -3241,8 +3211,8 @@ class WhyE(TeacherStudentsScene):
 class ReadFormula(Scene):
     def construct(self):
         formula = TexMobject("e^", "{\\pi i}", "=", "-1")
-        formula[1].highlight(GREEN_B)
-        formula[3].highlight(MULTIPLIER_COLOR)
+        formula[1].set_color(GREEN_B)
+        formula[3].set_color(MULTIPLIER_COLOR)
         formula.scale(2)
 
         randy = Randolph()
@@ -3304,7 +3274,7 @@ class EmeraldLogo(SVGMobject):
         SVGMobject.__init__(self, **kwargs)
         self.scale_to_fit_height(1)
         for submob in self.split()[18:]:
-            submob.highlight(self.helix_color)
+            submob.set_color(self.helix_color)
 
 class ECLPromo(PiCreatureScene):
     CONFIG = {
@@ -3389,8 +3359,8 @@ class ExpTransformation(ComplexTransformationScene):
 class Thumbnail(Scene):
     def construct(self):
         formula = TexMobject("e^", "{\\pi i}", "=", "-1")
-        formula[1].highlight(GREEN_B)
-        formula[3].highlight(YELLOW)
+        formula[1].set_color(GREEN_B)
+        formula[3].set_color(YELLOW)
         formula.scale(4)
         formula.to_edge(UP, buff = LARGE_BUFF)
         self.add(formula)

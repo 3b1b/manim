@@ -1,34 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.common_scenes import OpeningQuote, PatreonThanks
-
-from topics.graph_scene import *
+from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter4 import ThreeLinesChainRule
 
 class ExpFootnoteOpeningQuote(OpeningQuote):
@@ -72,7 +42,7 @@ class LastVideo(TeacherStudentsScene):
         self.add(series)
         self.play(
             last_video_brace.restore,
-            last_video.highlight, YELLOW,
+            last_video.set_color, YELLOW,
             self.get_teacher().change_mode, "raise_right_hand",
         )
         self.play(Write(known_formulas))
@@ -86,7 +56,7 @@ class LastVideo(TeacherStudentsScene):
         self.play(
             self.teacher.change_mode, "raise_right_hand",
             e_to_x.scale, 1.5,
-            e_to_x.highlight, YELLOW,
+            e_to_x.set_color, YELLOW,
             e_to_x.next_to, self.teacher.get_corner(UP+LEFT), UP
         )
         self.wait(2)
@@ -122,11 +92,11 @@ class DoublingPopulation(PiCreatureScene):
             function.to_corner(UP+LEFT)
         for function in functions[1:]:
             for i, j in (0, 2), (2, 1):
-                function[i][j].highlight(self.time_color)
+                function[i][j].set_color(self.time_color)
 
         t_expression = TexMobject("t", "=", "\\text{Time (in days)}")
         t_expression.to_corner(UP+RIGHT)
-        t_expression[0].highlight(self.time_color)
+        t_expression[0].set_color(self.time_color)
 
         pop_brace, mass_brace = [
             Brace(function[0], DOWN)
@@ -271,7 +241,7 @@ class DoublingPopulation(PiCreatureScene):
             difference_eq[2][-1],
             real_deriv[0][1],
             real_deriv[0][-2],
-        ).highlight(YELLOW)
+        ).set_color(YELLOW)
         VGroup(
             difference_eq[0][3],
             difference_eq[1][-1],
@@ -279,7 +249,7 @@ class DoublingPopulation(PiCreatureScene):
             real_deriv[0][4],
             real_deriv[1][-2],
             real_deriv[1][-1],
-        ).highlight(GREEN)
+        ).set_color(GREEN)
 
         expressions = [false_deriv, difference_eq, real_deriv]
         text_arg_list = [
@@ -317,7 +287,7 @@ class DoublingPopulation(PiCreatureScene):
             self.wait(2)
 
         for expression in difference_eq, real_deriv:
-            expression.brace_text[1].highlight(GREEN)
+            expression.brace_text[1].set_color(GREEN)
             self.play(
                 Transform(false_deriv, expression),
                 Transform(false_deriv.brace, expression.brace),
@@ -460,13 +430,13 @@ class DoublingPopulation(PiCreatureScene):
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
         )
-        top_words[1].highlight(GREEN)
+        top_words[1].set_color(GREEN)
 
         bottom_words = TexMobject(
             str(2**curr_day),
             "\\text{ creatures}", "\\over {1 \\text{ day}}"
         )
-        bottom_words[0].highlight(GREEN)
+        bottom_words[0].set_color(GREEN)
         bottom_words.next_to(top_words, DOWN, buff = MED_LARGE_BUFF)
 
         return top_words, bottom_words
@@ -538,7 +508,7 @@ class GraphOfTwoToT(GraphScene):
         #Vary value
         threes = VGroup(height_label[1], slope_label[2][1])
         ts = VGroup(*[
-            TexMobject("t").highlight(YELLOW).scale(0.75).move_to(three)
+            TexMobject("t").set_color(YELLOW).scale(0.75).move_to(three)
             for three in threes
         ])
         self.play(Transform(threes, ts))
@@ -590,7 +560,7 @@ class GraphOfTwoToT(GraphScene):
             DOWN+RIGHT,
             buff = 0
         )
-        slope_label.highlight_by_tex("Slope", RED)
+        slope_label.set_color_by_tex("Slope", RED)
         return VGroup(
             v_line, brace, height_label,
             ss_group, slope_label
@@ -641,8 +611,8 @@ class FakeDiagram(TeacherStudentsScene):
                 graph.add_control_points(3*[point])
             graph.set_stroke(width = 1)
             graph.set_fill(opacity = 1)
-            graph.highlight(BLUE_D)
-        background_graph.highlight(YELLOW)
+            graph.set_color(BLUE_D)
+        background_graph.set_color(YELLOW)
         background_graph.set_stroke(width = 0.5)
 
         graphs.next_to(self.teacher, UP+LEFT, LARGE_BUFF)
@@ -667,7 +637,7 @@ class FakeDiagram(TeacherStudentsScene):
         words = TextMobject("Not a real explanation")
         words.to_edge(UP)
         arrow = Arrow(words.get_bottom(), two_to_t.get_corner(UP+LEFT))
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
 
         diagram = VGroup(
             graphs, two_to_t, dt_brace, dt, 
@@ -769,8 +739,8 @@ class AnalyzeExponentRatio(PiCreatureScene):
             extracted_two_to_t, lhs, func_def
         ]
         for expression in expressions:
-            expression.highlight_by_tex("t", YELLOW)
-            expression.highlight_by_tex("dt", GREEN)
+            expression.set_color_by_tex("t", YELLOW)
+            expression.set_color_by_tex("dt", GREEN)
 
         #Apply exponential property
         self.play(
@@ -808,7 +778,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
             for s in "Additive", "Multiplicative"
         ])
         words[0].move_to(words[1], LEFT)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         words.next_to(two_to_t_plus_dt, RIGHT, buff = 1.5*LARGE_BUFF)
         arrows = VGroup(*[
             Arrow(word.get_left(), rect, color = words.get_color())
@@ -866,7 +836,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
         brace = Brace(VGroup(extracted_two_to_t, ratio), DOWN)
         alt_brace = Brace(parens, DOWN)
         dt_to_zero = TexMobject("dt", "\\to 0")
-        dt_to_zero.highlight_by_tex("dt", GREEN)
+        dt_to_zero.set_color_by_tex("dt", GREEN)
         dt_to_zero.next_to(brace, DOWN)
 
         self.play(GrowFromCenter(brace))
@@ -992,8 +962,8 @@ class AnalyzeExponentRatio(PiCreatureScene):
                 "\\over \\,", "%s}"%dt_str, 
                 "=", output_str
             )
-            expression.highlight_by_tex(dt_str, GREEN)
-            expression.highlight_by_tex(output_str, BLUE)
+            expression.set_color_by_tex(dt_str, GREEN)
+            expression.set_color_by_tex(output_str, BLUE)
             expression.to_corner(UP+RIGHT)
             expressions.append(expression)
 
@@ -1089,7 +1059,7 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
             (const_str, BLUE)
         ]
         for tex, color in tex_color_paris:
-            result.highlight_by_tex(tex, color)
+            result.set_color_by_tex(tex, color)
         return result
 
     def create_pi_creature(self):
@@ -1103,9 +1073,9 @@ class AskAboutConstantOne(TeacherStudentsScene):
             "{ d(a^", "t", ")", "\\over \\,", "dt}", 
             "=", "a^", "t", "(\\text{Some constant})"
         )
-        note.highlight_by_tex("t", YELLOW)
-        note.highlight_by_tex("dt", GREEN)
-        note.highlight_by_tex("constant", BLUE)
+        note.set_color_by_tex("t", YELLOW)
+        note.set_color_by_tex("dt", GREEN)
+        note.set_color_by_tex("constant", BLUE)
         note.to_corner(UP+LEFT)
         self.add(note)
 
@@ -1137,11 +1107,11 @@ class WhyPi(PiCreatureScene):
         ghost_circle = circle.copy()
         ghost_circle.set_stroke(width = 1)
         diam = Line(circle.get_left(), circle.get_right())
-        diam.highlight(YELLOW)
+        diam.set_color(YELLOW)
         one = TexMobject("1")
         one.next_to(diam, UP)
         circum = diam.copy()
-        circum.highlight(circle.get_color())
+        circum.set_color(circle.get_color())
         circum.scale(np.pi)
         circum.next_to(circle, DOWN, LARGE_BUFF)
         circum.insert_n_anchor_points(circle.get_num_anchor_points()-2)
@@ -1258,7 +1228,7 @@ class Chapter4Wrapper(Scene):
         title = TextMobject("Chapter 4 chain rule intuition")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9)
-        rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1273,7 +1243,7 @@ class ApplyChainRule(TeacherStudentsScene):
         )
         deriv_equation.next_to(self.teacher, UP+LEFT)
         deriv_equation.shift(UP)
-        deriv_equation.highlight_by_tex("3", BLUE)
+        deriv_equation.set_color_by_tex("3", BLUE)
         deriv = VGroup(*deriv_equation[:7])
         exponent = VGroup(*deriv_equation[-2:])
         circle = Circle(color = YELLOW)
@@ -1377,14 +1347,14 @@ class ChainRuleIntuition(ThreeLinesChainRule):
             nudge_line = Line(start, end)
             nudge_line.set_stroke(color, width = 6)
             brace = Brace(nudge_line, DOWN, buff = SMALL_BUFF)
-            brace.highlight(color)
+            brace.set_color(color)
             func_label = config["func_label"]
             if len(func_label) == 1:
                 text = "$d%s$"%func_label
             else:
                 text = "$d(%s)$"%func_label
             brace.text = brace.get_text(text, buff = SMALL_BUFF)
-            brace.text.highlight(color)
+            brace.text.set_color(color)
             brace.add(brace.text)
 
             line.add(nudge_line)
@@ -1437,7 +1407,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         non_t_group.remove(*t_group)
 
         log_words = TextMobject("``$e$ to the ", "\\emph{what}", "equals 2?''")
-        log_words.highlight_by_tex("what", BLUE)
+        log_words.set_color_by_tex("what", BLUE)
         log_words.next_to(equation, UP+LEFT)
         log_words_arrow = Arrow(
             log_words.get_right(),
@@ -1450,10 +1420,10 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         )
         derivative.move_to(equation)
         for tex_mob in equation, derivative:
-            tex_mob.highlight_by_tex("ln(2)", BLUE)
-            tex_mob.highlight_by_tex("t", YELLOW)
+            tex_mob.set_color_by_tex("ln(2)", BLUE)
+            tex_mob.set_color_by_tex("t", YELLOW)
         derivative_arrow = Arrow(1.5*UP, ORIGIN, buff = 0)
-        derivative_arrow.highlight(WHITE)
+        derivative_arrow.set_color(WHITE)
         derivative_arrow.next_to(
             derivative.get_parts_by_tex("="), UP
         )
@@ -1531,7 +1501,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             "{d(", "e^", "{%s"%C_str, "t}", ")", "\\over", "dt}",
             "=", C_str, "e^", "{%s"%C_str, "t}",
         )
-        result.highlight_by_tex(C_str, BLUE)
+        result.set_color_by_tex(C_str, BLUE)
         result.C_str = C_str
         return result
 
@@ -1542,7 +1512,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             "{d(", a_str, "^t", ")", "\\over", "dt}",
             "=", log_str, a_str, "^t"
         )
-        result.highlight_by_tex(log_str, BLUE)
+        result.set_color_by_tex(log_str, BLUE)
         return result
 
     def get_log_str(self, a):
@@ -1567,10 +1537,10 @@ class CompareWaysToWriteExponentials(GraphScene):
         a_to_t.move_to(self.coords_to_point(6, 45))
 
         cross = TexMobject("\\times")
-        cross.highlight(RED)
+        cross.set_color(RED)
         cross.replace(a_to_t, stretch = True)
         e_to_ct = TexMobject("e^", "{c", "t}")
-        e_to_ct.highlight_by_tex("c", BLUE)
+        e_to_ct.set_color_by_tex("c", BLUE)
         e_to_ct.scale(1.5)
         e_to_ct.next_to(a_to_t, DOWN)
 
@@ -1581,7 +1551,7 @@ class CompareWaysToWriteExponentials(GraphScene):
                 str(base), "^t", "=",
                 "e^", "{(%s)"%log_str, "t}", 
             )
-            equation.highlight_by_tex(log_str, BLUE)
+            equation.set_color_by_tex(log_str, BLUE)
             equation.scale(1.2)
             equations.add(equation)
 
@@ -1622,18 +1592,18 @@ class ManyExponentialForms(TeacherStudentsScene):
         ]
         group = VGroup(lhs, *rhs_list)
         group.arrange_submobjects(RIGHT)
-        group.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        group.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         group.next_to(self.get_pi_creatures(), UP, 2*LARGE_BUFF)
         for part in group:
-            part.highlight_by_tex("t", YELLOW)
+            part.set_color_by_tex("t", YELLOW)
             const = part.get_part_by_tex("dots")
             if const:
-                const.highlight(BLUE)
+                const.set_color(BLUE)
                 brace = Brace(const, UP)
                 log = brace.get_text(
                     "$\\log_{%s}(2)$"%part[1].get_tex_string()[:-1]
                 )
-                log.highlight(BLUE)
+                log.set_color(BLUE)
                 part.add(brace, log)
         exp = VGroup(*rhs_list[0][1:4])
         rect = BackgroundRectangle(group)
@@ -1655,7 +1625,7 @@ class ManyExponentialForms(TeacherStudentsScene):
         )
         self.play(*[
             ApplyFunction(
-                lambda m : m.shift(SMALL_BUFF*UP).highlight(RED),
+                lambda m : m.shift(SMALL_BUFF*UP).set_color(RED),
                 part,
                 run_time = 2,
                 rate_func = squish_rate_func(there_and_back, a, a+0.3)
@@ -1707,8 +1677,8 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
             "\\Delta T(", "t", ") = e", "^{-k", "t}"
         )
         solution.next_to(ode, DOWN, MED_LARGE_BUFF)
-        solution.highlight_by_tex("t", YELLOW)
-        solution.highlight_by_tex("Delta", WHITE)
+        solution.set_color_by_tex("t", YELLOW)
+        solution.set_color_by_tex("Delta", WHITE)
 
         delta_T_brace = Brace(graph, RIGHT)
         delta_T_label = TexMobject("\\Delta T")
@@ -1758,7 +1728,7 @@ class InvestedMoney(Scene):
             "{d", cash_str, "\\over", "dt}",
             "=", "(1 + r)", cash_str
         )
-        equation.highlight_by_tex(cash_str, GREEN)
+        equation.set_color_by_tex(cash_str, GREEN)
         equation.next_to(ORIGIN, LEFT)
         equation.to_edge(UP)
 
@@ -1768,8 +1738,8 @@ class InvestedMoney(Scene):
         solution = TexMobject(
             cash_str, "(", "t", ")", "=", "e^", "{(1+r)", "t}"
         )
-        solution.highlight_by_tex("t", YELLOW)
-        solution.highlight_by_tex(cash_str, GREEN)
+        solution.set_color_by_tex("t", YELLOW)
+        solution.set_color_by_tex(cash_str, GREEN)
         solution.next_to(arrow, RIGHT)
 
         cash = TexMobject("\\$")
@@ -1781,7 +1751,7 @@ class InvestedMoney(Scene):
             for x in range(40)
             for y in range(8)
         ])
-        cash_pile.highlight(GREEN)
+        cash_pile.set_color(GREEN)
         cash_pile.center()
         cash_pile.shift(DOWN)
 
@@ -1885,7 +1855,7 @@ class NaturalLog(Scene):
             FadeOut(expression[-2]),
             FadeOut(constant),
             ln_a.move_to, constant, LEFT,
-            ln_a.highlight, BLUE
+            ln_a.set_color, BLUE
         )
         self.wait()
         self.play(*map(FadeOut, [log_expression, exp_expression]))
@@ -1896,9 +1866,9 @@ class NaturalLog(Scene):
             "{d(", "%d^"%base, "t", ")", "\\over \\,", "dt}",
             "=", "%d^"%base, "t", "(%.4f\\dots)"%np.log(base),
         )
-        expression.highlight_by_tex("t", YELLOW)
-        expression.highlight_by_tex("dt", GREEN)
-        expression.highlight_by_tex("\\dots", BLUE)
+        expression.set_color_by_tex("t", YELLOW)
+        expression.set_color_by_tex("dt", GREEN)
+        expression.set_color_by_tex("\\dots", BLUE)
 
         brace = Brace(expression.get_part_by_tex("\\dots"), UP)
         brace_text = brace.get_text("$\\ln(%d)$"%base)
@@ -1916,13 +1886,13 @@ class NextVideo(TeacherStudentsScene):
         next_video = series[4]
         brace = Brace(this_video, DOWN)
         this_video.save_state()
-        this_video.highlight(YELLOW)
+        this_video.set_color(YELLOW)
 
         this_tex = TexMobject(
             "{d(", "a^t", ") \\over dt} = ", "a^t", "\\ln(a)"
         )
-        this_tex[1][1].highlight(YELLOW)
-        this_tex[3][1].highlight(YELLOW)
+        this_tex[1][1].set_color(YELLOW)
+        this_tex[3][1].set_color(YELLOW)
         this_tex.next_to(brace, DOWN)
 
         next_tex = VGroup(*map(TextMobject, [
@@ -1959,7 +1929,7 @@ class NextVideo(TeacherStudentsScene):
             brace.next_to, next_video, DOWN,
             this_video.restore,
             Animation(this_tex),
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             Write(next_tex),
             self.get_teacher().change_mode, "raise_right_hand"
         )
@@ -2026,11 +1996,11 @@ class Thumbnail(GraphOfTwoToT):
         derivative = TexMobject(
             "\\frac{d(a^t)}{dt} =", "a^t \\ln(a)"
         )
-        derivative[0][3].highlight(YELLOW)
-        derivative[1][1].highlight(YELLOW)
-        derivative[0][2].highlight(BLUE)
-        derivative[1][0].highlight(BLUE)
-        derivative[1][5].highlight(BLUE)
+        derivative[0][3].set_color(YELLOW)
+        derivative[1][1].set_color(YELLOW)
+        derivative[0][2].set_color(BLUE)
+        derivative[1][0].set_color(BLUE)
+        derivative[1][5].set_color(BLUE)
         derivative.scale(2)
         derivative.add_background_rectangle()
         derivative.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
@@ -2050,7 +2020,7 @@ class Thumbnail(GraphOfTwoToT):
         question = TextMobject("What is $e\\,$?")
         e = question[-2]
         e.scale(1.2, about_point = e.get_bottom())
-        e.highlight(BLUE)
+        e.set_color(BLUE)
         question.scale(3)
         question.add_background_rectangle()
         question.to_edge(UP)

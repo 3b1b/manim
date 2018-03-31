@@ -2,38 +2,7 @@ import sys
 import os.path
 import cv2
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject, Group
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from topics.graph_scene import *
-from topics.common_scenes import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 from nn.network import *
 from nn.part1 import *
@@ -57,9 +26,9 @@ def get_decimal_vector(nums, with_dots = True):
     for num in nums:
         decimal = DecimalNumber(num)
         if num > 0:
-            decimal.highlight(POSITIVE_COLOR)
+            decimal.set_color(POSITIVE_COLOR)
         else:
-            decimal.highlight(NEGATIVE_COLOR)
+            decimal.set_color(NEGATIVE_COLOR)
         decimals.add(decimal)
     contents = VGroup(*decimals)
     if with_dots:
@@ -123,8 +92,8 @@ class ShowPlan(Scene):
     def construct(self):
         title = TextMobject("Plan").scale(1.5)
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
-        h_line.highlight(WHITE)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
+        h_line.set_color(WHITE)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
@@ -345,7 +314,7 @@ class PreviewLearning(NetworkScene):
         return LaggedStart(
             ApplyFunction, edges,
             lambda mob : (
-                lambda m : m.rotate_in_place(np.pi/12).highlight(YELLOW),
+                lambda m : m.rotate_in_place(np.pi/12).set_color(YELLOW),
                 mob
             ),
             rate_func = wiggle
@@ -354,7 +323,7 @@ class PreviewLearning(NetworkScene):
 class BackpropComingLaterWords(Scene):
     def construct(self):
         words = TextMobject("(Backpropagation be \\\\ the next video)")
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         self.add(words)
 
@@ -419,10 +388,10 @@ class TrainingVsTestData(Scene):
         for is_correct, test_example in zip(bools, test_examples.target):
             if is_correct:
                 mark = TexMobject("\\checkmark")
-                mark.highlight(GREEN)
+                mark.set_color(GREEN)
             else:
                 mark = TexMobject("\\times")
-                mark.highlight(RED)
+                mark.set_color(RED)
             mark.next_to(test_example, LEFT)
             marks.add(mark)
 
@@ -449,7 +418,7 @@ class TrainingVsTestData(Scene):
             for train_ex, new_ex in zip(training_examples, new_examples):
                 self.remove(train_ex)
                 self.add(new_ex)
-                new_ex[0][0].highlight(color)
+                new_ex[0][0].set_color(color)
                 self.wait(1./30)
             training_examples = new_examples
 
@@ -463,7 +432,7 @@ class MNistDescription(Scene):
     def construct(self):
         title = TextMobject("MNIST Database")
         title.scale(1.5)
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         authors = TextMobject("LeCun, Cortes and Burges")
         authors.next_to(title, DOWN)
         link_words = TextMobject("(links in the description)")
@@ -471,7 +440,7 @@ class MNistDescription(Scene):
         arrows = VGroup(*[Vector(DOWN) for x in range(4)])
         arrows.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         arrows.next_to(link_words, DOWN)
-        arrows.highlight(BLUE)
+        arrows.set_color(BLUE)
 
         word_group = VGroup(title, authors, link_words, arrows)
         word_group.center()
@@ -499,7 +468,7 @@ class MNistDescription(Scene):
             group.arrange_submobjects_in_grid(
                 n_rows = self.n_rows_per_grid,
             )
-            group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+            group.scale_to_fit_height(FRAME_HEIGHT - 1)
             if i == 0:
                 self.play(
                     LaggedStart(FadeIn, group),
@@ -590,7 +559,7 @@ class FunctionMinmization(GraphScene):
             Dot().move_to(self.input_to_graph_point(x, graph))
             for x in range(10)
         ])
-        dots.gradient_highlight(YELLOW, RED)
+        dots.set_color_by_gradient(YELLOW, RED)
 
         def update_dot(dot, dt):
             x = self.x_axis.point_to_number(dot.get_center())
@@ -690,14 +659,14 @@ class IntroduceCostFunction(PreviewLearning):
             for tex in "=", "+", "dots"
         ])
 
-        w_labels.highlight(self.positive_edge_color)
-        b.highlight(self.bias_color)
-        sigma.highlight(YELLOW)
+        w_labels.set_color(self.positive_edge_color)
+        b.set_color(self.bias_color)
+        sigma.set_color(YELLOW)
         formula.next_to(neuron, RIGHT)
 
         weights_word = TextMobject("Weights")
         weights_word.next_to(neuron.edges_in, RIGHT, aligned_edge = UP)
-        weights_word.highlight(self.positive_edge_color)
+        weights_word.set_color(self.positive_edge_color)
         weights_arrow_to_edges = Arrow(
             weights_word.get_bottom(),
             neuron.edges_in[0].get_center(),
@@ -717,7 +686,7 @@ class IntroduceCostFunction(PreviewLearning):
         bias_arrow = Vector(DOWN, color = self.bias_color)
         bias_arrow.next_to(b, UP, SMALL_BUFF)
         bias_word.next_to(bias_arrow, UP, SMALL_BUFF)
-        bias_word.highlight(self.bias_color)
+        bias_word.set_color(self.bias_color)
 
         self.play(
             Transform(layer0, active_layer0),
@@ -859,7 +828,7 @@ class IntroduceCostFunction(PreviewLearning):
         rect = SurroundingRectangle(last_layer)
         words = TextMobject("Utter trash")
         words.next_to(rect, DOWN, aligned_edge = LEFT)
-        VGroup(rect, words).highlight(YELLOW)
+        VGroup(rect, words).set_color(YELLOW)
 
         self.play(
             ShowCreation(rect),
@@ -884,7 +853,7 @@ class IntroduceCostFunction(PreviewLearning):
         words = TextMobject(
             "What's the", "``cost''\\\\", "of this difference?",
         )
-        words.highlight_by_tex("cost", RED)
+        words.set_color_by_tex("cost", RED)
         words.next_to(layers, UP)
         words.to_edge(UP)
         words.shift_onto_screen()
@@ -944,7 +913,7 @@ class IntroduceCostFunction(PreviewLearning):
         image_group = Group(self.image, self.image_rect)
         image_group.generate_target()
         image_group.target.scale(0.5)
-        cost_of = TextMobject("Cost of").highlight(RED)
+        cost_of = TextMobject("Cost of").set_color(RED)
         cost_group = VGroup(cost_of, image_group.target)
         cost_group.arrange_submobjects(RIGHT)
         brace = Brace(terms, LEFT)
@@ -985,7 +954,7 @@ class IntroduceCostFunction(PreviewLearning):
             Arrow(ORIGIN, LEFT).next_to(d, LEFT, MED_LARGE_BUFF)
             for d in decimals
         ])
-        arrows.highlight(WHITE)
+        arrows.set_color(WHITE)
 
         def generate_term_update_func(decimal, desired_decimal):
             return lambda a : (decimal.number - desired_decimal.number)**2
@@ -1006,7 +975,7 @@ class IntroduceCostFunction(PreviewLearning):
 
         sum_term = DecimalNumber(0)
         sum_term.next_to(brace.target, LEFT)
-        sum_term.highlight(RED)
+        sum_term.set_color(RED)
         def sum_update(alpha):
             return sum([
                 (d1.number - d2.number)**2
@@ -1079,7 +1048,7 @@ class IntroduceCostFunction(PreviewLearning):
         ))
 
         words = TextMobject("Average cost of \\\\ all training data...")
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         words.to_corner(UP+LEFT)
 
         self.play(
@@ -1178,7 +1147,7 @@ class YellAtNetwork(PiCreatureScene, PreviewLearning):
         desired.arrange_submobjects(RIGHT)
         desired.to_edge(UP)
 
-        q_marks = TexMobject("???").highlight(RED)
+        q_marks = TexMobject("???").set_color(RED)
         q_marks.next_to(arrow, UP, SMALL_BUFF)
 
         self.play(
@@ -1253,9 +1222,9 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         self.show_cost_function()
 
     def setup_sides(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         network_mob = self.network_mob
-        network_mob.scale_to_fit_width(SPACE_WIDTH - 1)
+        network_mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
         network_mob.to_corner(DOWN+LEFT)
 
         self.add(v_line)
@@ -1263,7 +1232,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
 
     def show_network_as_a_function(self):
         title = TextMobject("Neural network function")
-        title.shift(SPACE_WIDTH*RIGHT/2)
+        title.shift(FRAME_X_RADIUS*RIGHT/2)
         title.to_edge(UP)
         underline = Line(LEFT, RIGHT)
         underline.stretch_to_fit_width(title.get_width())
@@ -1284,7 +1253,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         image = MNistMobject(in_vect)
         image.scale_to_fit_height(1.5)
         image_label = TextMobject("Input")
-        image_label.highlight(input_words[0].get_color())
+        image_label.set_color(input_words[0].get_color())
         image_label.next_to(image, UP, SMALL_BUFF)
 
         arrow = Arrow(LEFT, RIGHT, color = WHITE)
@@ -1333,11 +1302,11 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         network_mob.target.to_edge(UP, buff = LARGE_BUFF)
         rect = SurroundingRectangle(network_mob.target, color = BLUE)
         network_label = TextMobject("Input")
-        network_label.highlight(input_words[0].get_color())
+        network_label.set_color(input_words[0].get_color())
         network_label.next_to(rect, UP, SMALL_BUFF)
 
         new_output_word = TextMobject("1 number", "(the cost)")
-        new_output_word[1].highlight(RED).scale(0.9)
+        new_output_word[1].set_color(RED).scale(0.9)
         new_output_word.move_to(output_words[1], LEFT)
         new_output_word.shift(0.5*SMALL_BUFF*DOWN)
         new_parameter_word = TextMobject("""
@@ -1348,13 +1317,13 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         new_parameter_word.move_to(parameter_words[1], UP+LEFT) 
 
         new_title = TextMobject("Cost function")
-        new_title.highlight(RED)
+        new_title.set_color(RED)
         new_title.move_to(self.title)
 
         arrow = Arrow(UP, DOWN, color = WHITE)
         arrow.next_to(rect, DOWN)
         cost = TextMobject("Cost: 5.4")
-        cost.highlight(RED)
+        cost.set_color(RED)
         cost.next_to(arrow, DOWN)
 
         training_data, validation_data, test_data = load_data_wrapper()
@@ -1409,11 +1378,11 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
 
     def get_function_description_words(self, w1, w2, w3):
         input_words = TextMobject("Input:", w1)
-        input_words[0].highlight(BLUE)
+        input_words[0].set_color(BLUE)
         output_words = TextMobject("Output:", w2)
-        output_words[0].highlight(YELLOW)
+        output_words[0].set_color(YELLOW)
         parameter_words = TextMobject("Parameters:", w3)
-        parameter_words[0].highlight(GREEN)
+        parameter_words[0].set_color(GREEN)
         words = VGroup(input_words, output_words, parameter_words)
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
         words.scale(0.9)
@@ -1493,7 +1462,7 @@ class SingleVariableCostFunction(GraphScene):
         cf1 = TexMobject("C(", "w_1, w_2, \\dots, w_{13{,}002}", ")")
         cf2 = TexMobject("C(", "w", ")")
         for cf in cf1, cf2:
-            VGroup(cf[0], cf[2]).highlight(RED)
+            VGroup(cf[0], cf[2]).set_color(RED)
         big_brace, lil_brace = [
             Brace(cf[1], DOWN)
             for cf in cf1, cf2
@@ -1502,7 +1471,7 @@ class SingleVariableCostFunction(GraphScene):
         lil_brace_text = lil_brace.get_text("Single input")
 
         name.next_to(cf1, UP, LARGE_BUFF)
-        name.highlight(RED)
+        name.set_color(RED)
 
         self.add(name, cf1)
         self.play(
@@ -1598,7 +1567,7 @@ class SingleVariableCostFunction(GraphScene):
         brace = Brace(deriv_group, UP)
         words = TextMobject("Sometimes \\\\ infeasible")
         words.next_to(deriv_group, UP)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         words.next_to(brace, UP)
 
         graph = self.get_graph(
@@ -1646,7 +1615,7 @@ class SingleVariableCostFunction(GraphScene):
         for vect, color in (LEFT, BLUE), (RIGHT, GREEN):
             arrow = Arrow(ORIGIN, vect, buff = SMALL_BUFF)
             arrow.shift(point + SMALL_BUFF*UP)
-            arrow.highlight(color)
+            arrow.set_color(color)
             arrows.add(arrow)
             q_mark = TextMobject("?")
             q_mark.next_to(arrow, UP, buff = 0)
@@ -1785,7 +1754,7 @@ class SingleVariableCostFunction(GraphScene):
                 ContinualUpdateFromFunc(point, update_point),
                 ContinualUpdateFromFunc(new_ball, update_ball)
             ]
-        balls.gradient_highlight(BLUE, GREEN)
+        balls.set_color_by_gradient(BLUE, GREEN)
 
         self.play(ReplacementTransform(ball, balls))
         self.add(*updates)
@@ -1829,7 +1798,7 @@ class SingleVariableCostFunction(GraphScene):
 
     def get_tangent_line(self, x, color = YELLOW):
         tangent_line = Line(LEFT, RIGHT).scale(3)
-        tangent_line.highlight(color)
+        tangent_line.set_color(color)
         self.make_line_tangent(tangent_line, x)
         return tangent_line
 
@@ -1855,7 +1824,7 @@ class TwoVariableInputSpace(Scene):
 
     def add_plane(self):
         plane = NumberPlane(
-            x_radius = SPACE_WIDTH/2
+            x_radius = FRAME_X_RADIUS/2
         )
         plane.add_coordinates()
         name = TextMobject("Input space")
@@ -1877,20 +1846,20 @@ class TwoVariableInputSpace(Scene):
         point = self.plane.coords_to_point(2, 1)
         dot = Dot(point, color = YELLOW)
         dot.save_state()
-        dot.move_to(SPACE_HEIGHT*UP + SPACE_WIDTH*RIGHT/2)
+        dot.move_to(FRAME_Y_RADIUS*UP + FRAME_X_RADIUS*RIGHT/2)
         dot.fade(1)
         arrows = VGroup(*[
             Arrow(ORIGIN, vect).shift(point)
             for vect in compass_directions(8)
         ])
-        arrows.highlight(WHITE)
+        arrows.set_color(WHITE)
         question = TextMobject(
             "Which direction decreases \\\\",
             "$C(x, y)$", "most quickly?"
         )
         question.scale(0.7)
-        question.highlight(YELLOW)
-        question.highlight_by_tex("C(x, y)", RED)
+        question.set_color(YELLOW)
+        question.set_color_by_tex("C(x, y)", RED)
         question.add_background_rectangle()
         question.next_to(arrows, LEFT)
 
@@ -1916,7 +1885,7 @@ class TwoVariableInputSpace(Scene):
             buff = 0,
             color = GREEN
         )
-        new_arrow.highlight(GREEN)
+        new_arrow.set_color(GREEN)
         arrow.save_state()
 
         gradient = TexMobject("\\nabla C(x, y)")
@@ -1928,14 +1897,14 @@ class TwoVariableInputSpace(Scene):
             "steepest increase"
         )
         gradient_words.scale(0.7)
-        gradient_words[-1].highlight(GREEN)
+        gradient_words[-1].set_color(GREEN)
         gradient_words.next_to(gradient, UP, SMALL_BUFF)
         gradient_words.add_background_rectangle(opacity = 1)
         gradient_words.shift(LEFT)
 
         anti_arrow = new_arrow.copy()
         anti_arrow.rotate(np.pi, about_point = dot.get_center())
-        anti_arrow.highlight(RED)
+        anti_arrow.set_color(RED)
 
         self.play(
             Transform(arrow, new_arrow),
@@ -1982,11 +1951,11 @@ class GradientDescentAlgorithm(Scene):
             TextMobject("Repeat."),
         )
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_corner(DOWN+LEFT)
 
         for word in words[:2]:
-            word[1].highlight(RED)
+            word[1].set_color(RED)
 
         for word in words:
             self.play(Write(word, run_time = 1))
@@ -1995,8 +1964,8 @@ class GradientDescentAlgorithm(Scene):
 class GradientDescentName(Scene):
     def construct(self):
         words = TextMobject("Gradient descent")
-        words.highlight(BLUE)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.set_color(BLUE)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
 
         self.play(Write(words, run_time = 2))
@@ -2016,7 +1985,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
 
         nums = [2.25, -1.57,  1.98, -1.16,  3.82, 1.21]
         decimals = VGroup(*[
-            DecimalNumber(num).highlight(
+            DecimalNumber(num).set_color(
                 BLUE_D if num > 0 else RED
             )
             for num in nums
@@ -2042,7 +2011,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
         words.next_to(column_vect, UP)
 
         lhs = TexMobject("\\vec{\\textbf{W}}", "=")
-        lhs[0].highlight(YELLOW)
+        lhs[0].set_color(YELLOW)
         lhs.next_to(column_vect, LEFT)
 
         self.play(
@@ -2069,7 +2038,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
             "-", "\\nabla", "C(", "\\vec{\\textbf{W}}", ")", "="
         )
         lhs.shift(2*RIGHT)
-        lhs.highlight_by_tex("W", YELLOW)
+        lhs.set_color_by_tex("W", YELLOW)
         old_decimals = VGroup(*filter(
             lambda m : isinstance(m, DecimalNumber),
             column_vect[1]
@@ -2078,7 +2047,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
         new_nums = [0.18, 0.45, -0.51, 0.4, -0.32, 0.82]
         for decimal, new_num in zip(old_decimals, new_nums):
             new_decimal = DecimalNumber(new_num)
-            new_decimal.highlight(BLUE if new_num > 0 else RED_B)
+            new_decimal.set_color(BLUE if new_num > 0 else RED_B)
             new_decimal.move_to(decimal)
             new_decimals.add(new_decimal)
         rhs = VGroup(
@@ -2118,7 +2087,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
 class DotsInsert(Scene):
     def construct(self):
         dots = TexMobject("\\vdots")
-        dots.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        dots.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(dots)
 
 class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
@@ -2136,7 +2105,7 @@ class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
 
         words = TextMobject("Minimize cost $\\dots$")
         words.next_to(decimals, UP, MED_LARGE_BUFF)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         # words.shift(LEFT)
 
         def generate_update(n1, n2):
@@ -2193,7 +2162,7 @@ class NonSpatialGradientIntuition(Scene):
         "w_color" : YELLOW,
         "positive_color" : BLUE,
         "negative_color" : RED,
-        "vect_height" : SPACE_HEIGHT - MED_LARGE_BUFF,
+        "vect_height" : FRAME_Y_RADIUS - MED_LARGE_BUFF,
         "text_scale_value" : 0.7,
     }
     def construct(self):
@@ -2204,7 +2173,7 @@ class NonSpatialGradientIntuition(Scene):
 
     def add_vector(self):
         lhs = TexMobject("\\vec{\\textbf{W}}", "=")
-        lhs[0].highlight(self.w_color)
+        lhs[0].set_color(self.w_color)
         lhs.to_edge(LEFT)
 
         ws = VGroup(*[
@@ -2215,7 +2184,7 @@ class NonSpatialGradientIntuition(Scene):
                 ["w_{13{,}00%d}"%d for d in range(3)]
             )
         ])
-        ws.highlight(self.w_color)
+        ws.set_color(self.w_color)
         ws.arrange_submobjects(DOWN)
         lb, rb = brackets = TexMobject("\\big[", "\\big]").scale(2)
         brackets.stretch_to_fit_height(1.2*ws.get_height())
@@ -2241,7 +2210,7 @@ class NonSpatialGradientIntuition(Scene):
             "-\\nabla", "C(", "\\vec{\\textbf{W}}", ")", "="
         )
         lhs.next_to(vect, RIGHT, LARGE_BUFF)
-        lhs.highlight_by_tex("W", self.w_color)
+        lhs.set_color_by_tex("W", self.w_color)
 
         decimals = VGroup()
         nums = [0.31, 0.03, -1.25, 0.78, -0.37, 0.16]
@@ -2249,9 +2218,9 @@ class NonSpatialGradientIntuition(Scene):
             decimal = DecimalNumber(num)
             decimal.scale(self.text_scale_value)
             if num > 0:
-                decimal.highlight(self.positive_color)
+                decimal.set_color(self.positive_color)
             else:
-                decimal.highlight(self.negative_color)
+                decimal.set_color(self.negative_color)
             decimal.move_to(w)
             decimals.add(decimal)
         new_dots = dots.copy()
@@ -2297,7 +2266,7 @@ class NonSpatialGradientIntuition(Scene):
                 color = self.negative_color
             phrase = TextMobject("should", verb)
             phrase.scale(self.text_scale_value)
-            phrase.highlight_by_tex(verb, color)
+            phrase.set_color_by_tex(verb, color)
             w.generate_target()
             group = VGroup(w.target, phrase)
             group.arrange_submobjects(RIGHT)
@@ -2333,7 +2302,7 @@ class NonSpatialGradientIntuition(Scene):
                 color =  WHITE
             words = TextMobject(adj)
             words.scale(self.text_scale_value)
-            words.highlight(color)
+            words.set_color(color)
             words.next_to(phrase, RIGHT, SMALL_BUFF)
             magnitude_words.add(words)
 
@@ -2383,7 +2352,7 @@ class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
         edge.set_stroke(YELLOW, 4)
         words = TextMobject("This weight \\\\ matters a lot")
         words.next_to(layers[-1], UP).to_edge(UP)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         arrow = Arrow(words.get_bottom(), edge.get_center())
 
         self.play(
@@ -2400,9 +2369,9 @@ class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
         words = TextMobject("Who even cares \\\\ about this weight?")
         words.next_to(self.network_mob.layers[-1], DOWN)
         words.to_edge(DOWN)
-        words.highlight(color)
+        words.set_color(color)
         arrow = Arrow(words.get_top(), edge.get_center(), buff = SMALL_BUFF)
-        arrow.highlight(color)
+        arrow.set_color(color)
 
         self.play(
             ShowCreation(edge),
@@ -2483,7 +2452,7 @@ class TwoGradientInterpretationsIn2D(Scene):
             "C(", "x, y", ")", "=", 
             "\\frac{3}{2}x^2", "+", "\\frac{1}{2}y^2",
         )
-        func.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
+        func.shift(FRAME_X_RADIUS*LEFT/2).to_edge(UP)
 
         grad = TexMobject("\\nabla", "C(", "1, 1", ")", "=")
         vect = TexMobject(
@@ -2507,11 +2476,11 @@ class TwoGradientInterpretationsIn2D(Scene):
     def point_out_direction(self):
         coords = self.grad.get_part_by_tex("1, 1").copy()
         vect = self.vect[1].copy()
-        coords.highlight(YELLOW)
-        vect.highlight(GREEN)
+        coords.set_color(YELLOW)
+        vect.set_color(GREEN)
 
         dot = Dot(self.plane.coords_to_point(1, 1))
-        dot.highlight(coords.get_color())
+        dot.set_color(coords.get_color())
         arrow = Arrow(
             self.plane.coords_to_point(1, 1),
             self.plane.coords_to_point(4, 2),
@@ -2535,9 +2504,9 @@ class TwoGradientInterpretationsIn2D(Scene):
         self.wait()
 
         self.remove(vect)
-        self.vect[1].highlight(vect.get_color())
+        self.vect[1].set_color(vect.get_color())
         self.remove(coords)
-        self.grad.get_part_by_tex("1, 1").highlight(coords.get_color())
+        self.grad.get_part_by_tex("1, 1").set_color(coords.get_color())
 
         self.steepest_words = words
         self.dot = dot
@@ -2553,12 +2522,12 @@ class TwoGradientInterpretationsIn2D(Scene):
         x_rect = SurroundingRectangle(x_part, color = YELLOW)
         y_rect = SurroundingRectangle(y_part, color = TEAL)
         x_words = TextMobject("$x$ has 3 times \\\\ the impact...")
-        x_words.highlight(x_rect.get_color())
+        x_words.set_color(x_rect.get_color())
         x_words.add_background_rectangle()
         x_words.next_to(x_rect, UP)
         # x_words.to_edge(LEFT)
         y_words = TextMobject("...as $y$")
-        y_words.highlight(y_rect.get_color())
+        y_words.set_color(y_rect.get_color())
         y_words.add_background_rectangle()
         y_words.next_to(y_rect, DOWN)
 
@@ -2779,9 +2748,9 @@ class ContinuouslyRangingNeuron(PreviewLearning):
 
         def update_decimal_color(decimal):
             if neuron.get_fill_opacity() > 0.8:
-                decimal.highlight(BLACK)
+                decimal.set_color(BLACK)
             else:
-                decimal.highlight(WHITE)
+                decimal.set_color(WHITE)
         decimal_color_anim = UpdateFromFunc(decimal, update_decimal_color)
 
         self.play(*map(MoveToTarget, [neuron, decimal]))
@@ -2845,7 +2814,7 @@ class TestPerformance(PreviewLearning):
             "{\\text{Number correct}", "\\over", 
             "\\text{total}}", "=",
         )
-        word_frac[0].highlight(GREEN)
+        word_frac[0].set_color(GREEN)
         self.frac = self.get_frac()
         self.equals = TexMobject("=")
         fracs = VGroup(
@@ -2869,7 +2838,7 @@ class TestPerformance(PreviewLearning):
             )
         ]
         rect_wrong = TextMobject("Wrong!")
-        rect_wrong.highlight(RED)
+        rect_wrong.set_color(RED)
         num_wrong = rect_wrong.copy()
 
         arrow = Arrow(LEFT, RIGHT, color = WHITE)
@@ -2944,7 +2913,7 @@ class TestPerformance(PreviewLearning):
 
     def get_frac(self):
         frac = TexMobject("{%d"%self.n_correct, "\\over", "%d}"%self.total)
-        frac[0].highlight(GREEN)
+        frac[0].set_color(GREEN)
         return frac
 
     def activate_layers(self, test_in):
@@ -2964,14 +2933,14 @@ class ReactToPerformance(TeacherStudentsScene):
         )
         title.arrange_submobjects(RIGHT)
         title.to_edge(UP)
-        title[-1][0].highlight(GREEN)
+        title[-1][0].set_color(GREEN)
         self.play(Write(title, run_time = 2))
 
         last_words = TextMobject(
             "State of the art \\\\ is", 
             "99.79\\%"
         )
-        last_words[-1].highlight(GREEN)
+        last_words[-1].set_color(GREEN)
 
         self.teacher_says(
             "That's pretty", "good!",
@@ -3012,7 +2981,7 @@ class NotAtAll(TeacherStudentsScene, PreviewLearning):
 
     def construct(self):
         words = TextMobject("Well...\\\\", "not at all!")
-        words[1].highlight(BLACK)
+        words[1].set_color(BLACK)
         network_mob = self.network_mob
         network_mob.scale_to_fit_height(4)
         network_mob.to_corner(UP+LEFT)
@@ -3026,7 +2995,7 @@ class NotAtAll(TeacherStudentsScene, PreviewLearning):
         self.change_student_modes(*["sassy"]*3)
         self.play(
             self.teacher.change, "concerned_musician",
-            words[1].highlight, WHITE
+            words[1].set_color, WHITE
         )
         self.wait(2)
 
@@ -3051,7 +3020,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
             network_mob.edge_groups[0],
             network_mob.layers[:2]
         ))
-        shift_val = SPACE_WIDTH*LEFT + MED_LARGE_BUFF*RIGHT - \
+        shift_val = FRAME_X_RADIUS*LEFT + MED_LARGE_BUFF*RIGHT - \
                     to_keep.get_left()
         self.play(
             to_fade.shift, shift_val,
@@ -3075,12 +3044,12 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
                 pixel.set_fill(color, opacity = abs(shade)**(0.3))
             pixel_arrays.add(pixel_array)
         pixel_arrays.arrange_submobjects_in_grid(buff = MED_LARGE_BUFF)
-        pixel_arrays.scale_to_fit_height(2*SPACE_HEIGHT - 2.5)
+        pixel_arrays.scale_to_fit_height(FRAME_HEIGHT - 2.5)
         pixel_arrays.to_corner(DOWN+RIGHT)
 
         for pixel_array in pixel_arrays:
             rect = SurroundingRectangle(pixel_array)
-            rect.highlight(WHITE)
+            rect.set_color(WHITE)
             pixel_array.rect = rect
 
         words = TextMobject("What second layer \\\\ neurons look for")
@@ -3221,7 +3190,7 @@ class InputRandomData(TestPerformance):
             neurons[choice], output_labels[choice]
         ))
         word = TextMobject("What?!?")
-        word.highlight(YELLOW)
+        word.set_color(YELLOW)
         word.next_to(rect, RIGHT)
 
         self.play(ShowCreation(rect))
@@ -3337,7 +3306,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             Dot(line.point_from_proportion(a))
             for a in np.linspace(0, 1, 5)
         ])
-        dots.gradient_highlight(BLUE, YELLOW)
+        dots.set_color_by_gradient(BLUE, YELLOW)
         path = VGroup(line, dots)
         words = TextMobject("This series")
         words.next_to(line, DOWN)
@@ -3382,7 +3351,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
         lstm.next_to(line.get_right(), UP)
 
         modern_variants = VGroup(cnn, lstm)
-        modern_variants.highlight(YELLOW)
+        modern_variants.set_color(YELLOW)
 
         self.play(
             Write(words, run_time = 1),
@@ -3443,11 +3412,11 @@ class ShiftingFocus(Scene):
         how, do, networks, learn = words = TextMobject(
             "How", "do", "neural networks", "learn?"
         )
-        networks.highlight(BLUE)
+        networks.set_color(BLUE)
         cross = Cross(networks)
         viewers = TextMobject("video viewers")
         viewers.move_to(networks)
-        viewers.highlight(YELLOW)
+        viewers.set_color(YELLOW)
         cap_do = TextMobject("Do")
         cap_do.move_to(do, DOWN+LEFT)
 
@@ -3486,7 +3455,7 @@ class ConvolutionalNetworkPreview(Scene):
         vect = get_organized_images()[9][0]
         image = PixelsFromVect(vect)
         image.set_stroke(width = 1)
-        image.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        image.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(image)
 
         kernels = [
@@ -3544,7 +3513,7 @@ class RandomlyLabeledImageData(Scene):
             x = i//5
             y = i%5
             group = self.get_training_group(image_name, label_name)
-            group.shift(4.5*LEFT + x*SPACE_WIDTH*RIGHT)
+            group.shift(4.5*LEFT + x*FRAME_X_RADIUS*RIGHT)
             group.shift(3*UP + 1.5*y*DOWN)
             groups.add(group)
             labels.add(group[-1])
@@ -3554,7 +3523,7 @@ class RandomlyLabeledImageData(Scene):
         for label, i in zip(labels, permutation):
             label.generate_target()
             label.target.move_to(labels[i], LEFT)
-            label.target.highlight(YELLOW)
+            label.target.set_color(YELLOW)
 
         self.play(LaggedStart(
             FadeIn, groups,
@@ -3660,7 +3629,7 @@ class CompareLearningCurves(GraphScene):
         self.setup_axes()
         self.x_axis_label_mob.to_edge(DOWN)
         self.y_axis_label_mob.to_edge(LEFT)
-        self.y_axis_label_mob.highlight(RED)
+        self.y_axis_label_mob.set_color(RED)
 
         slow_decrease = self.get_graph(
             lambda x : 9 - 0.25*x
@@ -3675,17 +3644,17 @@ class CompareLearningCurves(GraphScene):
         faster_decrease.move_to(slow_decrease, UP+LEFT)
 
         slow_label = TextMobject("Randomly-labeled data")
-        slow_label.highlight(slow_decrease.get_color())
+        slow_label.set_color(slow_decrease.get_color())
         slow_label.to_corner(UP+RIGHT)
         slow_line = Line(ORIGIN, RIGHT)
         slow_line.set_stroke(slow_decrease.get_color(), 5)
         slow_line.next_to(slow_label, LEFT)
 
         fast_label = TextMobject("Properly-labeled data")
-        fast_label.highlight(faster_decrease.get_color())
+        fast_label.set_color(faster_decrease.get_color())
         fast_label.next_to(slow_label, DOWN)
         fast_line = slow_line.copy()
-        fast_line.highlight(faster_decrease.get_color())
+        fast_line.set_color(faster_decrease.get_color())
         fast_line.next_to(fast_label, LEFT)
 
         self.play(FadeIn(slow_label), ShowCreation(slow_line))
@@ -3714,7 +3683,7 @@ class CompareLearningCurves(GraphScene):
         rect.replace(line, stretch = True)
 
         words = TextMobject("Learns structured data more quickly")
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         words.next_to(rect, DOWN)
         words.add_background_rectangle()
 
@@ -3728,7 +3697,7 @@ class ManyMinimaWords(Scene):
             "Many local minima,\\\\",
             "roughly equal quality"
         )
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
         self.play(Write(words))
         self.wait()

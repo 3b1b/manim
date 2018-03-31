@@ -1,12 +1,17 @@
 
-from helpers import *
+from constants import *
 
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from topics.geometry import Square, Line
-from scene import Scene
-from camera import Camera
+from scene.scene import Scene
+from camera.camera import Camera
 from animation.continual_animation import AmbientMovement
 from animation.transform import ApplyMethod
+
+from utils.bezier import interpolate
+from utils.iterables import list_update
+from utils.space_ops import rotation_matrix, rotation_about_z, z_to_vector
+
 
 class CameraWithPerspective(Camera):
     CONFIG = {

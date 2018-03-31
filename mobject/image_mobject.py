@@ -4,9 +4,14 @@ import os
 from PIL import Image
 from random import random
 
-from helpers import *
-from mobject import Mobject
+from constants import *
+from .mobject import Mobject
 from point_cloud_mobject import PMobject
+from utils.bezier import interpolate
+from utils.color import color_to_int_rgb
+from utils.color import interpolate_color
+from utils.config_ops import digest_config
+from utils.images import get_full_raster_image_path
 
 class ImageMobject(Mobject):
     """
@@ -47,13 +52,14 @@ class ImageMobject(Mobject):
             pa = np.append(pa, alphas, axis = 2)
         self.pixel_array = pa
 
-    def highlight(self, color, alpha = None, family = True):
+    def set_color(self, color, alpha = None, family = True):
         rgb = color_to_int_rgb(color)
         self.pixel_array[:,:,:3] = rgb
         if alpha is not None:
             self.pixel_array[:,:,3] = int(255*alpha)
         for submob in self.submobjects:
-            submob.highlight(color, alpha, family)
+            submob.set_color(color, alpha, family)
+        self.color = color
         return self
 
     def init_points(self):

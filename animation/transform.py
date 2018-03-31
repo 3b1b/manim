@@ -4,11 +4,17 @@ import inspect
 import copy
 import warnings
 
-from helpers import *
+from constants import *
 
-from animation import Animation
-from mobject import Mobject, Point, VMobject, Group
+from .animation import Animation
+from mobject.mobject import Mobject, Group
+from mobject.vectorized_mobject import VMobject, VectorizedPoint
 from topics.geometry import Dot, Circle
+from utils.config_ops import digest_config
+from utils.iterables import adjacent_pairs
+from utils.paths import straight_path, path_along_arc, counterclockwise_path
+from utils.rate_functions import smooth, there_and_back
+from utils.rate_functions import squish_rate_func
 
 class Transform(Animation):
     CONFIG = {
@@ -107,11 +113,11 @@ class GrowFromPoint(Transform):
     def __init__(self, mobject, point, **kwargs):
         digest_config(self, kwargs)
         target = mobject.copy()
-        point_mob = Point(point)
+        point_mob = VectorizedPoint(point)
         if self.point_color:
-            point_mob.highlight(self.point_color)
+            point_mob.set_color(self.point_color)
         mobject.replace(point_mob)
-        mobject.highlight(point_mob.get_color())
+        mobject.set_color(point_mob.get_color())
         Transform.__init__(self, mobject, target, **kwargs)
 
 class GrowFromCenter(GrowFromPoint):
@@ -193,7 +199,7 @@ class FocusOn(Transform):
     def __init__(self, mobject_or_point, **kwargs):
         digest_config(self, kwargs)
         big_dot = Dot(
-            radius = SPACE_WIDTH+SPACE_HEIGHT,
+            radius = FRAME_X_RADIUS+FRAME_Y_RADIUS,
             stroke_width = 0,
             fill_color = self.color,
             fill_opacity = 0,
@@ -214,7 +220,7 @@ class Indicate(Transform):
         digest_config(self, kwargs)
         target = mobject.copy()
         target.scale_in_place(self.scale_factor)
-        target.highlight(self.color)
+        target.set_color(self.color)
         Transform.__init__(self, mobject, target, **kwargs)
 
 class CircleIndicate(Indicate):
@@ -260,7 +266,7 @@ class ApplyPointwiseFunction(ApplyMethod):
 
 class FadeToColor(ApplyMethod):
     def __init__(self, mobject, color, **kwargs):
-        ApplyMethod.__init__(self, mobject.highlight, color, **kwargs)
+        ApplyMethod.__init__(self, mobject.set_color, color, **kwargs)
 
 class ScaleInPlace(ApplyMethod):
     def __init__(self, mobject, scale_factor, **kwargs):

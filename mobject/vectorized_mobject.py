@@ -1,8 +1,15 @@
 import re
+from colour import Color
 
-from mobject import Mobject
+from constants import *
+from .mobject import Mobject
+from utils.bezier import bezier, partial_bezier_points
+from utils.bezier import interpolate, get_smooth_handle_points, is_closed
+from utils.color import color_to_rgb
+from utils.color import interpolate_color
+from utils.iterables import make_even
 
-from helpers import *
+
 
 class VMobject(Mobject):
     CONFIG = {
@@ -78,12 +85,13 @@ class VMobject(Mobject):
             family = family
         )
 
-    def highlight(self, color, family = True):
+    def set_color(self, color, family = True):
         self.set_style_data(
             stroke_color = color, 
             fill_color = color,
             family = family
         )
+        self.color = color
         return self
 
     def match_style(self, vmobject):
@@ -150,7 +158,7 @@ class VMobject(Mobject):
 
     def color_using_background_image(self, background_image_file):
         self.background_image_file = background_image_file
-        self.highlight(WHITE)
+        self.set_color(WHITE)
         for submob in self.submobjects:
             submob.color_using_background_image(background_image_file)
         return self

@@ -1,26 +1,4 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.combinatorics import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
+from big_ol_pile_of_manim_imports import *
 
 EXAMPLE_TRANFORM = [[0, 1], [-1, 1]]
 TRANFORMED_VECTOR = [[1], [2]]
@@ -59,12 +37,12 @@ class OpeningQuote(Scene):
             """, 
             organize_left_to_right = False
         )
-        words.scale_to_fit_width(2*(SPACE_WIDTH-1))
+        words.scale_to_fit_width(2*(FRAME_X_RADIUS-1))
         words.to_edge(UP)        
         for mob in words.submobjects[48:49+13]:
-            mob.highlight(GREEN)
+            mob.set_color(GREEN)
         author = TextMobject("-Jean Dieudonn\\'e")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.next_to(words, DOWN)
 
         self.play(FadeIn(words))
@@ -76,7 +54,7 @@ class VideoIcon(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, "video_icon", **kwargs)
         self.center()
-        self.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        self.scale_to_fit_width(FRAME_WIDTH/12.)
         self.set_stroke(color = WHITE, width = 0)
         self.set_fill(color = WHITE, opacity = 1)
 
@@ -226,11 +204,11 @@ class AboutLinearAlgebra(Scene):
 
     def get_eigenvalue(self):
         result = TextMobject("\\Text{Det}\\left(A - \\lambda I \\right) = 0")
-        result.submobjects[-5].highlight(YELLOW)
+        result.submobjects[-5].set_color(YELLOW)
         return result
 
     def get_matrix_multiplication_question(self):
-        why = TextMobject("Why?").highlight(BLUE) 
+        why = TextMobject("Why?").set_color(BLUE) 
         mult = self.get_matrix_multiplication()
         why.next_to(mult, UP)
         result = VMobject(why, mult)
@@ -255,7 +233,7 @@ class AboutLinearAlgebra(Scene):
 
         )
         for mob in result.submobjects[-11:-6]:
-            mob.highlight(YELLOW)
+            mob.set_color(YELLOW)
         return result
 
 
@@ -271,13 +249,13 @@ class NumericVsGeometric(Scene):
         geometric = TextMobject("Geometric intuition")
         for mob in numeric, geometric:
             mob.to_corner(UP+LEFT)
-        geometric.shift(SPACE_WIDTH*RIGHT)
-        hline = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        geometric.shift(FRAME_X_RADIUS*RIGHT)
+        hline = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         hline.next_to(numeric, DOWN)
         hline.to_edge(LEFT, buff = 0)
-        vline = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        vline = Line(FRAME_Y_RADIUS*UP, FRAME_Y_RADIUS*DOWN)
         for mob in hline, vline:
-            mob.highlight(GREEN)
+            mob.set_color(GREEN)
 
         self.play(ShowCreation(VMobject(hline, vline)))
         digest_locals(self)
@@ -294,7 +272,7 @@ class NumericVsGeometric(Scene):
             "\\\\ &=",
             matrix_to_tex_string([[1], [-1]]),
         ]))
-        matrix_vector_product.scale_to_fit_width(SPACE_WIDTH-0.5)
+        matrix_vector_product.scale_to_fit_width(FRAME_X_RADIUS-0.5)
         matrix_vector_product.next_to(self.vline, LEFT)
 
         self.play(
@@ -309,15 +287,15 @@ class NumericVsGeometric(Scene):
         digest_locals(self)
 
     def clear_way_for_geometric(self):
-        new_line = Line(SPACE_HEIGHT*LEFT, SPACE_HEIGHT*RIGHT)
-        new_line.shift((SPACE_HEIGHT+1)*DOWN)
+        new_line = Line(FRAME_Y_RADIUS*LEFT, FRAME_Y_RADIUS*RIGHT)
+        new_line.shift((FRAME_Y_RADIUS+1)*DOWN)
         self.play(
             Transform(self.vline, new_line),
             Transform(self.hline, new_line),
-            ApplyMethod(self.numeric.shift, (2*SPACE_HEIGHT+1)*DOWN),
+            ApplyMethod(self.numeric.shift, (FRAME_HEIGHT+1)*DOWN),
             ApplyMethod(
                 self.matrix_vector_product.shift, 
-                (2*SPACE_HEIGHT+1)*DOWN
+                (FRAME_HEIGHT+1)*DOWN
             ),
             ApplyMethod(self.geometric.to_edge, LEFT)
         )
@@ -336,7 +314,7 @@ class NumericVsGeometric(Scene):
         ]
         bulb = SVGMobject("light_bulb")
         bulb.scale_to_fit_height(1)
-        bulb.highlight(YELLOW)
+        bulb.set_color(YELLOW)
         thoughts = [
             matrix_to_mobject(EXAMPLE_TRANFORM),
             bulb,
@@ -402,7 +380,7 @@ class LinAlgPyramid(Scene):
             )
         self.wait()
         self.play(*[
-            ApplyMethod(m.highlight, DARK_GREY)
+            ApplyMethod(m.set_color, DARK_GREY)
             for m in words[0], rects[0]
         ])
         self.wait()
@@ -519,11 +497,11 @@ class SineApproximations(Scene):
     def construct(self):
         series = self.get_series()
         one_approx = self.get_approx_series("1", 1)
-        one_approx.highlight(YELLOW)
+        one_approx.set_color(YELLOW)
         pi_sixts_approx = self.get_approx_series("\\pi/6", np.pi/6)
-        pi_sixts_approx.highlight(RED)
+        pi_sixts_approx.set_color(RED)
         words = TextMobject("(How calculators compute sine)")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
 
         series.to_edge(UP)
         one_approx.next_to(series, DOWN, buff = 1.5)
@@ -627,13 +605,13 @@ class PhysicsExample(Scene):
 
         v_label = TexMobject("\\vec{v}")
         v_label.shift(p1 + RIGHT*vector[0]/4 + UP*vector[1]/2)
-        v_label.highlight(v_mob.get_color())
+        v_label.set_color(v_mob.get_color())
         vx_label = TexMobject("||\\vec{v}|| \\cos(\\theta)")
         vx_label.next_to(vx, UP)
-        vx_label.highlight(vx.get_color())
+        vx_label.set_color(vx.get_color())
         vy_label = TexMobject("||\\vec{v}|| \\sin(\\theta)")
         vy_label.next_to(vy, RIGHT)
-        vy_label.highlight(vy.get_color())
+        vy_label.set_color(vy.get_color())
 
         kwargs = {"submobject_mode" : "one_at_a_time"}
         for v in v_mob, vx, vy:
@@ -671,9 +649,9 @@ class LinearAlgebraIntuitions(Scene):
     def construct(self):
         title = TextMobject("Preview of core visual intuitions")
         title.to_edge(UP)
-        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         h_line.next_to(title, DOWN)
-        h_line.highlight(BLUE_E)
+        h_line.set_color(BLUE_E)
         intuitions = [
             "Matrices transform space",
             "Matrix multiplication corresponds to applying " + 
@@ -720,9 +698,9 @@ class ExampleTransformationForIntuitionList(LinearTransformationScene):
 class MatrixMultiplicationIs(Scene):
     def construct(self):
         matrix1 = matrix_to_mobject([[1, -1], [1, 2]])
-        matrix1.highlight(BLUE)
+        matrix1.set_color(BLUE)
         matrix2 = matrix_to_mobject([[2, 1], [1, 2]])
-        matrix2.highlight(GREEN)
+        matrix2.set_color(GREEN)
         for m in matrix1, matrix2:
             m.scale_to_fit_height(3)
         arrow = Arrow(LEFT, RIGHT, stroke_width = 6, preserve_tip_size_when_scaling = False)
@@ -830,9 +808,9 @@ class ExampleMatrixMultiplication(NumericalMatrixMultiplication):
 class TableOfContents(Scene):
     def construct(self):
         title = TextMobject("Essence of Linear Algebra")
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         title.to_corner(UP+LEFT)
-        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         h_line.next_to(title, DOWN)
         h_line.to_edge(LEFT, buff = 0)
         chapters = VMobject(*map(TextMobject, [
@@ -863,13 +841,13 @@ class TableOfContents(Scene):
         entry3 = chapters.split()[2]
         added_words = TextMobject("(Personally, I'm most excited \\\\ to do this one)")
         added_words.scale(0.5)
-        added_words.highlight(YELLOW)
+        added_words.set_color(YELLOW)
         added_words.next_to(h_line, DOWN)
         added_words.to_edge(RIGHT)
         arrow = Arrow(added_words.get_bottom(), entry3)
 
         self.play(
-            ApplyMethod(entry3.highlight, YELLOW),
+            ApplyMethod(entry3.set_color, YELLOW),
             ShowCreation(arrow, submobject_mode = "one_at_a_time"),
             Write(added_words),
             run_time = 1
@@ -884,7 +862,7 @@ class TableOfContents(Scene):
     def series_of_videos(self, chapters):
         icon = SVGMobject("video_icon")
         icon.center()
-        icon.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        icon.scale_to_fit_width(FRAME_WIDTH/12.)
         icon.set_stroke(color = WHITE, width = 0)
         icons = [icon.copy() for chapter in chapters.split()]
         colors = Color(BLUE_A).range_to(BLUE_D, len(icons))

@@ -1,9 +1,9 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
-from scene import Scene
-from animation import Animation
+from constants import *
+from scene.scene import Scene
+from animation.animation import Animation
 from mobject.tex_mobject import TexMobject
 
 class RearrangeEquation(Scene):

@@ -1,38 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from scene.moving_camera_scene import *
-from camera import *
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.graph_scene import *
-from topics.common_scenes import *
+from big_ol_pile_of_manim_imports import *
 
 ###### Ben's stuff ########
 
@@ -122,8 +90,8 @@ class CircleConstants(Scene):
 
         self.circle_arc = Arc(angle = 0.004, radius = RADIUS)
         self.radius = Line(ORIGIN, RADIUS * RIGHT)
-        self.radius.highlight(RADIUS_COLOR)
-        self.circle_arc.highlight(CIRCUM_COLOR)
+        self.radius.set_color(RADIUS_COLOR)
+        self.circle_arc.set_color(CIRCUM_COLOR)
 
         self.pi_equals = TexMobject("\pi\\approx", color = CIRCUM_COLOR)
         self.decimal = DecimalNumber(0, color = CIRCUM_COLOR)
@@ -249,7 +217,7 @@ def get_circle_drawing_terms(radius = 1, positioning_func = lambda m : m.center(
     circle = Circle(color = YELLOW, radius = 1.25)
     positioning_func(circle)
     radius = Line(circle.get_center(), circle.points[0])
-    radius.highlight(WHITE)
+    radius.set_color(WHITE)
     one = TexMobject("1")
     one.scale(0.75)
     one_update = UpdateFromFunc(
@@ -297,9 +265,9 @@ class PiTauDebate(PiCreatureScene):
         self.add(pi, tau)
 
         pi_value = TextMobject("3.1415...!")
-        pi_value.highlight(BLUE)
+        pi_value.set_color(BLUE)
         tau_value = TextMobject("6.2831...!")
-        tau_value.highlight(GREEN)
+        tau_value.set_color(GREEN)
 
         self.play(PiCreatureSays(
             pi, pi_value,
@@ -385,7 +353,7 @@ class HartlAndPalais(Scene):
             color = WHITE,
             stroke_width = 1,
         )
-        hartl_rect.scale_to_fit_width(SPACE_WIDTH - 1)
+        hartl_rect.scale_to_fit_width(FRAME_X_RADIUS - 1)
         hartl_rect.to_edge(LEFT)
         palais_rect = hartl_rect.copy()
         palais_rect.to_edge(RIGHT)
@@ -436,7 +404,7 @@ class ManyFormulas(Scene):
         circle = Circle(color = YELLOW, radius = 2)
         circle.to_edge(RIGHT)
         radius = Line(circle.get_center(), circle.get_right())
-        radius.highlight(WHITE)
+        radius.set_color(WHITE)
 
         angle_groups = VGroup()
         for denom in 5, 4, 3, 2:
@@ -505,7 +473,7 @@ class EulerWrites628(Scene):
     }
     def construct(self):
         image = ImageMobject(os.path.join(RESOURCE_DIR, "dalembert_zoom"))
-        image.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        image.scale_to_fit_width(FRAME_WIDTH - 1)
         image.to_edge(UP, buff = MED_SMALL_BUFF)
         image.fade(0.15)
         rect = Rectangle(
@@ -525,7 +493,7 @@ class EulerWrites628(Scene):
             "``Let", "$\\pi$", "be the", "circumference", 
             "of a circle whose", "radius = 1''",
         )
-        words.highlight_by_tex_to_color_map({
+        words.set_color_by_tex_to_color_map({
             "circumference" : YELLOW,
             "radius" : GREEN,
         })
@@ -549,7 +517,7 @@ class EulerWrites628(Scene):
             "="
         )
         perimeter.next_to(brace, UP, submobject_to_align = perimeter[1], buff = SMALL_BUFF)
-        perimeter[0][0].highlight(GREEN)
+        perimeter[0][0].set_color(GREEN)
 
         self.play(FadeInFromDown(image))
         self.play(
@@ -563,7 +531,7 @@ class EulerWrites628(Scene):
         self.play(
             pi.scale, 2,
             pi.shift, DOWN, 
-            pi.highlight, GREEN
+            pi.set_color, GREEN
         )
         self.wait()
         self.play(
@@ -591,20 +559,20 @@ class HeroAndVillain(Scene):
         for mob in pictures:
             mob.scale_to_fit_height(5)
 
-        good_euler.move_to(SPACE_WIDTH*LEFT/2)
-        bad_euler.move_to(SPACE_WIDTH*RIGHT/2)
+        good_euler.move_to(FRAME_X_RADIUS*LEFT/2)
+        bad_euler.move_to(FRAME_X_RADIUS*RIGHT/2)
         bad_euler_pixelated.move_to(bad_euler)
 
         good_euler_label = TextMobject("Leonhard Euler")
         good_euler_label.next_to(good_euler, DOWN)
         tau_words = TextMobject("Used 6.2831...")
         tau_words.next_to(good_euler, UP)
-        tau_words.highlight(GREEN)
+        tau_words.set_color(GREEN)
 
         bad_euler_label = TextMobject("Also Euler...")
         bad_euler_label.next_to(bad_euler, DOWN)
         pi_words = TextMobject("Used 3.1415...")
-        pi_words.highlight(RED)
+        pi_words.set_color(RED)
         pi_words.next_to(bad_euler, UP)
 
         self.play(
@@ -626,7 +594,7 @@ class HeroAndVillain(Scene):
 class AnalysisQuote(Scene):
     def construct(self):
         analysis = get_image("Analysis_page_showing_pi")
-        analysis.scale_to_fit_height(2*SPACE_HEIGHT)
+        analysis.scale_to_fit_height(FRAME_HEIGHT)
         analysis.to_edge(LEFT, buff = 0)
 
         text = TextMobject(
@@ -642,13 +610,13 @@ class AnalysisQuote(Scene):
         pi_formula = TexMobject(
             "\\pi", "=", "{ \\text{semicircumference}", "\\over", "\\text{radius}}"
         )
-        text.scale_to_fit_width(SPACE_WIDTH)
+        text.scale_to_fit_width(FRAME_X_RADIUS)
         text.next_to(analysis, RIGHT, LARGE_BUFF)
         text.to_edge(UP)
 
         HIGHLIGHT_COLOR= GREEN
         for mob in text, pi_formula:
-            mob.highlight_by_tex_to_color_map({
+            mob.set_color_by_tex_to_color_map({
                 "semicircumference" : HIGHLIGHT_COLOR,
                 "3.14" : HIGHLIGHT_COLOR,
                 "\pi" : HIGHLIGHT_COLOR
@@ -658,8 +626,8 @@ class AnalysisQuote(Scene):
             radius = 1,
             positioning_func = lambda circ : circ.next_to(text, DOWN, LARGE_BUFF)
         )
-        terms[0].highlight(HIGHLIGHT_COLOR)
-        terms[-1].highlight(HIGHLIGHT_COLOR)
+        terms[0].set_color(HIGHLIGHT_COLOR)
+        terms[-1].set_color(HIGHLIGHT_COLOR)
 
         pi_formula.next_to(terms, DOWN, buff = 0)
         pi_formula.align_to(text, alignment_vect = RIGHT)
@@ -689,9 +657,9 @@ class QuarterTurn(Scene):
         self.wait()
 
         pi_halves = TexMobject("\\pi", "/2")
-        pi_halves[0].highlight(RED)
+        pi_halves[0].set_color(RED)
         tau_fourths = TexMobject("\\tau", "/4")
-        tau_fourths[0].highlight(GREEN)
+        tau_fourths[0].set_color(GREEN)
         for mob in pi_halves, tau_fourths:
             mob.next_to(decimal, UP)
 
@@ -717,7 +685,7 @@ class UsingTheta(Scene):
 
         radius = Line(ORIGIN, circle.get_right())
         arc = Arc(radius = 0.5, angle = TAU, num_anchors = 200)
-        arc.highlight(GREEN)
+        arc.set_color(GREEN)
         start_arc = arc.copy()
 
         theta = TexMobject("\\theta", "=")
@@ -767,7 +735,7 @@ class ThingsNamedAfterEuler(Scene):
             "Euler totient function (number theory)",
         ]))
         group.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(FRAME_HEIGHT - 1)
 
         self.play(LaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
         self.wait()
@@ -788,7 +756,7 @@ class EulerThinking(Scene):
             "Should $\\pi$ represent \\\\", "3.1415...", 
             "or", "6.2831...", "?"
         )
-        pi_vs_tau.highlight_by_tex_to_color_map({
+        pi_vs_tau.set_color_by_tex_to_color_map({
             "3.14" : GREEN,    
             "6.28" : RED,
         })
@@ -798,7 +766,7 @@ class EulerThinking(Scene):
             "\\frac{1}{1} + \\frac{1}{4} + \\frac{1}{9} + \\frac{1}{16} + \\cdots = ",
             "\\;???"
         )
-        question[0].gradient_highlight(BLUE_C, BLUE_B)
+        question[0].set_color_by_gradient(BLUE_C, BLUE_B)
         question.move_to(bubble.get_bubble_center())
         question.shift(2*SMALL_BUFF*UP)
 
@@ -868,8 +836,8 @@ class WhatIsRight(PiCreatureScene):
             mob.next_to(randy, UP)
             mob.shift(3.5*RIGHT)
 
-        left_mobs.gradient_highlight(YELLOW_C, YELLOW_D)
-        right_mobs.gradient_highlight(GREEN_C, GREEN_D)
+        left_mobs.set_color_by_gradient(YELLOW_C, YELLOW_D)
+        right_mobs.set_color_by_gradient(GREEN_C, GREEN_D)
 
         self.play(randy.change, "pondering", title)
         self.wait()
@@ -905,15 +873,15 @@ class AskPuzzle(TeacherStudentsScene):
             "\\frac{1}{1} + \\frac{1}{4} + \\frac{1}{9} + \\cdots + " +\
             "\\frac{1}{n^2} + \\cdots = ", "\\,???"
         )
-        series[0].gradient_highlight(BLUE_C, BLUE_B)
-        series[1].highlight(YELLOW)
+        series[0].set_color_by_gradient(BLUE_C, BLUE_B)
+        series[1].set_color(YELLOW)
 
         question = TextMobject(
             "How should we think about\\\\",
             "$\\displaystyle \\sum_{n=1}^\\infty \\frac{1}{n^s}$",
             "for arbitrary $s$?"
         )
-        question[1].highlight(BLUE)
+        question[1].set_color(BLUE)
         question[0].shift(SMALL_BUFF*UP)
 
         response = TextMobject(
@@ -921,7 +889,7 @@ class AskPuzzle(TeacherStudentsScene):
             "$\\displaystyle \\sum_{n = 1}^{\\infty}$", 
             "?"
         )
-        response[1].highlight(BLUE)
+        response[1].set_color(BLUE)
 
         self.teacher_says(series)
         self.change_all_student_modes("pondering", look_at_arg = series)
@@ -967,7 +935,7 @@ class ChangeTopic(PiCreatureScene):
             "\\frac{6}{5} \\cdot \\frac{6}{7} \\cdots = \\frac{\\pi}{2}$", "?"
         )
         question[0].shift(MED_SMALL_BUFF*UP)
-        question[1].gradient_highlight(YELLOW, GREEN)
+        question[1].set_color_by_gradient(YELLOW, GREEN)
 
         self.play(
             PiCreatureSays(
@@ -1000,7 +968,7 @@ class SpecialThanks(Scene):
         title = TextMobject("Special thanks to:")
         title.to_edge(UP, LARGE_BUFF)
         title.scale(1.5)
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         h_line = Line(LEFT, RIGHT).scale(4)
         h_line.next_to(title, DOWN)
         h_line.set_stroke(WHITE, 1)
@@ -1030,13 +998,13 @@ class EndScene(PatreonEndScreen):
         watch_basel = TextMobject(
             "One such actual piece of math", "(quite pretty!)",
         )
-        watch_basel[0].highlight(YELLOW)
+        watch_basel[0].set_color(YELLOW)
         watch_basel.next_to(basel_screen, DOWN, submobject_to_align = watch_basel[0])
 
         self.add(watch_basel)
         # self.add(basel_screen)
 
-        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line = DashedLine(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         line.next_to(watch_basel, DOWN)
         self.add(line)
 
@@ -1061,7 +1029,7 @@ class EndScene(PatreonEndScreen):
         instagram_logo.next_to(instagram_line, LEFT, SMALL_BUFF)
         instagram = Group(instagram_logo, instagram_line)
         instagram.next_to(line, DOWN)
-        instagram.shift(SPACE_WIDTH*RIGHT/2)
+        instagram.shift(FRAME_X_RADIUS*RIGHT/2)
         self.add(instagram)
 
 
@@ -1096,7 +1064,7 @@ class Thumbnail(Scene):
         formula.scale(2)
         pi.scale(1.5, about_edge = RIGHT)
         formula.set_stroke(BLUE, 1)
-        formula.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        formula.scale_to_fit_width(FRAME_WIDTH - 2)
         # formula.shift(0.5*RIGHT)
         self.add(formula)
 

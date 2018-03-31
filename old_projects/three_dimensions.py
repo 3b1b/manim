@@ -1,14 +1,14 @@
 import numpy as np
 import itertools as it
 
-from mobject import Mobject, Mobject1D, Mobject2D, Mobject
+from mobject.mobject import Mobject, Mobject1D, Mobject2D, Mobject
 from geometry import Line
-from helpers import *
+from constants import *
 
 class Stars(Mobject1D):
     CONFIG = {
         "stroke_width" : 1,
-        "radius"          : SPACE_WIDTH,
+        "radius"          : FRAME_X_RADIUS,
         "num_points"      : 1000,
     }
     def generate_points(self):

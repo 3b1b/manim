@@ -1,8 +1,9 @@
 from scipy import integrate
 
 from mobject.vectorized_mobject import VMobject
+from utils.config_ops import digest_config
 
-from helpers import *
+from constants import *
 
 class ParametricFunction(VMobject):
     CONFIG = {
@@ -27,8 +28,8 @@ class ParametricFunction(VMobject):
 class FunctionGraph(ParametricFunction):
     CONFIG = {
         "color" : YELLOW,
-        "x_min" : -SPACE_WIDTH,
-        "x_max" : SPACE_WIDTH,
+        "x_min" : -FRAME_X_RADIUS,
+        "x_max" : FRAME_X_RADIUS,
     }
     def __init__(self, function, **kwargs):
         digest_config(self, kwargs)

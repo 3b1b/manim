@@ -1,6 +1,6 @@
-from helpers import *
+from constants import *
 
-from scene import Scene
+from scene.scene import Scene
 # from topics.geometry import 
 from mobject.tex_mobject import TexMobject, TextMobject
 from mobject.vectorized_mobject import VGroup, VectorizedPoint
@@ -9,6 +9,10 @@ from animation.transform import Transform
 from topics.number_line import NumberLine
 from topics.functions import ParametricFunction
 from topics.geometry import Rectangle, DashedLine, Line
+from utils.bezier import interpolate
+from utils.color import invert_color
+from utils.color import color_gradient
+from utils.space_ops import angle_of_vector
 
 class GraphScene(Scene):
     CONFIG = {
@@ -183,12 +187,12 @@ class GraphScene(Scene):
         ):
         label = TexMobject(label)
         color = color or graph.get_color()
-        label.highlight(color)
+        label.set_color(color)
         if x_val is None:
             #Search from right to left
             for x in np.linspace(self.x_max, self.x_min, 100):
                 point = self.input_to_graph_point(x, graph)
-                if point[1] < SPACE_HEIGHT:
+                if point[1] < FRAME_Y_RADIUS:
                     break
             x_val = x
         label.next_to(
@@ -384,7 +388,7 @@ class GraphScene(Scene):
                 np.sign(dx)*DOWN,
                 buff = group.dx_label.get_height()/2
             )
-            group.dx_label.highlight(group.dx_line.get_color())
+            group.dx_label.set_color(group.dx_line.get_color())
 
         if df_label is not None:
             group.df_label.next_to(
@@ -392,7 +396,7 @@ class GraphScene(Scene):
                 np.sign(dx)*RIGHT,
                 buff = group.df_label.get_height()/2
             )
-            group.df_label.highlight(group.df_line.get_color())
+            group.df_label.set_color(group.df_line.get_color())
 
         if include_secant_line:
             secant_line_color = secant_line_color or self.default_derivative_color

@@ -3,38 +3,7 @@ import os.path
 import cv2
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject, Group
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from topics.graph_scene import *
-from topics.common_scenes import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 from nn.network import *
 
@@ -349,7 +318,7 @@ def make_transparent(image_mob):
         image_mob.pixel_array[:,:,0],
         dtype = 'uint8'
     )
-    image_mob.highlight(WHITE)
+    image_mob.set_color(WHITE)
     image_mob.pixel_array[:,:,3] = alpha_vect
     return image_mob
 
@@ -438,7 +407,7 @@ class ExampleThrees(PiCreatureScene):
 
         alt_threes = VGroup(*self.three_mobs[1:])
         alt_threes.arrange_submobjects(DOWN)
-        alt_threes.scale_to_fit_height(2*SPACE_HEIGHT - 2)
+        alt_threes.scale_to_fit_height(FRAME_HEIGHT - 2)
         alt_threes.to_edge(RIGHT)
 
         for alt_three in alt_threes:
@@ -594,7 +563,7 @@ class WriteAProgram(Scene):
             )
             num.set_stroke(width = 1)
             color = rgba_to_color(1 - (rgb + 0.2)/1.2)
-            num.highlight(color)
+            num.set_color(color)
             num.scale_to_fit_width(0.7*square.get_width())
             num.move_to(square)
             numbers.add(num)
@@ -604,7 +573,7 @@ class WriteAProgram(Scene):
 
         choices = VGroup(*[TexMobject(str(n)) for n in range(10)])
         choices.arrange_submobjects(DOWN)
-        choices.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        choices.scale_to_fit_height(FRAME_HEIGHT - 1)
         choices.next_to(arrow, RIGHT)
 
         self.play(
@@ -656,8 +625,8 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
 
     def show_words(self):
         words = VGroup(
-            TextMobject("Machine", "learning").highlight(GREEN),
-            TextMobject("Neural network").highlight(BLUE),
+            TextMobject("Machine", "learning").set_color(GREEN),
+            TextMobject("Neural network").set_color(BLUE),
         )
         words.next_to(self.teacher.get_corner(UP+LEFT), UP)
         words[0].save_state()
@@ -714,7 +683,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
                 "W_l", "\\textbf{a}_l", "+", "b_l",
             ")"
         )
-        equation.highlight_by_tex_to_color_map({
+        equation.set_color_by_tex_to_color_map({
             "\\textbf{a}" : GREEN,
         })
         equation.move_to(self.network_mob.get_corner(UP+RIGHT))
@@ -748,7 +717,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         word_group = VGroup(word, rect)
         word_group.generate_target()
         word_group.target.move_to(self.equation, LEFT)
-        word_group.target[0].highlight(YELLOW)
+        word_group.target[0].set_color(YELLOW)
         word_group.target[1].set_stroke(width = 0)
 
         self.play(ShowCreation(rect))
@@ -773,7 +742,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         network_mob = self.network_mob
         learning = self.learning_word
         structure = TextMobject("Structure")
-        structure.highlight(YELLOW)
+        structure.set_color(YELLOW)
         videos = VGroup(*[
             VideoIcon().set_fill(RED)
             for x in range(2)
@@ -885,14 +854,14 @@ class AlternateNeuralNetworks(PiCreatureScene):
             ex[0].next_to(arrow, LEFT)
             ex[1].next_to(arrow, RIGHT)
             ex.submobjects.insert(1, arrow)
-        examples.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        examples.scale_to_fit_width(FRAME_WIDTH - 1)
         examples.next_to(morty, UP).to_edge(RIGHT)
 
         maybe_words = TextMobject("Maybe future videos?")
         maybe_words.scale(0.8)
         maybe_words.next_to(morty, UP)
         maybe_words.to_edge(RIGHT)
-        maybe_words.highlight(YELLOW)
+        maybe_words.set_color(YELLOW)
 
         self.play(
             Write(examples[0], run_time = 2),
@@ -929,7 +898,7 @@ class NotPerfectAddOn(Scene):
         words = TextMobject("Not perfect!")
         words.scale(1.5)
         arrow = Arrow(UP+RIGHT, DOWN+LEFT, color = RED)
-        words.highlight(RED)
+        words.set_color(RED)
         arrow.to_corner(DOWN+LEFT)
         words.next_to(arrow, UP+RIGHT)
 
@@ -966,8 +935,8 @@ class BreakDownName(Scene):
         q2.next_to(name[1].get_bottom(), DOWN+RIGHT, buff = LARGE_BUFF)
         a1 = Arrow(q1.get_top(), name[0].get_bottom())
         a2 = Arrow(q2.get_top(), name.get_corner(DOWN+RIGHT))
-        VGroup(q1, a1).highlight(BLUE)
-        VGroup(q2, a2).highlight(YELLOW)
+        VGroup(q1, a1).set_color(BLUE)
+        VGroup(q2, a2).set_color(YELLOW)
 
         randy = Randolph().to_corner(DOWN+LEFT)
         brain = SVGMobject(file_name = "brain")
@@ -997,12 +966,12 @@ class BreakDownName(Scene):
         self.play(
             Write(q1, run_time = 1),
             ShowCreation(a1),
-            name[0].highlight, q1.get_color(),
+            name[0].set_color, q1.get_color(),
         )
         self.play(
             Write(q2, run_time = 1),
             ShowCreation(a2),
-            name[1].highlight, q2.get_color()
+            name[1].set_color, q2.get_color()
         )
         self.wait(2)
 
@@ -1019,7 +988,7 @@ class BreakDownName(Scene):
         arrow = TexMobject("\\rightarrow")
         arrow.shift(LEFT)
         description = TextMobject("Thing that holds a number")
-        neuron_word.highlight(BLUE)
+        neuron_word.set_color(BLUE)
         neuron_word.next_to(arrow, LEFT)
         neuron_word.shift(0.5*SMALL_BUFF*UP)
         description.next_to(arrow, RIGHT)
@@ -1192,7 +1161,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         rect = SurroundingRectangle(example_num, color = YELLOW)
         activation = TextMobject("``Activation''")
         activation.next_to(example_neuron, RIGHT)
-        activation.highlight(rect.get_color())
+        activation.set_color(rect.get_color())
         self.play(ShowCreation(rect))
         self.play(Write(activation, run_time = 1))
         self.wait()
@@ -1326,7 +1295,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         rect = SurroundingRectangle(hidden_layers, color = YELLOW)
         name = TextMobject("``Hidden layers''")
         name.next_to(rect, UP, SMALL_BUFF)
-        name.highlight(YELLOW)
+        name.set_color(YELLOW)
         q_marks = VGroup()
         for layer in hidden_layers:
             for neuron in layer.neurons:
@@ -1334,10 +1303,10 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 q_mark.scale_to_fit_height(0.8*neuron.get_height())
                 q_mark.move_to(neuron)
                 q_marks.add(q_mark)
-        q_marks.gradient_highlight(BLUE, YELLOW)
+        q_marks.set_color_by_gradient(BLUE, YELLOW)
         q_mark = TextMobject("?").scale(4)
         q_mark.move_to(hidden_layers)
-        q_mark.highlight(YELLOW)
+        q_mark.set_color(YELLOW)
         q_marks.add(q_mark)
 
         self.play(
@@ -1370,9 +1339,9 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
         self.add(network_mob)
 
         two_words = TextMobject("2 hidden layers")
-        two_words.highlight(YELLOW)
+        two_words.set_color(YELLOW)
         sixteen_words = TextMobject("16 neurons each")
-        sixteen_words.highlight(MAROON_B)
+        sixteen_words.set_color(MAROON_B)
         for words in two_words, sixteen_words:
             words.next_to(rects, UP)
 
@@ -1559,7 +1528,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
                 pa[:,:] = 0
                 pa[i:i+14,j:j+14,:] = temp
                 self.make_transparent(pattern[1])
-                pattern[1].highlight(random_bright_color())
+                pattern[1].set_color(random_bright_color())
                 self.added_patterns.add(pattern)
         self.image_map = image_map
 
@@ -1573,7 +1542,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
 
         parts = [upper_loop[1], right_line[1]]
         for mob, color in zip(parts, [YELLOW, RED]):
-            mob.highlight(color)
+            mob.set_color(color)
             mob.save_state()
             mob.move_to(nine)
         right_line[1].pixel_array[:14,:,3] = 0
@@ -1601,7 +1570,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         eight = self.eight
         upper_loop = self.upper_loop.deepcopy()
         lower_loop = self.lower_loop
-        lower_loop[1].highlight(GREEN)
+        lower_loop[1].set_color(GREEN)
 
         equation = self.get_equation(eight, upper_loop, lower_loop)
         equation.next_to(self.nine_equation, DOWN)
@@ -1631,9 +1600,9 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
     def show_four(self):
         four = self.four
         upper_left_line = self.upper_left_line
-        upper_left_line[1].highlight(BLUE)
+        upper_left_line[1].set_color(BLUE)
         horizontal_line = self.horizontal_line
-        horizontal_line[1].highlight(MAROON_B)
+        horizontal_line[1].set_color(MAROON_B)
         right_line = self.right_line.deepcopy()
         equation = self.get_equation(four, right_line, upper_left_line, horizontal_line)
         equation.next_to(
@@ -1670,7 +1639,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         )
         for pattern in patterns:
             pattern.add_to_back(
-                pattern[1].copy().highlight(BLACK, alpha = 1)
+                pattern[1].copy().set_color(BLACK, alpha = 1)
             )
         everything.remove(*patterns)
         network_mob = self.network_mob
@@ -1756,7 +1725,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
             image_mob.pixel_array[:,:,0],
             dtype = 'uint8'
         )
-        image_mob.highlight(WHITE)
+        image_mob.set_color(WHITE)
         image_mob.pixel_array[:,:,3] = alpha_vect
         return image_mob
 
@@ -1810,7 +1779,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
 
     def break_down_loop(self):
         loop = self.loop
-        loop[0].highlight(WHITE)
+        loop[0].set_color(WHITE)
         edges = Group(*[
             getattr(self, "loop_edge%d"%d)
             for d in range(1, 6)
@@ -1818,7 +1787,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         colors = color_gradient([BLUE, YELLOW, RED], 5)
         for edge, color in zip(edges, colors):
             for mob in edge:
-                mob.highlight(color)
+                mob.set_color(color)
         loop.generate_target()
         edges.generate_target()
         for edge in edges:
@@ -1826,7 +1795,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             edge.save_state()
             edge[1].set_opacity(0)
         equation = self.get_equation(loop.target, *edges.target)
-        equation.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        equation.scale_to_fit_width(FRAME_WIDTH - 1)
         equation.to_edge(UP)
         symbols = VGroup(*equation[1::2])
 
@@ -1860,7 +1829,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
     def break_down_long_line(self):
         randy = self.randy
         line = self.right_line
-        line[0].highlight(WHITE)
+        line[0].set_color(WHITE)
         edges = Group(*[
             getattr(self, "right_line_edge%d"%d)
             for d in range(1, 4)
@@ -1868,7 +1837,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         colors = Color(MAROON_B).range_to(PURPLE, 3)
         for edge, color in zip(edges, colors):
             for mob in edge:
-                mob.highlight(color)
+                mob.set_color(color)
         equation = self.get_equation(line, *edges)
         equation.scale_to_fit_height(self.loop_equation.get_height())
         equation.next_to(
@@ -1931,7 +1900,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         ]
         self.nine = MNistMobject(nine_array.flatten())
         self.nine.scale_to_fit_height(1.5)
-        self.nine[0].highlight(WHITE)
+        self.nine[0].set_color(WHITE)
         make_transparent(self.nine[1])
         self.nine.next_to(layers[0].neurons, UP)
 
@@ -1964,7 +1933,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         ]
         for mob, color in (loop, YELLOW), (line, RED):
             make_transparent(mob)
-            mob.highlight(color)
+            mob.set_color(color)
             mob.replace(self.nine[1])
         line.pixel_array[:14,:,:] = 0
 
@@ -1979,7 +1948,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         rect = SurroundingRectangle(layer)
         words = TextMobject("``Little edge'' layer?")
         words.next_to(rect, UP, MED_LARGE_BUFF)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
 
         self.play(
             ShowCreation(rect),
@@ -2068,9 +2037,9 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         question.to_edge(LEFT)
         later = TextMobject("We'll get back \\\\ to this")
         later.to_corner(UP+LEFT)
-        later.highlight(BLUE)
+        later.set_color(BLUE)
         arrow = Arrow(later.get_bottom(), question.get_top())
-        arrow.highlight(BLUE)
+        arrow.set_color(BLUE)
 
         self.play(Write(question, run_time = 2))
         self.wait()
@@ -2140,7 +2109,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             "re", "cognition",
             arg_separator = ""
         )
-        word[1].highlight(BLUE)
+        word[1].set_color(BLUE)
         arrows = VGroup()
         def get_arrow():
             arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
@@ -2153,11 +2122,11 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             word
         )
         sequence.arrange_submobjects(RIGHT)
-        sequence.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        sequence.scale_to_fit_width(FRAME_WIDTH - 1)
         sequence.to_edge(UP)
 
         audio_label.next_to(audio, DOWN)
-        VGroup(audio, audio_label).highlight(YELLOW)
+        VGroup(audio, audio_label).set_color(YELLOW)
         audio.save_state()
 
         self.teacher_says(
@@ -2332,7 +2301,7 @@ class IntroduceWeights(IntroduceEachLayer):
 
         question = TextMobject("What", "parameters", "should exist?")
         parameter_word = question.get_part_by_tex("parameters")
-        parameter_word.highlight(self.weights_color)
+        parameter_word.set_color(self.weights_color)
         question.move_to(neuron.edges_in.get_top(), LEFT)
         arrow = Arrow(
             parameter_word.get_bottom(),
@@ -2341,7 +2310,7 @@ class IntroduceWeights(IntroduceEachLayer):
         )
 
         p_labels = VGroup(*[
-            TexMobject("p_%d\\!:"%(i+1)).highlight(self.weights_color)
+            TexMobject("p_%d\\!:"%(i+1)).set_color(self.weights_color)
             for i in range(8)
         ] + [TexMobject("\\vdots")])
         p_labels.arrange_submobjects(DOWN, aligned_edge = LEFT)
@@ -2403,7 +2372,7 @@ class IntroduceWeights(IntroduceEachLayer):
         parameter_word = question.get_part_by_tex("parameters")
         question.remove(parameter_word)
         weights_word = TextMobject("Weights", "")[0]
-        weights_word.highlight(self.weights_color)
+        weights_word.set_color(self.weights_color)
         weights_word.move_to(parameter_word)
 
         w_labels = VGroup()
@@ -2411,7 +2380,7 @@ class IntroduceWeights(IntroduceEachLayer):
             w_label = TexMobject(
                 p_label.get_tex_string().replace("p", "w")
             )
-            w_label.highlight(self.weights_color)
+            w_label.set_color(self.weights_color)
             w_label.move_to(p_label)
             w_labels.add(w_label)
 
@@ -2472,7 +2441,7 @@ class IntroduceWeights(IntroduceEachLayer):
         weighted_sum.add(
             TexMobject("\\cdots"),
             TexMobject("+"),
-            TexMobject("w_n").highlight(self.weights_color),
+            TexMobject("w_n").set_color(self.weights_color),
             TexMobject("a_n")
         )
         weighted_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
@@ -2653,7 +2622,7 @@ class MotivateSquishing(Scene):
         ] + [
             ["\\cdots", "+", "w_n", "a_n"]
         ]))
-        weighted_sum.highlight_by_tex("w_", GREEN)
+        weighted_sum.set_color_by_tex("w_", GREEN)
         weighted_sum.to_edge(UP)
         self.add(weighted_sum)
         self.weighted_sum = weighted_sum
@@ -2685,8 +2654,8 @@ class MotivateSquishing(Scene):
     def show_interval(self):
         lower_number_line = self.number_line.copy()
         lower_number_line.shift(2*DOWN)
-        lower_number_line.highlight(LIGHT_GREY)
-        lower_number_line.numbers.highlight(WHITE)
+        lower_number_line.set_color(LIGHT_GREY)
+        lower_number_line.numbers.set_color(WHITE)
         interval = Line(
             lower_number_line.number_to_point(0),
             lower_number_line.number_to_point(1),
@@ -2714,7 +2683,7 @@ class MotivateSquishing(Scene):
         line.remove(*line.numbers)
         ghost_line = line.copy()
         ghost_line.fade(0.5)
-        ghost_line.highlight(BLUE_E)
+        ghost_line.set_color(BLUE_E)
         self.add(ghost_line, line)
         lower_line = self.lower_number_line
 
@@ -2871,7 +2840,7 @@ class IncludeBias(IntroduceWeights):
         activation_word = TextMobject("Activation")
         activation_word.next_to(neuron, RIGHT)
         arrow = Arrow(neuron, weighted_sum.get_bottom())
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
         words = TextMobject("How positive is this?")
         words.next_to(self.weighted_sum, UP, SMALL_BUFF)
 
@@ -2901,7 +2870,7 @@ class IncludeBias(IntroduceWeights):
             "Only activate meaningfully \\\\ when",
             "weighted sum", "$> 10$"
         )
-        words.highlight_by_tex("weighted", GREEN)
+        words.set_color_by_tex("weighted", GREEN)
         words.next_to(neuron, RIGHT)
 
         self.play(Write(words, run_time = 2))
@@ -2926,7 +2895,7 @@ class IncludeBias(IntroduceWeights):
         rect = SurroundingRectangle(bias, buff = 0.5*SMALL_BUFF)
         name = TextMobject("``bias''")
         name.next_to(rect, DOWN)
-        VGroup(rect, name).highlight(BLUE)
+        VGroup(rect, name).set_color(BLUE)
 
         self.play(
             ReplacementTransform(
@@ -2971,8 +2940,8 @@ class IncludeBias(IntroduceWeights):
         args += ["\\cdots", "+", "w_n", "a_n"]
         args += ["\\big)"]
         weighted_sum = TexMobject(*args)
-        weighted_sum.highlight_by_tex("w_", GREEN)
-        weighted_sum.highlight_by_tex("\\big", YELLOW)
+        weighted_sum.set_color_by_tex("w_", GREEN)
+        weighted_sum.set_color_by_tex("\\big", YELLOW)
         weighted_sum.to_edge(UP, LARGE_BUFF)
         weighted_sum.shift(RIGHT)
 
@@ -2981,8 +2950,8 @@ class IncludeBias(IntroduceWeights):
 class BiasForInactiviyWords(Scene):
     def construct(self):
         words = TextMobject("Bias for inactivity")
-        words.highlight(BLUE)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.set_color(BLUE)
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
 
         self.play(Write(words))
@@ -3320,7 +3289,7 @@ class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
         self.feed_in_image(in_vect)
 
         wrong = TextMobject("Wrong!")
-        wrong.highlight(RED)
+        wrong.set_color(RED)
         wrong.next_to(self.network_mob.layers[-1], UP+RIGHT)
         self.play(Write(wrong, run_time = 1))
 
@@ -3458,7 +3427,7 @@ class IntroduceWeightMatrix(NetworkScene):
             0.75, about_point = a1_label.get_left()
         )
 
-        w_labels.highlight(GREEN)
+        w_labels.set_color(GREEN)
         w_labels.shift(0.6*SMALL_BUFF*DOWN)
         a_labels.target.shift(0.5*SMALL_BUFF*UP)
 
@@ -3491,7 +3460,7 @@ class IntroduceWeightMatrix(NetworkScene):
         name.scale(0.75)
         name.next_to(bias, DOWN, MED_LARGE_BUFF)
         arrow = Arrow(name, bias, buff = SMALL_BUFF)
-        VGroup(name, arrow, bias).highlight(BLUE)
+        VGroup(name, arrow, bias).set_color(BLUE)
 
         self.play(
             FadeIn(name),
@@ -3519,7 +3488,7 @@ class IntroduceWeightMatrix(NetworkScene):
         name.next_to(sigma, UP, MED_LARGE_BUFF)
         arrow = Arrow(name, sigma, buff = SMALL_BUFF)
         sigmoid_name = VGroup(name, arrow)
-        VGroup(sigmoid_name, mob).highlight(YELLOW)
+        VGroup(sigmoid_name, mob).set_color(YELLOW)
 
         self.play(
             FadeIn(mob),
@@ -3617,7 +3586,7 @@ class IntroduceWeightMatrix(NetworkScene):
             for target, mover in zip(last_row, row):
                 mover.move_to(target)
                 if "w" in mover.get_tex_string():
-                    mover.highlight(GREEN)
+                    mover.set_color(GREEN)
             row.next_to(last_row, DOWN, buff = 0.45)
             last_row = row
 
@@ -3669,7 +3638,7 @@ class IntroduceWeightMatrix(NetworkScene):
                 mob = TexMobject("\\vdots")
             else:
                 # mob = Circle(radius = 0.2, color = YELLOW)
-                mob = TexMobject("?").scale(1.3).highlight(YELLOW)
+                mob = TexMobject("?").scale(1.3).set_color(YELLOW)
             result_terms.add(mob.move_to(a))
         VGroup(result_brackets, result_terms).next_to(equals, RIGHT)
 
@@ -3717,7 +3686,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
         rect2 = SurroundingRectangle(result_terms[1])
         rectk = SurroundingRectangle(result_terms[-1])
-        VGroup(rect2, rectk).highlight(WHITE)
+        VGroup(rect2, rectk).set_color(WHITE)
         row2 = self.lower_matrix_rows[0]
         rowk = self.lower_matrix_rows[-1]
 
@@ -3772,7 +3741,7 @@ class IntroduceWeightMatrix(NetworkScene):
         b_column.scale(0.85)
         b_column.arrange_submobjects(DOWN, buff = 0.35)
         b_column.move_to(a_column)
-        b_column.highlight(BLUE)
+        b_column.set_color(BLUE)
         plus.next_to(a_column_brackets, RIGHT)
         VGroup(b_brackets, b_column).next_to(plus, RIGHT)
 
@@ -3807,7 +3776,7 @@ class IntroduceWeightMatrix(NetworkScene):
         parens.stretch_to_fit_height(expression_bounds.get_height())
         big_lp.next_to(expression_bounds, LEFT, SMALL_BUFF)
         big_rp.next_to(expression_bounds, RIGHT, SMALL_BUFF)
-        parens.highlight(YELLOW)
+        parens.set_color(YELLOW)
 
         self.play(
             sigma.scale, 2,
@@ -3832,7 +3801,7 @@ class IntroduceWeightMatrix(NetworkScene):
             "\\textbf{b}", 
             "\\big)",
         )
-        expression.highlight_by_tex_to_color_map({
+        expression.set_color_by_tex_to_color_map({
             "sigma" : YELLOW,
             "big" : YELLOW,
             "W" : GREEN,
@@ -3931,7 +3900,7 @@ class SigmoidAppliedToVector(Scene):
                 \\sigma(x) \\\\ \\sigma(y) \\\\ \\sigma(z)
             \\end{array}\\right]
         """)
-        tex.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        tex.scale_to_fit_width(FRAME_WIDTH - 1)
         tex.to_edge(DOWN)
         indices = it.chain(
             [0], range(1, 5), range(16, 16+4),
@@ -3940,7 +3909,7 @@ class SigmoidAppliedToVector(Scene):
             range(33, 33+2), [33+3],
         )
         for i in indices:
-            tex[i].highlight(YELLOW)
+            tex[i].set_color(YELLOW)
         self.add(tex)
         self.wait()
 
@@ -4119,7 +4088,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
     def network_is_a_function(self):
         neuron_word = self.neuron_word
         network_word = TextMobject("Network")
-        network_word.highlight(YELLOW)
+        network_word.set_color(YELLOW)
         network_word.move_to(neuron_word)
 
         func_tex = TexMobject(
@@ -4405,7 +4374,7 @@ class IntroduceReLU(IntroduceSigmoid):
         cross = Cross(sigmoid_title)
         old_school = TextMobject("Old school")
         old_school.to_corner(UP+RIGHT)
-        old_school.highlight(RED)
+        old_school.set_color(RED)
         arrow = Arrow(
             old_school.get_bottom(), 
             self.equation.get_right(),
@@ -4421,7 +4390,7 @@ class IntroduceReLU(IntroduceSigmoid):
         self.play(
             ApplyMethod(
                 VGroup(cross, sigmoid_title).shift, 
-                SPACE_WIDTH*RIGHT,
+                FRAME_X_RADIUS*RIGHT,
                 rate_func = running_start
             ),
             FadeOut(old_school),
@@ -4444,10 +4413,10 @@ class IntroduceReLU(IntroduceSigmoid):
                 self.coords_to_point(4, 4),
             ),
         )
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
         char = self.x_axis_label.replace("$", "")
         equation = TextMobject("ReLU($%s$) = max$(0, %s)$"%(char, char))
-        equation.shift(SPACE_WIDTH*LEFT/2)
+        equation.shift(FRAME_X_RADIUS*LEFT/2)
         equation.to_edge(UP)
         equation.add_background_rectangle()
         name = TextMobject("Rectified linear unit")
@@ -4468,21 +4437,21 @@ class IntroduceReLU(IntroduceSigmoid):
     def label_input_regions(self):
         l1, l2 = self.ReLU_graph
         neg_words = TextMobject("Inactive")
-        neg_words.highlight(RED)
+        neg_words.set_color(RED)
         neg_words.next_to(self.coords_to_point(-2, 0), UP)
 
         pos_words = TextMobject("Same as $f(a) = a$")
-        pos_words.highlight(GREEN)
+        pos_words.set_color(GREEN)
         pos_words.next_to(
             self.coords_to_point(1, 1),
             DOWN+RIGHT
         )
 
         self.revert_to_original_skipping_status()
-        self.play(ShowCreation(l1.copy().highlight(RED)))
+        self.play(ShowCreation(l1.copy().set_color(RED)))
         self.play(Write(neg_words))
         self.wait()
-        self.play(ShowCreation(l2.copy().highlight(GREEN)))
+        self.play(ShowCreation(l2.copy().set_color(GREEN)))
         self.play(Write(pos_words))
         self.wait(2)
 
@@ -4495,7 +4464,7 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
             x_max = 5,
         )
         sigmoid_graph.stretch_to_fit_width(3)
-        sigmoid_graph.highlight(YELLOW)
+        sigmoid_graph.set_color(YELLOW)
         sigmoid_graph.next_to(lisha, UP+LEFT)
         sigmoid_graph.shift_onto_screen()
         sigmoid_name = TextMobject("Sigmoid")
@@ -4503,7 +4472,7 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
         sigmoid_graph.add(sigmoid_name)
 
         slow_learner = TextMobject("Slow learner")
-        slow_learner.highlight(YELLOW)
+        slow_learner.set_color(YELLOW)
         slow_learner.to_corner(UP+LEFT)
         slow_arrow = Arrow(
             slow_learner.get_bottom(),
@@ -4514,7 +4483,7 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
             Line(2*LEFT, ORIGIN),
             Line(ORIGIN, np.sqrt(2)*(RIGHT+UP)),
         )
-        relu_graph.highlight(BLUE)
+        relu_graph.set_color(BLUE)
         relu_graph.next_to(lisha, UP+RIGHT)
         relu_name = TextMobject("ReLU")
         relu_name.move_to(relu_graph, UP)
@@ -4556,9 +4525,9 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
     ###
     def create_pi_creatures(self):
         morty = Mortimer()
-        morty.shift(SPACE_WIDTH*RIGHT/2).to_edge(DOWN)
+        morty.shift(FRAME_X_RADIUS*RIGHT/2).to_edge(DOWN)
         lisha = PiCreature(color = BLUE_C)
-        lisha.shift(SPACE_WIDTH*LEFT/2).to_edge(DOWN)
+        lisha.shift(FRAME_X_RADIUS*LEFT/2).to_edge(DOWN)
         self.morty, self.lisha = morty, lisha
         return morty, lisha
 
@@ -4588,7 +4557,7 @@ class Thumbnail(NetworkScene):
     }
     def construct(self):
         network_mob = self.network_mob
-        network_mob.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        network_mob.scale_to_fit_height(FRAME_HEIGHT - 1)
         for layer in network_mob.layers:
             layer.neurons.set_stroke(width = 5)
 

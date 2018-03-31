@@ -1,22 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.combinatorics import PascalsTriangle
-from scene import Scene
-from mobject.svg_mobject import *
-
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 
 class TrigAnimation(Animation):
@@ -165,9 +147,9 @@ class Notation(Scene):
             for trig_part in new_trig.split()
         ]
         trig_anim = TrigAnimation()
-        sin.highlight(trig_anim.sin_color)
-        cos.highlight(trig_anim.cos_color)
-        tan.highlight(trig_anim.tan_color)
+        sin.set_color(trig_anim.sin_color)
+        cos.set_color(trig_anim.cos_color)
+        tan.set_color(trig_anim.tan_color)
         new_trig.to_corner(UP+RIGHT)
         sum_lines = self.get_harmonic_sum_lines()
 
@@ -248,7 +230,7 @@ class ThreesomeOfNotation(Scene):
 
         words = TextMobject("Artificially unrelated")
         words.to_corner(UP+RIGHT)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         self.play(Write(words))
         self.wait()
 
@@ -314,7 +296,7 @@ class TwoThreeEightExample(Scene):
         ])
         self.wait()
         self.play(ApplyMethod(
-            VMobject(rad1, rad2).highlight, RED,
+            VMobject(rad1, rad2).set_color, RED,
             rate_func = there_and_back,
             run_time = 2
         ))
@@ -340,7 +322,7 @@ class TwoThreeEightExample(Scene):
         ])
         self.wait()
         self.play(ApplyMethod(
-            VMobject(l, o, g).highlight, RED,
+            VMobject(l, o, g).set_color, RED,
             rate_func = there_and_back,
             run_time = 2
         ))
@@ -355,9 +337,9 @@ class WhatTheHell(Scene):
             "\\sqrt[3]{8} = 2",
             "\\log_2(8) = 3",
         ])
-        # exp.highlight(BLUE_D)
-        # rad.highlight(RED_D)
-        # log.highlight(GREEN_D)
+        # exp.set_color(BLUE_D)
+        # rad.set_color(RED_D)
+        # log.set_color(GREEN_D)
         arrow1 = DoubleArrow(DOWN, UP)
         arrow2 = arrow1.copy()
         last = exp
@@ -368,7 +350,7 @@ class WhatTheHell(Scene):
             TexMobject("?!").next_to(arrow, RIGHT)
             for arrow in arrow1, arrow2
         ])
-        q_marks.highlight(RED_D)
+        q_marks.set_color(RED_D)
         everyone = VMobject(exp, rad, log, arrow1, arrow2, q_marks)
         everyone.scale(0.7)
         everyone.to_corner(UP+RIGHT)
@@ -383,7 +365,7 @@ class WhatTheHell(Scene):
             ]
         ]
         for phrase, color in zip(phrases, [BLUE, RED, GREEN]):
-            phrase.split()[1].highlight(color)
+            phrase.split()[1].set_color(color)
 
         self.play(ApplyMethod(randy.change_mode, "angry"))
         self.play(FadeIn(VMobject(exp, rad, log)))
@@ -456,7 +438,7 @@ class LogarithmProperties(Scene):
         ]
         bubble.add_content(props[0])
         words = TextMobject("What was it again?")
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         words.scale(0.5)
         words.next_to(props[0], UP)
 
@@ -492,7 +474,7 @@ class HaveToShare(Scene):
         ]
         share = VMobject(left_dot, top_dot, bottom_dot, line1, line2)
         share.next_to(words[1], RIGHT, buff = 1)
-        share.highlight(RED)
+        share.set_color(RED)
 
         for word in words:
             self.play(FadeIn(word))

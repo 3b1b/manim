@@ -1,8 +1,14 @@
 import os
 import numpy as np
 
-DEFAULT_HEIGHT = 1080
-DEFAULT_WIDTH  = 1920
+# Things anyone wishing to use this repository for their
+# own use will want to change this
+MEDIA_DIR = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder")
+#
+
+
+DEFAULT_PIXEL_HEIGHT = 1080
+DEFAULT_PIXEL_WIDTH  = 1920
 
 LOW_QUALITY_FRAME_DURATION = 1./15
 MEDIUM_QUALITY_FRAME_DURATION = 1./30
@@ -10,7 +16,7 @@ PRODUCTION_QUALITY_FRAME_DURATION = 1./60
 
 #There might be other configuration than pixel_shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
+    "pixel_shape" : (DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH),
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
@@ -26,10 +32,11 @@ DEFAULT_POINT_DENSITY_1D = 250
 
 DEFAULT_POINT_THICKNESS = 4
 
-#TODO, Make sure these are not needed
-SPACE_HEIGHT = 4.0
-SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 
+FRAME_HEIGHT = 8.0
+FRAME_WIDTH = FRAME_HEIGHT * DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
+FRAME_Y_RADIUS = FRAME_HEIGHT/2
+FRAME_X_RADIUS = FRAME_WIDTH/2
 
 SMALL_BUFF = 0.1
 MED_SMALL_BUFF = 0.25
@@ -57,17 +64,13 @@ X_AXIS = np.array(( 1., 0., 0.))
 Y_AXIS = np.array(( 0., 1., 0.))
 Z_AXIS = np.array(( 0., 0., 1.))
 
-TOP        = SPACE_HEIGHT*UP
-BOTTOM     = SPACE_HEIGHT*DOWN
-LEFT_SIDE  = SPACE_WIDTH*LEFT
-RIGHT_SIDE = SPACE_WIDTH*RIGHT
+TOP        = FRAME_Y_RADIUS*UP
+BOTTOM     = FRAME_Y_RADIUS*DOWN
+LEFT_SIDE  = FRAME_X_RADIUS*LEFT
+RIGHT_SIDE = FRAME_X_RADIUS*RIGHT
 
 TAU = 2*np.pi
 DEGREES = TAU/360
-
-# Change this to point to where you want 
-# animation files to output
-MEDIA_DIR = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder")
 
 ANIMATIONS_DIR = os.path.join(MEDIA_DIR, "animations")
 RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
@@ -99,12 +102,10 @@ TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
 
-
 FFMPEG_BIN = "ffmpeg"
 
 
 ### Colors ###
-
 
 COLOR_MAP = {
     "DARK_BLUE"   : "#236B8E",

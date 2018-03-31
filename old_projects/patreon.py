@@ -1,28 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 
 class SideGigToFullTime(Scene):
@@ -72,14 +48,14 @@ class SideGigToFullTime(Scene):
             for x in range(10)
         ])
         dollar_signs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
-        dollar_signs.highlight(BLACK)
+        dollar_signs.set_color(BLACK)
         dollar_signs.next_to(morty.eyes, RIGHT, buff = 2*LARGE_BUFF)
 
         self.play(
             morty.change_mode, "happy",
             morty.look_at, dollar_signs, 
             dollar_signs.shift, LEFT,
-            dollar_signs.highlight, GREEN
+            dollar_signs.set_color, GREEN
         )
         for x in range(5):
             last_sign = dollar_signs[0]
@@ -92,7 +68,7 @@ class SideGigToFullTime(Scene):
         self.play(
             ApplyMethod(
                 dollar_signs.shift, 
-                (SPACE_HEIGHT+1)*DOWN,
+                (FRAME_Y_RADIUS+1)*DOWN,
                 submobject_mode = "lagged_start"
             ),
             morty.change_mode, "guilty",
@@ -105,7 +81,7 @@ class SideGigToFullTime(Scene):
         new_title.move_to(self.screen_title)
         q_mark = TexMobject("?")
         q_mark.next_to(self.cross)
-        q_mark.highlight(GREEN)
+        q_mark.set_color(GREEN)
 
         self.play(morty.look_at, q_mark)
         self.play(Transform(self.screen_title, new_title))
@@ -127,8 +103,8 @@ class TakesTime(Scene):
         rect = PictureInPictureFrame(height = 4)
         rect.to_edge(RIGHT, buff = LARGE_BUFF)
         clock = Clock()
-        clock.hour_hand.highlight(BLUE_C)
-        clock.minute_hand.highlight(BLUE_D)
+        clock.hour_hand.set_color(BLUE_C)
+        clock.minute_hand.set_color(BLUE_D)
         clock.next_to(rect, LEFT, buff = LARGE_BUFF)
         self.add(rect)
         self.play(ShowCreation(clock))
@@ -163,7 +139,7 @@ class GrowingToDoList(Scene):
         ]))
         lines.scale(0.65)
         lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
-        lines.gradient_highlight(BLUE_C, YELLOW)
+        lines.set_color_by_gradient(BLUE_C, YELLOW)
         lines.next_to(title, DOWN, buff = LARGE_BUFF/2.)
         lines.to_edge(RIGHT)
 
@@ -195,10 +171,10 @@ class TwoTypesOfVideos(Scene):
     def construct(self):
         morty = Mortimer().shift(2*DOWN)
         stand_alone = TextMobject("Standalone videos")
-        stand_alone.shift(SPACE_WIDTH*LEFT/2)
+        stand_alone.shift(FRAME_X_RADIUS*LEFT/2)
         stand_alone.to_edge(UP)
         series = TextMobject("Series")
-        series.shift(SPACE_WIDTH*RIGHT/2)
+        series.shift(FRAME_X_RADIUS*RIGHT/2)
         series.to_edge(UP)
         box = Rectangle(width = 16, height = 9, color = WHITE)
         box.scale_to_fit_height(3)
@@ -215,14 +191,14 @@ class TwoTypesOfVideos(Scene):
             ]
         ])
         series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
-        series_list.scale_to_fit_width(SPACE_WIDTH-2)
+        series_list.scale_to_fit_width(FRAME_X_RADIUS-2)
         series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
 
         fridays = TextMobject("Every other friday")
         when_done = TextMobject("When series is done")
         for words, vect in (fridays, LEFT), (when_done, RIGHT):
-            words.highlight(YELLOW)
+            words.set_color(YELLOW)
             words.next_to(
                 morty, vect, 
                 buff = MED_SMALL_BUFF, 
@@ -264,7 +240,7 @@ class TwoTypesOfVideos(Scene):
             self.play(Write(words), run_time = 1)
         self.play(Blink(morty))
         self.wait()
-        self.play(series_list[1].highlight, BLUE)
+        self.play(series_list[1].set_color, BLUE)
         self.wait(2)
         self.play(Blink(morty))
         self.wait()
@@ -399,9 +375,9 @@ class GrowRonaksSierpinski(Scene):
             if choose(n, k)%2 == 0:
                 if choose(n-1, k)%2 == 0:
                     continue
-                dot.highlight(PINK)
+                dot.set_color(PINK)
             else:
-                dot.highlight(WHITE)
+                dot.set_color(WHITE)
             dots.add(dot)
         return dots
 
@@ -409,7 +385,7 @@ class GrowRonaksSierpinski(Scene):
         ronaks_sierpinski = VGroup()
         for n in range(n_layers):
             ronaks_sierpinski.add(self.get_lines_at_layer(n))
-        ronaks_sierpinski.gradient_highlight(*self.colors)
+        ronaks_sierpinski.set_color_by_gradient(*self.colors)
         ronaks_sierpinski.set_stroke(width = 0)##TODO
         return ronaks_sierpinski
 
@@ -467,7 +443,7 @@ class PythagoreanTransformation(Scene):
             tri[0].get_start()
             for tri in [tri1] + copies
         ])
-        big_square.highlight(WHITE)
+        big_square.set_color(WHITE)
         a_square = Square(side_length = 2)
         a_square.shift(1.5*(LEFT+UP))
         a_square.set_stroke(width = 0)
@@ -559,7 +535,7 @@ class MakeALotOfPiCreaturesHappy(Scene):
         random.shuffle(pi_list)
         colors = color_gradient([BLUE_D, GREY_BROWN], len(pi_list))
         for pi, color in zip(pi_list, colors):
-            pi.highlight(color)
+            pi.set_color(color)
         pis = VGroup(*pi_list)
         pis.scale_to_fit_height(6)
 
@@ -569,7 +545,7 @@ class MakeALotOfPiCreaturesHappy(Scene):
         for pi, color in zip(pis.target, colors):
             pi.change_mode("hooray")
             # pi.scale_in_place(1)
-            pi.highlight(color)
+            pi.set_color(color)
         self.play(
             MoveToTarget(
                 pis,
@@ -590,7 +566,7 @@ class IntegrationByParts(Scene):
         f = lambda t : 4*t
         g = lambda t : 3*smooth(t)
         curve = ParametricFunction(lambda t : f(t)*RIGHT + g(t)*DOWN)
-        curve.highlight(YELLOW)
+        curve.set_color(YELLOW)
         curve.center()
         rect = Rectangle()
         rect.replace(curve, stretch = True)
@@ -611,8 +587,8 @@ class IntegrationByParts(Scene):
             left_point = curve.points[0][0]*RIGHT + point[1]*UP
             v_lines.add(Line(top_point, point))
             h_lines.add(Line(left_point, point))
-        v_lines.highlight(BLUE_E)
-        h_lines.highlight(GREEN_E)
+        v_lines.set_color(BLUE_E)
+        h_lines.set_color(GREEN_E)
 
         equation = TexMobject(
             "\\int_0^1 g\\,df", 
@@ -620,11 +596,11 @@ class IntegrationByParts(Scene):
             "= \\big(fg \\big)_0^1"
         )
         equation.to_edge(UP)
-        equation.highlight_by_tex(
+        equation.set_color_by_tex(
             "\\int_0^1 g\\,df",
             upper_right.get_color()
         )
-        equation.highlight_by_tex(
+        equation.set_color_by_tex(
             "+\\int_0^1 f\\,dg",
             lower_left.get_color()
         )
@@ -669,7 +645,7 @@ class IntegrationByParts(Scene):
         lp, lnum, comma, rnum, rp = coords = TexMobject(
             "\\big(f(", "t", "), g(", "t", ")\\big)"
         )
-        coords.highlight_by_tex("0.00", BLACK)
+        coords.set_color_by_tex("0.00", BLACK)
         dot = Dot(radius = 0.1)
         dot.move_to(curve.points[0])
         coords.next_to(dot, UP+RIGHT)

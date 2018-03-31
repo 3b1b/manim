@@ -1,17 +1,22 @@
-from helpers import *
+from constants import *
 
-from scene import Scene
+from scene.scene import Scene
 
 from animation.animation import Animation
 from animation.transform import Transform, MoveToTarget
 from animation.simple_animations import UpdateFromFunc
 
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject, Brace
-
 from topics.geometry import Circle, Line, Rectangle, Square, Arc, Polygon
+
+from utils.bezier import interpolate
+from utils.color import color_gradient, average_color
+from utils.config_ops import digest_config
+from utils.iterables import tuplify
+from utils.space_ops import center_of_mass
 
 EPSILON = 0.0001
 
@@ -342,7 +347,7 @@ class BarChart(VGroup):
             )
             bar.move_to((2*i+1)*buff*RIGHT, DOWN+LEFT)
             bars.add(bar)
-        bars.gradient_highlight(*self.bar_colors)
+        bars.set_color_by_gradient(*self.bar_colors)
 
         bar_labels = VGroup()
         for bar, name in zip(bars, self.bar_names):
@@ -577,7 +582,7 @@ class PlayingCard(VGroup):
             self.get_corner(UP+LEFT), DOWN+RIGHT,
             buff = MED_LARGE_BUFF*width
         )
-        value_mob.highlight(symbol.get_color())
+        value_mob.set_color(symbol.get_color())
         corner_symbol = symbol.copy()
         corner_symbol.scale_to_fit_width(width)
         corner_symbol.next_to(

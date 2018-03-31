@@ -1,28 +1,4 @@
-from mobject import Mobject, Point
-from mobject.tex_mobject import \
-    TexMobject, TextMobject, Brace
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromRegion
-
-from scene import Scene
-
-from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction,\
-    TransformAnimations, ShimmerIn, FadeOut, FadeIn
-from animation.simple_animations import \
-    ShowCreation, DelayByOrder
-from animation.playground import Vibrate
-
-from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point
-from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician, Randolph
-from topics.number_line import UnitInterval
-from topics.three_dimensions import Stars
-
-from mobject.region import  region_from_polygon_vertices
+from big_ol_pile_of_manim_imports import *
 
 import displayer as disp
 
@@ -31,7 +7,7 @@ from hilbert.curves import \
     SnakeCurve
 
 
-from helpers import *
+from constants import *
 
 
 
@@ -422,7 +398,7 @@ class ListenToAllPixels(Scene):
         freq_line = get_freq_line()
         freq_line.sort_points(lambda p : p[0])
         red, blue = Color(RED), Color(BLUE)
-        freq_line.gradient_highlight(red, blue)
+        freq_line.set_color_by_gradient(red, blue)
 
         colors = [
             Color(rgb = interpolate(
@@ -438,7 +414,7 @@ class ListenToAllPixels(Scene):
         vibration_copy.mobject.stroke_width = 1
         sub_vibrations = [
             Vibrate(
-                string.copy().shift((n-1)*UP).highlight(colors[n]),
+                string.copy().shift((n-1)*UP).set_color(colors[n]),
                 overtones = 1,
                 spatial_period = 6./(n+1),
                 temporal_period = 1./(n+1),
@@ -452,7 +428,7 @@ class ListenToAllPixels(Scene):
         self.add(grid)
         self.wait()
         self.play(DelayByOrder(ApplyMethod(
-            grid.gradient_highlight, red, blue
+            grid.set_color_by_gradient, red, blue
         )))
         self.play(Transform(grid, freq_line))
         self.wait()
@@ -611,7 +587,7 @@ class WeaveLineThroughPixels(Scene):
         curve = HilbertCurve(order = order)
         line = Line(5*LEFT, 5*RIGHT)
         for mob in curve, line:
-            mob.gradient_highlight(start_color, end_color)
+            mob.set_color_by_gradient(start_color, end_color)
         freq_line = get_freq_line()
         freq_line.replace(line, stretch = True)
 
@@ -743,7 +719,7 @@ class Order1PseudoHilbertCurve(Scene):
         cluster.center()
         cluster.scale(0.7)
         cluster.to_edge(UP, buff = 0.3)
-        cluster.highlight(GREEN)
+        cluster.set_color(GREEN)
         grid1 = Grid(1, 1)
         grid2 = Grid(2, 2)
         curve = HilbertCurve(order = 1)
@@ -770,7 +746,7 @@ class Order2PseudoHilbertCurve(Scene):
     def construct(self):
         words = TextMobject("Order 2 Pseudo-Hilbert Curve")
         words.to_edge(UP, buff = 0.3)
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         grid2 = Grid(2, 2)
         grid4 = Grid(4, 4, stroke_width = 2)
         # order_1_curve = HilbertCurve(order = 1)
@@ -794,7 +770,7 @@ class Order2PseudoHilbertCurve(Scene):
             naive_curve.add(line, mini_curve)
             last_curve = mini_curve
         naive_curve.ingest_submobjects()
-        naive_curve.gradient_highlight(RED, GREEN)
+        naive_curve.set_color_by_gradient(RED, GREEN)
         order_2_curve = HilbertCurve(order = 2)
 
         self.add(words, grid2)
@@ -815,7 +791,7 @@ class Order2PseudoHilbertCurve(Scene):
 class Order3PseudoHilbertCurve(Scene):
     def construct(self):
         words = TextMobject("Order 3 Pseudo-Hilbert Curve")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         words.to_edge(UP)
         grid4 = Mobject(
             Grid(2, 2),
@@ -899,7 +875,7 @@ class UseOrder8(Scene):
         mathy, bubble = get_mathy_and_bubble()
         bubble.write("For a 256x256 pixel array...")
         words = TextMobject("Order 8 Pseudo-Hilbert Curve")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         words.to_edge(UP, buff = 0.3)
         curve = HilbertCurve(order = 8)
 
@@ -957,7 +933,7 @@ class RandyWithHeadphones(Scene):
         headphones.scale(0.1)
         headphones.stretch(2, 0)
         headphones.shift(1.2*UP+0.05*LEFT)
-        headphones.highlight(GREY)
+        headphones.set_color(GREY)
         randy = Randolph()
 
         self.add(randy, headphones)

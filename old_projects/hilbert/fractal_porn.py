@@ -1,13 +1,4 @@
-from mobject import Mobject, Point, Mobject1D
-from scene import Scene
-from animation.transform import \
-    Transform, ShimmerIn, FadeIn, FadeOut, ApplyMethod
-from animation.simple_animations import \
-    ShowCreation, DelayByOrder
-from topics.geometry import Line, Arc, Arrow
-from mobject.tex_mobject import TexMobject, TextMobject
-
-from helpers import *
+from big_ol_pile_of_manim_imports import *
 from hilbert.curves import *
 
 class Intro(TransformOverIncreasingOrders):

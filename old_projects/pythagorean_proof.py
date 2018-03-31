@@ -3,9 +3,9 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-from helpers import *
+from constants import *
 
-from scene import Scene
+from scene.scene import Scene
 from geometry import Polygon
 from mobject.region import  region_from_polygon_vertices, region_from_line_boundary
 
@@ -151,7 +151,7 @@ class HighlightEmergentTriangles(AddParallelLines):
             [(3, 3), (0, 3), (0, 2)],
         ]
         for triplet in triplets:
-            self.highlight_region(
+            self.set_color_region(
                 region_from_polygon_vertices(*triplet),
                 color = "DARK_BLUE"
             )
@@ -164,7 +164,7 @@ class IndicateTroublePointFromParallelLines(AddParallelLines):
         circle.shift(DOWN+RIGHT)
         vect = DOWN+RIGHT
         arrow = Arrow(circle.get_center()+2*vect, circle.get_boundary_point(vect))
-        arrow.highlight(circle.get_color())
+        arrow.set_color(circle.get_color())
         self.add_mobjects_among(locals().values())
 
 
@@ -211,7 +211,7 @@ class DrawAllThreeSquaresWithMoreTriangles(DrawAllThreeSquares):
             if n not in to_flip:
                 vertices.reverse()
             if fill:
-                self.highlight_region(
+                self.set_color_region(
                     region_from_polygon_vertices(*vertices),
                     color = DARK_BLUE
                 )
@@ -248,7 +248,7 @@ class FillInAreaOfBigRectangle(DrawAllThreeSquaresWithMoreTriangles):
         args_list = [(10, False)]
         color = Color("yellow")
         color.set_rgb(0.3*np.array(color.get_rgb()))
-        self.highlight_region(
+        self.set_color_region(
             region_from_polygon_vertices(
                 (-3, 3),
                 (-3, -2),
@@ -276,14 +276,14 @@ class AddTriangleCopyToABSquares(DrawOnlyABSquares):
         triangle.rotate(np.pi, UP)
         triangle.place_hypotenuse_on(3*LEFT+DOWN, 2*DOWN)
         self.add(triangle)
-        self.highlight_triangles()
+        self.set_color_triangles()
 
-    def highlight_triangles(self):
+    def set_color_triangles(self):
         for mob in self.mobjects:
             if isinstance(mob, Triangle):
                 vertices = list(mob.get_vertices())
                 for x in range(2):
-                    self.highlight_region(region_from_polygon_vertices(
+                    self.set_color_region(region_from_polygon_vertices(
                         *vertices
                     ), color = DARK_BLUE)
                     vertices.reverse()#silly hack
@@ -296,7 +296,7 @@ class AddAllTrianglesToABSquares(AddTriangleCopyToABSquares):
         triangle.rotate(np.pi, UP)
         triangle.place_hypotenuse_on(2*DOWN, 3*LEFT+DOWN)
         self.add(triangle)
-        self.highlight_triangles()
+        self.set_color_triangles()
 
 
 
@@ -346,7 +346,7 @@ class HighlightCSquareInBigSquare(DrawCSquareWithAllTraingles):
     args_list = [tuple([False]*4)]
     def construct(self, *args):
         DrawCSquareWithAllTraingles.construct(self, *args)
-        self.highlight_region(region_from_polygon_vertices(
+        self.set_color_region(region_from_polygon_vertices(
             *c_square().center().get_vertices()
         ), color = YELLOW)
 
@@ -457,7 +457,7 @@ class CompletelyFillLargeSquare(LabelLargeSquare):
         vertices = [2*(DOWN+LEFT), 2*(DOWN+RIGHT), 2*(UP+RIGHT), 2*(UP+LEFT)]
         vertices.append(vertices[0])
         pairs = zip(vertices, vertices[1:])
-        self.highlight_region(region_from_line_boundary(*pairs), color = BLUE)
+        self.set_color_region(region_from_line_boundary(*pairs), color = BLUE)
 
 
 class FillComponentsOfLargeSquare(LabelLargeSquare):
@@ -475,12 +475,12 @@ class FillComponentsOfLargeSquare(LabelLargeSquare):
         ])
         for triplet in [[0, 1, 7], [2, 3, 1], [4, 5, 3], [6, 7, 5]]:
             triplet.append(triplet[0])
-            self.highlight_region(region_from_line_boundary(*[
+            self.set_color_region(region_from_line_boundary(*[
                 [points[i], points[j]]
                 for i, j in zip(triplet, triplet[1:])
             ]), color = DARK_BLUE)
         vertices = points[[1, 3, 5, 7, 1]]
-        self.highlight_region(region_from_line_boundary(*[
+        self.set_color_region(region_from_line_boundary(*[
             [p1, p2]
             for p1, p2 in zip(vertices, vertices[1:])
         ]), color = YELLOW)
@@ -501,9 +501,9 @@ class ShowRearrangementInBigSquare(DrawCSquareWithAllTraingles):
 class ShowRearrangementInBigSquareWithRegions(ShowRearrangementInBigSquare):
     def construct(self):
         ShowRearrangementInBigSquare.construct(self)
-        self.highlight_region(region_from_polygon_vertices(
+        self.set_color_region(region_from_polygon_vertices(
             2*(LEFT+UP), 2*LEFT+DOWN, RIGHT+DOWN, RIGHT+2*UP
         ), color = B_COLOR)
-        self.highlight_region(region_from_polygon_vertices(
+        self.set_color_region(region_from_polygon_vertices(
             RIGHT+DOWN, RIGHT+2*DOWN, 2*RIGHT+2*DOWN, 2*RIGHT+DOWN
         ), color = A_COLOR)

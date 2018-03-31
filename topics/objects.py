@@ -1,11 +1,11 @@
-from helpers import *
+from constants import *
 
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject, Brace
 
-from animation import Animation
+from animation.animation import Animation
 from animation.simple_animations import Rotating
 from animation.compositions import LaggedStart, AnimationGroup
 from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
@@ -13,6 +13,9 @@ from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
 from topics.geometry import Circle, Line, Rectangle, Square, \
     Arc, Polygon, SurroundingRectangle
 from topics.three_dimensions import Cube
+from utils.config_ops import digest_config, digest_locals
+from utils.space_ops import rotate_vector, angle_of_vector
+from utils.space_ops import complex_to_R3, R3_to_complex
 
 class Lightbulb(SVGMobject):
     CONFIG = {
@@ -172,9 +175,9 @@ class PartyHat(SVGMobject):
         self.cone = self[self.NUM_FRILLS]
         self.dots = VGroup(*self[self.NUM_FRILLS+1:])
 
-        self.frills.gradient_highlight(*self.frills_colors)
-        self.cone.highlight(self.cone_color)
-        self.dots.gradient_highlight(*self.dots_colors)
+        self.frills.set_color_by_gradient(*self.frills_colors)
+        self.cone.set_color(self.cone_color)
+        self.dots.set_color_by_gradient(*self.dots_colors)
 
 class Laptop(VGroup):
     CONFIG = {
@@ -267,7 +270,7 @@ class PatreonLogo(SVGMobject):
 class VideoIcon(SVGMobject):
     CONFIG = {
         "file_name" : "video_icon",
-        "width" : 2*SPACE_WIDTH/12.,
+        "width" : FRAME_WIDTH/12.,
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
@@ -286,8 +289,8 @@ class VideoSeries(VGroup):
         videos = [VideoIcon() for x in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
         self.arrange_submobjects()
-        self.scale_to_fit_width(2*SPACE_WIDTH-MED_LARGE_BUFF)
-        self.gradient_highlight(*self.gradient_colors)
+        self.scale_to_fit_width(FRAME_WIDTH-MED_LARGE_BUFF)
+        self.set_color_by_gradient(*self.gradient_colors)
 
 class Headphones(SVGMobject):
     CONFIG = {

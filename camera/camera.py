@@ -6,31 +6,32 @@ from PIL import Image
 from colour import Color
 import aggdraw
 import copy
-
-from helpers import *
-from mobject import Mobject, PMobject, VMobject, \
-    ImageMobject, Group
-
 import time
+
+from constants import *
+from mobject.mobject import Mobject, Group
+from mobject.point_cloud_mobject import PMobject
+from mobject.vectorized_mobject import VMobject
+from mobject.image_mobject import ImageMobject
+from utils.color import rgb_to_hex, color_to_int_rgba
+from utils.config_ops import digest_config, digest_locals, DictAsObject
+from utils.images import get_full_raster_image_path
+from utils.iterables import remove_list_redundancies, list_difference_update
+from utils.iterables import batch_by_property
+from utils.simple_functions import fdiv
+
 
 class Camera(object):
     CONFIG = {
         "background_image" : None,
-        "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
-        # Note 1: space_shape will be resized to match pixel_shape
-        #
-        # Note 2: While pixel_shape indicates the actual full height
-        # and width of the pixel array, space_shape indicates only 
-        # half the height and half the width of space (extending from
-        # -space_height to +space_height vertically and from 
-        # -space_widtdh to +space_width horizontally)
-        # TODO: Rename these to SPACE_X_RADIUS, SPACE_Y_RADIUS
-        "space_shape" : (SPACE_HEIGHT, SPACE_WIDTH),
+        "pixel_shape" : (DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH),
+        # Note: frame_shape will be resized to match pixel_shape
+        "frame_shape" : (FRAME_HEIGHT, FRAME_WIDTH),
         "space_center" : ORIGIN,
         "background_color" : BLACK,
         #Points in vectorized mobjects with norm greater
         #than this value will be rescaled.
-        "max_allowable_norm" : 2*SPACE_WIDTH,
+        "max_allowable_norm" : FRAME_WIDTH,
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
         "background_alpha" : 0, #Out of rgb_max_val
@@ -45,7 +46,7 @@ class Camera(object):
         digest_config(self, kwargs, locals())
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.init_background()
-        self.resize_space_shape()
+        self.resize_frame_shape()
         self.reset()
 
     def __deepcopy__(self, memo):
@@ -55,20 +56,20 @@ class Camera(object):
         self.canvas = None 
         return copy.copy(self)
 
-    def resize_space_shape(self, fixed_dimension = 0):
+    def resize_frame_shape(self, fixed_dimension = 0):
         """
-        Changes space_shape to match the aspect ratio 
+        Changes frame_shape to match the aspect ratio 
         of pixel_shape, where fixed_dimension determines
-        whether space_shape[0] (height) or space_shape[1] (width)
+        whether frame_shape[0] (height) or frame_shape[1] (width)
         remains fixed while the other changes accordingly.
         """
         aspect_ratio = float(self.pixel_shape[1])/self.pixel_shape[0]
-        space_height, space_width = self.space_shape
+        frame_width, frame_height = self.frame_shape
         if fixed_dimension == 0:
-            space_width = aspect_ratio*space_height
+            frame_height = aspect_ratio*frame_width
         else:
-            space_height = space_width/aspect_ratio
-        self.space_shape = (space_height, space_width)
+            frame_width = frame_height/aspect_ratio
+        self.frame_shape = (frame_width, frame_height)
 
     def init_background(self):
         if self.background_image is not None:
@@ -477,10 +478,10 @@ class Camera(object):
     def points_to_pixel_coords(self, points):
         result = np.zeros((len(points), 2))
         ph, pw = self.pixel_shape
-        sh, sw = self.space_shape
-        width_mult  = pw/sw/2
+        sh, sw = self.frame_shape
+        width_mult  = pw/sw
         width_add   = pw/2        
-        height_mult = ph/sh/2
+        height_mult = ph/sh
         height_add  = ph/2
         #Flip on y-axis as you go
         height_mult *= -1
@@ -517,7 +518,7 @@ class Camera(object):
 
     def get_coords_of_all_pixels(self):
         # These are in x, y order, to help me keep things straight
-        full_space_dims = np.array(self.space_shape)[::-1] * 2
+        full_space_dims = np.array(self.frame_shape)[::-1]
         full_pixel_dims = np.array(self.pixel_shape)[::-1]
 
         # These are addressed in the same y, x order as in pixel_array, but the values in them
@@ -527,7 +528,7 @@ class Camera(object):
             uncentered_pixel_coords * full_space_dims, 
             full_pixel_dims)
         # Could structure above line's computation slightly differently, but figured (without much 
-        # thought) multiplying by space_shape first, THEN dividing by pixel_shape, is probably 
+        # thought) multiplying by frame_shape first, THEN dividing by pixel_shape, is probably 
         # better than the other order, for avoiding underflow quantization in the division (whereas 
         # overflow is unlikely to be a problem)
 
@@ -621,18 +622,16 @@ class MovingCamera(Camera):
 
     def capture_mobjects(self, *args, **kwargs):
         self.space_center = self.mobject.get_center()
-        self.realign_space_shape()
+        self.realign_frame_shape()
         Camera.capture_mobjects(self, *args, **kwargs)
 
-    def realign_space_shape(self):
-        height, width = self.space_shape
+    def realign_frame_shape(self):
+        height, width = self.frame_shape
         if self.aligned_dimension == "height":
-            self.space_shape = (self.mobject.get_height()/2, width)
+            self.frame_shape = (self.mobject.get_height(), width)
         else:
-            self.space_shape = (height, self.mobject.get_width()/2)
-        self.resize_space_shape(
-            0 if self.aligned_dimension == "height" else 1
-        )
+            self.frame_shape = (height, self.mobject.get_width())
+        self.resize_frame_shape(0 if self.aligned_dimension == "height" else 1)
 
 # TODO: Add an attribute to mobjects under which they can specify that they should just 
 # map their centers but remain otherwise undistorted (useful for labels, etc.)
@@ -727,7 +726,7 @@ class SplitScreenCamera(MultiCamera):
         for camera in [self.left_camera, self.right_camera]:
             camera.pixel_shape = (self.pixel_shape[0], half_width) # TODO: Round up on one if width is odd
             camera.init_background()
-            camera.resize_space_shape()
+            camera.resize_frame_shape()
             camera.reset()
 
         MultiCamera.__init__(self, (left_camera, (0, 0)), (right_camera, (0, half_width)))

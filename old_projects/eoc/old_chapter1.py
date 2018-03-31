@@ -1,31 +1,5 @@
-from helpers import *
+from big_ol_pile_of_manim_imports import *
 
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.graph_scene import GraphScene
 
 #### Warning, scenes here not updated based on most recent GraphScene changes #######
 
@@ -118,7 +92,7 @@ class CircleScene(PiCreatureScene):
             nudge_label = TexMobject("%.01f"%self.dR)
         else:
             nudge_label = TexMobject("dr")
-        nudge_label.highlight(self.dR_color)
+        nudge_label.set_color(self.dR_color)
         nudge_label.scale(0.75)
         nudge_label.next_to(nudge_arrow.get_start(), DOWN)
 
@@ -213,7 +187,7 @@ class PatronsOnly(Scene):
             This is a draft
             for patrons only
         """)
-        title.highlight(RED)
+        title.set_color(RED)
         title.scale(2)
         title.to_edge(UP)
 
@@ -241,18 +215,18 @@ class Introduction(TeacherStudentsScene):
         series = VideoSeries()
         series.to_edge(UP)
         this_video = series[0]
-        this_video.highlight(YELLOW)
+        this_video.set_color(YELLOW)
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(2*SPACE_HEIGHT)
+        this_video.scale_to_fit_height(FRAME_HEIGHT)
         self.this_video = this_video
 
         words = TextMobject(
             "Welcome to \\\\",
             "Essence of calculus"
         )
-        words.highlight_by_tex("Essence of calculus", YELLOW)
+        words.set_color_by_tex("Essence of calculus", YELLOW)
         self.remove(self.teacher)
         self.teacher.change_mode("happy")
         self.add(self.teacher)
@@ -276,7 +250,7 @@ class Introduction(TeacherStudentsScene):
             ]
         )
         def homotopy(x, y, z, t):
-            alpha = (0.7*x + SPACE_WIDTH)/(2*SPACE_WIDTH)
+            alpha = (0.7*x + FRAME_X_RADIUS)/(FRAME_WIDTH)
             beta = squish_rate_func(smooth, alpha-0.15, alpha+0.15)(t)
             return (x, y - 0.3*np.sin(np.pi*beta), z)
         self.play(
@@ -372,7 +346,7 @@ class Introduction(TeacherStudentsScene):
         this_video = self.this_video
         self.remove(this_video)
         this_video.generate_target()
-        this_video.target.scale_to_fit_height(2*SPACE_HEIGHT)
+        this_video.target.scale_to_fit_height(FRAME_HEIGHT)
         this_video.target.center()        
         this_video.target.set_fill(opacity = 0)
 
@@ -387,14 +361,14 @@ class IntroduceCircle(Scene):
         circle = Circle(radius = 3, color = WHITE)
         circle.to_edge(LEFT)
         radius = Line(circle.get_center(), circle.get_right())
-        radius.highlight(MAROON_B)
+        radius.set_color(MAROON_B)
         R = TexMobject("R").next_to(radius, UP)
 
         area, circumference = words = VGroup(*map(TextMobject, [
             "Area =", "Circumference ="
         ]))
-        area.highlight(BLUE)
-        circumference.highlight(YELLOW)
+        area.set_color(BLUE)
+        circumference.set_color(YELLOW)
 
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
         words.next_to(circle, RIGHT)
@@ -420,7 +394,7 @@ class IntroduceCircle(Scene):
 
         brace = Brace(calc_stuffs, RIGHT)
         to_be_explained = brace.get_text("To be \\\\ explained")
-        VGroup(brace, to_be_explained).highlight(GREEN)
+        VGroup(brace, to_be_explained).set_color(GREEN)
 
         self.play(ShowCreation(radius), Write(R))
         self.play(
@@ -572,13 +546,13 @@ class IntroduceTinyChangeInArea(CircleScene):
         new_area_form, minus, area_form = expression = TexMobject(
             "\\pi (R + 0.1)^2", "-", "\\pi R^2"
         )
-        VGroup(*new_area_form[4:7]).highlight(self.dR_color)
+        VGroup(*new_area_form[4:7]).set_color(self.dR_color)
         expression_brace = Brace(expression, UP)
         change_in_area = expression_brace.get_text("Change in area")
-        change_in_area.highlight(self.outer_ring_color)
+        change_in_area.set_color(self.outer_ring_color)
         area_brace = Brace(area_form)
         area_word = area_brace.get_text("Area")
-        area_word.highlight(BLUE)
+        area_word.set_color(BLUE)
         new_area_brace = Brace(new_area_form)
         new_area_word = new_area_brace.get_text("New area")
         group = VGroup(
@@ -617,7 +591,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         )
         self.wait()
         self.play(
-            outer_ring.highlight, YELLOW,
+            outer_ring.set_color, YELLOW,
             Animation(self.nudge_arrow),
             Animation(self.nudge_line),
             rate_func = there_and_back
@@ -627,22 +601,22 @@ class IntroduceTinyChangeInArea(CircleScene):
         self.work_out_expression(group)
         self.second_unwrapping(outer_ring)
         insignificant = TextMobject("Insignificant")
-        insignificant.highlight(self.dR_color)
+        insignificant.set_color(self.dR_color)
         insignificant.move_to(self.error_words)
         self.play(Transform(self.error_words, insignificant))
         self.wait()
 
         big_rect = Rectangle(
-            width = 2*SPACE_WIDTH,
-            height = 2*SPACE_HEIGHT,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             fill_color = BLACK, 
             fill_opacity = 0.85,
             stroke_width = 0,
         )
         self.play(
             FadeIn(big_rect),
-            area_form.highlight, BLUE,
-            self.two_pi_R.highlight, GREEN,
+            area_form.set_color, BLUE,
+            self.two_pi_R.set_color, GREEN,
             self.pi_creature.change_mode, "happy"
         )
 
@@ -659,7 +633,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         dR_brace.next_to(almost_rect, RIGHT)
         two_pi_R = circum_brace.get_text("$2\\pi R$")
         dR = TexMobject("$0.1$").scale(0.7).next_to(dR_brace, RIGHT)
-        dR.highlight(self.dR_color)
+        dR.set_color(self.dR_color)
 
         two_pi_R.generate_target()
         dR.generate_target()
@@ -673,8 +647,8 @@ class IntroduceTinyChangeInArea(CircleScene):
         )
         final_area.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         final_area.next_to(almost_rect, DOWN, buff = MED_LARGE_BUFF)
-        final_area.highlight(GREEN_A)
-        final_area[3].highlight(self.dR_color)
+        final_area.set_color(GREEN_A)
+        final_area[3].set_color(self.dR_color)
         change_in_area.shift(0.1*LEFT)
 
         self.play(
@@ -717,7 +691,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         )
         pi_R_squared, plus, two_pi_R_dR, plus2, pi_dR_squared, minus2, pi_R_squared2 = expanded
         for subset in two_pi_R_dR[4:7], pi_dR_squared[2:5]:
-            VGroup(*subset).highlight(self.dR_color)
+            VGroup(*subset).set_color(self.dR_color)
         expanded.next_to(new_area_form, DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         expanded.shift(LEFT/2.)
 
@@ -748,7 +722,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         self.add(self.pi_creature, *expanded)
         self.wait(2)
         self.play(*[
-            ApplyMethod(mob.highlight, RED)
+            ApplyMethod(mob.set_color, RED)
             for mob in pi_R_squared, pi_R_squared2
         ])
         self.wait()
@@ -761,7 +735,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         approx_brace = Brace(two_pi_R_dR)
         error_brace = Brace(pi_dR_squared, buff = SMALL_BUFF)
         error_words = error_brace.get_text("Error", buff = SMALL_BUFF)
-        error_words.highlight(RED)
+        error_words.set_color(RED)
         self.error_words = error_words
 
         self.play(
@@ -787,7 +761,7 @@ class IntroduceTinyChangeInArea(CircleScene):
             stroke_width = 0,
         )
         self.play(
-            almost_rect.highlight, YELLOW,
+            almost_rect.set_color, YELLOW,
             self.pi_creature.change_mode, "pondering"
         )
         self.unwrap_ring(almost_rect)
@@ -830,11 +804,11 @@ class BuildToDADR(CircleScene):
 
     def write_initial_terms(self):
         change = TextMobject("Change in area")
-        change.highlight(GREEN_B)
+        change.set_color(GREEN_B)
         equals, two_pi_R, dR, plus, pi, dR2, squared = rhs = TexMobject(
             "=", "2 \\pi R", "(0.1)", "+", "\\pi", "(0.1)", "^2"
         )
-        VGroup(dR, dR2).highlight(self.dR_color)
+        VGroup(dR, dR2).set_color(self.dR_color)
         change.next_to(self.circle, buff = LARGE_BUFF)
         rhs.next_to(change)
 
@@ -842,7 +816,7 @@ class BuildToDADR(CircleScene):
         circum_text = circum_brace.get_text("Circumference")
         error_brace = Brace(VGroup(pi, squared), UP)
         error_text = error_brace.get_text("Error")
-        error_text.highlight(RED)
+        error_text.set_color(RED)
 
         self.play(
             Write(change, run_time = 1),
@@ -875,7 +849,7 @@ class BuildToDADR(CircleScene):
             term.frac_line.next_to(term, DOWN, buff = SMALL_BUFF)
             term.denom = TexMobject("(0.1)")
             term.denom.next_to(term.frac_line, DOWN, buff = SMALL_BUFF)
-            term.denom.highlight(self.dR_color)
+            term.denom.set_color(self.dR_color)
             term.denom.save_state()
             term.denom.replace(self.nudge_label)
 
@@ -891,7 +865,7 @@ class BuildToDADR(CircleScene):
         self.play(*[term.denom.restore for term in terms])
         self.wait(2)
         self.play(
-            self.outer_ring.highlight, YELLOW,
+            self.outer_ring.set_color, YELLOW,
             rate_func = there_and_back
         )
         self.play(
@@ -900,7 +874,7 @@ class BuildToDADR(CircleScene):
         )
         self.wait(2)
         canceleres = VGroup(self.circum_term[1], self.circum_term.denom)
-        self.play(canceleres.highlight, RED)
+        self.play(canceleres.set_color, RED)
         self.play(FadeOut(canceleres))
         self.remove(self.circum_term)
         self.play(
@@ -943,7 +917,7 @@ class BuildToDADR(CircleScene):
                 TexMobject(s).move_to(mob, LEFT)
                 for mob in dRs
             ])
-            new_dRs.highlight(self.dR_color)
+            new_dRs.set_color(self.dR_color)
             new_outer_ring = self.get_ring(self.radius, width)
             new_nudge_line = self.nudge_line.copy()
             new_nudge_line.scale_to_fit_width(width)
@@ -970,7 +944,7 @@ class BuildToDADR(CircleScene):
                 self.error_term.target.next_to(self.plus.target)
                 error_brace.target = Brace(self.error_term.target)
                 error_text.target = error_brace.target.get_text("Truly tiny")
-                error_text.target.highlight(error_text.get_color())
+                error_text.target.set_color(error_text.get_color())
                 self.play(*map(MoveToTarget, [
                     error_brace, error_text, self.plus, self.error_term
                 ]))
@@ -981,7 +955,7 @@ class BuildToDADR(CircleScene):
             arg_separator = ""
 
         )
-        difference_text.highlight_by_tex("d", self.dR_color)
+        difference_text.set_color_by_tex("d", self.dR_color)
         difference_text.next_to(self.pi_creature, UP+RIGHT)
         difference_arrow = Arrow(difference_text, self.change.denom)
         self.play(
@@ -992,7 +966,7 @@ class BuildToDADR(CircleScene):
         self.wait()
 
         dA = TexMobject("dA")
-        dA.highlight(self.change.get_color())
+        dA.set_color(self.change.get_color())
         frac_line = self.change.frac_line
         frac_line.generate_target()
         frac_line.target.stretch_to_fit_width(dA.get_width())
@@ -1007,7 +981,7 @@ class BuildToDADR(CircleScene):
             MoveToTarget(frac_line),
             MoveToTarget(self.change.denom),
             Transform(difference_text[3], A),
-            difference_text[1].highlight, dA.get_color(),
+            difference_text[1].set_color, dA.get_color(),
             MoveToTarget(difference_arrow),
         )
         self.wait(2)
@@ -1053,7 +1027,7 @@ class BuildToDADR(CircleScene):
         self.wait(2)
         equality_brace = Brace(VGroup(self.change.denom, self.circum_term))
         equal_word = equality_brace.get_text("Equality")
-        VGroup(equality_brace, equal_word).highlight(BLUE)
+        VGroup(equality_brace, equal_word).set_color(BLUE)
         self.play(
             GrowFromCenter(equality_brace),
             Write(equal_word, run_time = 1)
@@ -1121,7 +1095,7 @@ class BuildToDADR(CircleScene):
         for mob in to_infs:
             mob.save_state()
             mob.inf = TexMobject("1/\\infty")
-            mob.inf.highlight(mob.get_color())
+            mob.inf.set_color(mob.get_color())
             mob.inf.move_to(mob)
         self.play(*[
             Transform(mob, mob.inf)
@@ -1138,7 +1112,7 @@ class BuildToDADR(CircleScene):
         ))
         for n in range(7):
             target = TexMobject("0.%s1"%("0"*n))
-            target.highlight(self.nudge_label.get_color())
+            target.set_color(self.nudge_label.get_color())
             target.move_to(self.nudge_label, LEFT)
             self.outer_ring.target = self.get_ring(self.radius, 0.1/(n+1))
             self.nudge_line.get_center = self.nudge_line.get_left
@@ -1158,7 +1132,7 @@ class BuildToDADR(CircleScene):
             Write(bubble.content, run_time = 1),
             randy.change_mode, "angry",
         )
-        self.play(randy.highlight, RED)
+        self.play(randy.set_color, RED)
         self.play(self.pi_creature.change_mode, "guilty")
         self.wait()
 
@@ -1174,7 +1148,7 @@ class BuildToDADR(CircleScene):
             ShowCreation(new_bubble),
             Write(new_bubble.content),
             randy.change_mode, "erm",
-            randy.highlight, BLUE_E,
+            randy.set_color, BLUE_E,
             self.pi_creature.change_mode, "shruggie"
         )
         self.wait(2)
@@ -1193,7 +1167,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         new_label = TexMobject("dR")
         new_label.move_to(self.nudge_label)
         new_label.to_edge(UP)        
-        new_label.highlight(self.nudge_label.get_color())
+        new_label.set_color(self.nudge_label.get_color())
         new_arrow = Arrow(new_label, self.nudge_line)
 
         self.remove(self.nudge_label, self.nudge_arrow)
@@ -1210,15 +1184,15 @@ class NameDerivative(IntroduceTinyChangeInArea):
         )
         dArea_fom.to_edge(UP, buff = MED_LARGE_BUFF).shift(RIGHT)
         dA, frac_line, dR = VGroup(*dA_dR[:2]), dA_dR[2], VGroup(*dA_dR[3:])
-        dA.highlight(GREEN_B)
-        dR.highlight(self.dR_color)
-        VGroup(*d_formula_dR[7:]).highlight(self.dR_color)
+        dA.set_color(GREEN_B)
+        dR.set_color(self.dR_color)
+        VGroup(*d_formula_dR[7:]).set_color(self.dR_color)
 
 
         dA_dR_circle = Circle()
         dA_dR_circle.replace(dA_dR, stretch = True)
         dA_dR_circle.scale_in_place(1.5)
-        dA_dR_circle.highlight(BLUE)
+        dA_dR_circle.set_color(BLUE)
 
         words = TextMobject(
             "``Derivative'' of $A$\\\\",
@@ -1227,7 +1201,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         words.next_to(dA_dR_circle, DOWN, buff = 1.5*LARGE_BUFF)
         words.shift(0.5*LEFT)
         arrow = Arrow(words, dA_dR_circle)
-        arrow.highlight(dA_dR_circle.get_color())
+        arrow.set_color(dA_dR_circle.get_color())
 
         self.play(Transform(self.outer_ring.copy(), dA, run_time = 2))
         self.play(
@@ -1253,13 +1227,13 @@ class NameDerivative(IntroduceTinyChangeInArea):
         target_formula = TexMobject(
             "\\frac{d \\quad}{dR} = "
         )
-        VGroup(*target_formula[2:4]).highlight(self.dR_color)
+        VGroup(*target_formula[2:4]).set_color(self.dR_color)
         target_formula.scale(1.3)
         target_formula.next_to(self.dArea_fom, DOWN)
         target_formula.shift(2*RIGHT + 0.5*DOWN)
 
         area_form = VGroup(*self.dArea_fom[2][2:5]).copy()
-        area_form.highlight(BLUE_D)
+        area_form.set_color(BLUE_D)
         circum_form = self.dArea_fom[-1]
 
         circle_width = 1
@@ -1268,7 +1242,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         area_circle.generate_target()
         area_circle.target.scale_to_fit_width(circle_width)
         area_circle.target.next_to(target_formula[0], RIGHT, buff = 0)
-        area_circle.target.highlight(BLUE_D)
+        area_circle.target.set_color(BLUE_D)
         circum_circle = self.circle.copy()
         circum_circle.set_fill(opacity = 0)
         circum_circle.generate_target()
@@ -1313,27 +1287,27 @@ class NameDerivative(IntroduceTinyChangeInArea):
         for dR in sample_dRs:
             dA = 2*np.pi*dR + np.pi*(dR**2)
             frac = TexMobject("\\frac{%.3f}{%.2f}"%(dA, dR))
-            VGroup(*frac[:5]).highlight(self.outer_ring.get_color())
-            VGroup(*frac[6:]).highlight(self.dR_color)
+            VGroup(*frac[:5]).set_color(self.outer_ring.get_color())
+            VGroup(*frac[6:]).set_color(self.dR_color)
             fracs.add(frac)
         fracs.add(TexMobject("\\cdots \\rightarrow"))
         fracs.add(TexMobject("???"))
-        fracs[-1].gradient_highlight(self.dR_color, self.outer_ring.get_color())
+        fracs[-1].set_color_by_gradient(self.dR_color, self.outer_ring.get_color())
         fracs.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
         fracs.to_corner(DOWN+LEFT)
 
         arrows = VGroup()
         for frac in fracs[:len(sample_dRs)] + [fracs[-1]]:
             arrow = Arrow(self.words.get_bottom(), frac.get_top())
-            arrow.highlight(WHITE)
+            arrow.set_color(WHITE)
             if frac is fracs[-1]:
                 check = TexMobject("\\checkmark")
-                check.highlight(GREEN)
+                check.set_color(GREEN)
                 check.next_to(arrow.get_center(), UP+RIGHT, SMALL_BUFF)
                 arrow.add(check)
             else:
                 cross = TexMobject("\\times")
-                cross.highlight(RED)
+                cross.set_color(RED)
                 cross.move_to(arrow.get_center())
                 cross.set_stroke(RED, width = 5)
                 arrow.add(cross)
@@ -1378,7 +1352,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         self.remove(self.last_mover)
         self.play(
             equals.scale_in_place, 1.5,
-            equals.highlight, GREEN,
+            equals.set_color, GREEN,
             rate_func = there_and_back,
             run_time = 2
         )
@@ -1399,7 +1373,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
 
 class DerivativeAsTangentLine(ZoomedScene):
     CONFIG = {
-        "zoomed_canvas_space_shape" : (4, 4),
+        "zoomed_canvas_frame_shape" : (4, 4),
         "zoom_factor" : 10,
         "R_min" : 0,
         "R_max" : 2.5,
@@ -1455,7 +1429,7 @@ class DerivativeAsTangentLine(ZoomedScene):
 
         graph = ParametricFunction(func, color = BLUE)
         graph_label = TexMobject("A(R) = \\pi R^2")
-        graph_label.highlight(BLUE)
+        graph_label.set_color(BLUE)
         graph_label.next_to(
             graph.point_from_proportion(2), LEFT
         )
@@ -1502,9 +1476,9 @@ class DerivativeAsTangentLine(ZoomedScene):
         self.play(FadeIn(dot))
 
         dR_line = Line(graph_point, interim_point)
-        dR_line.highlight(YELLOW)
+        dR_line.set_color(YELLOW)
         dA_line = Line(interim_point, nudged_point)
-        dA_line.highlight(GREEN)
+        dA_line.set_color(GREEN)
         tiny_buff = SMALL_BUFF/self.zoom_factor
         for line, vect, char in (dR_line, DOWN, "R"), (dA_line, RIGHT, "A"):
             line.brace = Brace(Line(LEFT, RIGHT))
@@ -1514,7 +1488,7 @@ class DerivativeAsTangentLine(ZoomedScene):
             line.brace.next_to(line, vect, buff = tiny_buff)
             line.text = TexMobject("d%s"%char)
             line.text.scale(1./self.zoom_factor)
-            line.text.highlight(line.get_color())
+            line.text.set_color(line.get_color())
             line.text.next_to(line.brace, vect, buff = tiny_buff)
             self.play(ShowCreation(line))
             self.play(Write(VGroup(line.brace, line.text)))
@@ -1524,8 +1498,8 @@ class DerivativeAsTangentLine(ZoomedScene):
             "\\frac{dA}{dR} =", "\\text{Slope}"
         )
         self.slope_word = deriv_is_slope[1]
-        VGroup(*deriv_is_slope[0][:2]).highlight(GREEN)
-        VGroup(*deriv_is_slope[0][3:5]).highlight(YELLOW)
+        VGroup(*deriv_is_slope[0][:2]).set_color(GREEN)
+        VGroup(*deriv_is_slope[0][3:5]).set_color(YELLOW)
         deriv_is_slope.next_to(self.y_axis, RIGHT)
         deriv_is_slope.shift(UP)
 
@@ -1558,8 +1532,8 @@ class DerivativeAsTangentLine(ZoomedScene):
 
     def show_tangent_lines(self):
         R = self.R_to_zoom_in_on
-        line = Line(LEFT, RIGHT).scale(SPACE_HEIGHT)
-        line.highlight(MAROON_B)
+        line = Line(LEFT, RIGHT).scale(FRAME_Y_RADIUS)
+        line.set_color(MAROON_B)
         line.rotate(self.angle_of_tangent(R))
         line.move_to(self.graph_point(R))
         x_axis_y = self.x_axis.number_to_point(0)[1]
@@ -1709,7 +1683,7 @@ class IntroduceConcentricRings(CircleScene):
             self.get_ring(r, self.dR)
             for r in np.arange(0, self.radius, self.dR)
         ])
-        rings.gradient_highlight(BLUE_E, GREEN_E)
+        rings.set_color_by_gradient(BLUE_E, GREEN_E)
         rings.set_stroke(BLACK, width = 1)
         outermost_ring = rings[-1]
         dr_line = Line(
@@ -1720,7 +1694,7 @@ class IntroduceConcentricRings(CircleScene):
         dr_text = TexMobject("dr")
         dr_text.move_to(self.circle.get_corner(UP+RIGHT))
         dr_text.shift(LEFT)
-        dr_text.highlight(YELLOW)
+        dr_text.set_color(YELLOW)
         dr_arrow = Arrow(dr_text, dr_line, buff = SMALL_BUFF)
         self.dr_group = VGroup(dr_text, dr_arrow, dr_line)
 
@@ -1795,7 +1769,7 @@ class IntroduceConcentricRings(CircleScene):
         radial_line = Line(ORIGIN, radius*RIGHT)
         radial_line.rotate(np.pi/4)
         radial_line.shift(self.circle.get_center())
-        radial_line.highlight(YELLOW)
+        radial_line.set_color(YELLOW)
         r_label = TexMobject("r")
         r_label.next_to(radial_line.get_center(), UP+LEFT, buff = SMALL_BUFF)
 
@@ -2022,14 +1996,14 @@ class IntroduceConcentricRings(CircleScene):
         )
         self.wait(2)
         self.play(
-            self.integral_expression.gradient_highlight, BLUE, GREEN,
+            self.integral_expression.set_color_by_gradient, BLUE, GREEN,
             GrowFromCenter(int_brace),
             Write(integral_word)
         )
         self.wait()
         for term in self.integral_terms:
             term.save_state()
-            self.play(term.highlight, YELLOW)
+            self.play(term.set_color, YELLOW)
             self.play(term.restore)
         self.wait(3)
 
@@ -2087,13 +2061,13 @@ class GraphIntegral(GraphScene):
         moving_arrow = arrows[0].copy()
         self.play(
             ShowCreation(moving_arrow),
-            self.little_r.highlight, YELLOW
+            self.little_r.set_color, YELLOW
         )
         for arrow in reversed(arrows):
             self.play(Transform(moving_arrow, arrow, run_time = 4))
         self.play(
             FadeOut(moving_arrow),
-            self.little_r.highlight, WHITE
+            self.little_r.set_color, WHITE
         )
         
     def add_rectangles(self):
@@ -2104,7 +2078,7 @@ class GraphIntegral(GraphScene):
             for x in np.arange(0, self.R+self.dr, self.dr)
         ])
         ticks.stretch_to_fit_height(tick_height)
-        ticks.highlight(YELLOW)
+        ticks.set_color(YELLOW)
         R_label = TexMobject("R")
         R_label.next_to(self.coords_to_point(self.R, 0), DOWN)
 
@@ -2124,7 +2098,7 @@ class GraphIntegral(GraphScene):
             buff = SMALL_BUFF
         )
         dr_text = dr_brace.get_text("$dr$", buff = SMALL_BUFF)
-        # dr_text.highlight(YELLOW)
+        # dr_text.set_color(YELLOW)
 
         rectangles = self.get_rectangles(self.dr)
         special_rect = rectangles[special_tick_index]
@@ -2275,12 +2249,12 @@ class FundamentalTheorem(CircleScene):
         symbolic = TexMobject(
             "\\frac{d(\\pi R^2)}{dR} =", "2\\pi R"
         )
-        VGroup(*symbolic[0][2:5]).highlight(self.area_color)
-        VGroup(*symbolic[0][7:9]).highlight(self.dR_color)
-        symbolic[1].highlight(self.circum_color)
+        VGroup(*symbolic[0][2:5]).set_color(self.area_color)
+        VGroup(*symbolic[0][7:9]).set_color(self.dR_color)
+        symbolic[1].set_color(self.circum_color)
 
         geometric = TexMobject("\\frac{d \\quad}{dR}=")
-        VGroup(*geometric[2:4]).highlight(self.dR_color)
+        VGroup(*geometric[2:4]).set_color(self.dR_color)
         radius = geometric[0].get_height()
         area_circle = Circle(
             stroke_width = 0,
@@ -2311,9 +2285,9 @@ class FundamentalTheorem(CircleScene):
         symbolic = TexMobject(
             "\\int_0^R", "2\\pi r", "\\cdot", "dr", "=", "\\pi R^2"
         )
-        symbolic.highlight_by_tex("2\\pi r", self.circum_color)
-        symbolic.highlight_by_tex("dr", self.dR_color)
-        symbolic.highlight_by_tex("\\pi R^2", self.area_color)
+        symbolic.set_color_by_tex("2\\pi r", self.circum_color)
+        symbolic.set_color_by_tex("dr", self.dR_color)
+        symbolic.set_color_by_tex("\\pi R^2", self.area_color)
 
         geometric = symbolic.copy()
         area_circle = Circle(
@@ -2367,8 +2341,8 @@ class FundamentalTheorem(CircleScene):
         brace = Brace(ring_copy, UP)
         brace.stretch_in_place(0.95, 0)
         deriv = brace.get_text("$\\dfrac{dA}{dR}$")
-        VGroup(*deriv[:2]).highlight(self.outer_ring.get_color())
-        VGroup(*deriv[-2:]).highlight(self.dR_color)
+        VGroup(*deriv[:2]).set_color(self.outer_ring.get_color())
+        VGroup(*deriv[-2:]).set_color(self.dR_color)
         self.play(
             GrowFromCenter(brace),
             Write(deriv),
@@ -2382,7 +2356,7 @@ class FundamentalTheorem(CircleScene):
             self.get_ring(radius = r, dR = self.dR)
             for r in np.arange(0, self.radius, self.dR)
         ])
-        rings.gradient_highlight(BLUE_E, GREEN_E)
+        rings.set_color_by_gradient(BLUE_E, GREEN_E)
         rings.save_state()
         integrand = self.integral_terms[1][1]
         for ring in rings:
@@ -2471,7 +2445,7 @@ class CalculusInANutshell(CircleScene):
         for ring in rings:
             ring.add(ring.copy().rotate(np.pi))
         for mob in calculus, rings:
-            mob.gradient_highlight(BLUE, GREEN)
+            mob.set_color_by_gradient(BLUE, GREEN)
         rings.set_stroke(width = 0) 
 
         self.play(Write(calculus))
@@ -2489,7 +2463,7 @@ class CalculusInANutshell(CircleScene):
         first.set_fill(YELLOW)
         first.save_state()
         first.center()
-        first.scale_to_fit_height(SPACE_HEIGHT*2)
+        first.scale_to_fit_height(FRAME_Y_RADIUS*2)
         first.set_fill(opacity = 0)
         everything = VGroup(*self.get_mobjects())
         everything.generate_target()

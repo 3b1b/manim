@@ -1,10 +1,10 @@
 import numpy as np
 
-from scene import Scene
-from mobject import Mobject
+from scene.scene import Scene
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
-from animation import Animation    
+from animation.animation import Animation    
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
@@ -12,8 +12,10 @@ from topics.number_line import NumberPlane, Axes
 from topics.geometry import Vector, Line, Circle, Arrow, Dot, \
     BackgroundRectangle, Square
 
-from helpers import *
+from constants import *
 from topics.matrix import Matrix, VECTOR_LABEL_SCALE_FACTOR, vector_coordinate_label
+from utils.rate_functions import rush_into, rush_from
+from utils.space_ops import angle_of_vector
 
 
 X_COLOR = GREEN_C
@@ -43,7 +45,7 @@ class VectorScene(Scene):
         plane = self.add_plane()
         axes = plane.get_axes()
         plane.fade(dimness)
-        axes.highlight(WHITE)
+        axes.set_color(WHITE)
         axes.fade(axes_dimness)
         self.add(axes)
         self.freeze_background()
@@ -98,7 +100,7 @@ class VectorScene(Scene):
             label = TexMobject(label)
             if color is None:
                 color = vector.get_color()
-            label.highlight(color)
+            label.set_color(color)
         label.scale(label_scale_factor)
         label.add_background_rectangle()
 
@@ -122,12 +124,12 @@ class VectorScene(Scene):
 
     def position_x_coordinate(self, x_coord, x_line, vector):
         x_coord.next_to(x_line, -np.sign(vector[1])*UP)
-        x_coord.highlight(X_COLOR)
+        x_coord.set_color(X_COLOR)
         return x_coord
 
     def position_y_coordinate(self, y_coord, y_line, vector):
         y_coord.next_to(y_line, np.sign(vector[0])*RIGHT)
-        y_coord.highlight(Y_COLOR)
+        y_coord.set_color(Y_COLOR)
         return y_coord
 
     def coords_to_vector(self, vector, coords_start = 2*RIGHT+2*UP, clean_up = True):
@@ -137,8 +139,8 @@ class VectorScene(Scene):
         arrow = Vector(vector)
         x_line = Line(ORIGIN, vector[0]*RIGHT)
         y_line = Line(x_line.get_end(), arrow.get_end())
-        x_line.highlight(X_COLOR)
-        y_line.highlight(Y_COLOR)
+        x_line.set_color(X_COLOR)
+        y_line.set_color(Y_COLOR)
         x_coord, y_coord = array.get_mob_matrix().flatten()
 
         self.play(Write(array, run_time = 1))
@@ -175,8 +177,8 @@ class VectorScene(Scene):
         array = vector_coordinate_label(arrow, integer_labels = integer_labels)
         x_line = Line(ORIGIN, vector[0]*RIGHT)
         y_line = Line(x_line.get_end(), arrow.get_end())
-        x_line.highlight(X_COLOR)
-        y_line.highlight(Y_COLOR)
+        x_line.set_color(X_COLOR)
+        y_line.set_color(Y_COLOR)
         x_coord, y_coord = array.get_mob_matrix().flatten()
         x_coord_start = self.position_x_coordinate(
             x_coord.copy(), x_line, vector
@@ -218,8 +220,8 @@ class VectorScene(Scene):
             vector = vector.get_end() - vector.get_start()
         elif len(vector) == 2:
             vector = np.append(np.array(vector), 0.0)
-        x_max = int(SPACE_WIDTH + abs(vector[0]))
-        y_max = int(SPACE_HEIGHT + abs(vector[1]))
+        x_max = int(FRAME_X_RADIUS + abs(vector[0]))
+        y_max = int(FRAME_Y_RADIUS + abs(vector[1]))
         dots = VMobject(*[
             Dot(x*RIGHT + y*UP)
             for x in range(-x_max, x_max)
@@ -242,8 +244,8 @@ class LinearTransformationScene(VectorScene):
         "include_background_plane" : True,
         "include_foreground_plane" : True,
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_HEIGHT,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 0
         },
         "background_plane_kwargs" : {

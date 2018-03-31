@@ -12,6 +12,7 @@ ben_cairo_test.py
 .flooignore
 *.xml
 *.iml
-
+manim.sublime-project
+manim.sublime-workspace
 
 primes.py

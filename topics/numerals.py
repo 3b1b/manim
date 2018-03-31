@@ -1,11 +1,13 @@
 
 from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from mobject.tex_mobject import TexMobject
-from animation import Animation
+from animation.animation import Animation
 from animation.continual_animation import ContinualAnimation
 from topics.geometry import BackgroundRectangle
-from scene import Scene
-from helpers import *
+from scene.scene import Scene
+from constants import *
+from utils.bezier import interpolate
+from utils.config_ops import digest_config
 
 class DecimalNumber(VMobject):
     CONFIG = {

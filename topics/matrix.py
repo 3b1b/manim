@@ -1,7 +1,7 @@
 import numpy as np
 
-from scene import Scene
-from mobject import Mobject
+from scene.scene import Scene
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from animation.transform import ApplyPointwiseFunction, Transform, \
@@ -10,7 +10,7 @@ from animation.simple_animations import ShowCreation, Write
 from topics.number_line import NumberPlane, Axes
 from topics.geometry import Vector, Line, Circle, Arrow, Dot, BackgroundRectangle
 
-from helpers import *
+from constants import *
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8
 
@@ -47,7 +47,7 @@ def vector_coordinate_label(vector_mob, integer_labels = True,
     else: #Pointing left
         shift_dir -= label.get_right() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*RIGHT
     label.shift(shift_dir)
-    label.highlight(color)
+    label.set_color(color)
     label.rect = BackgroundRectangle(label)
     label.add_to_back(label.rect)
     return label
@@ -108,9 +108,9 @@ class Matrix(VMobject):
         self.brackets = VMobject(l_bracket, r_bracket)
         return self
 
-    def highlight_columns(self, *colors):
+    def set_color_columns(self, *colors):
         for i, color in enumerate(colors):
-            VMobject(*self.mob_matrix[:,i]).highlight(color)
+            VMobject(*self.mob_matrix[:,i]).set_color(color)
         return self
 
     def add_background_to_entries(self):
@@ -199,7 +199,7 @@ class NumericalMatrixMultiplication(Scene):
         equals = TexMobject("=")
         everything = VMobject(left, right, equals, result)
         everything.arrange_submobjects()
-        everything.scale_to_fit_width(2*SPACE_WIDTH-1)
+        everything.scale_to_fit_width(FRAME_WIDTH-1)
         self.add(everything)
 
 
@@ -217,13 +217,13 @@ class NumericalMatrixMultiplication(Scene):
         ])
         (m, k), n = l_matrix.shape, r_matrix.shape[1]
         for mob in result_matrix.flatten():
-            mob.highlight(BLACK)
+            mob.set_color(BLACK)
         lagging_anims = []
         for a in range(m):
             for b in range(n):
                 for c in range(k):
-                    l_matrix[a][c].highlight(YELLOW)
-                    r_matrix[c][b].highlight(YELLOW)
+                    l_matrix[a][c].set_color(YELLOW)
+                    r_matrix[c][b].set_color(YELLOW)
                 for c in range(k):
                     start_parts = VMobject(
                         l_matrix[a][c].copy(),
@@ -239,21 +239,21 @@ class NumericalMatrixMultiplication(Scene):
                     self.play(
                         Transform(
                             start_parts, 
-                            result_entry.copy().highlight(YELLOW), 
+                            result_entry.copy().set_color(YELLOW), 
                             path_arc = -np.pi/2,
                             submobject_mode = "all_at_once",
                         ),
                         *lagging_anims
                     )
-                    result_entry.highlight(YELLOW)
+                    result_entry.set_color(YELLOW)
                     self.remove(start_parts)
                     lagging_anims = [
-                        ApplyMethod(result_entry.highlight, WHITE)
+                        ApplyMethod(result_entry.set_color, WHITE)
                     ]
 
                 for c in range(k):
-                    l_matrix[a][c].highlight(WHITE)
-                    r_matrix[c][b].highlight(WHITE)
+                    l_matrix[a][c].set_color(WHITE)
+                    r_matrix[c][b].set_color(WHITE)
         self.play(FadeOut(circles), *lagging_anims)
         self.wait()
 

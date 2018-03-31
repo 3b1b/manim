@@ -1,17 +1,19 @@
-from helpers import *
+from constants import *
 
-from mobject import Mobject1D
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject
 from topics.geometry import Line, Arrow
 from topics.functions import ParametricFunction
-from scene import Scene
+from scene.scene import Scene
+from utils.bezier import interpolate
+from utils.config_ops import digest_config
+from utils.space_ops import angle_of_vector
 
 class NumberLine(VMobject):
     CONFIG = {
         "color" : BLUE,
-        "x_min" : -SPACE_WIDTH,
-        "x_max" : SPACE_WIDTH,
+        "x_min" : -FRAME_X_RADIUS,
+        "x_max" : FRAME_X_RADIUS,
         "unit_size" : 1,
         "tick_size" : 0.1,
         "tick_frequency" : 1,
@@ -135,7 +137,7 @@ class NumberLine(VMobject):
         vect = (end - start)/np.linalg.norm(end-start)
         arrow = Arrow(start, end + MED_SMALL_BUFF*vect, buff = 0)
         tip = arrow.tip
-        tip.highlight(self.color)
+        tip.set_color(self.color)
         self.tip = tip
         self.add(tip)
 
@@ -160,10 +162,10 @@ class Axes(VGroup):
         "x_axis_config" : {},
         "y_axis_config" : {},
         "z_axis_config" : {},
-        "x_min" : -SPACE_WIDTH,
-        "x_max" : SPACE_WIDTH,
-        "y_min" : -SPACE_HEIGHT,
-        "y_max" : SPACE_HEIGHT,
+        "x_min" : -FRAME_X_RADIUS,
+        "x_max" : FRAME_X_RADIUS,
+        "y_min" : -FRAME_Y_RADIUS,
+        "y_max" : FRAME_Y_RADIUS,
         "z_min" : -3.5,
         "z_max" : 3.5,
         "z_normal" : DOWN,
@@ -276,10 +278,10 @@ class NumberPlane(VMobject):
     }
     def generate_points(self):
         if self.x_radius is None:
-            center_to_edge = (SPACE_WIDTH + abs(self.center_point[0])) 
+            center_to_edge = (FRAME_X_RADIUS + abs(self.center_point[0])) 
             self.x_radius = center_to_edge / self.x_unit_size
         if self.y_radius is None:
-            center_to_edge = (SPACE_HEIGHT + abs(self.center_point[1])) 
+            center_to_edge = (FRAME_Y_RADIUS + abs(self.center_point[1])) 
             self.y_radius = center_to_edge / self.y_unit_size
         self.axes = VMobject()
         self.main_lines = VMobject()

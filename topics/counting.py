@@ -1,20 +1,20 @@
-from helpers import *
+from constants import *
 
 from mobject.tex_mobject import TexMobject, TextMobject
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 
 from animation.transform import Transform, FadeIn, MoveToTarget
 from animation.simple_animations import ShowCreation
 from topics.geometry import Arrow, Circle, Dot
 # from topics.fractals import *
-from scene import Scene
+from scene.scene import Scene
 
 
 class CountingScene(Scene):
     CONFIG = {
         "digit_place_colors" : [YELLOW, MAROON_B, RED, GREEN, BLUE, PURPLE_D],
-        "counting_dot_starting_position" : (SPACE_WIDTH-1)*RIGHT + (SPACE_HEIGHT-1)*UP,
+        "counting_dot_starting_position" : (FRAME_X_RADIUS-1)*RIGHT + (FRAME_Y_RADIUS-1)*UP,
         "count_dot_starting_radius" : 0.5,
         "dot_configuration_height" : 2,
         "ones_configuration_location" : UP+2*RIGHT,
@@ -162,7 +162,7 @@ class CountingScene(Scene):
             digit = TexMobject(str(self.get_place_num(num, place)))
             if place >= len(self.digit_place_colors):
                 self.digit_place_colors += self.digit_place_colors
-            digit.highlight(self.digit_place_colors[place])
+            digit.set_color(self.digit_place_colors[place])
             digit.scale(self.num_scale_factor)
             digit.next_to(result, LEFT, buff = SMALL_BUFF, aligned_edge = DOWN)
             result.add(digit)

@@ -11,7 +11,7 @@ from mobject import *
 from constants import *
 from mobject.region import  *
 import displayer as disp
-from scene import Scene, GraphScene
+from scene.scene import Scene, GraphScene
 from scene.graphs import *
 from moser_main import EulersFormula
 from script_wrapper import command_line_create_scene
@@ -49,7 +49,7 @@ class PreferOtherProofDialogue(Scene):
         self.add(student, teacher, teacher_bubble, teacher_bubble.text)
         self.wait(2)
         self.play(Transform(
-            Dot(student_bubble.tip).highlight("black"),
+            Dot(student_bubble.tip).set_color("black"),
             Mobject(student_bubble, student_bubble.text)
         ))
         self.wait(2)
@@ -110,7 +110,7 @@ class IntroduceGraph(GraphScene):
         connected, planar, graph = TextMobject([
             "Connected ", "Planar ", "Graph"
         ]).to_edge(UP).split()
-        not_okay = TextMobject("Not Okay").highlight("red")
+        not_okay = TextMobject("Not Okay").set_color("red")
         planar_explanation = TextMobject("""
             (``Planar'' just means we can draw it without
              intersecting lines)
@@ -183,7 +183,7 @@ class PlanarGraphDefinition(Scene):
             # "no matter how \\\\ hard you try"
         ]).split()
         shift_val = Mobject(Not, planar).to_corner().get_center()
-        Not.highlight("red").shift(shift_val)
+        Not.set_color("red").shift(shift_val)
         graphs = [
             Mobject(*GraphScene(g).mobjects)
             for g in [
@@ -205,10 +205,10 @@ class PlanarGraphDefinition(Scene):
         self.wait()
         self.remove(graphs[0])
         self.add(graphs[1])
-        planar.highlight("red")
+        planar.set_color("red")
         self.add(Not)
         self.wait(2)
-        planar.highlight("white")
+        planar.set_color("white")
         self.remove(Not)
         self.remove(graphs[1])
         self.add(graphs[2])
@@ -258,7 +258,7 @@ class TerminologyFromPolyhedra(GraphScene):
         self.remove(dots_to_vertices, *self.vertices)
         self.add(lines_to_edges)
         self.play(ApplyMethod(
-            Mobject(*self.edges).highlight, "yellow"
+            Mobject(*self.edges).set_color, "yellow"
         ))
         self.wait(2)
         self.clear()
@@ -266,7 +266,7 @@ class TerminologyFromPolyhedra(GraphScene):
         self.add(regions_to_faces)
         self.generate_regions()
         for region in self.regions:
-            self.highlight_region(region)
+            self.set_color_region(region)
         self.wait(3.0)
 
 
@@ -284,9 +284,9 @@ class ThreePiecesOfTerminology(GraphScene):
         self.generate_spanning_tree()
         scale_factor = 1.2       
         def accent(mobject, color = "yellow"):
-            return mobject.scale_in_place(scale_factor).highlight(color)
+            return mobject.scale_in_place(scale_factor).set_color(color)
         def tone_down(mobject):
-            return mobject.scale_in_place(1.0/scale_factor).highlight("white")
+            return mobject.scale_in_place(1.0/scale_factor).set_color("white")
 
         self.add(accent(cycles))
         self.trace_cycle(run_time = 1.0)
@@ -337,7 +337,7 @@ class WalkingRandolph(GraphScene):
         for next, last in zip(point_path[1:], point_path):
             self.play(
                 WalkPiCreature(randy, next),
-                ShowCreation(Line(last, next).highlight("yellow")),
+                ShowCreation(Line(last, next).set_color("yellow")),
                 run_time = 2.0
             )
         self.randy = randy
@@ -355,8 +355,8 @@ class PathExamples(GraphScene):
             [(0, 1), (7, 8), (5, 6),],
             [(5, 0), (0, 2), (0, 1)],
         ]
-        valid_path = TextMobject("Valid \\\\ Path").highlight("green")
-        not_a_path = TextMobject("Not a \\\\ Path").highlight("red")
+        valid_path = TextMobject("Valid \\\\ Path").set_color("green")
+        not_a_path = TextMobject("Not a \\\\ Path").set_color("red")
         for mob in valid_path, not_a_path:
             mob.to_edge(UP)
         kwargs = {"run_time" : 1.0}
@@ -365,14 +365,14 @@ class PathExamples(GraphScene):
                 Line(
                     self.points[path[i]], 
                     self.points[path[i+1]]
-                ).highlight("yellow")
+                ).set_color("yellow")
                 for i in range(len(path) - 1)
             ])
             non_path_lines = Mobject(*[
                 Line(
                     self.points[pp[0]],
                     self.points[pp[1]],
-                ).highlight("yellow")
+                ).set_color("yellow")
                 for pp in non_path
             ])
 
@@ -404,7 +404,7 @@ class IntroduceCycle(WalkingRandolph):
             for cycle in encompassed_cycles
         ]
         for region in regions:
-            self.highlight_region(region)
+            self.set_color_region(region)
         self.wait()
 
 
@@ -463,7 +463,7 @@ class DefineSpanningTree(GraphScene):
                 Line(
                     self.points[pair[0]], 
                     self.points[pair[1]]
-                ).highlight("yellow"),
+                ).set_color("yellow"),
                 run_time = run_time_per_branch
             ))
             self.play(ShowCreation(
@@ -475,7 +475,7 @@ class DefineSpanningTree(GraphScene):
         unneeded_edges = filter(out_of_spanning_set, self.graph.edges)
         for edge, limit in zip(unneeded_edges, range(5)):
             line = Line(self.points[edge[0]], self.points[edge[1]])
-            line.highlight("red")
+            line.set_color("red")
             self.play(ShowCreation(line, run_time = 1.0))
             self.add(unneeded.center().shift(line.get_center() + 0.2*UP))
             self.wait()
@@ -600,9 +600,9 @@ class FacebookGraphAsAbstractSet(Scene):
         friendships = TextMobject("\\textbf{Friendships}")
         friendships.shift(3*RIGHT).to_edge(UP)
         lines = Mobject(
-            Line(UP*SPACE_HEIGHT, DOWN*SPACE_HEIGHT),
-            Line(LEFT*SPACE_WIDTH + 3*UP, RIGHT*SPACE_WIDTH + 3*UP)
-        ).highlight("white")
+            Line(UP*FRAME_Y_RADIUS, DOWN*FRAME_Y_RADIUS),
+            Line(LEFT*FRAME_X_RADIUS + 3*UP, RIGHT*FRAME_X_RADIUS + 3*UP)
+        ).set_color("white")
 
         self.add(accounts, friendships, lines)
         self.wait()
@@ -626,13 +626,13 @@ class ExamplesOfGraphs(GraphScene):
             ["Objects \\quad\\quad ", "Thing that connects objects"]
         )).to_corner().shift(0.5*RIGHT).split()
         horizontal_line = Line(
-            (-SPACE_WIDTH, SPACE_HEIGHT-1, 0),
-            (max(notions.points[:,0]), SPACE_HEIGHT-1, 0)
+            (-FRAME_X_RADIUS, FRAME_Y_RADIUS-1, 0),
+            (max(notions.points[:,0]), FRAME_Y_RADIUS-1, 0)
         )
         vert_line_x_val = min(notions.points[:,0]) - buff
         vertical_line = Line(
-            (vert_line_x_val, SPACE_HEIGHT, 0),
-            (vert_line_x_val,-SPACE_HEIGHT, 0)
+            (vert_line_x_val, FRAME_Y_RADIUS, 0),
+            (vert_line_x_val,-FRAME_Y_RADIUS, 0)
         )
         objects_and_notions = [
             ("Facebook accounts", "Friendship"),
@@ -651,7 +651,7 @@ class ExamplesOfGraphs(GraphScene):
         for (obj, notion), height in zip(objects_and_notions, it.count(2, -1)):
             obj_mob = TextMobject(obj, size = "\\small").to_edge(LEFT)
             not_mob = TextMobject(notion, size = "\\small").to_edge(LEFT)
-            not_mob.shift((vert_line_x_val + SPACE_WIDTH)*RIGHT)
+            not_mob.shift((vert_line_x_val + FRAME_X_RADIUS)*RIGHT)
             obj_mob.shift(height*UP)
             not_mob.shift(height*UP)
 
@@ -699,12 +699,12 @@ class ExamplesOfGraphs(GraphScene):
 
 
     def handle_dual_graph(self, words1, words2):
-        words1.highlight("yellow")
-        words2.highlight("yellow")
+        words1.set_color("yellow")
+        words2.set_color("yellow")
         connected = TextMobject("Connected")
-        connected.highlight("lightgreen")
+        connected.set_color("lightgreen")
         not_connected = TextMobject("Not Connected")
-        not_connected.highlight("red")
+        not_connected.set_color("red")
         for mob in connected, not_connected:
             mob.shift(self.points[3] + UP)
 
@@ -714,7 +714,7 @@ class ExamplesOfGraphs(GraphScene):
         ])
         self.wait()
         for region in self.regions:
-            self.highlight_region(region)
+            self.set_color_region(region)
         self.add(words1)
         self.wait()
         self.reset_background()
@@ -736,7 +736,7 @@ class ExamplesOfGraphs(GraphScene):
                     break
             for cycle in cycle1, cycle2:
                 index = self.graph.region_cycles.index(cycle)
-                self.highlight_region(self.regions[index])
+                self.set_color_region(self.regions[index])
             if want_matching:
                 self.remove(not_connected)
                 self.add(connected)
@@ -744,7 +744,7 @@ class ExamplesOfGraphs(GraphScene):
                 if tup not in self.graph.edges:
                     tup = tuple(reversed(tup))
                 edge = deepcopy(self.edges[self.graph.edges.index(tup)])
-                edge.highlight("red")
+                edge.set_color("red")
                 self.play(ShowCreation(edge), run_time = 1.0)
                 self.wait()
                 self.remove(edge)
@@ -768,15 +768,15 @@ class DrawDualGraph(GraphScene):
             for reg in self.regions
         ]
         for region, mob in zip(self.regions, region_mobs):
-            self.highlight_region(region, mob.get_color())
+            self.set_color_region(region, mob.get_color())
         outer_region      = self.regions.pop()
         outer_region_mob  = region_mobs.pop()
         outer_dual_vertex = self.dual_vertices.pop()
         internal_edges = filter(
-            lambda e : abs(e.start[0]) < SPACE_WIDTH and \
-                       abs(e.end[0]) < SPACE_WIDTH and \
-                       abs(e.start[1]) < SPACE_HEIGHT and \
-                       abs(e.end[1]) < SPACE_HEIGHT,
+            lambda e : abs(e.start[0]) < FRAME_X_RADIUS and \
+                       abs(e.end[0]) < FRAME_X_RADIUS and \
+                       abs(e.start[1]) < FRAME_Y_RADIUS and \
+                       abs(e.end[1]) < FRAME_Y_RADIUS,
             self.dual_edges
         )
         external_edges = filter(
@@ -786,7 +786,7 @@ class DrawDualGraph(GraphScene):
 
         self.wait()
         self.reset_background()
-        self.highlight_region(outer_region, outer_region_mob.get_color())
+        self.set_color_region(outer_region, outer_region_mob.get_color())
         self.play(*[
             Transform(reg_mob, dot)
             for reg_mob, dot in zip(region_mobs, self.dual_vertices)
@@ -794,7 +794,7 @@ class DrawDualGraph(GraphScene):
         self.wait()
         self.reset_background()
         self.play(ApplyFunction(
-            lambda p : (SPACE_WIDTH + SPACE_HEIGHT)*p/np.linalg.norm(p),
+            lambda p : (FRAME_X_RADIUS + FRAME_Y_RADIUS)*p/np.linalg.norm(p),
             outer_region_mob
         ))
         self.wait()
@@ -849,15 +849,15 @@ class ListOfCorrespondances(Scene):
                 mob.shift(height*UP)
             arrow_xs = this_arrow.points[:,0]
             left.to_edge(RIGHT)
-            left.shift((min(arrow_xs) - SPACE_WIDTH, 0, 0))
+            left.shift((min(arrow_xs) - FRAME_X_RADIUS, 0, 0))
             right.to_edge(LEFT)
-            right.shift((max(arrow_xs) + SPACE_WIDTH, 0, 0))
+            right.shift((max(arrow_xs) + FRAME_X_RADIUS, 0, 0))
             lines.append(Mobject(left, right, this_arrow))
         last = None
         for line in lines:
-            self.add(line.highlight("yellow"))
+            self.add(line.set_color("yellow"))
             if last:
-                last.highlight("white")
+                last.set_color("white")
             last = line
             self.wait(1)
 
@@ -879,7 +879,7 @@ class CyclesCorrespondWithConnectedComponents(GraphScene):
         lines_to_remove = []
         for last, next in zip(cycle, cycle[1:]):
             line = Line(self.points[last], self.points[next])
-            line.highlight("yellow")
+            line.set_color("yellow")
             self.play(
                 ShowCreation(line),
                 WalkPiCreature(randy, self.points[next]),
@@ -889,22 +889,22 @@ class CyclesCorrespondWithConnectedComponents(GraphScene):
         self.wait()
         self.remove(randy, *lines_to_remove)
         for region in np.array(self.regions)[enclosed_regions]:
-            self.highlight_region(region)
+            self.set_color_region(region)
         self.wait(2)
         self.reset_background()
         lines = Mobject(*[
             Line(self.dual_points[last], self.dual_points[next])
             for last, next in zip(dual_cycle, dual_cycle[1:])
-        ]).highlight("red")
+        ]).set_color("red")
         self.play(ShowCreation(lines))
         self.play(*[
             Transform(v, Dot(
                 v.get_center(), 
                 radius = 3*Dot.DEFAULT_RADIUS
-            ).highlight("green"))
+            ).set_color("green"))
             for v in np.array(self.vertices)[enclosed_vertices]
         ] + [
-            ApplyMethod(self.edges[0].highlight, "green")
+            ApplyMethod(self.edges[0].set_color, "green")
         ])
         self.wait()
 
@@ -922,7 +922,7 @@ class IntroduceMortimer(GraphScene):
         randy_path = (0, 1, 3)
         morty_path = (-2, -3, -4)
         morty_crossed_lines = [
-            Line(self.points[i], self.points[j]).highlight("red")
+            Line(self.points[i], self.points[j]).set_color("red")
             for i, j in [(7, 1), (1, 5)]
         ]
         kwargs = {"run_time" : 1.0}
@@ -947,14 +947,14 @@ class IntroduceMortimer(GraphScene):
         self.wait()
 
 
-        self.highlight_region(self.regions[morty_path[0]])
+        self.set_color_region(self.regions[morty_path[0]])
         for last, next in zip(morty_path, morty_path[1:]):
             self.play(WalkPiCreature(morty, self.dual_points[next]),**kwargs)
-            self.highlight_region(self.regions[next])
+            self.set_color_region(self.regions[next])
         self.wait()
         for last, next in zip(randy_path, randy_path[1:]):
             line = Line(self.points[last], self.points[next])
-            line.highlight("yellow")
+            line.set_color("yellow")
             self.play(
                 WalkPiCreature(randy, self.points[next]),
                 ShowCreation(line),
@@ -1004,19 +1004,19 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
             #         ShowCreation(Line(
             #             midpoint,
             #             tip
-            #         ).highlight("red"))
+            #         ).set_color("red"))
             #         for tip in edge.start, edge.end
             #     ], run_time = time_per_dual_edge)
-            self.highlight_region(self.regions[region_ordering[index]])
+            self.set_color_region(self.regions[region_ordering[index]])
             self.wait(time_per_dual_edge)
         self.wait()
 
 
         cycle_index = region_ordering[-1]
         cycle = self.graph.region_cycles[cycle_index]
-        self.highlight_region(self.regions[cycle_index], "black")
+        self.set_color_region(self.regions[cycle_index], "black")
         self.play(ShowCreation(Mobject(*[
-            Line(self.points[last], self.points[next]).highlight("green")
+            Line(self.points[last], self.points[next]).set_color("green")
             for last, next in zip(cycle, list(cycle)[1:] + [cycle[0]])
         ])))
         self.wait()
@@ -1042,7 +1042,7 @@ class MortimerCannotTraverseCycle(GraphScene):
         kwargs = {"run_time" : time_per_edge, "rate_func" : None}
         for last, next in zip(dual_cycle, dual_cycle[1:]):
             line = Line(self.dual_points[last], self.dual_points[next])
-            line.highlight("red")
+            line.set_color("red")
             self.play(
                 WalkPiCreature(morty, self.dual_points[next], **kwargs),
                 ShowCreation(line, **kwargs),
@@ -1066,7 +1066,7 @@ class MortimerCannotTraverseCycle(GraphScene):
         ])
         self.add(text)
         self.play(*[
-            Transform(line, deepcopy(edge).highlight(line.get_color()))
+            Transform(line, deepcopy(edge).set_color(line.get_color()))
             for line, edge in zip(all_lines, matching_edges)
         ])
         self.wait()
@@ -1095,7 +1095,7 @@ class TwoPropertiesOfSpanningTree(Scene):
                 explanation.get_center() + vect,
                 tail = word.get_center() - vect,
             ))
-            self.play(ApplyMethod(word.highlight, "yellow"))
+            self.play(ApplyMethod(word.set_color, "yellow"))
             self.wait()
 
 
@@ -1118,7 +1118,7 @@ class DualSpanningTree(GraphScene):
         self.add(self.spanning_tree, randy, morty)
         self.play(ShowCreation(Mobject(
             *np.array(self.edges)[dual_edges]
-        ).highlight("red")))
+        ).set_color("red")))
         self.add(words)
         self.wait()
 

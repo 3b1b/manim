@@ -1,12 +1,12 @@
-from helpers import *
+from constants import *
 
-from camera import MovingCamera
-from scene import Scene
+from camera.camera import MovingCamera
+from .scene import Scene
 from topics.geometry import ScreenRectangle
 
 class MovingCameraScene(Scene):
     def setup(self):
-        self.camera_frame = ScreenRectangle(height = 2*SPACE_HEIGHT)
+        self.camera_frame = ScreenRectangle(height = FRAME_HEIGHT)
         self.camera_frame.set_stroke(width = 0)
         self.camera = MovingCamera(
             self.camera_frame, **self.camera_config

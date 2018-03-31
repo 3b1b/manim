@@ -1,14 +1,18 @@
-from helpers import *
+from constants import *
 
 
-from mobject import VGroup
+from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from number_line import NumberPlane
-from animation import Animation
+from animation.animation import Animation
 from animation.transform import ApplyPointwiseFunction, MoveToTarget
 from animation.simple_animations import Homotopy, ShowCreation, \
     SmoothedVectorizedHomotopy
-from scene import Scene
+from scene.scene import Scene
+from utils.config_ops import instantiate
+from utils.config_ops import digest_config
+from utils.paths import path_along_arc
+from utils.space_ops import complex_to_R3, R3_to_complex
 
 
 class ComplexTransformationScene(Scene):
@@ -99,13 +103,13 @@ class ComplexTransformationScene(Scene):
 
     def paint_plane(self, plane):
         for lines in plane.main_lines, plane.secondary_lines:
-            lines.gradient_highlight(
+            lines.set_color_by_gradient(
                 self.vert_start_color,
                 self.vert_end_color,
                 self.horiz_start_color,
                 self.horiz_end_color,
             )
-        # plane.axes.gradient_highlight(
+        # plane.axes.set_color_by_gradient(
         #     self.horiz_start_color,
         #     self.vert_start_color
         # )
@@ -216,6 +220,7 @@ class ComplexPlane(NumberPlane):
             num_mob.scale_to_fit_height(self.written_coordinate_height)
             num_mob.next_to(point, DOWN+LEFT, SMALL_BUFF)
             result.add(num_mob)
+        self.coordinate_labels = result
         return result
 
     def add_coordinates(self, *numbers):
@@ -230,11 +235,11 @@ class ComplexPlane(NumberPlane):
             "color" : self.color,
             "density" : self.density,
         }
-        for radius in np.arange(circle_freq, SPACE_WIDTH, circle_freq):
+        for radius in np.arange(circle_freq, FRAME_X_RADIUS, circle_freq):
             self.add(Circle(radius = radius, **config))
         for angle in np.arange(0, 2*np.pi, angle_freq):
             end_point = np.cos(angle)*RIGHT + np.sin(angle)*UP
-            end_point *= SPACE_WIDTH
+            end_point *= FRAME_X_RADIUS
             self.add(Line(ORIGIN, end_point, **config))
         return self
 

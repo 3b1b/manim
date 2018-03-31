@@ -1,11 +1,13 @@
-from helpers import *
+from constants import *
 
 from vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from topics.geometry import BackgroundRectangle
+from utils.config_ops import digest_config
 
 import collections
 import sys
+import operator as op
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -170,22 +172,22 @@ class TexMobject(SVGMobject):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
         return all_parts[0] if all_parts else None
 
-    def highlight_by_tex(self, tex, color, **kwargs):
+    def set_color_by_tex(self, tex, color, **kwargs):
         parts_to_color = self.get_parts_by_tex(tex, **kwargs)
         for part in parts_to_color:
-            part.highlight(color)
+            part.set_color(color)
         return self
 
-    def highlight_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
+    def set_color_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
         for texs, color in texs_to_color_map.items():
             try:
                 # If the given key behaves like strings
                 texs + ''
-                self.highlight_by_tex(texs, color, **kwargs)
+                self.set_color_by_tex(texs, color, **kwargs)
             except TypeError:
                 # If the given key is a tuple
                 for tex in texs:
-                    self.highlight_by_tex(tex, color, **kwargs)
+                    self.set_color_by_tex(tex, color, **kwargs)
         return self
 
     def index_of_part(self, part):

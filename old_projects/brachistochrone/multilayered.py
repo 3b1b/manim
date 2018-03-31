@@ -1,26 +1,7 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import Randolph
-from topics.functions import *
-from mobject.region import  Region
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from camera import Camera
+from big_ol_pile_of_manim_imports import *
 from brachistochrone.light import PhotonScene
 from brachistochrone.curves import *
 
@@ -38,7 +19,7 @@ class MultilayeredScene(Scene):
     def get_layers(self, n_layers = None):
         if n_layers is None:
             n_layers = self.n_layers
-        width = 2*SPACE_WIDTH
+        width = FRAME_WIDTH
         height = float(self.total_glass_height)/n_layers
         rgb_pair = [
             np.array(Color(color).get_rgb())
@@ -75,11 +56,11 @@ class MultilayeredScene(Scene):
 
     def get_continuous_glass(self):
         result = self.RectClass(
-            width = 2*SPACE_WIDTH,
+            width = FRAME_WIDTH,
             height = self.total_glass_height,
         )
         result.sort_points(lambda p : -p[1])
-        result.gradient_highlight(self.top_color, self.bottom_color)
+        result.set_color_by_gradient(self.top_color, self.bottom_color)
         result.shift(self.top-result.get_top())
         return result
 
@@ -107,10 +88,10 @@ class TwoToMany(MultilayeredScene):
 
     def get_glass(self):
         return self.RectClass(
-            height = SPACE_HEIGHT,
-            width = 2*SPACE_WIDTH,
+            height = FRAME_Y_RADIUS,
+            width = FRAME_WIDTH,
             color = BLUE_E
-        ).shift(SPACE_HEIGHT*DOWN/2)
+        ).shift(FRAME_Y_RADIUS*DOWN/2)
 
 
 class RaceLightInLayers(MultilayeredScene, PhotonScene):
@@ -119,7 +100,7 @@ class RaceLightInLayers(MultilayeredScene, PhotonScene):
     }
     def construct(self):
         self.add_layers()
-        line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         lines = [
             line.copy().shift(layer.get_center())
             for layer in self.layers
@@ -180,7 +161,7 @@ class ShowDiscretePath(MultilayeredScene, PhotonScene):
                 angle_of_vector(start_point-end_point)-np.pi/2
             )
         self.discrete_path.add_line(
-            points[end], SPACE_WIDTH*RIGHT+(tops[-1]-0.5)*UP
+            points[end], FRAME_X_RADIUS*RIGHT+(tops[-1]-0.5)*UP
         )
 
 class NLayers(MultilayeredScene):
@@ -228,8 +209,8 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
             )
             eq_mob.shift(layer.get_center()+2*LEFT)
             v_eq = eq_mob.split()
-            v_eq[0].highlight(layer.get_color())
-            path = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+            v_eq[0].set_color(layer.get_color())
+            path = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
             path.shift(layer.get_center())
             brace_endpoints = Mobject(
                 Point(self.top),
@@ -375,7 +356,7 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         self.freeze_background()
 
         cycloid = Cycloid(end_theta = np.pi)
-        cycloid.highlight(YELLOW)
+        cycloid.set_color(YELLOW)
         chopped_cycloid = cycloid.copy()
         n = cycloid.get_num_points()
         chopped_cycloid.filter_out(lambda p : p[1] > 1 and p[0] < 0)

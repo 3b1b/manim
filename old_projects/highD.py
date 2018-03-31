@@ -1,34 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from topics.common_scenes import *
-from topics.graph_scene import GraphScene
-from scene.scene import Scene, ProgressDisplay
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 ##########
 #force_skipping
@@ -93,7 +63,7 @@ class Slider(NumberLine):
             for u in [-1, 1]
         ])
         self.real_estate_ticks.set_stroke(width = 3)
-        self.real_estate_ticks.gradient_highlight(*colors)
+        self.real_estate_ticks.set_color_by_gradient(*colors)
         self.add(self.real_estate_ticks)
         self.add(self.dial)
         return self.real_estate_ticks
@@ -409,7 +379,7 @@ class CircleToPairsOfPoints(Scene):
         plane.scale(2)
         plane.add_coordinates(y_vals = [-1, 1])
         background_plane = plane.copy()
-        background_plane.highlight(GREY)
+        background_plane.set_color(GREY)
         background_plane.fade()
         circle = Circle(radius = 2, color = YELLOW)
 
@@ -417,8 +387,8 @@ class CircleToPairsOfPoints(Scene):
         dot = Dot(2*x*RIGHT + 2*y*UP, color = LIGHT_GREY)
 
         equation = TexMobject("x", "^2", "+", "y", "^2", "=", "1")
-        equation.highlight_by_tex("x", GREEN)
-        equation.highlight_by_tex("y", RED)
+        equation.set_color_by_tex("x", GREEN)
+        equation.set_color_by_tex("y", RED)
         equation.to_corner(UP+LEFT)
         equation.add_background_rectangle()
 
@@ -431,8 +401,8 @@ class CircleToPairsOfPoints(Scene):
             DecimalNumber(val).replace(num, dim_to_match = 1)
             for val, num in zip([x, y], fixed_numbers)
         ])
-        numbers[0].highlight(GREEN)
-        numbers[1].highlight(RED)
+        numbers[0].set_color(GREEN)
+        numbers[1].set_color(RED)
 
         def get_update_func(i):
             return lambda t : dot.get_center()[i]/2.0
@@ -543,20 +513,20 @@ class CirclesSpheresSumsSquares(ExternallyAnimatedScene):
 class BackAndForth(Scene):
     def construct(self):
         analytic = TextMobject("Analytic")
-        analytic.shift(SPACE_WIDTH*LEFT/2)
+        analytic.shift(FRAME_X_RADIUS*LEFT/2)
         analytic.to_edge(UP, buff = MED_SMALL_BUFF)
         geometric = TextMobject("Geometric")
-        geometric.shift(SPACE_WIDTH*RIGHT/2)
+        geometric.shift(FRAME_X_RADIUS*RIGHT/2)
         geometric.to_edge(UP, buff = MED_SMALL_BUFF)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.to_edge(UP, LARGE_BUFF)
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         self.add(analytic, geometric, h_line, v_line)
 
         pair = TexMobject("(", "x", ",", "y", ")")
-        pair.shift(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/3)
+        pair.shift(FRAME_X_RADIUS*LEFT/2 + FRAME_Y_RADIUS*UP/3)
         triplet = TexMobject("(", "x", ",", "y", ",", "z", ")")
-        triplet.shift(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*DOWN/2)
+        triplet.shift(FRAME_X_RADIUS*LEFT/2 + FRAME_Y_RADIUS*DOWN/2)
         for mob in pair, triplet:
             arrow = DoubleArrow(LEFT, RIGHT)
             arrow.move_to(mob)
@@ -572,7 +542,7 @@ class BackAndForth(Scene):
         plane_group = VGroup(plane, circle)
         plane_group.scale(0.4)
         plane_group.next_to(h_line, DOWN, SMALL_BUFF)
-        plane_group.shift(SPACE_WIDTH*RIGHT/2)
+        plane_group.shift(FRAME_X_RADIUS*RIGHT/2)
 
 
         self.play(Write(pair))
@@ -703,7 +673,7 @@ class Professionals(PiCreatureScene):
         )
         quaternion.scale(0.7)
         quaternion.next_to(self.mathy, UP)
-        quaternion.highlight_by_tex_to_color_map({
+        quaternion.set_color_by_tex_to_color_map({
             "i" : RED,
             "j" : GREEN,
             "k" : BLUE,
@@ -718,7 +688,7 @@ class Professionals(PiCreatureScene):
             "\\beta",
             "|\\!\\downarrow\\rangle"
         )
-        kets.highlight_by_tex_to_color_map({
+        kets.set_color_by_tex_to_color_map({
             "\\alpha" : GREEN,
             "\\beta" : RED,
         })
@@ -804,20 +774,20 @@ class OfferAHybrid(SliderScene):
     def construct(self):
         self.remove(self.sliders)
         titles = self.get_titles()
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(titles, DOWN)
         v_lines = VGroup(*[
-            Line(UP, DOWN).scale(SPACE_HEIGHT)
+            Line(UP, DOWN).scale(FRAME_Y_RADIUS)
             for x in range(2)
         ])
         v_lines.generate_target()
         for line, vect in zip(v_lines.target, [LEFT, RIGHT]):
-            line.shift(vect*SPACE_WIDTH/3)
+            line.shift(vect*FRAME_X_RADIUS/3)
 
         equation = TexMobject("x^2 + y^2 + z^2 = 1")
         equation.generate_target()
-        equation.shift(SPACE_WIDTH*LEFT/2)
-        equation.target.shift(2*SPACE_WIDTH*LEFT/3)
+        equation.shift(FRAME_X_RADIUS*LEFT/2)
+        equation.target.shift(FRAME_WIDTH*LEFT/3)
 
         self.add(titles, h_line, v_lines, equation)
         self.wait()
@@ -833,13 +803,13 @@ class OfferAHybrid(SliderScene):
             "Analytic", "Hybrid", "Geometric"
         ]))
         titles.to_edge(UP)
-        titles[1].highlight(BLUE)
+        titles[1].set_color(BLUE)
         titles.generate_target()
         titles[1].scale_in_place(0.001)
-        titles[0].shift(SPACE_WIDTH*LEFT/2)
-        titles.target[0].shift(2*SPACE_WIDTH*LEFT/3)
-        titles[2].shift(SPACE_WIDTH*RIGHT/2)
-        titles.target[2].shift(2*SPACE_WIDTH*RIGHT/3)
+        titles[0].shift(FRAME_X_RADIUS*LEFT/2)
+        titles.target[0].shift(FRAME_WIDTH*LEFT/3)
+        titles[2].shift(FRAME_X_RADIUS*RIGHT/2)
+        titles.target[2].shift(FRAME_WIDTH*RIGHT/3)
         return titles
 
 class TODOBoxExample(TODOStub):
@@ -870,7 +840,7 @@ class DismissProjection(PiCreatureScene):
         ]))
         colors = [YELLOW, GREEN, BLUE]
         for equation, edge, color in zip(equations, [LEFT, ORIGIN, RIGHT], colors):
-            equation.highlight(color)
+            equation.set_color(color)
             equation.shift(3*UP)
             equation.to_edge(edge)
         equations[1].shift(LEFT)
@@ -908,7 +878,7 @@ class DismissProjection(PiCreatureScene):
         square.scale_to_fit_width(equation.get_width())
         square.stretch_to_fit_height(3)
         square.next_to(equation, vect)
-        square.highlight(self.screen_rect_color)
+        square.set_color(self.screen_rect_color)
         return square
 
     def discuss_4d_sphere_definition(self):
@@ -926,7 +896,7 @@ class DismissProjection(PiCreatureScene):
             "\\text{Just lists of numbers like }", 
             "(%.02f \\,, %.02f \\,, %.02f \\,, %.02f \\,)"%tuple(self.example_vect)
         )
-        descriptor[1].highlight(BLUE)
+        descriptor[1].set_color(BLUE)
         descriptor.next_to(sphere_words, DOWN)
         dot = Dot(descriptor[1].get_top())
         dot.set_fill(WHITE, opacity = 0.75)
@@ -990,7 +960,7 @@ class DismissProjection(PiCreatureScene):
         equation.target.center().to_edge(UP)
         tup.generate_target()
         tup.target.next_to(equation.target, DOWN)
-        tup.target.highlight(WHITE)
+        tup.target.set_color(WHITE)
 
         self.play(LaggedStart(FadeOut, VGroup(*[
             self.equations, self.spheres,
@@ -1038,7 +1008,7 @@ class Introduce4DSliders(SliderScene):
             ",", "%.02f \\,"%w, ")"
         )
         equation.center().to_edge(UP)
-        equation.highlight(BLUE)
+        equation.set_color(BLUE)
         tup.next_to(equation, DOWN)
 
         self.sliders.next_to(tup, DOWN)
@@ -1111,7 +1081,7 @@ class TwoDimensionalCase(Introduce4DSliders):
             y_radius = 2.5,
         )
         plane.fade(0.25)
-        plane.axes.highlight(GREY)
+        plane.axes.set_color(GREY)
         plane.add_coordinates()
         plane.to_edge(LEFT)
         origin = plane.coords_to_point(0, 0)
@@ -1169,13 +1139,13 @@ class TwoDimensionalCase(Introduce4DSliders):
         colors = GREEN, RED
         arrows = VGroup()
         for rect, decimal, color in zip(rects, decimals, colors):
-            rect.highlight(color)
-            decimal.highlight(color)
+            rect.set_color(color)
+            decimal.set_color(color)
             arrow = Arrow(
                 rect.get_bottom()+SMALL_BUFF*UP, decimal.get_top(),
                 tip_length = 0.2,
             )
-            arrow.highlight(color)
+            arrow.set_color(color)
             arrows.add(arrow)
 
             self.play(ShowCreation(rect))
@@ -1211,10 +1181,10 @@ class TwoDimensionalCase(Introduce4DSliders):
                 )
                 rect.move_to((p1+p2)/2)
                 if np.mean([x1, x2]) == 0:
-                    rect.highlight(BLUE)
+                    rect.set_color(BLUE)
                     blue_rects.add(rect)
                 else:
-                    rect.highlight(RED)
+                    rect.set_color(RED)
                     red_rects.add(rect)
 
         blue_rects.save_state()
@@ -1317,7 +1287,7 @@ class TwoDimensionalCase(Introduce4DSliders):
     def write_distance_squared(self):
         d_squared = TexMobject("(\\text{Distance})^2")
         d_squared.next_to(self.real_estate_word, DOWN)
-        d_squared.highlight(YELLOW)
+        d_squared.set_color(YELLOW)
 
         self.play(Write(d_squared))
         self.wait(3)
@@ -1385,8 +1355,8 @@ class ThreeDCase(TwoDimensionalCase):
         colors = [GREEN, RED, BLUE]
         arrows = VGroup()
         for rect, decimal, color in zip(rects, decimals, colors):
-            rect.highlight(color)
-            decimal.highlight(color)
+            rect.set_color(color)
+            decimal.set_color(color)
             arrow = Arrow(
                 rect.get_bottom()+SMALL_BUFF*UP, decimal.get_top(),
                 tip_length = 0.2,
@@ -1524,7 +1494,7 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         arrow.next_to(dial, LEFT)
         self.play(
             ShowCreation(arrow),
-            dial.highlight, arrow.get_color()
+            dial.set_color, arrow.get_color()
         )
         self.change_student_modes(
             "erm", "confused", "hooray",
@@ -1575,7 +1545,7 @@ class TwoDBoxExample(Scene):
         self.plane = NumberPlane()
         self.plane.scale(scale_factor)
         self.plane.add_coordinates()
-        self.plane.axes.highlight(GREY)
+        self.plane.axes.set_color(GREY)
         self.add(self.plane)
 
     def construct(self):
@@ -1766,7 +1736,7 @@ class ThreeDCubeCorners(Scene):
         name = TextMobject("Corners: ")
         name.next_to(coordinates[0], LEFT)
         group = VGroup(name, coordinates)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(FRAME_HEIGHT - 1)
         group.to_edge(LEFT)
 
         self.play(Write(name, run_time = 2))
@@ -1780,14 +1750,14 @@ class ShowDistanceFormula(TeacherStudentsScene):
             "=", 
             "\\sqrt", "{x_1^2", " + ", "x_2^2", " +\\cdots", "x_n^2", "}"
         )
-        rule.highlight_by_tex_to_color_map({
+        rule.set_color_by_tex_to_color_map({
             "x_1" : GREEN,
             "x_2" : RED,
             "x_n" : BLUE,
         })
         for part in rule.get_parts_by_tex("x_"):
             if len(part) > 2:
-                part[1].highlight(WHITE)
+                part[1].set_color(WHITE)
         rule.next_to(self.teacher, UP, LARGE_BUFF)
         rule.to_edge(RIGHT)
         rule.shift(UP)
@@ -1824,17 +1794,17 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
         )
         bottom = Line(rect.get_left(), rect.get_right())
         bottom.move_to(rect.get_bottom())
-        bottom.highlight(tex_to_color_map["x"])
+        bottom.set_color(tex_to_color_map["x"])
         side = Line(rect.get_bottom(), rect.get_top())
         side.move_to(rect.get_right())
-        side.highlight(tex_to_color_map["y"])
+        side.set_color(tex_to_color_map["y"])
 
         x = TexMobject("x")
         x.next_to(rect.get_bottom(), UP, SMALL_BUFF)
         y = TexMobject("y")
         y.next_to(rect.get_right(), LEFT, SMALL_BUFF)
         hyp = TexMobject("\\sqrt", "{x", "^2 + ", "y", "^2}")
-        hyp.highlight_by_tex_to_color_map(tex_to_color_map)
+        hyp.set_color_by_tex_to_color_map(tex_to_color_map)
         hyp.next_to(ORIGIN, UP)
         hyp.rotate(diag.get_angle())
         hyp.shift(diag.get_center())
@@ -1854,13 +1824,13 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
 
         corner = diag.get_end()
         z_line = Line(corner, corner + 3*UP)
-        z_line.highlight(tex_to_color_map["z"])
+        z_line.set_color(tex_to_color_map["z"])
         z = TexMobject("z")
-        z.highlight(tex_to_color_map["z"])
+        z.set_color(tex_to_color_map["z"])
         z.next_to(z_line, RIGHT)
         dot = Dot(z_line.get_end())
         three_d_diag = Line(diag.get_start(), z_line.get_end())
-        three_d_diag.highlight(MAROON_B)
+        three_d_diag.set_color(MAROON_B)
 
         self.play(
             ShowCreation(z_line),
@@ -1894,7 +1864,7 @@ class ThreeDBoxFormulas(Scene):
             "&\\approx", "0.73"
         )
         inner_r.next_to(answer, DOWN, LARGE_BUFF, LEFT)
-        inner_r.highlight(GREEN_C)
+        inner_r.set_color(GREEN_C)
         VGroup(question, answer).shift(0.55*RIGHT)
 
         self.play(Write(question))
@@ -1960,13 +1930,13 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
                 x_slider.number_to_point(value), 
                 LEFT, MED_SMALL_BUFF
             )
-        self.plane.axes.highlight(BLUE)
+        self.plane.axes.set_color(BLUE)
 
         ##Add box material
         corner_circles = VGroup(*[
             self.circle.copy().move_to(
                 self.plane.coords_to_point(*coords)
-            ).highlight(GREY)
+            ).set_color(GREY)
             for coords in (1, 1), (-1, 1), (-1, -1)
         ])
         line = Line(
@@ -2049,14 +2019,14 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             TextMobject("$y$", "real estate:", "$(y+1)^2$"),
         )
         phrases.next_to(self.plane, UP)
-        phrases[0].highlight_by_tex("x", GREEN)
-        phrases[1].highlight_by_tex("y", RED)
+        phrases[0].set_color_by_tex("x", GREEN)
+        phrases[1].set_color_by_tex("y", RED)
         x_brace, y_brace = [
             Brace(slider.real_estate_ticks, RIGHT)
             for slider in self.sliders
         ]
-        x_brace.highlight(GREEN)
-        y_brace.highlight(RED)
+        x_brace.set_color(GREEN)
+        y_brace.set_color(RED)
 
         self.play(FadeOut(self.question))
         self.play(
@@ -2365,7 +2335,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         half_label = TexMobject("0.5")
         half_label.scale(self.sliders[0].number_scale_val)
         half_label.next_to(half_line, LEFT, MED_SMALL_BUFF)
-        half_label.highlight(half_line.get_color())
+        half_label.set_color(half_line.get_color())
 
         curr_vector = self.get_vector()
         target_vector = 0.5*np.ones(3)
@@ -2377,7 +2347,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         cross = Cross(self.re_words.get_parts_by_tex("frac"))
         new_re = TexMobject("(0.5)^2 = 0.25")
         new_re.next_to(cross, DOWN, MED_SMALL_BUFF, LEFT)
-        new_re.highlight(MAROON_B)
+        new_re.set_color(MAROON_B)
 
         self.play(
             FadeOut(self.arrow),
@@ -2480,7 +2450,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         title = TextMobject(
             "$2 \\!\\times\\! 2 \\!\\times\\! 2 \\!\\times\\! 2$ box vertices:"
         )
-        title.shift(SPACE_WIDTH*LEFT/2)
+        title.shift(FRAME_X_RADIUS*LEFT/2)
         title.to_edge(UP)
 
         coordinates = list(it.product(*4*[[1, -1]]))
@@ -2512,7 +2482,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         self.add(sphere_words)
         pairs = zip(self.coordinate_mobs, self.coordinates)
         for coord_mob, coords in pairs[1:] + [pairs[0]]:
-            coord_mob.highlight(GREEN)
+            coord_mob.set_color(GREEN)
             coord_mob_copy = coord_mob.copy()
             coord_mob_copy.next_to(sphere_words, DOWN)
             for slider, x in zip(self.sliders, coords):
@@ -2525,7 +2495,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
             self.add(coord_mob_copy)
             self.wait()
             self.remove(coord_mob_copy)
-            coord_mob.highlight(WHITE)
+            coord_mob.set_color(WHITE)
         self.add(coord_mob_copy)
         sphere_words.add(coord_mob_copy)
         self.sphere_words = sphere_words
@@ -2549,7 +2519,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         half_label = TexMobject("0.5")
         half_label.scale(self.sliders[0].number_scale_val)
         half_label.next_to(re_line, LEFT, MED_SMALL_BUFF)
-        half_label.highlight(MAROON_B)
+        half_label.set_color(MAROON_B)
 
         self.wind_down_ambient_movement()
         self.play(*[
@@ -2597,7 +2567,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         old_coords = sphere_words.target[1]
         new_coords = TexMobject("(0, 0, 0, 0)")
         new_coords.replace(old_coords, dim_to_match = 1)
-        new_coords.highlight(old_coords.get_color())
+        new_coords.set_color(old_coords.get_color())
         Transform(old_coords, new_coords).update(1)
 
         self.play(Animation(self.sliders), *[
@@ -2645,7 +2615,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         brace = Brace(VGroup(*computation[1][1:-2]), UP)
         brace_text = brace.get_text("Distance to corner")
         brace_text.scale(0.8, about_point = brace_text.get_bottom())
-        VGroup(brace, brace_text).highlight(RED)
+        VGroup(brace, brace_text).set_color(RED)
 
         self.play(LaggedStart(FadeIn, computation, run_time = 3))
         self.play(GrowFromCenter(brace))
@@ -2662,7 +2632,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         )
         touching_words.to_corner(UP+LEFT)
         arrow = Arrow(MED_SMALL_BUFF*DOWN, 3*RIGHT+DOWN)
-        arrow.highlight(BLUE)
+        arrow.set_color(BLUE)
         arrow.shift(touching_words.get_bottom())
 
         self.wind_down_ambient_movement(wait = False)
@@ -2678,7 +2648,7 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
         PiCreatureScene.setup(self)
         self.remove(self.sliders)
         self.remove(self.dot)
-        self.circle.highlight(GREY)
+        self.circle.set_color(GREY)
         self.randy.next_to(self.plane, RIGHT, LARGE_BUFF, DOWN)
 
     def construct(self):
@@ -2761,7 +2731,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             s = s.replace("1", "+1")
             s = s.replace("-+1", "-1")
             coords_mob = TexMobject(s)
-            coords_mob.highlight(GREEN)
+            coords_mob.set_color(GREEN)
             coords_mob.next_to(sphere_words, DOWN)
             for slider, x in zip(self.sliders, coords):
                 for mob in slider.real_estate_ticks, slider.dial:
@@ -2824,11 +2794,11 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
             for i, vect in (0, LEFT), (-1, RIGHT)
         ])
-        half_line.highlight(MAROON_B)
+        half_line.set_color(MAROON_B)
         half_label = TexMobject("0.5")
         half_label.scale(self.sliders[0].number_scale_val)
         half_label.next_to(half_line, LEFT, MED_SMALL_BUFF)
-        half_label.highlight(half_line.get_color())
+        half_label.set_color(half_line.get_color())
 
         curr_vector = self.get_vector()
         ghost_dials = VGroup(*[
@@ -2836,7 +2806,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             for slider in self.sliders
         ])
         point_25 = TexMobject("0.25")
-        point_25.highlight(half_label.get_color())
+        point_25.set_color(half_label.get_color())
         point_25.move_to(self.re_words[0], RIGHT)
         self.re_words.save_state()
 
@@ -2877,12 +2847,12 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         old_coords = self.sphere_words.target[1]
         new_coords = TexMobject(str(tuple(5*[0])))
         new_coords.replace(old_coords, dim_to_match = 1)
-        new_coords.highlight(old_coords.get_color())
+        new_coords.set_color(old_coords.get_color())
         Transform(old_coords, new_coords).update(1)
 
         self.re_words.generate_target()
         new_re = TexMobject("0.31")
-        new_re.highlight(GREEN)
+        new_re.set_color(GREEN)
         old_re = self.re_words.target[0]
         new_re.move_to(old_re, RIGHT)
         Transform(old_re, new_re).update(1)
@@ -2928,7 +2898,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
 
         words = TextMobject("Poking outside \\\\ the box!")
         words.to_edge(LEFT)
-        words.highlight(RED)
+        words.set_color(RED)
         arrow = Arrow(
             words.get_top(),
             self.sliders[0].dial,
@@ -3066,7 +3036,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
             "bounding box!"
         )
         words.to_edge(LEFT)
-        words.highlight(RED)
+        words.set_color(RED)
         arrow = Arrow(
             words.get_top(), 
             self.sliders[0].dial,
@@ -3083,7 +3053,7 @@ class TwoDOuterBox(TwoDInnerSphereTouchingBox):
     def construct(self):
         words = TextMobject("$4 \\!\\times\\! 4$ outer bounding box")
         words.next_to(self.plane, UP)
-        words.highlight(MAROON_B)
+        words.set_color(MAROON_B)
         line = Line(
             self.plane.coords_to_point(-2, -2),
             self.plane.coords_to_point(2, 2),
@@ -3110,9 +3080,9 @@ class ThreeDOuterBoundingBoxWords(Scene):
             "$4 \\!\\times\\! 4\\!\\times\\! 4$ outer\\\\",
             "bounding box"
         )
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
-        words.highlight(MAROON_B)
+        words.set_color(MAROON_B)
 
         self.play(Write(words))
         self.wait(4)
@@ -3228,7 +3198,7 @@ class ProportionOfSphereInBox(GraphScene):
             graph.point_from_proportion(0.3),
             UP+RIGHT, SMALL_BUFF
         )
-        footnote.highlight(YELLOW)
+        footnote.set_color(YELLOW)
 
         self.play(ShowCreation(graph, run_time = 5, rate_func = None))
         self.wait()
@@ -3305,7 +3275,7 @@ class FunHighDSpherePhenomena(Scene):
             "Fun high-D sphere phenomena"
         )
         title.to_edge(UP)
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         h_line = Line(LEFT, RIGHT).scale(5)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
@@ -3390,7 +3360,7 @@ class Skeptic(TeacherStudentsScene, SliderScene):
         box = Square(color = RED)
         box.next_to(self.sliders, LEFT)
         line = Line(box.get_center(), box.get_corner(UP+RIGHT))
-        line.highlight(YELLOW)
+        line.set_color(YELLOW)
 
         self.student_says(
             analytic_thought,
@@ -3460,7 +3430,7 @@ class JustBecauseYouCantVisualize(Scene):
         phrase += "something   doesn't mean you can't\\\\ "
         phrase += "still think about it visually."
         phrase_mob = TextMobject(*phrase.split(" "))
-        phrase_mob.highlight_by_tex("visual", YELLOW)
+        phrase_mob.set_color_by_tex("visual", YELLOW)
         phrase_mob.next_to(ORIGIN, UP)
 
         for part in phrase_mob:
@@ -3544,7 +3514,7 @@ class Podcast(TeacherStudentsScene):
         title = TextMobject("Podcast!")
         title.scale(1.5)
         title.to_edge(UP)
-        title.shift(SPACE_WIDTH*LEFT/2)
+        title.shift(FRAME_X_RADIUS*LEFT/2)
         self.add(title)
 
         q_and_a = TextMobject("Q\\&A Followup")

@@ -1,7 +1,14 @@
-from helpers import *
+from constants import *
 
-from mobject import Mobject
+import itertools as it
+import numpy as np
+
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
+from utils.bezier import interpolate
+from utils.config_ops import digest_config, digest_locals
+from utils.paths import path_along_arc
+from utils.space_ops import rotate_vector, angle_of_vector, compass_directions, center_of_mass
 
 class Arc(VMobject):
     CONFIG = {
@@ -65,11 +72,7 @@ class Arc(VMobject):
             )
             self.add(end_arrow.split()[-1])
 
-
-
-
-
-        self.highlight(self.get_color())
+        self.set_color(self.get_color())
         return self
 
 
@@ -725,7 +728,7 @@ class ScreenRectangle(Rectangle):
 
 class FullScreenRectangle(ScreenRectangle):
     CONFIG = {
-        "height" : 2*SPACE_HEIGHT,
+        "height" : FRAME_HEIGHT,
     }
 
 class FullScreenFadeRectangle(FullScreenRectangle):

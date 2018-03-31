@@ -1,25 +1,4 @@
-import numpy as np
-import itertools as it
-
-from helpers import *
-
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import * 
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import *
-from topics.characters import Randolph, Mathematician
-from topics.functions import ParametricFunction, FunctionGraph
-from topics.number_line import *
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
+from big_ol_pile_of_manim_imports import *
 
 RANDY_SCALE_FACTOR = 0.3
 
@@ -126,7 +105,7 @@ class SlideWordDownCycloid(Animation):
 class BrachistochroneWordSliding(Scene):
     def construct(self):
         anim = SlideWordDownCycloid("Brachistochrone")
-        anim.path.gradient_highlight(WHITE, BLUE_E)
+        anim.path.set_color_by_gradient(WHITE, BLUE_E)
         self.play(ShowCreation(anim.path))
         self.play(anim)
         self.wait()
@@ -284,7 +263,7 @@ class TryManyPaths(PathSlidingScene):
             Line(3*UP+LEFT, LEFT),
             Arc(angle = np.pi/2, start_angle = np.pi),
             Line(DOWN, DOWN+3*RIGHT)
-        ).ingest_submobjects().highlight(GREEN)
+        ).ingest_submobjects().set_color(GREEN)
         paths = [
             Arc(
                 angle = np.pi/2, 
@@ -332,7 +311,7 @@ class NotTheCircle(PathSlidingScene):
         end   = self.point_b.get_center()
         angle = 2*np.pi/3
         path = Arc(angle, radius = 3)
-        path.gradient_highlight(RED_D, WHITE)
+        path.set_color_by_gradient(RED_D, WHITE)
         radius = Line(ORIGIN, path.points[0])
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)
@@ -376,14 +355,14 @@ class TransitionAwayFromSlide(PathSlidingScene):
             arrow.copy().shift(vect)
             for vect in 3*LEFT, ORIGIN, 3*RIGHT
         ])
-        arrows.shift(2*SPACE_WIDTH*RIGHT)
+        arrows.shift(FRAME_WIDTH*RIGHT)
         self.add(arrows)
 
         self.add(self.cycloid)
         self.slide(randy, self.cycloid)
         everything = Mobject(*self.mobjects)
         self.play(ApplyMethod(
-            everything.shift, 4*SPACE_WIDTH*LEFT,
+            everything.shift, 4*FRAME_X_RADIUS*LEFT,
             run_time = 2,
             rate_func = rush_into
         ))
@@ -409,11 +388,11 @@ class MinimalPotentialEnergy(Scene):
             density = 3*DEFAULT_POINT_DENSITY_1D
         )
         graph.stretch_to_fit_width(2*horiz_radius)
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
         min_point = Dot(graph.get_bottom())
         nature_finds = TextMobject("Nature finds this point")
         nature_finds.scale(0.5)
-        nature_finds.highlight(GREEN)
+        nature_finds.set_color(GREEN)
         nature_finds.shift(2*RIGHT+3*UP)
         arrow = Arrow(
             nature_finds.get_bottom(), min_point, 
@@ -438,7 +417,7 @@ class MinimalPotentialEnergy(Scene):
         for words in last_side_words:
             words.next_to(side_words_start, DOWN)
         for words in top_words[1], last_side_words[1]:
-            words.highlight(RED)
+            words.set_color(RED)
 
         self.add(
             axes, top_words[0], side_words_start, 
@@ -650,7 +629,7 @@ class DefineCurveWithKnob(PathSlidingScene):
         self.path = self.get_path()
         self.path.shift(1.5*DOWN)
         self.path.show()
-        self.path.highlight(BLACK)        
+        self.path.set_color(BLACK)        
 
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)
@@ -673,7 +652,7 @@ class DefineCurveWithKnob(PathSlidingScene):
         d_angle = angle-self.last_angle
         self.knob.rotate_in_place(d_angle)
         self.last_angle = angle
-        self.path.highlight(BLUE_D, lambda p : p[0] < point[0])
+        self.path.set_color(BLUE_D, lambda p : p[0] < point[0])
 
 
 
