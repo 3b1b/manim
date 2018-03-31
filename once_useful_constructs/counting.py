@@ -13,7 +13,6 @@ from animation.transform import Transform
 from topics.geometry import Arrow
 from topics.geometry import Circle
 from topics.geometry import Dot
-# from topics.fractals import *
 from scene.scene import Scene
 
 

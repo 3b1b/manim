@@ -2,7 +2,7 @@
 
 from big_ol_pile_of_manim_imports import *
 
-from old_projects.basel.light import *
+from once_useful_constructs.light import *
 
 import types
 import functools

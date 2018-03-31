@@ -1,8 +1,8 @@
 from animation.creation import ShowCreation
 from animation.transform import Transform
-from characters import PiCreature
-from characters import Randolph
-from characters import get_all_pi_creature_modes
+from pi_creature.pi_creature import PiCreature
+from pi_creature.pi_creature import Randolph
+from pi_creature.pi_creature import get_all_pi_creature_modes
 from mobject.vectorized_mobject import VGroup
 from mobject.vectorized_mobject import VMobject
 from mobject.vectorized_mobject import VectorizedPoint
@@ -21,7 +21,6 @@ from utils.space_ops import rotate_vector
 from utils.space_ops import rotation_matrix
 
 from constants import *
-
 
 def rotate(points, angle = np.pi, axis = OUT):
     if axis is None:
@@ -276,8 +275,6 @@ class CircularFractal(SelfSimilarFractal):
             )
             part.rotate(i*2*np.pi/self.num_subparts, about_point = ORIGIN)
         self.num_subparts -= 1
-
-
 
 ######## Space filling curves ############
 

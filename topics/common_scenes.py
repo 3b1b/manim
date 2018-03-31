@@ -12,9 +12,9 @@ from mobject.tex_mobject import TexMobject
 from mobject.tex_mobject import TextMobject
 from mobject.vectorized_mobject import VGroup
 from scene.scene import Scene
-from topics.characters import Blink
-from topics.characters import Mortimer
-from topics.characters import Randolph
+from pi_creature.pi_creature_animations import Blink
+from pi_creature.pi_creature import Mortimer
+from pi_creature.pi_creature import Randolph
 from topics.geometry import DashedLine
 from topics.geometry import Rectangle
 from topics.geometry import Square
@@ -208,18 +208,4 @@ class TODOStub(Scene):
     def construct(self):
         self.add(TextMobject("TODO: %s"%self.message))
         self.wait()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

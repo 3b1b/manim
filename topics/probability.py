@@ -382,7 +382,6 @@ class BarChart(VGroup):
     def copy(self):
         return self.deepcopy()
 
-
 ### Cards ###
 
 class DeckOfCards(VGroup):
@@ -542,7 +541,7 @@ class PlayingCard(VGroup):
         return design
 
     def get_face_card_design(self, value, symbol):
-        from topics.characters import PiCreature
+        from pi_creature.pi_creature import PiCreature
         sub_rect = Rectangle(
             stroke_color = BLACK,
             fill_opacity = 0,

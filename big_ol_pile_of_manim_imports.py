@@ -25,8 +25,8 @@ from animation.transform import *
 from animation.update import *
 
 from camera.camera import *
-from camera.moving_camera import *
 from camera.mapping_camera import *
+from camera.moving_camera import *
 
 from continual_animation.continual_animation import *
 from continual_animation.from_animation import *
@@ -49,16 +49,18 @@ from scene.scene import *
 from scene.scene_from_video import *
 from scene.zoomed_scene import *
 
-from topics.arithmetic import *
-from topics.combinatorics import *
+from once_useful_constructs.arithmetic import *
+from once_useful_constructs.combinatorics import *
+from once_useful_constructs.counting import *
+from once_useful_constructs.fractals import *
+from once_useful_constructs.graph_theory import *
+from once_useful_constructs.light import *
+
 from topics.common_scenes import *
 from topics.complex_numbers import *
-from topics.counting import *
-from topics.fractals import *
 from topics.functions import *
 from topics.geometry import *
 from topics.graph_scene import *
-from topics.graph_theory import *
 from topics.matrix import *
 from topics.number_line import *
 from topics.numerals import *
@@ -89,6 +91,7 @@ import os
 import random
 import re
 import string
+import sys
 
 from PIL import Image
 from colour import Color
