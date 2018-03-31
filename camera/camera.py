@@ -6,12 +6,20 @@ from PIL import Image
 from colour import Color
 import aggdraw
 import copy
-
-from helpers import *
-from mobject import Mobject, PMobject, VMobject, \
-    ImageMobject, Group
-
 import time
+
+from constants import *
+from mobject.mobject import Mobject, Group
+from mobject.point_cloud_mobject import PMobject
+from mobject.vectorized_mobject import VMobject
+from mobject.image_mobject import ImageMobject
+from utils.color import rgb_to_hex, color_to_int_rgba
+from utils.config_ops import digest_config, digest_locals, DictAsObject
+from utils.images import get_full_raster_image_path
+from utils.iterables import remove_list_redundancies, list_difference_update
+from utils.iterables import batch_by_property
+from utils.simple_functions import fdiv
+
 
 class Camera(object):
     CONFIG = {

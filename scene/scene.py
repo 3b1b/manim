@@ -10,16 +10,27 @@ import copy
 from tqdm import tqdm as ProgressDisplay
 import inspect
 import subprocess as sp
+import random
 
-from helpers import *
+from constants import *
 
-from camera import Camera
+from camera.camera import Camera
 from tk_scene import TkSceneRoot
-from mobject import Mobject, VMobject
-from animation import Animation
+from mobject.mobject import Mobject
+from mobject.vectorized_mobject import VMobject
+from animation.animation import Animation
 from animation.transform import MoveToTarget
 from animation.continual_animation import ContinualAnimation
-from container import *
+from utils.iterables import list_update
+
+from container.container import Container
+
+def add_extension_if_not_present(file_name, extension):
+    # This could conceivably be smarter about handling existing differing extensions
+    if(file_name[-len(extension):] != extension):
+        return file_name + extension
+    else:
+        return file_name
 
 class Scene(Container):
     CONFIG = {

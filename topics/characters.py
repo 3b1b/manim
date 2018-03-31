@@ -1,6 +1,10 @@
-from helpers import *
+import random
+import numpy as np
+import itertools as it
 
-from mobject import Mobject
+from constants import *
+
+from mobject.mobject import Mobject, Group
 from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TextMobject, TexMobject
@@ -8,11 +12,14 @@ from mobject.tex_mobject import TextMobject, TexMobject
 from topics.objects import Bubble, ThoughtBubble, SpeechBubble
 from topics.geometry import ScreenRectangle
 
-from animation import Animation
-from animation.transform import *
+from animation.animation import Animation
+from animation.transform import Transform, ApplyMethod, MoveToTarget
+from animation.transform import ReplacementTransform, FadeOut, FadeIn
 from animation.simple_animations import Write, ShowCreation
 from animation.compositions import AnimationGroup
-from scene import Scene
+from scene.scene import Scene
+from utils.config_ops import digest_config
+from utils.rate_functions import there_and_back, squish_rate_func
 
 
 PI_CREATURE_DIR = os.path.join(MEDIA_DIR, "designs", "PiCreature")

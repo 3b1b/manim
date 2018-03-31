@@ -2,7 +2,7 @@
 
 import scipy
 from big_ol_pile_of_manim_imports import *
-
+from old_projects.fourier import *
 
 FREQUENCY_COLOR = RED
 USE_ALMOST_FOURIER_BY_DEFAULT = False

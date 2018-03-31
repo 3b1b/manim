@@ -1,14 +1,14 @@
-from helpers import *
+from constants import *
 
 from mobject.tex_mobject import TexMobject, TextMobject
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 
 from animation.transform import Transform, FadeIn, MoveToTarget
 from animation.simple_animations import ShowCreation
 from topics.geometry import Arrow, Circle, Dot
 # from topics.fractals import *
-from scene import Scene
+from scene.scene import Scene
 
 
 class CountingScene(Scene):

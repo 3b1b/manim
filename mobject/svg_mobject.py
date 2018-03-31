@@ -1,9 +1,14 @@
 from xml.dom import minidom
+import itertools as it
+import re
 import warnings
+import string
 
+from constants import *
 from vectorized_mobject import VMobject, VGroup
 from topics.geometry import Rectangle, Circle
-from helpers import *
+from utils.bezier import is_closed
+from utils.config_ops import digest_config, digest_locals
 
 def string_to_numbers(num_string):
     num_string = num_string.replace("-",",-")

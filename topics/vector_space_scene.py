@@ -1,10 +1,10 @@
 import numpy as np
 
-from scene import Scene
-from mobject import Mobject
+from scene.scene import Scene
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
-from animation import Animation    
+from animation.animation import Animation    
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
@@ -12,8 +12,10 @@ from topics.number_line import NumberPlane, Axes
 from topics.geometry import Vector, Line, Circle, Arrow, Dot, \
     BackgroundRectangle, Square
 
-from helpers import *
+from constants import *
 from topics.matrix import Matrix, VECTOR_LABEL_SCALE_FACTOR, vector_coordinate_label
+from utils.rate_functions import rush_into, rush_from
+from utils.space_ops import angle_of_vector
 
 
 X_COLOR = GREEN_C

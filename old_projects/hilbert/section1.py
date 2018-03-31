@@ -7,7 +7,7 @@ from hilbert.curves import \
     SnakeCurve
 
 
-from helpers import *
+from constants import *
 
 
 

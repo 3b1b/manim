@@ -1,15 +1,11 @@
-from PIL import Image
-from colour import Color
 import numpy as np
-import warnings
-import time
-import os
-import progressbar
-import inspect
 from copy import deepcopy
 
-from helpers import *
-from mobject import Mobject
+from constants import *
+from mobject.mobject import Mobject
+from utils.rate_functions import smooth
+from utils.config_ops import instantiate
+from utils.config_ops import digest_config
 
 class Animation(object):
     CONFIG = {

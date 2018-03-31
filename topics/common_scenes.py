@@ -1,8 +1,8 @@
 
-from helpers import *
+from constants import *
 
 from scene.scene import Scene
-from animation import Animation
+from animation.animation import Animation
 from animation.simple_animations import Write, DrawBorderThenFill
 from animation.compositions import LaggedStart
 from animation.transform import FadeIn, FadeOut, ApplyMethod

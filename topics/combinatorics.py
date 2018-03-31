@@ -1,9 +1,10 @@
-from helpers import *
+from constants import *
 
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TexMobject
 
-from scene import Scene
+from scene.scene import Scene
+from utils.simple_functions import choose
 
 
 DEFAULT_COUNT_NUM_OFFSET = (FRAME_X_RADIUS - 1, FRAME_Y_RADIUS - 1, 0)

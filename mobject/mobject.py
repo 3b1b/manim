@@ -1,13 +1,21 @@
 import numpy as np
 import operator as op
+import itertools as it
 import os
 import copy
 from PIL import Image
 from colour import Color
 
-from helpers import *
+from constants import *
+from container.container import Container
+from utils.bezier import interpolate
+from utils.color import color_to_rgb, color_gradient
+from utils.color import interpolate_color
+from utils.iterables import remove_list_redundancies, list_update
+from utils.paths import straight_path
+from utils.space_ops import rotation_matrix, angle_of_vector
+from utils.space_ops import complex_to_R3, R3_to_complex
 
-from container import *
 
 #TODO: Explain array_attrs
 
@@ -87,7 +95,7 @@ class Mobject(Container):
 
     def get_image(self, camera = None):
         if camera is None:
-            from camera import Camera
+            from camera.camera import Camera
             camera = Camera()
         camera.capture_mobject(self)
         return camera.get_image()
@@ -749,6 +757,12 @@ class Mobject(Container):
             ])
         )
         return self
+
+    def print_submobject_family(self, n_tabs = 0):
+        """For debugging purposes"""
+        print "\t"*n_tabs, self, id(self)
+        for submob in self.submobjects:
+            submob.print_mobject_family(n_tabs + 1)
 
     ## Alignment
     def align_data(self, mobject):

@@ -4,9 +4,14 @@ import os
 from PIL import Image
 from random import random
 
-from helpers import *
-from mobject import Mobject
+from constants import *
+from .mobject import Mobject
 from point_cloud_mobject import PMobject
+from utils.bezier import interpolate
+from utils.color import color_to_int_rgb
+from utils.color import interpolate_color
+from utils.config_ops import digest_config
+from utils.images import get_full_raster_image_path
 
 class ImageMobject(Mobject):
     """

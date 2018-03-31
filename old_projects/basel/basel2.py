@@ -1,35 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.continual_animation import *
-
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-#from topics.combinatorics import *
-from scene import Scene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.three_dimensions import *
-from topics.light import *
-from topics.objects import *
-from topics.common_scenes import *
+from big_ol_pile_of_manim_imports import *
 
 import types
 import functools
@@ -260,7 +232,7 @@ class ThreeDSpotlight(VGroup):
                     fill_opacity = self.ambient_light.opacity_function(a1*distance),
                     stroke_width = 0
                 ))
-        
+
 class ContinualThreeDLightConeUpdate(ContinualAnimation):
     def update(self, dt):
         self.mobject.update()

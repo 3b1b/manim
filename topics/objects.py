@@ -1,11 +1,11 @@
-from helpers import *
+from constants import *
 
-from mobject import Mobject
+from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject, Brace
 
-from animation import Animation
+from animation.animation import Animation
 from animation.simple_animations import Rotating
 from animation.compositions import LaggedStart, AnimationGroup
 from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
@@ -13,6 +13,9 @@ from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
 from topics.geometry import Circle, Line, Rectangle, Square, \
     Arc, Polygon, SurroundingRectangle
 from topics.three_dimensions import Cube
+from utils.config_ops import digest_config, digest_locals
+from utils.space_ops import rotate_vector, angle_of_vector
+from utils.space_ops import complex_to_R3, R3_to_complex
 
 class Lightbulb(SVGMobject):
     CONFIG = {

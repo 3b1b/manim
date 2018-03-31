@@ -1,8 +1,15 @@
 import re
+from colour import Color
 
-from mobject import Mobject
+from constants import *
+from .mobject import Mobject
+from utils.bezier import bezier, partial_bezier_points
+from utils.bezier import interpolate, get_smooth_handle_points, is_closed
+from utils.color import color_to_rgb
+from utils.color import interpolate_color
+from utils.iterables import make_even
 
-from helpers import *
+
 
 class VMobject(Mobject):
     CONFIG = {

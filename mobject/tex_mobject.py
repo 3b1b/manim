@@ -1,11 +1,13 @@
-from helpers import *
+from constants import *
 
 from vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from topics.geometry import BackgroundRectangle
+from utils.config_ops import digest_config
 
 import collections
 import sys
+import operator as op
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
