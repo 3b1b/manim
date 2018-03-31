@@ -25,8 +25,8 @@ class Arc(VMobject):
         anchors = np.array([
             np.cos(a)*RIGHT+np.sin(a)*UP
             for a in np.linspace(
-                self.start_angle, 
-                self.start_angle + self.angle, 
+                self.start_angle,
+                self.start_angle + self.angle,
                 self.num_anchors
             )
         ])
@@ -56,7 +56,7 @@ class Arc(VMobject):
             p1, p2 = self.points[-3:-1]
             # self.points[-2:] did overshoot
             start_arrow = Arrow(
-                p1, 2*p2 - p1, 
+                p1, 2*p2 - p1,
                 tip_length = tip_length,
                 max_tip_length_to_length_ratio = 2.0
             )
@@ -66,16 +66,12 @@ class Arc(VMobject):
             p4, p3 = self.points[1:3]
             # self.points[:2] did overshoot
             end_arrow = Arrow(
-                p3, 2*p4 - p3, 
+                p3, 2*p4 - p3,
                 tip_length = tip_length,
                 max_tip_length_to_length_ratio = 2.0
             )
             self.add(end_arrow.split()[-1])
-        
 
-
-
-        
         self.set_color(self.get_color())
         return self
 
@@ -100,7 +96,7 @@ class Arc(VMobject):
     def set_bound_angles(self,start=0,stop=np.pi):
         self.start_angle = start
         self.angle = stop - start
-        
+
         return self
 
 
@@ -132,7 +128,7 @@ class ArcBetweenPoints(Arc):
             radius = radius,
             start_angle = start_angle,
             **kwargs)
-        
+
         self.move_arc_center_to(arc_center)
 
 class CurvedArrow(ArcBetweenPoints):
@@ -145,7 +141,7 @@ class CurvedArrow(ArcBetweenPoints):
         else:
             ArcBetweenPoints.__init__(self, end_point, start_point, angle = -angle, **kwargs)
             self.add_tip(at_start = False, at_end = True)
-        
+
 
 class CurvedDoubleArrow(ArcBetweenPoints):
 
@@ -483,7 +479,7 @@ class Arrow(Line):
         self.init_colors()
 
     def init_tip(self):
-        self.tip = self.add_tip()
+        self.add_tip()
 
     def add_tip(self, add_at_end = True):
         tip = VMobject(
@@ -496,13 +492,16 @@ class Arrow(Line):
         )
         self.set_tip_points(tip, add_at_end, preserve_normal = False)
         self.add(tip)
+        if not hasattr(self, 'tip'):
+            self.tip = []
+        self.tip.append(tuple((tip, add_at_end)))
         return tip
 
     def add_rectangular_stem(self):
         self.rect = Rectangle(
             stroke_width = 0,
-            fill_color = self.tip.get_fill_color(),
-            fill_opacity = self.tip.get_fill_opacity()
+            fill_color = self.tip[0][0].get_fill_color(),
+            fill_opacity = self.tip[0][0].get_fill_opacity()
         )
         self.add_to_back(self.rect)
         self.set_stroke(width = 0)
@@ -511,7 +510,7 @@ class Arrow(Line):
     def set_rectangular_stem_points(self):
         start, end = self.get_start_and_end()
         vect = end - start
-        tip_base_points = self.tip.get_anchors()[1:]
+        tip_base_points = self.tip[0][0].get_anchors()[1:]
         tip_base = center_of_mass(tip_base_points)
         tbp1, tbp2 = tip_base_points
         perp_vect = tbp2 - tbp1
@@ -535,8 +534,8 @@ class Arrow(Line):
         return self
 
     def set_tip_points(
-        self, tip, 
-        add_at_end = True, 
+        self, tip,
+        add_at_end = True,
         tip_length = None,
         preserve_normal = True,
         ):
@@ -564,7 +563,7 @@ class Arrow(Line):
             v *= tip_length/np.linalg.norm(v)
         ratio = self.tip_width_to_length_ratio
         tip.set_points_as_corners([
-            end_point, 
+            end_point,
             end_point-vect+perp_vect*ratio/2,
             end_point-vect-perp_vect*ratio/2,
         ])
@@ -572,7 +571,7 @@ class Arrow(Line):
         return self
 
     def get_normal_vector(self):
-        p0, p1, p2 = self.tip.get_anchors()
+        p0, p1, p2 = self.tip[0][0].get_anchors()
         result = np.cross(p2 - p1, p1 - p0)
         norm = np.linalg.norm(result)
         if norm == 0:
@@ -586,7 +585,7 @@ class Arrow(Line):
 
     def get_end(self):
         if hasattr(self, "tip"):
-            return self.tip.get_anchors()[0]
+            return self.tip[0][0].get_anchors()[0]
         else:
             return Line.get_end(self)
 
@@ -595,14 +594,16 @@ class Arrow(Line):
 
     def put_start_and_end_on(self, *args, **kwargs):
         Line.put_start_and_end_on(self, *args, **kwargs)
-        self.set_tip_points(self.tip, preserve_normal = False)
+        self.set_tip_points(self.tip[0][0], preserve_normal = False)
         self.set_rectangular_stem_points()
         return self
 
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
         if self.preserve_tip_size_when_scaling:
-            self.set_tip_points(self.tip)
+            for t in self.tip:
+                print(t)
+                self.set_tip_points(t[0], add_at_end=t[1])
         if self.use_rectangular_stem:
             self.set_rectangular_stem_points()
         return self
@@ -622,8 +623,7 @@ class Vector(Arrow):
 
 class DoubleArrow(Arrow):
     def init_tip(self):
-        self.tip = self.add_tip()
-        self.second_tip = self.add_tip(add_at_end = False)
+        self.tip = [(self.add_tip(), True), (self.add_tip(add_at_end = False), False)]
 
 class CubicBezier(VMobject):
     def __init__(self, points, **kwargs):
@@ -681,7 +681,7 @@ class Square(Rectangle):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         Rectangle.__init__(
-            self, 
+            self,
             height = self.side_length,
             width = self.side_length,
             **kwargs
@@ -762,7 +762,7 @@ class Cross(VGroup):
         "stroke_width" : 6,
     }
     def __init__(self, mobject, **kwargs):
-        VGroup.__init__(self, 
+        VGroup.__init__(self,
             Line(UP+LEFT, DOWN+RIGHT),
             Line(UP+RIGHT, DOWN+LEFT),
         )
