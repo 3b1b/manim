@@ -25,6 +25,8 @@ from animation.transform import *
 from animation.update import *
 
 from camera.camera import *
+from camera.moving_camera import *
+from camera.mapping_camera import *
 
 from continual_animation.continual_animation import *
 
