@@ -1,9 +1,10 @@
-from constants import *
-from mobject.mobject import Mobject, Group
-from animation.update import MaintainPositionRelativeTo
 import copy
-from utils.config_ops import instantiate
+
+from constants import *
+from mobject.mobject import Group
+from mobject.mobject import Mobject
 from utils.config_ops import digest_config
+from utils.config_ops import instantiate
 
 class ContinualAnimation(object):
     CONFIG = {
@@ -66,7 +67,7 @@ class ContinualAnimationGroup(ContinualAnimation):
         for continual_animation in self.continual_animations:
             continual_animation.update(dt)
 
-class AmbientRotation(ContinualAnimation):
+class ContinualRotation(ContinualAnimation):
     CONFIG = {
         "axis" : OUT,
         "rate" : np.pi/12, #Radians per second
@@ -86,7 +87,7 @@ class AmbientRotation(ContinualAnimation):
             about_point = about_point
         )
 
-class AmbientMovement(ContinualAnimation):
+class ContinualMovement(ContinualAnimation):
     CONFIG = {
         "direction" : RIGHT,
         "rate" : 0.05, #Units per second
@@ -94,59 +95,6 @@ class AmbientMovement(ContinualAnimation):
 
     def update_mobject(self, dt):
         self.mobject.shift(dt*self.rate*self.direction)
-
-class ContinualUpdateFromFunc(ContinualAnimation):
-    CONFIG = {
-        "function_depends_on_dt" : False
-    }
-    def __init__(self, mobject, func, **kwargs):
-        self.func = func
-        ContinualAnimation.__init__(self, mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        if self.function_depends_on_dt:
-            self.func(self.mobject, dt)
-        else:
-            self.func(self.mobject)
-
-class ContinualUpdateFromTimeFunc(ContinualUpdateFromFunc):
-    CONFIG = {
-        "function_depends_on_dt" : True
-    }
-
-class ContinualMaintainPositionRelativeTo(ContinualAnimation):
-    # TODO: Possibly reimplement using CycleAnimation?
-    def __init__(self, mobject, tracked_mobject, **kwargs):
-        self.anim = MaintainPositionRelativeTo(mobject, tracked_mobject, **kwargs)
-        ContinualAnimation.__init__(self, mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        self.anim.update(0) # 0 is arbitrary
-
-class NormalAnimationAsContinualAnimation(ContinualAnimation):
-    CONFIG = {
-        "start_up_time" : 0,
-        "wind_down_time" : 0,
-    }
-    def __init__(self, animation, **kwargs):
-        self.animation = animation
-        ContinualAnimation.__init__(self, animation.mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        self.animation.update(
-            min(float(self.internal_time)/self.animation.run_time, 1)
-        )
-
-class CycleAnimation(ContinualAnimation):
-    def __init__(self, animation, **kwargs):
-        self.animation = animation
-        ContinualAnimation.__init__(self, animation.mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        mod_value = self.internal_time % self.animation.run_time
-        alpha = mod_value/float(self.animation.run_time)
-        self.animation.update(alpha)
-
 
 
 

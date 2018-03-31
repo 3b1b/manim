@@ -29,6 +29,8 @@ from camera.moving_camera import *
 from camera.mapping_camera import *
 
 from continual_animation.continual_animation import *
+from continual_animation.from_animation import *
+from continual_animation.update import *
 
 from mobject.image_mobject import *
 from mobject.mobject import *

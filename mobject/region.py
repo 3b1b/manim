@@ -8,7 +8,8 @@ from utils.iterables import adjacent_pairs
 
 from constants import *
 
-#TODO, this whole class should be something vectorized.
+# Warning: This is all now pretty depricated, and should not be expected to work
+
 class Region(Mobject):
     CONFIG = {
         "display_mode" : "region"

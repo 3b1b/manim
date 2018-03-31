@@ -231,8 +231,6 @@ class SVGMobject(VMobject):
         if self.width is not None:
             self.scale_to_fit_width(self.width)
 
-
-
 class VMobjectFromSVGPathstring(VMobject):
     def __init__(self, path_string, **kwargs):
         digest_locals(self)

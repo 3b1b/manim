@@ -1146,7 +1146,7 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
             run_time = 4,
             added_anims = [MoveToTarget(everything, run_time = 4)],
         )
-        self.add(AmbientRotation(everything, axis = UP, rate = 3*DEGREES))
+        self.add(ContinualRotation(everything, axis = UP, rate = 3*DEGREES))
         self.wait(10)
 
 class EveryOutputPointHasAColor(ColorMappedObjectsScene):
@@ -3188,7 +3188,7 @@ class PatreonScroll(Scene):
 
         # patorons = patrons[:10] ##TO remove
 
-        scroll = AmbientMovement(patrons, direction = UP, rate = 1)
+        scroll = ContinualMovement(patrons, direction = UP, rate = 1)
         def patrons_opacity_update(patrons):
             for patron in patrons:
                 y = patron.get_center()[1]

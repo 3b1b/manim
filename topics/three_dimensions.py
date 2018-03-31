@@ -1,7 +1,7 @@
 
 from constants import *
 
-from continual_animation.continual_animation import AmbientMovement
+from continual_animation.continual_animation import ContinualMovement
 from animation.transform import ApplyMethod
 from camera.camera import Camera
 from mobject.vectorized_mobject import VGroup
@@ -184,7 +184,7 @@ class ThreeDScene(Scene):
         self.camera.set_position(phi, theta, distance, center_x, center_y, center_z)
 
     def begin_ambient_camera_rotation(self, rate = 0.01):
-        self.ambient_camera_rotation = AmbientMovement(
+        self.ambient_camera_rotation = ContinualMovement(
             self.camera.rotation_mobject,
             direction = UP,
             rate = rate
