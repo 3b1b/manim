@@ -2,6 +2,7 @@ from xml.dom import minidom
 import itertools as it
 import re
 import warnings
+import string
 
 from constants import *
 from vectorized_mobject import VMobject, VGroup
