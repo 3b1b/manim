@@ -12,6 +12,8 @@ For 9/10 math animation needs, you'd probably be better off using a more well-ma
 
 ## Install requirements
 
+Manim depends on Python 2.7 and is not yet compatible with Python 3.
+
 Manim dependencies rely on system libraries you will need to install on your
 operating system:
 * ffmpeg
