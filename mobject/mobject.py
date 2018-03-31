@@ -1,20 +1,25 @@
+import copy
+import itertools as it
 import numpy as np
 import operator as op
-import itertools as it
 import os
-import copy
+
 from PIL import Image
 from colour import Color
 
 from constants import *
 from container.container import Container
 from utils.bezier import interpolate
-from utils.color import color_to_rgb, color_gradient
+from utils.color import color_gradient
+from utils.color import color_to_rgb
 from utils.color import interpolate_color
-from utils.iterables import remove_list_redundancies, list_update
+from utils.iterables import list_update
+from utils.iterables import remove_list_redundancies
 from utils.paths import straight_path
-from utils.space_ops import rotation_matrix, angle_of_vector
-from utils.space_ops import complex_to_R3, R3_to_complex
+from utils.space_ops import R3_to_complex
+from utils.space_ops import angle_of_vector
+from utils.space_ops import complex_to_R3
+from utils.space_ops import rotation_matrix
 
 
 #TODO: Explain array_attrs

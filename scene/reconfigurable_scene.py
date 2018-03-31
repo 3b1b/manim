@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+
 import numpy as np
 
-from .scene import Scene
+from scene.scene import Scene
 from animation.transform import Transform
 from mobject.mobject import Mobject
 

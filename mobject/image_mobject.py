@@ -1,12 +1,15 @@
-import numpy as np
+from __future__ import absolute_import
+
 import itertools as it
+import numpy as np
 import os
+
 from PIL import Image
 from random import random
 
+from mobject.mobject import Mobject
 from constants import *
-from .mobject import Mobject
-from point_cloud_mobject import PMobject
+from mobject.point_cloud_mobject import PMobject
 from utils.bezier import interpolate
 from utils.color import color_to_int_rgb
 from utils.color import interpolate_color

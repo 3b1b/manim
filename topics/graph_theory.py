@@ -1,6 +1,7 @@
 import itertools as it
 import numpy as np
 import operator as op
+
 from random import random
 
 from constants import *

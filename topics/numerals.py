@@ -1,11 +1,13 @@
 
-from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
-from mobject.tex_mobject import TexMobject
 from animation.animation import Animation
-from animation.continual_animation import ContinualAnimation
-from topics.geometry import BackgroundRectangle
-from scene.scene import Scene
 from constants import *
+from continual_animation.continual_animation import ContinualAnimation
+from mobject.tex_mobject import TexMobject
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VectorizedPoint
+from scene.scene import Scene
+from topics.geometry import BackgroundRectangle
 from utils.bezier import interpolate
 from utils.config_ops import digest_config
 

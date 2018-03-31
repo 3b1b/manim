@@ -1,54 +1,27 @@
-import numpy as np
+from __future__ import absolute_import
+
 import itertools as it
+import numpy as np
 
 from constants import *
 
 import warnings
-from mobject.mobject import Mobject, Group
-from mobject.vectorized_mobject import VMobject
-from mobject.tex_mobject import TextMobject
-from .animation import Animation
-from transform import Transform
+
+from animation.animation import Animation
+from mobject.mobject import Group
+from mobject.mobject import Mobject
 from utils.bezier import inverse_interpolate
 from utils.config_ops import digest_config
 from utils.rate_functions import squish_rate_func
 
-class LaggedStart(Animation):
+class EmptyAnimation(Animation):
     CONFIG = {
-        "run_time" : 2,
-        "lag_ratio" : 0.5,
+        "run_time" : 0,
+        "empty" : True
     }
-    def __init__(self, AnimationClass, mobject, arg_creator = None, **kwargs):
-        digest_config(self, kwargs)
-        for key in "rate_func", "run_time", "lag_ratio":
-            if key in kwargs:
-                kwargs.pop(key)
-        if arg_creator is None:
-            arg_creator = lambda mobject : (mobject,)
-        self.subanimations = [
-            AnimationClass(
-                *arg_creator(submob),
-                run_time = self.run_time,
-                rate_func = squish_rate_func(
-                    self.rate_func, beta, beta + self.lag_ratio
-                ),
-                **kwargs
-            )
-            for submob, beta in zip(
-                mobject, 
-                np.linspace(0, 1-self.lag_ratio, len(mobject))
-            )
-        ]
-        Animation.__init__(self, mobject, **kwargs)
 
-    def update(self, alpha):
-        for anim in self.subanimations:
-            anim.update(alpha)
-        return self
-
-    def clean_up(self, *args, **kwargs):
-        for anim in self.subanimations:
-            anim.clean_up(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        return Animation.__init__(self, Group(), *args, **kwargs)
 
 class Succession(Animation):
     CONFIG = {
@@ -231,11 +204,64 @@ class AnimationGroup(Animation):
         for anim in self.sub_anims:
             anim.update_config(**kwargs)
 
-class EmptyAnimation(Animation):
-    CONFIG = {
-        "run_time" : 0,
-        "empty" : True
-    }
+# Variants on mappin an animation over submobjectsg
 
-    def __init__(self, *args, **kwargs):
-        return Animation.__init__(self, Group(), *args, **kwargs)
+class LaggedStart(Animation):
+    CONFIG = {
+        "run_time" : 2,
+        "lag_ratio" : 0.5,
+    }
+    def __init__(self, AnimationClass, mobject, arg_creator = None, **kwargs):
+        digest_config(self, kwargs)
+        for key in "rate_func", "run_time", "lag_ratio":
+            if key in kwargs:
+                kwargs.pop(key)
+        if arg_creator is None:
+            arg_creator = lambda mobject : (mobject,)
+        self.subanimations = [
+            AnimationClass(
+                *arg_creator(submob),
+                run_time = self.run_time,
+                rate_func = squish_rate_func(
+                    self.rate_func, beta, beta + self.lag_ratio
+                ),
+                **kwargs
+            )
+            for submob, beta in zip(
+                mobject, 
+                np.linspace(0, 1-self.lag_ratio, len(mobject))
+            )
+        ]
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update(self, alpha):
+        for anim in self.subanimations:
+            anim.update(alpha)
+        return self
+
+    def clean_up(self, *args, **kwargs):
+        for anim in self.subanimations:
+            anim.clean_up(*args, **kwargs)
+
+class ApplyToCenters(Animation):
+    def __init__(self, AnimationClass, mobjects, **kwargs):
+        full_kwargs = AnimationClass.CONFIG
+        full_kwargs.update(kwargs)
+        full_kwargs["mobject"] = Mobject(*[
+            mob.get_point_mobject()
+            for mob in mobjects
+        ])
+        self.centers_container = AnimationClass(**full_kwargs)
+        full_kwargs.pop("mobject")
+        Animation.__init__(self, Mobject(*mobjects), **full_kwargs)
+        self.name = str(self) + AnimationClass.__name__
+
+    def update_mobject(self, alpha):
+        self.centers_container.update_mobject(alpha)
+        center_mobs = self.centers_container.mobject.split()
+        mobjects = self.mobject.split()        
+        for center_mob, mobject in zip(center_mobs, mobjects):
+            mobject.shift(
+                center_mob.get_center()-mobject.get_center()
+            )
+

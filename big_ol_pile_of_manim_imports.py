@@ -16,13 +16,17 @@ as a convenience for scripts createing scenes for videos
 from constants import *
 
 from animation.animation import *
-from animation.compositions import *
-from animation.continual_animation import *
-from animation.playground import *
-from animation.simple_animations import *
+from animation.composition import *
+from animation.creation import *
+from animation.indication import *
+from animation.movement import *
+from animation.rotation import *
 from animation.transform import *
+from animation.update import *
 
 from camera.camera import *
+
+from continual_animation.continual_animation import *
 
 from mobject.image_mobject import *
 from mobject.mobject import *
@@ -35,7 +39,6 @@ from scene.moving_camera_scene import *
 from scene.reconfigurable_scene import *
 from scene.scene import *
 from scene.scene_from_video import *
-from scene.tk_scene import *
 from scene.zoomed_scene import *
 
 from topics.arithmetic import *
@@ -49,7 +52,6 @@ from topics.functions import *
 from topics.geometry import *
 from topics.graph_scene import *
 from topics.graph_theory import *
-from topics.light import *
 from topics.matrix import *
 from topics.number_line import *
 from topics.numerals import *
@@ -70,18 +72,17 @@ from utils.sounds import *
 from utils.space_ops import *
 from utils.strings import *
 
-from special_animations import *
-
 # Non manim libraries that are also nice to have without thinking
 
-import numpy as np
-import itertools as it
-import operator as op
-import random
 import inspect
-import string
-import re
+import itertools as it
+import numpy as np
+import operator as op
 import os
+import random
+import re
+import string
+
 from PIL import Image
 from colour import Color
 

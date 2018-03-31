@@ -1,23 +1,29 @@
-import numpy as np
 import itertools as it
+import numpy as np
 import os
 
-from PIL import Image
-from colour import Color
 import aggdraw
 import copy
 import time
 
+from PIL import Image
+from colour import Color
+
 from constants import *
-from mobject.mobject import Mobject, Group
+from mobject.image_mobject import ImageMobject
+from mobject.mobject import Group
+from mobject.mobject import Mobject
 from mobject.point_cloud_mobject import PMobject
 from mobject.vectorized_mobject import VMobject
-from mobject.image_mobject import ImageMobject
-from utils.color import rgb_to_hex, color_to_int_rgba
-from utils.config_ops import digest_config, digest_locals, DictAsObject
+from utils.color import color_to_int_rgba
+from utils.color import rgb_to_hex
+from utils.config_ops import DictAsObject
+from utils.config_ops import digest_config
+from utils.config_ops import digest_locals
 from utils.images import get_full_raster_image_path
-from utils.iterables import remove_list_redundancies, list_difference_update
 from utils.iterables import batch_by_property
+from utils.iterables import list_difference_update
+from utils.iterables import remove_list_redundancies
 from utils.simple_functions import fdiv
 
 

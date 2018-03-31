@@ -1,12 +1,18 @@
 from constants import *
 
-from mobject.tex_mobject import TexMobject, TextMobject
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VMobject, VGroup
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
 
-from animation.transform import Transform, FadeIn, MoveToTarget
-from animation.simple_animations import ShowCreation
-from topics.geometry import Arrow, Circle, Dot
+from animation.creation import ShowCreation
+from animation.creation import FadeIn
+from animation.transform import MoveToTarget
+from animation.transform import Transform
+from topics.geometry import Arrow
+from topics.geometry import Circle
+from topics.geometry import Dot
 # from topics.fractals import *
 from scene.scene import Scene
 

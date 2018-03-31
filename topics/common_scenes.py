@@ -1,16 +1,24 @@
 
 from constants import *
 
-from scene.scene import Scene
 from animation.animation import Animation
-from animation.simple_animations import Write, DrawBorderThenFill
-from animation.compositions import LaggedStart
-from animation.transform import FadeIn, FadeOut, ApplyMethod
+from animation.composition import LaggedStart
+from animation.creation import DrawBorderThenFill
+from animation.creation import Write
+from animation.transform import ApplyMethod
+from animation.creation import FadeIn
+from animation.creation import FadeOut
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
 from mobject.vectorized_mobject import VGroup
-from mobject.tex_mobject import TexMobject, TextMobject
-from topics.characters import Mortimer, Randolph, Blink
+from scene.scene import Scene
+from topics.characters import Blink
+from topics.characters import Mortimer
+from topics.characters import Randolph
+from topics.geometry import DashedLine
+from topics.geometry import Rectangle
+from topics.geometry import Square
 from topics.objects import PatreonLogo
-from topics.geometry import Square, Rectangle, DashedLine
 
 
 class OpeningQuote(Scene):

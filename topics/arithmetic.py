@@ -1,10 +1,10 @@
-import numpy as np
 import itertools as it
+import numpy as np
 
-from constants import *
-from scene.scene import Scene
 from animation.animation import Animation
+from constants import *
 from mobject.tex_mobject import TexMobject
+from scene.scene import Scene
 
 class RearrangeEquation(Scene):
     def construct(

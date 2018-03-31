@@ -1,10 +1,16 @@
+from __future__ import absolute_import
+
 import re
+
 from colour import Color
 
+from mobject.mobject import Mobject
 from constants import *
-from .mobject import Mobject
-from utils.bezier import bezier, partial_bezier_points
-from utils.bezier import interpolate, get_smooth_handle_points, is_closed
+from utils.bezier import bezier
+from utils.bezier import get_smooth_handle_points
+from utils.bezier import interpolate
+from utils.bezier import is_closed
+from utils.bezier import partial_bezier_points
 from utils.color import color_to_rgb
 from utils.color import interpolate_color
 from utils.iterables import make_even

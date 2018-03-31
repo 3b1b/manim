@@ -1,7 +1,7 @@
 from constants import *
 
-from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TexMobject
+from mobject.vectorized_mobject import VMobject
 
 from scene.scene import Scene
 from utils.simple_functions import choose

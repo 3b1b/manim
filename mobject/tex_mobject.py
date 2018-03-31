@@ -1,13 +1,16 @@
 from constants import *
 
-from vectorized_mobject import VMobject, VGroup, VectorizedPoint
-from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
+from svg_mobject import SVGMobject
+from svg_mobject import VMobjectFromSVGPathstring
 from topics.geometry import BackgroundRectangle
 from utils.config_ops import digest_config
+from vectorized_mobject import VGroup
+from vectorized_mobject import VMobject
+from vectorized_mobject import VectorizedPoint
 
 import collections
-import sys
 import operator as op
+import sys
 
 TEX_MOB_SCALE_FACTOR = 0.05
 

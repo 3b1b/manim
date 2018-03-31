@@ -1,18 +1,22 @@
 from constants import *
 
 
-from mobject.vectorized_mobject import VGroup
-from mobject.tex_mobject import TexMobject, TextMobject
-from number_line import NumberPlane
 from animation.animation import Animation
-from animation.transform import ApplyPointwiseFunction, MoveToTarget
-from animation.simple_animations import Homotopy, ShowCreation, \
-    SmoothedVectorizedHomotopy
+from animation.movement import Homotopy
+from animation.creation import ShowCreation
+from animation.movement import SmoothedVectorizedHomotopy
+from animation.transform import ApplyPointwiseFunction
+from animation.transform import MoveToTarget
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
+from mobject.vectorized_mobject import VGroup
+from number_line import NumberPlane
 from scene.scene import Scene
-from utils.config_ops import instantiate
 from utils.config_ops import digest_config
+from utils.config_ops import instantiate
 from utils.paths import path_along_arc
-from utils.space_ops import complex_to_R3, R3_to_complex
+from utils.space_ops import R3_to_complex
+from utils.space_ops import complex_to_R3
 
 
 class ComplexTransformationScene(Scene):

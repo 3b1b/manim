@@ -1,6 +1,6 @@
 from constants import *
 from mobject.mobject import Mobject, Group
-from simple_animations import MaintainPositionRelativeTo
+from animation.update import MaintainPositionRelativeTo
 import copy
 from utils.config_ops import instantiate
 from utils.config_ops import digest_config

@@ -3,17 +3,28 @@ from constants import *
 from scene.scene import Scene
 
 from animation.animation import Animation
-from animation.transform import Transform, MoveToTarget
-from animation.simple_animations import UpdateFromFunc
+from animation.transform import MoveToTarget
+from animation.transform import Transform
+from animation.update import UpdateFromFunc
 
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
-from mobject.tex_mobject import TextMobject, TexMobject, Brace
-from topics.geometry import Circle, Line, Rectangle, Square, Arc, Polygon
+from mobject.tex_mobject import Brace
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VectorizedPoint
+from topics.geometry import Arc
+from topics.geometry import Circle
+from topics.geometry import Line
+from topics.geometry import Polygon
+from topics.geometry import Rectangle
+from topics.geometry import Square
 
 from utils.bezier import interpolate
-from utils.color import color_gradient, average_color
+from utils.color import average_color
+from utils.color import color_gradient
 from utils.config_ops import digest_config
 from utils.iterables import tuplify
 from utils.space_ops import center_of_mass

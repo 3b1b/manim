@@ -1,16 +1,21 @@
 
 from constants import *
 
-from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
-from topics.geometry import Square, Line
-from scene.scene import Scene
-from camera.camera import Camera
-from animation.continual_animation import AmbientMovement
+from continual_animation.continual_animation import AmbientMovement
 from animation.transform import ApplyMethod
+from camera.camera import Camera
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VectorizedPoint
+from scene.scene import Scene
+from topics.geometry import Line
+from topics.geometry import Square
 
 from utils.bezier import interpolate
 from utils.iterables import list_update
-from utils.space_ops import rotation_matrix, rotation_about_z, z_to_vector
+from utils.space_ops import rotation_about_z
+from utils.space_ops import rotation_matrix
+from utils.space_ops import z_to_vector
 
 
 class CameraWithPerspective(Camera):

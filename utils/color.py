@@ -1,6 +1,7 @@
-from colour import Color
 import numpy as np
 import random
+
+from colour import Color
 
 from utils.bezier import interpolate
 

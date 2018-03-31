@@ -1,7 +1,8 @@
 import numpy as np
+
+from constants import OUT
 from utils.bezier import interpolate
 from utils.space_ops import rotation_matrix
-from constants import OUT
 
 STRAIGHT_PATH_THRESHOLD = 0.01
 

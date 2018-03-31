@@ -1,20 +1,35 @@
 import numpy as np
 
-from scene.scene import Scene
+from animation.animation import Animation
+from animation.creation import ShowCreation
+from animation.creation import Write
+from animation.transform import ApplyFunction
+from animation.transform import ApplyMethod
+from animation.transform import ApplyPointwiseFunction
+from animation.creation import FadeOut
+from animation.transform import Transform
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VMobject, VGroup
-from mobject.tex_mobject import TexMobject, TextMobject
-from animation.animation import Animation    
-from animation.transform import ApplyPointwiseFunction, Transform, \
-    ApplyMethod, FadeOut, ApplyFunction
-from animation.simple_animations import ShowCreation, Write
-from topics.number_line import NumberPlane, Axes
-from topics.geometry import Vector, Line, Circle, Arrow, Dot, \
-    BackgroundRectangle, Square
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
+from scene.scene import Scene
+from topics.geometry import Arrow
+from topics.geometry import BackgroundRectangle
+from topics.geometry import Circle
+from topics.geometry import Dot
+from topics.geometry import Line
+from topics.geometry import Square
+from topics.geometry import Vector
+from topics.number_line import Axes
+from topics.number_line import NumberPlane
 
 from constants import *
-from topics.matrix import Matrix, VECTOR_LABEL_SCALE_FACTOR, vector_coordinate_label
-from utils.rate_functions import rush_into, rush_from
+from topics.matrix import Matrix
+from topics.matrix import VECTOR_LABEL_SCALE_FACTOR
+from topics.matrix import vector_coordinate_label
+from utils.rate_functions import rush_from
+from utils.rate_functions import rush_into
 from utils.space_ops import angle_of_vector
 
 

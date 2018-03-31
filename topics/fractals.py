@@ -1,14 +1,25 @@
 # from mobject.mobject import Mobject, Point, Mobject1D
-from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
-from scene.scene import Scene
+from animation.creation import ShowCreation
 from animation.transform import Transform
-from animation.simple_animations import ShowCreation
-from topics.geometry import Line, Polygon, RegularPolygon, Square, Circle
-from characters import PiCreature, Randolph, get_all_pi_creature_modes
+from characters import PiCreature
+from characters import Randolph
+from characters import get_all_pi_creature_modes
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VectorizedPoint
+from scene.scene import Scene
+from topics.geometry import Circle
+from topics.geometry import Line
+from topics.geometry import Polygon
+from topics.geometry import RegularPolygon
+from topics.geometry import Square
 from utils.bezier import interpolate
 from utils.color import color_gradient
 from utils.config_ops import digest_config
-from utils.space_ops import rotation_matrix, rotate_vector, compass_directions, center_of_mass
+from utils.space_ops import center_of_mass
+from utils.space_ops import compass_directions
+from utils.space_ops import rotate_vector
+from utils.space_ops import rotation_matrix
 
 from constants import *
 

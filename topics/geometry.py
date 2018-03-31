@@ -4,11 +4,16 @@ import itertools as it
 import numpy as np
 
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VMobject, VGroup
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
 from utils.bezier import interpolate
-from utils.config_ops import digest_config, digest_locals
+from utils.config_ops import digest_config
+from utils.config_ops import digest_locals
 from utils.paths import path_along_arc
-from utils.space_ops import rotate_vector, angle_of_vector, compass_directions, center_of_mass
+from utils.space_ops import angle_of_vector
+from utils.space_ops import center_of_mass
+from utils.space_ops import compass_directions
+from utils.space_ops import rotate_vector
 
 class Arc(VMobject):
     CONFIG = {

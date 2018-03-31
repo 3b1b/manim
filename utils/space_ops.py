@@ -1,5 +1,7 @@
 import numpy as np
-from constants import RIGHT, OUT
+
+from constants import OUT
+from constants import RIGHT
 
 #Matrix operations
 

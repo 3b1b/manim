@@ -1,21 +1,36 @@
 from constants import *
 
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
-from mobject.tex_mobject import TextMobject, TexMobject, Brace
+from mobject.tex_mobject import Brace
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VectorizedPoint
 
 from animation.animation import Animation
-from animation.simple_animations import Rotating
-from animation.compositions import LaggedStart, AnimationGroup
-from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
+from animation.composition import AnimationGroup
+from animation.composition import LaggedStart
+from animation.rotation import Rotating
+from animation.transform import ApplyMethod
+from animation.creation import FadeIn
+from animation.creation import GrowFromCenter
 
-from topics.geometry import Circle, Line, Rectangle, Square, \
-    Arc, Polygon, SurroundingRectangle
+from topics.geometry import Arc
+from topics.geometry import Circle
+from topics.geometry import Line
+from topics.geometry import Polygon
+from topics.geometry import Rectangle
+from topics.geometry import Square
+from topics.geometry import SurroundingRectangle
 from topics.three_dimensions import Cube
-from utils.config_ops import digest_config, digest_locals
-from utils.space_ops import rotate_vector, angle_of_vector
-from utils.space_ops import complex_to_R3, R3_to_complex
+from utils.config_ops import digest_config
+from utils.config_ops import digest_locals
+from utils.space_ops import R3_to_complex
+from utils.space_ops import angle_of_vector
+from utils.space_ops import complex_to_R3
+from utils.space_ops import rotate_vector
 
 class Lightbulb(SVGMobject):
     CONFIG = {

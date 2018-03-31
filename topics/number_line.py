@@ -1,10 +1,12 @@
 from constants import *
 
-from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject
-from topics.geometry import Line, Arrow
-from topics.functions import ParametricFunction
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
 from scene.scene import Scene
+from topics.functions import ParametricFunction
+from topics.geometry import Arrow
+from topics.geometry import Line
 from utils.bezier import interpolate
 from utils.config_ops import digest_config
 from utils.space_ops import angle_of_vector

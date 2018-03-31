@@ -1,14 +1,26 @@
 import numpy as np
 
-from scene.scene import Scene
+from animation.creation import ShowCreation
+from animation.creation import Write
+from animation.transform import ApplyFunction
+from animation.transform import ApplyMethod
+from animation.transform import ApplyPointwiseFunction
+from animation.creation import FadeOut
+from animation.transform import Transform
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VMobject, VGroup
-from mobject.tex_mobject import TexMobject, TextMobject
-from animation.transform import ApplyPointwiseFunction, Transform, \
-    ApplyMethod, FadeOut, ApplyFunction
-from animation.simple_animations import ShowCreation, Write
-from topics.number_line import NumberPlane, Axes
-from topics.geometry import Vector, Line, Circle, Arrow, Dot, BackgroundRectangle
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
+from scene.scene import Scene
+from topics.geometry import Arrow
+from topics.geometry import BackgroundRectangle
+from topics.geometry import Circle
+from topics.geometry import Dot
+from topics.geometry import Line
+from topics.geometry import Vector
+from topics.number_line import Axes
+from topics.number_line import NumberPlane
 
 from constants import *
 

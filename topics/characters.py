@@ -1,25 +1,36 @@
-import random
-import numpy as np
 import itertools as it
+import numpy as np
+import random
 
 from constants import *
 
-from mobject.mobject import Mobject, Group
+from mobject.mobject import Group
+from mobject.mobject import Mobject
 from mobject.svg_mobject import SVGMobject
-from mobject.vectorized_mobject import VMobject, VGroup
-from mobject.tex_mobject import TextMobject, TexMobject
+from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TextMobject
+from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VMobject
 
-from topics.objects import Bubble, ThoughtBubble, SpeechBubble
 from topics.geometry import ScreenRectangle
+from topics.objects import Bubble
+from topics.objects import SpeechBubble
+from topics.objects import ThoughtBubble
 
 from animation.animation import Animation
-from animation.transform import Transform, ApplyMethod, MoveToTarget
-from animation.transform import ReplacementTransform, FadeOut, FadeIn
-from animation.simple_animations import Write, ShowCreation
-from animation.compositions import AnimationGroup
+from animation.composition import AnimationGroup
+from animation.creation import ShowCreation
+from animation.creation import Write
+from animation.transform import ApplyMethod
+from animation.creation import FadeIn
+from animation.creation import FadeOut
+from animation.transform import MoveToTarget
+from animation.transform import ReplacementTransform
+from animation.transform import Transform
 from scene.scene import Scene
 from utils.config_ops import digest_config
-from utils.rate_functions import there_and_back, squish_rate_func
+from utils.rate_functions import squish_rate_func
+from utils.rate_functions import there_and_back
 
 
 PI_CREATURE_DIR = os.path.join(MEDIA_DIR, "designs", "PiCreature")
