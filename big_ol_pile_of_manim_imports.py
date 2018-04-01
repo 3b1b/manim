@@ -70,7 +70,7 @@ from once_useful_constructs.fractals import *
 from once_useful_constructs.graph_theory import *
 from once_useful_constructs.light import *
 
-from topics.matrix import *
+from mobject.matrix import *
 from topics.probability import *
 from topics.three_dimensions import *
 from topics.vector_space_scene import *

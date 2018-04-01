@@ -25,9 +25,9 @@ from mobject.coordinate_systems import Axes
 from mobject.coordinate_systems import NumberPlane
 
 from constants import *
-from topics.matrix import Matrix
-from topics.matrix import VECTOR_LABEL_SCALE_FACTOR
-from topics.matrix import vector_coordinate_label
+from mobject.matrix import Matrix
+from mobject.matrix import VECTOR_LABEL_SCALE_FACTOR
+from mobject.matrix import vector_coordinate_label
 from utils.rate_functions import rush_from
 from utils.rate_functions import rush_into
 from utils.space_ops import angle_of_vector

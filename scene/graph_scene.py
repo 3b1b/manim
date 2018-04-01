@@ -19,6 +19,9 @@ from utils.color import color_gradient
 from utils.color import invert_color
 from utils.space_ops import angle_of_vector
 
+# TODO, this should probably reimplemented entirely, especially so as to
+# better reuse code from mobject/coordinate_systems
+
 class GraphScene(Scene):
     CONFIG = {
         "x_min" : -1,

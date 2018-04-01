@@ -216,7 +216,6 @@ def get_module(file_name):
         return get_module_windows(file_name)
     return get_module_posix(file_name)
 
-
 def main():
    config = get_configuration()
    module = get_module(config["file"])

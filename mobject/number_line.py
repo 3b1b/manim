@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from constants import *
 
 from mobject.svg.tex_mobject import TexMobject
