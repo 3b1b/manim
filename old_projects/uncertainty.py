@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import scipy
 from big_ol_pile_of_manim_imports import *
 from old_projects.fourier import *
@@ -662,7 +663,7 @@ class ShowPlan(PiCreatureScene):
         )
         self.add(pulse)
         count = it.count() #TODO, this is not a great hack...
-        while not pulse.is_finished() and count.next() < 15:
+        while not pulse.is_finished() and next(count) < 15:
             self.play(
                 morty.look_at, pulse.mobject,
                 run_time = 0.5
@@ -1501,7 +1502,7 @@ class CenterOfMassDescription(FourierRecapScene):
                 angle = factor*angle,
                 radius = 0.5,
             )
-            for factor in 1, 2
+            for factor in (1, 2)
         ]
         theta = TexMobject("\\theta")
         theta.shift(1.5*arc.point_from_proportion(0.5))
@@ -2018,7 +2019,7 @@ class IntroduceDopplerRadar(Scene):
         )
         v_line_pair = VGroup(*[
             v_line.copy().shift(u*0.6*RIGHT)
-            for u in -1, 1
+            for u in (-1, 1)
         ])
         v_line = VGroup(v_line)
 
@@ -2526,7 +2527,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
 
         noise_function = lambda t : np.sum([
             0.5*np.sin(f*t)/f 
-            for f in 2, 3, 5, 7, 11, 13
+            for f in (2, 3, 5, 7, 11, 13)
         ])
         noisy_graph = self.axes.get_graph(
             lambda t : sum_graph.underlying_function(t)*(1+noise_function(t)),
@@ -3337,7 +3338,7 @@ class AskPhysicists(PiCreatureScene):
 
         physies = VGroup(*[
             PiCreature(color = c).flip()
-            for c in GREY, LIGHT_GREY, DARK_GREY
+            for c in (GREY, LIGHT_GREY, DARK_GREY)
         ])
         physies.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
         physies.scale(scale_factor)
@@ -4183,7 +4184,7 @@ class ProbabalisticDetection(FourierTransformOfWaveFunction):
 
         v_lines = VGroup(*[
             DashedLine(ORIGIN, 3*UP).move_to(point, DOWN)
-            for point in rect.get_left(), rect.get_right()
+            for point in (rect.get_left(), rect.get_right())
         ])
         
         self.play(
@@ -4584,7 +4585,7 @@ class Promotion(PiCreatureScene):
             ),
             FadeOut(book),
         )
-        print self.num_plays
+        print(self.num_plays)
         self.play(
             FadeOut(words),
             ShowCreation(rect),
@@ -4766,7 +4767,7 @@ class Thumbnail(Scene):
         )
         graphs = VGroup(*[
             axes.get_graph(get_func(a))
-            for a in 10, 3, 1, 0.3, 0.1,
+            for a in (10, 3, 1, 0.3, 0.1,)
         ])
         graphs.arrange_submobjects(DOWN, buff = 0.6)
         graphs.to_corner(UP+LEFT)

@@ -138,7 +138,7 @@ class Introduction(TeacherStudentsScene):
             )
         )
         self.change_student_modes(
-            *["pondering"]*3, 
+            *["pondering"]*3,
             look_at_arg = disease_group
         )
 
@@ -174,7 +174,7 @@ class Introduction(TeacherStudentsScene):
         )
 
         self.play(
-            disease_group.next_to, 
+            disease_group.next_to,
                 self.teacher.get_corner(UP+LEFT), UP,
             disease_group.shift, LEFT,
             intuitive_examples.scale, 0.7,
@@ -189,7 +189,7 @@ class Introduction(TeacherStudentsScene):
         something_else.scale_to_fit_height(bayes.get_height())
         something_else.move_to(bayes, RIGHT)
         new_group = VGroup(
-            something_else, 
+            something_else,
             *self.bayes_to_intuition[1:]
         )
 
@@ -314,7 +314,7 @@ class TestScene(PiCreatureScene):
 
     def get_test_arrow(self):
         arrow = Arrow(
-            LEFT, RIGHT, 
+            LEFT, RIGHT,
             color = WHITE,
         )
         word = TextMobject("Test")
@@ -515,7 +515,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
                 TexMobject("P(\\text{Disease})", s1),
                 TexMobject("P(\\text{Not disease})", s2),
             ).scale(0.7)
-            for s1, s2 in ("", ""), ("= 0.001", "= 0.999")
+            for s1, s2 in (("", ""), ("= 0.001", "= 0.999"))
         ]
         sample_space.get_side_braces_and_labels(initial_labels)
         sample_space.add_braces_and_labels()
@@ -629,7 +629,7 @@ class ShowRestrictedSpace(Scene):
 
     def show_accurate_positive_result(self):
         equation = TexMobject(
-            "P(", "\\text{Test positive }", "|", 
+            "P(", "\\text{Test positive }", "|",
             "\\text{ sick}", ")", "=", "100\\%"
         )
         equation.set_color_by_tex("positive", YELLOW)
@@ -643,7 +643,7 @@ class ShowRestrictedSpace(Scene):
 
     def show_false_positive_conditional(self):
         equation = TexMobject(
-            "P(", "\\text{Test positive }", "|", 
+            "P(", "\\text{Test positive }", "|",
             "\\text{ healthy}", ")", "=", "1\\%"
         )
         equation.set_color_by_tex("positive", YELLOW)
@@ -701,7 +701,7 @@ class ShowRestrictedSpace(Scene):
         words.to_edge(UP)
         arrows = [
             Arrow(words.get_bottom(), movers.target[i].get_top())
-            for i in 0, -1
+            for i in (0, -1)
         ]
 
         self.play(FadeOut(to_fade))
@@ -723,7 +723,7 @@ class ShowRestrictedSpace(Scene):
 
     def show_posterior_probability(self):
         posterior = TexMobject(
-            "P(", "\\text{Sick }", "|", 
+            "P(", "\\text{Sick }", "|",
             "\\text{ Positive test result}", ")",
             "\\approx \\frac{1}{11}", "\\approx 9\\%"
         )
@@ -984,7 +984,7 @@ class ShowTheFormula(TeacherStudentsScene):
         lhs_copy = lhs.copy()
         self.play(
             LaggedStart(
-                FadeIn, initial_formula, 
+                FadeIn, initial_formula,
                 lag_ratio = 0.7
             ),
             Animation(lhs_copy, remover = True),
@@ -1074,8 +1074,8 @@ class SourceOfConfusion(Scene):
         words = self.bayes_rule_words
         words_rect = SurroundingRectangle(words)
         rule = TexMobject(
-            "P(", "S", "|", "+", ")", "=", 
-            "P(", "S", ")", 
+            "P(", "S", "|", "+", ")", "=",
+            "P(", "S", ")",
             "{P(", "+", "|", "S", ")", "\\over",
             "P(", "+", ")}"
         )
@@ -1127,7 +1127,7 @@ class StatisticsVsEmpathy(PiCreatureScene):
         prior.save_state()
 
         self.play(PiCreatureSays(
-            morty, 
+            morty,
             "1 in 1{,}000 people \\\\ have this disease.",
             look_at_arg = randy.eyes
         ))
@@ -1202,12 +1202,12 @@ class LessMedicalExample(Scene):
 class PlaneCrashProbability(Scene):
     def construct(self):
         plane_prob = TexMobject(
-            "P(\\text{Dying in a }", "\\text{plane}", "\\text{ crash})", 
+            "P(\\text{Dying in a }", "\\text{plane}", "\\text{ crash})",
             "\\approx", "1/", "11{,}000{,}000"
         )
         plane_prob.set_color_by_tex("plane", BLUE)
         car_prob = TexMobject(
-            "P(\\text{Dying in a }", "\\text{car}", "\\text{ crash})", 
+            "P(\\text{Dying in a }", "\\text{car}", "\\text{ crash})",
             "\\approx", "1/", "5{,}000"
         )
         car_prob.set_color_by_tex("car", YELLOW)
@@ -1280,7 +1280,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         self.play(
             ShowCreation(bubble),
             number.move_to, bubble.get_bubble_center(), DOWN+LEFT,
-            morty.change, "pondering", 
+            morty.change, "pondering",
         )
         self.wait()
 
@@ -1326,7 +1326,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
                 bubble_kwargs = {"height" : 3, "width" : 4}
             ),
             RemovePiCreatureBubble(
-                randy, 
+                randy,
                 target_mode = "plain",
                 look_at_arg = morty.eyes,
             )
@@ -1383,15 +1383,15 @@ class CompareNumbersInBothExamples(Scene):
             TexMobject(
                 "P(", "\\text{%s}"%s, ")", "= 1/1{,}000}"
             )
-            for s in "Sick", "Powers"
+            for s in ("Sick", "Powers")
         ])
         likelihoods = VGroup(*[
             TexMobject(
-                "P(", "\\text{%s}"%s1, "|", 
+                "P(", "\\text{%s}"%s1, "|",
                 "\\text{Not }", "\\text{%s}"%s2, ")",
                 "=", "1/100"
             )
-            for s1, s2 in ("+", "Sick"), ("Correct", "Powers")
+            for s1, s2 in (("+", "Sick"), ("Correct", "Powers"))
         ])
         priors.next_to(likelihoods, UP, LARGE_BUFF)
         for group in priors, likelihoods:
@@ -1481,7 +1481,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
     def either_way(self):
         b_to_i = self.bayes_to_intuition
         s_to_b = self.statistics_to_belief
-        
+
         self.play(FadeOut(self.example))
         self.play(
             self.teacher.change_mode, "raise_left_hand",
@@ -1531,31 +1531,3 @@ class Thumbnail(Scene):
         prob.next_to(randy, RIGHT)
 
         self.add(title, randy, prob)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

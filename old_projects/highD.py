@@ -52,12 +52,12 @@ class Slider(NumberLine):
         self.label = label
 
     def add_real_estate_ticks(
-        self, 
+        self,
         re_per_tick = 0.05,
         colors = [BLUE, RED],
         max_real_estate = 1,
         ):
-        self.real_estate_ticks = VGroup(*[   
+        self.real_estate_ticks = VGroup(*[
             self.get_tick(self.center_value + u*np.sqrt(x + re_per_tick))
             for x in np.arange(0, max_real_estate, re_per_tick)
             for u in [-1, 1]
@@ -143,7 +143,7 @@ class SliderScene(Scene):
             self.center_point[0] + np.sqrt(self.total_real_estate)
         )
         self.sliders = sliders
-        
+
         self.add_labels_to_sliders()
         self.add(sliders)
 
@@ -178,7 +178,7 @@ class SliderScene(Scene):
         ], run_time = run_time)
 
     def get_target_vect_from_subset_of_values(self, values, fixed_indices = None):
-        if fixed_indices is None: 
+        if fixed_indices is None:
             fixed_indices = []
         curr_vector = self.get_vector()
         target_vector = np.array(self.center_point, dtype = 'float')
@@ -351,7 +351,7 @@ class MathIsATease(Scene):
         eye_bottom_y = randy.eyes.get_bottom()[1]
         self.play(
             ApplyMethod(
-                lashes.apply_function, 
+                lashes.apply_function,
                 lambda p : [p[0], eye_bottom_y, p[2]],
                 rate_func = Blink.CONFIG["rate_func"],
             ),
@@ -360,7 +360,7 @@ class MathIsATease(Scene):
         )
         self.play(
             ApplyMethod(
-                lashes.apply_function, 
+                lashes.apply_function,
                 lambda p : [p[0], eye_bottom_y, p[2]],
                 rate_func = Blink.CONFIG["rate_func"],
             ),
@@ -392,7 +392,7 @@ class CircleToPairsOfPoints(Scene):
         equation.to_corner(UP+LEFT)
         equation.add_background_rectangle()
 
-        coord_pair = TexMobject("(", "-%.02f"%x, ",", "-%.02f"%y, ")") 
+        coord_pair = TexMobject("(", "-%.02f"%x, ",", "-%.02f"%y, ")")
         fixed_numbers = coord_pair.get_parts_by_tex("-")
         fixed_numbers.set_fill(opacity = 0)
         coord_pair.add_background_rectangle()
@@ -485,7 +485,7 @@ class CircleToPairsOfPoints(Scene):
         plane.remove(*plane.coordinate_labels)
         self.play(
             Rotate(
-                plane, np.pi/3, 
+                plane, np.pi/3,
                 run_time = 4,
                 rate_func = there_and_back
             ),
@@ -600,7 +600,7 @@ class TODOTease(TODOStub):
 class AskAboutLongerLists(TeacherStudentsScene):
     def construct(self):
         question = TextMobject(
-            "What about \\\\", 
+            "What about \\\\",
             "$(x_1, x_2, x_3, x_4)?$"
         )
         tup = question[1]
@@ -666,7 +666,7 @@ class Professionals(PiCreatureScene):
 
     def add_equation(self):
         quaternion = TexMobject(
-            "\\frac{1}{2}", "+", 
+            "\\frac{1}{2}", "+",
             "0", "\\textbf{i}", "+",
             "\\frac{\\sqrt{6}}{4}", "\\textbf{j}", "+",
             "\\frac{\\sqrt{6}}{4}", "\\textbf{k}",
@@ -745,7 +745,7 @@ class Professionals(PiCreatureScene):
                 rate_func = squish_rate_func(smooth, a, a+0.5)
             )
             for pi, mode, a in zip(
-                self.pi_creatures, 
+                self.pi_creatures,
                 ["confused", "sassy", "erm"],
                 np.linspace(0, 0.5, len(self.pi_creatures))
             )
@@ -821,7 +821,7 @@ class RotatingSphereWithWanderingPoint(ExternallyAnimatedScene):
     pass
 
 class DismissProjection(PiCreatureScene):
-    CONFIG = { 
+    CONFIG = {
         "screen_rect_color" : WHITE,
         "example_vect" : np.array([0.52, 0.26, 0.53, 0.60]),
     }
@@ -831,7 +831,7 @@ class DismissProjection(PiCreatureScene):
         self.discuss_4d_sphere_definition()
         self.talk_through_animation()
         self.transition_to_next_scene()
-        
+
     def show_all_spheres(self):
         equations = VGroup(*map(TexMobject, [
             "x^2 + y^2 = 1",
@@ -850,7 +850,7 @@ class DismissProjection(PiCreatureScene):
             self.get_sphere_screen(equations[1], DOWN),
             self.get_sphere_screen(equations[2], DOWN),
         )
-        
+
         for equation, sphere in zip(equations, spheres):
             self.play(
                 Write(equation),
@@ -888,12 +888,12 @@ class DismissProjection(PiCreatureScene):
         sphere_words = TextMobject("``4-dimensional sphere''")
         sphere_words.next_to(sphere, DOWN+LEFT, buff = LARGE_BUFF)
         arrow = Arrow(
-            sphere_words.get_right(), sphere.get_bottom(), 
-            path_arc = np.pi/3, 
+            sphere_words.get_right(), sphere.get_bottom(),
+            path_arc = np.pi/3,
             color = BLUE
         )
         descriptor = TexMobject(
-            "\\text{Just lists of numbers like }", 
+            "\\text{Just lists of numbers like }",
             "(%.02f \\,, %.02f \\,, %.02f \\,, %.02f \\,)"%tuple(self.example_vect)
         )
         descriptor[1].set_color(BLUE)
@@ -1002,9 +1002,9 @@ class Introduce4DSliders(SliderScene):
         equation = TexMobject("x^2 + y^2 + z^2 + w^2 = 1")
         x, y, z, w = self.start_vect
         tup = TexMobject(
-            "(", "%.02f \\,"%x, 
-            ",", "%.02f \\,"%y, 
-            ",", "%.02f \\,"%z, 
+            "(", "%.02f \\,"%x,
+            ",", "%.02f \\,"%y,
+            ",", "%.02f \\,"%z,
             ",", "%.02f \\,"%w, ")"
         )
         equation.center().to_edge(UP)
@@ -1037,7 +1037,7 @@ class Introduce4DSliders(SliderScene):
                 remover = True
             )
             for num, dial, a in zip(
-                numbers, dial_copies, 
+                numbers, dial_copies,
                 np.linspace(0, 0.5, len(numbers))
             )
         ])
@@ -1126,7 +1126,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         rects = VGroup(x_rect, y_rect)
 
         decimals = VGroup(*[
-            DecimalNumber(num**2) 
+            DecimalNumber(num**2)
             for num in self.get_vector()
         ])
         decimals.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
@@ -1309,7 +1309,7 @@ class TwoDimensionalCaseIntro(TwoDimensionalCase):
         self.wait(10)
 
 class ThreeDCase(TwoDimensionalCase):
-    CONFIG = { 
+    CONFIG = {
         "n_sliders" : 3,
         "slider_config" : {
             "include_real_estate_ticks" : True,
@@ -1656,7 +1656,7 @@ class TwoDBoxExample(Scene):
 
     def compute_radius(self):
         triangle = Polygon(
-            ORIGIN, 
+            ORIGIN,
             self.plane.coords_to_point(1, 0),
             self.plane.coords_to_point(1, 1),
             fill_color = BLUE,
@@ -1746,8 +1746,8 @@ class ThreeDCubeCorners(Scene):
 class ShowDistanceFormula(TeacherStudentsScene):
     def construct(self):
         rule = TexMobject(
-            "||(", "x_1", ", ", "x_2", "\\dots, ", "x_n", ")||", 
-            "=", 
+            "||(", "x_1", ", ", "x_2", "\\dots, ", "x_n", ")||",
+            "=",
             "\\sqrt", "{x_1^2", " + ", "x_2^2", " +\\cdots", "x_n^2", "}"
         )
         rule.set_color_by_tex_to_color_map({
@@ -1843,7 +1843,7 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
         full_group = VGroup(group, z_line, z, three_d_diag, dot)
         self.play(Rotating(
             full_group, radians = -np.pi/6,
-            axis = UP, 
+            axis = UP,
             run_time = 10,
         ))
         self.wait()
@@ -1927,7 +1927,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         for number in x_slider.numbers:
             value = int(number.get_tex_string())
             number.next_to(
-                x_slider.number_to_point(value), 
+                x_slider.number_to_point(value),
                 LEFT, MED_SMALL_BUFF
             )
         self.plane.axes.set_color(BLUE)
@@ -1937,7 +1937,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             self.circle.copy().move_to(
                 self.plane.coords_to_point(*coords)
             ).set_color(GREY)
-            for coords in (1, 1), (-1, 1), (-1, -1)
+            for coords in ((1, 1), (-1, 1), (-1, -1))
         ])
         line = Line(
             self.plane.coords_to_point(-1, -1),
@@ -1984,7 +1984,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
                     slider.number_to_point(0)-slider.number_to_point(slider.center_value)
                 )
                 for slider in self.sliders
-                for mob in slider.real_estate_ticks, slider.dial
+                for mob in (slider.real_estate_ticks, slider.dial)
             ]
         )
         self.center_point = [0, 0]
@@ -1994,7 +1994,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.wait(7)
         self.wind_down_ambient_movement()
         self.play(
-            self.circle.move_to, 
+            self.circle.move_to,
                 self.plane.coords_to_point(*original_center_point),
             Animation(self.sliders),
             *[
@@ -2003,7 +2003,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
                     slider.number_to_point(x)-slider.number_to_point(0)
                 )
                 for x, slider in zip(original_center_point, self.sliders)
-                for mob in slider.real_estate_ticks, slider.dial
+                for mob in (slider.real_estate_ticks, slider.dial)
             ]
         )
         self.center_point = original_center_point
@@ -2055,7 +2055,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
                     mob.shift,
                     slider.number_to_point(1) - slider.number_to_point(-1)
                 )
-                for mob in slider.real_estate_ticks, slider.dial
+                for mob in (slider.real_estate_ticks, slider.dial)
             ]
         )
         slider.center_value = 1
@@ -2115,7 +2115,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             slider.dial.copy()
             for slider in self.sliders
         ])
-        ghost_dials.set_fill(WHITE, opacity = 0.75)
+        ghost_dials.set_fill(WHITE, opacity=0.75)
 
         self.add_foreground_mobjects(ghost_dials)
         self.reset_dials(target_vector)
@@ -2181,10 +2181,10 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         #Return to original position
         target_vector = np.array(2*[1-np.sqrt(0.5)])
         self.play(LaggedStart(FadeOut, VGroup(*[
-            ghost_dials, 
-            x_words, y_words, 
-            x_arrow, y_arrow, 
-            crosses, new_words, 
+            ghost_dials,
+            x_words, y_words,
+            x_arrow, y_arrow,
+            crosses, new_words,
         ])))
         self.remove_foreground_mobjects(ghost_dials)
         self.reset_dials(target_vector)
@@ -2303,7 +2303,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         re_words.to_corner(UP+LEFT)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(target_x) + MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (2, RIGHT)
+            for i, vect in ((0, LEFT), (2, RIGHT))
         ])
         new_arrow = Arrow(
             re_words.get_corner(DOWN+RIGHT), re_line.get_left(),
@@ -2329,7 +2329,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
     def compare_to_halfway_point(self):
         half_line = Line(*[
             self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (2, RIGHT)
+            for i, vect in ((0, LEFT), (2, RIGHT))
         ])
         half_line.set_stroke(MAROON_B, 6)
         half_label = TexMobject("0.5")
@@ -2514,7 +2514,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         target_vector = 0.5*np.ones(4)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in ((0, LEFT), (-1, RIGHT))
         ])
         half_label = TexMobject("0.5")
         half_label.scale(self.sliders[0].number_scale_val)
@@ -2603,7 +2603,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
 
     def compute_inner_radius_numerically(self):
         computation = TexMobject(
-            "R_\\text{Inner}", 
+            "R_\\text{Inner}",
             "&= ||(1, 1, 1, 1)|| - 1 \\\\",
             # "&= \\sqrt{1^2 + 1^2 + 1^2 + 1^2} - 1 \\\\",
             "&= \\sqrt{4} - 1 \\\\",
@@ -2657,12 +2657,12 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
                 radius = radius*self.plane.x_unit_size,
                 color = GREEN
             ).move_to(self.plane.coords_to_point(0, 0))
-            for radius in np.sqrt(2)-1, 1
+            for radius in (np.sqrt(2)-1, 1)
         ]
         randy = self.randy
         tangency_points = VGroup(*[
             Dot(self.plane.coords_to_point(x, y))
-            for x, y in (1, 0), (0, 1), (-1, 0), (0, -1)
+            for x, y in ((1, 0), (0, 1), (-1, 0), (0, -1))
         ])
         tangency_points.set_fill(YELLOW, 0.5)
 
@@ -2754,7 +2754,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         target_x = 1-np.sqrt(0.2)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(target_x)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in ((0, LEFT), (-1, RIGHT))
         ])
         re_words = TextMobject(
             "$0.2$", "units of real \\\\ estate each"
@@ -2772,7 +2772,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             )
             rect.move_to(slider.number_to_point(1), UP)
             re_rects.add(rect)
-        
+
         self.wind_down_ambient_movement()
         self.reset_dials(5*[target_x])
         self.play(
@@ -2792,7 +2792,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
     def show_halfway_point(self):
         half_line = Line(*[
             self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in ((0, LEFT), (-1, RIGHT))
         ])
         half_line.set_color(MAROON_B)
         half_label = TexMobject("0.5")
@@ -2868,7 +2868,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         )
         self.play(
             MoveToTarget(
-                re_rects, 
+                re_rects,
                 run_time = 2,
                 submobject_mode = "lagged_start",
                 path_arc = np.pi
@@ -2950,7 +2950,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         target_x = 1-np.sqrt(1./self.n_sliders)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(target_x)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in ((0, LEFT), (-1, RIGHT))
         ])
 
         re_rects = VGroup()
@@ -2964,7 +2964,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
             )
             rect.move_to(slider.number_to_point(1), UP)
             re_rects.add(rect)
-        
+
         self.wind_down_ambient_movement()
         self.reset_dials(self.n_sliders*[target_x])
         self.play(ShowCreation(re_line))
@@ -3002,7 +3002,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         )
         self.play(
             MoveToTarget(
-                re_rects, 
+                re_rects,
                 run_time = 2,
                 submobject_mode = "lagged_start",
                 path_arc = np.pi
@@ -3038,7 +3038,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         words.to_edge(LEFT)
         words.set_color(RED)
         arrow = Arrow(
-            words.get_top(), 
+            words.get_top(),
             self.sliders[0].dial,
             path_arc = -np.pi/3,
             color = words.get_color()
@@ -3524,7 +3524,7 @@ class Podcast(TeacherStudentsScene):
             LaggedStart(
                 ApplyMethod, self.pi_creatures,
                 lambda pi : (pi.change, "hooray", title)
-            ), 
+            ),
             Write(title)
         )
         self.wait(5)
@@ -3612,24 +3612,3 @@ class Thumbnail(SliderScene):
         title.scale(2)
         title.to_edge(UP)
         self.add(title)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -404,7 +404,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
 
         sec_dot, csc_dot = [
             Dot(line.get_end(), color = line.get_color())
-            for line in sec_line, csc_line
+            for line in (sec_line, csc_line)
         ]
         sec_group.add(sec_dot)
         csc_group.add(csc_dot)

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 
@@ -8,7 +10,7 @@ from mobject.mobject import Mobject, Group
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 from .animation import Animation
-from transform import Transform
+from .transform import Transform
 from utils.bezier import inverse_interpolate
 from utils.config_ops import digest_config
 from utils.rate_functions import squish_rate_func
@@ -178,7 +180,7 @@ class Succession(Animation):
                     "Rounding error not near alpha=1 in Succession.update_mobject," + \
                     "instead alpha = %f"%alpha
                 )
-                print self.critical_alphas, alpha
+                print(self.critical_alphas, alpha)
             i = self.num_anims - 1
 
         # At this point, we should have self.critical_alphas[i] <= alpha <= self.critical_alphas[i +1]

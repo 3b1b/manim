@@ -1149,9 +1149,9 @@ class Antiderivative(AverageOfSineStart):
         (start_pi, end_pi), (start_zero, end_zero) = start_end_pairs = [
             [
                 m.get_part_by_tex(tex) 
-                for m in integral, rhs
+                for m in (integral, rhs)
             ]
-            for tex in "\\pi", "0"
+            for tex in ("\\pi", "0")
         ]
 
         for tex_mob in integral, rhs:
@@ -1271,7 +1271,7 @@ class Antiderivative(AverageOfSineStart):
             TexMobject("\\over\\,").stretch_to_fit_width(
                 mob.get_width()
             ).move_to(mob)
-            for mob in integral, rhs_without_eq
+            for mob in (integral, rhs_without_eq)
         ])
         frac_lines.shift(
             (integral.get_height()/2 + SMALL_BUFF)*DOWN
@@ -1301,7 +1301,7 @@ class Antiderivative(AverageOfSineStart):
                 integral.get_part_by_tex(tex).copy(),
                 pi_minus_zeros[0].get_part_by_tex(tex)
             )
-            for tex in "\\pi","0"
+            for tex in ("\\pi","0")
         ] + [
             Write(pi_minus_zeros[0].get_part_by_tex("-"))
         ])
@@ -1312,7 +1312,7 @@ class Antiderivative(AverageOfSineStart):
                 ).copy(),
                 pi_minus_zeros[1].get_part_by_tex(tex)
             )
-            for tex in "\\pi", "-", "0"
+            for tex in ("\\pi", "-", "0")
         ])
         self.wait(2)
 
@@ -1514,7 +1514,7 @@ class GeneralAverage(AverageOfContinuousVariable):
             Write(
                 VGroup(*[
                     fraction.get_part_by_tex(tex)
-                    for tex in "int", "f(x)", "dx", "over"
+                    for tex in ("int", "f(x)", "dx", "over")
                 ]),
                 rate_func = squish_rate_func(smooth, 0.25, 0.75),
                 run_time = 4

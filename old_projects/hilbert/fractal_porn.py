@@ -228,7 +228,7 @@ class FromKochToSpaceFilling(Scene):
         words.to_edge(UP)
         koch, sharper_koch, duller_koch = curves = [
             CurveClass(order = 1)
-            for CurveClass in StraightKoch, SharperKoch, DullerKoch
+            for CurveClass in (StraightKoch, SharperKoch, DullerKoch)
         ]
         arcs = [
             Arc(
@@ -276,11 +276,11 @@ class FromKochToSpaceFilling(Scene):
             text.to_edge(UP)
         sharper, duller, space_filling = [
             CurveClass(order = 1).shift(3*LEFT)
-            for CurveClass in SharperKoch, DullerKoch, SpaceFillingKoch
+            for CurveClass in (SharperKoch, DullerKoch, SpaceFillingKoch)
         ]
         shaper_f, duller_f, space_filling_f = [
             CurveClass(order = self.max_order).shift(3*RIGHT)
-            for CurveClass in SharperKoch, DullerKoch, SpaceFillingKoch
+            for CurveClass in (SharperKoch, DullerKoch, SpaceFillingKoch)
         ]
 
         self.add(words[0])

@@ -113,7 +113,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             card.generate_target()
 
         straight_cards = VGroup(*it.chain(
-            you.hand.target, 
+            you.hand.target,
             [c.target for c in selected_community_cards]
         ))
         straight_cards.submobjects.sort(card_cmp)
@@ -214,7 +214,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
     def compute_flush_probability(self):
         you, her = self.you, self.her
         equation = TexMobject(
-            "{ {10 \\choose 2}", "\\over", "{45 \\choose 2} }", 
+            "{ {10 \\choose 2}", "\\over", "{45 \\choose 2} }",
             "=", "{45 \\over 990}", "\\approx", "4.5\\%"
         )
         equation.next_to(self.community_cards, UP, buff = LARGE_BUFF)
@@ -247,19 +247,19 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         self.play(LaggedStart(FadeIn, equation))
         self.wait(2)
         self.play(
-            FadeIn(num_hearts), 
+            FadeIn(num_hearts),
             ShowCreation(num_hearts_arrow),
             ten.set_color, RED,
         )
         self.play(
-            FadeIn(num_cards), 
+            FadeIn(num_cards),
             ShowCreation(num_cards_arrow),
             fourty_five.set_color, BLUE
         )
         self.wait(3)
         equation.remove(percentage)
         self.play(*map(FadeOut, [
-            equation, 
+            equation,
             num_hearts, num_hearts_arrow,
             num_cards, num_cards_arrow,
         ]))
@@ -308,7 +308,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
                 [("3H", "8H"), ("4H", "5H"), ("JH", "KH")],
                 [("AC", "6D"), ("3D", "6S"), ("JH", "4C")],
             ]
-        ]   
+        ]
         for hand_list, part in zip(hand_lists, [top_part, bottom_part]):
             self.play(Indicate(part, scale_factor = 1))
             for hand in hand_list:
@@ -456,12 +456,12 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         card2.move_to(card1)
         card2.shift(MED_SMALL_BUFF*RIGHT + SMALL_BUFF*DOWN)
         hand.next_to(
-            pi_creature, vect, 
+            pi_creature, vect,
             buff = MED_LARGE_BUFF,
             aligned_edge = UP
         )
         return hand
-    
+
 class HowDoesPokerWork(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -564,13 +564,13 @@ class UpdatePokerPrior(SampleSpaceScene):
         self.play(FadeIn(her))
         self.play(glasses.restore)
         self.play(
-            her.change_mode, "happy", 
+            her.change_mode, "happy",
             Animation(glasses)
         )
         self.wait(2)
 
         self.her = her
-        
+
     def add_bottom_conditionals(self):
         her = self.her
         bottom_part = self.sample_space.horizontal_parts[1]
@@ -635,14 +635,14 @@ class UpdatePokerPrior(SampleSpaceScene):
         bubble.add_content(words)
 
         numbers = VGroup(
-            self.top_conditional_rhs, 
+            self.top_conditional_rhs,
             self.bottom_conditional_rhs
         )
         numbers.save_state()
         arrows = VGroup(*[
             Arrow(
-                numbers_word.get_left(), 
-                num.get_right(), 
+                numbers_word.get_left(),
+                num.get_right(),
                 buff = 2*SMALL_BUFF
             )
             for num in numbers
@@ -758,7 +758,7 @@ class UpdatePokerPrior(SampleSpaceScene):
 
     def write_P_flush_given_bet(self):
         posterior_tex = TexMobject(
-            "P(", self.double_heart_template, 
+            "P(", self.double_heart_template,
             "|", self.cash_string, ")"
         )
         posterior_tex.scale(0.7)
@@ -957,7 +957,7 @@ class UpdatePokerPrior(SampleSpaceScene):
         prior_rhs_group = self.get_prior_rhs_group()
 
         fraction = TexMobject(
-            "{(0.045)", "(0.97)", "\\over", 
+            "{(0.045)", "(0.97)", "\\over",
             "(0.995)", "(0.3)", "+", "(0.045)", "(0.97)}"
         )
         products = [
@@ -1044,7 +1044,7 @@ class UpdatePokerPrior(SampleSpaceScene):
                 "P(", s, self.double_heart_template, ")",
                 "= ", num
             )
-            for s, num in ("", p_str), ("\\text{not }", q_str)
+            for s, num in (("", p_str), ("\\text{not }", q_str))
         ]
         for label in labels:
             label.scale(0.7)
@@ -1058,7 +1058,7 @@ class UpdatePokerPrior(SampleSpaceScene):
 
     def get_conditional_label(self, value, given_flush = True):
         label = TexMobject(
-            "P(", self.cash_string, "|", 
+            "P(", self.cash_string, "|",
             "" if given_flush else "\\text{not }",
             self.double_heart_template, ")",
             "=", str(value)
@@ -1110,8 +1110,8 @@ class BayesRuleInMemory(Scene):
         B = "\\text{Belief}"
         D = "\\text{Data}"
         rule = TexMobject(
-            "P(", B, "|", D, ")", "=", 
-            "P(", "B", ")", 
+            "P(", B, "|", D, ")", "=",
+            "P(", "B", ")",
             "{P(", D, "|", B, ")", "\\over", "P(", D, ")}"
         )
         rule.set_color_by_tex(B, RED)
@@ -1187,7 +1187,7 @@ class BayesianNetworkPreview(Scene):
         nodes = VGroup(*[
             node.copy().shift(x*RIGHT + y*UP)
             for x, y in [
-                (-1, 0),  
+                (-1, 0),
                 (1, 0),
                 (-2, 2),
                 (0, 2),
@@ -1212,7 +1212,7 @@ class BayesianNetworkPreview(Scene):
         for i1, i2 in edge_index_pairs:
             n1, n2 = nodes[i1], nodes[i2]
             edge = Arrow(
-                n1.get_center(), 
+                n1.get_center(),
                 n2.get_center(),
                 buff = radius,
                 color = WHITE,
@@ -1417,10 +1417,10 @@ class GeneralizeBayesRule(SampleSpaceScene):
         )
 
         self.play(
-            Write(prior_word), 
-            ShowCreation(prior_arrow), 
+            Write(prior_word),
+            ShowCreation(prior_arrow),
             ShowCreation(prior_rect),
-        ) 
+        )
         self.wait()
         self.play(Transform(
             prior.copy(), prior_target,
@@ -1440,13 +1440,13 @@ class GeneralizeBayesRule(SampleSpaceScene):
         self.play(FocusOn(self.sample_space[0][0]))
         for i in range(2):
             self.play(Indicate(
-                self.sample_space[i][0], 
+                self.sample_space[i][0],
                 scale_factor = 1
             ))
         self.wait()
         self.play(
-            Write(posterior_word), 
-            ShowCreation(posterior_arrow), 
+            Write(posterior_word),
+            ShowCreation(posterior_arrow),
             ShowCreation(posterior_rect),
         )
 
@@ -1468,7 +1468,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
         name.next_to(self.posterior_tex, UP, 1.5*LARGE_BUFF)
         arrows = [
             Arrow(
-                name, rect.get_edge_center(vect), 
+                name, rect.get_edge_center(vect),
                 tip_length = 0.15
             )
             for rect, vect in zip(rects, [RIGHT, UP])
@@ -1555,7 +1555,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
         self.wait()
         self.play(*it.chain(
             self.get_division_change_animations(
-                self.sample_space, 
+                self.sample_space,
                 self.sample_space.horizontal_parts,
                 0.1
             ),
@@ -1663,7 +1663,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         randy = self.pi_creature
         friends = VGroup(*[
             PiCreature(mode = "happy", color = color).flip()
-            for color in BLUE_B, GREY_BROWN, MAROON_E
+            for color in (BLUE_B, GREY_BROWN, MAROON_E)
         ])
         friends.scale(0.6)
         friends.arrange_submobjects(RIGHT)
@@ -1677,7 +1677,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.play(FadeIn(friends))
         self.pi_creatures.add(*friends)
         self.play(
-            FadeIn(headphones), 
+            FadeIn(headphones),
             Animation(friends)
         )
         self.play_notes(randy.guitar)
@@ -1714,7 +1714,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         bubble.add_content(content)
         VGroup(bubble, content).next_to(friends, LEFT, SMALL_BUFF)
         VGroup(bubble, content).to_edge(UP, SMALL_BUFF)
-    
+
         self.play(LaggedStart(
             ApplyMethod, friends,
             lambda pi : (pi.change_mode, "conniving")
@@ -1789,7 +1789,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.change_pi_creature_with_guitar(
             "soulful_musician",
             LaggedStart(
-                ApplyMethod, friends, 
+                ApplyMethod, friends,
                 lambda pi : (pi.change, "happy"),
                 run_time = 1,
             )
@@ -1887,14 +1887,14 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         rhs.scale(0.7)
         rhs.next_to(post_tex, RIGHT)
         ratio = TexMobject(
-            "{(0.8)(0.9)", "\\over", 
+            "{(0.8)(0.9)", "\\over",
             "(0.8)(0.9)", "+", "(0.2)(0.99)}"
         )
         ratio.scale(0.6)
         ratio.next_to(VGroup(post_tex, rhs), DOWN, LARGE_BUFF)
         ratio.to_edge(RIGHT)
         arrow_kwargs = {
-            "tip_length" : 0.15, 
+            "tip_length" : 0.15,
             "color" : WHITE,
             "buff" : 2*SMALL_BUFF,
         }
@@ -1966,16 +1966,16 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         for value in 0.5, 0.1, 0.9:
             label = self.get_conditional_label(value)
             self.play(*self.get_top_conditional_change_anims(
-                value, post_rects, 
+                value, post_rects,
                 new_label_kwargs = {"labels" : [label]},
             ), run_time = 2)
             self.wait(2)
 
     def fade_out_post_rect(self):
         self.play(*map(FadeOut, [
-            self.post_rects, 
-            self.post_rects.braces, 
-            self.post_rects.labels, 
+            self.post_rects,
+            self.post_rects.braces,
+            self.post_rects.labels,
         ]))
         self.play(self.negative_space.restore)
 
@@ -2006,7 +2006,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.wait()
         self.play(ReplacementTransform(
             new_prior_rects.copy(), post_rects,
-            run_time = 2            
+            run_time = 2
         ))
         self.play(GrowFromCenter(brace))
         self.wait(2)
@@ -2060,7 +2060,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
     def get_conditional_label(self, value, given_suck = True):
         positive_str = "\\checkmark"
         label = TexMobject(
-            "P(", positive_str, "|", 
+            "P(", positive_str, "|",
             "" if given_suck else "\\text{not }",
             "S", ")",
             "=", str(value)
@@ -2096,7 +2096,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             sine_wave.point_from_proportion(0)
         )
         self.play(LaggedStart(
-            MoveAlongPath, notes, 
+            MoveAlongPath, notes,
             lambda n : (n, sine_wave),
             path_arc = np.pi/2,
             run_time = 4,
@@ -2161,7 +2161,7 @@ class FinalWordsOnRule(SampleSpaceScene):
 
     def add_uses(self):
         uses = TextMobject(
-            "Machine learning, ", 
+            "Machine learning, ",
             "scientific inference, $\\dots$",
         )
         uses.to_edge(UP)
@@ -2276,16 +2276,3 @@ class Thumbnail(SampleSpaceScene):
 
         VGroup(sample_space, post_rects).next_to(title, DOWN, LARGE_BUFF)
         self.add(sample_space, post_rects)
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 from PIL import Image
 from copy import deepcopy
 
-from mobject.mobject import Mobject
+from .mobject.mobject import Mobject
 from utils.iterables import adjacent_pairs
 
 from constants import *

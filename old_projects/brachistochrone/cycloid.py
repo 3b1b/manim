@@ -36,7 +36,7 @@ class CycloidScene(Scene):
     def grow_parts(self):
         self.play(*[
             ShowCreation(mob)
-            for mob in self.circle, self.ceiling
+            for mob in (self.circle, self.ceiling)
         ])
 
     def generate_cycloid(self):
@@ -295,7 +295,7 @@ class LeviSolution(CycloidScene):
         self.wait()
         self.play(*[
             Transform(mob, d_mob)
-            for mob in brace, diameter_word
+            for mob in (brace, diameter_word)
         ])
         self.remove(brace, diameter_word)
         self.add(d_mob)

@@ -8,6 +8,7 @@ using backpropagation.  Note that I have focused on making the code
 simple, easily readable, and easily modifiable.  It is not optimized,
 and omits many desirable features.
 """
+from __future__ import print_function
 
 #### Libraries
 # Standard library
@@ -221,7 +222,7 @@ def test_network():
             n_right += 1
         else:
             n_wrong += 1
-    print(n_right, n_wrong, float(n_right)/(n_right + n_wrong))
+    print((n_right, n_wrong, float(n_right)/(n_right + n_wrong)))
 
 def layer_to_image_array(layer):
     w = int(np.ceil(np.sqrt(len(layer))))

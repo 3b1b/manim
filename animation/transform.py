@@ -34,7 +34,7 @@ class Transform(Animation):
         self.init_path_func()
 
         Animation.__init__(self, mobject, **kwargs)
-        self.name += "To" + str(target_mobject)  
+        self.name += "To" + str(target_mobject)
 
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
@@ -155,7 +155,7 @@ class ApplyMethod(Transform):
             "Whoops, looks like you accidentally invoked " + \
             "the method you want to animate"
         )
-        assert(isinstance(method.im_self, Mobject))
+        assert(isinstance(method.__self__, Mobject))
         args = list(args) #So that args.pop() works
         if "method_kwargs" in kwargs:
             method_kwargs = kwargs["method_kwargs"]
@@ -163,13 +163,13 @@ class ApplyMethod(Transform):
             method_kwargs = args.pop()
         else:
             method_kwargs = {}
-        target = method.im_self.copy()
-        method.im_func(target, *args, **method_kwargs)
-        Transform.__init__(self, method.im_self, target, **kwargs)
+        target = method.__self__.copy()
+        method.__func__(target, *args, **method_kwargs)
+        Transform.__init__(self, method.__self__, target, **kwargs)
 
 class FadeOut(Transform):
     CONFIG = {
-        "remover" : True, 
+        "remover" : True,
     }
     def __init__(self, mobject, **kwargs):
         target = mobject.copy()
@@ -249,7 +249,7 @@ class Rotate(ApplyMethod):
         if self.in_place:
             self.about_point = mobject.get_center()
         target.rotate(
-            angle, 
+            angle,
             axis = axis,
             about_point = self.about_point,
         )
@@ -278,8 +278,8 @@ class ApplyFunction(Transform):
     }
     def __init__(self, function, mobject, **kwargs):
         Transform.__init__(
-            self, 
-            mobject, 
+            self,
+            mobject,
             function(mobject.copy()),
             **kwargs
         )
@@ -294,7 +294,7 @@ class ApplyMatrix(ApplyPointwiseFunction):
             new_matrix[:2, :2] = matrix
             matrix = new_matrix
         elif matrix.shape != (3, 3):
-            raise "Matrix has bad dimensions"
+            raise Exception("Matrix has bad dimensions")
         transpose = np.transpose(matrix)
         def func(p):
             return np.dot(p, transpose)
@@ -313,7 +313,7 @@ class TransformAnimations(Transform):
             self.run_time = max(start_anim.run_time, end_anim.run_time)
         for anim in start_anim, end_anim:
             anim.set_run_time(self.run_time)
-            
+
         if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
             start_anim.starting_mobject.align_data(end_anim.starting_mobject)
             for anim in start_anim, end_anim:
@@ -329,6 +329,3 @@ class TransformAnimations(Transform):
         self.start_anim.update(alpha)
         self.end_anim.update(alpha)
         Transform.update(self, alpha)
-
-
-

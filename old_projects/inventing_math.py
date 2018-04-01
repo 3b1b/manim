@@ -9,6 +9,7 @@ from random import sample
 
 from big_ol_pile_of_manim_imports import *
 from script_wrapper import command_line_create_scene
+from functools import reduce
 
 # from inventing_math_images import *
 
@@ -351,7 +352,7 @@ class YouAsMathematician(Scene):
         bubble.clear()
         dot_pair = [
             Dot(density = 3*DEFAULT_POINT_DENSITY_1D).shift(x+UP)
-            for x in LEFT, RIGHT
+            for x in (LEFT, RIGHT)
         ]
         self.add(you, explanation)
         self.play(
@@ -376,7 +377,7 @@ class YouAsMathematician(Scene):
         self.add(*dot_pair)
         two_arrows = [
             Arrow(x, direction = x).shift(UP).nudge()
-            for x in LEFT, RIGHT
+            for x in (LEFT, RIGHT)
         ]
         self.play(*[ShowCreation(a) for a in two_arrows])
         self.play(BlinkPiCreature(you))
@@ -412,7 +413,7 @@ class DotsGettingCloser(Scene):
     def construct(self):
         dots = [
             Dot(radius = 3*Dot.DEFAULT_RADIUS).shift(3*x)
-            for x in LEFT, RIGHT
+            for x in (LEFT, RIGHT)
         ]
         self.add(*dots)
         self.wait()
@@ -428,7 +429,7 @@ class ZoomInOnInterval(Scene):
         interval = zero_to_one_interval().split()
 
         new_line = deepcopy(number_line)
-        new_line.set_color("black", lambda (x,y,z) : x < 0 or x > 1 or y < -0.2)
+        new_line.set_color("black", lambda x_y_z1 : x_y_z1[0] < 0 or x_y_z1[0] > 1 or x_y_z1[1] < -0.2)
         # height = new_line.get_height()
         new_line.scale(2*INTERVAL_RADIUS)
         new_line.shift(INTERVAL_RADIUS*LEFT)
@@ -465,7 +466,7 @@ class DanceDotOnInterval(Scene):
         interval = zero_to_one_interval()
         dots = [
             Dot(radius = 3*Dot.DEFAULT_RADIUS).shift(INTERVAL_RADIUS*x+UP)
-            for x in LEFT, RIGHT
+            for x in (LEFT, RIGHT)
         ]
         color_range = Color("green").range_to("yellow", num_written_terms)
         conv_sum = TexMobject(sum_terms, size = "\\large").split()
@@ -480,7 +481,7 @@ class DanceDotOnInterval(Scene):
             shift_val = 2*RIGHT*INTERVAL_RADIUS*(1-prop)*(prop**count)
             start = dots[0].get_center()
             line = Line(start, start + shift_val*RIGHT)
-            line.set_color(color_range.next())
+            line.set_color(next(color_range))
             self.play(
                 ApplyMethod(dots[0].shift, shift_val),
                 ShowCreation(line)
@@ -570,7 +571,7 @@ class SeeNumbersApproachOne(Scene):
             ).scale(1+1.0/2.0**x).shift(
                 INTERVAL_RADIUS*RIGHT +\
                 (INTERVAL_RADIUS/2.0**x)*LEFT
-            ).set_color(colors.next())
+            ).set_color(next(colors))
             for x in range(num_dots)
         ])
 
@@ -661,7 +662,7 @@ class ListOfPartialSums(Scene):
         ).split())
         numbers, equals, sums = [
             all_terms[range(k, 12, 3)]
-            for k in 0, 1, 2
+            for k in (0, 1, 2)
         ]
         dots = all_terms[12]
         one = all_terms[-3]
@@ -755,7 +756,7 @@ class CircleZoomInOnOne(Scene):
 
         self.play(*[
             DelayByOrder(FadeIn(mob))
-            for mob in arrow, curr_num
+            for mob in (arrow, curr_num)
         ])
         self.wait()
         for num in numbers[1:] + [text]:
@@ -775,16 +776,16 @@ class ZoomInOnOne(Scene):
     def construct(self):
         num_iterations = 8
         number_line = NumberLine(interval_size = 1, radius = FRAME_X_RADIUS+2)
-        number_line.filter_out(lambda (x, y, z):abs(y)>0.1)
+        number_line.filter_out(lambda x_y_z2:abs(x_y_z2[1])>0.1)
         nl_with_nums = deepcopy(number_line).add_numbers()
         self.play(ApplyMethod(nl_with_nums.shift, 2*LEFT))
         zero, one, two = [
             TexMobject(str(n)).scale(0.5).shift(0.4*DOWN+2*(-1+n)*RIGHT)
-            for n in 0, 1, 2
+            for n in (0, 1, 2)
         ]
         self.play(
             FadeOut(nl_with_nums),
-            *[Animation(mob) for mob in zero, one, two, number_line]
+            *[Animation(mob) for mob in (zero, one, two, number_line)]
         )
         self.remove(nl_with_nums, number_line, zero, two)
         powers_of_10 = [10**(-n) for n in range(num_iterations+1)]
@@ -796,7 +797,7 @@ class ZoomInOnOne(Scene):
 
     def zoom_with_numbers(self, numbers, next_numbers):
         all_numbers = map(
-            lambda (n, u): TexMobject(str(n)).scale(0.5).shift(0.4*DOWN+2*u*RIGHT),
+            lambda n_u: TexMobject(str(n_u[0])).scale(0.5).shift(0.4*DOWN+2*n_u[1]*RIGHT),
             zip(numbers+next_numbers, it.cycle([-1, 1]))
         )
 
@@ -807,7 +808,7 @@ class ZoomInOnOne(Scene):
                 interval_size = 1, 
                 density = scale_factor*DEFAULT_POINT_DENSITY_1D
             ).filter_out(
-                lambda (x, y, z):abs(y)>0.1
+                lambda x_y_z:abs(x_y_z[1])>0.1
             ).scale(1.0/scale_factor**x)
             for x in range(num_levels)
         ]
@@ -823,7 +824,7 @@ class ZoomInOnOne(Scene):
                 2*LEFT*(scale_factor-1)*(-1)**i, 
                 **kwargs
             )
-            for i in 0, 1
+            for i in (0, 1)
         ]+[
             Transform(Point(0.4*DOWN + u*0.2*RIGHT), num, **kwargs)
             for u, num in zip([-1, 1], all_numbers[2:])
@@ -917,7 +918,7 @@ class DefineInfiniteSum(Scene):
         ]
         self.play(*[
             Transform(lines[x], lines[x+1], run_time = 3.0)
-            for x in 0, 2
+            for x in (0, 2)
         ])
 
 
@@ -982,7 +983,7 @@ class ChopIntervalInProportions(Scene):
                     TexMobject("\\frac{%d}{%d}"%(k, (10**(count+1))))
                     for count in range(num_terms)
                 ]
-                for k in 9, 1
+                for k in (9, 1)
             ]
         if mode == "p":
             num_terms = 4         
@@ -1359,7 +1360,7 @@ class SumPowersOfTwoAnimation(Scene):
         topbrace = Underbrace(top_brace_left, right).rotate(np.pi, RIGHT)
         bottombrace = Underbrace(bottom_brace_left, right)
         colors = Color("yellow").range_to("purple", iterations)
-        curr_dots.set_color(colors.next())
+        curr_dots.set_color(next(colors))
         equation = TexMobject(
             "1+2+4+\\cdots+2^n=2^{n+1} - 1",
             size = "\\Huge"
@@ -1386,7 +1387,7 @@ class SumPowersOfTwoAnimation(Scene):
             shift_val = (2**n)*(dot_width+dot_buff)
             right += shift_val
             new_dots = Mobject(new_dot, curr_dots)
-            new_dots.set_color(colors.next()).shift(shift_val)
+            new_dots.set_color(next(colors)).shift(shift_val)
             alt_bottombrace = deepcopy(bottombrace).shift(shift_val)
             alt_bottom_num = deepcopy(bottom_num).shift(shift_val)
             alt_topbrace = deepcopy(alt_bottombrace).rotate(np.pi, RIGHT)
@@ -1655,9 +1656,9 @@ class TriangleInequality(Scene):
         self.play(ShowCreation(ac_line), FadeIn(ac_copy))
         self.wait()
         self.play(*[
-            ShowCreation(line) for line in ab_line, bc_line
+            ShowCreation(line) for line in (ab_line, bc_line)
         ]+[
-            FadeIn(dist) for dist in ab_copy, bc_copy
+            FadeIn(dist) for dist in (ab_copy, bc_copy)
         ])
         self.wait()
         self.play(*[
@@ -1665,7 +1666,7 @@ class TriangleInequality(Scene):
             for pair in zip(all_copies, all_dists)
         ]+[
             FadeIn(mob)
-            for mob in plus, greater_than
+            for mob in (plus, greater_than)
         ])
         self.wait()
 
@@ -1844,7 +1845,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 return mob
             self.play(*[
                 ApplyFunction(transform, mob)
-                for mob in zero_copy, power_mob_copy
+                for mob in (zero_copy, power_mob_copy)
             ])
             last_left_mob = zero
             for n in range(power+1, 2*power):
@@ -1852,7 +1853,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 shift_val = left_mob.get_center()-last_left_mob.get_center()
                 self.play(*[
                     ApplyMethod(mob.shift, shift_val)
-                    for mob in zero_copy, power_mob_copy
+                    for mob in (zero_copy, power_mob_copy)
                 ])
                 num_mobs[n] = TexMobject(str(n))
                 num_mobs[n].scale(1.0/(power_of_divisor(n, 2)+1))
@@ -1901,7 +1902,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
             self.clear_way_for_text(text, cluster)
             self.add(*cluster)          
             pairs = filter(
-                lambda (a, b) : (a-b)%(2**count) == 0 and (a-b)%(2**(count+1)) != 0,
+                lambda a_b : (a_b[0]-a_b[1])%(2**count) == 0 and (a_b[0]-a_b[1])%(2**(count+1)) != 0,
                 it.combinations(range(16), 2)
             )
             for pair in sample(pairs, min(10, len(pairs))):
@@ -1922,7 +1923,8 @@ class RoomsAndSubroomsWithNumbers(Scene):
     def clear_way_for_text(text, mobjects):
         right, top, null = np.max(text.points, 0)
         left, bottom, null = np.min(text.points, 0)
-        def filter_func((x, y, z)):
+        def filter_func(xxx_todo_changeme):
+            (x, y, z) = xxx_todo_changeme
             return x>left and x<right and y>bottom and y<top
         for mobject in mobjects:
             mobject.filter_out(filter_func)
@@ -1957,7 +1959,7 @@ class DeduceWhereNegativeOneFalls(Scene):
             rest_time = 0.3 + 1.0/(n+1)
             new_args = [
                 TextMobject("$%d$"%k).scale(1.5)
-                for k in 2**n-1, 2**n
+                for k in (2**n-1, 2**n)
             ]
             for new_arg, old_arg in zip(new_args, last_args):
                 new_arg.shift(old_arg.get_center())
@@ -2015,7 +2017,7 @@ class PAdicMetric(Scene):
         self.add(curr, text)
         self.wait()        
         for prime, count in zip(primes, it.count()):
-            prime.scale(1.0).set_color(colors.next())
+            prime.scale(1.0).set_color(next(colors))
             prime.shift(center_of_mass([p_str.get_top(), p_str.get_center()]))
             self.play(DelayByOrder(Transform(curr, prime)))
             self.wait()

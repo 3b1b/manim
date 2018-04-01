@@ -20,7 +20,7 @@ class TrigAnimation(Animation):
         circle = Circle(color = WHITE)
         self.trig_lines = [
             Line(ORIGIN, RIGHT, color = color)
-            for color in self.sin_color, self.cos_color, self.tan_color
+            for color in (self.sin_color, self.cos_color, self.tan_color)
         ]
         mobject = VMobject(
             x_axis, y_axis, circle, 
@@ -348,7 +348,7 @@ class WhatTheHell(Scene):
             last = mob
         q_marks = VMobject(*[
             TexMobject("?!").next_to(arrow, RIGHT)
-            for arrow in arrow1, arrow2
+            for arrow in (arrow1, arrow2)
         ])
         q_marks.set_color(RED_D)
         everyone = VMobject(exp, rad, log, arrow1, arrow2, q_marks)
@@ -466,11 +466,11 @@ class HaveToShare(Scene):
         VMobject(*words).center()
         left_dot, top_dot, bottom_dot = [
             Dot(point, radius = 0.1)
-            for point in ORIGIN, RIGHT+0.5*UP, RIGHT+0.5*DOWN
+            for point in (ORIGIN, RIGHT+0.5*UP, RIGHT+0.5*DOWN)
         ]
         line1, line2 = [
             Line(left_dot.get_center(), dot.get_center(), buff = 0)
-            for dot in top_dot, bottom_dot
+            for dot in (top_dot, bottom_dot)
         ]
         share = VMobject(left_dot, top_dot, bottom_dot, line1, line2)
         share.next_to(words[1], RIGHT, buff = 1)

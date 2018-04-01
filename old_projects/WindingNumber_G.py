@@ -85,7 +85,7 @@ class IntroSceneWrapper(PiCreatureScene):
             \\left[\\begin{array}{c}
                 ye^x \\\\
                 \\sin(|xy|)
-            \\end{array}\\right] = 
+            \\end{array}\\right] =
             \\left[\\begin{array}{c}
                 y^2 \\\\
                 3y
@@ -236,7 +236,7 @@ class Introduce1DFunctionCase(Scene):
                 axes.coords_to_point(x, 0),
                 axes.coords_to_point(x, f_graph.underlying_function(solution)),
             )
-            for x in axes.x_min, axes.x_max, solution
+            for x in (axes.x_min, axes.x_max, solution)
         ]
 
         equation = TexMobject("f(x)", "=", "g(x)")
@@ -346,9 +346,9 @@ class Introduce1DFunctionCase(Scene):
     ##
 
     def binary_search(
-        self, 
-        f_graph, g_graph, 
-        x0, x1, 
+        self,
+        f_graph, g_graph,
+        x0, x1,
         n_iterations,
         n_iterations_with_sign_mention = 0,
         zoom = False,
@@ -405,7 +405,7 @@ class Introduce1DFunctionCase(Scene):
         kwargs = {
             "mention_signs" : False,
             "show_decimal" : zoom,
-        } 
+        }
         for x in range(n_iterations - 1):
             x_mid = np.mean(end_points)
             leftovers_mid = self.compare_graphs_at_x(f_graph, g_graph, x_mid, **kwargs)
@@ -448,14 +448,14 @@ class Introduce1DFunctionCase(Scene):
                 everything.target[midpoint_line_index].scale(1./factor)
                 if factor > 1:
                     self.play(
-                        everything.scale, factor, 
+                        everything.scale, factor,
                         {"about_point" : rect.get_center()}
                     )
             else:
                 self.wait()
 
     def compare_graphs_at_x(
-        self, f_graph, g_graph, x, 
+        self, f_graph, g_graph, x,
         mention_signs = False,
         show_decimal = False,
         ):
@@ -648,7 +648,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
         self.teacher_holds_up(root_two_equations[0])
         self.wait()
         self.play(Transform(
-            *root_two_equations, 
+            *root_two_equations,
             run_time = 1.5,
             path_arc = TAU/2
         ))
@@ -667,7 +667,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
             \\left[\\begin{array}{c}
                 ye^x \\\\
                 \\sin(xy)
-            \\end{array}\\right] = 
+            \\end{array}\\right] =
             \\left[\\begin{array}{c}
                 y^2 + x^3 \\\\
                 3y - x
@@ -712,8 +712,8 @@ class InputOutputScene(Scene):
         "y_shift" : MED_LARGE_BUFF,
         "output_scalar" : 10,
         "non_renormalized_func" : plane_func_by_wind_spec(
-            (-2, -1, 2), 
-            (1, 1, 1), 
+            (-2, -1, 2),
+            (1, 1, 1),
             (2, -2, -1),
         ),
     }
@@ -857,7 +857,7 @@ class IntroduceInputOutputScene(InputOutputScene):
         for mob in input_label, input_label_arrow:
             mob.match_color(in_dot)
         input_label.add_background_rectangle()
-        
+
         output_label_arrow = Vector(DOWN+LEFT)
         output_label_arrow.next_to(out_dot, UP+RIGHT, SMALL_BUFF)
         output_label = TextMobject("Output point")
@@ -964,7 +964,7 @@ class IntroduceInputOutputScene(InputOutputScene):
 
     def get_output_dot_continual_update(self, input_dot, output_dot):
         return ContinualUpdateFromFunc(
-            output_dot, 
+            output_dot,
             lambda od : od.move_to(self.point_function(input_dot.get_center()))
         )
 
@@ -987,7 +987,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
         out_dot.set_color(PINK)
 
         out_vector = Arrow(
-            LEFT, RIGHT, 
+            LEFT, RIGHT,
             color = out_dot.get_color(),
         )
         out_vector.set_stroke(BLACK, 1)
@@ -1008,7 +1008,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
         )
         continual_updates = [
             out_dot_continual_update,
-            continual_out_vector_update, 
+            continual_out_vector_update,
             continual_in_vector_update
         ]
 
@@ -1077,7 +1077,7 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         out_plane.add(out_text)
 
         arrow = Arrow(
-            LEFT, RIGHT, 
+            LEFT, RIGHT,
             path_arc = -TAU/4,
             use_rectangular_stem = False,
             color = WHITE
@@ -1184,7 +1184,7 @@ class EveryOutputPointHasAColor(ColorMappedObjectsScene):
                 dots.add(dot)
         random.shuffle(dots.submobjects)
 
-        m = 3 #exponential factor        
+        m = 3 #exponential factor
         n = 1
         dot_groups = VGroup()
         while n <= len(dots):
@@ -1221,7 +1221,7 @@ class DotsHoppingToColor(InputOutputScene):
         #Introduce parts
         self.add(input_plane, output_plane, v_line)
         self.play(
-            FadeIn(output_coloring), 
+            FadeIn(output_coloring),
             Animation(output_plane),
             output_plane.white_parts.set_color, BLACK,
             output_plane.lines_to_fade.set_stroke, {"width" : 0},
@@ -1232,7 +1232,7 @@ class DotsHoppingToColor(InputOutputScene):
 
         #Hop over and back
         self.play(LaggedStart(
-            MoveToTarget, dots, 
+            MoveToTarget, dots,
             path_arc = -TAU/4,
             run_time = 3,
         ))
@@ -1309,7 +1309,7 @@ class DotsHoppingToColor(InputOutputScene):
         ))
         self.play(
             ApplyMethod(
-                inspector.move_to, 
+                inspector.move_to,
                 input_plane.coords_to_point(-2, 0),
                 path_arc = -TAU/8,
                 run_time = 3,
@@ -1318,7 +1318,7 @@ class DotsHoppingToColor(InputOutputScene):
         )
         self.play(
             ApplyMethod(
-                inspector.move_to, 
+                inspector.move_to,
                 input_plane.coords_to_point(-2.75, 2.75),
                 path_arc = TAU/8,
                 run_time = 3,
@@ -1335,7 +1335,7 @@ class DotsHoppingToColor(InputOutputScene):
             for zero in zeros:
                 path = ParametricFunction(
                     bezier([
-                        inspector.get_center(), 
+                        inspector.get_center(),
                         input_plane.coords_to_point(0, 0),
                         zero
                     ]),
@@ -1408,7 +1408,7 @@ class Rearrange2DEquation(AltTeacherStudentsScene):
     def construct(self):
         f_tex, g_tex, h_tex = [
             "%s(\\text{2d point})"%char
-            for char in "f", "g", "h" 
+            for char in ("f", "g", "h")
         ]
         zero_tex = "\\vec{\\textbf{0}}"
         equations = VGroup(
@@ -1487,7 +1487,7 @@ class OneDRegionBoundary(Scene):
         "region_rect_height" : 0.1,
     }
     def construct(self):
-        x0 = self.x0 = 3 
+        x0 = self.x0 = 3
         x1 = self.x1 = 6
         fx0 = self.fx0 = -2
         fx1 = self.fx1 = 2
@@ -1540,7 +1540,7 @@ class OneDRegionBoundary(Scene):
                 color = color,
                 buff = 0
             )
-            for x, fx, color in (x0, fx0, RED), (x1, fx1, GREEN)
+            for x, fx, color in ((x0, fx0, RED), (x1, fx1, GREEN))
         ])
         minus = TexMobject("-")
         minus.match_color(x0_arrow)
@@ -1562,7 +1562,7 @@ class OneDRegionBoundary(Scene):
         ))
         self.wait()
         self.play(
-            ShowCreation(graph), 
+            ShowCreation(graph),
             FadeOut(region_words),
         )
         self.wait()
@@ -1693,7 +1693,7 @@ class AskAboutHowToGeneralizeSigns(AltTeacherStudentsScene):
             "Wait...what would \\\\ positive and negative \\\\ be in 2d?",
         )
         # question.set_color_by_tex_to_color_map({
-        #     "+" : "green", 
+        #     "+" : "green",
         #     "textminus" : "red"
         # })
 
@@ -1729,8 +1729,8 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
         square.color_using_background_image(self.background_image_file)
         hypothesis = TextMobject(
            "Working Hypothesis: \\\\",
-           "If a 2d function hits outputs of all possible colors \\\\" + 
-           "on the boundary of a 2d region,", 
+           "If a 2d function hits outputs of all possible colors \\\\" +
+           "on the boundary of a 2d region,",
            "that region \\\\ contains a zero.",
            alignment = "",
         )
@@ -1818,8 +1818,8 @@ class ForeverNarrowingLoop(InputOutputScene):
             circle.move_to(input_plane.coords_to_point(*self.target_coords))
         else:
             circle.next_to(
-                input_coloring.get_corner(self.input_plane_corner), 
-                -self.input_plane_corner, 
+                input_coloring.get_corner(self.input_plane_corner),
+                -self.input_plane_corner,
                 SMALL_BUFF
             )
         circle.set_stroke(width = 5)
@@ -1913,7 +1913,7 @@ class ConfusedPiCreature(PiCreatureScene):
 class FailureOfComposition(ColorMappedObjectsScene):
     CONFIG = {
         "func" : lambda p : (
-            np.cos(TAU*p[1]/3.5), 
+            np.cos(TAU*p[1]/3.5),
             np.sin(TAU*p[1]/3.5)
         )
     }
@@ -2079,7 +2079,7 @@ class PathContainingZero(InputOutputScene, PiCreatureScene):
         )
         path.match_background_image_file(self.input_coloring)
         path.set_points_smoothly(list(it.starmap(
-            self.input_plane.coords_to_point, 
+            self.input_plane.coords_to_point,
             [(1, 2.5), (2.5, 2.5), (2, 0.5), (1, 1), (0.5, 1), (0.5, 2), (1, 2.5)]
         )))
 
@@ -2100,7 +2100,7 @@ class PathContainingZero(InputOutputScene, PiCreatureScene):
             morty.change, "pondering",
             *[
                 ShowCreation(mob, rate_func = bezier([0, 0, 1, 1]))
-                for mob in path, out_path
+                for mob in (path, out_path)
             ],
             run_time = 5
         )
@@ -2225,7 +2225,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
         #Add regions
         self.play(
             FadeOut(paths),
-            FadeOut(joint_path.brace), 
+            FadeOut(joint_path.brace),
             dot.move_to, path1.get_start()
         )
         for square in squares:
@@ -2272,7 +2272,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
     def get_squares_and_joint_rect(self):
         squares = VGroup(*[
             Square(side_length = 4).next_to(ORIGIN, vect, buff = 0)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
         joint_rect = SurroundingRectangle(squares, buff = 0)
         for mob in it.chain(squares, [joint_rect]):
@@ -2293,7 +2293,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
             rev = (get_output_rev() - self.start_rev)%1
             possible_windings = [
                 np.floor(self.curr_winding)+k+rev
-                for k in -1, 0, 1
+                for k in (-1, 0, 1)
             ]
             i = np.argmin([abs(pw - self.curr_winding) for pw in possible_windings])
             self.curr_winding = possible_windings[i]
@@ -2369,7 +2369,7 @@ class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
         both_cannot_be_zero.to_edge(UP)
         arrows = VGroup(*[
             Arrow(both_cannot_be_zero.get_bottom(), var.get_top(), buff = SMALL_BUFF)
-            for var in x, y
+            for var in (x, y)
         ])
 
         self.position_dot(joint_rect.points[0])
@@ -2579,11 +2579,11 @@ class PolynomialTerms(MonomialTerm):
                 background_image_file = self.input_coloring.background_image_file ,
                 stroke_width = 4,
             )
-            for u in -1, 1
+            for u in (-1, 1)
         ]
         out_line = line.copy()
         update_out_line = UpdateFromFunc(
-            out_line, 
+            out_line,
             lambda m : m.set_points(line.points).apply_function(self.point_function),
         )
 
@@ -2706,8 +2706,8 @@ class PiCreatureInAwe(Scene):
         self.play(Blink(randy))
         self.play(randy.look, UP, run_time = 2)
         self.play(
-            randy.look, RIGHT, 
-            run_time = 4, 
+            randy.look, RIGHT,
+            run_time = 4,
             rate_func = there_and_back,
             path_arc = -TAU/4
         )
@@ -2807,7 +2807,7 @@ class WindingNumbersInInputOutputContext(PathContainingZero):
 
         out_arrow = Arrow(LEFT, RIGHT)
         update_out_arrow = ContinualUpdateFromFunc(
-            out_arrow, 
+            out_arrow,
             lambda a : a.put_start_and_end_on(
                 self.output_plane.coords_to_point(0, 0),
                 out_loop.point_from_proportion(1)
@@ -2975,7 +2975,7 @@ class TickingClock(Scene):
 
         run_time = self.run_time
         self.play(ClockPassesTime(
-            clock, 
+            clock,
             run_time = run_time,
             hours_passed = 0.1*run_time
         ))
@@ -3245,35 +3245,3 @@ class Thumbnail(SearchSpacePerimeterVsArea):
 
         self.clear()
         self.add(lines)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

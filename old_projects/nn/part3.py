@@ -2255,7 +2255,7 @@ class SimplestNetworkExample(PreviewLearning):
     def label_neurons(self):
         neurons = VGroup(*[
             self.network_mob.layers[i].neurons[0]
-            for i in -1, -2
+            for i in (-1, -2)
         ])
         decimals = VGroup()
         a_labels = VGroup()
@@ -2374,7 +2374,7 @@ class SimplestNetworkExample(PreviewLearning):
         cost_equation.to_corner(UP+RIGHT)
         C0, a, y = [
             cost_equation.get_part_by_tex(tex)
-            for tex in "C_0", "a^{(L)}", "y"
+            for tex in ("C_0", "a^{(L)}", "y")
         ]
         y.set_color(YELLOW)
 
@@ -2577,7 +2577,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(MoveToTarget(C0))
         self.play(*it.chain(*[
             [ShowCreation(line), line.flash]
-            for line in a_to_c_line, y_to_c_line
+            for line in (a_to_c_line, y_to_c_line)
         ]))
         self.wait(2)
 
@@ -2895,7 +2895,7 @@ class SimplestNetworkExample(PreviewLearning):
         dC_dw = self.dC_dw
         del_syms = [
             getattr(self, attr)
-            for attr in "del_wL", "del_zL", "del_aL", "del_C0"
+            for attr in ("del_wL", "del_zL", "del_aL", "del_C0")
         ]
 
         dz_dw = TexMobject(
@@ -3088,7 +3088,7 @@ class SimplestNetworkExample(PreviewLearning):
                 neuron.set_fill, None, target_o,
                 *[
                     ChangingDecimal(d, lambda a : neuron.get_fill_opacity())
-                    for d in decimal, moving_decimals[0]
+                    for d in (decimal, moving_decimals[0])
                 ]
             )
         self.play(*map(FadeOut, [double_arrow, moving_decimals]))
@@ -3726,8 +3726,8 @@ class GeneralFormulas(SimplestNetworkExample):
             all_subscript_rects.add(subscript_rects)
 
         start_labels, start_arrows = [
-            VGroup(*map(VGroup, [group[i][0] for i in 0, 1])).copy()
-            for group in all_labels, all_arrows
+            VGroup(*map(VGroup, [group[i][0] for i in (0, 1)])).copy()
+            for group in (all_labels, all_arrows)
         ]
         for label in start_labels:
             label[0][-1].set_color(BLACK)
@@ -3856,7 +3856,7 @@ class GeneralFormulas(SimplestNetworkExample):
 
         self.play(*[
             ReplacementTransform(mob, mob.target)
-            for mob in aj, yj
+            for mob in (aj, yj)
         ])
         self.play(LaggedStart(FadeIn, to_fade_in))
         self.wait(2)
@@ -4050,7 +4050,7 @@ class GeneralFormulas(SimplestNetworkExample):
         neurons = self.network_mob.layers[-1].neurons
         labels, arrows, decimals = [
             VGroup(*[getattr(n, attr) for n in neurons])
-            for attr in "label", "arrow", "decimal"
+            for attr in ("label", "arrow", "decimal")
         ]
         edges = VGroup(*[n.edges_in[1] for n in neurons])
         labels[0].generate_target()

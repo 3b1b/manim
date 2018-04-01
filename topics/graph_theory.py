@@ -8,6 +8,7 @@ from constants import *
 from scene.scene import Scene
 from utils.rate_functions import there_and_back
 from utils.space_ops import center_of_mass
+from functools import reduce
 
 
 class Graph():
@@ -276,7 +277,7 @@ class GraphScene(Scene):
             cycle = self.graph.region_cycles[0]
         time_per_edge = run_time / len(cycle)
         next_in_cycle = it.cycle(cycle)
-        next_in_cycle.next()#jump one ahead
+        next(next_in_cycle)#jump one ahead
         self.traced_cycle = Mobject(*[
             Line(self.points[i], self.points[j]).set_color(color)
             for i, j in zip(cycle, next_in_cycle)

@@ -79,7 +79,7 @@ class SlopeOfCircleExample(ZoomedScene):
         equation = TexMobject("x^2 + y^2 = 5^2")
         equation.add_background_rectangle()
         equation.next_to(
-            circle.point_from_proportion(1./8), 
+            circle.point_from_proportion(1./8),
             UP+RIGHT
         )
         equation.to_edge(RIGHT)
@@ -108,7 +108,7 @@ class SlopeOfCircleExample(ZoomedScene):
             label.set_color(line.get_color())
             label.add_background_rectangle()
             label.next_to(
-                line.get_center(), 
+                line.get_center(),
                 rotate_vector(UP, line.get_angle()),
                 buff = SMALL_BUFF
             )
@@ -135,7 +135,7 @@ class SlopeOfCircleExample(ZoomedScene):
             radial_line.put_start_and_end_on(ORIGIN, new_point)
             for line, label in zip(lines, labels):
                 label.next_to(
-                    line.get_center(), 
+                    line.get_center(),
                     rotate_vector(UP, line.get_angle()),
                     buff = SMALL_BUFF
                 )
@@ -214,7 +214,7 @@ class SlopeOfCircleExample(ZoomedScene):
         self.wait()
         self.play(Indicate(perp_mark))
         self.wait()
-        
+
         morty =  Mortimer().flip().to_corner(DOWN+LEFT)
         self.play(FadeIn(morty))
         self.play(PiCreatureBubbleIntroduction(
@@ -266,7 +266,7 @@ class SlopeOfCircleExample(ZoomedScene):
         self.little_rectangle.move_to(step_line.get_center())
         self.little_rectangle.save_state()
         self.little_rectangle.scale_in_place(self.zoom_factor)
-        self.wait()        
+        self.wait()
         self.play(
             self.little_rectangle.restore,
             dot.scale_in_place, 1./self.zoom_factor,
@@ -354,7 +354,7 @@ class SlopeOfCircleExample(ZoomedScene):
         q_marks.next_to(morty, UP)
 
         rect = Rectangle(
-            width = FRAME_X_RADIUS - SMALL_BUFF, 
+            width = FRAME_X_RADIUS - SMALL_BUFF,
             height = FRAME_Y_RADIUS - SMALL_BUFF,
             stroke_width = 0,
             fill_color = BLACK,
@@ -372,7 +372,7 @@ class SlopeOfCircleExample(ZoomedScene):
 
         self.play(
             FadeIn(rect),
-            FadeIn(morty),            
+            FadeIn(morty),
             equation.next_to, ORIGIN, DOWN, MED_LARGE_BUFF,
             equation.shift, FRAME_X_RADIUS*RIGHT/2,
         )
@@ -396,7 +396,7 @@ class SlopeOfCircleExample(ZoomedScene):
                     equation[1][i].copy(),
                     derivative[j],
                 )
-                for i, j in (1, 0), (0, 1)
+                for i, j in ((1, 0), (0, 1))
             ]
         )
         self.play(Write(dx, run_time = 1))
@@ -406,16 +406,16 @@ class SlopeOfCircleExample(ZoomedScene):
                 equation[1][i].copy(),
                 derivative[j],
             )
-            for i, j in (2, 4), (3, 6), (4, 5)
+            for i, j in ((2, 4), (3, 6), (4, 5))
         ])
         self.play(Write(dy, run_time = 1))
-        self.play(Blink(morty)) 
+        self.play(Blink(morty))
         self.play(*[
             ReplacementTransform(
                 equation[1][i].copy(),
                 derivative[j],
             )
-            for i, j in (-3, -2), (-2, -1), (-1, -1)
+            for i, j in ((-3, -2), (-2, -1), (-1, -1))
         ])
         self.wait()
 
@@ -462,10 +462,10 @@ class SlopeOfCircleExample(ZoomedScene):
                 path_arc = np.pi/2,
             )
             for mover, target in [
-                (dy, new_dy), 
-                (dx, new_dx), 
-                (eq, new_eq), 
-                (x, new_x), 
+                (dy, new_dy),
+                (dx, new_dx),
+                (eq, new_eq),
+                (x, new_x),
                 (y, new_y)
             ]
         ] + [
@@ -480,7 +480,7 @@ class SlopeOfCircleExample(ZoomedScene):
         morty = self.morty
         dy_dx = self.dy_dx
         coords = self.example_point_coords_mob
-        x, y = coords[1][1].copy(), coords[1][3].copy()        
+        x, y = coords[1][1].copy(), coords[1][3].copy()
 
         frac = self.neg_x_over_y.copy()
         frac.generate_target()
@@ -563,7 +563,7 @@ class Ladder(VMobject):
     def generate_points(self):
         left_line, right_line = [
             Line(ORIGIN, self.height*UP).shift(self.width*vect/2.0)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ]
         rungs = [
             Line(
@@ -677,7 +677,7 @@ class RelatedRatesExample(ThreeDScene):
 
         down_arrow, left_arrow = [
             Arrow(ORIGIN, vect, color = YELLOW, buff = 0)
-            for vect in DOWN, LEFT
+            for vect in (DOWN, LEFT)
         ]
         down_arrow.shift(y_line.get_start()+MED_SMALL_BUFF*RIGHT)
         left_arrow.shift(x_line.get_start()+SMALL_BUFF*DOWN)
@@ -788,7 +788,7 @@ class RelatedRatesExample(ThreeDScene):
 
         randy = Randolph()
         randy.next_to(
-            alt_equation, DOWN, 
+            alt_equation, DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
         )
@@ -800,11 +800,11 @@ class RelatedRatesExample(ThreeDScene):
 
         self.play(FadeIn(randy))
         self.play(
-            randy.change_mode, "raise_right_hand", 
+            randy.change_mode, "raise_right_hand",
             randy.look_at, alt_equation,
             *[
                 ReplacementTransform(
-                    self.equation[i].copy(), 
+                    self.equation[i].copy(),
                     alt_equation[j],
                     path_arc = np.pi/2,
                     run_time = 3,
@@ -907,8 +907,8 @@ class RelatedRatesExample(ThreeDScene):
             Write(dt_brace_text, run_time = 2)
         )
         self.play(*map(FadeOut, [
-            self.dy_arrow, self.dy_label, 
-            self.dx_arrow, self.dx_label, 
+            self.dy_arrow, self.dy_label,
+            self.dx_arrow, self.dx_label,
         ]))
         self.add(shadow_ladder)
         self.let_ladder_fall(
@@ -960,7 +960,7 @@ class RelatedRatesExample(ThreeDScene):
         self.play(Indicate(rhs))
         self.wait()
         self.reset_ladder(
-            self.ladder, 
+            self.ladder,
             *self.get_added_anims_for_ladder_fall()+[
                 Animation(self.dy_group),
                 Animation(self.dx_group),
@@ -1160,7 +1160,7 @@ class RelatedRatesExample(ThreeDScene):
 
     def get_ladder_brace(self, ladder):
         vect = rotate_vector(LEFT, -self.get_ladder_angle())
-        brace = Brace(ladder, vect)        
+        brace = Brace(ladder, vect)
         length_string = "%dm"%int(self.get_ladder_length())
         length_label = brace.get_text(
             length_string, use_next_to = False
@@ -1302,7 +1302,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             for i, j in enumerate([1, 0, 3, 5, 4, 7])
         ]+[
             Write(derivative[j])
-            for j in 2, 6
+            for j in (2, 6)
         ])
         self.play(
             self.pi_creature.change_mode, "pondering",
@@ -1321,7 +1321,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             "x(t)", "^2", "+", "y(t)", "^2", "= 5^2"
         )
         time_derivative = TexMobject(
-            "2", "x(t)", "\\frac{dx}{dt}", "+", 
+            "2", "x(t)", "\\frac{dx}{dt}", "+",
             "2", "y(t)", "\\frac{dy}{dt}", "=0"
         )
         self.color_equations(time_equation, time_derivative)
@@ -1430,7 +1430,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         self.wait()
         self.play(
             FadeIn(s_rect),
-            s.restore, 
+            s.restore,
             GrowFromCenter(xy)
         )
         self.wait()
@@ -1508,7 +1508,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             )
         ]+[
             Write(derivative[1][j])
-            for j in 3, 7
+            for j in (3, 7)
         ])
         self.play(*[
             ReplacementTransform(
@@ -1542,13 +1542,13 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             label.next_to(line, vect, buff = SMALL_BUFF)
             label.add_background_rectangle()
             label.scale(
-                1./self.zoom_factor, 
+                1./self.zoom_factor,
                 about_point = line.get_center()
             )
             line.label = label
 
         self.activate_zooming()
-        lil_rect = self.little_rectangle        
+        lil_rect = self.little_rectangle
         lil_rect.move_to(dot)
         lil_rect.shift(0.05*lil_rect.get_width()*LEFT)
         lil_rect.shift(0.2*lil_rect.get_height()*DOWN)
@@ -1580,8 +1580,8 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         new_s_label.scale_to_fit_height(s_label.get_height())
         new_s_label.scale(0.8)
         new_s_label.next_to(
-            new_dot, DOWN, 
-            buff = SMALL_BUFF/self.zoom_factor, 
+            new_dot, DOWN,
+            buff = SMALL_BUFF/self.zoom_factor,
             aligned_edge = LEFT
         )
         new_s_label.shift(MED_LARGE_BUFF*LEFT/self.zoom_factor)
@@ -1729,7 +1729,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
                 buff = SMALL_BUFF/self.zoom_factor,
                 tip_length = 0.15/self.zoom_factor
             )
-            for mob in dot, new_dot
+            for mob in (dot, new_dot)
         ]
 
         for line, tex, vect in (dy_line, "dy", RIGHT), (dx_line, "dx", UP):
@@ -1737,7 +1737,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             label.set_color(line.get_color())
             label.next_to(line, vect)
             label.scale(
-                1./self.zoom_factor, 
+                1./self.zoom_factor,
                 about_point = line.get_center()
             )
             line.label = label
@@ -1836,7 +1836,7 @@ class AlternateExample(ZoomedScene):
         "zoomed_canvas_corner" : DOWN+RIGHT,
         "zoomed_canvas_frame_shape" : (3, 4),
     }
-    def construct(self): 
+    def construct(self):
         self.add_plane()
         self.draw_graph()
         self.emphasize_meaning_of_points()
@@ -1889,8 +1889,8 @@ class AlternateExample(ZoomedScene):
 
         self.play(
             ShowCreation(
-                graphs, 
-                run_time = 3, 
+                graphs,
+                run_time = 3,
                 submobject_mode = "all_at_once"
             ),
             Animation(self.formula)
@@ -2025,7 +2025,7 @@ class AlternateExample(ZoomedScene):
 
         arrows = VGroup(*[
             Arrow(word, part)
-            for part in lhs, rhs
+            for part in (lhs, rhs)
         ])
 
         self.play(FocusOn(formula))
@@ -2045,7 +2045,7 @@ class AlternateExample(ZoomedScene):
         y_squared = VGroup(*lhs[6:])
 
         mnemonic = TextMobject(
-            "``", 
+            "``",
             "Left", " d-Right", " + ",
             "Right",  " d-Left"
             "''",
@@ -2059,20 +2059,20 @@ class AlternateExample(ZoomedScene):
         mnemonic.to_edge(LEFT)
 
         derivative = TexMobject(
-            "\\sin(x)", "(2y\\,dy)", "+", 
+            "\\sin(x)", "(2y\\,dy)", "+",
             "y^2", "(\\cos(x)\\,dx)",
         )
         derivative.set_color_by_tex("dx", GREEN)
         derivative.set_color_by_tex("dy", RED)
         derivative.scale_to_fit_width(FRAME_X_RADIUS - 2*MED_LARGE_BUFF)
         derivative.next_to(
-            brace, DOWN, 
+            brace, DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
         derivative_rects = [
             BackgroundRectangle(VGroup(*subset))
-            for subset in derivative[:2], derivative[2:]
+            for subset in (derivative[:2], derivative[2:])
         ]
         derivative_rects[1].stretch(1.05, dim = 0)
 
@@ -2150,7 +2150,7 @@ class AlternateExample(ZoomedScene):
         lil_rect = self.little_rectangle
         self.play(
             arrow.put_start_and_end_on, point, new_end_point,
-            dy_line.put_start_and_end_on, 
+            dy_line.put_start_and_end_on,
                 dy_line.get_start(), new_end_point,
             MaintainPositionRelativeTo(dy_line.label, dy_line),
             lil_rect.shift, lil_rect.get_height()*DOWN/3,
@@ -2258,8 +2258,8 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
     def draw_graph(self):
         graph = FunctionGraph(
-            np.log, 
-            x_min = 0.01, 
+            np.log,
+            x_min = 0.01,
             x_max = FRAME_X_RADIUS,
             num_steps = 100
         )
@@ -2379,7 +2379,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         new_formula = TexMobject("e", "^y", "=", "x")
         e, new_y, new_eq, new_x = new_formula
         new_formula.next_to(
-            formula, DOWN, 
+            formula, DOWN,
             buff = MED_LARGE_BUFF,
         )
         rect = BackgroundRectangle(new_formula)
@@ -2441,7 +2441,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
             label.next_to(line, vect, buff = SMALL_BUFF)
             label.set_color(line.get_color())
             label.scale(
-                1./self.zoom_factor, 
+                1./self.zoom_factor,
                 about_point = line.get_center()
             )
             line.label = label
@@ -2482,7 +2482,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
         self.play(*[
             ReplacementTransform(
-                m1, m2, 
+                m1, m2,
                 run_time = 2,
                 path_arc = -np.pi/2,
             )
@@ -2520,7 +2520,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         equals_one_over_x.add_to_back(rect)
 
         self.play(
-            equals_one_over_x.next_to, 
+            equals_one_over_x.next_to,
             self.slope_equation, RIGHT, 0,
             run_time = 2
         )
@@ -2531,7 +2531,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         start_x = line.get_center()[0]
         target_x = 0.2
         graph = FunctionGraph(
-            lambda x : 1./x, 
+            lambda x : 1./x,
             x_min = 0.1,
             x_max = FRAME_X_RADIUS,
             num_steps = 100,
@@ -2619,7 +2619,7 @@ class Chapter6PatreonThanks(PatreonThanks):
             "Meshal  Alshammari",
             "CrypticSwarm    ",
             "Nathan Pellegrin",
-            "Karan Bhargava", 
+            "Karan Bhargava",
             "Justin Helps",
             "Ankit   Agarwal",
             "Yu  Jun",
@@ -2671,57 +2671,3 @@ class Thumbnail(AlternateExample):
 
 
         self.add(title)
-
-
-
-
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

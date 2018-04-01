@@ -1,5 +1,12 @@
 import numpy as np
 import itertools as it
+from functools import reduce
+
+try:
+    xrange          # Python 2
+except NameError:
+    xrange = range  # Python 3
+
 
 def remove_list_redundancies(l):
     """
@@ -86,8 +93,8 @@ def make_even_by_cycling(iterable_1, iterable_2):
     cycle1 = it.cycle(iterable_1)
     cycle2 = it.cycle(iterable_2)
     return (
-        [cycle1.next() for x in range(length)],
-        [cycle2.next() for x in range(length)]
+        [next(cycle1) for x in range(length)],
+        [next(cycle2) for x in range(length)]
     )
 
 def composition(func_list):
@@ -95,9 +102,9 @@ def composition(func_list):
     func_list should contain elements of the form (f, args)
     """
     return reduce(
-        lambda (f1, args1), (f2, args2) : (lambda x : f1(f2(x, *args2), *args1)), 
+        lambda func_args0, func_args1: (lambda x: func_args0[0](func_args1[0](x, *func_args1[1]), *func_args0[1])),
         func_list,
-        lambda x : x
+        lambda x: x
     )
 
 def remove_nones(sequence):
@@ -106,8 +113,3 @@ def remove_nones(sequence):
 ## Note this is redundant with it.chain
 def concatenate_lists(*list_of_lists):
     return [item for l in list_of_lists for item in l]
-
-
-
-
-

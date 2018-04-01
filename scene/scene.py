@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from PIL import Image
 from colour import Color
 import numpy as np
@@ -15,7 +17,7 @@ import random
 from constants import *
 
 from camera.camera import Camera
-from tk_scene import TkSceneRoot
+from .tk_scene import TkSceneRoot
 from mobject.mobject import Mobject
 from mobject.vectorized_mobject import VMobject
 from animation.animation import Animation
@@ -390,8 +392,8 @@ class Scene(Container):
         def compile_method(state):
             if state["curr_method"] is None:
                 return
-            mobject = state["curr_method"].im_self
-            if state["last_method"] and state["last_method"].im_self is mobject:
+            mobject = state["curr_method"].__self__
+            if state["last_method"] and state["last_method"].__self__ is mobject:
                 animations.pop()
                 #method should already have target then.
             else:
@@ -401,7 +403,7 @@ class Scene(Container):
                 method_kwargs = state["method_args"].pop()
             else:
                 method_kwargs = {}
-            state["curr_method"].im_func(
+            state["curr_method"].__func__(
                 mobject.target, 
                 *state["method_args"],
                 **method_kwargs
