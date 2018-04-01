@@ -4089,7 +4089,6 @@ class SubscribeOrBinge(PiCreatureScene):
             )
         )
 
-
 class CloseWithAPuzzle(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Close with a puzzle!", run_time = 1)

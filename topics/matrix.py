@@ -19,8 +19,8 @@ from mobject.geometry import Circle
 from mobject.geometry import Dot
 from mobject.geometry import Line
 from mobject.geometry import Vector
-from topics.number_line import Axes
-from topics.number_line import NumberPlane
+from mobject.coordinate_systems import Axes
+from mobject.coordinate_systems import NumberPlane
 
 from constants import *
 

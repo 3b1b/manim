@@ -2,15 +2,16 @@ from constants import *
 
 
 from animation.animation import Animation
-from animation.movement import Homotopy
 from animation.creation import ShowCreation
+from animation.movement import Homotopy
 from animation.movement import SmoothedVectorizedHomotopy
 from animation.transform import ApplyPointwiseFunction
 from animation.transform import MoveToTarget
+from mobject.coordinate_systems import NumberPlane
+from mobject.coordinate_systems import ComplexPlane
 from mobject.svg.tex_mobject import TexMobject
 from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
-from number_line import NumberPlane
 from scene.scene import Scene
 from utils.config_ops import digest_config
 from utils.config_ops import instantiate
@@ -170,81 +171,6 @@ class ComplexTransformationScene(Scene):
 
 def complex_string(complex_num):
     return filter(lambda c : c not in "()", str(complex_num))
-
-class ComplexPlane(NumberPlane):
-    CONFIG = {
-        "color" : BLUE,
-        "unit_size" : 1,
-        "line_frequency" : 1,
-        "faded_line_frequency" : 0.5,
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        kwargs.update({
-            "x_unit_size" : self.unit_size,
-            "y_unit_size" : self.unit_size,
-            "x_line_frequency" : self.line_frequency,
-            "x_faded_line_frequency" : self.faded_line_frequency,
-            "y_line_frequency" : self.line_frequency,
-            "y_faded_line_frequency" : self.faded_line_frequency,
-        })
-        NumberPlane.__init__(self, **kwargs)
-
-    def number_to_point(self, number):
-        number = complex(number)
-        return self.coords_to_point(number.real, number.imag)
-
-    def point_to_number(self, point):
-        x, y = self.point_to_coords(point)
-        return complex(x, y)
-
-    def get_coordinate_labels(self, *numbers):
-        # TODO: Should merge this with the code from NumberPlane.get_coordinate_labels
-
-        result = VGroup()
-        nudge = 0.1*(DOWN+RIGHT)
-        if len(numbers) == 0:
-            numbers = range(-int(self.x_radius), int(self.x_radius)+1)
-            numbers += [
-                complex(0, y)
-                for y in range(-int(self.y_radius), int(self.y_radius)+1)
-            ]
-        for number in numbers:
-            if number == complex(0, 0):
-                continue
-            point = self.number_to_point(number)
-            num_str = str(number).replace("j", "i")
-            if num_str.startswith("0"):
-                num_str = "0"
-            elif num_str in ["1i", "-1i"]:
-                num_str = num_str.replace("1", "")
-            num_mob = TexMobject(num_str)
-            num_mob.add_background_rectangle()
-            num_mob.scale_to_fit_height(self.written_coordinate_height)
-            num_mob.next_to(point, DOWN+LEFT, SMALL_BUFF)
-            result.add(num_mob)
-        self.coordinate_labels = result
-        return result
-
-    def add_coordinates(self, *numbers):
-        self.add(*self.get_coordinate_labels(*numbers))
-        return self
-
-    def add_spider_web(self, circle_freq = 1, angle_freq = np.pi/6):
-        # This code no longer works because it has this reference to self.fade_factor
-        # which is never initialized. Shall we delete this little-used function entirely?
-        self.fade(self.fade_factor)
-        config = {
-            "color" : self.color,
-            "density" : self.density,
-        }
-        for radius in np.arange(circle_freq, FRAME_X_RADIUS, circle_freq):
-            self.add(Circle(radius = radius, **config))
-        for angle in np.arange(0, 2*np.pi, angle_freq):
-            end_point = np.cos(angle)*RIGHT + np.sin(angle)*UP
-            end_point *= FRAME_X_RADIUS
-            self.add(Line(ORIGIN, end_point, **config))
-        return self
 
 class ComplexFunction(ApplyPointwiseFunction):
     def __init__(self, function, mobject = ComplexPlane, **kwargs):
