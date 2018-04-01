@@ -1,7 +1,8 @@
 import numpy as np
+import os
+
 from PIL import Image
 from constants import RASTER_IMAGE_DIR
-import os
 
 def get_full_raster_image_path(image_file_name):
     possible_paths = [

@@ -1,11 +1,13 @@
+from __future__ import absolute_import
+
 import numpy as np
 
-from .scene import Scene
-from animation.transform import FadeIn
-from mobject.mobject import Mobject
-from topics.geometry import Rectangle
+from scene.scene import Scene
+from animation.creation import FadeIn
 from camera.camera import Camera
-from camera.camera import MovingCamera
+from camera.moving_camera import MovingCamera
+from mobject.mobject import Mobject
+from mobject.geometry import Rectangle
 
 from constants import *
 

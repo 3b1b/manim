@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 from constants import *
 
-from camera.camera import MovingCamera
-from .scene import Scene
-from topics.geometry import ScreenRectangle
+from scene.scene import Scene
+from camera.moving_camera import MovingCamera
+from mobject.frame import ScreenRectangle
 
 class MovingCameraScene(Scene):
     def setup(self):

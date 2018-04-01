@@ -1,31 +1,8 @@
 #!/usr/bin/env python
 
-from constants import *
+from big_ol_pile_of_manim_imports import *
 
-from mobject.tex_mobject import TexMobject
-from mobject.mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.continual_animation import *
-
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene.scene import Scene
-from camera.camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.three_dimensions import *
-
-from topics.light import *
+from once_useful_constructs.light import *
 
 import types
 import functools

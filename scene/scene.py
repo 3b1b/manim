@@ -1,26 +1,26 @@
+import copy
+import inspect
+import itertools as it
+import numpy as np
+import os
+import random
+import shutil
+import subprocess as sp
+import time
+import warnings
+
 from PIL import Image
 from colour import Color
-import numpy as np
-import itertools as it
-import warnings
-import time
-import os
-import shutil
-import copy
 from tqdm import tqdm as ProgressDisplay
-import inspect
-import subprocess as sp
-import random
 
 from constants import *
 
-from camera.camera import Camera
-from tk_scene import TkSceneRoot
-from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VMobject
 from animation.animation import Animation
 from animation.transform import MoveToTarget
-from animation.continual_animation import ContinualAnimation
+from camera.camera import Camera
+from continual_animation.continual_animation import ContinualAnimation
+from mobject.mobject import Mobject
+from mobject.types.vectorized_mobject import VMobject
 from utils.iterables import list_update
 
 from container.container import Container
@@ -538,9 +538,6 @@ class Scene(Container):
         self.update_frame(dont_update_when_skipping = False)
         self.get_image().show()
 
-    def preview(self):
-        TkSceneRoot(self)
-    
     def get_image_file_path(self, name = None, dont_update = False):
         folder = "images"
         if dont_update:

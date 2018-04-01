@@ -16,47 +16,66 @@ as a convenience for scripts createing scenes for videos
 from constants import *
 
 from animation.animation import *
-from animation.compositions import *
-from animation.continual_animation import *
-from animation.playground import *
-from animation.simple_animations import *
+from animation.composition import *
+from animation.creation import *
+from animation.indication import *
+from animation.movement import *
+from animation.numbers import *
+from animation.rotation import *
+from animation.specialized import *
 from animation.transform import *
+from animation.update import *
 
 from camera.camera import *
+from camera.mapping_camera import *
+from camera.moving_camera import *
+from camera.three_d_camera import *
 
-from mobject.image_mobject import *
+from continual_animation.continual_animation import *
+from continual_animation.from_animation import *
+from continual_animation.numbers import *
+from continual_animation.update import *
+
+from mobject.frame import *
+from mobject.functions import *
+from mobject.geometry import *
+from mobject.matrix import *
 from mobject.mobject import *
-from mobject.point_cloud_mobject import *
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
+from mobject.number_line import *
+from mobject.numbers import *
+from mobject.probability import *
+from mobject.shape_matchers import *
+from mobject.svg.brace import *
+from mobject.svg.svg_mobject import *
+from mobject.svg.tex_mobject import *
+from mobject.three_dimensions import *
+from mobject.types.image_mobject import *
+from mobject.types.point_cloud_mobject import *
+from mobject.types.vectorized_mobject import *
+from mobject.value_tracker import *
 
+from for_3b1b_videos.common_scenes import *
+from for_3b1b_videos.pi_creature import *
+from for_3b1b_videos.pi_creature_animations import *
+from for_3b1b_videos.pi_creature_scene import *
+
+from scene.graph_scene import *
 from scene.moving_camera_scene import *
 from scene.reconfigurable_scene import *
 from scene.scene import *
 from scene.scene_from_video import *
-from scene.tk_scene import *
+from scene.three_d_scene import *
+from scene.vector_space_scene import *
 from scene.zoomed_scene import *
 
-from topics.arithmetic import *
-from topics.characters import *
-from topics.combinatorics import *
-from topics.common_scenes import *
-from topics.complex_numbers import *
-from topics.counting import *
-from topics.fractals import *
-from topics.functions import *
-from topics.geometry import *
-from topics.graph_scene import *
-from topics.graph_theory import *
-from topics.light import *
-from topics.matrix import *
-from topics.number_line import *
-from topics.numerals import *
-from topics.objects import *
-from topics.probability import *
-from topics.three_dimensions import *
-from topics.vector_space_scene import *
+from once_useful_constructs.arithmetic import *
+from once_useful_constructs.combinatorics import *
+from once_useful_constructs.complex_transformation_scene import *
+from once_useful_constructs.counting import *
+from once_useful_constructs.fractals import *
+from once_useful_constructs.graph_theory import *
+from once_useful_constructs.light import *
+
 
 from utils.bezier import *
 from utils.color import *
@@ -70,18 +89,17 @@ from utils.sounds import *
 from utils.space_ops import *
 from utils.strings import *
 
-from special_animations import *
-
 # Non manim libraries that are also nice to have without thinking
 
-import numpy as np
-import itertools as it
-import operator as op
-import random
 import inspect
-import string
-import re
+import itertools as it
+import numpy as np
+import operator as op
 import os
+import random
+import re
+import string
+import sys
+
 from PIL import Image
 from colour import Color
-

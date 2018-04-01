@@ -17,3 +17,6 @@ def initials(name, sep_values = [" ", "_"]):
 
 def camel_case_initials(name):
     return filter(lambda c : c.isupper(), name)
+
+def complex_string(complex_num):
+    return filter(lambda c : c not in "()", str(complex_num))

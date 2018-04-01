@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from big_ol_pile_of_manim_imports import *
+from once_useful_constructs.light import *
 
 import types
 import functools
@@ -3847,7 +3848,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
             for n in range(0, self.max_shown_n, 2)
         ])
 
-        zoom_out = AmbientMovement(
+        zoom_out = ContinualMovement(
             self.camera.rotation_mobject,
             direction = OUT, rate = 0.4
         )

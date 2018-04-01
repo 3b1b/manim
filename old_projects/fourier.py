@@ -2874,7 +2874,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         self.wait()
 
         ghost_dot.move_to(ORIGIN)
-        ambient_ghost_dot_movement = AmbientMovement(
+        ambient_ghost_dot_movement = ContinualMovement(
             ghost_dot, rate = TAU
         )
         self.add(ambient_ghost_dot_movement)
@@ -2896,7 +2896,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             )
         )
         ghost_dot.move_to(ORIGIN)
-        ambient_ghost_dot_movement = AmbientMovement(
+        ambient_ghost_dot_movement = ContinualMovement(
             ghost_dot, rate = 0.1*TAU
         )
         self.add(ambient_ghost_dot_movement)
@@ -4088,7 +4088,6 @@ class SubscribeOrBinge(PiCreatureScene):
                 Animation, Mobject(), {"run_time" : 4}
             )
         )
-
 
 class CloseWithAPuzzle(TeacherStudentsScene):
     def construct(self):

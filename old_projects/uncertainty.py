@@ -7,40 +7,6 @@ from old_projects.fourier import *
 FREQUENCY_COLOR = RED
 USE_ALMOST_FOURIER_BY_DEFAULT = False
 
-class ValueTracker(VectorizedPoint):
-    """
-    Note meant to be displayed.  Instead the position encodes some 
-    number, often one which another animation or continual_animation
-    uses for its update function, and by treating it as a mobject it can
-    still be animated and manipulated just like anything else.
-    """
-    def __init__(self, value = 0, **kwargs):
-        VectorizedPoint.__init__(self, **kwargs)
-        self.set_value(value)
-
-    def get_value(self):
-        return self.get_center()[0]
-
-    def set_value(self, value):
-        self.move_to(value*RIGHT)
-        return self
-
-    def increment_value(self, d_value):
-        self.set_value(self.get_value() + d_value)
-
-class ExponentialValueTracker(ValueTracker):
-    """
-    Operates just like ValueTracker, except it encodes the value as the
-    exponential of a position coordinate, which changes how interpolation 
-    behaves
-    """
-    def get_value(self):
-        return np.exp(self.get_center()[0])
-
-    def set_value(self, value):
-        self.move_to(np.log(value)*RIGHT)
-        return self
-
 class GaussianDistributionWrapper(Line):
     """
     This is meant to encode a 2d normal distribution as
@@ -608,7 +574,7 @@ class ShowPlan(PiCreatureScene):
         rect = BackgroundRectangle(wave, fill_opacity = 1)
         rect.stretch(2, 1)
         rect.next_to(wave, LEFT, buff = 0)
-        wave_shift = AmbientMovement(
+        wave_shift = ContinualMovement(
             wave, direction = LEFT, rate = 5
         )
         wave_fader = UpdateFromAlphaFunc(
@@ -644,7 +610,7 @@ class ShowPlan(PiCreatureScene):
         target = Plane()
         # target.match_height(radar_dish)
         target.next_to(radar_dish, RIGHT, buff = LARGE_BUFF)
-        target_movement = AmbientMovement(target, direction = RIGHT, rate = 1.25)
+        target_movement = ContinualMovement(target, direction = RIGHT, rate = 1.25)
 
         pulse = RadarPulse(radar_dish, target)
 
@@ -1730,7 +1696,7 @@ class MentionDopplerRadar(TeacherStudentsScene):
         plane = Plane()
         plane.to_edge(RIGHT)
         plane.align_to(dish)
-        plane_flight = AmbientMovement(
+        plane_flight = ContinualMovement(
             plane, 
             direction = LEFT,
             rate = 1,
@@ -1911,7 +1877,7 @@ class IntroduceDopplerRadar(Scene):
             ShowCreation(sum_graph, run_time = 8, rate_func = None)
         )
         pulse = RadarPulse(dish, plane, n_pulse_singletons = 12)
-        plane_flight = AmbientMovement(
+        plane_flight = ContinualMovement(
             plane, direction = LEFT, rate = 1.5
         )
 
@@ -2690,7 +2656,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         object_velocities = self.object_velocities
 
         movements = self.object_movements = [
-            AmbientMovement(
+            ContinualMovement(
                 obj, 
                 direction = v/np.linalg.norm(v),
                 rate = np.linalg.norm(v)
@@ -3366,7 +3332,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         t_tracker = VectorizedPoint()
         #x-coordinate gives wave number
         k_tracker = VectorizedPoint(2*RIGHT)
-        tk_movement = AmbientMovement(t_tracker, direction = RIGHT, rate = 1)
+        tk_movement = ContinualMovement(t_tracker, direction = RIGHT, rate = 1)
         def get_wave():
             t = t_tracker.get_center()[0]
             k = k_tracker.get_center()[0]
@@ -3399,7 +3365,7 @@ class SortOfDopplerEffect(PiCreatureScene):
 
         rect = ScreenRectangle(height = 2)
         rect.to_edge(RIGHT)
-        rect_movement = AmbientMovement(rect, direction = LEFT, rate = 1)
+        rect_movement = ContinualMovement(rect, direction = LEFT, rate = 1)
 
         randy = self.pi_creature
         randy_look_at = ContinualUpdateFromFunc(
@@ -3523,7 +3489,7 @@ class HangingWeightsScene(MovingCameraScene):
 
         k_tracker = self.k_tracker = VectorizedPoint()
         t_tracker = self.t_tracker = VectorizedPoint()
-        self.t_tracker_walk = AmbientMovement(t_tracker, direction = RIGHT, rate = 1)
+        self.t_tracker_walk = ContinualMovement(t_tracker, direction = RIGHT, rate = 1)
         equilibrium_height = springs.get_height()
         def update_springs(springs):
             for spring in springs:
@@ -3637,7 +3603,7 @@ class HangingWeightsScene(MovingCameraScene):
 
     def moving_reference_frame(self):
         rect = ScreenRectangle(height = 2.1*FRAME_Y_RADIUS)
-        rect_movement = AmbientMovement(rect, direction = LEFT, rate = 2)
+        rect_movement = ContinualMovement(rect, direction = LEFT, rate = 2)
         camera_frame = self.camera_frame
 
         self.add(rect)
@@ -4371,7 +4337,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         self.add()
         freq = 1
         continual_anims = [
-            AmbientMovement(time_tracker, direction = RIGHT, rate = 1),
+            ContinualMovement(time_tracker, direction = RIGHT, rate = 1),
             ContinualUpdateFromFunc(
                 dot_gdw,
                 lambda d : d.scale_to_fit_width(

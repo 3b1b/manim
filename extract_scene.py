@@ -4,17 +4,18 @@ import sys
 # import getopt
 import argparse
 import imp
-import itertools as it
-import inspect
-import traceback
 import imp
+import inspect
+import itertools as it
 import os
 import subprocess as sp
+import traceback
 
+from camera.camera import Camera
 from constants import *
 from scene.scene import Scene
-from camera.camera import Camera
-from utils.sounds import play_error_sound, play_finish_sound
+from utils.sounds import play_error_sound
+from utils.sounds import play_finish_sound
 
 HELP_MESSAGE = """
    Usage:
@@ -214,7 +215,6 @@ def get_module(file_name):
     if os.name == 'nt':
         return get_module_windows(file_name)
     return get_module_posix(file_name)
-
 
 def main():
    config = get_configuration()

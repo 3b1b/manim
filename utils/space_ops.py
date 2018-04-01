@@ -1,5 +1,7 @@
 import numpy as np
-from constants import RIGHT, OUT
+
+from constants import OUT
+from constants import RIGHT
 
 #Matrix operations
 
@@ -98,13 +100,4 @@ def R3_to_complex(point):
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
-
-
-# TODO: It feels like this should live elsewhere
-
-
-
-
-
-
 

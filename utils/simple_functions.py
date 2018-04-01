@@ -1,5 +1,5 @@
-import operator as op
 import numpy as np
+import operator as op
 
 def sigmoid(x):
     return 1.0/(1 + np.exp(-x))

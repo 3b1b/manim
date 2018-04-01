@@ -1,20 +1,21 @@
-import numpy as np
-import itertools as it
+from __future__ import absolute_import
+
 import inspect
-import copy
-import warnings
+import numpy as np
 
 from constants import *
 
-from .animation import Animation
-from mobject.mobject import Mobject, Group
-from mobject.vectorized_mobject import VMobject, VectorizedPoint
-from topics.geometry import Dot, Circle
+from animation.animation import Animation
+from mobject.mobject import Group
+from mobject.mobject import Mobject
 from utils.config_ops import digest_config
 from utils.iterables import adjacent_pairs
-from utils.paths import straight_path, path_along_arc, counterclockwise_path
-from utils.rate_functions import smooth, there_and_back
+from utils.paths import path_along_arc
+from utils.paths import straight_path
+from utils.config_ops import instantiate
+from utils.rate_functions import smooth
 from utils.rate_functions import squish_rate_func
+from utils.space_ops import complex_to_R3
 
 class Transform(Animation):
     CONFIG = {
@@ -74,7 +75,6 @@ class ReplacementTransform(Transform):
         "replace_mobject_with_target_in_scene" : True,
     }
 
-
 class ClockwiseTransform(Transform):
     CONFIG = {
         "path_arc" : -np.pi
@@ -90,54 +90,6 @@ class MoveToTarget(Transform):
         if not hasattr(mobject, "target"):
             raise Exception("MoveToTarget called on mobject without attribute 'target' ")
         Transform.__init__(self, mobject, mobject.target, **kwargs)
-
-class CyclicReplace(Transform):
-    CONFIG = {
-        "path_arc" : np.pi/2
-    }
-    def __init__(self, *mobjects, **kwargs):
-        start = Group(*mobjects)
-        target = Group(*[
-            m1.copy().move_to(m2)
-            for m1, m2 in adjacent_pairs(start)
-        ])
-        Transform.__init__(self, start, target, **kwargs)
-
-class Swap(CyclicReplace):
-    pass #Renaming, more understandable for two entries
-
-class GrowFromPoint(Transform):
-    CONFIG = {
-        "point_color" : None,
-    }
-    def __init__(self, mobject, point, **kwargs):
-        digest_config(self, kwargs)
-        target = mobject.copy()
-        point_mob = VectorizedPoint(point)
-        if self.point_color:
-            point_mob.set_color(self.point_color)
-        mobject.replace(point_mob)
-        mobject.set_color(point_mob.get_color())
-        Transform.__init__(self, mobject, target, **kwargs)
-
-class GrowFromCenter(GrowFromPoint):
-    def __init__(self, mobject, **kwargs):
-        GrowFromPoint.__init__(self, mobject, mobject.get_center(), **kwargs)
-
-class GrowArrow(GrowFromPoint):
-    def __init__(self, arrow, **kwargs):
-        GrowFromPoint.__init__(self, arrow, arrow.get_start(), **kwargs)
-
-class SpinInFromNothing(GrowFromCenter):
-    CONFIG = {
-        "path_func" : counterclockwise_path()
-    }
-
-class ShrinkToCenter(Transform):
-    def __init__(self, mobject, **kwargs):
-        Transform.__init__(
-            self, mobject, mobject.get_point_mobject(), **kwargs
-        )
 
 class ApplyMethod(Transform):
     CONFIG = {
@@ -166,94 +118,6 @@ class ApplyMethod(Transform):
         target = method.im_self.copy()
         method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
-
-class FadeOut(Transform):
-    CONFIG = {
-        "remover" : True, 
-    }
-    def __init__(self, mobject, **kwargs):
-        target = mobject.copy()
-        target.fade(1)
-        Transform.__init__(self, mobject, target, **kwargs)
-
-    def clean_up(self, surrounding_scene = None):
-        Transform.clean_up(self, surrounding_scene)
-        self.update(0)
-
-class FadeIn(Transform):
-    def __init__(self, mobject, **kwargs):
-        target = mobject.copy()
-        Transform.__init__(self, mobject, target, **kwargs)
-        self.starting_mobject.fade(1)
-        if isinstance(self.starting_mobject, VMobject):
-            self.starting_mobject.set_stroke(width = 0)
-            self.starting_mobject.set_fill(opacity = 0)
-
-class FocusOn(Transform):
-    CONFIG = {
-        "opacity" : 0.2,
-        "color" : GREY,
-        "run_time" : 2,
-        "remover" : True,
-    }
-    def __init__(self, mobject_or_point, **kwargs):
-        digest_config(self, kwargs)
-        big_dot = Dot(
-            radius = FRAME_X_RADIUS+FRAME_Y_RADIUS,
-            stroke_width = 0,
-            fill_color = self.color,
-            fill_opacity = 0,
-        )
-        little_dot = Dot(radius = 0)
-        little_dot.set_fill(self.color, opacity = self.opacity)
-        little_dot.move_to(mobject_or_point)
-
-        Transform.__init__(self, big_dot, little_dot, **kwargs)
-
-class Indicate(Transform):
-    CONFIG = {
-        "rate_func" : there_and_back,
-        "scale_factor" : 1.2,
-        "color" : YELLOW,
-    }
-    def __init__(self, mobject, **kwargs):
-        digest_config(self, kwargs)
-        target = mobject.copy()
-        target.scale_in_place(self.scale_factor)
-        target.set_color(self.color)
-        Transform.__init__(self, mobject, target, **kwargs)
-
-class CircleIndicate(Indicate):
-    CONFIG = {
-        "rate_func" : squish_rate_func(there_and_back, 0, 0.8),
-        "remover" : True
-    }
-    def __init__(self, mobject, **kwargs):
-        digest_config(self, kwargs)
-        circle = Circle(color = self.color, **kwargs)
-        circle.surround(mobject)
-        Indicate.__init__(self, circle, **kwargs)
-
-class Rotate(ApplyMethod):
-    CONFIG = {
-        "in_place" : False,
-        "about_point" : None,
-    }
-    def __init__(self, mobject, angle = np.pi, axis = OUT, **kwargs):
-        if "path_arc" not in kwargs:
-            kwargs["path_arc"] = angle
-        if "path_arc_axis" not in kwargs:
-            kwargs["path_arc_axis"] = axis
-        digest_config(self, kwargs, locals())
-        target = mobject.copy()
-        if self.in_place:
-            self.about_point = mobject.get_center()
-        target.rotate(
-            angle, 
-            axis = axis,
-            about_point = self.about_point,
-        )
-        Transform.__init__(self, mobject, target, **kwargs)
 
 class ApplyPointwiseFunction(ApplyMethod):
     CONFIG = {
@@ -300,7 +164,37 @@ class ApplyMatrix(ApplyPointwiseFunction):
             return np.dot(p, transpose)
         ApplyPointwiseFunction.__init__(self, func, mobject, **kwargs)
 
+class ComplexFunction(ApplyPointwiseFunction):
+    def __init__(self, function, mobject, **kwargs):
+        if "path_func" not in kwargs:
+            self.path_func = path_along_arc(
+                np.log(function(complex(1))).imag
+            )
+        ApplyPointwiseFunction.__init__(
+            self,
+            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
+            instantiate(mobject),
+            **kwargs
+        )
 
+###
+
+class CyclicReplace(Transform):
+    CONFIG = {
+        "path_arc" : np.pi/2
+    }
+    def __init__(self, *mobjects, **kwargs):
+        start = Group(*mobjects)
+        target = Group(*[
+            m1.copy().move_to(m2)
+            for m1, m2 in adjacent_pairs(start)
+        ])
+        Transform.__init__(self, start, target, **kwargs)
+
+class Swap(CyclicReplace):
+    pass #Renaming, more understandable for two entries
+
+#TODO: Um...does this work
 class TransformAnimations(Transform):
     CONFIG = {
         "rate_func" : squish_rate_func(smooth)
@@ -329,6 +223,4 @@ class TransformAnimations(Transform):
         self.start_anim.update(alpha)
         self.end_anim.update(alpha)
         Transform.update(self, alpha)
-
-
 
