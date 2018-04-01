@@ -1,23 +1,12 @@
 from constants import *
 
-
 from animation.animation import Animation
-from animation.creation import ShowCreation
-from animation.movement import Homotopy
 from animation.movement import SmoothedVectorizedHomotopy
 from animation.transform import ApplyPointwiseFunction
 from animation.transform import MoveToTarget
-from mobject.coordinate_systems import NumberPlane
 from mobject.coordinate_systems import ComplexPlane
-from mobject.svg.tex_mobject import TexMobject
-from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
 from scene.scene import Scene
-from utils.config_ops import digest_config
-from utils.config_ops import instantiate
-from utils.paths import path_along_arc
-from utils.space_ops import R3_to_complex
-from utils.space_ops import complex_to_R3
 
 class ComplexTransformationScene(Scene):
     CONFIG = {
@@ -166,35 +155,6 @@ class ComplexTransformationScene(Scene):
             ),
             *added_anims
         )
-
-##### Unsure about what comes under here...
-
-def complex_string(complex_num):
-    return filter(lambda c : c not in "()", str(complex_num))
-
-class ComplexFunction(ApplyPointwiseFunction):
-    def __init__(self, function, mobject = ComplexPlane, **kwargs):
-        if "path_func" not in kwargs:
-            self.path_func = path_along_arc(
-                np.log(function(complex(1))).imag
-            )
-        ApplyPointwiseFunction.__init__(
-            self,
-            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
-            instantiate(mobject),
-            **kwargs
-        )
-
-class ComplexHomotopy(Homotopy):
-    def __init__(self, complex_homotopy, mobject = ComplexPlane, **kwargs):
-        """
-        Complex Hootopy a function Cx[0, 1] to C
-        """
-        def homotopy(event):
-            x, y, z, t = event
-            c = complex_homotopy((complex(x, y), t))
-            return (c.real, c.imag, z)
-        Homotopy.__init__(self, homotopy, mobject, *args, **kwargs)
 
 
 

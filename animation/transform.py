@@ -12,8 +12,10 @@ from utils.config_ops import digest_config
 from utils.iterables import adjacent_pairs
 from utils.paths import path_along_arc
 from utils.paths import straight_path
+from utils.config_ops import instantiate
 from utils.rate_functions import smooth
 from utils.rate_functions import squish_rate_func
+from utils.space_ops import complex_to_R3
 
 class Transform(Animation):
     CONFIG = {
@@ -161,6 +163,21 @@ class ApplyMatrix(ApplyPointwiseFunction):
         def func(p):
             return np.dot(p, transpose)
         ApplyPointwiseFunction.__init__(self, func, mobject, **kwargs)
+
+class ComplexFunction(ApplyPointwiseFunction):
+    def __init__(self, function, mobject, **kwargs):
+        if "path_func" not in kwargs:
+            self.path_func = path_along_arc(
+                np.log(function(complex(1))).imag
+            )
+        ApplyPointwiseFunction.__init__(
+            self,
+            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
+            instantiate(mobject),
+            **kwargs
+        )
+
+###
 
 class CyclicReplace(Transform):
     CONFIG = {

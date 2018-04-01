@@ -34,6 +34,18 @@ class SmoothedVectorizedHomotopy(Homotopy):
         Homotopy.update_submobject(self, submob, start, alpha)
         submob.make_smooth()
 
+class ComplexHomotopy(Homotopy):
+    def __init__(self, complex_homotopy, mobject, **kwargs):
+        """
+        Complex Hootopy a function Cx[0, 1] to C
+        """
+        def homotopy(event):
+            x, y, z, t = event
+            c = complex_homotopy((complex(x, y), t))
+            return (c.real, c.imag, z)
+        Homotopy.__init__(self, homotopy, mobject, *args, **kwargs)
+
+
 class PhaseFlow(Animation):
     CONFIG = {
         "virtual_time" : 1,

@@ -61,12 +61,12 @@ from scene.zoomed_scene import *
 
 from once_useful_constructs.arithmetic import *
 from once_useful_constructs.combinatorics import *
+from once_useful_constructs.complex_transformation_scene import *
 from once_useful_constructs.counting import *
 from once_useful_constructs.fractals import *
 from once_useful_constructs.graph_theory import *
 from once_useful_constructs.light import *
 
-from topics.complex_numbers import *
 from topics.functions import *
 from topics.graph_scene import *
 from topics.matrix import *
