@@ -520,7 +520,7 @@ class Car(SVGMobject):
         self.set_stroke(color = WHITE, width = 0)
         self.set_fill(self.color, opacity = 1)
 
-        from pi_creature.pi_creature import Randolph
+        from for_3b1b_videos.pi_creature import Randolph
         randy = Randolph(mode = "happy")
         randy.scale_to_fit_height(0.6*self.get_height())
         randy.stretch(0.8, 0)

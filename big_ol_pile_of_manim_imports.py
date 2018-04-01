@@ -45,9 +45,10 @@ from mobject.types.image_mobject import *
 from mobject.types.point_cloud_mobject import *
 from mobject.types.vectorized_mobject import *
 
-from pi_creature.pi_creature import *
-from pi_creature.pi_creature_animations import *
-from pi_creature.pi_creature_scene import *
+from for_3b1b_videos.pi_creature import *
+from for_3b1b_videos.pi_creature_animations import *
+from for_3b1b_videos.pi_creature_scene import *
+from for_3b1b_videos.common_scenes import *
 
 from scene.moving_camera_scene import *
 from scene.reconfigurable_scene import *
@@ -62,7 +63,6 @@ from once_useful_constructs.fractals import *
 from once_useful_constructs.graph_theory import *
 from once_useful_constructs.light import *
 
-from topics.common_scenes import *
 from topics.complex_numbers import *
 from topics.functions import *
 from topics.graph_scene import *

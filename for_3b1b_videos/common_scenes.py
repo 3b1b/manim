@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+
+import random
 
 from constants import *
 
@@ -12,9 +15,9 @@ from mobject.svg.tex_mobject import TexMobject
 from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
 from scene.scene import Scene
-from pi_creature.pi_creature_animations import Blink
-from pi_creature.pi_creature import Mortimer
-from pi_creature.pi_creature import Randolph
+from for_3b1b_videos.pi_creature_animations import Blink
+from for_3b1b_videos.pi_creature import Mortimer
+from for_3b1b_videos.pi_creature import Randolph
 from mobject.geometry import DashedLine
 from mobject.geometry import Rectangle
 from mobject.geometry import Square

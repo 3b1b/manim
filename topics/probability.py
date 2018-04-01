@@ -541,7 +541,7 @@ class PlayingCard(VGroup):
         return design
 
     def get_face_card_design(self, value, symbol):
-        from pi_creature.pi_creature import PiCreature
+        from for_3b1b_videos.pi_creature import PiCreature
         sub_rect = Rectangle(
             stroke_color = BLACK,
             fill_opacity = 0,
