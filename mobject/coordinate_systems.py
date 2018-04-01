@@ -4,13 +4,13 @@ import numpy as np
 
 from constants import *
 
+from mobject.functions import ParametricFunction
 from mobject.geometry import Arrow
 from mobject.geometry import Line
 from mobject.number_line import NumberLine
 from mobject.svg.tex_mobject import TexMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
-from topics.functions import ParametricFunction
 from utils.config_ops import digest_config
 from utils.space_ops import R3_to_complex
 from utils.space_ops import angle_of_vector

@@ -1,12 +1,12 @@
+from __future__ import absolute_import
+
 from constants import *
 
 from scene.scene import Scene
-# from mobject.geometry import 
-from animation.creation import ShowCreation
 from animation.creation import Write
 from animation.transform import Transform
 from animation.update import UpdateFromAlphaFunc
-from mobject.geometry import DashedLine
+from mobject.functions import ParametricFunction
 from mobject.geometry import Line
 from mobject.geometry import Rectangle
 from mobject.number_line import NumberLine
@@ -14,7 +14,6 @@ from mobject.svg.tex_mobject import TexMobject
 from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VectorizedPoint
-from topics.functions import ParametricFunction
 from utils.bezier import interpolate
 from utils.color import color_gradient
 from utils.color import invert_color

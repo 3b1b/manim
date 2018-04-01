@@ -36,6 +36,7 @@ from continual_animation.numbers import *
 from continual_animation.update import *
 
 from mobject.frame import *
+from mobject.functions import *
 from mobject.geometry import *
 from mobject.mobject import *
 from mobject.number_line import *
@@ -54,6 +55,7 @@ from for_3b1b_videos.pi_creature import *
 from for_3b1b_videos.pi_creature_animations import *
 from for_3b1b_videos.pi_creature_scene import *
 
+from scene.graph_scene import *
 from scene.moving_camera_scene import *
 from scene.reconfigurable_scene import *
 from scene.scene import *
@@ -68,8 +70,6 @@ from once_useful_constructs.fractals import *
 from once_useful_constructs.graph_theory import *
 from once_useful_constructs.light import *
 
-from topics.functions import *
-from topics.graph_scene import *
 from topics.matrix import *
 from topics.probability import *
 from topics.three_dimensions import *

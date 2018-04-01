@@ -1,9 +1,10 @@
-from scipy import integrate
+from __future__ import absolute_import
+
+from constants import *
 
 from mobject.types.vectorized_mobject import VMobject
 from utils.config_ops import digest_config
 
-from constants import *
 
 class ParametricFunction(VMobject):
     CONFIG = {
