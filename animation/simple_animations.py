@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 
@@ -8,7 +9,7 @@ from mobject.mobject import Mobject, Group
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 from .animation import Animation
-from transform import Transform
+from .transform import Transform
 from utils.bezier import interpolate
 from utils.config_ops import digest_config
 from utils.rate_functions import smooth, double_smooth, there_and_back, wiggle

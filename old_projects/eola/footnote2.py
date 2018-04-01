@@ -37,7 +37,7 @@ class ColumnsRepresentBasisVectors(Scene):
         matrix = Matrix([[3, 1], [4, 1], [5, 9]])
         i_hat_words, j_hat_words = [
             TextMobject("Where $\\hat{\\%smath}$ lands"%char)
-            for char in "i", "j"
+            for char in ("i", "j")
         ]
         i_hat_words.set_color(X_COLOR)
         i_hat_words.next_to(ORIGIN, LEFT).to_edge(UP)
@@ -166,7 +166,7 @@ class DescribeColumnsInSpecificTransformation(Scene):
         ])
         matrix.set_color_columns(X_COLOR, Y_COLOR)
         mob_matrix = matrix.get_mob_matrix()
-        i_col, j_col = [VMobject(*mob_matrix[:,i]) for i in 0, 1]
+        i_col, j_col = [VMobject(*mob_matrix[:,i]) for i in (0, 1)]
         for col, char, vect in zip([i_col, j_col], ["i", "j"], [UP, DOWN]):
             color = col[0].get_color()
             col.words = TextMobject("Where $\\hat\\%smath$ lands"%char)
@@ -572,7 +572,7 @@ class DotProductPreview(VectorScene):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
         v_norm, w_norm = [
             np.linalg.norm(vect.get_end())
-            for vect in self.v, self.w
+            for vect in (self.v, self.w)
         ]
         projected_w = Vector(
             self.v.get_end()*dot_product/(v_norm**2),
@@ -595,7 +595,7 @@ class DotProductPreview(VectorScene):
                 Line(ORIGIN, norm*RIGHT), 
                 UP
             )
-            for norm in 1, self.v.get_length(), dot_product
+            for norm in (1, self.v.get_length(), dot_product)
         ]
         length_texs = list(it.starmap(TexMobject, [
             ("1",),

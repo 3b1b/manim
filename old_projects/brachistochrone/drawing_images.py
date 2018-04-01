@@ -255,7 +255,7 @@ class NewtonVsJohann(Scene):
     def construct(self):
         newton, johann = [
             ImageMobject(name, invert = False).scale(0.5)
-            for name in "Newton", "Johann_Bernoulli2"
+            for name in ("Newton", "Johann_Bernoulli2")
         ]
         greater_than = TexMobject(">")
         newton.next_to(greater_than, RIGHT)
@@ -277,7 +277,7 @@ class JohannThinksOfFermat(Scene):
     def construct(self):
         johann, fermat = [
             ImageMobject(name, invert = False)
-            for name in "Johann_Bernoulli2", "Pierre_de_Fermat"
+            for name in ("Johann_Bernoulli2", "Pierre_de_Fermat")
         ]
         johann.scale(0.2)
         johann.to_corner(DOWN+LEFT)

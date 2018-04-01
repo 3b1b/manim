@@ -106,7 +106,7 @@ class BruteForceVerification(Scene):
                 "(", v_tex, "\\times", w_tex, ")",
                 "= 0"
             )
-            for tex in v_tex, w_tex
+            for tex in (v_tex, w_tex)
         ]
         theta_def = TexMobject(
             "\\theta", 
@@ -149,7 +149,7 @@ class Prerequisites(Scene):
         rect.scale_to_fit_width(FRAME_X_RADIUS - 1)
         left_rect, right_rect = [
             rect.copy().shift(DOWN/2).to_edge(edge)
-            for edge in LEFT, RIGHT
+            for edge in (LEFT, RIGHT)
         ]
         chapter5 = TextMobject("""
             \\centering 
@@ -293,7 +293,7 @@ class ThreeStepPlan(Scene):
         v_tex, w_tex = get_vect_tex(*"vw")
         v_text, w_text, cross_text = [
             "$%s$"%s 
-            for s in v_tex, w_tex, v_tex + "\\times" + w_tex
+            for s in (v_tex, w_tex, v_tex + "\\times" + w_tex)
         ]
         steps = [
             TextMobject(
@@ -413,7 +413,7 @@ class DefineDualTransform(Scene):
         det_text = get_det_text(matrix, background_rect = False)
         syms = times1, times2, equals = [
             TexMobject(sym) 
-            for sym in "\\times", "\\times", "=",
+            for sym in ("\\times", "\\times", "=",)
         ]
         triple_cross = VGroup(
             u_tex.target, times1, v_tex.target, times2, w_tex.target, equals
@@ -509,7 +509,7 @@ class DefineDualTransform(Scene):
         func_tex[0].scale_in_place(1.5)
 
         func_tex = VGroup(
-            VGroup(*[func_tex[i] for i in 0, 1, 2, -2, -1]),
+            VGroup(*[func_tex[i] for i in (0, 1, 2, -2, -1)]),
             func_input
         )
         func_tex.next_to(self.equals, LEFT)
@@ -528,7 +528,7 @@ class DefineDualTransform(Scene):
         ])
         self.play(*[
             Write(VGroup(vect_brace, vect_brace.tex))
-            for vect_brace in v_brace, w_brace
+            for vect_brace in (v_brace, w_brace)
         ])
         self.wait()
         self.play(Write(func_tex))

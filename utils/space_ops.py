@@ -1,5 +1,6 @@
 import numpy as np
 from constants import RIGHT, OUT
+from functools import reduce
 
 #Matrix operations
 

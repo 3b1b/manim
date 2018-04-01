@@ -7,7 +7,8 @@ from brachistochrone.curves import Cycloid
 class PhysicalIntuition(Scene):
     def construct(self):
         n_terms = 4
-        def func((x, y, ignore)):
+        def func(xxx_todo_changeme):
+            (x, y, ignore) = xxx_todo_changeme
             z = complex(x, y)                                    
             if (np.abs(x%1 - 0.5)<0.01 and y < 0.01) or np.abs(z)<0.01:
                 return ORIGIN
@@ -87,7 +88,7 @@ class TimeLine(Scene):
         for point, event in zip(centers[1:], dated_events):
             self.play(ApplyMethod(
                 timeline.shift, -point.get_center(), 
-                run_time = run_times.next()
+                run_time = next(run_times)
             ))
             picture = ImageMobject(event["picture"], invert = False)
             picture.scale_to_fit_width(2)

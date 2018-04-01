@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 import os
@@ -6,7 +7,7 @@ from random import random
 
 from constants import *
 from .mobject import Mobject
-from point_cloud_mobject import PMobject
+from .point_cloud_mobject import PMobject
 from utils.bezier import interpolate
 from utils.color import color_to_int_rgb
 from utils.color import interpolate_color

@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import sys
 import inspect
 import os
 import shutil
 import itertools as it
-from extract_scene import is_scene, get_module
-from constants import ANIMATIONS_DIR, STAGED_SCENES_DIR
+from .extract_scene import is_scene, get_module
+from .constants import ANIMATIONS_DIR, STAGED_SCENES_DIR
 
 
 def get_sorted_scene_names(module_name):

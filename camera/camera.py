@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import itertools as it
 import os
@@ -19,6 +20,7 @@ from utils.images import get_full_raster_image_path
 from utils.iterables import remove_list_redundancies, list_difference_update
 from utils.iterables import batch_by_property
 from utils.simple_functions import fdiv
+from functools import reduce
 
 
 class Camera(object):
@@ -53,12 +55,12 @@ class Camera(object):
         # This is to address a strange bug where deepcopying
         # will result in a segfault, which is somehow related
         # to the aggdraw library
-        self.canvas = None 
+        self.canvas = None
         return copy.copy(self)
 
     def resize_frame_shape(self, fixed_dimension = 0):
         """
-        Changes frame_shape to match the aspect ratio 
+        Changes frame_shape to match the aspect ratio
         of pixel_shape, where fixed_dimension determines
         whether frame_shape[0] (height) or frame_shape[1] (width)
         remains fixed while the other changes accordingly.
@@ -76,7 +78,7 @@ class Camera(object):
             path = get_full_raster_image_path(self.background_image)
             image = Image.open(path).convert(self.image_mode)
             height, width = self.pixel_shape
-            #TODO, how to gracefully handle backgrounds 
+            #TODO, how to gracefully handle backgrounds
             #with different sizes?
             self.background = np.array(image)[:height, :width]
             self.background = self.background.astype(self.pixel_array_dtype)
@@ -110,7 +112,7 @@ class Camera(object):
 
     def set_pixel_array(self, pixel_array, convert_from_floats = False):
         converted_array = self.convert_pixel_array(pixel_array, convert_from_floats)
-        if not (hasattr(self, "pixel_array") and self.pixel_array.shape == converted_array.shape): 
+        if not (hasattr(self, "pixel_array") and self.pixel_array.shape == converted_array.shape):
             self.pixel_array = converted_array
         else:
             #Set in place
@@ -121,19 +123,19 @@ class Camera(object):
 
     def make_background_from_func(self, coords_to_colors_func):
         """
-        Sets background by using coords_to_colors_func to determine each pixel's color. Each input 
-        to coords_to_colors_func is an (x, y) pair in space (in ordinary space coordinates; not 
+        Sets background by using coords_to_colors_func to determine each pixel's color. Each input
+        to coords_to_colors_func is an (x, y) pair in space (in ordinary space coordinates; not
         pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
         """
 
-        print "Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
         coords = self.get_coords_of_all_pixels()
         new_background = np.apply_along_axis(
             coords_to_colors_func,
             2,
             coords
         )
-        print "Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
 
         return self.convert_pixel_array(new_background, convert_from_floats = True)
 
@@ -159,7 +161,7 @@ class Camera(object):
         ))
 
     def get_mobjects_to_display(
-        self, mobjects, 
+        self, mobjects,
         include_submobjects = True,
         excluded_mobjects = None,
         ):
@@ -190,7 +192,7 @@ class Camera(object):
     def capture_mobjects(self, mobjects, **kwargs):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
 
-        # Organize this list into batches of the same type, and 
+        # Organize this list into batches of the same type, and
         # apply corresponding function to those batches
         type_func_pairs = [
             (VMobject, self.display_multiple_vectorized_mobjects),
@@ -229,7 +231,7 @@ class Camera(object):
         if len(vmobjects) == 0:
             return
         batch_file_pairs = batch_by_property(
-            vmobjects, 
+            vmobjects,
             lambda vm : vm.get_background_image_file()
         )
         for batch, file_name in batch_file_pairs:
@@ -291,7 +293,7 @@ class Camera(object):
         result = ""
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
-            # points = self.adjust_out_of_range_points(points)            
+            # points = self.adjust_out_of_range_points(points)
             if len(points) == 0:
                 continue
             aligned_points = self.align_points_to_camera(points)
@@ -346,8 +348,8 @@ class Camera(object):
         factor = target_len/len(rgbas)
         rgbas = np.array([rgbas]*factor).reshape((target_len, rgba_len))
 
-        on_screen_indices = self.on_screen_pixels(pixel_coords)        
-        pixel_coords = pixel_coords[on_screen_indices]        
+        on_screen_indices = self.on_screen_pixels(pixel_coords)
+        pixel_coords = pixel_coords[on_screen_indices]
         rgbas = rgbas[on_screen_indices]
 
         ph, pw = self.pixel_shape
@@ -356,7 +358,7 @@ class Camera(object):
         flattener = flattener.reshape((2, 1))
         indices = np.dot(pixel_coords, flattener)[:,0]
         indices = indices.astype('int')
-        
+
         new_pa = self.pixel_array.reshape((ph*pw, rgba_len))
         new_pa[indices] = rgbas
         self.pixel_array = new_pa.reshape((ph, pw, rgba_len))
@@ -386,7 +388,7 @@ class Camera(object):
             y_indices = np.arange(dv1, dtype = 'int')*ih/dv1
             stretched_impa = impa[y_indices][:,x_indices]
 
-            x0, x1 = ul_coords[0], ur_coords[0] 
+            x0, x1 = ul_coords[0], ur_coords[0]
             y0, y1 = ul_coords[1], dl_coords[1]
             if x0 >= ow or x1 < 0 or y0 >= oh or y1 < 0:
                 return
@@ -399,7 +401,7 @@ class Camera(object):
             image[y0:y1, x0:x1] = stretched_impa[siy0:siy1, six0:six1]
         else:
             # Alternate (slower) tactic if image is tilted
-            # List of all coordinates of pixels, given as (x, y), 
+            # List of all coordinates of pixels, given as (x, y),
             # which matches the return type of points_to_pixel_coords,
             # even though np.array indexing naturally happens as (y, x)
             all_pixel_coords = np.zeros((oh*ow, 2), dtype = 'int')
@@ -416,7 +418,7 @@ class Camera(object):
                         dim*np.dot(recentered_coords, vect),
                         np.dot(vect, vect),
                     )
-                    for vect, dim in (right_vect, iw), (down_vect, ih)
+                    for vect, dim in ((right_vect, iw), (down_vect, ih))
                 ]
             to_change = reduce(op.and_, [
                 ix_coords >= 0, ix_coords < iw,
@@ -438,12 +440,12 @@ class Camera(object):
         # rgba_max_val = self.rgb_max_val
         src_rgb, src_a, dst_rgb, dst_a = [
             a.astype(np.float32)/self.rgb_max_val
-            for a in fg[...,:3], fg[...,3], bg[...,:3], bg[...,3]
+            for a in (fg[...,:3], fg[...,3], bg[...,:3], bg[...,3])
         ]
 
         out_a = src_a + dst_a*(1.0-src_a)
 
-        # When the output alpha is 0 for full transparency, 
+        # When the output alpha is 0 for full transparency,
         # we have a choice over what RGB value to use in our
         # output representation. We choose 0 here.
         out_rgb = fdiv(
@@ -468,7 +470,7 @@ class Camera(object):
         violators = points[violator_indices,:]
         violator_norms = norms[violator_indices]
         reshaped_norms = np.repeat(
-            violator_norms.reshape((len(violator_norms), 1)), 
+            violator_norms.reshape((len(violator_norms), 1)),
             points.shape[1], 1
         )
         rescaled = self.max_allowable_norm * violators / reshaped_norms
@@ -480,7 +482,7 @@ class Camera(object):
         ph, pw = self.pixel_shape
         sh, sw = self.frame_shape
         width_mult  = pw/sw
-        width_add   = pw/2        
+        width_add   = pw/2
         height_mult = ph/sh
         height_add  = ph/2
         #Flip on y-axis as you go
@@ -525,16 +527,16 @@ class Camera(object):
         # are listed in x, y order
         uncentered_pixel_coords = np.indices(self.pixel_shape)[::-1].transpose(1, 2, 0)
         uncentered_space_coords = fdiv(
-            uncentered_pixel_coords * full_space_dims, 
+            uncentered_pixel_coords * full_space_dims,
             full_pixel_dims)
-        # Could structure above line's computation slightly differently, but figured (without much 
-        # thought) multiplying by frame_shape first, THEN dividing by pixel_shape, is probably 
-        # better than the other order, for avoiding underflow quantization in the division (whereas 
+        # Could structure above line's computation slightly differently, but figured (without much
+        # thought) multiplying by frame_shape first, THEN dividing by pixel_shape, is probably
+        # better than the other order, for avoiding underflow quantization in the division (whereas
         # overflow is unlikely to be a problem)
 
         centered_space_coords = (uncentered_space_coords - fdiv(full_space_dims, 2))
 
-        # Have to also flip the y coordinates to account for pixel array being listed in 
+        # Have to also flip the y coordinates to account for pixel array being listed in
         # top-to-bottom order, opposite of screen coordinate convention
         centered_space_coords = centered_space_coords * (1, -1)
 
@@ -558,8 +560,8 @@ class BackgroundColoredVMobjectDisplayer(object):
         self.canvas = aggdraw.Draw(image)
 
     def resize_background_array(
-        self, background_array, 
-        new_width, new_height, 
+        self, background_array,
+        new_width, new_height,
         mode = "RGBA"
         ):
         image = Image.fromarray(background_array, mode = mode)
@@ -633,7 +635,7 @@ class MovingCamera(Camera):
             self.frame_shape = (height, self.mobject.get_width())
         self.resize_frame_shape(0 if self.aligned_dimension == "height" else 1)
 
-# TODO: Add an attribute to mobjects under which they can specify that they should just 
+# TODO: Add an attribute to mobjects under which they can specify that they should just
 # map their centers but remain otherwise undistorted (useful for labels, etc.)
 class MappingCamera(Camera):
     CONFIG = {
@@ -644,7 +646,7 @@ class MappingCamera(Camera):
 
     def points_to_pixel_coords(self, points):
         return Camera.points_to_pixel_coords(self, np.apply_along_axis(self.mapping_func, 1, points))
-    
+
     def capture_mobjects(self, mobjects, **kwargs):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         if self.allow_object_intrusion:
@@ -656,7 +658,7 @@ class MappingCamera(Camera):
             0 < mobject.get_num_anchor_points() < self.min_anchor_points:
                 mobject.insert_n_anchor_points(self.min_anchor_points)
         Camera.capture_mobjects(
-            self, mobject_copies, 
+            self, mobject_copies,
             include_submobjects = False,
             excluded_mobjects = None,
         )
@@ -664,14 +666,14 @@ class MappingCamera(Camera):
 # Note: This allows layering of multiple cameras onto the same portion of the pixel array,
 # the later cameras overwriting the former
 #
-# TODO: Add optional separator borders between cameras (or perhaps peel this off into a 
+# TODO: Add optional separator borders between cameras (or perhaps peel this off into a
 # CameraPlusOverlay class)
 class MultiCamera(Camera):
     def __init__(self, *cameras_with_start_positions, **kwargs):
         self.shifted_cameras = [
             DictAsObject(
             {
-                "camera" : camera_with_start_positions[0], 
+                "camera" : camera_with_start_positions[0],
                 "start_x" : camera_with_start_positions[1][1],
                 "start_y" : camera_with_start_positions[1][0],
                 "end_x" : camera_with_start_positions[1][1] + camera_with_start_positions[0].pixel_shape[1],
@@ -684,9 +686,9 @@ class MultiCamera(Camera):
     def capture_mobjects(self, mobjects, **kwargs):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.capture_mobjects(mobjects, **kwargs)
-            
+
             self.pixel_array[
-                shifted_camera.start_y:shifted_camera.end_y, 
+                shifted_camera.start_y:shifted_camera.end_y,
                 shifted_camera.start_x:shifted_camera.end_x] \
             = shifted_camera.camera.pixel_array
 
@@ -694,7 +696,7 @@ class MultiCamera(Camera):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_background(
                 pixel_array[
-                    shifted_camera.start_y:shifted_camera.end_y, 
+                    shifted_camera.start_y:shifted_camera.end_y,
                     shifted_camera.start_x:shifted_camera.end_x],
                 **kwargs
             )
@@ -704,7 +706,7 @@ class MultiCamera(Camera):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_pixel_array(
                 pixel_array[
-                    shifted_camera.start_y:shifted_camera.end_y, 
+                    shifted_camera.start_y:shifted_camera.end_y,
                     shifted_camera.start_x:shifted_camera.end_x],
                 **kwargs
             )
@@ -721,7 +723,7 @@ class SplitScreenCamera(MultiCamera):
         digest_config(self, kwargs)
         self.left_camera = left_camera
         self.right_camera = right_camera
-        
+
         half_width = self.pixel_shape[1] / 2
         for camera in [self.left_camera, self.right_camera]:
             camera.pixel_shape = (self.pixel_shape[0], half_width) # TODO: Round up on one if width is odd
@@ -730,5 +732,3 @@ class SplitScreenCamera(MultiCamera):
             camera.reset()
 
         MultiCamera.__init__(self, (left_camera, (0, 0)), (right_camera, (0, half_width)))
-
-

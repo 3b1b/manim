@@ -43,7 +43,7 @@ class LogoGeneration(Scene):
             self.interpolation_factor
         )
         for mob, color in [(iris, self.sphere_brown), (circle, self.circle_brown)]:
-            mob.set_color(color, lambda (x, y, z) : x < 0 and y > 0)
+            mob.set_color(color, lambda x_y_z : x_y_z[0] < 0 and x_y_z[1] > 0)
             mob.set_color(
                 "black", 
                 lambda point: np.linalg.norm(point) < \

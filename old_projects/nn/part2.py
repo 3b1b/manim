@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import os.path
 import cv2
@@ -460,7 +461,7 @@ class MNistDescription(Scene):
         ]
 
         for i, td_group in enumerate(training_data_groups):
-            print i
+            print(i)
             group = Group(*[
                 self.get_digit_pair(v_in, v_out)
                 for v_in, v_out in td_group
@@ -656,7 +657,7 @@ class IntroduceCostFunction(PreviewLearning):
         )
         symbols = VGroup(*[
             formula.get_parts_by_tex(tex)
-            for tex in "=", "+", "dots"
+            for tex in ("=", "+", "dots")
         ])
 
         w_labels.set_color(self.positive_edge_color)
@@ -774,7 +775,7 @@ class IntroduceCostFunction(PreviewLearning):
                 FadeIn, group,
                 run_time = 3,
             )
-            for group in neurons, edges
+            for group in (neurons, edges)
         ])
 
     def feed_in_example(self):
@@ -885,7 +886,7 @@ class IntroduceCostFunction(PreviewLearning):
         desired_layer = self.desired_last_layer
         decimal_groups = VGroup(*[
             self.num_vect_to_decimals(self.layer_to_num_vect(l))
-            for l in layer, desired_layer
+            for l in (layer, desired_layer)
         ])
 
         terms = VGroup()
@@ -1060,7 +1061,7 @@ class IntroduceCostFunction(PreviewLearning):
             random_v = np.random.random(10)
             new_decimal_groups = VGroup(*[
                 self.num_vect_to_decimals(v)
-                for v in random_v, out_vect
+                for v in (random_v, out_vect)
             ])
             for ds, nds in zip(decimal_groups, new_decimal_groups):
                 for old_d, new_d in zip(ds, nds):
@@ -1077,7 +1078,7 @@ class IntroduceCostFunction(PreviewLearning):
             self.add(new_image_group)
             image_group = new_image_group
 
-            self.wait(wait_times.next())
+            self.wait(next(wait_times))
 
     ####
 
@@ -1465,7 +1466,7 @@ class SingleVariableCostFunction(GraphScene):
             VGroup(cf[0], cf[2]).set_color(RED)
         big_brace, lil_brace = [
             Brace(cf[1], DOWN)
-            for cf in cf1, cf2
+            for cf in (cf1, cf2)
         ]
         big_brace_text = big_brace.get_text("Weights and biases")
         lil_brace_text = lil_brace.get_text("Single input")

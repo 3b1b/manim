@@ -23,7 +23,7 @@ class MultilayeredScene(Scene):
         height = float(self.total_glass_height)/n_layers
         rgb_pair = [
             np.array(Color(color).get_rgb())
-            for color in self.top_color, self.bottom_color
+            for color in (self.top_color, self.bottom_color)
         ]
         rgb_range = [
             interpolate(*rgb_pair+[x])
@@ -253,7 +253,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
                 )
                 for mob, start in zip(mobs, starts)
             ]
-            for mobs in start_ys, braces
+            for mobs in (start_ys, braces)
         ]))
         self.wait()
 
