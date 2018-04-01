@@ -2,8 +2,8 @@ import numpy as np
 import random
 
 from colour import Color
-from colour import WHITE
-from colour import PALETTE
+from constants import WHITE
+from constants import PALETTE
 
 from utils.bezier import interpolate
 

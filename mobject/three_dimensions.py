@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+
 from constants import *
 
-from mobject.vectorized_mobject import VMobject
-from topics.geometry import Square
+from mobject.types.vectorized_mobject import VMobject
+from mobject.geometry import Square
 
 from utils.space_ops import z_to_vector
 

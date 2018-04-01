@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 
 from constants import *
 
 from continual_animation.continual_animation import ContinualMovement
 from animation.transform import ApplyMethod
 from camera.three_d_camera import ThreeDCamera
-from mobject.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VGroup
 from mobject.three_dimensions import should_shade_in_3d
 from scene.scene import Scene
 

@@ -2,6 +2,7 @@ from constants import *
 
 from mobject.geometry import AnnularSector
 from mobject.geometry import Arc
+from mobject.geometry import Annulus
 from mobject.mobject import Mobject
 from mobject.svg.svg_mobject import SVGMobject
 from mobject.svg.tex_mobject import TexMobject

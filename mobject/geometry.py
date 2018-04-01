@@ -631,7 +631,12 @@ class Vector(Arrow):
 
 class DoubleArrow(Arrow):
     def init_tip(self):
-        self.tip = [(self.add_tip(), True), (self.add_tip(add_at_end = False), False)]
+        self.tip = VGroup()
+        for b in True, False:
+            t = self.add_tip(add_at_end = b)
+            t.add_at_end = b
+            self.tip.add(t)
+        self.tip.match_style(self.tip[0])
 
 class CubicBezier(VMobject):
     def __init__(self, points, **kwargs):
