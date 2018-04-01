@@ -20,6 +20,7 @@ from animation.composition import *
 from animation.creation import *
 from animation.indication import *
 from animation.movement import *
+from animation.numbers import *
 from animation.rotation import *
 from animation.specialized import *
 from animation.transform import *
@@ -31,11 +32,13 @@ from camera.moving_camera import *
 
 from continual_animation.continual_animation import *
 from continual_animation.from_animation import *
+from continual_animation.numbers import *
 from continual_animation.update import *
 
 from mobject.mobject import *
 from mobject.frame import *
 from mobject.geometry import *
+from mobject.numbers import *
 from mobject.shape_matchers import *
 from mobject.value_tracker import *
 from mobject.svg.brace import *
@@ -68,7 +71,6 @@ from topics.functions import *
 from topics.graph_scene import *
 from topics.matrix import *
 from topics.number_line import *
-from topics.numerals import *
 from topics.probability import *
 from topics.three_dimensions import *
 from topics.vector_space_scene import *
