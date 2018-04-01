@@ -35,23 +35,24 @@ from continual_animation.from_animation import *
 from continual_animation.numbers import *
 from continual_animation.update import *
 
-from mobject.mobject import *
 from mobject.frame import *
 from mobject.geometry import *
+from mobject.mobject import *
+from mobject.number_line import *
 from mobject.numbers import *
 from mobject.shape_matchers import *
-from mobject.value_tracker import *
 from mobject.svg.brace import *
 from mobject.svg.svg_mobject import *
 from mobject.svg.tex_mobject import *
 from mobject.types.image_mobject import *
 from mobject.types.point_cloud_mobject import *
 from mobject.types.vectorized_mobject import *
+from mobject.value_tracker import *
 
+from for_3b1b_videos.common_scenes import *
 from for_3b1b_videos.pi_creature import *
 from for_3b1b_videos.pi_creature_animations import *
 from for_3b1b_videos.pi_creature_scene import *
-from for_3b1b_videos.common_scenes import *
 
 from scene.moving_camera_scene import *
 from scene.reconfigurable_scene import *
@@ -70,7 +71,6 @@ from once_useful_constructs.light import *
 from topics.functions import *
 from topics.graph_scene import *
 from topics.matrix import *
-from topics.number_line import *
 from topics.probability import *
 from topics.three_dimensions import *
 from topics.vector_space_scene import *
@@ -101,4 +101,3 @@ import sys
 
 from PIL import Image
 from colour import Color
-

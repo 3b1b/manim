@@ -150,12 +150,3 @@ class UnitInterval(NumberLine):
         "number_at_center" : 0.5,
     }
 
-
-
-
-
-
-
-
-
-
