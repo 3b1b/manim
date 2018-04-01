@@ -7,7 +7,7 @@ from animation.creation import FadeIn
 from camera.camera import Camera
 from camera.moving_camera import MovingCamera
 from mobject.mobject import Mobject
-from topics.geometry import Rectangle
+from mobject.geometry import Rectangle
 
 from constants import *
 

@@ -101,12 +101,3 @@ def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
 
-
-# TODO: It feels like this should live elsewhere
-
-
-
-
-
-
-

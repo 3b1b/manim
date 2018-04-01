@@ -6,13 +6,13 @@ import warnings
 from xml.dom import minidom
 
 from constants import *
-from topics.geometry import Circle
-from topics.geometry import Rectangle
+from mobject.geometry import Circle
+from mobject.geometry import Rectangle
 from utils.bezier import is_closed
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
-from vectorized_mobject import VGroup
-from vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VMobject
 
 def string_to_numbers(num_string):
     num_string = num_string.replace("-",",-")

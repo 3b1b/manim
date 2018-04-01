@@ -21,6 +21,7 @@ from animation.creation import *
 from animation.indication import *
 from animation.movement import *
 from animation.rotation import *
+from animation.specialized import *
 from animation.transform import *
 from animation.update import *
 
@@ -32,12 +33,17 @@ from continual_animation.continual_animation import *
 from continual_animation.from_animation import *
 from continual_animation.update import *
 
-from mobject.image_mobject import *
 from mobject.mobject import *
-from mobject.point_cloud_mobject import *
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
+from mobject.frame import *
+from mobject.geometry import *
+from mobject.shape_matchers import *
+from mobject.value_tracker import *
+from mobject.svg.brace import *
+from mobject.svg.svg_mobject import *
+from mobject.svg.tex_mobject import *
+from mobject.types.image_mobject import *
+from mobject.types.point_cloud_mobject import *
+from mobject.types.vectorized_mobject import *
 
 from pi_creature.pi_creature import *
 from pi_creature.pi_creature_animations import *
@@ -59,12 +65,10 @@ from once_useful_constructs.light import *
 from topics.common_scenes import *
 from topics.complex_numbers import *
 from topics.functions import *
-from topics.geometry import *
 from topics.graph_scene import *
 from topics.matrix import *
 from topics.number_line import *
 from topics.numerals import *
-from topics.objects import *
 from topics.probability import *
 from topics.three_dimensions import *
 from topics.vector_space_scene import *

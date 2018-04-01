@@ -7,9 +7,9 @@ from animation.creation import ShowCreation
 from animation.movement import SmoothedVectorizedHomotopy
 from animation.transform import ApplyPointwiseFunction
 from animation.transform import MoveToTarget
-from mobject.tex_mobject import TexMobject
-from mobject.tex_mobject import TextMobject
-from mobject.vectorized_mobject import VGroup
+from mobject.svg.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import TextMobject
+from mobject.types.vectorized_mobject import VGroup
 from number_line import NumberPlane
 from scene.scene import Scene
 from utils.config_ops import digest_config

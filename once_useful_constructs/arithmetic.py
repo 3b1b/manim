@@ -3,7 +3,7 @@ import numpy as np
 
 from animation.animation import Animation
 from constants import *
-from mobject.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import TexMobject
 from scene.scene import Scene
 
 class RearrangeEquation(Scene):

@@ -1,4 +1,34 @@
-from big_ol_pile_of_manim_imports import *
+from constants import *
+
+from mobject.geometry import AnnularSector
+from mobject.geometry import Arc
+from mobject.mobject import Mobject
+from mobject.svg.svg_mobject import SVGMobject
+from mobject.svg.tex_mobject import TexMobject
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VectorizedPoint
+
+from continual_animation.continual_animation import ContinualAnimation
+
+from animation.animation import Animation
+from animation.composition import LaggedStart
+from animation.transform import ApplyMethod
+from animation.transform import Transform
+from animation.creation import FadeIn
+from animation.creation import FadeOut
+
+from camera.camera import Camera
+from scene.scene import Scene
+from topics.three_dimensions import ThreeDCamera
+from topics.three_dimensions import ThreeDScene
+
+from utils.space_ops import angle_between
+from utils.space_ops import angle_between_vectors
+from utils.space_ops import project_along_vector
+from utils.space_ops import rotate_vector
+from utils.space_ops import rotation_matrix
+from utils.space_ops import z_to_vector
 
 from scipy.spatial import ConvexHull
 from traceback import *

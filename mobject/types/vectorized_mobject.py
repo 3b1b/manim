@@ -493,3 +493,21 @@ class VectorizedPoint(VMobject):
     def set_location(self,new_loc):
         self.set_points(np.array([new_loc]))
 
+class DashedMobject(VMobject):
+    CONFIG = {
+        "dashes_num" : 15,
+        "spacing"    : 0.5,
+        "color"      : WHITE
+    }
+    def __init__(self, mobject, **kwargs):
+        VMobject.__init__(self, **kwargs)
+
+        buff = float(self.spacing) / self.dashes_num
+
+        for i in range(self.dashes_num):
+            a = ((1+buff) * i)/self.dashes_num
+            b = 1-((1+buff) * (self.dashes_num-1-i)) / self.dashes_num
+            dash = VMobject(color = self.color)
+            dash.pointwise_become_partial(mobject, a, b)
+            self.submobjects.append(dash)
+

@@ -20,7 +20,7 @@ from animation.transform import MoveToTarget
 from camera.camera import Camera
 from continual_animation.continual_animation import ContinualAnimation
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VMobject
 from utils.iterables import list_update
 
 from container.container import Container

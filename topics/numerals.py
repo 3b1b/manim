@@ -2,12 +2,12 @@
 from animation.animation import Animation
 from constants import *
 from continual_animation.continual_animation import ContinualAnimation
-from mobject.tex_mobject import TexMobject
-from mobject.vectorized_mobject import VGroup
-from mobject.vectorized_mobject import VMobject
-from mobject.vectorized_mobject import VectorizedPoint
+from mobject.svg.tex_mobject import TexMobject
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VectorizedPoint
 from scene.scene import Scene
-from topics.geometry import BackgroundRectangle
+from mobject.shape_matchers import BackgroundRectangle
 from utils.bezier import interpolate
 from utils.config_ops import digest_config
 

@@ -10,10 +10,10 @@ from PIL import Image
 from colour import Color
 
 from constants import *
-from mobject.image_mobject import ImageMobject
+from mobject.types.image_mobject import ImageMobject
 from mobject.mobject import Mobject
-from mobject.point_cloud_mobject import PMobject
-from mobject.vectorized_mobject import VMobject
+from mobject.types.point_cloud_mobject import PMobject
+from mobject.types.vectorized_mobject import VMobject
 from utils.color import color_to_int_rgba
 from utils.color import rgb_to_hex
 from utils.config_ops import digest_config

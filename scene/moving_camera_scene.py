@@ -4,7 +4,7 @@ from constants import *
 
 from scene.scene import Scene
 from camera.moving_camera import MovingCamera
-from topics.geometry import ScreenRectangle
+from mobject.frame import ScreenRectangle
 
 class MovingCameraScene(Scene):
     def setup(self):

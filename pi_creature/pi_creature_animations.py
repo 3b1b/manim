@@ -4,7 +4,7 @@ from constants import *
 
 from mobject.mobject import Group
 
-from topics.objects import SpeechBubble
+from mobject.svg.drawings import SpeechBubble
 
 from animation.creation import ShowCreation
 from animation.creation import Write

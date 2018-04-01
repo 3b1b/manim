@@ -10,9 +10,9 @@ from animation.creation import ShowPartial
 from animation.transform import Transform
 from mobject.mobject import Group
 from mobject.mobject import Mobject
-from mobject.vectorized_mobject import VMobject
-from topics.geometry import Circle
-from topics.geometry import Dot
+from mobject.types.vectorized_mobject import VMobject
+from mobject.geometry import Circle
+from mobject.geometry import Dot
 from utils.config_ops import digest_config
 from utils.rate_functions import squish_rate_func
 from utils.rate_functions import there_and_back

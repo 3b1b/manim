@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 from constants import *
 
 from mobject.mobject import Mobject
-from mobject.svg_mobject import SVGMobject
-from mobject.tex_mobject import Brace
-from mobject.tex_mobject import TexMobject
-from mobject.tex_mobject import TextMobject
-from mobject.vectorized_mobject import VGroup
-from mobject.vectorized_mobject import VMobject
-from mobject.vectorized_mobject import VectorizedPoint
+from mobject.svg.svg_mobject import SVGMobject
+from mobject.svg.brace import Brace
+from mobject.svg.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import TextMobject
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VectorizedPoint
 
 from animation.animation import Animation
 from animation.composition import AnimationGroup
@@ -17,13 +19,13 @@ from animation.transform import ApplyMethod
 from animation.creation import FadeIn
 from animation.creation import GrowFromCenter
 
-from topics.geometry import Arc
-from topics.geometry import Circle
-from topics.geometry import Line
-from topics.geometry import Polygon
-from topics.geometry import Rectangle
-from topics.geometry import Square
-from topics.geometry import SurroundingRectangle
+from mobject.geometry import Arc
+from mobject.geometry import Circle
+from mobject.geometry import Line
+from mobject.geometry import Polygon
+from mobject.geometry import Rectangle
+from mobject.geometry import Square
+from mobject.shape_matchers import SurroundingRectangle
 from topics.three_dimensions import Cube
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
@@ -583,131 +585,5 @@ class Car(SVGMobject):
     def get_rear_light(self):
         return self[1][8]
 
-class MoveCar(ApplyMethod):
-    CONFIG = {
-        "moving_forward" : True,
-    }
-    def __init__(self, car, target_point, **kwargs):
-        ApplyMethod.__init__(self, car.move_to, target_point, **kwargs)
-        displacement = self.target_mobject.get_right()-self.starting_mobject.get_right()
-        distance = np.linalg.norm(displacement)
-        if not self.moving_forward:
-            distance *= -1
-        tire_radius = car.get_tires()[0].get_width()/2
-        self.total_tire_radians = -distance/tire_radius
 
-    def update_mobject(self, alpha):
-        ApplyMethod.update_mobject(self, alpha)
-        if alpha == 0:
-            return
-        radians = alpha*self.total_tire_radians
-        for tire in self.mobject.get_tires():
-            tire.rotate_in_place(radians)
 
-#TODO: Where should this live?
-class Broadcast(LaggedStart):
-    CONFIG = {
-        "small_radius" : 0.0,
-        "big_radius" : 5,
-        "n_circles" : 5,
-        "start_stroke_width" : 8,
-        "color" : WHITE,
-        "remover" : True,
-        "lag_ratio" : 0.7,
-        "run_time" : 3,
-        "remover" : True,
-    }
-    def __init__(self, focal_point, **kwargs):
-        digest_config(self, kwargs)
-        circles = VGroup()
-        for x in range(self.n_circles):
-            circle = Circle(
-                radius = self.big_radius, 
-                stroke_color = BLACK,
-                stroke_width = 0,
-            )
-            circle.move_to(focal_point)
-            circle.save_state()
-            circle.scale_to_fit_width(self.small_radius*2)
-            circle.set_stroke(self.color, self.start_stroke_width)
-            circles.add(circle)
-        LaggedStart.__init__(
-            self, ApplyMethod, circles,
-            lambda c : (c.restore,),
-            **kwargs
-
-        )
-
-class BraceLabel(VMobject):
-    CONFIG = {
-        "label_constructor" : TexMobject,
-        "label_scale" : 1,
-    }
-    def __init__(self, obj, text, brace_direction = DOWN, **kwargs):
-        VMobject.__init__(self, **kwargs)
-        self.brace_direction = brace_direction
-        if isinstance(obj, list): obj = VMobject(*obj)
-        self.brace = Brace(obj, brace_direction, **kwargs)
-
-        if isinstance(text, tuple) or isinstance(text, list):
-            self.label = self.label_constructor(*text, **kwargs)
-        else: self.label = self.label_constructor(str(text))
-        if self.label_scale != 1: self.label.scale(self.label_scale)
-
-        self.brace.put_at_tip(self.label)
-        self.submobjects = [self.brace, self.label]
-
-    def creation_anim(self, label_anim = FadeIn, brace_anim = GrowFromCenter):
-        return AnimationGroup(brace_anim(self.brace), label_anim(self.label))
-
-    def shift_brace(self, obj, **kwargs):
-        if isinstance(obj, list): obj = VMobject(*obj)
-        self.brace = Brace(obj, self.brace_direction, **kwargs)
-        self.brace.put_at_tip(self.label)
-        self.submobjects[0] = self.brace
-        return self
-
-    def change_label(self, *text, **kwargs):
-        self.label = self.label_constructor(*text, **kwargs)
-        if self.label_scale != 1: self.label.scale(self.label_scale)
-
-        self.brace.put_at_tip(self.label)
-        self.submobjects[1] = self.label
-        return self
-
-    def change_brace_label(self, obj, *text):
-        self.shift_brace(obj)
-        self.change_label(*text)
-        return self
-
-    def copy(self):
-        copy_mobject = copy.copy(self)
-        copy_mobject.brace = self.brace.copy()
-        copy_mobject.label = self.label.copy()
-        copy_mobject.submobjects = [copy_mobject.brace, copy_mobject.label]
-
-        return copy_mobject
-
-class BraceText(BraceLabel):
-    CONFIG = {
-        "label_constructor" : TextMobject
-    }
-
-class DashedMobject(VMobject):
-    CONFIG = {
-        "dashes_num" : 15,
-        "spacing"    : 0.5,
-        "color"      : WHITE
-    }
-    def __init__(self, mob, **kwargs):
-        digest_locals(self)
-        VMobject.__init__(self, **kwargs)
-
-        buff = float(self.spacing) / self.dashes_num
-
-        for i in range(self.dashes_num):
-            a = ((1+buff) * i)/self.dashes_num
-            b = 1-((1+buff) * (self.dashes_num-1-i)) / self.dashes_num
-            dash = VMobject(color = self.color)
-            dash.pointwise_become_partial(mob, a, b)
-            self.submobjects.append(dash)

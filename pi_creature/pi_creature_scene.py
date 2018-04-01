@@ -6,11 +6,11 @@ import random
 
 from constants import *
 
-from mobject.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VGroup
 
-from topics.geometry import ScreenRectangle
-from topics.objects import SpeechBubble
-from topics.objects import ThoughtBubble
+from mobject.frame import ScreenRectangle
+from mobject.svg.drawings import SpeechBubble
+from mobject.svg.drawings import ThoughtBubble
 
 from animation.transform import ApplyMethod
 from animation.transform import ReplacementTransform

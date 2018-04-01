@@ -4,12 +4,12 @@ from constants import *
 from continual_animation.continual_animation import ContinualMovement
 from animation.transform import ApplyMethod
 from camera.camera import Camera
-from mobject.vectorized_mobject import VGroup
-from mobject.vectorized_mobject import VMobject
-from mobject.vectorized_mobject import VectorizedPoint
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VectorizedPoint
 from scene.scene import Scene
-from topics.geometry import Line
-from topics.geometry import Square
+from mobject.geometry import Line
+from mobject.geometry import Square
 
 from utils.bezier import interpolate
 from utils.iterables import list_update

@@ -8,19 +8,19 @@ from animation.transform import Transform
 from animation.update import UpdateFromFunc
 
 from mobject.mobject import Mobject
-from mobject.svg_mobject import SVGMobject
-from mobject.tex_mobject import Brace
-from mobject.tex_mobject import TexMobject
-from mobject.tex_mobject import TextMobject
-from mobject.vectorized_mobject import VGroup
-from mobject.vectorized_mobject import VMobject
-from mobject.vectorized_mobject import VectorizedPoint
-from topics.geometry import Arc
-from topics.geometry import Circle
-from topics.geometry import Line
-from topics.geometry import Polygon
-from topics.geometry import Rectangle
-from topics.geometry import Square
+from mobject.svg.svg_mobject import SVGMobject
+from mobject.svg.brace import Brace
+from mobject.svg.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import TextMobject
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VectorizedPoint
+from mobject.geometry import Arc
+from mobject.geometry import Circle
+from mobject.geometry import Line
+from mobject.geometry import Polygon
+from mobject.geometry import Rectangle
+from mobject.geometry import Square
 
 from utils.bezier import interpolate
 from utils.color import average_color

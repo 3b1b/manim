@@ -5,9 +5,9 @@ import numpy as np
 from constants import *
 
 from animation.animation import Animation
-from mobject.tex_mobject import TextMobject
-from mobject.vectorized_mobject import VMobject
-from mobject.vectorized_mobject import VectorizedPoint
+from mobject.svg.tex_mobject import TextMobject
+from mobject.types.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VectorizedPoint
 from animation.transform import Transform
 from utils.bezier import interpolate
 from utils.config_ops import digest_config

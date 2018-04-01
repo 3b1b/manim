@@ -1,6 +1,6 @@
 from scipy import integrate
 
-from mobject.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VMobject
 from utils.config_ops import digest_config
 
 from constants import *

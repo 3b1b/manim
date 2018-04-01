@@ -8,17 +8,17 @@ from animation.creation import Write
 from animation.transform import ApplyMethod
 from animation.creation import FadeIn
 from animation.creation import FadeOut
-from mobject.tex_mobject import TexMobject
-from mobject.tex_mobject import TextMobject
-from mobject.vectorized_mobject import VGroup
+from mobject.svg.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import TextMobject
+from mobject.types.vectorized_mobject import VGroup
 from scene.scene import Scene
 from pi_creature.pi_creature_animations import Blink
 from pi_creature.pi_creature import Mortimer
 from pi_creature.pi_creature import Randolph
-from topics.geometry import DashedLine
-from topics.geometry import Rectangle
-from topics.geometry import Square
-from topics.objects import PatreonLogo
+from mobject.geometry import DashedLine
+from mobject.geometry import Rectangle
+from mobject.geometry import Square
+from mobject.svg.drawings import PatreonLogo
 
 class OpeningQuote(Scene):
     CONFIG = {

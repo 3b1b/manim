@@ -3,12 +3,12 @@ import numpy as np
 from constants import *
 
 from mobject.mobject import Mobject
-from mobject.svg_mobject import SVGMobject
-from mobject.tex_mobject import TextMobject
-from mobject.vectorized_mobject import VGroup
-from mobject.vectorized_mobject import VMobject
+from mobject.svg.svg_mobject import SVGMobject
+from mobject.svg.tex_mobject import TextMobject
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VMobject
 
-from topics.objects import ThoughtBubble
+from mobject.svg.drawings import ThoughtBubble
 
 from animation.transform import Transform
 from utils.config_ops import digest_config
