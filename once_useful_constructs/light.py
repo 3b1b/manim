@@ -20,8 +20,8 @@ from animation.creation import FadeOut
 
 from camera.camera import Camera
 from scene.scene import Scene
-from topics.three_dimensions import ThreeDCamera
-from topics.three_dimensions import ThreeDScene
+from camera.three_d_camera import ThreeDCamera
+from scene.three_d_scene import ThreeDScene
 
 from utils.space_ops import angle_between
 from utils.space_ops import angle_between_vectors

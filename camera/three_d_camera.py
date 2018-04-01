@@ -1,22 +1,14 @@
+import numpy as np
 
 from constants import *
 
-from continual_animation.continual_animation import ContinualMovement
-from animation.transform import ApplyMethod
 from camera.camera import Camera
-from mobject.types.vectorized_mobject import VGroup
-from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VectorizedPoint
-from scene.scene import Scene
-from mobject.geometry import Line
-from mobject.geometry import Square
+from mobject.three_dimensions import should_shade_in_3d
 
 from utils.bezier import interpolate
-from utils.iterables import list_update
 from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
-from utils.space_ops import z_to_vector
-
 
 class CameraWithPerspective(Camera):
     CONFIG = {
@@ -47,6 +39,7 @@ class ThreeDCamera(CameraWithPerspective):
         Camera.__init__(self, *args, **kwargs)
         self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
         ## rotation_mobject lives in the phi-theta-distance space
+        ## TODO, use ValueTracker for this instead
         self.rotation_mobject = VectorizedPoint()
         ## moving_center lives in the x-y-z space
         ## It representes the center of rotation
@@ -172,128 +165,3 @@ class ThreeDCamera(CameraWithPerspective):
         self.space_center = self.moving_center.points[0]
 
         return Camera.points_to_pixel_coords(self, new_points)
-
-class ThreeDScene(Scene):
-    CONFIG = {
-        "camera_class" : ThreeDCamera,
-        "ambient_camera_rotation" : None,
-    }
-
-    def set_camera_position(self, phi = None, theta = None, distance = None,
-                            center_x = None, center_y = None, center_z = None):
-        self.camera.set_position(phi, theta, distance, center_x, center_y, center_z)
-
-    def begin_ambient_camera_rotation(self, rate = 0.01):
-        self.ambient_camera_rotation = ContinualMovement(
-            self.camera.rotation_mobject,
-            direction = UP,
-            rate = rate
-        )
-        self.add(self.ambient_camera_rotation)
-
-    def stop_ambient_camera_rotation(self):
-        if self.ambient_camera_rotation is not None:
-            self.remove(self.ambient_camera_rotation)
-        self.ambient_camera_rotation = None
-
-    def move_camera(
-        self,
-        phi = None, theta = None, distance = None,
-        center_x = None, center_y = None, center_z = None,
-        added_anims = [],
-        **kwargs
-        ):
-        target_point = self.camera.get_spherical_coords(phi, theta, distance)
-        movement = ApplyMethod(
-            self.camera.rotation_mobject.move_to,
-            target_point,
-            **kwargs
-        )
-        target_center = self.camera.get_center_of_rotation(center_x, center_y, center_z)
-        movement_center = ApplyMethod(
-            self.camera.moving_center.move_to,
-            target_center,
-            **kwargs
-        )
-        is_camera_rotating = self.ambient_camera_rotation in self.continual_animations
-        if is_camera_rotating:
-            self.remove(self.ambient_camera_rotation)
-        self.play(movement, movement_center, *added_anims)
-        target_point = self.camera.get_spherical_coords(phi, theta, distance)
-        if is_camera_rotating:
-            self.add(self.ambient_camera_rotation)
-
-    def get_moving_mobjects(self, *animations):
-        moving_mobjects = Scene.get_moving_mobjects(self, *animations)
-        if self.camera.rotation_mobject in moving_mobjects:
-            return list_update(self.mobjects, moving_mobjects)
-        return moving_mobjects
-
-##############
-
-def should_shade_in_3d(mobject):
-    return hasattr(mobject, "shade_in_3d") and mobject.shade_in_3d
-
-def shade_in_3d(mobject):
-    for submob in mobject.submobject_family():
-        submob.shade_in_3d = True
-
-def turn_off_3d_shading(mobject):
-    for submob in mobject.submobject_family():
-        submob.shade_in_3d = False
-
-class ThreeDMobject(VMobject):
-    def __init__(self, *args, **kwargs):
-        VMobject.__init__(self, *args, **kwargs)
-        shade_in_3d(self)
-
-class Cube(ThreeDMobject):
-    CONFIG = {
-        "fill_opacity" : 0.75,
-        "fill_color" : BLUE,
-        "stroke_width" : 0,
-        "propagate_style_to_family" : True,
-        "side_length" : 2,
-    }
-    def generate_points(self):
-        for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
-            face = Square(side_length = self.side_length)
-            face.shift(self.side_length*OUT/2.0)
-            face.apply_function(lambda p : np.dot(p, z_to_vector(vect).T))
-
-            self.add(face)
-
-class Prism(Cube):
-    CONFIG = {
-        "dimensions" : [3, 2, 1]
-    }
-    def generate_points(self):
-        Cube.generate_points(self)
-        for dim, value in enumerate(self.dimensions):
-            self.rescale_to_fit(value, dim, stretch = True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

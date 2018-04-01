@@ -1,10 +1,11 @@
 import numpy as np
 
+from constants import *
+
 from animation.animation import Animation
 from animation.creation import ShowCreation
 from animation.creation import Write
 from animation.transform import ApplyFunction
-from animation.transform import ApplyMethod
 from animation.transform import ApplyPointwiseFunction
 from animation.creation import FadeOut
 from animation.transform import Transform
@@ -15,8 +16,6 @@ from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from scene.scene import Scene
 from mobject.geometry import Arrow
-from mobject.shape_matchers import BackgroundRectangle
-from mobject.geometry import Circle
 from mobject.geometry import Dot
 from mobject.geometry import Line
 from mobject.geometry import Square
@@ -24,7 +23,6 @@ from mobject.geometry import Vector
 from mobject.coordinate_systems import Axes
 from mobject.coordinate_systems import NumberPlane
 
-from constants import *
 from mobject.matrix import Matrix
 from mobject.matrix import VECTOR_LABEL_SCALE_FACTOR
 from mobject.matrix import vector_coordinate_label
@@ -32,11 +30,9 @@ from utils.rate_functions import rush_from
 from utils.rate_functions import rush_into
 from utils.space_ops import angle_of_vector
 
-
 X_COLOR = GREEN_C
 Y_COLOR = RED_C
 Z_COLOR = BLUE_D
-
 
 class VectorScene(Scene):
     CONFIG = {

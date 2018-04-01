@@ -29,6 +29,7 @@ from animation.update import *
 from camera.camera import *
 from camera.mapping_camera import *
 from camera.moving_camera import *
+from camera.three_d_camera import *
 
 from continual_animation.continual_animation import *
 from continual_animation.from_animation import *
@@ -38,13 +39,16 @@ from continual_animation.update import *
 from mobject.frame import *
 from mobject.functions import *
 from mobject.geometry import *
+from mobject.matrix import *
 from mobject.mobject import *
 from mobject.number_line import *
 from mobject.numbers import *
+from mobject.probability import *
 from mobject.shape_matchers import *
 from mobject.svg.brace import *
 from mobject.svg.svg_mobject import *
 from mobject.svg.tex_mobject import *
+from mobject.three_dimensions import *
 from mobject.types.image_mobject import *
 from mobject.types.point_cloud_mobject import *
 from mobject.types.vectorized_mobject import *
@@ -60,6 +64,8 @@ from scene.moving_camera_scene import *
 from scene.reconfigurable_scene import *
 from scene.scene import *
 from scene.scene_from_video import *
+from scene.three_d_scene import *
+from scene.vector_space_scene import *
 from scene.zoomed_scene import *
 
 from once_useful_constructs.arithmetic import *
@@ -70,10 +76,6 @@ from once_useful_constructs.fractals import *
 from once_useful_constructs.graph_theory import *
 from once_useful_constructs.light import *
 
-from mobject.matrix import *
-from topics.probability import *
-from topics.three_dimensions import *
-from topics.vector_space_scene import *
 
 from utils.bezier import *
 from utils.color import *
