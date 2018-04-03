@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+from once_useful_constructs.combinatorics import *
 
 nb_levels = 50
 
@@ -13,11 +14,18 @@ def rainbow_color(alpha):
 	return rainbow[index]
 
 
+class SampleScene(Scene):
+
+	def construct(self):
+
+		triangle = Polygon()
+		self.add(triangle)
+		self.wait()
 
 
 
 
-class PascalScene(Scene):
+class PascalNetScene(Scene):
 
 	def construct(self):
 
@@ -71,7 +79,7 @@ class PascalScene(Scene):
 
 
 
-class RescaledPascalScene(Scene):
+class RescaledPascalNetScene(Scene):
 
 	def construct(self):
 
