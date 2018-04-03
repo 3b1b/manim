@@ -85,12 +85,18 @@ class CountingScene(Scene):
         self.number = num_mob
         return self
 
-class PascalsTriangle(VMobject):
+class CombinationTexMobject(TexMobject):
+    def __init(self,n,k,**kwargs):
+        TexMobject.__init__(str(choose(n,k)),**kwargs)
+
+
+class GeneralizedPascalsTriangle(VMobject):
     CONFIG = {
         "nrows" : 7,
         "height" : FRAME_HEIGHT - 1,
         "width" : 1.5*FRAME_X_RADIUS,
-        "portion_to_fill" : 0.7
+        "portion_to_fill" : 0.7,
+        "submob_class" : CombinationTexMobject,
     }    
     def generate_points(self):
         self.cell_height = float(self.height) / self.nrows
@@ -98,16 +104,16 @@ class PascalsTriangle(VMobject):
         self.bottom_left = (self.cell_width * self.nrows / 2.0)*LEFT + \
                            (self.cell_height * self.nrows / 2.0)*DOWN
         num_to_num_mob   = {} 
-        self.coords_to_mobs   = {}
+        self.coords_to_mobs = {}
         self.coords = [
             (n, k) 
             for n in range(self.nrows) 
             for k in range(n+1)
         ]
         for n, k in self.coords:
-            num = choose(n, k)              
+            num = choose(n, k)
             center = self.coords_to_center(n, k)
-            num_mob = TexMobject(str(num))
+            num_mob = self.submob_class(n,k) #TexMobject(str(num))
             scale_factor = min(
                 1,
                 self.portion_to_fill * self.cell_height / num_mob.get_height(),
@@ -167,7 +173,10 @@ class PascalsTriangle(VMobject):
                     self.add(mob)
         return self
 
-
+class PascalsTriangle(GeneralizedPascalsTriangle):
+    CONFIG = {
+        "submob_class" : CombinationTexMobject,
+    }
 
 
 
