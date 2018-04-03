@@ -1,12 +1,4 @@
-from helpers import *
-from mobject import Mobject
-from mobject.vectorized_mobject import *
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from topics.geometry import *
-from scene import Scene
-from camera import *
+from big_ol_pile_of_manim_imports import *
 
 nb_levels = 50
 
