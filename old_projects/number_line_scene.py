@@ -1,11 +1,4 @@
-import numpy as np
-from animation.transform import ApplyMethod, Transform
-from constants import RIGHT, SPACE_WIDTH, UP
-from helpers import counterclockwise_path, straight_path
-from point_cloud_mobject import Point
-from scene import Scene
-from topics.geometry import Line
-from topics.number_line import NumberLine
+from big_ol_pile_of_manim_imports import *
 
 class NumberLineScene(Scene):
     def construct(self, **number_line_config):
@@ -16,7 +9,7 @@ class NumberLineScene(Scene):
 
     def zoom_in_on(self, number, zoom_factor, run_time = 2.0):
         unit_length_to_spatial_width = self.number_line.unit_length_to_spatial_width*zoom_factor
-        radius = SPACE_WIDTH/unit_length_to_spatial_width
+        radius = FRAME_X_RADIUS/unit_length_to_spatial_width
         tick_frequency = 10**(np.floor(np.log10(radius)))
         left_tick = tick_frequency*(np.ceil((number-radius)/tick_frequency))
         new_number_line = NumberLine(

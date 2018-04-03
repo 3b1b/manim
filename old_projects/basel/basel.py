@@ -1,31 +1,8 @@
 #!/usr/bin/env python
 
-from helpers import *
+from big_ol_pile_of_manim_imports import *
 
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.continual_animation import *
-
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.three_dimensions import *
-
-from topics.light import *
+from once_useful_constructs.light import *
 
 import types
 import functools
@@ -344,7 +321,7 @@ class IntroScene(PiCreatureScene):
                 
             self.wait()
 
-        self.q_marks = TextMobject("???").highlight(LIGHT_COLOR)
+        self.q_marks = TextMobject("???").set_color(LIGHT_COLOR)
         self.q_marks.move_to(self.partial_sum_decimal)
 
         self.play(
@@ -394,7 +371,7 @@ class IntroScene(PiCreatureScene):
             rect = Rectangle()
             rect.stroke_width = 0
             rect.fill_opacity = 1
-            rect.highlight(color)
+            rect.set_color(color)
             rect.stretch_to_fit_height(
                 self.rect_height,
             )
@@ -404,7 +381,7 @@ class IntroScene(PiCreatureScene):
             self.rects.add(rect)
             lines.add(line)
 
-        #self.rects.radial_gradient_highlight(ORIGIN, 5, YELLOW, BLUE)
+        #self.rects.set_colors_by_radial_gradient(ORIGIN, 5, YELLOW, BLUE)
         
         self.little_euler_terms = VGroup()
         for i in range(1,7):
@@ -464,7 +441,7 @@ class IntroScene(PiCreatureScene):
 
     def show_pi_answer(self):
 
-        self.pi_answer = TexMobject("{\\pi^2 \\over 6}").highlight(YELLOW)
+        self.pi_answer = TexMobject("{\\pi^2 \\over 6}").set_color(YELLOW)
         self.pi_answer.move_to(self.partial_sum_decimal)
         self.pi_answer.next_to(self.euler_sum[-1], RIGHT, buff = 1,
             submobject_to_align = self.pi_answer[-2])
@@ -1128,7 +1105,7 @@ class EarthScene(Scene):
             0]))
 
         polar_morty = morty.copy().scale(0.5).next_to(screen_on_earth,DOWN,buff = 0.5)
-        polar_morty.highlight(BLUE_C)
+        polar_morty.set_color(BLUE_C)
 
         self.play(
             Transform(self.screen, screen_on_earth),
@@ -1140,7 +1117,7 @@ class EarthScene(Scene):
 
         tropical_morty = polar_morty.copy()
         tropical_morty.move_to(np.array([0,0,0]))
-        tropical_morty.highlight(RED)
+        tropical_morty.set_color(RED)
 
         morty.target = tropical_morty
 
@@ -2078,7 +2055,7 @@ class IPTScene1(PiCreatureScene):
 
         # use the following for the zoomed inset
         if show_detail:
-            self.camera.space_shape = (0.02 * SPACE_HEIGHT, 0.02 * SPACE_WIDTH)
+            self.camera.frame_shape = (0.02 * FRAME_HEIGHT, 0.02 * FRAME_WIDTH)
             self.camera.space_center = C
             SCREEN_SCALE = 0.01
             SCREEN_THICKNESS = 0.02
@@ -3873,8 +3850,8 @@ class PondScene(ThreeDScene):
 
 
         covering_rectangle = Rectangle(
-            width = SPACE_WIDTH * scale,
-            height = 2 * SPACE_HEIGHT * scale,
+            width = FRAME_X_RADIUS * scale,
+            height = 2 * FRAME_Y_RADIUS * scale,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 1,
@@ -3960,7 +3937,7 @@ class FinalSumManipulationScene(PiCreatureScene):
         sum_vertical_spacing = 1.5
 
         randy = self.get_primary_pi_creature()
-        randy.highlight(MAROON_D)
+        randy.set_color(MAROON_D)
         randy.color = MAROON_D
         randy.scale(0.7).flip().to_edge(DOWN + LEFT)
         self.wait()
@@ -4397,7 +4374,7 @@ class InfiniteCircleScene(PiCreatureScene):
     def construct(self):
 
         morty = self.get_primary_pi_creature()
-        morty.highlight(MAROON_D).flip()
+        morty.set_color(MAROON_D).flip()
         morty.color = MAROON_D
         morty.scale(0.5).move_to(ORIGIN)
 

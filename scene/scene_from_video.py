@@ -1,9 +1,12 @@
-import numpy as np
+from __future__ import absolute_import
+
 import cv2
 import itertools as it
+import numpy as np
+
 from tqdm import tqdm as show_progress
 
-from scene import Scene
+from scene.scene import Scene
 
 
 class SceneFromVideo(Scene):

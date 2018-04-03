@@ -1,78 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from helpers import *
 import scipy
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from topics.common_scenes import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from scene.moving_camera_scene import *
-from camera import Camera
-from mobject import *
-from mobject.image_mobject import *
-from mobject.vectorized_mobject import *
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.graph_scene import *
-from topics.light import *
-
+from big_ol_pile_of_manim_imports import *
 from old_projects.fourier import *
-
 
 FREQUENCY_COLOR = RED
 USE_ALMOST_FOURIER_BY_DEFAULT = False
-
-class ValueTracker(VectorizedPoint):
-    """
-    Note meant to be displayed.  Instead the position encodes some 
-    number, often one which another animation or continual_animation
-    uses for its update function, and by treating it as a mobject it can
-    still be animated and manipulated just like anything else.
-    """
-    def __init__(self, value = 0, **kwargs):
-        VectorizedPoint.__init__(self, **kwargs)
-        self.set_value(value)
-
-    def get_value(self):
-        return self.get_center()[0]
-
-    def set_value(self, value):
-        self.move_to(value*RIGHT)
-        return self
-
-    def increment_value(self, d_value):
-        self.set_value(self.get_value() + d_value)
-
-class ExponentialValueTracker(ValueTracker):
-    """
-    Operates just like ValueTracker, except it encodes the value as the
-    exponential of a position coordinate, which changes how interpolation 
-    behaves
-    """
-    def get_value(self):
-        return np.exp(self.get_center()[0])
-
-    def set_value(self, value):
-        self.move_to(np.log(value)*RIGHT)
-        return self
 
 class GaussianDistributionWrapper(Line):
     """
@@ -212,7 +145,7 @@ class FalconHeavy(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
         self.logo = self[-9:]
-        self.logo.highlight(self.logo_color)
+        self.logo.set_color(self.logo_color)
 
 class RadarPulseSingleton(ContinualAnimation):
     CONFIG = {
@@ -311,7 +244,7 @@ class Flash(AnimationGroup):
         digest_config(self, kwargs)
         original_color = mobject.get_color()
         on_and_off = UpdateFromAlphaFunc(
-            mobject.copy(), lambda m, a : m.highlight(
+            mobject.copy(), lambda m, a : m.set_color(
                 color if a < 0.5 else original_color
             ),
             remover = True
@@ -323,7 +256,7 @@ class Flash(AnimationGroup):
             line.rotate(angle, about_point = ORIGIN)
             lines.add(line)
         lines.move_to(mobject)
-        lines.highlight(color)
+        lines.set_color(color)
         line_anims = [
             ShowCreationThenDestruction(
                 line, rate_func = squish_rate_func(smooth, 0, 0.5)
@@ -403,7 +336,7 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
                 brace.match_width(gdw, stretch = True)
                 brace.next_to(gdw, vect)
                 text.next_to(brace, vect, buff = SMALL_BUFF)
-            group.highlight(color)
+            group.set_color(color)
             return ContinualUpdateFromFunc(group, update_group)
 
         dot_brace_anim = get_brace_text_group_update(
@@ -509,7 +442,7 @@ class FourierTradeoff(Scene):
             frequency_axes.x_axis.get_right(), UP+LEFT,
             buff = MED_SMALL_BUFF, 
         )
-        frequency_label.highlight(FREQUENCY_COLOR)
+        frequency_label.set_color(FREQUENCY_COLOR)
         frequency_axes.add(frequency_label)
         frequency_axes.move_to(time_axes, LEFT)
         frequency_axes.to_edge(DOWN, buff = LARGE_BUFF)
@@ -530,7 +463,7 @@ class FourierTradeoff(Scene):
                 get_wave_packet_function(),
                 num_graph_points = 200,
             )
-            graph.highlight(YELLOW)
+            graph.set_color(YELLOW)
             return graph
 
         time_radius = 10
@@ -565,7 +498,7 @@ class FourierTradeoff(Scene):
         fourier_words = TextMobject("Fourier Transform")
         fourier_words.next_to(arrow, LEFT, buff = MED_LARGE_BUFF)
         sub_words = TextMobject("(To be explained shortly)")
-        sub_words.highlight(BLUE)
+        sub_words.set_color(BLUE)
         sub_words.scale(0.75)
         sub_words.next_to(fourier_words, DOWN)
 
@@ -608,7 +541,7 @@ class ShowPlan(PiCreatureScene):
         title = TextMobject("The plan")
         title.scale(1.5)
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
@@ -621,7 +554,7 @@ class ShowPlan(PiCreatureScene):
         words = VGroup()
         for topic, tradeoff, color in trips:
             word = TextMobject("Uncertainty for", topic, tradeoff)
-            word[1:].highlight(color)
+            word[1:].set_color(color)
             word[2].scale(0.75)
             word[2].next_to(word[1], DOWN, buff = 1.5*SMALL_BUFF)
             words.add(word)
@@ -641,7 +574,7 @@ class ShowPlan(PiCreatureScene):
         rect = BackgroundRectangle(wave, fill_opacity = 1)
         rect.stretch(2, 1)
         rect.next_to(wave, LEFT, buff = 0)
-        wave_shift = AmbientMovement(
+        wave_shift = ContinualMovement(
             wave, direction = LEFT, rate = 5
         )
         wave_fader = UpdateFromAlphaFunc(
@@ -677,7 +610,7 @@ class ShowPlan(PiCreatureScene):
         target = Plane()
         # target.match_height(radar_dish)
         target.next_to(radar_dish, RIGHT, buff = LARGE_BUFF)
-        target_movement = AmbientMovement(target, direction = RIGHT, rate = 1.25)
+        target_movement = ContinualMovement(target, direction = RIGHT, rate = 1.25)
 
         pulse = RadarPulse(radar_dish, target)
 
@@ -744,7 +677,7 @@ class ShowPlan(PiCreatureScene):
 
     def get_checkmark(self, word):
         checkmark = TexMobject("\\checkmark")
-        checkmark.highlight(GREEN)
+        checkmark.set_color(GREEN)
         checkmark.scale(1.25)
         checkmark.next_to(word[1], UP+RIGHT, buff = 0)
         return checkmark
@@ -803,9 +736,9 @@ class TwoCarsAtRedLight(Scene):
             traffic_light, LEFT, 
             buff = LARGE_BUFF, aligned_edge = DOWN
         )
-        car2.pi_creature.highlight(GREY_BROWN)
+        car2.pi_creature.set_color(GREY_BROWN)
         car1.start_point = car1.get_corner(DOWN+RIGHT)
-        car1.shift(SPACE_WIDTH*LEFT)
+        car1.shift(FRAME_X_RADIUS*LEFT)
 
         #Pull up car
         self.add(cars)
@@ -850,7 +783,7 @@ class TwoCarsAtRedLight(Scene):
             x_min = 0.8,
             x_max = 3.8,
         )
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
 
         #Label short duration
         brace = Brace(Line(
@@ -905,7 +838,7 @@ class TwoCarsAtRedLight(Scene):
             }
         )
         frequency_axes.next_to(time_axes, DOWN, LARGE_BUFF)
-        frequency_axes.highlight(LIGHT_GREY)
+        frequency_axes.set_color(LIGHT_GREY)
         frequency_label = TextMobject("Frequency")
         frequency_label.scale(self.text_scale_val)
         frequency_label.next_to(frequency_axes.x_axis.get_right(), DOWN)
@@ -919,7 +852,7 @@ class TwoCarsAtRedLight(Scene):
             x_min = 0,
             x_max = 2,
         )
-        frequency_graph.highlight(RED)
+        frequency_graph.set_color(RED)
         peak_point = frequency_axes.input_to_graph_point(
             1, frequency_graph
         )
@@ -1088,7 +1021,7 @@ class VariousMusicalNotes(Scene):
                 graph_update_anim,
                 **kwargs
             )
-        change_width_anim(SPACE_WIDTH).update(1)
+        change_width_anim(FRAME_X_RADIUS).update(1)
         graph_update_anim.update(0)
 
         phrases = [
@@ -1102,7 +1035,7 @@ class VariousMusicalNotes(Scene):
 
 
         #Show graphs and phrases
-        widths = [SPACE_WIDTH, 1, 0.2]
+        widths = [FRAME_X_RADIUS, 1, 0.2]
         for width, phrase in zip(widths, phrases):
             brace = Brace(Line(LEFT, RIGHT), UP)
             brace.stretch(width, 0)
@@ -1142,7 +1075,7 @@ class VariousMusicalNotes(Scene):
         phrases = VGroup(short_signal_words, long_signal_words)
         for phrase in phrases:
             phrase.scale(0.8)
-            phrase.highlight_by_tex_to_color_map({
+            phrase.set_color_by_tex_to_color_map({
                 "short" : RED,
                 "long" : GREEN,
                 "wide" : GREEN,
@@ -1152,11 +1085,11 @@ class VariousMusicalNotes(Scene):
 
         long_graph = FunctionGraph(
             lambda x : 0.5*np.sin(freq*x),
-            x_min = -2*SPACE_WIDTH,
-            x_max = 2*SPACE_WIDTH,
+            x_min = -FRAME_WIDTH,
+            x_max = FRAME_WIDTH,
             num_anchor_points = 1000
         )
-        long_graph.highlight(BLUE)
+        long_graph.set_color(BLUE)
         long_graph.next_to(graph, UP, MED_LARGE_BUFF)
 
         self.play(
@@ -1169,7 +1102,7 @@ class VariousMusicalNotes(Scene):
         )
         self.play(
             long_graph.stretch, 0.35, 0,
-            long_graph.highlight, GREEN,
+            long_graph.set_color, GREEN,
             run_time = 5,
             rate_func = wiggle
         )
@@ -1180,7 +1113,7 @@ class VariousMusicalNotes(Scene):
         )
         self.play(
             long_graph.stretch, 0.95, 0,
-            long_graph.highlight, average_color(GREEN, BLUE),
+            long_graph.set_color, average_color(GREEN, BLUE),
             run_time = 4,
             rate_func = wiggle
         )
@@ -1253,7 +1186,7 @@ class FourierRecapScene(DrawFrequencyPlot):
         self.match_winding_to_beat_frequency()
         self.follow_center_of_mass()
         self.draw_fourier_plot()
-        self.highlight_spike()
+        self.set_color_spike()
 
     def setup_axes(self):
         self.remove(self.pi_creature)
@@ -1418,7 +1351,7 @@ class FourierRecapScene(DrawFrequencyPlot):
         self.fourier_graph_drawing_update_anim = Animation(Mobject())
         self.fourier_graph = fourier_graph
 
-    def highlight_spike(self):
+    def set_color_spike(self):
         spike_point = self.frequency_axes.input_to_graph_point(
             5, self.fourier_graph
         )
@@ -1454,13 +1387,13 @@ class FourierRecapScene(DrawFrequencyPlot):
             x_min = 0, x_max = width,
             **kwargs
         )
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
         return graph
 
 class RealPartOfInsert(Scene):
     def construct(self):
         words = TextMobject("(Real part of the)")
-        words.highlight(RED)
+        words.set_color(RED)
         self.add(words)
         self.play(Write(words))
         self.wait(5)
@@ -1471,7 +1404,7 @@ class CenterOfMassDescription(FourierRecapScene):
         circle_plane = self.get_circle_plane()
         circle_plane.save_state()
         circle_plane.generate_target()
-        circle_plane.target.scale_to_fit_height(2*SPACE_HEIGHT)
+        circle_plane.target.scale_to_fit_height(FRAME_HEIGHT)
         circle_plane.target.center()
         circle_plane.target.axes.set_stroke(width = 2)
         circle_plane.target.main_lines.set_stroke(width = 2)
@@ -1715,7 +1648,7 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             vect = point - axis_point
             vect *= 1.3/np.linalg.norm(vect)
             arrow = Arrow(vect, ORIGIN, buff = SMALL_BUFF)
-            arrow.highlight(YELLOW)
+            arrow.set_color(YELLOW)
             arrow.shift(point)
             dot.arrow = arrow
         return dots
@@ -1728,7 +1661,7 @@ class FocusRectangleInsert(FourierRecapScene):
         self.setup_axes()
         self.clear()
         point = self.frequency_axes.coords_to_point(5, 0.25)
-        rect = ScreenRectangle(height = 2.1*SPACE_HEIGHT)
+        rect = ScreenRectangle(height = 2.1*FRAME_Y_RADIUS)
         rect.set_stroke(YELLOW, 2)
         self.add(rect)
         self.wait()
@@ -1763,7 +1696,7 @@ class MentionDopplerRadar(TeacherStudentsScene):
         plane = Plane()
         plane.to_edge(RIGHT)
         plane.align_to(dish)
-        plane_flight = AmbientMovement(
+        plane_flight = ContinualMovement(
             plane, 
             direction = LEFT,
             rate = 1,
@@ -1944,7 +1877,7 @@ class IntroduceDopplerRadar(Scene):
             ShowCreation(sum_graph, run_time = 8, rate_func = None)
         )
         pulse = RadarPulse(dish, plane, n_pulse_singletons = 12)
-        plane_flight = AmbientMovement(
+        plane_flight = ContinualMovement(
             plane, direction = LEFT, rate = 1.5
         )
 
@@ -2023,14 +1956,14 @@ class IntroduceDopplerRadar(Scene):
                 frequency_axes.coords_to_point(9, 0.9*f_max),
             ),
             UP,
-        ).highlight(BLUE)
+        ).set_color(BLUE)
         echo_fourier_brace = Brace(
             Line(
                 frequency_axes.coords_to_point(14, 0.4*f_max),
                 frequency_axes.coords_to_point(18, 0.4*f_max),
             ),
             UP,
-        ).highlight(YELLOW)
+        ).set_color(YELLOW)
         # braces = [original_fourier_brace, echo_fourier_brace]
         # words = ["original signal", "echo"]
         # for brace, word in zip(braces, words):
@@ -2039,7 +1972,7 @@ class IntroduceDopplerRadar(Scene):
         # fourier_label.next_to(sum_graph.fourier_transform, UP, MED_LARGE_BUFF)
         fourier_label.next_to(frequency_axes.y_axis, UP, buff = SMALL_BUFF)
         fourier_label.shift_onto_screen()
-        fourier_label.highlight(RED)
+        fourier_label.set_color(RED)
 
 
         #v_lines
@@ -2162,8 +2095,8 @@ class DopplerFormulaInsert(Scene):
             "\\left(1 + \\frac{v}{c}\\right)",
             "f_{\\text{pulse}}"
         )
-        formula[0].highlight(BLUE)
-        formula[3].highlight(YELLOW)
+        formula[0].set_color(BLUE)
+        formula[3].set_color(YELLOW)
 
         randy = Randolph(color = BLUE_C)
         formula.scale(1.5)
@@ -2210,7 +2143,7 @@ class MentionPRFNuance(TeacherStudentsScene):
         displayed_doppler_shift = TextMobject("How I'm showing the \\\\", "Doppler shift")
         actual_doppler_shift = TextMobject("Actual\\\\", "Doppler shift")
         doppler_shift_words = VGroup(displayed_doppler_shift, actual_doppler_shift)
-        doppler_shift_words.highlight(YELLOW)
+        doppler_shift_words.set_color(YELLOW)
         doppler_shift_words.scale(0.75)
         displayed_doppler_shift.next_to(brace, UP, buff = SMALL_BUFF)
         actual_doppler_shift.move_to(pulse_graph.peak_point)
@@ -2320,7 +2253,7 @@ class TimeAndFrequencyGivePositionAndVelocity(IntroduceDopplerRadar):
             UP
         )
         frequency = TextMobject("Frequency")
-        frequency.highlight(YELLOW)
+        frequency.set_color(YELLOW)
         frequency.next_to(brace, UP, SMALL_BUFF)
 
         time_updown_arrow = TexMobject("\\Updownarrow")
@@ -2368,7 +2301,7 @@ class RadarOperatorUncertainty(Scene):
         dish_words = TextMobject("3b1b industrial \\\\ enterprises")
         dish_words.scale(0.25)
         dish_words.set_stroke(BLACK, 0.5)
-        dish_words.highlight(BLACK)
+        dish_words.set_color(BLACK)
         dish_words.move_to(dish, DOWN)
         dish_words.shift(SMALL_BUFF*(UP+2*LEFT))
         dish.add(dish_words)
@@ -2381,7 +2314,7 @@ class RadarOperatorUncertainty(Scene):
 
         echo_object = Square()
         echo_object.move_to(dish)
-        echo_object.shift(SPACE_WIDTH*RIGHT)
+        echo_object.shift(FRAME_X_RADIUS*RIGHT)
         pulse = RadarPulse(dish, echo_object, speed = 6)
 
         plane = Plane().scale(0.5)
@@ -2548,7 +2481,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             self.get_frequency_pulse_graph(x)
             for x in x_coords
         ])
-        graphs.gradient_highlight(BLUE, YELLOW)
+        graphs.set_color_by_gradient(BLUE, YELLOW)
         sum_graph = self.axes.get_graph(
             lambda t : sum([
                 graph.underlying_function(t)
@@ -2636,7 +2569,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
 
         self.curr_graph = sum_graph
         self.first_echo_graph = graphs[0]
-        self.first_echo_graph.highlight(YELLOW)
+        self.first_echo_graph.set_color(YELLOW)
 
     def fourier_transform_of_one_pulse(self):
         frequency_axes = Axes(
@@ -2723,7 +2656,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         object_velocities = self.object_velocities
 
         movements = self.object_movements = [
-            AmbientMovement(
+            ContinualMovement(
                 obj, 
                 direction = v/np.linalg.norm(v),
                 rate = np.linalg.norm(v)
@@ -2756,7 +2689,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         fourier_graph = self.fourier_graph
         shifted_graphs = self.get_shifted_frequency_graphs(fourier_graph)
         color = fourier_graph.get_color()
-        shifted_graphs.gradient_highlight(
+        shifted_graphs.set_color_by_gradient(
             average_color(color, WHITE), 
             color,
             average_color(color, BLACK),
@@ -2792,7 +2725,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             lambda x : f_max * np.exp(-100*(x-8)**2),
             num_graph_points = 1000,
         )
-        new_fourier_graph.highlight(PINK)
+        new_fourier_graph.set_color(PINK)
 
         self.play(
             FadeOut(curr_fourier_graph),
@@ -2912,7 +2845,7 @@ class SummarizeFourierTradeoffForDoppler(Scene):
                 time_axes.get_graph(lambda t : np.exp(-5*a*(t-x)**2))
                 for x in x_values
             ])
-            graphs.highlight(WHITE)
+            graphs.set_color(WHITE)
             graphs.color_using_background_image("blue_yellow_gradient")
             return graphs
         def get_bottom_graphs():
@@ -2921,7 +2854,7 @@ class SummarizeFourierTradeoffForDoppler(Scene):
                 frequency_axes.get_graph(lambda t : np.exp(-(5./a)*(t-v)**2))
                 for v in v_values
             ])
-            graphs.highlight(RED)
+            graphs.set_color(RED)
             return graphs
 
         top_graphs = get_top_graphs()
@@ -2994,7 +2927,7 @@ class IntroduceDeBroglie(Scene):
             numbers_with_elongated_ticks = range(1900, 1941, 10),
             color = BLUE_D
         )
-        time_line.stretch_to_fit_width(2*SPACE_WIDTH - picture.get_width() - 2)
+        time_line.stretch_to_fit_width(FRAME_WIDTH - picture.get_width() - 2)
         time_line.add_numbers(*time_line.numbers_with_elongated_ticks)
         time_line.next_to(picture, RIGHT, MED_LARGE_BUFF, DOWN)
 
@@ -3070,7 +3003,7 @@ class IntroduceDeBroglie(Scene):
         axes.match_width(line)
         axes.shift(line.get_center() - axes.x_axis.get_center())
         im_line = line.copy()
-        im_line.highlight(YELLOW)
+        im_line.set_color(YELLOW)
         wave_update_animation = self.get_wave_update_animation(
             axes, particle, line, im_line
         )
@@ -3095,10 +3028,10 @@ class IntroduceDeBroglie(Scene):
         )
         if re_line is None:
             re_line = line.copy()
-            re_line.highlight(self.wave_colors[0])
+            re_line.set_color(self.wave_colors[0])
         if im_line is None:
             im_line = line.copy()
-            im_line.highlight(self.wave_colors[1])
+            im_line.set_color(self.wave_colors[1])
         lines = VGroup(im_line, re_line)
         def update_lines(lines):
             waves = self.get_wave_pair(axes, particle)
@@ -3167,7 +3100,7 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         )
         added_p_words = TextMobject("(Classically $m \\times v$)")
         added_p_words.move_to(p_words, DOWN)
-        VGroup(p, p_words, added_p_words, p_arrow).highlight(self.p_color)
+        VGroup(p, p_words, added_p_words, p_arrow).set_color(self.p_color)
 
         xi_words = TextMobject("Spatial frequency")
         added_xi_words = TextMobject("(cycles per unit \\emph{distance})")
@@ -3179,10 +3112,10 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         )
         added_xi_words.move_to(xi_words, DOWN)
         added_xi_words.align_to(added_p_words, DOWN)
-        VGroup(xi, xi_words, added_xi_words, xi_arrow).highlight(self.xi_color)
+        VGroup(xi, xi_words, added_xi_words, xi_arrow).set_color(self.xi_color)
 
         axes = Axes(
-            x_min = 0, x_max = 2*SPACE_WIDTH,
+            x_min = 0, x_max = FRAME_WIDTH,
             y_min = -1, y_max = 1,
         )
         axes.center().to_edge(UP, buff = -0.5)
@@ -3315,7 +3248,7 @@ class AskPhysicists(PiCreatureScene):
     def construct(self):
         morty, physy1, physy2, physy3 = self.pi_creatures
         formula = TexMobject("p", "=", "h", "\\xi")
-        formula.highlight_by_tex_to_color_map({
+        formula.set_color_by_tex_to_color_map({
             "p" : BLUE,
             "\\xi" : YELLOW,
         })
@@ -3386,7 +3319,7 @@ class SortOfDopplerEffect(PiCreatureScene):
     }
     def setup(self):
         PiCreatureScene.setup(self)
-        rect = self.screen_rect = ScreenRectangle(height = 2*SPACE_HEIGHT)
+        rect = self.screen_rect = ScreenRectangle(height = FRAME_HEIGHT)
         rect.set_stroke(width = 0)
         self.camera = MovingCamera(
             rect, **self.camera_config
@@ -3399,7 +3332,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         t_tracker = VectorizedPoint()
         #x-coordinate gives wave number
         k_tracker = VectorizedPoint(2*RIGHT)
-        tk_movement = AmbientMovement(t_tracker, direction = RIGHT, rate = 1)
+        tk_movement = ContinualMovement(t_tracker, direction = RIGHT, rate = 1)
         def get_wave():
             t = t_tracker.get_center()[0]
             k = k_tracker.get_center()[0]
@@ -3410,8 +3343,8 @@ class SortOfDopplerEffect(PiCreatureScene):
             func = lambda x : 0.5*np.cos(omega*t - k*x)
             graph = FunctionGraph(
                 func,
-                x_min = -5*SPACE_WIDTH,
-                x_max = SPACE_WIDTH,
+                x_min = -5*FRAME_X_RADIUS,
+                x_max = FRAME_X_RADIUS,
                 color = color,
             )
             return VGroup(graph, *[
@@ -3420,7 +3353,7 @@ class SortOfDopplerEffect(PiCreatureScene):
                     color = color
                 )
                 for x in np.arange(
-                    -4*SPACE_WIDTH, SPACE_WIDTH, 
+                    -4*FRAME_X_RADIUS, FRAME_X_RADIUS, 
                     self.arrow_spacing
                 )
             ])
@@ -3432,7 +3365,7 @@ class SortOfDopplerEffect(PiCreatureScene):
 
         rect = ScreenRectangle(height = 2)
         rect.to_edge(RIGHT)
-        rect_movement = AmbientMovement(rect, direction = LEFT, rate = 1)
+        rect_movement = ContinualMovement(rect, direction = LEFT, rate = 1)
 
         randy = self.pi_creature
         randy_look_at = ContinualUpdateFromFunc(
@@ -3475,7 +3408,7 @@ class SortOfDopplerEffect(PiCreatureScene):
             ),
         )
         self.play(
-            screen_rect.move_to, rect.get_right()+SPACE_WIDTH*LEFT,
+            screen_rect.move_to, rect.get_right()+FRAME_X_RADIUS*LEFT,
             k_tracker.shift, 2*LEFT,
         )
 
@@ -3514,7 +3447,7 @@ class SortOfDopplerEffect(PiCreatureScene):
 class HangingWeightsScene(MovingCameraScene):
     CONFIG = {
         "frequency" : 0.5,
-        "ceiling_radius" : 3*SPACE_WIDTH,
+        "ceiling_radius" : 3*FRAME_X_RADIUS,
         "n_springs" : 72,
         "amplitude" : 0.6,
         "spring_radius" : 0.15,
@@ -3556,7 +3489,7 @@ class HangingWeightsScene(MovingCameraScene):
 
         k_tracker = self.k_tracker = VectorizedPoint()
         t_tracker = self.t_tracker = VectorizedPoint()
-        self.t_tracker_walk = AmbientMovement(t_tracker, direction = RIGHT, rate = 1)
+        self.t_tracker_walk = ContinualMovement(t_tracker, direction = RIGHT, rate = 1)
         equilibrium_height = springs.get_height()
         def update_springs(springs):
             for spring in springs:
@@ -3594,7 +3527,7 @@ class HangingWeightsScene(MovingCameraScene):
             weight_anims.append(weight_anim)
             weights.add(weight)
         weights.set_fill(opacity = 1)
-        weights.gradient_highlight(BLUE_D, BLUE_E, BLUE_D)
+        weights.set_color_by_gradient(BLUE_D, BLUE_E, BLUE_D)
         weights.set_stroke(WHITE, 1)
 
         self.play(LaggedStart(GrowFromCenter, weights))
@@ -3605,7 +3538,7 @@ class HangingWeightsScene(MovingCameraScene):
     def introduce(self):
         arrow = Arrow(4*LEFT, LEFT)
         arrows = VGroup(arrow, arrow.copy().flip(about_point = ORIGIN))
-        arrows.highlight(WHITE)
+        arrows.set_color(WHITE)
 
         self.wait(3)
         self.play(*map(GrowArrow, arrows))
@@ -3669,8 +3602,8 @@ class HangingWeightsScene(MovingCameraScene):
         self.einstein = einstein
 
     def moving_reference_frame(self):
-        rect = ScreenRectangle(height = 2.1*SPACE_HEIGHT)
-        rect_movement = AmbientMovement(rect, direction = LEFT, rate = 2)
+        rect = ScreenRectangle(height = 2.1*FRAME_Y_RADIUS)
+        rect_movement = ContinualMovement(rect, direction = LEFT, rate = 2)
         camera_frame = self.camera_frame
 
         self.add(rect)
@@ -3681,7 +3614,7 @@ class HangingWeightsScene(MovingCameraScene):
             FadeOut(self.einstein),
         )
         self.play(camera_frame.scale, 3, {"about_point" : 2*UP})
-        self.play(rect.shift, 2*SPACE_WIDTH*RIGHT, path_arc = -TAU/2)
+        self.play(rect.shift, FRAME_WIDTH*RIGHT, path_arc = -TAU/2)
         self.add(rect_movement)
         self.wait(3)
 
@@ -3929,7 +3862,7 @@ class FourierTransformOfWaveFunction(Scene):
 
         sinusoid = axes.get_graph(
             lambda x : 0.5*np.cos(TAU*x),
-            x_min = -SPACE_WIDTH, x_max = 3*SPACE_WIDTH,
+            x_min = -FRAME_X_RADIUS, x_max = 3*FRAME_X_RADIUS,
         )
         sinusoid.to_edge(UP, buff = SMALL_BUFF)
 
@@ -3968,7 +3901,7 @@ class FourierTransformOfWaveFunction(Scene):
 
     def this_is_momentum(self):
         formula = TexMobject("p", "=", "h", "\\xi")
-        formula.highlight_by_tex_to_color_map({
+        formula.set_color_by_tex_to_color_map({
             "p" : BLUE,
             "xi" : YELLOW,
         })
@@ -4066,7 +3999,7 @@ class MusicalNote(AddingPureFrequencies):
                 0.3*(np.cos(2*TAU*x) + np.cos(3*TAU*x) + np.cos(5*TAU*x)),
             ),
         )
-        graph.highlight(BLUE)
+        graph.set_color(BLUE)
         v_line = DashedLine(ORIGIN, 0.5*UP)
         v_line_update = UpdateFromFunc(
             v_line, lambda l : l.put_start_and_end_on_with_projection(
@@ -4175,8 +4108,8 @@ class ProbabalisticDetection(FourierTransformOfWaveFunction):
 
         self.add(rect, brace, question)
 
-        yes = TextMobject("Yes").highlight(GREEN)
-        no = TextMobject("No").highlight(RED)
+        yes = TextMobject("Yes").set_color(GREEN)
+        no = TextMobject("No").set_color(RED)
         for word in yes, no:
             word.next_to(rect, DOWN)
             # word.add_background_rectangle()
@@ -4322,14 +4255,14 @@ class BetterTranslation(TeacherStudentsScene):
         to_german_words.scale(0.5)
         to_german_arrow = Vector(DOWN, color = WHITE, buff = SMALL_BUFF)
         to_german_words.next_to(to_german_arrow, RIGHT, SMALL_BUFF)
-        to_german_words.highlight(YELLOW)
+        to_german_words.set_color(YELLOW)
         to_german_group = VGroup(to_german_arrow, to_german_words)
 
         translation_words = TextMobject("Literal translation")
         translation_words.scale(0.5)
         translation_arrow = Vector(DOWN, color = WHITE, buff = SMALL_BUFF)
         translation_words.next_to(translation_arrow, LEFT, SMALL_BUFF)
-        translation_words.highlight(YELLOW)
+        translation_words.set_color(YELLOW)
         translation_group = VGroup(translation_arrow, translation_words)
 
         english_term.next_to(self.teacher, UP+LEFT)
@@ -4390,7 +4323,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         dot_gdw = dot_cloud.gaussian_distribution_wrapper
         dot_gdw.scale_to_fit_width(1)
         dot_gdw.rotate(TAU/8)
-        dot_gdw.move_to(SPACE_WIDTH*RIGHT/2),
+        dot_gdw.move_to(FRAME_X_RADIUS*RIGHT/2),
 
         vector_cloud = ProbabalisticVectorCloud(
             center_func = dot_gdw.get_center
@@ -4404,7 +4337,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         self.add()
         freq = 1
         continual_anims = [
-            AmbientMovement(time_tracker, direction = RIGHT, rate = 1),
+            ContinualMovement(time_tracker, direction = RIGHT, rate = 1),
             ContinualUpdateFromFunc(
                 dot_gdw,
                 lambda d : d.scale_to_fit_width(
@@ -4424,8 +4357,8 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         position, momentum, time, frequency = map(TextMobject, [
             "Position", "Momentum", "Time", "Frequency"
         ])
-        VGroup(position, time).highlight(BLUE)
-        VGroup(momentum, frequency).highlight(YELLOW)
+        VGroup(position, time).set_color(BLUE)
+        VGroup(momentum, frequency).set_color(YELLOW)
         groups = VGroup()
         for m1, m2 in (position, momentum), (time, frequency):
             arrow = TexMobject("\\updownarrow").scale(1.5)
@@ -4457,7 +4390,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         self.play(
             ApplyMethod(
                 VGroup(dot_gdw, vector_gdw ).shift, 
-                SPACE_WIDTH*RIGHT,
+                FRAME_X_RADIUS*RIGHT,
                 rate_func = running_start
             )
         )
@@ -4567,7 +4500,7 @@ class Promotion(PiCreatureScene):
         self.play(
             LaggedStart(
                 ApplyFunction, aops_logo,
-                lambda mob : (lambda m : m.shift(0.2*UP).highlight(YELLOW), mob),
+                lambda mob : (lambda m : m.shift(0.2*UP).set_color(YELLOW), mob),
                 rate_func = there_and_back, 
                 run_time = 1,
             ),
@@ -4629,7 +4562,7 @@ class Promotion(PiCreatureScene):
         self.play(ShowCreation(url_rect))
         self.play(
             FadeOut(url_rect),
-            url.get_part_by_tex("3b1b").highlight, BLUE,
+            url.get_part_by_tex("3b1b").set_color, BLUE,
         )
         self.wait(15)
 
@@ -4652,7 +4585,7 @@ class PuzzleStatement(Scene):
             to determine who we send.  Can we make sure we don't send
              the weakest person?
         """, alignment = "")
-        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words.scale_to_fit_width(FRAME_WIDTH - 2)
         words.next_to(group, DOWN, LARGE_BUFF)
         self.play(LaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
         self.wait(2)
@@ -4773,7 +4706,7 @@ class Thumbnail(Scene):
         is_not.scale(3)
         is_word.move_to(arrow)
         # is_word.shift(0.6*UP)
-        not_word.highlight(RED)
+        not_word.set_color(RED)
         not_word.set_stroke(RED, 3)
         not_word.rotate(10*DEGREES, about_edge = DOWN+LEFT)
         not_word.next_to(is_word, DOWN, 0.1*SMALL_BUFF)
@@ -4803,7 +4736,7 @@ class Thumbnail(Scene):
         ])
         graphs.arrange_submobjects(DOWN, buff = 0.6)
         graphs.to_corner(UP+LEFT)
-        graphs.gradient_highlight(BLUE_B, BLUE_D)
+        graphs.set_color_by_gradient(BLUE_B, BLUE_D)
 
         frequency_axes = Axes(
             x_min = 0, x_max = 2,

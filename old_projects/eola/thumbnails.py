@@ -1,25 +1,4 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
+from big_ol_pile_of_manim_imports import *
 from eola.chapter9 import Jennifer, You
 
 class Chapter0(LinearTransformationScene):
@@ -39,7 +18,7 @@ class Chapter1(Scene):
         arrow = Vector(2*UP+RIGHT)
         vs = TextMobject("vs.")
         array = Matrix([1, 2])
-        array.highlight(TEAL)
+        array.set_color(TEAL)
         everyone = VMobject(arrow, vs, array)
         everyone.arrange_submobjects(RIGHT, buff = 0.5)
         everyone.scale_to_fit_height(4)
@@ -50,10 +29,10 @@ class Chapter2(LinearTransformationScene):
         self.lock_in_faded_grid()
         vectors = VMobject(*[
             Vector([x, y])
-            for x in np.arange(-int(SPACE_WIDTH)+0.5, int(SPACE_WIDTH)+0.5)
-            for y in np.arange(-int(SPACE_HEIGHT)+0.5, int(SPACE_HEIGHT)+0.5)
+            for x in np.arange(-int(FRAME_X_RADIUS)+0.5, int(FRAME_X_RADIUS)+0.5)
+            for y in np.arange(-int(FRAME_Y_RADIUS)+0.5, int(FRAME_Y_RADIUS)+0.5)
         ])
-        vectors.submobject_gradient_highlight(PINK, BLUE_E)
+        vectors.set_submobject_colors_by_gradient(PINK, BLUE_E)
         words = TextMobject("Span")
         words.scale(3)
         words.to_edge(UP)
@@ -118,8 +97,8 @@ class Chapter9(Scene):
 class Chapter10(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_HEIGHT,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_HEIGHT,
             "secondary_line_ratio" : 1
 
         },
@@ -129,8 +108,8 @@ class Chapter10(LinearTransformationScene):
     def construct(self):
         v_tex = "\\vec{\\textbf{v}}"
         eq = TexMobject("A", v_tex, "=", "\\lambda", v_tex)
-        eq.highlight_by_tex(v_tex, YELLOW)
-        eq.highlight_by_tex("\\lambda", MAROON_B)
+        eq.set_color_by_tex(v_tex, YELLOW)
+        eq.set_color_by_tex("\\lambda", MAROON_B)
         eq.scale(3)
         eq.add_background_rectangle()
         eq.shift(2*DOWN)        
@@ -141,9 +120,9 @@ class Chapter10(LinearTransformationScene):
         , arg_separator = "")
         title.scale(2.5)
         title.to_edge(UP)
-        # title.highlight_by_tex("Eigen", MAROON_B)
-        title[0].highlight(YELLOW)
-        title[2].highlight(MAROON_B)
+        # title.set_color_by_tex("Eigen", MAROON_B)
+        title[0].set_color(YELLOW)
+        title[2].set_color(MAROON_B)
         title.add_background_rectangle()
 
 

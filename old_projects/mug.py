@@ -1,39 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.graph_scene import *
-from topics.common_scenes import *
-
+from big_ol_pile_of_manim_imports import *
 from old_projects.efvgt import ConfettiSpiril
 
 #revert_to_original_skipping_status
@@ -47,7 +15,7 @@ class HappyHolidays(TeacherStudentsScene):
         self.add(self.get_snowflakes())
         self.change_student_modes(
             *["hooray"]*3,
-            look_at_arg = SPACE_HEIGHT*UP,
+            look_at_arg = FRAME_Y_RADIUS*UP,
             added_anims = [self.teacher.change, "hooray"]
         )
         self.play(LaggedStart(
@@ -55,7 +23,7 @@ class HappyHolidays(TeacherStudentsScene):
         ), Animation(self.pi_creatures))
         self.change_student_modes(
             "happy", "wave_2", "wave_1",
-            look_at_arg = SPACE_HEIGHT*UP,
+            look_at_arg = FRAME_Y_RADIUS*UP,
         )
         self.look_at(self.teacher.get_corner(UP+LEFT))
         self.wait(2)
@@ -94,7 +62,7 @@ class HappyHolidays(TeacherStudentsScene):
         ])
         def random_confetti_spiral(mob, **kwargs):
             return ConfettiSpiril(
-                mob, x_start = 2*random.random()*SPACE_WIDTH - SPACE_WIDTH,
+                mob, x_start = 2*random.random()*FRAME_X_RADIUS - FRAME_X_RADIUS,
                 **kwargs
             )
         snowflake_spirils = LaggedStart(
@@ -211,7 +179,7 @@ class UtilitiesPuzzleScene(Scene):
         words = TextMobject("No crossing!")
         words.next_to(arrow, UP, buff = SMALL_BUFF)
         result = VGroup(words, arrow)
-        result.highlight("RED")
+        result.set_color("RED")
         return result
 
     def get_region(self, *bounding_edges):
@@ -286,11 +254,11 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
         objects.generate_target()
         objects.target.scale(0.5)
         objects.target.move_to(
-            (SPACE_HEIGHT*DOWN + SPACE_WIDTH*LEFT)/2
+            (FRAME_Y_RADIUS*DOWN + FRAME_X_RADIUS*LEFT)/2
         )
 
         eulers = TexMobject(*"V-E+F=2")
-        eulers.highlight_by_tex_to_color_map({
+        eulers.set_color_by_tex_to_color_map({
             "V" : RED,
             "E" : GREEN,
             "F" : BLUE,
@@ -320,7 +288,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
             eulers.get_bottom(),
             color = WHITE
         )
-        self.add(AmbientRotation(cube, axis = UP))
+        self.add(ContinualRotation(cube, axis = UP))
         self.play(
             GrowArrow(arrow_to_eulers),
             Write(eulers),
@@ -505,7 +473,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
             is impossible.
         """)
         meta_puzzle_words.next_to(group.target, UP)
-        meta_puzzle_words.highlight(BLUE)
+        meta_puzzle_words.set_color(BLUE)
 
         self.play(
             MoveToTarget(group),
@@ -552,7 +520,7 @@ class IntroduceGraph(PiCreatureScene):
 
         vertices_word = TextMobject("Vertices")
         vertices_word.to_edge(RIGHT, buff = LARGE_BUFF)
-        vertices_word.highlight(YELLOW)
+        vertices_word.set_color(YELLOW)
 
         vertex_arrows = VGroup(*[
             Arrow(vertices_word.get_left(), dot)
@@ -633,14 +601,14 @@ class IsK33Planar(UtilitiesPuzzleScene):
         almost_solution_lines = self.get_almost_solution_lines()
 
         question = TextMobject("Is", "this graph", "planar?")
-        question.highlight_by_tex("this graph", YELLOW)
+        question.set_color_by_tex("this graph", YELLOW)
         question.to_edge(UP)
         brace = Brace(question.get_part_by_tex("graph"), DOWN, buff = SMALL_BUFF)
         fancy_name = brace.get_text(
             "``Complete bipartite graph $K_{3, 3}$''",
             buff = SMALL_BUFF
         )
-        fancy_name.highlight(YELLOW)
+        fancy_name.set_color(YELLOW)
 
         self.add(question)
         self.convert_objects_to_dots()
@@ -673,7 +641,7 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
         )
         words.to_edge(UP)
         eulers = words.get_part_by_tex("V-E+F")
-        eulers.highlight(GREEN)
+        eulers.set_color(GREEN)
         non_eulers = VGroup(*filter(lambda m : m is not eulers, words))
 
         self.add(words)
@@ -685,10 +653,10 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
 
         know_eulers = TextMobject("Know about \\\\ Euler's formula")
         know_eulers.next_to(pi1, DOWN)
-        know_eulers.highlight(GREEN)
+        know_eulers.set_color(GREEN)
         dont = TextMobject("Don't")
         dont.next_to(pi2, DOWN)
-        dont.highlight(RED)
+        dont.set_color(RED)
 
         self.play(
             FadeIn(know_eulers),
@@ -855,8 +823,8 @@ class IntroduceRegions(UtilitiesPuzzleScene):
         regions.submobjects.insert(0, back_region)
         front_regions = VGroup(*regions[1:])
 
-        back_region.highlight(BLUE_E)
-        front_regions.gradient_highlight(GREEN_E, MAROON_E)
+        back_region.set_color(BLUE_E)
+        front_regions.set_color_by_gradient(GREEN_E, MAROON_E)
 
         return flat_lines, line_groups, regions
 
@@ -936,7 +904,7 @@ class AskAboutRegions(IntroduceRegions):
             count = new_count
 
             region.save_state()
-            anims = [ApplyMethod(region.highlight, YELLOW)]
+            anims = [ApplyMethod(region.set_color, YELLOW)]
             if last_region:
                 anims.append(ApplyMethod(last_region.restore))
             anims.append(Animation(front_regions))
@@ -1079,7 +1047,7 @@ class LightUpNodes(IntroduceRegions):
             TextMobject("\\# Regions"),
         ]
         for title, vect in zip(titles, [LEFT, ORIGIN, RIGHT]):
-            title.shift(SPACE_WIDTH*vect/2)
+            title.shift(FRAME_X_RADIUS*vect/2)
             title.to_edge(UP)
             underline = Line(LEFT, RIGHT)
             underline.stretch_to_fit_width(title.get_width())
@@ -1217,7 +1185,7 @@ class LightUpNodes(IntroduceRegions):
 
     def get_plus_one_anim(self, count):
         plus_one = TexMobject("+1")
-        plus_one.highlight(YELLOW)
+        plus_one.set_color(YELLOW)
         plus_one.move_to(count)
         plus_one.next_to(count, DOWN)
         plus_one.generate_target()
@@ -1287,11 +1255,11 @@ class ShowRule(TeacherStudentsScene):
             word_mob.next_to(ORIGIN, UP, SMALL_BUFF)
             word_mob.rotate(arrow.get_angle())
             word_mob.shift(arrow.get_center())
-            word_mob.highlight(GREEN)
+            word_mob.set_color(GREEN)
             arrow.add(word_mob)
-        new_vertex.highlight(YELLOW)
-        new_edge.highlight(BLUE)
-        new_region.highlight(RED)
+        new_vertex.set_color(YELLOW)
+        new_edge.set_color(BLUE)
+        new_region.set_color(RED)
         rule = VGroup(new_edge, arrows, new_vertex, new_region)
         rule.center().to_edge(UP)
 
@@ -1404,7 +1372,7 @@ class ConcludeFiveRegions(LightUpNodes):
             self.side_lines
         ))
         side_lines_rect = SurroundingRectangle(on_screen_side_lines)
-        side_lines_rect.highlight(WHITE)
+        side_lines_rect.set_color(WHITE)
 
         self.play(ShowCreation(side_lines_rect))
         self.wait()
@@ -1435,9 +1403,9 @@ class ConcludeFiveRegions(LightUpNodes):
         #Conclude
         words = TextMobject("Last line must \\\\ introduce 5th region")
         words.scale(0.8)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         rect = SurroundingRectangle(self.f_count)
-        rect.highlight(BLUE)
+        rect.set_color(BLUE)
         words.next_to(rect, DOWN)
         randy = Randolph().flip()
         randy.scale(0.5)
@@ -1544,14 +1512,14 @@ class FiveRegionsFourEdgesEachGraph(Scene):
         )
         words.arrange_submobjects(DOWN)
         words.to_edge(UP)
-        words[0][0].highlight(self.f_colors[0])
-        words[1][0].highlight(self.e_color)
+        words[0][0].set_color(self.f_colors[0])
+        words[1][0].set_color(self.e_color)
 
         squares = VGroup(*[Square() for x in range(5)])
         squares.scale(0.5)
         squares.set_stroke(width = 0)
         squares.set_fill(opacity = 1)
-        squares.gradient_highlight(*self.f_colors)
+        squares.set_color_by_gradient(*self.f_colors)
         squares.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
         squares.next_to(words, DOWN, LARGE_BUFF)
         all_edges = VGroup()
@@ -1612,7 +1580,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
         ])
         regions.set_stroke(width = 0)
         regions.set_fill(opacity = 1)
-        regions.gradient_highlight(*self.f_colors)
+        regions.set_color_by_gradient(*self.f_colors)
 
         all_edges = VGroup()
         all_movers = VGroup()
@@ -1689,7 +1657,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             for edge in region.edges:
                 new_count = Integer(count.number + 1)
                 new_count.replace(count, dim_to_match = 1)
-                new_count.highlight(count.get_color())
+                new_count.set_color(count.get_color())
                 self.play(
                     ShowCreation(edge),
                     FadeOut(count),
@@ -1795,7 +1763,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         points *= 0.75
         points += DOWN
         vertices = VGroup(*map(Dot, points))
-        vertices.highlight(YELLOW)
+        vertices.set_color(YELLOW)
         edges = VGroup(*[
             VGroup(*[
                 Line(p1, p2, color = WHITE)
@@ -1806,7 +1774,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         regions = self.get_cube_faces(points)
         regions.set_stroke(width = 0)
         regions.set_fill(opacity = 1)
-        regions.gradient_highlight(GREEN, RED, BLUE_E)
+        regions.set_color_by_gradient(GREEN, RED, BLUE_E)
         regions[-1].set_fill(opacity = 0)
 
         pairs = [
@@ -1867,7 +1835,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         words = TextMobject("``Euler's characteristic formula''")
         words.next_to(counts.target, DOWN)
         words.shift(MED_LARGE_BUFF*RIGHT)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
 
         for group in groups:
             self.play(
@@ -1916,7 +1884,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         self.play(FadeOut(self.vertices))
         self.play(ReplacementTransform(regions, cube, run_time = 2))
         cube.sort_submobjects(lambda p : -p[2])
-        self.add(AmbientRotation(cube, axis = UP, in_place = False))
+        self.add(ContinualRotation(cube, axis = UP, in_place = False))
         self.wait(3)
         self.play(
             FadeOut(self.top_formula),
@@ -1975,7 +1943,7 @@ class QuestionWrapper(Scene):
             "this proof break down?",
         )
         question.to_edge(UP)
-        question.highlight_by_tex("specifically", YELLOW)
+        question.set_color_by_tex("specifically", YELLOW)
         screen_rect = ScreenRectangle(height = 5.5)
         screen_rect.next_to(question, DOWN)
 

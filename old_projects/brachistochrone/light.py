@@ -1,28 +1,9 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
+from big_ol_pile_of_manim_imports import *
 
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import *
-from topics.characters import Randolph, Mathematician
-from topics.functions import *
-from topics.number_line import *
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from brachistochrone.curves import \
+from old_projects.brachistochrone.curves import \
     Cycloid, PathSlidingScene, RANDY_SCALE_FACTOR, TryManyPaths
 
 
@@ -69,7 +50,7 @@ class PhotonScene(Scene):
         if "rate_func" not in kwargs:
             kwargs["rate_func"] = None
         photon = self.wavify(path)
-        photon.highlight(color)
+        photon.set_color(color)
         return ShowPassingFlash(photon, **kwargs)
 
 
@@ -92,7 +73,7 @@ class MultipathPhotonScene(PhotonScene):
         paths = self.get_paths()
         colors = Color(YELLOW).range_to(WHITE, len(paths))
         for path, color in zip(paths, colors):
-            path.highlight(color)
+            path.set_color(color)
         photon_runs = [
             self.photon_run_along_path(path)
             for path in paths
@@ -133,7 +114,7 @@ class PhotonThroughLens(MultipathPhotonScene):
         focal_point = 2*RIGHT
         return [
             Mobject(
-                Line(SPACE_WIDTH*LEFT + fc[1]*UP, fc),
+                Line(FRAME_X_RADIUS*LEFT + fc[1]*UP, fc),
                 Line(fc, sc),
                 Line(sc, focal_point),
                 Line(focal_point, 6*focal_point-5*sc)
@@ -153,7 +134,7 @@ class TransitionToOptics(PhotonThroughLens):
         if not self.has_started:
             self.has_started = True
             everything = Mobject(*self.mobjects)
-            vect = 2*SPACE_WIDTH*RIGHT
+            vect = FRAME_WIDTH*RIGHT
             everything.shift(vect)
             self.play(ApplyMethod(
                 everything.shift, -vect,
@@ -164,8 +145,8 @@ class TransitionToOptics(PhotonThroughLens):
 
 class PhotonOffMirror(MultipathPhotonScene):
     def construct(self):
-        self.mirror = Line(*SPACE_HEIGHT*np.array([DOWN, UP]))
-        self.mirror.highlight(GREY)
+        self.mirror = Line(*FRAME_Y_RADIUS*np.array([DOWN, UP]))
+        self.mirror.set_color(GREY)
         self.add(self.mirror)
         self.run_along_paths()
 
@@ -201,11 +182,11 @@ class PhotonsInWater(MultipathPhotonScene):
         start_point = x*RIGHT + y*UP
         angles = np.arange(np.pi/18, np.pi/3, np.pi/18)
         midpoints = y*np.arctan(angles)
-        end_points = midpoints + SPACE_HEIGHT*np.arctan(2*angles)
+        end_points = midpoints + FRAME_Y_RADIUS*np.arctan(2*angles)
         return [
             Mobject(
                 Line(start_point, [midpoint, 0, 0]),
-                Line([midpoint, 0, 0], [end_point, -SPACE_HEIGHT, 0])
+                Line([midpoint, 0, 0], [end_point, -FRAME_Y_RADIUS, 0])
             ).ingest_submobjects()
             for midpoint, end_point in zip(midpoints, end_points)
         ]
@@ -267,7 +248,7 @@ class ShowMultiplePathsThroughLens(ShowMultiplePathsScene):
                 Line(self.start_point, a),
                 Line(a, b),
                 Line(b, self.end_point)
-            ).highlight(color)
+            ).set_color(color)
             for (a, b), color in zip(
                 [
                     (upper_left, upper_right),
@@ -282,8 +263,8 @@ class ShowMultiplePathsThroughLens(ShowMultiplePathsScene):
 
 class ShowMultiplePathsOffMirror(ShowMultiplePathsScene):
     def construct(self):
-        mirror = Line(*SPACE_HEIGHT*np.array([DOWN, UP]))
-        mirror.highlight(GREY)
+        mirror = Line(*FRAME_Y_RADIUS*np.array([DOWN, UP]))
+        mirror.set_color(GREY)
         self.add(mirror)
         ShowMultiplePathsScene.construct(self)
 
@@ -296,7 +277,7 @@ class ShowMultiplePathsOffMirror(ShowMultiplePathsScene):
             Mobject(
                 Line(self.start_point, midpoint),
                 Line(midpoint, self.end_point)
-            ).highlight(color)
+            ).set_color(color)
             for midpoint, color in zip(
                 [2*UP, 2*DOWN],
                 Color(YELLOW).range_to(WHITE, 2)
@@ -347,7 +328,7 @@ class ShowMultiplePathsInWater(ShowMultiplePathsScene):
             Mobject(
                 Line(self.start_point, midpoint),
                 Line(midpoint, self.end_point)
-            ).highlight(color)
+            ).set_color(color)
             for midpoint, color in zip(
                 [3*LEFT, 3*RIGHT],
                 Color(YELLOW).range_to(WHITE, 2)
@@ -390,7 +371,7 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
         line = Line(start, end)
         result = [squaggle, line]
         for mob in result:
-            mob.highlight(BLUE_D)
+            mob.set_color(BLUE_D)
         return result
 
 class PhtonBendsInWater(PhotonScene, ZoomedScene):
@@ -399,21 +380,21 @@ class PhtonBendsInWater(PhotonScene, ZoomedScene):
         kwargs = {
             "density" : self.zoom_factor*DEFAULT_POINT_DENSITY_1D
         }
-        top_line = Line(SPACE_HEIGHT*UP+2*LEFT, ORIGIN, **kwargs)
-        extension = Line(ORIGIN, SPACE_HEIGHT*DOWN+2*RIGHT, **kwargs)
-        bottom_line = Line(ORIGIN, SPACE_HEIGHT*DOWN+RIGHT, **kwargs)
+        top_line = Line(FRAME_Y_RADIUS*UP+2*LEFT, ORIGIN, **kwargs)
+        extension = Line(ORIGIN, FRAME_Y_RADIUS*DOWN+2*RIGHT, **kwargs)
+        bottom_line = Line(ORIGIN, FRAME_Y_RADIUS*DOWN+RIGHT, **kwargs)
         path1 = Mobject(top_line, extension)
         path2 = Mobject(top_line, bottom_line)
         for mob in path1, path2:
             mob.ingest_submobjects()
-        extension.highlight(RED)
+        extension.set_color(RED)
         theta1 = np.arctan(bottom_line.get_slope())
         theta2 = np.arctan(extension.get_slope())
         arc = Arc(theta2-theta1, start_angle = theta1, radius = 2)
         question_mark = TextMobject("$\\theta$?")
         question_mark.shift(arc.get_center()+0.5*DOWN+0.25*RIGHT)
         wave = self.wavify(path2)
-        wave.highlight(YELLOW)
+        wave.set_color(YELLOW)
         wave.scale(0.5)
 
         self.add(glass)
@@ -437,7 +418,7 @@ class LightIsFasterInAirThanWater(ShowMultiplePathsInWater):
         glass = Region(lambda x, y : y < 0, color = BLUE_E)
         equation = TexMobject("v_{\\text{air}} > v_{\\text{water}}")
         equation.to_edge(UP)
-        path = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        path = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         path1 = path.copy().shift(2*UP)
         path2 = path.copy().shift(2*DOWN)
 
@@ -506,7 +487,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
             x_min = -2,
             x_max = 4
         )
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
         Mobject(axes, graph).scale(0.2).to_corner(UP+RIGHT, buff = 1)
         axes.add(TexMobject("x", size = "\\small").next_to(axes, RIGHT))
         axes.add(TextMobject("Travel time", size = "\\small").next_to(
@@ -806,7 +787,7 @@ class SpringSetup(ShowMultiplePathsInWater):
         bars = Mobject(bar1, bar2)
         new_eq = equals.copy().center().shift(bars.get_center())
         snells = TextMobject("Snell's Law")
-        snells.highlight(YELLOW)
+        snells.set_color(YELLOW)
         snells.shift(new_eq.get_center()[0]*RIGHT)
         snells.shift(UP)
 
@@ -862,7 +843,7 @@ class WhichPathWouldLightTake(PhotonScene, TryManyPaths):
         words = TextMobject(
             ["Which path ", "would \\emph{light} take", "?"]
         )
-        words.split()[1].highlight(YELLOW)
+        words.split()[1].set_color(YELLOW)
         words.to_corner(UP+RIGHT)
         self.add_cycloid_end_points()
 
@@ -916,7 +897,7 @@ class StateSnellsLaw(PhotonScene):
         equation.to_corner(UP+RIGHT)
         exp1, equals, exp2 = equation.split()
         snells_law = TextMobject("Snell's Law:")
-        snells_law.highlight(YELLOW)
+        snells_law.set_color(YELLOW)
         snells_law.to_edge(UP)
 
         self.play(ShimmerIn(snells_law))

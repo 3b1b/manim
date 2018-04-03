@@ -1,12 +1,15 @@
+from __future__ import absolute_import
+
 import numpy as np
 
-from scene import Scene
-from animation.transform import FadeIn
-from mobject import Mobject
-from topics.geometry import Rectangle
-from camera import MovingCamera, Camera
+from scene.scene import Scene
+from animation.creation import FadeIn
+from camera.camera import Camera
+from camera.moving_camera import MovingCamera
+from mobject.mobject import Mobject
+from mobject.geometry import Rectangle
 
-from helpers import *
+from constants import *
 
 class ZoomedScene(Scene):
     """
@@ -14,7 +17,7 @@ class ZoomedScene(Scene):
     which part of the screen is zoomed in on.
     """
     CONFIG = {
-        "zoomed_canvas_space_shape" : (3, 3),
+        "zoomed_canvas_frame_shape" : (3, 3),
         "zoomed_canvas_center"      : None,
         "zoomed_canvas_corner"      : UP+RIGHT,
         "zoomed_canvas_corner_buff" : DEFAULT_MOBJECT_TO_EDGE_BUFFER,
@@ -47,7 +50,7 @@ class ZoomedScene(Scene):
         return self.big_rectangle
 
     def generate_big_rectangle(self):
-        height, width = self.zoomed_canvas_space_shape
+        height, width = self.zoomed_canvas_frame_shape
         self.big_rectangle = Rectangle(
             height = height,
             width = width,

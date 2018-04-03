@@ -1,28 +1,9 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
+from big_ol_pile_of_manim_imports import *
 
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import *
-from topics.characters import Randolph, Mathematician
-from topics.functions import *
-from topics.number_line import *
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from brachistochrone.curves import Cycloid
+from old_projects.brachistochrone.curves import Cycloid
 
 class MultilayeredGlass(PhotonScene, ZoomedScene):
     CONFIG = {
@@ -30,12 +11,12 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         "num_variables" : 3,
         "top_color" : BLUE_E,
         "bottom_color" : BLUE_A,
-        "zoomed_canvas_space_shape" : (5, 5),
+        "zoomed_canvas_frame_shape" : (5, 5),
         "square_color" : GREEN_B,
     }
     def construct(self):
         self.cycloid = Cycloid(end_theta = np.pi)
-        self.cycloid.highlight(YELLOW)
+        self.cycloid.set_color(YELLOW)
         self.top = self.cycloid.get_top()[1]
         self.bottom = self.cycloid.get_bottom()[1]-1
         self.generate_layers()
@@ -74,11 +55,11 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
     def get_continuous_background(self):
         glass = FilledRectangle(
             height = self.top-self.bottom,
-            width = 2*SPACE_WIDTH,
+            width = FRAME_WIDTH,
         )
         glass.sort_points(lambda p : -p[1])
         glass.shift((self.top-glass.get_top()[1])*UP)
-        glass.gradient_highlight(self.top_color, self.bottom_color)
+        glass.set_color_by_gradient(self.top_color, self.bottom_color)
         return glass
 
     def generate_layer_info(self):
@@ -132,7 +113,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 angle_of_vector(start_point-end_point)-np.pi/2
             )
         self.discrete_path.add_line(
-            points[end], SPACE_WIDTH*RIGHT+(self.layer_tops[-1]-1)*UP
+            points[end], FRAME_X_RADIUS*RIGHT+(self.layer_tops[-1]-1)*UP
         )
 
     def show_layer_variables(self):
@@ -154,8 +135,8 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
             eq_mob.shift(midpoint)
             v_eq = eq_mob.split()
             center_paths.append(Line(
-                midpoint+SPACE_WIDTH*LEFT, 
-                midpoint+SPACE_WIDTH*RIGHT
+                midpoint+FRAME_X_RADIUS*LEFT, 
+                midpoint+FRAME_X_RADIUS*RIGHT
             ))            
             brace_endpoints = Mobject(
                 Point(self.top*UP+x*RIGHT),

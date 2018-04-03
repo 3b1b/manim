@@ -1,32 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from old_projects.fractal_charm import FractalCreation
-
-from topics.graph_scene import GraphScene
-from topics.common_scenes import PatreonThanks
+from big_ol_pile_of_manim_imports import *
 
 def break_up(mobject, factor = 1.3):
     mobject.scale_in_place(factor)
@@ -180,7 +152,7 @@ class WhatAreFractals(TeacherStudentsScene):
         )
         self.wait(2)
         question = TextMobject("Aren't they", "self-similar", "shapes?")
-        question.highlight_by_tex("self-similar", YELLOW)
+        question.set_color_by_tex("self-similar", YELLOW)
         self.student_says(question)
         self.play(self.get_teacher().change_mode, "happy")
         self.wait(2)
@@ -220,7 +192,7 @@ class IntroduceVonKochCurve(Scene):
                 (np.sqrt(3)/6)*width*UP, DOWN
             )
             curve.rotate(-index*2*np.pi/3)
-        curves.gradient_highlight(BLUE, WHITE, BLUE)
+        curves.set_color_by_gradient(BLUE, WHITE, BLUE)
 
         return curves
 
@@ -244,7 +216,7 @@ class IntroduceVonKochCurve(Scene):
         )
         larger_curve.replace(curve)
         larger_curve.scale(3, about_point = curve.get_corner(DOWN+LEFT))
-        larger_curve.gradient_highlight(
+        larger_curve.set_color_by_gradient(
             curve[0].get_color(),
             curve[-1].get_color(),
         )
@@ -253,7 +225,7 @@ class IntroduceVonKochCurve(Scene):
         n_parts = len(curve.split())
         sub_portion = VGroup(*curve[:n_parts/4])
         self.play(
-            sub_portion.highlight, YELLOW,
+            sub_portion.set_color, YELLOW,
             rate_func = there_and_back
         )
         self.wait()
@@ -327,8 +299,8 @@ class SelfSimilarFractalsAsSubset(Scene):
 
     def add_general_fractals(self):
         big_rectangle = Rectangle(
-            width = 2*SPACE_WIDTH - MED_LARGE_BUFF,
-            height = 2*SPACE_HEIGHT - MED_LARGE_BUFF,
+            width = FRAME_WIDTH - MED_LARGE_BUFF,
+            height = FRAME_HEIGHT - MED_LARGE_BUFF,
         )
         title = TextMobject("Fractals")
         title.scale(1.5)
@@ -371,15 +343,15 @@ class ConstrastSmoothAndFractal(Scene):
         "fractal_dimension" : 1.21,
     }
     def construct(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         smooth = TextMobject("Smooth")
-        smooth.shift(SPACE_WIDTH*LEFT/2)
+        smooth.shift(FRAME_X_RADIUS*LEFT/2)
         fractal = TextMobject("Fractal")
-        fractal.shift(SPACE_WIDTH*RIGHT/2)
+        fractal.shift(FRAME_X_RADIUS*RIGHT/2)
         VGroup(smooth, fractal).to_edge(UP)
         background_rectangle = Rectangle(
-            height = 2*SPACE_HEIGHT,
-            width = SPACE_WIDTH,
+            height = FRAME_HEIGHT,
+            width = FRAME_X_RADIUS,
         )
         background_rectangle.to_edge(RIGHT, buff = 0)
         background_rectangle.set_fill(BLACK, 1)
@@ -394,13 +366,13 @@ class ConstrastSmoothAndFractal(Scene):
         anchors = britain.get_anchors()
         smooth_britain = VMobject()
         smooth_britain.set_points_smoothly(anchors[::10])
-        smooth_britain.center().shift(SPACE_WIDTH*LEFT/2)
+        smooth_britain.center().shift(FRAME_X_RADIUS*LEFT/2)
         index = np.argmax(smooth_britain.get_anchors()[:,0])
         smooth_britain.zoom_point = smooth_britain.point_from_proportion(
             self.britain_zoom_point_proportion
         )
 
-        britain.shift(SPACE_WIDTH*RIGHT/2)
+        britain.shift(FRAME_X_RADIUS*RIGHT/2)
         britain.zoom_point = britain.point_from_proportion(
             self.britain_zoom_point_proportion
         )
@@ -468,7 +440,7 @@ class InfiniteKochZoom(Scene):
 
 class ShowIdealizations(Scene):
     def construct(self):
-        arrow = DoubleArrow(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        arrow = DoubleArrow(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         arrow.shift(DOWN)
         left_words = TextMobject("Idealization \\\\ as smooth")
         middle_words = TextMobject("Nature")
@@ -504,7 +476,7 @@ class ShowIdealizations(Scene):
         koch_snowflake.next_to(arrow, UP)
         koch_snowflake.to_edge(RIGHT)
 
-        VGroup(smooth_britain, britain, koch_snowflake).gradient_highlight(
+        VGroup(smooth_britain, britain, koch_snowflake).set_color_by_gradient(
             BLUE_B, BLUE_D
         )
 
@@ -635,7 +607,7 @@ class FourSelfSimilarShapes(Scene):
             "Line", "Square", "Cube", "Sierpinski"
         ]))
         for title, x in zip(titles, np.linspace(-0.75, 0.75, 4)):
-            title.shift(x*SPACE_WIDTH*RIGHT)
+            title.shift(x*FRAME_X_RADIUS*RIGHT)
         titles.to_edge(UP)
         return titles
 
@@ -644,7 +616,7 @@ class FourSelfSimilarShapes(Scene):
             Line(LEFT, ORIGIN),
             Line(ORIGIN, RIGHT)
         )
-        line.highlight(BLUE_C)
+        line.set_color(BLUE_C)
 
         square = VGroup(*[
             Square().next_to(ORIGIN, vect, buff = 0)
@@ -742,7 +714,7 @@ class FourSelfSimilarShapes(Scene):
 
             self.play(
                 Write(label, run_time = 1),
-                shape[0].highlight, YELLOW
+                shape[0].set_color, YELLOW
             )
             self.wait()
 
@@ -768,7 +740,7 @@ class GeneralWordForMeasurement(Scene):
         words.next_to(measure, DOWN, buff = 2*LARGE_BUFF)
         colors = color_gradient([BLUE_B, BLUE_D], len(words))
         for word, color in zip(words, colors):
-            word.highlight(color)
+            word.set_color(color)
         lines = VGroup(*[
             Line(
                 measure.get_bottom(), word.get_top(),
@@ -808,8 +780,8 @@ class ImagineShapesAsMetal(FourSelfSimilarShapes):
         self.add(titles, shapes)
         for shape in shapes:
             shape.generate_target()
-            shape.target.highlight(LIGHT_GREY)
-        shapes[-1].target.gradient_highlight(GREY, WHITE)
+            shape.target.set_color(LIGHT_GREY)
+        shapes[-1].target.set_color_by_gradient(GREY, WHITE)
         for shape, title in zip(shapes, titles):
             self.play(
                 MoveToTarget(title),
@@ -842,12 +814,12 @@ class ScaledLineMass(Scene):
         scaling_factor_label = TextMobject(
             "Scaling factor:", "$\\frac{1}{2}$"
         )
-        scaling_factor_label[1].highlight(YELLOW)
+        scaling_factor_label[1].set_color(YELLOW)
         scaling_factor_label.to_edge(LEFT).shift(UP)
         mass_scaling_label = TextMobject(
             "Mass scaling factor:", "$%s$"%self.mass_scaling_factor
         )
-        mass_scaling_label[1].highlight(GREEN)
+        mass_scaling_label[1].set_color(GREEN)
         mass_scaling_label.next_to(
             scaling_factor_label, DOWN,
             aligned_edge = LEFT,
@@ -857,7 +829,7 @@ class ScaledLineMass(Scene):
         shape = self.get_shape()
         shape.scale_to_fit_width(self.shape_width)
         shape.center()
-        shape.shift(SPACE_WIDTH*RIGHT/2 + self.vert_distance*UP)
+        shape.shift(FRAME_X_RADIUS*RIGHT/2 + self.vert_distance*UP)
 
         big_brace = Brace(shape, self.brace_direction)
         big_brace_text = big_brace.get_text("$1$")
@@ -906,7 +878,7 @@ class ScaledLineMass(Scene):
         return VGroup(
             Line(LEFT, ORIGIN),
             Line(ORIGIN, RIGHT)
-        ).highlight(BLUE)
+        ).set_color(BLUE)
 
 class ScaledSquareMass(ScaledLineMass):
     CONFIG = {
@@ -972,21 +944,21 @@ class DefineTwoDimensional(PiCreatureScene):
             arg_separator = ""
         )
         self.dimension_in_title = title[0]
-        self.dimension_in_title.highlight(self.dimension_color)
+        self.dimension_in_title.set_color(self.dimension_color)
         title.to_edge(UP)
         self.add(title)
 
         self.title = title
 
     def add_h_line(self):
-        self.h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        self.h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         self.add(self.h_line)
 
     def add_shape(self):
         shape = self.get_shape()
         shape.scale_to_fit_width(self.shape_width)
         shape.next_to(self.title, DOWN, buff = MED_LARGE_BUFF)
-        # self.shape.shift(SPACE_HEIGHT*UP/2)
+        # self.shape.shift(FRAME_Y_RADIUS*UP/2)
         self.mass_color = shape.get_color()
         self.add(shape)
 
@@ -1008,7 +980,7 @@ class DefineTwoDimensional(PiCreatureScene):
         self.dimension_in_exp = VGroup(
             *bottom_mass[1][-len(self.dimension):]
         )
-        self.dimension_in_exp.highlight(self.dimension_color)
+        self.dimension_in_exp.set_color(self.dimension_color)
 
         top_group = VGroup(top_length, top_mass)
         bottom_group = VGroup(bottom_length, bottom_mass)
@@ -1018,8 +990,8 @@ class DefineTwoDimensional(PiCreatureScene):
                 buff = MED_LARGE_BUFF,
                 aligned_edge = LEFT
             )
-            group[0][-1].highlight(self.length_color)
-            group[1][-1].highlight(self.mass_color)
+            group[0][-1].set_color(self.length_color)
+            group[1][-1].set_color(self.mass_color)
 
         top_group.next_to(self.h_line, UP, buff = LARGE_BUFF)
         bottom_group.next_to(self.h_line, DOWN, buff = LARGE_BUFF)
@@ -1106,7 +1078,7 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
             "$= \\left(\\frac{1}{3}\\right)$", "$M$",
             arg_separator = ""
         )
-        equation.highlight_by_tex("$M$", self.mass_color)
+        equation.set_color_by_tex("$M$", self.mass_color)
         equation.next_to(self.bottom_mass)
 
         self.play(Write(equation))
@@ -1154,12 +1126,12 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
         self.wait(2)
 
         simpler_equation = TexMobject("2^D = 3")
-        simpler_equation[1].highlight(self.dimension_color)
+        simpler_equation[1].set_color(self.dimension_color)
         simpler_equation.scale(self.equation_scale_factor)
         simpler_equation.next_to(equation, DOWN, buff = MED_LARGE_BUFF)
 
         log_expression = TexMobject("\\log_2(3) \\approx", "1.585")
-        log_expression[-1].highlight(self.dimension_color)
+        log_expression[-1].set_color(self.dimension_color)
         log_expression.scale(self.equation_scale_factor)
         log_expression.next_to(simpler_equation, DOWN, buff = MED_LARGE_BUFF)
         log_expression.shift_onto_screen()
@@ -1196,7 +1168,7 @@ class ShowSierpinskiCurve(Scene):
 
     def get_curve(self, order):
         curve = SierpinskiCurve(order = order, monochromatic = True)
-        curve.highlight(RED)
+        curve.set_color(RED)
         return curve
 
 class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
@@ -1207,10 +1179,10 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
     }
     def construct(self):
         length = TextMobject("Length = $\\infty$")
-        length.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
+        length.shift(FRAME_X_RADIUS*LEFT/2).to_edge(UP)
         area = TextMobject("Area = $0$")
-        area.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        area.shift(FRAME_X_RADIUS*RIGHT/2).to_edge(UP)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         self.add(length, area, v_line)
 
         curve = self.get_curve(order = self.curve_start_order)
@@ -1239,12 +1211,12 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
         # curve = ShowSierpinskiCurve.get_curve(self, order)
         curve = SierpinskiCurve(order = order)
         curve.scale_to_fit_height(4).center()
-        curve.shift(SPACE_WIDTH*LEFT/2)
+        curve.shift(FRAME_X_RADIUS*LEFT/2)
         return curve
 
     def get_sierpinski(self, order):
         result = Sierpinski(order = order)
-        result.shift(SPACE_WIDTH*RIGHT/2)
+        result.shift(FRAME_X_RADIUS*RIGHT/2)
         return result
 
 class FractionalAnalogOfLengthAndArea(Scene):
@@ -1294,7 +1266,7 @@ class DimensionOfKoch(Scene):
         )
         scaling_factor.next_to(ORIGIN, UP)
         scaling_factor.to_edge(LEFT)
-        scaling_factor[1].highlight(self.scaling_factor_color)
+        scaling_factor[1].set_color(self.scaling_factor_color)
         self.add(scaling_factor[0])
 
         mass_scaling = TextMobject(
@@ -1303,7 +1275,7 @@ class DimensionOfKoch(Scene):
         )
         mass_scaling.next_to(ORIGIN, DOWN)
         mass_scaling.to_edge(LEFT)
-        mass_scaling[1].highlight(self.mass_scaling_color)
+        mass_scaling[1].set_color(self.mass_scaling_color)
         self.add(mass_scaling[0])
 
         self.scaling_factor_mob = scaling_factor[1]
@@ -1342,7 +1314,7 @@ class DimensionOfKoch(Scene):
         one = big_brace.get_text("$1$")
         little_brace = Brace(self.broken_curve[0], DOWN)
         one_third = little_brace.get_text("1/%d"%self.scaling_factor)
-        one_third.highlight(self.scaling_factor_color)
+        one_third.set_color(self.scaling_factor_color)
 
         self.play(
             GrowFromCenter(big_brace),
@@ -1378,9 +1350,9 @@ class DimensionOfKoch(Scene):
         simpler_formula.move_to(formula, UP)
 
         for mob in formula, simpler_formula:
-            mob[0].highlight(self.scaling_factor_color)
-            mob[1].highlight(self.dimension_color)
-            mob[3].highlight(self.mass_scaling_color)
+            mob[0].set_color(self.scaling_factor_color)
+            mob[1].set_color(self.dimension_color)
+            mob[3].set_color(self.mass_scaling_color)
 
         log_expression = TexMobject(
             "D = \\log_%d(%d) %s"%(
@@ -1389,9 +1361,9 @@ class DimensionOfKoch(Scene):
                 self.dimension_rhs
             )
         )
-        log_expression[0].highlight(self.dimension_color)
-        log_expression[5].highlight(self.scaling_factor_color)
-        log_expression[7].highlight(self.mass_scaling_color)
+        log_expression[0].set_color(self.dimension_color)
+        log_expression[5].set_color(self.scaling_factor_color)
+        log_expression[7].set_color(self.mass_scaling_color)
         log_expression.next_to(
             simpler_formula, DOWN,
             aligned_edge = LEFT,
@@ -1434,7 +1406,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
     def construct(self):
         self.add_labels()
         self.add_curve()
-        self.highlight_curve_subparts()
+        self.set_color_curve_subparts()
         self.show_dimension()
 
     def get_curve(self, order):
@@ -1450,14 +1422,14 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
 
     def add_curve(self):
         seed_label = TextMobject("Seed")
-        seed_label.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
+        seed_label.shift(FRAME_X_RADIUS*RIGHT/2).to_edge(UP)
         seed = self.get_curve(order = 1)
         seed.next_to(seed_label, DOWN)
 
         curve = seed.copy()
 
         resulting_fractal = TextMobject("Resulting fractal")
-        resulting_fractal.shift(SPACE_WIDTH*RIGHT/2)
+        resulting_fractal.shift(FRAME_X_RADIUS*RIGHT/2)
 
         self.add(seed_label, seed)
         self.wait()
@@ -1476,7 +1448,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
 
         self.curve = curve
 
-    def highlight_curve_subparts(self):
+    def set_color_curve_subparts(self):
         n_parts = self.num_subparts
         colored_curve = self.curve_class(
             order = self.koch_curve_order,
@@ -1490,7 +1462,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
         ])
         colors = it.cycle([WHITE, RED])
         for subpart, color in zip(broken_curve, colors):
-            subpart.highlight(color)
+            subpart.set_color(color)
         self.play(
             FadeOut(self.curve),
             FadeIn(colored_curve)
@@ -1542,7 +1514,7 @@ class ShowSeveralSelfSimilarityDimensions(Scene):
 
         title = TextMobject("``Self-similarity dimension''")
         title.to_edge(UP)
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         self.add(title)
 
 
@@ -1627,7 +1599,7 @@ class ShowDiskScaling(Scene):
             shape.scale_to_fit_width(1.5)
             shape.set_stroke(width = 0)
             shape.set_fill(opacity = 1)
-        shapes.gradient_highlight(BLUE_B, BLUE_E)
+        shapes.set_color_by_gradient(BLUE_B, BLUE_E)
         shapes.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         shapes.next_to(title, DOWN)
         for shape in shapes:
@@ -1731,17 +1703,17 @@ class BoxCountingScene(Scene):
         "corner_rect_left_extension" : 0,
     }
     def setup(self):
-        self.num_rows = 2*int(SPACE_HEIGHT/self.box_width)+1
-        self.num_cols = 2*int(SPACE_WIDTH/self.box_width)+1
+        self.num_rows = 2*int(FRAME_Y_RADIUS/self.box_width)+1
+        self.num_cols = 2*int(FRAME_X_RADIUS/self.box_width)+1
 
     def get_grid(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_lines = VGroup(*[
             v_line.copy().shift(u*x*self.box_width*RIGHT)
             for x in range(self.num_cols/2+1)
             for u in [-1, 1]
         ])
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_lines = VGroup(*[
             h_line.copy().shift(u*y*self.box_width*UP)
             for y in range(self.num_rows/2+1)
@@ -1811,8 +1783,8 @@ class BoxCountingScene(Scene):
 
     def get_corner_rect(self):
         rect = Rectangle(
-            height = SPACE_HEIGHT/2,
-            width = SPACE_WIDTH+self.corner_rect_left_extension,
+            height = FRAME_Y_RADIUS/2,
+            width = FRAME_X_RADIUS+self.corner_rect_left_extension,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.8
@@ -1841,7 +1813,7 @@ class BoxCountingScene(Scene):
         self.play(Write(num))
         self.play(
             num.next_to, self.counting_num_reference, RIGHT, MED_SMALL_BUFF, DOWN,
-            num.highlight, YELLOW
+            num.set_color, YELLOW
         )
         return num
 
@@ -1871,7 +1843,7 @@ class BoxCountingWithDisk(BoxCountingScene):
         counting_label = self.get_counting_label()
 
         prop_words = TextMobject("Proportional to", "$\\pi r^2$")
-        prop_words[1].highlight(BLUE)
+        prop_words[1].set_color(BLUE)
         prop_words.next_to(counting_label, DOWN, aligned_edge = LEFT)
 
         self.add(disk, one)
@@ -1906,7 +1878,7 @@ class BoxCountingWithDisk(BoxCountingScene):
         self.wait()
 
         frac_line = TexMobject("-")
-        frac_line.highlight(YELLOW)
+        frac_line.set_color(YELLOW)
         frac_line.stretch_to_fit_width(new_counting_mob.get_width())
         frac_line.next_to(new_counting_mob, DOWN, buff = SMALL_BUFF)
         decimal = TexMobject(self.decimal_string%(float(large_box_count)/small_box_num))
@@ -2050,7 +2022,7 @@ class BoxCountingSierpinski(BoxCountingScene):
         self.wait()
 
         frac_line = TexMobject("-")
-        frac_line.highlight(YELLOW)
+        frac_line.set_color(YELLOW)
         frac_line.stretch_to_fit_width(new_counting_mob.get_width())
         frac_line.next_to(new_counting_mob, DOWN, buff = SMALL_BUFF)
         approx_three = TexMobject("\\approx 3")
@@ -2119,9 +2091,9 @@ class BoxCountingWithBritain(BoxCountingScene):
         s = equation[word_len+3].copy()
         dim = VGroup(*equation[-len("1.21"):]).copy()
 
-        N.highlight(YELLOW)
-        s.highlight(BLUE)
-        dim.highlight(GREEN)
+        N.set_color(YELLOW)
+        s.set_color(BLUE)
+        dim.set_color(GREEN)
 
         simpler_eq = VGroup(N, approx, c, s, dim)
         simpler_eq.generate_target()
@@ -2158,10 +2130,10 @@ class BoxCountingWithBritain(BoxCountingScene):
         )
         for log_expression in log_expression1, log_expression2:
             log_expression.next_to(simpler_eq, DOWN, aligned_edge = LEFT)
-            log_expression.highlight_by_tex("N", N.get_color())
-            log_expression.highlight_by_tex("s", s.get_color())
-            log_expression.highlight_by_tex("^{1.21}", dim.get_color())
-            log_expression.highlight_by_tex("1.21", dim.get_color())
+            log_expression.set_color_by_tex("N", N.get_color())
+            log_expression.set_color_by_tex("s", s.get_color())
+            log_expression.set_color_by_tex("^{1.21}", dim.get_color())
+            log_expression.set_color_by_tex("1.21", dim.get_color())
         rewired_log_expression1 = VGroup(*[
             log_expression1[index].copy()
             for index in [
@@ -2258,8 +2230,8 @@ class IntroduceLogLogPlot(GraphScene):
         self.add(expression)
 
         self.setup_axes(animate = False)
-        self.x_axis_label_mob[-2].highlight(BLUE)
-        self.y_axis_label_mob[-2].highlight(YELLOW)
+        self.x_axis_label_mob[-2].set_color(BLUE)
+        self.y_axis_label_mob[-2].set_color(YELLOW)
         graph = self.graph_function(
             lambda x : self.y_intercept+self.dimension*x
         )
@@ -2270,10 +2242,10 @@ class IntroduceLogLogPlot(GraphScene):
         h_line = Line(p1, interim_point)
         v_line = Line(interim_point, p2)
         slope_lines = VGroup(h_line, v_line)
-        slope_lines.highlight(GREEN)
+        slope_lines.set_color(GREEN)
 
         slope = TextMobject("Slope = ", "$%.2f$"%self.dimension)
-        slope[-1].highlight(GREEN)
+        slope[-1].set_color(GREEN)
         slope.next_to(slope_lines, RIGHT)
 
         self.wait()
@@ -2370,10 +2342,10 @@ class RoughnessAndFractionalDimension(Scene):
         dimension_label = TextMobject("Boundary dimension = ", "1")
         dimension_label.to_edge(LEFT)
         one = dimension_label[1]
-        one.highlight(BLUE)
+        one.set_color(BLUE)
         new_dim = TexMobject("1.2")
         new_dim.move_to(one, DOWN+LEFT)
-        new_dim.highlight(one.get_color())
+        new_dim.set_color(one.get_color())
         self.add(dimension_label)
 
         self.play(Blink(randy))
@@ -2394,8 +2366,8 @@ class RoughnessAndFractionalDimension(Scene):
 class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
     def construct(self):
         self.setup_axes(animate = False)
-        self.x_axis_label_mob[-2].highlight(BLUE)
-        self.y_axis_label_mob[-2].highlight(YELLOW)
+        self.x_axis_label_mob[-2].set_color(BLUE)
+        self.y_axis_label_mob[-2].set_color(YELLOW)
         self.graph_function(
             lambda x : 0.01*(x-5)**3 + 0.3*x + 3
         )
@@ -2532,7 +2504,7 @@ class ZoomInOnBritain(Scene):
 class NoteTheConstantSlope(Scene):
     def construct(self):
         words = TextMobject("Note the \\\\ constant slope")
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         self.play(Write(words))
         self.wait(2)
 
@@ -2573,8 +2545,8 @@ class WhatSlopeDoesLogLogPlotApproach(IntroduceLogLogPlot):
     }
     def construct(self):
         self.setup_axes(animate = False)
-        self.x_axis_label_mob[-2].highlight(BLUE)
-        self.y_axis_label_mob[-2].highlight(YELLOW)
+        self.x_axis_label_mob[-2].set_color(BLUE)
+        self.y_axis_label_mob[-2].set_color(YELLOW)
 
         spacing = 0.5
         x_range = np.arange(1, self.x_max, spacing)
@@ -2682,7 +2654,7 @@ class SmoothBritainLogLogPlot(IntroduceLogLogPlot):
             [p3, interim_point2, p4]
         )
         slope_lines_group = VGroup(slope_lines1, slope_lines2)
-        slope_lines_group.highlight(GREEN)
+        slope_lines_group.set_color(GREEN)
 
         slope_label1 = TextMobject("Slope $> 1$")
         slope_label2 = TextMobject("Slope $= 1$")
@@ -2736,14 +2708,14 @@ class CompareBritainAndNorway(Scene):
         norway.to_corner(UP+RIGHT, buff = 0)
         fractalify(norway, order = 1, dimension = 1.5)
         anchors = list(norway.get_anchors())
-        anchors.append(SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP)
+        anchors.append(FRAME_X_RADIUS*RIGHT+FRAME_Y_RADIUS*UP)
         norway.set_points_as_corners(anchors)
 
         britain = Britain(
             fill_opacity = 0,
             stroke_width = 2
         )
-        britain.shift(SPACE_WIDTH*LEFT/2)
+        britain.shift(FRAME_X_RADIUS*LEFT/2)
         britain.to_edge(UP)
         fractalify(britain, order = 1, dimension = 1.21)
 
@@ -2779,8 +2751,8 @@ class CompareOceansLabels(Scene):
         label1 = TextMobject("Dimension $\\approx 2.05$")
         label2 = TextMobject("Dimension $\\approx 2.3$")
 
-        label1.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
-        label2.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
+        label1.shift(FRAME_X_RADIUS*LEFT/2).to_edge(UP)
+        label2.shift(FRAME_X_RADIUS*RIGHT/2).to_edge(UP)
 
         self.play(Write(label1))
         self.wait()
@@ -2798,8 +2770,8 @@ class FractalNonFractalFlowChart(Scene):
         man_made = TextMobject("Probably \\\\ man-made")
 
         is_fractal.to_edge(UP)
-        nature.shift(SPACE_WIDTH*LEFT/2)
-        man_made.shift(SPACE_WIDTH*RIGHT/2)
+        nature.shift(FRAME_X_RADIUS*LEFT/2)
+        man_made.shift(FRAME_X_RADIUS*RIGHT/2)
 
         yes_arrow = Arrow(
             is_fractal.get_bottom(),
@@ -2812,8 +2784,8 @@ class FractalNonFractalFlowChart(Scene):
 
         yes = TextMobject("Yes")
         no = TextMobject("No")
-        yes.highlight(GREEN)
-        no.highlight(RED)
+        yes.set_color(GREEN)
+        no.set_color(RED)
 
         for word, arrow in (yes, yes_arrow), (no, no_arrow):
             word.next_to(ORIGIN, UP)
@@ -2953,7 +2925,7 @@ class Thumbnail(Scene):
         koch_curve = QuadraticKoch(order = 6, monochromatic = True)
         koch_curve.set_stroke(width = 0)
         koch_curve.set_fill(BLUE)
-        koch_curve.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        koch_curve.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
         koch_curve.to_edge(DOWN, buff = SMALL_BUFF)
 
         self.add(koch_curve, title)

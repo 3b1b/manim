@@ -1,33 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.complex_numbers import *
-from topics.common_scenes import *
-from topics.probability import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 #revert_to_original_skipping_status
 
@@ -130,7 +101,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         self.play(LaggedStart(
             ApplyMethod,
             straight_cards,
-            lambda m : (m.highlight, YELLOW),
+            lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back,
             run_time = 1.5,
             lag_ratio = 0.5,
@@ -227,7 +198,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             ten, UP, aligned_edge = LEFT
         )
         num_hearts.to_edge(UP)
-        num_hearts.highlight(RED)
+        num_hearts.set_color(RED)
         num_hearts_arrow = Arrow(
             num_hearts.get_bottom(), ten.get_right(),
             color = RED, buff = SMALL_BUFF
@@ -238,7 +209,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         num_cards.scale(0.75)
         num_cards.next_to(fourty_five, LEFT)
         num_cards.to_edge(LEFT)
-        num_cards.highlight(BLUE)
+        num_cards.set_color(BLUE)
         num_cards_arrow = Arrow(
             num_cards, fourty_five,
             color = BLUE, buff = SMALL_BUFF
@@ -249,12 +220,12 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         self.play(
             FadeIn(num_hearts), 
             ShowCreation(num_hearts_arrow),
-            ten.highlight, RED,
+            ten.set_color, RED,
         )
         self.play(
             FadeIn(num_cards), 
             ShowCreation(num_cards_arrow),
-            fourty_five.highlight, BLUE
+            fourty_five.set_color, BLUE
         )
         self.wait(3)
         equation.remove(percentage)
@@ -330,7 +301,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             for y in range(4)
         ]).arrange_submobjects(UP, buff = SMALL_BUFF)
         money = VGroup(*it.chain(*pre_money))
-        money.highlight(GREEN)
+        money.set_color(GREEN)
         money.scale(0.8)
         money.next_to(her.hand, DOWN)
         for dollar in money:
@@ -389,7 +360,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
 
     def name_bayes_rule(self):
         title = TextMobject("Bayes' rule")
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         title.to_edge(UP)
         subtitle = TextMobject("Update ", "prior ", "beliefs")
         subtitle.scale(0.8)
@@ -398,7 +369,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         numbers = self.sample_space.horizontal_parts.labels
         rect = SurroundingRectangle(numbers, color = GREEN)
         arrow = Arrow(prior_word.get_bottom(), rect.get_top())
-        arrow.highlight(GREEN)
+        arrow.set_color(GREEN)
 
         words = TextMobject(
             "Maybe she really \\\\ does have a flush $\\dots$",
@@ -413,7 +384,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         )
         self.wait()
         self.play(FadeIn(subtitle))
-        self.play(prior_word.highlight, GREEN)
+        self.play(prior_word.set_color, GREEN)
         self.play(
             ShowCreation(rect),
             ShowCreation(arrow)
@@ -533,8 +504,8 @@ class UpdatePokerPrior(SampleSpaceScene):
         explanation = TextMobject(
             "Probability of", "high bet", "given", "flush"
         )
-        explanation.highlight_by_tex("high bet", GREEN)
-        explanation.highlight_by_tex("flush", RED)
+        explanation.set_color_by_tex("high bet", GREEN)
+        explanation.set_color_by_tex("flush", RED)
         explanation.scale(0.6)
         explanation.next_to(label, UP)
 
@@ -582,8 +553,8 @@ class UpdatePokerPrior(SampleSpaceScene):
         explanation = TextMobject(
             "Probability of", "high bet", "given", "no flush"
         )
-        explanation.highlight_by_tex("high bet", GREEN)
-        explanation.highlight_by_tex("no flush", RED)
+        explanation.set_color_by_tex("high bet", GREEN)
+        explanation.set_color_by_tex("no flush", RED)
         explanation.scale(0.6)
         explanation.next_to(label, DOWN)
 
@@ -627,7 +598,7 @@ class UpdatePokerPrior(SampleSpaceScene):
         randy.shift(2*DOWN)
         words = TextMobject("Where do these \\\\", "numbers", "come from?")
         numbers_word = words.get_part_by_tex("numbers")
-        numbers_word.highlight(YELLOW)
+        numbers_word.set_color(YELLOW)
         words.scale(0.7)
         bubble = ThoughtBubble(height = 3, width = 4)
         bubble.pin_to(randy)
@@ -667,7 +638,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             Write(words, run_time = 2)
         )
         self.play(*map(ShowCreation, arrows))
-        self.play(numbers.highlight, YELLOW)
+        self.play(numbers.set_color, YELLOW)
         self.play(Blink(randy))
         self.play(randy.change_mode, "maybe")
         self.play(*map(FadeOut, [
@@ -728,11 +699,11 @@ class UpdatePokerPrior(SampleSpaceScene):
             for j in range(2)
         ]
         words = TexMobject("P(", self.cash_string, ")")
-        words.highlight_by_tex(self.cash_string, GREEN)
+        words.set_color_by_tex(self.cash_string, GREEN)
         words.next_to(self.sample_space, RIGHT)
         low_bet_space.generate_target()
         for submob in low_bet_space.target:
-            submob.highlight(average_color(
+            submob.set_color(average_color(
                 submob.get_color(), *[BLACK]*4
             ))
         arrows = VGroup(*[
@@ -762,7 +733,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             "|", self.cash_string, ")"
         )
         posterior_tex.scale(0.7)
-        posterior_tex.highlight_by_tex(self.cash_string, GREEN)
+        posterior_tex.set_color_by_tex(self.cash_string, GREEN)
         self.insert_double_heart(posterior_tex)
         rects = self.high_bet_space.copy()
         rects = [rects[0].copy()] + list(rects)
@@ -972,8 +943,8 @@ class UpdatePokerPrior(SampleSpaceScene):
             ]
         ]
         for i in 0, 2:
-            products[i].highlight(prior_rects[0].get_color())
-        products[1].highlight(prior_rects[1].get_color())
+            products[i].set_color(prior_rects[0].get_color())
+        products[1].set_color(prior_rects[1].get_color())
         fraction.scale(0.65)
         fraction.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
         arrow_kwargs = {
@@ -1064,7 +1035,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             "=", str(value)
         )
         self.insert_double_heart(label)
-        label.highlight_by_tex(self.cash_string, GREEN)
+        label.set_color_by_tex(self.cash_string, GREEN)
         label.scale(0.7)
         return label
 
@@ -1114,8 +1085,8 @@ class BayesRuleInMemory(Scene):
             "P(", "B", ")", 
             "{P(", D, "|", B, ")", "\\over", "P(", D, ")}"
         )
-        rule.highlight_by_tex(B, RED)
-        rule.highlight_by_tex(D, GREEN)
+        rule.set_color_by_tex(B, RED)
+        rule.set_color_by_tex(D, GREEN)
         rule.next_to(randy, RIGHT, LARGE_BUFF, UP)
         rule.generate_target()
         bubble.add_content(rule.target)
@@ -1396,7 +1367,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
         posterior_word = TextMobject("Posterior")
         words = [prior_word, posterior_word]
         for word in words:
-            word.highlight(YELLOW)
+            word.set_color(YELLOW)
             word.scale(0.7)
         prior_rect = SurroundingRectangle(prior)
         posterior_rect = SurroundingRectangle(posterior)
@@ -1473,7 +1444,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
             )
             for rect, vect in zip(rects, [RIGHT, UP])
         ]
-        VGroup(name, *arrows+rects).highlight(YELLOW)
+        VGroup(name, *arrows+rects).set_color(YELLOW)
 
         morty = Mortimer()
         morty.scale(0.5)
@@ -1537,7 +1508,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
         self.play(LaggedStart(
             ApplyMethod,
             prior_rects,
-            lambda m : (m.highlight, YELLOW),
+            lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back,
             lag_ratio = 0.7
         ))
@@ -1567,8 +1538,8 @@ class GeneralizeBayesRule(SampleSpaceScene):
     ####
 
     def color_label(self, label):
-        label.highlight_by_tex("B", RED)
-        label.highlight_by_tex("I", GREEN)
+        label.set_color_by_tex("B", RED)
+        label.set_color_by_tex("I", GREEN)
 
 class MoreExamples(TeacherStudentsScene):
     def construct(self):
@@ -1809,7 +1780,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.play(negative_space.fade, 0.8)
         self.play(LaggedStart(
             ApplyMethod, positive_space,
-            lambda m : (m.highlight, YELLOW),
+            lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back,
             run_time = 2,
             lag_ratio = 0.7,
@@ -1823,7 +1794,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         post_rects = self.get_posterior_rectangles()
         label = TexMobject("P(S | ", "\\checkmark", ")")
         label.scale(0.7)
-        label.highlight_by_tex("\\checkmark", GREEN)
+        label.set_color_by_tex("\\checkmark", GREEN)
         braces, labels = self.get_posterior_rectangle_braces_and_labels(
             post_rects, [label]
         )
@@ -1914,7 +1885,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.wait(2)
         for mob in prior_rects, prior_rects[0]:
             self.play(
-                mob.highlight, YELLOW,
+                mob.set_color, YELLOW,
                 Animation(self.products),
                 rate_func = there_and_back,
                 run_time = 2
@@ -1991,7 +1962,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             "\\approx", "0.98"
         )
         label.scale(0.7)
-        label.highlight_by_tex("\\checkmark", GREEN)
+        label.set_color_by_tex("\\checkmark", GREEN)
         braces, labels = self.get_posterior_rectangle_braces_and_labels(
             post_rects, [label]
         )
@@ -2065,7 +2036,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             "S", ")",
             "=", str(value)
         )
-        label.highlight_by_tex(positive_str, GREEN)
+        label.set_color_by_tex(positive_str, GREEN)
         label.scale(0.7)
         return label
 
@@ -2133,8 +2104,8 @@ class FinalWordsOnRule(SampleSpaceScene):
         labels = VGroup(P_B, P_D_given_B, P_D_given_not_B, P_B_given_D)
         for label in labels:
             label.scale(0.7)
-            label.highlight_by_tex(B, BLUE)
-            label.highlight_by_tex(D, GREEN)
+            label.set_color_by_tex(B, BLUE)
+            label.set_color_by_tex(D, GREEN)
 
         prior_rects = self.get_prior_rectangles()
         post_rects = self.get_posterior_rectangles()
@@ -2257,8 +2228,8 @@ class Thumbnail(SampleSpaceScene):
         prior_label = TexMobject("P(", "H", ")")
         post_label = TexMobject("P(", "H", "|", "D", ")")
         for label in prior_label, post_label:
-            label.highlight_by_tex("H", YELLOW)
-            label.highlight_by_tex("D", GREEN)
+            label.set_color_by_tex("H", YELLOW)
+            label.set_color_by_tex("D", GREEN)
             label.scale(1.5)
 
         sample_space = self.get_sample_space()

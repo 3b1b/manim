@@ -1,33 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.complex_numbers import *
-from topics.common_scenes import *
-from topics.probability import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 from scene.scene import ProgressDisplay
 import scipy
@@ -55,7 +26,7 @@ def get_quiz(*questions):
     content.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
     rect = SurroundingRectangle(content, buff = MED_LARGE_BUFF)
     rect.shift(MED_SMALL_BUFF*DOWN)
-    rect.highlight(WHITE)
+    rect.set_color(WHITE)
     quiz = VGroup(rect, content)
     quiz.questions = q_mobs
     quiz.scale(0.7)
@@ -93,7 +64,7 @@ def get_slot_group(
     slot_group.to_edge(RIGHT)
     slot_group.bool_list = bool_list
 
-    total_height = SPACE_HEIGHT
+    total_height = FRAME_Y_RADIUS
     base = 2.3
 
     for i, line in enumerate(lines):
@@ -101,11 +72,11 @@ def get_slot_group(
             mob = VectorizedPoint()
         elif bool_list[i]:
             mob = TexMobject("\\checkmark")
-            mob.highlight(GREEN)
+            mob.set_color(GREEN)
             slot_group.shift(total_height*DOWN / (base**(i+1)))
         else:
             mob = TexMobject("\\times")
-            mob.highlight(RED)
+            mob.set_color(RED)
             slot_group.shift(total_height*UP / (base**(i+1)))
         mob.next_to(line, UP, SMALL_BUFF)
         slot_group.content.add(mob)
@@ -240,7 +211,7 @@ class MeaningOfIndependence(SampleSpaceScene):
         word = TextMobject("Independence")
         word.scale(1.5)
         word.next_to(self.sample_space, RIGHT, buff = LARGE_BUFF)
-        word.highlight(RED)
+        word.set_color(RED)
 
         self.play(*it.chain(
             self.get_top_conditional_change_anims(0.7),
@@ -347,11 +318,11 @@ class IntroduceBinomial(Scene):
             "(1-", "p", ")", "^{n-", "k}",
             arg_separator = ""
         )
-        formula.highlight_by_tex("k", BLUE)
-        formula.highlight_by_tex("p", YELLOW)
+        formula.set_color_by_tex("k", BLUE)
+        formula.set_color_by_tex("p", YELLOW)
         choose_part = formula.get_part_by_tex("choose")
-        choose_part.highlight(WHITE)
-        choose_part[-2].highlight(BLUE)
+        choose_part.set_color(WHITE)
+        choose_part[-2].set_color(BLUE)
         formula.next_to(title, DOWN, MED_LARGE_BUFF)
 
         self.formula = formula
@@ -391,7 +362,7 @@ class IntroduceBinomial(Scene):
         triangle.move_to(interval.number_to_point(self.p), DOWN)
         label = TexMobject("p")
         label.next_to(triangle, UP, SMALL_BUFF)
-        label.highlight(triangle.get_color())
+        label.set_color(triangle.get_color())
 
         self.p_slider = VGroup(interval, triangle, label)
         self.play(Write(self.p_slider, run_time = 1))
@@ -405,7 +376,7 @@ class IntroduceBinomial(Scene):
         assumption = TextMobject("Independence assumption")
         assumption.scale(1.2)
         assumption.next_to(self.formula, DOWN, MED_LARGE_BUFF, LEFT)
-        assumption.highlight(GREEN_C)
+        assumption.set_color(GREEN_C)
 
         self.play(Write(assumption, run_time = 2))
         self.wait()
@@ -414,7 +385,7 @@ class IntroduceBinomial(Scene):
 
     def cross_out_assumption(self):
         cross = Cross(self.assumption)
-        cross.highlight(GREY)
+        cross.set_color(GREY)
         self.bar_chart.save_state()
 
         self.play(ShowCreation(cross))
@@ -438,7 +409,7 @@ class IntroduceBinomial(Scene):
                 corner = bar.get_corner(DOWN+vect)
                 bar.stretch(0.5, 0)
                 bar.move_to(corner, DOWN+vect)
-        old_bars.target.highlight(RED)
+        old_bars.target.set_color(RED)
         old_bars.target.fade()
 
         self.play(
@@ -494,7 +465,7 @@ class IntroduceQuiz(PiCreatureScene):
             VGroup(*[
                 TexMobject(
                     "P(", s_tex, "=", str(score), ")", rhs
-                ).highlight_by_tex_to_color_map({
+                ).set_color_by_tex_to_color_map({
                     str(score) : YELLOW,
                     "text" : GREEN,
                 })
@@ -566,7 +537,7 @@ class IntroduceQuiz(PiCreatureScene):
             "= 0.8"
         )
         prob.to_corner(UP+RIGHT)
-        prob.highlight_by_tex("text", GREEN)
+        prob.set_color_by_tex("text", GREEN)
         rect = SurroundingRectangle(prob, buff = MED_SMALL_BUFF)
 
         self.play(
@@ -685,7 +656,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
             score_groups[sum(slot_group.bool_list)].add(slot_group)
         for i, score_group in enumerate(score_groups):
             score = TextMobject("Score", "=", str(i))
-            score.highlight_by_tex("Score", GREEN)
+            score.set_color_by_tex("Score", GREEN)
             scores.add(score)
             score_group.organized = score_group.deepcopy()
             score_group.organized.arrange_submobjects(UP, buff = SMALL_BUFF)
@@ -742,7 +713,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
             self.randy.change, "pondering",
             LaggedStart(FadeIn, triangle, run_time = 4),
         )
-        self.play(row.highlight, YELLOW)
+        self.play(row.set_color, YELLOW)
         self.wait(4)
 
 class BeforeCounting(TeacherStudentsScene):
@@ -801,7 +772,7 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
         rhs.arrange_submobjects(RIGHT, SMALL_BUFF)
         rhs.next_to(lhs, RIGHT, SMALL_BUFF)
         for part, b in zip(rhs, slot_group.bool_list):
-            part.highlight_by_tex_to_color_map({
+            part.set_color_by_tex_to_color_map({
                 "checkmark" : GREEN,
                 "times" : RED,
             })
@@ -810,7 +781,7 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
                 value = TexMobject("(0.8)")
             else:
                 value = TexMobject("(0.2)")
-            value.highlight(part[1].get_color())
+            value.set_color(part[1].get_color())
             value.next_to(brace, UP)
             part.brace = brace
             part.value = value
@@ -922,7 +893,7 @@ class ThousandPossibleQuizzes(Scene):
             split.generate_target()
             split.target.shift(MED_LARGE_BUFF*vect)
             for quiz in split.target:
-                quiz[0].highlight(color)
+                quiz[0].set_color(color)
 
         labels = VGroup()
         for num, b, split in (800, True, top_split), (200, False, bottom_split):
@@ -992,7 +963,7 @@ class ThousandPossibleQuizzes(Scene):
         for split, color in (left_split, GREEN_E), (right_split, RED_E):
             split.generate_target()
             for quiz in split.target:
-                quiz[1].highlight(color)
+                quiz[1].set_color(color)
         left_split.target.shift(LEFT)
 
         left_label = VGroup(
@@ -1010,7 +981,7 @@ class ThousandPossibleQuizzes(Scene):
         self.play(FadeIn(left_label))
         self.play(LaggedStart(
             ApplyMethod, left_split,
-            lambda m : (m.highlight, YELLOW),
+            lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back,
             lag_ratio = 0.2,
         ))
@@ -1026,12 +997,12 @@ class ThousandPossibleQuizzes(Scene):
         movers = VGroup(*right_split[:self.n_movers])
         movers.generate_target()
         for quiz in movers.target:
-            quiz[1].highlight(left_split[0][1].get_color())
+            quiz[1].set_color(left_split[0][1].get_color())
         movers.target.shift(LEFT)
 
         new_equation = TexMobject("(0.925)", "800 =", "740")
         for i in 0, 2:
-            new_equation[i].highlight(YELLOW)
+            new_equation[i].set_color(YELLOW)
         new_equation.move_to(left_label_equation)
 
         self.play(
@@ -1066,13 +1037,13 @@ class ThousandPossibleQuizzes(Scene):
         for split, color in (left_split, GREEN_E), (right_split, RED_E):
             split.generate_target()
             for quiz in split.target:
-                quiz[1].highlight(color)
+                quiz[1].set_color(color)
         left_split.target.shift(LEFT)
 
         movers = VGroup(*left_split[-self.n_movers:])
         movers.generate_target()
         for quiz in movers.target:
-            quiz[1].highlight(right_split.target[0][1].get_color())
+            quiz[1].set_color(right_split.target[0][1].get_color())
 
         equation = TexMobject("(0.8)", "200 = ", "160")
         slot_group = get_slot_group([False, True], buff = SMALL_BUFF, include_qs = False)
@@ -1081,7 +1052,7 @@ class ThousandPossibleQuizzes(Scene):
         label.next_to(left_split.target, UP, SMALL_BUFF, LEFT)
         alt_equation = TexMobject("(0.3)", "200 = ", "60")
         for i in 0, 2:
-            alt_equation[i].highlight(YELLOW)
+            alt_equation[i].set_color(YELLOW)
         alt_equation.move_to(equation)
 
         self.play(top_group.to_edge, UP, SMALL_BUFF)
@@ -1126,7 +1097,7 @@ class ThousandPossibleQuizzes(Scene):
 
         equation = TexMobject("740", "+", "60", "=", "800")
         for tex in "740", "60":
-            equation.highlight_by_tex(tex, YELLOW)
+            equation.set_color_by_tex(tex, YELLOW)
         slot_group = get_slot_group([True, True])
         slot_group.content[0].set_fill(BLACK, 0)
         label = VGroup(equation, slot_group)
@@ -1166,9 +1137,9 @@ class ThousandPossibleQuizzes(Scene):
         top_movers.target = bottom_movers.copy().shift(LEFT)
         bottom_movers.target = top_movers.copy().shift(RIGHT)
         for quiz in top_movers.target:
-            quiz[0].highlight(RED)
+            quiz[0].set_color(RED)
         for quiz in bottom_movers.target:
-            quiz[0].highlight(GREEN)
+            quiz[0].set_color(GREEN)
 
         line = Line(UP, DOWN, color = YELLOW)
         line.scale_to_fit_height(self.quizzes.get_height())
@@ -1197,9 +1168,9 @@ class ThousandPossibleQuizzes(Scene):
             bottom_part = VGroup(*split.target[n:])
             bottom_part.shift(MED_SMALL_BUFF*DOWN)
             for quiz in top_part:
-                quiz[-1].highlight(GREEN)
+                quiz[-1].set_color(GREEN)
             for quiz in bottom_part:
-                quiz[-1].highlight(RED)
+                quiz[-1].set_color(RED)
 
         split = self.top_left_split
         n_all_right = int(proportions[0]*len(split))
@@ -1214,7 +1185,7 @@ class ThousandPossibleQuizzes(Scene):
         self.wait()
         self.play(LaggedStart(
             ApplyMethod, all_right,
-            lambda m : (m.highlight, YELLOW),
+            lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back,
             lag_ratio = 0.2,
             run_time = 2
@@ -1253,10 +1224,10 @@ class ExampleConditional(Scene):
             [True, True], [True]
         )
         rhs = TexMobject("=", "0.925", ">", "0.8")
-        rhs.highlight_by_tex("0.925", YELLOW)
+        rhs.set_color_by_tex("0.925", YELLOW)
         rhs.next_to(prob, RIGHT)
         expression = VGroup(prob, rhs)
-        expression.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        expression.scale_to_fit_width(FRAME_WIDTH - 1)
         expression.center().to_edge(DOWN)
 
         self.play(Write(expression))
@@ -1296,7 +1267,7 @@ class WritePSecond(Scene):
         rhs = TexMobject("= 0.8")
         rhs.next_to(prob, RIGHT)
         prob.add(rhs)
-        prob.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        prob.scale_to_fit_width(FRAME_WIDTH - 1)
         prob.center().to_edge(DOWN)
         self.play(Write(prob))
 
@@ -1311,7 +1282,7 @@ class SubmitToTemptation(TemptingButWrongCalculation):
         title.generate_target()
         title.target.scale_in_place(1./1.5)
         new_words = TextMobject("and", "okay", "assuming independence.")
-        new_words.highlight_by_tex("okay", GREEN)
+        new_words.set_color_by_tex("okay", GREEN)
         new_words.next_to(title.target, RIGHT)
         VGroup(title.target, new_words).center().to_edge(UP)
 
@@ -1566,7 +1537,7 @@ class ShowIndependenceSymbolically(Scene):
     def construct(self):
         filler_tex = "Filler"
         rhs = TexMobject("=", "0.8")
-        rhs.highlight_by_tex("0.8", YELLOW)
+        rhs.set_color_by_tex("0.8", YELLOW)
         rhs.next_to(ORIGIN, RIGHT, LARGE_BUFF)
         lhs = TexMobject("P(", filler_tex, "|", filler_tex, ")")
         lhs.next_to(rhs, LEFT)
@@ -1587,9 +1558,9 @@ class ShowIndependenceSymbolically(Scene):
         ]
         arrow = Arrow(UP, DOWN)
         arrow.next_to(condition, UP)
-        arrow.highlight(RED)
+        arrow.set_color(RED)
         words = TextMobject("Doesn't matter")
-        words.highlight(RED)
+        words.set_color(RED)
         words.next_to(arrow, UP)
 
         self.add(rhs, lhs, arrow, words)
@@ -1626,8 +1597,8 @@ class ComputeProbabilityOfOneWrong(Scene):
             probs[i] = "(%s)"%self.default_q
             lhs = get_probability_of_slot_group(bool_list)
             rhs = TexMobject("=", *probs)
-            rhs.highlight_by_tex("0.8", GREEN)
-            rhs.highlight_by_tex("0.2", RED)
+            rhs.set_color_by_tex("0.8", GREEN)
+            rhs.set_color_by_tex("0.2", RED)
             point_8s.add(*rhs.get_parts_by_tex("0.8"))
             point_2s.add(*rhs.get_parts_by_tex("0.2"))
             rhs.next_to(lhs, RIGHT)
@@ -1656,14 +1627,14 @@ class ComputeProbabilityOfOneWrong(Scene):
             "P(", "\\text{Score} = %s"%self.score, ")", "=",
             *self.final_result_rhs_tex
         )
-        result.highlight_by_tex_to_color_map({
+        result.set_color_by_tex_to_color_map({
             "0.8" : GREEN,
             "0.2" : RED,
             "Score" : YELLOW,
         })
-        result[-1].highlight(YELLOW)
-        result.highlight_by_tex("0.8", GREEN)
-        result.highlight_by_tex("0.2", RED)
+        result[-1].set_color(YELLOW)
+        result.set_color_by_tex("0.8", GREEN)
+        result.set_color_by_tex("0.2", RED)
         result.to_edge(UP)
 
         self.play(Write(result))
@@ -1719,11 +1690,11 @@ class ShowFullDistribution(Scene):
         scores.shift(MED_LARGE_BUFF*UP)
         scores.to_edge(LEFT)
         for score in scores:
-            score.highlight_by_tex_to_color_map({
+            score.set_color_by_tex_to_color_map({
                 "0.8" : GREEN,
                 "0.2" : RED,
             })
-            score[-1].highlight(YELLOW)
+            score[-1].set_color(YELLOW)
 
         self.add(*scores[1:3])
         self.scores = scores
@@ -1771,7 +1742,7 @@ class ShowFullDistribution(Scene):
             for k in range(4)
         ])
         for term, bar in zip(new_p_terms, chart.bars):
-            term[1].highlight(YELLOW)
+            term[1].set_color(YELLOW)
             term.scale_to_fit_width(1.5*bar.get_width())
             term.next_to(bar, UP)
 
@@ -1832,8 +1803,8 @@ class ShowFullDistribution(Scene):
         new_prob = TexMobject(
             "P(", "\\text{Correct}", ")", "=", "0.8"
         )
-        new_prob.highlight_by_tex("Correct", GREEN)
-        new_prob.shift(SPACE_WIDTH*RIGHT/2)
+        new_prob.set_color_by_tex("Correct", GREEN)
+        new_prob.shift(FRAME_X_RADIUS*RIGHT/2)
         new_prob.to_edge(UP)
 
         alt_ps = 0.5, 0.65, 0.25
@@ -1841,7 +1812,7 @@ class ShowFullDistribution(Scene):
         alt_charts = VGroup()
         for p in alt_ps:
             rhs = TexMobject(str(p))
-            rhs.highlight(YELLOW)
+            rhs.set_color(YELLOW)
             rhs.move_to(new_prob[-1])
             alt_rhss.add(rhs)
 
@@ -1915,7 +1886,7 @@ class ShowTrueDistribution(PiCreatureScene):
     def add_title(self):
         title = TexMobject("P(", "\\text{Correct}", ")", "=", "0.65")
         title.to_edge(UP)
-        title.highlight_by_tex("Correct", GREEN)
+        title.set_color_by_tex("Correct", GREEN)
 
         self.add(title)
         self.title = title
@@ -1936,7 +1907,7 @@ class ShowTrueDistribution(PiCreatureScene):
                     mob.get_corner(DOWN+vect),
                     mob.target.stretch, 0.5, 0
                 )
-            old_bar.target.highlight(average_color(RED_E, BLACK))
+            old_bar.target.set_color(average_color(RED_E, BLACK))
             old_bar.target.set_stroke(width = 0)
             arrow = Arrow(ORIGIN, UP, buff = 0, color = GREEN)
             arrow.move_to(bar.get_bottom())
@@ -1944,8 +1915,8 @@ class ShowTrueDistribution(PiCreatureScene):
             arrows.add(arrow)
         for arrow in arrows[1:3]:
             arrow.rotate_in_place(np.pi)
-            arrow.highlight(RED)
-        arrows.gradient_highlight(BLUE, YELLOW)
+            arrow.set_color(RED)
+        arrows.set_color_by_gradient(BLUE, YELLOW)
 
         self.add(chart)
         self.play(*map(MoveToTarget, it.chain(bars, old_bars)))
@@ -2009,7 +1980,7 @@ class TeacherAssessingLiklihoodOfZero(TeacherStudentsScene):
     def add_title(self):
         title = TexMobject("P(", "\\text{Correct}", ")", "=", "0.65")
         title.to_edge(UP)
-        title.highlight_by_tex("Correct", GREEN)
+        title.set_color_by_tex("Correct", GREEN)
         q_mark = TexMobject("?")
         q_mark.next_to(title[-2], UP, SMALL_BUFF)
         title.add(q_mark)
@@ -2025,7 +1996,7 @@ class TeacherAssessingLiklihoodOfZero(TeacherStudentsScene):
     def show_independence_probability(self):
         prob = get_probability_of_slot_group(3*[False])
         rhs = TexMobject("=", "(0.35)", "^3", "\\approx 4.3\\%")
-        rhs.highlight_by_tex("0.35", RED)
+        rhs.set_color_by_tex("0.35", RED)
         rhs.next_to(prob, RIGHT)
         prob.add(rhs)
         prob.next_to(self.teacher, UP+LEFT)
@@ -2101,7 +2072,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         for part, color in zip(parts, [GREEN, RED]):
             part.generate_target()
             for quiz in part.target:
-                quiz[0].highlight(color)
+                quiz[0].set_color(color)
         top_part.target.shift(UP)
         brace = Brace(bottom_part, LEFT)
         prop = TexMobject("0.35")
@@ -2136,7 +2107,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         for part, color in zip(parts, [GREEN, RED_E]):
             part.generate_target()
             for quiz in part.target:
-                quiz[1].highlight(color)
+                quiz[1].set_color(color)
         left_part.target.shift(LEFT)
         brace = Brace(right_part, UP)
         prop = TexMobject(">0.35")
@@ -2169,7 +2140,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         for part, color in zip(parts, [GREEN, RED_B]):
             part.generate_target()
             for quiz in part.target:
-                quiz[2].highlight(color)
+                quiz[2].set_color(color)
         top_part.target.shift(0.5*UP)
         brace = Brace(bottom_part, LEFT)
         prop = TexMobject("\\gg 0.35")
@@ -2218,8 +2189,8 @@ class WeighingIndependenceAssumption(PiCreatureScene):
             "P(", "A", "B", ")", "="
             "P(", "A", ")", "P(", "B", ")"
         )
-        formula.highlight_by_tex("A", BLUE)
-        formula.highlight_by_tex("B", GREEN)
+        formula.set_color_by_tex("A", BLUE)
+        formula.set_color_by_tex("B", GREEN)
 
         clean = TextMobject("Clean")
         clean.next_to(formula, UP)
@@ -2272,7 +2243,7 @@ class NameBinomial(Scene):
         probability = TexMobject(
             "P(", "\\checkmark", ")", "=", str(p)
         )
-        probability.highlight_by_tex("checkmark", GREEN)
+        probability.set_color_by_tex("checkmark", GREEN)
         probability.move_to(charts, UP)
 
         title = TextMobject("``Binomial distribution''")
@@ -2285,11 +2256,11 @@ class NameBinomial(Scene):
             "(1-", "p", ")", "^{n-", "k}",
             arg_separator = ""
         )
-        formula.highlight_by_tex("p", YELLOW)
-        formula.highlight_by_tex("k", GREEN)
+        formula.set_color_by_tex("p", YELLOW)
+        formula.set_color_by_tex("k", GREEN)
         choose_part = formula.get_part_by_tex("choose")
-        choose_part.highlight(WHITE)
-        choose_part[-2].highlight(GREEN)
+        choose_part.set_color(WHITE)
+        choose_part[-2].set_color(GREEN)
         formula.to_corner(UP+RIGHT)
 
         self.add(charts[0], probability)
@@ -2312,7 +2283,7 @@ class NameBinomial(Scene):
     def add_quiz_questions(self):
         n = 10
         checkmarks = VGroup(*[
-            TexMobject("\\checkmark").highlight(GREEN)
+            TexMobject("\\checkmark").set_color(GREEN)
             for x in range(n)
         ])
         checkmarks.arrange_submobjects(DOWN, buff = 0.3)
@@ -2320,7 +2291,7 @@ class NameBinomial(Scene):
         arrows = VGroup()
         for checkmark in checkmarks:
             cross = TexMobject("\\times")
-            cross.highlight(RED)
+            cross.set_color(RED)
             cross.next_to(checkmark, RIGHT, LARGE_BUFF)
             crosses.add(cross)
             arrow = Arrow(
@@ -2448,9 +2419,9 @@ class NameBinomial(Scene):
         prob = TexMobject(
             "P(", "\\# \\text{Girls}", "=", "6", ")"
         )
-        prob.highlight_by_tex("Girls", MAROON_B)
+        prob.set_color_by_tex("Girls", MAROON_B)
         arrow = Arrow(UP, ORIGIN, tip_length = 0.15)
-        arrow.highlight(MAROON_B)
+        arrow.set_color(MAROON_B)
         arrow.next_to(prob, DOWN)
         prob.add(arrow)
         prob.next_to(chart_rect, UP)
@@ -2513,10 +2484,10 @@ class NameBinomial(Scene):
     ##
 
     def get_male(self):
-        return TexMobject("\\male").scale(1.3).highlight(BLUE)
+        return TexMobject("\\male").scale(1.3).set_color(BLUE)
 
     def get_female(self):
-        return TexMobject("\\female").scale(1.3).highlight(MAROON_B)
+        return TexMobject("\\female").scale(1.3).set_color(MAROON_B)
 
 class CycleThroughPatterns(NameBinomial):
     CONFIG = {
@@ -2536,9 +2507,9 @@ class CycleThroughPatterns(NameBinomial):
             "?",
             arg_separator = ""
         )
-        question.highlight_by_tex("male", BLUE)
-        question.highlight_by_tex("female", MAROON_B)
-        question.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        question.set_color_by_tex("male", BLUE)
+        question.set_color_by_tex("female", MAROON_B)
+        question.scale_to_fit_width(FRAME_WIDTH - 1)
         question.to_edge(UP, buff = LARGE_BUFF)
         self.add(question)
 
@@ -2600,7 +2571,7 @@ class Compute6of10GirlsProbability(CycleThroughPatterns):
         ten_choose_six = brace.get_tex("{10 \\choose 6}")
         see_chapter_one = TextMobject("(See chapter 1)")
         see_chapter_one.next_to(ten_choose_six, DOWN)
-        see_chapter_one.highlight(GREEN)
+        see_chapter_one.set_color(GREEN)
         computation = TexMobject(
             "=\\frac{%s}{%s}"%(
                  "\\cdot ".join(map(str, range(10, 4, -1))),
@@ -2651,11 +2622,11 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
         prob.next_to(self.count, DOWN, LARGE_BUFF)
 
         gp = TexMobject("P(\\female)")
-        gp[2].highlight(MAROON_B)
+        gp[2].set_color(MAROON_B)
         bp = TexMobject("P(\\male)")
-        bp[2].highlight(BLUE)
-        gp_num = TexMobject("(0.49)").highlight(MAROON_B)
-        bp_num = TexMobject("(0.51)").highlight(BLUE)
+        bp[2].set_color(BLUE)
+        gp_num = TexMobject("(0.49)").set_color(MAROON_B)
+        bp_num = TexMobject("(0.51)").set_color(BLUE)
         gp_nums = VGroup()
         bp_nums = VGroup()
         factored = VGroup()
@@ -2680,8 +2651,8 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
         final_probability = TexMobject(
             "(0.49)^6", "(0.51)^4"
         )
-        final_probability.highlight_by_tex("0.49", MAROON_B)
-        final_probability.highlight_by_tex("0.51", BLUE)
+        final_probability.set_color_by_tex("0.49", MAROON_B)
+        final_probability.set_color_by_tex("0.51", BLUE)
         final_probability.next_to(factored_in_nums, DOWN, LARGE_BUFF)
 
         self.play(FadeIn(prob))
@@ -2717,7 +2688,7 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
         ten_choose_six.generate_target()
         ten_choose_six.target.move_to(self.final_probability)
         p_tex = TexMobject("P(", "\\text{6 Girls}", ")", "=")
-        p_tex.highlight_by_tex("Girls", MAROON_B)
+        p_tex.set_color_by_tex("Girls", MAROON_B)
         p_tex.next_to(ten_choose_six.target, LEFT)
 
         self.play(
@@ -2825,14 +2796,14 @@ class GeneralBinomialDistributionValues(Scene):
             ten_choose_k.stretch(0.8, 0)
             ten_choose_k.next_to(mob, DOWN)
             ten_choose_ks.add(ten_choose_k)
-        ten_choose_ks.gradient_highlight(BLUE, YELLOW)
+        ten_choose_ks.set_color_by_gradient(BLUE, YELLOW)
 
         self.play(
             LaggedStart(FadeIn, triangle),
             FadeOut(self.shown_prob)
         )
         self.play(
-            last_row.gradient_highlight, BLUE, YELLOW,
+            last_row.set_color_by_gradient, BLUE, YELLOW,
             Write(ten_choose_ks, run_time = 2)
         )
         self.wait()
@@ -2919,7 +2890,7 @@ class GeneralBinomialDistributionValues(Scene):
         triangle.scale_to_fit_height(0.25)
         triangle.move_to(interval.number_to_point(p), DOWN)
         p_mob = TexMobject("p")
-        p_mob.highlight(MAROON_B)
+        p_mob.set_color(MAROON_B)
         p_mob.next_to(triangle, UP, SMALL_BUFF)
         triangle.add(p_mob)
 
@@ -2962,11 +2933,11 @@ class GeneralBinomialDistributionValues(Scene):
             p : MAROON_B,
             q : BLUE,
         }
-        result.highlight_by_tex_to_color_map(color_map)
+        result.set_color_by_tex_to_color_map(color_map)
         choose_part = result.get_part_by_tex("choose")
-        choose_part.highlight(WHITE)
-        VGroup(*choose_part[1:1+len(n)]).highlight(color_map[n])
-        VGroup(*choose_part[-1-len(k):-1]).highlight(color_map[k])
+        choose_part.set_color(WHITE)
+        VGroup(*choose_part[1:1+len(n)]).set_color(color_map[n])
+        VGroup(*choose_part[-1-len(k):-1]).set_color(color_map[k])
         return result
 
 class PointOutSimplicityOfFormula(TeacherStudentsScene, GeneralBinomialDistributionValues):
@@ -3035,7 +3006,7 @@ class CorrectForDependence(NameBinomial):
             for trip in zip(checkmarks, arrows, crosses)
         ]
         top_rect = SurroundingRectangle(groups[0])
-        top_rect.highlight(GREEN)
+        top_rect.set_color(GREEN)
         indices_to_follow = [1, 4, 5, 7]
 
         self.play(ShowCreation(top_rect))
@@ -3056,7 +3027,7 @@ class CorrectForDependence(NameBinomial):
                 bar.stretch(0.5, 0)
                 bar.move_to(side, vect)
         for bar in old_bars.target:
-            bar.highlight(average_color(RED_E, BLACK))
+            bar.set_color(average_color(RED_E, BLACK))
 
         dist = get_binomial_distribution(10, 0.65)
         values = np.array(map(dist, range(11)))
@@ -3148,7 +3119,7 @@ class PermuteQuizQuestions(Scene):
         ]
         colors = [BLUE, GREEN, RED]
         for color, question in zip(colors, questions):
-            question.highlight(color)
+            question.set_color(color)
         quiz.scale(2)
 
         self.add(quiz)
@@ -3200,7 +3171,7 @@ class AssumeOrderDoesntMatter(Scene):
                 equals.next_to(prob, RIGHT)
                 prob.add(equals)
             prob_group.arrange_submobjects(RIGHT)
-            max_width = 2*SPACE_WIDTH - 1
+            max_width = FRAME_WIDTH - 1
             if prob_group.get_width() > max_width:
                 prob_group.scale_to_fit_width(max_width)
         prob_groups.arrange_submobjects(DOWN, buff = 0.7)
@@ -3227,7 +3198,7 @@ class AssumeOrderDoesntMatter(Scene):
             "But what is ", "``correlation''", "?",
             arg_separator = ""
         )
-        question.highlight(BLUE)
+        question.set_color(BLUE)
         question.to_edge(UP)
         bottom = question.get_bottom()
 
@@ -3244,7 +3215,7 @@ class AssumeOrderDoesntMatter(Scene):
         self.play(
             LaggedStart(
                 ApplyMethod, self.assumption_group,
-                lambda m : (m.shift, 2*SPACE_HEIGHT*DOWN),
+                lambda m : (m.shift, FRAME_HEIGHT*DOWN),
                 remover = True,
             ),
             ApplyMethod(
@@ -3259,7 +3230,7 @@ class AssumeOrderDoesntMatter(Scene):
         words = brace.get_text("Coming soon!")
         self.play(
             GrowFromCenter(brace),
-            part.highlight, YELLOW
+            part.set_color, YELLOW
         )
         self.play(Write(words))
         self.wait()
@@ -3294,7 +3265,7 @@ class CompareTwoSituations(PiCreatureScene):
             for vect in UP+LEFT, UP+RIGHT
         ]
         arrow = DoubleArrow(*screens, buff = SMALL_BUFF)
-        arrow.highlight(BLUE)
+        arrow.set_color(BLUE)
 
         for screen, s in zip(screens, ["left", "right"]):
             self.play(
@@ -3553,8 +3524,8 @@ class Thumbnail(DangerInProbability):
         chart = BarChart(
             values = values,
             label_y_axis = False,
-            width = 2*SPACE_WIDTH - 3,
-            height = 1.5*SPACE_HEIGHT
+            width = FRAME_WIDTH - 3,
+            height = 1.5*FRAME_Y_RADIUS
         )
         chart.to_edge(DOWN)
         self.add(chart)

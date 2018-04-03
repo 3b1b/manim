@@ -1,35 +1,8 @@
 # -*- coding: utf-8 -*-
-from helpers import *
+from constants import *
 import scipy
 
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from topics.common_scenes import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject import *
-from mobject.image_mobject import *
-from mobject.vectorized_mobject import *
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.graph_scene import *
+from big_ol_pile_of_manim_imports import *
 
 USE_ALMOST_FOURIER_BY_DEFAULT = True
 NUM_SAMPLES_FOR_FFT = 1000
@@ -59,7 +32,7 @@ def get_fourier_graph(
         )
         for x, y in zip(frequencies, fft_output[:n_samples//2])
     ])
-    graph.highlight(color)
+    graph.set_color(color)
     f_min, f_max = [
         axes.x_axis.point_to_number(graph.points[i])
         for i in 0, -1
@@ -97,14 +70,14 @@ class Introduction(TeacherStudentsScene):
         graph.stretch(0.25, 1)
         graph.next_to(title, DOWN)
         graph.to_edge(LEFT)
-        graph.highlight(BLUE)
+        graph.set_color(BLUE)
         fourier_graph = FunctionGraph(
             get_fourier_transform(func, 0, 5),
             x_min = 0, x_max = 5
         )
         fourier_graph.move_to(graph)
         fourier_graph.to_edge(RIGHT)
-        fourier_graph.highlight(RED)
+        fourier_graph.set_color(RED)
         arrow = Arrow(graph, fourier_graph, color = WHITE)
         self.add(title, graph)
 
@@ -198,7 +171,7 @@ class AddingPureFrequencies(PiCreatureScene):
     def play_A440(self):
         randy = self.pi_creature
         A_label = TextMobject("A440")
-        A_label.highlight(self.A_color)
+        A_label.set_color(self.A_color)
         A_label.next_to(self.speaker, UP)
 
         self.broadcast(
@@ -233,7 +206,7 @@ class AddingPureFrequencies(PiCreatureScene):
         frequency = self.A_frequency
         graph = self.get_wave_graph(frequency, axes)
         func = graph.underlying_function
-        graph.highlight(self.A_color)
+        graph.set_color(self.A_color)
         pressure = TextMobject("Pressure")
         time = TextMobject("Time")
         for label in pressure, time:
@@ -291,7 +264,7 @@ class AddingPureFrequencies(PiCreatureScene):
         graph.set_color(self.D_color)
 
         D_label = TextMobject("D294")
-        D_label.highlight(self.D_color)
+        D_label.set_color(self.D_color)
         D_label.move_to(self.A_label)
 
         self.play(
@@ -348,7 +321,7 @@ class AddingPureFrequencies(PiCreatureScene):
         self.play(*it.chain(
             map(MoveToTarget, movers),
             [
-                ApplyMethod(mob.shift, SPACE_HEIGHT*DOWN, remover = True)
+                ApplyMethod(mob.shift, FRAME_Y_RADIUS*DOWN, remover = True)
                 for mob in  randy, speaker
             ]
         ))
@@ -374,7 +347,7 @@ class AddingPureFrequencies(PiCreatureScene):
         top_axes_point = axes.coords_to_point(x, self.equilibrium_height)
         x_point = np.array(top_axes_point)
         x_point[1] = 0
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT).move_to(x_point)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS).move_to(x_point)
 
         self.revert_to_original_skipping_status()
         self.play(GrowFromCenter(v_line))
@@ -407,7 +380,7 @@ class AddingPureFrequencies(PiCreatureScene):
             return result
 
         sum_graph = axes.get_graph(new_func)
-        sum_graph.highlight(self.sum_color)
+        sum_graph.set_color(self.sum_color)
         thin_sum_graph = sum_graph.copy().fade()
 
         A_graph = self.A_graph
@@ -415,7 +388,7 @@ class AddingPureFrequencies(PiCreatureScene):
         D_axes = self.D_axes
 
         rect = Rectangle(
-            height = 2.5*SPACE_HEIGHT,
+            height = 2.5*FRAME_Y_RADIUS,
             width = MED_SMALL_BUFF,
             stroke_width = 0,
             fill_color = YELLOW,
@@ -469,15 +442,15 @@ class AddingPureFrequencies(PiCreatureScene):
         C_axes = self.A_axes.deepcopy()
         VGroup(F_axes, C_axes).next_to(squish_group, DOWN)
         F_graph = self.get_wave_graph(self.A_frequency*4.0/5, F_axes)
-        F_graph.highlight(self.F_color)
+        F_graph.set_color(self.F_color)
         C_graph = self.get_wave_graph(self.A_frequency*6.0/5, C_axes)
-        C_graph.highlight(self.C_color)
+        C_graph.set_color(self.C_color)
 
         F_label = TextMobject("F349")
         C_label = TextMobject("C523")
         for label, graph in (F_label, F_graph), (C_label, C_graph):
             label.scale(0.5)
-            label.highlight(graph.get_stroke_color())
+            label.set_color(graph.get_stroke_color())
             label.next_to(graph, UP, SMALL_BUFF)
 
         graphs = VGroup(self.A_graph, self.D_graph, F_graph, C_graph)
@@ -492,7 +465,7 @@ class AddingPureFrequencies(PiCreatureScene):
             new_sum_func, 
             num_graph_points = 200
         )
-        new_sum_graph.highlight(BLUE_C)
+        new_sum_graph.set_color(BLUE_C)
         thin_new_sum_graph = new_sum_graph.copy().fade()
 
         self.play(*it.chain(
@@ -561,8 +534,8 @@ class AddingPureFrequencies(PiCreatureScene):
         A_line, D_line = lines
         A_line.shift(point - A_line.get_start())
         D_line.shift(A_line.get_end()-D_line.get_start())
-        A_line.highlight(self.A_color)
-        D_line.highlight(self.D_color)
+        A_line.set_color(self.A_color)
+        D_line.set_color(self.D_color)
         return lines
 
     def create_pi_creature(self):
@@ -606,12 +579,12 @@ class BreakApartSum(Scene):
                 "unit_size" : 0.5,
             },
         )
-        axes.stretch_to_fit_width(2*SPACE_WIDTH - 2)
+        axes.stretch_to_fit_width(FRAME_WIDTH - 2)
         axes.stretch_to_fit_height(3)
         axes.center()
         axes.to_edge(LEFT)
         graph = axes.get_graph(func, num_graph_points = 200)
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
 
         v_line = Line(ORIGIN, 4*UP)
         v_line.move_to(axes.coords_to_point(0, 0), DOWN)
@@ -639,7 +612,7 @@ class BreakApartSum(Scene):
             )
             for freq in self.frequencies
         ])
-        pure_graphs.gradient_highlight(BLUE, RED)
+        pure_graphs.set_color_by_gradient(BLUE, RED)
         pure_graphs.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         h_line = DashedLine(6*LEFT, 6*RIGHT)
 
@@ -675,7 +648,7 @@ class BreakApartSum(Scene):
             ShowCreation(rect),
             LaggedStart(
                 ApplyFunction, pure_graphs,
-                lambda g : (lambda m : m.shift(SMALL_BUFF*UP).highlight(YELLOW), g),
+                lambda g : (lambda m : m.shift(SMALL_BUFF*UP).set_color(YELLOW), g),
                 rate_func = wiggle
             )
         )
@@ -707,7 +680,7 @@ class UnmixMixedPaint(Scene):
     def construct(self):
         angles = np.arange(4)*np.pi/2
         quadrants = VGroup(*[
-            Quadrant().rotate(angle, about_point = ORIGIN).highlight(color)
+            Quadrant().rotate(angle, about_point = ORIGIN).set_color(color)
             for color, angle in zip(self.colors, angles)
         ])
         quadrants.add(*it.chain(*[
@@ -765,15 +738,15 @@ class MachineThatTreatsOneFrequencyDifferently(Scene):
         arrow1, q_marks, arrow2 = group = VGroup(
             Vector(DOWN), TextMobject("???").scale(1.5), Vector(DOWN)
         )
-        group.highlight(WHITE)
+        group.set_color(WHITE)
         group.arrange_submobjects(DOWN)
         group.next_to(graph, DOWN)
         self.add(group)
 
         self.change_graph_frequency(1)
-        graph.highlight(GREEN)
+        graph.set_color(GREEN)
         self.wait()
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
         self.change_graph_frequency(2)
         self.wait()
 
@@ -1078,7 +1051,7 @@ class FourierMachineScene(Scene):
             ctp(0, 0), ctp(0, time_axes.y_max),
             stroke_width = 6,
         )
-        v_line.highlight(RED)
+        v_line.set_color(RED)
 
         for x in range(n_repeats):
             v_line.move_to(ctp(0, 0), DOWN)
@@ -1282,7 +1255,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
                 self.play(LaggedStart(
                     ApplyFunction, v_lines,
                     lambda mob : (
-                        lambda m : m.shift(0.25*UP).highlight(YELLOW), 
+                        lambda m : m.shift(0.25*UP).set_color(YELLOW), 
                         mob
                     ),
                     rate_func = there_and_back
@@ -1406,7 +1379,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         dot.move_to(arrow.get_start())
         words = TextMobject("Center of mass")
         words.next_to(arrow.get_start(), RIGHT)
-        words.highlight(color)
+        words.set_color(color)
 
         self.play(
             GrowArrow(arrow),
@@ -1437,7 +1410,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         com_label.add_background_rectangle()
         frequency_axes = self.get_frequency_axes()
         x_coord_label = TextMobject("$x$-coordinate for center of mass")
-        x_coord_label.highlight(self.center_of_mass_color)
+        x_coord_label.set_color(self.center_of_mass_color)
         x_coord_label.scale(self.text_scale_val)
         x_coord_label.next_to(
             frequency_axes.y_axis.get_top(),
@@ -1527,7 +1500,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         self.play(FadeIn(rect))
         self.wait()
         for group in groups:
-            graph_copy = group[0].copy().highlight(PINK)
+            graph_copy = group[0].copy().set_color(PINK)
             self.play(FadeIn(group))
             self.play(ShowCreation(graph_copy))
             self.play(FadeOut(graph_copy))
@@ -1732,7 +1705,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
         graph = self.get_cosine_wave(
             freq = self.signal_frequency,
         )
-        graph.highlight(self.lower_signal_color)
+        graph.set_color(self.lower_signal_color)
         self.graph = graph
         ratio = float(self.higher_signal_frequency)/self.signal_frequency
 
@@ -1751,7 +1724,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
         # self.add(start_graph)
         self.play(
             start_graph.stretch, ratio, 0, {"about_edge" : LEFT},
-            start_graph.highlight, graph.get_color(),
+            start_graph.set_color, graph.get_color(),
         )
         self.play(FadeOut(start_graph), Animation(graph))
         self.remove(start_graph)
@@ -1836,7 +1809,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
                 self.signal_frequency, fourier_graph
             ), UP
         )
-        x_coord_label.highlight(self.center_of_mass_color)
+        x_coord_label.set_color(self.center_of_mass_color)
         self.generate_fourier_dot_transform(fourier_graph)
 
         self.play(Write(x_coord_label))
@@ -1918,8 +1891,8 @@ class ShowLinearity(DrawFrequencyPlot):
         ]
         for label, graph, color in trips:
             label.next_to(graph, UP)
-            graph.highlight(color)
-            label.highlight(color)
+            graph.set_color(color)
+            label.set_color(color)
         sum_label[0].match_color(low_freq_graph)
         sum_label[2].match_color(high_freq_graph)
 
@@ -1978,7 +1951,7 @@ class ShowLinearity(DrawFrequencyPlot):
                 self.signal_frequency, fourier_graph
             ), UP
         )
-        x_coord_label.highlight(self.center_of_mass_color)
+        x_coord_label.set_color(self.center_of_mass_color)
         almost_fourier_label = TextMobject(
             "``Almost-Fourier transform''"
         )
@@ -2058,7 +2031,7 @@ class ShowCommutativeDiagram(ShowLinearity):
         ta_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
 
         frequency_axes = Axes(**self.frequency_axes_config)
-        frequency_axes.highlight(TEAL)
+        frequency_axes.set_color(TEAL)
         freq_label = TextMobject("Frequency")
         freq_label.scale(self.text_scale_val)
         freq_label.next_to(frequency_axes.x_axis, DOWN, SMALL_BUFF, RIGHT)
@@ -2097,15 +2070,15 @@ class ShowCommutativeDiagram(ShowLinearity):
         ]
         for func, color, label, ta, fa in zip(funcs, colors, labels, ta_group, fa_group):
             time_graph = ta.get_graph(func)
-            time_graph.highlight(color)
-            label.highlight(color)
+            time_graph.set_color(color)
+            label.set_color(color)
             label.scale(0.75)
             label.next_to(time_graph, UP, SMALL_BUFF)
             fourier = get_fourier_transform(
                 func, ta.x_min, 4*ta.x_max
             )
             fourier_graph = fa.get_graph(fourier)
-            fourier_graph.highlight(self.center_of_mass_color)
+            fourier_graph.set_color(self.center_of_mass_color)
 
             arrow = Arrow(
                 ta.x_axis.main_line, fa.x_axis.main_line, 
@@ -2266,7 +2239,7 @@ class BeforeGettingToTheFullMath(TeacherStudentsScene):
         self.wait()
         self.play(
             ApplyMethod(
-                formula.next_to, SPACE_WIDTH*RIGHT, RIGHT,
+                formula.next_to, FRAME_X_RADIUS*RIGHT, RIGHT,
                 path_arc = TAU/16,
                 rate_func = running_start,
             ),
@@ -2338,7 +2311,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
             for f in 0.5, 0.7, 1.0, 1.2, 3.0,
         ])
         graph = axes.get_graph(func)
-        graph.highlight(BLUE)
+        graph.set_color(BLUE)
 
         self.play(
             FadeIn(axes), 
@@ -2369,7 +2342,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
             y_max = 1,
             y_axis_config = {"unit_size" : 2},
         )
-        frequency_axes.highlight(TEAL)
+        frequency_axes.set_color(TEAL)
         frequency_axes.next_to(time_axes, DOWN, LARGE_BUFF, LEFT)
         freq_label = TextMobject("Frequency")
         freq_label.scale(0.75)
@@ -2386,7 +2359,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
         fourier_graph = frequency_axes.get_graph(
             fourier_func, num_graph_points = 150,
         )
-        fourier_graph.highlight(RED)
+        fourier_graph.set_color(RED)
         frequency_axes.graph = fourier_graph
 
         arrow = Arrow(time_graph, fourier_graph, color = WHITE)
@@ -2402,7 +2375,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
             ReplacementTransform(time_axes.labels[0].copy(), freq_label),
             GrowArrow(arrow),
             Write(ft_words),
-            VGroup(randy, speaker).shift, SPACE_HEIGHT*DOWN,
+            VGroup(randy, speaker).shift, FRAME_Y_RADIUS*DOWN,
         )
         self.remove(randy, speaker)
         self.wait()
@@ -2427,7 +2400,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
         new_graph = frequency_axes.get_graph(
             filtered_func, num_graph_points = 300
         )
-        new_graph.highlight(RED)
+        new_graph.set_color(RED)
 
         self.play(spike_rect.stretch, 4, 0)
         self.play(
@@ -2450,7 +2423,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
         filtered_graph = time_axes.get_graph(
             lambda t : time_graph.underlying_function(t)-np.cos(TAU*3*t)
         )
-        filtered_graph.highlight(BLUE_C)
+        filtered_graph.set_color(BLUE_C)
 
         to_fourier_arrow = self.to_fourier_arrow
         arrow = to_fourier_arrow.copy()
@@ -2458,7 +2431,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
         arrow.shift(MED_SMALL_BUFF*LEFT)
         inv_fourier_words = TextMobject("Inverse Fourier \\\\ transform")
         inv_fourier_words.next_to(arrow, LEFT)
-        VGroup(arrow, inv_fourier_words).highlight(MAROON_B)
+        VGroup(arrow, inv_fourier_words).set_color(MAROON_B)
 
         self.play(
             GrowArrow(arrow),
@@ -2562,7 +2535,7 @@ class ApplyFourierToFourier(DrawFrequencyPlot):
             ),
         )
         self.play(
-            wound_up_graph.next_to, SPACE_WIDTH*LEFT, LEFT,
+            wound_up_graph.next_to, FRAME_X_RADIUS*LEFT, LEFT,
             remover = True
         )
         self.wait()
@@ -2571,12 +2544,12 @@ class ApplyFourierToFourier(DrawFrequencyPlot):
         wound_up_graph = self.get_polarized_mobject(new_fourier_graph, freq = 0)
         double_fourier_graph = frequency_axes.get_graph(
             lambda t : 0.25*np.cos(TAU*2*t)
-        ).highlight(PINK)
+        ).set_color(PINK)
         self.fourier_graph = double_fourier_graph
         self.remove(self.fourier_graph_dot)
         self.get_fourier_graph_drawing_update_anim(double_fourier_graph)
         self.generate_fourier_dot_transform(double_fourier_graph)
-        self.center_of_mass_dot.highlight(PINK)
+        self.center_of_mass_dot.set_color(PINK)
         self.generate_center_of_mass_dot_update_anim()
         def new_get_pol_graph_center_of_mass():
             result = DrawFrequencyPlot.get_pol_graph_center_of_mass(self)
@@ -2611,8 +2584,8 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         "initial_winding_frequency" : 0.1,
         "circle_plane_config" : {
             "unit_size" : 2,
-            "y_radius" : SPACE_HEIGHT+LARGE_BUFF,
-            "x_radius" : SPACE_WIDTH+LARGE_BUFF
+            "y_radius" : FRAME_Y_RADIUS+LARGE_BUFF,
+            "x_radius" : FRAME_X_RADIUS+LARGE_BUFF
         }
     }
     def construct(self):
@@ -2680,7 +2653,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         v_line = Line(ORIGIN, UP)
         h_line = Line(ORIGIN, RIGHT)
         lines = VGroup(v_line, h_line)
-        lines.highlight(PINK)
+        lines.set_color(PINK)
         def lines_update(lines):
             point = com_dot.get_center()
             x, y = plane.point_to_coords(point)
@@ -2867,8 +2840,8 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             plane.coords_to_point(1, 1), 
             UP+RIGHT
         )
-        f.highlight(RED)
-        t.highlight(YELLOW)
+        f.set_color(RED)
+        t.set_color(YELLOW)
         exp_expression.add_background_rectangle()
         two_pi_i_f_t_group = VGroup(two_pi_i, f, t)
         two_pi_i_f_t_group.save_state()
@@ -2901,7 +2874,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         self.wait()
 
         ghost_dot.move_to(ORIGIN)
-        ambient_ghost_dot_movement = AmbientMovement(
+        ambient_ghost_dot_movement = ContinualMovement(
             ghost_dot, rate = TAU
         )
         self.add(ambient_ghost_dot_movement)
@@ -2923,7 +2896,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             )
         )
         ghost_dot.move_to(ORIGIN)
-        ambient_ghost_dot_movement = AmbientMovement(
+        ambient_ghost_dot_movement = ContinualMovement(
             ghost_dot, rate = 0.1*TAU
         )
         self.add(ambient_ghost_dot_movement)
@@ -3193,10 +3166,10 @@ class BuildUpExpressionStepByStep(TeacherStudentsScene):
         )
         frac, integral, g, e, two_pi_i, f, t, dt = expression
         expression.next_to(self.teacher, UP+LEFT)
-        t.highlight(YELLOW)
-        g[2].highlight(YELLOW)
-        dt[1].highlight(YELLOW)
-        f.highlight(GREEN)
+        t.set_color(YELLOW)
+        g[2].set_color(YELLOW)
+        dt[1].set_color(YELLOW)
+        f.set_color(GREEN)
         t.save_state()
         t.move_to(f, LEFT)
 
@@ -3257,10 +3230,10 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
         )
         frac, integral, g, e, two_pi_i, f, t, dt = expression
         expression.to_corner(UP+RIGHT)
-        t.highlight(YELLOW)
-        g[2].highlight(YELLOW)
-        dt[1].highlight(YELLOW)
-        f.highlight(GREEN)
+        t.set_color(YELLOW)
+        g[2].set_color(YELLOW)
+        dt[1].set_color(YELLOW)
+        f.set_color(GREEN)
         self.expression = expression
         self.add(expression)
 
@@ -3314,7 +3287,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
                 com_vector.copy().shift(x*com_vector.get_vector())
                 for x in range(1, n+1)
             ])
-            com_vector_copies.highlight(TEAL)
+            com_vector_copies.set_color(TEAL)
             return com_vector_copies
         com_vector_update = UpdateFromFunc(
             com_vector,
@@ -3518,7 +3491,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
         graph_portion = axes.get_graph(
             graph.underlying_function, x_min = 1, x_max = 2
         )
-        graph_portion.highlight(TEAL)
+        graph_portion.set_color(TEAL)
         bps_label = TextMobject("2 beats per second")
         bps_label.scale(0.75)
         bps_label.next_to(graph_portion, UP, aligned_edge = LEFT)
@@ -3653,9 +3626,9 @@ class SummarizeTheFullTransform(DrawFrequencyPlot):
         )
 
         graph = time_axes.get_graph(func)
-        graph.highlight(GREEN)
+        graph.set_color(GREEN)
         fourier_graph = frequency_axes.get_graph(fourier_func)
-        fourier_graph.highlight(RED)
+        fourier_graph.set_color(RED)
 
         g_t = TexMobject("g(t)")
         g_t[-2].match_color(graph)
@@ -3711,7 +3684,7 @@ class SummarizeTheFullTransform(DrawFrequencyPlot):
         morty = self.pi_creature
         g_hat_f = self.g_hat_f
         g_hat_f_rect = SurroundingRectangle(g_hat_f)
-        g_hat_f_rect.highlight(TEAL)
+        g_hat_f_rect.set_color(TEAL)
         g_hat_rect = SurroundingRectangle(g_hat_f[0])
         g_hat_rect.match_style(g_hat_f_rect)
 
@@ -3734,7 +3707,7 @@ class SummarizeTheFullTransform(DrawFrequencyPlot):
                 use_almost_fourier = False,
             )
         )
-        imaginary_fourier_graph.highlight(BLUE)
+        imaginary_fourier_graph.set_color(BLUE)
         imaginary_fourier_graph.shift(
             frequency_axes.x_axis.main_line.get_right() - \
             imaginary_fourier_graph.points[-1],
@@ -3832,11 +3805,11 @@ class SummarizeFormula(Scene):
             "\\hat g(", "f", ")", "=", "\\int", "_{t_1}", "^{t_2}",
             "g({}", "t", ")", "e", "^{-2\\pi i", "f", "t}", "dt"
         )
-        expression.highlight_by_tex(
+        expression.set_color_by_tex(
             "t", YELLOW, substring = False,
         )
-        expression.highlight_by_tex("t}", YELLOW)
-        expression.highlight_by_tex(
+        expression.set_color_by_tex("t}", YELLOW)
+        expression.set_color_by_tex(
             "f", RED, substring = False,
         )
         expression.scale(1.2)
@@ -3861,13 +3834,13 @@ class BoundsAtInfinity(SummarizeFormula):
         graph = self.graph
 
         time_interval = self.get_time_interval(-2, 2)
-        wide_interval = self.get_time_interval(-SPACE_WIDTH, SPACE_WIDTH)
+        wide_interval = self.get_time_interval(-FRAME_X_RADIUS, FRAME_X_RADIUS)
         bounds = VGroup(*reversed(expression.get_parts_by_tex("t_")))
         bound_rects = VGroup(*[
             SurroundingRectangle(b, buff = 0.5*SMALL_BUFF)
             for b in bounds
         ])
-        bound_rects.highlight(TEAL)
+        bound_rects.set_color(TEAL)
         inf_bounds = VGroup(*[
             VGroup(TexMobject(s + "\\infty"))
             for s in "-", "+"
@@ -3948,7 +3921,7 @@ class BoundsAtInfinity(SummarizeFormula):
             return np.exp(-0.1*x**2)*(1 + np.cos(TAU*x))
         graph = axes.get_graph(func)
         self.add(graph)
-        graph.highlight(YELLOW)
+        graph.set_color(YELLOW)
 
         self.set_variables_as_attrs(axes, graph)
 
@@ -3988,8 +3961,8 @@ class ShowUncertaintyPrinciple(Scene):
         title = TextMobject("Uncertainty principle")
         self.add(title)
         top_axes = Axes(
-            x_min = -SPACE_WIDTH,
-            x_max = SPACE_WIDTH,
+            x_min = -FRAME_X_RADIUS,
+            x_max = FRAME_X_RADIUS,
             y_min = 0,
             y_max = 3,
             y_axis_config = {
@@ -4013,9 +3986,9 @@ class ShowUncertaintyPrinciple(Scene):
         def get_bell_func(factor = 1):
             return lambda x : 2*np.exp(-factor*x**2)
         top_graph = top_axes.get_graph(get_bell_func())
-        top_graph.highlight(YELLOW)
+        top_graph.set_color(YELLOW)
         bottom_graph = bottom_axes.get_graph(get_bell_func())
-        bottom_graph.highlight(RED)
+        bottom_graph.set_color(RED)
         def get_update_func(axes):
             def update_graph(graph):
                 f = ghost_dot.get_center()[0]
@@ -4047,7 +4020,7 @@ class ShowUncertaintyPrinciple(Scene):
 class XCoordinateLabelTypoFix(Scene):
     def construct(self):
         words = TextMobject("$x$-coordinate for center of mass")
-        words.highlight(RED)
+        words.set_color(RED)
         self.add(words)
 
 class NextVideoWrapper(Scene):
@@ -4065,16 +4038,16 @@ class SubscribeOrBinge(PiCreatureScene):
         morty = self.pi_creature
         morty.center().to_edge(DOWN, LARGE_BUFF)
         subscribe = TextMobject("Subscribe")
-        subscribe.highlight(RED)
+        subscribe.set_color(RED)
         subscribe.next_to(morty, UP+RIGHT)
         binge = TextMobject("Binge")
-        binge.highlight(BLUE)
+        binge.set_color(BLUE)
         binge.next_to(morty, UP+LEFT)
 
         videos = VGroup(*[VideoIcon() for x in range(30)])
         colors = it.cycle([BLUE_D, BLUE_E, BLUE_C, GREY_BROWN])
         for video, color in zip(videos, colors):
-            video.highlight(color)
+            video.set_color(color)
         videos.move_to(binge.get_bottom(), UP)
         video_anim = LaggedStart(
             Succession, videos, 
@@ -4116,7 +4089,6 @@ class SubscribeOrBinge(PiCreatureScene):
             )
         )
 
-
 class CloseWithAPuzzle(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Close with a puzzle!", run_time = 1)
@@ -4132,15 +4104,15 @@ class PuzzleDescription(Scene):
             TextMobject("Prove that", "$D$", "is convex")
         )
         for line in lines:
-            line.highlight_by_tex_to_color_map({
+            line.set_color_by_tex_to_color_map({
                 "$C$" : BLUE_D,
                 "\\partial C" : BLUE_D,
                 "$B$" : BLUE_C,
                 "$D$" : YELLOW,
             })
-        VGroup(lines[2][1][2], lines[2][1][6]).highlight(RED)
-        VGroup(lines[2][1][4], lines[2][1][8]).highlight(MAROON_B)
-        lines[2][1][10].highlight(BLUE_C)
+        VGroup(lines[2][1][2], lines[2][1][6]).set_color(RED)
+        VGroup(lines[2][1][4], lines[2][1][8]).set_color(MAROON_B)
+        lines[2][1][10].set_color(BLUE_C)
         lines.scale(1.25)
         lines.arrange_submobjects(DOWN, buff = LARGE_BUFF, aligned_edge = LEFT)
 
@@ -4256,7 +4228,7 @@ class FourierEndScreen(PatreonEndScreen):
 class Thumbnail(Scene):
     def construct(self):
         title = TextMobject("Fourier\\\\", "Visualized")
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         title.set_stroke(RED, 2)
         title.scale(2.5)
         title.add_background_rectangle()
@@ -4266,9 +4238,9 @@ class Thumbnail(Scene):
         fourier = get_fourier_transform(func, -5, 5)
 
         graph = FunctionGraph(func, x_min = -5, x_max = 5)
-        graph.highlight(BLUE)
+        graph.set_color(BLUE)
         fourier_graph = FunctionGraph(fourier, x_min = 0, x_max = 6)
-        fourier_graph.highlight(YELLOW)
+        fourier_graph.set_color(YELLOW)
         for g in graph, fourier_graph:
             g.stretch_to_fit_height(2)
             g.stretch_to_fit_width(10)
@@ -4288,14 +4260,14 @@ class Thumbnail(Scene):
             pol_graph.scale_to_fit_height(2)
             pol_graphs.add(pol_graph)
         pol_graphs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
-        pol_graphs.gradient_highlight(BLUE_C, YELLOW)
+        pol_graphs.set_color_by_gradient(BLUE_C, YELLOW)
         pol_graphs.match_width(graph)
         pol_graphs.set_stroke(width = 2)
 
 
         self.clear()
         title.center().to_edge(UP)
-        pol_graphs.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        pol_graphs.scale_to_fit_width(FRAME_WIDTH - 1)
         pol_graphs.center()
         title.move_to(pol_graphs)
         title.shift(SMALL_BUFF*LEFT)

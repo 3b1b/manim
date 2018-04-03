@@ -1,26 +1,4 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
-
+from big_ol_pile_of_manim_imports import *
 from ka_playgrounds.circuits import Resistor, Source, LongResistor
 
 class OpeningQuote(Scene):
@@ -31,9 +9,9 @@ class OpeningQuote(Scene):
             "is harder than to answer it." 
         )
         words.to_edge(UP)
-        words[1].highlight(BLUE)
+        words[1].set_color(BLUE)
         author = TextMobject("-Georg Cantor")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
@@ -44,7 +22,7 @@ class OpeningQuote(Scene):
 class ListTerms(Scene):
     def construct(self):
         title = TextMobject("Under the light of linear transformations")
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         title.to_edge(UP)
         randy = Randolph().to_corner()
         words = VMobject(*map(TextMobject, [
@@ -95,8 +73,8 @@ class NoComputations(TeacherStudentsScene):
                 "``Row echelon form''",
             ])
         )
-        new_words.split()[1].highlight(YELLOW)
-        new_words.split()[3].highlight(GREEN)
+        new_words.split()[1].set_color(YELLOW)
+        new_words.split()[3].set_color(GREEN)
         self.play(
             Transform(self.teacher.bubble.content, new_words),
             self.teacher.change_mode, "speaking"
@@ -114,7 +92,7 @@ class PuntToSoftware(Scene):
 class UsefulnessOfMatrices(Scene):
     def construct(self):
         title = TextMobject("Usefulness of matrices")
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         title.to_edge(UP)
         self.add(title)
         self.wait(3) #Play some 3d linear transform over this
@@ -127,7 +105,7 @@ class UsefulnessOfMatrices(Scene):
         equations.to_edge(RIGHT, buff = 2)
         syms = VMobject(*np.array(equations.split())[[1, 4, 7]])
         new_syms = VMobject(*[
-            m.copy().highlight(c) 
+            m.copy().set_color(c) 
             for m, c in zip(syms.split(), [X_COLOR, Y_COLOR, Z_COLOR])
         ])
         new_syms.arrange_submobjects(RIGHT, buff = 0.5)
@@ -164,7 +142,7 @@ class CircuitDiagram(Scene):
         v2 = TexMobject("v_2").next_to(r2, RIGHT)
         v3 = TexMobject("v_3").next_to(r3, UP)
         unknowns = VMobject(v1, v2, v3)
-        unknowns.highlight(BLUE)
+        unknowns.set_color(BLUE)
 
         self.play(ShowCreation(circuit))
         self.wait()
@@ -187,8 +165,8 @@ class StockPrices(Scene):
     def construct(self):
         self.add(TextMobject("Stock prices").to_edge(UP))
 
-        x_axis = Line(ORIGIN, SPACE_WIDTH*RIGHT)
-        y_axis = Line(ORIGIN, SPACE_HEIGHT*UP)
+        x_axis = Line(ORIGIN, FRAME_X_RADIUS*RIGHT)
+        y_axis = Line(ORIGIN, FRAME_Y_RADIUS*UP)
         everyone = VMobject(x_axis, y_axis)
         stock_lines = []
         for color in TEAL, PINK, YELLOW, RED, BLUE:
@@ -228,7 +206,7 @@ class MachineLearningNetwork(Scene):
         for l_layer, r_layer in zip(layers, layers[1:]):
             for l_node, r_node in it.product(l_layer.split(), r_layer.split()):
                 lines.add(Line(l_node, r_node))
-        lines.submobject_gradient_highlight(BLUE_E, BLUE_A)
+        lines.set_submobject_colors_by_gradient(BLUE_E, BLUE_A)
         for mob in VMobject(*layers), lines:
             self.play(Write(mob), run_time = 2)
         self.wait()
@@ -268,7 +246,7 @@ class SystemOfEquations(Scene):
         rhs = map(TexMobject, map(str, [-3, 0, 2]))
         variables = map(TexMobject, list("xyz"))
         for v, color in zip(variables, [X_COLOR, Y_COLOR, Z_COLOR]):
-            v.highlight(color)
+            v.set_color(color)
         equations = VMobject()
         for row in mob_matrix:
             equation = VMobject(*it.chain(*zip(
@@ -309,7 +287,7 @@ class SystemOfEquations(Scene):
 
         self.play(other_equations.fade, 0.7)
         self.play(Transform(scaled_vars, isolated_scaled_vars))
-        self.play(scalars.highlight, YELLOW, submobject_mode = "lagged_start")
+        self.play(scalars.set_color, YELLOW, submobject_mode = "lagged_start")
         self.play(*[
             ApplyMethod(m.scale_in_place, 1.2, rate_func = there_and_back)
             for m in scalars.split()
@@ -327,16 +305,16 @@ class SystemOfEquations(Scene):
 
     def show_nonlinearity_examples(self):
         squared = TexMobject("x^2")
-        squared.split()[0].highlight(X_COLOR)
+        squared.split()[0].set_color(X_COLOR)
         sine = TexMobject("\\sin(x)")
-        sine.split()[-2].highlight(X_COLOR)
+        sine.split()[-2].set_color(X_COLOR)
         product = TexMobject("xy")
-        product.split()[0].highlight(X_COLOR)
-        product.split()[1].highlight(Y_COLOR)
+        product.split()[0].set_color(X_COLOR)
+        product.split()[1].set_color(Y_COLOR)
 
 
         words = TextMobject("Not allowed!")
-        words.highlight(RED)
+        words.set_color(RED)
         words.to_corner(UP+LEFT, buff = 1)
         arrow = Vector(RIGHT, color = RED)
         arrow.next_to(words, RIGHT)
@@ -394,7 +372,7 @@ class SystemOfEquations(Scene):
             mob.square.scale_in_place(1.1)
             if hasattr(mob, "words"):
                 mob.words = TextMobject(mob.words)
-                mob.words.highlight(color)
+                mob.words.set_color(color)
                 mob.words.next_to(mob.square, UP)
         ys.square.add(xs.square, zs.square)
         zero_circles = VMobject(*[
@@ -404,9 +382,9 @@ class SystemOfEquations(Scene):
                 for i, j in (1, 3), (2, 6)
             ]
         ])
-        zero_circles.highlight(PINK)
+        zero_circles.set_color(PINK)
         zero_circles.words = TextMobject("Add zeros as needed")
-        zero_circles.words.highlight(zero_circles.get_color())
+        zero_circles.words.set_color(zero_circles.get_color())
         zero_circles.words.next_to(equations, UP)
 
         for mob in variables, constants, ys:
@@ -502,11 +480,11 @@ class SystemOfEquations(Scene):
             mob.words.shift_onto_screen()
             mob.symbol = TexMobject(mob.symbol)
             mob.brace.put_at_tip(mob.symbol)
-        x_array.words.submobject_gradient_highlight(
+        x_array.words.set_submobject_colors_by_gradient(
             X_COLOR, Y_COLOR, Z_COLOR
         )
-        x_array.symbol.highlight(PINK)
-        v_array.symbol.highlight(YELLOW)
+        x_array.symbol.set_color(PINK)
+        v_array.symbol.set_color(YELLOW)
         for mob in parts:
             self.play(
                 GrowFromCenter(mob.brace),
@@ -551,8 +529,8 @@ class LinearSystemTransformationScene(LinearTransformationScene):
         self.add_foreground_mobject(equation)
         self.equation = equation
         self.A, self.x, eq, self.v = equation.split()[1].split()
-        self.x.highlight(PINK)
-        self.v.highlight(YELLOW)
+        self.x.set_color(PINK)
+        self.v.set_color(YELLOW)
 
 class MentionThatItsATransformation(LinearSystemTransformationScene):
     CONFIG = {
@@ -619,7 +597,7 @@ class ThinkAboutWhatsHappening(Scene):
                 lambda m : m.shift(2*DOWN).scale(5),
                 everything
             ),
-            bubble.content.highlight, BLACK,
+            bubble.content.set_color, BLACK,
             run_time = 2
         )
 
@@ -632,11 +610,11 @@ class SystemOfTwoEquationsTwoUnknowns(Scene):
         system.to_edge(UP)
         for indices, color in ((1, 9), X_COLOR), ((4, 12), Y_COLOR):
             for i in indices:
-                system.split()[i].highlight(color)
+                system.split()[i].set_color(color)
         matrix = Matrix([[2, 2], [1, 3]])
         v = Matrix([-4, -1])
         x = Matrix(["x", "y"])
-        x.get_entries().submobject_gradient_highlight(X_COLOR, Y_COLOR)
+        x.get_entries().set_submobject_colors_by_gradient(X_COLOR, Y_COLOR)
         matrix_system = VMobject(
             matrix, x, TexMobject("="), v
         )
@@ -651,7 +629,7 @@ class SystemOfTwoEquationsTwoUnknowns(Scene):
         for mob in matrix, x, v:
             brace = Brace(mob)
             label = brace.get_text("$%s$"%mob.label)
-            label.highlight(mob.label_color)
+            label.set_color(mob.label_color)
             brace.add(label)
             mob.brace = brace
 
@@ -673,10 +651,10 @@ class ShowBijectivity(LinearTransformationScene):
             Vector([x, y])
             for x, y in it.product(*[
                 np.arange(-int(val)+0.5, int(val)+0.5)
-                for val in SPACE_WIDTH, SPACE_HEIGHT
+                for val in FRAME_X_RADIUS, FRAME_Y_RADIUS
             ])
         ])
-        vectors.submobject_gradient_highlight(BLUE_E, PINK)
+        vectors.set_submobject_colors_by_gradient(BLUE_E, PINK)
         dots = VMobject(*[
             Dot(v.get_end(), color = v.get_color())
             for v in vectors.split()
@@ -766,7 +744,7 @@ class StartWithNonzeroDetCase(TeacherStudentsScene):
             "Let's start with \\\\",
             "the", "$\\det(A) \\ne 0$", "case"
         )
-        words[2].highlight(TEAL)
+        words[2].set_color(TEAL)
         self.teacher_says(words)
         self.random_blink()
         self.play(
@@ -781,7 +759,7 @@ class DeclareNewTransformation(TeacherStudentsScene):
             "Playing a transformation in\\\\",
             "reverse gives a", "new transformation"
         )
-        words[-1].highlight(GREEN)
+        words[-1].set_color(GREEN)
         self.teacher_says(words)
         self.change_student_modes("pondering", "sassy")
         self.random_blink()
@@ -796,7 +774,7 @@ class PlayInReverse(FullRankExmapleDet):
         v_label = self.label_vector(v, "v", color = YELLOW)
         self.add(v.copy())
         self.apply_inverse_transpose(self.t_matrix)
-        self.play(v.highlight, PINK)
+        self.play(v.set_color, PINK)
         self.label_vector(v, "x", color = PINK)
         self.wait()
 
@@ -833,11 +811,11 @@ class DescribeInverse(LinearTransformationScene):
             label_mob.add_background_rectangle()
             m.add(brace, label_mob)
             text.add(m)
-            if text.get_width() > 2*SPACE_WIDTH-1:
-                text.scale_to_fit_width(2*SPACE_WIDTH-1)
+            if text.get_width() > FRAME_WIDTH-1:
+                text.scale_to_fit_width(FRAME_WIDTH-1)
             text.center().to_corner(UP+RIGHT)
-        matrix.highlight(PINK)
-        inv_matrix.highlight(YELLOW)
+        matrix.set_color(PINK)
+        inv_matrix.set_color(YELLOW)
 
         self.add_foreground_mobject(title)
         self.apply_transposed_matrix(self.t_matrix)
@@ -869,7 +847,7 @@ class MultiplyToIdentity(LinearTransformationScene):
         lhs.scale(1.5)
         A_inv, A, eq = lhs.split()
         identity = Matrix([[1, 0], [0, 1]])
-        identity.highlight_columns(X_COLOR, Y_COLOR)
+        identity.set_color_columns(X_COLOR, Y_COLOR)
         identity.next_to(eq, RIGHT)
         VMobject(lhs, identity).center().to_corner(UP+RIGHT)
         for mob in A, A_inv, eq:
@@ -931,7 +909,7 @@ class ThereAreComputationMethods(TeacherStudentsScene):
 class TwoDInverseFormula(Scene):
     def construct(self):
         title = TextMobject("If you're curious...")
-        title.highlight(YELLOW)
+        title.set_color(YELLOW)
         title.to_edge(UP)
         morty = Mortimer().to_corner(DOWN+RIGHT)
         self.add(title, morty)
@@ -954,7 +932,7 @@ class SymbolicInversion(Scene):
         words = TextMobject("Once you have this:")
         words.to_edge(UP, buff = 2)
         inv = TexMobject("A^{-1}")
-        inv.highlight(GREEN)
+        inv.set_color(GREEN)
         inv.next_to(words.split()[-1], RIGHT, aligned_edge = DOWN)
         inv2 = inv.copy()
 
@@ -963,8 +941,8 @@ class SymbolicInversion(Scene):
         end = TexMobject(vec("x"), "=", "A^{-1}", vec("v"))
 
         A, x, eq, v = start.split()
-        x.highlight(PINK)
-        v.highlight(YELLOW)
+        x.set_color(PINK)
+        v.set_color(YELLOW)
         interim_mobs = [inv, A, x, eq, inv2, v]
         for i, mob in enumerate(interim_mobs):
             mob.interim = mob.copy().move_to(interim.split()[i])
@@ -983,15 +961,15 @@ class SymbolicInversion(Scene):
         product.words = product.brace.get_text(
             "The ``do nothing'' matrix"
         )
-        product.words.highlight(BLUE)
+        product.words.set_color(BLUE)
         self.play(
             GrowFromCenter(product.brace),
             Write(product.words, run_time = 1),
-            product.highlight, BLUE
+            product.set_color, BLUE
         )
         self.wait()
         self.play(*[
-            ApplyMethod(m.highlight, BLACK)
+            ApplyMethod(m.set_color, BLACK)
             for m in product, product.brace, product.words
         ])
         self.wait()
@@ -1018,9 +996,9 @@ class PlayInReverseWithSolution(PlayInReverse):
         self.add_foreground_mobject(equation)
         self.equation = equation
         self.x, eq, self.inv, self.v = equation.split()[1].split()
-        self.x.highlight(PINK)
-        self.v.highlight(YELLOW)
-        self.inv.highlight(GREEN)
+        self.x.set_color(PINK)
+        self.v.set_color(YELLOW)
+        self.inv.set_color(GREEN)
 
 class OneUniqueSolution(Scene):
     def construct(self):
@@ -1030,13 +1008,13 @@ class OneUniqueSolution(Scene):
                 bx + dy &= f
             \\end{align*}
         """)
-        VMobject(*np.array(system.split())[[1, 8]]).highlight(X_COLOR)
-        VMobject(*np.array(system.split())[[4, 11]]).highlight(Y_COLOR)
+        VMobject(*np.array(system.split())[[1, 8]]).set_color(X_COLOR)
+        VMobject(*np.array(system.split())[[4, 11]]).set_color(Y_COLOR)
         brace = Brace(system, UP)
-        brace.highlight(YELLOW)
+        brace.set_color(YELLOW)
         words = brace.get_text("One unique solution \\dots", "probably")
-        words.highlight(YELLOW)
-        words.split()[1].highlight(GREEN)
+        words.set_color(YELLOW)
+        words.split()[1].set_color(GREEN)
 
         self.add(system)
         self.wait()
@@ -1073,7 +1051,7 @@ class ThreeDInverseRule(Scene):
         form = TexMobject("A^{-1} A = ")
         form.scale(2)
         matrix = Matrix(np.identity(3, 'int'))
-        matrix.highlight_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
         matrix.next_to(form, RIGHT)
         self.add(form)
         self.play(Write(matrix))
@@ -1104,7 +1082,7 @@ class InvertNonInvertable(LinearTransformationScene):
     def construct(self):
         no_func = TextMobject("No function does this")
         no_func.shift(2*UP)
-        no_func.highlight(RED)
+        no_func.set_color(RED)
         no_func.add_background_rectangle()
         grid = VMobject(self.plane, self.i_hat, self.j_hat)
         grid.save_state()
@@ -1124,7 +1102,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
         input_vectors = VMobject(*[
             Vector([x+2, x]) for x in np.arange(-4, 4.5, 0.5)
         ])
-        input_vectors.submobject_gradient_highlight(PINK, YELLOW)
+        input_vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         output_vector = Vector([4, 2], color = YELLOW)
 
         grid = VMobject(self.plane, self.i_hat, self.j_hat)
@@ -1135,7 +1113,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
         single_input = TextMobject("Single vector")
         single_input.add_background_rectangle()
         single_input.next_to(output_vector.get_end(), UP)
-        single_input.highlight(YELLOW) 
+        single_input.set_color(YELLOW) 
         self.play(Write(single_input))
         self.wait()
         self.remove(single_input, output_vector)
@@ -1151,7 +1129,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
             "Must map to \\\\",
             "multiple vectors"
         )
-        multiple_outputs.split()[1].submobject_gradient_highlight(YELLOW, PINK)
+        multiple_outputs.split()[1].set_submobject_colors_by_gradient(YELLOW, PINK)
         multiple_outputs.next_to(ORIGIN, DOWN).to_edge(RIGHT)
         multiple_outputs.add_background_rectangle()
         self.play(Write(multiple_outputs, run_time = 2))
@@ -1163,7 +1141,7 @@ class SolutionsCanStillExist(TeacherStudentsScene):
             Solutions can still 
             exist when""",  "$\\det(A) = 0$"
         )
-        words[1].highlight(TEAL)
+        words[1].set_color(TEAL)
         self.teacher_says(words)
         self.random_blink(2)
 
@@ -1185,7 +1163,7 @@ class ShowVInAndOutOfColumnSpace(LinearSystemTransformationScene):
         for v in v_in, v_out:
             self.add_vector(v, animate = True)
             words = TextMobject(v.words)
-            words.highlight(v.words_color)
+            words.set_color(v.words_color)
             words.next_to(v.get_end(), DOWN+RIGHT)
             words.add_background_rectangle()
             self.play(Write(words), run_time = 2)
@@ -1205,20 +1183,20 @@ class PrepareForRank(Scene):
             "New terminology: ",
             "rank"
         )
-        rank.highlight(TEAL)
+        rank.set_color(TEAL)
         self.play(Write(words))
         self.wait()
 
 class DefineRank(Scene):
     def construct(self):
         rank = TextMobject("``Rank''")
-        rank.highlight(TEAL)
+        rank.set_color(TEAL)
         arrow = DoubleArrow(LEFT, RIGHT)
         dims = TextMobject(
             "Number of\\\\", "dimensions \\\\", 
             "in the output"
         )
-        dims[1].highlight(rank.get_color())
+        dims[1].set_color(rank.get_color())
 
         rank.next_to(arrow, LEFT)
         dims.next_to(arrow, RIGHT)
@@ -1237,11 +1215,11 @@ class DefineColumnSpace(Scene):
             "outputs",
             "$A\\vec{\\textbf{v}}$",
         )
-        left_words[1].highlight(TEAL)
-        VMobject(*left_words[-1][1:]).highlight(YELLOW)
+        left_words[1].set_color(TEAL)
+        VMobject(*left_words[-1][1:]).set_color(YELLOW)
         arrow = DoubleArrow(LEFT, RIGHT).to_edge(UP)
         right_words = TextMobject("``Column space''", "of $A$")
-        right_words[0].highlight(left_words[1].get_color())
+        right_words[0].set_color(left_words[1].get_color())
 
         everyone = VMobject(left_words, arrow, right_words)
         everyone.arrange_submobjects(RIGHT)
@@ -1263,9 +1241,9 @@ class ColumnsRepresentBasisVectors(Scene):
             TextMobject("Where $\\hat{\\%smath}$ lands"%char)
             for char in "i", "j"
         ]
-        i_hat_words.highlight(X_COLOR)
+        i_hat_words.set_color(X_COLOR)
         i_hat_words.next_to(ORIGIN, LEFT).to_edge(UP)
-        j_hat_words.highlight(Y_COLOR)
+        j_hat_words.set_color(Y_COLOR)
         j_hat_words.next_to(ORIGIN, RIGHT).to_edge(UP)
 
         self.add(matrix)
@@ -1281,7 +1259,7 @@ class ColumnsRepresentBasisVectors(Scene):
                 Write(words, run_time = 1),
                 ShowCreation(arrow),
                 *[
-                    ApplyMethod(m.highlight, words.get_color())
+                    ApplyMethod(m.set_color, words.get_color())
                     for m in matrix.get_mob_matrix()[:,i]
                 ]
             )
@@ -1302,7 +1280,7 @@ class TowDColumnsDontSpan(LinearTransformationScene):
     }
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
-        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR)
         matrix.add_to_back(BackgroundRectangle(matrix))
         self.add_foreground_mobject(matrix)
         brace = Brace(matrix)
@@ -1313,8 +1291,8 @@ class TowDColumnsDontSpan(LinearTransformationScene):
         )
         words.arrange_submobjects(DOWN, buff = 0.1)
         words.next_to(brace, DOWN)
-        words[0][0].highlight(PINK)
-        words[2].highlight(TEAL)
+        words[0][0].set_color(PINK)
+        words[2].set_color(TEAL)
         words[0].add_background_rectangle()
         words[2].add_background_rectangle()
         VMobject(matrix, brace, words).to_corner(UP+LEFT)
@@ -1360,14 +1338,14 @@ class ThreeDColumnsDontSpan(Scene):
             [0, 1, 1],
             [-1, -2, -1],
         ]).T)
-        matrix.highlight_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
         brace = Brace(matrix)
         words = brace.get_text(
             "Columns don't",
             "span \\\\",
             "full output space"
         )
-        words[1].highlight(PINK)
+        words[1].set_color(PINK)
 
         self.add(matrix)
         self.play(
@@ -1383,7 +1361,7 @@ class NameColumnSpace(Scene):
             [0, 1, 1],
             [-1, -2, -1],
         ]).T)
-        matrix.highlight_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
         matrix.to_corner(UP+LEFT)
         cols = list(matrix.copy().get_mob_matrix().T)
         col_arrays = map(Matrix, cols)
@@ -1412,7 +1390,7 @@ class NameColumnSpace(Scene):
         arrow = DoubleArrow(LEFT, RIGHT)
         column_space = TextMobject("``Column space''")
         for mob in column_space, arrow:
-            mob.highlight(TEAL)
+            mob.set_color(TEAL)
         text = VMobject(span_text, arrow, column_space)
         text.arrange_submobjects(RIGHT)
         text.next_to(matrix, DOWN, buff = 1, aligned_edge = LEFT)
@@ -1446,10 +1424,10 @@ class NameColumnSpace(Scene):
             "must be in \\\\ the",
             "column space."
         )
-        VMobject(*words[1][1:3]).highlight(PINK)
-        VMobject(*words[1][4:6]).highlight(YELLOW)
-        words[2].highlight(YELLOW)
-        words[4].highlight(TEAL)
+        VMobject(*words[1][1:3]).set_color(PINK)
+        VMobject(*words[1][4:6]).set_color(YELLOW)
+        words[2].set_color(YELLOW)
+        words[4].set_color(TEAL)
         words.to_corner(UP+LEFT)
 
         self.play(Write(words))
@@ -1461,7 +1439,7 @@ class NameColumnSpace(Scene):
             "Number of dimensions \\\\ is called",
             "``rank''"
         )
-        rank_words[1].highlight(MAROON)
+        rank_words[1].set_color(MAROON)
         self.play(
             GrowFromCenter(brace),
             Write(rank_words)
@@ -1476,7 +1454,7 @@ class NameColumnSpace(Scene):
             col = Matrix(arr)
             col.replace(two_d_span[index])
             two_d_span.submobjects[index] = col
-            col.get_entries().highlight(c)
+            col.get_entries().set_color(c)
         for index in 5, 6:
             two_d_span[index].scale(0)
         two_d_span.arrange_submobjects(RIGHT, buff = 0.2)
@@ -1521,7 +1499,7 @@ class NameColumnSpace(Scene):
         targets = map(TexMobject, map(str, np.array(new_numbers).flatten()))
         for start, target in zip(starters, targets):
             target.move_to(start)
-            target.highlight(start.get_color())
+            target.set_color(start.get_color())
         self.play(*[
             Transform(*pair, path_arc = np.pi)
             for pair in zip(starters, targets)
@@ -1530,8 +1508,8 @@ class NameColumnSpace(Scene):
 class IHatShear(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 0
         },
     }
@@ -1560,7 +1538,7 @@ class RankNumber(Scene):
     }
     def construct(self):
         words = TextMobject("Rank", "%d"%self.number)
-        words[1].highlight(self.color)
+        words[1].set_color(self.color)
         self.add(words)
 
 class RankNumber2(RankNumber):
@@ -1584,17 +1562,17 @@ class RankNumber0(RankNumber):
 class NameFullRank(Scene):
     def construct(self):
         matrix = Matrix([[2, 5, 1], [3, 1, 4], [-4, 0, 0]])
-        matrix.highlight_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
         matrix.to_edge(UP)
         brace = Brace(matrix)
         top_words = brace.get_text(
             "When", "rank", "$=$", "number of columns",
         )
-        top_words[1].highlight(MAROON)
+        top_words[1].set_color(MAROON)
         low_words = TextMobject(
             "matrix is", "``full rank''"
         )
-        low_words[1].highlight(MAROON)
+        low_words[1].set_color(MAROON)
         low_words.next_to(top_words, DOWN)
         VMobject(matrix, brace, top_words, low_words).to_corner(UP+LEFT)
         self.add(matrix)
@@ -1608,9 +1586,9 @@ class NameFullRank(Scene):
 
 class OriginIsAlwaysInColumnSpace(LinearTransformationScene):
     def construct(self):
-        vector = Matrix([0, 0]).highlight(YELLOW)
+        vector = Matrix([0, 0]).set_color(YELLOW)
         words = TextMobject("is always in the", "column space")
-        words[1].highlight(TEAL)
+        words[1].set_color(TEAL)
         words.next_to(vector, RIGHT)
         vector.add_to_back(BackgroundRectangle(vector))
         words.add_background_rectangle()
@@ -1631,8 +1609,8 @@ class OriginIsAlwaysInColumnSpace(LinearTransformationScene):
 class FullRankCase(LinearTransformationScene):
     CONFIG = {
         "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "secondary_line_ratio" : 0
         },
     }
@@ -1641,7 +1619,7 @@ class FullRankCase(LinearTransformationScene):
             [[2, 1], [-3, 2]],
             [[1./2, 1], [1./3, -1./2]]
         ]
-        vector = Matrix([0, 0]).highlight(YELLOW)
+        vector = Matrix([0, 0]).set_color(YELLOW)
         title = VMobject(
             TextMobject("Only"), vector,
             TextMobject("lands on"), vector.copy()
@@ -1674,13 +1652,13 @@ class NameNullSpace(LinearTransformationScene):
         vectors = self.get_vectors()
         dot = Dot(ORIGIN, color = YELLOW)
         line = Line(vectors[0].get_end(), vectors[-1].get_end())
-        line.highlight(YELLOW)
+        line.set_color(YELLOW)
         null_space_label = TextMobject("``Null space''")
         kernel_label = TextMobject("``Kernel''")
         null_space_label.move_to(vectors[13].get_end(), aligned_edge = UP+LEFT)
         kernel_label.next_to(null_space_label, DOWN)
         for mob in null_space_label, kernel_label:
-            mob.highlight(YELLOW)
+            mob.set_color(YELLOW)
             mob.add_background_rectangle()
 
         self.play(ShowCreation(vectors, run_time = 3))
@@ -1725,7 +1703,7 @@ class NameNullSpace(LinearTransformationScene):
             Vector(a*vect + offset)
             for a in np.linspace(-5, 5, 18)
         ])
-        vectors.submobject_gradient_highlight(PINK, YELLOW)
+        vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         return vectors
 
 class ThreeDNullSpaceIsLine(Scene):
@@ -1739,10 +1717,10 @@ class NullSpaceSolveForVEqualsZero(NameNullSpace):
         vec = lambda s : "\\vec{\\textbf{%s}}"%s
         equation = TexMobject("A", vec("x"), "=", vec("v"))
         A, x, eq, v = equation
-        x.highlight(PINK)
-        v.highlight(YELLOW)
+        x.set_color(PINK)
+        v.set_color(YELLOW)
         zero_vector = Matrix([0, 0])
-        zero_vector.highlight(YELLOW)
+        zero_vector.set_color(YELLOW)
         zero_vector.scale(0.7)
         zero_vector.move_to(v, aligned_edge = LEFT)
         VMobject(equation, zero_vector).next_to(ORIGIN, LEFT).to_edge(UP)
@@ -1778,7 +1756,7 @@ class OffsetNullSpace(NameNullSpace):
             All vectors still land 
             on the same spot
         """)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         words.add_background_rectangle()
         words.next_to(circle)
         x_copies = VMobject(*[
@@ -1823,8 +1801,8 @@ class ShowAdditivityProperty(LinearTransformationScene):
     def construct(self):
         v = Vector([2, -1])
         w = Vector([1, 2])
-        v.highlight(YELLOW)
-        w.highlight(MAROON_B)
+        v.set_color(YELLOW)
+        w.set_color(MAROON_B)
         sum_vect = Vector(v.get_end()+w.get_end(), color = PINK)
         form = TexMobject(
             "A(",
@@ -1838,8 +1816,8 @@ class ShowAdditivityProperty(LinearTransformationScene):
             "\\vec{\\textbf{w}}",
         )
         form.to_corner(UP+RIGHT)
-        VMobject(form[1], form[6]).highlight(YELLOW)
-        VMobject(form[3], form[8]).highlight(MAROON_B)
+        VMobject(form[1], form[6]).set_color(YELLOW)
+        VMobject(form[3], form[8]).set_color(MAROON_B)
         initial_sum = VMobject(*form[1:4])
         transformer = VMobject(form[0], form[4])
         final_sum = VMobject(*form[5:])
@@ -1880,7 +1858,7 @@ class AddJustOneNullSpaceVector(NameNullSpace):
         )
         for v in x, null_vector:
             v.label = TextMobject(v.label)
-            v.label.highlight(v.get_color())
+            v.label.set_color(v.get_color())
             v.label.next_to(v.get_end(), UP)
             v.label.add_background_rectangle()
         dot = Dot(ORIGIN, color = null_vector.get_color())
@@ -1897,8 +1875,8 @@ class AddJustOneNullSpaceVector(NameNullSpace):
             "\\vec{\\textbf{n}}",
         )
         form.to_corner(UP+RIGHT)
-        VMobject(form[1], form[6]).highlight(x.get_color())
-        VMobject(form[3], form[8]).highlight(null_vector.get_color())
+        VMobject(form[1], form[6]).set_color(x.get_color())
+        VMobject(form[3], form[8]).set_color(null_vector.get_color())
         initial_sum = VMobject(*form[1:4])
         transformer = VMobject(form[0], form[4])
         final_sum = VMobject(*form[5:])
@@ -1948,9 +1926,9 @@ class AddJustOneNullSpaceVector(NameNullSpace):
             "$\\vec{\\textbf{x}} + \\vec{\\textbf{n}}$\\\\",
             "land on the same spot"
         )
-        words[0].highlight(x.get_color())
-        VMobject(*words[2][:2]).highlight(x.get_color())
-        VMobject(*words[2][3:]).highlight(null_vector.get_color())
+        words[0].set_color(x.get_color())
+        VMobject(*words[2][:2]).set_color(x.get_color())
+        VMobject(*words[2][3:]).set_color(null_vector.get_color())
         words.next_to(brace, DOWN)
         words.to_edge(RIGHT)
         self.play(Write(words))
@@ -1961,12 +1939,12 @@ class NullSpaceOffsetRule(Scene):
         vec = lambda s : "\\vec{\\textbf{%s}}"%s
         equation = TexMobject("A", vec("x"), "=", vec("v"))
         A, x, equals, v = equation
-        x.highlight(PINK)
-        v.highlight(YELLOW)
+        x.set_color(PINK)
+        v.set_color(YELLOW)
         A_text = TextMobject(
             "When $A$ is not", "full rank"
         )
-        A_text[1].highlight(MAROON_C)
+        A_text[1].set_color(MAROON_C)
         A_text.next_to(A, UP+LEFT, buff = 1)
         A_text.shift_onto_screen()
         A_arrow = Arrow(A_text.get_bottom(), A, color = WHITE)
@@ -1974,8 +1952,8 @@ class NullSpaceOffsetRule(Scene):
             "If", "$%s$"%vec("v"), "is in the", 
             "column space", "of $A$"
         )
-        v_text[1].highlight(YELLOW)
-        v_text[3].highlight(TEAL)
+        v_text[1].set_color(YELLOW)
+        v_text[3].set_color(TEAL)
         v_text.next_to(v, DOWN+RIGHT, buff = 1)
         v_text.shift_onto_screen()
         v_arrow = Arrow(v_text.get_top(), v, color = YELLOW)
@@ -2024,7 +2002,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Nonsquare matrices
         """)
-        title.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        title.scale_to_fit_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)

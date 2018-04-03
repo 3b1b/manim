@@ -1,10 +1,8 @@
 *.pyc
 .DS_Store
 homeless.py
-ka_playgrounds/
 playground.py
-special_animations.py
-prettiness_hall_of_fame.py
+random_scenes/
 files/
 ben_playground.py
 ben_cairo_test.py
@@ -12,6 +10,7 @@ ben_cairo_test.py
 .flooignore
 *.xml
 *.iml
-
+manim.sublime-project
+manim.sublime-workspace
 
 primes.py

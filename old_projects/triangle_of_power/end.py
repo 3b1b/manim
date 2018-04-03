@@ -1,22 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from scene import Scene
-
-from mobject.svg_mobject import *
-from mobject.vectorized_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 from triangle_of_power.triangle import TOP, OPERATION_COLORS
 
@@ -35,7 +17,7 @@ class DontLearnFromSymbols(Scene):
         )
         equation.arrange_submobjects()
         q_marks = TextMobject("???")
-        q_marks.highlight(YELLOW)
+        q_marks.set_color(YELLOW)
         q_marks.next_to(randy, UP)
 
         self.add(randy)
@@ -75,19 +57,19 @@ class AsymmetriesInTheMath(Scene):
     def construct(self):
         assyms_of_top = VMobject(
             TextMobject("Asymmetries of "),
-            TOP("a", "b", "c", radius = 0.75).highlight(BLUE)
+            TOP("a", "b", "c", radius = 0.75).set_color(BLUE)
         ).arrange_submobjects()
         assyms_of_top.to_edge(UP)
         assyms_of_math = TextMobject("""
             Asymmetries of 
             $\\underbrace{a \\cdot a \\cdots a}_{\\text{$b$ times}} = c$
         """)
-        VMobject(*assyms_of_math.split()[13:]).highlight(YELLOW)
+        VMobject(*assyms_of_math.split()[13:]).set_color(YELLOW)
         assyms_of_math.next_to(assyms_of_top, DOWN, buff = 2)
         rad = TexMobject("\\sqrt{\\quad}").to_edge(LEFT).shift(UP)
-        rad.highlight(RED)
+        rad.set_color(RED)
         log = TexMobject("\\log").next_to(rad, DOWN)
-        log.highlight(RED)
+        log.set_color(RED)
 
         self.play(FadeIn(assyms_of_top))
         self.wait()
@@ -105,10 +87,10 @@ class AddedVsOplussed(Scene):
         right_dot   = top.put_in_vertex(2, Dot())
         plus        = top.put_in_vertex(1, TexMobject("+"))
         oplus       = top.put_in_vertex(1, TexMobject("\\oplus"))
-        left_times.highlight(YELLOW)        
-        right_times.highlight(YELLOW)        
-        plus.highlight(GREEN)        
-        oplus.highlight(BLUE)
+        left_times.set_color(YELLOW)        
+        right_times.set_color(YELLOW)        
+        plus.set_color(GREEN)        
+        oplus.set_color(BLUE)
 
         self.add(top, left_dot, plus, right_times)
         self.wait()
@@ -130,10 +112,10 @@ class ReciprocalTop(Scene):
         end_two = top.put_on_vertex(0, 2)
         x = top.put_on_vertex(1, "x")
         one_over_x = top.put_on_vertex(1, "\\dfrac{1}{x}")
-        x.highlight(GREEN)
-        one_over_x.highlight(BLUE)
-        start_two.highlight(YELLOW)
-        end_two.highlight(YELLOW)
+        x.set_color(GREEN)
+        one_over_x.set_color(BLUE)
+        start_two.set_color(YELLOW)
+        end_two.set_color(YELLOW)
 
         self.add(top, start_two, x)
         self.wait()
@@ -194,12 +176,12 @@ class ChangeWeCanBelieveIn(Scene):
 class TriangleOfPowerIsBetter(Scene):
     def construct(self):
         top = TOP("x", "y", "z", radius = 0.75)
-        top.highlight(BLUE)
+        top.set_color(BLUE)
         alts = VMobject(*map(TexMobject, [
             "x^y", "\\log_x(z)", "\\sqrt[y]{z}"
         ]))
         for mob, color in zip(alts.split(), OPERATION_COLORS):
-            mob.highlight(color)
+            mob.set_color(color)
         alts.arrange_submobjects(DOWN)
         greater_than = TexMobject(">")
         top.next_to(greater_than, LEFT)

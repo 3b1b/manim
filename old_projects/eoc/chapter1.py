@@ -1,34 +1,5 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.graph_scene import GraphScene
+from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter2 import Car, MoveCar
-from topics.common_scenes import OpeningQuote, PatreonThanks
 
 class CircleScene(PiCreatureScene):
     CONFIG = {
@@ -115,7 +86,7 @@ class CircleScene(PiCreatureScene):
             nudge_label = TexMobject("%.01f"%self.dR)
         else:
             nudge_label = TexMobject("dr")
-        nudge_label.highlight(self.dR_color)
+        nudge_label.set_color(self.dR_color)
         nudge_label.scale(0.75)
         nudge_label.next_to(nudge_arrow.get_start(), DOWN)
 
@@ -246,11 +217,11 @@ class Introduction(TeacherStudentsScene):
         series = VideoSeries()
         series.to_edge(UP)
         this_video = series[0]
-        this_video.highlight(YELLOW)
+        this_video.set_color(YELLOW)
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(2*SPACE_HEIGHT)
+        this_video.scale_to_fit_height(FRAME_HEIGHT)
         self.this_video = this_video
 
 
@@ -258,7 +229,7 @@ class Introduction(TeacherStudentsScene):
             "Welcome to \\\\",
             "Essence of calculus"
         )
-        words.highlight_by_tex("Essence of calculus", YELLOW)
+        words.set_color_by_tex("Essence of calculus", YELLOW)
 
         self.teacher.change_mode("happy")
         self.play(
@@ -335,7 +306,7 @@ class Introduction(TeacherStudentsScene):
 
         for rule in rules:
             for tex, color in tex_to_color:
-                rule.highlight_by_tex(tex, color, substring = False)
+                rule.set_color_by_tex(tex, color, substring = False)
             rule.next_to(self.teacher.get_corner(UP+LEFT), UP)
             rule.shift_onto_screen()
 
@@ -386,8 +357,8 @@ class Introduction(TeacherStudentsScene):
         arrow = Arrow(invent_calculus, student)
 
         fader = Rectangle(
-            width = 2*SPACE_WIDTH,
-            height = 2*SPACE_HEIGHT,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.5,
@@ -410,11 +381,11 @@ class Introduction(TeacherStudentsScene):
 class PreviewFrame(Scene):
     def construct(self):
         frame = Rectangle(height = 9, width = 16, color = WHITE)
-        frame.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        frame.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
 
         colors = iter(color_gradient([BLUE, YELLOW], 3))
         titles = [
-            TextMobject("Chapter %d:"%d, s).to_edge(UP).highlight(colors.next())
+            TextMobject("Chapter %d:"%d, s).to_edge(UP).set_color(colors.next())
             for d, s in [
                 (3, "Derivative formulas through geometry"),
                 (4, "Chain rule, product rule, etc."),
@@ -474,7 +445,7 @@ class ProductRuleDiagram(Scene):
                 for corner in corner_pair
             ])
             d_rect.line = d_rect.copy().replace(line, stretch = True)
-            d_rect.line.highlight(d_rect.get_color())
+            d_rect.line.set_color(d_rect.get_color())
 
         f_brace = Brace(rect, UP)
         g_brace = Brace(rect, LEFT)
@@ -486,8 +457,8 @@ class ProductRuleDiagram(Scene):
         df_label = df_brace.get_text("$df$")
         dg_label = dg_brace.get_text("$dg$")
 
-        VGroup(f_label, df_label).highlight(GREEN)
-        VGroup(g_label, dg_label).highlight(RED)
+        VGroup(f_label, df_label).set_color(GREEN)
+        VGroup(g_label, dg_label).set_color(RED)
 
         f_label.generate_target()
         g_label.generate_target()
@@ -776,7 +747,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         r_label = TexMobject("r")
         r_label.next_to(radius.get_center(), UP+LEFT, SMALL_BUFF)
         area_q = TextMobject("Area", "?", arg_separator = "")
-        area_q.highlight(YELLOW)
+        area_q.set_color(YELLOW)
 
 
         self.play(
@@ -962,7 +933,7 @@ class MoveForwardWithApproximation(TeacherStudentsScene):
             "\\\\ for smaller ",
             "$dr$"
         )
-        words.highlight_by_tex("dr", BLUE)
+        words.set_color_by_tex("dr", BLUE)
         self.teacher_says(words, target_mode = "shruggie")
         self.wait(3)
 
@@ -1016,7 +987,7 @@ class GraphRectangles(CircleScene, GraphScene):
             "\\text{Area}", "\\approx", 
             "2\\pi", "r", "\\,dr"
         )
-        area_label.highlight_by_tex("r", YELLOW, substring = False)
+        area_label.set_color_by_tex("r", YELLOW, substring = False)
         area_label.next_to(ring_sum, RIGHT, aligned_edge = UP)
         area = area_label.get_part_by_tex("Area")
         arrow_start = area.get_corner(DOWN+LEFT)
@@ -1047,7 +1018,7 @@ class GraphRectangles(CircleScene, GraphScene):
 
     def draw_r_values(self):
         values_of_r = TextMobject("Values of ", "$r$")
-        values_of_r.highlight_by_tex("r", YELLOW)
+        values_of_r.set_color_by_tex("r", YELLOW)
         values_of_r.next_to(
             self.x_axis, UP, 
             buff = 2*LARGE_BUFF,
@@ -1196,7 +1167,7 @@ class GraphRectangles(CircleScene, GraphScene):
 
         side_brace = Brace(highlighted_ring, RIGHT)
         height_label = side_brace.get_text("2\\pi", "r")
-        height_label.highlight_by_tex("r", YELLOW)
+        height_label.set_color_by_tex("r", YELLOW)
 
         self.play(
             transformed_rings.set_fill, None, 0.2,
@@ -1439,7 +1410,7 @@ class GraphRectangles(CircleScene, GraphScene):
 
         arranged_group.add(last_ring.target)
         arranged_group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
-        arranged_group.scale_to_fit_height(2*SPACE_HEIGHT-1)
+        arranged_group.scale_to_fit_height(FRAME_HEIGHT-1)
         arranged_group.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
         for mob in tex_mobs:
             mob.scale_in_place(0.7)
@@ -1477,11 +1448,11 @@ class GraphRectangles(CircleScene, GraphScene):
             "\\\\ &=", "\\pi ", "%s"%R, "^2"
             
         )
-        formula.highlight_by_tex("b", GREEN, substring = False)
-        formula.highlight_by_tex("h", RED, substring = False)
-        formula.highlight_by_tex("%s"%R, GREEN)
-        formula.highlight_by_tex("(2\\pi ", RED)
-        formula.highlight_by_tex("(2\\pi ", RED)
+        formula.set_color_by_tex("b", GREEN, substring = False)
+        formula.set_color_by_tex("h", RED, substring = False)
+        formula.set_color_by_tex("%s"%R, GREEN)
+        formula.set_color_by_tex("(2\\pi ", RED)
+        formula.set_color_by_tex("(2\\pi ", RED)
         formula.scale(0.8)
 
         formula.top_line = VGroup(*formula[:4])
@@ -1492,7 +1463,7 @@ class GraphRectangles(CircleScene, GraphScene):
 class ThinkLikeAMathematician(TeacherStudentsScene):
     def construct(self):
         pi_R_squraed = TexMobject("\\pi", "R", "^2")
-        pi_R_squraed.highlight_by_tex("R", YELLOW)
+        pi_R_squraed.set_color_by_tex("R", YELLOW)
         pi_R_squraed.move_to(self.get_students(), UP)
         pi_R_squraed.set_fill(opacity = 0)
 
@@ -1519,7 +1490,7 @@ class TwoThingsToNotice(TeacherStudentsScene):
             "Two things to \\\\ note about",
             "$dr$",
         )
-        words.highlight_by_tex("dr", GREEN)
+        words.set_color_by_tex("dr", GREEN)
         self.teacher_says(words, run_time = 1)
         self.wait(3)
 
@@ -1583,15 +1554,15 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
                 "\\approx", "2\\pi", 
                 "(%s)"%str(radius), "(%s)"%str(self.dR)
             )
-            label[2].highlight(YELLOW)
-            label[3].highlight(GREEN)
+            label[2].set_color(YELLOW)
+            label[3].set_color(GREEN)
             label.scale(0.75)
             label.next_to(ring, RIGHT)
             approximations.add(label)
         approximations[-1].shift(UP+0.5*LEFT)
         area_label = TexMobject("2\\pi", "r", "\\, dr")
-        area_label.highlight_by_tex("r", YELLOW)
-        area_label.highlight_by_tex("dr", GREEN)
+        area_label.set_color_by_tex("r", YELLOW)
+        area_label.set_color_by_tex("dr", GREEN)
         area_label.next_to(approximations, RIGHT, buff = 2*LARGE_BUFF)
         arrows = VGroup(*[
             Arrow(
@@ -1739,7 +1710,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
         words = TextMobject("Area under \\\\ a graph")
         group = VGroup(TexMobject("\\Downarrow"), words)
         group.arrange_submobjects(DOWN)
-        group.highlight(YELLOW)
+        group.set_color(YELLOW)
         group.scale(0.8)
         group.next_to(self.integral_condition, DOWN)
 
@@ -1817,7 +1788,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
         brace = Brace(brace_ticks, UP)
         v_dt = TexMobject("v(t)", "dt")
         v_dt.next_to(brace, UP, SMALL_BUFF)
-        v_dt.highlight(YELLOW)
+        v_dt.set_color(YELLOW)
         v_dt_brace_group = VGroup(brace, v_dt)
 
         self.play(
@@ -2064,7 +2035,7 @@ class AreaUnderParabola(GraphScene):
 
         v_lines = VGroup(*[
             DashedLine(
-                2*SPACE_HEIGHT*UP, ORIGIN,
+                FRAME_HEIGHT*UP, ORIGIN,
                 color = RED
             ).move_to(self.coords_to_point(x, 0), DOWN)
             for x in 0, self.default_right_x
@@ -2132,7 +2103,7 @@ class AreaUnderParabola(GraphScene):
     def name_integral(self):
         f_tex = "$%s$"%self.graph_label_tex
         words = TextMobject("``Integral'' of ", f_tex)
-        words.highlight_by_tex(f_tex, self.graph_label.get_color())
+        words.set_color_by_tex(f_tex, self.graph_label.get_color())
         brace = Brace(self.A_func, UP)
         words.next_to(brace, UP)
 
@@ -2210,7 +2181,7 @@ class PlayWithThisIdea(TeacherStudentsScene):
         self.change_student_modes(*["happy"]*3)
         self.wait()
         equation = TexMobject("A(x)", "\\leftrightarrow", "x^2")
-        equation.highlight_by_tex("x^2", BLUE)
+        equation.set_color_by_tex("x^2", BLUE)
         self.teacher_says(equation, target_mode = "sassy")
         self.change_student_modes(*["thinking"]*3)
         self.wait(2)
@@ -2275,7 +2246,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
         ).move_to(self.right_v_lines, DOWN)
         dA_label = TexMobject("d", "A")
         dA_label.next_to(dA_rect, RIGHT, MED_LARGE_BUFF, UP)
-        dA_label.highlight(GREEN)
+        dA_label.set_color(GREEN)
         dA_arrow = Arrow(
             dA_label.get_bottom()+MED_SMALL_BUFF*DOWN, 
             dA_rect.get_center(),
@@ -2287,8 +2258,8 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
             "d", "ifference in ", "A", "rea",
             arg_separator = ""
         )
-        difference_in_area.highlight_by_tex("d", GREEN)
-        difference_in_area.highlight_by_tex("A", GREEN)
+        difference_in_area.set_color_by_tex("d", GREEN)
+        difference_in_area.set_color_by_tex("A", GREEN)
         difference_in_area.scale(0.7)
         difference_in_area.next_to(dA_label, UP, MED_SMALL_BUFF, LEFT)
 
@@ -2314,7 +2285,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
         self.play(FadeIn(dA_rect), Animation(dA_arrow))
         self.play(GrowFromCenter(side_brace))
         self.play(
-            graph_label_copy.highlight, WHITE,
+            graph_label_copy.set_color, WHITE,
             graph_label_copy.next_to, side_brace, LEFT, SMALL_BUFF
         )
         self.wait()
@@ -2344,7 +2315,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
         deriv_equation.move_to(equation, UP+LEFT)
 
         for tex_mob in equation, deriv_equation:
-            tex_mob.highlight_by_tex(
+            tex_mob.set_color_by_tex(
                 "dA", self.dA_label.get_color()
             )
 
@@ -2439,7 +2410,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
                 tip_length = 0.15
             )
             line_copy = line.copy()
-            line_copy.highlight(YELLOW)
+            line_copy.set_color(YELLOW)
 
             self.play(
                 FadeIn(label),
@@ -2550,12 +2521,12 @@ class AlternateAreaUnderCurve(PlayingTowardsDADX):
             "Gets better \\\\ as", 
             "$dx \\to 0$"
         )
-        dx_to_zero_words.highlight_by_tex("dx", color)
+        dx_to_zero_words.set_color_by_tex("dx", color)
         dx_to_zero_words.next_to(approx, DOWN, 1.5*LARGE_BUFF)
         arrow = Arrow(dx_to_zero_words, approx, color = color)
 
         self.play(
-            approx.highlight, color,
+            approx.set_color, color,
             ShowCreation(arrow),
             FadeIn(dx_to_zero_words),
         )
@@ -2616,7 +2587,7 @@ class AlternateAreaUnderCurve(PlayingTowardsDADX):
 class NextVideoWrapper(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
         titles = [
             TextMobject("Chapter %d:"%d, s)
             for d, s in [
@@ -2652,7 +2623,7 @@ class FundamentalTheorem(Scene):
         deriv = TexMobject(
             "{dA", "\\over \\,", "dx}", "=", "x^2"
         )
-        deriv.highlight_by_tex("dA", GREEN)
+        deriv.set_color_by_tex("dA", GREEN)
         deriv.next_to(arrow, RIGHT)
 
         self.play(ShowCreation(arrow))
@@ -2667,7 +2638,7 @@ class NextVideos(TeacherStudentsScene):
         series = VideoSeries()
         series.to_edge(UP)
         this_video = series[0]
-        this_video.highlight(YELLOW)
+        this_video.set_color(YELLOW)
 
         self.add(series)
         self.teacher_says(

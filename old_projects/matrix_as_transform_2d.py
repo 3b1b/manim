@@ -5,10 +5,7 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-from helpers import *
-
-from scene import Scene
-from number_line import NumberLineScene
+from big_ol_pile_of_manim_imports import *
 
 ARROW_CONFIG = {"stroke_width" : 2*DEFAULT_POINT_THICKNESS}
 LIGHT_RED = RED_E
@@ -58,7 +55,7 @@ class ShowMultiplication(NumberLineScene):
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
         if abs(num) < 1:
-            config["numerical_radius"] = SPACE_WIDTH/num
+            config["numerical_radius"] = FRAME_X_RADIUS/num
 
         NumberLineScene.construct(self, **config)
         if show_original_line:
@@ -72,7 +69,7 @@ class ShowMultiplication(NumberLineScene):
         copied_num_mobs = deepcopy(self.number_mobs)
         self.play(
             ApplyFunction(
-                lambda m : m.shift(DOWN).highlight("lightgreen"), 
+                lambda m : m.shift(DOWN).set_color("lightgreen"), 
                 copied_line
             ), *[
                 ApplyMethod(mob.shift, DOWN)
@@ -101,7 +98,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
         def shift_zero((x, y, z)):
             return (2*x+4, y, z)
         self.nonlinear = TextMobject("Not a Linear Transform")
-        self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
+        self.nonlinear.set_color(LIGHT_RED).to_edge(UP, buff = 1.5)
         pairs = [
             (sinx_plux_x, "numbers don't remain evenly spaced"),
             (shift_zero, "zero does not remain fixed")
@@ -118,7 +115,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
             "density" : 5*DEFAULT_POINT_DENSITY_1D,
         }
         NumberLineScene.construct(self, **config)
-        words = TextMobject(explanation).highlight(LIGHT_RED)
+        words = TextMobject(explanation).set_color(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
         self.add(words)
 
@@ -159,8 +156,8 @@ class ShowTwoThenThree(ShowMultiplication):
 class TransformScene2D(Scene):
     def add_number_plane(self, density_factor = 1, use_faded_lines = True):
         config = {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "density" : DEFAULT_POINT_DENSITY_1D*density_factor,
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
@@ -301,7 +298,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         def shift_zero((x, y, z)):
             return (2*x + 3*y + 4, -1*x+y+2, z)
         self.nonlinear = TextMobject("Nonlinear Transform")
-        self.nonlinear.highlight(LIGHT_RED)
+        self.nonlinear.set_color(LIGHT_RED)
         self.nonlinear.to_edge(UP, buff = 1.5)
         pairs = [
             (squiggle, "lines do not remain straight"),
@@ -315,15 +312,15 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def apply_function(self, function, explanation):
         self.clear()
         config = {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_WIDTH,
+            "x_radius" : FRAME_WIDTH,
+            "y_radius" : FRAME_WIDTH,
             "density" : 3*DEFAULT_POINT_DENSITY_1D,
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
         number_plane = NumberPlane(**config)
         numbers = number_plane.get_coordinate_labels()
         words = TextMobject(explanation)
-        words.highlight(LIGHT_RED)
+        words.set_color(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
 
         self.add(number_plane, *numbers)
@@ -358,9 +355,9 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         image = disp.paint_region(region, color = WHITE)
         self.blackness = TextMobject("")
         ImageMobject.generate_points_from_image_array(self.blackness, image)
-        self.blackness.highlight(BLACK)
+        self.blackness.set_color(BLACK)
         rectangle = Rectangle(width = 7, height=1.7)
-        rectangle.highlight(WHITE)
+        rectangle.set_color(WHITE)
         rectangle.shift(self.blackness.get_center())
         self.blackness.add(rectangle)
         self.blackness.scale_in_place(0.95)
@@ -369,8 +366,8 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
 class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def construct(self):
         config = {
-            "x_radius" : 1.2*SPACE_WIDTH,
-            "y_radius" : 1.2*SPACE_WIDTH,
+            "x_radius" : 0.6*FRAME_WIDTH,
+            "y_radius" : 0.6*FRAME_WIDTH,
             "density" : 10*DEFAULT_POINT_DENSITY_1D,
             "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
@@ -379,14 +376,14 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             "These might look like they keep lines straight...",
             "but diagonal lines get curved"
         ]).to_edge(UP, buff = 1.5).split()
-        phrase2.highlight(LIGHT_RED)
+        phrase2.set_color(LIGHT_RED)
         diagonal = Line(
-            DOWN*SPACE_HEIGHT+LEFT*SPACE_WIDTH,
-            UP*SPACE_HEIGHT+RIGHT*SPACE_WIDTH,
+            DOWN*FRAME_Y_RADIUS+LEFT*FRAME_X_RADIUS,
+            UP*FRAME_Y_RADIUS+RIGHT*FRAME_X_RADIUS,
             density = 10*DEFAULT_POINT_DENSITY_1D
         )
         def sunrise((x, y, z)):
-            return ((SPACE_HEIGHT+y)*x, y, z)
+            return ((FRAME_Y_RADIUS+y)*x, y, z)
 
         def squished((x, y, z)):
             return (x + np.sin(x), y+np.sin(y), z)
@@ -429,9 +426,9 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         image = disp.paint_region(region, color = WHITE)
         self.blackness = TextMobject("")
         ImageMobject.generate_points_from_image_array(self.blackness, image)
-        self.blackness.highlight(BLACK)
+        self.blackness.set_color(BLACK)
         rectangle = Rectangle(width = 9, height=1.5)
-        rectangle.highlight(WHITE)
+        rectangle.set_color(WHITE)
         rectangle.shift(self.blackness.get_center())
         self.blackness.add(rectangle)
         self.blackness.scale_in_place(0.95)

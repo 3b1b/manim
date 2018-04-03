@@ -1,24 +1,5 @@
-from helpers import *
-
 import numbers
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from scene import Scene
-
-from mobject.svg_mobject import *
-from mobject.vectorized_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 OPERATION_COLORS = [YELLOW, GREEN, BLUE_B]
 
@@ -37,7 +18,7 @@ def get_equation(index, x = 2, y = 3, z = 8, expression_only = False):
         tex = tex1
     else:
         tex = tex1+tex2
-    return TexMobject(tex).highlight(OPERATION_COLORS[index])
+    return TexMobject(tex).set_color(OPERATION_COLORS[index])
 
 def get_inverse_rules():
     return map(TexMobject, [
@@ -241,7 +222,7 @@ class ShowRule(Scene):
         self.wait()
         self.play(
             Transform(circle, new_circle),
-            ApplyMethod(new_top.values[index].highlight, circle.color)
+            ApplyMethod(new_top.values[index].set_color, circle.color)
         )
         self.wait()
 
@@ -255,7 +236,7 @@ class AllThree(Scene):
             new_args = list(args)
             new_args[i] = None
             top = TOP(*new_args, triangle_height_to_number_height = 2)
-            # top.highlight(OPERATION_COLORS[i])
+            # top.set_color(OPERATION_COLORS[i])
             top.shift(i*4.5*LEFT)
             equation = get_equation(i, expression_only = True)
             equation.scale(3)
@@ -286,9 +267,9 @@ class SixDifferentInverses(Scene):
         self.wait()
         for s, color in (rules[:4], GREEN), (rules[4:], RED):
             mob = VMobject(*s)
-            self.play(ApplyMethod(mob.highlight, color))
+            self.play(ApplyMethod(mob.set_color, color))
             self.wait()
-            self.play(ApplyMethod(mob.highlight, WHITE))
+            self.play(ApplyMethod(mob.set_color, WHITE))
         self.play(
             ApplyMethod(VMobject(*rules[::2]).to_edge, LEFT),
             ApplyMethod(VMobject(*rules[1::2]).to_edge, RIGHT),
@@ -310,7 +291,7 @@ class SixDifferentInverses(Scene):
         original = None
         for i, (top_rule, rule) in enumerate(zip(top_rules, rules)):
             rule.center().to_edge(UP)
-            rule.highlight(GREEN if i < 4 else RED)
+            rule.set_color(GREEN if i < 4 else RED)
             self.add(rule)
             new_top_rule = top_rule.copy().center().scale(1.5)
             anims = [Transform(top_rule, new_top_rule)]
@@ -403,14 +384,14 @@ class AdditiveProperty(Scene):
             ApplyMethod(log_rule.to_edge, DOWN, 1.5)
         )
         t_exp_rule.next_to(exp_rule, DOWN)
-        t_exp_rule.highlight(GREEN)
+        t_exp_rule.set_color(GREEN)
         t_log_rule.next_to(log_rule, UP)
-        t_log_rule.highlight(RED)
+        t_log_rule.set_color(RED)
         self.play(
             FadeIn(t_exp_rule),
             FadeIn(t_log_rule),
-            ApplyMethod(exp_rule.highlight, GREEN),
-            ApplyMethod(log_rule.highlight, RED),
+            ApplyMethod(exp_rule.set_color, GREEN),
+            ApplyMethod(log_rule.set_color, RED),
         )
         self.wait()
         all_tops = filter(
@@ -418,7 +399,7 @@ class AdditiveProperty(Scene):
             t_exp_rule.split()+t_log_rule.split()
         )
         self.put_in_circles(all_tops)
-        self.highlight_appropriate_parts(t_exp_rule, t_log_rule)
+        self.set_color_appropriate_parts(t_exp_rule, t_log_rule)
 
 
 
@@ -476,14 +457,14 @@ class AdditiveProperty(Scene):
                     index = i
             circle = top.put_on_vertex(index, Circle(color = WHITE))
             anims.append(
-                Transform(top.copy().highlight(YELLOW), circle)
+                Transform(top.copy().set_color(YELLOW), circle)
             )
         self.add(*[anim.mobject for anim in anims])
         self.wait()
         self.play(*anims)
         self.wait()
 
-    def highlight_appropriate_parts(self, t_exp_rule, t_log_rule):
+    def set_color_appropriate_parts(self, t_exp_rule, t_log_rule):
         #Horribly hacky
         circle1 = t_exp_rule.split()[0].put_on_vertex(
             2, Circle()
@@ -512,7 +493,7 @@ class AdditiveProperty(Scene):
         for mobs in mob_lists:
             copies = VMobject(*mobs).copy()
             self.play(ApplyMethod(
-                copies.highlight, YELLOW, 
+                copies.set_color, YELLOW, 
                 run_time = 0.5
             ))
             self.play(ApplyMethod(
@@ -530,8 +511,8 @@ class DrawInsideTriangle(Scene):
         dot = top.put_in_vertex(0, Dot())
         plus = top.put_in_vertex(1, TexMobject("+"))
         times = top.put_in_vertex(2, TexMobject("\\times"))
-        plus.highlight(GREEN)
-        times.highlight(YELLOW)
+        plus.set_color(GREEN)
+        times.set_color(YELLOW)
 
         self.add(top)
         self.wait()
@@ -545,8 +526,8 @@ class ConstantOnTop(Scene):
         dot = top.put_in_vertex(1, Dot())
         times1 = top.put_in_vertex(0, TexMobject("\\times"))
         times2 = top.put_in_vertex(2, TexMobject("\\times"))
-        times1.highlight(YELLOW)
-        times2.highlight(YELLOW)
+        times1.set_color(YELLOW)
+        times2.set_color(YELLOW)
         three = top.put_on_vertex(1, "3")
         lower_left_x = top.put_on_vertex(0, "x")
         lower_right_x = top.put_on_vertex(2, "x")
@@ -579,8 +560,8 @@ def get_const_top_TOP(*args):
         dot = top.put_in_vertex(1, Dot())
         times1 = top.put_in_vertex(0, TexMobject("\\times"))
         times2 = top.put_in_vertex(2, TexMobject("\\times"))
-        times1.highlight(YELLOW)
-        times2.highlight(YELLOW)
+        times1.set_color(YELLOW)
+        times2.set_color(YELLOW)
         top.add(dot, times1, times2)
         return top
 
@@ -598,10 +579,10 @@ class MultiplyWithConstantTop(Scene):
         top_exp_equation.arrange_submobjects()
         old_style_exp = TexMobject("(x^3)(y^3) = (xy)^3")
         old_style_exp.to_edge(UP)
-        old_style_exp.highlight(GREEN)
+        old_style_exp.set_color(GREEN)
         old_style_rad = TexMobject("\\sqrt[3]{x} \\sqrt[3]{y} = \\sqrt[3]{xy}")
         old_style_rad.to_edge(UP)
-        old_style_rad.highlight(RED)
+        old_style_rad.set_color(RED)
 
         self.add(top_exp_equation, old_style_exp)
         self.wait(3)
@@ -643,9 +624,9 @@ class RightStaysConstantQ(Scene):
             for top in top1, top2, top3
         ])
         old_style_eq1 = TexMobject("\\sqrt[x]{8} ? \\sqrt[y]{8} = \\sqrt[x?y]{8}")
-        old_style_eq1.highlight(BLUE)
+        old_style_eq1.set_color(BLUE)
         old_style_eq2 = TexMobject("\\log_x(8) ? \\log_y(8) = \\log_{x?y}(8)")
-        old_style_eq2.highlight(YELLOW)
+        old_style_eq2.set_color(YELLOW)
         for eq in old_style_eq1, old_style_eq2:
             eq.to_edge(UP)
 
@@ -696,9 +677,9 @@ class ConstantLowerRight(Scene):
     def construct(self):
         top = TOP()
         times = top.put_in_vertex(0, TexMobject("\\times"))
-        times.highlight(YELLOW)
+        times.set_color(YELLOW)
         oplus = top.put_in_vertex(1, TexMobject("\\oplus"))
-        oplus.highlight(BLUE)
+        oplus.set_color(BLUE)
         dot = top.put_in_vertex(2, Dot())
         eight = top.put_on_vertex(2, TexMobject("8"))
 
@@ -713,7 +694,7 @@ class ConstantLowerRight(Scene):
         top1, top2, top3 = tops = [
             top.copy() for i in range(3)
         ]
-        big_oplus = TexMobject("\\oplus").scale(2).highlight(BLUE)
+        big_oplus = TexMobject("\\oplus").scale(2).set_color(BLUE)
         equals = TexMobject("=")
         equation = VMobject(
             top1, big_oplus, top2, equals, top3
@@ -727,7 +708,7 @@ class ConstantLowerRight(Scene):
         old_style_eq = TexMobject(
             "\\dfrac{1}{\\frac{1}{\\log_x(8)} + \\frac{1}{\\log_y(8)}} = \\log_{xy}(8)"
         )
-        old_style_eq.to_edge(UP).highlight(RED)
+        old_style_eq.to_edge(UP).set_color(RED)
 
         triple_top_copy = VMobject(*[
             top.copy() for i in range(3)
@@ -758,8 +739,8 @@ class ConstantLowerRight(Scene):
         frac.shift(frac_lower_right - frac.get_corner(DOWN+RIGHT))
         new_old_style_eq.submobjects[-4] = frac
         new_old_style_eq.to_edge(UP)
-        new_old_style_eq.highlight(RED)
-        big_times = TexMobject("\\times").highlight(YELLOW)
+        new_old_style_eq.set_color(RED)
+        big_times = TexMobject("\\times").set_color(YELLOW)
         big_times.shift(big_oplus.get_center())
         self.play(
             Transform(old_style_eq, new_old_style_eq),
@@ -778,7 +759,7 @@ class TowerExponentFrame(Scene):
             $7{,}625{,}597{,}484{,}987$.  But with the triangle
             of power, the difference is crystal clear:
         """)
-        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.scale_to_fit_width(FRAME_WIDTH-1)
         words.to_edge(UP)
         top1 = TOP(TOP(3, 3), 3)
         top2 = TOP(3, (TOP(3, 3)))

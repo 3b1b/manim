@@ -5,36 +5,9 @@ import sys
 import os.path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from helpers import *
+from constants import *
 
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject, Group
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from animation.continual_animation import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.probability import *
-from topics.complex_numbers import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 from nn.network import *
 from nn.part1 import *
@@ -61,7 +34,7 @@ class Test(Scene):
         #     h_group.arrange_submobjects(LEFT)
         #     group.add(h_group)
         # group.arrange_submobjects(DOWN)
-        # group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        # group.scale_to_fit_height(FRAME_HEIGHT - 1)
         # self.add(group)
 
 
@@ -75,7 +48,7 @@ class Test(Scene):
             ]).arrange_submobjects(RIGHT)
             for x in range(10)
         ]).arrange_submobjects(DOWN)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(group)
 
     def show_weight_rows(self, network, index):
@@ -88,7 +61,7 @@ class Test(Scene):
                 pixel.set_fill(color, opacity = opacity)
             group.add(mob)
         group.arrange_submobjects_in_grid()
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(group)
 
     def show_all_activation_images(self, network, test_data):
@@ -99,7 +72,7 @@ class Test(Scene):
         image_samples.arrange_submobjects_in_grid(
             n_rows = 2, buff = LARGE_BUFF
         )
-        image_samples.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        image_samples.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(image_samples)
 
     def get_activation_images(self, digit, network, test_data, n_examples = 8):
@@ -115,7 +88,7 @@ class Test(Scene):
             ]).arrange_submobjects(RIGHT)
             for vect in input_vectors[:n_examples]
         ]).arrange_submobjects(DOWN)
-        activation_iamges.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        activation_iamges.scale_to_fit_height(FRAME_HEIGHT - 1)
         return activation_iamges
 
     def show_two_blend(self):
@@ -142,7 +115,7 @@ class Test(Scene):
             group.arrange_submobjects(DOWN+RIGHT, SMALL_BUFF)
             groups.add(group)
         groups.arrange_submobjects_in_grid()
-        groups.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        groups.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.add(groups)
 
     def show_test_input(self, network):
@@ -153,7 +126,7 @@ class Test(Scene):
             if test[1] in [4, 9]
         ])
         group.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(FRAME_HEIGHT - 1)
         self.play(FadeIn(group))
 
     def get_set(self, network, test):

@@ -1,19 +1,4 @@
-from helpers import *
-from mobject import Mobject
-from mobject.vectorized_mobject import *
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from topics.geometry import *
-from scene import Scene
-from camera import *
-from topics.number_line import *
-from topics.three_dimensions import *
-from topics.light import *
-from topics.characters import *
-from topics.numerals import *
-
-
+from big_ol_pile_of_manim_imports import *
 
 class Birthday(Scene):
 

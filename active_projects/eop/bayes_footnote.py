@@ -1,33 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.complex_numbers import *
-from topics.common_scenes import *
-from topics.probability import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from big_ol_pile_of_manim_imports import *
 
 from eop.bayes import IntroducePokerHand
 
@@ -73,7 +44,7 @@ class Introduction(TeacherStudentsScene):
         self.add(name, randy)
         self.play(
             randy.change_mode, "sick",
-            randy.highlight, SICKLY_GREEN
+            randy.set_color, SICKLY_GREEN
         )
         self.play(ShowCreation(rect))
         self.play(
@@ -152,7 +123,7 @@ class Introduction(TeacherStudentsScene):
         bayes_to_intuition.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         bayes_to_intuition.next_to(brace, UP, SMALL_BUFF)
         check = TexMobject("\\checkmark")
-        check.highlight(GREEN)
+        check.set_color(GREEN)
         check.next_to(bayes_to_intuition[1], UP, SMALL_BUFF)
 
         for example in examples:
@@ -185,7 +156,7 @@ class Introduction(TeacherStudentsScene):
     def other_culprit(self):
         bayes = self.bayes_to_intuition[0]
         something_else = TextMobject("Something else")
-        something_else.highlight(YELLOW)
+        something_else.set_color(YELLOW)
         something_else.scale_to_fit_height(bayes.get_height())
         something_else.move_to(bayes, RIGHT)
         new_group = VGroup(
@@ -224,8 +195,8 @@ class Introduction(TeacherStudentsScene):
         probability = TexMobject(
             "P(", "\\text{Flush}", "|", "\\text{High bet}", ")"
         )
-        probability.highlight_by_tex("Flush", RED)
-        probability.highlight_by_tex("High bet", GREEN)
+        probability.set_color_by_tex("Flush", RED)
+        probability.set_color_by_tex("High bet", GREEN)
         probability.scale(0.5)
         probability.next_to(rect.get_top(), DOWN)
 
@@ -247,8 +218,8 @@ class Introduction(TeacherStudentsScene):
         probability = TexMobject(
             "P(", "\\text{Suck }", "|", "\\text{ Good review}", ")"
         )
-        probability.highlight_by_tex("Suck", RED)
-        probability.highlight_by_tex("Good", GREEN)
+        probability.set_color_by_tex("Suck", RED)
+        probability.set_color_by_tex("Good", GREEN)
         probability.scale(0.5)
         probability.next_to(rect.get_top(), DOWN)
 
@@ -256,7 +227,7 @@ class Introduction(TeacherStudentsScene):
 
     def get_example_rect(self):
         rect = self.example[0].copy()
-        rect.highlight(WHITE)
+        rect.set_color(WHITE)
         return rect
 
 class OneInOneThousandHaveDisease(Scene):
@@ -271,22 +242,22 @@ class OneInOneThousandHaveDisease(Scene):
             ]).arrange_submobjects(DOWN, SMALL_BUFF)
             for x in range(40)
         ]).arrange_submobjects(RIGHT, SMALL_BUFF)
-        all_creatures.scale_to_fit_width(2*SPACE_WIDTH - 4)
+        all_creatures.scale_to_fit_width(FRAME_WIDTH - 4)
         all_creatures.next_to(title, DOWN)
         randy = all_creatures[0][0]
         all_creatures[0].remove(randy)
         randy.change_mode("sick")
-        randy.highlight(SICKLY_GREEN)
+        randy.set_color(SICKLY_GREEN)
         randy.save_state()
         randy.scale_to_fit_height(3)
         randy.center()
         randy.change_mode("plain")
-        randy.highlight(BLUE)
+        randy.set_color(BLUE)
 
         self.add(randy)
         self.play(
             randy.change_mode, "sick",
-            randy.highlight, SICKLY_GREEN
+            randy.set_color, SICKLY_GREEN
         )
         self.play(Blink(randy))
         self.play(randy.restore)
@@ -300,7 +271,7 @@ class TestScene(PiCreatureScene):
     def get_result(self, creature, word, color):
         arrow = self.get_test_arrow()
         test_result = TextMobject(word)
-        test_result.highlight(color)
+        test_result.set_color(color)
         test_result.next_to(arrow.get_end(), RIGHT)
         group = VGroup(arrow, test_result)
         group.next_to(creature, RIGHT, aligned_edge = UP)
@@ -332,7 +303,7 @@ class TestDiseaseCase(TestScene):
     def construct(self):
         randy = self.pi_creature
         randy.change_mode("sick")
-        randy.highlight(SICKLY_GREEN)
+        randy.set_color(SICKLY_GREEN)
         result = self.get_positive_result(randy)
         accuracy = TextMobject("100\\% Accuracy")
         accuracy.next_to(VGroup(randy, result), UP)
@@ -365,7 +336,7 @@ class TestNonDiseaseCase(TestScene):
         all_creatures.to_corner(DOWN+LEFT)
         last_guy = all_creatures[-1][-1]
         rect = SurroundingRectangle(last_guy, buff = 0)
-        rect.highlight(YELLOW)
+        rect.set_color(YELLOW)
 
         self.add(randy, accuracy)
         self.play(FadeIn(result[0]))
@@ -409,7 +380,7 @@ class ReceivePositiveResults(TestScene):
         result = self.get_positive_result(randy)
         accuracy = TextMobject("99\% Accuracy")
         accuracy.next_to(result[1], DOWN, LARGE_BUFF)
-        accuracy.highlight(YELLOW)
+        accuracy.set_color(YELLOW)
 
         self.add(status, randy)
         self.play(FadeIn(result[0]))
@@ -444,22 +415,22 @@ class RephraseQuestion(Scene):
             """,
         ]))
         words.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
-        words.scale_to_fit_width(2*(SPACE_WIDTH - MED_LARGE_BUFF))
+        words.scale_to_fit_width(2*(FRAME_X_RADIUS - MED_LARGE_BUFF))
 
         prior = TextMobject("Prior")
-        prior.highlight(GREEN)
+        prior.set_color(GREEN)
         prior.next_to(words[0], UP, 1.5*LARGE_BUFF)
         prior_arrow = Arrow(prior, words[0])
-        prior_arrow.highlight(prior.get_color())
+        prior_arrow.set_color(prior.get_color())
 
         posterior = TextMobject("Posterior")
         posterior.next_to(words[2], UP)
         posterior.shift(
             (prior.get_center() - posterior.get_center())[1]*UP
         )
-        posterior.highlight(YELLOW)
+        posterior.set_color(YELLOW)
         posterior_arrow = Arrow(posterior, words[2])
-        posterior_arrow.highlight(posterior.get_color())
+        posterior_arrow.set_color(posterior.get_color())
 
         self.add(words[0])
         self.play(
@@ -491,7 +462,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
         hard_to_see.scale(0.7)
         hard_to_see.next_to(prior_label, UP)
         hard_to_see.to_edge(UP)
-        hard_to_see.highlight(YELLOW)
+        hard_to_see.set_color(YELLOW)
         arrow = Arrow(hard_to_see, prior_label)
 
         self.wait()
@@ -532,7 +503,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
         )
         top_label.scale(0.7)
         top_label.next_to(top_brace, UP)
-        top_label.highlight_by_tex("+", GREEN)
+        top_label.set_color_by_tex("+", GREEN)
 
         self.play(GrowFromCenter(top_brace))
         self.play(FadeIn(top_label))
@@ -545,7 +516,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
             "P(", "+", "|", "\\text{Not disease}", ")", "=", "1"
         )
         bottom_label.scale(0.7)
-        bottom_label.highlight_by_tex("+", GREEN)
+        bottom_label.set_color_by_tex("+", GREEN)
         braces, labels = bottom_part.get_bottom_braces_and_labels(
             [bottom_label]
         )
@@ -585,7 +556,7 @@ class ShowRestrictedSpace(Scene):
         sick_one_words = TextMobject("1 sick")
         sick_one_words.next_to(sick_one, RIGHT)
         sick_one_words.to_edge(RIGHT)
-        sick_one_words.highlight(SICKLY_GREEN)
+        sick_one_words.set_color(SICKLY_GREEN)
         sick_one_arrow = Arrow(
             sick_one_words, sick_one,
             color = SICKLY_GREEN
@@ -594,7 +565,7 @@ class ShowRestrictedSpace(Scene):
         healthy_words = TextMobject("999 healthy")
         healthy_words.next_to(sick_one_words, UP, MED_LARGE_BUFF)
         healthy_words.shift_onto_screen()
-        healthy_words.highlight(BLUE)
+        healthy_words.set_color(BLUE)
 
         self.add(title)
         self.play(LaggedStart(FadeIn, all_creatures))
@@ -632,8 +603,8 @@ class ShowRestrictedSpace(Scene):
             "P(", "\\text{Test positive }", "|", 
             "\\text{ sick}", ")", "=", "100\\%"
         )
-        equation.highlight_by_tex("positive", YELLOW)
-        equation.highlight_by_tex("sick", SICKLY_GREEN)
+        equation.set_color_by_tex("positive", YELLOW)
+        equation.set_color_by_tex("sick", SICKLY_GREEN)
         equation.to_corner(UP+LEFT)
 
         self.play(Write(equation, run_time = 1))
@@ -646,8 +617,8 @@ class ShowRestrictedSpace(Scene):
             "P(", "\\text{Test positive }", "|", 
             "\\text{ healthy}", ")", "=", "1\\%"
         )
-        equation.highlight_by_tex("positive", YELLOW)
-        equation.highlight_by_tex("healthy", BLUE)
+        equation.set_color_by_tex("positive", YELLOW)
+        equation.set_color_by_tex("healthy", BLUE)
         equation.to_corner(UP+LEFT)
 
         self.play(ReplacementTransform(
@@ -672,7 +643,7 @@ class ShowRestrictedSpace(Scene):
             GrowFromCenter(brace),
             LaggedStart(
                 ApplyMethod, false_positives,
-                lambda pi : (pi.highlight, self.false_positive_color),
+                lambda pi : (pi.set_color, self.false_positive_color),
                 run_time = 1
             )
         )
@@ -727,8 +698,8 @@ class ShowRestrictedSpace(Scene):
             "\\text{ Positive test result}", ")",
             "\\approx \\frac{1}{11}", "\\approx 9\\%"
         )
-        posterior.highlight_by_tex("Sick", SICKLY_GREEN)
-        posterior.highlight_by_tex("Positive", YELLOW)
+        posterior.set_color_by_tex("Sick", SICKLY_GREEN)
+        posterior.set_color_by_tex("Positive", YELLOW)
         posterior.to_edge(UP)
         posterior.shift(LEFT)
 
@@ -741,7 +712,7 @@ class ShowRestrictedSpace(Scene):
         prior = TexMobject(
             "P(", "\\text{Sick}", ")", "= 0.1\\%"
         )
-        prior.highlight_by_tex("Sick", SICKLY_GREEN)
+        prior.set_color_by_tex("Sick", SICKLY_GREEN)
         prior.move_to(self.posterior, UP+RIGHT)
 
         self.revert_to_original_skipping_status()
@@ -776,7 +747,7 @@ class ShowRestrictedSpace(Scene):
         healthy_creatures = VGroup(*it.chain(*all_creatures))
         sick_one = all_creatures[-1][0]
         sick_one.change_mode("sick")
-        sick_one.highlight(SICKLY_GREEN)
+        sick_one.set_color(SICKLY_GREEN)
         healthy_creatures.remove(sick_one)
         all_creatures.sick_one = sick_one
         all_creatures.healthy_creatures = healthy_creatures
@@ -796,14 +767,14 @@ class DepressingForMedicalTestDesigners(TestScene):
 
         checks = VGroup(*[
             VGroup(*[
-                TexMobject("\\checkmark").highlight(GREEN)
+                TexMobject("\\checkmark").set_color(GREEN)
                 for y in range(10)
             ]).arrange_submobjects(DOWN)
             for x in range(10)
         ]).arrange_submobjects(RIGHT)
         cross = TexMobject("\\times")
         cross.replace(checks[-1][-1])
-        cross.highlight(RED)
+        cross.set_color(RED)
         Transform(checks[-1][-1], cross).update(1)
         checks.scale_to_fit_height(6)
         checks.next_to(title, DOWN)
@@ -855,7 +826,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
         new_sick_one = sick_one.copy()
         new_sick_one.shift(1.3*sick_one.get_width()*RIGHT)
         sick_one.change_mode("plain")
-        sick_one.highlight(BLUE_E)
+        sick_one.set_color(BLUE_E)
 
         self.add(new_sick_one)
         self.sick_one = new_sick_one
@@ -872,8 +843,8 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
         special_group = subgroups[-5]
         special_group.add(self.sick_one)
         subgroups.generate_target()
-        width_factor = 2*SPACE_WIDTH/subgroups.get_width()
-        height_factor = 2*SPACE_HEIGHT/subgroups.get_height()
+        width_factor = FRAME_WIDTH/subgroups.get_width()
+        height_factor = FRAME_HEIGHT/subgroups.get_height()
         subgroups.target.stretch_in_place(width_factor, 0)
         subgroups.target.stretch_in_place(height_factor, 1)
         for subgroup in subgroups.target:
@@ -958,11 +929,11 @@ class ShowTheFormula(TeacherStudentsScene):
         rhs = TexMobject("\\approx 0.09")
         rhs.scale(scale_factor)
         rhs.move_to(equals_group[-1], LEFT)
-        rhs.highlight(YELLOW)
+        rhs.set_color(YELLOW)
 
         for mob in formula, alt_numerator:
-            mob.highlight_by_tex(sick, SICKLY_GREEN)
-            mob.highlight_by_tex(positive, YELLOW)
+            mob.set_color_by_tex(sick, SICKLY_GREEN)
+            mob.set_color_by_tex(positive, YELLOW)
 
 
         #Ask question
@@ -1033,8 +1004,8 @@ class SourceOfConfusion(Scene):
         arrow = Arrow(ORIGIN, self.arrow_width*RIGHT)
         posterior = TexMobject("P(", "S", "|", "+", ")", "= 0.09")
         for mob in prior, posterior:
-            mob.highlight_by_tex("S", SICKLY_GREEN)
-            mob.highlight_by_tex("+", YELLOW)
+            mob.set_color_by_tex("S", SICKLY_GREEN)
+            mob.set_color_by_tex("+", YELLOW)
         progression = VGroup(prior, arrow, posterior)
         progression.arrange_submobjects(RIGHT)
         progression.shift(DOWN)
@@ -1079,11 +1050,11 @@ class SourceOfConfusion(Scene):
             "{P(", "+", "|", "S", ")", "\\over",
             "P(", "+", ")}"
         )
-        rule.highlight_by_tex("S", SICKLY_GREEN)
-        rule.highlight_by_tex("+", YELLOW)
+        rule.set_color_by_tex("S", SICKLY_GREEN)
+        rule.set_color_by_tex("+", YELLOW)
         rule.to_corner(UP+RIGHT)
         rule_rect = SurroundingRectangle(rule)
-        rule_rect.highlight(BLUE)
+        rule_rect.set_color(BLUE)
         rule.save_state()
         rule.replace(words_rect)
         rule.scale_in_place(0.9)
@@ -1153,7 +1124,7 @@ class StatisticsVsEmpathy(PiCreatureScene):
         )
         self.play(
             sick_one.change_mode, "sick",
-            sick_one.highlight, SICKLY_GREEN
+            sick_one.set_color, SICKLY_GREEN
         )
         self.wait()
 
@@ -1205,12 +1176,12 @@ class PlaneCrashProbability(Scene):
             "P(\\text{Dying in a }", "\\text{plane}", "\\text{ crash})", 
             "\\approx", "1/", "11{,}000{,}000"
         )
-        plane_prob.highlight_by_tex("plane", BLUE)
+        plane_prob.set_color_by_tex("plane", BLUE)
         car_prob = TexMobject(
             "P(\\text{Dying in a }", "\\text{car}", "\\text{ crash})", 
             "\\approx", "1/", "5{,}000"
         )
-        car_prob.highlight_by_tex("car", YELLOW)
+        car_prob.set_color_by_tex("car", YELLOW)
         plane_prob.shift(UP)
         car_prob.shift(
             plane_prob.get_part_by_tex("approx").get_center() -\
@@ -1304,8 +1275,8 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
             "P(", "\\text{Telepath }", "|", "\\text{ Correct}", ")",
             "=", "???"
         )
-        probability.highlight_by_tex("Telepath", BLUE)
-        probability.highlight_by_tex("Correct", GREEN)
+        probability.set_color_by_tex("Telepath", BLUE)
+        probability.set_color_by_tex("Correct", GREEN)
         probability.to_edge(UP)
 
         self.play(morty.change, "confused", randy.eyes)
@@ -1369,14 +1340,14 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
 
 class CompareNumbersInBothExamples(Scene):
     def construct(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.shift(MED_LARGE_BUFF*LEFT)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.to_edge(UP, buff = 1.25*LARGE_BUFF)
         titles = VGroup()
         for word, vect in ("Disease", LEFT), ("Telepathy", RIGHT):
             title = TextMobject("%s example"%word)
-            title.shift(vect*SPACE_WIDTH/2.0)
+            title.shift(vect*FRAME_X_RADIUS/2.0)
             title.to_edge(UP)
             titles.add(title)
         priors = VGroup(*[
@@ -1396,12 +1367,12 @@ class CompareNumbersInBothExamples(Scene):
         priors.next_to(likelihoods, UP, LARGE_BUFF)
         for group in priors, likelihoods:
             for mob, vect in zip(group, [LEFT, RIGHT]):
-                mob.highlight_by_tex("Sick", BLUE)
-                mob.highlight_by_tex("Powers", BLUE)
-                mob.highlight_by_tex("+", GREEN)
-                mob.highlight_by_tex("Correct", GREEN)
+                mob.set_color_by_tex("Sick", BLUE)
+                mob.set_color_by_tex("Powers", BLUE)
+                mob.set_color_by_tex("+", GREEN)
+                mob.set_color_by_tex("Correct", GREEN)
                 mob.scale(0.8)
-                mob.shift(vect*SPACE_WIDTH/2)
+                mob.shift(vect*FRAME_X_RADIUS/2)
 
         self.play(
             LaggedStart(FadeIn, titles, lag_ratio = 0.7),
@@ -1420,7 +1391,7 @@ class NonchalantReactionToPositiveTest(TestScene):
         randy.shift(DOWN+2*RIGHT)
         result = self.get_positive_result(randy)
         accuracy = TextMobject("99\\% Accuracy")
-        accuracy.highlight(YELLOW)
+        accuracy.set_color(YELLOW)
         accuracy.next_to(result, DOWN, LARGE_BUFF, RIGHT)
 
         self.add(accuracy)
@@ -1526,8 +1497,8 @@ class Thumbnail(Scene):
 
         prob = TexMobject("P(", "\\text{Sick}", "|", "\\text{Test+}", ")")
         prob.scale(2)
-        prob.highlight_by_tex("Sick", YELLOW)
-        prob.highlight_by_tex("Test", GREEN)
+        prob.set_color_by_tex("Sick", YELLOW)
+        prob.set_color_by_tex("Test", GREEN)
         prob.next_to(randy, RIGHT)
 
         self.add(title, randy, prob)

@@ -1,35 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.compositions import *
-from animation.continual_animation import *
-
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-#from topics.combinatorics import *
-from scene import Scene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from topics.three_dimensions import *
-from topics.light import *
-from topics.objects import *
-from topics.common_scenes import *
+from big_ol_pile_of_manim_imports import *
+from once_useful_constructs.light import *
 
 import types
 import functools
@@ -260,7 +233,7 @@ class ThreeDSpotlight(VGroup):
                     fill_opacity = self.ambient_light.opacity_function(a1*distance),
                     stroke_width = 0
                 ))
-        
+
 class ContinualThreeDLightConeUpdate(ContinualAnimation):
     def update(self, dt):
         self.mobject.update()
@@ -470,7 +443,7 @@ class IntroScene(PiCreatureScene):
         brace = self.brace = Brace(partial_sum_decimal, DOWN)
         q_marks = self.q_marks = TextMobject("???")
         q_marks.next_to(brace, DOWN)
-        q_marks.highlight(LIGHT_COLOR)
+        q_marks.set_color(LIGHT_COLOR)
 
         self.play(
             GrowFromCenter(brace),
@@ -504,11 +477,11 @@ class IntroScene(PiCreatureScene):
         euler_words.next_to(euler, DOWN)
         euler.add(euler_words)
 
-        pietro.next_to(SPACE_WIDTH*LEFT, LEFT)
-        euler.next_to(SPACE_WIDTH*RIGHT, RIGHT)
+        pietro.next_to(FRAME_X_RADIUS*LEFT, LEFT)
+        euler.next_to(FRAME_X_RADIUS*RIGHT, RIGHT)
 
         pi_answer = self.pi_answer = TexMobject("{\\pi^2 \\over 6}")
-        pi_answer.highlight(YELLOW)
+        pi_answer.set_color(YELLOW)
         pi_answer.move_to(self.partial_sum_decimal, LEFT)
         equals_sign = TexMobject("=")
         equals_sign.next_to(pi_answer, RIGHT)
@@ -519,7 +492,7 @@ class IntroScene(PiCreatureScene):
         pi = pi_answer[0]
         pi_rect = SurroundingRectangle(pi, color = RED)
         pi_rect.save_state()
-        pi_rect.scale_to_fit_height(SPACE_HEIGHT)
+        pi_rect.scale_to_fit_height(FRAME_Y_RADIUS)
         pi_rect.center()
         pi_rect.set_stroke(width = 0)
         squared = pi_answer[1]
@@ -534,7 +507,7 @@ class IntroScene(PiCreatureScene):
         self.number_line_group.save_state()
         self.play(
             pietro.next_to, ORIGIN, LEFT, LARGE_BUFF,
-            self.number_line_group.next_to, SPACE_HEIGHT*DOWN, DOWN,
+            self.number_line_group.next_to, FRAME_Y_RADIUS*DOWN, DOWN,
             morty.change, "pondering",
         )
         self.wait(2)
@@ -665,7 +638,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
             "fundamentally \\\\", 
             "about circles"
         )
-        words.highlight_by_tex("fundamentally", YELLOW)
+        words.set_color_by_tex("fundamentally", YELLOW)
 
         self.play(PiCreatureSays(
             jerk, words,
@@ -744,7 +717,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
         question.set_stroke(WHITE, 0.5)
         question.next_to(fundamentally, DOWN, LARGE_BUFF)
         arrow = Arrow(question, fundamentally)
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
 
         self.play(
             FadeIn(question),
@@ -758,11 +731,11 @@ class MathematicalWebOfConnections(PiCreatureScene):
     def draw_circle(self):
         semi_circle = Arc(angle = np.pi, radius = 2)
         radius = Line(ORIGIN, semi_circle.points[0])
-        radius.highlight(BLUE)
-        semi_circle.highlight(YELLOW)
+        radius.set_color(BLUE)
+        semi_circle.set_color(YELLOW)
 
         VGroup(radius, semi_circle).move_to(
-            SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/2,
+            FRAME_X_RADIUS*LEFT/2 + FRAME_Y_RADIUS*UP/2,
         )
 
         decimal = DecimalNumber(0)
@@ -795,7 +768,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
         )
         to_shift_down.generate_target()
         for part in to_shift_down.target:
-            part.move_to(2*SPACE_HEIGHT*DOWN)
+            part.move_to(FRAME_HEIGHT*DOWN)
 
         basel_sum = self.formulas[0]
 
@@ -849,7 +822,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
 
         circle = Circle(color = YELLOW, radius = 1)
         radius = Line(circle.get_center(), circle.get_right())
-        radius.highlight(BLUE)
+        radius.set_color(BLUE)
         VGroup(circle, radius).next_to(path_dots[-1], RIGHT)
 
         self.play(
@@ -857,11 +830,11 @@ class MathematicalWebOfConnections(PiCreatureScene):
             LaggedStart(ShowCreation, edges, run_time = 3),
             LaggedStart(GrowFromCenter, dots, run_time = 3)
         )
-        self.play(path_dots[0].highlight, RED)
+        self.play(path_dots[0].set_color, RED)
         for dot, edge in zip(path_dots[1:], path_edges):
             self.play(
                 ShowCreation(edge),
-                dot.highlight, RED
+                dot.set_color, RED
             )
         self.play(ShowCreation(radius))
         radius.set_points_as_corners(radius.get_anchors())
@@ -917,8 +890,8 @@ class MathematicalWebOfConnections(PiCreatureScene):
     def create_pi_creatures(self):
         jerk = PiCreature(color = GREEN_D)
         randy = Randolph().flip()
-        jerk.move_to(0.5*SPACE_WIDTH*LEFT).to_edge(DOWN)
-        randy.move_to(0.5*SPACE_WIDTH*RIGHT).to_edge(DOWN)
+        jerk.move_to(0.5*FRAME_X_RADIUS*LEFT).to_edge(DOWN)
+        randy.move_to(0.5*FRAME_X_RADIUS*RIGHT).to_edge(DOWN)
 
         return VGroup(jerk, randy)
 
@@ -1421,7 +1394,7 @@ class IntroduceScreen(Scene):
             for ray in rays
         ])
         self.play(*[
-            ApplyMethod(ray.highlight, ray.target_color)
+            ApplyMethod(ray.set_color, ray.target_color)
             for ray in rays
         ])
         self.wait()
@@ -1431,7 +1404,7 @@ class EarthScene(IntroduceScreen):
     CONFIG = {
         "screen_height" : 0.5,
         "screen_thickness" : 0,
-        "radius" : 100 + SPACE_WIDTH,
+        "radius" : 100 + FRAME_X_RADIUS,
         "source_point" : 100*LEFT,
         "min_ray_angle" : -1.65*DEGREES,
         "max_ray_angle" : 1.65*DEGREES,
@@ -1446,7 +1419,7 @@ class EarthScene(IntroduceScreen):
         earth.replace(earth_circle)
 
         black_rect = Rectangle(
-            height = 2*SPACE_HEIGHT,
+            height = FRAME_HEIGHT,
             width = earth_radius + LARGE_BUFF,
             stroke_width = 0,
             fill_color = BLACK,
@@ -1684,7 +1657,7 @@ class InverseSquareLaw(ThreeDScene):
         one_arrow = DoubleArrow(ORIGIN, unit_distance*RIGHT, buff = 0)
         two_arrow = DoubleArrow(ORIGIN, 2*unit_distance*RIGHT, buff = 0)
         arrows = VGroup(one_arrow, two_arrow)
-        arrows.highlight(WHITE)
+        arrows.set_color(WHITE)
         one_arrow.move_to(source_point + DOWN, LEFT)
         two_arrow.move_to(source_point + 1.75*DOWN, LEFT)
         one = Integer(1).next_to(one_arrow, UP, SMALL_BUFF)
@@ -1868,7 +1841,7 @@ class InverseSquareLaw(ThreeDScene):
         self.begin_ambient_camera_rotation(rate = -0.01)
         self.play(LaggedStart(
             ApplyMethod, screen_copy_groups[2],
-            lambda m : (m.highlight, RED),
+            lambda m : (m.set_color, RED),
             run_time = 5,
             rate_func = there_and_back,
         ))
@@ -1906,7 +1879,7 @@ class OtherInstanceOfInverseSquareLaw(Scene):
     def construct(self):
         title = TextMobject("Where the inverse square law shows up")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
@@ -1938,7 +1911,7 @@ class OtherInstanceOfInverseSquareLaw(Scene):
 
 class ScreensIntroWrapper(TeacherStudentsScene):
     def construct(self):
-        point = VectorizedPoint(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/2)
+        point = VectorizedPoint(FRAME_X_RADIUS*LEFT/2 + FRAME_Y_RADIUS*UP/2)
         self.play(self.teacher.change, "raise_right_hand")
         self.change_student_modes(
             "pondering", "erm", "confused",
@@ -2147,12 +2120,12 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
 
         #Lines
         line_a = Line(C, A)
-        line_a.highlight(BLUE)
+        line_a.set_color(BLUE)
         line_b = Line(C, B)
-        line_b.highlight(RED)
+        line_b.set_color(RED)
         line_c = Line(A, B)
         line_h = Line(H, C)
-        line_h.highlight(GREEN)
+        line_h.set_color(GREEN)
 
         label_a = TexMobject("a")
         label_a.match_color(line_a)
@@ -2170,7 +2143,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
         perp_mark.scale(0.25, about_point = ORIGIN)
         perp_mark.rotate(line_c.get_angle() + TAU/4, about_point = ORIGIN)
         perp_mark.shift(H)
-        # perp_mark.highlight(BLACK)
+        # perp_mark.set_color(BLACK)
 
         #Indicators
         indicator = LightIndicator(
@@ -2210,7 +2183,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
             "{1 \over ", "a^2}", "+", 
             "{1 \over", "b^2}", "=", "{1 \over","h^2}"
         )
-        theorem.highlight_by_tex_to_color_map({
+        theorem.set_color_by_tex_to_color_map({
             "a" : line_a.get_color(),
             "b" : line_b.get_color(),
             "h" : line_h.get_color(),
@@ -2359,12 +2332,12 @@ class MathologerVideoWrapper(Scene):
         logo = ImageMobject("mathologer_logo")
         logo.scale_to_fit_height(1)
         logo.to_corner(UP+LEFT)
-        logo.shift(2*SPACE_WIDTH*RIGHT)
+        logo.shift(FRAME_WIDTH*RIGHT)
         screen = ScreenRectangle(height = 5.5)
         screen.next_to(title, DOWN)
 
         self.play(
-            logo.shift, 2*SPACE_WIDTH*LEFT,
+            logo.shift, FRAME_WIDTH*LEFT,
             LaggedStart(FadeIn, title),
             run_time = 2
         )
@@ -2424,7 +2397,7 @@ class SimpleIPTProof(Scene):
         )
         argument_lines.arrange_submobjects(DOWN)
         for line in argument_lines:
-            line.highlight_by_tex_to_color_map({
+            line.set_color_by_tex_to_color_map({
                 "a" : BLUE,
                 "b" : RED,
                 "h" : GREEN,
@@ -2458,7 +2431,7 @@ class SimpleIPTProof(Scene):
 
 class WeCanHaveMoreFunThanThat(TeacherStudentsScene):
     def construct(self):
-        point = VectorizedPoint(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/2)
+        point = VectorizedPoint(FRAME_X_RADIUS*LEFT/2 + FRAME_Y_RADIUS*UP/2)
         self.teacher_says(
             "We can have \\\\ more fun than that!",
             target_mode = "hooray"
@@ -2536,12 +2509,12 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
 
         #Lines
         line_a = Line(C, A)
-        line_a.highlight(BLUE)
+        line_a.set_color(BLUE)
         line_b = Line(C, B)
-        line_b.highlight(RED)
+        line_b.set_color(RED)
         line_c = Line(A, B)
         line_h = Line(H, C)
-        line_h.highlight(GREEN)
+        line_h.set_color(GREEN)
 
         label_a = TexMobject("a")
         label_a.match_color(line_a)
@@ -2587,7 +2560,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
             "{1 \over ", "a^2}", "+", 
             "{1 \over", "b^2}", "=", "{1 \over","h^2}"
         )
-        theorem.highlight_by_tex_to_color_map({
+        theorem.set_color_by_tex_to_color_map({
             "a" : line_a.get_color(),
             "b" : line_b.get_color(),
             "h" : line_h.get_color(),
@@ -2690,7 +2663,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
         for hyp, line in (m_hyp_a, m_a), (m_hyp_b, m_b):
             hyp.save_state()
             hyp.alt_version = line.copy()
-            hyp.alt_version.highlight(WHITE)
+            hyp.alt_version.set_color(WHITE)
 
         for x in range(2):
             self.play(*[
@@ -2863,7 +2836,7 @@ class InscribedeAngleThreorem(TeacherStudentsScene):
         angle_mark = Arc(start_angle = -TAU/8, angle = TAU/4)
         angle_mark.scale(0.3, about_point = ORIGIN)
         angle_mark.shift(circle.get_center())
-        theta = TexMobject("\\theta").highlight(RED)
+        theta = TexMobject("\\theta").set_color(RED)
         theta.next_to(angle_mark, RIGHT, MED_SMALL_BUFF)
         angle_mark.match_color(theta)
 
@@ -2871,7 +2844,7 @@ class InscribedeAngleThreorem(TeacherStudentsScene):
         half_angle_mark.scale(0.3, about_point = ORIGIN)
         half_angle_mark.shift(point.get_center())
         half_angle_mark.add(point.copy())
-        theta_halves = TexMobject("\\theta/2").highlight(GREEN)
+        theta_halves = TexMobject("\\theta/2").set_color(GREEN)
         theta_halves.scale(0.7)
         half_angle_mark.match_color(theta_halves)
         theta_halves_update = UpdateFromFunc(
@@ -3729,8 +3702,8 @@ class PondScene(ThreeDScene):
         self.wait()        
 
         covering_rectangle = Rectangle(
-            width = SPACE_WIDTH * scale,
-            height = 2 * SPACE_HEIGHT * scale,
+            width = FRAME_X_RADIUS * scale,
+            height = 2 * FRAME_Y_RADIUS * scale,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 1,
@@ -3786,14 +3759,14 @@ class CenterOfLargerCircleOverlayText(Scene):
         arrow = Vector(DOWN+LEFT, color = WHITE)
         arrow.shift(words.get_bottom() + SMALL_BUFF*DOWN - arrow.get_start())
         group = VGroup(words, arrow)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.scale_to_fit_height(FRAME_HEIGHT - 1)
         group.to_edge(UP)
         self.add(group)
 
 class DiameterWordOverlay(Scene):
     def construct(self):
         word = TextMobject("Diameter")
-        word.scale_to_fit_width(SPACE_WIDTH)
+        word.scale_to_fit_width(FRAME_X_RADIUS)
         word.rotate(-45*DEGREES)
         self.play(Write(word))
         self.wait()
@@ -3864,7 +3837,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
             p_term.next_to(number_line.number_to_point(n), UP, LARGE_BUFF)
             n_term.next_to(number_line.number_to_point(-n), UP, LARGE_BUFF)
             term_mobjects.add(group)
-        term_mobjects.gradient_highlight(BLUE, YELLOW)
+        term_mobjects.set_color_by_gradient(BLUE, YELLOW)
         plusses = VGroup(*[
             VGroup(*[
                 TexMobject("+").next_to(
@@ -3875,7 +3848,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
             for n in range(0, self.max_shown_n, 2)
         ])
 
-        zoom_out = AmbientMovement(
+        zoom_out = ContinualMovement(
             self.camera.rotation_mobject,
             direction = OUT, rate = 0.4
         )
@@ -3968,7 +3941,7 @@ class FinalSumManipulationScene(PiCreatureScene):
         sum_vertical_spacing = 1.5
 
         randy = self.get_primary_pi_creature()
-        randy.highlight(MAROON_D)
+        randy.set_color(MAROON_D)
         randy.color = MAROON_D
         randy.scale(0.7).flip().to_edge(DOWN + LEFT)
         self.wait()
@@ -4342,7 +4315,7 @@ class InfiniteCircleScene(PiCreatureScene):
     def construct(self):
 
         morty = self.get_primary_pi_creature()
-        morty.highlight(MAROON_D).flip()
+        morty.set_color(MAROON_D).flip()
         morty.color = MAROON_D
         morty.scale(0.5).move_to(ORIGIN)
 
@@ -4425,7 +4398,7 @@ class Credits(Scene):
             ]
         ])
         for credit, color in zip(credits, [MAROON_D, BLUE_D, WHITE]):
-            credit[1].highlight(color)
+            credit[1].set_color(color)
             credit.arrange_submobjects(DOWN, buff = SMALL_BUFF)
 
         credits.arrange_submobjects(DOWN, buff = LARGE_BUFF)
@@ -4584,7 +4557,7 @@ class BaselPatreonThanks(PatreonEndScreen):
         next_video = TextMobject("$\\uparrow$  Next video $\\uparrow$")
         next_video.to_edge(RIGHT, buff = 1.5)
         next_video.shift(MED_SMALL_BUFF*UP)
-        next_video.highlight(YELLOW)
+        next_video.set_color(YELLOW)
         self.add_foreground_mobject(next_video)
         PatreonEndScreen.construct(self)
 
