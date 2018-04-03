@@ -320,7 +320,7 @@ class LinearTransformationScene(VectorScene):
 
     def add_foreground_mobject(self, *mobjects):
         self.add_special_mobjects(self.foreground_mobjects, *mobjects)
-            
+
     def add_transformable_mobject(self, *mobjects):
         self.add_special_mobjects(self.transformable_mobjects, *mobjects)
 
