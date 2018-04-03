@@ -1896,6 +1896,20 @@ class TinyLoopAroundRed(TinyLoop):
         "target_coords" : (-1, 1),
     }
 
+class ConfusedPiCreature(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        morty.set_color(YELLOW_E)
+        morty.flip()
+        morty.center()
+
+        self.play(morty.change, "awe", DOWN+3*RIGHT)
+        self.wait(2)
+        self.play(morty.change, "confused")
+        self.wait(2)
+        self.play(morty.change, "pondering")
+        self.wait(2)
+
 class FailureOfComposition(ColorMappedObjectsScene):
     CONFIG = {
         "func" : lambda p : (
@@ -2148,7 +2162,11 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
     CONFIG = {
         "func" : plane_func_by_wind_spec(
             (-2, 0, 2), (2, 0, 1)
-        )
+        ),
+        "dot_fill_opacity" : 1,
+        "dot_stroke_width" : 1,
+        "include_walkers" : True,
+        "include_question_mark" : True,
     }
     def construct(self):
         ColorMappedObjectsScene.construct(self)
@@ -2178,7 +2196,10 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
 
         #Setup region labels
 
-        for square, tex in (left_square, "x"), (right_square, "y"), (joint_rect, "x+y \\, ?"):
+        sum_tex = "x+y"
+        if self.include_question_mark:
+            sum_tex += "\\, ?"
+        for square, tex in (left_square, "x"), (right_square, "y"), (joint_rect, sum_tex):
             square.label = TextMobject("Winding = ", "$%s$"%tex)
             square.label.move_to(square)
 
@@ -2232,7 +2253,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
                 path_arc = TAU/6
             ),
             FadeIn(joint_rect.label[1][1]),
-            FadeIn(joint_rect.label[1][3]),
+            FadeIn(joint_rect.label[1][3:]),
             FadeOut(right_square.label[0]),
             Transform(
                 right_square.label[1], joint_rect.label[1][2],
@@ -2281,9 +2302,12 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
 
         #Setup dot, arrow and label
         dot = self.dot = Dot(radius = 0.1)
-        dot.set_stroke(WHITE, 1)
+        dot.set_stroke(WHITE, self.dot_stroke_width)
         update_dot_color = ContinualUpdateFromFunc(
-            dot, lambda d : d.set_fill(get_output_color())
+            dot, lambda d : d.set_fill(
+                get_output_color(),
+                self.dot_fill_opacity
+            )
         )
 
         label = DecimalNumber(0, num_decimal_points = 1)
@@ -2294,7 +2318,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
 
         arrow_length = 0.75
         arrow = Vector(arrow_length*RIGHT)
-        arrow.set_stroke(WHITE, 1)
+        arrow.set_stroke(WHITE, self.dot_stroke_width)
         def arrow_update_func(arrow):
             arrow.set_fill(get_output_color(), 1)
             arrow.rotate(-TAU*get_output_rev() - arrow.get_angle())
@@ -2303,13 +2327,25 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
             return arrow
         update_arrow = ContinualUpdateFromFunc(arrow, arrow_update_func)
 
-        self.add(update_arrow, update_dot_color, label_upadte)
+        if self.include_walkers:
+            self.add(update_arrow, update_dot_color, label_upadte)
         return dot
 
     def position_dot(self, point):
         self.dot.move_to(point)
         self.start_rev = self.get_output_rev()
         self.curr_winding = 0
+
+class TransitionFromPathsToBoundariesArrowless(TransitionFromPathsToBoundaries):
+    CONFIG = {
+        "func" : plane_func_by_wind_spec(
+            (-2, 0, 2), (2, 0, 1)
+        ),
+        "dot_fill_opacity" : 0,
+        "dot_stroke_width" : 0,
+        "include_walkers" : False,
+        "include_question_mark" : False,
+    }
 
 class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
     def construct(self):
@@ -2589,9 +2625,7 @@ class PolynomialTerms(MonomialTerm):
 
 class SearchSpacePerimeterVsArea(EquationSolver2d):
     CONFIG = {
-        "func" : plane_func_by_wind_spec(
-            (-3, -1.3, 2), (0.1, 0.2, 1), (2.8, -2, 1)
-        ),
+        "func" : example_plane_func,
         "num_iterations" : 15,
         "display_in_parallel" : False,
         "use_fancy_lines" : True,
@@ -2654,7 +2688,6 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         self.play(FadeOut(full_rect))
         self.wait()
 
-<<<<<<< HEAD:old_projects/WindingNumber_G.py
 class ShowPolynomialFinalState(SolveX5MinusXMinus1):
     CONFIG = {
         "num_iterations" : 15,
@@ -2872,8 +2905,6 @@ class AllOfTheVideos(Scene):
         self.play(LaggedStart(FadeIn, images, run_time = 4))
         self.wait()
 
-=======
->>>>>>> parent of feeb9ec... Merge branch 'master' into eop:active_projects/WindingNumber_G.py
 class EndingCredits(Scene):
     def construct(self):
         text = TextMobject(
@@ -3187,8 +3218,33 @@ class EndScreen(PatreonEndScreen, PiCreatureScene):
             self.play(morty.change, mode)
             self.wait(2)
 
+class Thumbnail(SearchSpacePerimeterVsArea):
+    CONFIG = {
+        "num_iterations" : 18,
+        "func" : plane_func_by_wind_spec(
+            (-3, -1.3, 2), (0.1, 0.2, 1), (2.8, -2, 1)
+        ),
+    }
+    def construct(self):
+        self.force_skipping()
+        EquationSolver2d.construct(self)
+        self.revert_to_original_skipping_status()
 
+        mobjects = VGroup(*self.get_mobjects())
+        lines = VGroup()
+        rects = VGroup()
+        get_length = lambda mob : max(mob.get_width(), mob.get_height())
+        for mob in mobjects:
+            if mob.background_image_file is not None:
+                mob.set_stroke(width = 4*np.sqrt(get_length(mob)))
+                lines.add(mob)
+            elif isinstance(mob, Polygon):
+                rects.add(mob)
+            else:
+                self.remove(mob)
 
+        self.clear()
+        self.add(lines)
 
 
 
