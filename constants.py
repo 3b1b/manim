@@ -1,11 +1,10 @@
 import os
 import numpy as np
 
-# Things anyone wishing to use this repository for their
-# own use will want to change this
-MEDIA_DIR = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder")
+# Change this to point to where you want 
+# animation files to output
+MEDIA_DIR = 'out'
 #
-
 
 DEFAULT_PIXEL_HEIGHT = 1080
 DEFAULT_PIXEL_WIDTH  = 1920

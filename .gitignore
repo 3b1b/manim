@@ -4,6 +4,7 @@ homeless.py
 playground.py
 random_scenes/
 files/
+out/
 ben_playground.py
 ben_cairo_test.py
 .floo
@@ -12,5 +13,4 @@ ben_cairo_test.py
 *.iml
 manim.sublime-project
 manim.sublime-workspace
-
 primes.py
