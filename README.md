@@ -29,7 +29,12 @@ Note: pip will install the python module `aggdraw` from
 https://github.com/scottopell/aggdraw-64bits/ and it might have additional
 dependencies.
 
-This doesn't install freetype, but I don't think it's required for this project
+This doesn't install freetype, but I don't think it's required for this project.
+
+The latest version of aggdraw (1.3 as of 2018) does not work with manim. Uninstall it beforehand if necessary:
+```sh
+pip uninstall aggdraw
+```
 
 ## How to Use
 Try running the following:
