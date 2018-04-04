@@ -1,7 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from constants import *
 
-from svg_mobject import SVGMobject
-from svg_mobject import VMobjectFromSVGPathstring
+from .svg_mobject import SVGMobject
+from .svg_mobject import VMobjectFromSVGPathstring
 from mobject.shape_matchers import BackgroundRectangle
 from utils.config_ops import digest_config
 from mobject.types.vectorized_mobject import VGroup
@@ -11,6 +13,7 @@ from mobject.types.vectorized_mobject import VectorizedPoint
 import collections
 import operator as op
 import sys
+from functools import reduce
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -209,7 +212,7 @@ class TexMobject(SVGMobject):
 
     def sort_submobjects_alphabetically(self):
         def alphabetical_cmp(m1, m2):
-            if not all([isinstance(m, TexMobject) for m in m1, m2]):
+            if not all([isinstance(m, TexMobject) for m in (m1, m2)]):
                 return 0
             return cmp(m1.get_tex_string(), m2.get_tex_string())
         self.submobjects.sort(alphabetical_cmp)

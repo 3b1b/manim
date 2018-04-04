@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 
 from once_useful_constructs.light import *
@@ -147,7 +148,7 @@ class LightIndicator(VMobject):
 
     def continual_update(self):
         if self.light_source == None:
-            print "Indicator cannot update, reason: no light source found"
+            print("Indicator cannot update, reason: no light source found")
         self.set_intensity(self.measured_intensity())
 
         
@@ -176,9 +177,9 @@ class ContinualLightIndicatorUpdate(ContinualAnimation):
 
 def copy_func(f):
     """Based on http://stackoverflow.com/a/6528148/190597 (Glenn Maynard)"""
-    g = types.FunctionType(f.func_code, f.func_globals, name=f.func_name,
-                           argdefs=f.func_defaults,
-                           closure=f.func_closure)
+    g = types.FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                           argdefs=f.__defaults__,
+                           closure=f.__closure__)
     g = functools.update_wrapper(g, f)
     return g
 
@@ -2552,7 +2553,7 @@ class InscribedAngleScene(ThreeDScene):
             show_animation = (onscreen_old or onscreen_1 or onscreen_2)
 
             if show_animation:
-                print "animating (", i, ",", step, ")"
+                print("animating (", i, ",", step, ")")
                 self.play(
                     ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
                     ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
@@ -3333,7 +3334,7 @@ class PondScene(ThreeDScene):
             show_animation = (onscreen_old or onscreen_1 or onscreen_2)
 
             if show_animation or animate:
-                print "animating (", i, ",", step, ")"
+                print("animating (", i, ",", step, ")")
                 self.play(
                     ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
                     ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
@@ -3671,7 +3672,7 @@ class PondScene(ThreeDScene):
         self.play(FadeOut(self.inner_lake))
 
         for n in range(3,max_it + 1):
-            print "working on n = ", n, "..."
+            print("working on n = ", n, "...")
             new_lake = self.outer_lake.copy().scale(2,about_point = self.obs_dot.get_center())
             for (i,ls) in enumerate(self.light_sources_array[:2**n]):
                 #print i
@@ -3702,14 +3703,14 @@ class PondScene(ThreeDScene):
                 onscreen_2 = np.all(np.abs(pos2[:2]) < 10 * 2**2)
                 
                 if onscreen_old or onscreen_1:
-                    print "anim1 for step", n, "part", i
-                    print "------------------ moving from", ls_old_loc[:2], "to", pos1[:2]
+                    print("anim1 for step", n, "part", i)
+                    print("------------------ moving from", ls_old_loc[:2], "to", pos1[:2])
                     shift_list.append(ApplyMethod(ls1.move_source_to, pos1, run_time = STEP_RUN_TIME))
                 else:
                     ls1.move_source_to(pos1)
                 if onscreen_old or onscreen_2:
-                    print "anim2 for step", n, "part", i
-                    print "------------------ moving from", ls_old_loc[:2], "to", pos2[:2]
+                    print("anim2 for step", n, "part", i)
+                    print("------------------ moving from", ls_old_loc[:2], "to", pos2[:2])
                     shift_list.append(ApplyMethod(ls2.move_source_to, pos2, run_time = STEP_RUN_TIME))
                 else:
                     ls2.move_source_to(pos2)
@@ -3718,7 +3719,7 @@ class PondScene(ThreeDScene):
                 #print shift_list
 
             self.play(*shift_list)
-            print "...done"
+            print("...done")
 
 
         #self.revert_to_original_skipping_status()
@@ -3745,9 +3746,9 @@ class PondScene(ThreeDScene):
             label_direction = UP,
         ).shift(origin_point - self.number_line.number_to_point(0)) # .shift(scale * 2.5 * DOWN)
 
-        print "scale ", scale
-        print "number line at", self.number_line.get_center()
-        print "should be at", origin_point, "or", OBSERVER_POINT
+        print("scale ", scale)
+        print("number line at", self.number_line.get_center())
+        print("should be at", origin_point, "or", OBSERVER_POINT)
 
         self.number_line.tick_marks.fade(1)
         self.number_line_labels = self.number_line.get_number_mobjects()

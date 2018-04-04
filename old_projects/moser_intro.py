@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 import operator as op
@@ -12,13 +13,13 @@ CIRCLE_DENSITY = DEFAULT_POINT_DENSITY_1D*RADIUS
 
 
 def logo_to_circle():
-    from generate_logo import DARK_BROWN, LOGO_RADIUS
+    from .generate_logo import DARK_BROWN, LOGO_RADIUS
     sc = Scene()
     small_circle = Circle(
         density = CIRCLE_DENSITY,
         color = 'skyblue'
     ).scale(LOGO_RADIUS).set_color(
-        DARK_BROWN, lambda (x, y, z) : x < 0 and y > 0
+        DARK_BROWN, lambda x_y_z : x_y_z[0] < 0 and x_y_z[1] > 0
     )
     big_circle = Circle(density = CIRCLE_DENSITY).scale(RADIUS)
     sc.add(small_circle)

@@ -3,6 +3,7 @@
 
 import sys
 import os.path
+from functools import reduce
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from constants import *

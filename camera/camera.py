@@ -1,3 +1,4 @@
+from __future__ import print_function
 import itertools as it
 import numpy as np
 import os
@@ -22,6 +23,7 @@ from utils.iterables import batch_by_property
 from utils.iterables import list_difference_update
 from utils.iterables import remove_list_redundancies
 from utils.simple_functions import fdiv
+from functools import reduce
 
 class Camera(object):
     CONFIG = {
@@ -128,14 +130,14 @@ class Camera(object):
         pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
         """
 
-        print "Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
         coords = self.get_coords_of_all_pixels()
         new_background = np.apply_along_axis(
             coords_to_colors_func,
             2,
             coords
         )
-        print "Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
 
         return self.convert_pixel_array(new_background, convert_from_floats = True)
 
@@ -440,7 +442,7 @@ class Camera(object):
         # rgba_max_val = self.rgb_max_val
         src_rgb, src_a, dst_rgb, dst_a = [
             a.astype(np.float32)/self.rgb_max_val
-            for a in fg[...,:3], fg[...,3], bg[...,:3], bg[...,3]
+            for a in (fg[...,:3], fg[...,3], bg[...,:3], bg[...,3])
         ]
 
         out_a = src_a + dst_a*(1.0-src_a)

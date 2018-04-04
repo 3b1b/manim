@@ -653,7 +653,7 @@ class ConstantVelocityPlot(PlotVelocity):
     def note_units(self):
         x_line, y_line  = lines = VGroup(*[
             axis.main_line.copy()
-            for axis in self.x_axis, self.y_axis
+            for axis in (self.x_axis, self.y_axis)
         ])
         lines.set_color(TIME_COLOR)
         square = Square(
@@ -665,7 +665,7 @@ class ConstantVelocityPlot(PlotVelocity):
         square.replace(
             VGroup(*[
                 VectorizedPoint(self.coords_to_point(i, i))
-                for i in 0, 1
+                for i in (0, 1)
             ]),
             stretch = True
         )
@@ -876,7 +876,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             FadeOut(self.pw_constant_graph),
             *[
                 m.restore 
-                for m in self.v_graph, self.v_graph_label
+                for m in (self.v_graph, self.v_graph_label)
             ]+[Animation(self.rects)]
         )
         for new_rects in self.rect_list[1:]:
@@ -1022,7 +1022,7 @@ class PiecewiseConstantPlot(PlotVelocity):
 
         self.play(*map(FadeOut, [
             group[1]
-            for group in v_lines, h_lines, height_labels
+            for group in (v_lines, h_lines, height_labels)
         ]))
         self.play(
             v_lines[0].set_color, RED,
@@ -1368,7 +1368,7 @@ class CarJourneyApproximation(Scene):
         "bottom_words" : "Approximated motion (5 jumps)",
     }
     def construct(self):
-        points = [5*LEFT + v for v in UP, 2*DOWN]
+        points = [5*LEFT + v for v in (UP, 2*DOWN)]
         cars = [Car().move_to(point) for point in points]
         h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         words = [
@@ -1539,7 +1539,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
                 mob.get_left(), self.area.get_center(),
                 color = WHITE
             )
-            for mob in integral, s_T
+            for mob in (integral, s_T)
         ]
 
         distance_word = TextMobject("Distance")
@@ -1678,7 +1678,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
                 formula1.get_part_by_tex(tex),
                 formula2.get_part_by_tex(tex),
             )
-            for tex in "ds", "=", "v(T)", "dT"
+            for tex in ("ds", "=", "v(T)", "dT")
         ] + [
             Write(formula2.get_part_by_tex("over"))
         ])
@@ -1865,7 +1865,7 @@ class FindAntiderivative(Antiderivative):
                 run_time = 2,
                 path_arc = -np.pi/6.
             )
-            for i in 0, 1
+            for i in (0, 1)
         ])
         self.change_mode("thinking")
         self.wait()
@@ -2172,7 +2172,7 @@ class LowerBound(AreaIsDerivative):
                 self.coords_to_point(d, 0), 
                 DOWN, MED_LARGE_BUFF
             )
-            for d in 1, 7
+            for d in (1, 7)
         ]
         tex_mobs = [new_integral]+new_antideriv_diff[1::2]+numbers
         for tex_mob in tex_mobs:
@@ -2353,7 +2353,7 @@ class FundamentalTheorem(GraphScene):
                 dx_brace.next_to, rects[i], DOWN, 0,
                 *[
                     MaintainPositionRelativeTo(brace.label, brace)
-                    for brace in f_brace, dx_brace
+                    for brace in (f_brace, dx_brace)
                 ]
             )
         self.wait()
@@ -2419,7 +2419,7 @@ class FundamentalTheorem(GraphScene):
     def show_integral_considering_continuum(self):
         self.play(*[
             ApplyMethod(mob.set_fill, None, 0.2)
-            for mob in self.deriv, self.rhs
+            for mob in (self.deriv, self.rhs)
         ])
         self.play(
             self.rects.restore,
@@ -2600,7 +2600,7 @@ class NegativeArea(GraphScene):
                 equation.get_part_by_tex(tex).get_top(),
                 color = RED,
             )
-            for tex in "ds", "v(t)"
+            for tex in ("ds", "v(t)")
         ])
 
         self.play(

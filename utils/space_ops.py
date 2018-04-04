@@ -2,6 +2,7 @@ import numpy as np
 
 from constants import OUT
 from constants import RIGHT
+from functools import reduce
 
 #Matrix operations
 

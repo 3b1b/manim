@@ -1247,7 +1247,7 @@ class ShowRule(TeacherStudentsScene):
                 color = WHITE,
                 buff = SMALL_BUFF
             )
-            for mob in new_vertex, new_region
+            for mob in (new_vertex, new_region)
         ])
         for word, arrow in zip(["Either", "or"], arrows):
             word_mob = TextMobject(word)
