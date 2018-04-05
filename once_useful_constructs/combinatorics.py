@@ -1,7 +1,8 @@
 from constants import *
 
 from mobject.svg.tex_mobject import TexMobject
-from mobject.types.vectorized_mobject import VMobject
+from mobject.types.vectorized_mobject import VMobject, VGroup
+from mobject.numbers import Integer
 
 from scene.scene import Scene
 from utils.simple_functions import choose
@@ -85,9 +86,8 @@ class CountingScene(Scene):
         self.number = num_mob
         return self
 
-class CombinationTexMobject(TexMobject):
-    def __init(self,n,k,**kwargs):
-        TexMobject.__init__(str(choose(n,k)),**kwargs)
+def combinationMobject(n,k):
+    return Integer(choose(n,k))
 
 
 class GeneralizedPascalsTriangle(VMobject):
@@ -96,7 +96,7 @@ class GeneralizedPascalsTriangle(VMobject):
         "height" : FRAME_HEIGHT - 1,
         "width" : 1.5*FRAME_X_RADIUS,
         "portion_to_fill" : 0.7,
-        "submob_class" : CombinationTexMobject,
+        "submob_class" : combinationMobject,
     }    
     def generate_points(self):
         self.cell_height = float(self.height) / self.nrows
@@ -173,9 +173,18 @@ class GeneralizedPascalsTriangle(VMobject):
                     self.add(mob)
         return self
 
+    def get_lowest_row(self):
+        n = self.nrows - 1
+        lowest_row = VGroup(*[
+            self.coords_to_mobs[n][k]
+            for k in range(n+1)
+        ])
+        return lowest_row
+
+
 class PascalsTriangle(GeneralizedPascalsTriangle):
     CONFIG = {
-        "submob_class" : CombinationTexMobject,
+        "submob_class" : combinationMobject,
     }
 
 
