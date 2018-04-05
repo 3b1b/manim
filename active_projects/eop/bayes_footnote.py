@@ -672,7 +672,7 @@ class ShowRestrictedSpace(Scene):
         words.to_edge(UP)
         arrows = [
             Arrow(words.get_bottom(), movers.target[i].get_top())
-            for i in 0, -1
+            for i in (0, -1)
         ]
 
         self.play(FadeOut(to_fade))
@@ -1354,7 +1354,7 @@ class CompareNumbersInBothExamples(Scene):
             TexMobject(
                 "P(", "\\text{%s}"%s, ")", "= 1/1{,}000}"
             )
-            for s in "Sick", "Powers"
+            for s in ("Sick", "Powers")
         ])
         likelihoods = VGroup(*[
             TexMobject(

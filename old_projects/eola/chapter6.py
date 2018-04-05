@@ -362,7 +362,7 @@ class SystemOfEquations(Scene):
                 eq.split()[i]
                 for eq in equations.split()
             ])
-            for i in 1, 4, 7
+            for i in (1, 4, 7)
         ]
         ys.words = "Vertically align variables"
         colors = [PINK, YELLOW, BLUE_B, BLUE_C, BLUE_D]
@@ -432,7 +432,7 @@ class SystemOfEquations(Scene):
         ax_equals_v.to_edge(RIGHT)
         all_brackets = [
             mob.get_brackets()
-            for mob in matrix, x_array, v_array
+            for mob in (matrix, x_array, v_array)
         ]
 
         self.play(equations.to_edge, LEFT)
@@ -651,7 +651,7 @@ class ShowBijectivity(LinearTransformationScene):
             Vector([x, y])
             for x, y in it.product(*[
                 np.arange(-int(val)+0.5, int(val)+0.5)
-                for val in FRAME_X_RADIUS, FRAME_Y_RADIUS
+                for val in (FRAME_X_RADIUS, FRAME_Y_RADIUS)
             ])
         ])
         vectors.set_submobject_colors_by_gradient(BLUE_E, PINK)
@@ -970,7 +970,7 @@ class SymbolicInversion(Scene):
         self.wait()
         self.play(*[
             ApplyMethod(m.set_color, BLACK)
-            for m in product, product.brace, product.words
+            for m in (product, product.brace, product.words)
         ])
         self.wait()
         self.play(ApplyFunction(
@@ -1239,7 +1239,7 @@ class ColumnsRepresentBasisVectors(Scene):
         matrix.shift(UP)
         i_hat_words, j_hat_words = [
             TextMobject("Where $\\hat{\\%smath}$ lands"%char)
-            for char in "i", "j"
+            for char in ("i", "j")
         ]
         i_hat_words.set_color(X_COLOR)
         i_hat_words.next_to(ORIGIN, LEFT).to_edge(UP)
@@ -1462,7 +1462,7 @@ class NameColumnSpace(Scene):
         two_d_span.move_to(span_text, aligned_edge = RIGHT)
         mob_matrix = np.array([
             two_d_span[i].get_entries().split()
-            for i in 2, 4
+            for i in (2, 4)
         ])
 
         self.play(Transform(span_text, two_d_span))
@@ -1482,7 +1482,7 @@ class NameColumnSpace(Scene):
         self.add(span_text)
         mob_matrix = np.array([
             span_text[i].get_entries().split()
-            for i in 2, 4, 6
+            for i in (2, 4, 6)
         ])
         self.replace_number_matrix(mob_matrix, [[1, 1, 0], [0, 1, 1], [1, 0, 1]])
         self.wait()

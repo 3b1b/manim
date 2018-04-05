@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -13,7 +14,7 @@ from mobject.region import  *
 import displayer as disp
 from scene.scene import Scene, GraphScene
 from scene.graphs import *
-from moser_main import EulersFormula
+from .moser_main import EulersFormula
 from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "ecf_graph_scenes/"
@@ -726,7 +727,7 @@ class ExamplesOfGraphs(GraphScene):
             found = False
             while True:
                 try:
-                    cycle1, cycle2 = region_pairs.next()
+                    cycle1, cycle2 = next(region_pairs)
                 except:
                     return
                 shared = set(cycle1).intersection(cycle2)

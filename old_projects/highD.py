@@ -1937,7 +1937,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             self.circle.copy().move_to(
                 self.plane.coords_to_point(*coords)
             ).set_color(GREY)
-            for coords in (1, 1), (-1, 1), (-1, -1)
+            for coords in ((1, 1), (-1, 1), (-1, -1))
         ])
         line = Line(
             self.plane.coords_to_point(-1, -1),
@@ -2055,7 +2055,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
                     mob.shift,
                     slider.number_to_point(1) - slider.number_to_point(-1)
                 )
-                for mob in slider.real_estate_ticks, slider.dial
+                for mob in (slider.real_estate_ticks, slider.dial)
             ]
         )
         slider.center_value = 1
@@ -2657,7 +2657,7 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
                 radius = radius*self.plane.x_unit_size,
                 color = GREEN
             ).move_to(self.plane.coords_to_point(0, 0))
-            for radius in np.sqrt(2)-1, 1
+            for radius in (np.sqrt(2)-1, 1)
         ]
         randy = self.randy
         tangency_points = VGroup(*[

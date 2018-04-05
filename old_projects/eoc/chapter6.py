@@ -563,7 +563,7 @@ class Ladder(VMobject):
     def generate_points(self):
         left_line, right_line = [
             Line(ORIGIN, self.height*UP).shift(self.width*vect/2.0)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ]
         rungs = [
             Line(
@@ -677,7 +677,7 @@ class RelatedRatesExample(ThreeDScene):
 
         down_arrow, left_arrow = [
             Arrow(ORIGIN, vect, color = YELLOW, buff = 0)
-            for vect in DOWN, LEFT
+            for vect in (DOWN, LEFT)
         ]
         down_arrow.shift(y_line.get_start()+MED_SMALL_BUFF*RIGHT)
         left_arrow.shift(x_line.get_start()+SMALL_BUFF*DOWN)
@@ -1302,7 +1302,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             for i, j in enumerate([1, 0, 3, 5, 4, 7])
         ]+[
             Write(derivative[j])
-            for j in 2, 6
+            for j in (2, 6)
         ])
         self.play(
             self.pi_creature.change_mode, "pondering",
@@ -1508,7 +1508,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             )
         ]+[
             Write(derivative[1][j])
-            for j in 3, 7
+            for j in (3, 7)
         ])
         self.play(*[
             ReplacementTransform(
@@ -1729,7 +1729,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
                 buff = SMALL_BUFF/self.zoom_factor,
                 tip_length = 0.15/self.zoom_factor
             )
-            for mob in dot, new_dot
+            for mob in (dot, new_dot)
         ]
 
         for line, tex, vect in (dy_line, "dy", RIGHT), (dx_line, "dx", UP):
@@ -2025,7 +2025,7 @@ class AlternateExample(ZoomedScene):
 
         arrows = VGroup(*[
             Arrow(word, part)
-            for part in lhs, rhs
+            for part in (lhs, rhs)
         ])
 
         self.play(FocusOn(formula))
@@ -2072,7 +2072,7 @@ class AlternateExample(ZoomedScene):
         )
         derivative_rects = [
             BackgroundRectangle(VGroup(*subset))
-            for subset in derivative[:2], derivative[2:]
+            for subset in (derivative[:2], derivative[2:])
         ]
         derivative_rects[1].stretch(1.05, dim = 0)
 

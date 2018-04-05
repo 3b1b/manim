@@ -1,4 +1,6 @@
-from big_ol_pile_of_manim_imports import *
+from __future__ import print_function
+from __future__ import absolute_import
+from .big_ol_pile_of_manim_imports import *
 
 def is_prime(n):
 
@@ -68,15 +70,15 @@ class Primes(Scene):
         #            73      79      83        89       97
 
         nb_primes = len(primes_list)
-        print nb_primes
+        print(nb_primes)
 
         prime_points_radius = 3.2
         angles = np.arange(TAU/4, -3*TAU/4, -TAU/float(nb_primes))
-        print len(angles), angles
+        print(len(angles), angles)
         prime_points = [prime_points_radius * (np.cos(theta) * RIGHT
                          + np.sin(theta) * UP)
                             for theta in angles]
-        print len(prime_points)
+        print(len(prime_points))
 
         wheel = Wheel()
         
@@ -116,7 +118,7 @@ class Primes(Scene):
                 full_wheel = VGroup(wheel,number).copy()
                 full_wheel_copy = full_wheel.copy()
                 full_wheel_copy.scale(0.15).move_to(prime_points[j])
-                print j
+                print(j)
                 j += 1
                 self.play(
                     Transform(full_wheel, full_wheel_copy)
@@ -162,7 +164,7 @@ class Wheel(VMobject):
     def update_sectors(self, new_angles, new_colors):
 
         if len(new_angles) > self.nb_sectors:
-            raise "More angles than sectors!"
+            raise Exception("More angles than sectors!")
         
         for i in range(len(new_angles), self.nb_sectors):
             new_angles = np.append(new_angles, 0)

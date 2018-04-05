@@ -152,7 +152,7 @@ class WhyConfuseWithTerminology(TeacherStudentsScene):
     def construct(self):
         self.setup()
         self.student_says("Why confuse us with \\\\ redundant terminology?")
-        other_students = [self.get_students()[i] for i in 0, 2]
+        other_students = [self.get_students()[i] for i in (0, 2)]
         self.play(*[
             ApplyMethod(student.change_mode, "confused")
             for student in other_students
@@ -668,7 +668,7 @@ class TrackBasisVectorsExample(LinearTransformationScene):
         self.remove(coords)
 
     def show_linear_combination(self, clean_up = True):
-        i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
+        i_hat_copy, j_hat_copy = [m.copy() for m in (self.i_hat, self.j_hat)]
         self.play(ApplyFunction(
             lambda m : m.scale(self.v_coords[0]).fade(0.3),
             i_hat_copy

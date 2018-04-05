@@ -1,3 +1,4 @@
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 
 import mpmath
@@ -1800,7 +1801,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
 
         line = Line(*map(self.z_to_point, [
             complex(np.euler_gamma, u*FRAME_Y_RADIUS)
-            for u in 1, -1
+            for u in (1, -1)
         ]))
         line.set_color(YELLOW)
         arrows = [
@@ -1826,9 +1827,9 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
                     vert_vect+RIGHT,
                     vert_vect+(FRAME_X_RADIUS+1)*horiz_vect
                 )
-                for vert_vect in UP, DOWN
+                for vert_vect in (UP, DOWN)
             ])
-            for horiz_vect in RIGHT, LEFT
+            for horiz_vect in (RIGHT, LEFT)
         ]
         right_i_lines.set_color(YELLOW)
         left_i_lines.set_color(BLUE)
@@ -1913,7 +1914,7 @@ class ShowConditionalDefinition(Scene):
         something_else = TextMobject("Something else...")
         conditions = VGroup(*[
             TextMobject("if Re$(s) %s 1$"%s)
-            for s in ">", "\\le"
+            for s in (">", "\\le")
         ])
         definitions = VGroup(sigma, something_else)
         definitions.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)

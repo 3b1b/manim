@@ -21,6 +21,7 @@ from utils.space_ops import rotate_vector
 from utils.space_ops import rotation_matrix
 
 from constants import *
+from functools import reduce
 
 def rotate(points, angle = np.pi, axis = OUT):
     if axis is None:

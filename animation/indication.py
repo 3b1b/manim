@@ -16,6 +16,7 @@ from mobject.geometry import Dot
 from utils.config_ops import digest_config
 from utils.rate_functions import squish_rate_func
 from utils.rate_functions import there_and_back
+from functools import reduce
 
 
 class FocusOn(Transform):
@@ -170,7 +171,7 @@ class Vibrate(Animation):
         )
         for mob, start in zip(*families):
             mob.points = np.apply_along_axis(
-                lambda (x, y, z) : (x, y + self.wave_function(x, time), z),
+                lambda x_y_z : (x_y_z[0], x_y_z[1] + self.wave_function(x_y_z[0], time), x_y_z[2]),
                 1, start.points
             )
 
