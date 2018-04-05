@@ -129,6 +129,7 @@ def get_configuration():
    return config
 
 def handle_scene(scene, **config):
+   import platform
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
@@ -142,6 +143,9 @@ def handle_scene(scene, **config):
    ])
    if open_file:
       commands = ["open"]
+      if (platform.system() == "Linux"):
+         commands = ["xdg-open"]
+
       if config["show_file_in_finder"]:
          commands.append("-R")
       #
@@ -149,7 +153,9 @@ def handle_scene(scene, **config):
          commands.append(scene.get_image_file_path())
       else:
          commands.append(scene.get_movie_file_path())
-      sp.call(commands)
+      FNULL = open(os.devnull, 'w')
+      sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
+      FNULL.close()
 
    if config["quiet"]:
       sys.stdout.close()
