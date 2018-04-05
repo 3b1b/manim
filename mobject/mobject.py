@@ -553,7 +553,7 @@ class Mobject(Container):
         return self
 
     def fade_to(self, color, alpha):
-        for mob in self.subobject_family():
+        for mob in self.submobject_family():
             mob.fade_to_no_recurse(self, color, alpha)
         return self
 
