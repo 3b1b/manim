@@ -2,29 +2,30 @@ from constants import *
 
 from animation.animation import Animation
 from animation.movement import SmoothedVectorizedHomotopy
-from animation.transform import ApplyPointwiseFunction
 from animation.transform import MoveToTarget
 from mobject.coordinate_systems import ComplexPlane
 from mobject.types.vectorized_mobject import VGroup
 from scene.scene import Scene
 
+
 class ComplexTransformationScene(Scene):
     CONFIG = {
-        "plane_config" : {},
-        "background_fade_factor" : 0.5,
-        "use_multicolored_plane" : False,
-        "vert_start_color" : BLUE, ##TODO
-        "vert_end_color" : BLUE,
-        "horiz_start_color" : BLUE,
-        "horiz_end_color" : BLUE,
-        "num_anchors_to_add_per_line" : 50,
-        "post_transformation_stroke_width" : None,
-        "default_apply_complex_function_kwargs" : {
-            "run_time" : 5,
+        "plane_config": {},
+        "background_fade_factor": 0.5,
+        "use_multicolored_plane": False,
+        "vert_start_color": BLUE,  # TODO
+        "vert_end_color": BLUE,
+        "horiz_start_color": BLUE,
+        "horiz_end_color": BLUE,
+        "num_anchors_to_add_per_line": 50,
+        "post_transformation_stroke_width": None,
+        "default_apply_complex_function_kwargs": {
+            "run_time": 5,
         },
-        "background_label_scale_val" : 0.5,
-        "include_coordinate_labels" : True,
+        "background_label_scale_val": 0.5,
+        "include_coordinate_labels": True,
     }
+
     def setup(self):
         self.foreground_mobjects = []
         self.transformable_mobjects = []
@@ -44,12 +45,12 @@ class ComplexTransformationScene(Scene):
         Scene.add(self, *mobjects)
 
     def add(self, *mobjects):
-        Scene.add(self, *list(mobjects)+self.foreground_mobjects)
+        Scene.add(self, *list(mobjects) + self.foreground_mobjects)
 
     def play(self, *animations, **kwargs):
         Scene.play(
             self,
-            *list(animations)+map(Animation, self.foreground_mobjects),
+            *list(animations) + map(Animation, self.foreground_mobjects),
             **kwargs
         )
 
@@ -67,7 +68,7 @@ class ComplexTransformationScene(Scene):
         self.plane = self.get_transformable_plane()
         self.add(self.plane)
 
-    def get_transformable_plane(self, x_range = None, y_range = None):
+    def get_transformable_plane(self, x_range=None, y_range=None):
         """
         x_range and y_range would be tuples (min, max)
         """
@@ -76,11 +77,11 @@ class ComplexTransformationScene(Scene):
         if x_range is not None:
             x_min, x_max = x_range
             plane_config["x_radius"] = x_max - x_min
-            shift_val += (x_max+x_min)*RIGHT/2.
+            shift_val += (x_max + x_min) * RIGHT / 2.
         if y_range is not None:
             y_min, y_max = y_range
             plane_config["y_radius"] = y_max - y_min
-            shift_val += (y_max+y_min)*UP/2.
+            shift_val += (y_max + y_min) * UP / 2.
         plane = ComplexPlane(**plane_config)
         plane.shift(shift_val)
         if self.use_multicolored_plane:
@@ -92,7 +93,7 @@ class ComplexTransformationScene(Scene):
             mob.prepare_for_nonlinear_transform(
                 self.num_anchors_to_add_per_line
             )
-        #TODO...
+        # TODO...
 
     def paint_plane(self, plane):
         for lines in plane.main_lines, plane.secondary_lines:
@@ -109,7 +110,7 @@ class ComplexTransformationScene(Scene):
 
     def z_to_point(self, z):
         return self.background.number_to_point(z)
-        
+
     def get_transformer(self, **kwargs):
         transform_kwargs = dict(self.default_apply_complex_function_kwargs)
         transform_kwargs.update(kwargs)
@@ -117,16 +118,15 @@ class ComplexTransformationScene(Scene):
         self.prepare_for_transformation(plane)
         transformer = VGroup(
             plane, *self.transformable_mobjects
-        )        
+        )
         return transformer, transform_kwargs
 
-
-    def apply_complex_function(self, func, added_anims = [], **kwargs):
+    def apply_complex_function(self, func, added_anims=[], **kwargs):
         transformer, transform_kwargs = self.get_transformer(**kwargs)
         transformer.generate_target()
-        #Rescale, apply function, scale back
+        # Rescale, apply function, scale back
         transformer.target.shift(-self.background.get_center_point())
-        transformer.target.scale(1./self.background.unit_size)
+        transformer.target.scale(1. / self.background.unit_size)
         transformer.target.apply_complex_function(func)
         transformer.target.scale(self.background.unit_size)
         transformer.target.shift(self.background.get_center_point())
@@ -135,14 +135,16 @@ class ComplexTransformationScene(Scene):
         for mob in transformer.target[0].family_members_with_points():
             mob.make_smooth()
         if self.post_transformation_stroke_width is not None:
-            transformer.target.set_stroke(width = self.post_transformation_stroke_width)
+            transformer.target.set_stroke(
+                width=self.post_transformation_stroke_width)
         self.play(
             MoveToTarget(transformer, **transform_kwargs),
             *added_anims
         )
 
-    def apply_complex_homotopy(self, complex_homotopy, added_anims = [], **kwargs):
+    def apply_complex_homotopy(self, complex_homotopy, added_anims=[], **kwargs):
         transformer, transform_kwargs = self.get_transformer(**kwargs)
+
         def homotopy(x, y, z, t):
             output = complex_homotopy(complex(x, y), t)
             rescaled_output = self.z_to_point(output)
@@ -155,24 +157,3 @@ class ComplexTransformationScene(Scene):
             ),
             *added_anims
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,17 +2,19 @@ from __future__ import absolute_import
 
 from camera.camera import Camera
 
+
 class MovingCamera(Camera):
     """
     Stays in line with the height, width and position
     of a given mobject
     """
     CONFIG = {
-        "aligned_dimension" : "width" #or height
+        "aligned_dimension": "width"  # or height
     }
+
     def __init__(self, frame, **kwargs):
         """
-        frame is a Mobject, (should be a rectangle) determining 
+        frame is a Mobject, (should be a rectangle) determining
         which region of space the camera displys
         """
         self.frame = frame

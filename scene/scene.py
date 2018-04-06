@@ -1,4 +1,3 @@
-import copy
 import inspect
 import itertools as it
 import numpy as np
@@ -6,11 +5,8 @@ import os
 import random
 import shutil
 import subprocess as sp
-import time
 import warnings
 
-from PIL import Image
-from colour import Color
 from tqdm import tqdm as ProgressDisplay
 
 from constants import *
@@ -20,10 +16,10 @@ from animation.transform import MoveToTarget
 from camera.camera import Camera
 from continual_animation.continual_animation import ContinualAnimation
 from mobject.mobject import Mobject
-from mobject.types.vectorized_mobject import VMobject
 from utils.iterables import list_update
 
 from container.container import Container
+
 
 def add_extension_if_not_present(file_name, extension):
     # This could conceivably be smarter about handling existing differing extensions
@@ -32,29 +28,32 @@ def add_extension_if_not_present(file_name, extension):
     else:
         return file_name
 
+
 class Scene(Container):
     CONFIG = {
-        "camera_class"     : Camera,
-        "camera_config"    : {},
-        "frame_duration"   : LOW_QUALITY_FRAME_DURATION,
-        "construct_args"   : [],
-        "skip_animations"  : False,
-        "ignore_waits"     : False,
-        "write_to_movie"   : False,
-        "save_frames"      : False,
-        "save_pngs"        : False,
-        "pngs_mode"        : "RGBA",
-        "output_directory" : ANIMATIONS_DIR,
-        "movie_file_extension" : ".mp4",
-        "name" : None,
-        "always_continually_update" : False,
-        "random_seed" : 0,
-        "start_at_animation_number" : None,
-        "end_at_animation_number" : None,
-        "include_render_quality_in_output_directory" : True,
+        "camera_class": Camera,
+        "camera_config": {},
+        "frame_duration": LOW_QUALITY_FRAME_DURATION,
+        "construct_args": [],
+        "skip_animations": False,
+        "ignore_waits": False,
+        "write_to_movie": False,
+        "save_frames": False,
+        "save_pngs": False,
+        "pngs_mode": "RGBA",
+        "output_directory": ANIMATIONS_DIR,
+        "movie_file_extension": ".mp4",
+        "name": None,
+        "always_continually_update": False,
+        "random_seed": 0,
+        "start_at_animation_number": None,
+        "end_at_animation_number": None,
+        "include_render_quality_in_output_directory": True,
     }
+
     def __init__(self, **kwargs):
-        Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
+        # Perhaps allow passing in a non-empty *mobjects parameter?
+        Container.__init__(self, **kwargs)
         self.camera = self.camera_class(**self.camera_config)
         self.mobjects = []
         self.continual_animations = []
@@ -86,7 +85,7 @@ class Scene(Container):
 
         if self.write_to_movie:
             self.close_movie_pipe()
-        print("Played a total of %d animations"%self.num_plays)
+        print("Played a total of %d animations" % self.num_plays)
 
     def setup(self):
         """
@@ -101,7 +100,7 @@ class Scene(Container):
             base.setup(self)
 
     def construct(self):
-        pass #To be implemented in subclasses
+        pass  # To be implemented in subclasses
 
     def __str__(self):
         return self.name
@@ -128,7 +127,7 @@ class Scene(Container):
     def get_attrs(self, *keys):
         return [getattr(self, key) for key in keys]
 
-    ### Only these methods should touch the camera
+    # Only these methods should touch the camera
 
     def set_camera(self, camera):
         self.camera = camera
@@ -152,12 +151,12 @@ class Scene(Container):
         self.camera.capture_mobjects(mobjects, **kwargs)
 
     def update_frame(
-        self, 
-        mobjects = None, 
-        background = None, 
-        include_submobjects = True,
-        dont_update_when_skipping = True,
-        **kwargs):
+            self,
+            mobjects=None,
+            background=None,
+            include_submobjects=True,
+            dont_update_when_skipping=True,
+            **kwargs):
         if self.skip_animations and dont_update_when_skipping:
             return
         if mobjects is None:
@@ -179,7 +178,7 @@ class Scene(Container):
         self.clear()
     ###
 
-    def continual_update(self, dt = None):
+    def continual_update(self, dt=None):
         if dt is None:
             dt = self.frame_duration
         for continual_animation in self.continual_animations:
@@ -190,10 +189,10 @@ class Scene(Container):
         for continual_animation in continual_animations:
             continual_animation.begin_wind_down(wind_down_time)
         self.wait(wind_down_time)
-        #TODO, this is not done with the remove method so as to
-        #keep the relevant mobjects.  Better way?
+        # TODO, this is not done with the remove method so as to
+        # keep the relevant mobjects.  Better way?
         self.continual_animations = filter(
-            lambda ca : ca in continual_animations,
+            lambda ca: ca in continual_animations,
             self.continual_animations
         )
 
@@ -207,6 +206,7 @@ class Scene(Container):
         # of another mobject from the scene
         mobjects = self.get_mobjects()
         families = [m.submobject_family() for m in mobjects]
+
         def is_top_level(mobject):
             num_families = sum([
                 (mobject in family)
@@ -239,7 +239,7 @@ class Scene(Container):
         mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
             mobjects_or_continual_animations
         )
-        self.restructure_mobjects(to_remove = mobjects)
+        self.restructure_mobjects(to_remove=mobjects)
         self.mobjects += mobjects
         self.continual_animations += continual_animations
         return self
@@ -249,7 +249,7 @@ class Scene(Container):
         So a scene can just add all mobjects it's defined up to that point
         by calling add_mobjects_among(locals().values())
         """
-        mobjects = filter(lambda x : isinstance(x, Mobject), values)
+        mobjects = filter(lambda x: isinstance(x, Mobject), values)
         self.add(*mobjects)
         return self
 
@@ -263,17 +263,17 @@ class Scene(Container):
             self.restructure_mobjects(mobjects, list_name, False)
 
         self.continual_animations = filter(
-            lambda ca : ca not in continual_animations and \
-                        ca.mobject not in to_remove,
+            lambda ca: ca not in continual_animations and
+            ca.mobject not in to_remove,
             self.continual_animations
         )
         return self
 
     def restructure_mobjects(
-        self, to_remove, 
-        mobject_list_name = "mobjects", 
-        extract_families = True
-        ):
+        self, to_remove,
+        mobject_list_name="mobjects",
+        extract_families=True
+    ):
         """
         In cases where the scene contains a group, e.g. Group(m1, m2, m3), but one
         of its submobjects is removed, e.g. scene.remove(m1), the list of mobjects
@@ -289,6 +289,7 @@ class Scene(Container):
 
     def get_restructured_mobject_list(self, mobjects, to_remove):
         new_mobjects = []
+
         def add_safe_mobjects_from_list(list_to_examine, set_to_remove):
             for mob in list_to_examine:
                 if mob in set_to_remove:
@@ -364,7 +365,7 @@ class Scene(Container):
         run_time = np.max([animation.run_time for animation in animations])
         time_progression = self.get_time_progression(run_time)
         time_progression.set_description("".join([
-            "Animation %d: "%self.num_plays,
+            "Animation %d: " % self.num_plays,
             str(animations[0]),
             (", etc." if len(animations) > 1 else ""),
         ]))
@@ -383,17 +384,18 @@ class Scene(Container):
         """
         animations = []
         state = {
-            "curr_method" : None,
-            "last_method" : None,
-            "method_args" : [],
+            "curr_method": None,
+            "last_method": None,
+            "method_args": [],
         }
+
         def compile_method(state):
             if state["curr_method"] is None:
                 return
             mobject = state["curr_method"].im_self
             if state["last_method"] and state["last_method"].im_self is mobject:
                 animations.pop()
-                #method should already have target then.
+                # method should already have target then.
             else:
                 mobject.generate_target()
             #
@@ -402,7 +404,7 @@ class Scene(Container):
             else:
                 method_kwargs = {}
             state["curr_method"].im_func(
-                mobject.target, 
+                mobject.target,
                 *state["method_args"],
                 **method_kwargs
             )
@@ -453,7 +455,7 @@ class Scene(Container):
 
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
-        self.update_frame(excluded_mobjects = moving_mobjects)
+        self.update_frame(excluded_mobjects=moving_mobjects)
         static_image = self.get_frame()
         for t in self.get_animation_time_progression(animations):
             for animation in animations:
@@ -484,27 +486,28 @@ class Scene(Container):
             return self.mobjects_from_last_animation
         return []
 
-    def wait(self, duration = DEFAULT_WAIT_TIME):
+    def wait(self, duration=DEFAULT_WAIT_TIME):
         if self.should_continually_update():
             for t in self.get_time_progression(duration):
                 self.continual_update()
                 self.update_frame()
                 self.add_frames(self.get_frame())
         elif self.skip_animations:
-            #Do nothing
+            # Do nothing
             return self
         else:
             self.update_frame()
-            self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
+            self.add_frames(*[self.get_frame()] *
+                            int(duration / self.frame_duration))
         return self
 
-    def wait_to(self, time, assert_positive = True):
-        if self.ignore_waits: 
+    def wait_to(self, time, assert_positive=True):
+        if self.ignore_waits:
             return
         time -= self.current_scene_time
-        if assert_positive: 
+        if assert_positive:
             assert(time >= 0)
-        elif time < 0: 
+        elif time < 0:
             return
 
         self.wait(time)
@@ -522,23 +525,24 @@ class Scene(Container):
     def add_frames(self, *frames):
         if self.skip_animations:
             return
-        self.current_scene_time += len(frames)*self.frame_duration
+        self.current_scene_time += len(frames) * self.frame_duration
         if self.write_to_movie:
             for frame in frames:
                 if self.save_pngs:
-                    self.save_image("frame" + str(self.frame_num), self.pngs_mode, True)
+                    self.save_image(
+                        "frame" + str(self.frame_num), self.pngs_mode, True)
                     self.frame_num = self.frame_num + 1
                 self.writing_process.stdin.write(frame.tostring())
         if self.save_frames:
             self.saved_frames += list(frames)
 
-    #Display methods
+    # Display methods
 
     def show_frame(self):
-        self.update_frame(dont_update_when_skipping = False)
+        self.update_frame(dont_update_when_skipping=False)
         self.get_image().show()
 
-    def get_image_file_path(self, name = None, dont_update = False):
+    def get_image_file_path(self, name=None, dont_update=False):
         folder = "images"
         if dont_update:
             folder = str(self)
@@ -546,23 +550,23 @@ class Scene(Container):
         file_name = add_extension_if_not_present(name or str(self), ".png")
         return os.path.join(path, file_name)
 
-    def save_image(self, name = None, mode = "RGB", dont_update = False):
+    def save_image(self, name=None, mode="RGB", dont_update=False):
         path = self.get_image_file_path(name, dont_update)
         directory_path = os.path.dirname(path)
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
         if not dont_update:
-            self.update_frame(dont_update_when_skipping = False)
+            self.update_frame(dont_update_when_skipping=False)
         image = self.get_image()
         image = image.convert(mode)
         image.save(path)
 
-    def get_movie_file_path(self, name = None, extension = None):
+    def get_movie_file_path(self, name=None, extension=None):
         directory = self.output_directory
         if self.include_render_quality_in_output_directory:
-            sub_dir = "%dp%d"%(
+            sub_dir = "%dp%d" % (
                 self.camera.pixel_shape[0],
-                int(1.0/self.frame_duration)
+                int(1.0 / self.frame_duration)
             )
             directory = os.path.join(directory, sub_dir)
         if not os.path.exists(directory):
@@ -581,21 +585,21 @@ class Scene(Container):
         name = str(self)
         file_path = self.get_movie_file_path(name)
         temp_file_path = file_path.replace(name, name + "Temp")
-        print("Writing to %s"%temp_file_path)
+        print("Writing to %s" % temp_file_path)
         self.args_to_rename_file = (temp_file_path, file_path)
 
-        fps = int(1/self.frame_duration)
+        fps = int(1 / self.frame_duration)
         height, width = self.camera.pixel_shape
-        
+
         command = [
             FFMPEG_BIN,
-            '-y', # overwrite output file if it exists
+            '-y',  # overwrite output file if it exists
             '-f', 'rawvideo',
-            '-s', '%dx%d'%(width, height), # size of one frame
+            '-s', '%dx%d' % (width, height),  # size of one frame
             '-pix_fmt', 'rgba',
-            '-r', str(fps), # frames per second
-            '-i', '-', # The imput comes from a pipe
-            '-an', # Tells FFMPEG not to expect any audio
+            '-r', str(fps),  # frames per second
+            '-i', '-',  # The imput comes from a pipe
+            '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
         if self.movie_file_extension == ".mov":
@@ -603,7 +607,7 @@ class Scene(Container):
             # should be transparent.
             command += [
                 '-vcodec', 'png',
-            ] 
+            ]
         else:
             command += [
                 '-vcodec', 'libx264',
@@ -621,14 +625,6 @@ class Scene(Container):
         else:
             os.rename(*self.args_to_rename_file)
 
+
 class EndSceneEarlyException(Exception):
     pass
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,6 @@
 import os
 
+
 def play_chord(*nums):
     commands = [
         "play",
@@ -8,10 +9,10 @@ def play_chord(*nums):
         "--no-show-progress",
         "synth",
     ] + [
-        "sin %-"+str(num)
+        "sin %-" + str(num)
         for num in nums
     ] + [
-        "fade h 0.5 1 0.5", 
+        "fade h 0.5 1 0.5",
         "> /dev/null"
     ]
     try:
@@ -19,8 +20,10 @@ def play_chord(*nums):
     except:
         pass
 
+
 def play_error_sound():
     play_chord(11, 8, 6, 1)
+
 
 def play_finish_sound():
     play_chord(12, 9, 5, 2)

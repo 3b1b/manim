@@ -7,13 +7,15 @@ from mobject.numbers import DecimalNumber
 from utils.bezier import interpolate
 from utils.config_ops import digest_config
 
+
 class ChangingDecimal(Animation):
     CONFIG = {
-        "num_decimal_points" : None,
-        "show_ellipsis" : None,
-        "position_update_func" : None,
-        "tracked_mobject" : None,
+        "num_decimal_points": None,
+        "show_ellipsis": None,
+        "position_update_func": None,
+        "tracked_mobject": None,
     }
+
     def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
         self.decimal_number_config = dict(
@@ -52,10 +54,14 @@ class ChangingDecimal(Animation):
         if self.position_update_func is not None:
             self.position_update_func(self.decimal_number_mobject)
         elif self.tracked_mobject is not None:
-            self.decimal_number_mobject.move_to(self.tracked_mobject.get_center() + self.diff_from_tracked_mobject)
+            self.decimal_number_mobject.move_to(
+                self.tracked_mobject.get_center() + self.diff_from_tracked_mobject)
+
 
 class ChangeDecimalToValue(ChangingDecimal):
     def __init__(self, decimal_number_mobject, target_number, **kwargs):
         start_number = decimal_number_mobject.number
-        func = lambda alpha : interpolate(start_number, target_number, alpha)
+
+        def func(alpha):
+            return interpolate(start_number, target_number, alpha)
         ChangingDecimal.__init__(self, decimal_number_mobject, func, **kwargs)

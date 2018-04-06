@@ -15,29 +15,31 @@ from utils.iterables import tuplify
 
 EPSILON = 0.0001
 
+
 class SampleSpace(Rectangle):
     CONFIG = {
-        "height" : 3,
-        "width" : 3,
-        "fill_color" : DARK_GREY,
-        "fill_opacity" : 1,
-        "stroke_width" : 0.5,
-        "stroke_color" : LIGHT_GREY,
+        "height": 3,
+        "width": 3,
+        "fill_color": DARK_GREY,
+        "fill_opacity": 1,
+        "stroke_width": 0.5,
+        "stroke_color": LIGHT_GREY,
         ##
-        "default_label_scale_val" : 1,
+        "default_label_scale_val": 1,
     }
-    def add_title(self, title = "Sample space", buff = MED_SMALL_BUFF):
-        ##TODO, should this really exist in SampleSpaceScene
+
+    def add_title(self, title="Sample space", buff=MED_SMALL_BUFF):
+        # TODO, should this really exist in SampleSpaceScene
         title_mob = TextMobject(title)
         if title_mob.get_width() > self.get_width():
             title_mob.scale_to_fit_width(self.get_width())
-        title_mob.next_to(self, UP, buff = buff)
+        title_mob.next_to(self, UP, buff=buff)
         self.title = title_mob
         self.add(title_mob)
 
     def add_label(self, label):
         self.label = label
-    
+
     def complete_p_list(self, p_list):
         new_p_list = list(tuplify(p_list))
         remainder = 1.0 - sum(new_p_list)
@@ -54,7 +56,7 @@ class SampleSpace(Rectangle):
         for factor, color in zip(p_list, colors):
             part = SampleSpace()
             part.set_fill(color, 1)
-            part.replace(self, stretch = True)
+            part.replace(self, stretch=True)
             part.stretch(factor, dim)
             part.move_to(last_point, -vect)
             last_point = part.get_edge_center(vect)
@@ -62,17 +64,17 @@ class SampleSpace(Rectangle):
         return parts
 
     def get_horizontal_division(
-        self, p_list, 
-        colors = [GREEN_E, BLUE_E],
-        vect = DOWN 
-        ):
+        self, p_list,
+        colors=[GREEN_E, BLUE_E],
+        vect=DOWN
+    ):
         return self.get_division_along_dimension(p_list, 1, colors, vect)
 
     def get_vertical_division(
-        self, p_list, 
-        colors = [MAROON_B, YELLOW],
-        vect = RIGHT
-        ):
+        self, p_list,
+        colors=[MAROON_B, YELLOW],
+        vect=RIGHT
+    ):
         return self.get_division_along_dimension(p_list, 0, colors, vect)
 
     def divide_horizontally(self, *args, **kwargs):
@@ -85,16 +87,16 @@ class SampleSpace(Rectangle):
 
     def get_subdivision_braces_and_labels(
         self, parts, labels, direction,
-        buff = SMALL_BUFF,
-        min_num_quads = 1
-        ):
+        buff=SMALL_BUFF,
+        min_num_quads=1
+    ):
         label_mobs = VGroup()
         braces = VGroup()
         for label, part in zip(labels, parts):
             brace = Brace(
-                part, direction, 
-                min_num_quads = min_num_quads, 
-                buff = buff
+                part, direction,
+                min_num_quads=min_num_quads,
+                buff=buff
             )
             if isinstance(label, Mobject):
                 label_mob = label
@@ -108,13 +110,13 @@ class SampleSpace(Rectangle):
         parts.braces = braces
         parts.labels = label_mobs
         parts.label_kwargs = {
-            "labels" : label_mobs.copy(),
-            "direction" : direction, 
-            "buff" : buff,
+            "labels": label_mobs.copy(),
+            "direction": direction,
+            "buff": buff,
         }
         return VGroup(parts.braces, parts.labels)
 
-    def get_side_braces_and_labels(self, labels, direction = LEFT, **kwargs):
+    def get_side_braces_and_labels(self, labels, direction=LEFT, **kwargs):
         assert(hasattr(self, "horizontal_parts"))
         parts = self.horizontal_parts
         return self.get_subdivision_braces_and_labels(parts, labels, direction, **kwargs)
@@ -145,21 +147,23 @@ class SampleSpace(Rectangle):
             return self.vertical_parts[index]
         return self.split()[index]
 
+
 class BarChart(VGroup):
     CONFIG = {
-        "height" : 4,
-        "width" : 6,
-        "n_ticks" : 4,
-        "tick_width" : 0.2,
-        "label_y_axis" : True,
-        "y_axis_label_height" : 0.25,
-        "max_value" : 1,
-        "bar_colors" : [BLUE, YELLOW],
-        "bar_fill_opacity" : 0.8,
-        "bar_stroke_width" : 3,
-        "bar_names" : [],
-        "bar_label_scale_val" : 0.75,
+        "height": 4,
+        "width": 6,
+        "n_ticks": 4,
+        "tick_width": 0.2,
+        "label_y_axis": True,
+        "y_axis_label_height": 0.25,
+        "max_value": 1,
+        "bar_colors": [BLUE, YELLOW],
+        "bar_fill_opacity": 0.8,
+        "bar_stroke_width": 3,
+        "bar_names": [],
+        "bar_label_scale_val": 0.75,
     }
+
     def __init__(self, values, **kwargs):
         VGroup.__init__(self, **kwargs)
         if self.max_value is None:
@@ -170,15 +174,15 @@ class BarChart(VGroup):
         self.center()
 
     def add_axes(self):
-        x_axis = Line(self.tick_width*LEFT/2, self.width*RIGHT)
-        y_axis = Line(MED_LARGE_BUFF*DOWN, self.height*UP)
+        x_axis = Line(self.tick_width * LEFT / 2, self.width * RIGHT)
+        y_axis = Line(MED_LARGE_BUFF * DOWN, self.height * UP)
         ticks = VGroup()
-        heights = np.linspace(0, self.height, self.n_ticks+1)
-        values = np.linspace(0, self.max_value, self.n_ticks+1)
+        heights = np.linspace(0, self.height, self.n_ticks + 1)
+        values = np.linspace(0, self.max_value, self.n_ticks + 1)
         for y, value in zip(heights, values):
             tick = Line(LEFT, RIGHT)
             tick.scale_to_fit_width(self.tick_width)
-            tick.move_to(y*UP)
+            tick.move_to(y * UP)
             ticks.add(tick)
         y_axis.add(ticks)
 
@@ -195,18 +199,17 @@ class BarChart(VGroup):
             self.y_axis_labels = labels
             self.add(labels)
 
-
     def add_bars(self, values):
-        buff = float(self.width) / (2*len(values) + 1)
+        buff = float(self.width) / (2 * len(values) + 1)
         bars = VGroup()
         for i, value in enumerate(values):
             bar = Rectangle(
-                height = (value/self.max_value)*self.height,
-                width = buff,
-                stroke_width = self.bar_stroke_width,
-                fill_opacity = self.bar_fill_opacity,
+                height=(value / self.max_value) * self.height,
+                width=buff,
+                stroke_width=self.bar_stroke_width,
+                fill_opacity=self.bar_fill_opacity,
             )
-            bar.move_to((2*i+1)*buff*RIGHT, DOWN+LEFT)
+            bar.move_to((2 * i + 1) * buff * RIGHT, DOWN + LEFT)
             bars.add(bar)
         bars.set_color_by_gradient(*self.bar_colors)
 
@@ -225,27 +228,9 @@ class BarChart(VGroup):
         for bar, value in zip(self.bars, values):
             bar_bottom = bar.get_bottom()
             bar.stretch_to_fit_height(
-                (value/self.max_value)*self.height
+                (value / self.max_value) * self.height
             )
             bar.move_to(bar_bottom, DOWN)
 
     def copy(self):
         return self.deepcopy()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
