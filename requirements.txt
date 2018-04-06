@@ -1,3 +1,4 @@
+argparse==1.4.0
 colour==0.1.2
 numpy==1.11.0
 Pillow==3.4.2
