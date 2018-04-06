@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
 
 import sys
-# import getopt
 import argparse
 import imp
 import imp
@@ -11,8 +10,9 @@ import os
 import subprocess as sp
 import traceback
 
-from camera.camera import Camera
 from constants import *
+
+from camera.camera import Camera
 from scene.scene import Scene
 from utils.sounds import play_error_sound
 from utils.sounds import play_finish_sound

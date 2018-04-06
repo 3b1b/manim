@@ -25,17 +25,19 @@ from scene.scene import Scene
 from utils.rate_functions import squish_rate_func
 from utils.rate_functions import there_and_back
 
+
 class PiCreatureScene(Scene):
     CONFIG = {
-        "total_wait_time" : 0,
-        "seconds_to_blink" : 3,
-        "pi_creatures_start_on_screen" : True,
-        "default_pi_creature_kwargs" : {
-            "color" : GREY_BROWN,
-            "flip_at_start" : True,
+        "total_wait_time": 0,
+        "seconds_to_blink": 3,
+        "pi_creatures_start_on_screen": True,
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+            "flip_at_start": True,
         },
-        "default_pi_creature_start_corner" : DOWN+LEFT,
+        "default_pi_creature_start_corner": DOWN + LEFT,
     }
+
     def setup(self):
         self.pi_creatures = self.create_pi_creatures()
         self.pi_creature = self.get_primary_pi_creature()
@@ -43,7 +45,7 @@ class PiCreatureScene(Scene):
             self.add(*self.pi_creatures)
 
     def create_pi_creatures(self):
-        """ 
+        """
         Likely updated for subclasses
         """
         return VGroup(self.create_pi_creature())
@@ -66,7 +68,7 @@ class PiCreatureScene(Scene):
     def get_on_screen_pi_creatures(self):
         mobjects = self.get_mobjects()
         return VGroup(*filter(
-            lambda pi : pi in mobjects,
+            lambda pi: pi in mobjects,
             self.get_pi_creatures()
         ))
 
@@ -80,7 +82,7 @@ class PiCreatureScene(Scene):
 
         bubble_class = kwargs.pop("bubble_class", SpeechBubble)
         target_mode = kwargs.pop(
-            "target_mode", 
+            "target_mode",
             "thinking" if bubble_class is ThoughtBubble else "speaking"
         )
         bubble_kwargs = kwargs.pop("bubble_kwargs", {})
@@ -91,10 +93,11 @@ class PiCreatureScene(Scene):
         on_screen_mobjects = self.camera.extract_mobject_family_members(
             self.get_mobjects()
         )
+
         def has_bubble(pi):
             return hasattr(pi, "bubble") and \
-                   pi.bubble is not None and \
-                   pi.bubble in on_screen_mobjects
+                pi.bubble is not None and \
+                pi.bubble in on_screen_mobjects
 
         pi_creatures_with_bubbles = filter(has_bubble, self.get_pi_creatures())
         if pi_creature in pi_creatures_with_bubbles:
@@ -102,7 +105,7 @@ class PiCreatureScene(Scene):
             old_bubble = pi_creature.bubble
             bubble = pi_creature.get_bubble(
                 *content,
-                bubble_class = bubble_class,
+                bubble_class=bubble_class,
                 **bubble_kwargs
             )
             anims += [
@@ -114,9 +117,9 @@ class PiCreatureScene(Scene):
             anims.append(PiCreatureBubbleIntroduction(
                 pi_creature,
                 *content,
-                bubble_class = bubble_class,
-                bubble_kwargs = bubble_kwargs,
-                target_mode = target_mode,
+                bubble_class=bubble_class,
+                bubble_kwargs=bubble_kwargs,
+                target_mode=target_mode,
                 **kwargs
             ))
         anims += [
@@ -130,26 +133,28 @@ class PiCreatureScene(Scene):
     def pi_creature_says(self, *args, **kwargs):
         self.introduce_bubble(
             *args,
-            bubble_class = SpeechBubble,
+            bubble_class=SpeechBubble,
             **kwargs
         )
 
     def pi_creature_thinks(self, *args, **kwargs):
         self.introduce_bubble(
             *args,
-            bubble_class = ThoughtBubble,
+            bubble_class=ThoughtBubble,
             **kwargs
         )
 
     def say(self, *content, **kwargs):
-        self.pi_creature_says(self.get_primary_pi_creature(), *content, **kwargs)
+        self.pi_creature_says(
+            self.get_primary_pi_creature(), *content, **kwargs)
 
     def think(self, *content, **kwargs):
-        self.pi_creature_thinks(self.get_primary_pi_creature(), *content, **kwargs)
+        self.pi_creature_thinks(
+            self.get_primary_pi_creature(), *content, **kwargs)
 
     def compile_play_args_to_animation_list(self, *args):
         """
-        Add animations so that all pi creatures look at the 
+        Add animations so that all pi creatures look at the
         first mobject being animated with each .play call
         """
         animations = Scene.compile_play_args_to_animation_list(self, *args)
@@ -157,13 +162,13 @@ class PiCreatureScene(Scene):
             return animations
 
         non_pi_creature_anims = filter(
-            lambda anim : anim.mobject not in self.get_pi_creatures(),
+            lambda anim: anim.mobject not in self.get_pi_creatures(),
             animations
         )
         if len(non_pi_creature_anims) == 0:
             return animations
         first_anim = non_pi_creature_anims[0]
-        #Look at ending state
+        # Look at ending state
         first_anim.update(1)
         point_of_interest = first_anim.mobject.get_center()
         first_anim.update(0)
@@ -174,7 +179,7 @@ class PiCreatureScene(Scene):
             if pi_creature in first_anim.mobject.submobject_family():
                 continue
             anims_with_pi_creature = filter(
-                lambda anim : pi_creature in anim.mobject.submobject_family(),
+                lambda anim: pi_creature in anim.mobject.submobject_family(),
                 animations
             )
             for anim in anims_with_pi_creature:
@@ -193,7 +198,7 @@ class PiCreatureScene(Scene):
     def blink(self):
         self.play(Blink(random.choice(self.get_on_screen_pi_creatures())))
 
-    def joint_blink(self, pi_creatures = None, shuffle = True, **kwargs):
+    def joint_blink(self, pi_creatures=None, shuffle=True, **kwargs):
         if pi_creatures is None:
             pi_creatures = self.get_on_screen_pi_creatures()
         creatures_list = list(pi_creatures)
@@ -202,25 +207,25 @@ class PiCreatureScene(Scene):
 
         def get_rate_func(pi):
             index = creatures_list.index(pi)
-            proportion = float(index)/len(creatures_list)
-            start_time = 0.8*proportion
+            proportion = float(index) / len(creatures_list)
+            start_time = 0.8 * proportion
             return squish_rate_func(
                 there_and_back,
                 start_time, start_time + 0.2
             )
 
         self.play(*[
-            Blink(pi, rate_func = get_rate_func(pi), **kwargs)
+            Blink(pi, rate_func=get_rate_func(pi), **kwargs)
             for pi in creatures_list
         ])
         return self
 
-    def wait(self, time = 1, blink = True):
+    def wait(self, time=1, blink=True):
         while time >= 1:
-            time_to_blink = self.total_wait_time%self.seconds_to_blink == 0
+            time_to_blink = self.total_wait_time % self.seconds_to_blink == 0
             if blink and self.any_pi_creatures_on_screen() and time_to_blink:
                 self.blink()
-                self.num_plays -= 1 #This shouldn't count as an animation
+                self.num_plays -= 1  # This shouldn't count as an animation
             else:
                 self.non_blink_wait()
             time -= 1
@@ -229,14 +234,14 @@ class PiCreatureScene(Scene):
             self.non_blink_wait(time)
         return self
 
-    def non_blink_wait(self, time = 1):
+    def non_blink_wait(self, time=1):
         Scene.wait(self, time)
         return self
 
     def change_mode(self, mode):
         self.play(self.get_primary_pi_creature().change_mode, mode)
 
-    def look_at(self, thing_to_look_at, pi_creatures = None):
+    def look_at(self, thing_to_look_at, pi_creatures=None):
         if pi_creatures is None:
             pi_creatures = self.get_pi_creatures()
         self.play(*it.chain(*[
@@ -244,30 +249,33 @@ class PiCreatureScene(Scene):
             for pi in pi_creatures
         ]))
 
+
 class TeacherStudentsScene(PiCreatureScene):
     CONFIG = {
-        "student_colors" : [BLUE_D, BLUE_E, BLUE_C],
-        "student_scale_factor" : 0.8,
-        "seconds_to_blink" : 2,
-        "screen_height" : 3,
+        "student_colors": [BLUE_D, BLUE_E, BLUE_C],
+        "student_scale_factor": 0.8,
+        "seconds_to_blink": 2,
+        "screen_height": 3,
     }
+
     def setup(self):
         PiCreatureScene.setup(self)
-        self.screen = ScreenRectangle(height = self.screen_height)
-        self.screen.to_corner(UP+LEFT)
-        self.hold_up_spot = self.teacher.get_corner(UP+LEFT) + MED_LARGE_BUFF*UP
+        self.screen = ScreenRectangle(height=self.screen_height)
+        self.screen.to_corner(UP + LEFT)
+        self.hold_up_spot = self.teacher.get_corner(
+            UP + LEFT) + MED_LARGE_BUFF * UP
 
     def create_pi_creatures(self):
         self.teacher = Mortimer()
         self.teacher.to_corner(DOWN + RIGHT)
-        self.teacher.look(DOWN+LEFT)
+        self.teacher.look(DOWN + LEFT)
         self.students = VGroup(*[
-            Randolph(color = c)
+            Randolph(color=c)
             for c in self.student_colors
         ])
         self.students.arrange_submobjects(RIGHT)
         self.students.scale(self.student_scale_factor)
-        self.students.to_corner(DOWN+LEFT)
+        self.students.to_corner(DOWN + LEFT)
         self.teacher.look_at(self.students[-1].eyes)
         for student in self.students:
             student.look_at(self.teacher.eyes)
@@ -288,8 +296,8 @@ class TeacherStudentsScene(PiCreatureScene):
     def student_says(self, *content, **kwargs):
         if "target_mode" not in kwargs:
             target_mode = random.choice([
-                "raise_right_hand", 
-                "raise_left_hand", 
+                "raise_right_hand",
+                "raise_left_hand",
             ])
             kwargs["target_mode"] = target_mode
         student = self.get_students()[kwargs.get("student_index", 1)]
@@ -307,7 +315,7 @@ class TeacherStudentsScene(PiCreatureScene):
         return self.pi_creature_thinks(student, *content, **kwargs)
 
     def change_all_student_modes(self, mode, **kwargs):
-        self.change_student_modes(*[mode]*len(self.students), **kwargs)
+        self.change_student_modes(*[mode] * len(self.students), **kwargs)
 
     def change_student_modes(self, *modes, **kwargs):
         added_anims = kwargs.pop("added_anims", [])
@@ -326,12 +334,12 @@ class TeacherStudentsScene(PiCreatureScene):
                 pi.look_at(kwargs["look_at_arg"])
         submobject_mode = kwargs.get("submobject_mode", "lagged_start")
         return Transform(
-            start, target, 
-            submobject_mode = submobject_mode,
-            run_time = 2
+            start, target,
+            submobject_mode=submobject_mode,
+            run_time=2
         )
 
-    def zoom_in_on_thought_bubble(self, bubble = None, radius = FRAME_Y_RADIUS+FRAME_X_RADIUS):
+    def zoom_in_on_thought_bubble(self, bubble=None, radius=FRAME_Y_RADIUS + FRAME_X_RADIUS):
         if bubble is None:
             for pi in self.get_pi_creatures():
                 if hasattr(pi, "bubble") and isinstance(pi.bubble, ThoughtBubble):
@@ -340,15 +348,16 @@ class TeacherStudentsScene(PiCreatureScene):
             if bubble is None:
                 raise Exception("No pi creatures have a thought bubble")
         vect = -bubble.get_bubble_center()
+
         def func(point):
-            centered = point+vect
-            return radius*centered/np.linalg.norm(centered)
+            centered = point + vect
+            return radius * centered / np.linalg.norm(centered)
         self.play(*[
             ApplyPointwiseFunction(func, mob)
             for mob in self.get_mobjects()
         ])
 
-    def teacher_holds_up(self, mobject, target_mode = "raise_right_hand", **kwargs):
+    def teacher_holds_up(self, mobject, target_mode="raise_right_hand", **kwargs):
         mobject.move_to(self.hold_up_spot, DOWN)
         mobject.shift_onto_screen()
         mobject_copy = mobject.copy()
@@ -358,5 +367,3 @@ class TeacherStudentsScene(PiCreatureScene):
             ReplacementTransform(mobject_copy, mobject),
             self.teacher.change, target_mode,
         )
-
-
