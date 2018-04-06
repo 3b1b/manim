@@ -1,27 +1,27 @@
 from __future__ import absolute_import
 
-import numpy as np
-
 from scene.scene import Scene
 from animation.transform import Transform
 from mobject.mobject import Mobject
 
 from constants import *
 
+
 class ReconfigurableScene(Scene):
     CONFIG = {
-        "allow_recursion" : True,
+        "allow_recursion": True,
     }
+
     def setup(self):
         self.states = []
         self.num_recursions = 0
 
     def transition_to_alt_config(
-        self, 
-        return_to_original_configuration = True, 
-        transformation_kwargs = None,
+        self,
+        return_to_original_configuration=True,
+        transformation_kwargs=None,
         **new_config
-        ):
+    ):
         if transformation_kwargs is None:
             transformation_kwargs = {}
         original_state = self.get_state()
@@ -30,41 +30,37 @@ class ReconfigurableScene(Scene):
         if not self.allow_recursion:
             return
         alt_scene = self.__class__(
-            skip_animations = True, 
-            allow_recursion = False,
+            skip_animations=True,
+            allow_recursion=False,
             **new_config
         )
-        alt_state = alt_scene.states[len(self.states)-1]
+        alt_state = alt_scene.states[len(self.states) - 1]
 
         if return_to_original_configuration:
             self.clear()
             self.transition_between_states(
-                state_copy, alt_state, 
+                state_copy, alt_state,
                 **transformation_kwargs
             )
             self.transition_between_states(
-                state_copy, original_state, 
+                state_copy, original_state,
                 **transformation_kwargs
             )
             self.clear()
             self.add(*original_state)
         else:
             self.transition_between_states(
-                original_state, alt_state, 
+                original_state, alt_state,
                 **transformation_kwargs
             )
             self.__dict__.update(new_config)
 
     def get_state(self):
-        # Want to return a mobject that maintains the most 
+        # Want to return a mobject that maintains the most
         # structure.  The way to do that is to extract only
         # those that aren't inside another.
-        top_level_mobjects = self.get_top_level_mobjects()
         return Mobject(*self.get_top_level_mobjects())
 
     def transition_between_states(self, start_state, target_state, **kwargs):
         self.play(Transform(start_state, target_state, **kwargs))
         self.wait()
-
-
-

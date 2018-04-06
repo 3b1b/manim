@@ -4,6 +4,7 @@ import os
 from PIL import Image
 from constants import RASTER_IMAGE_DIR
 
+
 def get_full_raster_image_path(image_file_name):
     possible_paths = [
         image_file_name,
@@ -15,7 +16,8 @@ def get_full_raster_image_path(image_file_name):
     for path in possible_paths:
         if os.path.exists(path):
             return path
-    raise IOError("File %s not Found"%image_file_name)
+    raise IOError("File %s not Found" % image_file_name)
+
 
 def drag_pixels(frames):
     curr = frames[0]
@@ -24,6 +26,7 @@ def drag_pixels(frames):
         curr += (curr == 0) * np.array(frame)
         new_frames.append(np.array(curr))
     return new_frames
+
 
 def invert_image(image):
     arr = np.array(image)

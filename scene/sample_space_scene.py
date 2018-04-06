@@ -21,10 +21,10 @@ class SampleSpaceScene(Scene):
 
     def get_division_change_animations(
         self, sample_space, parts, p_list,
-        dimension = 1,
-        new_label_kwargs = None,
+        dimension=1,
+        new_label_kwargs=None,
         **kwargs
-        ):
+    ):
         if new_label_kwargs is None:
             new_label_kwargs = {}
         anims = []
@@ -34,12 +34,12 @@ class SampleSpaceScene(Scene):
         vect = DOWN if dimension == 1 else RIGHT
         parts.generate_target()
         for part, p in zip(parts.target, p_list):
-            part.replace(space_copy, stretch = True)
+            part.replace(space_copy, stretch=True)
             part.stretch(p, dimension)
-        parts.target.arrange_submobjects(vect, buff = 0)
+        parts.target.arrange_submobjects(vect, buff=0)
         parts.target.move_to(space_copy)
         anims.append(MoveToTarget(parts))
-        if hasattr(parts,  "labels") and parts.labels is not None:
+        if hasattr(parts, "labels") and parts.labels is not None:
             label_kwargs = parts.label_kwargs
             label_kwargs.update(new_label_kwargs)
             new_braces, new_labels = sample_space.get_subdivision_braces_and_labels(
@@ -55,7 +55,7 @@ class SampleSpaceScene(Scene):
         assert(hasattr(self.sample_space, "horizontal_parts"))
         return self.get_division_change_animations(
             self.sample_space, self.sample_space.horizontal_parts, p_list,
-            dimension = 1,
+            dimension=1,
             **kwargs
         )
 
@@ -63,19 +63,19 @@ class SampleSpaceScene(Scene):
         assert(hasattr(self.sample_space, "vertical_parts"))
         return self.get_division_change_animations(
             self.sample_space, self.sample_space.vertical_parts, p_list,
-            dimension = 0,
+            dimension=0,
             **kwargs
         )
-    
+
     def get_conditional_change_anims(
-        self, sub_sample_space_index, value, post_rects = None,
+        self, sub_sample_space_index, value, post_rects=None,
         **kwargs
-        ):
+    ):
         parts = self.sample_space.horizontal_parts
         sub_sample_space = parts[sub_sample_space_index]
         anims = self.get_division_change_animations(
             sub_sample_space, sub_sample_space.vertical_parts, value,
-            dimension = 0,
+            dimension=0,
             **kwargs
         )
         if post_rects is not None:
@@ -94,10 +94,10 @@ class SampleSpaceScene(Scene):
             for i in range(2)
         ])
 
-    def get_posterior_rectangles(self, buff = MED_LARGE_BUFF):
+    def get_posterior_rectangles(self, buff=MED_LARGE_BUFF):
         prior_rects = self.get_prior_rectangles()
         areas = [
-            rect.get_width()*rect.get_height()
+            rect.get_width() * rect.get_height()
             for rect in prior_rects
         ]
         total_area = sum(areas)
@@ -105,19 +105,19 @@ class SampleSpaceScene(Scene):
 
         post_rects = prior_rects.copy()
         for rect, area in zip(post_rects, areas):
-            rect.stretch_to_fit_height(total_height * area/total_area)
+            rect.stretch_to_fit_height(total_height * area / total_area)
             rect.stretch_to_fit_width(
-                area/rect.get_height()
+                area / rect.get_height()
             )
-        post_rects.arrange_submobjects(DOWN, buff = 0)
+        post_rects.arrange_submobjects(DOWN, buff=0)
         post_rects.next_to(
             self.sample_space, RIGHT, buff
         )
         return post_rects
 
     def get_posterior_rectangle_braces_and_labels(
-        self, post_rects, labels, direction = RIGHT, **kwargs
-        ):
+        self, post_rects, labels, direction=RIGHT, **kwargs
+    ):
         return self.sample_space.get_subdivision_braces_and_labels(
             post_rects, labels, direction, **kwargs
         )
@@ -132,7 +132,7 @@ class SampleSpaceScene(Scene):
 
     def get_posterior_rectangle_change_anims(self, post_rects):
         def update_rects(rects):
-            new_rects = self.get_posterior_rectangles() 
+            new_rects = self.get_posterior_rectangles()
             Transform(rects, new_rects).update(1)
             if hasattr(rects, "braces"):
                 self.update_posterior_braces(rects)

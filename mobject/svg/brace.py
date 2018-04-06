@@ -12,35 +12,37 @@ from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VMobject
 from utils.config_ops import digest_config
 
+
 class Brace(TexMobject):
     CONFIG = {
-        "buff" : 0.2,
-        "width_multiplier" : 2,
-        "max_num_quads" : 15,
-        "min_num_quads" : 0,
+        "buff": 0.2,
+        "width_multiplier": 2,
+        "max_num_quads": 15,
+        "min_num_quads": 0,
     }
-    def __init__(self, mobject, direction = DOWN, **kwargs):
+
+    def __init__(self, mobject, direction=DOWN, **kwargs):
         digest_config(self, kwargs, locals())
         angle = -np.arctan2(*direction[:2]) + np.pi
-        mobject.rotate(-angle, about_point = ORIGIN)
-        left  = mobject.get_corner(DOWN+LEFT)
-        right = mobject.get_corner(DOWN+RIGHT)
-        target_width = right[0]-left[0]
+        mobject.rotate(-angle, about_point=ORIGIN)
+        left = mobject.get_corner(DOWN + LEFT)
+        right = mobject.get_corner(DOWN + RIGHT)
+        target_width = right[0] - left[0]
 
-        ## Adding int(target_width) qquads gives approximately the right width
+        # Adding int(target_width) qquads gives approximately the right width
         num_quads = np.clip(
-            int(self.width_multiplier*target_width),
+            int(self.width_multiplier * target_width),
             self.min_num_quads, self.max_num_quads
         )
-        tex_string = "\\underbrace{%s}"%(num_quads*"\\qquad")
+        tex_string = "\\underbrace{%s}" % (num_quads * "\\qquad")
         TexMobject.__init__(self, tex_string, **kwargs)
-        self.tip_point_index = np.argmin(self.get_all_points()[:,1])
+        self.tip_point_index = np.argmin(self.get_all_points()[:, 1])
         self.stretch_to_fit_width(target_width)
-        self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
+        self.shift(left - self.get_corner(UP + LEFT) + self.buff * DOWN)
         for mob in mobject, self:
-            mob.rotate(angle, about_point = ORIGIN)
+            mob.rotate(angle, about_point=ORIGIN)
 
-    def put_at_tip(self, mob, use_next_to = True, **kwargs):
+    def put_at_tip(self, mob, use_next_to=True, **kwargs):
         if use_next_to:
             mob.next_to(
                 self.get_tip(),
@@ -50,8 +52,8 @@ class Brace(TexMobject):
         else:
             mob.move_to(self.get_tip())
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_MOBJECT_BUFFER)
-            shift_distance = mob.get_width()/2.0+buff
-            mob.shift(self.get_direction()*shift_distance)
+            shift_distance = mob.get_width() / 2.0 + buff
+            mob.shift(self.get_direction() * shift_distance)
         return self
 
     def get_text(self, *text, **kwargs):
@@ -72,32 +74,38 @@ class Brace(TexMobject):
 
     def get_direction(self):
         vect = self.get_tip() - self.get_center()
-        return vect/np.linalg.norm(vect)
+        return vect / np.linalg.norm(vect)
+
 
 class BraceLabel(VMobject):
     CONFIG = {
-        "label_constructor" : TexMobject,
-        "label_scale" : 1,
+        "label_constructor": TexMobject,
+        "label_scale": 1,
     }
-    def __init__(self, obj, text, brace_direction = DOWN, **kwargs):
+
+    def __init__(self, obj, text, brace_direction=DOWN, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.brace_direction = brace_direction
-        if isinstance(obj, list): obj = VMobject(*obj)
+        if isinstance(obj, list):
+            obj = VMobject(*obj)
         self.brace = Brace(obj, brace_direction, **kwargs)
 
         if isinstance(text, tuple) or isinstance(text, list):
             self.label = self.label_constructor(*text, **kwargs)
-        else: self.label = self.label_constructor(str(text))
-        if self.label_scale != 1: self.label.scale(self.label_scale)
+        else:
+            self.label = self.label_constructor(str(text))
+        if self.label_scale != 1:
+            self.label.scale(self.label_scale)
 
         self.brace.put_at_tip(self.label)
         self.submobjects = [self.brace, self.label]
 
-    def creation_anim(self, label_anim = FadeIn, brace_anim = GrowFromCenter):
+    def creation_anim(self, label_anim=FadeIn, brace_anim=GrowFromCenter):
         return AnimationGroup(brace_anim(self.brace), label_anim(self.label))
 
     def shift_brace(self, obj, **kwargs):
-        if isinstance(obj, list): obj = VMobject(*obj)
+        if isinstance(obj, list):
+            obj = VMobject(*obj)
         self.brace = Brace(obj, self.brace_direction, **kwargs)
         self.brace.put_at_tip(self.label)
         self.submobjects[0] = self.brace
@@ -105,7 +113,8 @@ class BraceLabel(VMobject):
 
     def change_label(self, *text, **kwargs):
         self.label = self.label_constructor(*text, **kwargs)
-        if self.label_scale != 1: self.label.scale(self.label_scale)
+        if self.label_scale != 1:
+            self.label.scale(self.label_scale)
 
         self.brace.put_at_tip(self.label)
         self.submobjects[1] = self.label
@@ -124,7 +133,8 @@ class BraceLabel(VMobject):
 
         return copy_mobject
 
+
 class BraceText(BraceLabel):
     CONFIG = {
-        "label_constructor" : TextMobject
+        "label_constructor": TextMobject
     }

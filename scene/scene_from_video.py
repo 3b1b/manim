@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
 import cv2
-import itertools as it
-import numpy as np
 
 from tqdm import tqdm as show_progress
 
@@ -11,25 +9,25 @@ from scene.scene import Scene
 
 class SceneFromVideo(Scene):
     def construct(self, file_name,
-                  freeze_last_frame = True,
-                  time_range = None):
+                  freeze_last_frame=True,
+                  time_range=None):
         cap = cv2.VideoCapture(file_name)
         self.shape = (
             int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)),
             int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         )
         fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-        self.frame_duration = 1.0/fps
+        self.frame_duration = 1.0 / fps
         frame_count = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         if time_range is None:
             start_frame = 0
             end_frame = frame_count
         else:
-            start_frame, end_frame = map(lambda t : fps*t, time_range)
+            start_frame, end_frame = map(lambda t: fps * t, time_range)
 
         frame_count = end_frame - start_frame
         print("Reading in " + file_name + "...")
-        for count in show_progress(range(start_frame, end_frame+1)):
+        for count in show_progress(range(start_frame, end_frame + 1)):
             returned, frame = cap.read()
             if not returned:
                 break
@@ -41,18 +39,17 @@ class SceneFromVideo(Scene):
         if freeze_last_frame and len(self.frames) > 0:
             self.original_background = self.background = self.frames[-1]
 
-    def apply_gaussian_blur(self, ksize = (5, 5), sigmaX = 5):
+    def apply_gaussian_blur(self, ksize=(5, 5), sigmaX=5):
         self.frames = [
             cv2.GaussianBlur(frame, ksize, sigmaX)
             for frame in self.frames
         ]
 
-    def apply_edge_detection(self, threshold1 = 50, threshold2 = 100):
+    def apply_edge_detection(self, threshold1=50, threshold2=100):
         edged_frames = [
             cv2.Canny(frame, threshold1, threshold2)
             for frame in self.frames
         ]
         for index in range(len(self.frames)):
             for i in range(3):
-                self.frames[index][:,:,i] = edged_frames[index]
-
+                self.frames[index][:, :, i] = edged_frames[index]

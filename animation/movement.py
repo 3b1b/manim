@@ -2,22 +2,22 @@ from __future__ import absolute_import
 
 from constants import *
 
-import warnings
-
 from animation.animation import Animation
 from utils.config_ops import digest_config
 
+
 class Homotopy(Animation):
     CONFIG = {
-        "run_time" : 3,
-        "apply_function_kwargs" : {},
+        "run_time": 3,
+        "apply_function_kwargs": {},
     }
+
     def __init__(self, homotopy, mobject, **kwargs):
         """
         Homotopy a function from (x, y, z, t) to (x', y', z')
         """
         def function_at_time_t(t):
-            return lambda p : homotopy(p[0], p[1], p[2], t)
+            return lambda p: homotopy(p[0], p[1], p[2], t)
         self.function_at_time_t = function_at_time_t
         digest_config(self, kwargs)
         Animation.__init__(self, mobject, **kwargs)
@@ -29,10 +29,12 @@ class Homotopy(Animation):
             **self.apply_function_kwargs
         )
 
+
 class SmoothedVectorizedHomotopy(Homotopy):
     def update_submobject(self, submob, start, alpha):
         Homotopy.update_submobject(self, submob, start, alpha)
         submob.make_smooth()
+
 
 class ComplexHomotopy(Homotopy):
     def __init__(self, complex_homotopy, mobject, **kwargs):
@@ -48,20 +50,22 @@ class ComplexHomotopy(Homotopy):
 
 class PhaseFlow(Animation):
     CONFIG = {
-        "virtual_time" : 1,
-        "rate_func" : None,
+        "virtual_time": 1,
+        "rate_func": None,
     }
+
     def __init__(self, function, mobject, **kwargs):
-        digest_config(self, kwargs, locals())        
+        digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
         if hasattr(self, "last_alpha"):
-            dt = self.virtual_time*(alpha-self.last_alpha)
+            dt = self.virtual_time * (alpha - self.last_alpha)
             self.mobject.apply_function(
-                lambda p : p + dt*self.function(p)
+                lambda p: p + dt * self.function(p)
             )
         self.last_alpha = alpha
+
 
 class MoveAlongPath(Animation):
     def __init__(self, mobject, path, **kwargs):
@@ -71,4 +75,3 @@ class MoveAlongPath(Animation):
     def update_mobject(self, alpha):
         point = self.path.point_from_proportion(alpha)
         self.mobject.move_to(point)
-

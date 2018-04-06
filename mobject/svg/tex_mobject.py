@@ -8,49 +8,50 @@ from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VectorizedPoint
 
-import collections
 import operator as op
-import sys
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
+
 class TexSymbol(VMobjectFromSVGPathstring):
     def pointwise_become_partial(self, mobject, a, b):
-        #TODO, this assumes a = 0
+        # TODO, this assumes a = 0
         if b < 0.5:
-            b = 2*b
+            b = 2 * b
             added_width = 1
             opacity = 0
         else:
-            added_width = 2 - 2*b
-            opacity = 2*b - 1
+            added_width = 2 - 2 * b
+            opacity = 2 * b - 1
             b = 1
         VMobjectFromSVGPathstring.pointwise_become_partial(
             self, mobject, 0, b
         )
-        self.set_stroke(width = added_width + mobject.get_stroke_width())
-        self.set_fill(opacity = opacity)
+        self.set_stroke(width=added_width + mobject.get_stroke_width())
+        self.set_fill(opacity=opacity)
+
 
 class TexMobject(SVGMobject):
     CONFIG = {
-        "template_tex_file" : TEMPLATE_TEX_FILE,
-        "stroke_width"      : 0,
-        "fill_opacity"      : 1.0,
-        "fill_color"        : WHITE,
-        "should_center"     : True,
-        "arg_separator"     : " ",
-        "height" : None,
-        "organize_left_to_right" : False,
-        "propagate_style_to_family" : True,
-        "alignment" : "",
+        "template_tex_file": TEMPLATE_TEX_FILE,
+        "stroke_width": 0,
+        "fill_opacity": 1.0,
+        "fill_color": WHITE,
+        "should_center": True,
+        "arg_separator": " ",
+        "height": None,
+        "organize_left_to_right": False,
+        "propagate_style_to_family": True,
+        "alignment": "",
     }
+
     def __init__(self, *args, **kwargs):
         digest_config(self, kwargs, locals())
-        
-        if "color" in kwargs.keys() and not "fill_color" in kwargs.keys():
+
+        if "color" in kwargs.keys() and "fill_color" not in kwargs.keys():
             self.fill_color = kwargs["color"]
 
-        ##TODO, Eventually remove this
+        # TODO, Eventually remove this
         if len(args) == 1 and isinstance(args[0], list):
             self.args = args[0]
         ##
@@ -60,14 +61,14 @@ class TexMobject(SVGMobject):
             self.tex_string,
             self.template_tex_file
         )
-        SVGMobject.__init__(self, file_name = file_name, **kwargs)
+        SVGMobject.__init__(self, file_name=file_name, **kwargs)
         self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
     def path_string_to_mobject(self, path_string):
-        #Overwrite superclass default to use
-        #specialized path_string mobject
+        # Overwrite superclass default to use
+        # specialized path_string mobject
         return TexSymbol(path_string)
 
     def generate_points(self):
@@ -86,7 +87,7 @@ class TexMobject(SVGMobject):
     def modify_special_strings(self, tex):
         tex = self.remove_stray_braces(tex)
         if tex in ["\\over", "\\overline"]:
-            #fraction line needs something to be over
+            # fraction line needs something to be over
             tex += "\\,"
         if tex == "\\sqrt":
             tex += "{\\quad}"
@@ -132,7 +133,7 @@ class TexMobject(SVGMobject):
         self.expression_parts = list(self.args)
         for expr in self.args:
             sub_tex_mob = TexMobject(expr, **self.CONFIG)
-            sub_tex_mob.tex_string = expr ##Want it unmodified
+            sub_tex_mob.tex_string = expr  # Want it unmodified
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
@@ -150,7 +151,7 @@ class TexMobject(SVGMobject):
         self.submobjects = new_submobjects
         return self
 
-    def get_parts_by_tex(self, tex, substring = True, case_sensitive = True):
+    def get_parts_by_tex(self, tex, substring=True, case_sensitive=True):
         def test(tex1, tex2):
             if not case_sensitive:
                 tex1 = tex1.lower()
@@ -161,13 +162,13 @@ class TexMobject(SVGMobject):
                 return tex1 == tex2
 
         tex_submobjects = filter(
-            lambda m : isinstance(m, TexMobject),
+            lambda m: isinstance(m, TexMobject),
             self.submobject_family()
         )
         if hasattr(self, "expression_parts"):
             tex_submobjects.remove(self)
         return VGroup(*filter(
-            lambda m : test(tex, m.get_tex_string()),
+            lambda m: test(tex, m.get_tex_string()),
             tex_submobjects
         ))
 
@@ -204,7 +205,7 @@ class TexMobject(SVGMobject):
         return self.index_of_part(part)
 
     def organize_submobjects_left_to_right(self):
-        self.sort_submobjects(lambda p : p[0])
+        self.sort_submobjects(lambda p: p[0])
         return self
 
     def sort_submobjects_alphabetically(self):
@@ -215,30 +216,33 @@ class TexMobject(SVGMobject):
         self.submobjects.sort(alphabetical_cmp)
         return self
 
-    def add_background_rectangle(self, color = BLACK, opacity = 0.75, **kwargs):
+    def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
         self.background_rectangle = BackgroundRectangle(
-            self, color = color,
-            fill_opacity = opacity,
+            self, color=color,
+            fill_opacity=opacity,
             **kwargs
         )
         letters = VMobject(*self.submobjects)
         self.submobjects = [self.background_rectangle, letters]
         return self
 
+
 class TextMobject(TexMobject):
     CONFIG = {
-        "template_tex_file" : TEMPLATE_TEXT_FILE,
-        "alignment" : "\\centering",
+        "template_tex_file": TEMPLATE_TEXT_FILE,
+        "alignment": "\\centering",
     }
+
 
 class BulletedList(TextMobject):
     CONFIG = {
-        "buff" : MED_LARGE_BUFF,
-        "dot_scale_factor" : 2,
-        #Have to include because of handle_multiple_args implementation
-        "template_tex_file" : TEMPLATE_TEXT_FILE,
-        "alignment" : "",
+        "buff": MED_LARGE_BUFF,
+        "dot_scale_factor": 2,
+        # Have to include because of handle_multiple_args implementation
+        "template_tex_file": TEMPLATE_TEXT_FILE,
+        "alignment": "",
     }
+
     def __init__(self, *items, **kwargs):
         line_separated_items = [s + "\\\\" for s in items]
         TextMobject.__init__(self, *line_separated_items, **kwargs)
@@ -247,12 +251,12 @@ class BulletedList(TextMobject):
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
         self.arrange_submobjects(
-            DOWN, 
-            aligned_edge = LEFT,
-            buff = self.buff
+            DOWN,
+            aligned_edge=LEFT,
+            buff=self.buff
         )
 
-    def fade_all_but(self, index_or_string, opacity = 0.5):
+    def fade_all_but(self, index_or_string, opacity=0.5):
         arg = index_or_string
         if isinstance(arg, str):
             part = self.get_part_by_tex(arg)
@@ -262,14 +266,16 @@ class BulletedList(TextMobject):
             raise Exception("Expected int or string, got {0}".format(arg))
         for other_part in self.submobjects:
             if other_part is part:
-                other_part.set_fill(opacity = 1)
+                other_part.set_fill(opacity=1)
             else:
-                other_part.set_fill(opacity = opacity)
+                other_part.set_fill(opacity=opacity)
 
 ##########
 
+
 def tex_hash(expression, template_tex_file):
     return str(hash(expression + template_tex_file))
+
 
 def tex_to_svg_file(expression, template_tex_file):
     image_dir = os.path.join(
@@ -282,13 +288,14 @@ def tex_to_svg_file(expression, template_tex_file):
     dvi_file = tex_to_dvi(tex_file)
     return dvi_to_svg(dvi_file)
 
+
 def generate_tex_file(expression, template_tex_file):
     result = os.path.join(
         TEX_DIR,
         tex_hash(expression, template_tex_file)
     ) + ".tex"
     if not os.path.exists(result):
-        print("Writing \"%s\" to %s"%(
+        print("Writing \"%s\" to %s" % (
             "".join(expression), result
         ))
         with open(template_tex_file, "r") as infile:
@@ -298,10 +305,12 @@ def generate_tex_file(expression, template_tex_file):
             outfile.write(body)
     return result
 
+
 def get_null():
     if os.name == "nt":
         return "NUL"
     return "/dev/null"
+
 
 def tex_to_dvi(tex_file):
     result = tex_file.replace(".tex", ".dvi")
@@ -327,7 +336,8 @@ def tex_to_dvi(tex_file):
                 "See log output above or the log file: %s" % log_file)
     return result
 
-def dvi_to_svg(dvi_file, regen_if_exists = False):
+
+def dvi_to_svg(dvi_file, regen_if_exists=False):
     """
     Converts a dvi, which potentially has multiple slides, into a
     directory full of enumerated pngs corresponding with these slides.
