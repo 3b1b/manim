@@ -6,6 +6,10 @@ nb_levels = 5
 dev_x_step = 2
 dev_y_step = 5
 
+GRADE_COLOR_1 = RED
+GRADE_COLOR_2 = BLUE
+
+
 def rainbow_color(alpha):
     nb_colors = 100
     rainbow = color_gradient([RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE], nb_colors)
@@ -18,7 +22,7 @@ def graded_color(n,k):
         alpha = float(k)/n
     else:
         alpha = 0.5
-    color = interpolate_color(RED, BLUE, alpha)
+    color = interpolate_color(GRADE_COLOR_1, GRADE_COLOR_2, alpha)
     return color
 
 
