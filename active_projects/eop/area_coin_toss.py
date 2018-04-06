@@ -6,7 +6,7 @@ WIDTH = 12
 HEIGHT = 1
 GRADE_COLOR_1 = COLOR_HEADS = RED
 GRADE_COLOR_2 = COLOR_TAILS = BLUE
-NB_ROWS = 3
+NB_ROWS = 6
 
 
 class Coin(Circle):
@@ -97,6 +97,22 @@ class AreaSplittingScene(Scene):
             split_row.add(left_half, right_half)
         return split_row
 
+
+    def rect_center(self,n,i,j):
+        if n < 0:
+            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
+        if i < 0 or i > n:
+            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
+        if j > choose(n,i) or j < 0:
+            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
+
+        rect = self.brick_array[n][i]
+        width = rect.get_width()
+        left_x = rect.get_center()[0] - width/2
+        spacing = width / choose(n,i)
+        x = left_x + (j+0.5) * spacing
+        return np.array([x,rect.get_center()[1], rect.get_center()[2]])
+
     def construct(self):
 
         # Draw the bricks
@@ -106,7 +122,7 @@ class AreaSplittingScene(Scene):
         rect_row.move_to(3.5*UP + 0*HEIGHT*DOWN)
         self.add(rect_row)
         brick_wall.add(rect_row)
-        brick_dict = {"0": {"0": rect_row.submobjects[0]}}
+        self.brick_array = [[rect_row.submobjects[0]]]
 
         for n in range(NB_ROWS):
             # copy and shift
@@ -130,26 +146,11 @@ class AreaSplittingScene(Scene):
             self.wait()
 
             # add to brick dict
-            rect_dict = {}
-            i = 0
+            rect_array = []
             for rect in rect_row.submobjects:
-                rect_dict[str(i)] = rect
-                print "added rect for (", n+1, ",", i, ")"
-                i += 1
+                rect_array.append(rect)
 
-            brick_dict[str(n+1)] = rect_dict
-
-
-        for nrow_str,rect_row_dict in brick_dict.iteritems():
-            for i_str, rect in rect_row_dict.iteritems():
-                pos = rect.get_center()
-                nrow = int(nrow_str)
-                i = int(i_str)
-                print nrow, i
-                tally = TallyStack(nrow - i, i)
-                tally.move_to(pos)
-                self.add(tally)
-
+            self.brick_array.append(rect_array)
 
 
         self.play(
@@ -159,7 +160,45 @@ class AreaSplittingScene(Scene):
 
         # Draw the branches
 
-#            for n in NB_ROWS:
+        for (n, rect_row_array) in enumerate(self.brick_array):
+            for (i, rect) in enumerate(rect_row_array):
+                pos = rect.get_center()
+                tally = TallyStack(n - i, i)
+                tally.move_to(pos)
+
+
+                # from the left
+                lines = VGroup()
+
+                if i > 0:
+                    for j in range(choose(n-1,i-1)):
+                        start_pos = self.rect_center(n-1,i-1,j)
+                        end_pos = self.rect_center(n,i,j)
+                        lines.add(Line(start_pos,end_pos, stroke_color = GRADE_COLOR_2))
+                    self.play(
+                        LaggedStart(ShowCreation, lines))
+
+                # from the right
+                lines = VGroup()
+
+                if i < n:
+                    for j in range(choose(n-1,i)):
+                        start_pos = self.rect_center(n-1,i,j)
+                        if i != 0:
+                            end_pos = self.rect_center(n,i,choose(n-1,i-1) + j)
+                        else:
+                            end_pos = self.rect_center(n,i,j)
+                    
+                        lines.add(Line(start_pos,end_pos, stroke_color = GRADE_COLOR_1))
+                    self.play(
+                        LaggedStart(ShowCreation, lines))
+
+
+
+                #self.play(FadeIn(tally))
+
+
+
 
 
 
