@@ -145,6 +145,8 @@ def handle_scene(scene, **config):
         commands = ["open"]
         if (platform.system() == "Linux"):
             commands = ["xdg-open"]
+        elif (platform.system() == "Windows"):
+            commands = ["start"]    
 
         if config["show_file_in_finder"]:
             commands.append("-R")
