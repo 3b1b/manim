@@ -67,6 +67,12 @@ X_AXIS = np.array((1., 0., 0.))
 Y_AXIS = np.array((0., 1., 0.))
 Z_AXIS = np.array((0., 0., 1.))
 
+# Useful abbreviations for diagonals
+UL = UP + LEFT
+UR = UP + RIGHT
+DL = DOWN + LEFT
+DR = DOWN + RIGHT
+
 TOP = FRAME_Y_RADIUS * UP
 BOTTOM = FRAME_Y_RADIUS * DOWN
 LEFT_SIDE = FRAME_X_RADIUS * LEFT
