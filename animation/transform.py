@@ -17,16 +17,18 @@ from utils.rate_functions import smooth
 from utils.rate_functions import squish_rate_func
 from utils.space_ops import complex_to_R3
 
+
 class Transform(Animation):
     CONFIG = {
-        "path_arc" : 0,
-        "path_arc_axis" : OUT,
-        "path_func" : None,
-        "submobject_mode" : "all_at_once",
-        "replace_mobject_with_target_in_scene" : False,
+        "path_arc": 0,
+        "path_arc_axis": OUT,
+        "path_func": None,
+        "submobject_mode": "all_at_once",
+        "replace_mobject_with_target_in_scene": False,
     }
+
     def __init__(self, mobject, target_mobject, **kwargs):
-        #Copy target_mobject so as to not mess with caller
+        # Copy target_mobject so as to not mess with caller
         self.original_target_mobject = target_mobject
         target_mobject = target_mobject.copy()
         mobject.align_data(target_mobject)
@@ -35,7 +37,7 @@ class Transform(Animation):
         self.init_path_func()
 
         Animation.__init__(self, mobject, **kwargs)
-        self.name += "To" + str(target_mobject)  
+        self.name += "To" + str(target_mobject)
 
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
@@ -63,38 +65,45 @@ class Transform(Animation):
         submob.interpolate(start, end, alpha, self.path_func)
         return self
 
-    def clean_up(self, surrounding_scene = None):
+    def clean_up(self, surrounding_scene=None):
         Animation.clean_up(self, surrounding_scene)
         if self.replace_mobject_with_target_in_scene and surrounding_scene is not None:
             surrounding_scene.remove(self.mobject)
             if not self.remover:
                 surrounding_scene.add(self.original_target_mobject)
 
+
 class ReplacementTransform(Transform):
     CONFIG = {
-        "replace_mobject_with_target_in_scene" : True,
+        "replace_mobject_with_target_in_scene": True,
     }
+
 
 class ClockwiseTransform(Transform):
     CONFIG = {
-        "path_arc" : -np.pi
+        "path_arc": -np.pi
     }
+
 
 class CounterclockwiseTransform(Transform):
     CONFIG = {
-        "path_arc" : np.pi
+        "path_arc": np.pi
     }
+
 
 class MoveToTarget(Transform):
     def __init__(self, mobject, **kwargs):
         if not hasattr(mobject, "target"):
-            raise Exception("MoveToTarget called on mobject without attribute 'target' ")
+            raise Exception(
+                "MoveToTarget called on mobject without attribute 'target' ")
         Transform.__init__(self, mobject, mobject.target, **kwargs)
+
 
 class ApplyMethod(Transform):
     CONFIG = {
-        "submobject_mode" : "all_at_once"
+        "submobject_mode": "all_at_once"
     }
+
     def __init__(self, method, *args, **kwargs):
         """
         Method is a method of Mobject.  *args is for the method,
@@ -104,11 +113,11 @@ class ApplyMethod(Transform):
         """
         if not inspect.ismethod(method):
             raise Exception(
-            "Whoops, looks like you accidentally invoked " + \
-            "the method you want to animate"
-        )
+                "Whoops, looks like you accidentally invoked " +
+                "the method you want to animate"
+            )
         assert(isinstance(method.im_self, Mobject))
-        args = list(args) #So that args.pop() works
+        args = list(args)  # So that args.pop() works
         if "method_kwargs" in kwargs:
             method_kwargs = kwargs["method_kwargs"]
         elif len(args) > 0 and isinstance(args[-1], dict):
@@ -119,38 +128,46 @@ class ApplyMethod(Transform):
         method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
 
+
 class ApplyPointwiseFunction(ApplyMethod):
     CONFIG = {
-        "run_time" : DEFAULT_POINTWISE_FUNCTION_RUN_TIME
+        "run_time": DEFAULT_POINTWISE_FUNCTION_RUN_TIME
     }
+
     def __init__(self, function, mobject, **kwargs):
         ApplyMethod.__init__(
             self, mobject.apply_function, function, **kwargs
         )
 
+
 class FadeToColor(ApplyMethod):
     def __init__(self, mobject, color, **kwargs):
         ApplyMethod.__init__(self, mobject.set_color, color, **kwargs)
 
+
 class ScaleInPlace(ApplyMethod):
     def __init__(self, mobject, scale_factor, **kwargs):
-        ApplyMethod.__init__(self, mobject.scale_in_place, scale_factor, **kwargs)
+        ApplyMethod.__init__(self, mobject.scale_in_place,
+                             scale_factor, **kwargs)
+
 
 class ApplyFunction(Transform):
     CONFIG = {
-        "submobject_mode" : "all_at_once",
+        "submobject_mode": "all_at_once",
     }
+
     def __init__(self, function, mobject, **kwargs):
         Transform.__init__(
-            self, 
-            mobject, 
+            self,
+            mobject,
             function(mobject.copy()),
             **kwargs
         )
-        self.name = "ApplyFunctionTo"+str(mobject)
+        self.name = "ApplyFunctionTo" + str(mobject)
+
 
 class ApplyMatrix(ApplyPointwiseFunction):
-    #Truth be told, I'm not sure if this is useful.
+    # Truth be told, I'm not sure if this is useful.
     def __init__(self, matrix, mobject, **kwargs):
         matrix = np.array(matrix)
         if matrix.shape == (2, 2):
@@ -160,9 +177,11 @@ class ApplyMatrix(ApplyPointwiseFunction):
         elif matrix.shape != (3, 3):
             raise "Matrix has bad dimensions"
         transpose = np.transpose(matrix)
+
         def func(p):
             return np.dot(p, transpose)
         ApplyPointwiseFunction.__init__(self, func, mobject, **kwargs)
+
 
 class ComplexFunction(ApplyPointwiseFunction):
     def __init__(self, function, mobject, **kwargs):
@@ -172,17 +191,19 @@ class ComplexFunction(ApplyPointwiseFunction):
             )
         ApplyPointwiseFunction.__init__(
             self,
-            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
+            lambda (x, y, z): complex_to_R3(function(complex(x, y))),
             instantiate(mobject),
             **kwargs
         )
 
 ###
 
+
 class CyclicReplace(Transform):
     CONFIG = {
-        "path_arc" : np.pi/2
+        "path_arc": np.pi / 2
     }
+
     def __init__(self, *mobjects, **kwargs):
         start = Group(*mobjects)
         target = Group(*[
@@ -191,14 +212,18 @@ class CyclicReplace(Transform):
         ])
         Transform.__init__(self, start, target, **kwargs)
 
-class Swap(CyclicReplace):
-    pass #Renaming, more understandable for two entries
 
-#TODO: Um...does this work
+class Swap(CyclicReplace):
+    pass  # Renaming, more understandable for two entries
+
+# TODO: Um...does this work
+
+
 class TransformAnimations(Transform):
     CONFIG = {
-        "rate_func" : squish_rate_func(smooth)
+        "rate_func": squish_rate_func(smooth)
     }
+
     def __init__(self, start_anim, end_anim, **kwargs):
         digest_config(self, kwargs, locals())
         if "run_time" in kwargs:
@@ -207,15 +232,16 @@ class TransformAnimations(Transform):
             self.run_time = max(start_anim.run_time, end_anim.run_time)
         for anim in start_anim, end_anim:
             anim.set_run_time(self.run_time)
-            
+
         if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
             start_anim.starting_mobject.align_data(end_anim.starting_mobject)
             for anim in start_anim, end_anim:
                 if hasattr(anim, "target_mobject"):
                     anim.starting_mobject.align_data(anim.target_mobject)
 
-        Transform.__init__(self, start_anim.mobject, end_anim.mobject, **kwargs)
-        #Rewire starting and ending mobjects
+        Transform.__init__(self, start_anim.mobject,
+                           end_anim.mobject, **kwargs)
+        # Rewire starting and ending mobjects
         start_anim.mobject = self.starting_mobject
         end_anim.mobject = self.target_mobject
 
@@ -223,4 +249,3 @@ class TransformAnimations(Transform):
         self.start_anim.update(alpha)
         self.end_anim.update(alpha)
         Transform.update(self, alpha)
-

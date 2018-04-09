@@ -12,12 +12,13 @@ from constants import *
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8
 
+
 def matrix_to_tex_string(matrix):
     matrix = np.array(matrix).astype("string")
     if matrix.ndim == 1:
         matrix = matrix.reshape((matrix.size, 1))
     n_rows, n_cols = matrix.shape
-    prefix = "\\left[ \\begin{array}{%s}"%("c"*n_cols)
+    prefix = "\\left[ \\begin{array}{%s}" % ("c" * n_cols)
     suffix = "\\end{array} \\right]"
     rows = [
         " & ".join(row)
@@ -25,39 +26,43 @@ def matrix_to_tex_string(matrix):
     ]
     return prefix + " \\\\ ".join(rows) + suffix
 
+
 def matrix_to_mobject(matrix):
     return TexMobject(matrix_to_tex_string(matrix))
 
-def vector_coordinate_label(vector_mob, integer_labels = True, 
-                            n_dim = 2, color = WHITE):
+
+def vector_coordinate_label(vector_mob, integer_labels=True,
+                            n_dim=2, color=WHITE):
     vect = np.array(vector_mob.get_end())
     if integer_labels:
         vect = np.round(vect).astype(int)
     vect = vect[:n_dim]
     vect = vect.reshape((n_dim, 1))
-    label = Matrix(vect, add_background_rectangles = True)
+    label = Matrix(vect, add_background_rectangles=True)
     label.scale(VECTOR_LABEL_SCALE_FACTOR)
 
     shift_dir = np.array(vector_mob.get_end())
-    if shift_dir[0] >= 0: #Pointing right
-        shift_dir -= label.get_left() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*LEFT
-    else: #Pointing left
-        shift_dir -= label.get_right() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*RIGHT
+    if shift_dir[0] >= 0:  # Pointing right
+        shift_dir -= label.get_left() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER * LEFT
+    else:  # Pointing left
+        shift_dir -= label.get_right() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER * RIGHT
     label.shift(shift_dir)
     label.set_color(color)
     label.rect = BackgroundRectangle(label)
     label.add_to_back(label.rect)
     return label
 
+
 class Matrix(VMobject):
     CONFIG = {
-        "v_buff" : 0.5,
-        "h_buff" : 1,
-        "add_background_rectangles" : False
+        "v_buff": 0.5,
+        "h_buff": 1,
+        "add_background_rectangles": False
     }
+
     def __init__(self, matrix, **kwargs):
         """
-        Matrix can either either include numbres, tex_strings, 
+        Matrix can either either include numbres, tex_strings,
         or mobjects
         """
         VMobject.__init__(self, **kwargs)
@@ -89,9 +94,9 @@ class Matrix(VMobject):
                 if i == 0 and j == 0:
                     continue
                 elif i == 0:
-                    mob.next_to(matrix[i][j-1], RIGHT, self.h_buff)
+                    mob.next_to(matrix[i][j - 1], RIGHT, self.h_buff)
                 else:
-                    mob.next_to(matrix[i-1][j], DOWN, self.v_buff)
+                    mob.next_to(matrix[i - 1][j], DOWN, self.v_buff)
         return self
 
     def add_brackets(self):
@@ -107,7 +112,7 @@ class Matrix(VMobject):
 
     def set_color_columns(self, *colors):
         for i, color in enumerate(colors):
-            VGroup(*self.mob_matrix[:,i]).set_color(color)
+            VGroup(*self.mob_matrix[:, i]).set_color(color)
         return self
 
     def add_background_to_entries(self):
@@ -123,15 +128,3 @@ class Matrix(VMobject):
 
     def get_brackets(self):
         return self.brackets
-
-
-
-
-
-
-
-
-
-
-
-

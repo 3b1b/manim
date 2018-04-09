@@ -1,5 +1,7 @@
 import numpy as np
 
+from constants import *
+
 from animation.creation import ShowCreation
 from animation.transform import ApplyMethod
 from animation.creation import FadeOut
@@ -11,12 +13,14 @@ from scene.scene import Scene
 from mobject.geometry import Circle
 from mobject.geometry import Line
 
+
 class NumericalMatrixMultiplication(Scene):
     CONFIG = {
-        "left_matrix" : [[1, 2], [3, 4]],
-        "right_matrix" : [[5, 6], [7, 8]],
-        "use_parens" : True,
+        "left_matrix": [[1, 2], [3, 4]],
+        "right_matrix": [[5, 6], [7, 8]],
+        "use_parens": True,
     }
+
     def construct(self):
         left_string_matrix, right_string_matrix = [
             np.array(matrix).astype("string")
@@ -34,25 +38,24 @@ class NumericalMatrixMultiplication(Scene):
         self.organize_matrices(left, right, result)
         self.animate_product(left, right, result)
 
-
     def get_result_matrix(self, left, right):
         (m, k), n = left.shape, right.shape[1]
-        mob_matrix = np.array([VGroup()]).repeat(m*n).reshape((m, n))
+        mob_matrix = np.array([VGroup()]).repeat(m * n).reshape((m, n))
         for a in range(m):
             for b in range(n):
                 template = "(%s)(%s)" if self.use_parens else "%s%s"
                 parts = [
-                    prefix + template%(left[a][c], right[c][b])
+                    prefix + template % (left[a][c], right[c][b])
                     for c in range(k)
                     for prefix in ["" if c == 0 else "+"]
                 ]
-                mob_matrix[a][b] = TexMobject(parts, next_to_buff = 0.1)
+                mob_matrix[a][b] = TexMobject(parts, next_to_buff=0.1)
         return Matrix(mob_matrix)
 
     def add_lines(self, left, right):
         line_kwargs = {
-            "color" : BLUE,
-            "stroke_width" : 2,
+            "color": BLUE,
+            "stroke_width": 2,
         }
         left_rows = [
             VGroup(*row) for row in left.get_mob_matrix()
@@ -60,7 +63,7 @@ class NumericalMatrixMultiplication(Scene):
         h_lines = VGroup()
         for row in left_rows[:-1]:
             h_line = Line(row.get_left(), row.get_right(), **line_kwargs)
-            h_line.next_to(row, DOWN, buff = left.v_buff/2.)
+            h_line.next_to(row, DOWN, buff=left.v_buff / 2.)
             h_lines.add(h_line)
 
         right_cols = [
@@ -69,7 +72,7 @@ class NumericalMatrixMultiplication(Scene):
         v_lines = VGroup()
         for col in right_cols[:-1]:
             v_line = Line(col.get_top(), col.get_bottom(), **line_kwargs)
-            v_line.next_to(col, RIGHT, buff = right.h_buff/2.)
+            v_line.next_to(col, RIGHT, buff=right.h_buff / 2.)
             v_lines.add(v_line)
 
         self.play(ShowCreation(h_lines))
@@ -81,17 +84,16 @@ class NumericalMatrixMultiplication(Scene):
         equals = TexMobject("=")
         everything = VGroup(left, right, equals, result)
         everything.arrange_submobjects()
-        everything.scale_to_fit_width(FRAME_WIDTH-1)
+        everything.scale_to_fit_width(FRAME_WIDTH - 1)
         self.add(everything)
-
 
     def animate_product(self, left, right, result):
         l_matrix = left.get_mob_matrix()
         r_matrix = right.get_mob_matrix()
         result_matrix = result.get_mob_matrix()
         circle = Circle(
-            radius = l_matrix[0][0].get_height(),
-            color = GREEN
+            radius=l_matrix[0][0].get_height(),
+            color=GREEN
         )
         circles = VGroup(*[
             entry.get_point_mobject()
@@ -120,10 +122,10 @@ class NumericalMatrixMultiplication(Scene):
                     self.play(Transform(circles, new_circles))
                     self.play(
                         Transform(
-                            start_parts, 
-                            result_entry.copy().set_color(YELLOW), 
-                            path_arc = -np.pi/2,
-                            submobject_mode = "all_at_once",
+                            start_parts,
+                            result_entry.copy().set_color(YELLOW),
+                            path_arc=-np.pi / 2,
+                            submobject_mode="all_at_once",
                         ),
                         *lagging_anims
                     )

@@ -3,12 +3,14 @@ import numpy as np
 from constants import OUT
 from constants import RIGHT
 
-#Matrix operations
+# Matrix operations
 
-def thick_diagonal(dim, thickness = 2):
+
+def thick_diagonal(dim, thickness=2):
     row_indices = np.arange(dim).repeat(dim).reshape((dim, dim))
     col_indices = np.transpose(row_indices)
-    return (np.abs(row_indices - col_indices)<thickness).astype('uint8')
+    return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
+
 
 def rotation_matrix(angle, axis):
     """
@@ -19,16 +21,18 @@ def rotation_matrix(angle, axis):
     axis_to_z = np.linalg.inv(z_to_axis)
     return reduce(np.dot, [z_to_axis, about_z, axis_to_z])
 
+
 def rotation_about_z(angle):
     return [
         [np.cos(angle), -np.sin(angle), 0],
-        [np.sin(angle),  np.cos(angle), 0],
+        [np.sin(angle), np.cos(angle), 0],
         [0, 0, 1]
     ]
 
+
 def z_to_vector(vector):
     """
-    Returns some matrix in SO(3) which takes the z-axis to the 
+    Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
     """
     norm = np.linalg.norm(vector)
@@ -37,7 +41,7 @@ def z_to_vector(vector):
     v = np.array(vector) / norm
     phi = np.arccos(v[2])
     if any(v[:2]):
-        #projection of vector to unit circle
+        # projection of vector to unit circle
         axis_proj = v[:2] / np.linalg.norm(v[:2])
         theta = np.arccos(axis_proj[0])
         if axis_proj[1] < 0:
@@ -51,14 +55,17 @@ def z_to_vector(vector):
     ])
     return np.dot(rotation_about_z(theta), phi_down)
 
-def rotate_vector(vector, angle, axis = OUT):
+
+def rotate_vector(vector, angle, axis=OUT):
     return np.dot(rotation_matrix(angle, axis), vector)
+
 
 def angle_between(v1, v2):
     return np.arccos(np.dot(
-        v1 / np.linalg.norm(v1), 
+        v1 / np.linalg.norm(v1),
         v2 / np.linalg.norm(v2)
     ))
+
 
 def angle_of_vector(vector):
     """
@@ -69,6 +76,7 @@ def angle_of_vector(vector):
         return 0
     return np.angle(complex(*vector[:2]))
 
+
 def angle_between_vectors(v1, v2):
     """
     Returns the angle between two 3D vectors.
@@ -76,7 +84,8 @@ def angle_between_vectors(v1, v2):
     """
     l1 = np.linalg.norm(v1)
     l2 = np.linalg.norm(v2)
-    return np.arccos(np.dot(v1,v2)/(l1*l2))
+    return np.arccos(np.dot(v1, v2) / (l1 * l2))
+
 
 def project_along_vector(point, vector):
     matrix = np.identity(3) - np.outer(vector, vector)
@@ -84,20 +93,23 @@ def project_along_vector(point, vector):
 
 ###
 
-def compass_directions(n = 4, start_vect = RIGHT):
-    angle = 2*np.pi/n
+
+def compass_directions(n=4, start_vect=RIGHT):
+    angle = 2 * np.pi / n
     return np.array([
-        rotate_vector(start_vect, k*angle)
+        rotate_vector(start_vect, k * angle)
         for k in range(n)
     ])
+
 
 def complex_to_R3(complex_num):
     return np.array((complex_num.real, complex_num.imag, 0))
 
+
 def R3_to_complex(point):
     return complex(*point[:2])
+
 
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
-

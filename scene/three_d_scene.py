@@ -5,8 +5,6 @@ from constants import *
 from continual_animation.continual_animation import ContinualMovement
 from animation.transform import ApplyMethod
 from camera.three_d_camera import ThreeDCamera
-from mobject.types.vectorized_mobject import VGroup
-from mobject.three_dimensions import should_shade_in_3d
 from scene.scene import Scene
 
 from utils.iterables import list_update
@@ -14,19 +12,20 @@ from utils.iterables import list_update
 
 class ThreeDScene(Scene):
     CONFIG = {
-        "camera_class" : ThreeDCamera,
-        "ambient_camera_rotation" : None,
+        "camera_class": ThreeDCamera,
+        "ambient_camera_rotation": None,
     }
 
-    def set_camera_position(self, phi = None, theta = None, distance = None,
-                            center_x = None, center_y = None, center_z = None):
-        self.camera.set_position(phi, theta, distance, center_x, center_y, center_z)
+    def set_camera_position(self, phi=None, theta=None, distance=None,
+                            center_x=None, center_y=None, center_z=None):
+        self.camera.set_position(phi, theta, distance,
+                                 center_x, center_y, center_z)
 
-    def begin_ambient_camera_rotation(self, rate = 0.01):
+    def begin_ambient_camera_rotation(self, rate=0.01):
         self.ambient_camera_rotation = ContinualMovement(
             self.camera.rotation_mobject,
-            direction = UP,
-            rate = rate
+            direction=UP,
+            rate=rate
         )
         self.add(self.ambient_camera_rotation)
 
@@ -37,18 +36,19 @@ class ThreeDScene(Scene):
 
     def move_camera(
         self,
-        phi = None, theta = None, distance = None,
-        center_x = None, center_y = None, center_z = None,
-        added_anims = [],
+        phi=None, theta=None, distance=None,
+        center_x=None, center_y=None, center_z=None,
+        added_anims=[],
         **kwargs
-        ):
+    ):
         target_point = self.camera.get_spherical_coords(phi, theta, distance)
         movement = ApplyMethod(
             self.camera.rotation_mobject.move_to,
             target_point,
             **kwargs
         )
-        target_center = self.camera.get_center_of_rotation(center_x, center_y, center_z)
+        target_center = self.camera.get_center_of_rotation(
+            center_x, center_y, center_z)
         movement_center = ApplyMethod(
             self.camera.moving_center.move_to,
             target_center,
