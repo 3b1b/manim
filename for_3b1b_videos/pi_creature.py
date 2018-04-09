@@ -98,14 +98,15 @@ class PiCreature(SVGMobject):
 
     def set_color(self, color):
         self.body.set_fill(color)
+        self.color = color
         return self
 
     def change_mode(self, mode):
         new_self = self.__class__(
-            mode=mode,
-            color=self.color
+            mode = mode,
         )
-        new_self.scale_to_fit_height(self.get_height())
+        new_self.match_style(self)
+        new_self.match_height(self)
         if self.is_flipped() ^ new_self.is_flipped():
             new_self.flip()
         new_self.shift(self.eyes.get_center() - new_self.eyes.get_center())
