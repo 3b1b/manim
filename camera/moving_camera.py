@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 
+from constants import FRAME_HEIGHT
+
 from camera.camera import Camera
+from mobject.frame import ScreenRectangle
 
 
 class MovingCamera(Camera):
@@ -12,11 +15,14 @@ class MovingCamera(Camera):
         "aligned_dimension": "width"  # or height
     }
 
-    def __init__(self, frame, **kwargs):
+    def __init__(self, frame=None, **kwargs):
         """
         frame is a Mobject, (should be a rectangle) determining
         which region of space the camera displys
         """
+        if frame is None:
+            frame = ScreenRectangle(height=FRAME_HEIGHT)
+            frame.fade(1)
         self.frame = frame
         Camera.__init__(self, **kwargs)
 

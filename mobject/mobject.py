@@ -139,7 +139,7 @@ class Mobject(Container):
             self.target = self.copy()
         return self.target
 
-    #### Transforming operations ######
+    # Transforming operations
 
     def apply_to_family(self, func):
         for mob in self.family_members_with_points():
@@ -156,7 +156,7 @@ class Mobject(Container):
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
-        the mobject to scale about, e.g., mob.scale(about_edge = RIGHT) 
+        the mobject to scale about, e.g., mob.scale(about_edge = RIGHT)
         scales about mob.get_right().
 
         Otherwise, if about_point is given a value, scaling is done with
@@ -249,7 +249,7 @@ class Mobject(Container):
             mob.apply_over_attr_arrays(repeat_array)
         return self
 
-    #### In place operations ######
+    # In place operations.
     # Note, much of these are now redundant with default behavior of
     # above methods
 
@@ -278,7 +278,7 @@ class Mobject(Container):
         self.rotate(TAU / 14, RIGHT + UP, **kwargs)
         return self
 
-    #### Positioning methods ####
+    # Positioning methods
 
     def center(self):
         self.shift(-self.get_center())
@@ -334,7 +334,7 @@ class Mobject(Container):
 
     def align_to(self, mobject_or_point, direction=ORIGIN, alignment_vect=UP):
         """
-        Examples: 
+        Examples:
         mob1.align_to(mob2, UP) moves mob1 vertically so that its
         top edge lines ups with mob2's top edge.
 
@@ -488,7 +488,7 @@ class Mobject(Container):
     def set_color(self, color=YELLOW_C, family=True):
         """
         Condition is function which takes in one arguments, (x, y, z).
-        Here it just recurses to submobjects, but in subclasses this 
+        Here it just recurses to submobjects, but in subclasses this
         should be further implemented based on the the inner workings
         of color
         """
@@ -521,8 +521,7 @@ class Mobject(Container):
         return self
 
     def set_submobject_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
-        mobs = self.family_members_with_points()
-        if center == None:
+        if center is None:
             center = self.get_center()
 
         for mob in self.family_members_with_points():
@@ -618,7 +617,7 @@ class Mobject(Container):
     def get_all_points(self):
         return self.get_merged_array("points")
 
-    ### Getters ###
+    # Getters
 
     def get_points_defining_boundary(self):
         return self.points
