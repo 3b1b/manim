@@ -200,7 +200,12 @@ class FlatCoin(UprightCoin):
 
         # draw the ridges
         PI = TAU/2
-        ridge_angles = np.arange(PI/self.nb_ridges,PI,PI/self.nb_ridges)
+        dtheta = PI/self.nb_ridges
+        ridge_angles = np.arange(dtheta,PI,dtheta)
+        # add a twist onto each coin
+        ridge_angles += np.random.rand(1) * dtheta
+        # crop the angles that overshoot on either side
+        ridge_angles = ridge_angles[(ridge_angles > 0) * (ridge_angles < PI)]
         ridge_positions = 0.5 * 2 * self.radius * np.array([
             np.cos(theta) for theta in ridge_angles
         ])
