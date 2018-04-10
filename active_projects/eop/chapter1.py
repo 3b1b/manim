@@ -12,6 +12,24 @@ GRADE_COLOR_1 = COLOR_HEADS = RED
 GRADE_COLOR_2 = COLOR_TAILS = BLUE
 
 
+def binary(i):
+    if i == 0:
+        return []
+    j = i
+    binary_array = []
+    while j > 0:
+        jj = j/2
+        if jj > 0:
+            binary_array.append(j % 2)
+        else:
+            binary_array.append(1)
+        j = jj
+    return binary_array[::-1]
+
+
+def nb_of_ones(i):
+    return binary(i).count(1)
+
 
 class PiCreatureCoin(VMobject):
     CONFIG = {
@@ -277,7 +295,90 @@ class TallyStack(VGroup):
         stack1 = HeadsStack(size = self.nb_heads, coin_thickness = self.coin_thickness)
         stack2 = TailsStack(size = self.nb_tails, coin_thickness = self.coin_thickness)
         stack2.next_to(stack1, RIGHT, buff = SMALL_BUFF)
+        stack2.align_to(stack1, DOWN)
         self.add(stack1, stack2)
+
+
+
+
+
+
+class CoinFlipTree(VGroup):
+    CONFIG = {
+        "total_width": 12,
+        "level_height": 0.8,
+        "nb_levels": 4,
+        "sort_until_level": 3
+    }
+
+    def __init__(self, **kwargs):
+
+        VGroup.__init__(self, **kwargs)
+
+        self.rows = []
+        for n in range(self.nb_levels + 1):
+            if n <= self.sort_until_level:
+                self.create_row(n, sorted = True)
+            else:
+                self.create_row(n, sorted = False)
+            
+
+        for row in self.rows:
+            for leaf in row:
+                dot = Dot()
+                dot.move_to(leaf[0])
+                line = Line(leaf[2], leaf[0])
+                if leaf[2][0] > leaf[0][0]:
+                    line_color = COLOR_HEADS
+                else:
+                    line_color = COLOR_TAILS
+                line.set_stroke(color = line_color)
+                group = VGroup()
+                group.add(dot)
+                group.add_to_back(line)
+                self.add(group)
+
+
+
+
+    def create_row(self, level, sorted = True):
+
+        if level == 0:
+            new_row = [[ORIGIN,0,ORIGIN]] # is its own parent
+            self.rows.append(new_row)
+            return
+
+        previous_row = self.rows[level - 1]
+        new_row = []
+        dx = float(self.total_width) / (2 ** level)
+        x = - 0.5 * self.total_width + 0.5 * dx
+        y = - self.level_height * level
+        for root in previous_row:
+            root_point = root[0]
+            root_tally = root[1]
+            for i in range(2): # 0 = heads = left, 1 = tails = right
+                leaf = x * RIGHT + y * UP
+                new_row.append([leaf, root_tally + i, root_point]) # leaf and its parent
+                x += dx
+
+        #print "tallies for row", level, ":", [new_row[i][1] for i in range(2**level)]
+
+        if sorted:
+            # sort the new_row by its tallies
+            sorted_row = []
+            x = - 0.5 * self.total_width + 0.5 * dx
+            for i in range(level + 1):
+                for leaf in new_row:
+                    if leaf[1] == i:
+                        sorted_leaf = leaf
+                        sorted_leaf[0][0] = x
+                        x += dx
+                        sorted_row.append(leaf)
+            print "sorted roots:", [sorted_row[i][2][0] for i in range(2**level)]
+            self.rows.append(sorted_row)
+        else:
+            self.rows.append(new_row)
+
 
 
 
@@ -285,13 +386,57 @@ class TestScene(Scene):
 
     def construct(self):
 
-        #seq = CoinSequence(["H", "T", "T", "H"])
+        #seq = CoinSequence(["H", "T", "T", "H"]).move_to(2 * LEFT)
         #self.add(seq)
         
-        stack = TallyStack(4,5, coin_thickness = COIN_THICKNESS)
-        self.add(stack)
+        #stack = TallyStack(4,7, coin_thickness = COIN_THICKNESS)
+        #self.add(stack)
+
+        tree = CoinFlipTree(nb_levels = 7, sort_until_level = 0)
+        tree.move_to(ORIGIN)
+        self.add(tree)
+
+        for i in range(1, 8):
+            new_tree = CoinFlipTree(nb_levels = 7, sort_until_level = i)
+            new_tree.move_to(ORIGIN)
+            self.play(Transform(tree, new_tree))
+            self.wait()
 
         self.wait()
+
+
+class CoinFlipBranchToAreaScene(Scene):
+
+    def construct(self):
+
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class AreaSplittingScene(Scene):
