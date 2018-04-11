@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+from old_projects.eoc.chapter8 import *
 
 COIN_RADIUS = 0.3
 COIN_THICKNESS = 0.4 * COIN_RADIUS
@@ -13,6 +14,7 @@ GRADE_COLOR_2 = COLOR_TAILS = BLUE
 
 
 def binary(i):
+    # returns an array of 0s and 1s
     if i == 0:
         return []
     j = i
@@ -26,10 +28,8 @@ def binary(i):
         j = jj
     return binary_array[::-1]
 
-
 def nb_of_ones(i):
     return binary(i).count(1)
-
 
 class PiCreatureCoin(VMobject):
     CONFIG = {
@@ -67,8 +67,6 @@ class PiCreatureCoin(VMobject):
             )
             self.add(ridge)
 
-
-
 class CoinFlippingPiCreature(PiCreature):
 
     def __init__(self, **kwargs):
@@ -84,7 +82,6 @@ class CoinFlippingPiCreature(PiCreature):
     def flip_coin_up(self):
         self.change("raise_right_hand")
 
-
 class FlipUpAndDown(Animation):
     CONFIG = {
         "vector" : UP,
@@ -94,7 +91,6 @@ class FlipUpAndDown(Animation):
     def update(self,t):
         self.mobject.shift(4 * t * (1 - t) * self.vector)
         self.mobject.rotate(t * self.nb_turns * TAU)
-
 
 class FlipCoin(AnimationGroup):
     CONFIG = {
@@ -116,9 +112,6 @@ class FlipCoin(AnimationGroup):
         )
         AnimationGroup.__init__(self,pi_creature_motion, coin_motion)
 
-
-
-
 class CoinFlippingPiCreatureScene(Scene):
 
     def construct(self):
@@ -126,10 +119,6 @@ class CoinFlippingPiCreatureScene(Scene):
         randy = CoinFlippingPiCreature()
         self.add(randy)
         self.play(FlipCoin(randy, run_time = 3))
-
-
-
-
 
 
 class UprightCoin(Circle):
@@ -153,7 +142,6 @@ class UprightHeads(UprightCoin):
         "fill_color": COLOR_HEADS,
         "symbol": "H",
     }
-
 
 class UprightTails(UprightCoin):
     CONFIG = {
@@ -181,7 +169,6 @@ class CoinSequence(VGroup):
             new_coin.shift(offset * RIGHT)
             self.add(new_coin)
             offset += self.spacing
-
 
 class FlatCoin(UprightCoin):
 # For use in coin stacks
@@ -243,22 +230,18 @@ class FlatCoin(UprightCoin):
         empty_edge.set_fill(opacity = 0)
         self.add(empty_edge)
 
-
 class FlatHeads(FlatCoin):
     CONFIG = {
         "fill_color": COLOR_HEADS,
         "symbol": "H",
     }
     
-
 class FlatTails(FlatCoin):
     CONFIG = {
         "fill_color": COLOR_TAILS,
         "symbol": "T",
     }
     
-
-
 class CoinStack(VGroup):
     CONFIG = {
         "coin_thickness": COIN_THICKNESS,
@@ -272,17 +255,15 @@ class CoinStack(VGroup):
             coin.shift(n * self.coin_thickness * UP)
             self.add(coin)
 
-
-
-
 class HeadsStack(CoinStack):
-    CONFIG = { "face": FlatHeads }
+    CONFIG = {
+        "face": FlatHeads
+    }
 
 class TailsStack(CoinStack):
-    CONFIG = { "face": FlatTails }
-
-
-
+    CONFIG = {
+        "face": FlatTails
+    }
 
 class TallyStack(VGroup):
 
@@ -297,11 +278,6 @@ class TallyStack(VGroup):
         stack2.next_to(stack1, RIGHT, buff = SMALL_BUFF)
         stack2.align_to(stack1, DOWN)
         self.add(stack1, stack2)
-
-
-
-
-
 
 class CoinFlipTree(VGroup):
     CONFIG = {
@@ -413,6 +389,367 @@ class CoinFlipBranchToAreaScene(Scene):
 
 
 
+class Chapter1OpeningQuote(OpeningQuote):
+    CONFIG = {
+        "fade_in_kwargs": {
+            "submobject_mode": "lagged_start",
+            "rate_func": None,
+            "lag_factor": 9,
+            "run_time": 10,
+        },
+        "text_size" : "\\normalsize",
+        "use_quotation_marks": False,
+        "quote" : [
+            "To see a world in a grain of sand\\\\",
+            "And a heaven in a wild flower,\\\\",
+            "Hold infinity in the palm of your hand\\\\",
+            "\phantom{r}And eternity in an hour.\\\\"
+        ],
+        "quote_arg_separator" : " ",
+        "highlighted_quote_terms" : {},
+        "author" : "William Blake: \\\\ \emph{Auguries of Innocence}",
+    }
+
+class Introduction(TeacherStudentsScene):
+
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+        "color": MAROON_E,
+        "flip_at_start": True,
+        },
+    }
+
+    def construct(self):
+        self.show_series()
+
+    def show_series(self):
+        series = VideoSeries()
+        series.to_edge(UP)
+        this_video = series[0]
+        this_video.set_color(YELLOW)
+        this_video.save_state()
+        this_video.set_fill(opacity = 0)
+        this_video.center()
+        this_video.scale_to_fit_height(FRAME_HEIGHT)
+        self.this_video = this_video
+
+
+        words = TextMobject(
+            "Welcome to \\\\",
+            "Essence of Probability"
+        )
+        words.set_color_by_tex("Essence of Probability", YELLOW)
+
+        self.teacher.change_mode("happy")
+        self.play(
+            FadeIn(
+                series,
+                submobject_mode = "lagged_start",
+                run_time = 2
+            ),
+            Blink(self.get_teacher())
+        )
+        self.teacher_says(words, target_mode = "hooray")
+        self.change_student_modes(
+            *["hooray"]*3,
+            look_at_arg = series[1].get_left(),
+            added_anims = [
+                ApplyMethod(this_video.restore, run_time = 3),
+            ]
+        )
+        self.play(*[
+            ApplyMethod(
+                video.shift, 0.5*video.get_height()*DOWN,
+                run_time = 3,
+                rate_func = squish_rate_func(
+                    there_and_back, alpha, alpha+0.3
+                )
+            )
+            for video, alpha in zip(series, np.linspace(0, 0.7, len(series)))
+        ]+[
+            Animation(self.teacher.bubble),
+            Animation(self.teacher.bubble.content),
+        ])
+
+        essence_words = words.get_part_by_tex("Essence").copy()
+        self.play(
+            FadeOut(self.teacher.bubble),
+            FadeOut(self.teacher.bubble.content),
+            essence_words.next_to, series, DOWN,
+            *[
+                ApplyMethod(pi.change_mode, "pondering")
+                for pi in self.get_pi_creatures()
+            ]
+        )
+        self.wait(3)
+
+        self.series = series
+        self.essence_words = essence_words
+
+class IllustrateAreaModel1(Scene):
+
+    def construct(self):
+        
+        # show independent events
+
+        sample_space_width = sample_space_height = 3.0
+        p_of_A = 0.7
+        p_of_not_A = 1 - p_of_A
+        p_of_B = 0.8
+        p_of_not_B = 1 - p_of_B
+
+
+        rect_A = Rectangle(
+            width = p_of_A * sample_space_width,
+            height = 1 * sample_space_height,
+            stroke_width = 0,
+            fill_color = BLUE,
+            fill_opacity = 1.0
+        )
+        rect_not_A = Rectangle(
+            width = p_of_not_A * sample_space_width,
+            height = 1 * sample_space_height,
+            stroke_width = 0,
+            fill_color = BLUE_E,
+            fill_opacity = 1.0
+        ).next_to(rect_A, RIGHT, buff = 0)
+
+        brace_A = Brace(rect_A, DOWN)
+        label_A = TexMobject("P(A)").next_to(brace_A, DOWN).scale(0.7)
+        brace_not_A = Brace(rect_not_A, DOWN)
+        label_not_A = TexMobject("P(\\text{not }A)").next_to(brace_not_A, DOWN).scale(0.7)
+
+        self.play(
+            LaggedStart(FadeIn, VGroup(rect_A, rect_not_A), lag_factor = 0.5)
+        )
+        self.play(
+            ShowCreation(brace_A),
+            Write(label_A),
+        )
+        # self.play(
+        #     ShowCreation(brace_not_A),
+        #     Write(label_not_A),
+        # )
+
+
+
+
+        rect_B = Rectangle(
+            width = 1 * sample_space_width,
+            height = p_of_B * sample_space_height,
+            stroke_width = 0,
+            fill_color = GREEN,
+            fill_opacity = 0.5
+        )
+        rect_not_B = Rectangle(
+            width = 1 * sample_space_width,
+            height = p_of_not_B * sample_space_height,
+            stroke_width = 0,
+            fill_color = GREEN_E,
+            fill_opacity = 0.5
+        ).next_to(rect_B, UP, buff = 0)
+
+        VGroup(rect_B, rect_not_B).move_to(VGroup(rect_A, rect_not_A))
+
+        brace_B = Brace(rect_B, LEFT)
+        label_B = TexMobject("P(B)").next_to(brace_B, LEFT).scale(0.7)
+        brace_not_B = Brace(rect_not_B, LEFT)
+        label_not_B = TexMobject("P(\\text{not }B)").next_to(brace_not_B, LEFT).scale(0.7)
+
+        self.play(
+            LaggedStart(FadeIn, VGroup(rect_B, rect_not_B), lag_factor = 0.5)
+        )
+        self.play(
+            ShowCreation(brace_B),
+            Write(label_B),
+        )
+        # self.play(
+        #     ShowCreation(brace_not_B),
+        #     Write(label_not_B),
+        # )
+
+        rect_A_and_B = Rectangle(
+            width = p_of_A * sample_space_width,
+            height = p_of_B * sample_space_height,
+            stroke_width = 3,
+            fill_opacity = 0.0
+        ).align_to(rect_A, DOWN).align_to(rect_A,LEFT)
+        label_A_and_B = TexMobject("P(A\\text{ and }B)").scale(0.7)
+        label_A_and_B.move_to(rect_A_and_B)
+
+        self.play(
+            ShowCreation(rect_A_and_B)
+        )
+        self.play(FadeIn(label_A_and_B))
+        self.add_foreground_mobject(label_A_and_B)
+
+        indep_formula = TexMobject("P(A\\text{ and }B)", "=", "P(A)", "\cdot", "P(B)")
+        indep_formula = indep_formula.scale(0.7).next_to(rect_not_B, UP, buff = MED_LARGE_BUFF)
+
+        label_A_and_B_copy = label_A_and_B.copy()
+        label_A_copy = label_A.copy()
+        label_B_copy = label_B.copy()
+        self.add(label_A_and_B_copy, label_A_copy, label_B_copy)
+
+        self.play(Transform(label_A_and_B_copy, indep_formula[0]))
+        self.play(FadeIn(indep_formula[1]))
+        self.play(Transform(label_A_copy, indep_formula[2]))
+        self.play(FadeIn(indep_formula[3]))
+        self.play(Transform(label_B_copy, indep_formula[4]))
+
+        self.wait()
+
+
+        # show conditional prob
+
+        rect_A_and_B.set_fill(color = GREEN, opacity = 0.5)
+        rect_A_and_not_B = Rectangle(
+            width = p_of_A * sample_space_width,
+            height = p_of_not_B * sample_space_height,
+            stroke_width = 0,
+            fill_color = GREEN_E,
+            fill_opacity = 0.5
+        ).next_to(rect_A_and_B, UP, buff = 0)
+        
+        rect_not_A_and_B = Rectangle(
+            width = p_of_not_A * sample_space_width,
+            height = p_of_B * sample_space_height,
+            stroke_width = 0,
+            fill_color = GREEN,
+            fill_opacity = 0.5
+        ).next_to(rect_A_and_B, RIGHT, buff = 0)
+
+        rect_not_A_and_not_B = Rectangle(
+            width = p_of_not_A * sample_space_width,
+            height = p_of_not_B * sample_space_height,
+            stroke_width = 0,
+            fill_color = GREEN_E,
+            fill_opacity = 0.5
+        ).next_to(rect_not_A_and_B, UP, buff = 0)
+
+        self.remove(rect_B, rect_not_B)
+        self.add(rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B)
+
+
+
+
+
+        p_of_B_knowing_A = 0.6
+        rect_A_and_B.target = Rectangle(
+            width = p_of_A * sample_space_width,
+            height = p_of_B_knowing_A * sample_space_height,
+            stroke_width = 3,
+            fill_color = GREEN,
+            fill_opacity = 0.5
+        ).align_to(rect_A_and_B, DOWN).align_to(rect_A_and_B, LEFT)
+
+        rect_A_and_not_B.target = Rectangle(
+            width = p_of_A * sample_space_width,
+            height = (1 - p_of_B_knowing_A) * sample_space_height,
+            stroke_width = 0,
+            fill_color = GREEN_E,
+            fill_opacity = 0.5
+        ).next_to(rect_A_and_B.target, UP, buff = 0)
+
+        brace_B.target = Brace(rect_A_and_B.target, LEFT)
+        label_B.target = TexMobject("P(B\mid A)").scale(0.7).next_to(brace_B.target, LEFT)
+
+
+        self.play(
+            MoveToTarget(rect_A_and_B),
+            MoveToTarget(rect_A_and_not_B),
+            MoveToTarget(brace_B),
+            MoveToTarget(label_B),
+            label_A_and_B.move_to,rect_A_and_B.target
+        )
+        label_B_knowing_A = label_B
+
+        self.play(FadeOut(label_B_copy))
+        label_B_knowing_A_copy = label_B_knowing_A.copy()
+        self.add(label_B_knowing_A_copy)
+
+        self.play(
+            label_B_knowing_A_copy.next_to, indep_formula[-2], RIGHT
+        )
+
+
+        
+
+
+        self.wait()
+
+
+    # def show_independent_events(self):
+    #     sample_space = SampleSpace(
+    #         full_space_config = {
+    #             "height" : 3,
+    #             "width" : 3,
+    #             "fill_opacity" : 0
+    #         }
+    #     )
+    #     sample_space.divide_horizontally(0.4)
+    #     sample_space.horizontal_parts.set_fill(opacity = 0)
+    #     h_labels = [
+    #         TexMobject("P(", "A", ")"),
+    #         TexMobject("P(\\text{not }", "A", ")"),
+    #     ]
+    #     for label in h_labels:
+    #         label.scale(0.7)
+    #         #self.color_label(label)
+    #     sample_space.get_side_braces_and_labels(h_labels)
+    #     sample_space.add_braces_and_labels()
+    #     h_parts = sample_space.horizontal_parts
+    #     for (label, part) in zip(h_labels, h_parts):
+    #         label.next_to(part, 2 * LEFT)
+    #         sample_space.add(label)
+
+    #     values = [0.2, 0.2]
+    #     color_pairs = [(GREEN, BLUE), (GREEN_E, BLUE_E)]
+    #     v_parts = VGroup()
+    #     for tup in zip(h_parts, values, color_pairs):
+    #         part, value, colors = tup
+    #         part.divide_vertically(value, colors = colors)
+    #         part.vertical_parts.set_fill(opacity = 0.8)
+    #         #label = TexMobject(
+    #         #    "P(", "B", "|", given_str, "A", ")"
+    #         #)
+    #         #label.scale(0.7)
+    #         #self.color_label(label)
+    #         if part == h_parts[0]:
+    #             part.get_subdivision_braces_and_labels(
+    #                 part.vertical_parts, [label], DOWN
+    #             )
+    #             sample_space.add(
+    #                 part.vertical_parts.braces,
+    #             #    part.vertical_parts.labels,
+    #             )
+    #         v_parts.add(part.vertical_parts.submobjects)
+            
+
+    #     v_labels = [
+    #         TexMobject("P(", "B", ")"),
+    #         TexMobject("P(\\text{not }", "B", ")"),
+    #     ]
+    #     for (label, part) in zip(v_labels, v_parts[1::2]):
+    #         label.scale(0.7)
+    #         label.next_to(part, DOWN)
+    #         sample_space.add(label)
+
+
+    #     sample_space.to_edge(LEFT)
+
+    #     self.add(sample_space)
+    #     self.sample_space = sample_space
+
+    #     self.wait()
+
+
+
+
+
+    def color_label(self, label):
+        label.set_color_by_tex("B", RED)
+        label.set_color_by_tex("I", GREEN)
 
 
 
@@ -420,26 +757,7 @@ class CoinFlipBranchToAreaScene(Scene):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class AreaSplittingScene(Scene):
+class AreaSplitting(Scene):
 
     def create_rect_row(self,n):
         rects_group = VGroup()
