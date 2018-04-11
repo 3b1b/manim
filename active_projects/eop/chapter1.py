@@ -762,7 +762,7 @@ class IllustrateAreaModel2(AreaIsDerivative):
         "y_min" : -4,
         "num_iterations" : 7,
         "y_axis_label" : "",
-        "num_rects" : 400,
+        "num_rects" : 50,
         "dT" : 0.25,
         "variable_point_label" : "T",
         "area_opacity" : 0.8,
@@ -771,6 +771,7 @@ class IllustrateAreaModel2(AreaIsDerivative):
 
         self.setup_axes()
         self.introduce_variable_area()
+        return
 
         graph, label = self.get_v_graph_and_label()
 
@@ -933,6 +934,29 @@ class AreaSplitting(Scene):
 
 
 
+
+
+class Test(GraphScene):
+    CONFIG = {
+        "x_min" : -3,
+        "x_max" : 3,
+        "y_min" : -0.2,
+        "y_max" : 2,
+        "graph_origin": 3*DOWN
+    }
+
+    def construct(self):
+
+        self.setup_axes()
+        graph = self.get_graph(lambda x: np.exp(-x**2/2))
+        self.add(graph)
+        
+        integral = self.get_riemann_rectangles(graph,x_min = -3, x_max = 0)
+        self.add(integral)
+
+        anim = self.get_animation_integral_bounds_change(graph, new_xmin = 3, new_xmax = 2)
+
+        self.play(anim)
 
 
 
