@@ -266,7 +266,7 @@ class TeacherStudentsScene(PiCreatureScene):
             UP + LEFT) + MED_LARGE_BUFF * UP
 
     def create_pi_creatures(self):
-        self.teacher = Mortimer()
+        self.teacher = Mortimer(color = self.default_pi_creature_kwargs["color"])
         self.teacher.to_corner(DOWN + RIGHT)
         self.teacher.look(DOWN + LEFT)
         self.students = VGroup(*[
