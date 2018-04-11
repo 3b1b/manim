@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from constants import *
+import itertools as it
 
 from scene.scene import Scene
 from animation.creation import Write

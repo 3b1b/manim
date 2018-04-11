@@ -46,6 +46,7 @@ from mobject.numbers import *
 from mobject.probability import *
 from mobject.shape_matchers import *
 from mobject.svg.brace import *
+from mobject.svg.drawings import *
 from mobject.svg.svg_mobject import *
 from mobject.svg.tex_mobject import *
 from mobject.three_dimensions import *
@@ -59,15 +60,6 @@ from for_3b1b_videos.pi_creature import *
 from for_3b1b_videos.pi_creature_animations import *
 from for_3b1b_videos.pi_creature_scene import *
 
-from scene.graph_scene import *
-from scene.moving_camera_scene import *
-from scene.reconfigurable_scene import *
-from scene.scene import *
-from scene.scene_from_video import *
-from scene.three_d_scene import *
-from scene.vector_space_scene import *
-from scene.zoomed_scene import *
-
 from once_useful_constructs.arithmetic import *
 from once_useful_constructs.combinatorics import *
 from once_useful_constructs.complex_transformation_scene import *
@@ -76,6 +68,16 @@ from once_useful_constructs.fractals import *
 from once_useful_constructs.graph_theory import *
 from once_useful_constructs.light import *
 
+from scene.graph_scene import *
+from scene.moving_camera_scene import *
+from scene.reconfigurable_scene import *
+from scene.scene import *
+from scene.sample_space_scene import *
+from scene.graph_scene import *
+from scene.scene_from_video import *
+from scene.three_d_scene import *
+from scene.vector_space_scene import *
+from scene.zoomed_scene import *
 
 from utils.bezier import *
 from utils.color import *
