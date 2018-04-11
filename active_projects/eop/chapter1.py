@@ -941,20 +941,27 @@ class Test(GraphScene):
         "x_min" : -3,
         "x_max" : 3,
         "y_min" : -0.2,
-        "y_max" : 2,
-        "graph_origin": 3*DOWN
+        "y_max" : 2.0,
+        "graph_origin": 3*DOWN,
+        "num_rects": 100
     }
 
     def construct(self):
 
+        x_max_1 = -2.99
+        x_max_2 = 3.0
+
         self.setup_axes()
         graph = self.get_graph(lambda x: np.exp(-x**2/2))
         self.add(graph)
+        area = self.area = self.get_area(graph,self.x_min, x_max_1)
         
-        integral = self.get_riemann_rectangles(graph,x_min = -3, x_max = 0)
+        integral = self.get_riemann_rectangles(
+            graph,x_min = self.x_min, x_max = x_max_1)
         self.add(integral)
 
-        anim = self.get_animation_integral_bounds_change(graph, new_xmin = 3, new_xmax = 2)
+        anim = self.get_animation_integral_bounds_change(
+            graph, self.x_min, x_max_2, run_time = 3)
 
         self.play(anim)
 
