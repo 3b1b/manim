@@ -755,6 +755,54 @@ class IllustrateAreaModel1(Scene):
 
 
 
+class IllustrateAreaModel2(AreaIsDerivative):
+
+    CONFIG = {
+        "y_max" : 4,
+        "y_min" : -4,
+        "num_iterations" : 7,
+        "y_axis_label" : "",
+        "num_rects" : 400,
+        "dT" : 0.25,
+        "variable_point_label" : "T",
+        "area_opacity" : 0.8,
+    }
+    def construct(self):
+
+        self.setup_axes()
+        self.introduce_variable_area()
+
+        graph, label = self.get_v_graph_and_label()
+
+        rect_list = self.get_riemann_rectangles_list(
+            graph, self.num_iterations
+        )
+        VGroup(*rect_list).set_fill(opacity = 0.8)
+        rects = rect_list[0]
+
+        self.play(ShowCreation(graph))
+        self.play(Write(rects))
+        for new_rects in rect_list[1:]:
+            rects.align_submobjects(new_rects)
+            for every_other_rect in rects[::2]:
+                every_other_rect.set_fill(opacity = 0)
+            self.play(Transform(
+                rects, new_rects,
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ))
+        self.wait()
+
+#        self.play(FadeOut(self.x_axis.numbers))
+        self.add_T_label(6)
+        self.change_area_bounds(
+            new_t_max = 4,
+            rate_func = there_and_back,
+            run_time = 2
+        )
+
+    def func(self, x):
+        return np.exp(-x**2/2)
 
 
 class AreaSplitting(Scene):
