@@ -1,7 +1,7 @@
 from big_ol_pile_of_manim_imports import *
 from random import *
 
-def text_range(start,stop,step):
+def text_range(start,stop,step): # a range as a list of strings
 	numbers = np.arange(start,stop,step)
 	labels = []
 	for x in numbers:

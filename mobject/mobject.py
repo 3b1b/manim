@@ -115,7 +115,7 @@ class Mobject(Container):
     def copy(self):
         # TODO, either justify reason for shallow copy, or
         # remove this redundancy everywhere
-        return self.deepcopy()
+        #return self.deepcopy()
 
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
@@ -554,7 +554,7 @@ class Mobject(Container):
         return self
 
     def fade_to(self, color, alpha):
-        for mob in self.subobject_family():
+        for mob in self.submobject_family():
             mob.fade_to_no_recurse(self, color, alpha)
         return self
 
