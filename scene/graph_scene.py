@@ -245,6 +245,8 @@ class GraphScene(Scene):
                 sample_input = x
             elif input_sample_type == "right":
                 sample_input = x + dx
+            elif input_sample_type == "center":
+                sample_input = x + 0.5 * dx
             else:
                 raise Exception("Invalid input sample type")
             graph_point = self.input_to_graph_point(sample_input, graph)
@@ -420,6 +422,9 @@ class GraphScene(Scene):
             group.add(group.secant_line)
 
         return group
+
+    def get_animation_integral_bounds_change(self):
+        pass
 
     def animate_secant_slope_group_change(
         self, secant_slope_group,
