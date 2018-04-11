@@ -555,7 +555,7 @@ class Lemma2(Lemma1):
 
     def state_lemma_premise(self):
         premise = self.premise = TextMobject(
-            "If the observer replaces a lighthouse,"
+            "Lemma 2: If the observer replaces a lighthouse,"
         )
         premise.next_to(self.title, DOWN)
 
@@ -921,15 +921,17 @@ class FromGeometryToAlgebra(DistanceProductScene):
 
         self.play(Write(func_label, run_time=1))
         for i, rotation in enumerate(rotations[:4]):
-            anims = [rotation]
             if i == 3:
                 rect = SurroundingRectangle(polynomial)
                 rect.set_color(YELLOW)
-                anims += [
+                self.play(
                     FadeIn(polynomial),
                     ShowCreationThenDestruction(rect)
-                ]
-            self.play(*anims, run_time=np.sqrt(i + 1))
+                )
+            self.play(
+                rotation,
+                run_time=np.sqrt(i + 1)
+            )
         self.play(*rotations[4:], run_time=3)
         self.wait()
 
@@ -1017,12 +1019,6 @@ class FromGeometryToAlgebra(DistanceProductScene):
             )
             for point in self.get_lh_points()
         ])
-
-
-
-
-
-
 
 
 
