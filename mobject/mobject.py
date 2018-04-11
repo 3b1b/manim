@@ -115,7 +115,7 @@ class Mobject(Container):
     def copy(self):
         # TODO, either justify reason for shallow copy, or
         # remove this redundancy everywhere
-        return self.deepcopy()
+        #return self.deepcopy()
 
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
