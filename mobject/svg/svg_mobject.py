@@ -4,10 +4,12 @@ import string
 import warnings
 
 from xml.dom import minidom
+from utils.color import *
 
 from constants import *
 from mobject.geometry import Circle
 from mobject.geometry import Rectangle
+from mobject.geometry import RoundedRectangle
 from utils.bezier import is_closed
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
@@ -34,7 +36,7 @@ class SVGMobject(VMobject):
         "file_name": None,
         "unpack_groups": True,  # if False, creates a hierarchy of VGroups
         "stroke_width": 0,
-        "fill_opacity": 1,
+        "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
         "propagate_style_to_family": True,
     }
@@ -155,16 +157,54 @@ class SVGMobject(VMobject):
         return Circle().scale(rx * RIGHT + ry * UP).shift(x * RIGHT + y * DOWN)
 
     def rect_to_mobject(self, rect_element):
-        if rect_element.hasAttribute("fill"):
-            if Color(str(rect_element.getAttribute("fill"))) == Color(WHITE):
-                return
-        mob = Rectangle(
-            width=float(rect_element.getAttribute("width")),
-            height=float(rect_element.getAttribute("height")),
-            stroke_width=0,
-            fill_color=WHITE,
-            fill_opacity=1.0
-        )
+        fill_color = rect_element.getAttribute("fill")
+        stroke_color = rect_element.getAttribute("stroke")
+        stroke_width = rect_element.getAttribute("stroke-width")
+        corner_radius = rect_element.getAttribute("rx")
+
+        # input preprocessing
+        if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):
+            opacity = 0
+            fill_color = BLACK # shdn't be necessary but avoids error msgs
+        if fill_color in ["#000", "#000000"]:
+            fill_color = WHITE
+        if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(stroke_color) == Color(WHITE):
+            stroke_width = 0
+            stroke_color = BLACK
+        if stroke_color in ["#000", "#000000"]:
+            stroke_color = WHITE
+        if stroke_width in ["", "none", "0"]:
+            stroke_width = 0
+        
+        # is there sth to draw?
+        if opacity == 0 and stroke_width == 0:
+            return
+
+        if corner_radius in ["", "0", "none"]:
+            corner_radius = 0
+
+        corner_radius = float(corner_radius)
+
+        if corner_radius == 0:
+            mob = Rectangle(
+                width = float(rect_element.getAttribute("width")),
+                height = float(rect_element.getAttribute("height")),
+                stroke_width = stroke_width,
+                stroke_color = stroke_color,
+                fill_color = fill_color,
+                fill_opacity = opacity
+            )
+        else:
+            mob = RoundedRectangle(
+                width = float(rect_element.getAttribute("width")),
+                height = float(rect_element.getAttribute("height")),
+                stroke_width = stroke_width,
+                stroke_color = stroke_color,
+                fill_color = fill_color,
+                fill_opacity = opacity,
+                corner_radius = corner_radius
+            )
+
         mob.shift(mob.get_center() - mob.get_corner(UP + LEFT))
         return mob
 
