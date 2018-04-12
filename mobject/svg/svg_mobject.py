@@ -4,6 +4,7 @@ import string
 import warnings
 
 from xml.dom import minidom
+from utils.color import *
 
 from constants import *
 from mobject.geometry import Circle
@@ -155,15 +156,57 @@ class SVGMobject(VMobject):
         return Circle().scale(rx * RIGHT + ry * UP).shift(x * RIGHT + y * DOWN)
 
     def rect_to_mobject(self, rect_element):
-        if rect_element.hasAttribute("fill"):
-            if Color(str(rect_element.getAttribute("fill"))) == Color(WHITE):
-                return
+        fill_color = rect_element.getAttribute("fill")
+        stroke_color = rect_element.getAttribute("stroke")
+        stroke_width = rect_element.getAttribute("stroke-width")
+        print "fill_color =", fill_color
+        print "stroke_color =", stroke_color
+        print "stroke_width =", stroke_width
+
+        # input preprocessing
+        if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):
+            print "no fill"
+            opacity = 0
+            fill_color = BLACK # shdn't be necessary but avoids error msgs
+        if fill_color in ["#000", "#000000"]:
+            print "flipping fill color"
+            fill_color = WHITE
+        if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(stroke_color) == Color(WHITE):
+            stroke_width = 0
+            stroke_color = BLACK
+            print "no stroke color"
+        if stroke_color in ["#000", "#000000"]:
+            print "flipping stroke color"
+            stroke_color = WHITE
+        if stroke_width in ["", "none", "0"]:
+            print "no stroke width"
+            stroke_width = 0
+        
+        # is there sth to draw?
+        if opacity == 0 and stroke_width == 0:
+            print "nothing to draw"
+            return
+
+        print "after preprocessing:"
+        print "fill_color =", fill_color
+        print "stroke_color =", stroke_color
+        print "stroke_width =", stroke_width
+        print "opacity = ", opacity
+
+
+        # if rect_element.hasAttribute("fill"):
+        #     color_attr = str(rect_element.getAttribute("fill"))
+        #     if color_attr == "none":
+        #         return
+        #     elif Color(color_attr) == Color(WHITE):
+        #         return
         mob = Rectangle(
             width=float(rect_element.getAttribute("width")),
             height=float(rect_element.getAttribute("height")),
-            stroke_width=0,
-            fill_color=WHITE,
-            fill_opacity=1.0
+            stroke_width = stroke_width,
+            stroke_color = stroke_color,
+            fill_color = fill_color,
+            fill_opacity = opacity
         )
         mob.shift(mob.get_center() - mob.get_corner(UP + LEFT))
         return mob
