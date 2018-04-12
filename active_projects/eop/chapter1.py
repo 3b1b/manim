@@ -798,12 +798,13 @@ class IllustrateAreaModel2(GraphScene):
 
         self.setup_axes()
         graph = self.get_graph(lambda x: np.exp(-x**2) / ((0.5 * TAU) ** 0.5))
+
         self.add(graph)
 
 
         cdf_formula = TexMobject("P(|X-\mu| < x) = \int_{-x}^x {\exp(-{1\over 2}({t\over \sigma})^2) \over \sigma\sqrt{2\pi}} dt")
         cdf_formula.set_color_by_tex("x", YELLOW)
-        cdf_formula.next_to(graph, UP, buff = 1)
+        cdf_formula.next_to(graph, LEFT, buff = 1)
         self.add(cdf_formula)
         
 
@@ -1086,6 +1087,46 @@ class AreaSplitting(Scene):
 
 
                 #self.play(FadeIn(tally))
+
+
+class DieFace(SVGMobject):
+    
+    def __init__(self, value, **kwargs):
+
+        self.value = value
+        SVGMobject.__init__(self, file_name = "Dice-" + str(value))
+
+class RowOfDice(VGroup):
+    CONFIG = {
+        "values" : range(1,7)
+    }
+
+    def generate_points(self):
+        for value in self.values:
+            new_die = DieFace(value)
+            new_die.next_to(self, RIGHT)
+            self.add(new_die)
+
+
+
+class ShowUncertainty(PiCreatureScene):
+
+    def construct(self):
+
+        row_of_dice = RowOfDice(values = [1])
+        self.add(row_of_dice)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
