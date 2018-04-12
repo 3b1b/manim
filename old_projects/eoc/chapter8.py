@@ -1501,7 +1501,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         self.add(*self.get_v_graph_and_label())
         self.x_axis_label_mob.shift(MED_LARGE_BUFF*DOWN)
         self.v_graph_label.shift(MED_LARGE_BUFF*DOWN)
-        self.foreground_mobjects = []        
+        self.foreground_mobjects = []
 
     def construct(self):
         self.introduce_variable_area()

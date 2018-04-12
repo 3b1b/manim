@@ -1,5 +1,9 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter8 import *
+from active_projects.eop.histograms import *
+from svgpathtools import *
+
+import scipy.special
 
 COIN_RADIUS = 0.3
 COIN_THICKNESS = 0.4 * COIN_RADIUS
@@ -665,19 +669,35 @@ class IllustrateAreaModel1(Scene):
         label_B_knowing_A = label_B
 
         self.play(FadeOut(label_B_copy))
+        self.remove(indep_formula.get_part_by_tex("P(B)"))
         label_B_knowing_A_copy = label_B_knowing_A.copy()
         self.add(label_B_knowing_A_copy)
 
         self.play(
-            label_B_knowing_A_copy.next_to, indep_formula[-2], RIGHT
+            label_B_knowing_A_copy.next_to, indep_formula.get_part_by_tex("\cdot"), RIGHT,
         )
 
+        # solve formula for P(B|A)
 
-        
-
+        rearranged_formula = TexMobject(["P(B\mid A)", "=", "{P(A\\text{ and }B) \over P(A)}"])
+        rearranged_formula.move_to(indep_formula)
 
         self.wait()
 
+        self.play(
+            # in some places get_part_by_tex does not find the correct part
+            # so I picked out fitting indices
+            label_B_knowing_A_copy.move_to, rearranged_formula.get_part_by_tex("P(B\mid A)"),
+            label_A_copy.move_to, rearranged_formula[-1][10],
+            label_A_and_B_copy.move_to, rearranged_formula[-1][3],
+            indep_formula.get_part_by_tex("=").move_to, rearranged_formula.get_part_by_tex("="),
+            Transform(indep_formula.get_part_by_tex("\cdot"), rearranged_formula[-1][8]),
+        )
+
+
+# # # # # # # # # # # # # # # # #
+# Old version with SampleSpace  #
+# # # # # # # # # # # # # # # # #
 
     # def show_independent_events(self):
     #     sample_space = SampleSpace(
@@ -747,62 +767,200 @@ class IllustrateAreaModel1(Scene):
 
 
 
-    def color_label(self, label):
-        label.set_color_by_tex("B", RED)
-        label.set_color_by_tex("I", GREEN)
+    # def color_label(self, label):
+    #     label.set_color_by_tex("B", RED)
+    #     label.set_color_by_tex("I", GREEN)
 
 
 
 
-
-class IllustrateAreaModel2(AreaIsDerivative):
-
+class IllustrateAreaModel2(GraphScene):
     CONFIG = {
-        "y_max" : 4,
-        "y_min" : -4,
-        "num_iterations" : 7,
+        "x_min" : -5,
+        "x_max" : 5,
+        "y_min" : -0,
+        "y_max" : 0.6,
+        "graph_origin": 3*DOWN,
+        "num_rects": 20,
         "y_axis_label" : "",
-        "num_rects" : 400,
-        "dT" : 0.25,
-        "variable_point_label" : "T",
-        "area_opacity" : 0.8,
+        "x_axis_label" : "",
+        "variable_point_label" : "x",
+        "y_axis_height" : 4
     }
+
     def construct(self):
 
+        x_max_1 = 0
+        x_min_1 = -x_max_1
+
+        x_max_2 = 5
+        x_min_2 = -x_max_2
+
+
         self.setup_axes()
-        self.introduce_variable_area()
+        graph = self.get_graph(lambda x: np.exp(-x**2) / ((0.5 * TAU) ** 0.5))
 
-        graph, label = self.get_v_graph_and_label()
+        self.add(graph)
 
-        rect_list = self.get_riemann_rectangles_list(
-            graph, self.num_iterations
+
+        cdf_formula = TexMobject("P(|X-\mu| < x) = \int_{-x}^x {\exp(-{1\over 2}({t\over \sigma})^2) \over \sigma\sqrt{2\pi}} dt")
+        cdf_formula.set_color_by_tex("x", YELLOW)
+        cdf_formula.next_to(graph, LEFT, buff = 1)
+        self.add(cdf_formula)
+        
+
+        self.v_graph = graph
+        self.add_T_label(x_min_1, color = YELLOW, animated = False)
+        
+        self.remove(self.T_label_group, self.right_v_line)
+        #self.T_label_group[0].set_fill(opacity = 0).set_stroke(width = 0)
+        #self.T_label_group[1].set_fill(opacity = 0).set_stroke(width = 0)
+        #self.right_v_line.set_fill(opacity = 0).set_stroke(width = 0)
+
+        #self.add(self.T_label_group)
+        area = self.area = self.get_area(graph, x_min_1, x_max_1)
+        
+        right_bound_label = TexMobject("x", color = YELLOW)
+        right_bound_label.next_to(self.coords_to_point(0,0), DOWN)
+        right_bound_label.target = right_bound_label.copy().next_to(self.coords_to_point(self.x_max,0), DOWN)
+        right_bound_label.set_fill(opacity = 0).set_stroke(width = 0)
+        
+        left_bound_label = TexMobject("-x", color = YELLOW)
+        left_bound_label.next_to(self.coords_to_point(0,0), DOWN)
+        left_bound_label.target = right_bound_label.copy().next_to(self.coords_to_point(self.x_min,0), DOWN)
+        left_bound_label.set_fill(opacity = 0).set_stroke(width = 0)
+
+        #integral = self.get_riemann_rectangles(
+            #graph,x_min = self.x_min, x_max = x_max_1)
+        self.add(area)
+
+        def integral_update_func(t):
+            return 100 * scipy.special.erf(
+                self.point_to_coords(self.right_v_line.get_center())[0]
+            )
+
+        cdf_value = DecimalNumber(0, unit = "\%")
+        cdf_value.move_to(self.coords_to_point(0,0.2))
+        self.add_foreground_mobject(cdf_value)
+
+        self.add(ContinualChangingDecimal(
+            decimal_number_mobject = cdf_value,
+            number_update_func = integral_update_func,
+            num_decimal_points = 1
+        ))
+
+        anim = self.get_animation_integral_bounds_change(
+            graph, x_min_2, x_max_2, run_time = 3)
+
+        # changing_cdf_value = ChangingDecimal(
+        #     decimal_number_mobject = cdf_value,
+        #     number_update_func = integral_update_func,
+        #     num_decimal_points = 1
+        # )
+
+        self.play(
+            anim
         )
-        VGroup(*rect_list).set_fill(opacity = 0.8)
-        rects = rect_list[0]
 
-        self.play(ShowCreation(graph))
-        self.play(Write(rects))
-        for new_rects in rect_list[1:]:
-            rects.align_submobjects(new_rects)
-            for every_other_rect in rects[::2]:
-                every_other_rect.set_fill(opacity = 0)
-            self.play(Transform(
-                rects, new_rects,
-                run_time = 2,
-                submobject_mode = "lagged_start"
-            ))
-        self.wait()
 
-#        self.play(FadeOut(self.x_axis.numbers))
-        self.add_T_label(6)
-        self.change_area_bounds(
-            new_t_max = 4,
-            rate_func = there_and_back,
-            run_time = 2
+
+
+
+class IllustrateAreaModel3(Scene):
+
+    def construct(self):
+
+        formula = TexMobject("E[X] = \sum_{i=1}^N p_i x_i").move_to(3 * LEFT + UP)
+        self.add(formula)
+
+
+        x_scale = 5.0
+        y_scale = 1.0
+
+        probabilities = np.array([1./8, 3./8, 3./8, 1./8])
+        prob_strings = ["{1\over 8}","{3\over 8}","{3\over 8}","{1\over 8}"]
+        cumulative_probabilities = np.cumsum(probabilities)
+        cumulative_probabilities = np.insert(cumulative_probabilities, 0, 0)
+        print cumulative_probabilities
+        y_values = np.array([0, 1, 2, 3])
+
+        hist = Histogram(probabilities, y_values,
+            mode = "widths",
+            x_scale = x_scale,
+            y_scale = y_scale,
+            x_labels = "none"
         )
 
-    def func(self, x):
-        return np.exp(-x**2/2)
+        flat_hist = Histogram(probabilities, 0 * y_values,
+            mode = "widths",
+            x_scale = x_scale,
+            y_scale = y_scale,
+            x_labels = "none"
+        )
+
+        self.play(FadeIn(flat_hist))
+        self.play(
+            ReplacementTransform(flat_hist, hist)
+        )
+
+        braces = VGroup()
+        p_labels = VGroup()
+        # add x labels (braces)
+        for (p,string,bar) in zip(probabilities, prob_strings,hist.bars):
+            brace = Brace(bar, DOWN, buff = 0.1)
+            p_label = TexMobject(string).next_to(brace, DOWN, buff = SMALL_BUFF).scale(0.7)
+            group = VGroup(brace, p_label)
+            braces.add(brace)
+            p_labels.add(p_label)
+            self.play(
+                Write(group)
+            )
+
+
+
+        labels = VGroup()
+        for (y, bar) in zip(y_values, hist.bars):
+            label = TexMobject(str(int(y))).scale(0.7).next_to(bar, UP, buff = SMALL_BUFF)
+            self.play(FadeIn(label))
+            labels.add(label)
+
+        y_average = np.mean(y_values)
+        averaged_y_values = y_average * np.ones(np.shape(y_values))
+
+        averaged_hist = flat_hist = Histogram(probabilities, averaged_y_values,
+            mode = "widths",
+            x_scale = x_scale,
+            y_scale = y_scale,
+            x_labels = "none"
+        ).fade(0.2)
+
+        ghost_hist = hist.copy().fade(0.8)
+        labels.fade(0.8)
+        self.bring_to_back(ghost_hist)
+
+        self.play(Transform(hist, averaged_hist))
+
+        average_label = TexMobject(str(y_average)).scale(0.7).next_to(averaged_hist, UP, SMALL_BUFF)
+
+        one_brace = Brace(averaged_hist, DOWN, buff = 0.1)
+        one_p_label = TexMobject(str(1)).next_to(one_brace, DOWN, buff = SMALL_BUFF).scale(0.7)
+        one_group = VGroup(one_brace, one_p_label)
+
+        self.play(
+            FadeIn(average_label),
+            Transform(braces, one_brace),
+            Transform(p_labels, one_p_label),
+        )
+        
+
+
+
+
+
+
+
+
+
 
 
 class AreaSplitting(Scene):
@@ -930,6 +1088,62 @@ class AreaSplitting(Scene):
 
 
                 #self.play(FadeIn(tally))
+
+
+class DieFace(SVGMobject):
+    
+    def __init__(self, value, **kwargs):
+
+        self.value = value
+        self.file_name = "Dice-" + str(value)
+        self.ensure_valid_file()
+
+        paths, attributes = svg2paths(self.file_path)
+        print paths, attributes
+        SVGMobject.__init__(self, file_name = self.file_name)
+        # for submob in self.submobject_family():
+        #     if type(submob) == Rectangle:
+        #         submob.set_fill(opacity = 0)
+        #         submob.set_stroke(width = 7)
+
+class RowOfDice(VGroup):
+    CONFIG = {
+        "values" : range(1,7)
+    }
+
+    def generate_points(self):
+        for value in self.values:
+            new_die = DieFace(value)
+            new_die.submobjects[0].set_fill(opacity = 0)
+            new_die.submobjects[0].set_stroke(width = 7)
+            new_die.next_to(self, RIGHT)
+            self.add(new_die)
+
+
+
+class ShowUncertainty(PiCreatureScene):
+
+    def construct(self):
+
+        row_of_dice = RowOfDice().scale(0.5).move_to(ORIGIN)
+        self.add(row_of_dice)
+        rounded_rect = RoundedRectangle(
+            width = 3,
+            height = 2,
+            corner_radius = 0.1
+        ).shift(3*LEFT)
+        self.add(rounded_rect)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
