@@ -427,17 +427,6 @@ class Line(VMobject):
         self.shift(new_start - self.get_start())
         return self
 
-    def insert_n_anchor_points(self, n):
-        if not self.path_arc:
-            n_anchors = self.get_num_anchor_points()
-            new_num_points = 3 * (n_anchors + n) - 2
-            self.points = np.array([
-                self.point_from_proportion(alpha)
-                for alpha in np.linspace(0, 1, new_num_points)
-            ])
-        else:
-            VMobject.insert_n_anchor_points(self, n)
-
 
 class DashedLine(Line):
     CONFIG = {
