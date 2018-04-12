@@ -4,12 +4,13 @@ from constants import *
 import itertools as it
 
 from scene.scene import Scene
-from animation.creation import Write
+from animation.creation import Write, DrawBorderThenFill, ShowCreation
 from animation.transform import Transform
 from animation.update import UpdateFromAlphaFunc
 from mobject.functions import ParametricFunction
 from mobject.geometry import Line
 from mobject.geometry import Rectangle
+from mobject.geometry import RegularPolygon
 from mobject.number_line import NumberLine
 from mobject.svg.tex_mobject import TexMobject
 from mobject.svg.tex_mobject import TextMobject
@@ -438,25 +439,28 @@ class GraphScene(Scene):
         return group
 
 
-    def add_T_label(self, x_val, **kwargs):
+    def add_T_label(self, x_val, color = WHITE, animated = False, **kwargs):
         triangle = RegularPolygon(n=3, start_angle = np.pi/2)
         triangle.scale_to_fit_height(MED_SMALL_BUFF)
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
-        triangle.set_fill(WHITE, 1)
+        triangle.set_fill(color, 1)
         triangle.set_stroke(width = 0)
-        T_label = TexMobject(self.variable_point_label)
+        T_label = TexMobject(self.variable_point_label, fill_color = color)
         T_label.next_to(triangle, DOWN)
         v_line = self.get_vertical_line_to_graph(
             x_val, self.v_graph,
             color = YELLOW
         )
 
-        self.play(
-            DrawBorderThenFill(triangle),
-            ShowCreation(v_line),
-            Write(T_label, run_time = 1),
-            **kwargs
-        )
+        if animated:
+            self.play(
+                DrawBorderThenFill(triangle),
+                ShowCreation(v_line),
+                Write(T_label, run_time = 1),
+                **kwargs
+            )
+        else:
+            self.add(triangle, v_line, T_label)
 
         self.T_label_group = VGroup(T_label, triangle)
         self.right_v_line = v_line
