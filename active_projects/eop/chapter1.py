@@ -1,6 +1,7 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter8 import *
 from active_projects.eop.histograms import *
+from svgpathtools import *
 
 import scipy.special
 
@@ -1094,7 +1095,16 @@ class DieFace(SVGMobject):
     def __init__(self, value, **kwargs):
 
         self.value = value
-        SVGMobject.__init__(self, file_name = "Dice-" + str(value))
+        self.file_name = "Dice-" + str(value)
+        self.ensure_valid_file()
+
+        paths, attributes = svg2paths(self.file_path)
+        print paths, attributes
+        SVGMobject.__init__(self, file_name = self.file_name)
+        # for submob in self.submobject_family():
+        #     if type(submob) == Rectangle:
+        #         submob.set_fill(opacity = 0)
+        #         submob.set_stroke(width = 7)
 
 class RowOfDice(VGroup):
     CONFIG = {
@@ -1104,6 +1114,8 @@ class RowOfDice(VGroup):
     def generate_points(self):
         for value in self.values:
             new_die = DieFace(value)
+            new_die.submobjects[0].set_fill(opacity = 0)
+            new_die.submobjects[0].set_stroke(width = 7)
             new_die.next_to(self, RIGHT)
             self.add(new_die)
 
@@ -1113,9 +1125,14 @@ class ShowUncertainty(PiCreatureScene):
 
     def construct(self):
 
-        row_of_dice = RowOfDice(values = [1])
+        row_of_dice = RowOfDice().scale(0.5).move_to(ORIGIN)
         self.add(row_of_dice)
-
+        rounded_rect = RoundedRectangle(
+            width = 3,
+            height = 2,
+            corner_radius = 0.1
+        ).shift(3*LEFT)
+        self.add(rounded_rect)
 
 
 
