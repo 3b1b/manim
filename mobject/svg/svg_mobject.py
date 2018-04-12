@@ -9,6 +9,7 @@ from utils.color import *
 from constants import *
 from mobject.geometry import Circle
 from mobject.geometry import Rectangle
+from mobject.geometry import RoundedRectangle
 from utils.bezier import is_closed
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
@@ -35,7 +36,7 @@ class SVGMobject(VMobject):
         "file_name": None,
         "unpack_groups": True,  # if False, creates a hierarchy of VGroups
         "stroke_width": 0,
-        "fill_opacity": 1,
+        "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
         "propagate_style_to_family": True,
     }
@@ -159,55 +160,51 @@ class SVGMobject(VMobject):
         fill_color = rect_element.getAttribute("fill")
         stroke_color = rect_element.getAttribute("stroke")
         stroke_width = rect_element.getAttribute("stroke-width")
-        print "fill_color =", fill_color
-        print "stroke_color =", stroke_color
-        print "stroke_width =", stroke_width
+        corner_radius = rect_element.getAttribute("rx")
 
         # input preprocessing
         if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):
-            print "no fill"
             opacity = 0
             fill_color = BLACK # shdn't be necessary but avoids error msgs
         if fill_color in ["#000", "#000000"]:
-            print "flipping fill color"
             fill_color = WHITE
         if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(stroke_color) == Color(WHITE):
             stroke_width = 0
             stroke_color = BLACK
-            print "no stroke color"
         if stroke_color in ["#000", "#000000"]:
-            print "flipping stroke color"
             stroke_color = WHITE
         if stroke_width in ["", "none", "0"]:
-            print "no stroke width"
             stroke_width = 0
         
         # is there sth to draw?
         if opacity == 0 and stroke_width == 0:
-            print "nothing to draw"
             return
 
-        print "after preprocessing:"
-        print "fill_color =", fill_color
-        print "stroke_color =", stroke_color
-        print "stroke_width =", stroke_width
-        print "opacity = ", opacity
+        if corner_radius in ["", "0", "none"]:
+            corner_radius = 0
 
+        corner_radius = float(corner_radius)
 
-        # if rect_element.hasAttribute("fill"):
-        #     color_attr = str(rect_element.getAttribute("fill"))
-        #     if color_attr == "none":
-        #         return
-        #     elif Color(color_attr) == Color(WHITE):
-        #         return
-        mob = Rectangle(
-            width=float(rect_element.getAttribute("width")),
-            height=float(rect_element.getAttribute("height")),
-            stroke_width = stroke_width,
-            stroke_color = stroke_color,
-            fill_color = fill_color,
-            fill_opacity = opacity
-        )
+        if corner_radius == 0:
+            mob = Rectangle(
+                width = float(rect_element.getAttribute("width")),
+                height = float(rect_element.getAttribute("height")),
+                stroke_width = stroke_width,
+                stroke_color = stroke_color,
+                fill_color = fill_color,
+                fill_opacity = opacity
+            )
+        else:
+            mob = RoundedRectangle(
+                width = float(rect_element.getAttribute("width")),
+                height = float(rect_element.getAttribute("height")),
+                stroke_width = stroke_width,
+                stroke_color = stroke_color,
+                fill_color = fill_color,
+                fill_opacity = opacity,
+                corner_radius = corner_radius
+            )
+
         mob.shift(mob.get_center() - mob.get_corner(UP + LEFT))
         return mob
 
