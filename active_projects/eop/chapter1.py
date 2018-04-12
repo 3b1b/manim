@@ -1,5 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter8 import *
+from active_projects.eop.histograms import *
 
 import scipy.special
 
@@ -808,6 +809,7 @@ class IllustrateAreaModel2(GraphScene):
 
         self.v_graph = graph
         self.add_T_label(x_min_1, color = YELLOW, animated = False)
+        
         self.remove(self.T_label_group, self.right_v_line)
         #self.T_label_group[0].set_fill(opacity = 0).set_stroke(width = 0)
         #self.T_label_group[1].set_fill(opacity = 0).set_stroke(width = 0)
@@ -858,6 +860,96 @@ class IllustrateAreaModel2(GraphScene):
             anim
         )
 
+
+
+
+
+class IllustrateAreaModel3(Scene):
+
+    def construct(self):
+
+        formula = TexMobject("E[X] = \sum_{i=1}^N p_i x_i").move_to(3 * LEFT + UP)
+        self.add(formula)
+
+
+        x_scale = 5.0
+        y_scale = 1.0
+
+        probabilities = np.array([1./8, 3./8, 3./8, 1./8])
+        prob_strings = ["{1\over 8}","{3\over 8}","{3\over 8}","{1\over 8}"]
+        cumulative_probabilities = np.cumsum(probabilities)
+        cumulative_probabilities = np.insert(cumulative_probabilities, 0, 0)
+        print cumulative_probabilities
+        y_values = np.array([0, 1, 2, 3])
+
+        hist = Histogram(probabilities, y_values,
+            mode = "widths",
+            x_scale = x_scale,
+            y_scale = y_scale,
+            x_labels = "none"
+        )
+
+        flat_hist = Histogram(probabilities, 0 * y_values,
+            mode = "widths",
+            x_scale = x_scale,
+            y_scale = y_scale,
+            x_labels = "none"
+        )
+
+        self.play(FadeIn(flat_hist))
+        self.play(
+            ReplacementTransform(flat_hist, hist)
+        )
+
+        braces = VGroup()
+        p_labels = VGroup()
+        # add x labels (braces)
+        for (p,string,bar) in zip(probabilities, prob_strings,hist.bars):
+            brace = Brace(bar, DOWN, buff = 0.1)
+            p_label = TexMobject(string).next_to(brace, DOWN, buff = SMALL_BUFF).scale(0.7)
+            group = VGroup(brace, p_label)
+            braces.add(brace)
+            p_labels.add(p_label)
+            self.play(
+                Write(group)
+            )
+
+
+
+        labels = VGroup()
+        for (y, bar) in zip(y_values, hist.bars):
+            label = TexMobject(str(int(y))).scale(0.7).next_to(bar, UP, buff = SMALL_BUFF)
+            self.play(FadeIn(label))
+            labels.add(label)
+
+        y_average = np.mean(y_values)
+        averaged_y_values = y_average * np.ones(np.shape(y_values))
+
+        averaged_hist = flat_hist = Histogram(probabilities, averaged_y_values,
+            mode = "widths",
+            x_scale = x_scale,
+            y_scale = y_scale,
+            x_labels = "none"
+        ).fade(0.2)
+
+        ghost_hist = hist.copy().fade(0.8)
+        labels.fade(0.8)
+        self.bring_to_back(ghost_hist)
+
+        self.play(Transform(hist, averaged_hist))
+
+        average_label = TexMobject(str(y_average)).scale(0.7).next_to(averaged_hist, UP, SMALL_BUFF)
+
+        one_brace = Brace(averaged_hist, DOWN, buff = 0.1)
+        one_p_label = TexMobject(str(1)).next_to(one_brace, DOWN, buff = SMALL_BUFF).scale(0.7)
+        one_group = VGroup(one_brace, one_p_label)
+
+        self.play(
+            FadeIn(average_label),
+            Transform(braces, one_brace),
+            Transform(p_labels, one_p_label),
+        )
+        
 
 
 
