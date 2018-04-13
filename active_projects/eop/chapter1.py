@@ -378,36 +378,6 @@ class CoinFlipTree(VGroup):
 
 
 
-class TestScene(Scene):
-
-    def construct(self):
-
-        #seq = CoinSequence(["H", "T", "T", "H"]).move_to(2 * LEFT)
-        #self.add(seq)
-        
-        #stack = TallyStack(4,7, coin_thickness = COIN_THICKNESS)
-        #self.add(stack)
-
-        tree = CoinFlipTree(nb_levels = 7, sort_until_level = 0)
-        tree.move_to(ORIGIN)
-        self.add(tree)
-
-        for i in range(1, 8):
-            new_tree = CoinFlipTree(nb_levels = 7, sort_until_level = i)
-            new_tree.move_to(ORIGIN)
-            self.play(Transform(tree, new_tree))
-            self.wait()
-
-        self.wait()
-
-
-class CoinFlipBranchToAreaScene(Scene):
-
-    def construct(self):
-
-        pass
-
-
 
 class Chapter1OpeningQuote(OpeningQuote):
     CONFIG = {
@@ -441,6 +411,7 @@ class Introduction(TeacherStudentsScene):
 
     def construct(self):
         self.show_series()
+        self.show_area_model1()
 
     def show_series(self):
         series = VideoSeries()
@@ -491,28 +462,28 @@ class Introduction(TeacherStudentsScene):
             Animation(self.teacher.bubble.content),
         ])
 
-        essence_words = words.get_part_by_tex("Essence").copy()
         self.play(
             FadeOut(self.teacher.bubble),
             FadeOut(self.teacher.bubble.content),
-            essence_words.next_to, series, DOWN,
             *[
                 ApplyMethod(pi.change_mode, "pondering")
                 for pi in self.get_pi_creatures()
             ]
         )
-        self.wait(3)
+        self.wait()
 
         self.series = series
-        self.essence_words = essence_words
 
-class IllustrateAreaModel1(Scene):
-
-    def construct(self):
+        # # # # # # # # # # # # # # # # # #
+        # show examples of the area model #
+        # # # # # # # # # # # # # # # # # #
         
+
+    def show_area_model1(self):
+
         # show independent events
 
-        sample_space_width = sample_space_height = 3.0
+        sample_space_width = sample_space_height = 2.5
         p_of_A = 0.7
         p_of_not_A = 1 - p_of_A
         p_of_B = 0.8
@@ -525,7 +496,8 @@ class IllustrateAreaModel1(Scene):
             stroke_width = 0,
             fill_color = BLUE,
             fill_opacity = 1.0
-        )
+        ).move_to(2 * RIGHT + 1.5 * UP)
+
         rect_not_A = Rectangle(
             width = p_of_not_A * sample_space_width,
             height = 1 * sample_space_height,
@@ -539,18 +511,13 @@ class IllustrateAreaModel1(Scene):
         brace_not_A = Brace(rect_not_A, DOWN)
         label_not_A = TexMobject("P(\\text{not }A)").next_to(brace_not_A, DOWN).scale(0.7)
 
-        self.play(
-            LaggedStart(FadeIn, VGroup(rect_A, rect_not_A), lag_factor = 0.5)
-        )
-        self.play(
-            ShowCreation(brace_A),
-            Write(label_A),
-        )
         # self.play(
-        #     ShowCreation(brace_not_A),
-        #     Write(label_not_A),
+        #     LaggedStart(FadeIn, VGroup(rect_A, rect_not_A), lag_factor = 0.5)
         # )
-
+        # self.play(
+        #     ShowCreation(brace_A),
+        #     Write(label_A),
+        # )
 
 
 
@@ -576,16 +543,12 @@ class IllustrateAreaModel1(Scene):
         brace_not_B = Brace(rect_not_B, LEFT)
         label_not_B = TexMobject("P(\\text{not }B)").next_to(brace_not_B, LEFT).scale(0.7)
 
-        self.play(
-            LaggedStart(FadeIn, VGroup(rect_B, rect_not_B), lag_factor = 0.5)
-        )
-        self.play(
-            ShowCreation(brace_B),
-            Write(label_B),
-        )
         # self.play(
-        #     ShowCreation(brace_not_B),
-        #     Write(label_not_B),
+        #     LaggedStart(FadeIn, VGroup(rect_B, rect_not_B), lag_factor = 0.5)
+        # )
+        # self.play(
+        #     ShowCreation(brace_B),
+        #     Write(label_B),
         # )
 
         rect_A_and_B = Rectangle(
@@ -597,11 +560,9 @@ class IllustrateAreaModel1(Scene):
         label_A_and_B = TexMobject("P(A\\text{ and }B)").scale(0.7)
         label_A_and_B.move_to(rect_A_and_B)
 
-        self.play(
-            ShowCreation(rect_A_and_B)
-        )
-        self.play(FadeIn(label_A_and_B))
-        self.add_foreground_mobject(label_A_and_B)
+        # self.play(
+        #     ShowCreation(rect_A_and_B)
+        # )
 
         indep_formula = TexMobject("P(A\\text{ and }B)", "=", "P(A)", "\cdot", "P(B)")
         indep_formula = indep_formula.scale(0.7).next_to(rect_not_B, UP, buff = MED_LARGE_BUFF)
@@ -609,16 +570,19 @@ class IllustrateAreaModel1(Scene):
         label_A_and_B_copy = label_A_and_B.copy()
         label_A_copy = label_A.copy()
         label_B_copy = label_B.copy()
-        self.add(label_A_and_B_copy, label_A_copy, label_B_copy)
+        # self.add(label_A_and_B_copy, label_A_copy, label_B_copy)
 
-        self.play(Transform(label_A_and_B_copy, indep_formula[0]))
-        self.play(FadeIn(indep_formula[1]))
-        self.play(Transform(label_A_copy, indep_formula[2]))
-        self.play(FadeIn(indep_formula[3]))
-        self.play(Transform(label_B_copy, indep_formula[4]))
+        # self.play(Transform(label_A_and_B_copy, indep_formula[0]))
+        # self.play(FadeIn(indep_formula[1]))
+        # self.play(Transform(label_A_copy, indep_formula[2]))
+        # self.play(FadeIn(indep_formula[3]))
+        # self.play(Transform(label_B_copy, indep_formula[4]))
 
-        self.wait()
+        #self.wait()
 
+        label_A_and_B_copy = indep_formula[0]
+        label_A_copy = indep_formula[2]
+        label_B_copy = indep_formula[4]
 
         # show conditional prob
 
@@ -647,11 +611,22 @@ class IllustrateAreaModel1(Scene):
             fill_opacity = 0.5
         ).next_to(rect_not_A_and_B, UP, buff = 0)
 
-        self.remove(rect_B, rect_not_B)
-        self.add(rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B)
 
+        indep_formula.next_to(rect_not_A, LEFT, buff = 4)
+        indep_formula.shift(UP)
 
+        self.play(Write(indep_formula))
 
+        self.play(
+            FadeIn(VGroup(
+                rect_A, rect_not_A, brace_A, label_A, brace_B, label_B,
+                rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B,
+                rect_A_and_B,
+                label_A_and_B,
+            ))
+        )
+
+        self.wait()
 
 
         p_of_B_knowing_A = 0.6
@@ -684,7 +659,7 @@ class IllustrateAreaModel1(Scene):
         )
         label_B_knowing_A = label_B
 
-        self.play(FadeOut(label_B_copy))
+        #self.play(FadeOut(label_B_copy))
         self.remove(indep_formula.get_part_by_tex("P(B)"))
         label_B_knowing_A_copy = label_B_knowing_A.copy()
         self.add(label_B_knowing_A_copy)
@@ -700,6 +675,7 @@ class IllustrateAreaModel1(Scene):
 
         self.wait()
 
+
         self.play(
             # in some places get_part_by_tex does not find the correct part
             # so I picked out fitting indices
@@ -707,7 +683,17 @@ class IllustrateAreaModel1(Scene):
             label_A_copy.move_to, rearranged_formula[-1][10],
             label_A_and_B_copy.move_to, rearranged_formula[-1][3],
             indep_formula.get_part_by_tex("=").move_to, rearranged_formula.get_part_by_tex("="),
-            Transform(indep_formula.get_part_by_tex("\cdot"), rearranged_formula[-1][8]),
+            Transform(indep_formula.get_part_by_tex("\cdot"), rearranged_formula[2][6]),
+        )
+
+
+        self.play(
+            FadeOut(VGroup(
+                indep_formula, rect_A, rect_B, rect_not_A, rect_not_B,
+                rect_A_and_B, rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B,
+                brace_A, brace_B, label_A, label_B_knowing_A, label_A_and_B,
+                label_B_knowing_A_copy
+            ))
         )
 
 
@@ -792,8 +778,8 @@ class IllustrateAreaModel1(Scene):
 
 class IllustrateAreaModel2(GraphScene):
     CONFIG = {
-        "x_min" : -5,
-        "x_max" : 5,
+        "x_min" : -3.5,
+        "x_max" : 3.5,
         "y_min" : -0,
         "y_max" : 0.6,
         "graph_origin": 3*DOWN,
@@ -801,7 +787,10 @@ class IllustrateAreaModel2(GraphScene):
         "y_axis_label" : "",
         "x_axis_label" : "",
         "variable_point_label" : "x",
-        "y_axis_height" : 4
+        "y_axis_height" : 4,
+        "graph_origin": 2.5 * DOWN + 3 * LEFT,
+        "x_axis_width": 5,
+        "y_axis_height": 3
     }
 
     def construct(self):
@@ -809,7 +798,7 @@ class IllustrateAreaModel2(GraphScene):
         x_max_1 = 0
         x_min_1 = -x_max_1
 
-        x_max_2 = 5
+        x_max_2 = 3.5
         x_min_2 = -x_max_2
 
 
@@ -818,10 +807,10 @@ class IllustrateAreaModel2(GraphScene):
 
         self.add(graph)
 
-
         cdf_formula = TexMobject("P(|X-\mu| < x) = \int_{-x}^x {\exp(-{1\over 2}({t\over \sigma})^2) \over \sigma\sqrt{2\pi}} dt")
+        
         cdf_formula.set_color_by_tex("x", YELLOW)
-        cdf_formula.next_to(graph, LEFT, buff = 1)
+        cdf_formula.next_to(graph, RIGHT, buff = -1)
         self.add(cdf_formula)
         
 
