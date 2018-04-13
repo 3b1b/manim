@@ -198,7 +198,7 @@ class TexMobject(SVGMobject):
         split_self = self.split()
         if part not in split_self:
             raise Exception("Trying to get index of part not in TexMobject")
-        return self.split().index(part)
+        return split_self.index(part)
 
     def index_of_part_by_tex(self, tex, **kwargs):
         part = self.get_part_by_tex(tex, **kwargs)
@@ -224,6 +224,11 @@ class TexMobject(SVGMobject):
         )
         letters = VMobject(*self.submobjects)
         self.submobjects = [self.background_rectangle, letters]
+        return self
+
+    def add_background_rectangle_to_parts(self):
+        for part in self:
+            part.add_background_rectangle()
         return self
 
 

@@ -5,16 +5,33 @@ from once_useful_constructs.light import SwitchOn
 # from once_useful_constructs.light import LightSource
 
 PRODUCT_COLOR = BLUE
+DEFAULT_OPACITY_FUNCTION = inverse_power_law(1, 1.5, 1, 4)
 CHEAP_AMBIENT_LIGHT_CONFIG = {
     "num_levels": 5,
-    "radius": 0.5,
+    "radius": 0.25,
+    "opacity_function": DEFAULT_OPACITY_FUNCTION,
 }
+
+
+def get_chord_f_label(chord, arg="f", direction=DOWN):
+    chord_f = TextMobject("Chord(", "$%s$" % arg, ")", arg_separator="")
+    chord_f.set_color_by_tex("$%s$" % arg, YELLOW)
+    chord_f.add_background_rectangle()
+    chord_f.next_to(chord.get_center(), direction, SMALL_BUFF)
+    angle = ((chord.get_angle() + TAU / 2) % TAU) - TAU / 2
+    if np.abs(angle) > TAU / 4:
+        angle += TAU / 2
+    chord_f.rotate(angle, about_point=chord.get_center())
+    chord_f.angle = angle
+    return chord_f
+
+# Scenes
 
 
 class DistanceProductScene(MovingCameraScene):
     CONFIG = {
         "ambient_light_config": {
-            "opacity_function": inverse_power_law(1, 1.5, 1, 4),
+            "opacity_function": DEFAULT_OPACITY_FUNCTION,
             "num_levels": 100,
             "light_radius": 5,
             "max_opacity": 0.8,
@@ -35,6 +52,7 @@ class DistanceProductScene(MovingCameraScene):
         "d_label_height": 0.35,
         "numeric_distance_label_height": 0.25,
         "default_product_column_top": FRAME_WIDTH * RIGHT / 4 + 1.5 * UP,
+        "include_lighthouses": True,
     }
 
     def setup(self):
@@ -124,6 +142,7 @@ class DistanceProductScene(MovingCameraScene):
                 line.get_length() / radius,
                 num_decimal_points=num_decimal_points,
                 show_ellipsis=show_ellipsis,
+                include_background_rectangle=True,
             )
             label.scale_to_fit_height(self.numeric_distance_label_height)
             max_width = 0.5 * line.get_length()
@@ -138,6 +157,37 @@ class DistanceProductScene(MovingCameraScene):
             labels.add(label)
         return labels
 
+    def get_distance_product_column(self, column_top):
+        if not hasattr(self, "numeric_distance_labels"):
+            self.get_numeric_distance_labels()
+        if column_top is None:
+            column_top = self.default_product_column_top
+        labels = self.numeric_distance_labels
+        stacked_labels = labels.copy()
+        for label in stacked_labels:
+            label.rotate(-label.angle)
+            label.scale_to_fit_height(self.numeric_distance_label_height)
+        stacked_labels.arrange_submobjects(DOWN)
+        stacked_labels.move_to(column_top, UP)
+
+        h_line = Line(LEFT, RIGHT)
+        h_line.scale_to_fit_width(1.5 * stacked_labels.get_width())
+        h_line.next_to(stacked_labels, DOWN, aligned_edge=RIGHT)
+        times = TexMobject("\\times")
+        times.next_to(h_line, UP, SMALL_BUFF, aligned_edge=LEFT)
+
+        product_decimal = DecimalNumber(
+            self.get_distance_product(),
+            num_decimal_points=3,
+            show_ellipsis=True,
+            include_background_rectangle=True,
+        )
+        product_decimal.scale_to_fit_height(self.numeric_distance_label_height)
+        product_decimal.next_to(h_line, DOWN)
+        product_decimal.align_to(stacked_labels, RIGHT)
+        product_decimal.set_color(BLUE)
+        return VGroup(stacked_labels, h_line, times, product_decimal)
+
     def get_circle_group(self):
         group = VGroup(self.circle)
         if not hasattr(self, "observer_dot"):
@@ -148,12 +198,10 @@ class DistanceProductScene(MovingCameraScene):
             self.get_lighthouses()
         if not hasattr(self, "lights"):
             self.get_lights()
-        group.add(
-            self.observer_dot,
-            self.observer,
-            self.lighthouses,
-            self.lights,
-        )
+        group.add(self.observer_dot, self.observer)
+        if self.include_lighthouses:
+            group.add(self.lighthouses)
+        group.add(self.lights)
         return group
 
     def setup_lighthouses_and_observer(self):
@@ -187,34 +235,9 @@ class DistanceProductScene(MovingCameraScene):
 
         self.play(*anims)
 
-    def show_distance_product_in_column(self, column_top=None):
-        if not hasattr(self, "numeric_distance_labels"):
-            self.get_numeric_distance_labels()
-        if column_top is None:
-            column_top = self.default_product_column_top
-        labels = self.numeric_distance_labels
-        stacked_labels = labels.copy()
-        for label in stacked_labels:
-            label.rotate(-label.angle)
-            label.scale_to_fit_height(self.numeric_distance_label_height)
-        stacked_labels.arrange_submobjects(DOWN)
-        stacked_labels.move_to(column_top, UP)
-
-        h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(1.5 * stacked_labels.get_width())
-        h_line.next_to(stacked_labels, DOWN, aligned_edge=RIGHT)
-        times = TexMobject("\\times")
-        times.next_to(h_line, UP, SMALL_BUFF, aligned_edge=LEFT)
-
-        product_decimal = DecimalNumber(
-            self.get_distance_product(),
-            num_decimal_points=3,
-            show_ellipsis=True
-        )
-        product_decimal.scale_to_fit_height(self.numeric_distance_label_height)
-        product_decimal.next_to(h_line, DOWN)
-        product_decimal.align_to(stacked_labels, RIGHT)
-        product_decimal.set_color(BLUE)
+    def show_distance_product_in_column(self, **kwargs):
+        group = self.get_distance_product_column(**kwargs)
+        stacked_labels, h_line, times, product_decimal = group
 
         self.play(ReplacementTransform(labels.copy(), stacked_labels))
         self.play(
@@ -555,7 +578,7 @@ class Lemma2(Lemma1):
 
     def state_lemma_premise(self):
         premise = self.premise = TextMobject(
-            "If the observer replaces a lighthouse,"
+            "Lemma 2: If the observer replaces a lighthouse,"
         )
         premise.next_to(self.title, DOWN)
 
@@ -829,7 +852,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
             )
             label.add_background_rectangle()
             power_labels.add(label)
-        power_labels[-1].next_to(outer_arrows[-1].get_start(), UR, SMALL_BUFF)
+        power_labels[0].next_to(outer_arrows[-1].get_start(), UR, SMALL_BUFF)
         power_labels.submobjects[1] = x_term
 
         L_labels = self.L_labels = VGroup(*[
@@ -851,7 +874,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         )
         self.wait()
         self.add(line_ghost)
-        for i in range(2, self.num_lighthouses + 1):
+        for i in range(2, self.num_lighthouses) + [0]:
             anims = [
                 Transform(angle_arc, angle_arcs[i]),
                 Transform(angle_label, angle_labels[i]),
@@ -870,7 +893,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
                 new_anims.append(FadeOut(self.complex_plane_words))
             self.play(*new_anims)
             self.wait()
-        self.play(ReplacementTransform(power_labels[1:], L_labels[1:]))
+        self.play(ReplacementTransform(power_labels, L_labels))
         self.wait()
         self.play(
             Rotate(self.lights, TAU / self.num_lighthouses / 2),
@@ -898,7 +921,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         polynomial.to_edge(LEFT)
 
         factored_polynomial = TexMobject(
-            "(x-L_1)(x-L_2)\\cdots(x-L_%d)" % self.num_lighthouses, "=", "0"
+            "(x-L_0)(x-L_1)\\cdots(x-L_{%d - 1})" % self.num_lighthouses, "=", "0"
         )
         factored_polynomial.scale(polynomial_scale_factor)
         factored_polynomial.next_to(polynomial, DOWN, aligned_edge=LEFT)
@@ -921,15 +944,17 @@ class FromGeometryToAlgebra(DistanceProductScene):
 
         self.play(Write(func_label, run_time=1))
         for i, rotation in enumerate(rotations[:4]):
-            anims = [rotation]
             if i == 3:
                 rect = SurroundingRectangle(polynomial)
                 rect.set_color(YELLOW)
-                anims += [
+                self.play(
                     FadeIn(polynomial),
                     ShowCreationThenDestruction(rect)
-                ]
-            self.play(*anims, run_time=np.sqrt(i + 1))
+                )
+            self.play(
+                rotation,
+                run_time=np.sqrt(i + 1)
+            )
         self.play(*rotations[4:], run_time=3)
         self.wait()
 
@@ -988,7 +1013,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
             TAU / self.num_lighthouses / 2,
             about_point=origin
         )
-        sevens = VGroup(polynomial[0][1][1], factored_polynomial[0][1][-2])
+        sevens = VGroup(polynomial[0][1][1], factored_polynomial[0][1][-4])
         n_terms = VGroup()
         for seven in sevens:
             n_term = TexMobject("N")
@@ -998,7 +1023,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
             n_terms.add(n_term)
 
         self.play(LaggedStart(FadeOut, VGroup(*it.chain(
-            L1_rhs, self.outer_arrows, self.L_labels[1:], self.outer_arrow,
+            L1_rhs, self.outer_arrows, self.L_labels, self.outer_arrow,
             self.angle_line, self.ghost_angle_line
         ))))
         self.play(LaggedStart(SwitchOn, new_lights), morty.look_at, new_lights)
@@ -1017,6 +1042,783 @@ class FromGeometryToAlgebra(DistanceProductScene):
             )
             for point in self.get_lh_points()
         ])
+
+
+class PlugObserverIntoPolynomial(DistanceProductScene):
+    CONFIG = {
+        # "ambient_light_config": CHEAP_AMBIENT_LIGHT_CONFIG,
+        "num_lighthouses": 7,
+        # This makes it look slightly better, but renders much slower
+        "add_lights_in_foreground": True,
+    }
+
+    def construct(self):
+        self.add_plane()
+        self.add_circle_group()
+        self.label_roots()
+        self.add_polynomial()
+        self.point_out_rhs()
+        self.introduce_observer()
+        self.raise_observer_to_the_N()
+
+    def add_plane(self):
+        plane = self.plane = ComplexPlane(
+            unit_size=2,
+            y_radius=5,
+        )
+        plane.shift(DOWN)
+        plane.add_coordinates()
+        plane.coordinate_labels.submobjects.pop(-4)
+        self.origin = plane.number_to_point(0)
+
+        self.add(plane)
+
+    def add_circle_group(self):
+        self.circle.set_color(RED)
+        self.circle.scale_to_fit_width(
+            2 * np.linalg.norm(self.plane.number_to_point(1) - self.origin)
+        )
+        self.circle.move_to(self.origin)
+
+        lights = self.lights = self.get_lights()
+        dots = VGroup(*[
+            Dot(point) for point in self.get_lh_points()
+        ])
+        for dot, light in zip(dots, lights):
+            light.add_to_back(dot)
+
+        self.add(self.circle, lights)
+        if self.add_lights_in_foreground:
+            self.add_foreground_mobject(lights)
+
+    def label_roots(self):
+        origin = self.origin
+        labels = VGroup(*[
+            TexMobject("L_%d" % d)
+            for d in range(self.num_lighthouses)
+        ])
+        self.root_labels = labels
+        points = self.get_lh_points()
+        for label, point in zip(labels, points):
+            label.move_to(interpolate(origin, point, 1.2))
+        labels[0].align_to(origin, UP)
+        labels[0].shift(SMALL_BUFF * DOWN)
+        self.add(labels)
+
+    def add_polynomial(self, arg="x"):
+        self.polynomial = self.get_polynomial_equation(arg)
+        self.add(self.polynomial)
+
+    def point_out_rhs(self):
+        rhs = self.get_polynomial_rhs(self.polynomial)
+        brace = Brace(rhs, DOWN, buff=SMALL_BUFF)
+        brace_text = brace.get_text("Useful for distance product", buff=SMALL_BUFF)
+        brace_text.set_color(YELLOW)
+        brace_text.add_background_rectangle()
+
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.wait()
+        self.play(FadeOut(VGroup(brace, brace_text)))
+
+    def introduce_observer(self):
+        dot = self.observer_dot = Dot()
+        dot.move_to(self.plane.coords_to_point(1.6, 0.8))
+        observer = PiCreature(**self.observer_config)
+        observer.move_to(dot)
+        dot.match_color(observer)
+
+        vect = 2 * DOWN + LEFT
+        vect /= np.linalg.norm(vect)
+        arrow = self.arrow = Vector(0.5 * vect)
+        arrow.next_to(observer, -vect, buff=SMALL_BUFF)
+        arrow.set_color(WHITE)
+
+        full_name = TextMobject("Observer")
+        var_name = self.var_name = TexMobject("O")
+        for mob in full_name, var_name:
+            mob.match_color(observer)
+            mob.next_to(arrow.get_start(), UP, SMALL_BUFF)
+            mob.add_background_rectangle()
+
+        complex_decimal = DecimalNumber(0, include_background_rectangle=True)
+        equals = TexMobject("=")
+        complex_decimal_animation = ChangingDecimal(
+            complex_decimal,
+            lambda a: self.plane.point_to_number(dot.get_center()),
+            position_update_func=lambda m: m.next_to(equals, RIGHT, SMALL_BUFF)
+        )
+        complex_decimal_animation.update(0)
+        equals_decimal = VGroup(equals, complex_decimal)
+        equals_decimal.next_to(var_name, RIGHT)
+
+        new_polynomial = self.get_polynomial_equation("O")
+        O_terms = new_polynomial.get_parts_by_tex("O")
+
+        lhs, poly_eq, rhs = self.get_polynomial_split(new_polynomial)
+        lhs_rect = SurroundingRectangle(lhs, color=YELLOW)
+        rhs_rect = SurroundingRectangle(rhs, color=YELLOW)
+        self.lhs, self.rhs = lhs, rhs
+        self.lhs_rect, self.rhs_rect = lhs_rect, rhs_rect
+
+        lines = self.lines = self.get_lines()
+        lines_update = self.lines_update = UpdateFromFunc(
+            lines, lambda l: Transform(l, self.get_lines()).update(1)
+        )
+
+        anims_for_dot_movement = self.anims_for_dot_movement = [
+            MaintainPositionRelativeTo(arrow, dot),
+            MaintainPositionRelativeTo(var_name, arrow),
+            MaintainPositionRelativeTo(equals, var_name),
+            complex_decimal_animation,
+            lines_update,
+        ]
+
+        self.play(
+            FadeInAndShiftFromDirection(observer, direction=-vect),
+            GrowArrow(arrow)
+        )
+        self.play(Write(full_name))
+        self.wait()
+        self.play(
+            ReplacementTransform(full_name[0], var_name[0]),
+            ReplacementTransform(full_name[1][0], var_name[1][0]),
+            FadeOut(full_name[1][1:]),
+            ReplacementTransform(observer, dot),
+            FadeIn(equals_decimal)
+        )
+        self.add_foreground_mobject(dot)
+
+        # Substitute
+        self.wait()
+        self.play(
+            ReplacementTransform(var_name.copy(), O_terms),
+            ReplacementTransform(self.polynomial, new_polynomial)
+        )
+        self.polynomial = new_polynomial
+        self.wait()
+
+        # Show distances
+        self.play(ShowCreation(rhs_rect))
+        self.play(
+            LaggedStart(ShowCreation, lines),
+            Animation(dot)
+        )
+
+        self.play(
+            Rotating(
+                dot,
+                radians=TAU,
+                rate_func=smooth,
+                about_point=dot.get_center() + MED_LARGE_BUFF * LEFT,
+                run_time=4
+            ),
+            *anims_for_dot_movement
+        )
+        self.wait()
+
+        self.remove(rhs_rect)
+        self.play(ReplacementTransform(rhs_rect.copy(), lhs_rect))
+        self.wait()
+
+        # Move onto circle
+        angle = self.observer_angle = TAU / self.num_lighthouses / 3.0
+        target_point = self.plane.number_to_point(
+            np.exp(complex(0, angle))
+        )
+        self.play(
+            dot.move_to, target_point,
+            *anims_for_dot_movement
+        )
+        self.play(FadeOut(VGroup(
+            equals, complex_decimal,
+            var_name, arrow,
+        )))
+
+    def raise_observer_to_the_N(self):
+        dot = self.observer_dot
+        origin = self.origin
+        radius = self.get_radius()
+
+        text_scale_val = 0.8
+
+        question = TextMobject(
+            "What fraction \\\\", "between $L_0$ and $L_1$", "?",
+            arg_separator=""
+        )
+        question.scale(text_scale_val)
+        question.next_to(dot, RIGHT)
+        question.add_background_rectangle_to_parts()
+
+        f_words = TextMobject("$f$", "of the way")
+        third_words = TextMobject("$\\frac{1}{3}$", "of the way")
+        for words in f_words, third_words:
+            words.scale(text_scale_val)
+            words.move_to(question[0])
+            words[0].set_color(YELLOW)
+            words.add_background_rectangle()
+
+        obs_angle = self.observer_angle
+        full_angle = TAU / self.num_lighthouses
+
+        def get_arc(angle):
+            result = Arc(angle=angle, radius=radius, color=YELLOW, stroke_width=4)
+            result.shift(origin)
+            return result
+
+        arc = get_arc(obs_angle)
+        O_to_N_arc = get_arc(obs_angle * self.num_lighthouses)
+
+        O_to_N_dot = dot.copy().move_to(O_to_N_arc.point_from_proportion(1))
+        O_to_N_arrow = Vector(0.5 * DR).next_to(O_to_N_dot, UL, SMALL_BUFF)
+        O_to_N_arrow.set_color(WHITE)
+        O_to_N_label = TexMobject("O", "^N")
+        O_to_N_label.set_color_by_tex("O", dot.get_color())
+        O_to_N_label.next_to(O_to_N_arrow.get_start(), UP, SMALL_BUFF)
+        O_to_N_label.shift(SMALL_BUFF * RIGHT)
+        O_to_N_group = VGroup(O_to_N_arc, O_to_N_arrow, O_to_N_label)
+
+        around_circle_words = TextMobject("around the circle")
+        around_circle_words.scale(text_scale_val)
+        around_circle_words.add_background_rectangle()
+        around_circle_words.next_to(self.circle.get_top(), UR)
+
+        chord = Line(O_to_N_dot.get_center(), self.circle.get_right())
+        chord.set_stroke(GREEN)
+
+        chord_halves = VGroup(
+            Line(chord.get_center(), chord.get_start()),
+            Line(chord.get_center(), chord.get_end()),
+        )
+        chord_halves.set_stroke(WHITE, 5)
+
+        chord_label = TexMobject("|", "O", "^N", "-", "1", "|")
+        chord_label.set_color_by_tex("O", MAROON_B)
+        chord_label.add_background_rectangle()
+        chord_label.next_to(chord.get_center(), DOWN, SMALL_BUFF)
+        chord_label.rotate(
+            chord.get_angle(), about_point=chord.get_center()
+        )
+
+        numeric_chord_label = DecimalNumber(
+            np.sqrt(3),
+            num_decimal_points=4,
+            include_background_rectangle=True,
+            show_ellipsis=True,
+        )
+        numeric_chord_label.rotate(chord.get_angle())
+        numeric_chord_label.move_to(chord_label)
+
+        self.play(
+            FadeIn(question),
+            ShowCreation(arc),
+        )
+        for angle in [full_angle - obs_angle, -full_angle, obs_angle]:
+            last_angle = angle_of_vector(dot.get_center() - origin)
+            self.play(
+                self.lines_update,
+                UpdateFromAlphaFunc(
+                    arc, lambda arc, a: Transform(
+                        arc, get_arc(last_angle + a * angle)
+                    ).update(1)
+                ),
+                Rotate(dot, angle, about_point=origin),
+                run_time=2
+            )
+        self.play(
+            FadeOut(question[0]),
+            FadeOut(question[2]),
+            FadeIn(f_words),
+        )
+        self.wait()
+        self.play(
+            FadeOut(self.lines),
+            FadeOut(self.root_labels),
+        )
+        self.play(
+            ReplacementTransform(dot.copy(), O_to_N_dot),
+            ReplacementTransform(arc, O_to_N_arc),
+            path_arc=O_to_N_arc.angle - arc.angle,
+        )
+        self.add_foreground_mobject(O_to_N_dot)
+        self.play(
+            FadeIn(O_to_N_label),
+            GrowArrow(O_to_N_arrow),
+        )
+        self.wait()
+        self.play(
+            FadeOut(question[1]),
+            f_words.next_to, around_circle_words, UP, SMALL_BUFF,
+            FadeIn(around_circle_words)
+        )
+        self.wait()
+        self.play(
+            FadeIn(chord_label[0]),
+            ReplacementTransform(self.lhs.copy(), chord_label[1]),
+            ShowCreation(chord)
+        )
+        self.wait()
+
+        # Talk through current example
+        light_rings = VGroup(*it.chain(self.lights))
+        self.play(LaggedStart(
+            ApplyMethod, light_rings,
+            lambda m: (m.shift, MED_SMALL_BUFF * UP),
+            rate_func=wiggle
+        ))
+        self.play(
+            FadeOut(around_circle_words),
+            FadeIn(question[1]),
+            ReplacementTransform(f_words, third_words)
+        )
+        self.play(
+            Rotate(dot, 0.05 * TAU, about_point=origin, rate_func=wiggle)
+        )
+        self.wait(2)
+        self.play(ReplacementTransform(dot.copy(), O_to_N_dot, path_arc=TAU / 3))
+        self.play(
+            third_words.next_to, around_circle_words, UP, SMALL_BUFF,
+            FadeIn(around_circle_words),
+            FadeOut(question[1])
+        )
+        self.wait()
+        self.play(Indicate(self.lhs))
+        for x in range(2):
+            self.play(ShowCreationThenDestruction(chord_halves))
+        self.play(
+            FadeOut(chord_label),
+            FadeIn(numeric_chord_label)
+        )
+        self.wait()
+        self.remove(self.lhs_rect)
+        self.play(
+            FadeOut(chord),
+            FadeOut(numeric_chord_label),
+            FadeOut(O_to_N_group),
+            FadeIn(self.lines),
+            ReplacementTransform(self.lhs_rect.copy(), self.rhs_rect)
+        )
+        self.wait()
+
+        # Add new lights
+        for light in self.lights:
+            light[1:].fade(0.5)
+        added_lights = self.lights.copy()
+        added_lights.rotate(full_angle / 2, about_point=origin)
+        new_lights = VGroup(*it.chain(*zip(self.lights, added_lights)))
+        self.num_lighthouses *= 2
+        dot.generate_target()
+        dot.target.move_to(self.get_circle_point_at_proportion(
+            obs_angle / TAU / 2
+        ))
+        dot.save_state()
+        dot.move_to(dot.target)
+        new_lines = self.get_lines()
+        dot.restore()
+
+        self.play(Transform(self.lights, new_lights))
+        self.play(
+            MoveToTarget(dot),
+            Transform(self.lines, new_lines)
+        )
+        self.wait()
+        self.play(
+            third_words.next_to, question[1], UP, SMALL_BUFF,
+            FadeOut(around_circle_words),
+            FadeIn(question[1]),
+        )
+        self.wait()
+
+        chord_group = VGroup(chord, numeric_chord_label[1])
+        chord_group.set_color(YELLOW)
+        self.add_foreground_mobjects(*chord_group)
+        self.play(
+            FadeIn(chord),
+            FadeIn(numeric_chord_label),
+        )
+        self.wait()
+
+    # Helpers
+
+    def get_polynomial_equation(self, var="x", color=None):
+        if color is None:
+            color = self.observer_config["color"]
+        equation = TexMobject(
+            "\\left(", var, "^N", "-", "1", "\\right)", "=",
+            "\\left(", var, "-", "L_0", "\\right)",
+            "\\left(", var, "-", "L_1", "\\right)",
+            "\\cdots",
+            "\\left(", var, "-", "L_{N-1}", "\\right)",
+        )
+        equation.set_color_by_tex(var, color)
+        equation.to_edge(UP)
+        equation.add_background_rectangle()
+        return equation
+
+    def get_polynomial_rhs(self, polynomial):
+        return self.get_polynomial_split(polynomial)[2]
+
+    def get_polynomial_lhs(self, polynomial):
+        return self.get_polynomial_split(polynomial)[0]
+
+    def get_polynomial_split(self, polynomial):
+        eq = polynomial.get_part_by_tex("=")
+        i = polynomial[1].submobjects.index(eq)
+        return polynomial[1][:i], polynomial[1][i], polynomial[1][i + 1:]
+
+    def get_lines(self):
+        dot = self.observer_dot
+        lines = VGroup(*[
+            DashedLine(dot.get_center(), point)
+            for point in self.get_lh_points()
+        ])
+        lines.set_stroke(width=2)
+        return lines
+
+
+class PlugObserverIntoPolynomial5Lighthouses(PlugObserverIntoPolynomial):
+    CONFIG = {
+        "num_lighthouses": 5,
+    }
+
+
+class PlugObserverIntoPolynomial3Lighthouses(PlugObserverIntoPolynomial):
+    CONFIG = {
+        "num_lighthouses": 3,
+    }
+
+
+class PlugObserverIntoPolynomial2Lighthouses(PlugObserverIntoPolynomial):
+    CONFIG = {
+        "num_lighthouses": 2,
+    }
+
+
+class DefineChordF(Scene):
+    def construct(self):
+        radius = 2.5
+
+        full_chord_f = TextMobject("``", "Chord(", "$f$", ")", "''", arg_separator="")
+        full_chord_f.set_color_by_tex("$f$", YELLOW)
+        full_chord_f.to_edge(UP)
+        chord_f = full_chord_f[1:-1]
+        chord_f.generate_target()
+
+        circle = Circle(radius=2.5)
+        circle.set_color(RED)
+        radius_line = Line(circle.get_center(), circle.get_right())
+        one_label = TexMobject("1")
+        one_label.next_to(radius_line, DOWN, SMALL_BUFF)
+
+        chord = Line(*[circle.point_from_proportion(f) for f in [0, 1. / 3]])
+        chord.set_color(YELLOW)
+        chord_third = TextMobject("Chord(", "$1/3$", ")", arg_separator="")
+        chord_third.set_color_by_tex("1/3", YELLOW)
+        for term in chord_third, chord_f.target:
+            term.next_to(chord.get_center(), UP, SMALL_BUFF)
+            chord_angle = chord.get_angle() + np.pi
+            term.rotate(chord_angle, about_point=chord.get_center())
+
+        brace = Brace(Line(ORIGIN, TAU * UP / 3), RIGHT, buff=0)
+        brace.generate_target()
+        brace.target.stretch(0.5, 0)
+        brace.target.apply_complex_function(np.exp)
+        VGroup(brace, brace.target).scale(radius)
+        brace.next_to(circle.get_right(), RIGHT, SMALL_BUFF, DOWN)
+        brace.scale(0.5, about_edge=DOWN)
+        brace.target.move_to(brace, DR)
+        brace.target.shift(2 * SMALL_BUFF * LEFT)
+
+        f_label = TexMobject("f")
+        f_label.set_color(YELLOW)
+        point = circle.point_from_proportion(1.0 / 6)
+        f_label.move_to(point + 0.4 * (point - circle.get_center()))
+
+        third_label = TexMobject("\\frac{1}{3}")
+        third_label.scale(0.7)
+        third_label.move_to(f_label)
+        third_label.match_color(f_label)
+
+        alphas = np.linspace(0, 1, 4)
+        third_arcs = VGroup(*[
+            VMobject().pointwise_become_partial(circle, a1, a2)
+            for a1, a2 in zip(alphas, alphas[1:])
+        ])
+        third_arcs.set_color_by_gradient(BLUE, PINK, GREEN)
+
+        # Terms for sine formula
+        origin = circle.get_center()
+        height = DashedLine(origin, chord.get_center())
+        half_chords = VGroup(
+            Line(chord.get_start(), chord.get_center()),
+            Line(chord.get_end(), chord.get_center()),
+        )
+        half_chords.set_color_by_gradient(BLUE, PINK)
+        alt_radius_line = Line(origin, chord.get_end())
+        alt_radius_line.set_color(WHITE)
+        angle_arc = Arc(
+            radius=0.3,
+            angle=TAU / 6,
+        )
+        angle_arc.shift(origin)
+        angle_label = TexMobject("\\frac{f}{2}", "2\\pi")
+        angle_label[0][0].set_color(YELLOW)
+        angle_label.scale(0.6)
+        angle_label.next_to(angle_arc, RIGHT, SMALL_BUFF, DOWN)
+        angle_label.shift(SMALL_BUFF * UR)
+
+        circle_group = VGroup(
+            circle, chord, radius_line, one_label,
+            brace, f_label, chord_f,
+            half_chords, height,
+            angle_arc, angle_label,
+        )
+
+        formula = TexMobject(
+            "= 2 \\cdot \\sin\\left(\\frac{f}{2} 2\\pi \\right)",
+            "= 2 \\cdot \\sin\\left(f \\pi \\right)",
+        )
+        for part in formula:
+            part[7].set_color(YELLOW)
+
+        # Draw circle and chord
+        self.add(radius_line, circle, one_label)
+        self.play(Write(full_chord_f))
+        self.play(ShowCreation(chord))
+        self.play(
+            MoveToTarget(chord_f),
+            FadeOut(VGroup(full_chord_f[0], full_chord_f[-1]))
+        )
+        self.play(GrowFromEdge(brace, DOWN))
+        self.play(MoveToTarget(brace, path_arc=TAU / 3))
+        self.play(Write(f_label))
+        self.wait(2)
+
+        # Show third
+        self.remove(chord_f, f_label)
+        self.play(
+            ReplacementTransform(chord_f.copy(), chord_third),
+            ReplacementTransform(f_label.copy(), third_label),
+        )
+        chord_copies = VGroup()
+        last_chord = chord
+        for color in PINK, BLUE:
+            chord_copy = last_chord.copy()
+            old_color = chord_copy.get_color()
+            self.play(
+                Rotate(chord_copy, -TAU / 6, about_point=last_chord.get_end()),
+                UpdateFromAlphaFunc(
+                    chord_copy,
+                    lambda m, a: m.set_stroke(interpolate_color(old_color, color, a))
+                )
+            )
+            chord_copy.reverse_points()
+            last_chord = chord_copy
+            chord_copies.add(chord_copy)
+        self.wait()
+        self.play(
+            FadeOut(chord_copies),
+            ReplacementTransform(chord_third, chord_f),
+            ReplacementTransform(third_label, f_label),
+        )
+
+        # Show sine formula
+        top_chord_f = chord_f.copy()
+        top_chord_f.generate_target()
+        top_chord_f.target.rotate(-chord_angle)
+        top_chord_f.target.center().to_edge(UP, buff=LARGE_BUFF)
+        top_chord_f.target.shift(3 * LEFT)
+        formula.next_to(top_chord_f.target, RIGHT)
+
+        self.play(
+            ShowCreation(height),
+            FadeIn(half_chords),
+            ShowCreation(angle_arc),
+            Write(angle_label)
+        )
+        self.wait()
+        self.play(
+            MoveToTarget(top_chord_f),
+            circle_group.shift, 1.5 * DOWN,
+        )
+        self.play(Write(formula[0], run_time=1))
+        self.wait()
+        self.play(ReplacementTransform(
+            formula[0].copy(), formula[1],
+            path_arc=45 * DEGREES
+        ))
+        self.wait()
+
+
+class DistanceProductIsChordF(PlugObserverIntoPolynomial):
+    CONFIG = {
+        "include_lighthouses": False,
+        "num_lighthouses": 8,
+        # "ambient_light_config": CHEAP_AMBIENT_LIGHT_CONFIG,
+        # "add_lights_in_foreground": False,
+    }
+
+    def construct(self):
+        self.add_plane()
+        self.add_circle_group()
+        self.add_polynomial("O")
+        self.add_observer_and_lines()
+
+    def add_observer_and_lines(self):
+        fraction = self.observer_fraction = 0.3
+        circle = self.circle
+
+        O_dot = self.observer_dot = Dot()
+        O_dot.set_color(self.observer_config["color"])
+        O_to_N_dot = O_dot.copy()
+        O_dot.move_to(self.get_circle_point_at_proportion(fraction / self.num_lighthouses))
+        O_to_N_dot.move_to(self.get_circle_point_at_proportion(fraction))
+
+        for dot, vect, tex in [(O_dot, DL, "O"), (O_to_N_dot, DR, "O^N")]:
+            arrow = Vector(0.5 * vect, color=WHITE)
+            arrow.next_to(dot.get_center(), -vect, SMALL_BUFF)
+            label = TexMobject(tex)
+            O_part = label[0]
+            O_part.match_color(dot)
+            label.add_background_rectangle()
+            label.next_to(arrow.get_start(), -vect, buff=0, submobject_to_align=O_part)
+            dot.arrow = arrow
+            dot.label = label
+            self.add_foreground_mobject(dot)
+            self.add(arrow, label)
+            # For the transition to f = 1 / 2
+            dot.generate_target()
+
+        fraction_words = VGroup(
+            TextMobject("$f$", "of the way"),
+            TextMobject("between lighthouses")
+        )
+        fraction_words.scale(0.8)
+        fraction_words[0][0].set_color(YELLOW)
+        fraction_words.arrange_submobjects(DOWN, SMALL_BUFF, aligned_edge=LEFT)
+        fraction_words.next_to(O_dot.label, RIGHT)
+        map(TexMobject.add_background_rectangle, fraction_words)
+
+        f_arc, new_arc = [
+            Arc(
+                angle=(TAU * f / self.num_lighthouses),
+                radius=self.get_radius(),
+                color=YELLOW,
+            ).shift(circle.get_center())
+            for f in fraction, 0.5
+        ]
+        self.add(f_arc)
+
+        lines = self.lines = self.get_lines()
+        labels = self.get_numeric_distance_labels()
+
+        black_rect = Rectangle(height=6, width=3.5)
+        black_rect.set_stroke(width=0)
+        black_rect.set_fill(BLACK, 1)
+        black_rect.to_corner(DL, buff=0)
+        colum_group = self.get_distance_product_column(
+            column_top=black_rect.get_top() + MED_SMALL_BUFF * DOWN
+        )
+        stacked_labels, h_line, times, product_decimal = colum_group
+
+        chord = Line(*[
+            self.get_circle_point_at_proportion(f)
+            for f in 0, fraction
+        ])
+        chord.set_stroke(YELLOW)
+        chord_f = get_chord_f_label(chord)
+        chord_f_as_product = chord_f.copy()
+        chord_f_as_product.generate_target()
+        chord_f_as_product.target.rotate(-chord_f_as_product.angle)
+        chord_f_as_product.target.scale(0.8)
+        chord_f_as_product.target.move_to(product_decimal, RIGHT)
+
+        # Constructs for the case f = 1 / 2
+        new_chord = Line(circle.get_right(), circle.get_left())
+        new_chord.match_style(chord)
+        chord_half = get_chord_f_label(new_chord, "1/2")
+
+        f_terms = VGroup(fraction_words[0][1][0], chord_f_as_product[1][1])
+        half_terms = VGroup(*[
+            TexMobject("\\frac{1}{2}").scale(0.6).set_color(YELLOW).move_to(f)
+            for f in f_terms
+        ])
+        half_terms[1].move_to(chord_f_as_product.target[1][1])
+
+        O_dot.target.move_to(self.get_circle_point_at_proportion(0.5 / self.num_lighthouses))
+        O_to_N_dot .target.move_to(circle.get_left())
+        self.observer_dot = O_dot.target
+        new_lines = self.get_lines()
+
+        changing_decimals = []
+        radius = self.get_radius()
+        for decimal, line in zip(stacked_labels, new_lines):
+            changing_decimals.append(
+                ChangeDecimalToValue(decimal, line.get_length() / radius)
+            )
+
+        equals_two_terms = VGroup(*[
+            TexMobject("=2").next_to(mob, DOWN, SMALL_BUFF)
+            for mob in chord_half, chord_f_as_product.target
+        ])
+
+        # Animations
+
+        self.play(Write(fraction_words))
+        self.wait()
+        self.play(
+            LaggedStart(ShowCreation, lines),
+            LaggedStart(FadeIn, labels),
+        )
+        self.play(
+            FadeIn(black_rect),
+            ReplacementTransform(labels.copy(), stacked_labels),
+            ShowCreation(h_line),
+            Write(times),
+        )
+        self.wait(2)
+        self.add_foreground_mobjects(
+            chord_f[1], chord, O_dot, O_to_N_dot
+        )
+        self.play(
+            FadeOut(labels),
+            ShowCreation(chord),
+            FadeIn(chord_f),
+        )
+        self.play(MoveToTarget(chord_f_as_product))
+        self.wait(2)
+
+        # Transition to f = 1 / 2
+        self.play(
+            Transform(lines, new_lines),
+            Transform(f_arc, new_arc),
+            Transform(chord, new_chord),
+            chord_f.rotate, -chord_f.angle,
+            chord_f.move_to, chord_half,
+            MoveToTarget(O_dot),
+            MoveToTarget(O_to_N_dot),
+            MaintainPositionRelativeTo(O_dot.arrow, O_dot),
+            MaintainPositionRelativeTo(O_dot.label, O_dot),
+            MaintainPositionRelativeTo(O_to_N_dot.arrow, O_to_N_dot),
+            MaintainPositionRelativeTo(O_to_N_dot.label, O_to_N_dot),
+            *changing_decimals,
+            path_arc=(45 * DEGREES),
+            run_time=2
+        )
+        self.play(
+            Transform(chord_f, chord_half),
+            Transform(f_terms, half_terms),
+        )
+        self.wait()
+        for term in equals_two_terms:
+            term.add_background_rectangle()
+            self.add_foreground_mobject(term[1])
+        self.play(
+            Write(equals_two_terms)
+        )
+        self.wait()
 
 
 

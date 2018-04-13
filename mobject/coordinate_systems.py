@@ -352,5 +352,6 @@ class ComplexPlane(NumberPlane):
         return result
 
     def add_coordinates(self, *numbers):
-        self.add(*self.get_coordinate_labels(*numbers))
+        self.coordinate_labels = self.get_coordinate_labels(*numbers)
+        self.add(self.coordinate_labels)
         return self

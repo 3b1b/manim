@@ -188,6 +188,13 @@ class GrowFromCenter(GrowFromPoint):
         GrowFromPoint.__init__(self, mobject, mobject.get_center(), **kwargs)
 
 
+class GrowFromEdge(GrowFromPoint):
+    def __init__(self, mobject, edge, **kwargs):
+        GrowFromPoint.__init__(
+            self, mobject, mobject.get_critical_point(edge), **kwargs
+        )
+
+
 class GrowArrow(GrowFromPoint):
     def __init__(self, arrow, **kwargs):
         GrowFromPoint.__init__(self, arrow, arrow.get_start(), **kwargs)
