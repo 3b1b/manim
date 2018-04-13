@@ -1,7 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter8 import *
 from active_projects.eop.histograms import *
-from svgpathtools import *
 
 import scipy.special
 
@@ -75,7 +74,7 @@ class CoinFlippingPiCreature(PiCreature):
 
     def __init__(self, **kwargs):
 
-        coin = PiCreatureCoin() # Line(ORIGIN, 0.4 * RIGHT, stroke_width = 15, color = YELLOW)
+        coin = PiCreatureCoin()
         PiCreature.__init__(self,**kwargs)
         self.coin = coin
         self.add(coin)
@@ -270,18 +269,32 @@ class TailsStack(CoinStack):
     }
 
 class TallyStack(VGroup):
+    CONFIG = {
+        "coin_thickness": COIN_THICKNESS
+    }
 
-    def __init__(self,h,t,**kwargs):
+    def __init__(self,h,t,anchor = ORIGIN, **kwargs):
         self.nb_heads = h
         self.nb_tails = t
+        self.anchor = anchor
         VGroup.__init__(self,**kwargs)
 
     def generate_points(self):
         stack1 = HeadsStack(size = self.nb_heads, coin_thickness = self.coin_thickness)
         stack2 = TailsStack(size = self.nb_tails, coin_thickness = self.coin_thickness)
-        stack2.next_to(stack1, RIGHT, buff = SMALL_BUFF)
-        stack2.align_to(stack1, DOWN)
+        stack1.next_to(self.anchor, LEFT, buff = SMALL_BUFF)
+        stack2.next_to(self.anchor, RIGHT, buff = SMALL_BUFF)
+        stack1.align_to(self.anchor, DOWN)
+        stack2.align_to(self.anchor, DOWN)
+        self.heads_stack = stack1
+        self.tails_stack = stack2
         self.add(stack1, stack2)
+
+    def move_anchor_to(self, new_anchor):
+        for submob in self.submobjects:
+            submob.shift(new_anchor - self.anchor)
+        self.anchor = new_anchor
+        return self
 
 class CoinFlipTree(VGroup):
     CONFIG = {
@@ -1216,6 +1229,41 @@ class ShowUncertainty2(PiCreatureScene):
 
 
 
+
+
+class ShowUncertainty3(Scene):
+
+    def construct(self):
+
+        randy = CoinFlippingPiCreature(color = MAROON_E)
+        randy.scale(0.5).to_edge(LEFT + DOWN)
+
+        heads = tails = 0
+        tally = TallyStack(heads, tails, anchor = ORIGIN)
+
+        for i in range(10):
+
+            self.play(FlipCoin(randy))
+            self.wait(0.5)
+
+            flip = np.random.randint(0,2)
+            if flip == 0:
+                heads += 1
+            elif flip == 1:
+                tails += 1
+            else:
+                raise Exception("That side does not exist on this coin")
+
+            new_tally = TallyStack(heads, tails, anchor = ORIGIN)
+
+            if tally.nb_heads == 0 and new_tally.nb_heads == 1:
+                self.play(FadeIn(new_tally.heads_stack))
+            elif tally.nb_tails == 0 and new_tally.nb_tails == 1:
+                self.play(FadeIn(new_tally.tails_stack))
+            else:
+                self.play(Transform(tally, new_tally))
+
+            tally = new_tally
 
 
 
