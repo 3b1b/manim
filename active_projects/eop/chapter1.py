@@ -106,12 +106,15 @@ class FlipCoin(AnimationGroup):
             rate_func = self.rate_func,
             **kwargs
         )
-        coin_motion = FlipUpAndDown(
-            pi_creature.coin, 
-            vector = UP,
-            nb_turns = 5,
-            rate_func = self.rate_func,
-            **kwargs
+        coin_motion = Succession(
+            EmptyAnimation(run_time = 1.0),
+            FlipUpAndDown(
+                pi_creature.coin, 
+                vector = UP,
+                nb_turns = 5,
+                rate_func = self.rate_func,
+                **kwargs
+            )
         )
         AnimationGroup.__init__(self,pi_creature_motion, coin_motion)
 
@@ -1241,12 +1244,16 @@ class ShowUncertainty3(Scene):
         heads = tails = 0
         tally = TallyStack(heads, tails, anchor = ORIGIN)
 
-        for i in range(10):
+        nb_flips = 10
+
+        flips = np.random.randint(2, size = nb_flips)
+
+        for i in range(nb_flips):
 
             self.play(FlipCoin(randy))
             self.wait(0.5)
 
-            flip = np.random.randint(0,2)
+            flip = flips[i]
             if flip == 0:
                 heads += 1
             elif flip == 1:
