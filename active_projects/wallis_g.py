@@ -25,6 +25,26 @@ def get_chord_f_label(chord, arg="f", direction=DOWN):
     chord_f.angle = angle
     return chord_f
 
+
+def get_wallis_product(n_terms=6, show_result=True):
+    tex_mob_args = []
+    for x in range(n_terms):
+        if x % 2 == 0:
+            numerator = x + 2
+            denominator = x + 1
+        else:
+            numerator = x + 1
+            denominator = x + 2
+        tex_mob_args += [
+            "{%d" % numerator, "\\over", "%d}" % denominator, "\\cdot"
+        ]
+    tex_mob_args[-1] = "\\cdots"
+    if show_result:
+        tex_mob_args += ["=", "{\\pi", "\\over", "2}"]
+
+    result = TexMobject(*tex_mob_args)
+    return result
+
 # Scenes
 
 
@@ -33,7 +53,7 @@ class DistanceProductScene(MovingCameraScene):
         "ambient_light_config": {
             "opacity_function": DEFAULT_OPACITY_FUNCTION,
             "num_levels": 100,
-            "light_radius": 5,
+            "radius": 5,
             "max_opacity": 0.8,
             "color": PRODUCT_COLOR,
         },
@@ -2037,16 +2057,82 @@ class ProveLemma2(PlugObserverIntoPolynomial):
 
 
 class ArmedWithTwoKeyFacts(TeacherStudentsScene, DistanceProductScene):
+    CONFIG = {
+        "num_lighthouses": 6,
+        "ambient_light_config": {
+            "opacity_function": inverse_power_law(1, 1, 1, 6),
+            "radius": 1,
+            "num_levels": 100,
+            "max_opacity": 1,
+        },
+    }
+
     def setup(self):
         TeacherStudentsScene.setup(self)
         DistanceProductScene.setup(self)
 
     def construct(self):
-        pass
+        circle1 = self.circle
+        circle1.scale_to_fit_height(1.5)
+        circle1.to_corner(UL)
+        circle2 = circle1.copy()
+        circle2.next_to(circle1, DOWN, MED_LARGE_BUFF)
+
+        wallis_product = get_wallis_product(n_terms=8)
+
+        N = self.num_lighthouses
+        labels = VGroup()
+        for circle, f, dp in (circle1, 0.5, "2"), (circle2, 0, "N"):
+            self.circle = circle
+            lights = self.get_lights()
+            if f == 0:
+                lights.submobjects.pop(0)
+            observer = Dot(color=MAROON_B)
+            frac = f / N
+            point = self.get_circle_point_at_proportion(frac)
+            observer.move_to(point)
+            lines = self.get_distance_lines(point, line_class=DashedLine)
+
+            label = TextMobject("Distance product = %s" % dp)
+            label.scale(0.7)
+            label.next_to(circle, RIGHT)
+            labels.add(label)
+
+            group = VGroup(lines, observer, label)
+            self.play(
+                FadeIn(circle),
+                LaggedStart(FadeIn, VGroup(*it.chain(lights))),
+                LaggedStart(
+                    FadeIn, VGroup(*it.chain(group.family_members_with_points()))
+                ),
+                self.teacher.change, "raise_right_hand",
+                self.get_student_changes(*["pondering"] * 3)
+            )
+        wallis_product.move_to(labels).to_edge(RIGHT)
+        self.play(
+            LaggedStart(FadeIn, wallis_product),
+            self.teacher.change_mode, "hooray",
+            self.get_student_changes(*["thinking"] * 3, look_at_arg=wallis_product)
+        )
+        self.wait(2)
 
 
+class KeeperAndSailor(DistanceProductScene):
+    CONFIG = {
+        "num_lighthouses": 9,
+        "ambient_light_config": CHEAP_AMBIENT_LIGHT_CONFIG,
+    }
+
+    def construct(self):
+        self.place_lighthouses()
+        self.introduce_observers()
 
 
+class Test(Scene):
+    def construct(self):
+        product = get_wallis_product(8)
+        product.get_parts_by_tex("\\over").set_color(YELLOW)
+        self.add(product)
 
 
 
