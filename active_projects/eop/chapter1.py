@@ -1123,16 +1123,44 @@ class RowOfDice(VGroup):
 
 class ShowUncertainty(PiCreatureScene):
 
+    def throw_a_die(self):
+
+        eye = np.random.randint(1,7)
+        face = self.row_of_dice.submobjects[eye - 1]
+        self.tallies[eye - 1] += 1
+
+        new_hist = self.hist_from_tallies()
+
+        self.play(
+            ApplyMethod(face.submobjects[0].set_fill, {"opacity": 1}, rate_func = there_and_back),
+            Transform(self.dice_histogram, new_hist)
+        )
+
+
+
+    def hist_from_tallies(self):
+        hist = Histogram(0.5 * np.ones(6), self.tallies, 
+            mode = "widths", 
+            x_labels = "none",
+            y_scale = 0.5
+        )
+
+        hist.next_to(self.row_of_dice, UP)
+        hist.stretch_to_fit_width(self.row_of_dice.get_width())
+        return hist
+
     def construct(self):
 
-        row_of_dice = RowOfDice().scale(0.5).move_to(ORIGIN)
-        self.add(row_of_dice)
-        rounded_rect = RoundedRectangle(
-            width = 3,
-            height = 2,
-            corner_radius = 0.1
-        ).shift(3*LEFT)
-        self.add(rounded_rect)
+        self.row_of_dice = RowOfDice().scale(0.5).move_to(3 * DOWN)
+        self.add(self.row_of_dice)
+
+        self.tallies = np.ones(6)
+        self.dice_histogram = self.hist_from_tallies()
+        
+        self.add(self.dice_histogram)
+
+        for i in range(30):
+            self.throw_a_die()
 
 
 
