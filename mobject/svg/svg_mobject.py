@@ -165,7 +165,7 @@ class SVGMobject(VMobject):
         # input preprocessing
         if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):
             opacity = 0
-            fill_color = BLACK # shdn't be necessary but avoids error msgs
+            fill_color = BLACK  # shdn't be necessary but avoids error msgs
         if fill_color in ["#000", "#000000"]:
             fill_color = WHITE
         if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(stroke_color) == Color(WHITE):
@@ -175,10 +175,6 @@ class SVGMobject(VMobject):
             stroke_color = WHITE
         if stroke_width in ["", "none", "0"]:
             stroke_width = 0
-        
-        # is there sth to draw?
-        if opacity == 0 and stroke_width == 0:
-            return
 
         if corner_radius in ["", "0", "none"]:
             corner_radius = 0
@@ -187,22 +183,22 @@ class SVGMobject(VMobject):
 
         if corner_radius == 0:
             mob = Rectangle(
-                width = float(rect_element.getAttribute("width")),
-                height = float(rect_element.getAttribute("height")),
-                stroke_width = stroke_width,
-                stroke_color = stroke_color,
-                fill_color = fill_color,
-                fill_opacity = opacity
+                width=float(rect_element.getAttribute("width")),
+                height=float(rect_element.getAttribute("height")),
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                fill_color=fill_color,
+                fill_opacity=opacity
             )
         else:
             mob = RoundedRectangle(
-                width = float(rect_element.getAttribute("width")),
-                height = float(rect_element.getAttribute("height")),
-                stroke_width = stroke_width,
-                stroke_color = stroke_color,
-                fill_color = fill_color,
-                fill_opacity = opacity,
-                corner_radius = corner_radius
+                width=float(rect_element.getAttribute("width")),
+                height=float(rect_element.getAttribute("height")),
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                fill_color=fill_color,
+                fill_opacity=opacity,
+                corner_radius=corner_radius
             )
 
         mob.shift(mob.get_center() - mob.get_corner(UP + LEFT))
