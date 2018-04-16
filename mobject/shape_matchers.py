@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from constants import *
 
+from mobject.types.vectorized_mobject import VMobject
 from mobject.geometry import Rectangle
 from mobject.geometry import Line
 from mobject.types.vectorized_mobject import VGroup
@@ -39,8 +40,21 @@ class BackgroundRectangle(SurroundingRectangle):
         self.set_fill(opacity=b * self.original_fill_opacity)
         return self
 
-    def set_color(self):
-        # Can't be changin' me!
+    def set_style_data(self,
+                       stroke_color=None,
+                       stroke_width=None,
+                       fill_color=None,
+                       fill_opacity=None,
+                       family=True
+                       ):
+        # Unchangable style, except for fill_opacity
+        VMobject.set_style_data(
+            self,
+            stroke_color=BLACK,
+            stroke_width=0,
+            fill_color=BLACK,
+            fill_opacity=fill_opacity
+        )
         return self
 
     def get_fill_color(self):
