@@ -26,15 +26,30 @@ def get_chord_f_label(chord, arg="f", direction=DOWN):
     return chord_f
 
 
+class WallisNumeratorDenominatorGenerator(object):
+    def __init__(self):
+        self.n = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        n = self.n
+        self.n += 1
+        if n % 2 == 0:
+            return (n + 2, n + 1)
+        else:
+            return (n + 1, n + 2)
+
+
 def get_wallis_product(n_terms=6, show_result=True):
     tex_mob_args = []
+    nd_generator = WallisNumeratorDenominatorGenerator()
     for x in range(n_terms):
-        if x % 2 == 0:
-            numerator = x + 2
-            denominator = x + 1
-        else:
-            numerator = x + 1
-            denominator = x + 2
+        numerator, denominator = nd_generator.next()
         tex_mob_args += [
             "{%d" % numerator, "\\over", "%d}" % denominator, "\\cdot"
         ]
@@ -45,7 +60,297 @@ def get_wallis_product(n_terms=6, show_result=True):
     result = TexMobject(*tex_mob_args)
     return result
 
+
+def get_wallis_product_numerical_terms(n_terms=20):
+    result = []
+    nd_generator = WallisNumeratorDenominatorGenerator()
+    for x in range(n_terms):
+        n, d = nd_generator.next()
+        result.append(float(n) / d)
+    return result
+
+
 # Scenes
+
+
+class Introduction(Scene):
+    def construct(self):
+        n_terms = 10
+
+        number_line = NumberLine(
+            x_min=0,
+            x_max=2,
+            unit_size=5,
+            tick_frequency=0.25,
+            numbers_with_elongated_ticks=[0, 1, 2],
+            color=LIGHT_GREY,
+        )
+        number_line.add_numbers()
+        number_line.move_to(DOWN)
+
+        numerical_terms = get_wallis_product_numerical_terms(400)
+        partial_products = np.cumprod(numerical_terms)
+        curr_product = partial_products[0]
+
+        arrow = Vector(DOWN, color=YELLOW)
+
+        def get_arrow_update():
+            return ApplyFunction(
+                lambda mob: mob.next_to(
+                    number_line.number_to_point(curr_product),
+                    UP, SMALL_BUFF
+                ),
+                arrow,
+            )
+        get_arrow_update().update(1)
+        decimal = DecimalNumber(curr_product, num_decimal_points=5, show_ellipsis=True)
+        decimal.next_to(arrow, UP, SMALL_BUFF, submobject_to_align=decimal[:5])
+        decimal_anim = ChangingDecimal(
+            decimal,
+            lambda a: number_line.point_to_number(arrow.get_center()),
+            tracked_mobject=arrow
+        )
+
+        product_mob = get_wallis_product(n_terms)
+        product_mob.to_edge(UP)
+
+        rects = VGroup(*[
+            SurroundingRectangle(product_mob[:n])
+            for n in range(3, 4 * n_terms, 4) + [4 * n_terms]
+        ])
+        rect = rects[0].copy()
+
+        pi_halves_arrow = Vector(UP, color=BLUE)
+        pi_halves_arrow.next_to(
+            number_line.number_to_point(np.pi / 2), DOWN, SMALL_BUFF
+        )
+        pi_halves_term = TexMobject("\\pi / 2")
+        pi_halves_term.next_to(pi_halves_arrow, DOWN)
+
+        self.add(product_mob, number_line, rect, arrow, decimal)
+        self.add(pi_halves_arrow, pi_halves_term)
+        for n in range(1, len(rects)):
+            curr_product = partial_products[n]
+            self.play(
+                get_arrow_update(),
+                decimal_anim,
+                Transform(rect, rects[n]),
+                run_time=0.5
+            )
+            self.wait(0.5)
+
+        for n in range(len(rects), len(numerical_terms), 31):
+            curr_product = partial_products[n]
+            self.play(
+                get_arrow_update(),
+                decimal_anim,
+                run_time=0.25
+            )
+        curr_product = np.pi / 2
+        self.play(
+            get_arrow_update(),
+            decimal_anim,
+            run_time=0.5
+        )
+        self.wait()
+
+
+class SourcesOfOriginality(TeacherStudentsScene):
+    def construct(self):
+        self.mention_excitement()
+        self.break_down_value_of_math_presentations()
+        self.where_we_fit_in()
+
+    def mention_excitement(self):
+        self.teacher_says(
+            "This one came about \\\\ a bit differently...",
+            target_mode="speaking",
+            run_time=1
+        )
+        self.change_student_modes("happy", "confused", "erm")
+        self.wait(2)
+
+    def break_down_value_of_math_presentations(self):
+        title = TextMobject("The value of a", "math", "presentation")
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+        value_of, math, presentation = title
+
+        MATH_COLOR = YELLOW
+        COMMUNICATION_COLOR = BLUE
+
+        big_rect = self.big_rect = Rectangle(
+            width=title.get_width() + 2 * MED_LARGE_BUFF,
+            height=3.5,
+            color=WHITE
+        )
+        big_rect.next_to(title, DOWN)
+
+        left_rect, right_rect = self.left_rect, self.right_rect = [
+            Rectangle(
+                height=big_rect.get_height() - 2 * SMALL_BUFF,
+                width=0.5 * big_rect.get_width() - 2 * SMALL_BUFF,
+                color=color
+            )
+            for color in MATH_COLOR, COMMUNICATION_COLOR
+        ]
+        right_rect.flip()
+        left_rect.next_to(big_rect.get_left(), RIGHT, SMALL_BUFF)
+        right_rect.next_to(big_rect.get_right(), LEFT, SMALL_BUFF)
+
+        underlying_math = TextMobject("Underlying", "math")
+        underlying_math.set_color(MATH_COLOR)
+        communication = TextMobject("Communication")
+        communication.set_color(COMMUNICATION_COLOR)
+        VGroup(underlying_math, communication).scale(0.75)
+        underlying_math.next_to(left_rect.get_top(), DOWN, SMALL_BUFF)
+        communication.next_to(right_rect.get_top(), DOWN, SMALL_BUFF)
+
+        formula = TexMobject(
+            "\\sum_{n = 1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{2}",
+        )
+        formula.scale(0.75)
+        formula.next_to(underlying_math, DOWN)
+
+        based_on_wastlund = TextMobject(
+            "Previous video based on\\\\",
+            "a paper by Johan W\\\"{a}stlund"
+        )
+        based_on_wastlund.scale_to_fit_width(left_rect.get_width() - MED_SMALL_BUFF)
+        based_on_wastlund.next_to(formula, DOWN, MED_LARGE_BUFF)
+
+        communication_parts = TextMobject("Visuals, narrative, etc.")
+        communication_parts.scale(0.75)
+        communication_parts.next_to(communication, DOWN, MED_LARGE_BUFF)
+        lighthouse = Lighthouse(height=0.5)
+        lighthouse.next_to(communication_parts, DOWN, LARGE_BUFF)
+        ambient_light = AmbientLight(
+            num_levels=200,
+            radius=5,
+            opacity_function=DEFAULT_OPACITY_FUNCTION,
+        )
+        ambient_light.move_source_to(lighthouse.get_top())
+
+        big_rect.save_state()
+        big_rect.stretch(0, 1)
+        big_rect.stretch(0.5, 0)
+        big_rect.move_to(title)
+
+        self.play(
+            FadeInFromDown(title),
+            RemovePiCreatureBubble(
+                self.teacher,
+                target_mode="raise_right_hand",
+                look_at_arg=title,
+            ),
+            self.get_student_changes(
+                *["pondering"] * 3,
+                look_at_arg=title
+            )
+        )
+        self.play(big_rect.restore)
+        self.play(*map(ShowCreation, [left_rect, right_rect]))
+        self.wait()
+        self.play(
+            math.match_color, left_rect,
+            ReplacementTransform(VGroup(math.copy()), underlying_math)
+        )
+        self.play(FadeIn(formula))
+        self.play(
+            presentation.match_color, right_rect,
+            ReplacementTransform(presentation.copy(), communication)
+        )
+        self.play(
+            FadeIn(communication_parts),
+            FadeIn(lighthouse),
+            SwitchOn(ambient_light)
+        )
+        self.play(self.teacher.change, "tease")
+        self.wait()
+
+        self.play(
+            FadeIn(based_on_wastlund),
+            self.get_student_changes(
+                "sassy", "erm", "plain",
+                look_at_arg=based_on_wastlund
+            ),
+        )
+        self.wait()
+
+        self.math_content = VGroup(formula, based_on_wastlund)
+
+    def where_we_fit_in(self):
+        right_rect = self.right_rect
+        left_rect = self.left_rect
+
+        points = [
+            right_rect.get_left() + SMALL_BUFF * RIGHT,
+            right_rect.get_corner(UL),
+            right_rect.get_corner(UR),
+            right_rect.get_right() + SMALL_BUFF * LEFT,
+            right_rect.get_corner(DR),
+            right_rect.get_bottom() + SMALL_BUFF * UP,
+            right_rect.get_corner(DL),
+        ]
+        added_points = [
+            left_rect.get_bottom(),
+            left_rect.get_corner(DL),
+            left_rect.get_corner(DL) + 1.25 * UP,
+            left_rect.get_bottom() + 1.25 * UP,
+        ]
+
+        blob1, blob2 = VMobject(), VMobject()
+        blob1.set_points_smoothly(points + [points[0]])
+        blob1.add_control_points(3 * len(added_points) * [points[0]])
+        blob2.set_points_smoothly(points + added_points + [points[0]])
+        for blob in blob1, blob2:
+            blob.set_stroke(width=0)
+            blob.set_fill(BLUE, opacity=0.5)
+
+        our_contribution = TextMobject("Our target \\\\ contribution")
+        our_contribution.scale(0.75)
+        our_contribution.to_corner(UR)
+        arrow = Arrow(
+            our_contribution.get_bottom(),
+            right_rect.get_right() + MED_LARGE_BUFF * LEFT,
+            color=BLUE
+        )
+
+        wallis_product = get_wallis_product(n_terms=4)
+        wallis_product.scale_to_fit_width(left_rect.get_width() - 2 * MED_LARGE_BUFF)
+        wallis_product.move_to(self.math_content, UP)
+        wallis_product_name = TextMobject("``Wallis product''")
+        wallis_product_name.scale(0.75)
+        wallis_product_name.next_to(wallis_product, DOWN, MED_SMALL_BUFF)
+
+        new_proof = TextMobject("New proof")
+        new_proof.next_to(wallis_product_name, DOWN, MED_LARGE_BUFF)
+
+        self.play(
+            DrawBorderThenFill(blob1),
+            Write(our_contribution),
+            GrowArrow(arrow),
+        )
+        self.wait(2)
+        self.play(FadeOut(self.math_content))
+        self.play(
+            FadeIn(wallis_product),
+            Write(wallis_product_name, run_time=1)
+        )
+        self.wait(2)
+        self.play(
+            Transform(blob1, blob2, path_arc=-90 * DEGREES),
+            FadeIn(new_proof),
+            self.teacher.change, "hooray",
+        )
+        self.change_all_student_modes("hooray", look_at_arg=new_proof)
+        self.wait(5)
+
+
+class SridharWatchingScene(Scene):
+    def construct(self):
+        laptop = Laptop()
+        sridhar = PiCreature(color=YELLOW_E)
+        sridhar.next_to(laptop, LEFT)
 
 
 class DistanceProductScene(MovingCameraScene):
@@ -2157,14 +2462,14 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
     def construct(self):
         self.place_lighthouses()
         self.introduce_observers()
-        # self.write_distance_product_fraction()
+        self.write_distance_product_fraction()
         self.break_down_distance_product_by_parts()
         self.show_limit_for_each_fraction()
 
     def place_lighthouses(self):
         circle = self.circle
         circle.to_corner(DL)
-        circle.shift(SMALL_BUFF * UP)
+        circle.shift(MED_SMALL_BUFF * UR)
         circle.set_color(RED)
 
         lighthouses = self.get_lighthouses()
@@ -2273,7 +2578,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
 
         # Define result fraction
         equals = TexMobject("=")
-        result_fraction = TexMobject(
+        result_fraction = self.result_fraction = TexMobject(
             "{N", "{\\text{distance} \\choose \\text{between obs.}}", "\\over", "2}"
         )
         N, dist, frac_line, two = result_fraction
@@ -2391,24 +2696,28 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         self.wait()
 
     def break_down_distance_product_by_parts(self):
+        result_fraction = self.result_fraction
+        result_fraction_rect = SurroundingRectangle(result_fraction)
+
         product_parts = TexMobject(
             "{|L_1 - K|", "\\over", "|L_1 - S|}", "\\cdot",
             "{|L_2 - K|", "\\over", "|L_2 - S|}", "\\cdot",
             "{|L_3 - K|", "\\over", "|L_3 - S|}", "\\cdots",
-            # "{|L_{N-1} - K|", "\\over", "|L_{N-1}- S|}",
         )
         product_parts.set_color_by_tex_to_color_map({
             "K": YELLOW,
             "S": BLUE,
         })
         product_parts.scale_to_fit_width(0.4 * FRAME_WIDTH)
-        product_parts.move_to(self.observers)
-        product_parts.to_edge(RIGHT)
+        product_parts.next_to(result_fraction, DOWN, LARGE_BUFF, RIGHT)
+        product_parts.shift(MED_SMALL_BUFF * RIGHT)
 
         center = self.circle.get_center()
         lighthouse_labels = VGroup()
-        for i, point in enumerate(self.get_lh_points()):
-            label = TexMobject("L_%d" % i)
+        for count, point in enumerate(self.get_lh_points()):
+            if count > self.num_lighthouses / 2:
+                count -= self.num_lighthouses
+            label = TexMobject("L_{%d}" % count)
             label.scale(0.8)
             label.move_to(center + 1.15 * (point - center))
             # label.move_to(center + 0.87 * (point - center))
@@ -2421,21 +2730,6 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         keeper_lines.set_stroke(YELLOW, 3)
         keeper_lines.save_state()
 
-        # sailor_line_braces = VGroup()
-        # keeper_line_braces = VGroup()
-        # triplets = [
-        #     (sailor_line_braces, sailor_lines, DOWN),
-        #     (keeper_line_braces, keeper_lines, UP),
-        # ]
-        # for brace_group, line_group, vect in triplets:
-        #     for line in line_group:
-        #         angle = line.get_angle()
-        #         line.rotate(-angle)
-        #         brace = Brace(line, vect, buff=SMALL_BUFF)
-        #         brace.match_color(line)
-        #         VGroup(line, brace).rotate(angle, about_point=line.get_center())
-        #         brace_group.add(brace)
-
         sailor_length_braces = VGroup(VMobject())  # Add fluff first object
         keeper_length_braces = VGroup(VMobject())  # Add fluff first object
         triplets = [
@@ -2444,10 +2738,16 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         ]
         for char, brace_group, vect in triplets:
             for part in product_parts.get_parts_by_tex(char):
-                brace = Brace(part, vect)
+                brace = Brace(part, vect, buff=SMALL_BUFF)
                 brace.match_color(part)
                 brace_group.add(brace)
 
+        term_rects = VGroup(*[
+            SurroundingRectangle(product_parts[i:i + 3], color=WHITE)
+            for i in [0, 4, 8]
+        ])
+
+        # Animations
         self.remove(self.lights[0], self.lighthouses[0])
         if self.add_lights_in_foreground:
             self.add_foreground_mobjects(lighthouse_labels[1:])
@@ -2464,16 +2764,50 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         keeper_lines.restore()
         self.wait()
 
+        keeper_line = keeper_lines[1].copy()
+        sailor_line = sailor_lines[1].copy()
+        keeper_brace = keeper_length_braces[1].copy()
+        sailor_brace = sailor_length_braces[1].copy()
         self.play(
-            ShowCreation(keeper_lines[1]),
-            GrowFromCenter(keeper_length_braces[1]),
+            ShowCreation(keeper_line),
+            GrowFromCenter(keeper_brace),
         )
         self.wait()
         self.play(
-            ShowCreation(sailor_lines[1]),
-            GrowFromCenter(sailor_length_braces[1]),
+            ShowCreation(sailor_line),
+            GrowFromCenter(sailor_brace),
         )
         self.wait()
+        for i in range(2, 4):
+            self.play(
+                Transform(keeper_line, keeper_lines[i]),
+                Transform(keeper_brace, keeper_length_braces[i]),
+            )
+            self.play(
+                Transform(sailor_line, sailor_lines[i]),
+                Transform(sailor_brace, sailor_length_braces[i]),
+            )
+        for i in range(4, self.num_lighthouses):
+            anims = [
+                Transform(keeper_line, keeper_lines[i]),
+                Transform(sailor_line, sailor_lines[i]),
+            ]
+            if i == 4:
+                anims += [
+                    FadeOut(sailor_brace),
+                    FadeOut(keeper_brace),
+                ]
+            self.play(*anims)
+        self.play(FocusOn(result_fraction))
+        self.play(ShowPassingFlash(result_fraction_rect))
+        self.wait(3)
+
+        # Analyze first distance
+        self.play(
+            Transform(keeper_line, keeper_lines[1]),
+            Transform(sailor_line, sailor_lines[1]),
+            FadeIn(term_rects[0]),
+        )
 
     def show_limit_for_each_fraction(self):
         pass
