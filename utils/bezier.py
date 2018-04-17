@@ -3,7 +3,7 @@ import numpy as np
 from scipy import linalg
 from utils.simple_functions import choose
 
-CLOSED_THRESHOLD = 0.0
+CLOSED_THRESHOLD = 0.001
 
 
 def bezier(points):
@@ -98,7 +98,8 @@ def get_smooth_handle_points(points):
 
     def solve_func(b):
         return linalg.solve_banded((l, u), diag, b)
-    if is_closed(points):
+    use_closed_solve_function = is_closed(points)
+    if use_closed_solve_function:
         # Get equations to relate first and last points
         matrix = diag_to_matrix((l, u), diag)
         # last row handles second derivative
@@ -109,11 +110,15 @@ def get_smooth_handle_points(points):
         b[0] = 2 * points[0]
         b[-1] = np.zeros(dim)
 
-        def solve_func(b):
+        def closed_curve_solve_func(b):
             return linalg.solve(matrix, b)
+
     handle_pairs = np.zeros((2 * num_handles, dim))
     for i in range(dim):
-        handle_pairs[:, i] = solve_func(b[:, i])
+        if use_closed_solve_function:
+            handle_pairs[:, i] = closed_curve_solve_func(b[:, i])
+        else:
+            handle_pairs[:, i] = solve_func(b[:, i])
     return handle_pairs[0::2], handle_pairs[1::2]
 
 
