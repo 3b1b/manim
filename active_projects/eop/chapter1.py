@@ -1102,15 +1102,8 @@ class DieFace(SVGMobject):
         self.value = value
         self.file_name = "Dice-" + str(value)
         self.ensure_valid_file()
-
-        paths, attributes = svg2paths(self.file_path)
-        print paths, attributes
         SVGMobject.__init__(self, file_name = self.file_name)
-        # for submob in self.submobject_family():
-        #     if type(submob) == Rectangle:
-        #         submob.set_fill(opacity = 0)
-        #         submob.set_stroke(width = 7)
-
+        
 class RowOfDice(VGroup):
     CONFIG = {
         "values" : range(1,7)
@@ -1126,7 +1119,7 @@ class RowOfDice(VGroup):
 
 
 
-class ShowUncertainty1(PiCreatureScene):
+class ShowUncertainty1(Scene):
 
     def throw_a_die(self):
 
@@ -1147,8 +1140,6 @@ class ShowUncertainty1(PiCreatureScene):
                 run_time = 0.5)
         )
 
-
-
     def hist_from_tallies(self):
         x_scale = self.row_of_dice.get_width() / np.size(self.tallies)
         hist = Histogram(np.ones(6), self.tallies, 
@@ -1163,7 +1154,7 @@ class ShowUncertainty1(PiCreatureScene):
 
     def construct(self):
 
-        self.row_of_dice = RowOfDice().scale(0.5).move_to(3 * DOWN)
+        self.row_of_dice = RowOfDice().scale(0.5).move_to(2 * DOWN)
         self.add(self.row_of_dice)
 
         self.tallies = np.zeros(6)
@@ -1175,6 +1166,30 @@ class ShowUncertainty1(PiCreatureScene):
             self.throw_a_die()
             self.wait()
 
+
+
+class IdealizedDieHistogram(Scene):
+
+    def construct(self):
+
+        self.row_of_dice = RowOfDice().scale(0.5).move_to(2 * DOWN)
+        self.add(self.row_of_dice)
+        self.probs = 1.0/6 * np.ones(6)
+        x_scale = self.row_of_dice.get_width() / np.size(self.probs)
+
+        y_labels = ["${1\over 6}$"] * 6
+
+        hist = Histogram(np.ones(6), self.probs, 
+            mode = "widths", 
+            x_labels = "none",
+            y_labels = y_labels,
+            y_label_position = "center",
+            y_scale = 20,
+            x_scale = x_scale,
+        )
+        hist.next_to(self.row_of_dice, UP)
+
+        self.add(hist)
 
 
 
