@@ -1,7 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter8 import *
 from active_projects.eop.histograms import *
-from svgpathtools import *
 
 import scipy.special
 
@@ -75,7 +74,7 @@ class CoinFlippingPiCreature(PiCreature):
 
     def __init__(self, **kwargs):
 
-        coin = PiCreatureCoin() # Line(ORIGIN, 0.4 * RIGHT, stroke_width = 15, color = YELLOW)
+        coin = PiCreatureCoin()
         PiCreature.__init__(self,**kwargs)
         self.coin = coin
         self.add(coin)
@@ -107,12 +106,15 @@ class FlipCoin(AnimationGroup):
             rate_func = self.rate_func,
             **kwargs
         )
-        coin_motion = FlipUpAndDown(
-            pi_creature.coin, 
-            vector = UP,
-            nb_turns = 5,
-            rate_func = self.rate_func,
-            **kwargs
+        coin_motion = Succession(
+            EmptyAnimation(run_time = 1.0),
+            FlipUpAndDown(
+                pi_creature.coin, 
+                vector = UP,
+                nb_turns = 5,
+                rate_func = self.rate_func,
+                **kwargs
+            )
         )
         AnimationGroup.__init__(self,pi_creature_motion, coin_motion)
 
@@ -270,18 +272,32 @@ class TailsStack(CoinStack):
     }
 
 class TallyStack(VGroup):
+    CONFIG = {
+        "coin_thickness": COIN_THICKNESS
+    }
 
-    def __init__(self,h,t,**kwargs):
+    def __init__(self,h,t,anchor = ORIGIN, **kwargs):
         self.nb_heads = h
         self.nb_tails = t
+        self.anchor = anchor
         VGroup.__init__(self,**kwargs)
 
     def generate_points(self):
         stack1 = HeadsStack(size = self.nb_heads, coin_thickness = self.coin_thickness)
         stack2 = TailsStack(size = self.nb_tails, coin_thickness = self.coin_thickness)
-        stack2.next_to(stack1, RIGHT, buff = SMALL_BUFF)
-        stack2.align_to(stack1, DOWN)
+        stack1.next_to(self.anchor, LEFT, buff = SMALL_BUFF)
+        stack2.next_to(self.anchor, RIGHT, buff = SMALL_BUFF)
+        stack1.align_to(self.anchor, DOWN)
+        stack2.align_to(self.anchor, DOWN)
+        self.heads_stack = stack1
+        self.tails_stack = stack2
         self.add(stack1, stack2)
+
+    def move_anchor_to(self, new_anchor):
+        for submob in self.submobjects:
+            submob.shift(new_anchor - self.anchor)
+        self.anchor = new_anchor
+        return self
 
 class CoinFlipTree(VGroup):
     CONFIG = {
@@ -362,36 +378,6 @@ class CoinFlipTree(VGroup):
 
 
 
-class TestScene(Scene):
-
-    def construct(self):
-
-        #seq = CoinSequence(["H", "T", "T", "H"]).move_to(2 * LEFT)
-        #self.add(seq)
-        
-        #stack = TallyStack(4,7, coin_thickness = COIN_THICKNESS)
-        #self.add(stack)
-
-        tree = CoinFlipTree(nb_levels = 7, sort_until_level = 0)
-        tree.move_to(ORIGIN)
-        self.add(tree)
-
-        for i in range(1, 8):
-            new_tree = CoinFlipTree(nb_levels = 7, sort_until_level = i)
-            new_tree.move_to(ORIGIN)
-            self.play(Transform(tree, new_tree))
-            self.wait()
-
-        self.wait()
-
-
-class CoinFlipBranchToAreaScene(Scene):
-
-    def construct(self):
-
-        pass
-
-
 
 class Chapter1OpeningQuote(OpeningQuote):
     CONFIG = {
@@ -425,6 +411,7 @@ class Introduction(TeacherStudentsScene):
 
     def construct(self):
         self.show_series()
+        self.show_area_model1()
 
     def show_series(self):
         series = VideoSeries()
@@ -475,28 +462,28 @@ class Introduction(TeacherStudentsScene):
             Animation(self.teacher.bubble.content),
         ])
 
-        essence_words = words.get_part_by_tex("Essence").copy()
         self.play(
             FadeOut(self.teacher.bubble),
             FadeOut(self.teacher.bubble.content),
-            essence_words.next_to, series, DOWN,
             *[
                 ApplyMethod(pi.change_mode, "pondering")
                 for pi in self.get_pi_creatures()
             ]
         )
-        self.wait(3)
+        self.wait()
 
         self.series = series
-        self.essence_words = essence_words
 
-class IllustrateAreaModel1(Scene):
-
-    def construct(self):
+        # # # # # # # # # # # # # # # # # #
+        # show examples of the area model #
+        # # # # # # # # # # # # # # # # # #
         
+
+    def show_area_model1(self):
+
         # show independent events
 
-        sample_space_width = sample_space_height = 3.0
+        sample_space_width = sample_space_height = 2.5
         p_of_A = 0.7
         p_of_not_A = 1 - p_of_A
         p_of_B = 0.8
@@ -509,7 +496,8 @@ class IllustrateAreaModel1(Scene):
             stroke_width = 0,
             fill_color = BLUE,
             fill_opacity = 1.0
-        )
+        ).move_to(2 * RIGHT + 1.5 * UP)
+
         rect_not_A = Rectangle(
             width = p_of_not_A * sample_space_width,
             height = 1 * sample_space_height,
@@ -523,18 +511,13 @@ class IllustrateAreaModel1(Scene):
         brace_not_A = Brace(rect_not_A, DOWN)
         label_not_A = TexMobject("P(\\text{not }A)").next_to(brace_not_A, DOWN).scale(0.7)
 
-        self.play(
-            LaggedStart(FadeIn, VGroup(rect_A, rect_not_A), lag_factor = 0.5)
-        )
-        self.play(
-            ShowCreation(brace_A),
-            Write(label_A),
-        )
         # self.play(
-        #     ShowCreation(brace_not_A),
-        #     Write(label_not_A),
+        #     LaggedStart(FadeIn, VGroup(rect_A, rect_not_A), lag_factor = 0.5)
         # )
-
+        # self.play(
+        #     ShowCreation(brace_A),
+        #     Write(label_A),
+        # )
 
 
 
@@ -560,16 +543,12 @@ class IllustrateAreaModel1(Scene):
         brace_not_B = Brace(rect_not_B, LEFT)
         label_not_B = TexMobject("P(\\text{not }B)").next_to(brace_not_B, LEFT).scale(0.7)
 
-        self.play(
-            LaggedStart(FadeIn, VGroup(rect_B, rect_not_B), lag_factor = 0.5)
-        )
-        self.play(
-            ShowCreation(brace_B),
-            Write(label_B),
-        )
         # self.play(
-        #     ShowCreation(brace_not_B),
-        #     Write(label_not_B),
+        #     LaggedStart(FadeIn, VGroup(rect_B, rect_not_B), lag_factor = 0.5)
+        # )
+        # self.play(
+        #     ShowCreation(brace_B),
+        #     Write(label_B),
         # )
 
         rect_A_and_B = Rectangle(
@@ -581,11 +560,9 @@ class IllustrateAreaModel1(Scene):
         label_A_and_B = TexMobject("P(A\\text{ and }B)").scale(0.7)
         label_A_and_B.move_to(rect_A_and_B)
 
-        self.play(
-            ShowCreation(rect_A_and_B)
-        )
-        self.play(FadeIn(label_A_and_B))
-        self.add_foreground_mobject(label_A_and_B)
+        # self.play(
+        #     ShowCreation(rect_A_and_B)
+        # )
 
         indep_formula = TexMobject("P(A\\text{ and }B)", "=", "P(A)", "\cdot", "P(B)")
         indep_formula = indep_formula.scale(0.7).next_to(rect_not_B, UP, buff = MED_LARGE_BUFF)
@@ -593,16 +570,19 @@ class IllustrateAreaModel1(Scene):
         label_A_and_B_copy = label_A_and_B.copy()
         label_A_copy = label_A.copy()
         label_B_copy = label_B.copy()
-        self.add(label_A_and_B_copy, label_A_copy, label_B_copy)
+        # self.add(label_A_and_B_copy, label_A_copy, label_B_copy)
 
-        self.play(Transform(label_A_and_B_copy, indep_formula[0]))
-        self.play(FadeIn(indep_formula[1]))
-        self.play(Transform(label_A_copy, indep_formula[2]))
-        self.play(FadeIn(indep_formula[3]))
-        self.play(Transform(label_B_copy, indep_formula[4]))
+        # self.play(Transform(label_A_and_B_copy, indep_formula[0]))
+        # self.play(FadeIn(indep_formula[1]))
+        # self.play(Transform(label_A_copy, indep_formula[2]))
+        # self.play(FadeIn(indep_formula[3]))
+        # self.play(Transform(label_B_copy, indep_formula[4]))
 
-        self.wait()
+        #self.wait()
 
+        label_A_and_B_copy = indep_formula[0]
+        label_A_copy = indep_formula[2]
+        label_B_copy = indep_formula[4]
 
         # show conditional prob
 
@@ -631,11 +611,22 @@ class IllustrateAreaModel1(Scene):
             fill_opacity = 0.5
         ).next_to(rect_not_A_and_B, UP, buff = 0)
 
-        self.remove(rect_B, rect_not_B)
-        self.add(rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B)
 
+        indep_formula.next_to(rect_not_A, LEFT, buff = 4)
+        indep_formula.shift(UP)
 
+        self.play(Write(indep_formula))
 
+        self.play(
+            FadeIn(VGroup(
+                rect_A, rect_not_A, brace_A, label_A, brace_B, label_B,
+                rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B,
+                rect_A_and_B,
+                label_A_and_B,
+            ))
+        )
+
+        self.wait()
 
 
         p_of_B_knowing_A = 0.6
@@ -668,7 +659,7 @@ class IllustrateAreaModel1(Scene):
         )
         label_B_knowing_A = label_B
 
-        self.play(FadeOut(label_B_copy))
+        #self.play(FadeOut(label_B_copy))
         self.remove(indep_formula.get_part_by_tex("P(B)"))
         label_B_knowing_A_copy = label_B_knowing_A.copy()
         self.add(label_B_knowing_A_copy)
@@ -684,6 +675,7 @@ class IllustrateAreaModel1(Scene):
 
         self.wait()
 
+
         self.play(
             # in some places get_part_by_tex does not find the correct part
             # so I picked out fitting indices
@@ -691,7 +683,17 @@ class IllustrateAreaModel1(Scene):
             label_A_copy.move_to, rearranged_formula[-1][10],
             label_A_and_B_copy.move_to, rearranged_formula[-1][3],
             indep_formula.get_part_by_tex("=").move_to, rearranged_formula.get_part_by_tex("="),
-            Transform(indep_formula.get_part_by_tex("\cdot"), rearranged_formula[-1][8]),
+            Transform(indep_formula.get_part_by_tex("\cdot"), rearranged_formula[2][6]),
+        )
+
+
+        self.play(
+            FadeOut(VGroup(
+                indep_formula, rect_A, rect_B, rect_not_A, rect_not_B,
+                rect_A_and_B, rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B,
+                brace_A, brace_B, label_A, label_B_knowing_A, label_A_and_B,
+                label_B_knowing_A_copy
+            ))
         )
 
 
@@ -776,8 +778,8 @@ class IllustrateAreaModel1(Scene):
 
 class IllustrateAreaModel2(GraphScene):
     CONFIG = {
-        "x_min" : -5,
-        "x_max" : 5,
+        "x_min" : -3.5,
+        "x_max" : 3.5,
         "y_min" : -0,
         "y_max" : 0.6,
         "graph_origin": 3*DOWN,
@@ -785,7 +787,10 @@ class IllustrateAreaModel2(GraphScene):
         "y_axis_label" : "",
         "x_axis_label" : "",
         "variable_point_label" : "x",
-        "y_axis_height" : 4
+        "y_axis_height" : 4,
+        "graph_origin": 2.5 * DOWN + 3 * LEFT,
+        "x_axis_width": 5,
+        "y_axis_height": 3
     }
 
     def construct(self):
@@ -793,7 +798,7 @@ class IllustrateAreaModel2(GraphScene):
         x_max_1 = 0
         x_min_1 = -x_max_1
 
-        x_max_2 = 5
+        x_max_2 = 3.5
         x_min_2 = -x_max_2
 
 
@@ -802,10 +807,10 @@ class IllustrateAreaModel2(GraphScene):
 
         self.add(graph)
 
-
         cdf_formula = TexMobject("P(|X-\mu| < x) = \int_{-x}^x {\exp(-{1\over 2}({t\over \sigma})^2) \over \sigma\sqrt{2\pi}} dt")
+        
         cdf_formula.set_color_by_tex("x", YELLOW)
-        cdf_formula.next_to(graph, LEFT, buff = 1)
+        cdf_formula.next_to(graph, RIGHT, buff = -1)
         self.add(cdf_formula)
         
 
@@ -1121,26 +1126,140 @@ class RowOfDice(VGroup):
 
 
 
-class ShowUncertainty(PiCreatureScene):
+class ShowUncertainty1(PiCreatureScene):
+
+    def throw_a_die(self):
+
+        eye = np.random.randint(1,7)
+        face = self.row_of_dice.submobjects[eye - 1]
+        self.tallies[eye - 1] += 1
+
+        new_hist = self.hist_from_tallies()
+
+        self.play(
+            ApplyMethod(face.submobjects[0].set_fill, {"opacity": 1},
+                rate_func = there_and_back,
+                run_time = 0.3,
+            ),
+        )
+        self.play(
+            Transform(self.dice_histogram, new_hist,
+                run_time = 0.5)
+        )
+
+
+
+    def hist_from_tallies(self):
+        x_scale = self.row_of_dice.get_width() / np.size(self.tallies)
+        hist = Histogram(np.ones(6), self.tallies, 
+            mode = "widths", 
+            x_labels = "none",
+            y_scale = 0.5,
+            x_scale = x_scale
+        )
+
+        hist.next_to(self.row_of_dice, UP)
+        return hist
 
     def construct(self):
 
-        row_of_dice = RowOfDice().scale(0.5).move_to(ORIGIN)
-        self.add(row_of_dice)
-        rounded_rect = RoundedRectangle(
-            width = 3,
-            height = 2,
-            corner_radius = 0.1
-        ).shift(3*LEFT)
-        self.add(rounded_rect)
+        self.row_of_dice = RowOfDice().scale(0.5).move_to(3 * DOWN)
+        self.add(self.row_of_dice)
+
+        self.tallies = np.zeros(6)
+        self.dice_histogram = self.hist_from_tallies()
+        
+        self.add(self.dice_histogram)
+
+        for i in range(30):
+            self.throw_a_die()
+            self.wait()
+
+
+
+
+class ShowUncertainty2(PiCreatureScene):
+
+
+    def throw_darts(self, n, run_time = 1):
+
+        points = np.random.normal(
+            loc = self.dartboard.get_center(),
+            scale = 0.6 * np.ones(3),
+            size = (n,3)
+        )
+        points[:,2] = 0
+        dots = VGroup()
+        for point in points:
+            dot = Dot(point, radius = 0.04, fill_opacity = 0.7)
+            dots.add(dot)
+            self.add(dot)
+
+        self.play(
+            LaggedStart(FadeIn, dots, lag_ratio = 0.01, run_time = run_time)
+        )
+
+
+    def construct(self):
+
+        self.dartboard = ImageMobject("dartboard").scale(2)
+        dartboard_circle = Circle(
+            radius = self.dartboard.get_width() / 2,
+            fill_color = BLACK,
+            fill_opacity = 0.5,
+            stroke_color = WHITE,
+            stroke_width = 5
+        )
+        self.dartboard.add(dartboard_circle)
+
+        self.add(self.dartboard)
+    
+        self.throw_darts(5,5)
+        self.throw_darts(20,5)
+        self.throw_darts(100,5)
+        self.throw_darts(1000,5)
 
 
 
 
 
+class ShowUncertainty3(Scene):
 
+    def construct(self):
 
+        randy = CoinFlippingPiCreature(color = MAROON_E)
+        randy.scale(0.5).to_edge(LEFT + DOWN)
 
+        heads = tails = 0
+        tally = TallyStack(heads, tails, anchor = ORIGIN)
+
+        nb_flips = 10
+
+        flips = np.random.randint(2, size = nb_flips)
+
+        for i in range(nb_flips):
+
+            self.play(FlipCoin(randy))
+            self.wait(0.5)
+
+            flip = flips[i]
+            if flip == 0:
+                heads += 1
+            elif flip == 1:
+                tails += 1
+            else:
+                raise Exception("That side does not exist on this coin")
+
+            new_tally = TallyStack(heads, tails, anchor = ORIGIN)
+
+            if tally.nb_heads == 0 and new_tally.nb_heads == 1:
+                self.play(FadeIn(new_tally.heads_stack))
+            elif tally.nb_tails == 0 and new_tally.nb_tails == 1:
+                self.play(FadeIn(new_tally.tails_stack))
+            else:
+                self.play(Transform(tally, new_tally))
+
+            tally = new_tally
 
 
 
