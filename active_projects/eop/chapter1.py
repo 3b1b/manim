@@ -4,7 +4,7 @@ from active_projects.eop.histograms import *
 
 import scipy.special
 
-COIN_RADIUS = 0.3
+COIN_RADIUS = 0.25
 COIN_THICKNESS = 0.4 * COIN_RADIUS
 COIN_FORESHORTENING = 0.3
 COIN_NB_RIDGES = 20
@@ -33,6 +33,23 @@ def binary(i):
 
 def nb_of_ones(i):
     return binary(i).count(1)
+
+
+def rainbow_color(alpha):
+    nb_colors = 100
+    rainbow = color_gradient([RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE], nb_colors)
+    rainbow = np.append(rainbow,PURPLE)
+    index = int(alpha * nb_colors)
+    return rainbow[index]
+
+def graded_color(n,k):
+    if n != 0:
+        alpha = float(k)/n
+    else:
+        alpha = 0.5
+    color = interpolate_color(GRADE_COLOR_1, GRADE_COLOR_2, alpha)
+    return color
+
 
 class PiCreatureCoin(VMobject):
     CONFIG = {
@@ -296,6 +313,7 @@ class TallyStack(VGroup):
     def move_anchor_to(self, new_anchor):
         for submob in self.submobjects:
             submob.shift(new_anchor - self.anchor)
+
         self.anchor = new_anchor
         return self
 
@@ -697,83 +715,6 @@ class Introduction(TeacherStudentsScene):
         )
 
 
-# # # # # # # # # # # # # # # # #
-# Old version with SampleSpace  #
-# # # # # # # # # # # # # # # # #
-
-    # def show_independent_events(self):
-    #     sample_space = SampleSpace(
-    #         full_space_config = {
-    #             "height" : 3,
-    #             "width" : 3,
-    #             "fill_opacity" : 0
-    #         }
-    #     )
-    #     sample_space.divide_horizontally(0.4)
-    #     sample_space.horizontal_parts.set_fill(opacity = 0)
-    #     h_labels = [
-    #         TexMobject("P(", "A", ")"),
-    #         TexMobject("P(\\text{not }", "A", ")"),
-    #     ]
-    #     for label in h_labels:
-    #         label.scale(0.7)
-    #         #self.color_label(label)
-    #     sample_space.get_side_braces_and_labels(h_labels)
-    #     sample_space.add_braces_and_labels()
-    #     h_parts = sample_space.horizontal_parts
-    #     for (label, part) in zip(h_labels, h_parts):
-    #         label.next_to(part, 2 * LEFT)
-    #         sample_space.add(label)
-
-    #     values = [0.2, 0.2]
-    #     color_pairs = [(GREEN, BLUE), (GREEN_E, BLUE_E)]
-    #     v_parts = VGroup()
-    #     for tup in zip(h_parts, values, color_pairs):
-    #         part, value, colors = tup
-    #         part.divide_vertically(value, colors = colors)
-    #         part.vertical_parts.set_fill(opacity = 0.8)
-    #         #label = TexMobject(
-    #         #    "P(", "B", "|", given_str, "A", ")"
-    #         #)
-    #         #label.scale(0.7)
-    #         #self.color_label(label)
-    #         if part == h_parts[0]:
-    #             part.get_subdivision_braces_and_labels(
-    #                 part.vertical_parts, [label], DOWN
-    #             )
-    #             sample_space.add(
-    #                 part.vertical_parts.braces,
-    #             #    part.vertical_parts.labels,
-    #             )
-    #         v_parts.add(part.vertical_parts.submobjects)
-            
-
-    #     v_labels = [
-    #         TexMobject("P(", "B", ")"),
-    #         TexMobject("P(\\text{not }", "B", ")"),
-    #     ]
-    #     for (label, part) in zip(v_labels, v_parts[1::2]):
-    #         label.scale(0.7)
-    #         label.next_to(part, DOWN)
-    #         sample_space.add(label)
-
-
-    #     sample_space.to_edge(LEFT)
-
-    #     self.add(sample_space)
-    #     self.sample_space = sample_space
-
-    #     self.wait()
-
-
-
-
-
-    # def color_label(self, label):
-    #     label.set_color_by_tex("B", RED)
-    #     label.set_color_by_tex("I", GREEN)
-
-
 
 
 class IllustrateAreaModel2(GraphScene):
@@ -967,134 +908,6 @@ class IllustrateAreaModel3(Scene):
 
 
 
-
-class AreaSplitting(Scene):
-
-    def create_rect_row(self,n):
-        rects_group = VGroup()
-        for k in range(n+1):
-            proportion = float(choose(n,k)) / 2**n
-            new_rect = Rectangle(
-                width = proportion * WIDTH, 
-                height = HEIGHT,
-                fill_color = graded_color(n,k),
-                fill_opacity = 1
-            )
-            new_rect.next_to(rects_group,RIGHT,buff = 0)
-            rects_group.add(new_rect)
-        return rects_group
-
-    def split_rect_row(self,rect_row):
-
-        split_row = VGroup()
-        for rect in rect_row.submobjects:
-            half = rect.copy().stretch_in_place(0.5,0)
-            left_half = half.next_to(rect.get_center(),LEFT,buff = 0)
-            right_half = half.copy().next_to(rect.get_center(),RIGHT,buff = 0)
-            split_row.add(left_half, right_half)
-        return split_row
-
-
-    def rect_center(self,n,i,j):
-        if n < 0:
-            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
-        if i < 0 or i > n:
-            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
-        if j > choose(n,i) or j < 0:
-            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
-
-        rect = self.brick_array[n][i]
-        width = rect.get_width()
-        left_x = rect.get_center()[0] - width/2
-        spacing = width / choose(n,i)
-        x = left_x + (j+0.5) * spacing
-        return np.array([x,rect.get_center()[1], rect.get_center()[2]])
-
-    def construct(self):
-
-        # Draw the bricks
-
-        brick_wall = VGroup()
-        rect_row = self.create_rect_row(0)
-        rect_row.move_to(3.5*UP + 0*HEIGHT*DOWN)
-        self.add(rect_row)
-        brick_wall.add(rect_row)
-        self.brick_array = [[rect_row.submobjects[0]]]
-
-        for n in range(NB_ROWS):
-            # copy and shift
-            new_rect_row = rect_row.copy()
-            self.add(new_rect_row)
-            self.play(new_rect_row.shift,HEIGHT * DOWN)
-            self.wait()
-
-            #split
-            split_row = self.split_rect_row(new_rect_row)
-            self.play(FadeIn(split_row))
-            self.remove(new_rect_row)
-            self.wait()
-
-            # merge
-            rect_row = self.create_rect_row(n+1)
-            rect_row.move_to(3.5*UP + (n+1)*HEIGHT*DOWN)
-            self.play(FadeIn(rect_row))
-            brick_wall.add(rect_row)
-            self.remove(split_row)
-            self.wait()
-
-            # add to brick dict
-            rect_array = []
-            for rect in rect_row.submobjects:
-                rect_array.append(rect)
-
-            self.brick_array.append(rect_array)
-
-
-        self.play(
-            brick_wall.set_fill, {"opacity" : 0.2}
-        )
-
-
-        # Draw the branches
-
-        for (n, rect_row_array) in enumerate(self.brick_array):
-            for (i, rect) in enumerate(rect_row_array):
-                pos = rect.get_center()
-                tally = TallyStack(n - i, i)
-                tally.move_to(pos)
-
-
-                # from the left
-                lines = VGroup()
-
-                if i > 0:
-                    for j in range(choose(n-1,i-1)):
-                        start_pos = self.rect_center(n-1,i-1,j)
-                        end_pos = self.rect_center(n,i,j)
-                        lines.add(Line(start_pos,end_pos, stroke_color = GRADE_COLOR_2))
-                    self.play(
-                        LaggedStart(ShowCreation, lines))
-
-                # from the right
-                lines = VGroup()
-
-                if i < n:
-                    for j in range(choose(n-1,i)):
-                        start_pos = self.rect_center(n-1,i,j)
-                        if i != 0:
-                            end_pos = self.rect_center(n,i,choose(n-1,i-1) + j)
-                        else:
-                            end_pos = self.rect_center(n,i,j)
-                    
-                        lines.add(Line(start_pos,end_pos, stroke_color = GRADE_COLOR_1))
-                    self.play(
-                        LaggedStart(ShowCreation, lines))
-
-
-
-                #self.play(FadeIn(tally))
-
-
 class DieFace(SVGMobject):
     
     def __init__(self, value, **kwargs):
@@ -1281,7 +1094,452 @@ class ShowUncertainty3(Scene):
 
 
 
+class PascalBrickRow(VMobject):
 
+    CONFIG = {
+        "left_color" : YELLOW,
+        "right_color" : BLUE,
+        "height" : 1.0,
+        "width" : 8.0,
+    }
+
+    def __init__(self, n, **kwargs):
+        self.subdiv_level = n
+        self.coloring_level = n
+        VMobject.__init__(self, **kwargs)
+
+
+    def generate_points(self):
+
+        self.submobjects = []
+        self.rects = self.get_rects_for_level(self.coloring_level)
+        self.add(self.rects)
+        self.subdivs = self.get_subdivs_for_level(self.subdiv_level)
+        self.add(self.subdivs)
+
+        self.border = SurroundingRectangle(self,
+            buff = 0, color = WHITE)
+        self.add(self.border)
+
+
+
+    def get_rects_for_level(self,r):
+        rects = VGroup()
+        for k in range(r + 1):
+            proportion = float(choose(r,k)) / 2**r
+            new_rect = Rectangle(
+                width = proportion * self.width, 
+                height = self.height,
+                fill_color = graded_color(r,k),
+                fill_opacity = 1,
+                stroke_width = 0
+            )
+            if len(rects.submobjects) > 0:
+                new_rect.next_to(rects,RIGHT,buff = 0)
+            else:
+                new_rect.next_to(0.5 * self.width * LEFT, RIGHT, buff = 0)
+            rects.add(new_rect)
+        return rects
+
+    def get_subdivs_for_level(self,r):
+        subdivs = VGroup()
+        x = - 0.5 * self.width
+        for k in range(0, r):
+            proportion = float(choose(r,k)) / 2**r
+            x += proportion * self.width
+            subdiv = Line(
+                x * RIGHT + 0.5 * self.height * UP,
+                x * RIGHT + 0.5 * self.height * DOWN,
+            )
+            subdivs.add(subdiv)
+        return subdivs
+
+
+    def get_outcome_centers_for_level(self,r):
+        
+        dpos = float(self.width) / (2 ** r) * RIGHT
+        print "dpos =", dpos
+        pos = 0.5 * self.width * LEFT + 0.5 * dpos
+        centers = []
+        for k in range(0, 2 ** r):
+            centers.append(self.get_center() + pos + k * dpos)
+
+        return centers
+
+    def get_outcome_width_for_level(self,r):
+        return self.width / (2**r)
+
+    def get_rect_widths_for_level_(self, r):
+        ret_arr = []
+        for k in range(0, r):
+            proportion = float(choose(r,k)) / 2**r
+            ret_arr.append(proportion * self.width)
+        return ret_arr
+
+
+
+
+
+class SplitRectsInBrickWall(Animation):
+
+    def __init__(self, mobject, **kwargs):
+
+        r = self.subdiv_level = mobject.subdiv_level + 1
+        
+        self.subdivs = VGroup()
+        x = - 0.5 * mobject.width
+
+        for k in range(0, r):
+            proportion = float(choose(r,k)) / 2**r
+            x += proportion * mobject.width
+            subdiv = DashedLine(
+                x * RIGHT + 0.5 * mobject.height * UP,
+                x * RIGHT + 0.5 * mobject.height * UP,
+            )
+            self.subdivs.add(subdiv)
+        mobject.add(self.subdivs)
+
+        Animation.__init__(self, mobject, **kwargs)
+
+
+
+
+
+    def update_mobject(self, alpha):
+        for subdiv in self.subdivs:
+            x = subdiv.get_start()[0]
+            start = x * RIGHT + 0.5 * self.mobject.height * UP
+            end = start + alpha * 0.5 * self.mobject.height * (DOWN - UP)
+            subdiv.put_start_and_end_on(start,end)
+
+
+
+
+
+class PascalBrickRowScene(Scene):
+
+    def split_tallies(self):
+
+        self.tallies_copy = self.tallies.copy()
+        self.add_foreground_mobject(self.tallies_copy)
+
+        tally_targets_left = [
+            rect.get_center() + 0.25 * rect.get_width() * LEFT 
+            for rect in self.row.rects
+        ]
+
+        tally_targets_right = [
+            rect.get_center() + 0.25 * rect.get_width() * RIGHT 
+            for rect in self.row.rects
+        ]
+        for (i, tally) in enumerate(self.tallies):
+
+            target_left = tally_targets_left[i]
+            new_tally_left = TallyStack(tally.nb_heads + 1, tally.nb_tails)
+            new_tally_left.move_anchor_to(target_left)
+            self.play(tally.move_anchor_to, target_left)
+            tally.anchor = target_left
+            self.play(Transform(tally, new_tally_left))
+            
+            tally_copy = self.tallies_copy[i]
+            target_right = tally_targets_right[i]
+            new_tally_right = TallyStack(tally.nb_heads, tally.nb_tails + 1)
+            new_tally_right.move_anchor_to(target_right)
+            self.play(tally_copy.move_anchor_to, target_right)
+            tally_copy.anchor = target_right
+            self.play(Transform(tally_copy, new_tally_right))
+
+
+            tally_copy.nb_heads = new_tally_right.nb_heads
+            tally_copy.nb_tails = new_tally_right.nb_tails
+            tally.nb_heads = new_tally_left.nb_heads
+            tally.nb_tails = new_tally_left.nb_tails
+
+
+    def merge_rects_by_subdiv(self):
+
+        half_merged_row = self.row.copy()
+        half_merged_row.subdiv_level += 1
+        half_merged_row.generate_points()
+        self.play(FadeIn(half_merged_row))
+        self.row = half_merged_row
+
+    def merge_tallies(self):
+
+        r = self.row.subdiv_level
+        tally_targets = [
+            rect.get_center()
+            for rect in self.row.get_rects_for_level(r)
+        ]
+
+        anims = []
+        for (tally, target) in zip(self.tallies[1:], tally_targets[1:-1]):
+            anims.append(tally.move_anchor_to)
+            anims.append(target)
+
+        for (tally, target) in zip(self.tallies_copy[:-1], tally_targets[1:-1]):
+            anims.append(tally.move_anchor_to)
+            anims.append(target)
+
+        self.play(*anims)
+        # update anchors
+        for (tally, target) in zip(self.tallies[1:], tally_targets[1:-1]):
+            tally.anchor = target
+        for (tally, target) in zip(self.tallies_copy[:-1], tally_targets[1:-1]):
+            tally.anchor = target
+
+        self.remove(self.tallies_copy)
+        self.tallies.add(self.tallies_copy[-1])
+
+
+    def merge_rects_by_coloring(self):
+
+        merged_row = self.row.copy()
+        merged_row.coloring_level += 1
+        merged_row.generate_points()
+
+        self.play(FadeIn(merged_row))
+        self.row = merged_row
+
+
+    def move_tallies_on_top(self):
+        self.play(
+            self.tallies.shift, 1.2 * 0.5 * self.row.height * UP
+        )
+        for tally in self.tallies:
+            tally.anchor += 1.2 * 0.5 * self.row.height * UP
+
+    def construct(self):
+
+        randy = CoinFlippingPiCreature()
+        randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
+        self.add(randy)
+        self.row = PascalBrickRow(1, height = 2, width = 10)
+        
+        self.play(FlipCoin(randy),
+            FadeIn(self.row))
+
+        self.wait()
+        
+        # put tallies on top
+
+        self.tallies = VGroup(*[
+            TallyStack(1 - i, i) for i in range(2)
+        ])
+        for (tally, rect) in zip(self.tallies, self.row.rects):
+            new_anchor = rect.get_center() + 1.2 * 0.5 * rect.get_height() * UP
+            tally.move_anchor_to(new_anchor)
+            self.play(FadeIn(tally))
+
+        self.add_foreground_mobject(self.tallies)
+        self.wait()
+
+
+
+        # # # # # # # #
+        # SECOND FLIP #
+        # # # # # # # #
+
+
+
+        self.play(FlipCoin(randy))
+        self.wait()
+
+
+        self.play(
+            SplitRectsInBrickWall(self.row)
+        )
+        self.wait()
+
+        self.split_tallies()
+        self.wait()
+        self.merge_rects_by_subdiv()
+        self.wait()
+        self.merge_tallies()
+        self.merge_rects_by_coloring()
+        self.wait()
+        self.move_tallies_on_top()
+        
+
+        # # # # # # # #
+        #  THIRD FLIP #
+        # # # # # # # #
+
+
+        self.play(FlipCoin(randy))
+
+        self.wait()
+
+
+        self.play(
+            SplitRectsInBrickWall(self.row)
+        )
+        self.wait()
+
+        self.split_tallies()
+        self.wait()
+        self.merge_rects_by_subdiv()
+        self.wait()
+        self.merge_tallies()
+        self.merge_rects_by_coloring()
+        self.wait()
+        self.move_tallies_on_top()
+
+
+        # # # # # # # #
+        # FOURTH FLIP #
+        # # # # # # # #
+
+
+        self.play(FlipCoin(randy))
+
+        self.wait()
+
+
+        self.play(
+            SplitRectsInBrickWall(self.row)
+        )
+        self.wait()
+
+        self.split_tallies()
+        self.wait()
+        self.merge_rects_by_subdiv()
+        self.wait()
+        self.merge_tallies()
+        self.merge_rects_by_coloring()
+        self.wait()
+        self.move_tallies_on_top()
+
+
+
+
+
+
+class AreaSplitting(Scene):
+
+    def create_rect_row(self,n):
+        rects_group = VGroup()
+        for k in range(n+1):
+            proportion = float(choose(n,k)) / 2**n
+            new_rect = Rectangle(
+                width = proportion * WIDTH, 
+                height = HEIGHT,
+                fill_color = graded_color(n,k),
+                fill_opacity = 1
+            )
+            new_rect.next_to(rects_group,RIGHT,buff = 0)
+            rects_group.add(new_rect)
+        return rects_group
+
+    def split_rect_row(self,rect_row):
+
+        split_row = VGroup()
+        for rect in rect_row.submobjects:
+            half = rect.copy().stretch_in_place(0.5,0)
+            left_half = half.next_to(rect.get_center(),LEFT,buff = 0)
+            right_half = half.copy().next_to(rect.get_center(),RIGHT,buff = 0)
+            split_row.add(left_half, right_half)
+        return split_row
+
+
+    def rect_center(self,n,i,j):
+        if n < 0:
+            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
+        if i < 0 or i > n:
+            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
+        if j > choose(n,i) or j < 0:
+            raise Exception("wrong indices " + str(n) + ", " + str(i) + ", " + str(j))
+
+        rect = self.brick_array[n][i]
+        width = rect.get_width()
+        left_x = rect.get_center()[0] - width/2
+        spacing = width / choose(n,i)
+        x = left_x + (j+0.5) * spacing
+        return np.array([x,rect.get_center()[1], rect.get_center()[2]])
+
+    def construct(self):
+
+        # Draw the bricks
+
+        brick_wall = VGroup()
+        rect_row = self.create_rect_row(0)
+        rect_row.move_to(3.5*UP + 0*HEIGHT*DOWN)
+        self.add(rect_row)
+        brick_wall.add(rect_row)
+        self.brick_array = [[rect_row.submobjects[0]]]
+
+        for n in range(NB_ROWS):
+            # copy and shift
+            new_rect_row = rect_row.copy()
+            self.add(new_rect_row)
+            self.play(new_rect_row.shift,HEIGHT * DOWN)
+            self.wait()
+
+            #split
+            split_row = self.split_rect_row(new_rect_row)
+            self.play(FadeIn(split_row))
+            self.remove(new_rect_row)
+            self.wait()
+
+            # merge
+            rect_row = self.create_rect_row(n+1)
+            rect_row.move_to(3.5*UP + (n+1)*HEIGHT*DOWN)
+            self.play(FadeIn(rect_row))
+            brick_wall.add(rect_row)
+            self.remove(split_row)
+            self.wait()
+
+            # add to brick dict
+            rect_array = []
+            for rect in rect_row.submobjects:
+                rect_array.append(rect)
+
+            self.brick_array.append(rect_array)
+
+
+        self.play(
+            brick_wall.set_fill, {"opacity" : 0.2}
+        )
+
+
+        # Draw the branches
+
+        for (n, rect_row_array) in enumerate(self.brick_array):
+            for (i, rect) in enumerate(rect_row_array):
+                pos = rect.get_center()
+                tally = TallyStack(n - i, i)
+                tally.move_to(pos)
+
+
+                # from the left
+                lines = VGroup()
+
+                if i > 0:
+                    for j in range(choose(n-1,i-1)):
+                        start_pos = self.rect_center(n-1,i-1,j)
+                        end_pos = self.rect_center(n,i,j)
+                        lines.add(Line(start_pos,end_pos, stroke_color = GRADE_COLOR_2))
+                    self.play(
+                        LaggedStart(ShowCreation, lines))
+
+                # from the right
+                lines = VGroup()
+
+                if i < n:
+                    for j in range(choose(n-1,i)):
+                        start_pos = self.rect_center(n-1,i,j)
+                        if i != 0:
+                            end_pos = self.rect_center(n,i,choose(n-1,i-1) + j)
+                        else:
+                            end_pos = self.rect_center(n,i,j)
+                    
+                        lines.add(Line(start_pos,end_pos, stroke_color = GRADE_COLOR_1))
+                    self.play(
+                        LaggedStart(ShowCreation, lines))
+
+
+
+                #self.play(FadeIn(tally))
 
 
 
