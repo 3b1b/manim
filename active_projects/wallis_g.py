@@ -425,6 +425,7 @@ class DistanceProductScene(MovingCameraScene):
         "numeric_distance_label_height": 0.25,
         "default_product_column_top": FRAME_WIDTH * RIGHT / 4 + 1.5 * UP,
         "include_lighthouses": True,
+        "include_distance_labels_background_rectangle": True,
     }
 
     def setup(self):
@@ -520,7 +521,7 @@ class DistanceProductScene(MovingCameraScene):
                 line.get_length() / radius,
                 num_decimal_points=num_decimal_points,
                 show_ellipsis=show_ellipsis,
-                include_background_rectangle=True,
+                include_background_rectangle=self.include_distance_labels_background_rectangle,
             )
             label.scale_to_fit_height(self.numeric_distance_label_height)
             max_width = 0.5 * max(line.get_length(), 0.1)
@@ -559,7 +560,7 @@ class DistanceProductScene(MovingCameraScene):
             self.get_distance_product(fraction),
             num_decimal_points=3,
             show_ellipsis=True,
-            include_background_rectangle=True,
+            include_background_rectangle=self.include_distance_labels_background_rectangle,
         )
         product_decimal.scale_to_fit_height(self.numeric_distance_label_height)
         product_decimal.next_to(h_line, DOWN)
@@ -2520,10 +2521,13 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
     CONFIG = {
         "num_lighthouses": 9,
         "circle_radius": 2.75,
-        "ambient_light_config": CHEAP_AMBIENT_LIGHT_CONFIG,
+        # "ambient_light_config": CHEAP_AMBIENT_LIGHT_CONFIG,
         "add_lights_in_foreground": False,  # Keep this way
         "text_scale_val": 0.7,
         "observer_fraction": 0.5,
+        "keeper_color": BLUE,
+        "sailor_color": YELLOW_D,
+        "include_distance_labels_background_rectangle": False,
     }
 
     def setup(self):
@@ -2538,6 +2542,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         self.break_down_distance_product_by_parts()
         self.grow_circle_and_N()
         self.show_limit_for_each_fraction()
+        self.show_limit_of_lhs()
 
     def place_lighthouses(self):
         circle = self.circle
@@ -2650,7 +2655,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         # stacked_labels, h_line, times, product_decimal = column
 
         # Define result fraction
-        equals = TexMobject("=")
+        equals = self.distance_product_equals = TexMobject("=")
         result_fraction = self.result_fraction = TexMobject(
             "{N", "{\\text{distance} \\choose \\text{between obs.}}", "\\over", "2}"
         )
@@ -2691,10 +2696,11 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             ShowCreation(fraction[1])
         )
         self.wait()
-        self.play(
-            LaggedStart(FadeIn, sailor_line_lengths),
-            FadeIn(sailor_dp_column)
-        )
+        self.play(LaggedStart(FadeIn, sailor_line_lengths))
+        self.play(ReplacementTransform(
+            sailor_line_lengths.copy(), sailor_dp_column[0]
+        ))
+        self.play(FadeIn(sailor_dp_column[1:]))
         self.play(ShowCreation(sailor_dp_decimal_rect))
         self.play(
             fraction.next_to, equals, LEFT,
@@ -2709,10 +2715,13 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         self.remove(*list(sailor_lines) + list(sailor_line_lengths))
         self.play(
             FadeOut(sailor_dp_column),
-            FadeIn(keeper_dp_column),
             ReplacementTransform(sailor_lines.deepcopy(), keeper_lines),
             ReplacementTransform(sailor_line_lengths.deepcopy(), keeper_line_lengths),
         )
+        self.play(ReplacementTransform(
+            keeper_line_lengths.copy(), keeper_dp_column[0]
+        ))
+        self.play(FadeIn(keeper_dp_column[1:]))
         self.wait()
         self.play(
             ShowCreation(keeper_dp_decimal_rect),
@@ -2749,6 +2758,9 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             FadeOut(keeper_dp_column[:-1]),
             FadeOut(new_keeper_dp_decimal),
         )
+        self.play(
+            Rotate(sailor_line_lengths[0], 30 * DEGREES, rate_func=wiggle)
+        )
         self.wait()
         self.play(
             ReplacementTransform(sailor_lines[0].copy(), dist),
@@ -2778,8 +2790,8 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             "{|L_3 - K|", "\\over", "|L_3 - S|}", "\\cdots",
         )
         product_parts.set_color_by_tex_to_color_map({
-            "K": YELLOW,
-            "S": BLUE,
+            "K": BLUE,
+            "S": YELLOW,
         })
         product_parts.scale_to_fit_width(0.4 * FRAME_WIDTH)
         product_parts.next_to(result_fraction, DOWN, LARGE_BUFF, RIGHT)
@@ -2976,6 +2988,8 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         approx.rotate(90 * DEGREES)
         approx.move_to(limit_arrows[0])
 
+        braces = self.get_all_circle_braces()
+
         # Show first lighthouse
         term_rect = term_rects[0].copy()
         self.play(
@@ -2985,7 +2999,11 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             path_arc=-180 * DEGREES
         )
         self.wait(2)
-        self.play(*map(ShowCreation, angle_mob))
+        self.play(
+            FadeOut(VGroup(keeper_line, sailor_line)),
+            FadeIn(braces[:2]),
+            FadeIn(angle_mob)
+        )
         self.wait()
         self.play(Transform(angle_mob, get_angle_mob(lh_points[1], sailor_point)))
         self.wait(2)
@@ -2996,39 +3014,36 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         )
         self.wait()
         self.play(ReplacementTransform(approx, limit_arrows[0]))
-        self.let_N_approach_infinity()
+        self.let_N_approach_infinity(braces[:2])
 
         # Show second lighthouse
         self.play(
-            Transform(keeper_line, keeper_lines[2]),
-            Transform(sailor_line, sailor_lines[2]),
             Transform(term_rect, term_rects[1]),
+            ReplacementTransform(limit_arrows[0].copy(), limit_arrows[1]),
+            FadeIn(braces[2:4])
         )
-        angle_mob = get_angle_mob(lh_points[2], keeper_point)
-        self.play(*map(ShowCreation, angle_mob))
-        self.wait()
-        self.play(Transform(
-            angle_mob, get_angle_mob(lh_points[2], sailor_point)
-        ))
-        self.wait()
+        for group, color in (braces[:4], self.keeper_color), (braces[1:4], self.sailor_color):
+            self.play(
+                group.scale, 0.95, {"about_point": center},
+                group.set_color, color,
+                rate_func=there_and_back
+            )
+            self.wait(0.5)
         self.play(
-            GrowArrow(limit_arrows[1]),
             ReplacementTransform(ratios[1].copy(), limit_fractions[1])
         )
         self.wait()
 
         # Show third lighthouse
+        braces[4:6].set_color(YELLOW)
         self.play(
-            Transform(keeper_line, keeper_lines[3]),
-            Transform(sailor_line, sailor_lines[3]),
             Transform(term_rect, term_rects[2]),
-            FadeOut(angle_mob)
+            ReplacementTransform(limit_arrows[1].copy(), limit_arrows[2]),
+            FadeIn(braces[4:6]),
+            braces[1:4].set_color, YELLOW,
+            ReplacementTransform(limit_fractions[1].copy(), limit_fractions[2])
         )
-        self.play(
-            GrowArrow(limit_arrows[2]),
-            ReplacementTransform(ratios[2].copy(), limit_fractions[2])
-        )
-        self.let_N_approach_infinity()
+        self.let_N_approach_infinity(braces[:6])
         self.wait()
 
         # Set up for lighthouse "before" keeper
@@ -3040,16 +3055,16 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         )
         cw_product_parts.match_height(product_parts)
         cw_product_parts.set_color_by_tex_to_color_map({
-            "K": YELLOW,
-            "S": BLUE,
+            "K": BLUE,
+            "S": YELLOW,
         })
         cw_product_parts.move_to(ratios, RIGHT)
         cw_ratios = VGroup(*[cw_product_parts[i:i + 3] for i in 9, 5, 1])
         cw_term_rects = self.get_term_rects(cw_ratios)
         cw_limit_fractions = VGroup(
-            TexMobject("{2", "\\over", "1}"),
-            TexMobject("{4", "\\over", "3}"),
-            TexMobject("{6", "\\over", "5}"),
+            TexMobject("{2", "\\over", "3}"),
+            TexMobject("{4", "\\over", "5}"),
+            TexMobject("{6", "\\over", "7}"),
         )
         cw_limit_arrows = VGroup()
         for rect, fraction in zip(cw_term_rects, cw_limit_fractions):
@@ -3063,31 +3078,199 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         cw_label_rects = self.get_term_rects(labels[-1:-5:-1])
         cw_label_rects.set_color(RED)
 
+        braces[-8:].set_color(BLUE)
+        braces[0].set_color(YELLOW)
+
+        def show_braces(n):
+            cw_group = braces[-2 * n:]
+            for group in cw_group, VGroup(braces[0], *cw_group):
+                self.play(
+                    group.scale, 0.95, {"about_point": center},
+                    rate_func=there_and_back
+                )
+                self.wait(0.5)
+
         # Animated clockwise-from-keeper terms
         self.play(
-            ccw_product_group.scale, 0.7, {"about_edge": UL},
-            ccw_product_group.to_edge, LEFT,
+            ccw_product_group.scale, 0.5, {"about_edge": UL},
+            ccw_product_group.to_corner, UL,
             FadeOut(term_rect),
+            FadeOut(braces[:6]),
             cw_product_parts.restore,
         )
         term_rect = cw_term_rects[0].copy()
         self.play(LaggedStart(ShowCreationThenDestruction, cw_label_rects))
         self.wait()
         self.play(
-            Transform(keeper_line, keeper_lines[-1]),
-            Transform(sailor_line, sailor_lines[-1]),
-            FadeIn(term_rect)
+            FadeIn(term_rect),
+            FadeIn(braces[-2:]),
+            FadeIn(braces[0]),
         )
+        show_braces(1)
+        self.play(
+            GrowArrow(cw_limit_arrows[0]),
+            FadeIn(cw_limit_fractions[0])
+        )
+        self.wait()
+
+        # Second and third lighthouse before
+        self.play(
+            Transform(term_rect, cw_term_rects[1]),
+            ReplacementTransform(cw_limit_arrows[0].copy(), cw_limit_arrows[1]),
+            FadeIn(braces[-4:-2]),
+            Write(cw_limit_fractions[1])
+        )
+        show_braces(2)
+        self.wait()
+        self.play(
+            Transform(term_rect, cw_term_rects[2]),
+            ReplacementTransform(cw_limit_arrows[1].copy(), cw_limit_arrows[2]),
+            FadeIn(braces[-6:-4]),
+            Write(cw_limit_fractions[2])
+        )
+        show_braces(3)
+        self.let_N_approach_infinity(VGroup(braces[0], *braces[-6:]))
+        self.wait()
+
+        # Organize fractions
+        fractions = VGroup(*it.chain(*zip(
+            limit_fractions, cw_limit_fractions,
+        )))
+        fractions.generate_target()
+        wallis_product = VGroup()
+        dots = VGroup()
+        for fraction in fractions.target:
+            fraction.match_height(cw_limit_fractions[0])
+            wallis_product.add(fraction)
+            dot = TexMobject("\\cdot")
+            wallis_product.add(dot)
+            dots.add(dot)
+        final_dot = TexMobject("\\cdots")
+        for group in wallis_product, dots:
+            group.submobjects[-1] = final_dot
+        wallis_product.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        wallis_product.to_edge(RIGHT)
+
+        self.play(
+            FadeOut(limit_arrows),
+            FadeOut(cw_limit_arrows),
+            FadeOut(braces[-6:]),
+            FadeOut(braces[0]),
+            FadeOut(term_rect),
+        )
+        self.play(
+            cw_product_parts.scale, 0.5,
+            cw_product_parts.next_to, product_parts, DOWN, {"aligned_edge": LEFT},
+            MoveToTarget(fractions),
+            Write(dots),
+            run_time=2,
+            path_arc=90 * DEGREES
+        )
+        self.wait()
+
+        self.wallis_product = VGroup(dots, fractions)
+        self.observers_brace = braces[0]
+
+    def show_limit_of_lhs(self):
+        brace = self.observers_brace
+        wallis_product = self.wallis_product
+        result_fraction = self.result_fraction
+        N, dist, over, two = result_fraction
+        distance_product_equals = self.distance_product_equals
+
+        result_rect = SurroundingRectangle(result_fraction)
+        result_rect.set_color(WHITE)
+
+        equals = TexMobject("=")
+        equals.next_to(brace, LEFT, SMALL_BUFF)
+        approx1, approx2, approx3 = [TexMobject("\\approx") for x in range(3)]
+        approx1.next_to(brace, LEFT, SMALL_BUFF)
+        half_two_pi_over_N = TexMobject(
+            "{1", "\\over", "2}", "{2", "\\pi", "\\over", "N}",
+        )
+        pi = half_two_pi_over_N.get_part_by_tex("\\pi")
+        half_two_pi_over_N.next_to(approx1, LEFT)
+        approx2.next_to(half_two_pi_over_N, LEFT, SMALL_BUFF)
+
+        approx3.move_to(distance_product_equals)
+
+        pi_over_N = TexMobject("(", "\\pi", "/", "N", ")")
+        pi_over_N.next_to(N, RIGHT)
+        N_shift = MED_LARGE_BUFF * RIGHT
+        pi_over_N.shift(N_shift)
+
+        pi_halves = TexMobject("{\\pi", "\\over", "2}")
+        pi_halves.next_to(result_rect, DOWN, LARGE_BUFF)
+        pi_halves.shift(RIGHT)
+        pi_halves_arrow = Arrow(
+            result_rect.get_bottom(),
+            pi_halves.get_top(),
+            color=WHITE,
+            buff=SMALL_BUFF
+        )
+
+        last_equals = TexMobject("=")
+        last_equals.next_to(pi_halves, LEFT)
+
+        self.play(ShowCreation(result_rect))
+        self.wait()
+        self.play(
+            dist.next_to, equals, LEFT,
+            FadeIn(equals),
+            GrowFromCenter(brace),
+        )
+        self.wait()
+        approx2.next_to(dist, LEFT, SMALL_BUFF)
+        half_two_pi_over_N.next_to(approx2, LEFT)
+        self.play(
+            Write(half_two_pi_over_N),
+            FadeIn(approx2)
+        )
+        self.wait()
+        self.play(
+            FadeOut(half_two_pi_over_N[:4]),
+            pi.shift, SMALL_BUFF * LEFT,
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                half_two_pi_over_N[-3:].copy(),
+                pi_over_N[1:4]
+            ),
+            FadeIn(pi_over_N[0]),
+            FadeIn(pi_over_N[-1]),
+            N.shift, N_shift * RIGHT,
+            ReplacementTransform(distance_product_equals, approx3)
+        )
+        self.wait()
+        self.play(
+            GrowArrow(pi_halves_arrow),
+            wallis_product.shift, DOWN,
+        )
+        self.play(Write(pi_halves))
+        self.wait(2)
+        self.play(
+            wallis_product.next_to, last_equals, LEFT, 2 * SMALL_BUFF,
+            FadeIn(last_equals)
+        )
+        final_rect = SurroundingRectangle(
+            VGroup(wallis_product, pi_halves),
+            buff=MED_SMALL_BUFF
+        )
+        final_rect.set_color(YELLOW)
+        self.play(ShowCreation(final_rect))
+        self.wait(2)
 
     #
 
-    def let_N_approach_infinity(self, factor=3.5, run_time=5, zoom_in_after=False):
+    def let_N_approach_infinity(self, braces=None, factor=4, run_time=5, zoom_in_after=False):
         lights = self.lights
         labels = self.lighthouse_labels
         keeper, sailor = self.observers
-        keeper_line = self.keeper_line
-        sailor_line = self.sailor_line
         circle = self.circle
+
+        if braces is None:
+            braces = VGroup()
 
         start_fraction = 1.0 / self.num_lighthouses
         target_fraction = start_fraction / factor
@@ -3128,6 +3311,15 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
                 light.move_source_to(point)
             return lights
 
+        def update_braces(braces):
+            for brace in braces:
+                f1 = brace.fraction1 * (get_fraction() / start_fraction)
+                f2 = brace.fraction2 * (get_fraction() / start_fraction)
+                new_brace = self.get_circle_brace(f1, f2)
+                new_brace.match_style(brace)
+                Transform(brace, new_brace).update(1)
+            return braces
+
         light_update_anim = UpdateFromFunc(lights, update_lights)
         label_update_anim = UpdateFromFunc(
             labels,
@@ -3145,41 +3337,10 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             keeper.title,
             lambda m: update_title_heights(m).next_to(keeper.dot, RIGHT, SMALL_BUFF)
         )
-
-        center = self.circle.get_center()
-        keeper_line_end_angle = angle_of_vector(keeper_line.get_end() - center)
-        keeper_line_end_mult = (keeper_line_end_angle / TAU) / get_fraction()
-        sailor_line_end_angle = angle_of_vector(sailor_line.get_end() - center)
-        sailor_line_end_mult = (sailor_line_end_angle / TAU) / get_fraction()
-        keeper_line_update = UpdateFromFunc(
-            keeper_line,
-            lambda l: l.put_start_and_end_on(
-                keeper.dot.get_center(),
-                self.get_circle_point_at_proportion(
-                    keeper_line_end_mult * get_fraction()
-                )
-            )
-        )
-        sailor_line_update = UpdateFromFunc(
-            sailor_line,
-            lambda l: l.put_start_and_end_on(
-                sailor.dot.get_center(),
-                self.get_circle_point_at_proportion(
-                    sailor_line_end_mult * get_fraction()
-                )
-            )
-        )
+        braces_update_anim = UpdateFromFunc(braces, update_braces)
 
         lights[0].fade(1)
         labels[0].fade(1)
-
-        movers = VGroup(
-            circle, lights, labels,
-            sailor.dot, sailor.title,
-            keeper.dot, keeper.title,
-            sailor_line, keeper_line,
-        )
-        movers.save_state()
 
         all_updates = [
             light_update_anim,
@@ -3187,8 +3348,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             sailor_dot_anim,
             sailor_title_anim,
             keeper_title_anim,
-            sailor_line_update,
-            keeper_line_update,
+            braces_update_anim,
         ]
 
         self.play(
@@ -3222,8 +3382,8 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         return self.get_circle_point_at_proportion(0.5 / self.num_lighthouses)
 
     def create_pi_creatures(self):
-        keeper = self.keeper = Mortimer(color=YELLOW_D)
-        sailor = self.sailor = Randolph().flip()
+        keeper = self.keeper = PiCreature(color=self.keeper_color).flip()
+        sailor = self.sailor = PiCreature(color=self.sailor_color).flip()
         observers = self.observers = VGroup(keeper, sailor)
         observers.scale(0.5)
         keeper.shift(4 * RIGHT + 2 * DOWN)
@@ -3254,12 +3414,12 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
 
     def get_keeper_lines(self, line_class=Line):
         lines = self.get_distance_lines(self.get_keeper_point())
-        lines.set_stroke(YELLOW, 3)
+        lines.set_stroke(self.keeper_color, 3)
         return lines
 
     def get_sailor_lines(self, line_class=Line):
         lines = self.get_distance_lines(self.get_sailor_point())
-        lines.set_stroke(BLUE, 3)
+        lines.set_stroke(self.sailor_color, 3)
         return lines
 
     def get_term_rects(self, terms):
@@ -3268,6 +3428,35 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             for term in terms
         ])
 
+    def get_circle_brace(self, f1, f2):
+        line = Line(
+            self.get_circle_point_at_proportion(f1),
+            self.get_circle_point_at_proportion(f2),
+        )
+        angle = (line.get_angle() + TAU / 2) % TAU
+        scale_factor = 1.5
+        line.rotate(-angle, about_point=ORIGIN)
+        line.scale(scale_factor, about_point=ORIGIN)
+        brace = Brace(line, DOWN, buff=SMALL_BUFF)
+        group = VGroup(line, brace)
+        group.scale(1.0 / scale_factor, about_point=ORIGIN)
+        group.rotate(angle, about_point=ORIGIN)
+
+        # Keep track of a fraction between -0.5 and 0.5
+        if f1 > 0.5:
+            f1 -= 1
+        if f2 > 0.5:
+            f2 -= 1
+        brace.fraction1 = f1
+        brace.fraction2 = f2
+        return brace
+
+    def get_all_circle_braces(self):
+        fractions = np.linspace(0, 1, 2 * self.num_lighthouses + 1)
+        return VGroup(*[
+            self.get_circle_brace(f1, f2)
+            for f1, f2 in zip(fractions, fractions[1:])
+        ])
 
 
 
