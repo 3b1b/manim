@@ -226,6 +226,7 @@ class Laptop(VGroup):
         body.set_fill(self.shaded_body_color, opacity=1)
         body.sort_submobjects(lambda p: p[2])
         body[-1].set_fill(self.body_color)
+        screen_plate = body.copy()
         keyboard = VGroup(*[
             VGroup(*[
                 Square(**self.key_color_kwargs)
@@ -243,7 +244,6 @@ class Laptop(VGroup):
         keyboard.shift(MED_SMALL_BUFF * UP)
         body.add(keyboard)
 
-        screen_plate = body.copy()
         screen_plate.stretch(self.screen_thickness /
                              self.body_dimensions[2], dim=2)
         screen = Rectangle(
