@@ -503,16 +503,27 @@ class Introduction(TeacherStudentsScene):
 
         self.series = series
 
+
+
         # # # # # # # # # # # # # # # # # #
         # show examples of the area model #
         # # # # # # # # # # # # # # # # # #
         
 
-    def show_area_model1(self):
+class IllustrateAreaModel1(Scene):
+
+    def construct(self):
+
+        color_A = YELLOW
+        color_not_A = YELLOW_E
+        color_B = MAROON
+        color_not_B = MAROON_E
+        opacity_B = 0.7
+
 
         # show independent events
 
-        sample_space_width = sample_space_height = 2.5
+        sample_space_width = sample_space_height = 3
         p_of_A = 0.7
         p_of_not_A = 1 - p_of_A
         p_of_B = 0.8
@@ -523,15 +534,15 @@ class Introduction(TeacherStudentsScene):
             width = p_of_A * sample_space_width,
             height = 1 * sample_space_height,
             stroke_width = 0,
-            fill_color = BLUE,
+            fill_color = color_A,
             fill_opacity = 1.0
-        ).move_to(2 * RIGHT + 1.5 * UP)
+        ).move_to(3 * RIGHT + 1.5 * UP)
 
         rect_not_A = Rectangle(
             width = p_of_not_A * sample_space_width,
             height = 1 * sample_space_height,
             stroke_width = 0,
-            fill_color = BLUE_E,
+            fill_color = color_not_A,
             fill_opacity = 1.0
         ).next_to(rect_A, RIGHT, buff = 0)
 
@@ -554,15 +565,15 @@ class Introduction(TeacherStudentsScene):
             width = 1 * sample_space_width,
             height = p_of_B * sample_space_height,
             stroke_width = 0,
-            fill_color = GREEN,
-            fill_opacity = 0.5
+            fill_color = color_B,
+            fill_opacity = opacity_B
         )
         rect_not_B = Rectangle(
             width = 1 * sample_space_width,
             height = p_of_not_B * sample_space_height,
             stroke_width = 0,
-            fill_color = GREEN_E,
-            fill_opacity = 0.5
+            fill_color = color_not_B,
+            fill_opacity = opacity_B
         ).next_to(rect_B, UP, buff = 0)
 
         VGroup(rect_B, rect_not_B).move_to(VGroup(rect_A, rect_not_A))
@@ -594,7 +605,8 @@ class Introduction(TeacherStudentsScene):
         # )
 
         indep_formula = TexMobject("P(A\\text{ and }B)", "=", "P(A)", "\cdot", "P(B)")
-        indep_formula = indep_formula.scale(0.7).next_to(rect_not_B, UP, buff = MED_LARGE_BUFF)
+        indep_formula = indep_formula.scale(0.7)
+        label_p_of_b = indep_formula.get_part_by_tex("P(B)")
 
         label_A_and_B_copy = label_A_and_B.copy()
         label_A_copy = label_A.copy()
@@ -615,34 +627,34 @@ class Introduction(TeacherStudentsScene):
 
         # show conditional prob
 
-        rect_A_and_B.set_fill(color = GREEN, opacity = 0.5)
+        rect_A_and_B.set_fill(color = RED, opacity = 0.5)
         rect_A_and_not_B = Rectangle(
             width = p_of_A * sample_space_width,
             height = p_of_not_B * sample_space_height,
             stroke_width = 0,
-            fill_color = GREEN_E,
-            fill_opacity = 0.5
+            fill_color = color_not_B,
+            fill_opacity = opacity_B
         ).next_to(rect_A_and_B, UP, buff = 0)
         
         rect_not_A_and_B = Rectangle(
             width = p_of_not_A * sample_space_width,
             height = p_of_B * sample_space_height,
             stroke_width = 0,
-            fill_color = GREEN,
-            fill_opacity = 0.5
+            fill_color = color_B,
+            fill_opacity = opacity_B
         ).next_to(rect_A_and_B, RIGHT, buff = 0)
 
         rect_not_A_and_not_B = Rectangle(
             width = p_of_not_A * sample_space_width,
             height = p_of_not_B * sample_space_height,
             stroke_width = 0,
-            fill_color = GREEN_E,
-            fill_opacity = 0.5
+            fill_color = color_not_B,
+            fill_opacity = opacity_B
         ).next_to(rect_not_A_and_B, UP, buff = 0)
 
 
-        indep_formula.next_to(rect_not_A, LEFT, buff = 4)
-        indep_formula.shift(UP)
+        indep_formula.next_to(rect_not_A, LEFT, buff = 5)
+        #indep_formula.shift(UP)
 
         self.play(Write(indep_formula))
 
@@ -663,16 +675,16 @@ class Introduction(TeacherStudentsScene):
             width = p_of_A * sample_space_width,
             height = p_of_B_knowing_A * sample_space_height,
             stroke_width = 3,
-            fill_color = GREEN,
-            fill_opacity = 0.5
+            fill_color = color_B,
+            fill_opacity = opacity_B
         ).align_to(rect_A_and_B, DOWN).align_to(rect_A_and_B, LEFT)
 
         rect_A_and_not_B.target = Rectangle(
             width = p_of_A * sample_space_width,
             height = (1 - p_of_B_knowing_A) * sample_space_height,
             stroke_width = 0,
-            fill_color = GREEN_E,
-            fill_opacity = 0.5
+            fill_color = color_not_B,
+            fill_opacity = opacity_B
         ).next_to(rect_A_and_B.target, UP, buff = 0)
 
         brace_B.target = Brace(rect_A_and_B.target, LEFT)
@@ -690,6 +702,7 @@ class Introduction(TeacherStudentsScene):
 
         #self.play(FadeOut(label_B_copy))
         self.remove(indep_formula.get_part_by_tex("P(B)"))
+        indep_formula.remove(indep_formula.get_part_by_tex("P(B)"))
         label_B_knowing_A_copy = label_B_knowing_A.copy()
         self.add(label_B_knowing_A_copy)
 
@@ -712,18 +725,15 @@ class Introduction(TeacherStudentsScene):
             label_A_copy.move_to, rearranged_formula[-1][10],
             label_A_and_B_copy.move_to, rearranged_formula[-1][3],
             indep_formula.get_part_by_tex("=").move_to, rearranged_formula.get_part_by_tex("="),
-            Transform(indep_formula.get_part_by_tex("\cdot"), rearranged_formula[2][6]),
+            Transform(indep_formula.get_part_by_tex("\cdot"), rearranged_formula[2][8]),
         )
 
+        rect = SurroundingRectangle(rearranged_formula)
+        self.play(ShowCreation(rect))
 
-        self.play(
-            FadeOut(VGroup(
-                indep_formula, rect_A, rect_B, rect_not_A, rect_not_B,
-                rect_A_and_B, rect_A_and_not_B, rect_not_A_and_B, rect_not_A_and_not_B,
-                brace_A, brace_B, label_A, label_B_knowing_A, label_A_and_B,
-                label_B_knowing_A_copy
-            ))
-        )
+
+        self.wait()
+
 
 
 
