@@ -440,10 +440,10 @@ class Introduction(TeacherStudentsScene):
 
     def construct(self):
         self.show_series()
-        self.show_area_model1()
+        self.show_examples()
 
     def show_series(self):
-        series = VideoSeries()
+        series = VideoSeries(num_videos = 11)
         series.to_edge(UP)
         this_video = series[0]
         this_video.set_color(YELLOW)
@@ -494,15 +494,21 @@ class Introduction(TeacherStudentsScene):
         self.play(
             FadeOut(self.teacher.bubble),
             FadeOut(self.teacher.bubble.content),
+            self.get_teacher().change_mode, "raise_right_hand",
             *[
                 ApplyMethod(pi.change_mode, "pondering")
-                for pi in self.get_pi_creatures()
+                for pi in self.get_students()
             ]
         )
         self.wait()
 
         self.series = series
 
+
+    def show_examples(self):
+
+        self.wait(10)
+        # put examples here in video editor
 
 
         # # # # # # # # # # # # # # # # # #
