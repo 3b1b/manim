@@ -468,15 +468,15 @@ class GraphScene(Scene):
                 Write(T_label, run_time = 1),
                 **kwargs
             )
-        else:
-            self.add(triangle, v_line, T_label)
 
         if np.all(side == LEFT):
             self.left_T_label_group = VGroup(T_label, triangle)
             self.left_v_line = v_line
+            self.add(self.left_T_label_group, self.left_v_line)
         elif np.all(side == RIGHT):
             self.right_T_label_group = VGroup(T_label, triangle)
             self.right_v_line = v_line
+            self.add(self.right_T_label_group, self.right_v_line)
 
 
 
