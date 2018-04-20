@@ -639,6 +639,8 @@ class ShowProduct(Scene):
         parts = full_product
         terms = self.wallis_product_terms
         partial_products = np.cumprod(terms)
+        partial_products_iter = iter(partial_products)
+        print partial_products
 
         dots = VGroup(*[
             Dot(axes.coords_to_point(n + 1, prod))
@@ -656,16 +658,16 @@ class ShowProduct(Scene):
         ])
 
         brace = braces[0].copy()
-        decimal = DecimalNumber(partial_products[0], num_decimal_points=4)
+        decimal = DecimalNumber(partial_products_iter.next(), num_decimal_points=4)
         decimal.next_to(brace, DOWN)
 
         self.play(*map(FadeIn, [brace, decimal, dots[0]]))
-        tuples = zip(lines, dots[1:], partial_products[1:], braces[1:])
-        for line, dot, prod, new_brace in tuples:
+        tuples = zip(lines, dots[1:], braces[1:])
+        for line, dot, new_brace in tuples:
             self.play(
                 Transform(brace, new_brace),
                 ChangeDecimalToValue(
-                    decimal, prod,
+                    decimal, partial_products_iter.next(),
                     position_update_func=lambda m: m.next_to(brace, DOWN)
                 ),
                 ShowCreation(line),
@@ -673,13 +675,24 @@ class ShowProduct(Scene):
                 run_time=0.5,
             )
             self.wait(0.5)
+
+        def get_decimal_anim():
+            return ChangeDecimalToValue(
+                decimal, partial_products_iter.next(),
+                run_time=1,
+                rate_func=squish_rate_func(smooth, 0, 0.5),
+            )
+
         self.play(
             FadeIn(lines[len(parts) - 1:]),
             FadeIn(dots[len(parts):]),
-            ChangeDecimalToValue(decimal, np.pi / 2, run_time=4),
+            get_decimal_anim()
         )
+        for x in range(3):
+            self.play(get_decimal_anim())
 
         self.partial_product_decimal = decimal
+        self.get_decimal_anim = get_decimal_anim
 
     def show_answer(self):
         decimal = self.partial_product_decimal
@@ -704,15 +717,21 @@ class ShowProduct(Scene):
 
         self.play(
             ShowCreation(h_line),
-            randy.restore
+            randy.restore,
+            self.get_decimal_anim()
         )
-        self.play(Blink(randy))
-        self.wait()
+        self.play(Blink(randy), self.get_decimal_anim())
+        self.play(self.get_decimal_anim())
         self.play(
-            FadeOut(decimal),
+            self.get_decimal_anim(),
+            UpdateFromAlphaFunc(
+                decimal,
+                lambda m, a: m.set_fill(opacity=1 - a)
+            ),
             ReplacementTransform(randy, pi_halves[0]),
             Write(pi_halves[1:]),
         )
+        self.remove(decimal)
         self.wait()
 
     # Helpers
