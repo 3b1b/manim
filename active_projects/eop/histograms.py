@@ -126,6 +126,10 @@ class Histogram(VMobject):
                 stroke_width = self.bar_stroke_width,
                 stroke_color = self.stroke_color,
             )
+            if bar.height == 0:
+                bar.height = 0.01
+                bar.generate_points()
+
             t = float(x - self.x_min)/(self.x_max - self.x_min)
             bar_color = interpolate_color(
                 self.start_color,
