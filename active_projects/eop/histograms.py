@@ -174,7 +174,7 @@ class Histogram(VMobject):
             stroke_color = self.stroke_color)
         self.add(self.bars, self.x_labels_group, self.y_labels_group, self.outline)
 
-        print self.submobjects
+        self.move_to(ORIGIN)
 
     def get_lower_left_point(self):
         return self.bars[0].get_anchors()[-2]
