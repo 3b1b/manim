@@ -195,6 +195,7 @@ class CoinSequence(VGroup):
             self.add(new_coin)
             offset += self.spacing
 
+
 class FlatCoin(UprightCoin):
 # For use in coin stacks
     CONFIG = {
@@ -386,8 +387,6 @@ class CoinFlipTree(VGroup):
                 new_row.append([leaf, root_tally + i, root_point]) # leaf and its parent
                 x += dx
 
-        #print "tallies for row", level, ":", [new_row[i][1] for i in range(2**level)]
-
         if sorted:
             # sort the new_row by its tallies
             sorted_row = []
@@ -399,7 +398,6 @@ class CoinFlipTree(VGroup):
                         sorted_leaf[0][0] = x
                         x += dx
                         sorted_row.append(leaf)
-            print "sorted roots:", [sorted_row[i][2][0] for i in range(2**level)]
             self.rows.append(sorted_row)
         else:
             self.rows.append(new_row)
@@ -879,7 +877,6 @@ class IllustrateAreaModel3(Scene):
         prob_strings = ["{1\over 8}","{3\over 8}","{3\over 8}","{1\over 8}"]
         cumulative_probabilities = np.cumsum(probabilities)
         cumulative_probabilities = np.insert(cumulative_probabilities, 0, 0)
-        print cumulative_probabilities
         y_values = np.array([0, 1, 2, 3])
 
         hist = Histogram(probabilities, y_values,
@@ -1184,14 +1181,15 @@ class OneIn200HaveDisease(Scene):
 
 
 
-class PascalBrickRow(VMobject):
+class PascalBrickWall(VMobject):
 
     CONFIG = {
         "left_color" : YELLOW,
         "right_color" : BLUE,
         "height" : 1.0,
         "width" : 8.0,
-        "outcome_shrinkage_factor" : 0.85
+        "outcome_shrinkage_factor_x" : 0.85,
+        "outcome_shrinkage_factor_y" : 0.95
     }
 
     def __init__(self, n, **kwargs):
@@ -1232,6 +1230,11 @@ class PascalBrickRow(VMobject):
             rects.add(new_rect)
         return rects
 
+    def get_center(self):
+        return self.rects.get_center()
+        # just in case some more submobs have been added
+        # that displace the center
+
     def get_subdivs_for_level(self,r):
         subdivs = VGroup()
         x = - 0.5 * self.width
@@ -1243,13 +1246,13 @@ class PascalBrickRow(VMobject):
                 x * RIGHT + 0.5 * self.height * DOWN,
             )
             subdivs.add(subdiv)
+        subdivs.move_to(self.get_center())
         return subdivs
 
 
     def get_outcome_centers_for_level(self,r):
         
         dpos = float(self.width) / (2 ** r) * RIGHT
-        print "dpos =", dpos
         pos = 0.5 * self.width * LEFT + 0.5 * dpos
         centers = []
         for k in range(0, 2 ** r):
@@ -1260,8 +1263,8 @@ class PascalBrickRow(VMobject):
     def get_outcome_rects_for_level(self,r, with_labels = False):
 
         centers = self.get_outcome_centers_for_level(r)
-        outcome_width = self.outcome_shrinkage_factor * float(self.width) / (2 ** r)
-        outcome_height = self.outcome_shrinkage_factor * self.height
+        outcome_width = self.outcome_shrinkage_factor_x * float(self.width) / (2 ** r)
+        outcome_height = self.outcome_shrinkage_factor_y * self.height
         rect = RoundedRectangle(
             width = outcome_width,
             height = outcome_height,
@@ -1274,6 +1277,8 @@ class PascalBrickRow(VMobject):
         for center in centers:
             rects.add(rect.copy().move_to(center))
 
+
+
         if with_labels == False:
             return rects
 
@@ -1282,9 +1287,11 @@ class PascalBrickRow(VMobject):
         labels = VGroup()
         for (seq, rect) in zip(sequences, rects):
             coin_seq = CoinSequence(seq, direction = DOWN)
-            coin_seq.move_to(rect)
+            coin_seq.shift(rect.get_center() - coin_seq.get_center())
+            # not simply move_to bc coin_seq is not centered
             rect.add(coin_seq)
 
+        rects.move_to(self.get_center())
         return rects
 
     def get_coin_sequences_for_level(self,r):
@@ -1344,10 +1351,11 @@ class SplitRectsInBrickWall(Animation):
             proportion = float(choose(r,k)) / 2**r
             x += proportion * mobject.width
             subdiv = DashedLine(
-                x * RIGHT + 0.5 * mobject.height * UP,
-                x * RIGHT + 0.5 * mobject.height * UP,
+                mobject.get_center() + x * RIGHT + 0.5 * mobject.height * UP,
+                mobject.get_center() + x * RIGHT + 0.5 * mobject.height * UP,
             )
             self.subdivs.add(subdiv)
+
         mobject.add(self.subdivs)
 
         Animation.__init__(self, mobject, **kwargs)
@@ -1359,15 +1367,17 @@ class SplitRectsInBrickWall(Animation):
     def update_mobject(self, alpha):
         for subdiv in self.subdivs:
             x = subdiv.get_start()[0]
-            start = x * RIGHT + 0.5 * self.mobject.height * UP
-            end = start + alpha * 0.5 * self.mobject.height * (DOWN - UP)
+            start = self.mobject.get_center()
+            end = self.mobject.get_center()
+            start += x * RIGHT + 0.5 * self.mobject.height * UP
+            end += x * RIGHT + alpha * 0.5 * self.mobject.height * DOWN
             subdiv.put_start_and_end_on(start,end)
 
 
 
 
 
-class PascalBrickRowScene(Scene):
+class PascalBrickWallScene(Scene):
 
     def split_tallies(self, direction = DOWN):
 
@@ -1430,9 +1440,7 @@ class PascalBrickRowScene(Scene):
             tally.nb_tails = new_tally_left.nb_tails
 
 
-
-
-    def split_tallies_at_once(self, direction = DOWN):
+    def tally_split_animations(self, direction = DOWN):
 
         self.tallies_copy = self.tallies.copy()
         self.add_foreground_mobject(self.tallies_copy)
@@ -1487,12 +1495,11 @@ class PascalBrickRowScene(Scene):
             anims1.append(target_right)
             anims1.append(decimal_copy.shift)
             anims1.append(v)
-            self.decimal_copies.add(decimal_copy)
+            if len(self.decimals) > 0:
+                self.decimal_copies.add(decimal_copy)
             
             tally_copy.anchor = target_right
 
-
-        self.play(*anims1)
         anims2 = []
 
         for (i, tally) in enumerate(self.tallies):
@@ -1513,10 +1520,23 @@ class PascalBrickRowScene(Scene):
             tally.nb_tails = new_tally_left.nb_tails
 
 
-        self.play(*anims2)
 
         if len(self.decimals) > 0:
             self.add_foreground_mobject(self.decimal_copies)
+
+        return anims1, anims2
+
+    def split_tallies_at_once(self, direction = DOWN):
+        anims1, anims2 = self.tally_split_animations(direction = direction)
+        self.play(*(anims1 + anims2))
+
+    def split_tallies_in_two_steps(self, direction = DOWN):
+        anims1, anims2 = self.tally_split_animations(direction = direction)
+        self.play(*anims1)
+        self.wait(0.3)
+        self.play(*anims2)
+
+
 
 
     def split_decimals_alone(self):
@@ -1621,6 +1641,11 @@ class PascalBrickRowScene(Scene):
             k = choose(r,i)
             decimal = Integer(k)
             decimal.move_to(rect)
+            if rect.get_width() < 0.2:
+                # then the rect is too narrow,
+                # let the decimal go in dignity
+                decimal.set_stroke(width = 0)
+                decimal.set_fill(opacity = 0)
             self.new_decimals.add(decimal)
 
         anims.append(FadeIn(self.new_decimals))
@@ -1648,7 +1673,7 @@ class PascalBrickRowScene(Scene):
         randy = CoinFlippingPiCreature()
         randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
         self.add(randy)
-        self.row = PascalBrickRow(1, height = 2, width = 10)
+        self.row = PascalBrickWall(1, height = 2, width = 10)
         
         self.decimals = VGroup()
 
@@ -1687,7 +1712,7 @@ class PascalBrickRowScene(Scene):
         )
         self.wait()
 
-        self.split_tallies()
+        self.split_tallies_in_two_steps()
         self.wait()
         self.merge_rects_by_subdiv()
         self.wait()
@@ -1725,7 +1750,7 @@ class PascalBrickRowScene(Scene):
 
 
         # # # # # # # #
-        #  THIRD FLIP #
+        # THIRD  FLIP #
         # # # # # # # #
 
 
@@ -1739,7 +1764,7 @@ class PascalBrickRowScene(Scene):
         )
         self.wait()
 
-        self.split_tallies()
+        self.split_tallies_in_two_steps()
         self.wait()
         self.merge_rects_by_subdiv()
         self.wait()
@@ -1797,10 +1822,9 @@ class PascalBrickRowScene(Scene):
         self.merge_decimals()
         self.wait()
 
-        self.revert_to_original_skipping_status()
 
         # # # # # # # #
-        #  FIFTH FLIP #
+        # FIFTH  FLIP #
         # # # # # # # #
 
         self.play(FlipCoin(randy))
@@ -1812,7 +1836,6 @@ class PascalBrickRowScene(Scene):
         )
         self.wait()
 
-        # this tweaks an undesirable overlap in the next animation
         self.split_tallies_at_once(direction = LEFT)
         self.wait()
         self.merge_rects_by_subdiv()
@@ -1823,9 +1846,12 @@ class PascalBrickRowScene(Scene):
         self.wait()
 
 
-        # # # # # # # # #
-        # FURTHER FLIPS #
-        # # # # # # # # #
+        # # # # # # # #
+        # SIXTH  FLIP #
+        # # # # # # # #
+
+
+        self.revert_to_original_skipping_status()
 
         # removing the tallies (boy are they sticky)
         self.play(FadeOut(self.tallies))
@@ -1837,22 +1863,76 @@ class PascalBrickRowScene(Scene):
             self.remove_foreground_mobject(tally)
             self.remove(tally)
 
-        for i in range(4):
-            self.play(FlipCoin(randy))
-            self.play(SplitRectsInBrickWall(self.row))
-            self.split_decimals_alone()
-            self.merge_rects_by_subdiv()
-            self.merge_rects_by_coloring()
-            self.merge_decimals()
-            self.wait()
+        # delete all the old crap hidden behind the row
+        # before we can move it
+        self.remove(*self.mobjects)
+        self.add(randy,self.decimals,self.decimal_copies)
+
+
+        previous_row = self.row.copy()
+        self.add(previous_row)
+
+        v = 1.25 * self.row.height * UP
+        self.play(
+            previous_row.shift, v,
+            self.decimals.shift, v,
+            self.decimal_copies.shift, v
+        )
+
+        self.add(self.row)
+        self.bring_to_back(self.row)
+        self.row.shift(v)
+
+        w = 1.5 * self.row.height * DOWN
+        self.play(
+            self.row.shift, w
+        )
+
+        self.play(
+            SplitRectsInBrickWall(self.row)
+        )
+        self.wait()
+
+        # this tweaks an undesirable overlap in the next animation
+        self.merge_rects_by_subdiv()
+
+        self.wait()
+
+        # show individual outcomes
+        outcomes = previous_row.get_outcome_rects_for_level(5, with_labels = False)
+        grouped_outcomes = VGroup()
+        index = 0
+        for i in range(6):
+            size = choose(5,i)
+            grouped_outcomes.add(VGroup(outcomes[index:index + size]))
+            index += size
+
+
+        grouped_outcomes_copy = grouped_outcomes.copy()
+        self.play(
+            LaggedStart(FadeIn, grouped_outcomes),
+            LaggedStart(FadeIn, grouped_outcomes_copy),
+        )
+        self.wait()
 
 
 
 
+        target_outcomes = self.row.get_outcome_rects_for_level(6, with_labels = False)
+        target_outcomes.shift(w)
+        grouped_target_outcomes = VGroup()
+        index = 0
+        for i in range(7):
+            size = choose(6,i)
+            grouped_target_outcomes.add(VGroup(target_outcomes[index:index + size]))
+            index += size
 
+        self.play(
+            Transform(grouped_outcomes[2],grouped_target_outcomes[2][0][5:])
+        )
 
-
-
-
+        self.play(
+            Transform(grouped_outcomes_copy[2],grouped_target_outcomes[3][0][:10])
+        )
 
 
