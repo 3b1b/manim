@@ -440,40 +440,301 @@ class ShowProduct(Scene):
         self.show_answer()
 
     def setup_axes(self):
-        axes = self.axes = Axes(
-            x_min=-1,
-            x_max=10,
-            y_min=-0.5,
-            y_max=5.25,
-            y_axis_config={
-                # "unit_size": 1.5,
-                # "tick_frequency": 0.5,
-                "numbers_with_elongated_ticks": range(6)
-                "tick_size": 0.05,
-            }
-        )
-        axes.to_edge(DOWN, buff = LARGE_BUFF)
-        axes.to_edge(LEFT)
-
-        axes.y_axis.label_direction = LEFT
-        axes.y_axis.add_numbers(*range(6))
-
+        axes = self.axes = self.get_axes(unit_size=0.75)
         self.add(axes)
 
     def setup_wallis_product(self):
-        pass
+        full_wallis_product = get_wallis_product(n_terms=16, show_result=False)
+        wallis_product_parts = VGroup(*[
+            full_wallis_product[i:i + 4]
+            for i in range(0, len(full_wallis_product), 4)
+        ])
+
+        larger_parts = self.larger_parts = wallis_product_parts[::2]
+        larger_parts.set_color(YELLOW)
+        dots = TexMobject("\\cdots")
+        dots.move_to(larger_parts[-1][-1], LEFT)
+        larger_parts[-1][-1].submobjects = dots.submobjects
+
+        smaller_parts = self.smaller_parts = wallis_product_parts[1::2]
+        smaller_parts.set_color(BLUE)
+
+        for parts in larger_parts, smaller_parts:
+            parts.arrange_submobjects(RIGHT, buff=2 * SMALL_BUFF)
+            # Move around the dots
+            for part1, part2 in zip(parts, parts[1:]):
+                dot = part1.submobjects.pop(-1)
+                part2.add_to_back(dot)
+
+        larger_parts.to_edge(UP)
+        smaller_parts.next_to(larger_parts, DOWN, LARGE_BUFF)
+
+        self.wallis_product_terms = get_wallis_product_numerical_terms(40)
 
     def show_larger_terms(self):
-        pass
+        axes = self.axes
+        parts = self.larger_parts
+        terms = self.wallis_product_terms[::2]
+        partial_products = np.cumprod(terms)
+
+        dots = VGroup(*[
+            Dot(axes.coords_to_point(n + 1, prod))
+            for n, prod in enumerate(partial_products)
+        ])
+        dots.match_color(parts)
+        lines = VGroup(*[
+            Line(d1.get_center(), d2.get_center())
+            for d1, d2 in zip(dots, dots[1:])
+        ])
+
+        braces = VGroup(*[
+            Brace(parts[:n + 1], DOWN)
+            for n in range(len(parts))
+        ])
+
+        brace = braces[0].copy()
+        decimal = DecimalNumber(partial_products[0], num_decimal_points=4)
+        decimal.next_to(brace, DOWN)
+
+        self.add(brace, decimal, dots[0], parts[0])
+        tuples = zip(parts[1:], lines, dots[1:], partial_products[1:], braces[1:])
+        for part, line, dot, prod, new_brace in tuples:
+            self.play(
+                FadeIn(part),
+                Transform(brace, new_brace),
+                ChangeDecimalToValue(
+                    decimal, prod,
+                    position_update_func=lambda m: m.next_to(brace, DOWN)
+                ),
+                ShowCreation(line),
+                GrowFromCenter(dot, rate_func=squish_rate_func(smooth, 0.5, 1)),
+                run_time=0.5,
+            )
+            self.wait(0.5)
+        N = len(parts)
+        self.play(
+            LaggedStart(ShowCreation, lines[N - 1:], lag_ratio=0.2),
+            LaggedStart(FadeIn, dots[N:], lag_ratio=0.2),
+            brace.stretch, 1.2, 0, {"about_edge": LEFT},
+            ChangeDecimalToValue(
+                decimal, partial_products[-1],
+                position_update_func=lambda m: m.next_to(brace, DOWN)
+            ),
+            run_time=4,
+            rate_func=None,
+        )
+        self.play(
+            FadeOut(brace),
+            ChangeDecimalToValue(
+                decimal, partial_products[-1] + 2,
+                position_update_func=lambda m: m.next_to(brace, DOWN)
+            ),
+            UpdateFromFunc(
+                decimal, lambda d: d.shift(self.frame_duration * RIGHT)
+            ),
+            UpdateFromAlphaFunc(
+                decimal, lambda d, a: d.set_fill(opacity=1 - a)
+            ),
+        )
+        self.remove(decimal)
+
+        self.graph_to_remove = VGroup(dots, lines)
 
     def show_smaller_terms(self):
-        pass
+        larger_parts = self.larger_parts
+        larger_parts.save_state()
+        larger_parts_mover = larger_parts.copy()
+        larger_parts.fade(0.5)
+
+        smaller_parts = self.smaller_parts
+        for parts in larger_parts_mover, smaller_parts:
+            parts.denominators = VGroup(
+                parts[0][2],
+                *[part[3] for part in parts[1:]]
+            )
+        vect = op.sub(
+            smaller_parts.denominators[1].get_left(),
+            smaller_parts.denominators[0].get_left(),
+        )
+        smaller_parts.denominators.shift(vect)
+
+        self.play(
+            larger_parts_mover.move_to, smaller_parts, LEFT,
+            FadeOut(self.graph_to_remove)
+        )
+        self.play(
+            larger_parts_mover.denominators.shift, -vect,
+            smaller_parts.denominators.shift, -vect,
+            UpdateFromAlphaFunc(
+                larger_parts_mover,
+                lambda m, a: m.set_fill(opacity=1 - a),
+                remover=True
+            ),
+            UpdateFromAlphaFunc(
+                smaller_parts,
+                lambda m, a: m.set_fill(opacity=a)
+            ),
+        )
+
+        # Rescale axes
+        new_axes = self.get_axes(unit_size=1.5)
+        self.play(ReplacementTransform(self.axes, new_axes))
+        axes = self.axes = new_axes
+
+        # Show graph
+        terms = self.wallis_product_terms[1::2]
+        partial_products = np.cumprod(terms)[:15]
+
+        dots = VGroup(*[
+            Dot(axes.coords_to_point(n + 1, prod))
+            for n, prod in enumerate(partial_products)
+        ])
+        dots.match_color(smaller_parts)
+        lines = VGroup(*[
+            Line(d1.get_center(), d2.get_center())
+            for d1, d2 in zip(dots, dots[1:])
+        ])
+
+        self.play(
+            ShowCreation(lines),
+            LaggedStart(FadeIn, dots, lag_ratio=0.1),
+            run_time=3,
+            rate_func=None,
+        )
+        self.wait(2)
+        self.play(FadeOut(VGroup(dots, lines)))
 
     def interleave_terms(self):
-        pass
+        larger_parts = self.larger_parts
+        smaller_parts = self.smaller_parts
+        index = 6
+        larger_parts.restore()
+        for parts in larger_parts, smaller_parts:
+            parts.prefix = parts[:index]
+            parts.suffix = parts[index:]
+            parts.prefix.generate_target()
+        larger_parts.fade(0.5)
+        full_product = VGroup(*it.chain(
+            *zip(larger_parts.prefix.target, smaller_parts.prefix.target)
+        ))
+        for i, tex, vect in (0, "\\cdot", LEFT), (-1, "\\cdots", RIGHT):
+            part = smaller_parts.prefix.target[i]
+            dot = TexMobject(tex)
+            dot.match_color(part)
+            dot.next_to(part, vect, buff=2 * SMALL_BUFF)
+            part.add(dot)
+        full_product.arrange_submobjects(RIGHT, buff=2 * SMALL_BUFF)
+        full_product.to_edge(UP)
+
+        for parts in larger_parts, smaller_parts:
+            self.play(
+                MoveToTarget(parts.prefix),
+                FadeOut(parts.suffix)
+            )
+        self.wait()
+
+        # Dots and lines
+        # In poor form, this is modified copy-pasted from show_larger_terms
+        axes = self.axes
+        parts = full_product
+        terms = self.wallis_product_terms
+        partial_products = np.cumprod(terms)
+
+        dots = VGroup(*[
+            Dot(axes.coords_to_point(n + 1, prod))
+            for n, prod in enumerate(partial_products)
+        ])
+        dots.set_color(GREEN)
+        lines = VGroup(*[
+            Line(d1.get_center(), d2.get_center())
+            for d1, d2 in zip(dots, dots[1:])
+        ])
+
+        braces = VGroup(*[
+            Brace(parts[:n + 1], DOWN)
+            for n in range(len(parts))
+        ])
+
+        brace = braces[0].copy()
+        decimal = DecimalNumber(partial_products[0], num_decimal_points=4)
+        decimal.next_to(brace, DOWN)
+
+        self.play(*map(FadeIn, [brace, decimal, dots[0]]))
+        tuples = zip(lines, dots[1:], partial_products[1:], braces[1:])
+        for line, dot, prod, new_brace in tuples:
+            self.play(
+                Transform(brace, new_brace),
+                ChangeDecimalToValue(
+                    decimal, prod,
+                    position_update_func=lambda m: m.next_to(brace, DOWN)
+                ),
+                ShowCreation(line),
+                GrowFromCenter(dot, rate_func=squish_rate_func(smooth, 0.5, 1)),
+                run_time=0.5,
+            )
+            self.wait(0.5)
+        self.play(
+            FadeIn(lines[len(parts) - 1:]),
+            FadeIn(dots[len(parts):]),
+            ChangeDecimalToValue(decimal, np.pi / 2, run_time=4),
+        )
+
+        self.partial_product_decimal = decimal
 
     def show_answer(self):
-        pass
+        decimal = self.partial_product_decimal
+        axes = self.axes
+
+        pi_halves = TexMobject("{\\pi", "\\over", "2}")
+        pi_halves.scale(1.5)
+        pi_halves.move_to(decimal, UP)
+
+        randy = Randolph(height=1.7)
+        randy.next_to(decimal, DL)
+        randy.change("confused")
+        randy.save_state()
+        randy.change("plain")
+        randy.fade(1)
+
+        h_line = DashedLine(
+            axes.coords_to_point(0, np.pi / 2),
+            axes.coords_to_point(20, np.pi / 2),
+            color=RED
+        )
+
+        self.play(
+            ShowCreation(h_line),
+            randy.restore
+        )
+        self.play(Blink(randy))
+        self.wait()
+        self.play(
+            FadeOut(decimal),
+            ReplacementTransform(randy, pi_halves[0]),
+            Write(pi_halves[1:]),
+        )
+        self.wait()
+
+    # Helpers
+
+    def get_axes(self, unit_size):
+        y_max = 7
+        axes = Axes(
+            x_min=-1,
+            x_max=12.5,
+            y_min=-0.5,
+            y_max=y_max + 0.25,
+            y_axis_config={
+                "unit_size": unit_size,
+                "numbers_with_elongated_ticks": range(1, y_max + 1),
+                "tick_size": 0.05,
+            },
+        )
+        axes.shift(6 * LEFT + 3 * DOWN - axes.coords_to_point(0, 0))
+
+        axes.y_axis.label_direction = LEFT
+        axes.y_axis.add_numbers(*range(1, y_max + 1))
+        return axes
 
 
 class DistanceProductScene(MovingCameraScene):
@@ -2610,6 +2871,54 @@ class ProveLemma2(PlugObserverIntoPolynomial):
         self.wait()
 
 
+class LocalMathematician(PiCreatureScene):
+    def construct(self):
+        randy, mathy = self.pi_creatures
+        screen = ScreenRectangle(height=2)
+        screen.to_corner(UL)
+        screen.fade(1)
+
+        mathy_name = TextMobject("Local \\\\ mathematician")
+        mathy_name.next_to(mathy, LEFT, LARGE_BUFF)
+        arrow = Arrow(mathy_name, mathy)
+
+        self.play(
+            Animation(screen),
+            mathy.change, "pondering",
+            PiCreatureSays(
+                randy, "Check these \\\\ out!",
+                target_mode="surprised",
+                bubble_kwargs={"height": 3, "width": 4},
+                look_at_arg=screen,
+            ),
+        )
+        self.play(
+            Animation(screen),
+            RemovePiCreatureBubble(
+                randy, 
+                target_mode="raise_right_hand",
+                look_at_arg=screen,
+            )
+        )
+        self.wait(2)
+        self.play(
+            PiCreatureSays(
+                mathy, "Ah yes, consider \\\\ $x^n - 1$ over $\\mathds{C}$...",
+                look_at_arg=randy.eyes
+            ),
+            randy.change, "happy", mathy.eyes
+        )
+        self.wait(3)
+
+    def create_pi_creatures(self):
+        randy = Randolph().flip()
+        mathy = Mathematician()
+        randy.scale(0.9)
+        randy.to_edge(DOWN).shift(4 * RIGHT)
+        mathy.to_edge(DOWN).shift(4 * LEFT)
+        return randy, mathy
+
+
 class ArmedWithTwoKeyFacts(TeacherStudentsScene, DistanceProductScene):
     CONFIG = {
         "num_lighthouses": 6,
@@ -3891,6 +4200,137 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
         group.arrange_submobjects(RIGHT, buff=4)
         group.to_edge(DOWN)
         return group
+
+
+class NonCommunitingLimitsExample(Scene):
+    CONFIG = {
+        "num_terms_per_row": 6,
+        "num_rows": 5,
+        "x_spacing": 0.75,
+        "y_spacing": 1,
+    }
+
+    def construct(self):
+        rows = VGroup(*[
+            self.get_row(seven_index)
+            for seven_index in range(self.num_rows)
+        ])
+        rows.add(self.get_v_dot_row())
+        for n, row in enumerate(rows):
+            row.move_to(n * self.y_spacing * DOWN)
+        rows.center().to_edge(UP)
+        rows[-1].shift(MED_SMALL_BUFF * UP)
+
+        row_rects = VGroup(*map(SurroundingRectangle, rows[:-1]))
+        row_rects.set_color(YELLOW)
+
+        columns = VGroup(*[
+            VGroup(*[row[0][i] for row in rows])
+            for i in range(len(rows[0][0]))
+        ])
+        column_rects = VGroup(*map(SurroundingRectangle, columns))
+        column_rects.set_color(BLUE)
+
+        row_arrows = VGroup(*[
+            TexMobject("\\rightarrow").next_to(row, RIGHT)
+            for row in rows[:-1]
+        ])
+        row_products = VGroup(*[
+            Integer(7).next_to(arrow)
+            for arrow in row_arrows
+        ])
+        row_products.set_color(YELLOW)
+
+        row_product_limit_dots = TexMobject("\\vdots")
+        row_product_limit_dots.next_to(row_products, DOWN)
+        row_product_limit = Integer(7)
+        row_product_limit.set_color(YELLOW)
+        row_product_limit.next_to(row_product_limit_dots, DOWN)
+
+        column_arrows = VGroup(*[
+            TexMobject("\\downarrow").next_to(part, DOWN, SMALL_BUFF)
+            for part in rows[-1][0]
+        ])
+        column_limits = VGroup(*[
+            Integer(1).next_to(arrow, DOWN)
+            for arrow in column_arrows
+        ])
+        column_limits.set_color(BLUE)
+        column_limit_dots = self.get_row_dots(column_limits)
+
+        column_limits_arrow = TexMobject("\\rightarrow").next_to(
+            column_limit_dots, RIGHT
+        )
+        product_of_limits = Integer(1).next_to(column_limits_arrow, RIGHT)
+        product_of_limits.set_color(BLUE)
+
+        self.add(rows)
+        self.wait()
+        self.play(LaggedStart(ShowCreation, row_rects))
+        self.wait(2)
+        row_products_iter = iter(row_products)
+        self.play(
+            LaggedStart(Write, row_arrows),
+            LaggedStart(
+                ReplacementTransform, rows[:-1].copy(),
+                lambda r: (r, row_products_iter.next())
+            )
+        )
+        self.wait()
+        self.play(Write(row_product_limit_dots))
+        self.play(Write(row_product_limit))
+        self.wait()
+
+        self.play(LaggedStart(FadeOut, row_rects))
+        self.play(LaggedStart(FadeIn, column_rects))
+        self.wait()
+        column_limit_iter = iter(column_limits)
+        self.play(
+            LaggedStart(Write, column_arrows),
+            LaggedStart(
+                ReplacementTransform, columns.copy(),
+                lambda c: (c, column_limit_iter.next())
+            )
+        )
+        self.wait()
+        self.play(Write(column_limits_arrow))
+        self.play(
+            Write(product_of_limits),
+            FadeOut(row_product_limit)
+        )
+        self.wait()
+
+
+    def get_row(self, seven_index):
+        terms = [1] * (self.num_terms_per_row)
+        if seven_index < len(terms):
+            terms[seven_index] = 7
+        row = VGroup(*map(Integer, terms))
+        self.arrange_row(row)
+        dots = self.get_row_dots(row)
+
+        return VGroup(row, dots)
+
+    def get_v_dot_row(self):
+        row = VGroup(*[
+            TexMobject("\\vdots")
+            for x in range(self.num_terms_per_row)
+        ])
+        self.arrange_row(row)
+        dots = self.get_row_dots(row)
+        dots.fade(1)
+        return VGroup(row, dots)
+
+    def arrange_row(self, row):
+        for n, part in enumerate(row):
+            part.move_to(n * self.x_spacing * RIGHT)
+
+    def get_row_dots(self, row):
+        dots = VGroup()
+        for p1, p2 in zip(row, row[1:]):
+            dots.add(TexMobject("\\cdot").move_to(VGroup(p1, p2)))
+        dots.add(TexMobject("\\cdots").next_to(row, RIGHT))
+        return dots
 
 
 class DelicacyInIntermixingSeries(Scene):
