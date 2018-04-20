@@ -967,7 +967,8 @@ class DieFace(SVGMobject):
         
 class RowOfDice(VGroup):
     CONFIG = {
-        "values" : range(1,7)
+        "values" : range(1,7),
+        "direction": RIGHT,
     }
 
     def generate_points(self):
@@ -975,7 +976,7 @@ class RowOfDice(VGroup):
             new_die = DieFace(value)
             new_die.submobjects[0].set_fill(opacity = 0)
             new_die.submobjects[0].set_stroke(width = 7)
-            new_die.next_to(self, RIGHT)
+            new_die.next_to(self, self.direction)
             self.add(new_die)
         self.move_to(ORIGIN)
 
@@ -997,7 +998,7 @@ class ShowUncertainty1(Scene):
 
     def construct(self):
 
-        self.row_of_dice = RowOfDice().scale(1)
+        self.row_of_dice = RowOfDice(direction = DOWN).scale(0.5)
         self.add(self.row_of_dice)
 
         for i in range(5):
@@ -1019,7 +1020,7 @@ class IdealizedDieHistogram(Scene):
     def construct(self):
 
         self.probs = 1.0/6 * np.ones(6)
-        x_scale = 1.0
+        x_scale = 1.3
 
         y_labels = ["${1\over 6}$"] * 6
 
@@ -1031,14 +1032,19 @@ class IdealizedDieHistogram(Scene):
             y_scale = 20,
             x_scale = x_scale,
         )
+        hist.rotate(-TAU/4)
+
+        for label in hist.y_labels_group:
+            label.rotate(TAU/4)
         hist.remove(hist.y_labels_group)
+
 
         self.play(FadeIn(hist))
         self.play(LaggedStart(FadeIn, hist.y_labels_group))
 
 
 
-class ShowUncertainty2(PiCreatureScene):
+class ShowUncertainty2(Scene):
 
 
     def throw_darts(self, n, run_time = 1):
@@ -1123,6 +1129,52 @@ class ShowUncertainty3(Scene):
 
 
 
+SICKLY_GREEN = "#9BBD37"
+
+class OneIn200HaveDisease(Scene):
+    def construct(self):
+        title = TextMobject("1 in 200")
+        title.to_edge(UP)
+        creature = PiCreature()
+
+        all_creatures = VGroup(*[
+            VGroup(*[
+                creature.copy()
+                for y in range(20)
+            ]).arrange_submobjects(DOWN, SMALL_BUFF)
+            for x in range(10)
+        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
+        all_creatures.scale_to_fit_height(FRAME_HEIGHT * 0.8)
+        all_creatures.next_to(title, DOWN)
+        randy = all_creatures[0][0]
+        all_creatures[0].remove(randy)
+        randy.change_mode("sick")
+        randy.set_color(SICKLY_GREEN)
+        randy.save_state()
+        randy.scale_to_fit_height(3)
+        randy.center()
+        randy.change_mode("plain")
+        randy.set_color(BLUE)
+
+        self.add(randy)
+
+        p_sick = TexMobject("p(","\\text{sick}",") = 0.5\%")
+        p_sick.set_color_by_tex("sick", SICKLY_GREEN)
+        p_sick.next_to(randy, RIGHT+UP)
+        self.add(p_sick)
+        self.wait()
+        self.play(
+            randy.change_mode, "sick",
+            randy.set_color, SICKLY_GREEN
+        )
+        self.play(Blink(randy))
+        self.play(randy.restore)
+        self.play(
+            FadeOut(p_sick),
+            Write(title),
+            LaggedStart(FadeIn, all_creatures, run_time = 3)
+        )
+        self.wait()
 
 
 
