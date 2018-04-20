@@ -1230,10 +1230,6 @@ class PascalBrickWall(VMobject):
             rects.add(new_rect)
         return rects
 
-    def get_center(self):
-        return self.rects.get_center()
-        # just in case some more submobs have been added
-        # that displace the center
 
     def get_subdivs_for_level(self,r):
         subdivs = VGroup()
@@ -1277,6 +1273,7 @@ class PascalBrickWall(VMobject):
         for center in centers:
             rects.add(rect.copy().move_to(center))
 
+        rects.move_to(self.get_center())
 
 
         if with_labels == False:
@@ -1291,7 +1288,6 @@ class PascalBrickWall(VMobject):
             # not simply move_to bc coin_seq is not centered
             rect.add(coin_seq)
 
-        rects.move_to(self.get_center())
         return rects
 
     def get_coin_sequences_for_level(self,r):
@@ -1368,9 +1364,8 @@ class SplitRectsInBrickWall(Animation):
         for subdiv in self.subdivs:
             x = subdiv.get_start()[0]
             start = self.mobject.get_center()
-            end = self.mobject.get_center()
             start += x * RIGHT + 0.5 * self.mobject.height * UP
-            end += x * RIGHT + alpha * 0.5 * self.mobject.height * DOWN
+            end = start + alpha * self.mobject.height * DOWN
             subdiv.put_start_and_end_on(start,end)
 
 
@@ -1579,6 +1574,7 @@ class PascalBrickWallScene(Scene):
         half_merged_row = self.row.copy()
         half_merged_row.subdiv_level += 1
         half_merged_row.generate_points()
+        half_merged_row.move_to(self.row.get_center())
         self.play(FadeIn(half_merged_row))
         self.row = half_merged_row
 
@@ -1668,7 +1664,7 @@ class PascalBrickWallScene(Scene):
 
     def construct(self):
 
-        self.force_skipping()
+        #self.force_skipping()
 
         randy = CoinFlippingPiCreature()
         randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
@@ -1893,11 +1889,12 @@ class PascalBrickWallScene(Scene):
         )
         self.wait()
 
-        # this tweaks an undesirable overlap in the next animation
         self.merge_rects_by_subdiv()
 
         self.wait()
 
+
+        print previous_row.get_center()
         # show individual outcomes
         outcomes = previous_row.get_outcome_rects_for_level(5, with_labels = False)
         grouped_outcomes = VGroup()
@@ -1919,7 +1916,6 @@ class PascalBrickWallScene(Scene):
 
 
         target_outcomes = self.row.get_outcome_rects_for_level(6, with_labels = False)
-        target_outcomes.shift(w)
         grouped_target_outcomes = VGroup()
         index = 0
         for i in range(7):
