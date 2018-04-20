@@ -72,8 +72,8 @@ class ImageMobject(Mobject):
             DOWN + LEFT,
         ])
         self.center()
-        self.scale_to_fit_height(self.height)
         h, w = self.pixel_array.shape[:2]
+        self.stretch_to_fit_height(self.height)
         self.stretch_to_fit_width(self.height * w / h)
 
     def set_opacity(self, alpha):

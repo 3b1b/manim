@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from big_ol_pile_of_manim_imports import *
 from once_useful_constructs.light import AmbientLight
 from once_useful_constructs.light import Lighthouse
@@ -10,6 +12,13 @@ CHEAP_AMBIENT_LIGHT_CONFIG = {
     "num_levels": 5,
     "radius": 0.25,
     "opacity_function": DEFAULT_OPACITY_FUNCTION,
+}
+HIGHT_QUALITY_AMBIENT_LIGHT_CONFIG = {
+    "opacity_function": DEFAULT_OPACITY_FUNCTION,
+    "num_levels": 100,
+    "radius": 5,
+    "max_opacity": 0.8,
+    "color": PRODUCT_COLOR,
 }
 
 
@@ -374,6 +383,16 @@ class SourcesOfOriginality(TeacherStudentsScene):
         )
         self.change_all_student_modes("hooray", look_at_arg=new_proof)
         self.wait(5)
+
+
+class Six(Scene):
+    def construct(self):
+        six = TexMobject("6")
+        six.add_background_rectangle(opacity = 1)
+        six.background_rectangle.stretch(1.5, 0)
+        six.scale_to_fit_height(7)
+        self.add(six)
+
 
 
 class SridharWatchingScene(PiCreatureScene):
@@ -756,15 +775,25 @@ class ShowProduct(Scene):
         return axes
 
 
+class TeacherShowing(TeacherStudentsScene):
+    def construct(self):
+        screen = self.screen
+        screen.scale_to_fit_height(4)
+        screen.next_to(self.students, UP, MED_LARGE_BUFF, RIGHT)
+        self.play(
+            ShowCreation(screen),
+            self.teacher.change, "raise_right_hand", screen,
+            self.get_student_changes(
+                *["pondering"] * 3,
+                look_at_arg=screen
+            )
+        )
+        self.wait(5)
+
+
 class DistanceProductScene(MovingCameraScene):
     CONFIG = {
-        "ambient_light_config": {
-            "opacity_function": DEFAULT_OPACITY_FUNCTION,
-            "num_levels": 100,
-            "radius": 5,
-            "max_opacity": 0.8,
-            "color": PRODUCT_COLOR,
-        },
+        "ambient_light_config": HIGHT_QUALITY_AMBIENT_LIGHT_CONFIG,
         "circle_color": BLUE,
         "circle_radius": 3,
         "num_lighthouses": 6,
@@ -1465,6 +1494,16 @@ class Lemma2With9Lighthouses(Lemma2):
     CONFIG = {
         "num_lighthouses": 9,
     }
+
+
+class ConfusedPiCreature(Scene):
+    def construct(self):
+        randy = Randolph(color=GREY_BROWN)
+        self.add(randy)
+        self.play(Blink(randy))
+        self.play(randy.change, "confused")
+        self.play(Blink(randy))
+        self.wait()
 
 
 class FromGeometryToAlgebra(DistanceProductScene):
@@ -4917,9 +4956,313 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
             self.wait()
 
 
+class Conclusion(TeacherStudentsScene):
+    CONFIG = {
+        "camera_config": {"background_alpha": 255},
+    }
+
+    def construct(self):
+        wallis_product = get_wallis_product(6)
+        wallis_product.move_to(self.hold_up_spot, DOWN)
+        wallis_product.shift_onto_screen()
+        for i in range(0, len(wallis_product) - 5, 4):
+            color = GREEN if (i / 4) % 2 == 0 else BLUE
+            wallis_product[i:i + 3].set_color(color)
+
+        sine_formula = TexMobject(
+            "\\sin(", "f", "\\pi", ")", "=", "f", "\\pi",
+            "\\prod_{k \\ne 0}", "\\left(", "1", "-",
+            "{f", "\\over", "k}", "\\right)"
+        )
+        sine_formula.set_color_by_tex("f", GREEN)
+        sine_formula.set_color_by_tex("left", WHITE)
+        sine_formula.move_to(self.hold_up_spot, DOWN)
+        sine_formula.shift_onto_screen()
+
+        euler = ImageMobject("Euler")
+        euler.scale_to_fit_height(2.5)
+        basel_problem = TexMobject(
+            "\\frac{1}{1^2} + ",
+            "\\frac{1}{2^2} + ",
+            "\\frac{1}{3^2} + ",
+            "\\cdots",
+            "\\frac{\\pi^2}{6}"
+        )
+        basel_problem.move_to(self.hold_up_spot, DOWN)
+        implication = TexMobject("\\Rightarrow")
+        implication.next_to(basel_problem[0][1], LEFT)
+
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            FadeInFromDown(wallis_product),
+            self.get_student_changes("thinking", "hooray", "surprised")
+        )
+        self.wait()
+        self.play(
+            self.teacher.change, "hooray",
+            FadeInFromDown(sine_formula),
+            wallis_product.to_edge, UP,
+            self.get_student_changes("pondering", "thinking", "erm")
+        )
+        self.wait(3)
+        self.play(
+            sine_formula.next_to, implication, LEFT,
+            {"submobject_to_align": sine_formula[-1]},
+            FadeIn(implication),
+        )
+        euler.next_to(sine_formula, UP)
+        self.play(
+            FadeIn(euler),
+            LaggedStart(FadeIn, basel_problem),
+            self.teacher.change, "happy",
+            self.get_student_changes("sassy", "confused", "hesitant")
+        )
+        self.wait(2)
+
+        wallis_rect = SurroundingRectangle(wallis_product)
+        wallis_rect.set_color(BLUE)
+        basel_rect = SurroundingRectangle(basel_problem)
+        basel_rect.set_color(YELLOW)
+
+        self.play(
+            ShowCreation(wallis_rect),
+            FadeOut(implication),
+            FadeOut(euler),
+            FadeOut(sine_formula),
+        )
+        self.play(
+            ShowCreation(basel_rect),
+            self.teacher.change, "surprised",
+            self.get_student_changes(*["happy"] * 3)
+        )
+        self.wait(5)
 
 
+class ByLine(Scene):
+    def construct(self):
+        self.add(TextMobject("""
+            Written and animated by \\\\
+            \\quad \\\\
+            Sridhar Ramesh \\\\
+            Grant Sanderson
+        """).shift(2 * UP))
 
+
+class SponsorUnderlay(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_start_corner": DR,
+    }
+
+    def construct(self):
+        url = TextMobject("https://udacity.com/3b1b/")
+        url.to_corner(UL)
+
+        rect = ScreenRectangle(height=5.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+        url.next_to(rect, UP)
+        url.save_state()
+
+        url.next_to(self.pi_creature.get_corner(UL), UP)
+
+        logo = SVGMobject(file_name="udacity")
+        logo.set_fill("#02b3e4")
+        logo.to_corner(UR)
+
+        self.add(logo)
+
+        self.play(
+            Write(url),
+            self.pi_creature.change, "raise_right_hand"
+        )
+        self.play(
+            url.restore,
+            ShowCreation(rect),
+            path_arc=90 * DEGREES,
+        )
+        self.wait(2)
+        self.change_mode("thinking")
+        self.wait()
+        self.look_at(url)
+        self.wait(10)
+        self.change_mode("happy")
+        self.wait(10)
+        self.change_mode("raise_right_hand")
+        self.wait(10)
+
+        self.remove(rect)
+        self.play(url.next_to, self.pi_creature, UL)
+        url_rect = SurroundingRectangle(url)
+        self.play(ShowCreation(url_rect))
+        self.play(FadeOut(url_rect))
+        self.wait(3)
+
+
+class EndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "Juan Benet",
+            "Keith Smith",
+            "Chloe Zhou",
+            "Ross Garber",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Hoang Tung Lam",
+            "Sergei",
+            "Devin Scott",
+            "George John",
+            "Akash Kumar",
+            "Felix Tripier",
+            "Arthur Zey",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Yu Jun",
+            "dave nicponski",
+            "Damion Kistler",
+            "Jordan Scales",
+            "Markus Persson",
+            "Fred Ehrsam",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Cooper Jones",
+            "James Hughes",
+            "John V Wertheim",
+            "Chris Giddings",
+            "Song Gao",
+            "William Fritzon",
+            "Alexander Feldman",
+            # "孟子易",
+            "Mengzi yi",
+            "zheng zhang",
+            "Matt Langford",
+            "Max Mitchell",
+            "Richard Burgmann",
+            "John Griffith",
+            "Chris Connett",
+            "Steven Tomlinson",
+            "Jameel Syed",
+            "Bong Choung",
+            "Ignacio Freiberg",
+            "Zhilong Yang",
+            "Dan Esposito (Guardion)",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "Cody Brocious",
+            "James H. Park",
+            "Norton Wang",
+            "Kevin Le",
+            "Tianyu Ge",
+            "David MacCumber",
+            "Oliver Steele",
+            "Yaw Etse",
+            "Dave B",
+            "Waleed Hamied",
+            "George Chiesa",
+            "supershabam",
+            "Delton Ding",
+            "Thomas Tarler",
+            "Jonathan Eppele",
+            "Isak Hietala",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Clark Gaebel",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Awoo",
+            "Dr  David G. Stork",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Ryan Dahl",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            # "世珉 匡",
+            "Shi min kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
+
+
+class Thumbnail(DistanceProductScene):
+    def construct(self):
+        product = get_wallis_product()
+        product.scale(1.5)
+        product.move_to(2.5 * UP)
+        frac_lines = product.get_parts_by_tex("\\over")
+        frac_indices = map(product.index_of_part, frac_lines)
+        parts = VGroup(*[
+            product[i-1:i+2]
+            for i in frac_indices
+        ])
+        parts[::2].set_color(GREEN)
+        parts[1::2].set_color(BLUE)
+        parts[-1].set_color(WHITE)
+        parts[-1].set_stroke(RED, 1)
+        parts[-1].scale(1.5, about_edge=LEFT)
+
+        new_proof = TextMobject("New proof")
+        new_proof.scale(2.5)
+        new_proof.set_color(YELLOW)
+        new_proof.set_stroke(RED, 0.75)
+        new_proof.next_to(product, DOWN, MED_LARGE_BUFF)
+
+        circle = self.circle = Circle(radius=8, color=RED)
+        circle.move_to(3 * DOWN, DOWN)
+        bottom_dot = Dot(color=BLUE)
+        bottom_dot.move_to(circle.get_bottom())
+        observer = PiCreature(mode="pondering")
+        observer.scale_to_fit_height(0.5)
+        observer.next_to(bottom_dot, DOWN)
+
+        lights = VGroup()
+        lines = VGroup()
+        light_config = dict(HIGHT_QUALITY_AMBIENT_LIGHT_CONFIG)
+        # light_config = dict(CHEAP_AMBIENT_LIGHT_CONFIG)
+        light_config["max_opacity"] = 1
+        step = 0.03
+        for frac in np.arange(step, 0.2, step):
+            for u in -1, 1:
+                light = AmbientLight(**light_config)
+                dot = Dot(color=BLUE)
+                dot.move_to(light)
+                light.add_to_back(dot)
+                light.move_to(self.get_circle_point_at_proportion(u * frac - 0.25))
+                lights.add(light)
+                line = DashedLine(dot.get_center(), circle.get_bottom())
+                lines.add(line)
+
+
+        self.add(circle)
+        self.add(lights)
+        self.add(product)
+        self.add(new_proof)
+        self.add(bottom_dot, observer)
 
 
 
