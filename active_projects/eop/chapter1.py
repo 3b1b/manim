@@ -802,7 +802,12 @@ class IllustrateAreaModel2(GraphScene):
             color = YELLOW,
             animated = False
         )
-        
+        # don't show the labels just yet
+        self.remove(
+            self.left_T_label_group[0],
+            self.right_T_label_group[0],
+        )
+
         def integral_update_func(t):
             return scipy.special.erf(
                 self.point_to_coords(self.right_v_line.get_center())[0]
