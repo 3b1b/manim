@@ -977,6 +977,7 @@ class RowOfDice(VGroup):
             new_die.submobjects[0].set_stroke(width = 7)
             new_die.next_to(self, RIGHT)
             self.add(new_die)
+        self.move_to(ORIGIN)
 
 
 
@@ -986,9 +987,6 @@ class ShowUncertainty1(Scene):
 
         eye = np.random.randint(1,7)
         face = self.row_of_dice.submobjects[eye - 1]
-        self.tallies[eye - 1] += 1
-
-        new_hist = self.hist_from_tallies()
 
         self.play(
             ApplyMethod(face.submobjects[0].set_fill, {"opacity": 1},
@@ -996,36 +994,23 @@ class ShowUncertainty1(Scene):
                 run_time = 0.3,
             ),
         )
-        self.play(
-            Transform(self.dice_histogram, new_hist,
-                run_time = 0.5)
-        )
-
-    def hist_from_tallies(self):
-        x_scale = self.row_of_dice.get_width() / np.size(self.tallies)
-        hist = Histogram(np.ones(6), self.tallies, 
-            mode = "widths", 
-            x_labels = "none",
-            y_scale = 0.5,
-            x_scale = x_scale
-        )
-
-        hist.next_to(self.row_of_dice, UP)
-        return hist
 
     def construct(self):
 
-        self.row_of_dice = RowOfDice().scale(0.5).move_to(2 * DOWN)
+        self.row_of_dice = RowOfDice().scale(1)
         self.add(self.row_of_dice)
 
-        self.tallies = np.zeros(6)
-        self.dice_histogram = self.hist_from_tallies()
-        
-        self.add(self.dice_histogram)
-
-        for i in range(30):
+        for i in range(5):
             self.throw_a_die()
-            self.wait()
+            self.wait(1)
+
+        for i in range(10):
+            self.throw_a_die()
+            self.wait(0.3)
+
+        for i in range(10):
+            self.throw_a_die()
+            self.wait(0.1)
 
 
 
@@ -1033,10 +1018,8 @@ class IdealizedDieHistogram(Scene):
 
     def construct(self):
 
-        self.row_of_dice = RowOfDice().scale(0.5).move_to(2 * DOWN)
-        self.add(self.row_of_dice)
         self.probs = 1.0/6 * np.ones(6)
-        x_scale = self.row_of_dice.get_width() / np.size(self.probs)
+        x_scale = 1.0
 
         y_labels = ["${1\over 6}$"] * 6
 
@@ -1048,9 +1031,10 @@ class IdealizedDieHistogram(Scene):
             y_scale = 20,
             x_scale = x_scale,
         )
-        hist.next_to(self.row_of_dice, UP)
+        hist.remove(hist.y_labels_group)
 
-        self.add(hist)
+        self.play(FadeIn(hist))
+        self.play(LaggedStart(FadeIn, hist.y_labels_group))
 
 
 
