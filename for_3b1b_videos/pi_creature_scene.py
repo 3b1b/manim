@@ -262,8 +262,7 @@ class TeacherStudentsScene(PiCreatureScene):
         PiCreatureScene.setup(self)
         self.screen = ScreenRectangle(height=self.screen_height)
         self.screen.to_corner(UP + LEFT)
-        self.hold_up_spot = self.teacher.get_corner(
-            UP + LEFT) + MED_LARGE_BUFF * UP
+        self.hold_up_spot = self.teacher.get_corner(UP + LEFT) + MED_LARGE_BUFF * UP
 
     def create_pi_creatures(self):
         self.teacher = Mortimer(color = self.default_pi_creature_kwargs["color"])
