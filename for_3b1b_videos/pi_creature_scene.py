@@ -39,7 +39,7 @@ class PiCreatureScene(Scene):
     }
 
     def setup(self):
-        self.pi_creatures = self.create_pi_creatures()
+        self.pi_creatures = VGroup(*self.create_pi_creatures())
         self.pi_creature = self.get_primary_pi_creature()
         if self.pi_creatures_start_on_screen:
             self.add(*self.pi_creatures)

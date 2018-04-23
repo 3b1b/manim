@@ -439,7 +439,13 @@ class DashedLine(Line):
 
     def generate_points(self):
         length = np.linalg.norm(self.end - self.start)
+        if length == 0:
+            self.add(Line(self.start, self.end))
+            return self
         num_interp_points = int(length / self.dashed_segment_length)
+        # Even number ensures that start and end points are hit
+        if num_interp_points % 2 == 1:
+            num_interp_points += 1
         points = [
             interpolate(self.start, self.end, alpha)
             for alpha in np.linspace(0, 1, num_interp_points)
