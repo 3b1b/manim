@@ -1134,7 +1134,7 @@ class ShowUncertainty3(Scene):
 
 SICKLY_GREEN = "#9BBD37"
 
-class OneIn200HaveDisease(Scene):
+class OneIn200HasDisease(Scene):
     def construct(self):
         title = TextMobject("1 in 200")
         title.to_edge(UP)
@@ -1226,7 +1226,7 @@ class PascalBrickWall(VMobject):
             if len(rects.submobjects) > 0:
                 new_rect.next_to(rects,RIGHT,buff = 0)
             else:
-                new_rect.next_to(0.5 * self.width * LEFT, RIGHT, buff = 0)
+                new_rect.next_to(self.get_center() + 0.5 * self.width * LEFT, RIGHT, buff = 0)
             rects.add(new_rect)
         return rects
 
@@ -1261,10 +1261,12 @@ class PascalBrickWall(VMobject):
         centers = self.get_outcome_centers_for_level(r)
         outcome_width = self.outcome_shrinkage_factor_x * float(self.width) / (2 ** r)
         outcome_height = self.outcome_shrinkage_factor_y * self.height
+        corner_radius = min(0.1, 0.3 * min(outcome_width, outcome_height))
+        # this scales down the corner radius for very narrow rects
         rect = RoundedRectangle(
             width = outcome_width,
             height = outcome_height,
-            corner_radius = 0.1,
+            corner_radius = corner_radius,
             fill_color = BLACK,
             fill_opacity = 0.2,
             stroke_width = 0
@@ -1894,7 +1896,6 @@ class PascalBrickWallScene(Scene):
         self.wait()
 
 
-        print previous_row.get_center()
         # show individual outcomes
         outcomes = previous_row.get_outcome_rects_for_level(5, with_labels = False)
         grouped_outcomes = VGroup()
@@ -1906,29 +1907,149 @@ class PascalBrickWallScene(Scene):
 
 
         grouped_outcomes_copy = grouped_outcomes.copy()
+
+        original_grouped_outcomes = grouped_outcomes.copy()
+        # for later reference
+
         self.play(
             LaggedStart(FadeIn, grouped_outcomes),
             LaggedStart(FadeIn, grouped_outcomes_copy),
         )
         self.wait()
 
+        # show how the outcomes in one tally split into two copies
+        # going into the neighboring tallies
 
+        n = 5 # level to split
+        k = 2 # tally to split
 
-
-        target_outcomes = self.row.get_outcome_rects_for_level(6, with_labels = False)
+        target_outcomes = self.row.get_outcome_rects_for_level(n + 1, with_labels = False)
         grouped_target_outcomes = VGroup()
         index = 0
-        for i in range(7):
-            size = choose(6,i)
+        old_tally_sizes = [choose(n,i) for i in range(n + 1)]
+        new_tally_sizes = [choose(n + 1,i) for i in range(n + 2)]
+        for i in range(n + 2):
+            size = new_tally_sizes[i]
             grouped_target_outcomes.add(VGroup(target_outcomes[index:index + size]))
             index += size
 
         self.play(
-            Transform(grouped_outcomes[2],grouped_target_outcomes[2][0][5:])
+            Transform(grouped_outcomes[k],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:])
         )
 
         self.play(
-            Transform(grouped_outcomes_copy[2],grouped_target_outcomes[3][0][:10])
+            Transform(grouped_outcomes_copy[k],grouped_target_outcomes[k + 1][0][:old_tally_sizes[k]])
         )
+
+
+        old_tally_sizes.append(0) # makes the ege cases work properly
+
+        # split the other 
+        for i in range(k) + range(k + 1, n + 1):
+            self.play(
+                Transform(grouped_outcomes[i][0],
+                    grouped_target_outcomes[i][0][old_tally_sizes[i - 1]:]
+                ),
+                Transform(grouped_outcomes_copy[i][0],
+                    grouped_target_outcomes[i + 1][0][:old_tally_sizes[i]]
+                )
+            )
+
+        
+        self.wait()
+
+        # remove outcomes and sizes except for one tally
+        anims = []
+        for i in range(n + 1):
+            if i != k - 1:
+                anims.append(FadeOut(grouped_outcomes_copy[i]))
+            if i != k:
+                anims.append(FadeOut(grouped_outcomes[i]))
+
+        self.play(*anims)
+
+        self.wait()
+
+        self.play(
+            Transform(grouped_outcomes_copy[k - 1], original_grouped_outcomes[k - 1])
+        )
+        self.play(
+            Transform(grouped_outcomes[k], original_grouped_outcomes[k])
+        )
+
+
+        new_rects = self.row.get_rects_for_level(n + 1)
+
+        decimals_copy = self.decimals.copy()
+        decimals_copy2 = self.decimals.copy()
+
+        self.play(
+            Transform(grouped_outcomes[k],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:]),
+            Transform(grouped_outcomes_copy[k - 1],grouped_target_outcomes[k][0][:old_tally_sizes[k]]),
+            decimals_copy[k - 1].move_to, new_rects[k],
+            decimals_copy2[k].move_to, new_rects[k],
+            )
+
+        # show new outcome sizes
+        new_decimals = VGroup()
+        for (i,rect) in zip(new_tally_sizes, new_rects):
+            decimal = Integer(i).move_to(rect)
+            new_decimals.add(decimal)
+
+        self.play(
+            FadeOut(decimals_copy[k - 1]),
+            FadeOut(decimals_copy2[k]),
+            FadeIn(new_decimals[k])
+        )
+
+        # move the old decimals into the new row
+        anims = []
+        anims.append(decimals_copy2[0].move_to)
+        anims.append(new_rects[0])
+        for i in range(1,k) + range(k + 1, n):
+            anims.append(decimals_copy[i - 1].move_to)
+            anims.append(new_rects[i])
+            anims.append(decimals_copy2[i].move_to)
+            anims.append(new_rects[i])
+        anims.append(decimals_copy[n].move_to)
+        anims.append(new_rects[n + 1])
+
+        self.play(*anims)
+
+        # fade them out and fade in their sums
+        anims = []
+        for i in range(1,k) + range(k + 1, n):
+            anims.append(FadeOut(decimals_copy[i - 1]))
+            anims.append(FadeOut(decimals_copy2[i]))
+            anims.append(FadeIn(new_decimals[i]))
+
+        self.play(*anims)
+
+        self.add_foreground_mobject(new_decimals)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
