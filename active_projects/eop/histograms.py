@@ -18,7 +18,11 @@ class Histogram(VMobject):
         "y_scale" : 1.0,
         "x_labels" : "auto", # widths, mids, auto, none, [...]
         "y_labels" : "auto", # auto, none, [...]
-        "x_min" : 0
+        "y_label_position" : "top", # "center"
+        "x_min" : 0,
+        "bar_stroke_width" : 5,
+        "outline_stroke_width" : 0,
+        "stroke_color" : WHITE
     }
 
     def __init__(self, x_values, y_values, mode = "widths", **kwargs):
@@ -119,7 +123,13 @@ class Histogram(VMobject):
             bar = Rectangle(
                 width = self.widths_scaled[i],
                 height = self.y_values_scaled[i],
+                stroke_width = self.bar_stroke_width,
+                stroke_color = self.stroke_color,
             )
+            if bar.height == 0:
+                bar.height = 0.01
+                bar.generate_points()
+
             t = float(x - self.x_min)/(self.x_max - self.x_min)
             bar_color = interpolate_color(
                 self.start_color,
@@ -127,7 +137,6 @@ class Histogram(VMobject):
                 t
             )
             bar.set_fill(color = bar_color, opacity = 1)
-            bar.set_stroke(width = 0)
             bar.next_to(previous_bar,RIGHT,buff = 0, aligned_edge = DOWN)
             
             self.bars.add(bar)
@@ -137,7 +146,12 @@ class Histogram(VMobject):
             self.x_labels_group.add(x_label)
 
             y_label = TextMobject(self.y_labels[i])
-            y_label.next_to(bar, UP)
+            if self.y_label_position == "top":
+                y_label.next_to(bar, UP)
+            elif self.y_label_position == "center":
+                y_label.move_to(bar)
+            else:
+                raise Exception("y_label_position must be top or center")
             self.y_labels_group.add(y_label)
 
             if i == 0:
@@ -155,11 +169,12 @@ class Histogram(VMobject):
             # lower left
         outline_points.append(outline_points[0])
 
-        self.outline = Polygon(*outline_points)
-        self.outline.set_stroke(color = WHITE)
+        self.outline = Polygon(*outline_points,
+            stroke_width = self.outline_stroke_width,
+            stroke_color = self.stroke_color)
         self.add(self.bars, self.x_labels_group, self.y_labels_group, self.outline)
 
-        print self.submobjects
+        self.move_to(ORIGIN)
 
     def get_lower_left_point(self):
         return self.bars[0].get_anchors()[-2]
@@ -263,61 +278,6 @@ class FlashThroughHistogram(Animation):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-class SampleScene(Scene):
-
-    def construct(self):
-
-        x_values = np.array([1,2,3,4,5])
-        y_values = np.array([4,3,5,2,3])
-
-        hist1 = Histogram(
-            x_values = x_values,
-            y_values = y_values,
-            x_scale = 0.5,
-            y_scale = 0.5,
-        ).shift(1*DOWN)
-        self.add(hist1)
-        self.wait()
-
-        y_values2 = np.array([3,8,7,15,5])
-
-        hist2 = Histogram(
-            x_values = x_values,
-            y_values = y_values2,
-            x_scale = 0.5,
-            y_scale = 0.5,
-            x_labels = text_range(1,6,1),
-        )
-
-        v1 = hist1.get_lower_left_point()
-        v2 = hist2.get_lower_left_point()
-        hist2.shift(v1 - v2)
-        
-        # self.play(
-        #   ReplacementTransform(hist1,hist2)
-        # )
-
-        self.play(
-            FlashThroughHistogram(
-                hist1,
-                direction = "horizontal",
-                mode = "linear",
-                run_time = 10,
-                rate_func = None,
-            )
-        )
 
 
 
