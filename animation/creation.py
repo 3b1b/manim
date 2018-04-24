@@ -144,14 +144,10 @@ class FadeIn(Transform):
 
 
 class FadeInAndShiftFromDirection(Transform):
-    CONFIG = {
-        "direction": DOWN,
-    }
-
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject, direction=DOWN, **kwargs):
         digest_config(self, kwargs)
         target = mobject.copy()
-        mobject.shift(self.direction)
+        mobject.shift(direction)
         mobject.fade(1)
         Transform.__init__(self, mobject, target, **kwargs)
 

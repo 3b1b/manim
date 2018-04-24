@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import random
+import string
 
 from constants import *
 
@@ -34,9 +35,9 @@ class OpeningQuote(Scene):
             "lag_factor": 4,
             "run_time": 5,
         },
-        "text_size" : "\\Large",
+        "text_size": "\\Large",
         "use_quotation_marks": True,
-        "top_buff" : 1.0,
+        "top_buff": 1.0,
         "author_buff": 1.0,
     }
 
@@ -46,7 +47,7 @@ class OpeningQuote(Scene):
 
         self.play(FadeIn(self.quote, **self.fade_in_kwargs))
         self.wait(2)
-        self.play(Write(self.author, run_time = 3))
+        self.play(Write(self.author, run_time=3))
         self.wait()
 
     def get_quote(self, max_width=FRAME_WIDTH - 1):
@@ -57,10 +58,10 @@ class OpeningQuote(Scene):
         if isinstance(self.quote, str):
             if self.use_quotation_marks:
                 quote = TextMobject("``%s''" %
-                                self.quote.strip(), **text_mobject_kwargs)
+                                    self.quote.strip(), **text_mobject_kwargs)
             else:
                 quote = TextMobject("%s" %
-                                self.quote.strip(), **text_mobject_kwargs)
+                                    self.quote.strip(), **text_mobject_kwargs)
         else:
             if self.use_quotation_marks:
                 words = [self.text_size + " ``"] + list(self.quote) + ["''"]
@@ -73,14 +74,14 @@ class OpeningQuote(Scene):
                 quote[-1].shift(0.2 * LEFT)
         for term, color in self.highlighted_quote_terms:
             quote.set_color_by_tex(term, color)
-        quote.to_edge(UP, buff = self.top_buff)
+        quote.to_edge(UP, buff=self.top_buff)
         if quote.get_width() > max_width:
             quote.scale_to_fit_width(max_width)
         return quote
 
     def get_author(self, quote):
         author = TextMobject(self.text_size + " --" + self.author)
-        author.next_to(quote, DOWN, buff = self.author_buff)
+        author.next_to(quote, DOWN, buff=self.author_buff)
         author.set_color(YELLOW)
         return author
 
@@ -99,7 +100,6 @@ class PatreonThanks(Scene):
         patreon_logo = PatreonLogo()
         patreon_logo.to_edge(UP)
 
-        n_patrons = len(self.specific_patrons)
         patrons = map(TextMobject, self.specific_patrons)
         num_groups = float(len(patrons)) / self.max_patron_group_size
         proportion_range = np.linspace(0, 1, num_groups + 1)
@@ -147,14 +147,22 @@ class PatreonThanks(Scene):
 class PatreonEndScreen(PatreonThanks):
     CONFIG = {
         "n_patron_columns": 3,
-        "max_patron_width": 3,
+        "max_patron_width": 3.5,
         "run_time": 20,
         "randomize_order": True,
+        "capitalize": True,
+        "name_y_spacing": 0.7,
     }
 
     def construct(self):
         if self.randomize_order:
             random.shuffle(self.specific_patrons)
+        if self.capitalize:
+            self.specific_patrons = [
+                " ".join(map(string.capitalize, patron.split(" ")))
+                for patron in self.specific_patrons
+            ]
+
         self.add_title()
         self.scroll_through_patrons()
 
@@ -195,11 +203,12 @@ class PatreonEndScreen(PatreonThanks):
             if patron.get_width() > self.max_patron_width:
                 patron.scale_to_fit_width(self.max_patron_width)
         columns = VGroup(*[
-            VGroup(
-                *patrons[i::self.n_patron_columns]
-            ).arrange_submobjects(DOWN, buff=MED_SMALL_BUFF)
+            VGroup(*patrons[i::self.n_patron_columns])
             for i in range(self.n_patron_columns)
         ])
+        for column in columns:
+            for n, name in enumerate(column):
+                name.shift(n * self.name_y_spacing * DOWN)
         columns.arrange_submobjects(
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
@@ -209,7 +218,7 @@ class PatreonEndScreen(PatreonThanks):
         columns.to_edge(RIGHT)
 
         self.play(
-            columns.next_to, FRAME_Y_RADIUS * DOWN, UP, LARGE_BUFF,
+            columns.move_to, 2 * DOWN, DOWN,
             columns.to_edge, RIGHT,
             Animation(black_rect),
             rate_func=None,
