@@ -2,7 +2,8 @@ from __future__ import absolute_import
 
 import numpy as np
 
-from mobject.mobject import Mobject
+from mobject.numbers import DecimalNumber
+from mobject.numbers import Integer
 from mobject.svg.tex_mobject import TexMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
@@ -55,9 +56,12 @@ def vector_coordinate_label(vector_mob, integer_labels=True,
 
 class Matrix(VMobject):
     CONFIG = {
-        "v_buff": 0.5,
-        "h_buff": 1,
-        "add_background_rectangles": False
+        "v_buff": 1,
+        "h_buff": 1.5,
+        "add_background_rectangles": False,
+        "element_to_mobject": TexMobject,
+        "element_to_mobject_config": {},
+        "element_alignment_corner": DR,
     }
 
     def __init__(self, matrix, **kwargs):
@@ -69,34 +73,32 @@ class Matrix(VMobject):
         matrix = np.array(matrix)
         if matrix.ndim == 1:
             matrix = matrix.reshape((matrix.size, 1))
-        if not isinstance(matrix[0][0], Mobject):
-            matrix = matrix.astype("string")
-            matrix = self.string_matrix_to_mob_matrix(matrix)
-        self.organize_mob_matrix(matrix)
-        self.add(*matrix.flatten())
+        mob_matrix = self.matrix_to_mob_matrix(matrix)
+        self.organize_mob_matrix(mob_matrix)
+        self.elements = VGroup(*mob_matrix.flatten())
+        self.add(self.elements)
         self.add_brackets()
         self.center()
-        self.mob_matrix = matrix
+
+        self.mob_matrix = mob_matrix
         if self.add_background_rectangles:
-            for mob in matrix.flatten():
+            for mob in self.elements:
                 mob.add_background_rectangle()
 
-    def string_matrix_to_mob_matrix(self, matrix):
-        return np.array([
-            map(TexMobject, row)
-            for row in matrix
-        ]).reshape(matrix.shape)
+    def matrix_to_mob_matrix(self, matrix):
+        return np.vectorize(
+            lambda e: self.element_to_mobject(
+                e, **self.element_to_mobject_config)
+        )(matrix)
 
     def organize_mob_matrix(self, matrix):
         for i, row in enumerate(matrix):
             for j, elem in enumerate(row):
                 mob = matrix[i][j]
-                if i == 0 and j == 0:
-                    continue
-                elif i == 0:
-                    mob.next_to(matrix[i][j - 1], RIGHT, self.h_buff)
-                else:
-                    mob.next_to(matrix[i - 1][j], DOWN, self.v_buff)
+                mob.move_to(
+                    i * self.v_buff * DOWN + j * self.h_buff * RIGHT,
+                    self.element_alignment_corner
+                )
         return self
 
     def add_brackets(self):
@@ -128,3 +130,42 @@ class Matrix(VMobject):
 
     def get_brackets(self):
         return self.brackets
+
+
+class DecimalMatrix(Matrix):
+    CONFIG = {
+        "element_to_mobject": DecimalNumber,
+        "element_to_mobject_config": {"num_decimal_points": 1}
+    }
+
+
+class IntegerMatrix(Matrix):
+    CONFIG = {
+        "element_to_mobject": Integer,
+    }
+
+
+class MobjectMatrix(Matrix):
+    CONFIG = {
+        "element_to_mobject": lambda m: m,
+    }
+
+
+def get_det_text(matrix, determinant=None, background_rect=True):
+    parens = TexMobject(["(", ")"])
+    parens.scale(2)
+    parens.stretch_to_fit_height(matrix.get_height())
+    l_paren, r_paren = parens.split()
+    l_paren.next_to(matrix, LEFT, buff=0.1)
+    r_paren.next_to(matrix, RIGHT, buff=0.1)
+    det = TextMobject("det").next_to(l_paren, LEFT, buff=0.1)
+    if background_rect:
+        det.add_background_rectangle()
+    det_text = VMobject(det, l_paren, r_paren)
+    if determinant is not None:
+        eq = TexMobject("=")
+        eq.next_to(r_paren, RIGHT, buff=0.1)
+        result = TexMobject(str(determinant))
+        result.next_to(eq, RIGHT, buff=0.2)
+        det_text.add(eq, result)
+    return det_text
