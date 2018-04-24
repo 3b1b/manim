@@ -2030,7 +2030,14 @@ class PascalBrickWallScene(Scene):
 
 
 
+class IRecognizeThis(TeacherStudentsScene):
 
+    def construct(self):
+
+        self.student_says("I have seen this before!")
+        self.change_student_modes("pondering", "raise_right_hand", "pondering")
+        self.teacher_says("This is Pascal's Triangle")
+        
 
 
 
