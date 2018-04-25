@@ -1181,7 +1181,7 @@ class OneIn200HasDisease(Scene):
 
 
 
-class PascalBrickWall(VMobject):
+class BrickRow(VMobject):
 
     CONFIG = {
         "left_color" : YELLOW,
@@ -1374,7 +1374,7 @@ class SplitRectsInBrickWall(Animation):
 
 
 
-class PascalBrickWallScene(Scene):
+class BrickRowScene(Scene):
 
     def split_tallies(self, direction = DOWN):
 
@@ -1671,7 +1671,7 @@ class PascalBrickWallScene(Scene):
         randy = CoinFlippingPiCreature()
         randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
         self.add(randy)
-        self.row = PascalBrickWall(1, height = 2, width = 10)
+        self.row = BrickRow(1, height = 2, width = 10)
         
         self.decimals = VGroup()
 
@@ -1883,7 +1883,8 @@ class PascalBrickWallScene(Scene):
 
         w = 1.5 * self.row.height * DOWN
         self.play(
-            self.row.shift, w
+            self.row.shift, w,
+            Animation(previous_row)
         )
 
         self.play(
@@ -2030,27 +2031,142 @@ class PascalBrickWallScene(Scene):
 
 
 
-class IRecognizeThis(TeacherStudentsScene):
+class MorphBrickRowIntoHistogram(Scene):
 
     def construct(self):
 
-        self.student_says("I have seen this before!")
-        self.change_student_modes("pondering", "raise_right_hand", "pondering")
-        self.wait()
-        self.play(FadeOut(self.get_students[1].bubble))
+        row = BrickRow(3, height = 2, width = 10)
+        self.add(row)
+        tallies = VMobject()
 
-        self.wait()
-        # insert https://www.youtube.com/watch?v=K8P8uFahAgc&t=6m47s here
+        for (i,brick) in enumerate(row.rects):
+            tally = TallyStack(3 - i, i)
+            tally.next_to(brick, UP)
+            self.add(tally)
+            tallies.add(tally)
+            brick.set_stroke(width = 3)
 
-        self.teacher_says("It's Pascal's Triangle")
+        self.remove(row.subdivs, row.border)
+
+        anims = []
+        for brick in row.rects:
+            anims.append(brick.rotate)
+            anims.append(TAU/4)
+        anims.append(FadeOut(tallies))
+        self.play(*anims)
+
+        bar_anchors = [2.5 * DOWN + row.height * (i - 1.5) * RIGHT for i in range(4)]
+
+        anims = []
+        for (i,brick) in enumerate(row.rects):
+            anims.append(brick.next_to)
+            anims.append(bar_anchors[i])
+            anims.append({"direction" : UP, "buff" : 0})
+        self.play(*anims)
+
+        bars = VMobject(*[row.rects[i] for i in range(4)])
+        
+        # draw x-axis
+
+        x_axis = Arrow(ORIGIN, 10 * RIGHT, color = WHITE, buff = 0)
+        x_axis.next_to(bars, DOWN, buff = -0.1)
+        #x_labels = VMobject(*[TexMobject(str(i)) for i in range(4)])
+        x_labels = VMobject()
+        for (i, bar) in enumerate(bars):
+            label = Integer(i)
+            label.next_to(bar_anchors[i], DOWN)
+            x_labels.add(label)
+
+        nb_heads_label = TextMobject("\# of heads")
+        nb_heads_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
+        
+        self.play(
+            FadeIn(x_axis),
+            FadeIn(x_labels),
+            FadeIn(nb_heads_label)
+        )
+
+
+
+        # draw y-guides
+
+        y_guides = VMobject()
+        for i in range(1,5):
+            y_guide = Line(5 * LEFT, 5 * RIGHT, stroke_color = GRAY)
+            y_guide.move_to(2.5 * DOWN + i * float(row.width) / 8 * UP)
+            y_guide_label = TexMobject("{" + str(i) + "\over 8}", color = GRAY).scale(0.7)
+            y_guide_label.next_to(y_guide, LEFT)
+            y_guide.add(y_guide_label)
+            y_guides.add(y_guide)
+
+        self.bring_to_back(y_guides)
+        self.play(FadeIn(y_guides), Animation(bars))
+
+
+        total_area_text = TextMobject("total area = 1", color = YELLOW)
+        total_area_rect = SurroundingRectangle(total_area_text,
+            buff = MED_SMALL_BUFF,
+            fill_opacity = 0.5,
+            fill_color = BLACK,
+            stroke_color = YELLOW
+        )
+
+        self.play(
+            Write(total_area_text),
+            ShowCreation(total_area_rect)
+        )
+
+        prob_dist_text = TextMobject("probability distribution", color = YELLOW)
+        prob_dist_text.to_corner(UP, buff = MED_LARGE_BUFF)
+        prob_dist_rect = SurroundingRectangle(prob_dist_text,
+            buff = MED_SMALL_BUFF,
+            stroke_color = YELLOW
+        )
+
+        self.play(
+            Write(prob_dist_text),
+            ShowCreation(prob_dist_rect)
+        )
+
+
+
+# class IRecognizeThis(TeacherStudentsScene):
+
+#     def construct(self):
+
+#         self.student_says("I have seen this before!")
+#         self.change_student_modes("pondering", "raise_right_hand", "pondering")
+#         self.wait()
+#         self.play(FadeOut(self.get_students[1].bubble))
+
+#         self.wait()
+#         # insert https://www.youtube.com/watch?v=K8P8uFahAgc&t=6m47s here
+
+#         self.teacher_says("It's Pascal's Triangle")
         
 
 
-class EntirePascalBrickWall(Scene):
+class EntireBrickWall(Scene):
 
     def construct(self):
 
+        row_height = 0.3
+        nb_rows = 20
+        start_point = 3 * UP
         
+        rows = VMobject()
+        rows.add(BrickRow(0, height = row_height))
+        rows[0].move_to(start_point)
+        self.add(rows)
+
+        for i in range(1,nb_rows):
+            rows.add(BrickRow(i, height = row_height))
+            rows[-1].move_to(start_point + (i - 1) * row_height * DOWN)
+            self.bring_to_back(rows[-1])
+            self.play(
+                rows[-1].shift, row_height * DOWN,
+                Animation(rows[-2])
+            )
 
 
 
