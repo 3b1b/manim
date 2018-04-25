@@ -53,7 +53,7 @@ class Female(Male):
         "color" : MAROON_B,
     }
 
-class PascalsTraingle(VGroup):
+class PascalsTriangle(VGroup):
     CONFIG = {
         "n_rows" : 9,
         "distance" : 0.8,
@@ -143,7 +143,7 @@ class ExperienceProblemSolver(PiCreatureScene):
 
     def think_about_patterns(self):
         randy, jenny = self.randy, self.jenny
-        rows = PascalsTraingle(
+        rows = PascalsTriangle(
             n_rows = 6,
             distance = 0.6,
         )
@@ -1768,7 +1768,7 @@ class IntroducePascalsTriangle(Scene):
         self.cap_off_triangle()
 
     def show_triangle(self):
-        rows = PascalsTraingle(n_rows = self.max_n+1)
+        rows = PascalsTriangle(n_rows = self.max_n+1)
         self.play(FadeIn(rows[1]))
         for last_row, curr_row in zip(rows[1:], rows[2:]):
             self.play(*[
@@ -3477,7 +3477,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
             self.teacher.get_corner(UP+LEFT), UP 
         )
 
-        pascals = PascalsTraingle(n_rows = 6)
+        pascals = PascalsTriangle(n_rows = 6)
         pascals.scale_to_fit_height(3)
         pascals.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         pascals.set_color_by_gradient(BLUE, YELLOW)
