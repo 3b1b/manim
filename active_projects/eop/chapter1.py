@@ -2036,11 +2036,21 @@ class IRecognizeThis(TeacherStudentsScene):
 
         self.student_says("I have seen this before!")
         self.change_student_modes("pondering", "raise_right_hand", "pondering")
-        self.teacher_says("This is Pascal's Triangle")
+        self.wait()
+        self.play(FadeOut(self.get_students[1].bubble))
+
+        self.wait()
+        # insert https://www.youtube.com/watch?v=K8P8uFahAgc&t=6m47s here
+
+        self.teacher_says("It's Pascal's Triangle")
         
 
 
+class EntirePascalBrickWall(Scene):
 
+    def construct(self):
+
+        
 
 
 
