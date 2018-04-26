@@ -5,6 +5,7 @@ import numpy as np
 from mobject.numbers import DecimalNumber
 from mobject.numbers import Integer
 from mobject.svg.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from mobject.shape_matchers import BackgroundRectangle
@@ -56,8 +57,8 @@ def vector_coordinate_label(vector_mob, integer_labels=True,
 
 class Matrix(VMobject):
     CONFIG = {
-        "v_buff": 1,
-        "h_buff": 1.5,
+        "v_buff": 0.8,
+        "h_buff": 1.3,
         "add_background_rectangles": False,
         "element_to_mobject": TexMobject,
         "element_to_mobject_config": {},
@@ -151,9 +152,9 @@ class MobjectMatrix(Matrix):
     }
 
 
-def get_det_text(matrix, determinant=None, background_rect=True):
+def get_det_text(matrix, determinant=None, background_rect=True, initial_scale_factor=2):
     parens = TexMobject(["(", ")"])
-    parens.scale(2)
+    parens.scale(initial_scale_factor)
     parens.stretch_to_fit_height(matrix.get_height())
     l_paren, r_paren = parens.split()
     l_paren.next_to(matrix, LEFT, buff=0.1)
