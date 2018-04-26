@@ -1189,7 +1189,7 @@ class BrickRow(VMobject):
         "height" : 1.0,
         "width" : 8.0,
         "outcome_shrinkage_factor_x" : 0.85,
-        "outcome_shrinkage_factor_y" : 0.95
+        "outcome_shrinkage_factor_y" : 0.9
     }
 
     def __init__(self, n, **kwargs):
@@ -1267,8 +1267,8 @@ class BrickRow(VMobject):
             width = outcome_width,
             height = outcome_height,
             corner_radius = corner_radius,
-            fill_color = BLACK,
-            fill_opacity = 0.2,
+            fill_color = DARK_GREY,
+            fill_opacity = 0.8,
             stroke_width = 0
         )
         rects = VGroup()
@@ -1401,10 +1401,10 @@ class BrickRowScene(Scene):
 
         for (i, tally) in enumerate(self.tallies):
 
-            if len(self.decimals) > 0:
-                decimal = self.decimals[i]
-            else:
-                decimal = VMobject()
+            # if len(self.decimals) > 0:
+            #     decimal = self.decimals[i]
+            # else:
+            #     decimal = VMobject()
 
             target_left = tally_targets_left[i]
             new_tally_left = TallyStack(tally.nb_heads + 1, tally.nb_tails)
@@ -1413,13 +1413,13 @@ class BrickRowScene(Scene):
             
             self.play(
                 tally.move_anchor_to, target_left,
-                decimal.shift,v
+                #decimal.shift,v
             )
             tally.anchor = target_left
             self.play(Transform(tally, new_tally_left))
             
             tally_copy = self.tallies_copy[i]
-            decimal_copy = decimal.copy()
+            #decimal_copy = decimal.copy()
 
             target_right = tally_targets_right[i]
             new_tally_right = TallyStack(tally.nb_heads, tally.nb_tails + 1)
@@ -1462,38 +1462,38 @@ class BrickRowScene(Scene):
 
 
         anims1 = []
-        if len(self.decimals) > 0:
-            self.decimal_copies = VGroup()
+        # if len(self.decimals) > 0:
+        #     self.decimal_copies = VGroup()
 
         for (i, tally) in enumerate(self.tallies):
 
-            if len(self.decimals) > 0:
-                decimal = self.decimals[i]
-            else:
-                decimal = VMobject()
+            # if len(self.decimals) > 0:
+            #     decimal = self.decimals[i]
+            # else:
+            #     decimal = VMobject()
 
             target_left = tally_targets_left[i]
             v = target_left - tally.anchor
             
             anims1.append(tally.move_anchor_to)
             anims1.append(target_left)
-            anims1.append(decimal.shift)
-            anims1.append(v)
+            #anims1.append(decimal.shift)
+            #anims1.append(v)
             
             tally.anchor = target_left
             
             tally_copy = self.tallies_copy[i]
-            decimal_copy = decimal.copy()
+            #decimal_copy = decimal.copy()
 
             target_right = tally_targets_right[i]
             v = target_right - tally_copy.anchor
             
             anims1.append(tally_copy.move_anchor_to)
             anims1.append(target_right)
-            anims1.append(decimal_copy.shift)
-            anims1.append(v)
-            if len(self.decimals) > 0:
-                self.decimal_copies.add(decimal_copy)
+            #anims1.append(decimal_copy.shift)
+            #anims1.append(v)
+            # if len(self.decimals) > 0:
+            #     self.decimal_copies.add(decimal_copy)
             
             tally_copy.anchor = target_right
 
@@ -1518,8 +1518,8 @@ class BrickRowScene(Scene):
 
 
 
-        if len(self.decimals) > 0:
-            self.add_foreground_mobject(self.decimal_copies)
+        # if len(self.decimals) > 0:
+        #     self.add_foreground_mobject(self.decimal_copies)
 
         return anims1, anims2
 
@@ -1536,36 +1536,36 @@ class BrickRowScene(Scene):
 
 
 
-    def split_decimals_alone(self):
+    # def split_decimals_alone(self):
 
-        r = self.row.coloring_level
-        targets_left = []
-        targets_right = []
+    #     r = self.row.coloring_level
+    #     targets_left = []
+    #     targets_right = []
 
-        for rect in self.row.get_rects_for_level(r):
-            target = rect.get_center() + 0.25 * rect.get_width() * LEFT
-            targets_left.append(target)
-            target = rect.get_center() + 0.25 * rect.get_width() * RIGHT
-            targets_right.append(target)
+    #     for rect in self.row.get_rects_for_level(r):
+    #         target = rect.get_center() + 0.25 * rect.get_width() * LEFT
+    #         targets_left.append(target)
+    #         target = rect.get_center() + 0.25 * rect.get_width() * RIGHT
+    #         targets_right.append(target)
 
-        anims = []
-        self.decimal_copies = VGroup()
+    #     anims = []
+    #     self.decimal_copies = VGroup()
 
-        for (i, decimal) in enumerate(self.decimals):
+    #     for (i, decimal) in enumerate(self.decimals):
 
-            anims.append(decimal.move_to)
-            anims.append(targets_left[i])
+    #         anims.append(decimal.move_to)
+    #         anims.append(targets_left[i])
 
-            decimal_copy = decimal.copy()
+    #         decimal_copy = decimal.copy()
             
-            anims.append(decimal_copy.move_to)
-            anims.append(targets_right[i])
-            self.decimal_copies.add(decimal_copy)
+    #         anims.append(decimal_copy.move_to)
+    #         anims.append(targets_right[i])
+    #         self.decimal_copies.add(decimal_copy)
             
 
-        self.play(*anims)
+    #     self.play(*anims)
 
-        self.add_foreground_mobject(self.decimal_copies)
+    #     self.add_foreground_mobject(self.decimal_copies)
 
 
 
@@ -1623,36 +1623,36 @@ class BrickRowScene(Scene):
         self.row = merged_row
 
 
-    def merge_decimals(self):
+    # def merge_decimals(self):
 
-        anims = []        
-        self.new_decimals = VGroup()
-        self.decimal_copies = VGroup()
+    #     anims = []        
+    #     self.new_decimals = VGroup()
+    #     self.decimal_copies = VGroup()
 
-        if self.decimals in self.mobjects:
-            anims.append(FadeOut(self.decimals))
-        if self.decimal_copies in self.mobjects:
-            anims.append(FadeOut(self.decimal_copies))
+    #     if self.decimals in self.mobjects:
+    #         anims.append(FadeOut(self.decimals))
+    #     if self.decimal_copies in self.mobjects:
+    #         anims.append(FadeOut(self.decimal_copies))
 
-        r = self.row.coloring_level
-        for (i, rect) in enumerate(self.row.rects):
-            k = choose(r,i)
-            decimal = Integer(k)
-            decimal.move_to(rect)
-            if rect.get_width() < 0.2:
-                # then the rect is too narrow,
-                # let the decimal go in dignity
-                decimal.set_stroke(width = 0)
-                decimal.set_fill(opacity = 0)
-            self.new_decimals.add(decimal)
+    #     r = self.row.coloring_level
+    #     for (i, rect) in enumerate(self.row.rects):
+    #         k = choose(r,i)
+    #         decimal = Integer(k)
+    #         decimal.move_to(rect)
+    #         if rect.get_width() < 0.2:
+    #             # then the rect is too narrow,
+    #             # let the decimal go in dignity
+    #             decimal.set_stroke(width = 0)
+    #             decimal.set_fill(opacity = 0)
+    #         self.new_decimals.add(decimal)
 
-        anims.append(FadeIn(self.new_decimals))
-        self.play(*anims)
+    #     anims.append(FadeIn(self.new_decimals))
+    #     self.play(*anims)
 
-        self.remove(self.decimal_copies)
-        self.decimals = self.new_decimals.copy()
-        #self.remove(self.new_decimals)
-        self.add_foreground_mobject(self.decimals)
+    #     self.remove(self.decimal_copies)
+    #     self.decimals = self.new_decimals.copy()
+    #     #self.remove(self.new_decimals)
+    #     self.add_foreground_mobject(self.decimals)
 
 
 
@@ -1673,7 +1673,7 @@ class BrickRowScene(Scene):
         self.add(randy)
         self.row = BrickRow(1, height = 2, width = 10)
         
-        self.decimals = VGroup()
+        #self.decimals = VGroup()
 
         self.play(FlipCoin(randy),
             FadeIn(self.row))
@@ -1731,22 +1731,6 @@ class BrickRowScene(Scene):
         
 
 
-        # # show their numbers
-        # nb_outcomes = [1,2,1]
-        # self.decimals = VGroup()
-        # for (n,rect) in zip(nb_outcomes, self.row.rects):
-        #     decimal = Integer(n).move_to(rect)
-        #     self.decimals.add(decimal)
-        # self.play(
-        #     LaggedStart(FadeIn, self.decimals)
-        # )
-        # self.wait()
-        # self.play(
-        #     LaggedStart(FadeOut, self.decimals)
-        # )
-
-        # self.decimals = VGroup()
-
 
 
         # # # # # # # #
@@ -1802,25 +1786,25 @@ class BrickRowScene(Scene):
         # FOURTH FLIP #
         # # # # # # # #
 
-        self.play(FlipCoin(randy))
+        # self.play(FlipCoin(randy))
 
-        self.wait()
+        # self.wait()
 
-        self.play(
-            SplitRectsInBrickWall(self.row)
-        )
-        self.wait()
+        # self.play(
+        #     SplitRectsInBrickWall(self.row)
+        # )
+        # self.wait()
 
-        self.add_foreground_mobject(self.tallies[-1])
-        # this tweaks an undesirable overlap in the next animation
-        self.split_tallies_at_once(direction = LEFT)
-        self.wait()
-        self.merge_rects_by_subdiv()
-        self.wait()
-        self.merge_tallies(direction = LEFT)
-        self.merge_rects_by_coloring()
-        self.merge_decimals()
-        self.wait()
+        # self.add_foreground_mobject(self.tallies[-1])
+        # # this tweaks an undesirable overlap in the next animation
+        # self.split_tallies_at_once(direction = LEFT)
+        # self.wait()
+        # self.merge_rects_by_subdiv()
+        # self.wait()
+        # self.merge_tallies(direction = LEFT)
+        # self.merge_rects_by_coloring()
+        # self.merge_decimals()
+        # self.wait()
 
 
         # # # # # # # #
@@ -1846,12 +1830,11 @@ class BrickRowScene(Scene):
         # self.wait()
 
 
-        # # # # # # # # #
-        # # SIXTH  FLIP #
-        # # # # # # # # #
+        # # # # # # # # # # # # # #
+        # # FOURTH FLIP IN DETAIL #
+        # # # # # # # # # # # # # #
 
 
-        self.revert_to_original_skipping_status()
 
         # removing the tallies (boy are they sticky)
         self.play(FadeOut(self.tallies))
@@ -1866,7 +1849,7 @@ class BrickRowScene(Scene):
         # delete all the old crap hidden behind the row
         # before we can move it
         self.remove(*self.mobjects)
-        self.add(randy,self.decimals,self.decimal_copies)
+        self.add(randy) #,self.decimals,self.decimal_copies)
 
 
         previous_row = self.row.copy()
@@ -1875,8 +1858,8 @@ class BrickRowScene(Scene):
         v = 1.25 * self.row.height * UP
         self.play(
             previous_row.shift, v,
-            self.decimals.shift, v,
-            self.decimal_copies.shift, v
+            #self.decimals.shift, v,
+            #self.decimal_copies.shift, v
         )
 
         self.add(self.row)
@@ -1898,8 +1881,8 @@ class BrickRowScene(Scene):
 
         self.wait()
 
-        n = 4 # level to split
-        k = 2 # tally to split
+        n = 3 # level to split
+        k = 1 # tally to split
 
         # show individual outcomes
         outcomes = previous_row.get_outcome_rects_for_level(n, with_labels = False)
@@ -1925,6 +1908,7 @@ class BrickRowScene(Scene):
         # show how the outcomes in one tally split into two copies
         # going into the neighboring tallies
 
+        self.revert_to_original_skipping_status()
 
         target_outcomes = self.row.get_outcome_rects_for_level(n + 1, with_labels = False)
         grouped_target_outcomes = VGroup()
@@ -1937,17 +1921,16 @@ class BrickRowScene(Scene):
             index += size
 
         self.play(
-            Transform(grouped_outcomes[k],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:])
+            Transform(grouped_outcomes[k][0],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:])
         )
 
         self.play(
-            Transform(grouped_outcomes_copy[k],grouped_target_outcomes[k + 1][0][:old_tally_sizes[k]])
+            Transform(grouped_outcomes_copy[k][0],grouped_target_outcomes[k + 1][0][:old_tally_sizes[k]])
         )
 
+        old_tally_sizes.append(0) # makes the edge cases work properly
 
-        old_tally_sizes.append(0) # makes the ege cases work properly
-
-        # split the other 
+        # split the other tallies
         for i in range(k) + range(k + 1, n + 1):
             self.play(
                 Transform(grouped_outcomes[i][0],
@@ -1983,52 +1966,88 @@ class BrickRowScene(Scene):
 
         new_rects = self.row.get_rects_for_level(n + 1)
 
-        decimals_copy = self.decimals.copy()
-        decimals_copy2 = self.decimals.copy()
+        #decimals_copy = self.decimals.copy()
+        #decimals_copy2 = self.decimals.copy()
 
         self.play(
-            Transform(grouped_outcomes[k],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:]),
-            Transform(grouped_outcomes_copy[k - 1],grouped_target_outcomes[k][0][:old_tally_sizes[k]]),
-            decimals_copy[k - 1].move_to, new_rects[k],
-            decimals_copy2[k].move_to, new_rects[k],
-            )
-
-        # show new outcome sizes
-        new_decimals = VGroup()
-        for (i,rect) in zip(new_tally_sizes, new_rects):
-            decimal = Integer(i).move_to(rect)
-            new_decimals.add(decimal)
-
-        self.play(
-            FadeOut(decimals_copy[k - 1]),
-            FadeOut(decimals_copy2[k]),
-            FadeIn(new_decimals[k])
+            Transform(grouped_outcomes[k][0],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:]),
+            Transform(grouped_outcomes_copy[k - 1][0],grouped_target_outcomes[k][0][:old_tally_sizes[k]]),
+            #decimals_copy[k - 1].move_to, new_rects[k],
+            #decimals_copy2[k].move_to, new_rects[k],
         )
 
-        # move the old decimals into the new row
-        anims = []
-        anims.append(decimals_copy2[0].move_to)
-        anims.append(new_rects[0])
-        for i in range(1,k) + range(k + 1, n):
-            anims.append(decimals_copy[i - 1].move_to)
-            anims.append(new_rects[i])
-            anims.append(decimals_copy2[i].move_to)
-            anims.append(new_rects[i])
-        anims.append(decimals_copy[n].move_to)
-        anims.append(new_rects[n + 1])
+        # show new outcome sizes
+        # new_decimals = VGroup()
+        # for (i,rect) in zip(new_tally_sizes, new_rects):
+        #     decimal = Integer(i).move_to(rect)
+        #     new_decimals.add(decimal)
 
-        self.play(*anims)
+        # self.play(
+        #     FadeOut(decimals_copy[k - 1]),
+        #     FadeOut(decimals_copy2[k]),
+        #     FadeIn(new_decimals[k])
+        # )
 
-        # fade them out and fade in their sums
-        anims = []
-        for i in range(1,k) + range(k + 1, n):
-            anims.append(FadeOut(decimals_copy[i - 1]))
-            anims.append(FadeOut(decimals_copy2[i]))
-            anims.append(FadeIn(new_decimals[i]))
+        # # move the old decimals into the new row
+        # anims = []
+        # anims.append(decimals_copy2[0].move_to)
+        # anims.append(new_rects[0])
+        # for i in range(1,k) + range(k + 1, n):
+        #     anims.append(decimals_copy[i - 1].move_to)
+        #     anims.append(new_rects[i])
+        #     anims.append(decimals_copy2[i].move_to)
+        #     anims.append(new_rects[i])
+        # anims.append(decimals_copy[n].move_to)
+        # anims.append(new_rects[n + 1])
 
-        self.play(*anims)
+        # # self.play(*anims)
 
-        self.add_foreground_mobject(new_decimals)
+        # # fade them out and fade in their sums
+        # anims = []
+        # for i in range(1,k) + range(k + 1, n):
+        #     anims.append(FadeOut(decimals_copy[i - 1]))
+        #     anims.append(FadeOut(decimals_copy2[i]))
+        #     anims.append(FadeIn(new_decimals[i]))
+
+        # self.play(*anims)
+
+        # self.add_foreground_mobject(new_decimals)
+
+
+class OutlineableBars(VGroup):
+    CONFIG = {
+        "outline_stroke_width" : 5,
+        "stroke_color" : WHITE
+    }
+    def create_outline(self, animated = False, **kwargs):
+
+        outline_points = []
+
+        for (i, bar) in enumerate(self.submobjects):
+            
+            if i == 0:
+                # start with the lower left
+                outline_points.append(bar.get_corner(DOWN + LEFT))
+
+            # upper two points of each bar
+            outline_points.append(bar.get_corner(UP + LEFT))
+            outline_points.append(bar.get_corner(UP + RIGHT))
+
+            previous_bar = bar
+        # close the outline
+            # lower right
+        outline_points.append(previous_bar.get_corner(DOWN + RIGHT))
+            # lower left
+        outline_points.append(outline_points[0])
+
+        self.outline = Polygon(*outline_points,
+            stroke_width = self.outline_stroke_width,
+            stroke_color = self.stroke_color)
+
+        if animated:
+            self.play(FadeIn(self.outline, **kwargs))
+        return self.outline
+
 
 
 
@@ -2038,25 +2057,28 @@ class GenericMorphBrickRowIntoHistogram(Scene):
     CONFIG = {
         "level" : 3,
         "bar_width" : 2.0,
-        "bar_anchor_height" : -3.0
+        "bar_anchor_height" : -3.0,
+        "show_tallies" : False,
     }
 
     def construct(self):
 
         self.row = BrickRow(self.level, height = self.bar_width, width = 10)
-        self.bars = VMobject(*[self.row.rects[i] for i in range(self.level + 1)])
+        self.bars = OutlineableBars(*[self.row.rects[i] for i in range(self.level + 1)])
         self.bar_anchors = [self.bar_anchor_height * UP + self.row.height * (i - 0.5 * self.level) * RIGHT for i in range(self.level + 1)]
 
-
         self.add(self.row)
-        tallies = VMobject()
 
-        for (i,brick) in enumerate(self.row.rects):
-            tally = TallyStack(self.level - i, i)
-            tally.next_to(brick, UP)
-            self.add(tally)
-            tallies.add(tally)
-            brick.set_stroke(width = 3)
+        if self.show_tallies:
+
+            tallies = VMobject()
+
+            for (i,brick) in enumerate(self.row.rects):
+                tally = TallyStack(self.level - i, i)
+                tally.next_to(brick, UP)
+                self.add(tally)
+                tallies.add(tally)
+                brick.set_stroke(width = 3)
 
         self.remove(self.row.subdivs, self.row.border)
 
@@ -2064,7 +2086,9 @@ class GenericMorphBrickRowIntoHistogram(Scene):
         for brick in self.row.rects:
             anims.append(brick.rotate)
             anims.append(TAU/4)
-        anims.append(FadeOut(tallies))
+        
+        if self.show_tallies:
+            anims.append(FadeOut(tallies))
         self.play(*anims)
 
         
@@ -2074,6 +2098,17 @@ class GenericMorphBrickRowIntoHistogram(Scene):
             anims.append(self.bar_anchors[i])
             anims.append({"direction" : UP, "buff" : 0})
         self.play(*anims)
+
+        self.bars.create_outline()
+
+        anims = []
+        for bar in self.bars.submobjects:
+            anims.append(bar.set_stroke)
+            anims.append({"width" : 0})
+        anims.append(FadeIn(self.bars.outline))
+        self.play(*anims)
+
+
 
 
 
@@ -2085,7 +2120,8 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
         "level" : 3,
         "prob_denominator" : 8,
         "bar_width" : 2.0,
-        "bar_anchor_height" : -3.0
+        "bar_anchor_height" : -3.0,
+        "show_tallies" : True
     }
 
     def construct(self):
@@ -2095,10 +2131,11 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
 
         # draw x-axis
 
-        x_axis = Arrow(ORIGIN, 10 * RIGHT, color = WHITE, buff = 0)
-        x_axis.next_to(self.bars, DOWN, buff = -0.1)
+        x_axis = Line(ORIGIN, 10 * RIGHT, color = WHITE, buff = 0)
+        x_axis.next_to(self.bars, DOWN, buff = 0)
         #x_labels = VMobject(*[TexMobject(str(i)) for i in range(4)])
         x_labels = VMobject()
+
         for (i, bar) in enumerate(self.bars):
             label = Integer(i)
             label.next_to(self.bar_anchors[i], DOWN)
@@ -2163,19 +2200,20 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
         "level" : 20,
         "prob_ticks" : 0.05,
         "bar_width" : 0.5,
-        "bar_anchor_height" : -1.0
+        "bar_anchor_height" : -3.0,
+        "x_ticks": 5
     }
 
     def construct(self):
 
         super(MorphBrickRowIntoHistogram20, self).construct()
 
-        x_axis = Arrow(ORIGIN, 10 * RIGHT, color = WHITE, buff = 0)
-        x_axis.next_to(self.bars, DOWN, buff = -0.1)
+        x_axis = Line(ORIGIN, 10 * RIGHT, color = WHITE, buff = 0)
+        x_axis.next_to(self.bars, DOWN, buff = 0)
         #x_labels = VMobject(*[TexMobject(str(i)) for i in range(4)])
         x_labels = VMobject()
         for (i, bar) in enumerate(self.bars):
-            if i % 5 != 0:
+            if i % self.x_ticks != 0:
                 continue
             label = Integer(i)
             label.next_to(self.bar_anchors[i], DOWN)
@@ -2195,9 +2233,13 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
         max_prob = float(choose(self.level, self.level/2)) / 2 ** self.level
 
         y_guides = VMobject()
-        for i in np.arange(self.prob_ticks, 1.3 * max_prob, self.prob_ticks):
+        y_guide_heights = []
+        prob_grid = np.arange(self.prob_ticks, 1.3 * max_prob, self.prob_ticks)
+        for i in prob_grid:
             y_guide = Line(5 * LEFT, 5 * RIGHT, stroke_color = GRAY)
-            y_guide.move_to(self.bar_anchor_height * UP + i * float(self.row.width) * UP)
+            y_guide_height = self.bar_anchor_height + i * float(self.row.width)
+            y_guide_heights.append(y_guide_height)
+            y_guide.move_to(y_guide_height * UP)
             y_guide_label = DecimalNumber(i, num_decimal_points = 2, color = GRAY)
             y_guide_label.scale(0.7)
             y_guide_label.next_to(y_guide, LEFT)
@@ -2207,21 +2249,64 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
         self.bring_to_back(y_guides)
         self.play(FadeIn(y_guides), Animation(self.bars))
 
+        histogram_width = self.bars.get_width()
+        histogram_height = self.bars.get_height()
+
+        # scale to fit screen
+        self.scale_x = 10.0/(len(self.bars) * self.bar_width)
+        self.scale_y = 6.0/histogram_height
 
 
-# class IRecognizeThis(TeacherStudentsScene):
+        anims = []
+        for (bar, x_label) in zip(self.bars, x_labels):
+            v = (self.scale_x - 1) * x_label.get_center()[0] * RIGHT
+            anims.append(x_label.shift)
+            anims.append(v)
 
-#     def construct(self):
 
-#         self.student_says("I have seen this before!")
-#         self.change_student_modes("pondering", "raise_right_hand", "pondering")
-#         self.wait()
-#         self.play(FadeOut(self.get_students[1].bubble))
+        anims.append(self.bars.stretch_about_point)
+        anims.append(self.scale_x)
+        anims.append(0)
+        anims.append(ORIGIN)
+        anims.append(self.bars.outline.stretch_about_point)
+        anims.append(self.scale_x)
+        anims.append(0)
+        anims.append(ORIGIN)
 
-#         self.wait()
-#         # insert https://www.youtube.com/watch?v=K8P8uFahAgc&t=6m47s here
+        self.play(*anims)
 
-#         self.teacher_says("It's Pascal's Triangle")
+        anims = []
+        for (guide, i, h) in zip(y_guides, prob_grid, y_guide_heights):
+            new_y_guide_height = self.bar_anchor_height + i * self.scale_y * float(self.row.width)
+            v = (new_y_guide_height - h) * UP
+            anims.append(guide.shift)
+            anims.append(v)
+
+        anims.append(self.bars.stretch_about_point)
+        anims.append(self.scale_y)
+        anims.append(1)
+        anims.append(self.bars.get_bottom())
+        anims.append(self.bars.outline.stretch_about_point)
+        anims.append(self.scale_y)
+        anims.append(1)
+        anims.append(self.bars.get_bottom())
+
+        self.play(*anims)
+
+class MorphBrickRowIntoHistogram100(MorphBrickRowIntoHistogram20):
+    CONFIG = {
+        "level" : 100,
+        "x_ticks": 20,
+        "prob_ticks": 0.02
+    }
+
+class MorphBrickRowIntoHistogram500(MorphBrickRowIntoHistogram20):
+    CONFIG = {
+        "level" : 500,
+        "x_ticks": 100,
+        "prob_ticks": 0.01
+    }
+
         
 
 
@@ -2231,40 +2316,64 @@ class EntireBrickWall(Scene):
 
         row_height = 0.3
         nb_rows = 20
-        start_point = 3 * UP
+        start_point = 3 * UP + 1 * LEFT
         
         rows = VMobject()
         rows.add(BrickRow(0, height = row_height))
         rows[0].move_to(start_point)
         self.add(rows)
 
-        for i in range(1,nb_rows):
+        zero_counter = Integer(0).next_to(start_point + 0.5 * rows[0].width * RIGHT)
+        nb_flips_text = TextMobject("\# of flips")
+        nb_flips_text.next_to(zero_counter, RIGHT, buff = LARGE_BUFF)
+        self.add(zero_counter, nb_flips_text)
+
+        for i in range(1,nb_rows + 1):
             rows.add(BrickRow(i, height = row_height))
             rows[-1].move_to(start_point + (i - 1) * row_height * DOWN)
             self.bring_to_back(rows[-1])
-            self.play(
+            anims = [
                 rows[-1].shift, row_height * DOWN,
                 Animation(rows[-2])
-            )
+            ]
 
+            if i % 5 == 0:
+                counter = Integer(i)
+                counter.next_to(rows[-1].get_right() + row_height * DOWN, RIGHT)
+                anims.append(FadeIn(counter))
 
+            self.play(*anims)
 
-class SceneType1(Scene):
-    def construct(self):
-        self.randy = Randolph()
+        # draw indices under the last row for the number of tails
+        tails_counters = VGroup()
+        for (i, rect) in enumerate(rows[-1].rects):
+            if i < 6 or i > 14:
+                continue
+            if i == 6:
+                counter = TexMobject("\dots", color = COLOR_TAILS)
+                counter.next_to(rect, DOWN, buff = 1.5 * MED_SMALL_BUFF)
+            elif i == 14:
+                counter = TexMobject("\dots", color = COLOR_TAILS)
+                counter.next_to(rect, DOWN, buff = 1.5 * MED_SMALL_BUFF)
+                counter.shift(0.2 * RIGHT)
+            else:
+                counter = Integer(i, color = COLOR_TAILS)
+                counter.next_to(rect, DOWN)
+            tails_counters.add(counter)
 
+        nb_tails_text = TextMobject("\# of tails", color = COLOR_TAILS)
+        nb_tails_text.next_to(tails_counters[-1], RIGHT, buff = LARGE_BUFF)
 
-class SceneType2(SceneType1):
-    def construct(self):
-        super(SceneType2, self).construct()
-        self.add(self.randy)
+        self.play(
+            LaggedStart(FadeIn, tails_counters),
+            FadeIn(nb_tails_text)
+        )
 
-
-
-
-
-
-
+        special_brick_copy = rows[-1].rects[13].copy()
+        self.play(
+            rows.fade, 0.9,
+            FadeIn(special_brick_copy)
+        )
 
 
 
