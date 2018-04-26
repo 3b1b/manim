@@ -37,6 +37,12 @@ Y_COLOR = RED_C
 Z_COLOR = BLUE_D
 
 
+# TODO: Much of this scene type seems dependent on the coordinate system chosen.
+# That is, being centered at the origin with grid units corresponding to the
+# arbitrary space units.  Change it!
+#
+# Also, methods I would have thought of as getters, like coords_to_vector, are
+# actually doing a lot of animating.
 class VectorScene(Scene):
     CONFIG = {
         "basis_vector_stroke_width": 6
@@ -64,6 +70,14 @@ class VectorScene(Scene):
         axes.fade(axes_dimness)
         self.add(axes)
         self.freeze_background()
+
+    def get_vector(self, numerical_vector, **kwargs):
+        return Arrow(
+            self.plane.coords_to_point(0, 0),
+            self.plane.coords_to_point(*numerical_vector[:2]),
+            buff=0,
+            **kwargs
+        )
 
     def add_vector(self, vector, color=YELLOW, animate=True, **kwargs):
         if not isinstance(vector, Arrow):
@@ -281,10 +295,10 @@ class LinearTransformationScene(VectorScene):
     }
 
     def setup(self):
+        # The has_already_setup attr is to not break all the old Scenes
         if hasattr(self, "has_already_setup"):
             return
         self.has_already_setup = True
-        # ^This is to not break all the old Scenes
         self.background_mobjects = []
         self.foreground_mobjects = []
         self.transformable_mobjects = []
@@ -321,6 +335,7 @@ class LinearTransformationScene(VectorScene):
     def add_background_mobject(self, *mobjects):
         self.add_special_mobjects(self.background_mobjects, *mobjects)
 
+    # TODO, this conflicts with Scene.add_fore
     def add_foreground_mobject(self, *mobjects):
         self.add_special_mobjects(self.foreground_mobjects, *mobjects)
 
@@ -426,6 +441,9 @@ class LinearTransformationScene(VectorScene):
 
     def apply_matrix(self, matrix, **kwargs):
         self.apply_transposed_matrix(np.array(matrix).T, **kwargs)
+
+    def apply_inverse(self, matrix, **kwargs):
+        self.apply_matrix(np.linalg.inv(matrix), **kwargs)
 
     def apply_transposed_matrix(self, transposed_matrix, **kwargs):
         func = self.get_transposed_matrix_transformation(transposed_matrix)
