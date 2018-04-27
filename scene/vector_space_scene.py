@@ -10,6 +10,7 @@ from animation.creation import Write
 from animation.transform import ApplyFunction
 from animation.transform import ApplyPointwiseFunction
 from animation.creation import FadeOut
+from animation.creation import GrowArrow
 from animation.transform import Transform
 from mobject.mobject import Mobject
 from mobject.svg.tex_mobject import TexMobject
@@ -83,7 +84,7 @@ class VectorScene(Scene):
         if not isinstance(vector, Arrow):
             vector = Vector(vector, color=color, **kwargs)
         if animate:
-            self.play(ShowCreation(vector))
+            self.play(GrowArrow(vector))
         self.add(vector)
         return vector
 
@@ -120,6 +121,7 @@ class VectorScene(Scene):
         ])
 
     def get_vector_label(self, vector, label,
+                         at_tip=False,
                          direction="left",
                          rotate=False,
                          color=None,
@@ -134,15 +136,20 @@ class VectorScene(Scene):
         label.scale(label_scale_factor)
         label.add_background_rectangle()
 
-        angle = vector.get_angle()
-        if not rotate:
-            label.rotate(-angle, about_point=ORIGIN)
-        if direction is "left":
-            label.shift(-label.get_bottom() + 0.1 * UP)
+        if at_tip:
+            vect = vector.get_vector()
+            vect /= np.linalg.norm(vect)
+            label.next_to(vector.get_end(), vect, buff=SMALL_BUFF)
         else:
-            label.shift(-label.get_top() + 0.1 * DOWN)
-        label.rotate(angle, about_point=ORIGIN)
-        label.shift((vector.get_end() - vector.get_start()) / 2)
+            angle = vector.get_angle()
+            if not rotate:
+                label.rotate(-angle, about_point=ORIGIN)
+            if direction is "left":
+                label.shift(-label.get_bottom() + 0.1 * UP)
+            else:
+                label.shift(-label.get_top() + 0.1 * DOWN)
+            label.rotate(angle, about_point=ORIGIN)
+            label.shift((vector.get_end() - vector.get_start()) / 2)
         return label
 
     def label_vector(self, vector, label, animate=True, **kwargs):
@@ -373,12 +380,19 @@ class LinearTransformationScene(VectorScene):
         self.add_foreground_mobject(coords)
         return coords
 
-    def add_transformable_label(self, vector, label, new_label=None, **kwargs):
+    def add_transformable_label(
+            self, vector, label,
+            transformation_name="L",
+            new_label=None,
+            **kwargs):
         label_mob = self.label_vector(vector, label, **kwargs)
         if new_label:
             label_mob.target_text = new_label
         else:
-            label_mob.target_text = "L(%s)" % label_mob.get_tex_string()
+            label_mob.target_text = "%s(%s)" % (
+                transformation_name,
+                label_mob.get_tex_string()
+            )
         label_mob.vector = vector
         label_mob.kwargs = kwargs
         if "animate" in label_mob.kwargs:
