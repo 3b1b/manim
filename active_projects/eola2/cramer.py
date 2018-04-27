@@ -232,14 +232,19 @@ class PrerequisiteKnowledge(TeacherStudentsScene):
 
 
 class NotTheMostComputationallyEfficient(Scene):
+    CONFIG = {
+        "words": "Not the most \\\\ computationally \\\\ efficient",
+        "word_height": 4,
+    }
+
     def construct(self):
         big_rect = FullScreenFadeRectangle(opacity=0.5)
         self.add(big_rect)
 
-        words = TextMobject("Not the most \\\\ computationally \\\\ efficient")
+        words = TextMobject(self.words)
         words.set_color(RED)
         words.set_stroke(WHITE, 1)
-        words.scale_to_fit_height(4)
+        words.scale_to_fit_height(self.word_height)
         self.play(Write(words))
         self.wait()
 
@@ -450,6 +455,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         self.q_marks = q_marks
         self.input_vect_mob = input_vect_mob
         self.output_vect_mob = output_vect_mob
+        self.output_vect_label = output_vect_label
         self.column_mobs = column_mobs
 
     # Helpers
@@ -780,6 +786,7 @@ class WrongButHelpful(TeacherStudentsScene):
 class LookAtDotProducts(SetupSimpleSystemOfEquations):
     CONFIG = {
         "quit_before_final_transformation": True,
+        "equation_scale_factor": 0.7,
     }
 
     def construct(self):
@@ -789,8 +796,6 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
 
         self.remove_corner_system()
         self.show_dot_products()
-        self.show_transformation()
-        self.show_transformed_dot_products()
 
     def remove_corner_system(self):
         to_remove = [self.corner_rect, self.matrix_system]
@@ -800,18 +805,200 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
         q_marks = self.q_marks
         input_vect_mob = self.input_vect_mob
 
-        xy_vect_mob = Matrix(["x", "y"], add_background_rectangle=True)
+        equations = self.equations = VGroup()
+        for i in 0, 1:
+            basis = [0, 0]
+            basis[i] = 1
+            equation = VGroup(
+                Matrix(["x", "y"]),
+                TexMobject("\\cdot"),
+                IntegerMatrix(basis),
+                TexMobject("="),
+                TexMobject(["x", "y"][i]),
+            )
+            for part in equation:
+                if isinstance(part, Matrix):
+                    part.scale(self.array_scale_factor)
+            equation[2].elements.set_color([X_COLOR, Y_COLOR][i])
+            equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            equation.scale(self.equation_scale_factor)
+            equations.add(equation)
+        equations.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        equations.to_corner(UL)
+        corner_rect = self.corner_rect = BackgroundRectangle(equations, opacity=0.8)
+        self.resize_corner_rect_to_mobjet(corner_rect, equations)
+        corner_rect.save_state()
+        self.resize_corner_rect_to_mobjet(corner_rect, equations[0])
+
+        xy_vect_mob = Matrix(["x", "y"], include_background_rectangle=True)
         xy_vect_mob.scale(self.array_scale_factor)
         xy_vect_mob.next_to(input_vect_mob.get_end(), DOWN, SMALL_BUFF)
+        q_marks.add_background_rectangle()
         q_marks.next_to(xy_vect_mob, RIGHT)
 
+        origin = self.plane.coords_to_point(0, 0)
+        input_vect_end = input_vect_mob.get_end()
+        x_point = (input_vect_end - origin)[0] * RIGHT + origin
+        y_point = (input_vect_end - origin)[1] * UP + origin
+        v_dashed_line = DashedLine(input_vect_end, x_point)
+        h_dashed_line = DashedLine(input_vect_end, y_point)
+
+        h_brace = Brace(Line(x_point, origin), UP, buff=SMALL_BUFF)
+        v_brace = Brace(Line(y_point, origin), RIGHT, buff=SMALL_BUFF)
+
         self.add(xy_vect_mob)
+        self.wait()
+        self.play(
+            FadeIn(corner_rect),
+            FadeIn(equations[0][:-1]),
+            ShowCreation(v_dashed_line),
+            GrowFromCenter(h_brace),
+        )
+        self.play(
+            ReplacementTransform(h_brace.copy(), equations[0][-1])
+        )
+        self.wait()
+        self.play(
+            corner_rect.restore,
+            Animation(equations[0]),
+            FadeIn(equations[1]),
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(equations[1][-1].copy(), v_brace),
+            ShowCreation(h_dashed_line),
+            GrowFromCenter(v_brace)
+        )
+        self.wait()
+
+        self.to_fade = VGroup(
+            h_dashed_line, v_dashed_line,
+            h_brace, v_brace,
+            xy_vect_mob, q_marks,
+        )
 
     def show_dot_products(self):
-        pass
+        moving_equations = self.equations.copy()
+        transformed_equations = VGroup()
+        implications = VGroup()
+        transformed_input_rects = VGroup()
+        transformed_basis_rects = VGroup()
+        for equation in moving_equations:
+            equation.generate_target()
+            xy_vect, dot, basis, equals, coord = equation.target
+            T1, lp1, rp1 = TexMobject("T", "(", ")")
+            lp1.scale(1, about_edge=LEFT)
+            rp1.scale(1, about_edge=LEFT)
+            for paren in lp1, rp1:
+                paren.stretch_to_fit_height(equation.get_height())
+            T2, lp2, rp2 = T1.copy(), lp1.copy(), rp1.copy()
+            transformed_equation = VGroup(
+                T1, lp1, xy_vect, rp1, dot,
+                T2, lp2, basis, rp2, equals,
+                coord
+            )
+            transformed_equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            # transformed_equation.scale(self.equation_scale_factor)
 
-    def show_transformation(self):
-        pass
+            implies = TexMobject("\\Rightarrow").scale(1.2)
+            implies.next_to(equation, RIGHT)
+            implies.set_color(BLUE)
 
-    def show_transformed_dot_products(self):
-        pass
+            transformed_equation.next_to(implies, RIGHT)
+            implications.add(implies)
+
+            transformed_input_rects.add(SurroundingRectangle(
+                transformed_equation[:4],
+                color=OUTPUT_COLOR
+            ))
+            transformed_basis_rects.add(SurroundingRectangle(
+                transformed_equation[5:5 + 4],
+                color=basis.elements.get_color()
+            ))
+
+            for mob in [implies]:
+                mob.add(TexMobject("?").next_to(mob, UP, SMALL_BUFF))
+
+            transformed_equation.parts_to_write = VGroup(
+                T1, lp1, rp1, T2, lp2, rp2
+            )
+
+            transformed_equations.add(transformed_equation)
+
+        corner_rect = self.corner_rect
+        corner_rect.generate_target()
+        group = VGroup(self.equations, transformed_equations)
+        self.resize_corner_rect_to_mobjet(corner_rect.target, group)
+
+        for array in [self.output_vect_label] + list(self.column_mobs):
+            array.rect = SurroundingRectangle(array)
+            array.rect.match_color(array.elements)
+
+        self.play(
+            MoveToTarget(corner_rect),
+            Animation(self.equations),
+            FadeOut(self.to_fade),
+            LaggedStart(Write, implications),
+        )
+        self.remove(self.input_vect_mob)
+        self.apply_matrix(self.matrix, added_anims=[
+            Animation(VGroup(corner_rect, self.equations, implications)),
+            MoveToTarget(moving_equations[0]),
+            LaggedStart(FadeIn, transformed_equations[0].parts_to_write),
+            FadeIn(self.column_mobs),
+            ReplacementTransform(self.input_vect_mob.copy(), self.output_vect_mob)
+        ])
+        self.play(
+            MoveToTarget(moving_equations[1]),
+            LaggedStart(FadeIn, transformed_equations[1].parts_to_write),
+            path_arc=-30 * DEGREES,
+            run_time=2
+        )
+        self.wait()
+
+        # Show rectangles
+        self.play(
+            LaggedStart(ShowCreation, transformed_input_rects, lag_ratio=0.8),
+            ShowCreation(self.output_vect_label.rect),
+        )
+        for tbr, column_mob in zip(transformed_basis_rects, self.column_mobs):
+            self.play(
+                ShowCreation(tbr),
+                ShowCreation(column_mob.rect),
+            )
+        self.wait()
+        self.play(FadeOut(VGroup(
+            transformed_input_rects,
+            transformed_basis_rects,
+            self.output_vect_label.rect,
+            *[cm.rect for cm in self.column_mobs]
+        )))
+
+        # These computations assume plane is centered at ORIGIN
+        output_vect = self.output_vect_mob.get_end()
+        c1 = self.basis_vectors[0].get_end()
+        c2 = self.basis_vectors[1].get_end()
+        x_point = c1 * np.dot(output_vect, c1) / (np.linalg.norm(c1)**2)
+        y_point = c2 * np.dot(output_vect, c2) / (np.linalg.norm(c2)**2)
+
+        dashed_line_to_x = DashedLine(self.output_vect_mob.get_end(), x_point)
+        dashed_line_to_y = DashedLine(self.output_vect_mob.get_end(), y_point)
+
+        self.play(ShowCreation(dashed_line_to_x))
+        self.play(ShowCreation(dashed_line_to_y))
+        self.wait()
+
+    # Helpers
+
+    def resize_corner_rect_to_mobjet(self, rect, mobject):
+        rect.stretch_to_fit_width(mobject.get_width() + MED_LARGE_BUFF + SMALL_BUFF)
+        rect.stretch_to_fit_height(mobject.get_height() + MED_LARGE_BUFF + SMALL_BUFF)
+        rect.to_corner(UL, buff=0)
+        return rect
+
+
+class NotAtAllTrue(NotTheMostComputationallyEfficient):
+    CONFIG = {
+        "words": "Not at all \\\\ True",
+        "word_height": 4,
+    }
