@@ -51,7 +51,7 @@ class DecimalNumber(VMobject):
             )
 
         if self.unit is not None:
-            self.unit_sign = TexMobject(self.unit)
+            self.unit_sign = TexMobject(self.unit, color = self.color)
             self.add(self.unit_sign)
 
         self.arrange_submobjects(
