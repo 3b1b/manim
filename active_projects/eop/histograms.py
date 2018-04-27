@@ -107,6 +107,8 @@ class Histogram(VMobject):
             self.x_labels = num_arr_to_string_arr(self.widths)
         elif self.x_labels == "mids":
             self.x_labels = num_arr_to_string_arr(self.x_mids)
+        elif self.x_labels == "auto":
+            self.x_labels = num_arr_to_string_arr(self.x_mids)
         elif self.x_labels == "none":
             self.x_labels = empty_string_array(len(self.widths))
 
@@ -228,7 +230,7 @@ class FlashThroughHistogram(Animation):
         self.cell_indices = []
         for (i,x) in enumerate(x_values):
 
-            nb_cells = y_values[i]
+            nb_cells = int(np.floor(y_values[i]))
             for j in range(nb_cells):
                 self.cell_indices.append((i, j))
 
@@ -271,8 +273,8 @@ class FlashThroughHistogram(Animation):
         self.prototype_cell.generate_points()
         self.prototype_cell.move_to(cell.get_center())
 
-        #if t == 1:
-        #   self.mobject.remove(self.prototype_cell)
+        if t == 1:
+           self.mobject.remove(self.prototype_cell)
 
 
 
