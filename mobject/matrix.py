@@ -40,7 +40,7 @@ def vector_coordinate_label(vector_mob, integer_labels=True,
         vect = np.round(vect).astype(int)
     vect = vect[:n_dim]
     vect = vect.reshape((n_dim, 1))
-    label = Matrix(vect, add_background_rectangles=True)
+    label = Matrix(vect, add_background_rectangles_to_entries=True)
     label.scale(VECTOR_LABEL_SCALE_FACTOR)
 
     shift_dir = np.array(vector_mob.get_end())
@@ -59,7 +59,7 @@ class Matrix(VMobject):
     CONFIG = {
         "v_buff": 0.8,
         "h_buff": 1.3,
-        "add_background_rectangles": False,
+        "add_background_rectangles_to_entries": False,
         "element_to_mobject": TexMobject,
         "element_to_mobject_config": {},
         "element_alignment_corner": DR,
@@ -82,14 +82,15 @@ class Matrix(VMobject):
         self.center()
 
         self.mob_matrix = mob_matrix
-        if self.add_background_rectangles:
+        if self.add_background_rectangles_to_entries:
             for mob in self.elements:
                 mob.add_background_rectangle()
 
     def matrix_to_mob_matrix(self, matrix):
         return np.vectorize(
             lambda e: self.element_to_mobject(
-                e, **self.element_to_mobject_config)
+                e, **self.element_to_mobject_config
+            )
         )(matrix)
 
     def organize_mob_matrix(self, matrix):
