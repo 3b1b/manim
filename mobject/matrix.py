@@ -60,6 +60,7 @@ class Matrix(VMobject):
         "v_buff": 0.8,
         "h_buff": 1.3,
         "add_background_rectangles_to_entries": False,
+        "include_background_rectangle": False,
         "element_to_mobject": TexMobject,
         "element_to_mobject_config": {},
         "element_alignment_corner": DR,
@@ -80,11 +81,13 @@ class Matrix(VMobject):
         self.add(self.elements)
         self.add_brackets()
         self.center()
-
         self.mob_matrix = mob_matrix
         if self.add_background_rectangles_to_entries:
             for mob in self.elements:
                 mob.add_background_rectangle()
+        if self.include_background_rectangle:
+            self.background_rectangle = BackgroundRectangle(self)
+            self.add_to_back(self.background_rectangle)
 
     def matrix_to_mob_matrix(self, matrix):
         return np.vectorize(
