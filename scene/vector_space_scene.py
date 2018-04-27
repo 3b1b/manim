@@ -325,6 +325,7 @@ class LinearTransformationScene(VectorScene):
             )
             self.moving_vectors += list(self.basis_vectors)
             self.i_hat, self.j_hat = self.basis_vectors
+            self.add(self.basis_vectors)
 
     def add_special_mobjects(self, mob_list, *mobs_to_add):
         for mobject in mobs_to_add:

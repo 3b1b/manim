@@ -1,11 +1,10 @@
 from big_ol_pile_of_manim_imports import *
 
-
 X_COLOR = GREEN
 Y_COLOR = RED
 Z_COLOR = BLUE
-OUTPUT_COLOR = MAROON_B
-INPUT_COLOR = YELLOW
+OUTPUT_COLOR = YELLOW
+INPUT_COLOR = MAROON_B
 
 
 def get_cramer_matrix(matrix, output_vect, index=0):
@@ -248,7 +247,9 @@ class NotTheMostComputationallyEfficient(Scene):
 class SetupSimpleSystemOfEquations(LinearTransformationScene):
     CONFIG = {
         "matrix": [[3, 2], [-1, 2]],
-        "output_vect": [-5, -1],
+        "output_vect": [-4, -2],
+        "quit_before_final_transformation": False,
+        "array_scale_factor": 0.75
     }
 
     def construct(self):
@@ -376,7 +377,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
             np.linalg.inv(first_half_matrix),
         )
 
-        scale_factor = 0.75
+        scale_factor = self.array_scale_factor
 
         column_mobs = VGroup()
         for i in 0, 1:
@@ -438,11 +439,18 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         ])
         self.play(ShowPassingFlash(q_marks_rect))
         self.wait(2)
-        self.apply_matrix(self.matrix, added_anims=[
-            FadeOut(q_marks),
-            ReplacementTransform(input_vect_mob, output_vect_mob),
-            FadeIn(column_mobs),
-        ])
+        if not self.quit_before_final_transformation:
+            self.apply_matrix(self.matrix, added_anims=[
+                FadeOut(q_marks),
+                ReplacementTransform(input_vect_mob, output_vect_mob),
+                FadeIn(column_mobs),
+            ])
+            self.wait()
+
+        self.q_marks = q_marks
+        self.input_vect_mob = input_vect_mob
+        self.output_vect_mob = output_vect_mob
+        self.column_mobs = column_mobs
 
     # Helpers
 
@@ -490,3 +498,320 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
             index_of_submobject_to_align=-2
         )
         return system
+
+
+class ShowZeroDeterminantCase(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors": True,
+        "matrix": [[3, -2.0], [1, -2.0 / 3]],
+        "tex_scale_factor": 1.25,
+        "det_eq_symbol": "=",
+    }
+
+    def construct(self):
+        self.add_equation()
+        self.show_det_zero()
+
+    def add_equation(self):
+        equation = self.equation = TexMobject(
+            "A", "\\vec{\\textbf{x}}", "=", "\\vec{\\textbf{v}}"
+        )
+        equation.scale(self.tex_scale_factor)
+        equation.set_color_by_tex("{x}", INPUT_COLOR)
+        equation.set_color_by_tex("{v}", OUTPUT_COLOR)
+        equation.add_background_rectangle()
+        equation.to_corner(UL)
+        self.add(equation)
+        self.add_foreground_mobject(equation)
+
+    def show_det_zero(self):
+        matrix = self.matrix
+
+        # vect_in_span = [2, 2.0 / 3]
+        vect_in_span = [2, 2.0 / 3]
+        vect_off_span = [1, 2]
+        vect_in_span_mob = self.get_vector(vect_in_span, color=OUTPUT_COLOR)
+        vect_off_span_mob = self.get_vector(vect_off_span, color=OUTPUT_COLOR)
+
+        for vect_mob in vect_in_span_mob, vect_off_span_mob:
+            circle = Circle(color=WHITE, radius=0.15, stroke_width=2)
+            circle.move_to(vect_mob.get_end())
+            vect_mob.circle = circle
+
+        vect_off_span_words = TextMobject("No input lands here")
+        vect_off_span_words.next_to(vect_off_span_mob.circle, UP)
+        vect_off_span_words.add_background_rectangle()
+
+        vect_in_span_words = TextMobject("Many inputs lands here")
+        vect_in_span_words.next_to(vect_in_span_mob.circle, DR)
+        vect_in_span_words.shift_onto_screen()
+        vect_in_span_words.add_background_rectangle()
+
+        moving_group = VGroup(self.plane, self.basis_vectors)
+        moving_group.save_state()
+
+        solution = np.dot(np.linalg.pinv(matrix), vect_in_span)
+        import sympy
+        null_space_basis = np.array(sympy.Matrix(matrix).nullspace())
+        null_space_basis = null_space_basis.flatten().astype(float)
+        solution_vectors = VGroup(*[
+            self.get_vector(
+                solution + x * null_space_basis,
+                rectangular_stem_width=0.025,
+                tip_length=0.2,
+            )
+            for x in np.linspace(-4, 4, 20)
+        ])
+        solution_vectors.set_color_by_gradient(YELLOW, MAROON_B)
+
+        self.apply_matrix(matrix, path_arc=0)
+        self.wait()
+        self.show_det_equation()
+        self.wait()
+
+        # Mention zero determinants
+        self.play(GrowArrow(vect_off_span_mob))
+        self.play(
+            ShowCreation(vect_off_span_mob.circle),
+            Write(vect_off_span_words),
+        )
+        self.wait()
+        self.play(
+            FadeOut(vect_off_span_mob.circle),
+            ReplacementTransform(vect_off_span_mob, vect_in_span_mob),
+            ReplacementTransform(vect_off_span_words, vect_in_span_words),
+            ReplacementTransform(vect_off_span_mob.circle, vect_in_span_mob.circle),
+        )
+        self.wait(2)
+        self.play(
+            FadeOut(vect_in_span_words),
+            FadeOut(vect_in_span_mob.circle),
+            ApplyMethod(moving_group.restore, run_time=2),
+            ReplacementTransform(
+                VGroup(vect_in_span_mob),
+                solution_vectors,
+                run_time=2,
+            ),
+        )
+        self.wait()
+
+    # Helpers
+
+    def show_det_equation(self):
+        equation = self.equation
+        det_equation = TexMobject(
+            "\\det(", "A", ")", self.det_eq_symbol, "0"
+        )
+        det_equation.scale(self.tex_scale_factor)
+        det_equation.next_to(equation, DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        det_rect = BackgroundRectangle(det_equation)
+        self.play(
+            FadeIn(det_rect),
+            Write(det_equation[0]),
+            ReplacementTransform(
+                equation.get_part_by_tex("A").copy(),
+                det_equation.get_part_by_tex("A").copy(),
+            ),
+            Write(det_equation[2:]),
+        )
+        self.add_foreground_mobject(det_rect, det_equation)
+
+
+class NonZeroDeterminantCase(ShowZeroDeterminantCase, SetupSimpleSystemOfEquations):
+    CONFIG = {
+        "det_eq_symbol": "\\neq"
+    }
+
+    def construct(self):
+        self.add_equation()
+        self.show_det_equation()
+
+        output_vect = self.output_vect
+        matrix = self.matrix
+        input_vect = np.dot(np.linalg.inv(matrix), output_vect)
+
+        input_vect_mob = self.get_vector(input_vect, color=INPUT_COLOR)
+        output_vect_mob = self.get_vector(output_vect, color=OUTPUT_COLOR)
+
+        input_vect_label = TextMobject("Input")
+        input_vect_label.next_to(input_vect_mob.get_end(), DOWN, SMALL_BUFF)
+        input_vect_label.match_color(input_vect_mob)
+        output_vect_label = TextMobject("Output")
+        output_vect_label.next_to(output_vect_mob.get_end(), DOWN, SMALL_BUFF)
+        output_vect_label.match_color(output_vect_mob)
+        for label in input_vect_label, output_vect_label:
+            label.scale(1.25, about_edge=UP)
+            label.add_background_rectangle()
+
+        self.apply_matrix(matrix)
+        self.wait()
+        self.apply_inverse(matrix)
+        self.wait()
+        self.play(
+            GrowArrow(input_vect_mob),
+            Write(input_vect_label),
+            run_time=1
+        )
+        self.wait()
+        self.remove(input_vect_mob, input_vect_label)
+        self.apply_matrix(matrix, added_anims=[
+            ReplacementTransform(input_vect_mob.copy(), output_vect_mob),
+            ReplacementTransform(input_vect_label.copy(), output_vect_label),
+        ], run_time=2)
+        self.wait()
+        self.remove(output_vect_mob, output_vect_label)
+        self.apply_inverse(matrix, added_anims=[
+            ReplacementTransform(output_vect_mob.copy(), input_vect_mob),
+            ReplacementTransform(output_vect_label.copy(), input_vect_label),
+        ], run_time=2)
+        self.wait()
+
+
+class ThinkOfPuzzleAsLinearCombination(SetupSimpleSystemOfEquations):
+    CONFIG = {
+        "output_vect": [-4, -2],
+    }
+
+    def construct(self):
+        self.force_skipping()
+        super(ThinkOfPuzzleAsLinearCombination, self).construct()
+        self.revert_to_original_skipping_status()
+
+        self.rearrange_equation_as_linear_combination()
+        self.show_linear_combination_of_vectors()
+
+    def rearrange_equation_as_linear_combination(self):
+        system = self.matrix_system
+        corner_rect = self.corner_rect
+        matrix, input_vect, equals, output_vect = system
+
+        columns = VGroup(*[
+            VGroup(*matrix.mob_matrix[:, i].flatten())
+            for i in 0, 1
+        ])
+        column_arrays = VGroup(*[
+            MobjectMatrix(matrix.deepcopy().mob_matrix[:, i])
+            for i in 0, 1
+        ])
+        for column_array in column_arrays:
+            column_array.match_height(output_vect)
+        x, y = input_vect.elements
+        movers = VGroup(x, y, equals, output_vect)
+        for mover in movers:
+            mover.generate_target()
+        plus = TexMobject("+")
+
+        new_system = VGroup(
+            x.target, column_arrays[0], plus,
+            y.target, column_arrays[1],
+            equals.target,
+            output_vect.target
+        )
+        new_system.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        new_system.move_to(matrix, LEFT)
+
+        corner_rect.generate_target()
+        corner_rect.target.stretch_to_fit_width(
+            new_system.get_width() + MED_LARGE_BUFF,
+            about_edge=LEFT
+        )
+
+        self.remove_foreground_mobjects(corner_rect, system)
+        self.play(
+            MoveToTarget(corner_rect),
+            FadeOut(input_vect.brackets),
+            ReplacementTransform(matrix.brackets, column_arrays[0].brackets),
+            ReplacementTransform(matrix.brackets.copy(), column_arrays[1].brackets),
+            ReplacementTransform(columns[0], column_arrays[0].elements),
+            ReplacementTransform(columns[1], column_arrays[1].elements),
+            Write(plus, rate_func=squish_rate_func(smooth, 0.5, 1)),
+            *[
+                MoveToTarget(mover, replace_mobject_with_target_in_scene=True)
+                for mover in movers
+            ],
+            path_arc=90 * DEGREES,
+            run_time=2
+        )
+        self.add_foreground_mobject(corner_rect, new_system)
+        self.wait()
+
+    def show_linear_combination_of_vectors(self):
+        basis_vectors = self.basis_vectors
+        input_vect = np.dot(np.linalg.inv(self.matrix), self.output_vect)
+        origin = self.plane.coords_to_point(0, 0)
+        for basis, scalar in zip(basis_vectors, input_vect):
+            basis.ghost = basis.copy()
+            basis.ghost.set_color(average_color(basis.get_color(), BLACK))
+            self.add_foreground_mobjects(basis.ghost, basis)
+            basis.generate_target()
+            basis_coords = np.array(self.plane.point_to_coords(basis.get_end()))
+            new_coords = scalar * basis_coords
+            basis.target.put_start_and_end_on(
+                origin, self.plane.coords_to_point(*new_coords),
+            )
+
+        dashed_lines = VGroup(*[DashedLine(LEFT, RIGHT) for x in range(2)])
+
+        def update_dashed_lines(lines):
+            for i in 0, 1:
+                lines[i].put_start_and_end_on(
+                    basis_vectors[i].get_start(),
+                    basis_vectors[i].get_end(),
+                )
+                lines[i].shift(basis_vectors[1 - i].get_end() - origin)
+            return lines
+        update_dashed_lines(dashed_lines)
+        self.play(LaggedStart(ShowCreation, dashed_lines, lag_ratio=0.7))
+        for basis in basis_vectors:
+            self.play(
+                MoveToTarget(basis, run_time=2),
+                UpdateFromFunc(dashed_lines, update_dashed_lines)
+            )
+        self.wait()
+
+
+class WrongButHelpful(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("What's next is wrong, \\\\ but helpful")
+        self.change_student_modes("sassy", "sad", "angry")
+        self.wait(3)
+
+
+class LookAtDotProducts(SetupSimpleSystemOfEquations):
+    CONFIG = {
+        "quit_before_final_transformation": True,
+    }
+
+    def construct(self):
+        self.force_skipping()
+        super(LookAtDotProducts, self).construct()
+        self.revert_to_original_skipping_status()
+
+        self.remove_corner_system()
+        self.show_dot_products()
+        self.show_transformation()
+        self.show_transformed_dot_products()
+
+    def remove_corner_system(self):
+        to_remove = [self.corner_rect, self.matrix_system]
+        self.remove_foreground_mobjects(*to_remove)
+        self.remove(*to_remove)
+
+        q_marks = self.q_marks
+        input_vect_mob = self.input_vect_mob
+
+        xy_vect_mob = Matrix(["x", "y"], add_background_rectangle=True)
+        xy_vect_mob.scale(self.array_scale_factor)
+        xy_vect_mob.next_to(input_vect_mob.get_end(), DOWN, SMALL_BUFF)
+        q_marks.next_to(xy_vect_mob, RIGHT)
+
+        self.add(xy_vect_mob)
+
+    def show_dot_products(self):
+        pass
+
+    def show_transformation(self):
+        pass
+
+    def show_transformed_dot_products(self):
+        pass
