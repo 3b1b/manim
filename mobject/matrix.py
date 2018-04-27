@@ -86,8 +86,7 @@ class Matrix(VMobject):
             for mob in self.elements:
                 mob.add_background_rectangle()
         if self.include_background_rectangle:
-            self.background_rectangle = BackgroundRectangle(self)
-            self.add_to_back(self.background_rectangle)
+            self.add_background_rectangle()
 
     def matrix_to_mob_matrix(self, matrix):
         return np.vectorize(
@@ -116,6 +115,10 @@ class Matrix(VMobject):
         self.add(l_bracket, r_bracket)
         self.brackets = VGroup(l_bracket, r_bracket)
         return self
+
+    def add_background_rectangle(self):
+        self.background_rectangle = BackgroundRectangle(self)
+        self.add_to_back(self.background_rectangle)
 
     def set_color_columns(self, *colors):
         for i, color in enumerate(colors):
