@@ -41,7 +41,7 @@ class LinearSystem(VGroup):
             )
         else:
             dim = len(matrix)
-        self.matrix_mobject = IntegerMatrix(matrix)
+        self.matrix_mobject = Matrix(matrix, **self.matrix_config)
         self.equals = TexMobject("=")
         self.equals.scale(1.5)
 
@@ -1002,3 +1002,282 @@ class NotAtAllTrue(NotTheMostComputationallyEfficient):
         "words": "Not at all \\\\ True",
         "word_height": 4,
     }
+
+
+class ShowDotProductChanging(LinearTransformationScene):
+    CONFIG = {
+        "matrix": [[2, -5.0 / 3], [-5.0 / 3, 2]],
+        "v": [1, 2],
+        "w": [2, 1],
+        "v_label": "v",
+        "w_label": "w",
+        "v_color": YELLOW,
+        "w_color": MAROON_B,
+        "rhs1": "> 0",
+        "rhs2": "< 0",
+        "foreground_plane_kwargs": {
+            "x_radius": 2 * FRAME_WIDTH,
+            "y_radius": 2 * FRAME_HEIGHT,
+        },
+        "equation_scale_factor": 1.5,
+    }
+
+    def construct(self):
+        v_mob = self.add_vector(self.v, self.v_color, animate=False)
+        w_mob = self.add_vector(self.w, self.w_color, animate=False)
+        kwargs = {
+            "transformation_name": "T",
+            "at_tip": True,
+            "animate": False,
+        }
+        v_label = self.add_transformable_label(v_mob, self.v_label, **kwargs)
+        w_label = self.add_transformable_label(w_mob, self.w_label, **kwargs)
+
+        start_equation = self.get_equation(v_label, w_label, self.rhs1)
+        start_equation.to_corner(UR)
+        self.play(
+            Write(start_equation[0::2]),
+            ReplacementTransform(v_label.copy(), start_equation[1]),
+            ReplacementTransform(w_label.copy(), start_equation[3]),
+        )
+        self.wait()
+        self.add_foreground_mobject(start_equation)
+        self.apply_matrix(self.matrix)
+        self.wait()
+
+        end_equation = self.get_equation(v_label, w_label, self.rhs2)
+        end_equation.next_to(start_equation, DOWN, aligned_edge=RIGHT)
+        self.play(
+            FadeIn(end_equation[0]),
+            ReplacementTransform(
+                start_equation[2::2].copy(),
+                end_equation[2::2],
+            ),
+            ReplacementTransform(v_label.copy(), end_equation[1]),
+            ReplacementTransform(w_label.copy(), end_equation[3]),
+        )
+        self.wait(2)
+
+    def get_equation(self, v_label, w_label, rhs):
+        equation = VGroup(
+            v_label.copy(),
+            TexMobject("\\cdot"),
+            w_label.copy(),
+            TexMobject(rhs),
+        )
+        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        equation.add_to_back(BackgroundRectangle(equation))
+        equation.scale(self.equation_scale_factor)
+        return equation
+
+
+class ShowDotProductChangingAwayFromZero(ShowDotProductChanging):
+    CONFIG = {
+        "matrix": [[2, 2], [0, -1]],
+        "v": [1, 0],
+        "w": [0, 1],
+        "v_label": "x",
+        "w_label": "y",
+        "v_color": X_COLOR,
+        "w_color": Y_COLOR,
+        "rhs1": "= 0",
+        "rhs2": "\\ne 0",
+    }
+
+
+class OrthonormalWords(Scene):
+    def construct(self):
+        v_tex = "\\vec{\\textbf{v}}"
+        w_tex = "\\vec{\\textbf{w}}"
+        top_words = TexMobject(
+            "\\text{If }",
+            "T(", v_tex, ")", "\\cdot",
+            "T(", w_tex, ")", "=",
+            v_tex, "\\cdot", w_tex,
+            "\\text{ for all }", v_tex, "\\text{ and }", w_tex,
+        )
+        top_words.set_color_by_tex_to_color_map({
+            v_tex: YELLOW,
+            w_tex: MAROON_B,
+        })
+        bottom_words = TextMobject(
+            "$T$", "is", "``Orthonormal''"
+        )
+        bottom_words.set_color_by_tex("Orthonormal", BLUE)
+        words = VGroup(top_words, bottom_words)
+        words.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        for word in words:
+            word.add_background_rectangle()
+        words.to_edge(UP)
+
+        self.play(Write(words))
+        self.wait()
+
+
+class ShowSomeOrthonormalTransformations(LinearTransformationScene):
+    CONFIG = {
+        "random_seed": 1,
+        "n_angles": 5
+    }
+
+    def construct(self):
+        for x in range(self.n_angles):
+            angle = TAU * np.random.random() - TAU / 2
+            matrix = rotation_matrix(angle, OUT)[:2, :2]
+            self.apply_matrix(matrix)
+
+
+class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
+    CONFIG = {
+        "array_scale_factor": 0.6,
+    }
+
+    def construct(self):
+        # Setup system
+        angle = TAU / 12
+        matrix = np.array([
+            [np.cos(angle), -np.sin(angle)],
+            [np.sin(angle), np.cos(angle)]
+        ])
+        output_vect = [1, 2]
+        symbolic_matrix = [
+            ["\\cos(30^\\circ)", "-\\sin(30^\\circ)"],
+            ["\\sin(30^\\circ)", "\\cos(30^\\circ)"],
+        ]
+        system = LinearSystem(
+            matrix=symbolic_matrix,
+            output_vect=output_vect,
+            matrix_config={
+                "h_buff": 2.5,
+                "element_to_mobject": TexMobject,
+            },
+            height=1.25,
+        )
+        system.to_corner(UL)
+        system.matrix_mobject.set_color_columns(X_COLOR, Y_COLOR)
+        system.input_vect_mob.elements.set_color(WHITE)
+        system_rect = BackgroundRectangle(system, buff=MED_SMALL_BUFF)
+
+        matrix_brace = Brace(system.matrix_mobject, DOWN, buff=SMALL_BUFF)
+        orthonomal_label = TextMobject("Orthonormal")
+        orthonomal_label.set_color(WHITE)
+        orthonomal_label.next_to(matrix_brace, DOWN, SMALL_BUFF)
+        orthonomal_label.add_background_rectangle()
+
+        # Input and output vectors
+        output_vect_mob = self.get_vector(output_vect, color=OUTPUT_COLOR)
+        output_vect_label = system.output_vect_mob.copy()
+        output_vect_label.add_background_rectangle()
+        output_vect_label.scale(self.array_scale_factor)
+        output_vect_label.next_to(output_vect_mob.get_end(), RIGHT, buff=SMALL_BUFF)
+
+        input_vect = np.dot(np.linalg.inv(matrix), output_vect)
+        input_vect_mob = self.get_vector(input_vect, color=INPUT_COLOR)
+        input_vect_label = TextMobject("Mystery input vector")
+        input_vect_label.add_background_rectangle()
+        input_vect_label.next_to(input_vect_mob.get_end(), RIGHT, SMALL_BUFF)
+        input_vect_label.match_color(input_vect_mob)
+
+        # Column arrays
+        column_mobs = VGroup()
+        for i, vect in zip(range(2), [DR, DL]):
+            elements = system.matrix_mobject.deepcopy().mob_matrix[:, i]
+            column_mob = MobjectMatrix(elements)
+            column_mob.add_background_rectangle()
+            column_mob.scale(self.array_scale_factor)
+            column_mob.next_to(
+                self.get_vector(matrix[:, i]).get_end(), vect,
+                buff=SMALL_BUFF
+            )
+            column_mobs.add(column_mob)
+        column_mobs[1].shift(SMALL_BUFF * UP)
+
+        # Dot product lines
+        x_point = self.plane.coords_to_point(input_vect[0], 0)
+        y_point = self.plane.coords_to_point(0, input_vect[1])
+        input_dashed_lines = VGroup(
+            DashedLine(input_vect_mob.get_end(), x_point),
+            DashedLine(input_vect_mob.get_end(), y_point),
+        )
+        output_dashed_lines = input_dashed_lines.copy()
+        output_dashed_lines.apply_matrix(matrix)
+
+        self.add_foreground_mobjects(system_rect, system)
+        self.add_foreground_mobjects(matrix_brace, orthonomal_label)
+        self.add_foreground_mobjects(output_vect_mob, output_vect_label)
+        self.plane.set_stroke(width=2)
+
+        self.apply_matrix(matrix)
+        self.wait()
+        self.play(LaggedStart(ShowCreation, output_dashed_lines))
+        self.play(*self.get_column_animations(system.matrix_mobject, column_mobs))
+        self.wait()
+        self.remove(*output_dashed_lines)
+        self.apply_inverse(matrix, added_anims=[
+            FadeOut(column_mobs),
+            ReplacementTransform(output_vect_mob.copy(), input_vect_mob),
+            ReplacementTransform(output_dashed_lines.copy(), input_dashed_lines),
+            FadeIn(input_vect_label),
+        ])
+        self.wait()
+        self.remove(input_dashed_lines, input_vect_mob)
+        self.apply_matrix(matrix, added_anims=[
+            FadeOut(input_vect_label),
+            ReplacementTransform(input_vect_mob.copy(), output_vect_mob),
+            ReplacementTransform(input_dashed_lines.copy(), output_dashed_lines),
+            FadeIn(column_mobs),
+        ])
+
+        # Write dot product equations
+        equations = VGroup()
+        for i in 0, 1:
+            moving_output_vect_label = output_vect_label.copy()
+            moving_column_mob = column_mobs[i].copy()
+            moving_var = system.input_vect_mob.elements[i].copy()
+            equation = VGroup(
+                moving_var.generate_target(),
+                TexMobject("="),
+                moving_output_vect_label.generate_target(),
+                TexMobject("\\cdot"),
+                moving_column_mob.generate_target()
+            )
+            equation.movers = VGroup(moving_var, moving_output_vect_label, moving_column_mob)
+            equation.to_write = equation[1::2]
+            equation[2].match_height(equation[4])
+            equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            equation.background_rectangle = BackgroundRectangle(equation)
+            equation.add_to_back(equation.background_rectangle)
+            equations.add(equation)
+        equations.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        equations.to_corner(UR)
+
+        for i, equation in enumerate(equations):
+            self.play(
+                FadeIn(equation.background_rectangle),
+                Write(equation.to_write),
+                LaggedStart(MoveToTarget, equation.movers, path_arc=60 * DEGREES),
+            )
+            self.wait()
+
+    def get_column_animations(self, matrix_mobject, column_mobs):
+        def get_kwargs(i):
+            return {
+                "rate_func": squish_rate_func(smooth, 0.4 * i, 0.6 + 0.4 * i),
+                "run_time": 2,
+            }
+        return list(it.chain(*[
+            [
+                FadeIn(cm[0], **get_kwargs(i)),
+                ReplacementTransform(
+                    matrix_mobject.brackets.copy(),
+                    cm.brackets,
+                    **get_kwargs(i)
+                ),
+                ReplacementTransform(
+                    VGroup(*matrix_mobject.mob_matrix[:, i]).copy(),
+                    cm.elements,
+                    **get_kwargs(i)
+                ),
+            ]
+            for i, cm in enumerate(column_mobs)
+        ]))
