@@ -21,7 +21,7 @@ from scene.scene import Scene
 from mobject.geometry import Arrow
 from mobject.geometry import Dot
 from mobject.geometry import Line
-from mobject.geometry import Square
+from mobject.geometry import Rectangle
 from mobject.geometry import Vector
 from mobject.coordinate_systems import Axes
 from mobject.coordinate_systems import NumberPlane
@@ -354,15 +354,26 @@ class LinearTransformationScene(VectorScene):
         mobject.target = target_mobject
         self.add_special_mobjects(self.moving_mobjects, mobject)
 
-    def add_unit_square(self, color=YELLOW, opacity=0.3, animate=False):
-        square = Square(color=color, side_length=1)
-        square.shift(-square.get_corner(DOWN + LEFT))
+    def get_unit_square(self, color=YELLOW, opacity=0.3, stroke_width=3):
+        square = Rectangle(
+            color=color,
+            width=self.plane.get_x_unit_size(),
+            height=self.plane.get_y_unit_size(),
+            stroke_color=color,
+            stroke_width=stroke_width,
+            fill_color=color,
+            fill_opacity=opacity
+        )
+        square.move_to(self.plane.coords_to_point(0, 0), DL)
+        return square
+
+    def add_unit_square(self, animate=False, **kwargs):
+        square = self.get_unit_square(**kwargs)
         if animate:
-            added_anims = map(Animation, self.moving_vectors)
-            self.play(ShowCreation(square), *added_anims)
-            self.play(square.set_fill, color, opacity, *added_anims)
-        else:
-            square.set_fill(color, opacity)
+            self.play(
+                DrawBorderThenFill(square),
+                Animation(Group(*self.moving_vectors))
+            )
         self.add_transformable_mobject(square)
         self.bring_to_front(*self.moving_vectors)
         self.square = square
