@@ -1,24 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 from eola.chapter3 import MatrixVectorMultiplicationAbstract
 
-def get_det_text(matrix, determinant = None, background_rect = True):
-    parens = TexMobject(["(", ")"])
-    parens.scale(2)
-    parens.stretch_to_fit_height(matrix.get_height())
-    l_paren, r_paren = parens.split()
-    l_paren.next_to(matrix, LEFT, buff = 0.1)
-    r_paren.next_to(matrix, RIGHT, buff = 0.1)
-    det = TextMobject("det").next_to(l_paren, LEFT, buff = 0.1)
-    if background_rect:
-        det.add_background_rectangle()
-    det_text = VMobject(det, l_paren, r_paren)
-    if determinant is not None:
-        eq = TexMobject("=")
-        eq.next_to(r_paren, RIGHT, buff = 0.1)
-        result = TexMobject(str(determinant))
-        result.next_to(eq, RIGHT, buff = 0.2)
-        det_text.add(eq, result)
-    return det_text
 
 class Blob(Circle):
     CONFIG = {

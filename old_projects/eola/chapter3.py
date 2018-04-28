@@ -887,7 +887,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         )
         concrete_matrix = Matrix(
             copy.deepcopy(abstract_matrix),
-            add_background_rectangles = True
+            add_background_rectangles_to_entries = True
         )
         concrete_matrix.to_edge(UP)
         if self.abstract:

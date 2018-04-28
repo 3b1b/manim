@@ -106,7 +106,7 @@ class FollowLinearCombination(LinearTransformationScene):
             direction = "right", color = Y_COLOR
         )
         vect = self.add_vector(vect_coords)
-        vect_array = Matrix(["x", "y"], add_background_rectangles = True)
+        vect_array = Matrix(["x", "y"], add_background_rectangles_to_entries = True)
         v_equals = TexMobject(["\\vec{\\textbf{v}}", "="])
         v_equals.split()[0].set_color(YELLOW)
         v_equals.next_to(vect_array, LEFT)
