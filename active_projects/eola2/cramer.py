@@ -1884,9 +1884,165 @@ class TransformingAreasXCoord(TransformingAreasYCoord):
     }
 
 
+class ThreeDDotVectorWithKHat(ExternallyAnimatedScene):
+    pass
+
+
+class ZEqualsVDotK(Scene):
+    def construct(self):
+        equation = VGroup(
+            TexMobject("z"),
+            TexMobject("="),
+            Matrix(["x", "y", "z"]),
+            TexMobject("\\cdot"),
+            IntegerMatrix([0, 0, 1]),
+        )
+        equation[2].elements.set_color_by_gradient(X_COLOR, Y_COLOR, Z_COLOR)
+        equation[4].elements.set_color(BLUE)
+        equation.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        equation.to_edge(LEFT)
+
+        self.play(Write(equation))
+        self.wait()
+
+
+class InputParallelepipedAngledView(ExternallyAnimatedScene):
+    pass
+
+
+class InputParallelepipedTopViewToSideView(ExternallyAnimatedScene):
+    pass
+
+
+class ParallelepipedForXCoordinate(ExternallyAnimatedScene):
+    pass
+
+
+class ParallelepipedForYCoordinate(ExternallyAnimatedScene):
+    pass
+
+
+class ThreeDCoordinatesAsVolumes(Scene):
+    def construct(self):
+        colors = [X_COLOR, Y_COLOR, Z_COLOR]
+        x, y, z = coords = VGroup(*map(TexMobject, "xyz"))
+        coords.set_color_by_gradient(*colors)
+        matrix = IntegerMatrix(np.identity(3))
+        matrix.set_color_columns(*colors)
+        det_text = get_det_text(matrix)
+        equals = TexMobject("=")
+        equals.next_to(det_text[0], LEFT)
+        equals.shift(SMALL_BUFF * DOWN)
+        coords.next_to(equals, LEFT)
+
+        columns = VGroup(*[
+            VGroup(*matrix.mob_matrix[:, i])
+            for i in range(3)
+        ])
+
+        coord_column = coords.copy()
+        for coord, m_elem in zip(coord_column, columns[2]):
+            coord.move_to(m_elem)
+        coord_column.set_color(WHITE)
+        coord_column[2].set_color(BLUE)
+        coord_column.generate_target()
+
+        self.play(LaggedStart(FadeIn, VGroup(
+            z, equals, det_text, matrix.brackets,
+            VGroup(*matrix.mob_matrix[:, :2].flatten()),
+            coord_column
+        )))
+        self.wait(2)
+        coord_column.target.move_to(columns[1])
+        coord_column.target.set_color_by_gradient(WHITE, Y_COLOR, WHITE)
+        self.play(
+            MoveToTarget(coord_column, path_arc=np.pi),
+            FadeOut(columns[1]),
+            FadeIn(columns[2]),
+            FadeInFromDown(y),
+            z.shift, UP,
+            z.fade, 1,
+        )
+        self.wait(2)
+        coord_column.target.move_to(columns[0])
+        coord_column.target.set_color_by_gradient(X_COLOR, WHITE, WHITE)
+        self.play(
+            MoveToTarget(coord_column, path_arc=np.pi),
+            FadeOut(columns[0]),
+            FadeIn(columns[1]),
+            FadeInFromDown(x),
+            y.shift, UP,
+            y.fade, 1,
+        )
+        self.wait(2)
+
+
 class WriteCramersRule(Scene):
     def construct(self):
         words = TextMobject("``Cramer's Rule''")
         words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
         self.play(Write(words))
         self.wait()
+
+
+class CramersYEvaluation(Scene):
+    def construct(self):
+        frac = TexMobject("{(2)(2) - (4)(0) \\over (2)(1) - (-1)(0)}")
+        VGroup(frac[1], frac[11], frac[15], frac[26]).set_color(GREEN)
+        VGroup(frac[4], frac[8]).set_color(MAROON_B)
+        VGroup(frac[18], frac[22], frac[23]).set_color(RED)
+
+        group = VGroup(
+            TexMobject("="), frac,
+            TexMobject("= \\frac{4}{2}"), TexMobject("=2")
+        )
+        group.arrange_submobjects(RIGHT)
+        group.add_to_back(BackgroundRectangle(group))
+
+        self.add(group)
+        self.wait(1)
+
+
+# Largely copy-pasted.  Not great, but what are you gonna do.
+class CramersXEvaluation(Scene):
+    def construct(self):
+        frac = TexMobject("{(4)(1) - (-1)(2) \\over (2)(1) - (-1)(0)}")
+        VGroup(frac[1], frac[12]).set_color(MAROON_B)
+        VGroup(frac[4], frac[8], frac[9]).set_color(RED)
+        VGroup(frac[16], frac[27]).set_color(GREEN)
+        VGroup(frac[19], frac[23], frac[24]).set_color(RED)
+
+        group = VGroup(
+            TexMobject("="), frac,
+            TexMobject("= \\frac{6}{2}"), TexMobject("=3")
+        )
+        group.arrange_submobjects(RIGHT)
+        group.add_to_back(BackgroundRectangle(group))
+
+        self.add(group)
+        self.wait(1)
+
+
+class Equals2(Scene):
+    def construct(self):
+        self.add(TexMobject("=2").add_background_rectangle())
+        self.wait()
+
+
+class Equals3(Scene):
+    def construct(self):
+        self.add(TexMobject("=3").add_background_rectangle())
+        self.wait()
+
+
+class Introduce3DSystem(Scene):
+    def construct(self):
+        pass
+
+
+class TransformParallelepipedWithoutGrid(ExternallyAnimatedScene):
+    pass
+
+
+class TransformParallelepipedWithGrid(ExternallyAnimatedScene):
+    pass
