@@ -256,7 +256,9 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         "matrix": [[3, 2], [-1, 2]],
         "output_vect": [-4, -2],
         "quit_before_final_transformation": False,
-        "array_scale_factor": 0.75
+        "array_scale_factor": 0.75,
+        "compare_to_big_system": True,
+        "transition_to_geometric_view": True,
     }
 
     def construct(self):
@@ -270,11 +272,12 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
 
     def introduce_system(self):
         system = self.system = self.get_system(self.matrix, self.output_vect)
+        dim = len(self.matrix)
         big_dim = 7  # Big system size
         big_matrix = np.random.randint(-9, 10, size=(big_dim, big_dim))
         big_output_vect = np.random.randint(-9, 10, size=big_dim)
-        big_matrix[:2, :2] = self.matrix
-        big_output_vect[:2] = self.output_vect
+        big_matrix[:dim, :dim] = self.matrix
+        big_output_vect[:dim] = self.output_vect
         big_system = self.get_system(big_matrix, big_output_vect)
 
         unknown_circles = VGroup(*[
@@ -301,26 +304,29 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
                               run_time=1, lag_ratio=0.8))
         self.play(FadeOut(row_rects))
         self.wait()
-        self.remove(system)
-        self.play(ReplacementTransform(system.copy(), big_system))
-        self.wait(2)
-        # Oh yeah, super readable line...
-        self.play(*[
-            ReplacementTransform(big_system[i][:5], system[i][:5])
-            for i in range(2)
-        ] + [
-            ReplacementTransform(big_system[i][-2:], system[i][-2:])
-            for i in range(2)
-        ] + [
-            FadeOut(big_system[i][start:end])
-            for i in range(big_dim)
-            for start in [5 if i < 2 else 0]
-            for end in [-2 if i < 2 else len(big_system[i])]
-        ])
-        self.remove(big_system, system)
-        self.add(system)
+        if self.compare_to_big_system:
+            self.remove(system)
+            self.play(ReplacementTransform(system.copy(), big_system))
+            self.wait(2)
+            # Oh yeah, super readable line...
+            cutoff = 3 * dim - 1
+            self.play(*[
+                ReplacementTransform(big_system[i][:cutoff], system[i][:cutoff])
+                for i in range(dim)
+            ] + [
+                ReplacementTransform(big_system[i][-2:], system[i][-2:])
+                for i in range(dim)
+            ] + [
+                FadeOut(big_system[i][start:end])
+                for i in range(big_dim)
+                for start in [cutoff if i < dim else 0]
+                for end in [-2 if i < dim else len(big_system[i])]
+            ])
+            self.remove(big_system, system)
+            self.add(system)
 
     def from_system_to_matrix(self):
+        # dim = len(self.matrix)
         system_in_lines = self.system
         matrix_system = self.matrix_system = LinearSystem(
             self.matrix, self.output_vect, height=2
@@ -339,35 +345,39 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         system_in_lines_copy = system_in_lines.deepcopy()
         self.play(
             ReplacementTransform(
-                system_in_lines_copy.matrix_elements,
+                VGroup(*map(VGroup, system_in_lines_copy.matrix_elements)),
                 matrix_system.matrix_mobject.elements,
-            ),
-            ReplacementTransform(
-                system_in_lines_copy.output_vect_elements,
-                matrix_system.output_vect_mob.elements,
-            ),
-            ReplacementTransform(
-                system_in_lines_copy.unknowns[:2],
-                matrix_system.input_vect_mob.elements,
             ),
             Write(matrix_system.matrix_mobject.brackets),
             Write(matrix_system.output_vect_mob.brackets),
             Write(matrix_system.input_vect_mob.brackets),
             Write(matrix_system.equals)
         )
+        self.play(ReplacementTransform(
+            VGroup(*map(VGroup, system_in_lines_copy.output_vect_elements)),
+            matrix_system.output_vect_mob.elements,
+        ))
+        self.play(*[
+            ReplacementTransform(uk, elem)
+            for uk, elem in zip(
+                system_in_lines_copy.unknowns,
+                it.cycle(matrix_system.input_vect_mob.elements)
+            )
+        ])
         self.wait()
-        self.play(
-            Write(self.background_plane),
-            Write(self.plane),
-            FadeOut(system_in_lines),
-            FadeIn(corner_rect),
-            matrix_system.scale_to_fit_height, corner_rect.get_height() - MED_LARGE_BUFF,
-            matrix_system.move_to, corner_rect,
-        )
-        self.play(*map(GrowArrow, self.basis_vectors))
+        if self.transition_to_geometric_view:
+            self.play(
+                Write(self.background_plane),
+                Write(self.plane),
+                FadeOut(system_in_lines),
+                FadeIn(corner_rect),
+                matrix_system.scale_to_fit_height, corner_rect.get_height() - MED_LARGE_BUFF,
+                matrix_system.move_to, corner_rect,
+            )
+            self.play(*map(GrowArrow, self.basis_vectors))
 
-        self.add_foreground_mobject(corner_rect)
-        self.add_foreground_mobject(matrix_system)
+            self.add_foreground_mobject(corner_rect)
+            self.add_foreground_mobject(matrix_system)
 
     def show_geometry(self):
         system = self.matrix_system
@@ -2035,9 +2045,28 @@ class Equals3(Scene):
         self.wait()
 
 
-class Introduce3DSystem(Scene):
+class Introduce3DSystem(SetupSimpleSystemOfEquations):
+    CONFIG = {
+        "matrix": [[3, 2, 7], [-1, 2, -4], [4, 0, 1]],
+        "output_vect": [-4, -2, 5],
+        "compare_to_big_system": False,
+        "transition_to_geometric_view": False,
+    }
+
     def construct(self):
-        pass
+        self.remove_grid()
+        self.introduce_system()
+        self.from_system_to_matrix()
+
+
+class ThinkItThroughYourself(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Try thinking \\\\ it through!",
+            target_mode="hooray"
+        )
+        self.change_all_student_modes("pondering")
+        self.wait(4)
 
 
 class TransformParallelepipedWithoutGrid(ExternallyAnimatedScene):
@@ -2046,3 +2075,21 @@ class TransformParallelepipedWithoutGrid(ExternallyAnimatedScene):
 
 class TransformParallelepipedWithGrid(ExternallyAnimatedScene):
     pass
+
+
+class AreYouPausingAndPondering(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Are you pausing \\\\ and pondering?",
+            target_mode="sassy",
+            added_anims=[self.get_student_changes(*3 * ["guilty"])]
+        )
+        self.wait()
+        self.change_all_student_modes(
+            "thinking",
+            added_anims=[
+                RemovePiCreatureBubble(self.teacher, target_mode="raise_right_hand")
+            ],
+            look_at_arg=self.screen
+        )
+        self.wait(6)
