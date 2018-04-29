@@ -29,6 +29,32 @@ def add_extension_if_not_present(file_name, extension):
         return file_name
 
 
+def get_scene_output_directory(scene_class):
+    file_path = os.path.abspath(inspect.getfile(scene_class))
+
+    # TODO, is there a better way to do this?
+    parts = file_path.split(os.path.sep)
+    if "manim" in parts:
+        sub_parts = parts[parts.index("manim") + 1:]
+        file_path = os.path.join(*sub_parts)
+    file_path = file_path.replace(".pyc", "")
+    file_path = file_path.replace(".py", "")
+    return os.path.join(ANIMATIONS_DIR, file_path)
+
+
+def get_movie_output_directory(scene_class, camera_config, frame_duration):
+    directory = get_scene_output_directory(scene_class)
+    sub_dir = "%dp%d" % (
+        camera_config["pixel_shape"][0],
+        int(1.0 / frame_duration)
+    )
+    return os.path.join(directory, sub_dir)
+
+
+def get_image_output_directory(scene_class, sub_dir="images"):
+    return os.path.join(get_scene_output_directory(scene_class), sub_dir)
+
+
 class Scene(Container):
     CONFIG = {
         "camera_class": Camera,
@@ -41,14 +67,12 @@ class Scene(Container):
         "save_frames": False,
         "save_pngs": False,
         "pngs_mode": "RGBA",
-        "output_directory": ANIMATIONS_DIR,
         "movie_file_extension": ".mp4",
         "name": None,
         "always_continually_update": False,
         "random_seed": 0,
         "start_at_animation_number": None,
         "end_at_animation_number": None,
-        "include_render_quality_in_output_directory": True,
     }
 
     def __init__(self, **kwargs):
@@ -543,10 +567,10 @@ class Scene(Container):
         self.get_image().show()
 
     def get_image_file_path(self, name=None, dont_update=False):
-        folder = "images"
+        sub_dir = "images"
         if dont_update:
-            folder = str(self)
-        path = os.path.join(self.output_directory, folder)
+            sub_dir = str(self)
+        path = get_image_output_directory(self.__class__, sub_dir)
         file_name = add_extension_if_not_present(name or str(self), ".png")
         return os.path.join(path, file_name)
 
@@ -562,16 +586,9 @@ class Scene(Container):
         image.save(path)
 
     def get_movie_file_path(self, name=None, extension=None):
-        directory = self.output_directory
-        if self.include_render_quality_in_output_directory:
-            sub_dir = "%dp%d" % (
-                self.camera.pixel_shape[0],
-                int(1.0 / self.frame_duration)
-            )
-            directory = os.path.join(directory, sub_dir)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
+        directory = get_movie_output_directory(
+            self.__class__, self.camera_config, self.frame_duration
+        )
         if extension is None:
             extension = self.movie_file_extension
         if name is None:
