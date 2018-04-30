@@ -451,75 +451,29 @@ class Introduction(TeacherStudentsScene):
     }
 
     def construct(self):
-        self.show_series()
-        self.show_examples()
-
-    def show_series(self):
-        series = VideoSeries(num_videos = 11)
-        series.to_edge(UP)
-        this_video = series[0]
-        this_video.set_color(YELLOW)
-        this_video.save_state()
-        this_video.set_fill(opacity = 0)
-        this_video.center()
-        this_video.scale_to_fit_height(FRAME_HEIGHT)
-        self.this_video = this_video
-
-
-        words = TextMobject(
-            "Welcome to \\\\",
-            "Essence of Probability"
-        )
-        words.set_color_by_tex("Essence of Probability", YELLOW)
-
-        self.teacher.change_mode("happy")
-        self.play(
-            FadeIn(
-                series,
-                submobject_mode = "lagged_start",
-                run_time = 2
-            ),
-            Blink(self.get_teacher())
-        )
-        self.teacher_says(words, target_mode = "hooray")
+        
+        self.wait()
+        
         self.change_student_modes(
-            *["hooray"]*3,
-            look_at_arg = series[1].get_left(),
-            added_anims = [
-                ApplyMethod(this_video.restore, run_time = 3),
-            ]
+            "confused", "frustrated", "dejected",
+            look_at_arg = UP + 2 * RIGHT
         )
-        self.play(*[
-            ApplyMethod(
-                video.shift, 0.5*video.get_height()*DOWN,
-                run_time = 3,
-                rate_func = squish_rate_func(
-                    there_and_back, alpha, alpha+0.3
-                )
-            )
-            for video, alpha in zip(series, np.linspace(0, 0.7, len(series)))
-        ]+[
-            Animation(self.teacher.bubble),
-            Animation(self.teacher.bubble.content),
-        ])
+
+        self.wait()
+
+
+        self.get_teacher().change_mode("hooray")
+        self.wait()
 
         self.play(
-            FadeOut(self.teacher.bubble),
-            FadeOut(self.teacher.bubble.content),
             self.get_teacher().change_mode, "raise_right_hand",
             *[
-                ApplyMethod(pi.change_mode, "pondering")
+                ApplyMethod(pi.change, "pondering", {"look_at_arg" : UP + 2 * LEFT})
                 for pi in self.get_students()
             ]
         )
-        self.wait()
 
-        self.series = series
-
-
-    def show_examples(self):
-
-        self.wait(10)
+        self.wait(30)
         # put examples here in video editor
 
 
@@ -1001,7 +955,7 @@ class RowOfDice(VGroup):
 
 class ShowUncertainty1(Scene):
 
-    def throw_a_die(self):
+    def throw_a_die(self, run_time = 0.3):
 
         eye = np.random.randint(1,7)
         face = self.row_of_dice.submobjects[eye - 1]
@@ -1009,7 +963,7 @@ class ShowUncertainty1(Scene):
         self.play(
             ApplyMethod(face.submobjects[0].set_fill, {"opacity": 1},
                 rate_func = there_and_back,
-                run_time = 0.3,
+                run_time = run_time,
             ),
         )
 
@@ -1026,9 +980,9 @@ class ShowUncertainty1(Scene):
             self.throw_a_die()
             self.wait(0.3)
 
-        for i in range(10):
-            self.throw_a_die()
-            self.wait(0.1)
+        for i in range(100):
+            self.throw_a_die(0.05)
+            self.wait(0.0)
 
 
 
@@ -1384,6 +1338,20 @@ class SplitRectsInBrickWall(Animation):
             end = start + alpha * self.mobject.height * DOWN
             subdiv.put_start_and_end_on(start,end)
 
+
+
+class JustFlipping(Scene):
+
+    def construct(self):
+
+        randy = CoinFlippingPiCreature()
+        self.add(randy)
+
+        self.wait(2)
+
+        for i in range(10):
+            self.wait()
+            self.play(FlipCoin(randy))
 
 
 
