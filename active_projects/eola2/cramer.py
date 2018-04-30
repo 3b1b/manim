@@ -71,6 +71,13 @@ class LinearSystem(VGroup):
 # Scenes
 
 
+class CramerOpeningQuote(OpeningQuote):
+    CONFIG = {
+        "quote": ["Computers are useless. They \\\\ can only give you answers."],
+        "author": "Pablo Picasso",
+    }
+
+
 class LeaveItToComputers(TeacherStudentsScene):
     CONFIG = {
         "random_seed": 1,
@@ -83,26 +90,30 @@ class LeaveItToComputers(TeacherStudentsScene):
         system.target.scale(0.5)
         system.target.to_corner(UL)
 
+        colors = [X_COLOR, Y_COLOR, Z_COLOR]
         cramer_groups = VGroup()
         for i in range(3):
             numer_matrix = get_cramer_matrix(
                 system.matrix_mobject, system.output_vect_mob,
                 index=i
             )
+            VGroup(*numer_matrix.mob_matrix[:, i]).set_color(colors[i])
+            VGroup(*numer_matrix.mob_matrix[:, i]).set_stroke(colors[i], 1)
             numer = VGroup(
-                get_det_text(numer_matrix, initial_scale_factor=4),
+                get_det_text(numer_matrix, initial_scale_factor=3),
                 numer_matrix
             )
             numer.to_corner(UP)
-            denom_matrix_mobject = system.matrix_mobject.copy()
+            denom_matrix_mobject = system.matrix_mobject.deepcopy()
             denom = VGroup(
-                get_det_text(denom_matrix_mobject, initial_scale_factor=4),
+                get_det_text(denom_matrix_mobject, initial_scale_factor=3),
                 denom_matrix_mobject,
             )
             rhs = VGroup(numer, Line(LEFT, RIGHT).match_width(numer), denom)
             rhs.arrange_submobjects(DOWN)
             rhs.scale_to_fit_height(2.25)
             rhs.move_to(self.hold_up_spot, DOWN)
+            rhs.to_edge(RIGHT, buff=LARGE_BUFF)
             equals = TexMobject("=").next_to(rhs, LEFT)
             variable = system.input_vect_mob.elements[i].copy()
             variable.next_to(equals, LEFT)
@@ -149,6 +160,7 @@ class LeaveItToComputers(TeacherStudentsScene):
         denom_mover.target = numer.deepcopy()
         column1 = VGroup(*denom_mover.target[1].mob_matrix[:, 0])
         column1.set_fill(opacity=0)
+        column1.set_stroke(width=0)
         self.play(MoveToTarget(denom_mover))
         self.look_at(system)
         self.play(
@@ -210,7 +222,7 @@ class PrerequisiteKnowledge(TeacherStudentsScene):
 
         images = Group(*[
             ImageMobject("eola%d_thumbnail" % d)
-            for d in [5, 6, 7]
+            for d in [5, 7, 6]
         ])
         images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
         images.next_to(h_line, DOWN, MED_LARGE_BUFF)
@@ -235,20 +247,40 @@ class PrerequisiteKnowledge(TeacherStudentsScene):
 
 class NotTheMostComputationallyEfficient(Scene):
     CONFIG = {
-        "words": "Not the most \\\\ computationally \\\\ efficient",
+        "words": "Not the most \\\\ computationally efficient",
         "word_height": 4,
+        "opacity": 0.7,
     }
 
     def construct(self):
-        big_rect = FullScreenFadeRectangle(opacity=0.5)
+        big_rect = FullScreenFadeRectangle(opacity=self.opacity)
         self.add(big_rect)
 
         words = TextMobject(self.words)
         words.set_color(RED)
         words.set_stroke(WHITE, 1)
-        words.scale_to_fit_height(self.word_height)
+        words.scale_to_fit_width(FRAME_WIDTH - 2 * MED_LARGE_BUFF)
         self.play(Write(words))
         self.wait()
+
+
+class WhyLearnIt(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What?!?  Then why \\\\ learn it?",
+            bubble_kwargs={"direction": LEFT},
+            student_index=2,
+            target_mode="angry",
+        )
+        self.change_all_student_modes("angry")
+        self.wait()
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes("erm", "happy" "pondering"),
+            RemovePiCreatureBubble(self.students[2], target_mode="pondering"),
+        )
+        self.look_at(self.screen)
+        self.wait(10)
 
 
 class SetupSimpleSystemOfEquations(LinearTransformationScene):
@@ -1265,10 +1297,18 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
                 TexMobject("="),
                 moving_output_vect_label.generate_target(),
                 TexMobject("\\cdot"),
-                moving_column_mob.generate_target()
+                moving_column_mob.generate_target(use_deepcopy=True)
             )
             equation.movers = VGroup(
-                moving_var, moving_output_vect_label, moving_column_mob)
+                moving_var, moving_output_vect_label, moving_column_mob
+            )
+            for element in moving_column_mob.target.submobject_family():
+                if not isinstance(element, TexMobject):
+                    continue
+                tex_string = element.get_tex_string()
+                if "sin" in tex_string or "cos" in tex_string:
+                    element.set_stroke(width=1)
+                    element.scale(1.25)
             equation.to_write = equation[1::2]
             equation[2].match_height(equation[4])
             equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
@@ -1276,15 +1316,23 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
             equation.add_to_back(equation.background_rectangle)
             equations.add(equation)
         equations.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
-        equations.to_corner(UR)
+        equations.scale(1.25)
+        equations.to_corner(UR, buff=MED_SMALL_BUFF)
+        equations_rect = BackgroundRectangle(equations, buff=MED_LARGE_BUFF)
+        equations_rect.set_fill(opacity=0.9)
 
         for i, equation in enumerate(equations):
-            self.play(
+            anims = [
                 FadeIn(equation.background_rectangle),
                 Write(equation.to_write),
-                LaggedStart(MoveToTarget, equation.movers,
-                            path_arc=60 * DEGREES),
-            )
+                LaggedStart(
+                    MoveToTarget, equation.movers,
+                    path_arc=60 * DEGREES
+                )
+            ]
+            if i == 0:
+                anims.insert(0, FadeIn(equations_rect))
+            self.play(*anims)
             self.wait()
 
     def get_column_animations(self, matrix_mobject, column_mobs):
@@ -1991,6 +2039,7 @@ class WriteCramersRule(Scene):
     def construct(self):
         words = TextMobject("``Cramer's Rule''")
         words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        words.add_background_rectangle()
         self.play(Write(words))
         self.wait()
 
