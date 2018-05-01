@@ -2142,3 +2142,19 @@ class AreYouPausingAndPondering(TeacherStudentsScene):
             look_at_arg=self.screen
         )
         self.wait(6)
+
+
+class Thumbnail(TransformingAreasYCoord):
+    def construct(self):
+        self.matrix = np.array(self.matrix)
+        vect = self.add_vector([1, 1.5], color=MAROON_B)
+        ip = self.get_input_parallelogram(vect)
+        self.add_transformable_mobject(ip)
+        self.apply_transposed_matrix([[2, -0.5], [1, 2]])
+
+        words = TextMobject("Cramer's", "rule")
+        words.scale_to_fit_width(7)
+        # words.add_background_rectangle_to_parts()
+        words.add_background_rectangle()
+        words.to_edge(UP)
+        self.add(words)
