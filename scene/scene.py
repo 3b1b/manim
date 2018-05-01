@@ -17,16 +17,11 @@ from camera.camera import Camera
 from continual_animation.continual_animation import ContinualAnimation
 from mobject.mobject import Mobject
 from utils.iterables import list_update
+from utils.output_directory_getters import add_extension_if_not_present
+from utils.output_directory_getters import get_movie_output_directory
+from utils.output_directory_getters import get_image_output_directory
 
 from container.container import Container
-
-
-def add_extension_if_not_present(file_name, extension):
-    # This could conceivably be smarter about handling existing differing extensions
-    if(file_name[-len(extension):] != extension):
-        return file_name + extension
-    else:
-        return file_name
 
 
 class Scene(Container):
@@ -41,14 +36,12 @@ class Scene(Container):
         "save_frames": False,
         "save_pngs": False,
         "pngs_mode": "RGBA",
-        "output_directory": ANIMATIONS_DIR,
         "movie_file_extension": ".mp4",
         "name": None,
         "always_continually_update": False,
         "random_seed": 0,
         "start_at_animation_number": None,
         "end_at_animation_number": None,
-        "include_render_quality_in_output_directory": True,
     }
 
     def __init__(self, **kwargs):
@@ -543,10 +536,10 @@ class Scene(Container):
         self.get_image().show()
 
     def get_image_file_path(self, name=None, dont_update=False):
-        folder = "images"
+        sub_dir = "images"
         if dont_update:
-            folder = str(self)
-        path = os.path.join(self.output_directory, folder)
+            sub_dir = str(self)
+        path = get_image_output_directory(self.__class__, sub_dir)
         file_name = add_extension_if_not_present(name or str(self), ".png")
         return os.path.join(path, file_name)
 
@@ -562,16 +555,9 @@ class Scene(Container):
         image.save(path)
 
     def get_movie_file_path(self, name=None, extension=None):
-        directory = self.output_directory
-        if self.include_render_quality_in_output_directory:
-            sub_dir = "%dp%d" % (
-                self.camera.pixel_shape[0],
-                int(1.0 / self.frame_duration)
-            )
-            directory = os.path.join(directory, sub_dir)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
+        directory = get_movie_output_directory(
+            self.__class__, self.camera_config, self.frame_duration
+        )
         if extension is None:
             extension = self.movie_file_extension
         if name is None:

@@ -146,7 +146,7 @@ def handle_scene(scene, **config):
         if (platform.system() == "Linux"):
             commands = ["xdg-open"]
         elif (platform.system() == "Windows"):
-            commands = ["start"]    
+            commands = ["start"]
 
         if config["show_file_in_finder"]:
             commands.append("-R")
@@ -238,10 +238,10 @@ def main():
     module = get_module(config["file"])
     scene_names_to_classes = dict(inspect.getmembers(module, is_scene))
 
-    config["output_directory"] = os.path.join(
-        ANIMATIONS_DIR,
-        config["file"].replace(".py", "")
-    )
+    # config["output_directory"] = os.path.join(
+    #     ANIMATIONS_DIR,
+    #     config["file"].replace(".py", "")
+    # )
 
     scene_kwargs = dict([
         (key, config[key])
@@ -250,7 +250,6 @@ def main():
             "frame_duration",
             "skip_animations",
             "write_to_movie",
-            "output_directory",
             "save_pngs",
             "movie_file_extension",
             "start_at_animation_number",

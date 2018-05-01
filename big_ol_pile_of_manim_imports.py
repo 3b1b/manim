@@ -84,6 +84,7 @@ from utils.color import *
 from utils.config_ops import *
 from utils.images import *
 from utils.iterables import *
+from utils.output_directory_getters import *
 from utils.paths import *
 from utils.rate_functions import *
 from utils.simple_functions import *
