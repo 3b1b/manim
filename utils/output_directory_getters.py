@@ -12,6 +12,12 @@ def add_extension_if_not_present(file_name, extension):
         return file_name
 
 
+def guarantee_existance(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+
+
 def get_scene_output_directory(scene_class):
     file_path = os.path.abspath(inspect.getfile(scene_class))
 
@@ -22,7 +28,7 @@ def get_scene_output_directory(scene_class):
         file_path = os.path.join(*sub_parts)
     file_path = file_path.replace(".pyc", "")
     file_path = file_path.replace(".py", "")
-    return os.path.join(ANIMATIONS_DIR, file_path)
+    return guarantee_existance(os.path.join(ANIMATIONS_DIR, file_path))
 
 
 def get_movie_output_directory(scene_class, camera_config, frame_duration):
@@ -31,8 +37,9 @@ def get_movie_output_directory(scene_class, camera_config, frame_duration):
         camera_config["pixel_shape"][0],
         int(1.0 / frame_duration)
     )
-    return os.path.join(directory, sub_dir)
+    return guarantee_existance(os.path.join(directory, sub_dir))
 
 
 def get_image_output_directory(scene_class, sub_dir="images"):
-    return os.path.join(get_scene_output_directory(scene_class), sub_dir)
+    directory = get_scene_output_directory(scene_class)
+    return guarantee_existance(os.path.join(directory, sub_dir))
