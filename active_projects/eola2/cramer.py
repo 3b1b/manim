@@ -71,6 +71,13 @@ class LinearSystem(VGroup):
 # Scenes
 
 
+class CramerOpeningQuote(OpeningQuote):
+    CONFIG = {
+        "quote": ["Computers are useless. They \\\\ can only give you answers."],
+        "author": "Pablo Picasso",
+    }
+
+
 class LeaveItToComputers(TeacherStudentsScene):
     CONFIG = {
         "random_seed": 1,
@@ -83,26 +90,30 @@ class LeaveItToComputers(TeacherStudentsScene):
         system.target.scale(0.5)
         system.target.to_corner(UL)
 
+        colors = [X_COLOR, Y_COLOR, Z_COLOR]
         cramer_groups = VGroup()
         for i in range(3):
             numer_matrix = get_cramer_matrix(
                 system.matrix_mobject, system.output_vect_mob,
                 index=i
             )
+            VGroup(*numer_matrix.mob_matrix[:, i]).set_color(colors[i])
+            VGroup(*numer_matrix.mob_matrix[:, i]).set_stroke(colors[i], 1)
             numer = VGroup(
-                get_det_text(numer_matrix, initial_scale_factor=4),
+                get_det_text(numer_matrix, initial_scale_factor=3),
                 numer_matrix
             )
             numer.to_corner(UP)
-            denom_matrix_mobject = system.matrix_mobject.copy()
+            denom_matrix_mobject = system.matrix_mobject.deepcopy()
             denom = VGroup(
-                get_det_text(denom_matrix_mobject, initial_scale_factor=4),
+                get_det_text(denom_matrix_mobject, initial_scale_factor=3),
                 denom_matrix_mobject,
             )
             rhs = VGroup(numer, Line(LEFT, RIGHT).match_width(numer), denom)
             rhs.arrange_submobjects(DOWN)
             rhs.scale_to_fit_height(2.25)
             rhs.move_to(self.hold_up_spot, DOWN)
+            rhs.to_edge(RIGHT, buff=LARGE_BUFF)
             equals = TexMobject("=").next_to(rhs, LEFT)
             variable = system.input_vect_mob.elements[i].copy()
             variable.next_to(equals, LEFT)
@@ -149,6 +160,7 @@ class LeaveItToComputers(TeacherStudentsScene):
         denom_mover.target = numer.deepcopy()
         column1 = VGroup(*denom_mover.target[1].mob_matrix[:, 0])
         column1.set_fill(opacity=0)
+        column1.set_stroke(width=0)
         self.play(MoveToTarget(denom_mover))
         self.look_at(system)
         self.play(
@@ -210,7 +222,7 @@ class PrerequisiteKnowledge(TeacherStudentsScene):
 
         images = Group(*[
             ImageMobject("eola%d_thumbnail" % d)
-            for d in [5, 6, 7]
+            for d in [5, 7, 6]
         ])
         images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
         images.next_to(h_line, DOWN, MED_LARGE_BUFF)
@@ -235,20 +247,40 @@ class PrerequisiteKnowledge(TeacherStudentsScene):
 
 class NotTheMostComputationallyEfficient(Scene):
     CONFIG = {
-        "words": "Not the most \\\\ computationally \\\\ efficient",
+        "words": "Not the most \\\\ computationally efficient",
         "word_height": 4,
+        "opacity": 0.7,
     }
 
     def construct(self):
-        big_rect = FullScreenFadeRectangle(opacity=0.5)
+        big_rect = FullScreenFadeRectangle(opacity=self.opacity)
         self.add(big_rect)
 
         words = TextMobject(self.words)
         words.set_color(RED)
         words.set_stroke(WHITE, 1)
-        words.scale_to_fit_height(self.word_height)
+        words.scale_to_fit_width(FRAME_WIDTH - 2 * MED_LARGE_BUFF)
         self.play(Write(words))
         self.wait()
+
+
+class WhyLearnIt(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What?!?  Then why \\\\ learn it?",
+            bubble_kwargs={"direction": LEFT},
+            student_index=2,
+            target_mode="angry",
+        )
+        self.change_all_student_modes("angry")
+        self.wait()
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes("erm", "happy" "pondering"),
+            RemovePiCreatureBubble(self.students[2], target_mode="pondering"),
+        )
+        self.look_at(self.screen)
+        self.wait(10)
 
 
 class SetupSimpleSystemOfEquations(LinearTransformationScene):
@@ -256,7 +288,9 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         "matrix": [[3, 2], [-1, 2]],
         "output_vect": [-4, -2],
         "quit_before_final_transformation": False,
-        "array_scale_factor": 0.75
+        "array_scale_factor": 0.75,
+        "compare_to_big_system": True,
+        "transition_to_geometric_view": True,
     }
 
     def construct(self):
@@ -270,11 +304,12 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
 
     def introduce_system(self):
         system = self.system = self.get_system(self.matrix, self.output_vect)
+        dim = len(self.matrix)
         big_dim = 7  # Big system size
         big_matrix = np.random.randint(-9, 10, size=(big_dim, big_dim))
         big_output_vect = np.random.randint(-9, 10, size=big_dim)
-        big_matrix[:2, :2] = self.matrix
-        big_output_vect[:2] = self.output_vect
+        big_matrix[:dim, :dim] = self.matrix
+        big_output_vect[:dim] = self.output_vect
         big_system = self.get_system(big_matrix, big_output_vect)
 
         unknown_circles = VGroup(*[
@@ -301,26 +336,29 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
                               run_time=1, lag_ratio=0.8))
         self.play(FadeOut(row_rects))
         self.wait()
-        self.remove(system)
-        self.play(ReplacementTransform(system.copy(), big_system))
-        self.wait(2)
-        # Oh yeah, super readable line...
-        self.play(*[
-            ReplacementTransform(big_system[i][:5], system[i][:5])
-            for i in range(2)
-        ] + [
-            ReplacementTransform(big_system[i][-2:], system[i][-2:])
-            for i in range(2)
-        ] + [
-            FadeOut(big_system[i][start:end])
-            for i in range(big_dim)
-            for start in [5 if i < 2 else 0]
-            for end in [-2 if i < 2 else len(big_system[i])]
-        ])
-        self.remove(big_system, system)
-        self.add(system)
+        if self.compare_to_big_system:
+            self.remove(system)
+            self.play(ReplacementTransform(system.copy(), big_system))
+            self.wait(2)
+            # Oh yeah, super readable line...
+            cutoff = 3 * dim - 1
+            self.play(*[
+                ReplacementTransform(big_system[i][:cutoff], system[i][:cutoff])
+                for i in range(dim)
+            ] + [
+                ReplacementTransform(big_system[i][-2:], system[i][-2:])
+                for i in range(dim)
+            ] + [
+                FadeOut(big_system[i][start:end])
+                for i in range(big_dim)
+                for start in [cutoff if i < dim else 0]
+                for end in [-2 if i < dim else len(big_system[i])]
+            ])
+            self.remove(big_system, system)
+            self.add(system)
 
     def from_system_to_matrix(self):
+        # dim = len(self.matrix)
         system_in_lines = self.system
         matrix_system = self.matrix_system = LinearSystem(
             self.matrix, self.output_vect, height=2
@@ -339,35 +377,39 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         system_in_lines_copy = system_in_lines.deepcopy()
         self.play(
             ReplacementTransform(
-                system_in_lines_copy.matrix_elements,
+                VGroup(*map(VGroup, system_in_lines_copy.matrix_elements)),
                 matrix_system.matrix_mobject.elements,
-            ),
-            ReplacementTransform(
-                system_in_lines_copy.output_vect_elements,
-                matrix_system.output_vect_mob.elements,
-            ),
-            ReplacementTransform(
-                system_in_lines_copy.unknowns[:2],
-                matrix_system.input_vect_mob.elements,
             ),
             Write(matrix_system.matrix_mobject.brackets),
             Write(matrix_system.output_vect_mob.brackets),
             Write(matrix_system.input_vect_mob.brackets),
             Write(matrix_system.equals)
         )
+        self.play(ReplacementTransform(
+            VGroup(*map(VGroup, system_in_lines_copy.output_vect_elements)),
+            matrix_system.output_vect_mob.elements,
+        ))
+        self.play(*[
+            ReplacementTransform(uk, elem)
+            for uk, elem in zip(
+                system_in_lines_copy.unknowns,
+                it.cycle(matrix_system.input_vect_mob.elements)
+            )
+        ])
         self.wait()
-        self.play(
-            Write(self.background_plane),
-            Write(self.plane),
-            FadeOut(system_in_lines),
-            FadeIn(corner_rect),
-            matrix_system.scale_to_fit_height, corner_rect.get_height() - MED_LARGE_BUFF,
-            matrix_system.move_to, corner_rect,
-        )
-        self.play(*map(GrowArrow, self.basis_vectors))
+        if self.transition_to_geometric_view:
+            self.play(
+                Write(self.background_plane),
+                Write(self.plane),
+                FadeOut(system_in_lines),
+                FadeIn(corner_rect),
+                matrix_system.scale_to_fit_height, corner_rect.get_height() - MED_LARGE_BUFF,
+                matrix_system.move_to, corner_rect,
+            )
+            self.play(*map(GrowArrow, self.basis_vectors))
 
-        self.add_foreground_mobject(corner_rect)
-        self.add_foreground_mobject(matrix_system)
+            self.add_foreground_mobject(corner_rect)
+            self.add_foreground_mobject(matrix_system)
 
     def show_geometry(self):
         system = self.matrix_system
@@ -1255,10 +1297,18 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
                 TexMobject("="),
                 moving_output_vect_label.generate_target(),
                 TexMobject("\\cdot"),
-                moving_column_mob.generate_target()
+                moving_column_mob.generate_target(use_deepcopy=True)
             )
             equation.movers = VGroup(
-                moving_var, moving_output_vect_label, moving_column_mob)
+                moving_var, moving_output_vect_label, moving_column_mob
+            )
+            for element in moving_column_mob.target.submobject_family():
+                if not isinstance(element, TexMobject):
+                    continue
+                tex_string = element.get_tex_string()
+                if "sin" in tex_string or "cos" in tex_string:
+                    element.set_stroke(width=1)
+                    element.scale(1.25)
             equation.to_write = equation[1::2]
             equation[2].match_height(equation[4])
             equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
@@ -1266,15 +1316,23 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
             equation.add_to_back(equation.background_rectangle)
             equations.add(equation)
         equations.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
-        equations.to_corner(UR)
+        equations.scale(1.25)
+        equations.to_corner(UR, buff=MED_SMALL_BUFF)
+        equations_rect = BackgroundRectangle(equations, buff=MED_LARGE_BUFF)
+        equations_rect.set_fill(opacity=0.9)
 
         for i, equation in enumerate(equations):
-            self.play(
+            anims = [
                 FadeIn(equation.background_rectangle),
                 Write(equation.to_write),
-                LaggedStart(MoveToTarget, equation.movers,
-                            path_arc=60 * DEGREES),
-            )
+                LaggedStart(
+                    MoveToTarget, equation.movers,
+                    path_arc=60 * DEGREES
+                )
+            ]
+            if i == 0:
+                anims.insert(0, FadeIn(equations_rect))
+            self.play(*anims)
             self.wait()
 
     def get_column_animations(self, matrix_mobject, column_mobs):
@@ -1884,9 +1942,219 @@ class TransformingAreasXCoord(TransformingAreasYCoord):
     }
 
 
+class ThreeDDotVectorWithKHat(ExternallyAnimatedScene):
+    pass
+
+
+class ZEqualsVDotK(Scene):
+    def construct(self):
+        equation = VGroup(
+            TexMobject("z"),
+            TexMobject("="),
+            Matrix(["x", "y", "z"]),
+            TexMobject("\\cdot"),
+            IntegerMatrix([0, 0, 1]),
+        )
+        equation[2].elements.set_color_by_gradient(X_COLOR, Y_COLOR, Z_COLOR)
+        equation[4].elements.set_color(BLUE)
+        equation.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        equation.to_edge(LEFT)
+
+        self.play(Write(equation))
+        self.wait()
+
+
+class InputParallelepipedAngledView(ExternallyAnimatedScene):
+    pass
+
+
+class InputParallelepipedTopViewToSideView(ExternallyAnimatedScene):
+    pass
+
+
+class ParallelepipedForXCoordinate(ExternallyAnimatedScene):
+    pass
+
+
+class ParallelepipedForYCoordinate(ExternallyAnimatedScene):
+    pass
+
+
+class ThreeDCoordinatesAsVolumes(Scene):
+    def construct(self):
+        colors = [X_COLOR, Y_COLOR, Z_COLOR]
+        x, y, z = coords = VGroup(*map(TexMobject, "xyz"))
+        coords.set_color_by_gradient(*colors)
+        matrix = IntegerMatrix(np.identity(3))
+        matrix.set_color_columns(*colors)
+        det_text = get_det_text(matrix)
+        equals = TexMobject("=")
+        equals.next_to(det_text[0], LEFT)
+        equals.shift(SMALL_BUFF * DOWN)
+        coords.next_to(equals, LEFT)
+
+        columns = VGroup(*[
+            VGroup(*matrix.mob_matrix[:, i])
+            for i in range(3)
+        ])
+
+        coord_column = coords.copy()
+        for coord, m_elem in zip(coord_column, columns[2]):
+            coord.move_to(m_elem)
+        coord_column.set_color(WHITE)
+        coord_column[2].set_color(BLUE)
+        coord_column.generate_target()
+
+        self.play(LaggedStart(FadeIn, VGroup(
+            z, equals, det_text, matrix.brackets,
+            VGroup(*matrix.mob_matrix[:, :2].flatten()),
+            coord_column
+        )))
+        self.wait(2)
+        coord_column.target.move_to(columns[1])
+        coord_column.target.set_color_by_gradient(WHITE, Y_COLOR, WHITE)
+        self.play(
+            MoveToTarget(coord_column, path_arc=np.pi),
+            FadeOut(columns[1]),
+            FadeIn(columns[2]),
+            FadeInFromDown(y),
+            z.shift, UP,
+            z.fade, 1,
+        )
+        self.wait(2)
+        coord_column.target.move_to(columns[0])
+        coord_column.target.set_color_by_gradient(X_COLOR, WHITE, WHITE)
+        self.play(
+            MoveToTarget(coord_column, path_arc=np.pi),
+            FadeOut(columns[0]),
+            FadeIn(columns[1]),
+            FadeInFromDown(x),
+            y.shift, UP,
+            y.fade, 1,
+        )
+        self.wait(2)
+
+
 class WriteCramersRule(Scene):
     def construct(self):
         words = TextMobject("``Cramer's Rule''")
         words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        words.add_background_rectangle()
         self.play(Write(words))
         self.wait()
+
+
+class CramersYEvaluation(Scene):
+    def construct(self):
+        frac = TexMobject("{(2)(2) - (4)(0) \\over (2)(1) - (-1)(0)}")
+        VGroup(frac[1], frac[11], frac[15], frac[26]).set_color(GREEN)
+        VGroup(frac[4], frac[8]).set_color(MAROON_B)
+        VGroup(frac[18], frac[22], frac[23]).set_color(RED)
+
+        group = VGroup(
+            TexMobject("="), frac,
+            TexMobject("= \\frac{4}{2}"), TexMobject("=2")
+        )
+        group.arrange_submobjects(RIGHT)
+        group.add_to_back(BackgroundRectangle(group))
+
+        self.add(group)
+        self.wait(1)
+
+
+# Largely copy-pasted.  Not great, but what are you gonna do.
+class CramersXEvaluation(Scene):
+    def construct(self):
+        frac = TexMobject("{(4)(1) - (-1)(2) \\over (2)(1) - (-1)(0)}")
+        VGroup(frac[1], frac[12]).set_color(MAROON_B)
+        VGroup(frac[4], frac[8], frac[9]).set_color(RED)
+        VGroup(frac[16], frac[27]).set_color(GREEN)
+        VGroup(frac[19], frac[23], frac[24]).set_color(RED)
+
+        group = VGroup(
+            TexMobject("="), frac,
+            TexMobject("= \\frac{6}{2}"), TexMobject("=3")
+        )
+        group.arrange_submobjects(RIGHT)
+        group.add_to_back(BackgroundRectangle(group))
+
+        self.add(group)
+        self.wait(1)
+
+
+class Equals2(Scene):
+    def construct(self):
+        self.add(TexMobject("=2").add_background_rectangle())
+        self.wait()
+
+
+class Equals3(Scene):
+    def construct(self):
+        self.add(TexMobject("=3").add_background_rectangle())
+        self.wait()
+
+
+class Introduce3DSystem(SetupSimpleSystemOfEquations):
+    CONFIG = {
+        "matrix": [[3, 2, 7], [-1, 2, -4], [4, 0, 1]],
+        "output_vect": [-4, -2, 5],
+        "compare_to_big_system": False,
+        "transition_to_geometric_view": False,
+    }
+
+    def construct(self):
+        self.remove_grid()
+        self.introduce_system()
+        self.from_system_to_matrix()
+
+
+class ThinkItThroughYourself(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Try thinking \\\\ it through!",
+            target_mode="hooray"
+        )
+        self.change_all_student_modes("pondering")
+        self.wait(4)
+
+
+class TransformParallelepipedWithoutGrid(ExternallyAnimatedScene):
+    pass
+
+
+class TransformParallelepipedWithGrid(ExternallyAnimatedScene):
+    pass
+
+
+class AreYouPausingAndPondering(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Are you pausing \\\\ and pondering?",
+            target_mode="sassy",
+            added_anims=[self.get_student_changes(*3 * ["guilty"])]
+        )
+        self.wait()
+        self.change_all_student_modes(
+            "thinking",
+            added_anims=[
+                RemovePiCreatureBubble(self.teacher, target_mode="raise_right_hand")
+            ],
+            look_at_arg=self.screen
+        )
+        self.wait(6)
+
+
+class Thumbnail(TransformingAreasYCoord):
+    def construct(self):
+        self.matrix = np.array(self.matrix)
+        vect = self.add_vector([1, 1.5], color=MAROON_B)
+        ip = self.get_input_parallelogram(vect)
+        self.add_transformable_mobject(ip)
+        self.apply_transposed_matrix([[2, -0.5], [1, 2]])
+
+        words = TextMobject("Cramer's", "rule")
+        words.scale_to_fit_width(7)
+        # words.add_background_rectangle_to_parts()
+        words.add_background_rectangle()
+        words.to_edge(UP)
+        self.add(words)
