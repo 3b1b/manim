@@ -32,6 +32,20 @@ def get_quiz(*questions):
     quiz.scale(0.7)
     return quiz
 
+class Checkmark(TexMobjectFromPresetString):
+    CONFIG = {
+        "tex" : "\\checkmark",
+        "color" : GREEN
+    }
+
+class Xmark(TexMobjectFromPresetString):
+    CONFIG = {
+        "tex" : "\\times",
+        "color" : RED
+    }
+
+
+
 def get_slot_group(
     bool_list, 
     buff = MED_LARGE_BUFF, 
