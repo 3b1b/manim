@@ -21,6 +21,7 @@ HELP_MESSAGE = """
    -p preview in low quality
    -s show and save picture of last frame
    -w write result to file [this is default if nothing else is stated]
+   -o <file_name> write to a different file_name
    -l use low quality
    -m use medium quality
    -a run and save every scene in the script, or all args for the given scene

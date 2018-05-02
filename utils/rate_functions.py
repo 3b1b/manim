@@ -33,13 +33,14 @@ def there_and_back(t, inflection=10.0):
     return smooth(new_t, inflection)
 
 
-def there_and_back_with_pause(t):
-    if t < 1. / 3:
-        return smooth(3 * t)
-    elif t < 2. / 3:
+def there_and_back_with_pause(t, pause_ratio=1. / 3):
+    a = 1. / pause_ratio
+    if t < 0.5 - pause_ratio / 2:
+        return smooth(a * t)
+    elif t < 0.5 + pause_ratio / 2:
         return 1
     else:
-        return smooth(3 - 3 * t)
+        return smooth(a - a * t)
 
 
 def running_start(t, pull_factor=-0.5):
