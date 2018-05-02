@@ -767,7 +767,7 @@ class Mobject(Container):
         """For debugging purposes"""
         print "\t" * n_tabs, self, id(self)
         for submob in self.submobjects:
-            submob.print_mobject_family(n_tabs + 1)
+            submob.print_submobject_family(n_tabs + 1)
 
     # Alignment
     def align_data(self, mobject):

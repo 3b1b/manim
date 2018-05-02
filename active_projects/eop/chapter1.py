@@ -452,7 +452,7 @@ class Introduction(TeacherStudentsScene):
 
     def construct(self):
         
-        self.wait()
+        self.wait(5)
         
         self.change_student_modes(
             "confused", "frustrated", "dejected",
@@ -462,16 +462,8 @@ class Introduction(TeacherStudentsScene):
         self.wait()
 
 
-        self.get_teacher().change_mode("hooray")
+        self.get_teacher().change_mode("raise_right_hand")
         self.wait()
-
-        self.play(
-            self.get_teacher().change_mode, "raise_right_hand",
-            *[
-                ApplyMethod(pi.change, "pondering", {"look_at_arg" : UP + 2 * LEFT})
-                for pi in self.get_students()
-            ]
-        )
 
         self.wait(30)
         # put examples here in video editor
@@ -1057,10 +1049,130 @@ class ShowUncertainty2(Scene):
         self.throw_darts(1000,5)
 
 
+SICKLY_GREEN = "#9BBD37"
+
+
+class SicklyPiCreature(PiCreature):
+    CONFIG = {
+        "sick_color": SICKLY_GREEN
+    }
+
+    def get_slightly_sick(self):
+
+        self.save_state()
+        self.set_color(self.sick_color)
+
+    def get_sick(self):
+
+        self.get_slightly_sick()
+        self.change_mode("sick")
+
+    def get_better(self):
+        self.restore()
+
+
+class RandyIsSickOrNot(Scene):
+
+
+    def construct(self):
+        title = TextMobject("1 in 200")
+        title.to_edge(UP)
+
+        
+        randy = SicklyPiCreature()
+        randy.scale_to_fit_height(3)
+        randy.move_to(2*LEFT)
+        randy.change_mode("plain")
+        randy.set_color(BLUE)
+        randy.save_state()
+
+        self.add(randy)
+
+        p_sick = TexMobject("p(","\\text{sick}",") = 0.5\%").scale(1.7)
+        p_sick.set_color_by_tex("sick", SICKLY_GREEN)
+        p_sick.next_to(randy, UP, buff = LARGE_BUFF)
+        self.add(p_sick)
+        self.wait()
+        
+        self.play(
+            ApplyMethod(randy.get_slightly_sick, rate_func = there_and_back)
+        )
+        self.play(Blink(randy))
+        self.wait(2)
+
+        self.play(
+            ApplyMethod(randy.get_sick)
+        )
+
+        self.play(Blink(randy))
+        self.wait()
+
+        self.play(randy.get_better)
+
+        self.play(
+            ApplyMethod(randy.get_slightly_sick, rate_func = there_and_back)
+        )
+        self.play(Blink(randy))
+        self.wait(0.5)
+
+        self.play(
+            ApplyMethod(randy.get_sick)
+        )
+        
+        self.play(Blink(randy))
+        self.play(randy.get_better)
+        self.wait(3)
 
 
 
-class ShowUncertainty3(Scene):
+class OneIn200HasDisease(Scene):
+    def construct(self):
+        title = TextMobject("1 in 200")
+        title.to_edge(UP)
+        creature = PiCreature()
+
+        all_creatures = VGroup(*[
+            VGroup(*[
+                creature.copy()
+                for y in range(20)
+            ]).arrange_submobjects(DOWN, SMALL_BUFF)
+            for x in range(10)
+        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
+        all_creatures.scale_to_fit_height(FRAME_HEIGHT * 0.8)
+        all_creatures.next_to(title, DOWN)
+        randy = all_creatures[0][0]
+        all_creatures[0].remove(randy)
+        randy.change_mode("sick")
+        randy.set_color(SICKLY_GREEN)
+        randy.save_state()
+        randy.scale_to_fit_height(3)
+        randy.center()
+        randy.change_mode("plain")
+        randy.set_color(BLUE)
+
+        self.add(randy)
+
+        #p_sick = TexMobject("p(","\\text{sick}",") = 0.5\%")
+        #p_sick.set_color_by_tex("sick", SICKLY_GREEN)
+        #p_sick.next_to(randy, RIGHT+UP)
+        #self.add(p_sick)
+        self.wait()
+        
+        self.play(
+            randy.change_mode, "sick",
+            randy.set_color, SICKLY_GREEN
+        )
+        self.play(Blink(randy))
+        self.play(randy.restore)
+        self.wait()
+        self.play(
+            Write(title),
+            LaggedStart(FadeIn, all_creatures, run_time = 3)
+        )
+        self.wait()
+
+
+class RandyFlipsAndStacks(Scene):
 
     def construct(self):
 
@@ -1100,52 +1212,39 @@ class ShowUncertainty3(Scene):
 
 
 
-SICKLY_GREEN = "#9BBD37"
+class TwoDiceTable(Scene):
 
-class OneIn200HasDisease(Scene):
     def construct(self):
-        title = TextMobject("1 in 200")
-        title.to_edge(UP)
-        creature = PiCreature()
 
-        all_creatures = VGroup(*[
-            VGroup(*[
-                creature.copy()
-                for y in range(20)
-            ]).arrange_submobjects(DOWN, SMALL_BUFF)
-            for x in range(10)
-        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
-        all_creatures.scale_to_fit_height(FRAME_HEIGHT * 0.8)
-        all_creatures.next_to(title, DOWN)
-        randy = all_creatures[0][0]
-        all_creatures[0].remove(randy)
-        randy.change_mode("sick")
-        randy.set_color(SICKLY_GREEN)
-        randy.save_state()
-        randy.scale_to_fit_height(3)
-        randy.center()
-        randy.change_mode("plain")
-        randy.set_color(BLUE)
+        table = VGroup()
+        cell_size = 1
+        colors = np.random.permutation(color_gradient([RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE], 13))
 
-        self.add(randy)
+        for i in range(1,7):
+            for j in range(1,7):
+                cell = Square(side_length = cell_size)
+                cell.set_fill(color = colors[i+j], opacity = 0.8)
+                label = Integer(i+j)
+                label.move_to(cell)
+                cell.add(label)
+                cell.move_to(i*cell_size*RIGHT + j*cell_size*DOWN)
+                table.add(cell)
 
-        p_sick = TexMobject("p(","\\text{sick}",") = 0.5\%")
-        p_sick.set_color_by_tex("sick", SICKLY_GREEN)
-        p_sick.next_to(randy, RIGHT+UP)
-        self.add(p_sick)
-        self.wait()
-        self.play(
-            randy.change_mode, "sick",
-            randy.set_color, SICKLY_GREEN
-        )
-        self.play(Blink(randy))
-        self.play(randy.restore)
-        self.play(
-            FadeOut(p_sick),
-            Write(title),
-            LaggedStart(FadeIn, all_creatures, run_time = 3)
-        )
-        self.wait()
+        table.center()
+        self.add(table)
+
+        row1 = RowOfDice().match_width(table)
+        print row1.is_subpath
+        row2 = row1.copy().rotate(-TAU/4)
+        print row2.is_subpath
+        row1.next_to(table, UP)
+        row2.next_to(table, LEFT)
+        self.add(row1, row2)
+
+
+
+
+
 
 
 
@@ -1344,7 +1443,7 @@ class JustFlipping(Scene):
 
     def construct(self):
 
-        randy = CoinFlippingPiCreature()
+        randy = CoinFlippingPiCreature().shift(2 * DOWN)
         self.add(randy)
 
         self.wait(2)
@@ -1354,6 +1453,46 @@ class JustFlipping(Scene):
             self.play(FlipCoin(randy))
 
 
+
+class JustFlippingWithResults(Scene):
+
+    def construct(self):
+
+        randy = CoinFlippingPiCreature().shift(2 * DOWN)
+        self.add(randy)
+
+        self.wait(2)
+
+        for i in range(10):
+            self.wait()
+            self.play(FlipCoin(randy))
+            result = random.choice(["H", "T"])
+            if result == "H":
+                coin = UprightHeads().scale(3)
+            else:
+                coin = UprightTails().scale(3)
+            coin.move_to(2 * UP + 2.5 * LEFT + i * 0.6 * RIGHT)
+            self.play(FadeIn(coin))
+
+
+
+class WhatDoesItReallyMean(TeacherStudentsScene):
+
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": MAROON_E,
+            "flip_at_start": True,
+        },
+    }
+
+    def construct(self):
+
+        student_q = TextMobject("What does", "``probability''", "\emph{actually}", "mean?")
+        student_q.set_color_by_tex("probability", YELLOW)
+        self.student_says(student_q, target_mode = "sassy")
+        self.wait()
+        self.teacher_says("Don't worry -- philosophy can come later!")
+        self.wait()
 
 
 class BrickRowScene(Scene):
@@ -1648,7 +1787,7 @@ class BrickRowScene(Scene):
 
     def construct(self):
 
-        #self.force_skipping()
+        self.force_skipping()
 
         randy = CoinFlippingPiCreature()
         randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
@@ -1764,54 +1903,6 @@ class BrickRowScene(Scene):
         # self.add_foreground_mobject(self.decimals)
 
 
-        # # # # # # # #
-        # FOURTH FLIP #
-        # # # # # # # #
-
-        # self.play(FlipCoin(randy))
-
-        # self.wait()
-
-        # self.play(
-        #     SplitRectsInBrickWall(self.row)
-        # )
-        # self.wait()
-
-        # self.add_foreground_mobject(self.tallies[-1])
-        # # this tweaks an undesirable overlap in the next animation
-        # self.split_tallies_at_once(direction = LEFT)
-        # self.wait()
-        # self.merge_rects_by_subdiv()
-        # self.wait()
-        # self.merge_tallies(direction = LEFT)
-        # self.merge_rects_by_coloring()
-        # self.merge_decimals()
-        # self.wait()
-
-
-        # # # # # # # #
-        # FIFTH  FLIP #
-        # # # # # # # #
-
-        # self.play(FlipCoin(randy))
-
-        # self.wait()
-
-        # self.play(
-        #     SplitRectsInBrickWall(self.row)
-        # )
-        # self.wait()
-
-        # self.split_tallies_at_once(direction = LEFT)
-        # self.wait()
-        # self.merge_rects_by_subdiv()
-        # self.wait()
-        # self.merge_tallies(direction = LEFT)
-        # self.merge_rects_by_coloring()
-        # self.merge_decimals()
-        # self.wait()
-
-
         # # # # # # # # # # # # # #
         # # FOURTH FLIP IN DETAIL #
         # # # # # # # # # # # # # #
@@ -1890,7 +1981,7 @@ class BrickRowScene(Scene):
         # show how the outcomes in one tally split into two copies
         # going into the neighboring tallies
 
-        self.revert_to_original_skipping_status()
+        #self.revert_to_original_skipping_status()
 
         target_outcomes = self.row.get_outcome_rects_for_level(n + 1, with_labels = False)
         grouped_target_outcomes = VGroup()
@@ -1994,6 +2085,117 @@ class BrickRowScene(Scene):
         # self.play(*anims)
 
         # self.add_foreground_mobject(new_decimals)
+
+        # # # # # # # #
+        # FIFTH  FLIP #
+        # # # # # # # #
+
+        # self.remove(
+        #     grouped_outcomes,
+        #     grouped_outcomes_copy,
+        #     grouped_target_outcomes,
+        #     target_outcomes,
+        #     outcomes,
+        #     previous_row,
+        #     original_grouped_outcomes)
+        self.clear()
+        self.add(randy, self.row)
+        self.row.shift(0.5 * UP)        
+        
+
+        self.merge_rects_by_coloring()
+
+        self.revert_to_original_skipping_status()
+
+        for i in range(3):
+
+            self.play(FlipCoin(randy))
+
+            self.wait()
+
+            self.play(
+                SplitRectsInBrickWall(self.row)
+            )
+            self.wait()
+
+            #self.split_tallies_at_once(direction = LEFT)
+            self.wait()
+            self.merge_rects_by_subdiv()
+            self.wait()
+            #self.merge_tallies(direction = LEFT)
+            self.merge_rects_by_coloring()
+            #self.merge_decimals()
+            self.wait()
+
+class LevelsOfDetailInBrickRow(BrickRowScene):
+
+    def construct(self):
+
+        self.force_skipping()
+
+        randy = CoinFlippingPiCreature()
+        randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
+        self.add(randy)
+        self.row = BrickRow(1, height = 2, width = 10)
+        
+        #self.decimals = VGroup()
+
+        self.play(FlipCoin(randy),
+            FadeIn(self.row))
+
+
+        self.wait()
+        
+        # put tallies on top
+
+        self.tallies = VGroup(*[
+            TallyStack(1 - i, i) for i in range(2)
+        ])
+        for (tally, rect) in zip(self.tallies, self.row.rects):
+            new_anchor = rect.get_center() + 1.2 * 0.5 * rect.get_height() * UP
+            tally.move_anchor_to(new_anchor)
+            self.play(FadeIn(tally))
+
+        self.add_foreground_mobject(self.tallies)
+        self.wait()
+
+
+        # # # # # # # #
+        # SECOND FLIP #
+        # # # # # # # #
+
+
+
+        self.play(FlipCoin(randy))
+        self.wait()
+
+
+        self.play(
+            SplitRectsInBrickWall(self.row)
+        )
+        self.wait()
+
+        # show individual outcomes
+        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = True)
+        self.play(
+            LaggedStart(FadeIn, outcomes)
+        )
+        self.wait()
+        self.play(
+            LaggedStart(FadeOut, outcomes)
+        )
+
+        self.split_tallies_in_two_steps()
+        self.wait()
+        self.merge_rects_by_subdiv()
+        self.wait()
+        self.merge_tallies()
+        self.merge_rects_by_coloring()
+        self.wait()
+        self.move_tallies_on_top()
+        
+
+
 
 
 class OutlineableBars(VGroup):
@@ -2123,13 +2325,13 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
             label.next_to(self.bar_anchors[i], DOWN)
             x_labels.add(label)
 
-        nb_heads_label = TextMobject("\# of heads")
-        nb_heads_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
+        nb_tails_label = TextMobject("\# of tails")
+        nb_tails_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
         
         self.play(
             FadeIn(x_axis),
             FadeIn(x_labels),
-            FadeIn(nb_heads_label)
+            FadeIn(nb_tails_label)
         )
 
 
@@ -2201,13 +2403,13 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
             label.next_to(self.bar_anchors[i], DOWN)
             x_labels.add(label)
 
-        nb_heads_label = TextMobject("\# of heads")
-        nb_heads_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
+        nb_tails_label = TextMobject("\# of heads")
+        nb_tails_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
         
         self.play(
             FadeIn(x_axis),
             FadeIn(x_labels),
-            FadeIn(nb_heads_label)
+            FadeIn(nb_tails_label)
         )
 
         # draw y-guides
