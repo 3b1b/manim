@@ -15,6 +15,9 @@ class CoinStack(VGroup):
             coin = self.face(thickness = self.coin_thickness)
             coin.shift(n * self.coin_thickness * UP)
             self.add(coin)
+        if self.size == 0:
+            point = VectorizedPoint()
+            self.add(point)
 
 class HeadsStack(CoinStack):
     CONFIG = {

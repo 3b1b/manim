@@ -94,42 +94,30 @@ class BrickRowScene(PiCreatureScene):
 
         for (i, tally) in enumerate(self.tallies):
 
+            new_tally_left = TallyStack(tally.nb_heads + 1, tally.nb_tails)
             target_left = tally_targets_left[i]
-            v = target_left - tally.anchor
-            
-            anims1.append(tally.move_anchor_to)
-            anims1.append(target_left)
+            new_tally_left.move_anchor_to(target_left)
+
+            anims1.append(Transform(tally, new_tally_left))
             
             tally.anchor = target_left
+            tally.nb_heads = new_tally_left.nb_heads
+            tally.nb_tails = new_tally_left.nb_tails
             
-            tally_copy = self.tallies_copy[i]
-
-            target_right = tally_targets_right[i]
-            v = target_right - tally_copy.anchor
-            
-            anims1.append(tally_copy.move_anchor_to)
-            anims1.append(target_right)
-            
-            tally_copy.anchor = target_right
 
         anims2 = []
 
-        for (i, tally) in enumerate(self.tallies):
-
-            new_tally_left = TallyStack(tally.nb_heads + 1, tally.nb_tails)
-            new_tally_left.move_anchor_to(tally.anchor)
-            anims2.append(Transform(tally, new_tally_left))
-            
-            tally_copy = self.tallies_copy[i]
+        for (i, tally) in enumerate(self.tallies_copy):
 
             new_tally_right = TallyStack(tally.nb_heads, tally.nb_tails + 1)
-            new_tally_right.move_anchor_to(tally_copy.anchor)
-            anims2.append(Transform(tally_copy, new_tally_right))
+            target_right = tally_targets_right[i]
+            new_tally_right.move_anchor_to(target_right)
+            
+            anims2.append(Transform(tally, new_tally_right))
 
-            tally_copy.nb_heads = new_tally_right.nb_heads
-            tally_copy.nb_tails = new_tally_right.nb_tails
-            tally.nb_heads = new_tally_left.nb_heads
-            tally.nb_tails = new_tally_left.nb_tails
+            tally.anchor = target_right
+            tally.nb_heads = new_tally_right.nb_heads
+            tally.nb_tails = new_tally_right.nb_tails
 
         return anims1, anims2
 
@@ -139,7 +127,7 @@ class BrickRowScene(PiCreatureScene):
         self.play(*(anims1 + anims2))
 
     def split_tallies_in_two_steps(self, direction = DOWN):
-        # First all thiode to the left, then those to the right
+        # First all those to the left, then those to the right
         anims1, anims2 = self.tally_split_animations(direction = direction)
         self.play(*anims1)
         self.wait(0.3)
@@ -154,7 +142,9 @@ class BrickRowScene(PiCreatureScene):
         half_merged_row.subdiv_level += 1
         half_merged_row.generate_points()
         half_merged_row.move_to(self.row)
+
         self.play(FadeIn(half_merged_row))
+        self.remove(self.row)
         self.row = half_merged_row
 
     def merge_tallies(self, direction = UP):
@@ -198,6 +188,7 @@ class BrickRowScene(PiCreatureScene):
         merged_row.move_to(self.row)
 
         self.play(FadeIn(merged_row))
+        self.remove(self.row)
         self.row = merged_row
 
 
@@ -465,16 +456,20 @@ class BrickRowScene(PiCreatureScene):
 
         # move row up, leace a copy without tallies below
         new_row = self.row.copy()
+        self.clear()
+        self.add(randy, self.row, self.tallies)
         self.bring_to_back(new_row)
         self.play(
-            self.row.shift,2.5 * UP,
-            self.tallies.shift,2.5 * UP,
+            self.row.shift, 2.5 * UP,
+            self.tallies.shift, 2.5 * UP,
         )
+
+        old_row = self.row
+        self.row = new_row
 
         self.play(FlipCoin(randy))
 
         self.wait()
-        return
 
         self.play(
             SplitRectsInBrickWall(self.row)
@@ -490,7 +485,7 @@ class BrickRowScene(PiCreatureScene):
         self.wait()
         self.move_tallies_on_top()
 
-
+        return
 
         # show individual outcomes
         outcomes = self.row.get_outcome_rects_for_level(3, with_labels = True)
