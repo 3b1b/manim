@@ -20,6 +20,7 @@ GRADE_COLOR_1 = COLOR_HEADS = RED
 GRADE_COLOR_2 = COLOR_TAILS = BLUE_E
 
 TALLY_BACKGROUND_WIDTH = 1.0
+TALLY_BACKGROUND_COLOR = BLACK
 
 def get_example_quiz():
     quiz = get_quiz(
@@ -312,10 +313,11 @@ class TailsStack(CoinStack):
 
 class TallyStack(VGroup):
     CONFIG = {
-        "coin_thickness": COIN_THICKNESS
+        "coin_thickness": COIN_THICKNESS,
+        "show_decimals": True
     }
 
-    def __init__(self,h,t,anchor = ORIGIN, **kwargs):
+    def __init__(self, h, t, anchor = ORIGIN, **kwargs):
         self.nb_heads = h
         self.nb_tails = t
         self.anchor = anchor
@@ -331,21 +333,36 @@ class TallyStack(VGroup):
         self.heads_stack = stack1
         self.tails_stack = stack2
         self.add(stack1, stack2)
-        background_rect = RoundedRectangle(
+        self.background_rect = background_rect = RoundedRectangle(
             width = TALLY_BACKGROUND_WIDTH,
             height = TALLY_BACKGROUND_WIDTH,
             corner_radius = 0.1,
-            fill_color = DARK_GREY,
+            fill_color = TALLY_BACKGROUND_COLOR,
             fill_opacity = 1.0,
             stroke_width = 3
         ).align_to(self.anchor, DOWN).shift(0.1 * DOWN)
         self.add_to_back(background_rect)
+
+        self.decimal_tally = DecimalTally(self.nb_heads, self.nb_tails)
+        self.position_decimal_tally(self.decimal_tally)
+        if self.show_decimals:
+            self.add(self.decimal_tally)
+
+    def position_decimal_tally(self, decimal_tally):
+        decimal_tally.match_width(self.background_rect)
+        print self.background_rect.get_center()
+        decimal_tally.scale(0.6)
+        decimal_tally.next_to(self.background_rect.get_top(), DOWN, buff = 0.15)
+        return decimal_tally
+
 
     def move_anchor_to(self, new_anchor):
         for submob in self.submobjects:
             submob.shift(new_anchor - self.anchor)
 
         self.anchor = new_anchor
+        self.position_decimal_tally(self.decimal_tally)
+
         return self
 
 class CoinFlipTree(VGroup):
@@ -1582,6 +1599,17 @@ class WhatDoesItReallyMean(TeacherStudentsScene):
         self.wait()
 
 
+class DecimalTally(TextMobject):
+
+    def __init__(self, heads, tails, **kwargs):
+
+        TextMobject.__init__(self, str(heads), "\\textemdash\,", str(tails), **kwargs)
+        self[0].set_color(COLOR_HEADS)
+        self[-1].set_color(COLOR_TAILS)
+        # this only works for single-digit tallies
+
+
+
 class BrickRowScene(Scene):
 
 
@@ -1809,8 +1837,8 @@ class BrickRowScene(Scene):
             n = np.random.randint(1,10)
             seq = [np.random.choice(["H", "T"]) for j in range(n)]
             coin_seq = CoinSequence(seq).scale(1.5)
-            loc = np.random.uniform(low = -1, high = 1) * FRAME_X_RADIUS * RIGHT
-            loc += np.random.uniform(low = -1, high = 1) * FRAME_Y_RADIUS * UP
+            loc = np.random.uniform(low = -10, high = 10) * RIGHT
+            loc += np.random.uniform(low = -6, high = 6) * UP
             coin_seq.move_to(loc)
             
             coin_seq.target = coin_seq.copy().scale(0.3).move_to(0.4 * loc)
@@ -1833,8 +1861,8 @@ class BrickRowScene(Scene):
         #
         # put tallies on top
 
-        self.single_flip_labels = VGroup(UprightHeads(), UprightTails())
-        for (label, rect) in zip(self.single_flip_labels, self.row.rects):
+        single_flip_labels = VGroup(UprightHeads(), UprightTails())
+        for (label, rect) in zip(single_flip_labels, self.row.rects):
             label.next_to(rect, UP)
             self.play(FadeIn(label))
             self.wait()
@@ -1848,35 +1876,106 @@ class BrickRowScene(Scene):
         #     self.play(FadeIn(label))
         #     self.wait()
 
-        self.add_foreground_mobject(self.single_flip_labels)
+        #self.add_foreground_mobject(single_flip_labels)
         self.wait()
 
-        return
 
         # # # # # # # #
         # SECOND FLIP #
         # # # # # # # #
 
-
-
         self.play(FlipCoin(randy))
         self.wait()
-
 
         self.play(
             SplitRectsInBrickWall(self.row)
         )
         self.wait()
 
+
+        # split sequences
+        single_flip_labels_copy = single_flip_labels.copy()
+        self.add(single_flip_labels_copy)
+
+        
+        v = self.row.get_outcome_centers_for_level(2)[0] - single_flip_labels[0].get_center()
+        self.play(
+            single_flip_labels.shift, v
+        )
+        new_heads = VGroup(UprightHeads(), UprightHeads())
+        for i in range(2):
+            new_heads[i].move_to(single_flip_labels[i])
+            new_heads[i].shift(COIN_SEQUENCE_SPACING * DOWN)
+        self.play(FadeIn(new_heads))
+
+        v = self.row.get_outcome_centers_for_level(2)[-1] - single_flip_labels_copy[-1].get_center()
+        self.play(
+            single_flip_labels_copy.shift, v
+        )
+        new_tails = VGroup(UprightTails(), UprightTails())
+        for i in range(2):
+            new_tails[i].move_to(single_flip_labels_copy[i])
+            new_tails[i].shift(COIN_SEQUENCE_SPACING * DOWN)
+        self.play(FadeIn(new_tails))
+
+
+        decimal_tallies = VGroup()
+        # introduce notion of tallies
+        for (i, rect) in enumerate(self.row.get_rects_for_level(2)):
+            tally = DecimalTally(2-i, i)
+            tally.next_to(rect, UP)
+            decimal_tallies.add(tally)
+            self.play(FadeIn(tally))
+            self.wait()
+
+        self.add_foreground_mobject(single_flip_labels)
+        self.add_foreground_mobject(new_heads)
+        self.add_foreground_mobject(single_flip_labels_copy)
+        self.add_foreground_mobject(new_tails)
+
         # show individual outcomes
-        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = True)
+        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = False)
+
+
         self.play(
             LaggedStart(FadeIn, outcomes)
         )
         self.wait()
         self.play(
-            LaggedStart(FadeOut, outcomes)
+            LaggedStart(FadeOut, outcomes),
         )
+
+        self.play(
+            FadeOut(single_flip_labels),
+            FadeOut(new_heads),
+            FadeOut(single_flip_labels_copy),
+            FadeOut(new_tails)
+        )
+
+        self.tallies = VGroup()
+        for (i, rect) in enumerate(self.row.get_rects_for_level(2)):
+            tally = TallyStack(2-i, i, show_decimals = False)
+            tally.move_to(rect)
+            self.tallies.add(tally)
+
+
+        self.play(FadeIn(self.tallies))
+
+        anims = []
+        for (decimal_tally, tally_stack) in zip(decimal_tallies, self.tallies):
+            anims.append(ApplyFunction(
+                tally_stack.position_decimal_tally, decimal_tally
+            ))
+        
+        self.play(*anims)
+   
+        # replace the original decimal tallies with
+        # the ones that belong to the TallyStacks
+        for (decimal_tally, tally_stack) in zip(decimal_tallies, self.tallies):
+            self.remove(decimal_tally)
+            tally_stack.position_decimal_tally(tally_stack.decimal_tally)
+            tally_stack.add(tally_stack.decimal_tally)
+        return
 
         self.split_tallies_in_two_steps()
         self.wait()
