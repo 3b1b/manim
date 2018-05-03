@@ -353,7 +353,6 @@ class TallyStack(VGroup):
 
     def position_decimal_tally(self, decimal_tally):
         decimal_tally.match_width(self.background_rect)
-        print self.background_rect.get_center()
         decimal_tally.scale(0.6)
         decimal_tally.next_to(self.background_rect.get_top(), DOWN, buff = 0.15)
         return decimal_tally
@@ -1361,8 +1360,8 @@ class BrickRow(VMobject):
         "right_color" : BLUE,
         "height" : 1.0,
         "width" : 8.0,
-        "outcome_shrinkage_factor_x" : 0.85,
-        "outcome_shrinkage_factor_y" : 0.9
+        "outcome_shrinkage_factor_x" : 1.0,
+        "outcome_shrinkage_factor_y" : 1.0
     }
 
     def __init__(self, n, **kwargs):
@@ -1419,6 +1418,22 @@ class BrickRow(VMobject):
         return subdivs
 
 
+    def get_sequence_subdivs_for_level(self,r):
+        subdivs = VGroup()
+        x = - 0.5 * self.width
+        dx = 1.0 / 2**r
+        for k in range(1, 2 ** r):
+            proportion = dx
+            x += proportion * self.width
+            subdiv = DashedLine(
+                x * RIGHT + 0.5 * self.height * UP,
+                x * RIGHT + 0.5 * self.height * DOWN,
+            )
+            subdivs.add(subdiv)
+        subdivs.move_to(self.get_center())
+        return subdivs
+
+
     def get_outcome_centers_for_level(self,r):
         
         dpos = float(self.width) / (2 ** r) * RIGHT
@@ -1434,14 +1449,14 @@ class BrickRow(VMobject):
         centers = self.get_outcome_centers_for_level(r)
         outcome_width = self.outcome_shrinkage_factor_x * float(self.width) / (2 ** r)
         outcome_height = self.outcome_shrinkage_factor_y * self.height
-        corner_radius = min(0.1, 0.3 * min(outcome_width, outcome_height))
+        corner_radius = 0 # min(0.1, 0.3 * min(outcome_width, outcome_height))
         # this scales down the corner radius for very narrow rects
-        rect = RoundedRectangle(
+        rect = Rectangle( # RoundedRectangle(
             width = outcome_width,
             height = outcome_height,
-            corner_radius = corner_radius,
-            fill_color = DARK_GREY,
-            fill_opacity = 0.8,
+            #corner_radius = corner_radius,
+            fill_color = WHITE,
+            fill_opacity = 0.2,
             stroke_width = 0
         )
         rects = VGroup()
@@ -1462,6 +1477,7 @@ class BrickRow(VMobject):
             coin_seq.shift(rect.get_center() - coin_seq.get_center())
             # not simply move_to bc coin_seq is not centered
             rect.add(coin_seq)
+            rect.label = coin_seq
 
         return rects
 
@@ -1613,7 +1629,7 @@ class DecimalTally(TextMobject):
 
 
 
-class BrickRowScene(Scene):
+class BrickRowScene(PiCreatureScene):
 
 
     def split_tallies(self, direction = DOWN):
@@ -1764,7 +1780,7 @@ class BrickRowScene(Scene):
         half_merged_row = self.row.copy()
         half_merged_row.subdiv_level += 1
         half_merged_row.generate_points()
-        half_merged_row.move_to(self.row.get_center())
+        half_merged_row.move_to(self.row)
         self.play(FadeIn(half_merged_row))
         self.row = half_merged_row
 
@@ -1820,12 +1836,15 @@ class BrickRowScene(Scene):
         for tally in self.tallies:
             tally.anchor += 1.2 * 0.5 * self.row.height * UP
 
+    def create_pi_creature(self):
+        randy = CoinFlippingPiCreature(color = MAROON_E)
+        return randy
+
     def construct(self):
 
-
-        randy = CoinFlippingPiCreature()
+        randy = self.get_primary_pi_creature()
         randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
-        self.add(randy)
+        #self.add(randy)
         self.row = BrickRow(0, height = 2, width = 10)
         self.wait()
 
@@ -1856,7 +1875,7 @@ class BrickRowScene(Scene):
             )
         )
         
-
+        self.play(FlipCoin(randy) )
 
         self.play(SplitRectsInBrickWall(self.row))
         self.merge_rects_by_subdiv()
@@ -1870,16 +1889,6 @@ class BrickRowScene(Scene):
             self.play(FadeIn(label))
             self.wait()
 
-        #self.tallies = VGroup(*[
-        #    TallyStack(1 - i, i) for i in range(2)
-        #])
-        # for (label, rect) in zip(self.single_flip_labels, self.row.rects):
-        #     new_anchor = rect.get_center() + 1.2 * 0.5 * rect.get_height() * UP
-        #     label.move_anchor_to(new_anchor)
-        #     self.play(FadeIn(label))
-        #     self.wait()
-
-        #self.add_foreground_mobject(single_flip_labels)
         self.wait()
 
 
@@ -1947,13 +1956,14 @@ class BrickRowScene(Scene):
         self.play(
             LaggedStart(FadeOut, outcomes),
         )
-
+        self.wait()
         self.play(
             FadeOut(single_flip_labels),
             FadeOut(new_heads),
             FadeOut(single_flip_labels_copy),
             FadeOut(new_tails)
         )
+        self.wait()
 
         self.tallies = VGroup()
         for (i, rect) in enumerate(self.row.get_rects_for_level(2)):
@@ -1963,6 +1973,7 @@ class BrickRowScene(Scene):
 
 
         self.play(FadeIn(self.tallies))
+        self.wait()
 
         anims = []
         for (decimal_tally, tally_stack) in zip(decimal_tallies, self.tallies):
@@ -1971,37 +1982,126 @@ class BrickRowScene(Scene):
             ))
         
         self.play(*anims)
-   
+        self.wait()
+
         # replace the original decimal tallies with
         # the ones that belong to the TallyStacks
         for (decimal_tally, tally_stack) in zip(decimal_tallies, self.tallies):
             self.remove(decimal_tally)
             tally_stack.position_decimal_tally(tally_stack.decimal_tally)
             tally_stack.add(tally_stack.decimal_tally)
-        return
-
-        self.split_tallies_in_two_steps()
-        self.wait()
+        
+        self.add_foreground_mobject(self.tallies)
         self.merge_rects_by_subdiv()
         self.wait()
-        self.merge_tallies()
         self.merge_rects_by_coloring()
         self.wait()
-        self.move_tallies_on_top()
         
 
+        # # # # # # # # # # # # #
+        # CALLBACK TO SEQUENCES #
+        # # # # # # # # # # # # #
+
+        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = True)
+        subdivs = self.row.get_sequence_subdivs_for_level(2)
+        self.play(
+            FadeIn(outcomes),
+            FadeIn(subdivs),
+            FadeOut(self.tallies)
+        )
+
+        self.wait()
+
+        rect_to_dice = outcomes[1]
+        N = 10
+        dice_width = rect_to_dice.get_width()/N
+        dice_height = rect_to_dice.get_height()/N
+        prototype_dice = Rectangle(
+            width = dice_width,
+            height = dice_height,
+            stroke_width = 2,
+            stroke_color = WHITE,
+            fill_color = WHITE,
+            fill_opacity = 0
+        )
+        prototype_dice.align_to(rect_to_dice, direction = UP)
+        prototype_dice.align_to(rect_to_dice, direction = LEFT)
+        all_dice = VGroup()
+        for i in range(N):
+            for j in range(N):
+                dice_copy = prototype_dice.copy()
+                dice_copy.shift(j * dice_width * RIGHT + i * dice_height * DOWN)
+                all_dice.add(dice_copy)
+
+        self.play(
+            LaggedStart(FadeIn, all_dice),
+            FadeOut(rect_to_dice.label)
+        )
+
+        self.wait()
+
+        table = Ellipse(width = 1.5, height = 1)
+        table.set_fill(color = GREEN_E, opacity = 1)
+        table.next_to(rect_to_dice, UP)
+        self.add(table)
+        coin1 = UprightHeads(radius = 0.1)
+        coin2 = UprightTails(radius = 0.1)
+
+        def get_random_point_in_ellipse(ellipse):
+            width = ellipse.get_width()
+            height = ellipse.get_height()
+            x = y = 1
+            while x**2 + y**2 > 0.9:
+                x = np.random.uniform(-1,1)
+                y = np.random.uniform(-1,1)            
+            x *= width/2
+            y *= height/2
+            return ellipse.get_center() + x * RIGHT + y * UP
 
 
+        for dice in all_dice:
+            p1 = get_random_point_in_ellipse(table)
+            p2 = get_random_point_in_ellipse(table)
+            coin1.move_to(p1)
+            coin2.move_to(p2)
+            self.add(coin1, coin2)
+            self.play(
+                ApplyMethod(dice.set_fill, {"opacity" : 0.5},
+                    rate_func = there_and_back,
+                    run_time = 0.05)
+            )
+
+
+        self.wait()
+
+        self.play(
+            FadeOut(outcomes),
+            FadeOut(subdivs),
+            FadeOut(all_dice),
+            FadeOut(table),
+            FadeOut(coin1),
+            FadeOut(coin2),
+            FadeIn(self.tallies)
+        )
+
+        self.wait()
 
         # # # # # # # #
         # THIRD  FLIP #
         # # # # # # # #
 
+        # move row up, leace a copy without tallies below
+        new_row = self.row.copy()
+        self.bring_to_back(new_row)
+        self.play(
+            self.row.shift,2.5 * UP,
+            self.tallies.shift,2.5 * UP,
+        )
 
         self.play(FlipCoin(randy))
 
         self.wait()
-
+        return
 
         self.play(
             SplitRectsInBrickWall(self.row)
