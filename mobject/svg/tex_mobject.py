@@ -275,6 +275,14 @@ class BulletedList(TextMobject):
             else:
                 other_part.set_fill(opacity=opacity)
 
+
+class TexMobjectFromPresetString(TexMobject):
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        TexMobject.__init__(self, self.tex, **kwargs)
+        self.set_color(self.color)
+
 ##########
 
 

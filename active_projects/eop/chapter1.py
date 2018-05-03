@@ -1,8 +1,12 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.eoc.chapter8 import *
 from active_projects.eop.histograms import *
+from active_projects.eop.independence import *
+from active_projects.eop.combinations import *
 
 import scipy.special
+import itertools as it
+
 
 COIN_RADIUS = 0.18
 COIN_THICKNESS = 0.4 * COIN_RADIUS
@@ -13,9 +17,22 @@ COIN_STROKE_WIDTH = 2
 COIN_SEQUENCE_SPACING = 0.1
 
 GRADE_COLOR_1 = COLOR_HEADS = RED
-GRADE_COLOR_2 = COLOR_TAILS = BLUE
+GRADE_COLOR_2 = COLOR_TAILS = BLUE_E
 
 TALLY_BACKGROUND_WIDTH = 1.0
+TALLY_BACKGROUND_COLOR = BLACK
+
+def get_example_quiz():
+    quiz = get_quiz(
+        "Define ``Brachistochrone'' ",
+        "Define ``Tautochrone'' ",
+        "Define ``Cycloid'' ",
+    )
+    rect = SurroundingRectangle(quiz, buff = 0)
+    rect.set_fill(color = BLACK, opacity = 1)
+    rect.set_stroke(width = 0)
+    quiz.add_to_back(rect)
+    return quiz
 
 def binary(i):
     # returns an array of 0s and 1s
@@ -90,38 +107,44 @@ class PiCreatureCoin(VMobject):
 
 class CoinFlippingPiCreature(PiCreature):
 
-    def __init__(self, **kwargs):
+    def __init__(self, mode = "coin_flip_1", **kwargs):
 
         coin = PiCreatureCoin()
-        PiCreature.__init__(self,**kwargs)
+        PiCreature.__init__(self, mode = mode, **kwargs)
         self.coin = coin
         self.add(coin)
         right_arm = self.get_arm_copies()[1]
+        coin.rotate(-TAU/24)
         coin.next_to(right_arm, RIGHT+UP, buff = 0)
-        coin.shift(0.15 * self.get_width() * LEFT)
+        coin.shift(0.1 * self.get_width() * LEFT)
+        coin.shift(0.2 * DOWN)
 
     def flip_coin_up(self):
-        self.change("raise_right_hand")
+        self.change("coin_flip_2")
+
+
 
 class FlipUpAndDown(Animation):
     CONFIG = {
         "vector" : UP,
+        "height" : 3,
         "nb_turns" : 1
     }
 
     def update(self,t):
-        self.mobject.shift(4 * t * (1 - t) * self.vector)
+        self.mobject.shift(self.height * 4 * t * (1 - t) * self.vector)
         self.mobject.rotate(t * self.nb_turns * TAU)
 
 class FlipCoin(AnimationGroup):
     CONFIG = {
-        "rate_func" : there_and_back
+        "coin_rate_func" : there_and_back,
+        "pi_rate_func" : lambda t : there_and_back_with_pause(t, 1./4)
     }
     def __init__(self, pi_creature, **kwargs):
         digest_config(self, kwargs)
         pi_creature_motion = ApplyMethod(
             pi_creature.flip_coin_up,
-            rate_func = self.rate_func,
+            rate_func = self.pi_rate_func,
             **kwargs
         )
         coin_motion = Succession(
@@ -130,7 +153,7 @@ class FlipCoin(AnimationGroup):
                 pi_creature.coin, 
                 vector = UP,
                 nb_turns = 5,
-                rate_func = self.rate_func,
+                rate_func = self.coin_rate_func,
                 **kwargs
             )
         )
@@ -140,7 +163,7 @@ class CoinFlippingPiCreatureScene(Scene):
 
     def construct(self):
 
-        randy = CoinFlippingPiCreature()
+        randy = CoinFlippingPiCreature(color = MAROON_E)
         self.add(randy)
         self.play(FlipCoin(randy, run_time = 3))
 
@@ -293,10 +316,11 @@ class TailsStack(CoinStack):
 
 class TallyStack(VGroup):
     CONFIG = {
-        "coin_thickness": COIN_THICKNESS
+        "coin_thickness": COIN_THICKNESS,
+        "show_decimals": True
     }
 
-    def __init__(self,h,t,anchor = ORIGIN, **kwargs):
+    def __init__(self, h, t, anchor = ORIGIN, **kwargs):
         self.nb_heads = h
         self.nb_tails = t
         self.anchor = anchor
@@ -312,21 +336,36 @@ class TallyStack(VGroup):
         self.heads_stack = stack1
         self.tails_stack = stack2
         self.add(stack1, stack2)
-        background_rect = RoundedRectangle(
+        self.background_rect = background_rect = RoundedRectangle(
             width = TALLY_BACKGROUND_WIDTH,
             height = TALLY_BACKGROUND_WIDTH,
             corner_radius = 0.1,
-            fill_color = DARK_GREY,
+            fill_color = TALLY_BACKGROUND_COLOR,
             fill_opacity = 1.0,
             stroke_width = 3
         ).align_to(self.anchor, DOWN).shift(0.1 * DOWN)
         self.add_to_back(background_rect)
+
+        self.decimal_tally = DecimalTally(self.nb_heads, self.nb_tails)
+        self.position_decimal_tally(self.decimal_tally)
+        if self.show_decimals:
+            self.add(self.decimal_tally)
+
+    def position_decimal_tally(self, decimal_tally):
+        decimal_tally.match_width(self.background_rect)
+        print self.background_rect.get_center()
+        decimal_tally.scale(0.6)
+        decimal_tally.next_to(self.background_rect.get_top(), DOWN, buff = 0.15)
+        return decimal_tally
+
 
     def move_anchor_to(self, new_anchor):
         for submob in self.submobjects:
             submob.shift(new_anchor - self.anchor)
 
         self.anchor = new_anchor
+        self.position_decimal_tally(self.decimal_tally)
+
         return self
 
 class CoinFlipTree(VGroup):
@@ -437,75 +476,21 @@ class Introduction(TeacherStudentsScene):
     }
 
     def construct(self):
-        self.show_series()
-        self.show_examples()
-
-    def show_series(self):
-        series = VideoSeries(num_videos = 11)
-        series.to_edge(UP)
-        this_video = series[0]
-        this_video.set_color(YELLOW)
-        this_video.save_state()
-        this_video.set_fill(opacity = 0)
-        this_video.center()
-        this_video.scale_to_fit_height(FRAME_HEIGHT)
-        self.this_video = this_video
-
-
-        words = TextMobject(
-            "Welcome to \\\\",
-            "Essence of Probability"
-        )
-        words.set_color_by_tex("Essence of Probability", YELLOW)
-
-        self.teacher.change_mode("happy")
-        self.play(
-            FadeIn(
-                series,
-                submobject_mode = "lagged_start",
-                run_time = 2
-            ),
-            Blink(self.get_teacher())
-        )
-        self.teacher_says(words, target_mode = "hooray")
+        
+        self.wait(5)
+        
         self.change_student_modes(
-            *["hooray"]*3,
-            look_at_arg = series[1].get_left(),
-            added_anims = [
-                ApplyMethod(this_video.restore, run_time = 3),
-            ]
+            "confused", "frustrated", "dejected",
+            look_at_arg = UP + 2 * RIGHT
         )
-        self.play(*[
-            ApplyMethod(
-                video.shift, 0.5*video.get_height()*DOWN,
-                run_time = 3,
-                rate_func = squish_rate_func(
-                    there_and_back, alpha, alpha+0.3
-                )
-            )
-            for video, alpha in zip(series, np.linspace(0, 0.7, len(series)))
-        ]+[
-            Animation(self.teacher.bubble),
-            Animation(self.teacher.bubble.content),
-        ])
 
-        self.play(
-            FadeOut(self.teacher.bubble),
-            FadeOut(self.teacher.bubble.content),
-            self.get_teacher().change_mode, "raise_right_hand",
-            *[
-                ApplyMethod(pi.change_mode, "pondering")
-                for pi in self.get_students()
-            ]
-        )
         self.wait()
 
-        self.series = series
 
+        self.get_teacher().change_mode("raise_right_hand")
+        self.wait()
 
-    def show_examples(self):
-
-        self.wait(10)
+        self.wait(30)
         # put examples here in video editor
 
 
@@ -987,7 +972,7 @@ class RowOfDice(VGroup):
 
 class ShowUncertainty1(Scene):
 
-    def throw_a_die(self):
+    def throw_a_die(self, run_time = 0.3):
 
         eye = np.random.randint(1,7)
         face = self.row_of_dice.submobjects[eye - 1]
@@ -995,7 +980,7 @@ class ShowUncertainty1(Scene):
         self.play(
             ApplyMethod(face.submobjects[0].set_fill, {"opacity": 1},
                 rate_func = there_and_back,
-                run_time = 0.3,
+                run_time = run_time,
             ),
         )
 
@@ -1012,9 +997,9 @@ class ShowUncertainty1(Scene):
             self.throw_a_die()
             self.wait(0.3)
 
-        for i in range(10):
-            self.throw_a_die()
-            self.wait(0.1)
+        for i in range(100):
+            self.throw_a_die(0.05)
+            self.wait(0.0)
 
 
 
@@ -1089,10 +1074,130 @@ class ShowUncertainty2(Scene):
         self.throw_darts(1000,5)
 
 
+SICKLY_GREEN = "#9BBD37"
+
+
+class SicklyPiCreature(PiCreature):
+    CONFIG = {
+        "sick_color": SICKLY_GREEN
+    }
+
+    def get_slightly_sick(self):
+
+        self.save_state()
+        self.set_color(self.sick_color)
+
+    def get_sick(self):
+
+        self.get_slightly_sick()
+        self.change_mode("sick")
+
+    def get_better(self):
+        self.restore()
+
+
+class RandyIsSickOrNot(Scene):
+
+
+    def construct(self):
+        title = TextMobject("1 in 200")
+        title.to_edge(UP)
+
+        
+        randy = SicklyPiCreature()
+        randy.scale_to_fit_height(3)
+        randy.move_to(2*LEFT)
+        randy.change_mode("plain")
+        randy.set_color(BLUE)
+        randy.save_state()
+
+        self.add(randy)
+
+        p_sick = TexMobject("p(","\\text{sick}",") = 0.5\%").scale(1.7)
+        p_sick.set_color_by_tex("sick", SICKLY_GREEN)
+        p_sick.next_to(randy, UP, buff = LARGE_BUFF)
+        self.add(p_sick)
+        self.wait()
+        
+        self.play(
+            ApplyMethod(randy.get_slightly_sick, rate_func = there_and_back)
+        )
+        self.play(Blink(randy))
+        self.wait(2)
+
+        self.play(
+            ApplyMethod(randy.get_sick)
+        )
+
+        self.play(Blink(randy))
+        self.wait()
+
+        self.play(randy.get_better)
+
+        self.play(
+            ApplyMethod(randy.get_slightly_sick, rate_func = there_and_back)
+        )
+        self.play(Blink(randy))
+        self.wait(0.5)
+
+        self.play(
+            ApplyMethod(randy.get_sick)
+        )
+        
+        self.play(Blink(randy))
+        self.play(randy.get_better)
+        self.wait(3)
 
 
 
-class ShowUncertainty3(Scene):
+class OneIn200HasDisease(Scene):
+    def construct(self):
+        title = TextMobject("1 in 200")
+        title.to_edge(UP)
+        creature = PiCreature()
+
+        all_creatures = VGroup(*[
+            VGroup(*[
+                creature.copy()
+                for y in range(20)
+            ]).arrange_submobjects(DOWN, SMALL_BUFF)
+            for x in range(10)
+        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
+        all_creatures.scale_to_fit_height(FRAME_HEIGHT * 0.8)
+        all_creatures.next_to(title, DOWN)
+        randy = all_creatures[0][0]
+        all_creatures[0].remove(randy)
+        randy.change_mode("sick")
+        randy.set_color(SICKLY_GREEN)
+        randy.save_state()
+        randy.scale_to_fit_height(3)
+        randy.center()
+        randy.change_mode("plain")
+        randy.set_color(BLUE)
+
+        self.add(randy)
+
+        #p_sick = TexMobject("p(","\\text{sick}",") = 0.5\%")
+        #p_sick.set_color_by_tex("sick", SICKLY_GREEN)
+        #p_sick.next_to(randy, RIGHT+UP)
+        #self.add(p_sick)
+        self.wait()
+        
+        self.play(
+            randy.change_mode, "sick",
+            randy.set_color, SICKLY_GREEN
+        )
+        self.play(Blink(randy))
+        self.play(randy.restore)
+        self.wait()
+        self.play(
+            Write(title),
+            LaggedStart(FadeIn, all_creatures, run_time = 3)
+        )
+        self.wait()
+
+
+class RandyFlipsAndStacks(Scene):
 
     def construct(self):
 
@@ -1132,56 +1237,124 @@ class ShowUncertainty3(Scene):
 
 
 
-SICKLY_GREEN = "#9BBD37"
+class TwoDiceTable(Scene):
 
-class OneIn200HasDisease(Scene):
     def construct(self):
-        title = TextMobject("1 in 200")
-        title.to_edge(UP)
-        creature = PiCreature()
 
-        all_creatures = VGroup(*[
-            VGroup(*[
-                creature.copy()
-                for y in range(20)
-            ]).arrange_submobjects(DOWN, SMALL_BUFF)
-            for x in range(10)
-        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
-        all_creatures.scale_to_fit_height(FRAME_HEIGHT * 0.8)
-        all_creatures.next_to(title, DOWN)
-        randy = all_creatures[0][0]
-        all_creatures[0].remove(randy)
-        randy.change_mode("sick")
-        randy.set_color(SICKLY_GREEN)
-        randy.save_state()
-        randy.scale_to_fit_height(3)
-        randy.center()
-        randy.change_mode("plain")
-        randy.set_color(BLUE)
+        table = VGroup()
+        cell_size = 1
+        colors = color_gradient([RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE], 13)
 
-        self.add(randy)
+        for i in range(1,7):
+            for j in range(1,7):
+                cell = Square(side_length = cell_size)
+                cell.set_fill(color = colors[i+j], opacity = 0.8)
+                label = Integer(i+j)
+                label.move_to(cell)
+                cell.add(label)
+                cell.move_to(i*cell_size*RIGHT + j*cell_size*DOWN)
+                table.add(cell)
 
-        p_sick = TexMobject("p(","\\text{sick}",") = 0.5\%")
-        p_sick.set_color_by_tex("sick", SICKLY_GREEN)
-        p_sick.next_to(randy, RIGHT+UP)
-        self.add(p_sick)
-        self.wait()
+        table.center()
+        self.add(table)
+
+        row1 = RowOfDice().match_width(table)
+        print row1.is_subpath
+        row2 = row1.copy().rotate(-TAU/4)
+        print row2.is_subpath
+        row1.next_to(table, UP)
+        row2.next_to(table, LEFT)
+        table.add(row1, row2)
+        table.center()
+
+
+
+class VisualCovariance(Scene):
+
+
+    def construct(self):
+
+        size = 4
+        square = Square(side_length = size)
+        n_points = 30
+        cloud = VGroup(*[
+            Dot((x + 0.8*y) * RIGHT + y * UP).set_fill(WHITE, 1)
+            for x, y in zip(
+                np.random.normal(0, 1, n_points),
+                np.random.normal(0, 1, n_points)
+            )
+        ])
+        self.add_foreground_mobject(cloud)
+
+        x_axis = Vector(8*RIGHT, color = WHITE).move_to(2.5*DOWN)
+        y_axis = Vector(5*UP, color = WHITE).move_to(4*LEFT)
+
+        self.add(x_axis, y_axis)
+
+
+        random_pairs = [ (p1, p2) for (p1, p2) in
+            it.combinations(cloud, 2)
+        ]
+        np.random.shuffle(random_pairs)
+
+
+
+        for (p1, p2) in random_pairs:
+            c1, c2 = p1.get_center(), p2.get_center()
+            x1, y1, x2, y2 = c1[0], c1[1], c2[0], c2[1]
+            if x1 >= x2:
+                continue
+            if y2 > y1:
+                # make a red rect
+                color = RED
+                opacity = 0.1
+               
+            elif y2 < y1:
+                # make a blue rect
+                color = BLUE
+                opacity = 0.2
+
+            rect = Rectangle(width = x2 - x1, height = abs(y2 - y1))
+            rect.set_fill(color = color, opacity = opacity)
+            rect.set_stroke(width = 0)
+            rect.move_to((c1+c2)/2)
+
+            self.play(FadeIn(rect), run_time = 0.05)
+
+
+
+class BinaryOption(VMobject):
+
+    def __init__(self, mob1, mob2, **kwargs):
+
+        VMobject.__init__(self, **kwargs)
+        text = TextMobject("or").scale(0.5)
+        mob1.next_to(text, LEFT)
+        mob2.next_to(text, RIGHT)
+        self.add(mob1, text, mob2)
+
+
+
+class BinaryChoices(Scene):
+
+    def construct(self):
+
+        example1 = BinaryOption(UprightHeads(), UprightTails())
+        example2 = BinaryOption(Male(), Female())
+        example3 = BinaryOption(Checkmark(), Xmark())
+
+        example2.next_to(example1, DOWN, buff = MED_LARGE_BUFF)
+        example3.next_to(example2, DOWN, buff = MED_LARGE_BUFF)
+
+        all = VGroup(example1, example2, example3)
+        all = all.scale(2)
+
         self.play(
-            randy.change_mode, "sick",
-            randy.set_color, SICKLY_GREEN
+            LaggedStart(FadeIn, all)
         )
-        self.play(Blink(randy))
-        self.play(randy.restore)
-        self.play(
-            FadeOut(p_sick),
-            Write(title),
-            LaggedStart(FadeIn, all_creatures, run_time = 3)
-        )
-        self.wait()
 
 
-
-class PascalBrickWall(VMobject):
+class BrickRow(VMobject):
 
     CONFIG = {
         "left_color" : YELLOW,
@@ -1189,7 +1362,7 @@ class PascalBrickWall(VMobject):
         "height" : 1.0,
         "width" : 8.0,
         "outcome_shrinkage_factor_x" : 0.85,
-        "outcome_shrinkage_factor_y" : 0.95
+        "outcome_shrinkage_factor_y" : 0.9
     }
 
     def __init__(self, n, **kwargs):
@@ -1267,8 +1440,8 @@ class PascalBrickWall(VMobject):
             width = outcome_width,
             height = outcome_height,
             corner_radius = corner_radius,
-            fill_color = BLACK,
-            fill_opacity = 0.2,
+            fill_color = DARK_GREY,
+            fill_opacity = 0.8,
             stroke_width = 0
         )
         rects = VGroup()
@@ -1336,47 +1509,117 @@ class PascalBrickWall(VMobject):
 
 
 
-class SplitRectsInBrickWall(Animation):
+class SplitRectsInBrickWall(AnimationGroup):
 
     def __init__(self, mobject, **kwargs):
 
         r = self.subdiv_level = mobject.subdiv_level + 1
         
-        self.subdivs = VGroup()
-        x = - 0.5 * mobject.width
+        subdivs = VGroup()
+        x = -0.5 * mobject.get_width()
 
+        anims = []
         for k in range(0, r):
             proportion = float(choose(r,k)) / 2**r
-            x += proportion * mobject.width
+            x += proportion * mobject.get_width()
             subdiv = DashedLine(
-                mobject.get_center() + x * RIGHT + 0.5 * mobject.height * UP,
-                mobject.get_center() + x * RIGHT + 0.5 * mobject.height * UP,
+                mobject.get_top() + x * RIGHT,
+                mobject.get_bottom() + x * RIGHT,
             )
-            self.subdivs.add(subdiv)
+            subdivs.add(subdiv)
+            anims.append(ShowCreation(subdiv))
 
-        mobject.add(self.subdivs)
-
-        Animation.__init__(self, mobject, **kwargs)
-
-
-
-
-
-    def update_mobject(self, alpha):
-        for subdiv in self.subdivs:
-            x = subdiv.get_start()[0]
-            start = self.mobject.get_center()
-            start += x * RIGHT + 0.5 * self.mobject.height * UP
-            end = start + alpha * self.mobject.height * DOWN
-            subdiv.put_start_and_end_on(start,end)
+        mobject.add(subdivs)
+        AnimationGroup.__init__(self, *anims, **kwargs)
 
 
 
 
 
-class PascalBrickWallScene(Scene):
+    # def update_mobject(self, alpha):
+    #     for subdiv in self.subdivs:
+    #         x = subdiv.get_start()[0]
+    #         start = self.mobject.get_center()
+    #         start += x * RIGHT + 0.5 * self.mobject.get_height() * UP
+    #         end = start + alpha * self.mobject.get_height() * DOWN
+    #         subdiv.put_start_and_end_on(start,end)
+
+
+
+class JustFlipping(Scene):
+
+    def construct(self):
+
+        randy = CoinFlippingPiCreature().shift(2 * DOWN)
+        self.add(randy)
+
+        self.wait(2)
+
+        for i in range(10):
+            self.wait()
+            self.play(FlipCoin(randy))
+
+
+
+class JustFlippingWithResults(Scene):
+
+    def construct(self):
+
+        randy = CoinFlippingPiCreature().shift(2 * DOWN)
+        self.add(randy)
+
+        self.wait(2)
+
+        for i in range(10):
+            self.wait()
+            self.play(FlipCoin(randy))
+            result = random.choice(["H", "T"])
+            if result == "H":
+                coin = UprightHeads().scale(3)
+            else:
+                coin = UprightTails().scale(3)
+            coin.move_to(2 * UP + 2.5 * LEFT + i * 0.6 * RIGHT)
+            self.play(FadeIn(coin))
+
+
+
+class WhatDoesItReallyMean(TeacherStudentsScene):
+
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": MAROON_E,
+            "flip_at_start": True,
+        },
+    }
+
+    def construct(self):
+
+        student_q = TextMobject("What does", "``probability''", "\emph{actually}", "mean?")
+        student_q.set_color_by_tex("probability", YELLOW)
+        self.student_says(student_q, target_mode = "sassy")
+        self.wait()
+        self.teacher_says("Don't worry -- philosophy can come later!")
+        self.wait()
+
+
+class DecimalTally(TextMobject):
+
+    def __init__(self, heads, tails, **kwargs):
+
+        TextMobject.__init__(self, str(heads), "\\textemdash\,", str(tails), **kwargs)
+        self[0].set_color(COLOR_HEADS)
+        self[-1].set_color(COLOR_TAILS)
+        # this only works for single-digit tallies
+
+
+
+class BrickRowScene(Scene):
+
 
     def split_tallies(self, direction = DOWN):
+        # Split all tally symbols at once and move the copies
+        # either horizontally on top of the brick row
+        # or diagonally into the bricks
 
         self.tallies_copy = self.tallies.copy()
         self.add_foreground_mobject(self.tallies_copy)
@@ -1401,11 +1644,6 @@ class PascalBrickWallScene(Scene):
 
         for (i, tally) in enumerate(self.tallies):
 
-            if len(self.decimals) > 0:
-                decimal = self.decimals[i]
-            else:
-                decimal = VMobject()
-
             target_left = tally_targets_left[i]
             new_tally_left = TallyStack(tally.nb_heads + 1, tally.nb_tails)
             new_tally_left.move_anchor_to(target_left)
@@ -1413,13 +1651,11 @@ class PascalBrickWallScene(Scene):
             
             self.play(
                 tally.move_anchor_to, target_left,
-                decimal.shift,v
             )
             tally.anchor = target_left
             self.play(Transform(tally, new_tally_left))
             
             tally_copy = self.tallies_copy[i]
-            decimal_copy = decimal.copy()
 
             target_right = tally_targets_right[i]
             new_tally_right = TallyStack(tally.nb_heads, tally.nb_tails + 1)
@@ -1430,14 +1666,18 @@ class PascalBrickWallScene(Scene):
             tally_copy.anchor = target_right
             self.play(Transform(tally_copy, new_tally_right))
 
-
             tally_copy.nb_heads = new_tally_right.nb_heads
             tally_copy.nb_tails = new_tally_right.nb_tails
             tally.nb_heads = new_tally_left.nb_heads
             tally.nb_tails = new_tally_left.nb_tails
 
 
+
+
     def tally_split_animations(self, direction = DOWN):
+        # Just creates the animations and returns them
+        # Execution can be timed afterwards
+        # Returns two lists: first all those going left, then those to the right
 
         self.tallies_copy = self.tallies.copy()
         self.add_foreground_mobject(self.tallies_copy)
@@ -1462,38 +1702,24 @@ class PascalBrickWallScene(Scene):
 
 
         anims1 = []
-        if len(self.decimals) > 0:
-            self.decimal_copies = VGroup()
 
         for (i, tally) in enumerate(self.tallies):
-
-            if len(self.decimals) > 0:
-                decimal = self.decimals[i]
-            else:
-                decimal = VMobject()
 
             target_left = tally_targets_left[i]
             v = target_left - tally.anchor
             
             anims1.append(tally.move_anchor_to)
             anims1.append(target_left)
-            anims1.append(decimal.shift)
-            anims1.append(v)
             
             tally.anchor = target_left
             
             tally_copy = self.tallies_copy[i]
-            decimal_copy = decimal.copy()
 
             target_right = tally_targets_right[i]
             v = target_right - tally_copy.anchor
             
             anims1.append(tally_copy.move_anchor_to)
             anims1.append(target_right)
-            anims1.append(decimal_copy.shift)
-            anims1.append(v)
-            if len(self.decimals) > 0:
-                self.decimal_copies.add(decimal_copy)
             
             tally_copy.anchor = target_right
 
@@ -1516,57 +1742,19 @@ class PascalBrickWallScene(Scene):
             tally.nb_heads = new_tally_left.nb_heads
             tally.nb_tails = new_tally_left.nb_tails
 
-
-
-        if len(self.decimals) > 0:
-            self.add_foreground_mobject(self.decimal_copies)
-
         return anims1, anims2
+
 
     def split_tallies_at_once(self, direction = DOWN):
         anims1, anims2 = self.tally_split_animations(direction = direction)
         self.play(*(anims1 + anims2))
 
     def split_tallies_in_two_steps(self, direction = DOWN):
+        # First all thiode to the left, then those to the right
         anims1, anims2 = self.tally_split_animations(direction = direction)
         self.play(*anims1)
         self.wait(0.3)
         self.play(*anims2)
-
-
-
-
-    def split_decimals_alone(self):
-
-        r = self.row.coloring_level
-        targets_left = []
-        targets_right = []
-
-        for rect in self.row.get_rects_for_level(r):
-            target = rect.get_center() + 0.25 * rect.get_width() * LEFT
-            targets_left.append(target)
-            target = rect.get_center() + 0.25 * rect.get_width() * RIGHT
-            targets_right.append(target)
-
-        anims = []
-        self.decimal_copies = VGroup()
-
-        for (i, decimal) in enumerate(self.decimals):
-
-            anims.append(decimal.move_to)
-            anims.append(targets_left[i])
-
-            decimal_copy = decimal.copy()
-            
-            anims.append(decimal_copy.move_to)
-            anims.append(targets_right[i])
-            self.decimal_copies.add(decimal_copy)
-            
-
-        self.play(*anims)
-
-        self.add_foreground_mobject(self.decimal_copies)
-
 
 
 
@@ -1618,42 +1806,10 @@ class PascalBrickWallScene(Scene):
         merged_row = self.row.copy()
         merged_row.coloring_level += 1
         merged_row.generate_points()
+        merged_row.move_to(self.row)
 
         self.play(FadeIn(merged_row))
         self.row = merged_row
-
-
-    def merge_decimals(self):
-
-        anims = []
-        if self.decimals in self.mobjects:
-            anims.append(FadeOut(self.decimals))
-        if self.decimal_copies in self.mobjects:
-            anims.append(FadeOut(self.decimal_copies))
-        
-        self.new_decimals = VGroup()
-        self.decimal_copies = VGroup()
-
-        r = self.row.coloring_level
-        for (i, rect) in enumerate(self.row.rects):
-            k = choose(r,i)
-            decimal = Integer(k)
-            decimal.move_to(rect)
-            if rect.get_width() < 0.2:
-                # then the rect is too narrow,
-                # let the decimal go in dignity
-                decimal.set_stroke(width = 0)
-                decimal.set_fill(opacity = 0)
-            self.new_decimals.add(decimal)
-
-        anims.append(FadeIn(self.new_decimals))
-        self.play(*anims)
-
-        self.remove(self.decimal_copies)
-        self.decimals = self.new_decimals.copy()
-        #self.remove(self.new_decimals)
-        self.add_foreground_mobject(self.decimals)
-
 
 
 
@@ -1666,49 +1822,163 @@ class PascalBrickWallScene(Scene):
 
     def construct(self):
 
-        #self.force_skipping()
 
         randy = CoinFlippingPiCreature()
         randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
         self.add(randy)
-        self.row = PascalBrickWall(1, height = 2, width = 10)
-        
-        self.decimals = VGroup()
+        self.row = BrickRow(0, height = 2, width = 10)
+        self.wait()
 
-        self.play(FlipCoin(randy),
-            FadeIn(self.row))
+        self.play(FadeIn(self.row))
 
         self.wait()
+
+
+        # move in all kinds of sequences
+        coin_seqs = VGroup()
+        for i in range(20):
+            n = np.random.randint(1,10)
+            seq = [np.random.choice(["H", "T"]) for j in range(n)]
+            coin_seq = CoinSequence(seq).scale(1.5)
+            loc = np.random.uniform(low = -10, high = 10) * RIGHT
+            loc += np.random.uniform(low = -6, high = 6) * UP
+            coin_seq.move_to(loc)
+            
+            coin_seq.target = coin_seq.copy().scale(0.3).move_to(0.4 * loc)
+            coin_seq.target.fade(1)
+            coin_seqs.add(coin_seq)
+
+        self.play(
+            LaggedStart(
+                Succession, coin_seqs, lambda m: (FadeIn(m, run_time = 0.1), MoveToTarget(m)),
+                run_time = 5,
+                lag_ratio = 0.5
+            )
+        )
         
+
+
+        self.play(SplitRectsInBrickWall(self.row))
+        self.merge_rects_by_subdiv()
+        self.merge_rects_by_coloring()
+        #
         # put tallies on top
 
-        self.tallies = VGroup(*[
-            TallyStack(1 - i, i) for i in range(2)
-        ])
-        for (tally, rect) in zip(self.tallies, self.row.rects):
-            new_anchor = rect.get_center() + 1.2 * 0.5 * rect.get_height() * UP
-            tally.move_anchor_to(new_anchor)
-            self.play(FadeIn(tally))
+        single_flip_labels = VGroup(UprightHeads(), UprightTails())
+        for (label, rect) in zip(single_flip_labels, self.row.rects):
+            label.next_to(rect, UP)
+            self.play(FadeIn(label))
+            self.wait()
 
-        self.add_foreground_mobject(self.tallies)
+        #self.tallies = VGroup(*[
+        #    TallyStack(1 - i, i) for i in range(2)
+        #])
+        # for (label, rect) in zip(self.single_flip_labels, self.row.rects):
+        #     new_anchor = rect.get_center() + 1.2 * 0.5 * rect.get_height() * UP
+        #     label.move_anchor_to(new_anchor)
+        #     self.play(FadeIn(label))
+        #     self.wait()
+
+        #self.add_foreground_mobject(single_flip_labels)
         self.wait()
-
 
 
         # # # # # # # #
         # SECOND FLIP #
         # # # # # # # #
 
-
-
         self.play(FlipCoin(randy))
         self.wait()
-
 
         self.play(
             SplitRectsInBrickWall(self.row)
         )
         self.wait()
+
+
+        # split sequences
+        single_flip_labels_copy = single_flip_labels.copy()
+        self.add(single_flip_labels_copy)
+
+        
+        v = self.row.get_outcome_centers_for_level(2)[0] - single_flip_labels[0].get_center()
+        self.play(
+            single_flip_labels.shift, v
+        )
+        new_heads = VGroup(UprightHeads(), UprightHeads())
+        for i in range(2):
+            new_heads[i].move_to(single_flip_labels[i])
+            new_heads[i].shift(COIN_SEQUENCE_SPACING * DOWN)
+        self.play(FadeIn(new_heads))
+
+        v = self.row.get_outcome_centers_for_level(2)[-1] - single_flip_labels_copy[-1].get_center()
+        self.play(
+            single_flip_labels_copy.shift, v
+        )
+        new_tails = VGroup(UprightTails(), UprightTails())
+        for i in range(2):
+            new_tails[i].move_to(single_flip_labels_copy[i])
+            new_tails[i].shift(COIN_SEQUENCE_SPACING * DOWN)
+        self.play(FadeIn(new_tails))
+
+
+        decimal_tallies = VGroup()
+        # introduce notion of tallies
+        for (i, rect) in enumerate(self.row.get_rects_for_level(2)):
+            tally = DecimalTally(2-i, i)
+            tally.next_to(rect, UP)
+            decimal_tallies.add(tally)
+            self.play(FadeIn(tally))
+            self.wait()
+
+        self.add_foreground_mobject(single_flip_labels)
+        self.add_foreground_mobject(new_heads)
+        self.add_foreground_mobject(single_flip_labels_copy)
+        self.add_foreground_mobject(new_tails)
+
+        # show individual outcomes
+        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = False)
+
+
+        self.play(
+            LaggedStart(FadeIn, outcomes)
+        )
+        self.wait()
+        self.play(
+            LaggedStart(FadeOut, outcomes),
+        )
+
+        self.play(
+            FadeOut(single_flip_labels),
+            FadeOut(new_heads),
+            FadeOut(single_flip_labels_copy),
+            FadeOut(new_tails)
+        )
+
+        self.tallies = VGroup()
+        for (i, rect) in enumerate(self.row.get_rects_for_level(2)):
+            tally = TallyStack(2-i, i, show_decimals = False)
+            tally.move_to(rect)
+            self.tallies.add(tally)
+
+
+        self.play(FadeIn(self.tallies))
+
+        anims = []
+        for (decimal_tally, tally_stack) in zip(decimal_tallies, self.tallies):
+            anims.append(ApplyFunction(
+                tally_stack.position_decimal_tally, decimal_tally
+            ))
+        
+        self.play(*anims)
+   
+        # replace the original decimal tallies with
+        # the ones that belong to the TallyStacks
+        for (decimal_tally, tally_stack) in zip(decimal_tallies, self.tallies):
+            self.remove(decimal_tally)
+            tally_stack.position_decimal_tally(tally_stack.decimal_tally)
+            tally_stack.add(tally_stack.decimal_tally)
+        return
 
         self.split_tallies_in_two_steps()
         self.wait()
@@ -1719,31 +1989,7 @@ class PascalBrickWallScene(Scene):
         self.wait()
         self.move_tallies_on_top()
         
-        # show individual outcomes
-        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = True)
-        self.play(
-            LaggedStart(FadeIn, outcomes)
-        )
-        self.wait()
-        self.play(
-            LaggedStart(FadeOut, outcomes)
-        )
 
-        # show their numbers
-        nb_outcomes = [1,2,1]
-        self.decimals = VGroup()
-        for (n,rect) in zip(nb_outcomes, self.row.rects):
-            decimal = Integer(n).move_to(rect)
-            self.decimals.add(decimal)
-        self.play(
-            LaggedStart(FadeIn, self.decimals)
-        )
-        self.wait()
-        self.play(
-            LaggedStart(FadeOut, self.decimals)
-        )
-
-        self.decimals = VGroup()
 
 
 
@@ -1783,73 +2029,12 @@ class PascalBrickWallScene(Scene):
             LaggedStart(FadeOut, outcomes)
         )
 
-        # show their numbers
-        nb_outcomes = [1,3,3,1]
-        self.decimals = VGroup()
-        for (n,rect) in zip(nb_outcomes, self.row.rects):
-            decimal = Integer(n).move_to(rect)
-            self.decimals.add(decimal)
-        self.play(
-            LaggedStart(FadeIn, self.decimals)
-        )
-        self.wait()
-        self.add_foreground_mobject(self.decimals)
+
+        # # # # # # # # # # # # # #
+        # # FOURTH FLIP IN DETAIL #
+        # # # # # # # # # # # # # #
 
 
-        # # # # # # # #
-        # FOURTH FLIP #
-        # # # # # # # #
-
-        self.play(FlipCoin(randy))
-
-        self.wait()
-
-        self.play(
-            SplitRectsInBrickWall(self.row)
-        )
-        self.wait()
-
-        self.add_foreground_mobject(self.tallies[-1])
-        # this tweaks an undesirable overlap in the next animation
-        self.split_tallies_at_once(direction = LEFT)
-        self.wait()
-        self.merge_rects_by_subdiv()
-        self.wait()
-        self.merge_tallies(direction = LEFT)
-        self.merge_rects_by_coloring()
-        self.merge_decimals()
-        self.wait()
-
-
-        # # # # # # # #
-        # FIFTH  FLIP #
-        # # # # # # # #
-
-        self.play(FlipCoin(randy))
-
-        self.wait()
-
-        self.play(
-            SplitRectsInBrickWall(self.row)
-        )
-        self.wait()
-
-        self.split_tallies_at_once(direction = LEFT)
-        self.wait()
-        self.merge_rects_by_subdiv()
-        self.wait()
-        self.merge_tallies(direction = LEFT)
-        self.merge_rects_by_coloring()
-        self.merge_decimals()
-        self.wait()
-
-
-        # # # # # # # #
-        # SIXTH  FLIP #
-        # # # # # # # #
-
-
-        self.revert_to_original_skipping_status()
 
         # removing the tallies (boy are they sticky)
         self.play(FadeOut(self.tallies))
@@ -1864,7 +2049,7 @@ class PascalBrickWallScene(Scene):
         # delete all the old crap hidden behind the row
         # before we can move it
         self.remove(*self.mobjects)
-        self.add(randy,self.decimals,self.decimal_copies)
+        self.add(randy) #,self.decimals,self.decimal_copies)
 
 
         previous_row = self.row.copy()
@@ -1873,8 +2058,8 @@ class PascalBrickWallScene(Scene):
         v = 1.25 * self.row.height * UP
         self.play(
             previous_row.shift, v,
-            self.decimals.shift, v,
-            self.decimal_copies.shift, v
+            #self.decimals.shift, v,
+            #self.decimal_copies.shift, v
         )
 
         self.add(self.row)
@@ -1883,7 +2068,8 @@ class PascalBrickWallScene(Scene):
 
         w = 1.5 * self.row.height * DOWN
         self.play(
-            self.row.shift, w
+            self.row.shift, w,
+            Animation(previous_row)
         )
 
         self.play(
@@ -1895,13 +2081,15 @@ class PascalBrickWallScene(Scene):
 
         self.wait()
 
+        n = 3 # level to split
+        k = 1 # tally to split
 
         # show individual outcomes
-        outcomes = previous_row.get_outcome_rects_for_level(5, with_labels = False)
+        outcomes = previous_row.get_outcome_rects_for_level(n, with_labels = False)
         grouped_outcomes = VGroup()
         index = 0
-        for i in range(6):
-            size = choose(5,i)
+        for i in range(n + 1):
+            size = choose(n,i)
             grouped_outcomes.add(VGroup(outcomes[index:index + size]))
             index += size
 
@@ -1920,8 +2108,7 @@ class PascalBrickWallScene(Scene):
         # show how the outcomes in one tally split into two copies
         # going into the neighboring tallies
 
-        n = 5 # level to split
-        k = 2 # tally to split
+        #self.revert_to_original_skipping_status()
 
         target_outcomes = self.row.get_outcome_rects_for_level(n + 1, with_labels = False)
         grouped_target_outcomes = VGroup()
@@ -1934,17 +2121,16 @@ class PascalBrickWallScene(Scene):
             index += size
 
         self.play(
-            Transform(grouped_outcomes[k],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:])
+            Transform(grouped_outcomes[k][0],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:])
         )
 
         self.play(
-            Transform(grouped_outcomes_copy[k],grouped_target_outcomes[k + 1][0][:old_tally_sizes[k]])
+            Transform(grouped_outcomes_copy[k][0],grouped_target_outcomes[k + 1][0][:old_tally_sizes[k]])
         )
 
+        old_tally_sizes.append(0) # makes the edge cases work properly
 
-        old_tally_sizes.append(0) # makes the ege cases work properly
-
-        # split the other 
+        # split the other tallies
         for i in range(k) + range(k + 1, n + 1):
             self.play(
                 Transform(grouped_outcomes[i][0],
@@ -1980,66 +2166,671 @@ class PascalBrickWallScene(Scene):
 
         new_rects = self.row.get_rects_for_level(n + 1)
 
-        decimals_copy = self.decimals.copy()
-        decimals_copy2 = self.decimals.copy()
+        #decimals_copy = self.decimals.copy()
+        #decimals_copy2 = self.decimals.copy()
 
         self.play(
-            Transform(grouped_outcomes[k],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:]),
-            Transform(grouped_outcomes_copy[k - 1],grouped_target_outcomes[k][0][:old_tally_sizes[k]]),
-            decimals_copy[k - 1].move_to, new_rects[k],
-            decimals_copy2[k].move_to, new_rects[k],
-            )
-
-        # show new outcome sizes
-        new_decimals = VGroup()
-        for (i,rect) in zip(new_tally_sizes, new_rects):
-            decimal = Integer(i).move_to(rect)
-            new_decimals.add(decimal)
-
-        self.play(
-            FadeOut(decimals_copy[k - 1]),
-            FadeOut(decimals_copy2[k]),
-            FadeIn(new_decimals[k])
+            Transform(grouped_outcomes[k][0],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:]),
+            Transform(grouped_outcomes_copy[k - 1][0],grouped_target_outcomes[k][0][:old_tally_sizes[k]]),
+            #decimals_copy[k - 1].move_to, new_rects[k],
+            #decimals_copy2[k].move_to, new_rects[k],
         )
 
-        # move the old decimals into the new row
+
+        # # # # # # # #
+        # FIFTH  FLIP #
+        # # # # # # # #
+
+        # self.remove(
+        #     grouped_outcomes,
+        #     grouped_outcomes_copy,
+        #     grouped_target_outcomes,
+        #     target_outcomes,
+        #     outcomes,
+        #     previous_row,
+        #     original_grouped_outcomes)
+        self.clear()
+        self.add(randy, self.row)
+        #self.row.shift(0.5 * UP)        
+        
+        #return
+
+        self.merge_rects_by_coloring()
+
+        self.revert_to_original_skipping_status()
+
+        for i in range(1):
+
+            self.play(FlipCoin(randy))
+
+            self.wait()
+
+            self.play(
+                SplitRectsInBrickWall(self.row)
+            )
+            self.wait()
+
+
+            #self.split_tallies_at_once(direction = LEFT)
+            self.wait()
+            self.merge_rects_by_subdiv()
+            self.wait()
+            #self.merge_tallies(direction = LEFT)
+            self.merge_rects_by_coloring()
+            #self.merge_decimals()
+            self.wait()
+
+class LevelsOfDetailInBrickRow(BrickRowScene):
+
+    def construct(self):
+
+        self.force_skipping()
+
+        randy = CoinFlippingPiCreature()
+        randy = randy.scale(0.5).move_to(3*DOWN + 6*LEFT)
+        self.add(randy)
+        self.row = BrickRow(1, height = 2, width = 10)
+        
+        #self.decimals = VGroup()
+
+        self.play(FlipCoin(randy),
+            FadeIn(self.row))
+
+
+        self.wait()
+        
+        # put tallies on top
+
+        self.tallies = VGroup(*[
+            TallyStack(1 - i, i) for i in range(2)
+        ])
+        for (tally, rect) in zip(self.tallies, self.row.rects):
+            new_anchor = rect.get_center() + 1.2 * 0.5 * rect.get_height() * UP
+            tally.move_anchor_to(new_anchor)
+            self.play(FadeIn(tally))
+
+        self.add_foreground_mobject(self.tallies)
+        self.wait()
+
+
+        # # # # # # # #
+        # SECOND FLIP #
+        # # # # # # # #
+
+
+
+        self.play(FlipCoin(randy))
+        self.wait()
+
+
+        self.play(
+            SplitRectsInBrickWall(self.row)
+        )
+        self.wait()
+
+        # show individual outcomes
+        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = True)
+        self.play(
+            LaggedStart(FadeIn, outcomes)
+        )
+        self.wait()
+        self.play(
+            LaggedStart(FadeOut, outcomes)
+        )
+
+        self.split_tallies_in_two_steps()
+        self.wait()
+        self.merge_rects_by_subdiv()
+        self.wait()
+        self.merge_tallies()
+        self.merge_rects_by_coloring()
+        self.wait()
+        self.move_tallies_on_top()
+        
+
+
+
+
+class OutlineableBars(VGroup):
+    CONFIG = {
+        "outline_stroke_width" : 5,
+        "stroke_color" : WHITE
+    }
+    def create_outline(self, animated = False, **kwargs):
+
+        outline_points = []
+
+        for (i, bar) in enumerate(self.submobjects):
+            
+            if i == 0:
+                # start with the lower left
+                outline_points.append(bar.get_corner(DOWN + LEFT))
+
+            # upper two points of each bar
+            outline_points.append(bar.get_corner(UP + LEFT))
+            outline_points.append(bar.get_corner(UP + RIGHT))
+
+            previous_bar = bar
+        # close the outline
+            # lower right
+        outline_points.append(previous_bar.get_corner(DOWN + RIGHT))
+            # lower left
+        outline_points.append(outline_points[0])
+
+        self.outline = Polygon(*outline_points,
+            stroke_width = self.outline_stroke_width,
+            stroke_color = self.stroke_color)
+
+        if animated:
+            self.play(FadeIn(self.outline, **kwargs))
+        return self.outline
+
+
+
+
+
+class GenericMorphBrickRowIntoHistogram(Scene):
+
+    CONFIG = {
+        "level" : 3,
+        "bar_width" : 2.0,
+        "bar_anchor_height" : -3.0,
+        "show_tallies" : False,
+    }
+
+    def construct(self):
+
+        self.row = BrickRow(self.level, height = self.bar_width, width = 10)
+        self.bars = OutlineableBars(*[self.row.rects[i] for i in range(self.level + 1)])
+        self.bar_anchors = [self.bar_anchor_height * UP + self.row.height * (i - 0.5 * self.level) * RIGHT for i in range(self.level + 1)]
+
+        self.add(self.row)
+
+        if self.show_tallies:
+
+            tallies = VMobject()
+
+            for (i,brick) in enumerate(self.row.rects):
+                tally = TallyStack(self.level - i, i)
+                tally.next_to(brick, UP)
+                self.add(tally)
+                tallies.add(tally)
+                brick.set_stroke(width = 3)
+
+        self.remove(self.row.subdivs, self.row.border)
+
         anims = []
-        anims.append(decimals_copy2[0].move_to)
-        anims.append(new_rects[0])
-        for i in range(1,k) + range(k + 1, n):
-            anims.append(decimals_copy[i - 1].move_to)
-            anims.append(new_rects[i])
-            anims.append(decimals_copy2[i].move_to)
-            anims.append(new_rects[i])
-        anims.append(decimals_copy[n].move_to)
-        anims.append(new_rects[n + 1])
+        for brick in self.row.rects:
+            anims.append(brick.rotate)
+            anims.append(TAU/4)
+        
+        if self.show_tallies:
+            anims.append(FadeOut(tallies))
+        self.play(*anims)
+
+        
+        anims = []
+        for (i,brick) in enumerate(self.row.rects):
+            anims.append(brick.next_to)
+            anims.append(self.bar_anchors[i])
+            anims.append({"direction" : UP, "buff" : 0})
+        self.play(*anims)
+
+        self.bars.create_outline()
+
+        anims = []
+        for bar in self.bars.submobjects:
+            anims.append(bar.set_stroke)
+            anims.append({"width" : 0})
+        anims.append(FadeIn(self.bars.outline))
+        self.play(*anims)
+
+
+
+
+
+
+
+class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
+    
+    CONFIG = {
+        "level" : 3,
+        "prob_denominator" : 8,
+        "bar_width" : 2.0,
+        "bar_anchor_height" : -3.0,
+        "show_tallies" : True
+    }
+
+    def construct(self):
+
+        super(MorphBrickRowIntoHistogram3,self).construct()
+        
+
+        # draw x-axis
+
+        x_axis = Line(ORIGIN, 10 * RIGHT, color = WHITE, buff = 0)
+        x_axis.next_to(self.bars, DOWN, buff = 0)
+        #x_labels = VMobject(*[TexMobject(str(i)) for i in range(4)])
+        x_labels = VMobject()
+
+        for (i, bar) in enumerate(self.bars):
+            label = Integer(i)
+            label.next_to(self.bar_anchors[i], DOWN)
+            x_labels.add(label)
+
+        nb_tails_label = TextMobject("\# of tails")
+        nb_tails_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
+        
+        self.play(
+            FadeIn(x_axis),
+            FadeIn(x_labels),
+            FadeIn(nb_tails_label)
+        )
+
+
+
+        # draw y-guides
+
+        y_guides = VMobject()
+        for i in range(1,self.prob_denominator + 1):
+            y_guide = Line(5 * LEFT, 5 * RIGHT, stroke_color = GRAY)
+            y_guide.move_to(self.bar_anchor_height * UP + i * float(self.row.width) / self.prob_denominator * UP)
+            y_guide_label = TexMobject("{" + str(i) + "\over " + str(self.prob_denominator) + "}", color = GRAY)
+            y_guide_label.scale(0.7)
+            y_guide_label.next_to(y_guide, LEFT)
+            y_guide.add(y_guide_label)
+            y_guides.add(y_guide)
+
+        self.bring_to_back(y_guides)
+        self.play(FadeIn(y_guides), Animation(self.bars))
+
+
+        total_area_text = TextMobject("total area = 1", color = YELLOW)
+        total_area_rect = SurroundingRectangle(total_area_text,
+            buff = MED_SMALL_BUFF,
+            fill_opacity = 0.5,
+            fill_color = BLACK,
+            stroke_color = YELLOW
+        )
+
+        self.play(
+            Write(total_area_text),
+            ShowCreation(total_area_rect)
+        )
+
+        prob_dist_text = TextMobject("probability distribution", color = YELLOW)
+        prob_dist_text.to_corner(UP, buff = LARGE_BUFF)
+        prob_dist_rect = SurroundingRectangle(prob_dist_text,
+            buff = MED_SMALL_BUFF,
+            stroke_color = YELLOW
+        )
+
+        self.play(
+            Write(prob_dist_text),
+            ShowCreation(prob_dist_rect)
+        )
+
+
+
+class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
+    CONFIG = {
+        "level" : 20,
+        "prob_ticks" : 0.05,
+        "bar_width" : 0.5,
+        "bar_anchor_height" : -3.0,
+        "x_ticks": 5
+    }
+
+    def construct(self):
+
+        super(MorphBrickRowIntoHistogram20, self).construct()
+
+        x_axis = Line(ORIGIN, 10 * RIGHT, color = WHITE, buff = 0)
+        x_axis.next_to(self.bars, DOWN, buff = 0)
+        #x_labels = VMobject(*[TexMobject(str(i)) for i in range(4)])
+        x_labels = VMobject()
+        for (i, bar) in enumerate(self.bars):
+            if i % self.x_ticks != 0:
+                continue
+            label = Integer(i)
+            label.next_to(self.bar_anchors[i], DOWN)
+            x_labels.add(label)
+
+        nb_tails_label = TextMobject("\# of heads")
+        nb_tails_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
+        
+        self.play(
+            FadeIn(x_axis),
+            FadeIn(x_labels),
+            FadeIn(nb_tails_label)
+        )
+
+        # draw y-guides
+
+        max_prob = float(choose(self.level, self.level/2)) / 2 ** self.level
+
+        y_guides = VMobject()
+        y_guide_heights = []
+        prob_grid = np.arange(self.prob_ticks, 1.3 * max_prob, self.prob_ticks)
+        for i in prob_grid:
+            y_guide = Line(5 * LEFT, 5 * RIGHT, stroke_color = GRAY)
+            y_guide_height = self.bar_anchor_height + i * float(self.row.width)
+            y_guide_heights.append(y_guide_height)
+            y_guide.move_to(y_guide_height * UP)
+            y_guide_label = DecimalNumber(i, num_decimal_points = 2, color = GRAY)
+            y_guide_label.scale(0.7)
+            y_guide_label.next_to(y_guide, LEFT)
+            y_guide.add(y_guide_label)
+            y_guides.add(y_guide)
+
+        self.bring_to_back(y_guides)
+        self.play(FadeIn(y_guides), Animation(self.bars))
+
+        histogram_width = self.bars.get_width()
+        histogram_height = self.bars.get_height()
+
+        # scale to fit screen
+        self.scale_x = 10.0/(len(self.bars) * self.bar_width)
+        self.scale_y = 6.0/histogram_height
+
+
+        anims = []
+        for (bar, x_label) in zip(self.bars, x_labels):
+            v = (self.scale_x - 1) * x_label.get_center()[0] * RIGHT
+            anims.append(x_label.shift)
+            anims.append(v)
+
+
+        anims.append(self.bars.stretch_about_point)
+        anims.append(self.scale_x)
+        anims.append(0)
+        anims.append(ORIGIN)
+        anims.append(self.bars.outline.stretch_about_point)
+        anims.append(self.scale_x)
+        anims.append(0)
+        anims.append(ORIGIN)
 
         self.play(*anims)
 
-        # fade them out and fade in their sums
         anims = []
-        for i in range(1,k) + range(k + 1, n):
-            anims.append(FadeOut(decimals_copy[i - 1]))
-            anims.append(FadeOut(decimals_copy2[i]))
-            anims.append(FadeIn(new_decimals[i]))
+        for (guide, i, h) in zip(y_guides, prob_grid, y_guide_heights):
+            new_y_guide_height = self.bar_anchor_height + i * self.scale_y * float(self.row.width)
+            v = (new_y_guide_height - h) * UP
+            anims.append(guide.shift)
+            anims.append(v)
+
+        anims.append(self.bars.stretch_about_point)
+        anims.append(self.scale_y)
+        anims.append(1)
+        anims.append(self.bars.get_bottom())
+        anims.append(self.bars.outline.stretch_about_point)
+        anims.append(self.scale_y)
+        anims.append(1)
+        anims.append(self.bars.get_bottom())
 
         self.play(*anims)
 
-        self.add_foreground_mobject(new_decimals)
+class MorphBrickRowIntoHistogram100(MorphBrickRowIntoHistogram20):
+    CONFIG = {
+        "level" : 100,
+        "x_ticks": 20,
+        "prob_ticks": 0.02
+    }
+
+class MorphBrickRowIntoHistogram500(MorphBrickRowIntoHistogram20):
+    CONFIG = {
+        "level" : 500,
+        "x_ticks": 100,
+        "prob_ticks": 0.01
+    }
+
+        
+
+
+class EntireBrickWall(Scene):
+
+    def construct(self):
+
+        row_height = 0.3
+        nb_rows = 20
+        start_point = 3 * UP + 1 * LEFT
+        
+        rows = VMobject()
+        rows.add(BrickRow(0, height = row_height))
+        rows[0].move_to(start_point)
+        self.add(rows)
+
+        zero_counter = Integer(0).next_to(start_point + 0.5 * rows[0].width * RIGHT)
+        nb_flips_text = TextMobject("\# of flips")
+        nb_flips_text.next_to(zero_counter, RIGHT, buff = LARGE_BUFF)
+        self.add(zero_counter, nb_flips_text)
+
+        for i in range(1,nb_rows + 1):
+            rows.add(BrickRow(i, height = row_height))
+            rows[-1].move_to(start_point + (i - 1) * row_height * DOWN)
+            self.bring_to_back(rows[-1])
+            anims = [
+                rows[-1].shift, row_height * DOWN,
+                Animation(rows[-2])
+            ]
+            
+            if i % 5 == 0:
+                counter = Integer(i)
+                counter.next_to(rows[-1].get_right() + row_height * DOWN, RIGHT)
+                anims.append(FadeIn(counter))
+
+            self.play(*anims)
+
+        # draw indices under the last row for the number of tails
+        tails_counters = VGroup()
+        for (i, rect) in enumerate(rows[-1].rects):
+            if i < 6 or i > 14:
+                continue
+            if i == 6:
+                counter = TexMobject("\dots", color = COLOR_TAILS)
+                counter.next_to(rect, DOWN, buff = 1.5 * MED_SMALL_BUFF)
+            elif i == 14:
+                counter = TexMobject("\dots", color = COLOR_TAILS)
+                counter.next_to(rect, DOWN, buff = 1.5 * MED_SMALL_BUFF)
+                counter.shift(0.2 * RIGHT)
+            else:
+                counter = Integer(i, color = COLOR_TAILS)
+                counter.next_to(rect, DOWN)
+            tails_counters.add(counter)
+
+        nb_tails_text = TextMobject("\# of tails", color = COLOR_TAILS)
+        nb_tails_text.next_to(tails_counters[-1], RIGHT, buff = LARGE_BUFF)
+
+        self.play(
+            LaggedStart(FadeIn, tails_counters),
+            FadeIn(nb_tails_text)
+        )
+
+        special_brick_copy = rows[-1].rects[13].copy()
+        self.play(
+            rows.fade, 0.9,
+            FadeIn(special_brick_copy)
+        )
 
 
 
 
 
 
+class QuizResult(Scene):
+
+    def construct(self):
+
+        highlight_color = YELLOW
+
+        nb_students_x = 5
+        nb_students_y = 3
+        spacing_students_x = 2.0
+        spacing_students_y = 2.2
+
+        all_students = VGroup()
+        student_points = []
+        grades = []
+        grades_count = []
+        hist_y_values = np.zeros(4)
+        for i in range(nb_students_x):
+            for j in range(nb_students_y):
+                x = i * spacing_students_x
+                y = j * spacing_students_y
+                pi = PiCreature().scale(0.3)
+                pi.move_to([x,y,0])
+                all_students.add(pi)
+                q1 = np.random.choice([True, False])
+                q2 = np.random.choice([True, False])
+                q3 = np.random.choice([True, False])
+                student_points.append([q1, q2, q3])
+                grade = q1*1+q2*1+q3*1
+                grades.append(grade)
+                hist_y_values[grade] += 1
+                # How many times has this grade already occured?
+                grade_count = grades.count(grade)
+                grades_count.append(grade_count)
+
+
+        all_students.move_to(ORIGIN)
+        self.add(all_students)
+
+        all_quizzes = VGroup()
+
+        quiz = get_example_quiz().scale(0.2)
+        for pi in all_students:
+            quiz_copy = quiz.copy()
+            quiz_copy.next_to(pi, UP)
+            all_quizzes.add(quiz_copy)
+
+        master_quiz = get_example_quiz()
+        self.play(ShowCreation(master_quiz))
+        self.play(Transform(master_quiz, all_quizzes[0]))
+
+        self.play(LaggedStart(FadeIn,all_quizzes))
+
+        grades_mob = VGroup()
+        for (pi, quiz, grade) in zip(all_students, all_quizzes, grades):
+            grade_mob = TexMobject(str(grade) + "/3")
+            grade_mob.move_to(quiz)
+            grades_mob.add(grade_mob)
+
+        self.remove(master_quiz)
+        self.play(
+            FadeOut(all_quizzes),
+            FadeIn(grades_mob)
+        )
+
+        # self.play(
+        #     all_students[2:].fade, 0.8,
+        #     grades_mob[2:].fade, 0.8
+        # )
+
+        students_points_mob = VGroup()
+        for (pi, quiz, points) in zip(all_students, all_quizzes, student_points):
+            slot = get_slot_group(points, include_qs = False)
+            slot.scale(0.5).move_to(quiz)
+            students_points_mob.add(slot)
+
+        self.play(
+            #all_students.fade, 0,
+            FadeOut(grades_mob),
+            FadeIn(students_points_mob)
+        )
 
 
 
+        anims = []
+        anchor_point = 3 * DOWN + 1 * LEFT
+        for (pi, grade, grades_count) in zip(all_students, grades, grades_count):
+            anims.append(pi.move_to)
+            anims.append(anchor_point + grade * RIGHT + grades_count * UP)
+        anims.append(FadeOut(students_points_mob))
+
+        self.play(*anims)
+
+        grade_labels = VGroup()
+        for i in range(4):
+            grade_label = Integer(i, color = highlight_color)
+            grade_label.move_to(i * RIGHT)
+            grade_labels.add(grade_label)
+        grade_labels.next_to(all_students, DOWN)
+        out_of_label = TextMobject("out of 3", color = highlight_color)
+        out_of_label.next_to(grade_labels, RIGHT, buff = MED_LARGE_BUFF)
+        grade_labels.add(out_of_label)
+        self.play(Write(grade_labels))
+
+        grade_hist = Histogram(
+            np.ones(4),
+            hist_y_values,
+            mode = "widths",
+            x_labels = "none",
+            y_label_position = "center",
+            bar_stroke_width = 0,
+            outline_stroke_width = 5
+        )
+        grade_hist.move_to(all_students)
+
+        self.play(FadeIn(grade_hist))
 
 
+        nb_students_label = TextMobject("\# of students", color = highlight_color)
+        nb_students_label.move_to(3 * LEFT + 2 * UP)
+        arrows = VGroup(*[
+            Arrow(nb_students_label, grade_hist.bars[i].get_center(),
+                color = highlight_color)
+            for i in range(4)
+        ])
+        self.play(Write(nb_students_label), LaggedStart(ShowCreation,arrows))
 
+        percentage_label = TextMobject("\% of students", color = highlight_color)
+        percentage_label.move_to(nb_students_label)
+        percentages = hist_y_values / (nb_students_x * nb_students_y) * 100
+        anims = []
+        for (label, percentage) in zip(grade_hist.y_labels_group, percentages):
+            new_label = DecimalNumber(percentage,
+                num_decimal_points = 1,
+                unit = "\%",
+                color = highlight_color
+            )
+            new_label.move_to(label)
+            anims.append(Transform(label, new_label))
+        anims.append(ReplacementTransform(nb_students_label, percentage_label))
+        self.play(*anims)
 
+        self.remove(all_quizzes)
+        # put small copy of class in corner
+        for (i,pi) in enumerate(all_students):
+            x = i % 5
+            y = i / 5
+            pi.move_to(x * RIGHT + y * UP)
+        all_students.scale(0.8)
+        all_students.to_corner(DOWN + LEFT)
+        self.play(FadeIn(all_students))
 
+        prob_label = TextMobject("probability", color = highlight_color)
+        prob_label.move_to(percentage_label)
+        self.play(
+            all_students[8].set_color, MAROON_E,
+            all_students[:8].fade, 0.6,
+            all_students[9:].fade, 0.6,
+            ReplacementTransform(percentage_label, prob_label)
+        )
+
+        self.play(
+            FadeOut(prob_label),
+            FadeOut(arrows)
+        )
+
+        for i in range(1):
+            self.play(
+                FlashThroughHistogram(
+                    grade_hist,
+                    direction = "vertical",
+                    mode = "random",
+                    run_time = 5
+                )
+            )
 
 
 
