@@ -6,7 +6,7 @@ from utils.rate_functions import *
 from for_3b1b_videos.pi_creature_scene import *
 from active_projects.eop.reusables.eop_helpers import *
 from active_projects.eop.reusables.eop_constants import *
-
+from active_projects.eop.reusables.coin_flipping_pi_creature import *
 
 
 class PiCreatureCoin(VMobject):
@@ -46,6 +46,9 @@ class PiCreatureCoin(VMobject):
             self.add(ridge)
 
 class CoinFlippingPiCreature(PiCreature):
+    CONFIG = {
+        "flip_height": 3
+    }
 
     def __init__(self, mode = "coin_flip_1", **kwargs):
 
@@ -93,6 +96,7 @@ class FlipCoin(AnimationGroup):
                 pi_creature.coin, 
                 vector = UP,
                 nb_turns = 5,
+                height = pi_creature.flip_height * pi_creature.get_height(),
                 rate_func = self.coin_rate_func,
                 **kwargs
             )

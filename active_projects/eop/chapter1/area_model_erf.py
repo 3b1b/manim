@@ -1,6 +1,5 @@
 
 from big_ol_pile_of_manim_imports import *
-from active_projects.eop.reusables import *
 from old_projects.eoc.chapter8 import *
 
 import scipy.special

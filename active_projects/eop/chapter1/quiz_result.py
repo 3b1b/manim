@@ -1,7 +1,8 @@
 
 
 from big_ol_pile_of_manim_imports import *
-from active_projects.eop.reusables import *
+from active_projects.eop.reusable_imports import *
+from active_projects.eop.independence import *
 
 
 class QuizResult(Scene):

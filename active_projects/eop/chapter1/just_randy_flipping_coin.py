@@ -1,12 +1,12 @@
 
 from big_ol_pile_of_manim_imports import *
-from active_projects.eop.reusables import *
+from active_projects.eop.reusable_imports import *
 
 class JustFlipping(Scene):
 
     def construct(self):
 
-        randy = CoinFlippingPiCreature().shift(2 * DOWN)
+        randy = CoinFlippingPiCreature(color = MAROON_E, flip_height = 1).shift(2 * DOWN)
         self.add(randy)
 
         self.wait(2)
@@ -21,7 +21,7 @@ class JustFlippingWithResults(Scene):
 
     def construct(self):
 
-        randy = CoinFlippingPiCreature().shift(2 * DOWN)
+        randy = CoinFlippingPiCreature(color = MAROON_E, flip_height = 1).shift(2 * DOWN)
         self.add(randy)
 
         self.wait(2)

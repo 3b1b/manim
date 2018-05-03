@@ -282,8 +282,8 @@ class FlashThroughHistogram(Animation):
 
 class OutlineableBars(VGroup):
 
-    # A group of bars (rectangles), together with
-    # a method that draws an outline around them,
+    # A group of bars (rectangles), together with
+    # a method that draws an outline around them,
     # assuming the bars are arranged in a histogram
     # (aligned at the bottom without gaps).
 
