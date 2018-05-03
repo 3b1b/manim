@@ -114,8 +114,10 @@ class CoinFlippingPiCreature(PiCreature):
         self.coin = coin
         self.add(coin)
         right_arm = self.get_arm_copies()[1]
+        coin.rotate(-TAU/24)
         coin.next_to(right_arm, RIGHT+UP, buff = 0)
-        coin.shift(0.15 * self.get_width() * LEFT)
+        coin.shift(0.1 * self.get_width() * LEFT)
+        coin.shift(0.2 * DOWN)
 
     def flip_coin_up(self):
         self.change("coin_flip_2")
@@ -125,17 +127,18 @@ class CoinFlippingPiCreature(PiCreature):
 class FlipUpAndDown(Animation):
     CONFIG = {
         "vector" : UP,
+        "height" : 3,
         "nb_turns" : 1
     }
 
     def update(self,t):
-        self.mobject.shift(4 * t * (1 - t) * self.vector)
+        self.mobject.shift(self.height * 4 * t * (1 - t) * self.vector)
         self.mobject.rotate(t * self.nb_turns * TAU)
 
 class FlipCoin(AnimationGroup):
     CONFIG = {
         "coin_rate_func" : there_and_back,
-        "pi_rate_func" : there_and_back_with_pause
+        "pi_rate_func" : lambda t : there_and_back_with_pause(t, 1./4)
     }
     def __init__(self, pi_creature, **kwargs):
         digest_config(self, kwargs)
