@@ -10,7 +10,7 @@ or refactoring the library on current or older scene scripts should be entirely
 addressible by changing this file.
 
 Note: One should NOT import from this file for main library code, it is meant only
-as a convenience for scripts createing scenes for videos
+as a convenience for scripts creating scenes for videos.
 """
 
 from constants import *
