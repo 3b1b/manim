@@ -49,9 +49,9 @@ class SingleStringTexMobject(SVGMobject):
     def __init__(self, tex_string, **kwargs):
         digest_config(self, kwargs)
         assert(isinstance(tex_string, str))
-        self.tex_string = self.get_modified_expression(tex_string)
+        self.tex_string = tex_string
         file_name = tex_to_svg_file(
-            self.tex_string,
+            self.get_modified_expression(tex_string),
             self.template_tex_file
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
@@ -149,11 +149,8 @@ class TexMobject(SingleStringTexMobject):
         """
         new_submobjects = []
         curr_index = 0
-        # TODO, remove this attribute
-        self.expression_parts = list(self.tex_strings)
-        for expr in self.tex_strings:
-            sub_tex_mob = SingleStringTexMobject(expr, **self.CONFIG)
-            sub_tex_mob.tex_string = expr  # We want it unmodified
+        for tex_string in self.tex_strings:
+            sub_tex_mob = SingleStringTexMobject(tex_string, **self.CONFIG)
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
