@@ -4,6 +4,7 @@ from svg_mobject import SVGMobject
 from svg_mobject import VMobjectFromSVGPathstring
 from mobject.shape_matchers import BackgroundRectangle
 from utils.config_ops import digest_config
+from utils.strings import split_string_list_to_isolate_substring
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VectorizedPoint
@@ -14,6 +15,7 @@ import operator as op
 # - Make sure if "color" is passed into TexMobject, it behaves as expected
 
 TEX_MOB_SCALE_FACTOR = 0.05
+
 
 class TexSymbol(VMobjectFromSVGPathstring):
     def pointwise_become_partial(self, mobject, a, b):
@@ -128,10 +130,12 @@ class SingleStringTexMobject(SVGMobject):
 class TexMobject(SingleStringTexMobject):
     CONFIG = {
         "arg_separator": " ",
+        "substrings_to_isolate": [],
     }
 
     def __init__(self, *tex_strings, **kwargs):
         digest_config(self, kwargs)
+        tex_strings = self.break_up_tex_strings(tex_strings)
         self.tex_strings = tex_strings
         SingleStringTexMobject.__init__(
             self, self.arg_separator.join(tex_strings), **kwargs
@@ -140,6 +144,14 @@ class TexMobject(SingleStringTexMobject):
 
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
+
+    def break_up_tex_strings(self, tex_strings):
+        split_list = split_string_list_to_isolate_substring(
+            tex_strings, *self.substrings_to_isolate
+        )
+        split_list = map(str.strip, split_list)
+        split_list = filter(lambda s: s != '', split_list)
+        return split_list
 
     def break_up_by_substrings(self):
         """

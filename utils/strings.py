@@ -27,25 +27,35 @@ def complex_string(complex_num):
     return filter(lambda c: c not in "()", str(complex_num))
 
 
-def break_up_string_by_terms(full_string, *terms):
+def split_string_to_isolate_substrings(full_string, *substrings_to_isolate):
     """
     Given a string, and an arbitrary number of possible substrings, returns a list
     of strings which would concatenate to make the full string, and in which
     these special substrings appear as their own elements.
 
-    For example, break_up_string_by_terms("to be or not to be", "to", "be") would
+    For example, split_string_to_isolate_substrings("to be or not to be", "to", "be") would
     return ["to", " ", "be", " or not ", "to", " ", "be"]
     """
-    if len(terms) == 0:
+    if len(substrings_to_isolate) == 0:
         return [full_string]
-    term = terms[0]
-    substrings = list(it.chain(*zip(
-        full_string.split(term),
-        it.repeat(term)
+    substring_to_isolate = substrings_to_isolate[0]
+    all_substrings = list(it.chain(*zip(
+        full_string.split(substring_to_isolate),
+        it.repeat(substring_to_isolate)
     )))
-    substrings.pop(-1)
-    substrings = filter(lambda s: s != "", substrings)
+    all_substrings.pop(-1)
+    all_substrings = filter(lambda s: s != "", all_substrings)
+    return split_string_list_to_isolate_substring(
+        all_substrings, *substrings_to_isolate[1:]
+    )
+
+
+def split_string_list_to_isolate_substring(string_list, *substrings_to_isolate):
+    """
+    Similar to split_string_to_isolate_substrings, but the first argument
+    is a list of strings, thought of as something already broken up a bit.
+    """
     return list(it.chain(*[
-        break_up_string_by_terms(substring, *terms[1:])
-        for substring in substrings
+        split_string_to_isolate_substrings(s, *substrings_to_isolate)
+        for s in string_list
     ]))
