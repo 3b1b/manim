@@ -131,6 +131,7 @@ class TexMobject(SingleStringTexMobject):
     CONFIG = {
         "arg_separator": " ",
         "substrings_to_isolate": [],
+        "tex_to_color_map": {},
     }
 
     def __init__(self, *tex_strings, **kwargs):
@@ -141,13 +142,18 @@ class TexMobject(SingleStringTexMobject):
             self, self.arg_separator.join(tex_strings), **kwargs
         )
         self.break_up_by_substrings()
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
     def break_up_tex_strings(self, tex_strings):
+        substrings_to_isolate = op.add(
+            self.substrings_to_isolate,
+            self.tex_to_color_map.keys()
+        )
         split_list = split_string_list_to_isolate_substring(
-            tex_strings, *self.substrings_to_isolate
+            tex_strings, *substrings_to_isolate
         )
         split_list = map(str.strip, split_list)
         split_list = filter(lambda s: s != '', split_list)
