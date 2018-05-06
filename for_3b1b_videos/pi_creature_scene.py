@@ -32,10 +32,10 @@ class PiCreatureScene(Scene):
         "seconds_to_blink": 3,
         "pi_creatures_start_on_screen": True,
         "default_pi_creature_kwargs": {
-            "color": GREY_BROWN,
-            "flip_at_start": True,
+            "color": BLUE,
+            "flip_at_start": False,
         },
-        "default_pi_creature_start_corner": DOWN + LEFT,
+        "default_pi_creature_start_corner": DL,
     }
 
     def setup(self):
