@@ -45,35 +45,16 @@ class RandyFlipsAndStacks(Scene):
 
 
 
-class TwoDiceTable(Scene):
+class TwoDiceTableScene(Scene):
 
     def construct(self):
 
-        table = VGroup()
-        cell_size = 1
-        colors = color_gradient([RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE], 13)
-
-        for i in range(1,7):
-            for j in range(1,7):
-                cell = Square(side_length = cell_size)
-                cell.set_fill(color = colors[i+j], opacity = 0.8)
-                label = Integer(i+j)
-                label.move_to(cell)
-                cell.add(label)
-                cell.move_to(i*cell_size*RIGHT + j*cell_size*DOWN)
-                table.add(cell)
+        table = TwoDiceTable(cell_size = 1)
 
         table.center()
         self.add(table)
 
-        row1 = RowOfDice().match_width(table)
-        print row1.is_subpath
-        row2 = row1.copy().rotate(-TAU/4)
-        print row2.is_subpath
-        row1.next_to(table, UP)
-        row2.next_to(table, LEFT)
-        table.add(row1, row2)
-        table.center()
+
 
 
 
