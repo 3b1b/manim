@@ -2,7 +2,7 @@ from big_ol_pile_of_manim_imports import *
 from active_projects.eop.reusable_imports import *
 
 
-class WeatherForecast(PiCreatureScene):
+class ProbabilityDistributions(PiCreatureScene):
 
     CONFIG = {
         "default_pi_creature_kwargs": {
@@ -12,6 +12,9 @@ class WeatherForecast(PiCreatureScene):
     }
 
     def construct(self):
+
+        # weather forecast
+
 
         unit_rect = Rectangle(
             height = 4, width = 4
@@ -44,14 +47,14 @@ class WeatherForecast(PiCreatureScene):
         text_scale =  0.7
 
         brace_rain = Brace(rain_rect, UP)
-        p_rain_label = TextMobject("$p($rain$)=$").scale(text_scale)
+        p_rain_label = TextMobject("$P($rain$)=$").scale(text_scale)
         p_rain_decimal = DecimalNumber(p_rain).scale(text_scale)
         p_rain_decimal.next_to(p_rain_label)
         p_rain_whole_label = VGroup(p_rain_label, p_rain_decimal)
         p_rain_whole_label.next_to(brace_rain, UP)
 
         brace_sun = Brace(sun_rect, DOWN)
-        p_sun_label = TextMobject("$p($sun$)=$").scale(text_scale)
+        p_sun_label = TextMobject("$P($sun$)=$").scale(text_scale)
         p_sun_decimal = DecimalNumber(p_sun).scale(text_scale)
         p_sun_decimal.next_to(p_sun_label)
         p_sun_whole_label = VGroup(p_sun_label, p_sun_decimal)
@@ -82,7 +85,7 @@ class WeatherForecast(PiCreatureScene):
         new_sun.move_to(new_sun_rect)
 
         new_brace_rain = Brace(new_rain_rect, UP)
-        new_p_rain_label = TextMobject("$p($rain$)=$").scale(text_scale)
+        new_p_rain_label = TextMobject("$P($rain$)=$").scale(text_scale)
         new_p_rain_decimal = DecimalNumber(new_p_rain).scale(text_scale)
         new_p_rain_decimal.next_to(new_p_rain_label)
         new_p_rain_whole_label = VGroup(new_p_rain_label, new_p_rain_decimal)
@@ -90,7 +93,7 @@ class WeatherForecast(PiCreatureScene):
 
         
         new_brace_sun = Brace(new_sun_rect, DOWN)
-        new_p_sun_label = TextMobject("$p($sun$)=$").scale(text_scale)
+        new_p_sun_label = TextMobject("$P($sun$)=$").scale(text_scale)
         new_p_sun_decimal = DecimalNumber(new_p_sun).scale(text_scale)
         new_p_sun_decimal.next_to(new_p_sun_label)
         new_p_sun_whole_label = VGroup(new_p_sun_label, new_p_sun_decimal)
@@ -102,8 +105,9 @@ class WeatherForecast(PiCreatureScene):
         def sun_update_func(alpha):
             return 1 - rain_update_func(alpha)
 
+        lag_ratio = 0.1
         run_time = 5
-
+        
         update_p_rain = ChangingDecimal(
             p_rain_decimal, rain_update_func,
             tracked_mobject = p_rain_label,
@@ -127,6 +131,132 @@ class WeatherForecast(PiCreatureScene):
             update_p_rain,
             update_p_sun
         )
+
+
+
+        # move the forecast into a corner
+
+        forecast = VGroup(
+            rain_rect, sun_rect, rain, sun, brace_rain, brace_sun,
+            p_rain_whole_label, p_sun_whole_label, unit_rect
+        )
+
+        forecast.target = forecast.copy().scale(0.5)
+        forecast.target.to_corner(UL)
+
+        self.play(MoveToTarget(forecast))
+
+
+
+
+
+        coin_flip_rect = BrickRow(3)
+
+        for (i, brick) in enumerate(coin_flip_rect.rects):
+            tally = TallyStack(3 - i, i)
+            tally.next_to(brick, UP)
+            coin_flip_rect.add(tally)
+
+        coin_flip_rect.scale(0.7)
+        self.play(FadeIn(coin_flip_rect))
+
+        counts = [1, 3, 3, 1]
+        braces = VGroup()
+        labels = VGroup()
+        for (rect, count) in zip(coin_flip_rect.rects, counts):
+            label = TexMobject("{" + str(count) + "\over 8}").scale(0.5)
+            brace = Brace(rect, DOWN)
+            label.next_to(brace, DOWN)
+            braces.add(brace)
+            labels.add(label)
+
+        self.play(
+            LaggedStart(ShowCreation, braces, lag_ratio = lag_ratio, run_time = run_time),
+            LaggedStart(Write, labels)
+        )
+
+        coin_flip_rect.add(braces, labels)
+
+        self.play(coin_flip_rect.to_corner,UR)
+
+
+
+
+
+
+        cell_size = 0.5
+        dice_table = TwoDiceTable(cell_size = cell_size, label_scale = 0.7)
+        dice_table.shift(DOWN)
+
+        self.play(FadeIn(dice_table))
+        self.wait()
+        self.play(
+            FadeOut(dice_table.rows),
+            FadeOut(dice_table.labels),
+            dice_table.cells.fade, 0.8
+        )
+
+        dice_table_braces = VGroup()
+        dice_table_probs = VGroup()
+        dice_table_grouped_cells = VGroup()
+
+        for i in range(6):
+            cell = dice_table.cells[6 * i]
+            start = cell.get_center()
+            color = cell.get_fill_color()
+            brace = Brace(cell, LEFT, buff = 0, color = color)
+            brace.stretch(0.5,0)
+            stop = start + cell_size * LEFT + cell_size * DOWN
+            p_label = TexMobject("{" + str(i + 1) + "\over 36}", color = color)
+            p_label.scale(0.35)
+            p_label.next_to(brace, LEFT)
+            dice_table_probs.add(p_label)
+            dice_table_braces.add(brace)
+
+            dice_table_grouped_cells.add(VGroup(*[
+                dice_table.cells[6 * i - 5 * k]
+                for k in range(i + 1)
+            ]))
+
+
+        for i in range(5):
+            cell = dice_table.cells[31 + i]
+            start = cell.get_center()
+            color = cell.get_fill_color()
+            brace = Brace(cell, DOWN, buff = 0, color = color)
+            brace.stretch(0.5, 1)
+            stop = start + cell_size * LEFT + cell_size * DOWN
+            p_label = TexMobject("{" + str(5 - i) + "\over 36}", color = color)
+            p_label.scale(0.35)
+            p_label.next_to(brace, DOWN)
+            dice_table_probs.add(p_label)
+            dice_table_braces.add(brace)
+
+            dice_table_grouped_cells.add(VGroup(*[
+                dice_table.cells[31 + i - 5 * k]
+                for k in range(5 - i)
+            ]))
+
+
+        # group the dice table cells to make them appear in the right order
+
+        self.play(
+            LaggedStart(ShowCreation, dice_table_braces, lag_ratio = lag_ratio, run_time = run_time),
+            LaggedStart(Write, dice_table_probs, lag_ratio = lag_ratio, run_time = run_time),
+            LaggedStart(ApplyMethod, dice_table_grouped_cells, arg_creator = 
+                lambda m : (m.fade, -4), lag_ratio = lag_ratio, run_time = run_time
+            )
+        )
+
+
+
+
+
+
+
+
+
+
 
 
 

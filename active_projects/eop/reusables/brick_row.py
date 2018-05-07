@@ -6,7 +6,7 @@ from active_projects.eop.reusables.upright_coins import *
 class BrickRow(VMobject):
 
     CONFIG = {
-        "left_color" : YELLOW,
+        "left_color" : RED,
         "right_color" : BLUE,
         "height" : 1.0,
         "width" : 8.0,

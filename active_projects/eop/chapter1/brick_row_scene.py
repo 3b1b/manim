@@ -210,6 +210,12 @@ class BrickRowScene(PiCreatureScene):
         randy = CoinFlippingPiCreature(color = MAROON_E)
         return randy
 
+
+
+
+
+        
+
     def construct(self):
 
         randy = self.get_primary_pi_creature()
