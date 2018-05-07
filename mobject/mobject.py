@@ -30,7 +30,6 @@ class Mobject(Container):
     """
     CONFIG = {
         "color": WHITE,
-        "stroke_width": DEFAULT_POINT_THICKNESS,
         "name": None,
         "dim": 3,
         "target": None,
