@@ -13,7 +13,11 @@ class ProbabilityDistributions(PiCreatureScene):
 
     def construct(self):
 
-        # weather forecast
+        lag_ratio = 0.2
+        run_time = 5
+        
+
+# WEATHER FORECAST
 
 
         unit_rect = Rectangle(
@@ -105,9 +109,6 @@ class ProbabilityDistributions(PiCreatureScene):
         def sun_update_func(alpha):
             return 1 - rain_update_func(alpha)
 
-        lag_ratio = 0.1
-        run_time = 5
-        
         update_p_rain = ChangingDecimal(
             p_rain_decimal, rain_update_func,
             tracked_mobject = p_rain_label,
@@ -149,6 +150,8 @@ class ProbabilityDistributions(PiCreatureScene):
 
 
 
+# COIN FLIP
+
 
         coin_flip_rect = BrickRow(3)
 
@@ -172,7 +175,7 @@ class ProbabilityDistributions(PiCreatureScene):
 
         self.play(
             LaggedStart(ShowCreation, braces, lag_ratio = lag_ratio, run_time = run_time),
-            LaggedStart(Write, labels)
+            LaggedStart(Write, labels, lag_ratio = lag_ratio, run_time = run_time)
         )
 
         coin_flip_rect.add(braces, labels)
@@ -182,7 +185,7 @@ class ProbabilityDistributions(PiCreatureScene):
 
 
 
-
+# DOUBLE DICE THROW
 
         cell_size = 0.5
         dice_table = TwoDiceTable(cell_size = cell_size, label_scale = 0.7)
