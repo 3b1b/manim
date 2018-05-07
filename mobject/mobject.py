@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import copy
 import itertools as it
 import numpy as np
@@ -28,7 +30,6 @@ class Mobject(Container):
     """
     CONFIG = {
         "color": WHITE,
-        "stroke_width": DEFAULT_POINT_THICKNESS,
         "name": None,
         "dim": 3,
         "target": None,
@@ -464,6 +465,27 @@ class Mobject(Container):
         self.shift(start - self.points[0])
         return self
 
+    # Background rectangle
+    def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
+        from mobject.shape_matchers import BackgroundRectangle
+        self.background_rectangle = BackgroundRectangle(
+            self, color=color,
+            fill_opacity=opacity,
+            **kwargs
+        )
+        self.add_to_back(self.background_rectangle)
+        return self
+
+    def add_background_rectangle_to_submobjects(self, **kwargs):
+        for submobject in self.submobjects:
+            submobject.add_background_rectangle(**kwargs)
+        return self
+
+    def add_background_rectangle_to_family_members_with_points(self, **kwargs):
+        for mob in self.family_members_with_points():
+            mob.add_background_rectangle(**kwargs)
+        return self
+
     # Match other mobvject properties
 
     def match_color(self, mobject):
@@ -643,6 +665,7 @@ class Mobject(Container):
         return result
 
     # Pseudonyms for more general get_critical_point method
+
     def get_edge_center(self, direction):
         return self.get_critical_point(direction)
 
@@ -719,7 +742,8 @@ class Mobject(Container):
 
     def submobject_family(self):
         sub_families = map(Mobject.submobject_family, self.submobjects)
-        all_mobjects = [self] + list(it.chain(*sub_families))
+        # all_mobjects = [self] + list(it.chain(*sub_families))
+        all_mobjects = list(it.chain(*sub_families)) + [self]
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):

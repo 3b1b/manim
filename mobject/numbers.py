@@ -3,9 +3,7 @@ from __future__ import absolute_import
 from constants import *
 
 from mobject.svg.tex_mobject import TexMobject
-from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
-from mobject.shape_matchers import BackgroundRectangle
 
 
 class DecimalNumber(VMobject):
@@ -51,7 +49,7 @@ class DecimalNumber(VMobject):
             )
 
         if self.unit is not None:
-            self.unit_sign = TexMobject(self.unit, color = self.color)
+            self.unit_sign = TexMobject(self.unit, color=self.color)
             self.add(self.unit_sign)
 
         self.arrange_submobjects(
@@ -69,16 +67,6 @@ class DecimalNumber(VMobject):
         #
         if self.include_background_rectangle:
             self.add_background_rectangle()
-
-    def add_background_rectangle(self):
-        # TODO, is this the best way to handle
-        # background rectangles?
-        self.background_rectangle = BackgroundRectangle(self)
-        self.submobjects = [
-            self.background_rectangle,
-            VGroup(*self.submobjects)
-        ]
-        return self
 
 
 class Integer(DecimalNumber):

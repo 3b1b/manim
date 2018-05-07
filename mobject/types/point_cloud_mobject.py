@@ -12,6 +12,10 @@ from utils.iterables import stretch_array_to_length
 
 
 class PMobject(Mobject):
+    CONFIG = {
+        "stroke_width": DEFAULT_POINT_THICKNESS,
+    }
+
     def init_points(self):
         self.rgbas = np.zeros((0, 4))
         self.points = np.zeros((0, 3))

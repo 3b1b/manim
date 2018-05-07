@@ -2154,7 +2154,7 @@ class Thumbnail(TransformingAreasYCoord):
 
         words = TextMobject("Cramer's", "rule")
         words.scale_to_fit_width(7)
-        # words.add_background_rectangle_to_parts()
+        # words.add_background_rectangle_to_submobjects()
         words.add_background_rectangle()
         words.to_edge(UP)
         self.add(words)
