@@ -95,3 +95,17 @@ class TallyStack(VGroup):
         self.position_decimal_tally(self.decimal_tally)
 
         return self
+
+
+
+
+
+
+
+
+
+
+
+
+
+

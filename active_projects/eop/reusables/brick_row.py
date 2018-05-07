@@ -10,8 +10,8 @@ class BrickRow(VMobject):
         "right_color" : BLUE,
         "height" : 1.0,
         "width" : 8.0,
-        "outcome_shrinkage_factor_x" : 1.0,
-        "outcome_shrinkage_factor_y" : 1.0
+        "outcome_shrinkage_factor_x" : 0.95,
+        "outcome_shrinkage_factor_y" : 0.95
     }
 
     def __init__(self, n, **kwargs):
@@ -94,11 +94,16 @@ class BrickRow(VMobject):
 
         return centers
 
-    def get_outcome_rects_for_level(self,r, with_labels = False):
+    def get_outcome_rects_for_level(self, r, inset = False, with_labels = False):
 
         centers = self.get_outcome_centers_for_level(r)
-        outcome_width = self.outcome_shrinkage_factor_x * float(self.width) / (2 ** r)
-        outcome_height = self.outcome_shrinkage_factor_y * self.height
+        if inset == True:
+            outcome_width = self.outcome_shrinkage_factor_x * float(self.width) / (2 ** r)
+            outcome_height = self.outcome_shrinkage_factor_y * self.height
+        else:
+            outcome_width = float(self.width) / (2 ** r)
+            outcome_height = self.height
+        
         corner_radius = 0 # min(0.1, 0.3 * min(outcome_width, outcome_height))
         # this scales down the corner radius for very narrow rects
         rect = Rectangle( # RoundedRectangle(
