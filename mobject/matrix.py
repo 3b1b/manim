@@ -116,10 +116,6 @@ class Matrix(VMobject):
         self.brackets = VGroup(l_bracket, r_bracket)
         return self
 
-    def add_background_rectangle(self):
-        self.background_rectangle = BackgroundRectangle(self)
-        self.add_to_back(self.background_rectangle)
-
     def set_color_columns(self, *colors):
         for i, color in enumerate(colors):
             VGroup(*self.mob_matrix[:, i]).set_color(color)

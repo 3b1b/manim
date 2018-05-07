@@ -116,16 +116,6 @@ class SingleStringTexMobject(SVGMobject):
         self.sort_submobjects(lambda p: p[0])
         return self
 
-    def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
-        self.background_rectangle = BackgroundRectangle(
-            self, color=color,
-            fill_opacity=opacity,
-            **kwargs
-        )
-        letters = VMobject(*self.submobjects)
-        self.submobjects = [self.background_rectangle, letters]
-        return self
-
 
 class TexMobject(SingleStringTexMobject):
     CONFIG = {
@@ -232,10 +222,13 @@ class TexMobject(SingleStringTexMobject):
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part)
 
-    def add_background_rectangle_to_parts(self):
-        for part in self:
-            part.add_background_rectangle()
-        return self
+    def split(self):
+        # Many old scenes assume that when you pass in a single string
+        # to TexMobject, it indexes across the characters.
+        if len(self.submobjects) == 1:
+            return self.submobjects[0].split()
+        else:
+            return super(TexMobject, self).split()
 
 
 class TextMobject(TexMobject):
