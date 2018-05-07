@@ -2,11 +2,9 @@ from constants import *
 
 from svg_mobject import SVGMobject
 from svg_mobject import VMobjectFromSVGPathstring
-from mobject.shape_matchers import BackgroundRectangle
 from utils.config_ops import digest_config
 from utils.strings import split_string_list_to_isolate_substring
 from mobject.types.vectorized_mobject import VGroup
-from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VectorizedPoint
 
 import operator as op
@@ -40,7 +38,6 @@ class SingleStringTexMobject(SVGMobject):
         "template_tex_file": TEMPLATE_TEX_FILE,
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "fill_color": WHITE,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
