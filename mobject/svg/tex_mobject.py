@@ -4,13 +4,11 @@ from svg_mobject import SVGMobject
 from svg_mobject import VMobjectFromSVGPathstring
 from utils.config_ops import digest_config
 from utils.strings import split_string_list_to_isolate_substring
+from utils.tex_file_writing import tex_to_svg_file
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VectorizedPoint
 
 import operator as op
-
-# TODO list
-# - Make sure if "color" is passed into TexMobject, it behaves as expected
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -67,11 +65,20 @@ class SingleStringTexMobject(SVGMobject):
 
     def modify_special_strings(self, tex):
         tex = self.remove_stray_braces(tex)
-        if tex in ["\\over", "\\overline"]:
-            # fraction line needs something to be over
-            tex += "\\,"
-        if tex == "\\sqrt":
-            tex += "{\\quad}"
+        should_add_filler = reduce(op.or_, [
+            # Fraction line needs something to be over
+            tex == "\\over",
+            tex == "\\overline",
+            # Makesure sqrt has overbar
+            tex == "\\sqrt",
+            # Need to add blank subscript or superscript
+            tex.endswith("_"),
+            tex.endswith("^"),
+        ])
+        if should_add_filler:
+            filler = "{\\quad}"
+            tex += filler
+
         if tex == "\\substack":
             tex = ""
         for t1, t2 in ("\\left", "\\right"), ("\\right", "\\left"):
@@ -95,10 +102,9 @@ class SingleStringTexMobject(SVGMobject):
             for char in "{}"
         ]
         if num_rights > num_lefts:
-            backwards = tex[::-1].replace("}", "", num_rights - num_lefts)
-            tex = backwards[::-1]
+            tex = "{" + tex
         elif num_lefts > num_rights:
-            tex = tex.replace("{", "", num_lefts - num_rights)
+            tex = tex + "}"
         return tex
 
     def get_tex_string(self):
@@ -273,98 +279,14 @@ class BulletedList(TextMobject):
 
 
 class TexMobjectFromPresetString(TexMobject):
+    CONFIG = {
+        # To be filled by subclasses
+        "tex": None,
+        "color": None,
+    }
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         TexMobject.__init__(self, self.tex, **kwargs)
         self.set_color(self.color)
 
-##########
-
-
-def tex_hash(expression, template_tex_file):
-    return str(hash(expression + template_tex_file))
-
-
-def tex_to_svg_file(expression, template_tex_file):
-    image_dir = os.path.join(
-        TEX_IMAGE_DIR,
-        tex_hash(expression, template_tex_file)
-    )
-    if os.path.exists(image_dir):
-        return get_sorted_image_list(image_dir)
-    tex_file = generate_tex_file(expression, template_tex_file)
-    dvi_file = tex_to_dvi(tex_file)
-    return dvi_to_svg(dvi_file)
-
-
-def generate_tex_file(expression, template_tex_file):
-    result = os.path.join(
-        TEX_DIR,
-        tex_hash(expression, template_tex_file)
-    ) + ".tex"
-    if not os.path.exists(result):
-        print("Writing \"%s\" to %s" % (
-            "".join(expression), result
-        ))
-        with open(template_tex_file, "r") as infile:
-            body = infile.read()
-            body = body.replace(TEX_TEXT_TO_REPLACE, expression)
-        with open(result, "w") as outfile:
-            outfile.write(body)
-    return result
-
-
-def get_null():
-    if os.name == "nt":
-        return "NUL"
-    return "/dev/null"
-
-
-def tex_to_dvi(tex_file):
-    result = tex_file.replace(".tex", ".dvi")
-    if not os.path.exists(result):
-        commands = [
-            "latex",
-            "-interaction=batchmode",
-            "-halt-on-error",
-            "-output-directory=" + TEX_DIR,
-            tex_file,
-            ">",
-            get_null()
-        ]
-        exit_code = os.system(" ".join(commands))
-        if exit_code != 0:
-            latex_output = ''
-            log_file = tex_file.replace(".tex", ".log")
-            if os.path.exists(log_file):
-                with open(log_file, 'r') as f:
-                    latex_output = f.read()
-            raise Exception(
-                "Latex error converting to dvi. "
-                "See log output above or the log file: %s" % log_file)
-    return result
-
-
-def dvi_to_svg(dvi_file, regen_if_exists=False):
-    """
-    Converts a dvi, which potentially has multiple slides, into a
-    directory full of enumerated pngs corresponding with these slides.
-    Returns a list of PIL Image objects for these images sorted as they
-    where in the dvi
-    """
-    result = dvi_file.replace(".dvi", ".svg")
-    if not os.path.exists(result):
-        commands = [
-            "dvisvgm",
-            dvi_file,
-            "-n",
-            "-v",
-            "0",
-            "-o",
-            result,
-            ">",
-            get_null()
-        ]
-        os.system(" ".join(commands))
-    return result
