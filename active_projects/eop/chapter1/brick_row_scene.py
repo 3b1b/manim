@@ -677,11 +677,18 @@ class BrickRowScene(PiCreatureScene):
             with_labels = True,
             inset = True)
         self.play(FadeOut(self.tallies))
-        self.play(LaggedStart(
-            FadeIn, outcomes))
         self.wait()
         self.play(LaggedStart(
-            FadeOut, outcomes))
+            FadeIn, outcomes,
+            #rate_func = there_and_back_with_pause,
+            run_time = 5))
+        self.wait()
+        self.play(LaggedStart(
+            FadeOut, outcomes,
+            #rate_func = there_and_back_with_pause,
+            run_time = 5))
+
+        self.wait()
         self.play(FadeIn(self.tallies))
 
         brace1 = Brace(self.row.rects[2], UP)
@@ -704,6 +711,33 @@ class BrickRowScene(PiCreatureScene):
             FadeOut(p2),
         )
         self.wait()
+
+
+
+        # put visuals for other probability distribtuions here
+
+        # back to three coin flips, show all 8 outcomes
+
+        self.play(
+            LaggedStart(FadeIn, outcomes,
+                #rate_func = there_and_back_with_pause,
+                run_time = 5),
+            FadeOut(self.tallies)
+        )
+        self.wait()
+        self.play(
+            LaggedStart(FadeOut, outcomes,
+                #rate_func = there_and_back_with_pause,
+                run_time = 5),
+            FadeIn(self.tallies)
+        )
+
+
+
+
+        return
+
+
 
         # # # # # # # #
         # FOURTH FLIP #
@@ -888,4 +922,13 @@ class BrickRowScene(PiCreatureScene):
             self.merge_rects_by_coloring()
             #self.merge_decimals()
             self.wait()
+
+
+
+
+
+
+
+
+
 

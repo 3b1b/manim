@@ -277,6 +277,15 @@ class FlashThroughHistogram(Animation):
            self.mobject.remove(self.prototype_cell)
 
 
+    def clean_up(self):
+        self.update(1)
+        self.remove(prototype_cell)
+        if surrounding_scene is not None:
+            if self.is_remover():
+                surrounding_scene.remove(self.mobject)
+            else:
+                surrounding_scene.add(self.mobject)
+        return self
 
 
 

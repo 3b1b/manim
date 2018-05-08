@@ -14,15 +14,25 @@ class ProbabilityDistributions(PiCreatureScene):
     def construct(self):
 
         lag_ratio = 0.2
-        run_time = 5
+        run_time = 3
         
+
+        text = TextMobject("Probability distributions", color = YELLOW)
+        text.to_edge(UP)
+        text_rect = SurroundingRectangle(text, buff = MED_SMALL_BUFF)
+
+        self.play(
+            FadeIn(text),
+            ShowCreation(text_rect)
+        )
+
 
 # WEATHER FORECAST
 
 
         unit_rect = Rectangle(
-            height = 4, width = 4
-        )
+            height = 3, width = 3
+        ).shift(DOWN)
 
         p_rain = 0.23
         p_sun = 1 - p_rain
@@ -38,7 +48,7 @@ class ProbabilityDistributions(PiCreatureScene):
         sun_rect.set_fill(color = YELLOW, opacity = opacity)
         sun_rect.set_stroke(width = 0)
 
-        self.add(unit_rect, rain_rect, sun_rect)
+        self.play(FadeIn(VGroup(unit_rect, rain_rect, sun_rect)))
 
         rain = SVGMobject(file_name = "rain").scale(0.35)
         sun = SVGMobject(file_name = "sun").scale(0.35)
@@ -189,7 +199,8 @@ class ProbabilityDistributions(PiCreatureScene):
         coin_flip_rect.add(braces, labels)
 
         coin_flip_rect.target  = coin_flip_rect.copy().scale(0.6)
-        coin_flip_rect.target.to_corner(UR, buff = LARGE_BUFF)
+        coin_flip_rect.target.to_corner(UR, buff = MED_LARGE_BUFF)
+        coin_flip_rect.target.shift(DOWN)
 
         self.play(
             MoveToTarget(coin_flip_rect)
@@ -255,25 +266,3 @@ class ProbabilityDistributions(PiCreatureScene):
             rate_func=there_and_back_with_pause,
             run_time=run_time
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

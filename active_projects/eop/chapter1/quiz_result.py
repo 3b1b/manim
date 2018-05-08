@@ -1,12 +1,13 @@
-
-
 from big_ol_pile_of_manim_imports import *
 from active_projects.eop.reusable_imports import *
 from active_projects.eop.independence import *
 
+from for_3b1b_videos.pi_class import *
 
-class QuizResult(Scene):
-
+class QuizResult(PiCreatureScene):
+    CONFIG = {
+        "pi_creatures_start_on_screen" : False
+    }
     def construct(self):
 
 
@@ -23,14 +24,15 @@ class QuizResult(Scene):
             return quiz
 
 
-        highlight_color = YELLOW
+        highlight_color = WHITE
 
         nb_students_x = 5
         nb_students_y = 3
         spacing_students_x = 2.0
         spacing_students_y = 2.2
 
-        all_students = VGroup()
+        all_students = PiCreatureClass(
+            width = nb_students_x, height = nb_students_y)# VGroup()
         student_points = []
         grades = []
         grades_count = []
@@ -39,9 +41,10 @@ class QuizResult(Scene):
             for j in range(nb_students_y):
                 x = i * spacing_students_x
                 y = j * spacing_students_y
-                pi = PiCreature().scale(0.3)
-                pi.move_to([x,y,0])
-                all_students.add(pi)
+                #pi = PiCreature().scale(0.3)
+                #pi.move_to([x,y,0])
+                #all_students.add(pi)
+                all_students[i*nb_students_y + j].move_to([x,y,0])
                 q1 = np.random.choice([True, False])
                 q2 = np.random.choice([True, False])
                 q3 = np.random.choice([True, False])
@@ -55,7 +58,8 @@ class QuizResult(Scene):
 
 
         all_students.move_to(ORIGIN)
-        self.add(all_students)
+        self.pi_creatures = all_students
+        self.play(FadeIn(all_students))
 
         all_quizzes = VGroup()
 
@@ -133,17 +137,20 @@ class QuizResult(Scene):
         )
         grade_hist.move_to(all_students)
 
-        self.play(FadeIn(grade_hist))
+        self.play(
+            FadeIn(grade_hist),
+            FadeOut(all_students)
+        )
 
 
         nb_students_label = TextMobject("\# of students", color = highlight_color)
-        nb_students_label.move_to(3 * LEFT + 2 * UP)
+        nb_students_label.move_to(5 * LEFT + 2 * UP)
         arrows = VGroup(*[
-            Arrow(nb_students_label, grade_hist.bars[i].get_center(),
+            Arrow(nb_students_label.get_right(), grade_hist.bars[i].get_center(),
                 color = highlight_color)
             for i in range(4)
         ])
-        self.play(Write(nb_students_label), LaggedStart(ShowCreation,arrows))
+        self.play(Write(nb_students_label), LaggedStart(GrowArrow,arrows))
 
         percentage_label = TextMobject("\% of students", color = highlight_color)
         percentage_label.move_to(nb_students_label)
@@ -155,6 +162,7 @@ class QuizResult(Scene):
                 unit = "\%",
                 color = highlight_color
             )
+            new_label.scale(0.7)
             new_label.move_to(label)
             anims.append(Transform(label, new_label))
         anims.append(ReplacementTransform(nb_students_label, percentage_label))
@@ -189,6 +197,12 @@ class QuizResult(Scene):
                 FlashThroughHistogram(
                     grade_hist,
                     direction = "vertical",
+                    mode = "random",
+                    cell_opacity = 0.5,
+                    run_time = 1
+                ),
+                FlashThroughClass(
+                    all_students,
                     mode = "random",
                     run_time = 5
                 )
