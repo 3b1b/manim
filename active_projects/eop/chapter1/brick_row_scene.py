@@ -717,25 +717,23 @@ class BrickRowScene(PiCreatureScene):
         # put visuals for other probability distribtuions here
 
         # back to three coin flips, show all 8 outcomes
-
+        run_time = 5
         self.play(
             LaggedStart(FadeIn, outcomes,
                 #rate_func = there_and_back_with_pause,
-                run_time = 5),
-            FadeOut(self.tallies)
+                run_time = run_time),
+            FadeOut(self.tallies,
+                run_time = run_time)
         )
         self.wait()
         self.play(
             LaggedStart(FadeOut, outcomes,
                 #rate_func = there_and_back_with_pause,
                 run_time = 5),
-            FadeIn(self.tallies)
+            FadeIn(self.tallies,
+                run_time = run_time)
         )
 
-
-
-
-        return
 
 
 
@@ -745,25 +743,16 @@ class BrickRowScene(PiCreatureScene):
 
 
 
-        # removing the tallies (boy are they sticky)
-        self.play(FadeOut(self.tallies))
-        self.remove(self.tallies, self.tallies_copy)
-        for tally in self.tallies:
-            self.remove_foreground_mobject(tally)
-            self.remove(tally)
-        for tally in self.tallies_copy:
-            self.remove_foreground_mobject(tally)
-            self.remove(tally)
-
+        
         previous_row = self.row.copy()
         self.add(previous_row)
 
         v = 1.25 * self.row.height * UP
         self.play(
             previous_row.shift, v,
-            #self.decimals.shift, v,
-            #self.decimal_copies.shift, v
+            self.tallies.shift, v,
         )
+        self.add_foreground_mobject(self.tallies)
 
         self.play(
             SplitRectsInBrickWall(self.row)
@@ -778,7 +767,10 @@ class BrickRowScene(PiCreatureScene):
         k = 1 # tally to split
 
         # show individual outcomes
-        outcomes = previous_row.get_outcome_rects_for_level(n, with_labels = False)
+        outcomes = previous_row.get_outcome_rects_for_level(n,
+            with_labels = False,
+            inset = True
+        )
         grouped_outcomes = VGroup()
         index = 0
         for i in range(n + 1):
@@ -803,7 +795,10 @@ class BrickRowScene(PiCreatureScene):
 
         #self.revert_to_original_skipping_status()
 
-        target_outcomes = self.row.get_outcome_rects_for_level(n + 1, with_labels = False)
+        target_outcomes = self.row.get_outcome_rects_for_level(n + 1,
+            with_labels = False,
+            inset = True
+        )
         grouped_target_outcomes = VGroup()
         index = 0
         old_tally_sizes = [choose(n,i) for i in range(n + 1)]
@@ -837,6 +832,13 @@ class BrickRowScene(PiCreatureScene):
         
         self.wait()
 
+        # fade in new tallies
+        new_rects = self.row.get_rects_for_level(4)
+        new_tallies = VGroup(*[
+            TallyStack(n + 1 - i, i).move_to(rect) for (i, rect) in enumerate(new_rects)
+        ])
+        self.play(FadeIn(new_tallies))
+        self.add_foreground_mobject(new_tallies[1])
         # remove outcomes and sizes except for one tally
         anims = []
         for i in range(n + 1):
@@ -844,6 +846,11 @@ class BrickRowScene(PiCreatureScene):
                 anims.append(FadeOut(grouped_outcomes_copy[i]))
             if i != k:
                 anims.append(FadeOut(grouped_outcomes[i]))
+                anims.append(FadeOut(new_tallies[i]))
+
+        #anims.append(FadeOut(self.tallies[0]))
+        #anims.append(FadeOut(self.tallies[2:]))
+        anims.append(FadeOut(new_tallies[-1]))
 
         self.play(*anims)
 
@@ -852,66 +859,62 @@ class BrickRowScene(PiCreatureScene):
         self.play(
             Transform(grouped_outcomes_copy[k - 1], original_grouped_outcomes[k - 1])
         )
+
         self.play(
             Transform(grouped_outcomes[k], original_grouped_outcomes[k])
         )
 
-
         new_rects = self.row.get_rects_for_level(n + 1)
-
-        #decimals_copy = self.decimals.copy()
-        #decimals_copy2 = self.decimals.copy()
 
         self.play(
             Transform(grouped_outcomes[k][0],grouped_target_outcomes[k][0][old_tally_sizes[k - 1]:]),
-            Transform(grouped_outcomes_copy[k - 1][0],grouped_target_outcomes[k][0][:old_tally_sizes[k]]),
-            #decimals_copy[k - 1].move_to, new_rects[k],
-            #decimals_copy2[k].move_to, new_rects[k],
+            Transform(grouped_outcomes_copy[k - 1][0],grouped_target_outcomes[k][0][:old_tally_sizes[k - 1]]),
         )
+
+        self.play(
+            FadeOut(previous_row),
+            FadeOut(self.tallies),
+        )
+
+        self.merge_rects_by_coloring()
+
+        self.play(
+            FadeIn(new_tallies[0]),
+            FadeIn(new_tallies[2:]),
+        )
+
+
 
 
         # # # # # # # #
         # FIFTH  FLIP #
         # # # # # # # #
 
-        # self.remove(
-        #     grouped_outcomes,
-        #     grouped_outcomes_copy,
-        #     grouped_target_outcomes,
-        #     target_outcomes,
-        #     outcomes,
-        #     previous_row,
-        #     original_grouped_outcomes)
+        self.play(FadeOut(new_tallies))
         self.clear()
-        self.add(randy, self.row)
-        #self.row.shift(0.5 * UP)        
+        self.add(randy, self.row)       
         
-        #return
 
-        self.merge_rects_by_coloring()
-
-        self.revert_to_original_skipping_status()
-
-        for i in range(1):
+        for i in range(3):
 
             self.play(FlipCoin(randy))
 
             self.wait()
 
+            previous_row = self.row.copy()
+
+            self.play(previous_row.shift, 1.25 * self.row.height * UP)
+
             self.play(
                 SplitRectsInBrickWall(self.row)
             )
             self.wait()
-
-
-            #self.split_tallies_at_once(direction = LEFT)
-            self.wait()
             self.merge_rects_by_subdiv()
             self.wait()
-            #self.merge_tallies(direction = LEFT)
             self.merge_rects_by_coloring()
-            #self.merge_decimals()
             self.wait()
+
+            self.play(FadeOut(previous_row))
 
 
 

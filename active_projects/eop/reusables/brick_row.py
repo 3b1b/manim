@@ -11,7 +11,7 @@ class BrickRow(VMobject):
         "height" : 1.0,
         "width" : 8.0,
         "outcome_shrinkage_factor_x" : 0.95,
-        "outcome_shrinkage_factor_y" : 0.95
+        "outcome_shrinkage_factor_y" : 0.94
     }
 
     def __init__(self, n, **kwargs):
@@ -104,12 +104,12 @@ class BrickRow(VMobject):
             outcome_width = float(self.width) / (2 ** r)
             outcome_height = self.height
         
-        corner_radius = 0 # min(0.1, 0.3 * min(outcome_width, outcome_height))
+        corner_radius = min(0.1, 0.3 * min(outcome_width, outcome_height))
         # this scales down the corner radius for very narrow rects
-        rect = Rectangle( # RoundedRectangle(
+        rect = RoundedRectangle(
             width = outcome_width,
             height = outcome_height,
-            #corner_radius = corner_radius,
+            corner_radius = corner_radius,
             fill_color = WHITE,
             fill_opacity = 0.2,
             stroke_width = 0
@@ -204,14 +204,4 @@ class SplitRectsInBrickWall(AnimationGroup):
         AnimationGroup.__init__(self, *anims, **kwargs)
 
 
-
-
-
-    # def update_mobject(self, alpha):
-    #     for subdiv in self.subdivs:
-    #         x = subdiv.get_start()[0]
-    #         start = self.mobject.get_center()
-    #         start += x * RIGHT + 0.5 * self.mobject.get_height() * UP
-    #         end = start + alpha * self.mobject.get_height() * DOWN
-    #         subdiv.put_start_and_end_on(start,end)
 
