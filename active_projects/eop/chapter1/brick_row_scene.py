@@ -765,16 +765,6 @@ class BrickRowScene(PiCreatureScene):
             #self.decimal_copies.shift, v
         )
 
-        self.add(self.row)
-        self.bring_to_back(self.row)
-        self.row.shift(v)
-
-        w = 1.5 * self.row.height * DOWN
-        self.play(
-            self.row.shift, w,
-            Animation(previous_row)
-        )
-
         self.play(
             SplitRectsInBrickWall(self.row)
         )

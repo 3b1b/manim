@@ -4,6 +4,9 @@ from utils.bezier import bezier
 from utils.simple_functions import sigmoid
 
 
+def linear(t):
+    return t
+
 def smooth(t, inflection=10.0):
     error = sigmoid(-inflection / 2)
     return (sigmoid(inflection * (t - 0.5)) - error) / (1 - 2 * error)

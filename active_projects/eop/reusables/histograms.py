@@ -299,7 +299,7 @@ class OutlineableBars(VGroup):
     # We use this to morph a row of bricks into a histogram.
 
     CONFIG = {
-        "outline_stroke_width" : 5,
+        "outline_stroke_width" : 3,
         "stroke_color" : WHITE
     }
     def create_outline(self, animated = False, **kwargs):
