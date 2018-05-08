@@ -2,13 +2,15 @@ from constants import *
 
 from svg_mobject import SVGMobject
 from svg_mobject import VMobjectFromSVGPathstring
-from mobject.shape_matchers import BackgroundRectangle
 from utils.config_ops import digest_config
+from utils.strings import split_string_list_to_isolate_substring
 from mobject.types.vectorized_mobject import VGroup
-from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VectorizedPoint
 
 import operator as op
+
+# TODO list
+# - Make sure if "color" is passed into TexMobject, it behaves as expected
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -31,57 +33,36 @@ class TexSymbol(VMobjectFromSVGPathstring):
         self.set_fill(opacity=opacity)
 
 
-class TexMobject(SVGMobject):
+class SingleStringTexMobject(SVGMobject):
     CONFIG = {
         "template_tex_file": TEMPLATE_TEX_FILE,
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "fill_color": WHITE,
         "should_center": True,
-        "arg_separator": " ",
         "height": None,
         "organize_left_to_right": False,
         "propagate_style_to_family": True,
         "alignment": "",
     }
 
-    def __init__(self, *args, **kwargs):
-        digest_config(self, kwargs, locals())
-
-        if "color" in kwargs.keys() and "fill_color" not in kwargs.keys():
-            self.fill_color = kwargs["color"]
-
-        # TODO, Eventually remove this
-        if len(args) == 1 and isinstance(args[0], list):
-            self.args = args[0]
-        ##
-        assert(all([isinstance(a, str) for a in self.args]))
-        self.tex_string = self.get_modified_expression()
+    def __init__(self, tex_string, **kwargs):
+        digest_config(self, kwargs)
+        assert(isinstance(tex_string, str))
+        self.tex_string = tex_string
         file_name = tex_to_svg_file(
-            self.tex_string,
+            self.get_modified_expression(tex_string),
             self.template_tex_file
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
-        self.scale(TEX_MOB_SCALE_FACTOR)
+        if self.height is None:
+            self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def path_string_to_mobject(self, path_string):
-        # Overwrite superclass default to use
-        # specialized path_string mobject
-        return TexSymbol(path_string)
-
-    def generate_points(self):
-        SVGMobject.generate_points(self)
-        if len(self.args) > 1:
-            self.handle_multiple_args()
-
-    def get_modified_expression(self):
-        result = self.arg_separator.join(self.args)
-        result = " ".join([self.alignment, result])
+    def get_modified_expression(self, tex_string):
+        result = self.alignment + " " + tex_string
         result = result.strip()
         result = self.modify_special_strings(result)
-
         return result
 
     def modify_special_strings(self, tex):
@@ -123,27 +104,67 @@ class TexMobject(SVGMobject):
     def get_tex_string(self):
         return self.tex_string
 
-    def handle_multiple_args(self):
+    def path_string_to_mobject(self, path_string):
+        # Overwrite superclass default to use
+        # specialized path_string mobject
+        return TexSymbol(path_string)
+
+    def organize_submobjects_left_to_right(self):
+        self.sort_submobjects(lambda p: p[0])
+        return self
+
+
+class TexMobject(SingleStringTexMobject):
+    CONFIG = {
+        "arg_separator": " ",
+        "substrings_to_isolate": [],
+        "tex_to_color_map": {},
+    }
+
+    def __init__(self, *tex_strings, **kwargs):
+        digest_config(self, kwargs)
+        tex_strings = self.break_up_tex_strings(tex_strings)
+        self.tex_strings = tex_strings
+        SingleStringTexMobject.__init__(
+            self, self.arg_separator.join(tex_strings), **kwargs
+        )
+        self.break_up_by_substrings()
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+
+        if self.organize_left_to_right:
+            self.organize_submobjects_left_to_right()
+
+    def break_up_tex_strings(self, tex_strings):
+        substrings_to_isolate = op.add(
+            self.substrings_to_isolate,
+            self.tex_to_color_map.keys()
+        )
+        split_list = split_string_list_to_isolate_substring(
+            tex_strings, *substrings_to_isolate
+        )
+        split_list = map(str.strip, split_list)
+        split_list = filter(lambda s: s != '', split_list)
+        return split_list
+
+    def break_up_by_substrings(self):
         """
         Reorganize existing submojects one layer
-        deeper based on the structure of args (as a list of strings)
+        deeper based on the structure of tex_strings (as a list
+        of tex_strings)
         """
         new_submobjects = []
         curr_index = 0
-        self.expression_parts = list(self.args)
-        for expr in self.args:
-            sub_tex_mob = TexMobject(expr, **self.CONFIG)
-            sub_tex_mob.tex_string = expr  # Want it unmodified
+        for tex_string in self.tex_strings:
+            sub_tex_mob = SingleStringTexMobject(tex_string, **self.CONFIG)
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
-                if len(self) > curr_index:
-                    last_submob_index = curr_index
-                else:
-                    last_submob_index = -1
-                sub_tex_mob.submobjects = [VectorizedPoint(
-                    self.submobjects[last_submob_index].get_right()
-                )]
+                # For cases like empty tex_strings, we want the corresponing
+                # part of the whole TexMobject to be a VectorizedPoint
+                # positioned in the right part of the TexMobject
+                sub_tex_mob.submobjects = [VectorizedPoint()]
+                last_submob_index = min(curr_index, len(self.submobjects) - 1)
+                sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
             else:
                 sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
             new_submobjects.append(sub_tex_mob)
@@ -161,15 +182,9 @@ class TexMobject(SVGMobject):
             else:
                 return tex1 == tex2
 
-        tex_submobjects = filter(
-            lambda m: isinstance(m, TexMobject),
-            self.submobject_family()
-        )
-        if hasattr(self, "expression_parts"):
-            tex_submobjects.remove(self)
         return VGroup(*filter(
             lambda m: test(tex, m.get_tex_string()),
-            tex_submobjects
+            self.submobjects
         ))
 
     def get_part_by_tex(self, tex, **kwargs):
@@ -185,7 +200,7 @@ class TexMobject(SVGMobject):
     def set_color_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
         for texs, color in texs_to_color_map.items():
             try:
-                # If the given key behaves like strings
+                # If the given key behaves like tex_strings
                 texs + ''
                 self.set_color_by_tex(texs, color, **kwargs)
             except TypeError:
@@ -204,32 +219,13 @@ class TexMobject(SVGMobject):
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part)
 
-    def organize_submobjects_left_to_right(self):
-        self.sort_submobjects(lambda p: p[0])
-        return self
-
-    def sort_submobjects_alphabetically(self):
-        def alphabetical_cmp(m1, m2):
-            if not all([isinstance(m, TexMobject) for m in m1, m2]):
-                return 0
-            return cmp(m1.get_tex_string(), m2.get_tex_string())
-        self.submobjects.sort(alphabetical_cmp)
-        return self
-
-    def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
-        self.background_rectangle = BackgroundRectangle(
-            self, color=color,
-            fill_opacity=opacity,
-            **kwargs
-        )
-        letters = VMobject(*self.submobjects)
-        self.submobjects = [self.background_rectangle, letters]
-        return self
-
-    def add_background_rectangle_to_parts(self):
-        for part in self:
-            part.add_background_rectangle()
-        return self
+    def split(self):
+        # Many old scenes assume that when you pass in a single string
+        # to TexMobject, it indexes across the characters.
+        if len(self.submobjects) == 1:
+            return self.submobjects[0].split()
+        else:
+            return super(TexMobject, self).split()
 
 
 class TextMobject(TexMobject):

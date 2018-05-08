@@ -18,6 +18,7 @@ class VMobject(Mobject):
         "fill_color": None,
         "fill_opacity": 0.0,
         "stroke_color": None,
+        "stroke_width": DEFAULT_POINT_THICKNESS,
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
         "is_subpath": False,

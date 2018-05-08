@@ -2135,7 +2135,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
         )
         question.scale(text_scale_val)
         question.next_to(dot, RIGHT)
-        question.add_background_rectangle_to_parts()
+        question.add_background_rectangle_to_submobjects()
 
         f_words = TextMobject("$f$", "of the way")
         third_words = TextMobject("$\\frac{1}{3}$", "of the way")
