@@ -58,7 +58,7 @@ class ProbabilityDistributions(PiCreatureScene):
         p_rain_whole_label.next_to(brace_rain, UP)
 
         brace_sun = Brace(sun_rect, DOWN)
-        p_sun_label = TextMobject("$P($sun$)=$").scale(text_scale)
+        p_sun_label = TextMobject("$P($sunshine$)=$").scale(text_scale)
         p_sun_decimal = DecimalNumber(p_sun).scale(text_scale)
         p_sun_decimal.next_to(p_sun_label)
         p_sun_whole_label = VGroup(p_sun_label, p_sun_decimal)
@@ -97,7 +97,7 @@ class ProbabilityDistributions(PiCreatureScene):
 
         
         new_brace_sun = Brace(new_sun_rect, DOWN)
-        new_p_sun_label = TextMobject("$P($sun$)=$").scale(text_scale)
+        new_p_sun_label = TextMobject("$P($sunshine$)=$").scale(text_scale)
         new_p_sun_decimal = DecimalNumber(new_p_sun).scale(text_scale)
         new_p_sun_decimal.next_to(new_p_sun_label)
         new_p_sun_whole_label = VGroup(new_p_sun_label, new_p_sun_decimal)
@@ -147,20 +147,28 @@ class ProbabilityDistributions(PiCreatureScene):
 
         self.play(MoveToTarget(forecast))
 
+        self.play(
+            FadeOut(brace_rain),
+            FadeOut(brace_sun),
+            FadeOut(p_rain_whole_label),
+            FadeOut(p_sun_whole_label),
+        )
+
+
 
 
 
 # COIN FLIP
 
 
-        coin_flip_rect = BrickRow(3)
+        coin_flip_rect = BrickRow(3, height = 2, width = 10)
 
         for (i, brick) in enumerate(coin_flip_rect.rects):
             tally = TallyStack(3 - i, i)
-            tally.next_to(brick, UP)
+            tally.move_to(brick)
             coin_flip_rect.add(tally)
 
-        coin_flip_rect.scale(0.7)
+        coin_flip_rect.scale(0.8).shift(2*RIGHT)
         self.play(FadeIn(coin_flip_rect))
 
         counts = [1, 3, 3, 1]
@@ -180,76 +188,74 @@ class ProbabilityDistributions(PiCreatureScene):
 
         coin_flip_rect.add(braces, labels)
 
-        self.play(coin_flip_rect.to_corner,UR)
+        coin_flip_rect.target  = coin_flip_rect.copy().scale(0.6)
+        coin_flip_rect.target.to_corner(UR, buff = LARGE_BUFF)
 
-
+        self.play(
+            MoveToTarget(coin_flip_rect)
+        )
+        self.play(
+            FadeOut(braces),
+            FadeOut(labels)
+        )
 
 
 # DOUBLE DICE THROW
 
         cell_size = 0.5
         dice_table = TwoDiceTable(cell_size = cell_size, label_scale = 0.7)
-        dice_table.shift(DOWN)
+        dice_table.shift(0.8 * DOWN)
+        dice_unit_rect = SurroundingRectangle(dice_table.cells, buff = 0,
+            stroke_color = WHITE) 
 
-        self.play(FadeIn(dice_table))
-        self.wait()
-        self.play(
-            FadeOut(dice_table.rows),
-            FadeOut(dice_table.labels),
-            dice_table.cells.fade, 0.8
-        )
-
-        dice_table_braces = VGroup()
-        dice_table_probs = VGroup()
         dice_table_grouped_cells = VGroup()
 
         for i in range(6):
             cell = dice_table.cells[6 * i]
             start = cell.get_center()
-            color = cell.get_fill_color()
-            brace = Brace(cell, LEFT, buff = 0, color = color)
-            brace.stretch(0.5,0)
             stop = start + cell_size * LEFT + cell_size * DOWN
-            p_label = TexMobject("{" + str(i + 1) + "\over 36}", color = color)
-            p_label.scale(0.35)
-            p_label.next_to(brace, LEFT)
-            dice_table_probs.add(p_label)
-            dice_table_braces.add(brace)
-
+            
             dice_table_grouped_cells.add(VGroup(*[
                 dice_table.cells[6 * i - 5 * k]
                 for k in range(i + 1)
             ]))
 
-
         for i in range(5):
             cell = dice_table.cells[31 + i]
             start = cell.get_center()
-            color = cell.get_fill_color()
-            brace = Brace(cell, DOWN, buff = 0, color = color)
-            brace.stretch(0.5, 1)
             stop = start + cell_size * LEFT + cell_size * DOWN
-            p_label = TexMobject("{" + str(5 - i) + "\over 36}", color = color)
-            p_label.scale(0.35)
-            p_label.next_to(brace, DOWN)
-            dice_table_probs.add(p_label)
-            dice_table_braces.add(brace)
-
+            
             dice_table_grouped_cells.add(VGroup(*[
                 dice_table.cells[31 + i - 5 * k]
                 for k in range(5 - i)
             ]))
 
+        self.play(
+            FadeIn(dice_unit_rect),
+            FadeIn(dice_table.rows)
+        )
 
-        # group the dice table cells to make them appear in the right order
+        for (cell, label) in zip(dice_table.cells, dice_table.labels):
+            cell.add(label)
 
         self.play(
-            LaggedStart(ShowCreation, dice_table_braces, lag_ratio = lag_ratio, run_time = run_time),
-            LaggedStart(Write, dice_table_probs, lag_ratio = lag_ratio, run_time = run_time),
-            LaggedStart(ApplyMethod, dice_table_grouped_cells, arg_creator = 
-                lambda m : (m.fade, -4), lag_ratio = lag_ratio, run_time = run_time
-            )
+            LaggedStart(FadeIn, dice_table_grouped_cells,
+                lag_ratio = lag_ratio, run_time = run_time)
         )
+
+        self.wait()
+        self.play(
+            FadeOut(dice_table.rows),
+            FadeOut(dice_unit_rect),
+        )
+
+
+        self.play(
+            dice_table_grouped_cells.space_out_submobjects, {"factor" : 1.9},
+            rate_func=there_and_back_with_pause,
+            run_time=run_time
+        )
+
 
 
 
