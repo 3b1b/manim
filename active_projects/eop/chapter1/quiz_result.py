@@ -2,11 +2,12 @@ from big_ol_pile_of_manim_imports import *
 from active_projects.eop.reusable_imports import *
 from active_projects.eop.independence import *
 
-from for_3b1b_videos.pi_class import *
+from for_3b1b_videos.pi_class import PiCreatureClass
 
 class QuizResult(PiCreatureScene):
     CONFIG = {
-        "pi_creatures_start_on_screen" : False
+        "pi_creatures_start_on_screen" : False,
+        "random_seed" : 6
     }
     def construct(self):
 
@@ -182,8 +183,8 @@ class QuizResult(PiCreatureScene):
         prob_label.move_to(percentage_label)
         self.play(
             all_students[8].set_color, MAROON_E,
-            all_students[:8].fade, 0.6,
-            all_students[9:].fade, 0.6,
+            #all_students[:8].fade, 0.6,
+            #all_students[9:].fade, 0.6,
             ReplacementTransform(percentage_label, prob_label)
         )
 
@@ -192,18 +193,32 @@ class QuizResult(PiCreatureScene):
             FadeOut(arrows)
         )
 
-        for i in range(1):
-            self.play(
-                FlashThroughHistogram(
+        flash_hist = FlashThroughHistogram(
                     grade_hist,
                     direction = "vertical",
                     mode = "random",
                     cell_opacity = 0.5,
-                    run_time = 1
-                ),
-                FlashThroughClass(
+                    run_time = 5,
+                    rate_func = linear
+                )
+
+        flash_class = FlashThroughClass(
                     all_students,
                     mode = "random",
-                    run_time = 5
+                    highlight_color = MAROON_E,
+                    run_time = 5,
+                    rate_func = linear
                 )
-            )
+
+        for i in range(3):
+            self.play(flash_hist, flash_class)
+            self.remove(flash_hist.prototype_cell)
+
+
+
+
+
+
+
+
+

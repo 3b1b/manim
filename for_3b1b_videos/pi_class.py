@@ -1,4 +1,10 @@
-from for_3b1b_videos.pi_creature import *
+import numpy as np
+import warnings
+
+from constants import *
+
+from mobject.types.vectorized_mobject import VGroup
+from for_3b1b_videos.pi_creature import PiCreature
 
 class PiCreatureClass(VGroup):
     CONFIG = {
@@ -15,25 +21,3 @@ class PiCreatureClass(VGroup):
                 self.add(pi)
 
 
-
-def FlashThroughClass(Animation):
-    CONFIG = {
-        "highlight_color" : GREEN,
-    }
-
-    def __init__(self, mobject, mode = "linear", **kwargs):
-
-        digest_config(self, kwargs)
-        self.indices = range(self.height * self.width)
-        
-        if mode == "random":
-            np.random.shuffle(self.indices)
-
-        Animation.__init__(self, mobject, **kwargs)
-        
-
-    def update_mobject(self, alpha):
-        index = int(np.floor(alpha * self.height * self.width))
-        for pi in self.mobject:
-            pi.set_color(BLUE_E)
-        self.mobject[index].set_color(self.highlight_color)
