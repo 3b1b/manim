@@ -616,23 +616,19 @@ class Mobject(Container):
     ##
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):
-        try:
-            points = self.get_points_defining_boundary()
-            values = [points_func(points[:, dim])]
-        except:
-            values = []
-        values += [
-            mob.reduce_across_dimension(points_func, reduce_func, dim)
-            for mob in self.nonempty_submobjects()
-        ]
-        try:
-            return reduce_func(values)
-        except:
+        points = self.get_all_points()
+        if not points:
+            # Note, this default means things like empty VGroups
+            # will appear to have a center at [0, 0, 0]
             return 0
+        values = points_func(points[:, dim])
+        return reduce_func(values)
 
     def nonempty_submobjects(self):
-        return [submob for submob in self.submobjects
-            if len(submob.submobjects) != 0 or len(submob.points) != 0]
+        return [
+            submob for submob in self.submobjects
+            if len(submob.submobjects) != 0 or len(submob.points) != 0
+        ]
 
     def get_merged_array(self, array_attr):
         result = None
