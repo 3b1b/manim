@@ -72,10 +72,8 @@ class EntireBrickWall(BrickRowScene):
         )
 
         # remove any hidden brick rows
-        hidden_brick_rows = VGroup(*[mob for mob in self.mobjects
-            if isinstance(mob, BrickRow) and not mob in rows
-        ])
-        self.remove(hidden_brick_rows)
+        self.clear()
+        self.add(nb_flips_text)
 
         mobs_to_shift = VGroup(
             rows, flip_counters, tails_counters, nb_tails_text, 
@@ -94,7 +92,8 @@ class EntireBrickWall(BrickRowScene):
             brick_copy = rows[row].rects[nb_tails].copy()
             brick_copy.set_fill(color = YELLOW, opacity = 0.8)
             prob_percentage = float(choose(row, nb_tails)) / 2**row * 100
-            brick_label = DecimalNumber(prob_percentage, unit = "\%", num_decimal_places = 1, color = BLACK)
+            brick_label = DecimalNumber(prob_percentage,
+                unit = "\%", num_decimal_places = 1, color = BLACK)
             brick_label.move_to(brick_copy)
             brick_label.scale_to_fit_height(0.8 * brick_copy.get_height())
             return VGroup(brick_copy, brick_label)
