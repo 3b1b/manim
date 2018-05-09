@@ -467,6 +467,8 @@ class Mobject(Container):
 
     # Background rectangle
     def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
+        # TODO, this does not behave well when the mobject has points, 
+        # since it gets displayed on top
         from mobject.shape_matchers import BackgroundRectangle
         self.background_rectangle = BackgroundRectangle(
             self, color=color,
@@ -621,12 +623,16 @@ class Mobject(Container):
             values = []
         values += [
             mob.reduce_across_dimension(points_func, reduce_func, dim)
-            for mob in self.submobjects
+            for mob in self.nonempty_submobjects()
         ]
         try:
             return reduce_func(values)
         except:
             return 0
+
+    def nonempty_submobjects(self):
+        return [submob for submob in self.submobjects
+            if len(submob.submobjects) != 0 or len(submob.points) != 0]
 
     def get_merged_array(self, array_attr):
         result = None
