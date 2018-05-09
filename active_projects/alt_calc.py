@@ -47,18 +47,19 @@ class WriteOpeningWords(Scene):
 
 class StartingCalc101(PiCreatureScene):
     CONFIG = {
+        # "default_pi_creature_kwargs": {
+        #     "color": BLUE,
+        #     "flip_at_start": False,
+        # },
     }
 
     def construct(self):
         randy = self.pi_creature
-        deriv_equation = TexMobject(
-            "\\frac{df}{dx}(x) = \\lim(\\Delta x \\to \\infty)" +
-            "{f(x + \\Delta x) - f(x) \\over \\Delta x}",
-            tex_to_color_map={"\\Delta x": BLUE}
+        deriv_string = "\\frac{df}{dx}(x) = \\lim(\\delta x \\to \\infty)" + \
+                       "{f(x + \\delta x) - f(x) \\over \\delta x}"
+        equations = VGroup(
+            TexMobject(*break_up_string_by_terms(deriv_string, "\\delta x"))
         )
-        self.add(deriv_equation)
-        equations = VGroup(deriv_equation)
-
         title = TextMobject("Calculus 101")
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT)

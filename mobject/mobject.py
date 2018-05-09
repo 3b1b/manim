@@ -623,12 +623,16 @@ class Mobject(Container):
             values = []
         values += [
             mob.reduce_across_dimension(points_func, reduce_func, dim)
-            for mob in self.submobjects
+            for mob in self.nonempty_submobjects()
         ]
         try:
             return reduce_func(values)
         except:
             return 0
+
+    def nonempty_submobjects(self):
+        return [submob for submob in self.submobjects
+            if len(submob.submobjects) != 0 or len(submob.points) != 0]
 
     def get_merged_array(self, array_attr):
         result = None
@@ -745,6 +749,7 @@ class Mobject(Container):
     def submobject_family(self):
         sub_families = map(Mobject.submobject_family, self.submobjects)
         all_mobjects = [self] + list(it.chain(*sub_families))
+        #all_mobjects = list(it.chain(*sub_families)) + [self]
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):

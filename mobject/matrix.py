@@ -139,7 +139,7 @@ class Matrix(VMobject):
 class DecimalMatrix(Matrix):
     CONFIG = {
         "element_to_mobject": DecimalNumber,
-        "element_to_mobject_config": {"num_decimal_points": 1}
+        "element_to_mobject_config": {"num_decimal_places": 1}
     }
 
 

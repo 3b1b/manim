@@ -559,7 +559,7 @@ class WriteAProgram(Scene):
             rgb = square.fill_rgb
             num = DecimalNumber(
                 square.fill_rgb[0],
-                num_decimal_points = 1
+                num_decimal_places = 1
             )
             num.set_stroke(width = 1)
             color = rgba_to_color(1 - (rgb + 0.2)/1.2)
@@ -1113,7 +1113,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         example_num = None
         for neuron in neurons:
             o = neuron.get_fill_opacity()
-            num = DecimalNumber(o, num_decimal_points = 1)
+            num = DecimalNumber(o, num_decimal_places = 1)
             num.scale_to_fit_width(0.7*neuron.get_width())
             num.move_to(neuron)
             if o > 0.8:

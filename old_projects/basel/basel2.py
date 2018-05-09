@@ -94,7 +94,7 @@ class LightIndicator(Mobject):
         self.foreground.set_fill(color = self.fill_color)
 
         self.add(self.background, self.foreground)
-        self.reading = DecimalNumber(self.intensity,num_decimal_points = self.precision)
+        self.reading = DecimalNumber(self.intensity,num_decimal_places = self.precision)
         self.reading.set_fill(color=INDICATOR_TEXT_COLOR)
         self.reading.scale_to_fit_height(self.reading_height)
         self.reading.move_to(self.get_center())
@@ -317,7 +317,7 @@ class IntroScene(PiCreatureScene):
 
         partial_sum_decimal = self.partial_sum_decimal = DecimalNumber(
             series_terms[1],
-            num_decimal_points = 2
+            num_decimal_places = 2
         )
         partial_sum_decimal.next_to(equals_sign, RIGHT)
 
@@ -418,7 +418,7 @@ class IntroScene(PiCreatureScene):
                         partial_sum_decimal,
                         series_terms[i+1], 
                         run_time = 1,
-                        num_decimal_points = 6,
+                        num_decimal_places = 6,
                         position_update_func = lambda m: m.next_to(equals_sign, RIGHT)
                     )
                 ]
@@ -430,7 +430,7 @@ class IntroScene(PiCreatureScene):
                 ChangeDecimalToValue(
                     partial_sum_decimal,
                     series_terms[i+1],
-                    num_decimal_points = 6,
+                    num_decimal_places = 6,
                 ),
             ]
             if i == 5:
@@ -451,7 +451,7 @@ class IntroScene(PiCreatureScene):
             ChangeDecimalToValue(
                 partial_sum_decimal,
                 series_terms[-1],
-                num_decimal_points = 6,
+                num_decimal_places = 6,
             ),
             morty.change, "confused",
         )
@@ -1295,7 +1295,7 @@ class IntroduceScreen(Scene):
 
         self.angle_indicator = DecimalNumber(
             arc_angle / DEGREES,
-            num_decimal_points = 0,
+            num_decimal_places = 0,
             unit = "^\\circ"
         )
         self.angle_indicator.next_to(self.angle_arc, RIGHT)
@@ -3818,7 +3818,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         dot_pairs = it.starmap(VGroup, zip(positive_dots, negative_dots))
 
         # Decimal
-        decimal = DecimalNumber(0, num_decimal_points = 6)
+        decimal = DecimalNumber(0, num_decimal_places = 6)
         decimal.to_edge(UP)
         terms = [2./(n**2) for n in range(1, 100, 2)]
         partial_sums = np.cumsum(terms)
@@ -4250,7 +4250,7 @@ class LabeledArc(Arc):
 
         Arc.__init__(self,angle,**kwargs)
 
-        label = DecimalNumber(self.length, num_decimal_points = 0)
+        label = DecimalNumber(self.length, num_decimal_places = 0)
         r = BUFFER * self.radius
         theta = self.start_angle + self.angle/2
         label_pos = r * np.array([np.cos(theta), np.sin(theta), 0])

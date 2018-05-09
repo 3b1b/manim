@@ -226,7 +226,7 @@ def get_circle_drawing_terms(radius = 1, positioning_func = lambda m : m.center(
             0.25*rotate_vector(radius.get_vector(), TAU/4)
         ),
     )
-    decimal = DecimalNumber(0, num_decimal_points = 4, show_ellipsis = True)
+    decimal = DecimalNumber(0, num_decimal_places = 4, show_ellipsis = True)
     decimal.scale(0.75)
     def reposition_decimal(decimal):
         vect = radius.get_vector()
@@ -318,7 +318,7 @@ class PiTauDebate(PiCreatureScene):
         circum_line.next_to(circle, DOWN, buff = MED_LARGE_BUFF)
         # circum_line.to_edge(LEFT)
         brace = Brace(circum_line, DOWN, buff = SMALL_BUFF)
-        decimal = DecimalNumber(np.pi, num_decimal_points = 4, show_ellipsis = True)
+        decimal = DecimalNumber(np.pi, num_decimal_places = 4, show_ellipsis = True)
         decimal.scale(0.75)
         decimal.next_to(brace, DOWN, SMALL_BUFF)
 

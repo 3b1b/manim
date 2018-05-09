@@ -9,6 +9,7 @@ class GenericMorphBrickRowIntoHistogram(Scene):
         "bar_width" : 2.0,
         "bar_anchor_height" : -3.0,
         "show_tallies" : False,
+        "show_nb_flips" : True
     }
 
     def construct(self):
@@ -25,12 +26,22 @@ class GenericMorphBrickRowIntoHistogram(Scene):
 
             for (i,brick) in enumerate(self.row.rects):
                 tally = TallyStack(self.level - i, i)
-                tally.next_to(brick, UP)
+                tally.move_to(brick)
                 self.add(tally)
                 tallies.add(tally)
                 brick.set_stroke(width = 3)
 
+        if self.show_nb_flips:
+            nb_flips_text = TextMobject("\# of flips: " + str(self.level))
+            nb_flips_text.to_corner(UR)
+            self.add(nb_flips_text)
+
         self.remove(self.row.subdivs, self.row.border)
+
+        for rect in self.row.rects:
+            rect.set_stroke(color = WHITE, width = 3)
+
+        self.play(self.row.rects.space_out_submobjects, {"factor" : 1.3})
 
         anims = []
         for brick in self.row.rects:
@@ -41,7 +52,7 @@ class GenericMorphBrickRowIntoHistogram(Scene):
             anims.append(FadeOut(tallies))
         self.play(*anims)
 
-        
+
         anims = []
         for (i,brick) in enumerate(self.row.rects):
             anims.append(brick.next_to)
@@ -50,11 +61,10 @@ class GenericMorphBrickRowIntoHistogram(Scene):
         self.play(*anims)
 
         self.bars.create_outline()
-
-        anims = []
-        for bar in self.bars.submobjects:
-            anims.append(bar.set_stroke)
-            anims.append({"width" : 0})
+        anims = [
+            ApplyMethod(rect.set_stroke, {"width" : 0})
+                for rect in self.bars
+        ]
         anims.append(FadeIn(self.bars.outline))
         self.play(*anims)
 
@@ -67,7 +77,8 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
         "prob_denominator" : 8,
         "bar_width" : 2.0,
         "bar_anchor_height" : -3.0,
-        "show_tallies" : True
+        "show_tallies" : True,
+        "show_nb_flips" : False
     }
 
     def construct(self):
@@ -89,54 +100,70 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
 
         nb_tails_label = TextMobject("\# of tails")
         nb_tails_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
-        
-        self.play(
-            FadeIn(x_axis),
-            FadeIn(x_labels),
-            FadeIn(nb_tails_label)
-        )
 
 
 
         # draw y-guides
 
         y_guides = VMobject()
-        for i in range(1,self.prob_denominator + 1):
+        for i in range(0,self.prob_denominator + 1):
             y_guide = Line(5 * LEFT, 5 * RIGHT, stroke_color = GRAY)
             y_guide.move_to(self.bar_anchor_height * UP + i * float(self.row.width) / self.prob_denominator * UP)
             y_guide_label = TexMobject("{" + str(i) + "\over " + str(self.prob_denominator) + "}", color = GRAY)
             y_guide_label.scale(0.7)
             y_guide_label.next_to(y_guide, LEFT)
-            y_guide.add(y_guide_label)
+            if i != 0:
+                y_guide.add(y_guide_label)
             y_guides.add(y_guide)
 
-        self.bring_to_back(y_guides)
-        self.play(FadeIn(y_guides), Animation(self.bars))
-
-
-        total_area_text = TextMobject("total area = 1", color = YELLOW)
-        total_area_rect = SurroundingRectangle(total_area_text,
-            buff = MED_SMALL_BUFF,
-            fill_opacity = 0.5,
-            fill_color = BLACK,
-            stroke_color = YELLOW
+        self.play(
+            FadeIn(y_guides),
+            Animation(self.bars.outline),
+            Animation(self.bars)
         )
 
         self.play(
-            Write(total_area_text),
+            FadeIn(x_axis),
+            FadeIn(x_labels),
+            FadeIn(nb_tails_label)
+        )
+
+        self.add_foreground_mobject(nb_tails_label)
+        area_color = YELLOW
+
+        total_area_text = TextMobject("total area =", color = area_color)
+        area_decimal = DecimalNumber(0, color = area_color, num_decimal_places = 3)
+        area_decimal.next_to(total_area_text, RIGHT)
+
+        total_area_group = VGroup(total_area_text, area_decimal)
+        total_area_group.move_to(2.7 * UP)
+
+        self.play(
+            FadeIn(total_area_text),
+        )
+
+        cumulative_areas = [0.125, 0.5, 0.875, 1]
+        covering_rects = self.bars.copy()
+        for (i,rect) in enumerate(covering_rects):
+            rect.set_fill(color = area_color, opacity = 0.5)
+            self.play(
+                FadeIn(rect, rate_func = linear),
+                ChangeDecimalToValue(area_decimal, cumulative_areas[i],
+                    rate_func = linear)
+            )
+            self.wait(0.2)
+
+        self.wait()
+
+        total_area_rect = SurroundingRectangle(
+            total_area_group,
+            buff = MED_SMALL_BUFF,
+            stroke_color = area_color
+        )
+
+        self.play(
+            FadeOut(covering_rects),
             ShowCreation(total_area_rect)
-        )
-
-        prob_dist_text = TextMobject("probability distribution", color = YELLOW)
-        prob_dist_text.to_corner(UP, buff = LARGE_BUFF)
-        prob_dist_rect = SurroundingRectangle(prob_dist_text,
-            buff = MED_SMALL_BUFF,
-            stroke_color = YELLOW
-        )
-
-        self.play(
-            Write(prob_dist_text),
-            ShowCreation(prob_dist_rect)
         )
 
 
@@ -165,9 +192,9 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
             label.next_to(self.bar_anchors[i], DOWN)
             x_labels.add(label)
 
-        nb_tails_label = TextMobject("\# of heads")
-        nb_tails_label.next_to(x_labels[-1], RIGHT, MED_LARGE_BUFF)
-        
+        nb_tails_label = TextMobject("\# of tails")
+        nb_tails_label.move_to(5 * RIGHT + 2.5 * DOWN)
+
         self.play(
             FadeIn(x_axis),
             FadeIn(x_labels),
@@ -186,7 +213,7 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
             y_guide_height = self.bar_anchor_height + i * float(self.row.width)
             y_guide_heights.append(y_guide_height)
             y_guide.move_to(y_guide_height * UP)
-            y_guide_label = DecimalNumber(i, num_decimal_points = 2, color = GRAY)
+            y_guide_label = DecimalNumber(i, num_decimal_places = 2, color = GRAY)
             y_guide_label.scale(0.7)
             y_guide_label.next_to(y_guide, LEFT)
             y_guide.add(y_guide_label)
@@ -199,7 +226,7 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
         histogram_height = self.bars.get_height()
 
         # scale to fit screen
-        self.scale_x = 10.0/(len(self.bars) * self.bar_width)
+        self.scale_x = 10.0/((len(self.bars) - 1) * self.bar_width)
         self.scale_y = 6.0/histogram_height
 
 

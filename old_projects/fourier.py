@@ -728,7 +728,7 @@ class UnmixMixedPaint(Scene):
 class MachineThatTreatsOneFrequencyDifferently(Scene):
     def construct(self):
         graph = self.get_cosine_graph(0.5)
-        frequency_mob = DecimalNumber(220, num_decimal_points = 0)
+        frequency_mob = DecimalNumber(220, num_decimal_places = 0)
         frequency_mob.next_to(graph, UP, buff = MED_LARGE_BUFF)
 
         self.graph = graph
@@ -1273,7 +1273,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
     def get_winding_frequency_label(self):
         freq = self.initial_winding_frequency
         winding_freq_label = VGroup(
-            DecimalNumber(freq, num_decimal_points = 2),
+            DecimalNumber(freq, num_decimal_places = 2),
             TextMobject("cycles/second")
         )
         winding_freq_label.arrange_submobjects(RIGHT)

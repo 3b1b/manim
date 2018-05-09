@@ -37,6 +37,7 @@ class UprightTails(UprightCoin):
 class CoinSequence(VGroup):
     CONFIG = {
         "sequence": [],
+        "radius" : COIN_RADIUS,
         "spacing": COIN_SEQUENCE_SPACING,
         "direction": RIGHT
     }
@@ -47,11 +48,11 @@ class CoinSequence(VGroup):
         offset = 0
         for symbol in self.sequence:
             if symbol == "H":
-                new_coin = UprightHeads()
+                new_coin = UprightHeads(radius = self.radius)
             elif symbol == "T":
-                new_coin = UprightTails()
+                new_coin = UprightTails(radius = self.radius)
             else:
-                new_coin = UprightCoin(symbol = symbol)
+                new_coin = UprightCoin(symbol = symbol, radius = self.radius)
             new_coin.shift(offset * self.direction)
             self.add(new_coin)
             offset += self.spacing

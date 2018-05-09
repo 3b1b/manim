@@ -201,7 +201,10 @@ class FlashThroughHistogram(Animation):
         "hist_opacity" : 0.2
     }
 
-    def __init__(self, mobject, direction = "horizontal", mode = "random", **kwargs):
+    def __init__(self, mobject,
+        direction = "horizontal",
+        mode = "random",
+        **kwargs):
 
         digest_config(self, kwargs)
 
@@ -277,6 +280,15 @@ class FlashThroughHistogram(Animation):
            self.mobject.remove(self.prototype_cell)
 
 
+    def clean_up(self, surrounding_scene = None):
+        Animation.clean_up(self, surrounding_scene)
+        self.update(1)
+        if surrounding_scene is not None:
+            if self.is_remover():
+                surrounding_scene.remove(self.prototype_cell)
+            else:
+                surrounding_scene.add(self.prototype_cell)
+        return self
 
 
 
@@ -290,7 +302,7 @@ class OutlineableBars(VGroup):
     # We use this to morph a row of bricks into a histogram.
 
     CONFIG = {
-        "outline_stroke_width" : 5,
+        "outline_stroke_width" : 3,
         "stroke_color" : WHITE
     }
     def create_outline(self, animated = False, **kwargs):
