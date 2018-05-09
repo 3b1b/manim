@@ -151,11 +151,12 @@ def handle_scene(scene, **config):
 
         if config["show_file_in_finder"]:
             commands.append("-R")
-        #
+        
         if config["show_last_frame"]:
             commands.append(scene.get_image_file_path())
         else:
             commands.append(scene.get_movie_file_path())
+        #commands.append("-g")
         FNULL = open(os.devnull, 'w')
         sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
         FNULL.close()
@@ -223,14 +224,18 @@ def get_module_posix(file_name):
     module_name = file_name.replace(".py", "")
     last_module = imp.load_module(".", *imp.find_module("."))
     for part in module_name.split(os.sep):
-        load_args = imp.find_module(part, last_module.__path__)
-        last_module = imp.load_module(part, *load_args)
+        try:
+            load_args = imp.find_module(part, last_module.__path__)
+            last_module = imp.load_module(part, *load_args)
+        except ImportError:
+            continue
     return last_module
 
 
 def get_module(file_name):
     if os.name == 'nt':
         return get_module_windows(file_name)
+    print "file_name =", file_name
     return get_module_posix(file_name)
 
 
