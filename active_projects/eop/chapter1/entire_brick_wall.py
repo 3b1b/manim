@@ -1,11 +1,13 @@
 
 from big_ol_pile_of_manim_imports import *
 from active_projects.eop.reusable_imports import *
+from active_projects.eop.chapter1.brick_row_scene import BrickRowScene
 
-
-class EntireBrickWall(Scene):
+class EntireBrickWall(BrickRowScene):
 
     def construct(self):
+
+        self.remove(self.get_primary_pi_creature())
 
         row_height = 0.3
         nb_rows = 20
@@ -13,17 +15,16 @@ class EntireBrickWall(Scene):
         
         rows = VMobject()
         rows.add(BrickRow(0, height = row_height))
-        rows[0].move_to(start_point)
+        rows.move_to(start_point)
         self.add(rows)
-
+            
         zero_counter = Integer(0).next_to(start_point + 0.5 * rows[0].width * RIGHT)
         nb_flips_text = TextMobject("\# of flips")
         nb_flips_text.next_to(zero_counter, RIGHT, buff = LARGE_BUFF)
         self.add(zero_counter, nb_flips_text)
 
-        for i in range(1,nb_rows + 1):
-            rows.add(BrickRow(i, height = row_height))
-            rows[-1].move_to(start_point + (i - 1) * row_height * DOWN)
+        for i in range(1, nb_rows + 1):
+            rows.add(rows[-1].copy())
             self.bring_to_back(rows[-1])
             anims = [
                 rows[-1].shift, row_height * DOWN,
@@ -36,6 +37,12 @@ class EntireBrickWall(Scene):
                 anims.append(FadeIn(counter))
 
             self.play(*anims)
+
+            self.play(SplitRectsInBrickWall(rows[-1]))
+            rows.submobjects[-1] = self.merge_rects_by_subdiv(rows[-1])
+            rows.submobjects[-1] = self.merge_rects_by_coloring(rows[-1])
+
+
 
         # draw indices under the last row for the number of tails
         tails_counters = VGroup()
@@ -61,6 +68,12 @@ class EntireBrickWall(Scene):
             LaggedStart(FadeIn, tails_counters),
             FadeIn(nb_tails_text)
         )
+
+        # remove any hidden brick rows
+        hidden_brick_rows = VGroup(*[mob for mob in self.mobjects
+            if isinstance(mob, BrickRow) and not mob in rows
+        ])
+        self.remove(hidden_brick_rows)
 
         special_brick_copy = rows[-1].rects[13].copy()
         self.play(
