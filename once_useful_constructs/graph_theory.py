@@ -175,7 +175,7 @@ class CompleteGraph(Graph):
         return Graph.__str__(self) + str(self.num_vertices)
 
 
-class GraphScene(Scene):
+class DiscreteGraphScene(Scene):
     args_list = [
         (CubeGraph(),),
         (SampleGraph(),),
