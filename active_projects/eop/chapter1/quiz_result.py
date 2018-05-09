@@ -159,7 +159,7 @@ class QuizResult(PiCreatureScene):
         anims = []
         for (label, percentage) in zip(grade_hist.y_labels_group, percentages):
             new_label = DecimalNumber(percentage,
-                num_decimal_points = 1,
+                num_decimal_places = 1,
                 unit = "\%",
                 color = highlight_color
             )

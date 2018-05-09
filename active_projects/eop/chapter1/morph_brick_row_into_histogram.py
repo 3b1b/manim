@@ -132,7 +132,7 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
         area_color = YELLOW
 
         total_area_text = TextMobject("total area =", color = area_color)
-        area_decimal = DecimalNumber(0, color = area_color, num_decimal_points = 3)
+        area_decimal = DecimalNumber(0, color = area_color, num_decimal_places = 3)
         area_decimal.next_to(total_area_text, RIGHT)
 
         total_area_group = VGroup(total_area_text, area_decimal)
@@ -213,7 +213,7 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
             y_guide_height = self.bar_anchor_height + i * float(self.row.width)
             y_guide_heights.append(y_guide_height)
             y_guide.move_to(y_guide_height * UP)
-            y_guide_label = DecimalNumber(i, num_decimal_points = 2, color = GRAY)
+            y_guide_label = DecimalNumber(i, num_decimal_places = 2, color = GRAY)
             y_guide_label.scale(0.7)
             y_guide_label.next_to(y_guide, LEFT)
             y_guide.add(y_guide_label)

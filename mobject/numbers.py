@@ -8,7 +8,7 @@ from mobject.types.vectorized_mobject import VMobject
 
 class DecimalNumber(VMobject):
     CONFIG = {
-        "num_decimal_points": 2,
+        "num_decimal_places": 2,
         "digit_to_digit_buff": 0.05,
         "show_ellipsis": False,
         "unit": None,  # Aligned to bottom unless it starts with "^"
@@ -18,7 +18,7 @@ class DecimalNumber(VMobject):
     def __init__(self, number, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.number = number
-        ndp = self.num_decimal_points
+        ndp = self.num_decimal_places
 
         # Build number string
         if isinstance(number, complex):
@@ -71,5 +71,5 @@ class DecimalNumber(VMobject):
 
 class Integer(DecimalNumber):
     CONFIG = {
-        "num_decimal_points": 0,
+        "num_decimal_places": 0,
     }

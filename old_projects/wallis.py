@@ -112,7 +112,7 @@ class Introduction(Scene):
             )
         get_arrow_update().update(1)
         decimal = DecimalNumber(
-            curr_product, num_decimal_points=5, show_ellipsis=True)
+            curr_product, num_decimal_places=5, show_ellipsis=True)
         decimal.next_to(arrow, UP, SMALL_BUFF, submobject_to_align=decimal[:5])
         decimal_anim = ChangingDecimal(
             decimal,
@@ -512,7 +512,7 @@ class ShowProduct(Scene):
         ])
 
         brace = braces[0].copy()
-        decimal = DecimalNumber(partial_products[0], num_decimal_points=4)
+        decimal = DecimalNumber(partial_products[0], num_decimal_places=4)
         decimal.next_to(brace, DOWN)
 
         self.add(brace, decimal, dots[0], parts[0])
@@ -677,7 +677,7 @@ class ShowProduct(Scene):
         ])
 
         brace = braces[0].copy()
-        decimal = DecimalNumber(partial_products_iter.next(), num_decimal_points=4)
+        decimal = DecimalNumber(partial_products_iter.next(), num_decimal_places=4)
         decimal.next_to(brace, DOWN)
 
         self.play(*map(FadeIn, [brace, decimal, dots[0]]))
@@ -894,7 +894,7 @@ class DistanceProductScene(MovingCameraScene):
             self.d_labels.add(d_label)
         return self.d_labels
 
-    def get_numeric_distance_labels(self, lines=None, num_decimal_points=3, show_ellipsis=True):
+    def get_numeric_distance_labels(self, lines=None, num_decimal_places=3, show_ellipsis=True):
         radius = self.circle.get_width() / 2
         if lines is None:
             if not hasattr(self, "distance_lines"):
@@ -904,7 +904,7 @@ class DistanceProductScene(MovingCameraScene):
         for line in lines:
             label = DecimalNumber(
                 line.get_length() / radius,
-                num_decimal_points=num_decimal_points,
+                num_decimal_places=num_decimal_places,
                 show_ellipsis=show_ellipsis,
                 include_background_rectangle=self.include_distance_labels_background_rectangle,
             )
@@ -943,7 +943,7 @@ class DistanceProductScene(MovingCameraScene):
 
         product_decimal = DecimalNumber(
             self.get_distance_product(fraction),
-            num_decimal_points=3,
+            num_decimal_places=3,
             show_ellipsis=True,
             include_background_rectangle=self.include_distance_labels_background_rectangle,
         )
@@ -1632,7 +1632,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         values = map(plane.point_to_number, self.get_lh_points())
         complex_decimal = self.complex_decimal = DecimalNumber(
             values[3],
-            num_decimal_points=3,
+            num_decimal_places=3,
             include_background_rectangle=True
         )
         complex_decimal.next_to(outer_arrow.get_start(), LEFT, SMALL_BUFF)
@@ -2190,7 +2190,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
 
         numeric_chord_label = DecimalNumber(
             np.sqrt(3),
-            num_decimal_points=4,
+            num_decimal_places=4,
             include_background_rectangle=True,
             show_ellipsis=True,
         )
@@ -2907,7 +2907,7 @@ class ProveLemma2(PlugObserverIntoPolynomial):
 
         product = DecimalNumber(
             self.num_lighthouses,
-            num_decimal_points=3,
+            num_decimal_places=3,
             show_ellipsis=True
         )
         product.move_to(self.q_marks, LEFT)
@@ -3235,7 +3235,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
 
         new_keeper_dp_decimal = DecimalNumber(
             self.num_lighthouses,
-            num_decimal_points=3,
+            num_decimal_places=3,
         )
         new_keeper_dp_decimal.replace(keeper_dp_decimal, dim_to_match=1)
         new_keeper_dp_decimal.set_color(YELLOW)

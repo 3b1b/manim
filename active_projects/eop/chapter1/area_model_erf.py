@@ -84,7 +84,7 @@ class IllustrateAreaModelErf(GraphScene):
             
         equals_sign = TexMobject("=").next_to(cdf_formula, buff = MED_LARGE_BUFF)
 
-        cdf_value = DecimalNumber(0, color = graph.color, num_decimal_points = 3)
+        cdf_value = DecimalNumber(0, color = graph.color, num_decimal_places = 3)
         cdf_value.next_to(equals_sign)
         self.play(
             FadeIn(equals_sign),
@@ -99,13 +99,13 @@ class IllustrateAreaModelErf(GraphScene):
         self.add(ContinualChangingDecimal(
             decimal_number_mobject = cdf_value,
             number_update_func = integral_update_func,
-            num_decimal_points = 3
+            num_decimal_places = 3
         ))
 
         self.add(ContinualChangingDecimal(
             decimal_number_mobject = cdf_percentage,
             number_update_func = integral_update_func_percent,
-            num_decimal_points = 1
+            num_decimal_places = 1
         ))
 
 

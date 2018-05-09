@@ -962,14 +962,14 @@ class IntroduceCostFunction(PreviewLearning):
         terms = VGroup()
         term_updates = []
         for arrow, d1, d2 in zip(arrows, *self.decimal_groups):
-            term = DecimalNumber(0, num_decimal_points = 4)
+            term = DecimalNumber(0, num_decimal_places = 4)
             term.scale_to_fit_height(d1.get_height())
             term.next_to(arrow, LEFT)
             term.num_update_func = generate_term_update_func(d1, d2)
             terms.add(term)
             term_updates.append(ChangingDecimalWithColor(
                 term, term.num_update_func,
-                num_decimal_points = 4
+                num_decimal_places = 4
             ))
         brace.target.next_to(terms, LEFT)
 
@@ -2780,7 +2780,7 @@ class TestPerformance(PreviewLearning):
         "wrong_wait_time" : 0.5,
         "stroke_width_exp" : 2,
         "decimal_kwargs" : {
-            "num_decimal_points" : 3,
+            "num_decimal_places" : 3,
         }
     }
     def construct(self):
