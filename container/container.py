@@ -1,14 +1,16 @@
 from utils.config_ops import digest_config
 
-# Currently, this is only used by both Scene and MOBject.
+# Currently, this is only used by both Scene and Mobject.
 # Still, we abstract its functionality here, albeit purely nominally.
 # All actual implementation has to be handled by derived classes for now.
 #
-# Note that although the prototypical instances add and remove MObjects,
+# Note that although the prototypical instances add and remove Mobjects,
 # there is also the possibility to add ContinualAnimations to Scenes. Thus,
 # in the Container class in general, we do not make any presumptions about
 # what types of objects may be added; this is again dependent on the specific
 # derived instance.
+
+# TODO: Move the "remove" functionality of Scene to this class
 
 
 class Container(object):
