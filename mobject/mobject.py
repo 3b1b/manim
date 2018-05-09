@@ -467,6 +467,8 @@ class Mobject(Container):
 
     # Background rectangle
     def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
+        # TODO, this does not behave well when the mobject has points, 
+        # since it gets displayed on top
         from mobject.shape_matchers import BackgroundRectangle
         self.background_rectangle = BackgroundRectangle(
             self, color=color,
@@ -743,7 +745,10 @@ class Mobject(Container):
     def submobject_family(self):
         sub_families = map(Mobject.submobject_family, self.submobjects)
         all_mobjects = [self] + list(it.chain(*sub_families))
+<<<<<<< HEAD
         #all_mobjects = list(it.chain(*sub_families)) + [self]
+=======
+>>>>>>> master
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):
