@@ -13,7 +13,7 @@ from utils.config_ops import digest_config
 
 class NumberLine(VMobject):
     CONFIG = {
-        "color": BLUE,
+        "color": LIGHT_GREY,
         "x_min": -FRAME_X_RADIUS,
         "x_max": FRAME_X_RADIUS,
         "unit_size": 1,
@@ -21,6 +21,7 @@ class NumberLine(VMobject):
         "tick_frequency": 1,
         "leftmost_tick": None,  # Defaults to value near x_min s.t. 0 is a tick
         "numbers_with_elongated_ticks": [0],
+        "include_numbers": False,
         "numbers_to_show": None,
         "longer_tick_multiple": 2,
         "number_at_center": 0,
@@ -39,6 +40,8 @@ class NumberLine(VMobject):
         VMobject.__init__(self, **kwargs)
         if self.include_tip:
             self.add_tip()
+        if self.include_numbers:
+            self.add_numbers()
 
     def generate_points(self):
         self.main_line = Line(self.x_min * RIGHT, self.x_max * RIGHT)
@@ -133,7 +136,7 @@ class NumberLine(VMobject):
         self.numbers = self.get_number_mobjects(
             *numbers, **kwargs
         )
-        self.add(*self.numbers)
+        self.add(self.numbers)
         return self
 
     def add_tip(self):
