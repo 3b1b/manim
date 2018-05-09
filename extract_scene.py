@@ -235,7 +235,6 @@ def get_module_posix(file_name):
 def get_module(file_name):
     if os.name == 'nt':
         return get_module_windows(file_name)
-    print "file_name =", file_name
     return get_module_posix(file_name)
 
 
