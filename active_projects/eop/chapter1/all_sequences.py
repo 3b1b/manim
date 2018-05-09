@@ -3,7 +3,7 @@ from active_projects.eop.reusable_imports import *
 
 class ShuffleThroughAllSequences(Scene):
     CONFIG = {
-        "nb_coins" : 14,
+        "nb_coins" : 20,
         "run_time" : 5,
         "fps" : int(1.0/PRODUCTION_QUALITY_FRAME_DURATION),
         "coin_size" : 0.5,
@@ -31,7 +31,8 @@ class ShuffleThroughAllSequences(Scene):
             radius = self.coin_size * 0.5,
             spacing = self.coin_spacing)
 
-        self.add(idle_part, left_idle_part)
+        #self.add(idle_part, left_idle_part)
+        self.add(left_idle_part)
         last_coin_seq = VGroup()
 
         for i in range(2**nb_relevant_coins):
@@ -46,7 +47,7 @@ class ShuffleThroughAllSequences(Scene):
                 spacing = self.coin_spacing)
             coin_seq.next_to(idle_part, LEFT, buff = self.coin_spacing - self.coin_size)
             left_idle_part.next_to(coin_seq, LEFT, buff = self.coin_spacing - self.coin_size)
-            all_coins = VGroup(left_idle_part, coin_seq, idle_part)
+            all_coins = VGroup(left_idle_part, coin_seq) #, idle_part)
             all_coins.center()
             self.remove(last_coin_seq)
             self.add(coin_seq)
