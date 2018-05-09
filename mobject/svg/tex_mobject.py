@@ -5,6 +5,7 @@ from svg_mobject import VMobjectFromSVGPathstring
 from utils.config_ops import digest_config
 from utils.strings import split_string_list_to_isolate_substring
 from utils.tex_file_writing import tex_to_svg_file
+from mobject.geometry import Line
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VectorizedPoint
 
@@ -290,3 +291,27 @@ class TexMobjectFromPresetString(TexMobject):
         TexMobject.__init__(self, self.tex, **kwargs)
         self.set_color(self.color)
 
+
+class Title(TextMobject):
+    CONFIG = {
+        "scale_factor": 1,
+        "include_underline": True,
+        "underline_width": FRAME_WIDTH - 2,
+        # This will override underline_width
+        "match_underline_width_to_text": False,
+        "underline_buff": MED_SMALL_BUFF,
+    }
+
+    def __init__(self, text, **kwargs):
+        TextMobject.__init__(self, text, **kwargs)
+        self.scale(self.scale_factor)
+        self.to_edge(UP)
+        if self.include_underline:
+            underline = Line(LEFT, RIGHT)
+            underline.next_to(self, DOWN, buff=self.underline_buff)
+            if self.match_underline_width_to_text:
+                underline.match_width(self)
+            else:
+                underline.scale_to_fit_width(self.underline_width)
+            self.add(underline)
+            self.underline = underline
