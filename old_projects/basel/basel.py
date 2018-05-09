@@ -119,7 +119,7 @@ class LightIndicator(VMobject):
         self.foreground.set_stroke(color=INDICATOR_STROKE_COLOR,width=INDICATOR_STROKE_WIDTH)
 
         self.add(self.background, self.foreground)
-        self.reading = DecimalNumber(self.intensity,num_decimal_points = self.precision)
+        self.reading = DecimalNumber(self.intensity,num_decimal_places = self.precision)
         self.reading.set_fill(color=INDICATOR_TEXT_COLOR)
         self.reading.move_to(self.get_center())
         if self.show_reading:
@@ -287,7 +287,7 @@ class IntroScene(PiCreatureScene):
         equals_sign = self.euler_sum.get_part_by_tex("=")
 
         self.partial_sum_decimal = DecimalNumber(partial_results_values[1],
-                num_decimal_points = 2)
+                num_decimal_places = 2)
         self.partial_sum_decimal.next_to(equals_sign, RIGHT)
 
 
@@ -313,7 +313,7 @@ class IntroScene(PiCreatureScene):
                         self.partial_sum_decimal,
                         partial_results_values[i+1], 
                         run_time = self.duration,
-                        num_decimal_points = 6,
+                        num_decimal_places = 6,
                         show_ellipsis = True,
                         position_update_func = lambda m: m.next_to(equals_sign, RIGHT)
                     )
@@ -863,7 +863,7 @@ class SingleLighthouseScene(PiCreatureScene):
         # angle msmt (decimal number)
 
         self.angle_indicator = DecimalNumber(arc_angle / DEGREES,
-            num_decimal_points = 0,
+            num_decimal_places = 0,
             unit = "^\\circ",
             fill_opacity = 1.0,
             fill_color = WHITE)
@@ -4262,7 +4262,7 @@ class LabeledArc(Arc):
 
         Arc.__init__(self,angle,**kwargs)
 
-        label = DecimalNumber(self.length, num_decimal_points = 0)
+        label = DecimalNumber(self.length, num_decimal_places = 0)
         r = BUFFER * self.radius
         theta = self.start_angle + self.angle/2
         label_pos = r * np.array([np.cos(theta), np.sin(theta), 0])

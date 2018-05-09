@@ -386,7 +386,7 @@ class Introduce1DFunctionCase(Scene):
         )
         decimal = DecimalNumber(
             0,
-            num_decimal_points = 3,
+            num_decimal_places = 3,
             show_ellipsis = True,
         )
         decimal.scale(0.7)
@@ -484,7 +484,7 @@ class Introduce1DFunctionCase(Scene):
         if show_decimal:
             decimal = DecimalNumber(
                 axes.x_axis.point_to_number(arrow.get_start()),
-                num_decimal_points = 3,
+                num_decimal_places = 3,
                 # show_ellipsis = True,
             )
             height = self.rect.get_height()
@@ -2310,7 +2310,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
             )
         )
 
-        label = DecimalNumber(0, num_decimal_points = 1)
+        label = DecimalNumber(0, num_decimal_places = 1)
         label_upadte = ContinualChangingDecimal(
             label, get_total_winding,
             position_update_func = lambda l : l.next_to(dot, UP+LEFT, SMALL_BUFF)

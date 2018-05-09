@@ -671,7 +671,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         decimals = VGroup()
         for neuron in neurons:
             activation = neuron.get_fill_opacity()
-            decimal = DecimalNumber(activation, num_decimal_points = 1)
+            decimal = DecimalNumber(activation, num_decimal_places = 1)
             decimal.scale_to_fit_width(0.7*neuron.get_width())
             decimal.move_to(neuron)
             if activation > 0.8:
@@ -748,7 +748,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             anims.append(ChangingDecimal(
                 decimal,
                 get_decimal_update(decimal.number, target),
-                num_decimal_points = 1
+                num_decimal_places = 1
             ))
             anims.append(UpdateFromFunc(
                 self.decimals[i],
@@ -1076,7 +1076,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             ChangingDecimal(
                 two_decimal,
                 lambda a : interpolate(two_activation, 1, a),
-                num_decimal_points = 1,
+                num_decimal_places = 1,
             ),
             UpdateFromFunc(
                 two_decimal,
@@ -1110,7 +1110,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             ChangingDecimal(
                 two_decimal,
                 lambda a : interpolate(1, two_activation, a),
-                num_decimal_points = 1,
+                num_decimal_places = 1,
             ),
             UpdateFromFunc(
                 two_decimal,
@@ -3613,7 +3613,7 @@ class SimplestNetworkExample(PreviewLearning):
 
     def get_neuron_activation_decimal(self, neuron):
         opacity = neuron.get_fill_opacity()
-        decimal = DecimalNumber(opacity, num_decimal_points = 2)
+        decimal = DecimalNumber(opacity, num_decimal_places = 2)
         decimal.scale_to_fit_width(0.85*neuron.get_width())
         if decimal.number > 0.8:
             decimal.set_fill(BLACK)

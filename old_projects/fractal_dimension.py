@@ -1805,7 +1805,7 @@ class BoxCountingScene(Scene):
         return label
 
     def count_boxes(self, boxes):
-        num = DecimalNumber(len(boxes), num_decimal_points = 0)
+        num = DecimalNumber(len(boxes), num_decimal_places = 0)
         num.next_to(boxes, RIGHT)
         num.add_to_back(BackgroundRectangle(num))
 

@@ -10,7 +10,7 @@ from utils.config_ops import digest_config
 
 class ChangingDecimal(Animation):
     CONFIG = {
-        "num_decimal_points": None,
+        "num_decimal_places": None,
         "show_ellipsis": None,
         "position_update_func": None,
         "tracked_mobject": None,
@@ -21,7 +21,7 @@ class ChangingDecimal(Animation):
         self.decimal_number_config = dict(
             decimal_number_mobject.initial_config
         )
-        for attr in "num_decimal_points", "show_ellipsis":
+        for attr in "num_decimal_places", "show_ellipsis":
             value = getattr(self, attr)
             if value is not None:
                 self.decimal_number_config[attr] = value

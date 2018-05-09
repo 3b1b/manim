@@ -118,9 +118,6 @@ class StartingCalc101(PiCreatureScene):
             "{f(x + \\Delta x) - f(x) \\over \\Delta x}",
             tex_to_color_map={"\\Delta x": BLUE}
         )
-        self.add(deriv_equation)
-        equations = VGroup(deriv_equation)
-
         title = TextMobject("Calculus 101")
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT)
@@ -134,7 +131,6 @@ class StartingCalc101(PiCreatureScene):
 
 class StandardDerivativeVisual(GraphScene):
     CONFIG = {
-        # "y_axis_label": "$f(x)$",
         "y_max": 8,
         "y_axis_height": 5,
     }
