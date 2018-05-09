@@ -617,7 +617,7 @@ class Mobject(Container):
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):
         points = self.get_all_points()
-        if not points:
+        if points is None or len(points) == 0:
             # Note, this default means things like empty VGroups
             # will appear to have a center at [0, 0, 0]
             return 0
