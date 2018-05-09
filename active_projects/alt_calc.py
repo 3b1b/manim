@@ -1,10 +1,10 @@
 from big_ol_pile_of_manim_imports import *
 
 
-class NumberlineTransformationScene(Scene):
+class NumberlineTransformationScene(MovingCameraScene):
     CONFIG = {
-        "input_line_center": 2 * UP,
-        "output_line_center": 2 * DOWN,
+        "input_line_zero_point": 1 * UP + (FRAME_X_RADIUS - 1) * LEFT,
+        "output_line_zero_point": 2 * DOWN + (FRAME_X_RADIUS - 1) * LEFT,
         "number_line_config": {
             "include_numbers": True,
             "x_min": -3.5,
@@ -17,24 +17,32 @@ class NumberlineTransformationScene(Scene):
         },
         "output_line_config": {},
         "num_inserted_number_line_anchors": 20,
+        "default_delta_x": 0.1,
+        "default_sample_dot_radius": 0.05,
+        "default_sample_dot_colors": [RED, YELLOW],
+        "default_mapping_animation_config": {
+            "run_time": 3,
+            # "path_arc": 30 * DEGREES,
+        }
     }
 
     def setup(self):
+        MovingCameraScene.setup(self)
         self.setup_number_lines()
         self.setup_titles()
 
     def setup_number_lines(self):
         number_lines = self.number_lines = VGroup()
         added_configs = (self.input_line_config, self.output_line_config)
-        centers = (self.input_line_center, self.output_line_center)
-        for added_config, center in zip(added_configs, centers):
+        zero_opints = (self.input_line_zero_point, self.output_line_zero_point)
+        for added_config, zero_point in zip(added_configs, zero_opints):
             full_config = dict(self.number_line_config)
             full_config.update(added_config)
             number_line = NumberLine(**full_config)
             number_line.main_line.insert_n_anchor_points(
                 self.num_inserted_number_line_anchors
             )
-            number_line.move_to(center)
+            number_line.shift(zero_point - number_line.number_to_point(0))
             number_lines.add(number_line)
         self.input_line, self.output_line = number_lines
 
@@ -51,30 +59,88 @@ class NumberlineTransformationScene(Scene):
 
         self.add(self.titles)
 
-    def get_line_mapping_animation(self, func, run_time=3, path_arc=30 * DEGREES):
-        input_line, output_line = self.number_lines
-        input_line_copy = input_line.deepcopy()
+    def get_line_mapping_animation(self, func, **kwargs):
+        anim_config = dict(self.default_mapping_animation_config)
+        anim_config.update(kwargs)
+
+        input_line_copy = self.input_line.deepcopy()
         input_line_copy.remove(input_line_copy.numbers)
-        input_line_copy.set_stroke(width=2)
+        # input_line_copy.set_stroke(width=2)
+        input_line_copy.generate_target(use_deepcopy=True)
+
+        point_func = self.number_func_to_point_func(func)
+
+        input_line_copy.target.main_line.apply_function(point_func)
+        for tick in input_line_copy.target.tick_marks:
+            tick.move_to(point_func(tick.get_center()))
+
+        return MoveToTarget(input_line_copy, **anim_config)
+
+    def get_sample_dots(self, x_min=None, x_max=None,
+                        delta_x=None, radius=None, colors=None):
+        x_min = x_min or self.input_line.x_min
+        x_max = x_max or self.input_line.x_max
+        delta_x = delta_x or self.default_delta_x
+        radius = radius or self.default_sample_dot_radius
+        colors = colors or self.default_sample_dot_colors
+
+        dots = self.sample_dots = VGroup(*[
+            Dot(self.input_line.number_to_point(x), radius=radius)
+            for x in np.arange(x_min, x_max+delta_x, delta_x)
+        ])
+        dots.set_color_by_gradient(*colors)
+        return dots
+
+    def get_sample_dots_mapping_animation(self, func, **kwargs):
+        anim_config = dict(self.default_mapping_animation_config)
+        anim_config.update(kwargs)
+
+        point_func = self.number_func_to_point_func(func)
+
+        return AnimationGroup(*[
+            ApplyPointwiseFunctionToCenter(point_func, dot, **anim_config)
+            for dot in self.sample_dots
+        ])
+
+    def number_func_to_point_func(self, number_func):
+        input_line, output_line = self.number_lines
 
         def point_func(point):
             input_number = input_line.point_to_number(point)
-            output_number = func(input_number)
+            output_number = number_func(input_number)
             return output_line.number_to_point(output_number)
-
-        return ApplyPointwiseFunction(
-            point_func, input_line_copy,
-            run_time=run_time,
-            path_arc=path_arc,
-        )
+        return point_func
 
 
 class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
+    CONFIG = {
+        "number_line_config": {
+            "x_min": 0,
+            "x_max": 5,
+            "unit_size": 2.0
+        },
+        "output_line_config": {
+            "x_max": 20,
+        }
+    }
+
     def construct(self):
         func = lambda x: x**2
-        anim = self.get_line_mapping_animation(func)
-        self.play(anim)
+
+        line_anim = self.get_line_mapping_animation(func)
+        sample_dots = self.get_sample_dots()
+        sample_dots_anim = self.get_sample_dots_mapping_animation(func)
+
+        self.add(sample_dots)
+        self.play(line_anim, sample_dots_anim)
         self.wait()
+        self.play(
+            self.camera_frame.scale, 2, {"about_edge": LEFT},
+            run_time=3,
+            rate_func=there_and_back_with_pause,
+        )
+        self.wait()
+
 
 # Scenes
 
