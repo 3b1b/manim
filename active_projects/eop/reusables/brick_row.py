@@ -184,6 +184,7 @@ class SplitRectsInBrickWall(AnimationGroup):
 
     def __init__(self, mobject, **kwargs):
 
+        #print mobject.height, mobject.get_height()
         r = self.subdiv_level = mobject.subdiv_level + 1
         
         subdivs = VGroup()
@@ -196,6 +197,7 @@ class SplitRectsInBrickWall(AnimationGroup):
             subdiv = DashedLine(
                 mobject.get_top() + x * RIGHT,
                 mobject.get_bottom() + x * RIGHT,
+                dashed_segment_length = 0.05
             )
             subdivs.add(subdiv)
             anims.append(ShowCreation(subdiv))
