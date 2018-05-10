@@ -458,9 +458,9 @@ class Bubble(SVGMobject):
 
     def pin_to(self, mobject):
         mob_center = mobject.get_center()
-        want_to_filp = np.sign(mob_center[0]) != np.sign(self.direction[0])
+        want_to_flip = np.sign(mob_center[0]) != np.sign(self.direction[0])
         can_flip = not self.direction_was_specified
-        if want_to_filp and can_flip:
+        if want_to_flip and can_flip:
             self.flip()
         boundary_point = mobject.get_critical_point(UP - self.direction)
         vector_from_center = 1.0 * (boundary_point - mob_center)
