@@ -44,7 +44,7 @@ class MappingCamera(Camera):
 # CameraPlusOverlay class)
 
 
-class MultiCamera(Camera):
+class OldMultiCamera(Camera):
     def __init__(self, *cameras_with_start_positions, **kwargs):
         self.shifted_cameras = [
             DictAsObject(
@@ -92,11 +92,11 @@ class MultiCamera(Camera):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.init_background()
 
-# A MultiCamera which, when called with two full-size cameras, initializes itself
+# A OldMultiCamera which, when called with two full-size cameras, initializes itself
 # as a splitscreen, also taking care to resize each individual camera within it
 
 
-class SplitScreenCamera(MultiCamera):
+class SplitScreenCamera(OldMultiCamera):
     def __init__(self, left_camera, right_camera, **kwargs):
         digest_config(self, kwargs)
         self.left_camera = left_camera
@@ -110,5 +110,8 @@ class SplitScreenCamera(MultiCamera):
             camera.resize_frame_shape()
             camera.reset()
 
-        MultiCamera.__init__(self, (left_camera, (0, 0)),
-                             (right_camera, (0, half_width)))
+        OldMultiCamera.__init__(
+            self,
+            (left_camera, (0, 0)),
+            (right_camera, (0, half_width)),
+        )

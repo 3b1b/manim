@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
 from constants import FRAME_HEIGHT
+from constants import WHITE
 
 from camera.camera import Camera
 from mobject.frame import ScreenRectangle
+from utils.config_ops import digest_config
 
 
 class MovingCamera(Camera):
@@ -12,7 +14,9 @@ class MovingCamera(Camera):
     of a given mobject
     """
     CONFIG = {
-        "aligned_dimension": "width"  # or height
+        "fixed_dimension": 0,  # width
+        "default_frame_stroke_color": WHITE,
+        "default_frame_stroke_width": 0,
     }
 
     def __init__(self, frame=None, **kwargs):
@@ -20,21 +24,28 @@ class MovingCamera(Camera):
         frame is a Mobject, (should be a rectangle) determining
         which region of space the camera displys
         """
+        digest_config(self, kwargs)
         if frame is None:
             frame = ScreenRectangle(height=FRAME_HEIGHT)
-            frame.fade(1)
+            frame.set_stroke(
+                self.default_frame_stroke_color,
+                self.default_frame_stroke_width,
+            )
         self.frame = frame
         Camera.__init__(self, **kwargs)
 
-    def capture_mobjects(self, *args, **kwargs):
-        self.space_center = self.frame.get_center()
+    def capture_mobjects(self, mobjects, **kwargs):
+        self.reset_space_center()
         self.realign_frame_shape()
-        Camera.capture_mobjects(self, *args, **kwargs)
+        Camera.capture_mobjects(self, mobjects, **kwargs)
+
+    def reset_space_center(self):
+        self.space_center = self.frame.get_center()
 
     def realign_frame_shape(self):
         height, width = self.frame_shape
-        if self.aligned_dimension == "height":
-            self.frame_shape = (self.frame.get_height(), width)
-        else:
+        if self.fixed_dimension == 0:
             self.frame_shape = (height, self.frame.get_width())
-        self.resize_frame_shape(0 if self.aligned_dimension == "height" else 1)
+        else:
+            self.frame_shape = (self.frame.get_height(), width)
+        self.resize_frame_shape(fixed_dimension=self.fixed_dimension)

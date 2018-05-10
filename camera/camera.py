@@ -11,7 +11,7 @@ from colour import Color
 from scipy.spatial.distance import pdist
 
 from constants import *
-from mobject.types.image_mobject import ImageMobject
+from mobject.types.image_mobject import AbstractImageMobject
 from mobject.mobject import Mobject
 from mobject.types.point_cloud_mobject import PMobject
 from mobject.types.vectorized_mobject import VMobject
@@ -61,6 +61,12 @@ class Camera(object):
         self.canvas = None
         return copy.copy(self)
 
+    def reset_pixel_shape(self, new_shape):
+        self.pixel_shape = tuple(new_shape)
+        self.init_background()
+        self.resize_frame_shape()
+        self.reset()
+
     def resize_frame_shape(self, fixed_dimension=0):
         """
         Changes frame_shape to match the aspect ratio
@@ -68,13 +74,14 @@ class Camera(object):
         whether frame_shape[0] (height) or frame_shape[1] (width)
         remains fixed while the other changes accordingly.
         """
-        aspect_ratio = float(self.pixel_shape[1]) / self.pixel_shape[0]
-        frame_width, frame_height = self.frame_shape
+        frame_height, frame_width = self.frame_shape
+        pixel_height, pixel_width = self.pixel_shape
+        aspect_ratio = fdiv(pixel_width, pixel_height)
         if fixed_dimension == 0:
-            frame_height = aspect_ratio * frame_width
+            frame_height = frame_width / aspect_ratio
         else:
-            frame_width = frame_height / aspect_ratio
-        self.frame_shape = (frame_width, frame_height)
+            frame_width = aspect_ratio * frame_height
+        self.frame_shape = (frame_height, frame_width)
 
     def init_background(self):
         if self.background_image is not None:
@@ -151,6 +158,7 @@ class Camera(object):
 
     def reset(self):
         self.set_pixel_array(self.background)
+        return self
 
     ####
 
@@ -204,7 +212,7 @@ class Camera(object):
         type_func_pairs = [
             (VMobject, self.display_multiple_vectorized_mobjects),
             (PMobject, self.display_multiple_point_cloud_mobjects),
-            (ImageMobject, self.display_multiple_image_mobjects),
+            (AbstractImageMobject, self.display_multiple_image_mobjects),
             (Mobject, lambda batch: batch),  # Do nothing
         ]
 
