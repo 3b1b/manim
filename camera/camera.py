@@ -1,5 +1,6 @@
 import itertools as it
 import numpy as np
+import operator as op
 
 import aggdraw
 import copy
@@ -7,6 +8,7 @@ import time
 
 from PIL import Image
 from colour import Color
+from scipy.spatial.distance import pdist
 
 from constants import *
 from mobject.types.image_mobject import ImageMobject
@@ -21,6 +23,7 @@ from utils.iterables import batch_by_property
 from utils.iterables import list_difference_update
 from utils.iterables import remove_list_redundancies
 from utils.simple_functions import fdiv
+from utils.space_ops import angle_of_vector
 
 
 class Camera(object):
@@ -378,90 +381,57 @@ class Camera(object):
         ul_coords, ur_coords, dl_coords = corner_coords
         right_vect = ur_coords - ul_coords
         down_vect = dl_coords - ul_coords
+        center_coords = ul_coords + (right_vect + down_vect) / 2
 
-        impa = image_mobject.pixel_array
-
-        oh, ow = self.pixel_array.shape[:2]  # Outer width and height
-        ih, iw = impa.shape[:2]  # inner with and height
-        rgb_len = self.pixel_array.shape[2]
-
-        image = np.zeros((oh, ow, rgb_len), dtype=self.pixel_array_dtype)
-
-        if right_vect[1] == 0 and down_vect[0] == 0:
-            rv0 = right_vect[0]
-            dv1 = down_vect[1]
-            x_indices = np.arange(rv0, dtype='int') * iw / rv0
-            y_indices = np.arange(dv1, dtype='int') * ih / dv1
-            stretched_impa = impa[y_indices][:, x_indices]
-
-            x0, x1 = ul_coords[0], ur_coords[0]
-            y0, y1 = ul_coords[1], dl_coords[1]
-            if x0 >= ow or x1 < 0 or y0 >= oh or y1 < 0:
-                return
-            siy0 = max(-y0, 0)  # stretched_impa y0
-            siy1 = dv1 - max(y1 - oh, 0)
-            six0 = max(-x0, 0)
-            six1 = rv0 - max(x1 - ow, 0)
-            x0 = max(x0, 0)
-            y0 = max(y0, 0)
-            image[y0:y1, x0:x1] = stretched_impa[siy0:siy1, six0:six1]
-        else:
-            # Alternate (slower) tactic if image is tilted
-            # List of all coordinates of pixels, given as (x, y),
-            # which matches the return type of points_to_pixel_coords,
-            # even though np.array indexing naturally happens as (y, x)
-            all_pixel_coords = np.zeros((oh * ow, 2), dtype='int')
-            a = np.arange(oh * ow, dtype='int')
-            all_pixel_coords[:, 0] = a % ow
-            all_pixel_coords[:, 1] = a / ow
-
-            recentered_coords = all_pixel_coords - ul_coords
-
-            with np.errstate(divide='ignore'):
-                ix_coords, iy_coords = [
-                    np.divide(
-                        dim * np.dot(recentered_coords, vect),
-                        np.dot(vect, vect),
-                    )
-                    for vect, dim in (right_vect, iw), (down_vect, ih)
-                ]
-            to_change = reduce(op.and_, [
-                ix_coords >= 0, ix_coords < iw,
-                iy_coords >= 0, iy_coords < ih,
-            ])
-            inner_flat_coords = iw * \
-                iy_coords[to_change] + ix_coords[to_change]
-            flat_impa = impa.reshape((iw * ih, rgb_len))
-            target_rgbas = flat_impa[inner_flat_coords, :]
-
-            image = image.reshape((ow * oh, rgb_len))
-            image[to_change] = target_rgbas
-            image = image.reshape((oh, ow, rgb_len))
-        self.overlay_rgba_array(image)
-
-    def overlay_rgba_array(self, arr):
-        fg = arr
-        bg = self.pixel_array
-        # rgba_max_val = self.rgb_max_val
-        src_rgb, src_a, dst_rgb, dst_a = [
-            a.astype(np.float32) / self.rgb_max_val
-            for a in fg[..., :3], fg[..., 3], bg[..., :3], bg[..., 3]
-        ]
-
-        out_a = src_a + dst_a * (1.0 - src_a)
-
-        # When the output alpha is 0 for full transparency,
-        # we have a choice over what RGB value to use in our
-        # output representation. We choose 0 here.
-        out_rgb = fdiv(
-            src_rgb * src_a[..., None] +
-            dst_rgb * dst_a[..., None] * (1.0 - src_a[..., None]),
-            out_a[..., None],
-            zero_over_zero_value=0
+        sub_image = Image.fromarray(
+            image_mobject.get_pixel_array(),
+            mode="RGBA"
         )
 
-        self.pixel_array[..., :3] = out_rgb * self.rgb_max_val
-        self.pixel_array[..., 3] = out_a * self.rgb_max_val
+        # Reshape
+        pixel_width = int(pdist([ul_coords, ur_coords]))
+        pixel_height = int(pdist([ul_coords, dl_coords]))
+        sub_image = sub_image.resize(
+            (pixel_width, pixel_height), resample=Image.BICUBIC
+        )
+
+        # Rotate
+        angle = angle_of_vector(right_vect)
+        adjusted_angle = -int(360 * angle / TAU)
+        if adjusted_angle != 0:
+            sub_image = sub_image.rotate(
+                adjusted_angle, resample=Image.BICUBIC, expand=1
+            )
+
+        # TODO, there is no accounting for a shear...
+
+        # Paste into an image as large as the camear's pixel array
+        h, w = self.pixel_shape
+        full_image = Image.fromarray(
+            np.zeros((h, w)),
+            mode="RGBA"
+        )
+        new_ul_coords = center_coords - np.array(sub_image.size) / 2
+        full_image.paste(
+            sub_image,
+            box=(
+                new_ul_coords[0],
+                new_ul_coords[1],
+                new_ul_coords[0] + sub_image.size[0],
+                new_ul_coords[1] + sub_image.size[1],
+            )
+        )
+
+        # Paint on top of existing pixel array
+        self.overlay_PIL_image(full_image)
+
+    def overlay_rgba_array(self, arr):
+        self.overlay_PIL_image(Image.fromarray(arr, mode="RGBA"))
+
+    def overlay_PIL_image(self, image):
+        self.pixel_array = np.array(
+            Image.alpha_composite(self.get_image(), image)
+        )
 
     def align_points_to_camera(self, points):
         # This is where projection should live
