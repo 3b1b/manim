@@ -6,8 +6,8 @@ from active_projects.eop.reusables.upright_coins import *
 class BrickRow(VMobject):
 
     CONFIG = {
-        "left_color" : RED,
-        "right_color" : BLUE,
+        "left_color" : COLOR_HEADS,
+        "right_color" : COLOR_TAILS,
         "height" : 1.0,
         "width" : 8.0,
         "outcome_shrinkage_factor_x" : 0.95,
@@ -104,14 +104,14 @@ class BrickRow(VMobject):
             outcome_width = float(self.width) / (2 ** r)
             outcome_height = self.height
         
-        corner_radius = min(0.1, 0.3 * min(outcome_width, outcome_height))
+        corner_radius = 0.1 # max(0.1, 0.3 * min(outcome_width, outcome_height))
         # this scales down the corner radius for very narrow rects
         rect = RoundedRectangle(
             width = outcome_width,
             height = outcome_height,
             corner_radius = corner_radius,
-            fill_color = WHITE,
-            fill_opacity = 0.2,
+            fill_color = OUTCOME_COLOR,
+            fill_opacity = OUTCOME_OPACITY,
             stroke_width = 0
         )
         rects = VGroup()

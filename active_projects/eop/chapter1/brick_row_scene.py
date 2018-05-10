@@ -312,31 +312,57 @@ class BrickRowScene(PiCreatureScene):
             new_tails[i].shift(COIN_SEQUENCE_SPACING * DOWN)
         self.play(FadeIn(new_tails))
 
-        decimal_tallies = VGroup()
-        # introduce notion of tallies
-        for (i, rect) in enumerate(self.row.get_rects_for_level(2)):
-            tally = DecimalTally(2-i, i)
-            tally.next_to(rect, UP)
-            decimal_tallies.add(tally)
-            self.play(FadeIn(tally))
-            self.wait()
-
         self.add_foreground_mobject(single_flip_labels)
         self.add_foreground_mobject(new_heads)
         self.add_foreground_mobject(single_flip_labels_copy)
         self.add_foreground_mobject(new_tails)
 
-        # show individual outcomes
-        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = False)
+        # get individual outcomes
+        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = False,
+            inset = True)
+        grouped_outcomes = VGroup(outcomes[0], outcomes[1:3], outcomes[3])
 
+        decimal_tallies = VGroup()
+        # introduce notion of tallies
+        rects = self.row.get_rects_for_level(2)
 
+        rect = rects[0]
+        tally = DecimalTally(2,0)
+        tally.next_to(rect, UP)
+        decimal_tallies.add(tally)
         self.play(
-            LaggedStart(FadeIn, outcomes)
+            FadeIn(tally),
+            FadeIn(grouped_outcomes[0])
         )
         self.wait()
+
+        rect = rects[1]
+        tally = DecimalTally(1,1)
+        tally.next_to(rect, UP)
+        decimal_tallies.add(tally)
         self.play(
-            LaggedStart(FadeOut, outcomes),
+            FadeIn(tally),
+            FadeOut(grouped_outcomes[0]),
+            FadeIn(grouped_outcomes[1])
         )
+        self.wait()
+
+        rect = rects[2]
+        tally = DecimalTally(0,2)
+        tally.next_to(rect, UP)
+        decimal_tallies.add(tally)
+        self.play(
+            FadeIn(tally),
+            FadeOut(grouped_outcomes[1]),
+            FadeIn(grouped_outcomes[2])
+        )
+        self.wait()
+
+        self.play(
+            FadeOut(grouped_outcomes[2])
+        )
+        self.wait()
+
         self.wait()
         self.play(
             FadeOut(single_flip_labels),
@@ -345,7 +371,6 @@ class BrickRowScene(PiCreatureScene):
             FadeOut(new_tails)
         )
         self.wait()
-
 
         self.tallies = VGroup()
         for (i, rect) in enumerate(self.row.get_rects_for_level(2)):
@@ -386,7 +411,8 @@ class BrickRowScene(PiCreatureScene):
         # CALLBACK TO SEQUENCES #
         # # # # # # # # # # # # #
 
-        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = True)
+        outcomes = self.row.get_outcome_rects_for_level(2, with_labels = True,
+            inset = True)
         subdivs = self.row.get_sequence_subdivs_for_level(2)
         self.play(
             FadeIn(outcomes),
@@ -396,7 +422,8 @@ class BrickRowScene(PiCreatureScene):
 
         self.wait()
 
-        rect_to_dice = outcomes[1]
+        rect_to_dice = self.row.get_outcome_rects_for_level(2, with_labels = False,
+            inset = False)[1]
         N = 10
         dice_width = rect_to_dice.get_width()/N
         dice_height = rect_to_dice.get_height()/N
@@ -419,9 +446,8 @@ class BrickRowScene(PiCreatureScene):
 
         self.play(
             LaggedStart(FadeIn, all_dice),
-            FadeOut(rect_to_dice.label)
+            FadeOut(outcomes[1])
         )
-
         self.wait()
 
         table = Ellipse(width = 1.5, height = 1)
@@ -454,7 +480,6 @@ class BrickRowScene(PiCreatureScene):
                     rate_func = there_and_back,
                     run_time = 0.05)
             )
-
 
         self.wait()
 
@@ -513,14 +538,17 @@ class BrickRowScene(PiCreatureScene):
         self.clear()
         self.add(randy, self.row, old_row)
         self.add_foreground_mobject(self.tallies)
+        self.add_foreground_mobject(self.tallies_copy)
         
 
         self.play(
             self.row.fade, 0.7,
             old_row.fade, 0.7,
             FadeOut(self.tallies),
+            FadeOut(self.tallies_copy),
         )
 
+        
         # # # # # # # # # # # # # # # # #
         # SHOW SPLITTING  WITH OUTCOMES #
         # # # # # # # # # # # # # # # # #
@@ -685,13 +713,6 @@ class BrickRowScene(PiCreatureScene):
             #rate_func = there_and_back_with_pause,
             run_time = 5))
         self.wait()
-        self.play(LaggedStart(
-            FadeOut, outcomes,
-            #rate_func = there_and_back_with_pause,
-            run_time = 5))
-
-        self.wait()
-        self.play(FadeIn(self.tallies))
 
         brace1 = Brace(self.row.rects[2], UP)
         brace2 = Brace(self.row.rects[3], UP)
@@ -705,6 +726,15 @@ class BrickRowScene(PiCreatureScene):
             Write(p2),
         )
         self.wait()
+        self.play(LaggedStart(
+            FadeOut, outcomes,
+            #rate_func = there_and_back_with_pause,
+            run_time = 5),
+        )
+        self.play(
+            FadeIn(self.tallies)
+        )
+        self.wait()
 
         self.play(
             FadeOut(brace1),
@@ -713,7 +743,6 @@ class BrickRowScene(PiCreatureScene):
             FadeOut(p2),
         )
         self.wait()
-
 
 
         # put visuals for other probability distribtuions here
