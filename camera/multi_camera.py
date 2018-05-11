@@ -53,3 +53,8 @@ class MultiCamera(MovingCamera):
             imfc.camera.capture_mobjects(to_add, **kwargs)
         MovingCamera.capture_mobjects(self, mobjects, **kwargs)
 
+    def get_mobjects_indicating_movement(self):
+        return [self.frame] + [
+            imfc.camera.frame
+            for imfc in self.image_mobjects_from_cameras
+        ]

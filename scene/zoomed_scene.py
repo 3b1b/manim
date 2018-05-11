@@ -81,16 +81,6 @@ class ZoomedScene(MovingCameraScene):
         else:
             self.add_foreground_mobjects(*to_add)
 
-    def get_moving_mobjects(self, *animations):
-        moving_mobjects = MovingCameraScene.get_moving_mobjects(self, *animations)
-        zoomed_mobjects = [self.zoomed_camera.frame, self.zoomed_display]
-        moving_zoomed_mobjects = set(moving_mobjects).intersection(zoomed_mobjects)
-        if self.zoom_activated and moving_zoomed_mobjects:
-            # If either of the zoomed_mobjects are moving, then so is
-            # everything
-            return self.mobjects
-        return moving_mobjects
-
     def get_zoom_factor(self):
         return fdiv(
             self.zoomed_camera.frame.get_width(),

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from scene.scene import Scene
 from camera.moving_camera import MovingCamera
+from utils.iterables import list_update
 
 
 class MovingCameraScene(Scene):
@@ -18,10 +19,14 @@ class MovingCameraScene(Scene):
         return self
 
     def get_moving_mobjects(self, *animations):
-        # TODO: Code repetition from ZoomedScene
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
-        if self.camera_frame in moving_mobjects:
-            # When the camera is moving, so is everything,
-            return self.mobjects
-        else:
-            return moving_mobjects
+        all_moving_mobjects = self.camera.extract_mobject_family_members(
+            moving_mobjects
+        )
+        movement_indicators = self.camera.get_mobjects_indicating_movement()
+        for movement_indicator in movement_indicators:
+            if movement_indicator in all_moving_mobjects:
+                # When one of these is moving, the camera should
+                # consider all mobjects to be moving
+                return list_update(self.mobjects, moving_mobjects)
+        return moving_mobjects

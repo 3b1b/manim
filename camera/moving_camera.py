@@ -49,3 +49,10 @@ class MovingCamera(Camera):
         else:
             self.frame_shape = (self.frame.get_height(), width)
         self.resize_frame_shape(fixed_dimension=self.fixed_dimension)
+
+    def get_mobjects_indicating_movement(self):
+        """
+        Returns all mobjets whose movement implies that the camera
+        should think of all other mobjects on the screen as moving
+        """
+        return [self.frame]
