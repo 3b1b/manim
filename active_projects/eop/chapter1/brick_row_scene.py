@@ -714,16 +714,16 @@ class BrickRowScene(PiCreatureScene):
             run_time = 5))
         self.wait()
 
-        brace1 = Brace(self.row.rects[2], UP)
-        brace2 = Brace(self.row.rects[3], UP)
-        p1 = TexMobject("{3\over 8}").next_to(brace1, UP)
-        p2 = TexMobject("{1\over 8}").next_to(brace2, UP)
+        braces = VGroup(*[Brace(rect, UP) for rect in self.row.rects])
+        counts = [choose(3, i) for i in range(4)]
+        probs = VGroup(*[TexMobject("{" + str(k) + "\over 8}") for k in counts])
+        for (brace, prob) in zip(braces, probs):
+            prob.next_to(brace, UP)
+
 
         self.play(
-            ShowCreation(brace1),
-            ShowCreation(brace2),
-            Write(p1),
-            Write(p2),
+            LaggedStart(ShowCreation, braces),
+            LaggedStart(Write, probs)
         )
         self.wait()
         self.play(LaggedStart(
@@ -737,13 +737,11 @@ class BrickRowScene(PiCreatureScene):
         self.wait()
 
         self.play(
-            FadeOut(brace1),
-            FadeOut(brace2),
-            FadeOut(p1),
-            FadeOut(p2),
+            FadeOut(braces),
+            FadeOut(probs)
         )
         self.wait()
-
+ 
 
         # put visuals for other probability distribtuions here
 
