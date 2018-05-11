@@ -219,7 +219,10 @@ class ProbabilityDistributions(PiCreatureScene):
             FadeOut(dice_unit_rect),
         )
         
-        # Replacing
+        # Animating the dice_table_group (which is what you had been
+        # manipulating above), instead of the dice_table, seems to work.
+        # I suspect there was something going on with the subgroup structures
+        # getting convoluted.
         self.play(
             dice_table_grouped_cells.scale, 0.5,
             dice_table_grouped_cells.to_corner, UR,
