@@ -312,8 +312,7 @@ class Camera(object):
             # points = self.adjust_out_of_range_points(points)
             if len(points) == 0:
                 continue
-            aligned_points = self.align_points_to_camera(points)
-            coords = self.points_to_pixel_coords(aligned_points)
+            coords = self.points_to_pixel_coords(points)
             coord_strings = coords.flatten().astype(str)
             # Start new path string with M
             coord_strings[0] = "M" + coord_strings[0]
@@ -353,7 +352,6 @@ class Camera(object):
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
             return
-        points = self.align_points_to_camera(points)
         pixel_coords = self.points_to_pixel_coords(points)
         pixel_coords = self.thickened_coordinates(
             pixel_coords, thickness
@@ -441,10 +439,6 @@ class Camera(object):
             Image.alpha_composite(self.get_image(), image)
         )
 
-    def align_points_to_camera(self, points):
-        # This is where projection should live
-        return points - self.space_center
-
     def adjust_out_of_range_points(self, points):
         if not np.any(points > self.max_allowable_norm):
             return points
@@ -461,6 +455,8 @@ class Camera(object):
         return points
 
     def points_to_pixel_coords(self, points):
+        shifted_points = points - self.space_center
+
         result = np.zeros((len(points), 2))
         ph, pw = self.pixel_shape
         sh, sw = self.frame_shape
@@ -471,8 +467,8 @@ class Camera(object):
         # Flip on y-axis as you go
         height_mult *= -1
 
-        result[:, 0] = points[:, 0] * width_mult + width_add
-        result[:, 1] = points[:, 1] * height_mult + height_add
+        result[:, 0] = shifted_points[:, 0] * width_mult + width_add
+        result[:, 1] = shifted_points[:, 1] * height_mult + height_add
         return result.astype('int')
 
     def on_screen_pixels(self, pixel_coords):

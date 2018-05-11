@@ -55,7 +55,7 @@ class ZoomedScene(Scene):
         self.zoomed_camera = zoomed_camera
         self.zoomed_display = zoomed_display
 
-    def activate_zooming(self, animate=False, run_times=[3, 2]):
+    def activate_zooming(self, animate=False, run_times=[2, 1]):
         self.zoom_activated = True
         zoomed_camera = self.zoomed_camera
         zoomed_display = self.zoomed_display
@@ -63,7 +63,7 @@ class ZoomedScene(Scene):
 
         to_add = [zoomed_camera.frame, zoomed_display]
         if animate:
-            zoomed_display.save_state()
+            zoomed_display.save_state(use_deepcopy=True)
             zoomed_display.replace(zoomed_camera.frame)
 
             full_frame_height, full_frame_width = self.camera.frame_shape

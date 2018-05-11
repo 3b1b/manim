@@ -27,6 +27,7 @@ class MultiCamera(MovingCamera):
         # A silly method to have right now, but maybe there are things
         # we want to guarantee about any imfc's added later.
         imfc = image_mobject_from_camera
+        assert(isinstance(imfc.camera, MovingCamera))
         self.image_mobjects_from_cameras.append(imfc)
 
     def update_sub_cameras(self):
@@ -47,6 +48,12 @@ class MultiCamera(MovingCamera):
                 int(pixel_width * imfc.get_width() / frame_width),
             ))
 
+    def reset(self):
+        for imfc in self.image_mobjects_from_cameras:
+            imfc.camera.reset()
+        MovingCamera.reset(self)
+        return self
+
     def capture_mobjects(self, mobjects, **kwargs):
         # Make sure all frames are in mobjects?  Or not?
         self.update_sub_cameras()
@@ -58,3 +65,4 @@ class MultiCamera(MovingCamera):
                 )
             imfc.camera.capture_mobjects(to_add, **kwargs)
         MovingCamera.capture_mobjects(self, mobjects, **kwargs)
+
