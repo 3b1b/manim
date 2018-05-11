@@ -1,19 +1,20 @@
 from __future__ import absolute_import
 
-from constants import *
-
 from scene.scene import Scene
 from camera.moving_camera import MovingCamera
-from mobject.frame import ScreenRectangle
 
 
 class MovingCameraScene(Scene):
+    CONFIG = {
+        "camera_class": MovingCamera
+    }
+
     def setup(self):
-        self.camera_frame = ScreenRectangle(height=FRAME_HEIGHT)
-        self.camera_frame.set_stroke(width=0)
-        self.camera = MovingCamera(
-            self.camera_frame, **self.camera_config
-        )
+        Scene.setup(self)
+        assert(isinstance(self.camera, MovingCamera))
+        self.camera_frame = self.camera.frame
+        # Hmm, this currently relies on the fact that MovingCamera
+        # willd default to a full-sized frame.  Is that okay?
         return self
 
     def get_moving_mobjects(self, *animations):

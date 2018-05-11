@@ -1,9 +1,10 @@
 from __future__ import absolute_import
 
-from scene.scene import Scene
+from scene.moving_camera_scene import MovingCameraScene
 from camera.moving_camera import MovingCamera
 from camera.multi_camera import MultiCamera
 from mobject.types.image_mobject import ImageMobjectFromCamera
+from utils.simple_functions import fdiv
 
 from constants import *
 
@@ -11,7 +12,7 @@ from constants import *
 # Note, any scenes from old videos using ZoomedScene will almost certainly
 # break, as it was restructured.
 
-class ZoomedScene(Scene):
+class ZoomedScene(MovingCameraScene):
     CONFIG = {
         "camera_class": MultiCamera,
         "zoomed_display_height": 3,
@@ -30,6 +31,7 @@ class ZoomedScene(Scene):
     }
 
     def setup(self):
+        MovingCameraScene.setup(self)
         # Initialize camera and display
         zoomed_camera = MovingCamera(**self.zoomed_camera_config)
         zoomed_display = ImageMobjectFromCamera(
@@ -80,7 +82,7 @@ class ZoomedScene(Scene):
             self.add_foreground_mobjects(*to_add)
 
     def get_moving_mobjects(self, *animations):
-        moving_mobjects = Scene.get_moving_mobjects(self, *animations)
+        moving_mobjects = MovingCameraScene.get_moving_mobjects(self, *animations)
         zoomed_mobjects = [self.zoomed_camera.frame, self.zoomed_display]
         moving_zoomed_mobjects = set(moving_mobjects).intersection(zoomed_mobjects)
         if self.zoom_activated and moving_zoomed_mobjects:
@@ -88,3 +90,9 @@ class ZoomedScene(Scene):
             # everything
             return self.mobjects
         return moving_mobjects
+
+    def get_zoom_factor(self):
+        return fdiv(
+            self.zoomed_camera.frame.get_width(),
+            self.zoomed_display.get_width()
+        )
