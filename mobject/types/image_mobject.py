@@ -19,11 +19,7 @@ class AbstractImageMobject(Mobject):
     Automatically filters out black pixels
     """
     CONFIG = {
-        "filter_color": "black",
-        "invert": False,
-        # "use_cache" : True,
         "height": 2.0,
-        "image_mode": "RGBA",
         "pixel_array_dtype": "uint8",
     }
 
@@ -31,12 +27,11 @@ class AbstractImageMobject(Mobject):
         raise Exception("Not implemented")
 
     def set_color(self):
-        # Likely to be implemented in subclasses
+        # Likely to be implemented in subclasses, but no obgligation
         pass
 
     def init_points(self):
-        # Corresponding corners of image are fixed to these
-        # Three points
+        # Corresponding corners of image are fixed to these 3 points
         self.points = np.array([
             UP + LEFT,
             UP + RIGHT,
@@ -52,16 +47,9 @@ class AbstractImageMobject(Mobject):
 
 
 class ImageMobject(AbstractImageMobject):
-    """
-    Automatically filters out black pixels
-    """
     CONFIG = {
-        "filter_color": "black",
         "invert": False,
-        # "use_cache" : True,
-        "height": 2.0,
         "image_mode": "RGBA",
-        "pixel_array_dtype": "uint8",
     }
 
     def __init__(self, filename_or_array, **kwargs):
@@ -117,6 +105,10 @@ class ImageMobject(AbstractImageMobject):
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
         ).astype(self.pixel_array_dtype)
+
+# TODO, add the ability to have the dimensions/orientation of this
+# mobject more strongly tied to the frame of the camera it contains,
+# in the case where that's a MovingCamera
 
 
 class ImageMobjectFromCamera(AbstractImageMobject):

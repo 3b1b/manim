@@ -10,9 +10,9 @@ from utils.config_ops import digest_config
 
 class MovingCamera(Camera):
     """
-    Stays in line with the height, width and position
-    of a given mobject
+    Stays in line with the height, width and position of it's 'frame', which is a Rectangle
     """
+
     CONFIG = {
         "fixed_dimension": 0,  # width
         "default_frame_stroke_color": WHITE,
@@ -21,8 +21,8 @@ class MovingCamera(Camera):
 
     def __init__(self, frame=None, **kwargs):
         """
-        frame is a Mobject, (should be a rectangle) determining
-        which region of space the camera displys
+        frame is a Mobject, (should almost certainly be a rectangle)
+        determining which region of space the camera displys
         """
         digest_config(self, kwargs)
         if frame is None:

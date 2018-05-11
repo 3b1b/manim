@@ -3,17 +3,9 @@ from __future__ import absolute_import
 from camera.moving_camera import MovingCamera
 from utils.iterables import list_difference_update
 
-# Distinct notions of view frame vs. display frame
-
-# For now, let's say it is the responsibility of the scene holding
-# this camera to add all of the relevant image_mobjects_from_cameras,
-# as well as their display_frames
-
 
 class MultiCamera(MovingCamera):
     CONFIG = {
-        # "lock_display_frame_dimensions_to_view_frame": True,
-        # "display_frame_fixed_dimension": 1,  # Height
         "allow_cameras_to_capture_their_own_display": False,
     }
 
@@ -31,11 +23,7 @@ class MultiCamera(MovingCamera):
         self.image_mobjects_from_cameras.append(imfc)
 
     def update_sub_cameras(self):
-        # if self.lock_display_frame_dimensions_to_view_frame:
-        #     for imfc in self.image_mobjects_from_cameras:
-        #         aspect_ratio = imfc.view_frame.get_width() / imfc.view_frame.get_height()
-
-        # Reshape sub_camera pixel_arrays
+        """ Reshape sub_camera pixel_arrays """
         for imfc in self.image_mobjects_from_cameras:
             frame_height, frame_width = self.frame_shape
             pixel_height, pixel_width = self.get_pixel_array().shape[:2]
@@ -55,7 +43,6 @@ class MultiCamera(MovingCamera):
         return self
 
     def capture_mobjects(self, mobjects, **kwargs):
-        # Make sure all frames are in mobjects?  Or not?
         self.update_sub_cameras()
         for imfc in self.image_mobjects_from_cameras:
             to_add = list(mobjects)

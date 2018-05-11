@@ -34,12 +34,12 @@ class Camera(object):
         "frame_shape": (FRAME_HEIGHT, FRAME_WIDTH),
         "space_center": ORIGIN,
         "background_color": BLACK,
+        "background_alpha": 0,  # Out of rgb_max_val
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
         "max_allowable_norm": FRAME_WIDTH,
         "image_mode": "RGBA",
         "n_rgb_coords": 4,
-        "background_alpha": 0,  # Out of rgb_max_val
         "pixel_array_dtype": 'uint8',
         "use_z_coordinate_for_display_order": False,
         # z_buff_func is only used if the flag above is set to True.
