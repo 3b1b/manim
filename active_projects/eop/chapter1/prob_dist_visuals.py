@@ -193,7 +193,7 @@ class ProbabilityDistributions(PiCreatureScene):
         #     FadeIn(dice_unit_rect),
         #     FadeIn(dice_table.rows)
         # )
-        self.add(dice_unit_rect, dice_table_rows)
+        # self.add(dice_unit_rect, dice_table_rows)
 
         for (cell, label) in zip(dice_table.cells, dice_table.labels):
             cell.add(label)
@@ -202,7 +202,8 @@ class ProbabilityDistributions(PiCreatureScene):
         #     LaggedStart(FadeIn, dice_table_grouped_cells,
         #         lag_ratio = lag_ratio, run_time = run_time)
         # )
-        self.add(dice_table_grouped_cells)
+        self.remove(dice_table) # Remove the table
+        self.add(dice_table_grouped_cells) # Add in the reorganized version
 
         self.wait()
 
@@ -218,10 +219,15 @@ class ProbabilityDistributions(PiCreatureScene):
             FadeOut(dice_unit_rect),
         )
         
-        dice_table_target = dice_table.copy()
-        dice_table_target.scale(0.5).to_corner(UR, buff = MED_LARGE_BUFF)
+        # Replacing
+        self.play(
+            dice_table_grouped_cells.scale, 0.5,
+            dice_table_grouped_cells.to_corner, UR,
+        )
+        # dice_table_target = dice_table.copy()
+        # dice_table_target.scale(0.5).to_corner(UR, buff = MED_LARGE_BUFF)
 
-        self.play(Transform(dice_table, dice_table_target))
+        # self.play(Transform(dice_table, dice_table_target))
 
         self.wait()
 
