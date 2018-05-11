@@ -1,7 +1,7 @@
 from big_ol_pile_of_manim_imports import *
 
 
-class NumberlineTransformationScene(MovingCameraScene):
+class NumberlineTransformationScene(ZoomedScene):
     CONFIG = {
         "input_line_zero_point": 1 * UP + (FRAME_X_RADIUS - 1) * LEFT,
         "output_line_zero_point": 2 * DOWN + (FRAME_X_RADIUS - 1) * LEFT,
@@ -23,11 +23,14 @@ class NumberlineTransformationScene(MovingCameraScene):
         "default_mapping_animation_config": {
             "run_time": 3,
             # "path_arc": 30 * DEGREES,
-        }
+        },
+        "zoom_factor": 0.1,
+        "zoomed_display_height": 2,
+        "zoomed_display_corner_buff": MED_SMALL_BUFF,
     }
 
     def setup(self):
-        MovingCameraScene.setup(self)
+        ZoomedScene.setup(self)
         self.setup_number_lines()
         self.setup_titles()
 
@@ -59,48 +62,85 @@ class NumberlineTransformationScene(MovingCameraScene):
 
         self.add(self.titles)
 
-    def get_line_mapping_animation(self, func, **kwargs):
-        anim_config = dict(self.default_mapping_animation_config)
-        anim_config.update(kwargs)
-
-        input_line_copy = self.input_line.deepcopy()
-        input_line_copy.remove(input_line_copy.numbers)
-        # input_line_copy.set_stroke(width=2)
-        input_line_copy.generate_target(use_deepcopy=True)
-
-        point_func = self.number_func_to_point_func(func)
-
-        input_line_copy.target.main_line.apply_function(point_func)
-        for tick in input_line_copy.target.tick_marks:
-            tick.move_to(point_func(tick.get_center()))
-
-        return MoveToTarget(input_line_copy, **anim_config)
-
     def get_sample_dots(self, x_min=None, x_max=None,
-                        delta_x=None, radius=None, colors=None):
+                        delta_x=None, dot_radius=None, colors=None):
         x_min = x_min or self.input_line.x_min
         x_max = x_max or self.input_line.x_max
         delta_x = delta_x or self.default_delta_x
-        radius = radius or self.default_sample_dot_radius
+        dot_radius = dot_radius or self.default_sample_dot_radius
         colors = colors or self.default_sample_dot_colors
 
         dots = self.sample_dots = VGroup(*[
-            Dot(self.input_line.number_to_point(x), radius=radius)
-            for x in np.arange(x_min, x_max+delta_x, delta_x)
+            Dot(self.get_input_point(x), radius=dot_radius)
+            for x in np.arange(x_min, x_max + delta_x, delta_x)
         ])
         dots.set_color_by_gradient(*colors)
         return dots
 
-    def get_sample_dots_mapping_animation(self, func, **kwargs):
+    def get_local_sample_dots(self, x, sample_radius=None, **kwargs):
+        if sample_radius is None:
+            sample_radius = self.zoomed_camera.frame.get_width() / 2
+        zoom_factor = self.get_zoom_factor()
+        config = {
+            "x_min": x - sample_radius,
+            "x_max": x + sample_radius,
+            "delta_x": self.default_delta_x * zoom_factor,
+            "dot_radius": self.default_sample_dot_radius * zoom_factor,
+        }
+        config.update(kwargs)
+        return self.get_sample_dots(**config)
+
+    # Mapping animations
+    def get_mapping_animation(self, func, mobject, what_to_transform="self", **kwargs):
         anim_config = dict(self.default_mapping_animation_config)
         anim_config.update(kwargs)
 
         point_func = self.number_func_to_point_func(func)
 
-        return AnimationGroup(*[
-            ApplyPointwiseFunctionToCenter(point_func, dot, **anim_config)
-            for dot in self.sample_dots
-        ])
+        mobject.generate_target(use_deepcopy=True)
+        if what_to_transform == "self":
+            mobject.target.move_to(point_func(mobject.get_center()))
+        elif what_to_transform == "submobjects":
+            for submob in mobject.target:
+                submob.move_to(point_func(submob.get_center()))
+        elif what_to_transform == "points":
+            mobject.target.apply_functiong(point_func)
+        else:
+            raise Exception("Invalid value for what_to_transform")
+
+        return MoveToTarget(mobject, **anim_config)
+
+    def get_line_mapping_animation(self, func, **kwargs):
+        input_line_copy = self.input_line.deepcopy()
+        input_line_copy.remove(input_line_copy.numbers)
+        # input_line_copy.set_stroke(width=2)
+        input_line_copy.main_line.insert_n_anchor_points(
+            self.num_inserted_number_line_anchors
+        )
+        return AnimationGroup(
+            self.get_mapping_animation(
+                func, input_line_copy.main_line, maintin_shape=False
+            ),
+            self.get_mapping_animation(func, input_line_copy.tick_marks),
+        )
+
+    def get_sample_dots_mapping_animation(self, func, dots, **kwargs):
+        return self.get_mapping_animation(
+            func, dots, what_to_transform="submobjects"
+        )
+
+    def get_zoomed_camera_frame_mapping_animation(self, func, x, **kwargs):
+        point = VectorizedPoint(self.get_input_point(x))
+        return AnimationGroup(
+            self.get_mapping_animation(func, point),
+            UpdateFromFunc(
+                self.zoomed_camera.frame,
+                lambda m: m.move_to(point)
+            )
+        )
+
+    def get_input_point(self, x):
+        return self.input_line.number_to_point(x)
 
     def number_func_to_point_func(self, number_func):
         input_line, output_line = self.number_lines
@@ -129,15 +169,23 @@ class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
 
         line_anim = self.get_line_mapping_animation(func)
         sample_dots = self.get_sample_dots()
-        sample_dots_anim = self.get_sample_dots_mapping_animation(func)
+        sample_dots_anim = self.get_sample_dots_mapping_animation(
+            func, sample_dots
+        )
 
-        self.add(sample_dots)
-        self.play(line_anim, sample_dots_anim)
-        self.wait()
+        x = 2
+        local_sample_dots = self.get_local_sample_dots(2)
+        local_sample_dots_anim = self.get_sample_dots_mapping_animation(
+            func, local_sample_dots
+        )
+
+        self.zoomed_camera.frame.move_to(self.get_input_point(x))
+
+        self.add(local_sample_dots)
+        self.activate_zooming(animate=True)
         self.play(
-            self.camera_frame.scale, 2, {"about_edge": LEFT},
-            run_time=3,
-            rate_func=there_and_back_with_pause,
+            line_anim, local_sample_dots_anim,
+            self.get_zoomed_camera_frame_mapping_animation(func, x)
         )
         self.wait()
 
