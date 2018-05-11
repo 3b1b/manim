@@ -34,7 +34,7 @@ class Camera(object):
         "frame_shape": (FRAME_HEIGHT, FRAME_WIDTH),
         "space_center": ORIGIN,
         "background_color": BLACK,
-        "background_alpha": 0,  # Out of rgb_max_val
+        "background_opacity": 0,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
         "max_allowable_norm": FRAME_WIDTH,
@@ -94,7 +94,7 @@ class Camera(object):
             self.background = self.background.astype(self.pixel_array_dtype)
         else:
             background_rgba = color_to_int_rgba(
-                self.background_color, alpha=self.background_alpha
+                self.background_color, self.background_opacity
             )
             self.background = np.zeros(
                 list(self.pixel_shape) + [self.n_rgb_coords],
@@ -115,10 +115,10 @@ class Camera(object):
         retval = np.array(pixel_array)
         if convert_from_floats:
             retval = np.apply_along_axis(
-                lambda f: (
-                    f * self.rgb_max_val).astype(self.pixel_array_dtype),
+                lambda f: (f * self.rgb_max_val).astype(self.pixel_array_dtype),
                 2,
-                retval)
+                retval
+            )
         return retval
 
     def set_pixel_array(self, pixel_array, convert_from_floats=False):
