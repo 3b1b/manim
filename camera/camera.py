@@ -30,9 +30,10 @@ class Camera(object):
     CONFIG = {
         "background_image": None,
         "pixel_shape": (DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH),
-        # Note: frame_shape will be resized to match pixel_shape
-        "frame_shape": (FRAME_HEIGHT, FRAME_WIDTH),
-        "space_center": ORIGIN,
+        # Note: frame height and width will be resized to match pixel_shape
+        "frame_height": FRAME_HEIGHT,
+        "frame_width": FRAME_WIDTH,
+        "frame_center": ORIGIN,
         "background_color": BLACK,
         "background_opacity": 0,
         # Points in vectorized mobjects with norm greater
@@ -67,21 +68,41 @@ class Camera(object):
         self.resize_frame_shape()
         self.reset()
 
+    def get_frame_height(self):
+        return self.frame_height
+
+    def get_frame_width(self):
+        return self.frame_width
+
+    def get_frame_center(self):
+        return self.frame_center
+
+    def set_frame_height(self, frame_height):
+        self.frame_height = frame_height
+
+    def set_frame_width(self, frame_width):
+        self.frame_width = frame_width
+
+    def set_frame_center(self, frame_center):
+        self.frame_center = frame_center
+
     def resize_frame_shape(self, fixed_dimension=0):
         """
         Changes frame_shape to match the aspect ratio
         of pixel_shape, where fixed_dimension determines
-        whether frame_shape[0] (height) or frame_shape[1] (width)
+        whether frame_height or frame_width
         remains fixed while the other changes accordingly.
         """
-        frame_height, frame_width = self.frame_shape
         pixel_height, pixel_width = self.pixel_shape
+        frame_height = self.get_frame_height()
+        frame_width = self.get_frame_width()
         aspect_ratio = fdiv(pixel_width, pixel_height)
         if fixed_dimension == 0:
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
-        self.frame_shape = (frame_height, frame_width)
+        self.set_frame_height(frame_height)
+        self.set_frame_width(frame_width)
 
     def init_background(self):
         if self.background_image is not None:
@@ -455,15 +476,16 @@ class Camera(object):
         return points
 
     def points_to_pixel_coords(self, points):
-        shifted_points = points - self.space_center
+        shifted_points = points - self.get_frame_center()
 
         result = np.zeros((len(points), 2))
-        ph, pw = self.pixel_shape
-        sh, sw = self.frame_shape
-        width_mult = pw / sw
-        width_add = pw / 2
-        height_mult = ph / sh
-        height_add = ph / 2
+        pixel_height, pixel_width = self.pixel_shape
+        frame_height = self.get_frame_height()
+        frame_width = self.get_frame_width()
+        width_mult = pixel_width / frame_width
+        width_add = pixel_width / 2
+        height_mult = pixel_height / frame_height
+        height_add = pixel_height / 2
         # Flip on y-axis as you go
         height_mult *= -1
 
@@ -499,7 +521,10 @@ class Camera(object):
 
     def get_coords_of_all_pixels(self):
         # These are in x, y order, to help me keep things straight
-        full_space_dims = np.array(self.frame_shape)[::-1]
+        full_space_dims = np.array([
+            self.get_frame_width(),
+            self.get_frame_height()
+        ])
         full_pixel_dims = np.array(self.pixel_shape)[::-1]
 
         # These are addressed in the same y, x order as in pixel_array, but the values in them

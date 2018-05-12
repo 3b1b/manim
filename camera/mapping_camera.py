@@ -43,6 +43,7 @@ class MappingCamera(Camera):
 # TODO: Add optional separator borders between cameras (or perhaps peel this off into a
 # CameraPlusOverlay class)
 
+# TODO, the classes below should likely be deleted
 
 class OldMultiCamera(Camera):
     def __init__(self, *cameras_with_start_positions, **kwargs):

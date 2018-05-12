@@ -7,10 +7,11 @@ from mobject.types.image_mobject import ImageMobjectFromCamera
 from utils.simple_functions import fdiv
 
 from constants import *
-
+from animation.transform import ApplyMethod
 
 # Note, any scenes from old videos using ZoomedScene will almost certainly
 # break, as it was restructured.
+
 
 class ZoomedScene(MovingCameraScene):
     CONFIG = {
@@ -56,33 +57,36 @@ class ZoomedScene(MovingCameraScene):
         self.zoomed_camera = zoomed_camera
         self.zoomed_display = zoomed_display
 
-    def activate_zooming(self, animate=False, run_times=[2, 1]):
-        zoomed_camera = self.zoomed_camera
-        zoomed_display = self.zoomed_display
-
+    def activate_zooming(self, animate=False):
         self.zoom_activated = True
-        self.camera.add_image_mobject_from_camera(zoomed_display)
-
-        to_add = [zoomed_camera.frame, zoomed_display]
+        self.camera.add_image_mobject_from_camera(self.zoomed_display)
         if animate:
-            zoomed_display.save_state(use_deepcopy=True)
-            zoomed_display.replace(zoomed_camera.frame)
+            self.play(self.get_zoom_in_animation())
+            self.play(self.get_zoomed_display_pop_out_animation())
+        self.add_foreground_mobjects(
+            self.zoomed_camera.frame,
+            self.zoomed_display,
+        )
 
-            full_frame_height, full_frame_width = self.camera.frame_shape
-            zoomed_camera.frame.save_state()
-            zoomed_camera.frame.stretch_to_fit_width(full_frame_width)
-            zoomed_camera.frame.stretch_to_fit_height(full_frame_height)
-            zoomed_camera.frame.center()
-            zoomed_camera.frame.set_stroke(width=0)
+    def get_zoom_in_animation(self, run_time=2, **kwargs):
+        frame = self.zoomed_camera.frame
+        full_frame_height = self.camera.get_frame_height()
+        full_frame_width = self.camera.get_frame_width()
+        frame.save_state()
+        frame.stretch_to_fit_width(full_frame_width)
+        frame.stretch_to_fit_height(full_frame_height)
+        frame.center()
+        frame.set_stroke(width=0)
+        return ApplyMethod(frame.restore, run_time=run_time, **kwargs)
 
-            for mover, run_time in zip(to_add, run_times):
-                self.add_foreground_mobject(mover)
-                self.play(mover.restore, run_time=run_time)
-        else:
-            self.add_foreground_mobjects(*to_add)
+    def get_zoomed_display_pop_out_animation(self, **kwargs):
+        display = self.zoomed_display
+        display.save_state(use_deepcopy=True)
+        display.replace(self.zoomed_camera.frame, stretch=True)
+        return ApplyMethod(display.restore)
 
     def get_zoom_factor(self):
         return fdiv(
-            self.zoomed_camera.frame.get_width(),
-            self.zoomed_display.get_width()
+            self.zoomed_camera.frame.get_height(),
+            self.zoomed_display.get_height()
         )
