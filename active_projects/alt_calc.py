@@ -1,9 +1,21 @@
 from big_ol_pile_of_manim_imports import *
 
 
+def apply_function_to_center(point_func, mobject):
+    mobject.apply_function_to_position(point_func)
+
+
+def apply_function_to_submobjects(point_func, mobject):
+    mobject.apply_function_to_submobject_positions(point_func)
+
+
+def apply_function_to_points(point_func, mobject):
+    mobject.apply_function(point_func)
+
+
 class NumberlineTransformationScene(ZoomedScene):
     CONFIG = {
-        "input_line_zero_point": 1 * UP + (FRAME_X_RADIUS - 1) * LEFT,
+        "input_line_zero_point": 0.5 * UP + (FRAME_X_RADIUS - 1) * LEFT,
         "output_line_zero_point": 2 * DOWN + (FRAME_X_RADIUS - 1) * LEFT,
         "number_line_config": {
             "include_numbers": True,
@@ -18,14 +30,14 @@ class NumberlineTransformationScene(ZoomedScene):
         "output_line_config": {},
         "num_inserted_number_line_anchors": 20,
         "default_delta_x": 0.1,
-        "default_sample_dot_radius": 0.05,
+        "default_sample_dot_radius": 0.07,
         "default_sample_dot_colors": [RED, YELLOW],
         "default_mapping_animation_config": {
             "run_time": 3,
             # "path_arc": 30 * DEGREES,
         },
         "zoom_factor": 0.1,
-        "zoomed_display_height": 2,
+        "zoomed_display_height": 2.5,
         "zoomed_display_corner_buff": MED_SMALL_BUFF,
     }
 
@@ -33,6 +45,7 @@ class NumberlineTransformationScene(ZoomedScene):
         ZoomedScene.setup(self)
         self.setup_number_lines()
         self.setup_titles()
+        self.setup_zoomed_camera_background_rectangle()
 
     def setup_number_lines(self):
         number_lines = self.number_lines = VGroup()
@@ -53,14 +66,28 @@ class NumberlineTransformationScene(ZoomedScene):
 
     def setup_titles(self):
         input_title, output_title = self.titles = VGroup(*[
-            TextMobject()
+            TextMobject(word)
             for word in "Inputs", "Outputs"
         ])
-        for title, line in zip(self.titles, self.number_lines):
-            title.next_to(line, UP)
+        vects = [UP, DOWN]
+        for title, line, vect in zip(self.titles, self.number_lines, vects):
+            title.next_to(line, vect, aligned_edge=LEFT)
             title.shift_onto_screen()
 
         self.add(self.titles)
+
+    def setup_zoomed_camera_background_rectangle(self):
+        frame = self.zoomed_camera.frame
+        self.zoomed_camera_background_rectangle = BackgroundRectangle(
+            frame, fill_opacity=1
+        )
+        self.zoomed_camera_background_rectangle_anim = UpdateFromFunc(
+            self.zoomed_camera_background_rectangle,
+            lambda m: m.replace(frame, stretch=True)
+        )
+        self.zoomed_camera_background_rectangle_group = VGroup(
+            self.zoomed_camera_background_rectangle,
+        )
 
     def get_sample_dots(self, x_min=None, x_max=None,
                         delta_x=None, dot_radius=None, colors=None):
@@ -70,7 +97,7 @@ class NumberlineTransformationScene(ZoomedScene):
         dot_radius = dot_radius or self.default_sample_dot_radius
         colors = colors or self.default_sample_dot_colors
 
-        dots = self.sample_dots = VGroup(*[
+        dots = VGroup(*[
             Dot(self.get_input_point(x), radius=dot_radius)
             for x in np.arange(x_min, x_max + delta_x, delta_x)
         ])
@@ -91,23 +118,16 @@ class NumberlineTransformationScene(ZoomedScene):
         return self.get_sample_dots(**config)
 
     # Mapping animations
-    def get_mapping_animation(self, func, mobject, what_to_transform="self", **kwargs):
+    def get_mapping_animation(self, func, mobject,
+                              how_to_apply_func=apply_function_to_center,
+                              **kwargs):
         anim_config = dict(self.default_mapping_animation_config)
         anim_config.update(kwargs)
 
         point_func = self.number_func_to_point_func(func)
 
         mobject.generate_target(use_deepcopy=True)
-        if what_to_transform == "self":
-            mobject.target.move_to(point_func(mobject.get_center()))
-        elif what_to_transform == "submobjects":
-            for submob in mobject.target:
-                submob.move_to(point_func(submob.get_center()))
-        elif what_to_transform == "points":
-            mobject.target.apply_functiong(point_func)
-        else:
-            raise Exception("Invalid value for what_to_transform")
-
+        how_to_apply_func(point_func, mobject.target)
         return MoveToTarget(mobject, **anim_config)
 
     def get_line_mapping_animation(self, func, **kwargs):
@@ -119,26 +139,170 @@ class NumberlineTransformationScene(ZoomedScene):
         )
         return AnimationGroup(
             self.get_mapping_animation(
-                func, input_line_copy.main_line, maintin_shape=False
+                func, input_line_copy.main_line,
+                apply_function_to_points
             ),
-            self.get_mapping_animation(func, input_line_copy.tick_marks),
+            self.get_mapping_animation(
+                func, input_line_copy.tick_marks,
+                apply_function_to_submobjects
+            ),
         )
 
     def get_sample_dots_mapping_animation(self, func, dots, **kwargs):
         return self.get_mapping_animation(
-            func, dots, what_to_transform="submobjects"
+            func, dots, apply_function_to_submobjects
         )
 
-    def get_zoomed_camera_frame_mapping_animation(self, func, x, **kwargs):
-        point = VectorizedPoint(self.get_input_point(x))
+    def get_zoomed_camera_frame_mapping_animation(self, func, x=None, **kwargs):
+        frame = self.zoomed_camera.frame
+        if x is None:
+            point = frame.get_center()
+        else:
+            point = self.get_input_point(x)
+        point_mob = VectorizedPoint(point)
         return AnimationGroup(
-            self.get_mapping_animation(func, point),
-            UpdateFromFunc(
-                self.zoomed_camera.frame,
-                lambda m: m.move_to(point)
-            )
+            self.get_mapping_animation(func, point_mob),
+            UpdateFromFunc(frame, lambda m: m.move_to(point_mob)),
         )
 
+    def apply_function(self, func,
+                       sample_dots=None,
+                       local_sample_dots=None,
+                       target_coordinate_values=None):
+        zcbr_group = self.zoomed_camera_background_rectangle_group
+        zcbr_anim = self.zoomed_camera_background_rectangle_anim
+        frame = self.zoomed_camera.frame
+
+        anims = [self.get_line_mapping_animation(func)]
+        if hasattr(self, "mini_line"):  # Test for if mini_line is in self?
+            anims.append(self.get_mapping_animation(
+                func, self.mini_line,
+                how_to_apply_func=apply_function_to_points
+            ))
+        if sample_dots:
+            anims.append(
+                self.get_sample_dots_mapping_animation(func, sample_dots)
+            )
+        if self.zoom_activated:
+            zoom_anim = self.get_zoomed_camera_frame_mapping_animation(func)
+            anims.append(zoom_anim)
+            anims.append(zcbr_anim)
+
+            zoom_anim.update(1)
+            target_mini_line = Line(frame.get_left(), frame.get_right())
+            target_mini_line.scale(2)
+            target_mini_line.match_style(self.output_line.main_line)
+            zoom_anim.update(0)
+            zcbr_group.submobjects.insert(1, target_mini_line)
+        if target_coordinate_values:
+            coordinates = self.get_local_coordinates(
+                self.output_line,
+                *target_coordinate_values
+            )
+            anims.append(FadeIn(coordinates))
+            zcbr_group.add(coordinates)
+        if local_sample_dots:
+            anims.append(
+                self.get_sample_dots_mapping_animation(func, local_sample_dots)
+            )
+            zcbr_group.add(local_sample_dots)
+        anims.append(Animation(zcbr_group))
+
+        self.play(*anims)
+
+    # Zooming
+    def zoom_in_on_input(self, x,
+                         local_sample_dots=None,
+                         local_coordinate_values=None,
+                         ):
+        input_point = self.get_input_point(x)
+
+        # Decide how to move camera frame into place
+        frame = self.zoomed_camera.frame
+        movement = ApplyMethod(frame.move_to, input_point)
+        zcbr = self.zoomed_camera_background_rectangle
+        zcbr_group = self.zoomed_camera_background_rectangle_group
+        zcbr_anim = self.zoomed_camera_background_rectangle_anim
+        anims = []
+        if self.zoom_activated:
+            anims.append(movement)
+            anims.append(zcbr_anim)
+        else:
+            movement.update(1)
+            zcbr_anim.update(1)
+            anims.append(self.get_zoom_in_animation())
+            anims.append(FadeIn(zcbr))
+
+        # Make sure frame is in final place
+        for anim in anims:
+            anim.update(1)
+
+        # Add miniature number_line
+        mini_line = self.mini_line = Line(frame.get_left(), frame.get_right())
+        mini_line.scale(2)
+        mini_line.insert_n_anchor_points(self.num_inserted_number_line_anchors)
+        mini_line.match_style(self.input_line.main_line)
+        zcbr_group.add(mini_line.copy(), mini_line)
+        anims.append(FadeIn(mini_line))
+
+        # Add tiny coordiantes
+        if local_coordinate_values is None:
+            local_coordinate_values = [x]
+        local_coordinates = self.get_local_coordinates(
+            self.input_line,
+            *local_coordinate_values
+        )
+        anims.append(FadeIn(local_coordinates))
+        zcbr_group.add(local_coordinates)
+
+        # Add tiny dots
+        if local_sample_dots is not None:
+            anims.append(LaggedStart(GrowFromCenter, local_sample_dots))
+            zcbr_group.add(local_sample_dots)
+
+        anims.append(Animation(zcbr_group))
+        self.play(*anims)
+
+        if not self.zoom_activated:
+            self.activate_zooming(animate=False)
+            self.play(self.get_zoomed_display_pop_out_animation())
+
+    def get_local_coordinates(self, line, *x_values, **kwargs):
+        num_decimal_places = kwargs.get("num_decimal_places", 2)
+        result = VGroup()
+        result.tick_marks = VGroup()
+        result.numbers = VGroup()
+        result.add(result.tick_marks, result.numbers)
+        for x in x_values:
+            tick_mark = Line(UP, DOWN)
+            tick_mark.scale_to_fit_height(
+                0.15 * self.zoomed_camera.frame.get_height()
+            )
+            tick_mark.move_to(line.number_to_point(x))
+            result.tick_marks.add(tick_mark)
+
+            number = DecimalNumber(x, num_decimal_places=num_decimal_places)
+            number.scale(self.get_zoom_factor())
+            number.scale(0.5)  # To make it seem small
+            number.next_to(tick_mark, DOWN, buff=0.5 * number.get_height())
+            result.numbers.add(number)
+        return result
+
+    def get_mobjects_in_zoomed_camera(self, mobjects):
+        frame = self.zoomed_camera.frame
+        x_min = frame.get_left()[0]
+        x_max = frame.get_right()[0]
+        y_min = frame.get_bottom()[1]
+        y_max = frame.get_top()[1]
+        result = VGroup()
+        for mob in mobjects:
+            for point in mob.get_all_points():
+                if (x_min < point[0] < x_max) and (y_min < point[1] < y_max):
+                    result.add(mob)
+                    break
+        return result
+
+    # Helpers
     def get_input_point(self, x):
         return self.input_line.number_to_point(x)
 
@@ -166,26 +330,23 @@ class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
 
     def construct(self):
         func = lambda x: x**2
+        x = 0.5
 
-        line_anim = self.get_line_mapping_animation(func)
         sample_dots = self.get_sample_dots()
-        sample_dots_anim = self.get_sample_dots_mapping_animation(
-            func, sample_dots
+        local_sample_dots = self.get_local_sample_dots(x)
+
+        self.play(LaggedStart(GrowFromCenter, sample_dots))
+        self.zoom_in_on_input(
+            x,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=[x - 0.05, x, x + 0.05],
         )
-
-        x = 2
-        local_sample_dots = self.get_local_sample_dots(2)
-        local_sample_dots_anim = self.get_sample_dots_mapping_animation(
-            func, local_sample_dots
-        )
-
-        self.zoomed_camera.frame.move_to(self.get_input_point(x))
-
-        self.add(local_sample_dots)
-        self.activate_zooming(animate=True)
-        self.play(
-            line_anim, local_sample_dots_anim,
-            self.get_zoomed_camera_frame_mapping_animation(func, x)
+        self.wait()
+        self.apply_function(
+            func,
+            sample_dots=sample_dots,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=[func(x) - 0.05, func(x), func(x) + 0.05],
         )
         self.wait()
 
