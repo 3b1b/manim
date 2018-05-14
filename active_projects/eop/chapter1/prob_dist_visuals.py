@@ -40,7 +40,7 @@ class ProbabilityDistributions(PiCreatureScene):
 
         self.add(unit_rect, rain_rect, sun_rect)
 
-        rain = SVGMobject(file_name = "rain").scale(0.35)
+        rain = SVGMobject(file_name = "rain").scale(0.25)
         sun = SVGMobject(file_name = "sun").scale(0.35)
 
         rain.flip().move_to(rain_rect)
@@ -156,7 +156,7 @@ class ProbabilityDistributions(PiCreatureScene):
             FadeOut(p_sun_whole_label),
         )
 
-
+        self.wait(3)
 
 
 # DOUBLE DICE THROW
@@ -193,7 +193,6 @@ class ProbabilityDistributions(PiCreatureScene):
         #     FadeIn(dice_unit_rect),
         #     FadeIn(dice_table.rows)
         # )
-        self.add(dice_unit_rect, dice_table_rows)
 
         for (cell, label) in zip(dice_table.cells, dice_table.labels):
             cell.add(label)
@@ -202,9 +201,13 @@ class ProbabilityDistributions(PiCreatureScene):
         #     LaggedStart(FadeIn, dice_table_grouped_cells,
         #         lag_ratio = lag_ratio, run_time = run_time)
         # )
-        self.add(dice_table_grouped_cells)
+        self.play(
+            FadeIn(dice_table_grouped_cells),
+            FadeIn(dice_unit_rect),
+            FadeIn(dice_table.rows)
+        )
 
-        self.wait()
+        self.wait(3)
 
 
         self.play(
@@ -212,18 +215,19 @@ class ProbabilityDistributions(PiCreatureScene):
             rate_func=there_and_back_with_pause,
             run_time=run_time
         )
+        dice_table.add(dice_unit_rect)
+        dice_table_target = dice_table.copy()
+        dice_table_target.scale(0.5).to_corner(UR, buff = LARGE_BUFF)
+        dice_table_target.shift(0.4*UP)
+
+        self.play(Transform(dice_table, dice_table_target))
 
         self.play(
             FadeOut(dice_table.rows),
             FadeOut(dice_unit_rect),
         )
-        
-        dice_table_target = dice_table.copy()
-        dice_table_target.scale(0.5).to_corner(UR, buff = MED_LARGE_BUFF)
 
-        self.play(Transform(dice_table, dice_table_target))
-
-        self.wait()
+        self.wait(3)
 
 # TITLE
 
@@ -236,16 +240,17 @@ class ProbabilityDistributions(PiCreatureScene):
             ShowCreation(text_rect)
         )
 
-        self.wait()
+        self.wait(3)
 
 
 # COIN FLIP
 
 
-        coin_flip_rect = BrickRow(3, height = 2, width = 10)
+        brick_row = BrickRow(3, height = 2, width = 10)
+        coin_flip_rect = VGroup(brick_row)
 
         tallies = VGroup()
-        for (i, brick) in enumerate(coin_flip_rect.rects):
+        for (i, brick) in enumerate(brick_row.rects):
             tally = TallyStack(3 - i, i)
             tally.move_to(brick)
             tallies.add(tally)
@@ -257,7 +262,7 @@ class ProbabilityDistributions(PiCreatureScene):
         counts = [1, 3, 3, 1]
         braces = VGroup()
         labels = VGroup()
-        for (rect, count) in zip(coin_flip_rect.rects, counts):
+        for (rect, count) in zip(brick_row.rects, counts):
             label = TexMobject("{" + str(count) + "\over 8}").scale(0.5)
             brace = Brace(rect, DOWN)
             label.next_to(brace, DOWN)
@@ -271,15 +276,13 @@ class ProbabilityDistributions(PiCreatureScene):
 
         coin_flip_rect.add(braces, labels)
 
-        coin_flip_rect.target  = coin_flip_rect.copy().scale(0.6)
-        coin_flip_rect.target.to_corner(UR, buff = MED_LARGE_BUFF)
-        coin_flip_rect.target.shift(DOWN)
 
+        self.wait(6)
 
-        self.wait()
-
-        outcomes = coin_flip_rect.get_outcome_rects_for_level(3, with_labels = True,
+        outcomes = brick_row.get_outcome_rects_for_level(3, with_labels = True,
             inset = True)
+        outcomes.scale(0.65)
+        outcomes.move_to(brick_row.get_center())
         outcome_braces = VGroup(*[
             Brace(outcome, DOWN) for outcome in outcomes
         ])
@@ -297,7 +300,8 @@ class ProbabilityDistributions(PiCreatureScene):
             FadeIn(outcome_labels)
         )
 
-        self.wait()
+
+        self.wait(10)
 
 
 

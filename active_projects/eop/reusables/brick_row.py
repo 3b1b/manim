@@ -179,7 +179,6 @@ class BrickRow(VMobject):
 
 
 
-
 class SplitRectsInBrickWall(AnimationGroup):
 
     def __init__(self, mobject, **kwargs):

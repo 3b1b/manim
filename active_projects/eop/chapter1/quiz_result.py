@@ -71,9 +71,11 @@ class QuizResult(PiCreatureScene):
             all_quizzes.add(quiz_copy)
 
         master_quiz = get_example_quiz()
-        self.play(ShowCreation(master_quiz))
+        self.play(ShowCreation(master_quiz), run_time = 2)
+        self.wait()
         self.play(Transform(master_quiz, all_quizzes[0]))
-
+        self.wait()
+        
         self.play(LaggedStart(FadeIn,all_quizzes))
 
         grades_mob = VGroup()
@@ -83,6 +85,7 @@ class QuizResult(PiCreatureScene):
             grades_mob.add(grade_mob)
 
         self.remove(master_quiz)
+        self.wait()
         self.play(
             FadeOut(all_quizzes),
             FadeIn(grades_mob)
@@ -99,13 +102,53 @@ class QuizResult(PiCreatureScene):
             slot.scale(0.5).move_to(quiz)
             students_points_mob.add(slot)
 
+        self.wait()
         self.play(
             #all_students.fade, 0,
             FadeOut(grades_mob),
             FadeIn(students_points_mob)
         )
 
+        all_students.save_state()
+        students_points_mob.save_state()
+        self.wait()
+        randy = all_students[0]
+        morty = all_students[nb_students_y]
+        all_other_students = VGroup(*all_students)
+        all_other_students.remove(randy, morty)
+        randy_points = students_points_mob[0]
+        morty_points = students_points_mob[nb_students_y]
+        all_other_points = VGroup(*students_points_mob)
+        all_other_points.remove(randy_points, morty_points)
+        self.play(
+            all_other_students.fade, 0.8,
+            all_other_points.fade, 0.8,
+        )
+        self.wait()
+        scale = 1.5
+        self.play(randy_points.scale,scale)
+        self.play(randy_points.scale,1.0/scale, morty_points.scale,scale)
+        self.play(morty_points.scale,1.0/scale)
 
+        self.wait()
+        self.play(
+            all_students.restore,
+            students_points_mob.restore,
+        )
+
+        self.wait()
+        anims = []
+        for points in students_points_mob:
+            anims.append(points.scale)
+            anims.append(scale)
+        self.play(*anims)
+
+        self.wait()
+        anims = []
+        for points in students_points_mob:
+            anims.append(points.scale)
+            anims.append(1.0/scale)
+        self.play(*anims)
 
         anims = []
         anchor_point = 3 * DOWN + 1 * LEFT
@@ -114,6 +157,7 @@ class QuizResult(PiCreatureScene):
             anims.append(anchor_point + grade * RIGHT + grades_count * UP)
         anims.append(FadeOut(students_points_mob))
 
+        self.wait()
         self.play(*anims)
 
         grade_labels = VGroup()
@@ -125,6 +169,7 @@ class QuizResult(PiCreatureScene):
         out_of_label = TextMobject("out of 3", color = highlight_color)
         out_of_label.next_to(grade_labels, RIGHT, buff = MED_LARGE_BUFF)
         grade_labels.add(out_of_label)
+        self.wait()
         self.play(Write(grade_labels))
 
         grade_hist = Histogram(
@@ -138,6 +183,7 @@ class QuizResult(PiCreatureScene):
         )
         grade_hist.move_to(all_students)
 
+        self.wait()
         self.play(
             FadeIn(grade_hist),
             FadeOut(all_students)
@@ -145,12 +191,13 @@ class QuizResult(PiCreatureScene):
 
 
         nb_students_label = TextMobject("\# of students", color = highlight_color)
-        nb_students_label.move_to(5 * LEFT + 2 * UP)
+        nb_students_label.move_to(5 * RIGHT + 1 * UP)
         arrows = VGroup(*[
-            Arrow(nb_students_label.get_right(), grade_hist.bars[i].get_center(),
+            Arrow(nb_students_label.get_left(), grade_hist.bars[i].get_center(),
                 color = highlight_color)
             for i in range(4)
         ])
+        self.wait()
         self.play(Write(nb_students_label), LaggedStart(GrowArrow,arrows))
 
         percentage_label = TextMobject("\% of students", color = highlight_color)
@@ -167,6 +214,7 @@ class QuizResult(PiCreatureScene):
             new_label.move_to(label)
             anims.append(Transform(label, new_label))
         anims.append(ReplacementTransform(nb_students_label, percentage_label))
+        self.wait()
         self.play(*anims)
 
         self.remove(all_quizzes)
@@ -177,10 +225,12 @@ class QuizResult(PiCreatureScene):
             pi.move_to(x * RIGHT + y * UP)
         all_students.scale(0.8)
         all_students.to_corner(DOWN + LEFT)
+        self.wait()
         self.play(FadeIn(all_students))
 
         prob_label = TextMobject("probability", color = highlight_color)
         prob_label.move_to(percentage_label)
+        self.wait()
         self.play(
             all_students[8].set_color, MAROON_E,
             #all_students[:8].fade, 0.6,
@@ -188,6 +238,7 @@ class QuizResult(PiCreatureScene):
             ReplacementTransform(percentage_label, prob_label)
         )
 
+        self.wait()
         self.play(
             FadeOut(prob_label),
             FadeOut(arrows)
@@ -210,6 +261,7 @@ class QuizResult(PiCreatureScene):
                     rate_func = linear
                 )
 
+        self.wait()
         for i in range(3):
             self.play(flash_hist, flash_class)
             self.remove(flash_hist.prototype_cell)

@@ -42,15 +42,16 @@ class GenericMorphBrickRowIntoHistogram(Scene):
             rect.set_stroke(color = WHITE, width = 3)
 
         self.wait()
-        self.play(self.row.rects.space_out_submobjects, {"factor" : 1.3})
+        self.play(
+            self.row.rects.space_out_submobjects, {"factor" : 1.3},
+            FadeOut(tallies)
+        )
         self.wait()
         anims = []
         for brick in self.row.rects:
             anims.append(brick.rotate)
             anims.append(TAU/4)
         
-        if self.show_tallies:
-            anims.append(FadeOut(tallies))
         self.play(*anims)
 
         self.wait()
@@ -74,6 +75,7 @@ class GenericMorphBrickRowIntoHistogram(Scene):
         self.wait()
 
 
+
 class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
     
     CONFIG = {
@@ -86,6 +88,8 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
     }
 
     def construct(self):
+
+
 
         super(MorphBrickRowIntoHistogram3,self).construct()
         
