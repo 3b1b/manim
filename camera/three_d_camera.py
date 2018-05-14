@@ -12,6 +12,8 @@ from utils.bezier import interpolate
 from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
 
+# TODO: Make sure this plays well with latest camera updates
+
 
 class CameraWithPerspective(Camera):
     CONFIG = {

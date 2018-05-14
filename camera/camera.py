@@ -29,8 +29,10 @@ from utils.space_ops import angle_of_vector
 class Camera(object):
     CONFIG = {
         "background_image": None,
-        "pixel_shape": (DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH),
-        # Note: frame height and width will be resized to match pixel_shape
+        "pixel_height": DEFAULT_PIXEL_HEIGHT,
+        "pixel_width": DEFAULT_PIXEL_WIDTH,
+        # Note: frame height and width will be resized to match
+        # the pixel aspect ratio
         "frame_height": FRAME_HEIGHT,
         "frame_width": FRAME_WIDTH,
         "frame_center": ORIGIN,
@@ -62,11 +64,18 @@ class Camera(object):
         self.canvas = None
         return copy.copy(self)
 
-    def reset_pixel_shape(self, new_shape):
-        self.pixel_shape = tuple(new_shape)
+    def reset_pixel_shape(self, new_height, new_width):
+        self.pixel_width = new_width
+        self.pixel_height = new_height
         self.init_background()
         self.resize_frame_shape()
         self.reset()
+
+    def get_pixel_height(self):
+        return self.pixel_height
+
+    def get_pixel_width(self):
+        return self.pixel_width
 
     def get_frame_height(self):
         return self.frame_height
@@ -89,11 +98,12 @@ class Camera(object):
     def resize_frame_shape(self, fixed_dimension=0):
         """
         Changes frame_shape to match the aspect ratio
-        of pixel_shape, where fixed_dimension determines
+        of the pixels, where fixed_dimension determines
         whether frame_height or frame_width
         remains fixed while the other changes accordingly.
         """
-        pixel_height, pixel_width = self.pixel_shape
+        pixel_height = self.get_pixel_height()
+        pixel_width = self.get_pixel_width()
         frame_height = self.get_frame_height()
         frame_width = self.get_frame_width()
         aspect_ratio = fdiv(pixel_width, pixel_height)
@@ -105,10 +115,11 @@ class Camera(object):
         self.set_frame_width(frame_width)
 
     def init_background(self):
+        height = self.get_pixel_height()
+        width = self.get_pixel_width()
         if self.background_image is not None:
             path = get_full_raster_image_path(self.background_image)
             image = Image.open(path).convert(self.image_mode)
-            height, width = self.pixel_shape
             # TODO, how to gracefully handle backgrounds
             # with different sizes?
             self.background = np.array(image)[:height, :width]
@@ -118,7 +129,7 @@ class Camera(object):
                 self.background_color, self.background_opacity
             )
             self.background = np.zeros(
-                list(self.pixel_shape) + [self.n_rgb_coords],
+                (height, width, self.n_rgb_coords),
                 dtype=self.pixel_array_dtype
             )
             self.background[:, :] = background_rgba
@@ -388,7 +399,8 @@ class Camera(object):
         pixel_coords = pixel_coords[on_screen_indices]
         rgbas = rgbas[on_screen_indices]
 
-        ph, pw = self.pixel_shape
+        ph = self.get_pixel_height()
+        pw = self.get_pixel_width()
 
         flattener = np.array([1, pw], dtype='int')
         flattener = flattener.reshape((2, 1))
@@ -433,9 +445,8 @@ class Camera(object):
         # TODO, there is no accounting for a shear...
 
         # Paste into an image as large as the camear's pixel array
-        h, w = self.pixel_shape
         full_image = Image.fromarray(
-            np.zeros((h, w)),
+            np.zeros((self.get_pixel_height(), self.get_pixel_width())),
             mode="RGBA"
         )
         new_ul_coords = center_coords - np.array(sub_image.size) / 2
@@ -479,7 +490,8 @@ class Camera(object):
         shifted_points = points - self.get_frame_center()
 
         result = np.zeros((len(points), 2))
-        pixel_height, pixel_width = self.pixel_shape
+        pixel_height = self.get_pixel_height()
+        pixel_width = self.get_pixel_width()
         frame_height = self.get_frame_height()
         frame_width = self.get_frame_width()
         width_mult = pixel_width / frame_width
@@ -496,14 +508,22 @@ class Camera(object):
     def on_screen_pixels(self, pixel_coords):
         return reduce(op.and_, [
             pixel_coords[:, 0] >= 0,
-            pixel_coords[:, 0] < self.pixel_shape[1],
+            pixel_coords[:, 0] < self.get_pixel_width(),
             pixel_coords[:, 1] >= 0,
-            pixel_coords[:, 1] < self.pixel_shape[0],
+            pixel_coords[:, 1] < self.get_pixel_height(),
         ])
 
     def adjusted_thickness(self, thickness):
-        big_shape = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_shape"]
-        factor = sum(big_shape) / sum(self.pixel_shape)
+        # TODO: This seems...unsystematic
+        big_sum = op.add(
+            PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"],
+            PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"],
+        )
+        this_sum = op.add(
+            self.get_pixel_height(),
+            self.get_pixel_width(),
+        )
+        factor = fdiv(big_sum, this_sum)
         return 1 + (thickness - 1) / factor
 
     def get_thickening_nudges(self, thickness):
@@ -525,12 +545,16 @@ class Camera(object):
             self.get_frame_width(),
             self.get_frame_height()
         ])
-        full_pixel_dims = np.array(self.pixel_shape)[::-1]
+        full_pixel_dims = np.array([
+            self.get_pixel_width(),
+            self.get_pixel_height()
+        ])
 
         # These are addressed in the same y, x order as in pixel_array, but the values in them
         # are listed in x, y order
-        uncentered_pixel_coords = np.indices(self.pixel_shape)[
-            ::-1].transpose(1, 2, 0)
+        uncentered_pixel_coords = np.indices(
+            [self.get_pixel_height(), self.get_pixel_width()]
+        )[::-1].transpose(1, 2, 0)
         uncentered_space_coords = fdiv(
             uncentered_pixel_coords * full_space_dims,
             full_pixel_dims)
@@ -540,7 +564,8 @@ class Camera(object):
         # overflow is unlikely to be a problem)
 
         centered_space_coords = (
-            uncentered_space_coords - fdiv(full_space_dims, 2))
+            uncentered_space_coords - fdiv(full_space_dims, 2)
+        )
 
         # Have to also flip the y coordinates to account for pixel array being listed in
         # top-to-bottom order, opposite of screen coordinate convention

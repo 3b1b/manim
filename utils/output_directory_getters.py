@@ -34,7 +34,7 @@ def get_scene_output_directory(scene_class):
 def get_movie_output_directory(scene_class, camera_config, frame_duration):
     directory = get_scene_output_directory(scene_class)
     sub_dir = "%dp%d" % (
-        camera_config["pixel_shape"][0],
+        camera_config["pixel_height"],
         int(1.0 / frame_duration)
     )
     return guarantee_existance(os.path.join(directory, sub_dir))
