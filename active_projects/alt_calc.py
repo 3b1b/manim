@@ -36,6 +36,7 @@ class NumberlineTransformationScene(ZoomedScene):
             "run_time": 3,
             # "path_arc": 30 * DEGREES,
         },
+        "local_coordinate_num_decimal_places": 2,
         "zoom_factor": 0.1,
         "zoomed_display_height": 2.5,
         "zoomed_display_corner_buff": MED_SMALL_BUFF,
@@ -244,6 +245,9 @@ class NumberlineTransformationScene(ZoomedScene):
     def zoom_in_on_input(self, x,
                          local_sample_dots=None,
                          local_coordinate_values=None,
+                         pop_out=True,
+                         first_added_anims=[],
+                         second_added_anims=[],
                          ):
         input_point = self.get_input_point(x)
 
@@ -292,15 +296,26 @@ class NumberlineTransformationScene(ZoomedScene):
             anims.append(LaggedStart(GrowFromCenter, local_sample_dots))
             zcbr_group.add(local_sample_dots)
 
+        if first_added_anims:
+            anims += first_added_anims
+
         anims.append(Animation(zcbr_group))
+        if not pop_out:
+            self.activate_zooming(animate=False)
         self.play(*anims)
 
-        if not self.zoom_activated:
+        if not self.zoom_activated and pop_out:
             self.activate_zooming(animate=False)
-            self.play(self.get_zoomed_display_pop_out_animation())
+            added_anims = second_added_anims or []
+            self.play(
+                self.get_zoomed_display_pop_out_animation(),
+                *added_anims
+            )
 
     def get_local_coordinates(self, line, *x_values, **kwargs):
-        num_decimal_places = kwargs.get("num_decimal_places", 2)
+        num_decimal_places = kwargs.get(
+            "num_decimal_places", self.local_coordinate_num_decimal_places
+        )
         result = VGroup()
         result.tick_marks = VGroup()
         result.numbers = VGroup()
@@ -872,7 +887,7 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
 
     def add_title(self):
         title = self.title = TextMobject("$f(x) = x^2$")
-        title.to_edge(UP)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
         self.add(title)
 
     def show_specific_points_mapping(self):
@@ -922,6 +937,31 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
 
         self.sample_dots = sample_dots
         self.sample_dot_ghosts = sample_dot_ghosts
+
+    def get_stretch_words(self, factor, color=RED, less_than_one=False):
+        result = TextMobject(
+            "Scale \\\\ by", str(factor),
+            tex_to_color_map={str(factor): color}
+        )
+        result.scale(0.7)
+        la, ra = TexMobject("\\leftarrow \\rightarrow")
+        if less_than_one:
+            la, ra = ra, la
+        la.next_to(result, LEFT)
+        ra.next_to(result, RIGHT)
+        result.add(la, ra)
+        result.next_to(
+            self.zoomed_display.get_top(), DOWN, SMALL_BUFF
+        )
+        return result
+
+    def get_deriv_equation(self, x, rhs, color=RED):
+        deriv_equation = self.deriv_equation = TexMobject(
+            "\\frac{df}{dx}(", str(x), ")", "=", str(rhs),
+            tex_to_color_map={str(x): color, str(rhs): color}
+        )
+        deriv_equation.next_to(self.title, DOWN, MED_LARGE_BUFF)
+        return deriv_equation
 
 
 class ZoomInOnXSquaredNearOne(TalkThroughXSquaredExample):
@@ -1006,15 +1046,7 @@ class ZoomInOnXSquaredNearOne(TalkThroughXSquaredExample):
         )
 
         # Transform new zoomed view
-        stretch_by_two_words = TextMobject("Stretch by 2")
-        stretch_by_two_words.scale(0.5)
-        la, ra = TexMobject("\\leftarrow \\rightarrow")
-        la.next_to(stretch_by_two_words, LEFT)
-        ra.next_to(stretch_by_two_words, RIGHT)
-        stretch_by_two_words.add(la, ra)
-        stretch_by_two_words.next_to(
-            self.zoomed_display.get_top(), DOWN
-        )
+        stretch_by_two_words = self.get_stretch_words(2)
         self.add_foreground_mobject(stretch_by_two_words)
         sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
         self.apply_function(
@@ -1029,37 +1061,200 @@ class ZoomInOnXSquaredNearOne(TalkThroughXSquaredExample):
         self.wait()
 
         # Write derivative
-        deriv_equation = self.deriv_equation = TexMobject(
-            "\\frac{df}{dx}(", "1", ")", "=", "2",
-            tex_to_color_map={"1": RED, "2": RED}
-        )
-        deriv_equation.next_to(self.title, DOWN)
-
-        self.play(
-            Write(deriv_equation),
-            self.title.shift, MED_SMALL_BUFF * UP
-        )
+        deriv_equation = self.get_deriv_equation(1, 2, color=RED)
+        self.play(Write(deriv_equation))
         self.wait()
 
 
 class ZoomInOnXSquaredNearThree(ZoomInOnXSquaredNearOne):
+    CONFIG = {
+        "zoomed_display_width": 4,
+    }
+
     def construct(self):
-        pass
+        zoom_words = TextMobject("Zoomed view \\\\ near 3")
+        zoom_words.next_to(self.zoomed_display, DOWN)
+
+        x = 3
+        local_sample_dots = self.get_local_sample_dots(x)
+        local_coordinate_values = self.get_local_coordinate_values(x, dx=0.1)
+        target_coordinate_values = self.get_local_coordinate_values(self.func(x), dx=0.1)
+
+        color = self.sample_dots[len(self.sample_dots) / 2].get_color()
+        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
+        stretch_words = self.get_stretch_words(2 * x, color)
+        deriv_equation = self.get_deriv_equation(x, 2 * x, color)
+
+        self.add(deriv_equation)
+        self.zoom_in_on_input(
+            x,
+            pop_out=False,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=local_coordinate_values
+        )
+        self.play(Write(zoom_words, run_time=1))
+        self.wait()
+        self.add_foreground_mobject(stretch_words)
+        self.apply_function(
+            self.func,
+            apply_function_to_number_line=False,
+            sample_dots=sample_dot_ghost_copies,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=target_coordinate_values,
+            added_anims=[Write(stretch_words)]
+        )
+        self.wait(2)
 
 
 class ZoomInOnXSquaredNearOneFourth(ZoomInOnXSquaredNearOne):
+    CONFIG = {
+        "zoom_factor": 0.01,
+        "local_coordinate_num_decimal_places": 4,
+        "zoomed_display_width": 4,
+        "default_delta_x": 0.25,
+    }
+
     def construct(self):
-        pass
+        # Much copy-pasting from previous scenes.  Not great, but
+        # the fastest way to get the ease-of-tweaking I'd like.
+        zoom_words = TextMobject("Zoomed view \\\\ near $1/4$")
+        zoom_words.next_to(self.zoomed_display, DOWN)
+
+        x = 0.25
+        local_sample_dots = self.get_local_sample_dots(
+            x, sample_radius=2.5 * self.zoomed_camera.frame.get_width(),
+        )
+        local_coordinate_values = self.get_local_coordinate_values(
+            x, dx=0.01,
+        )
+        target_coordinate_values = self.get_local_coordinate_values(
+            self.func(x), dx=0.01,
+        )
+
+        color = RED
+        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
+        stretch_words = self.get_stretch_words("1/2", color, less_than_one=True)
+        deriv_equation = self.get_deriv_equation("1/4", "1/2", color)
+
+        one_fourth_point = self.get_input_point(x)
+        one_fourth_arrow = Vector(0.5 * UP, color=WHITE)
+        one_fourth_arrow.stem.stretch(0.75, 0)
+        one_fourth_arrow.tip.scale(0.75, about_edge=DOWN)
+        one_fourth_arrow.next_to(one_fourth_point, DOWN, SMALL_BUFF)
+        one_fourth_label = TexMobject("0.25")
+        one_fourth_label.match_height(self.input_line.numbers)
+        one_fourth_label.next_to(one_fourth_arrow, DOWN, SMALL_BUFF)
+
+        self.add(deriv_equation)
+        self.zoom_in_on_input(
+            x,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=local_coordinate_values,
+            pop_out=False,
+            first_added_anims=[
+                FadeIn(one_fourth_label),
+                GrowArrow(one_fourth_arrow),
+            ]
+        )
+        self.play(Write(zoom_words, run_time=1))
+        self.wait()
+        self.add_foreground_mobject(stretch_words)
+        self.apply_function(
+            self.func,
+            apply_function_to_number_line=False,
+            sample_dots=sample_dot_ghost_copies,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=target_coordinate_values,
+            added_anims=[Write(stretch_words)]
+        )
+        self.wait(2)
 
 
 class ZoomInOnXSquaredNearZero(ZoomInOnXSquaredNearOne):
+    CONFIG = {
+        "zoom_factor": 0.1,
+        "zoomed_display_width": 4,
+        "scale_by_term": "???",
+    }
+
     def construct(self):
-        pass
+        zoom_words = TextMobject(
+            "Zoomed %sx \\\\ near 0" % "{:,}".format(int(1.0 / self.zoom_factor))
+        )
+        zoom_words.next_to(self.zoomed_display, DOWN)
+
+        x = 0
+        local_sample_dots = self.get_local_sample_dots(
+            x, sample_radius=2 * self.zoomed_camera.frame.get_width()
+        )
+        local_coordinate_values = self.get_local_coordinate_values(
+            x, dx=self.zoom_factor
+        )
+        # target_coordinate_values = self.get_local_coordinate_values(
+        #     self.func(x), dx=self.zoom_factor
+        # )
+
+        color = self.sample_dots[len(self.sample_dots) / 2].get_color()
+        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
+        stretch_words = self.get_stretch_words(
+            self.scale_by_term, color, less_than_one=True
+        )
+        deriv_equation = self.get_deriv_equation(x, 2 * x, color)
+
+        self.add(deriv_equation)
+        self.zoom_in_on_input(
+            x,
+            pop_out=False,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=local_coordinate_values
+        )
+        self.play(Write(zoom_words, run_time=1))
+        self.wait()
+        self.add_foreground_mobject(stretch_words)
+        self.apply_function(
+            self.func,
+            apply_function_to_number_line=False,
+            sample_dots=sample_dot_ghost_copies,
+            local_sample_dots=local_sample_dots,
+            # target_coordinate_values=target_coordinate_values,
+            added_anims=[
+                Write(stretch_words),
+                MaintainPositionRelativeTo(
+                    self.local_coordinates,
+                    self.zoomed_camera.frame
+                )
+            ]
+        )
+        self.wait(2)
+
+
+class ZoomInOnXSquared100xZero(ZoomInOnXSquaredNearZero):
+    CONFIG = {
+        "zoom_factor": 0.01
+    }
+
+
+class ZoomInOnXSquared1000xZero(ZoomInOnXSquaredNearZero):
+    CONFIG = {
+        "zoom_factor": 0.001,
+        "local_coordinate_num_decimal_places": 3,
+    }
+
+
+class ZoomInOnXSquared10000xZero(ZoomInOnXSquaredNearZero):
+    CONFIG = {
+        "zoom_factor": 0.0001,
+        "local_coordinate_num_decimal_places": 4,
+        "scale_by_term": "0",
+    }
 
 
 class XSquaredForNegativeInput(TalkThroughXSquaredExample):
     CONFIG = {
-        "input_line_config": {},
+        "input_line_config": {
+            "x_min": -3,
+            "x_max": 3,
+        },
         "output_line_config": {},
     }
 
