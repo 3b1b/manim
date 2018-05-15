@@ -468,7 +468,7 @@ class TauFalls(Scene):
 class EulerWrites628(Scene):
     CONFIG = {
         "camera_config" : {
-            "background_alpha" : 255,
+            "background_opacity" : 1,
         }
     }
     def construct(self):
@@ -548,7 +548,7 @@ class EulerWrites628(Scene):
 class HeroAndVillain(Scene):
     CONFIG = {
         "camera_config" : {
-            "background_alpha" : 255,
+            "background_opacity" : 1,
         } 
     }
     def construct(self):
@@ -987,7 +987,7 @@ class SpecialThanks(Scene):
 class EndScene(PatreonEndScreen):
     CONFIG = {
         "camera_config" : {
-            "background_alpha" : 255,
+            "background_opacity" : 1,
         }
     }
     def construct(self):

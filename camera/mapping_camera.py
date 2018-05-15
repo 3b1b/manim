@@ -43,8 +43,9 @@ class MappingCamera(Camera):
 # TODO: Add optional separator borders between cameras (or perhaps peel this off into a
 # CameraPlusOverlay class)
 
+# TODO, the classes below should likely be deleted
 
-class MultiCamera(Camera):
+class OldMultiCamera(Camera):
     def __init__(self, *cameras_with_start_positions, **kwargs):
         self.shifted_cameras = [
             DictAsObject(
@@ -52,8 +53,8 @@ class MultiCamera(Camera):
                     "camera": camera_with_start_positions[0],
                     "start_x": camera_with_start_positions[1][1],
                     "start_y": camera_with_start_positions[1][0],
-                    "end_x": camera_with_start_positions[1][1] + camera_with_start_positions[0].pixel_shape[1],
-                    "end_y": camera_with_start_positions[1][0] + camera_with_start_positions[0].pixel_shape[0],
+                    "end_x": camera_with_start_positions[1][1] + camera_with_start_positions[0].get_pixel_width(),
+                    "end_y": camera_with_start_positions[1][0] + camera_with_start_positions[0].get_pixel_height(),
                 })
             for camera_with_start_positions in cameras_with_start_positions
         ]
@@ -92,23 +93,23 @@ class MultiCamera(Camera):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.init_background()
 
-# A MultiCamera which, when called with two full-size cameras, initializes itself
+# A OldMultiCamera which, when called with two full-size cameras, initializes itself
 # as a splitscreen, also taking care to resize each individual camera within it
 
 
-class SplitScreenCamera(MultiCamera):
+class SplitScreenCamera(OldMultiCamera):
     def __init__(self, left_camera, right_camera, **kwargs):
         digest_config(self, kwargs)
         self.left_camera = left_camera
         self.right_camera = right_camera
 
-        half_width = self.pixel_shape[1] / 2
+        half_width = self.get_pixel_width() / 2
         for camera in [self.left_camera, self.right_camera]:
             # TODO: Round up on one if width is odd
-            camera.pixel_shape = (self.pixel_shape[0], half_width)
-            camera.init_background()
-            camera.resize_frame_shape()
-            camera.reset()
+            camera.reset_pixel_shape(camera.get_pixel_height(), half_width)
 
-        MultiCamera.__init__(self, (left_camera, (0, 0)),
-                             (right_camera, (0, half_width)))
+        OldMultiCamera.__init__(
+            self,
+            (left_camera, (0, 0)),
+            (right_camera, (0, half_width)),
+        )

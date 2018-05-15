@@ -1479,7 +1479,7 @@ class AskAboutLayers(PreviewMNistNetwork):
 
 class BreakUpMacroPatterns(IntroduceEachLayer):
     CONFIG = {
-        "camera_config" : {"background_alpha" : 255},
+        "camera_config" : {"background_opacity" : 1},
         "prefixes" : [
             "nine", "eight", "four",
             "upper_loop", "right_line",
@@ -1868,7 +1868,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
 class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
     CONFIG = {
         "camera_config" : {
-            "background_alpha" : 255,
+            "background_opacity" : 1,
         },
         "network_mob_config" : {
             "layer_to_layer_buff" : 2,
@@ -2081,7 +2081,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
 
 class EdgeDetection(Scene):
     CONFIG = {
-        "camera_config" : {"background_alpha" : 255}
+        "camera_config" : {"background_opacity" : 1}
     }
     def construct(self):
         lion = ImageMobject("Lion")

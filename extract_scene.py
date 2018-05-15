@@ -224,11 +224,8 @@ def get_module_posix(file_name):
     module_name = file_name.replace(".py", "")
     last_module = imp.load_module(".", *imp.find_module("."))
     for part in module_name.split(os.sep):
-        try:
-            load_args = imp.find_module(part, last_module.__path__)
-            last_module = imp.load_module(part, *load_args)
-        except ImportError:
-            continue
+        load_args = imp.find_module(part, last_module.__path__)
+        last_module = imp.load_module(part, *load_args)
     return last_module
 
 

@@ -4958,7 +4958,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
 
 class Conclusion(TeacherStudentsScene):
     CONFIG = {
-        "camera_config": {"background_alpha": 255},
+        "camera_config": {"background_opacity": 1},
     }
 
     def construct(self):
