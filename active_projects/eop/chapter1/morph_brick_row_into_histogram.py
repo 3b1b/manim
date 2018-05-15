@@ -41,17 +41,20 @@ class GenericMorphBrickRowIntoHistogram(Scene):
         for rect in self.row.rects:
             rect.set_stroke(color = WHITE, width = 3)
 
-        self.play(self.row.rects.space_out_submobjects, {"factor" : 1.3})
-
+        self.wait()
+        self.play(
+            self.row.rects.space_out_submobjects, {"factor" : 1.3},
+            FadeOut(tallies)
+        )
+        self.wait()
         anims = []
         for brick in self.row.rects:
             anims.append(brick.rotate)
             anims.append(TAU/4)
         
-        if self.show_tallies:
-            anims.append(FadeOut(tallies))
         self.play(*anims)
 
+        self.wait()
 
         anims = []
         for (i,brick) in enumerate(self.row.rects):
@@ -59,6 +62,7 @@ class GenericMorphBrickRowIntoHistogram(Scene):
             anims.append(self.bar_anchors[i])
             anims.append({"direction" : UP, "buff" : 0})
         self.play(*anims)
+        self.wait()
 
         self.bars.create_outline()
         anims = [
@@ -67,6 +71,8 @@ class GenericMorphBrickRowIntoHistogram(Scene):
         ]
         anims.append(FadeIn(self.bars.outline))
         self.play(*anims)
+
+        self.wait()
 
 
 
@@ -82,6 +88,8 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
     }
 
     def construct(self):
+
+
 
         super(MorphBrickRowIntoHistogram3,self).construct()
         
@@ -115,12 +123,14 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
             if i != 0:
                 y_guide.add(y_guide_label)
             y_guides.add(y_guide)
+        self.wait()
 
         self.play(
             FadeIn(y_guides),
             Animation(self.bars.outline),
             Animation(self.bars)
         )
+        self.wait()
 
         self.play(
             FadeIn(x_axis),
@@ -137,10 +147,12 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
 
         total_area_group = VGroup(total_area_text, area_decimal)
         total_area_group.move_to(2.7 * UP)
+        self.wait()
 
         self.play(
             FadeIn(total_area_text),
         )
+        self.wait()
 
         cumulative_areas = [0.125, 0.5, 0.875, 1]
         covering_rects = self.bars.copy()
@@ -165,6 +177,7 @@ class MorphBrickRowIntoHistogram3(GenericMorphBrickRowIntoHistogram):
             FadeOut(covering_rects),
             ShowCreation(total_area_rect)
         )
+        self.wait()
 
 
 
@@ -194,12 +207,14 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
 
         nb_tails_label = TextMobject("\# of tails")
         nb_tails_label.move_to(5 * RIGHT + 2.5 * DOWN)
+        self.wait()
 
         self.play(
             FadeIn(x_axis),
             FadeIn(x_labels),
             FadeIn(nb_tails_label)
         )
+        self.wait()
 
         # draw y-guides
 
@@ -221,6 +236,7 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
 
         self.bring_to_back(y_guides)
         self.play(FadeIn(y_guides), Animation(self.bars))
+        self.wait()
 
         histogram_width = self.bars.get_width()
         histogram_height = self.bars.get_height()
@@ -247,6 +263,7 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
         anims.append(ORIGIN)
 
         self.play(*anims)
+        self.wait()
 
         anims = []
         for (guide, i, h) in zip(y_guides, prob_grid, y_guide_heights):
@@ -265,6 +282,7 @@ class MorphBrickRowIntoHistogram20(GenericMorphBrickRowIntoHistogram):
         anims.append(self.bars.get_bottom())
 
         self.play(*anims)
+        self.wait()
 
 class MorphBrickRowIntoHistogram100(MorphBrickRowIntoHistogram20):
     CONFIG = {

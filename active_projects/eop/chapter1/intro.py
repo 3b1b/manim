@@ -42,8 +42,9 @@ class Introduction(TeacherStudentsScene):
 
         self.wait()
 
-
-        self.get_teacher().change_mode("raise_right_hand")
+        self.play(
+            self.get_teacher().change_mode,"raise_right_hand"
+        )
         self.wait()
 
         self.wait(30)
