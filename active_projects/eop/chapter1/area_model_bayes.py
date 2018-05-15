@@ -203,7 +203,7 @@ class IllustrateAreaModelBayes(Scene):
 
         # solve formula for P(B|A)
 
-        rearranged_formula = TexMobject(["P(B\mid A)", "=", "{P(A\\text{ and }B) \over P(A)}"])
+        rearranged_formula = TexMobject("P(B\mid A)", "=", "{P(A\\text{ and }B) \over P(A)}")
         rearranged_formula.move_to(indep_formula)
 
         self.wait()
