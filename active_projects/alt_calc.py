@@ -39,6 +39,8 @@ class NumberlineTransformationScene(ZoomedScene):
         "zoom_factor": 0.1,
         "zoomed_display_height": 2.5,
         "zoomed_display_corner_buff": MED_SMALL_BUFF,
+        "mini_line_scale_factor": 2,
+        "default_coordinate_value_dx": 0.05,
     }
 
     def setup(self):
@@ -78,6 +80,7 @@ class NumberlineTransformationScene(ZoomedScene):
 
     def setup_zoomed_camera_background_rectangle(self):
         frame = self.zoomed_camera.frame
+        frame.next_to(self.camera.frame, UL)
         self.zoomed_camera_background_rectangle = BackgroundRectangle(
             frame, fill_opacity=1
         )
@@ -89,17 +92,23 @@ class NumberlineTransformationScene(ZoomedScene):
             self.zoomed_camera_background_rectangle,
         )
 
-    def get_sample_dots(self, x_min=None, x_max=None,
-                        delta_x=None, dot_radius=None, colors=None):
+    def get_sample_input_points(self, x_min=None, x_max=None, delta_x=None):
         x_min = x_min or self.input_line.x_min
         x_max = x_max or self.input_line.x_max
         delta_x = delta_x or self.default_delta_x
+        return [
+            self.get_input_point(x)
+            for x in np.arange(x_min, x_max + delta_x, delta_x)
+        ]
+
+    def get_sample_dots(self, x_min=None, x_max=None,
+                        delta_x=None, dot_radius=None, colors=None):
         dot_radius = dot_radius or self.default_sample_dot_radius
         colors = colors or self.default_sample_dot_colors
 
         dots = VGroup(*[
-            Dot(self.get_input_point(x), radius=dot_radius)
-            for x in np.arange(x_min, x_max + delta_x, delta_x)
+            Dot(point, radius=dot_radius)
+            for point in self.get_sample_input_points(x_min, x_max, delta_x)
         ])
         dots.set_color_by_gradient(*colors)
         return dots
@@ -117,6 +126,13 @@ class NumberlineTransformationScene(ZoomedScene):
         config.update(kwargs)
         return self.get_sample_dots(**config)
 
+    def get_local_coordinate_values(self, x, dx=None, n_neighbors=1):
+        dx = dx or self.default_coordinate_value_dx
+        return [
+            x + n * dx
+            for n in range(-n_neighbors, n_neighbors + 1)
+        ]
+
     # Mapping animations
     def get_mapping_animation(self, func, mobject,
                               how_to_apply_func=apply_function_to_center,
@@ -132,6 +148,7 @@ class NumberlineTransformationScene(ZoomedScene):
 
     def get_line_mapping_animation(self, func, **kwargs):
         input_line_copy = self.input_line.deepcopy()
+        self.moving_input_line = input_line_copy
         input_line_copy.remove(input_line_copy.numbers)
         # input_line_copy.set_stroke(width=2)
         input_line_copy.main_line.insert_n_anchor_points(
@@ -150,7 +167,7 @@ class NumberlineTransformationScene(ZoomedScene):
 
     def get_sample_dots_mapping_animation(self, func, dots, **kwargs):
         return self.get_mapping_animation(
-            func, dots, apply_function_to_submobjects
+            func, dots, how_to_apply_func=apply_function_to_submobjects
         )
 
     def get_zoomed_camera_frame_mapping_animation(self, func, x=None, **kwargs):
@@ -177,7 +194,7 @@ class NumberlineTransformationScene(ZoomedScene):
         if hasattr(self, "mini_line"):  # Test for if mini_line is in self?
             anims.append(self.get_mapping_animation(
                 func, self.mini_line,
-                how_to_apply_func=apply_function_to_points
+                how_to_apply_func=apply_function_to_center
             ))
         if sample_dots:
             anims.append(
@@ -190,7 +207,7 @@ class NumberlineTransformationScene(ZoomedScene):
 
             zoom_anim.update(1)
             target_mini_line = Line(frame.get_left(), frame.get_right())
-            target_mini_line.scale(2)
+            target_mini_line.scale(self.mini_line_scale_factor)
             target_mini_line.match_style(self.output_line.main_line)
             zoom_anim.update(0)
             zcbr_group.submobjects.insert(1, target_mini_line)
@@ -239,11 +256,12 @@ class NumberlineTransformationScene(ZoomedScene):
 
         # Add miniature number_line
         mini_line = self.mini_line = Line(frame.get_left(), frame.get_right())
-        mini_line.scale(2)
+        mini_line.scale(self.mini_line_scale_factor)
         mini_line.insert_n_anchor_points(self.num_inserted_number_line_anchors)
         mini_line.match_style(self.input_line.main_line)
-        zcbr_group.add(mini_line.copy(), mini_line)
-        anims.append(FadeIn(mini_line))
+        mini_line_copy = mini_line.copy()
+        zcbr_group.add(mini_line_copy, mini_line)
+        anims += [FadeIn(mini_line), FadeIn(mini_line_copy)]
 
         # Add tiny coordiantes
         if local_coordinate_values is None:
@@ -306,6 +324,9 @@ class NumberlineTransformationScene(ZoomedScene):
     def get_input_point(self, x):
         return self.input_line.number_to_point(x)
 
+    def get_output_point(self, fx):
+        return self.output_line.number_to_point(fx)
+
     def number_func_to_point_func(self, number_func):
         input_line, output_line = self.number_lines
 
@@ -325,12 +346,13 @@ class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
         },
         "output_line_config": {
             "x_max": 20,
-        }
+        },
     }
 
     def construct(self):
         func = lambda x: x**2
-        x = 0.5
+        x = 3
+        dx = 0.05
 
         sample_dots = self.get_sample_dots()
         local_sample_dots = self.get_local_sample_dots(x)
@@ -339,14 +361,14 @@ class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
         self.zoom_in_on_input(
             x,
             local_sample_dots=local_sample_dots,
-            local_coordinate_values=[x - 0.05, x, x + 0.05],
+            local_coordinate_values=[x - dx, x, x + dx],
         )
         self.wait()
         self.apply_function(
             func,
             sample_dots=sample_dots,
             local_sample_dots=local_sample_dots,
-            target_coordinate_values=[func(x) - 0.05, func(x), func(x) + 0.05],
+            target_coordinate_values=[func(x) - dx, func(x), func(x) + dx],
         )
         self.wait()
 
@@ -674,3 +696,148 @@ class EoCWrapper(Scene):
         title = Title("Essence of calculus")
         self.play(Write(title))
         self.wait()
+
+
+class IntroduceTransformationView(NumberlineTransformationScene):
+    CONFIG = {
+        "func": lambda x: 0.5 * np.sin(2 * x) + x,
+        "number_line_config": {
+            "x_min": 0,
+            "x_max": 6,
+            "unit_size": 2.0
+        },
+    }
+
+    def construct(self):
+        self.add_title()
+        self.show_animation_preview()
+        self.indicate_indicate_point_densities()
+        self.show_zoomed_transformation()
+
+    def add_title(self):
+        title = self.title = TextMobject("$f(x)$ as a transformation")
+        title.to_edge(UP)
+        self.add(title)
+
+    def show_animation_preview(self):
+        input_points = self.get_sample_input_points()
+        output_points = map(
+            self.number_func_to_point_func(self.func),
+            input_points
+        )
+        sample_dots = self.get_sample_dots()
+        sample_dot_ghosts = sample_dots.copy().fade(0.5)
+        arrows = VGroup(*[
+            Arrow(ip, op, buff=MED_SMALL_BUFF)
+            for ip, op in zip(input_points, output_points)
+        ])
+        arrows = arrows[1::3]
+        arrows.set_stroke(BLACK, 1)
+
+        self.play(
+            LaggedStart(GrowFromCenter, sample_dots, run_time=1),
+            LaggedStart(GrowArrow, arrows)
+        )
+        self.add(sample_dot_ghosts)
+        self.apply_function(
+            self.func, sample_dots=sample_dots
+        )
+        self.wait()
+        self.play(LaggedStart(FadeOut, arrows, run_time=1))
+
+        self.sample_dots = sample_dots
+        self.sample_dot_ghosts = sample_dot_ghosts
+
+    def indicate_indicate_point_densities(self):
+        lower_brace = Brace(Line(LEFT, RIGHT), UP)
+        upper_brace = lower_brace.copy()
+        input_tracker = ValueTracker(0.5)
+        dx = 0.5
+
+        def update_upper_brace(brace):
+            x = input_tracker.get_value()
+            line = Line(
+                self.get_input_point(x),
+                self.get_input_point(x + dx),
+            )
+            brace.match_width(line, stretch=True)
+            brace.next_to(line, UP, buff=SMALL_BUFF)
+            return brace
+
+        def update_lower_brace(brace):
+            x = input_tracker.get_value()
+            line = Line(
+                self.get_output_point(self.func(x)),
+                self.get_output_point(self.func(x + dx)),
+            )
+            brace.match_width(line, stretch=True)
+            brace.next_to(line, UP, buff=SMALL_BUFF)
+            return brace
+
+        lower_brace_anim = UpdateFromFunc(lower_brace, update_lower_brace)
+        upper_brace_anim = UpdateFromFunc(upper_brace, update_upper_brace)
+
+        new_title = TextMobject(
+            "$\\frac{df}{dx}(x)$ measures stretch/squishing"
+        )
+        new_title.move_to(self.title, UP)
+
+        stretch_factor = DecimalNumber(0, color=YELLOW)
+        stretch_factor_anim = ChangingDecimal(
+            stretch_factor, lambda a: lower_brace.get_width() / upper_brace.get_width(),
+            position_update_func=lambda m: m.next_to(lower_brace, UP, SMALL_BUFF)
+        )
+
+        self.play(
+            GrowFromCenter(upper_brace),
+            FadeOut(self.title),
+            # FadeIn(new_title)
+            Write(new_title, run_time=2)
+        )
+        self.title = new_title
+        self.play(
+            ReplacementTransform(upper_brace.copy(), lower_brace),
+            GrowFromPoint(stretch_factor, upper_brace.get_center())
+        )
+        self.play(
+            input_tracker.set_value, self.input_line.x_max - dx,
+            lower_brace_anim,
+            upper_brace_anim,
+            stretch_factor_anim,
+            run_time=8,
+            rate_func=bezier([0, 0, 1, 1])
+        )
+        self.wait()
+
+        new_sample_dots = self.get_sample_dots()
+        self.play(
+            FadeOut(VGroup(
+                upper_brace, lower_brace, stretch_factor,
+                self.sample_dots, self.moving_input_line,
+            )),
+            FadeIn(new_sample_dots),
+        )
+        self.sample_dots = new_sample_dots
+
+    def show_zoomed_transformation(self):
+        x = 2.75
+        local_sample_dots = self.get_local_sample_dots(x)
+
+        self.zoom_in_on_input(
+            x,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=self.get_local_coordinate_values(x),
+        )
+        self.wait()
+        self.apply_function(
+            self.func,
+            sample_dots=self.sample_dots,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=self.get_local_coordinate_values(self.func(x))
+        )
+        self.wait()
+
+
+class TalkThroughXSquaredExample(IntroduceTransformationView):
+    def construct(self):
+        pass
