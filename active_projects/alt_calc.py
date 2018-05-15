@@ -41,6 +41,7 @@ class NumberlineTransformationScene(ZoomedScene):
         "zoomed_display_corner_buff": MED_SMALL_BUFF,
         "mini_line_scale_factor": 2,
         "default_coordinate_value_dx": 0.05,
+        "zoomed_camera_background_rectangle_fill_opacity": 1.0,
     }
 
     def setup(self):
@@ -82,7 +83,7 @@ class NumberlineTransformationScene(ZoomedScene):
         frame = self.zoomed_camera.frame
         frame.next_to(self.camera.frame, UL)
         self.zoomed_camera_background_rectangle = BackgroundRectangle(
-            frame, fill_opacity=1
+            frame, fill_opacity=self.zoomed_camera_background_rectangle_fill_opacity
         )
         self.zoomed_camera_background_rectangle_anim = UpdateFromFunc(
             self.zoomed_camera_background_rectangle,
@@ -114,14 +115,18 @@ class NumberlineTransformationScene(ZoomedScene):
         return dots
 
     def get_local_sample_dots(self, x, sample_radius=None, **kwargs):
-        if sample_radius is None:
-            sample_radius = self.zoomed_camera.frame.get_width() / 2
         zoom_factor = self.get_zoom_factor()
+        delta_x = kwargs.get("delta_x", self.default_delta_x * zoom_factor)
+        dot_radius = kwargs.get("dot_radius", self.default_sample_dot_radius * zoom_factor)
+
+        if sample_radius is None:
+            unrounded_radius = self.zoomed_camera.frame.get_width() / 2
+            sample_radius = int(unrounded_radius / delta_x) * delta_x
         config = {
             "x_min": x - sample_radius,
             "x_max": x + sample_radius,
-            "delta_x": self.default_delta_x * zoom_factor,
-            "dot_radius": self.default_sample_dot_radius * zoom_factor,
+            "delta_x": delta_x,
+            "dot_radius": dot_radius,
         }
         config.update(kwargs)
         return self.get_sample_dots(**config)
@@ -183,14 +188,19 @@ class NumberlineTransformationScene(ZoomedScene):
         )
 
     def apply_function(self, func,
+                       apply_function_to_number_line=True,
                        sample_dots=None,
                        local_sample_dots=None,
-                       target_coordinate_values=None):
+                       target_coordinate_values=None,
+                       added_anims=None
+                       ):
         zcbr_group = self.zoomed_camera_background_rectangle_group
         zcbr_anim = self.zoomed_camera_background_rectangle_anim
         frame = self.zoomed_camera.frame
 
-        anims = [self.get_line_mapping_animation(func)]
+        anims = []
+        if apply_function_to_number_line:
+            anims.append(self.get_line_mapping_animation(func))
         if hasattr(self, "mini_line"):  # Test for if mini_line is in self?
             anims.append(self.get_mapping_animation(
                 func, self.mini_line,
@@ -218,11 +228,14 @@ class NumberlineTransformationScene(ZoomedScene):
             )
             anims.append(FadeIn(coordinates))
             zcbr_group.add(coordinates)
+            self.local_target_coordinates = coordinates
         if local_sample_dots:
             anims.append(
                 self.get_sample_dots_mapping_animation(func, local_sample_dots)
             )
             zcbr_group.add(local_sample_dots)
+        if added_anims:
+            anims += added_anims
         anims.append(Animation(zcbr_group))
 
         self.play(*anims)
@@ -272,6 +285,7 @@ class NumberlineTransformationScene(ZoomedScene):
         )
         anims.append(FadeIn(local_coordinates))
         zcbr_group.add(local_coordinates)
+        self.local_coordinates = local_coordinates
 
         # Add tiny dots
         if local_sample_dots is not None:
@@ -839,5 +853,215 @@ class IntroduceTransformationView(NumberlineTransformationScene):
 
 
 class TalkThroughXSquaredExample(IntroduceTransformationView):
+    CONFIG = {
+        "func": lambda x: x**2,
+        "number_line_config": {
+            "x_min": 0,
+            "x_max": 5,
+            "unit_size": 1.25,
+        },
+        "output_line_config": {
+            "x_max": 25,
+        },
+        "default_delta_x": 0.2
+    }
+
+    def construct(self):
+        self.add_title()
+        self.show_specific_points_mapping()
+
+    def add_title(self):
+        title = self.title = TextMobject("$f(x) = x^2$")
+        title.to_edge(UP)
+        self.add(title)
+
+    def show_specific_points_mapping(self):
+        # First, just show integers as examples
+        int_dots = self.get_sample_dots(1, 6, 1)
+        int_dot_ghosts = int_dots.copy().fade(0.5)
+        int_arrows = VGroup(*[
+            Arrow(
+                # num.get_bottom(),
+                self.get_input_point(x),
+                self.get_output_point(self.func(x)),
+                buff=MED_SMALL_BUFF
+            )
+            for x, num in zip(range(1, 6), self.input_line.numbers[1:])
+        ])
+        point_func = self.number_func_to_point_func(self.func)
+
+        numbers = self.input_line.numbers
+        numbers.next_to(self.input_line, UP, SMALL_BUFF)
+        self.titles[0].next_to(numbers, UP, MED_SMALL_BUFF, LEFT)
+        # map(TexMobject.add_background_rectangle, numbers)
+        # self.add_foreground_mobject(numbers)
+
+        for dot, dot_ghost, arrow in zip(int_dots, int_dot_ghosts, int_arrows):
+            arrow.match_color(dot)
+            self.play(DrawBorderThenFill(dot, run_time=1))
+            self.add(dot_ghost)
+            self.play(
+                GrowArrow(arrow),
+                dot.apply_function_to_position, point_func
+            )
+        self.wait()
+
+        # Show more sample_dots
+        sample_dots = self.get_sample_dots()
+        sample_dot_ghosts = sample_dots.copy().fade(0.5)
+
+        self.play(
+            LaggedStart(DrawBorderThenFill, sample_dots),
+            LaggedStart(FadeOut, int_arrows),
+        )
+        self.remove(int_dot_ghosts)
+        self.add(sample_dot_ghosts)
+        self.apply_function(self.func, sample_dots=sample_dots)
+        self.remove(int_dots)
+        self.wait()
+
+        self.sample_dots = sample_dots
+        self.sample_dot_ghosts = sample_dot_ghosts
+
+
+class ZoomInOnXSquaredNearOne(TalkThroughXSquaredExample):
+    def setup(self):
+        TalkThroughXSquaredExample.setup(self)
+        self.force_skipping()
+        self.add_title()
+        self.show_specific_points_mapping()
+        self.revert_to_original_skipping_status()
+
+    def construct(self):
+        zoom_words = TextMobject("Zoomed view \\\\ near 1")
+        zoom_words.next_to(self.zoomed_display, DOWN)
+        # zoom_words.shift_onto_screen()
+
+        x = 1
+        local_sample_dots = self.get_local_sample_dots(x)
+        local_coords = self.get_local_coordinate_values(x, dx=0.1)
+
+        zcbr_anim = self.zoomed_camera_background_rectangle_anim
+        zcbr_group = self.zoomed_camera_background_rectangle_group
+        frame = self.zoomed_camera.frame
+
+        self.zoom_in_on_input(x, local_sample_dots, local_coords)
+        self.play(FadeIn(zoom_words))
+        self.wait()
+        local_sample_dots.save_state()
+        frame.save_state()
+        self.mini_line.save_state()
+        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
+        self.apply_function(
+            self.func,
+            apply_function_to_number_line=False,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=local_coords
+        )
+        self.remove(sample_dot_ghost_copies)
+        self.wait()
+
+        # Go back
+        self.play(
+            frame.restore,
+            self.mini_line.restore,
+            local_sample_dots.restore,
+            zcbr_anim,
+            Animation(zcbr_group)
+        )
+        self.wait()
+
+        # Zoom in even more
+        extra_zoom_factor = 0.3
+        one_group = VGroup(
+            self.local_coordinates.tick_marks[1],
+            self.local_coordinates.numbers[1],
+        )
+        all_other_coordinates = VGroup(
+            self.local_coordinates.tick_marks[::2],
+            self.local_coordinates.numbers[::2],
+            self.local_target_coordinates,
+        )
+        self.play(frame.scale, extra_zoom_factor)
+        new_local_sample_dots = self.get_local_sample_dots(x, delta_x=0.005)
+        new_coordinate_values = self.get_local_coordinate_values(x, dx=0.02)
+        new_local_coordinates = self.get_local_coordinates(
+            self.input_line, *new_coordinate_values
+        )
+
+        self.play(
+            Write(new_local_coordinates),
+            Write(new_local_sample_dots),
+            one_group.scale, extra_zoom_factor, {"about_point": self.get_input_point(1)},
+            FadeOut(all_other_coordinates),
+            *[
+                ApplyMethod(dot.scale, extra_zoom_factor)
+                for dot in local_sample_dots
+            ]
+        )
+        self.remove(one_group, local_sample_dots)
+        zcbr_group.remove(
+            self.local_coordinates, self.local_target_coordinates,
+            local_sample_dots
+        )
+
+        # Transform new zoomed view
+        stretch_by_two_words = TextMobject("Stretch by 2")
+        stretch_by_two_words.scale(0.5)
+        la, ra = TexMobject("\\leftarrow \\rightarrow")
+        la.next_to(stretch_by_two_words, LEFT)
+        ra.next_to(stretch_by_two_words, RIGHT)
+        stretch_by_two_words.add(la, ra)
+        stretch_by_two_words.next_to(
+            self.zoomed_display.get_top(), DOWN
+        )
+        self.add_foreground_mobject(stretch_by_two_words)
+        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
+        self.apply_function(
+            self.func,
+            apply_function_to_number_line=False,
+            sample_dots=sample_dot_ghost_copies,
+            local_sample_dots=new_local_sample_dots,
+            target_coordinate_values=new_coordinate_values,
+            added_anims=[FadeIn(stretch_by_two_words)]
+        )
+        self.remove(sample_dot_ghost_copies)
+        self.wait()
+
+        # Write derivative
+        deriv_equation = self.deriv_equation = TexMobject(
+            "\\frac{df}{dx}(", "1", ")", "=", "2",
+            tex_to_color_map={"1": RED, "2": RED}
+        )
+        deriv_equation.next_to(self.title, DOWN)
+
+        self.play(
+            Write(deriv_equation),
+            self.title.shift, MED_SMALL_BUFF * UP
+        )
+        self.wait()
+
+
+class ZoomInOnXSquaredNearThree(ZoomInOnXSquaredNearOne):
+    def construct(self):
+        pass
+
+
+class ZoomInOnXSquaredNearOneFourth(ZoomInOnXSquaredNearOne):
+    def construct(self):
+        pass
+
+
+class ZoomInOnXSquaredNearZero(ZoomInOnXSquaredNearOne):
+    def construct(self):
+        pass
+
+
+class XSquaredForNegativeInput(TalkThroughXSquaredExample):
+    CONFIG = {
+        "input_line_config": {},
+        "output_line_config": {},
+    }
+
     def construct(self):
         pass
