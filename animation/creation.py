@@ -160,6 +160,33 @@ class FadeInFromDown(FadeInAndShiftFromDirection):
         "direction": DOWN,
     }
 
+
+class VFadeIn(Animation):
+    """
+    VFadeIn and VFadeOut only work for VMobjects, but they can be applied
+    to mobjects while they are being animated in some other way (e.g. shifting
+    then) in a way that does not work with FadeIn and FadeOut
+    """
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.set_stroke(
+            width=interpolate(0, starting_submobject.get_stroke_width(), alpha)
+        )
+        submobject.set_fill(
+            opacity=interpolate(0, starting_submobject.get_fill_opacity(), alpha)
+        )
+
+
+class VFadeOut(VFadeIn):
+    CONFIG = {
+        "remover": True
+    }
+
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        VFadeIn.update_submobject(
+            self, submobject, starting_submobject, 1 - alpha
+        )
+
+
 # Growing
 
 

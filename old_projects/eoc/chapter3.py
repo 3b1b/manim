@@ -913,7 +913,7 @@ class NudgeSideLengthOfCube(Scene):
         df_equation.to_edge(UP)
 
         faces_brace = Brace(faces, DOWN)
-        derivative = faces_brace.get_text("$3x^2", "\\, dx$")
+        derivative = faces_brace.get_tex("3x^2", "\\, dx")
         extras_brace = Brace(VGroup(bars, corner_cube), DOWN)
         ignore_text = extras_brace.get_text(
             "Multiple \\\\ of $dx^2$"
@@ -1148,7 +1148,6 @@ class NudgeSideLengthOfCube(Scene):
 
     def get_corner_cube(self):
         return self.get_prism(self.dx, self.dx,  self.dx)
-
 
     def get_prism(self, width, height, depth):
         color_kwargs = {

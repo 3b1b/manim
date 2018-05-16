@@ -550,6 +550,7 @@ class Arrow(Line):
             start - perp_vect * width / 2,
             tip_base - perp_vect * width / 2,
         ])
+        self.stem = self.rect  # Alternate name
         return self
 
     def set_tip_points(

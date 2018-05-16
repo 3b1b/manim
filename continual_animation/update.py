@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from continual_animation.continual_animation import ContinualAnimation
 from animation.update import MaintainPositionRelativeTo
+from mobject.value_tracker import ValueTracker
 
 
 class ContinualUpdateFromFunc(ContinualAnimation):
@@ -35,3 +36,21 @@ class ContinualMaintainPositionRelativeTo(ContinualAnimation):
 
     def update_mobject(self, dt):
         self.anim.update(0)  # 0 is arbitrary
+
+
+# TODO, maybe factor into a different file
+class ContinualGrowValue(ContinualAnimation):
+    CONFIG = {
+        "rate": 1,
+    }
+
+    def __init__(self, value_tracker, **kwargs):
+        if not isinstance(value_tracker, ValueTracker):
+            raise Exception("ContinualGrowValue must take a ValueTracker as its mobject")
+        self.value_tracker = value_tracker
+        ContinualAnimation.__init__(self, value_tracker, **kwargs)
+
+    def update_mobject(self, dt):
+        self.value_tracker.set_value(
+            self.value_tracker.get_value() + self.rate * dt
+        )
