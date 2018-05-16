@@ -759,14 +759,56 @@ class StartingCalc101(PiCreatureScene):
 class GraphicalIntuitions(GraphScene):
     CONFIG = {
         "func": lambda x: 0.1 * (x - 2) * (x - 5) * (x - 7) + 4,
+        "x_labeled_nums": range(1, 10),
     }
 
     def construct(self):
         self.setup_axes()
+        axes = self.axes
         graph = self.get_graph(self.func)
+
+        ss_group = self.get_secant_slope_group(
+            x=2, graph=graph, dx=0.01,
+            secant_line_length=6,
+            secant_line_color=RED,
+        )
+        rects = self.get_riemann_rectangles(
+            graph, x_min=2, x_max=8, dx=0.01, stroke_width=0
+        )
+
+        deriv_text = TextMobject(
+            "Derivative $\\rightarrow$ slope",
+            tex_to_color_map={"slope": ss_group.secant_line.get_color()}
+        )
+        deriv_text.to_edge(UP)
+        integral_text = TextMobject(
+            "Integral $\\rightarrow$ area",
+            tex_to_color_map={"area": rects[0].get_color()}
+        )
+        integral_text.next_to(deriv_text, DOWN)
+
         self.play(
+            Succession(Write(axes), ShowCreation(graph, run_time=2)),
             self.get_graph_words_anim(),
-            Succession(Write(self.axes), ShowCreation(graph, run_time=2))
+        )
+        self.animate_secant_slope_group_change(
+            ss_group,
+            target_x=8,
+            rate_func=there_and_back,
+            run_time=5,
+            added_anims=[
+                Write(deriv_text),
+                VFadeIn(ss_group, run_time=2),
+            ]
+        )
+        self.play(FadeIn(integral_text))
+        self.play(
+            LaggedStart(
+                GrowFromEdge, rects,
+                lambda r: (r, DOWN)
+            ),
+            Animation(axes),
+            Animation(graph),
         )
         self.wait()
 
@@ -777,8 +819,10 @@ class GraphicalIntuitions(GraphScene):
             TextMobject("non-stop graphs"),
             TextMobject("all day"),
             TextMobject("every day"),
-            TextMobject("only graphs."),
+            TextMobject("as if to visualize is to graph"),
         )
+        for word in words:
+            word.add_background_rectangle()
         words.arrange_submobjects(DOWN)
         words.to_edge(UP)
         return LaggedStart(
@@ -788,6 +832,94 @@ class GraphicalIntuitions(GraphScene):
             lag_ratio=0.6,
             remover=True
         )
+
+
+class Wrapper(Scene):
+    CONFIG = {
+        "title": "",
+        "title_kwargs": {},
+        "screen_height": 6,
+        "wait_time": 2,
+    }
+
+    def construct(self):
+        rect = ScreenRectangle(height=self.screen_height)
+        title = TextMobject(self.title, **self.title_kwargs)
+        title.to_edge(UP)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.wait(self.wait_time)
+
+
+class DomainColoringWrapper(Wrapper):
+    CONFIG = {
+        "title": "Complex $\\rightarrow$ Complex",
+    }
+
+
+class ChangingVectorFieldWrapper(Wrapper):
+    CONFIG = {"title": "$(x, y, t) \\rightarrow (x', y')$"}
+
+
+class ChangingVectorField(Scene):
+    def construct(self):
+        plane = self.plane = NumberPlane()
+        plane.set_stroke(width=2)
+        plane.add_coordinates()
+        self.add(plane)
+
+        time_tracker = self.time_tracker = ValueTracker(0)
+        self.add(ContinualGrowValue(time_tracker))
+
+        vectors = self.get_vectors()
+        self.add(ContinualUpdateFromFunc(
+            vectors,
+            lambda vs: self.update_vectors(vs)
+        ))
+        self.wait(15)
+
+    def get_vectors(self):
+        vectors = VGroup()
+        x_max = int(np.ceil(FRAME_WIDTH))
+        y_max = int(np.ceil(FRAME_HEIGHT))
+        step = 0.5
+        for x in np.arange(-x_max, x_max + 1, step):
+            for y in np.arange(-y_max, y_max + 1, step):
+                point = x * RIGHT + y * UP
+                vectors.add(Vector(RIGHT).shift(point))
+        vectors.set_color_by_gradient(YELLOW, RED)
+        return vectors
+
+    def update_vectors(self, vectors):
+        time = self.time_tracker.get_value()
+        for vector in vectors:
+            point = vector.get_start()
+            out_point = self.func(point, time)
+            norm = np.linalg.norm(out_point)
+            if norm == 0:
+                out_point = RIGHT  # Fake it
+                vector.set_fill(opacity=0)
+            else:
+                alpha = sigmoid(2 * norm - 1)
+                out_point *= 0.4 / norm
+                color = interpolate_color(BLUE, RED, alpha)
+                vector.set_fill(color, opacity=1)
+                vector.set_stroke(BLACK, width=1)
+            new_x, new_y = out_point[:2]
+            vector.put_start_and_end_on(
+                point, point + new_x * RIGHT + new_y * UP
+            )
+
+    def func(self, point, time):
+        x, y, z = point
+        time += 5
+        return np.array([
+            np.sin(time) * np.sin((y * x**2 + 0.9 * x + 0.8 * y) / 10) + 0.1,
+            np.cos(time) * np.sin((y / (0.8 * x + 1)) / 10) + 0.1,
+            0
+        ])
 
 
 class StandardDerivativeVisual(GraphScene):
