@@ -13,6 +13,22 @@ def apply_function_to_points(point_func, mobject):
     mobject.apply_function(point_func)
 
 
+def get_nested_one_plus_one_over_x(n_terms, bottom_term="x"):
+    tex = "1+ {1 \\over" * n_terms + bottom_term + "}" * n_terms
+    return TexMobject(tex, substrings_to_isolate=["1", "\\over", bottom_term])
+
+
+def get_phi_continued_fraction(n_terms):
+    return get_nested_one_plus_one_over_x(n_terms, bottom_term="1+\\cdots")
+
+
+def get_nested_f(n_terms, arg="x"):
+    terms = ["f("] * n_terms + [arg] + [")"] * n_terms
+    return TexMobject(*terms)
+
+
+# Scene types
+
 class NumberlineTransformationScene(ZoomedScene):
     CONFIG = {
         "input_line_zero_point": 0.5 * UP + (FRAME_X_RADIUS - 1) * LEFT,
@@ -864,6 +880,10 @@ class ChangingVectorFieldWrapper(Wrapper):
 
 
 class ChangingVectorField(Scene):
+    CONFIG = {
+        "wait_time": 15,
+    }
+
     def construct(self):
         plane = self.plane = NumberPlane()
         plane.set_stroke(width=2)
@@ -878,7 +898,7 @@ class ChangingVectorField(Scene):
             vectors,
             lambda vs: self.update_vectors(vs)
         ))
-        self.wait(15)
+        self.wait(self.wait_time)
 
     def get_vectors(self):
         vectors = VGroup()
@@ -902,9 +922,8 @@ class ChangingVectorField(Scene):
                 out_point = RIGHT  # Fake it
                 vector.set_fill(opacity=0)
             else:
-                alpha = sigmoid(2 * norm - 1)
-                out_point *= 0.4 / norm
-                color = interpolate_color(BLUE, RED, alpha)
+                out_point *= 0.5
+                color = interpolate_color(BLUE, RED, norm / np.sqrt(8))
                 vector.set_fill(color, opacity=1)
                 vector.set_stroke(BLACK, width=1)
             new_x, new_y = out_point[:2]
@@ -914,12 +933,70 @@ class ChangingVectorField(Scene):
 
     def func(self, point, time):
         x, y, z = point
-        time += 5
         return np.array([
-            np.sin(time) * np.sin((y * x**2 + 0.9 * x + 0.8 * y) / 10) + 0.1,
-            np.cos(time) * np.sin((y / (0.8 * x + 1)) / 10) + 0.1,
+            np.sin(time + 0.5 * x + y),
+            np.cos(time + 0.2 * x * y + 0.7),
             0
         ])
+
+
+class MoreTopics(Scene):
+    def construct(self):
+        calculus = TextMobject("Calculus")
+        calculus.next_to(LEFT, LEFT)
+        calculus.set_color(YELLOW)
+        others = VGroup(
+            TextMobject("Multivariable calculus"),
+            TextMobject("Complex analysis"),
+            TextMobject("Differential geometry"),
+            TextMobject("$\\vdots$")
+        )
+        others.arrange_submobjects(
+            DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT,
+        )
+        others.next_to(RIGHT, RIGHT)
+        lines = VGroup(*[
+            Line(calculus.get_right(), word.get_left(), buff=MED_SMALL_BUFF)
+            for word in others
+        ])
+
+        rect = FullScreenFadeRectangle(fill_opacity=0.7)
+        self.add(rect)
+
+        self.add(calculus)
+        self.play(
+            LaggedStart(ShowCreation, lines),
+            LaggedStart(Write, others),
+        )
+        self.wait()
+
+
+class TransformationalViewWrapper(Wrapper):
+    CONFIG = {
+        "title": "Transformational view"
+    }
+
+
+class SetTheStage(TeacherStudentsScene):
+    def construct(self):
+        ordinary = TextMobject("Ordinary visual")
+        transformational = TextMobject("Transformational visual")
+        for word in ordinary, transformational:
+            word.move_to(self.hold_up_spot, DOWN)
+            word.shift_onto_screen()
+
+        self.teacher_holds_up(
+            ordinary,
+            added_anims=[self.get_student_changes(*3 * ["sassy"])]
+        )
+        self.wait()
+        self.play(
+            ordinary.shift, UP,
+            FadeInFromDown(transformational),
+            self.teacher.change, "hooray",
+            self.get_student_changes(*3 * ["erm"])
+        )
+        self.wait(3)
 
 
 class StandardDerivativeVisual(GraphScene):
@@ -1785,3 +1862,149 @@ class XSquaredForNegativeInput(TalkThroughXSquaredExample):
             target_coordinate_values=target_coordinate_values
         )
         self.wait()
+
+
+class HowDoesThisSolveProblems(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Is this...useful?",
+            target_mode="confused"
+        )
+        self.change_student_modes("maybe", "confused", "sassy")
+        self.play(self.teacher.change, "happy")
+        self.wait(3)
+
+
+class IntroduceContinuedFractionPuzzle(PiCreatureScene):
+    def construct(self):
+        self.ask_question()
+        self.plug_func_into_self()
+
+    def create_pi_creatures(self):
+        morty = Mortimer(height=2)
+        morty.to_corner(DR)
+
+        friend = PiCreature(color=GREEN, height=2)
+        friend.to_edge(DOWN)
+
+        group = VGroup(morty, friend)
+        group.shift(2 * LEFT)
+
+        return morty, friend
+
+    def ask_question(self):
+        morty, friend = self.pi_creatures
+        frac = get_phi_continued_fraction(5)
+        rhs = DecimalNumber(
+            (1 - np.sqrt(5)) / 2.0,
+            num_decimal_places=5,
+            show_ellipsis=True,
+        )
+        rhs.set_color(YELLOW)
+        equals = TexMobject("=")
+        equals.next_to(frac.get_part_by_tex("\\over"), RIGHT)
+        rhs.next_to(equals, RIGHT)
+        group = VGroup(frac, equals, rhs)
+        group.scale(1.5)
+        group.to_corner(UR)
+
+        self.play(
+            FadeInFromDown(group),
+            PiCreatureSays(
+                friend, "Would this be valid? \\\\ If not, why not?",
+                target_mode="confused",
+                bubble_kwargs={
+                    "direction": RIGHT,
+                    "width": 4,
+                    "height": 3,
+                }
+            ),
+            morty.change, "pondering",
+        )
+        for x in range(3):
+            self.play(LaggedStart(
+                ApplyMethod, frac,
+                lambda m: (m.set_color, YELLOW),
+                rate_func=there_and_back,
+                lag_ratio=0.2,
+                run_time=2
+            ))
+            self.wait()
+        self.play(
+            frac.scale, 0.5,
+            frac.to_corner, UL,
+            RemovePiCreatureBubble(
+                friend, target_mode="pondering",
+                look_at_arg=frac
+            ),
+            FadeOut(equals),
+            rhs.scale, 0.5,
+            rhs.to_corner, DL,
+        )
+
+        self.neg_one_over_phi = rhs
+        self.frac = frac
+
+    def plug_func_into_self(self):
+        morty, friend = self.pi_creatures
+
+        lines = VGroup()
+        for n_terms in range(1, 5):
+            lhs = get_nested_f(n_terms)
+            equals = TexMobject("=")
+            rhs = get_nested_one_plus_one_over_x(n_terms)
+            equals.next_to(rhs[0], LEFT)
+            lhs.next_to(equals, LEFT)
+            lines.add(VGroup(lhs, equals, rhs))
+
+        lines.arrange_submobjects(
+            DOWN, buff=MED_LARGE_BUFF,
+            # aligned_edge=RIGHT
+        )
+        lines.to_corner(UR)
+
+        top_line = lines[0]
+        colors = [WHITE] + color_gradient([YELLOW, RED], len(lines) - 1)
+        for n in range(1, len(lines)):
+            color = colors[n]
+            lines[n][0].set_color(color)
+            lines[n][0][1:-1].match_style(lines[n - 1][0])
+            lines[n][2].set_color(color)
+            lines[n][2][4:].match_style(lines[n - 1][2])
+
+        self.play(FadeInFromDown(top_line))
+        for n in range(1, 4):
+            new_line = lines[n]
+            last_line = lines[n - 1]
+            mover, target = [
+                VGroup(
+                    line[0][0],
+                    line[0][-1],
+                    line[1],
+                    line[2][:4],
+                )
+                for line in top_line, new_line
+            ]
+            anims = [ReplacementTransform(mover.copy(), target, path_arc=30 * DEGREES)]
+            if n == 3:
+                morty.generate_target()
+                morty.target.change("horrified")
+                morty.target.shift(2.5 * DOWN)
+                anims.append(MoveToTarget(morty, remover=True))
+            self.play(*anims)
+            self.wait()
+            self.play(
+                ReplacementTransform(
+                    last_line[0].copy(), new_line[0][1:-1]
+                ),
+                ReplacementTransform(
+                    last_line[2].copy(), new_line[2][4:]
+                ),
+            )
+            self.wait()
+        self.play(friend.look_at, self.frac)
+        self.wait(5)
+
+
+class NumericalPlay(ExternallyAnimatedScene):
+    pass
