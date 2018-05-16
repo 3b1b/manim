@@ -2210,7 +2210,7 @@ class ShowPhiAsFixedPoint(ShowRepeatedApplication):
             num_formula
         )
         self.play(
-            group.arrange_submobjects, DOWN, 
+            group.arrange_submobjects, DOWN,
             {"buff": LARGE_BUFF, "aligned_edge": LEFT},
             group.to_corner, UL
         )
@@ -2255,4 +2255,59 @@ class ShowPhiAsFixedPoint(ShowRepeatedApplication):
                 VGroup(frac[2], new_x), frac[3]
             )
         )
+        self.wait()
+
+
+class GraphOnePlusOneOverX(GraphScene):
+    CONFIG = {
+        "x_min": -6,
+        "x_max": 6,
+        "x_axis_width": 12,
+        "y_min": -4,
+        "y_max": 4,
+        "y_axis_height": 8,
+        "y_axis_label": None,
+        "graph_origin": ORIGIN,
+        "num_graph_anchor_points": 100,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.draw_graphs()
+
+    def setup_axes(self):
+        GraphScene.setup_axes(self)
+        self.x_axis.add_numbers(*range(-6, 0) + range(1, 7))
+        self.y_axis.label_direction = RIGHT
+        self.y_axis.add_numbers(*range(-3, 0) + range(1, 4))
+
+    def draw_graphs(self):
+        lower_func_graph, upper_func_graph = func_graph = VGroup(*[
+            self.get_graph(
+                lambda x: 1.0 + 1.0 / x,
+                x_min=x_min,
+                x_max=x_max,
+                color=BLUE,
+            )
+            for x_min, x_max in (-10, -0.1), (0.1, 10)
+        ])
+        func_graph_label = self.get_graph_label(
+            upper_func_graph, "y = 1 + \\frac{1}{x}",
+            x_val=6, direction=UP
+        )
+
+        identity_graph = self.get_graph(
+            lambda x: x, color=GREEN
+        )
+        identity_graph_label = self.get_graph_label(
+            identity_graph, "y = x",
+            x_val=3, direction=UL, buff=SMALL_BUFF
+        )
+        # for label in func_graph_label, identity_graph_label:
+        #     label[:2].set_color(WHITE)
+
+        self.play(ShowCreation(func_graph))
+        self.play(Write(func_graph_label))
+        self.play(ShowCreation(identity_graph))
+        self.play(Write(identity_graph_label))
         self.wait()
