@@ -1,22 +1,10 @@
 from big_ol_pile_of_manim_imports import *
 
 
-def apply_function_to_center(point_func, mobject):
-    mobject.apply_function_to_position(point_func)
-
-
-def apply_function_to_submobjects(point_func, mobject):
-    mobject.apply_function_to_submobject_positions(point_func)
-
-
-def apply_function_to_points(point_func, mobject):
-    mobject.apply_function(point_func)
-
-
-class NumberlineTransformationScene(ZoomedScene):
+class NumberlineTransformationScene(Scene):
     CONFIG = {
-        "input_line_zero_point": 0.5 * UP + (FRAME_X_RADIUS - 1) * LEFT,
-        "output_line_zero_point": 2 * DOWN + (FRAME_X_RADIUS - 1) * LEFT,
+        "input_line_center": 2 * UP,
+        "output_line_center": 2 * DOWN,
         "number_line_config": {
             "include_numbers": True,
             "x_min": -3.5,
@@ -29,6 +17,7 @@ class NumberlineTransformationScene(ZoomedScene):
         },
         "output_line_config": {},
         "num_inserted_number_line_anchors": 20,
+<<<<<<< HEAD
         "default_delta_x": 0.1,
         "default_sample_dot_radius": 0.07,
         "default_sample_dot_colors": [RED, YELLOW],
@@ -43,26 +32,26 @@ class NumberlineTransformationScene(ZoomedScene):
         "mini_line_scale_factor": 2,
         "default_coordinate_value_dx": 0.05,
         "zoomed_camera_background_rectangle_fill_opacity": 1.0,
+=======
+>>>>>>> parent of b9f4b8b... Merge pull request #235 from 3b1b/alt-calc
     }
 
     def setup(self):
-        ZoomedScene.setup(self)
         self.setup_number_lines()
         self.setup_titles()
-        self.setup_zoomed_camera_background_rectangle()
 
     def setup_number_lines(self):
         number_lines = self.number_lines = VGroup()
         added_configs = (self.input_line_config, self.output_line_config)
-        zero_opints = (self.input_line_zero_point, self.output_line_zero_point)
-        for added_config, zero_point in zip(added_configs, zero_opints):
+        centers = (self.input_line_center, self.output_line_center)
+        for added_config, center in zip(added_configs, centers):
             full_config = dict(self.number_line_config)
             full_config.update(added_config)
             number_line = NumberLine(**full_config)
             number_line.main_line.insert_n_anchor_points(
                 self.num_inserted_number_line_anchors
             )
-            number_line.shift(zero_point - number_line.number_to_point(0))
+            number_line.move_to(center)
             number_lines.add(number_line)
         self.input_line, self.output_line = number_lines
 
@@ -70,16 +59,16 @@ class NumberlineTransformationScene(ZoomedScene):
 
     def setup_titles(self):
         input_title, output_title = self.titles = VGroup(*[
-            TextMobject(word)
+            TextMobject()
             for word in "Inputs", "Outputs"
         ])
-        vects = [UP, DOWN]
-        for title, line, vect in zip(self.titles, self.number_lines, vects):
-            title.next_to(line, vect, aligned_edge=LEFT)
+        for title, line in zip(self.titles, self.number_lines):
+            title.next_to(line, UP)
             title.shift_onto_screen()
 
         self.add(self.titles)
 
+<<<<<<< HEAD
     def setup_zoomed_camera_background_rectangle(self):
         frame = self.zoomed_camera.frame
         frame.next_to(self.camera.frame, UL)
@@ -362,50 +351,32 @@ class NumberlineTransformationScene(ZoomedScene):
         return self.output_line.number_to_point(fx)
 
     def number_func_to_point_func(self, number_func):
+=======
+    def get_line_mapping_animation(self, func, run_time=3, path_arc=30 * DEGREES):
+>>>>>>> parent of b9f4b8b... Merge pull request #235 from 3b1b/alt-calc
         input_line, output_line = self.number_lines
+        input_line_copy = input_line.deepcopy()
+        input_line_copy.remove(input_line_copy.numbers)
+        input_line_copy.set_stroke(width=2)
 
         def point_func(point):
             input_number = input_line.point_to_number(point)
-            output_number = number_func(input_number)
+            output_number = func(input_number)
             return output_line.number_to_point(output_number)
-        return point_func
+
+        return ApplyPointwiseFunction(
+            point_func, input_line_copy,
+            run_time=run_time,
+            path_arc=path_arc,
+        )
 
 
 class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
-    CONFIG = {
-        "number_line_config": {
-            "x_min": 0,
-            "x_max": 5,
-            "unit_size": 2.0
-        },
-        "output_line_config": {
-            "x_max": 20,
-        },
-    }
-
     def construct(self):
         func = lambda x: x**2
-        x = 3
-        dx = 0.05
-
-        sample_dots = self.get_sample_dots()
-        local_sample_dots = self.get_local_sample_dots(x)
-
-        self.play(LaggedStart(GrowFromCenter, sample_dots))
-        self.zoom_in_on_input(
-            x,
-            local_sample_dots=local_sample_dots,
-            local_coordinate_values=[x - dx, x, x + dx],
-        )
+        anim = self.get_line_mapping_animation(func)
+        self.play(anim)
         self.wait()
-        self.apply_function(
-            func,
-            sample_dots=sample_dots,
-            local_sample_dots=local_sample_dots,
-            target_coordinate_values=[func(x) - dx, func(x), func(x) + dx],
-        )
-        self.wait()
-
 
 # Scenes
 
@@ -1192,6 +1163,7 @@ class EoCWrapper(Scene):
         title = Title("Essence of calculus")
         self.play(Write(title))
         self.wait()
+<<<<<<< HEAD
 
 
 class IntroduceTransformationView(NumberlineTransformationScene):
@@ -1785,3 +1757,5 @@ class XSquaredForNegativeInput(TalkThroughXSquaredExample):
             target_coordinate_values=target_coordinate_values
         )
         self.wait()
+=======
+>>>>>>> parent of b9f4b8b... Merge pull request #235 from 3b1b/alt-calc

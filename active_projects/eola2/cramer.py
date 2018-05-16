@@ -206,7 +206,7 @@ class LeaveItToComputers(TeacherStudentsScene):
 
 class PrerequisiteKnowledge(TeacherStudentsScene):
     CONFIG = {
-        "camera_config": {"background_opacity": 1}
+        "camera_config": {"background_alpha": 255}
     }
 
     def construct(self):
