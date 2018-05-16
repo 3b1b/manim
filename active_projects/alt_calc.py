@@ -881,7 +881,7 @@ class ChangingVectorFieldWrapper(Wrapper):
 
 class ChangingVectorField(Scene):
     CONFIG = {
-        "wait_time": 15,
+        "wait_time": 30,
     }
 
     def construct(self):
@@ -2008,3 +2008,251 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
 
 class NumericalPlay(ExternallyAnimatedScene):
     pass
+
+
+class ShowRepeatedApplication(Scene):
+    CONFIG = {
+        "title_color": YELLOW,
+    }
+
+    def construct(self):
+        self.add_func_title()
+        self.show_repeated_iteration()
+
+    def add_func_title(self):
+        title = self.title = VGroup(
+            TexMobject("f(", "x", ")"),
+            TexMobject("="),
+            get_nested_one_plus_one_over_x(1)
+        )
+        title.arrange_submobjects(RIGHT)
+        title.to_corner(UL)
+        title.set_color(self.title_color)
+
+        self.add(title)
+
+    def show_repeated_iteration(self):
+        line = VGroup()
+        decimal_kwargs = {
+            "num_decimal_places": 3,
+            "show_ellipsis": True,
+        }
+        phi = (1 + np.sqrt(5)) / 2
+
+        def func(x):
+            return 1.0 + 1.0 / x
+
+        initial_term = DecimalNumber(2.71828, **decimal_kwargs)
+        line.add(initial_term)
+        last_term = initial_term
+
+        def get_arrow():
+            arrow = TexMobject("\\rightarrow")
+            arrow.stretch(1.5, 0)
+            arrow.next_to(line[-1], RIGHT)
+            tex = TexMobject("f(x)")
+            tex.set_color(YELLOW)
+            tex.match_width(arrow)
+            tex.next_to(arrow, UP, SMALL_BUFF)
+            return VGroup(arrow, tex)
+
+        for x in range(2):
+            arrow = get_arrow()
+            line.add(arrow)
+
+            new_term = DecimalNumber(
+                func(last_term.number),
+                **decimal_kwargs
+            )
+            new_term.next_to(arrow[0], RIGHT)
+            last_term = new_term
+            line.add(new_term)
+
+        line.add(get_arrow())
+        line.add(TexMobject("\\dots\\dots").next_to(line[-1][0], RIGHT))
+        num_phi_mob = DecimalNumber(phi, **decimal_kwargs)
+        line.add(num_phi_mob.next_to(line[-1], RIGHT))
+        line.move_to(DOWN)
+
+        rects = VGroup(*[
+            SurroundingRectangle(mob)
+            for mob in line[0], line[1:-1], line[-1]
+        ])
+        rects.set_stroke(BLUE, 2)
+
+        braces = VGroup(*[
+            Brace(rect, DOWN, buff=SMALL_BUFF)
+            for rect in rects
+        ])
+        braces.set_color_by_gradient(GREEN, YELLOW)
+        brace_texts = VGroup(*[
+            brace.get_text(text).scale(0.75, about_edge=UP)
+            for brace, text in zip(braces, [
+                "Arbitrary \\\\ starting \\\\ value",
+                "Repeatedly apply $f(x)$",
+                "$\\varphi$ \\\\ ``Golden ratio''"
+            ])
+        ])
+        var_phi_mob = brace_texts[2][0]
+        var_phi_mob.scale(2, about_edge=UP).set_color(YELLOW)
+        brace_texts[2][1:].next_to(var_phi_mob, DOWN, MED_SMALL_BUFF)
+
+        # Animations
+        self.add(line[0])
+        self.play(
+            GrowFromCenter(braces[0]),
+            Write(brace_texts[0])
+        )
+        self.wait()
+        self.play(
+            GrowFromEdge(line[1], LEFT),
+            FadeIn(braces[1]),
+            FadeIn(brace_texts[1]),
+        )
+        self.play(ReplacementTransform(line[0].copy(), line[2]))
+        self.wait()
+
+        self.play(GrowFromEdge(line[3], LEFT))
+        self.play(ReplacementTransform(line[2].copy(), line[4]))
+        self.wait()
+
+        self.play(GrowFromEdge(line[5], LEFT))
+        self.play(LaggedStart(GrowFromCenter, line[6]))
+        self.wait()
+
+        self.play(FadeIn(line[7]))
+        self.play(
+            GrowFromCenter(braces[2]),
+            FadeIn(brace_texts[2]),
+        )
+        self.wait()
+
+
+class ShowPhiAsFixedPoint(ShowRepeatedApplication):
+    CONFIG = {
+        "title_color": WHITE,
+    }
+
+    def construct(self):
+        self.add_func_title()
+        self.show_fixed_point_formulas()
+        self.solve_infinite_fraction()
+
+    def show_fixed_point_formulas(self):
+        var_formula = TexMobject(
+            "{1 \\over", "\\varphi}", "=", "\\varphi", "-", "1",
+        )
+        var_formula.set_color_by_tex("\\varphi", YELLOW)
+        var_formula.move_to(UP)
+        alt_var_formula = TexMobject(
+            "1", "+", "{1 \\over", "\\varphi}", "=", "\\varphi",
+        )
+        alt_var_formula.set_color_by_tex("\\varphi", YELLOW)
+        alt_var_formula.move_to(var_formula)
+
+        num_formula = TexMobject(
+            "{1 \\over 1.618\\dots} = 0.618\\dots",
+            tex_to_color_map={
+                "1.618\\dots": YELLOW,
+                "0.618\\dots": YELLOW,
+                "=": WHITE,
+            }
+        )
+        num_formula.next_to(var_formula, DOWN, LARGE_BUFF)
+
+        fixed_phi_formula = VGroup(
+            TexMobject("f(", "\\varphi", ")"),
+            TexMobject("="),
+            TexMobject("\\quad", "\\varphi", "\\quad"),
+        )
+        fixed_phi_formula.arrange_submobjects(RIGHT)
+        for mob in fixed_phi_formula:
+            mob.set_color_by_tex("\\varphi", YELLOW)
+        fixed_phi_formula.next_to(alt_var_formula, UP, LARGE_BUFF)
+
+        self.add(num_formula)
+        self.wait()
+        self.play(Write(var_formula))
+        self.wait()
+
+        self.play(*[
+            ReplacementTransform(
+                part,
+                alt_var_formula.get_part_by_tex(
+                    tex_string if tex_string is not "-" else "+",
+                    substring=False
+                ),
+                path_arc=90 * DEGREES,
+                run_time=2
+            )
+            for part in var_formula
+            for tex_string in [part.get_tex_string()]
+        ])
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                self.title[:2].copy(),
+                fixed_phi_formula[:2],
+                path_arc=90 * DEGREES
+            ),
+        )
+        self.play(
+            ReplacementTransform(
+                fixed_phi_formula[0][1].copy(),
+                fixed_phi_formula[2][1],
+                path_arc=-180 * DEGREES
+            )
+        )
+        self.wait()
+        group = VGroup(
+            self.title, fixed_phi_formula,
+            alt_var_formula,
+            num_formula
+        )
+        self.play(
+            group.arrange_submobjects, DOWN, 
+            {"buff": LARGE_BUFF, "aligned_edge": LEFT},
+            group.to_corner, UL
+        )
+        self.wait()
+
+    def solve_infinite_fraction(self):
+        frac = get_phi_continued_fraction(n_terms=9)
+        frac.to_edge(RIGHT, buff=LARGE_BUFF)
+
+        inner_frac = frac[4:]
+        inner_frac_rect = SurroundingRectangle(
+            inner_frac, stroke_width=2, buff=0.5 * SMALL_BUFF
+        )
+        inner_frac_group = VGroup(inner_frac, inner_frac_rect)
+
+        equals = TexMobject("=")
+        equals.next_to(frac[0], LEFT)
+        x = TexMobject("x")
+        x.next_to(equals, LEFT)
+
+        new_x = TexMobject("x")
+        new_x.next_to(frac[3], DOWN, 2 * SMALL_BUFF)
+
+        VGroup(x, new_x).set_color(YELLOW)
+
+        self.play(LaggedStart(GrowFromCenter, frac))
+        self.play(Write(x), Write(equals))
+        self.wait()
+        self.play(ShowCreation(inner_frac_rect))
+        self.wait()
+        self.play(
+            inner_frac_group.scale, 0.75,
+            inner_frac_group.to_corner, DR,
+            ReplacementTransform(
+                x.copy(), new_x,
+                path_arc=90 * DEGREES
+            )
+        )
+        self.play(
+            frac[3].stretch, 0.15, 0, {"about_edge": LEFT},
+            MaintainPositionRelativeTo(
+                VGroup(frac[2], new_x), frac[3]
+            )
+        )
+        self.wait()
