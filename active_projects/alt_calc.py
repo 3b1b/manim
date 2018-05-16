@@ -132,6 +132,11 @@ class NumberlineTransformationScene(ZoomedScene):
         config.update(kwargs)
         return self.get_sample_dots(**config)
 
+    def add_sample_dot_ghosts(self, sample_dots, fade_factor=0.5):
+        self.sample_dot_ghosts = sample_dots.copy()
+        self.sample_dot_ghosts.fade(fade_factor)
+        self.add(self.sample_dot_ghosts, sample_dots)
+
     def get_local_coordinate_values(self, x, dx=None, n_neighbors=1):
         dx = dx or self.default_coordinate_value_dx
         return [
@@ -435,24 +440,354 @@ class WriteOpeningWords(Scene):
 
 class StartingCalc101(PiCreatureScene):
     CONFIG = {
+        "camera_config": {"background_opacity": 1},
+        "image_frame_width": 3.5,
+        "image_frame_height": 2.5,
     }
 
     def construct(self):
-        randy = self.pi_creature
-        deriv_equation = TexMobject(
-            "\\frac{df}{dx}(x) = \\lim_{\\Delta x \\to \\infty}" +
-            "{f(x + \\Delta x) - f(x) \\over \\Delta x}",
-            tex_to_color_map={"\\Delta x": BLUE}
-        )
-        title = TextMobject("Calculus 101")
-        title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
-        h_line.next_to(title, DOWN)
+        self.show_you()
+        self.show_images()
+        self.show_mystery_topic()
 
-        self.add(title, h_line)
-        self.play(randy.change, "erm", title)
+    def show_you(self):
+        randy = self.pi_creature
+        title = self.title = Title("Calculus 101")
+        you = TextMobject("You")
+        arrow = Vector(DL, color=WHITE)
+        arrow.next_to(randy, UR)
+        you.next_to(arrow.get_start(), UP)
+
+        self.play(
+            Write(you),
+            GrowArrow(arrow),
+            randy.change, "erm", title
+        )
         self.wait()
+        self.play(Write(title, run_time=1))
+        self.play(FadeOut(VGroup(arrow, you)))
+
+    def show_images(self):
+        randy = self.pi_creature
+        images = self.get_all_images()
+        modes = [
+            "pondering",  # hard_work_image
+            "pondering",  # neat_example_image
+            "hesitant",  # not_so_neat_example_image
+            "hesitant",  # physics_image
+            "horrified",  # piles_of_formulas_image
+            "horrified",  # getting_stuck_image
+            "thinking",  # aha_image
+            "thinking",  # graphical_intuition_image
+        ]
+
+        for i, image, mode in zip(it.count(), images, modes):
+            anims = []
+            if hasattr(image, "fade_in_anim"):
+                anims.append(image.fade_in_anim)
+                anims.append(FadeIn(image.frame))
+            else:
+                anims.append(FadeIn(image))
+
+            if i >= 3:
+                image_to_fade_out = images[i - 3]
+                if hasattr(image_to_fade_out, "fade_out_anim"):
+                    anims.append(image_to_fade_out.fade_out_anim)
+                else:
+                    anims.append(FadeOut(image_to_fade_out))
+
+            if hasattr(image, "continual_animations"):
+                self.add(*image.continual_animations)
+
+            anims.append(ApplyMethod(randy.change, mode))
+            self.play(*anims)
+            self.wait()
+            if i >= 3:
+                if hasattr(image_to_fade_out, "continual_animations"):
+                    self.remove(*image_to_fade_out.continual_animations)
+                self.remove(image_to_fade_out.frame)
+        self.wait(3)
+
+        self.remaining_images = images[-3:]
+
+    def show_mystery_topic(self):
+        images = self.remaining_images
+        randy = self.pi_creature
+
+        mystery_box = Rectangle(
+            width=self.image_frame_width,
+            height=self.image_frame_height,
+            stroke_color=YELLOW,
+            fill_color=DARK_GREY,
+            fill_opacity=0.5,
+        )
+        mystery_box.scale(1.5)
+        mystery_box.next_to(self.title, DOWN, MED_LARGE_BUFF)
+
+        rects = images[-1].rects.copy()
+        rects.center()
+        rects.scale_to_fit_height(FRAME_HEIGHT - 1)
+        # image = rects.get_image()
+        open_cv_image = cv2.imread(get_full_raster_image_path("alt_calc_hidden_image"))
+        blurry_iamge = cv2.blur(open_cv_image, (50, 50))
+        array = np.array(blurry_iamge)[:, :, ::-1]
+        im_mob = ImageMobject(array)
+        im_mob.replace(mystery_box, stretch=True)
+        mystery_box.add(im_mob)
+
+        q_marks = TexMobject("???").scale(3)
+        q_marks.space_out_submobjects(1.5)
+        q_marks.set_stroke(BLACK, 1)
+        q_marks.move_to(mystery_box)
+        mystery_box.add(q_marks)
+
+        for image in images:
+            if hasattr(image, "continual_animations"):
+                self.remove(*image.continual_animations)
+            self.play(
+                image.shift, DOWN,
+                image.fade, 1,
+                randy.change, "erm",
+                run_time=1.5
+            )
+            self.remove(image)
+        self.wait()
+        self.play(
+            FadeInFromDown(mystery_box),
+            randy.change, "confused"
+        )
+        self.wait(5)
+
+    # Helpers
+
+    def get_all_images(self):
+        # Images matched to narration's introductory list
+        images = VGroup(
+            self.get_hard_work_image(),
+            self.get_neat_example_image(),
+            self.get_not_so_neat_example_image(),
+            self.get_physics_image(),
+            self.get_piles_of_formulas_image(),
+            self.get_getting_stuck_image(),
+            self.get_aha_image(),
+            self.get_graphical_intuition_image(),
+        )
+        colors = color_gradient([BLUE, YELLOW], len(images))
+        for i, image, color in zip(it.count(), images, colors):
+            self.adjust_size(image)
+            frame = Rectangle(
+                width=self.image_frame_width,
+                height=self.image_frame_height,
+                color=color,
+                stroke_width=2,
+            )
+            frame.move_to(image)
+            image.frame = frame
+            image.add(frame)
+            image.next_to(self.title, DOWN)
+            alt_i = (i % 3) - 1
+            vect = (self.image_frame_width + LARGE_BUFF) * RIGHT
+            image.shift(alt_i * vect)
+        return images
+
+    def adjust_size(self, group):
+        group.scale_to_fit_width(min(
+            group.get_width(),
+            self.image_frame_width - 2 * MED_SMALL_BUFF
+        ))
+        group.scale_to_fit_height(min(
+            group.get_height(),
+            self.image_frame_height - 2 * MED_SMALL_BUFF
+        ))
+        return group
+
+    def get_hard_work_image(self):
+        new_randy = self.pi_creature.copy()
+        new_randy.change_mode("telepath")
+        bubble = new_randy.get_bubble(height=3.5, width=4)
+        bubble.add_content(TexMobject("\\frac{d}{dx}(\\sin(\\sqrt{x}))"))
+        bubble.add(bubble.content)  # Remove?
+
+        return VGroup(new_randy, bubble)
+
+    def get_neat_example_image(self):
+        filled_circle = Circle(
+            stroke_width=0,
+            fill_color=BLUE_E,
+            fill_opacity=1
+        )
+        area = TexMobject("\\pi r^2")
+        area.move_to(filled_circle)
+        unfilled_circle = Circle(
+            stroke_width=3,
+            stroke_color=YELLOW,
+            fill_opacity=0,
+        )
+        unfilled_circle.next_to(filled_circle, RIGHT)
+        circles = VGroup(filled_circle, unfilled_circle)
+        circumference = TexMobject("2\\pi r")
+        circumference.move_to(unfilled_circle)
+        equation = TexMobject(
+            "{d (\\pi r^2) \\over dx}  = 2\\pi r",
+            tex_to_color_map={
+                "\\pi r^2": BLUE_D,
+                "2\\pi r": YELLOW,
+            }
+        )
+        equation.next_to(circles, UP)
+
+        return VGroup(
+            filled_circle, area,
+            unfilled_circle, circumference,
+            equation
+        )
+
+    def get_not_so_neat_example_image(self):
+        return TexMobject("\\int x \\cos(x) \\, dx")
+
+    def get_physics_image(self):
+        t_max = 6.5
+        r = 0.2
+        spring = ParametricFunction(
+            lambda t: op.add(
+                r * (np.sin(TAU * t) * RIGHT + np.cos(TAU * t) * UP),
+                t * DOWN,
+            ),
+            t_min=0, t_max=t_max,
+            color=WHITE,
+            stroke_width=2,
+        )
+        spring.color_using_background_image("grey_gradient")
+
+        weight = Square()
+        weight.set_stroke(width=0)
+        weight.set_fill(opacity=1)
+        weight.color_using_background_image("grey_gradient")
+        weight.scale_to_fit_height(0.4)
+
+        t_tracker = ValueTracker(0)
+        group = VGroup(spring, weight)
+        group.continual_animations = [
+            ContinualUpdateFromTimeFunc(
+                t_tracker,
+                lambda tracker, dt: tracker.set_value(
+                    tracker.get_value() + dt
+                )
+            ),
+            ContinualUpdateFromFunc(
+                spring,
+                lambda s: s.stretch_to_fit_height(
+                    1.5 + 0.5 * np.cos(3 * t_tracker.get_value()),
+                    about_edge=UP
+                )
+            ),
+            ContinualUpdateFromFunc(
+                weight,
+                lambda w: w.move_to(spring.points[-1])
+            )
+        ]
+
+        def update_group_style(alpha):
+            spring.set_stroke(width=2 * alpha)
+            weight.set_fill(opacity=alpha)
+
+        group.fade_in_anim = UpdateFromAlphaFunc(
+            group,
+            lambda g, a: update_group_style(a)
+        )
+        group.fade_out_anim = UpdateFromAlphaFunc(
+            group,
+            lambda g, a: update_group_style(1 - a)
+        )
+        return group
+
+    def get_piles_of_formulas_image(self):
+        return TexMobject("(f/g)' = \\frac{gf' - fg'}{g^2}")
+
+    def get_getting_stuck_image(self):
+        creature = self.pi_creature.copy()
+        creature.change_mode("angry")
+        equation = TexMobject("\\frac{d}{dx}(x^x)")
+        equation.scale_to_fit_height(creature.get_height() / 2)
+        equation.next_to(creature, RIGHT, aligned_edge=UP)
+        creature.look_at(equation)
+        return VGroup(creature, equation)
+
+    def get_aha_image(self):
+        creature = self.pi_creature.copy()
+        creature.change_mode("hooray")
+        from old_projects.eoc.chapter3 import NudgeSideLengthOfCube
+        scene = NudgeSideLengthOfCube(
+            end_at_animation_number=7,
+            skip_animations=True
+        )
+        group = VGroup(
+            scene.cube, scene.faces,
+            scene.bars, scene.corner_cube,
+        )
+        group.scale_to_fit_height(0.75 * creature.get_height())
+        group.next_to(creature, RIGHT)
+        creature.look_at(group)
+        return VGroup(creature, group)
+
+    def get_graphical_intuition_image(self):
+        gs = GraphScene()
+        gs.setup_axes()
+        graph = gs.get_graph(
+            lambda x: 0.2 * (x - 3) * (x - 5) * (x - 6) + 4,
+            x_min=2, x_max=8,
+        )
+        rects = gs.get_riemann_rectangles(
+            graph, x_min=2, x_max=8,
+            stroke_width=0.5,
+            dx=0.25
+        )
+        gs.add(graph, rects, gs.axes)
+        group = VGroup(*gs.mobjects)
+        self.adjust_size(group)
+        group.next_to(self.title, DOWN, MED_LARGE_BUFF)
+        group.rects = rects
+        group.continual_animations = [
+            NormalAnimationAsContinualAnimation(Write(rects)),
+            NormalAnimationAsContinualAnimation(ShowCreation(graph)),
+            NormalAnimationAsContinualAnimation(FadeIn(gs.axes)),
+        ]
+        self.adjust_size(group)
+        return group
+
+
+class GraphicalIntuitions(GraphScene):
+    CONFIG = {
+        "func": lambda x: 0.1 * (x - 2) * (x - 5) * (x - 7) + 4,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        graph = self.get_graph(self.func)
+        self.play(
+            self.get_graph_words_anim(),
+            Succession(Write(self.axes), ShowCreation(graph, run_time=2))
+        )
+        self.wait()
+
+    def get_graph_words_anim(self):
+        words = VGroup(
+            TextMobject("Graphs,"),
+            TextMobject("graphs,"),
+            TextMobject("non-stop graphs"),
+            TextMobject("all day"),
+            TextMobject("every day"),
+            TextMobject("only graphs."),
+        )
+        words.arrange_submobjects(DOWN)
+        words.to_edge(UP)
+        return LaggedStart(
+            FadeIn, words,
+            rate_func=there_and_back,
+            run_time=len(words) - 1,
+            lag_ratio=0.6,
+            remover=True
+        )
 
 
 class StandardDerivativeVisual(GraphScene):
@@ -939,14 +1274,26 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
         self.sample_dot_ghosts = sample_dot_ghosts
 
     def get_stretch_words(self, factor, color=RED, less_than_one=False):
+        factor_str = "$%s$" % str(factor)
         result = TextMobject(
-            "Scale \\\\ by", str(factor),
-            tex_to_color_map={str(factor): color}
+            "Scale \\\\ by", factor_str,
+            tex_to_color_map={factor_str: color}
         )
         result.scale(0.7)
         la, ra = TexMobject("\\leftarrow \\rightarrow")
         if less_than_one:
             la, ra = ra, la
+        if factor < 0:
+            kwargs = {
+                "path_arc": -np.pi,
+                "use_rectangular_stem": False,
+            }
+            la = Arrow(DOWN, UP, **kwargs)
+            ra = Arrow(UP, DOWN, **kwargs)
+            for arrow in la, ra:
+                arrow.pointwise_become_partial(arrow, 0, 0.9)
+                arrow.tip.scale(2)
+            VGroup(la, ra).match_height(result)
         la.next_to(result, LEFT)
         ra.next_to(result, RIGHT)
         result.add(la, ra)
@@ -1252,11 +1599,57 @@ class ZoomInOnXSquared10000xZero(ZoomInOnXSquaredNearZero):
 class XSquaredForNegativeInput(TalkThroughXSquaredExample):
     CONFIG = {
         "input_line_config": {
-            "x_min": -3,
-            "x_max": 3,
+            "x_min": -4,
+            "x_max": 4,
         },
+        "input_line_zero_point": 0.5 * UP + 0 * LEFT,
         "output_line_config": {},
+        "default_mapping_animation_config": {
+            "path_arc": 30 * DEGREES
+        },
+        "zoomed_display_width": 4,
     }
 
     def construct(self):
-        pass
+        self.add_title()
+        self.show_full_transformation()
+        self.zoom_in_on_example()
+
+    def show_full_transformation(self):
+        sample_dots = self.get_sample_dots()
+
+        self.play(LaggedStart(DrawBorderThenFill, sample_dots))
+        self.add_sample_dot_ghosts(sample_dots)
+        self.apply_function(self.func, sample_dots=sample_dots)
+        self.wait()
+
+    def zoom_in_on_example(self):
+        x = -2
+
+        local_sample_dots = self.get_local_sample_dots(x)
+        local_coordinate_values = self.get_local_coordinate_values(
+            x, dx=0.1
+        )
+        target_coordinate_values = self.get_local_coordinate_values(
+            self.func(x), dx=0.1
+        )
+        deriv_equation = self.get_deriv_equation(x, 2 * x, color=BLUE)
+        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
+        scale_words = self.get_stretch_words(-4, color=BLUE)
+
+        self.zoom_in_on_input(
+            x,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=local_coordinate_values,
+        )
+        self.wait()
+        self.play(Write(deriv_equation))
+        self.add_foreground_mobject(scale_words)
+        self.play(Write(scale_words))
+        self.apply_function(
+            self.func,
+            sample_dots=sample_dot_ghost_copies,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=target_coordinate_values
+        )
+        self.wait()
