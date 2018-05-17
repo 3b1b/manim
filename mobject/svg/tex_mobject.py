@@ -86,7 +86,7 @@ class SingleStringTexMobject(SVGMobject):
             should_replace = reduce(op.and_, [
                 t1 in tex,
                 t2 not in tex,
-                len(tex) > len(t1)
+                len(tex) > len(t1) and tex[len(t1)] in ["(){}[]|.\\"]
             ])
             if should_replace:
                 tex = tex.replace(t1, "\\big")
