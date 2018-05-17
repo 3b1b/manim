@@ -214,7 +214,8 @@ class NumberlineTransformationScene(ZoomedScene):
                        sample_dots=None,
                        local_sample_dots=None,
                        target_coordinate_values=None,
-                       added_anims=None
+                       added_anims=None,
+                       **kwargs
                        ):
         zcbr_group = self.zoomed_camera_background_rectangle_group
         zcbr_anim = self.zoomed_camera_background_rectangle_anim
@@ -260,21 +261,35 @@ class NumberlineTransformationScene(ZoomedScene):
             anims += added_anims
         anims.append(Animation(zcbr_group))
 
-        self.play(*anims)
+        self.play(*anims, **kwargs)
 
     # Zooming
     def zoom_in_on_input(self, x,
                          local_sample_dots=None,
                          local_coordinate_values=None,
                          pop_out=True,
-                         first_added_anims=[],
-                         second_added_anims=[],
+                         first_added_anims=None,
+                         first_anim_kwargs=None,
+                         second_added_anims=None,
+                         second_anim_kwargs=None,
+                         zoom_factor=None,
                          ):
+
+        first_added_anims = first_added_anims or []
+        first_anim_kwargs = first_anim_kwargs or {}
+        second_added_anims = second_added_anims or []
+        second_anim_kwargs = second_anim_kwargs or {}
         input_point = self.get_input_point(x)
 
         # Decide how to move camera frame into place
         frame = self.zoomed_camera.frame
-        movement = ApplyMethod(frame.move_to, input_point)
+        frame.generate_target()
+        frame.target.move_to(input_point)
+        if zoom_factor:
+            frame.target.scale_to_fit_height(
+                self.zoomed_display.get_height() * zoom_factor
+            )
+        movement = MoveToTarget(frame)
         zcbr = self.zoomed_camera_background_rectangle
         zcbr_group = self.zoomed_camera_background_rectangle_group
         zcbr_anim = self.zoomed_camera_background_rectangle_anim
@@ -323,14 +338,15 @@ class NumberlineTransformationScene(ZoomedScene):
         anims.append(Animation(zcbr_group))
         if not pop_out:
             self.activate_zooming(animate=False)
-        self.play(*anims)
+        self.play(*anims, **first_anim_kwargs)
 
         if not self.zoom_activated and pop_out:
             self.activate_zooming(animate=False)
             added_anims = second_added_anims or []
             self.play(
                 self.get_zoomed_display_pop_out_animation(),
-                *added_anims
+                *added_anims,
+                **second_anim_kwargs
             )
 
     def get_local_coordinates(self, line, *x_values, **kwargs):
@@ -2264,50 +2280,731 @@ class GraphOnePlusOneOverX(GraphScene):
         "x_max": 6,
         "x_axis_width": 12,
         "y_min": -4,
-        "y_max": 4,
+        "y_max": 5,
         "y_axis_height": 8,
         "y_axis_label": None,
-        "graph_origin": ORIGIN,
+        "graph_origin": 0.5 * DOWN,
         "num_graph_anchor_points": 100,
+        "func_graph_color": GREEN,
+        "identity_graph_color": BLUE,
     }
 
     def construct(self):
+        self.add_title()
         self.setup_axes()
         self.draw_graphs()
+        self.show_solutions()
+
+    def add_title(self):
+        title = self.title = TexMobject(
+            "\\text{Solve: }", "1 + \\frac{1}{x}", "=", "x",
+        )
+        title.set_color_by_tex("x", self.identity_graph_color, substring=False)
+        title.set_color_by_tex("frac", self.func_graph_color)
+        title.to_corner(UL)
+        self.add(title)
 
     def setup_axes(self):
         GraphScene.setup_axes(self)
-        self.x_axis.add_numbers(*range(-6, 0) + range(1, 7))
+        step = 2
+        self.x_axis.add_numbers(*range(-6, 0, step) + range(step, 7, step))
         self.y_axis.label_direction = RIGHT
-        self.y_axis.add_numbers(*range(-3, 0) + range(1, 4))
+        self.y_axis.add_numbers(*range(-2, 0, step) + range(step, 4, step))
 
-    def draw_graphs(self):
+    def draw_graphs(self, animate=True):
         lower_func_graph, upper_func_graph = func_graph = VGroup(*[
             self.get_graph(
                 lambda x: 1.0 + 1.0 / x,
                 x_min=x_min,
                 x_max=x_max,
-                color=BLUE,
+                color=self.func_graph_color,
             )
             for x_min, x_max in (-10, -0.1), (0.1, 10)
         ])
-        func_graph_label = self.get_graph_label(
+        func_graph.label = self.get_graph_label(
             upper_func_graph, "y = 1 + \\frac{1}{x}",
-            x_val=6, direction=UP
+            x_val=6, direction=UP,
         )
 
         identity_graph = self.get_graph(
-            lambda x: x, color=GREEN
+            lambda x: x, color=self.identity_graph_color
         )
-        identity_graph_label = self.get_graph_label(
+        identity_graph.label = self.get_graph_label(
             identity_graph, "y = x",
             x_val=3, direction=UL, buff=SMALL_BUFF
         )
-        # for label in func_graph_label, identity_graph_label:
-        #     label[:2].set_color(WHITE)
 
-        self.play(ShowCreation(func_graph))
-        self.play(Write(func_graph_label))
-        self.play(ShowCreation(identity_graph))
-        self.play(Write(identity_graph_label))
+        if animate:
+            for graph in func_graph, identity_graph:
+                self.play(
+                    ShowCreation(graph),
+                    Write(graph.label),
+                    run_time=2
+                )
+            self.wait()
+        else:
+            self.add(
+                func_graph, func_graph.label,
+                identity_graph, identity_graph.label,
+            )
+
+        self.func_graph = func_graph
+        self.identity_graph = identity_graph
+
+    def show_solutions(self):
+        phi = 0.5 * (1 + np.sqrt(5))
+        phi_bro = 0.5 * (1 - np.sqrt(5))
+
+        lines = VGroup()
+        for num in phi, phi_bro:
+            line = DashedLine(
+                self.coords_to_point(num, 0),
+                self.coords_to_point(num, num),
+                color=WHITE
+            )
+            line_copy = line.copy()
+            line.fade(0.5)
+            line_anim = ShowCreationThenDestruction(
+                line_copy,
+                submobject_mode="lagged_start",
+                run_time=2
+            )
+            line.continual_anim = CycleAnimation(line_anim)
+            lines.add(line)
+
+        phi_line, phi_bro_line = lines
+
+        decimal_kwargs = {
+            "num_decimal_places": 3,
+            "show_ellipsis": True,
+            "color": YELLOW,
+        }
+        arrow_kwargs = {
+            "buff": SMALL_BUFF,
+            "color": WHITE,
+            "tip_length": 0.15,
+            "rectangular_stem_width": 0.025,
+        }
+
+        phi_decimal = DecimalNumber(phi, **decimal_kwargs)
+        phi_decimal.next_to(phi_line, DOWN, LARGE_BUFF)
+        phi_arrow = Arrow(
+            phi_decimal[:4].get_top(), phi_line.get_bottom(),
+            **arrow_kwargs
+        )
+
+        phi_bro_decimal = DecimalNumber(phi_bro, **decimal_kwargs)
+        phi_bro_decimal.next_to(phi_bro_line, UP, LARGE_BUFF)
+        phi_bro_decimal.shift(0.5 * LEFT)
+        phi_bro_arrow = Arrow(
+            phi_bro_decimal[:6].get_bottom(), phi_bro_line.get_top(),
+            **arrow_kwargs
+        )
+
+        brother_words = TextMobject(
+            "$\\varphi$'s little brother",
+            tex_to_color_map={"$\\varphi$": YELLOW},
+            arg_separator=""
+        )
+        brother_words.next_to(
+            phi_bro_decimal[-2], UP, buff=MED_SMALL_BUFF,
+            aligned_edge=RIGHT
+        )
+
+        self.add(phi_line.continual_anim)
+        self.play(ShowCreation(phi_line))
+        self.play(
+            Write(phi_decimal),
+            GrowArrow(phi_arrow),
+        )
+        self.wait(4)
+        self.add(phi_bro_line.continual_anim)
+        self.play(ShowCreation(phi_bro_line))
+        self.play(
+            Write(phi_bro_decimal),
+            GrowArrow(phi_bro_arrow),
+        )
+        self.wait(4)
+        self.play(Write(brother_words))
+        self.wait(8)
+
+
+class NumericalPlayFromOne(ExternallyAnimatedScene):
+    pass
+
+
+class NumericalPlayFromTau(ExternallyAnimatedScene):
+    pass
+
+
+class NumericalPlayFromNegPhi(ExternallyAnimatedScene):
+    pass
+
+
+class NumericalPlayOnNumberLineFromOne(Scene):
+    CONFIG = {
+        "starting_value": 1,
+        "n_jumps": 10,
+        "func": lambda x: 1 + 1.0 / x,
+        "number_line_config": {
+            "x_min": 0,
+            "x_max": 2,
+            "unit_size": 6,
+            "tick_frequency": 0.25,
+            "numbers_with_elongated_ticks": [0, 1, 2]
+        }
+    }
+
+    def construct(self):
+        self.add_number_line()
+        self.add_phi_label()
+        self.add_title()
+        self.bounce_around()
+
+    def add_number_line(self):
+        number_line = NumberLine(**self.number_line_config)
+        number_line.move_to(2 * DOWN)
+        number_line.add_numbers()
+
+        self.add(number_line)
+        self.number_line = number_line
+
+    def add_phi_label(self):
+        number_line = self.number_line
+        phi_point = number_line.number_to_point(
+            (1 + np.sqrt(5)) / 2
+        )
+        phi_dot = Dot(phi_point, color=YELLOW)
+        arrow = Vector(DL)
+        arrow.next_to(phi_point, UR, SMALL_BUFF)
+        phi_label = TexMobject("\\varphi = 1.618\\dots")
+        phi_label.set_color(YELLOW)
+        phi_label.next_to(arrow.get_start(), UP, SMALL_BUFF)
+
+        self.add(phi_dot, phi_label, arrow)
+
+    def add_title(self):
+        title = TexMobject("x \\rightarrow 1 + \\frac{1}{x}")
+        title.to_corner(UL)
+        self.add(title)
+
+    def bounce_around(self):
+        number_line = self.number_line
+        value = self.starting_value
+        point = number_line.number_to_point(value)
+        dot = Dot(point)
+        dot.set_fill(RED, opacity=0.8)
+        arrow = Vector(DR)
+        arrow.next_to(point, UL, buff=SMALL_BUFF)
+        arrow.match_color(dot)
+        start_here = TextMobject("Start here")
+        start_here.next_to(arrow.get_start(), UP, SMALL_BUFF)
+        start_here.match_color(dot)
+
+        self.play(
+            FadeIn(start_here),
+            GrowArrow(arrow),
+            GrowFromPoint(dot, arrow.get_start())
+        )
+        self.play(
+            FadeOut(start_here),
+            FadeOut(arrow)
+        )
         self.wait()
+        for x in range(self.n_jumps):
+            new_value = self.func(value)
+            new_point = number_line.number_to_point(new_value)
+            if new_value - value > 0:
+                path_arc = -120 * DEGREES
+            else:
+                path_arc = -120 * DEGREES
+            arc = Line(
+                point, new_point,
+                path_arc=path_arc,
+                buff=SMALL_BUFF
+            )
+            self.play(
+                ShowCreationThenDestruction(arc, run_time=1.5),
+                ApplyMethod(
+                    dot.move_to, new_point,
+                    path_arc=path_arc
+                ),
+            )
+            self.wait(0.5)
+
+            value = new_value
+            point = new_point
+
+
+class NumericalPlayOnNumberLineFromTau(NumericalPlayOnNumberLineFromOne):
+    CONFIG = {
+        "starting_value": TAU,
+        "number_line_config": {
+            "x_min": 0,
+            "x_max": 7,
+            "unit_size": 2,
+        }
+    }
+
+
+class NumericalPlayOnNumberLineFromMinusPhi(NumericalPlayOnNumberLineFromOne):
+    CONFIG = {
+        "starting_value": -0.61803,
+        "number_line_config": {
+            "x_min": -3,
+            "x_max": 3,
+            "unit_size": 2,
+            "tick_frequency": 0.25,
+        },
+        "n_jumps": 25,
+    }
+
+    def add_phi_label(self):
+        NumericalPlayOnNumberLineFromOne.add_phi_label(self)
+        number_line = self.number_line
+        new_point = number_line.number_to_point(
+            (1 - np.sqrt(5)) / 2
+        )
+        arrow = Vector(DR)
+        arrow.next_to(new_point, UL, SMALL_BUFF)
+        arrow.set_color(RED)
+        new_label = TexMobject("-\\frac{1}{\\varphi} = -0.618\\dots")
+        new_label.set_color(RED)
+        new_label.next_to(arrow.get_start(), UP, SMALL_BUFF)
+        new_label.shift(RIGHT)
+        self.add(new_label, arrow)
+
+
+class RepeatedApplicationGraphically(GraphOnePlusOneOverX, PiCreatureScene):
+    CONFIG = {
+        "starting_value": 1,
+        "n_jumps": 5,
+        "n_times_to_show_identity_property": 2,
+    }
+
+    def setup(self):
+        GraphOnePlusOneOverX.setup(self)
+        PiCreatureScene.setup(self)
+
+    def construct(self):
+        self.setup_axes()
+        self.draw_graphs(animate=False)
+        self.draw_spider_web()
+
+    def create_pi_creature(self):
+        randy = Randolph(height=2)
+        randy.flip()
+        randy.to_corner(DR)
+        return randy
+
+    def get_new_randy_mode(self):
+        randy = self.pi_creature
+        if not hasattr(self, "n_mode_changes"):
+            self.n_mode_changes = 0
+        else:
+            self.n_mode_changes += 1
+        if self.n_mode_changes % 3 != 0:
+            return randy.get_mode()
+        return random.choice([
+            "confused",
+            "erm",
+            "maybe"
+        ])
+
+    def draw_spider_web(self):
+        randy = self.pi_creature
+        func = self.func_graph[0].underlying_function
+        x_val = self.starting_value
+        curr_output = 0
+        dot = Dot(color=RED, fill_opacity=0.7)
+        dot.move_to(self.coords_to_point(x_val, curr_output))
+
+        self.play(FadeInAndShiftFromDirection(dot, 2 * UR))
+        self.wait()
+
+        for n in range(self.n_jumps):
+            new_output = func(x_val)
+            func_graph_point = self.coords_to_point(x_val, new_output)
+            id_graph_point = self.coords_to_point(new_output, new_output)
+            v_line = DashedLine(dot.get_center(), func_graph_point)
+            h_line = DashedLine(func_graph_point, id_graph_point)
+
+            curr_output = new_output
+            x_val = new_output
+
+            for line in v_line, h_line:
+                line_end = line.get_end()
+                self.play(
+                    ShowCreation(line),
+                    dot.move_to, line_end,
+                    randy.change, self.get_new_randy_mode()
+                )
+                self.wait()
+
+            if n < self.n_times_to_show_identity_property:
+                x_point = self.coords_to_point(new_output, 0)
+                y_point = self.coords_to_point(0, new_output)
+                lines = VGroup(*[
+                    Line(dot.get_center(), point)
+                    for point in x_point, y_point
+                ])
+                lines.set_color(YELLOW)
+                self.play(ShowCreationThenDestruction(
+                    lines, run_time=2
+                ))
+                self.wait(0.25)
+
+
+class RepeatedApplicationGraphicallyFromNegPhi(RepeatedApplicationGraphically):
+    CONFIG = {
+        "starting_value": -0.61,
+        "n_jumps": 13,
+        "n_times_to_show_identity_property": 0,
+    }
+
+
+class LetsSwitchToTheTransformationalView(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Lose the \\\\ graphs!",
+            target_mode="hooray"
+        )
+        self.change_student_modes("hooray", "erm", "surprised")
+        self.wait(5)
+
+
+class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
+    CONFIG = {
+        "input_line_zero_point": 0.5 * UP,
+        "output_line_zero_point": 2 * DOWN,
+        "func": lambda x: 1 + 1.0 / x,
+        "num_initial_applications": 10,
+        "num_repeated_local_applications": 7,
+        "zoomed_display_width": 3.5,
+        "zoomed_display_height": 2,
+        "default_mapping_animation_config": {},
+    }
+
+    def construct(self):
+        self.add_function_title()
+        self.repeatedly_apply_function()
+        self.show_phi_and_phi_bro()
+        self.zoom_in_on_phi()
+        self.zoom_in_on_phi_bro()
+
+    def setup_number_lines(self):
+        NumberlineTransformationScene.setup_number_lines(self)
+        for line in self.input_line, self.output_line:
+            VGroup(line.main_line, line.tick_marks).set_stroke(width=2)
+
+    def add_function_title(self):
+        title = TexMobject("f(x)", "=", "1 + \\frac{1}{x}")
+        title.to_edge(UP)
+        self.add(title)
+        self.title = title
+
+    def repeatedly_apply_function(self):
+        input_zero_point = self.input_line.number_to_point(0)
+        output_zero_point = self.output_line.number_to_point(0)
+        sample_dots = self.get_sample_dots(
+            delta_x=0.05,
+            dot_radius=0.05,
+            x_min=-10,
+            x_max=10,
+        )
+        sample_dots.set_stroke(BLACK, 0.5)
+        point_func = self.number_func_to_point_func(self.func)
+        arrows = VGroup(*[
+            Arrow(
+                c, point_func(c), buff=SMALL_BUFF,
+                rectangular_stem_width=0.02,
+                tip_length=0.15
+            )
+            for c in map(Mobject.get_center, sample_dots)
+            if np.linalg.norm(c - input_zero_point) > 0.3
+        ])
+        arrows.set_fill(WHITE, 0.75)
+        arrows.set_stroke(BLACK, 0.5)
+
+        self.play(LaggedStart(
+            FadeInAndShiftFromDirection, sample_dots,
+            lambda m: (m, UP)
+        ))
+        self.play(LaggedStart(GrowArrow, arrows))
+        self.wait()
+        for x in range(self.num_initial_applications):
+            self.apply_function(
+                self.func,
+                apply_function_to_number_line=False,
+                sample_dots=sample_dots
+            )
+            self.wait()
+
+            shift_vect = input_zero_point - output_zero_point
+            shift_vect[0] = 0
+            lower_output_line = self.output_line.copy()
+            upper_output_line = self.output_line.copy()
+            lower_arrows = arrows.copy()
+            upper_arrows = arrows.copy()
+            lower_group = VGroup(lower_output_line, lower_arrows)
+            lower_group.shift(-shift_vect)
+            lower_group.fade(1)
+
+            self.remove(self.output_line, *arrows)
+            self.play(
+                ReplacementTransform(lower_arrows, arrows),
+                ReplacementTransform(lower_output_line, self.output_line),
+                upper_arrows.shift, shift_vect,
+                upper_arrows.fade, 1,
+                upper_output_line.shift, shift_vect,
+                upper_output_line.fade, 1,
+                sample_dots.shift, shift_vect,
+            )
+            self.remove(upper_output_line, upper_arrows)
+            self.wait()
+        self.play(FadeOut(sample_dots))
+
+        self.all_arrows = arrows
+
+    def show_phi_and_phi_bro(self):
+        phi = (1 + np.sqrt(5)) / 2
+        phi_bro = (1 - np.sqrt(5)) / 2
+
+        input_phi_point = self.input_line.number_to_point(phi)
+        output_phi_point = self.output_line.number_to_point(phi)
+        input_phi_bro_point = self.input_line.number_to_point(phi_bro)
+        output_phi_bro_point = self.output_line.number_to_point(phi_bro)
+
+        tick = Line(UP, DOWN)
+        tick.set_stroke(YELLOW, 3)
+        tick.match_height(self.input_line.tick_marks)
+        phi_tick = tick.copy().move_to(input_phi_point, DOWN)
+        phi_bro_tick = tick.copy().move_to(input_phi_bro_point, DOWN)
+        VGroup(phi_tick, phi_bro_tick).shift(SMALL_BUFF * DOWN)
+
+        phi_label = TexMobject("1.618\\dots")
+        phi_label.next_to(phi_tick, UP)
+        phi_bro_label = TexMobject("-0.618\\dots")
+        phi_bro_label.next_to(phi_bro_tick, UP)
+        VGroup(phi_label, phi_bro_label).set_color(YELLOW)
+
+        arrow_kwargs = {
+            "buff": SMALL_BUFF,
+            "rectangular_stem_width": 0.035,
+            "tip_length": 0.2,
+        }
+        phi_arrow = Arrow(phi_tick, output_phi_point, **arrow_kwargs)
+        phi_bro_arrow = Arrow(phi_bro_tick, output_phi_bro_point, **arrow_kwargs)
+
+        self.play(
+            LaggedStart(
+                ApplyMethod, self.all_arrows,
+                lambda m: (m.set_fill, {"opacity": 0.1})
+            ),
+            FadeIn(phi_arrow),
+            FadeIn(phi_bro_arrow),
+        )
+        self.play(
+            Write(phi_label),
+            GrowFromCenter(phi_tick)
+        )
+        self.play(
+            Write(phi_bro_label),
+            GrowFromCenter(phi_bro_tick)
+        )
+
+        self.set_variables_as_attrs(
+            input_phi_point, output_phi_point,
+            input_phi_bro_point, output_phi_bro_point,
+            phi_label, phi_tick,
+            phi_bro_label, phi_bro_tick,
+            phi_arrow, phi_bro_arrow
+        )
+
+    def zoom_in_on_phi(self):
+        phi = (1 + np.sqrt(5)) / 2
+        # phi_point = self.get_input_point(phi)
+        local_sample_dots = self.get_local_sample_dots(
+            phi, dot_radius=0.005, sample_radius=1
+        )
+        local_coordinate_values = [1.55, 1.6, 1.65, 1.7]
+
+        # zcbr = self.zoomed_camera_background_rectangle
+        zcbr_group = self.zoomed_camera_background_rectangle_group
+        zcbr_group.add(self.phi_tick)
+
+        title = self.title
+        deriv_text = TexMobject(
+            "|", "\\frac{df}{dx}(\\varphi)", "|", "< 1",
+            tex_to_color_map={"\\varphi": YELLOW}
+        )
+        deriv_text.get_parts_by_tex("|").match_height(
+            deriv_text, stretch=True
+        )
+        deriv_text.move_to(title, UP)
+        approx_value = TexMobject("\\approx |%.2f|" % (-1 / phi**2))
+        approx_value.move_to(deriv_text)
+        deriv_text_lhs = deriv_text[:-1]
+        deriv_text_rhs = deriv_text[-1]
+
+        self.zoom_in_on_input(
+            phi,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=local_coordinate_values
+        )
+        self.wait()
+        self.apply_function(
+            self.func,
+            apply_function_to_number_line=False,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=local_coordinate_values,
+        )
+        self.wait()
+        self.play(
+            FadeInFromDown(deriv_text_lhs),
+            FadeInFromDown(deriv_text_rhs),
+            title.to_corner, UL
+        )
+        self.wait()
+        self.play(
+            deriv_text_lhs.next_to, approx_value, LEFT,
+            deriv_text_rhs.next_to, approx_value, RIGHT,
+            FadeIn(approx_value)
+        )
+        self.wait()
+        for n in range(self.num_repeated_local_applications):
+            self.apply_function(
+                self.func,
+                apply_function_to_number_line=False,
+                local_sample_dots=local_sample_dots,
+                path_arc=60 * DEGREES,
+                run_time=2
+            )
+
+        self.deriv_text = VGroup(
+            deriv_text_lhs, deriv_text_rhs, approx_value
+        )
+
+    def zoom_in_on_phi_bro(self):
+        zcbr = self.zoomed_camera_background_rectangle
+        # zcbr_group = self.zoomed_camera_background_rectangle_group
+        zoomed_frame = self.zoomed_camera.frame
+
+        phi_bro = (1 - np.sqrt(5)) / 2
+        # phi_bro_point = self.get_input_point(phi_bro)
+        local_sample_dots = self.get_local_sample_dots(phi_bro)
+        local_coordinate_values = [-0.65, -0.6, -0.55]
+
+        deriv_text = TexMobject(
+            "\\left| \\frac{df}{dx}\\left(\\frac{-1}{\\varphi}\\right) \\right|",
+            "\\approx |%.2f|" % (-1 / (phi_bro**2)),
+            "> 1"
+        )
+        deriv_text.move_to(self.deriv_text, UL)
+        deriv_text[0][10:14].set_color(YELLOW)
+
+        self.play(
+            zoomed_frame.scale_to_fit_height, 4,
+            zoomed_frame.center,
+            self.deriv_text.fade, 1,
+            run_time=2
+        )
+        self.wait()
+        zcbr.set_fill(opacity=0)
+        self.zoom_in_on_input(
+            phi_bro,
+            local_sample_dots=local_sample_dots,
+            local_coordinate_values=local_coordinate_values,
+            zoom_factor=self.zoom_factor,
+            first_anim_kwargs={"run_time": 2},
+        )
+        self.wait()
+        self.play(FadeInFromDown(deriv_text))
+        self.wait()
+        zcbr.set_fill(opacity=1)
+        self.apply_function(
+            self.func,
+            apply_function_to_number_line=False,
+            local_sample_dots=local_sample_dots,
+            target_coordinate_values=local_coordinate_values,
+        )
+        self.wait()
+        for n in range(self.num_repeated_local_applications):
+            self.apply_function(
+                self.func,
+                apply_function_to_number_line=False,
+                local_sample_dots=local_sample_dots,
+                path_arc=20 * DEGREES,
+                run_time=2,
+            )
+
+
+class StabilityAndInstability(AnalyzeFunctionWithTransformations):
+    CONFIG = {
+        "num_initial_applications": 0,
+    }
+    def construct(self):
+        self.force_skipping()
+        self.add_function_title()
+        self.repeatedly_apply_function()
+        self.show_phi_and_phi_bro()
+        self.revert_to_original_skipping_status()
+
+        self.label_stability()
+
+    def label_stability(self):
+        self.title.to_corner(UL)
+
+        stable_label = TextMobject("Stable fixed point")
+        unstable_label = TextMobject("Unstable fixed point")
+        labels = VGroup(stable_label, unstable_label)
+        labels.scale(0.8)
+        stable_label.next_to(self.phi_label, UP, aligned_edge=ORIGIN)
+        unstable_label.next_to(self.phi_bro_label, UP, aligned_edge=ORIGIN)
+
+        phi_point = self.input_phi_point
+        phi_bro_point = self.input_phi_bro_point
+
+        arrow_groups = VGroup()
+        for point in phi_point, phi_bro_point:
+            arrows = VGroup(*filter(
+                lambda a: np.linalg.norm(a.get_start() - point) < 0.75,
+                self.all_arrows
+            )).copy()
+            arrows.set_fill(PINK, 1)
+            arrows.second_anim = LaggedStart(
+                ApplyMethod, arrows,
+                lambda m: (m.set_fill, YELLOW, 1),
+                rate_func=there_and_back_with_pause,
+                lag_ratio=0.7,
+                run_time=2,
+            )
+            arrows.anim = AnimationGroup(*map(GrowArrow, arrows))
+            arrow_groups.add(arrows)
+        phi_arrows, phi_bro_arrows = arrow_groups
+
+        self.add_foreground_mobjects(self.phi_arrow, self.phi_bro_arrow)
+        self.play(
+            Write(stable_label),
+            phi_arrows.anim,
+        )
+        self.play(phi_arrows.second_anim)
+        self.play(
+            Write(unstable_label),
+            phi_bro_arrows.anim,
+        )
+        self.play(phi_bro_arrows.second_anim)
+        self.wait()
+
+
+class NotBetterThanGraphs(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Um, yeah, I'll stick \\\\ with graphs thanks",
+            target_mode="sassy",
+        )
+        self.play(
+            self.teacher.change, "guilty",
+            self.get_student_changes("sad", "sassy", "hesitant")
+        )
+        self.wait(2)
