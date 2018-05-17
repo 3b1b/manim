@@ -114,11 +114,11 @@ class ComplexTransformationScene(Scene):
     def get_transformer(self, **kwargs):
         transform_kwargs = dict(self.default_apply_complex_function_kwargs)
         transform_kwargs.update(kwargs)
-        plane = self.plane
-        self.prepare_for_transformation(plane)
-        transformer = VGroup(
-            plane, *self.transformable_mobjects
-        )
+        transformer = VGroup()
+        if hasattr(self, "plane"):
+            self.prepare_for_transformation(self.plane)
+            transformer.add(self.plane)
+        transformer.add(*self.transformable_mobjects)
         return transformer, transform_kwargs
 
     def apply_complex_function(self, func, added_anims=[], **kwargs):

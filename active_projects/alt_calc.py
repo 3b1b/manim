@@ -986,6 +986,11 @@ class MoreTopics(Scene):
         )
         self.wait()
 
+        self.calculus = calculus
+        self.lines = lines
+        self.full_screen_rect = rect
+        self.other_topics = others
+
 
 class TransformationalViewWrapper(Wrapper):
     CONFIG = {
@@ -1892,9 +1897,15 @@ class HowDoesThisSolveProblems(TeacherStudentsScene):
 
 
 class IntroduceContinuedFractionPuzzle(PiCreatureScene):
+    CONFIG = {
+        "remove_initial_rhs": True,
+    }
+
     def construct(self):
         self.ask_question()
-        self.plug_func_into_self()
+        self.set_equal_to_x()
+        # TODO, move this
+        # self.plug_func_into_self()
 
     def create_pi_creatures(self):
         morty = Mortimer(height=2)
@@ -1902,6 +1913,7 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
 
         friend = PiCreature(color=GREEN, height=2)
         friend.to_edge(DOWN)
+        friend.shift(0.5 * LEFT)
 
         group = VGroup(morty, friend)
         group.shift(2 * LEFT)
@@ -1910,7 +1922,8 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
 
     def ask_question(self):
         morty, friend = self.pi_creatures
-        frac = get_phi_continued_fraction(5)
+        frac = get_phi_continued_fraction(9)
+        frac.scale(0.8)
         rhs = DecimalNumber(
             (1 - np.sqrt(5)) / 2.0,
             num_decimal_places=5,
@@ -1925,10 +1938,17 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
         group.to_corner(UR)
 
         self.play(
-            FadeInFromDown(group),
+            LaggedStart(
+                Write, frac,
+                run_time=15,
+                lag_ratio=0.15,
+            ),
+            FadeInFromDown(equals),
+            FadeInFromDown(rhs),
             PiCreatureSays(
                 friend, "Would this be valid? \\\\ If not, why not?",
                 target_mode="confused",
+                look_at_arg=frac,
                 bubble_kwargs={
                     "direction": RIGHT,
                     "width": 4,
@@ -1937,50 +1957,344 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
             ),
             morty.change, "pondering",
         )
-        for x in range(3):
-            self.play(LaggedStart(
-                ApplyMethod, frac,
-                lambda m: (m.set_color, YELLOW),
-                rate_func=there_and_back,
-                lag_ratio=0.2,
-                run_time=2
-            ))
-            self.wait()
-        self.play(
-            frac.scale, 0.5,
-            frac.to_corner, UL,
+        self.wait()
+
+        anims = [
             RemovePiCreatureBubble(
                 friend, target_mode="pondering",
                 look_at_arg=frac
             ),
-            FadeOut(equals),
-            rhs.scale, 0.5,
-            rhs.to_corner, DL,
-        )
+        ]
+        if self.remove_initial_rhs:
+            anims += [
+                Animation(frac),
+                FadeOut(equals),
+                rhs.scale, 0.5,
+                rhs.to_corner, DL,
+            ]
+        self.play(*anims)
 
         self.neg_one_over_phi = rhs
+        self.equals = equals
         self.frac = frac
 
-    def plug_func_into_self(self):
-        morty, friend = self.pi_creatures
+    def set_equal_to_x(self):
+        frac = self.frac
+        morty, friend = self.get_pi_creatures()
+
+        inner_frac = frac[4:]
+        inner_frac_rect = SurroundingRectangle(
+            inner_frac, stroke_width=2, buff=0.5 * SMALL_BUFF
+        )
+        inner_frac_group = VGroup(inner_frac, inner_frac_rect)
+
+        equals = TexMobject("=")
+        equals.next_to(frac[3], RIGHT)
+        x, new_x = [TexMobject("x") for i in range(2)]
+        xs = VGroup(x, new_x)
+        xs.set_color(YELLOW)
+        xs.scale(1.3)
+        x.next_to(equals, RIGHT)
+        new_x.next_to(frac[3], DOWN, 2 * SMALL_BUFF)
+
+        fixed_point_words = VGroup(
+            TextMobject("Fixed point of"),
+            TexMobject(
+                "f(x) = 1 + \\frac{1}{x}",
+                tex_to_color_map={"x": YELLOW}
+            )
+        )
+        fixed_point_words.arrange_submobjects(DOWN)
+
+        self.play(Write(x), Write(equals))
+        self.wait()
+        self.play(ShowCreation(inner_frac_rect))
+        self.wait()
+        self.play(
+            inner_frac_group.scale, 0.75,
+            inner_frac_group.center,
+            inner_frac_group.to_edge, LEFT,
+            ReplacementTransform(
+                x.copy(), new_x,
+                path_arc=-90 * DEGREES
+            )
+        )
+        self.wait()
+        self.play(
+            frac[3].stretch, 0.1, 0, {"about_edge": RIGHT},
+            MaintainPositionRelativeTo(
+                VGroup(frac[2], new_x), frac[3]
+            ),
+            UpdateFromFunc(
+                frac[:2], lambda m: m.next_to(frac[3], LEFT)
+            )
+        )
+        self.wait()
+        fixed_point_words.next_to(VGroup(frac[0], xs), DOWN, LARGE_BUFF)
+        self.play(
+            Write(fixed_point_words),
+            morty.change, "hooray",
+            friend.change, "happy"
+        )
+        self.wait(3)
+
+
+class GraphOnePlusOneOverX(GraphScene):
+    CONFIG = {
+        "x_min": -6,
+        "x_max": 6,
+        "x_axis_width": 12,
+        "y_min": -4,
+        "y_max": 5,
+        "y_axis_height": 8,
+        "y_axis_label": None,
+        "graph_origin": 0.5 * DOWN,
+        "num_graph_anchor_points": 100,
+        "func_graph_color": GREEN,
+        "identity_graph_color": BLUE,
+    }
+
+    def construct(self):
+        self.add_title()
+        self.setup_axes()
+        self.draw_graphs()
+        self.show_solutions()
+
+    def add_title(self):
+        title = self.title = TexMobject(
+            "\\text{Solve: }", "1 + \\frac{1}{x}", "=", "x",
+        )
+        title.set_color_by_tex("x", self.identity_graph_color, substring=False)
+        title.set_color_by_tex("frac", self.func_graph_color)
+        title.to_corner(UL)
+        self.add(title)
+
+    def setup_axes(self):
+        GraphScene.setup_axes(self)
+        step = 2
+        self.x_axis.add_numbers(*range(-6, 0, step) + range(step, 7, step))
+        self.y_axis.label_direction = RIGHT
+        self.y_axis.add_numbers(*range(-2, 0, step) + range(step, 4, step))
+
+    def draw_graphs(self, animate=True):
+        lower_func_graph, upper_func_graph = func_graph = VGroup(*[
+            self.get_graph(
+                lambda x: 1.0 + 1.0 / x,
+                x_min=x_min,
+                x_max=x_max,
+                color=self.func_graph_color,
+            )
+            for x_min, x_max in (-10, -0.1), (0.1, 10)
+        ])
+        func_graph.label = self.get_graph_label(
+            upper_func_graph, "y = 1 + \\frac{1}{x}",
+            x_val=6, direction=UP,
+        )
+
+        identity_graph = self.get_graph(
+            lambda x: x, color=self.identity_graph_color
+        )
+        identity_graph.label = self.get_graph_label(
+            identity_graph, "y = x",
+            x_val=3, direction=UL, buff=SMALL_BUFF
+        )
+
+        if animate:
+            for graph in func_graph, identity_graph:
+                self.play(
+                    ShowCreation(graph),
+                    Write(graph.label),
+                    run_time=2
+                )
+            self.wait()
+        else:
+            self.add(
+                func_graph, func_graph.label,
+                identity_graph, identity_graph.label,
+            )
+
+        self.func_graph = func_graph
+        self.identity_graph = identity_graph
+
+    def show_solutions(self):
+        phi = 0.5 * (1 + np.sqrt(5))
+        phi_bro = 0.5 * (1 - np.sqrt(5))
 
         lines = VGroup()
-        for n_terms in range(1, 5):
-            lhs = get_nested_f(n_terms)
+        for num in phi, phi_bro:
+            line = DashedLine(
+                self.coords_to_point(num, 0),
+                self.coords_to_point(num, num),
+                color=WHITE
+            )
+            line_copy = line.copy()
+            line_copy.set_color(YELLOW)
+            line.fade(0.5)
+            line_anim = ShowCreationThenDestruction(
+                line_copy,
+                submobject_mode="lagged_start",
+                run_time=2
+            )
+            line.continual_anim = CycleAnimation(line_anim)
+            lines.add(line)
+
+        phi_line, phi_bro_line = lines
+
+        decimal_kwargs = {
+            "num_decimal_places": 3,
+            "show_ellipsis": True,
+            "color": YELLOW,
+        }
+        arrow_kwargs = {
+            "buff": SMALL_BUFF,
+            "color": WHITE,
+            "tip_length": 0.15,
+            "rectangular_stem_width": 0.025,
+        }
+
+        phi_decimal = DecimalNumber(phi, **decimal_kwargs)
+        phi_decimal.next_to(phi_line, DOWN, LARGE_BUFF)
+        phi_arrow = Arrow(
+            phi_decimal[:4].get_top(), phi_line.get_bottom(),
+            **arrow_kwargs
+        )
+        phi_label = TexMobject("=", "\\varphi")
+        phi_label.next_to(phi_decimal, RIGHT)
+        phi_label.set_color_by_tex("\\varphi", YELLOW)
+
+        phi_bro_decimal = DecimalNumber(phi_bro, **decimal_kwargs)
+        phi_bro_decimal.next_to(phi_bro_line, UP, LARGE_BUFF)
+        phi_bro_decimal.shift(0.5 * LEFT)
+        phi_bro_arrow = Arrow(
+            phi_bro_decimal[:6].get_bottom(), phi_bro_line.get_top(),
+            **arrow_kwargs
+        )
+
+        brother_words = TextMobject(
+            "$\\varphi$'s little brother",
+            tex_to_color_map={"$\\varphi$": YELLOW},
+            arg_separator=""
+        )
+        brother_words.next_to(
+            phi_bro_decimal[-2], UP, buff=MED_SMALL_BUFF,
+            aligned_edge=RIGHT
+        )
+
+        self.add(phi_line.continual_anim)
+        self.play(ShowCreation(phi_line))
+        self.play(
+            Write(phi_decimal),
+            GrowArrow(phi_arrow),
+        )
+        self.play(Write(phi_label))
+        self.wait(3)
+        self.add(phi_bro_line.continual_anim)
+        self.play(ShowCreation(phi_bro_line))
+        self.play(
+            Write(phi_bro_decimal),
+            GrowArrow(phi_bro_arrow),
+        )
+        self.wait(4)
+        self.play(Write(brother_words))
+        self.wait(8)
+
+
+class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
+    CONFIG = {
+        "remove_initial_rhs": False,
+    }
+
+    def construct(self):
+        self.force_skipping()
+        self.ask_question()
+        self.revert_to_original_skipping_status()
+
+        self.obviously_not()
+        self.plug_func_into_self()
+
+    def obviously_not(self):
+        morty, friend = self.get_pi_creatures()
+        randy = Randolph()
+        randy.match_height(morty)
+        randy.to_corner(DL)
+
+        frac = self.frac
+        rhs = self.neg_one_over_phi
+        plusses = frac[1::4]
+        plus_rects = VGroup(*[
+            SurroundingRectangle(plus, buff=0) for plus in plusses
+        ])
+        plus_rects.set_color(PINK)
+
+        self.play(FadeIn(randy))
+        self.play(
+            PiCreatureSays(
+                randy, "Of course not!",
+                bubble_kwargs={"width": 3, "height": 2},
+                target_mode="angry",
+                run_time=1,
+            ),
+            morty.change, "guilty",
+            friend.change, "hesitant"
+        )
+        self.wait()
+        self.play(
+            Animation(frac),
+            RemovePiCreatureBubble(randy, target_mode="sassy"),
+            morty.change, "confused",
+            friend.change, "confused",
+        )
+        self.play(LaggedStart(
+            ShowCreationThenDestruction, plus_rects,
+            run_time=4,
+            lag_ratio=0.35,
+        ))
+        self.play(WiggleOutThenIn(rhs))
+        self.wait(2)
+        self.play(
+            frac.scale, 0.7,
+            frac.to_corner, UL,
+            FadeOut(self.equals),
+            rhs.scale, 0.5,
+            rhs.center,
+            rhs.to_edge, LEFT,
+            FadeOut(randy),
+            morty.change, "pondering",
+            friend.change, "pondering",
+        )
+
+    def plug_func_into_self(self, value=1, value_str="1"):
+        morty, friend = self.pi_creatures
+
+        def func(x):
+            return 1 + 1.0 / x
+
+        lines = VGroup()
+        value_labels = VGroup()
+        for n_terms in range(5):
+            lhs = get_nested_f(n_terms, arg="c")
             equals = TexMobject("=")
-            rhs = get_nested_one_plus_one_over_x(n_terms)
+            rhs = get_nested_one_plus_one_over_x(n_terms, bottom_term=value_str)
             equals.next_to(rhs[0], LEFT)
             lhs.next_to(equals, LEFT)
             lines.add(VGroup(lhs, equals, rhs))
 
+            value_label = TexMobject("= %.3f" % value)
+            value = func(value)
+            value_labels.add(value_label)
+
         lines.arrange_submobjects(
             DOWN, buff=MED_LARGE_BUFF,
-            # aligned_edge=RIGHT
         )
+        VGroup(lines, value_labels).scale(0.8)
         lines.to_corner(UR)
+        buff = MED_LARGE_BUFF + MED_SMALL_BUFF + value_labels.get_width()
+        lines.to_edge(RIGHT, buff=buff)
+        for line, value_label in zip(lines, value_labels):
+            value_label.move_to(line[1]).to_edge(RIGHT)
 
         top_line = lines[0]
-        colors = [WHITE] + color_gradient([YELLOW, RED], len(lines) - 1)
+        colors = [WHITE] + color_gradient([YELLOW, RED, PINK], len(lines) - 1)
         for n in range(1, len(lines)):
             color = colors[n]
             lines[n][0].set_color(color)
@@ -1988,10 +2302,19 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
             lines[n][2].set_color(color)
             lines[n][2][4:].match_style(lines[n - 1][2])
 
-        self.play(FadeInFromDown(top_line))
-        for n in range(1, 4):
+        arrow = Vector(0.5 * DOWN, color=WHITE)
+        arrow.next_to(value_labels[-1], DOWN)
+        q_marks = TexMobject("???")
+        q_marks.next_to(arrow, DOWN)
+
+        self.play(
+            FadeInFromDown(top_line),
+            FadeInFromDown(value_labels[0])
+        )
+        for n in range(1, len(lines)):
             new_line = lines[n]
             last_line = lines[n - 1]
+            value_label = value_labels[n]
             mover, target = [
                 VGroup(
                     line[0][0],
@@ -1999,9 +2322,11 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
                     line[1],
                     line[2][:4],
                 )
-                for line in top_line, new_line
+                for line in lines[1], new_line
             ]
-            anims = [ReplacementTransform(mover.copy(), target, path_arc=30 * DEGREES)]
+            anims = [ReplacementTransform(
+                mover.copy().fade(1), target, path_arc=30 * DEGREES
+            )]
             if n == 3:
                 morty.generate_target()
                 morty.target.change("horrified")
@@ -2017,13 +2342,27 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
                     last_line[2].copy(), new_line[2][4:]
                 ),
             )
+            self.play(FadeIn(value_label))
             self.wait()
-        self.play(friend.look_at, self.frac)
-        self.wait(5)
+        self.play(
+            GrowArrow(arrow),
+            Write(q_marks),
+            friend.change, "confused"
+        )
+        self.wait(3)
 
 
-class NumericalPlay(ExternallyAnimatedScene):
-    pass
+class RepeatedApplicationWithPhiBro(ThinkAboutWithRepeatedApplication):
+    def construct(self):
+        self.force_skipping()
+        self.ask_question()
+        self.obviously_not()
+        self.revert_to_original_skipping_status()
+
+        self.plug_func_into_self(
+            value=(1 - np.sqrt(5)) / 2,
+            value_str="-1/\\varphi"
+        )
 
 
 class ShowRepeatedApplication(Scene):
@@ -2152,7 +2491,6 @@ class ShowPhiAsFixedPoint(ShowRepeatedApplication):
     def construct(self):
         self.add_func_title()
         self.show_fixed_point_formulas()
-        self.solve_infinite_fraction()
 
     def show_fixed_point_formulas(self):
         var_formula = TexMobject(
@@ -2231,202 +2569,6 @@ class ShowPhiAsFixedPoint(ShowRepeatedApplication):
             group.to_corner, UL
         )
         self.wait()
-
-    def solve_infinite_fraction(self):
-        frac = get_phi_continued_fraction(n_terms=9)
-        frac.to_edge(RIGHT, buff=LARGE_BUFF)
-
-        inner_frac = frac[4:]
-        inner_frac_rect = SurroundingRectangle(
-            inner_frac, stroke_width=2, buff=0.5 * SMALL_BUFF
-        )
-        inner_frac_group = VGroup(inner_frac, inner_frac_rect)
-
-        equals = TexMobject("=")
-        equals.next_to(frac[0], LEFT)
-        x = TexMobject("x")
-        x.next_to(equals, LEFT)
-
-        new_x = TexMobject("x")
-        new_x.next_to(frac[3], DOWN, 2 * SMALL_BUFF)
-
-        VGroup(x, new_x).set_color(YELLOW)
-
-        self.play(LaggedStart(GrowFromCenter, frac))
-        self.play(Write(x), Write(equals))
-        self.wait()
-        self.play(ShowCreation(inner_frac_rect))
-        self.wait()
-        self.play(
-            inner_frac_group.scale, 0.75,
-            inner_frac_group.to_corner, DR,
-            ReplacementTransform(
-                x.copy(), new_x,
-                path_arc=90 * DEGREES
-            )
-        )
-        self.play(
-            frac[3].stretch, 0.15, 0, {"about_edge": LEFT},
-            MaintainPositionRelativeTo(
-                VGroup(frac[2], new_x), frac[3]
-            )
-        )
-        self.wait()
-
-
-class GraphOnePlusOneOverX(GraphScene):
-    CONFIG = {
-        "x_min": -6,
-        "x_max": 6,
-        "x_axis_width": 12,
-        "y_min": -4,
-        "y_max": 5,
-        "y_axis_height": 8,
-        "y_axis_label": None,
-        "graph_origin": 0.5 * DOWN,
-        "num_graph_anchor_points": 100,
-        "func_graph_color": GREEN,
-        "identity_graph_color": BLUE,
-    }
-
-    def construct(self):
-        self.add_title()
-        self.setup_axes()
-        self.draw_graphs()
-        self.show_solutions()
-
-    def add_title(self):
-        title = self.title = TexMobject(
-            "\\text{Solve: }", "1 + \\frac{1}{x}", "=", "x",
-        )
-        title.set_color_by_tex("x", self.identity_graph_color, substring=False)
-        title.set_color_by_tex("frac", self.func_graph_color)
-        title.to_corner(UL)
-        self.add(title)
-
-    def setup_axes(self):
-        GraphScene.setup_axes(self)
-        step = 2
-        self.x_axis.add_numbers(*range(-6, 0, step) + range(step, 7, step))
-        self.y_axis.label_direction = RIGHT
-        self.y_axis.add_numbers(*range(-2, 0, step) + range(step, 4, step))
-
-    def draw_graphs(self, animate=True):
-        lower_func_graph, upper_func_graph = func_graph = VGroup(*[
-            self.get_graph(
-                lambda x: 1.0 + 1.0 / x,
-                x_min=x_min,
-                x_max=x_max,
-                color=self.func_graph_color,
-            )
-            for x_min, x_max in (-10, -0.1), (0.1, 10)
-        ])
-        func_graph.label = self.get_graph_label(
-            upper_func_graph, "y = 1 + \\frac{1}{x}",
-            x_val=6, direction=UP,
-        )
-
-        identity_graph = self.get_graph(
-            lambda x: x, color=self.identity_graph_color
-        )
-        identity_graph.label = self.get_graph_label(
-            identity_graph, "y = x",
-            x_val=3, direction=UL, buff=SMALL_BUFF
-        )
-
-        if animate:
-            for graph in func_graph, identity_graph:
-                self.play(
-                    ShowCreation(graph),
-                    Write(graph.label),
-                    run_time=2
-                )
-            self.wait()
-        else:
-            self.add(
-                func_graph, func_graph.label,
-                identity_graph, identity_graph.label,
-            )
-
-        self.func_graph = func_graph
-        self.identity_graph = identity_graph
-
-    def show_solutions(self):
-        phi = 0.5 * (1 + np.sqrt(5))
-        phi_bro = 0.5 * (1 - np.sqrt(5))
-
-        lines = VGroup()
-        for num in phi, phi_bro:
-            line = DashedLine(
-                self.coords_to_point(num, 0),
-                self.coords_to_point(num, num),
-                color=WHITE
-            )
-            line_copy = line.copy()
-            line.fade(0.5)
-            line_anim = ShowCreationThenDestruction(
-                line_copy,
-                submobject_mode="lagged_start",
-                run_time=2
-            )
-            line.continual_anim = CycleAnimation(line_anim)
-            lines.add(line)
-
-        phi_line, phi_bro_line = lines
-
-        decimal_kwargs = {
-            "num_decimal_places": 3,
-            "show_ellipsis": True,
-            "color": YELLOW,
-        }
-        arrow_kwargs = {
-            "buff": SMALL_BUFF,
-            "color": WHITE,
-            "tip_length": 0.15,
-            "rectangular_stem_width": 0.025,
-        }
-
-        phi_decimal = DecimalNumber(phi, **decimal_kwargs)
-        phi_decimal.next_to(phi_line, DOWN, LARGE_BUFF)
-        phi_arrow = Arrow(
-            phi_decimal[:4].get_top(), phi_line.get_bottom(),
-            **arrow_kwargs
-        )
-
-        phi_bro_decimal = DecimalNumber(phi_bro, **decimal_kwargs)
-        phi_bro_decimal.next_to(phi_bro_line, UP, LARGE_BUFF)
-        phi_bro_decimal.shift(0.5 * LEFT)
-        phi_bro_arrow = Arrow(
-            phi_bro_decimal[:6].get_bottom(), phi_bro_line.get_top(),
-            **arrow_kwargs
-        )
-
-        brother_words = TextMobject(
-            "$\\varphi$'s little brother",
-            tex_to_color_map={"$\\varphi$": YELLOW},
-            arg_separator=""
-        )
-        brother_words.next_to(
-            phi_bro_decimal[-2], UP, buff=MED_SMALL_BUFF,
-            aligned_edge=RIGHT
-        )
-
-        self.add(phi_line.continual_anim)
-        self.play(ShowCreation(phi_line))
-        self.play(
-            Write(phi_decimal),
-            GrowArrow(phi_arrow),
-        )
-        self.wait(4)
-        self.add(phi_bro_line.continual_anim)
-        self.play(ShowCreation(phi_bro_line))
-        self.play(
-            Write(phi_bro_decimal),
-            GrowArrow(phi_bro_arrow),
-        )
-        self.wait(4)
-        self.play(Write(brother_words))
-        self.wait(8)
 
 
 class NumericalPlayFromOne(ExternallyAnimatedScene):
@@ -2744,23 +2886,17 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             shift_vect[0] = 0
             lower_output_line = self.output_line.copy()
             upper_output_line = self.output_line.copy()
-            lower_arrows = arrows.copy()
-            upper_arrows = arrows.copy()
-            lower_group = VGroup(lower_output_line, lower_arrows)
-            lower_group.shift(-shift_vect)
-            lower_group.fade(1)
+            lower_output_line.shift(-shift_vect)
+            lower_output_line.fade(1)
 
-            self.remove(self.output_line, *arrows)
+            self.remove(self.output_line)
             self.play(
-                ReplacementTransform(lower_arrows, arrows),
                 ReplacementTransform(lower_output_line, self.output_line),
-                upper_arrows.shift, shift_vect,
-                upper_arrows.fade, 1,
                 upper_output_line.shift, shift_vect,
                 upper_output_line.fade, 1,
                 sample_dots.shift, shift_vect,
             )
-            self.remove(upper_output_line, upper_arrows)
+            self.remove(upper_output_line)
             self.wait()
         self.play(FadeOut(sample_dots))
 
@@ -3008,3 +3144,153 @@ class NotBetterThanGraphs(TeacherStudentsScene):
             self.get_student_changes("sad", "sassy", "hesitant")
         )
         self.wait(2)
+        self.play(
+            RemovePiCreatureBubble(self.students[1]),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.change_all_student_modes(
+            "confused", look_at_arg=self.screen
+        )
+        self.wait(3)
+        self.teacher_says(
+            "You must flex those \\\\ conceptual muscles",
+            added_anims=[self.get_student_changes(
+                *3 * ["thinking"],
+                look_at_arg=self.teacher.eyes
+            )]
+        )
+        self.wait(3)
+
+
+class TopicsAfterSingleVariable(PiCreatureScene, MoreTopics):
+    CONFIG = {
+        "pi_creatures_start_on_screen": False,
+    }
+
+    def construct(self):
+        MoreTopics.construct(self)
+        self.show_horror()
+        self.zero_in_on_complex_analysis()
+
+    def create_pi_creatures(self):
+        creatures = VGroup(*[
+            PiCreature(color=color)
+            for color in [BLUE_E, BLUE_C, BLUE_D]
+        ])
+        creatures.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        creatures.scale(0.5)
+        creatures.to_corner(DR)
+        return creatures
+
+    def show_horror(self):
+        creatures = self.get_pi_creatures()
+        modes = ["horrified", "tired", "horrified"]
+        for creature, mode in zip(creatures, modes):
+            creature.generate_target()
+            creature.target.change(mode, self.other_topics)
+        creatures.fade(1)
+
+        self.play(LaggedStart(MoveToTarget, creatures))
+        self.wait(2)
+
+    def zero_in_on_complex_analysis(self):
+        creatures = self.get_pi_creatures()
+        complex_analysis = self.other_topics[1]
+        self.other_topics.remove(complex_analysis)
+
+        self.play(
+            complex_analysis.scale, 1.25,
+            complex_analysis.center,
+            complex_analysis.to_edge, UP,
+            LaggedStart(FadeOut, self.other_topics),
+            LaggedStart(FadeOut, self.lines),
+            FadeOut(self.calculus),
+            *[
+                ApplyMethod(creature.change, "pondering")
+                for creature in creatures
+            ]
+        )
+        self.wait(4)
+
+
+class ComplexAnalysisOverlay(Scene):
+    def construct(self):
+        words = TextMobject("Complex analysis")
+        words.scale(1.25)
+        words.to_edge(UP)
+        words.add_background_rectangle()
+        self.add(words)
+        self.wait()
+
+
+class CompelxAnalyticFluidFlow(ComplexTransformationScene, MovingCameraScene):
+    CONFIG = {
+        "num_anchors_to_add_per_line": 200,
+        "plane_config": {"y_radius": 8}
+    }
+
+    def setup(self):
+        MovingCameraScene.setup(self)
+        ComplexTransformationScene.setup(self)
+
+    def construct(self):
+        self.camera.frame.shift(2 * UP)
+        self.camera.frame.scale(0.5, about_point=ORIGIN)
+
+        plane = NumberPlane(
+            x_radius=15,
+            y_radius=25,
+            y_unit_size=0.5,
+            secondary_line_ratio=0,
+        )
+        plane.next_to(ORIGIN, UP, buff=0.001)
+        horizontal_lines = VGroup(*filter(
+            lambda l: np.abs(l.get_center()[0]) < 0.1,
+            list(plane.main_lines) + [plane.axes[0]]
+        ))
+        plane.set_stroke(MAROON_B, width=2)
+        horizontal_lines.set_stroke(BLUE, width=2)
+        for line in horizontal_lines:
+            # To lag the paths of the droplets
+            line.scale(1 + random.random())
+
+        self.prepare_for_transformation(plane)
+        self.add_transformable_mobjects(plane)
+
+        self.background.set_stroke(width=2)
+        for label in self.background.coordinate_labels:
+            label.set_stroke(width=0)
+            label.scale(0.75, about_edge=UR)
+
+        words = TextMobject("Flow near \\\\", "a wall")
+        words.scale(0.75)
+        words.add_background_rectangle_to_submobjects()
+        words.next_to(0.75 * UP, LEFT, MED_LARGE_BUFF)
+        equation = TexMobject("z \\rightarrow z^{1/2}")
+        equation.scale(0.75)
+        equation.add_background_rectangle()
+        equation.next_to(words, UP)
+
+        self.apply_complex_function(
+            lambda x: x**(1. / 2),
+            added_anims=[Write(equation)]
+        )
+        self.play(Write(words, run_time=1))
+
+        dots = VGroup()
+        num_dots_per_line = 50
+        for x in range(num_dots_per_line):
+            for line in horizontal_lines:
+                dot = Dot(radius=0.025)
+                opacity = 1.0 - x / float(num_dots_per_line)
+                dot.set_fill(opacity=opacity)
+                dot.path = line
+                dots.add(dot)
+        dots.set_color_by_gradient(BLUE_B, BLUE_D)
+
+        self.play(LaggedStart(
+            MoveAlongPath, dots,
+            lambda d: (d, d.path),
+            run_time=3,
+            lag_ratio=0.9
+        ))
