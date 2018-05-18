@@ -800,7 +800,7 @@ class GraphicalIntuitions(GraphScene):
         graph = self.get_graph(self.func)
 
         ss_group = self.get_secant_slope_group(
-            x=2, graph=graph, dx=0.01,
+            x=8, graph=graph, dx=0.01,
             secant_line_length=6,
             secant_line_color=RED,
         )
@@ -825,9 +825,9 @@ class GraphicalIntuitions(GraphScene):
         )
         self.animate_secant_slope_group_change(
             ss_group,
-            target_x=8,
-            rate_func=there_and_back,
-            run_time=5,
+            target_x=2,
+            rate_func=smooth,
+            run_time=2.5,
             added_anims=[
                 Write(deriv_text),
                 VFadeIn(ss_group, run_time=2),
@@ -889,6 +889,29 @@ class DomainColoringWrapper(Wrapper):
     CONFIG = {
         "title": "Complex $\\rightarrow$ Complex",
     }
+
+
+class R2ToR2Wrapper(Wrapper):
+    CONFIG = {"title": "$\\mathds{R}^2 \\rightarrow \\mathds{R}^2$"}
+
+
+class ExampleMultivariableFunction(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors": False,
+        "show_coordinates": True,
+    }
+
+    def construct(self):
+        def example_function(point):
+            x, y, z = point
+            return np.array([
+                x + np.sin(y),
+                y + np.sin(x),
+                0
+            ])
+        self.wait()
+        self.apply_nonlinear_transformation(example_function, run_time=5)
+        self.wait()
 
 
 class ChangingVectorFieldWrapper(Wrapper):
@@ -961,12 +984,15 @@ class MoreTopics(Scene):
         calculus = TextMobject("Calculus")
         calculus.next_to(LEFT, LEFT)
         calculus.set_color(YELLOW)
+        calculus.add_background_rectangle()
         others = VGroup(
             TextMobject("Multivariable calculus"),
             TextMobject("Complex analysis"),
             TextMobject("Differential geometry"),
             TextMobject("$\\vdots$")
         )
+        for word in others:
+            word.add_background_rectangle()
         others.arrange_submobjects(
             DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT,
         )
@@ -1006,6 +1032,8 @@ class SetTheStage(TeacherStudentsScene):
             word.move_to(self.hold_up_spot, DOWN)
             word.shift_onto_screen()
 
+        self.screen.scale(1.25, about_edge=UL)
+        self.add(self.screen)
         self.teacher_holds_up(
             ordinary,
             added_anims=[self.get_student_changes(*3 * ["sassy"])]
@@ -1018,6 +1046,7 @@ class SetTheStage(TeacherStudentsScene):
             self.get_student_changes(*3 * ["erm"])
         )
         self.wait(3)
+        self.change_all_student_modes("pondering", look_at_arg=self.screen)
 
 
 class StandardDerivativeVisual(GraphScene):
@@ -1328,13 +1357,24 @@ class IntroduceTransformationView(NumberlineTransformationScene):
         arrows = arrows[1::3]
         arrows.set_stroke(BLACK, 1)
 
-        self.play(
-            LaggedStart(GrowFromCenter, sample_dots, run_time=1),
-            LaggedStart(GrowArrow, arrows)
-        )
+        for sd in sample_dots:
+            sd.save_state()
+            sd.scale(2)
+            sd.fade(1)
+        self.play(LaggedStart(
+            ApplyMethod, sample_dots,
+            lambda sd: (sd.restore,),
+            run_time=2
+        ))
+        self.play(LaggedStart(
+            GrowArrow, arrows,
+            run_time=6,
+            lag_ratio=0.3,
+        ))
         self.add(sample_dot_ghosts)
         self.apply_function(
-            self.func, sample_dots=sample_dots
+            self.func, sample_dots=sample_dots,
+            run_time=3
         )
         self.wait()
         self.play(LaggedStart(FadeOut, arrows, run_time=1))
@@ -1430,6 +1470,13 @@ class IntroduceTransformationView(NumberlineTransformationScene):
             target_coordinate_values=self.get_local_coordinate_values(self.func(x))
         )
         self.wait()
+
+
+class ExamplePlease(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("Example?", student_index=0)
+        self.teacher_holds_up(TexMobject("f(x) = x^2").scale(1.5))
+        self.wait(2)
 
 
 class TalkThroughXSquaredExample(IntroduceTransformationView):
@@ -1561,6 +1608,7 @@ class ZoomInOnXSquaredNearOne(TalkThroughXSquaredExample):
         zcbr_anim = self.zoomed_camera_background_rectangle_anim
         zcbr_group = self.zoomed_camera_background_rectangle_group
         frame = self.zoomed_camera.frame
+        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
 
         self.zoom_in_on_input(x, local_sample_dots, local_coords)
         self.play(FadeIn(zoom_words))
@@ -1568,10 +1616,10 @@ class ZoomInOnXSquaredNearOne(TalkThroughXSquaredExample):
         local_sample_dots.save_state()
         frame.save_state()
         self.mini_line.save_state()
-        sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
         self.apply_function(
             self.func,
             apply_function_to_number_line=False,
+            sample_dots=sample_dot_ghost_copies,
             local_sample_dots=local_sample_dots,
             target_coordinate_values=local_coords
         )
@@ -1805,6 +1853,58 @@ class ZoomInOnXSquaredNearZero(ZoomInOnXSquaredNearOne):
         self.wait(2)
 
 
+class ZoomInMoreAndMoreToZero(ZoomInOnXSquaredNearZero):
+    def construct(self):
+        x = 0
+        color = self.sample_dots[len(self.sample_dots) / 2].get_color()
+        deriv_equation = self.get_deriv_equation(x, 2 * x, color)
+        self.add(deriv_equation)
+
+        frame = self.zoomed_camera.frame
+        zoomed_display_height = self.zoomed_display.get_height()
+
+        last_sample_dots = VGroup()
+        last_coords = VGroup()
+        last_zoom_words = None
+        for factor in 0.1, 0.01, 0.001, 0.0001:
+            frame.save_state()
+            frame.scale_to_fit_height(factor * zoomed_display_height)
+            self.local_coordinate_num_decimal_places = int(-np.log10(factor))
+            zoom_words = TextMobject(
+                "Zoomed ", "{:,}".format(int(1.0 / factor)),
+                "x \\\\", "near 0",
+                arg_separator=""
+            )
+            zoom_words.next_to(self.zoomed_display, DOWN)
+
+            sample_dots = self.get_local_sample_dots(x)
+            coords = self.get_local_coordinate_values(x, dx=factor)
+            frame.restore()
+
+            added_anims = [
+                ApplyMethod(last_sample_dots.fade, 1),
+                ApplyMethod(last_coords.fade, 1),
+            ]
+            if last_zoom_words is not None:
+                added_anims.append(ReplacementTransform(
+                    last_zoom_words, zoom_words
+                ))
+            else:
+                added_anims.append(FadeIn(zoom_words))
+            self.zoom_in_on_input(
+                x,
+                local_sample_dots=sample_dots,
+                local_coordinate_values=coords,
+                pop_out=False,
+                zoom_factor=factor,
+                first_added_anims=added_anims
+            )
+            self.wait()
+            last_sample_dots = sample_dots
+            last_coords = self.local_coordinates
+            last_zoom_words = zoom_words
+
+
 class ZoomInOnXSquared100xZero(ZoomInOnXSquaredNearZero):
     CONFIG = {
         "zoom_factor": 0.01
@@ -1846,7 +1946,12 @@ class XSquaredForNegativeInput(TalkThroughXSquaredExample):
         self.zoom_in_on_example()
 
     def show_full_transformation(self):
-        sample_dots = self.get_sample_dots()
+        sample_dots = self.get_sample_dots(
+            x_min=-4.005,
+            delta_x=0.05,
+            dot_radius=0.05
+        )
+        sample_dots.set_fill(opacity=0.8)
 
         self.play(LaggedStart(DrawBorderThenFill, sample_dots))
         self.add_sample_dot_ghosts(sample_dots)
@@ -1885,6 +1990,20 @@ class XSquaredForNegativeInput(TalkThroughXSquaredExample):
         self.wait()
 
 
+class FeelsALittleCramped(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Kind of cramped,\\\\ isn't it?",
+            target_mode="sassy"
+        )
+        self.wait()
+        self.teacher_says(
+            "Sure, but think \\\\ locally"
+        )
+        self.change_all_student_modes("pondering", look_at_arg=self.screen)
+        self.wait(3)
+
+
 class HowDoesThisSolveProblems(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -1904,8 +2023,6 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
     def construct(self):
         self.ask_question()
         self.set_equal_to_x()
-        # TODO, move this
-        # self.plug_func_into_self()
 
     def create_pi_creatures(self):
         morty = Mortimer(height=2)
@@ -1913,7 +2030,7 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
 
         friend = PiCreature(color=GREEN, height=2)
         friend.to_edge(DOWN)
-        friend.shift(0.5 * LEFT)
+        friend.shift(LEFT)
 
         group = VGroup(morty, friend)
         group.shift(2 * LEFT)
@@ -2210,10 +2327,12 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
         self.revert_to_original_skipping_status()
 
         self.obviously_not()
+        self.ask_about_fraction()
         self.plug_func_into_self()
 
     def obviously_not(self):
         morty, friend = self.get_pi_creatures()
+        friend.change_mode("confused")
         randy = Randolph()
         randy.match_height(morty)
         randy.to_corner(DL)
@@ -2229,7 +2348,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
         self.play(FadeIn(randy))
         self.play(
             PiCreatureSays(
-                randy, "Of course not!",
+                randy, "Obviously not!",
                 bubble_kwargs={"width": 3, "height": 2},
                 target_mode="angry",
                 run_time=1,
@@ -2246,7 +2365,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
         )
         self.play(LaggedStart(
             ShowCreationThenDestruction, plus_rects,
-            run_time=4,
+            run_time=2,
             lag_ratio=0.35,
         ))
         self.play(WiggleOutThenIn(rhs))
@@ -2262,6 +2381,28 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
             morty.change, "pondering",
             friend.change, "pondering",
         )
+
+    def ask_about_fraction(self):
+        frac = self.frac
+        arrow = Vector(LEFT, color=RED)
+        arrow.next_to(frac, RIGHT)
+        question = TextMobject("What does this \\\\ actually mean?")
+        question.set_color(RED)
+        question.next_to(arrow, RIGHT)
+
+        self.play(
+            LaggedStart(FadeIn, question, run_time=1),
+            GrowArrow(arrow),
+            LaggedStart(
+                ApplyMethod, frac,
+                lambda m: (m.set_color, RED),
+                rate_func=there_and_back,
+                lag_ratio=0.2,
+                run_time=2
+            )
+        )
+        self.wait()
+        self.play(FadeOut(question), FadeOut(arrow))
 
     def plug_func_into_self(self, value=1, value_str="1"):
         morty, friend = self.pi_creatures
@@ -2279,7 +2420,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
             lhs.next_to(equals, LEFT)
             lines.add(VGroup(lhs, equals, rhs))
 
-            value_label = TexMobject("= %.3f" % value)
+            value_label = TexMobject("= %.3f\\dots" % value)
             value = func(value)
             value_labels.add(value_label)
 
@@ -2327,7 +2468,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
             anims = [ReplacementTransform(
                 mover.copy().fade(1), target, path_arc=30 * DEGREES
             )]
-            if n == 3:
+            if n == 4:
                 morty.generate_target()
                 morty.target.change("horrified")
                 morty.target.shift(2.5 * DOWN)
@@ -2351,8 +2492,15 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
         )
         self.wait(3)
 
+        self.top_line = VGroup(lines[0], value_labels[0])
+
 
 class RepeatedApplicationWithPhiBro(ThinkAboutWithRepeatedApplication):
+    CONFIG = {
+        "value": (1 - np.sqrt(5)) / 2,
+        "value_str": "-1/\\varphi",
+    }
+
     def construct(self):
         self.force_skipping()
         self.ask_question()
@@ -2360,8 +2508,38 @@ class RepeatedApplicationWithPhiBro(ThinkAboutWithRepeatedApplication):
         self.revert_to_original_skipping_status()
 
         self.plug_func_into_self(
-            value=(1 - np.sqrt(5)) / 2,
-            value_str="-1/\\varphi"
+            value=self.value,
+            value_str=self.value_str
+        )
+
+
+class RepeatedApplicationWithNegativeSeed(RepeatedApplicationWithPhiBro, MovingCameraScene):
+    CONFIG = {
+        "value": -0.65,
+        "value_str": "-0.65"
+    }
+
+    def setup(self):
+        MovingCameraScene.setup(self)
+        RepeatedApplicationWithPhiBro.setup(self)
+
+    def construct(self):
+        RepeatedApplicationWithPhiBro.construct(self)
+
+        rect = SurroundingRectangle(self.top_line)
+        question = TextMobject("What about a negative seed?")
+        question.match_color(rect)
+        question.next_to(rect, UP)
+        self.play(ShowCreation(rect))
+        self.play(
+            Write(question),
+            self.camera.frame.scale_to_fit_height, FRAME_HEIGHT + 1.5
+        )
+        self.wait()
+        self.play(
+            FadeOut(question),
+            FadeOut(rect),
+            self.camera.frame.scale_to_fit_height, FRAME_HEIGHT
         )
 
 
@@ -2479,94 +2657,6 @@ class ShowRepeatedApplication(Scene):
         self.play(
             GrowFromCenter(braces[2]),
             FadeIn(brace_texts[2]),
-        )
-        self.wait()
-
-
-class ShowPhiAsFixedPoint(ShowRepeatedApplication):
-    CONFIG = {
-        "title_color": WHITE,
-    }
-
-    def construct(self):
-        self.add_func_title()
-        self.show_fixed_point_formulas()
-
-    def show_fixed_point_formulas(self):
-        var_formula = TexMobject(
-            "{1 \\over", "\\varphi}", "=", "\\varphi", "-", "1",
-        )
-        var_formula.set_color_by_tex("\\varphi", YELLOW)
-        var_formula.move_to(UP)
-        alt_var_formula = TexMobject(
-            "1", "+", "{1 \\over", "\\varphi}", "=", "\\varphi",
-        )
-        alt_var_formula.set_color_by_tex("\\varphi", YELLOW)
-        alt_var_formula.move_to(var_formula)
-
-        num_formula = TexMobject(
-            "{1 \\over 1.618\\dots} = 0.618\\dots",
-            tex_to_color_map={
-                "1.618\\dots": YELLOW,
-                "0.618\\dots": YELLOW,
-                "=": WHITE,
-            }
-        )
-        num_formula.next_to(var_formula, DOWN, LARGE_BUFF)
-
-        fixed_phi_formula = VGroup(
-            TexMobject("f(", "\\varphi", ")"),
-            TexMobject("="),
-            TexMobject("\\quad", "\\varphi", "\\quad"),
-        )
-        fixed_phi_formula.arrange_submobjects(RIGHT)
-        for mob in fixed_phi_formula:
-            mob.set_color_by_tex("\\varphi", YELLOW)
-        fixed_phi_formula.next_to(alt_var_formula, UP, LARGE_BUFF)
-
-        self.add(num_formula)
-        self.wait()
-        self.play(Write(var_formula))
-        self.wait()
-
-        self.play(*[
-            ReplacementTransform(
-                part,
-                alt_var_formula.get_part_by_tex(
-                    tex_string if tex_string is not "-" else "+",
-                    substring=False
-                ),
-                path_arc=90 * DEGREES,
-                run_time=2
-            )
-            for part in var_formula
-            for tex_string in [part.get_tex_string()]
-        ])
-        self.wait()
-        self.play(
-            ReplacementTransform(
-                self.title[:2].copy(),
-                fixed_phi_formula[:2],
-                path_arc=90 * DEGREES
-            ),
-        )
-        self.play(
-            ReplacementTransform(
-                fixed_phi_formula[0][1].copy(),
-                fixed_phi_formula[2][1],
-                path_arc=-180 * DEGREES
-            )
-        )
-        self.wait()
-        group = VGroup(
-            self.title, fixed_phi_formula,
-            alt_var_formula,
-            num_formula
-        )
-        self.play(
-            group.arrange_submobjects, DOWN,
-            {"buff": LARGE_BUFF, "aligned_edge": LEFT},
-            group.to_corner, UL
         )
         self.wait()
 
@@ -2840,7 +2930,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             VGroup(line.main_line, line.tick_marks).set_stroke(width=2)
 
     def add_function_title(self):
-        title = TexMobject("f(x)", "=", "1 + \\frac{1}{x}")
+        title = TexMobject("f(x)", "=", "1 +", "\\frac{1}{x}")
         title.to_edge(UP)
         self.add(title)
         self.title = title
@@ -2855,24 +2945,13 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             x_max=10,
         )
         sample_dots.set_stroke(BLACK, 0.5)
-        point_func = self.number_func_to_point_func(self.func)
-        arrows = VGroup(*[
-            Arrow(
-                c, point_func(c), buff=SMALL_BUFF,
-                rectangular_stem_width=0.02,
-                tip_length=0.15
-            )
-            for c in map(Mobject.get_center, sample_dots)
-            if np.linalg.norm(c - input_zero_point) > 0.3
-        ])
-        arrows.set_fill(WHITE, 0.75)
-        arrows.set_stroke(BLACK, 0.5)
+        sample_points = map(Mobject.get_center, sample_dots)
 
         self.play(LaggedStart(
             FadeInAndShiftFromDirection, sample_dots,
             lambda m: (m, UP)
         ))
-        self.play(LaggedStart(GrowArrow, arrows))
+        self.show_arrows(sample_points)
         self.wait()
         for x in range(self.num_initial_applications):
             self.apply_function(
@@ -2899,6 +2978,48 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             self.remove(upper_output_line)
             self.wait()
         self.play(FadeOut(sample_dots))
+
+    def show_arrows(self, sample_points):
+        input_zero_point = self.input_line.number_to_point(0)
+        point_func = self.number_func_to_point_func(self.func)
+        alt_point_func = self.number_func_to_point_func(lambda x: 1.0 / x)
+        arrows, alt_arrows = [
+            VGroup(*[
+                Arrow(
+                    point, func(point), buff=SMALL_BUFF,
+                    use_rectangular_stem=False,
+                    tip_length=0.15
+                )
+                for point in sample_points
+                if np.linalg.norm(point - input_zero_point) > 0.3
+            ])
+            for func in point_func, alt_point_func
+        ]
+        for group in arrows, alt_arrows:
+            group.set_stroke(WHITE, 0.5)
+            group.set_color_by_gradient(RED, YELLOW)
+            for arrow in group:
+                arrow.tip.set_stroke(BLACK, 0.5)
+
+        one_plus = self.title.get_part_by_tex("1 +")
+        one_plus_rect = BackgroundRectangle(one_plus)
+        one_plus_rect.set_fill(BLACK, opacity=0.8)
+
+        self.play(LaggedStart(GrowArrow, arrows))
+        self.wait()
+        self.play(LaggedStart(
+            ApplyMethod, arrows,
+            lambda a: (a.scale, 0.7),
+            rate_func=there_and_back,
+        ))
+        self.wait()
+        self.play(
+            Transform(arrows, alt_arrows),
+            FadeIn(one_plus_rect, remover=True),
+            rate_func=there_and_back_with_pause,
+            run_time=4,
+        )
+        self.wait()
 
         self.all_arrows = arrows
 
@@ -2932,10 +3053,17 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
         phi_arrow = Arrow(phi_tick, output_phi_point, **arrow_kwargs)
         phi_bro_arrow = Arrow(phi_bro_tick, output_phi_bro_point, **arrow_kwargs)
 
+        def fade_arrow(arrow):
+            # arrow.set_stroke(DARK_GREY, 0.5)
+            arrow.set_stroke(width=0.1)
+            arrow.tip.set_fill(opacity=0)
+            arrow.tip.set_stroke(width=0)
+            return arrow
+
         self.play(
             LaggedStart(
-                ApplyMethod, self.all_arrows,
-                lambda m: (m.set_fill, {"opacity": 0.1})
+                ApplyFunction, self.all_arrows,
+                lambda a: (fade_arrow, a)
             ),
             FadeIn(phi_arrow),
             FadeIn(phi_bro_arrow),
@@ -3087,6 +3215,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
         self.revert_to_original_skipping_status()
 
         self.label_stability()
+        self.write_derivative_fact()
 
     def label_stability(self):
         self.title.to_corner(UL)
@@ -3131,6 +3260,20 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
         )
         self.play(phi_bro_arrows.second_anim)
         self.wait()
+
+        self.stable_label = stable_label
+        self.unstable_label = unstable_label
+        self.phi_arrows = phi_arrows
+        self.phi_bro_arrows = phi_bro_arrows
+
+    def write_derivative_fact(self):
+        stable_label = self.stable_label
+        unstable_label = self.unstable_label
+        phi_arrows = self.phi_arrows
+        phi_bro_arrows = self.phi_bro_arrows
+        arrow_groups = [phi_arrows, phi_bro_arrows]
+
+
 
 
 class NotBetterThanGraphs(TeacherStudentsScene):
@@ -3294,3 +3437,134 @@ class CompelxAnalyticFluidFlow(ComplexTransformationScene, MovingCameraScene):
             run_time=3,
             lag_ratio=0.9
         ))
+
+
+class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
+    CONFIG = {
+        "num_anchors_to_add_per_line": 20,
+        "complex_homotopy": lambda z, t: z**(1.0 + t),
+    }
+
+    def setup(self):
+        ComplexTransformationScene.setup(self)
+        ZoomedScene.setup(self)
+
+    def construct(self):
+        self.edit_background_plane()
+        self.add_title()
+        self.add_transforming_planes()
+        self.preview_some_numbers()
+        self.zoom_in_to_one_plus_half_i()
+        self.write_derivative()
+
+    def add_title(self):
+        title = TexMobject("z \\rightarrow z^2")
+        title.add_background_rectangle()
+        title.scale(1.5)
+        title.to_corner(UL, buff=MED_SMALL_BUFF)
+        self.add_foreground_mobject(title)
+
+    def edit_background_plane(self):
+        self.background.main_lines.set_stroke(GREY, 2)
+        self.background.secondary_lines.set_stroke(DARK_GREY, 1)
+        self.add_foreground_mobject(self.background.coordinate_labels)
+
+    def add_transforming_planes(self):
+        self.plane = self.get_plane()
+        self.add_transformable_mobjects(self.plane)
+
+    def preview_some_numbers(self):
+        dots = VGroup(*[
+            Dot().move_to(self.background.number_to_point(z))
+            for z in [
+                1, 2, complex(0, 1),
+                -1, complex(2, 0.5), complex(-1, -1), complex(3, 0.5),
+            ]
+        ])
+        dots.set_color_by_gradient(RED, YELLOW)
+        d_angle = 30 * DEGREES
+
+        dot_groups = VGroup()
+        for dot in dots:
+            point = dot.get_center()
+            z = self.background.point_to_number(point)
+            z_out = self.complex_homotopy(z, 1)
+            out_point = self.background.number_to_point(z_out)
+            path_arc = angle_of_vector(point)
+            if abs(z - 1) < 0.01:
+                # One is special
+                arrow = Arc(
+                    start_angle=(-90 * DEGREES + d_angle),
+                    angle=(360 * DEGREES - 2 * d_angle),
+                    radius=0.25
+                )
+                arrow.add_tip(tip_length=0.15)
+                arrow.pointwise_become_partial(arrow, 0, 0.9)
+                arrow.next_to(dot, UP, buff=0)
+            else:
+                arrow = Arrow(
+                    point, out_point,
+                    use_rectangular_stem=False,
+                    path_arc=path_arc,
+                    buff=SMALL_BUFF,
+                )
+            arrow.match_color(dot)
+
+            out_dot = dot.copy()
+            # out_dot.set_fill(opacity=0.5)
+            out_dot.set_stroke(BLUE, 1)
+            out_dot.move_to(out_point)
+            dot.path_arc = path_arc
+            dot.out_dot = out_dot
+
+            dot_group = VGroup(dot, arrow, out_dot)
+            dot_groups.add(dot_group)
+
+            dot_copy = dot.copy()
+            dot.save_state()
+            dot.scale(3)
+            dot.fade(1)
+
+            dot_group.anim = Succession(
+                ApplyMethod(dot.restore),
+                AnimationGroup(
+                    ShowCreation(arrow),
+                    ReplacementTransform(
+                        dot_copy, out_dot,
+                        path_arc=path_arc
+                    )
+                )
+            )
+
+        for dot_group in dot_groups[:3]:
+            self.play(dot_group.anim)
+            self.wait()
+        self.play(*[dg.anim for dg in dot_groups[3:]])
+
+        self.apply_complex_homotopy(
+            self.complex_homotopy,
+            added_anims=[Animation(dot_groups)]
+        )
+        self.wait()
+        self.play(FadeOut(dot_groups))
+        self.wait()
+        self.play(FadeOut(self.plane))
+
+    def zoom_in_to_one_plus_half_i(self):
+        pass
+
+    def write_derivative(self):
+        pass
+
+    # Helpers
+
+    def get_plane(self):
+        top_plane = NumberPlane(
+            y_radius=FRAME_HEIGHT / 2,
+        )
+        self.prepare_for_transformation(top_plane)
+        bottom_plane = top_plane.copy()
+        tiny_tiny_buff = 0.001
+        top_plane.next_to(ORIGIN, UP, buff=tiny_tiny_buff)
+        bottom_plane.next_to(ORIGIN, DOWN, buff=tiny_tiny_buff)
+        return VGroup(top_plane, bottom_plane)
