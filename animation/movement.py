@@ -41,11 +41,10 @@ class ComplexHomotopy(Homotopy):
         """
         Complex Hootopy a function Cx[0, 1] to C
         """
-        def homotopy(event):
-            x, y, z, t = event
-            c = complex_homotopy((complex(x, y), t))
+        def homotopy(x, y, z, t):
+            c = complex_homotopy(complex(x, y), t)
             return (c.real, c.imag, z)
-        Homotopy.__init__(self, homotopy, mobject, *args, **kwargs)
+        Homotopy.__init__(self, homotopy, mobject, **kwargs)
 
 
 class PhaseFlow(Animation):
