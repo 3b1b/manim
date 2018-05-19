@@ -1,7 +1,8 @@
 from constants import *
 
 from animation.animation import Animation
-from animation.movement import SmoothedVectorizedHomotopy
+# from animation.movement import SmoothedVectorizedHomotopy
+from animation.movement import ComplexHomotopy
 from animation.transform import MoveToTarget
 from mobject.coordinate_systems import ComplexPlane
 from mobject.types.vectorized_mobject import VGroup
@@ -114,11 +115,11 @@ class ComplexTransformationScene(Scene):
     def get_transformer(self, **kwargs):
         transform_kwargs = dict(self.default_apply_complex_function_kwargs)
         transform_kwargs.update(kwargs)
-        plane = self.plane
-        self.prepare_for_transformation(plane)
-        transformer = VGroup(
-            plane, *self.transformable_mobjects
-        )
+        transformer = VGroup()
+        if hasattr(self, "plane"):
+            self.prepare_for_transformation(self.plane)
+            transformer.add(self.plane)
+        transformer.add(*self.transformable_mobjects)
         return transformer, transform_kwargs
 
     def apply_complex_function(self, func, added_anims=[], **kwargs):
@@ -145,15 +146,12 @@ class ComplexTransformationScene(Scene):
     def apply_complex_homotopy(self, complex_homotopy, added_anims=[], **kwargs):
         transformer, transform_kwargs = self.get_transformer(**kwargs)
 
-        def homotopy(x, y, z, t):
-            output = complex_homotopy(complex(x, y), t)
-            rescaled_output = self.z_to_point(output)
-            return (rescaled_output.real, rescaled_output.imag, z)
+        # def homotopy(x, y, z, t):
+        #     output = complex_homotopy(complex(x, y), t)
+        #     rescaled_output = self.z_to_point(output)
+        #     return (rescaled_output.real, rescaled_output.imag, z)
 
         self.play(
-            SmoothedVectorizedHomotopy(
-                homotopy, transformer,
-                **transform_kwargs
-            ),
+            ComplexHomotopy(complex_homotopy, transformer, **transform_kwargs),
             *added_anims
         )

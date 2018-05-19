@@ -253,6 +253,7 @@ class PiCreatureScene(Scene):
 class TeacherStudentsScene(PiCreatureScene):
     CONFIG = {
         "student_colors": [BLUE_D, BLUE_E, BLUE_C],
+        "teacher_color": GREY_BROWN,
         "student_scale_factor": 0.8,
         "seconds_to_blink": 2,
         "screen_height": 3,
@@ -265,7 +266,7 @@ class TeacherStudentsScene(PiCreatureScene):
         self.hold_up_spot = self.teacher.get_corner(UP + LEFT) + MED_LARGE_BUFF * UP
 
     def create_pi_creatures(self):
-        self.teacher = Mortimer(color = self.default_pi_creature_kwargs["color"])
+        self.teacher = Mortimer(color=self.teacher_color)
         self.teacher.to_corner(DOWN + RIGHT)
         self.teacher.look(DOWN + LEFT)
         self.students = VGroup(*[
@@ -356,13 +357,15 @@ class TeacherStudentsScene(PiCreatureScene):
             for mob in self.get_mobjects()
         ])
 
-    def teacher_holds_up(self, mobject, target_mode="raise_right_hand", **kwargs):
+    def teacher_holds_up(self, mobject, target_mode="raise_right_hand", added_anims=None, **kwargs):
         mobject.move_to(self.hold_up_spot, DOWN)
         mobject.shift_onto_screen()
         mobject_copy = mobject.copy()
         mobject_copy.shift(DOWN)
         mobject_copy.fade(1)
+        added_anims = added_anims or []
         self.play(
             ReplacementTransform(mobject_copy, mobject),
             self.teacher.change, target_mode,
+            *added_anims
         )

@@ -47,6 +47,7 @@ class PiCreature(SVGMobject):
 
     def __init__(self, mode="plain", **kwargs):
         digest_config(self, kwargs)
+        self.mode = mode
         self.parts_named = False
         try:
             svg_file = os.path.join(
@@ -67,6 +68,13 @@ class PiCreature(SVGMobject):
             self.flip()
         if self.start_corner is not None:
             self.to_corner(self.start_corner)
+
+    def align_data(self, mobject):
+        # This ensures that after a transform into a different mode,
+        # the pi creatures mode will be updated appropriately
+        SVGMobject.align_data(self, mobject)
+        if isinstance(mobject, PiCreature):
+            self.mode = mobject.get_mode()
 
     def name_parts(self):
         self.mouth = self.submobjects[MOUTH_INDEX]
@@ -104,17 +112,21 @@ class PiCreature(SVGMobject):
 
     def change_mode(self, mode):
         new_self = self.__class__(
-            mode = mode,
+            mode=mode,
         )
         new_self.match_style(self)
         new_self.match_height(self)
-        if self.is_flipped() ^ new_self.is_flipped():
+        if self.is_flipped() != new_self.is_flipped():
             new_self.flip()
         new_self.shift(self.eyes.get_center() - new_self.eyes.get_center())
         if hasattr(self, "purposeful_looking_direction"):
             new_self.look(self.purposeful_looking_direction)
         Transform(self, new_self).update(1)
+        self.mode = mode
         return self
+
+    def get_mode(self):
+        return self.mode
 
     def look(self, direction):
         norm = np.linalg.norm(direction)

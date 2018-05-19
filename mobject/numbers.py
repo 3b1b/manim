@@ -17,6 +17,7 @@ class DecimalNumber(VMobject):
 
     def __init__(self, number, **kwargs):
         VMobject.__init__(self, **kwargs)
+        # TODO, make this more ediable with a getter and setter
         self.number = number
         ndp = self.num_decimal_places
 

@@ -81,17 +81,22 @@ class SingleStringTexMobject(SVGMobject):
             tex += filler
 
         if tex == "\\substack":
-            tex = ""
-        for t1, t2 in ("\\left", "\\right"), ("\\right", "\\left"):
-            should_replace = reduce(op.and_, [
-                t1 in tex,
-                t2 not in tex,
-                len(tex) > len(t1) and tex[len(t1)] in "()[]<>|.\\"
-            ])
-            if should_replace:
-                tex = tex.replace(t1, "\\big")
+            tex = "\\quad"
+
         if tex == "":
             tex = "\\quad"
+
+        # Handle imbalanced \left and \right
+        num_lefts, num_rights = [
+            len(filter(
+                lambda s: s[0] in "(){}[]|.\\",
+                tex.split(substr)[1:]
+            ))
+            for substr in "\\left", "\\right"
+        ]
+        if num_lefts != num_rights:
+            tex = tex.replace("\\left", "\\big")
+            tex = tex.replace("\\right", "\\big")
         return tex
 
     def remove_stray_braces(self, tex):
@@ -102,10 +107,12 @@ class SingleStringTexMobject(SVGMobject):
             tex.count(char)
             for char in "{}"
         ]
-        if num_rights > num_lefts:
+        while num_rights > num_lefts:
             tex = "{" + tex
-        elif num_lefts > num_rights:
+            num_lefts += 1
+        while num_lefts > num_rights:
             tex = tex + "}"
+            num_rights += 1
         return tex
 
     def get_tex_string(self):
