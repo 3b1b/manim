@@ -572,8 +572,7 @@ class Scene(Container):
         self.args_to_rename_file = (temp_file_path, file_path)
 
         fps = int(1 / self.frame_duration)
-        height = self.camera.get_pixel_height()
-        width = self.camera.get_pixel_width()
+        height, width = self.camera.pixel_shape
 
         command = [
             FFMPEG_BIN,

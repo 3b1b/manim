@@ -17,20 +17,17 @@ LOW_QUALITY_FRAME_DURATION = 1. / 15
 MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
 PRODUCTION_QUALITY_FRAME_DURATION = 1. / 60
 
-# There might be other configuration than pixel shape later...
+# There might be other configuration than pixel_shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": DEFAULT_PIXEL_HEIGHT,
-    "pixel_width": DEFAULT_PIXEL_WIDTH,
+    "pixel_shape": (DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH),
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 720,
-    "pixel_width": 1280,
+    "pixel_shape": (720, 1280),
 }
 
 LOW_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 480,
-    "pixel_width": 854,
+    "pixel_shape": (480, 854),
 }
 
 DEFAULT_POINT_DENSITY_2D = 25
