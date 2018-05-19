@@ -23,6 +23,7 @@ class ZoomedScene(MovingCameraScene):
         "zoomed_display_corner_buff": DEFAULT_MOBJECT_TO_EDGE_BUFFER,
         "zoomed_camera_config": {
             "default_frame_stroke_width": 2,
+            "background_opacity": 1,
         },
         "zoomed_camera_image_mobject_config": {},
         "zoomed_camera_frame_starting_position": ORIGIN,
