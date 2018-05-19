@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from big_ol_pile_of_manim_imports import *
 
 
@@ -316,7 +317,7 @@ class NumberlineTransformationScene(ZoomedScene):
         zcbr_group.add(mini_line_copy, mini_line)
         anims += [FadeIn(mini_line), FadeIn(mini_line_copy)]
 
-        # Add tiny coordiantes
+        # Add tiny coordinates
         if local_coordinate_values is None:
             local_coordinate_values = [x]
         local_coordinates = self.get_local_coordinates(
@@ -660,7 +661,7 @@ class StartingCalc101(PiCreatureScene):
         circumference = TexMobject("2\\pi r")
         circumference.move_to(unfilled_circle)
         equation = TexMobject(
-            "{d (\\pi r^2) \\over dx}  = 2\\pi r",
+            "{d (\\pi r^2) \\over dr}  = 2\\pi r",
             tex_to_color_map={
                 "\\pi r^2": BLUE_D,
                 "2\\pi r": YELLOW,
@@ -875,8 +876,8 @@ class Wrapper(Scene):
     }
 
     def construct(self):
-        rect = ScreenRectangle(height=self.screen_height)
-        title = TextMobject(self.title, **self.title_kwargs)
+        rect = self.rect = ScreenRectangle(height=self.screen_height)
+        title = self.title = TextMobject(self.title, **self.title_kwargs)
         title.to_edge(UP)
         rect.next_to(title, DOWN)
 
@@ -1562,11 +1563,11 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
             la, ra = ra, la
         if factor < 0:
             kwargs = {
-                "path_arc": -np.pi,
+                "path_arc": np.pi,
                 "use_rectangular_stem": False,
             }
-            la = Arrow(DOWN, UP, **kwargs)
-            ra = Arrow(UP, DOWN, **kwargs)
+            la = Arrow(UP, DOWN, **kwargs)
+            ra = Arrow(DOWN, UP, **kwargs)
             for arrow in la, ra:
                 arrow.pointwise_become_partial(arrow, 0, 0.9)
                 arrow.tip.scale(2)
@@ -1871,9 +1872,8 @@ class ZoomInMoreAndMoreToZero(ZoomInOnXSquaredNearZero):
             frame.scale_to_fit_height(factor * zoomed_display_height)
             self.local_coordinate_num_decimal_places = int(-np.log10(factor))
             zoom_words = TextMobject(
-                "Zoomed ", "{:,}".format(int(1.0 / factor)),
-                "x \\\\", "near 0",
-                arg_separator=""
+                "Zoomed", "{:,}x \\\\".format(int(1.0 / factor)),
+                "near 0",
             )
             zoom_words.next_to(self.zoomed_display, DOWN)
 
@@ -1954,6 +1954,14 @@ class XSquaredForNegativeInput(TalkThroughXSquaredExample):
         sample_dots.set_fill(opacity=0.8)
 
         self.play(LaggedStart(DrawBorderThenFill, sample_dots))
+        self.play(LaggedStart(
+            ApplyFunction, sample_dots[len(sample_dots) / 2:0:-1],
+            lambda mob: (
+                lambda m: m.scale(2).shift(SMALL_BUFF * UP).set_color(PINK),
+                mob,
+            ),
+            rate_func=there_and_back,
+        ))
         self.add_sample_dot_ghosts(sample_dots)
         self.apply_function(self.func, sample_dots=sample_dots)
         self.wait()
@@ -3207,6 +3215,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
     CONFIG = {
         "num_initial_applications": 0,
     }
+
     def construct(self):
         self.force_skipping()
         self.add_function_title()
@@ -3237,9 +3246,10 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
                 self.all_arrows
             )).copy()
             arrows.set_fill(PINK, 1)
+            arrows.set_stroke(PINK, 3)
             arrows.second_anim = LaggedStart(
                 ApplyMethod, arrows,
-                lambda m: (m.set_fill, YELLOW, 1),
+                lambda m: (m.set_color, YELLOW),
                 rate_func=there_and_back_with_pause,
                 lag_ratio=0.7,
                 run_time=2,
@@ -3269,11 +3279,87 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
     def write_derivative_fact(self):
         stable_label = self.stable_label
         unstable_label = self.unstable_label
+        labels = VGroup(stable_label, unstable_label)
         phi_arrows = self.phi_arrows
         phi_bro_arrows = self.phi_bro_arrows
-        arrow_groups = [phi_arrows, phi_bro_arrows]
+        arrow_groups = VGroup(phi_arrows, phi_bro_arrows)
+
+        deriv_labels = VGroup()
+        for char, label in zip("<>", labels):
+            deriv_label = TexMobject(
+                "\\big|", "\\frac{df}{dx}(", "x", ")", "\\big|",
+                char, "1"
+            )
+            deriv_label.get_parts_by_tex("\\big|").match_height(
+                deriv_label, stretch=True
+            )
+            deriv_label.set_color_by_tex("x", YELLOW, substring=False)
+            deriv_label.next_to(label, UP)
+            deriv_labels.add(deriv_label)
+
+        dot_groups = VGroup()
+        for arrow_group in arrow_groups:
+            dot_group = VGroup()
+            for arrow in arrow_group:
+                start_point, end_point = [
+                    line.number_to_point(line.point_to_number(p))
+                    for line, p in [
+                        (self.input_line, arrow.get_start()),
+                        (self.output_line, arrow.get_end()),
+                    ]
+                ]
+                dot = Dot(start_point, radius=0.05)
+                dot.set_color(YELLOW)
+                dot.generate_target()
+                dot.target.move_to(end_point)
+                dot_group.add(dot)
+            dot_groups.add(dot_group)
+
+        for deriv_label, dot_group in zip(deriv_labels, dot_groups):
+            self.play(FadeInFromDown(deriv_label))
+            self.play(LaggedStart(GrowFromCenter, dot_group))
+            self.play(*map(MoveToTarget, dot_group), run_time=2)
+            self.wait()
 
 
+class StaticAlgebraicObject(Scene):
+    def construct(self):
+        frac = get_phi_continued_fraction(40)
+        frac.scale_to_fit_width(FRAME_WIDTH - 1)
+        # frac.shift(2 * DOWN)
+        frac.to_edge(DOWN)
+        frac.set_stroke(WHITE, width=0.5)
+
+        title = TexMobject(
+            "\\infty \\ne \\lim",
+            tex_to_color_map={"\\ne": RED}
+        )
+        title.scale(1.5)
+        title.to_edge(UP)
+
+        polynomial = TexMobject("x^2 - x - 1 = 0")
+        polynomial.move_to(title)
+
+        self.add(title)
+        self.play(LaggedStart(
+            GrowFromCenter, frac,
+            lag_ratio=0.1,
+            run_time=3
+        ))
+        self.wait()
+        factor = 1.1
+        self.play(frac.scale, factor, run_time=0.5)
+        self.play(
+            frac.scale, 1 / factor,
+            frac.set_color, LIGHT_GREY,
+            run_time=0.5, rate_func=lambda t: t**5,
+        )
+        self.wait()
+        self.play(
+            FadeOut(title),
+            FadeIn(polynomial)
+        )
+        self.wait(2)
 
 
 class NotBetterThanGraphs(TeacherStudentsScene):
@@ -3301,6 +3387,23 @@ class NotBetterThanGraphs(TeacherStudentsScene):
                 *3 * ["thinking"],
                 look_at_arg=self.teacher.eyes
             )]
+        )
+        self.wait(3)
+
+
+class WhatComesAfterWrapper(Wrapper):
+    CONFIG = {"title": "Beyond the first year"}
+
+    def construct(self):
+        Wrapper.construct(self)
+        new_title = TextMobject("Next video")
+        new_title.set_color(BLUE)
+        new_title.move_to(self.title)
+
+        self.play(
+            FadeInFromDown(new_title),
+            self.title.shift, UP,
+            self.title.fade, 1,
         )
         self.wait(3)
 
@@ -3355,6 +3458,83 @@ class TopicsAfterSingleVariable(PiCreatureScene, MoreTopics):
         )
         self.wait(4)
 
+
+class ShowJacobianZoomedIn(LinearTransformationScene, ZoomedScene):
+    CONFIG = {
+        "show_basis_vectors": False,
+        "show_coordinates": True,
+        "zoom_factor": 0.05,
+    }
+
+    def setup(self):
+        LinearTransformationScene.setup(self)
+        ZoomedScene.setup(self)
+
+    def construct(self):
+        def example_function(point):
+            x, y, z = point
+            return np.array([
+                x + np.sin(y),
+                y + np.sin(x),
+                0
+            ])
+
+        zoomed_camera = self.zoomed_camera
+        zoomed_display = self.zoomed_display
+        frame = zoomed_camera.frame
+        frame.move_to(3 * LEFT + 1 * UP)
+        frame.set_color(YELLOW)
+        zoomed_display.display_frame.set_color(YELLOW)
+        zd_rect = BackgroundRectangle(
+            zoomed_display,
+            fill_opacity=1,
+            buff=MED_SMALL_BUFF,
+        )
+        self.add_foreground_mobject(zd_rect)
+        zd_rect.anim = UpdateFromFunc(
+            zd_rect,
+            lambda rect: rect.replace(zoomed_display).scale(1.1)
+        )
+        zd_rect.next_to(FRAME_HEIGHT * UP, UP)
+
+        tiny_grid = NumberPlane(
+            x_radius=2,
+            y_radius=2,
+            color=BLUE_E,
+            secondary_color=DARK_GREY,
+        )
+        tiny_grid.replace(frame)
+
+        jacobian_words = TextMobject("Jacobian")
+        jacobian_words.add_background_rectangle()
+        jacobian_words.scale(1.5)
+        jacobian_words.move_to(zoomed_display, UP)
+        zoomed_display.next_to(jacobian_words, DOWN)
+
+        self.play(self.get_zoom_in_animation())
+        self.activate_zooming()
+        self.play(
+            self.get_zoomed_display_pop_out_animation(),
+            zd_rect.anim
+        )
+        self.play(
+            ShowCreation(tiny_grid),
+            Write(jacobian_words),
+            run_time=2
+        )
+        self.add_transformable_mobject(tiny_grid)
+        self.add_foreground_mobject(jacobian_words)
+        self.wait()
+        self.apply_nonlinear_transformation(
+            example_function,
+            added_anims=[MaintainPositionRelativeTo(
+                zoomed_camera.frame, tiny_grid,
+            )],
+            run_time=5
+        )
+        self.wait()
+
+# Video 2
 
 class ComplexAnalysisOverlay(Scene):
     def construct(self):
@@ -3443,6 +3623,7 @@ class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
     CONFIG = {
         "num_anchors_to_add_per_line": 20,
         "complex_homotopy": lambda z, t: z**(1.0 + t),
+        "zoom_factor": 0.05,
     }
 
     def setup(self):
@@ -3452,8 +3633,8 @@ class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
     def construct(self):
         self.edit_background_plane()
         self.add_title()
-        self.add_transforming_planes()
-        self.preview_some_numbers()
+        # self.add_transforming_planes()
+        # self.preview_some_numbers()
         self.zoom_in_to_one_plus_half_i()
         self.write_derivative()
 
@@ -3549,9 +3730,44 @@ class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
         self.play(FadeOut(dot_groups))
         self.wait()
         self.play(FadeOut(self.plane))
+        self.transformable_mobjects.remove(self.plane)
 
     def zoom_in_to_one_plus_half_i(self):
-        pass
+        z = complex(1, 0.5)
+        point = self.background.number_to_point(z)
+        point_mob = VectorizedPoint(point)
+        frame = self.zoomed_camera.frame
+        frame.move_to(point)
+        tiny_plane = NumberPlane(
+            x_radius=2, y_radius=2,
+            color=GREEN,
+            secondary_color=GREEN_E
+        )
+        tiny_plane.replace(frame)
+
+        plane = self.get_plane()
+
+        words = TextMobject("What does this look like")
+        words.add_background_rectangle()
+        words.next_to(self.zoomed_display, LEFT, aligned_edge=UP)
+        arrow = Arrow(words.get_bottom(), self.zoomed_display.get_left())
+        VGroup(words, arrow).set_color(YELLOW)
+
+        self.play(FadeIn(plane))
+        self.activate_zooming(animate=True)
+        self.play(ShowCreation(tiny_plane))
+        self.wait()
+        self.add_transformable_mobjects(plane, tiny_plane, point_mob)
+        self.add_foreground_mobjects(words, arrow)
+        self.apply_complex_homotopy(
+            self.complex_homotopy,
+            added_anims=[
+                Write(words),
+                GrowArrow(arrow),
+                MaintainPositionRelativeTo(frame, point_mob)
+            ]
+        )
+        self.wait(2)
 
     def write_derivative(self):
         pass
@@ -3568,3 +3784,244 @@ class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
         top_plane.next_to(ORIGIN, UP, buff=tiny_tiny_buff)
         bottom_plane.next_to(ORIGIN, DOWN, buff=tiny_tiny_buff)
         return VGroup(top_plane, bottom_plane)
+
+
+class PrinciplesOverlay(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+            "flip_at_start": True,
+        },
+        "default_pi_creature_start_corner": DR,
+    }
+
+    def construct(self):
+        morty = self.pi_creature
+        q_marks = VGroup(*[TexMobject("?") for x in range(40)])
+        q_marks.arrange_submobjects_in_grid(4, 10)
+        q_marks.space_out_submobjects(1.4)
+        for mark in q_marks:
+            mark.shift(
+                random.random() * RIGHT,
+                random.random() * UP,
+            )
+            mark.scale(1.5)
+            mark.set_stroke(BLACK, 1)
+        q_marks.next_to(morty, UP)
+        q_marks.shift_onto_screen()
+        q_marks.sort_submobjects(
+            lambda p: np.linalg.norm(p - morty.get_top())
+        )
+
+        self.play(morty.change, "pondering")
+        self.wait(2)
+        self.play(morty.change, "raise_right_hand")
+        self.wait()
+        self.play(morty.change, "thinking")
+        self.wait(4)
+        self.play(FadeInFromDown(q_marks[0]))
+        self.wait(2)
+        self.play(LaggedStart(
+            FadeInFromDown, q_marks[1:],
+            run_time=3
+        ))
+        self.wait(3)
+
+
+class ManyInfiniteExpressions(Scene):
+    def construct(self):
+        frac = get_phi_continued_fraction(10)
+        frac.scale_to_fit_height(2)
+        frac.to_corner(UL)
+
+        n = 9
+        radical_str_parts = [
+            "%d + \\sqrt{" % d
+            for d in range(1, n + 1)
+        ]
+        radical_str_parts += ["\\cdots"]
+        radical_str_parts += ["}"] * n
+        radical = TexMobject("".join(radical_str_parts))
+        radical.to_corner(UR)
+        radical.to_edge(DOWN)
+        radical.set_color_by_gradient(YELLOW, RED)
+
+        n = 12
+        power_tower = TexMobject(
+            *["\\sqrt{2}^{"] * n + ["\\dots"] + ["}"] * n
+        )
+        power_tower.to_corner(UR)
+        power_tower.set_color_by_gradient(BLUE, GREEN)
+
+        self.play(*[
+            LaggedStart(
+                GrowFromCenter, group,
+                lag_ratio=0.1,
+                run_time=8,
+            )
+            for group in frac, radical, power_tower
+        ])
+        self.wait(2)
+
+
+class HoldUpPromo(PrinciplesOverlay):
+    def construct(self):
+        morty = self.pi_creature
+
+        url = TextMobject("https://brilliant.org/3b1b/")
+        url.to_corner(UL)
+
+        rect = ScreenRectangle(height=5.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+
+        self.play(
+            Write(url),
+            self.pi_creature.change, "raise_right_hand"
+        )
+        self.play(ShowCreation(rect))
+        self.wait(2)
+        self.change_mode("thinking")
+        self.wait()
+        self.look_at(url)
+        self.wait(10)
+        self.change_mode("happy")
+        self.wait(10)
+        self.change_mode("raise_right_hand")
+        self.wait(10)
+
+        self.play(FadeOut(rect), FadeOut(url))
+        self.play(morty.change, "raise_right_hand")
+        self.wait()
+        self.play(morty.change, "hooray")
+        self.wait(3)
+
+
+class EndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "Juan Benet",
+            "Keith Smith",
+            "Chloe Zhou",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Andrew Sachs",
+            "Ho\\`ang T\\`ung L\\^am",
+            # "Hoàng Tùng Lâm",
+            "Devin Scott",
+            "Akash Kumar",
+            "Felix Tripier",
+            "Arthur Zey",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Yu Jun",
+            "dave nicponski",
+            "Damion Kistler",
+            "Jordan Scales",
+            "Markus Persson",
+            "Fela",
+            "Fred Ehrsam",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Matt Roveto",
+            "Jamie Warner",
+            "Marek Cirkos",
+            "Magister Mugit",
+            "Stevie Metke",
+            "Cooper Jones",
+            "James Hughes",
+            "John V Wertheim",
+            "Chris Giddings",
+            "Song Gao",
+            "Alexander Feldman",
+            "Matt Langford",
+            "Max Mitchell",
+            "Richard Burgmann",
+            "John Griffith",
+            "Chris Connett",
+            "Steven Tomlinson",
+            "Jameel Syed",
+            "Bong Choung",
+            "Ignacio Freiberg",
+            "Zhilong Yang",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "Cody Brocious",
+            "James H. Park",
+            "Norton Wang",
+            "Kevin Le",
+            "Tianyu Ge",
+            "David MacCumber",
+            "Oliver Steele",
+            "Yaw Etse",
+            "Dave B",
+            "Waleed Hamied",
+            "George Chiesa",
+            "supershabam",
+            "Delton Ding",
+            "Thomas Tarler",
+            "Isak Hietala",
+            "1st ViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Clark Gaebel",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Awoo",
+            "Dr . David G. Stork",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Sh\\`im\\'in Ku\\=ang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
+
+
+# class Thumbnail(GraphicalIntuitions):
+class Thumbnail(AnalyzeFunctionWithTransformations):
+    CONFIG = {
+        "x_axis_width": 12,
+        "graph_origin": 1.5 * DOWN + 4 * LEFT,
+        "num_initial_applications": 1,
+        "input_line_zero_point": 2 * UP,
+    }
+
+    def construct(self):
+        self.add_function_title()
+        self.title.fade(1)
+        self.titles.fade(1)
+        self.repeatedly_apply_function()
+
+        full_rect = FullScreenFadeRectangle()
+        cross = Cross(full_rect)
+        cross.set_stroke(width=40)
+
+        self.add(cross)
