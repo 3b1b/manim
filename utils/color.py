@@ -39,8 +39,7 @@ def color_to_int_rgb(color):
     return (255 * color_to_rgb(color)).astype('uint8')
 
 
-def color_to_int_rgba(color, opacity=1.0):
-    alpha = int(255 * opacity)
+def color_to_int_rgba(color, alpha=255):
     return np.append(color_to_int_rgb(color), alpha)
 
 

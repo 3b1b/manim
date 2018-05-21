@@ -199,15 +199,6 @@ class Mobject(Container):
         )
         return self
 
-    def apply_function_to_position(self, function):
-        self.move_to(function(self.get_center()))
-        return self
-
-    def apply_function_to_submobject_positions(self, function):
-        for submob in self.submobjects:
-            submob.apply_function_to_position(function)
-        return self
-
     def apply_matrix(self, matrix, **kwargs):
         # Default to applying matrix about the origin, not mobjects center
         if len(kwargs) == 0:

@@ -668,7 +668,7 @@ class ColorMappedByFuncScene(Scene):
         # We hash just based on output image
         # Thus, multiple scenes with same output image can re-use it
         # without recomputation
-        full_hash = hash((func_hash, self.camera.get_pixel_width()))
+        full_hash = hash((func_hash, self.camera.pixel_shape))
         self.background_image_file = self.short_path_to_long_path(
             "color_mapped_bg_hash_" + str(full_hash) + ".png"
         )
