@@ -1,26 +1,32 @@
 from __future__ import absolute_import
 
-from constants import *
-
 from scene.scene import Scene
 from camera.moving_camera import MovingCamera
-from mobject.frame import ScreenRectangle
+from utils.iterables import list_update
 
 
 class MovingCameraScene(Scene):
+    CONFIG = {
+        "camera_class": MovingCamera
+    }
+
     def setup(self):
-        self.camera_frame = ScreenRectangle(height=FRAME_HEIGHT)
-        self.camera_frame.set_stroke(width=0)
-        self.camera = MovingCamera(
-            self.camera_frame, **self.camera_config
-        )
+        Scene.setup(self)
+        assert(isinstance(self.camera, MovingCamera))
+        self.camera_frame = self.camera.frame
+        # Hmm, this currently relies on the fact that MovingCamera
+        # willd default to a full-sized frame.  Is that okay?
         return self
 
     def get_moving_mobjects(self, *animations):
-        # TODO: Code repetition from ZoomedScene
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
-        if self.camera_frame in moving_mobjects:
-            # When the camera is moving, so is everything,
-            return self.mobjects
-        else:
-            return moving_mobjects
+        all_moving_mobjects = self.camera.extract_mobject_family_members(
+            moving_mobjects
+        )
+        movement_indicators = self.camera.get_mobjects_indicating_movement()
+        for movement_indicator in movement_indicators:
+            if movement_indicator in all_moving_mobjects:
+                # When one of these is moving, the camera should
+                # consider all mobjects to be moving
+                return list_update(self.mobjects, moving_mobjects)
+        return moving_mobjects
