@@ -2056,7 +2056,7 @@ class IPTScene1(PiCreatureScene):
         # use the following for the zoomed inset
         if show_detail:
             self.camera.frame_shape = (0.02 * FRAME_HEIGHT, 0.02 * FRAME_WIDTH)
-            self.camera.space_center = C
+            self.camera.frame_center = C
             SCREEN_SCALE = 0.01
             SCREEN_THICKNESS = 0.02
 

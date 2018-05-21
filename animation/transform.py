@@ -140,6 +140,13 @@ class ApplyPointwiseFunction(ApplyMethod):
         )
 
 
+class ApplyPointwiseFunctionToCenter(ApplyPointwiseFunction):
+    def __init__(self, function, mobject, **kwargs):
+        ApplyMethod.__init__(
+            self, mobject.move_to, function(mobject.get_center()), **kwargs
+        )
+
+
 class FadeToColor(ApplyMethod):
     def __init__(self, mobject, color, **kwargs):
         ApplyMethod.__init__(self, mobject.set_color, color, **kwargs)

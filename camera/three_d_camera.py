@@ -12,6 +12,8 @@ from utils.bezier import interpolate
 from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
 
+# TODO: Make sure this plays well with latest camera updates
+
 
 class CameraWithPerspective(Camera):
     CONFIG = {
@@ -49,7 +51,7 @@ class ThreeDCamera(CameraWithPerspective):
         self.rotation_mobject = VectorizedPoint()
         # moving_center lives in the x-y-z space
         # It representes the center of rotation
-        self.moving_center = VectorizedPoint(self.space_center)
+        self.moving_center = VectorizedPoint(self.frame_center)
         self.set_position(self.phi, self.theta, self.distance)
 
     def modified_rgb(self, vmobject, rgb):
@@ -163,7 +165,7 @@ class ThreeDCamera(CameraWithPerspective):
         center_of_rotation = self.get_center_of_rotation(
             center_x, center_y, center_z)
         self.moving_center.move_to(center_of_rotation)
-        self.space_center = self.moving_center.points[0]
+        self.frame_center = self.moving_center.points[0]
 
     def get_view_transformation_matrix(self):
         return (self.default_distance / self.get_distance()) * np.dot(
@@ -174,6 +176,6 @@ class ThreeDCamera(CameraWithPerspective):
     def points_to_pixel_coords(self, points):
         matrix = self.get_view_transformation_matrix()
         new_points = np.dot(points, matrix.T)
-        self.space_center = self.moving_center.points[0]
+        self.frame_center = self.moving_center.points[0]
 
         return Camera.points_to_pixel_coords(self, new_points)
