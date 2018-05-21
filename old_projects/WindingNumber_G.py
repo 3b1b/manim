@@ -3276,4 +3276,3 @@ class Thumbnail(SearchSpacePerimeterVsArea):
 
 
 
-
