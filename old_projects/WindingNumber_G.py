@@ -2884,7 +2884,7 @@ class ZeroFoundOnBoundary(Scene):
 class AllOfTheVideos(Scene):
     CONFIG = {
         "camera_config" : {
-            "background_alpha" : 255,
+            "background_opacity" : 1,
         }
     }
     def construct(self):
