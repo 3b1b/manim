@@ -221,7 +221,6 @@ class Camera(object):
                     excluded_mobjects
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
-
         if self.use_z_coordinate_for_display_order:
             # Should perhaps think about what happens here when include_submobjects is False,
             # (for now, the onus is then on the caller to ensure this is handled correctly by
@@ -232,6 +231,17 @@ class Camera(object):
             )
         else:
             return mobjects
+
+    def is_in_frame(self, mobject):
+        fc = self.get_frame_center()
+        fh = self.get_frame_height()
+        fw = self.get_frame_width()
+        return not reduce(op.or_, [
+            mobject.get_left()[0] < fc[0] - fw,
+            mobject.get_bottom()[1] > fc[1] + fh,
+            mobject.get_right()[0] > fc[0] + fw,
+            mobject.get_top()[1] < fc[1] - fh,
+        ])
 
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
