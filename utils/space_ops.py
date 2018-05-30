@@ -110,6 +110,10 @@ def R3_to_complex(point):
     return complex(*point[:2])
 
 
+def complex_func_to_R3_func(complex_func):
+    return lambda p: complex_to_R3(complex_func(R3_to_complex(p)))
+
+
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
