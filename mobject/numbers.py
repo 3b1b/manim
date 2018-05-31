@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from constants import *
 
-from mobject.svg.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import SingleStringTexMobject
 from mobject.types.vectorized_mobject import VMobject
 
 
@@ -34,13 +34,13 @@ class DecimalNumber(VMobject):
             if num_string == negative_zero_string:
                 num_string = num_string[1:]
         self.add(*[
-            TexMobject(char, **kwargs)
+            SingleStringTexMobject(char, **kwargs)
             for char in num_string
         ])
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            self.add(TexMobject("\\dots"))
+            self.add(SingleStringTexMobject("\\dots"))
 
         if num_string.startswith("-"):
             minus = self.submobjects[0]
@@ -50,7 +50,7 @@ class DecimalNumber(VMobject):
             )
 
         if self.unit is not None:
-            self.unit_sign = TexMobject(self.unit, color=self.color)
+            self.unit_sign = SingleStringTexMobject(self.unit, color=self.color)
             self.add(self.unit_sign)
 
         self.arrange_submobjects(
