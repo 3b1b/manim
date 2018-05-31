@@ -71,12 +71,14 @@ class QuizResult(PiCreatureScene):
             all_quizzes.add(quiz_copy)
 
         master_quiz = get_example_quiz()
-        self.play(ShowCreation(master_quiz), run_time = 2)
+        self.play(Write(master_quiz), run_time = 2)
         self.wait()
-        self.play(Transform(master_quiz, all_quizzes[0]))
-        self.wait()
-        
-        self.play(LaggedStart(FadeIn,all_quizzes))
+        self.play(ReplacementTransform(
+            VGroup(master_quiz), all_quizzes,
+            run_time=2,
+            submobject_mode="lagged_start"
+        ))
+        self.wait(2)
 
         grades_mob = VGroup()
         for (pi, quiz, grade) in zip(all_students, all_quizzes, grades):
