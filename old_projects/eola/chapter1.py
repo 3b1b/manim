@@ -403,7 +403,7 @@ class HelpsToHaveOneThought(Scene):
 
         randys = VMobject(*[
             Randolph(color = color).scale(0.8)
-            for color in BLUE_D, BLUE_C, BLUE_E
+            for color in (BLUE_D, BLUE_C, BLUE_E)
         ])
         randys.arrange_submobjects(RIGHT)
         randys.to_corner(DOWN+LEFT)
@@ -795,7 +795,7 @@ class VectorAdditionNumerically(VectorScene):
             Write(plus, run_time = 1), 
             *[
                 ApplyMethod(mob.shift, v1.get_end())
-                for mob in v2, x_line2, y_line2
+                for mob in (v2, x_line2, y_line2)
             ]
         )
         equals.next_to(coords2, RIGHT)

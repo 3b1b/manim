@@ -254,11 +254,11 @@ class Pendulum(ReconfigurableScene):
         self.height_tex_R = height_tex_R
         self.cosine = VGroup(*[
             height_tex.get_part_by_tex(tex)
-            for tex in "cos", "theta", ")"
+            for tex in ("cos", "theta", ")")
         ])
         self.one_minus = VGroup(*[
             height_tex.get_part_by_tex(tex)
-            for tex in "\\big(1-", "\\big)"
+            for tex in ("\\big(1-", "\\big)")
         ])
 
     def get_angry_at_cosine(self):
@@ -500,9 +500,9 @@ class ExampleApproximationWithCos(ExampleApproximationWithSine):
                     line_class = DashedLine,
                     color = YELLOW
                 )
-                for u in -1, 1
+                for u in (-1, 1)
             ])
-            for dx in 0.01, 0.7
+            for dx in (0.01, 0.7)
         ]
 
         self.play(*map(ShowCreation, v_lines), run_time = 2)
@@ -1101,7 +1101,7 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
                 "\\cos(", s, ")", "\\approx",
                 "1 - \\frac{1}{2}", "(", s, ")", "^2"
             ).next_to(self.get_students(), UP, 2)
-            for s in "x", "0.1",
+            for s in ("x", "0.1",)
         ]
         approx_rhs = TexMobject("=", "0.995")
         approx_rhs.next_to(approx_at_point, RIGHT)
@@ -1612,7 +1612,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
 
             possibly_added_anims = []
             try:
-                possibly_added_anims.append(added_anims_iter.next())
+                possibly_added_anims.append(next(added_anims_iter))
             except:
                 pass
 
@@ -1779,7 +1779,7 @@ class HigherTermsDontMessUpLowerTerms(Scene):
         polynomial.shift(2*LEFT + UP)
         c0, c2, c4 = [
             polynomial.get_part_by_tex(tex)
-            for tex in c0_tex, c2_tex, c4_tex
+            for tex in (c0_tex, c2_tex, c4_tex)
         ]
         for term, color in zip([c0, c2, c4], self.colors):
             term.set_color(color)
@@ -2046,7 +2046,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         )
         outer_v_lines = VGroup(*[
             center_v_line.copy().shift(vect)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
         outer_v_lines.set_color(GREEN)
         dot = Dot(color = YELLOW)
@@ -2101,7 +2101,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                     "-\\cos", "\\sin", "\\cos"
                 ]
             ])
-            for arg in "x", "0"
+            for arg in ("x", "0")
         ]
         arrows = VGroup(*[
             Arrow(
@@ -2268,7 +2268,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                     ("\\frac{d^4 f}{dx^4}", "(", arg, ")"),
                 ]
             ])
-            for arg in "x", "0", "a"
+            for arg in ("x", "0", "a")
         ]
         derivs_at_x.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         derivs_at_x.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
@@ -2513,7 +2513,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
                 TexMobject("e^%s"%s).set_color(c)
                 for c in self.colors
             ])
-            for s in "x", "0"
+            for s in ("x", "0")
         ]
         derivs_at_x.submobjects[0] = self.e_to_x.target
         arrows = VGroup(*[
@@ -2698,7 +2698,7 @@ class SecondTermIntuition(AreaIsDerivative):
                     new_t_max = target,
                     run_time = 3,
                 )
-        self.func_name = func_name
+        self.__name__ = func_name
 
     def write_derivative(self):
         deriv = TexMobject("\\frac{df_{\\text{area}}}{dx}(x)")
@@ -2826,7 +2826,7 @@ class SecondTermIntuition(AreaIsDerivative):
         tex_scale_factor = 0.7
         base_line = Line(*[
             triangle.get_corner(DOWN+vect)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
         base_line.set_color(RED)
         base_label = TextMobject("Base = ", "$(x-a)$")
@@ -2905,7 +2905,7 @@ class SecondTermIntuition(AreaIsDerivative):
     def walk_through_taylor_terms(self):
         mini_area, mini_rect, mini_triangle = [
             mob.copy()
-            for mob in self.dark_area, self.rect, self.triangle
+            for mob in (self.dark_area, self.rect, self.triangle)
         ]
         mini_area.set_fill(BLUE_E, opacity = 1)
         mini_area.scale_to_fit_height(1)
@@ -2939,7 +2939,7 @@ class SecondTermIntuition(AreaIsDerivative):
             part.add_to_back(BackgroundRectangle(part))
 
         new_func_name = TexMobject("f_{\\text{area}}(a)")
-        new_func_name.replace(self.func_name)
+        new_func_name.replace(self.__name__)
 
         self.play(FadeIn(
             geometric_taylor,
@@ -2950,7 +2950,7 @@ class SecondTermIntuition(AreaIsDerivative):
         self.play(
             FadeIn(VGroup(*analytic_taylor[:3])),
             self.dark_area.set_fill, BLUE_E, 1,
-            Transform(self.func_name, new_func_name)
+            Transform(self.__name__, new_func_name)
         )
         self.wait()
         self.play(
@@ -3302,7 +3302,7 @@ class BoundedRadiusOfConvergence(CubicAndQuarticApproximations):
                 self.coords_to_point(x, 2),
                 color = WHITE
             )
-            for x in -1, 1
+            for x in (-1, 1)
         ])
 
         colors = list(self.colors) + [GREEN, MAROON_B, PINK]
@@ -3400,15 +3400,15 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         v_lines = [
             DashedLine(*[
                 self.coords_to_point(x, y)
-                for y in -2, 2
+                for y in (-2, 2)
             ])
-            for x in 0, 1, 2
+            for x in (0, 1, 2)
         ]
         outer_v_lines = VGroup(*v_lines[::2])
         center_v_line = VGroup(v_lines[1])
         input_v_line = Line(*[
             self.coords_to_point(self.convergent_example, y)
-            for y in -4, 3
+            for y in (-4, 3)
         ])
         input_v_line.set_stroke(WHITE, width = 2)
 
@@ -3535,7 +3535,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
     def write_radius_of_convergence(self):
         line = Line(*[
             self.coords_to_point(x, 0)
-            for x in 1, 2
+            for x in (1, 2)
         ])
         line.set_color(YELLOW)
         brace = Brace(line, DOWN)

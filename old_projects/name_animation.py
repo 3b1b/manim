@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 
 NAME_WITH_SPACES = "Prime Meridian"
@@ -104,4 +105,4 @@ if __name__ == "__main__":
                 ),
             )
         except Exception as e:
-            print "Could not animate %s: %s" % (name, e)
+            print("Could not animate %s: %s" % (name, e))

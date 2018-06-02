@@ -723,12 +723,12 @@ class IntroduceTinyChangeInArea(CircleScene):
         self.wait(2)
         self.play(*[
             ApplyMethod(mob.set_color, RED)
-            for mob in pi_R_squared, pi_R_squared2
+            for mob in (pi_R_squared, pi_R_squared2)
         ])
         self.wait()
         self.play(*[
             ApplyMethod(mob.fade, 0.7)
-            for mob in plus, pi_R_squared, pi_R_squared2, minus2
+            for mob in (plus, pi_R_squared, pi_R_squared2, minus2)
         ]) 
         self.wait()
 
@@ -2056,7 +2056,7 @@ class GraphIntegral(GraphScene):
     def show_horizontal_axis(self):
         arrows = [
             Arrow(self.little_r, self.coords_to_point(*coords))
-            for coords in (0, 0), (self.x_max, 0)
+            for coords in ((0, 0), (self.x_max, 0))
         ]
         moving_arrow = arrows[0].copy()
         self.play(

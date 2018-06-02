@@ -665,7 +665,7 @@ class PairOfPairBecomeRectangle(Scene):
 
         rectangle = Polygon(*[
             dots[i].get_center()
-            for i in 0, 2, 1, 3
+            for i in (0, 2, 1, 3)
         ])
         rectangle.set_color(BLUE)
         self.play(
@@ -882,7 +882,7 @@ class AskAbouPairType(TeacherStudentsScene):
         """)
         self.play(*[
             ApplyMethod(self.get_students()[i].change_mode, "confused")
-            for i in 0, 2
+            for i in (0, 2)
         ])
         self.random_blink(3)
 
@@ -950,7 +950,7 @@ class DefineUnorderedPair(ClosedLoopScene):
         dots = self.dots
         dots.set_color(PURPLE_B)
 
-        labels = VGroup(*[subtitle[i].copy() for i in 0, 2])
+        labels = VGroup(*[subtitle[i].copy() for i in (0, 2)])
         for label, vect in zip(labels, [LEFT, RIGHT]):
             label.next_to(dots, vect, LARGE_BUFF)
         arrows = [
@@ -1098,7 +1098,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
         self.wait()
         self.play(*[
             Rotate(mob, np.pi/2, about_point = interval.get_left())
-            for mob in vert_interval, self.dots[1]
+            for mob in (vert_interval, self.dots[1])
         ])
 
         #Find interior point
@@ -1205,7 +1205,7 @@ class EdgesOfSquare(Scene):
                 square.get_corner(vect+LEFT),
                 square.get_corner(vect+RIGHT),
             )
-            for vect in DOWN, UP
+            for vect in (DOWN, UP)
         ])
         y_edges.set_color(BLUE)
         x_edges = VGroup(*[
@@ -1213,7 +1213,7 @@ class EdgesOfSquare(Scene):
                 square.get_corner(vect+DOWN),
                 square.get_corner(vect+UP),
             )
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
         x_edges.set_color(MAROON_B)
         return x_edges, y_edges
@@ -1229,7 +1229,7 @@ class EdgesOfSquare(Scene):
                 ))
                 for alpha in alpha_range
             ])
-            for vect in LEFT, RIGHT            
+            for vect in (LEFT, RIGHT)            
         ]
         for group in dot_groups:
             group.set_color_by_gradient(YELLOW, PURPLE_B)
@@ -1238,7 +1238,7 @@ class EdgesOfSquare(Scene):
                 TexMobject("(%s, %s)"%(a, b)).scale(0.7)
                 for b in alpha_range
             ])
-            for a in 0, 1
+            for a in (0, 1)
         ]
         for dot_group, label_group in zip(dot_groups, label_groups):
             for dot, label in zip(dot_group, label_group):
@@ -1261,7 +1261,7 @@ class EdgesOfSquare(Scene):
                 ])
                 for edge in edges
             ]).set_color(edges.get_color())
-            for edges in x_edges, y_edges
+            for edges in (x_edges, y_edges)
         ]
 
 class EndpointsGluedTogether(ClosedLoopScene):
@@ -1281,7 +1281,7 @@ class EndpointsGluedTogether(ClosedLoopScene):
         self.loop = line
         dots = VGroup(*[
             Dot(line.get_critical_point(vect))
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
         dots.set_color(BLUE)
 
@@ -1640,7 +1640,7 @@ class FoldUnitSquare(EdgesOfSquare):
     def get_point_from_coords(self, x, y):
         left, right, bottom, top = [
             self.triangles.get_edge_center(vect)
-            for vect in LEFT, RIGHT, DOWN, UP
+            for vect in (LEFT, RIGHT, DOWN, UP)
         ]
         x_point = interpolate(left, right, x)
         y_point = interpolate(bottom, top, y)

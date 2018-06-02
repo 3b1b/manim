@@ -35,7 +35,7 @@ def get_fourier_graph(
     graph.set_color(color)
     f_min, f_max = [
         axes.x_axis.point_to_number(graph.points[i])
-        for i in 0, -1
+        for i in (0, -1)
     ]
     graph.underlying_function = lambda f : axes.y_axis.point_to_number(
         graph.point_from_proportion((f - f_min)/(f_max - f_min))
@@ -291,7 +291,7 @@ class AddingPureFrequencies(PiCreatureScene):
             self.pi_creature.change, "thinking",
             *[
                 ShowCreation(graph, run_time = 4, rate_func = None)
-                for graph in self.A_graph, self.D_graph
+                for graph in (self.A_graph, self.D_graph)
             ]
         )
         self.wait()
@@ -322,7 +322,7 @@ class AddingPureFrequencies(PiCreatureScene):
             map(MoveToTarget, movers),
             [
                 ApplyMethod(mob.shift, FRAME_Y_RADIUS*DOWN, remover = True)
-                for mob in  randy, speaker
+                for mob in  (randy, speaker)
             ]
         ))
         self.wait()
@@ -1114,7 +1114,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
             DashedLine(
                 ORIGIN, 2*UP, color = RED
             ).move_to(axes.coords_to_point(x, 0), DOWN)
-            for x in 1, 2
+            for x in (1, 2)
         ])
         words = self.get_bps_label()
         words.save_state()
@@ -1714,7 +1714,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
             DashedLine(ORIGIN, 1.5*UP).move_to(
                 axes.coords_to_point(x, 0), DOWN
             )
-            for x in 1, 2
+            for x in (1, 2)
         ])
         bps_label = self.get_bps_label(2)
         bps_label.save_state()
@@ -1866,7 +1866,7 @@ class ShowLinearity(DrawFrequencyPlot):
                 scale_val = 0.5,
                 shift_val = 0.55,
             )
-            for freq in low_freq, high_freq
+            for freq in (low_freq, high_freq)
         ]
         sum_graph = self.get_time_graph(
             lambda t : sum([
@@ -2120,7 +2120,7 @@ class ShowCommutativeDiagram(ShowLinearity):
                 ReplacementTransform(
                     getattr(ta, attr), getattr(fa, attr)
                 )
-                for attr in "x_axis", "y_axis", "graph"
+                for attr in ("x_axis", "y_axis", "graph")
             ]
             anims += [
                 GrowArrow(ta.arrow),
@@ -2308,7 +2308,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
 
         func = lambda t : sum([
             np.cos(TAU*f*t)
-            for f in 0.5, 0.7, 1.0, 1.2, 3.0,
+            for f in (0.5, 0.7, 1.0, 1.2, 3.0,)
         ])
         graph = axes.get_graph(func)
         graph.set_color(BLUE)
@@ -2457,7 +2457,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
                 start_stroke_width = 5,
                 **kwargs
             )
-            for n in 5, 7, 10, 12
+            for n in (5, 7, 10, 12)
         ]
 
 class AskAboutInverseFourier(TeacherStudentsScene):
@@ -2788,7 +2788,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         #Show arc
         arc, circle = [
             Line(ORIGIN, t*UP)
-            for t in get_t(), TAU
+            for t in (get_t(), TAU)
         ]
         for mob in arc, circle:
             mob.insert_n_anchor_points(20)
@@ -3315,7 +3315,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
             axes.get_graph(
                 graph.underlying_function, x_min = 0, x_max = t_max,
             ).match_style(graph)
-            for t_max in 3, 6
+            for t_max in (3, 6)
         ]
         for g in short_graph, long_graph:
             self.get_polarized_mobject(g, freq = self.initial_winding_frequency)
@@ -3400,7 +3400,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
                         0.5, 1, smooth(a)
                     )
                 )
-                for mob in long_graph, long_graph.polarized_mobject
+                for mob in (long_graph, long_graph.polarized_mobject)
             ],
             run_time = 2
         )
@@ -3843,7 +3843,7 @@ class BoundsAtInfinity(SummarizeFormula):
         bound_rects.set_color(TEAL)
         inf_bounds = VGroup(*[
             VGroup(TexMobject(s + "\\infty"))
-            for s in "-", "+"
+            for s in ("-", "+")
         ])
         decimal_bounds = VGroup(*[DecimalNumber(0) for x in range(2)])
         for bound, inf_bound, d_bound in zip(bounds, inf_bounds, decimal_bounds):
@@ -3928,7 +3928,7 @@ class BoundsAtInfinity(SummarizeFormula):
     def get_time_interval(self, t1, t2):
         line = Line(*[
             self.axes.coords_to_point(t, 0)
-            for t in t1, t2
+            for t in (t1, t2)
         ])
         rect = Rectangle(
             stroke_width = 0,

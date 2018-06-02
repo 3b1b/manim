@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+from functools import reduce
 
 class OpeningQuote(Scene):
     def construct(self):

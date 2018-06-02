@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 from once_useful_constructs.light import AmbientLight
 from once_useful_constructs.light import Lighthouse
 from once_useful_constructs.light import SwitchOn
+from functools import reduce
 # from once_useful_constructs.light import LightSource
 
 PRODUCT_COLOR = BLUE
@@ -43,7 +45,7 @@ class WallisNumeratorDenominatorGenerator(object):
         return self
 
     def __next__(self):
-        return self.next()
+        return next(self)
 
     def next(self):
         n = self.n
@@ -58,7 +60,7 @@ def get_wallis_product(n_terms=6, show_result=True):
     tex_mob_args = []
     nd_generator = WallisNumeratorDenominatorGenerator()
     for x in range(n_terms):
-        numerator, denominator = nd_generator.next()
+        numerator, denominator = next(nd_generator)
         tex_mob_args += [
             "{%d" % numerator, "\\over", "%d}" % denominator, "\\cdot"
         ]
@@ -74,7 +76,7 @@ def get_wallis_product_numerical_terms(n_terms=20):
     result = []
     nd_generator = WallisNumeratorDenominatorGenerator()
     for x in range(n_terms):
-        n, d = nd_generator.next()
+        n, d = next(nd_generator)
         result.append(float(n) / d)
     return result
 
@@ -228,7 +230,7 @@ class SourcesOfOriginality(TeacherStudentsScene):
                 width=0.5 * big_rect.get_width() - 2 * SMALL_BUFF,
                 color=color
             )
-            for color in MATH_COLOR, COMMUNICATION_COLOR
+            for color in (MATH_COLOR, COMMUNICATION_COLOR)
         ]
         right_rect.flip()
         left_rect.next_to(big_rect.get_left(), RIGHT, SMALL_BUFF)
@@ -659,7 +661,7 @@ class ShowProduct(Scene):
         terms = self.wallis_product_terms
         partial_products = np.cumprod(terms)
         partial_products_iter = iter(partial_products)
-        print partial_products
+        print(partial_products)
 
         dots = VGroup(*[
             Dot(axes.coords_to_point(n + 1, prod))
@@ -677,7 +679,7 @@ class ShowProduct(Scene):
         ])
 
         brace = braces[0].copy()
-        decimal = DecimalNumber(partial_products_iter.next(), num_decimal_places=4)
+        decimal = DecimalNumber(next(partial_products_iter), num_decimal_places=4)
         decimal.next_to(brace, DOWN)
 
         self.play(*map(FadeIn, [brace, decimal, dots[0]]))
@@ -686,7 +688,7 @@ class ShowProduct(Scene):
             self.play(
                 Transform(brace, new_brace),
                 ChangeDecimalToValue(
-                    decimal, partial_products_iter.next(),
+                    decimal, next(partial_products_iter),
                     position_update_func=lambda m: m.next_to(brace, DOWN)
                 ),
                 ShowCreation(line),
@@ -697,7 +699,7 @@ class ShowProduct(Scene):
 
         def get_decimal_anim():
             return ChangeDecimalToValue(
-                decimal, partial_products_iter.next(),
+                decimal, next(partial_products_iter),
                 run_time=1,
                 rate_func=squish_rate_func(smooth, 0, 0.5),
             )
@@ -1059,7 +1061,7 @@ class IntroduceDistanceProduct(DistanceProductScene):
         lh_dot_arrows = VGroup(*[
             Arrow(*[
                 interpolate(circle.get_center(), dot.get_center(), a)
-                for a in 0.6, 0.9
+                for a in (0.6, 0.9)
             ], buff=0)
             for dot in lh_dots
         ])
@@ -2598,7 +2600,7 @@ class DistanceProductIsChordF(PlugObserverIntoPolynomial):
                 radius=self.get_radius(),
                 color=YELLOW,
             ).shift(circle.get_center())
-            for f in fraction, 0.5
+            for f in (fraction, 0.5)
         ]
         self.add(f_arc)
 
@@ -2616,7 +2618,7 @@ class DistanceProductIsChordF(PlugObserverIntoPolynomial):
 
         chord = Line(*[
             self.get_circle_point_at_proportion(f)
-            for f in 0, fraction
+            for f in (0, fraction)
         ])
         chord.set_stroke(YELLOW)
         chord_f = get_chord_f_label(chord)
@@ -2653,7 +2655,7 @@ class DistanceProductIsChordF(PlugObserverIntoPolynomial):
 
         equals_two_terms = VGroup(*[
             TexMobject("=2").next_to(mob, DOWN, SMALL_BUFF)
-            for mob in chord_half, chord_f_as_product.target
+            for mob in (chord_half, chord_f_as_product.target)
         ])
 
         # Animations
@@ -3623,7 +3625,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             "S": YELLOW,
         })
         cw_product_parts.move_to(ratios, RIGHT)
-        cw_ratios = VGroup(*[cw_product_parts[i:i + 3] for i in 9, 5, 1])
+        cw_ratios = VGroup(*[cw_product_parts[i:i + 3] for i in (9, 5, 1)])
         cw_term_rects = self.get_term_rects(cw_ratios)
         cw_limit_fractions = VGroup(
             TexMobject("{2", "\\over", "3}"),
@@ -4331,7 +4333,7 @@ class NonCommunitingLimitsExample(Scene):
             LaggedStart(Write, row_arrows),
             LaggedStart(
                 ReplacementTransform, rows[:-1].copy(),
-                lambda r: (r, row_products_iter.next())
+                lambda r: (r, next(row_products_iter))
             )
         )
         self.wait()
@@ -4347,7 +4349,7 @@ class NonCommunitingLimitsExample(Scene):
             LaggedStart(Write, column_arrows),
             LaggedStart(
                 ReplacementTransform, columns.copy(),
-                lambda c: (c, column_limit_iter.next())
+                lambda c: (c, next(column_limit_iter))
             )
         )
         self.wait()
@@ -4400,7 +4402,7 @@ class DelicacyInIntermixingSeries(Scene):
                 ["{%d" % (2 * x), "\\over", "%d}" % (2 * x + u), "\\cdot"]
                 for x in range(1, n_terms + 1)
             ]))
-            for u in -1, 1
+            for u in (-1, 1)
         ])
         top_product.set_color(GREEN)
         bottom_product.set_color(BLUE)
@@ -4465,9 +4467,9 @@ class DelicacyInIntermixingSeries(Scene):
         while True:
             try:
                 new_terms = [
-                    bottom_parts_iter.next(),
-                    top_parts_iter.next(),
-                    top_parts_iter.next(),
+                    next(bottom_parts_iter),
+                    next(top_parts_iter),
+                    next(top_parts_iter),
                 ]
                 movers1.add(*new_terms)
             except StopIteration:
@@ -4761,7 +4763,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         ])
         limits = VGroup(*[
             TexMobject("{%d" % k, "\\over", "%d" % k, "-", "f}")
-            for k in -2, -1, 1, 2, 3
+            for k in (-2, -1, 1, 2, 3)
         ])
         for limit, arrow in zip(limits, limit_arrows):
             limit.set_color_by_tex("f", GREEN)
@@ -4795,7 +4797,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
                     run_time=3,
                     lag_ratio=0.1
                 )
-                for lines in keeper_lines, sailor_lines
+                for lines in (keeper_lines, sailor_lines)
             ]
         )
         self.wait()

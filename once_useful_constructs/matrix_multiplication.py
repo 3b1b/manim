@@ -24,7 +24,7 @@ class NumericalMatrixMultiplication(Scene):
     def construct(self):
         left_string_matrix, right_string_matrix = [
             np.array(matrix).astype("string")
-            for matrix in self.left_matrix, self.right_matrix
+            for matrix in (self.left_matrix, self.right_matrix)
         ]
         if right_string_matrix.shape[0] != left_string_matrix.shape[1]:
             raise Exception("Incompatible shapes for matrix multiplication")
@@ -97,7 +97,7 @@ class NumericalMatrixMultiplication(Scene):
         )
         circles = VGroup(*[
             entry.get_point_mobject()
-            for entry in l_matrix[0][0], r_matrix[0][0]
+            for entry in (l_matrix[0][0], r_matrix[0][0])
         ])
         (m, k), n = l_matrix.shape, r_matrix.shape[1]
         for mob in result_matrix.flatten():

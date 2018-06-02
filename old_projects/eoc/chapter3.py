@@ -99,7 +99,7 @@ class ContrastAbstractAndConcrete(Scene):
                 t_max = 12*np.pi,
                 num_anchor_points = 100,
             )
-            for denom in 12.0, 4.0
+            for denom in (12.0, 4.0)
         ]
         for spring in compact_spring, extended_spring:
             spring.scale(0.5)
@@ -253,7 +253,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
                 color = RED,
                 dashed_segment_length = 0.025
             )
-            for x in self.start_x, self.start_x+self.dx
+            for x in (self.start_x, self.start_x+self.dx)
         ]
 
         df_dx = TexMobject("\\frac{df}{dx} ?")
@@ -534,10 +534,10 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
         self.play(
             *[
                 mob.restore
-                for mob in r1, r2, s
+                for mob in (r1, r2, s)
             ]+[
                 Write(symbol)
-                for symbol in equals, plus1, plus2
+                for symbol in (equals, plus1, plus2)
             ], 
             run_time = 2
         )
@@ -612,7 +612,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             FadeOut(example_value),
             *[
                 mob.restore
-                for mob in xs, dxs, text
+                for mob in (xs, dxs, text)
             ]
         )
         self.remove(text)
@@ -652,7 +652,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
         self.wait(2)
         self.play(*[
             mob.restore
-            for mob in self.dxs, text
+            for mob in (self.dxs, text)
         ] + [
             self.pi_creature.change_mode, "erm"
         ])
@@ -889,7 +889,7 @@ class NudgeSideLengthOfCube(Scene):
                 for piece in dv_pieces
                 if piece.type == target_type
             ])
-            for target_type in "face", "bar", "corner_cube"
+            for target_type in ("face", "bar", "corner_cube")
         ]
 
     def write_df_equation(self):
@@ -1023,7 +1023,7 @@ class NudgeSideLengthOfCube(Scene):
         self.shrink_dx("Derivative is written", restore = False)
         self.play(*[
             ApplyMethod(mob.fade, 0.7)
-            for mob in extra_stuff, inner_dx
+            for mob in (extra_stuff, inner_dx)
         ])
         self.wait(2)
 
@@ -1470,7 +1470,7 @@ class PowerRuleAlgebra(Scene):
                 for submob, tex in product_part_tex_pairs
                 if tex == target_tex
             ])
-            for target_tex in "x", "dx"
+            for target_tex in ("x", "dx")
         ]
 
         x_to_n = TexMobject("x^n")
@@ -1759,7 +1759,7 @@ class OneOverX(PiCreatureScene, GraphScene):
                 color = self.df_color,
                 stroke_width = 2
             ).move_to(rect.get_corner(UP+LEFT), LEFT)
-            for rect in rect_group.rectangle, new_rect
+            for rect in (rect_group.rectangle, new_rect)
         ])
 
         v_lines = VGroup(*[
@@ -1768,7 +1768,7 @@ class OneOverX(PiCreatureScene, GraphScene):
                 color = self.dx_color,
                 stroke_width = 2
             ).move_to(rect.get_corner(DOWN+RIGHT), DOWN)
-            for rect in rect_group.rectangle, new_rect
+            for rect in (rect_group.rectangle, new_rect)
         ])
 
         dx_brace = Brace(v_lines, UP, buff = 0)
@@ -1921,7 +1921,7 @@ class OneOverX(PiCreatureScene, GraphScene):
 
         result.x_brace, result.recip_brace = braces = [
             Brace(result.rectangle, vect)
-            for vect in UP, RIGHT
+            for vect in (UP, RIGHT)
         ]
         result.labels = VGroup()
         for brace, label in zip(braces, [x_label, one_over_x_label]):
@@ -2047,7 +2047,7 @@ class SquareRootOfX(Scene):
 
         bottom_brace, right_brace = braces = VGroup(*[
             Brace(square, vect)
-            for vect in DOWN, RIGHT
+            for vect in (DOWN, RIGHT)
         ])
         for brace in braces:
             brace.add(brace.get_text("$\\sqrt{x}$"))

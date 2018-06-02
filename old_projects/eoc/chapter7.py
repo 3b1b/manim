@@ -191,7 +191,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
                 line_class = DashedLine,
                 color = RED
             )
-            for nudge in 0, self.start_dx
+            for nudge in (0, self.start_dx)
         ]
         nudged_x_v_line.save_state()
         ss_group = self.get_secant_slope_group(
@@ -343,7 +343,7 @@ class RantOpenAndClose(Scene):
                 start, "Rant on infinitesimals", "$>$",
                 arg_separator = ""
             )
-            for start in "$<$", "$<$/"
+            for start in ("$<$", "$<$/")
         ]
         self.play(FadeIn(opening))
         self.wait(2)
@@ -439,7 +439,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
                 lhs.get_part_by_tex(tex)[0],
                 stretch = True,
             ).scale_in_place(1.5).rotate_in_place(-np.pi/12)
-            for tex in "df", "dx"
+            for tex in ("df", "dx")
         ])
         d_words = TextMobject("""
             Limit idea is
@@ -452,7 +452,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             Rectangle(color = GREEN_B).replace(
                 mob, stretch = True
             )
-            for mob in lhs, rhs.target
+            for mob in (lhs, rhs.target)
         ]
         for rect in rects:
             rect.stretch_to_fit_width(rect.get_width()+2*MED_SMALL_BUFF)
@@ -654,7 +654,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
                 VGroup(*statement.get_parts_by_tex(
                     tex, substring = False
                 )).set_color(GREEN)
-                for tex in "$h$", "$dx$"
+                for tex in ("$h$", "$dx$")
             ]
 
         #Question
@@ -1165,14 +1165,14 @@ class GraphLimitExpression(GraphScene):
                     (limit_x+basically_zero, limit_x+delta),
                 ]
             ]).set_stroke(width = input_range_stroke_width)
-            for func in (lambda h : 0), self.func
+            for func in ((lambda h : 0), self.func)
         ]
         result.epsilon_lines = VGroup(*[
             dashed_line.copy().move_to(
                 self.coords_to_point(limit_x, 0)[0]*RIGHT+\
                 result.output_range.get_edge_center(vect)[1]*UP
             )
-            for vect in DOWN, UP
+            for vect in (DOWN, UP)
         ])
 
         result.digest_mobject_attrs()
@@ -1588,7 +1588,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             Line(
                 ORIGIN, line_length*RIGHT,
             ).move_to(self.coords_to_point(0, limit_value+nudge))
-            for nudge in 0, -epsilon, epsilon
+            for nudge in (0, -epsilon, epsilon)
         ]
         result.limit_line = lines[0]
         result.limit_line.set_stroke(RED, width = 3)
@@ -1599,7 +1599,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             brace.copy().scale_to_fit_height(
                 group.get_height()
             ).next_to(group, RIGHT, SMALL_BUFF)
-            for i in 1, 2
+            for i in (1, 2)
             for group in [VGroup(lines[0], lines[i])]
         ])
         result.labels = VGroup(*[
@@ -1623,7 +1623,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         )
         result.braces = VGroup(*[
             brace.copy().move_to(self.coords_to_point(x, 0))
-            for x in -delta/2, delta/2
+            for x in (-delta/2, delta/2)
         ])
         result.braces.shift(self.holes[0].get_height()*DOWN)
         result.labels = VGroup(*[
@@ -1897,11 +1897,11 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 line_class = DashedLine,
                 color = self.x_color
             )
-            for x in 1, -1
+            for x in (1, -1)
         ]
         hole, alt_hole = [
             self.get_hole(x, self.func(x))
-            for x in 1, -1
+            for x in (1, -1)
         ]
         ed_group = self.get_epsilon_delta_group(
             self.big_delta, limit_x = 1,
@@ -2090,7 +2090,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 fill_opacity = 0.75,
                 fill_color = BLACK,
             ).next_to(self.coords_to_point(1, 0), vect, MED_LARGE_BUFF)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
 
         self.play(
@@ -2149,7 +2149,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 tip_length = arrow_tip_length,
                 color = graph.get_color()
             )
-            for graph in self.sine_graph, self.parabola
+            for graph in (self.sine_graph, self.parabola)
         ]
         tex_arrow_pairs = [
             [("d\\big(", "\\sin(", "\\pi", "x", ")", "\\big)"), d_sine_arrow],
@@ -2606,7 +2606,7 @@ class GeneralLHoptial(LHopitalExample):
                 tip_length = arrow_tip_length,
                 color = graph.get_color()
             )
-            for graph in self.f_graph, self.g_graph
+            for graph in (self.f_graph, self.g_graph)
         ]
         v_labels = []
         for char, arrow in ("f", df_arrow), ("g", dg_arrow):
@@ -2881,7 +2881,7 @@ class NextVideo(TeacherStudentsScene):
             ])
         ]+[
             Write(VGroup(*ftc.get_parts_by_tex(part)))
-            for part in "-", "=", "over", "(x)"
+            for part in ("-", "=", "over", "(x)")
         ])
         self.change_student_modes(*["pondering"]*3)
         self.wait(3)

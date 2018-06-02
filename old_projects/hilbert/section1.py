@@ -101,7 +101,7 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
         self.wait()
         self.play(*[
             ShimmerIn(mob)
-            for mob in infinity, rightarrow, N
+            for mob in (infinity, rightarrow, N)
         ] + [
             ApplyMethod(question_mark.next_to, rightarrow, UP),
         ])
@@ -540,11 +540,11 @@ class ThinkInTermsOfReverseMapping(Scene):
         arrow2 = Arrow(4*RIGHT+UP, dot2, color = color2, buff = 0.1)
         dot3, arrow3 = [
             mob.copy().shift(5*LEFT+UP)
-            for mob in dot1, arrow1
+            for mob in (dot1, arrow1)
         ]
         dot4, arrow4 = [
             mob.copy().shift(5*LEFT+0.9*UP)
-            for mob in dot2, arrow2
+            for mob in (dot2, arrow2)
         ]
 
         self.add(grid, freq_line, arrow)
@@ -659,7 +659,7 @@ class TellMathematicianFriend(Scene):
         mathy, bubble = get_mathy_and_bubble()
         squiggle_mouth = mathy.mouth.copy()
         squiggle_mouth.apply_function(
-            lambda (x, y, z) : (x, y+0.02*np.sin(50*x), z)
+            lambda x_y_z : (x_y_z[0], x_y_z[1]+0.02*np.sin(50*x_y_z[0]), x_y_z[2])
         )
         bubble.ingest_submobjects()        
         bubble.write("Why not use a Hilbert curve \\textinterrobang ")
@@ -898,7 +898,7 @@ class HilbertBetterThanSnakeQ(Scene):
                 CurveClass(order = n)
                 for n in range(2, 7)
             ]
-            for CurveClass in HilbertCurve, SnakeCurve
+            for CurveClass in (HilbertCurve, SnakeCurve)
         ]
         for curve in hilbert_curves+snake_curves:
             curve.scale(0.8)
@@ -949,7 +949,7 @@ class IncreaseResolution(Scene):
                 2**order, 2**order,
                 stroke_width = 1
             ).shift(0.3*DOWN)
-            for order in 6, 7
+            for order in (6, 7)
         ]
         grid = grids[0]
         side_brace = Brace(grid, LEFT)
@@ -995,7 +995,7 @@ class IncreasingResolutionWithSnakeCurve(Scene):
                     (0.7, RED)
                 ]
             ])
-            for curve in start_curve, end_curve
+            for curve in (start_curve, end_curve)
         ]
         self.add(start_curve)
         self.wait()

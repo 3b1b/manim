@@ -1,3 +1,4 @@
+from __future__ import print_function
 import itertools as it
 import numpy as np
 import operator as op
@@ -24,6 +25,7 @@ from utils.iterables import list_difference_update
 from utils.iterables import remove_list_redundancies
 from utils.simple_functions import fdiv
 from utils.space_ops import angle_of_vector
+from functools import reduce
 
 
 class Camera(object):
@@ -173,14 +175,14 @@ class Camera(object):
         pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
         """
 
-        print "Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
         coords = self.get_coords_of_all_pixels()
         new_background = np.apply_along_axis(
             coords_to_colors_func,
             2,
             coords
         )
-        print "Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
 
         return self.convert_pixel_array(new_background, convert_from_floats=True)
 

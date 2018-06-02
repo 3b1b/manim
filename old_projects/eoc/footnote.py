@@ -135,7 +135,7 @@ class SecondDerivativeGraphically(GraphScene):
         second_deriv.set_color(self.second_deriv_color)
         points = [
             self.input_to_graph_point(x, self.graph)
-            for x in self.x2, self.x3
+            for x in (self.x2, self.x3)
         ]
         words = TextMobject("Change to \\\\ slope")
         words.next_to(
@@ -243,7 +243,7 @@ class SecondDerivativeGraphically(GraphScene):
         ]
         arg_rhs_list = [
             TexMobject("(", str(x0), ")", "=", str(rhs))
-            for rhs in 10, 0.4, 0
+            for rhs in (10, 0.4, 0)
         ]
         for graph, arg_rhs in zip(graphs, arg_rhs_list):
             graph.ss_group = self.get_secant_slope_group(
@@ -736,7 +736,7 @@ class SecondDerivativeAsAcceleration(Scene):
         )
         s_graph, v_graph, a_graph, j_graph = graphs = [
             VGroup(*scene.get_top_level_mobjects())
-            for scene in s_scene, v_scene, a_scene, j_scene
+            for scene in (s_scene, v_scene, a_scene, j_scene)
         ]
         for i, graph in enumerate(graphs):
             graph.scale_to_fit_height(FRAME_Y_RADIUS)
