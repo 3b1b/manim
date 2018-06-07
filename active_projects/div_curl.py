@@ -1,7 +1,7 @@
 from big_ol_pile_of_manim_imports import *
 
 
-DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, WHITE, ORANGE, RED]
+DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, WHITE, RED]
 
 
 # Helper functions
@@ -24,7 +24,7 @@ def joukowsky_map(z):
 
 
 def inverse_joukowsky_map(w):
-    u = 1 if w.real <= 0 else -1
+    u = 1 if w.real >= 0 else -1
     return (w + u * np.sqrt(w**2 - 4)) / 2
 
 
@@ -255,7 +255,8 @@ class TestVectorField(Scene):
             self.func,
             start_points_generator=lambda: get_flow_start_points(
                 x_min=-8, x_max=-7, y_min=-4, y_max=4,
-                delta_x=0.5, delta_y=0.1,
+                delta_x=0.5,
+                delta_y=0.1,
                 n_repeats=1,
                 noise_factor=0.1,
             ),
@@ -284,11 +285,12 @@ class TestVectorField(Scene):
 
 class Introduction(Scene):
     CONFIG = {
-
+        "production_quality_flow": True,
     }
 
     def construct(self):
         self.add_plane()
+        self.add_title()
         self.show_numbers()
         self.show_contour_lines()
         self.show_flow()
@@ -300,15 +302,22 @@ class Introduction(Scene):
         self.plane.coordinate_labels.submobjects.pop(-1)
         self.add(self.plane)
 
-    def show_numbers(self):
+    def add_title(self):
         title = TextMobject("Complex Plane")
-        title.scale(1.5)
         title.to_edge(UP, buff=MED_SMALL_BUFF)
         title.add_background_rectangle()
+        self.title = title
         self.add(title)
 
-        unit_circle = Circle(radius=self.plane.unit_size)
-        unit_circle.set_color(YELLOW)
+    def show_numbers(self):
+        run_time = 5
+
+        unit_circle = self.unit_circle = Circle(
+            radius=self.plane.unit_size,
+            fill_color=BLACK,
+            fill_opacity=0,
+            stroke_color=YELLOW
+        )
         dot = Dot()
         dot_update = UpdateFromFunc(
             dot, lambda d: d.move_to(unit_circle.point_from_proportion(1))
@@ -328,11 +337,29 @@ class Introduction(Scene):
         exp_decimal_update = ChangeDecimalToValue(
             exp_decimal, TAU,
             position_update_func=lambda mob: mob.move_to(zero),
-            run_time=4,
+            run_time=run_time,
         )
 
+        sample_numbers = [
+            complex(-5, 2),
+            complex(2, 2),
+            complex(3, 1),
+            complex(-5, -2),
+            complex(-4, 1),
+        ]
+        sample_labels = VGroup()
+        for z in sample_numbers:
+            sample_dot = Dot(self.plane.number_to_point(z))
+            sample_label = DecimalNumber(
+                z,
+                num_decimal_places=0,
+                include_background_rectangle=True,
+            )
+            sample_label.next_to(sample_dot, UR, SMALL_BUFF)
+            sample_labels.add(VGroup(sample_dot, sample_label))
+
         self.play(
-            ShowCreation(unit_circle, run_time=4),
+            ShowCreation(unit_circle, run_time=run_time),
             VFadeIn(exp_tex),
             UpdateFromAlphaFunc(
                 exp_decimal,
@@ -341,13 +368,162 @@ class Introduction(Scene):
             dot_update,
             exp_tex_update,
             exp_decimal_update,
+            LaggedStart(
+                FadeIn, sample_labels,
+                remover=True,
+                rate_func=there_and_back,
+                run_time=run_time,
+            )
         )
+        self.play(
+            FadeOut(exp_tex),
+            FadeOut(exp_decimal),
+            FadeOut(dot),
+            unit_circle.set_fill, BLACK, {"opacity": 1},
+        )
+        self.wait()
 
     def show_contour_lines(self):
-        pass
+        warped_grid = self.warped_grid = self.get_warpable_grid()
+        h_line = Line(3 * LEFT, 3 * RIGHT, color=WHITE)  # Hack
+
+        func_label = self.func_label = TexMobject("f(z) = z + 1 / z")
+        func_label.add_background_rectangle()
+        func_label.next_to(self.title, DOWN, MED_SMALL_BUFF)
+
+        self.remove(self.plane)
+        self.add_foreground_mobjects(self.unit_circle, self.title)
+        self.play(
+            warped_grid.apply_complex_function, inverse_joukowsky_map,
+            Animation(h_line, remover=True)
+        )
+        self.play(Write(func_label))
+        self.add_foreground_mobjects(func_label)
+        self.wait()
 
     def show_flow(self):
-        pass
+        stream_lines = self.get_stream_lines()
+        stream_lines_copy = stream_lines.copy()
+        stream_lines_copy.set_stroke(YELLOW, 1)
+        stream_lines_animation = self.get_stream_lines_animation(
+            stream_lines
+        )
+
+        tiny_buff = 0.0001
+        v_lines = VGroup(*[
+            Line(
+                UP, ORIGIN,
+                path_arc=0,
+                n_arc_anchors=20,
+            ).shift(x * RIGHT)
+            for x in np.linspace(0, 1, 5)
+        ])
+        v_lines.match_background_image_file(stream_lines)
+        fast_lines, slow_lines = [
+            VGroup(*[
+                v_lines.copy().next_to(point, vect, tiny_buff)
+                for point, vect in it.product(h_points, [UP, DOWN])
+            ])
+            for h_points in [
+                [0.5 * LEFT, 0.5 * RIGHT],
+                [2 * LEFT, 2 * RIGHT],
+            ]
+        ]
+        for lines in fast_lines, slow_lines:
+            lines.apply_complex_function(inverse_joukowsky_map)
+
+        self.add(stream_lines_animation)
+        self.wait(7)
+        self.play(
+            ShowCreationThenDestruction(
+                stream_lines_copy,
+                submobject_mode="all_at_once",
+                run_time=3,
+            )
+        )
+        self.wait()
+        self.play(ShowCreation(fast_lines))
+        self.wait(2)
+        self.play(ReplacementTransform(fast_lines, slow_lines))
+        self.wait(3)
+        self.play(
+            FadeOut(slow_lines),
+            VFadeOut(stream_lines_animation.mobject)
+        )
+        self.remove(stream_lines_animation)
 
     def apply_joukowsky_map(self):
-        pass
+        shift_val = 0.1 * LEFT + 0.2 * UP
+        scale_factor = np.linalg.norm(RIGHT - shift_val)
+        movers = VGroup(self.warped_grid, self.unit_circle)
+        self.unit_circle.insert_n_anchor_points(50)
+
+        stream_lines = self.get_stream_lines()
+        stream_lines.scale(scale_factor)
+        stream_lines.shift(shift_val)
+        stream_lines.apply_complex_function(joukowsky_map)
+
+        self.play(
+            movers.scale, scale_factor,
+            movers.shift, shift_val,
+        )
+        self.wait()
+        self.play(
+            movers.apply_complex_function, joukowsky_map,
+            CircleThenFadeAround(self.func_label),
+            run_time=2
+        )
+        self.add(self.get_stream_lines_animation(stream_lines))
+        self.wait(20)
+
+    # Helpers
+
+    def get_warpable_grid(self):
+        top_grid = NumberPlane()
+        top_grid.prepare_for_nonlinear_transform()
+        bottom_grid = top_grid.copy()
+        tiny_buff = 0.0001
+        top_grid.next_to(ORIGIN, UP, buff=tiny_buff)
+        bottom_grid.next_to(ORIGIN, DOWN, buff=tiny_buff)
+        result = VGroup(top_grid, bottom_grid)
+        result.add(*[
+            Line(
+                ORIGIN, FRAME_WIDTH * RIGHT / 2,
+                color=WHITE,
+                path_arc=0,
+                n_arc_anchors=100,
+            ).next_to(ORIGIN, vect, buff=2)
+            for vect in LEFT, RIGHT
+        ])
+        return result
+
+    def get_stream_lines(self):
+        func = cylinder_flow_vector_field
+        if self.production_quality_flow:
+            delta_x = 0.5
+            delta_y = 0.1
+        else:
+            delta_x = 1
+            # delta_y = 1
+            delta_y = 0.1
+        return StreamLines(
+            func,
+            start_points_generator=lambda: get_flow_start_points(
+                x_min=-8, x_max=-7, y_min=-4, y_max=4,
+                delta_x=delta_x,
+                delta_y=delta_y,
+                n_repeats=1,
+                noise_factor=0.1,
+            ),
+            stroke_width=2,
+        )
+
+    def get_stream_lines_animation(self, stream_lines):
+        if self.production_quality_flow:
+            line_anim_class = ShowPassingFlashWithThinningStrokeWidth
+        else:
+            line_anim_class = ShowPassingFlash
+        return StreamLineAnimation(
+            stream_lines,
+            line_anim_class=line_anim_class,
+        )
