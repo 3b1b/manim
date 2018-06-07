@@ -17,7 +17,7 @@ def play_chord(*nums):
     ]
     try:
         os.system(" ".join(commands))
-    except:
+    except Exception:
         pass
 
 
