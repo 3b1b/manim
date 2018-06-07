@@ -606,7 +606,8 @@ class BackgroundColoredVMobjectDisplayer(object):
         new_width, new_height,
         mode="RGBA"
     ):
-        image = Image.fromarray(background_array, mode=mode)
+        image = Image.fromarray(background_array)
+        image = image.convert(mode)
         resized_image = image.resize((new_width, new_height))
         return np.array(resized_image)
 
