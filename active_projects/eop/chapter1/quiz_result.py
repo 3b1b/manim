@@ -7,7 +7,7 @@ from for_3b1b_videos.pi_class import PiCreatureClass
 class QuizResult(PiCreatureScene):
     CONFIG = {
         "pi_creatures_start_on_screen" : False,
-        "random_seed" : 6
+        "random_seed" : 0
     }
     def construct(self):
 
