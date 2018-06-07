@@ -424,7 +424,7 @@ def make_alpha_winder(func, start, end, num_checkpoints, cheap = False):
         if cheap:
             return alpha # A test to see if this func is responsible for slowdown
 
-        index = clamp(0, num_checkpoints - 1, int(alpha * num_checkpoints))
+        index = np.clip(0, num_checkpoints - 1, int(alpha * num_checkpoints))
         x = interpolate(start, end, alpha)
         if cheap:
             return check_points[index] # A more principled test that at least returns a reasonable answer
