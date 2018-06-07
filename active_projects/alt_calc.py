@@ -3768,9 +3768,10 @@ class Thumbnail(AnalyzeFunctionWithTransformations):
         self.title.fade(1)
         self.titles.fade(1)
         self.repeatedly_apply_function()
+        self.all_arrows.set_stroke(width=1)
 
         full_rect = FullScreenFadeRectangle()
         cross = Cross(full_rect)
         cross.set_stroke(width=40)
 
-        self.add(cross)
+        # self.add(cross)
