@@ -20,6 +20,8 @@ def get_flow_start_points(x_min=-8, x_max=8,
 
 
 def joukowsky_map(z):
+    if z == 0:
+        return 0
     return z + fdiv(1, z)
 
 
@@ -61,13 +63,17 @@ def get_colored_background_image(scalar_field_func,
     return Image.fromarray((rgb_array * 255).astype('uint8'))
 
 
-def get_rgb_gradient_function(min_value=0, max_value=1, colors=[BLUE, RED]):
+def get_rgb_gradient_function(min_value=0, max_value=1,
+                              colors=[BLUE, RED],
+                              flip_alphas=True,  # Why?
+                              ):
     rgbs = np.array(map(color_to_rgb, colors))
 
     def func(values):
         alphas = inverse_interpolate(min_value, max_value, values)
         alphas = np.clip(alphas, 0, 1)
-        alphas = 1 - alphas  # Why?
+        if flip_alphas:
+            alphas = 1 - alphas
         scaled_alphas = alphas * (len(rgbs) - 1)
         indices = scaled_alphas.astype(int)
         next_indices = np.clip(indices + 1, 0, len(rgbs) - 1)
@@ -103,40 +109,7 @@ def get_color_field_image_file(scalar_func,
         image.save(full_path)
     return full_path
 
-
-# Continual animations
-
-
-class VectorFieldFlow(ContinualAnimation):
-    CONFIG = {
-        "mode": None,
-    }
-
-    def __init__(self, mobject, func, **kwargs):
-        """
-        Func should take in a vector in R3, and output a vector in R3
-        """
-        self.func = func
-        ContinualAnimation.__init__(self, mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        self.apply_nudge(dt)
-
-    def apply_nudge(self):
-        self.mobject.shift(self.func(self.mobject.get_center()) * dt)
-
-
-class VectorFieldSubmobjectFlow(VectorFieldFlow):
-    def apply_nudge(self, dt):
-        for submob in self.mobject:
-            submob.shift(self.func(submob.get_center()) * dt)
-
-
-class VectorFieldPointFlow(VectorFieldFlow):
-    def apply_nudge(self, dt):
-        self.mobject.apply_function(
-            lambda p: p + self.func(p) * dt
-        )
+# Mobjects
 
 
 class StreamLines(VGroup):
@@ -180,6 +153,85 @@ class StreamLines(VGroup):
                 colors=self.colors,
             )
             self.color_using_background_image(image_file)
+
+
+class VectorField(VGroup):
+    CONFIG = {
+        "delta_x": 0.5,
+        "delta_y": 0.5,
+        "x_min": int(np.floor(-FRAME_WIDTH / 2)),
+        "x_max": int(np.ceil(FRAME_WIDTH / 2)),
+        "y_min": int(np.floor(-FRAME_HEIGHT / 2)),
+        "y_max": int(np.ceil(FRAME_HEIGHT / 2)),
+        "min_magnitude": 0,
+        "max_magnitude": 2,
+        "colors": DEFAULT_SCALAR_FIELD_COLORS,
+        # Takes in actual norm, spits out displayed norm
+        "length_func": lambda norm: 0.5 * sigmoid(norm),
+        "stroke_color": BLACK,
+        "stroke_width": 0.5,
+    }
+
+    def __init__(self, func, **kwargs):
+        VGroup.__init__(self, **kwargs)
+
+        rgb_gradient_function = get_rgb_gradient_function(
+            self.min_magnitude, self.max_magnitude, self.colors,
+            flip_alphas=False
+        )
+        for x in np.arange(self.x_min, self.x_max, self.delta_x):
+            for y in np.arange(self.y_min, self.y_max, self.delta_y):
+                point = x * RIGHT + y * UP
+                output = np.array(func(point))
+                norm = np.linalg.norm(output)
+                if norm == 0:
+                    output *= 0
+                else:
+                    output *= self.length_func(norm) / norm
+                vect = Vector(output)
+                vect.shift(point)
+                vect.set_fill(rgb_to_color(
+                    rgb_gradient_function(np.array([norm]))[0]
+                ))
+                vect.set_stroke(
+                    self.stroke_color,
+                    self.stroke_width
+                )
+                self.add(vect)
+
+# Continual animations
+
+
+class VectorFieldFlow(ContinualAnimation):
+    CONFIG = {
+        "mode": None,
+    }
+
+    def __init__(self, mobject, func, **kwargs):
+        """
+        Func should take in a vector in R3, and output a vector in R3
+        """
+        self.func = func
+        ContinualAnimation.__init__(self, mobject, **kwargs)
+
+    def update_mobject(self, dt):
+        self.apply_nudge(dt)
+
+    def apply_nudge(self):
+        self.mobject.shift(self.func(self.mobject.get_center()) * dt)
+
+
+class VectorFieldSubmobjectFlow(VectorFieldFlow):
+    def apply_nudge(self, dt):
+        for submob in self.mobject:
+            submob.shift(self.func(submob.get_center()) * dt)
+
+
+class VectorFieldPointFlow(VectorFieldFlow):
+    def apply_nudge(self, dt):
+        self.mobject.apply_function(
+            lambda p: p + self.func(p) * dt
+        )
 
 
 class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
@@ -234,6 +286,30 @@ class StreamLineAnimation(ContinualAnimation):
             adjusted_time = max(line.time, 0) % line.anim.run_time
             line.anim.update(adjusted_time / line.anim.run_time)
 
+
+class JigglingSubmobjects(ContinualAnimation):
+    CONFIG = {
+        "amplitude": 0.05,
+        "jiggles_per_second": 1,
+    }
+
+    def __init__(self, group, **kwargs):
+        for submob in group.submobjects:
+            submob.jiggling_direction = rotate_vector(
+                RIGHT, np.random.random() * TAU,
+            )
+            submob.jiggling_phase = np.random.random() * TAU
+        ContinualAnimation.__init__(self, group, **kwargs)
+
+    def update_mobject(self, dt):
+        for submob in self.mobject.submobjects:
+            submob.jiggling_phase += dt * self.jiggles_per_second * TAU
+            submob.shift(
+                self.amplitude *
+                submob.jiggling_direction *
+                np.sin(submob.jiggling_phase) * dt
+            )
+
 # Scenes
 
 
@@ -244,43 +320,15 @@ class TestVectorField(Scene):
     }
 
     def construct(self):
-        plane = ComplexPlane()
-        self.add(plane)
-
-        circle = Circle(stroke_color=YELLOW)
-        circle.set_fill(BLACK, 1)
-        self.add_foreground_mobject(circle)
-
-        lines = StreamLines(
-            self.func,
-            start_points_generator=lambda: get_flow_start_points(
-                x_min=-8, x_max=-7, y_min=-4, y_max=4,
-                delta_x=0.5,
-                delta_y=0.1,
-                n_repeats=1,
-                noise_factor=0.1,
-            ),
-            stroke_width=2,
+        vector_field = VectorField(
+            lambda p: rotate_vector(cylinder_flow_vector_field(p), TAU / 4)
         )
-        # self.add(lines)
-        # self.play(ShowPassingFlashWithThinningStrokeWidth(lines[5], run_time=4))
-        # return
-        stream_line_animation = StreamLineAnimation(lines)
-        self.add(stream_line_animation)
-        self.wait(self.flow_time)
-        # self.play(VFadeOut(lines))
-        # self.remove(stream_line_animation)
-        # self.wait()
+        vector_field.remove(*filter(
+            lambda v: np.linalg.norm(v.get_start()) <= 1,
+            vector_field
+        ))
 
-        # dots = VGroup(*[
-        #     Dot().move_to(start_point)
-        #     for start_point in get_flow_start_points()
-        # ])
-        # dots.set_color_by_gradient(YELLOW, RED)
-        # self.add(dots)
-
-        # self.add(VectorFieldSubmobjectFlow(dots, self.func))
-        # self.wait(5)
+        self.add(vector_field)
 
 
 class Introduction(Scene):
@@ -386,10 +434,7 @@ class Introduction(Scene):
     def show_contour_lines(self):
         warped_grid = self.warped_grid = self.get_warpable_grid()
         h_line = Line(3 * LEFT, 3 * RIGHT, color=WHITE)  # Hack
-
-        func_label = self.func_label = TexMobject("f(z) = z + 1 / z")
-        func_label.add_background_rectangle()
-        func_label.next_to(self.title, DOWN, MED_SMALL_BUFF)
+        func_label = self.get_func_label()
 
         self.remove(self.plane)
         self.add_foreground_mobjects(self.unit_circle, self.title)
@@ -478,6 +523,12 @@ class Introduction(Scene):
 
     # Helpers
 
+    def get_func_label(self):
+        func_label = self.func_label = TexMobject("f(z) = z + 1 / z")
+        func_label.add_background_rectangle()
+        func_label.next_to(self.title, DOWN, MED_SMALL_BUFF)
+        return func_label
+
     def get_warpable_grid(self):
         top_grid = NumberPlane()
         top_grid.prepare_for_nonlinear_transform()
@@ -495,6 +546,11 @@ class Introduction(Scene):
             ).next_to(ORIGIN, vect, buff=2)
             for vect in LEFT, RIGHT
         ])
+        # This line is a bit of a hack
+        h_line = Line(LEFT, RIGHT, color=WHITE)
+        h_line.set_points([LEFT, LEFT, RIGHT, RIGHT])
+        h_line.scale(2)
+        result.add(h_line)
         return result
 
     def get_stream_lines(self):
@@ -527,3 +583,191 @@ class Introduction(Scene):
             stream_lines,
             line_anim_class=line_anim_class,
         )
+
+
+class ElectricField(Introduction, MovingCameraScene):
+    def construct(self):
+        self.add_plane()
+        self.add_title()
+        self.setup_warped_grid()
+        self.show_uniform_field()
+        self.show_moving_charges()
+        self.show_field_lines()
+
+    def setup_warped_grid(self):
+        warped_grid = self.warped_grid = self.get_warpable_grid()
+        warped_grid.save_state()
+        func_label = self.get_func_label()
+        unit_circle = self.unit_circle = Circle(
+            radius=self.plane.unit_size,
+            stroke_color=YELLOW,
+            fill_color=BLACK,
+            fill_opacity=1
+        )
+
+        self.add_foreground_mobjects(self.title, func_label, unit_circle)
+        self.remove(self.plane)
+        self.play(
+            warped_grid.apply_complex_function, inverse_joukowsky_map,
+        )
+        self.wait()
+
+    def show_uniform_field(self):
+        vector_field = self.vector_field = VectorField(
+            lambda p: UP,
+            colors=[BLUE_E, WHITE, RED]
+        )
+        protons, electrons = groups = [
+            VGroup(*[method(radius=0.2) for x in range(20)])
+            for method in self.get_proton, self.get_electron
+        ]
+        for group in groups:
+            group.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+            random.shuffle(group.submobjects)
+        protons.next_to(FRAME_HEIGHT * DOWN / 2, DOWN)
+        electrons.next_to(FRAME_HEIGHT * UP / 2, UP)
+
+        self.play(
+            self.warped_grid.restore,
+            FadeOut(self.unit_circle),
+            FadeOut(self.title),
+            FadeOut(self.func_label),
+            LaggedStart(GrowArrow, vector_field)
+        )
+        self.remove_foreground_mobjects(self.title, self.func_label)
+        self.wait()
+        for group, vect in (protons, UP), (electrons, DOWN):
+            self.play(LaggedStart(
+                ApplyMethod, group,
+                lambda m: (m.shift, (FRAME_HEIGHT + 1) * vect),
+                run_time=3,
+                rate_func=rush_into
+            ))
+
+    def show_moving_charges(self):
+        unit_circle = self.unit_circle
+
+        protons = VGroup(*[
+            self.get_proton().move_to(
+                rotate_vector(0.275 * n * RIGHT, angle)
+            )
+            for n in range(4)
+            for angle in np.arange(
+                0, TAU, TAU / (6 * n) if n > 0 else TAU
+            )
+        ])
+        jiggling_protons = JigglingSubmobjects(protons)
+        electrons = VGroup(*[
+            self.get_electron().move_to(
+                proton.get_center() +
+                proton.radius * rotate_vector(RIGHT, angle)
+            )
+            for proton in protons
+            for angle in [np.random.random() * TAU]
+        ])
+        jiggling_electrons = JigglingSubmobjects(electrons)
+        electrons.generate_target()
+        for electron in electrons.target:
+            y_part = electron.get_center()[1]
+            if y_part > 0:
+                electron.shift(2 * y_part * DOWN)
+
+        # New vector field
+        def new_electric_field(point):
+            if np.linalg.norm(point) < 1:
+                return ORIGIN
+            vect = cylinder_flow_vector_field(point)
+            return rotate_vector(vect, 90 * DEGREES)
+        new_vector_field = VectorField(
+            new_electric_field,
+            colors=self.vector_field.colors
+        )
+
+        warped_grid = self.warped_grid
+
+        self.play(GrowFromCenter(unit_circle))
+        self.add(jiggling_protons, jiggling_electrons)
+        self.add_foreground_mobjects(
+            self.vector_field, unit_circle, protons, electrons
+        )
+        self.play(
+            LaggedStart(VFadeIn, protons),
+            LaggedStart(VFadeIn, electrons),
+        )
+        self.play(
+            self.camera.frame.scale, 0.7,
+            run_time=3
+        )
+        self.play(
+            MoveToTarget(electrons),  # More indication?
+            warped_grid.apply_complex_function, inverse_joukowsky_map,
+            Transform(
+                self.vector_field,
+                new_vector_field
+            ),
+            run_time=3
+        )
+        self.wait(5)
+
+    def show_field_lines(self):
+        h_lines = VGroup(*[
+            Line(
+                5 * LEFT, 5 * RIGHT,
+                path_arc=0,
+                n_arc_anchors=50,
+                stroke_color=LIGHT_GREY,
+                stroke_width=2,
+            ).shift(y * UP)
+            for y in np.arange(-3, 3.25, 0.25)
+            if y != 0
+        ])
+        h_lines.apply_complex_function(inverse_joukowsky_map)
+
+        self.play(ShowCreation(
+            h_lines,
+            run_time=2,
+            submobject_mode="all_at_once"
+        ))
+        for x in range(4):
+            self.play(LaggedStart(
+                ApplyMethod, h_lines,
+                lambda m: (m.set_stroke, TEAL, 4),
+                rate_func=there_and_back,
+            ))
+
+    # Helpers
+
+    def get_chraged_particle(self, color, sign, radius=0.1):
+        result = Circle(
+            stroke_color=WHITE,
+            stroke_width=0.5,
+            fill_color=color,
+            fill_opacity=0.8,
+            radius=radius
+        )
+        sign = TexMobject(sign)
+        sign.set_stroke(WHITE, 1)
+        sign.scale_to_fit_width(0.5 * result.get_width())
+        sign.move_to(result)
+        result.add(sign)
+        return result
+
+    def get_proton(self, radius=0.1):
+        return self.get_chraged_particle(RED, "+", radius)
+
+    def get_electron(self, radius=0.05):
+        return self.get_chraged_particle(BLUE, "-", radius)
+
+
+class AskQuestions(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What does fluid flow have \\\\ to do with electricity?",
+            added_anims=[self.teacher.change, "happy"]
+        )
+        self.wait()
+        self.student_says(
+            "And you mentioned \\\\ complex numbers?",
+            student_index=0,
+        )
+        self.wait()
