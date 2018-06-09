@@ -1,7 +1,17 @@
 from big_ol_pile_of_manim_imports import *
 
-
 DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, WHITE, RED]
+
+# Quick note to anyone coming to this file with the
+# intent of recreating animations from the video.  Some
+# of these, espeically those involving StreamLineAnimation,
+# can take an extremely long time to run, but much of the
+# computational cost is just for giving subtle little effects
+# which don't matter too much.  Switching the line_anim_class
+# to ShowPassingFlash will give significant speedups, as will
+# increasing the values of delta_x and delta_y in sampling for
+# the streamlines.  Certainly while developing, things were not
+# run at production quality.
 
 
 # Helper functions
@@ -109,12 +119,68 @@ def get_color_field_image_file(scalar_func,
         image.save(full_path)
     return full_path
 
+
+def vec_tex(s):
+    return "\\vec{\\textbf{%s}}" % s
+
+
+def four_swirls_function(point):
+    x, y = point[:2]
+    result = (y**3 - 4 * y) * RIGHT + (x**3 - 16 * x) * UP
+    result *= 0.05
+    norm = np.linalg.norm(result)
+    if norm == 0:
+        return result
+    # result *= 2 * sigmoid(norm) / norm
+    return result
+
+
+def get_force_field_func(*point_strength_pairs):
+    def func(point):
+        result = np.array(ORIGIN)
+        for center, strength in point_strength_pairs:
+            to_center = center - point
+            norm = np.linalg.norm(to_center)
+            if norm == 0:
+                continue
+            to_center /= norm**3
+            to_center *= strength
+            result += to_center
+        return result
+    return func
+
+
+def get_chraged_particle(color, sign, radius=0.1):
+    result = Circle(
+        stroke_color=WHITE,
+        stroke_width=0.5,
+        fill_color=color,
+        fill_opacity=0.8,
+        radius=radius
+    )
+    sign = TexMobject(sign)
+    sign.set_stroke(WHITE, 1)
+    sign.scale_to_fit_width(0.5 * result.get_width())
+    sign.move_to(result)
+    result.add(sign)
+    return result
+
+
+def get_proton(radius=0.1):
+    return get_chraged_particle(RED, "+", radius)
+
+
+def get_electron(radius=0.05):
+    return get_chraged_particle(BLUE, "-", radius)
+
+
 # Mobjects
 
 
 class StreamLines(VGroup):
     CONFIG = {
         "start_points_generator": get_flow_start_points,
+        "start_points_generator_config": {},
         "dt": 0.05,
         "virtual_time": 15,
         "n_anchors_per_line": 40,
@@ -124,6 +190,7 @@ class StreamLines(VGroup):
         "min_magnitude": 0.5,
         "max_magnitude": 1.5,
         "colors": DEFAULT_SCALAR_FIELD_COLORS,
+        "cutoff_norm": 15,
     }
 
     def __init__(self, func, **kwargs):
@@ -131,16 +198,19 @@ class StreamLines(VGroup):
         self.func = func
         dt = self.dt
 
-        start_points = self.start_points_generator()
+        start_points = self.start_points_generator(
+            **self.start_points_generator_config
+        )
         for point in start_points:
             points = [point]
             for t in np.arange(0, self.virtual_time, dt):
                 last_point = points[-1]
                 points.append(last_point + dt * func(last_point))
+                if np.linalg.norm(last_point) > self.cutoff_norm:
+                    break
             line = VMobject()
-            line.set_points_smoothly(
-                points[::(len(points) / self.n_anchors_per_line)]
-            )
+            step = max(1, len(points) / self.n_anchors_per_line)
+            line.set_points_smoothly(points[::step])
             self.add(line)
 
         self.set_stroke(self.stroke_color, self.stroke_width)
@@ -174,9 +244,12 @@ class VectorField(VGroup):
 
     def __init__(self, func, **kwargs):
         VGroup.__init__(self, **kwargs)
+        self.func = func
 
         rgb_gradient_function = get_rgb_gradient_function(
-            self.min_magnitude, self.max_magnitude, self.colors,
+            self.min_magnitude,
+            self.max_magnitude,
+            self.colors,
             flip_alphas=False
         )
         for x in np.arange(self.x_min, self.x_max, self.delta_x):
@@ -188,6 +261,7 @@ class VectorField(VGroup):
                     output *= 0
                 else:
                     output *= self.length_func(norm) / norm
+                # new_norm = np.linalg.norm(output)
                 vect = Vector(output)
                 vect.shift(point)
                 vect.set_fill(rgb_to_color(
@@ -234,6 +308,9 @@ class VectorFieldPointFlow(VectorFieldFlow):
         )
 
 
+# TODO: Make it so that you can have a group of streamlines
+# varying in response to a changing vector field, and still
+# animate the resulting flow
 class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
     CONFIG = {
         "n_segments": 10,
@@ -564,13 +641,16 @@ class Introduction(Scene):
             delta_y = 0.1
         return StreamLines(
             func,
-            start_points_generator=lambda: get_flow_start_points(
-                x_min=-8, x_max=-7, y_min=-4, y_max=4,
-                delta_x=delta_x,
-                delta_y=delta_y,
-                n_repeats=1,
-                noise_factor=0.1,
-            ),
+            start_points_generator_config={
+                "x_min": -8,
+                "x_max": -7,
+                "y_min": -4,
+                "y_max": 4,
+                "delta_x": delta_x,
+                "delta_y": delta_y,
+                "n_repeats": 1,
+                "noise_factor": 0.1,
+            },
             stroke_width=2,
         )
 
@@ -619,7 +699,7 @@ class ElectricField(Introduction, MovingCameraScene):
         )
         protons, electrons = groups = [
             VGroup(*[method(radius=0.2) for x in range(20)])
-            for method in self.get_proton, self.get_electron
+            for method in get_proton, get_electron
         ]
         for group in groups:
             group.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
@@ -648,7 +728,7 @@ class ElectricField(Introduction, MovingCameraScene):
         unit_circle = self.unit_circle
 
         protons = VGroup(*[
-            self.get_proton().move_to(
+            get_proton().move_to(
                 rotate_vector(0.275 * n * RIGHT, angle)
             )
             for n in range(4)
@@ -658,7 +738,7 @@ class ElectricField(Introduction, MovingCameraScene):
         ])
         jiggling_protons = JigglingSubmobjects(protons)
         electrons = VGroup(*[
-            self.get_electron().move_to(
+            get_electron().move_to(
                 proton.get_center() +
                 proton.radius * rotate_vector(RIGHT, angle)
             )
@@ -735,32 +815,25 @@ class ElectricField(Introduction, MovingCameraScene):
                 rate_func=there_and_back,
             ))
 
-    # Helpers
-
-    def get_chraged_particle(self, color, sign, radius=0.1):
-        result = Circle(
-            stroke_color=WHITE,
-            stroke_width=0.5,
-            fill_color=color,
-            fill_opacity=0.8,
-            radius=radius
-        )
-        sign = TexMobject(sign)
-        sign.set_stroke(WHITE, 1)
-        sign.scale_to_fit_width(0.5 * result.get_width())
-        sign.move_to(result)
-        result.add(sign)
-        return result
-
-    def get_proton(self, radius=0.1):
-        return self.get_chraged_particle(RED, "+", radius)
-
-    def get_electron(self, radius=0.05):
-        return self.get_chraged_particle(BLUE, "-", radius)
-
 
 class AskQuestions(TeacherStudentsScene):
     def construct(self):
+        div_tex = TexMobject("\\nabla \\cdot", vec_tex("v"))
+        curl_tex = TexMobject("\\nabla \\times", vec_tex("v"))
+        div_name = TextMobject("Divergence")
+        curl_name = TextMobject("Curl")
+        div = VGroup(div_name, div_tex)
+        curl = VGroup(curl_name, curl_tex)
+        for group in div, curl:
+            group[1].set_color_by_tex(vec_tex("v"), YELLOW)
+            group.arrange_submobjects(DOWN)
+        topics = VGroup(div, curl)
+        topics.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        topics.move_to(self.hold_up_spot, DOWN)
+        div.save_state()
+        div.move_to(self.hold_up_spot, DOWN)
+        screen = self.screen
+
         self.student_says(
             "What does fluid flow have \\\\ to do with electricity?",
             added_anims=[self.teacher.change, "happy"]
@@ -770,4 +843,290 @@ class AskQuestions(TeacherStudentsScene):
             "And you mentioned \\\\ complex numbers?",
             student_index=0,
         )
+        self.wait(3)
+        self.play(
+            FadeInFromDown(div),
+            self.teacher.change, "raise_right_hand",
+            FadeOut(self.students[0].bubble),
+            FadeOut(self.students[0].bubble.content),
+            self.get_student_changes(*["pondering"] * 3)
+        )
+        self.play(
+            FadeInFromDown(curl),
+            div.restore
+        )
         self.wait()
+        self.look_at(self.screen)
+        self.wait()
+        self.change_all_student_modes("hooray", look_at_arg=screen)
+        self.wait(3)
+
+        topics.generate_target()
+        topics.target.to_edge(LEFT, buff=LARGE_BUFF)
+        arrow = TexMobject("\\leftrightarrow")
+        arrow.scale(2)
+        arrow.next_to(topics.target, RIGHT, buff=LARGE_BUFF)
+        screen.next_to(arrow, RIGHT, LARGE_BUFF)
+        complex_analysis = TextMobject("Complex analysis")
+        complex_analysis.next_to(screen, UP)
+
+        self.play(
+            MoveToTarget(topics),
+            self.get_student_changes(
+                "confused", "sassy", "erm",
+                look_at_arg=topics.target
+            ),
+            self.teacher.change, "pondering", screen
+        )
+        self.play(
+            Write(arrow),
+            FadeInFromDown(complex_analysis)
+        )
+        self.look_at(screen)
+        self.wait(6)
+
+
+class IntroduceVectorField(Scene):
+    CONFIG = {
+        "vector_field_config": {
+            # "delta_x": 2,
+            # "delta_y": 2,
+            "delta_x": 0.5,
+            "delta_y": 0.5,
+        },
+        "stream_line_config": {
+            "start_points_generator_config": {
+                # "delta_x": 1,
+                # "delta_y": 1,
+                "delta_x": 0.25,
+                "delta_y": 0.25,
+            },
+            "virtual_time": 3,
+        },
+        "stream_line_animation_config": {
+            # "line_anim_class": ShowPassingFlash,
+            "line_anim_class": ShowPassingFlashWithThinningStrokeWidth,
+        }
+    }
+
+    def construct(self):
+        self.add_plane()
+        self.add_title()
+        self.points_to_vectors()
+        self.show_fluid_flow()
+        self.show_gravitational_force()
+        self.show_magnetic_force()
+        self.show_fluid_flow()
+
+    def add_plane(self):
+        plane = self.plane = NumberPlane()
+        plane.add_coordinates()
+        plane.remove(plane.coordinate_labels[-1])
+        self.add(plane)
+
+    def add_title(self):
+        title = TextMobject("Vector field")
+        title.scale(1.5)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+        title.add_background_rectangle(opacity=1, buff=SMALL_BUFF)
+        self.add_foreground_mobjects(title)
+
+    def points_to_vectors(self):
+        vector_field = self.vector_field = VectorField(
+            four_swirls_function,
+            **self.vector_field_config
+        )
+        dots = VGroup()
+        for vector in vector_field:
+            dot = Dot(radius=0.05)
+            dot.move_to(vector.get_start())
+            dot.target = vector
+            dots.add(dot)
+
+        self.play(LaggedStart(GrowFromCenter, dots))
+        self.wait()
+        self.play(LaggedStart(MoveToTarget, dots, remover=True))
+        self.add(vector_field)
+        self.wait()
+
+    def show_fluid_flow(self):
+        vector_field = self.vector_field
+        stream_lines = StreamLines(
+            vector_field.func,
+            **self.stream_line_config
+        )
+        stream_line_animation = StreamLineAnimation(
+            stream_lines,
+            **self.stream_line_animation_config
+        )
+
+        self.add(stream_line_animation)
+        self.play(
+            vector_field.set_fill, {"opacity": 0.3}
+        )
+        self.wait(7)
+        self.play(
+            vector_field.set_fill, {"opacity": 1},
+            VFadeOut(stream_line_animation.mobject),
+        )
+        self.remove(stream_line_animation)
+
+    def show_gravitational_force(self):
+        earth = self.earth = ImageMobject("earth")
+        moon = self.moon = ImageMobject("moon", height=1)
+        earth_center = 3 * RIGHT + 2 * UP
+        moon_center = 3 * LEFT + DOWN
+        earth.move_to(earth_center)
+        moon.move_to(moon_center)
+
+        gravity_func = get_force_field_func((earth_center, 6), (moon_center, 1))
+        gravity_field = VectorField(
+            gravity_func,
+            **self.vector_field_config
+        )
+
+        self.add_foreground_mobjects(earth, moon)
+        self.play(
+            GrowFromCenter(earth),
+            GrowFromCenter(moon),
+            Transform(self.vector_field, gravity_field),
+            run_time=2
+        )
+        self.vector_field.func = gravity_field.func
+        self.wait()
+
+    def show_magnetic_force(self):
+        magnetic_func = get_force_field_func(
+            (3 * LEFT, 1), (3 * RIGHT, - 1)
+        )
+        magnetic_field = VectorField(
+            magnetic_func,
+            **self.vector_field_config
+        )
+        magnet = VGroup(*[
+            Rectangle(
+                width=3.5,
+                height=1,
+                stroke_width=0,
+                fill_opacity=1,
+                fill_color=color
+            )
+            for color in BLUE, RED
+        ])
+        magnet.arrange_submobjects(RIGHT, buff=0)
+        for char, vect in ("S", LEFT), ("N", RIGHT):
+            letter = TextMobject(char)
+            edge = magnet.get_edge_center(vect)
+            letter.next_to(edge, -vect, buff=MED_LARGE_BUFF)
+            magnet.add(letter)
+
+        self.add_foreground_mobjects(magnet)
+        self.play(
+            self.earth.scale, 0,
+            self.moon.scale, 0,
+            DrawBorderThenFill(magnet),
+            Transform(self.vector_field, magnetic_field),
+            run_time=2
+        )
+        self.vector_field.func = magnetic_field.func
+        self.remove_foreground_mobjects(self.earth, self.moon)
+
+
+class QuickNoteOnDrawingThese(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Quick note on \\\\ drawing vector fields",
+            bubble_kwargs={"width": 5, "height": 3},
+            added_anims=[self.get_student_changes(
+                "confused", "erm", "sassy"
+            )]
+        )
+        self.look_at(self.screen)
+        self.wait(3)
+
+
+class ShorteningLongVectors(IntroduceVectorField):
+    def construct(self):
+        self.add_plane()
+        self.add_title()
+        self.contrast_adjusted_and_non_adjusted()
+
+    def contrast_adjusted_and_non_adjusted(self):
+        func = four_swirls_function
+        unadjusted = VectorField(
+            func, length_func=lambda n: n, colors=[WHITE],
+        )
+        adjusted = VectorField(func)
+        for v1, v2 in zip(adjusted, unadjusted):
+            v1.save_state()
+            v1.target = v2
+
+        self.add(adjusted)
+        self.wait()
+        self.play(LaggedStart(
+            MoveToTarget, adjusted,
+            run_time=3
+        ))
+        self.wait()
+        self.play(LaggedStart(
+            ApplyMethod, adjusted,
+            lambda m: (m.restore,),
+            run_time=3
+        ))
+        self.wait()
+
+
+class TimeDependentVectorField(ExternallyAnimatedScene):
+    pass
+
+
+class ChangingElectricField(Scene):
+    CONFIG = {
+        "vector_field_config": {}
+    }
+
+    def construct(self):
+        particles = self.particles = VGroup()
+
+        for n in range(9):
+            if n % 2 == 0:
+                particle = get_proton(radius=0.2)
+                particle.charge = +1
+            else:
+                particle = get_electron(radius=0.2)
+                particle.charge = -1
+            particle.velocity = np.array(ORIGIN)
+            particles.add(particle)
+            particle.shift(
+                0.2 * random.random() * RIGHT +
+                0.2 * random.random() * UP
+            )
+
+        particles.arrange_submobjects_in_grid(buff=LARGE_BUFF)
+
+        vector_field = self.get_vector_field()
+
+        def update_vector_field(vector_field):
+            new_field = self.get_vector_field()
+            Transform(vector_field, new_field).update(1)
+            vector_field.func = new_field.func
+
+        def update_particles(particles, dt):
+            func = vector_field.func
+            for particle in particles:
+                force = func(particle.get_center())
+                particle.velocity += force * dt
+                particle.shift(particle.velocity * dt)
+
+        self.add(
+            ContinualUpdateFromFunc(vector_field, update_vector_field),
+            ContinualUpdateFromTimeFunc(particles, update_particles),
+        )
+        self.wait(20)
+
+    def get_vector_field(self):
+        func = get_force_field_func(*zip(
+            map(Mobject.get_center, self.particles),
+            [p.charge for p in self.particles]
+        ))
+        return VectorField(func, **self.vector_field_config)
