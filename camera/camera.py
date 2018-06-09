@@ -438,8 +438,8 @@ class Camera(object):
         )
 
         # Reshape
-        pixel_width = int(pdist([ul_coords, ur_coords]))
-        pixel_height = int(pdist([ul_coords, dl_coords]))
+        pixel_width = max(int(pdist([ul_coords, ur_coords])), 1)
+        pixel_height = max(int(pdist([ul_coords, dl_coords])), 1)
         sub_image = sub_image.resize(
             (pixel_width, pixel_height), resample=Image.BICUBIC
         )
