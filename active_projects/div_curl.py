@@ -1,6 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 
-DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, WHITE, RED]
+DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
 
 # Quick note to anyone coming to this file with the
 # intent of recreating animations from the video.  Some
@@ -10,7 +10,7 @@ DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, WHITE, RED]
 # which don't matter too much.  Switching the line_anim_class
 # to ShowPassingFlash will give significant speedups, as will
 # increasing the values of delta_x and delta_y in sampling for
-# the streamlines.  Certainly while developing, things were not
+# the stream lines.  Certainly while developing, things were not
 # run at production quality.
 
 
@@ -44,6 +44,30 @@ def derivative(func, dt=1e-7):
     return lambda z: (func(z + dt) - func(z)) / dt
 
 
+def negative_gradient(potential_func, dt=1e-7):
+    def result(p):
+        output = potential_func(p)
+        dx = dt * RIGHT
+        dy = dt * UP
+        dz = dt * OUT
+        return -np.array([
+            (potential_func(p + dx) - output) / dt,
+            (potential_func(p + dy) - output) / dt,
+            (potential_func(p + dz) - output) / dt,
+        ])
+    return result
+
+
+def divergence(vector_func, dt=1e-1):
+    def result(point):
+        value = vector_func(point)
+        return sum([
+            (vector_func(point + dt * RIGHT) - value)[i] / dt
+            for i, vect in enumerate([RIGHT, UP, OUT])
+        ])
+    return result
+
+
 def cylinder_flow_vector_field(point, R=1, U=1):
     z = R3_to_complex(point)
     # return complex_to_R3(1.0 / derivative(joukowsky_map)(z))
@@ -64,8 +88,13 @@ def get_colored_background_image(scalar_field_func,
     fw = FRAME_WIDTH
     fh = FRAME_HEIGHT
     points_array = np.zeros((ph, pw, 3))
-    x_array = np.linspace(-fw / 2, fw / 2, ph).repeat(pw).reshape((ph, pw))
-    y_array = np.linspace(fh / 2, -fh / 2, pw).repeat(ph).reshape((pw, ph)).T
+    x_array = np.linspace(-fw / 2, fw / 2, pw)
+    x_array = x_array.reshape((1, len(x_array)))
+    x_array = x_array.repeat(ph, axis=0)
+
+    y_array = np.linspace(fh / 2, -fh / 2, ph)
+    y_array = y_array.reshape((len(y_array), 1))
+    y_array.repeat(pw, axis=1)
     points_array[:, :, 0] = x_array
     points_array[:, :, 1] = y_array
     scalars = np.apply_along_axis(scalar_field_func, 2, points_array)
@@ -82,8 +111,8 @@ def get_rgb_gradient_function(min_value=0, max_value=1,
     def func(values):
         alphas = inverse_interpolate(min_value, max_value, values)
         alphas = np.clip(alphas, 0, 1)
-        if flip_alphas:
-            alphas = 1 - alphas
+        # if flip_alphas:
+        #     alphas = 1 - alphas
         scaled_alphas = alphas * (len(rgbs) - 1)
         indices = scaled_alphas.astype(int)
         next_indices = np.clip(indices + 1, 0, len(rgbs) - 1)
@@ -135,7 +164,9 @@ def four_swirls_function(point):
     return result
 
 
-def get_force_field_func(*point_strength_pairs):
+def get_force_field_func(*point_strength_pairs, **kwargs):
+    radius = kwargs.get("radius", 0.5)
+
     def func(point):
         result = np.array(ORIGIN)
         for center, strength in point_strength_pairs:
@@ -143,8 +174,11 @@ def get_force_field_func(*point_strength_pairs):
             norm = np.linalg.norm(to_center)
             if norm == 0:
                 continue
-            to_center /= norm**3
-            to_center *= strength
+            elif norm < radius:
+                to_center /= radius**3
+            elif norm >= radius:
+                to_center /= norm**3
+            to_center *= -strength
             result += to_center
         return result
     return func
@@ -183,7 +217,7 @@ class StreamLines(VGroup):
         "start_points_generator_config": {},
         "dt": 0.05,
         "virtual_time": 15,
-        "n_anchors_per_line": 40,
+        "n_anchors_per_line": 100,
         "stroke_width": 1,
         "stroke_color": WHITE,
         "color_lines_by_magnitude": True,
@@ -245,8 +279,7 @@ class VectorField(VGroup):
     def __init__(self, func, **kwargs):
         VGroup.__init__(self, **kwargs)
         self.func = func
-
-        rgb_gradient_function = get_rgb_gradient_function(
+        self.rgb_gradient_function = get_rgb_gradient_function(
             self.min_magnitude,
             self.max_magnitude,
             self.colors,
@@ -255,23 +288,26 @@ class VectorField(VGroup):
         for x in np.arange(self.x_min, self.x_max, self.delta_x):
             for y in np.arange(self.y_min, self.y_max, self.delta_y):
                 point = x * RIGHT + y * UP
-                output = np.array(func(point))
-                norm = np.linalg.norm(output)
-                if norm == 0:
-                    output *= 0
-                else:
-                    output *= self.length_func(norm) / norm
-                # new_norm = np.linalg.norm(output)
-                vect = Vector(output)
-                vect.shift(point)
-                vect.set_fill(rgb_to_color(
-                    rgb_gradient_function(np.array([norm]))[0]
-                ))
-                vect.set_stroke(
-                    self.stroke_color,
-                    self.stroke_width
-                )
-                self.add(vect)
+                self.add(self.get_vector(point))
+
+    def get_vector(self, point):
+        output = np.array(self.func(point))
+        norm = np.linalg.norm(output)
+        if norm == 0:
+            output *= 0
+        else:
+            output *= self.length_func(norm) / norm
+        vect = Vector(output)
+        vect.shift(point)
+        vect.set_fill(rgb_to_color(
+            self.rgb_gradient_function(np.array([norm]))[0]
+        ))
+        vect.set_stroke(
+            self.stroke_color,
+            self.stroke_width
+        )
+        return vect
+
 
 # Continual animations
 
@@ -338,7 +374,7 @@ class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
 class StreamLineAnimation(ContinualAnimation):
     CONFIG = {
         "lag_range": 4,
-        "line_anim_class": ShowPassingFlashWithThinningStrokeWidth,
+        "line_anim_class": ShowPassingFlash,
         "line_anim_config": {
             "run_time": 4,
             "rate_func": None,
@@ -397,20 +433,23 @@ class TestVectorField(Scene):
     }
 
     def construct(self):
-        vector_field = VectorField(
-            lambda p: rotate_vector(cylinder_flow_vector_field(p), TAU / 4)
+        lines = StreamLines(
+            four_swirls_function,
+            virtual_time=3,
+            min_magnitude=0,
+            max_magnitude=2,
         )
-        vector_field.remove(*filter(
-            lambda v: np.linalg.norm(v.get_start()) <= 1,
-            vector_field
+        self.add(StreamLineAnimation(
+            lines,
+            line_anim_class=ShowPassingFlash
         ))
-
-        self.add(vector_field)
+        self.wait(10)
 
 
 class Introduction(Scene):
     CONFIG = {
         "production_quality_flow": True,
+        "vector_field_func": cylinder_flow_vector_field,
     }
 
     def construct(self):
@@ -631,7 +670,7 @@ class Introduction(Scene):
         return result
 
     def get_stream_lines(self):
-        func = cylinder_flow_vector_field
+        func = self.vector_field_func
         if self.production_quality_flow:
             delta_x = 0.5
             delta_y = 0.1
@@ -962,7 +1001,7 @@ class IntroduceVectorField(Scene):
 
         self.add(stream_line_animation)
         self.play(
-            vector_field.set_fill, {"opacity": 0.3}
+            vector_field.set_fill, {"opacity": 0.5}
         )
         self.wait(7)
         self.play(
@@ -979,7 +1018,7 @@ class IntroduceVectorField(Scene):
         earth.move_to(earth_center)
         moon.move_to(moon_center)
 
-        gravity_func = get_force_field_func((earth_center, 6), (moon_center, 1))
+        gravity_func = get_force_field_func((earth_center, -6), (moon_center, -1))
         gravity_field = VectorField(
             gravity_func,
             **self.vector_field_config
@@ -997,7 +1036,7 @@ class IntroduceVectorField(Scene):
 
     def show_magnetic_force(self):
         magnetic_func = get_force_field_func(
-            (3 * LEFT, 1), (3 * RIGHT, - 1)
+            (3 * LEFT, -1), (3 * RIGHT, +1)
         )
         magnetic_field = VectorField(
             magnetic_func,
@@ -1086,24 +1125,7 @@ class ChangingElectricField(Scene):
     }
 
     def construct(self):
-        particles = self.particles = VGroup()
-
-        for n in range(9):
-            if n % 2 == 0:
-                particle = get_proton(radius=0.2)
-                particle.charge = +1
-            else:
-                particle = get_electron(radius=0.2)
-                particle.charge = -1
-            particle.velocity = np.array(ORIGIN)
-            particles.add(particle)
-            particle.shift(
-                0.2 * random.random() * RIGHT +
-                0.2 * random.random() * UP
-            )
-
-        particles.arrange_submobjects_in_grid(buff=LARGE_BUFF)
-
+        particles = self.get_particles()
         vector_field = self.get_vector_field()
 
         def update_vector_field(vector_field):
@@ -1124,9 +1146,219 @@ class ChangingElectricField(Scene):
         )
         self.wait(20)
 
+    def get_particles(self):
+        particles = self.particles = VGroup()
+        for n in range(9):
+            if n % 2 == 0:
+                particle = get_proton(radius=0.2)
+                particle.charge = +1
+            else:
+                particle = get_electron(radius=0.2)
+                particle.charge = -1
+            particle.velocity = np.random.normal(0, 0.1, 3)
+            particles.add(particle)
+            particle.shift(np.random.normal(0, 0.2, 3))
+
+        particles.arrange_submobjects_in_grid(buff=LARGE_BUFF)
+        return particles
+
     def get_vector_field(self):
         func = get_force_field_func(*zip(
             map(Mobject.get_center, self.particles),
             [p.charge for p in self.particles]
         ))
-        return VectorField(func, **self.vector_field_config)
+        self.vector_field = VectorField(func, **self.vector_field_config)
+        return self.vector_field
+
+
+class InsertAirfoildTODO(TODOStub):
+    CONFIG = {"message": "Insert airfoil flow animation"}
+
+
+class ThreeDVectorField(ExternallyAnimatedScene):
+    pass
+
+
+class GravityFluidFlow(IntroduceVectorField):
+    def construct(self):
+        self.vector_field = VectorField(
+            lambda p: np.array(ORIGIN),
+            **self.vector_field_config
+        )
+        self.show_gravitational_force()
+        self.show_fluid_flow()
+
+
+class TotallyToScale(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Totally drawn to scale. \\\\ Don't even worry about it."
+        )
+        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.add_background_rectangle()
+        self.add(words)
+        self.wait()
+
+
+# TODO: Revisit this
+class FluidFlowAsHillGradient(Introduction, ThreeDScene):
+    CONFIG = {
+        "production_quality_flow": False,
+    }
+
+    def construct(self):
+        def potential(point):
+            x, y = point[:2]
+            result = 2 - 0.01 * op.mul(
+                ((x - 4)**2 + y**2),
+                ((x + 4)**2 + y**2)
+            )
+            return max(-10, result)
+
+        vector_field_func = negative_gradient(potential)
+
+        stream_lines = StreamLines(
+            vector_field_func,
+            virtual_time=3,
+            color_lines_by_magnitude=False,
+            start_points_generator_config={
+                "delta_x": 0.2,
+                "delta_y": 0.2,
+            }
+        )
+        for line in stream_lines:
+            line.points[:, 2] = np.apply_along_axis(
+                potential, 1, line.points
+            )
+        stream_lines_animation = self.get_stream_lines_animation(
+            stream_lines
+        )
+
+        plane = NumberPlane()
+
+        self.add(plane)
+        self.add(stream_lines_animation)
+        self.wait(3)
+        self.begin_ambient_camera_rotation(rate=0.1)
+        self.move_camera(
+            phi=70 * DEGREES,
+            run_time=2
+        )
+        self.wait(5)
+
+
+class DefineDivergence(ChangingElectricField):
+    CONFIG = {
+        "vector_field_config": {
+            "length_func": lambda norm: 0.3,
+        },
+        "stream_line_config": {
+            "start_points_generator_config": {
+                "delta_x": 0.125,
+                "delta_y": 0.125,
+            },
+            "virtual_time": 2,
+            "n_anchors_per_line": 10,
+            "min_magnitude": 0,
+            "max_magnitude": 6,
+        },
+        "stream_line_animation_config": {
+            "line_anim_class": ShowPassingFlash,
+        },
+        "flow_time": 10,
+    }
+
+    def construct(self):
+        self.draw_vector_field()
+        # self.show_flow()
+        self.point_out_sources_and_sinks()
+        self.show_divergence_values()
+
+    def draw_vector_field(self):
+        particles = self.get_particles()
+        random.shuffle(particles.submobjects)
+        particles.remove(particles[0])
+        particles.arrange_submobjects_in_grid(
+            n_cols=4, buff=3
+        )
+        for particle in particles:
+            particle.shift(
+                np.random.normal(0, 1, 3)
+            )
+            particle.shift(particle.get_center()[2] * IN)
+        vector_field = self.get_vector_field()
+
+        self.play(
+            LaggedStart(GrowArrow, vector_field),
+            LaggedStart(GrowFromCenter, particles),
+            run_time=4
+        )
+        self.wait()
+        self.play(LaggedStart(FadeOut, particles))
+
+    def show_flow(self):
+        stream_lines = StreamLines(
+            self.vector_field.func,
+            **self.stream_line_config
+        )
+        stream_line_animation = StreamLineAnimation(
+            stream_lines,
+            **self.stream_line_animation_config
+        )
+        self.add(stream_line_animation)
+        self.wait(self.flow_time)
+
+    def point_out_sources_and_sinks(self):
+        particles = self.particles
+        self.positive_points, self.negative_points = [
+            [
+                particle.get_center()
+                for particle in particles
+                if particle.charge == charge
+            ]
+            for charge in +1, -1
+        ]
+        pair_of_vector_circle_groups = VGroup()
+        for point_set in self.positive_points, self.negative_points:
+            vector_circle_groups = VGroup()
+            for point in point_set:
+                vector_circle_group = VGroup()
+                for angle in np.linspace(0, TAU, 12, endpoint=False):
+                    step = 0.5 * rotate_vector(RIGHT, angle)
+                    vect = self.vector_field.get_vector(point + step)
+                    vect.set_color(WHITE)
+                    vect.set_stroke(width=2)
+                    vector_circle_group.add(vect)
+                vector_circle_groups.add(vector_circle_group)
+            pair_of_vector_circle_groups.add(vector_circle_groups)
+
+            self.play(
+                LaggedStart(
+                    LaggedStart, vector_circle_groups,
+                    lambda vcg: (GrowArrow, vcg),
+                ),
+                self.vector_field.set_fill, {"opacity": 0.5}
+            )
+            self.wait()
+            self.play(FadeOut(vector_circle_groups))
+
+        self.positive_vector_circle_groups = pair_of_vector_circle_groups[0]
+        self.negative_vector_circle_groups = pair_of_vector_circle_groups[1]
+        self.wait()
+
+    def show_divergence_values(self):
+        div_func = divergence(self.vector_field.func)
+
+
+
+class DefineDivergenceJustFlow(DefineDivergence):
+    CONFIG = {
+        "flow_time": 10,
+    }
+
+    def construct(self):
+        self.force_skipping()
+        self.draw_vector_field()
+        self.revert_to_original_skipping_status()
+        self.clear()
+        self.show_flow()
