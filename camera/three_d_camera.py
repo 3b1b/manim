@@ -4,7 +4,7 @@ import numpy as np
 
 from constants import *
 
-from camera.camera import Camera
+from camera.moving_camera import MovingCamera
 from mobject.types.vectorized_mobject import VectorizedPoint
 from mobject.three_dimensions import should_shade_in_3d
 
@@ -15,41 +15,40 @@ from utils.space_ops import rotation_matrix
 # TODO: Make sure this plays well with latest camera updates
 
 
-class CameraWithPerspective(Camera):
-    CONFIG = {
-        "camera_distance": 20,
-    }
+# class CameraWithPerspective(Camera):
+#     CONFIG = {
+#         "camera_distance": 20,
+#     }
 
-    def points_to_pixel_coords(self, points):
-        distance_ratios = np.divide(
-            self.camera_distance,
-            self.camera_distance - points[:, 2]
-        )
-        scale_factors = interpolate(0, 1, distance_ratios)
-        adjusted_points = np.array(points)
-        for i in 0, 1:
-            adjusted_points[:, i] *= scale_factors
+#     def points_to_pixel_coords(self, points):
+#         distance_ratios = np.divide(
+#             self.camera_distance,
+#             self.camera_distance - points[:, 2]
+#         )
+#         scale_factors = interpolate(0, 1, distance_ratios)
+#         adjusted_points = np.array(points)
+#         for i in 0, 1:
+#             adjusted_points[:, i] *= scale_factors
 
-        return Camera.points_to_pixel_coords(self, adjusted_points)
+#         return Camera.points_to_pixel_coords(self, adjusted_points)
 
 
-class ThreeDCamera(CameraWithPerspective):
+class ThreeDCamera(MovingCamera):
     CONFIG = {
         "sun_vect": 5 * UP + LEFT,
         "shading_factor": 0.2,
         "distance": 5.,
-        "default_distance": 5.,
         "phi": 0,  # Angle off z axis
         "theta": -TAU / 4,  # Rotation about z axis
     }
 
     def __init__(self, *args, **kwargs):
-        Camera.__init__(self, *args, **kwargs)
+        MovingCamera.__init__(self, *args, **kwargs)
         self.unit_sun_vect = self.sun_vect / np.linalg.norm(self.sun_vect)
         # rotation_mobject lives in the phi-theta-distance space
         # TODO, use ValueTracker for this instead
         self.rotation_mobject = VectorizedPoint()
-        # moving_center lives in the x-y-z space
+        # Moving_center lives in the x-y-z space
         # It representes the center of rotation
         self.moving_center = VectorizedPoint(self.frame_center)
         self.set_position(self.phi, self.theta, self.distance)
@@ -88,9 +87,9 @@ class ThreeDCamera(CameraWithPerspective):
         return normal / length
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
-        camera_point = self.spherical_coords_to_point(
-            *self.get_spherical_coords()
-        )
+        # camera_point = self.spherical_coords_to_point(
+        #     *self.get_spherical_coords()
+        # )
 
         def z_cmp(*vmobs):
             # Compare to three dimensional mobjects based on

@@ -1,11 +1,27 @@
 from __future__ import absolute_import
 
 from constants import FRAME_HEIGHT
+from constants import FRAME_WIDTH
+from constants import ORIGIN
 from constants import WHITE
 
 from camera.camera import Camera
 from mobject.frame import ScreenRectangle
+from mobject.types.vectorized_mobject import VGroup
+from mobject.types.vectorized_mobject import VectorizedPoint
 from utils.config_ops import digest_config
+
+
+# TODO, think about how to incorporate perspective
+class CameraFrame(VGroup):
+    CONFIG = {
+        "width": FRAME_WIDTH,
+        "height": FRAME_HEIGHT,
+        "center": ORIGIN,
+    }
+
+    def __init__(self, **kwargs):
+        pass
 
 
 class MovingCamera(Camera):
