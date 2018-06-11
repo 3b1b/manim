@@ -42,7 +42,8 @@ def batch_by_property(items, property_func):
     Takes in a list, and returns a list of tuples, (batch, prop)
     such that all items in a batch have the same output when
     put into property_func, and such that chaining all these
-    batches together would give the original list.
+    batches together would give the original list (i.e. order is
+    preserved)
     """
     batch_prop_pairs = []
 
