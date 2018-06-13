@@ -19,8 +19,10 @@ def get_flow_start_points(x_min=-8, x_max=8,
                           y_min=-5, y_max=5,
                           delta_x=0.5, delta_y=0.5,
                           n_repeats=1,
-                          noise_factor=0.01
+                          noise_factor=None
                           ):
+    if noise_factor is None:
+        noise_factor = delta_y / 2
     return np.array([
         x * RIGHT + y * UP + noise_factor * np.random.random(3)
         for n in xrange(n_repeats)
@@ -1262,6 +1264,7 @@ class DefineDivergence(ChangingElectricField):
             "n_anchors_per_line": 10,
             "min_magnitude": 0,
             "max_magnitude": 6,
+            "stroke_width": 2,
         },
         "stream_line_animation_config": {
             "line_anim_class": ShowPassingFlash,
@@ -1391,14 +1394,14 @@ class DefineDivergence(ChangingElectricField):
         for point in negative_points:
             self.play(circle.move_to, point)
             self.wait(2)
-        self.wait(2)
-        self.remove(div_tex_update)
-        self.remove(div_value_update)
-        self.play(
-            ApplyMethod(circle.scale, 0, remover=True),
-            FadeOut(div_tex),
-            FadeOut(div_value),
-        )
+        self.wait(4)
+        # self.remove(div_tex_update)
+        # self.remove(div_value_update)
+        # self.play(
+        #     ApplyMethod(circle.scale, 0, remover=True),
+        #     FadeOut(div_tex),
+        #     FadeOut(div_value),
+        # )
 
 
 class DefineDivergenceJustFlow(DefineDivergence):
@@ -1434,9 +1437,7 @@ class DivergenceAtSlowFastPoint(Scene):
 
     def construct(self):
         def func(point):
-            return 4 * inverse_interpolate(
-                -FRAME_WIDTH / 2, FRAME_WIDTH / 2, point[0]
-            ) * RIGHT
+            return 3 * sigmoid(point[0]) * RIGHT
         vector_field = self.vector_field = VectorField(
             func, **self.vector_field_config
         )
@@ -1486,7 +1487,245 @@ class DivergenceAsNewFunction(Scene):
         self.add(plane)
 
     def show_vector_field_function(self):
-        pass
+        func = self.func
+        unscaled_vector_field = VectorField(
+            func,
+            length_func=lambda norm: norm,
+            colors=[BLUE_C, YELLOW, RED],
+            delta_x=np.inf,
+            delta_y=np.inf,
+        )
+
+        in_dot = Dot(color=PINK)
+        in_dot.move_to(3.75 * LEFT + 1.25 * UP)
+
+        def get_input():
+            return in_dot.get_center()
+
+        def get_out_vect():
+            return unscaled_vector_field.get_vector(get_input())
+
+        # Tex
+        func_tex = TexMobject(
+            "\\textbf{F}(", "+0.00", ",", "+0.00", ")", "=",
+        )
+        dummy_in_x, dummy_in_y = func_tex.get_parts_by_tex("+0.00")
+        func_tex.add_background_rectangle()
+        rhs = DecimalMatrix(
+            [[0], [0]],
+            element_to_mobject_config={
+                "num_decimal_places": 2,
+                "include_sign": True,
+            },
+            include_background_rectangle=True
+        )
+        rhs.next_to(func_tex, RIGHT)
+        dummy_out_x, dummy_out_y = rhs.get_mob_matrix().flatten()
+
+        VGroup(func_tex, rhs).to_corner(UL, buff=MED_SMALL_BUFF)
+
+        VGroup(
+            dummy_in_x, dummy_in_y,
+            dummy_out_x, dummy_out_y,
+        ).set_fill(BLACK, opacity=0)
+
+        # Changing decimals
+        in_x, in_y, out_x, out_y = [
+            DecimalNumber(0, include_sign=True)
+            for x in range(4)
+        ]
+        VGroup(in_x, in_y).set_color(in_dot.get_color())
+        VGroup(out_x, out_y).set_color(get_out_vect().get_fill_color())
+        in_x_update = ContinualChangingDecimal(
+            in_x, lambda a: get_input()[0],
+            position_update_func=lambda m: m.move_to(dummy_in_x)
+        )
+        in_y_update = ContinualChangingDecimal(
+            in_y, lambda a: get_input()[1],
+            position_update_func=lambda m: m.move_to(dummy_in_y)
+        )
+        out_x_update = ContinualChangingDecimal(
+            out_x, lambda a: func(get_input())[0],
+            position_update_func=lambda m: m.move_to(dummy_out_x)
+        )
+        out_y_update = ContinualChangingDecimal(
+            out_y, lambda a: func(get_input())[1],
+            position_update_func=lambda m: m.move_to(dummy_out_y)
+        )
+
+        self.add(func_tex, rhs)
+        # self.add(ContinualUpdateFromFunc(
+        #     rhs, lambda m: m.next_to(func_tex, RIGHT)
+        # ))
+
+        # Where those decimals actually change
+        self.add(in_x_update, in_y_update)
+
+        in_dot.save_state()
+        in_dot.move_to(ORIGIN)
+        self.play(in_dot.restore)
+        self.wait()
+        self.play(*[
+            ReplacementTransform(
+                VGroup(mob.copy().fade(1)),
+                VGroup(out_x, out_y),
+            )
+            for mob in in_x, in_y
+        ])
+        out_vect = get_out_vect()
+        VGroup(out_x, out_y).match_style(out_vect)
+        out_vect.save_state()
+        out_vect.move_to(rhs)
+        out_vect.set_fill(opacity=0)
+        self.play(out_vect.restore)
+        self.out_vect_update = ContinualUpdateFromFunc(
+            out_vect,
+            lambda ov: Transform(ov, get_out_vect()).update(1)
+        )
+
+        self.add(self.out_vect_update)
+        self.add(out_x_update, out_y_update)
+
+        self.add(ContinualUpdateFromFunc(
+            VGroup(out_x, out_y),
+            lambda m: m.match_style(out_vect)
+        ))
+        self.wait()
+
+        for vect in DOWN, 2 * RIGHT, UP:
+            self.play(
+                in_dot.shift, 3 * vect,
+                run_time=3
+            )
+            self.wait()
+
+        self.in_dot = in_dot
+        self.out_vect = out_vect
+        self.func_equation = VGroup(func_tex, rhs)
+        self.out_x, self.out_y = out_x, out_y
+        self.in_x, self.in_y = out_x, out_y
+        self.in_x_update = in_x_update
+        self.in_y_update = in_y_update
+        self.out_x_update = out_x_update
+        self.out_y_update = out_y_update
 
     def show_divergence_function(self):
+        vector_field = VectorField(self.func)
+        vector_field.remove(*[
+            v for v in vector_field
+            if v.get_start()[0] < 0 and v.get_start()[1] > 2
+        ])
+        vector_field.set_fill(opacity=0.5)
+        in_dot = self.in_dot
+
+        def get_neighboring_points(step_sizes=[0.3], n_angles=12):
+            point = in_dot.get_center()
+            return list(it.chain(*[
+                [
+                    point + step_size * step
+                    for step in compass_directions(n_angles)
+                ]
+                for step_size in step_sizes
+            ]))
+
+        def get_vector_ring():
+            return VGroup(*[
+                vector_field.get_vector(point)
+                for point in get_neighboring_points()
+            ])
+
+        def get_stream_lines():
+            return StreamLines(
+                self.func,
+                start_points_generator=get_neighboring_points,
+                start_points_generator_config={
+                    "step_sizes": np.arange(0.1, 0.5, 0.1)
+                },
+                virtual_time=1
+            )
+
+        def show_flow():
+            stream_lines = get_stream_lines()
+            random.shuffle(stream_lines.submobjects)
+            self.play(LaggedStart(
+                ShowCreationThenDestruction,
+                stream_lines,
+                remover=True
+            ))
+
+        vector_ring = get_vector_ring()
+        vector_ring_update = ContinualUpdateFromFunc(
+            vector_ring,
+            lambda vr: Transform(vr, get_vector_ring()).update(1)
+        )
+
+        func_tex, rhs = self.func_equation
+        out_x, out_y = self.out_x, self.out_y
+        out_x_update = self.out_x_update
+        out_y_update = self.out_y_update
+        div_tex = TexMobject("\\text{div}")
+        div_tex.add_background_rectangle()
+        div_tex.move_to(func_tex, LEFT)
+        div_tex.shift(2 * SMALL_BUFF * RIGHT)
+
+        self.remove(out_x_update, out_y_update)
+        self.remove(self.out_vect_update)
+        self.add(self.in_x_update, self.in_y_update)
+        self.play(
+            func_tex.next_to, div_tex, RIGHT, SMALL_BUFF,
+            {"submobject_to_align": func_tex[1][0]},
+            Write(div_tex),
+            FadeOut(self.out_vect),
+            FadeOut(out_x),
+            FadeOut(out_y),
+            FadeOut(rhs),
+        )
+        # This line is a dumb hack around a Scene bug
+        self.add(*[
+            ContinualUpdateFromFunc(
+                mob, lambda m: m.set_fill(None, 0)
+            )
+            for mob in out_x, out_y
+        ])
+        self.add_foreground_mobjects(div_tex)
+        self.play(
+            LaggedStart(GrowArrow, vector_field),
+            LaggedStart(GrowArrow, vector_ring),
+        )
+        self.add(vector_ring_update)
+        self.wait()
+
+        div_func = divergence(self.func)
+        div_rhs = DecimalNumber(
+            0, include_sign=True,
+            include_background_rectangle=True
+        )
+        div_rhs_update = ContinualChangingDecimal(
+            div_rhs, lambda a: div_func(in_dot.get_center()),
+            position_update_func=lambda d: d.next_to(func_tex, RIGHT, SMALL_BUFF)
+        )
+
+        self.play(FadeIn(div_rhs))
+        self.add(div_rhs_update)
+        show_flow()
+
+        for vect in 2 * RIGHT, 3 * DOWN, 2 * LEFT:
+            self.play(in_dot.shift, vect, run_time=3)
+            show_flow()
+        self.wait()
+
+    def func(self, point):
+        x, y = point[:2]
+        return np.sin(x + y) * RIGHT + np.sin(y * x / 3) * UP
+
+
+class DivergenceZeroCondition(Scene):
+    def construct(self):
+        self.add_title()
+        self.begin_flow()
+
+    def add_title(self):
+        pass
+
+    def begin_flow(self):
         pass
