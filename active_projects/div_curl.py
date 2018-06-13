@@ -216,7 +216,7 @@ class StreamLines(VGroup):
         "start_points_generator": get_flow_start_points,
         "start_points_generator_config": {},
         "dt": 0.05,
-        "virtual_time": 15,
+        "virtual_time": 3,
         "n_anchors_per_line": 100,
         "stroke_width": 1,
         "stroke_color": WHITE,
@@ -691,6 +691,7 @@ class Introduction(Scene):
                 "noise_factor": 0.1,
             },
             stroke_width=2,
+            virtual_time=15,
         )
 
     def get_stream_lines_animation(self, stream_lines):
@@ -1270,7 +1271,7 @@ class DefineDivergence(ChangingElectricField):
 
     def construct(self):
         self.draw_vector_field()
-        # self.show_flow()
+        self.show_flow()
         self.point_out_sources_and_sinks()
         self.show_divergence_values()
 
@@ -1286,6 +1287,7 @@ class DefineDivergence(ChangingElectricField):
                 np.random.normal(0, 1, 3)
             )
             particle.shift(particle.get_center()[2] * IN)
+            particle.charge *= random.random()
         vector_field = self.get_vector_field()
 
         self.play(
@@ -1314,9 +1316,9 @@ class DefineDivergence(ChangingElectricField):
             [
                 particle.get_center()
                 for particle in particles
-                if particle.charge == charge
+                if u * particle.charge > 0
             ]
-            for charge in +1, -1
+            for u in +1, -1
         ]
         pair_of_vector_circle_groups = VGroup()
         for point_set in self.positive_points, self.negative_points:
@@ -1333,22 +1335,70 @@ class DefineDivergence(ChangingElectricField):
             pair_of_vector_circle_groups.add(vector_circle_groups)
 
             self.play(
+                self.vector_field.set_fill, {"opacity": 0.5},
                 LaggedStart(
                     LaggedStart, vector_circle_groups,
                     lambda vcg: (GrowArrow, vcg),
                 ),
-                self.vector_field.set_fill, {"opacity": 0.5}
             )
-            self.wait()
+            self.wait(4)
             self.play(FadeOut(vector_circle_groups))
-
+        self.play(self.vector_field.set_fill, {"opacity": 1})
         self.positive_vector_circle_groups = pair_of_vector_circle_groups[0]
         self.negative_vector_circle_groups = pair_of_vector_circle_groups[1]
         self.wait()
 
     def show_divergence_values(self):
+        positive_points = self.positive_points
+        negative_points = self.negative_points
         div_func = divergence(self.vector_field.func)
 
+        circle = Circle(color=WHITE, radius=0.2)
+        circle.add(Dot(circle.get_center(), radius=0.02))
+        circle.move_to(positive_points[0])
+
+        div_tex = TexMobject(
+            "\\text{div} \\, \\textbf{F}(x, y) = "
+        )
+        div_tex.add_background_rectangle()
+        div_tex_update = ContinualUpdateFromFunc(
+            div_tex, lambda m: m.next_to(circle, UP, SMALL_BUFF)
+        )
+
+        div_value = DecimalNumber(
+            0,
+            include_background_rectangle=True,
+            include_sign=True,
+        )
+        div_value_update = ContinualChangingDecimal(
+            div_value,
+            lambda a: div_func(circle.get_center()),
+            position_update_func=lambda m: m.next_to(div_tex, RIGHT, SMALL_BUFF)
+        )
+
+        self.play(
+            ShowCreation(circle),
+            FadeIn(div_tex),
+            FadeIn(div_value),
+        )
+        self.add(div_tex_update)
+        self.add(div_value_update)
+
+        self.wait()
+        for point in positive_points[1:-1]:
+            self.play(circle.move_to, point)
+            self.wait(1.5)
+        for point in negative_points:
+            self.play(circle.move_to, point)
+            self.wait(2)
+        self.wait(2)
+        self.remove(div_tex_update)
+        self.remove(div_value_update)
+        self.play(
+            ApplyMethod(circle.scale, 0, remover=True),
+            FadeOut(div_tex),
+            FadeOut(div_value),
+        )
 
 
 class DefineDivergenceJustFlow(DefineDivergence):
@@ -1362,3 +1412,81 @@ class DefineDivergenceJustFlow(DefineDivergence):
         self.revert_to_original_skipping_status()
         self.clear()
         self.show_flow()
+
+
+class DivergenceAtSlowFastPoint(Scene):
+    CONFIG = {
+        "vector_field_config": {
+            "length_func": lambda norm: 0.1 + 0.4 * norm / 4.0,
+            "min_magnitude": 0,
+            "max_magnitude": 3,
+        },
+        "stream_lines_config": {
+            "start_points_generator_config": {
+                "delta_x": 0.125,
+                "delta_y": 0.125,
+            },
+            "virtual_time": 1,
+            "min_magnitude": 0,
+            "max_magnitude": 3,
+        },
+    }
+
+    def construct(self):
+        def func(point):
+            return 4 * inverse_interpolate(
+                -FRAME_WIDTH / 2, FRAME_WIDTH / 2, point[0]
+            ) * RIGHT
+        vector_field = self.vector_field = VectorField(
+            func, **self.vector_field_config
+        )
+
+        circle = Circle(color=WHITE)
+        slow_words = TextMobject("Slow flow in")
+        fast_words = TextMobject("Fast flow out")
+        words = VGroup(slow_words, fast_words)
+        for word, vect in zip(words, [LEFT, RIGHT]):
+            word.add_background_rectangle()
+            word.next_to(circle, vect)
+
+        div_tex = TexMobject(
+            "\\text{div}\\,\\textbf{F}(x, y) > 0"
+        )
+        div_tex.add_background_rectangle()
+        div_tex.next_to(circle, UP)
+
+        self.add(vector_field)
+        self.add_foreground_mobjects(circle, div_tex)
+        self.begin_flow()
+        self.wait(2)
+        for word in words:
+            self.add_foreground_mobjects(word)
+            self.play(Write(word))
+        self.wait(8)
+
+    def begin_flow(self):
+        stream_lines = StreamLines(
+            self.vector_field.func,
+            **self.stream_lines_config
+        )
+        stream_line_animation = StreamLineAnimation(stream_lines)
+        stream_line_animation.update(3)
+        self.add(stream_line_animation)
+
+
+class DivergenceAsNewFunction(Scene):
+    def construct(self):
+        self.add_plane()
+        self.show_vector_field_function()
+        self.show_divergence_function()
+
+    def add_plane(self):
+        plane = self.plane = NumberPlane()
+        plane.add_coordinates()
+        self.add(plane)
+
+    def show_vector_field_function(self):
+        pass
+
+    def show_divergence_function(self):
+        pass
