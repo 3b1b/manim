@@ -13,6 +13,7 @@ class DecimalNumber(VMobject):
         "show_ellipsis": False,
         "unit": None,  # Aligned to bottom unless it starts with "^"
         "include_background_rectangle": False,
+        "include_sign": False,
     }
 
     def __init__(self, number, **kwargs):
@@ -30,6 +31,8 @@ class DecimalNumber(VMobject):
             )
         else:
             num_string = '%.*f' % (ndp, number)
+            if self.include_sign and number >= 0:
+                num_string = "+" + num_string
             negative_zero_string = "-%.*f" % (ndp, 0.)
             if num_string == negative_zero_string:
                 num_string = num_string[1:]
