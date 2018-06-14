@@ -497,7 +497,7 @@ class Mobject(Container):
             mob.add_background_rectangle(**kwargs)
         return self
 
-    # Match other mobvject properties
+    # Match other mobject properties
 
     def match_color(self, mobject):
         return self.set_color(mobject.get_color())
