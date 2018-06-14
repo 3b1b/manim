@@ -13,6 +13,7 @@ class ChangingDecimal(Animation):
         "num_decimal_places": None,
         "show_ellipsis": None,
         "position_update_func": None,
+        "include_sign": None,
         "tracked_mobject": None,
     }
 
@@ -21,7 +22,7 @@ class ChangingDecimal(Animation):
         self.decimal_number_config = dict(
             decimal_number_mobject.initial_config
         )
-        for attr in "num_decimal_places", "show_ellipsis":
+        for attr in "num_decimal_places", "show_ellipsis", "include_sign":
             value = getattr(self, attr)
             if value is not None:
                 self.decimal_number_config[attr] = value
