@@ -1254,6 +1254,8 @@ class DefineDivergence(ChangingElectricField):
     CONFIG = {
         "vector_field_config": {
             "length_func": lambda norm: 0.3,
+            "min_magnitude": 0,
+            "max_magnitude": 1,
         },
         "stream_line_config": {
             "start_points_generator_config": {
@@ -1263,13 +1265,14 @@ class DefineDivergence(ChangingElectricField):
             "virtual_time": 2,
             "n_anchors_per_line": 10,
             "min_magnitude": 0,
-            "max_magnitude": 6,
+            "max_magnitude": 1,
             "stroke_width": 2,
         },
         "stream_line_animation_config": {
             "line_anim_class": ShowPassingFlash,
         },
         "flow_time": 10,
+        "random_seed": 7,
     }
 
     def construct(self):
@@ -1287,10 +1290,11 @@ class DefineDivergence(ChangingElectricField):
         )
         for particle in particles:
             particle.shift(
-                np.random.normal(0, 1, 3)
+                np.random.normal(0, 0.75) * RIGHT,
+                np.random.normal(0, 0.5) * UP,
             )
-            particle.shift(particle.get_center()[2] * IN)
-            particle.charge *= random.random()
+            particle.shift_onto_screen(buff=2 * LARGE_BUFF)
+            particle.charge *= 0.125
         vector_field = self.get_vector_field()
 
         self.play(
@@ -1370,13 +1374,15 @@ class DefineDivergence(ChangingElectricField):
 
         div_value = DecimalNumber(
             0,
+            num_decimal_places=1,
             include_background_rectangle=True,
             include_sign=True,
         )
         div_value_update = ContinualChangingDecimal(
             div_value,
-            lambda a: div_func(circle.get_center()),
-            position_update_func=lambda m: m.next_to(div_tex, RIGHT, SMALL_BUFF)
+            lambda a: np.round(div_func(circle.get_center()), 1),
+            position_update_func=lambda m: m.next_to(div_tex, RIGHT, SMALL_BUFF),
+            include_sign=True,
         )
 
         self.play(
@@ -1641,7 +1647,8 @@ class DivergenceAsNewFunction(Scene):
                 start_points_generator_config={
                     "step_sizes": np.arange(0.1, 0.5, 0.1)
                 },
-                virtual_time=1
+                virtual_time=1,
+                stroke_width=3,
             )
 
         def show_flow():
@@ -1709,7 +1716,7 @@ class DivergenceAsNewFunction(Scene):
         self.add(div_rhs_update)
         show_flow()
 
-        for vect in 2 * RIGHT, 3 * DOWN, 2 * LEFT:
+        for vect in 2 * RIGHT, 3 * DOWN, 2 * LEFT, 2 * LEFT:
             self.play(in_dot.shift, vect, run_time=3)
             show_flow()
         self.wait()
@@ -1721,11 +1728,176 @@ class DivergenceAsNewFunction(Scene):
 
 class DivergenceZeroCondition(Scene):
     def construct(self):
+        self.add_vector_field()
         self.add_title()
         self.begin_flow()
+        self.add_circle()
+        self.wait(5)
 
     def add_title(self):
-        pass
+        title = TextMobject(
+            "For actual (incompressible) fluid flow:"
+        )
+        title.to_edge(UP)
+        equation = TexMobject(
+            "\\text{div} \\, \\textbf{F} = 0 \\quad \\text{everywhere}"
+        )
+        equation.next_to(title, DOWN)
+
+        for mob in title, equation:
+            mob.add_background_rectangle(buff=MED_SMALL_BUFF / 2)
+            self.add_foreground_mobjects(mob)
+
+    def add_vector_field(self):
+        vector_field = VectorField(
+            cylinder_flow_vector_field,
+        )
+        for vector in vector_field:
+            if np.linalg.norm(vector.get_start()) < 1:
+                vector_field.remove(vector)
+        vector_field.set_fill(opacity=0.75)
+        self.add_foreground_mobjects(vector_field)
 
     def begin_flow(self):
-        pass
+        stream_lines = StreamLines(
+            cylinder_flow_vector_field,
+            colors=[BLUE_E, BLUE_D, BLUE_C],
+            start_points_generator_config={
+                "delta_x": 0.125,
+                "delta_y": 0.125,
+            },
+            virtual_time=5,
+        )
+        for stream_line in stream_lines:
+            if np.linalg.norm(stream_line.points[0]) < 1:
+                stream_lines.remove(stream_line)
+
+        stream_line_animation = StreamLineAnimation(stream_lines)
+        stream_line_animation.update(3)
+
+        self.add(stream_line_animation)
+
+    def add_circle(self):
+        self.add_foreground_mobjects(Circle(
+            radius=1,
+            stroke_color=YELLOW,
+            fill_color=BLACK,
+            fill_opacity=1,
+        ))
+
+
+class IntroduceCurl(IntroduceVectorField):
+    CONFIG = {
+        "stream_line_animation_config": {
+            "line_anim_class": ShowPassingFlash,
+        },
+        "stream_line_config": {
+            "start_points_generator_config": {
+                "delta_x": 0.125,
+                "delta_y": 0.125,
+            },
+            "virtual_time": 1,
+        }
+    }
+
+    def construct(self):
+        self.add_title()
+        self.show_vector_field()
+        self.begin_flow()
+        self.show_rotation()
+
+    def add_title(self):
+        title = self.title = Title(
+            "Curl",
+            match_underline_width_to_text=True,
+            scale_factor=1.5,
+        )
+        title.add_background_rectangle()
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+        self.add_foreground_mobjects(title)
+
+    def show_vector_field(self):
+        vector_field = self.vector_field = VectorField(
+            four_swirls_function,
+        )
+        vector_field.submobjects.sort(
+            lambda v1, v2: cmp(v1.get_length(), v2.get_length())
+        )
+
+        self.play(LaggedStart(GrowArrow, vector_field))
+        self.wait()
+
+    def begin_flow(self):
+        stream_lines = StreamLines(
+            self.vector_field.func,
+            **self.stream_line_config
+        )
+        stream_line_animation = StreamLineAnimation(
+            stream_lines,
+            **self.stream_line_animation_config
+        )
+
+        self.add(stream_line_animation)
+        self.wait(3)
+
+    def show_rotation(self):
+        clockwise_arrows, counterclockwise_arrows = [
+            VGroup(*[
+                self.get_rotation_arrows(clockwise=cw).move_to(point)
+                for point in points
+            ])
+            for cw, points in [
+                (True, [2 * UP, 2 * DOWN]),
+                (False, [4 * LEFT, 4 * RIGHT]),
+            ]
+        ]
+
+        for group, u in (counterclockwise_arrows, +1), (clockwise_arrows, -1):
+            for arrows in group:
+                label = TexMobject(
+                    "\\text{curl} \\, \\textbf{F}",
+                    ">" if u > 0 else "<",
+                    "0"
+                )
+                label.add_background_rectangle()
+                label.next_to(arrows, DOWN)
+                self.add_foreground_mobjects(label)
+                self.add(ContinualRotation(
+                    arrows, rate=u * 30 * DEGREES
+                ))
+                self.play(
+                    VFadeIn(arrows),
+                    FadeIn(label)
+                )
+        self.wait(2)
+        for group in counterclockwise_arrows, clockwise_arrows:
+            self.play(
+                UpdateFromAlphaFunc(
+                    group,
+                    lambda mob, alpha: mob.set_color(
+                        interpolate_color(WHITE, PINK, alpha)
+                    ).set_stroke(
+                        width=interpolate(5, 10, alpha)
+                    ),
+                    rate_func=there_and_back,
+                    run_time=2
+                )
+            )
+            self.wait()
+        self.wait(6)
+
+    # Helpers
+    def get_rotation_arrows(self, clockwise=True, width=1):
+        result = VGroup(*[
+            Arrow(
+                *points,
+                use_rectangular_stem=False,
+                buff=2 * SMALL_BUFF,
+                path_arc=90 * DEGREES
+            ).set_stroke(width=5)
+            for points in adjacent_pairs(compass_directions(4, RIGHT))
+        ])
+        if clockwise:
+            result.flip()
+        result.scale_to_fit_width(width)
+        return result
