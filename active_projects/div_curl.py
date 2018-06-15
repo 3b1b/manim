@@ -13,6 +13,7 @@ DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
 # the stream lines.  Certainly while developing, things were not
 # run at production quality.
 
+FOX_COLOR = "#DF7F20"
 
 # Helper functions
 def get_flow_start_points(x_min=-8, x_max=8,
@@ -221,8 +222,17 @@ def get_electron(radius=0.05):
 
 
 def preditor_prey_vector_field(point):
+    alpha = 30.0
+    beta = 1.0
+    gamma = 30.0
+    delta = 1.0
     x, y = point[:2]
-    return -(y - 30) * RIGHT + (x - 30) * UP
+    result = 0.05 * np.array([
+        alpha * x - beta * x * y,
+        delta * x * y - gamma * y,
+        0,
+    ])
+    return rotate(result, 1 * DEGREES)
 
 # Mobjects
 
@@ -2386,6 +2396,9 @@ class IllustrateGaussMagnetic(IllustrateGaussLaw):
             "colors": [BLUE_E, BLUE_D, BLUE_C],
             "stroke_width": 3,
         },
+        "stream_line_animation_config": {
+            "start_up_time": 0,
+        },
         "flow_time": 10,
     }
 
@@ -2426,12 +2439,14 @@ class IllustrateGaussMagnetic(IllustrateGaussLaw):
 
     def func(self, point):
         x, y = point[:2]
-        top_part = np.array([(y - 0.25), -x, 0])
-        bottom_part = np.array([-(y + 0.25), x, 0])
+        top_part = np.array([(y - 1.0), -x, 0])
+        bottom_part = np.array([-(y + 1.0), x, 0])
         norm = np.linalg.norm
-        return 3 * op.add(
-            top_part / (norm(top_part)**2 + 1),
-            bottom_part / (norm(bottom_part)**2 + 1),
+        return 1 * op.add(
+            top_part / (norm(top_part) * norm(point - UP) + 0.1),
+            bottom_part / (norm(bottom_part) * norm(point - DOWN) + 0.1),
+            # top_part / (norm(top_part)**2 + 1),
+            # bottom_part / (norm(bottom_part)**2 + 1),
         )
 
 
@@ -2457,9 +2472,9 @@ class RelevantInNonSpatialCircumstances(TeacherStudentsScene):
 
 class ShowTwoPopulations(Scene):
     CONFIG = {
-        "total_num_animals": 50,
-        "start_num_foxes": 20,
-        "start_num_rabbits": 30,
+        "total_num_animals": 80,
+        "start_num_foxes": 40,
+        "start_num_rabbits": 20,
         "animal_height": 0.5,
         "final_wait_time": 30,
     }
@@ -2484,7 +2499,7 @@ class ShowTwoPopulations(Scene):
         for mob in examples:
             mob.save_state()
             mob.scale_to_fit_height(3)
-        examples.arrange_submobjects(RIGHT, buff=2)
+        examples.arrange_submobjects(LEFT, buff=2)
 
         preditor, prey = words = VGroup(
             TextMobject("Preditor"),
@@ -2529,10 +2544,10 @@ class ShowTwoPopulations(Scene):
             preditor_prey_vector_field,
         ))
 
-        def get_num_foxes():
+        def get_num_rabbits():
             return phase_point.get_center()[0]
 
-        def get_num_rabbits():
+        def get_num_foxes():
             return phase_point.get_center()[1]
 
         def get_updater(pop_size_getter):
@@ -2592,9 +2607,14 @@ class ShowTwoPopulations(Scene):
             file_name=name,
             height=self.animal_height,
             fill_color=color,
-            # stroke_color=BLACK,
-            # stroke_width=0.5
         )
+        for submob in result.family_members_with_points():
+            if submob.is_subpath:
+                submob.is_subpath = False
+                submob.set_fill(
+                    interpolate_color(color, BLACK, 0.8),
+                    opacity=1
+                )
         x_shift, y_shift = [
             (2 * random.random() - 1) * max_val
             for max_val in [
@@ -2606,7 +2626,7 @@ class ShowTwoPopulations(Scene):
         return result
 
     def get_fox(self):
-        return self.get_animal("fox", "#DF7F20")
+        return self.get_animal("fox", FOX_COLOR)
 
     def get_rabbit(self):
         return self.get_animal("rabbit", WHITE)
@@ -2627,30 +2647,280 @@ class ShowTwoPopulations(Scene):
         return count
 
 
-class PhaseSpaceOfPopulationModel(ShowTwoPopulations):
+class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene):
+    CONFIG = {
+        "origin": 5 * LEFT + 2.5 * DOWN,
+        "vector_field_config": {
+            "max_magnitude": 50,
+        },
+        "pi_creatures_start_on_screen": False,
+        "default_pi_creature_kwargs": {
+            "height": 1.8
+        },
+        "flow_time": 10,
+    }
+
     def construct(self):
-        self.add_population_size_labels()
         self.add_axes()
         self.add_example_point()
+        self.write_differential_equations()
         self.add_vectors()
-        self.show_evolution_of_one_point()
         self.show_phase_flow()
 
-    def add_population_size_labels(self):
-        pass
-
     def add_axes(self):
-        pass
+        axes = self.axes = Axes(
+            x_min=0,
+            x_max=55,
+            x_axis_config={"unit_size": 0.15},
+            y_min=0,
+            y_max=55,
+            y_axis_config={"unit_size": 0.09},
+            number_line_config={
+                "tick_frequency": 10,
+            },
+        )
+        axes.shift(self.origin)
+        for axis in axes.x_axis, axes.y_axis:
+            axis.add_numbers(*range(10, 60, 10))
+
+        axes_labels = self.axes_labels = VGroup(*[
+            VGroup(
+                method().scale_to_fit_height(0.75),
+                TextMobject("Population"),
+            ).arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+            for method in self.get_rabbit, self.get_fox
+        ])
+        for axis, label, vect in zip(axes, axes_labels, [RIGHT, UP]):
+            label.next_to(
+                axis.main_line, vect,
+                submobject_to_align=label[0]
+            )
+
+        self.add(axes, axes_labels)
 
     def add_example_point(self):
-        pass
+        axes = self.axes
+        origin = self.origin
+        x = self.start_num_rabbits
+        y = self.start_num_foxes
+        point = axes.coords_to_point(x, y)
+        x_point = axes.coords_to_point(x, 0)
+        y_point = axes.coords_to_point(0, y)
+        v_line = DashedLine(x_point, point)
+        h_line = DashedLine(y_point, point)
+        v_line.set_color(FOX_COLOR)
+        h_line.set_color(LIGHT_GREY)
+        dot = Dot(point)
+
+        coord_pair = TexMobject(
+            "(10, 10)", substrings_to_isolate=["10"]
+        )
+        pop_sizes = VGroup(Integer(10), Integer(10))
+        pop_sizes[0].set_color(LIGHT_GREY)
+        pop_sizes[1].set_color(FOX_COLOR)
+        tens = coord_pair.get_parts_by_tex("10")
+        tens.fade(1)
+
+        def get_pop_size_update(i):
+            return ContinualChangingDecimal(
+                pop_sizes[i],
+                lambda a: int(np.round(
+                    axes.point_to_coords(dot.get_center())[i]
+                )),
+                position_update_func=lambda m: m.move_to(tens[i])
+            )
+        coord_pair.add_background_rectangle()
+        coord_pair_update = ContinualUpdateFromFunc(
+            coord_pair, lambda m: m.next_to(dot, UR, SMALL_BUFF)
+        )
+        pop_sizes_updates = [get_pop_size_update(i) for i in 0, 1]
+
+        phase_space = TextMobject("``Phase space''")
+        phase_space.set_color(YELLOW)
+        phase_space.scale(1.5)
+        phase_space.to_edge(UP)
+        phase_space.shift(2 * RIGHT)
+
+        self.play(ShowCreation(v_line))
+        self.play(ShowCreation(h_line))
+        dot.save_state()
+        dot.move_to(origin)
+        self.add(coord_pair_update)
+        self.add(*pop_sizes_updates)
+        self.play(
+            dot.restore,
+            UpdateFromAlphaFunc(pop_sizes, lambda m, a: m.set_fill(opacity=a)),
+            VFadeIn(coord_pair)
+        )
+        self.wait()
+        self.play(Write(phase_space))
+        self.wait(2)
+        self.play(FadeOut(VGroup(h_line, v_line, phase_space)))
+        self.play(Rotating(
+            dot,
+            about_point=axes.coords_to_point(30, 30),
+            rate_func=smooth,
+        ))
+
+        self.dot = dot
+        self.coord_pair = coord_pair
+        self.coord_pair_update = coord_pair_update
+        self.pop_sizes = pop_sizes
+        self.pop_sizes_updates = pop_sizes_updates
+
+    def write_differential_equations(self):
+        variables = ["XX", "YY"]
+        equations = TexMobject(
+            """
+                {dXX \\over dt} =
+                30 \\cdot XX - XX \\cdot YY \\\\
+                \\quad \\\\
+                {dYY \\over dt} =
+                XX \\cdot YY - 30 \\cdot YY
+            """,
+            substrings_to_isolate=variables
+        )
+        animals = [self.get_fox().flip(), self.get_rabbit()]
+        for char, animal in zip(variables, animals):
+            for part in equations.get_parts_by_tex(char):
+                animal_copy = animal.copy()
+                animal_copy.scale_to_fit_height(0.5)
+                animal_copy.move_to(part, DL)
+                Transform(part, animal_copy).update(1)
+
+        equations.shift(2 * DOWN)
+        rect = SurroundingRectangle(equations, color=YELLOW)
+        rect.set_fill(BLACK, 0.8)
+        title = TextMobject("Differential equations")
+        title.next_to(rect, UP)
+        title.set_color(rect.get_stroke_color())
+        self.differential_equation_group = VGroup(
+            rect, equations, title
+        )
+        self.differential_equation_group.to_corner(UR)
+
+        randy = self.pi_creature
+        randy.next_to(rect, DL)
+
+        self.play(
+            Write(title, run_time=1),
+            ShowCreation(rect)
+        )
+        self.play(
+            LaggedStart(FadeIn, equations),
+            randy.change, "confused", equations,
+            VFadeIn(randy),
+        )
+        self.wait(3)
 
     def add_vectors(self):
-        pass
+        origin = self.axes.coords_to_point(0, 0)
+        dot = self.dot
+        randy = self.pi_creature
 
-    def show_evolution_of_one_point(self):
-        pass
+        def rescaled_field(point):
+            x, y = self.axes.point_to_coords(point)
+            result = preditor_prey_vector_field(np.array([x, y, 0]))
+            return self.axes.coords_to_point(*result[:2]) - origin
+
+        self.vector_field_config.update({
+            "x_min": origin[0] + 0.5,
+            "x_max": self.axes.get_right()[0] + 1,
+            "y_min": origin[1] + 0.5,
+            "y_max": self.axes.get_top()[1],
+        })
+        vector_field = VectorField(
+            rescaled_field, **self.vector_field_config
+        )
+
+        def get_dot_vector():
+            vector = vector_field.get_vector(dot.get_center())
+            vector.scale(1, about_point=vector.get_start())
+            return vector
+
+        dot_vector = get_dot_vector()
+
+        self.play(
+            LaggedStart(GrowArrow, vector_field),
+            randy.change, "thinking", dot,
+            Animation(self.differential_equation_group)
+        )
+        self.wait(3)
+        self.play(
+            Animation(dot),
+            vector_field.set_fill, {"opacity": 0.2},
+            GrowArrow(dot_vector),
+            randy.change, "pondering",
+        )
+        self.wait()
+        self.play(
+            dot.move_to, dot_vector.get_end(),
+            dot.align_to, dot, RIGHT,
+            run_time=3,
+        )
+        self.wait(2)
+        self.play(
+            dot.move_to, dot_vector.get_end(),
+            run_time=3,
+        )
+        self.wait(2)
+        for x in range(6):
+            new_dot_vector = get_dot_vector()
+            fade_anims = [
+                FadeOut(dot_vector),
+                FadeIn(new_dot_vector),
+                Animation(dot),
+            ]
+            if x == 4:
+                fade_anims += [
+                    vector_field.set_fill, {"opacity": 0.5},
+                    FadeOut(randy),
+                    FadeOut(self.differential_equation_group),
+                ]
+            self.play(*fade_anims)
+            dot_vector = new_dot_vector
+            self.play(dot.move_to, dot_vector.get_end())
+
+        dot_movement = VectorFieldFlow(
+            dot, lambda p: 0.3 * vector_field.func(p)
+        )
+        self.add(dot_movement)
+        self.play(FadeOut(dot_vector))
+        self.wait(10)
+        self.play(
+            vector_field.set_fill, {"opacity": 1.0},
+            VFadeOut(dot),
+            VFadeOut(self.coord_pair),
+            UpdateFromAlphaFunc(self.pop_sizes, lambda m, a: m.set_fill(opacity=1 - a)),
+        )
+        self.remove(
+            dot_movement,
+            self.coord_pair_update,
+            *self.pop_sizes_updates
+        )
+        self.wait()
+
+        self.vector_field = vector_field
 
     def show_phase_flow(self):
-        pass
-
+        vector_field = self.vector_field
+        stream_lines = StreamLines(
+            vector_field.func,
+            start_points_generator_config={
+                "x_min": vector_field.x_min,
+                "x_max": vector_field.x_max,
+                "y_min": vector_field.y_min,
+                "y_max": vector_field.y_max,
+                "delta_x": 0.25,
+                "delta_y": 0.25,
+            },
+            min_magnitude=vector_field.min_magnitude,
+            max_magnitude=vector_field.max_magnitude,
+            virtual_time=4,
+        )
+        stream_line_animation = StreamLineAnimation(
+            stream_lines,
+        )
+        self.add(stream_line_animation)
+        self.add_foreground_mobjects(vector_field)
+        self.wait(self.flow_time)
