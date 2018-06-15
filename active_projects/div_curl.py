@@ -60,13 +60,23 @@ def negative_gradient(potential_func, dt=1e-7):
     return result
 
 
-def divergence(vector_func, dt=1e-1):
+def divergence(vector_func, dt=1e-7):
     def result(point):
         value = vector_func(point)
         return sum([
             (vector_func(point + dt * RIGHT) - value)[i] / dt
             for i, vect in enumerate([RIGHT, UP, OUT])
         ])
+    return result
+
+
+def two_d_curl(vector_func, dt=1e-7):
+    def result(point):
+        value = vector_func(point)
+        return op.add(
+            (vector_func(point + dt * RIGHT) - value)[1] / dt,
+            -(vector_func(point + dt * UP) - value)[0] / dt,
+        )
     return result
 
 
@@ -186,7 +196,7 @@ def get_force_field_func(*point_strength_pairs, **kwargs):
     return func
 
 
-def get_chraged_particle(color, sign, radius=0.1):
+def get_charged_particles(color, sign, radius=0.1):
     result = Circle(
         stroke_color=WHITE,
         stroke_width=0.5,
@@ -203,12 +213,16 @@ def get_chraged_particle(color, sign, radius=0.1):
 
 
 def get_proton(radius=0.1):
-    return get_chraged_particle(RED, "+", radius)
+    return get_charged_particles(RED, "+", radius)
 
 
 def get_electron(radius=0.05):
-    return get_chraged_particle(BLUE, "-", radius)
+    return get_charged_particles(BLUE, "-", radius)
 
+
+def preditor_prey_vector_field(point):
+    x, y = point[:2]
+    return -(y - 30) * RIGHT + (x - 30) * UP
 
 # Mobjects
 
@@ -276,6 +290,7 @@ class VectorField(VGroup):
         "length_func": lambda norm: 0.5 * sigmoid(norm),
         "stroke_color": BLACK,
         "stroke_width": 0.5,
+        "fill_opacity": 1.0,
     }
 
     def __init__(self, func, **kwargs):
@@ -301,9 +316,10 @@ class VectorField(VGroup):
             output *= self.length_func(norm) / norm
         vect = Vector(output)
         vect.shift(point)
-        vect.set_fill(rgb_to_color(
+        fill_color = rgb_to_color(
             self.rgb_gradient_function(np.array([norm]))[0]
-        ))
+        )
+        vect.set_fill(fill_color, self.fill_opacity)
         vect.set_stroke(
             self.stroke_color,
             self.stroke_width
@@ -329,14 +345,16 @@ class VectorFieldFlow(ContinualAnimation):
     def update_mobject(self, dt):
         self.apply_nudge(dt)
 
-    def apply_nudge(self):
+    def apply_nudge(self, dt):
         self.mobject.shift(self.func(self.mobject.get_center()) * dt)
 
 
 class VectorFieldSubmobjectFlow(VectorFieldFlow):
     def apply_nudge(self, dt):
         for submob in self.mobject:
-            submob.shift(self.func(submob.get_center()) * dt)
+            x, y = submob.get_center()[:2]
+            if abs(x) < FRAME_WIDTH and abs(y) < FRAME_HEIGHT:
+                submob.shift(self.func(submob.get_center()) * dt)
 
 
 class VectorFieldPointFlow(VectorFieldFlow):
@@ -1819,6 +1837,7 @@ class IntroduceCurl(IntroduceVectorField):
     def show_vector_field(self):
         vector_field = self.vector_field = VectorField(
             four_swirls_function,
+            **self.vector_field_config
         )
         vector_field.submobjects.sort(
             lambda v1, v2: cmp(v1.get_length(), v2.get_length())
@@ -1871,6 +1890,7 @@ class IntroduceCurl(IntroduceVectorField):
                 )
         self.wait(2)
         for group in counterclockwise_arrows, clockwise_arrows:
+            self.play(FocusOn(group[0]))
             self.play(
                 UpdateFromAlphaFunc(
                     group,
@@ -1901,3 +1921,736 @@ class IntroduceCurl(IntroduceVectorField):
             result.flip()
         result.scale_to_fit_width(width)
         return result
+
+
+class ShearCurl(IntroduceCurl):
+    def construct(self):
+        self.show_vector_field()
+        self.begin_flow()
+        self.wait(2)
+        self.comment_on_relevant_region()
+
+    def show_vector_field(self):
+        vector_field = self.vector_field = VectorField(
+            self.func, **self.vector_field_config
+        )
+        vector_field.submobjects.sort(
+            lambda a1, a2: cmp(a1.get_length(), a2.get_length())
+        )
+        self.play(LaggedStart(GrowArrow, vector_field))
+
+    def comment_on_relevant_region(self):
+        circle = Circle(color=WHITE, radius=0.75)
+        circle.next_to(ORIGIN, UP, LARGE_BUFF)
+        self.play(ShowCreation(circle))
+
+        slow_words, fast_words = words = [
+            TextMobject("Slow flow below"),
+            TextMobject("Fast flow above")
+        ]
+        for word, vect in zip(words, [DOWN, UP]):
+            word.add_background_rectangle(buff=SMALL_BUFF)
+            word.next_to(circle, vect)
+            self.add_foreground_mobjects(word)
+            self.play(Write(word))
+            self.wait()
+
+        twig = Rectangle(
+            height=0.8 * 2 * circle.radius,
+            width=SMALL_BUFF,
+            stroke_width=0,
+            fill_color=GREY_BROWN,
+            fill_opacity=1,
+        )
+        twig.add(Dot(twig.get_center()))
+        twig.move_to(circle)
+        twig_rotation = ContinualRotation(
+            twig, rate=-90 * DEGREES,
+            start_up_time=8,
+        )
+
+        self.play(FadeInAndShiftFromDirection(twig, UP))
+        self.add(twig_rotation)
+        self.wait(16)
+
+    # Helpers
+    def func(self, point):
+        return 0.5 * point[1] * RIGHT
+
+
+class FromKAWrapper(TeacherStudentsScene):
+    def construct(self):
+        screen = self.screen
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes(
+                "pondering", "confused", "hooray",
+            )
+        )
+        self.look_at(screen)
+        self.wait(2)
+        self.change_student_modes("erm", "happy", "confused")
+        self.wait(3)
+        self.teacher_says(
+            "Our focus is \\\\ the 2d version",
+            bubble_kwargs={"width": 4, "height": 3},
+            added_anims=[self.get_student_changes(
+                "happy", "hooray", "happy"
+            )]
+        )
+        self.wait()
+
+
+class ShowCurlAtVariousPoints(IntroduceCurl):
+    CONFIG = {
+        "func": four_swirls_function,
+        "sample_points": [
+            4 * RIGHT,
+            2 * UP,
+            4 * LEFT,
+            2 * DOWN,
+            ORIGIN,
+            3 * RIGHT + 2 * UP,
+            3 * LEFT + 2 * UP,
+        ],
+        "vector_field_config": {
+            "fill_opacity": 0.75
+        },
+        "stream_line_config": {
+            "virtual_time": 5,
+            "start_points_generator_config": {
+                "delta_x": 0.25,
+                "delta_y": 0.25,
+            }
+        }
+    }
+
+    def construct(self):
+        self.add_plane()
+        self.show_vector_field()
+        self.begin_flow()
+        self.show_curl_at_points()
+
+    def add_plane(self):
+        plane = NumberPlane()
+        plane.add_coordinates()
+        self.add(plane)
+        self.plane = plane
+
+    def show_curl_at_points(self):
+        dot = Dot()
+        circle = Circle(radius=0.25, color=WHITE)
+        circle.move_to(dot)
+        circle_update = ContinualUpdateFromFunc(
+            circle,
+            lambda m: m.move_to(dot)
+        )
+
+        curl_tex = TexMobject(
+            "\\text{curl} \\, \\textbf{F}(x, y) = "
+        )
+        curl_tex.add_background_rectangle(buff=0.025)
+        curl_tex_update = ContinualUpdateFromFunc(
+            curl_tex,
+            lambda m: m.next_to(circle, UP, SMALL_BUFF)
+        )
+
+        curl_func = two_d_curl(self.func)
+        curl_value = DecimalNumber(
+            0, include_sign=True,
+            include_background_rectangle=True,
+        )
+        curl_value_update = ContinualChangingDecimal(
+            curl_value,
+            lambda a: curl_func(dot.get_center()),
+            position_update_func=lambda m: m.next_to(
+                curl_tex, RIGHT, buff=0
+            ),
+            include_background_rectangle=True,
+            include_sign=True,
+        )
+
+        points = self.sample_points
+        self.add(dot, circle_update)
+        self.play(
+            dot.move_to, points[0],
+            VFadeIn(dot),
+            VFadeIn(circle),
+        )
+        curl_tex_update.update(0)
+        curl_value_update.update(0)
+        self.play(Write(curl_tex), FadeIn(curl_value))
+        self.add(curl_tex_update, curl_value_update)
+        self.wait()
+        for point in points[1:]:
+            self.play(dot.move_to, point, run_time=3)
+            self.wait(2)
+        self.wait(2)
+
+
+class IllustrationUseVennDiagram(Scene):
+    def construct(self):
+        title = Title("Divergence \\& Curl")
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        useful_for = TextMobject("Useful for")
+        useful_for.next_to(title, DOWN)
+        useful_for.set_color(BLUE)
+
+        fluid_flow = TextMobject("Fluid \\\\ flow")
+        fluid_flow.next_to(ORIGIN, UL)
+        ff_circle = Circle(color=YELLOW)
+        ff_circle.surround(fluid_flow, stretch=True)
+        fluid_flow.match_color(ff_circle)
+
+        big_circle = Circle(
+            fill_color=BLUE,
+            fill_opacity=0.2,
+            stroke_color=BLUE,
+        )
+        big_circle.stretch_to_fit_width(9)
+        big_circle.stretch_to_fit_height(6)
+        big_circle.next_to(useful_for, DOWN, SMALL_BUFF)
+
+        illustrated_by = TextMobject("Illustrated by")
+        illustrated_by.next_to(
+            big_circle.point_from_proportion(3. / 8), UL
+        )
+        illustrated_by.match_color(ff_circle)
+        illustrated_by_arrow = Arrow(
+            illustrated_by.get_bottom(),
+            ff_circle.get_left(),
+            path_arc=90 * DEGREES,
+            use_rectangular_stem=False,
+            color=YELLOW,
+        )
+        illustrated_by_arrow.pointwise_become_partial(
+            illustrated_by_arrow, 0, 0.95
+        )
+
+        examples = VGroup(
+            TextMobject("Electricity"),
+            TextMobject("Magnetism"),
+            TextMobject("Phase flow"),
+            TextMobject("Stokes' theorem"),
+        )
+        points = [
+            2 * RIGHT + 0.5 * UP,
+            2 * RIGHT + 0.5 * DOWN,
+            2 * DOWN,
+            2 * LEFT + DOWN,
+        ]
+        for example, point in zip(examples, points):
+            example.move_to(point)
+
+        self.play(Write(title), run_time=1)
+        self.play(
+            Write(illustrated_by),
+            ShowCreation(illustrated_by_arrow),
+            run_time=1,
+        )
+        self.play(
+            ShowCreation(ff_circle),
+            FadeIn(fluid_flow),
+        )
+        self.wait()
+        self.play(
+            Write(useful_for),
+            DrawBorderThenFill(big_circle),
+            Animation(fluid_flow),
+            Animation(ff_circle),
+        )
+        self.play(LaggedStart(
+            FadeIn, examples,
+            run_time=3,
+        ))
+        self.wait()
+
+
+class MaxwellsEquations(Scene):
+    CONFIG = {
+        "faded_opacity": 0.3,
+    }
+
+    def construct(self):
+        self.add_equations()
+        self.circle_gauss_law()
+        self.circle_magnetic_divergence()
+        self.circle_curl_equations()
+
+    def add_equations(self):
+        title = Title("Maxwell's equations")
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        tex_to_color_map = {
+            "\\textbf{E}": BLUE,
+            "\\textbf{B}": YELLOW,
+            "\\rho": WHITE,
+        }
+
+        equations = self.equations = VGroup(*[
+            TexMobject(
+                tex, tex_to_color_map=tex_to_color_map
+            )
+            for tex in [
+                """
+                    \\text{div} \\, \\textbf{E} =
+                    {\\rho \\over \\varepsilon_0}
+                """,
+                """\\text{div} \\, \\textbf{B} = 0""",
+                """
+                    \\text{curl} \\, \\textbf{E} =
+                    -{\\partial \\textbf{B} \\over \\partial t}
+                """,
+                """
+                    \\text{curl} \\, \\textbf{B} =
+                    \\mu_0 \\left(
+                        \\textbf{J} + \\varepsilon_0
+                        {\\partial \\textbf{E} \\over \\partial t}
+                    \\right)
+                """,
+            ]
+        ])
+        equations.arrange_submobjects(
+            DOWN, aligned_edge=LEFT,
+            buff=MED_LARGE_BUFF
+        )
+
+        field_definitions = VGroup(*[
+            TexMobject(text, tex_to_color_map=tex_to_color_map)
+            for text in [
+                "\\text{Electric fild: } \\textbf{E}",
+                "\\text{Magnetic fild: } \\textbf{B}",
+            ]
+        ])
+        field_definitions.arrange_submobjects(
+            RIGHT, buff=MED_LARGE_BUFF
+        )
+        field_definitions.next_to(title, DOWN, MED_LARGE_BUFF)
+        equations.next_to(field_definitions, DOWN, MED_LARGE_BUFF)
+        field_definitions.shift(MED_SMALL_BUFF * UP)
+
+        self.add(title)
+        self.add(field_definitions)
+        self.play(LaggedStart(
+            FadeIn, equations,
+            run_time=3,
+            lag_range=0.4
+        ))
+        self.wait()
+
+    def circle_gauss_law(self):
+        equation = self.equations[0]
+        rect = SurroundingRectangle(equation)
+        rect.set_color(RED)
+        rho = equation.get_part_by_tex("\\rho")
+        sub_rect = SurroundingRectangle(rho)
+        sub_rect.match_color(rect)
+        rho_label = TextMobject("Charge density")
+        rho_label.next_to(sub_rect, RIGHT)
+        rho_label.match_color(sub_rect)
+        gauss_law = TextMobject("Gauss's law")
+        gauss_law.next_to(rect, RIGHT)
+
+        self.play(
+            ShowCreation(rect),
+            Write(gauss_law, run_time=1),
+            self.equations[1:].set_fill, {"opacity": self.faded_opacity}
+        )
+        self.wait(2)
+        self.play(
+            ReplacementTransform(rect, sub_rect),
+            FadeOut(gauss_law),
+            FadeIn(rho_label),
+            rho.match_color, sub_rect,
+        )
+        self.wait()
+        self.play(
+            self.equations.to_edge, LEFT,
+            MaintainPositionRelativeTo(rho_label, equation),
+            MaintainPositionRelativeTo(sub_rect, equation),
+            VFadeOut(rho_label),
+            VFadeOut(sub_rect),
+        )
+        self.wait()
+
+    def circle_magnetic_divergence(self):
+        equations = self.equations
+        rect = SurroundingRectangle(equations[1])
+
+        self.play(
+            equations[0].set_fill, {"opacity": self.faded_opacity},
+            equations[1].set_fill, {"opacity": 1.0},
+        )
+        self.play(ShowCreation(rect))
+        self.wait(3)
+        self.play(FadeOut(rect))
+
+    def circle_curl_equations(self):
+        equations = self.equations
+        rect = SurroundingRectangle(equations[2:])
+        randy = Randolph(height=2)
+        randy.flip()
+        randy.next_to(rect, RIGHT, aligned_edge=DOWN)
+        randy.look_at(rect)
+
+        self.play(
+            equations[1].set_fill, {"opacity": self.faded_opacity},
+            equations[2:].set_fill, {"opacity": 1.0},
+        )
+        self.play(ShowCreation(rect))
+        self.play(
+            randy.change, "confused",
+            VFadeIn(randy),
+        )
+        self.play(Blink(randy))
+        self.play(randy.look_at, 2 * RIGHT)
+        self.wait(3)
+        self.play(
+            FadeOut(rect),
+            randy.change, "pondering",
+            randy.look_at, rect,
+        )
+        self.wait()
+        self.play(Blink(randy))
+        self.wait()
+
+
+class IllustrateGaussLaw(DefineDivergence, MovingCameraScene):
+    CONFIG = {
+        "flow_time": 10,
+        "stream_line_config": {
+            "start_points_generator_config": {
+                "delta_x": 1.0 / 16,
+                "delta_y": 1.0 / 16,
+                "x_min": -2,
+                "x_max": 2,
+                "y_min": -1.5,
+                "y_max": 1.5,
+            },
+            "color_lines_by_magnitude": True,
+            "colors": [BLUE_E, BLUE_D, BLUE_C],
+            "stroke_width": 3,
+        },
+        "stream_line_animation_config": {
+            "line_anim_class": ShowPassingFlashWithThinningStrokeWidth,
+            "line_anim_config": {
+                "n_segments": 5,
+            }
+        },
+        "final_frame_width": 4,
+    }
+
+    def construct(self):
+        particles = self.get_particles()
+        vector_field = self.get_vector_field()
+
+        self.add_foreground_mobjects(vector_field)
+        self.add_foreground_mobjects(particles)
+        self.zoom_in()
+        self.show_flow()
+
+    def get_particles(self):
+        particles = VGroup(
+            get_proton(radius=0.1),
+            get_electron(radius=0.1),
+        )
+        particles.arrange_submobjects(RIGHT, buff=2.25)
+        particles.shift(0.25 * UP)
+        for particle, sign in zip(particles, [+1, -1]):
+            particle.charge = sign
+
+        self.particles = particles
+        return particles
+
+    def zoom_in(self):
+        self.play(
+            self.camera_frame.scale_to_fit_width, self.final_frame_width,
+            run_time=2
+        )
+
+
+class IllustrateGaussMagnetic(IllustrateGaussLaw):
+    CONFIG = {
+        "final_frame_width": 7,
+        "stream_line_config": {
+            "start_points_generator_config": {
+                "delta_x": 1.0 / 16,
+                "delta_y": 1.0 / 16,
+                "x_min": -3.5,
+                "x_max": 3.5,
+                "y_min": -2,
+                "y_max": 2,
+            },
+            "color_lines_by_magnitude": True,
+            "colors": [BLUE_E, BLUE_D, BLUE_C],
+            "stroke_width": 3,
+        },
+        "flow_time": 10,
+    }
+
+    def construct(self):
+        self.add_wires()
+        self.show_vector_field()
+        self.zoom_in()
+        self.show_flow()
+
+    def add_wires(self):
+        top, bottom = [
+            Circle(
+                radius=0.275,
+                stroke_color=WHITE,
+                fill_color=BLACK,
+                fill_opacity=1
+            )
+            for x in range(2)
+        ]
+        top.add(TexMobject("\\times").scale(0.5))
+        bottom.add(Dot().scale(0.5))
+        top.move_to(1 * UP)
+        bottom.move_to(1 * DOWN)
+
+        self.add_foreground_mobjects(top, bottom)
+
+    def show_vector_field(self):
+        vector_field = self.vector_field = VectorField(
+            self.func, **self.vector_field_config
+        )
+        vector_field.submobjects.sort(
+            lambda a1, a2: -cmp(a1.get_length(), a2.get_length())
+        )
+        self.play(LaggedStart(GrowArrow, vector_field))
+        self.add_foreground_mobjects(
+            vector_field, *self.foreground_mobjects
+        )
+
+    def func(self, point):
+        x, y = point[:2]
+        top_part = np.array([(y - 0.25), -x, 0])
+        bottom_part = np.array([-(y + 0.25), x, 0])
+        norm = np.linalg.norm
+        return 3 * op.add(
+            top_part / (norm(top_part)**2 + 1),
+            bottom_part / (norm(bottom_part)**2 + 1),
+        )
+
+
+class IllustrateEMCurlEquations(ExternallyAnimatedScene):
+    pass
+
+
+class RelevantInNonSpatialCircumstances(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            """
+                $\\textbf{div}$ and $\\textbf{curl}$ are \\\\
+                even useful in some \\\\
+                non-spatial problems
+            """,
+            target_mode="hooray"
+        )
+        self.change_student_modes(
+            "sassy", "confused", "hesitant"
+        )
+        self.wait(3)
+
+
+class ShowTwoPopulations(Scene):
+    CONFIG = {
+        "total_num_animals": 50,
+        "start_num_foxes": 20,
+        "start_num_rabbits": 30,
+        "animal_height": 0.5,
+        "final_wait_time": 30,
+    }
+
+    def construct(self):
+        self.introduce_animals()
+        self.evolve_system()
+
+    def introduce_animals(self):
+        foxes = self.foxes = VGroup(*[
+            self.get_fox()
+            for n in range(self.total_num_animals)
+        ])
+        rabbits = self.rabbits = VGroup(*[
+            self.get_rabbit()
+            for n in range(self.total_num_animals)
+        ])
+        foxes[self.start_num_foxes:].set_fill(opacity=0)
+        rabbits[self.start_num_rabbits:].set_fill(opacity=0)
+
+        fox, rabbit = examples = VGroup(foxes[0], rabbits[0])
+        for mob in examples:
+            mob.save_state()
+            mob.scale_to_fit_height(3)
+        examples.arrange_submobjects(RIGHT, buff=2)
+
+        preditor, prey = words = VGroup(
+            TextMobject("Preditor"),
+            TextMobject("Prey")
+        )
+        for mob, word in zip(examples, words):
+            word.scale(1.5)
+            word.next_to(mob, UP)
+            self.play(
+                FadeInFromDown(mob),
+                Write(word, run_time=1),
+            )
+        self.play(
+            LaggedStart(
+                ApplyMethod, examples,
+                lambda m: (m.restore,)
+            ),
+            LaggedStart(FadeOut, words),
+            *[
+                LaggedStart(
+                    FadeIn,
+                    group[1:],
+                    run_time=4,
+                    lag_ratio=0.1,
+                )
+                for group in [
+                    foxes[:self.start_num_foxes],
+                    rabbits[:self.start_num_rabbits],
+                ]
+            ]
+        )
+
+    def evolve_system(self):
+        foxes = self.foxes
+        rabbits = self.rabbits
+        phase_point = VectorizedPoint(
+            self.start_num_foxes * RIGHT +
+            self.start_num_rabbits * UP
+        )
+        self.add(VectorFieldFlow(
+            phase_point,
+            preditor_prey_vector_field,
+        ))
+
+        def get_num_foxes():
+            return phase_point.get_center()[0]
+
+        def get_num_rabbits():
+            return phase_point.get_center()[1]
+
+        def get_updater(pop_size_getter):
+            def update(animals):
+                target_num = pop_size_getter()
+                for n, animal in enumerate(animals):
+                    animal.set_fill(
+                        opacity=np.clip(target_num - n, 0, 1)
+                    )
+                target_int = int(np.ceil(target_num))
+                tail = animals.submobjects[target_int:]
+                random.shuffle(tail)
+                animals.submobjects[target_int:] = tail
+
+            return update
+
+        self.add(ContinualUpdateFromFunc(
+            foxes, get_updater(get_num_foxes)
+        ))
+        self.add(ContinualUpdateFromFunc(
+            rabbits, get_updater(get_num_rabbits)
+        ))
+
+        # Add counts for foxes and rabbits
+        labels = self.get_pop_labels()
+        num_foxes = Integer(10)
+        num_foxes.next_to(labels[0], RIGHT)
+        num_rabbits = Integer(10)
+        num_rabbits.next_to(labels[1], RIGHT)
+
+        self.add(ContinualChangingDecimal(
+            num_foxes, lambda a: get_num_foxes()
+        ))
+        self.add(ContinualChangingDecimal(
+            num_rabbits, lambda a: get_num_rabbits()
+        ))
+
+        for count in num_foxes, num_rabbits:
+            self.add(ContinualUpdateFromFunc(
+                count, self.update_count_color,
+            ))
+
+        self.play(
+            FadeIn(labels),
+            *[
+                UpdateFromAlphaFunc(count, lambda m, a: m.set_fill(opacity=a))
+                for count in num_foxes, num_rabbits
+            ]
+        )
+
+        self.wait(self.final_wait_time)
+
+    # Helpers
+
+    def get_animal(self, name, color):
+        result = SVGMobject(
+            file_name=name,
+            height=self.animal_height,
+            fill_color=color,
+            # stroke_color=BLACK,
+            # stroke_width=0.5
+        )
+        x_shift, y_shift = [
+            (2 * random.random() - 1) * max_val
+            for max_val in [
+                FRAME_WIDTH / 2 - 2,
+                FRAME_HEIGHT / 2 - 2
+            ]
+        ]
+        result.shift(x_shift * RIGHT + y_shift * UP)
+        return result
+
+    def get_fox(self):
+        return self.get_animal("fox", "#DF7F20")
+
+    def get_rabbit(self):
+        return self.get_animal("rabbit", WHITE)
+
+    def get_pop_labels(self):
+        labels = VGroup(
+            TextMobject("\\# Foxes: "),
+            TextMobject("\\# Rabbits: "),
+        )
+        labels.arrange_submobjects(RIGHT, buff=2)
+        labels.to_edge(UP)
+        return labels
+
+    def update_count_color(self, count):
+        count.set_fill(interpolate_color(
+            BLUE, RED, (count.number - 20) / 30.0
+        ))
+        return count
+
+
+class PhaseSpaceOfPopulationModel(ShowTwoPopulations):
+    def construct(self):
+        self.add_population_size_labels()
+        self.add_axes()
+        self.add_example_point()
+        self.add_vectors()
+        self.show_evolution_of_one_point()
+        self.show_phase_flow()
+
+    def add_population_size_labels(self):
+        pass
+
+    def add_axes(self):
+        pass
+
+    def add_example_point(self):
+        pass
+
+    def add_vectors(self):
+        pass
+
+    def show_evolution_of_one_point(self):
+        pass
+
+    def show_phase_flow(self):
+        pass
+
