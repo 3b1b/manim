@@ -12,6 +12,7 @@ LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * DEFAULT_NODE_HEIGHT / 2
 class Node(Group):
     def __init__(self, location, **kwargs):
         assert(isinstance(location, tuple))
+        # create mobject
         self.location = location
         radius = 0.1
         if "mobject" in kwargs:
@@ -27,16 +28,17 @@ class Node(Group):
                                   color=BLACK,
                                   stroke_width=kwargs["stroke_width"]) \
                            .move_to(location)
-        if "labels" in kwargs and kwargs["labels"] and \
-                location in kwargs["labels"]:
-            saved_labels = kwargs["labels"][location]
+        # save labels
+        saved_labels = []
+        if "labels" in kwargs and \
+                kwargs["labels"] and location in \
+                kwargs["labels"]:
+            saved_labels.extend(kwargs["labels"][location])
             del kwargs["labels"]
-            Group.__init__(self, self.mobject, **kwargs)
-            self.labels = OrderedDict()
-            self.set_labels(*saved_labels, animate=False)
-        else:
-            Group.__init__(self, self.mobject, **kwargs)
-            self.labels = OrderedDict()
+        # initialize and set labels
+        Group.__init__(self, self.mobject, **kwargs)
+        self.labels = OrderedDict()
+        self.set_labels(*saved_labels, animate=False)
 
     def __str__(self):
         return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])
@@ -98,6 +100,10 @@ class Node(Group):
         return self.set_labels((name, label), **kwargs)
 
     def set_labels(self, *labels, **kwargs):
+        if not labels:
+            return
+
+        # copy
         new_labels = OrderedDict()
         for name in self.labels.keys():
             new_labels[name] = self.labels[name].copy()

@@ -226,7 +226,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*anims)
 
         # this is antipattern; possibly allow returning a copy edge?
-        self.play(Indicate(H.edges[edges[0]].weight))
+        self.play(Indicate(H.edges[edges[0]].get_weight()))
 
         # switch to upper bound
         anims = []
@@ -282,7 +282,7 @@ class RunAlgorithm(MovingCameraScene):
         anims = []
         for edge in adj_edges:
             if edge != min_edge:
-                anims.extend([Indicate(G.edges[edge].weight)])
+                anims.extend([Indicate(G.edges[edge].get_weight())])
         self.play(*anims)
 
         # revert graph
@@ -524,7 +524,7 @@ class RunAlgorithm(MovingCameraScene):
         adj_edges = G.get_adjacent_edges(s)
         for edge in adj_edges:
             if edge != min_edge:
-                anims.extend([Indicate(G.edges[edge].weight)])
+                anims.extend([Indicate(G.edges[edge].get_weight())])
         self.play(*anims)
 
         self.play(*relax_node(G, min_node))
@@ -640,7 +640,7 @@ class RunAlgorithm(MovingCameraScene):
             if node == s:
                 labels.append((node, "dist", Integer(0)))
             else:
-                labels.append((node, "dist", TexMobject("\infty")))
+                labels.append((node, "dist", TexMobject("\le\infty")))
 
         self.play(ShowCreation(initialize_code))
         self.play(FadeIn(G))

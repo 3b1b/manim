@@ -14,3 +14,11 @@ manim.sublime-project
 manim.sublime-workspace
 
 primes.py
+
+*.mnm
+*.sw*
+env/
+media/
+notes.txt
+log.txt
+tags

@@ -151,10 +151,10 @@ class Graph(Group):
         return label in self.nodes[node].labels
 
     def set_edge_weight(self, edge, weight):
-        return [self.edges[self.make_key(edge)].set_weight(weight)]
+        return self.edges[self.make_key(edge)].set_weight(weight)
 
     def get_edge_weight(self, edge):
-        weight = self.edges[self.make_key(edge)].weight
+        weight = self.edges[self.make_key(edge)].get_weight()
         if weight:
             return weight.number
 
