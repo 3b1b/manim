@@ -42,6 +42,7 @@ class Scene(Container):
         "random_seed": 0,
         "start_at_animation_number": None,
         "end_at_animation_number": None,
+        "start_at_function": None,
     }
 
     def __init__(self, **kwargs):
@@ -434,6 +435,10 @@ class Scene(Container):
                 self.skip_animations = True
                 raise EndSceneEarlyException()
 
+        if self.start_at_function:
+            if self.start_at_function == inspect.getframeinfo(inspect.currentframe(2)).function:
+                self.skip_animations = False
+
     def play(self, *args, **kwargs):
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
@@ -466,6 +471,8 @@ class Scene(Container):
         else:
             self.continual_update(0)
         self.num_plays += 1
+        if "callback" in kwargs:
+            kwargs["callback"]()
         return self
 
     def clean_up_animations(self, *animations):

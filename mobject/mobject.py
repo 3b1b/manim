@@ -29,7 +29,7 @@ class Mobject(Container):
     Mathematical Object
     """
     CONFIG = {
-        "color": WHITE,
+        "color": BLACK,
         "name": None,
         "dim": 3,
         "target": None,
@@ -45,7 +45,7 @@ class Mobject(Container):
             self.name = self.__class__.__name__
         self.init_points()
         self.generate_points()
-        self.init_colors()
+        self.init_colors(override_children=False)
 
     def __str__(self):
         return str(self.name)
@@ -53,7 +53,7 @@ class Mobject(Container):
     def init_points(self):
         self.points = np.zeros((0, self.dim))
 
-    def init_colors(self):
+    def init_colors(self, override_children=True):
         # For subclasses
         pass
 
@@ -295,7 +295,7 @@ class Mobject(Container):
         self.shift(-self.get_center())
         return self
 
-    def align_on_border(self, direction, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+    def align_on_border(self, direction, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER, initial_offset=ORIGIN):
         """
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
@@ -304,14 +304,14 @@ class Mobject(Container):
         point_to_align = self.get_critical_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
-        self.shift(shift_val)
+        self.shift(shift_val + initial_offset)
         return self
 
-    def to_corner(self, corner=LEFT + DOWN, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
-        return self.align_on_border(corner, buff)
+    def to_corner(self, corner=LEFT + DOWN, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER, initial_offset=ORIGIN):
+        return self.align_on_border(corner, buff, initial_offset)
 
-    def to_edge(self, edge=LEFT, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
-        return self.align_on_border(edge, buff)
+    def to_edge(self, edge=LEFT, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER, initial_offset=ORIGIN):
+        return self.align_on_border(edge, buff, initial_offset)
 
     def next_to(self, mobject_or_point,
                 direction=RIGHT,

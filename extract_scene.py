@@ -68,6 +68,7 @@ def get_configuration():
             parser.add_argument(short_arg, long_arg, action="store_true")
         parser.add_argument("-o", "--output_name")
         parser.add_argument("-n", "--start_at_animation_number")
+        parser.add_argument("-u", "--start_at_function")
         args = parser.parse_args()
         if args.output_name is not None:
             output_name_root, output_name_ext = os.path.splitext(
@@ -101,6 +102,7 @@ def get_configuration():
         "write_all": args.write_all,
         "output_name": output_name,
         "start_at_animation_number": args.start_at_animation_number,
+        "start_at_function": args.start_at_function,
         "end_at_animation_number": None,
     }
     if args.low_quality:
@@ -125,6 +127,7 @@ def get_configuration():
     config["skip_animations"] = any([
         config["show_last_frame"] and not config["write_to_movie"],
         config["start_at_animation_number"],
+        config["start_at_function"],
     ])
     return config
 
@@ -172,6 +175,18 @@ def is_scene(obj):
     if not issubclass(obj, Scene):
         return False
     if obj == Scene:
+        return False
+    return True
+
+
+def is_child_scene(obj, module):
+    if not inspect.isclass(obj):
+        return False
+    if not issubclass(obj, Scene):
+        return False
+    if obj == Scene:
+        return False
+    if not obj.__module__.startswith(module.__name__):
         return False
     return True
 
@@ -238,7 +253,9 @@ def get_module(file_name):
 def main():
     config = get_configuration()
     module = get_module(config["file"])
-    scene_names_to_classes = dict(inspect.getmembers(module, is_scene))
+    members = inspect.getmembers(module, is_scene)
+    scene_names_to_classes = dict(
+            inspect.getmembers(module, lambda x: is_child_scene(x, module)))
 
     # config["output_directory"] = os.path.join(
     #     ANIMATIONS_DIR,
@@ -256,6 +273,7 @@ def main():
             "movie_file_extension",
             "start_at_animation_number",
             "end_at_animation_number",
+            "start_at_function",
         ]
     ])
 

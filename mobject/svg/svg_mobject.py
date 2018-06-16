@@ -3,6 +3,7 @@ import re
 import string
 import warnings
 
+from mobject.svg.tex_mobject import *
 from xml.dom import minidom
 from utils.color import *
 
@@ -73,7 +74,7 @@ class SVGMobject(VMobject):
                 self.add(*mobjects[0].submobjects)
         doc.unlink()
 
-    def get_mobjects_from(self, element):
+    def get_mobjects_from(self, element, fill_color=None):
         result = []
         if not isinstance(element, minidom.Element):
             return result
@@ -82,16 +83,19 @@ class SVGMobject(VMobject):
         elif element.tagName == 'style':
             pass  # TODO, handle style
         elif element.tagName in ['g', 'svg']:
+            if element.hasAttribute("fill"):
+                fill_color = element.getAttribute("fill")
             result += it.chain(*[
-                self.get_mobjects_from(child)
+                self.get_mobjects_from(child, fill_color=fill_color)
                 for child in element.childNodes
             ])
         elif element.tagName == 'path':
             result.append(self.path_string_to_mobject(
-                element.getAttribute('d')
+                element.getAttribute('d'),
+                fill_color=fill_color,
             ))
         elif element.tagName == 'use':
-            result += self.use_to_mobjects(element)
+            result += self.use_to_mobjects(element, fill_color=fill_color)
         elif element.tagName == 'rect':
             result.append(self.rect_to_mobject(element))
         elif element.tagName == 'circle':
@@ -118,14 +122,15 @@ class SVGMobject(VMobject):
     def path_string_to_mobject(self, path_string):
         return VMobjectFromSVGPathstring(path_string)
 
-    def use_to_mobjects(self, use_element):
+    def use_to_mobjects(self, use_element, fill_color=None):
         # Remove initial "#" character
         ref = use_element.getAttribute("xlink:href")[1:]
         if ref not in self.ref_to_element:
             warnings.warn("%s not recognized" % ref)
             return VMobject()
         return self.get_mobjects_from(
-            self.ref_to_element[ref]
+            self.ref_to_element[ref],
+            fill_color=fill_color,
         )
 
     def polygon_to_mobject(self, polygon_element):
@@ -161,6 +166,7 @@ class SVGMobject(VMobject):
         stroke_color = rect_element.getAttribute("stroke")
         stroke_width = rect_element.getAttribute("stroke-width")
         corner_radius = rect_element.getAttribute("rx")
+        opacity = 1
 
         # input preprocessing
         if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):

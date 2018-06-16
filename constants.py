@@ -5,7 +5,7 @@ import numpy as np
 # own use will want to change
 MEDIA_DIR = os.path.join(
     os.path.expanduser('~'),
-    "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+    "Public/manim/media"
 )
 #
 
@@ -112,6 +112,7 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DI
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(THIS_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
+TEMPLATE_CODE_FILE = os.path.join(THIS_DIR, "code_template.tex")
 
 FFMPEG_BIN = "ffmpeg"
 

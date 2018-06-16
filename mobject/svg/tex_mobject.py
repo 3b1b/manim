@@ -15,6 +15,9 @@ TEX_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
+    CONFIG = {
+        "stroke_width": 0,
+    }
     def pointwise_become_partial(self, mobject, a, b):
         # TODO, this assumes a = 0
         if b < 0.5:
@@ -118,10 +121,10 @@ class SingleStringTexMobject(SVGMobject):
     def get_tex_string(self):
         return self.tex_string
 
-    def path_string_to_mobject(self, path_string):
+    def path_string_to_mobject(self, path_string, fill_color=None):
         # Overwrite superclass default to use
         # specialized path_string mobject
-        return TexSymbol(path_string)
+        return TexSymbol(path_string, color=fill_color)
 
     def organize_submobjects_left_to_right(self):
         self.sort_submobjects(lambda p: p[0])
@@ -247,6 +250,69 @@ class TextMobject(TexMobject):
         "template_tex_file": TEMPLATE_TEXT_FILE,
         "alignment": "\\centering",
     }
+
+class CodeMobject(TexMobject):
+    CONFIG = {
+        "template_tex_file": TEMPLATE_CODE_FILE,
+        "indent_level": 4,
+    }
+
+    def break_up_tex_strings(self, tex_string):
+        # only one string should be passed
+        assert(len(tex_string) == 1)
+        lines = tex_string[0].split('\n')
+        while len(lines[0]) == 0 or lines[0].isspace():
+            lines.pop(0)
+        while len(lines[-1]) == 0 or lines[-1].isspace():
+            lines.pop()
+        indent = len(lines[0]) - len(lines[0].lstrip())
+        lines = map(lambda l: l[indent:], lines)
+        return ['\n'.join(lines)]
+
+    def modify_special_strings(self, tex):
+        return tex
+
+    def break_up_by_substrings(self):
+        index, mob = self.organize_by_blocks(self.tex_string)
+        # TODO: return just the list
+        self.submobjects = mob.submobjects
+
+    def organize_by_blocks(self, tex_string, level=0, index=0):
+        lines = tex_string.split('\n')
+        if len(lines) == 1:
+            line = lines[0]
+            mob = SingleStringTexMobject(line, **self.CONFIG)
+            mob.submobjects = self.submobjects[index:index+len(line.replace(" ", ""))]
+            index += len(line.replace(" ", ""))
+            return index, mob
+
+        # add toplevel line
+        first_line = lines.pop(0)
+        mob = SingleStringTexMobject(first_line, **self.CONFIG)
+        mob.submobjects = self.submobjects[index:index+len(first_line.replace(" ", ""))]
+        new_submobjects = [mob]
+        index += len(first_line.replace(" ", ""))
+
+        # split remaining lines by indent level
+        cur_indentation_level = len(lines[0]) - len(lines[0].lstrip())
+        cur_string = lines[0]
+        blocks = []
+        for line in lines[1:]:
+            indentation_level = len(line) - len(line.lstrip())
+            if indentation_level > cur_indentation_level:
+                cur_string += '\n' + line
+            else:
+                blocks.append(cur_string)
+                cur_string = line
+        blocks.append(cur_string)
+
+        # recursively add sublevel lines
+        for block in blocks:
+            index, block_mob = self.organize_by_blocks(block, level=level+1, index=index)
+            new_submobjects.append(block_mob)
+        block_mobject = SingleStringTexMobject(tex_string, **self.CONFIG)
+        block_mobject.submobjects = new_submobjects
+        return index, block_mobject
 
 
 class BulletedList(TextMobject):

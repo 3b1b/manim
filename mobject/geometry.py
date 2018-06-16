@@ -352,6 +352,10 @@ class Line(VMobject):
         start, end = self.get_start_and_end()
         return np.linalg.norm(start - end)
 
+    def get_midpoint(self):
+        start, end = self.get_start_and_end()
+        return start + (end - start) / 2
+
     def get_arc_length(self):
         if self.path_arc:
             anchors = self.get_anchors()
@@ -692,7 +696,7 @@ class RegularPolygon(Polygon):
 
 class Rectangle(VMobject):
     CONFIG = {
-        "color": WHITE,
+        "color": BLACK,
         "height": 2.0,
         "width": 4.0,
         "mark_paths_closed": True,

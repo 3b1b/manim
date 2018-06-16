@@ -34,13 +34,14 @@ class VMobject(Mobject):
         return VGroup
 
     # Colors
-    def init_colors(self):
+    def init_colors(self, override_children=True):
         self.set_style_data(
             stroke_color=self.stroke_color or self.color,
             stroke_width=self.stroke_width,
             fill_color=self.fill_color or self.color,
             fill_opacity=self.fill_opacity,
-            family=self.propagate_style_to_family
+            family=self.propagate_style_to_family,
+            override_children=override_children,
         )
         return self
 
@@ -53,12 +54,19 @@ class VMobject(Mobject):
                        stroke_width=None,
                        fill_color=None,
                        fill_opacity=None,
-                       family=True
+                       family=True,
+                       override_children=True,
                        ):
         if stroke_color is not None:
-            self.stroke_rgb = color_to_rgb(stroke_color)
+            if override_children or self.color is None:
+                self.stroke_rgb = color_to_rgb(stroke_color)
+            else:
+                self.stroke_rgb = color_to_rgb(self.color)
         if fill_color is not None:
-            self.fill_rgb = color_to_rgb(fill_color)
+            if override_children or self.color is None:
+                self.fill_rgb = color_to_rgb(fill_color)
+            else:
+                self.fill_rgb = color_to_rgb(self.color)
         if stroke_width is not None:
             self.stroke_width = stroke_width
         if fill_opacity is not None:
@@ -70,7 +78,8 @@ class VMobject(Mobject):
                     stroke_width=stroke_width,
                     fill_color=fill_color,
                     fill_opacity=fill_opacity,
-                    family=family
+                    family=family,
+                    override_children=override_children,
                 )
         return self
 
