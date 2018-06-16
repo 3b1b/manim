@@ -1290,7 +1290,7 @@ class DefineDivergence(ChangingElectricField):
                 "delta_x": 0.125,
                 "delta_y": 0.125,
             },
-            "virtual_time": 2,
+            "virtual_time": 5,
             "n_anchors_per_line": 10,
             "min_magnitude": 0,
             "max_magnitude": 1,
@@ -2647,7 +2647,7 @@ class ShowTwoPopulations(Scene):
         return count
 
 
-class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene):
+class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCameraScene):
     CONFIG = {
         "origin": 5 * LEFT + 2.5 * DOWN,
         "vector_field_config": {
@@ -2659,6 +2659,10 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene):
         },
         "flow_time": 10,
     }
+
+    def setup(self):
+        MovingCameraScene.setup(self)
+        PiCreatureScene.setup(self)
 
     def construct(self):
         self.add_axes()
@@ -2749,8 +2753,8 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene):
         self.add(*pop_sizes_updates)
         self.play(
             dot.restore,
+            VFadeIn(coord_pair),
             UpdateFromAlphaFunc(pop_sizes, lambda m, a: m.set_fill(opacity=a)),
-            VFadeIn(coord_pair)
         )
         self.wait()
         self.play(Write(phase_space))
@@ -2849,6 +2853,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene):
         self.play(
             Animation(dot),
             vector_field.set_fill, {"opacity": 0.2},
+            Animation(self.differential_equation_group),
             GrowArrow(dot_vector),
             randy.change, "pondering",
         )
@@ -2924,3 +2929,301 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene):
         self.add(stream_line_animation)
         self.add_foreground_mobjects(vector_field)
         self.wait(self.flow_time)
+        self.play(
+            self.camera_frame.scale, 1.5, {"about_point": self.origin},
+            run_time=self.flow_time,
+        )
+        self.wait(self.flow_time)
+
+
+class AskAboutComputation(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Sure, but how do you \\\\" +
+            "\\emph{compute} $\\textbf{div}$ and $\\textbf{curl}$?",
+            target_mode="sassy",
+        )
+        self.change_student_modes(
+            "confused", "sassy", "angry",
+            added_anims=[self.teacher.change, "guilty"]
+        )
+        self.wait()
+        self.teacher_says(
+            "Are you familiar \\\\" +
+            "with my work \\\\" +
+            "at Khan Academy?",
+            target_mode="speaking",
+            bubble_kwargs={"width": 4, "height": 3}
+        )
+        self.change_student_modes(
+            * 3 * ["pondering"],
+            look_at_arg=self.screen
+        )
+        self.wait(5)
+
+
+class NablaNotation(PiCreatureScene, MovingCameraScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+        },
+        "default_pi_creature_start_corner": DL,
+    }
+
+    def setup(self):
+        MovingCameraScene.setup(self)
+        PiCreatureScene.setup(self)
+
+    def construct(self):
+        self.show_notation()
+        self.show_expansion()
+        self.zoom_out()
+
+    def show_notation(self):
+        morty = self.pi_creature
+
+        tex_to_color_map = {
+            "\\text{div}": BLUE,
+            "\\nabla \\cdot": BLUE,
+            "\\text{curl}": YELLOW,
+            "\\nabla \\times": YELLOW,
+        }
+        div_equation = TexMobject(
+            "\\text{div} \\, \\textbf{F} = \\nabla \\cdot \\textbf{F}",
+            tex_to_color_map=tex_to_color_map
+        )
+        div_nabla = div_equation.get_part_by_tex("\\nabla")
+        curl_equation = TexMobject(
+            "\\text{curl} \\, \\textbf{F} = \\nabla \\times \\textbf{F}",
+            tex_to_color_map=tex_to_color_map
+        )
+        curl_nabla = curl_equation.get_part_by_tex("\\nabla")
+        equations = VGroup(div_equation, curl_equation)
+        equations.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        equations.next_to(morty, UP, 2)
+        equations.to_edge(LEFT)
+
+        self.play(
+            FadeInFromDown(div_equation),
+            morty.change, "raise_right_hand"
+        )
+        self.wait()
+        self.play(WiggleOutThenIn(div_nabla, scale_value=1.5))
+        self.wait()
+        self.play(
+            FadeInFromDown(curl_equation),
+            morty.change, "raise_left_hand"
+        )
+        self.wait()
+        self.play(WiggleOutThenIn(curl_nabla, scale_value=1.5))
+        self.wait()
+
+        self.equations = equations
+
+    def show_expansion(self):
+        equations = self.equations
+        morty = self.pi_creature
+
+        nabla_vector = Matrix([
+            ["\\partial \\over \\partial x"],
+            ["\\partial \\over \\partial y"],
+        ], v_buff=1.5)
+        F_vector = Matrix([
+            ["\\textbf{F}_x"],
+            ["\\textbf{F}_y"],
+        ], v_buff=1.2)
+        nabla_vector.match_height(F_vector)
+
+        div_lhs, curl_lhs = lhs_groups = VGroup(*[
+            VGroup(
+                nabla_vector.deepcopy(),
+                TexMobject(tex).scale(1.5),
+                F_vector.copy(),
+                TexMobject("=")
+            )
+            for tex in "\\cdot", "\\times"
+        ])
+        colors = [BLUE, YELLOW]
+        for lhs, color in zip(lhs_groups, colors):
+            lhs.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+            VGroup(lhs[0].brackets, lhs[1]).set_color(color)
+        div_lhs.to_edge(UP)
+        curl_lhs.next_to(div_lhs, DOWN, buff=LARGE_BUFF)
+
+        div_rhs = TexMobject(
+            "{\\partial F_x \\over \\partial x} + " +
+            "{\\partial F_y \\over \\partial y}"
+        )
+        curl_rhs = TexMobject(
+            "{\\partial F_y \\over \\partial x} - " +
+            "{\\partial F_x \\over \\partial y}"
+        )
+        rhs_groups = VGroup(div_rhs, curl_rhs)
+        for rhs, lhs in zip(rhs_groups, lhs_groups):
+            rhs.next_to(lhs, RIGHT)
+
+        for rhs, tex, color in zip(rhs_groups, ["div", "curl"], colors):
+            rhs.rect = SurroundingRectangle(rhs, color=color)
+            rhs.label = TexMobject(
+                "\\text{%s}" % tex,
+                "\\, \\textbf{F}"
+            )
+            rhs.label.set_color(color)
+            rhs.label.next_to(rhs.rect, UP)
+
+        for i in 0, 1:
+            self.play(
+                ReplacementTransform(
+                    equations[i][2].copy(),
+                    lhs_groups[i][0].brackets
+                ),
+                ReplacementTransform(
+                    equations[i][3].copy(),
+                    lhs_groups[i][2],
+                ),
+                morty.change, "pondering",
+                *[
+                    GrowFromPoint(mob, equations[i].get_right())
+                    for mob in [
+                        lhs_groups[i][0].get_entries(),
+                        lhs_groups[i][1],
+                        lhs_groups[i][3]
+                    ]
+                ],
+                run_time=2
+            )
+            self.wait()
+        self.wait()
+        for rhs in rhs_groups:
+            self.play(
+                Write(rhs),
+                morty.change, 'confused'
+            )
+            self.play(
+                ShowCreation(rhs.rect),
+                FadeInFromDown(rhs.label),
+            )
+            self.wait()
+        self.play(morty.change, "erm")
+        self.wait(3)
+
+    def zoom_out(self):
+        screen_rect = self.camera_frame.copy()
+        screen_rect.set_stroke(WHITE, 3)
+        screen_rect.scale(1.01)
+        words = TextMobject("Something deeper at play...")
+        words.scale(1.3)
+        words.next_to(screen_rect, UP)
+
+        self.add(screen_rect)
+        self.play(
+            self.camera_frame.scale_to_fit_height, FRAME_HEIGHT + 3,
+            Write(words, rate_func=squish_rate_func(smooth, 0.3, 1)),
+            run_time=2,
+        )
+        self.wait()
+
+
+class DivCurlDotCross(Scene):
+    def construct(self):
+        rects = VGroup(*[
+            ScreenRectangle(height=2.5)
+            for n in range(4)
+        ])
+        rects.arrange_submobjects_in_grid(n_rows=2, buff=LARGE_BUFF)
+        rects[2:].shift(MED_LARGE_BUFF * DOWN)
+        titles = VGroup(*map(TextMobject, [
+            "Divergence", "Curl",
+            "Dot product", "Cross product"
+        ]))
+        for title, rect in zip(titles, rects):
+            title.next_to(rect, UP)
+
+        self.add(rects, titles)
+
+
+class ShowDotProduct(MovingCameraScene):
+    CONFIG = {
+        "prod_tex": "\\cdot"
+    }
+
+    def construct(self):
+        plane = NumberPlane()
+        v1 = Vector(RIGHT, color=BLUE)
+        v2 = Vector(UP, color=YELLOW)
+
+        dot_product = TexMobject(
+            "\\vec{\\textbf{v}}", self.prod_tex,
+            "\\vec{\\textbf{w}}", "="
+        )
+        dot_product.set_color_by_tex_to_color_map({
+            "textbf{v}": BLUE,
+            "textbf{w}": YELLOW,
+        })
+        dot_product.add_background_rectangle()
+        dot_product.next_to(2.25 * UP, RIGHT)
+        dot_product_value = DecimalNumber(
+            1.0,
+            include_background_rectangle=True,
+        )
+        dot_product_value.next_to(dot_product)
+        dot_product_value_update = ContinualChangingDecimal(
+            dot_product_value,
+            lambda a: self.get_product(v1, v2),
+            include_background_rectangle=True,
+        )
+
+        self.camera_frame.scale_to_fit_height(4)
+        self.camera_frame.move_to(DL, DL)
+        self.add(plane)
+        self.add(dot_product, dot_product_value_update)
+        self.add_additional_continual_animations(v1, v2)
+        self.add_foreground_mobjects(v1, v2)
+        for n in range(5):
+            self.play(
+                Rotate(v1, 45 * DEGREES, about_point=ORIGIN),
+                Rotate(v2, -45 * DEGREES, about_point=ORIGIN),
+                run_time=3,
+                rate_func=there_and_back
+            )
+            self.wait(0.5)
+
+    def get_product(self, v1, v2):
+        return np.dot(v1.get_vector(), v2.get_vector())
+
+    def add_additional_continual_animations(self):
+        pass
+
+
+class ShowCrossProduct(ShowDotProduct):
+    CONFIG = {
+        "prod_tex": "\\times"
+    }
+
+    def get_product(self, v1, v2):
+        return np.linalg.norm(
+            np.cross(v1.get_vector(), v2.get_vector())
+        )
+
+    def add_additional_continual_animations(self, v1, v2):
+        square = Square(
+            stroke_color=YELLOW,
+            stroke_width=3,
+            fill_color=YELLOW,
+            fill_opacity=0.2,
+        )
+
+        self.add(ContinualUpdateFromFunc(
+            square,
+            lambda s: s.set_points_as_corners([
+                ORIGIN,
+                v1.get_end(),
+                v1.get_end() + v2.get_end(),
+                v2.get_end(),
+            ])
+        ))
+
+
+class NewSceneName(Scene):
+    def construct(self):
+        pass
