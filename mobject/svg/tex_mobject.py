@@ -274,45 +274,62 @@ class CodeMobject(TexMobject):
 
     def break_up_by_substrings(self):
         index, mob = self.organize_by_blocks(self.tex_string)
-        # TODO: return just the list
         self.submobjects = mob.submobjects
 
     def organize_by_blocks(self, tex_string, level=0, index=0):
+        # check for header
+        has_header = True
         lines = tex_string.split('\n')
-        if len(lines) == 1:
-            line = lines[0]
-            mob = SingleStringTexMobject(line, **self.CONFIG)
-            mob.submobjects = self.submobjects[index:index+len(line.replace(" ", ""))]
-            index += len(line.replace(" ", ""))
-            return index, mob
-
-        # add toplevel line
-        first_line = lines.pop(0)
-        mob = SingleStringTexMobject(first_line, **self.CONFIG)
-        mob.submobjects = self.submobjects[index:index+len(first_line.replace(" ", ""))]
-        new_submobjects = [mob]
-        index += len(first_line.replace(" ", ""))
-
-        # split remaining lines by indent level
-        cur_indentation_level = len(lines[0]) - len(lines[0].lstrip())
-        cur_string = lines[0]
-        blocks = []
+        min_indent = len(lines[0]) - len(lines[0].strip())
         for line in lines[1:]:
-            indentation_level = len(line) - len(line.lstrip())
-            if indentation_level > cur_indentation_level:
-                cur_string += '\n' + line
-            else:
-                blocks.append(cur_string)
-                cur_string = line
-        blocks.append(cur_string)
+            indent = len(line) - len(line.strip())
+            if indent == min_indent:
+                has_header = False
+                break
 
-        # recursively add sublevel lines
-        for block in blocks:
-            index, block_mob = self.organize_by_blocks(block, level=level+1, index=index)
-            new_submobjects.append(block_mob)
-        block_mobject = SingleStringTexMobject(tex_string, **self.CONFIG)
-        block_mobject.submobjects = new_submobjects
-        return index, block_mobject
+        top_mob = SingleStringTexMobject(tex_string, **self.CONFIG)
+        top_mob.submobjects = []
+        if has_header:
+            head_mob = SingleStringTexMobject(lines[0], **self.CONFIG)
+            head_mob.submobjects = self.submobjects[index:index+len(lines[0].replace(" ", ""))]
+            index += len(lines[0].replace(" ", ""))
+            top_mob.submobjects.append(head_mob)
+            lines = lines[1:]
+
+        # add children
+        i = 0
+        while i < len(lines):
+            cur_line = lines[i]
+            if len(cur_line) == 0:
+                i += 1
+                continue
+            cur_indent = len(cur_line) - len(cur_line.strip())
+            if i+1 < len(lines):
+                next_line = lines[i+1]
+                next_indent = len(next_line) - len(next_line.strip()) 
+            else:
+                next_line = None
+                next_indent = None
+            if next_indent is None or cur_indent == next_indent:
+                cur_mob = SingleStringTexMobject(lines[i], **self.CONFIG)
+                cur_mob.submobjects = self.submobjects[index:index+len(lines[i].replace(" ", ""))]
+                index += len(lines[i].replace(" ", ""))
+                top_mob.submobjects.append(cur_mob)
+            else:
+                child_string = lines[i]
+                j = 1
+                while i+j < len(lines):
+                    child_indent = len(lines[i+j]) - len(lines[i+j].strip())
+                    if child_indent > cur_indent:
+                        child_string += '\n' + lines[i+j]
+                        j += 1
+                    else:
+                        break
+                index, child_mob = self.organize_by_blocks(child_string, level=level+1, index=index)
+                top_mob.submobjects.append(child_mob)
+                i += j - 1
+            i += 1
+        return index, top_mob
 
 
 class BulletedList(TextMobject):

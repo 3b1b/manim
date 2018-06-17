@@ -592,7 +592,7 @@ class RunAlgorithm(MovingCameraScene):
         loaded_state = pickle.load(open("last_run.mnm", "rb"))
         self.__dict__.update(loaded_state)
 
-        dijkstra_code = CodeMobject("""
+        code = CodeMobject("""
         def dijkstra(G):
             initialize_source(s)
             bounded_vertices = min_queue(G.vertices)
@@ -600,21 +600,25 @@ class RunAlgorithm(MovingCameraScene):
                 u = bounded_vertices.extract_min()
                 for v in G.neighbors(u):
                     relax_edge(G, u, v)
-        """)
-        target = dijkstra_code.generate_target()
-        target.scale(0.5) \
-              .shift(LEFT * 0.25 * FRAME_WIDTH) \
-              .to_edge(UP, buff=MED_SMALL_BUFF)
-        self.play(ShowCreation(dijkstra_code))
-        self.play(MoveToTarget(dijkstra_code))
 
-        initialize_code = CodeMobject("""
         def initialize_source(s):
             for v in G.vertices:
                 v.dist = infinity
             s.dist = 0
-        """).scale(0.5) \
-            .next_to(dijkstra_code, DOWN, aligned_edge=LEFT, buff=MED_SMALL_BUFF) \
+
+        def relax_edge(G, u, v):
+            if v.dist > u.dist + G.weights(u, v):
+                v.dist = u.dist + G.weights(u, v)
+                v.parent = u
+        """).scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
+            .to_corner(UL, buff=MED_SMALL_BUFF)
+
+        dijkstra_code = code.submobjects[0].copy()
+        dijkstra_code.scale((FRAME_WIDTH - 2 * MED_SMALL_BUFF) / dijkstra_code.get_width()) \
+            .shift(self.camera_frame.get_center() - dijkstra_code.get_center())
+        self.play(ShowCreation(dijkstra_code))
+
+        self.play(ReplacementTransform(dijkstra_code, code.submobjects[0]))
 
         s = (0, 0, 0)
         nodes = [
@@ -642,18 +646,24 @@ class RunAlgorithm(MovingCameraScene):
             else:
                 labels.append((node, "dist", TexMobject("\infty")))
 
-        self.play(ShowCreation(initialize_code))
+        # shift initialize header down and create next block
+        top_line = code.submobjects[0].submobjects[1]
+        bottom_line = code.submobjects[1].submobjects[0]
+        top_initialize_line = top_line.copy()
+        bottom_initialize_line = SingleStringTexMobject(bottom_line.tex_string[4:-1])
+        bottom_initialize_line.submobjects = bottom_line.submobjects[3:-1]
+        bottom_initialize_line_ends = SingleStringTexMobject("")
+        bottom_initialize_line_ends.submobjects = bottom_line.submobjects[0:3] + [bottom_line.submobjects[-1]]
+        self.play(ReplacementTransform(top_initialize_line, bottom_initialize_line))
+        self.play(
+            FadeIn(bottom_initialize_line_ends),
+            ShowCreation(Group(*code.submobjects[1].submobjects[1:])),
+        )
+
+        # show the graph
         self.play(FadeIn(G))
         self.play(*G.set_node_labels(*labels))
         self.play(FadeOut(G))
-
-        relax_code = CodeMobject("""
-        def relax(G, u, v):
-            if v.dist > u.dist + G.weights(u, v):
-                v.dist = u.dist + G.weights(u, v)
-                v.parent = u
-        """).scale(0.5) \
-            .next_to(initialize_code, DOWN, aligned_edge=LEFT, buff=MED_SMALL_BUFF) \
 
         u = (0, 0, 0)
         v = (3, 0, 0)
@@ -666,7 +676,25 @@ class RunAlgorithm(MovingCameraScene):
         }
         G = Graph(nodes, edges, labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
 
-        self.play(ShowCreation(relax_code))
+        # shift relax header down and create next block
+        top_line = code.submobjects[0] \
+                       .submobjects[3] \
+                       .submobjects[2] \
+                       .submobjects[1]
+        bottom_line = code.submobjects[2] \
+                          .submobjects[0]
+        top_relax_line = top_line.copy()
+        bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[4:-1])
+        bottom_relax_line.submobjects = bottom_line.submobjects[3:-1]
+        bottom_relax_line_ends = SingleStringTexMobject("")
+        bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:3] + [bottom_line.submobjects[-1]]
+        self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
+        self.play(
+            FadeIn(bottom_relax_line_ends),
+            ShowCreation(Group(*code.submobjects[2].submobjects[1:])),
+        )
+
+        # show the graph
         self.play(FadeIn(G))
         self.play(*G.set_node_labels((v, "dist", TexMobject("\le 5"))))
         self.play(FadeOut(G))
