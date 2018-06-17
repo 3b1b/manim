@@ -11,9 +11,9 @@ LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * DEFAULT_NODE_HEIGHT / 2
 
 class Node(Group):
     def __init__(self, location, **kwargs):
-        assert(isinstance(location, tuple))
+        self.key = location
+        self.assert_node_primitive(self.key)
         # create mobject
-        self.location = location
         radius = 0.1
         if "mobject" in kwargs:
             self.mobject = kwargs["mobject"].move_to(location)
@@ -33,12 +33,19 @@ class Node(Group):
         if "labels" in kwargs and \
                 kwargs["labels"] and location in \
                 kwargs["labels"]:
-            saved_labels.extend(kwargs["labels"][location])
+            saved_labels.extend(kwargs["labels"][self.key])
             del kwargs["labels"]
         # initialize and set labels
         Group.__init__(self, self.mobject, **kwargs)
         self.labels = OrderedDict()
         self.set_labels(*saved_labels, animate=False)
+
+    @staticmethod
+    def assert_node_primitive(point):
+        try:
+            assert type(point) == np.ndarray or type(point) == tuple
+            assert len(point) == 3
+        except: import ipdb; ipdb.set_trace(context=5)
 
     def __str__(self):
         return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])

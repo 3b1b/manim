@@ -191,8 +191,8 @@ class RunAlgorithm(MovingCameraScene):
 
         # draw counterexample graph
         nodes = [
-            (0, 0, 0),
-            (4, 1.5, 0),
+            (0,    0, 0),
+            (4,  1.5, 0),
             (4, -1.5, 0),
         ]
         edges = [
@@ -640,7 +640,7 @@ class RunAlgorithm(MovingCameraScene):
             if node == s:
                 labels.append((node, "dist", Integer(0)))
             else:
-                labels.append((node, "dist", TexMobject("\le\infty")))
+                labels.append((node, "dist", TexMobject("\infty")))
 
         self.play(ShowCreation(initialize_code))
         self.play(FadeIn(G))
@@ -659,17 +659,16 @@ class RunAlgorithm(MovingCameraScene):
         v = (3, 0, 0)
         nodes = [u, v]
         edges = [(u, v)]
-        # TODO: allow setting multiple initial labels
         labels = {
             u: [("variable", TexMobject("u")), ("dist", Integer(3))],
             v: [("variable", TexMobject("v")), ("dist", TexMobject("\le 7"))],
-            #(u, v): [("weight", Integer(2))],
+            (u, v): [("weight", Integer(2))],
         }
         G = Graph(nodes, edges, labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
 
         self.play(ShowCreation(relax_code))
         self.play(FadeIn(G))
-        #self.play(*G.set_node_labels(*labels))
+        self.play(*G.set_node_labels((v, "dist", TexMobject("\le 5"))))
         self.play(FadeOut(G))
 
         self.wait(2)
