@@ -277,11 +277,15 @@ class CodeMobject(TexMobject):
         self.submobjects = mob.submobjects
 
     def organize_by_blocks(self, tex_string, level=0, index=0):
+        #if "relax" in tex_string:
+        #    import ipdb; ipdb.set_trace(context=5)
         # check for header
         has_header = True
         lines = tex_string.split('\n')
         min_indent = len(lines[0]) - len(lines[0].strip())
         for line in lines[1:]:
+            if len(line) == 0:
+                continue
             indent = len(line) - len(line.strip())
             if indent == min_indent:
                 has_header = False
@@ -310,7 +314,7 @@ class CodeMobject(TexMobject):
             else:
                 next_line = None
                 next_indent = None
-            if next_indent is None or cur_indent == next_indent:
+            if next_indent is None or cur_indent == next_indent or len(next_line) == 0:
                 cur_mob = SingleStringTexMobject(lines[i], **self.CONFIG)
                 cur_mob.submobjects = self.submobjects[index:index+len(lines[i].replace(" ", ""))]
                 index += len(lines[i].replace(" ", ""))
@@ -320,7 +324,7 @@ class CodeMobject(TexMobject):
                 j = 1
                 while i+j < len(lines):
                     child_indent = len(lines[i+j]) - len(lines[i+j].strip())
-                    if child_indent > cur_indent:
+                    if child_indent > cur_indent or len(lines[i+j]) == 0:
                         child_string += '\n' + lines[i+j]
                         j += 1
                     else:

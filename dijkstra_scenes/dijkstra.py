@@ -612,23 +612,15 @@ class RunAlgorithm(MovingCameraScene):
 
         def initialize_source(s):
             for v in G.vertices:
-                v.dist = infinity
-            s.dist = 0
+                if v == s:
+                    v.dist = 0
+                else:
+                    v.dist = infinity
 
         def relax_edge(G, u, v):
             if v.dist > u.dist + G.weights(u, v):
                 v.dist = u.dist + G.weights(u, v)
                 v.parent = u
-
-        class min_queue:
-            def __init__(self, items, key):
-                pass
-
-            def extract_min(self):
-                pass
-
-            def decrease_key(self, item, new_value):
-                pass
         """).scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
             .to_corner(UL, buff=MED_SMALL_BUFF)
 
@@ -716,9 +708,80 @@ class RunAlgorithm(MovingCameraScene):
         # show the graph
         self.play(FadeIn(G))
         self.play(*G.set_node_labels((v, "dist", TexMobject("\le 5"))))
-        self.play(FadeOut(G))
 
-        self.wait(2)
+        # remove lower blocks
+        self.play(
+            FadeOut(G),
+            FadeOut(code.submobjects[1]),
+            FadeOut(code.submobjects[2]),
+        )
+
+        code2 = CodeMobject("""
+        def dijkstra(G):
+            initialize_source(s)
+            bounded_vertices = min_queue(G.vertices)
+            while bounded_vertices:
+                u = bounded_vertices.extract_min()
+                for v in G.neighbors(u):
+                    relax_edge(G, u, v)
+
+        class min_queue:
+            def __init__(self, items):
+                pass
+
+            def extract_min(self):
+                pass
+
+            def decrease_key(self, item, new_value):
+                pass
+        """).scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
+            .to_corner(UL, buff=MED_SMALL_BUFF)
+
+        self.remove(code.submobjects[0])
+        self.add(code2.submobjects[0])
+
+        top_line = code2.submobjects[0] \
+                       .submobjects[2]
+        bottom_line = code2.submobjects[1] \
+                          .submobjects[0]
+        top_relax_line = Group(*top_line.copy().submobjects[17:26])
+        bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[6:-1])
+        bottom_relax_line.submobjects = bottom_line.submobjects[5:-1]
+        bottom_relax_line_ends = SingleStringTexMobject("")
+        bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:5] + [bottom_line.submobjects[-1]]
+        self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
+        self.play(
+            FadeIn(bottom_relax_line_ends),
+            ShowCreation(Group(*code2.submobjects[1].submobjects[1:])),
+        )
+
+        self.play(
+            Indicate(code2.submobjects[0].submobjects[2]),
+            Indicate(code2.submobjects[1].submobjects[1].submobjects[0]),
+        )
+        self.play(
+            Indicate(code2.submobjects[0].submobjects[3].submobjects[1]),
+            Indicate(code2.submobjects[1].submobjects[2].submobjects[0]),
+        )
+        self.play(
+            Indicate(code2.submobjects[0].submobjects[3].submobjects[2].submobjects[1]),
+            Indicate(code2.submobjects[1].submobjects[3].submobjects[0]),
+        )
+
+        self.play(FadeOut(code2.submobjects[1]))
+        self.remove(
+            code2.submobjects[0].submobjects[2],
+            code2.submobjects[0].submobjects[3].submobjects[1],
+            code2.submobjects[0].submobjects[3].submobjects[2].submobjects[1],
+            code2.submobjects[0].submobjects[0],
+            code2.submobjects[0].submobjects[1],
+            code2.submobjects[0].submobjects[2],
+            code2.submobjects[0].submobjects[3].submobjects[0],
+            code2.submobjects[0].submobjects[3].submobjects[2].submobjects[0],
+        )
+        self.remove(code2)
+        self.add(code.submobjects[0])
+        self.play(FadeIn(Group(*code.submobjects[1:])))
 
         state = self.__dict__.copy()
         # must be removed before save to prevent segfault
