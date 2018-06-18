@@ -93,6 +93,8 @@ class Edge(Group):
                 new_labels[name].move_to(self.labels[name].get_center())
 
         # scale TODO
+        for label in new_labels.values():
+            label.scale(self.scale)
 
         # animate / create
         anims = []

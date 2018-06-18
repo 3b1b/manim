@@ -5,7 +5,7 @@ FACTOR = 1/3.
 LABELED_NODE_FACTOR = 7
 DEFAULT_NODE_HEIGHT = 0.2
 LABEL_SCALE_FACTOR = LABELED_NODE_FACTOR * DEFAULT_NODE_HEIGHT
-HEIGHT_RELATIVE_TO_NODE = [0, 0.258, 0.258, 0.258]
+HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
 UNLABELED_NODE_RADIUS = DEFAULT_NODE_HEIGHT / 2
 LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * DEFAULT_NODE_HEIGHT / 2
 
@@ -20,7 +20,7 @@ class Node(Group):
         else:
             if "labels" in kwargs and kwargs["labels"] and \
                     location in kwargs["labels"]:
-                radius = LABELED_NODE_RADIUS
+                radius = LABELED_NODE_RADIUS * kwargs["scale"]
             else:
                 radius = UNLABELED_NODE_RADIUS
             self.mobject = Circle(fill_opacity=0.0,
@@ -55,9 +55,9 @@ class Node(Group):
         if "factor" in kwargs:
             factor = kwargs["factor"]
         elif "shrink" in kwargs and kwargs["shrink"] == True:
-            factor = 1./LABELED_NODE_FACTOR
+            factor = 1./(LABELED_NODE_FACTOR * self.scale)
         else:
-            factor = LABELED_NODE_FACTOR
+            factor = (LABELED_NODE_FACTOR * self.scale)
 
         new_node = self.mobject.copy().scale(factor)
         new_node.radius *= factor
@@ -67,7 +67,7 @@ class Node(Group):
 
     def get_label_height(self, label, num_labels):
         return HEIGHT_RELATIVE_TO_NODE[num_labels] * \
-                LABEL_SCALE_FACTOR / label.get_height()
+                LABEL_SCALE_FACTOR / label.get_height() * self.scale
     
     def get_label(self, name):
         if name in self.labels:
@@ -124,7 +124,7 @@ class Node(Group):
                 label.move_to(self.get_center())
             else:
                 vec = rotate_vector(RIGHT, np.pi / 2)
-                vec *= LABEL_SCALE_FACTOR / 4.8
+                vec *= LABEL_SCALE_FACTOR / 4.8 * self.scale
                 for label in new_labels.values():
                     label.move_to(self.get_center() + vec)
                     vec = rotate_vector(vec, 2 * np.pi / len(new_labels))

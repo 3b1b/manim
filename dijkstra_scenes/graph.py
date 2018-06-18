@@ -9,7 +9,7 @@ class Graph(Group):
     CONFIG = {
         "stroke_width": 1,
     }
-    def __init__(self, nodes, edges, labels=None):
+    def __init__(self, nodes, edges, labels=None, scale=1):
         for node in nodes:
             assert(type(node) == tuple)
             assert(len(node) == 3)
@@ -26,6 +26,7 @@ class Graph(Group):
         self.edges = {}
         submobjects = []
 
+        self.CONFIG["scale"] = scale
         # add nodes
         for location in nodes:
             node = Node(location, labels=labels, **self.CONFIG)

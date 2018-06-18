@@ -43,7 +43,10 @@ def relax_node(G, parent, arrows=False):
             if type(old_bound) == Integer or len(old_bound.tex_string) == 1:
                 # path length is already known
                 continue
-            old_bound = int(old_bound.tex_string[4:])
+            if "\infty" in old_bound.tex_string:
+                old_bound = float("inf")
+            else:
+                old_bound = int(old_bound.tex_string[4:])
             if new_bound < old_bound:
                 labels.append((child, "dist", TexMobject("\le {}".format(new_bound))))
                 if arrows:
@@ -75,9 +78,15 @@ def extract_node(G):
     if not bounded_nodes:
         return None, None
     min_node  = bounded_nodes[0]
-    min_bound = int(G.get_node_label(min_node, "dist").tex_string[4:])
+    if "\infty" in G.get_node_label(min_node, "dist").tex_string:
+        min_bound = float("inf")
+    else:
+        min_bound = int(G.get_node_label(min_node, "dist").tex_string[4:])
     for v in bounded_nodes[1:]:
-        cur_bound = int(G.get_node_label(v, "dist").tex_string[4:])
+        if "\infty" in G.get_node_label(v, "dist").tex_string:
+            cur_bound = float("inf")
+        else:
+            cur_bound = int(G.get_node_label(v, "dist").tex_string[4:])
         if cur_bound < min_bound:
             min_node = v
             min_bound = cur_bound
@@ -610,6 +619,16 @@ class RunAlgorithm(MovingCameraScene):
             if v.dist > u.dist + G.weights(u, v):
                 v.dist = u.dist + G.weights(u, v)
                 v.parent = u
+
+        class min_queue:
+            def __init__(self, items, key):
+                pass
+
+            def extract_min(self):
+                pass
+
+            def decrease_key(self, item, new_value):
+                pass
         """).scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
             .to_corner(UL, buff=MED_SMALL_BUFF)
 
@@ -644,7 +663,7 @@ class RunAlgorithm(MovingCameraScene):
             if node == s:
                 labels.append((node, "dist", Integer(0)))
             else:
-                labels.append((node, "dist", TexMobject("\infty")))
+                labels.append((node, "dist", TexMobject("\le\infty")))
 
         # shift initialize header down and create next block
         top_line = code.submobjects[0].submobjects[1]
@@ -701,6 +720,87 @@ class RunAlgorithm(MovingCameraScene):
 
         self.wait(2)
 
+        state = self.__dict__.copy()
+        # must be removed before save to prevent segfault
+        if "writing_process" in self.__dict__:
+            del state["writing_process"]
+        if "canvas" in state["camera"].__dict__:
+            del state["camera"].__dict__["canvas"]
+        pickle.dump(state, open("show_code.mnm", "wb"))
+
+    def run_code(self):
+        loaded_state = pickle.load(open("show_code.mnm", "rb"))
+        self.__dict__.update(loaded_state)
+
+        s = ( 0,  2.6, 0)
+        nodes = [
+            ( 0,  2.6, 0),
+            (-1.3,  1.3, 0), ( 1.3,  1.3, 0),
+            (-2.6,  0, 0), ( 0,  0, 0), ( 2.6,  0, 0),
+            (-1.3, -1.3, 0), ( 1.3, -1.3, 0),
+            ( 0, -2.6, 0),
+        ]
+        edges = [
+            (( 0,  2.6, 0), (-1.3,  1.3, 0)),
+            (( 0,  2.6, 0), ( 1.3,  1.3, 0)),
+
+            ((-1.3,  1.3, 0), (-2.6,  0, 0)),
+            ((-1.3,  1.3, 0), ( 0,  0, 0)),
+            (( 1.3,  1.3, 0), ( 0,  0, 0)),
+            (( 1.3,  1.3, 0), ( 2.6,  0, 0)),
+
+            ((-2.6,  0, 0), (-1.3, -1.3, 0)),
+            (( 0,  0, 0), (-1.3, -1.3, 0)),
+            (( 0,  0, 0), ( 1.3, -1.3, 0)),
+            (( 2.6,  0, 0), ( 1.3, -1.3, 0)),
+
+            ((-1.3, -1.3, 0), ( 0, -2.6, 0)),
+            (( 1.3, -1.3, 0), ( 0, -2.6, 0)),
+        ]
+        labels = {
+            ( 0,  2.6, 0): [("variable", TexMobject("s"))],
+
+            (( 0  , 2.6 , 0) , (-1.3, 1.3 , 0)): [("weight", Integer(6))],
+            (( 0  , 2.6 , 0) , ( 1.3, 1.3 , 0)): [("weight", Integer(1))],
+
+            ((-1.3, 1.3 , 0) , (-2.6, 0   , 0)): [("weight", Integer(5))],
+            ((-1.3, 1.3 , 0) , ( 0  , 0   , 0)): [("weight", Integer(4))],
+            (( 1.3, 1.3 , 0) , ( 0  , 0   , 0)): [("weight", Integer(9))],
+            (( 1.3, 1.3 , 0) , ( 2.6, 0   , 0)): [("weight", Integer(2))],
+
+            ((-2.6, 0   , 0) , (-1.3, -1.3, 0)): [("weight", Integer(4))],
+            (( 0  , 0   , 0) , (-1.3, -1.3, 0)): [("weight", Integer(5))],
+            (( 0  , 0   , 0) , ( 1.3, -1.3, 0)): [("weight", Integer(1))],
+            (( 2.6, 0   , 0) , ( 1.3, -1.3, 0)): [("weight", Integer(2))],
+
+            ((-1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(2))],
+            (( 1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(1))],
+        }
+        G = Graph(nodes, edges, labels, scale=0.8).shift(self.camera_frame.get_right() * 0.5)
+        self.play(ShowCreation(G))
+
+        labels = [
+            (s, "dist", Integer(0))
+        ]
+        for node in nodes:
+            if node != s:
+                labels.append((node, "dist", TexMobject("\le\infty")))
+        self.play(*G.set_node_labels(*labels))
+
+        min_node = (0, 2.6, 0)
+        while True:
+            # relax neighbors
+            self.play(*relax_node(G, min_node, arrows=True))
+
+            # tighten bound on node with least bound
+            min_node, min_bound = extract_node(G)
+            if min_node:
+                self.play(*G.set_node_label(min_node, "dist", Integer(min_bound)))
+            else:
+                break
+
+        self.wait(2)
+
     def construct(self):
         self.first_try()
         self.counterexample()
@@ -708,4 +808,8 @@ class RunAlgorithm(MovingCameraScene):
         self.triangle_inequality()
         self.generalize()
         self.last_run()
-        self.show_code()
+        # TODO: mention shortest path tree when arrows are used
+        # TODO: directed graphs
+        self.show_code() # TODO: min_queue
+        self.run_code()
+
