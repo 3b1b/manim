@@ -237,9 +237,9 @@ class Camera(object):
         fh = self.get_frame_height()
         fw = self.get_frame_width()
         return not reduce(op.or_, [
-            mobject.get_left()[0] < fc[0] - fw,
+            mobject.get_right()[0] < fc[0] - fw,
             mobject.get_bottom()[1] > fc[1] + fh,
-            mobject.get_right()[0] > fc[0] + fw,
+            mobject.get_left()[0] > fc[0] + fw,
             mobject.get_top()[1] < fc[1] - fh,
         ])
 
