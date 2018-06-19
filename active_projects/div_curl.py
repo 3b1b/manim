@@ -380,7 +380,7 @@ class VectorFieldPointFlow(VectorFieldFlow):
         )
 
 
-# TODO: Make it so that you can have a group of streamlines
+# TODO: Make it so that you can have a group of stream_lines
 # varying in response to a changing vector field, and still
 # animate the resulting flow
 class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
@@ -463,19 +463,192 @@ class JigglingSubmobjects(ContinualAnimation):
 
 
 class Introduction(MovingCameraScene):
+    CONFIG = {
+        "stream_lines_config": {
+            "start_points_generator_config": {
+                "delta_x": 1.0 / 8,
+                "delta_y": 1.0 / 8,
+                "y_min": -8.5,
+                "y_max": 8.5,
+            }
+        },
+        "vector_field_config": {},
+        "virtual_time": 3,
+    }
+
     def construct(self):
-        self.show_divergence()
-        self.show_curl()
-        self.show_context()
+        # Divergence
+        def div_func(p):
+            return p / 3
+        div_vector_field = VectorField(
+            div_func, **self.vector_field_config
+        )
+        stream_lines = StreamLines(
+            div_func, **self.stream_lines_config
+        )
+        stream_lines.shuffle_submobjects()
+        div_title = self.get_title("Divergence")
 
-    def show_divergence(self):
-        pass
+        self.add(div_vector_field)
+        self.play(
+            LaggedStart(ShowPassingFlash, stream_lines),
+            FadeIn(div_title[0]),
+            *map(GrowFromCenter, div_title[1])
+        )
 
-    def show_curl(self):
-        pass
+        # Curl
+        def curl_func(p):
+            return rotate_vector(p / 3, 90 * DEGREES)
 
-    def show_context(self):
-        pass
+        curl_vector_field = VectorField(
+            curl_func, **self.vector_field_config
+        )
+        stream_lines = StreamLines(
+            curl_func, **self.stream_lines_config
+        )
+        stream_lines.shuffle_submobjects()
+        curl_title = self.get_title("Curl")
+
+        self.play(
+            ReplacementTransform(div_vector_field, curl_vector_field),
+            ReplacementTransform(
+                div_title, curl_title,
+                path_arc=90 * DEGREES
+            ),
+        )
+        self.play(ShowPassingFlash(stream_lines, run_time=3))
+        self.wait()
+
+    def get_title(self, word):
+        title = TextMobject(word)
+        title.scale(2)
+        title.to_edge(UP)
+        title.add_background_rectangle()
+        return title
+
+
+class ShowWritingTrajectory(TeacherStudentsScene):
+    def construct(self):
+        self.add_screen()
+        self.show_meandering_path()
+        self.show_previous_video()
+
+    def add_screen(self):
+        self.screen.scale(1.4, about_edge=UL)
+        self.add(self.screen)
+
+    def show_meandering_path(self):
+        solid_path = VMobject().set_points_smoothly([
+            3 * UP + 2 * RIGHT,
+            2 * UP + 4 * RIGHT,
+            3.5 * UP + 3.5 * RIGHT,
+            2 * UP + 3 * RIGHT,
+            3 * UP + 7 * RIGHT,
+            3 * UP + 5 * RIGHT,
+            UP + 6 * RIGHT,
+            2 * RIGHT,
+            2 * UP + 2 * RIGHT,
+            self.screen.get_right()
+        ])
+        step = 1.0 / 80
+        dashed_path = VGroup(*[
+            VMobject().pointwise_become_partial(
+                solid_path, x, x + step / 2
+            )
+            for x in np.arange(0, 1 + step, step)
+        ])
+        arrow = Arrow(
+            solid_path.points[-2],
+            solid_path.points[-1],
+            buff=0
+        )
+        dashed_path.add(arrow.tip)
+        dashed_path.set_color_by_gradient(BLUE, YELLOW)
+
+        self.play(
+            ShowCreation(
+                dashed_path,
+                rate_func=bezier([0, 0, 1, 1]),
+                run_time=5,
+            ),
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes(*["sassy"] * 3)
+        )
+        self.play(
+            LaggedStart(
+                ApplyMethod, dashed_path,
+                lambda m: (m.scale, 0),
+                remover=True
+            ),
+            self.teacher.change, "tease",
+            self.get_student_changes(
+                *["pondering"] * 3,
+                look_at_arg=self.screen
+            )
+        )
+
+    def show_previous_video(self):
+        screen = self.screen
+
+        arrow = Vector(LEFT, color=WHITE)
+        arrow.next_to(screen, RIGHT)
+        prev_words = TextMobject("Previous video")
+        prev_words.next_to(arrow, RIGHT)
+
+        screen.generate_target()
+        screen.target.scale_to_fit_height(3.75)
+        screen.target.to_corner(UR)
+        complex_words = TextMobject("Complex derivatives")
+        complex_words.next_to(
+            screen.target, LEFT,
+            buff=2 * SMALL_BUFF + arrow.get_length()
+        )
+
+        self.play(
+            GrowArrow(arrow),
+            Write(prev_words)
+        )
+        self.wait(3)
+        self.play(
+            arrow.flip,
+            arrow.next_to, screen.target, LEFT, SMALL_BUFF,
+            MoveToTarget(screen),
+            FadeOut(prev_words),
+            Write(complex_words),
+            self.teacher.change, "raise_right_hand",
+            path_arc=30 * DEGREES
+        )
+        self.change_student_modes("erm", "sassy", "confused")
+        self.look_at(screen)
+        self.wait(2)
+        self.change_student_modes("pondering", "confused", "sassy")
+        self.wait(2)
+
+        bubble = self.teacher.get_bubble(
+            bubble_class=SpeechBubble,
+            height=3, width=5
+        )
+        complex_words.generate_target()
+        complex_words.target.move_to(bubble.get_bubble_center())
+        self.play(
+            FadeOut(screen),
+            FadeOut(arrow),
+            ShowCreation(bubble),
+            self.teacher.change, "hooray",
+            MoveToTarget(complex_words),
+        )
+
+        s0 = self.students[0]
+        s0.target_center = s0.get_center()
+
+        def update_s0(s0, dt):
+            s0.target_center += dt * LEFT * 0.5
+            s0.move_to(s0.target_center)
+
+        self.add(ContinualUpdateFromTimeFunc(s0, update_s0))
+        self.change_student_modes("tired", "horrified", "sad")
+        self.play(s0.look, LEFT)
+        self.wait(4)
 
 
 class TestVectorField(Scene):
@@ -976,6 +1149,168 @@ class AskQuestions(TeacherStudentsScene):
         )
         self.look_at(screen)
         self.wait(6)
+
+
+class ScopeMeiosis(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "flip_at_start": True,
+            "color": GREY_BROWN,
+        },
+        "default_pi_creature_start_corner": DR,
+    }
+
+    def construct(self):
+        morty = self.pi_creature
+        section_titles = VGroup(*map(TextMobject, [
+            "Background on div/curl",
+            "Conformal maps",
+            "Conformal map $\\Rightarrow" +
+            "\\text{div}\\textbf{F} = " +
+            "\\text{curl}\\textbf{F} = 0$",
+            "Complex derivatives",
+        ]))
+        sections = VGroup(*[
+            VGroup(title, self.get_lines(title, 3))
+            for title in section_titles
+        ])
+        sections.arrange_submobjects(
+            DOWN, buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
+        )
+        sections.to_edge(UP)
+
+        top_title = section_titles[0]
+        lower_sections = sections[1:]
+
+        self.add(sections)
+        modes = [
+            "pondering",
+            "pondering",
+            "bump",
+            "bump",
+            "concerned_musician",
+            "concerned_musician",
+        ]
+
+        for n, mode in zip(range(6), modes):
+            if n % 2 == 1:
+                top_title = lines
+                lines = self.get_lines(top_title, 4)
+            else:
+                lines = self.get_lines(top_title, 6)
+            lower_sections.generate_target()
+            lower_sections.target.next_to(
+                lines, DOWN, MED_LARGE_BUFF, LEFT,
+            )
+            self.play(
+                ShowCreation(lines),
+                MoveToTarget(lower_sections),
+                morty.change, mode, lines,
+            )
+
+    def get_lines(self, title, n_lines):
+        lines = VGroup(*[
+            Line(3 * LEFT, 3 * RIGHT, color=LIGHT_GREY)
+            for x in range(n_lines)
+        ])
+        lines.arrange_submobjects(DOWN, buff=MED_SMALL_BUFF)
+        lines.next_to(
+            title, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
+        )
+        lines[-1].pointwise_become_partial(
+            lines[-1], 0, random.random()
+        )
+        return lines
+
+
+class WhyAreYouTellingUsThis(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Cool story bro...\\\\ how about the actual math?",
+            target_mode="sassy",
+            added_anims=[self.teacher.change, "guilty"]
+        )
+        self.change_student_modes("angry", "sassy", "angry")
+        self.wait(2)
+
+
+class TopicsAndConnections(Scene):
+    CONFIG = {
+        "random_seed": 1,
+    }
+
+    def construct(self):
+        dots = VGroup(*[
+            Dot(8 * np.array([
+                random.random(),
+                random.random(),
+                0
+            ]))
+            for n in range(5)
+        ])
+        topics = VGroup(*[
+            TextMobject(word).next_to(
+                dot, RIGHT, SMALL_BUFF
+            )
+            for dot, word in zip(dots, [
+                "Divergence/curl",
+                "Fluid flow",
+                "Electricity and magnetism",
+                "Conformal maps",
+                "Complex numbers"
+            ])
+        ])
+        for topic in topics:
+            topic.add_to_back(
+                topic.copy().set_stroke(BLACK, 2)
+            )
+
+        VGroup(dots, topics).center()
+        for dot in dots:
+            dot.save_state()
+            dot.scale(3)
+            dot.set_fill(opacity=0)
+
+        connections = VGroup(*[
+            DashedLine(d1.get_center(), d2.get_center())
+            for d1, d2 in it.combinations(dots, 2)
+        ])
+        connections.set_stroke(YELLOW, 2)
+
+        full_rect = FullScreenFadeRectangle()
+
+        self.play(
+            LaggedStart(
+                ApplyMethod, dots,
+                lambda d: (d.restore,)
+            ),
+            LaggedStart(Write, topics),
+        )
+        self.wait()
+        self.play(
+            LaggedStart(ShowCreation, connections),
+            Animation(topics),
+            Animation(dots),
+        )
+        self.wait()
+        self.play(
+            FadeIn(full_rect),
+            Animation(topics[0]),
+            Animation(dots[0]),
+        )
+        self.wait()
+
+
+class OnToTheLesson(Scene):
+    def construct(self):
+        words = TextMobject("On to the lesson!")
+        words.scale(1.5)
+        self.add(words)
+        self.play(FadeInFromDown(words))
+        self.wait()
 
 
 class IntroduceVectorField(Scene):
@@ -1808,6 +2143,7 @@ class PureCylinderFlow(Scene):
             if np.linalg.norm(vector.get_start()) < 1:
                 vector_field.remove(vector)
         vector_field.set_fill(opacity=0.75)
+        self.modify_vector_field(vector_field)
         self.add_foreground_mobjects(vector_field)
 
     def begin_flow(self):
@@ -1820,6 +2156,7 @@ class PureCylinderFlow(Scene):
             },
             virtual_time=5,
         )
+        self.add(stream_lines)
         for stream_line in stream_lines:
             if np.linalg.norm(stream_line.points[0]) < 1:
                 stream_lines.remove(stream_line)
@@ -1837,22 +2174,38 @@ class PureCylinderFlow(Scene):
             stroke_color=YELLOW,
             fill_color=BLACK,
             fill_opacity=1,
-            num_anchors=24,
         )
         self.modify_flow(circle)
-        self.add_foreground_mobjects()
+        self.add_foreground_mobjects(circle)
 
     def modify_flow(self, mobject):
+        pass
+
+    def modify_vector_field(self, vector_field):
         pass
 
 
 class PureAirfoilFlow(PureCylinderFlow):
     def modify_flow(self, mobject):
-        vect = 0.1 * UP + 0.2 * LEFT
+        vect = 0.1 * LEFT + 0.2 * UP
         mobject.scale(np.linalg.norm(vect - RIGHT))
         mobject.shift(vect)
         mobject.apply_complex_function(joukowsky_map)
         return mobject
+
+    def modify_vector_field(self, vector_field):
+        def func(z):
+            w = complex(-0.1, 0.2)
+            n = abs(w - 1)
+            return joukowsky_map(inverse_joukowsky_map(z) - w / n)
+
+        def new_vector_field_func(point):
+            z = R3_to_complex(point)
+            return complex_to_R3(derivative(func)(z).conjugate())
+
+        vf = VectorField(new_vector_field_func, delta_y=0.33)
+        Transform(vector_field, vf).update(1)
+        vf.set_fill(opacity=0.5)
 
 
 class IntroduceCurl(IntroduceVectorField):
@@ -3266,7 +3619,8 @@ class ShowCrossProduct(ShowDotProduct):
 
 class DivergenceTinyNudgesView(MovingCameraScene):
     CONFIG = {
-        "scale_factor": 0.25
+        "scale_factor": 0.25,
+        "point": ORIGIN,
     }
 
     def construct(self):
@@ -3281,33 +3635,34 @@ class DivergenceTinyNudgesView(MovingCameraScene):
     def add_vector_field(self):
         plane = self.plane = NumberPlane()
 
-        vector_field = self.vector_field = VectorField(
-            lambda p: 0.4 * np.array([
-                np.cos(3 * p[0] * p[1] / 4),
-                np.sin(TAU * p[1] / 4),
+        def func(p):
+            x, y = p[:2]
+            result = np.array([
+                np.sin(x + 0.1),
+                np.cos(2 * y),
                 0
-            ]),
-            length_func=lambda n: max(n, 0.5),
-            max_magnitude=1.0,
+            ])
+            result /= (np.linalg.norm(result)**0.5 + 1)
+            return result
+
+        vector_field = self.vector_field = VectorField(
+            func,
+            length_func=lambda n: 0.5 * sigmoid(n),
+            # max_magnitude=1.0,
         )
         self.add(plane)
         self.add(vector_field)
 
     def zoom_in(self):
-        point = self.point = 2 * LEFT + UP
+        point = self.point
         vector_field = self.vector_field
         sf = self.scale_factor
 
-        self.play(
-            self.camera_frame.scale, sf,
-            self.camera_frame.move_to, point,
-            FadeOut(vector_field),
-            run_time=2
-        )
         vector_field.vector_config.update({
             "rectangular_stem_width": 0.02,
-            "tip_length": 0.1
+            "tip_length": 0.1,
         })
+        vector_field.length_func = lambda n: n
         vector = vector_field.get_vector(point)
 
         input_dot = Dot(point).scale(sf)
@@ -3318,13 +3673,20 @@ class DivergenceTinyNudgesView(MovingCameraScene):
         output_words.next_to(vector.get_top(), UP, sf * SMALL_BUFF)
         output_words.match_color(vector)
 
+        self.play(
+            self.camera_frame.scale, sf,
+            self.camera_frame.move_to, point,
+            FadeOut(vector_field),
+            FadeIn(vector),
+            run_time=2
+        )
         self.add_foreground_mobjects(input_dot)
         self.play(
             FadeInAndShiftFromDirection(input_dot, SMALL_BUFF * DL),
             Write(input_words),
         )
         self.play(
-            GrowArrow(vector),
+            Indicate(vector),
             Write(output_words),
         )
         self.wait()
@@ -3739,4 +4101,385 @@ class IncmpressibleAndIrrotational(Scene):
 
         self.play(ShowCreation(rect))
         self.play(Write(question))
+        self.wait()
+
+
+# End message
+class BroughtToYouBy(PiCreatureScene):
+    CONFIG = {
+        "pi_creatures_start_on_screen": False,
+    }
+
+    def construct(self):
+        self.brought_to_you_by()
+        self.just_you_and_me()
+
+    def brought_to_you_by(self):
+        so_words = TextMobject("So", "...", arg_separator="")
+        so_words.scale(2)
+
+        btyb = TextMobject("Brought to you", "by")
+        btyb.scale(1.5)
+        btyb_line = Line(LEFT, RIGHT)
+        btyb_line.next_to(btyb, RIGHT, SMALL_BUFF)
+        btyb_line.align_to(btyb[0], DOWN)
+        btyb_group = VGroup(btyb, btyb_line)
+        btyb_group.center()
+
+        you_word = TextMobject("\\emph{you}")
+        you_word.set_color(YELLOW)
+        you_word.scale(1.75)
+        you_word.move_to(btyb_line)
+        you_word.align_to(btyb, DOWN)
+
+        only_word = TextMobject("(only)")
+        only_word.scale(1.25)
+        only_brace = Brace(only_word, DOWN, buff=SMALL_BUFF)
+        only_group = VGroup(only_word, only_brace)
+        only_group.next_to(
+            VGroup(btyb[0][-1], btyb[1][0]), UP, SMALL_BUFF
+        )
+        only_group.set_color(RED)
+
+        full_group = VGroup(btyb_group, only_group, you_word)
+        full_group.generate_target()
+        full_group.target.scale(0.4)
+        full_group.target.to_corner(UL)
+
+        patreon_logo = PatreonLogo()
+        patreon_logo.scale(0.4)
+        patreon_logo.next_to(full_group.target, DOWN)
+
+        self.play(
+            Write(so_words[0]),
+            LaggedStart(
+                DrawBorderThenFill, so_words[1],
+                run_time=5
+            ),
+        )
+        self.play(
+            so_words.shift, DOWN,
+            so_words.fade, 1,
+            remover=True
+        )
+        self.play(FadeInFromDown(btyb_group))
+        self.wait()
+        self.play(Write(you_word))
+        self.play(
+            GrowFromCenter(only_brace),
+            Write(only_word)
+        )
+        self.wait()
+        self.play(MoveToTarget(
+            full_group,
+            rate_func=running_start,
+        ))
+        self.play(LaggedStart(
+            DrawBorderThenFill, patreon_logo
+        ))
+        self.wait()
+
+    def just_you_and_me(self):
+        randy, morty = self.pi_creatures
+        for pi in self.pi_creatures:
+            pi.change("pondering")
+        math = TexMobject("\\sum_{n=1}^\\infty \\frac{1}{n^s}")
+        math.scale(2)
+        math.move_to(self.pi_creatures)
+
+        spiral = Line(0.5 * RIGHT, 0.5 * RIGHT + 70 * UP)
+        spiral.insert_n_anchor_points(1000)
+        from old_projects.zeta import zeta
+        spiral.apply_complex_function(zeta)
+        step = 0.1
+        spiral = VGroup(*[
+            VMobject().pointwise_become_partial(
+                spiral, a, a + step
+            )
+            for a in np.arange(0, 1, step)
+        ])
+        spiral.set_color_by_gradient(BLUE, YELLOW, RED)
+        spiral.scale(0.5)
+        spiral.move_to(math)
+
+        self.play(FadeInFromDown(randy))
+        self.play(FadeInFromDown(morty))
+        self.play(
+            Write(math),
+            randy.change, "hooray",
+            morty.change, "hooray",
+        )
+        self.look_at(math)
+        self.play(
+            ShowCreation(spiral, run_time=6, rate_func=None),
+            math.scale, 0.5,
+            math.shift, 3 * UP,
+            randy.change, "thinking",
+            morty.change, "thinking",
+        )
+        self.play(LaggedStart(FadeOut, spiral, run_time=3))
+        self.wait(3)
+
+    # Helpers
+    def create_pi_creatures(self):
+        randy = Randolph(color=BLUE_C)
+        randy.to_edge(DOWN).shift(4 * LEFT)
+        morty = Mortimer()
+        morty.to_edge(DOWN).shift(4 * RIGHT)
+        return VGroup(randy, morty)
+
+
+class ThoughtsOnAds(Scene):
+    def construct(self):
+        title = Title(
+            "Internet advertising",
+            match_underline_width_to_text=True,
+            underline_buff=SMALL_BUFF,
+        )
+
+        line = NumberLine(
+            color=LIGHT_GREY,
+            x_min=0,
+            x_max=12,
+            numbers_with_elongated_ticks=[]
+        )
+        line.move_to(DOWN)
+
+        arrows = VGroup(Vector(2 * LEFT), Vector(2 * RIGHT))
+        arrows.arrange_submobjects(RIGHT, buff=2)
+        arrows.next_to(line, DOWN)
+
+        misaligned = TextMobject("Misaligned")
+        misaligned.next_to(arrows[0], DOWN)
+        aligned = TextMobject("Well-aligned")
+        aligned.next_to(arrows[1], DOWN)
+
+        VGroup(arrows[0], misaligned).set_color(RED)
+        VGroup(arrows[1], aligned).set_color(BLUE)
+
+        left_text = TextMobject(
+            "Any website presented \\\\",
+            "as a click-maximizing \\\\ slideshow"
+        )
+        left_text.scale(0.8)
+        left_text.next_to(line, UP, buff=MED_LARGE_BUFF)
+        left_text.to_edge(LEFT)
+
+        viewer, brand, creator = vcb = VGroup(
+            *map(TextMobject, ["viewer", "brand", "creator"])
+        )
+        brand.next_to(creator, LEFT, LARGE_BUFF)
+        viewer.next_to(vcb[1:], UP, LARGE_BUFF)
+        arrow_config = {
+            "path_arc": 60 * DEGREES,
+            "use_rectangular_stem": False,
+            "tip_length": 0.15,
+        }
+        vcb_arrows = VGroup(*[
+            VGroup(
+                Arrow(p1, p2, **arrow_config),
+                Arrow(p2, p1, **arrow_config),
+            )
+            for p1, p2 in [
+                (creator.get_left(), brand.get_right()),
+                (brand.get_top(), viewer.get_bottom()),
+                (viewer.get_bottom(), creator.get_top()),
+            ]
+        ])
+        vcb_arrows.set_stroke(width=2)
+        vcb_arrows.set_color(BLUE)
+        vcb_group = VGroup(vcb, vcb_arrows)
+        vcb_group.next_to(line, UP, buff=MED_LARGE_BUFF)
+        vcb_group.to_edge(RIGHT)
+
+        knob = RegularPolygon(n=3, start_angle=-90 * DEGREES)
+        knob.scale_to_fit_height(0.25)
+        knob.set_stroke(width=0)
+        knob.set_fill(YELLOW, 1)
+        knob.move_to(line.get_left(), DOWN)
+
+        right_rect = Rectangle(
+            width=3,
+            height=0.25,
+            stroke_color=WHITE,
+            stroke_width=2,
+            fill_color=BLUE,
+            fill_opacity=0.5
+        )
+        right_rect.move_to(line, RIGHT)
+        right_rect_label = Group(
+            ImageMobject("3b1b_logo", height=1),
+            TextMobject("(hopefully)").scale(0.8)
+        )
+        right_rect_label.arrange_submobjects(DOWN, buff=SMALL_BUFF)
+        # TextMobject(
+        #     "Where I hope \\\\ I've been"
+        # )
+        right_rect_label.next_to(
+            right_rect, UP, SMALL_BUFF
+        )
+        # right_rect_label.set_color(BLUE)
+
+        self.add(title)
+        self.play(ShowCreation(line))
+        self.play(
+            Write(misaligned),
+            Write(aligned),
+            *map(GrowArrow, arrows),
+            run_time=1
+        )
+
+        self.play(
+            FadeIn(left_text),
+            FadeInAndShiftFromDirection(knob, 2 * RIGHT)
+        )
+        self.wait()
+        self.play(
+            LaggedStart(FadeInFromDown, vcb),
+            LaggedStart(ShowCreation, vcb_arrows),
+            ApplyMethod(
+                knob.move_to, line.get_right(), DOWN,
+                run_time=2
+            )
+        )
+        self.wait(2)
+        self.play(vcb_group.shift, 2 * UP)
+        self.play(
+            DrawBorderThenFill(right_rect),
+            FadeIn(right_rect_label),
+        )
+        self.wait()
+
+
+class HoldUpPreviousPromo(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+            "flip_at_start": True,
+        },
+        "default_pi_creature_start_corner": DR,
+    }
+
+    def construct(self):
+        morty = self.pi_creature
+        screen_rect = ScreenRectangle(height=5)
+        screen_rect.to_corner(UL)
+
+        self.play(
+            FadeInFromDown(screen_rect),
+            morty.change, "raise_right_hand",
+        )
+        self.wait(5)
+
+
+class GoalWrapper(Scene):
+    def construct(self):
+        goal = TextMobject(
+            "Goal: Teach/remind people \\\\ that they love math"
+        )
+        goal.to_edge(UP)
+        self.add(goal)
+
+        screen_rect = ScreenRectangle(height=6)
+        screen_rect.next_to(goal, DOWN)
+        self.play(ShowCreation(screen_rect))
+        self.wait()
+
+
+class PeopleValueGraph(GraphScene):
+    CONFIG = {
+        "x_axis_label": "People reached",
+        "y_axis_label": "Value per person",
+        "x_min": 0,
+        "x_max": 12,
+        "x_axis_width": 11,
+        "y_max": 8,
+        "y_axis_height": 5,
+        "graph_origin": 2 * DOWN + 5 * LEFT,
+        "riemann_rectangles_config": {
+            "dx": 0.01,
+            "stroke_width": 0,
+            "start_color": GREEN,
+            "end_color": BLUE,
+        }
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.tweak_labels()
+        self.add_curve()
+        self.comment_on_incentives()
+        self.change_curve()
+
+    def tweak_labels(self):
+        self.add_foreground_mobjects(self.x_axis_label_mob)
+        self.y_axis_label_mob.to_edge(LEFT)
+
+    def add_curve(self):
+        graph = self.graph = self.get_graph(
+            lambda x: 7 * np.exp(-0.5 * x),
+        )
+
+        self.play(
+            ShowCreation(graph),
+            rate_func=bezier([0, 0, 1, 1]),
+            run_time=3
+        )
+
+    def comment_on_incentives(self):
+        reach_arrow = Vector(5 * RIGHT)
+        reach_arrow.next_to(
+            self.x_axis, DOWN,
+            buff=SMALL_BUFF,
+            aligned_edge=RIGHT
+        )
+        reach_words = TextMobject("Maximize reach?")
+        reach_words.next_to(reach_arrow, DOWN, buff=SMALL_BUFF)
+        reach_words.match_color(reach_arrow)
+
+        area = self.area = self.get_riemann_rectangles(
+            self.graph, **self.riemann_rectangles_config
+        )
+        area_words = TextMobject("Maximize this area")
+        area_words.set_color(BLUE)
+        area_words.move_to(self.coords_to_point(4, 5))
+        area_arrow = Arrow(
+            area_words.get_bottom(),
+            self.coords_to_point(1.5, 2)
+        )
+
+        self.play(GrowArrow(reach_arrow))
+        self.play(Write(reach_words))
+        self.wait()
+        self.play(
+            LaggedStart(DrawBorderThenFill, area),
+            Animation(self.graph),
+            Animation(self.axes),
+            Write(area_words),
+            GrowArrow(area_arrow),
+        )
+        self.wait()
+
+        self.area_label_group = VGroup(area_words, area_arrow)
+
+    def change_curve(self):
+        new_graph = self.get_graph(
+            lambda x: interpolate(
+                7 * np.exp(-0.01 * x),
+                7 * np.exp(-3 * x),
+                smooth(np.clip(x / 5, 0, 1))
+            )
+        )
+        new_area = self.get_riemann_rectangles(
+            new_graph, **self.riemann_rectangles_config
+        )
+
+        self.play(
+            Transform(self.area, new_area),
+            Transform(self.graph, new_graph),
+            self.area_label_group[0].shift, RIGHT,
+            Animation(self.area_label_group),
+            Animation(self.axes),
+            run_time=4,
+        )
         self.wait()
