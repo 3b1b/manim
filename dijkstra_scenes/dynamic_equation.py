@@ -129,6 +129,7 @@ class DynamicEquation(Group):
             if token[0] == "\\":
                 token = token[1:]
             if re.match(group_regex, token):
+                # transform the next initial group to the next target group
                 group1 = Group()
                 for token in initial_equation_match.group(group_number).split():
                     group1.add(self.mob_from_char(
@@ -150,6 +151,7 @@ class DynamicEquation(Group):
                 anims.append(ReplacementTransform(group1, group2))
                 group_number += 1
             else:
+                # transform next initial character to the next target character
                 anims.append(ReplacementTransform(
                     self.mob_from_char(
                         self.current_equation_index,

@@ -110,9 +110,10 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DI
         os.makedirs(folder)
 
 TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE = os.path.join(THIS_DIR, "template.tex")
-TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
-TEMPLATE_CODE_FILE = os.path.join(THIS_DIR, "code_template.tex")
+TEMPLATE_TEX_FILE     = os.path.join(THIS_DIR, "template.tex")
+TEMPLATE_TEXT_FILE    = os.path.join(THIS_DIR, "text_template.tex")
+TEMPLATE_CODE_FILE    = os.path.join(THIS_DIR, "code_template.tex")
+TEMPLATE_ALIGNAT_FILE = os.path.join(THIS_DIR, "alignat_template.tex")
 
 FFMPEG_BIN = "ffmpeg"
 

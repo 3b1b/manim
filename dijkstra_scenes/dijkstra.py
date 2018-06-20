@@ -769,6 +769,7 @@ class RunAlgorithm(MovingCameraScene):
         )
 
         self.play(FadeOut(code2.submobjects[1]))
+        # TODO: prevent indicate from splitting data structures
         self.remove(
             code2.submobjects[0].submobjects[2],
             code2.submobjects[0].submobjects[3].submobjects[1],
@@ -783,6 +784,7 @@ class RunAlgorithm(MovingCameraScene):
         self.add(code.submobjects[0])
         self.play(FadeIn(Group(*code.submobjects[1:])))
 
+        self.code = code
         state = self.__dict__.copy()
         # must be removed before save to prevent segfault
         if "writing_process" in self.__dict__:
@@ -862,7 +864,136 @@ class RunAlgorithm(MovingCameraScene):
             else:
                 break
 
+        self.G = G
+        state = self.__dict__.copy()
+        # must be removed before save to prevent segfault
+        if "writing_process" in self.__dict__:
+            del state["writing_process"]
+        if "canvas" in state["camera"].__dict__:
+            del state["camera"].__dict__["canvas"]
+        pickle.dump(state, open("run_code.mnm", "wb"))
+
+    def analyze(self):
+        loaded_state = pickle.load(open("run_code.mnm", "rb"))
+        self.__dict__.update(loaded_state)
+        G = self.G
+        code = self.code
+
+        self.play(FadeOut(G))
+
+        runtime = AlignatTexMobject(
+            "{3}  &  \, &&       \,\, &&T_{\\text{build}(V)}      \\\\" + \
+            "+ \, &V \, &&\\cdot \,\, &&T_{\\text{extract\_min}}  \\\\" + \
+            "+ \, &E \, &&\\cdot \,\, &&T_{\\text{decrease\_key}} \\\\" + \
+            "+ \, &V \, &&       \,\, &&                          \\\\" + \
+            "+ \, &2 \, &&\\cdot \,\, &&E                         \\\\"
+        ).shift(RIGHT * 3)
+
+        tbuild = SingleStringTexMobject("")
+        tbuild.submobjects = runtime.submobjects[0].submobjects[0:9]
+        v_textractmin = SingleStringTexMobject("")
+        v_textractmin.submobjects = runtime.submobjects[0].submobjects[10:24]
+        e_tdecreasekey = SingleStringTexMobject("")
+        e_tdecreasekey.submobjects = runtime.submobjects[0].submobjects[25:40]
+        v = SingleStringTexMobject("")
+        v.submobjects = runtime.submobjects[0].submobjects[41]
+        two_e = SingleStringTexMobject("")
+        two_e.submobjects = runtime.submobjects[0].submobjects[43:]
+
+        # time to build
+        self.play(
+            ReplacementTransform(
+                code.submobjects[0].submobjects[2].copy(),
+                tbuild
+            ),
+        )
+        self.wait()
+
+        # time to extract
+        self.play(
+            ReplacementTransform(
+                code.submobjects[0].submobjects[3].submobjects[1].copy(),
+                v_textractmin
+            ),
+            FadeIn(runtime.submobjects[0].submobjects[9]),
+        )
+        self.wait()
+
+        # time to relax
+        self.play(
+            ReplacementTransform(
+                code.submobjects[2].submobjects[1].submobjects[1].copy(),
+                e_tdecreasekey
+            ),
+            FadeIn(runtime.submobjects[0].submobjects[24]),
+        )
         self.wait(2)
+
+        # extraneous V
+        self.play(
+            ReplacementTransform(
+                code.submobjects[0].submobjects[1].copy(),
+                v
+            ),
+            FadeIn(runtime.submobjects[0].submobjects[40]),
+        )
+        self.wait()
+
+        # extra 2 * E
+        self.play(
+            ReplacementTransform(
+                code.submobjects[2].submobjects[1].submobjects[0].copy(),
+                two_e
+            ),
+            FadeIn(runtime.submobjects[0].submobjects[42]),
+        )
+        self.wait(2)
+
+        # remove extra
+        self.play(
+            FadeOut(Group(v, runtime.submobjects[0].submobjects[40])),
+            FadeOut(Group(two_e, runtime.submobjects[0].submobjects[42])),
+        )
+        self.wait(2)
+
+        # remove time to build
+        self.play(
+            FadeOut(tbuild),
+            FadeOut(runtime.submobjects[0].submobjects[9]),
+        )
+
+        # show
+        textbook_runtime = TexMobject(
+            "O(V \cdot T_\\text{extract\_min} + E \cdot T_\\text{decrease\_key})"
+        ).shift(RIGHT * 3 + UP * 0.5)
+
+        textbook_term_1 = VGroup(*textbook_runtime.submobjects[0].submobjects[2:16])
+        textbook_plus   = textbook_runtime.submobjects[0].submobjects[16]
+        textbook_term_2 = VGroup(*textbook_runtime.submobjects[0].submobjects[17:32])
+
+
+        self.play(
+            ReplacementTransform(v_textractmin, textbook_term_1),
+            ReplacementTransform(runtime.submobjects[0].submobjects[24], textbook_plus),
+            ReplacementTransform(e_tdecreasekey, textbook_term_2),
+            FadeIn(Group(*textbook_runtime.submobjects[0].submobjects[:2] + 
+                           [textbook_runtime.submobjects[0].submobjects[-1]]))
+        )
+
+        self.wait(2)
+
+        state = self.__dict__.copy()
+        # must be removed before save to prevent segfault
+        if "writing_process" in self.__dict__:
+            del state["writing_process"]
+        if "canvas" in state["camera"].__dict__:
+            del state["camera"].__dict__["canvas"]
+        pickle.dump(state, open("analyze.mnm", "wb"))
+
+    def compare_data_structures(self):
+        loaded_state = pickle.load(open("analyze.mnm", "rb"))
+        self.__dict__.update(loaded_state)
+
 
     def construct(self):
         self.first_try()
@@ -873,6 +1004,8 @@ class RunAlgorithm(MovingCameraScene):
         self.last_run()
         # TODO: mention shortest path tree when arrows are used
         # TODO: directed graphs
-        self.show_code() # TODO: min_queue
+        self.show_code()
         self.run_code()
+        self.analyze()
+        self.compare_data_structures()
 

@@ -251,6 +251,11 @@ class TextMobject(TexMobject):
         "alignment": "\\centering",
     }
 
+class AlignatTexMobject(TexMobject):
+    CONFIG = {
+        "template_tex_file": TEMPLATE_ALIGNAT_FILE,
+    }
+
 class CodeMobject(TexMobject):
     CONFIG = {
         "template_tex_file": TEMPLATE_CODE_FILE,
