@@ -630,13 +630,13 @@ class ShowWritingTrajectory(TeacherStudentsScene):
         )
         complex_words.generate_target()
         complex_words.target.move_to(bubble.get_bubble_center())
-        self.play(
-            FadeOut(screen),
-            FadeOut(arrow),
-            ShowCreation(bubble),
-            self.teacher.change, "hooray",
-            MoveToTarget(complex_words),
-        )
+        # self.play(
+        #     FadeOut(screen),
+        #     FadeOut(arrow),
+        #     ShowCreation(bubble),
+        #     self.teacher.change, "hooray",
+        #     MoveToTarget(complex_words),
+        # )
 
         s0 = self.students[0]
         s0.target_center = s0.get_center()
@@ -930,6 +930,28 @@ class CylinderModel(Scene):
         )
 
 
+class OkayNotToUnderstand(Scene):
+    def construct(self):
+        words = TextMobject(
+            "It's okay not to \\\\ understand this just yet."
+        )
+        morty = Mortimer()
+        morty.change("confused")
+        words.next_to(morty, UP)
+        self.add(morty, words)
+
+
+class ThatsKindOfInteresting(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Cool!", target_mode="hooray",
+            student_index=2,
+            added_anims=[self.teacher.change, "happy"]
+        )
+        self.change_student_modes("happy", "happy")
+        self.wait(2)
+
+
 class ElectricField(CylinderModel, MovingCameraScene):
     def construct(self):
         self.add_plane()
@@ -1067,18 +1089,53 @@ class ElectricField(CylinderModel, MovingCameraScene):
             if y != 0
         ])
         h_lines.apply_complex_function(inverse_joukowsky_map)
+        for h_line in h_lines:
+            h_line.save_state()
+
+        voltage = DecimalNumber(
+            10, num_decimal_places=1,
+            unit="\\, V",
+            color=YELLOW,
+            include_background_rectangle=True,
+        )
+        vp_prop = 0.1
+        voltage_point = VectorizedPoint(
+            h_lines[4].point_from_proportion(vp_prop)
+        )
+
+        def get_voltage(dummy_arg):
+            y = voltage_point.get_center()[1]
+            return 10 - y
+
+        voltage_update = ContinualChangingDecimal(
+            voltage, get_voltage,
+            position_update_func=lambda v: v.next_to(
+                voltage_point, UP, SMALL_BUFF
+            )
+        )
 
         self.play(ShowCreation(
             h_lines,
             run_time=2,
             submobject_mode="all_at_once"
         ))
-        for x in range(4):
-            self.play(LaggedStart(
-                ApplyMethod, h_lines,
-                lambda m: (m.set_stroke, TEAL, 4),
-                rate_func=there_and_back,
-            ))
+        self.add(voltage_update)
+        self.add_foreground_mobjects(voltage)
+        self.play(
+            UpdateFromAlphaFunc(
+                voltage, lambda m, a: m.set_fill(opacity=a)
+            ),
+            h_lines[4].set_stroke, YELLOW, 4,
+        )
+        for hl1, hl2 in zip(h_lines[4:], h_lines[5:]):
+            self.play(
+                voltage_point.move_to,
+                hl2.point_from_proportion(vp_prop),
+                hl1.restore,
+                hl2.set_stroke, YELLOW, 3,
+                run_time=0.5
+            )
+            self.wait(0.5)
 
 
 class AskQuestions(TeacherStudentsScene):
@@ -1567,6 +1624,17 @@ class ThreeDVectorField(ExternallyAnimatedScene):
     pass
 
 
+class ThreeDVectorFieldEquation(Scene):
+    def construct(self):
+        vector = Matrix([
+            "yz",
+            "xz",
+            "xy",
+        ])
+        vector.scale_to_fit_height(FRAME_HEIGHT - 1)
+        self.add(vector)
+
+
 class GravityFluidFlow(IntroduceVectorField):
     def construct(self):
         self.vector_field = VectorField(
@@ -1806,6 +1874,58 @@ class DefineDivergenceJustFlow(DefineDivergence):
         self.revert_to_original_skipping_status()
         self.clear()
         self.show_flow()
+
+
+class DefineDivergenceSymbols(Scene):
+    def construct(self):
+        tex_mob = TexMobject(
+            "\\text{div}",
+            "\\textbf{F}",
+            "(x, y)",
+            "=",
+        )
+        div, F, xy, eq = tex_mob
+        output = DecimalNumber(0, include_sign=True)
+        output.next_to(tex_mob, RIGHT)
+        time_tracker = ValueTracker()
+        self.add(ContinualMovement(time_tracker, rate=1))
+        output_animation = ContinualChangingDecimal(
+            output, lambda a: 3 * np.cos(int(time_tracker.get_value())),
+        )
+
+        F.set_color(BLUE)
+        xy.set_color(YELLOW)
+
+        F_brace = Brace(F, UP, buff=SMALL_BUFF)
+        F_label = F_brace.get_text(
+            "Vector field function",
+        )
+        F_label.match_color(F)
+        xy_brace = Brace(xy, DOWN, buff=SMALL_BUFF)
+        xy_label = xy_brace.get_text("Some point")
+        xy_label.match_color(xy)
+        output_brace = Brace(output, UP, buff=SMALL_BUFF)
+        output_label = output_brace.get_text(
+            "Measure of how much \\\\ "
+            "$(x, y)$ ``generates'' fluid"
+        )
+        brace_label_pairs = [
+            (F_brace, F_label),
+            (xy_brace, xy_label),
+            (output_brace, output_label),
+        ]
+
+        self.add(tex_mob, output_animation)
+        fade_anims = []
+        for brace, label in brace_label_pairs:
+            self.play(
+                GrowFromCenter(brace),
+                FadeInFromDown(label),
+                *fade_anims
+            )
+            self.wait(2)
+            fade_anims = map(FadeOut, [brace, label])
+        self.wait()
 
 
 class DivergenceAtSlowFastPoint(Scene):
@@ -2623,8 +2743,8 @@ class MaxwellsEquations(Scene):
         field_definitions = VGroup(*[
             TexMobject(text, tex_to_color_map=tex_to_color_map)
             for text in [
-                "\\text{Electric fild: } \\textbf{E}",
-                "\\text{Magnetic fild: } \\textbf{B}",
+                "\\text{Electric field: } \\textbf{E}",
+                "\\text{Magnetic field: } \\textbf{B}",
             ]
         ])
         field_definitions.arrange_submobjects(
@@ -2718,6 +2838,12 @@ class MaxwellsEquations(Scene):
         self.wait()
         self.play(Blink(randy))
         self.wait()
+
+
+class ThatWeKnowOf(Scene):
+    def construct(self):
+        words = TextMobject("*That we know of!")
+        self.add(words)
 
 
 class IllustrateGaussLaw(DefineDivergence, MovingCameraScene):
@@ -3329,6 +3455,80 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         self.wait(self.flow_time)
 
 
+class PhaseFlowWords(Scene):
+    def construct(self):
+        words = TextMobject("``Phase flow''")
+        words.scale(2)
+        self.play(Write(words))
+        self.wait()
+
+
+class PhaseFlowQuestions(Scene):
+    def construct(self):
+        questions = VGroup(
+            TextMobject(
+                "Which points does the flow \\\\" +
+                "converge to?  Diverge away from?",
+            ),
+            TextMobject("Where are there cycles?"),
+        )
+        questions.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        questions.to_corner(UR)
+        for question in questions:
+            self.play(FadeInFromDown(question))
+            self.wait(2)
+
+
+class ToolsBeyondDivAndCurlForODEs(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+        },
+        "default_pi_creature_start_corner": DOWN,
+    }
+
+    def construct(self):
+        morty = self.pi_creature
+        div_curl = TextMobject("div \\\\", "curl")
+        div_curl.set_color_by_tex("div", BLUE)
+        div_curl.set_color_by_tex("curl", YELLOW)
+        div_curl.next_to(morty.get_corner(UL), UP, MED_LARGE_BUFF)
+
+        jacobian = TextMobject("Analyze the \\\\ Jacobian")
+        jacobian.set_color(GREEN)
+        jacobian.next_to(morty.get_corner(UR), UP, MED_LARGE_BUFF)
+
+        flow_intuitions = TextMobject("Flow-based intuitions")
+        flow_intuitions.next_to(
+            VGroup(div_curl, jacobian),
+            UP, buff=1.5
+        )
+        arrow1 = Arrow(div_curl.get_top(), flow_intuitions.get_bottom())
+        arrow2 = Arrow(flow_intuitions.get_bottom(), jacobian.get_top())
+
+        self.play(
+            FadeInFromDown(div_curl),
+            morty.change, "raise_left_hand",
+        )
+        self.wait()
+        self.play(
+            FadeInFromDown(jacobian),
+            morty.change, "raise_right_hand"
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                flow_intuitions.copy().fade(1).move_to(div_curl),
+                flow_intuitions,
+            ),
+            GrowArrow(arrow1),
+            morty.change, "pondering"
+        )
+        self.wait(0.5)
+        self.play(GrowArrow(arrow2))
+        self.wait()
+
+
 class AskAboutComputation(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -3353,6 +3553,14 @@ class AskAboutComputation(TeacherStudentsScene):
             look_at_arg=self.screen
         )
         self.wait(5)
+
+
+class QuickWordsOnNotation(Scene):
+    def construct(self):
+        words = TextMobject("Quick words on notation:")
+        words.scale(1.5)
+        self.play(FadeInFromDown(words))
+        self.wait()
 
 
 class NablaNotation(PiCreatureScene, MovingCameraScene):
@@ -4060,6 +4268,80 @@ class DivergenceTinyNudgesView(MovingCameraScene):
         ))
 
 
+class ZToHalfFlowNearWall(ComplexTransformationScene, MovingCameraScene):
+    CONFIG = {
+        "num_anchors_to_add_per_line": 200,
+        "plane_config": {"y_radius": 8}
+    }
+
+    def setup(self):
+        MovingCameraScene.setup(self)
+        ComplexTransformationScene.setup(self)
+
+    def construct(self):
+        # self.camera.frame.shift(2 * UP)
+        self.camera.frame.scale(0.5, about_point=ORIGIN)
+
+        plane = NumberPlane(
+            x_radius=15,
+            y_radius=25,
+            y_unit_size=0.5,
+            secondary_line_ratio=0,
+        )
+        plane.next_to(ORIGIN, UP, buff=0.001)
+        horizontal_lines = VGroup(*filter(
+            lambda l: np.abs(l.get_center()[0]) < 0.1,
+            list(plane.main_lines) + [plane.axes[0]]
+        ))
+        plane.set_stroke(MAROON_B, width=2)
+        horizontal_lines.set_stroke(BLUE, width=2)
+
+        self.prepare_for_transformation(plane)
+        self.add_transformable_mobjects(plane)
+
+        self.background.set_stroke(width=2)
+        for label in self.background.coordinate_labels:
+            label.set_stroke(width=0)
+            label.scale(0.75, about_edge=UR)
+
+        words = TextMobject("(Idealized) Flow \\\\", "near a wall")
+        words.scale(0.75)
+        words.add_background_rectangle_to_submobjects()
+        words.next_to(0.75 * UP, LEFT, MED_LARGE_BUFF)
+        equation = TexMobject("z \\rightarrow z^{1/2}")
+        equation.scale(0.75)
+        equation.add_background_rectangle()
+        equation.next_to(words, UP)
+
+        self.apply_complex_function(
+            lambda x: x**(1. / 2),
+            added_anims=[Write(equation)]
+        )
+        self.play(Write(words, run_time=1))
+
+        def func(point):
+            z = R3_to_complex(point)
+            d_half = derivative(lambda z: z**2)
+            return complex_to_R3(d_half(z).conjugate())
+
+        stream_lines = StreamLines(
+            func,
+            start_points_generator_config={
+                "x_min": 0.01,
+                "y_min": 0.01,
+                "delta_x": 0.125,
+                "delta_y": 0.125,
+            },
+            virtual_time=3,
+            stroke_width=2,
+            max_magnitude=10,
+        )
+        stream_line_animation = StreamLineAnimation(stream_lines)
+
+        self.add(stream_line_animation)
+        self.wait(7)
+
+
 class IncmpressibleAndIrrotational(Scene):
     def construct(self):
         div_0 = TextMobject("div$\\textbf{F} = 0$")
@@ -4068,7 +4350,7 @@ class IncmpressibleAndIrrotational(Scene):
         irrotational = TextMobject("Irrotational")
 
         for text in [div_0, curl_0, incompressible, irrotational]:
-            text.add_background_rectangle(buff=SMALL_BUFF)
+            self.stylize_word_for_background(text)
 
         div_0.to_edge(UP)
         curl_0.next_to(div_0, DOWN, MED_LARGE_BUFF)
@@ -4076,7 +4358,7 @@ class IncmpressibleAndIrrotational(Scene):
         for op, word in (div_0, incompressible), (curl_0, irrotational):
             op.generate_target()
             group = VGroup(op.target, word)
-            group.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+            group.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
             group.move_to(op)
 
         self.play(FadeInFromDown(div_0))
@@ -4097,11 +4379,29 @@ class IncmpressibleAndIrrotational(Scene):
         question = TextMobject("Does this actually happen?")
         question.next_to(rect, DOWN)
         question.match_color(rect)
-        question.add_background_rectangle()
+        self.stylize_word_for_background(question)
 
         self.play(ShowCreation(rect))
         self.play(Write(question))
         self.wait()
+
+    def stylize_word_for_background(self, word):
+        word.add_background_rectangle()
+
+
+class NoChargesOverlay(Scene):
+    def construct(self):
+        rect = FullScreenFadeRectangle()
+        rect.set_fill(BLUE_D, 0.75)
+        circle = Circle(radius=1.5, num_anchors=5000)
+        circle.rotate(135 * DEGREES)
+        rect.add_subpath(circle.points)
+
+        words = TextMobject("No charges outside wire")
+        words.scale(1.5)
+        words.to_edge(UP)
+
+        self.add(rect, words)
 
 
 # End message
@@ -4483,3 +4783,107 @@ class PeopleValueGraph(GraphScene):
             run_time=4,
         )
         self.wait()
+
+
+class DivCurlEndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "Juan Benet",
+            "Keith Smith",
+            "Chloe Zhou",
+            "Desmos ",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Andrew Sachs",
+            "Devin Scott",
+            "Akash Kumar",
+            "Felix Tripier",
+            "Arthur Zey",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Jordan Scales",
+            "Markus Persson",
+            "Fela ",
+            "Fred Ehrsam",
+            "Randy C. Will",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Omar Zrien",
+            "Sindre Reino Trosterud",
+            "Jeff Straathof",
+            "Matt Langford",
+            "Matt Roveto",
+            "Marek Cirkos",
+            "Magister Mugit",
+            "Stevie Metke",
+            "Cooper Jones",
+            "James Hughes",
+            "John V Wertheim",
+            "Chris Giddings",
+            "Song Gao",
+            "Alexander Feldman",
+            "Richard Burgmann",
+            "John Griffith",
+            "Chris Connett",
+            "Steven Tomlinson",
+            "Jameel Syed",
+            "Bong Choung",
+            "Ignacio Freiberg",
+            "Zhilong Yang",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "James H. Park",
+            "Norton Wang",
+            "Kevin Le",
+            "Tianyu Ge",
+            "David MacCumber",
+            "Oliver Steele",
+            "Yaw Etse",
+            "Dave B",
+            "Waleed Hamied",
+            "George Chiesa",
+            "supershabam ",
+            "Delton Ding",
+            "Thomas Tarler",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Clark Gaebel",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Awoo ",
+            "Dr . David G. Stork",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon ",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Robert Teed",
+            "Jason Hise",
+            "Bernd Sing",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Sh\\`im\\'in Ku\\=ang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
