@@ -964,24 +964,32 @@ class RunAlgorithm(MovingCameraScene):
 
         # show
         textbook_runtime = TexMobject(
-            "O(V \cdot T_\\text{extract\_min} + E \cdot T_\\text{decrease\_key})"
+            "O(E \cdot T_\\text{decrease\_key} + V \cdot T_\\text{extract\_min})"
         ).shift(RIGHT * 3 + UP * 0.5)
 
-        textbook_term_1 = VGroup(*textbook_runtime.submobjects[0].submobjects[2:16])
-        textbook_plus   = textbook_runtime.submobjects[0].submobjects[16]
-        textbook_term_2 = VGroup(*textbook_runtime.submobjects[0].submobjects[17:32])
+        textbook_term_1 = VGroup(*textbook_runtime.submobjects[0].submobjects[2:17])
+        textbook_plus   = textbook_runtime.submobjects[0].submobjects[17]
+        textbook_term_2 = VGroup(*textbook_runtime.submobjects[0].submobjects[18:32])
 
 
         self.play(
-            ReplacementTransform(v_textractmin, textbook_term_1),
+            ReplacementTransform(e_tdecreasekey, textbook_term_1),
             ReplacementTransform(runtime.submobjects[0].submobjects[24], textbook_plus),
-            ReplacementTransform(e_tdecreasekey, textbook_term_2),
+            ReplacementTransform(v_textractmin, textbook_term_2),
             FadeIn(Group(*textbook_runtime.submobjects[0].submobjects[:2] + 
                            [textbook_runtime.submobjects[0].submobjects[-1]]))
         )
 
         self.wait(2)
 
+        self.code = code
+        self.runtime = VGroup(
+              textbook_runtime.submobjects[0].submobjects[:2]    + \
+              textbook_runtime.submobjects[0].submobjects[2:17]  + \
+              [textbook_runtime.submobjects[0].submobjects[17]]  + \
+              textbook_runtime.submobjects[0].submobjects[18:32] + \
+              [textbook_runtime.submobjects[0].submobjects[-1]]
+        )
         state = self.__dict__.copy()
         # must be removed before save to prevent segfault
         if "writing_process" in self.__dict__:
@@ -993,7 +1001,74 @@ class RunAlgorithm(MovingCameraScene):
     def compare_data_structures(self):
         loaded_state = pickle.load(open("analyze.mnm", "rb"))
         self.__dict__.update(loaded_state)
+        code = self.code
+        runtime = self.runtime
 
+        self.play(FadeOut(code))
+        table = TextMobject(
+            "\\begin{tabular}{ c | c }" + \
+            "  Data Structure & $O(E \\cdot T_\\text{decrease\_key} + V \\cdot T_\\text{extract\_min})$ \\\\ \\hline" + \
+            "  Array & $O(E + V \\cdot V)$ \\\\" + \
+            "  Binary Heap & $O(E \\log V + V \\log V)$ \\\\" + \
+            "  Fibonacci Heap & $O(E + V \\log V)$ \\\\" + \
+            "\\end{tabular}"
+        )
+        #self.play(FadeOut(runtime))
+        #self.play(ShowCreation(table))
+        #number_anims = []
+        #for i, mob in enumerate(table.submobjects[0].submobjects):
+        #    num = Integer(i, color=RED).next_to(mob, UR, buff=0.1).scale(0.5)
+        #    number_anims.append(ShowCreation(num))
+        #self.play(*number_anims)
+        table_lines = VGroup(
+            table.submobjects[0].submobjects[13],
+            table.submobjects[0].submobjects[47],
+            table.submobjects[0].submobjects[53],
+            table.submobjects[0].submobjects[72],
+            table.submobjects[0].submobjects[100],
+        )
+        self.play(
+            ReplacementTransform(runtime, VGroup(*table.submobjects[0].submobjects[14:47])),
+            FadeIn(table_lines),
+            FadeIn(Group(*table.submobjects[0].submobjects[:13])),
+        )
+
+        # Array
+        array_word = VGroup(*table.submobjects[0].submobjects[48:53])
+        table_array_time = VGroup(*table.submobjects[0].submobjects[54:62])
+        array_time1 = TexMobject("O(E + V \cdot V)").move_to(table_array_time.get_center())
+        array_time2 = TexMobject("O(E + V^2)").move_to(array_time1.get_center())
+        array_time3 = TexMobject("O(V^2)").move_to(array_time2.get_center())
+        self.play(FadeIn(array_word))
+        self.play(Write(array_time1))
+        self.play(TransformEquation(array_time1, array_time2, "O\\(E \\+ (.*)\\)"))
+        self.play(TransformEquation(array_time2, array_time3, "O\\((.*)\\)"))
+
+        # Binary Heap
+        binheap_word = VGroup(*table.submobjects[0].submobjects[62:72])
+        table_binheap_time = VGroup(*table.submobjects[0].submobjects[73:87])
+        binheap_time1 = TexMobject("O(E \log V + V \log V)").move_to(table_binheap_time.get_center())
+        binheap_time2 = TexMobject("O((E + V) \log V)").move_to(DOWN + binheap_time1.get_center())
+        self.play(FadeIn(binheap_word))
+        self.play(Write(binheap_time1))
+        x = TransformEquation(
+            binheap_time1,
+            binheap_time2,
+            "(O)(\\()(E) (\\\\log V) (\\+) (V) (\\\\log V)\\)",
+            "(O)(\\()\\((E) (\\+) (V)\\) (\\\\log V)\\)",
+            [(0,0), (1,1), (1,2), (2,3), (4,4), (5,5), (3,7), (6,7), (7,8), (7,6)],
+        )
+        self.play(x)
+
+        # Fibonacci Heap
+        fibo_word = VGroup(*table.submobjects[0].submobjects[87:100])
+        table_fibo_time = VGroup(*table.submobjects[0].submobjects[101:])
+        fibo_time = TexMobject("O(E + V \log V)").move_to(table_fibo_time.get_center())
+        self.play(FadeIn(fibo_word))
+        self.play(Write(fibo_time))
+
+        self.play(Indicate(fibo_time))
+        self.wait(2)
 
     def construct(self):
         self.first_try()
