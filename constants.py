@@ -16,9 +16,7 @@ if not (env_MEDIA_DIR is None):
     MEDIA_DIR = env_MEDIA_DIR
 elif os.path.exists("media_dir.txt"):
     with open("media_dir.txt", 'rU') as media_file:
-        MEDIA_DIR = media_file.readline()
-    if MEDIA_DIR[-1] in ['\n', '\r']:
-        raise Exception("media_dir.txt must be a single-line text file pointing at the media_dir place")
+        MEDIA_DIR = media_file.readline().strip()
 else:
     MEDIA_DIR = os.path.join(
         os.path.expanduser('~'),
