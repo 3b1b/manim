@@ -3326,7 +3326,7 @@ class ECLPromo(PiCreatureScene):
 
 class ExpTransformation(ComplexTransformationScene):
     CONFIG = {
-        "camera_class": CameraWithPerspective,
+        "camera_class": ThreeDCamera,
     }
     def construct(self):
         self.camera.camera_distance = 10,
