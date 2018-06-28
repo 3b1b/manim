@@ -1,13 +1,10 @@
 from big_ol_pile_of_manim_imports import *
 from collections import OrderedDict as OrderedDict
 
-FACTOR = 1/3.
 LABELED_NODE_FACTOR = 7
-DEFAULT_NODE_HEIGHT = 0.2
-LABEL_SCALE_FACTOR = LABELED_NODE_FACTOR * DEFAULT_NODE_HEIGHT
+UNLABELED_NODE_RADIUS = 0.1
+LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * UNLABELED_NODE_RADIUS
 HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
-UNLABELED_NODE_RADIUS = DEFAULT_NODE_HEIGHT / 2
-LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * DEFAULT_NODE_HEIGHT / 2
 
 class Node(Group):
     def __init__(self, point, **kwargs):
@@ -66,8 +63,8 @@ class Node(Group):
         return ret
 
     def get_label_height(self, label, num_labels):
-        return HEIGHT_RELATIVE_TO_NODE[num_labels] * \
-                LABEL_SCALE_FACTOR / label.get_height() * self.scale
+        return self.scale * HEIGHT_RELATIVE_TO_NODE[num_labels] * \
+                2 * LABELED_NODE_RADIUS / label.get_height()
     
     def get_label(self, name):
         if name in self.labels:
@@ -124,7 +121,7 @@ class Node(Group):
                 label.move_to(self.get_center())
             else:
                 vec = rotate_vector(RIGHT, np.pi / 2)
-                vec *= LABEL_SCALE_FACTOR / 4.8 * self.scale
+                vec *= LABELED_NODE_RADIUS / 2.4 * self.scale
                 for label in new_labels.values():
                     label.move_to(self.get_center() + vec)
                     vec = rotate_vector(vec, 2 * np.pi / len(new_labels))
