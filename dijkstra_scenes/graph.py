@@ -28,8 +28,8 @@ class Graph(Group):
 
         self.CONFIG["scale"] = scale
         # add nodes
-        for location in nodes:
-            node = Node(location, labels=labels, **self.CONFIG)
+        for point in nodes:
+            node = Node(point, labels=labels, **self.CONFIG)
             self.nodes[node.key] = node
             submobjects.append(node)
 

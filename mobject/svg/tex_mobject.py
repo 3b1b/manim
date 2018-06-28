@@ -136,6 +136,7 @@ class TexMobject(SingleStringTexMobject):
         "arg_separator": " ",
         "substrings_to_isolate": [],
         "tex_to_color_map": {},
+        "override_children": True,
     }
 
     def __init__(self, *tex_strings, **kwargs):
@@ -260,6 +261,7 @@ class CodeMobject(TexMobject):
     CONFIG = {
         "template_tex_file": TEMPLATE_CODE_FILE,
         "indent_level": 4,
+        "override_children": False,
     }
 
     def break_up_tex_strings(self, tex_string):

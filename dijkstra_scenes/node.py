@@ -10,16 +10,16 @@ UNLABELED_NODE_RADIUS = DEFAULT_NODE_HEIGHT / 2
 LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * DEFAULT_NODE_HEIGHT / 2
 
 class Node(Group):
-    def __init__(self, location, **kwargs):
-        self.key = location
+    def __init__(self, point, **kwargs):
+        self.key = point
         self.assert_node_primitive(self.key)
         # create mobject
         radius = 0.1
         if "mobject" in kwargs:
-            self.mobject = kwargs["mobject"].move_to(location)
+            self.mobject = kwargs["mobject"].move_to(point)
         else:
             if "labels" in kwargs and kwargs["labels"] and \
-                    location in kwargs["labels"]:
+                    point in kwargs["labels"]:
                 radius = LABELED_NODE_RADIUS * kwargs["scale"]
             else:
                 radius = UNLABELED_NODE_RADIUS
@@ -27,11 +27,11 @@ class Node(Group):
                                   radius=radius,
                                   color=BLACK,
                                   stroke_width=kwargs["stroke_width"]) \
-                           .move_to(location)
+                           .move_to(point)
         # save labels
         saved_labels = []
         if "labels" in kwargs and \
-                kwargs["labels"] and location in \
+                kwargs["labels"] and point in \
                 kwargs["labels"]:
             saved_labels.extend(kwargs["labels"][self.key])
             del kwargs["labels"]

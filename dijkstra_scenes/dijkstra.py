@@ -1,5 +1,3 @@
-import dill
-import pickle
 import numpy.linalg as la
 from big_ol_pile_of_manim_imports import *
 from dijkstra_scenes.graph import Graph
@@ -186,17 +184,10 @@ class RunAlgorithm(MovingCameraScene):
         self.edges = edges
         self.X_DIST = X_DIST
         self.Y_DIST = Y_DIST
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("first_try.mnm", "wb"))
+        save_state(self)
 
     def counterexample(self):
-        loaded_state = pickle.load(open("first_try.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
 
         # draw counterexample graph
         nodes = [
@@ -210,7 +201,6 @@ class RunAlgorithm(MovingCameraScene):
             (nodes[1], nodes[2]),
         ]
         H = Graph(nodes, edges)
-        # TODO: that leftward shift in the coordinates above
         H.shift(DOWN * FRAME_HEIGHT + LEFT * 0.5 * H.get_width())
         self.play(ShowCreation(H))
 
@@ -252,17 +242,10 @@ class RunAlgorithm(MovingCameraScene):
         self.play(MoveAlongPath(self.camera_frame,
                                 ParametricFunction(ShiftUp)))
 
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("counterexample.mnm", "wb"))
+        save_state(self)
 
     def one_step(self):
-        loaded_state = pickle.load(open("counterexample.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
         G = self.G
         s = self.s
         nodes = self.nodes
@@ -319,18 +302,10 @@ class RunAlgorithm(MovingCameraScene):
 
         self.G = G
         self.s = s
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("one_step.mnm", "wb"))
+        save_state(self)
 
     def triangle_inequality(self):
-        loaded_state = pickle.load(open("one_step.mnm", "rb"))
-        self.__dict__.update(loaded_state)
-
+        self.__dict__.update(load_previous_state())
         X_DIST = self.X_DIST
         Y_DIST = self.Y_DIST
 
@@ -455,17 +430,10 @@ class RunAlgorithm(MovingCameraScene):
         self.play(MoveAlongPath(self.camera_frame,
                                 ParametricFunction(ShiftLeft)))
 
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("triangle_inequality.mnm", "wb"))
+        save_state(self)
 
     def generalize(self):
-        loaded_state = pickle.load(open("triangle_inequality.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
         s = self.s
         G = self.G
 
@@ -552,18 +520,10 @@ class RunAlgorithm(MovingCameraScene):
                 break
 
         self.wait(2)
-
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("generalize.mnm", "wb"))
+        save_state(self)
 
     def last_run(self):
-        loaded_state = pickle.load(open("generalize.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
         G = self.G
         s = self.s
 
@@ -589,17 +549,10 @@ class RunAlgorithm(MovingCameraScene):
         self.wait(1)
         self.play(FadeOut(G))
 
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("last_run.mnm", "wb"))
+        save_state(self)
 
     def show_code(self):
-        loaded_state = pickle.load(open("last_run.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
 
         code = CodeMobject("""
         def dijkstra(G):
@@ -785,17 +738,10 @@ class RunAlgorithm(MovingCameraScene):
         self.play(FadeIn(Group(*code.submobjects[1:])))
 
         self.code = code
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("show_code.mnm", "wb"))
+        save_state(self)
 
     def run_code(self):
-        loaded_state = pickle.load(open("show_code.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
 
         s = ( 0,  2.6, 0)
         nodes = [
@@ -865,17 +811,10 @@ class RunAlgorithm(MovingCameraScene):
                 break
 
         self.G = G
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("run_code.mnm", "wb"))
+        save_state(self)
 
     def analyze(self):
-        loaded_state = pickle.load(open("run_code.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
         G = self.G
         code = self.code
 
@@ -990,17 +929,10 @@ class RunAlgorithm(MovingCameraScene):
               textbook_runtime.submobjects[0].submobjects[18:32] + \
               [textbook_runtime.submobjects[0].submobjects[-1]]
         )
-        state = self.__dict__.copy()
-        # must be removed before save to prevent segfault
-        if "writing_process" in self.__dict__:
-            del state["writing_process"]
-        if "canvas" in state["camera"].__dict__:
-            del state["camera"].__dict__["canvas"]
-        pickle.dump(state, open("analyze.mnm", "wb"))
+        save_state(self)
 
     def compare_data_structures(self):
-        loaded_state = pickle.load(open("analyze.mnm", "rb"))
-        self.__dict__.update(loaded_state)
+        self.__dict__.update(load_previous_state())
         code = self.code
         runtime = self.runtime
 
@@ -1069,6 +1001,7 @@ class RunAlgorithm(MovingCameraScene):
 
         self.play(Indicate(fibo_time))
         self.wait(2)
+        save_state(self)
 
     def construct(self):
         self.first_try()
@@ -1083,4 +1016,3 @@ class RunAlgorithm(MovingCameraScene):
         self.run_code()
         self.analyze()
         self.compare_data_structures()
-
