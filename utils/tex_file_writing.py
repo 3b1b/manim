@@ -7,13 +7,13 @@ def tex_hash(expression, template_tex_file):
     return str(hash(expression + template_tex_file))
 
 
-def tex_to_svg_file(expression, template_tex_file):
-    tex_file = generate_tex_file(expression, template_tex_file)
+def tex_to_svg_file(expression, template_tex_file, **kwargs):
+    tex_file = generate_tex_file(expression, template_tex_file, **kwargs)
     dvi_file = tex_to_dvi(tex_file)
     return dvi_to_svg(dvi_file)
 
 
-def generate_tex_file(expression, template_tex_file):
+def generate_tex_file(expression, template_tex_file, **kwargs):
     result = os.path.join(
         TEX_DIR,
         tex_hash(expression, template_tex_file)
@@ -24,6 +24,8 @@ def generate_tex_file(expression, template_tex_file):
         ))
         with open(template_tex_file, "r") as infile:
             body = infile.read()
+            if kwargs is not None and "columns" in kwargs:
+                body = body.replace("###COLUMNS###", str(kwargs["columns"]))
             body = body.replace(TEX_TEXT_TO_REPLACE, expression)
         with open(result, "w") as outfile:
             outfile.write(body)

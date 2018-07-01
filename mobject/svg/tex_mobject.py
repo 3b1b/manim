@@ -51,9 +51,13 @@ class SingleStringTexMobject(SVGMobject):
         digest_config(self, kwargs)
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
+        if "template_tex_file" in kwargs and \
+                kwargs["template_tex_file"] == self.template_tex_file:
+            del kwargs["template_tex_file"]
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
-            self.template_tex_file
+            self.template_tex_file,
+            **kwargs
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:

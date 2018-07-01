@@ -810,11 +810,12 @@ class RunAlgorithm(MovingCameraScene):
         self.play(FadeOut(G))
 
         runtime = AlignatTexMobject(
-            "{3}  &  \, &&       \,\, &&T_{\\text{build}(V)}      \\\\" + \
+            "     &  \, &&       \,\, &&T_{\\text{build}(V)}      \\\\" + \
             "+ \, &V \, &&\\cdot \,\, &&T_{\\text{extract\_min}}  \\\\" + \
             "+ \, &E \, &&\\cdot \,\, &&T_{\\text{decrease\_key}} \\\\" + \
             "+ \, &V \, &&       \,\, &&                          \\\\" + \
-            "+ \, &2 \, &&\\cdot \,\, &&E                         \\\\"
+            "+ \, &2 \, &&\\cdot \,\, &&E                         \\\\",
+            columns=3,
         ).shift(RIGHT * 3)
 
         tbuild = SingleStringTexMobject("")
@@ -850,7 +851,7 @@ class RunAlgorithm(MovingCameraScene):
         # time to relax
         self.play(
             ReplacementTransform(
-                code.submobjects[2].submobjects[1].submobjects[1].copy(),
+                code.submobjects[0].submobjects[3].submobjects[2].submobjects[1].copy(),
                 e_tdecreasekey
             ),
             FadeIn(runtime.submobjects[0].submobjects[24]),
@@ -905,7 +906,7 @@ class RunAlgorithm(MovingCameraScene):
             ReplacementTransform(runtime.submobjects[0].submobjects[24], textbook_plus),
             ReplacementTransform(v_textractmin, textbook_term_2),
             FadeIn(Group(*textbook_runtime.submobjects[0].submobjects[:2] + 
-                           [textbook_runtime.submobjects[0].submobjects[-1]]))
+                       [textbook_runtime.submobjects[0].submobjects[-1]]))
         )
 
         self.wait(2)
