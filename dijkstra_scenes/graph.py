@@ -8,8 +8,10 @@ from dijkstra_scenes.edge import Edge as Edge
 class Graph(Group):
     CONFIG = {
         "stroke_width": 1,
+        "color": BLACK,
     }
-    def __init__(self, nodes, edges, labels=None, scale=1):
+    def __init__(self, nodes, edges, labels=None, scale=1, **kwargs):
+        # typechecking
         for node in nodes:
             assert(type(node) == tuple)
             assert(len(node) == 3)
@@ -20,29 +22,34 @@ class Graph(Group):
             assert(type(edge[0]) == type(edge[1]) == tuple)
             assert(len(edge[0]) == len(edge[1]) == 3)
 
-        # self.nodes is a dictionary mapping (x, y) -> Node
-        # self.edges is a dictionary mapping ((x1, y1), (x2, y2)) -> Edge
+        # mobject init
+        kwargs.update(self.CONFIG)
+        Group.__init__(self, **kwargs)
+
+        # create submobjects
         self.nodes = {}
         self.edges = {}
-        submobjects = []
 
-        self.CONFIG["scale"] = scale
-        # add nodes
+        # create nodes
         for point in nodes:
-            node = Node(point, labels=labels, **self.CONFIG)
+            if labels is not None and point in labels:
+                node = Node(point, labels=labels[point], scale=scale, **kwargs)
+            else:
+                node = Node(point, scale=scale, **kwargs)
             self.nodes[node.key] = node
-            submobjects.append(node)
+            self.add(node)
 
-        # add edges
+        # create edges
         for edge in edges:
             (u, v) = (edge[0], edge[1])
             u = self.nodes[u]
             v = self.nodes[v]
-            edge = Edge(u, v, labels=labels, **self.CONFIG)
+            if labels is not None and (u.key,v.key) in labels:
+                edge = Edge(u, v, labels=labels[(u.key,v.key)], scale=scale, **kwargs)
+            else:
+                edge = Edge(u, v, scale=scale, **kwargs)
             self.edges[edge.key] = edge
-            submobjects.append(edge)
-
-        Group.__init__(self, *submobjects)
+            self.add(edge)
 
     def shrink_nodes(self, *points, **kwargs):
         map(Node.assert_node_primitive, points)
@@ -64,7 +71,7 @@ class Graph(Group):
                 edge = self.edges[pair]
                 if edge.get_weight():
                     new_edge = Edge(edge.start_node, edge.end_node,
-                                    weight=edge.get_weight().copy(),
+                                    labels=[("weight", edge.get_weight().copy())],
                                     **self.CONFIG)
                 else:
                     new_edge = Edge(edge.start_node, edge.end_node,

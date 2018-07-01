@@ -4,10 +4,18 @@ import numpy.linalg as la
 from dijkstra_scenes.node import Node as Node
 
 class Edge(Group):
-    def __init__(self, start_node, end_node, **kwargs):
+    def __init__(self, start_node, end_node, labels=None, scale=1, **kwargs):
+        # typechecking
         self.key = (start_node.key, end_node.key)
         self.assert_edge_primitive(self.key)
+
+        # mobject init
+        kwargs.update(self.CONFIG)
+        Group.__init__(self, **kwargs)
+
         # create mobject
+        if scale is not None:
+            self.scale = scale
         self.start_node = start_node
         self.end_node = end_node
         normal_vec = end_node.get_center() - start_node.get_center()
@@ -15,24 +23,14 @@ class Edge(Group):
         self.line = Line(
             start_node.get_center() + normal_vec * start_node.mobject.radius,
             end_node.get_center() - normal_vec * end_node.mobject.radius,
-            stroke_width=kwargs["stroke_width"],
+            **kwargs
         )
-        # TODO: find a way to add the weight without creating bad
-        # non-weighted -> weighted Transforms
-        # save labels
-        saved_labels = []
-        if "labels" in kwargs and \
-                kwargs["labels"] and \
-                self.key in kwargs["labels"]:
-            saved_labels.extend(kwargs["labels"][self.key])
-            del kwargs["labels"]
-        if "weight" in kwargs:
-            saved_labels.append(("weight", kwargs["weight"]))
-            del kwargs["weight"]
-        # initialize and set labels
-        Group.__init__(self, self.line, **kwargs)
+        self.add(self.line)
+
+        # add labels
         self.labels = OrderedDict()
-        self.set_labels(*saved_labels, animate=False)
+        if labels is not None:
+            self.set_labels(*labels, animate=False)
 
     @staticmethod
     def assert_edge_primitive(pair):

@@ -568,7 +568,7 @@ class RunAlgorithm(MovingCameraScene):
                 if v == s:
                     v.dist = 0
                 else:
-                    v.dist = infinity
+                    v.dist = float("inf")
 
         def relax_edge(G, u, v):
             if v.dist > u.dist + G.weights(u, v):
@@ -601,7 +601,7 @@ class RunAlgorithm(MovingCameraScene):
         labels = {
             s: [("variable", TexMobject("s"))],
         }
-        G = Graph(nodes, edges, labels).shift(RIGHT * 0.25 * FRAME_WIDTH)
+        G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.25 * FRAME_WIDTH)
 
         labels = []
         for node in nodes:
@@ -638,7 +638,7 @@ class RunAlgorithm(MovingCameraScene):
             v: [("variable", TexMobject("v")), ("dist", TexMobject("\le 7"))],
             (u, v): [("weight", Integer(2))],
         }
-        G = Graph(nodes, edges, labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
+        G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
 
         # shift relax header down and create next block
         top_line = code.submobjects[0] \
@@ -722,17 +722,6 @@ class RunAlgorithm(MovingCameraScene):
         )
 
         self.play(FadeOut(code2.submobjects[1]))
-        # TODO: prevent indicate from splitting data structures
-        self.remove(
-            code2.submobjects[0].submobjects[2],
-            code2.submobjects[0].submobjects[3].submobjects[1],
-            code2.submobjects[0].submobjects[3].submobjects[2].submobjects[1],
-            code2.submobjects[0].submobjects[0],
-            code2.submobjects[0].submobjects[1],
-            code2.submobjects[0].submobjects[2],
-            code2.submobjects[0].submobjects[3].submobjects[0],
-            code2.submobjects[0].submobjects[3].submobjects[2].submobjects[0],
-        )
         self.remove(code2)
         self.add(code.submobjects[0])
         self.play(FadeIn(Group(*code.submobjects[1:])))
@@ -787,7 +776,7 @@ class RunAlgorithm(MovingCameraScene):
             ((-1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(2))],
             (( 1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(1))],
         }
-        G = Graph(nodes, edges, labels, scale=0.8).shift(self.camera_frame.get_right() * 0.5)
+        G = Graph(nodes, edges, labels=labels, scale=0.8).shift(self.camera_frame.get_right() * 0.5)
         self.play(ShowCreation(G))
 
         labels = [

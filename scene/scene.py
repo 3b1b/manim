@@ -253,7 +253,7 @@ class Scene(Container):
 
         to_remove = self.camera.extract_mobject_family_members(mobjects)
         for list_name in "mobjects", "foreground_mobjects":
-            self.restructure_mobjects(mobjects, list_name, False)
+            self.restructure_mobjects(mobjects, list_name, True)
 
         self.continual_animations = filter(
             lambda ca: ca not in continual_animations and

@@ -9,6 +9,7 @@ from mobject.mobject import Mobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from utils.bezier import interpolate
+from utils.bezier import mid
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
 from utils.paths import path_along_arc
@@ -353,8 +354,7 @@ class Line(VMobject):
         return np.linalg.norm(start - end)
 
     def get_midpoint(self):
-        start, end = self.get_start_and_end()
-        return start + (end - start) / 2
+        return mid(*self.get_start_and_end())
 
     def get_arc_length(self):
         if self.path_arc:

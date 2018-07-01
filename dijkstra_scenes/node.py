@@ -7,35 +7,35 @@ LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * UNLABELED_NODE_RADIUS
 HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
 
 class Node(Group):
-    def __init__(self, point, **kwargs):
+    CONFIG = {
+        "fill_opacity": 0.0,
+    }
+    def __init__(self, point, labels=None, mobject=None, scale=1, **kwargs):
+        # typechecking
         self.key = point
         self.assert_node_primitive(self.key)
+
+        # mobject init
+        kwargs.update(self.CONFIG)
+        Group.__init__(self, **kwargs)
+
         # create mobject
-        radius = 0.1
-        if "mobject" in kwargs:
-            self.mobject = kwargs["mobject"].move_to(point)
+        if scale is not None:
+            self.scale = scale
+        if mobject is not None:
+            self.mobject = mobject.move_to(point)
         else:
-            if "labels" in kwargs and kwargs["labels"] and \
-                    point in kwargs["labels"]:
-                radius = LABELED_NODE_RADIUS * kwargs["scale"]
+            if labels is not None:
+                radius = LABELED_NODE_RADIUS * self.scale
             else:
                 radius = UNLABELED_NODE_RADIUS
-            self.mobject = Circle(fill_opacity=0.0,
-                                  radius=radius,
-                                  color=BLACK,
-                                  stroke_width=kwargs["stroke_width"]) \
-                           .move_to(point)
-        # save labels
-        saved_labels = []
-        if "labels" in kwargs and \
-                kwargs["labels"] and point in \
-                kwargs["labels"]:
-            saved_labels.extend(kwargs["labels"][self.key])
-            del kwargs["labels"]
-        # initialize and set labels
-        Group.__init__(self, self.mobject, **kwargs)
+            self.mobject = Circle(radius=radius, **kwargs).move_to(point)
+        self.add(self.mobject)
+
+        # add labels
         self.labels = OrderedDict()
-        self.set_labels(*saved_labels, animate=False)
+        if labels is not None:
+            self.set_labels(*labels, animate=False)
 
     @staticmethod
     def assert_node_primitive(point):
