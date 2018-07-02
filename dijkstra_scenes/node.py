@@ -6,43 +6,34 @@ UNLABELED_NODE_RADIUS = 0.1
 LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * UNLABELED_NODE_RADIUS
 HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
 
-class Node(Group):
+class Node(Component):
     CONFIG = {
         "fill_opacity": 0.0,
     }
-    def __init__(self, point, labels=None, mobject=None, scale=1, **kwargs):
-        # typechecking
-        self.key = point
-        self.assert_node_primitive(self.key)
-
-        # mobject init
-        kwargs.update(self.CONFIG)
-        Group.__init__(self, **kwargs)
-
-        # create mobject
-        if scale is not None:
-            self.scale = scale
-        if mobject is not None:
-            self.mobject = mobject.move_to(point)
-        else:
-            if labels is not None:
-                radius = LABELED_NODE_RADIUS * self.scale
-            else:
-                radius = UNLABELED_NODE_RADIUS
-            self.mobject = Circle(radius=radius, **kwargs).move_to(point)
-        self.add(self.mobject)
-
-        # add labels
-        self.labels = OrderedDict()
-        if labels is not None:
-            self.set_labels(*labels, animate=False)
+    def __init__(self, point, labels=None, mobject=None,
+            scale_factor=1, **kwargs):
+        Component.__init__(self, point, labels=labels, mobject=mobject,
+                scale_factor=scale_factor, **kwargs)
 
     @staticmethod
-    def assert_node_primitive(point):
+    def assert_primitive(point):
         try:
             assert type(point) == np.ndarray or type(point) == tuple
             assert len(point) == 3
-        except: import ipdb; ipdb.set_trace(context=5)
+        except: import ipdb; ipdb.set_trace(context=7)
+
+    def make_key(self, point):
+        return point
+
+    def create_mobject(self, point, mobject=None, labels=None, **kwargs):
+        if mobject is not None:
+            return mobject.move_to(point)
+        else:
+            if labels is not None:
+                radius = LABELED_NODE_RADIUS * self.scale_factor
+            else:
+                radius = UNLABELED_NODE_RADIUS
+            return Circle(radius=radius, **kwargs).move_to(point)
 
     def __str__(self):
         return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])
@@ -52,9 +43,9 @@ class Node(Group):
         if "factor" in kwargs:
             factor = kwargs["factor"]
         elif "shrink" in kwargs and kwargs["shrink"] == True:
-            factor = 1./(LABELED_NODE_FACTOR * self.scale)
+            factor = 1./(LABELED_NODE_FACTOR * self.scale_factor)
         else:
-            factor = (LABELED_NODE_FACTOR * self.scale)
+            factor = (LABELED_NODE_FACTOR * self.scale_factor)
 
         new_node = self.mobject.copy().scale(factor)
         new_node.radius *= factor
@@ -63,7 +54,7 @@ class Node(Group):
         return ret
 
     def get_label_height(self, label, num_labels):
-        return self.scale * HEIGHT_RELATIVE_TO_NODE[num_labels] * \
+        return self.scale_factor * HEIGHT_RELATIVE_TO_NODE[num_labels] * \
                 2 * LABELED_NODE_RADIUS / label.get_height()
     
     def get_label(self, name):
@@ -121,7 +112,7 @@ class Node(Group):
                 label.move_to(self.get_center())
             else:
                 vec = rotate_vector(RIGHT, np.pi / 2)
-                vec *= LABELED_NODE_RADIUS / 2.4 * self.scale
+                vec *= LABELED_NODE_RADIUS / 2.4 * self.scale_factor
                 for label in new_labels.values():
                     label.move_to(self.get_center() + vec)
                     vec = rotate_vector(vec, 2 * np.pi / len(new_labels))

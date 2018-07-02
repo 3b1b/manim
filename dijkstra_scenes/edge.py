@@ -3,42 +3,32 @@ from collections import OrderedDict as OrderedDict
 import numpy.linalg as la
 from dijkstra_scenes.node import Node as Node
 
-class Edge(Group):
+class Edge(Component):
     def __init__(self, start_node, end_node, labels=None, scale=1, **kwargs):
-        # typechecking
-        self.key = (start_node.key, end_node.key)
-        self.assert_edge_primitive(self.key)
-
-        # mobject init
-        kwargs.update(self.CONFIG)
-        Group.__init__(self, **kwargs)
-
-        # create mobject
-        if scale is not None:
-            self.scale = scale
+        Component.__init__(self, start_node, end_node,
+                labels=labels, scale=scale, **kwargs)
         self.start_node = start_node
         self.end_node = end_node
+
+    @staticmethod
+    def assert_primitive(pair):
+        try:
+            assert type(pair) == tuple and len(pair) == 2
+            Node.assert_primitive(pair[0])
+            Node.assert_primitive(pair[1])
+        except: import ipdb; ipdb.set_trace(context=7)
+
+    def make_key(self, start_node, end_node):
+        return (start_node.key, end_node.key)
+
+    def create_mobject(self, start_node, end_node, labels=None, **kwargs):
         normal_vec = end_node.get_center() - start_node.get_center()
         normal_vec /= la.norm(normal_vec)
-        self.line = Line(
+        return Line(
             start_node.get_center() + normal_vec * start_node.mobject.radius,
             end_node.get_center() - normal_vec * end_node.mobject.radius,
             **kwargs
         )
-        self.add(self.line)
-
-        # add labels
-        self.labels = OrderedDict()
-        if labels is not None:
-            self.set_labels(*labels, animate=False)
-
-    @staticmethod
-    def assert_edge_primitive(pair):
-        try:
-            assert type(pair) == tuple and len(pair) == 2
-            Node.assert_node_primitive(pair[0])
-            Node.assert_node_primitive(pair[1])
-        except: import ipdb; ipdb.set_trace()
 
     def __str__(self):
         return "Edge(start=({}, {}), end=({}, {}))".format(
@@ -48,7 +38,7 @@ class Edge(Group):
     __repr__ = __str__
 
     def opposite(self, point):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         if np.allclose(self.start_node.key, point):
             return self.end_node.key
         elif np.allclose(self.end_node.key, point):
@@ -74,7 +64,7 @@ class Edge(Group):
         # move
         if len(new_labels) != len(self.labels):
             # rearrange labels
-            start, end = self.line.get_start_and_end()
+            start, end = self.mobject.get_start_and_end()
             vec = end - start
             vec /= la.norm(vec)
             vec = rotate_vector(vec, np.pi / 2)
@@ -83,7 +73,7 @@ class Edge(Group):
                 if last_mobject:
                     label.next_to(last_mobject, RIGHT, buff=SMALL_BUFF)
                 else:
-                    label.next_to(self.line.get_midpoint(), vec, buff=SMALL_BUFF)
+                    label.next_to(self.mobject.get_midpoint(), vec, buff=SMALL_BUFF)
                 last_mobject = label
         else:
             assert(new_labels.keys() == self.labels.keys())

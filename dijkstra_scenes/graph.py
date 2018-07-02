@@ -13,14 +13,9 @@ class Graph(Group):
     def __init__(self, nodes, edges, labels=None, scale=1, **kwargs):
         # typechecking
         for node in nodes:
-            assert(type(node) == tuple)
-            assert(len(node) == 3)
-            assert(np.allclose(node, np.round(node, 2)))
+            Node.assert_primitive(node)
         for edge in edges:
-            assert(type(edge) == tuple)
-            assert(len(edge) == 2)
-            assert(type(edge[0]) == type(edge[1]) == tuple)
-            assert(len(edge[0]) == len(edge[1]) == 3)
+            Edge.assert_primitive(edge)
 
         # mobject init
         kwargs.update(self.CONFIG)
@@ -33,9 +28,9 @@ class Graph(Group):
         # create nodes
         for point in nodes:
             if labels is not None and point in labels:
-                node = Node(point, labels=labels[point], scale=scale, **kwargs)
+                node = Node(point, labels=labels[point], scale_factor=scale, **kwargs)
             else:
-                node = Node(point, scale=scale, **kwargs)
+                node = Node(point, scale_factor=scale, **kwargs)
             self.nodes[node.key] = node
             self.add(node)
 
@@ -52,14 +47,14 @@ class Graph(Group):
             self.add(edge)
 
     def shrink_nodes(self, *points, **kwargs):
-        map(Node.assert_node_primitive, points)
+        map(Node.assert_primitive, points)
         return self.enlarge_nodes(*points, shrink=True)
 
     """
     enlarges node, shrinks adjacent edges
     """
     def enlarge_nodes(self, *points, **kwargs):
-        map(Node.assert_node_primitive, points)
+        map(Node.assert_primitive, points)
         # enlarge nodes
         anims = [self.nodes[point].enlarge(**kwargs) for point in points]
 
@@ -82,14 +77,14 @@ class Graph(Group):
         return anims
 
     def remove_node_label(self, point, label):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         node = self.nodes[point]
         assert(label in node.labels)
         # remove label
         return node.remove_label(label)
 
     def shrink_node(self, point):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         anims = []
         node = self.nodes[point]
         if len(node.labels) == 0:
@@ -98,7 +93,7 @@ class Graph(Group):
 
     def remove_node_labels(self, *labels):
         for point, label in labels:
-            Node.assert_node_primitive(point)
+            Node.assert_primitive(point)
         anims = []
         # remove labels
         for label in labels:
@@ -112,7 +107,7 @@ class Graph(Group):
 
     def set_node_labels(self, *labels):
         for point, name, label in labels:
-            Node.assert_node_primitive(point)
+            Node.assert_primitive(point)
         anims = []
 
         # enlarge small nodes
@@ -135,7 +130,7 @@ class Graph(Group):
     scales node, sets label, and scales adjacent edges
     """
     def set_node_label(self, point, name, label):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         anims = []
         node = self.nodes[point]
         if len(node.labels) == 0:
@@ -144,7 +139,7 @@ class Graph(Group):
         return anims
 
     def get_node_label(self, point, name):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         try:
             return self.nodes[point].labels[name]
         except KeyError:
@@ -152,25 +147,25 @@ class Graph(Group):
             exit(1)
 
     def node_has_label(self, point, label):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         return label in self.nodes[point].labels
 
     def set_edge_weight(self, pair, weight):
-        Edge.assert_edge_primitive(pair)
+        Edge.assert_primitive(pair)
         return self.edges[pair].set_weight(weight)
 
     def get_edge_weight(self, pair):
-        Edge.assert_edge_primitive(pair)
+        Edge.assert_primitive(pair)
         weight = self.edges[pair].get_weight()
         if weight:
             return weight.number
 
     def get_edge(self, pair):
-        Edge.assert_edge_primitive(pair)
+        Edge.assert_primitive(pair)
         return self.edges[pair]
 
     def get_node(self, point):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         return self.nodes[point]
 
     def get_nodes(self):
@@ -180,7 +175,7 @@ class Graph(Group):
         return self.edges.keys()
 
     def get_adjacent_nodes(self, point):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         adjacent_nodes = []
         for edge in self.get_adjacent_edges(point):
             (u, v) = edge
@@ -191,7 +186,7 @@ class Graph(Group):
         return adjacent_nodes
 
     def get_adjacent_edges(self, point):
-        Node.assert_node_primitive(point)
+        Node.assert_primitive(point)
         adjacent_edges = []
         for edge in self.edges.keys():
             (u, v) = edge
@@ -201,6 +196,6 @@ class Graph(Group):
         return adjacent_edges
 
     def get_opposite_node(self, pair, point):
-        Node.assert_node_primitive(point)
-        Edge.assert_edge_primitive(pair)
+        Node.assert_primitive(point)
+        Edge.assert_primitive(pair)
         return self.edges[pair].opposite(point)

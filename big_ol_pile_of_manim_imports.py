@@ -54,6 +54,8 @@ from mobject.types.image_mobject import *
 from mobject.types.point_cloud_mobject import *
 from mobject.types.vectorized_mobject import *
 from mobject.value_tracker import *
+from mobject.component import *
+
 
 from for_3b1b_videos.common_scenes import *
 from for_3b1b_videos.pi_creature import *
