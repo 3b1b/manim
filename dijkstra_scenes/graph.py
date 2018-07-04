@@ -10,7 +10,8 @@ class Graph(Group):
         "stroke_width": 2,
         "color": BLACK,
     }
-    def __init__(self, nodes, edges, labels=None, scale_factor=1, **kwargs):
+    def __init__(self, nodes, edges, labels=None, scale_factor=1,
+            gradient=None, **kwargs):
         # typechecking
         for node in nodes:
             Node.assert_primitive(node)
@@ -56,8 +57,15 @@ class Graph(Group):
     """
     def enlarge_nodes(self, *points, **kwargs):
         map(Node.assert_primitive, points)
+
         # enlarge nodes
-        anims = [self.nodes[point].enlarge(**kwargs) for point in points]
+        anims = []
+        for point in points:
+            if "color_map" in kwargs and point in kwargs["color_map"]:
+                color = kwargs["color_map"][point]
+            else:
+                color = None
+            anims.append(self.nodes[point].enlarge(color=color, **kwargs))
 
         # shrink edges
         seen = set()
@@ -100,22 +108,28 @@ class Graph(Group):
         return anims
 
     def set_node_labels(self, *labels):
-        for point, name, label in labels:
-            Node.assert_primitive(point)
-        anims = []
-
-        # enlarge small nodes
-        points = []
         for label in labels:
-            if len(self.nodes[label[0]].labels) == 0 and \
-                    label[0] not in points:
-                points.append(label[0])
-        anims.extend(self.enlarge_nodes(*points))
+            Node.assert_primitive(label[0])
+
+        anims = []
+        to_enlarge = []
+        color_map = dict()
+        for label in labels:
+            point = label[0]
+            if len(self.nodes[point].labels) == 0 and point not in to_enlarge:
+                to_enlarge.append(point)
+            if len(label) == 4 and "color" in label[3]:
+                color_map[point] = label[3]["color"]
+        anims.extend(self.enlarge_nodes(*to_enlarge, color_map=color_map))
+        for point in color_map:
+            if point not in to_enlarge:
+                anims.extend([self.nodes[point].change_color(color_map[point])])
 
         # label all nodes
         labels_dict = defaultdict(list)
-        for point, name, label in labels:
-            labels_dict[point].append((name, label))
+        for label in labels:
+            point, name, mobject = label[:3]
+            labels_dict[point].append((name, mobject))
         for point in labels_dict:
             anims.extend(self.nodes[point].set_labels(*labels_dict[point]))
         return anims

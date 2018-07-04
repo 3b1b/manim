@@ -33,22 +33,37 @@ class Node(Component):
                 radius = LABELED_NODE_RADIUS * self.scale_factor
             else:
                 radius = UNLABELED_NODE_RADIUS
-            return Circle(radius=radius, **kwargs).move_to(point)
+            ret = Circle(radius=radius, **kwargs).move_to(point)
+
+            if labels is not None:
+                color = None
+                for label in labels:
+                    if len(label) == 3 and "color" in label[2]:
+                        color = label[2]["color"]
+                if color is not None:
+                    ret.set_color(color)
+            return ret
 
     def __str__(self):
         return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])
     __repr__ = __str__
 
     def enlarge(self, **kwargs):
+        color = None
         if "factor" in kwargs:
             factor = kwargs["factor"]
         elif "shrink" in kwargs and kwargs["shrink"] == True:
             factor = 1./(LABELED_NODE_FACTOR * self.scale_factor)
+            color = BLACK
         else:
             factor = (LABELED_NODE_FACTOR * self.scale_factor)
+        if "color" in kwargs and kwargs["color"] is not None:
+            color = kwargs["color"]
 
         new_node = self.mobject.copy().scale(factor)
         new_node.radius *= factor
+        if color is not None:
+            new_node.set_color(color)
         ret = ReplacementTransform(self.mobject, new_node, parent=self)
         self.mobject = new_node
         return ret
@@ -65,12 +80,13 @@ class Node(Component):
 
     def change_color(self, color):
         new_node = self.mobject.copy().set_color(color)
-        self.mobject = new_node
-        return ReplacementTransform(
+        ret = ReplacementTransform(
             self.mobject,
             new_node,
             parent=self,
         )
+        self.mobject = new_node
+        return ret
 
 
     """
@@ -112,7 +128,8 @@ class Node(Component):
         new_labels = OrderedDict()
         for name in self.labels.keys():
             new_labels[name] = self.labels[name].copy()
-        for name, label in labels:
+        for label in labels:
+            name, label = label[:2]
             new_labels[name] = label
     
         # move
