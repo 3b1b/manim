@@ -77,13 +77,6 @@ class Graph(Group):
                 seen.add(pair)
         return anims
 
-    def remove_node_label(self, point, label):
-        Node.assert_primitive(point)
-        node = self.nodes[point]
-        assert(label in node.labels)
-        # remove label
-        return node.remove_label(label)
-
     def shrink_node(self, point):
         Node.assert_primitive(point)
         anims = []
@@ -125,18 +118,6 @@ class Graph(Group):
             labels_dict[point].append((name, label))
         for point in labels_dict:
             anims.extend(self.nodes[point].set_labels(*labels_dict[point]))
-        return anims
-
-    """
-    scales node, sets label, and scales adjacent edges
-    """
-    def set_node_label(self, point, name, label):
-        Node.assert_primitive(point)
-        anims = []
-        node = self.nodes[point]
-        if len(node.labels) == 0:
-            anims.extend(self.enlarge_nodes(point))
-        anims.extend(node.set_label(name, label))
         return anims
 
     def get_node_label(self, point, name):

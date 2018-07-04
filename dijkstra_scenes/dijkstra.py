@@ -156,7 +156,7 @@ class RunAlgorithm(MovingCameraScene):
 
         # set s to 0
         self.play(*G.set_node_labels(
-            (s, "dist", Integer(0), {"color" : G_gradient[0]})
+            (s, "dist", Integer(0))
         ))
 
         # label neighbors with question marks
@@ -178,7 +178,6 @@ class RunAlgorithm(MovingCameraScene):
                 adj_node,
                 "dist",
                 uncertain_weight,
-                {"color":G_gradient[edge_weight]},
             )))
         self.play(*anims)
 
@@ -219,7 +218,7 @@ class RunAlgorithm(MovingCameraScene):
         anims = []
         anims.extend(H.set_node_labels(
             (nodes[0], "variable", TexMobject("s")),
-            (nodes[0], "dist", Integer(0), {"color" : G_gradient[0]}),
+            (nodes[0], "dist", Integer(0)),
         ))
         anims.extend(H.set_edge_weight(edges[0], 10))
         anims.extend(H.set_edge_weight(edges[1], 1))
@@ -235,7 +234,7 @@ class RunAlgorithm(MovingCameraScene):
             adj_node = (u if nodes[0] == v else v)
             weight = H.get_edge_weight(edge)
             weight_mobject = TexMobject(str(weight) + "?")
-            labels.append((adj_node, "dist", weight_mobject, {"color":G_gradient[weight]}))
+            labels.append((adj_node, "dist", weight_mobject))
         anims.extend(H.set_node_labels(*labels))
         self.play(*anims)
 
