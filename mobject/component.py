@@ -8,7 +8,8 @@ class Component(Mobject):
         self.assert_primitive(self.key)
 
         # mobject init (will overwrite instance variables)
-        kwargs.update(self.CONFIG)
+        self.CONFIG.update(kwargs)
+        kwargs = self.CONFIG
         Mobject.__init__(self, **kwargs)
 
         # initialize variables

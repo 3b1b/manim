@@ -4,9 +4,10 @@ import numpy.linalg as la
 from dijkstra_scenes.node import Node as Node
 
 class Edge(Component):
-    def __init__(self, start_node, end_node, labels=None, scale=1, **kwargs):
+    def __init__(self, start_node, end_node, labels=None,
+            scale_factor=1, **kwargs):
         Component.__init__(self, start_node, end_node,
-                labels=labels, scale=scale, **kwargs)
+                labels=labels, scale_factor=scale_factor, **kwargs)
         self.start_node = start_node
         self.end_node = end_node
 
@@ -82,7 +83,7 @@ class Edge(Component):
 
         # scale TODO
         for label in new_labels.values():
-            label.scale(self.scale)
+            label.scale(self.scale_factor)
 
         # animate / create
         anims = []

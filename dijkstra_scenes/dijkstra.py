@@ -134,6 +134,7 @@ class RunAlgorithm(MovingCameraScene):
             (nodes[6], nodes[7]),
             (nodes[7], nodes[8]),
         ]
+        G_gradient = color_gradient([BLUE_E, RED_E], 20)
         G = Graph(nodes, edges)
         self.play(ShowCreation(G))
 
@@ -151,10 +152,12 @@ class RunAlgorithm(MovingCameraScene):
 
         # label s
         s = nodes[0]
-        self.play(*G.set_node_label(s, "variable", TexMobject("s")))
+        self.play(*G.set_node_labels((s, "variable", TexMobject("s"))))
 
         # set s to 0
-        self.play(*G.set_node_label(s, "dist", Integer(0)))
+        self.play(*G.set_node_labels(
+            (s, "dist", Integer(0), {"color" : G_gradient[0]})
+        ))
 
         # label neighbors with question marks
         neighbors = G.get_adjacent_nodes(s)
@@ -169,8 +172,14 @@ class RunAlgorithm(MovingCameraScene):
         for edge in adj_edges:
             (u, v) = edge
             adj_node = (u if s == v else v)
-            uncertain_weight = TexMobject(str(G.get_edge_weight(edge)) + "?")
-            anims.extend(G.set_node_label(adj_node, "dist", uncertain_weight))
+            edge_weight = G.get_edge_weight(edge)
+            uncertain_weight = TexMobject(str(edge_weight) + "?")
+            anims.extend(G.set_node_labels((
+                adj_node,
+                "dist",
+                uncertain_weight,
+                {"color":G_gradient[edge_weight]},
+            )))
         self.play(*anims)
 
         # scroll down to show example
@@ -184,10 +193,12 @@ class RunAlgorithm(MovingCameraScene):
         self.edges = edges
         self.X_DIST = X_DIST
         self.Y_DIST = Y_DIST
+        self.G_gradient = G_gradient
         save_state(self)
 
     def counterexample(self):
         self.__dict__.update(load_previous_state())
+        G_gradient = self.G_gradient
 
         # draw counterexample graph
         nodes = [
@@ -206,7 +217,10 @@ class RunAlgorithm(MovingCameraScene):
 
         # draw s and edge weights
         anims = []
-        anims.extend(H.set_node_label(nodes[0], "variable", TexMobject("s")))
+        anims.extend(H.set_node_labels(
+            (nodes[0], "variable", TexMobject("s")),
+            (nodes[0], "dist", Integer(0), {"color" : G_gradient[0]}),
+        ))
         anims.extend(H.set_edge_weight(edges[0], 10))
         anims.extend(H.set_edge_weight(edges[1], 1))
         anims.extend(H.set_edge_weight(edges[2], 1))
@@ -219,8 +233,9 @@ class RunAlgorithm(MovingCameraScene):
         for edge in adj_edges:
             (u, v) = edge
             adj_node = (u if nodes[0] == v else v)
-            uncertain_weight = TexMobject(str(H.get_edge_weight(edge)) + "?")
-            labels.append((adj_node, "dist", uncertain_weight))
+            weight = H.get_edge_weight(edge)
+            weight_mobject = TexMobject(str(weight) + "?")
+            labels.append((adj_node, "dist", weight_mobject, {"color":G_gradient[weight]}))
         anims.extend(H.set_node_labels(*labels))
         self.play(*anims)
 
@@ -233,7 +248,7 @@ class RunAlgorithm(MovingCameraScene):
             (u, v) = edge
             adj_node = (u if nodes[0] == v else v)
             upper_bound = TexMobject("\le " + str(H.get_edge_weight(edge)))
-            anims.extend(H.set_node_label(adj_node, "dist", upper_bound))
+            anims.extend(H.set_node_labels((adj_node, "dist", upper_bound)))
         self.play(*anims)
 
         # scroll back up
@@ -258,13 +273,13 @@ class RunAlgorithm(MovingCameraScene):
             (u, v) = edge
             adj_node = (u if s == v else v)
             uncertain_weight = TexMobject("\le " + str(G.get_edge_weight(edge)))
-            anims.extend(G.set_node_label(adj_node, "dist", uncertain_weight))
+            anims.extend(G.set_node_labels((adj_node, "dist", uncertain_weight)))
         self.play(*anims)
 
         # tighten bound on min node
         min_node, min_bound = extract_node(G)
         if min_node:
-            self.play(*G.set_node_label(min_node, "dist", Integer(min_bound)))
+            self.play(*G.set_node_labels((min_node, "dist", Integer(min_bound))))
 
         # highlight other edge weights
         ## antipattern
@@ -284,7 +299,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*G.remove_node_labels(*node_labels))
 
         # set s to 0
-        self.play(*G.set_node_label(s, "dist", Integer(0)))
+        self.play(*G.set_node_labels((s, "dist", Integer(0))))
 
         # set bound on neighbors
         adj_edges = G.get_adjacent_edges(s)
@@ -403,8 +418,8 @@ class RunAlgorithm(MovingCameraScene):
         )
 
         anims = \
-            S.set_node_label(s, "dist", Integer(0)) + \
-            S.set_node_label(u, "dist", Integer(x_len)) + \
+            S.set_node_labels((s, "dist", Integer(0))) + \
+            S.set_node_labels((u, "dist", Integer(x_len))) + \
             S.set_edge_weight((u, v), y_len)        + \
             [FadeOut(arrow1)]
         self.play(*anims)
@@ -421,8 +436,9 @@ class RunAlgorithm(MovingCameraScene):
                 initial_groups, target_groups, self)
         self.play(*anims, callback=cb)
 
-        self.play(*S.set_node_label(
-            v, "dist", TexMobject("\le {}".format(x_len + y_len))))
+        self.play(*S.set_node_labels(
+            (v, "dist", TexMobject("\le {}".format(x_len + y_len))),
+        ))
 
         self.wait(2)
 
@@ -452,7 +468,7 @@ class RunAlgorithm(MovingCameraScene):
         min_node = (u if s == v else v)
         cur_label = int(G.get_node_label(min_node, "dist").tex_string[3:])
         new_label = Integer(cur_label)
-        self.play(*G.set_node_label(min_node, "dist", new_label))
+        self.play(*G.set_node_labels((min_node, "dist", new_label)))
 
         # relax neighbors of other neighbor
         # get neighbor
@@ -506,7 +522,7 @@ class RunAlgorithm(MovingCameraScene):
 
         self.play(*relax_node(G, min_node))
         min_node, min_bound = extract_node(G)
-        self.play(*G.set_node_label(min_node, "dist", Integer(min_bound)))
+        self.play(*G.set_node_labels((min_node, "dist", Integer(min_bound))))
 
         while True:
             # relax neighbors
@@ -515,7 +531,7 @@ class RunAlgorithm(MovingCameraScene):
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
             if min_node:
-                self.play(*G.set_node_label(min_node, "dist", Integer(min_bound)))
+                self.play(*G.set_node_labels((min_node, "dist", Integer(min_bound))))
             else:
                 break
 
@@ -533,7 +549,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*G.remove_node_labels(*labels))
 
         min_node = s
-        self.play(*G.set_node_label(s, "dist", Integer(0)))
+        self.play(*G.set_node_labels((s, "dist", Integer(0))))
 
         while True:
             # relax neighbors
@@ -542,7 +558,7 @@ class RunAlgorithm(MovingCameraScene):
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
             if min_node:
-                self.play(*G.set_node_label(min_node, "dist", Integer(min_bound)))
+                self.play(*G.set_node_labels((min_node, "dist", Integer(min_bound))))
             else:
                 break
 
@@ -776,7 +792,7 @@ class RunAlgorithm(MovingCameraScene):
             ((-1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(2))],
             (( 1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(1))],
         }
-        G = Graph(nodes, edges, labels=labels, scale=0.8).shift(self.camera_frame.get_right() * 0.5)
+        G = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(self.camera_frame.get_right() * 0.5)
         self.play(ShowCreation(G))
 
         labels = [
@@ -795,7 +811,7 @@ class RunAlgorithm(MovingCameraScene):
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
             if min_node:
-                self.play(*G.set_node_label(min_node, "dist", Integer(min_bound)))
+                self.play(*G.set_node_labels((min_node, "dist", Integer(min_bound))))
             else:
                 break
 

@@ -7,10 +7,10 @@ from dijkstra_scenes.edge import Edge as Edge
 
 class Graph(Group):
     CONFIG = {
-        "stroke_width": 1,
+        "stroke_width": 2,
         "color": BLACK,
     }
-    def __init__(self, nodes, edges, labels=None, scale=1, **kwargs):
+    def __init__(self, nodes, edges, labels=None, scale_factor=1, **kwargs):
         # typechecking
         for node in nodes:
             Node.assert_primitive(node)
@@ -18,7 +18,8 @@ class Graph(Group):
             Edge.assert_primitive(edge)
 
         # mobject init
-        kwargs.update(self.CONFIG)
+        self.CONFIG.update(kwargs)
+        kwargs = self.CONFIG
         Group.__init__(self, **kwargs)
 
         # create submobjects
@@ -28,9 +29,9 @@ class Graph(Group):
         # create nodes
         for point in nodes:
             if labels is not None and point in labels:
-                node = Node(point, labels=labels[point], scale_factor=scale, **kwargs)
+                node = Node(point, labels=labels[point], scale_factor=scale_factor, **kwargs)
             else:
-                node = Node(point, scale_factor=scale, **kwargs)
+                node = Node(point, scale_factor=scale_factor, **kwargs)
             self.nodes[node.key] = node
             self.add(node)
 
@@ -40,9 +41,9 @@ class Graph(Group):
             u = self.nodes[u]
             v = self.nodes[v]
             if labels is not None and (u.key,v.key) in labels:
-                edge = Edge(u, v, labels=labels[(u.key,v.key)], scale=scale, **kwargs)
+                edge = Edge(u, v, labels=labels[(u.key,v.key)], scale_factor=scale_factor, **kwargs)
             else:
-                edge = Edge(u, v, scale=scale, **kwargs)
+                edge = Edge(u, v, scale_factor=scale_factor, **kwargs)
             self.edges[edge.key] = edge
             self.add(edge)
 

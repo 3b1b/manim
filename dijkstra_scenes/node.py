@@ -63,6 +63,16 @@ class Node(Component):
         else:
             return None
 
+    def change_color(self, color):
+        new_node = self.mobject.copy().set_color(color)
+        self.mobject = new_node
+        return ReplacementTransform(
+            self.mobject,
+            new_node,
+            parent=self,
+        )
+
+
     """
     scales and places labels, removes new label from self.labels
     """

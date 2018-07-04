@@ -140,7 +140,6 @@ class TexMobject(SingleStringTexMobject):
         "arg_separator": " ",
         "substrings_to_isolate": [],
         "tex_to_color_map": {},
-        "override_children": True,
     }
 
     def __init__(self, *tex_strings, **kwargs):
