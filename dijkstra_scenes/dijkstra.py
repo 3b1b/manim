@@ -118,15 +118,15 @@ class RunAlgorithm(MovingCameraScene):
         X_DIST = 4.3
         Y_DIST = 2.8
         nodes = [
-            (-X_DIST , Y_DIST  , 0),
-            ( 0      , Y_DIST  , 0),
-            ( X_DIST , Y_DIST  , 0),
-            (-X_DIST , 0       , 0),
-            ( 0      , 0       , 0),
-            ( X_DIST , 0       , 0),
-            (-X_DIST , -Y_DIST , 0),
-            ( 0      , -Y_DIST , 0),
-            ( X_DIST , -Y_DIST , 0),
+            (-X_DIST, Y_DIST , 0),
+            ( 0     , Y_DIST , 0),
+            ( X_DIST, Y_DIST , 0),
+            (-X_DIST, 0      , 0),
+            ( 0     , 0      , 0),
+            ( X_DIST, 0      , 0),
+            (-X_DIST, -Y_DIST, 0),
+            ( 0     , -Y_DIST, 0),
+            ( X_DIST, -Y_DIST, 0),
         ]
         edges = [
             (nodes[0], nodes[1]),
@@ -156,7 +156,8 @@ class RunAlgorithm(MovingCameraScene):
             if weights[i]:
                 anims.extend(G.set_edge_weight(edge, weights[i]))
             else:
-                anims.extend(G.set_edge_weight(edge, random.randint(1, 9)))
+                rand = random.randint(1, 9)
+                anims.extend(G.set_edge_weight(edge, rand))
 
         self.play(*anims)
 
@@ -864,21 +865,21 @@ class RunAlgorithm(MovingCameraScene):
         labels = {
             ( 0,  2.6, 0): [("variable", TexMobject("s"))],
 
-            (( 0  , 2.6 , 0) , (-1.3, 1.3 , 0)): [("weight", Integer(6))],
-            (( 0  , 2.6 , 0) , ( 1.3, 1.3 , 0)): [("weight", Integer(1))],
+            (( 0  , 2.6 , 0), (-1.3, 1.3 , 0)): [("weight", Integer(6))],
+            (( 0  , 2.6 , 0), ( 1.3, 1.3 , 0)): [("weight", Integer(1))],
 
-            ((-1.3, 1.3 , 0) , (-2.6, 0   , 0)): [("weight", Integer(5))],
-            ((-1.3, 1.3 , 0) , ( 0  , 0   , 0)): [("weight", Integer(4))],
-            (( 1.3, 1.3 , 0) , ( 0  , 0   , 0)): [("weight", Integer(9))],
-            (( 1.3, 1.3 , 0) , ( 2.6, 0   , 0)): [("weight", Integer(2))],
+            ((-1.3, 1.3 , 0), (-2.6, 0   , 0)): [("weight", Integer(5))],
+            ((-1.3, 1.3 , 0), ( 0  , 0   , 0)): [("weight", Integer(4))],
+            (( 1.3, 1.3 , 0), ( 0  , 0   , 0)): [("weight", Integer(7))],
+            (( 1.3, 1.3 , 0), ( 2.6, 0   , 0)): [("weight", Integer(2))],
 
-            ((-2.6, 0   , 0) , (-1.3, -1.3, 0)): [("weight", Integer(4))],
-            (( 0  , 0   , 0) , (-1.3, -1.3, 0)): [("weight", Integer(5))],
-            (( 0  , 0   , 0) , ( 1.3, -1.3, 0)): [("weight", Integer(1))],
-            (( 2.6, 0   , 0) , ( 1.3, -1.3, 0)): [("weight", Integer(2))],
+            ((-2.6, 0   , 0), (-1.3, -1.3, 0)): [("weight", Integer(4))],
+            (( 0  , 0   , 0), (-1.3, -1.3, 0)): [("weight", Integer(5))],
+            (( 0  , 0   , 0), ( 1.3, -1.3, 0)): [("weight", Integer(1))],
+            (( 2.6, 0   , 0), ( 1.3, -1.3, 0)): [("weight", Integer(2))],
 
-            ((-1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(2))],
-            (( 1.3, -1.3, 0) , ( 0  , -2.6, 0)): [("weight", Integer(1))],
+            ((-1.3, -1.3, 0), ( 0  , -2.6, 0)): [("weight", Integer(2))],
+            (( 1.3, -1.3, 0), ( 0  , -2.6, 0)): [("weight", Integer(1))],
         }
         G = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(self.camera_frame.get_right() * 0.5)
         self.play(ShowCreation(G))

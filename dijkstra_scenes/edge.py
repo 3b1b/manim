@@ -6,6 +6,10 @@ from dijkstra_scenes.node import Node as Node
 class Edge(Component):
     def __init__(self, start_node, end_node, labels=None,
             scale_factor=1, **kwargs):
+        if labels is not None:
+            for label in labels:
+                if len(label) == 3 and "stroke_width" in label[2]:
+                    kwargs["stroke_width"] = label[2]["stroke_width"]
         Component.__init__(self, start_node, end_node,
                 labels=labels, scale_factor=scale_factor, **kwargs)
         self.start_node = start_node
@@ -23,11 +27,11 @@ class Edge(Component):
         return (start_node.key, end_node.key)
 
     def create_mobject(self, start_node, end_node, labels=None, **kwargs):
-        normal_vec = end_node.get_center() - start_node.get_center()
-        normal_vec /= la.norm(normal_vec)
+        normalized_vec = end_node.get_center() - start_node.get_center()
+        normalized_vec /= la.norm(normalized_vec)
         return Line(
-            start_node.get_center() + normal_vec * start_node.mobject.radius,
-            end_node.get_center() - normal_vec * end_node.mobject.radius,
+            start_node.get_center() + normalized_vec * start_node.mobject.radius,
+            end_node.get_center() - normalized_vec * end_node.mobject.radius,
             **kwargs
         )
 
@@ -47,10 +51,6 @@ class Edge(Component):
         else:
             raise Exception("node isn't part of line")
 
-    def set_label(self, name, label, animate=True, **kwargs):
-        kwargs["animate"] = animate
-        return self.set_labels((name, label), **kwargs)
-
     def set_labels(self, *labels, **kwargs):
         if not labels:
             return
@@ -59,8 +59,9 @@ class Edge(Component):
         new_labels = OrderedDict()
         for name in self.labels.keys():
             new_labels[name] = self.labels[name].copy()
-        for name, label in labels:
-            new_labels[name] = label
+        for label in labels:
+            name, mobject = label[:2]
+            new_labels[name] = mobject
 
         # move
         if len(new_labels) != len(self.labels):
@@ -102,11 +103,39 @@ class Edge(Component):
         self.labels = new_labels
         return anims
 
-    def get_label(self):
-        return self.label
-
     def get_weight(self):
         return self.labels["weight"] if "weight" in self.labels else None
 
-    def set_weight(self, weight):
-        return self.set_label("weight", Integer(weight))
+    def set_stroke_width(self, stroke_width):
+        normalized_vec = self.end_node.get_center() - self.start_node.get_center()
+        normalized_vec /= la.norm(normalized_vec)
+        new_line = Line(
+            self.start_node.get_center() + normalized_vec * self.start_node.mobject.radius,
+            self.end_node.get_center() - normalized_vec * self.end_node.mobject.radius,
+            stroke_width=stroke_width,
+        )
+        ret = ReplacementTransform(
+            self.mobject,
+            new_line,
+            parent=self,
+        )
+        self.mobject = new_line
+        self.stroke_width = stroke_width
+        return ret
+
+    def update_endpoints(self):
+        normalized_vec = self.end_node.get_center() - self.start_node.get_center()
+        normalized_vec /= la.norm(normalized_vec)
+        new_line = Line(
+            self.start_node.get_center() + normalized_vec * self.start_node.mobject.radius,
+            self.end_node.get_center() - normalized_vec * self.end_node.mobject.radius,
+            stroke_width=self.stroke_width,
+        )
+        ret = ReplacementTransform(
+            self.mobject,
+            new_line,
+            parent=self,
+        )
+        self.mobject = new_line
+        return ret
+

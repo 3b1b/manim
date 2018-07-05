@@ -79,13 +79,13 @@ class Node(Component):
             return None
 
     def change_color(self, color):
-        new_node = self.mobject.copy().set_color(color)
+        new_circle = self.mobject.copy().set_color(color)
         ret = ReplacementTransform(
             self.mobject,
-            new_node,
+            new_circle,
             parent=self,
         )
-        self.mobject = new_node
+        self.mobject = new_circle
         return ret
 
 

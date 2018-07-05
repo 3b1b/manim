@@ -73,15 +73,7 @@ class Graph(Group):
             for pair in self.get_adjacent_edges(point):
                 if pair in seen: continue
                 edge = self.edges[pair]
-                if edge.get_weight():
-                    new_edge = Edge(edge.start_node, edge.end_node,
-                                    labels=[("weight", edge.get_weight().copy())],
-                                    **self.CONFIG)
-                else:
-                    new_edge = Edge(edge.start_node, edge.end_node,
-                                    **self.CONFIG)
-                anims.append(ReplacementTransform(edge, new_edge, parent=self))
-                self.edges[pair] = new_edge
+                anims.append(edge.update_endpoints())
                 seen.add(pair)
         return anims
 
@@ -111,6 +103,7 @@ class Graph(Group):
         for label in labels:
             Node.assert_primitive(label[0])
 
+        # enlarge/color nodes
         anims = []
         to_enlarge = []
         color_map = dict()
@@ -125,7 +118,7 @@ class Graph(Group):
             if point not in to_enlarge:
                 anims.extend([self.nodes[point].change_color(color_map[point])])
 
-        # label all nodes
+        # label nodes
         labels_dict = defaultdict(list)
         for label in labels:
             point, name, mobject = label[:3]
@@ -146,9 +139,13 @@ class Graph(Group):
         Node.assert_primitive(point)
         return label in self.nodes[point].labels
 
-    def set_edge_weight(self, pair, weight):
+    def set_edge_weight(self, pair, weight, stroke_width=None):
         Edge.assert_primitive(pair)
-        return self.edges[pair].set_weight(weight)
+        weight_anim = self.edges[pair].set_labels(("weight", Integer(weight)))
+        if stroke_width is not None:
+            line_anim = self.edges[pair].set_stroke_width(stroke_width)
+            return weight_anim + [line_anim]
+        return weight_anim
 
     def get_edge_weight(self, pair):
         Edge.assert_primitive(pair)
