@@ -5,7 +5,7 @@ import numpy as np
 # own use will want to change
 MEDIA_DIR = os.path.join(
     os.path.expanduser('~'),
-    "Public/manim/media"
+    "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
 )
 #
 
@@ -110,10 +110,8 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DI
         os.makedirs(folder)
 
 TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE     = os.path.join(THIS_DIR, "template.tex")
-TEMPLATE_TEXT_FILE    = os.path.join(THIS_DIR, "text_template.tex")
-TEMPLATE_CODE_FILE    = os.path.join(THIS_DIR, "code_template.tex")
-TEMPLATE_ALIGNAT_FILE = os.path.join(THIS_DIR, "alignat_template.tex")
+TEMPLATE_TEX_FILE = os.path.join(THIS_DIR, "template.tex")
+TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
 
 FFMPEG_BIN = "ffmpeg"
 
@@ -121,40 +119,14 @@ FFMPEG_BIN = "ffmpeg"
 # Colors
 
 COLOR_MAP = {
-    "PURPLE_A": "#221133",
-    "PURPLE_B": "#442266",
-    "PURPLE_C": "#663399",
-    "PURPLE_D": "#8844CC",
-    "PURPLE_E": "#AA55FF",
-
-    "BLUE_A": "#0B1628",
-    "BLUE_B": "#0F2D54",
-    "BLUE_C": "#14447F",
-    "BLUE_D": "#195AAA",
-    "BLUE_E": "#1D72D3",
-
-    "RED_A": "#551200",
-    "RED_B": "#771500",
-    "RED_C": "#991800",
-    "RED_D": "#BB2100",
-    "RED_E": "#dd2412",
-
-    "WHITE": "#FFFFFF",
-    "BLACK": "#000000",
-
     "DARK_BLUE": "#236B8E",
     "DARK_BROWN": "#8B4513",
     "LIGHT_BROWN": "#CD853F",
-    #"PURPLE_E": "#644172",
-    #"PURPLE_D": "#715582",
-    #"PURPLE_C": "#9A72AC",
-    #"PURPLE_B": "#B189C6",
-    #"PURPLE_A": "#CAA3E8",
-    #"BLUE_E": "#1C758A",
-    #"BLUE_D": "#29ABCA",
-    #"BLUE_C": "#58C4DD",
-    #"BLUE_B": "#9CDCEB",
-    #"BLUE_A": "#C7E9F1",
+    "BLUE_E": "#1C758A",
+    "BLUE_D": "#29ABCA",
+    "BLUE_C": "#58C4DD",
+    "BLUE_B": "#9CDCEB",
+    "BLUE_A": "#C7E9F1",
     "TEAL_E": "#49A88F",
     "TEAL_D": "#55C1A7",
     "TEAL_C": "#5CD0B3",
@@ -175,16 +147,23 @@ COLOR_MAP = {
     "GOLD_C": "#F0AC5F",
     "GOLD_B": "#F9B775",
     "GOLD_A": "#F7C797",
-    #"RED_E": "#CF5044",
-    #"RED_D": "#E65A4C",
-    #"RED_C": "#FC6255",
-    #"RED_B": "#FF8080",
-    #"RED_A": "#F7A1A3",
+    "RED_E": "#CF5044",
+    "RED_D": "#E65A4C",
+    "RED_C": "#FC6255",
+    "RED_B": "#FF8080",
+    "RED_A": "#F7A1A3",
     "MAROON_E": "#94424F",
     "MAROON_D": "#A24D61",
     "MAROON_C": "#C55F73",
     "MAROON_B": "#EC92AB",
     "MAROON_A": "#ECABC1",
+    "PURPLE_E": "#644172",
+    "PURPLE_D": "#715582",
+    "PURPLE_C": "#9A72AC",
+    "PURPLE_B": "#B189C6",
+    "PURPLE_A": "#CAA3E8",
+    "WHITE": "#FFFFFF",
+    "BLACK": "#000000",
     "LIGHT_GRAY": "#BBBBBB",
     "LIGHT_GREY": "#BBBBBB",
     "GRAY": "#888888",
