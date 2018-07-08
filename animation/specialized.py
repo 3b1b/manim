@@ -76,6 +76,10 @@ class Broadcast(LaggedStart):
         )
 
 class TransformEquation(AnimationGroup):
+    """
+    When writing the regex, parentheses and + in the equation must be double
+    escaped. LaTeX characters must be quadruple escaped (e.g. \\\\le).
+    """
     def mob_from_char(self, eq, tex_string, target):
         index = 0
         for char in tex_string:
@@ -120,8 +124,13 @@ class TransformEquation(AnimationGroup):
 
     def split_by_regex(self, eq, regex):
         match = re.match(regex, eq.tex_string)
-        assert(match)
-        assert(match.group(0) == eq.tex_string)
+        if not match:
+            print "{} does not match {}".format(regex, eq.tex_string)
+            import ipdb; ipdb.set_trace(context=7)
+            assert(False)
+        if match.group(0) != eq.tex_string:
+            import ipdb; ipdb.set_trace(context=7)
+            assert(False)
         regex_index = 0
         mob_index = 0
         group_index = 1

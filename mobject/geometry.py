@@ -511,6 +511,7 @@ class Arrow(Line):
             fill_opacity=1,
             stroke_color=self.color,
             stroke_width=0,
+            color=self.color,
         )
         tip.add_at_end = add_at_end
         self.set_tip_points(tip, add_at_end, preserve_normal=False)
@@ -525,7 +526,8 @@ class Arrow(Line):
         self.rect = Rectangle(
             stroke_width=0,
             fill_color=self.tip.get_fill_color(),
-            fill_opacity=self.tip.get_fill_opacity()
+            fill_opacity=self.tip.get_fill_opacity(),
+            color=self.tip.get_color(),
         )
         self.add_to_back(self.rect)
         self.set_stroke(width=0)

@@ -5,11 +5,13 @@ from dijkstra_scenes.node import Node as Node
 
 class Edge(Component):
     def __init__(self, start_node, end_node, labels=None,
-            scale_factor=1, **kwargs):
+            scale_factor=1, edge_color=None, **kwargs):
         if labels is not None:
             for label in labels:
                 if len(label) == 3 and "stroke_width" in label[2]:
                     kwargs["stroke_width"] = label[2]["stroke_width"]
+        if edge_color is not None:
+            kwargs["color"] = edge_color
         Component.__init__(self, start_node, end_node,
                 labels=labels, scale_factor=scale_factor, **kwargs)
         self.start_node = start_node

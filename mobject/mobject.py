@@ -321,7 +321,7 @@ class Mobject(Container):
                 submobject_to_align=None,
                 index_of_submobject_to_align=None,
                 coor_mask=np.array([1, 1, 1]),
-                ):
+                **kwargs):
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             if index_of_submobject_to_align is not None:

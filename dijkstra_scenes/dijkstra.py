@@ -2,13 +2,13 @@ import numpy.linalg as la
 from big_ol_pile_of_manim_imports import *
 from dijkstra_scenes.graph import Graph
 from dijkstra_scenes.dynamic_equation import DynamicEquation
-QUEUE_COLOR = DARK_BROWN
 INFTY_COLOR = BLACK
 DEFAULT_WIDTH = 2
 SPT_WIDTH = 6
-SPT_COLOR = BLUE_E
+SPT_COLOR = VIOLET
+QUEUE_COLOR = MAGENTA
 
-def extend_arrow(G, u, v, camera_location=ORIGIN):
+def extend_arrow(G, u, v, color=None):
     u_v_vector = G.get_node(v).mobject.get_center() - \
                  G.get_node(u).mobject.get_center() 
     u_v_vector /= la.norm(u_v_vector)
@@ -16,20 +16,17 @@ def extend_arrow(G, u, v, camera_location=ORIGIN):
                    u_v_vector * G.get_node(u).mobject.radius
     v_edge_point = G.get_node(v).mobject.get_center() - \
                    u_v_vector * G.get_node(v).mobject.radius
-    # the default arrow tip length is 0.25
-    arrow_tip_start = u_edge_point + u_v_vector * 0.25
     arrow = Arrow(
         u_edge_point,
-        arrow_tip_start,
-        rectangular_stem_width=0.005,
-        # prevent arrow tip from shrinking
-        max_tip_length_to_length_ratio=float("inf"),
+        u_edge_point,
+        rectangular_stem_width=0.03,
+        color=color,
     )
     return UpdateFromAlphaFunc(
         arrow,
         lambda a, t: a.put_start_and_end_on(
             u_edge_point,
-            arrow_tip_start + (v_edge_point - arrow_tip_start) * t,
+            u_edge_point + (v_edge_point - u_edge_point) * t,
         ),
     ), arrow
 
@@ -344,6 +341,9 @@ class RunAlgorithm(MovingCameraScene):
         X_DIST = self.X_DIST
         Y_DIST = self.Y_DIST
 
+        x_color = SPT_COLOR
+        y_color = QUEUE_COLOR
+        z_color = TEAL
         s = (-X_DIST * 0.60, 0 - 1, 0)
         v = ( X_DIST * 0.60, 0 - 1, 0)
         u = (             0, 3 - 1, 0)
@@ -352,7 +352,7 @@ class RunAlgorithm(MovingCameraScene):
             u: [("variable", TexMobject("u"))],
             v: [("variable", TexMobject("v"))],
         }
-        S = Graph([s, u, v], [(u, v)], labels=labels)
+        S = Graph([s, u, v], [(u, v)], labels=labels, color_map={(u, v): y_color})
         S.to_edge(DOWN, initial_offset=self.camera_frame.get_center())
 
         self.play(
@@ -360,53 +360,71 @@ class RunAlgorithm(MovingCameraScene):
             FadeIn(S.get_node(v)),
         )
 
-        # TODO: add color
         words = TextMobject(
             "\\large The shortest path from $s$ to $v$ ",
-            "is at most as long as the shortest path from $s$ "
-            "to any node $u$ adjacent to $v$ ",
-            "plus the length of the edge connecting $u$ to $v$.",
+            "is at most as long as ",
+            "the shortest path from $s$ to any node $u$ adjacent to $v$ ",
+            "plus ",
+            "the length of the edge connecting $u$ to $v$.",
         )
+        words[0].set_color(z_color)
+        words[2].set_color(x_color)
+        words[4].set_color(y_color)
         words.scale_to_fit_width(FRAME_WIDTH - 1)
         words.to_edge(UP, initial_offset=self.camera_frame.get_center())
 
-        arrow_anim1, arrow1 = extend_arrow(S, s, v, camera_location=self.camera_frame.get_center())
+        arrow_anim1, arrow1 = extend_arrow(S, s, v, color=z_color)
         self.play(
             arrow_anim1,
             Write(words[0]),
         )
 
-        arrow_anim2, arrow2 = extend_arrow(S, s, u,
-                camera_location=self.camera_frame.get_center())
+        arrow_anim2, arrow2 = extend_arrow(S, s, u, color=x_color)
         self.play(
             FadeIn(S.get_node(u)),
             FadeIn(S.get_edge((u, v))),
             arrow_anim2,
-            Write(words[1]),
+            Write(
+                Group(words[1], words[2])
+            ),
         )
 
-        self.play(Write(words[2]))
+        self.play(Write(
+            Group(words[3], words[4])
+        ))
 
         sx = Line(
             S.get_node(s).get_center(),
             S.get_node(u).get_center(),
+            color=x_color,
         )
         sx_normal = rotate_vector(sx.get_vector(), np.pi/2)
+        bx = BraceLabel(sx, "x", sx_normal, buff=SMALL_BUFF)
+        bx.brace.set_color(x_color)
+        x = bx.label.set_color(x_color)
+
         sy = Line(
             S.get_node(u).get_center(),
             S.get_node(v).get_center(),
+            color=y_color,
         )
         sy_normal = rotate_vector(sy.get_vector(), np.pi/2)
+        by = BraceLabel(sy, "y", sy_normal, buff=SMALL_BUFF)
+        by.brace.set_color(y_color)
+        y = by.label.set_color(y_color)
+
         sz = Line(
             S.get_node(s).get_center(),
             S.get_node(v).get_center(),
+            color=z_color,
         )
         sz_normal = rotate_vector(sz.get_vector(), -np.pi/2)
-        x = TexMobject("x").next_to(sx.get_midpoint(), sx_normal, buff=0.04)
-        y = TexMobject("y").next_to(sy.get_midpoint(), sy_normal, buff=0.04)
-        z = TexMobject("z").next_to(sz.get_midpoint(), sz_normal, buff=0.04)
-        triangle = Group(sx, sy, sz, x, y, z)
-        
+        bz = BraceLabel(sz, "z", sz_normal, buff=SMALL_BUFF)
+        bz.brace.set_color(z_color)
+        z = bz.label.set_color(z_color)
+
+        triangle = Group(sx, sy, sz)
+        brace_labels = Group(bx, by, bz)
         self.play(
             FadeIn(triangle),
             FadeOut(S),
@@ -414,24 +432,39 @@ class RunAlgorithm(MovingCameraScene):
             FadeOut(arrow2),
         )
 
+        self.play(
+            bx.creation_anim(),
+            by.creation_anim(),
+            bz.creation_anim(),
+        )
+        self.wait()
+
         # TODO: convert this to use DynamicEquation
         x_len = 5
         y_len = 2
-        dyneq = DynamicEquation(
-            "z &\le x + y",
-            "z &\le {} + {}".format(x_len, y_len),
-            "z &\le {}".format(x_len + y_len),
-        ).move_to(sx.get_end() + RIGHT * 4)
+        eq1 = TexMobject("z \le x + y").move_to(sx.get_end() + RIGHT * 4)
+        eq1[2].set_color(x_color)
+        eq1[4].set_color(y_color)
+        eq1[0].set_color(z_color)
+        eq2 = TexMobject("z \le {} + {}".format(x_len, y_len))
+        eq2[2].set_color(x_color)
+        eq2[4].set_color(y_color)
+        eq2[0].set_color(z_color)
+        eq3 = TexMobject("z \le {}".format(x_len + y_len))
+        eq3[2].set_color(QUEUE_COLOR)
+        eq3[0].set_color(z_color)
 
         self.play(
-            ReplacementTransform(x.copy(), dyneq.symbol_at_index(2)),
-            ReplacementTransform(y.copy(), dyneq.symbol_at_index(4)),
-            ReplacementTransform(z.copy(), dyneq.symbol_at_index(0)),
-            FadeIn(dyneq.symbols_at_indices(1, 3)),
+            ReplacementTransform(x.copy(), eq1[2]),
+            ReplacementTransform(y.copy(), eq1[4]),
+            ReplacementTransform(z.copy(), eq1[0]),
+            FadeIn(Group(eq1[1], eq1[3])),
         )
+        self.wait()
         
         self.play(
             FadeOut(triangle),
+            FadeOut(brace_labels),
             FadeIn(S),
             FadeIn(arrow1),
             FadeIn(arrow2),
@@ -444,17 +477,8 @@ class RunAlgorithm(MovingCameraScene):
             [FadeOut(arrow1)]
         self.play(*anims)
 
-        initial_groups = "z \\\\le (.*) \+ (.*)"
-        target_groups  = "z \\\\le (.*) \+ (.*)"
-        anims, cb = dyneq.transform_equation(1, "\le",
-                initial_groups, target_groups, self)
-        self.play(*anims, callback=cb)
-
-        initial_groups = "z \\\\le (.*)"
-        target_groups  = "z \\\\le (.*)"
-        anims, cb = dyneq.transform_equation(2, "\le",
-                initial_groups, target_groups, self)
-        self.play(*anims, callback=cb)
+        self.play(TransformEquation(eq1, eq2, "z \\\\le (.*) \\+ (.*)"))
+        self.play(TransformEquation(eq2, eq3, "z \\\\le (.*)"))
 
         self.play(*relax_node(S, u))
 
@@ -573,8 +597,7 @@ class RunAlgorithm(MovingCameraScene):
             if min_node:
                 parent_edge = G.get_node_parent_edge(min_node)
                 color_anim = G.change_edge_color(parent_edge, SPT_COLOR)
-                min_node_arrow = G.get_node_label(min_node, "parent") \
-                        .copy().set_color(BLACK)
+                min_node_arrow = G.get_node_label(min_node, "parent")
                 self.play(*G.set_node_labels(
                     (min_node, "dist", Integer(min_bound), {"color": SPT_COLOR}),
                     (min_node, "parent", min_node_arrow),
@@ -678,7 +701,7 @@ class RunAlgorithm(MovingCameraScene):
         edges = [(u, v)]
         labels = {
                 u: [("variable", TexMobject("u")), ("dist", Integer(3), {"color": SPT_COLOR})],
-                v: [("variable", TexMobject("v")), ("dist", TexMobject("\le 9"), {"color": BLACK})],
+                v: [("variable", TexMobject("v")), ("dist", TexMobject("\le\infty"))],
             (u, v): [("weight", Integer(2))],
         }
         G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
@@ -847,8 +870,7 @@ class RunAlgorithm(MovingCameraScene):
             if min_node:
                 parent_edge = G.get_node_parent_edge(min_node)
                 color_anim = G.change_edge_color(parent_edge, SPT_COLOR)
-                min_node_arrow = G.get_node_label(min_node, "parent") \
-                        .copy().set_color(BLACK)
+                min_node_arrow = G.get_node_label(min_node, "parent")
                 self.play(*G.set_node_labels(
                     (min_node, "dist", Integer(min_bound),
                         {"color": SPT_COLOR}),

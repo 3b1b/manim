@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import numpy as np
+import copy
 
 from constants import *
 
@@ -97,7 +98,7 @@ class BraceLabel(VMobject):
         if self.label_scale != 1:
             self.label.scale(self.label_scale)
 
-        self.brace.put_at_tip(self.label)
+        self.brace.put_at_tip(self.label, **kwargs)
         self.submobjects = [self.brace, self.label]
 
     def creation_anim(self, label_anim=FadeIn, brace_anim=GrowFromCenter):

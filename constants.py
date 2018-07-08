@@ -124,11 +124,11 @@ COLOR_MAP = {
     "DARK_BLUE": "#236B8E",
     "DARK_BROWN": "#8B4513",
     "LIGHT_BROWN": "#CD853F",
-    "BLUE_E": "#1C758A",
-    "BLUE_D": "#29ABCA",
-    "BLUE_C": "#58C4DD",
-    "BLUE_B": "#9CDCEB",
-    "BLUE_A": "#C7E9F1",
+    "BLUE_A" : "#1C758A",
+    "BLUE_B" : "#29ABCA",
+    "BLUE_C" : "#58C4DD",
+    "BLUE_D" : "#9CDCEB",
+    "BLUE_E" : "#C7E9F1",
     "TEAL_E": "#49A88F",
     "TEAL_D": "#55C1A7",
     "TEAL_C": "#5CD0B3",
@@ -159,11 +159,11 @@ COLOR_MAP = {
     "MAROON_C": "#C55F73",
     "MAROON_B": "#EC92AB",
     "MAROON_A": "#ECABC1",
-    "PURPLE_E": "#644172",
-    "PURPLE_D": "#715582",
-    "PURPLE_C": "#9A72AC",
-    "PURPLE_B": "#B189C6",
-    "PURPLE_A": "#CAA3E8",
+    "PURPLE_A" : "#644172",
+    "PURPLE_B" : "#715582",
+    "PURPLE_C" : "#9A72AC",
+    "PURPLE_D" : "#B189C6",
+    "PURPLE_E" : "#CAA3E8",
     "WHITE": "#FFFFFF",
     "BLACK": "#000000",
     "LIGHT_GRAY": "#BBBBBB",
@@ -176,6 +176,22 @@ COLOR_MAP = {
     "PINK": "#D147BD",
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
+
+    "MAGENTA_E": "#993265", # hsl(330, 67, 60)
+    "MAGENTA_D": "#B23A76", # hsl(330, 67, 70)
+    "MAGENTA_C": "#CC4387", # hsl(330, 67, 80)
+    "MAGENTA_B": "#E54B98", # hsl(330, 67, 90)
+    "MAGENTA_A": "#FF54A9", # hsl(330, 67, 100)
+    "VIOLET_E": "#663399",  # hsl(270, 67, 60)
+    "VIOLET_D": "#773BB2",  # hsl(270, 67, 70)
+    "VIOLET_C": "#8844CC",  # hsl(270, 67, 80)
+    "VIOLET_B": "#994CE5",  # hsl(270, 67, 90)
+    "VIOLET_A": "#AA55FF",  # hsl(270, 67, 100)
+    "TEAL_E": "#326599",    # hsl(210, 67, 60)
+    "TEAL_D": "#3A76B2",    # hsl(210, 67, 70)
+    "TEAL_C": "#4387CC",    # hsl(210, 67, 80)
+    "TEAL_B": "#4B98E5",    # hsl(210, 67, 90)
+    "TEAL_A": "#54A9FF",    # hsl(210, 67, 100)
 }
 
 import colour
@@ -183,7 +199,7 @@ for color_name,color_hex in COLOR_MAP.items():
     if color_name == "WHITE" or color_name == "BLACK":
         continue
     c = colour.Color(color_hex)
-    c.set_luminance(c.get_luminance() - 0.1)
+    c.set_luminance(c.get_luminance() - 0.08)
     COLOR_MAP[color_name] = c.hex
 
 PALETTE = COLOR_MAP.values()

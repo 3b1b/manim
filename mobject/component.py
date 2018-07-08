@@ -2,15 +2,20 @@ from mobject import Mobject
 from collections import OrderedDict as OrderedDict
 
 class Component(Mobject):
+    CONFIG = {
+    }
     def __init__(self, *args, **kwargs):
         # typechecking
         self.key = self.make_key(*args)
         self.assert_primitive(self.key)
 
-        # mobject init (will overwrite instance variables)
-        self.CONFIG.update(kwargs)
-        kwargs = self.CONFIG
-        Mobject.__init__(self, **kwargs)
+        # modifications to self.CONFIG will
+        # persist for future mobjects
+        config_copy = self.CONFIG.copy()
+        config_copy.update(kwargs)
+        kwargs = config_copy
+        # will overwrite instance variables
+        Mobject.__init__(self, **config_copy)
 
         # initialize variables
         if "scale_factor" in kwargs:

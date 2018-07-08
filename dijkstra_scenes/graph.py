@@ -11,7 +11,7 @@ class Graph(Group):
         "color": BLACK,
     }
     def __init__(self, nodes, edges, labels=None, scale_factor=1,
-            gradient=None, **kwargs):
+            gradient=None, color_map=None, **kwargs):
         # typechecking
         for node in nodes:
             Node.assert_primitive(node)
@@ -19,9 +19,10 @@ class Graph(Group):
             Edge.assert_primitive(edge)
 
         # mobject init
-        self.CONFIG.update(kwargs)
-        kwargs = self.CONFIG
-        Group.__init__(self, **kwargs)
+        config_copy = self.CONFIG.copy()
+        config_copy.update(kwargs)
+        kwargs = config_copy
+        Group.__init__(self, **config_copy)
 
         # create submobjects
         self.nodes = {}
@@ -38,9 +39,15 @@ class Graph(Group):
 
         # create edges
         for edge in edges:
-            (u, v) = (edge[0], edge[1])
+            u = edge[0]
+            v = edge[1]
             u = self.nodes[u]
             v = self.nodes[v]
+            if color_map is not None and edge in color_map:
+                kwargs["color"] = color_map[edge]
+            else:
+                kwargs["color"] = self.color
+
             if labels is not None and (u.key,v.key) in labels:
                 edge = Edge(u, v, labels=labels[(u.key,v.key)], scale_factor=scale_factor, **kwargs)
             else:
