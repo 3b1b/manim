@@ -106,14 +106,14 @@ class Edge(Component):
     def get_weight(self):
         return self.labels["weight"] if "weight" in self.labels else None
 
-    def set_stroke_width(self, stroke_width):
+    def set_stroke_width(self, stroke_width, color=None):
         normalized_vec = self.end_node.get_center() - self.start_node.get_center()
         normalized_vec /= la.norm(normalized_vec)
         new_line = Line(
             self.start_node.get_center() + normalized_vec * self.start_node.mobject.radius,
             self.end_node.get_center() - normalized_vec * self.end_node.mobject.radius,
             stroke_width=stroke_width,
-        )
+        ).set_color(color)
         ret = ReplacementTransform(
             self.mobject,
             new_line,
@@ -123,7 +123,7 @@ class Edge(Component):
         self.stroke_width = stroke_width
         return ret
 
-    def update_endpoints(self, stroke_width=None):
+    def update_endpoints(self, stroke_width=None, color=None):
         if stroke_width is not None:
             self.stroke_width = stroke_width
         normalized_vec = self.end_node.get_center() - self.start_node.get_center()
@@ -132,7 +132,17 @@ class Edge(Component):
             self.start_node.get_center() + normalized_vec * self.start_node.mobject.radius,
             self.end_node.get_center() - normalized_vec * self.end_node.mobject.radius,
             stroke_width=self.stroke_width,
+        ).set_color(color)
+        ret = ReplacementTransform(
+            self.mobject,
+            new_line,
+            parent=self,
         )
+        self.mobject = new_line
+        return ret
+
+    def change_color(self, color):
+        new_line = self.mobject.copy().set_color(color)
         ret = ReplacementTransform(
             self.mobject,
             new_line,

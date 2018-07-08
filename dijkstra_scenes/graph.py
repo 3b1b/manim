@@ -73,8 +73,8 @@ class Graph(Group):
             for pair in self.get_adjacent_edges(point):
                 if pair in seen: continue
                 edge = self.edges[pair]
-                if "parent_map" in kwargs and pair in kwargs["parent_map"].values():
-                    anims.append(edge.update_endpoints(stroke_width=4))
+                if "parent_map" in kwargs and pair in map(lambda x: x[0], kwargs["parent_map"].values()):
+                    anims.append(edge.update_endpoints(stroke_width=4, color=kwargs["parent_map"][point][1]))
                     self.set_node_parent_edge(point, pair)
                 else:
                     anims.append(edge.update_endpoints())
@@ -90,17 +90,27 @@ class Graph(Group):
         return anims
 
     def remove_node_labels(self, *labels):
-        for point, label in labels:
-            Node.assert_primitive(point)
+        for label in labels:
+            Node.assert_primitive(label[0])
         anims = []
+        color_map = {}
         # remove labels
         for label in labels:
             anims.extend(self.nodes[label[0]].remove_label(label[1]))
+            if len(label) == 3 and "color" in label[2]:
+                color_map[label[0]] = label[2]["color"]
 
         # shrink nodes
         points = [label[0] for label in labels \
                   if len(self.nodes[label[0]].labels) == 0]
-        anims.extend(self.enlarge_nodes(*points, shrink=True))
+        anims.extend(self.enlarge_nodes(
+            *points,
+            shrink=True,
+            color_map=color_map
+        ))
+        for point in color_map:
+            if point not in points:
+                anims.append(self.nodes[point].change_color(color_map[point]))
         return anims
 
     def set_node_labels(self, *labels):
@@ -118,20 +128,24 @@ class Graph(Group):
                 to_enlarge.append(point)
             if len(label) == 4 and "color" in label[3]:
                 color_map[point] = label[3]["color"]
-            if len(label) == 4 and "new_parent_edge" in label[3]:
-                parent_map[point] = label[3]["new_parent_edge"]
+            if len(label) == 4 and "parent_edge" in label[3]:
+                if "parent_edge_color" in label[3]:
+                    parent_edge_color = label[3]["parent_edge_color"]
+                else:
+                    parent_edge_color = None
+                parent_map[point] = (label[3]["parent_edge"], parent_edge_color)
                 old_parent = self.get_node_parent_edge(point)
                 if old_parent is not None:
-                    anims.append(self.set_edge_stroke_width(old_parent, 2))
+                    anims.append(self.set_edge_stroke_width(old_parent, 2, color=BLACK))
         anims.extend(self.enlarge_nodes(
             *to_enlarge,
             color_map=color_map,
             parent_map=parent_map
         ))
-        for point, pair in parent_map.items():
+        for point, (pair, color) in parent_map.items():
             if self.edges[pair].mobject.stroke_width == 2:
-                anims.append(self.set_edge_stroke_width(pair, 4))
-                self.set_node_parent_edge(point, parent_map[point])
+                anims.append(self.set_edge_stroke_width(pair, 4, color=color))
+                self.set_node_parent_edge(point, parent_map[point][0])
         for point in color_map:
             if point not in to_enlarge:
                 anims.extend([self.nodes[point].change_color(color_map[point])])
@@ -161,9 +175,9 @@ class Graph(Group):
             return weight_anim + [line_anim]
         return weight_anim
 
-    def set_edge_stroke_width(self, pair, stroke_width=2):
+    def set_edge_stroke_width(self, pair, stroke_width=2, color=None):
         Edge.assert_primitive(pair)
-        return self.edges[pair].set_stroke_width(stroke_width)
+        return self.edges[pair].set_stroke_width(stroke_width, color=color)
 
 
     def get_edge_weight(self, pair):
@@ -219,3 +233,6 @@ class Graph(Group):
 
     def get_node_parent_edge(self, point):
         return self.nodes[point].get_parent_edge()
+
+    def change_edge_color(self, pair, color):
+        return self.edges[pair].change_color(color)
