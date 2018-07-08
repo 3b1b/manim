@@ -159,14 +159,23 @@ class Node(Component):
         for name in new_labels.keys():
             if "animate" not in kwargs or kwargs["animate"]:
                 if name in self.labels:
-                    anims.extend([ReplacementTransform(self.labels[name],
+                    anims.append(ReplacementTransform(self.labels[name],
                                                        new_labels[name],
-                                                       parent=self)])
+                                                       parent=self))
                 else:
-                    anims.extend([ShowCreation(new_labels[name])])
+                    anims.append(ShowCreation(new_labels[name]))
                     self.add(new_labels[name])
             else:
                 if name not in self.labels:
                     self.add(new_labels[name])
         self.labels = new_labels
         return anims
+
+    def set_parent_edge(self, pair):
+        self.parent_edge = pair
+
+    def get_parent_edge(self):
+        if hasattr(self, "parent_edge"):
+            return self.parent_edge
+        else:
+            return None

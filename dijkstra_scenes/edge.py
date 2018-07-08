@@ -123,7 +123,9 @@ class Edge(Component):
         self.stroke_width = stroke_width
         return ret
 
-    def update_endpoints(self):
+    def update_endpoints(self, stroke_width=None):
+        if stroke_width is not None:
+            self.stroke_width = stroke_width
         normalized_vec = self.end_node.get_center() - self.start_node.get_center()
         normalized_vec /= la.norm(normalized_vec)
         new_line = Line(

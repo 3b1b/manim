@@ -2,6 +2,10 @@ import numpy.linalg as la
 from big_ol_pile_of_manim_imports import *
 from dijkstra_scenes.graph import Graph
 from dijkstra_scenes.dynamic_equation import DynamicEquation
+QUEUE_COLOR = DARK_BROWN
+INFTY_COLOR = BLACK
+DEFAULT_WIDTH = 2
+SPT_WIDTH = 6
 
 def extend_arrow(G, u, v, camera_location=ORIGIN):
     u_v_vector = G.get_node(v).mobject.get_center() - \
@@ -30,26 +34,42 @@ def extend_arrow(G, u, v, camera_location=ORIGIN):
 
 def relax_node(G, parent, arrows=False, gradient=None):
     labels = []
+    anims = []
     adj_edges = G.get_adjacent_edges(parent)
     for edge in adj_edges:
         child = G.get_opposite_node(edge, parent)
         # the parent's path length is known
-        parent_dist = int(G.get_node_label(parent, "dist").number)
+        parent_label = G.get_node_label(parent, "dist")
+        if type(parent_label) == Integer:
+            parent_dist = int(parent_label.number)
+        elif type(parent_label) == TexMobject:
+            # starts with '\le '
+            parent_dist = int(parent_label.tex_string[4:])
         new_bound = parent_dist + G.get_edge_weight(edge)
         if G.node_has_label(child, "dist"):
+            # node is already bounded
             old_bound = G.get_node_label(child, "dist") 
             if type(old_bound) == Integer or len(old_bound.tex_string) == 1:
                 # path length is already known
                 continue
-            if "\infty" in old_bound.tex_string:
+            relabel = False
+            if old_bound.tex_string.endswith("\infty"):
                 old_bound = float("inf")
-            else:
+            elif old_bound.tex_string.startswith("\le "):
                 old_bound = int(old_bound.tex_string[4:])
+            elif old_bound.tex_string.endswith("?"):
+                old_bound = int(old_bound.tex_string[:-1])
+                relabel = True
+            else:
+                import ipdb; ipdb.set_trace(context=7)
             if new_bound < old_bound:
+                relabel = True
+            if relabel:
                 labels.append((
                     child,
                     "dist",
-                    TexMobject("\le {}".format(new_bound)),
+                    TexMobject("\le {}".format(new_bound)) \
+                            .set_color(QUEUE_COLOR),
                     {"color": gradient[new_bound] if gradient else None},
                 ))
                 if arrows:
@@ -57,14 +77,16 @@ def relax_node(G, parent, arrows=False, gradient=None):
                                 G.get_node(child).mobject.get_center()
                     arrow_vec /= la.norm(arrow_vec)
                     arrow = Arrow(G.get_node(child).get_center(),
-                                  G.get_node(child).get_center() + arrow_vec)
-                    labels.append((child, "parent", arrow))
+                                  G.get_node(child).get_center() + arrow_vec) \
+                                          .set_color(QUEUE_COLOR)
+                    labels.append((child, "parent", arrow, {"new_parent_edge": edge}))
         else:
             # use new bound
             labels.append((
                 child,
                 "dist",
-                TexMobject("\le {}".format(new_bound)),
+                TexMobject("\le {}".format(new_bound)) \
+                        .set_color(QUEUE_COLOR),
                 {"color": gradient[new_bound] if gradient else None},
             ))
             if arrows:
@@ -72,9 +94,10 @@ def relax_node(G, parent, arrows=False, gradient=None):
                             G.get_node(child).mobject.get_center()
                 arrow_vec /= la.norm(arrow_vec)
                 arrow = Arrow(G.get_node(child).get_center(),
-                              G.get_node(child).get_center() + arrow_vec)
-                labels.append((child, "parent", arrow))
-    return G.set_node_labels(*labels)
+                              G.get_node(child).get_center() + arrow_vec) \
+                                      .set_color(QUEUE_COLOR)
+                labels.append((child, "parent", arrow, {"new_parent_edge": edge}))
+    return G.set_node_labels(*labels) + anims
 
 def extract_node(G):
     bounded_nodes = filter(
@@ -144,7 +167,7 @@ class RunAlgorithm(MovingCameraScene):
             (nodes[6], nodes[7]),
             (nodes[7], nodes[8]),
         ]
-        gradient = color_gradient([BLUE_E, RED_E], 15)
+        gradient = color_gradient([BLUE_C, RED_C], 15)
         G = Graph(nodes, edges)
         self.play(ShowCreation(G))
 
@@ -259,19 +282,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(Indicate(H.edges[edges[0]].get_weight()))
 
         # switch to upper bound
-        anims = []
-        for edge in adj_edges:
-            (u, v) = edge
-            adj_node = (u if nodes[0] == v else v)
-            weight = H.get_edge_weight(edge)
-            upper_bound = TexMobject("\le " + str(weight))
-            anims.extend(H.set_node_labels((
-                adj_node,
-                "dist",
-                upper_bound,
-                {"color": gradient[weight]},
-            )))
-        self.play(*anims)
+        self.play(*relax_node(H, nodes[0]))
 
         # scroll back up
         initial_height = self.camera_frame.get_center()[1]
@@ -291,19 +302,7 @@ class RunAlgorithm(MovingCameraScene):
 
         # set neighbors to upper bound
         adj_edges = G.get_adjacent_edges(s)
-        anims = []
-        for edge in adj_edges:
-            (u, v) = edge
-            adj_node = (u if s == v else v)
-            weight = G.get_edge_weight(edge)
-            uncertain_weight = TexMobject("\le " + str(weight))
-            anims.extend(G.set_node_labels((
-                adj_node,
-                "dist",
-                uncertain_weight,
-                {"color": gradient[weight]},
-            )))
-        self.play(*anims)
+        self.play(*relax_node(G, s))
 
         # tighten bound on min node
         min_node, min_bound = extract_node(G)
@@ -338,19 +337,7 @@ class RunAlgorithm(MovingCameraScene):
         )))
 
         # set bound on neighbors
-        adj_edges = G.get_adjacent_edges(s)
-        labels = []
-        for edge in adj_edges:
-            weight = G.get_edge_weight(edge)
-            uncertain_weight = TexMobject("\le " + str(weight))
-            # this will cause problems, and you'll have to settle the allclose thing
-            labels.append((
-                G.edges[edge].opposite(s),
-                "dist",
-                uncertain_weight,
-                {"color": gradient[weight]},
-            ))
-        self.play(*G.set_node_labels(*labels))
+        self.play(*relax_node(G, s, gradient=gradient))
 
         # scroll camera
         ShiftRight = lambda t: (FRAME_WIDTH * t, 0, 0)
@@ -479,12 +466,7 @@ class RunAlgorithm(MovingCameraScene):
                 initial_groups, target_groups, self)
         self.play(*anims, callback=cb)
 
-        self.play(*S.set_node_labels((
-            v,
-            "dist",
-            TexMobject("\le {}".format(x_len + y_len)),
-            {"color": gradient[x_len + y_len]},
-        )))
+        self.play(*relax_node(S, u, gradient=gradient))
 
         self.wait(2)
 
@@ -527,45 +509,16 @@ class RunAlgorithm(MovingCameraScene):
                 neighbor = G.get_edge(edge).opposite(s)
             
         #self.play(Indicate(G.get_node(neighbor)))
-        # relax neighbors (doesn't work with function)
-        labels = []
-        adj_edges = G.get_adjacent_edges(neighbor)
+        # relax neighbors
         to_revert = []
-        for edge in adj_edges:
-            adj_node = G.get_opposite_node(edge, neighbor)
-            # the parent's path length is not known
-            adj_node_bound = int(G.get_node_label(neighbor, "dist").tex_string[4:])
-
-            new_bound = adj_node_bound + G.get_edge_weight(edge)
-            if G.node_has_label(adj_node, "dist"):
-                old_bound = G.get_node_label(adj_node, "dist") 
-                if type(old_bound) == Integer or len(old_bound.tex_string) == 1:
-                    # path length is already known
-                    continue
-                # compare both bounds
-                old_bound = int(old_bound.tex_string[4:])
-                if new_bound < old_bound:
-                    labels.append((
-                        adj_node,
-                        "dist",
-                        TexMobject("\le {}".format(new_bound)),
-                        {"color": gradient[new_bound]},
-                    ))
-            else:
-                # use new bound
-                labels.append((
-                    adj_node,
-                    "dist",
-                    TexMobject("\le {}".format(new_bound)),
-                    {"color": gradient[new_bound]},
-                ))
-                to_revert.append(adj_node)
-        self.play(*G.set_node_labels(*labels))
+        for node in G.get_adjacent_nodes(neighbor):
+            if G.get_node_label(node, "dist") is None:
+                to_revert.append(node)
+        self.play(*relax_node(G, neighbor))
 
         # TODO:
         # tentatively label node across shortest edge
         # highlight shorter path
-
         labels = []
         for node in to_revert:
             labels.append((node, "dist")) 
@@ -630,12 +583,12 @@ class RunAlgorithm(MovingCameraScene):
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
             if min_node:
-                self.play(*G.set_node_labels((
-                    min_node,
-                    "dist",
-                    Integer(min_bound),
-                    {"color": gradient[min_bound]},
-                )))
+                min_node_arrow = G.get_node_label(min_node, "parent") \
+                        .copy().set_color(BLACK)
+                self.play(*G.set_node_labels(
+                    (min_node, "dist", Integer(min_bound)),
+                    (min_node, "parent", min_node_arrow),
+                ))
             else:
                 break
 
@@ -707,7 +660,9 @@ class RunAlgorithm(MovingCameraScene):
                     {"color": gradient[0]},
                 ))
             else:
-                labels.append((node, "dist", TexMobject("\le\infty")))
+                labels.append(
+                        (node, "dist",
+                            TexMobject("\le\infty").set_color(INFTY_COLOR)))
 
         # shift initialize header down and create next block
         top_line = code.submobjects[0].submobjects[1]
@@ -734,7 +689,7 @@ class RunAlgorithm(MovingCameraScene):
         edges = [(u, v)]
         labels = {
                 u: [("variable", TexMobject("u")), ("dist", Integer(3), {"color": gradient[3]})],
-                v: [("variable", TexMobject("v")), ("dist", TexMobject("\le 9"), {"color": gradient[9]})],
+                v: [("variable", TexMobject("v")), ("dist", TexMobject("\le 9").set_color(QUEUE_COLOR), {"color": gradient[9]})],
             (u, v): [("weight", Integer(2))],
         }
         G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
@@ -762,7 +717,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*G.set_node_labels((
             v,
             "dist",
-            TexMobject("\le 5"),
+            TexMobject("\le 5").set_color(QUEUE_COLOR),
             {"color": gradient[5]},
         )))
 
@@ -865,7 +820,7 @@ class RunAlgorithm(MovingCameraScene):
         labels = {
             ( 0,  2.6, 0): [("variable", TexMobject("s"))],
 
-            (( 0  , 2.6 , 0), (-1.3, 1.3 , 0)): [("weight", Integer(6))],
+            (( 0  , 2.6 , 0), (-1.3, 1.3 , 0)): [("weight", Integer(4))],
             (( 0  , 2.6 , 0), ( 1.3, 1.3 , 0)): [("weight", Integer(1))],
 
             ((-1.3, 1.3 , 0), (-2.6, 0   , 0)): [("weight", Integer(5))],
@@ -889,7 +844,9 @@ class RunAlgorithm(MovingCameraScene):
         ]
         for node in nodes:
             if node != s:
-                labels.append((node, "dist", TexMobject("\le\infty")))
+                labels.append(
+                        (node, "dist", TexMobject("\le\infty").set_color(INFTY_COLOR),
+                            {"color":INFTY_COLOR}))
         self.play(*G.set_node_labels(*labels))
 
         min_node = (0, 2.6, 0)
@@ -900,7 +857,12 @@ class RunAlgorithm(MovingCameraScene):
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
             if min_node:
-                self.play(*G.set_node_labels((min_node, "dist", Integer(min_bound))))
+                min_node_arrow = G.get_node_label(min_node, "parent") \
+                        .copy().set_color(BLACK)
+                self.play(*G.set_node_labels(
+                    (min_node, "dist", Integer(min_bound)),
+                    (min_node, "parent", min_node_arrow),
+                ))
             else:
                 break
 
@@ -1040,13 +1002,6 @@ class RunAlgorithm(MovingCameraScene):
             "  Fibonacci Heap & $O(E + V \\log V)$ \\\\" + \
             "\\end{tabular}"
         )
-        #self.play(FadeOut(runtime))
-        #self.play(ShowCreation(table))
-        #number_anims = []
-        #for i, mob in enumerate(table.submobjects[0].submobjects):
-        #    num = Integer(i, color=RED).next_to(mob, UR, buff=0.1).scale(0.5)
-        #    number_anims.append(ShowCreation(num))
-        #self.play(*number_anims)
         table_lines = VGroup(
             table.submobjects[0].submobjects[13],
             table.submobjects[0].submobjects[47],

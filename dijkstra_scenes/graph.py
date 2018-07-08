@@ -73,7 +73,11 @@ class Graph(Group):
             for pair in self.get_adjacent_edges(point):
                 if pair in seen: continue
                 edge = self.edges[pair]
-                anims.append(edge.update_endpoints())
+                if "parent_map" in kwargs and pair in kwargs["parent_map"].values():
+                    anims.append(edge.update_endpoints(stroke_width=4))
+                    self.set_node_parent_edge(point, pair)
+                else:
+                    anims.append(edge.update_endpoints())
                 seen.add(pair)
         return anims
 
@@ -103,17 +107,31 @@ class Graph(Group):
         for label in labels:
             Node.assert_primitive(label[0])
 
-        # enlarge/color nodes
+        # enlarge nodes / color nodes / set thickness
         anims = []
         to_enlarge = []
         color_map = dict()
+        parent_map = dict()
         for label in labels:
             point = label[0]
             if len(self.nodes[point].labels) == 0 and point not in to_enlarge:
                 to_enlarge.append(point)
             if len(label) == 4 and "color" in label[3]:
                 color_map[point] = label[3]["color"]
-        anims.extend(self.enlarge_nodes(*to_enlarge, color_map=color_map))
+            if len(label) == 4 and "new_parent_edge" in label[3]:
+                parent_map[point] = label[3]["new_parent_edge"]
+                old_parent = self.get_node_parent_edge(point)
+                if old_parent is not None:
+                    anims.append(self.set_edge_stroke_width(old_parent, 2))
+        anims.extend(self.enlarge_nodes(
+            *to_enlarge,
+            color_map=color_map,
+            parent_map=parent_map
+        ))
+        for point, pair in parent_map.items():
+            if self.edges[pair].mobject.stroke_width == 2:
+                anims.append(self.set_edge_stroke_width(pair, 4))
+                self.set_node_parent_edge(point, parent_map[point])
         for point in color_map:
             if point not in to_enlarge:
                 anims.extend([self.nodes[point].change_color(color_map[point])])
@@ -129,11 +147,7 @@ class Graph(Group):
 
     def get_node_label(self, point, name):
         Node.assert_primitive(point)
-        try:
-            return self.nodes[point].labels[name]
-        except KeyError:
-            sys.stderr.write("node at {} has no label {}".format(point, name))
-            exit(1)
+        return self.nodes[point].get_label(name)
 
     def node_has_label(self, point, label):
         Node.assert_primitive(point)
@@ -146,6 +160,11 @@ class Graph(Group):
             line_anim = self.edges[pair].set_stroke_width(stroke_width)
             return weight_anim + [line_anim]
         return weight_anim
+
+    def set_edge_stroke_width(self, pair, stroke_width=2):
+        Edge.assert_primitive(pair)
+        return self.edges[pair].set_stroke_width(stroke_width)
+
 
     def get_edge_weight(self, pair):
         Edge.assert_primitive(pair)
@@ -192,3 +211,11 @@ class Graph(Group):
         Node.assert_primitive(point)
         Edge.assert_primitive(pair)
         return self.edges[pair].opposite(point)
+
+    def set_node_parent_edge(self, point, pair):
+        Node.assert_primitive(point)
+        Edge.assert_primitive(pair)
+        self.nodes[point].set_parent_edge(pair)
+
+    def get_node_parent_edge(self, point):
+        return self.nodes[point].get_parent_edge()

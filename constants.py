@@ -5,7 +5,7 @@ import numpy as np
 # own use will want to change
 MEDIA_DIR = os.path.join(
     os.path.expanduser('~'),
-    "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+    "Public/manim/media"
 )
 #
 
@@ -110,8 +110,10 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DI
         os.makedirs(folder)
 
 TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE = os.path.join(THIS_DIR, "template.tex")
-TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
+TEMPLATE_TEX_FILE     = os.path.join(THIS_DIR, "template.tex")
+TEMPLATE_TEXT_FILE    = os.path.join(THIS_DIR, "text_template.tex")
+TEMPLATE_CODE_FILE    = os.path.join(THIS_DIR, "code_template.tex")
+TEMPLATE_ALIGNAT_FILE = os.path.join(THIS_DIR, "alignat_template.tex")
 
 FFMPEG_BIN = "ffmpeg"
 
@@ -175,6 +177,15 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 }
+
+import colour
+for color_name,color_hex in COLOR_MAP.items():
+    if color_name == "WHITE" or color_name == "BLACK":
+        continue
+    c = colour.Color(color_hex)
+    c.set_luminance(c.get_luminance() - 0.1)
+    COLOR_MAP[color_name] = c.hex
+
 PALETTE = COLOR_MAP.values()
 locals().update(COLOR_MAP)
 for name in filter(lambda s: s.endswith("_C"), COLOR_MAP.keys()):
