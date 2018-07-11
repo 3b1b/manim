@@ -104,6 +104,7 @@ import random
 import re
 import string
 import sys
+import math
 
 from PIL import Image
 from colour import Color
