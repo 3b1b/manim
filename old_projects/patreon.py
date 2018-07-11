@@ -19,7 +19,7 @@ class SideGigToFullTime(Scene):
         dollar_sign = TexMobject("\\$")
         cross = VGroup(*[
             Line(vect, -vect, color = RED)
-            for vect in UP+RIGHT, UP+LEFT
+            for vect in (UP+RIGHT, UP+LEFT)
         ])
         cross.scale_to_fit_height(dollar_sign.get_height())
         no_money = VGroup(dollar_sign, cross)

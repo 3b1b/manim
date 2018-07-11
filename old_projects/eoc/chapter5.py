@@ -100,7 +100,7 @@ class DoublingPopulation(PiCreatureScene):
 
         pop_brace, mass_brace = [
             Brace(function[0], DOWN)
-            for function in P_t, M_t
+            for function in (P_t, M_t)
         ]
         for brace, word in (pop_brace, "size"), (mass_brace, "mass"):
             text = brace.get_text("Population %s"%word)
@@ -601,7 +601,7 @@ class FakeDiagram(TeacherStudentsScene):
                 x_min = -8,
                 x_max = 2 + dx
             )
-            for dx in 0.25, 0
+            for dx in (0.25, 0)
         ])
         for graph in graphs:
             end_point = graph.points[-1]
@@ -775,7 +775,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
         ]
         words = VGroup(*[
             TextMobject(s, " ideas")
-            for s in "Additive", "Multiplicative"
+            for s in ("Additive", "Multiplicative")
         ])
         words[0].move_to(words[1], LEFT)
         words.set_color(BLUE)
@@ -812,14 +812,14 @@ class AnalyzeExponentRatio(PiCreatureScene):
                 run_time = 2,
                 rate_func = squish_rate_func(smooth, 0.5, 1)
             )
-            for mob in one, lp, rp
+            for mob in (one, lp, rp)
         ] + [
             ReplacementTransform(
                 mob, extracted_two_to_t,
                 path_arc = np.pi/2,
                 run_time = 2,
             )
-            for mob in two_to_t, VGroup(*two_to_t_two_to_dt[:2])
+            for mob in (two_to_t, VGroup(*two_to_t_two_to_dt[:2]))
         ] + [
             lhs.next_to, extracted_two_to_t, LEFT
         ])
@@ -1006,7 +1006,7 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
     def construct(self):
         two_deriv, eight_deriv = derivs = VGroup(*[
             self.get_derivative_expression(base)
-            for base in 2, 8
+            for base in (2, 8)
         ])
 
         derivs.arrange_submobjects(
@@ -1268,7 +1268,7 @@ class ApplyChainRule(TeacherStudentsScene):
                 path_arc = -np.pi,
                 run_time = 2
             )
-            for tex in "e^", "{3", "t}"
+            for tex in ("e^", "{3", "t}")
         ] + [
             Write(deriv_equation.get_part_by_tex("="))
         ])
@@ -1663,7 +1663,7 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
         )
         h_line = DashedLine(*[
             self.coords_to_point(x, self.T_room)
-            for x in self.x_min, self.x_max
+            for x in (self.x_min, self.x_max)
         ])
         T_room_label = TexMobject("T_{\\text{room}}")
         T_room_label.next_to(h_line, LEFT)

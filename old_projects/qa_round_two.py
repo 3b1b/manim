@@ -100,7 +100,7 @@ class PowersOfTwo(Scene):
                 two_to_ten.get_corner(vect+RIGHT),
                 mob[0].get_corner(vect+LEFT),
             )
-            for vect in UP, DOWN
+            for vect in (UP, DOWN)
         ])
         two_to_ten.save_state()
         two_to_ten.replace(mob[0])

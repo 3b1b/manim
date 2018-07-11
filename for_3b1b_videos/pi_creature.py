@@ -223,7 +223,7 @@ class PiCreature(SVGMobject):
         body = self.body
         return VGroup(*[
             body.copy().pointwise_become_partial(body, *alpha_range)
-            for alpha_range in self.right_arm_range, self.left_arm_range
+            for alpha_range in (self.right_arm_range, self.left_arm_range)
         ])
 
 

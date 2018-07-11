@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -7,7 +8,7 @@ import sys
 
 from big_ol_pile_of_manim_imports import *
 from script_wrapper import command_line_create_scene
-from generate_logo import LogoGeneration
+from .generate_logo import LogoGeneration
 
 POEM_LINES = """Fixed poorly in notation with that two,
 you shine so loud that you deserve a name.
@@ -388,7 +389,7 @@ class TauPoem(Scene):
         grid.add(TexMobject("e^{ix}").shift(grid_center+UP+RIGHT))
         circle.set_color("white")
         tau_line = Line(
-            *[np.pi*interval_size*vect for vect in LEFT, RIGHT],
+            *[np.pi*interval_size*vect for vect in (LEFT, RIGHT)],
             density = 5*DEFAULT_POINT_DENSITY_1D
         )
         tau_line.set_color("red")
@@ -475,7 +476,8 @@ class TauPoem(Scene):
         ])
         for index in range(circle.points.shape[0]):
             circle.rgbas
-        def trianglify((x, y, z)):
+        def trianglify(xxx_todo_changeme):
+            (x, y, z) = xxx_todo_changeme
             norm = np.linalg.norm((x, y, z))
             comp = complex(x, y)*complex(0, 1)
             return (

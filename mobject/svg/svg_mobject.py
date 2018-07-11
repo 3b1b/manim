@@ -143,7 +143,7 @@ class SVGMobject(VMobject):
             float(circle_element.getAttribute(key))
             if circle_element.hasAttribute(key)
             else 0.0
-            for key in "cx", "cy", "r"
+            for key in ("cx", "cy", "r")
         ]
         return Circle(radius=r).shift(x * RIGHT + y * DOWN)
 
@@ -152,7 +152,7 @@ class SVGMobject(VMobject):
             float(circle_element.getAttribute(key))
             if circle_element.hasAttribute(key)
             else 0.0
-            for key in "cx", "cy", "rx", "ry"
+            for key in ("cx", "cy", "rx", "ry")
         ]
         return Circle().scale(rx * RIGHT + ry * UP).shift(x * RIGHT + y * DOWN)
 

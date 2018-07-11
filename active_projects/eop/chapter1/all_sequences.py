@@ -1,3 +1,4 @@
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 from active_projects.eop.reusable_imports import *
 
@@ -15,7 +16,7 @@ class ShuffleThroughAllSequences(Scene):
 
         nb_frames = self.run_time * self.fps
         nb_relevant_coins = int(np.log2(nb_frames)) + 1
-        print "relevant coins:", nb_relevant_coins
+        print("relevant coins:", nb_relevant_coins)
         nb_idle_coins = self.nb_coins - nb_relevant_coins
 
         idle_heads = CoinSequence(nb_idle_coins * ["H"],
@@ -55,7 +56,7 @@ class ShuffleThroughAllSequences(Scene):
             self.update_frame()
             self.add_frames(self.get_frame())
             last_coin_seq = coin_seq
-            print float(i)/2**nb_relevant_coins
+            print(float(i)/2**nb_relevant_coins)
 
 
 

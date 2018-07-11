@@ -331,7 +331,7 @@ class GraphCarTrajectory(GraphScene):
     def introduce_graph(self, graph, origin):
         h_line, v_line = [
             Line(origin, origin, color = color, stroke_width = 2)
-            for color in TIME_COLOR, DISTANCE_COLOR
+            for color in (TIME_COLOR, DISTANCE_COLOR)
         ]
         def h_update(h_line, proportion = 1):
             end = graph.point_from_proportion(proportion)
@@ -931,7 +931,7 @@ class CompareTwoVerySimilarTimes(CompareTwoTimes):
                 for mob in formula
                 if mob.get_color() == Color(color)
             ])
-            for color in DISTANCE_COLOR, TIME_COLOR
+            for color in (DISTANCE_COLOR, TIME_COLOR)
         ]
         ds_brace = Brace(ds_symbols, UP)
         ds_text = ds_brace.get_text("$ds$", buff = SMALL_BUFF)
@@ -1086,7 +1086,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
                 line_class = Line,
                 line_kwargs = {"color" : MAROON_B}
             )
-            for time in self.end_time, self.end_time + self.dt
+            for time in (self.end_time, self.end_time + self.dt)
         ]
 
 
@@ -1285,7 +1285,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
     def get_ds_dt_group(self, dt, animate = False):
         points = [
             self.input_to_graph_point(time, self.graph)
-            for time in self.curr_time, self.curr_time+dt
+            for time in (self.curr_time, self.curr_time+dt)
         ]
         dots = map(Dot, points)
         for dot in dots:
@@ -1453,7 +1453,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             TextMobject(
                 "$dt$", "is", "not", s
             )
-            for s in "``infinitely small''", "0"
+            for s in ("``infinitely small''", "0")
         ]
         for phrase in phrases:
             phrase[0].set_color(TIME_COLOR)
@@ -1646,7 +1646,7 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(Write(ds_dt_group, run_time = 2))
         self.play(
             FadeIn(lhs),
-            *[mob.restore for mob in ds, dt]
+            *[mob.restore for mob in (ds, dt)]
         )
         self.play(ShowCreation(v_lines[0]))
         self.wait()
@@ -1690,7 +1690,7 @@ class TCubedExample(SecantLineToTangentLine):
                     "dashed_segment_length" : 0.05,
                 }
             )
-            for time in self.start_time, self.start_time+self.start_dt
+            for time in (self.start_time, self.start_time+self.start_dt)
         ])
 
     def brace_for_details(self):
@@ -2315,7 +2315,7 @@ class TinyMovement(ZoomedScene):
 
         dots = VGroup(*[
             Dot(point, radius = self.distance/10)
-            for point in wheel_point, target_wheel_point
+            for point in (wheel_point, target_wheel_point)
         ])
         brace = Brace(Line(ORIGIN, RIGHT))
         distance_label = TexMobject(self.distance_label)
