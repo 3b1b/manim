@@ -93,12 +93,14 @@ class ExamplesOfOneDimensionalLinearTransforms(ShowMultiplication):
 
 class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
     def construct(self):
-        def sinx_plux_x(xxx_todo_changeme):
-            (x, y, z) = xxx_todo_changeme
+        def sinx_plux_x(x_y_z):
+            (x, y, z) = x_y_z
             return (np.sin(x) + 1.2*x, y, z)
-        def shift_zero(xxx_todo_changeme2):
-            (x, y, z) = xxx_todo_changeme2
+
+        def shift_zero(x_y_z):
+            (x, y, z) = x_y_z
             return (2*x+4, y, z)
+
         self.nonlinear = TextMobject("Not a Linear Transform")
         self.nonlinear.set_color(LIGHT_RED).to_edge(UP, buff = 1.5)
         pairs = [
@@ -295,12 +297,14 @@ class ExamplesOfTwoDimensionalLinearTransformations(ShowMatrixTransform):
 class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def construct(self):
         Scene.construct(self)
-        def squiggle(xxx_todo_changeme3):
-            (x, y, z) = xxx_todo_changeme3
+        def squiggle(x_y_z):
+            (x, y, z) = x_y_z
             return (x+np.sin(y), y+np.cos(x), z)
-        def shift_zero(xxx_todo_changeme4):
-            (x, y, z) = xxx_todo_changeme4
+
+        def shift_zero(x_y_z):
+            (x, y, z) = x_y_z
             return (2*x + 3*y + 4, -1*x+y+2, z)
+
         self.nonlinear = TextMobject("Nonlinear Transform")
         self.nonlinear.set_color(LIGHT_RED)
         self.nonlinear.to_edge(UP, buff = 1.5)
@@ -386,12 +390,13 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             UP*FRAME_Y_RADIUS+RIGHT*FRAME_X_RADIUS,
             density = 10*DEFAULT_POINT_DENSITY_1D
         )
-        def sunrise(xxx_todo_changeme5):
-            (x, y, z) = xxx_todo_changeme5
+
+        def sunrise(x_y_z):
+            (x, y, z) = x_y_z
             return ((FRAME_Y_RADIUS+y)*x, y, z)
 
-        def squished(xxx_todo_changeme6):
-            (x, y, z) = xxx_todo_changeme6
+        def squished(x_y_z):
+            (x, y, z) = x_y_z
             return (x + np.sin(x), y+np.sin(y), z)
 
         self.get_blackness()

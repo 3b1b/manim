@@ -182,7 +182,7 @@ class ApplyMatrix(ApplyPointwiseFunction):
             new_matrix[:2, :2] = matrix
             matrix = new_matrix
         elif matrix.shape != (3, 3):
-            raise "Matrix has bad dimensions"
+            raise Exception("Matrix has bad dimensions")
         transpose = np.transpose(matrix)
 
         def func(p):
