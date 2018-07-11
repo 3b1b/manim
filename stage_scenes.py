@@ -1,14 +1,14 @@
-from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import print_function
 import inspect
 import os
 import sys
 
-from .constants import PRODUCTION_QUALITY_CAMERA_CONFIG
-from .constants import PRODUCTION_QUALITY_FRAME_DURATION
-from .extract_scene import get_module
-from .extract_scene import is_scene
-from .utils.output_directory_getters import get_movie_output_directory
+from constants import PRODUCTION_QUALITY_CAMERA_CONFIG
+from constants import PRODUCTION_QUALITY_FRAME_DURATION
+from extract_scene import get_module
+from extract_scene import is_scene
+from utils.output_directory_getters import get_movie_output_directory
 
 
 def get_sorted_scene_classes(module_name):
