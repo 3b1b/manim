@@ -13,6 +13,9 @@ class ComplexAnalysisOverlay(Scene):
 
 class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
     CONFIG = {
+        "plane_config": {
+            "line_frequency": 0.1,
+        },
         "num_anchors_to_add_per_line": 20,
         "complex_homotopy": lambda z, t: z**(1.0 + t),
         "zoom_factor": 0.05,
@@ -169,6 +172,8 @@ class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
     def get_plane(self):
         top_plane = NumberPlane(
             y_radius=FRAME_HEIGHT / 2,
+            x_line_frequency=0.1,
+            y_line_frequency=0.1,
         )
         self.prepare_for_transformation(top_plane)
         bottom_plane = top_plane.copy()
