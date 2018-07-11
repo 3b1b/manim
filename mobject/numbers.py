@@ -5,6 +5,7 @@ import operator as op
 
 from mobject.svg.tex_mobject import SingleStringTexMobject
 from mobject.types.vectorized_mobject import VMobject
+from functools import reduce
 
 
 class DecimalNumber(VMobject):

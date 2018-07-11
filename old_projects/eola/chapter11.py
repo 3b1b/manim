@@ -181,7 +181,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             ]),
             [ApplyMethod(s.change_mode, "plain") for s in students],
             map(Animation, [cs_student.bubble, cs_student.arrow]),
-            [mob.restore for mob in cs_student.v, cs_student.coords],
+            [mob.restore for mob in (cs_student.v, cs_student.coords)],
         ))
         bubble = cs_student.get_bubble(SpeechBubble, width = 4, height = 3)
         bubble.set_fill(BLACK, opacity = 1)
@@ -756,7 +756,7 @@ class AddTwoFunctions(FunctionGraphScene):
             }
         self.play(*[
             MoveToTarget(mob, **kwargs)
-            for mob in g_lines, dots
+            for mob in (g_lines, dots)
         ])
         # self.play(
         #     *[mob.fade for mob in g_lines, f_lines]+[
@@ -933,7 +933,7 @@ class FromVectorsToFunctions(VectorScene):
         self.wait()
         self.play(*[
             ApplyMethod(mob.shift, FRAME_WIDTH*RIGHT)
-            for mob in axes, everything
+            for mob in (axes, everything)
         ] + [Animation(words)]
         )
         self.play(ShowCreation(graph), Animation(words))
@@ -2036,7 +2036,7 @@ class ShowVectorSpaces(Scene):
             Line(
                 h_line.get_center(), FRAME_Y_RADIUS*DOWN
             ).shift(vect*FRAME_X_RADIUS/3.)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ]
         vectors = self.get_vectors()
         vectors.shift(LEFT*FRAME_X_RADIUS*(2./3))
@@ -2121,7 +2121,7 @@ class MathematicianSpeakingToAll(Scene):
         mathy = Mathematician().to_corner(DOWN+LEFT)
         others = VGroup(*[
             Randolph().flip().set_color(color)
-            for color in BLUE_D, GREEN_E, GOLD_E, BLUE_C
+            for color in (BLUE_D, GREEN_E, GOLD_E, BLUE_C)
         ])
         others.arrange_submobjects()
         others.scale(0.8)
@@ -2246,7 +2246,7 @@ class AxiomsAreInterface(Scene):
         mathy.change_mode("pondering")
         others = [
             Randolph().flip().set_color(color)
-            for color in BLUE_D, GREEN_E, GOLD_E, BLUE_C
+            for color in (BLUE_D, GREEN_E, GOLD_E, BLUE_C)
         ]
         others = VGroup(
             VGroup(*others[:2]),
@@ -2336,7 +2336,7 @@ class VectorSpaceOfPiCreatures(Scene):
 
     def show_sum(self, creatures):
         def is_valid(pi1, pi2, pi3):
-            if len(set([pi.get_color() for pi in pi1, pi2, pi3])) < 3:
+            if len(set([pi.get_color() for pi in (pi1, pi2, pi3)])) < 3:
                 return False
             if pi1.is_flipped()^pi2.is_flipped():
                 return False
@@ -2475,7 +2475,7 @@ class WhatIsThree(Scene):
         triplets = [
             VGroup(*[
                 PiCreature(color = color).scale(0.4)
-                for color in BLUE_E, BLUE_C, BLUE_D
+                for color in (BLUE_E, BLUE_C, BLUE_D)
             ]),
             VGroup(*[HyperCube().scale(0.3) for x in range(3)]),
             VGroup(*[Vector(RIGHT) for x in range(3)]),

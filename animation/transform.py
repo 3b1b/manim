@@ -116,7 +116,7 @@ class ApplyMethod(Transform):
                 "Whoops, looks like you accidentally invoked " +
                 "the method you want to animate"
             )
-        assert(isinstance(method.im_self, Mobject))
+        assert(isinstance(method.__self__, Mobject))
         args = list(args)  # So that args.pop() works
         if "method_kwargs" in kwargs:
             method_kwargs = kwargs["method_kwargs"]
@@ -124,9 +124,9 @@ class ApplyMethod(Transform):
             method_kwargs = args.pop()
         else:
             method_kwargs = {}
-        target = method.im_self.copy()
-        method.im_func(target, *args, **method_kwargs)
-        Transform.__init__(self, method.im_self, target, **kwargs)
+        target = method.__self__.copy()
+        method.__func__(target, *args, **method_kwargs)
+        Transform.__init__(self, method.__self__, target, **kwargs)
 
 
 class ApplyPointwiseFunction(ApplyMethod):
@@ -198,7 +198,7 @@ class ComplexFunction(ApplyPointwiseFunction):
             )
         ApplyPointwiseFunction.__init__(
             self,
-            lambda (x, y, z): complex_to_R3(function(complex(x, y))),
+            lambda x_y_z: complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),
             instantiate(mobject),
             **kwargs
         )

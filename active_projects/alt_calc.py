@@ -88,7 +88,7 @@ class NumberlineTransformationScene(ZoomedScene):
     def setup_titles(self):
         input_title, output_title = self.titles = VGroup(*[
             TextMobject(word)
-            for word in "Inputs", "Outputs"
+            for word in ("Inputs", "Outputs")
         ])
         vects = [UP, DOWN]
         for title, line, vect in zip(self.titles, self.number_lines, vects):
@@ -450,7 +450,7 @@ class WriteOpeningWords(Scene):
                       "any new topic, it will take some hard work to understand,"
         words1, words2 = [
             TextMobject("\\Large", *rs.split(" "))
-            for rs in raw_string1, raw_string2
+            for rs in (raw_string1, raw_string2)
         ]
         words1.next_to(words2, UP, aligned_edge=LEFT, buff=LARGE_BUFF)
         words = VGroup(*it.chain(words1, words2))
@@ -2471,7 +2471,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
                     line[1],
                     line[2][:4],
                 )
-                for line in lines[1], new_line
+                for line in (lines[1], new_line)
             ]
             anims = [ReplacementTransform(
                 mover.copy().fade(1), target, path_arc=30 * DEGREES
@@ -2617,7 +2617,7 @@ class ShowRepeatedApplication(Scene):
 
         rects = VGroup(*[
             SurroundingRectangle(mob)
-            for mob in line[0], line[1:-1], line[-1]
+            for mob in (line[0], line[1:-1], line[-1])
         ])
         rects.set_stroke(BLUE, 2)
 
@@ -2886,7 +2886,7 @@ class RepeatedApplicationGraphically(GraphOnePlusOneOverX, PiCreatureScene):
                 y_point = self.coords_to_point(0, new_output)
                 lines = VGroup(*[
                     Line(dot.get_center(), point)
-                    for point in x_point, y_point
+                    for point in (x_point, y_point)
                 ])
                 lines.set_color(YELLOW)
                 self.play(ShowCreationThenDestruction(
@@ -3001,7 +3001,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
                 for point in sample_points
                 if np.linalg.norm(point - input_zero_point) > 0.3
             ])
-            for func in point_func, alt_point_func
+            for func in (point_func, alt_point_func)
         ]
         for group in arrows, alt_arrows:
             group.set_stroke(WHITE, 0.5)
@@ -3608,7 +3608,7 @@ class ManyInfiniteExpressions(Scene):
                 lag_ratio=0.1,
                 run_time=8,
             )
-            for group in frac, radical, power_tower
+            for group in (frac, radical, power_tower)
         ])
         self.wait(2)
 

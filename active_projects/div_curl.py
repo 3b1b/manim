@@ -1,3 +1,4 @@
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 
 DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
@@ -153,7 +154,7 @@ def get_color_field_image_file(scalar_func,
     file_name = "%d.png" % func_hash
     full_path = os.path.join(RASTER_IMAGE_DIR, file_name)
     if not os.path.exists(full_path):
-        print "Rendering color field image " + str(func_hash)
+        print("Rendering color field image " + str(func_hash))
         rgb_gradient_func = get_rgb_gradient_function(
             min_value=min_value,
             max_value=max_value,
@@ -885,7 +886,7 @@ class CylinderModel(Scene):
                 path_arc=0,
                 n_arc_anchors=100,
             ).next_to(ORIGIN, vect, buff=2)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
         # This line is a bit of a hack
         h_line = Line(LEFT, RIGHT, color=WHITE)
@@ -986,7 +987,7 @@ class ElectricField(CylinderModel, MovingCameraScene):
         )
         protons, electrons = groups = [
             VGroup(*[method(radius=0.2) for x in range(20)])
-            for method in get_proton, get_electron
+            for method in (get_proton, get_electron)
         ]
         for group in groups:
             group.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
@@ -1495,7 +1496,7 @@ class IntroduceVectorField(Scene):
                 fill_opacity=1,
                 fill_color=color
             )
-            for color in BLUE, RED
+            for color in (BLUE, RED)
         ])
         magnet.arrange_submobjects(RIGHT, buff=0)
         for char, vect in ("S", LEFT), ("N", RIGHT):
@@ -1778,7 +1779,7 @@ class DefineDivergence(ChangingElectricField):
                 for particle in particles
                 if u * particle.charge > 0
             ]
-            for u in +1, -1
+            for u in (+1, -1)
         ]
         pair_of_vector_circle_groups = VGroup()
         for point_set in self.positive_points, self.negative_points:
@@ -2081,7 +2082,7 @@ class DivergenceAsNewFunction(Scene):
                 VGroup(mob.copy().fade(1)),
                 VGroup(out_x, out_y),
             )
-            for mob in in_x, in_y
+            for mob in (in_x, in_y)
         ])
         out_vect = get_out_vect()
         VGroup(out_x, out_y).match_style(out_vect)
@@ -2197,7 +2198,7 @@ class DivergenceAsNewFunction(Scene):
             ContinualUpdateFromFunc(
                 mob, lambda m: m.set_fill(None, 0)
             )
-            for mob in out_x, out_y
+            for mob in (out_x, out_y)
         ])
         self.add_foreground_mobjects(div_tex)
         self.play(
@@ -3112,7 +3113,7 @@ class ShowTwoPopulations(Scene):
             FadeIn(labels),
             *[
                 UpdateFromAlphaFunc(count, lambda m, a: m.set_fill(opacity=a))
-                for count in num_foxes, num_rabbits
+                for count in (num_foxes, num_rabbits)
             ]
         )
 
@@ -3211,7 +3212,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
                 method().scale_to_fit_height(0.75),
                 TextMobject("Population"),
             ).arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
-            for method in self.get_rabbit, self.get_fox
+            for method in (self.get_rabbit, self.get_fox)
         ])
         for axis, label, vect in zip(axes, axes_labels, [RIGHT, UP]):
             label.next_to(
@@ -3256,7 +3257,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         coord_pair_update = ContinualUpdateFromFunc(
             coord_pair, lambda m: m.next_to(dot, UR, SMALL_BUFF)
         )
-        pop_sizes_updates = [get_pop_size_update(i) for i in 0, 1]
+        pop_sizes_updates = [get_pop_size_update(i) for i in (0, 1)]
 
         phase_space = TextMobject("``Phase space''")
         phase_space.set_color(YELLOW)
@@ -3642,7 +3643,7 @@ class NablaNotation(PiCreatureScene, MovingCameraScene):
                 F_vector.copy(),
                 TexMobject("=")
             )
-            for tex in "\\cdot", "\\times"
+            for tex in ("\\cdot", "\\times")
         ])
         colors = [BLUE, YELLOW]
         for lhs, color in zip(lhs_groups, colors):

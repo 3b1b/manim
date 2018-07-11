@@ -1634,7 +1634,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         randy = self.pi_creature
         friends = VGroup(*[
             PiCreature(mode = "happy", color = color).flip()
-            for color in BLUE_B, GREY_BROWN, MAROON_E
+            for color in (BLUE_B, GREY_BROWN, MAROON_E)
         ])
         friends.scale(0.6)
         friends.arrange_submobjects(RIGHT)

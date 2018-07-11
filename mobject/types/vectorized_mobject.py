@@ -209,7 +209,7 @@ class VMobject(Mobject):
         points = np.array(points)
         self.set_anchors_and_handles(points, *[
             interpolate(points[:-1], points[1:], alpha)
-            for alpha in 1. / 3, 2. / 3
+            for alpha in (1. / 3, 2. / 3)
         ])
         return self
 

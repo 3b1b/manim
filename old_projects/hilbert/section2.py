@@ -190,7 +190,7 @@ class HistoryOfDiscover(Scene):
         peano_curve.to_corner(UP+LEFT)
         squares = Mobject(*[
             Square(side_length=3, color=WHITE).replace(curve)
-            for curve in hilbert_curve, peano_curve
+            for curve in (hilbert_curve, peano_curve)
         ])
 
 
@@ -499,15 +499,15 @@ class FormalDefinitionOfContinuity(Scene):
         self.input_dot = Dot(color = self.input_color)
         self.output_dot = self.input_dot.copy().set_color(self.output_color)
         left, right = self.interval.get_left(), self.interval.get_right()
-        self.input_homotopy = lambda (x, y, z, t) : (x, y, t) + interpolate(left, right, t)
+        self.input_homotopy = lambda x_y_z_t : (x_y_z_t[0], x_y_z_t[1], x_y_z_t[3]) + interpolate(left, right, x_y_z_t[3])
         output_size = self.output.get_num_points()-1
         output_points = self.output.points        
-        self.output_homotopy = lambda (x, y, z, t) : (x, y, z) + output_points[int(t*output_size)]
+        self.output_homotopy = lambda x_y_z_t1 : (x_y_z_t1[0], x_y_z_t1[1], x_y_z_t1[2]) + output_points[int(x_y_z_t1[3]*output_size)]
 
     def get_circles_and_points(self, min_input, max_input):
         input_left, input_right = [
             self.interval.number_to_point(num)
-            for num in min_input, max_input
+            for num in (min_input, max_input)
         ]
         input_circle = Circle(
             radius = np.linalg.norm(input_left-input_right)/2,
@@ -811,7 +811,7 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
             FadeOut(arrow),
             *[
                 FadeIn(func_parts[i])
-                for i in 0, 1, 2, 4
+                for i in (0, 1, 2, 4)
             ]
         )
         for num in range(2,9):

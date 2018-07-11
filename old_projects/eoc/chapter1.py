@@ -385,7 +385,7 @@ class PreviewFrame(Scene):
 
         colors = iter(color_gradient([BLUE, YELLOW], 3))
         titles = [
-            TextMobject("Chapter %d:"%d, s).to_edge(UP).set_color(colors.next())
+            TextMobject("Chapter %d:"%d, s).to_edge(UP).set_color(next(colors))
             for d, s in [
                 (3, "Derivative formulas through geometry"),
                 (4, "Chain rule, product rule, etc."),
@@ -483,7 +483,7 @@ class ProductRuleDiagram(Scene):
         self.play(MoveToTarget(fg_group))
         self.play(*[
             mob.restore
-            for mob in df_brace, df_label, dg_brace, dg_label
+            for mob in (df_brace, df_label, dg_brace, dg_label)
         ] + [
             ReplacementTransform(d_rect.line, d_rect)
             for d_rect in d_rects
@@ -521,11 +521,11 @@ class ProductRuleDiagram(Scene):
                 (g_label, "g"),
                 (df_label, "df"),
             ]
-            for alpha in [alpha_iter.next()]
+            for alpha in [next(alpha_iter)]
         ]+[
             Write(VGroup(*it.chain(*[
                 deriv.get_parts_by_tex(tex, substring = False)
-                for tex in "d(", ")", "=", "\\cdot", "+"
+                for tex in ("d(", ")", "=", "\\cdot", "+")
             ])))
         ], run_time = 3)
         self.wait()
@@ -820,7 +820,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
                 self.unwrapped_ring, vect, buff = SMALL_BUFF,
                 min_num_quads = 2,
             )
-            for vect in UP, LEFT
+            for vect in (UP, LEFT)
         ]
         top_brace.scale_in_place(self.ring.R/(self.ring.R+self.dR))
         side_brace.set_stroke(WHITE, 0.5)
@@ -1041,7 +1041,7 @@ class GraphRectangles(CircleScene, GraphScene):
                 color = YELLOW,
                 tip_length = 0.15
             )
-            for tick in r_ticks[0], r_ticks[-1]
+            for tick in (r_ticks[0], r_ticks[-1])
         ])
         first_tick = r_ticks[0].copy()
         moving_arrow = arrows[0].copy()
@@ -1094,7 +1094,7 @@ class GraphRectangles(CircleScene, GraphScene):
                 start_color = self.rings[0].get_fill_color(),
                 end_color = self.rings[-1].get_fill_color(),
             )
-            for g in graph, flat_graph
+            for g in (graph, flat_graph)
         ]
         self.graph, self.flat_rects = graph, flat_rects
 
@@ -1303,7 +1303,7 @@ class GraphRectangles(CircleScene, GraphScene):
     def compute_area_under_graph(self):
         formula, formula_with_R = formulas = [
             self.get_area_formula(R)
-            for R in "3", "R"
+            for R in ("3", "R")
         ]
         for mob in formulas:
             mob.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
@@ -2038,7 +2038,7 @@ class AreaUnderParabola(GraphScene):
                 FRAME_HEIGHT*UP, ORIGIN,
                 color = RED
             ).move_to(self.coords_to_point(x, 0), DOWN)
-            for x in 0, self.default_right_x
+            for x in (0, self.default_right_x)
         ])
 
         self.play(
@@ -2345,7 +2345,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
                 deriv_equation.get_part_by_tex(tex),
                 run_time = 2,
             )
-            for tex in "dA", "approx", f_tex, "dx"
+            for tex in ("dA", "approx", f_tex, "dx")
         ] + [
             Write(deriv_equation.get_part_by_tex("over"))
         ])

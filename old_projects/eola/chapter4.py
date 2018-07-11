@@ -164,7 +164,7 @@ class FollowLinearCombination(LinearTransformationScene):
         scaled_j = self.get_mobjects_from_last_animation()[0]
         self.play(*[
             ApplyMethod(mob.shift, scaled_i.get_end())
-            for mob in scaled_j, scaled_j_label
+            for mob in (scaled_j, scaled_j_label)
         ])
         self.wait()
         self.play(*map(FadeOut, [
@@ -313,7 +313,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
         matrix.next_to(words, RIGHT, aligned_edge = UP)
         col1, col2 = [
             VMobject(*matrix.get_mob_matrix()[:,i])
-            for i in 0, 1
+            for i in (0, 1)
         ]
         matrix_background = BackgroundRectangle(matrix)
 
@@ -536,7 +536,7 @@ class MoreComplicatedExampleNumerically(MoreComplicatedExampleVisually):
 
         col1, col2 = [
             VMobject(*m1_mob.split()[1].get_mob_matrix()[:,i])
-            for i in 0, 1
+            for i in (0, 1)
         ]
         col1.target_color = X_COLOR
         col2.target_color = Y_COLOR
@@ -862,9 +862,9 @@ class AskAssociativityQuestion(Scene):
 
         lhs = TexMobject(list("(AB)C"))
         lp, a, b, rp, c = lhs.split()
-        rhs = VMobject(*[m.copy() for m in a, lp, b, c, rp])
+        rhs = VMobject(*[m.copy() for m in (a, lp, b, c, rp)])
         point = VectorizedPoint()
-        start = VMobject(*[m.copy() for m in point, a, b, point, c])
+        start = VMobject(*[m.copy() for m in (point, a, b, point, c)])
         for mob in lhs, rhs, start:
             mob.arrange_submobjects(buff = 0.1)
         a, lp, b, c, rp = rhs.split()
@@ -904,7 +904,7 @@ class AskAssociativityQuestion(Scene):
 
         matrices = map(matrix_to_mobject, [
             np.array(list(m)).reshape((2, 2))
-            for m in "abcd", "efgh", "ijkl"
+            for m in ("abcd", "efgh", "ijkl")
         ])
         VMobject(*matrices).arrange_submobjects()
 
@@ -931,10 +931,10 @@ class AskAssociativityQuestion(Scene):
             m3
         )
         state2 = VMobject(*[
-            m.copy() for m in lp, m1, m2, rp, m3
+            m.copy() for m in (lp, m1, m2, rp, m3)
         ])
         state3 = VMobject(*[
-            m.copy() for m in m1, lp, m2, m3, rp
+            m.copy() for m in (m1, lp, m2, m3, rp)
         ])
         for state in state2, state3:
             state.arrange_submobjects(RIGHT, buff = 0.1)

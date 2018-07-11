@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 
+from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import argparse
 import imp
@@ -9,11 +11,11 @@ import os
 import subprocess as sp
 import traceback
 
-from constants import *
+from .constants import *
 
-from scene.scene import Scene
-from utils.sounds import play_error_sound
-from utils.sounds import play_finish_sound
+from .scene.scene import Scene
+from .utils.sounds import play_error_sound
+from .utils.sounds import play_finish_sound
 
 HELP_MESSAGE = """
    Usage:
@@ -74,7 +76,7 @@ def get_configuration():
                 args.output_name)
             expected_ext = '.png' if args.show_last_frame else '.mp4'
             if output_name_ext not in ['', expected_ext]:
-                print "WARNING: The output will be to (doubly-dotted) %s%s" % output_name_root % expected_ext
+                print("WARNING: The output will be to (doubly-dotted) %s%s" % output_name_root % expected_ext)
                 output_name = args.output_name
             else:
                 # If anyone wants .mp4.mp4 and is surprised to only get .mp4, or such... Well, too bad.
@@ -261,7 +263,7 @@ def main():
 
     scene_kwargs["name"] = config["output_name"]
     if config["save_pngs"]:
-        print "We are going to save a PNG sequence as well..."
+        print("We are going to save a PNG sequence as well...")
         scene_kwargs["save_pngs"] = True
         scene_kwargs["pngs_mode"] = config["saved_image_mode"]
 

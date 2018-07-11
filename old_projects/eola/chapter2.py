@@ -291,7 +291,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         ]
         anims += [
             ApplyMethod(v.copy().fade, 0.7)
-            for v in v1, v2
+            for v in (v1, v2)
         ]
         anims += label_anims + scalar_anims
         self.play(*anims, **{"run_time" : 2})
@@ -457,7 +457,7 @@ class NameLinearCombinations(Scene):
         scalars_word.next_to(equation, DOWN, buff = 2)
         arrows = [
             Arrow(scalars_word, letter)
-            for letter in a, b
+            for letter in (a, b)
         ]
 
         self.add(equation)
@@ -605,7 +605,7 @@ class DefineSpan(Scene):
         vary_words.next_to(equation, DOWN, buff = 2)
         arrows = [
             Arrow(vary_words, letter)
-            for letter in a, b
+            for letter in (a, b)
         ]
 
         self.play(Write(definition))
@@ -836,7 +836,7 @@ class LinearCombinationOfThreeVectorsText(Scene):
         VMobject(*span_comment.split()[3:7]).set_color(YELLOW)
         arrows = VMobject(*[
             Arrow(span_comment, var)
-            for var in a, b, c
+            for var in (a, b, c)
         ])
 
         self.play(Write(text))
@@ -967,7 +967,7 @@ class LinearDependentEquations(Scene):
         low_words2.to_edge(DOWN)
         arrows = VMobject(*[
             Arrow(low_words2, var)
-            for var in a, b
+            for var in (a, b)
         ])
 
         self.play(Write(equation1))
@@ -1064,7 +1064,7 @@ class AlternateDefOfLinearlyDependent(Scene):
         scalar_specification.shift(1.5*DOWN)
         scalar_specification.add(*[
             Arrow(scalar_specification, equations[0].split()[i])
-            for i in 2, 5
+            for i in (2, 5)
         ])
 
         brace = Brace(VMobject(*equations[2].split()[2:]))

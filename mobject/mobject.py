@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import print_function
 
 import copy
 import itertools as it
@@ -21,6 +22,7 @@ from utils.paths import straight_path
 from utils.space_ops import angle_of_vector
 from utils.space_ops import complex_to_R3
 from utils.space_ops import rotation_matrix
+from functools import reduce
 
 
 # TODO: Explain array_attrs
@@ -224,7 +226,7 @@ class Mobject(Container):
 
     def apply_complex_function(self, function, **kwargs):
         return self.apply_function(
-            lambda (x, y, z): complex_to_R3(function(complex(x, y))),
+            lambda x_y_z: complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),
             **kwargs
         )
 
@@ -807,7 +809,7 @@ class Mobject(Container):
 
     def print_submobject_family(self, n_tabs=0):
         """For debugging purposes"""
-        print "\t" * n_tabs, self, id(self)
+        print("\t" * n_tabs, self, id(self))
         for submob in self.submobjects:
             submob.print_submobject_family(n_tabs + 1)
 
@@ -843,7 +845,7 @@ class Mobject(Container):
         # push it into its submobject list
         self_has_points, mob_has_points = [
             mob.get_num_points() > 0
-            for mob in self, mobject
+            for mob in (self, mobject)
         ]
         if self_has_points and not mob_has_points:
             mobject.null_point_align(self)

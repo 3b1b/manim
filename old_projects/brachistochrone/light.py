@@ -499,7 +499,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
         new_graph.reverse_points()
         pairs_for_end_transform = [
             (mob, mob.copy())
-            for mob in top_line, bottom_line, left_brace, x_mob
+            for mob in (top_line, bottom_line, left_brace, x_mob)
         ]
 
         self.add(glass, point_a, point_b, A, B)
@@ -636,7 +636,7 @@ class SpringSetup(ShowMultiplePathsInWater):
                 Spring(self.start_point, r.get_top()),
                 Spring(self.end_point, r.get_bottom())
             )
-            for r in ring, ring.copy().shift(self.ring_shift_val)
+            for r in (ring, ring.copy().shift(self.ring_shift_val))
         ]
         
     def add_rod_and_ring(self, rod, ring):
@@ -663,7 +663,7 @@ class SpringSetup(ShowMultiplePathsInWater):
     def add_springs(self):
         colors = iter([BLACK, BLUE_E])
         for spring in self.start_springs.split():
-            circle = Circle(color = colors.next())
+            circle = Circle(color = next(colors))
             circle.reverse_points()
             circle.scale(spring.loop_radius)
             circle.shift(spring.points[0])
@@ -725,7 +725,7 @@ class SpringSetup(ShowMultiplePathsInWater):
             arc = Arc(angle, radius = 0.5).rotate(np.pi/2)
             if point is self.end_point:
                 arc.rotate(np.pi)
-            theta = TexMobject("\\theta_%d"%counter.next())
+            theta = TexMobject("\\theta_%d"%next(counter))
             theta.scale(0.5)
             theta.shift(2*arc.get_center())
             arc.shift(ring_center)
@@ -765,7 +765,7 @@ class SpringSetup(ShowMultiplePathsInWater):
         frac1, sin1, equals, frac2, sin2 = equation.split()
         v_air, v_water = [
             TexMobject("v_{\\text{%s}}"%s, size = "\\Large")
-            for s in "air", "water"
+            for s in ("air", "water")
         ]
         v_air.next_to(Point(frac1.get_center()), DOWN)
         v_water.next_to(Point(frac2.get_center()), DOWN)
@@ -773,7 +773,7 @@ class SpringSetup(ShowMultiplePathsInWater):
         frac2.add(v_water)
         f1, f2 = [
             TexMobject("F_%d"%d, size = "\\Large") 
-            for d in 1, 2
+            for d in (1, 2)
         ]
         f1.next_to(sin1, LEFT)
         f2.next_to(equals, RIGHT)
@@ -875,7 +875,7 @@ class StateSnellsLaw(PhotonScene):
             if point is point_b:
                 arc.rotate(np.pi)
                 line.reverse_points()
-            theta = TexMobject("\\theta_%d"%counter.next())
+            theta = TexMobject("\\theta_%d"%next(counter))
             theta.scale(0.5)
             theta.shift(2*arc.get_center())
             arc.shift(midpoint)
