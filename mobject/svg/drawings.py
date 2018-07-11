@@ -610,6 +610,26 @@ class Car(SVGMobject):
     def get_rear_light(self):
         return self[1][8]
 
+
+class VectorizedEarth(SVGMobject):
+    CONFIG = {
+        "file_name": "earth",
+        "height": 1.5,
+        "fill_color": BLACK,
+    }
+
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        circle = Circle(
+            stroke_width=3,
+            stroke_color=GREEN,
+            fill_opacity=1,
+            fill_color=BLUE_C,
+        )
+        circle.replace(self)
+        self.add_to_back(circle)
+
+
 ### Cards ###
 
 

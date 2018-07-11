@@ -758,7 +758,6 @@ class RoundedRectangle(Rectangle):
         self.set_points(points)
 
 
-
 class Grid(VMobject):
     CONFIG = {
         "height": 6.0,

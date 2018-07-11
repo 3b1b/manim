@@ -26,7 +26,9 @@ class Axes(VGroup):
             "include_tip": True,
         },
         "x_axis_config": {},
-        "y_axis_config": {},
+        "y_axis_config": {
+            "label_direction": LEFT,
+        },
         "z_axis_config": {},
         "x_min": -FRAME_X_RADIUS,
         "x_max": FRAME_X_RADIUS,

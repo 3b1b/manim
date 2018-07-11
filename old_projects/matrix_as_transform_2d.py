@@ -96,9 +96,11 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
         def sinx_plux_x(x_y_z):
             (x, y, z) = x_y_z
             return (np.sin(x) + 1.2*x, y, z)
+
         def shift_zero(x_y_z):
             (x, y, z) = x_y_z
             return (2*x+4, y, z)
+
         self.nonlinear = TextMobject("Not a Linear Transform")
         self.nonlinear.set_color(LIGHT_RED).to_edge(UP, buff = 1.5)
         pairs = [
@@ -298,9 +300,11 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         def squiggle(x_y_z):
             (x, y, z) = x_y_z
             return (x+np.sin(y), y+np.cos(x), z)
+
         def shift_zero(x_y_z):
             (x, y, z) = x_y_z
             return (2*x + 3*y + 4, -1*x+y+2, z)
+
         self.nonlinear = TextMobject("Nonlinear Transform")
         self.nonlinear.set_color(LIGHT_RED)
         self.nonlinear.to_edge(UP, buff = 1.5)
@@ -386,6 +390,7 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             UP*FRAME_Y_RADIUS+RIGHT*FRAME_X_RADIUS,
             density = 10*DEFAULT_POINT_DENSITY_1D
         )
+
         def sunrise(x_y_z):
             (x, y, z) = x_y_z
             return ((FRAME_Y_RADIUS+y)*x, y, z)
