@@ -1,12 +1,38 @@
 import os
 import numpy as np
 
-# Things anyone wishing to use this repository for their
-# own use will want to change
-MEDIA_DIR = os.path.join(
-    os.path.expanduser('~'),
-    "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
-)
+env_MEDIA_DIR = None
+MEDIA_DIR = "#ERROR#"
+
+try:
+    env_MEDIA_DIR = os.getenv("MEDIA_DIR")
+except NameError:
+    try:
+        env_MEDIA_DIR = os.environ['MEDIA_DIR']
+    except KeyError:
+        pass
+
+if not (env_MEDIA_DIR is None):
+    MEDIA_DIR = env_MEDIA_DIR
+elif os.path.exists("media_dir.txt"):
+    with open("media_dir.txt", 'rU') as media_file:
+        MEDIA_DIR = media_file.readline().strip()
+else:
+    MEDIA_DIR = os.path.join(
+        os.path.expanduser('~'),
+        "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+    )
+
+if not os.path.exists(MEDIA_DIR):
+    raise Exception("""
+        Redefine MEDIA_DIR by changing the MEDIA_DIR
+        environment constant or by changing
+        media_dir.txt to point to a valid directory
+        where movies and images will be written
+    """)
+
+with open("media_dir.txt", 'w') as media_file:
+    media_file.write(MEDIA_DIR)
 #
 
 
@@ -97,12 +123,6 @@ TEX_IMAGE_DIR = TEX_DIR  # TODO, What is this doing?
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
-if not os.path.exists(MEDIA_DIR):
-    raise Exception("""
-        Redefine MEDIA_DIR in constants.py to point to
-        a valid directory where movies and images will
-        be written
-    """)
 for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DIR,
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
                STAGED_SCENES_DIR]:
