@@ -58,6 +58,36 @@ class SunAnimation(ContinualAnimation):
             dtype=self.sun.pixel_array.dtype
         )
 
+
+class ShowWord(Animation):
+    CONFIG = {
+        "time_per_char": 0.06,
+        "rate_func": None,
+    }
+
+    def __init__(self, word, **kwargs):
+        assert(isinstance(word, SingleStringTexMobject))
+        digest_config(self, kwargs)
+        run_time = kwargs.pop(
+            "run_time",
+            self.time_per_char * len(word)
+        )
+        self.stroke_width = word.get_stroke_width()
+        Animation.__init__(self, word, run_time=run_time, **kwargs)
+
+    def update_mobject(self, alpha):
+        word = self.mobject
+        stroke_width = self.stroke_width
+        count = int(alpha * len(word))
+        remainder = (alpha * len(word)) % 1
+        word[:count].set_fill(opacity=1)
+        word[:count].set_stroke(width=stroke_width)
+        if count < len(word):
+            word[count].set_fill(opacity=remainder)
+            word[count].set_stroke(width=remainder * stroke_width)
+            word[count + 1:].set_fill(opacity=0)
+            word[count + 1:].set_stroke(width=0)
+
 # Animations
 
 
@@ -223,16 +253,16 @@ class FeynmanAndOrbitingPlannetOnEllipseDiagram(ShowEmergingEllipse):
         comet = ImageMobject("earth")
         comet.scale_to_fit_width(0.3)
 
-        feynman_cut = ImageMobject("FeynmanCut")
-        feynman_cut.scale_to_fit_height(4)
-        feynman_cut.next_to(ORIGIN, LEFT)
-        feynman_cut.shift(UP)
+        feynman = ImageMobject("Feynman")
+        feynman.scale_to_fit_height(6)
+        feynman.next_to(ORIGIN, LEFT)
+        feynman.to_edge(UP)
         feynman_name = TextMobject("Richard Feynman")
-        feynman_name.next_to(feynman_cut, DOWN)
-        feynman_cut.save_state()
-        feynman_cut.shift(2 * DOWN)
+        feynman_name.next_to(feynman, DOWN)
+        feynman.save_state()
+        feynman.shift(2 * DOWN)
         feynman_rect = BackgroundRectangle(
-            feynman_cut, fill_opacity=1
+            feynman, fill_opacity=1
         )
 
         group = VGroup(circle, ghost_lines, lines, e_dot, ellipse)
@@ -242,8 +272,8 @@ class FeynmanAndOrbitingPlannetOnEllipseDiagram(ShowEmergingEllipse):
         self.add_foreground_mobjects(comet)
         self.wait()
         self.play(
-            feynman_cut.restore,
-            MaintainPositionRelativeTo(feynman_rect, feynman_cut),
+            feynman.restore,
+            MaintainPositionRelativeTo(feynman_rect, feynman),
             VFadeOut(feynman_rect),
             group.to_edge, RIGHT,
         )
@@ -300,7 +330,7 @@ class FeynmanFame(Scene):
 
         objects = VGroup(safe, bongo)
 
-        feynman_smile = ImageMobject("Feynman_smile")
+        feynman_smile = ImageMobject("Feynman_Los_Alamos")
         feynman_smile.match_width(objects)
         feynman_smile.next_to(objects, DOWN)
 
@@ -335,7 +365,7 @@ class FeynmanFame(Scene):
         )
 
         # As a teacher
-        feynman_teacher = ImageMobject("Feynman_teacher")
+        feynman_teacher = ImageMobject("Feynman_teaching")
         feynman_teacher.scale_to_fit_width(FRAME_WIDTH / 2 - 1)
         feynman_teacher.next_to(ORIGIN, RIGHT)
 
@@ -651,7 +681,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
             radius_in_denominator,
             lambda a: radial_line.get_length(),
             position_update_func=lambda mob: mob.move_to(
-                radius_in_denominator_ref,
+                radius_in_denominator_ref, LEFT
             )
         )
 
@@ -776,21 +806,136 @@ class AskAboutEllipses(TheMotionOfPlanets):
 
 class FeynmanElementaryQuote(Scene):
     def construct(self):
-        quote = TextMobject(
-            """
+        quote_text = """
+            \\large
             I am going to give what I will call an
             \\emph{elementary} demonstration.  But elementary
             does not mean easy to understand.  Elementary
-            means that [nothing] very little is requried
+            means that very little is required
             to know ahead of time in order to understand it,
             except to have an infinite amount of intelligence.
-            """,
+        """
+        quote_parts = filter(lambda s: s, quote_text.split(" "))
+        quote = TextMobject(
+            *quote_parts,
             tex_to_color_map={
                 "\\emph{elementary}": BLUE,
                 "elementary": BLUE,
                 "Elementary": BLUE,
-            }
+                "infinite": YELLOW,
+                "amount": YELLOW,
+                "of": YELLOW,
+                "intelligence": YELLOW,
+                "very": RED,
+                "little": RED,
+            },
+            alignment=""
+        )
+        quote[-1].shift(2 * SMALL_BUFF * LEFT)
+        quote.scale_to_fit_width(FRAME_WIDTH - 1)
+        quote.to_edge(UP)
+        quote.get_part_by_tex("of").set_color(WHITE)
+
+        nothing = TextMobject("nothing")
+        nothing.scale(0.9)
+        very = quote.get_part_by_tex("very")
+        nothing.shift(very[0].get_left() - nothing[0].get_left())
+        nothing.set_color(RED)
+
+        for word in quote:
+            if word is very:
+                self.add_foreground_mobjects(nothing)
+                self.play(ShowWord(nothing))
+                self.wait(0.2)
+                nothing.sort_submobjects(lambda p: -p[0])
+                self.play(LaggedStart(
+                    FadeOut, nothing,
+                    run_time=1
+                ))
+                self.remove_foreground_mobject(nothing)
+            back_word = word.copy().set_stroke(BLACK, 5)
+            self.add_foreground_mobjects(back_word, word)
+            self.play(
+                ShowWord(back_word),
+                ShowWord(word),
+            )
+            self.wait(0.005 * len(word)**1.5)
+
+
+class LostLecturePicture(TODOStub):
+    CONFIG = {"camera_config": {"background_opacity": 1}}
+
+    def construct(self):
+        picture = ImageMobject("Feynman_teaching")
+        picture.scale_to_fit_height(FRAME_WIDTH)
+        picture.to_corner(UL, buff=0)
+        picture.fade(0.5)
+
+        self.play(
+            picture.to_corner, DR, {"buff": 0},
+            picture.shift, 1.5 * DOWN,
+            path_arc=60 * DEGREES,
+            run_time=20,
+            rate_func=bezier([0, 0, 1, 1])
         )
 
-        self.add(quote)
 
+class AskAboutInfiniteIntelligence(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Infinite intelligence?",
+            target_mode="confused"
+        )
+        self.play(
+            self.get_student_changes("horrified", "confused", "sad"),
+            self.teacher.change, "happy",
+        )
+        self.wait()
+        self.teacher_says(
+            "It's not too bad, \\\\ but stay focused",
+            added_anims=[self.get_student_changes(*["happy"] * 3)]
+        )
+        self.wait()
+        self.look_at(self.screen)
+        self.wait(5)
+
+
+class ShowEllipseDefiningProperty(Scene):
+    CONFIG = {
+        "ellipse_color": BLUE,
+        "a": 4.0,
+        "b": 3.0,
+    }
+
+    def construct(self):
+        self.add_ellipse()
+        self.add_focal_lines()
+        self.add_distance_labels()
+        self.show_constant_sum()
+        self.label_foci()
+        self.label_focal_sum()
+
+    def add_ellipse(self):
+        a = self.a
+        b = self.b
+        c = np.sqrt(a**2 - b**2)
+        ellipse = Circle(radius=a, color=self.ellipse_color)
+        ellipse.stretch(fdiv(b, a), dim=1)
+        self.foci = [c * LEFT, c * RIGHT]
+        self.ellipse = ellipse
+        self.add(ellipse)
+
+    def add_focal_lines(self):
+        pass
+
+    def add_distance_labels(self):
+        pass
+
+    def show_constant_sum(self):
+        pass
+
+    def label_foci(self):
+        pass
+
+    def label_focal_sum(self):
+        pass
