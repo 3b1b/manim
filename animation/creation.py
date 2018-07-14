@@ -144,9 +144,14 @@ class FadeIn(Transform):
 
 
 class FadeInAndShiftFromDirection(Transform):
-    def __init__(self, mobject, direction=DOWN, **kwargs):
+    CONFIG = {
+        "direction": DOWN,
+    }
+
+    def __init__(self, mobject, direction=None, **kwargs):
         digest_config(self, kwargs)
         target = mobject.copy()
+        direction = direction or self.direction
         mobject.shift(direction)
         mobject.fade(1)
         Transform.__init__(self, mobject, target, **kwargs)
@@ -156,6 +161,23 @@ class FadeInFromDown(FadeInAndShiftFromDirection):
     """
     Essential a more convenient form of FadeInAndShiftFromDirection
     """
+    CONFIG = {
+        "direction": DOWN,
+    }
+
+
+class FadeOutAndShift(FadeOut):
+    CONFIG = {
+        "direction": DOWN,
+    }
+
+    def __init__(self, mobject, direction=None, **kwargs):
+        FadeOut.__init__(self, mobject, **kwargs)
+        direction = direction or self.direction
+        self.target_mobject.shift(direction)
+
+
+class FadeOutAndShiftDown(FadeOutAndShift):
     CONFIG = {
         "direction": DOWN,
     }
