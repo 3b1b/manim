@@ -10,13 +10,13 @@ class Graph(Group):
         "stroke_width": 2,
         "color": BLACK,
     }
-    def __init__(self, nodes, edges, labels=None, scale_factor=1,
-            gradient=None, color_map=None, **kwargs):
+    def __init__(self, nodes, edges, labels=None, directed=False,
+            scale_factor=1, gradient=None, color_map=None, **kwargs):
         # typechecking
         for node in nodes:
             Node.assert_primitive(node)
         for edge in edges:
-            Edge.assert_primitive(edge)
+            Edge.assert_primitive(edge[:2])
 
         # mobject init
         config_copy = self.CONFIG.copy()
@@ -43,15 +43,36 @@ class Graph(Group):
             v = edge[1]
             u = self.nodes[u]
             v = self.nodes[v]
-            if color_map is not None and edge in color_map:
+            if color_map is not None and color_map.has_key(edge):
                 kwargs["color"] = color_map[edge]
             else:
                 kwargs["color"] = self.color
 
-            if labels is not None and (u.key,v.key) in labels:
-                edge = Edge(u, v, labels=labels[(u.key,v.key)], scale_factor=scale_factor, **kwargs)
+            if labels is not None and labels.has_key((u.key,v.key)):
+                edge_labels = labels[(u.key,v.key)]
             else:
-                edge = Edge(u, v, scale_factor=scale_factor, **kwargs)
+                edge_labels = None
+
+            if directed or len(edge) == 3 and edge[2].has_key("directed") and \
+                    edge[2]["directed"]:
+                edge_directed = True
+            else:
+                edge_directed = False
+
+            if (v.key, u.key) in edges:
+                curved = True
+            else:
+                curved = False
+
+            edge = Edge(
+                u, v,
+                directed=edge_directed,
+                labels=edge_labels,
+                scale_factor=scale_factor,
+                curved=curved,
+                **kwargs
+            )
+
             self.edges[edge.key] = edge
             self.add(edge)
 
@@ -77,14 +98,17 @@ class Graph(Group):
         # shrink edges
         seen = set()
         for point in points:
-            for pair in self.get_adjacent_edges(point):
+            for pair in self.get_adjacent_edges(point, use_direction=False):
                 if pair in seen: continue
                 edge = self.edges[pair]
+                curve = self.edges.has_key((pair[1], pair[0]))
                 if "parent_map" in kwargs and pair in map(lambda x: x[0], kwargs["parent_map"].values()):
-                    anims.append(edge.update_endpoints(stroke_width=4, color=kwargs["parent_map"][point][1]))
+                    edge.is_parent = True
+                    anims.extend(edge.update_endpoints(stroke_width=4, rectangular_stem_width=0.05, color=kwargs["parent_map"][point][1], curve=curve))
                     self.set_node_parent_edge(point, pair)
                 else:
-                    anims.append(edge.update_endpoints())
+                    anims.extend(edge.update_endpoints(curve=curve,
+                        stroke_width=2, rectangular_stem_width=0.03))
                 seen.add(pair)
         return anims
 
@@ -143,16 +167,21 @@ class Graph(Group):
                 parent_map[point] = (label[3]["parent_edge"], parent_edge_color)
                 old_parent = self.get_node_parent_edge(point)
                 if old_parent is not None:
-                    anims.append(self.set_edge_stroke_width(old_parent, 2, color=BLACK))
+                    self.edges[old_parent].is_parent = False
+                    anims.append(self.set_edge_stroke_width(old_parent, 2, 0.03, color=BLACK))
+        # color enlarged nodes and adjacent edges
         anims.extend(self.enlarge_nodes(
             *to_enlarge,
             color_map=color_map,
             parent_map=parent_map
         ))
+        # color remaining edges
         for point, (pair, color) in parent_map.items():
-            if self.edges[pair].mobject.stroke_width == 2:
-                anims.append(self.set_edge_stroke_width(pair, 4, color=color))
+            if self.edges[pair].is_parent == False:
+                self.edges[pair].is_parent = True
+                anims.append(self.set_edge_stroke_width(pair, 4, 0.05, color=color))
                 self.set_node_parent_edge(point, parent_map[point][0])
+        # color remaining nodes
         for point in color_map:
             if point not in to_enlarge:
                 anims.extend([self.nodes[point].change_color(color_map[point])])
@@ -182,10 +211,16 @@ class Graph(Group):
             return weight_anim + [line_anim]
         return weight_anim
 
-    def set_edge_stroke_width(self, pair, stroke_width=2, color=None):
+    def set_edge_to_parent(self, pair, stroke_width=4, color=None):
         Edge.assert_primitive(pair)
-        return self.edges[pair].set_stroke_width(stroke_width, color=color)
+        self.edges[pair].is_parent = True
+        return self.set_stroke_width(pair, stroke_width, color=color)
 
+    def set_edge_stroke_width(self, pair, stroke_width, rectangular_stem_width,
+            color=None):
+        Edge.assert_primitive(pair)
+        return self.edges[pair].set_stroke_width(stroke_width,
+                rectangular_stem_width, color=color)
 
     def get_edge_weight(self, pair):
         Edge.assert_primitive(pair)
@@ -218,13 +253,18 @@ class Graph(Group):
                 adjacent_nodes.append(u)
         return adjacent_nodes
 
-    def get_adjacent_edges(self, point):
+    def get_adjacent_edges(self, point, use_direction=False):
         Node.assert_primitive(point)
         adjacent_edges = []
         for edge in self.edges.keys():
+            if edge in adjacent_edges:
+                continue
             (u, v) = edge
-            if np.allclose(u, point) or np.allclose(v, point):
-                if edge not in adjacent_edges:
+            if use_direction and self.edges[edge].directed:
+                if np.allclose(u, point):
+                    adjacent_edges.append(edge) 
+            else:
+                if np.allclose(u, point) or np.allclose(v, point):
                     adjacent_edges.append(edge) 
         return adjacent_edges
 

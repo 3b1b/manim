@@ -30,10 +30,9 @@ def extend_arrow(G, u, v, color=None):
         ),
     ), arrow
 
-def relax_node(G, parent, arrows=False):
+def relax_neighbors(G, parent, arrows=False):
     labels = []
-    anims = []
-    adj_edges = G.get_adjacent_edges(parent)
+    adj_edges = G.get_adjacent_edges(parent, use_direction=True)
     for edge in adj_edges:
         child = G.get_opposite_node(edge, parent)
         # the parent's path length is known
@@ -91,7 +90,7 @@ def relax_node(G, parent, arrows=False):
                 arrow = Arrow(G.get_node(child).get_center(),
                               G.get_node(child).get_center() + arrow_vec)
                 labels.append((child, "parent", arrow, {"parent_edge": edge, "parent_edge_color": QUEUE_COLOR}))
-    return G.set_node_labels(*labels) + anims
+    return G.set_node_labels(*labels)
 
 def extract_node(G):
     bounded_nodes = filter(
@@ -271,7 +270,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(Indicate(H.edges[edges[0]].get_weight()))
 
         # switch to upper bound
-        self.play(*relax_node(H, nodes[0]))
+        self.play(*relax_neighbors(H, nodes[0]))
 
         # scroll back up
         initial_height = self.camera_frame.get_center()[1]
@@ -290,7 +289,7 @@ class RunAlgorithm(MovingCameraScene):
 
         # set neighbors to upper bound
         adj_edges = G.get_adjacent_edges(s)
-        self.play(*relax_node(G, s))
+        self.play(*relax_neighbors(G, s))
 
         # tighten bound on min node
         min_node, min_bound = extract_node(G)
@@ -325,7 +324,7 @@ class RunAlgorithm(MovingCameraScene):
         )))
 
         # set bound on neighbors
-        self.play(*relax_node(G, s))
+        self.play(*relax_neighbors(G, s))
 
         # scroll camera
         ShiftRight = lambda t: (FRAME_WIDTH * t, 0, 0)
@@ -480,7 +479,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(TransformEquation(eq1, eq2, "z \\\\le (.*) \\+ (.*)"))
         self.play(TransformEquation(eq2, eq3, "z \\\\le (.*)"))
 
-        self.play(*relax_node(S, u))
+        self.play(*relax_neighbors(S, u))
 
         self.wait(2)
 
@@ -527,7 +526,7 @@ class RunAlgorithm(MovingCameraScene):
         for node in G.get_adjacent_nodes(neighbor):
             if G.get_node_label(node, "dist") is None:
                 to_revert.append(node)
-        self.play(*relax_node(G, neighbor))
+        self.play(*relax_neighbors(G, neighbor))
 
         # TODO:
         # tentatively label node across shortest edge
@@ -545,7 +544,7 @@ class RunAlgorithm(MovingCameraScene):
                 anims.extend([Indicate(G.edges[edge].get_weight())])
         self.play(*anims)
 
-        self.play(*relax_node(G, min_node))
+        self.play(*relax_neighbors(G, min_node))
         min_node, min_bound = extract_node(G)
         self.play(*G.set_node_labels((
             min_node,
@@ -556,7 +555,7 @@ class RunAlgorithm(MovingCameraScene):
 
         while True:
             # relax neighbors
-            self.play(*relax_node(G, min_node))
+            self.play(*relax_neighbors(G, min_node))
 
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
@@ -590,7 +589,7 @@ class RunAlgorithm(MovingCameraScene):
 
         while True:
             # relax neighbors
-            self.play(*relax_node(G, min_node, arrows=True))
+            self.play(*relax_neighbors(G, min_node, arrows=True))
 
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
@@ -863,7 +862,7 @@ class RunAlgorithm(MovingCameraScene):
         min_node = (0, 2.6, 0)
         while True:
             # relax neighbors
-            self.play(*relax_node(G, min_node, arrows=True))
+            self.play(*relax_neighbors(G, min_node, arrows=True))
 
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
@@ -1061,10 +1060,104 @@ class RunAlgorithm(MovingCameraScene):
         fibo_time = TexMobject("O(E + V \log V)").move_to(table_fibo_time.get_center())
         self.play(FadeIn(fibo_word))
         self.play(Write(fibo_time))
-
         self.play(Indicate(fibo_time))
+        self.play(FadeOut(Group(
+            table[:13],
+            table[14:47],
+            table_lines,
+            array_word,
+            array_time3,
+            binheap_word,
+            binheap_time2,
+            fibo_word,
+            fibo_time,
+        )))
+
         self.wait(2)
         save_state(self)
+
+    def directed_graph(self):
+        self.__dict__.update(load_previous_state())
+        DIST = 2.5 / 2**0.5
+        nodes = [
+            (-DIST * 1.2, DIST * 1.2 , 0),
+            ( DIST * 1.2, DIST * 1.2 , 0),
+
+            (-2 * DIST  , 0          , 0),
+            (0          , 0          , 0),
+            (2 * DIST   , 0          , 0),
+
+            (-DIST * 1.2, -DIST * 1.2, 0),
+            ( DIST * 1.2, -DIST * 1.2, 0),
+        ]
+        edges = [
+            (nodes[1], nodes[0]),
+
+            (nodes[0], nodes[2]),
+            (nodes[3], nodes[0]),
+            (nodes[3], nodes[1]),
+            (nodes[4], nodes[1]),
+
+            (nodes[0], nodes[5]),
+            (nodes[5], nodes[0]),
+            (nodes[1], nodes[6]),
+            (nodes[6], nodes[1]),
+
+            (nodes[5], nodes[2]),
+            (nodes[3], nodes[5]),
+            (nodes[3], nodes[6]),
+            (nodes[6], nodes[4]),
+
+            (nodes[5], nodes[6]),
+        ]
+        labels = {
+            edges[0]: [("weight", Integer(9))],
+
+            edges[1]: [("weight", Integer(4))],
+            edges[2]: [("weight", Integer(8))],
+            edges[3]: [("weight", Integer(2))],
+            edges[4]: [("weight", Integer(2))],
+
+            edges[5]: [("weight", Integer(2))],
+            edges[6]: [("weight", Integer(2))],
+            edges[7]: [("weight", Integer(5))],
+            edges[8]: [("weight", Integer(1))],
+
+            edges[9]: [("weight", Integer(4))],
+            edges[10]: [("weight", Integer(3))],
+            edges[11]: [("weight", Integer(9))],
+            edges[12]: [("weight", Integer(9))],
+
+            edges[13]: [("weight", Integer(8))],
+            (0, 0, 0): [("variable", TexMobject("s"))],
+        }
+        G = Graph(nodes, edges, labels=labels, directed=True)
+        self.play(ShowCreation(G))
+        self.play(*G.set_node_labels(((0, 0, 0), "variable", TexMobject("s"))))
+
+        min_node = (0, 0, 0)
+        self.play(*G.set_node_labels((min_node, "dist", Integer(0), {"color":VIOLET})))
+        while True:
+            # relax neighbors
+            #import ipdb; ipdb.set_trace(context=7)
+            self.play(*relax_neighbors(G, min_node, arrows=True))
+
+            # tighten bound on node with least bound
+            min_node, min_bound = extract_node(G)
+            if min_node:
+                parent_edge = G.get_node_parent_edge(min_node)
+                color_anim = G.change_edge_color(parent_edge, SPT_COLOR)
+                min_node_arrow = G.get_node_label(min_node, "parent")
+                self.play(*G.set_node_labels(
+                    (min_node, "dist", Integer(min_bound),
+                        {"color": SPT_COLOR}),
+                    (min_node, "parent", min_node_arrow),
+                ) + [color_anim])
+            else:
+                break
+        self.wait()
+        self.play(FadeOut(G))
+
 
     def construct(self):
         self.first_try()
@@ -1079,3 +1172,4 @@ class RunAlgorithm(MovingCameraScene):
         self.run_code()
         self.analyze()
         self.compare_data_structures()
+        self.directed_graph()
