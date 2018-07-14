@@ -5,7 +5,7 @@ import numpy as np
 # own use will want to change
 MEDIA_DIR = os.path.join(
     os.path.expanduser('~'),
-    "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+    "C:\Output"
 )
 #
 
