@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from constants import TEX_DIR
 from constants import TEX_TEXT_TO_REPLACE

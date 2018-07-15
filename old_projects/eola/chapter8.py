@@ -183,7 +183,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
                     vect.label.target.restore, 
                     rate_func = lambda t : smooth(1-t)
                 )
-                for vect in self.v, self.w
+                for vect in (self.v, self.w)
             ]
         )
         self.wait()
@@ -250,7 +250,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
         self.play(
             FadeOut(positive), 
             FadeOut(positive.arrow),
-            *[mob.restore for mob in square, self.v, self.w]
+            *[mob.restore for mob in (square, self.v, self.w)]
         )
         arc = self.get_arc(self.v, self.w, radius = 1.5)
         arc.set_color(RED)
@@ -770,7 +770,7 @@ class Define2dCrossProduct(LinearTransformationScene):
 
         col1, col2 = [
             VGroup(*matrix.get_mob_matrix()[i,:])
-            for i in 0, 1
+            for i in (0, 1)
         ]
 
         both_words = []
@@ -836,7 +836,7 @@ class Define2dCrossProduct(LinearTransformationScene):
 
         vect_stuffs = VGroup(*it.chain(*[
             [m, m.label, m.coord_array]
-            for m in self.v, self.w
+            for m in (self.v, self.w)
         ]))
         to_restore = [self.plane, self.i_hat, self.j_hat]
         for mob in to_restore:
@@ -917,10 +917,10 @@ class Define2dCrossProduct(LinearTransformationScene):
         self.play(Transform(movers, movers.target))
         self.wait()
 
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "v", "w"]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in ("v", "w")]
         positive_words, negative_words = words_list = [
             TexMobject(v_tex, "\\times", w_tex, "\\text{ is }", word)
-            for word in "\\text{positive}", "\\text{negative}"
+            for word in ("\\text{positive}", "\\text{negative}")
         ]
         for words in words_list:
             words.set_color_by_tex(v_tex, V_COLOR)
@@ -1382,7 +1382,7 @@ class ShowCrossProductFormula(Scene):
 
         arrays = [
             ["%s_%d"%(s, i) for i in range(1, 4)]
-            for s in "v", "w"
+            for s in ("v", "w")
         ]
         matrices = map(Matrix, arrays)
         for matrix in matrices:
@@ -1466,7 +1466,7 @@ class DeterminantTrick(Scene):
     def construct(self):
         v_terms, w_terms = [
             ["%s_%d"%(s, d) for d in range(1, 4)]
-            for s in "v", "w"
+            for s in ("v", "w")
         ]
         v = Matrix(v_terms)
         w = Matrix(w_terms)
@@ -1475,7 +1475,7 @@ class DeterminantTrick(Scene):
         matrix = Matrix(np.array([
             [
                 TexMobject("\\hat{%s}"%s)
-                for s in "\\imath", "\\jmath", "k"
+                for s in ("\\imath", "\\jmath", "k")
             ],
             list(v.get_entries().copy()),
             list(w.get_entries().copy()),

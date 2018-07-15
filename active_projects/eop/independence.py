@@ -219,7 +219,7 @@ class MeaningOfIndependence(SampleSpaceScene):
                 self.sample_space.get_corner(vect+RIGHT),
                 0.7
             )
-            for vect in UP, DOWN
+            for vect in (UP, DOWN)
         ])
         line.set_stroke(RED, 8)
         word = TextMobject("Independence")
@@ -939,7 +939,7 @@ class ThousandPossibleQuizzes(Scene):
                 include_qs = False,
                 buff = SMALL_BUFF
             )
-            for b in True, False
+            for b in (True, False)
         ])
         question = VGroup(
             TextMobject("Where are"), sg1,
@@ -1499,7 +1499,7 @@ class ShowAllEightConditionals(Scene):
                 "P(", filler_tex, "|", filler_tex, ")",
             )
             sub_bool_lists = [
-                bool_list[:n] for n in 3, 1, 2, 1, 3, 2
+                bool_list[:n] for n in (3, 1, 2, 1, 3, 2)
             ]
             parts = equation.get_parts_by_tex(filler_tex)
             for part, sub_list in zip(parts, sub_bool_lists):
@@ -2319,7 +2319,7 @@ class NameBinomial(Scene):
         flip_indices = self.flip_indices
         flipped_arrows, faded_crosses, full_checks = [
             VGroup(*[group[i] for i in flip_indices])
-            for group in arrows, crosses, checkmarks
+            for group in (arrows, crosses, checkmarks)
         ]
         faded_checkmarks = VGroup(*filter(
             lambda m : m not in full_checks,
@@ -2543,7 +2543,7 @@ class CycleThroughPatterns(NameBinomial):
                     getattr(new_pattern, attr),
                     path_arc = np.pi
                 )
-                for attr in "boys", "girls"
+                for attr in ("boys", "girls")
             ])
 
     ####
@@ -3079,7 +3079,7 @@ class CorrectForDependence(NameBinomial):
                 for i in range(len(group))
                 if i in indices
             ])
-            for group in self.checkmarks, self.arrows, self.crosses
+            for group in (self.checkmarks, self.arrows, self.crosses)
         ]
         for arrow in arrows:
             arrow.target = arrow.deepcopy()
@@ -3276,7 +3276,7 @@ class CompareTwoSituations(PiCreatureScene):
         randy = self.randy
         top_left, top_right = screens = [
             ScreenRectangle(height = 3).to_corner(vect)
-            for vect in UP+LEFT, UP+RIGHT
+            for vect in (UP+LEFT, UP+RIGHT)
         ]
         arrow = DoubleArrow(*screens, buff = SMALL_BUFF)
         arrow.set_color(BLUE)
@@ -3404,7 +3404,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
         k_range = range(11)
         dists = [
             get_binomial_distribution(10, p)
-            for p in 0.2, 0.8, 0.5
+            for p in (0.2, 0.8, 0.5)
         ]
         values_list = [
             map(dist, k_range)

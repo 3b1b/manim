@@ -2,6 +2,7 @@ import numpy as np
 
 from constants import OUT
 from constants import RIGHT
+from functools import reduce
 
 # Matrix operations
 
@@ -108,6 +109,10 @@ def complex_to_R3(complex_num):
 
 def R3_to_complex(point):
     return complex(*point[:2])
+
+
+def complex_func_to_R3_func(complex_func):
+    return lambda p: complex_to_R3(complex_func(R3_to_complex(p)))
 
 
 def center_of_mass(points):

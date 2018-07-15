@@ -9,6 +9,7 @@ from mobject.types.vectorized_mobject import VGroup
 from scene.scene import Scene
 
 
+# TODO, refactor this full scene
 class ComplexTransformationScene(Scene):
     CONFIG = {
         "plane_config": {},

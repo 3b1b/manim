@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from constants import *
 
-from scene import Scene
+from .scene import Scene
 
 from animation.animation import Animation
 from animation.transform import MoveToTarget

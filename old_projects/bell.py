@@ -1,8 +1,10 @@
+from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 
 from tqdm import tqdm as ProgressDisplay
 
-from waves import *
+from .waves import *
+from functools import reduce
 
 #force_skipping
 #revert_to_original_skipping_status
@@ -193,7 +195,7 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
                 em_wave = self.em_wave.copy(),
                 run_time = 1,
             )
-            for x in -2, 2, 10
+            for x in (-2, 2, 10)
         ]
 
     def get_probability_text(self, prob = 0):
@@ -590,7 +592,7 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
         "filter_x_coordinates" : [-2, 2, 2, 2, 2],
         "pol_filter_configs" : [
             {"filter_angle" : angle}
-            for angle in 0, 0, np.pi/2, np.pi/4, np.pi/8
+            for angle in (0, 0, np.pi/2, np.pi/4, np.pi/8)
         ],
         "apply_filter" : False,
     }
@@ -838,7 +840,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
         n = self.n_lines
         start, end = [
             (f.point_from_proportion(0.75) if f is not None else None)
-            for f in filter1, filter2
+            for f in (filter1, filter2)
         ]
         if start is None:
             start = end + self.line_start_length*LEFT
@@ -878,7 +880,7 @@ class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
 
         cosines = VGroup(*[
             TexMobject("\\cos^2(%s^\\circ)"%str(x))
-            for x in 45, 22.5
+            for x in (45, 22.5)
         ])
         cosines.scale(0.8)
         # cosines.set_color(BLUE)
@@ -896,7 +898,7 @@ class ForgetPreviousActions(ShowVariousFilterPairs):
         "filter_x_coordinates" : [-6, -2, 2, 2, 2],
         "pol_filter_configs" : [
             {"filter_angle" : angle}
-            for angle in np.pi/4, 0, np.pi/4, np.pi/3, np.pi/6
+            for angle in (np.pi/4, 0, np.pi/4, np.pi/3, np.pi/6)
         ],
         "start_theta" : -0.6*np.pi,
         "EMWave_config" : {
@@ -1393,7 +1395,7 @@ class VennDiagramProofByContradiction(Scene):
                     "%s \\\\"%start,
                     "through", char + "$\\! \\uparrow$"
                 ).set_color_by_tex(char, circle.get_color())
-                for start in "Would pass", "Pass"
+                for start in ("Would pass", "Pass")
             ]
             for mob in label, alt_label:
                 mob[-1][-1].rotate_in_place(-angle)
@@ -1976,7 +1978,7 @@ class VennDiagramProofByContradiction(Scene):
                 fill_opacity = 0.5,
                 fill_color = YELLOW,
             )
-            for s in "in_A_out_B", "in_A_in_B_out_C", "in_A_out_C", "in_A_in_B"
+            for s in ("in_A_out_B", "in_A_in_B_out_C", "in_A_out_C", "in_A_in_B")
         ])
 
         in_A_out_B.scale(2.59)
@@ -2383,7 +2385,7 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
         "filter_x_coordinates" : [0, 0, 0],
         "pol_filter_configs" : [
             {"filter_angle" : angle}
-            for angle in 0, np.pi/8, np.pi/4
+            for angle in (0, np.pi/8, np.pi/4)
         ],
         "lines_depth" : 1.2,
         "lines_shift_vect" : SMALL_BUFF*OUT,

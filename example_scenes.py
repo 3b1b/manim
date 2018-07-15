@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from big_ol_pile_of_manim_imports import *
+from __future__ import absolute_import
+from .big_ol_pile_of_manim_imports import *
 
 # To watch one of these scenes, run the following:
 # python extract_scene.py file_name <SceneName> -p
@@ -27,7 +28,7 @@ class WarpSquare(Scene):
     def construct(self):
         square = Square()
         self.play(ApplyPointwiseFunction(
-            lambda (x, y, z): complex_to_R3(np.exp(complex(x, y))),
+            lambda x_y_z: complex_to_R3(np.exp(complex(x_y_z[0], x_y_z[1]))),
             square
         ))
         self.wait()

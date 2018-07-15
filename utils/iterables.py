@@ -1,5 +1,6 @@
 import itertools as it
 import numpy as np
+from functools import reduce
 
 
 def remove_list_redundancies(l):
@@ -42,7 +43,8 @@ def batch_by_property(items, property_func):
     Takes in a list, and returns a list of tuples, (batch, prop)
     such that all items in a batch have the same output when
     put into property_func, and such that chaining all these
-    batches together would give the original list.
+    batches together would give the original list (i.e. order is
+    preserved)
     """
     batch_prop_pairs = []
 
@@ -98,8 +100,8 @@ def make_even_by_cycling(iterable_1, iterable_2):
     cycle1 = it.cycle(iterable_1)
     cycle2 = it.cycle(iterable_2)
     return (
-        [cycle1.next() for x in range(length)],
-        [cycle2.next() for x in range(length)]
+        [next(cycle1) for x in range(length)],
+        [next(cycle2) for x in range(length)]
     )
 
 

@@ -1,4 +1,6 @@
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
+from functools import reduce
 
 def break_up(mobject, factor = 1.3):
     mobject.scale_in_place(factor)
@@ -498,7 +500,7 @@ class ExamplesOfDimension(Scene):
     def construct(self):
         labels = VGroup(*[
             TextMobject("%s-dimensional"%s)
-            for s in "1.585", "1.262", "1.21"
+            for s in ("1.585", "1.262", "1.21")
         ])
         fractals = VGroup(*[
             Sierpinski(order = 7),
@@ -548,7 +550,7 @@ class DimensionForNaturalNumbers(Scene):
     def construct(self):
         labels = VGroup(*[
             TextMobject("%d-dimensional"%d)
-            for d in 1, 2, 3
+            for d in (1, 2, 3)
         ])
         for label, vect in zip(labels, [LEFT, ORIGIN, RIGHT]):
             label.to_edge(vect)
@@ -2380,7 +2382,7 @@ class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
         words.to_edge(RIGHT)
         arrows = VGroup(*[
             Arrow(words.get_left(), self.input_to_graph_point(x))
-            for x in 1, 7, 12
+            for x in (1, 7, 12)
         ])
 
 
@@ -2567,7 +2569,7 @@ class WhatSlopeDoesLogLogPlotApproach(IntroduceLogLogPlot):
         words = TextMobject(self.words)
         p1, p2 = [
             data_dots[int(alpha*len(data_dots))].get_center()
-            for alpha in 0.3, 0.5
+            for alpha in (0.3, 0.5)
         ]
         words.rotate(Line(p1, p2).get_angle())
         words.next_to(p1, RIGHT, aligned_edge = DOWN, buff = 1.5)
@@ -2639,7 +2641,7 @@ class SmoothBritainLogLogPlot(IntroduceLogLogPlot):
 
         p1, p2, p3, p4 = [
             self.input_to_graph_point(x)
-            for x in 1, 2, 7, 8
+            for x in (1, 2, 7, 8)
         ]
         interim_point1 = p2[0]*RIGHT + p1[1]*UP
         interim_point2 = p4[0]*RIGHT + p3[1]*UP
@@ -2742,7 +2744,7 @@ class CompareBritainAndNorway(Scene):
                 mob.set_stroke, None, 0,
                 mob.set_fill, BLUE, 1
             ]
-            for mob in britain, norway
+            for mob in (britain, norway)
         ]))
         self.wait(2)
 

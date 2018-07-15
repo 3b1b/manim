@@ -157,7 +157,7 @@ class GraphScene(Scene):
         x_max=None,
     ):
         if color is None:
-            color = self.default_graph_colors_cycle.next()
+            color = next(self.default_graph_colors_cycle)
         if x_min is None:
             x_min = self.x_min
         if x_max is None:

@@ -18,8 +18,10 @@ class ThreeDScene(Scene):
 
     def set_camera_position(self, phi=None, theta=None, distance=None,
                             center_x=None, center_y=None, center_z=None):
-        self.camera.set_position(phi, theta, distance,
-                                 center_x, center_y, center_z)
+        self.camera.set_position(
+            phi, theta, distance,
+            center_x, center_y, center_z
+        )
 
     def begin_ambient_camera_rotation(self, rate=0.01):
         self.ambient_camera_rotation = ContinualMovement(

@@ -211,7 +211,7 @@ class DampenedSpring(Scene):
                 num_anchor_points = 100,
                 color = GREY,
             ).shift(3*LEFT)
-            for denom in 12.0, 2.0
+            for denom in (12.0, 2.0)
         ]
         for spring in compact_spring, extended_spring:
             spring.scale(0.5)
@@ -441,7 +441,7 @@ class SumRule(GraphScene):
             line.save_state()
         sine_lines, parabola_lines = [
             VGroup(example_v_lines[i], nudged_v_lines[i])
-            for i in 0, 1
+            for i in (0, 1)
         ]
         faders = VGroup(*filter(
             lambda line : line not in example_v_lines,
@@ -944,7 +944,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         line, triangle, x_mob = self.x_slider
         dx_line = Line(*[
             line.number_to_point(self.x_slider.x_val + num)
-            for num in 0, self.dx,
+            for num in (0, self.dx,)
         ])
         dx_line.set_stroke(
             self.df_box_kwargs["fill_color"], 
@@ -1943,7 +1943,7 @@ class GeneralizeChainRule(Scene):
         self.wait()
         self.play(*it.chain(*[
             [mob.scale_in_place, 1.2, mob.set_color, YELLOW]
-            for mob in example_inner, d_example_inner
+            for mob in (example_inner, d_example_inner)
         ]), rate_func = there_and_back)
         self.play(Transform(
             example_inner.copy(), d_example_inner,

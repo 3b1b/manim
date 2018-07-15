@@ -140,7 +140,7 @@ class ListOfAttributes(Scene):
                 fill_opacity = 1,
                 stroke_width = 0,
             )
-            for word in "government", "bank"
+            for word in ("government", "bank")
         ]
         attributes = VGroup(digital, *buildings)
         attributes.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
@@ -809,7 +809,7 @@ class IntroduceLedgerSystem(LedgerScene):
         self.wait()
         debtor_cash, creditor_cash = [
             VGroup(*it.chain(*[pi.cash for pi in group]))
-            for group in debtors, creditors
+            for group in (debtors, creditors)
         ]
         self.play(FadeIn(debtor_cash))
         self.play(
@@ -1691,7 +1691,7 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
     def point_out_charlie_is_broke(self):
         charlie_lines = VGroup(*[
             VGroup(*self.ledger.content[i][1:5])
-            for i in 3, 5, 6, 7
+            for i in (3, 5, 6, 7)
         ])
         rects = VGroup(*[
             SurroundingRectangle(line)
@@ -1722,11 +1722,11 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
     def running_balance(self):
         charlie_lines = VGroup(*[
             VGroup(*self.ledger.content[i][1:5])
-            for i in 3, 5, 6, 7
+            for i in (3, 5, 6, 7)
         ])
         signatures = VGroup(*[
             self.ledger.content[i][5]
-            for i in 5, 6, 7
+            for i in (5, 6, 7)
         ])
         rect = Rectangle(color = WHITE)
         rect.set_fill(BLACK, 0.8)
@@ -2770,7 +2770,7 @@ class IntroduceNonceOnTrasactions(LedgerScene):
         self.play(LaggedStart(
             ReplacementTransform, 
             VGroup(*[point.copy() for x in range(256)]),
-            lambda m : (m, bit_iter.next()),
+            lambda m : (m, next(bit_iter)),
         ))
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(digest)
@@ -3181,7 +3181,7 @@ class IntroduceBlockChain(Scene):
             Line(
                 rect.get_left(), rect.get_right()
             ).shift(0.3*rect.get_height()*vect)
-            for vect in UP, DOWN
+            for vect in (UP, DOWN)
         ]
 
         payments = VGroup()
@@ -4674,7 +4674,7 @@ class CompareBlockTimes(Scene):
         self.wait()
         self.play(*[
             LaggedStart(FadeIn, VGroup(*group[1:]))
-            for group in examples, logos
+            for group in (examples, logos)
         ])
         self.wait(2)
 

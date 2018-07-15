@@ -1260,7 +1260,7 @@ class ShowVectorEquation(Scene):
                 x_max = 4/f,
                 num_steps = 20/f,
             )
-            for f in 1, 0.25,
+            for f in (1, 0.25,)
         ])
 
         group = VGroup(axes, t, cos, high_f_graph, *fx_group)
@@ -1451,7 +1451,7 @@ class ShowVectorEquation(Scene):
         ])
         ket_rects = VGroup(*map(SurroundingRectangle, kets))
         ket_rects.set_color(WHITE)
-        unit_vectors = VGroup(*[Vector(2*vect) for vect in RIGHT, UP])
+        unit_vectors = VGroup(*[Vector(2*vect) for vect in (RIGHT, UP)])
         unit_vectors.set_fill(YELLOW)
 
         self.play(
@@ -1640,7 +1640,7 @@ class ShowTipToTailSum(ShowVectorEquation):
                 "\\cos(", "2\\pi", "f", "t", ")",
                 "|\\!\\%sarrow\\rangle"%s
             )
-            for s in "right", "up"
+            for s in ("right", "up")
         ])
         for ket in kets:
             ket.set_color_by_tex_to_color_map({
@@ -2155,7 +2155,7 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
                 decimal.align_data(new_decimal)
                 families = [
                     mob.family_members_with_points()
-                    for mob in decimal, new_decimal
+                    for mob in (decimal, new_decimal)
                 ]
                 for sm1, sm2 in zip(*families):
                     sm1.interpolate(sm1, sm2, 1)
@@ -2369,7 +2369,7 @@ class EnergyOfWavesTeacherPortion(TeacherStudentsScene):
         s1, s2 = self.get_students()[:2]
         b1, b2 = [
             ThoughtBubble(direction = v).scale(0.5)
-            for v in LEFT, RIGHT
+            for v in (LEFT, RIGHT)
         ]
         b1.pin_to(s1)
         b2.pin_to(s2)
@@ -3388,7 +3388,7 @@ class ThreeFilters(ShootPhotonThroughFilter):
         n = self.n_lines
         start, end = [
             (f.point_from_proportion(0.75) if f is not None else None)
-            for f in filter1, filter2
+            for f in (filter1, filter2)
         ]
         if start is None:
             start = end + self.line_start_length*LEFT
@@ -3883,7 +3883,7 @@ class CompareWaveEquations(TeacherStudentsScene):
     def show_complex_plane(self):
         new_alpha, new_beta = terms = [
             self.equation.get_part_by_tex(tex).copy()
-            for tex in "alpha", "beta"
+            for tex in ("alpha", "beta")
         ]
         for term in terms:
             term.save_state()

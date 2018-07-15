@@ -1,5 +1,6 @@
 import numbers
 from big_ol_pile_of_manim_imports import *
+from functools import reduce
 
 OPERATION_COLORS = [YELLOW, GREEN, BLUE_B]
 
@@ -319,7 +320,7 @@ class SixDifferentInverses(Scene):
         assert(lil_top is not None and lil_symbol is not None)
         cancel_parts = [
             VMobject(top.triangle, top.values[symbol_index])
-            for top in lil_top, big_top
+            for top in (lil_top, big_top)
         ]
         new_symbol = lil_symbol.copy()
         new_symbol.replace(right_symbol)
@@ -608,7 +609,7 @@ class RightStaysConstantQ(Scene):
     def construct(self):
         top1, top2, top3 = old_tops = [
             TOP(None, s, "8")
-            for s in "x", "y", TexMobject("x?y")
+            for s in ("x", "y", TexMobject("x?y"))
         ]
         q_mark = TexMobject("?").scale(2)
         equation = VMobject(
@@ -617,11 +618,11 @@ class RightStaysConstantQ(Scene):
         equation.arrange_submobjects(buff = 0.7)
         symbols_at_top = VMobject(*[
             top.values[1]
-            for top in top1, top2, top3
+            for top in (top1, top2, top3)
         ])
         symbols_at_lower_right = VMobject(*[
             top.put_on_vertex(0, top.values[1].copy())
-            for top in top1, top2, top3
+            for top in (top1, top2, top3)
         ])
         old_style_eq1 = TexMobject("\\sqrt[x]{8} ? \\sqrt[y]{8} = \\sqrt[x?y]{8}")
         old_style_eq1.set_color(BLUE)

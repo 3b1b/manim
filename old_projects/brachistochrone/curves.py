@@ -353,7 +353,7 @@ class TransitionAwayFromSlide(PathSlidingScene):
         arrow = Arrow(ORIGIN, 2*RIGHT)
         arrows = Mobject(*[
             arrow.copy().shift(vect)
-            for vect in 3*LEFT, ORIGIN, 3*RIGHT
+            for vect in (3*LEFT, ORIGIN, 3*RIGHT)
         ])
         arrows.shift(FRAME_WIDTH*RIGHT)
         self.add(arrows)

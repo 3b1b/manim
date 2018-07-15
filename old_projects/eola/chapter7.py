@@ -304,7 +304,7 @@ class GeometricInterpretation(VectorScene):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
         v_norm, w_norm = [
             np.linalg.norm(vect.get_end())
-            for vect in self.v, self.w
+            for vect in (self.v, self.w)
         ]
         projected = Vector(
             self.stable_vect.get_end()*dot_product/(
@@ -348,7 +348,7 @@ class GeometricInterpretation(VectorScene):
 
         proj_brace, stable_brace = braces = [
             Brace(Line(ORIGIN, vect.get_length()*RIGHT*sgn), UP)
-            for vect in self.proj_vect, self.stable_vect
+            for vect in (self.proj_vect, self.stable_vect)
             for sgn in [np.sign(np.dot(vect.get_end(), self.stable_vect.get_end()))]
         ]
         proj_brace.put_at_tip(proj_words.start)
@@ -581,7 +581,7 @@ class SymmetricVAndW(VectorScene):
             color = GREY
         )
 
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in "v", "w"]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in ("v", "w")]
         equation = TexMobject(
             "(", "2", v_tex, ")", "\\cdot", w_tex,
             "=",
@@ -600,7 +600,7 @@ class SymmetricVAndW(VectorScene):
         v.proj_line.save_state()
         self.play(Transform(*[
             VGroup(mob, mob.label)
-            for mob in v, new_v
+            for mob in (v, new_v)
         ]), run_time = 2)
         last_mob = self.get_mobjects_from_last_animation()[0] 
         self.remove(last_mob)
@@ -700,7 +700,7 @@ class Introduce2Dto1DLinearTransformations(TwoDToOneDScene):
         self.apply_transposed_matrix(self.t_matrix)
         self.play(
             ShowCreation(number_line),
-            *[Animation(v) for v in self.i_hat, self.j_hat]
+            *[Animation(v) for v in (self.i_hat, self.j_hat)]
         )
         self.play(*map(Write, [numbers, number_line_words]))
         self.wait()
@@ -778,7 +778,7 @@ class OkayToIgnoreFormalProperties(Scene):
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "v", "w"]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in ("v", "w")]
         additivity = TexMobject(
             "L(", v_tex, "+", w_tex, ") = ",
             "L(", v_tex, ") + L(", w_tex, ")",
@@ -829,7 +829,7 @@ class FormalVsVisual(Scene):
         formal.next_to(line, DOWN).shift(FRAME_X_RADIUS*LEFT/2)
         visual.next_to(line, DOWN).shift(FRAME_X_RADIUS*RIGHT/2)
 
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in "v", "w"]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in ("v", "w")]
         additivity = TexMobject(
             "L(", v_tex, "+", w_tex, ") = ",
             "L(", v_tex, ")+", "L(", w_tex, ")"
@@ -900,13 +900,13 @@ class AdditivityProperty(TwoDToOneDScene):
         sum_vect.target = sum_vect
         self.play(*[
             Transform(mob, mob.target)
-            for mob in v, w, sum_vect
+            for mob in (v, w, sum_vect)
         ])
         self.add_vector(sum_vect, animate = False)
         return sum_vect
 
     def get_symbols(self):
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in "v", "w"]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in ("v", "w")]
         if self.sum_before:
             tex_mob = TexMobject(
                 "L(", v_tex, "+", w_tex, ")"
@@ -1029,7 +1029,7 @@ class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
 
 class AlwaysfollowIHatJHat(TeacherStudentsScene):
     def construct(self):
-        i_tex, j_tex = ["$\\hat{\\%smath}$"%c for c in "i", "j"]
+        i_tex, j_tex = ["$\\hat{\\%smath}$"%c for c in ("i", "j")]
         words = TextMobject(
             "Always follow", i_tex, "and", j_tex
         )
@@ -1131,7 +1131,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
         self.play(
             *map(FadeOut, to_fade) + [
                 vect.restore
-                for vect in self.i_hat, self.j_hat
+                for vect in (self.i_hat, self.j_hat)
             ]
         )
 
@@ -1149,7 +1149,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
         else:
             new_labels = [
                 TexMobject("L(\\hat{\\%smath})"%char)
-                for char in "i", "j"
+                for char in ("i", "j")
             ]
             
         new_labels[0].set_color(X_COLOR)
@@ -1609,7 +1609,7 @@ class AskAboutProjectionMatrix(Scene):
         VMobject(words, matrix).arrange_submobjects(buff = MED_SMALL_BUFF).shift(UP)
         basis_words = [
             TextMobject("Where", "$\\hat{\\%smath}$"%char, "lands")
-            for char in "i", "j"
+            for char in ("i", "j")
         ]
         for b_words, q_mark, direction in zip(basis_words, matrix.get_entries(), [UP, DOWN]):
             b_words.next_to(q_mark, direction, buff = 1.5)
@@ -1650,7 +1650,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
             for vector in basis_vectors
         ])
 
-        i_tex, j_tex = ["$\\hat{\\%smath}$"%char for char in "i", "j"]
+        i_tex, j_tex = ["$\\hat{\\%smath}$"%char for char in ("i", "j")]
         question = TextMobject(
             "Where do", i_tex, "and", j_tex, "land?"
         )
@@ -1698,7 +1698,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         # self.show_u_coords(u_label)
         u_x, u_y = [
             TexMobject("u_%s"%c).set_color(self.u_hat.get_color())
-            for c in "x", "y"
+            for c in ("x", "y")
         ]
         matrix_x, matrix_y = matrix.get_entries()
         self.remove(j_hat, j_label)
@@ -2160,7 +2160,7 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
     def construct(self):
         v1, v2 = [
             Matrix(["x_%d"%n, "y_%d"%n])
-            for n in 1, 2
+            for n in (1, 2)
         ]
         v1.set_color_columns(V_COLOR)
         v2.set_color_columns(W_COLOR)
