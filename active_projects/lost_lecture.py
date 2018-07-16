@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 
+COBALT = "#0047AB"
 
 class Orbiting(ContinualAnimation):
     CONFIG = {
@@ -576,7 +577,12 @@ class TheMotionOfPlanets(Scene):
 class AskAboutEllipses(TheMotionOfPlanets):
     CONFIG = {
         "camera_config": {"background_opacity": 1},
+        "sun_center": ORIGIN,
         "animate_sun": True,
+        "a": 3.5,
+        "b": 2.0,
+        "ellipse_color": WHITE,
+        "ellipse_stroke_width": 1,
     }
 
     def construct(self):
@@ -595,6 +601,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
 
     def add_sun(self):
         sun = ImageMobject("sun", height=0.5)
+        sun.move_to(self.sun_center)
         self.sun = sun
         self.add(sun)
         if self.animate_sun:
@@ -792,12 +799,15 @@ class AskAboutEllipses(TheMotionOfPlanets):
 
     # Helpers
     def get_ellipse(self):
-        a = 7.0
-        b = 4.0
+        a = self.a
+        b = self.b
         c = np.sqrt(a**2 - b**2)
-        ellipse = Circle(radius=a / 2)
-        ellipse.set_stroke(WHITE, 1)
-        ellipse.stretch(b / a, dim=1)
+        ellipse = Circle(radius=a)
+        ellipse.set_stroke(
+            self.ellipse_color,
+            self.ellipse_stroke_width,
+        )
+        ellipse.stretch(fdiv(b, a), dim=1)
         ellipse.move_to(
             self.sun.get_center() + c * LEFT / 2
         )
@@ -1141,6 +1151,9 @@ class ShowEllipseDefiningProperty(Scene):
                     new_decimal.scale_to_fit_width(max_width)
                 new_decimal.next_to(line, UP, SMALL_BUFF)
                 new_decimal.set_color(color)
+                new_decimal.add_to_back(
+                    new_decimal.copy().set_stroke(BLACK, 5)
+                )
                 VGroup(new_decimal, line).rotate(
                     -angle, about_point=ORIGIN
                 )
@@ -1187,25 +1200,19 @@ class ShowEllipseDefiningProperty(Scene):
 
 
 class GeometryProofLand(Scene):
-    def construct(self):
-        word = TextMobject("Geometry proof land")
-        word.rotate(-90 * DEGREES)
-        word.scale(0.25)
-        word.shift(3 * RIGHT)
-        word.apply_complex_function(np.exp)
-        word.rotate(90 * DEGREES)
-        word.scale_to_fit_width(9)
-        word.center()
-        word.to_edge(UP)
-        colors = [
+    CONFIG = {
+        "colors": [
             PINK, RED, YELLOW, GREEN, GREEN_A, BLUE,
             MAROON_E, MAROON_B, YELLOW, BLUE,
-        ]
-        word.set_color_by_gradient(*colors)
+        ],
+    }
 
+    def construct(self):
+        word = self.get_geometry_proof_land_word()
         word_outlines = word.deepcopy()
         word_outlines.set_fill(opacity=0)
         word_outlines.set_stroke(WHITE, 1)
+        colors = list(self.colors)
         random.shuffle(colors)
         word_outlines.set_color_by_gradient(*colors)
 
@@ -1229,6 +1236,19 @@ class GeometryProofLand(Scene):
             run_time=4
         ))
         self.wait()
+
+    def get_geometry_proof_land_word(self):
+        word = TextMobject("Geometry proof land")
+        word.rotate(-90 * DEGREES)
+        word.scale(0.25)
+        word.shift(3 * RIGHT)
+        word.apply_complex_function(np.exp)
+        word.rotate(90 * DEGREES)
+        word.scale_to_fit_width(9)
+        word.center()
+        word.to_edge(UP)
+        word.set_color_by_gradient(*self.colors)
+        return word
 
 
 class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
@@ -1374,10 +1394,10 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         self.add(*to_add)
 
         points = [
-            ellipse.get_bottom(),
-            circle.point_from_proportion(0.9),
             ellipse.get_top(),
-            ellipse.point_from_proportion(0.7),
+            circle.point_from_proportion(0.2),
+            ellipse.point_from_proportion(0.2),
+            ellipse.point_from_proportion(0.4),
         ]
         for point in points:
             self.play(
@@ -1555,7 +1575,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
                 self.get_eccentricity_point()
             ]
         ])
-        triangles.set_color_by_gradient(PINK, GREEN)
+        triangles.set_color_by_gradient(RED_C, COBALT)
         triangles.set_stroke(WHITE, 2)
 
         # Add even more distant label updates
@@ -1609,7 +1629,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         )
         elbow_update_animation = UpdateFromFunc(
             elbow,
-            lambda e: Transform(e, self.get_elbow(line)).update(1)
+            lambda e: Transform(e, self.get_elbow(ghost_line)).update(1)
         )
 
         P_dot_movement_updates = [
@@ -1638,7 +1658,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
 
         # Why is this needed?!?
         self.add(*self.focal_sum_things_to_add)
-        self.wait(0)
+        self.wait(0.01)
         self.remove(*self.focal_sum_things_to_add)
 
         # Show label
@@ -1659,6 +1679,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             FadeInFromDown(Q_label),
             GrowFromCenter(Q_dot)
         )
+        self.wait()
         self.add_foreground_mobjects(Q_dot)
         self.add(Q_label_animation)
         self.play(
@@ -1794,10 +1815,10 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
                     intersection - planet.get_center()
                 )
                 if distance < 0.025:
-                    line.set_color(BLUE)
+                    line.set_stroke(BLUE, 3)
                     self.add(line)
                 else:
-                    line.set_color(WHITE)
+                    line.set_stroke(WHITE, 1)
 
         lines_update_animation = ContinualUpdateFromFunc(
             lines, update_lines
@@ -1809,6 +1830,207 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         self.wait(12)
 
 
-class EndOfGeometryProofiness(Scene):
+class EndOfGeometryProofiness(GeometryProofLand):
     def construct(self):
-        pass
+        geometry_word = self.get_geometry_proof_land_word()
+        orbital_mechanics = TextMobject("Orbital Mechanics")
+        orbital_mechanics.scale(1.5)
+        orbital_mechanics.to_edge(UP)
+        underline = Line(LEFT, RIGHT)
+        underline.match_width(orbital_mechanics)
+        underline.next_to(orbital_mechanics, DOWN, SMALL_BUFF)
+
+        self.play(LaggedStart(FadeOutAndShiftDown, geometry_word))
+        self.play(FadeInFromDown(orbital_mechanics))
+        self.play(ShowCreation(underline))
+        self.wait()
+
+
+class KeplersSecondLaw(AskAboutEllipses):
+    CONFIG = {
+        "sun_center": 3 * RIGHT + DOWN,
+        "animate_sun": False,
+        "a": 5.0,
+        "b": 2.5,
+        "ellipse_stroke_width": 2,
+        "area_color": COBALT,
+        "area_opacity": 0.75,
+        "arc_color": YELLOW,
+        "arc_stroke_width": 3,
+    }
+
+    def construct(self):
+        self.add_title()
+        self.add_sun()
+        self.add_foreground_mobjects(self.sun)
+        self.add_orbit()
+        self.add_foreground_mobjects(self.comet)
+
+        self.show_several_sweeps()
+        self.contrast_close_to_far()
+
+
+    def add_title(self):
+        title = TextMobject("Kepler's 2nd law")
+        title.scale(1.0)
+        title.to_edge(UP)
+        self.add(title)
+        self.title = title
+
+    def show_several_sweeps(self):
+        n_sweeps = 3
+        shown_areas = VGroup()
+        for x in range(n_sweeps):
+            self.wait()
+            area = self.show_area_sweep()
+            shown_areas.add(area)
+        self.wait(2)
+        self.play(FadeOut(shown_areas))
+
+
+    def contrast_close_to_far(self):
+        orbit = self.orbit
+        sun_point = self.sun.get_center()
+
+        start_prop = 0.8
+        self.wait_until_proportion(start_prop)
+        area = self.show_area_sweep()
+        end_prop = max(0.9, orbit.proportion)
+        arc = self.get_arc(start_prop, end_prop)
+        radius = Line(sun_point, arc.points[0])
+        radius.set_color(PINK)
+
+
+        radius_words = self.get_radius_words(
+            radius, "Short"
+        )
+
+        arc_words = TextMobject("Long arc")
+        angle = 9 * DEGREES
+        arc_words.rotate(angle)
+        arc_words.scale(0.1)
+        vect = rotate_vector(RIGHT, angle)
+        arc_words.next_to(vect, vect)
+        arc_words.apply_complex_function(np.exp)
+        arc_words.scale(2)
+        arc_words.next_to(
+            arc.point_from_proportion(0.5),
+            rotate_vector(vect, 90 * DEGREES),
+            buff=-MED_SMALL_BUFF,
+        )
+        arc_words.match_color(arc)
+
+        # Show stubby arc
+        # self.remove(orbit)
+        # self.add(self.comet)
+        self.play(
+            ShowCreation(radius),
+            Write(radius_words),
+        )
+        self.play(
+            ShowCreation(arc),
+            Write(arc_words)
+        )
+
+        # Show narrow arc
+        # (Code repetition...uck)
+        start_prop = 0.4
+        self.wait_until_proportion(start_prop)
+        area = self.show_area_sweep()
+        end_prop = max(0.45, orbit.proportion)
+        arc = self.get_arc(start_prop, end_prop)
+        radius = Line(sun_point, arc.points[0])
+        radius.set_color(PINK)
+        radius_words = self.get_radius_words(radius, "Long")
+
+    # Helpers
+    def show_area_sweep(self, time=1.0):
+        orbit = self.orbit
+        start_prop = orbit.proportion
+        area = self.get_area(start_prop, start_prop)
+        area_update = UpdateFromFunc(
+            area,
+            lambda a: Transform(
+                a, self.get_area(start_prop, orbit.proportion)
+            ).update(1)
+        )
+
+        self.play(area_update, run_time=time)
+
+        return area
+
+    def get_area(self, prop1, prop2):
+        """
+        Return a mobject illustrating the area swept
+        out between a point prop1 of the way along
+        the ellipse, and prop2 of the way.
+        """
+        sun_point = self.sun.get_center()
+        arc = self.get_arc(prop1, prop2)
+
+        # Add lines from start
+        result = VMobject()
+        result.append_vectorized_mobject(
+            Line(sun_point, arc.points[0])
+        )
+        result.append_vectorized_mobject(arc)
+        result.append_vectorized_mobject(
+            Line(arc.points[-1], sun_point)
+        )
+
+        result.set_stroke(WHITE, width=0)
+        result.set_fill(
+            self.area_color,
+            self.area_opacity,
+        )
+        return result
+
+    def get_arc(self, prop1, prop2):
+        sun_point = self.sun.get_center()
+        ellipse = self.get_ellipse()
+        prop1 = prop1 % 1.0
+        prop2 = prop2 % 1.0
+
+        if prop2 > prop1:
+            arc = VMobject().pointwise_become_partial(
+                ellipse, prop1, prop2
+            )
+        elif prop1 > prop2:
+            arc, arc_extension = [
+                VMobject().pointwise_become_partial(
+                    ellipse, p1, p2
+                )
+                for p1, p2 in [(prop1, 1.0), (0.0, prop2)]
+            ]
+            arc.append_vectorized_mobject(arc_extension)
+        else:
+            arc = VectorizedPoint(
+                ellipse.point_from_proportion(prop1)
+            )
+
+        arc.set_stroke(
+            self.arc_color,
+            self.arc_stroke_width,
+        )
+
+        return arc
+
+    def wait_until_proportion(self, prop):
+        if self.skip_animations:
+            self.orbit.proportion = prop
+        else:
+            while self.orbit.proportion < prop:
+                self.wait(0.2)
+
+    def get_radius_words(self, radius, adjective):
+        radius_words = TextMobject(
+            "%s radius" % adjective,
+        )
+        radius_words.scale_to_fit_width(
+            0.8 * radius.get_length()
+        )
+        radius_words.match_color(radius)
+        radius_words.next_to(ORIGIN, DOWN, SMALL_BUFF)
+        radius_words.rotate(radius.get_angle(), about_point=ORIGIN)
+        radius_words.shift(radius.get_center())
+        return radius_words
