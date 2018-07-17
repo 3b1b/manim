@@ -1,7 +1,11 @@
 from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 
+from active_projects.div_curl import VectorField
+from active_projects.div_curl import get_force_field_func
+
 COBALT = "#0047AB"
+
 
 class Orbiting(ContinualAnimation):
     CONFIG = {
@@ -577,12 +581,14 @@ class TheMotionOfPlanets(Scene):
 class AskAboutEllipses(TheMotionOfPlanets):
     CONFIG = {
         "camera_config": {"background_opacity": 1},
+        "sun_height": 0.5,
         "sun_center": ORIGIN,
         "animate_sun": True,
         "a": 3.5,
         "b": 2.0,
         "ellipse_color": WHITE,
         "ellipse_stroke_width": 1,
+        "comet_height": 0.2,
     }
 
     def construct(self):
@@ -600,17 +606,20 @@ class AskAboutEllipses(TheMotionOfPlanets):
         self.title = title
 
     def add_sun(self):
-        sun = ImageMobject("sun", height=0.5)
+        sun = ImageMobject("sun", height=self.sun_height)
         sun.move_to(self.sun_center)
         self.sun = sun
         self.add(sun)
         if self.animate_sun:
-            self.add(SunAnimation(sun))
+            sun_animation = SunAnimation(sun)
+            self.add(sun_animation)
+            self.add_foreground_mobjects(
+                sun_animation.mobject
+            )
 
     def add_orbit(self):
         sun = self.sun
-        comet = ImageMobject("comet")
-        comet.scale_to_fit_height(0.2)
+        comet = self.get_comet()
         ellipse = self.get_ellipse()
         orbit = Orbiting(comet, sun, ellipse)
 
@@ -798,6 +807,11 @@ class AskAboutEllipses(TheMotionOfPlanets):
         self.wait(6)
 
     # Helpers
+    def get_comet(self):
+        comet = ImageMobject("comet")
+        comet.scale_to_fit_height(self.comet_height)
+        return comet
+
     def get_ellipse(self):
         a = self.a
         b = self.b
@@ -809,7 +823,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
         )
         ellipse.stretch(fdiv(b, a), dim=1)
         ellipse.move_to(
-            self.sun.get_center() + c * LEFT / 2
+            self.sun.get_center() + c * LEFT,
         )
         self.focus_points = [
             self.sun.get_center(),
@@ -1848,75 +1862,75 @@ class EndOfGeometryProofiness(GeometryProofLand):
 
 class KeplersSecondLaw(AskAboutEllipses):
     CONFIG = {
-        "sun_center": 3 * RIGHT + DOWN,
-        "animate_sun": False,
+        "sun_center": 4 * RIGHT + 0.75 * DOWN,
+        "animate_sun": True,
         "a": 5.0,
-        "b": 2.5,
+        "b": 3.0,
         "ellipse_stroke_width": 2,
         "area_color": COBALT,
         "area_opacity": 0.75,
         "arc_color": YELLOW,
         "arc_stroke_width": 3,
+        "n_sample_sweeps": 5,
+        "fade_sample_areas": True,
     }
 
     def construct(self):
         self.add_title()
         self.add_sun()
-        self.add_foreground_mobjects(self.sun)
         self.add_orbit()
         self.add_foreground_mobjects(self.comet)
 
         self.show_several_sweeps()
         self.contrast_close_to_far()
 
-
     def add_title(self):
-        title = TextMobject("Kepler's 2nd law")
+        title = TextMobject("Kepler's 2nd law:")
         title.scale(1.0)
         title.to_edge(UP)
         self.add(title)
         self.title = title
 
+        subtitle = TextMobject(
+            "Orbits sweep a constant area per unit time"
+        )
+        subtitle.next_to(title, DOWN, buff=0.2)
+        subtitle.set_color(BLUE)
+        self.add(subtitle)
+
     def show_several_sweeps(self):
-        n_sweeps = 3
         shown_areas = VGroup()
-        for x in range(n_sweeps):
+        for x in range(self.n_sample_sweeps):
             self.wait()
             area = self.show_area_sweep()
             shown_areas.add(area)
-        self.wait(2)
-        self.play(FadeOut(shown_areas))
-
+        self.wait()
+        if self.fade_sample_areas:
+            self.play(FadeOut(shown_areas))
 
     def contrast_close_to_far(self):
         orbit = self.orbit
         sun_point = self.sun.get_center()
 
-        start_prop = 0.8
+        start_prop = 0.9
         self.wait_until_proportion(start_prop)
-        area = self.show_area_sweep()
-        end_prop = max(0.9, orbit.proportion)
+        self.show_area_sweep()
+        end_prop = orbit.proportion
         arc = self.get_arc(start_prop, end_prop)
         radius = Line(sun_point, arc.points[0])
-        radius.set_color(PINK)
+        radius.set_color(WHITE)
 
-
-        radius_words = self.get_radius_words(
-            radius, "Short"
-        )
+        radius_words = self.get_radius_words(radius, "Short")
+        radius_words.next_to(radius.get_center(), LEFT, SMALL_BUFF)
 
         arc_words = TextMobject("Long arc")
-        angle = 9 * DEGREES
-        arc_words.rotate(angle)
-        arc_words.scale(0.1)
-        vect = rotate_vector(RIGHT, angle)
-        arc_words.next_to(vect, vect)
+        arc_words.rotate(90 * DEGREES)
+        arc_words.scale(0.5)
+        arc_words.next_to(RIGHT, RIGHT)
         arc_words.apply_complex_function(np.exp)
-        arc_words.scale(2)
+        arc_words.scale(0.8)
         arc_words.next_to(
-            arc.point_from_proportion(0.5),
-            rotate_vector(vect, 90 * DEGREES),
-            buff=-MED_SMALL_BUFF,
+            arc, RIGHT, buff=-SMALL_BUFF
         )
         arc_words.match_color(arc)
 
@@ -1934,14 +1948,30 @@ class KeplersSecondLaw(AskAboutEllipses):
 
         # Show narrow arc
         # (Code repetition...uck)
-        start_prop = 0.4
+        start_prop = 0.475
         self.wait_until_proportion(start_prop)
-        area = self.show_area_sweep()
-        end_prop = max(0.45, orbit.proportion)
-        arc = self.get_arc(start_prop, end_prop)
-        radius = Line(sun_point, arc.points[0])
-        radius.set_color(PINK)
-        radius_words = self.get_radius_words(radius, "Long")
+        self.show_area_sweep()
+        end_prop = orbit.proportion
+        short_arc = self.get_arc(start_prop, end_prop)
+        long_radius = Line(sun_point, short_arc.points[0])
+        long_radius.set_color(WHITE)
+        long_radius_words = self.get_radius_words(long_radius, "Long")
+
+        short_arc_words = TextMobject("Short arc")
+        short_arc_words.scale(0.5)
+        short_arc_words.rotate(90 * DEGREES)
+        short_arc_words.next_to(short_arc, LEFT, SMALL_BUFF)
+        short_arc_words.match_color(short_arc)
+
+        self.play(
+            ShowCreation(long_radius),
+            Write(long_radius_words),
+        )
+        self.play(
+            ShowCreation(short_arc),
+            Write(short_arc_words)
+        )
+        self.wait(15)
 
     # Helpers
     def show_area_sweep(self, time=1.0):
@@ -1986,7 +2016,6 @@ class KeplersSecondLaw(AskAboutEllipses):
         return result
 
     def get_arc(self, prop1, prop2):
-        sun_point = self.sun.get_center()
         ellipse = self.get_ellipse()
         prop1 = prop1 % 1.0
         prop2 = prop2 % 1.0
@@ -2019,18 +2048,371 @@ class KeplersSecondLaw(AskAboutEllipses):
         if self.skip_animations:
             self.orbit.proportion = prop
         else:
-            while self.orbit.proportion < prop:
-                self.wait(0.2)
+            while (self.orbit.proportion % 1) < prop:
+                self.wait(self.frame_duration)
 
     def get_radius_words(self, radius, adjective):
         radius_words = TextMobject(
             "%s radius" % adjective,
         )
-        radius_words.scale_to_fit_width(
-            0.8 * radius.get_length()
-        )
+        min_width = 0.8 * radius.get_length()
+        if radius_words.get_width() > min_width:
+            radius_words.scale_to_fit_width(min_width)
         radius_words.match_color(radius)
-        radius_words.next_to(ORIGIN, DOWN, SMALL_BUFF)
-        radius_words.rotate(radius.get_angle(), about_point=ORIGIN)
+        radius_words.next_to(ORIGIN, UP, SMALL_BUFF)
+        angle = radius.get_angle()
+        angle = ((angle + PI) % TAU) - PI
+        if np.abs(angle) > PI / 2:
+            angle += PI
+        radius_words.rotate(angle, about_point=ORIGIN)
         radius_words.shift(radius.get_center())
         return radius_words
+
+
+class AngularMomentumArgument(KeplersSecondLaw):
+    CONFIG = {
+        "animate_sun": False,
+        "sun_center": 4 * RIGHT + DOWN,
+        "comet_start_point": 4 * LEFT,
+        "comet_end_point": 5 * LEFT + DOWN,
+        "comet_height": 0.3,
+    }
+
+    def construct(self):
+        self.add_sun()
+        self.show_small_sweep()
+        self.show_sweep_dimensions()
+        self.show_conservation_of_angular_momentum()
+
+    def show_small_sweep(self):
+        sun_center = self.sun_center
+        comet_start = self.comet_start_point
+        comet_end = self.comet_end_point
+        triangle = Polygon(
+            sun_center, comet_start, comet_end,
+            fill_opacity=1,
+            fill_color=COBALT,
+            stroke_width=0,
+        )
+        triangle.save_state()
+        alt_triangle = Polygon(
+            sun_center,
+            interpolate(comet_start, comet_end, 0.9),
+            comet_end
+        )
+        alt_triangle.match_style(triangle)
+
+        comet = self.get_comet()
+        comet.move_to(comet_start)
+
+        velocity_vector = Arrow(
+            comet_start, comet_end,
+            color=WHITE,
+            buff=0
+        )
+        velocity_vector_label = TexMobject("\\vec{\\textbf{v}}")
+        velocity_vector_label.next_to(
+            velocity_vector.get_center(), UL,
+            buff=SMALL_BUFF
+        )
+
+        small_time_label = TextMobject(
+            "Small", "time", "$\\Delta t$",
+        )
+        small_time_label.to_edge(UP)
+        small = small_time_label.get_part_by_tex("Small")
+        small_rect = SurroundingRectangle(small)
+
+        self.add_foreground_mobjects(comet)
+        self.play(
+            ShowCreation(
+                triangle,
+                rate_func=lambda t: interpolate(1.0 / 3, 2.0 / 3, t)
+            ),
+            MaintainPositionRelativeTo(
+                velocity_vector, comet
+            ),
+            MaintainPositionRelativeTo(
+                velocity_vector_label,
+                velocity_vector,
+            ),
+            ApplyMethod(
+                comet.move_to, comet_end,
+                rate_func=None,
+            ),
+            run_time=2,
+        )
+        self.play(Write(small_time_label), run_time=2)
+        self.wait()
+        self.play(
+            Transform(triangle, alt_triangle),
+            ShowCreation(small_rect),
+            small.set_color, YELLOW,
+        )
+        self.wait()
+        self.play(
+            Restore(triangle),
+            FadeOut(small_rect),
+            small.set_color, WHITE,
+        )
+        self.wait()
+
+        self.triangle = triangle
+        self.comet = comet
+        self.delta_t = small_time_label.get_part_by_tex(
+            "$\\Delta t$"
+        )
+        self.velocity_vector = velocity_vector
+        self.small_time_label = small_time_label
+
+    def show_sweep_dimensions(self):
+        triangle = self.triangle
+        # velocity_vector = self.velocity_vector
+        delta_t = self.delta_t
+        comet = self.comet
+
+        triangle_points = triangle.get_anchors()[:3]
+        top = triangle_points[1]
+
+        area_label = TexMobject(
+            "\\text{Area}", "=", "\\frac{1}{2}",
+            "\\text{Base}", "\\times", "\\text{Height}",
+        )
+        area_label.set_color_by_tex_to_color_map({
+            "Base": PINK,
+            "Height": YELLOW,
+        })
+        area_label.to_edge(UP)
+        equals = area_label.get_part_by_tex("=")
+        area_expression = TexMobject(
+            "=", "\\frac{1}{2}", "R", "\\times",
+            "\\vec{\\textbf{v}}_\\perp",
+            "\\Delta t",
+        )
+        area_expression.set_color_by_tex_to_color_map({
+            "R": PINK,
+            "textbf{v}": YELLOW,
+        })
+        area_expression.next_to(area_label, DOWN)
+        area_expression.align_to(equals, LEFT)
+
+        self.R_v_perp = VGroup(*area_expression[-4:-1])
+        self.R_v_perp_rect = SurroundingRectangle(
+            self.R_v_perp,
+            stroke_color=BLUE,
+            fill_color=BLACK,
+            fill_opacity=1,
+        )
+
+        base = Line(triangle_points[2], triangle_points[0])
+        base.set_stroke(PINK, 3)
+        base_point = line_intersection(
+            base.get_start_and_end(),
+            [top, top + DOWN]
+        )
+        height = Line(top, base_point)
+        height.set_stroke(YELLOW, 3)
+
+        radius_label = TextMobject("Radius")
+        radius_label.next_to(base, DOWN, SMALL_BUFF)
+        radius_label.match_color(base)
+
+        R_term = area_expression.get_part_by_tex("R")
+        R_term.save_state()
+        R_term.move_to(radius_label[0])
+        R_term.set_fill(opacity=0.5)
+
+        v_perp = Arrow(*height.get_start_and_end(), buff=0)
+        v_perp.set_color(YELLOW)
+        v_perp.shift(comet.get_center() - v_perp.get_start())
+        v_perp_label = TexMobject(
+            "\\vec{\\textbf{v}}_\\perp"
+        )
+        v_perp_label.set_color(YELLOW)
+        v_perp_label.next_to(v_perp, RIGHT, buff=SMALL_BUFF)
+
+        v_perp_delta_t = VGroup(v_perp_label.copy(), delta_t.copy())
+        v_perp_delta_t.generate_target()
+        v_perp_delta_t.target.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        v_perp_delta_t.target.next_to(height, RIGHT, SMALL_BUFF)
+        self.small_time_label.add(v_perp_delta_t[1])
+
+        self.play(
+            FadeInFromDown(area_label),
+            self.small_time_label.scale, 0.5,
+            self.small_time_label.to_corner, UL,
+        )
+        self.wait()
+        self.play(
+            ShowCreation(base),
+            Write(radius_label),
+        )
+        self.wait()
+        self.play(ShowCreation(height))
+        self.wait()
+        self.play(
+            GrowArrow(v_perp),
+            Write(v_perp_label, run_time=1),
+        )
+        self.wait()
+        self.play(MoveToTarget(v_perp_delta_t))
+        self.wait()
+        self.play(*[
+            ReplacementTransform(
+                area_label.get_part_by_tex(tex).copy(),
+                area_expression.get_part_by_tex(tex),
+            )
+            for tex in "=", "\\frac{1}{2}", "\\times"
+        ])
+        self.play(Restore(R_term))
+        self.play(ReplacementTransform(
+            v_perp_delta_t.copy(),
+            VGroup(*area_expression[-2:])
+        ))
+        self.wait()
+
+    def show_conservation_of_angular_momentum(self):
+        R_v_perp = self.R_v_perp
+        R_v_perp_rect = self.R_v_perp_rect
+        sun_center = self.sun_center
+        comet = self.comet
+        comet.save_state()
+
+        vector_field = VectorField(
+            get_force_field_func((sun_center, -1))
+        )
+        vector_field.set_fill(opacity=0.8)
+        vector_field.sort_submobjects(
+            lambda p: -np.linalg.norm(p - sun_center)
+        )
+
+        stays_constant = TextMobject("Stays constant")
+        stays_constant.next_to(
+            R_v_perp_rect, DR, buff=MED_LARGE_BUFF
+        )
+        stays_constant.match_color(R_v_perp_rect)
+        stays_constant_arrow = Arrow(
+            stays_constant.get_left(),
+            R_v_perp_rect.get_bottom(),
+            color=R_v_perp_rect.get_color()
+        )
+
+        sun_dot = Dot(sun_center, fill_opacity=0.25)
+        big_dot = Dot(fill_opacity=0, radius=FRAME_WIDTH)
+
+        R_v_perp.save_state()
+        R_v_perp.generate_target()
+        R_v_perp.target.to_edge(LEFT, buff=MED_LARGE_BUFF)
+        lp, rp = parens = TexMobject("()")
+        lp.next_to(R_v_perp.target, LEFT)
+        rp.next_to(R_v_perp.target, RIGHT)
+
+        self.play(Transform(
+            big_dot, sun_dot,
+            run_time=1,
+            remover=True
+        ))
+        self.wait()
+        self.play(
+            DrawBorderThenFill(R_v_perp_rect),
+            Animation(R_v_perp),
+            Write(stays_constant, run_time=1),
+            GrowArrow(stays_constant_arrow),
+        )
+        self.wait()
+        foreground = VGroup(*self.get_mobjects())
+        self.play(
+            LaggedStart(GrowArrow, vector_field),
+            Animation(foreground)
+        )
+        for x in range(3):
+            self.play(
+                LaggedStart(
+                    ApplyFunction, vector_field,
+                    lambda mob: (lambda m: m.scale(1.1).set_fill(opacity=1), mob),
+                    rate_func=there_and_back,
+                    run_time=1
+                ),
+                Animation(foreground)
+            )
+        self.play(
+            FadeIn(parens),
+            MoveToTarget(R_v_perp),
+        )
+        self.play(
+            comet.scale, 2,
+            comet.next_to, parens, RIGHT, {"buff": SMALL_BUFF}
+        )
+        self.wait()
+        self.play(
+            FadeOut(parens),
+            R_v_perp.restore,
+            comet.restore,
+        )
+        self.wait(3)
+
+
+class KeplersSecondLawImage(KeplersSecondLaw):
+    CONFIG = {
+        "animate_sun": False,
+        "n_sample_sweeps": 8,
+        "fade_sample_areas": False,
+    }
+
+    def construct(self):
+        self.add_sun()
+        self.add_foreground_mobjects(self.sun)
+        self.add_orbit()
+        self.add_foreground_mobjects(self.comet)
+        self.show_several_sweeps()
+
+
+class HistoryOfAngularMomentum(TeacherStudentsScene):
+    CONFIG = {
+        "camera_config": {"fill_opacity": 1}
+    }
+
+    def construct(self):
+        am = VGroup(TextMobject("Angular momentum"))
+        k2l = TextMobject("Kepler's 2nd law")
+        arrow = Arrow(ORIGIN, RIGHT)
+
+        group = VGroup(am, arrow, k2l)
+        group.arrange_submobjects(RIGHT)
+        group.next_to(self.hold_up_spot, UL)
+
+        k2l_image = ImageMobject("Kepler2ndLaw")
+        k2l_image.match_width(k2l)
+        k2l_image.next_to(k2l, UP)
+        k2l.add(k2l_image)
+
+        angular_momentum_formula = TexMobject(
+            "R", "\\times", "m", "\\vec{\\textbf{v}}_\\perp",
+        )
+        angular_momentum_formula.set_color_by_tex_to_color_map({
+            "R": PINK,
+            "v": YELLOW,
+        })
+        angular_momentum_formula.next_to(am, UP)
+        am.add(angular_momentum_formula)
+
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            FadeInFromDown(group),
+            self.get_student_changes(*3 * ["pondering"])
+        )
+        self.wait()
+        self.play(
+            am.next_to, arrow, RIGHT,
+            {"index_of_submobject_to_align": 0},
+            k2l.next_to, arrow, LEFT,
+            {"index_of_submobject_to_align": 0},
+            path_arc=90 * DEGREES,
+            run_time=2
+        )
+        self.wait(3)
+
+
+class FeynmanRecountingNewton(Scene):
+    def construct(self):
+        pass
