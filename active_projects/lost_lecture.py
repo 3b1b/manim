@@ -706,23 +706,8 @@ class AskAboutEllipses(TheMotionOfPlanets):
         )
 
         # Force arrow
-        force_arrow = Arrow(LEFT, RIGHT, color=YELLOW)
-
-        def update_force_arrow(arrow):
-            radius = radial_line.get_length()
-            # target_length = 1 / radius**2
-            target_length = 1 / radius  # Lies!
-            arrow.scale(
-                target_length / arrow.get_length()
-            )
-            arrow.rotate(
-                np.pi + radial_line.get_angle() - arrow.get_angle()
-            )
-            arrow.shift(
-                radial_line.get_end() - arrow.get_start()
-            )
-        force_arrow_animation = ContinualUpdateFromFunc(
-            force_arrow, update_force_arrow
+        force_arrow, force_arrow_animation = self.get_force_arrow_and_update(
+            self.comet
         )
 
         inverse_square_law_words = TextMobject(
@@ -831,6 +816,43 @@ class AskAboutEllipses(TheMotionOfPlanets):
         ]
         return ellipse
 
+    def get_force_arrow_and_update(self, comet, scale_factor=1):
+        force_arrow = Arrow(LEFT, RIGHT, color=YELLOW)
+        sun = self.sun
+
+        def update_force_arrow(arrow):
+            radial_line = Line(
+                sun.get_center(), comet.get_center()
+            )
+            radius = radial_line.get_length()
+            # target_length = 1 / radius**2
+            target_length = scale_factor / radius  # Lies!
+            arrow.scale(
+                target_length / arrow.get_length()
+            )
+            arrow.rotate(
+                np.pi + radial_line.get_angle() - arrow.get_angle()
+            )
+            arrow.shift(
+                radial_line.get_end() - arrow.get_start()
+            )
+        force_arrow_animation = ContinualUpdateFromFunc(
+            force_arrow, update_force_arrow
+        )
+
+        return force_arrow, force_arrow_animation
+
+    def get_radial_line_and_update(self, comet):
+        line = Line(LEFT, RIGHT)
+        line.set_stroke(LIGHT_GREY, 1)
+        line_update = ContinualUpdateFromFunc(
+            line, lambda l: l.put_start_and_end_on(
+                self.sun.get_center(),
+                comet.get_center(),
+            )
+        )
+        return line, line_update
+
 
 class FeynmanElementaryQuote(Scene):
     def construct(self):
@@ -926,6 +948,47 @@ class AskAboutInfiniteIntelligence(TeacherStudentsScene):
         self.wait()
         self.look_at(self.screen)
         self.wait(5)
+
+
+class TableOfContents(Scene):
+    def construct(self):
+        items = VGroup(
+            TextMobject("How the ellipse will arise"),
+            TextMobject("Kepler's 2nd law"),
+            TextMobject("The shape of velocities"),
+        )
+        items.arrange_submobjects(
+            DOWN, buff=LARGE_BUFF, aligned_edge=LEFT
+        )
+        items.to_edge(LEFT, buff=1.5)
+        for item in items:
+            item.add(Dot().next_to(item, LEFT))
+            item.generate_target()
+            item.target.set_fill(GREY, opacity=0.5)
+
+        title = Title("The plan")
+        scale_factor = 1.2
+
+        self.add(title)
+        self.play(LaggedStart(
+            FadeIn, items,
+            run_time=1,
+            lag_ratio=0.7,
+        ))
+        self.wait()
+        for item in items:
+            other_items = VGroup(*filter(
+                lambda m: m is not item,
+                items
+            ))
+            new_item = item.copy()
+            new_item.scale(scale_factor, about_edge=LEFT)
+            new_item.set_fill(WHITE, 1)
+            self.play(
+                Transform(item, new_item),
+                *map(MoveToTarget, other_items)
+            )
+            self.wait()
 
 
 class ShowEllipseDefiningProperty(Scene):
@@ -2414,5 +2477,238 @@ class HistoryOfAngularMomentum(TeacherStudentsScene):
 
 
 class FeynmanRecountingNewton(Scene):
+    CONFIG = {
+        "camera_config": {"background_opacity": 1},
+    }
+
     def construct(self):
-        pass
+        feynman_teaching = ImageMobject("Feynman_teaching")
+        feynman_teaching.scale_to_fit_width(FRAME_WIDTH)
+
+        newton = ImageMobject("Newton")
+        principia = ImageMobject("Principia_equal_area")
+        images = [newton, principia]
+        for image in images:
+            image.scale_to_fit_height(5)
+        newton.to_corner(UL)
+        principia.next_to(newton, RIGHT)
+        for image in images:
+            image.rect = SurroundingRectangle(
+                image, color=WHITE, buff=0,
+            )
+
+        self.play(FadeInFromDown(feynman_teaching, run_time=2))
+        self.wait()
+        self.play(
+            FadeInFromDown(newton),
+            FadeInFromDown(newton.rect),
+        )
+        self.wait()
+        self.play(*[
+            FadeInAndShiftFromDirection(
+                mob, direction=3 * LEFT
+            )
+            for mob in principia, principia.rect
+        ])
+        self.wait()
+
+
+class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
+    CONFIG = {
+        "animate_sun": False,
+        "sun_center": 2 * RIGHT,
+        "a": 4.0,
+        "b": 3.5,
+        "num_vectors": 25,
+    }
+
+    def construct(self):
+        self.setup_orbit()
+        self.warp_orbit()
+        self.reference_inverse_square_law()
+        self.show_velocity_vectors()
+        self.collect_velocity_vectors()
+
+    def setup_orbit(self):
+        self.add_sun()
+        self.add_orbit()
+        self.add_foreground_mobjects(self.comet)
+
+    def warp_orbit(self):
+        def func(z, c=6):
+            return 1 * (np.exp((1.0 / c) * (z) + 1) - np.exp(1))
+
+        ellipse = self.ellipse
+        ellipse.save_state()
+        ellipse.generate_target()
+        ellipse.target.apply_complex_function(func)
+        ellipse.target.replace(ellipse, dim_to_match=0)
+
+        self.wait(5)
+        self.play(MoveToTarget(ellipse, run_time=2))
+        self.wait(5)
+
+    def reference_inverse_square_law(self):
+        ellipse = self.ellipse
+        force_equation = TexMobject(
+            "F", "=", "{G", "M", "m", "\\over", "R^2}"
+        )
+        force_equation.move_to(ellipse)
+        force_equation.set_color_by_tex("F", YELLOW)
+
+        force_arrow, force_arrow_update = self.get_force_arrow_and_update(
+            self.comet, scale_factor=3,
+        )
+        radial_line, radial_line_update = self.get_radial_line_and_update(
+            self.comet
+        )
+
+        self.add(radial_line_update)
+        self.add(force_arrow_update)
+        self.play(
+            Restore(ellipse),
+            Write(force_equation),
+            UpdateFromAlphaFunc(
+                force_arrow,
+                lambda m, a: m.set_fill(opacity=a)
+            ),
+            UpdateFromAlphaFunc(
+                radial_line,
+                lambda m, a: m.set_stroke(width=a)
+            ),
+        )
+        self.wait(10)
+
+    def show_velocity_vectors(self):
+        alphas = np.linspace(0, 1, self.num_vectors, endpoint=False)
+        vectors = VGroup(*[
+            self.get_velocity_vector(alpha)
+            for alpha in alphas
+        ])
+
+        moving_vector = self.get_velocity_vector(0)
+
+        def update_moving_vector(vector):
+            new_vector = self.get_velocity_vector(
+                self.orbit.proportion,
+                # scalar=4.0,
+            )
+            Transform(vector, new_vector).update(1)
+
+        moving_vector_animation = ContinualUpdateFromFunc(
+            moving_vector, update_moving_vector
+        )
+
+        self.play(LaggedStart(
+            ShowCreation, vectors,
+            lag_ratio=0.2,
+            run_time=3,
+        ))
+        self.wait(5)
+
+        self.add(moving_vector_animation)
+        self.play(
+            FadeOut(vectors),
+            VFadeIn(moving_vector)
+        )
+        self.wait(10)
+        vectors.set_fill(opacity=0.5)
+        self.play(
+            LaggedStart(ShowCreation, vectors),
+            Animation(moving_vector)
+        )
+        self.wait(5)
+
+        self.velocity_vectors = vectors
+        self.moving_vector = moving_vector
+
+    def collect_velocity_vectors(self):
+        vectors = self.velocity_vectors.copy()
+        frame = self.camera_frame
+        ellipse = self.ellipse
+
+        frame_shift = 2.5 * LEFT
+        root_point = ellipse.get_left() + 3 * LEFT + 1 * UP
+        vector_targets = VGroup()
+        for vector in vectors:
+            vector.target = Arrow(
+                root_point,
+                root_point + vector.get_vector(),
+                buff=0,
+                rectangular_stem_width=0.025,
+                tip_length=0.2,
+                color=vector.get_color(),
+            )
+            vector.target.add_to_back(
+                vector.target.copy().set_stroke(BLACK, 5)
+            )
+            vector_targets.add(vector.target)
+
+        circle = Circle(color=YELLOW)
+        circle.replace(vector_targets)
+
+        velocity_space = TextMobject("Velocity space")
+        velocity_space.next_to(circle, UP)
+
+        rect = SurroundingRectangle(
+            VGroup(circle, velocity_space),
+            buff=MED_LARGE_BUFF,
+            color=WHITE,
+        )
+
+        self.play(
+            ApplyMethod(
+                frame.shift, frame_shift,
+                run_time=2,
+            ),
+            LaggedStart(
+                MoveToTarget, vectors,
+                run_time=4,
+            ),
+            FadeInFromDown(velocity_space),
+            FadeInFromDown(rect),
+        )
+        self.wait(2)
+        self.play(
+            ShowCreation(circle),
+            Animation(vectors)
+        )
+        self.wait(24)
+
+    # Helpers
+    def get_velocity_vector(self, alpha, d_alpha=0.01, scalar=3.0):
+        norm = np.linalg.norm
+        ellipse = self.ellipse
+        sun_center = self.sun.get_center()
+
+        min_length = 0.1 * scalar
+        max_length = 0.5 * scalar
+
+        p1, p2 = [
+            ellipse.point_from_proportion(a)
+            for a in alpha, alpha + d_alpha
+        ]
+        vector = Arrow(
+            p1, p2, buff=0
+        )
+        radius_vector = p1 - sun_center
+        curr_v_perp = norm(np.cross(
+            vector.get_vector(),
+            radius_vector / norm(radius_vector)
+        ))
+        vector.scale(
+            scalar / (norm(curr_v_perp) * norm(radius_vector)),
+            about_point=vector.get_start()
+        )
+        vector.set_color(
+            interpolate_color(
+                BLUE, RED, inverse_interpolate(
+                    min_length, max_length,
+                    vector.get_length()
+                )
+            )
+        )
+        vector.add_to_back(
+            vector.copy().set_stroke(BLACK, 5)
+        )
+        return vector
