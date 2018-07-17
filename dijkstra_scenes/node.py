@@ -15,6 +15,10 @@ class Node(Component):
         Component.__init__(self, point, labels=labels, mobject=mobject,
                 scale_factor=scale_factor, **kwargs)
 
+    def __str__(self):
+        return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])
+    __repr__ = __str__
+
     @staticmethod
     def assert_primitive(point):
         try:
@@ -44,9 +48,20 @@ class Node(Component):
                     ret.set_color(color)
             return ret
 
-    def __str__(self):
-        return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])
-    __repr__ = __str__
+    def update(self, factor=None, **kwargs):
+        new_mob = self.mobject.copy()
+
+        if factor is not None:
+            new_mob.scale(factor)
+            new_mob.radius *= factor
+
+        color = kwargs.get("color", None)
+        if color is not None:
+            new_mob.set_color(color)
+
+        ret = ReplacementTransform(self.mobject, new_mob, parent=self)
+        self.mobject = new_mob
+        return ret
 
     def enlarge(self, **kwargs):
         color = None
@@ -59,14 +74,7 @@ class Node(Component):
             factor = (LABELED_NODE_FACTOR * self.scale_factor)
         if "color" in kwargs and kwargs["color"] is not None:
             color = kwargs["color"]
-
-        new_node = self.mobject.copy().scale(factor)
-        new_node.radius *= factor
-        if color is not None:
-            new_node.set_color(color)
-        ret = ReplacementTransform(self.mobject, new_node, parent=self)
-        self.mobject = new_node
-        return ret
+        return self.update(factor=factor, color=color)
 
     def get_label_height(self, label, num_labels):
         return self.scale_factor * HEIGHT_RELATIVE_TO_NODE[num_labels] * \
@@ -79,14 +87,7 @@ class Node(Component):
             return None
 
     def change_color(self, color):
-        new_circle = self.mobject.copy().set_color(color)
-        ret = ReplacementTransform(
-            self.mobject,
-            new_circle,
-            parent=self,
-        )
-        self.mobject = new_circle
-        return ret
+        return self.update(color=color)
 
 
     """
