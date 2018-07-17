@@ -9,7 +9,7 @@ COBALT = "#0047AB"
 
 class Orbiting(ContinualAnimation):
     CONFIG = {
-        "rate": 0.3,
+        "rate": 7.5,
     }
 
     def __init__(self, planet, star, ellipse, **kwargs):
@@ -24,18 +24,28 @@ class Orbiting(ContinualAnimation):
 
     def update_mobject(self, dt):
         # time = self.internal_time
-        rate = self.rate
 
         planet = self.planet
         star = self.star
         ellipse = self.ellipse
 
-        rate *= 1 / np.linalg.norm(
-            planet.get_center() - star.get_center()
+        rate = self.rate
+        radius_vector = planet.get_center() - star.get_center()
+        rate *= 1.0 / np.linalg.norm(radius_vector)
+
+        prop = self.proportion
+        d_prop = 0.001
+        ds = np.linalg.norm(op.add(
+            ellipse.point_from_proportion((prop + d_prop) % 1),
+            -ellipse.point_from_proportion(prop),
+        ))
+
+        delta_prop = (d_prop / ds) * rate * dt
+
+        self.proportion = (self.proportion + delta_prop) % 1
+        planet.move_to(
+            ellipse.point_from_proportion(self.proportion)
         )
-        self.proportion += rate * dt
-        self.proportion = self.proportion % 1
-        planet.move_to(ellipse.point_from_proportion(self.proportion))
 
 
 class SunAnimation(ContinualAnimation):
@@ -812,7 +822,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
         )
         self.focus_points = [
             self.sun.get_center(),
-            self.sun.get_center() + c * LEFT,
+            self.sun.get_center() + 2 * c * LEFT,
         ]
         return ellipse
 
@@ -2515,7 +2525,7 @@ class FeynmanRecountingNewton(Scene):
 
 class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
     CONFIG = {
-        "animate_sun": False,
+        "animate_sun": True,
         "sun_center": 2 * RIGHT,
         "a": 4.0,
         "b": 3.5,
@@ -2535,14 +2545,15 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
         self.add_foreground_mobjects(self.comet)
 
     def warp_orbit(self):
-        def func(z, c=6):
+        def func(z, c=3.5):
             return 1 * (np.exp((1.0 / c) * (z) + 1) - np.exp(1))
 
         ellipse = self.ellipse
         ellipse.save_state()
         ellipse.generate_target()
+        ellipse.target.stretch(0.7, 1)
         ellipse.target.apply_complex_function(func)
-        ellipse.target.replace(ellipse, dim_to_match=0)
+        ellipse.target.replace(ellipse, dim_to_match=1)
 
         self.wait(5)
         self.play(MoveToTarget(ellipse, run_time=2))
@@ -2646,6 +2657,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
 
         circle = Circle(color=YELLOW)
         circle.replace(vector_targets)
+        circle.scale(1.04)
 
         velocity_space = TextMobject("Velocity space")
         velocity_space.next_to(circle, UP)
@@ -2712,3 +2724,284 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
             vector.copy().set_stroke(BLACK, 5)
         )
         return vector
+
+
+class AskWhy(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Um...why?",
+            target_mode="confused",
+            student_index=2,
+            bubble_kwargs={"direction": LEFT},
+        )
+        self.play(
+            self.teacher.change, "happy",
+            self.get_student_changes(
+                "raise_left_hand", "sassy", "confused"
+            )
+        )
+        self.wait(5)
+
+
+class FeynmanConfusedByNewton(Scene):
+    def construct(self):
+        pass
+
+
+class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
+    CONFIG = {
+        "animate_sun": False,
+        "theta": 30 * DEGREES,
+    }
+
+    def construct(self):
+        self.setup_orbit()
+        self.show_equal_angle_slices()
+        self.label_points_P_theta()
+        self.ask_about_time_per_slice()
+        self.areas_are_proportional_to_radius_squared()
+        self.show_inverse_square_law()
+        self.show_change_in_velocity()
+        self.directly_compare_velocity_vectors()
+        self.show_equal_angle_changes()
+
+    def setup_orbit(self):
+        IntroduceShapeOfVelocities.setup_orbit(self)
+        self.remove(self.orbit)
+        self.add(self.comet)
+
+    def show_equal_angle_slices(self):
+        sun_center = self.sun.get_center()
+        ellipse = self.ellipse
+
+        def get_cos_angle_diff(v1, v2):
+            return np.dot(
+                v1 / np.linalg.norm(v1),
+                v2 / np.linalg.norm(v2),
+            )
+
+        lines = VGroup()
+        angle_arcs = VGroup()
+        thetas = VGroup()
+        angles = np.arange(0, TAU, self.theta)
+        for angle in angles:
+            prop = angle / TAU
+            vect = rotate_vector(RIGHT, angle)
+            end_point = ellipse.point_from_proportion(prop)
+            curr_cos = get_cos_angle_diff(
+                end_point - sun_center, vect
+            )
+            coss_diff = (1 - curr_cos)
+            while abs(coss_diff) > 0.00001:
+                d_prop = 0.001
+                alt_end = ellipse.point_from_proportion(
+                    (prop + d_prop) % 1
+                )
+                alt_cos = get_cos_angle_diff(alt_end - sun_center, vect)
+                d_cos = (alt_cos - curr_cos)
+
+                delta_prop = (coss_diff / d_cos) * d_prop
+                prop += delta_prop
+                end_point = ellipse.point_from_proportion(prop)
+                curr_cos = get_cos_angle_diff(end_point - sun_center, vect)
+                coss_diff = 1 - curr_cos
+
+            line = Line(sun_center, end_point)
+            line.prop = prop
+            lines.add(line)
+
+            angle_arc = AnnularSector(
+                angle=self.theta,
+                inner_radius=1,
+                outer_radius=1.05,
+            )
+            angle_arc.rotate(angle, about_point=ORIGIN)
+            angle_arc.scale(0.5, about_point=ORIGIN)
+            angle_arc.shift(sun_center)
+            angle_arc.mid_angle = angle + self.theta / 2
+            angle_arcs.add(angle_arc)
+
+            theta = TexMobject("\\theta")
+            theta.scale(0.6)
+            vect = rotate_vector(RIGHT, angle_arc.mid_angle)
+            theta.move_to(
+                angle_arc.get_center() + 0.2 * vect
+            )
+            thetas.add(theta)
+
+        arcs = VGroup()
+        wedges = VGroup()
+        for l1, l2 in adjacent_pairs(lines):
+            arc = VMobject()
+            arc.pointwise_become_partial(
+                ellipse, l1.prop, (l2.prop or 1.0)
+            )
+            arcs.add(arc)
+
+            wedge = VMobject()
+            wedge.append_vectorized_mobject(
+                Line(sun_center, arc.points[0])
+            )
+            wedge.append_vectorized_mobject(arc)
+            wedge.append_vectorized_mobject(
+                Line(arc.points[-1], sun_center)
+            )
+            wedges.add(wedge)
+
+        lines.set_stroke(LIGHT_GREY, 2)
+        angle_arcs.set_color_by_gradient(
+            YELLOW, BLUE, RED, PINK, YELLOW
+        )
+        arcs.set_color_by_gradient(BLUE, YELLOW)
+        wedges.set_stroke(width=0)
+        wedges.set_fill(opacity=1)
+        wedges.set_color_by_gradient(BLUE, COBALT, BLUE_E, BLUE)
+
+        kwargs = {
+            "run_time": 6,
+            "lag_ratio": 0.2,
+            "rate_func": there_and_back,
+        }
+        faders = VGroup(wedges, angle_arcs, thetas)
+        faders.set_fill(opacity=0.4)
+        thetas.set_fill(opacity=0)
+
+        self.play(
+            FadeIn(faders),
+            *map(ShowCreation, lines)
+        )
+        self.play(*[
+            LaggedStart(
+                ApplyMethod, fader,
+                lambda m: (m.set_fill, {"opacity": 1}),
+                **kwargs
+            )
+            for fader in faders
+        ] + [Animation(lines)])
+        self.wait()
+
+        self.lines = lines
+        self.wedges = wedges
+        self.arcs = arcs
+        self.angle_arcs = angle_arcs
+        self.thetas = thetas
+
+    def label_points_P_theta(self):
+        sun_center = self.sun.get_center()
+        lines = self.lines
+        thick_lines = lines.copy().set_stroke(YELLOW, 4)
+
+        frame_scale_factor = 1.2
+        frame = self.camera_frame
+
+        P_labels = VGroup()
+        dots = VGroup()
+        for line in lines:
+            dot = Dot(line.get_end())
+            dot.scale(0.5)
+            dot.set_color(YELLOW)
+            dots.add(dot)
+
+            angle = angle_of_vector(line.get_end() - sun_center)
+            angle = angle % TAU
+            angle_degrees = angle * (360 / TAU)
+            P_label = TexMobject(
+                "P_{%d^\\circ}" % int(np.round(angle_degrees, -1))
+            )
+            P_label.next_to(
+                dot, line.get_unit_vector(),
+                buff=SMALL_BUFF,
+                submobject_to_align=P_label[:2],
+            )
+            P_labels.add(P_label)
+
+        self.play(
+            LaggedStart(GrowFromCenter, dots),
+            LaggedStart(Write, P_labels),
+            Animation(self.comet),
+            frame.scale, frame_scale_factor
+        )
+        self.wait(2)
+        self.play(*map(FadeOut, filter(
+            lambda pl: pl is not P_labels[1],
+            P_labels
+        )))
+        self.play(ShowCreationThenDestruction(thick_lines[1]))
+        self.wait()
+        for i in 1, 2, 3:
+            self.play(
+                FadeOut(P_labels[i]),
+                FadeIn(P_labels[i + 1]),
+            )
+            self.play(ShowCreationThenDestruction(thick_lines[i + 1]))
+            self.wait()
+        self.play(
+            FadeOut(P_labels[4]),
+            # frame.scale, 1.0 / frame_scale_factor
+        )
+
+        self.dots = dots
+        self.P_labels = P_labels
+
+    def ask_about_time_per_slice(self):
+        wedge1 = self.wedges[0]
+        wedge2 = self.wedges[6]
+        arc1 = self.arcs[0]
+        arc2 = self.arcs[6]
+        comet = self.comet
+
+        frame = self.camera_frame
+
+        words1 = TextMobject(
+            "Time spent \\\\ traversing \\\\ this slice?"
+        )
+        words2 = TextMobject("How about \\\\ this one?")
+
+        words1.to_corner(UR)
+        words2.next_to(wedge2, LEFT, MED_LARGE_BUFF)
+
+        arrow1 = Arrow(
+            words1.get_bottom(),
+            wedge1.get_center() + 0.5 * DOWN,
+            color=WHITE,
+        )
+        arrow2 = Arrow(
+            words2.get_right(),
+            wedge2.get_center() + 0.5 * UL,
+            color=WHITE
+        )
+
+        foreground = VGroup(
+            self.ellipse, self.angle_arcs, self.lines,
+            self.dots, comet,
+        )
+        self.play(
+            Write(words1),
+            wedge1.set_fill, {"opacity": 1},
+            GrowArrow(arrow1),
+            Animation(foreground),
+        )
+        self.play(MoveAlongPath(comet, arc1, rate_func=None))
+        self.play(
+            Write(words2),
+            wedge2.set_fill, {"opacity": 1},
+            Write(arrow2),
+            Animation(foreground),
+        )
+        self.play(MoveAlongPath(comet, arc2, rate_func=None, run_time=3))
+        self.wait()
+
+    def areas_are_proportional_to_radius_squared(self):
+        pass
+
+    def show_inverse_square_law(self):
+        pass
+
+    def show_change_in_velocity(self):
+        pass
+
+    def directly_compare_velocity_vectors(self):
+        pass
+
+    def show_equal_angle_changes(self):
+        pass
