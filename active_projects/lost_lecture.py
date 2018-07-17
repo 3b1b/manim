@@ -2597,18 +2597,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
             for alpha in alphas
         ])
 
-        moving_vector = self.get_velocity_vector(0)
-
-        def update_moving_vector(vector):
-            new_vector = self.get_velocity_vector(
-                self.orbit.proportion,
-                # scalar=4.0,
-            )
-            Transform(vector, new_vector).update(1)
-
-        moving_vector_animation = ContinualUpdateFromFunc(
-            moving_vector, update_moving_vector
-        )
+        moving_vector, moving_vector_animation = self.get_velocity_vector_and_update()
 
         self.play(LaggedStart(
             ShowCreation, vectors,
@@ -2725,6 +2714,20 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
         )
         return vector
 
+    def get_velocity_vector_and_update(self):
+        moving_vector = self.get_velocity_vector(0)
+
+        def update_moving_vector(vector):
+            new_vector = self.get_velocity_vector(
+                self.orbit.proportion,
+            )
+            Transform(vector, new_vector).update(1)
+
+        moving_vector_animation = ContinualUpdateFromFunc(
+            moving_vector, update_moving_vector
+        )
+        return moving_vector, moving_vector_animation
+
 
 class AskWhy(TeacherStudentsScene):
     def construct(self):
@@ -2752,6 +2755,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
     CONFIG = {
         "animate_sun": False,
         "theta": 30 * DEGREES,
+        # "theta": 15 * DEGREES,
     }
 
     def construct(self):
@@ -2761,7 +2765,6 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         self.ask_about_time_per_slice()
         self.areas_are_proportional_to_radius_squared()
         self.show_inverse_square_law()
-        self.show_change_in_velocity()
         self.directly_compare_velocity_vectors()
         self.show_equal_angle_changes()
 
@@ -2906,7 +2909,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             angle = angle % TAU
             angle_degrees = angle * (360 / TAU)
             P_label = TexMobject(
-                "P_{%d^\\circ}" % int(np.round(angle_degrees, -1))
+                "P_{%d^\\circ}" % int(np.round(angle_degrees))
             )
             P_label.next_to(
                 dot, line.get_unit_vector(),
@@ -2945,12 +2948,10 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
 
     def ask_about_time_per_slice(self):
         wedge1 = self.wedges[0]
-        wedge2 = self.wedges[6]
+        wedge2 = self.wedges[len(self.wedges) / 2]
         arc1 = self.arcs[0]
-        arc2 = self.arcs[6]
+        arc2 = self.arcs[len(self.arcs) / 2]
         comet = self.comet
-
-        frame = self.camera_frame
 
         words1 = TextMobject(
             "Time spent \\\\ traversing \\\\ this slice?"
@@ -2962,12 +2963,12 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
 
         arrow1 = Arrow(
             words1.get_bottom(),
-            wedge1.get_center() + 0.5 * DOWN,
+            wedge1.get_center() + wedge1.get_height() * DOWN / 2,
             color=WHITE,
         )
         arrow2 = Arrow(
             words2.get_right(),
-            wedge2.get_center() + 0.5 * UL,
+            wedge2.get_center() + wedge2.get_height() * UL / 4,
             color=WHITE
         )
 
@@ -2991,17 +2992,243 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         self.play(MoveAlongPath(comet, arc2, rate_func=None, run_time=3))
         self.wait()
 
+        self.area_questions = VGroup(words1, words2)
+        self.area_question_arrows = VGroup(arrow1, arrow2)
+        self.highlighted_wedges = VGroup(wedge1, wedge2)
+
     def areas_are_proportional_to_radius_squared(self):
-        pass
+        wedges = self.highlighted_wedges
+        wedge = wedges[1]
+        frame = self.camera_frame
+        ellipse = self.ellipse
+        sun_center = self.sun.get_center()
+
+        line = self.lines[len(self.lines) / 2]
+        thick_line = line.copy().set_stroke(PINK, 4)
+        radius_word = TextMobject("Radius")
+        radius_word.next_to(thick_line, UP, SMALL_BUFF)
+        radius_word.match_color(thick_line)
+
+        arc = self.arcs[len(self.arcs) / 2]
+        thick_arc = arc.copy().set_stroke(RED, 4)
+
+        scaling_group = VGroup(
+            wedge, thick_line, radius_word, thick_arc
+        )
+
+        expression = TextMobject(
+            "Time", "$\\propto$",
+            "Area", "$\\propto$", "$(\\text{Radius})^2$"
+        )
+        expression.next_to(ellipse, UP, LARGE_BUFF)
+
+        prop_to_brace = Brace(expression[1], DOWN, buff=SMALL_BUFF)
+        prop_to_words = TextMobject("(proportional to)")
+        prop_to_words.scale(0.7)
+        prop_to_words.next_to(prop_to_brace, DOWN, SMALL_BUFF)
+        VGroup(prop_to_words, prop_to_brace).set_color(GREEN)
+
+        self.play(
+            Write(expression[:3]),
+            frame.shift, 0.5 * UP,
+            FadeInFromDown(prop_to_words),
+            GrowFromCenter(prop_to_brace),
+        )
+        self.wait(2)
+        self.play(
+            ShowCreation(thick_line),
+            FadeInFromDown(radius_word)
+        )
+        self.wait()
+        self.play(ShowCreationThenDestruction(thick_arc))
+        self.play(ShowCreation(thick_arc))
+        self.wait()
+        self.play(Write(expression[3:]))
+        self.play(
+            scaling_group.scale, 0.5,
+            {"about_point": sun_center},
+            Animation(self.area_question_arrows),
+            Animation(self.dots),
+            Animation(self.comet),
+            rate_func=there_and_back,
+            run_time=4,
+        )
+        self.wait()
+
+        expression.add(prop_to_brace, prop_to_words)
+        self.proportionality_expression = expression
 
     def show_inverse_square_law(self):
-        pass
+        prop_exp = self.proportionality_expression
+        comet = self.comet
+        frame = self.camera_frame
+        ellipse = self.ellipse
+        orbit = self.orbit
+        next_line = self.lines[(len(self.lines) / 2) + 1]
 
-    def show_change_in_velocity(self):
-        pass
+        arc = self.arcs[len(self.arcs) / 2]
+
+        force_expression = TexMobject(
+            "ma", "=", "\\text{Force}",
+            "\\propto", "\\frac{1}{(\\text{Radius})^2}"
+        )
+        force_expression.next_to(ellipse, LEFT, MED_LARGE_BUFF)
+        force_expression.align_to(prop_exp, UP)
+        force_expression.set_color_by_tex("Force", YELLOW)
+
+        acceleration_expression = TexMobject(
+            "a", "=", "{\\Delta v",
+            "\\over", "\\Delta t}",
+            "\\propto", "{1 \\over (\\text{Radius})^2}"
+        )
+        acceleration_expression.next_to(
+            force_expression, DOWN, buff=0.75,
+            aligned_edge=LEFT
+        )
+
+        delta_v_expression = TexMobject(
+            "\\Delta v}", "\\propto",
+            "{\\Delta t", "\\over", "(\\text{Radius})^2}"
+        )
+        delta_v_expression.next_to(
+            acceleration_expression, DOWN, buff=0.75,
+            aligned_edge=LEFT
+        )
+        delta_t_numerator = delta_v_expression.get_part_by_tex(
+            "\\Delta t"
+        )
+        moving_R_squared = prop_exp.get_part_by_tex("Radius").copy()
+        moving_R_squared.generate_target()
+        moving_R_squared.target.move_to(delta_t_numerator, DOWN)
+        moving_R_squared.target.set_color(GREEN)
+
+        randy = Randolph()
+        randy.next_to(force_expression, DOWN, LARGE_BUFF)
+
+        force_vector, force_vector_update = self.get_force_arrow_and_update(
+            comet, scale_factor=3,
+        )
+        moving_vector, moving_vector_animation = self.get_velocity_vector_and_update()
+
+        self.play(
+            FadeOut(self.area_questions),
+            FadeOut(self.area_question_arrows),
+            FadeInFromDown(force_expression),
+            frame.shift, 2 * LEFT,
+        )
+        self.remove(*self.area_questions)
+        self.play(
+            randy.change, "confused", force_expression,
+            VFadeIn(randy)
+        )
+        self.wait(2)
+        self.play(
+            randy.change, "pondering", force_expression[0],
+            ShowPassingFlashAround(force_expression[:2]),
+        )
+        self.play(Blink(randy))
+        self.play(
+            FadeInFromDown(acceleration_expression),
+            randy.change, "hooray", force_expression,
+            randy.shift, 2 * DOWN,
+        )
+        self.wait(2)
+        self.play(Blink(randy))
+        self.play(randy.change, "thinking")
+        self.wait()
+
+        self.play(
+            comet.move_to, arc.points[0],
+            path_arc=90 * DEGREES
+        )
+        force_vector_update.update(0)
+        self.play(
+            Blink(randy),
+            GrowArrow(force_vector)
+        )
+        self.add(force_vector_update)
+        self.add_foreground_mobjects(comet)
+        # Slightly hacky orbit treatment here...
+        orbit.proportion = 0.5
+        moving_vector_animation.update(0)
+        start_velocity_vector = moving_vector.copy()
+        self.play(
+            GrowArrow(start_velocity_vector),
+            randy.look_at, moving_vector
+        )
+        self.add(moving_vector_animation)
+        self.add(orbit)
+        while orbit.proportion < next_line.prop:
+            self.wait(self.frame_duration)
+        self.remove(orbit)
+        self.add_foreground_mobjects(comet)
+        self.wait(2)
+        self.play(
+            randy.change, "pondering", force_expression,
+            randy.shift, 2 * DOWN,
+            FadeInFromDown(delta_v_expression)
+        )
+        self.play(Blink(randy))
+        self.wait(2)
+        self.play(
+            delta_t_numerator.scale, 1.5, {"about_edge": DOWN},
+            delta_t_numerator.set_color, YELLOW
+        )
+        self.play(CircleThenFadeAround(prop_exp[:-2]))
+        self.play(
+            FadeOut(delta_t_numerator),
+            MoveToTarget(moving_R_squared),
+            randy.change, "happy", delta_v_expression
+        )
+        self.wait()
+        self.play(FadeOut(randy))
+
+        self.start_velocity_vector = start_velocity_vector
+        self.end_velocity_vector = moving_vector.copy()
+        self.moving_vector = moving_vector
+        self.force_expressions = VGroup(
+            force_expression,
+            acceleration_expression,
+            delta_v_expression,
+        )
 
     def directly_compare_velocity_vectors(self):
-        pass
+        ellipse = self.ellipse
+        lines = self.lines
+        expressions = self.force_expressions
+        vectors = VGroup(*[
+            self.get_velocity_vector(line.prop)
+            for line in lines
+        ])
+
+        root_point = ellipse.get_left() + 3 * LEFT + DOWN
+        root_dot = Dot(root_point)
+
+        for vector in vectors:
+            vector.target = Arrow(
+                *vector.get_start_and_end(),
+                color=vector.get_color(),
+                buff=0
+            )
+            vector.target.scale(2)
+            vector.target.shift(
+                root_point - vector.target.get_start()
+            )
+            vector.target.add_to_back(
+                vector.target.copy().set_stroke(BLACK, 5)
+            )
+
+        self.play(LaggedStart(GrowArrow, vectors))
+        self.play(
+            LaggedStart(MoveToTarget, vectors),
+            GrowFromCenter(root_dot),
+            expressions.scale, 0.5, {"about_edge": UL}
+        )
 
     def show_equal_angle_changes(self):
+        pass
+
+
+class ShowMoreFinelyChoppedOrbit(ShowEqualAngleSlices):
+    def construct(self):
         pass
