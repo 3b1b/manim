@@ -368,6 +368,14 @@ class Line(VMobject):
     def get_vector(self):
         return self.get_end() - self.get_start()
 
+    def get_unit_vector(self):
+        vect = self.get_vector()
+        norm = np.linalg.norm(vect)
+        if norm == 0:
+            # TODO, is this the behavior I want?
+            return np.array(ORIGIN)
+        return vect / norm
+
     def get_start(self):
         return np.array(self.points[0])
 
