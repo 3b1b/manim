@@ -151,7 +151,8 @@ class FadeInAndShiftFromDirection(Transform):
     def __init__(self, mobject, direction=None, **kwargs):
         digest_config(self, kwargs)
         target = mobject.copy()
-        direction = direction or self.direction
+        if direction is None:
+            direction = self.direction
         mobject.shift(direction)
         mobject.fade(1)
         Transform.__init__(self, mobject, target, **kwargs)
@@ -173,7 +174,8 @@ class FadeOutAndShift(FadeOut):
 
     def __init__(self, mobject, direction=None, **kwargs):
         FadeOut.__init__(self, mobject, **kwargs)
-        direction = direction or self.direction
+        if direction is None:
+            direction = self.direction
         self.target_mobject.shift(direction)
 
 
