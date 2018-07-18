@@ -258,6 +258,60 @@ class ShowEmergingEllipse(Scene):
         return result
 
 
+class ShowFullStory(Scene):
+    def construct(self):
+        directory = os.path.join(
+            MEDIA_DIR,
+            "animations/active_projects/lost_lecture/images"
+        )
+        scene_names = [
+            "ShowEmergingEllipse",
+            "ShowFullStory",
+            "FeynmanAndOrbitingPlannetOnEllipseDiagram",
+            "FeynmanFameStart",
+            "TheMotionOfPlanets",
+            "FeynmanElementaryQuote",
+            "ShowEllipseDefiningProperty",
+            "ProveEllipse",
+            "KeplersSecondLaw",
+            "AngularMomentumArgument",
+            "HistoryOfAngularMomentum",
+            "FeynmanRecountingNewton",
+            "IntroduceShapeOfVelocities",
+            "ShowEqualAngleSlices",
+            "PonderOverOffCenterDiagram",
+            "UseVelocityDiagramToDeduceCurve",
+        ]
+        images = Group(*[
+            ImageMobject(os.path.join(directory, name + ".png"))
+            for name in scene_names
+        ])
+        for image in images:
+            image.add(
+                SurroundingRectangle(image, buff=0, color=WHITE)
+            )
+        images.arrange_submobjects_in_grid(n_rows=4)
+
+        images.scale(
+            1.01 * FRAME_WIDTH / images[0].get_width()
+        )
+        images.shift(-images[0].get_center())
+
+        self.play(
+            images.scale_to_fit_width, FRAME_WIDTH - 1,
+            images.center,
+            run_time=3,
+        )
+        self.wait()
+        self.play(
+            images.shift, -images[2].get_center(),
+            images.scale, FRAME_WIDTH / images[2].get_width(),
+            {"about_point": ORIGIN},
+            run_time=3,
+        )
+        self.wait()
+
+
 class FeynmanAndOrbitingPlannetOnEllipseDiagram(ShowEmergingEllipse):
     def construct(self):
         circle = self.get_circle()
@@ -3377,7 +3431,7 @@ class PonderOverOffCenterDiagram(PiCreatureScene):
 
 class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
     CONFIG = {
-        "animate_sun": False,
+        "animate_sun": True,
         "theta": 15 * DEGREES,
     }
 
@@ -3518,7 +3572,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         circle_wedge = self.get_wedge(circle_arc, circle.get_center())
         circle_wedge.set_fill(PINK)
         circle_wedge_start = self.get_wedge(
-            VectorizedPoint(circle.get_top()),
+            Line(circle.get_top(), circle.get_top()),
             circle.get_center()
         ).match_style(circle_wedge)
 
@@ -3650,8 +3704,6 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
                 lines.copy(),
                 tangent_lines,
                 run_time=3,
-                submobject_mode="lagged_start",
-                lag_ratio=0.3
             )
         )
         self.wait()
@@ -3705,6 +3757,8 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
     def ask_about_curve(self):
         ellipse = self.ellipse
         circle = self.circle
+        line = self.highlighted_line.copy()
+        vector = self.example_tangent_vector
 
         morty = Mortimer(height=2.5)
         morty.move_to(ellipse.get_corner(UL))
@@ -3727,6 +3781,10 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         self.play(Blink(morty))
         self.play(morty.look_at, ellipse)
         self.play(morty.change, "maybe", ellipse)
+        self.play(
+            line.move_to, vector, run_time=2
+        )
+        self.play(FadeOut(line))
         self.wait()
         self.play(morty.look_at, circle)
         self.wait()
@@ -3780,9 +3838,12 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
 
         self.add(ghost_lines)
         self.play(
-            LaggedStart(MoveToTarget, lines, lag_ratio=1),
+            LaggedStart(
+                MoveToTarget, lines,
+                lag_ratio=0.1,
+                run_time=8,
+            ),
             MoveToTarget(highlighted_line),
-            run_time=2,
             path_arc=-angle,
         )
         self.play(ShowCreation(little_ellipse))
@@ -3808,7 +3869,69 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         self.little_ellipse = little_ellipse
 
     def show_geometry_of_rotated_diagram(self):
+        ellipse = self.ellipse
         little_ellipse = self.little_ellipse
+        circle = self.circle
+        perp_line = self.highlighted_line.copy()
+        perp_line.rotate(PI)
+        circle_arc = self.circle_arc
+        arc_copy = circle_arc.copy()
+        center = circle.get_center()
+        velocity_vector = self.example_tangent_vector
+
+        e_line = perp_line.copy().rotate(90 * DEGREES)
+        c_line = Line(center, e_line.get_end())
+        c_line.set_stroke(WHITE, 4)
+
+        # lines = [c_line, e_line, perp_line]
+
+        tangency_point = line_intersection(
+            perp_line.get_start_and_end(),
+            c_line.get_start_and_end(),
+        )
+        tangency_point_dot = Dot(tangency_point)
+        tangency_point_dot.set_color(BLUE)
+        tangency_point_dot.save_state()
+        tangency_point_dot.scale(5)
+        tangency_point_dot.set_fill(opacity=0)
+
+        def indicate(line):
+            red_copy = line.copy().set_stroke(RED, 5)
+            return ShowPassingFlash(red_copy, run_time=2)
+
+        self.play(
+            self.ghost_lines.set_stroke, {"width": 0.5},
+            self.eccentric_lines.set_stroke, {"width": 0.5},
+            *map(WiggleOutThenIn, [e_line, c_line])
+        )
+        for x in range(3):
+            self.play(
+                indicate(e_line),
+                indicate(c_line),
+            )
+        self.play(WiggleOutThenIn(perp_line))
+        for x in range(2):
+            self.play(indicate(perp_line))
+        self.play(Restore(tangency_point_dot))
+        self.add_foreground_mobjects(tangency_point_dot)
+        self.wait(2)
+        self.play(
+            arc_copy.scale, 0.15, {"about_point": center},
+            run_time=2
+        )
+        self.wait(2)
+        self.play(
+            perp_line.move_to, velocity_vector,
+            run_time=4,
+            rate_func=there_and_back_with_pause
+        )
+        self.wait()
+        self.play(
+            little_ellipse.replace, ellipse,
+            run_time=4,
+            rate_func=there_and_back_with_pause
+        )
+        self.wait()
 
     # Helpers
     def get_wedge(self, arc, center_point, opacity=0.8):
@@ -3823,3 +3946,32 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         wedge.set_stroke(width=0)
         wedge.set_fill(COBALT, opacity=opacity)
         return wedge
+
+
+class TryToRememberProof(PiCreatureScene):
+    def construct(self):
+        randy = self.pi_creature
+
+        words = TextMobject("Oh god...how \\\\ did it go?")
+        words.next_to(randy, UP)
+        words.shift_onto_screen()
+
+        self.play(
+            randy.change, "telepath",
+            FadeInFromDown(words)
+        )
+        self.look_at(ORIGIN)
+        self.wait(2)
+        self.play(randy.change, "concerned_musician")
+        self.look_at(ORIGIN)
+        self.wait(3)
+
+
+class PatYourselfOnTheBack(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Pat yourself \\\\ on the back!",
+            target_mode="hooray"
+        )
+        self.change_all_student_modes("happy")
+        self.wait(3)
