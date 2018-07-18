@@ -920,6 +920,31 @@ class FeynmanElementaryQuote(Scene):
                 ShowWord(word),
             )
             self.wait(0.005 * len(word)**1.5)
+        self.wait()
+
+        # Show thumbnails
+        images = Group(
+            ImageMobject("Calculus_Thumbnail"),
+            ImageMobject("Fourier_Thumbnail"),
+        )
+        for image in images:
+            image.scale_to_fit_height(3)
+        images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        images.to_edge(DOWN, buff=LARGE_BUFF)
+        crosses = VGroup(*map(Cross, images))
+        crosses.set_stroke("RED", 10)
+
+        for image, cross in zip(images, crosses):
+            image.add(SurroundingRectangle(
+                image,
+                stroke_width=3,
+                stroke_color=WHITE,
+                buff=0
+            ))
+            cross.scale(1.1)
+            self.play(FadeInFromDown(image))
+            self.play(ShowCreation(cross))
+        self.wait()
 
 
 class LostLecturePicture(TODOStub):
@@ -2760,7 +2785,6 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
     def construct(self):
         self.setup_orbit()
         self.show_equal_angle_slices()
-        # self.label_points_P_theta()
         self.ask_about_time_per_slice()
         self.areas_are_proportional_to_radius_squared()
         self.show_inverse_square_law()
@@ -2887,66 +2911,13 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         self.angle_arcs = angle_arcs
         self.thetas = thetas
 
-    def label_points_P_theta(self):
-        sun_center = self.sun.get_center()
-        lines = self.lines
-        thick_lines = lines.copy().set_stroke(YELLOW, 4)
-
-        frame_scale_factor = 1.2
-        frame = self.camera_frame
-
-        P_labels = VGroup()
-        dots = VGroup()
-        for line in lines:
-            dot = Dot(line.get_end())
-            dot.scale(0.5)
-            dot.set_color(YELLOW)
-            dots.add(dot)
-
-            angle = angle_of_vector(line.get_end() - sun_center)
-            angle = angle % TAU
-            angle_degrees = angle * (360 / TAU)
-            P_label = TexMobject(
-                "P_{%d^\\circ}" % int(np.round(angle_degrees))
-            )
-            P_label.next_to(
-                dot, line.get_unit_vector(),
-                buff=SMALL_BUFF,
-                submobject_to_align=P_label[:2],
-            )
-            P_labels.add(P_label)
-
-        self.play(
-            LaggedStart(GrowFromCenter, dots),
-            LaggedStart(Write, P_labels),
-            Animation(self.comet),
-            frame.scale, frame_scale_factor
-        )
-        self.wait(2)
-        self.play(*map(FadeOut, filter(
-            lambda pl: pl is not P_labels[1],
-            P_labels
-        )))
-        self.play(ShowCreationThenDestruction(thick_lines[1]))
-        self.wait()
-        for i in 1, 2, 3:
-            self.play(
-                FadeOut(P_labels[i]),
-                FadeIn(P_labels[i + 1]),
-            )
-            self.play(ShowCreationThenDestruction(thick_lines[i + 1]))
-            self.wait()
-        self.play(FadeOut(P_labels[4]))
-
-        self.dots = dots
-        self.P_labels = P_labels
-
     def ask_about_time_per_slice(self):
         wedge1 = self.wedges[0]
         wedge2 = self.wedges[len(self.wedges) / 2]
         arc1 = self.arcs[0]
         arc2 = self.arcs[len(self.arcs) / 2]
         comet = self.comet
+        frame = self.camera_frame
 
         words1 = TextMobject(
             "Time spent \\\\ traversing \\\\ this slice?"
@@ -2968,14 +2939,15 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         )
 
         foreground = VGroup(
-            self.ellipse, self.angle_arcs, self.lines,
-            self.dots, comet,
+            self.ellipse, self.angle_arcs,
+            self.lines, comet,
         )
         self.play(
             Write(words1),
             wedge1.set_fill, {"opacity": 1},
             GrowArrow(arrow1),
             Animation(foreground),
+            frame.scale, 1.2,
         )
         self.play(MoveAlongPath(comet, arc1, rate_func=None))
         self.play(
@@ -3043,7 +3015,6 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             scaling_group.scale, 0.5,
             {"about_point": sun_center},
             Animation(self.area_question_arrows),
-            Animation(self.dots),
             Animation(self.comet),
             rate_func=there_and_back,
             run_time=4,
@@ -3265,7 +3236,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         self.wait()
         self.play(
             ReplacementTransform(
-                v1.saved_state.copy(), v2,
+                v1.saved_state.copy(), v2.saved_state,
                 path_arc=self.theta
             )
         )
@@ -3295,6 +3266,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             LaggedStart(ShowCreation, external_angle_arcs),
             Animation(difference_vectors),
         )
+        self.add_foreground_mobjects(difference_vectors)
         self.wait(2)
         self.play(FadeIn(polygon))
         self.wait(5)
@@ -3336,6 +3308,518 @@ class IKnowThisIsTricky(TeacherStudentsScene):
         self.wait(3)
 
 
-class PonderOverOffCenterDiagram(Scene):
+class PonderOverOffCenterDiagram(PiCreatureScene):
     def construct(self):
-        pass
+        randy, morty = self.pi_creatures
+        velocity_diagram = self.get_velocity_diagram()
+        bubble = randy.get_bubble()
+
+        rect = SurroundingRectangle(
+            velocity_diagram,
+            buff=MED_LARGE_BUFF,
+            color=LIGHT_GREY
+        )
+        rect.stretch(1.2, 1, about_edge=DOWN)
+        words = TextMobject("Velocity space")
+        words.next_to(rect.get_top(), DOWN)
+
+        self.play(
+            LaggedStart(GrowFromCenter, velocity_diagram),
+            randy.change, "pondering",
+            morty.change, "confused",
+        )
+        self.wait(2)
+        self.play(ShowCreation(bubble))
+        self.wait(2)
+        self.play(
+            FadeOut(bubble),
+            randy.change, "confused",
+            morty.change, "pondering",
+            ShowCreation(rect)
+        )
+        self.play(Write(words))
+        self.wait(2)
+
+    def create_pi_creatures(self):
+        randy = Randolph(height=2.5)
+        randy.to_corner(DL)
+        morty = Mortimer(height=2.5)
+        morty.to_corner(DR)
+        return randy, morty
+
+    def get_velocity_diagram(self):
+        circle = Circle(color=WHITE, radius=2)
+        circle.rotate(90 * DEGREES)
+        circle.to_edge(DOWN, buff=LARGE_BUFF)
+        root_point = interpolate(
+            circle.get_center(),
+            circle.get_bottom(),
+            0.5,
+        )
+        dot = Dot(root_point)
+        vectors = VGroup()
+        for a in np.arange(0, 1, 1.0 / 24):
+            end_point = circle.point_from_proportion(a)
+            vector = Arrow(root_point, end_point, buff=0)
+            vector.set_color(interpolate_color(
+                BLUE, RED,
+                inverse_interpolate(
+                    1, 3, vector.get_length(),
+                )
+            ))
+            vector.add_to_back(vector.copy().set_stroke(BLACK, 5))
+            vectors.add(vector)
+
+        vectors.add_to_back(circle)
+        vectors.add(dot)
+        return vectors
+
+
+class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
+    CONFIG = {
+        "animate_sun": False,
+        "theta": 15 * DEGREES,
+    }
+
+    def construct(self):
+        self.setup_orbit()
+        self.setup_velocity_diagram()
+        self.show_theta_degrees()
+        self.match_velocity_vector_to_tangency()
+        self.replace_vectors_with_lines()
+        self.not_that_velocity_vector_is_theta()
+        self.ask_about_curve()
+        self.show_90_degree_rotation()
+        self.show_geometry_of_rotated_diagram()
+
+    def setup_orbit(self):
+        ShowEqualAngleSlices.setup_orbit(self)
+        self.force_skipping()
+        self.show_equal_angle_slices()
+        self.revert_to_original_skipping_status()
+
+        orbit_word = self.orbit_word = TextMobject("Orbit")
+        orbit_word.scale(1.5)
+        orbit_word.next_to(self.ellipse, UP, LARGE_BUFF)
+        self.add(orbit_word)
+
+    def setup_velocity_diagram(self):
+        ellipse = self.ellipse
+        root_point = ellipse.get_left() + 4 * LEFT + DOWN
+        frame = self.camera_frame
+
+        root_dot = Dot(root_point)
+        vectors = VGroup()
+        original_vectors = VGroup()
+        for line in self.lines:
+            vector = self.get_velocity_vector(line.prop)
+            vector.save_state()
+            original_vectors.add(vector.copy())
+            vector.target = self.get_velocity_vector(
+                line.prop, scalar=8.0
+            )
+            vector.target.shift(
+                root_point - vector.target.get_start()
+            )
+
+            vectors.add(vector)
+
+        circle = Circle()
+        circle.rotate(92 * DEGREES)
+        circle.replace(VGroup(*[v.target for v in vectors]))
+        circle.set_stroke(WHITE, 2)
+        circle.shift(
+            (root_point[0] - circle.get_center()[0]) * RIGHT
+        )
+        circle.shift(0.035 * LEFT)  # ?!?
+
+        velocities_word = TextMobject("Velocities")
+        velocities_word.scale(1.5)
+        velocities_word.next_to(circle, UP)
+        velocities_word.align_to(self.orbit_word, DOWN)
+
+        frame.scale(1.2)
+        frame.shift(3 * LEFT + 0.5 * UP)
+
+        self.play(ApplyWave(ellipse))
+        self.play(*map(GrowArrow, vectors))
+        self.play(
+            LaggedStart(
+                MoveToTarget, vectors,
+                lag_ratio=1,
+                run_time=2
+            ),
+            GrowFromCenter(root_dot),
+            FadeInFromDown(velocities_word),
+        )
+        self.add_foreground_mobjects(root_dot)
+        self.play(
+            ShowCreation(circle),
+            Animation(vectors),
+        )
+        self.wait()
+
+        self.vectors = vectors
+        self.original_vectors = original_vectors
+        self.velocity_circle = circle
+        self.root_dot = root_dot
+        self.circle = circle
+
+    def show_theta_degrees(self):
+        lines = self.lines
+        ellipse = self.ellipse
+        circle = self.circle
+        vectors = self.vectors
+        comet = self.comet
+        sun_center = self.sun.get_center()
+
+        index = 4
+        angle = fdiv(index, len(lines)) * TAU
+        thick_line = lines[index].copy()
+        thick_line.set_stroke(RED, 3)
+        horizontal = lines[0].copy()
+        horizontal.set_stroke(WHITE, 3)
+
+        ellipse_arc = VMobject()
+        ellipse_arc.pointwise_become_partial(
+            ellipse, 0, thick_line.prop
+        )
+        ellipse_arc.set_stroke(YELLOW, 3)
+
+        ellipse_wedge = self.get_wedge(ellipse_arc, sun_center)
+        ellipse_wedge_start = self.get_wedge(
+            VectorizedPoint(ellipse.get_right()), sun_center
+        )
+
+        ellipse_angle_arc = Arc(
+            self.theta * index,
+            radius=0.5
+        )
+        ellipse_angle_arc.shift(sun_center)
+        ellipse_theta = TexMobject("\\theta")
+        ellipse_theta.next_to(ellipse_angle_arc, RIGHT, MED_SMALL_BUFF)
+        ellipse_theta.shift(2 * SMALL_BUFF * UL)
+
+        vector = vectors[index].deepcopy()
+        vector.set_fill(YELLOW)
+        vector.save_state()
+        Transform(vector, vectors[0]).update(1)
+        vector.set_fill(YELLOW)
+        circle_arc = VMobject()
+        circle_arc.pointwise_become_partial(
+            circle, 0, fdiv(index, len(vectors))
+        )
+        circle_arc.set_stroke(RED, 4)
+        circle_theta = TexMobject("\\theta")
+        circle_theta.scale(1.5)
+        circle_theta.next_to(circle_arc, UP, SMALL_BUFF)
+        circle_theta.shift(SMALL_BUFF * DL)
+
+        circle_wedge = self.get_wedge(circle_arc, circle.get_center())
+        circle_wedge.set_fill(PINK)
+        circle_wedge_start = self.get_wedge(
+            VectorizedPoint(circle.get_top()),
+            circle.get_center()
+        ).match_style(circle_wedge)
+
+        circle_center_dot = Dot(circle.get_center())
+        # circle_center_dot.set_color(BLUE)
+
+        self.play(FocusOn(comet))
+        self.play(
+            ReplacementTransform(
+                ellipse_wedge_start, ellipse_wedge,
+                path_arc=angle,
+            ),
+            FadeIn(ellipse_arc),
+            ShowCreation(ellipse_angle_arc),
+            Write(ellipse_theta),
+            ReplacementTransform(
+                lines[0].copy(), thick_line,
+                path_arc=angle
+            ),
+            MoveAlongPath(comet, ellipse_arc),
+            run_time=2
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                circle_wedge_start, circle_wedge,
+                path_arc=angle
+            ),
+            ShowCreation(circle_arc),
+            Write(circle_theta),
+            Restore(vector, path_arc=angle),
+            GrowFromCenter(circle_center_dot),
+            FadeIn(horizontal),
+            run_time=2
+        )
+        self.wait()
+
+        self.set_variables_as_attrs(
+            index,
+            ellipse_wedge, ellipse_arc,
+            ellipse_angle_arc, ellipse_theta,
+            thick_line, horizontal,
+            circle_wedge, circle_arc,
+            circle_theta, circle_center_dot,
+            highlighted_vector=vector
+        )
+
+    def match_velocity_vector_to_tangency(self):
+        vector = self.highlighted_vector
+        comet = self.comet
+        original_vector = self.original_vectors[self.index].copy()
+        original_vector.set_fill(YELLOW)
+
+        tangent_line = Line(
+            *original_vector.get_start_and_end()
+        )
+        tangent_line.set_stroke(LIGHT_GREY, 3)
+        tangent_line.scale(5)
+        tangent_line.move_to(comet)
+
+        self.play(
+            ReplacementTransform(
+                vector.copy(), original_vector,
+                run_time=2
+            ),
+            Animation(comet),
+        )
+        self.wait()
+        self.play(
+            ShowCreation(tangent_line),
+            Animation(original_vector),
+            Animation(comet),
+        )
+        self.wait()
+
+        self.set_variables_as_attrs(
+            example_tangent_line=tangent_line,
+            example_tangent_vector=original_vector,
+        )
+
+    def replace_vectors_with_lines(self):
+        vectors = self.vectors
+        original_vectors = self.original_vectors
+        root_dot = self.root_dot
+        highlighted_vector = self.highlighted_vector
+
+        lines = VGroup()
+        tangent_lines = VGroup()
+        for vect, o_vect in zip(vectors, original_vectors):
+            line = Line(*vect.get_start_and_end())
+            t_line = Line(*o_vect.get_start_and_end())
+            t_line.scale(5)
+            t_line.move_to(o_vect.get_start())
+
+            lines.add(line)
+            tangent_lines.add(t_line)
+
+            vect.generate_target()
+            vect.target.scale(0, about_point=root_dot.get_center())
+
+        lines.set_stroke(GREEN, 2)
+        tangent_lines.set_stroke(GREEN, 2)
+
+        highlighted_line = Line(
+            *highlighted_vector.get_start_and_end(),
+            stroke_color=YELLOW,
+            stroke_width=4
+        )
+
+        self.play(
+            LaggedStart(MoveToTarget, vectors),
+            highlighted_vector.scale, 0,
+            {"about_point": root_dot.get_center()},
+            Animation(highlighted_vector),
+            Animation(self.circle_wedge),
+            Animation(self.circle_arc),
+            Animation(self.circle),
+            Animation(self.circle_center_dot),
+        )
+        self.remove(vectors, highlighted_vector)
+        self.play(
+            LaggedStart(ShowCreation, lines),
+            ShowCreation(highlighted_line),
+            Animation(highlighted_vector),
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                lines.copy(),
+                tangent_lines,
+                run_time=3,
+                submobject_mode="lagged_start",
+                lag_ratio=0.3
+            )
+        )
+        self.wait()
+        self.play(FadeOut(tangent_lines))
+
+        self.eccentric_lines = lines
+        self.highlighted_line = highlighted_line
+
+    def not_that_velocity_vector_is_theta(self):
+        vector = self.example_tangent_vector
+        v_line = Line(DOWN, UP)
+        v_line.move_to(vector.get_start(), DOWN)
+        angle = vector.get_angle() - 90 * DEGREES
+        arc = Arc(angle, radius=0.5)
+        arc.rotate(90 * DEGREES, about_point=ORIGIN)
+        arc.shift(vector.get_start())
+
+        theta_q = TexMobject("\\theta ?")
+        theta_q.next_to(arc, UP)
+        theta_q.shift(SMALL_BUFF * LEFT)
+        cross = Cross(theta_q)
+
+        self.play(ShowCreation(v_line))
+        self.play(
+            ShowCreation(arc),
+            FadeInFromDown(theta_q),
+        )
+        self.wait()
+        self.play(ShowCreation(cross))
+        self.wait()
+        self.play(*map(FadeOut, [v_line, arc, theta_q, cross]))
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                self.ellipse_theta.copy(), self.circle_theta,
+            ),
+            ReplacementTransform(
+                self.ellipse_angle_arc.copy(), self.circle_arc,
+            ),
+            run_time=2,
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                self.circle.copy(),
+                self.circle_center_dot,
+            )
+        )
+        self.wait()
+
+    def ask_about_curve(self):
+        ellipse = self.ellipse
+        circle = self.circle
+
+        morty = Mortimer(height=2.5)
+        morty.move_to(ellipse.get_corner(UL))
+        morty.shift(MED_SMALL_BUFF * LEFT)
+
+        self.play(FadeIn(morty))
+        self.play(
+            morty.change, "confused", ellipse,
+            ShowCreationThenDestruction(
+                ellipse.copy().set_stroke(BLUE, 3),
+                run_time=2
+            )
+        )
+        self.play(
+            Blink(morty),
+            ApplyWave(ellipse),
+        )
+        self.play(morty.look_at, circle)
+        self.play(morty.change, "pondering", circle)
+        self.play(Blink(morty))
+        self.play(morty.look_at, ellipse)
+        self.play(morty.change, "maybe", ellipse)
+        self.wait()
+        self.play(morty.look_at, circle)
+        self.wait()
+        self.play(FadeOut(morty))
+
+    def show_90_degree_rotation(self):
+        circle = self.circle
+        circle_setup = VGroup(
+            circle, self.eccentric_lines,
+            self.circle_wedge,
+            self.circle_arc,
+            self.highlighted_line,
+            self.circle_center_dot,
+            self.root_dot,
+            self.circle_theta,
+        )
+        circle_setup.generate_target()
+        angle = -90 * DEGREES
+        circle_setup.target.rotate(
+            angle,
+            about_point=circle.get_center()
+        )
+        circle_setup.target[-1].rotate(-angle)
+        circle_setup.target[2].set_fill(opacity=0)
+        circle_setup.target[2].set_stroke(WHITE, 4)
+
+        self.play(MoveToTarget(circle_setup, path_arc=angle))
+        self.wait()
+
+        lines = self.eccentric_lines
+        highlighted_line = self.highlighted_line
+        ghost_lines = lines.copy()
+        ghost_lines.set_stroke(width=1)
+        ghost_lines[self.index].set_stroke(YELLOW, 4)
+        for mob in list(lines) + [highlighted_line]:
+            mob.generate_target()
+            mob.save_state()
+            mob.target.rotate(-angle)
+
+        foci = [
+            self.root_dot.get_center(),
+            circle.get_center(),
+        ]
+        a = circle.get_width() / 4
+        c = np.linalg.norm(foci[1] - foci[0]) / 2
+        b = np.sqrt(a**2 - c**2)
+        little_ellipse = Circle(radius=a)
+        little_ellipse.stretch(b / a, 1)
+        little_ellipse.move_to(center_of_mass(foci))
+        little_ellipse.set_stroke(PINK, 4)
+
+        self.add(ghost_lines)
+        self.play(
+            LaggedStart(MoveToTarget, lines, lag_ratio=1),
+            MoveToTarget(highlighted_line),
+            run_time=2,
+            path_arc=-angle,
+        )
+        self.play(ShowCreation(little_ellipse))
+        self.wait(2)
+        self.play(
+            little_ellipse.replace, self.ellipse,
+            run_time=4,
+            rate_func=there_and_back_with_pause
+        )
+        self.wait(2)
+
+        self.play(*[
+            Restore(
+                mob,
+                path_arc=angle,
+                run_time=4,
+                rate_func=there_and_back_with_pause
+            )
+            for mob in list(lines) + [highlighted_line]
+        ] + [Animation(little_ellipse)])
+
+        self.ghost_lines = ghost_lines
+        self.little_ellipse = little_ellipse
+
+    def show_geometry_of_rotated_diagram(self):
+        little_ellipse = self.little_ellipse
+
+    # Helpers
+    def get_wedge(self, arc, center_point, opacity=0.8):
+        wedge = VMobject()
+        wedge.append_vectorized_mobject(
+            Line(center_point, arc.points[0])
+        )
+        wedge.append_vectorized_mobject(arc)
+        wedge.append_vectorized_mobject(
+            Line(arc.points[-1], center_point)
+        )
+        wedge.set_stroke(width=0)
+        wedge.set_fill(COBALT, opacity=opacity)
+        return wedge
