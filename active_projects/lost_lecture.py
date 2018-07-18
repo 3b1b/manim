@@ -2753,20 +2753,18 @@ class FeynmanConfusedByNewton(Scene):
 
 class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
     CONFIG = {
-        "animate_sun": False,
+        "animate_sun": True,
         "theta": 30 * DEGREES,
-        # "theta": 15 * DEGREES,
     }
 
     def construct(self):
         self.setup_orbit()
         self.show_equal_angle_slices()
-        self.label_points_P_theta()
+        # self.label_points_P_theta()
         self.ask_about_time_per_slice()
         self.areas_are_proportional_to_radius_squared()
         self.show_inverse_square_law()
         self.directly_compare_velocity_vectors()
-        self.show_equal_angle_changes()
 
     def setup_orbit(self):
         IntroduceShapeOfVelocities.setup_orbit(self)
@@ -2938,10 +2936,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             )
             self.play(ShowCreationThenDestruction(thick_lines[i + 1]))
             self.wait()
-        self.play(
-            FadeOut(P_labels[4]),
-            # frame.scale, 1.0 / frame_scale_factor
-        )
+        self.play(FadeOut(P_labels[4]))
 
         self.dots = dots
         self.P_labels = P_labels
@@ -3176,10 +3171,11 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         )
         self.play(CircleThenFadeAround(prop_exp[:-2]))
         self.play(
-            FadeOut(delta_t_numerator),
+            delta_t_numerator.fade, 1,
             MoveToTarget(moving_R_squared),
             randy.change, "happy", delta_v_expression
         )
+        delta_v_expression.add(moving_R_squared)
         self.wait()
         self.play(FadeOut(randy))
 
@@ -3200,11 +3196,15 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             self.get_velocity_vector(line.prop)
             for line in lines
         ])
+        index = len(vectors) / 2
+        v1 = vectors[index]
+        v2 = vectors[index + 1]
 
         root_point = ellipse.get_left() + 3 * LEFT + DOWN
         root_dot = Dot(root_point)
 
         for vector in vectors:
+            vector.save_state()
             vector.target = Arrow(
                 *vector.get_start_and_end(),
                 color=vector.get_color(),
@@ -3218,17 +3218,124 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
                 vector.target.copy().set_stroke(BLACK, 5)
             )
 
-        self.play(LaggedStart(GrowArrow, vectors))
+        difference_vectors = VGroup()
+        external_angle_lines = VGroup()
+        external_angle_arcs = VGroup()
+        for vect1, vect2 in adjacent_pairs(vectors):
+            diff_vect = Arrow(
+                vect1.target.get_end(),
+                vect2.target.get_end(),
+                buff=0,
+                color=YELLOW,
+                rectangular_stem_width=0.025,
+                tip_length=0.15
+            )
+            diff_vect.add_to_back(
+                diff_vect.copy().set_stroke(BLACK, 2)
+            )
+            difference_vectors.add(diff_vect)
+
+            line = Line(
+                diff_vect.get_start(),
+                diff_vect.get_start() + 2 * diff_vect.get_vector(),
+            )
+            external_angle_lines.add(line)
+
+            arc = Arc(self.theta, stroke_width=2)
+            arc.rotate(line.get_angle(), about_point=ORIGIN)
+            arc.scale(0.4, about_point=ORIGIN)
+            arc.shift(line.get_center())
+            external_angle_arcs.add(arc)
+        external_angle_lines.set_stroke(LIGHT_GREY, 2)
+        diff_vect = difference_vectors[index]
+
+        polygon = Polygon(*[
+            vect.target.get_end()
+            for vect in vectors
+        ])
+        polygon.set_fill(BLUE_E, opacity=0.8)
+        polygon.set_stroke(WHITE, 3)
+
+        self.play(CircleThenFadeAround(v1))
         self.play(
-            LaggedStart(MoveToTarget, vectors),
+            MoveToTarget(v1),
             GrowFromCenter(root_dot),
             expressions.scale, 0.5, {"about_edge": UL}
         )
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                v1.saved_state.copy(), v2,
+                path_arc=self.theta
+            )
+        )
+        self.play(MoveToTarget(v2), Animation(root_dot))
+        self.wait()
+        self.play(GrowArrow(diff_vect))
+        self.wait()
 
-    def show_equal_angle_changes(self):
-        pass
+        n = len(vectors)
+        for i in range(n - 1):
+            v1 = vectors[(i + index + 1) % n]
+            v2 = vectors[(i + index + 2) % n]
+            diff_vect = difference_vectors[(i + index + 1) % n]
+            # TODO, v2.saved_state is on screen untracked
+            self.play(ReplacementTransform(
+                v1.saved_state.copy(), v2.saved_state,
+                path_arc=self.theta
+            ))
+            self.play(
+                MoveToTarget(v2),
+                GrowArrow(diff_vect)
+            )
+        self.add(self.orbit)
+        self.wait()
+        self.play(
+            LaggedStart(ShowCreation, external_angle_lines),
+            LaggedStart(ShowCreation, external_angle_arcs),
+            Animation(difference_vectors),
+        )
+        self.wait(2)
+        self.play(FadeIn(polygon))
+        self.wait(5)
+        self.play(FadeOut(polygon))
+        self.wait(15)
+        self.play(FadeIn(polygon))
 
 
-class ShowMoreFinelyChoppedOrbit(ShowEqualAngleSlices):
+class ShowEqualAngleSlices15DegreeSlices(ShowEqualAngleSlices):
+    CONFIG = {
+        "animate_sun": True,
+        "theta": 15 * DEGREES,
+    }
+
+
+class ShowEqualAngleSlices5DegreeSlices(ShowEqualAngleSlices):
+    CONFIG = {
+        "animate_sun": True,
+        "theta": 5 * DEGREES,
+    }
+
+
+class IKnowThisIsTricky(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "All you need is \\\\ infinite intelligence",
+            bubble_kwargs={
+                "width": 4,
+                "height": 3,
+            },
+            added_anims=[
+                self.get_student_changes(
+                    *3 * ["horrified"],
+                    look_at_arg=self.screen
+                )
+            ]
+        )
+        self.look_at(self.screen)
+        self.wait(3)
+
+
+class PonderOverOffCenterDiagram(Scene):
     def construct(self):
         pass
