@@ -267,10 +267,10 @@ class ShowFullStory(Scene):
         scene_names = [
             "ShowEmergingEllipse",
             "ShowFullStory",
-            "FeynmanAndOrbitingPlannetOnEllipseDiagram",
             "FeynmanFameStart",
             "TheMotionOfPlanets",
             "FeynmanElementaryQuote",
+            "DrawingEllipse",
             "ShowEllipseDefiningProperty",
             "ProveEllipse",
             "KeplersSecondLaw",
@@ -918,6 +918,19 @@ class AskAboutEllipses(TheMotionOfPlanets):
         return line, line_update
 
 
+class FeynmanSaysItBest(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Feynman says \\\\ it best",
+            added_anims=[
+                self.get_student_changes(
+                    "hooray", "happy", "erm"
+                )
+            ]
+        )
+        self.wait(3)
+
+
 class FeynmanElementaryQuote(Scene):
     def construct(self):
         quote_text = """
@@ -985,19 +998,32 @@ class FeynmanElementaryQuote(Scene):
             image.scale_to_fit_height(3)
         images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
         images.to_edge(DOWN, buff=LARGE_BUFF)
+        images[1].move_to(images[0])
         crosses = VGroup(*map(Cross, images))
         crosses.set_stroke("RED", 10)
 
         for image, cross in zip(images, crosses):
-            image.add(SurroundingRectangle(
+            image.rect = SurroundingRectangle(
                 image,
                 stroke_width=3,
                 stroke_color=WHITE,
                 buff=0
-            ))
+            )
             cross.scale(1.1)
-            self.play(FadeInFromDown(image))
-            self.play(ShowCreation(cross))
+        self.play(
+            FadeInFromDown(images[0]),
+            FadeInFromDown(images[0].rect)
+        )
+        self.play(ShowCreation(crosses[0]))
+        self.wait()
+        self.play(
+            FadeOutAndShiftDown(images[0]),
+            FadeOutAndShiftDown(images[0].rect),
+            FadeOutAndShiftDown(crosses[0]),
+            FadeInFromDown(images[1]),
+            FadeInFromDown(images[1].rect),
+        )
+        self.play(ShowCreation(crosses[1]))
         self.wait()
 
 
@@ -1078,6 +1104,28 @@ class TableOfContents(Scene):
                 *map(MoveToTarget, other_items)
             )
             self.wait()
+
+
+class DrawEllipseOverlay(Scene):
+    def construct(self):
+        ellipse = Circle()
+        ellipse.stretch_to_fit_width(7.0)
+        ellipse.stretch_to_fit_height(3.8)
+        ellipse.shift(1.05 * UP + 0.48 * LEFT)
+        ellipse.set_stroke(RED, 8)
+
+        image = ImageMobject(
+            os.path.join(
+                get_image_output_directory(self.__class__),
+                "HeldUpEllipse.jpg"
+            )
+        )
+        image.scale_to_fit_height(FRAME_HEIGHT)
+
+        # self.add(image)
+        self.play(ShowCreation(ellipse))
+        self.wait()
+        self.play(FadeOut(ellipse))
 
 
 class ShowEllipseDefiningProperty(Scene):
@@ -1629,7 +1677,8 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         self.play(LaggedStart(Restore, lines))
         self.play(
             FadeOut(to_fade),
-            line.set_stroke, {"width": 3},
+            ghost_line.set_stroke, YELLOW, 3,
+            line.set_stroke, WHITE, 3,
             ReplacementTransform(ep_dot.copy(), P_dot),
         )
         self.play(FadeInFromDown(P_label))
@@ -3338,7 +3387,8 @@ class ShowEqualAngleSlices15DegreeSlices(ShowEqualAngleSlices):
 
 class ShowEqualAngleSlices5DegreeSlices(ShowEqualAngleSlices):
     CONFIG = {
-        "animate_sun": True,
+        # "animate_sun": True,
+        "animate_sun": False,
         "theta": 5 * DEGREES,
     }
 
