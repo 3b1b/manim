@@ -76,6 +76,38 @@ class Graph(Group):
             self.edges[edge.key] = edge
             self.add(edge)
 
+    def update(self, dic):
+        anims = []
+        for key in dic.keys():
+            if self.nodes.has_key(key):
+                Node.assert_primitive(key)
+                if len(dic[key]) > 0:
+                    anims.extend(self.nodes[key].update(dic[key]))
+                else:
+                    anims.extend(self.nodes[key].update())
+            elif self.edges.has_key(key):
+                Edge.assert_primitive(key)
+                if len(dic[key]) > 0:
+                    anims.extend(self.edges[key].update(dic[key]))
+                else:
+                    anims.extend(self.edges[key].update(OrderedDict()))
+            else:
+                import ipdb; ipdb.set_trace(context=7)
+        return anims
+
+    def set_labels(self, dic):
+        anims = []
+        for key in dic.keys():
+            if self.nodes.has_key(key):
+                Node.assert_primitive(key)
+                anims.append(self.nodes[key].set_labels(dic[key]))
+            elif self.edges.has_key(key):
+                Edge.assert_primitive(key)
+                anims.append(self.edges[key].set_labels(dic[key]))
+            else:
+                import ipdb; ipdb.set_trace(context=7)
+        return anims
+
     def shrink_nodes(self, *points, **kwargs):
         map(Node.assert_primitive, points)
         return self.enlarge_nodes(*points, shrink=True)
@@ -192,7 +224,7 @@ class Graph(Group):
             point, name, mobject = label[:3]
             labels_dict[point].append((name, mobject))
         for point in labels_dict:
-            anims.extend(self.nodes[point].set_labels(*labels_dict[point]))
+            anims.extend(self.nodes[point].set_labels(OrderedDict(labels_dict[point])))
         return anims
 
     def get_node_label(self, point, name):
@@ -205,7 +237,7 @@ class Graph(Group):
 
     def set_edge_weight(self, pair, weight, stroke_width=None):
         Edge.assert_primitive(pair)
-        weight_anim = self.edges[pair].set_labels(("weight", Integer(weight)))
+        weight_anim = self.edges[pair].set_label("weight", Integer(weight))
         if stroke_width is not None:
             line_anim = self.edges[pair].set_stroke_width(stroke_width)
             return weight_anim + [line_anim]

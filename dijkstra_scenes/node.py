@@ -1,5 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 from collections import OrderedDict as OrderedDict
+import copy
 
 LABELED_NODE_FACTOR = 7
 UNLABELED_NODE_RADIUS = 0.1
@@ -9,6 +10,7 @@ HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
 class Node(Component):
     CONFIG = {
         "fill_opacity": 0.0,
+        "color": BLACK,
     }
     def __init__(self, point, labels=None, mobject=None,
             scale_factor=1, **kwargs):
@@ -48,18 +50,34 @@ class Node(Component):
                     ret.set_color(color)
             return ret
 
-    def update(self, factor=None, **kwargs):
+    def update(self, dic):
         new_mob = self.mobject.copy()
 
-        if factor is not None:
-            new_mob.scale(factor)
-            new_mob.radius *= factor
+        labels = OrderedDict()
+        for key in dic.keys():
+            if key == "variable":
+                labels["variable"] = dic["variable"]
+            if key == "dist":
+                labels["dist"] = dic["dist"]
 
-        color = kwargs.get("color", None)
+        if "factor" in dic:
+            factor = dic["factor"]
+        elif len(self.labels) == 0 and len(labels) > 0:
+            factor = LABELED_NODE_FACTOR
+        elif all(labels[key] is None for key in self.labels.keys() if self.labels[key] is not None):
+            factor = 1. / LABELED_NODE_FACTOR
+        else:
+            factor = 1
+        new_mob.scale(factor)
+        new_mob.radius *= factor
+
+        color = dic.get("color", None)
         if color is not None:
             new_mob.set_color(color)
 
-        ret = ReplacementTransform(self.mobject, new_mob, parent=self)
+        ret = [ReplacementTransform(self.mobject, new_mob, parent=self)]
+        if labels:
+            ret.extend(self.set_labels(labels))
         self.mobject = new_mob
         return ret
 
@@ -69,16 +87,20 @@ class Node(Component):
             factor = kwargs["factor"]
         elif "shrink" in kwargs and kwargs["shrink"] == True:
             factor = 1./(LABELED_NODE_FACTOR * self.scale_factor)
-            color = BLACK
         else:
             factor = (LABELED_NODE_FACTOR * self.scale_factor)
         if "color" in kwargs and kwargs["color"] is not None:
             color = kwargs["color"]
+        else:
+            color = self.get_color()
         return self.update(factor=factor, color=color)
 
-    def get_label_height(self, label, num_labels):
-        return self.scale_factor * HEIGHT_RELATIVE_TO_NODE[num_labels] * \
-                2 * LABELED_NODE_RADIUS / label.get_height()
+    def get_label_scale_factor(self, label, num_labels):
+        if label.get_height() > Integer(7).get_height():
+            return self.scale_factor * \
+                Integer(7).get_height() / label.get_height()
+        else:
+            return self.scale_factor
     
     def get_label(self, name):
         if name in self.labels:
@@ -119,46 +141,44 @@ class Node(Component):
     """
     def set_label(self, name, label, animate=True, **kwargs):
         kwargs["animate"] = animate
-        return self.set_labels((name, label), **kwargs)
+        d = copy.deepcopy(self.labels)
+        d[name] = label
+        return self.set_labels(d, **kwargs)
 
-    def set_labels(self, *labels, **kwargs):
-        if not labels:
-            return
+    def set_labels(self, new_labels, scale_mobject=True, **kwargs):
+        assert(type(new_labels) == OrderedDict)
+        # make sure labels are different
+        for old_label in self.labels.values():
+            for new_label in new_labels.values():
+                assert(id(old_label) != id(new_label))
 
-        # copy
-        new_labels = OrderedDict()
-        for name in self.labels.keys():
-            new_labels[name] = self.labels[name].copy()
-        for label in labels:
-            name, label = label[:2]
-            new_labels[name] = label
-    
-        # move
-        if len(new_labels) != len(self.labels):
-            # rearrange labels
-            if len(new_labels) == 1:
-                label.move_to(self.get_center())
-            else:
-                vec = rotate_vector(RIGHT, np.pi / 2)
-                vec *= LABELED_NODE_RADIUS / 2.4 * self.scale_factor
-                for label in new_labels.values():
-                    label.move_to(self.get_center() + vec)
-                    vec = rotate_vector(vec, 2 * np.pi / len(new_labels))
-        else:
-            assert(new_labels.keys() == self.labels.keys())
-            for name in new_labels:
-                new_labels[name].move_to(self.labels[name].get_center())
+        anims = []
+        # delete labels
+        for key, val in new_labels.items():
+            if val is None:
+                anims.append(Uncreate(self.labels[key]))
+                self.remove(self.labels[key])
+                del new_labels[key]
 
-        # scale
+        # scale labels
         for label in new_labels.values():
-            if type(label) == Arrow: continue # TODO: lol
-            new_height = self.get_label_height(label, len(new_labels))
-            label.scale(new_height)
+            if type(label) == Arrow: continue # TODO
+            scale_factor = self.get_label_scale_factor(label, len(new_labels))
+            label.scale(scale_factor)
+
+        # move
+        if len(new_labels) == 1:
+            new_labels.values()[0].move_to(self.mobject.get_center())
+        else:
+            vec = rotate_vector(RIGHT, np.pi / 2)
+            vec *= LABELED_NODE_RADIUS / 2.4 * self.scale_factor
+            for label in new_labels.values():
+                label.move_to(self.mobject.get_center() + vec)
+                vec = rotate_vector(vec, 2 * np.pi / len(new_labels))
 
         # animate / create
-        anims = []
-        for name in new_labels.keys():
-            if "animate" not in kwargs or kwargs["animate"]:
+        if "animate" not in kwargs or kwargs["animate"]:
+            for name in new_labels.keys():
                 if name in self.labels:
                     anims.append(ReplacementTransform(self.labels[name],
                                                        new_labels[name],
@@ -166,9 +186,13 @@ class Node(Component):
                 else:
                     anims.append(ShowCreation(new_labels[name]))
                     self.add(new_labels[name])
-            else:
+        else:
+            for name in new_labels.keys():
                 if name not in self.labels:
                     self.add(new_labels[name])
+                else:
+                    self.add(new_labels[name])
+                    self.remove(self.labels[name])
         self.labels = new_labels
         return anims
 

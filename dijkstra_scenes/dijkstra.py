@@ -31,7 +31,7 @@ def extend_arrow(G, u, v, color=None):
     ), arrow
 
 def relax_neighbors(G, parent, arrows=False):
-    labels = []
+    updates = OrderedDict()
     adj_edges = G.get_adjacent_edges(parent, use_direction=True)
     for edge in adj_edges:
         child = G.get_opposite_node(edge, parent)
@@ -62,13 +62,13 @@ def relax_neighbors(G, parent, arrows=False):
             if new_bound < old_bound:
                 relabel = True
             if relabel:
-                labels.append((
-                    child,
-                    "dist",
-                    TexMobject("\le {}".format(new_bound)),
-                    {"color": QUEUE_COLOR},
-                ))
+                updates[child] = OrderedDict([
+                    ("dist", TexMobject("\le {}".format(new_bound))),
+                    ("color", QUEUE_COLOR),
+
+                ])
                 if arrows:
+                    raise Exception("look at this")
                     arrow_vec = G.get_node(parent).mobject.get_center() - \
                                 G.get_node(child).mobject.get_center()
                     arrow_vec /= la.norm(arrow_vec)
@@ -77,20 +77,20 @@ def relax_neighbors(G, parent, arrows=False):
                     labels.append((child, "parent", arrow, {"parent_edge": edge, "parent_edge_color": QUEUE_COLOR}))
         else:
             # use new bound
-            labels.append((
-                child,
-                "dist",
-                TexMobject("\le {}".format(new_bound)),
-                {"color": QUEUE_COLOR},
-            ))
+            updates[child] = OrderedDict([
+                ("dist", TexMobject("\le {}".format(new_bound))),
+                ("color", QUEUE_COLOR),
+
+            ])
             if arrows:
+                raise Exception("look at this")
                 arrow_vec = G.get_node(parent).mobject.get_center() - \
                             G.get_node(child).mobject.get_center()
                 arrow_vec /= la.norm(arrow_vec)
                 arrow = Arrow(G.get_node(child).get_center(),
                               G.get_node(child).get_center() + arrow_vec)
                 labels.append((child, "parent", arrow, {"parent_edge": edge, "parent_edge_color": QUEUE_COLOR}))
-    return G.set_node_labels(*labels)
+    return G.update(updates)
 
 def extract_node(G):
     bounded_nodes = filter(
@@ -173,39 +173,50 @@ class RunAlgorithm(MovingCameraScene):
             else:
                 rand = random.randint(1, 9)
                 anims.extend(G.set_edge_weight(edge, rand))
-
         self.play(*anims)
 
         # label s
         s = nodes[0]
-        self.play(*G.set_node_labels((s, "variable", TexMobject("s"))))
+        updates = OrderedDict()
+        updates[s] = OrderedDict([("variable", TexMobject("s"))])
+        s_adjacent = G.get_adjacent_edges(s)
+        for pair in s_adjacent:
+            updates[pair] = OrderedDict()
+        self.play(*G.update(updates))
 
         # set s to 0
-        self.play(*G.set_node_labels(
-            (s, "dist", Integer(0), {"color": SPT_COLOR})
-        ))
+        updates = OrderedDict()
+        updates[s] = OrderedDict([
+            ("color", SPT_COLOR),
+            ("variable", TexMobject("s")),
+            ("dist", Integer(0)),
+        ])
+        self.play(*G.update(updates))
 
         # label neighbors with question marks
-        neighbors = G.get_adjacent_nodes(s)
-        labels = []
-        for node in neighbors:
-            labels.append((node, "dist", TexMobject("?")))
-        self.play(*G.set_node_labels(*labels))
+        updates = OrderedDict()
+        s_neighbors = [G.edges[edge].opposite(s) for edge in s_adjacent]
+        for point in s_neighbors:
+            updates[point] = OrderedDict([
+                ("dist", TexMobject("?"))
+            ])
+        seen = set()
+        for point in s_neighbors:
+            for pair in G.get_adjacent_edges(point):
+                if pair in seen: continue
+                updates[pair] = OrderedDict()
+                seen.add(pair)
+        self.play(*G.update(updates))
 
         # set neighbors to edge weights with question mark
-        adj_edges = G.get_adjacent_edges(s)
-        anims = []
-        for edge in adj_edges:
-            (u, v) = edge
-            adj_node = (u if s == v else v)
-            edge_weight = G.get_edge_weight(edge)
-            uncertain_weight = TexMobject(str(edge_weight) + "?")
-            anims.extend(G.set_node_labels((
-                adj_node,
-                "dist",
-                uncertain_weight,
-            )))
-        self.play(*anims)
+        updates = OrderedDict()
+        for pair in s_adjacent:
+            edge_weight = G.get_edge_weight(pair)
+            point = G.edges[pair].opposite(s)
+            updates[point] =  OrderedDict([
+                ("dist", TexMobject(str(edge_weight) + "?"))
+            ])
+        self.play(*G.update(updates))
 
         # scroll down to show example
         ShiftDown = lambda t: (0, -FRAME_HEIGHT * t, 0)
@@ -239,32 +250,28 @@ class RunAlgorithm(MovingCameraScene):
         self.play(ShowCreation(H))
 
         # draw s and edge weights
-        anims = []
-        anims.extend(H.set_node_labels(
-            (nodes[0], "variable", TexMobject("s")),
-            (nodes[0], "dist", Integer(0), {"color": SPT_COLOR}),
-        ))
-        anims.extend(H.set_edge_weight(edges[0], 10))
-        anims.extend(H.set_edge_weight(edges[1], 1))
-        anims.extend(H.set_edge_weight(edges[2], 1))
-        self.play(*anims)
+        updates = OrderedDict()
+        updates[nodes[0]] = OrderedDict([
+            ("variable", TexMobject("s")),
+            ("dist", Integer(0)),
+            ("color", SPT_COLOR),
+        ])
+        updates[edges[0]] = OrderedDict([ ("weight", Integer(10)) ])
+        updates[edges[1]] = OrderedDict([ ("weight", Integer(1))  ])
+        updates[edges[2]] = OrderedDict([ ("weight", Integer(1))  ])
+        self.play(*H.update(updates))
 
-        # tentative distances to nodes
+        # label nodes with tentative distances
+        updates = OrderedDict()
         adj_edges = H.get_adjacent_edges(nodes[0])
-        anims = []
-        labels = []
-        for edge in adj_edges:
-            (u, v) = edge
-            adj_node = (u if nodes[0] == v else v)
-            weight = H.get_edge_weight(edge)
+        adj_nodes = [H.get_opposite_node(pair, nodes[0]) for pair in adj_edges]
+        for pair, point in zip(adj_edges, adj_nodes):
+            weight = H.get_edge_weight(pair)
             weight_mobject = TexMobject(str(weight) + "?")
-            labels.append((
-                adj_node,
-                "dist",
-                weight_mobject,
-            ))
-        anims.extend(H.set_node_labels(*labels))
-        self.play(*anims)
+            updates[point] = OrderedDict([ ("dist", weight_mobject) ])
+        for pair in H.get_edges():
+            updates[pair] = OrderedDict()
+        self.play(*H.update(updates))
 
         # this is antipattern; possibly allow returning a copy edge?
         self.play(Indicate(H.edges[edges[0]].get_weight()))
@@ -1162,14 +1169,14 @@ class RunAlgorithm(MovingCameraScene):
     def construct(self):
         self.first_try()
         self.counterexample()
-        self.one_step()
-        self.triangle_inequality()
-        self.generalize()
-        self.last_run()
-        # TODO: mention shortest path tree when arrows are used
-        # TODO: directed graphs
-        self.show_code()
-        self.run_code()
-        self.analyze()
-        self.compare_data_structures()
-        self.directed_graph()
+        #self.one_step()
+        #self.triangle_inequality()
+        #self.generalize()
+        #self.last_run()
+        ## TODO: mention shortest path tree when arrows are used
+        ## TODO: directed graphs
+        #self.show_code()
+        #self.run_code()
+        #self.analyze()
+        #self.compare_data_structures()
+        #self.directed_graph()

@@ -30,7 +30,7 @@ class Component(Mobject):
         # add labels
         self.labels = OrderedDict()
         if "labels" in kwargs and kwargs["labels"] is not None:
-            self.set_labels(*kwargs["labels"], animate=False)
+            self.set_labels(OrderedDict(kwargs["labels"]), animate=False)
 
     @staticmethod
     def assert_primitive(self):
@@ -48,3 +48,6 @@ class Component(Mobject):
     def set_labels(self):
         # implemented by subclass
         pass
+
+    def get_center(self):
+        import ipdb; ipdb.set_trace(context=7)
