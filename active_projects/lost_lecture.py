@@ -106,6 +106,37 @@ class ShowWord(Animation):
 # Animations
 
 
+class TakeOver(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+            "flip_at_start": True,
+        },
+        "default_pi_creature_start_corner": DR,
+    }
+
+    def construct(self):
+        gradient = ImageMobject("white_black_gradient")
+        gradient.scale_to_fit_height(FRAME_HEIGHT)
+        self.add(gradient)
+
+        morty = self.pi_creatures
+        henry = ImageMobject("Henry_As_Stick")
+        henry.scale_to_fit_height(4)
+        henry.to_edge(LEFT)
+        henry.to_edge(DOWN)
+
+        self.add(morty, henry)
+        self.pi_creature_says(
+            "Muahaha!  All \\\\ mine now.",
+            bubble_kwargs={"fill_opacity": 0.5},
+            bubble_creation_class=FadeIn,
+            target_mode="conniving",
+            added_anims=[henry.rotate, 5 * DEGREES]
+        )
+        self.wait(2)
+
+
 class ShowEmergingEllipse(Scene):
     CONFIG = {
         "circle_radius": 3,
@@ -642,6 +673,16 @@ class TheMotionOfPlanets(Scene):
         return planets, ellipses, orbits
 
 
+class TeacherHoldingUp(TeacherStudentsScene):
+    def construct(self):
+        self.play(
+            self.teacher.change, "raise_right_hand"
+        )
+        self.change_all_student_modes("pondering")
+        self.look_at(ORIGIN)
+        self.wait(5)
+
+
 class AskAboutEllipses(TheMotionOfPlanets):
     CONFIG = {
         "camera_config": {"background_opacity": 1},
@@ -680,6 +721,8 @@ class AskAboutEllipses(TheMotionOfPlanets):
             self.add_foreground_mobjects(
                 sun_animation.mobject
             )
+        else:
+            self.add_foreground_mobjects(sun)
 
     def add_orbit(self):
         sun = self.sun
@@ -2045,6 +2088,27 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         self.wait(12)
 
 
+class Enthusiast(Scene):
+    def construct(self):
+        randy = Randolph(color=BLUE_C)
+        randy.flip()
+        self.play(randy.change, "surprised")
+        self.play(Blink(randy))
+        self.wait()
+
+
+class SimpleThinking(Scene):
+    def construct(self):
+        randy = Randolph(color=BLUE_C)
+        randy.flip()
+        self.play(randy.change, "thinking", 3 * UP)
+        self.play(Blink(randy))
+        self.wait()
+        self.play(randy.change, "hooray", 3 * UP)
+        self.play(Blink(randy))
+        self.wait()
+
+
 class EndOfGeometryProofiness(GeometryProofLand):
     def construct(self):
         geometry_word = self.get_geometry_proof_land_word()
@@ -2133,6 +2197,7 @@ class KeplersSecondLaw(AskAboutEllipses):
         arc_words.next_to(
             arc, RIGHT, buff=-SMALL_BUFF
         )
+        arc_words.shift(4 * SMALL_BUFF * DOWN)
         arc_words.match_color(arc)
 
         # Show stubby arc
@@ -2268,6 +2333,56 @@ class KeplersSecondLaw(AskAboutEllipses):
         radius_words.rotate(angle, about_point=ORIGIN)
         radius_words.shift(radius.get_center())
         return radius_words
+
+
+class NonEllipticalKeplersLaw(KeplersSecondLaw):
+    CONFIG = {
+        "animate_sun": True,
+        "sun_center": 2 * RIGHT,
+        "n_sample_sweeps": 10,
+    }
+
+    def construct(self):
+        self.add_sun()
+        self.add_orbit()
+        self.show_several_sweeps()
+
+    def add_orbit(self):
+        sun = self.sun
+        comet = ImageMobject("comet", height=0.5)
+        orbit_shape = self.get_ellipse()
+
+        orbit = self.orbit = Orbiting(comet, sun, orbit_shape)
+        self.add(orbit_shape)
+        self.add(orbit)
+
+        arrow, arrow_update = self.get_force_arrow_and_update(
+            comet
+        )
+        alt_arrow_update = ContinualUpdateFromFunc(
+            arrow, lambda a: a.scale(
+                1.0 / a.get_length(),
+                about_point=a.get_start()
+            )
+        )
+        self.add(arrow_update, alt_arrow_update)
+        self.add_foreground_mobjects(comet, arrow)
+
+        self.ellipse = orbit_shape
+
+    def get_ellipse(self):
+        orbit_shape = ParametricFunction(
+            lambda t: (1 + 0.2 * np.sin(5 * TAU * t)) * np.array([
+                np.cos(TAU * t),
+                np.sin(TAU * t),
+                0
+            ])
+        )
+        orbit_shape.scale_to_fit_height(7)
+        orbit_shape.stretch(1.5, 0)
+        orbit_shape.shift(LEFT)
+        orbit_shape.set_stroke(LIGHT_GREY, 1)
+        return orbit_shape
 
 
 class AngularMomentumArgument(KeplersSecondLaw):
@@ -3387,8 +3502,7 @@ class ShowEqualAngleSlices15DegreeSlices(ShowEqualAngleSlices):
 
 class ShowEqualAngleSlices5DegreeSlices(ShowEqualAngleSlices):
     CONFIG = {
-        # "animate_sun": True,
-        "animate_sun": False,
+        "animate_sun": True,
         "theta": 5 * DEGREES,
     }
 
@@ -3479,10 +3593,20 @@ class PonderOverOffCenterDiagram(PiCreatureScene):
         return vectors
 
 
+class OneMoreTrick(TeacherStudentsScene):
+    def construct(self):
+        for student in self.students:
+            student.change("tired")
+        self.teacher_says("Just one more \\\\ tricky bit!")
+        self.change_all_student_modes("hooray")
+        self.wait(3)
+
+
 class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
     CONFIG = {
         "animate_sun": True,
         "theta": 15 * DEGREES,
+        "index": 6,
     }
 
     def construct(self):
@@ -3577,7 +3701,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         comet = self.comet
         sun_center = self.sun.get_center()
 
-        index = 4
+        index = self.index
         angle = fdiv(index, len(lines)) * TAU
         thick_line = lines[index].copy()
         thick_line.set_stroke(RED, 3)
@@ -3998,6 +4122,30 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         return wedge
 
 
+class ShowSunVectorField(Scene):
+    def construct(self):
+        sun_center = IntroduceShapeOfVelocities.CONFIG["sun_center"]
+        vector_field = VectorField(
+            get_force_field_func((sun_center, -1))
+        )
+        vector_field.set_fill(opacity=0.8)
+        vector_field.sort_submobjects(
+            lambda p: -np.linalg.norm(p - sun_center)
+        )
+
+        for vector in vector_field:
+            vector.generate_target()
+            vector.target.set_fill(opacity=1)
+            vector.target.set_stroke(YELLOW, 0.5)
+
+        for x in range(3):
+            self.play(LaggedStart(
+                MoveToTarget, vector_field,
+                rate_func=there_and_back,
+                lag_ratio=0.5,
+            ))
+
+
 class TryToRememberProof(PiCreatureScene):
     def construct(self):
         randy = self.pi_creature
@@ -4018,6 +4166,10 @@ class TryToRememberProof(PiCreatureScene):
 
 
 class PatYourselfOnTheBack(TeacherStudentsScene):
+    CONFIG = {
+        "camera_config": {"background_opacity": 1},
+    }
+
     def construct(self):
         self.teacher_says(
             "Pat yourself \\\\ on the back!",
@@ -4025,3 +4177,33 @@ class PatYourselfOnTheBack(TeacherStudentsScene):
         )
         self.change_all_student_modes("happy")
         self.wait(3)
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher,
+                target_mode="raise_right_hand"
+            ),
+            self.get_student_changes(
+                *3 * ["pondering"],
+                look_at_arg=self.screen
+            )
+        )
+        self.look_at(UP)
+        self.wait(8)
+        self.change_student_modes(*3 * ["thinking"])
+        self.look_at(UP)
+        self.wait(12)
+        self.teacher_says("I just love this!")
+
+        feynman = ImageMobject("Feynman", height=4)
+        feynman.to_corner(UL)
+        chess = ImageMobject("ChessGameOfTheCentury")
+        chess.scale_to_fit_height(4)
+        chess.next_to(feynman)
+
+        self.play(FadeInFromDown(feynman))
+        self.wait()
+        self.play(
+            RemovePiCreatureBubble(self.teacher, target_mode="happy"),
+            FadeInFromDown(chess)
+        )
+        self.wait(2)
