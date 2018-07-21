@@ -42,8 +42,8 @@ class Edge(Component):
         normal_vec = rotate_vector(normalized_vec, np.pi/2)
         if directed:
             mob = Arrow(
-                start_node.get_center() + normalized_vec * (start_node.mobject.radius - 0.0),
-                end_node.get_center() - normalized_vec * (end_node.mobject.radius - 0.0),
+                start_node.mobject.get_center() + normalized_vec * (start_node.mobject.radius - 0.0),
+                end_node.mobject.get_center() - normalized_vec * (end_node.mobject.radius - 0.0),
                 buff=0,
                 **kwargs
             )
@@ -67,8 +67,8 @@ class Edge(Component):
     def __str__(self):
         return "Edge(start=({}, {}), end=({}, {}))".format(
             *np.append(
-                self.start_node.get_center()[:2],
-                self.end_node.get_center()[:2]))
+                self.start_node.mobject.get_center()[:2],
+                self.end_node.mobject.get_center()[:2]))
     __repr__ = __str__
 
     def opposite(self, point):
@@ -191,33 +191,39 @@ class Edge(Component):
         return ret
 
     def update(self, dic):
+        ret = []
+        # update labels
+        labels = OrderedDict()
+        for key in dic.keys():
+            if key == "weight":
+                labels["weight"] = dic["weight"]
+        if labels:
+            ret.extend(self.set_labels(labels))
+
+        # set parameters from dic
+        stroke_width = dic.get("stroke_width", None)
+        if stroke_width is None:
+            stroke_width = self.mobject.stroke_width
+
+        rectangular_stem_width = self.rectangular_stem_width
+
+        color = dic.get("color", None)
+        if color is None:
+            color = self.mobject.color
+
+        # update mobject
         new_mob = self.create_mobject(
             self.start_node,
             self.end_node,
             directed=self.directed,
             curved=self.curved,
-            stroke_width=self.stroke_width,
-            rectangular_stem_width=self.rectangular_stem_width,
-            color=self.color,
+            stroke_width=stroke_width,
+            rectangular_stem_width=rectangular_stem_width,
+            color=color,
         )
-
-        labels = OrderedDict()
-        for key in dic.keys():
-            if key == "weight":
-                labels["weight"] = dic["weight"]
-
-        stroke_width = dic.get("stroke_width", None)
-        if stroke_width is not None:
-            new_mob.set_stroke_width(stroke_width)
-
-        color = dic.get("color", None)
-        if color is not None:
-            new_mob.set_color(color)
-
-        ret = [ReplacementTransform(self.mobject, new_mob, parent=self)]
-        if labels:
-            ret.extend(self.set_labels(labels))
+        ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
         self.mobject = new_mob
+
         return ret
 
     def change_color(self, color):

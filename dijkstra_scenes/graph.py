@@ -176,55 +176,97 @@ class Graph(Group):
                 anims.append(self.nodes[point].change_color(color_map[point]))
         return anims
 
-    def set_node_labels(self, *labels):
+    def set_node_labels(self, labels):
         for label in labels:
             Node.assert_primitive(label[0])
 
-        # enlarge nodes / color nodes / set thickness
-        anims = []
-        to_enlarge = []
-        color_map = dict()
-        parent_map = dict()
+        updates = OrderedDict()
         for label in labels:
-            point = label[0]
-            if len(self.nodes[point].labels) == 0 and point not in to_enlarge:
-                to_enlarge.append(point)
-            if len(label) == 4 and "color" in label[3]:
-                color_map[point] = label[3]["color"]
-            if len(label) == 4 and "parent_edge" in label[3]:
-                if "parent_edge_color" in label[3]:
-                    parent_edge_color = label[3]["parent_edge_color"]
-                else:
-                    parent_edge_color = None
-                parent_map[point] = (label[3]["parent_edge"], parent_edge_color)
-                old_parent = self.get_node_parent_edge(point)
-                if old_parent is not None:
-                    self.edges[old_parent].is_parent = False
-                    anims.append(self.set_edge_stroke_width(old_parent, 2, 0.03, color=BLACK))
-        # color enlarged nodes and adjacent edges
-        anims.extend(self.enlarge_nodes(
-            *to_enlarge,
-            color_map=color_map,
-            parent_map=parent_map
-        ))
-        # color remaining edges
-        for point, (pair, color) in parent_map.items():
-            if self.edges[pair].is_parent == False:
-                self.edges[pair].is_parent = True
-                anims.append(self.set_edge_stroke_width(pair, 4, 0.05, color=color))
-                self.set_node_parent_edge(point, parent_map[point][0])
-        # color remaining nodes
-        for point in color_map:
-            if point not in to_enlarge:
-                anims.extend([self.nodes[point].change_color(color_map[point])])
+            point, name, mob = label[:3]
+            if point in updates:
+                updates[point][name] = mob
+            else:
+                updates[point] = OrderedDict([(name, mob)])
+            if len(label) == 4:
+                for key, val in label[3]:
+                    if key == "color":
+                        updates[point][key] = val
+                    elif key == "parent_edge":
+                        if val in updates:
+                            updates[val]["stroke_width"] = 4
+                            updates[val]["color"] = MAGENTA
+                        else:
+                            updates[val] = OrderedDict([
+                                ("stroke_width", 4),
+                                ("color", MAGENTA),
+                            ])
+                        old_parent = self.nodes[point].get_parent_edge()
+                        if old_parent is not None:
+                            if old_parent in updates:
+                                updates[old_parent]["stroke_width"] = 2
+                                updates[old_parent]["color"] = BLACK
+                            else:
+                                updates[old_parent] = OrderedDict([
+                                    ("stroke_width", 2),
+                                    ("color", BLACK),
+                                ])
+                        self.nodes[point].set_parent_edge(val)
+                    elif key == "parent_edge_color":
+                        pass
 
-        # label nodes
-        labels_dict = defaultdict(list)
-        for label in labels:
-            point, name, mobject = label[:3]
-            labels_dict[point].append((name, mobject))
-        for point in labels_dict:
-            anims.extend(self.nodes[point].set_labels(OrderedDict(labels_dict[point])))
+        seen = set()
+        for point in map(lambda x: x[0], labels):
+            for pair in self.get_adjacent_edges(point):
+                if pair in seen: continue
+                if pair not in updates:
+                    updates[pair] = OrderedDict()
+                seen.add(pair)
+        return self.update(updates)
+        ## enlarge nodes / color nodes / set thickness
+        #anims = []
+        #to_enlarge = []
+        #color_map = dict()
+        #parent_map = dict()
+        #for label in labels:
+        #    point = label[0]
+        #    if len(self.nodes[point].labels) == 0 and point not in to_enlarge:
+        #        to_enlarge.append(point)
+        #    if len(label) == 4 and "color" in label[3]:
+        #        color_map[point] = label[3]["color"]
+        #    if len(label) == 4 and "parent_edge" in label[3]:
+        #        if "parent_edge_color" in label[3]:
+        #            parent_edge_color = label[3]["parent_edge_color"]
+        #        else:
+        #            parent_edge_color = None
+        #        parent_map[point] = (label[3]["parent_edge"], parent_edge_color)
+        #        old_parent = self.get_node_parent_edge(point)
+        #        if old_parent is not None:
+        #            self.edges[old_parent].is_parent = False
+        #            anims.append(self.set_edge_stroke_width(old_parent, 2, 0.03, color=BLACK))
+        ## color enlarged nodes and adjacent edges
+        #anims.extend(self.enlarge_nodes(
+        #    *to_enlarge,
+        #    color_map=color_map,
+        #    parent_map=parent_map
+        #))
+        ## color remaining edges
+        #for point, (pair, color) in parent_map.items():
+        #    if self.edges[pair].is_parent == False:
+        #        self.edges[pair].is_parent = True
+        #        anims.append(self.set_edge_stroke_width(pair, 4, 0.05, color=color))
+        #        self.set_node_parent_edge(point, parent_map[point][0])
+        ## color remaining nodes
+        #for point in color_map:
+        #    if point not in to_enlarge:
+        #        anims.extend([self.nodes[point].change_color(color_map[point])])
+
+        ## label nodes
+        #labels_dict = defaultdict(list)
+        #for label in labels:
+        #    point, name, mobject = label[:3]
+        #    labels_dict[point].append((name, mobject))
+        #for point in labels_dict:
+        #    anims.extend(self.nodes[point].set_labels(OrderedDict(labels_dict[point])))
         return anims
 
     def get_node_label(self, point, name):

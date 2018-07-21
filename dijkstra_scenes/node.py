@@ -35,7 +35,10 @@ class Node(Component):
         if mobject is not None:
             return mobject.move_to(point)
         else:
-            if labels is not None:
+            if "radius" in kwargs:
+                radius = kwargs["radius"]
+                del kwargs["radius"]
+            elif labels is not None:
                 radius = LABELED_NODE_RADIUS * self.scale_factor
             else:
                 radius = UNLABELED_NODE_RADIUS
@@ -51,34 +54,44 @@ class Node(Component):
             return ret
 
     def update(self, dic):
-        new_mob = self.mobject.copy()
-
+        ret = []
+        # update labels
         labels = OrderedDict()
         for key in dic.keys():
             if key == "variable":
                 labels["variable"] = dic["variable"]
-            if key == "dist":
+            elif key == "dist":
                 labels["dist"] = dic["dist"]
+            elif key == "parent":
+                labels["parent"] = dic["parent"]
+        if labels:
+            ret.extend(self.set_labels(labels))
 
+        # set parameters from dic
         if "factor" in dic:
             factor = dic["factor"]
-        elif len(self.labels) == 0 and len(labels) > 0:
-            factor = LABELED_NODE_FACTOR
-        elif all(labels[key] is None for key in self.labels.keys() if self.labels[key] is not None):
+        elif self.mobject.radius < 0.5 and len(self.labels) > 0:
+            factor = LABELED_NODE_FACTOR * self.scale_factor
+        elif self.mobject.radius > 0.1 and len(self.labels) == 0:
             factor = 1. / LABELED_NODE_FACTOR
         else:
             factor = 1
-        new_mob.scale(factor)
-        new_mob.radius *= factor
+        radius = self.mobject.radius * factor
 
         color = dic.get("color", None)
-        if color is not None:
-            new_mob.set_color(color)
+        if color is None:
+            color = self.color
 
-        ret = [ReplacementTransform(self.mobject, new_mob, parent=self)]
-        if labels:
-            ret.extend(self.set_labels(labels))
+        # update mobject
+        new_mob = self.create_mobject(
+            self.key,
+            radius=radius,
+            color=color,
+            stroke_width=self.stroke_width,
+        ).move_to(self.mobject.get_center())
+        ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
         self.mobject = new_mob
+
         return ret
 
     def enlarge(self, **kwargs):
@@ -96,11 +109,14 @@ class Node(Component):
         return self.update(factor=factor, color=color)
 
     def get_label_scale_factor(self, label, num_labels):
-        if label.get_height() > Integer(7).get_height():
-            return self.scale_factor * \
-                Integer(7).get_height() / label.get_height()
-        else:
-            return self.scale_factor
+        try:
+            if label.get_height() > Integer(7).get_height():
+                return self.scale_factor * \
+                    Integer(7).get_height() / label.get_height()
+            else:
+                return self.scale_factor
+        except:
+            import ipdb; ipdb.set_trace(context=7)
     
     def get_label(self, name):
         if name in self.labels:
@@ -110,7 +126,6 @@ class Node(Component):
 
     def change_color(self, color):
         return self.update(color=color)
-
 
     """
     scales and places labels, removes new label from self.labels
@@ -159,6 +174,7 @@ class Node(Component):
                 anims.append(Uncreate(self.labels[key]))
                 self.remove(self.labels[key])
                 del new_labels[key]
+                del self.labels[key]
 
         # scale labels
         for label in new_labels.values():
@@ -167,14 +183,33 @@ class Node(Component):
             label.scale(scale_factor)
 
         # move
-        if len(new_labels) == 1:
-            new_labels.values()[0].move_to(self.mobject.get_center())
+        if len(set(self.labels.keys() + new_labels.keys())) == 1:
+            if len(new_labels) == 1:
+                new_labels.values()[0].move_to(self.mobject.get_center())
+            elif len(self.labels) == 1:
+                key, val = self.labels.items()[0]
+                new_labels[key] = val.copy().move_to(self.mobject.get_center())
+            else:
+                import ipdb; ipdb.set_trace(context=7)
         else:
             vec = rotate_vector(RIGHT, np.pi / 2)
             vec *= LABELED_NODE_RADIUS / 2.4 * self.scale_factor
-            for label in new_labels.values():
-                label.move_to(self.mobject.get_center() + vec)
-                vec = rotate_vector(vec, 2 * np.pi / len(new_labels))
+            old_label_copies = OrderedDict()
+            for name, label in self.labels.items():
+                if name in new_labels:
+                    new_labels[name].move_to(self.mobject.get_center() + vec)
+                else:
+                    old_label_copies[name] = label.copy().move_to(self.mobject.get_center() + vec)
+                vec = rotate_vector(vec, 2 * np.pi / len(set(self.labels.keys() + new_labels.keys())))
+            for name, label in new_labels.items():
+                if name in self.labels:
+                    pass
+                else:
+                    label.move_to(self.mobject.get_center() + vec)
+                    vec = rotate_vector(vec, 2 * np.pi / len(set(self.labels.keys() + new_labels.keys())))
+            for key in old_label_copies:
+                if key not in new_labels:
+                    new_labels[key] = old_label_copies[key]
 
         # animate / create
         if "animate" not in kwargs or kwargs["animate"]:

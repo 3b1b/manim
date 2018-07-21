@@ -50,4 +50,8 @@ class Component(Mobject):
         pass
 
     def get_center(self):
+        """
+        You called get_center() on a Component rather than its mobject.
+        This is probably not what you want.
+        """
         import ipdb; ipdb.set_trace(context=7)
