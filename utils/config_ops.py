@@ -2,6 +2,15 @@ import inspect
 import operator as op
 
 
+def __metaclass__(cls, bases, params):
+    if 'CONFIG' in params:
+        config = params.get('CONFIG')
+        for key, value in config.iterms():
+            params[key] = value
+
+    return type(cls, bases, params)
+
+
 def instantiate(obj):
     """
     Useful so that classes or instance of those classes can be
@@ -43,10 +52,10 @@ def digest_config(obj, kwargs, caller_locals={}):
     classes_in_hierarchy = [obj.__class__]
     static_configs = []
     while len(classes_in_hierarchy) > 0:
-        Class = classes_in_hierarchy.pop()
-        classes_in_hierarchy += Class.__bases__
-        if hasattr(Class, "CONFIG"):
-            static_configs.append(Class.CONFIG)
+        klass = classes_in_hierarchy.pop()
+        classes_in_hierarchy += klass.__bases__
+        if hasattr(klass, "CONFIG"):
+            static_configs.append(klass.CONFIG)
 
     # Order matters a lot here, first dicts have higher priority
     caller_locals = filtered_locals(caller_locals)

@@ -141,3 +141,9 @@ def diag_to_matrix(l_and_u, diag):
 
 def is_closed(points):
     return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
+
+
+if __name__ == '__main__':
+    l = bezier([1, 2, 3])
+    print l(1)
+    print l(2)
