@@ -93,7 +93,7 @@ class CountingScene(Scene):
         added_anims += self.get_new_configuration_animations()
         while continue_rolling_over:          
             moving_dot.target.replace(
-                self.dot_template_iterators[place].next()
+                next(self.dot_template_iterators[place])
             )
             if run_all_at_once:
                 denom = float(num_rollovers+1)
@@ -267,7 +267,7 @@ class TowersOfHanoiScene(Scene):
         peg.move_to(self.middle_peg_bottom, DOWN)
         self.pegs = VGroup(*[
             peg.copy().shift(vect)
-            for vect in self.peg_spacing*LEFT, ORIGIN, self.peg_spacing*RIGHT
+            for vect in (self.peg_spacing*LEFT, ORIGIN, self.peg_spacing*RIGHT)
         ])
         self.add(self.pegs)
         if self.include_peg_labels:
@@ -1357,7 +1357,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         ])
         bit_mobs.scale(2)
         self.bit_mobs_iter = it.cycle(bit_mobs)
-        self.curr_bit_mob = self.bit_mobs_iter.next()
+        self.curr_bit_mob = next(self.bit_mobs_iter)
 
         for bit_mob in bit_mobs:
             bit_mob.align_data(self.curr_bit_mob)
@@ -1370,7 +1370,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
     def get_increment_animation(self):
         return Succession(
             Transform(
-                self.curr_bit_mob, self.bit_mobs_iter.next(),
+                self.curr_bit_mob, next(self.bit_mobs_iter),
                 submobject_mode = "lagged_start",
                 path_arc = -np.pi/3
             ),
@@ -1836,7 +1836,7 @@ class ShowFourDiskFourBitsParallel(IntroduceSolveByCounting):
 
     def get_increment_animation(self):
         return Transform(
-            self.curr_bit_mob, self.bit_mobs_iter.next(),
+            self.curr_bit_mob, next(self.bit_mobs_iter),
             path_arc = -np.pi/3,
         )
  
@@ -2259,7 +2259,7 @@ class SolveConstrainedByCounting(ConstrainedTowersOfHanoiScene):
             ternary_mobs.add(ternary_mob)
         ternary_mobs.next_to(self.peg_labels, DOWN)
         self.ternary_mob_iter = it.cycle(ternary_mobs)
-        self.curr_ternary_mob = self.ternary_mob_iter.next()
+        self.curr_ternary_mob = next(self.ternary_mob_iter)
         self.add(self.curr_ternary_mob)
 
         for index in get_ternary_ruler_sequence(self.num_disks-1):
@@ -2270,7 +2270,7 @@ class SolveConstrainedByCounting(ConstrainedTowersOfHanoiScene):
     def increment_animation(self):
         return Succession(
             Transform(
-                self.curr_ternary_mob, self.ternary_mob_iter.next(),
+                self.curr_ternary_mob, next(self.ternary_mob_iter),
                 submobject_mode = "lagged_start",
                 path_arc = np.pi/6,
             ),
@@ -2429,7 +2429,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
         ])
         ternary_mobs.scale(2)
         ternary_mob_iter = it.cycle(ternary_mobs)
-        curr_ternary_mob = ternary_mob_iter.next()
+        curr_ternary_mob = next(ternary_mob_iter)
 
         for trits in ternary_mobs:
             trits.align_data(curr_ternary_mob)
@@ -2437,7 +2437,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
                 trit.set_color(color)
         def get_increment():
             return Transform(
-                curr_ternary_mob, ternary_mob_iter.next(),
+                curr_ternary_mob, next(ternary_mob_iter),
                 submobject_mode = "lagged_start",
                 path_arc = -np.pi/3
             )
@@ -2504,7 +2504,7 @@ class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
 
     def increment_number(self, run_time = 1):
         self.play(Transform(
-            self.curr_ternary_mob, self.ternary_mob_iter.next(),
+            self.curr_ternary_mob, next(self.ternary_mob_iter),
             path_arc = -np.pi/3,
             submobject_mode = "lagged_start", 
             run_time = run_time,
@@ -2512,7 +2512,7 @@ class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
 
     def move_next_disk(self, run_time = None, stay_on_peg = False):
         self.move_disk(
-            self.disk_index_iter.next(), 
+            next(self.disk_index_iter), 
             run_time = run_time,
             stay_on_peg = stay_on_peg
         )
@@ -2986,7 +2986,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             vect = -vect
 
     def define_edges(self):
-        nodes = [self.nodes[i] for i in 12, 14]
+        nodes = [self.nodes[i] for i in (12, 14)]
         for node, vect in zip(nodes, [LEFT, RIGHT]):
             node.save_state()
             node.generate_target()

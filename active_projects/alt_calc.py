@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 from big_ol_pile_of_manim_imports import *
 
 
@@ -88,7 +88,7 @@ class NumberlineTransformationScene(ZoomedScene):
     def setup_titles(self):
         input_title, output_title = self.titles = VGroup(*[
             TextMobject(word)
-            for word in "Inputs", "Outputs"
+            for word in ("Inputs", "Outputs")
         ])
         vects = [UP, DOWN]
         for title, line, vect in zip(self.titles, self.number_lines, vects):
@@ -450,7 +450,7 @@ class WriteOpeningWords(Scene):
                       "any new topic, it will take some hard work to understand,"
         words1, words2 = [
             TextMobject("\\Large", *rs.split(" "))
-            for rs in raw_string1, raw_string2
+            for rs in (raw_string1, raw_string2)
         ]
         words1.next_to(words2, UP, aligned_edge=LEFT, buff=LARGE_BUFF)
         words = VGroup(*it.chain(words1, words2))
@@ -2471,7 +2471,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
                     line[1],
                     line[2][:4],
                 )
-                for line in lines[1], new_line
+                for line in (lines[1], new_line)
             ]
             anims = [ReplacementTransform(
                 mover.copy().fade(1), target, path_arc=30 * DEGREES
@@ -2617,7 +2617,7 @@ class ShowRepeatedApplication(Scene):
 
         rects = VGroup(*[
             SurroundingRectangle(mob)
-            for mob in line[0], line[1:-1], line[-1]
+            for mob in (line[0], line[1:-1], line[-1])
         ])
         rects.set_stroke(BLUE, 2)
 
@@ -2886,7 +2886,7 @@ class RepeatedApplicationGraphically(GraphOnePlusOneOverX, PiCreatureScene):
                 y_point = self.coords_to_point(0, new_output)
                 lines = VGroup(*[
                     Line(dot.get_center(), point)
-                    for point in x_point, y_point
+                    for point in (x_point, y_point)
                 ])
                 lines.set_color(YELLOW)
                 self.play(ShowCreationThenDestruction(
@@ -3001,7 +3001,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
                 for point in sample_points
                 if np.linalg.norm(point - input_zero_point) > 0.3
             ])
-            for func in point_func, alt_point_func
+            for func in (point_func, alt_point_func)
         ]
         for group in arrows, alt_arrows:
             group.set_stroke(WHITE, 0.5)
@@ -3534,257 +3534,6 @@ class ShowJacobianZoomedIn(LinearTransformationScene, ZoomedScene):
         )
         self.wait()
 
-# Video 2
-
-class ComplexAnalysisOverlay(Scene):
-    def construct(self):
-        words = TextMobject("Complex analysis")
-        words.scale(1.25)
-        words.to_edge(UP)
-        words.add_background_rectangle()
-        self.add(words)
-        self.wait()
-
-
-class CompelxAnalyticFluidFlow(ComplexTransformationScene, MovingCameraScene):
-    CONFIG = {
-        "num_anchors_to_add_per_line": 200,
-        "plane_config": {"y_radius": 8}
-    }
-
-    def setup(self):
-        MovingCameraScene.setup(self)
-        ComplexTransformationScene.setup(self)
-
-    def construct(self):
-        self.camera.frame.shift(2 * UP)
-        self.camera.frame.scale(0.5, about_point=ORIGIN)
-
-        plane = NumberPlane(
-            x_radius=15,
-            y_radius=25,
-            y_unit_size=0.5,
-            secondary_line_ratio=0,
-        )
-        plane.next_to(ORIGIN, UP, buff=0.001)
-        horizontal_lines = VGroup(*filter(
-            lambda l: np.abs(l.get_center()[0]) < 0.1,
-            list(plane.main_lines) + [plane.axes[0]]
-        ))
-        plane.set_stroke(MAROON_B, width=2)
-        horizontal_lines.set_stroke(BLUE, width=2)
-        for line in horizontal_lines:
-            # To lag the paths of the droplets
-            line.scale(1 + random.random())
-
-        self.prepare_for_transformation(plane)
-        self.add_transformable_mobjects(plane)
-
-        self.background.set_stroke(width=2)
-        for label in self.background.coordinate_labels:
-            label.set_stroke(width=0)
-            label.scale(0.75, about_edge=UR)
-
-        words = TextMobject("Flow near \\\\", "a wall")
-        words.scale(0.75)
-        words.add_background_rectangle_to_submobjects()
-        words.next_to(0.75 * UP, LEFT, MED_LARGE_BUFF)
-        equation = TexMobject("z \\rightarrow z^{1/2}")
-        equation.scale(0.75)
-        equation.add_background_rectangle()
-        equation.next_to(words, UP)
-
-        self.apply_complex_function(
-            lambda x: x**(1. / 2),
-            added_anims=[Write(equation)]
-        )
-        self.play(Write(words, run_time=1))
-
-        dots = VGroup()
-        num_dots_per_line = 50
-        for x in range(num_dots_per_line):
-            for line in horizontal_lines:
-                dot = Dot(radius=0.025)
-                opacity = 1.0 - x / float(num_dots_per_line)
-                dot.set_fill(opacity=opacity)
-                dot.path = line
-                dots.add(dot)
-        dots.set_color_by_gradient(BLUE_B, BLUE_D)
-
-        self.play(LaggedStart(
-            MoveAlongPath, dots,
-            lambda d: (d, d.path),
-            run_time=3,
-            lag_ratio=0.9
-        ))
-
-
-class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
-    CONFIG = {
-        "num_anchors_to_add_per_line": 20,
-        "complex_homotopy": lambda z, t: z**(1.0 + t),
-        "zoom_factor": 0.05,
-    }
-
-    def setup(self):
-        ComplexTransformationScene.setup(self)
-        ZoomedScene.setup(self)
-
-    def construct(self):
-        self.edit_background_plane()
-        self.add_title()
-        # self.add_transforming_planes()
-        # self.preview_some_numbers()
-        self.zoom_in_to_one_plus_half_i()
-        self.write_derivative()
-
-    def add_title(self):
-        title = TexMobject("z \\rightarrow z^2")
-        title.add_background_rectangle()
-        title.scale(1.5)
-        title.to_corner(UL, buff=MED_SMALL_BUFF)
-        self.add_foreground_mobject(title)
-
-    def edit_background_plane(self):
-        self.background.main_lines.set_stroke(GREY, 2)
-        self.background.secondary_lines.set_stroke(DARK_GREY, 1)
-        self.add_foreground_mobject(self.background.coordinate_labels)
-
-    def add_transforming_planes(self):
-        self.plane = self.get_plane()
-        self.add_transformable_mobjects(self.plane)
-
-    def preview_some_numbers(self):
-        dots = VGroup(*[
-            Dot().move_to(self.background.number_to_point(z))
-            for z in [
-                1, 2, complex(0, 1),
-                -1, complex(2, 0.5), complex(-1, -1), complex(3, 0.5),
-            ]
-        ])
-        dots.set_color_by_gradient(RED, YELLOW)
-        d_angle = 30 * DEGREES
-
-        dot_groups = VGroup()
-        for dot in dots:
-            point = dot.get_center()
-            z = self.background.point_to_number(point)
-            z_out = self.complex_homotopy(z, 1)
-            out_point = self.background.number_to_point(z_out)
-            path_arc = angle_of_vector(point)
-            if abs(z - 1) < 0.01:
-                # One is special
-                arrow = Arc(
-                    start_angle=(-90 * DEGREES + d_angle),
-                    angle=(360 * DEGREES - 2 * d_angle),
-                    radius=0.25
-                )
-                arrow.add_tip(tip_length=0.15)
-                arrow.pointwise_become_partial(arrow, 0, 0.9)
-                arrow.next_to(dot, UP, buff=0)
-            else:
-                arrow = Arrow(
-                    point, out_point,
-                    use_rectangular_stem=False,
-                    path_arc=path_arc,
-                    buff=SMALL_BUFF,
-                )
-            arrow.match_color(dot)
-
-            out_dot = dot.copy()
-            # out_dot.set_fill(opacity=0.5)
-            out_dot.set_stroke(BLUE, 1)
-            out_dot.move_to(out_point)
-            dot.path_arc = path_arc
-            dot.out_dot = out_dot
-
-            dot_group = VGroup(dot, arrow, out_dot)
-            dot_groups.add(dot_group)
-
-            dot_copy = dot.copy()
-            dot.save_state()
-            dot.scale(3)
-            dot.fade(1)
-
-            dot_group.anim = Succession(
-                ApplyMethod(dot.restore),
-                AnimationGroup(
-                    ShowCreation(arrow),
-                    ReplacementTransform(
-                        dot_copy, out_dot,
-                        path_arc=path_arc
-                    )
-                )
-            )
-
-        for dot_group in dot_groups[:3]:
-            self.play(dot_group.anim)
-            self.wait()
-        self.play(*[dg.anim for dg in dot_groups[3:]])
-
-        self.apply_complex_homotopy(
-            self.complex_homotopy,
-            added_anims=[Animation(dot_groups)]
-        )
-        self.wait()
-        self.play(FadeOut(dot_groups))
-        self.wait()
-        self.play(FadeOut(self.plane))
-        self.transformable_mobjects.remove(self.plane)
-
-    def zoom_in_to_one_plus_half_i(self):
-        z = complex(1, 0.5)
-        point = self.background.number_to_point(z)
-        point_mob = VectorizedPoint(point)
-        frame = self.zoomed_camera.frame
-        frame.move_to(point)
-        tiny_plane = NumberPlane(
-            x_radius=2, y_radius=2,
-            color=GREEN,
-            secondary_color=GREEN_E
-        )
-        tiny_plane.replace(frame)
-
-        plane = self.get_plane()
-
-        words = TextMobject("What does this look like")
-        words.add_background_rectangle()
-        words.next_to(self.zoomed_display, LEFT, aligned_edge=UP)
-        arrow = Arrow(words.get_bottom(), self.zoomed_display.get_left())
-        VGroup(words, arrow).set_color(YELLOW)
-
-        self.play(FadeIn(plane))
-        self.activate_zooming(animate=True)
-        self.play(ShowCreation(tiny_plane))
-        self.wait()
-        self.add_transformable_mobjects(plane, tiny_plane, point_mob)
-        self.add_foreground_mobjects(words, arrow)
-        self.apply_complex_homotopy(
-            self.complex_homotopy,
-            added_anims=[
-                Write(words),
-                GrowArrow(arrow),
-                MaintainPositionRelativeTo(frame, point_mob)
-            ]
-        )
-        self.wait(2)
-
-    def write_derivative(self):
-        pass
-
-    # Helpers
-
-    def get_plane(self):
-        top_plane = NumberPlane(
-            y_radius=FRAME_HEIGHT / 2,
-        )
-        self.prepare_for_transformation(top_plane)
-        bottom_plane = top_plane.copy()
-        tiny_tiny_buff = 0.001
-        top_plane.next_to(ORIGIN, UP, buff=tiny_tiny_buff)
-        bottom_plane.next_to(ORIGIN, DOWN, buff=tiny_tiny_buff)
-        return VGroup(top_plane, bottom_plane)
-
 
 class PrinciplesOverlay(PiCreatureScene):
     CONFIG = {
@@ -3859,7 +3608,7 @@ class ManyInfiniteExpressions(Scene):
                 lag_ratio=0.1,
                 run_time=8,
             )
-            for group in frac, radical, power_tower
+            for group in (frac, radical, power_tower)
         ])
         self.wait(2)
 
@@ -4019,9 +3768,10 @@ class Thumbnail(AnalyzeFunctionWithTransformations):
         self.title.fade(1)
         self.titles.fade(1)
         self.repeatedly_apply_function()
+        self.all_arrows.set_stroke(width=1)
 
         full_rect = FullScreenFadeRectangle()
         cross = Cross(full_rect)
         cross.set_stroke(width=40)
 
-        self.add(cross)
+        # self.add(cross)

@@ -1,5 +1,7 @@
-#!/usr/bin/env python2
+# !/usr/bin/env python2
 
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
 import argparse
 import imp
@@ -74,7 +76,8 @@ def get_configuration():
                 args.output_name)
             expected_ext = '.png' if args.show_last_frame else '.mp4'
             if output_name_ext not in ['', expected_ext]:
-                print "WARNING: The output will be to (doubly-dotted) %s%s" % output_name_root % expected_ext
+                print("WARNING: The output will be to (doubly-dotted) %s%s" %
+                      output_name_root % expected_ext)
                 output_name = args.output_name
             else:
                 # If anyone wants .mp4.mp4 and is surprised to only get .mp4, or such... Well, too bad.
@@ -151,12 +154,12 @@ def handle_scene(scene, **config):
 
         if config["show_file_in_finder"]:
             commands.append("-R")
-        
+
         if config["show_last_frame"]:
             commands.append(scene.get_image_file_path())
         else:
             commands.append(scene.get_movie_file_path())
-        #commands.append("-g")
+        # commands.append("-g")
         FNULL = open(os.devnull, 'w')
         sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
         FNULL.close()
@@ -261,7 +264,7 @@ def main():
 
     scene_kwargs["name"] = config["output_name"]
     if config["save_pngs"]:
-        print "We are going to save a PNG sequence as well..."
+        print("We are going to save a PNG sequence as well...")
         scene_kwargs["save_pngs"] = True
         scene_kwargs["pngs_mode"] = config["saved_image_mode"]
 

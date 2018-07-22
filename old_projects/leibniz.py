@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+from functools import reduce
 
 # revert_to_original_skipping_status
 
@@ -840,7 +841,7 @@ class CountLatticePoints(LatticePointScene):
                     "\\approx \\pi", "(", R, ")^2"
                 )
             ).arrange_submobjects(RIGHT)
-            for R in "10", "1{,}000{,}000", "R"
+            for R in ("10", "1{,}000{,}000", "R")
         ])
         radius_10_eq, radius_million_eq, radius_R_eq = equations
         for eq in equations:
@@ -1747,7 +1748,7 @@ class NameGaussianIntegers(LatticePointScene):
         integers.add_background_rectangle()
         arrows = VGroup(*[
             Arrow(integers.get_top(), mob, tip_length = 0.15)
-            for mob in a, b
+            for mob in (a, b)
         ])
         self.add_foreground_mobjects(label, integers, arrows)
 
@@ -1836,7 +1837,7 @@ class NameGaussianIntegers(LatticePointScene):
                     self.plane.coords_to_point(x, u*y),
                     color = PINK,
                 )
-                for u in 1, -1
+                for u in (1, -1)
             ])
             dot.conjugate_dot = self.circle_dots[-i]
 
@@ -1979,7 +1980,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
 
         labels = [
             TexMobject(tex).add_background_rectangle()
-            for tex in "5", "2+i", "2-i", "-1+2i", "-1-2i", "-2-i", "-2+i"
+            for tex in ("5", "2+i", "2-i", "-1+2i", "-1-2i", "-2-i", "-2+i")
         ]
         five_label, p1_label, p2_label, p3_label, p4_label, p5_label, p6_label = labels
         vects = [
@@ -2393,7 +2394,7 @@ class FactorTwo(LatticePointScene):
         two_dot.set_color(YELLOW)
         factor_dots = VGroup(*[
             Dot(self.plane.coords_to_point(1, u))
-            for u in 1, -1
+            for u in (1, -1)
         ])
         two_label = TexMobject("2").next_to(two_dot, DOWN)
         two_label.set_color(YELLOW)
@@ -2888,7 +2889,7 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
             dot.add(line)
         words_group = VGroup(*[
             TextMobject("Multiply by $%s$"%s)
-            for s in "1", "i", "-1", "-i"
+            for s in ("1", "i", "-1", "-i")
         ])
         for words, color in zip(words_group, self.colors):
             words.add_background_rectangle()
@@ -3212,7 +3213,7 @@ class SummarizeCountingRule(Show125Circle):
 
         three, five, thirteen = [
             factorization.get_part_by_tex(str(n), substring = False)
-            for n in 3, 5, 13
+            for n in (3, 5, 13)
         ]
         three_power = factorization.get_part_by_tex("^4")
         five_power = factorization.get_part_by_tex("^3")
@@ -3583,7 +3584,7 @@ class IntroduceChi(FactorizationPattern):
             )
             braces = [
                 Brace(expression[i], UP) 
-                for i in 0, 2, 4
+                for i in (0, 2, 4)
             ]
             for brace, n in zip(braces, [x, y, x*y]):
                 output = chi_func(n)
@@ -4350,7 +4351,7 @@ class AddUpGrid(Scene):
                 rect.copy().move_to(self.radicals[N-1], LEFT)
                 for N in numbers
             ])
-            for numbers in [6, 12], [2, 3, 5, 7, 11]
+            for numbers in ([6, 12], [2, 3, 5, 7, 11])
         ]
         prime_rects.set_color(GREEN)
 

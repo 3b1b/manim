@@ -55,13 +55,6 @@ def match_interpolate(new_start, new_end, old_start, old_end, old_value):
     )
 
 
-def clamp(lower, upper, val):
-    if val < lower:
-        return lower
-    elif val > upper:
-        return upper
-    return val
-
 # Figuring out which bezier curves most smoothly connect a sequence of points
 
 

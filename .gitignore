@@ -1,4 +1,5 @@
 *.pyc
+*.bak
 .DS_Store
 homeless.py
 playground.py
@@ -15,3 +16,4 @@ manim.sublime-workspace
 constants.py
 
 primes.py
+/media_dir.txt

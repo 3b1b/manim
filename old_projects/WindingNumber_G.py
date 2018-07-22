@@ -236,7 +236,7 @@ class Introduce1DFunctionCase(Scene):
                 axes.coords_to_point(x, 0),
                 axes.coords_to_point(x, f_graph.underlying_function(solution)),
             )
-            for x in axes.x_min, axes.x_max, solution
+            for x in (axes.x_min, axes.x_max, solution)
         ]
 
         equation = TexMobject("f(x)", "=", "g(x)")
@@ -1408,7 +1408,7 @@ class Rearrange2DEquation(AltTeacherStudentsScene):
     def construct(self):
         f_tex, g_tex, h_tex = [
             "%s(\\text{2d point})"%char
-            for char in "f", "g", "h" 
+            for char in ("f", "g", "h") 
         ]
         zero_tex = "\\vec{\\textbf{0}}"
         equations = VGroup(
@@ -2100,7 +2100,7 @@ class PathContainingZero(InputOutputScene, PiCreatureScene):
             morty.change, "pondering",
             *[
                 ShowCreation(mob, rate_func = bezier([0, 0, 1, 1]))
-                for mob in path, out_path
+                for mob in (path, out_path)
             ],
             run_time = 5
         )
@@ -2272,7 +2272,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
     def get_squares_and_joint_rect(self):
         squares = VGroup(*[
             Square(side_length = 4).next_to(ORIGIN, vect, buff = 0)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
         joint_rect = SurroundingRectangle(squares, buff = 0)
         for mob in it.chain(squares, [joint_rect]):
@@ -2293,7 +2293,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
             rev = (get_output_rev() - self.start_rev)%1
             possible_windings = [
                 np.floor(self.curr_winding)+k+rev
-                for k in -1, 0, 1
+                for k in (-1, 0, 1)
             ]
             i = np.argmin([abs(pw - self.curr_winding) for pw in possible_windings])
             self.curr_winding = possible_windings[i]
@@ -2369,7 +2369,7 @@ class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
         both_cannot_be_zero.to_edge(UP)
         arrows = VGroup(*[
             Arrow(both_cannot_be_zero.get_bottom(), var.get_top(), buff = SMALL_BUFF)
-            for var in x, y
+            for var in (x, y)
         ])
 
         self.position_dot(joint_rect.points[0])
@@ -2579,7 +2579,7 @@ class PolynomialTerms(MonomialTerm):
                 background_image_file = self.input_coloring.background_image_file ,
                 stroke_width = 4,
             )
-            for u in -1, 1
+            for u in (-1, 1)
         ]
         out_line = line.copy()
         update_out_line = UpdateFromFunc(

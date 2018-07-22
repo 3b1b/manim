@@ -1,3 +1,4 @@
+from __future__ import print_function
 import itertools as it
 import numpy as np
 import operator as op
@@ -24,6 +25,7 @@ from utils.iterables import list_difference_update
 from utils.iterables import remove_list_redundancies
 from utils.simple_functions import fdiv
 from utils.space_ops import angle_of_vector
+from functools import reduce
 
 
 class Camera(object):
@@ -173,14 +175,14 @@ class Camera(object):
         pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
         """
 
-        print "Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
         coords = self.get_coords_of_all_pixels()
         new_background = np.apply_along_axis(
             coords_to_colors_func,
             2,
             coords
         )
-        print "Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
 
         return self.convert_pixel_array(new_background, convert_from_floats=True)
 
@@ -221,7 +223,6 @@ class Camera(object):
                     excluded_mobjects
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
-
         if self.use_z_coordinate_for_display_order:
             # Should perhaps think about what happens here when include_submobjects is False,
             # (for now, the onus is then on the caller to ensure this is handled correctly by
@@ -232,6 +233,17 @@ class Camera(object):
             )
         else:
             return mobjects
+
+    def is_in_frame(self, mobject):
+        fc = self.get_frame_center()
+        fh = self.get_frame_height()
+        fw = self.get_frame_width()
+        return not reduce(op.or_, [
+            mobject.get_right()[0] < fc[0] - fw,
+            mobject.get_bottom()[1] > fc[1] + fh,
+            mobject.get_left()[0] > fc[0] + fw,
+            mobject.get_top()[1] < fc[1] - fh,
+        ])
 
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
@@ -428,8 +440,8 @@ class Camera(object):
         )
 
         # Reshape
-        pixel_width = int(pdist([ul_coords, ur_coords]))
-        pixel_height = int(pdist([ul_coords, dl_coords]))
+        pixel_width = max(int(pdist([ul_coords, ur_coords])), 1)
+        pixel_height = max(int(pdist([ul_coords, dl_coords])), 1)
         sub_image = sub_image.resize(
             (pixel_width, pixel_height), resample=Image.BICUBIC
         )
@@ -596,7 +608,8 @@ class BackgroundColoredVMobjectDisplayer(object):
         new_width, new_height,
         mode="RGBA"
     ):
-        image = Image.fromarray(background_array, mode=mode)
+        image = Image.fromarray(background_array)
+        image = image.convert(mode)
         resized_image = image.resize((new_width, new_height))
         return np.array(resized_image)
 

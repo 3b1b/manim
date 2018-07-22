@@ -241,13 +241,24 @@ class PiCreatureScene(Scene):
     def change_mode(self, mode):
         self.play(self.get_primary_pi_creature().change_mode, mode)
 
-    def look_at(self, thing_to_look_at, pi_creatures=None):
+    def look_at(self, thing_to_look_at, pi_creatures=None, **kwargs):
         if pi_creatures is None:
             pi_creatures = self.get_pi_creatures()
-        self.play(*it.chain(*[
+        args = list(it.chain(*[
             [pi.look_at, thing_to_look_at]
             for pi in pi_creatures
         ]))
+        self.play(*args, **kwargs)
+
+
+class MortyPiCreatureScene(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+            "flip_at_start": True,
+        },
+        "default_pi_creature_start_corner": DR,
+    }
 
 
 class TeacherStudentsScene(PiCreatureScene):

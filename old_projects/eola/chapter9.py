@@ -559,9 +559,9 @@ class IntroduceJennifer(JenniferScene):
             ]),
             [
                 ApplyMethod(pi.change_mode, "plain") 
-                for pi in self.jenny, self.you
+                for pi in (self.jenny, self.you)
             ],
-            [mob.restore for mob in b1, b2, b1.label, b2.label]
+            [mob.restore for mob in (b1, b2, b1.label, b2.label)]
         ))
         self.jenny.bubble.restore()
 
@@ -1548,7 +1548,7 @@ class JennyWatchesRotation(JenniferScene):
         self.play(*it.chain(
             [
                 Rotate(mob, np.pi/2, run_time = 3)
-                for mob in self.jenny_plane, self.b1, self.b2
+                for mob in (self.jenny_plane, self.b1, self.b2)
             ],
             map(Animation, [jenny, jenny.bubble, matrix])
         ))
@@ -1757,7 +1757,7 @@ class JennyWatchesRotationWithMatrixAndVector(JenniferScene):
         self.play(*it.chain(
             [
                 Rotate(mob, np.pi/2, run_time = 3) 
-                for mob in self.jenny_plane, self.b1, self.b2, vector
+                for mob in (self.jenny_plane, self.b1, self.b2, vector)
             ],
             map(Animation, [self.jenny, matrix, vector_array]),
         ))

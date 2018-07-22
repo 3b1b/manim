@@ -1,5 +1,6 @@
 import numpy as np
 import operator as op
+from functools import reduce
 
 
 def sigmoid(x):

@@ -1,5 +1,6 @@
 import inspect
 import operator as op
+from functools import reduce
 
 
 def __metaclass__(cls, bases, params):

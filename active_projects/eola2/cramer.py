@@ -416,7 +416,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         matrix_mobject = system.matrix_mobject
         columns = VGroup(*[
             VGroup(*matrix_mobject.mob_matrix[:, i])
-            for i in 0, 1
+            for i in (0, 1)
         ])
 
         matrix = np.array(self.matrix)
@@ -742,11 +742,11 @@ class ThinkOfPuzzleAsLinearCombination(SetupSimpleSystemOfEquations):
 
         columns = VGroup(*[
             VGroup(*matrix.mob_matrix[:, i].flatten())
-            for i in 0, 1
+            for i in (0, 1)
         ])
         column_arrays = VGroup(*[
             MobjectMatrix(matrix.deepcopy().mob_matrix[:, i])
-            for i in 0, 1
+            for i in (0, 1)
         ])
         for column_array in column_arrays:
             column_array.match_height(output_vect)
@@ -1913,7 +1913,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
                 min_num_quads=3,
                 max_num_quads=3,
             )
-            for vect in DOWN, RIGHT
+            for vect in (DOWN, RIGHT)
         ])
         for brace, tex, color in zip(braces, "xy", [X_COLOR, Y_COLOR]):
             brace.label = brace.get_tex(tex, buff=SMALL_BUFF)

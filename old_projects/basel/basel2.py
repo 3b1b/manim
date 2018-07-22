@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 from once_useful_constructs.light import *
 
@@ -128,7 +129,7 @@ class LightIndicator(Mobject):
 
     def continual_update(self):
         if self.light_source == None:
-            print "Indicator cannot update, reason: no light source found"
+            print("Indicator cannot update, reason: no light source found")
         self.set_intensity(self.measured_intensity())
 
 class UpdateLightIndicator(AnimationGroup):
@@ -152,9 +153,9 @@ class ContinualLightIndicatorUpdate(ContinualAnimation):
 
 def copy_func(f):
     """Based on http://stackoverflow.com/a/6528148/190597 (Glenn Maynard)"""
-    g = types.FunctionType(f.func_code, f.func_globals, name=f.func_name,
-                           argdefs=f.func_defaults,
-                           closure=f.func_closure)
+    g = types.FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                           argdefs=f.__defaults__,
+                           closure=f.__closure__)
     g = functools.update_wrapper(g, f)
     return g
 
@@ -348,7 +349,7 @@ class IntroScene(PiCreatureScene):
         rect_label_anims = []
 
         for i, t1, t2 in zip(it.count(1), [0]+series_terms, series_terms):
-            color = slab_colors.next()
+            color = next(slab_colors)
             line = Line(*map(number_line.number_to_point, [t1, t2]))
             rect = Rectangle(
                 stroke_width = 0,
@@ -2115,7 +2116,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
                 buff = SMALL_BUFF,
                 color = WHITE,
             )
-            for ls in lsA, lsB, lsC
+            for ls in (lsA, lsB, lsC)
         ])
 
         #Lines
@@ -3813,7 +3814,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
                 Dot(number_line.number_to_point(u*x))
                 for x in range(1, int(self.x_radius), 2)
             ])
-            for u in 1, -1
+            for u in (1, -1)
         ]
         dot_pairs = it.starmap(VGroup, zip(positive_dots, negative_dots))
 
@@ -3843,7 +3844,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
                 TexMobject("+").next_to(
                     number_line.number_to_point(u*n), UP, buff = 1.25,
                 )
-                for u in -1, 1
+                for u in (-1, 1)
             ])
             for n in range(0, self.max_shown_n, 2)
         ])
@@ -3890,7 +3891,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         circle = everything.copy()
         circle.move_to(ORIGIN)
         circle.apply_function(
-            lambda (x, y, z) : complex_to_R3(7*np.exp(complex(0, 0.0315*x)))
+            lambda x_y_z : complex_to_R3(7*np.exp(complex(0, 0.0315*x_y_z[0])))
         )
         circle.rotate(-TAU/4, about_point = ORIGIN)
         circle.center()

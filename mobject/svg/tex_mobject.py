@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from constants import *
 
-from svg_mobject import SVGMobject
-from svg_mobject import VMobjectFromSVGPathstring
+from .svg_mobject import SVGMobject
+from .svg_mobject import VMobjectFromSVGPathstring
 from utils.config_ops import digest_config
 from utils.strings import split_string_list_to_isolate_substring
 from utils.tex_file_writing import tex_to_svg_file
@@ -10,6 +11,7 @@ from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VectorizedPoint
 
 import operator as op
+from functools import reduce
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -92,7 +94,7 @@ class SingleStringTexMobject(SVGMobject):
                 lambda s: s[0] in "(){}[]|.\\",
                 tex.split(substr)[1:]
             ))
-            for substr in "\\left", "\\right"
+            for substr in ("\\left", "\\right")
         ]
         if num_lefts != num_rights:
             tex = tex.replace("\\left", "\\big")

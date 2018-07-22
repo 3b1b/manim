@@ -15,7 +15,7 @@ def normalize(vect):
 def get_composite_rotation_angle_and_axis(angles, axes):
     angle1, axis1 = 0, OUT
     for angle2, axis2 in zip(angles, axes):
-        ## Figure out what (angle3, axis3) is the same 
+        ## Figure out what (angle3, axis3) is the same
         ## as first applying (angle1, axis1), then (angle2, axis2)
         axis2 = normalize(axis2)
         dot = np.dot(axis2, axis1)
@@ -955,8 +955,8 @@ class AddCircleSymmetries(CircleSymmetries):
         self.wait(2)
         for term, arc in zip(equation[::2], arcs):
             self.play(*[
-                ApplyMethod(mob.scale_in_place, 1.2, rate_func=there_and_back)
-                for mob in term, arc
+                ApplyMethod(mob.scale_in_place, 1.2, rate_func = there_and_back)
+                for mob in (term, arc)
             ])
             self.wait()
 
@@ -1027,7 +1027,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
                     start_angle=np.pi / 12 + a, angle=5 * np.pi / 6,
                     color=YELLOW
                 ).add_tip()
-                for a in 0, np.pi
+                for a in (0, np.pi)
             ])
             arrows.scale_to_fit_height(1.5 * cube.get_height())
             z_to_axis = z_to_vector(axis)
@@ -1878,7 +1878,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
                 self.number_line.number_to_point(num),
                 self.shadow_line.number_to_point(num)
             )
-            for num in 3, 0.5
+            for num in (3, 0.5)
         ]
         three_mob = filter(
             lambda m: m.get_tex_string() == "3",
@@ -1962,7 +1962,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
                 self.number_line.number_to_point(num),
                 self.shadow_line.number_to_point(num)
             )
-            for num in 0.33, 1
+            for num in (0.33, 1)
         ]
 
         self.play(
@@ -1999,8 +1999,8 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
 
     def compose_actions(self, num1, num2):
         words = VGroup(*[
-            TextMobject("(%s by %s)" % (word, str(num)))
-            for num in num1, num2, num1 * num2
+            TextMobject("(%s by %s)"%(word, str(num)))
+            for num in (num1, num2, num1*num2)
             for word in ["Stretch" if num > 1 else "Squish"]
         ])
         words.submobjects.insert(2, TexMobject("="))
@@ -2767,7 +2767,7 @@ class ExponentsAsHomomorphism(Scene):
             self.wait()
         self.play(*[
             line.restore
-            for line in self.top_line, self.bottom_line
+            for line in (self.top_line, self.bottom_line)
         ])
 
     def get_stretch_anim(self, bottom_line, x):
@@ -3383,7 +3383,7 @@ class ECLPromo(PiCreatureScene):
 
 class ExpTransformation(ComplexTransformationScene):
     CONFIG = {
-        "camera_class": CameraWithPerspective,
+        "camera_class": ThreeDCamera,
     }
 
     def construct(self):
@@ -3392,7 +3392,7 @@ class ExpTransformation(ComplexTransformationScene):
         self.prepare_for_transformation(self.plane)
         final_plane = self.plane.copy().apply_complex_function(np.exp)
         cylinder = self.plane.copy().apply_function(
-            lambda (x, y, z): np.array([x, np.sin(y), -np.cos(y)])
+            lambda x_y_z : np.array([x_y_z[0], np.sin(x_y_z[1]), -np.cos(x_y_z[1])])
         )
         title = TexMobject("x \\to e^x")
         title.add_background_rectangle()

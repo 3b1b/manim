@@ -1113,7 +1113,7 @@ class OneMoreExample(Scene):
             Transform(second_line[3], minus),
             FadeOut(VGroup(*[
                 second_line[i]
-                for i in 4, 6, 7
+                for i in (4, 6, 7)
             ])),
             second_line[5].shift, 0.35*RIGHT,
         )
@@ -1514,7 +1514,7 @@ class WriteGeneralFormula(GeneralExample):
                 run_time = 5,
                 lag_ratio = 0.2
             )
-            for mob in pair_mobs, triple_mobs
+            for mob in (pair_mobs, triple_mobs)
         ])
 
 class VisualizeZSquared(Scene):
@@ -1608,7 +1608,7 @@ class VisualizeZSquared(Scene):
         for z in z_list:
             z_point, square_point, mid_point = [
                 self.background_plane.number_to_point(z**p)
-                for p in 1, 2, 1.5
+                for p in (1, 2, 1.5)
             ]
             angle = Line(mid_point, square_point).get_angle()
             angle -= Line(z_point, mid_point).get_angle()
@@ -1671,7 +1671,7 @@ class VisualizeZSquared(Scene):
             self.background_plane.point_to_coords(
                 u*FRAME_X_RADIUS*RIGHT + u*FRAME_Y_RADIUS*UP
             )
-            for u in -1, 1
+            for u in (-1, 1)
         ]
         x_min, y_min = map(int, min_corner[:2])
         x_max, y_max = map(int, max_corner[:2])
@@ -1844,7 +1844,7 @@ class VisualizeZSquared(Scene):
             c = int(abs(z))
             a_label, b_label, c_label = labels = [
                 TexMobject(str(num))
-                for num in a, b, c
+                for num in (a, b, c)
             ]
             for label in b_label, c_label:
                 label.add_background_rectangle()
@@ -2048,7 +2048,7 @@ class DrawSingleRadialLine(PointsWeMiss):
         )
         added_dots = VGroup(*[
             Dot(self.background_plane.coords_to_point(3*k, 4*k))
-            for k in 2, 3, 5
+            for k in (2, 3, 5)
         ])
         added_dots.set_color(GREEN)
 
@@ -2307,7 +2307,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
                 run_time = 2,
                 path_arc = -np.pi/3
             )
-            for tex  in "a", "b", "c", "^2", "+", "="
+            for tex  in ("a", "b", "c", "^2", "+", "=")
         ] + [
             ReplacementTransform(
                 top_line.get_parts_by_tex("1"),
@@ -2320,7 +2320,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
                 run_time = 2,
                 rate_func = squish_rate_func(smooth, 0, 0.5)
             )
-            for tex in "(", ")", "over",
+            for tex in ("(", ")", "over",)
         ])
         self.wait(2)
         self.play(Write(circle_label))
@@ -2387,7 +2387,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
     def get_unit_circle(self):
         template_line = Line(*[
             self.background_plane.number_to_point(z)
-            for z in -1, 1
+            for z in (-1, 1)
         ])
         circle = Circle(color = GREEN)
         circle.replace(template_line, dim_to_match = 0)
@@ -2415,7 +2415,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
     def add_unit_circle(self):
         template_line = Line(*[
             self.background_plane.number_to_point(n)
-            for n in -1, 1
+            for n in (-1, 1)
         ])
         circle = Circle(color = BLUE)
         circle.replace(template_line, dim_to_match = 0)
@@ -2534,7 +2534,7 @@ class SupposeMissingPoint(PointsWeMiss):
         dot, line = self.dot, self.line
         template_line = Line(*[
             self.background_plane.number_to_point(n)
-            for n in -1, 1
+            for n in (-1, 1)
         ])
         circle = Circle(color = GREEN)
         circle.replace(template_line, dim_to_match = 0)
@@ -2893,10 +2893,10 @@ class FinalProof(RationalPointsOnUnitCircle):
                 rhs.get_part_by_tex(tex),
                 run_time = 2
             )
-            for tex in "u", "v"
+            for tex in ("u", "v")
         ] + [
             Write(rhs.get_part_by_tex(tex))
-            for tex in "=", "over"
+            for tex in ("=", "over")
         ])
         self.wait(2)
         self.play(
@@ -2917,7 +2917,7 @@ class BitOfCircleGeometry(Scene):
         circle = Circle(color = BLUE, radius = 3)
         p0, p1, p2 = [
             circle.point_from_proportion(alpha)
-            for alpha in 0, 0.15, 0.55
+            for alpha in (0, 0.15, 0.55)
         ]
         O = circle.get_center()
         O_dot = Dot(O, color = WHITE)

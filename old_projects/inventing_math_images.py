@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -7,7 +8,7 @@ import sys
 
 from big_ol_pile_of_manim_imports import *
 from script_wrapper import command_line_create_scene
-from inventing_math import divergent_sum, draw_you
+from .inventing_math import divergent_sum, draw_you
 
 
 

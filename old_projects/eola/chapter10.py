@@ -241,7 +241,7 @@ class VectorRemainsOnSpan(ExampleTranformationScene):
         self.wait()
         target_vectors = [
             vector.copy().scale(scalar)
-            for scalar in 2, -2, 1
+            for scalar in (2, -2, 1)
         ]
         for target, time in zip(target_vectors, [1, 2, 2]):
             self.play(Transform(vector, target, run_time = time))
@@ -269,7 +269,7 @@ class IHatAsEigenVector(ExampleTranformationScene):
         x_axis = self.plane.axes[0]
         targets = [
             self.i_hat.copy().scale(val)
-            for val in -FRAME_X_RADIUS, FRAME_X_RADIUS, 1
+            for val in (-FRAME_X_RADIUS, FRAME_X_RADIUS, 1)
         ]
         lines = [
             Line(v1.get_end(), v2.get_end(), color = YELLOW)
@@ -1422,7 +1422,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             two.move_to(lamb)
             self.play(Transform(lamb, two))
         self.play(*it.chain(
-            [mob.restore for mob in self.plane, self.i_hat, self.j_hat],
+            [mob.restore for mob in (self.plane, self.i_hat, self.j_hat)],
             map(Animation, self.foreground_mobjects),            
         ))
 
@@ -1460,7 +1460,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         )
         self.wait()
         self.play(*it.chain(
-            [mob.restore for mob in self.plane, self.i_hat, self.j_hat, vectors],
+            [mob.restore for mob in (self.plane, self.i_hat, self.j_hat, vectors)],
             map(FadeOut, [xy_array, equals, zero_array]),
             map(Animation, self.foreground_mobjects)
         ))
@@ -2167,7 +2167,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
 
         cob_matrix = Matrix(np.array([
             list(vect.entries.target)
-            for vect in b1, b2
+            for vect in (b1, b2)
         ]).T)
         cob_matrix.rect = BackgroundRectangle(cob_matrix)
         cob_matrix.add_to_back(cob_matrix.rect)
@@ -2178,7 +2178,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         brace_text.next_to(brace, DOWN, aligned_edge = LEFT)
         brace_text.add_background_rectangle()
 
-        copies = [vect.coords.copy() for vect in b1, b2]
+        copies = [vect.coords.copy() for vect in (b1, b2)]
         self.to_fade += copies
         self.add(*copies)
         self.play(

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 from once_useful_constructs.combinatorics import *
 
@@ -72,7 +73,7 @@ class BuildNewPascalRow(Transform):
         # align with original (copy got centered on screen)
         c1 = new_pt.coords_to_mobs[0][0].get_center()
         c2 = mobject.coords_to_mobs[0][0].get_center()
-        print c1, c2
+        print(c1, c2)
         v = c2 - c1
         new_pt.shift(v)
 

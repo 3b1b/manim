@@ -164,28 +164,28 @@ class ProbabilityDistributions(PiCreatureScene):
         cell_size = 0.5
         dice_table = TwoDiceTable(cell_size = cell_size, label_scale = 0.7)
         dice_table.shift(0.8 * DOWN)
-        dice_unit_rect = SurroundingRectangle(dice_table.cells, buff = 0,
-            stroke_color = WHITE) 
+        dice_unit_rect = SurroundingRectangle(
+            dice_table.cells, buff = 0,
+            stroke_color=WHITE
+        )
 
         dice_table_grouped_cells = VGroup()
 
         for i in range(6):
-            cell = dice_table.cells[6 * i]
-            start = cell.get_center()
-            stop = start + cell_size * LEFT + cell_size * DOWN
-            
             dice_table_grouped_cells.add(VGroup(*[
-                dice_table.cells[6 * i - 5 * k]
+                VGroup(
+                    dice_table.cells[6 * i - 5 * k],
+                    dice_table.labels[6 * i - 5 * k],
+                )
                 for k in range(i + 1)
             ]))
 
         for i in range(5):
-            cell = dice_table.cells[31 + i]
-            start = cell.get_center()
-            stop = start + cell_size * LEFT + cell_size * DOWN
-            
             dice_table_grouped_cells.add(VGroup(*[
-                dice_table.cells[31 + i - 5 * k]
+                VGroup(
+                    dice_table.cells[31 + i - 5 * k],
+                    dice_table.labels[31 + i - 5 * k],
+                )
                 for k in range(5 - i)
             ]))
 
@@ -194,8 +194,8 @@ class ProbabilityDistributions(PiCreatureScene):
         #     FadeIn(dice_table.rows)
         # )
 
-        for (cell, label) in zip(dice_table.cells, dice_table.labels):
-            cell.add(label)
+        # for (cell, label) in zip(dice_table.cells, dice_table.labels):
+        #     cell.add(label)
 
         # self.play(
         #     LaggedStart(FadeIn, dice_table_grouped_cells,
@@ -211,14 +211,16 @@ class ProbabilityDistributions(PiCreatureScene):
 
 
         self.play(
-            dice_table_grouped_cells.space_out_submobjects, {"factor" : 1.9},
+            dice_table_grouped_cells.space_out_submobjects, {"factor" : 1.5},
             rate_func=there_and_back_with_pause,
             run_time=run_time
         )
+
         dice_table.add(dice_unit_rect)
-        dice_table_target = dice_table.copy()
-        dice_table_target.scale(0.5).to_corner(UR, buff = LARGE_BUFF)
-        dice_table_target.shift(0.4*UP)
+        dice_table_target = dice_table.deepcopy()
+        dice_table_target.scale(0.5)
+        dice_table_target.to_corner(UR, buff=LARGE_BUFF)
+        dice_table_target.shift(0.4 * UP)
 
         self.play(Transform(dice_table, dice_table_target))
 
@@ -231,9 +233,10 @@ class ProbabilityDistributions(PiCreatureScene):
 
 # TITLE
 
-        text = TextMobject("Probability distributions", color = YELLOW)
+        text = TextMobject("Probability distributions")
         text.to_edge(UP)
-        text_rect = SurroundingRectangle(text, buff = MED_SMALL_BUFF)
+        text_rect = SurroundingRectangle(text, buff=MED_SMALL_BUFF)
+        text_rect.match_color(text)
 
         self.play(
             FadeIn(text),
@@ -263,7 +266,7 @@ class ProbabilityDistributions(PiCreatureScene):
         braces = VGroup()
         labels = VGroup()
         for (rect, count) in zip(brick_row.rects, counts):
-            label = TexMobject("{" + str(count) + "\over 8}").scale(0.5)
+            label = TexMobject("{" + str(count) + "\\over 8}").scale(0.5)
             brace = Brace(rect, DOWN)
             label.next_to(brace, DOWN)
             braces.add(brace)
@@ -286,7 +289,7 @@ class ProbabilityDistributions(PiCreatureScene):
         outcome_braces = VGroup(*[
             Brace(outcome, DOWN) for outcome in outcomes
         ])
-        outcome_labels = VGroup(*[
+        outcome_labels = VGroup(*[i
             TexMobject("{1\over 8}").scale(0.5).next_to(brace, DOWN)
             for brace in outcome_braces
         ])

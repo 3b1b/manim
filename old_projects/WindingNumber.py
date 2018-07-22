@@ -1,3 +1,4 @@
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 
 import time
@@ -30,8 +31,8 @@ ODOMETER_STROKE_WIDTH = 20
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
 
-# This turns counterclockwise revs into their color. Beware, we use CCW angles 
-# in all display code, but generally think in this video's script in terms of 
+# This turns counterclockwise revs into their color. Beware, we use CCW angles
+# in all display code, but generally think in this video's script in terms of
 # CW angles
 def rev_to_rgba(alpha):
     alpha = (0.5 - alpha) % 1  # For convenience, to go CW from red on left instead of CCW from right
@@ -64,19 +65,19 @@ def rev_to_color(alpha):
     return rgba_to_color(rev_to_rgba(alpha))
 
 
-def point_to_rev((x, y), allow_origin=False):
-    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
-    # design choices in the underlying atan2 library call, but for our purposes, this is 
+def point_to_rev(xxx_todo_changeme6, allow_origin = False):
+    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to
+    # design choices in the underlying atan2 library call, but for our purposes, this is
     # illegitimate, and all winding number calculations must be set up to avoid this
-    if not (allow_origin) and (x, y) == (0, 0):
-        print "Error! Angle of (0, 0) computed!"
+    (x, y) = xxx_todo_changeme6
+    if not(allow_origin) and (x, y) == (0, 0):
+        print("Error! Angle of (0, 0) computed!")
         return
     return fdiv(np.arctan2(y, x), TAU)
 
-
-def point_to_size((x, y)):
-    return np.sqrt(x ** 2 + y ** 2)
-
+def point_to_size(xxx_todo_changeme7):
+    (x, y) = xxx_todo_changeme7
+    return np.sqrt(x**2 + y**2)
 
 # rescaled_size goes from 0 to 1 as size goes from 0 to infinity
 # The exact method is arbitrarily chosen to make pleasing color map
@@ -146,14 +147,14 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         if self.show_target_line:
             self.play(FadeOut(target_line_label))  # Reduce clutter
 
-        print "For reference, graphOrigin: ", self.coords_to_point(0, 0)
-        print "targetYPoint: ", self.coords_to_point(0, self.targetY)
+        print("For reference, graphOrigin: ", self.coords_to_point(0, 0))
+        print("targetYPoint: ", self.coords_to_point(0, self.targetY))
 
-    # This is a mess right now (first major animation coded), 
+    # This is a mess right now (first major animation coded),
     # but it works; can be refactored later or never
     def solveEquation(self):
-        # Under special conditions, used in GuaranteedZeroScene, we let the 
-        # "lower" guesses actually be too high, or vice versa, and color 
+        # Under special conditions, used in GuaranteedZeroScene, we let the
+        # "lower" guesses actually be too high, or vice versa, and color
         # everything accordingly
 
         def color_by_comparison(val, ref):
@@ -440,7 +441,7 @@ def make_alpha_winder(func, start, end, num_checkpoints, cheap=False):
         if cheap:
             return alpha  # A test to see if this func is responsible for slowdown
 
-        index = clamp(0, num_checkpoints - 1, int(alpha * num_checkpoints))
+        index = np.clip(0, num_checkpoints - 1, int(alpha * num_checkpoints))
         x = interpolate(start, end, alpha)
         if cheap:
             return check_points[index]  # A more principled test that at least returns a reasonable answer
@@ -458,11 +459,11 @@ def complex_to_pair(c):
 
 
 def plane_func_from_complex_func(f):
-    return lambda (x, y): complex_to_pair(f(complex(x, y)))
-
+    return lambda x_y4 : complex_to_pair(f(complex(x_y4[0],x_y4[1])))
 
 def point3d_func_from_plane_func(f):
-    def g((x, y, z)):
+    def g(xxx_todo_changeme):
+        (x, y, z) = xxx_todo_changeme
         f_val = f((x, y))
         return np.array((f_val[0], f_val[1], 0))
 
@@ -472,8 +473,8 @@ def point3d_func_from_plane_func(f):
 def point3d_func_from_complex_func(f):
     return point3d_func_from_plane_func(plane_func_from_complex_func(f))
 
-
-def plane_zeta((x, y)):
+def plane_zeta(xxx_todo_changeme8):
+    (x, y) = xxx_todo_changeme8
     CLAMP_SIZE = 1000
     z = complex(x, y)
     try:
@@ -484,13 +485,12 @@ def plane_zeta((x, y)):
         answer = answer / abs(answer) * CLAMP_SIZE
     return (float(answer.real), float(answer.imag))
 
-
-def rescaled_plane_zeta((x, y)):
-    return plane_zeta((x / FRAME_X_RADIUS, 8 * y))
-
+def rescaled_plane_zeta(xxx_todo_changeme9):
+    (x, y) = xxx_todo_changeme9
+    return plane_zeta((x/FRAME_X_RADIUS, 8*y))
 
 # Returns a function from 2-ples to 2-ples
-# This function is specified by a list of (x, y, z) tuples, 
+# This function is specified by a list of (x, y, z) tuples,
 # and has winding number z (or total of all specified z) around each (x, y)
 #
 # Can also pass in (x, y) tuples, interpreted as (x, y, 1)
@@ -501,14 +501,13 @@ def plane_func_by_wind_spec(*specs):
         elif len(p) == 2:
             return (p[0], p[1], 1)
         else:
-            print "Error in plane_func_by_wind_spec embiggen!"
-
+            print("Error in plane_func_by_wind_spec embiggen!")
     specs = map(embiggen, specs)
 
-    pos_specs = filter(lambda (x, y, z): z > 0, specs)
-    neg_specs = filter(lambda (x, y, z): z < 0, specs)
+    pos_specs = filter(lambda x_y_z : x_y_z[2] > 0, specs)
+    neg_specs = filter(lambda x_y_z1 : x_y_z1[2] < 0, specs)
 
-    neg_specs_made_pos = map(lambda (x, y, z): (x, y, -z), neg_specs)
+    neg_specs_made_pos = map (lambda x_y_z2 : (x_y_z2[0], x_y_z2[1], -x_y_z2[2]), neg_specs)
 
     def poly(c, root_specs):
         return np.prod([(c - complex(x, y)) ** z for (x, y, z) in root_specs])
@@ -671,7 +670,7 @@ class ColorMappedByFuncScene(Scene):
         )
 
     def setup(self):
-        # The composition of input_to_pos and pos_to_color 
+        # The composition of input_to_pos and pos_to_color
         # is to be equal to func (which turns inputs into colors)
         # However, depending on whether we are showing input or output (via a MappingCamera),
         # we color the background using either func or the identity map
@@ -682,8 +681,8 @@ class ColorMappedByFuncScene(Scene):
             self.input_to_pos_func = lambda p: p
             self.pos_to_color_func = self.func
 
-        self.pixel_pos_to_color_func = lambda (x, y): self.pos_to_color_func(
-            self.num_plane.point_to_coords_cheap(np.array([x, y, 0]))
+        self.pixel_pos_to_color_func = lambda x_y3 : self.pos_to_color_func(
+            self.num_plane.point_to_coords_cheap(np.array([x_y3[0], x_y3[1], 0]))
         )
 
         jitter_val = 0.1
@@ -693,7 +692,7 @@ class ColorMappedByFuncScene(Scene):
         def mini_hasher(p):
             rgba = point_to_rgba(self.pixel_pos_to_color_func(p))
             if rgba[3] != 1.0:
-                print "Warning! point_to_rgba assigns fractional alpha", rgba[3]
+                print("Warning! point_to_rgba assigns fractional alpha", rgba[3])
             return tuple(rgba)
 
         to_hash = tuple(mini_hasher(p) for p in func_hash_points)
@@ -707,18 +706,18 @@ class ColorMappedByFuncScene(Scene):
         )
         self.in_background_pass = not os.path.exists(self.background_image_file)
 
-        print "Background file: " + self.background_image_file
+        print("Background file: " + self.background_image_file)
         if self.in_background_pass:
-            print "The background file does not exist yet; this will be a background creation + video pass"
+            print("The background file does not exist yet; this will be a background creation + video pass")
         else:
-            print "The background file already exists; this will only be a video pass"
+            print("The background file already exists; this will only be a video pass")
 
     def construct(self):
         if self.in_background_pass:
             self.camera.set_background_from_func(
-                lambda (x, y): point_to_rgba(
+                lambda x_y: point_to_rgba(
                     self.pixel_pos_to_color_func(
-                        (x, y)
+                        (x_y[0], x_y[1])
                     )
                 )
             )
@@ -847,7 +846,7 @@ class PiWalker(ColorMappedByFuncScene):
 
             walker_anim = Succession(walker_anim, new_anim)
 
-        # TODO: Allow smooth paths instead of breaking them up into lines, and 
+        # TODO: Allow smooth paths instead of breaking them up into lines, and
         # use point_from_proportion to get points along the way
 
         if self.display_odometer:
@@ -905,9 +904,9 @@ class PiWalkerCircle(PiWalker):
         self.walk_coords = [r * np.array((np.cos(i * TAU / N), np.sin(i * TAU / N))) for i in range(N)]
         PiWalker.setup(self)
 
-
-def split_interval((a, b)):
-    mid = (a + b) / 2.0
+def split_interval(xxx_todo_changeme10):
+    (a, b) = xxx_todo_changeme10
+    mid = (a + b)/2.0
     return ((a, mid), (mid, b))
 
 
@@ -959,7 +958,7 @@ class RectangleData():
         elif dim == 1:
             return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)[::-1]]
         else:
-            print "RectangleData.splits_on_dim passed illegitimate dimension!"
+            print("RectangleData.splits_on_dim passed illegitimate dimension!")
 
         return tuple(return_data)
 
@@ -972,7 +971,7 @@ class RectangleData():
         elif dim == 1:
             sides = (self.get_left(), self.get_right())
         else:
-            print "RectangleData.split_line_on_dim passed illegitimate dimension!"
+            print("RectangleData.split_line_on_dim passed illegitimate dimension!")
 
         return tuple([mid(x, y) for (x, y) in sides])
 
@@ -1017,10 +1016,10 @@ class EquationSolver2dNode(object):
 
     def play_in_bfs(self, scene, border_anim):
         bfs_nodes = self.hacky_bfs()
-        print "Number of nodes: ", len(bfs_nodes)
+        print("Number of nodes: ", len(bfs_nodes))
 
         if len(bfs_nodes) < 1:
-            print "Less than 1 node! Aborting!"
+            print("Less than 1 node! Aborting!")
             return
 
         scene.play(bfs_nodes[0].first_anim, border_anim)
@@ -1045,7 +1044,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "use_fancy_lines": True,
         "line_color": WHITE,  # Only used for non-fancy lines
 
-        # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
+        # TODO: Consider adding a "find_all_roots" flag, which could be turned off
         # to only explore one of the two candidate subrectangles when both are viable
 
         # Walker settings
@@ -1053,13 +1052,13 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "scale_arrows": False,
 
         # Special case settings
-        # These are used to hack UhOhScene, where we display different colors than 
+        # These are used to hack UhOhScene, where we display different colors than
         # are actually, secretly, guiding the evolution of the EquationSolver2d
         #
         # replacement_background_image_file has to be manually configured
         "show_winding_numbers": True,
 
-        # Used for UhOhScene; 
+        # Used for UhOhScene;
         "manual_wind_override": None,
 
         "show_cursor": True,
@@ -1073,7 +1072,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
     def construct(self):
         if self.num_iterations == 0:
-            print "You forgot to set num_iterations (maybe you meant to subclass something other than EquationSolver2d directly?)"
+            print("You forgot to set num_iterations (maybe you meant to subclass something other than EquationSolver2d directly?)")
             return
 
         ColorMappedObjectsScene.construct(self)
@@ -1113,9 +1112,9 @@ class EquationSolver2d(ColorMappedObjectsScene):
             return m[i + 1]
 
         def Animate2dSolver(cur_depth, rect, dim_to_split,
-                            sides_to_draw=[0, 1, 2, 3],
-                            manual_wind_override=None):
-            print "Solver at depth: " + str(cur_depth)
+            sides_to_draw = [0, 1, 2, 3],
+            manual_wind_override = None):
+            print("Solver at depth: " + str(cur_depth))
 
             if cur_depth >= self.num_iterations:
                 return EquationSolver2dNode(empty_animation)
@@ -1240,7 +1239,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         rect = RectangleData(x_interval, y_interval)
 
-        print "Starting to compute anim"
+        print("Starting to compute anim")
 
         node = Animate2dSolver(
             cur_depth=0,
@@ -1250,7 +1249,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
             manual_wind_override=self.manual_wind_override
         )
 
-        print "Done computing anim"
+        print("Done computing anim")
 
         if self.display_in_parallel:
             anim = node.display_in_parallel()
@@ -1287,14 +1286,14 @@ class EquationSolver2d(ColorMappedObjectsScene):
             rate_func=rect_rate
         )
 
-        print "About to do the big Play; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("About to do the big Play; for reference, the current time is ", time.strftime("%H:%M:%S"))
 
         if self.use_separate_plays:
             node.play_in_bfs(self, border_anim)
         else:
             self.play(anim, border_anim)
 
-        print "All done; for reference, the current time is ", time.strftime("%H:%M:%S")
+        print("All done; for reference, the current time is ", time.strftime("%H:%M:%S"))
 
         self.wait()
 
@@ -1636,7 +1635,7 @@ class HasItsLimitations(Scene):
 
         DOT_Z = OUT
         # Note: This z-buffer value is needed for our static scenes, but is
-        # not sufficient for everything, in that we still need to use 
+        # not sufficient for everything, in that we still need to use
         # the foreground_mobjects trick during animations.
         # At some point, we should figure out how to have animations
         # play well with z coordinates.
@@ -1740,7 +1739,7 @@ class NumberLineScene(Scene):
         self.play(ShowCreation(full_1d))
         self.wait()
 
-        # TODO: Can polish the morphing above; have dots become left and right sides, and 
+        # TODO: Can polish the morphing above; have dots become left and right sides, and
         # only then fill in the top and bottom
 
         num_plane = NumberPlane()
@@ -1772,12 +1771,12 @@ class Initial2dFuncSceneBase(Scene):
         "func": point3d_func_from_complex_func(lambda c: c ** 2 - c ** 3 / 5 + 1)
         # We don't use example_plane_func because, unfortunately, the sort of examples
         # which are good for demonstrating our color mapping haven't turned out to be
-        # good for visualizing in this manner; the gridlines run over themselves multiple 
+        # good for visualizing in this manner; the gridlines run over themselves multiple
         # times in too confusing a fashion
     }
 
     def show_planes(self):
-        print "Error! Unimplemented (pure virtual) show_planes"
+        print("Error! Unimplemented (pure virtual) show_planes")
 
     def shared_construct(self):
         points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
@@ -2039,7 +2038,7 @@ class LoopSplitScene(ColorMappedObjectsScene):
 
         faded = 0.3
 
-        # Workaround for FadeOut/FadeIn not playing well with ContinualAnimations due to 
+        # Workaround for FadeOut/FadeIn not playing well with ContinualAnimations due to
         # Transforms making copies no longer identified with the ContinualAnimation's tracked mobject
         def bullet_fade(start, end, mob):
             return UpdateFromAlphaFunc(mob, lambda m, a: m.set_fill(opacity=interpolate(start, end, a)))
@@ -2525,9 +2524,7 @@ class BorderOf2dRegionScene(Scene):
         border = Polygon(*points, color=negative_color, stroke_width=border_stroke_width)
         self.play(ShowCreation(border))
 
-
-big_loop_no_zeros_func = lambda (x, y): complex_to_pair(np.exp(complex(10, y * np.pi)))
-
+big_loop_no_zeros_func = lambda x_y5 : complex_to_pair(np.exp(complex(10, x_y5[1] * np.pi)))
 
 class BigLoopNoZeros(ColorMappedObjectsScene):
     CONFIG = {
@@ -2583,8 +2580,8 @@ class ExamplePlaneFunc(ColorMappedByFuncScene):
 
         self.wait()
 
-        # TODO: Fix the code in Fade to automatically propagate correctly 
-        # to subobjects, even with special vectorized object handler. 
+        # TODO: Fix the code in Fade to automatically propagate correctly
+        # to subobjects, even with special vectorized object handler.
         # Also, remove the special handling from FadeOut, have it implemented
         # solely through Fade.
         #
@@ -2610,7 +2607,7 @@ class PiWalkerExamplePlaneFunc(PiWalkerRect):
     CONFIG = {
         "show_num_plane": False,
         "func": example_plane_func,
-        # These are just manually entered, not 
+        # These are just manually entered, not
         # automatically kept in sync with example_plane_func:
         "start_x": -4,
         "start_y": 3,
@@ -2623,7 +2620,7 @@ class NoticeHowOnThisLoop(PiWalkerRect):
     CONFIG = {
         "show_num_plane": False,
         "func": example_plane_func,
-        # These are just manually entered, not 
+        # These are just manually entered, not
         # automatically kept in sync with example_plane_func:
         "start_x": 0.5,
         "start_y": -0.5,
@@ -2634,7 +2631,7 @@ class NoticeHowOnThisLoop(PiWalkerRect):
 
 class ButOnThisLoopOverHere(NoticeHowOnThisLoop):
     CONFIG = {
-        # These are just manually entered, not 
+        # These are just manually entered, not
         # automatically kept in sync with example_plane_func:
         "start_x": -1,
         "start_y": 0,
@@ -2658,10 +2655,10 @@ class TinyLoopOfBasicallySameColor(PureColorMap):
         self.play(ShowCreation(circle))
         self.wait()
 
-
-def uhOhFunc((x, y)):
-    x = -np.clip(x, -5, 5) / 5
-    y = -np.clip(y, -3, 3) / 3
+def uhOhFunc(xxx_todo_changeme11):
+    (x, y) = xxx_todo_changeme11
+    x = -np.clip(x, -5, 5)/5
+    y = -np.clip(y, -3, 3)/3
 
     alpha = 0.5  # Most things will return green
 
@@ -2772,8 +2769,9 @@ class UhOhSalientStill(ColorMappedObjectsScene):
 
 # Random test scenes and test functions go here:
 
-def rect_to_circle((x, y, z)):
-    size = np.sqrt(x ** 2 + y ** 2)
+def rect_to_circle(xxx_todo_changeme12):
+    (x, y, z) = xxx_todo_changeme12
+    size = np.sqrt(x**2 + y**2)
     max_abs_size = max(abs(x), abs(y))
     return fdiv(np.array((x, y, z)) * max_abs_size, size)
 
@@ -2859,7 +2857,7 @@ class SpecifiedWinder(PiWalker):
             cur_pos += (self.step_size, 0)
             mid_rev = rev_func(cur_pos)
 
-        print "Reached ", cur_pos, ", with rev ", mid_rev - start_rev
+        print("Reached ", cur_pos, ", with rev ", mid_rev - start_rev)
         mid_pos = cur_pos.copy()
 
         end_rev = mid_rev
@@ -2869,10 +2867,10 @@ class SpecifiedWinder(PiWalker):
 
         end_pos = cur_pos.copy()
 
-        print "Reached ", cur_pos, ", with rev ", end_rev - mid_rev
+        print("Reached ", cur_pos, ", with rev ", end_rev - mid_rev)
 
         self.walk_coords = [start_pos, mid_pos, end_pos]
-        print "Walk coords: ", self.walk_coords
+        print("Walk coords: ", self.walk_coords)
         PiWalker.setup(self)
 
 

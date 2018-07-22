@@ -108,7 +108,7 @@ class WorkOutNumerically(Scene):
                 LaggedStart(
                     ReplacementTransform,
                     matrix_numbers,
-                    lambda m: (m, numbers_iter.next()),
+                    lambda m: (m, next(numbers_iter)),
                     path_arc=TAU / 6
                 ),
             )
@@ -139,7 +139,7 @@ class WorkOutNumerically(Scene):
         self.play(FadeIn(empty_det_tex))
         self.play(*[
             ReplacementTransform(M.copy(), matrix)
-            for M in self.M1, self.M2
+            for M in (self.M1, self.M2)
         ])
         self.play(LaggedStart(FadeIn, group[1:]))
         self.wait()

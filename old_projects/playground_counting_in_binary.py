@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -12,6 +13,7 @@ from constants import *
 from mobject.region import  *
 from scene.scene import Scene, SceneFromVideo
 from script_wrapper import command_line_create_scene
+from functools import reduce
 
 MOVIE_PREFIX = "counting_in_binary/"
 

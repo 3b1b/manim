@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import print_function
 
 import itertools as it
 import numpy as np
@@ -160,7 +161,7 @@ class Succession(Animation):
                     "Rounding error not near alpha=1 in Succession.update_mobject," +
                     "instead alpha = %f" % alpha
                 )
-                print self.critical_alphas, alpha
+                print(self.critical_alphas, alpha)
             i = self.num_anims - 1
 
         # At this point, we should have self.critical_alphas[i] <= alpha <= self.critical_alphas[i +1]
