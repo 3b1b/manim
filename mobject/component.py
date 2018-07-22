@@ -3,6 +3,7 @@ from collections import OrderedDict as OrderedDict
 
 class Component(Mobject):
     CONFIG = {
+        "scale_factor": 1
     }
     def __init__(self, *args, **kwargs):
         # typechecking
@@ -17,20 +18,12 @@ class Component(Mobject):
         # will overwrite instance variables
         Mobject.__init__(self, **config_copy)
 
-        # initialize variables
-        if "scale_factor" in kwargs:
-            self.scale_factor = kwargs["scale_factor"]
-        else:
-            self.scale_factor = 1
-
         # create mobject
         self.mobject = self.create_mobject(*args, **kwargs)
         self.add(self.mobject)
 
-        # add labels
         self.labels = OrderedDict()
-        if "labels" in kwargs and kwargs["labels"] is not None:
-            self.set_labels(OrderedDict(kwargs["labels"]), animate=False)
+        self.update(kwargs.get("attrs", None), animate=False)
 
     @staticmethod
     def assert_primitive(self):

@@ -12,10 +12,8 @@ class Node(Component):
         "fill_opacity": 0.0,
         "color": BLACK,
     }
-    def __init__(self, point, labels=None, mobject=None,
-            scale_factor=1, **kwargs):
-        Component.__init__(self, point, labels=labels, mobject=mobject,
-                scale_factor=scale_factor, **kwargs)
+    def __init__(self, point, attrs=None, mobject=None, **kwargs):
+        Component.__init__(self, point, attrs=attrs, mobject=mobject, **kwargs)
 
     def __str__(self):
         return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])
@@ -53,7 +51,9 @@ class Node(Component):
                     ret.set_color(color)
             return ret
 
-    def update(self, dic):
+    def update(self, dic, animate=True):
+        if dic is None: return
+
         ret = []
         # update labels
         labels = OrderedDict()
@@ -65,7 +65,10 @@ class Node(Component):
             elif key == "parent_pointer":
                 labels["parent_pointer"] = dic["parent_pointer"]
         if labels:
-            ret.extend(self.set_labels(labels))
+            if animate:
+                ret.extend(self.set_labels(labels))
+            else:
+                self.set_labels(labels, animate=False)
 
         # set mobject parameters
         if "factor" in dic:
@@ -88,8 +91,13 @@ class Node(Component):
             radius=radius,
             color=color,
             stroke_width=self.stroke_width,
+            scale_factor=self.scale_factor,
         ).move_to(self.mobject.get_center())
-        ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+        if animate:
+            ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+        else:
+            self.remove(self.mobject)
+            self.add(new_mob)
         self.mobject = new_mob
 
         return ret
@@ -109,15 +117,12 @@ class Node(Component):
         return self.update(factor=factor, color=color)
 
     def get_label_scale_factor(self, label, num_labels):
-        try:
-            if label.get_height() > Integer(7).get_height():
-                return self.scale_factor * \
-                    Integer(7).get_height() / label.get_height()
-            else:
-                return self.scale_factor
-        except:
-            import ipdb; ipdb.set_trace(context=7)
-    
+        if label.get_height() > Integer(7).get_height():
+            return self.scale_factor * \
+                Integer(7).get_height() / label.get_height()
+        else:
+            return self.scale_factor
+
     def get_label(self, name):
         if name in self.labels:
             return self.labels[name]
@@ -132,7 +137,7 @@ class Node(Component):
     """
     def remove_label(self, label_name):
         self.remove(self.labels[label_name])
-        anims = [Uncreate(self.labels[label_name])] 
+        anims = [Uncreate(self.labels[label_name])]
         del self.labels[label_name]
         if len(self.labels) == 1:
             # there is only one old label
@@ -230,9 +235,6 @@ class Node(Component):
                     self.remove(self.labels[name])
         self.labels = new_labels
         return anims
-
-    def set_parent_edge(self, pair):
-        self.parent_edge = pair
 
     def get_parent_edge(self):
         if hasattr(self, "parent_edge"):

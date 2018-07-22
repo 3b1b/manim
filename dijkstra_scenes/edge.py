@@ -8,20 +8,13 @@ class Edge(Component):
     CONFIG = {
         "rectangular_stem_width": 0.03,
     }
-    def __init__(self, start_node, end_node, directed=False, labels=None,
-            scale_factor=1, edge_color=None, curved=False, **kwargs):
-        if labels is not None:
-            for label in labels:
-                if len(label) == 3 and "stroke_width" in label[2]:
-                    kwargs["stroke_width"] = label[2]["stroke_width"]
-        if edge_color is not None:
-            kwargs["color"] = edge_color
-        Component.__init__(self, start_node, end_node, directed=directed,
-                labels=labels, scale_factor=scale_factor, curved=curved,
-                **kwargs)
+    def __init__(self, start_node, end_node, state=None, directed=False,
+            curved=False, **kwargs):
         self.start_node = start_node
         self.end_node = end_node
         self.is_parent = False
+        Component.__init__(self, start_node, end_node, state=state,
+                directed=directed, curved=curved, **kwargs)
 
     @staticmethod
     def assert_primitive(pair):
@@ -152,45 +145,9 @@ class Edge(Component):
     def get_weight(self):
         return self.labels["weight"] if "weight" in self.labels else None
 
-    def set_stroke_width(self, stroke_width=2, rectangular_stem_width=0.03, color=None):
-        raise Exception("implement this")
-        #normalized_vec = self.end_node.get_center() - self.start_node.get_center()
-        #normalized_vec /= la.norm(normalized_vec)
-        #new_line = self.create_mobject(self.start_node, self.end_node,
-        #        directed=self.directed, curved=self.curved, color=color,
-        #        stroke_width=stroke_width,
-        #        rectangular_stem_width=rectangular_stem_width, scale_factor=1)
-        #ret = ReplacementTransform(
-        #    self.mobject,
-        #    new_line,
-        #    parent=self,
-        #)
-        #self.mobject = new_line
-        #self.stroke_width = stroke_width
-        #return ret
+    def update(self, dic, animate=True):
+        if dic is None: return
 
-    def update_endpoints(self, stroke_width=2, rectangular_stem_width=0.03,
-            color=None, curve=False):
-        if stroke_width is not None:
-            self.stroke_width = stroke_width
-        normalized_vec = self.end_node.get_center() - self.start_node.get_center()
-        normalized_vec /= la.norm(normalized_vec)
-        new_line = self.create_mobject(self.start_node, self.end_node,
-                directed=self.directed, curved=curve, stroke_width=stroke_width,
-                rectangular_stem_width=rectangular_stem_width, color=color)
-        ret = [ReplacementTransform(
-            self.mobject,
-            new_line,
-            parent=self,
-        )]
-        self.mobject = new_line
-        saved_labels = copy.deepcopy(self.labels)
-        label_anims = self.set_labels(OrderedDict(saved_labels.items()), rearrange=True, animate=True)
-        if label_anims:
-            ret.extend(label_anims)
-        return ret
-
-    def update(self, dic):
         ret = []
         # update labels
         labels = OrderedDict()
@@ -198,7 +155,10 @@ class Edge(Component):
             if key == "weight":
                 labels["weight"] = dic["weight"]
         if labels:
-            ret.extend(self.set_labels(labels))
+            if animate:
+                ret.extend(self.set_labels(labels))
+            else:
+                self.set_labels(labels, animate=False)
 
         # set mobject parameters
         stroke_width = dic.get("stroke_width", None)
@@ -221,7 +181,11 @@ class Edge(Component):
             rectangular_stem_width=rectangular_stem_width,
             color=color,
         )
-        ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+        if animate:
+            ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+        else:
+            self.remove(self.mobject)
+            self.add(new_mob)
         self.mobject = new_mob
 
         return ret

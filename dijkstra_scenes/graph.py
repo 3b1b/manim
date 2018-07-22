@@ -31,7 +31,8 @@ class Graph(Group):
         # create nodes
         for point in nodes:
             if labels is not None and point in labels:
-                node = Node(point, labels=labels[point], scale_factor=scale_factor, **kwargs)
+                node = Node(point, attrs=labels[point],
+                        scale_factor=scale_factor, **kwargs)
             else:
                 node = Node(point, scale_factor=scale_factor, **kwargs)
             self.nodes[node.key] = node
@@ -64,14 +65,21 @@ class Graph(Group):
             else:
                 curved = False
 
-            edge = Edge(
-                u, v,
-                directed=edge_directed,
-                labels=edge_labels,
-                scale_factor=scale_factor,
-                curved=curved,
-                **kwargs
-            )
+            if labels is not None and edge in labels:
+                edge = Edge(
+                    u, v,
+                    attrs=labels[edge],
+                    directed=edge_directed,
+                    curved=curved,
+                    **kwargs
+                )
+            else:
+                edge = Edge(
+                    u, v,
+                    directed=edge_directed,
+                    curved=curved,
+                    **kwargs
+                )
 
             self.edges[edge.key] = edge
             self.add(edge)
@@ -219,7 +227,7 @@ class Graph(Group):
                                     ("stroke_width", 2),
                                     ("color", BLACK),
                                 ])
-                        self.nodes[point].set_parent_edge(val)
+                        self.nodes[point].parent_edge = val
                     elif key == "parent_edge_color":
                         pass
 
@@ -240,22 +248,6 @@ class Graph(Group):
     def node_has_label(self, point, label):
         Node.assert_primitive(point)
         return label in self.nodes[point].labels
-
-    def set_edge_weight(self, pair, weight, stroke_width=None):
-        Edge.assert_primitive(pair)
-        dic = OrderedDict([("weight", Integer(weight))])
-        return self.edges[pair].update(dic)
-
-    def set_edge_to_parent(self, pair, stroke_width=4, color=None):
-        Edge.assert_primitive(pair)
-        self.edges[pair].is_parent = True
-        return self.set_stroke_width(pair, stroke_width, color=color)
-
-    def set_edge_stroke_width(self, pair, stroke_width, rectangular_stem_width,
-            color=None):
-        Edge.assert_primitive(pair)
-        return self.edges[pair].set_stroke_width(stroke_width,
-                rectangular_stem_width, color=color)
 
     def get_edge_weight(self, pair):
         Edge.assert_primitive(pair)
@@ -297,10 +289,10 @@ class Graph(Group):
             (u, v) = edge
             if use_direction and self.edges[edge].directed:
                 if np.allclose(u, point):
-                    adjacent_edges.append(edge) 
+                    adjacent_edges.append(edge)
             else:
                 if np.allclose(u, point) or np.allclose(v, point):
-                    adjacent_edges.append(edge) 
+                    adjacent_edges.append(edge)
         return adjacent_edges
 
     def get_opposite_node(self, pair, point):
@@ -311,7 +303,7 @@ class Graph(Group):
     def set_node_parent_edge(self, point, pair):
         Node.assert_primitive(point)
         Edge.assert_primitive(pair)
-        self.nodes[point].set_parent_edge(pair)
+        self.nodes[point].parent_edge = pair
 
     def get_node_parent_edge(self, point):
         return self.nodes[point].get_parent_edge()
