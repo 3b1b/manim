@@ -1,8 +1,17 @@
-from big_ol_pile_of_manim_imports import *
-from collections import OrderedDict
-import numpy.linalg as la
-import copy
+from __future__ import print_function
+
+from constants import *
+from mobject.component import Component
 from dijkstra_scenes.node import Node
+from mobject.geometry import Arrow
+from mobject.geometry import Line
+from mobject.numbers import Integer
+from animation.creation import ShowCreation
+from animation.transform import ReplacementTransform
+from utils.space_ops import rotate_vector
+from collections import OrderedDict
+import numpy
+import copy
 
 class Edge(Component):
     CONFIG = {
@@ -12,7 +21,6 @@ class Edge(Component):
             curved=False, **kwargs):
         self.start_node = start_node
         self.end_node = end_node
-        self.is_parent = False
         Component.__init__(self, start_node, end_node, state=state,
                 directed=directed, curved=curved, **kwargs)
 
@@ -22,7 +30,9 @@ class Edge(Component):
             assert type(pair) == tuple and len(pair) == 2
             Node.assert_primitive(pair[0])
             Node.assert_primitive(pair[1])
-        except: import ipdb; ipdb.set_trace(context=7)
+        except:
+            print("Invalid Edge primitive: {}".format(pair), file=sys.stderr)
+            import ipdb; ipdb.set_trace(context=7)
 
     def make_key(self, start_node, end_node):
         return (start_node.key, end_node.key)
@@ -31,8 +41,8 @@ class Edge(Component):
             labels=None, curved=False, **kwargs):
         normalized_vec = end_node.mobject.get_center() - \
             start_node.mobject.get_center()
-        normalized_vec = normalized_vec / la.norm(normalized_vec)
-        normal_vec = rotate_vector(normalized_vec, np.pi/2)
+        normalized_vec = normalized_vec / numpy.linalg.norm(normalized_vec)
+        normal_vec = rotate_vector(normalized_vec, numpy.pi/2)
         if directed:
             mob = Arrow(
                 start_node.mobject.get_center() + normalized_vec * (start_node.mobject.radius - 0.0),
@@ -53,22 +63,22 @@ class Edge(Component):
             start, end = mob.get_start_and_end()
             midpoint = (start + end) / 2
             def f(x):
-                return x - 0.1 * normal_vec * (la.norm(start - midpoint) - la.norm(x - midpoint))
+                return x - 0.1 * normal_vec * (numpy.linalg.norm(start - midpoint) - numpy.linalg.norm(x - midpoint))
             mob.shift(-0.05 * normal_vec).apply_function(f)
         return mob
 
     def __str__(self):
         return "Edge(start=({}, {}), end=({}, {}))".format(
-            *np.append(
+            *numpy.append(
                 self.start_node.mobject.get_center()[:2],
                 self.end_node.mobject.get_center()[:2]))
     __repr__ = __str__
 
     def opposite(self, point):
         Node.assert_primitive(point)
-        if np.allclose(self.start_node.key, point):
+        if numpy.allclose(self.start_node.key, point):
             return self.end_node.key
-        elif np.allclose(self.end_node.key, point):
+        elif numpy.allclose(self.end_node.key, point):
             return self.start_node.key
         else:
             raise Exception("node isn't part of line")
@@ -88,12 +98,19 @@ class Edge(Component):
 
     def set_labels(self, new_labels, **kwargs):
         assert(type(new_labels) == OrderedDict)
-        anims = []
-
         # make sure labels are different
         for old_label in self.labels.values():
             for new_label in new_labels.values():
                 assert(id(old_label) != id(new_label))
+
+        anims = []
+        # delete
+        for key, val in new_labels.items():
+            if val is None:
+                anims.append(Uncreate(self.labels[key]))
+                self.remove(self.labels[key])
+                del new_labels[key]
+                del self.labels[key]
 
         # scale
         for label in new_labels.values():
@@ -104,16 +121,36 @@ class Edge(Component):
         # move
         start, end = self.mobject.get_start_and_end()
         vec = start - end
-        vec = vec / la.norm(vec)
-        vec = rotate_vector(vec, np.pi/2)
+        vec = vec / numpy.linalg.norm(vec)
+        vec = rotate_vector(vec, numpy.pi/2)
         buff = MED_SMALL_BUFF if self.curved else SMALL_BUFF
         last_mobject = None
-        for label in new_labels.values():
-            if last_mobject:
-                label.next_to(last_mobject, RIGHT, buff=buff)
+        old_label_copies = OrderedDict()
+        for name, label in self.labels.items():
+            if name in new_labels:
+                if last_mobject:
+                    new_labels[name].next_to(last_mobject, RIGHT, buff=buff)
+                else:
+                    new_labels[name].next_to(self.mobject.get_midpoint(), vec, buff=buff)
             else:
-                label.next_to(self.mobject.get_midpoint(), vec, buff=buff)
+                if last_mobject:
+                    old_label_copies[name].next_to(last_mobject, RIGHT, buff=buff)
+                else:
+                    old_label_copies[name].next_to(self.mobject.get_midpoint(), vec, buff=buff)
             last_mobject = label
+
+        for name, label in new_labels.items():
+            if name in self.labels:
+                pass
+            else:
+                if last_mobject:
+                    label.next_to(last_mobject, RIGHT, buff=buff)
+                else:
+                    label.next_to(self.mobject.get_midpoint(), vec, buff=buff)
+                last_mobject = label
+        for key in old_label_copies:
+            if key not in new_labels:
+                new_labels[key] = old_label_copies[key]
 
         # animate / create
         if "animate" not in kwargs or kwargs["animate"]:
@@ -154,6 +191,8 @@ class Edge(Component):
         for key in dic.keys():
             if key == "weight":
                 labels["weight"] = dic["weight"]
+        if not hasattr(self, "labels"):
+            self.labels = OrderedDict()
         if labels:
             if animate:
                 ret.extend(self.set_labels(labels))

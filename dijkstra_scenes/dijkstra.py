@@ -1,7 +1,8 @@
-import numpy.linalg as la
+from __future__ import print_function
 from big_ol_pile_of_manim_imports import *
 from dijkstra_scenes.graph import Graph
 from dijkstra_scenes.dynamic_equation import DynamicEquation
+import numpy.linalg as la
 INFTY_COLOR = BLACK
 DEFAULT_WIDTH = 2
 SPT_WIDTH = 6
@@ -59,6 +60,8 @@ def relax_neighbors(G, parent, arrows=False):
                 old_bound = int(old_bound.tex_string[:-1])
                 relabel = True
             else:
+                print("Unexpected dist label {} on child".format(old_bound),
+                        file=sys.stderr)
                 import ipdb; ipdb.set_trace(context=7)
             if new_bound < old_bound:
                 relabel = True
@@ -706,7 +709,10 @@ class RunAlgorithm(MovingCameraScene):
             ("dist", TexMobject("\le 5")),
             ("color", QUEUE_COLOR),
         ])
-        updates[(u, v)] = OrderedDict([("color", QUEUE_COLOR)])
+        updates[(u, v)] = OrderedDict([
+            ("color", QUEUE_COLOR),
+            ("stroke_width", 4),
+        ])
         self.play(*G.update(updates))
 
         # remove lower blocks
@@ -842,7 +848,6 @@ class RunAlgorithm(MovingCameraScene):
         min_node = (0, 2.6, 0)
         while True:
             # relax neighbors
-            #import ipdb; ipdb.set_trace(context=7)
             self.play(*relax_neighbors(G, min_node, arrows=True))
 
             # tighten bound on node with least bound
@@ -1124,7 +1129,6 @@ class RunAlgorithm(MovingCameraScene):
         ])))
         while True:
             # relax neighbors
-            #import ipdb; ipdb.set_trace(context=7)
             self.play(*relax_neighbors(G, min_node, arrows=True))
 
             # tighten bound on node with least bound

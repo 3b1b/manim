@@ -1,3 +1,4 @@
+from __future__ import print_function
 from mobject import Mobject
 from collections import OrderedDict as OrderedDict
 
@@ -15,6 +16,7 @@ class Component(Mobject):
         config_copy = self.CONFIG.copy()
         config_copy.update(kwargs)
         kwargs = config_copy
+
         # will overwrite instance variables
         Mobject.__init__(self, **config_copy)
 
@@ -22,8 +24,15 @@ class Component(Mobject):
         self.mobject = self.create_mobject(*args, **kwargs)
         self.add(self.mobject)
 
-        self.labels = OrderedDict()
-        self.update(kwargs.get("attrs", None), animate=False)
+        if "attrs" in kwargs:
+            attrs = kwargs["attrs"]
+            del kwargs["attrs"]
+        else:
+            attrs = OrderedDict()
+        for key in kwargs:
+            if key not in attrs:
+                attrs[key] = kwargs[key]
+        self.update(attrs, animate=False)
 
     @staticmethod
     def assert_primitive(self):
@@ -43,8 +52,8 @@ class Component(Mobject):
         pass
 
     def get_center(self):
-        """
-        You called get_center() on a Component rather than its mobject.
-        This is probably not what you want.
-        """
+
+        print("You called get_center() on a Component rather than its mobject",
+                file=sys.stderr)
+        print("This is probably not what you want", file=sys.stderr)
         import ipdb; ipdb.set_trace(context=7)
