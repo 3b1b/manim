@@ -32,6 +32,7 @@ def extend_arrow(G, u, v, color=None):
 
 def relax_neighbors(G, parent, arrows=False):
     labels = []
+    updates = OrderedDict()
     adj_edges = G.get_adjacent_edges(parent, use_direction=True)
     for edge in adj_edges:
         child = G.get_opposite_node(edge, parent)
@@ -61,40 +62,33 @@ def relax_neighbors(G, parent, arrows=False):
                 import ipdb; ipdb.set_trace(context=7)
             if new_bound < old_bound:
                 relabel = True
-            if relabel:
-                labels.append(
-                    (child, "dist", TexMobject("\le {}".format(new_bound)),
-                        [("color", QUEUE_COLOR)]))
-                if arrows:
-                    arrow_vec = G.get_node(parent).mobject.get_center() - \
-                                G.get_node(child).mobject.get_center()
-                    arrow_vec /= la.norm(arrow_vec)
-                    arrow = Arrow(G.get_node(child).mobject.get_center(),
-                                  G.get_node(child).mobject.get_center() + arrow_vec)
-                    labels.append(
-                        (child, "parent", arrow, [
-                            ("parent_edge", edge),
-                            ("parent_edge_color", QUEUE_COLOR)
-                        ])
-                    )
         else:
-            # use new bound
-            labels.append(
-                (child, "dist", TexMobject("\le {}".format(new_bound)),
-                    [("color", QUEUE_COLOR)]))
+            relabel = True
+        if relabel:
+            updates[child] = OrderedDict([
+                ("dist", TexMobject("\le {}".format(new_bound))),
+                ("color", QUEUE_COLOR)
+            ])
             if arrows:
                 arrow_vec = G.get_node(parent).mobject.get_center() - \
                             G.get_node(child).mobject.get_center()
                 arrow_vec /= la.norm(arrow_vec)
                 arrow = Arrow(G.get_node(child).mobject.get_center(),
                               G.get_node(child).mobject.get_center() + arrow_vec)
-                labels.append(
-                    (child, "parent", arrow, [
-                        ("parent_edge", edge),
-                        ("parent_edge_color", QUEUE_COLOR)
+                if G.get_node_parent_edge(child) is not None:
+                    updates[G.get_node_parent_edge(child)] = OrderedDict([
+                        ("stroke_width", 2),
+                        ("color", BLACK),
                     ])
-                )
-    return G.set_node_labels(labels)
+                updates[edge] = OrderedDict([
+                    ("stroke_width", 4),
+                    ("color", QUEUE_COLOR),
+                ])
+                updates[child]["parent_edge"] = edge
+                updates[child]["parent_edge_color"] = QUEUE_COLOR
+                updates[child]["parent_pointer"] = arrow
+                G.set_node_parent_edge(child, edge)
+    return G.update(updates)
 
 def extract_node(G):
     bounded_nodes = filter(
@@ -170,38 +164,44 @@ class RunAlgorithm(MovingCameraScene):
         # weight edges
         random.seed()
         weights = [2, 4, 3, 6, 3, 5, 5, 8, 1, 2, 4, 1, 2, 7]
-        anims = []
+        updates = OrderedDict()
         for i, edge in enumerate(edges):
             if weights[i]:
-                anims.extend(G.set_edge_weight(edge, weights[i]))
+                edge_updates = OrderedDict([("weight", Integer(weights[i]))])
+                updates[edge] = edge_updates
             else:
                 rand = random.randint(1, 9)
-                anims.extend(G.set_edge_weight(edge, rand))
-        self.play(*anims)
+                edge_updates = OrderedDict([("weight", Integer(rand))])
+                updates[edge] = edge_updates
+        self.play(*G.update(updates))
 
         # label s
         s = nodes[0]
-        s_adjacent = G.get_adjacent_edges(s)
-        self.play(*G.set_node_labels([(s, "variable", TexMobject("s"))]))
+        s_updates = OrderedDict([("variable", TexMobject("s"))])
+        self.play(*G.single_update(s, s_updates))
 
         # set s to 0
-        self.play(*G.set_node_labels([
-            (s, "dist", Integer(0), [("color", SPT_COLOR)])
-        ]))
+        s_updates = OrderedDict([
+            ("dist", Integer(0)),
+            ("color", SPT_COLOR),
+        ])
+        self.play(*G.single_update(s, s_updates))
 
         # label neighbors with question marks
-        s_neighbors = [G.edges[edge].opposite(s) for edge in s_adjacent]
-        labels = []
-        for point in s_neighbors:
-            labels.append((point, "dist", TexMobject("?")))
-        self.play(*G.set_node_labels(labels))
+        updates = OrderedDict()
+        for point in G.get_adjacent_nodes(s):
+            updates[point] = OrderedDict([("dist", TexMobject("?"))])
+        self.play(*G.update(updates))
 
         # set neighbors to edge weights with question mark
-        labels = []
-        for pair, point in zip(s_adjacent, s_neighbors):
+        updates = OrderedDict()
+        s_adj_edges = G.get_adjacent_edges(s)
+        s_adj_nodes = G.get_adjacent_nodes(s)
+        for pair, point in zip(s_adj_edges, s_adj_nodes):
             edge_weight = G.get_edge_weight(pair)
-            labels.append((point, "dist", TexMobject(str(edge_weight) + "?")))
-        self.play(*G.set_node_labels(labels))
+            updates[point] = OrderedDict([
+                ("dist", TexMobject(str(edge_weight) + "?"))])
+        self.play(*G.update(updates))
 
         # scroll down to show example
         ShiftDown = lambda t: (0, -FRAME_HEIGHT * t, 0)
@@ -248,14 +248,13 @@ class RunAlgorithm(MovingCameraScene):
 
         # label nodes with tentative distances
         updates = OrderedDict()
-        labels = []
         adj_edges = H.get_adjacent_edges(nodes[0])
         adj_nodes = H.get_adjacent_nodes(nodes[0])
         for pair, point in zip(adj_edges, adj_nodes):
             weight = H.get_edge_weight(pair)
             weight_mobject = TexMobject(str(weight) + "?")
-            labels.append((point, "dist", weight_mobject))
-        self.play(*H.set_node_labels(labels))
+            updates[point] = OrderedDict([("dist", weight_mobject)])
+        self.play(*H.update(updates))
 
         # this is antipattern; possibly allow returning a copy edge?
         self.play(Indicate(H.edges[edges[0]].get_weight()))
@@ -284,12 +283,13 @@ class RunAlgorithm(MovingCameraScene):
 
         # tighten bound on min node
         min_node, min_bound = extract_node(G)
-        self.play(*G.set_node_labels([
-            (min_node, "dist", Integer(min_bound), [("color", SPT_COLOR)])
-        ]))
+        min_node_updates = OrderedDict([
+            ("dist", Integer(min_bound)),
+            ("color", SPT_COLOR),
+        ])
+        self.play(*G.single_update(min_node, min_node_updates))
 
         # highlight other edge weights
-        ## antipattern
         adj_edges = G.get_adjacent_edges(s)    
         min_edge = min(adj_edges, key = lambda x: G.get_edge(x).get_weight().number) 
         anims = []
@@ -299,16 +299,17 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*anims)
 
         # revert graph
-        labels = []
-        labels.append((s, "dist", None))
+        updates = OrderedDict()
+        updates[s] = OrderedDict([("dist", None)])
         for node in G.get_adjacent_nodes(s):
-            labels.append((node, "dist", None, [("color", BLACK)]))
-        self.play(*G.set_node_labels(labels))
+            updates[node] = OrderedDict([("dist", None), ("color", BLACK)])
+        self.play(*G.update(updates))
 
         # set s to 0
-        self.play(*G.set_node_labels([
-            (s, "dist", Integer(0), [("color", SPT_COLOR)])
-        ]))
+        self.play(*G.single_update(s, OrderedDict([
+            ("dist", Integer(0)),
+            ("color", SPT_COLOR),
+        ])))
 
         # set bound on neighbors
         self.play(*relax_neighbors(G, s))
@@ -360,24 +361,17 @@ class RunAlgorithm(MovingCameraScene):
         words.to_edge(UP, initial_offset=self.camera_frame.get_center())
 
         arrow_anim1, arrow1 = extend_arrow(S, s, v, color=z_color)
-        self.play(
-            arrow_anim1,
-            Write(words[0]),
-        )
+        self.play(arrow_anim1, Write(words[0]))
 
         arrow_anim2, arrow2 = extend_arrow(S, s, u, color=x_color)
         self.play(
             FadeIn(S.get_node(u)),
             FadeIn(S.get_edge((u, v))),
             arrow_anim2,
-            Write(
-                Group(words[1], words[2])
-            ),
+            Write(Group(words[1], words[2])),
         )
 
-        self.play(Write(
-            Group(words[3], words[4])
-        ))
+        self.play(Write(Group(words[3], words[4])))
 
         sx = Line(
             S.get_node(s).mobject.get_center(),
@@ -489,47 +483,34 @@ class RunAlgorithm(MovingCameraScene):
         G = self.G
 
         # tighten bound for closest node
-        # get shortest edge
-        adj_edges = G.get_adjacent_edges(s)
-        min_edge, min_weight = None, float("inf")
-        for edge in adj_edges:
-            edge_weight = G.get_edge_weight(edge)
-            if edge_weight < min_weight:
-                min_weight = edge_weight
-                min_edge = edge
-        (u, v) = min_edge
-
-        # tighten bound on corresponding node
-        min_node = (u if s == v else v)
-        cur_label = int(G.get_node_label(min_node, "dist").tex_string[3:])
-        new_label = Integer(cur_label)
-        self.play(*G.set_node_labels([
-            (min_node, "dist", new_label, [("color", SPT_COLOR)])
-        ]))
+        min_node, min_bound = extract_node(G)
+        self.play(*G.single_update(min_node, OrderedDict([
+            ("dist", Integer(min_bound)),
+            ("color", SPT_COLOR)
+        ])))
 
         # relax neighbors of other neighbor
-        # get neighbor
-        for edge in adj_edges:
-            if np.allclose(edge[0], (0, 0, 0)) or \
-               np.allclose(edge[1], (0, 0, 0)):
-                neighbor = G.get_edge(edge).opposite(s)
-            
-        # relax neighbors
+        neighbor = (0, 0, 0)
         to_revert = [
             node for node in G.get_adjacent_nodes(neighbor) \
             if G.get_node_label(node, "dist") is None
         ]
         self.play(*relax_neighbors(G, neighbor))
+        
+        updates = OrderedDict()
+        for point in to_revert:
+            updates[point] = OrderedDict([
+                ("dist", None),
+                ("color", BLACK),
+            ])
+        self.play(*G.update(updates))
 
-        # TODO:
-        # tentatively label node across shortest edge
-        # highlight shorter path
-        labels = [(node, "dist", None, [("color", BLACK)]) \
-                for node in to_revert]
-        self.play(*G.set_node_labels(labels))
+        # TODO: tentatively label node across shortest edge
 
+        # Indicate lengths of non-min edges
         anims = []
         adj_edges = G.get_adjacent_edges(s)
+        min_edge = min(adj_edges, key=lambda e: G.get_edge_weight(e))
         for edge in adj_edges:
             if edge != min_edge:
                 anims.extend([Indicate(G.edges[edge].get_weight())])
@@ -542,9 +523,10 @@ class RunAlgorithm(MovingCameraScene):
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
             if min_node:
-                self.play(*G.set_node_labels([
-                    (min_node, "dist", Integer(min_bound), [("color", SPT_COLOR)])
-                ]))
+                self.play(*G.single_update(min_node, OrderedDict([
+                    ("dist", Integer(min_bound)),
+                    ("color", SPT_COLOR),
+                ])))
             else:
                 break
 
@@ -556,18 +538,19 @@ class RunAlgorithm(MovingCameraScene):
         G = self.G
         s = self.s
 
-        labels = []
+        updates = OrderedDict()
         for node in G.get_nodes():
-            if node == s:
-                labels.append((node, "dist", None, [("color", BLACK)]))
-            else:
-                labels.append((node, "dist", None, [("color", BLACK)]))
-        self.play(*G.set_node_labels(labels))
+            updates[node] = OrderedDict([
+                ("dist", None),
+                ("color", BLACK),
+            ])
+        self.play(*G.update(updates))
 
         min_node = s
-        self.play(*G.set_node_labels([
-            (s, "dist", Integer(0), [("color", SPT_COLOR)])
-        ]))
+        self.play(*G.single_update(s, OrderedDict([
+            ("dist", Integer(0)),
+            ("color", SPT_COLOR),
+        ])))
 
         while min_node is not None:
             # relax neighbors
@@ -575,14 +558,17 @@ class RunAlgorithm(MovingCameraScene):
 
             # tighten bound on node with least bound
             min_node, min_bound = extract_node(G)
-            # TODO: this is the problem
             if min_node:
                 parent_edge = G.get_node_parent_edge(min_node)
-                color_anim = G.change_edge_color(parent_edge, SPT_COLOR)
-                min_node_arrow = G.get_node_label(min_node, "parent").copy()
-                self.play(*G.set_node_labels([
-                    (min_node, "dist", Integer(min_bound), [("color", SPT_COLOR)]),
-                ]) + [color_anim])
+                updates = OrderedDict()
+                updates[min_node] = OrderedDict([
+                    ("dist", Integer(min_bound)),
+                    ("color", SPT_COLOR),
+                ])
+                updates[parent_edge] = OrderedDict([
+                    ("color", SPT_COLOR),
+                ])
+                self.play(*G.update(updates))
             else:
                 break
 
@@ -643,19 +629,18 @@ class RunAlgorithm(MovingCameraScene):
         }
         G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.25 * FRAME_WIDTH)
 
-        labels = []
+        updates = OrderedDict()
         for node in nodes:
             if node == s:
-                labels.append(
-                    (node,
-                    "dist",
-                    Integer(0),
-                    [("color", SPT_COLOR)]),
-                )
+                updates[node] = OrderedDict([
+                    ("dist", Integer(0)),
+                    ("color", SPT_COLOR),
+                ])
             else:
-                labels.append(
-                        (node, "dist",
-                            TexMobject("\le\infty").set_color(INFTY_COLOR)))
+                updates[node] = OrderedDict([
+                    ("dist", TexMobject("\le\infty").set_color(INFTY_COLOR)),
+                    ("color", INFTY_COLOR),
+                ])
 
         # shift initialize header down and create next block
         top_line = code.submobjects[0].submobjects[1]
@@ -671,120 +656,121 @@ class RunAlgorithm(MovingCameraScene):
             ShowCreation(Group(*code.submobjects[1].submobjects[1:])),
         )
 
-        # show the graph
-        self.play(FadeIn(G))
-        self.play(*G.set_node_labels(labels))
-        self.play(FadeOut(G))
+        ## show the graph
+        #self.play(FadeIn(G))
+        #self.play(*G.update(updates))
+        #self.play(FadeOut(G))
 
-        u = (0, 0, 0)
-        v = (3, 0, 0)
-        nodes = [u, v]
-        edges = [(u, v)]
-        labels = {
-            u: OrderedDict([
-                ("variable", TexMobject("u")),
-                ("dist", Integer(3)),
-            ]),
-            v: OrderedDict([
-                ("variable", TexMobject("v")),
-                ("dist", TexMobject("\le\infty")),
-            ]),
-            (u, v): OrderedDict([
-                ("weight", Integer(2)),
-            ]),
-        }
-        G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
+        #u = (0, 0, 0)
+        #v = (3, 0, 0)
+        #nodes = [u, v]
+        #edges = [(u, v)]
+        #labels = {
+        #    u: OrderedDict([
+        #        ("variable", TexMobject("u")),
+        #        ("dist", Integer(3)),
+        #        ("color", SPT_COLOR),
+        #    ]),
+        #    v: OrderedDict([
+        #        ("variable", TexMobject("v")),
+        #        ("dist", TexMobject("\le\infty")),
+        #    ]),
+        #    (u, v): OrderedDict([
+        #        ("weight", Integer(2)),
+        #    ]),
+        #}
+        #G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
 
-        # shift relax header down and create next block
-        top_line = code.submobjects[0] \
-                       .submobjects[3] \
-                       .submobjects[2] \
-                       .submobjects[1]
-        bottom_line = code.submobjects[2] \
-                          .submobjects[0]
-        top_relax_line = top_line.copy()
-        bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[4:-1])
-        bottom_relax_line.submobjects = bottom_line.submobjects[3:-1]
-        bottom_relax_line_ends = SingleStringTexMobject("")
-        bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:3] + [bottom_line.submobjects[-1]]
-        self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
-        self.play(
-            FadeIn(bottom_relax_line_ends),
-            ShowCreation(Group(*code.submobjects[2].submobjects[1:])),
-        )
+        ## shift relax header down and create next block
+        #top_line = code.submobjects[0] \
+        #               .submobjects[3] \
+        #               .submobjects[2] \
+        #               .submobjects[1]
+        #bottom_line = code.submobjects[2] \
+        #                  .submobjects[0]
+        #top_relax_line = top_line.copy()
+        #bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[4:-1])
+        #bottom_relax_line.submobjects = bottom_line.submobjects[3:-1]
+        #bottom_relax_line_ends = SingleStringTexMobject("")
+        #bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:3] + [bottom_line.submobjects[-1]]
+        #self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
+        #self.play(
+        #    FadeIn(bottom_relax_line_ends),
+        #    ShowCreation(Group(*code.submobjects[2].submobjects[1:])),
+        #)
 
-        # show the graph
-        self.play(FadeIn(G))
-        self.play(*G.set_node_labels([
-            (v, "dist", TexMobject("\le 5"), [("color", QUEUE_COLOR)])
-        ]))
+        ## show the graph
+        #self.play(FadeIn(G))
+        #self.play(*G.set_node_labels([
+        #    (v, "dist", TexMobject("\le 5"), [("color", QUEUE_COLOR)])
+        #]))
 
-        # remove lower blocks
-        self.play(
-            FadeOut(G),
-            FadeOut(code.submobjects[1]),
-            FadeOut(code.submobjects[2]),
-        )
+        ## remove lower blocks
+        #self.play(
+        #    FadeOut(G),
+        #    FadeOut(code.submobjects[1]),
+        #    FadeOut(code.submobjects[2]),
+        #)
 
-        code2 = CodeMobject("""
-        def dijkstra(G):
-            initialize_source(s)
-            bounded_vertices = min_queue(G.vertices)
-            while bounded_vertices:
-                u = bounded_vertices.extract_min()
-                for v in G.neighbors(u):
-                    relax_edge(G, u, v)
+        #code2 = CodeMobject("""
+        #def dijkstra(G):
+        #    initialize_source(s)
+        #    bounded_vertices = min_queue(G.vertices)
+        #    while bounded_vertices:
+        #        u = bounded_vertices.extract_min()
+        #        for v in G.neighbors(u):
+        #            relax_edge(G, u, v)
 
-        class min_queue:
-            def __init__(self, items):
-                pass
+        #class min_queue:
+        #    def __init__(self, items):
+        #        pass
 
-            def extract_min(self):
-                pass
+        #    def extract_min(self):
+        #        pass
 
-            def decrease_key(self, item, new_value):
-                pass
-        """).scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
-            .to_corner(UL, buff=MED_SMALL_BUFF)
+        #    def decrease_key(self, item, new_value):
+        #        pass
+        #""").scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
+        #    .to_corner(UL, buff=MED_SMALL_BUFF)
 
-        self.remove(code.submobjects[0])
-        self.add(code2.submobjects[0])
+        #self.remove(code.submobjects[0])
+        #self.add(code2.submobjects[0])
 
-        top_line = code2.submobjects[0] \
-                       .submobjects[2]
-        bottom_line = code2.submobjects[1] \
-                          .submobjects[0]
-        top_relax_line = Group(*top_line.copy().submobjects[17:26])
-        bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[6:-1])
-        bottom_relax_line.submobjects = bottom_line.submobjects[5:-1]
-        bottom_relax_line_ends = SingleStringTexMobject("")
-        bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:5] + [bottom_line.submobjects[-1]]
-        self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
-        self.play(
-            FadeIn(bottom_relax_line_ends),
-            ShowCreation(Group(*code2.submobjects[1].submobjects[1:])),
-        )
+        #top_line = code2.submobjects[0] \
+        #               .submobjects[2]
+        #bottom_line = code2.submobjects[1] \
+        #                  .submobjects[0]
+        #top_relax_line = Group(*top_line.copy().submobjects[17:26])
+        #bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[6:-1])
+        #bottom_relax_line.submobjects = bottom_line.submobjects[5:-1]
+        #bottom_relax_line_ends = SingleStringTexMobject("")
+        #bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:5] + [bottom_line.submobjects[-1]]
+        #self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
+        #self.play(
+        #    FadeIn(bottom_relax_line_ends),
+        #    ShowCreation(Group(*code2.submobjects[1].submobjects[1:])),
+        #)
 
-        self.play(
-            Indicate(code2.submobjects[0].submobjects[2]),
-            Indicate(code2.submobjects[1].submobjects[1].submobjects[0]),
-        )
-        self.play(
-            Indicate(code2.submobjects[0].submobjects[3].submobjects[1]),
-            Indicate(code2.submobjects[1].submobjects[2].submobjects[0]),
-        )
-        self.play(
-            Indicate(code2.submobjects[0].submobjects[3].submobjects[2].submobjects[1]),
-            Indicate(code2.submobjects[1].submobjects[3].submobjects[0]),
-        )
+        #self.play(
+        #    Indicate(code2.submobjects[0].submobjects[2]),
+        #    Indicate(code2.submobjects[1].submobjects[1].submobjects[0]),
+        #)
+        #self.play(
+        #    Indicate(code2.submobjects[0].submobjects[3].submobjects[1]),
+        #    Indicate(code2.submobjects[1].submobjects[2].submobjects[0]),
+        #)
+        #self.play(
+        #    Indicate(code2.submobjects[0].submobjects[3].submobjects[2].submobjects[1]),
+        #    Indicate(code2.submobjects[1].submobjects[3].submobjects[0]),
+        #)
 
-        self.play(FadeOut(code2.submobjects[1]))
-        self.remove(code2)
-        self.add(code.submobjects[0])
-        self.play(FadeIn(Group(*code.submobjects[1:])))
+        #self.play(FadeOut(code2.submobjects[1]))
+        #self.remove(code2)
+        #self.add(code.submobjects[0])
+        #self.play(FadeIn(Group(*code.submobjects[1:])))
 
-        self.code = code
-        save_state(self)
+        #self.code = code
+        #save_state(self)
 
     def run_code(self):
         self.__dict__.update(load_previous_state())
@@ -1157,7 +1143,7 @@ class RunAlgorithm(MovingCameraScene):
         # TODO: mention shortest path tree when arrows are used
         # TODO: directed graphs
         self.show_code()
-        self.run_code()
-        self.analyze()
-        self.compare_data_structures()
-        self.directed_graph()
+        #self.run_code()
+        #self.analyze()
+        #self.compare_data_structures()
+        #self.directed_graph()

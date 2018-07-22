@@ -200,7 +200,7 @@ class Edge(Component):
         if labels:
             ret.extend(self.set_labels(labels))
 
-        # set parameters from dic
+        # set mobject parameters
         stroke_width = dic.get("stroke_width", None)
         if stroke_width is None:
             stroke_width = self.mobject.stroke_width

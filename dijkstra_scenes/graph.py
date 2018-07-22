@@ -76,8 +76,12 @@ class Graph(Group):
             self.edges[edge.key] = edge
             self.add(edge)
 
+    def single_update(self, key, dic):
+        return self.update(OrderedDict([(key, dic)]))
+
     def update(self, dic):
         anims = []
+        to_update = set()
         for key in dic.keys():
             if self.nodes.has_key(key):
                 Node.assert_primitive(key)
@@ -85,6 +89,9 @@ class Graph(Group):
                     anims.extend(self.nodes[key].update(dic[key]))
                 else:
                     anims.extend(self.nodes[key].update())
+                for pair in self.get_adjacent_edges(key):
+                    if pair not in dic and pair not in to_update:
+                        to_update.add(pair)
             elif self.edges.has_key(key):
                 Edge.assert_primitive(key)
                 if len(dic[key]) > 0:
@@ -93,6 +100,8 @@ class Graph(Group):
                     anims.extend(self.edges[key].update(OrderedDict()))
             else:
                 import ipdb; ipdb.set_trace(context=7)
+        for pair in to_update:
+            anims.extend(self.edges[pair].update(OrderedDict()))
         return anims
 
     def set_labels(self, dic):
@@ -222,51 +231,6 @@ class Graph(Group):
                     updates[pair] = OrderedDict()
                 seen.add(pair)
         return self.update(updates)
-        ## enlarge nodes / color nodes / set thickness
-        #anims = []
-        #to_enlarge = []
-        #color_map = dict()
-        #parent_map = dict()
-        #for label in labels:
-        #    point = label[0]
-        #    if len(self.nodes[point].labels) == 0 and point not in to_enlarge:
-        #        to_enlarge.append(point)
-        #    if len(label) == 4 and "color" in label[3]:
-        #        color_map[point] = label[3]["color"]
-        #    if len(label) == 4 and "parent_edge" in label[3]:
-        #        if "parent_edge_color" in label[3]:
-        #            parent_edge_color = label[3]["parent_edge_color"]
-        #        else:
-        #            parent_edge_color = None
-        #        parent_map[point] = (label[3]["parent_edge"], parent_edge_color)
-        #        old_parent = self.get_node_parent_edge(point)
-        #        if old_parent is not None:
-        #            self.edges[old_parent].is_parent = False
-        #            anims.append(self.set_edge_stroke_width(old_parent, 2, 0.03, color=BLACK))
-        ## color enlarged nodes and adjacent edges
-        #anims.extend(self.enlarge_nodes(
-        #    *to_enlarge,
-        #    color_map=color_map,
-        #    parent_map=parent_map
-        #))
-        ## color remaining edges
-        #for point, (pair, color) in parent_map.items():
-        #    if self.edges[pair].is_parent == False:
-        #        self.edges[pair].is_parent = True
-        #        anims.append(self.set_edge_stroke_width(pair, 4, 0.05, color=color))
-        #        self.set_node_parent_edge(point, parent_map[point][0])
-        ## color remaining nodes
-        #for point in color_map:
-        #    if point not in to_enlarge:
-        #        anims.extend([self.nodes[point].change_color(color_map[point])])
-
-        ## label nodes
-        #labels_dict = defaultdict(list)
-        #for label in labels:
-        #    point, name, mobject = label[:3]
-        #    labels_dict[point].append((name, mobject))
-        #for point in labels_dict:
-        #    anims.extend(self.nodes[point].set_labels(OrderedDict(labels_dict[point])))
         return anims
 
     def get_node_label(self, point, name):
@@ -279,11 +243,8 @@ class Graph(Group):
 
     def set_edge_weight(self, pair, weight, stroke_width=None):
         Edge.assert_primitive(pair)
-        weight_anim = self.edges[pair].set_label("weight", Integer(weight))
-        if stroke_width is not None:
-            line_anim = self.edges[pair].set_stroke_width(stroke_width)
-            return weight_anim + [line_anim]
-        return weight_anim
+        dic = OrderedDict([("weight", Integer(weight))])
+        return self.edges[pair].update(dic)
 
     def set_edge_to_parent(self, pair, stroke_width=4, color=None):
         Edge.assert_primitive(pair)

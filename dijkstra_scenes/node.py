@@ -62,12 +62,12 @@ class Node(Component):
                 labels["variable"] = dic["variable"]
             elif key == "dist":
                 labels["dist"] = dic["dist"]
-            elif key == "parent":
-                labels["parent"] = dic["parent"]
+            elif key == "parent_pointer":
+                labels["parent_pointer"] = dic["parent_pointer"]
         if labels:
             ret.extend(self.set_labels(labels))
 
-        # set parameters from dic
+        # set mobject parameters
         if "factor" in dic:
             factor = dic["factor"]
         elif self.mobject.radius < 0.5 and len(self.labels) > 0:
