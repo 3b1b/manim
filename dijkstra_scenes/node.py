@@ -43,20 +43,16 @@ class Node(Component):
         return point
 
     def create_mobject(self, point, mobject=None, labels=None, **kwargs):
-        pass
-        config_copy = self.CONFIG.copy()
-        config_copy.update(kwargs)
-        kwargs = config_copy
-        if mobject is not None:
-            return mobject.move_to(point)
-        else:
-            return Circle(radius=UNLABELED_NODE_RADIUS, **kwargs).move_to(point)
+        return
 
     def update(self, dic, animate=True):
         if dic is None: return
 
-        ret = []
-        # update labels
+        """
+        the labels dict is needed for the radius calculation later, but the
+        mobject (specifically mobject.get_center()) is needed before the labels
+        can be placed
+        """
         labels = OrderedDict()
         for key in dic.keys():
             if key == "variable":
@@ -70,18 +66,20 @@ class Node(Component):
                 del dic["parent_pointer"]
         if not hasattr(self, "labels"):
             self.labels = OrderedDict()
-        if labels:
-            if animate:
-                ret.extend(self.set_labels(labels))
-            else:
-                self.set_labels(labels, animate=False)
 
         # mobject parameters
+        num_labels = len(self.labels)
+        for key in labels:
+            if key not in self.labels:
+                num_labels += 1
+            if key in self.labels and labels[key] is None:
+                num_labels -= 1
+
         if "radius" in dic:
             pass
-        elif self.mobject.radius < 0.5 and len(self.labels) > 0:
+        elif num_labels > 0:
             dic["radius"] = LABELED_NODE_RADIUS * self.scale_factor
-        elif self.mobject.radius > 0.1 and len(self.labels) == 0:
+        elif num_labels == 0:
             dic["radius"] = UNLABELED_NODE_RADIUS * self.scale_factor
         else:
             dic["radius"] = self.mobject.radius
@@ -90,16 +88,28 @@ class Node(Component):
         dic["color"] = dic.get("color", self.color)
         mobject = dic.get("mobject", None)
         if mobject is None:
-            new_mob = Circle(**dic).move_to(self.mobject.get_center())
+            new_mob = Circle(**dic)
         else:
-            new_mob = mobject.move_to(self.mobject.get_center())
+            new_mob = mobject
 
+        if self.mobject is None:
+            new_mob.move_to(self.key)
+        else:
+            new_mob.move_to(self.mobject.get_center())
+
+        ret = []
         if animate:
             ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
         else:
             self.remove(self.mobject)
             self.add(new_mob)
         self.mobject = new_mob
+
+        if labels:
+            if animate:
+                ret.extend(self.set_labels(labels))
+            else:
+                self.set_labels(labels, animate=False)
 
         return ret
 
@@ -132,30 +142,6 @@ class Node(Component):
 
     def change_color(self, color):
         return self.update(color=color)
-
-    """
-    scales and places labels, removes new label from self.labels
-    """
-    def remove_label(self, label_name):
-        self.remove(self.labels[label_name])
-        anims = [Uncreate(self.labels[label_name])]
-        del self.labels[label_name]
-        if len(self.labels) == 1:
-            # there is only one old label
-            for old_label in self.labels.values():
-                old_label.generate_target()
-                old_label.target.move_to(self.get_center())
-                anims.append(MoveToTarget(old_label))
-        else:
-            num_labels = len(self.labels)
-            vec = rotate_vector(RIGHT, numpy.pi / 2)
-            vec *= self.mobject.get_height() / 4.5
-            for old_label in self.labels.values():
-                old_label.generate_target()
-                old_label.target.move_to(self.get_center() + vec)
-                anims.append(MoveToTarget(old_label))
-                vec = rotate_vector(vec, 2 * numpy.pi / num_labels)
-        return anims
 
     """
     scales and places labels, saves new label to self.labels
