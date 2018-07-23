@@ -1,6 +1,4 @@
 from __future__ import print_function
-
-from constants import *
 from mobject.component import Component
 from mobject.geometry import Circle
 from mobject.geometry import Arrow
@@ -10,19 +8,24 @@ from animation.creation import Uncreate
 from animation.transform import ReplacementTransform
 from utils.space_ops import rotate_vector
 from collections import OrderedDict as OrderedDict
+import constants
 import copy
+import ipdb
 import numpy
+import sys
 
 LABELED_NODE_FACTOR = 7
 UNLABELED_NODE_RADIUS = 0.1
 LABELED_NODE_RADIUS = LABELED_NODE_FACTOR * UNLABELED_NODE_RADIUS
 HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
 
+
 class Node(Component):
     CONFIG = {
         "fill_opacity": 0.0,
-        "color": BLACK,
+        "color": constants.BLACK,
     }
+
     def __init__(self, point, attrs=None, mobject=None, **kwargs):
         Component.__init__(self, point, attrs=attrs, mobject=mobject, **kwargs)
 
@@ -35,15 +38,16 @@ class Node(Component):
         try:
             assert type(point) == numpy.ndarray or type(point) == tuple
             assert len(point) == 3
-        except:
+        except AssertionError:
             print("Invalid Node primitive: {}".format(point), file=sys.stderr)
-            import ipdb; ipdb.set_trace(context=7)
+            ipdb.set_trace(context=7)
 
     def make_key(self, point):
         return point
 
     def update(self, dic, animate=True):
-        if dic is None: return
+        if dic is None:
+            return
         """
         the labels dict is needed for the radius calculation later, but the
         mobject (specifically mobject.get_center()) is needed before the labels
@@ -95,7 +99,9 @@ class Node(Component):
 
         ret = []
         if animate:
-            ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+            ret.extend([ReplacementTransform(self.mobject,
+                                             new_mob,
+                                             parent=self)])
         else:
             if hasattr(self, "mobject"):
                 self.remove(self.mobject)
@@ -134,7 +140,8 @@ class Node(Component):
 
         # scale
         for label in new_labels.values():
-            if type(label) == Arrow: continue # TODO
+            if type(label) == Arrow:
+                continue  # TODO
             scale_factor = self.get_label_scale_factor(label, len(new_labels))
             label.scale(scale_factor)
 
@@ -147,23 +154,29 @@ class Node(Component):
                 new_labels[key] = val.copy().move_to(self.mobject.get_center())
             else:
                 print("This should be impossible", file=sys.stderr)
-                import ipdb; ipdb.set_trace(context=7)
+                ipdb.set_trace(context=7)
         else:
-            vec = rotate_vector(RIGHT, numpy.pi / 2)
+            vec = rotate_vector(constants.RIGHT, numpy.pi / 2)
             vec *= LABELED_NODE_RADIUS / 2.4 * self.scale_factor
             old_label_copies = OrderedDict()
             for name, label in self.labels.items():
                 if name in new_labels:
                     new_labels[name].move_to(self.mobject.get_center() + vec)
                 else:
-                    old_label_copies[name] = label.copy().move_to(self.mobject.get_center() + vec)
-                vec = rotate_vector(vec, 2 * numpy.pi / len(set(self.labels.keys() + new_labels.keys())))
+                    old_label_copies[name] = \
+                            label.copy().move_to(
+                                    self.mobject.get_center() + vec)
+                vec = rotate_vector(
+                        vec, 2 * numpy.pi / len(set(self.labels.keys() +
+                                                    new_labels.keys())))
             for name, label in new_labels.items():
                 if name in self.labels:
                     pass
                 else:
                     label.move_to(self.mobject.get_center() + vec)
-                    vec = rotate_vector(vec, 2 * numpy.pi / len(set(self.labels.keys() + new_labels.keys())))
+                    vec = rotate_vector(
+                            vec, 2 * numpy.pi / len(set(self.labels.keys() +
+                                                        new_labels.keys())))
             for key in old_label_copies:
                 if key not in new_labels:
                     new_labels[key] = old_label_copies[key]
@@ -173,8 +186,8 @@ class Node(Component):
             for name in new_labels.keys():
                 if name in self.labels:
                     anims.append(ReplacementTransform(self.labels[name],
-                                                       new_labels[name],
-                                                       parent=self))
+                                                      new_labels[name],
+                                                      parent=self))
                 else:
                     anims.append(ShowCreation(new_labels[name]))
                     self.add(new_labels[name])

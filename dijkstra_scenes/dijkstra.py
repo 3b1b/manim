@@ -144,6 +144,7 @@ class RunAlgorithm(MovingCameraScene):
             (-X_DIST, -Y_DIST, 0),
             ( 0     , -Y_DIST, 0),
             ( X_DIST, -Y_DIST, 0),
+            (4),
         ]
         edges = [
             (nodes[0], nodes[1]),

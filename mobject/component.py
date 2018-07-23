@@ -1,11 +1,15 @@
 from __future__ import print_function
 from mobject import Mobject
 from collections import OrderedDict as OrderedDict
+import sys
+import ipdb
+
 
 class Component(Mobject):
     CONFIG = {
         "scale_factor": 1
     }
+
     def __init__(self, *args, **kwargs):
         # typechecking
         self.key = self.make_key(*args)
@@ -53,6 +57,6 @@ class Component(Mobject):
 
     def get_center(self):
         print("You called get_center() on a Component rather than its mobject",
-                file=sys.stderr)
+              file=sys.stderr)
         print("This is probably not what you want", file=sys.stderr)
-        import ipdb; ipdb.set_trace(context=7)
+        ipdb.set_trace(context=7)

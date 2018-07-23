@@ -1,18 +1,19 @@
 from __future__ import print_function
-
-from constants import *
 from mobject.mobject import Group
 from dijkstra_scenes.node import Node
 from dijkstra_scenes.edge import Edge
 from collections import OrderedDict
-from collections import defaultdict
-import numpy
+import constants
+import ipdb
+import sys
+
 
 class Graph(Group):
     CONFIG = {
         "stroke_width": 2,
-        "color": BLACK,
+        "color": constants.BLACK,
     }
+
     def __init__(self, nodes, edges, labels=OrderedDict(), **kwargs):
         # typechecking
         for node in nodes:
@@ -32,7 +33,9 @@ class Graph(Group):
 
         # create nodes
         for point in nodes:
-            node = Node(point, attrs=labels.get(point, OrderedDict()), **kwargs)
+            node = Node(point,
+                        attrs=labels.get(point, OrderedDict()),
+                        **kwargs)
             self.nodes[node.key] = node
             self.add(node)
 
@@ -54,18 +57,18 @@ class Graph(Group):
         anims = []
         neighbors_to_update = set()
         for key in dic.keys():
-            if self.nodes.has_key(key):
+            if key in self.nodes:
                 Node.assert_primitive(key)
                 anims.extend(self.nodes[key].update(dic.get(key, None)))
                 for pair in self.get_adjacent_edges(key):
                     if pair not in dic and pair not in neighbors_to_update:
                         neighbors_to_update.add(pair)
-            elif self.edges.has_key(key):
+            elif key in self.edges:
                 Edge.assert_primitive(key)
                 anims.extend(self.edges[key].update(dic.get(key, None)))
             else:
                 print("Unexpected key {}".format(key), file=sys.stderr)
-                import ipdb; ipdb.set_trace(context=7)
+                ipdb.set_trace(context=7)
         for pair in neighbors_to_update:
             anims.extend(self.edges[pair].update())
         return anims
@@ -73,15 +76,15 @@ class Graph(Group):
     def set_labels(self, dic):
         anims = []
         for key in dic.keys():
-            if self.nodes.has_key(key):
+            if key in self.nodes:
                 Node.assert_primitive(key)
                 anims.append(self.nodes[key].set_labels(dic[key]))
-            elif self.edges.has_key(key):
+            elif key in self.edges:
                 Edge.assert_primitive(key)
                 anims.append(self.edges[key].set_labels(dic[key]))
             else:
                 print("Unexpected key {}".format(key), file=sys.stderr)
-                import ipdb; ipdb.set_trace(context=7)
+                ipdb.set_trace(context=7)
         return anims
 
     def get_node_label(self, point, name):
