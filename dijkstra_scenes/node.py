@@ -110,39 +110,6 @@ class Node(Component):
 
         return ret
 
-    def enlarge(self, **kwargs):
-        color = None
-        if "factor" in kwargs:
-            factor = kwargs["factor"]
-        elif "shrink" in kwargs and kwargs["shrink"] == True:
-            factor = 1./(LABELED_NODE_FACTOR * self.scale_factor)
-        else:
-            factor = (LABELED_NODE_FACTOR * self.scale_factor)
-        if "color" in kwargs and kwargs["color"] is not None:
-            color = kwargs["color"]
-        else:
-            color = self.get_color()
-        return self.update(factor=factor, color=color)
-
-    def get_label_scale_factor(self, label, num_labels):
-        if label.get_height() > Integer(7).get_height():
-            return self.scale_factor * \
-                Integer(7).get_height() / label.get_height()
-        else:
-            return self.scale_factor
-
-    def get_label(self, name):
-        if name in self.labels:
-            return self.labels[name]
-        else:
-            return None
-
-    def change_color(self, color):
-        return self.update(color=color)
-
-    """
-    scales and places labels, saves new label to self.labels
-    """
     def set_label(self, name, label, animate=True, **kwargs):
         kwargs["animate"] = animate
         d = copy.deepcopy(self.labels)
@@ -220,6 +187,19 @@ class Node(Component):
                     self.remove(self.labels[name])
         self.labels = new_labels
         return anims
+
+    def get_label(self, name):
+        if name in self.labels:
+            return self.labels[name]
+        else:
+            return None
+
+    def get_label_scale_factor(self, label, num_labels):
+        if label.get_height() > Integer(7).get_height():
+            return self.scale_factor * \
+                Integer(7).get_height() / label.get_height()
+        else:
+            return self.scale_factor
 
     def get_parent_edge(self):
         if hasattr(self, "parent_edge"):

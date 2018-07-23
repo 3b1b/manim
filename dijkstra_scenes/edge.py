@@ -24,6 +24,13 @@ class Edge(Component):
         Component.__init__(self, start_node, end_node, state=state,
                 directed=directed, curved=curved, **kwargs)
 
+    def __str__(self):
+        return "Edge(start=({}, {}), end=({}, {}))".format(
+            *numpy.append(
+                self.start_node.mobject.get_center()[:2],
+                self.end_node.mobject.get_center()[:2]))
+    __repr__ = __str__
+
     @staticmethod
     def assert_primitive(pair):
         try:
@@ -36,13 +43,6 @@ class Edge(Component):
 
     def make_key(self, start_node, end_node):
         return (start_node.key, end_node.key)
-
-    def __str__(self):
-        return "Edge(start=({}, {}), end=({}, {}))".format(
-            *numpy.append(
-                self.start_node.mobject.get_center()[:2],
-                self.end_node.mobject.get_center()[:2]))
-    __repr__ = __str__
 
     def opposite(self, point):
         Node.assert_primitive(point)
@@ -152,8 +152,10 @@ class Edge(Component):
     def get_weight(self):
         return self.labels["weight"] if "weight" in self.labels else None
 
-    def update(self, dic, animate=True):
-        if dic is None: return
+    def update(self, dic=None, animate=True):
+        # empty update for when start or end node changes radius
+        if dic is None:
+            dic = OrderedDict()
 
         ret = []
         # set mobject parameters
@@ -230,14 +232,3 @@ class Edge(Component):
             self.set_labels(labels, animate=False)
 
         return ret
-
-    def change_color(self, color):
-        new_line = self.mobject.copy().set_color(color)
-        ret = ReplacementTransform(
-            self.mobject,
-            new_line,
-            parent=self,
-        )
-        self.mobject = new_line
-        return ret
-

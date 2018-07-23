@@ -39,12 +39,19 @@ class Component(Mobject):
         # implemented by subclasses
         pass
 
+    def update(self):
+        # implemented by subclasses
+        pass
+
     def set_labels(self):
         # implemented by subclass
         pass
 
-    def get_center(self):
+    def get_label(self):
+        # implemented by subclass
+        pass
 
+    def get_center(self):
         print("You called get_center() on a Component rather than its mobject",
                 file=sys.stderr)
         print("This is probably not what you want", file=sys.stderr)

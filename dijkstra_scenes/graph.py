@@ -37,10 +37,9 @@ class Graph(Group):
             self.add(node)
 
         # create edges
-        for edge in edges:
-            attrs = labels.get(edge, OrderedDict())
-            u = edge[0]
-            v = edge[1]
+        for pair in edges:
+            attrs = labels.get(pair, OrderedDict())
+            u, v = pair[0], pair[1]
             attrs["curved"] = (v, u) in edges
             u = self.nodes[u]
             v = self.nodes[v]
@@ -53,28 +52,22 @@ class Graph(Group):
 
     def update(self, dic):
         anims = []
-        to_update = set()
+        neighbors_to_update = set()
         for key in dic.keys():
             if self.nodes.has_key(key):
                 Node.assert_primitive(key)
-                if len(dic[key]) > 0:
-                    anims.extend(self.nodes[key].update(dic[key]))
-                else:
-                    anims.extend(self.nodes[key].update())
+                anims.extend(self.nodes[key].update(dic.get(key, None)))
                 for pair in self.get_adjacent_edges(key):
-                    if pair not in dic and pair not in to_update:
-                        to_update.add(pair)
+                    if pair not in dic and pair not in neighbors_to_update:
+                        neighbors_to_update.add(pair)
             elif self.edges.has_key(key):
                 Edge.assert_primitive(key)
-                if len(dic[key]) > 0:
-                    anims.extend(self.edges[key].update(dic[key]))
-                else:
-                    anims.extend(self.edges[key].update(OrderedDict()))
+                anims.extend(self.edges[key].update(dic.get(key, None)))
             else:
                 print("Unexpected key {}".format(key), file=sys.stderr)
                 import ipdb; ipdb.set_trace(context=7)
-        for pair in to_update:
-            anims.extend(self.edges[pair].update(OrderedDict()))
+        for pair in neighbors_to_update:
+            anims.extend(self.edges[pair].update())
         return anims
 
     def set_labels(self, dic):
@@ -89,49 +82,6 @@ class Graph(Group):
             else:
                 print("Unexpected key {}".format(key), file=sys.stderr)
                 import ipdb; ipdb.set_trace(context=7)
-        return anims
-
-    def shrink_nodes(self, *points, **kwargs):
-        map(Node.assert_primitive, points)
-        return self.enlarge_nodes(*points, shrink=True)
-
-    """
-    enlarges node, shrinks adjacent edges
-    """
-    def enlarge_nodes(self, *points, **kwargs):
-        map(Node.assert_primitive, points)
-
-        # enlarge nodes
-        anims = []
-        for point in points:
-            if "color_map" in kwargs and point in kwargs["color_map"]:
-                color = kwargs["color_map"][point]
-            else:
-                color = None
-            anims.append(self.nodes[point].enlarge(color=color, **kwargs))
-
-        # shrink edges
-        seen = set()
-        for point in points:
-            for pair in self.get_adjacent_edges(point, use_direction=False):
-                if pair in seen: continue
-                edge = self.edges[pair]
-                curve = self.edges.has_key((pair[1], pair[0]))
-                if "parent_map" in kwargs and pair in map(lambda x: x[0], kwargs["parent_map"].values()):
-                    anims.extend(edge.update_endpoints(stroke_width=4, rectangular_stem_width=0.05, color=kwargs["parent_map"][point][1], curve=curve))
-                    self.set_node_parent_edge(point, pair)
-                else:
-                    anims.extend(edge.update_endpoints(curve=curve,
-                        stroke_width=2, rectangular_stem_width=0.03))
-                seen.add(pair)
-        return anims
-
-    def shrink_node(self, point):
-        Node.assert_primitive(point)
-        anims = []
-        node = self.nodes[point]
-        if len(node.labels) == 0:
-            anims.extend(self.shrink_nodes(point))
         return anims
 
     def get_node_label(self, point, name):
@@ -200,6 +150,3 @@ class Graph(Group):
 
     def get_node_parent_edge(self, point):
         return self.nodes[point].get_parent_edge()
-
-    def change_edge_color(self, pair, color):
-        return self.edges[pair].change_color(color)

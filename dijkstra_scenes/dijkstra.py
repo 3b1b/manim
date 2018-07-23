@@ -294,7 +294,8 @@ class RunAlgorithm(MovingCameraScene):
 
         # highlight other edge weights
         adj_edges = G.get_adjacent_edges(s)
-        min_edge = min(adj_edges, key = lambda x: G.get_edge(x).get_weight().number)
+        min_edge = min(adj_edges,
+            key = lambda x: G.get_edge(x).get_weight().number)
         anims = []
         for edge in adj_edges:
             if edge != min_edge:
@@ -1149,7 +1150,6 @@ class RunAlgorithm(MovingCameraScene):
                 break
         self.wait()
         self.play(FadeOut(G))
-
 
     def construct(self):
         self.first_try()
