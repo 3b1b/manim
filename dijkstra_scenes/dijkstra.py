@@ -341,8 +341,9 @@ class RunAlgorithm(MovingCameraScene):
             s: OrderedDict([("variable", TexMobject("s"))]),
             u: OrderedDict([("variable", TexMobject("u"))]),
             v: OrderedDict([("variable", TexMobject("v"))]),
+            (u, v): OrderedDict([("color", y_color)])
         }
-        S = Graph([s, u, v], [(u, v)], labels=labels, color_map={(u, v): y_color})
+        S = Graph([s, u, v], [(u, v)], labels=labels)
         S.to_edge(DOWN, initial_offset=self.camera_frame.get_center())
 
         self.play(

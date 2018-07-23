@@ -20,10 +20,6 @@ class Component(Mobject):
         # will overwrite instance variables
         Mobject.__init__(self, **config_copy)
 
-        # create mobject
-        self.mobject = self.create_mobject(*args, **kwargs)
-        self.add(self.mobject)
-
         if "attrs" in kwargs:
             attrs = kwargs["attrs"]
             del kwargs["attrs"]
@@ -41,10 +37,6 @@ class Component(Mobject):
 
     def make_key(self):
         # implemented by subclasses
-        pass
-
-    def create_mobject(self):
-        # implemented by subclass
         pass
 
     def set_labels(self):

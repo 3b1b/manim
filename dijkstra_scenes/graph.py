@@ -13,8 +13,7 @@ class Graph(Group):
         "stroke_width": 2,
         "color": BLACK,
     }
-    def __init__(self, nodes, edges, labels=OrderedDict(), directed=False,
-            color_map=None, **kwargs):
+    def __init__(self, nodes, edges, labels=OrderedDict(), **kwargs):
         # typechecking
         for node in nodes:
             Node.assert_primitive(node)
@@ -39,47 +38,13 @@ class Graph(Group):
 
         # create edges
         for edge in edges:
+            attrs = labels.get(edge, OrderedDict())
             u = edge[0]
             v = edge[1]
+            attrs["curved"] = (v, u) in edges
             u = self.nodes[u]
             v = self.nodes[v]
-            if color_map is not None and color_map.has_key(edge):
-                kwargs["color"] = color_map[edge]
-            else:
-                kwargs["color"] = self.color
-
-            if labels is not None and labels.has_key((u.key,v.key)):
-                edge_labels = labels[(u.key,v.key)]
-            else:
-                edge_labels = None
-
-            if directed or len(edge) == 3 and edge[2].has_key("directed") and \
-                    edge[2]["directed"]:
-                edge_directed = True
-            else:
-                edge_directed = False
-
-            if (v.key, u.key) in edges:
-                curved = True
-            else:
-                curved = False
-
-            if labels is not None and edge in labels:
-                edge = Edge(
-                    u, v,
-                    attrs=labels[edge],
-                    directed=edge_directed,
-                    curved=curved,
-                    **kwargs
-                )
-            else:
-                edge = Edge(
-                    u, v,
-                    directed=edge_directed,
-                    curved=curved,
-                    **kwargs
-                )
-
+            edge = Edge(u, v, attrs=attrs, **kwargs)
             self.edges[edge.key] = edge
             self.add(edge)
 

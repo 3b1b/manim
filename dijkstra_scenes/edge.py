@@ -37,36 +37,6 @@ class Edge(Component):
     def make_key(self, start_node, end_node):
         return (start_node.key, end_node.key)
 
-    def create_mobject(self, start_node, end_node, directed=False,
-            labels=None, curved=False, **kwargs):
-        normalized_vec = end_node.mobject.get_center() - \
-            start_node.mobject.get_center()
-        normalized_vec = normalized_vec / numpy.linalg.norm(normalized_vec)
-        normal_vec = rotate_vector(normalized_vec, numpy.pi/2)
-        if directed:
-            mob = Arrow(
-                start_node.mobject.get_center() + normalized_vec * (start_node.mobject.radius - 0.0),
-                end_node.mobject.get_center() - normalized_vec * (end_node.mobject.radius - 0.0),
-                buff=0,
-                **kwargs
-            )
-        else:
-            mob = Line(
-                start_node.mobject.get_center() + \
-                    normalized_vec * start_node.mobject.radius,
-                end_node.mobject.get_center() - \
-                    normalized_vec * end_node.mobject.radius,
-                **kwargs
-            )
-
-        if curved:
-            start, end = mob.get_start_and_end()
-            midpoint = (start + end) / 2
-            def f(x):
-                return x - 0.1 * normal_vec * (numpy.linalg.norm(start - midpoint) - numpy.linalg.norm(x - midpoint))
-            mob.shift(-0.05 * normal_vec).apply_function(f)
-        return mob
-
     def __str__(self):
         return "Edge(start=({}, {}), end=({}, {}))".format(
             *numpy.append(
@@ -123,7 +93,7 @@ class Edge(Component):
         vec = start - end
         vec = vec / numpy.linalg.norm(vec)
         vec = rotate_vector(vec, numpy.pi/2)
-        buff = MED_SMALL_BUFF if self.curved else SMALL_BUFF
+        buff = MED_SMALL_BUFF if self.mobject.curved else SMALL_BUFF
         last_mobject = None
         old_label_copies = OrderedDict()
         for name, label in self.labels.items():
@@ -134,9 +104,9 @@ class Edge(Component):
                     new_labels[name].next_to(self.mobject.get_midpoint(), vec, buff=buff)
             else:
                 if last_mobject:
-                    old_label_copies[name].next_to(last_mobject, RIGHT, buff=buff)
+                    old_label_copies[name] = label.copy().next_to(last_mobject, RIGHT, buff=buff)
                 else:
-                    old_label_copies[name].next_to(self.mobject.get_midpoint(), vec, buff=buff)
+                    old_label_copies[name] = label.copy().next_to(self.mobject.get_midpoint(), vec, buff=buff)
             last_mobject = label
 
         for name, label in new_labels.items():
@@ -186,6 +156,67 @@ class Edge(Component):
         if dic is None: return
 
         ret = []
+        # set mobject parameters
+        if "stroke_width" not in dic:
+            if hasattr(self, "mobject") and type(self.mobject) == Line:
+                dic["stroke_width"] = self.mobject.stroke_width
+
+        if "rectangular_stem_width" not in dic:
+            if hasattr(self, "mobject") and type(self.mobject) == Arrow:
+                dic["rectangular_stem_width"] = self.mobject.rectangular_stem_width
+
+        if "color" not in dic:
+            if hasattr(self, "mobject"):
+                dic["color"] = self.mobject.color
+
+        normalized_vec = self.end_node.mobject.get_center() - \
+            self.start_node.mobject.get_center()
+        normalized_vec = normalized_vec / numpy.linalg.norm(normalized_vec)
+        normal_vec = rotate_vector(normalized_vec, numpy.pi/2)
+        if "directed" not in dic:
+            if hasattr(self, "mobject") and self.mobject.directed:
+                dic["directed"] = True
+            else:
+                dic["directed"] = False
+        if "curved" not in dic:
+            if hasattr(self, "mobject") and self.mobject.curved:
+                dic["curved"] = True
+            else:
+                dic["curved"] = False
+        if dic["directed"]:
+            mob = Arrow(
+                self.start_node.mobject.get_center() + \
+                    normalized_vec * (self.start_node.mobject.radius - 0.0),
+                self.end_node.mobject.get_center() - \
+                    normalized_vec * (self.end_node.mobject.radius - 0.0),
+                buff=0,
+                **dic
+            )
+        else:
+            mob = Line(
+                self.start_node.mobject.get_center() + \
+                    normalized_vec * self.start_node.mobject.radius,
+                self.end_node.mobject.get_center() - \
+                    normalized_vec * self.end_node.mobject.radius,
+                **dic
+            )
+
+        if dic["curved"]:
+            start, end = mob.get_start_and_end()
+            midpoint = (start + end) / 2
+            def f(x):
+                return x - 0.1 * normal_vec * (numpy.linalg.norm(start - midpoint) - numpy.linalg.norm(x - midpoint))
+            mob.shift(-0.05 * normal_vec).apply_function(f)
+        new_mob = mob
+
+        if animate:
+            ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+        else:
+            if hasattr(self, "mobject"):
+                self.remove(self.mobject)
+            self.add(new_mob)
+        self.mobject = new_mob
+
         # update labels
         labels = OrderedDict()
         for key in dic.keys():
@@ -193,39 +224,10 @@ class Edge(Component):
                 labels["weight"] = dic["weight"]
         if not hasattr(self, "labels"):
             self.labels = OrderedDict()
-        if labels:
-            if animate:
-                ret.extend(self.set_labels(labels))
-            else:
-                self.set_labels(labels, animate=False)
-
-        # set mobject parameters
-        stroke_width = dic.get("stroke_width", None)
-        if stroke_width is None:
-            stroke_width = self.mobject.stroke_width
-
-        rectangular_stem_width = self.rectangular_stem_width
-
-        color = dic.get("color", None)
-        if color is None:
-            color = self.mobject.color
-
-        # update mobject
-        new_mob = self.create_mobject(
-            self.start_node,
-            self.end_node,
-            directed=self.directed,
-            curved=self.curved,
-            stroke_width=stroke_width,
-            rectangular_stem_width=rectangular_stem_width,
-            color=color,
-        )
         if animate:
-            ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+            ret.extend(self.set_labels(labels))
         else:
-            self.remove(self.mobject)
-            self.add(new_mob)
-        self.mobject = new_mob
+            self.set_labels(labels, animate=False)
 
         return ret
 

@@ -42,12 +42,8 @@ class Node(Component):
     def make_key(self, point):
         return point
 
-    def create_mobject(self, point, mobject=None, labels=None, **kwargs):
-        return
-
     def update(self, dic, animate=True):
         if dic is None: return
-
         """
         the labels dict is needed for the radius calculation later, but the
         mobject (specifically mobject.get_center()) is needed before the labels
@@ -101,7 +97,8 @@ class Node(Component):
         if animate:
             ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
         else:
-            self.remove(self.mobject)
+            if hasattr(self, "mobject"):
+                self.remove(self.mobject)
             self.add(new_mob)
         self.mobject = new_mob
 
