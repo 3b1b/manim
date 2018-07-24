@@ -582,6 +582,71 @@ class RunAlgorithm(MovingCameraScene):
 
         save_state(self)
 
+    def spt_vs_mst(self):
+        self.__dict__.update(load_previous_state())
+        DIST = self.DIST
+
+        nodes = [
+            (0, 0, 0),
+            (DIST, DIST, 0),
+            (-DIST, DIST, 0),
+        ]
+        edges = [
+            (nodes[0], nodes[1]),
+            (nodes[0], nodes[2]),
+            (nodes[1], nodes[2]),
+        ]
+        labels = {
+            nodes[0]: OrderedDict([("variable", TexMobject("s"))]),
+            edges[0]: OrderedDict([("weight", Integer(2))]),
+            edges[1]: OrderedDict([("weight", Integer(2))]),
+            edges[2]: OrderedDict([("weight", Integer(1))]),
+        }
+        H_spt = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(DOWN)
+        H_spt_target = H_spt.generate_target().shift(3 * LEFT)
+        H_mst = H_spt.deepcopy()
+        H_mst_target = H_mst.generate_target().shift(3 * RIGHT)
+
+        # split graphs
+        self.play(ShowCreation(H_spt))
+        self.play(MoveToTarget(H_spt), MoveToTarget(H_mst))
+
+        # show spt
+        spt_updates = OrderedDict()
+        spt_updates[nodes[0]] = OrderedDict([("color", SPT_COLOR)])
+        spt_updates[nodes[1]] = OrderedDict([("color", SPT_COLOR)])
+        spt_updates[nodes[2]] = OrderedDict([("color", SPT_COLOR)])
+        spt_updates[edges[0]] = OrderedDict([
+            ("color", SPT_COLOR),
+            ("stroke_width", 4),
+        ])
+        spt_updates[edges[1]] = OrderedDict([
+            ("color", SPT_COLOR),
+            ("stroke_width", 4),
+        ])
+        spt_text = TextMobject("Shortest Paths Tree", hsize="85pt").next_to(H_spt, DOWN)
+        self.play(*H_spt.update(spt_updates) + [Write(spt_text)])
+
+        # show mst
+        mst_updates = OrderedDict()
+        mst_updates[nodes[0]] = OrderedDict([("color", SPT_COLOR)])
+        mst_updates[nodes[1]] = OrderedDict([("color", SPT_COLOR)])
+        mst_updates[nodes[2]] = OrderedDict([("color", SPT_COLOR)])
+        mst_updates[edges[1]] = OrderedDict([
+            ("color", SPT_COLOR),
+            ("stroke_width", 4),
+        ])
+        mst_updates[edges[2]] = OrderedDict([
+            ("color", SPT_COLOR),
+            ("stroke_width", 4),
+        ])
+        mst_text = TextMobject("Minimum Spanning Tree", hsize="85pt").next_to(H_mst, DOWN)
+        self.play(*H_mst.update(mst_updates) + [Write(mst_text)])
+        self.play(FadeOut(Group(
+            H_mst, H_spt, mst_text, spt_text,
+        )))
+        self.wait()
+
     def show_code(self):
         self.__dict__.update(load_previous_state())
 
@@ -1068,7 +1133,7 @@ class RunAlgorithm(MovingCameraScene):
 
     def directed_graph(self):
         self.__dict__.update(load_previous_state())
-        DIST = 2.5 / 2**0.5
+        self.DIST = DIST = 2.5 / 2**0.5
         nodes = [
             (-DIST * 1.2, DIST * 1.2 , 0),
             ( DIST * 1.2, DIST * 1.2 , 0),
@@ -1150,18 +1215,20 @@ class RunAlgorithm(MovingCameraScene):
                 break
         self.wait()
         self.play(FadeOut(G))
+        save_state(self)
 
     def construct(self):
         self.first_try()
         self.counterexample()
-        self.one_step()
-        self.triangle_inequality()
-        self.generalize()
-        self.last_run()
-        # TODO: mention shortest path tree when arrows are used
-        # TODO: directed graphs
-        self.show_code()
-        self.run_code()
-        self.analyze()
-        self.compare_data_structures()
-        self.directed_graph()
+        #self.one_step()
+        #self.triangle_inequality()
+        #self.generalize()
+        #self.last_run()
+        #self.spt_vs_mst()
+        ## TODO: mention shortest path tree when arrows are used
+        ## TODO: directed graphs
+        #self.show_code()
+        #self.run_code()
+        #self.analyze()
+        #self.compare_data_structures()
+        #self.directed_graph()
