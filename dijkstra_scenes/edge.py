@@ -15,15 +15,10 @@ import numpy
 import sys
 
 class Edge(Component):
-    CONFIG = {
-        "rectangular_stem_width": 0.03,
-    }
-    def __init__(self, start_node, end_node, state=None, directed=False,
-            curved=False, **kwargs):
+    def __init__(self, start_node, end_node, attrs=None, **kwargs):
         self.start_node = start_node
         self.end_node = end_node
-        Component.__init__(self, start_node, end_node, state=state,
-                directed=directed, curved=curved, **kwargs)
+        Component.__init__(self, start_node, end_node, attrs=attrs, **kwargs)
 
     def __str__(self):
         return "Edge(start=({}, {}), end=({}, {}))".format(
@@ -38,7 +33,7 @@ class Edge(Component):
             assert type(pair) == tuple and len(pair) == 2
             Node.assert_primitive(pair[0])
             Node.assert_primitive(pair[1])
-        except:
+        except AssertionError:
             print("Invalid Edge primitive: {}".format(pair), file=sys.stderr)
             ipdb.set_trace(context=7)
 
@@ -59,7 +54,7 @@ class Edge(Component):
             return self.scale_factor * \
                 Integer(7).get_height() / label.get_height()
         else:
-            return self.scale_factor
+            return self.mobject.scale_factor
 
     def set_label(self, name, label, animate=True, **kwargs):
         kwargs["animate"] = animate
@@ -158,34 +153,49 @@ class Edge(Component):
         if dic is None:
             dic = OrderedDict()
 
-        ret = []
         # set mobject parameters
         if "stroke_width" not in dic:
-            if hasattr(self, "mobject") and type(self.mobject) == Line:
+            if hasattr(self, "mobject"):
                 dic["stroke_width"] = self.mobject.stroke_width
+            else:
+                print("Attempted to initialize Edge without stroke_width")
+                import ipdb; ipdb.set_trace(context=7)
 
         if "rectangular_stem_width" not in dic:
-            if hasattr(self, "mobject") and type(self.mobject) == Arrow:
+            if hasattr(self, "mobject"):
                 dic["rectangular_stem_width"] = self.mobject.rectangular_stem_width
+            else:
+                print("Attempted to initialize Edge without rectangular_stem_width")
+                import ipdb; ipdb.set_trace(context=7)
+
+        if "scale_factor" not in dic:
+            if hasattr(self, "mobject"):
+                dic["scale_factor"] = self.mobject.scale_factor
+            else:
+                print("Attempted to initialize Edge without scale_factor")
+                import ipdb; ipdb.set_trace(context=7)
 
         if "color" not in dic:
             if hasattr(self, "mobject"):
                 dic["color"] = self.mobject.color
 
-        normalized_vec = self.end_node.mobject.get_center() - \
-            self.start_node.mobject.get_center()
-        normalized_vec = normalized_vec / numpy.linalg.norm(normalized_vec)
-        normal_vec = rotate_vector(normalized_vec, numpy.pi/2)
         if "directed" not in dic:
             if hasattr(self, "mobject") and self.mobject.directed:
                 dic["directed"] = True
             else:
                 dic["directed"] = False
+
         if "curved" not in dic:
             if hasattr(self, "mobject") and self.mobject.curved:
                 dic["curved"] = True
             else:
                 dic["curved"] = False
+
+        ret = []
+        normalized_vec = self.end_node.mobject.get_center() - \
+            self.start_node.mobject.get_center()
+        normalized_vec = normalized_vec / numpy.linalg.norm(normalized_vec)
+        normal_vec = rotate_vector(normalized_vec, numpy.pi/2)
         if dic["directed"]:
             mob = Arrow(
                 self.start_node.mobject.get_center() + \

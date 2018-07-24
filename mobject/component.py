@@ -21,8 +21,14 @@ class Component(Mobject):
         config_copy.update(kwargs)
         kwargs = config_copy
 
-        # will overwrite instance variables
-        Mobject.__init__(self, **config_copy)
+        # mobject information is stored in the Mobject, not the Component
+        Mobject.__init__(self)
+        delattr(self, "dim")
+        delattr(self, "scale_factor")
+        delattr(self, "name")
+        delattr(self, "color")
+        delattr(self, "override_children")
+        delattr(self, "initial_config")
 
         if "attrs" in kwargs:
             attrs = kwargs["attrs"]

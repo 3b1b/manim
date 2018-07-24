@@ -11,6 +11,8 @@ import sys
 class Graph(Group):
     CONFIG = {
         "stroke_width": 2,
+        "scale_factor": 1,
+        "rectangular_stem_width": 0.03,
         "color": constants.BLACK,
     }
 
@@ -133,7 +135,7 @@ class Graph(Group):
             if edge in adjacent_edges:
                 continue
             (u, v) = edge
-            if use_direction and self.edges[edge].directed:
+            if use_direction and self.edges[edge].mobject.directed:
                 if u == point:
                     adjacent_edges.append(edge)
             else:

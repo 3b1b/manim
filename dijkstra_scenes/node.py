@@ -21,13 +21,8 @@ HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
 
 
 class Node(Component):
-    CONFIG = {
-        "fill_opacity": 0.0,
-        "color": constants.BLACK,
-    }
-
-    def __init__(self, point, attrs=None, mobject=None, **kwargs):
-        Component.__init__(self, point, attrs=attrs, mobject=mobject, **kwargs)
+    def __init__(self, point, attrs=None, **kwargs):
+        Component.__init__(self, point, attrs=attrs, **kwargs)
 
     def __str__(self):
         return "Node(center=({}, {}))".format(*self.mobject.get_center()[:2])
@@ -75,24 +70,43 @@ class Node(Component):
             if key in self.labels and labels[key] is None:
                 num_labels -= 1
 
+        if "scale_factor" not in dic:
+            if hasattr(self, "mobject"):
+                dic["scale_factor"] = self.mobject.scale_factor
+            else:
+                print("Attempted to initialize Node without scale_factor")
+                import ipdb; ipdb.set_trace(context=7)
+
         if "radius" in dic:
             pass
         elif num_labels > 0:
-            dic["radius"] = LABELED_NODE_RADIUS * self.scale_factor
+            dic["radius"] = LABELED_NODE_RADIUS * dic["scale_factor"]
         elif num_labels == 0:
-            dic["radius"] = UNLABELED_NODE_RADIUS * self.scale_factor
+            dic["radius"] = UNLABELED_NODE_RADIUS * dic["scale_factor"]
         else:
             dic["radius"] = self.mobject.radius
 
-        dic["stroke_width"] = dic.get("stroke_width", self.stroke_width)
-        dic["color"] = dic.get("color", self.color)
+        if "stroke_width" not in dic:
+            if hasattr(self, "mobject"):
+                dic["stroke_width"] = self.mobject.stroke_width
+            else:
+                print("Attempted to initialize Node without stroke_width")
+                import ipdb; ipdb.set_trace(context=7)
+
+        if "color" not in dic:
+            if hasattr(self, "mobject"):
+                dic["color"] = self.mobject.color
+            else:
+                print("Attempted to initialize Node without color")
+                import ipdb; ipdb.set_trace(context=7)
+
         mobject = dic.get("mobject", None)
         if mobject is None:
             new_mob = Circle(**dic)
         else:
             new_mob = mobject
 
-        if self.mobject is None:
+        if not hasattr(self, "mobject"):
             new_mob.move_to(self.key)
         else:
             new_mob.move_to(self.mobject.get_center())
@@ -157,7 +171,7 @@ class Node(Component):
                 ipdb.set_trace(context=7)
         else:
             vec = rotate_vector(constants.RIGHT, numpy.pi / 2)
-            vec *= LABELED_NODE_RADIUS / 2.4 * self.scale_factor
+            vec *= LABELED_NODE_RADIUS / 2.4 * self.mobject.scale_factor
             old_label_copies = OrderedDict()
             for name, label in self.labels.items():
                 if name in new_labels:
@@ -209,10 +223,10 @@ class Node(Component):
 
     def get_label_scale_factor(self, label, num_labels):
         if label.get_height() > Integer(7).get_height():
-            return self.scale_factor * \
+            return self.mobject.scale_factor * \
                 Integer(7).get_height() / label.get_height()
         else:
-            return self.scale_factor
+            return self.mobject.scale_factor
 
     def get_parent_edge(self):
         if hasattr(self, "parent_edge"):
