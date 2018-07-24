@@ -99,7 +99,7 @@ class Graph(Group):
 
     def get_edge_weight(self, pair):
         Edge.assert_primitive(pair)
-        weight = self.edges[pair].get_weight()
+        weight = self.edges[pair].get_label("weight")
         if weight:
             return weight.number
 

@@ -260,7 +260,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*H.update(updates))
 
         # this is antipattern; possibly allow returning a copy edge?
-        self.play(Indicate(H.edges[edges[0]].get_weight()))
+        self.play(Indicate(H.edges[edges[0]].get_label("weight")))
 
         # switch to upper bound
         self.play(*relax_neighbors(H, nodes[0]))
@@ -295,11 +295,11 @@ class RunAlgorithm(MovingCameraScene):
         # highlight other edge weights
         adj_edges = G.get_adjacent_edges(s)
         min_edge = min(adj_edges,
-            key = lambda x: G.get_edge(x).get_weight().number)
+            key = lambda x: G.get_edge(x).get_label("weight").number)
         anims = []
         for edge in adj_edges:
             if edge != min_edge:
-                anims.extend([Indicate(G.edges[edge].get_weight())])
+                anims.extend([Indicate(G.edges[edge].get_label("weight"))])
         self.play(*anims)
 
         # revert graph
@@ -518,7 +518,7 @@ class RunAlgorithm(MovingCameraScene):
         min_edge = min(adj_edges, key=lambda e: G.get_edge_weight(e))
         for edge in adj_edges:
             if edge != min_edge:
-                anims.extend([Indicate(G.edges[edge].get_weight())])
+                anims.extend([Indicate(G.edges[edge].get_label("weight"))])
         self.play(*anims)
 
         while True:

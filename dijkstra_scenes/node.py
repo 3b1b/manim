@@ -130,35 +130,7 @@ class Node(Component):
 
         return ret
 
-    def set_label(self, name, label, animate=True, **kwargs):
-        kwargs["animate"] = animate
-        d = copy.deepcopy(self.labels)
-        d[name] = label
-        return self.set_labels(d, **kwargs)
-
-    def set_labels(self, new_labels, scale_mobject=True, **kwargs):
-        assert(type(new_labels) == OrderedDict)
-        # make sure labels are different
-        for old_label in self.labels.values():
-            for new_label in new_labels.values():
-                assert(id(old_label) != id(new_label))
-
-        anims = []
-        # delete
-        for key, val in new_labels.items():
-            if val is None:
-                anims.append(Uncreate(self.labels[key]))
-                self.remove(self.labels[key])
-                del new_labels[key]
-                del self.labels[key]
-
-        # scale
-        for label in new_labels.values():
-            if type(label) == Arrow:
-                continue  # TODO
-            scale_factor = self.get_label_scale_factor(label, len(new_labels))
-            label.scale(scale_factor)
-
+    def move_labels(self, new_labels):
         # move
         if len(set(self.labels.keys() + new_labels.keys())) == 1:
             if len(new_labels) == 1:
@@ -194,32 +166,8 @@ class Node(Component):
             for key in old_label_copies:
                 if key not in new_labels:
                     new_labels[key] = old_label_copies[key]
+        return new_labels
 
-        # animate / create
-        if "animate" not in kwargs or kwargs["animate"]:
-            for name in new_labels.keys():
-                if name in self.labels:
-                    anims.append(ReplacementTransform(self.labels[name],
-                                                      new_labels[name],
-                                                      parent=self))
-                else:
-                    anims.append(ShowCreation(new_labels[name]))
-                    self.add(new_labels[name])
-        else:
-            for name in new_labels.keys():
-                if name not in self.labels:
-                    self.add(new_labels[name])
-                else:
-                    self.add(new_labels[name])
-                    self.remove(self.labels[name])
-        self.labels = new_labels
-        return anims
-
-    def get_label(self, name):
-        if name in self.labels:
-            return self.labels[name]
-        else:
-            return None
 
     def get_label_scale_factor(self, label, num_labels):
         if label.get_height() > Integer(7).get_height():
@@ -233,3 +181,4 @@ class Node(Component):
             return self.parent_edge
         else:
             return None
+
