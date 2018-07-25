@@ -4,6 +4,7 @@ from dijkstra_scenes.node import Node
 from dijkstra_scenes.edge import Edge
 from collections import OrderedDict
 import constants
+import copy
 import ipdb
 import sys
 
@@ -22,6 +23,9 @@ class Graph(Group):
             Node.assert_primitive(node)
         for edge in edges:
             Edge.assert_primitive(edge)
+
+        # prevent changes to labels
+        labels = copy.deepcopy(labels)
 
         # mobject init
         config_copy = self.CONFIG.copy()
@@ -62,6 +66,7 @@ class Graph(Group):
             if key in self.nodes:
                 Node.assert_primitive(key)
                 anims.extend(self.nodes[key].update(dic.get(key, None)))
+                # update adjacent edges in case radius changes
                 for pair in self.get_adjacent_edges(key):
                     if pair not in dic and pair not in neighbors_to_update:
                         neighbors_to_update.add(pair)
