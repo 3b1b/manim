@@ -1100,7 +1100,7 @@ class AskAboutInfiniteIntelligence(TeacherStudentsScene):
         )
         self.wait()
         self.teacher_says(
-            "It's not too bad, \\\\ but stay focused",
+            "Stay focused, \\\\ go full screen, \\\\ and you'll be fine.",
             added_anims=[self.get_student_changes(*["happy"] * 3)]
         )
         self.wait()
@@ -4207,3 +4207,78 @@ class PatYourselfOnTheBack(TeacherStudentsScene):
             FadeInFromDown(chess)
         )
         self.wait(2)
+
+
+class Thumbnail(ShowEmergingEllipse):
+    CONFIG = {
+        "num_lines": 50,
+    }
+
+    def construct(self):
+        background = ImageMobject("Feynman_teaching")
+        background.scale_to_fit_width(FRAME_WIDTH)
+        background.scale(1.05)
+        background.to_corner(UR, buff=0)
+        background.shift(2 * UP)
+
+        self.add(background)
+
+        circle = self.get_circle()
+        circle.set_stroke(width=6)
+        circle.scale_to_fit_height(6.5)
+        circle.to_corner(UL)
+        circle.set_fill(BLACK, 0.9)
+        lines = self.get_lines()
+        lines.set_stroke(YELLOW, 5)
+        lines.set_color_by_gradient(YELLOW, RED)
+        ghost_lines = self.get_ghost_lines(lines)
+        for line in lines:
+            line.rotate(90 * DEGREES)
+        ellipse = self.get_ellipse()
+        ellipse.set_stroke(BLUE, 6)
+        sun = ImageMobject("sun", height=0.5)
+        sun.move_to(self.get_eccentricity_point())
+
+        circle_group = VGroup(circle, ghost_lines, lines, ellipse, sun)
+        self.add(circle_group)
+
+        l1 = Line(
+            circle.point_from_proportion(0.175),
+            6.25 * RIGHT + 0.75 * DOWN
+        )
+        l2 = Line(
+            circle.point_from_proportion(0.75),
+            6.25 * RIGHT + 2.5 * DOWN
+        )
+        l2a = VMobject().pointwise_become_partial(l2, 0, 0.56)
+        l2b = VMobject().pointwise_become_partial(l2, 0.715, 1)
+        expand_lines = VGroup(l1, l2a, l2b)
+
+        expand_lines.set_stroke("RED", 5)
+        self.add(expand_lines)
+        self.add(circle_group)
+
+        small_group = circle_group.copy()
+        small_group.scale(0.2)
+        small_group.stretch(1.35, 1)
+        small_group.move_to(6.2 * RIGHT + 1.6 * DOWN)
+        for mob in small_group:
+            if isinstance(mob, VMobject) and mob.get_stroke_width() > 1:
+                mob.set_stroke(width=1)
+        small_group[0].set_fill(opacity=0.25)
+        self.add(small_group)
+
+        title = TextMobject(
+            "Feynman's \\\\", "Lost \\\\", "Lecture",
+            alignment=""
+        )
+        title.scale(2.4)
+        for part in title:
+            part.add_to_back(
+                part.copy().set_stroke(BLACK, 12).set_fill(BLACK, 1)
+            )
+        title.to_corner(UR)
+        title[2].to_edge(RIGHT)
+        title[1].shift(0.9 * RIGHT)
+        title.shift(0.5 * LEFT)
+        self.add(title)
