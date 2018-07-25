@@ -30,7 +30,7 @@ def generate_tex_file(expression, template_tex_file, **kwargs):
             if kwargs is not None and "hsize" in kwargs:
                 body = body.replace("###HSIZE###", str(kwargs["hsize"]))
             else:
-                body = body.replace("###HSIZE###", "1675.7927pt")
+                body = body.replace("###HSIZE###", "345pt")
             body = body.replace(TEX_TEXT_TO_REPLACE, expression)
         with open(result, "w") as outfile:
             outfile.write(body)

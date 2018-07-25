@@ -584,7 +584,7 @@ class RunAlgorithm(MovingCameraScene):
 
     def spt_vs_mst(self):
         self.__dict__.update(load_previous_state())
-        DIST = self.DIST
+        self.DIST = DIST = 2.5 / 2**0.5
 
         nodes = [
             (0, 0, 0),
@@ -1133,7 +1133,7 @@ class RunAlgorithm(MovingCameraScene):
 
     def directed_graph(self):
         self.__dict__.update(load_previous_state())
-        self.DIST = DIST = 2.5 / 2**0.5
+        DIST = self.DIST
         nodes = [
             (-DIST * 1.2, DIST * 1.2 , 0),
             ( DIST * 1.2, DIST * 1.2 , 0),
@@ -1220,15 +1220,15 @@ class RunAlgorithm(MovingCameraScene):
     def construct(self):
         self.first_try()
         self.counterexample()
-        #self.one_step()
-        #self.triangle_inequality()
-        #self.generalize()
-        #self.last_run()
-        #self.spt_vs_mst()
-        ## TODO: mention shortest path tree when arrows are used
-        ## TODO: directed graphs
-        #self.show_code()
-        #self.run_code()
-        #self.analyze()
-        #self.compare_data_structures()
-        #self.directed_graph()
+        self.one_step()
+        self.triangle_inequality()
+        self.generalize()
+        self.last_run()
+        self.spt_vs_mst()
+        # TODO: mention shortest path tree when arrows are used
+        # TODO: directed graphs
+        self.show_code()
+        self.run_code()
+        self.analyze()
+        self.compare_data_structures()
+        self.directed_graph()
