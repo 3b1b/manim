@@ -385,8 +385,8 @@ class RunAlgorithm(MovingCameraScene):
         )
         sx_normal = rotate_vector(sx.get_vector(), np.pi/2)
         bx = BraceLabel(sx, "x", sx_normal, buff=SMALL_BUFF)
-        bx.brace.set_color(x_color)
-        x = bx.label.set_color(x_color)
+        bx.brace.set_color(x_color, family=True)
+        x = bx.label.set_color(x_color, family=True)
 
         sy = Line(
             S.get_node(u).mobject.get_center(),

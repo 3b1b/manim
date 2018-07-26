@@ -31,7 +31,6 @@ class Component(Mobject):
         delattr(self, "scale_factor")
         delattr(self, "name")
         delattr(self, "color")
-        delattr(self, "override_children")
         delattr(self, "initial_config")
 
         if "attrs" in kwargs:

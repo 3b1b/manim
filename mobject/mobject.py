@@ -36,7 +36,6 @@ class Mobject(Container):
         "name": None,
         "dim": 3,
         "target": None,
-        "override_children": False,
     }
 
     def __init__(self, *submobjects, **kwargs):
@@ -49,7 +48,7 @@ class Mobject(Container):
             self.name = self.__class__.__name__
         self.init_points()
         self.generate_points()
-        self.init_colors(self.override_children)
+        self.init_colors()
 
     def __str__(self):
         return str(self.name)
@@ -57,7 +56,7 @@ class Mobject(Container):
     def init_points(self):
         self.points = np.zeros((0, self.dim))
 
-    def init_colors(self, override_children):
+    def init_colors(self):
         # For subclasses
         pass
 

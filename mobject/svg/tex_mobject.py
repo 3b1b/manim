@@ -130,7 +130,11 @@ class SingleStringTexMobject(SVGMobject):
     def path_string_to_mobject(self, path_string, fill_color=None):
         # Overwrite superclass default to use
         # specialized path_string mobject
-        return TexSymbol(path_string, color=fill_color)
+        return TexSymbol(path_string,
+                         color=fill_color,
+                         stroke_rgb=np.array([0,0,0]),
+                         fill_rgb=np.array([0,0,0]),
+                         fill_opacity=1)
 
     def organize_submobjects_left_to_right(self):
         self.sort_submobjects(lambda p: p[0])
@@ -266,7 +270,7 @@ class CodeMobject(TexMobject):
     CONFIG = {
         "template_tex_file": TEMPLATE_CODE_FILE,
         "indent_level": 4,
-        "override_children": False,
+        "propagate_style_to_family": False,
     }
 
     def break_up_tex_strings(self, tex_string):
