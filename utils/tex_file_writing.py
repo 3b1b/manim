@@ -46,12 +46,16 @@ def tex_to_dvi(tex_file):
             "-halt-on-error",
             "-output-directory=" + TEX_DIR,
             tex_file,
-            ">",
-            get_null()
         ]
         exit_code = os.system(" ".join(commands))
         if exit_code != 0:
+            latex_output = ''
             log_file = tex_file.replace(".tex", ".log")
+            if os.path.exists(log_file):
+                with open(log_file, 'r') as f:
+                    latex_output = f.read()
+            if latex_output:
+                sys.stderr.write(latex_output)
             raise Exception(
                 "Latex error converting to dvi. "
                 "See log output above or the log file: %s" % log_file)
@@ -75,8 +79,6 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
             "0",
             "-o",
             result,
-            ">",
-            get_null()
         ]
         os.system(" ".join(commands))
     return result
