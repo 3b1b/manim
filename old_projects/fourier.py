@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from constants import *
-import scipy
+import scipy.integrate as integrate
 
 from big_ol_pile_of_manim_imports import *
 
@@ -52,7 +52,7 @@ def get_fourier_transform(
     scalar = 1. / (t_max - t_min) if use_almost_fourier else 1.0
 
     def fourier_transform(f):
-        z = scalar * scipy.integrate.quad(
+        z = scalar * integrate.quad(
             lambda t: func(t) * np.exp(complex(0, -TAU * f * t)),
             t_min, t_max
         )[0]
