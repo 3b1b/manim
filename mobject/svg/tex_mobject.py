@@ -50,7 +50,6 @@ class SingleStringTexMobject(SVGMobject):
         digest_config(self, kwargs)
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
-        #import ipdb; ipdb.set_trace(context=7)
         if "template_tex_file" in kwargs and \
                 kwargs["template_tex_file"] == self.template_tex_file:
             del kwargs["template_tex_file"]
