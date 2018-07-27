@@ -126,3 +126,24 @@ def complex_func_to_R3_func(complex_func):
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
+
+
+def line_intersection(line1, line2):
+    """
+    return intersection point of two lines,
+    each defined with a pair of vectors determining
+    the end points
+    """
+    x_diff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    y_diff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
+
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = det(x_diff, y_diff)
+    if div == 0:
+        raise Exception("Lines do not intersect")
+    d = (det(*line1), det(*line2))
+    x = det(d, x_diff) / div
+    y = det(d, y_diff) / div
+    return np.array([x, y, 0])

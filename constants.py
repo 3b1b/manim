@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 env_MEDIA_DIR = None
-MEDIA_DIR = "#ERROR#"
+MEDIA_DIR = "/home/kiran/Desktop/Programming/animations"
 
 try:
     env_MEDIA_DIR = os.getenv("MEDIA_DIR")
@@ -106,7 +106,8 @@ BOTTOM = FRAME_Y_RADIUS * DOWN
 LEFT_SIDE = FRAME_X_RADIUS * LEFT
 RIGHT_SIDE = FRAME_X_RADIUS * RIGHT
 
-TAU = 2 * np.pi
+PI = np.pi
+TAU = 2 * PI
 DEGREES = TAU / 360
 
 ANIMATIONS_DIR = os.path.join(MEDIA_DIR, "animations")
