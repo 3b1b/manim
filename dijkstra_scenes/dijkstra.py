@@ -578,8 +578,20 @@ class RunAlgorithm(MovingCameraScene):
                 self.play(*G.update(updates))
             else:
                 break
-
         self.wait(1)
+
+        not_in_tree = VGroup()
+        for node in G.get_nodes():
+            if str(G.get_node(node).mobject.color) != SPT_COLOR:
+                not_in_tree.add(G.get_node(node).mobject)
+        for edge in G.get_edges():
+            if str(G.get_edge(edge).mobject.color) != SPT_COLOR:
+                not_in_tree.add(*G.get_edge(edge).submobjects)
+        target = not_in_tree.generate_target() \
+            .set_color(interpolate_color(BLACK, WHITE, 0.9))
+        self.play(MoveToTarget(not_in_tree))
+        self.wait(1)
+
         self.play(FadeOut(G))
 
         save_state(self)
