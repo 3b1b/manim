@@ -3,7 +3,6 @@ import re
 import string
 import warnings
 
-from mobject.svg.tex_mobject import *
 from xml.dom import minidom
 from utils.color import *
 
@@ -14,6 +13,7 @@ from mobject.geometry import RoundedRectangle
 from utils.bezier import is_closed
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
+from mobject.svg.tex_mobject import *
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 
@@ -166,7 +166,6 @@ class SVGMobject(VMobject):
         stroke_color = rect_element.getAttribute("stroke")
         stroke_width = rect_element.getAttribute("stroke-width")
         corner_radius = rect_element.getAttribute("rx")
-        opacity = 1
 
         # input preprocessing
         if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):

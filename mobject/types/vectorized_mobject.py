@@ -40,7 +40,7 @@ class VMobject(Mobject):
             stroke_width=self.stroke_width,
             fill_color=self.fill_color or self.color,
             fill_opacity=self.fill_opacity,
-            family=self.propagate_style_to_family,
+            family=self.propagate_style_to_family
         )
         return self
 
@@ -53,7 +53,7 @@ class VMobject(Mobject):
                        stroke_width=None,
                        fill_color=None,
                        fill_opacity=None,
-                       family=True,
+                       family=True
                        ):
         if stroke_color is not None:
             self.stroke_rgb = color_to_rgb(stroke_color)
@@ -70,7 +70,7 @@ class VMobject(Mobject):
                     stroke_width=stroke_width,
                     fill_color=fill_color,
                     fill_opacity=fill_opacity,
-                    family=family,
+                    family=family
                 )
         return self
 

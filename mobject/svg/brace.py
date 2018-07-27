@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import copy
 import numpy as np
 
 from constants import *
@@ -58,7 +59,7 @@ class Brace(TexMobject):
 
     def get_text(self, *text, **kwargs):
         text_mob = TextMobject(*text)
-        self.put_at_tip(text_mob, **kwargs)
+        self.put_at_tip(text_mob)
         return text_mob
 
     def get_tex(self, *tex, **kwargs):
@@ -124,6 +125,14 @@ class BraceLabel(VMobject):
         self.shift_brace(obj)
         self.change_label(*text)
         return self
+
+    def copy(self):
+        copy_mobject = copy.copy(self)
+        copy_mobject.brace = self.brace.copy()
+        copy_mobject.label = self.label.copy()
+        copy_mobject.submobjects = [copy_mobject.brace, copy_mobject.label]
+
+        return copy_mobject
 
 
 class BraceText(BraceLabel):
