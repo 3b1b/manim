@@ -1226,7 +1226,6 @@ class RunAlgorithm(MovingCameraScene):
         self.last_run()
         self.spt_vs_mst()
         # TODO: mention shortest path tree when arrows are used
-        # TODO: directed graphs
         self.show_code()
         self.run_code()
         self.analyze()

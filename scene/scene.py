@@ -467,8 +467,6 @@ class Scene(Container):
         else:
             self.continual_update(0)
         self.num_plays += 1
-        if "callback" in kwargs:
-            kwargs["callback"]()
         return self
 
     def clean_up_animations(self, *animations):

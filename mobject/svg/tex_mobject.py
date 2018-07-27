@@ -17,9 +17,6 @@ TEX_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
-    CONFIG = {
-        "stroke_width": 0,
-    }
     def pointwise_become_partial(self, mobject, a, b):
         # TODO, this assumes a = 0
         if b < 0.5:
@@ -53,6 +50,7 @@ class SingleStringTexMobject(SVGMobject):
         digest_config(self, kwargs)
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
+        #import ipdb; ipdb.set_trace(context=7)
         if "template_tex_file" in kwargs and \
                 kwargs["template_tex_file"] == self.template_tex_file:
             del kwargs["template_tex_file"]
@@ -130,11 +128,14 @@ class SingleStringTexMobject(SVGMobject):
     def path_string_to_mobject(self, path_string, fill_color=None):
         # Overwrite superclass default to use
         # specialized path_string mobject
-        return TexSymbol(path_string,
-                         color=fill_color,
-                         stroke_rgb=np.array([0,0,0]),
-                         fill_rgb=np.array([0,0,0]),
-                         fill_opacity=1)
+        return TexSymbol(
+            path_string,
+            color=fill_color,
+            stroke_rgb=np.array([0,0,0]),
+            fill_rgb=np.array([0,0,0]),
+            fill_opacity=1,
+            stroke_width=0,
+        )
 
     def organize_submobjects_left_to_right(self):
         self.sort_submobjects(lambda p: p[0])
