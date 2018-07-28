@@ -163,9 +163,16 @@ class Node(Component):
                     vec = rotate_vector(
                             vec, 2 * numpy.pi / len(set(self.labels.keys() +
                                                         new_labels.keys())))
-            for key in old_label_copies:
-                if key not in new_labels:
-                    new_labels[key] = old_label_copies[key]
+            ordered_labels = OrderedDict()
+            for key in self.labels:
+                if key in new_labels:
+                    ordered_labels[key] = new_labels[key]
+                else:
+                    ordered_labels[key] = old_label_copies[key]
+            for key in new_labels:
+                if key not in self.labels:
+                    ordered_labels[key] = new_labels[key]
+            new_labels = ordered_labels
         return new_labels
 
 

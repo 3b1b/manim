@@ -67,7 +67,7 @@ class Graph(Group):
                 Node.assert_primitive(key)
                 anims.extend(self.nodes[key].update(dic.get(key, None)))
                 # update adjacent edges in case radius changes
-                for pair in self.get_adjacent_edges(key):
+                for pair in self.get_adjacent_edges(key, use_direction=False):
                     if pair not in dic and pair not in neighbors_to_update:
                         neighbors_to_update.add(pair)
             elif key in self.edges:
@@ -133,7 +133,7 @@ class Graph(Group):
                 adjacent_nodes.append(u)
         return adjacent_nodes
 
-    def get_adjacent_edges(self, point, use_direction=False):
+    def get_adjacent_edges(self, point, use_direction=True):
         Node.assert_primitive(point)
         adjacent_edges = []
         for edge in self.edges.keys():
