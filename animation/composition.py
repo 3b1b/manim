@@ -111,6 +111,8 @@ class Succession(Animation):
             self.scene_mobjects_at_time[i +
                                         1] = self.scene_mobjects_at_time[i].copy()
             self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
+            # the next mobject to be animated next will be added in jump_to_start()
+            self.scene_mobjects_at_time[i + 1].remove(self.animations[i].mobject)
 
         self.current_alpha = 0
         # If self.num_anims == 0, this is an invalid index, but so it goes
