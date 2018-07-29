@@ -16,12 +16,25 @@ class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
         square = Square()
-        square.flip(RIGHT)
-        square.rotate(-3 * TAU / 8)
+        rectangle = Rectangle()
+        #square.flip(RIGHT)
+        #square.rotate(-3 * TAU / 8)
 
-        self.play(ShowCreation(square))
-        self.play(Transform(square, circle))
-        self.play(FadeOut(square))
+        #self.play(ShowCreation(square))
+        #self.play(Transform(square, circle))
+        #self.play(FadeOut(square))
+        self.play(
+            Succession(
+                ShowCreation(circle),
+                ReplacementTransform, circle, square,
+                ReplacementTransform, square, rectangle,
+                ApplyMethod, rectangle.shift, 2*UP, {"run_time" : 2},
+            )
+        )
+        #self.play(ShowCreation(circle))
+        #self.play(ReplacementTransform(circle, square))
+        #self.play(ReplacementTransform(square, rectangle))
+        #self.play(ApplyMethod(rectangle.shift, 2 * UP, run_time=2))
 
 
 class WarpSquare(Scene):

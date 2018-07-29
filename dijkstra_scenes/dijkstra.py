@@ -34,7 +34,8 @@ def extend_arrow(G, u, v, color=None):
         ),
     ), arrow
 
-def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False):
+def relax_neighbors(scene, G, parent, show_relaxation=True,
+        arrows=False, additional_anims=[]):
     if show_relaxation:
         saved_edge_attrs = {}
         for edge in G.get_adjacent_edges(parent):
@@ -49,7 +50,7 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False):
                     ("color", RELAXATION_COLOR),
                     ("stroke_width", 4),
                 ])
-        scene.play(*G.update(indicate_neighbors_updates))
+        scene.play(*G.update(indicate_neighbors_updates) + additional_anims)
 
     labels = []
     updates = OrderedDict()
@@ -129,7 +130,7 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False):
         else:
             scene.wait()
 
-def extract_node(scene, G, arrows=False):
+def extract_node(scene, G, arrows=False, additional_anims=[]):
     bounded_nodes = filter(
         lambda v: G.node_has_label(v, "dist") and \
                 type(G.get_node_label(v, "dist")) == TexMobject and \
@@ -161,7 +162,7 @@ def extract_node(scene, G, arrows=False):
         updates[parent_edge] = OrderedDict([
             ("color", SPT_COLOR),
         ])
-    scene.play(*G.update(updates))
+    scene.play(*G.update(updates) + additional_anims)
     return min_node
 
 class RunAlgorithm(MovingCameraScene):
@@ -940,6 +941,9 @@ class RunAlgorithm(MovingCameraScene):
 
     def run_code(self):
         self.__dict__.update(load_previous_state())
+        code = self.code
+        CURSOR_COLOR = BLUE
+        LINE_HEIGHT = 0.3
 
         s = ( 0,  2.6, 0)
         nodes = [
@@ -988,6 +992,20 @@ class RunAlgorithm(MovingCameraScene):
         G = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(self.camera_frame.get_right() * 0.5)
         self.play(ShowCreation(G))
 
+        cursor = Rectangle(
+            fill_color=CURSOR_COLOR,
+            fill_opacity=0.5,
+            stroke_width=0,
+            width=7,
+            height=0.3,
+        ).to_edge(LEFT, buff=SMALL_BUFF) \
+         .to_edge(UP, buff=MED_SMALL_BUFF - 0.02) \
+         .shift(DOWN * LINE_HEIGHT)
+        self.play(FadeIn(cursor))
+
+        cursor_target = cursor.generate_target()
+        cursor_target.shift(DOWN * 3 * LINE_HEIGHT)
+
         updates = OrderedDict()
         updates[s] = OrderedDict([
             ("dist", Integer(0)),
@@ -999,12 +1017,17 @@ class RunAlgorithm(MovingCameraScene):
                     ("dist", TexMobject("\le\infty").set_color(INFTY_COLOR)),
                     ("color", INFTY_COLOR),
                 ])
-        self.play(*G.update(updates))
+        self.play(MoveToTarget(cursor), *G.update(updates))
 
         min_node = (0, 2.6, 0)
         while min_node is not None:
-            relax_neighbors(self, G, min_node, arrows=True)
-            min_node = extract_node(self, G, arrows=True)
+            cursor_target.shift(DOWN * 2 * LINE_HEIGHT)
+            relax_neighbors(self, G, min_node, arrows=True,
+                    additional_anims=[MoveToTarget(cursor)])
+
+            cursor_target.shift(UP * 2 * LINE_HEIGHT)
+            min_node = extract_node(self, G, arrows=True,
+                    additional_anims=[MoveToTarget(cursor)])
 
         self.G = G
         save_state(self)
@@ -1275,15 +1298,15 @@ class RunAlgorithm(MovingCameraScene):
         save_state(self)
 
     def construct(self):
-        self.first_try()
-        self.counterexample()
-        self.one_step()
-        self.triangle_inequality()
-        self.generalize()
-        self.last_run()
-        self.spt_vs_mst()
-        self.show_code()
+        #self.first_try()
+        #self.counterexample()
+        #self.one_step()
+        #self.triangle_inequality()
+        #self.generalize()
+        #self.last_run()
+        #self.spt_vs_mst()
+        #self.show_code()
         self.run_code()
-        self.analyze()
-        self.compare_data_structures()
-        self.directed_graph()
+        #self.analyze()
+        #self.compare_data_structures()
+        #self.directed_graph()
