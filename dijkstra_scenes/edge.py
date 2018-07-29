@@ -5,7 +5,7 @@ from dijkstra_scenes.node import Node
 from mobject.geometry import Arrow
 from mobject.geometry import Line
 from mobject.numbers import Integer
-from animation.creation import ShowCreation
+from animation.creation import ShowCreation, FadeIn, FadeOut
 from animation.transform import ReplacementTransform
 from utils.space_ops import rotate_vector
 from collections import OrderedDict
@@ -174,7 +174,13 @@ class Edge(Component):
         new_mob = mob
 
         if animate:
-            ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+            if type(self.mobject) == Line and type(new_mob) == Arrow:
+                ret.extend([
+                    FadeOut(self.mobject, parent=self),
+                    FadeIn(new_mob, parent=self),
+                ])
+            else:
+                ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
         else:
             if hasattr(self, "mobject"):
                 self.remove(self.mobject)

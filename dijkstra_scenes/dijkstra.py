@@ -73,6 +73,8 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False):
             old_bound = G.get_node_label(child, "dist")
             if type(old_bound) == Integer or len(old_bound.tex_string) == 1:
                 # path length is already known
+                if new_bound < old_bound.number:
+                    updates[child] = OrderedDict([("color", RED)])
                 continue
 
             # find child bound
@@ -613,7 +615,7 @@ class RunAlgorithm(MovingCameraScene):
 
     def spt_vs_mst(self):
         self.__dict__.update(load_previous_state())
-        self.DIST = DIST = 2.5 / 2**0.5
+        DIST = 2.5
 
         nodes = [
             (0, 0, 0),
@@ -631,7 +633,7 @@ class RunAlgorithm(MovingCameraScene):
             edges[1]: OrderedDict([("weight", Integer(2))]),
             edges[2]: OrderedDict([("weight", Integer(1))]),
         }
-        H_spt = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(DOWN)
+        H_spt = Graph(nodes, edges, labels=labels).shift(DOWN)
         H_spt_target = H_spt.generate_target().shift(3 * LEFT)
         H_mst = H_spt.deepcopy()
         H_mst_target = H_mst.generate_target().shift(3 * RIGHT)
@@ -671,10 +673,77 @@ class RunAlgorithm(MovingCameraScene):
         ])
         mst_text = TextMobject("Minimum Spanning Tree", hsize="85pt").next_to(H_mst, DOWN)
         self.play(*H_mst.update(mst_updates) + [Write(mst_text)])
-        self.play(FadeOut(Group(
-            H_mst, H_spt, mst_text, spt_text,
-        )))
         self.wait()
+
+        # restore spt + mst
+        spt_updates = OrderedDict()
+        spt_updates[nodes[0]] = OrderedDict([("color", BLACK)])
+        spt_updates[nodes[1]] = OrderedDict([("color", BLACK)])
+        spt_updates[nodes[2]] = OrderedDict([("color", BLACK)])
+        spt_updates[edges[0]] = OrderedDict([
+            ("color", BLACK),
+            ("stroke_width", 2),
+        ])
+        spt_updates[edges[1]] = OrderedDict([
+            ("color", BLACK),
+            ("stroke_width", 2),
+        ])
+
+        mst_updates = OrderedDict()
+        mst_updates[nodes[0]] = OrderedDict([("color", BLACK)])
+        mst_updates[nodes[1]] = OrderedDict([("color", BLACK)])
+        mst_updates[nodes[2]] = OrderedDict([("color", BLACK)])
+        mst_updates[edges[1]] = OrderedDict([
+            ("color", BLACK),
+            ("stroke_width", 2),
+        ])
+        mst_updates[edges[2]] = OrderedDict([
+            ("color", BLACK),
+            ("stroke_width", 2),
+        ])
+
+        self.play(
+            FadeOut(mst_text),
+            FadeOut(spt_text),
+            *H_spt.update(spt_updates) + H_mst.update(mst_updates)
+        )
+
+        H_spt_target = H_spt.generate_target().shift(3 * RIGHT)
+        H_mst_target = H_mst.generate_target().shift(3 * LEFT)
+        self.play(
+            MoveToTarget(H_spt),
+            MoveToTarget(H_mst),
+        )
+        self.remove(H_mst)
+
+        updates = OrderedDict()
+        updates[edges[0]] = OrderedDict([
+            ("weight", Integer(2)),
+            ("directed", True),
+        ])
+        updates[edges[1]] = OrderedDict([
+            ("weight", Integer(1)),
+            ("directed", True),
+        ])
+        updates[edges[2]] = OrderedDict([
+            ("weight", Integer(-2)),
+            ("directed", True),
+        ])
+        updates[nodes[0]] = OrderedDict([
+            ("dist", Integer(0)),
+            ("color", SPT_COLOR),
+        ])
+        self.play(*H_spt.update(updates))
+
+        min_node = nodes[0]
+        while min_node is not None:
+            relax_neighbors(self, H_spt, min_node, arrows=True)
+            min_node = extract_node(self, H_spt, arrows=True)
+
+        self.play(FadeOut(H_spt))
+        self.wait()
+        save_state(self)
+
 
     def show_code(self):
         self.__dict__.update(load_previous_state())
@@ -1137,7 +1206,7 @@ class RunAlgorithm(MovingCameraScene):
 
     def directed_graph(self):
         self.__dict__.update(load_previous_state())
-        DIST = self.DIST
+        DIST = 1.8
         nodes = [
             (-DIST * 1.2, DIST * 1.2 , 0),
             ( DIST * 1.2, DIST * 1.2 , 0),
