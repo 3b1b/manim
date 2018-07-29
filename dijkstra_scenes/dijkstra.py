@@ -130,23 +130,38 @@ def relax_neighbors(scene, G, parent, show_relaxation=True,
         else:
             scene.wait()
 
-def extract_node(scene, G, arrows=False, additional_anims=[]):
-    bounded_nodes = filter(
-        lambda v: G.node_has_label(v, "dist") and \
-                type(G.get_node_label(v, "dist")) == TexMobject and \
-                G.get_node_label(v, "dist").tex_string.startswith("\le"),
+def bounded_nodes(G):
+    def in_queue(v):
+        if not G.node_has_label(v, "dist"):
+            return False
+        if G.get_node_label(v, "dist") is None:
+            return True
+        if type(G.get_node_label(v, "dist")) == TexMobject and \
+                G.get_node_label(v, "dist").tex_string.startswith("\le"):
+            return True
+
+    ret = filter(
+        in_queue,
         G.get_nodes()
     )
-    if not bounded_nodes:
+    return ret
+
+def extract_node(scene, G, arrows=False, additional_anims=[]):
+    queue = bounded_nodes(G)
+    if not queue:
         return None
-    min_node  = bounded_nodes[0]
+    min_node  = queue[0]
     if "\infty" in G.get_node_label(min_node, "dist").tex_string:
         min_bound = float("inf")
+    elif "\le 0" == G.get_node_label(min_node, "dist").tex_string:
+        min_bound = 0
     else:
         min_bound = int(G.get_node_label(min_node, "dist").tex_string[4:])
-    for v in bounded_nodes[1:]:
+    for v in queue[1:]:
         if "\infty" in G.get_node_label(v, "dist").tex_string:
             cur_bound = float("inf")
+        elif "\le 0" == G.get_node_label(min_node, "dist").tex_string:
+            cur_bound = 0
         else:
             cur_bound = int(G.get_node_label(v, "dist").tex_string[4:])
         if cur_bound < min_bound:
@@ -159,9 +174,10 @@ def extract_node(scene, G, arrows=False, additional_anims=[]):
     ])
     if arrows:
         parent_edge = G.get_node_parent_edge(min_node)
-        updates[parent_edge] = OrderedDict([
-            ("color", SPT_COLOR),
-        ])
+        if parent_edge is not None:
+            updates[parent_edge] = OrderedDict([
+                ("color", SPT_COLOR),
+            ])
     scene.play(*G.update(updates) + additional_anims)
     return min_node
 
@@ -541,6 +557,7 @@ class RunAlgorithm(MovingCameraScene):
         ]
         relax_neighbors(self, G, neighbor)
 
+        # revert neighbors
         updates = OrderedDict()
         for point in to_revert:
             updates[point] = OrderedDict([
@@ -548,8 +565,6 @@ class RunAlgorithm(MovingCameraScene):
                 ("color", BLACK),
             ])
         self.play(*G.update(updates))
-
-        # TODO: tentatively label node across shortest edge
 
         # Indicate lengths of non-min edges
         anims = []
@@ -560,9 +575,12 @@ class RunAlgorithm(MovingCameraScene):
                 anims.extend([Indicate(G.edges[edge].get_label("weight"))])
         self.play(*anims)
 
-        while min_node is not None:
-            relax_neighbors(self, G, min_node)
+        # relax to match earlier extract
+        relax_neighbors(self, G, min_node)
+
+        while bounded_nodes(G):
             min_node = extract_node(self, G)
+            relax_neighbors(self, G, min_node)
 
         self.wait(2)
         save_state(self)
@@ -586,16 +604,10 @@ class RunAlgorithm(MovingCameraScene):
             ("color", SPT_COLOR),
         ])))
 
-        while min_node is not None:
-            # relax neighbors
-            relax_neighbors(self, G, min_node, arrows=True)
-
-            # tighten bound on node with least bound
+        relax_neighbors(self, G, s, arrows=True)
+        while bounded_nodes(G):
             min_node = extract_node(self, G, arrows=True)
-            if min_node:
-                pass
-            else:
-                break
+            relax_neighbors(self, G, min_node, arrows=True)
         self.wait(1)
 
         not_in_tree = VGroup()
@@ -612,6 +624,90 @@ class RunAlgorithm(MovingCameraScene):
 
         self.play(FadeOut(G))
 
+        save_state(self)
+
+    def directed_graph(self):
+        self.__dict__.update(load_previous_state())
+        DIST = 1.8
+        nodes = [
+            (-DIST * 1.2, DIST * 1.2 , 0),
+            ( DIST * 1.2, DIST * 1.2 , 0),
+
+            (-2 * DIST  , 0          , 0),
+            (0          , 0          , 0),
+            (2 * DIST   , 0          , 0),
+
+            (-DIST * 1.2, -DIST * 1.2, 0),
+            ( DIST * 1.2, -DIST * 1.2, 0),
+        ]
+        edges = [
+            (nodes[1], nodes[0]),
+
+            (nodes[0], nodes[2]),
+            (nodes[3], nodes[0]),
+            (nodes[3], nodes[1]),
+            (nodes[4], nodes[1]),
+
+            (nodes[0], nodes[5]),
+            (nodes[5], nodes[0]),
+            (nodes[1], nodes[6]),
+            (nodes[6], nodes[1]),
+
+            (nodes[5], nodes[2]),
+            (nodes[3], nodes[5]),
+            (nodes[3], nodes[6]),
+            (nodes[6], nodes[4]),
+
+            (nodes[5], nodes[6]),
+        ]
+        labels = {
+            edges[0]: OrderedDict([("weight", Integer(9))]),
+
+            edges[1]: OrderedDict([("weight", Integer(4))]),
+            edges[2]: OrderedDict([("weight", Integer(8))]),
+            edges[3]: OrderedDict([("weight", Integer(2))]),
+            edges[4]: OrderedDict([("weight", Integer(2))]),
+
+            edges[5]: OrderedDict([("weight", Integer(2))]),
+            edges[6]: OrderedDict([("weight", Integer(2))]),
+            edges[7]: OrderedDict([("weight", Integer(5))]),
+            edges[8]: OrderedDict([("weight", Integer(1))]),
+
+            edges[9]: OrderedDict([("weight", Integer(4))]),
+            edges[10]: OrderedDict([("weight", Integer(3))]),
+            edges[11]: OrderedDict([("weight", Integer(9))]),
+            edges[12]: OrderedDict([("weight", Integer(9))]),
+
+            edges[13]: OrderedDict([("weight", Integer(8))]),
+            (0, 0, 0): OrderedDict([("variable", TexMobject("s"))]),
+        }
+        G = Graph(nodes, edges, labels=labels, directed=True)
+        self.play(ShowCreation(G))
+
+        min_node = (0, 0, 0)
+        self.play(*G.single_update(min_node, OrderedDict([
+            ("dist", Integer(0)),
+            ("color", SPT_COLOR),
+        ])))
+        while min_node is not None:
+            relax_neighbors(self, G, min_node, arrows=True)
+            min_node = extract_node(self, G, arrows=True)
+        self.wait()
+
+        # show spt
+        not_in_tree = VGroup()
+        for node in G.get_nodes():
+            if str(G.get_node(node).mobject.color) != SPT_COLOR:
+                not_in_tree.add(G.get_node(node).mobject)
+        for edge in G.get_edges():
+            if str(G.get_edge(edge).mobject.color) != SPT_COLOR:
+                not_in_tree.add(*G.get_edge(edge).submobjects)
+        target = not_in_tree.generate_target() \
+            .set_color(interpolate_color(BLACK, WHITE, 0.9))
+        self.play(MoveToTarget(not_in_tree))
+        self.wait(1)
+
+        self.play(FadeOut(G))
         save_state(self)
 
     def spt_vs_mst(self):
@@ -802,8 +898,7 @@ class RunAlgorithm(MovingCameraScene):
         for node in nodes:
             if node == s:
                 updates[node] = OrderedDict([
-                    ("dist", Integer(0)),
-                    ("color", SPT_COLOR),
+                    ("dist", TexMobject("\le 0")),
                 ])
             else:
                 updates[node] = OrderedDict([
@@ -992,24 +1087,12 @@ class RunAlgorithm(MovingCameraScene):
         G = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(self.camera_frame.get_right() * 0.5)
         self.play(ShowCreation(G))
 
-        cursor = Rectangle(
-            fill_color=CURSOR_COLOR,
-            fill_opacity=0.5,
-            stroke_width=0,
-            width=7,
-            height=0.3,
-        ).to_edge(LEFT, buff=SMALL_BUFF) \
-         .to_edge(UP, buff=MED_SMALL_BUFF - 0.02) \
-         .shift(DOWN * LINE_HEIGHT)
-        self.play(FadeIn(cursor))
-
-        cursor_target = cursor.generate_target()
-        cursor_target.shift(DOWN * 3 * LINE_HEIGHT)
+        cursor = TexMobject("\\blacktriangleright").set_color(CURSOR_COLOR)
+        self.add(cursor)
 
         updates = OrderedDict()
         updates[s] = OrderedDict([
-            ("dist", Integer(0)),
-            ("color", SPT_COLOR),
+            ("dist", TexMobject("\le 0")),
         ])
         for node in nodes:
             if node != s:
@@ -1017,17 +1100,11 @@ class RunAlgorithm(MovingCameraScene):
                     ("dist", TexMobject("\le\infty").set_color(INFTY_COLOR)),
                     ("color", INFTY_COLOR),
                 ])
-        self.play(MoveToTarget(cursor), *G.update(updates))
+        self.play(*G.update(updates))
 
-        min_node = (0, 2.6, 0)
-        while min_node is not None:
-            cursor_target.shift(DOWN * 2 * LINE_HEIGHT)
-            relax_neighbors(self, G, min_node, arrows=True,
-                    additional_anims=[MoveToTarget(cursor)])
-
-            cursor_target.shift(UP * 2 * LINE_HEIGHT)
-            min_node = extract_node(self, G, arrows=True,
-                    additional_anims=[MoveToTarget(cursor)])
+        while bounded_nodes(G):
+            min_node = extract_node(self, G, arrows=True)
+            relax_neighbors(self, G, min_node, arrows=True)
 
         self.G = G
         save_state(self)
@@ -1227,86 +1304,16 @@ class RunAlgorithm(MovingCameraScene):
         self.wait(2)
         save_state(self)
 
-    def directed_graph(self):
-        self.__dict__.update(load_previous_state())
-        DIST = 1.8
-        nodes = [
-            (-DIST * 1.2, DIST * 1.2 , 0),
-            ( DIST * 1.2, DIST * 1.2 , 0),
-
-            (-2 * DIST  , 0          , 0),
-            (0          , 0          , 0),
-            (2 * DIST   , 0          , 0),
-
-            (-DIST * 1.2, -DIST * 1.2, 0),
-            ( DIST * 1.2, -DIST * 1.2, 0),
-        ]
-        edges = [
-            (nodes[1], nodes[0]),
-
-            (nodes[0], nodes[2]),
-            (nodes[3], nodes[0]),
-            (nodes[3], nodes[1]),
-            (nodes[4], nodes[1]),
-
-            (nodes[0], nodes[5]),
-            (nodes[5], nodes[0]),
-            (nodes[1], nodes[6]),
-            (nodes[6], nodes[1]),
-
-            (nodes[5], nodes[2]),
-            (nodes[3], nodes[5]),
-            (nodes[3], nodes[6]),
-            (nodes[6], nodes[4]),
-
-            (nodes[5], nodes[6]),
-        ]
-        labels = {
-            edges[0]: OrderedDict([("weight", Integer(9))]),
-
-            edges[1]: OrderedDict([("weight", Integer(4))]),
-            edges[2]: OrderedDict([("weight", Integer(8))]),
-            edges[3]: OrderedDict([("weight", Integer(2))]),
-            edges[4]: OrderedDict([("weight", Integer(2))]),
-
-            edges[5]: OrderedDict([("weight", Integer(2))]),
-            edges[6]: OrderedDict([("weight", Integer(2))]),
-            edges[7]: OrderedDict([("weight", Integer(5))]),
-            edges[8]: OrderedDict([("weight", Integer(1))]),
-
-            edges[9]: OrderedDict([("weight", Integer(4))]),
-            edges[10]: OrderedDict([("weight", Integer(3))]),
-            edges[11]: OrderedDict([("weight", Integer(9))]),
-            edges[12]: OrderedDict([("weight", Integer(9))]),
-
-            edges[13]: OrderedDict([("weight", Integer(8))]),
-            (0, 0, 0): OrderedDict([("variable", TexMobject("s"))]),
-        }
-        G = Graph(nodes, edges, labels=labels, directed=True)
-        self.play(ShowCreation(G))
-
-        min_node = (0, 0, 0)
-        self.play(*G.single_update(min_node, OrderedDict([
-            ("dist", Integer(0)),
-            ("color", SPT_COLOR),
-        ])))
-        while min_node is not None:
-            relax_neighbors(self, G, min_node, arrows=True)
-            min_node = extract_node(self, G, arrows=True)
-        self.wait()
-        self.play(FadeOut(G))
-        save_state(self)
-
     def construct(self):
-        #self.first_try()
-        #self.counterexample()
-        #self.one_step()
-        #self.triangle_inequality()
-        #self.generalize()
-        #self.last_run()
-        #self.spt_vs_mst()
-        #self.show_code()
+        self.first_try()
+        self.counterexample()
+        self.one_step()
+        self.triangle_inequality()
+        self.generalize()
+        self.last_run()
+        self.directed_graph()
+        self.spt_vs_mst()
+        self.show_code()
         self.run_code()
-        #self.analyze()
-        #self.compare_data_structures()
-        #self.directed_graph()
+        self.analyze()
+        self.compare_data_structures()
