@@ -11,6 +11,22 @@ SPT_WIDTH = 6
 SPT_COLOR = VIOLET
 QUEUE_COLOR = MAGENTA
 RELAXATION_COLOR = TEAL
+LINE_HEIGHT = 0.3
+CURSOR_COLOR = BLUE
+
+def place_arrows(block, group=None):
+    if group is None:
+        group = Group()
+    for sub_block in block.submobjects:
+        if "\n" in sub_block.tex_string:
+            place_arrows(sub_block, group)
+        elif not sub_block.tex_string.startswith("def"):
+            new_cursor = TexMobject("\\blacktriangleright") \
+                .set_color(CURSOR_COLOR) \
+                .scale_to_fit_height(LINE_HEIGHT) \
+                .next_to(sub_block, LEFT)
+            group.add(new_cursor)
+    return group
 
 def extend_arrow(G, u, v, color=None):
     u_v_vector = G.get_node(v).mobject.get_center() - \
@@ -34,8 +50,7 @@ def extend_arrow(G, u, v, color=None):
         ),
     ), arrow
 
-def relax_neighbors(scene, G, parent, show_relaxation=True,
-        arrows=False, additional_anims=[]):
+def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=None, cursor=None):
     if show_relaxation:
         saved_edge_attrs = {}
         for edge in G.get_adjacent_edges(parent):
@@ -50,11 +65,16 @@ def relax_neighbors(scene, G, parent, show_relaxation=True,
                     ("color", RELAXATION_COLOR),
                     ("stroke_width", 4),
                 ])
-        scene.play(*G.update(indicate_neighbors_updates) + additional_anims)
+        if cursor is not None:
+            cursor_anims = [ApplyMethod(cursor.shift, DOWN * LINE_HEIGHT)]
+        else:
+            cursor_anims = []
+        scene.play(*G.update(indicate_neighbors_updates) + cursor_anims)
 
     labels = []
     updates = OrderedDict()
     adj_edges = G.get_adjacent_edges(parent)
+    any_relabel = False
     for edge in adj_edges:
         child = G.get_opposite_node(edge, parent)
         # find parent bound
@@ -69,6 +89,7 @@ def relax_neighbors(scene, G, parent, show_relaxation=True,
         relabel = False
         if not G.node_has_label(child, "dist"):
             relabel = True
+            any_relabel = True
         else:
             # child node is already bounded
             old_bound = G.get_node_label(child, "dist")
@@ -93,6 +114,7 @@ def relax_neighbors(scene, G, parent, show_relaxation=True,
 
             if new_bound < old_bound:
                 relabel = True
+                any_relabel = True
         if relabel:
             updates[child] = OrderedDict([
                 ("dist", TexMobject("\le {}".format(new_bound))),
@@ -115,8 +137,32 @@ def relax_neighbors(scene, G, parent, show_relaxation=True,
                 ])
                 updates[child]["parent_pointer"] = arrow
                 G.set_node_parent_edge(child, edge)
-    scene.play(*G.update(updates))
 
+    # highlight edges and place cursors
+    if cursor is not None:
+        relax_line_cursor = cursor.copy() \
+            .next_to(code.submobjects[0].submobjects[3].submobjects[2].submobjects[1], LEFT)
+        relax_block_cursors = place_arrows(code.submobjects[2])
+        relax_block_cursors.remove(relax_block_cursors[2])
+        if not any_relabel:
+            relax_block_cursors.remove(relax_block_cursors[1])
+            cursor_anims = [
+                ShowCreation(relax_line_cursor),
+                ShowCreation(relax_block_cursors, run_time=1),
+            ]
+        else:
+            cursor_anims = [
+                ShowCreation(relax_line_cursor),
+                Succession(
+                    ShowCreation, relax_block_cursors, {"run_time": 0.5},
+                    ApplyMethod, relax_block_cursors[1].shift, DOWN * LINE_HEIGHT, {"run_time": 0.5}
+                ),
+            ]
+    else:
+        cursor_anims = []
+    scene.play(*G.update(updates) + cursor_anims)
+
+    # restore edges and remove cursors
     if show_relaxation:
         restore_neighbors_updates = OrderedDict()
         for edge in G.get_adjacent_edges(parent):
@@ -125,10 +171,25 @@ def relax_neighbors(scene, G, parent, show_relaxation=True,
                     ("color", saved_edge_attrs[edge]["color"]),
                     ("stroke_width", saved_edge_attrs[edge]["stroke_width"]),
                 ])
-        if restore_neighbors_updates:
-            scene.play(*G.update(restore_neighbors_updates))
-        else:
-            scene.wait()
+        edge_restore_anims = G.update(restore_neighbors_updates)
+    else:
+        edge_restore_anims = []
+    if cursor is not None:
+        cursor_anims = [
+            Uncreate(relax_line_cursor),
+            Uncreate(relax_block_cursors, run_time=1),
+        ]
+    else:
+        cursor_anims = []
+
+    if edge_restore_anims or cursor_anims:
+        scene.play(*edge_restore_anims + cursor_anims)
+    else:
+        scene.wait()
+
+    if cursor is not None and not bounded_nodes(G):
+        scene.play(Uncreate(cursor))
+
 
 def bounded_nodes(G):
     def in_queue(v):
@@ -146,7 +207,7 @@ def bounded_nodes(G):
     )
     return ret
 
-def extract_node(scene, G, arrows=False, additional_anims=[]):
+def extract_node(scene, G, arrows=False, code=None, cursor=None):
     queue = bounded_nodes(G)
     if not queue:
         return None
@@ -178,7 +239,17 @@ def extract_node(scene, G, arrows=False, additional_anims=[]):
             updates[parent_edge] = OrderedDict([
                 ("color", SPT_COLOR),
             ])
-    scene.play(*G.update(updates) + additional_anims)
+    if cursor is not None:
+        if cursor not in scene.mobjects:
+            cursor.next_to(code.submobjects[0].submobjects[3].submobjects[1], LEFT)
+            cursor_anims = [ShowCreation(cursor)]
+        else:
+            cursor_target = cursor.generate_target() \
+                .next_to(code.submobjects[0].submobjects[3].submobjects[1], LEFT)
+            cursor_anims = [MoveToTarget(cursor)]
+    else:
+        cursor_anims = []
+    scene.play(*G.update(updates) + cursor_anims)
     return min_node
 
 class RunAlgorithm(MovingCameraScene):
@@ -1037,8 +1108,6 @@ class RunAlgorithm(MovingCameraScene):
     def run_code(self):
         self.__dict__.update(load_previous_state())
         code = self.code
-        CURSOR_COLOR = BLUE
-        LINE_HEIGHT = 0.3
 
         s = ( 0,  2.6, 0)
         nodes = [
@@ -1087,8 +1156,13 @@ class RunAlgorithm(MovingCameraScene):
         G = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(self.camera_frame.get_right() * 0.5)
         self.play(ShowCreation(G))
 
-        cursor = TexMobject("\\blacktriangleright").set_color(CURSOR_COLOR)
-        self.add(cursor)
+        dijkstra_cursor = TexMobject("\\blacktriangleright").set_color(CURSOR_COLOR) \
+            .scale_to_fit_height(LINE_HEIGHT) \
+            .next_to(code.submobjects[0].submobjects[1], LEFT)
+
+        initialize_cursors = place_arrows(code.submobjects[1])
+
+        self.wait()
 
         updates = OrderedDict()
         updates[s] = OrderedDict([
@@ -1100,11 +1174,21 @@ class RunAlgorithm(MovingCameraScene):
                     ("dist", TexMobject("\le\infty").set_color(INFTY_COLOR)),
                     ("color", INFTY_COLOR),
                 ])
-        self.play(*G.update(updates))
 
+        self.play(*G.update(updates) + [
+            Succession(
+                ShowCreation, initialize_cursors, {"run_time": 1},
+                Uncreate, initialize_cursors, {"run_time": 1},
+            ),
+            ShowCreation(dijkstra_cursor),
+        ])
+        self.play(ApplyMethod(dijkstra_cursor.shift, DOWN * 2 * LINE_HEIGHT))
+
+        bounded_cursor = dijkstra_cursor.copy()
         while bounded_nodes(G):
-            min_node = extract_node(self, G, arrows=True)
-            relax_neighbors(self, G, min_node, arrows=True)
+            min_node = extract_node(self, G, arrows=True, code=code, cursor=bounded_cursor)
+            relax_neighbors(self, G, min_node, arrows=True, code=code, cursor=bounded_cursor)
+        self.play(Uncreate(dijkstra_cursor))
 
         self.G = G
         save_state(self)
@@ -1162,33 +1246,6 @@ class RunAlgorithm(MovingCameraScene):
                 e_tdecreasekey
             ),
             FadeIn(runtime.submobjects[0].submobjects[24]),
-        )
-        self.wait(2)
-
-        # extraneous V
-        self.play(
-            ReplacementTransform(
-                code.submobjects[0].submobjects[1].copy(),
-                v
-            ),
-            FadeIn(runtime.submobjects[0].submobjects[40]),
-        )
-        self.wait()
-
-        # extra 2 * E
-        self.play(
-            ReplacementTransform(
-                code.submobjects[2].submobjects[1].submobjects[0].copy(),
-                two_e
-            ),
-            FadeIn(runtime.submobjects[0].submobjects[42]),
-        )
-        self.wait(2)
-
-        # remove extra
-        self.play(
-            FadeOut(Group(v, runtime.submobjects[0].submobjects[40])),
-            FadeOut(Group(two_e, runtime.submobjects[0].submobjects[42])),
         )
         self.wait(2)
 
