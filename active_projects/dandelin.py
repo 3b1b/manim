@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 
 from active_projects.lost_lecture import Orbiting
+from active_projects.lost_lecture import ShowWord
 
 
 class ThinkingAboutAProof(PiCreatureScene):
@@ -17,6 +18,7 @@ class ThinkingAboutAProof(PiCreatureScene):
         cloud.stretch(2.8, 0)
         cloud.next_to(bubble[0], RIGHT)
         cloud.to_edge(UP, buff=0.25)
+        bubble[1].shift(0.25 * UL)
 
         you_arrow = Vector(LEFT, color=WHITE)
         you_arrow.next_to(randy, RIGHT)
@@ -99,7 +101,7 @@ class SumOfIntegersProof(Scene):
         self.play(
             ReplacementTransform(
                 rows.copy().set_fill(opacity=0), flipped_rows,
-                path_arc=PI,
+                path_arc=-PI,
                 run_time=2
             )
         )
@@ -141,14 +143,11 @@ class FeynmansLostLectureWrapper(Scene):
         self.wait()
 
 
-class HoldUpRedditQuestion(TeacherStudentsScene):
+class HoldUpProof(TeacherStudentsScene):
     def construct(self):
-        title = TextMobject("From reddit")
+        title = TextMobject("One of my all-time favorite proofs")
         title.to_edge(UP)
         self.add(title)
-
-        alt_title = TextMobject("One of my all-time favorite proofs")
-        alt_title.to_edge(UP)
 
         self.play(
             self.teacher.change, "raise_right_hand", self.screen,
@@ -159,13 +158,10 @@ class HoldUpRedditQuestion(TeacherStudentsScene):
         )
         self.look_at(title)
         self.wait(5)
-        self.play(
-            FadeOutAndShift(title, UP),
-            FadeInFromDown(alt_title),
-            self.teacher.change, "hooray",
-            self.get_student_changes(*3 * ["happy"])
+        self.change_student_modes(
+            "happy", "thinking", "hooray",
+            look_at_arg=title
         )
-        self.look_at(alt_title)
         self.wait(5)
 
 
@@ -192,7 +188,8 @@ class MultipleDefinitionsOfAnEllipse(Scene):
 
         self.play(LaggedStart(
             FadeInAndShiftFromDirection, definitions,
-            lambda m: (m, RIGHT)
+            lambda m: (m, RIGHT),
+            run_time=4
         ))
         self.wait()
         for definition in definitions:
@@ -349,6 +346,17 @@ class ShowArrayOfEccentricities(Scene):
         self.play(morty.change, "thinking", ellipses)
         self.wait()
         self.play(Blink(morty))
+
+        for i in 0, -1:
+            e_copy = ellipses[i].copy()
+            e_copy.set_color(RED)
+            self.play(ShowCreation(e_copy))
+            self.play(
+                CircleThenFadeAround(
+                    eccentricity_labels[i],
+                ),
+                FadeOut(e_copy)
+            )
         self.wait()
 
         circle = ellipses[0]
@@ -407,7 +415,7 @@ class ShowOrbits(ShowArrayOfEccentricities):
         comet_eccentricity = 0.9671
         earth_orbit = self.get_ellipse(eccentricity=earth_eccentricity)
         comet_orbit = self.get_ellipse(eccentricity=comet_eccentricity)
-        earth_orbit.scale_to_fit_height(6)
+        earth_orbit.scale_to_fit_height(5)
         comet_orbit.scale_to_fit_width(
             0.7 * FRAME_WIDTH,
             about_point=ORIGIN,
@@ -1116,6 +1124,75 @@ class LinesTangentToSphere(ExternallyAnimatedScene):
     pass
 
 
+class QuickGeometryProof(Scene):
+    def construct(self):
+        radius = 2
+        circle = Circle(color=BLUE, radius=radius)
+        circle.shift(0.5 * DOWN)
+        angle = 60 * DEGREES
+        O = circle.get_center()
+        p1 = circle.point_from_proportion(angle / TAU)
+        p2 = circle.point_from_proportion(1 - angle / TAU)
+        Q = O + (radius / np.cos(angle)) * RIGHT
+
+        O_p1 = Line(O, p1)
+        O_p2 = Line(O, p2)
+        p1_Q = Line(p1, Q, color=MAROON_B)
+        p2_Q = Line(p2, Q, color=MAROON_B)
+        O_Q = DashedLine(O, Q)
+
+        elbow = VGroup(Line(RIGHT, UR), Line(UR, UP))
+        elbow.set_stroke(WHITE, 1)
+        elbow.scale(0.2, about_point=ORIGIN)
+
+        ticks = VGroup(Line(DOWN, UP), Line(DOWN, UP))
+        ticks.scale(0.1)
+        ticks.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+
+        equation = TexMobject(
+            "\\Delta OP_1Q \\cong \\Delta OP_2Q",
+            tex_to_color_map={
+                "O": BLUE,
+                "P_1": MAROON_B,
+                "P_2": MAROON_B,
+                "Q": YELLOW,
+            }
+        )
+        equation.to_edge(UP)
+        self.add(*equation)
+
+        self.add(circle)
+        self.add(
+            TexMobject("O").next_to(O, LEFT),
+            TexMobject("P_1").next_to(p1, UP).set_color(MAROON_B),
+            TexMobject("P_2").next_to(p2, DOWN).set_color(MAROON_B),
+            TexMobject("Q").next_to(Q, RIGHT).set_color(YELLOW),
+        )
+        self.add(O_p1, O_p2, p1_Q, p2_Q, O_Q)
+        self.add(
+            Dot(O, color=BLUE),
+            Dot(p1, color=MAROON_B),
+            Dot(p2, color=MAROON_B),
+            Dot(Q, color=YELLOW)
+        )
+        self.add(
+            elbow.copy().rotate(angle + PI, about_point=ORIGIN).shift(p1),
+            elbow.copy().rotate(-angle + PI / 2, about_point=ORIGIN).shift(p2),
+        )
+        self.add(
+            ticks.copy().rotate(angle).move_to(O_p1),
+            ticks.copy().rotate(-angle).move_to(O_p2),
+        )
+
+        everything = VGroup(*self.mobjects)
+
+        self.play(LaggedStart(
+            GrowFromCenter, everything,
+            lag_ratio=0.25,
+            run_time=4
+        ))
+
+
 class ShowFocalSumEqualsCircleDistance(ExternallyAnimatedScene):
     pass
 
@@ -1128,9 +1205,592 @@ class TiltPlaneWithSpheres(ExternallyAnimatedScene):
     pass
 
 
+class NameDandelin(Scene):
+    CONFIG = {"camera_config": {"background_opacity": 1}}
+
+    def construct(self):
+        title = TextMobject(
+            "Proof by\\\\",
+            "Germinal Pierre Dandelin (1822)"
+        )
+        title.to_edge(UP)
+
+        portrait = ImageMobject("GerminalDandelin")
+        portrait.scale_to_fit_height(5)
+        portrait.next_to(title, DOWN)
+
+        google_result = ImageMobject("GoogleDandelin")
+        google_result.scale_to_fit_height(4)
+        google_result.center()
+        google_result.to_corner(DR)
+
+        cmon_google = TextMobject("C'mon Google...")
+        cmon_google.set_color(RED)
+        cmon_google.next_to(google_result, RIGHT)
+        cmon_google.next_to(google_result, UP, aligned_edge=RIGHT)
+
+        dandelion = ImageMobject("DandelionSphere", height=1.5)
+        dandelion.to_edge(LEFT, buff=LARGE_BUFF)
+        dandelion.shift(UP)
+        big_dandelion = dandelion.copy().scale(2)
+        big_dandelion.next_to(dandelion, DOWN, buff=0)
+        dandelions = Group(dandelion, big_dandelion)
+
+        self.add(title[0])
+        self.play(FadeInFromDown(portrait))
+        self.play(Write(title[1], lag_factor=4))
+        self.wait()
+        self.play(FadeInFrom(google_result, LEFT))
+        self.play(Write(cmon_google, run_time=1))
+        self.wait()
+
+        self.play(LaggedStart(
+            FadeInFromDown, dandelions,
+            lag_ratio=0.7,
+            run_time=1
+        ))
+        self.wait()
+
+
 class DandelinSpheresInCylinder(ExternallyAnimatedScene):
+    pass
+
+
+class ProjectCircleOntoTiltedPlane(ExternallyAnimatedScene):
     pass
 
 
 class CylinderDandelinSpheresChangingSlope(ExternallyAnimatedScene):
     pass
+
+
+class DetailsLeftAsHomework(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+            "flip_at_start": False,
+        },
+        "default_pi_creature_start_corner": DL,
+    }
+
+    def construct(self):
+        # morty = self.pi_creature
+        self.pi_creature_says(
+            "Details left \\\\ as homework",
+            target_mode="hooray"
+        )
+        self.wait(3)
+
+
+class AskWhyYouWouldChooseThisProof(PiCreatureScene):
+    def construct(self):
+        randy, other = self.pi_creatures
+        screen = ScreenRectangle(height=4).to_edge(UP)
+
+        for pi, vect, word in (randy, UP, "You"), (other, LEFT, "Non-math \\\\ enthusiast"):
+            arrow = Vector(-vect, color=WHITE)
+            arrow.next_to(pi, vect)
+            label = TextMobject(word)
+            label.next_to(arrow, vect)
+            pi.arrow = arrow
+            pi.label = label
+
+        for pi, mode in (randy, "hooray"), (other, "tired"):
+            self.play(
+                GrowArrow(pi.arrow),
+                FadeInFrom(pi.label, RIGHT),
+                pi.change, mode,
+            )
+        self.play(
+            randy.change, "raise_right_hand", screen,
+            other.look_at, screen,
+        )
+        self.wait()
+        self.play(other.change, "thinking", screen)
+        self.wait(5)
+
+    def create_pi_creatures(self):
+        randy = Randolph(color=BLUE_C)
+        other = PiCreature(color=RED_D)
+        other.flip()
+        group = VGroup(randy, other)
+        group.arrange_submobjects(RIGHT, buff=5)
+        group.to_edge(DOWN)
+        return group
+
+
+class CreativeConstruction(PiCreatureScene):
+    def construct(self):
+        randy = self.pi_creature
+        self.remove(randy)
+
+        dandelin = ImageMobject("GerminalDandelin")
+        dandelin.scale_to_fit_height(4)
+        dandelin.move_to(FRAME_WIDTH * RIGHT / 4)
+
+        lightbulb = Lightbulb()
+        lightbulb.next_to(dandelin, UP)
+
+        kant = ImageMobject("Kant")
+        kant.scale_to_fit_height(3)
+        bubble = ThoughtBubble(height=3, width=4)
+        bubble.pin_to(kant)
+        kant_words = TextMobject(
+            "How is synthetic a priori\\\\" +
+            "reasoning possible?"
+        )
+        kant_words.scale(0.75)
+        bubble.position_mobject_inside(kant_words)
+        kant_group = VGroup(bubble, kant_words, kant)
+        kant_group.to_corner(UR)
+
+        self.add(dandelin)
+        self.add(lightbulb)
+        self.play(
+            Write(lightbulb, run_time=1),
+            self.get_light_shine(lightbulb)
+        )
+        self.wait()
+        self.play(
+            lightbulb.next_to, randy, RIGHT,
+            {"buff": LARGE_BUFF, "aligned_edge": UP},
+            randy.change, "pondering",
+            VFadeIn(randy),
+            FadeOutAndShift(dandelin, DOWN),
+        )
+
+        self.play(
+            self.get_light_shine(lightbulb),
+            Blink(randy),
+        )
+        self.wait()
+        self.play(
+            FadeInFromDown(kant),
+            Write(bubble),
+            Write(kant_words),
+        )
+
+        lightbulb.generate_target()
+        q_marks = VGroup()
+        for submob in lightbulb.target.family_members_with_points():
+            if True or np.linalg.norm(submob.get_center() - lightbulb.get_center()) > 0.25:
+                q_mark = TexMobject("?")
+                q_mark.scale_to_fit_height(0.25)
+                q_mark.move_to(submob)
+                Transform(submob, q_mark).update(1)
+                q_marks.add(submob)
+        q_marks.space_out_submobjects(2)
+
+        self.wait()
+        self.play(randy.change, 'confused', lightbulb)
+        self.play(MoveToTarget(
+            lightbulb,
+            run_time=3,
+            rate_func=there_and_back,
+            submobject_mode="lagged_start"
+        ))
+        self.play(Blink(randy))
+        self.wait()
+
+    def get_rings(self, center, max_radius, delta_r):
+        radii = np.arange(0, max_radius, delta_r)
+        rings = VGroup(*[
+            Annulus(
+                inner_radius=r1,
+                outer_radius=r2,
+                fill_opacity=0.75 * (1 - fdiv(r1, max_radius)),
+                fill_color=YELLOW
+            )
+            for r1, r2 in zip(radii, radii[1:])
+        ])
+        rings.move_to(center)
+        return rings
+
+    def get_light_shine(self, lightbulb, max_radius=15.0, delta_r=0.025):
+        rings = self.get_rings(
+            lightbulb.get_center(),
+            max_radius=15.0,
+            delta_r=0.025,
+        )
+        return LaggedStart(
+            FadeIn, rings,
+            rate_func=there_and_back,
+            run_time=2,
+            lag_ratio=0.5
+        )
+
+
+class LockhartQuote(Scene):
+    CONFIG = {
+        "camera_config": {"background_opacity": 1}
+    }
+
+    def construct(self):
+        mb_string = "Madame\\,\\,Bovary"
+        ml_string = "Mona\\,\\,Lisa."
+        strings = (mb_string, ml_string)
+        quote_text = """
+            \\large
+            How do people come up with such ingenious arguments?
+            It's the same way people come up with %s or %s
+            I have no idea how it happens.  I only know that
+            when it happens to me, I feel very fortunate.
+        """ % strings
+        quote_parts = filter(lambda s: s, quote_text.split(" "))
+        quote = TextMobject(
+            *quote_parts,
+            tex_to_color_map={
+                mb_string: BLUE,
+                ml_string: YELLOW,
+            },
+            alignment=""
+        )
+        quote.scale_to_fit_width(FRAME_WIDTH - 2)
+        quote.to_edge(UP)
+
+        measurement = ImageMobject("MeasurementCover")
+        madame_bovary = ImageMobject("MadameBovary")
+        mona_lisa = ImageMobject("MonaLisa")
+        pictures = Group(measurement, madame_bovary, mona_lisa)
+        for picture in pictures:
+            picture.scale_to_fit_height(4)
+        pictures.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        pictures.to_edge(DOWN)
+
+        measurement.save_state()
+        measurement.scale_to_fit_width(FRAME_WIDTH)
+        measurement.center()
+        measurement.fade(1)
+        self.play(Restore(measurement))
+        self.wait()
+        for word in quote:
+            anims = [ShowWord(word)]
+            for text, picture in zip(strings, pictures[1:]):
+                if word is quote.get_part_by_tex(text):
+                    anims.append(FadeInFromDown(
+                        picture, run_time=1
+                    ))
+            self.play(*anims)
+            self.wait(0.005 * len(word)**1.5)
+        self.wait(2)
+        self.play(
+            LaggedStart(
+                FadeOutAndShiftDown, quote,
+                lag_ratio=0.2,
+                run_time=5,
+            ),
+            LaggedStart(
+                FadeOutAndShiftDown, pictures,
+                run_time=3,
+            ),
+        )
+
+
+class ImmersedInGeometryProblems(PiCreatureScene):
+    def construct(self):
+        randy = self.pi_creature
+        randy.center().to_edge(DOWN)
+
+        for vect in compass_directions(start_vect=UL):
+            self.play(randy.change, "pondering", 4 * vect)
+            self.wait(2)
+
+
+class ShowApollonianCircles(Scene):
+    def construct(self):
+        radii = [1.0, 2.0, 3.0]
+        curvatures = [1.0 / r for r in radii]
+        k4 = sum(curvatures) - 2 * np.sqrt(
+            sum([
+                k1 * k2
+                for k1, k2 in it.combinations(curvatures, 2)
+            ])
+        )
+        radii.append(1.0 / k4)
+        centers = [
+            ORIGIN, 3 * RIGHT, 4 * UP,
+            4 * UP + 3 * RIGHT,
+        ]
+        circles = VGroup(*[
+            Circle(radius=r).shift(c)
+            for r, c in zip(radii, centers)
+        ])
+
+        circles.scale_to_fit_height(FRAME_HEIGHT - 3)
+        circles.center().to_edge(DOWN)
+        # circles.set_fill(opacity=1)
+        circles.submobjects.reverse()
+        circles.set_stroke(width=5)
+        circles.set_color_by_gradient(BLUE, YELLOW)
+
+        equation = TexMobject("""
+            \\left(
+            {1 \\over r_1} + {1 \\over r_2} +
+            {1 \\over r_3} + {1 \\over r_4}
+            \\right)^2 = 
+            2\\left(
+            {1 \\over r_1^2} + {1 \\over r_2^2} +
+            {1 \\over r_3^2} + {1 \\over r_4^2}
+            \\right)
+        """)
+        # equation.scale(1.5)
+        equation.next_to(circles, UP)
+
+        self.add(equation)
+        self.play(LaggedStart(
+            DrawBorderThenFill, circles
+        ))
+        self.wait()
+
+
+class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
+    def construct(self):
+        ellipse = self.get_ellipse(eccentricity=0.6)
+        ellipse.scale(2)
+        foci = self.get_foci(ellipse)
+
+        point = VectorizedPoint()
+        point_movement = CycleAnimation(
+            MoveAlongPath(
+                point, ellipse,
+                run_time=5,
+                rate_func=None,
+            )
+        )
+
+        arrow = Vector(RIGHT, color=WHITE)
+        arrow.to_edge(LEFT)
+        q_mark = TexMobject("?")
+        q_mark.next_to(arrow, UP)
+
+        lines = VGroup(*[Line(UP, DOWN) for x in range(2)])
+        lines.set_color_by_gradient(PINK, GOLD)
+        lines.set_stroke(width=5)
+
+        h_line = Line(LEFT, RIGHT, color=WHITE)
+        h_line.scale_to_fit_width(0.25)
+
+        def update_lines(lines):
+            for line, focus in zip(lines, foci):
+                d = np.linalg.norm(point.get_center() - focus)
+                line.put_start_and_end_on(
+                    ORIGIN, d * UP
+                )
+            lines.arrange_submobjects(DOWN, buff=0)
+            lines.next_to(arrow, RIGHT)
+            h_line.move_to(lines[0].get_bottom())
+        lines_animation = ContinualUpdateFromFunc(
+            lines, update_lines
+        )
+
+        self.add(point_movement)
+        self.add(arrow)
+        self.add(q_mark)
+        self.add(h_line)
+        self.add(lines_animation)
+
+        self.wait(20)
+
+
+class ReactionToGlimpseOfGenius(TeacherStudentsScene, CreativeConstruction):
+    def construct(self):
+        morty = self.teacher
+
+        lightbulb = Lightbulb()
+        lightbulb.set_stroke(width=4)
+        lightbulb.scale(1.5)
+        lightbulb.move_to(self.hold_up_spot, DOWN)
+
+        rings = self.get_rings(
+            lightbulb.get_center(),
+            max_radius=15,
+            delta_r=0.1,
+        )
+
+        arrow = Vector(RIGHT, color=WHITE)
+        arrow.next_to(lightbulb, LEFT)
+
+        clock = Clock()
+        clock.next_to(arrow, LEFT)
+
+        pi_lights = VGroup()
+        for pi in self.students:
+            light = Lightbulb()
+            light.scale(0.75)
+            light.next_to(pi, UP)
+            pi.light = light
+            pi_lights.add(light)
+
+        q_marks = VGroup()
+        for submob in lightbulb:
+            q_mark = TexMobject("?")
+            q_mark.move_to(submob)
+            q_marks.add(q_mark)
+        q_marks.space_out_submobjects(2)
+
+        self.student_says(
+            "I think Lockhart was \\\\"
+            "speaking more generally.",
+            target_mode="sassy",
+            added_anims=[morty.change, "guilty"]
+        )
+        self.wait(2)
+        self.play(
+            morty.change, "raise_right_hand",
+            FadeInFromDown(lightbulb),
+            RemovePiCreatureBubble(self.students[1]),
+            self.get_student_changes(*3 * ["confused"]),
+            run_time=1
+        )
+        self.play(Transform(
+            lightbulb, q_marks,
+            run_time=3,
+            rate_func=there_and_back_with_pause,
+            submobject_mode="lagged_start"
+        ))
+        self.play(
+            ClockPassesTime(clock, hours_passed=4, run_tim=4),
+            VFadeIn(clock),
+            GrowArrow(arrow),
+            self.get_student_changes(
+                *3 * ["pondering"],
+                look_at_arg=clock
+            )
+        )
+        self.play(
+            ClockPassesTime(clock, run_time=1, hours_passed=1),
+            VFadeOut(clock),
+            FadeOut(arrow),
+            lightbulb.scale, 1.5,
+            lightbulb.move_to, 2 * UP,
+            self.get_student_changes(
+                *3 * ["awe"],
+                look_at_arg=2 * UP
+            ),
+            run_time=1
+        )
+        self.play(self.get_light_shine(lightbulb))
+        self.play(
+            ReplacementTransform(
+                VGroup(lightbulb),
+                pi_lights
+            ),
+            morty.change, "happy",
+            *[
+                ApplyMethod(pi.change, mode, pi.get_top())
+                for pi, mode in zip(self.students, [
+                    "hooray", "tease", "surprised"
+                ])
+            ]
+        )
+        self.wait(3)
+
+
+class DandelinEndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "Juan Benet",
+            "Matt Russell",
+            "soekul",
+            "Keith Smith",
+            "Burt Humburg",
+            "Cryptic Swarm",
+            "Brian Tiger Chow",
+            "Joseph Kelly",
+            "Roy Larson",
+            "Andrew Sachs",
+            "Devin Scott",
+            "Akash Kumar",
+            "Arthur Zey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Jordan Scales",
+            "Markus Persson",
+            "Fela",
+            "Fred Ehrsam",
+            "Gary Kong",
+            "Randy C. Will",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Valeriy Skobelev",
+            "Adrian Robinson",
+            "Michael Faust",
+            "Solara570",
+            "George M. Botros",
+            "Peter Ehrnstrom",
+            "Kai-Siang Ang",
+            "Alexis Olson",
+            "Ludwig",
+            "Omar Zrien",
+            "Sindre Reino Trosterud",
+            "Jeff Straathof",
+            "Matt Langford",
+            "Matt Roveto",
+            "Marek Cirkos",
+            "Magister Mugit",
+            "Stevie Metke",
+            "Cooper Jones",
+            "James Hughes",
+            "John V Wertheim",
+            "Chris Giddings",
+            "Song Gao",
+            "Richard Burgmann",
+            "John Griffith",
+            "Chris Connett",
+            "Steven Tomlinson",
+            "Jameel Syed",
+            "Bong Choung",
+            "Ignacio Freiberg",
+            "Zhilong Yang",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "James H. Park",
+            "Norton Wang",
+            "Kevin Le",
+            "Oliver Steele",
+            "Yaw Etse",
+            "Dave B",
+            "supershabam",
+            "Delton Ding",
+            "Thomas Tarler",
+            "1st ViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Clark Gaebel",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Awoo",
+            "Dr . David G. Stork",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Robert Teed",
+            "Jason Hise",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
