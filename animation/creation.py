@@ -158,6 +158,12 @@ class FadeInAndShiftFromDirection(Transform):
         Transform.__init__(self, mobject, target, **kwargs)
 
 
+class FadeInFrom(FadeInAndShiftFromDirection):
+    """
+    Alternate name for FadeInAndShiftFromDirection
+    """
+
+
 class FadeInFromDown(FadeInAndShiftFromDirection):
     """
     Essential a more convenient form of FadeInAndShiftFromDirection
