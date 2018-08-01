@@ -35,20 +35,19 @@ with open("media_dir.txt", 'w') as media_file:
     media_file.write(MEDIA_DIR)
 #
 
-
-# DEFAULT_PIXEL_HEIGHT = 1080
-# DEFAULT_PIXEL_WIDTH = 1920
-DEFAULT_PIXEL_HEIGHT = 1440
-DEFAULT_PIXEL_WIDTH = 2560
-
 LOW_QUALITY_FRAME_DURATION = 1. / 15
 MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
 PRODUCTION_QUALITY_FRAME_DURATION = 1. / 60
 
 # There might be other configuration than pixel shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": DEFAULT_PIXEL_HEIGHT,
-    "pixel_width": DEFAULT_PIXEL_WIDTH,
+    "pixel_height": 1440,
+    "pixel_width": 2560,
+}
+
+HIGH_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 1080,
+    "pixel_width": 1920,
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
@@ -60,6 +59,9 @@ LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 480,
     "pixel_width": 854,
 }
+
+DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
+DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
 
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
