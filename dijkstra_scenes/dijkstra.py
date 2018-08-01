@@ -12,7 +12,7 @@ SPT_COLOR = VIOLET
 QUEUE_COLOR = MAGENTA
 RELAXATION_COLOR = ORANGE
 LINE_HEIGHT = 0.3
-CURSOR_COLOR = TEAL
+CURSOR_COLOR = BLUE
 
 def place_arrows(block, group=None):
     if group is None:
@@ -71,7 +71,6 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
             cursor_anims = []
         scene.play(*G.update(indicate_neighbors_updates) + cursor_anims)
 
-    labels = []
     updates = OrderedDict()
     adj_edges = G.get_adjacent_edges(parent)
     any_relabel = False
@@ -475,13 +474,13 @@ class RunAlgorithm(MovingCameraScene):
         s = (-X_DIST * 0.60, 0 - 1, 0)
         v = ( X_DIST * 0.60, 0 - 1, 0)
         u = (             0, 3 - 1, 0)
-        labels = {
+        attrs = {
             s: OrderedDict([("variable", TexMobject("s"))]),
             u: OrderedDict([("variable", TexMobject("u"))]),
             v: OrderedDict([("variable", TexMobject("v"))]),
             (u, v): OrderedDict([("color", y_color)])
         }
-        S = Graph([s, u, v], [(u, v)], labels=labels)
+        S = Graph([s, u, v], [(u, v)], attrs=attrs)
         S.to_edge(DOWN, initial_offset=self.camera_frame.get_center())
 
         self.play(
@@ -742,7 +741,7 @@ class RunAlgorithm(MovingCameraScene):
 
             (nodes[5], nodes[6]),
         ]
-        labels = {
+        attrs = {
             edges[0]: OrderedDict([("weight", Integer(9))]),
 
             edges[1]: OrderedDict([("weight", Integer(4))]),
@@ -763,7 +762,7 @@ class RunAlgorithm(MovingCameraScene):
             edges[13]: OrderedDict([("weight", Integer(8))]),
             (0, 0, 0): OrderedDict([("variable", TexMobject("s"))]),
         }
-        G = Graph(nodes, edges, labels=labels, directed=True)
+        G = Graph(nodes, edges, attrs=attrs, directed=True)
         self.play(ShowCreation(G))
 
         min_node = (0, 0, 0)
@@ -806,13 +805,13 @@ class RunAlgorithm(MovingCameraScene):
             (nodes[0], nodes[2]),
             (nodes[1], nodes[2]),
         ]
-        labels = {
+        attrs = {
             nodes[0]: OrderedDict([("variable", TexMobject("s"))]),
             edges[0]: OrderedDict([("weight", Integer(2))]),
             edges[1]: OrderedDict([("weight", Integer(2))]),
             edges[2]: OrderedDict([("weight", Integer(1))]),
         }
-        H_spt = Graph(nodes, edges, labels=labels).shift(DOWN)
+        H_spt = Graph(nodes, edges, attrs=attrs).shift(DOWN)
         H_spt_target = H_spt.generate_target().shift(3 * LEFT)
         H_mst = H_spt.deepcopy()
         H_mst_target = H_mst.generate_target().shift(3 * RIGHT)
@@ -971,10 +970,10 @@ class RunAlgorithm(MovingCameraScene):
             (nodes[0], nodes[3]),
             (nodes[0], nodes[4]),
         ]
-        labels = {
+        attrs = {
             s: OrderedDict([("variable", TexMobject("s"))]),
         }
-        G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.25 * FRAME_WIDTH)
+        G = Graph(nodes, edges, attrs=attrs).shift(RIGHT * 0.25 * FRAME_WIDTH)
 
         updates = OrderedDict()
         for node in nodes:
@@ -1029,7 +1028,7 @@ class RunAlgorithm(MovingCameraScene):
         v = (3, 0, 0)
         nodes = [u, v]
         edges = [(u, v)]
-        labels = {
+        attrs = {
             u: OrderedDict([
                 ("variable", TexMobject("u")),
                 ("dist", Integer(3)),
@@ -1043,7 +1042,7 @@ class RunAlgorithm(MovingCameraScene):
                 ("weight", Integer(2)),
             ]),
         }
-        G = Graph(nodes, edges, labels=labels).shift(RIGHT * 0.15 * FRAME_WIDTH)
+        G = Graph(nodes, edges, attrs=attrs).shift(RIGHT * 0.15 * FRAME_WIDTH)
 
         self.play(FadeIn(G))
         updates = OrderedDict()
@@ -1151,7 +1150,7 @@ class RunAlgorithm(MovingCameraScene):
             ((-1.3, -1.3, 0), ( 0, -2.6, 0)),
             (( 1.3, -1.3, 0), ( 0, -2.6, 0)),
         ]
-        labels = {
+        attrs = {
             ( 0,  2.6, 0): OrderedDict([("variable", TexMobject("s"))]),
 
             (( 0  , 2.6 , 0), (-1.3, 1.3 , 0)): OrderedDict([("weight", Integer(4))]),
@@ -1170,7 +1169,7 @@ class RunAlgorithm(MovingCameraScene):
             ((-1.3, -1.3, 0), ( 0  , -2.6, 0)): OrderedDict([("weight", Integer(2))]),
             (( 1.3, -1.3, 0), ( 0  , -2.6, 0)): OrderedDict([("weight", Integer(1))]),
         }
-        G = Graph(nodes, edges, labels=labels, scale_factor=0.8).shift(self.camera_frame.get_right() * 0.5)
+        G = Graph(nodes, edges, attrs=attrs, scale_factor=0.8).shift(self.camera_frame.get_right() * 0.5)
         self.play(ShowCreation(G))
 
         dijkstra_cursor = TexMobject("\\blacktriangleright").set_color(CURSOR_COLOR) \
@@ -1383,15 +1382,15 @@ class RunAlgorithm(MovingCameraScene):
         save_state(self)
 
     def construct(self):
-        self.first_try()
-        self.counterexample()
-        self.one_step()
-        self.triangle_inequality()
-        self.generalize()
-        self.last_run()
-        self.directed_graph()
-        self.spt_vs_mst()
-        self.show_code()
+        #self.first_try()
+        #self.counterexample()
+        #self.one_step()
+        #self.triangle_inequality()
+        #self.generalize()
+        #self.last_run()
+        #self.directed_graph()
+        #self.spt_vs_mst()
+        #self.show_code()
         self.run_code()
-        self.analyze()
-        self.compare_data_structures()
+        #self.analyze()
+        #self.compare_data_structures()

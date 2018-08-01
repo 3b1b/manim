@@ -17,15 +17,15 @@ class Graph(Group):
         "color": constants.BLACK,
     }
 
-    def __init__(self, nodes, edges, labels=OrderedDict(), **kwargs):
+    def __init__(self, nodes, edges, attrs=OrderedDict(), **kwargs):
         # typechecking
         for node in nodes:
             Node.assert_primitive(node)
         for edge in edges:
             Edge.assert_primitive(edge)
 
-        # prevent changes to labels
-        labels = copy.deepcopy(labels)
+        # prevent changes to attrs
+        attrs = copy.deepcopy(attrs)
 
         # mobject init
         config_copy = self.CONFIG.copy()
@@ -40,19 +40,19 @@ class Graph(Group):
         # create nodes
         for point in nodes:
             node = Node(point,
-                        attrs=labels.get(point, OrderedDict()),
+                        attrs=attrs.get(point, OrderedDict()),
                         **kwargs)
             self.nodes[node.key] = node
             self.add(node)
 
         # create edges
         for pair in edges:
-            attrs = labels.get(pair, OrderedDict())
+            edge_attrs = attrs.get(pair, OrderedDict())
             u, v = pair[0], pair[1]
-            attrs["curved"] = (v, u) in edges
+            edge_attrs["curved"] = (v, u) in edges
             u = self.nodes[u]
             v = self.nodes[v]
-            edge = Edge(u, v, attrs=attrs, **kwargs)
+            edge = Edge(u, v, attrs=edge_attrs, **kwargs)
             self.edges[edge.key] = edge
             self.add(edge)
 
