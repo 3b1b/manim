@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import colour
 
 env_MEDIA_DIR = None
 MEDIA_DIR = "#ERROR#"
@@ -198,6 +199,7 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 
+    "ORANGE": "#FF7054",    # hsl(10, 67, 60)
     "MAGENTA_E": "#993265", # hsl(330, 67, 60)
     "MAGENTA_D": "#B23A76", # hsl(330, 67, 70)
     "MAGENTA_C": "#CC4387", # hsl(330, 67, 80)
@@ -215,7 +217,6 @@ COLOR_MAP = {
     "TEAL_A": "#54A9FF",    # hsl(210, 67, 100)
 }
 
-import colour
 for color_name,color_hex in COLOR_MAP.items():
     if color_name == "WHITE" or color_name == "BLACK":
         continue

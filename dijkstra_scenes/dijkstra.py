@@ -10,9 +10,9 @@ DEFAULT_WIDTH = 2
 SPT_WIDTH = 6
 SPT_COLOR = VIOLET
 QUEUE_COLOR = MAGENTA
-RELAXATION_COLOR = TEAL
+RELAXATION_COLOR = ORANGE
 LINE_HEIGHT = 0.3
-CURSOR_COLOR = BLUE
+CURSOR_COLOR = TEAL
 
 def place_arrows(block, group=None):
     if group is None:
@@ -395,7 +395,11 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*H.update(updates))
 
         # this is antipattern; possibly allow returning a copy edge?
-        self.play(Indicate(H.edges[edges[0]].get_label("weight")))
+        self.play(
+            Indicate(H.edges[edges[0]].get_label("weight"),
+            rate_func=there_and_back_with_pause,
+            run_time=2,
+        ))
 
         # switch to upper bound
         relax_neighbors(self, H, nodes[0], show_relaxation=False)
@@ -429,7 +433,10 @@ class RunAlgorithm(MovingCameraScene):
         anims = []
         for edge in adj_edges:
             if edge != min_edge:
-                anims.extend([Indicate(G.edges[edge].get_label("weight"))])
+                anims.extend([Indicate(G.edges[edge].get_label("weight"),
+                    rate_func=there_and_back_with_pause,
+                    run_time=2,
+                )])
         self.play(*anims)
 
         # revert graph
@@ -464,7 +471,7 @@ class RunAlgorithm(MovingCameraScene):
 
         x_color = SPT_COLOR
         y_color = QUEUE_COLOR
-        z_color = TEAL
+        z_color = RELAXATION_COLOR
         s = (-X_DIST * 0.60, 0 - 1, 0)
         v = ( X_DIST * 0.60, 0 - 1, 0)
         u = (             0, 3 - 1, 0)
@@ -507,6 +514,7 @@ class RunAlgorithm(MovingCameraScene):
         )
 
         self.play(Write(Group(words[3], words[4])))
+        self.wait()
 
         sx = Line(
             S.get_node(s).mobject.get_center(),
@@ -643,7 +651,10 @@ class RunAlgorithm(MovingCameraScene):
         min_edge = min(adj_edges, key=lambda e: G.get_edge_weight(e))
         for edge in adj_edges:
             if edge != min_edge:
-                anims.extend([Indicate(G.edges[edge].get_label("weight"))])
+                anims.extend([Indicate(G.edges[edge].get_label("weight"),
+                    rate_func=there_and_back_with_pause,
+                    run_time=2,
+                )])
         self.play(*anims)
 
         # relax to match earlier extract
@@ -1087,14 +1098,20 @@ class RunAlgorithm(MovingCameraScene):
         self.play(
             Indicate(code2.submobjects[0].submobjects[2]),
             Indicate(code2.submobjects[1].submobjects[1].submobjects[0]),
+            rate_func=there_and_back_with_pause,
+            run_time=2,
         )
         self.play(
             Indicate(code2.submobjects[0].submobjects[3].submobjects[1]),
             Indicate(code2.submobjects[1].submobjects[2].submobjects[0]),
+            rate_func=there_and_back_with_pause,
+            run_time=2,
         )
         self.play(
             Indicate(code2.submobjects[0].submobjects[3].submobjects[2].submobjects[1]),
             Indicate(code2.submobjects[1].submobjects[3].submobjects[0]),
+            rate_func=there_and_back_with_pause,
+            run_time=2,
         )
 
         self.play(FadeOut(code2.submobjects[1]))
@@ -1345,7 +1362,11 @@ class RunAlgorithm(MovingCameraScene):
         fibo_time = TexMobject("O(E + V \log V)").move_to(table_fibo_time.get_center())
         self.play(FadeIn(fibo_word))
         self.play(Write(fibo_time))
-        self.play(Indicate(fibo_time))
+        self.play(
+            Indicate(fibo_time),
+            rate_func=there_and_back_with_pause,
+            run_time=2,
+        )
         self.play(FadeOut(Group(
             table[:13],
             table[14:47],
