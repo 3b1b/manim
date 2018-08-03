@@ -201,10 +201,7 @@ def bounded_nodes(G):
                 G.get_node_label(v, "dist").tex_string.startswith("\le"):
             return True
 
-    ret = filter(
-        in_queue,
-        G.get_nodes()
-    )
+    ret = filter(in_queue, G.get_nodes())
     return ret
 
 def extract_node(scene, G, arrows=False, code=None, cursor=None):
