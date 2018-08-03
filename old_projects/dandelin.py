@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 
-from active_projects.lost_lecture import Orbiting
-from active_projects.lost_lecture import ShowWord
+from old_projects.lost_lecture import Orbiting
+from old_projects.lost_lecture import ShowWord
 
 
 

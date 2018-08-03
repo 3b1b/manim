@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 
-from active_projects.div_curl import VectorField
-from active_projects.div_curl import get_force_field_func
+from old_projects.div_curl import VectorField
+from old_projects.div_curl import get_force_field_func
 
 COBALT = "#0047AB"
 
