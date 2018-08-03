@@ -46,7 +46,7 @@ def extend_arrow(G, u, v, color=None):
         arrow,
         lambda a, t: a.put_start_and_end_on(
             u_edge_point,
-            u_edge_point + (v_edge_point - u_edge_point) * t,
+            interpolate(u_edge_point, v_edge_point, t),
         ),
     ), arrow
 
@@ -124,7 +124,8 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
                             G.get_node(child).mobject.get_center()
                 arrow_vec /= la.norm(arrow_vec)
                 arrow = Arrow(G.get_node(child).mobject.get_center(),
-                              G.get_node(child).mobject.get_center() + arrow_vec)
+                              G.get_node(child).mobject.get_center() + \
+                                      arrow_vec)
                 if G.get_node_parent_edge(child) is not None:
                     updates[G.get_node_parent_edge(child)] = OrderedDict([
                         ("stroke_width", 2),
@@ -1382,15 +1383,15 @@ class RunAlgorithm(MovingCameraScene):
         save_state(self)
 
     def construct(self):
-        #self.first_try()
-        #self.counterexample()
-        #self.one_step()
-        #self.triangle_inequality()
-        #self.generalize()
-        #self.last_run()
-        #self.directed_graph()
-        #self.spt_vs_mst()
-        #self.show_code()
+        self.first_try()
+        self.counterexample()
+        self.one_step()
+        self.triangle_inequality()
+        self.generalize()
+        self.last_run()
+        self.directed_graph()
+        self.spt_vs_mst()
+        self.show_code()
         self.run_code()
-        #self.analyze()
-        #self.compare_data_structures()
+        self.analyze()
+        self.compare_data_structures()
