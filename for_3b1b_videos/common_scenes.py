@@ -244,18 +244,19 @@ class PatreonEndScreen(PatreonThanks):
 
 class LogoGenerationTemplate(MovingCameraScene):
     def setup(self):
+        MovingCameraScene.setup(self)
         frame = self.camera_frame
         frame.shift(DOWN)
 
         self.logo = Logo()
         name = TextMobject("3Blue1Brown")
         name.scale(2.5)
-        name.next_to(logo, DOWN, buff=MED_LARGE_BUFF)
-        self.name = name
+        name.next_to(self.logo, DOWN, buff=MED_LARGE_BUFF)
+        self.channel_name = name
 
     def construct(self):
         logo = self.logo
-        name = self.name
+        name = self.channel_name
 
         self.play(
             Write(name, run_time=3, lag_factor=2.5),
@@ -265,6 +266,7 @@ class LogoGenerationTemplate(MovingCameraScene):
 
     def get_logo_animations(self, logo):
         return []  # For subclasses
+
 
 class ExternallyAnimatedScene(Scene):
     def construct(self):
