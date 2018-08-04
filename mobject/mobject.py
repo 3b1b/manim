@@ -65,15 +65,25 @@ class Mobject(Container):
         pass
 
     def add(self, *mobjects):
+        if not all(map(lambda m: isinstance(m, Mobject), mobjects)):
+            raise Exception("All submobjects must be of type Mobject")
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
-        self.submobjects = list_update(self.submobjects, mobjects)
+        self.remove(*mobjects)
+        self.submobjects = self.submobjects + list(mobjects)
         return self
 
     def add_to_back(self, *mobjects):
+        if not all(map(lambda m: isinstance(m, Mobject), mobjects)):
+            raise Exception("All submobjects must be of type Mobject")
+        if self in mobjects:
+            raise Exception("Mobject cannot contain self")
         self.remove(*mobjects)
         self.submobjects = list(mobjects) + self.submobjects
         return self
+
+    def add_to_front(self, *mobjects):
+        return self.add_to_back(*mobjects)
 
     def remove(self, *mobjects):
         for mobject in mobjects:
@@ -93,7 +103,7 @@ class Mobject(Container):
             lambda x: isinstance(x, Mobject),
             self.__dict__.values()
         )
-        self.submobjects = list_update(self.submobjects, mobject_attrs)
+        self.add(*mobject_attrs)
         return self
 
     def apply_over_attr_arrays(self, func):
