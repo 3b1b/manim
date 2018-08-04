@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 from constants import *
 from mobject.component import Component
 from dijkstra_scenes.node import Node
@@ -10,7 +11,6 @@ from animation.transform import ReplacementTransform
 from utils.space_ops import rotate_vector
 from collections import OrderedDict
 import copy
-import ipdb
 import numpy
 import sys
 
@@ -35,7 +35,7 @@ class Edge(Component):
             Node.assert_primitive(pair[1])
         except AssertionError:
             print("Invalid Edge primitive: {}".format(pair), file=sys.stderr)
-            ipdb.set_trace(context=7)
+            import ipdb; ipdb.set_trace(context=7)
 
     def make_key(self, start_node, end_node):
         return (start_node.key, end_node.key)

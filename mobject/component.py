@@ -1,12 +1,12 @@
 from __future__ import print_function
+from __future__ import absolute_import
 from collections import OrderedDict as OrderedDict
-from geometry import Arrow
-from mobject import Mobject
+from mobject.geometry import Arrow
+from mobject.mobject import Mobject
 from animation.creation import ShowCreation
 from animation.creation import Uncreate
 from animation.transform import ReplacementTransform
 import sys
-import ipdb
 
 
 class Component(Mobject):

@@ -1,11 +1,11 @@
 from __future__ import print_function
+from __future__ import absolute_import
 from mobject.mobject import Group
 from dijkstra_scenes.node import Node
 from dijkstra_scenes.edge import Edge
 from collections import OrderedDict
 import constants
 import copy
-import ipdb
 import sys
 
 

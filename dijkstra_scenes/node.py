@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 from mobject.component import Component
 from mobject.geometry import Circle
 from mobject.geometry import Arrow
@@ -7,10 +8,9 @@ from animation.creation import ShowCreation
 from animation.creation import Uncreate
 from animation.transform import ReplacementTransform
 from utils.space_ops import rotate_vector
-from collections import OrderedDict as OrderedDict
+from collections import OrderedDict
 import constants
 import copy
-import ipdb
 import numpy
 import sys
 
@@ -35,7 +35,7 @@ class Node(Component):
             assert len(point) == 3
         except AssertionError:
             print("Invalid Node primitive: {}".format(point), file=sys.stderr)
-            ipdb.set_trace(context=7)
+            import ipdb; ipdb.set_trace(context=7)
 
     def make_key(self, point):
         return point
