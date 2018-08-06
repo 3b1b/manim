@@ -155,7 +155,11 @@ class ShowGradient(Scene):
             self.wait()
 
 
-class SliceGraphTwoWays(ExternallyAnimatedScene):
+class ExampleGraphHoldXConstant(ExternallyAnimatedScene):
+    pass
+
+
+class ExampleGraphHoldYConstant(ExternallyAnimatedScene):
     pass
 
 
@@ -166,26 +170,27 @@ class TakePartialDerivatives(Scene):
             "y": RED,
         }
         func_tex = TexMobject(
-            "f(x, y)", "=", "e^{", "-x^2 + \\cos(2y)}",
+            "f", "(", "x", ",", "y", ")", "=",
+            "e^{", "-x^2", "+ \\cos(2y)}",
             tex_to_color_map=tex_to_color_map
         )
         partial_x = TexMobject(
-            "{\\partial f \\over \\partial x}", "=",
-            "\\left( e^{-x^2 + \\cos(2y)} \\right)",
-            "(-2x)",
-            tex_to_color_map=tex_to_color_map
+            "{\\partial", "f", "\\over", "\\partial", "x}", "=",
+            "\\left(", "e^", "{-x^2", "+ \\cos(2y)}", "\\right)",
+            "(", "-2", "x", ")",
+            tex_to_color_map=tex_to_color_map,
         )
         partial_y = TexMobject(
-            "{\\partial f \\over \\partial y}", "=",
-            "\\left( e^{-x^2 + \\cos(2y)} \\right)",
-            "(-\\sin(2y) \\cdot 2)",
-            tex_to_color_map=tex_to_color_map
+            "{\\partial", "f", "\\over", "\\partial", "y}", "=",
+            "\\left(", "e^", "{-x^2", "+ \\cos(", "2", "y)}", "\\right)",
+            "(", "-\\sin(", "2", "y)", "\\cdot 2", ")",
+            tex_to_color_map=tex_to_color_map,
         )
         partials = VGroup(partial_x, partial_y)
         for mob in func_tex, partials:
             mob.scale(1.5)
 
-        func_tex.move_to(2 * UP + LEFT)
+        func_tex.move_to(2 * UP + 3 * LEFT)
         for partial in partials:
             partial.next_to(func_tex, DOWN, buff=LARGE_BUFF)
             top_eq_x = func_tex.get_part_by_tex("=").get_center()[0]
@@ -208,23 +213,181 @@ class TakePartialDerivatives(Scene):
                 Vector(0.5 * DOWN).next_to(rect, UP, SMALL_BUFF)
                 for rect in terms.rects
             ])
-        treat_as_constant
-
-        self.add(func_tex, partial_x)
-        self.add(exp_rect)
-        self.add(xs.rects)
-        self.add(ys.rects)
-        self.add(xs.arrows)
-        self.add(ys.arrows)
+        treat_as_constant = TextMobject("Treat as a constant")
+        treat_as_constant.next_to(ys.arrows[1], UP)
 
         # Start to show partial_x
+        self.play(FadeInFromDown(func_tex))
+        self.wait()
+        self.play(
+            ReplacementTransform(func_tex[0].copy(), partial_x[1]),
+            Write(partial_x[0]),
+            Write(partial_x[2:4]),
+            Write(partial_x[6]),
+        )
+        self.play(
+            ReplacementTransform(func_tex[2].copy(), partial_x[4])
+        )
+        self.wait()
+
         # Label y as constant
+        self.play(LaggedStart(ShowCreation, ys.rects))
+        self.play(
+            LaggedStart(GrowArrow, ys.arrows, lag_ratio=0.8),
+            Write(treat_as_constant)
+        )
+        self.wait(2)
+
         # Perform partial_x derivative
+        self.play(FadeIn(exp_rect), Animation(func_tex))
+        self.wait()
+        pxi1 = 8
+        pxi2 = 15
+        self.play(
+            ReplacementTransform(
+                func_tex[7:].copy(),
+                partial_x[pxi1:pxi2],
+            ),
+            FadeIn(partial_x[pxi1 - 1:pxi1]),
+            FadeIn(partial_x[pxi2]),
+        )
+        self.wait(2)
+        self.play(
+            ReplacementTransform(
+                partial_x[10:12].copy(),
+                partial_x[pxi2 + 2:pxi2 + 4],
+                path_arc=-(TAU / 4)
+            ),
+            FadeIn(partial_x[pxi2 + 1]),
+            FadeIn(partial_x[-1]),
+        )
+        self.wait(2)
+
         # Swap out partial_x for partial_y
+        self.play(
+            FadeOutAndShiftDown(partial_x),
+            FadeOut(ys.rects),
+            FadeOut(ys.arrows),
+            FadeOut(treat_as_constant),
+            FadeOut(exp_rect),
+            Animation(func_tex)
+        )
+        self.play(FadeInFromDown(partial_y[:7]))
+        self.wait()
+
+        treat_as_constant.next_to(xs.arrows[1], UP, SMALL_BUFF)
+        self.play(
+            LaggedStart(ShowCreation, xs.rects),
+            LaggedStart(GrowArrow, xs.arrows),
+            Write(treat_as_constant),
+            lag_ratio=0.8
+        )
+        self.wait()
+
         # Show same outer derivative
-        # Finish y derivative
+        self.play(
+            ReplacementTransform(
+                func_tex[7:].copy(),
+                partial_x[pxi1:pxi2],
+            ),
+            FadeIn(partial_x[pxi1 - 2:pxi1]),
+            FadeIn(partial_x[pxi2]),
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(
+                partial_y[12:16].copy(),
+                partial_y[pxi2 + 3:pxi2 + 7],
+                path_arc=-(TAU / 4)
+            ),
+            FadeIn(partial_y[pxi2 + 2]),
+            FadeIn(partial_y[-1]),
+        )
+        self.wait()
+        self.play(ReplacementTransform(
+            partial_y[-5].copy(),
+            partial_y[-2],
+            path_arc=-PI
+        ))
+        self.wait()
 
 
 class ShowDerivativeAtExamplePoint(Scene):
     def construct(self):
-        pass
+        tex_to_color_map = {
+            "x": BLUE,
+            "y": RED,
+        }
+        func_tex = TexMobject(
+            "f", "(", "x", ",", "y", ")", "=",
+            "e^{", "-x^2", "+ \\cos(2y)}",
+            tex_to_color_map=tex_to_color_map
+        )
+        gradient_tex = TexMobject(
+            "\\nabla", "f", "(", "x", ",", "y", ")", "=",
+            tex_to_color_map=tex_to_color_map
+        )
+
+        partial_vect = Matrix([
+            ["{\\partial f / \\partial x}"],
+            ["{\\partial f / \\partial y}"],
+        ])
+        partial_vect.get_mob_matrix()[1, 0][-1].set_color(BLUE)
+        partial_vect.get_mob_matrix()[0, 0][-1].set_color(RED)
+        result_vector = self.get_result_vector("x", "y")
+
+        gradient = VGroup(
+            gradient_tex,
+            partial_vect,
+            TexMobject("="),
+            result_vector
+        )
+        gradient.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+
+        func_tex.to_edge(UP)
+        gradient.next_to(func_tex, DOWN, buff=LARGE_BUFF)
+
+        example_lhs = TexMobject(
+            "\\nabla", "f", "(", "1", ",", "3", ")", "=",
+            tex_to_color_map={"1": BLUE, "3": RED},
+        )
+        example_result_vector = self.get_result_vector("1", "3")
+        example_rhs = DecimalMatrix([[-1.92], [0.54]])
+        example = VGroup(
+            example_lhs,
+            example_result_vector,
+            TexMobject("="),
+            example_rhs,
+        )
+        example.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        example.next_to(gradient, DOWN, LARGE_BUFF)
+
+        self.add(func_tex, gradient)
+        self.wait()
+        self.play(
+            ReplacementTransform(gradient_tex.copy(), example_lhs),
+            ReplacementTransform(result_vector.copy(), example_result_vector),
+        )
+        self.wait()
+        self.play(Write(example[2:]))
+        self.wait()
+
+    def get_result_vector(self, x, y):
+        result_vector = Matrix([
+            ["e^{-%s^2 + \\cos(2\\cdot %s)} (-2\\cdot %s)" % (x, y, x)],
+            ["e^{-%s^2 + \\cos(2\\cdot %s)} \\big(-\\sin(2\\cdot %s) \\cdot 2\\big)" % (x, y, y)],
+        ], v_buff=1.2, element_alignment_corner=ORIGIN)
+
+        x_terms = VGroup(
+            result_vector.get_mob_matrix()[0, 0][2],
+            result_vector.get_mob_matrix()[1, 0][2],
+            result_vector.get_mob_matrix()[0, 0][-2],
+        )
+        y_terms = VGroup(
+            result_vector.get_mob_matrix()[0, 0][11],
+            result_vector.get_mob_matrix()[1, 0][11],
+            result_vector.get_mob_matrix()[1, 0][-5],
+        )
+        x_terms.set_color(BLUE)
+        y_terms.set_color(RED)
+        return result_vector
