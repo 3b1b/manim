@@ -19,6 +19,10 @@ class VMobject(Mobject):
         "fill_opacity": 0.0,
         "stroke_color": None,
         "stroke_width": DEFAULT_POINT_THICKNESS,
+        # The purpose of background stroke is to have
+        # something that won't overlap the fill
+        "background_stroke_color": BLACK,
+        "background_stroke_width": 0,
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
         "is_subpath": False,
@@ -36,10 +40,12 @@ class VMobject(Mobject):
     # Colors
     def init_colors(self):
         self.set_style_data(
-            stroke_color=self.stroke_color or self.color,
-            stroke_width=self.stroke_width,
             fill_color=self.fill_color or self.color,
             fill_opacity=self.fill_opacity,
+            stroke_color=self.stroke_color or self.color,
+            stroke_width=self.stroke_width,
+            background_stroke_color=self.background_stroke_color,
+            background_stroke_width=self.background_stroke_width,
             family=self.propagate_style_to_family
         )
         return self
@@ -49,29 +55,37 @@ class VMobject(Mobject):
             setattr(mob, attr, value)
 
     def set_style_data(self,
-                       stroke_color=None,
-                       stroke_width=None,
                        fill_color=None,
                        fill_opacity=None,
+                       stroke_color=None,
+                       stroke_width=None,
+                       background_stroke_color=None,
+                       background_stroke_width=None,
                        family=True
                        ):
-        if stroke_color is not None:
-            self.stroke_rgb = color_to_rgb(stroke_color)
-        if fill_color is not None:
-            self.fill_rgb = color_to_rgb(fill_color)
-        if stroke_width is not None:
-            self.stroke_width = stroke_width
-        if fill_opacity is not None:
-            self.fill_opacity = fill_opacity
+        kwargs = {
+            "fill_color": fill_color,
+            "fill_opacity": fill_opacity,
+            "stroke_color": stroke_color,
+            "stroke_width": stroke_width,
+            "background_stroke_color": background_stroke_color,
+            "background_stroke_width": background_stroke_width,
+            "family": family,
+        }
+        for key in "fill_color", "stroke_color", "background_stroke_color":
+            # Instead of setting a self.fill_color attr,
+            # set a numerical self.fill_rgb to make
+            # interpolation easier
+            key_with_rgb = key.replace("color", "rgb")
+            color = kwargs[key]
+            if color is not None:
+                setattr(self, key_with_rgb, color_to_rgb(color))
+        for key in "fill_opacity", "stroke_width", "background_stroke_width":
+            if kwargs[key] is not None:
+                setattr(self, key, kwargs[key])
         if family:
             for mob in self.submobjects:
-                mob.set_style_data(
-                    stroke_color=stroke_color,
-                    stroke_width=stroke_width,
-                    fill_color=fill_color,
-                    fill_opacity=fill_opacity,
-                    family=family
-                )
+                mob.set_style_data(**kwargs)
         return self
 
     def set_fill(self, color=None, opacity=None, family=True):
@@ -88,6 +102,13 @@ class VMobject(Mobject):
             family=family
         )
 
+    def set_background_stroke(self, color=None, width=None, family=True):
+        return self.set_style_data(
+            background_stroke_color=color,
+            background_stroke_width=width,
+            family=family
+        )
+
     def set_color(self, color, family=True):
         self.set_style_data(
             stroke_color=color,
@@ -99,10 +120,12 @@ class VMobject(Mobject):
 
     def match_style(self, vmobject):
         self.set_style_data(
-            stroke_color=vmobject.get_stroke_color(),
-            stroke_width=vmobject.get_stroke_width(),
             fill_color=vmobject.get_fill_color(),
             fill_opacity=vmobject.get_fill_opacity(),
+            stroke_color=vmobject.get_stroke_color(),
+            stroke_width=vmobject.get_stroke_width(),
+            background_stroke_color=vmobject.get_background_stroke_color(),
+            background_stroke_width=vmobject.get_background_stroke_width(),
             family=False
         )
 
@@ -153,6 +176,21 @@ class VMobject(Mobject):
 
     def get_stroke_width(self):
         return max(0, self.stroke_width)
+
+    def get_background_stroke_rgb(self):
+        return np.clip(self.background_stroke_rgb, 0, 1)
+
+    def get_background_stroke_color(self):
+        try:
+            self.background_stroke_rgb = np.clip(
+                self.background_stroke_rgb, 0, 1
+            )
+            return Color(rgb=self.background_stroke_rgb)
+        except:
+            return Color(WHITE)
+
+    def get_background_stroke_width(self):
+        return max(0, self.background_stroke_width)
 
     def get_color(self):
         if self.fill_opacity == 0:
@@ -404,10 +442,12 @@ class VMobject(Mobject):
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
-            "stroke_rgb",
-            "stroke_width",
             "fill_rgb",
             "fill_opacity",
+            "stroke_rgb",
+            "stroke_width",
+            "background_stroke_rgb",
+            "background_stroke_width",
         ]
         for attr in attrs:
             setattr(self, attr, interpolate(

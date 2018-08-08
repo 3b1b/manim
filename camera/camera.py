@@ -316,7 +316,17 @@ class Camera(object):
         pen, fill = self.get_pen_and_fill(vmobject)
         pathstring = self.get_pathstring(vmobject)
         symbol = aggdraw.Symbol(pathstring)
+        self.draw_background_stroke(canvas, vmobject, symbol)
         canvas.symbol((0, 0), symbol, pen, fill)
+
+    def draw_background_stroke(self, canvas, vmobject, symbol):
+        bs_width = vmobject.get_background_stroke_width()
+        if bs_width == 0:
+            return
+        bs_rgb = vmobject.get_background_stroke_rgb()
+        bs_hex = rgb_to_hex(bs_rgb)
+        pen = aggdraw.Pen(bs_hex, bs_width)
+        canvas.symbol((0, 0), symbol, pen, None)
 
     def get_pen_and_fill(self, vmobject):
         stroke_width = max(vmobject.get_stroke_width(), 0)

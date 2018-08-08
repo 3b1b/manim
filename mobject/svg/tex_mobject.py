@@ -39,6 +39,8 @@ class SingleStringTexMobject(SVGMobject):
         "template_tex_file": TEMPLATE_TEX_FILE,
         "stroke_width": 0,
         "fill_opacity": 1.0,
+        "background_stroke_width": 5,
+        "background_stroke_color": BLACK,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
