@@ -254,7 +254,7 @@ class SourcesOfOriginality(TeacherStudentsScene):
             "Previous video based on\\\\",
             "a paper by Johan W\\\"{a}stlund"
         )
-        based_on_wastlund.scale_to_fit_width(
+        based_on_wastlund.set_width(
             left_rect.get_width() - MED_SMALL_BUFF)
         based_on_wastlund.next_to(formula, DOWN, MED_LARGE_BUFF)
 
@@ -356,7 +356,7 @@ class SourcesOfOriginality(TeacherStudentsScene):
         )
 
         wallis_product = get_wallis_product(n_terms=4)
-        wallis_product.scale_to_fit_width(
+        wallis_product.set_width(
             left_rect.get_width() - 2 * MED_LARGE_BUFF)
         wallis_product.move_to(self.math_content, UP)
         wallis_product_name = TextMobject("``Wallis product''")
@@ -392,7 +392,7 @@ class Six(Scene):
         six = TexMobject("6")
         six.add_background_rectangle(opacity = 1)
         six.background_rectangle.stretch(1.5, 0)
-        six.scale_to_fit_height(7)
+        six.set_height(7)
         self.add(six)
 
 
@@ -780,7 +780,7 @@ class ShowProduct(Scene):
 class TeacherShowing(TeacherStudentsScene):
     def construct(self):
         screen = self.screen
-        screen.scale_to_fit_height(4)
+        screen.set_height(4)
         screen.next_to(self.students, UP, MED_LARGE_BUFF, RIGHT)
         self.play(
             ShowCreation(screen),
@@ -857,7 +857,7 @@ class DistanceProductScene(MovingCameraScene):
         self.lighthouses = VGroup()
         for point in self.get_lh_points():
             lighthouse = Lighthouse()
-            lighthouse.scale_to_fit_height(self.lighthouse_height)
+            lighthouse.set_height(self.lighthouse_height)
             lighthouse.move_to(point)
             self.lighthouses.add(lighthouse)
         return self.lighthouses
@@ -889,7 +889,7 @@ class DistanceProductScene(MovingCameraScene):
         self.d_labels = VGroup()
         for i, line in enumerate(self.distance_lines):
             d_label = TexMobject("d_%d" % i)
-            d_label.scale_to_fit_height(self.d_label_height)
+            d_label.set_height(self.d_label_height)
             vect = rotate_vector(line.get_vector(), 90 * DEGREES)
             vect *= 2.5 * SMALL_BUFF / np.linalg.norm(vect)
             d_label.move_to(line.get_center() + vect)
@@ -910,10 +910,10 @@ class DistanceProductScene(MovingCameraScene):
                 show_ellipsis=show_ellipsis,
                 include_background_rectangle=self.include_distance_labels_background_rectangle,
             )
-            label.scale_to_fit_height(self.numeric_distance_label_height)
+            label.set_height(self.numeric_distance_label_height)
             max_width = 0.5 * max(line.get_length(), 0.1)
             if label.get_width() > max_width:
-                label.scale_to_fit_width(max_width)
+                label.set_width(max_width)
             angle = (line.get_angle() % TAU) - TAU / 2
             if np.abs(angle) > TAU / 4:
                 angle += np.sign(angle) * np.pi
@@ -933,12 +933,12 @@ class DistanceProductScene(MovingCameraScene):
         stacked_labels = labels.copy()
         for label in stacked_labels:
             label.rotate(-label.angle)
-            label.scale_to_fit_height(self.numeric_distance_label_height)
+            label.set_height(self.numeric_distance_label_height)
         stacked_labels.arrange_submobjects(DOWN)
         stacked_labels.move_to(column_top, UP)
 
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(1.5 * stacked_labels.get_width())
+        h_line.set_width(1.5 * stacked_labels.get_width())
         h_line.next_to(stacked_labels, DOWN, aligned_edge=RIGHT)
         times = TexMobject("\\times")
         times.next_to(h_line, UP, SMALL_BUFF, aligned_edge=LEFT)
@@ -949,7 +949,7 @@ class DistanceProductScene(MovingCameraScene):
             show_ellipsis=True,
             include_background_rectangle=self.include_distance_labels_background_rectangle,
         )
-        product_decimal.scale_to_fit_height(self.numeric_distance_label_height)
+        product_decimal.set_height(self.numeric_distance_label_height)
         product_decimal.next_to(h_line, DOWN)
         product_decimal.align_to(stacked_labels, RIGHT)
         product_decimal[1].set_color(BLUE)
@@ -1066,7 +1066,7 @@ class IntroduceDistanceProduct(DistanceProductScene):
             for dot in lh_dots
         ])
         evenly_space_dots_label = TextMobject("Evenly-spaced \\\\ dots")
-        evenly_space_dots_label.scale_to_fit_width(0.5 * circle.get_width())
+        evenly_space_dots_label.set_width(0.5 * circle.get_width())
         evenly_space_dots_label.move_to(circle)
 
         special_dot = self.special_dot = self.get_observer_dot()
@@ -1103,7 +1103,7 @@ class IntroduceDistanceProduct(DistanceProductScene):
 
         observer = self.get_observer()
         observer.save_state()
-        observer.scale_to_fit_height(2)
+        observer.set_height(2)
         observer.change_mode("happy")
         observer.to_edge(RIGHT)
 
@@ -1284,7 +1284,7 @@ class IntroduceDistanceProduct(DistanceProductScene):
         lights = self.lights
 
         circle.generate_target()
-        circle.target.scale_to_fit_width(2 * self.circle_radius)
+        circle.target.set_width(2 * self.circle_radius)
         circle.target.to_corner(DL)
         self.circle = circle.target
 
@@ -1523,7 +1523,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
 
     def setup_lights(self):
         circle = self.circle
-        circle.scale_to_fit_height(5, about_edge=DOWN)
+        circle.set_height(5, about_edge=DOWN)
         lights = self.get_lights()
         dots = VGroup(*[Dot(point) for point in self.get_lh_points()])
         for dot, light in zip(dots, lights):
@@ -1549,7 +1549,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         )
 
         spacing_words = self.spacing_words = TextMobject("Evenly-spaced")
-        spacing_words.scale_to_fit_width(self.get_radius())
+        spacing_words.set_width(self.get_radius())
         spacing_words.move_to(circle)
 
         arrows = self.get_arrows()
@@ -1961,7 +1961,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
 
     def add_circle_group(self):
         self.circle.set_color(RED)
-        self.circle.scale_to_fit_width(
+        self.circle.set_width(
             2 * np.linalg.norm(self.plane.number_to_point(1) - self.origin)
         )
         self.circle.move_to(self.origin)
@@ -2996,7 +2996,7 @@ class ArmedWithTwoKeyFacts(TeacherStudentsScene, DistanceProductScene):
 
     def construct(self):
         circle1 = self.circle
-        circle1.scale_to_fit_height(1.5)
+        circle1.set_height(1.5)
         circle1.to_corner(UL)
         circle2 = circle1.copy()
         circle2.next_to(circle1, DOWN, MED_LARGE_BUFF)
@@ -3061,7 +3061,7 @@ class Sailor(PiCreature):
         )
         rhombus.set_fill(BLACK, opacity=1)
         rhombus.set_stroke(width=0)
-        rhombus.scale_to_fit_height(sailor_hat.get_height() / 3)
+        rhombus.set_height(sailor_hat.get_height() / 3)
         rhombus.rotate(5 * DEGREES)
         rhombus.move_to(sailor_hat, DR)
         rhombus.shift(0.05 * sailor_hat.get_width() * LEFT)
@@ -3166,7 +3166,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             self.add_foreground_mobjects(keeper, keeper.dot, keeper.title)
         for pi in observers:
             self.play(
-                pi.scale_to_fit_height, 0.5,
+                pi.set_height, 0.5,
                 pi.next_to, pi.target_point, RIGHT, SMALL_BUFF,
                 pi.dot.move_to, pi.target_point,
                 pi.dot.set_fill, {"opacity": 1},
@@ -3355,7 +3355,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             "K": BLUE,
             "S": YELLOW,
         })
-        product_parts.scale_to_fit_width(0.4 * FRAME_WIDTH)
+        product_parts.set_width(0.4 * FRAME_WIDTH)
         product_parts.next_to(result_fraction, DOWN, LARGE_BUFF, RIGHT)
         product_parts.shift(MED_SMALL_BUFF * RIGHT)
 
@@ -3857,7 +3857,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             for title in titles:
                 if not hasattr(title, "original_height"):
                     title.original_height = title.get_height()
-                title.scale_to_fit_height(min(
+                title.set_height(min(
                     title.original_height,
                     0.8 * get_ks_distance(),
                 ))
@@ -3873,7 +3873,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
                 if k == 0:
                     continue
                 light = lights[k]
-                light = light.scale_to_fit_width(
+                light = light.set_width(
                     (get_fraction() / start_fraction) * initial_light_width
                 )
                 point = self.get_circle_point_at_proportion(k * get_fraction())
@@ -3959,7 +3959,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         keeper = self.keeper = PiCreature(color=self.keeper_color).flip()
         sailor = self.sailor = Sailor()
         observers = self.observers = VGroup(keeper, sailor)
-        observers.scale_to_fit_height(3)
+        observers.set_height(3)
         keeper.shift(4 * RIGHT + 2 * DOWN)
         sailor.shift(4 * RIGHT + 2 * UP)
         return VGroup(keeper, sailor)
@@ -4054,13 +4054,13 @@ class MentionJohnWallis(Scene):
         name.next_to(product, DOWN, MED_LARGE_BUFF)
 
         image = ImageMobject("John_Wallis")
-        image.scale_to_fit_height(3)
+        image.set_height(3)
         image.next_to(name, DOWN)
         image_name = TextMobject("John Wallis")
         image_name.next_to(image, DOWN)
 
         infinity = TexMobject("\\infty")
-        infinity.scale_to_fit_height(1.5)
+        infinity.set_height(1.5)
         infinity.next_to(image, RIGHT, MED_LARGE_BUFF)
 
         self.add(product)
@@ -4256,7 +4256,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
 
     def create_pi_creatures(self):
         group = VGroup(PiCreature(color=GREY), Mortimer())
-        group.scale_to_fit_height(2)
+        group.set_height(2)
         group.arrange_submobjects(RIGHT, buff=4)
         group.to_edge(DOWN)
         return group
@@ -4941,7 +4941,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
             Mortimer()
         )
         pi_creatures.arrange_submobjects(RIGHT, LARGE_BUFF)
-        pi_creatures.scale_to_fit_height(1)
+        pi_creatures.set_height(1)
         pi_creatures.next_to(rect, DOWN)
         for pi in pi_creatures:
             pi.change("hooray", rect)
@@ -4982,7 +4982,7 @@ class Conclusion(TeacherStudentsScene):
         sine_formula.shift_onto_screen()
 
         euler = ImageMobject("Euler")
-        euler.scale_to_fit_height(2.5)
+        euler.set_height(2.5)
         basel_problem = TexMobject(
             "\\frac{1}{1^2} + ",
             "\\frac{1}{2^2} + ",
@@ -5239,7 +5239,7 @@ class Thumbnail(DistanceProductScene):
         bottom_dot = Dot(color=BLUE)
         bottom_dot.move_to(circle.get_bottom())
         observer = PiCreature(mode="pondering")
-        observer.scale_to_fit_height(0.5)
+        observer.set_height(0.5)
         observer.next_to(bottom_dot, DOWN)
 
         lights = VGroup()

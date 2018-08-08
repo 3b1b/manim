@@ -37,7 +37,7 @@ class OpeningQuote(Scene):
             """, 
             organize_left_to_right = False
         )
-        words.scale_to_fit_width(2*(FRAME_X_RADIUS-1))
+        words.set_width(2*(FRAME_X_RADIUS-1))
         words.to_edge(UP)        
         for mob in words.submobjects[48:49+13]:
             mob.set_color(GREEN)
@@ -54,7 +54,7 @@ class VideoIcon(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, "video_icon", **kwargs)
         self.center()
-        self.scale_to_fit_width(FRAME_WIDTH/12.)
+        self.set_width(FRAME_WIDTH/12.)
         self.set_stroke(color = WHITE, width = 0)
         self.set_fill(color = WHITE, opacity = 1)
 
@@ -272,7 +272,7 @@ class NumericVsGeometric(Scene):
             "\\\\ &=",
             matrix_to_tex_string([[1], [-1]]),
         ]))
-        matrix_vector_product.scale_to_fit_width(FRAME_X_RADIUS-0.5)
+        matrix_vector_product.set_width(FRAME_X_RADIUS-0.5)
         matrix_vector_product.next_to(self.vline, LEFT)
 
         self.play(
@@ -313,7 +313,7 @@ class NumericVsGeometric(Scene):
             Randolph(mode = "pondering")
         ]
         bulb = SVGMobject("light_bulb")
-        bulb.scale_to_fit_height(1)
+        bulb.set_height(1)
         bulb.set_color(YELLOW)
         thoughts = [
             matrix_to_mobject(EXAMPLE_TRANFORM),
@@ -679,7 +679,7 @@ class LinearAlgebraIntuitions(Scene):
 class MatricesAre(Scene):
     def construct(self):
         matrix = matrix_to_mobject([[1, -1], [1, 2]])
-        matrix.scale_to_fit_height(6)
+        matrix.set_height(6)
         arrow = Arrow(LEFT, RIGHT, stroke_width = 8, preserve_tip_size_when_scaling = False)
         arrow.scale(2)
         arrow.to_edge(RIGHT)
@@ -702,7 +702,7 @@ class MatrixMultiplicationIs(Scene):
         matrix2 = matrix_to_mobject([[2, 1], [1, 2]])
         matrix2.set_color(GREEN)
         for m in matrix1, matrix2:
-            m.scale_to_fit_height(3)
+            m.set_height(3)
         arrow = Arrow(LEFT, RIGHT, stroke_width = 6, preserve_tip_size_when_scaling = False)
         arrow.scale(2)
         arrow.to_edge(RIGHT)
@@ -747,7 +747,7 @@ class DeterminantsAre(Scene):
                 \\end{array}
             \\right]\\right)
         """)
-        tex_mob.scale_to_fit_height(4)
+        tex_mob.set_height(4)
         arrow = Arrow(LEFT, RIGHT, stroke_width = 8, preserve_tip_size_when_scaling = False)
         arrow.scale(2)
         arrow.to_edge(RIGHT)
@@ -862,7 +862,7 @@ class TableOfContents(Scene):
     def series_of_videos(self, chapters):
         icon = SVGMobject("video_icon")
         icon.center()
-        icon.scale_to_fit_width(FRAME_WIDTH/12.)
+        icon.set_width(FRAME_WIDTH/12.)
         icon.set_stroke(color = WHITE, width = 0)
         icons = [icon.copy() for chapter in chapters.split()]
         colors = Color(BLUE_A).range_to(BLUE_D, len(icons))
@@ -970,8 +970,8 @@ class PauseAndPonder(Scene):
     def construct(self):
         pause = TexMobject("=").rotate(np.pi/2)
         pause.stretch(0.5, 1)
-        pause.scale_to_fit_height(1.5)
-        bubble = ThoughtBubble().scale_to_fit_height(2)
+        pause.set_height(1.5)
+        bubble = ThoughtBubble().set_height(2)
         pause.shift(LEFT)
         bubble.next_to(pause, RIGHT, buff = 1)
 
@@ -985,7 +985,7 @@ class NextVideo(Scene):
         title = TextMobject("Next video: Vectors, what even are they?")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

@@ -692,16 +692,16 @@ class ReadIntoZetaFunction(Scene):
             Line(LEFT, RIGHT).shift(0.2*DOWN),
             Line(LEFT, ORIGIN).shift(0.4*DOWN)
         )
-        paragraph_lines.scale_to_fit_width(max_width)
+        paragraph_lines.set_width(max_width)
         paragraph_lines.next_to(title, DOWN, MED_LARGE_BUFF)
         paper.add(paragraph_lines)
         max_height = 1.5*paragraph_lines.get_height()
 
         statement = TextMobject(self.statement)
         if statement.get_width() > max_width:
-            statement.scale_to_fit_width(max_width)
+            statement.set_width(max_width)
         if statement.get_height() > max_height:
-            statement.scale_to_fit_height(max_height)
+            statement.set_height(max_height)
 
         statement.next_to(paragraph_lines, DOWN)
         statement.set_color(GREEN_B)
@@ -775,7 +775,7 @@ class RiemannFatherOfComplex(ComplexTransformationScene):
         name.add_background_rectangle()
         # photo = Square()
         photo = ImageMobject("Riemann", invert = False)
-        photo.scale_to_fit_width(5)
+        photo.set_width(5)
         photo.next_to(name, DOWN, aligned_edge = LEFT)
 
 
@@ -1003,7 +1003,7 @@ class FromRealToComplex(ComplexTransformationScene):
 
     def transition_to_spiril_sum(self):
         zeta = self.get_zeta_definition("2+i", "1.15 - 0.44i")
-        zeta.scale_to_fit_width(FRAME_WIDTH-1)
+        zeta.set_width(FRAME_WIDTH-1)
         zeta.to_corner(UP+LEFT)
         lines, output_dot = self.get_sum_lines(complex(2, 1))
 
@@ -1371,7 +1371,7 @@ class ComplexExponentiation(Scene):
         exp = self.imag_exponent[-1]
         new_exp = TexMobject("ti")
         new_exp.set_color(exp.get_color())
-        new_exp.scale_to_fit_height(exp.get_height())
+        new_exp.set_height(exp.get_height())
         new_exp.move_to(exp, LEFT)
 
         nine = TexMobject("9")
@@ -2845,7 +2845,7 @@ class DiscussZeros(ZetaTransformationScene):
         primes.to_corner(UP+RIGHT)
         # photo = Square()
         photo = ImageMobject("Riemann", invert = False)
-        photo.scale_to_fit_width(5)
+        photo.set_width(5)
         photo.to_corner(UP+LEFT)
         new_dots = VGroup(*[
             Dot(0.5*RIGHT + y*UP)
@@ -3100,11 +3100,11 @@ class DiscussSumOfNaturals(Scene):
 class InventingMathPreview(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(4)
+        rect.set_height(4)
         title = TextMobject("What does it feel like to invent math?")
         title.next_to(rect, UP)
         sum_tex = TexMobject("1+2+4+8+\\cdots = -1")
-        sum_tex.scale_to_fit_width(rect.get_width()-1)
+        sum_tex.set_width(rect.get_width()-1)
 
         self.play(
             ShowCreation(rect),
@@ -3162,7 +3162,7 @@ class PatreonThanks(Scene):
         special_thanks.set_color(YELLOW)
         special_thanks.shift(3*UP)
         patreon_logo = ImageMobject("patreon", invert = False)
-        patreon_logo.scale_to_fit_height(1.5)
+        patreon_logo.set_height(1.5)
         patreon_logo.next_to(special_thanks, DOWN)
 
         left_patrons = VGroup(*map(TextMobject,
@@ -3272,18 +3272,18 @@ class Thumbnail(ZetaTransformationScene):
         self.plane.set_stroke(width = 4)
 
         div_sum = TexMobject("-\\frac{1}{12} = ", "1+2+3+4+\\cdots")
-        div_sum.scale_to_fit_width(FRAME_WIDTH-1)
+        div_sum.set_width(FRAME_WIDTH-1)
         div_sum.to_edge(DOWN)
         div_sum.set_color(YELLOW)
         for mob in div_sum.submobjects:
             mob.add_to_back(BackgroundRectangle(mob))
 
         zeta = TexMobject("\\zeta(s)")
-        zeta.scale_to_fit_height(FRAME_Y_RADIUS-1)
+        zeta.set_height(FRAME_Y_RADIUS-1)
         zeta.to_corner(UP+LEFT)
 
         million = TexMobject("\\$1{,}000{,}000")
-        million.scale_to_fit_width(FRAME_X_RADIUS+1)
+        million.set_width(FRAME_X_RADIUS+1)
         million.to_edge(UP+RIGHT)
         million.set_color(GREEN_B)
         million.add_background_rectangle()

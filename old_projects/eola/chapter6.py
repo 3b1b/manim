@@ -812,7 +812,7 @@ class DescribeInverse(LinearTransformationScene):
             m.add(brace, label_mob)
             text.add(m)
             if text.get_width() > FRAME_WIDTH-1:
-                text.scale_to_fit_width(FRAME_WIDTH-1)
+                text.set_width(FRAME_WIDTH-1)
             text.center().to_corner(UP+RIGHT)
         matrix.set_color(PINK)
         inv_matrix.set_color(YELLOW)
@@ -1379,7 +1379,7 @@ class NameColumnSpace(Scene):
         for i in 1, -1:
             span_text[i].stretch(1.5, 1)
             span_text[i].do_in_place(
-                span_text[i].scale_to_fit_height, 
+                span_text[i].set_height, 
                 span_text.get_height()
             )
         for col_array, index in zip(col_arrays, [2, 4, 6]):
@@ -2002,10 +2002,10 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Nonsquare matrices
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

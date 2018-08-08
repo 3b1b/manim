@@ -29,7 +29,7 @@ class LastVideo(TeacherStudentsScene):
         known_formulas.arrange_submobjects(
             DOWN, buff = MED_LARGE_BUFF,
         )
-        known_formulas.scale_to_fit_height(2.5)
+        known_formulas.set_height(2.5)
         exp_question = TexMobject("2^x", ", 7^x, ", "e^x", " ???")
 
         last_video_brace = Brace(last_video)
@@ -331,7 +331,7 @@ class DoublingPopulation(PiCreatureScene):
             for x in range(width)
         ]).arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
         creatures = VGroup(*it.chain(*creature_array))
-        creatures.scale_to_fit_height(self.pi_creature_grid_height)
+        creatures.set_height(self.pi_creature_grid_height)
         creatures.to_corner(DOWN+RIGHT)
 
         colors = color_gradient([BLUE, GREEN, GREY_BROWN], len(creatures))
@@ -424,7 +424,7 @@ class DoublingPopulation(PiCreatureScene):
             "From day", str(curr_day), 
             "to", str(curr_day+1), ":"
         )
-        top_words.scale_to_fit_width(4)
+        top_words.set_width(4)
         top_words.next_to(
             self.function, DOWN,
             buff = MED_LARGE_BUFF,
@@ -727,7 +727,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
         one.move_to(ratio[5], DOWN)
         lp, rp = parens = TexMobject("()")
         parens.stretch(1.3, 1)
-        parens.scale_to_fit_height(ratio.get_height())
+        parens.set_height(ratio.get_height())
         lp.next_to(ratio, LEFT, buff = 0)
         rp.next_to(ratio, RIGHT, buff = 0)
 
@@ -1228,7 +1228,7 @@ class Chapter4Wrapper(Scene):
         title = TextMobject("Chapter 4 chain rule intuition")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9)
-        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        rect.set_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1592,7 +1592,7 @@ class ManyExponentialForms(TeacherStudentsScene):
         ]
         group = VGroup(lhs, *rhs_list)
         group.arrange_submobjects(RIGHT)
-        group.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        group.set_width(FRAME_WIDTH - LARGE_BUFF)
         group.next_to(self.get_pi_creatures(), UP, 2*LARGE_BUFF)
         for part in group:
             part.set_color_by_tex("t", YELLOW)
@@ -1689,9 +1689,9 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
                 graph.points[-1],
                 graph.points[-1][0]*RIGHT + h_line.get_center()[1]*UP
             )
-            brace.scale_to_fit_height(v_line.get_height())
+            brace.set_height(v_line.get_height())
             brace.next_to(v_line, RIGHT, SMALL_BUFF)
-            label.scale_to_fit_height(min(
+            label.set_height(min(
                 label.get_height(),
                 brace.get_height()
             ))
@@ -2006,7 +2006,7 @@ class Thumbnail(GraphOfTwoToT):
         derivative.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
 
         # brace = Brace(Line(LEFT, RIGHT), UP)
-        # brace.scale_to_fit_width(derivative[1].get_width())
+        # brace.set_width(derivative[1].get_width())
         # brace.next_to(derivative[1], UP)
         # question = TextMobject("Why?")
         # question.scale(2.5)

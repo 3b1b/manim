@@ -20,7 +20,7 @@ class NameAnimationScene(Scene):
         letter_mobs = TextMobject(name)
         nb_letters = len(letter_mobs)
         randy = PiCreature()
-        randy.move_to(ORIGIN).scale_to_fit_height(0.5 * DIAMETER)
+        randy.move_to(ORIGIN).set_height(0.5 * DIAMETER)
         randy.set_color(BLUE_E)
         randy.look_at(UP + RIGHT)
         self.add(randy)

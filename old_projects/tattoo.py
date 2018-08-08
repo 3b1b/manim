@@ -52,7 +52,7 @@ class TrigRepresentationsScene(Scene):
         theta = TexMobject("\\theta")
         theta.shift(1.5*arc.point_from_proportion(0.5))
         theta.set_color(self.theta_color)
-        theta.scale_to_fit_height(self.theta_height)
+        theta.set_height(self.theta_height)
         line = Line(ORIGIN, self.get_circle_point())
         dot = Dot(line.get_end(), radius = 0.05)
         return VGroup(line, arc, theta, dot)
@@ -512,7 +512,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         frac2.next_to(frac1)
         frac2[-2].set_color(YELLOW)
         frac_group = VGroup(opp_over_hyp, frac1, frac2)
-        frac_group.scale_to_fit_width(FRAME_X_RADIUS-1)
+        frac_group.set_width(FRAME_X_RADIUS-1)
         frac_group.next_to(ORIGIN, RIGHT).to_edge(UP)
 
         question = TextMobject("Why is this $\\theta$?")
@@ -823,7 +823,7 @@ class Credit(Scene):
         url.to_corner(UP+RIGHT, buff = LARGE_BUFF)
 
         book = ImageMobject("zen_and_motorcycles")
-        book.scale_to_fit_height(5)
+        book.set_height(5)
         book.to_edge(DOWN, buff = LARGE_BUFF)
         border = Rectangle(color = WHITE)
         border.replace(book, stretch = True)

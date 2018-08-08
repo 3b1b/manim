@@ -21,7 +21,7 @@ class OpeningQuote(Scene):
         )
         words.set_color_by_tex("mathematics", BLUE)
         words.set_color_by_tex("music", BLUE)
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Serge Lang")
         author.set_color(YELLOW)
@@ -112,7 +112,7 @@ class ManyPrerequisites(Scene):
         self.play(ShowCreation(h_line))
 
         rect = Rectangle(height = 9, width = 16, color = BLUE)
-        rect.scale_to_fit_width(FRAME_X_RADIUS-2)
+        rect.set_width(FRAME_X_RADIUS-2)
         rects = [rect]+[rect.copy() for i in range(3)]
         words = [
             "Linear transformations",
@@ -127,7 +127,7 @@ class ManyPrerequisites(Scene):
 
         Matrix(np.array(rects).reshape((2, 2)))
         rects = VGroup(*rects)
-        rects.scale_to_fit_height(FRAME_HEIGHT - 1.5)
+        rects.set_height(FRAME_HEIGHT - 1.5)
         rects.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(Write(rects[0]))
@@ -1430,7 +1430,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         xy_array.set_color(YELLOW)
         zero_array = Matrix([0, 0])
         for array in xy_array, zero_array:
-            array.scale_to_fit_height(self.matrix.get_height())
+            array.set_height(self.matrix.get_height())
             array.add_to_back(BackgroundRectangle(array))
         xy_array.next_to(self.matrix)
         equals = TexMobject("=").next_to(xy_array)
@@ -1603,7 +1603,7 @@ class SolveRotationEigenvalues(Rotate90Degrees):
             transformation.
         """, alignment = "")
         interesting_tidbit.add_background_rectangle()
-        interesting_tidbit.scale_to_fit_height(FRAME_Y_RADIUS-0.5)
+        interesting_tidbit.set_height(FRAME_Y_RADIUS-0.5)
         interesting_tidbit.to_corner(DOWN+RIGHT)
         self.play(FadeIn(interesting_tidbit))
         self.wait()
@@ -2082,7 +2082,7 @@ class LastVideo(Scene):
         title = TextMobject("Last chapter: Change of basis")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN, buff = MED_SMALL_BUFF)
 
         self.add(title)
@@ -2171,7 +2171,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         ]).T)
         cob_matrix.rect = BackgroundRectangle(cob_matrix)
         cob_matrix.add_to_back(cob_matrix.rect)
-        cob_matrix.scale_to_fit_height(self.matrix.get_height())
+        cob_matrix.set_height(self.matrix.get_height())
         cob_matrix.next_to(self.matrix)
         brace = Brace(cob_matrix)
         brace_text = brace.get_text("Change of basis matrix")

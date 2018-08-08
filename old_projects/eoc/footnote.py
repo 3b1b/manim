@@ -451,7 +451,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             brace.dx = TexMobject("dx")
             max_width = 0.7*brace.get_width()
             if brace.dx.get_width() > max_width:
-                brace.dx.scale_to_fit_width(max_width)
+                brace.dx.set_width(max_width)
             brace.dx.next_to(brace, DOWN, SMALL_BUFF)
 
         self.play(ShowCreation(v_lines[0]))
@@ -554,7 +554,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             h_lines.add(h_line)
             max_height = 0.8*group.get_height()
             if label.get_height() > max_height:
-                label.scale_to_fit_height(max_height)
+                label.set_height(max_height)
 
 
         ddf_brace = Brace(h_lines, LEFT, buff = SMALL_BUFF)
@@ -739,7 +739,7 @@ class SecondDerivativeAsAcceleration(Scene):
             for scene in (s_scene, v_scene, a_scene, j_scene)
         ]
         for i, graph in enumerate(graphs):
-            graph.scale_to_fit_height(FRAME_Y_RADIUS)
+            graph.set_height(FRAME_Y_RADIUS)
             graph.to_corner(UP+LEFT)
             graph.shift(i*DOWN/2.0)
 
@@ -885,7 +885,7 @@ class Thumbnail(SecondDerivativeGraphically):
         tex = TexMobject("{d^n f", "\\over", "dx^n}")
         tex.set_color_by_tex("d^n", YELLOW)
         tex.set_color_by_tex("dx", BLUE)
-        tex.scale_to_fit_height(4)
+        tex.set_height(4)
         tex.to_edge(UP)
 
         self.add(tex)

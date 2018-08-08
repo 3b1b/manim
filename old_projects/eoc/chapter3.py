@@ -139,7 +139,7 @@ class ContrastAbstractAndConcrete(Scene):
             for x in range(20)
             for y in range(10)
         ])
-        pis.scale_to_fit_height(3)
+        pis.set_height(3)
         pis.center()
         pis.to_edge(DOWN, buff = SMALL_BUFF)
         pis.shift(FRAME_X_RADIUS*RIGHT/2.)
@@ -195,7 +195,7 @@ class ListOfRules(PiCreatureScene):
             aligned_edge = LEFT,
         )
         rules[-1].shift(MED_LARGE_BUFF*RIGHT)
-        rules.scale_to_fit_height(FRAME_HEIGHT-1)
+        rules.set_height(FRAME_HEIGHT-1)
         rules.next_to(self.pi_creature, RIGHT)
         rules.to_edge(DOWN)
 
@@ -316,7 +316,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         self.ss_group = ss_group
 
     def position_little_rectangle(self, rect, ss_group):
-        rect.scale_to_fit_width(3*self.dx)
+        rect.set_width(3*self.dx)
         rect.move_to(
             ss_group.dx_line.get_left()
         )
@@ -1301,7 +1301,7 @@ class PatternForPowerRule(PiCreatureScene):
             DOWN, aligned_edge = LEFT,
             buff = MED_LARGE_BUFF
         )
-        derivatives.scale_to_fit_height(FRAME_HEIGHT-1)
+        derivatives.set_height(FRAME_HEIGHT-1)
         derivatives.to_edge(LEFT)
 
         self.play(FadeIn(derivatives[0]))
@@ -1933,7 +1933,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         area_label.scale(self.area_label_scale_factor)
         max_width = max(result.rectangle.get_width()-2*SMALL_BUFF, 0)
         if area_label.get_width() > max_width:
-            area_label.scale_to_fit_width(max_width)
+            area_label.set_width(max_width)
         area_label.move_to(result.rectangle)
         result.area_label = area_label
 
@@ -2145,7 +2145,7 @@ class DerivativeOfSineIsSlope(Scene):
             "\\frac{d(\\sin(\\theta))}{d\\theta} = ",
             "\\text{Slope of this graph}"
         )
-        tex.scale_to_fit_width(FRAME_WIDTH-1)
+        tex.set_width(FRAME_WIDTH-1)
         tex.to_edge(DOWN)
         VGroup(*tex[0][2:8]).set_color(BLUE)
         VGroup(*tex[1][-9:]).set_color(BLUE)
@@ -2541,11 +2541,11 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         )
         d_sine_line = Line(interim_point, nudged_point, color = DERIVATIVE_COLOR)
         d_sine_brace = Brace(Line(ORIGIN, UP), LEFT)
-        d_sine_brace.scale_to_fit_height(d_sine_line.get_height())
+        d_sine_brace.set_height(d_sine_line.get_height())
         d_sine_brace.next_to(d_sine_line, LEFT, buff = SMALL_BUFF/self.zoom_factor)
         d_sine = TexMobject("d(\\sin(\\theta))")
         d_sine.set_color(d_sine_line.get_color())
-        d_sine.scale_to_fit_width(1.5*self.d_theta*self.unit_length)
+        d_sine.set_width(1.5*self.d_theta*self.unit_length)
         d_sine.next_to(d_sine_brace, LEFT, SMALL_BUFF/self.zoom_factor)
 
         self.play(ShowCreation(d_theta_arc))
@@ -2768,7 +2768,7 @@ class Promotion(PiCreatureScene):
         url.to_corner(UP+LEFT)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5.5)
+        rect.set_height(5.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
 
@@ -2797,12 +2797,12 @@ class Thumbnail(NudgeSideLengthOfCube):
         )
         VGroup(*formula[:5]).set_color(YELLOW)
         VGroup(*formula[-3:]).set_color(GREEN_B)
-        formula.scale_to_fit_width(FRAME_X_RADIUS-1)
+        formula.set_width(FRAME_X_RADIUS-1)
         formula.to_edge(RIGHT)
         self.add(formula)
 
         title = TextMobject("Geometric derivatives")
-        title.scale_to_fit_width(FRAME_WIDTH-1)
+        title.set_width(FRAME_WIDTH-1)
         title.to_edge(UP)
         self.add(title)
 

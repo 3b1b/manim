@@ -77,7 +77,7 @@ class Chapter8OpeningQuote(OpeningQuote, PiCreatureScene):
         result.set_color_by_tex("h", GREEN, substring = False)
         result.set_color_by_tex("d\\theta", GREEN)
 
-        result.scale_to_fit_width(FRAME_WIDTH - 2*MED_SMALL_BUFF)
+        result.set_width(FRAME_WIDTH - 2*MED_SMALL_BUFF)
         return result
 
 class ThisVideo(TeacherStudentsScene):
@@ -343,7 +343,7 @@ class Chapter2Wrapper(Scene):
         title = TextMobject(self.title)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = WHITE)
-        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        rect.set_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -477,7 +477,7 @@ class Antiderivative(PiCreatureScene):
         bottom_arc = top_arc.copy()
         bottom_arc.rotate(np.pi)
         arcs = VGroup(top_arc, bottom_arc)
-        arcs.scale_to_fit_width(top_line.get_width())
+        arcs.set_width(top_line.get_width())
         for arc in arcs:
             arc.add_tip()
         top_arc.next_to(top_line, UP)
@@ -1689,7 +1689,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
 
     def add_T_label(self, x_val, **kwargs):
         triangle = RegularPolygon(n=3, start_angle = np.pi/2)
-        triangle.scale_to_fit_height(MED_SMALL_BUFF)
+        triangle.set_height(MED_SMALL_BUFF)
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
         triangle.set_fill(WHITE, 1)
         triangle.set_stroke(width = 0)
@@ -2348,7 +2348,7 @@ class FundamentalTheorem(GraphScene):
             self.play(
                 rects[i-1].set_fill, None, low_opacity,
                 rects[i].set_fill, None, 1,
-                f_brace.scale_to_fit_height, rects[i].get_height(),
+                f_brace.set_height, rects[i].get_height(),
                 f_brace.next_to, rects[i], LEFT, 0,
                 dx_brace.next_to, rects[i], DOWN, 0,
                 *[
@@ -2756,7 +2756,7 @@ class Thumbnail(Chapter1Thumbnail):
             dx = 0.25,
         )
         words = TextMobject("Integrals")
-        words.scale_to_fit_width(8)
+        words.set_width(8)
         words.to_edge(UP)
 
         self.add(graph, rects, words)

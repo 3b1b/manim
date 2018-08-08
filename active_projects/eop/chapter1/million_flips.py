@@ -86,7 +86,7 @@ class MillionFlips(Scene):
 
     def organize_group(self, group):
         group.arrange_submobjects_in_grid(10)
-        group.scale_to_fit_height(5)
+        group.set_height(5)
         group.shift(DOWN + 2 * LEFT)
 
     def increment(self, integer_mob, value=1):

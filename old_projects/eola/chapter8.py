@@ -38,7 +38,7 @@ class LastVideo(Scene):
         """)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -470,7 +470,7 @@ class ContrastDotAndCross(Scene):
             )
             dot_prod.arrange_submobjects(RIGHT)
             if dot_prod.get_width() > max_width:
-                dot_prod.scale_to_fit_width(max_width)
+                dot_prod.set_width(max_width)
             dot_prod.next_to(last_mob, DOWN, buff = MED_SMALL_BUFF)
             last_mob = dot_prod
             dot_prod.to_edge(LEFT)
@@ -632,10 +632,10 @@ class PrereqDeterminant(Scene):
         title = TextMobject("""
             Prerequisite: Understanding determinants
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1305,14 +1305,14 @@ class WriteCrossProductProperties(Scene):
             "(parallelogram's area)"
         )
         length_words.set_color_by_tex(p_cash, P_COLOR)
-        length_words.scale_to_fit_width(FRAME_X_RADIUS - 1)
+        length_words.set_width(FRAME_X_RADIUS - 1)
         length_words.set_color_by_tex("(parallelogram's area)", BLUE)
         length_words.next_to(VGroup(cross_product, vector), DOWN, buff = LARGE_BUFF)
         perpendicular = TextMobject(
             "\\centering Perpendicular to",
             v_cash, "and", w_cash
         )
-        perpendicular.scale_to_fit_width(FRAME_X_RADIUS - 1)        
+        perpendicular.set_width(FRAME_X_RADIUS - 1)        
         perpendicular.set_color_by_tex(v_cash, V_COLOR)
         perpendicular.set_color_by_tex(w_cash, W_COLOR)
         perpendicular.next_to(length_words, DOWN, buff = LARGE_BUFF)
@@ -1601,7 +1601,7 @@ class DeterminantTrick(Scene):
         for parens in paren_sets:
             brace = Brace(parens)
             text = brace.get_text("Some number")
-            text.scale_to_fit_width(brace.get_width())
+            text.set_width(brace.get_width())
             self.play(
                 GrowFromCenter(brace),
                 Write(text, run_time = 2)
@@ -1638,10 +1638,10 @@ class NextVideo(Scene):
             Next video: Cross products in the
             light of linear transformations
         """)
-        title.scale_to_fit_height(1.2)
+        title.set_height(1.2)
         title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

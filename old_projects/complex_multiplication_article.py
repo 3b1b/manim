@@ -194,7 +194,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         label = TexMobject(tex_representation)
         max_width = 0.8*self.plane.unit_to_spatial_width
         if label.get_width() > max_width:
-            label.scale_to_fit_width(max_width)
+            label.set_width(max_width)
         dot_to_label_dir = RIGHT if point[0] > 0 else LEFT
         edge = label.get_edge_center(-dot_to_label_dir)
         buff = 0.1
@@ -233,7 +233,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         #     tex_parts = tex_representation.split("-")
         # x_label, y_label = map(TexMobject, tex_parts)
         # for label in x_label, y_label:
-        #     label.scale_to_fit_height(0.5)
+        #     label.set_height(0.5)
         # x_label.next_to(x_line, point[1]*DOWN/abs(point[1]))
         # y_label.next_to(y_line, point[0]*RIGHT/abs(point[0]))
         norm = np.linalg.norm(point)

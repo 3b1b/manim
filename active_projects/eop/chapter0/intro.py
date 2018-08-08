@@ -21,7 +21,7 @@ class Introduction(TeacherStudentsScene):
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(FRAME_HEIGHT)
+        this_video.set_height(FRAME_HEIGHT)
         self.this_video = this_video
 
 

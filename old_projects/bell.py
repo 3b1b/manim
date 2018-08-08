@@ -1473,7 +1473,7 @@ class VennDiagramProofByContradiction(Scene):
         #Split to hundred
         photons = VGroup(*[photon.deepcopy() for x in range(100)])
         self.arrange_photons_in_circle(photons)
-        photons.scale_to_fit_height(6)
+        photons.set_height(6)
         photons.next_to(words, DOWN)
         photons.to_edge(LEFT)
 
@@ -1555,7 +1555,7 @@ class VennDiagramProofByContradiction(Scene):
             MoveToTarget(A),
             MoveToTarget(A.label),
             FadeOut(self.photon_words),
-            self.photons.scale_to_fit_height,
+            self.photons.set_height,
                 0.85*A.target.get_height(),
             self.photons.space_out_submobjects, 0.8,
             self.photons.move_to, A.target,
@@ -2016,7 +2016,7 @@ class VennDiagramProofByContradiction(Scene):
         for i in range(len(photons) - len(pairs)):
             pairs.append(rejected.pop())
         for photon, (x, y) in zip(photons, pairs):
-            photon.scale_to_fit_width(0.7)
+            photon.set_width(0.7)
             photon.move_to(x*RIGHT + y*UP)
         return photons
 

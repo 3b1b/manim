@@ -179,7 +179,7 @@ class FathersOfCalculus(Scene):
         men = Mobject()
         for name in self.names:
             image = ImageMobject(name, invert = False)
-            image.scale_to_fit_height(self.picture_height)
+            image.set_height(self.picture_height)
             title = TextMobject(name)
             title.scale(0.8)
             title.next_to(image, DOWN)
@@ -559,7 +559,7 @@ class ShowSpeedometer(IntroduceCar):
             vect = rotate_vector(RIGHT, angle)
             tick = Line((1-self.tick_length)*vect, vect)
             label = TexMobject(str(10*index))
-            label.scale_to_fit_height(self.tick_length)
+            label.set_height(self.tick_length)
             label.shift((1+self.tick_length)*vect)
             speedometer.add(tick, label)
 
@@ -590,7 +590,7 @@ class ShowSpeedometer(IntroduceCar):
 
         speedometer.save_state()
         speedometer.rotate(-np.pi/2, UP)
-        speedometer.scale_to_fit_height(self.car.get_height()/4)
+        speedometer.set_height(self.car.get_height()/4)
         speedometer.move_to(self.car)
         speedometer.shift((self.car.get_width()/4)*RIGHT)
 
@@ -1723,7 +1723,7 @@ class TCubedExample(SecantLineToTangentLine):
                 - 2^3
             }{dt}
         """)
-        expression.scale_to_fit_width(
+        expression.set_width(
             VGroup(self.lhs, self.rhs).get_width()
         )
         expression.next_to(
@@ -1964,7 +1964,7 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
         self.wait(3)
 
         series = VideoSeries()
-        series.scale_to_fit_width(FRAME_WIDTH-1)
+        series.set_width(FRAME_WIDTH-1)
         series.to_edge(UP)
         this_video = series[1]
         next_video = series[2]
@@ -2012,7 +2012,7 @@ class ContrastConcreteDtWithLimit(Scene):
             l_formula[27:29],
             l_formula[35:37],
         )).set_color(TIME_COLOR)
-        l_formula.scale_to_fit_width(FRAME_X_RADIUS-MED_LARGE_BUFF)
+        l_formula.set_width(FRAME_X_RADIUS-MED_LARGE_BUFF)
         l_formula.to_edge(LEFT)
 
         l_brace = Brace(l_formula, DOWN)
@@ -2399,7 +2399,7 @@ class TinyMovement(ZoomedScene):
 class NextVideos(TeacherStudentsScene):
     def construct(self):
         series = VideoSeries()
-        series.scale_to_fit_width(FRAME_WIDTH - 1)
+        series.set_width(FRAME_WIDTH - 1)
         series.to_edge(UP)
         series[1].set_color(YELLOW)
         self.add(series)
@@ -2475,7 +2475,7 @@ class Promotion(PiCreatureScene):
         url_rect.stretch_in_place(1.1, dim = 1)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(4.5)
+        rect.set_height(4.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
         mathy = Mathematician()
@@ -2564,7 +2564,7 @@ class Thumbnail(SecantLineToTangentLine):
         VGroup(*self.get_mobjects()).fade(0.4)
 
         title = TextMobject("Derivative paradox")
-        title.scale_to_fit_width(FRAME_WIDTH-1)
+        title.set_width(FRAME_WIDTH-1)
         title.to_edge(UP)
         title.add_background_rectangle()
         title.set_color_by_gradient(GREEN, YELLOW)

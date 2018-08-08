@@ -68,7 +68,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         you.hand.save_state()
         you.hand.generate_target()
         for card in you.hand.target:
-            card.scale_to_fit_height(community_cards.get_height())
+            card.set_height(community_cards.get_height())
 
         selected_community_cards = VGroup(*filter(
             lambda card : card.numerical_value >= 10,
@@ -142,7 +142,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             q_mark = TexMobject("?")
             heart_q = VGroup(heart, q_mark)
             for mob in heart_q:
-                mob.scale_to_fit_height(0.5)
+                mob.set_height(0.5)
             heart_q.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
             heart_q.move_to(target)
             heart_qs.add(heart, q_mark)
@@ -2053,7 +2053,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
 
     def play_notes(self, guitar):
         note = SVGMobject(file_name = "8th_note")
-        note.scale_to_fit_height(0.5)
+        note.set_height(0.5)
         note.set_stroke(width = 0)
         note.set_fill(BLUE, 1)
         note.move_to(guitar)
@@ -2233,7 +2233,7 @@ class Thumbnail(SampleSpaceScene):
             label.scale(1.5)
 
         sample_space = self.get_sample_space()
-        sample_space.scale_to_fit_height(4.5)
+        sample_space.set_height(4.5)
         sample_space.divide_horizontally(0.3)
         sample_space[0].divide_vertically(0.8, colors = [GREEN, BLUE])
         sample_space[1].divide_vertically(0.3, colors = [GREEN_E, BLUE_E])

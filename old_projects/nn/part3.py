@@ -19,7 +19,7 @@ class LayOutPlan(Scene):
         self.add(items)
 
         rect = ScreenRectangle()
-        rect.scale_to_fit_width(FRAME_WIDTH - items.get_width() - 2)
+        rect.set_width(FRAME_WIDTH - items.get_width() - 2)
         rect.next_to(items, RIGHT, MED_LARGE_BUFF)
 
         self.play(
@@ -306,7 +306,7 @@ class InterpretGradientComponents(GradientNudging):
         grad_terms.generate_target()
         grad_terms.target[len(grad_terms)/2].rotate(np.pi/2)
         grad_terms.target.arrange_submobjects(RIGHT)
-        grad_terms.target.scale_to_fit_width(cost_expression.get_width())
+        grad_terms.target.set_width(cost_expression.get_width())
         grad_terms.target.next_to(cost_expression, DOWN)
 
         words = TextMobject("Nudge weights")
@@ -522,7 +522,7 @@ class ShowAveragingCost(PreviewLearning):
         if hasattr(self, "curr_image"):
             self.remove(self.curr_image)
         image = MNistMobject(train_in)
-        image.scale_to_fit_height(self.image_height)
+        image.set_height(self.image_height)
         image.next_to(
             self.network_mob.layers[0].neurons, UP,
             aligned_edge = LEFT
@@ -672,7 +672,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         for neuron in neurons:
             activation = neuron.get_fill_opacity()
             decimal = DecimalNumber(activation, num_decimal_places = 1)
-            decimal.scale_to_fit_width(0.7*neuron.get_width())
+            decimal.set_width(0.7*neuron.get_width())
             decimal.move_to(neuron)
             if activation > 0.8:
                 decimal.set_color(BLACK)
@@ -1390,7 +1390,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
 class WriteHebbian(Scene):
     def construct(self):
         words = TextMobject("Hebbian theory")
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
         self.play(Write(words))
         self.wait()
@@ -1405,7 +1405,7 @@ class NotANeuroScientist(TeacherStudentsScene):
         asterisks.set_color(BLUE)
 
         brain = SVGMobject(file_name = "brain")
-        brain.scale_to_fit_height(1.5)
+        brain.set_height(1.5)
         self.add(brain)
         double_arrow = DoubleArrow(LEFT, RIGHT)
         double_arrow.next_to(brain, RIGHT)
@@ -1413,7 +1413,7 @@ class NotANeuroScientist(TeacherStudentsScene):
         q_marks.next_to(double_arrow, UP)
 
         network = NetworkMobject(Network(sizes = [6, 4, 4, 5]))
-        network.scale_to_fit_height(1.5)
+        network.set_height(1.5)
         network.next_to(double_arrow, RIGHT)
 
         group = VGroup(brain, double_arrow, q_marks, network)
@@ -1776,7 +1776,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
 
     def get_example(self, in_vect, index):
         result = MNistMobject(in_vect)
-        result.scale_to_fit_height(self.image_height)
+        result.set_height(self.image_height)
 
         eyes = Eyes(result, height = self.eyes_height)
         result.eyes = eyes
@@ -1992,14 +1992,14 @@ class OrganizeDataIntoMiniBatches(Scene):
             MNistMobject(
                 t[0],
                 rect_kwargs = {"stroke_width" : 2}
-            ).scale_to_fit_height(height)
+            ).set_height(height)
             for t in training_data[:n_examples]
         ])
         # return Group(*[
         #     Square(
         #         color = BLUE, 
         #         stroke_width = 2
-        #     ).scale_to_fit_height(height)
+        #     ).set_height(height)
         #     for x in range(n_examples)
         # ])
 
@@ -3346,7 +3346,7 @@ class SimplestNetworkExample(PreviewLearning):
         lb.next_to(terms, LEFT, buff = SMALL_BUFF)
         rb.next_to(terms, RIGHT, buff = SMALL_BUFF)
         vect = VGroup(lb, terms, rb)
-        vect.scale_to_fit_height(5)
+        vect.set_height(5)
         lhs = TexMobject("\\nabla C", "=")
         lhs[0].set_color(RED)
         lhs.next_to(vect, LEFT)
@@ -3614,7 +3614,7 @@ class SimplestNetworkExample(PreviewLearning):
     def get_neuron_activation_decimal(self, neuron):
         opacity = neuron.get_fill_opacity()
         decimal = DecimalNumber(opacity, num_decimal_places = 2)
-        decimal.scale_to_fit_width(0.85*neuron.get_width())
+        decimal.set_width(0.85*neuron.get_width())
         if decimal.number > 0.8:
             decimal.set_fill(BLACK)
         decimal.move_to(neuron)

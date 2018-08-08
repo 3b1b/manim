@@ -83,7 +83,7 @@ class UtilitiesPuzzleScene(Scene):
         houses = VGroup()
         for x in range(3):
             house = SVGMobject(file_name = "house")
-            house.scale_to_fit_height(self.object_height)
+            house.set_height(self.object_height)
             house.set_fill(LIGHT_GREY)
             house.move_to(x*self.h_distance*RIGHT)
             houses.add(house)
@@ -125,7 +125,7 @@ class UtilitiesPuzzleScene(Scene):
             utility.set_fill(DARK_GREY)
         utility.move_to(circle)
         circle.add(utility)
-        circle.scale_to_fit_height(self.object_height)
+        circle.set_height(self.object_height)
         return circle
 
     def get_line(
@@ -267,7 +267,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
 
         cube = Cube()
         cube.set_stroke(WHITE, 2)
-        cube.scale_to_fit_height(0.75)
+        cube.set_height(0.75)
         cube.pose_at_angle()
         cube.next_to(eulers, UP)
 
@@ -362,7 +362,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
         self.play(
             LaggedStart(DrawBorderThenFill, houses),
             LaggedStart(GrowFromCenter, utilities),
-            try_it.scale_to_fit_width, house.get_width(),
+            try_it.set_width, house.get_width(),
             try_it.fade, 1,
             try_it.move_to, house,
             self.pi_creature.change, "happy",
@@ -1209,7 +1209,7 @@ class LightUpNodes(IntroduceRegions):
             stroke_width = 0,
             stroke_color = BLACK,
         )
-        line.scale_to_fit_width(0.5*vertex.get_width())
+        line.set_width(0.5*vertex.get_width())
         line.next_to(ORIGIN, buff = 0.75*vertex.get_width())
         lines = VGroup(*[
             line.copy().rotate(angle)
@@ -1329,7 +1329,7 @@ class ConcludeFiveRegions(LightUpNodes):
             lines.generate_target()
             for line in lines.target:
                 line.rotate(-line.get_angle())
-                line.scale_to_fit_width(1.5)
+                line.set_width(1.5)
             lines.target.arrange_submobjects(DOWN)
             line_sets.target.add(lines.target)
         line_sets.target.arrange_submobjects(DOWN)

@@ -210,7 +210,7 @@ def get_charged_particles(color, sign, radius=0.1):
     )
     sign = TexMobject(sign)
     sign.set_stroke(WHITE, 1)
-    sign.scale_to_fit_width(0.5 * result.get_width())
+    sign.set_width(0.5 * result.get_width())
     sign.move_to(result)
     result.add(sign)
     return result
@@ -597,7 +597,7 @@ class ShowWritingTrajectory(TeacherStudentsScene):
         prev_words.next_to(arrow, RIGHT)
 
         screen.generate_target()
-        screen.target.scale_to_fit_height(3.75)
+        screen.target.set_height(3.75)
         screen.target.to_corner(UR)
         complex_words = TextMobject("Complex derivatives")
         complex_words.next_to(
@@ -1632,7 +1632,7 @@ class ThreeDVectorFieldEquation(Scene):
             "xz",
             "xy",
         ])
-        vector.scale_to_fit_height(FRAME_HEIGHT - 1)
+        vector.set_height(FRAME_HEIGHT - 1)
         self.add(vector)
 
 
@@ -1651,7 +1651,7 @@ class TotallyToScale(Scene):
         words = TextMobject(
             "Totally drawn to scale. \\\\ Don't even worry about it."
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.add_background_rectangle()
         self.add(words)
         self.wait()
@@ -2444,7 +2444,7 @@ class IntroduceCurl(IntroduceVectorField):
         ])
         if clockwise:
             result.flip()
-        result.scale_to_fit_width(width)
+        result.set_width(width)
         return result
 
 
@@ -2896,7 +2896,7 @@ class IllustrateGaussLaw(DefineDivergence, MovingCameraScene):
 
     def zoom_in(self):
         self.play(
-            self.camera_frame.scale_to_fit_width, self.final_frame_width,
+            self.camera_frame.set_width, self.final_frame_width,
             run_time=2
         )
 
@@ -3019,7 +3019,7 @@ class ShowTwoPopulations(Scene):
         fox, rabbit = examples = VGroup(foxes[0], rabbits[0])
         for mob in examples:
             mob.save_state()
-            mob.scale_to_fit_height(3)
+            mob.set_height(3)
         examples.arrange_submobjects(LEFT, buff=2)
 
         preditor, prey = words = VGroup(
@@ -3209,7 +3209,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
 
         axes_labels = self.axes_labels = VGroup(*[
             VGroup(
-                method().scale_to_fit_height(0.75),
+                method().set_height(0.75),
                 TextMobject("Population"),
             ).arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
             for method in (self.get_rabbit, self.get_fox)
@@ -3308,7 +3308,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         for char, animal in zip(variables, animals):
             for part in equations.get_parts_by_tex(char):
                 animal_copy = animal.copy()
-                animal_copy.scale_to_fit_height(0.5)
+                animal_copy.set_height(0.5)
                 animal_copy.move_to(part, DL)
                 Transform(part, animal_copy).update(1)
 
@@ -3719,7 +3719,7 @@ class NablaNotation(PiCreatureScene, MovingCameraScene):
 
         self.add(screen_rect)
         self.play(
-            self.camera_frame.scale_to_fit_height, FRAME_HEIGHT + 3,
+            self.camera_frame.set_height, FRAME_HEIGHT + 3,
             Write(words, rate_func=squish_rate_func(smooth, 0.3, 1)),
             run_time=2,
         )
@@ -3775,7 +3775,7 @@ class ShowDotProduct(MovingCameraScene):
             include_background_rectangle=True,
         )
 
-        self.camera_frame.scale_to_fit_height(4)
+        self.camera_frame.set_height(4)
         self.camera_frame.move_to(DL, DL)
         self.add(plane)
         self.add(dot_product, dot_product_value_update)
@@ -4594,7 +4594,7 @@ class ThoughtsOnAds(Scene):
         vcb_group.to_edge(RIGHT)
 
         knob = RegularPolygon(n=3, start_angle=-90 * DEGREES)
-        knob.scale_to_fit_height(0.25)
+        knob.set_height(0.25)
         knob.set_stroke(width=0)
         knob.set_fill(YELLOW, 1)
         knob.move_to(line.get_left(), DOWN)

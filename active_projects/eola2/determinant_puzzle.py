@@ -60,7 +60,7 @@ class WorkOutNumerically(Scene):
         ))
         equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
         eq_parts.get_part_by_tex("=").shift(0.2 * SMALL_BUFF * DOWN)
-        equation.scale_to_fit_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        equation.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         equation.next_to(self.original_equation, DOWN, MED_LARGE_BUFF)
 
         self.play(LaggedStart(FadeIn, equation))
@@ -132,7 +132,7 @@ class WorkOutNumerically(Scene):
             TexMobject("-15"),
         )
         group.arrange_submobjects(DOWN, buff=2 * SMALL_BUFF)
-        # group.scale_to_fit_height(0.4*FRAME_HEIGHT)
+        # group.set_height(0.4*FRAME_HEIGHT)
         group.next_to(self.equation_with_numbers, DOWN)
         group.shift(FRAME_WIDTH * LEFT / 4)
 

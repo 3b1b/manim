@@ -272,9 +272,9 @@ class SVGMobject(VMobject):
         if self.should_center:
             self.center()
         if self.height is not None:
-            self.scale_to_fit_height(self.height)
+            self.set_height(self.height)
         if self.width is not None:
-            self.scale_to_fit_width(self.width)
+            self.set_width(self.width)
 
 
 class VMobjectFromSVGPathstring(VMobject):

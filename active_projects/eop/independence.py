@@ -153,9 +153,9 @@ class DangerInProbability(Scene):
     def get_warning_sign(self):
         triangle = RegularPolygon(n = 3, start_angle = np.pi/2)
         triangle.set_stroke(RED, 12)
-        triangle.scale_to_fit_height(2)
+        triangle.set_height(2)
         bang = TextMobject("!")
-        bang.scale_to_fit_height(0.6*triangle.get_height())
+        bang.set_height(0.6*triangle.get_height())
         bang.move_to(interpolate(
             triangle.get_bottom(),
             triangle.get_top(),
@@ -360,7 +360,7 @@ class IntroduceBinomial(Scene):
 
     def add_p_slider(self):
         interval = UnitInterval(color = LIGHT_GREY)
-        interval.scale_to_fit_width(4)
+        interval.set_width(4)
         interval.next_to(
             VGroup(self.bar_chart.x_axis, self.bar_chart.y_axis), 
             UP, MED_LARGE_BUFF
@@ -372,7 +372,7 @@ class IntroduceBinomial(Scene):
             fill_color = YELLOW,
             fill_opacity = 1,
         )
-        triangle.scale_to_fit_height(0.25)
+        triangle.set_height(0.25)
         triangle.move_to(interval.number_to_point(self.p), DOWN)
         label = TexMobject("p")
         label.next_to(triangle, UP, SMALL_BUFF)
@@ -500,7 +500,7 @@ class IntroduceQuiz(PiCreatureScene):
 
         self.play(
             LaggedStart(FadeIn, probabilities, run_time = 3),
-            self.quiz.scale_to_fit_height, 0.7*self.randy.get_height(),
+            self.quiz.set_height, 0.7*self.randy.get_height(),
             self.quiz.next_to, self.randy, RIGHT,
             self.randy.change, "confused", probabilities
         )
@@ -519,7 +519,7 @@ class IntroduceQuiz(PiCreatureScene):
         )
         chart.to_edge(RIGHT)
         for short_p, bar in zip(self.abbreviated_probabilities, chart.bars):
-            short_p.scale_to_fit_width(1.75*bar.get_width())
+            short_p.set_width(1.75*bar.get_width())
             short_p.next_to(bar, UP)
 
         self.play(
@@ -733,7 +733,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
 class BeforeCounting(TeacherStudentsScene):
     def construct(self):
         triangle = PascalsTriangle(nrows = 7)
-        triangle.scale_to_fit_height(4)
+        triangle.set_height(4)
         triangle.next_to(self.teacher, UP+LEFT)
 
         prob = get_probability_of_slot_group([True, True, False])
@@ -1156,7 +1156,7 @@ class ThousandPossibleQuizzes(Scene):
             quiz[0].set_color(GREEN)
 
         line = Line(UP, DOWN, color = YELLOW)
-        line.scale_to_fit_height(self.quizzes.get_height())
+        line.set_height(self.quizzes.get_height())
         line.next_to(bottom_movers.target, LEFT, MED_LARGE_BUFF, UP)
 
         self.revert_to_original_skipping_status()
@@ -1227,7 +1227,7 @@ class ThousandPossibleQuizzes(Scene):
 
         rows.arrange_submobjects(DOWN, buff = SMALL_BUFF)
         quizzes = VGroup(*it.chain(*rows))
-        quizzes.scale_to_fit_height(self.quizzes_height)
+        quizzes.set_height(self.quizzes_height)
         quizzes.to_edge(RIGHT)
         quizzes.shift(MED_LARGE_BUFF*DOWN)
         return quizzes
@@ -1241,7 +1241,7 @@ class ExampleConditional(Scene):
         rhs.set_color_by_tex("0.925", YELLOW)
         rhs.next_to(prob, RIGHT)
         expression = VGroup(prob, rhs)
-        expression.scale_to_fit_width(FRAME_WIDTH - 1)
+        expression.set_width(FRAME_WIDTH - 1)
         expression.center().to_edge(DOWN)
 
         self.play(Write(expression))
@@ -1281,7 +1281,7 @@ class WritePSecond(Scene):
         rhs = TexMobject("= 0.8")
         rhs.next_to(prob, RIGHT)
         prob.add(rhs)
-        prob.scale_to_fit_width(FRAME_WIDTH - 1)
+        prob.set_width(FRAME_WIDTH - 1)
         prob.center().to_edge(DOWN)
         self.play(Write(prob))
 
@@ -1757,7 +1757,7 @@ class ShowFullDistribution(Scene):
         ])
         for term, bar in zip(new_p_terms, chart.bars):
             term[1].set_color(YELLOW)
-            term.scale_to_fit_width(1.5*bar.get_width())
+            term.set_width(1.5*bar.get_width())
             term.next_to(bar, UP)
 
         self.play(
@@ -2523,7 +2523,7 @@ class CycleThroughPatterns(NameBinomial):
         )
         question.set_color_by_tex("male", BLUE)
         question.set_color_by_tex("female", MAROON_B)
-        question.scale_to_fit_width(FRAME_WIDTH - 1)
+        question.set_width(FRAME_WIDTH - 1)
         question.to_edge(UP, buff = LARGE_BUFF)
         self.add(question)
 
@@ -2797,7 +2797,7 @@ class GeneralBinomialDistributionValues(Scene):
 
     def compare_to_pascal_row(self):
         triangle = PascalsTriangle(nrows = 11)
-        triangle.scale_to_fit_width(6)
+        triangle.set_width(6)
         triangle.to_corner(UP+RIGHT)
         last_row = VGroup(*[
             triangle.coords_to_mobs[10][k]
@@ -2892,7 +2892,7 @@ class GeneralBinomialDistributionValues(Scene):
     def play_with_p_value(self):
         p = self.p
         interval = UnitInterval(color = WHITE)
-        interval.scale_to_fit_width(5)
+        interval.set_width(5)
         interval.next_to(self.full_probability, DOWN, LARGE_BUFF)
         interval.add_numbers(0, 0.5, 1)
         triangle = RegularPolygon(
@@ -2901,7 +2901,7 @@ class GeneralBinomialDistributionValues(Scene):
             fill_opacity = 1,
             stroke_width = 0,
         )
-        triangle.scale_to_fit_height(0.25)
+        triangle.set_height(0.25)
         triangle.move_to(interval.number_to_point(p), DOWN)
         p_mob = TexMobject("p")
         p_mob.set_color(MAROON_B)
@@ -3187,7 +3187,7 @@ class AssumeOrderDoesntMatter(Scene):
             prob_group.arrange_submobjects(RIGHT)
             max_width = FRAME_WIDTH - 1
             if prob_group.get_width() > max_width:
-                prob_group.scale_to_fit_width(max_width)
+                prob_group.set_width(max_width)
         prob_groups.arrange_submobjects(DOWN, buff = 0.7)
         prob_groups.next_to(self.title, DOWN, MED_LARGE_BUFF)
 
@@ -3414,7 +3414,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
             values = values_list[-1],
             bar_names = k_range
         )
-        chart.scale_to_fit_height(self.chart_height)
+        chart.set_height(self.chart_height)
         chart.values_list = values_list
         return chart
 
@@ -3430,7 +3430,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
             bar_names = k_range,
             bar_colors = [RED, YELLOW]
         )
-        chart.scale_to_fit_height(self.chart_height)
+        chart.set_height(self.chart_height)
         title = TextMobject(
             "Poisson distribution \\\\",
             "$e^{-\\lambda}\\frac{\\lambda^k}{k!}$"
@@ -3452,7 +3452,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
             fill_opacity = 1,
             stroke_color = BLUE,
         )
-        graph.scale_to_fit_width(axes.get_width())
+        graph.set_width(axes.get_width())
         graph.move_to(axes[0], DOWN)
 
         title = TextMobject(
@@ -3546,7 +3546,7 @@ class Thumbnail(DangerInProbability):
 
 
         warning = self.get_warning_sign()
-        warning.scale_to_fit_height(2)
+        warning.set_height(2)
         warning.to_edge(UP)
         self.add(warning)
 

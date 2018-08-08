@@ -244,7 +244,7 @@ class NetworkMobject(VGroup):
         self.output_labels = VGroup()
         for n, neuron in enumerate(self.layers[-1].neurons):
             label = TexMobject(str(n))
-            label.scale_to_fit_height(0.75*neuron.get_height())
+            label.set_height(0.75*neuron.get_height())
             label.move_to(neuron)
             label.shift(neuron.get_width()*RIGHT)
             self.output_labels.add(label)
@@ -347,12 +347,12 @@ class ExampleThrees(PiCreatureScene):
 
         bubble = randy.get_bubble(height = 4, width = 6)
         three_mob.generate_target()
-        three_mob.target.scale_to_fit_height(1)
+        three_mob.target.set_height(1)
         three_mob.target.next_to(bubble[-1].get_left(), RIGHT, LARGE_BUFF)
         arrow = Arrow(LEFT, RIGHT, color = BLUE)
         arrow.next_to(three_mob.target, RIGHT)
         real_three = TexMobject("3")
-        real_three.scale_to_fit_height(0.8)
+        real_three.set_height(0.8)
         real_three.next_to(arrow, RIGHT)
 
         self.play(
@@ -407,7 +407,7 @@ class ExampleThrees(PiCreatureScene):
 
         alt_threes = VGroup(*self.three_mobs[1:])
         alt_threes.arrange_submobjects(DOWN)
-        alt_threes.scale_to_fit_height(FRAME_HEIGHT - 2)
+        alt_threes.set_height(FRAME_HEIGHT - 2)
         alt_threes.to_edge(RIGHT)
 
         for alt_three in alt_threes:
@@ -452,7 +452,7 @@ class ExampleThrees(PiCreatureScene):
         equals.move_to(self.arrow)
         for three, vect in (left_three, LEFT), (right_three, RIGHT):
             three.generate_target()
-            three.target.scale_to_fit_height(1)
+            three.target.set_height(1)
             three.target.next_to(equals, vect)
 
         self.play(
@@ -518,7 +518,7 @@ class ExampleThrees(PiCreatureScene):
 class BrainAndHow(Scene):
     def construct(self):
         brain = SVGMobject(file_name = "brain")
-        brain.scale_to_fit_height(2)
+        brain.set_height(2)
         brain.set_fill(LIGHT_GREY)
         brain_outline = brain.copy()
         brain_outline.set_fill(opacity = 0)
@@ -546,7 +546,7 @@ class WriteAProgram(Scene):
         im_mob = ImageMobject(layer_to_image_array(three_array))
         three = PixelsAsSquares(im_mob)
         three.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
-        three.scale_to_fit_height(6)
+        three.set_height(6)
         three.next_to(ORIGIN, LEFT)
         three_rect = SurroundingRectangle(
             three, 
@@ -564,7 +564,7 @@ class WriteAProgram(Scene):
             num.set_stroke(width = 1)
             color = rgba_to_color(1 - (rgb + 0.2)/1.2)
             num.set_color(color)
-            num.scale_to_fit_width(0.7*square.get_width())
+            num.set_width(0.7*square.get_width())
             num.move_to(square)
             numbers.add(num)
 
@@ -573,7 +573,7 @@ class WriteAProgram(Scene):
 
         choices = VGroup(*[TexMobject(str(n)) for n in range(10)])
         choices.arrange_submobjects(DOWN)
-        choices.scale_to_fit_height(FRAME_HEIGHT - 1)
+        choices.set_height(FRAME_HEIGHT - 1)
         choices.next_to(arrow, RIGHT)
 
         self.play(
@@ -747,12 +747,12 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             VideoIcon().set_fill(RED)
             for x in range(2)
         ])
-        videos.scale_to_fit_height(1.5)
+        videos.set_height(1.5)
         videos.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         videos.next_to(self.students, UP, LARGE_BUFF)
 
         network_mob.generate_target()
-        network_mob.target.scale_to_fit_height(0.8*videos[0].get_height())
+        network_mob.target.set_height(0.8*videos[0].get_height())
         network_mob.target.move_to(videos[0])
         learning.generate_target()
         learning.target.next_to(videos[1], UP)
@@ -854,7 +854,7 @@ class AlternateNeuralNetworks(PiCreatureScene):
             ex[0].next_to(arrow, LEFT)
             ex[1].next_to(arrow, RIGHT)
             ex.submobjects.insert(1, arrow)
-        examples.scale_to_fit_width(FRAME_WIDTH - 1)
+        examples.set_width(FRAME_WIDTH - 1)
         examples.next_to(morty, UP).to_edge(RIGHT)
 
         maybe_words = TextMobject("Maybe future videos?")
@@ -946,7 +946,7 @@ class BreakDownName(Scene):
         self.add(name)
         self.play(randy.change, "pondering")
         self.play(
-            brain.scale_to_fit_height, 2,
+            brain.set_height, 2,
             brain.shift, 2*UP,
             brain.set_fill, None, 1,
             randy.look, UP
@@ -996,7 +996,7 @@ class BreakDownName(Scene):
         neuron = Circle(radius = 0.35, color = BLUE)
         neuron.next_to(neuron_word, UP, MED_LARGE_BUFF)
         num = TexMobject("0.2")
-        num.scale_to_fit_width(0.7*neuron.get_width())
+        num.set_width(0.7*neuron.get_width())
         num.move_to(neuron)
         num.save_state()
         num.move_to(description.get_right())
@@ -1052,7 +1052,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         self.image_map = get_organized_images()
         image = self.image_map[9][0]
         image_mob = PixelsFromVect(image)
-        image_mob.scale_to_fit_height(4)
+        image_mob.set_height(4)
         image_mob.next_to(ORIGIN, LEFT)
         rect = SurroundingRectangle(image_mob, color = BLUE)
         neurons = VGroup()
@@ -1114,7 +1114,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         for neuron in neurons:
             o = neuron.get_fill_opacity()
             num = DecimalNumber(o, num_decimal_places = 1)
-            num.scale_to_fit_width(0.7*neuron.get_width())
+            num.set_width(0.7*neuron.get_width())
             num.move_to(neuron)
             if o > 0.8:
                 num.set_fill(BLACK)
@@ -1125,7 +1125,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 example_neuron.save_state()
                 example_num.save_state()
         example_neuron.generate_target()
-        example_neuron.target.scale_to_fit_height(1.5)
+        example_neuron.target.set_height(1.5)
         example_neuron.target.next_to(neurons, RIGHT)
         example_num.target = DecimalNumber(
             example_neuron.get_fill_opacity()
@@ -1300,7 +1300,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         for layer in hidden_layers:
             for neuron in layer.neurons:
                 q_mark = TextMobject("?")
-                q_mark.scale_to_fit_height(0.8*neuron.get_height())
+                q_mark.set_height(0.8*neuron.get_height())
                 q_mark.move_to(neuron)
                 q_marks.add(q_mark)
         q_marks.set_color_by_gradient(BLUE, YELLOW)
@@ -1332,7 +1332,7 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
             layer_to_layer_buff = 2.5,
             neuron_stroke_color = WHITE,
         )
-        network_mob.scale_to_fit_height(4)
+        network_mob.set_height(4)
         network_mob.to_edge(UP, buff = LARGE_BUFF)
         layers = VGroup(*network_mob.layers[1:3])
         rects = VGroup(*map(SurroundingRectangle, layers))
@@ -1646,7 +1646,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         layer = network_mob.layers[-2]
         patterns.generate_target()
         for pattern, neuron in zip(patterns.target, layer.neurons):
-            pattern.scale_to_fit_height(neuron.get_height())
+            pattern.set_height(neuron.get_height())
             pattern.next_to(neuron, RIGHT, SMALL_BUFF)
         for pattern in patterns[5:]:
             pattern.fade(1)
@@ -1795,7 +1795,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             edge.save_state()
             edge[1].set_opacity(0)
         equation = self.get_equation(loop.target, *edges.target)
-        equation.scale_to_fit_width(FRAME_WIDTH - 1)
+        equation.set_width(FRAME_WIDTH - 1)
         equation.to_edge(UP)
         symbols = VGroup(*equation[1::2])
 
@@ -1839,7 +1839,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             for mob in edge:
                 mob.set_color(color)
         equation = self.get_equation(line, *edges)
-        equation.scale_to_fit_height(self.loop_equation.get_height())
+        equation.set_height(self.loop_equation.get_height())
         equation.next_to(
             self.loop_equation, DOWN, MED_LARGE_BUFF, LEFT
         )
@@ -1899,7 +1899,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             for im in images
         ]
         self.nine = MNistMobject(nine_array.flatten())
-        self.nine.scale_to_fit_height(1.5)
+        self.nine.set_height(1.5)
         self.nine[0].set_color(WHITE)
         make_transparent(self.nine[1])
         self.nine.next_to(layers[0].neurons, UP)
@@ -1980,7 +1980,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             neuron.rotate(3*np.pi/4)
             neuron.move_to(pixel)
             neurons.add(neuron)
-        neurons.scale_to_fit_height(2)
+        neurons.set_height(2)
         neurons.space_out_submobjects(1.2)
         neurons.next_to(network_mob, LEFT)
         self.set_neurons_target(neurons, layers[0])
@@ -2088,7 +2088,7 @@ class EdgeDetection(Scene):
         edges_array = get_edges(lion.pixel_array)
         edges = ImageMobject(edges_array)
         group = Group(lion, edges)
-        group.scale_to_fit_height(4)
+        group.set_height(4)
         group.arrange_submobjects(RIGHT)
         lion_copy = lion.copy()
 
@@ -2122,7 +2122,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             word
         )
         sequence.arrange_submobjects(RIGHT)
-        sequence.scale_to_fit_width(FRAME_WIDTH - 1)
+        sequence.set_width(FRAME_WIDTH - 1)
         sequence.to_edge(UP)
 
         audio_label.next_to(audio, DOWN)
@@ -2182,7 +2182,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
         ])
         result.set_stroke(width = 2)
         result.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
-        result.scale_to_fit_height(1)
+        result.set_height(1)
 
         return result
 
@@ -2269,7 +2269,7 @@ class IntroduceWeights(IntroduceEachLayer):
         ))
         pixels.set_stroke(width = 0.5)
         pixels.set_fill(WHITE, 0)
-        pixels.scale_to_fit_height(4)
+        pixels.set_height(4)
         pixels.next_to(neuron, RIGHT, LARGE_BUFF)
         rect = SurroundingRectangle(pixels, color = BLUE)
 
@@ -2344,7 +2344,7 @@ class IntroduceWeights(IntroduceEachLayer):
         self.play(
             Write(question, run_time = 2),
             GrowFromPoint(arrow, arrow.get_start()),
-            pixels_group.scale_to_fit_height, 3,
+            pixels_group.set_height, 3,
             pixels_group.to_edge, RIGHT,
             LaggedStart(FadeIn, p_labels),
             LaggedStart(FadeIn, decimals),
@@ -2787,7 +2787,7 @@ class IncludeBias(IntroduceWeights):
         digit = self.get_digit()
         rect = SurroundingRectangle(digit)
         d_group = VGroup(digit, rect)
-        d_group.scale_to_fit_height(3)
+        d_group.set_height(3)
         d_group.to_edge(RIGHT)
         weight_grid = digit.copy()
         weight_grid.set_fill(BLACK, 0.5)
@@ -2951,7 +2951,7 @@ class BiasForInactiviyWords(Scene):
     def construct(self):
         words = TextMobject("Bias for inactivity")
         words.set_color(BLUE)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
 
         self.play(Write(words))
@@ -3868,7 +3868,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
     def get_brackets(self, mob):
         lb, rb = both = TexMobject("\\big[\\big]")
-        both.scale_to_fit_width(mob.get_width())
+        both.set_width(mob.get_width())
         both.stretch_to_fit_height(1.2*mob.get_height())
         lb.next_to(mob, LEFT, SMALL_BUFF)
         rb.next_to(mob, RIGHT, SMALL_BUFF)
@@ -3900,7 +3900,7 @@ class SigmoidAppliedToVector(Scene):
                 \\sigma(x) \\\\ \\sigma(y) \\\\ \\sigma(z)
             \\end{array}\\right]
         """)
-        tex.scale_to_fit_width(FRAME_WIDTH - 1)
+        tex.set_width(FRAME_WIDTH - 1)
         tex.to_edge(DOWN)
         indices = it.chain(
             [0], range(1, 5), range(16, 16+4),
@@ -3982,7 +3982,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
 
         neuron = self.network_mob.layers[2].neurons[2]
         decimal = DecimalNumber(neuron.get_fill_opacity())
-        decimal.scale_to_fit_width(0.7*neuron.get_width())
+        decimal.set_width(0.7*neuron.get_width())
         decimal.move_to(neuron)
         neuron_group = VGroup(neuron, decimal)
         neuron_group.save_state()
@@ -4158,7 +4158,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
         data_mobs = VGroup()
         for vect, num in test_data[:30]:
             image = MNistMobject(vect)
-            image.scale_to_fit_height(0.7)
+            image.set_height(0.7)
             arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
             num_mob = TexMobject(str(num))
             group = Group(image, arrow, num_mob)
@@ -4184,7 +4184,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
         content = self.content
 
         video = VideoIcon()
-        video.scale_to_fit_height(3)
+        video.set_height(3)
         video.set_fill(RED, 0.8)
         video.next_to(morty, UP+LEFT)
 
@@ -4198,7 +4198,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
         if self.edge_update.internal_time < 1:
             self.edge_update.internal_time = 2
         self.play(
-            content.scale_to_fit_height, 0.8*video.get_height(),
+            content.set_height, 0.8*video.get_height(),
             content.move_to, video,
             morty.change, "raise_right_hand",
             FadeIn(rect),
@@ -4251,14 +4251,14 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
 
         network_mob, rect, video, words = self.video
         network_mob.generate_target(use_deepcopy = True)
-        network_mob.target.scale_to_fit_height(5)
+        network_mob.target.set_height(5)
         network_mob.target.to_corner(UP+LEFT)
         neurons = VGroup(*network_mob.target.layers[-1].neurons[:2])
         neurons.set_stroke(width = 0)
 
         video.generate_target()
         video.target.set_fill(opacity = 1)
-        video.target.scale_to_fit_height(neurons.get_height())
+        video.target.set_height(neurons.get_height())
         video.target.move_to(neurons, LEFT)
 
         self.play(
@@ -4557,7 +4557,7 @@ class Thumbnail(NetworkScene):
     }
     def construct(self):
         network_mob = self.network_mob
-        network_mob.scale_to_fit_height(FRAME_HEIGHT - 1)
+        network_mob.set_height(FRAME_HEIGHT - 1)
         for layer in network_mob.layers:
             layer.neurons.set_stroke(width = 5)
 

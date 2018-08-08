@@ -118,7 +118,7 @@ class TOP(VMobject):
         return value
 
     def put_top_on_vertix(self, index, top):
-        top.scale_to_fit_height(2*self.get_value_height())
+        top.set_height(2*self.get_value_height())
         vertices = np.array(top.get_vertices())
         vertices[index] = 0
         start = reduce(op.add, vertices)/2
@@ -147,7 +147,7 @@ class TOP(VMobject):
         )
 
     def rescale_corner_mobject(self, mobject):
-        mobject.scale_to_fit_height(self.get_value_height())
+        mobject.set_height(self.get_value_height())
         return self
 
     def get_value_height(self):
@@ -280,7 +280,7 @@ class SixDifferentInverses(Scene):
 
         top_rules = get_top_inverse_rules()
         for rule, top_rule in zip(rules, top_rules):
-            top_rule.scale_to_fit_height(1.5)
+            top_rule.set_height(1.5)
             top_rule.center()
             top_rule.shift(rule.get_center())
         self.play(*map(FadeOut, rules))
@@ -760,7 +760,7 @@ class TowerExponentFrame(Scene):
             $7{,}625{,}597{,}484{,}987$.  But with the triangle
             of power, the difference is crystal clear:
         """)
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(UP)
         top1 = TOP(TOP(3, 3), 3)
         top2 = TOP(3, (TOP(3, 3)))

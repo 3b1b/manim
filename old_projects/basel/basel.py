@@ -527,7 +527,7 @@ class IntroScene(PiCreatureScene):
         q_mark.next_to(q_circle)
 
         thought = Group(q_circle, q_mark)
-        q_mark.scale_to_fit_height(0.6 * q_circle.get_height())
+        q_mark.set_height(0.6 * q_circle.get_height())
 
         self.look_at(pi_squared)
         self.pi_creature_thinks(thought,target_mode = "confused",
@@ -1738,7 +1738,7 @@ class BackToEulerSumScene(PiCreatureScene):
                 show_reading = False
         )
         indicator_reading = euler_sum[0]
-        indicator_reading.scale_to_fit_height(0.5 * indicator.get_height())
+        indicator_reading.set_height(0.5 * indicator.get_height())
         indicator_reading.move_to(indicator.get_center())
         indicator.add(indicator_reading)
         indicator.tex_reading = indicator_reading
@@ -1785,7 +1785,7 @@ class BackToEulerSumScene(PiCreatureScene):
             # center it in the indicator
 
             if bubble_indicator_target.tex_reading.get_tex_string() != "1":
-                bubble_indicator_target.tex_reading.scale_to_fit_height(0.8*indicator.get_height())
+                bubble_indicator_target.tex_reading.set_height(0.8*indicator.get_height())
             # the target is less bright, possibly switch to a white text color
             if bubble_indicator_target.intensity < 0.7:
                 bubble_indicator.tex_reading.set_fill(color = WHITE)
@@ -1848,7 +1848,7 @@ class BackToEulerSumScene(PiCreatureScene):
         sum_indicator.set_intensity(intensities[0] * np.pi**2/6)
         sum_indicator_reading = TexMobject("{\pi^2 \over 6}")
         sum_indicator_reading.set_fill(color = BLACK)
-        sum_indicator_reading.scale_to_fit_height(0.8 * sum_indicator.get_height())
+        sum_indicator_reading.set_height(0.8 * sum_indicator.get_height())
         sum_indicator.add(sum_indicator_reading)
         sum_indicator.move_to(collection_point)
 
@@ -3152,7 +3152,7 @@ class PondScene(ThreeDScene):
         # first lighthouse
         original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
         ls0 = LightSource(opacity_function = original_op_func, radius = 15.0, num_levels = 15)
-        ls0.lighthouse.scale_to_fit_height(LIGHTHOUSE_HEIGHT)
+        ls0.lighthouse.set_height(LIGHTHOUSE_HEIGHT)
         ls0.lighthouse.height = LIGHTHOUSE_HEIGHT
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
         self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)

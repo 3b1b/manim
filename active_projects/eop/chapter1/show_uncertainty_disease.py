@@ -12,7 +12,7 @@ class RandyIsSickOrNot(Scene):
 
         
         randy = SicklyPiCreature()
-        randy.scale_to_fit_height(3)
+        randy.set_height(3)
         randy.move_to(2*LEFT)
         randy.change_mode("plain")
         randy.set_color(BLUE)
@@ -70,14 +70,14 @@ class OneIn200HasDisease(Scene):
             ]).arrange_submobjects(DOWN, SMALL_BUFF)
             for x in range(10)
         ]).arrange_submobjects(RIGHT, SMALL_BUFF)
-        all_creatures.scale_to_fit_height(FRAME_HEIGHT * 0.8)
+        all_creatures.set_height(FRAME_HEIGHT * 0.8)
         all_creatures.next_to(title, DOWN)
         randy = all_creatures[0][0]
         all_creatures[0].remove(randy)
         randy.change_mode("sick")
         randy.set_color(SICKLY_GREEN)
         randy.save_state()
-        randy.scale_to_fit_height(3)
+        randy.set_height(3)
         randy.center()
         randy.change_mode("plain")
         randy.set_color(BLUE)

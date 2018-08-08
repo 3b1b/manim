@@ -197,7 +197,7 @@ class WatchingScreen(PiCreatureScene):
 
     def construct(self):
         screen = Rectangle(height = 9, width = 16)
-        screen.scale_to_fit_height(self.screen_height)
+        screen.set_height(self.screen_height)
         screen.to_corner(UP+RIGHT)
 
         self.add(screen)
@@ -432,7 +432,7 @@ class SymmetriesOfSquare(ThreeDScene):
         bottom_squares = VGroup(*all_squares[4:])
         bottom_squares.next_to(top_squares, DOWN, buff = LARGE_BUFF)
 
-        all_squares.scale_to_fit_width(FRAME_WIDTH-2*LARGE_BUFF)
+        all_squares.set_width(FRAME_WIDTH-2*LARGE_BUFF)
         all_squares.center()
         all_squares.to_edge(DOWN, buff = LARGE_BUFF)
 
@@ -592,7 +592,7 @@ class SymmetriesOfSquare(ThreeDScene):
 
     def add_randy_to_square(self, square, mode = "pondering"):
         randy = Randolph(mode = mode)
-        randy.scale_to_fit_height(0.75*square.get_height())
+        randy.set_height(0.75*square.get_height())
         randy.move_to(square)
         square.add(randy)
         square.randy = randy
@@ -642,7 +642,7 @@ class CircleSymmetries(Scene):
         theta_group.next_to(arc_circle, UP)
         def theta_value_update(theta_value, alpha):
             new_theta_value = DecimalNumber(alpha*2*np.pi)
-            new_theta_value.scale_to_fit_height(theta.get_height())
+            new_theta_value.set_height(theta.get_height())
             new_theta_value.next_to(theta, RIGHT)
             Transform(theta_value, new_theta_value).update(1)
             return new_theta_value
@@ -1003,7 +1003,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
                 ).add_tip()
                 for a in (0, np.pi)
             ])
-            arrows.scale_to_fit_height(1.5*cube.get_height())
+            arrows.set_height(1.5*cube.get_height())
             z_to_axis = z_to_vector(axis)
             arrows.apply_function(
                 lambda p : np.dot(p, z_to_axis.T),
@@ -1097,7 +1097,7 @@ class DihedralGroupStructure(SymmetriesOfSquare):
                 "axis" : axis,
             }
         expression.arrange_submobjects()
-        expression.scale_to_fit_width(FRAME_X_RADIUS+1)
+        expression.set_width(FRAME_X_RADIUS+1)
         expression.to_edge(RIGHT, buff = SMALL_BUFF)
         for square in s1, s2, s3:
             square.remove(square.action_illustration)
@@ -1163,7 +1163,7 @@ class ThisIsAVeryGeneralIdea(Scene):
         ]))
         numbers = examples[-1]
         examples.arrange_submobjects(buff = LARGE_BUFF)
-        examples.scale_to_fit_width(FRAME_WIDTH-1)
+        examples.set_width(FRAME_WIDTH-1)
         examples.move_to(UP)
 
         lines = VGroup(*[
@@ -2320,7 +2320,7 @@ class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
         target = self.plane.copy()
         target.apply_complex_function(lambda w : z*w)
         for dot in target.zero_dot, target.one_dot:
-            dot.scale_to_fit_width(2*self.dot_radius)
+            dot.set_width(2*self.dot_radius)
         angle = np.angle(z)
         kwargs["path_arc"] = kwargs.get("path_arc", angle)
         self.play(
@@ -3272,7 +3272,7 @@ class EmeraldLogo(SVGMobject):
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.scale_to_fit_height(1)
+        self.set_height(1)
         for submob in self.split()[18:]:
             submob.set_color(self.helix_color)
 
@@ -3287,7 +3287,7 @@ class ECLPromo(PiCreatureScene):
         logo_part2 = VGroup(*logo[15:])
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5)
+        rect.set_height(5)
         rect.next_to(logo, DOWN)
         rect.to_edge(LEFT)
 

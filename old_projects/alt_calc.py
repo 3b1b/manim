@@ -287,7 +287,7 @@ class NumberlineTransformationScene(ZoomedScene):
         frame.generate_target()
         frame.target.move_to(input_point)
         if zoom_factor:
-            frame.target.scale_to_fit_height(
+            frame.target.set_height(
                 self.zoomed_display.get_height() * zoom_factor
             )
         movement = MoveToTarget(frame)
@@ -360,7 +360,7 @@ class NumberlineTransformationScene(ZoomedScene):
         result.add(result.tick_marks, result.numbers)
         for x in x_values:
             tick_mark = Line(UP, DOWN)
-            tick_mark.scale_to_fit_height(
+            tick_mark.set_height(
                 0.15 * self.zoomed_camera.frame.get_height()
             )
             tick_mark.move_to(line.number_to_point(x))
@@ -454,7 +454,7 @@ class WriteOpeningWords(Scene):
         ]
         words1.next_to(words2, UP, aligned_edge=LEFT, buff=LARGE_BUFF)
         words = VGroup(*it.chain(words1, words2))
-        words.scale_to_fit_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        words.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         words.to_edge(UP)
 
         letter_wait = 0.05
@@ -559,7 +559,7 @@ class StartingCalc101(PiCreatureScene):
 
         rects = images[-1].rects.copy()
         rects.center()
-        rects.scale_to_fit_height(FRAME_HEIGHT - 1)
+        rects.set_height(FRAME_HEIGHT - 1)
         # image = rects.get_image()
         open_cv_image = cv2.imread(get_full_raster_image_path("alt_calc_hidden_image"))
         blurry_iamge = cv2.blur(open_cv_image, (50, 50))
@@ -624,11 +624,11 @@ class StartingCalc101(PiCreatureScene):
         return images
 
     def adjust_size(self, group):
-        group.scale_to_fit_width(min(
+        group.set_width(min(
             group.get_width(),
             self.image_frame_width - 2 * MED_SMALL_BUFF
         ))
-        group.scale_to_fit_height(min(
+        group.set_height(min(
             group.get_height(),
             self.image_frame_height - 2 * MED_SMALL_BUFF
         ))
@@ -696,7 +696,7 @@ class StartingCalc101(PiCreatureScene):
         weight.set_stroke(width=0)
         weight.set_fill(opacity=1)
         weight.color_using_background_image("grey_gradient")
-        weight.scale_to_fit_height(0.4)
+        weight.set_height(0.4)
 
         t_tracker = ValueTracker(0)
         group = VGroup(spring, weight)
@@ -741,7 +741,7 @@ class StartingCalc101(PiCreatureScene):
         creature = self.pi_creature.copy()
         creature.change_mode("angry")
         equation = TexMobject("\\frac{d}{dx}(x^x)")
-        equation.scale_to_fit_height(creature.get_height() / 2)
+        equation.set_height(creature.get_height() / 2)
         equation.next_to(creature, RIGHT, aligned_edge=UP)
         creature.look_at(equation)
         return VGroup(creature, equation)
@@ -758,7 +758,7 @@ class StartingCalc101(PiCreatureScene):
             scene.cube, scene.faces,
             scene.bars, scene.corner_cube,
         )
-        group.scale_to_fit_height(0.75 * creature.get_height())
+        group.set_height(0.75 * creature.get_height())
         group.next_to(creature, RIGHT)
         creature.look_at(group)
         return VGroup(creature, group)
@@ -1067,7 +1067,7 @@ class StandardDerivativeVisual(GraphScene):
         title = self.title = TextMobject("Standard derivative visual")
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        h_line.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         h_line.next_to(title, DOWN)
 
         self.add(title, h_line)
@@ -1869,7 +1869,7 @@ class ZoomInMoreAndMoreToZero(ZoomInOnXSquaredNearZero):
         last_zoom_words = None
         for factor in 0.1, 0.01, 0.001, 0.0001:
             frame.save_state()
-            frame.scale_to_fit_height(factor * zoomed_display_height)
+            frame.set_height(factor * zoomed_display_height)
             self.local_coordinate_num_decimal_places = int(-np.log10(factor))
             zoom_words = TextMobject(
                 "Zoomed", "{:,}x \\\\".format(int(1.0 / factor)),
@@ -2541,13 +2541,13 @@ class RepeatedApplicationWithNegativeSeed(RepeatedApplicationWithPhiBro, MovingC
         self.play(ShowCreation(rect))
         self.play(
             Write(question),
-            self.camera.frame.scale_to_fit_height, FRAME_HEIGHT + 1.5
+            self.camera.frame.set_height, FRAME_HEIGHT + 1.5
         )
         self.wait()
         self.play(
             FadeOut(question),
             FadeOut(rect),
-            self.camera.frame.scale_to_fit_height, FRAME_HEIGHT
+            self.camera.frame.set_height, FRAME_HEIGHT
         )
 
 
@@ -3176,7 +3176,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
         deriv_text[0][10:14].set_color(YELLOW)
 
         self.play(
-            zoomed_frame.scale_to_fit_height, 4,
+            zoomed_frame.set_height, 4,
             zoomed_frame.center,
             self.deriv_text.fade, 1,
             run_time=2
@@ -3325,7 +3325,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
 class StaticAlgebraicObject(Scene):
     def construct(self):
         frac = get_phi_continued_fraction(40)
-        frac.scale_to_fit_width(FRAME_WIDTH - 1)
+        frac.set_width(FRAME_WIDTH - 1)
         # frac.shift(2 * DOWN)
         frac.to_edge(DOWN)
         frac.set_stroke(WHITE, width=0.5)
@@ -3580,7 +3580,7 @@ class PrinciplesOverlay(PiCreatureScene):
 class ManyInfiniteExpressions(Scene):
     def construct(self):
         frac = get_phi_continued_fraction(10)
-        frac.scale_to_fit_height(2)
+        frac.set_height(2)
         frac.to_corner(UL)
 
         n = 9

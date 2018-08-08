@@ -206,7 +206,7 @@ class DifferentConceptions(Scene):
         house = SVGMobject("house")
         house.set_stroke(width = 0)
         house.set_fill(BLUE_C, opacity = 1)
-        house.scale_to_fit_height(3)
+        house.set_height(3)
         house.center()
         square_footage_words = TextMobject("Square footage:")
         price_words = TextMobject("Price: ")
@@ -315,7 +315,7 @@ class DifferentConceptions(Scene):
 
         statement = TextMobject("We'll ignore him \\\\ for now")
         statement.set_color(PINK)
-        statement.scale_to_fit_width(arrays.get_width())
+        statement.set_width(arrays.get_width())
         statement.next_to(arrays, DOWN, buff = 1.5)
         circle = Circle()
         circle.shift(syms.get_bottom())
@@ -638,7 +638,7 @@ class LabeledThreeDVector(Scene):
 class WriteZ(Scene):
     def construct(self):
         z = TexMobject("z").set_color(Z_COLOR)
-        z.scale_to_fit_height(4)
+        z.set_height(4)
         self.play(Write(z, run_time = 2))
         self.wait(3)
 
@@ -773,7 +773,7 @@ class VectorAdditionNumerically(VectorScene):
         plus = TexMobject("+")
         equals = TexMobject("=")
         randy = Randolph()
-        randy.scale_to_fit_height(1)
+        randy.set_height(1)
         randy.shift(-randy.get_bottom())
 
         axes = self.add_axes()
@@ -846,7 +846,7 @@ class VectorAdditionNumerically(VectorScene):
         self.add_vector(v2.get_end(), color = PINK )
 
         sum_coords = Matrix(["1+3", "2+(-1)"])
-        sum_coords.scale_to_fit_height(coords1.get_height())
+        sum_coords.set_height(coords1.get_height())
         sum_coords.next_to(equals, RIGHT)
         brackets = sum_coords.get_brackets()
         x1, y1 = coords1.get_mob_matrix().flatten()
@@ -942,9 +942,9 @@ class ShowScalarMultiplication(VectorScene):
         self.remove(label)
         factor_mob = TexMobject(factor_tex)
         if factor_mob.get_height() > 1:
-            factor_mob.scale_to_fit_height(0.9)
+            factor_mob.set_height(0.9)
         if factor_mob.get_width() > 1:
-            factor_mob.scale_to_fit_width(0.9)
+            factor_mob.set_width(0.9)
         factor_mob.shift(1.5*RIGHT+2.5*UP)
 
         num_factor_parts = len(factor_mob.split())
@@ -1079,7 +1079,7 @@ class FollowingVideos(UpcomingSeriesOfVidoes):
         everything.remove(last_video)
         big_last_video = last_video.copy()
         big_last_video.center()
-        big_last_video.scale_to_fit_height(2.5*FRAME_Y_RADIUS)
+        big_last_video.set_height(2.5*FRAME_Y_RADIUS)
         big_last_video.set_fill(opacity = 0)
         self.play(
             ApplyMethod(everything.shift, FRAME_WIDTH*LEFT),
@@ -1243,7 +1243,7 @@ class NextVideo(Scene):
         title = TextMobject("Next video: Linear combinations, span, and bases")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

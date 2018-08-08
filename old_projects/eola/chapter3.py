@@ -12,7 +12,7 @@ class OpeningQuote(Scene):
             "is. You have to",
             "see it for yourself.",
         ])
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].set_color(GREEN)
         words.split()[3].set_color(BLUE)
@@ -958,7 +958,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
 
     def multiply_by_vector(self, matrix):
         vector = Matrix(["x", "y"]) if self.abstract else Matrix([5, 7])
-        vector.scale_to_fit_height(matrix.get_height())
+        vector.set_height(matrix.get_height())
         vector.next_to(matrix, buff = 2)
         brace = Brace(vector, DOWN)
         words = TextMobject("Any  ol' vector")
@@ -1090,7 +1090,7 @@ class ColumnsToBasisVectors(LinearTransformationScene):
         if vector_coords is not None:
             vector = Matrix(vector_coords)
             VMobject(*vector.get_mob_matrix().flatten()).set_color(YELLOW)
-            vector.scale_to_fit_height(matrix_mob.get_height())
+            vector.set_height(matrix_mob.get_height())
             vector.next_to(matrix_mob, RIGHT)
             vector_background = BackgroundRectangle(vector)
             self.add_foreground_mobject(vector_background, vector)
@@ -1225,7 +1225,7 @@ class Describe90DegreeRotation(LinearTransformationScene):
     def show_vector(self, matrix):
         vector = Matrix(["x", "y"])
         VMobject(*vector.get_mob_matrix().flatten()).set_color(YELLOW)
-        vector.scale_to_fit_height(matrix.get_height())
+        vector.set_height(matrix.get_height())
         vector.next_to(matrix, RIGHT)
         v_background = BackgroundRectangle(vector)
 
@@ -1273,7 +1273,7 @@ class NextVideo(Scene):
         title = TextMobject("Next video: Matrix multiplication as composition")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1306,7 +1306,7 @@ class FinalSlide(Scene):
             definition is actually equivalent to the two properties 
             above.
         """, enforce_new_line_structure = False)
-        text.scale_to_fit_height(FRAME_HEIGHT - 2)
+        text.set_height(FRAME_HEIGHT - 2)
         text.to_edge(UP)
         self.add(text)
         self.wait()

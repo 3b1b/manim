@@ -412,9 +412,9 @@ class GraphScene(Scene):
             max_width = 0.8 * group.dx_line.get_width()
             max_height = 0.8 * group.df_line.get_height()
             if labels.get_width() > max_width:
-                labels.scale_to_fit_width(max_width)
+                labels.set_width(max_width)
             if labels.get_height() > max_height:
-                labels.scale_to_fit_height(max_height)
+                labels.set_height(max_height)
 
         if dx_label is not None:
             group.dx_label.next_to(
@@ -444,7 +444,7 @@ class GraphScene(Scene):
 
     def add_T_label(self, x_val, side=RIGHT, label=None, color=WHITE, animated=False, **kwargs):
         triangle = RegularPolygon(n=3, start_angle=np.pi / 2)
-        triangle.scale_to_fit_height(MED_SMALL_BUFF)
+        triangle.set_height(MED_SMALL_BUFF)
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
         triangle.set_fill(color, 1)
         triangle.set_stroke(width=0)

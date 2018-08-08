@@ -448,17 +448,17 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         ellipse.stretch(1.5, 0)
         ellipse.stretch(0.7, 1)
         ellipse.rotate(-np.pi/2)
-        ellipse.scale_to_fit_height(4)
+        ellipse.set_height(4)
         pi_loop = TexMobject("\\pi")[0]
         pi_loop.set_fill(opacity = 0)
         pi_loop.set_stroke(
             color = WHITE,
             width = DEFAULT_POINT_THICKNESS
         )
-        pi_loop.scale_to_fit_height(4)
+        pi_loop.set_height(4)
         randy = Randolph()
         randy.look(DOWN)
-        randy.scale_to_fit_width(pi_loop.get_width())
+        randy.set_width(pi_loop.get_width())
         randy.move_to(pi_loop, aligned_edge = DOWN)
         randy.body.set_fill(opacity = 0)
         randy.mouth.set_stroke(width = 0)
@@ -1062,7 +1062,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
         line.make_smooth()
         vert_interval = interval.copy()
         square = Square()
-        square.scale_to_fit_width(interval.get_width())
+        square.set_width(interval.get_width())
         square.set_stroke(width = 0)
         square.set_fill(color = BLUE, opacity = 0.3)
         square.move_to(
@@ -1189,7 +1189,7 @@ class EdgesOfSquare(Scene):
         vert_interval = interval.copy()
         vert_interval.rotate(np.pi, axis = UP+RIGHT, about_point = bottom_left)
         square = Square()
-        square.scale_to_fit_width(interval.get_width())
+        square.set_width(interval.get_width())
         square.set_stroke(width = 0)
         square.set_fill(color = BLUE, opacity = 0.3)
         square.move_to(

@@ -97,7 +97,7 @@ class LightIndicator(Mobject):
         self.add(self.background, self.foreground)
         self.reading = DecimalNumber(self.intensity,num_decimal_places = self.precision)
         self.reading.set_fill(color=INDICATOR_TEXT_COLOR)
-        self.reading.scale_to_fit_height(self.reading_height)
+        self.reading.set_height(self.reading_height)
         self.reading.move_to(self.get_center())
         if self.show_reading:
             self.add(self.reading)
@@ -368,7 +368,7 @@ class IntroScene(PiCreatureScene):
                     rect_label.scale(0.75)
                 max_width = 0.7*rect.get_width()
                 if rect_label.get_width() > max_width:
-                    rect_label.scale_to_fit_width(max_width)
+                    rect_label.set_width(max_width)
                 rect_label.next_to(rect, UP, buff = MED_LARGE_BUFF/(i+1))
 
                 term_mobject = term_mobjects[i-1]
@@ -388,7 +388,7 @@ class IntroScene(PiCreatureScene):
             lines.add(line)
         dots = TexMobject("\\dots").scale(0.5)
         last_rect = rect_anims[-1].target_mobject
-        dots.scale_to_fit_width(0.9*last_rect.get_width())
+        dots.set_width(0.9*last_rect.get_width())
         dots.move_to(last_rect, UP+RIGHT)
         rects.submobjects[-1] = dots
         rect_anims[-1] = FadeIn(dots)
@@ -493,7 +493,7 @@ class IntroScene(PiCreatureScene):
         pi = pi_answer[0]
         pi_rect = SurroundingRectangle(pi, color = RED)
         pi_rect.save_state()
-        pi_rect.scale_to_fit_height(FRAME_Y_RADIUS)
+        pi_rect.set_height(FRAME_Y_RADIUS)
         pi_rect.center()
         pi_rect.set_stroke(width = 0)
         squared = pi_answer[1]
@@ -605,7 +605,7 @@ class IntroScene(PiCreatureScene):
         q_mark.next_to(q_circle)
 
         thought = Group(q_circle, q_mark)
-        q_mark.scale_to_fit_height(0.8 * q_circle.get_height())
+        q_mark.set_height(0.8 * q_circle.get_height())
         self.pi_creature_thinks(thought,target_mode = "confused",
             bubble_kwargs = { "height" : 2, "width" : 3 })
 
@@ -796,7 +796,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
             for i in range(4)
             for j in range(7+(i%2))
         ])
-        dots.scale_to_fit_height(3)
+        dots.set_height(3)
         dots.next_to(title, DOWN, MED_LARGE_BUFF)
         edges = VGroup()
         for x in range(100):
@@ -1230,7 +1230,7 @@ class IntroduceScreen(Scene):
         # Camera
         camera = SVGMobject(file_name = "camera")
         camera.rotate(TAU/4)
-        camera.scale_to_fit_height(1.5)
+        camera.set_height(1.5)
         camera.move_to(morty.eyes, LEFT)
 
         # Animations
@@ -1526,7 +1526,7 @@ class ShowLightInThreeDimensions(IntroduceScreen, ThreeDScene):
             Circle().insert_n_anchor_points(25),
         )
         for screen in screens:
-            screen.scale_to_fit_height(self.screen_height)
+            screen.set_height(self.screen_height)
         screens.rotate(TAU/4, UP)
         screens.next_to(self.observer_point, LEFT)
         screens.set_stroke(WHITE, 2)
@@ -2331,7 +2331,7 @@ class MathologerVideoWrapper(Scene):
         # title.scale(0.7)
         title.to_edge(UP)
         logo = ImageMobject("mathologer_logo")
-        logo.scale_to_fit_height(1)
+        logo.set_height(1)
         logo.to_corner(UP+LEFT)
         logo.shift(FRAME_WIDTH*RIGHT)
         screen = ScreenRectangle(height = 5.5)
@@ -3011,7 +3011,7 @@ class PondScene(ThreeDScene):
         # first lighthouse
         original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
         ls0 = LightSource(opacity_function = original_op_func, radius = 15.0, num_levels = 150)
-        ls0.lighthouse.scale_to_fit_height(LIGHTHOUSE_HEIGHT)
+        ls0.lighthouse.set_height(LIGHTHOUSE_HEIGHT)
         ls0.lighthouse.height = LIGHTHOUSE_HEIGHT
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
         self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)
@@ -3044,7 +3044,7 @@ class PondScene(ThreeDScene):
         # New introduction
         lake0.save_state()
         morty.save_state()
-        lake0.scale_to_fit_height(6)
+        lake0.set_height(6)
         morty.to_corner(UP+LEFT)
         morty.fade(1)
         lake0.center()
@@ -3760,14 +3760,14 @@ class CenterOfLargerCircleOverlayText(Scene):
         arrow = Vector(DOWN+LEFT, color = WHITE)
         arrow.shift(words.get_bottom() + SMALL_BUFF*DOWN - arrow.get_start())
         group = VGroup(words, arrow)
-        group.scale_to_fit_height(FRAME_HEIGHT - 1)
+        group.set_height(FRAME_HEIGHT - 1)
         group.to_edge(UP)
         self.add(group)
 
 class DiameterWordOverlay(Scene):
     def construct(self):
         word = TextMobject("Diameter")
-        word.scale_to_fit_width(FRAME_X_RADIUS)
+        word.set_width(FRAME_X_RADIUS)
         word.rotate(-45*DEGREES)
         self.play(Write(word))
         self.wait()
@@ -3855,7 +3855,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         )
         def update_decimal(decimal):
             z = self.camera.rotation_mobject.get_center()[2]
-            decimal.scale_to_fit_height(0.07*z)
+            decimal.set_height(0.07*z)
             decimal.move_to(0.7*z*UP)
         scale_decimal = ContinualUpdateFromFunc(decimal, update_decimal)
 
@@ -4427,7 +4427,7 @@ class Promotion(PiCreatureScene):
         url.to_corner(UP+LEFT)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5.5)
+        rect.set_height(5.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
 

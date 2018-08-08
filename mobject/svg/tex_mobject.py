@@ -330,6 +330,6 @@ class Title(TextMobject):
             if self.match_underline_width_to_text:
                 underline.match_width(self)
             else:
-                underline.scale_to_fit_width(self.underline_width)
+                underline.set_width(self.underline_width)
             self.add(underline)
             self.underline = underline

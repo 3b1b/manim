@@ -480,7 +480,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
         sum_eq.to_edge(UP, buff = MED_SMALL_BUFF)
 
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(start_lines.get_width())
+        h_line.set_width(start_lines.get_width())
         h_line.set_color(WHITE)
         h_line.next_to(sum_eq, DOWN, aligned_edge = LEFT)
 
@@ -578,7 +578,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
             buff = SMALL_BUFF,
             aligned_edge = DOWN
         )
-        # numerator.scale_to_fit_width(FRAME_X_RADIUS)
+        # numerator.set_width(FRAME_X_RADIUS)
         numerator.scale(0.5)
         numerator.move_to(self.coords_to_point(3*np.pi/2, 0))
         numerator.to_edge(UP)
@@ -739,7 +739,7 @@ class IntegralOfSine(FiniteSample):
             self.play(
                 rects[i-1].set_fill, None, low_opacity,
                 rects[i].set_fill, None, high_opacity,
-                side_brace.scale_to_fit_height, rects[i].get_height(),
+                side_brace.set_height, rects[i].get_height(),
                 side_brace.next_to, rects[i], LEFT, SMALL_BUFF,
                 bottom_brace.next_to, rects[i], DOWN, SMALL_BUFF,
                 MaintainPositionRelativeTo(sin_x, side_brace),
@@ -886,7 +886,7 @@ class IntegralOfSine(FiniteSample):
 
         dx.generate_target()
         lp, rp = parens = TexMobject("()")
-        parens.scale_to_fit_height(numerator.get_height())
+        parens.set_height(numerator.get_height())
         lp.next_to(numerator, LEFT)
         rp.next_to(numerator, RIGHT)
         dx.target.next_to(rp, RIGHT)
@@ -904,7 +904,7 @@ class IntegralOfSine(FiniteSample):
         average = VGroup(parens, numerator, dx, frac_line, pi)
         integral.generate_target()
         over_pi = TexMobject("\\frac{\\phantom{\\int \\sin(x)\\dx}}{\\pi}")
-        integral.target.scale_to_fit_width(over_pi.get_width())
+        integral.target.set_width(over_pi.get_width())
         integral.target.next_to(over_pi, UP)
         integral_over_pi = VGroup(integral.target, over_pi)
         integral_over_pi.to_corner(UP+RIGHT)
@@ -963,7 +963,7 @@ class IntegralOfSine(FiniteSample):
 class Approx31(Scene):
     def construct(self):
         tex = TexMobject("\\approx 31")
-        tex.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        tex.set_width(FRAME_WIDTH - LARGE_BUFF)
         tex.to_edge(LEFT)
         self.play(Write(tex))
         self.wait(3)
@@ -1348,8 +1348,8 @@ class Antiderivative(AverageOfSineStart):
             fill_color = BLACK,
             fill_opacity = 0.75,
         )
-        big_rect.scale_to_fit_width(FRAME_WIDTH)
-        big_rect.scale_to_fit_height(FRAME_HEIGHT)
+        big_rect.set_width(FRAME_WIDTH)
+        big_rect.set_height(FRAME_HEIGHT)
         morty = Mortimer()
         morty.to_corner(DOWN+RIGHT)
 
@@ -1937,7 +1937,7 @@ class LastVideoWrapper(Scene):
         title.to_edge(UP)
         rect = Rectangle(height = 9, width = 16)
         rect.set_stroke(WHITE)
-        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        rect.set_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.play(Write(title), ShowCreation(rect))

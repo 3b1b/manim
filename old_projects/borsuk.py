@@ -18,7 +18,7 @@ class Jewel(VMobject):
                 compass_vects.reverse()
             for vect_pair in adjacent_pairs(compass_vects):
                 self.add(Polygon(vect, *vect_pair))
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         self.rotate(-np.pi/2-np.pi/24, RIGHT)        
         self.rotate(-np.pi/12, UP)
         self.submobjects.sort(lambda m1, m2 : cmp(-m1.get_center()[2], -m2.get_center()[2]))
@@ -51,7 +51,7 @@ class Necklace(VMobject):
             for color in self.colors
         ])
         jewels.arrange_submobjects(buff = self.jewel_buff)
-        jewels.scale_to_fit_width(self.width)
+        jewels.set_width(self.width)
         jewels.center()
         j_to_j_dist = (jewels[1].get_center()-jewels[0].get_center())[0]
 
@@ -69,7 +69,7 @@ class Necklace(VMobject):
 class FromPreviousTopologyVideo(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(FRAME_HEIGHT-2)
+        rect.set_height(FRAME_HEIGHT-2)
         title = TextMobject("From original ``Who cares about topology'' video")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -92,7 +92,7 @@ class CheckOutMathologer(PiCreatureScene):
         name.next_to(logo, RIGHT)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(self.screen_height)
+        rect.set_height(self.screen_height)
         rect.next_to(logo, DOWN)
         rect.to_edge(LEFT)
 
@@ -110,7 +110,7 @@ class CheckOutMathologer(PiCreatureScene):
 
     def get_logo(self):
         logo = ImageMobject(self.logo_file)
-        logo.scale_to_fit_height(self.logo_height)
+        logo.set_height(self.logo_height)
         logo.to_corner(UP+LEFT)
         if self.logo_color is not None:
             logo.set_color(self.logo_color)
@@ -245,7 +245,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                 half_label.arrange_submobjects()
                 half_labels.add(half_label)
             half_labels.arrange_submobjects(DOWN)
-            half_labels.scale_to_fit_height(thief.get_height())
+            half_labels.set_height(thief.get_height())
             half_labels.next_to(
                 thief, vect, 
                 buff = MED_LARGE_BUFF,
@@ -578,7 +578,7 @@ class WriteWords(Scene):
     def construct(self):
         words = TextMobject(self.words)
         words.set_color(self.color)
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         self.play(Write(words))
         self.wait(2)
@@ -711,7 +711,7 @@ class PointOutVSauce(CheckOutMathologer):
     }
     def get_logo(self):
         logo = SVGMobject(file_name = self.logo_file)
-        logo.scale_to_fit_height(self.logo_height)
+        logo.set_height(self.logo_height)
         logo.to_corner(UP+LEFT)
         logo.set_stroke(width = 0)
         logo.set_fill(GREEN)
@@ -1290,7 +1290,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         for jewel_type in jewel_types:
             num_mob = TexMobject(str(len(jewel_type)))
             jewel_copy = jewel_type[0].copy()
-            # jewel_copy.scale_to_fit_height(num_mob.get_height())
+            # jewel_copy.set_height(num_mob.get_height())
             jewel_copy.next_to(num_mob)
             label = VGroup(num_mob, jewel_copy)
             enumeration_labels.add(label)
@@ -1955,7 +1955,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             buff = LARGE_BUFF,
             aligned_edge = LEFT
         )
-        choices.scale_to_fit_height(FRAME_Y_RADIUS)
+        choices.set_height(FRAME_Y_RADIUS)
         choices.to_edge(LEFT)
         choices.shift(DOWN)
 
@@ -2292,7 +2292,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     def add_necklace(self):
         random.seed(self.random_seed)
         ChoicesInNecklaceCutting.add_necklace(self)
-        self.necklace.scale_to_fit_width(FRAME_X_RADIUS-1)
+        self.necklace.set_width(FRAME_X_RADIUS-1)
         self.necklace.to_edge(UP, buff = LARGE_BUFF)
         self.necklace.to_edge(LEFT, buff = SMALL_BUFF)
         self.add(self.necklace)
@@ -2311,7 +2311,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
             VGroup(*plane_class.get_top_level_mobjects())
             for plane_class in plane_classes
         ])
-        planes.scale_to_fit_width(FRAME_X_RADIUS)
+        planes.set_width(FRAME_X_RADIUS)
         planes.to_edge(RIGHT)
         self.example_coords = plane_classes[0].example_coords[0]
 
@@ -2407,7 +2407,7 @@ class JewelPairPlane(GraphScene):
 class WhatThisMappingActuallyLooksLikeWords(Scene):
     def construct(self):
         words = TextMobject("What this mapping actually looks like")
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
 
         self.play(Write(words))
@@ -2578,7 +2578,7 @@ class MortyLookingAtRectangle(Scene):
         url.scale(0.75)
         url.to_corner(UP+LEFT)
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5)
+        rect.set_height(5)
         rect.next_to(url, DOWN)
         rect.shift_onto_screen()
         url.save_state()
@@ -2639,7 +2639,7 @@ class Test(Scene):
         # necklace.apply_function(
         #     lambda (x, y, z) : x*RIGHT + (y + 0.1*x**2)*UP
         # )
-        necklace.scale_to_fit_width(randy.get_width() + 1)
+        necklace.set_width(randy.get_width() + 1)
         necklace.move_to(randy)
 
         self.add(randy, necklace)

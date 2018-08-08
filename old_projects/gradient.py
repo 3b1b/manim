@@ -38,7 +38,7 @@ class ShowSimpleMultivariableFunction(Scene):
         many_inputs = TexMobject(*[
             "x_{%d}, " % d for d in range(1, 25)
         ])
-        many_inputs.scale_to_fit_width(FRAME_WIDTH)
+        many_inputs.set_width(FRAME_WIDTH)
         many_inputs.to_edge(UL)
 
         inputs_brace = Brace(inputs, UP)

@@ -21,7 +21,7 @@ class SideGigToFullTime(Scene):
             Line(vect, -vect, color = RED)
             for vect in (UP+RIGHT, UP+LEFT)
         ])
-        cross.scale_to_fit_height(dollar_sign.get_height())
+        cross.set_height(dollar_sign.get_height())
         no_money = VGroup(dollar_sign, cross)
         no_money.next_to(rect, DOWN)
 
@@ -177,7 +177,7 @@ class TwoTypesOfVideos(Scene):
         series.shift(FRAME_X_RADIUS*RIGHT/2)
         series.to_edge(UP)
         box = Rectangle(width = 16, height = 9, color = WHITE)
-        box.scale_to_fit_height(3)
+        box.set_height(3)
         box.next_to(stand_alone, DOWN)
         series_list = VGroup(*[  
             TextMobject("Essence of %s"%s)
@@ -191,7 +191,7 @@ class TwoTypesOfVideos(Scene):
             ]
         ])
         series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
-        series_list.scale_to_fit_width(FRAME_X_RADIUS-2)
+        series_list.set_width(FRAME_X_RADIUS-2)
         series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
 
@@ -497,7 +497,7 @@ class PythagoreanTransformation(Scene):
 class KindWordsOnEoLA(TeacherStudentsScene):
     def construct(self):
         rect = Rectangle(width = 16, height = 9, color = WHITE)
-        rect.scale_to_fit_height(4)
+        rect.set_height(4)
         title = TextMobject("Essence of linear algebra")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -537,7 +537,7 @@ class MakeALotOfPiCreaturesHappy(Scene):
         for pi, color in zip(pi_list, colors):
             pi.set_color(color)
         pis = VGroup(*pi_list)
-        pis.scale_to_fit_height(6)
+        pis.set_height(6)
 
         self.add(pis)
         pis.generate_target()

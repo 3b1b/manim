@@ -60,7 +60,7 @@ class Broadcast(LaggedStart):
             )
             circle.move_to(focal_point)
             circle.save_state()
-            circle.scale_to_fit_width(self.small_radius * 2)
+            circle.set_width(self.small_radius * 2)
             circle.set_stroke(self.color, self.start_stroke_width)
             circles.add(circle)
         LaggedStart.__init__(

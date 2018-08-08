@@ -460,7 +460,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         formal_definition_words = TextMobject("""
             Formal derivative definition 
         """)
-        formal_definition_words.scale_to_fit_width(rhs_rect.get_width())
+        formal_definition_words.set_width(rhs_rect.get_width())
         formal_definition_words.next_to(rhs_rect, UP)
         formal_definition_words.set_color(rhs_rect.get_color())
         formal_definition_words.add_background_rectangle()
@@ -590,7 +590,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         self.wait()
         self.add(self.rhs)
         self.play(
-            lil_rect.scale_to_fit_width,
+            lil_rect.set_width,
             self.ss_group.dx_line.get_width()*4,
             run_time = 4
         )
@@ -1596,7 +1596,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         result.epsilon_lines.set_stroke(MAROON_B, width = 2)
         brace = Brace(Line(ORIGIN, 0.5*UP), RIGHT)
         result.braces = VGroup(*[
-            brace.copy().scale_to_fit_height(
+            brace.copy().set_height(
                 group.get_height()
             ).next_to(group, RIGHT, SMALL_BUFF)
             for i in (1, 2)
@@ -1607,7 +1607,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             for brace in result.braces
         ])
         for label, brace in zip(result.labels, result.braces):
-            label.scale_to_fit_height(min(
+            label.set_height(min(
                 label.get_height(),
                 0.8*brace.get_height()
             ))
@@ -1618,7 +1618,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
     def get_delta_group(self, delta):
         result = VGroup()
         brace = Brace(Line(ORIGIN, RIGHT), DOWN)
-        brace.scale_to_fit_width(
+        brace.set_width(
             (self.coords_to_point(delta, 0)-self.graph_origin)[0]
         )
         result.braces = VGroup(*[
@@ -1997,7 +1997,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         rhs = TexMobject("= %.4f\\dots"%result)
         rhs.next_to(label, RIGHT)
         approx_group = VGroup(label, rhs)
-        approx_group.scale_to_fit_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
+        approx_group.set_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
         approx_group.next_to(ORIGIN, UP, buff = MED_LARGE_BUFF)
         approx_group.to_edge(RIGHT)
 
@@ -2219,7 +2219,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         cos_pi = VGroup(*cos_dx[:-1])
         cos = VGroup(*cos_dx[:-2])
         brace = Brace(Line(LEFT, RIGHT), UP)
-        brace.scale_to_fit_width(cos_pi.get_width())
+        brace.set_width(cos_pi.get_width())
         brace.move_to(cos_pi.get_top(), DOWN)
         brace_text = TextMobject(
             """
@@ -2240,7 +2240,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.play(Write(brace_text))
         self.wait(2)
         self.play(
-            brace.scale_to_fit_width, cos.get_width(),
+            brace.set_width, cos.get_width(),
             brace.next_to, cos, UP, SMALL_BUFF/self.zoom_factor,
             FadeOut(brace_text)
         )
@@ -2738,7 +2738,7 @@ class GeneralLHoptial(LHopitalExample):
         bernoulli_image = ImageMobject("Johann_Bernoulli2")
         lhopital_image = ImageMobject("Guillaume_de_L'Hopital")
         for image in bernoulli_image, lhopital_image:
-            image.scale_to_fit_height(self.image_height)
+            image.set_height(self.image_height)
             image.to_edge(UP)
 
         arrow = Arrow(ORIGIN, DOWN, buff = 0, color = GREEN)
@@ -2930,7 +2930,7 @@ class Thumbnail(Scene):
     def construct(self):
         lim = TexMobject("\\lim", "_{h", "\\to 0}")
         lim.set_color_by_tex("h", GREEN)
-        lim.scale_to_fit_height(5)
+        lim.set_height(5)
         self.add(lim)
 
 

@@ -419,14 +419,14 @@ class Mobject(Container):
     def stretch_to_fit_depth(self, depth, **kwargs):
         return self.rescale_to_fit(depth, 1, stretch=True, **kwargs)
 
-    def scale_to_fit_width(self, width, **kwargs):
-        return self.rescale_to_fit(width, 0, stretch=False, **kwargs)
+    def set_width(self, width, stretch=False, **kwargs):
+        return self.rescale_to_fit(width, 0, stretch=stretch, **kwargs)
 
-    def scale_to_fit_height(self, height, **kwargs):
-        return self.rescale_to_fit(height, 1, stretch=False, **kwargs)
+    def set_height(self, height, stretch=False, **kwargs):
+        return self.rescale_to_fit(height, 1, stretch=stretch, **kwargs)
 
-    def scale_to_fit_depth(self, depth, **kwargs):
-        return self.rescale_to_fit(depth, 2, stretch=False, **kwargs)
+    def set_depth(self, depth, stretch=False, **kwargs):
+        return self.rescale_to_fit(depth, 2, stretch=stretch, **kwargs)
 
     def space_out_submobjects(self, factor=1.5, **kwargs):
         self.scale(factor, **kwargs)

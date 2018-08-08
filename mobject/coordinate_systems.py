@@ -252,7 +252,7 @@ class NumberPlane(VMobject):
                 point = self.coords_to_point(*num_pair)
                 num = TexMobject(str(val))
                 num.add_background_rectangle()
-                num.scale_to_fit_height(
+                num.set_height(
                     self.written_coordinate_height
                 )
                 num.next_to(point, DOWN + LEFT, buff=SMALL_BUFF)
@@ -347,7 +347,7 @@ class ComplexPlane(NumberPlane):
                 num_str = num_str.replace("1", "")
             num_mob = TexMobject(num_str)
             num_mob.add_background_rectangle()
-            num_mob.scale_to_fit_height(self.written_coordinate_height)
+            num_mob.set_height(self.written_coordinate_height)
             num_mob.next_to(point, DOWN + LEFT, SMALL_BUFF)
             result.add(num_mob)
         self.coordinate_labels = result

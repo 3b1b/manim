@@ -10,7 +10,7 @@ class OpeningQuote(Scene):
             "can be shortened by 50\\% if one",
             "throws the matrices out."
         ])
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].set_color(GREEN)
         words.split()[3].set_color(BLUE)
@@ -384,7 +384,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
         shear_matrix.set_color(PINK)
         l_paren, r_paren = map(TexMobject, ["\\Big(", "\\Big)"])
         for p in l_paren, r_paren:
-            p.scale_to_fit_height(1.4*vect.get_height())
+            p.set_height(1.4*vect.get_height())
         long_way = VMobject(
             shear_matrix, l_paren, rot_matrix, vect, r_paren
         )
@@ -922,7 +922,7 @@ class AskAssociativityQuestion(Scene):
     def move_matrix_parentheses(self, morty, matrices):
         m1, m2, m3 = matrices
         parens = TexMobject(["(", ")"])
-        parens.scale_to_fit_height(1.2*m1.get_height())
+        parens.set_height(1.2*m1.get_height())
         lp, rp = parens.split()
         state1 = VMobject(
             VectorizedPoint(m1.get_left()),
@@ -1057,10 +1057,10 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Linear transformations in three dimensions
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

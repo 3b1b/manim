@@ -493,7 +493,7 @@ class FormalDefinitionOfContinuity(Scene):
         self.output.set_color(GREEN_A)
 
         self.interval = UnitInterval()
-        self.interval.scale_to_fit_width(FRAME_X_RADIUS-1)
+        self.interval.set_width(FRAME_X_RADIUS-1)
         self.interval.to_edge(LEFT)
 
         self.input_dot = Dot(color = self.input_color)

@@ -377,7 +377,7 @@ class LeviSolution(CycloidScene):
         ]
         for line, tex, scale in triplets:
             trig_mob = TexMobject(tex)
-            trig_mob.scale_to_fit_width(
+            trig_mob.set_width(
                 scale*line.get_length()
             )
             trig_mob.shift(-1.2*trig_mob.get_top())
@@ -529,7 +529,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
             words1.next_to(arrow, LEFT)
             words2.next_to(arrow, RIGHT)
             words = Mobject(words1, arrow, words2)
-            words.scale_to_fit_width(FRAME_WIDTH-1)
+            words.set_width(FRAME_WIDTH-1)
             words.to_edge(UP, buff = 0.2)
             words.to_edge(LEFT)
 

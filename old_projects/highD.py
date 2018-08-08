@@ -319,7 +319,7 @@ class MathIsATease(Scene):
             for angle in np.linspace(-np.pi/3, np.pi/3, 12):
                 lash = Line(ORIGIN, RIGHT)
                 lash.set_stroke(DARK_GREY, 2)
-                lash.scale_to_fit_width(0.27)
+                lash.set_width(0.27)
                 lash.next_to(ORIGIN, RIGHT, buff = 0)
                 lash.rotate(angle + np.pi/2)
                 lash.shift(eye.get_center())
@@ -875,7 +875,7 @@ class DismissProjection(PiCreatureScene):
 
     def get_sphere_screen(self, equation, vect):
         square = Rectangle()
-        square.scale_to_fit_width(equation.get_width())
+        square.set_width(equation.get_width())
         square.stretch_to_fit_height(3)
         square.next_to(equation, vect)
         square.set_color(self.screen_rect_color)
@@ -1736,7 +1736,7 @@ class ThreeDCubeCorners(Scene):
         name = TextMobject("Corners: ")
         name.next_to(coordinates[0], LEFT)
         group = VGroup(name, coordinates)
-        group.scale_to_fit_height(FRAME_HEIGHT - 1)
+        group.set_height(FRAME_HEIGHT - 1)
         group.to_edge(LEFT)
 
         self.play(Write(name, run_time = 2))
@@ -2840,7 +2840,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         re_rects.generate_target()
         for rect, slider in zip(re_rects.target, self.sliders):
             height = slider.unit_size*(1-np.sqrt(0.2))
-            rect.scale_to_fit_height(height)
+            rect.set_height(height)
             rect.move_to(slider.number_to_point(0), DOWN)
 
         self.sphere_words.generate_target()
@@ -3080,7 +3080,7 @@ class ThreeDOuterBoundingBoxWords(Scene):
             "$4 \\!\\times\\! 4\\!\\times\\! 4$ outer\\\\",
             "bounding box"
         )
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         words.set_color(MAROON_B)
 
@@ -3475,7 +3475,7 @@ class Promotion(PiCreatureScene):
         url.to_corner(UP+LEFT)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5.5)
+        rect.set_height(5.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
 

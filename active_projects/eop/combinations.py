@@ -44,7 +44,7 @@ class Male(TexMobject):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         TexMobject.__init__(self, self.tex, **kwargs)
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         self.set_color(self.color)
 
 class Female(Male):
@@ -253,7 +253,7 @@ class InitialFiveChooseThreeExample(Scene):
             binomial_equations.add(equation)
 
         for stack, eq in zip(stacks, binomial_equations):
-            eq.scale_to_fit_width(0.9*stack.get_width())
+            eq.set_width(0.9*stack.get_width())
             eq.next_to(stack, UP)
 
         mover = VGroup()
@@ -425,7 +425,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             self.n, self.k,
             vertical_buff = SMALL_BUFF
         )
-        stack.scale_to_fit_height(self.stack_height)
+        stack.set_height(self.stack_height)
         stack.to_edge(DOWN)
         for line in stack:
             line.ones = VGroup(*filter(
@@ -652,7 +652,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         )
 #         stacks.to_edge(DOWN, buff = LARGE_BUFF)
 #         for stack, eq in zip(stacks, binomial_equations):
-#             eq.scale_to_fit_width(0.9*stack.get_width())
+#             eq.set_width(0.9*stack.get_width())
 #             eq.next_to(stack, UP)
 
 #         self.play(
@@ -801,7 +801,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         x = TexMobject("x").set_color(BLUE)
 #         y = TexMobject("y").set_color(RED)
 #         stack = get_stack(x, y, n, k)
-#         stack.scale_to_fit_height(self.stack_height)
+#         stack.set_height(self.stack_height)
 #         stack.shift(FRAME_X_RADIUS*LEFT/2)
 #         stack.to_edge(DOWN)
 #         numbers = VGroup(*[
@@ -845,7 +845,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             )
 #             for letter_subset in letter_subsets
 #         ]).arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
-#         subset_mobs.scale_to_fit_height(self.stack_height)
+#         subset_mobs.set_height(self.stack_height)
 #         subset_mobs.shift(FRAME_X_RADIUS*RIGHT/2)
 #         subset_mobs.to_edge(DOWN)
 
@@ -1314,7 +1314,7 @@ class TeacherHoldingSomething(TeacherStudentsScene):
 #         title.set_color_by_tex("64", YELLOW)
 #         man, woman = Male(), Female()
 #         stacks = get_stacks(man, woman, 6, vertical_buff = SMALL_BUFF)
-#         stacks.scale_to_fit_height(6.25)
+#         stacks.set_height(6.25)
 #         stacks.to_edge(DOWN, buff = MED_SMALL_BUFF)
 #         women_groups = VGroup()
 #         for stack in stacks:
@@ -2065,7 +2065,7 @@ class StacksApproachBellCurve(Scene):
                 ns.generate_target()
                 for bar, number in zip(bs.target, ns.target):
                     # if number.get_width() > bar.get_width():
-                    #     number.scale_to_fit_width(bar.get_width())
+                    #     number.set_width(bar.get_width())
                     number.next_to(bar, UP, SMALL_BUFF)
 
             self.play(*map(MoveToTarget, [
@@ -2108,7 +2108,7 @@ class StacksApproachBellCurve(Scene):
             if x > 1:
                 height = numbers.target[1].get_height()
                 for mob in numbers.target[0], numbers_copy.target[-1]:
-                    mob.scale_to_fit_height(height)
+                    mob.set_height(height)
 
             bars_copy.target[-1].align_to(bars, DOWN)
             numbers_copy.target[-1].next_to(bars_copy.target[-1], UP, SMALL_BUFF)
@@ -2224,7 +2224,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             mover = VGroup(*name_triplet).copy()
             mover.generate_target()
             if hasattr(self, "stack"):
-                mover.target.scale_to_fit_height(self.stack[0].get_height())
+                mover.target.set_height(self.stack[0].get_height())
             for name in mover.target[:2]:
                 name[-1].set_fill(opacity = 1)
             mover.target.arrange_submobjects(RIGHT, MED_SMALL_BUFF)
@@ -3072,7 +3072,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
             aligned_edge = UP,
             buff = MED_LARGE_BUFF
         )
-        columns.scale_to_fit_height(7)
+        columns.set_height(7)
         columns.to_corner(DOWN + RIGHT)
 
         for line in stack:
@@ -3268,7 +3268,7 @@ class ABCNotBCA(Scene):
         equation.set_color(YELLOW)
         equation.next_to(words, DOWN)
         group = VGroup(words, equation)
-        group.scale_to_fit_width(FRAME_WIDTH - 1)
+        group.set_width(FRAME_WIDTH - 1)
         group.to_edge(DOWN)
         self.add(words, equation)
 
@@ -3478,7 +3478,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
         )
 
         pascals = PascalsTriangle(n_rows = 6)
-        pascals.scale_to_fit_height(3)
+        pascals.set_height(3)
         pascals.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         pascals.set_color_by_gradient(BLUE, YELLOW)
 

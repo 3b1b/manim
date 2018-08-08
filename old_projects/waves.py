@@ -524,7 +524,7 @@ class VideoWrapper(Scene):
         title.to_edge(UP)
         self.add(title)
         rect = ScreenRectangle()
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
         self.add(rect)
         self.wait()
@@ -946,7 +946,7 @@ class WriteCurlEquations(Scene):
         )
         eqs = VGroup(eq1, eq2)
         eqs.arrange_submobjects(DOWN, buff = LARGE_BUFF)
-        eqs.scale_to_fit_height(FRAME_HEIGHT - 1)
+        eqs.set_height(FRAME_HEIGHT - 1)
         eqs.to_edge(LEFT)
         for eq in eqs:
             eq.set_color_by_tex_to_color_map({
@@ -1169,7 +1169,7 @@ class ShowVectorEquation(Scene):
         )
         components.arrange_submobjects(DOWN)
         lb, rb = brackets = TexMobject("[]")
-        brackets.scale_to_fit_height(components.get_height() + SMALL_BUFF)
+        brackets.set_height(components.get_height() + SMALL_BUFF)
         lb.next_to(components, LEFT, buff = 0.3)
         rb.next_to(components, RIGHT, buff = 0.3)
         E, equals = E_equals = TexMobject(
@@ -1872,7 +1872,7 @@ class FromBracketFootnote(Scene):
             arg_separator = ""
         )
         words.set_color_by_tex("ket", YELLOW)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         self.add(words)
 
 class Ay(Scene):
@@ -1991,7 +1991,7 @@ class AlternateBasis(ShowTipToTailSum):
 class WriteBasis(Scene):
     def construct(self):
         words = TextMobject("Choice of ``basis''")
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         self.play(Write(words))
         self.wait()
 
@@ -2149,7 +2149,7 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
                 new_decimal.rotate(np.pi/2, RIGHT)
                 new_decimal.rotate(np.pi/2, OUT)
                 new_decimal.rotate(self.camera.get_theta(), OUT)
-                new_decimal.scale_to_fit_depth(decimal.get_depth())
+                new_decimal.set_depth(decimal.get_depth())
                 new_decimal.move_to(decimal, UP)
                 new_decimal.set_color(decimal.get_color())
                 decimal.align_data(new_decimal)
@@ -2176,7 +2176,7 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
 class NamePolarizingFilter(Scene):
     def construct(self):
         words = TextMobject("Polarizing filter")
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         self.play(Write(words))
         self.wait()
 
@@ -2873,14 +2873,14 @@ class SeeCommentInDescription(Scene):
             vs. double-headed arrows
             \\end{flushleft}
         """)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_corner(DOWN+LEFT)
         self.add(words)
 
 class SeeCommentInDescriptionAgain(Scene):
     def construct(self):
         words = TextMobject("$^*$Again, see description")
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_corner(DOWN+LEFT)
         self.add(words)
 
@@ -4173,7 +4173,7 @@ class ClockwisePhotonInsert(Scene):
         )
         eq.set_color(BLUE)
         VGroup(*it.chain(eq[:4], eq[-5:])).set_color(WHITE)
-        eq.scale_to_fit_height(FRAME_HEIGHT - 1)
+        eq.set_height(FRAME_HEIGHT - 1)
         eq.to_edge(LEFT)
         self.add(eq)
 
@@ -4275,7 +4275,7 @@ class Footnote(Scene):
             from quantum mechanics conventions.
             \\end{flushleft}
         """)
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         self.add(words)
 
 

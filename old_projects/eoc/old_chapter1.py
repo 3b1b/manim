@@ -219,7 +219,7 @@ class Introduction(TeacherStudentsScene):
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(FRAME_HEIGHT)
+        this_video.set_height(FRAME_HEIGHT)
         self.this_video = this_video
 
         words = TextMobject(
@@ -346,7 +346,7 @@ class Introduction(TeacherStudentsScene):
         this_video = self.this_video
         self.remove(this_video)
         this_video.generate_target()
-        this_video.target.scale_to_fit_height(FRAME_HEIGHT)
+        this_video.target.set_height(FRAME_HEIGHT)
         this_video.target.center()        
         this_video.target.set_fill(opacity = 0)
 
@@ -920,7 +920,7 @@ class BuildToDADR(CircleScene):
             new_dRs.set_color(self.dR_color)
             new_outer_ring = self.get_ring(self.radius, width)
             new_nudge_line = self.nudge_line.copy()
-            new_nudge_line.scale_to_fit_width(width)
+            new_nudge_line.set_width(width)
             new_nudge_line.move_to(self.nudge_line, LEFT)
             error_brace.target = error_brace.copy()
             error_brace.target.stretch_to_fit_width(
@@ -989,7 +989,7 @@ class BuildToDADR(CircleScene):
 
     def elaborate_on_d(self):
         arc = Arc(-np.pi, start_angle = -np.pi/2)
-        arc.scale_to_fit_height(
+        arc.set_height(
             self.change.get_center()[1]-self.change.denom.get_center()[1]
         )
         arc.next_to(self.change.frac_line, LEFT)
@@ -1240,13 +1240,13 @@ class NameDerivative(IntroduceTinyChangeInArea):
         area_circle = self.circle.copy()
         area_circle.set_stroke(width = 0)
         area_circle.generate_target()
-        area_circle.target.scale_to_fit_width(circle_width)
+        area_circle.target.set_width(circle_width)
         area_circle.target.next_to(target_formula[0], RIGHT, buff = 0)
         area_circle.target.set_color(BLUE_D)
         circum_circle = self.circle.copy()
         circum_circle.set_fill(opacity = 0)
         circum_circle.generate_target()
-        circum_circle.target.scale_to_fit_width(circle_width)
+        circum_circle.target.set_width(circle_width)
         circum_circle.target.next_to(target_formula)
 
         self.play(
@@ -1270,8 +1270,8 @@ class NameDerivative(IntroduceTinyChangeInArea):
         small_dR = 0.01
         big_ring = self.get_ring(self.radius, big_dR)
         small_ring = self.get_ring(self.radius, small_dR)
-        big_nudge_line = self.nudge_line.copy().scale_to_fit_width(big_dR)
-        small_nudge_line = self.nudge_line.copy().scale_to_fit_width(small_dR)
+        big_nudge_line = self.nudge_line.copy().set_width(big_dR)
+        small_nudge_line = self.nudge_line.copy().set_width(small_dR)
         for line in big_nudge_line, small_nudge_line:
             line.move_to(self.nudge_line, LEFT)
         new_nudge_arrow = Arrow(self.nudge_label, big_nudge_line)
@@ -2463,7 +2463,7 @@ class CalculusInANutshell(CircleScene):
         first.set_fill(YELLOW)
         first.save_state()
         first.center()
-        first.scale_to_fit_height(FRAME_Y_RADIUS*2)
+        first.set_height(FRAME_Y_RADIUS*2)
         first.set_fill(opacity = 0)
         everything = VGroup(*self.get_mobjects())
         everything.generate_target()
@@ -2515,8 +2515,8 @@ class Thumbnail(CircleScene):
         deriv_eq = TexMobject("\\frac{d \\quad}{dR} = ")
         int_eq = TexMobject("\\int_0^R \\quad = ") 
         target_height = deriv_eq[0].get_height()*2
-        area_circle.scale_to_fit_height(target_height)
-        circum_circle.scale_to_fit_height(target_height)
+        area_circle.set_height(target_height)
+        circum_circle.set_height(target_height)
 
         area_circle.next_to(deriv_eq[0], buff = SMALL_BUFF)
         circum_circle.next_to(deriv_eq)

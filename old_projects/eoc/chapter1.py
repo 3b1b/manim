@@ -221,7 +221,7 @@ class Introduction(TeacherStudentsScene):
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(FRAME_HEIGHT)
+        this_video.set_height(FRAME_HEIGHT)
         self.this_video = this_video
 
 
@@ -381,7 +381,7 @@ class Introduction(TeacherStudentsScene):
 class PreviewFrame(Scene):
     def construct(self):
         frame = Rectangle(height = 9, width = 16, color = WHITE)
-        frame.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        frame.set_height(1.5*FRAME_Y_RADIUS)
 
         colors = iter(color_gradient([BLUE, YELLOW], 3))
         titles = [
@@ -1410,7 +1410,7 @@ class GraphRectangles(CircleScene, GraphScene):
 
         arranged_group.add(last_ring.target)
         arranged_group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
-        arranged_group.scale_to_fit_height(FRAME_HEIGHT-1)
+        arranged_group.set_height(FRAME_HEIGHT-1)
         arranged_group.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
         for mob in tex_mobs:
             mob.scale_in_place(0.7)
@@ -1722,7 +1722,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
             self.integral_condition[0][0],
             words[0]
         )
-        arc.scale_to_fit_height(
+        arc.set_height(
             arc_next_to_group.get_height()-MED_LARGE_BUFF
         )
         arc.next_to(arc_next_to_group, LEFT, SMALL_BUFF)
@@ -2078,7 +2078,7 @@ class AreaUnderParabola(GraphScene):
             fill_color = WHITE,
             fill_opacity = 1,
         )
-        triangle.scale_to_fit_height(0.25)
+        triangle.set_height(0.25)
         triangle.move_to(self.v_lines[1].get_bottom(), UP)
         x_label = TexMobject("x")
         x_label.next_to(triangle, DOWN)
@@ -2587,7 +2587,7 @@ class AlternateAreaUnderCurve(PlayingTowardsDADX):
 class NextVideoWrapper(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        rect.set_height(1.5*FRAME_Y_RADIUS)
         titles = [
             TextMobject("Chapter %d:"%d, s)
             for d, s in [
@@ -2781,7 +2781,7 @@ class Thumbnail(AlternateAreaUnderCurve):
             Essence of
             calculus
         """)
-        words.scale_to_fit_width(9)
+        words.set_width(9)
         words.to_edge(UP)
 
         self.add(graph, rects, words)

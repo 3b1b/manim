@@ -34,7 +34,7 @@ class LatticePointScene(Scene):
             secondary_line_ratio = self.secondary_line_ratio,
             radius = self.plane_color
         )
-        plane.scale_to_fit_height(FRAME_HEIGHT)
+        plane.set_height(FRAME_HEIGHT)
         plane.shift(self.plane_center)
         self.add(plane)
         self.plane = plane
@@ -198,7 +198,7 @@ class Introduction(PiCreatureScene):
         self.play(
             Write(primes, run_time = 2),
             morty.change_mode, "happy",
-            video.scale_to_fit_height, FRAME_WIDTH,
+            video.set_height, FRAME_WIDTH,
             video.center,
             video.set_fill, None, 0
         )
@@ -222,7 +222,7 @@ class Introduction(PiCreatureScene):
         )
         self.wait(2)
         self.play(
-            plane.scale_to_fit_width, pi_group.get_width(),
+            plane.set_width, pi_group.get_width(),
             plane.next_to, pi_group, DOWN, MED_LARGE_BUFF
         )
 
@@ -554,7 +554,7 @@ class Outline(PiCreatureScene):
             secondary_line_ratio = 0,
             color = BLUE_E,
         )
-        plane.scale_to_fit_height(6)
+        plane.set_height(6)
         plane.next_to(step, DOWN)
         plane.to_edge(LEFT)
         circle = Circle(
@@ -605,7 +605,7 @@ class Outline(PiCreatureScene):
         )
         self.wait()
         self.play(
-            lattice_group.scale_to_fit_height, 2.5,
+            lattice_group.set_height, 2.5,
             lattice_group.next_to, self.question, DOWN,
             lattice_group.to_edge, RIGHT
         )
@@ -636,7 +636,7 @@ class Outline(PiCreatureScene):
             value.next_to(arrow, DOWN)
             numerators.add(value)
         group = VGroup(chis, arrows, numerators)
-        group.scale_to_fit_width(1.3*FRAME_X_RADIUS)
+        group.set_width(1.3*FRAME_X_RADIUS)
         group.to_corner(DOWN+LEFT)
 
         self.play(FadeIn(self.steps[3]))
@@ -808,7 +808,7 @@ class CountLatticePoints(LatticePointScene):
             self.plane.coords_to_point(0, 0),
             self.plane.coords_to_point(1, 0),
         )
-        square.scale_to_fit_width(unit_line.get_width())
+        square.set_width(unit_line.get_width())
         squares = VGroup(*[
             square.copy().move_to(point)
             for point in self.lattice_points
@@ -1078,7 +1078,7 @@ class CountThroughRings(LatticePointScene):
         ])
         top_list.set_color(YELLOW)
         top_list.arrange_submobjects(RIGHT, aligned_edge = DOWN)
-        top_list.scale_to_fit_width(FRAME_WIDTH - MED_LARGE_BUFF)
+        top_list.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         top_list.to_edge(UP, buff = SMALL_BUFF)
         top_rect = BackgroundRectangle(top_list)
 
@@ -1123,7 +1123,7 @@ class CountThroughRings(LatticePointScene):
         )
         root = TexMobject("\\sqrt{%d}"%radius_squared)
         root.add_background_rectangle()
-        root.scale_to_fit_width(
+        root.set_width(
             min(0.7*radial_line.get_width(), root.get_width())
         )
         root.next_to(radial_line, DOWN, SMALL_BUFF)
@@ -1327,7 +1327,7 @@ class Given2DThinkComplex(TeacherStudentsScene):
             y_radius = 0.6*FRAME_Y_RADIUS,
         )
         plane.add_coordinates()
-        plane.scale_to_fit_height(FRAME_Y_RADIUS)
+        plane.set_height(FRAME_Y_RADIUS)
         plane.to_corner(UP+LEFT)
 
         self.teacher_says(tex)
@@ -1607,7 +1607,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         randy.scale(0.8)
         randy.to_corner(DOWN+LEFT)
         morty = Mortimer()
-        morty.scale_to_fit_height(randy.get_height())
+        morty.set_height(randy.get_height())
         morty.next_to(randy, RIGHT)
         randy.make_eye_contact(morty)
         screen = ScreenRectangle(height = 3.5)
@@ -2516,7 +2516,7 @@ class IntroduceRecipe(Scene):
         )
         max_width = FRAME_WIDTH - 2
         if factorization.get_width() > max_width:
-            factorization.scale_to_fit_width(max_width)
+            factorization.set_width(max_width)
         factorization.next_to(
             self.integer_factorization, DOWN,
             aligned_edge = LEFT
@@ -3535,7 +3535,7 @@ class IntroduceChi(FactorizationPattern):
             value.next_to(arrow, UP)
             numbers.add(value)
         group = VGroup(chis, arrows, numbers)
-        group.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        group.set_width(FRAME_WIDTH - LARGE_BUFF)
         group.to_edge(DOWN, buff = LARGE_BUFF)
 
         self.play(*[
@@ -3979,7 +3979,7 @@ class ExpandCountWith45(SummarizeCountingRule):
                 expansion.add(plus)
         expansion.add(rp)
         expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        expansion.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        expansion.set_width(FRAME_WIDTH - LARGE_BUFF)
         expansion.next_to(ORIGIN, UP)
         rect = BackgroundRectangle(expansion)
         rect.stretch_in_place(1.5, 1)
@@ -4224,7 +4224,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             TexMobject("\\sqrt{R^2}")
         )
         radicals.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
-        radicals.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
+        radicals.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         radicals.to_edge(DOWN, buff = MED_SMALL_BUFF)
         radicals.to_edge(LEFT)
         for radical in radicals:
@@ -4745,7 +4745,7 @@ class Sponsorship(PiCreatureScene):
         logo = SVGMobject(
             file_name = "remix_logo",
         )
-        logo.scale_to_fit_height(1)
+        logo.set_height(1)
         logo.center()
         logo.set_stroke(width = 0)
         logo.set_fill(BLUE_D, 1)
@@ -4778,7 +4778,7 @@ class Sponsorship(PiCreatureScene):
 class Thumbnail(Scene):
     def construct(self):
         randy = Randolph()
-        randy.scale_to_fit_height(5)
+        randy.set_height(5)
         body_copy = randy.body.copy()
         body_copy.set_stroke(YELLOW, width = 3)
         body_copy.set_fill(opacity = 0)

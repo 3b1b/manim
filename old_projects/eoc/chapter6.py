@@ -1250,7 +1250,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
         circle_scene = LightweightCircleExample()
         circle_mobs = VGroup(*circle_scene.get_top_level_mobjects())
         for mobs, vect in (ladder_mobs, LEFT), (circle_mobs, RIGHT):
-            mobs.scale_to_fit_height(FRAME_Y_RADIUS-MED_LARGE_BUFF)
+            mobs.set_height(FRAME_Y_RADIUS-MED_LARGE_BUFF)
             mobs.next_to(
                 self.pi_creature.get_corner(UP+vect), UP,
                 buff = SMALL_BUFF,
@@ -1553,7 +1553,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         lil_rect.shift(0.05*lil_rect.get_width()*LEFT)
         lil_rect.shift(0.2*lil_rect.get_height()*DOWN)
         lil_rect.save_state()
-        lil_rect.scale_to_fit_height(FRAME_Y_RADIUS - MED_LARGE_BUFF)
+        lil_rect.set_height(FRAME_Y_RADIUS - MED_LARGE_BUFF)
         lil_rect.move_to(s_label, UP)
         lil_rect.shift(MED_SMALL_BUFF*UP)
         self.wait()
@@ -1575,9 +1575,9 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             "%d + dx"%int(self.example_point[0]),
             "%d + dy"%int(self.example_point[1]),
         )
-        new_dot.scale_to_fit_height(dot.get_height())
+        new_dot.set_height(dot.get_height())
         new_dot.move_to(new_point)
-        new_s_label.scale_to_fit_height(s_label.get_height())
+        new_s_label.set_height(s_label.get_height())
         new_s_label.scale(0.8)
         new_s_label.next_to(
             new_dot, DOWN, 
@@ -2054,7 +2054,7 @@ class AlternateExample(ZoomedScene):
         mnemonic.set_color_by_tex("d-Right", RED)
         mnemonic.set_color_by_tex("d-Left", GREEN)
         mnemonic.add_background_rectangle()
-        mnemonic.scale_to_fit_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
+        mnemonic.set_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
         mnemonic.next_to(ORIGIN, UP)
         mnemonic.to_edge(LEFT)
 
@@ -2064,7 +2064,7 @@ class AlternateExample(ZoomedScene):
         )
         derivative.set_color_by_tex("dx", GREEN)
         derivative.set_color_by_tex("dy", RED)
-        derivative.scale_to_fit_width(FRAME_X_RADIUS - 2*MED_LARGE_BUFF)
+        derivative.set_width(FRAME_X_RADIUS - 2*MED_LARGE_BUFF)
         derivative.next_to(
             brace, DOWN, 
             buff = MED_LARGE_BUFF,

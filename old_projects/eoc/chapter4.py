@@ -245,7 +245,7 @@ class ComingUp(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
         rect.set_stroke(WHITE)
-        rect.scale_to_fit_height(FRAME_HEIGHT-2)
+        rect.set_height(FRAME_HEIGHT-2)
         title = TextMobject("Coming up...")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -855,7 +855,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         v_line = Line(ORIGIN, UP, color = WHITE, stroke_width = 2)
         def v_line_update(v_line):
             x = x_axis.point_to_number(self.x_slider[1].get_top())
-            v_line.scale_to_fit_height(np.sin(x)*scale_factor)
+            v_line.set_height(np.sin(x)*scale_factor)
             v_line.move_to(x_axis.number_to_point(x), DOWN)
         v_line_update(v_line)
 
@@ -1337,7 +1337,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             fill_opacity = 0.8,
             stroke_width = 0,
         )
-        triangle.scale_to_fit_height(self.x_slider_handle_height)
+        triangle.set_height(self.x_slider_handle_height)
         triangle.move_to(line.number_to_point(x), UP)
 
         x_mob = TexMobject("x")
@@ -1866,7 +1866,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
             fill_opacity = 0.75,
             stroke_width = 0,
         )
-        triangle.scale_to_fit_height(self.triangle_height)
+        triangle.set_height(self.triangle_height)
         triangle.move_to(
             number_line.number_to_point(func(x)), DOWN
         )
@@ -2261,7 +2261,7 @@ class Thumbnail(IntroduceProductAsArea):
         blg[1][1].next_to(df_boxes[-1], RIGHT)
         df_box_labels = self.get_df_box_labels(df_boxes)
         blg.add(df_boxes, df_box_labels)
-        blg.scale_to_fit_height(FRAME_HEIGHT-2*MED_LARGE_BUFF)
+        blg.set_height(FRAME_HEIGHT-2*MED_LARGE_BUFF)
         blg.center()
         self.add(blg)
 

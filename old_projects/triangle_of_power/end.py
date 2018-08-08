@@ -217,7 +217,7 @@ class InYourOwnNotes(Scene):
         g.submobjects = []
         #end hack
         top = TOP(2, None, "n", radius = 0.75)
-        top.scale_to_fit_width(log_n.get_width())
+        top.set_width(log_n.get_width())
         top.shift(log_n.get_center())
         new_O_log_n = O_log_n.copy()
         new_O_log_n.submobjects[1] = top

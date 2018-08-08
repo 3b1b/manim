@@ -79,7 +79,7 @@ class OpeningQuote(Scene):
             quote.set_color_by_tex(term, color)
         quote.to_edge(UP, buff=self.top_buff)
         if quote.get_width() > max_width:
-            quote.scale_to_fit_width(max_width)
+            quote.set_width(max_width)
         return quote
 
     def get_author(self, quote):
@@ -176,7 +176,7 @@ class PatreonEndScreen(PatreonThanks):
 
         randy, morty = self.pi_creatures = VGroup(Randolph(), Mortimer())
         for pi, vect in (randy, LEFT), (morty, RIGHT):
-            pi.scale_to_fit_height(title.get_height())
+            pi.set_height(title.get_height())
             pi.change_mode("thinking")
             pi.look(DOWN)
             pi.next_to(title, vect, buff=MED_LARGE_BUFF)
@@ -204,7 +204,7 @@ class PatreonEndScreen(PatreonThanks):
         thanks.next_to(black_rect.get_bottom(), UP, SMALL_BUFF)
         thanks.set_color(YELLOW)
         underline = Line(LEFT, RIGHT)
-        underline.scale_to_fit_width(thanks.get_width() + MED_SMALL_BUFF)
+        underline.set_width(thanks.get_width() + MED_SMALL_BUFF)
         underline.next_to(thanks, DOWN, SMALL_BUFF)
         thanks.add(underline)
         self.add(thanks)
@@ -213,7 +213,7 @@ class PatreonEndScreen(PatreonThanks):
         patrons.scale(self.patron_scale_val)
         for patron in patrons:
             if patron.get_width() > self.max_patron_width:
-                patron.scale_to_fit_width(self.max_patron_width)
+                patron.set_width(self.max_patron_width)
         columns = VGroup(*[
             VGroup(*patrons[i::self.n_patron_columns])
             for i in range(self.n_patron_columns)
@@ -225,7 +225,7 @@ class PatreonEndScreen(PatreonThanks):
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
         )
-        columns.scale_to_fit_width(total_width - 1)
+        columns.set_width(total_width - 1)
         columns.next_to(black_rect, DOWN, 3 * LARGE_BUFF)
         columns.to_edge(RIGHT)
 

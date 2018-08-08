@@ -42,7 +42,7 @@ class OpeningQuote(Scene):
         )
         words.set_color_by_tex("axioms,", BLUE)
         words.set_color_by_tex("difficult for the uninitiated", RED)
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Vladmir Arnold")
         author.set_color(YELLOW)
@@ -152,7 +152,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             coords.target = coords.copy()
             group = VGroup(v.target, coords.target)
             group.arrange_submobjects(DOWN)
-            group.scale_to_fit_height(coords.get_height())
+            group.set_height(coords.get_height())
             group.next_to(student.arrow, RIGHT)
             student.q_marks = TexMobject("???")
             student.q_marks.set_color_by_gradient(BLUE, YELLOW)
@@ -283,7 +283,7 @@ class AskAbout4DPhysicsStudent(Scene):
         hyper_cube = HyperCube()
         thought_mobs = []
         for i, mob in enumerate([line, square, cube, hyper_cube]):
-            mob.scale_to_fit_height(2)            
+            mob.set_height(2)            
             tex = TexMobject("%dD"%(i+1))
             tex.next_to(mob, UP)
             group = VGroup(mob, tex)
@@ -659,7 +659,7 @@ class AddTwoFunctions(FunctionGraphScene):
 
         curr_x_point = f_lines[0].get_start()
         sum_def = self.get_sum_definition(DecimalNumber(curr_x_point[0]))
-        # sum_def.scale_to_fit_width(FRAME_X_RADIUS-1)
+        # sum_def.set_width(FRAME_X_RADIUS-1)
         sum_def.to_corner(UP+LEFT)
         arrow = Arrow(sum_def[2].get_bottom(), curr_x_point, color = WHITE)        
         prefix = sum_def[0]
@@ -957,7 +957,7 @@ class FromVectorsToFunctions(VectorScene):
 
         func_tex.generate_target()
         lp, rp = parens = TexMobject("()")
-        parens.scale_to_fit_height(func_tex.get_height())
+        parens.set_height(func_tex.get_height())
         L, equals = TexMobject("L=")
         deriv = TexMobject("\\frac{d}{dx}")
         new_func = TexMobject("\\frac{1}{3}x^2 - 1")
@@ -1683,7 +1683,7 @@ class IntroducePolynomialSpace(Scene):
         new_coords = Matrix(["0", "0", "-5", "0", "0", "0", "0", "4", "\\vdots"])
         new_coords.get_entries()[2].set_color(Z_COLOR)
         new_coords.get_entries()[7].set_color(TEAL)
-        new_coords.scale_to_fit_height(6)
+        new_coords.set_height(6)
         new_coords.move_to(coords, aligned_edge = LEFT)
         self.play(
             Write(self.poly2),
@@ -2224,7 +2224,7 @@ class ListAxioms(Scene):
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
-        axioms.scale_to_fit_width(FRAME_WIDTH-1)
+        axioms.set_width(FRAME_WIDTH-1)
         axioms.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(FadeIn(
@@ -2304,7 +2304,7 @@ class VectorSpaceOfPiCreatures(Scene):
             for y in range(4)
         ]).arrange_submobjects(DOWN, buff = 1.5)
         creatures = VGroup(*it.chain(*creatures))
-        creatures.scale_to_fit_height(FRAME_HEIGHT-1)
+        creatures.set_height(FRAME_HEIGHT-1)
         for pi in creatures:
             pi.change_mode(random.choice([
                 "pondering", "pondering",
@@ -2349,7 +2349,7 @@ class VectorSpaceOfPiCreatures(Scene):
         transform = Transform(pi1.copy(), pi2.copy())
         transform.update(0.5)
         sum_pi = transform.mobject
-        sum_pi.scale_to_fit_height(pi1.get_height()+pi2.get_height())
+        sum_pi.set_height(pi1.get_height()+pi2.get_height())
         for pi in pis:
             pi.generate_target()
         plus, equals = TexMobject("+=")

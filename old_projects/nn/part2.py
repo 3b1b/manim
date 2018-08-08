@@ -13,7 +13,7 @@ NEGATIVE_COLOR = RED
 
 def get_training_image_group(train_in, train_out):
     image = MNistMobject(train_in)
-    image.scale_to_fit_height(1)
+    image.set_height(1)
     arrow = Vector(RIGHT, color = BLUE, buff = 0)
     output = np.argmax(train_out)
     output_tex = TexMobject(str(output)).scale(1.5)
@@ -58,7 +58,7 @@ def get_decimal_vector(nums, with_dots = True):
 class ShowLastVideo(TeacherStudentsScene):
     def construct(self):
         frame = ScreenRectangle()
-        frame.scale_to_fit_height(4.5)
+        frame.set_height(4.5)
         frame.to_corner(UP+LEFT)
         title = TextMobject("But what \\emph{is} a Neural Network")
         title.move_to(frame)
@@ -324,7 +324,7 @@ class PreviewLearning(NetworkScene):
 class BackpropComingLaterWords(Scene):
     def construct(self):
         words = TextMobject("(Backpropagation be \\\\ the next video)")
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         self.add(words)
 
@@ -469,7 +469,7 @@ class MNistDescription(Scene):
             group.arrange_submobjects_in_grid(
                 n_rows = self.n_rows_per_grid,
             )
-            group.scale_to_fit_height(FRAME_HEIGHT - 1)
+            group.set_height(FRAME_HEIGHT - 1)
             if i == 0:
                 self.play(
                     LaggedStart(FadeIn, group),
@@ -908,7 +908,7 @@ class IntroduceCostFunction(PreviewLearning):
             DOWN, buff = SMALL_BUFF,
             aligned_edge = LEFT
         )
-        terms.scale_to_fit_height(1.5*layer.get_height())
+        terms.set_height(1.5*layer.get_height())
         terms.next_to(layer, LEFT, buff = 2)
 
         image_group = Group(self.image, self.image_rect)
@@ -964,7 +964,7 @@ class IntroduceCostFunction(PreviewLearning):
         term_updates = []
         for arrow, d1, d2 in zip(arrows, *self.decimal_groups):
             term = DecimalNumber(0, num_decimal_places = 4)
-            term.scale_to_fit_height(d1.get_height())
+            term.set_height(d1.get_height())
             term.next_to(arrow, LEFT)
             term.num_update_func = generate_term_update_func(d1, d2)
             terms.add(term)
@@ -1110,7 +1110,7 @@ class IntroduceCostFunction(PreviewLearning):
             for n in num_vect
         ])
         decimals.arrange_submobjects(DOWN)
-        decimals.scale_to_fit_height(height)
+        decimals.set_height(height)
         lb, rb = brackets = TexMobject("[]")
         brackets.scale(2)
         brackets.stretch_to_fit_height(height + SMALL_BUFF)
@@ -1225,7 +1225,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
     def setup_sides(self):
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         network_mob = self.network_mob
-        network_mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
+        network_mob.set_width(FRAME_X_RADIUS - 1)
         network_mob.to_corner(DOWN+LEFT)
 
         self.add(v_line)
@@ -1252,7 +1252,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         in_vect = get_organized_images()[7][8]
         activations = self.network.get_activation_of_all_layers(in_vect)
         image = MNistMobject(in_vect)
-        image.scale_to_fit_height(1.5)
+        image.set_height(1.5)
         image_label = TextMobject("Input")
         image_label.set_color(input_words[0].get_color())
         image_label.next_to(image, UP, SMALL_BUFF)
@@ -1394,11 +1394,11 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
     def get_training_pair_mob(self, data):
         in_vect, out_vect = data
         image = MNistMobject(in_vect)
-        image.scale_to_fit_height(1)
+        image.set_height(1)
         comma = TextMobject(",")
         comma.next_to(image, RIGHT, SMALL_BUFF, DOWN)
         output = TexMobject(str(np.argmax(out_vect)))
-        output.scale_to_fit_height(0.75)
+        output.set_height(0.75)
         output.next_to(image, RIGHT, MED_SMALL_BUFF)
         lp, rp = parens = TextMobject("()")
         parens.scale(2)
@@ -1952,7 +1952,7 @@ class GradientDescentAlgorithm(Scene):
             TextMobject("Repeat."),
         )
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_corner(DOWN+LEFT)
 
         for word in words[:2]:
@@ -1966,7 +1966,7 @@ class GradientDescentName(Scene):
     def construct(self):
         words = TextMobject("Gradient descent")
         words.set_color(BLUE)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
 
         self.play(Write(words, run_time = 2))
@@ -2088,7 +2088,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
 class DotsInsert(Scene):
     def construct(self):
         dots = TexMobject("\\vdots")
-        dots.scale_to_fit_height(FRAME_HEIGHT - 1)
+        dots.set_height(FRAME_HEIGHT - 1)
         self.add(dots)
 
 class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
@@ -2193,7 +2193,7 @@ class NonSpatialGradientIntuition(Scene):
         rb.next_to(ws, RIGHT)
         vect = VGroup(lb, ws, rb)
 
-        vect.scale_to_fit_height(self.vect_height)
+        vect.set_height(self.vect_height)
         vect.to_edge(UP).shift(2*LEFT)
         lhs.next_to(vect, LEFT)
 
@@ -2231,7 +2231,7 @@ class NonSpatialGradientIntuition(Scene):
         ))
         grad_vect = VGroup(lb.copy(), grad_content, rb.copy())
         VGroup(grad_vect[0], grad_vect[-1]).space_out_submobjects(0.8)
-        grad_vect.scale_to_fit_height(self.vect_height)
+        grad_vect.set_height(self.vect_height)
         grad_vect.next_to(self.vect, DOWN)
         lhs.next_to(grad_vect, LEFT)
 
@@ -2737,13 +2737,13 @@ class ContinuouslyRangingNeuron(PreviewLearning):
         network_mob.to_edge(DOWN)
         neuron = self.network_mob.layers[2].neurons[6]
         decimal = DecimalNumber(0)
-        decimal.scale_to_fit_width(0.8*neuron.get_width())
+        decimal.set_width(0.8*neuron.get_width())
         decimal.move_to(neuron)
 
         decimal.generate_target()
         neuron.generate_target()
         group = VGroup(neuron.target, decimal.target)
-        group.scale_to_fit_height(1)
+        group.set_height(1)
         group.next_to(network_mob, UP)
         decimal.set_fill(opacity = 0)
 
@@ -2792,7 +2792,7 @@ class TestPerformance(PreviewLearning):
         self.run_through_examples()
 
     def setup_network_mob(self):
-        self.network_mob.scale_to_fit_height(5)
+        self.network_mob.set_height(5)
         self.network_mob.to_corner(DOWN+LEFT)
         self.network_mob.to_edge(DOWN, buff = MED_SMALL_BUFF)
 
@@ -2854,7 +2854,7 @@ class TestPerformance(PreviewLearning):
             choice = np.argmax(activations[-1])
 
             image = MNistMobject(test_in)
-            image.scale_to_fit_height(1.5)
+            image.set_height(1.5)
             choice_mob = TexMobject(str(choice))
             choice_mob.scale(1.5)
             group = VGroup(image, arrow, choice_mob)
@@ -2984,7 +2984,7 @@ class NotAtAll(TeacherStudentsScene, PreviewLearning):
         words = TextMobject("Well...\\\\", "not at all!")
         words[1].set_color(BLACK)
         network_mob = self.network_mob
-        network_mob.scale_to_fit_height(4)
+        network_mob.set_height(4)
         network_mob.to_corner(UP+LEFT)
         self.add(network_mob)
         self.color_network_edges()
@@ -3045,7 +3045,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
                 pixel.set_fill(color, opacity = abs(shade)**(0.3))
             pixel_arrays.add(pixel_array)
         pixel_arrays.arrange_submobjects_in_grid(buff = MED_LARGE_BUFF)
-        pixel_arrays.scale_to_fit_height(FRAME_HEIGHT - 2.5)
+        pixel_arrays.set_height(FRAME_HEIGHT - 2.5)
         pixel_arrays.to_corner(DOWN+RIGHT)
 
         for pixel_array in pixel_arrays:
@@ -3375,7 +3375,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
 
         for v_in, choice in validation_data[:self.n_examples]:
             image = MNistMobject(v_in)
-            image.scale_to_fit_height(1)
+            image.set_height(1)
             choice = TexMobject(str(choice))
             choice.scale(2)
             arrow = Vector(RIGHT, color = WHITE)
@@ -3456,7 +3456,7 @@ class ConvolutionalNetworkPreview(Scene):
         vect = get_organized_images()[9][0]
         image = PixelsFromVect(vect)
         image.set_stroke(width = 1)
-        image.scale_to_fit_height(FRAME_HEIGHT - 1)
+        image.set_height(FRAME_HEIGHT - 1)
         self.add(image)
 
         kernels = [
@@ -3543,7 +3543,7 @@ class RandomlyLabeledImageData(Scene):
     def get_training_group(self, image_name, label_name):
         arrow = Vector(RIGHT, color = WHITE)
         image = ImageMobject(image_name)
-        image.scale_to_fit_height(1.3)
+        image.set_height(1.3)
         image.next_to(arrow, LEFT)
         label = TextMobject(label_name)
         label.next_to(arrow, RIGHT)
@@ -3593,7 +3593,7 @@ class TrainOnImages(PreviewLearning, RandomlyLabeledImageData):
             self.remove(group)
 
     def setup_network_mob(self):
-        self.network_mob.scale_to_fit_height(5)
+        self.network_mob.set_height(5)
         self.network_mob.to_edge(DOWN)
         self.color_network_edges()
 
@@ -3698,7 +3698,7 @@ class ManyMinimaWords(Scene):
             "Many local minima,\\\\",
             "roughly equal quality"
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
         self.play(Write(words))
         self.wait()

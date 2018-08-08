@@ -346,7 +346,7 @@ class AssociatePixelWithFrequency(Scene):
         )
         pixel.set_color(WHITE)
         pixel_width = big_grid.width/big_grid.columns
-        pixel.scale_to_fit_width(pixel_width)
+        pixel.set_width(pixel_width)
         pixel.to_corner(UP+RIGHT, buff = 2)
         pixel.shift(5*pixel_width*(2*LEFT+DOWN))
 
@@ -457,10 +457,10 @@ class LayAsideSpeculation(Scene):
     def construct(self):
         words = TextMobject("Would this actually work?")
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         mapping = Mobject(
             grid, freq_line, Arrow(grid, freq_line)
@@ -481,10 +481,10 @@ class LayAsideSpeculation(Scene):
 class RandomMapping(Scene):
     def construct(self):
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         # for mob in grid, freq_line:
         #     indices = np.arange(mob.get_num_points())
@@ -523,10 +523,10 @@ class LeverageExistingIntuitions(Scene):
 class ThinkInTermsOfReverseMapping(Scene):
     def construct(self):
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         arrow =  Arrow(grid, freq_line)
 

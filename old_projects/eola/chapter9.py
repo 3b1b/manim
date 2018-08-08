@@ -46,7 +46,7 @@ class OpeningQuote(Scene):
         )
         words.set_color_by_tex("same name ", BLUE)
         words.set_color_by_tex("different things", MAROON_B)
-        # words.scale_to_fit_width(FRAME_WIDTH - 2)
+        # words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Henri Poincar\\'e.")
         author.set_color(YELLOW)
@@ -413,7 +413,7 @@ class IntroduceJennifer(JenniferScene):
 
         new_coords = [-1, 2]
         new_coords_mob = Matrix(new_coords)
-        new_coords_mob.scale_to_fit_height(jenny.coords.get_height())
+        new_coords_mob.set_height(jenny.coords.get_height())
         new_coords_mob.move_to(jenny.coords)
 
         for coords in you.coords, jenny.coords, new_coords_mob:
@@ -598,7 +598,7 @@ class IntroduceJennifer(JenniferScene):
             mover = coords.mover
             array_mob = Matrix(array)
             array_mob.set_color(mover.get_color())
-            array_mob.scale_to_fit_height(mover.get_height())
+            array_mob.set_height(mover.get_height())
             array_mob.move_to(mover)
             array_mob.add_to_back(BackgroundRectangle(array_mob))
             mover.target = array_mob
@@ -874,7 +874,7 @@ class TranslateFromJenny(JenniferScene):
         jenny_x, jenny_y = self.jenny.coords.get_entries().copy()
         equals, plus, equals2 = syms = map(TexMobject, list("=+="))
         result = Matrix([-4, 1])
-        result.scale_to_fit_height(self.you.coords.get_height())
+        result.set_height(self.you.coords.get_height())
         for mob in syms + [self.you.coords, self.jenny.coords, result]:
             mob.add_to_back(BackgroundRectangle(mob))
         movers = [
@@ -923,7 +923,7 @@ class TranslateFromJenny(JenniferScene):
         matrix.set_color_columns(X_COLOR, Y_COLOR)
         self.jenny.coords.target = self.jenny.coords.copy()
         self.jenny.coords.target.next_to(equals, LEFT)
-        matrix.scale_to_fit_height(self.jenny.coords.get_height())
+        matrix.set_height(self.jenny.coords.get_height())
         matrix.next_to(self.jenny.coords.target, LEFT)
         matrix.add_to_back(BackgroundRectangle(matrix))
 
@@ -1204,7 +1204,7 @@ class RecallInverse(JenniferScene):
             ["1/3", "1/3"],
             ["-1/3", "2/3"]
         ])
-        inv_matrix.scale_to_fit_height(matrix.get_height())
+        inv_matrix.set_height(matrix.get_height())
         inv_matrix.add_to_back(BackgroundRectangle(inv_matrix))
         equals.next_to(matrix, RIGHT, buff = 0.7)
         inv_matrix.next_to(equals, RIGHT, buff = MED_SMALL_BUFF)
@@ -1265,7 +1265,7 @@ class WorkOutInverseComputation(Scene):
         )
         for mob in equation:
             if isinstance(mob, Matrix):
-                mob.scale_to_fit_height(2)
+                mob.set_height(2)
         equation.arrange_submobjects()
 
         matrix_brace = Brace(matrix, UP)
@@ -1352,7 +1352,7 @@ class SummarizeTranslationProcess(Scene):
         our_vector = Matrix(["x_o", "y_o"])
         her_vector = Matrix(["x_j", "y_j"])
         for vector, color in (our_vector, BLUE_D), (her_vector, MAROON_B):
-            # vector.scale_to_fit_height(1.5)
+            # vector.set_height(1.5)
             vector.set_color(color)
         A = TexMobject("A")
         A_inv = TexMobject("A^{-1}")
@@ -1426,7 +1426,7 @@ class Prerequisites(Scene):
         ])
         for direction, words in zip([LEFT, RIGHT], prereqs):
             rect = Rectangle(height = 9, width = 16)
-            rect.scale_to_fit_height(3.5)
+            rect.set_height(3.5)
             rect.next_to(ORIGIN, direction, buff = MED_SMALL_BUFF)
             rect.set_color(BLUE)
             words.next_to(rect, UP, buff =  MED_SMALL_BUFF)
@@ -1795,7 +1795,7 @@ class NextVideo(Scene):
         """)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

@@ -1296,7 +1296,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
     def get_bps_label(self, freq = 3):
         braces = VGroup(*self.get_peak_braces()[freq:2*freq])
         words = TextMobject("%d beats/second"%freq)
-        words.scale_to_fit_width(0.9*braces.get_width())
+        words.set_width(0.9*braces.get_width())
         words.move_to(braces, DOWN)
         return words
 
@@ -4257,7 +4257,7 @@ class Thumbnail(Scene):
                 num_graph_points = 200,
             )
             pol_graph.match_color(graph)
-            pol_graph.scale_to_fit_height(2)
+            pol_graph.set_height(2)
             pol_graphs.add(pol_graph)
         pol_graphs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         pol_graphs.set_color_by_gradient(BLUE_C, YELLOW)
@@ -4267,7 +4267,7 @@ class Thumbnail(Scene):
 
         self.clear()
         title.center().to_edge(UP)
-        pol_graphs.scale_to_fit_width(FRAME_WIDTH - 1)
+        pol_graphs.set_width(FRAME_WIDTH - 1)
         pol_graphs.center()
         title.move_to(pol_graphs)
         title.shift(SMALL_BUFF*LEFT)

@@ -167,7 +167,7 @@ class RadarPulseSingleton(ContinualAnimation):
             start_angle = -30*DEGREES,
             angle = 60*DEGREES,
         )
-        self.arc.scale_to_fit_height(0.75*radar_dish.get_height())
+        self.arc.set_height(0.75*radar_dish.get_height())
         self.arc.move_to(radar_dish, UP+RIGHT)
         self.start_points = np.array(self.arc.points)
         self.start_center = self.arc.get_center()
@@ -1405,7 +1405,7 @@ class CenterOfMassDescription(FourierRecapScene):
         circle_plane = self.get_circle_plane()
         circle_plane.save_state()
         circle_plane.generate_target()
-        circle_plane.target.scale_to_fit_height(FRAME_HEIGHT)
+        circle_plane.target.set_height(FRAME_HEIGHT)
         circle_plane.target.center()
         circle_plane.target.axes.set_stroke(width = 2)
         circle_plane.target.main_lines.set_stroke(width = 2)
@@ -1791,7 +1791,7 @@ class IntroduceDopplerRadar(Scene):
             color = WHITE
         )
         distance_text = TextMobject("$2 \\times$ distance/(signal speed)")
-        distance_text.scale_to_fit_width(0.9*double_arrow.get_width())
+        distance_text.set_width(0.9*double_arrow.get_width())
         distance_text.next_to(double_arrow, UP, SMALL_BUFF)
 
         #v_line anim?
@@ -2892,7 +2892,7 @@ class IntroduceDeBroglie(Scene):
         #Overlay real tower in video editor
         eiffel_tower = Line(3*DOWN, 3*UP, stroke_width = 0)
         picture = ImageMobject("de_Broglie")
-        picture.scale_to_fit_height(4)
+        picture.set_height(4)
         picture.to_corner(UP+LEFT)
         name = TextMobject("Louis de Broglie")
         name.next_to(picture, DOWN)
@@ -3545,7 +3545,7 @@ class HangingWeightsScene(MovingCameraScene):
         self.play(*map(GrowArrow, arrows))
         self.play(*[
             UpdateFromAlphaFunc(
-                weight, lambda w, a : w.scale_to_fit_width(
+                weight, lambda w, a : w.set_width(
                     2*interpolate(w.start_radius, w.target_radius, a)
                 ),
                 run_time = 2
@@ -3568,7 +3568,7 @@ class HangingWeightsScene(MovingCameraScene):
 
     def metaphor_for_something(self):
         de_broglie = ImageMobject("de_Broglie")
-        de_broglie.scale_to_fit_height(3.5)
+        de_broglie.set_height(3.5)
         de_broglie.to_corner(DOWN+RIGHT)
         words = TextMobject("""
             If a photon's energy is carried as a wave \\\\
@@ -3624,7 +3624,7 @@ class HangingWeightsScene(MovingCameraScene):
             original_center = camera_frame.get_center()
             self.play(
                 UpdateFromAlphaFunc(
-                    camera_frame, lambda c, a : c.scale_to_fit_height(
+                    camera_frame, lambda c, a : c.set_height(
                         interpolate(original_height, 0.95*rect.get_height(), a)
                     ).move_to(
                         interpolate(original_center, rect.get_center(), a)
@@ -3637,7 +3637,7 @@ class HangingWeightsScene(MovingCameraScene):
                 run_time = 6
             ))
             self.play(
-                camera_frame.scale_to_fit_height, original_height,
+                camera_frame.set_height, original_height,
                 camera_frame.move_to, original_center,
                 ApplyMethod(self.k_tracker.shift, LEFT)
             )
@@ -3662,7 +3662,7 @@ class HangingWeightsScene(MovingCameraScene):
         randy = Randolph(mode = "pondering")
         randy.look(UP+RIGHT)
         de_broglie = ImageMobject("de_Broglie")
-        de_broglie.scale_to_fit_height(6)
+        de_broglie.set_height(6)
         de_broglie.next_to(4*DOWN, DOWN)
         self.add(
             ContinualUpdateFromFunc(
@@ -3725,7 +3725,7 @@ class MinutPhysicsWrapper(Scene):
         title.to_edge(UP).shift(MED_LARGE_BUFF*RIGHT)
 
         screen_rect = ScreenRectangle()
-        screen_rect.scale_to_fit_width(title.get_width() + LARGE_BUFF)
+        screen_rect.set_width(title.get_width() + LARGE_BUFF)
         screen_rect.next_to(title, DOWN)
 
         self.play(ShowCreation(screen_rect))
@@ -4102,7 +4102,7 @@ class ProbabalisticDetection(FourierTransformOfWaveFunction):
         rect.stretch(0, 0)
 
         gdw_anim = ContinualUpdateFromFunc(
-            gdw, lambda m : m.scale_to_fit_width(
+            gdw, lambda m : m.set_width(
                 2.0/(self.a_tracker.get_value()**(0.5))
             ).move_to(rect)
         )
@@ -4230,8 +4230,8 @@ class OneLevelDeeper(Scene):
         )
         gdw = randomness.gaussian_distribution_wrapper
         gdw.rotate(TAU/4)
-        gdw.scale_to_fit_height(1)
-        # gdw.scale_to_fit_width(4)
+        gdw.set_height(1)
+        # gdw.set_width(4)
         gdw.next_to(hup_words, UP, MED_LARGE_BUFF)
 
         self.add(hup_words, randomness)
@@ -4322,7 +4322,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
 
         dot_cloud = ProbabalisticDotCloud()
         dot_gdw = dot_cloud.gaussian_distribution_wrapper
-        dot_gdw.scale_to_fit_width(1)
+        dot_gdw.set_width(1)
         dot_gdw.rotate(TAU/8)
         dot_gdw.move_to(FRAME_X_RADIUS*RIGHT/2),
 
@@ -4330,7 +4330,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
             center_func = dot_gdw.get_center
         )
         vector_gdw = vector_cloud.gaussian_distribution_wrapper
-        vector_gdw.scale_to_fit_width(0.1)
+        vector_gdw.set_width(0.1)
         vector_gdw.rotate(TAU/8)
         vector_gdw.next_to(dot_gdw, UP+LEFT, LARGE_BUFF)
 
@@ -4341,13 +4341,13 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
             ContinualMovement(time_tracker, direction = RIGHT, rate = 1),
             ContinualUpdateFromFunc(
                 dot_gdw,
-                lambda d : d.scale_to_fit_width(
+                lambda d : d.set_width(
                     (np.cos(freq*time_tracker.get_value()) + 1.1)/2
                 )
             ),
             ContinualUpdateFromFunc(
                 vector_gdw,
-                lambda d : d.scale_to_fit_width(
+                lambda d : d.set_width(
                     (-np.cos(freq*time_tracker.get_value()) + 1.1)/2
                 )
             ),
@@ -4448,7 +4448,7 @@ class Promotion(PiCreatureScene):
         url_rect.stretch_in_place(1.1, dim = 1)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(4.5)
+        rect.set_height(4.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
         rect.set_stroke(width = 0)
@@ -4458,7 +4458,7 @@ class Promotion(PiCreatureScene):
         morty = self.pi_creature
         morty.save_state()
         book = ImageMobject("AoPS_volume_2")
-        book.scale_to_fit_height(2)
+        book.set_height(2)
         book.next_to(mathy, UP+LEFT).shift(MED_LARGE_BUFF*LEFT)
         mathy.get_center = mathy.get_top
 
@@ -4586,7 +4586,7 @@ class PuzzleStatement(Scene):
             to determine who we send.  Can we make sure we don't send
              the weakest person?
         """, alignment = "")
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.next_to(group, DOWN, LARGE_BUFF)
         self.play(LaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
         self.wait(2)

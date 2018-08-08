@@ -1866,7 +1866,7 @@ class EachTermControlsOneDerivative(Scene):
             buff = LARGE_BUFF,
             aligned_edge = UP
         )
-        deriv_words.scale_to_fit_width(FRAME_WIDTH - MED_LARGE_BUFF)
+        deriv_words.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         deriv_words.to_edge(UP)
 
         for const, deriv, color in zip(consts, deriv_words, colors):
@@ -2118,7 +2118,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         )))
         group.add(TexMobject("\\vdots"))
         group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
-        group.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
+        group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0, color in zip(derivs_at_x, derivs_at_zero, self.colors):
             for d in dx, d0:
@@ -2271,7 +2271,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             for arg in ("x", "0", "a")
         ]
         derivs_at_x.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
-        derivs_at_x.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
+        derivs_at_x.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         derivs_at_x.to_edge(LEFT)
         zeros = VGroup(*[
             deriv.get_part_by_tex("0")
@@ -2531,7 +2531,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
         )))
         group.add(TexMobject("\\vdots"))
         group.arrange_submobjects(DOWN, buff = 2*SMALL_BUFF)
-        group.scale_to_fit_height(FRAME_HEIGHT - MED_LARGE_BUFF)
+        group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0 in zip(derivs_at_x, derivs_at_zero):
             for d in dx, d0:
@@ -2774,7 +2774,7 @@ class SecondTermIntuition(AreaIsDerivative):
             stretch = True
         )
         circle = Circle(color = RED)
-        circle.scale_to_fit_height(triangle.get_height())
+        circle.set_height(triangle.get_height())
         circle.replace(triangle, dim_to_match = 1)
         circle.scale_in_place(1.3)
 
@@ -2908,9 +2908,9 @@ class SecondTermIntuition(AreaIsDerivative):
             for mob in (self.dark_area, self.rect, self.triangle)
         ]
         mini_area.set_fill(BLUE_E, opacity = 1)
-        mini_area.scale_to_fit_height(1)
-        mini_rect.scale_to_fit_height(1)
-        mini_triangle.scale_to_fit_height(0.5)
+        mini_area.set_height(1)
+        mini_rect.set_height(1)
+        mini_triangle.set_height(0.5)
 
         geometric_taylor = VGroup(
             TexMobject("f(x) \\approx "), mini_area,
@@ -3565,7 +3565,7 @@ class MoreToBeSaid(TeacherStudentsScene):
         words.to_edge(UP)
         fade_rect = FullScreenFadeRectangle()
         rect = Rectangle(height = 9, width = 16)        
-        rect.scale_to_fit_height(FRAME_Y_RADIUS)
+        rect.set_height(FRAME_Y_RADIUS)
         rect.to_corner(UP+RIGHT)
         randy = self.get_students()[1]
 
@@ -3654,7 +3654,7 @@ class Thumbnail(ExampleApproximationWithSine):
         self.add(cos_graph, quad_graph, quartic)
 
         title = TextMobject("Taylor Series")
-        title.scale_to_fit_width(1.5*FRAME_X_RADIUS)
+        title.set_width(1.5*FRAME_X_RADIUS)
         title.add_background_rectangle()
         title.to_edge(UP)
         self.add(title)

@@ -488,7 +488,7 @@ class Introduce1DFunctionCase(Scene):
                 # show_ellipsis = True,
             )
             height = self.rect.get_height()
-            decimal.scale_to_fit_height(height)
+            decimal.set_height(height)
             next_to_kwargs = {
                 "buff" : height,
             }
@@ -1065,7 +1065,7 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
     def ask_about_2d_functions(self):
         in_plane = NumberPlane(x_radius = 2.5, y_radius = 2.5)
         in_plane.add_coordinates()
-        in_plane.scale_to_fit_height(3)
+        in_plane.set_height(3)
         out_plane = in_plane.copy()
 
         in_text = TextMobject("Input space")
@@ -1530,7 +1530,7 @@ class OneDRegionBoundary(Scene):
         region.move_to(line)
 
         region_words = TextMobject("Input region")
-        region_words.scale_to_fit_width(0.8*region.get_width())
+        region_words.set_width(0.8*region.get_width())
         region_words.next_to(region, UP)
 
         x0_arrow, x1_arrow = arrows = VGroup(*[
@@ -2899,7 +2899,7 @@ class AllOfTheVideos(Scene):
             rect.set_stroke(WHITE, 1)
             image.add(rect)
         images.arrange_submobjects_in_grid(n, n, buff = 0)
-        images.scale_to_fit_height(FRAME_HEIGHT)
+        images.set_height(FRAME_HEIGHT)
         random.shuffle(images.submobjects)
 
         self.play(LaggedStart(FadeIn, images, run_time = 4))
@@ -2963,7 +2963,7 @@ class TickingClock(Scene):
     }
     def construct(self):
         clock = Clock()
-        clock.scale_to_fit_height(FRAME_HEIGHT - 1)
+        clock.set_height(FRAME_HEIGHT - 1)
         clock.to_edge(LEFT)
         lines = [clock.hour_hand, clock.minute_hand]
         def update_line(line):

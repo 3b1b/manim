@@ -34,7 +34,7 @@ class OpeningQuote(Scene):
             "No one can say how it happens. "
             "You either believe it or you don't.",
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
         words[0].set_color(YELLOW)
         words[2].set_color("#fd9c2b")
@@ -107,7 +107,7 @@ class ThisSeriesOrdering(RandolphScene):
         chapters.arrange_submobjects(
             DOWN, buff = SMALL_BUFF, aligned_edge = LEFT
         )
-        chapters.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        chapters.set_height(1.5*FRAME_Y_RADIUS)
         chapters.next_to(line, DOWN, buff = SMALL_BUFF)
         chapters.to_edge(RIGHT)
 
@@ -765,7 +765,7 @@ class RecommendChapter3(Scene):
         """)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1344,7 +1344,7 @@ class SomeKindOfConnection(Scene):
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(FRAME_X_RADIUS)
+        plane.set_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -2032,7 +2032,7 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(FRAME_X_RADIUS)
+        plane.set_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -2175,7 +2175,7 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
 
         brace = Brace(matrix, UP)
         word = TextMobject("Transform")
-        word.scale_to_fit_width(brace.get_width())
+        word.set_width(brace.get_width())
         brace.put_at_tip(word)
         word.set_color(BLUE)
 
@@ -2220,7 +2220,7 @@ class WhatTheVectorWantsToBe(Scene):
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(FRAME_X_RADIUS)
+        plane.set_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -2285,10 +2285,10 @@ class NextVideo(Scene):
             Next video: Cross products in the
             light of linear transformations
         """)
-        title.scale_to_fit_height(1.2)
+        title.set_height(1.2)
         title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
         VGroup(title, rect).show()
 

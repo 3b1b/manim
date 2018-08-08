@@ -42,7 +42,7 @@ class IntroduceTriples(TeacherStudentsScene):
             hyp_line = Line(ORIGIN, a*RIGHT+b*UP)
             elbow = VMobject()
             elbow.set_points_as_corners([LEFT, LEFT+UP, UP])
-            elbow.scale_to_fit_width(0.2*triangle.get_width())
+            elbow.set_width(0.2*triangle.get_width())
             elbow.move_to(triangle, DOWN+RIGHT)
             triangle.add(elbow)
 
@@ -87,7 +87,7 @@ class IntroduceTriples(TeacherStudentsScene):
                 VGroup(*[c_square[i] for i in not_i_list]),
             ]
             full_group = VGroup(triangle, square_groups)
-            full_group.scale_to_fit_height(4)
+            full_group.set_height(4)
             full_group.center()
             full_group.to_edge(UP)
 
@@ -181,7 +181,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
 class WritePythagoreanTriple(Scene):
     def construct(self):
         words = TextMobject("``Pythagorean triple''")
-        words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        words.set_width(FRAME_WIDTH - LARGE_BUFF)
         words.to_corner(DOWN+LEFT)
         self.play(Write(words))
         self.wait(2)
@@ -200,9 +200,9 @@ class ShowManyTriples(Scene):
             triangle = Polygon(ORIGIN, a*RIGHT, a*RIGHT+b*UP)
             triangle.set_color(WHITE)
             max_width = max_height = 4
-            triangle.scale_to_fit_height(max_height)
+            triangle.set_height(max_height)
             if triangle.get_width() > max_width:
-                triangle.scale_to_fit_width(max_width)
+                triangle.set_width(max_width)
             triangle.move_to(2*RIGHT)
             num_strings = map(str, (a, b, c))
             labels = map(TexMobject, num_strings)
@@ -299,7 +299,7 @@ class BabylonianTablets(Scene):
             triple = TexMobject(tex)
             triples.add(triple)
         triples.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        triples.scale_to_fit_height(FRAME_HEIGHT - LARGE_BUFF)
+        triples.set_height(FRAME_HEIGHT - LARGE_BUFF)
         triples.to_edge(RIGHT)
 
         self.add(title)
@@ -339,7 +339,7 @@ class PythagoreanProof(Scene):
             fill_color = WHITE,
             fill_opacity = 0.5
         )
-        triangle.scale_to_fit_height(3)
+        triangle.set_height(3)
         triangle.center()
         side_labels = self.get_triangle_side_labels(triangle)
         triangle_copy = triangle.copy()
@@ -453,15 +453,15 @@ class PythagoreanProof(Scene):
             )
             for color in SIDE_COLORS
         ]
-        a_square.scale_to_fit_width(triangle.get_width())
+        a_square.set_width(triangle.get_width())
         a_square.move_to(triangle.get_bottom(), UP)
-        b_square.scale_to_fit_height(triangle.get_height())
+        b_square.set_height(triangle.get_height())
         b_square.move_to(triangle.get_right(), LEFT)
         hyp_line = Line(
             triangle.get_corner(UP+RIGHT),
             triangle.get_corner(DOWN+LEFT),
         )
-        c_square.scale_to_fit_width(hyp_line.get_length())
+        c_square.set_width(hyp_line.get_length())
         c_square.move_to(hyp_line.get_center(), UP)
         c_square.rotate(
             hyp_line.get_angle(), 
@@ -2442,7 +2442,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
                 unit_length/distance,
                 about_point = self.plane_center
             )
-            dot.target.scale_to_fit_width(0.01)
+            dot.target.set_width(0.01)
 
         self.play(LaggedStart(
             MoveToTarget, dots,

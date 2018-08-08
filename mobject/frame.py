@@ -47,4 +47,4 @@ class PictureInPictureFrame(Rectangle):
             height=self.aspect_ratio[1],
             **kwargs
         )
-        self.scale_to_fit_height(height)
+        self.set_height(height)

@@ -48,7 +48,7 @@ class CountingScene(Scene):
             for point in self.get_template_configuration()
         ])
         dots[-1].set_stroke(width = 0)
-        dots.scale_to_fit_height(self.dot_configuration_height)
+        dots.set_height(self.dot_configuration_height)
         return dots
 
     def initialize_configurations(self):
@@ -301,7 +301,7 @@ class TowersOfHanoiScene(Scene):
         for number, disk in enumerate(self.disks):
             label = TexMobject(str(number))
             label.set_color(BLACK)
-            label.scale_to_fit_height(self.disk_height/2)
+            label.set_height(self.disk_height/2)
             label.move_to(disk)
             disk.add(label)
             disk.label = label
@@ -487,7 +487,7 @@ def get_base_b_tex_mob(number, base, n_digits):
     for place in range(n_digits):
         remainder = number%base
         digit_mob = TexMobject(str(remainder))
-        digit_mob.scale_to_fit_height(zero_height)
+        digit_mob.set_height(zero_height)
         digit_mob.shift(place*(zero_width+SMALL_BUFF)*LEFT)
         result.add(digit_mob)
         number = (number - remainder)/base
@@ -508,7 +508,7 @@ class IntroduceKeith(Scene):
         keith = Keith(mode = "dance_kick")
         keith_image = ImageMobject("keith_schwarz", invert = False)
         # keith_image = Rectangle()
-        keith_image.scale_to_fit_height(FRAME_HEIGHT - 2)
+        keith_image.set_height(FRAME_HEIGHT - 2)
         keith_image.next_to(ORIGIN, LEFT)
         keith.move_to(keith_image, DOWN+RIGHT)
         morty.next_to(keith, buff = LARGE_BUFF, aligned_edge = DOWN)
@@ -543,7 +543,7 @@ class IntroduceKeith(Scene):
         self.play(Blink(morty))
         self.play(
             keith.change_mode, "speaking",
-            keith.scale_to_fit_height, morty.get_height(),
+            keith.set_height, morty.get_height(),
             keith.next_to, morty, LEFT, LARGE_BUFF,
             run_time = 1.5
         )
@@ -1115,8 +1115,8 @@ class IntroduceBinaryCounting(BinaryCountingScene):
 
     def show_self_similarity(self):
         cover_rect = Rectangle()
-        cover_rect.scale_to_fit_width(FRAME_WIDTH)
-        cover_rect.scale_to_fit_height(FRAME_HEIGHT)
+        cover_rect.set_width(FRAME_WIDTH)
+        cover_rect.set_height(FRAME_HEIGHT)
         cover_rect.set_stroke(width = 0)
         cover_rect.set_fill(BLACK, opacity = 0.85)
         big_dot = self.curr_configurations[-1][0].copy()
@@ -1126,7 +1126,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         )
         self.play(
             big_dot.center,
-            big_dot.scale_to_fit_height, FRAME_HEIGHT-2,
+            big_dot.set_height, FRAME_HEIGHT-2,
             big_dot.to_edge, LEFT,
             run_time = 5
         )
@@ -1539,7 +1539,7 @@ class RecursiveSolution(TowersOfHanoiScene):
         arc = Arc(-5*np.pi/6, start_angle = 5*np.pi/6)
         arc.add_tip()
         arc.set_color(YELLOW)
-        arc.scale_to_fit_width(
+        arc.set_width(
             VGroup(*self.pegs[1:]).get_width()*0.8
         )
         arc.next_to(self.disks[0], UP+RIGHT, buff = SMALL_BUFF)
@@ -1974,7 +1974,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         peg_sets = (self.pegs[:2], self.pegs[1:])
         for curved_arrow, pegs in zip(curved_arrows, peg_sets):
             peg_group = VGroup(*pegs)
-            curved_arrow.scale_to_fit_width(0.7*peg_group.get_width())
+            curved_arrow.set_width(0.7*peg_group.get_width())
             curved_arrow.next_to(peg_group, UP)
 
         self.play(ShowCreation(curved_arrow1))
@@ -1982,7 +1982,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         self.wait()
 
         big_curved_arrow = Arc(start_angle = 5*np.pi/6, angle = -2*np.pi/3)
-        big_curved_arrow.scale_to_fit_width(0.9*self.pegs.get_width())
+        big_curved_arrow.set_width(0.9*self.pegs.get_width())
         big_curved_arrow.next_to(self.pegs, UP)
         big_curved_arrow.add_tip(tip_length = 0.4)
         big_curved_arrow.set_color(WHITE)
@@ -2034,7 +2034,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         ]
         sub_steps, sub_sub_steps = subdivisions[:2]
         for steps in subdivisions:
-            steps.scale_to_fit_width(FRAME_WIDTH-1)
+            steps.set_width(FRAME_WIDTH-1)
         subdivisions.append(
             TextMobject("\\tiny Move disk 0, Move disk 0").set_color(BLUE)
         )
@@ -2417,7 +2417,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
             for i, color in enumerate(colors[:-1]):
                 step[-i-2].set_color(color)
         VGroup(*steps[1::2]).set_color(colors[-1])
-        steps.scale_to_fit_width(FRAME_WIDTH-1)
+        steps.set_width(FRAME_WIDTH-1)
         brace = Brace(steps, UP)
         word_group = VGroup(title, brace, steps)
         word_group.arrange_submobjects(DOWN)
@@ -2694,7 +2694,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
             for d in range(self.num_disks)
         ]))
         parentheticals.arrange_submobjects()
-        parentheticals.scale_to_fit_width(FRAME_WIDTH-1)
+        parentheticals.set_width(FRAME_WIDTH-1)
         parentheticals.next_to(top_mob, DOWN)
         for parens in parentheticals:
             brace = Brace(parens)
@@ -2732,7 +2732,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
 class ThisIsMostEfficientText(Scene):
     def construct(self):
         text = TextMobject("This is the most efficient solution")
-        text.scale_to_fit_width(FRAME_WIDTH - 1)
+        text.set_width(FRAME_WIDTH - 1)
         text.to_edge(DOWN)
         self.play(Write(text))
         self.wait(2)
@@ -2856,7 +2856,7 @@ class SierpinskiGraphScene(Scene):
             self.nodes.add(node)
         if self.include_towers:
             self.add_towers_to_nodes()
-        self.nodes.scale_to_fit_height(FRAME_HEIGHT-2)
+        self.nodes.set_height(FRAME_HEIGHT-2)
         self.nodes.to_edge(UP)
 
     def get_node_circles(self, order = 3):
@@ -2886,7 +2886,7 @@ class SierpinskiGraphScene(Scene):
             for mob in towers:
                 if hasattr(mob, "label"):
                     self.disks[int(mob.label.tex_string)].add(mob)
-            towers.scale_to_fit_width(0.85*node.get_width())
+            towers.set_width(0.85*node.get_width())
             towers.move_to(node)
             node.towers = towers
             node.add(towers)
@@ -2977,7 +2977,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             node = self.nodes[index]
             node.save_state()
             self.play(
-                node.scale_to_fit_height, FRAME_HEIGHT-2,
+                node.set_height, FRAME_HEIGHT-2,
                 node.next_to, ORIGIN, vect
             )
             self.wait()
@@ -2990,13 +2990,13 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
         for node, vect in zip(nodes, [LEFT, RIGHT]):
             node.save_state()
             node.generate_target()
-            node.target.scale_to_fit_height(5)
+            node.target.set_height(5)
             node.target.center()
             node.target.to_edge(vect)
             arc = Arc(angle = -2*np.pi/3, start_angle = 5*np.pi/6)
             if vect is RIGHT:
                 arc.flip()
-            arc.scale_to_fit_width(0.8*node.target.towers.get_width())
+            arc.set_width(0.8*node.target.towers.get_width())
             arc.next_to(node.target.towers, UP)
             arc.add_tip()
             arc.set_color(YELLOW)
@@ -3067,7 +3067,7 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
         for node, vect in zip(nodes, [LEFT, RIGHT]):
             node.save_state()
             node.generate_target()
-            node.target.scale_to_fit_height(6)
+            node.target.set_height(6)
             node.target.center().next_to(ORIGIN, vect)
 
         self.play(*map(MoveToTarget, nodes))
@@ -3239,7 +3239,7 @@ class MortyLookingAtRectangle(Scene):
         url = TextMobject("www.desmos.com/careers")
         url.to_corner(UP+LEFT)
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5)
+        rect.set_height(5)
         rect.next_to(url, DOWN)
         rect.shift_onto_screen()
         url.save_state()

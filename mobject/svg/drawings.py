@@ -77,7 +77,7 @@ class SunGlasses(SVGMobject):
         SVGMobject.__init__(self, **kwargs)
         self.set_stroke(WHITE, width=0)
         self.set_fill(GREY, 1)
-        self.scale_to_fit_width(
+        self.set_width(
             self.glasses_width_to_eyes_width * pi_creature.eyes.get_width()
         )
         self.move_to(pi_creature.eyes, UP)
@@ -105,7 +105,7 @@ class Speedometer(VMobject):
             vect = rotate_vector(RIGHT, angle)
             tick = Line((1 - self.tick_length) * vect, vect)
             label = TexMobject(str(10 * index))
-            label.scale_to_fit_height(self.tick_length)
+            label.set_height(self.tick_length)
             label.shift((1 + self.tick_length) * vect)
             self.add(tick, label)
 
@@ -169,7 +169,7 @@ class AoPSLogo(SVGMobject):
             for i in index_list:
                 self.submobjects[i].set_fill(color, opacity=1)
 
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         self.center()
 
 
@@ -190,7 +190,7 @@ class PartyHat(SVGMobject):
 
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         if self.pi_creature is not None:
             self.next_to(self.pi_creature.eyes, UP, buff=0)
 
@@ -225,7 +225,7 @@ class Laptop(VGroup):
         body = Cube(side_length=1)
         for dim, scale_factor in enumerate(self.body_dimensions):
             body.stretch(scale_factor, dim=dim)
-        body.scale_to_fit_width(self.width)
+        body.set_width(self.width)
         body.set_fill(self.shaded_body_color, opacity=1)
         body.sort_submobjects(lambda p: p[2])
         body[-1].set_fill(self.body_color)
@@ -292,7 +292,7 @@ class PatreonLogo(SVGMobject):
 
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.scale_to_fit_width(self.width)
+        self.set_width(self.width)
         self.center()
 
 
@@ -305,7 +305,7 @@ class VideoIcon(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
         self.center()
-        self.scale_to_fit_width(self.width)
+        self.set_width(self.width)
         self.set_stroke(color=WHITE, width=0)
         self.set_fill(color=WHITE, opacity=1)
 
@@ -321,7 +321,7 @@ class VideoSeries(VGroup):
         videos = [VideoIcon() for x in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
         self.arrange_submobjects()
-        self.scale_to_fit_width(FRAME_WIDTH - MED_LARGE_BUFF)
+        self.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         self.set_color_by_gradient(*self.gradient_colors)
 
 
@@ -337,12 +337,12 @@ class Headphones(SVGMobject):
         digest_config(self, kwargs)
         SVGMobject.__init__(self, file_name=self.file_name, **kwargs)
         self.stretch(self.y_stretch_factor, 1)
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         self.set_stroke(width=0)
         self.set_fill(color=self.color)
         if pi_creature is not None:
             eyes = pi_creature.eyes
-            self.scale_to_fit_height(3 * eyes.get_height())
+            self.set_height(3 * eyes.get_height())
             self.move_to(eyes, DOWN)
             self.shift(DOWN * eyes.get_height() / 4)
 
@@ -473,7 +473,7 @@ class Bubble(SVGMobject):
     def position_mobject_inside(self, mobject):
         scaled_width = self.content_scale_factor * self.get_width()
         if mobject.get_width() > scaled_width:
-            mobject.scale_to_fit_width(scaled_width)
+            mobject.set_width(scaled_width)
         mobject.shift(
             self.get_bubble_center() - mobject.get_center()
         )
@@ -544,13 +544,13 @@ class Car(SVGMobject):
 
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         self.set_stroke(color=WHITE, width=0)
         self.set_fill(self.color, opacity=1)
 
         from for_3b1b_videos.pi_creature import Randolph
         randy = Randolph(mode="happy")
-        randy.scale_to_fit_height(0.6 * self.get_height())
+        randy.set_height(0.6 * self.get_height())
         randy.stretch(0.8, 0)
         randy.look(RIGHT)
         randy.move_to(self)
@@ -958,7 +958,7 @@ class PlayingCard(VGroup):
             mode=pi_mode,
             color=pi_color,
         )
-        pi_creature.scale_to_fit_width(0.8 * sub_rect.get_width())
+        pi_creature.set_width(0.8 * sub_rect.get_width())
         if value in ["Q", "K"]:
             prefix = "king" if value == "K" else "queen"
             crown = SVGMobject(file_name=prefix + "_crown")
@@ -983,7 +983,7 @@ class PlayingCard(VGroup):
         value_mob = TextMobject(value)
         width = self.get_width() / self.card_width_to_corner_num_width
         height = self.get_height() / self.card_height_to_corner_num_height
-        value_mob.scale_to_fit_width(width)
+        value_mob.set_width(width)
         value_mob.stretch_to_fit_height(height)
         value_mob.next_to(
             self.get_corner(UP + LEFT), DOWN + RIGHT,
@@ -991,7 +991,7 @@ class PlayingCard(VGroup):
         )
         value_mob.set_color(symbol.get_color())
         corner_symbol = symbol.copy()
-        corner_symbol.scale_to_fit_width(width)
+        corner_symbol.set_width(width)
         corner_symbol.next_to(
             value_mob, DOWN,
             buff=MED_SMALL_BUFF * width
@@ -1029,4 +1029,4 @@ class SuitSymbol(SVGMobject):
         color = suits_to_colors[suit_name]
         self.set_stroke(width=0)
         self.set_fill(color, 1)
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
