@@ -39,7 +39,7 @@ class Camera(object):
         "frame_width": FRAME_WIDTH,
         "frame_center": ORIGIN,
         "background_color": BLACK,
-        "background_opacity": 0,
+        "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
         "max_allowable_norm": FRAME_WIDTH,

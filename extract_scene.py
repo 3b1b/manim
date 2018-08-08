@@ -106,16 +106,23 @@ def get_configuration():
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
     }
+
+    # Camera configuration
+    config["camera_config"] = {}
     if args.low_quality:
-        config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
+        config["camera_config"].update(LOW_QUALITY_CAMERA_CONFIG)
         config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
     elif args.medium_quality:
-        config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
+        config["camera_config"].update(MEDIUM_QUALITY_CAMERA_CONFIG)
         config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
     else:
-        config["camera_config"] = PRODUCTION_QUALITY_CAMERA_CONFIG
+        config["camera_config"].update(PRODUCTION_QUALITY_CAMERA_CONFIG)
         config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
 
+    if args.transparent:
+        config["camera_config"]["background_opacity"] = 0
+
+    # Arguments related to skipping
     stan = config["start_at_animation_number"]
     if stan is not None:
         if "," in stan:

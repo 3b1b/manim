@@ -591,7 +591,7 @@ class Scene(Container):
             # This is if the background of the exported video
             # should be transparent.
             command += [
-                '-vcodec', 'png',
+                '-vcodec', 'qtrle',
             ]
         else:
             command += [
