@@ -332,8 +332,8 @@ class ShowDerivativeAtExamplePoint(Scene):
             ["{\\partial f / \\partial x}"],
             ["{\\partial f / \\partial y}"],
         ])
-        partial_vect.get_mob_matrix()[1, 0][-1].set_color(BLUE)
-        partial_vect.get_mob_matrix()[0, 0][-1].set_color(RED)
+        partial_vect.get_mob_matrix()[0, 0][-1].set_color(BLUE)
+        partial_vect.get_mob_matrix()[1, 0][-1].set_color(RED)
         result_vector = self.get_result_vector("x", "y")
 
         gradient = VGroup(
