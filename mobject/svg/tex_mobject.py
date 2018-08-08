@@ -99,6 +99,15 @@ class SingleStringTexMobject(SVGMobject):
         if num_lefts != num_rights:
             tex = tex.replace("\\left", "\\big")
             tex = tex.replace("\\right", "\\big")
+
+        for context in ["array"]:
+            begin_in = ("\\begin{%s}" % context) in tex
+            end_in = ("\\end{%s}" % context) in tex
+            if begin_in ^ end_in:
+                # Just turn this into a blank string,
+                # which means caller should leave a
+                # stray \\begin{...} with other symbols
+                tex = ""
         return tex
 
     def remove_stray_braces(self, tex):
