@@ -10,7 +10,7 @@ from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VectorizedPoint
 from animation.transform import Transform
 from utils.bezier import interpolate
-from utils.config_ops import digest_config
+from utils.config_ops import digest_config, __metaclass__
 from utils.paths import counterclockwise_path
 from utils.rate_functions import double_smooth
 from utils.rate_functions import smooth

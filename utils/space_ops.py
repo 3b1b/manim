@@ -8,14 +8,25 @@ from functools import reduce
 
 
 def thick_diagonal(dim, thickness=2):
+    """
+    :param dim: The dimension of the array.
+    :param thickness: Thickness of the diagonal. Defaults to 2
+    :return: returns a array fo dimension (dim, dim) with thickened diagonal with thickness = `thickness`
+
+    """
     row_indices = np.arange(dim).repeat(dim).reshape((dim, dim))
     col_indices = np.transpose(row_indices)
-    return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
+    thick_array = (np.abs(row_indices - col_indices) < thickness).astype('uint8')
+    return thick_array
 
 
 def rotation_matrix(angle, axis):
     """
     Rotation in R^3 about a specified axis of rotation.
+    The rotation is done in three steps:
+        1. First the Coordinate system is transferred to the a new system where the `axis` si the Z axis of the new system.
+        2. then the rotation is done through an angle of `angle` w.r.t. new co-codinates.
+        3. Reverts back to the old system.
     """
     about_z = rotation_about_z(angle)
     z_to_axis = z_to_vector(axis)
@@ -33,8 +44,12 @@ def rotation_about_z(angle):
 
 def z_to_vector(vector):
     """
+    :arg: vector: A vector in R3
     Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
+
+    This function tilts the entire space such that the given becomes the Z axis of the new System and returns the  matrix
+    of the linear transformation
     """
     norm = np.linalg.norm(vector)
     if norm == 0:
@@ -42,6 +57,7 @@ def z_to_vector(vector):
     v = np.array(vector) / norm
     phi = np.arccos(v[2])
     if any(v[:2]):
+
         # projection of vector to unit circle
         axis_proj = v[:2] / np.linalg.norm(v[:2])
         theta = np.arccos(axis_proj[0])
@@ -61,13 +77,6 @@ def rotate_vector(vector, angle, axis=OUT):
     return np.dot(rotation_matrix(angle, axis), vector)
 
 
-def angle_between(v1, v2):
-    return np.arccos(np.dot(
-        v1 / np.linalg.norm(v1),
-        v2 / np.linalg.norm(v2)
-    ))
-
-
 def angle_of_vector(vector):
     """
     Returns polar coordinate theta when vector is project on xy plane
@@ -82,6 +91,7 @@ def angle_between_vectors(v1, v2):
     """
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and TAU/2.
+
     """
     l1 = np.linalg.norm(v1)
     l2 = np.linalg.norm(v2)
@@ -91,8 +101,6 @@ def angle_between_vectors(v1, v2):
 def project_along_vector(point, vector):
     matrix = np.identity(3) - np.outer(vector, vector)
     return np.dot(point, matrix.T)
-
-###
 
 
 def compass_directions(n=4, start_vect=RIGHT):

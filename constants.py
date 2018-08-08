@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 env_MEDIA_DIR = None
-MEDIA_DIR = "#ERROR#"
+MEDIA_DIR = "/home/kiran/Desktop/Programming/animations"
 
 try:
     env_MEDIA_DIR = os.getenv("MEDIA_DIR")

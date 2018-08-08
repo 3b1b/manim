@@ -5,7 +5,7 @@ from constants import *
 from mobject.mobject import Mobject
 from utils.rate_functions import smooth
 from utils.config_ops import instantiate
-from utils.config_ops import digest_config
+from utils.config_ops import digest_config, __metaclass__
 
 
 class Animation(object):

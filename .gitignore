@@ -13,6 +13,7 @@ ben_cairo_test.py
 *.iml
 manim.sublime-project
 manim.sublime-workspace
+constants.py
 
 primes.py
 /media_dir.txt

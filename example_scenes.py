@@ -10,6 +10,7 @@ from .big_ol_pile_of_manim_imports import *
 # quality, use -s to skip to the end and just show
 # the final frame, and use -n <number> to skip ahead
 # to the n'th animation of a scene.
+from mobject.coordinate_systems import ThreeDAxes
 
 
 class SquareToCircle(Scene):
@@ -158,3 +159,21 @@ class SpinAroundCube(ThreeDScene):
             ]
         )
         self.wait(4)
+
+class FirstAnimation(Scene):
+    def construct(self):
+        circle = Circle()
+        arrow = Arrow([-1, -1, 0])
+        circle.flip(RIGHT)
+        line = Line([1, 3, 0], [6, 8, 0])
+        square = Square()
+        square.rotate(45)
+
+        # self.play(ShowCreation(arrow))
+        self.play(ShowCreation(circle))
+        # self.play(GrowFromCenter(circle))
+        self.play(Transform(circle, square))
+        self.play(Transform(circle, arrow))
+        self.play(Rotate(circle, 34))
+        # self.play(ShowCreation(line))
+
