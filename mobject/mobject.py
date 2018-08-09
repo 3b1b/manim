@@ -925,6 +925,15 @@ class Mobject(Container):
     def pointwise_become_partial(self, mobject, a, b):
         pass  # To implement in subclass
 
+    def become(self, mobject):
+        """
+        Edit points, colors and submobjects to be idential
+        to another mobject
+        """
+        self.align_points(mobject)
+        self.interpolate(self, mobject, 1)
+        self.submobjects = [sm.copy() for sm in mobject.submobjects]
+
 
 class Group(Mobject):
     # Alternate name to improve readibility in cases where
