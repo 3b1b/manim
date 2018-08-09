@@ -30,6 +30,8 @@ HELP_MESSAGE = """
    -q don't print progress
    -f when writing to a movie file, export the frames in png sequence
    -t use transperency when exporting images
+   -n specify the number of the animation to start from
+   -r specify a resolution
 """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script
@@ -70,6 +72,7 @@ def get_configuration():
             parser.add_argument(short_arg, long_arg, action="store_true")
         parser.add_argument("-o", "--output_name")
         parser.add_argument("-n", "--start_at_animation_number")
+        parser.add_argument("-r", "--resolution")
         args = parser.parse_args()
         if args.output_name is not None:
             output_name_root, output_name_ext = os.path.splitext(
@@ -119,6 +122,22 @@ def get_configuration():
         config["camera_config"].update(PRODUCTION_QUALITY_CAMERA_CONFIG)
         config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
 
+    # If the resolution was passed in via -r
+    if args.resolution:
+        if "," in args.resolution:
+            height_str, width_str = args.resolution.split(",")
+            height = int(height_str)
+            width = int(width_str)
+        else:
+            height = int(args.resolution)
+            width = int(16 * height / 9)
+        config["camera_config"].update({
+            "pixel_height": height,
+            "pixel_width": width,
+        })
+
+    # If rendering a transparent image/move, make sure the
+    # scene has a background opacity of 0
     if args.transparent:
         config["camera_config"]["background_opacity"] = 0
 
