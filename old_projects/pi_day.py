@@ -428,7 +428,7 @@ class ManyFormulas(Scene):
 
 
         angle_group = angle_groups[0]
-        self.play(*map(FadeIn, [circle, radius]))
+        self.play(*list(map(FadeIn, [circle, radius])))
         self.play(
             circle.set_stroke, {"width" : 1,},
             FadeIn(angle_group),
@@ -722,7 +722,7 @@ class UsingTheta(Scene):
 
 class ThingsNamedAfterEuler(Scene):
     def construct(self):
-        group = VGroup(*map(TextMobject, [
+        group = VGroup(*list(map(TextMobject, [
             "Euler's formula (Complex analysis)",
             "Euler's formula (Graph theory)",
             "Euler's formula (Mechanical engineering)",
@@ -733,7 +733,7 @@ class ThingsNamedAfterEuler(Scene):
             "Euler equations (fluid dynamics)",
             "Euler angles (rigid-body mechanics)",
             "Euler totient function (number theory)",
-        ]))
+        ])))
         group.arrange_submobjects(DOWN, aligned_edge = LEFT)
         group.set_height(FRAME_HEIGHT - 1)
 
@@ -973,12 +973,12 @@ class SpecialThanks(Scene):
         h_line.next_to(title, DOWN)
         h_line.set_stroke(WHITE, 1)
 
-        people = VGroup(*map(TextMobject, [
+        people = VGroup(*list(map(TextMobject, [
             "Ben Hambrecht",
             "University Library Basel",
             "Martin Mattmüller",
             "Library of the Institut de France",
-        ]))
+        ])))
         people.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
         people.next_to(h_line, DOWN)
 

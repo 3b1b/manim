@@ -137,7 +137,7 @@ class PlaneStartState(LinearTransformationScene):
     def construct(self):
         self.add_title("Input space")
         labels = self.get_basis_vector_labels()
-        self.play(*map(Write, labels))
+        self.play(*list(map(Write, labels)))
         self.wait()
 
 class OutputIn3dWords(Scene):
@@ -440,12 +440,12 @@ class TwoDTo1DTransform(LinearTransformationScene):
         self.remove(plane_words)
         mobjects = self.get_mobjects()
         self.play(
-            *map(FadeOut, mobjects) + [ShowCreation(line)]
+            *list(map(FadeOut, mobjects)) + [ShowCreation(line)]
         )
         self.play(Write(line_words))
         self.wait()
         self.remove(line_words)
-        self.play(*map(FadeIn, mobjects))
+        self.play(*list(map(FadeIn, mobjects)))
         self.apply_transposed_matrix(self.t_matrix)
         self.play(Write(VMobject(*line.get_number_mobjects())))
         self.wait()

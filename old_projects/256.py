@@ -292,7 +292,7 @@ class MainBreakdown(Scene):
             Animation(hash_names)
         )
         self.play(get_passing_flash(), Animation(hash_names))
-        self.play(*map(FadeOut, [name, hash_names]))
+        self.play(*list(map(FadeOut, [name, hash_names])))
 
         self.gpu = gpu
         self.rate_words = rate_words

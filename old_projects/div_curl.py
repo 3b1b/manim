@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 
 DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
@@ -29,7 +29,7 @@ def get_flow_start_points(x_min=-8, x_max=8,
         noise_factor = delta_y / 2
     return np.array([
         x * RIGHT + y * UP + noise_factor * np.random.random(3)
-        for n in xrange(n_repeats)
+        for n in range(n_repeats)
         for x in np.arange(x_min, x_max + delta_x, delta_x)
         for y in np.arange(y_min, y_max + delta_y, delta_y)
     ])
@@ -122,7 +122,7 @@ def get_rgb_gradient_function(min_value=0, max_value=1,
                               colors=[BLUE, RED],
                               flip_alphas=True,  # Why?
                               ):
-    rgbs = np.array(map(color_to_rgb, colors))
+    rgbs = np.array(list(map(color_to_rgb, colors)))
 
     def func(values):
         alphas = inverse_interpolate(min_value, max_value, values)
@@ -494,7 +494,7 @@ class Introduction(MovingCameraScene):
         self.play(
             LaggedStart(ShowPassingFlash, stream_lines),
             FadeIn(div_title[0]),
-            *map(GrowFromCenter, div_title[1])
+            *list(map(GrowFromCenter, div_title[1]))
         )
 
         # Curl
@@ -1220,14 +1220,14 @@ class ScopeMeiosis(PiCreatureScene):
 
     def construct(self):
         morty = self.pi_creature
-        section_titles = VGroup(*map(TextMobject, [
+        section_titles = VGroup(*list(map(TextMobject, [
             "Background on div/curl",
             "Conformal maps",
             "Conformal map $\\Rightarrow" +
             "\\text{div}\\textbf{F} = " +
             "\\text{curl}\\textbf{F} = 0$",
             "Complex derivatives",
-        ]))
+        ])))
         sections = VGroup(*[
             VGroup(title, self.get_lines(title, 3))
             for title in section_titles
@@ -1251,7 +1251,7 @@ class ScopeMeiosis(PiCreatureScene):
             "concerned_musician",
         ]
 
-        for n, mode in zip(range(6), modes):
+        for n, mode in zip(list(range(6)), modes):
             if n % 2 == 1:
                 top_title = lines
                 lines = self.get_lines(top_title, 4)
@@ -1609,10 +1609,10 @@ class ChangingElectricField(Scene):
         return particles
 
     def get_vector_field(self):
-        func = get_force_field_func(*zip(
-            map(Mobject.get_center, self.particles),
+        func = get_force_field_func(*list(zip(
+            list(map(Mobject.get_center, self.particles)),
             [p.charge for p in self.particles]
-        ))
+        )))
         self.vector_field = VectorField(func, **self.vector_field_config)
         return self.vector_field
 
@@ -1925,7 +1925,7 @@ class DefineDivergenceSymbols(Scene):
                 *fade_anims
             )
             self.wait(2)
-            fade_anims = map(FadeOut, [brace, label])
+            fade_anims = list(map(FadeOut, [brace, label]))
         self.wait()
 
 
@@ -3205,7 +3205,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         )
         axes.shift(self.origin)
         for axis in axes.x_axis, axes.y_axis:
-            axis.add_numbers(*range(10, 60, 10))
+            axis.add_numbers(*list(range(10, 60, 10)))
 
         axes_labels = self.axes_labels = VGroup(*[
             VGroup(
@@ -3734,10 +3734,10 @@ class DivCurlDotCross(Scene):
         ])
         rects.arrange_submobjects_in_grid(n_rows=2, buff=LARGE_BUFF)
         rects[2:].shift(MED_LARGE_BUFF * DOWN)
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Divergence", "Curl",
             "Dot product", "Cross product"
-        ]))
+        ])))
         for title, rect in zip(titles, rects):
             title.next_to(rect, UP)
 
@@ -4290,10 +4290,7 @@ class ZToHalfFlowNearWall(ComplexTransformationScene, MovingCameraScene):
             secondary_line_ratio=0,
         )
         plane.next_to(ORIGIN, UP, buff=0.001)
-        horizontal_lines = VGroup(*filter(
-            lambda l: np.abs(l.get_center()[0]) < 0.1,
-            list(plane.main_lines) + [plane.axes[0]]
-        ))
+        horizontal_lines = VGroup(*[l for l in list(plane.main_lines) + [plane.axes[0]] if np.abs(l.get_center()[0]) < 0.1])
         plane.set_stroke(MAROON_B, width=2)
         horizontal_lines.set_stroke(BLUE, width=2)
 
@@ -4567,7 +4564,7 @@ class ThoughtsOnAds(Scene):
         left_text.to_edge(LEFT)
 
         viewer, brand, creator = vcb = VGroup(
-            *map(TextMobject, ["viewer", "brand", "creator"])
+            *list(map(TextMobject, ["viewer", "brand", "creator"]))
         )
         brand.next_to(creator, LEFT, LARGE_BUFF)
         viewer.next_to(vcb[1:], UP, LARGE_BUFF)
@@ -4626,7 +4623,7 @@ class ThoughtsOnAds(Scene):
         self.play(
             Write(misaligned),
             Write(aligned),
-            *map(GrowArrow, arrows),
+            *list(map(GrowArrow, arrows)),
             run_time=1
         )
 

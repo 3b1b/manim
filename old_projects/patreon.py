@@ -122,7 +122,7 @@ class GrowingToDoList(Scene):
         underline = Line(title.get_left(), title.get_right())
         underline.next_to(title, DOWN)
 
-        lines = VGroup(*map(TextMobject, [
+        lines = VGroup(*list(map(TextMobject, [
             "That one on topology",
             "Something with quaternions",
             "Solving puzzles with binary counting",
@@ -136,7 +136,7 @@ class GrowingToDoList(Scene):
             "Fourier stuffs",
             "$1+2+3+\\cdots = -\\frac{1}{12}$",
             "Understanding entropy",
-        ]))
+        ])))
         lines.scale(0.65)
         lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         lines.set_color_by_gradient(BLUE_C, YELLOW)
@@ -461,7 +461,7 @@ class PythagoreanTransformation(Scene):
         b_square_tex.move_to(b_square)
 
         self.play(ShowCreation(tri1, run_time = 2))
-        self.play(*map(Write, [a, b, c]))
+        self.play(*list(map(Write, [a, b, c])))
         self.wait()
         self.play(
             FadeIn(c_square),
@@ -479,7 +479,7 @@ class PythagoreanTransformation(Scene):
         self.remove(mover)
         self.add(big_square, *[tri1]+copies)
         self.wait(2)
-        self.play(*map(FadeOut, [a, b, c, c_square]))
+        self.play(*list(map(FadeOut, [a, b, c, c_square])))
         self.play(
             tri3.shift,
             tri1.get_corner(UP+LEFT) -\
@@ -612,7 +612,7 @@ class IntegrationByParts(Scene):
 
         self.draw_curve(curve)
         self.play(ShowCreation(rect))
-        self.play(*map(Write, [down_brace, left_brace, f_T, g_T]))
+        self.play(*list(map(Write, [down_brace, left_brace, f_T, g_T])))
         self.wait()
         self.play(FadeIn(upper_right))
         self.play(
@@ -660,7 +660,7 @@ class IntegrationByParts(Scene):
             rate_func = None
         )
         self.wait()
-        self.play(*map(FadeOut, [coords, dot]))
+        self.play(*list(map(FadeOut, [coords, dot])))
 
 class EndScreen(TeacherStudentsScene):
     def construct(self):

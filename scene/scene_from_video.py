@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-from __future__ import print_function
+
+
 
 import cv2
 
@@ -24,11 +24,11 @@ class SceneFromVideo(Scene):
             start_frame = 0
             end_frame = frame_count
         else:
-            start_frame, end_frame = map(lambda t: fps * t, time_range)
+            start_frame, end_frame = [fps * t for t in time_range]
 
         frame_count = end_frame - start_frame
         print("Reading in " + file_name + "...")
-        for count in show_progress(range(start_frame, end_frame + 1)):
+        for count in show_progress(list(range(start_frame, end_frame + 1))):
             returned, frame = cap.read()
             if not returned:
                 break

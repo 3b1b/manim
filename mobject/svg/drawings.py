@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import itertools as it
 
 from constants import *
@@ -711,7 +711,7 @@ class Logo(VMobject):
                     fill_opacity=1,
                     stroke_width=0,
                 )
-                for vertex3 in half_base * LEFT, ORIGIN,
+                for vertex3 in (half_base * LEFT, ORIGIN,)
             ]
             left_half_triangle = right_half_triangle.copy()
             left_half_triangle.flip(UP, about_point=ORIGIN)
@@ -782,7 +782,7 @@ class Logo(VMobject):
 
 class DeckOfCards(VGroup):
     def __init__(self, **kwargs):
-        possible_values = map(str, range(1, 11)) + ["J", "Q", "K"]
+        possible_values = list(map(str, list(range(1, 11)))) + ["J", "Q", "K"]
         possible_suits = ["hearts", "diamonds", "spades", "clubs"]
         VGroup.__init__(self, *[
             PlayingCard(value=value, suit=suit, **kwargs)
@@ -804,7 +804,7 @@ class PlayingCard(VGroup):
         "color": LIGHT_GREY,
         "turned_over": False,
         "possible_suits": ["hearts", "diamonds", "spades", "clubs"],
-        "possible_values": map(str, range(2, 11)) + ["J", "Q", "K", "A"],
+        "possible_values": list(map(str, list(range(2, 11)))) + ["J", "Q", "K", "A"],
     }
 
     def __init__(self, key=None, **kwargs):
@@ -878,7 +878,7 @@ class PlayingCard(VGroup):
     def get_design(self, value, symbol):
         if value == "A":
             return self.get_ace_design(symbol)
-        if value in map(str, range(2, 11)):
+        if value in list(map(str, list(range(2, 11)))):
             return self.get_number_design(value, symbol)
         else:
             return self.get_face_card_design(value, symbol)

@@ -21,13 +21,10 @@ class Blob(Circle):
 
     def probably_contains(self, point):
         border_points = np.array(self.get_anchors_and_handles()[0])
-        distances = map(lambda p : np.linalg.norm(p-point), border_points)
+        distances = [np.linalg.norm(p-point) for p in border_points]
         min3 = border_points[np.argsort(distances)[:3]]
         center_direction = self.get_center() - point
-        in_center_direction = map(
-            lambda p : np.dot(p-point, center_direction) > 0, 
-            min3
-        )
+        in_center_direction = [np.dot(p-point, center_direction) > 0 for p in min3]
         return sum(in_center_direction) <= 2
             
 class RightHand(VMobject):
@@ -184,7 +181,7 @@ class DiagonalExample(LinearTransformationScene):
 
             width_target, height_target = width.copy(), height.copy()
             det = np.linalg.det(self.transposed_matrix)
-            times, eq_det = map(TexMobject, ["\\times", "=%d"%det])
+            times, eq_det = list(map(TexMobject, ["\\times", "=%d"%det]))
             words = TextMobject("New area $=$")
             equation = VMobject(
                 words, width_target, times, height_target, eq_det
@@ -198,7 +195,7 @@ class DiagonalExample(LinearTransformationScene):
                 ShowCreation(background_rect),                
                 Transform(width.copy(), width_target),
                 Transform(height.copy(), height_target),
-                *map(Write, [words, times, eq_det])
+                *list(map(Write, [words, times, eq_det]))
             )
             self.wait()
 
@@ -918,7 +915,7 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
             ]
         )
         self.wait()
-        self.play(*map(FadeOut, [i_brace, side_brace, width, height]))
+        self.play(*list(map(FadeOut, [i_brace, side_brace, width, height])))
         matrix1 = np.dot(
             [[a, b], [c, d]],
             np.linalg.inv([[a, b], [0, d]])

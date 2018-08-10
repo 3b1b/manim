@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-from __future__ import print_function
+
+
 import inspect
 import os
 import sys
@@ -39,7 +39,7 @@ def stage_animations(module_name):
     sorted_files = []
     for scene_class in scene_classes:
         scene_name = scene_class.__name__
-        for clip in filter(lambda f: f.startswith(scene_name + "."), files):
+        for clip in [f for f in files if f.startswith(scene_name + ".")]:
             sorted_files.append(os.path.join(animation_dir, clip))
 
     animation_subdir = os.path.dirname(animation_dir)

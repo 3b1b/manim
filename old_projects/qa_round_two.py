@@ -106,7 +106,7 @@ class PowersOfTwo(Scene):
         two_to_ten.replace(mob[0])
         self.play(
             two_to_ten.restore,
-            *map(ShowCreation, lines)
+            *list(map(ShowCreation, lines))
         )
 
         curr_po2_outline = curr_po2[-1].copy()

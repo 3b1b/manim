@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
+
 from .big_ol_pile_of_manim_imports import *
 
 # To watch one of these scenes, run the following:

@@ -553,20 +553,13 @@ class BackAndForth(Scene):
         self.wait(3)
         for tup, eq, to_draw in (pair, circle_eq, circle), (triplet, sphere_eq, VMobject()):
             for mob in tup, eq:
-                mob.xyz = VGroup(*filter(
-                    lambda sm : sm is not None,
-                    map(mob.get_part_by_tex, "xyz")
-                ))
+                mob.xyz = VGroup(*[sm for sm in map(mob.get_part_by_tex, "xyz") if sm is not None])
             self.play(
                 ReplacementTransform(tup.xyz, eq.xyz),
-                FadeOut(VGroup(*filter(
-                    lambda sm : sm not in tup.xyz, tup
-                ))),
+                FadeOut(VGroup(*[sm for sm in tup if sm not in tup.xyz])),
             )
             self.play(
-                Write(VGroup(*filter(
-                    lambda sm : sm not in eq.xyz, eq
-                ))),
+                Write(VGroup(*[sm for sm in eq if sm not in eq.xyz])),
                 ShowCreation(to_draw)
             )
         self.wait(3)
@@ -576,11 +569,11 @@ class SphereForming(ExternallyAnimatedScene):
 
 class PreviousVideos(Scene):
     def construct(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Pi hiding in prime regularities",
             "Visualizing all possible pythagorean triples",
             "Borsuk-Ulam theorem",
-        ]))
+        ])))
         titles.to_edge(UP, buff = MED_SMALL_BUFF)
         screen = ScreenRectangle(height = 6)
         screen.next_to(titles, DOWN)
@@ -604,10 +597,10 @@ class AskAboutLongerLists(TeacherStudentsScene):
             "$(x_1, x_2, x_3, x_4)?$"
         )
         tup = question[1]
-        alt_tups = map(TextMobject, [
+        alt_tups = list(map(TextMobject, [
             "$(x_1, x_2, x_3, x_4, x_5)?$",
             "$(x_1, x_2, \\dots, x_{99}, x_{100})?$"
-        ])
+        ]))
 
         self.student_says(question, run_time = 1)
         self.wait()
@@ -649,11 +642,11 @@ class Professionals(PiCreatureScene):
         self.analogies()
 
     def introduce_characters(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Mathematician",
             "Computer scientist",
             "Physicist",
-        ]))
+        ])))
         self.remove(*self.pi_creatures)
         for title, pi in zip(titles, self.pi_creatures):
             title.next_to(pi, DOWN)
@@ -718,7 +711,7 @@ class Professionals(PiCreatureScene):
         examples.add(Circle())
         examples.arrange_submobjects(RIGHT, buff = 2)
         examples.to_edge(UP, buff = LARGE_BUFF)
-        labels = VGroup(*map(TextMobject, ["2D", "3D"]))
+        labels = VGroup(*list(map(TextMobject, ["2D", "3D"])))
 
         title = TextMobject("Fly by instruments")
         title.scale(1.5)
@@ -791,7 +784,7 @@ class OfferAHybrid(SliderScene):
 
         self.add(titles, h_line, v_lines, equation)
         self.wait()
-        self.play(*map(MoveToTarget, [titles, v_lines, equation]))
+        self.play(*list(map(MoveToTarget, [titles, v_lines, equation])))
         self.play(Write(self.sliders, run_time = 1))
         self.initialize_ambiant_slider_movement()
         self.wait(10)
@@ -799,9 +792,9 @@ class OfferAHybrid(SliderScene):
         self.wait()
 
     def get_titles(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Analytic", "Hybrid", "Geometric"
-        ]))
+        ])))
         titles.to_edge(UP)
         titles[1].set_color(BLUE)
         titles.generate_target()
@@ -833,11 +826,11 @@ class DismissProjection(PiCreatureScene):
         self.transition_to_next_scene()
         
     def show_all_spheres(self):
-        equations = VGroup(*map(TexMobject, [
+        equations = VGroup(*list(map(TexMobject, [
             "x^2 + y^2 = 1",
             "x^2 + y^2 + z^2 = 1",
             "x^2 + y^2 + z^2 + w^2 = 1",
-        ]))
+        ])))
         colors = [YELLOW, GREEN, BLUE]
         for equation, edge, color in zip(equations, [LEFT, ORIGIN, RIGHT], colors):
             equation.set_color(color)
@@ -927,7 +920,7 @@ class DismissProjection(PiCreatureScene):
         sphere = self.spheres[-1]
 
         morty = self.pi_creature
-        alt_dims = VGroup(*map(TextMobject, ["5D", "6D", "7D"]))
+        alt_dims = VGroup(*list(map(TextMobject, ["5D", "6D", "7D"])))
         alt_dims.next_to(morty.eyes, UP, SMALL_BUFF)
         alt_dim = alt_dims[0]
 
@@ -968,7 +961,7 @@ class DismissProjection(PiCreatureScene):
             self.descriptor,
             self.pi_creature
         ])))
-        self.play(*map(MoveToTarget, [equation, tup]))
+        self.play(*list(map(MoveToTarget, [equation, tup])))
         self.wait()
 
     ###
@@ -1172,7 +1165,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         red_rects = VGroup()
         for slider in self.sliders:
             for x1, x2 in (-0.5, 0.5), (0.75, 1.0), (-1.0, -0.75):
-                p1, p2 = map(slider.number_to_point, [x1, x2])
+                p1, p2 = list(map(slider.number_to_point, [x1, x2]))
                 rect = Rectangle(
                     stroke_width = 0,
                     fill_opacity = 0.5,
@@ -1236,7 +1229,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         self.reset_dials([1, 0], run_time = 1)
         self.reset_dials([0.9, -np.sqrt(0.19)], run_time = 2)
         self.play(FadeOut(self.real_estate_rects))
-        self.play(*map(FadeOut, [x_brace, y_brace, x_text, y_text]))
+        self.play(*list(map(FadeOut, [x_brace, y_brace, x_text, y_text])))
         self.wait()
 
     def note_circle_steepness(self):
@@ -1623,7 +1616,7 @@ class TwoDBoxExample(Scene):
                 rate_func = smooth,
             ))
             self.wait(0.5)
-        self.play(*map(FadeOut, [radius, r_equals_1]))
+        self.play(*list(map(FadeOut, [radius, r_equals_1])))
         self.wait()
 
         self.corner_radius = radius
@@ -1705,7 +1698,7 @@ class TwoDBoxExample(Scene):
         self.play(ReplacementTransform(sqrt_1_plus_1, sqrt_2))
         self.play(
             Write(root_2_value, run_time = 1),
-            *map(FadeOut, [bottom_one, side_one])
+            *list(map(FadeOut, [bottom_one, side_one]))
         )
         self.wait()
         self.play(ShowCreation(corner_radius))
@@ -2040,7 +2033,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         )
         self.wait(5)
         self.wind_down_ambient_movement(wait = False)
-        self.play(*map(FadeOut, [x_brace, phrases[0]]))
+        self.play(*list(map(FadeOut, [x_brace, phrases[0]])))
 
     def swap_with_top_right_circle(self):
         alt_circle = self.corner_circles[0]
@@ -2088,7 +2081,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             self.wait()
         self.wind_down_ambient_movement(0)
         self.reset_dials(target_vector)
-        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.play(*list(map(ShowCreation, [h_line, v_line])))
         self.wait()
 
         re_line = DashedLine(
@@ -2480,7 +2473,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         sphere_words.shift(2*UP)
 
         self.add(sphere_words)
-        pairs = zip(self.coordinate_mobs, self.coordinates)
+        pairs = list(zip(self.coordinate_mobs, self.coordinates))
         for coord_mob, coords in pairs[1:] + [pairs[0]]:
             coord_mob.set_color(GREEN)
             coord_mob_copy = coord_mob.copy()
@@ -2503,9 +2496,9 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         self.play(
             self.sliders.center,
             sphere_words.shift, LEFT,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 self.coordinate_mobs, self.box_vertices_title
-            ])
+            ]))
         )
         self.initialize_ambiant_slider_movement()
         self.wait(4)
@@ -3169,7 +3162,7 @@ class ProportionOfSphereInBox(GraphScene):
         "x_min" : 0,
         "x_max" : 50,
         "x_tick_frequency" : 5,
-        "x_labeled_nums" : range(10, 50, 10),
+        "x_labeled_nums" : list(range(10, 50, 10)),
         "num_graph_anchor_points" : 100,
     }
     def construct(self):
@@ -3280,12 +3273,12 @@ class FunHighDSpherePhenomena(Scene):
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
-        items = VGroup(*map(TextMobject, [
+        items = VGroup(*list(map(TextMobject, [
             "$\\cdot$ Most volume is near the equator",
             "$\\cdot$ Most volume is near the surface",
             "$\\cdot$ Sphere packing in 8 dimensions",
             "$\\cdot$ Sphere packing in 24 dimensions",
-        ]))
+        ])))
         items.arrange_submobjects(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
@@ -3449,10 +3442,10 @@ class Announcements(TeacherStudentsScene):
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
-        items = VGroup(*map(TextMobject, [
+        items = VGroup(*list(map(TextMobject, [
             "$\\cdot$ Where to learn more",
             "$\\cdot$ Q\\&A Followup (podcast!)",
-        ]))
+        ])))
         items.arrange_submobjects(DOWN, aligned_edge = LEFT)
         items.next_to(h_line, DOWN)
 

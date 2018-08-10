@@ -105,7 +105,7 @@ class IntroduceCycloid(CycloidScene):
         arrow.reverse_points()
         q_mark = TextMobject("?")
 
-        self.play(*map(ShimmerIn, equation.split()))
+        self.play(*list(map(ShimmerIn, equation.split())))
         self.wait()
         self.play(
             ApplyMethod(equation.shift, 2.2*UP),
@@ -545,7 +545,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
         self.roll_back()
         self.wait()
         if with_words:
-            self.play(*map(ShimmerIn, [words1, arrow, words2]))
+            self.play(*list(map(ShimmerIn, [words1, arrow, words2])))
         self.wait()
         self.remove(self.circle)
         start_time = len(self.frames)*self.frame_duration

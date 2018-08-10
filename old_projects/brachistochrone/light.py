@@ -240,9 +240,9 @@ class ShowMultiplePathsThroughLens(ShowMultiplePathsScene):
 
     def get_paths(self):
         alphas = [0.25, 0.4, 0.58, 0.75]
-        lower_right, upper_right, upper_left, lower_left = map(
+        lower_right, upper_right, upper_left, lower_left = list(map(
             self.lens.point_from_proportion, alphas
-        )
+        ))
         return [
             Mobject(
                 Line(self.start_point, a),
@@ -347,7 +347,7 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
         right.next_to(arrow, RIGHT)
         squaggle, line = self.get_paths()        
 
-        self.play(*map(ShimmerIn, [left, arrow, right]))
+        self.play(*list(map(ShimmerIn, [left, arrow, right])))
         self.play(ShowCreation(squaggle))
         self.play(self.photon_run_along_path(
             squaggle, run_time = 2, rate_func = None
@@ -444,7 +444,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
         end_x = interpolate(left, right, 1.0)
         left_line = Line(self.start_point, left, color = RED_D)
         right_line = Line(self.end_point, right, color = RED_D)
-        h_1, h_2 = map(TexMobject, ["h_1", "h_2"])
+        h_1, h_2 = list(map(TexMobject, ["h_1", "h_2"]))
         h_1.next_to(left_line, LEFT)
         h_2.next_to(right_line, RIGHT)
         point_a = Dot(self.start_point)
@@ -711,7 +711,7 @@ class SpringSetup(ShowMultiplePathsInWater):
     def show_horizontal_component(self, ring):
         v_right = Vector(ring.get_top(), RIGHT)
         v_left = Vector(ring.get_bottom(), LEFT)
-        self.play(*map(ShowCreation, [v_right, v_left]))
+        self.play(*list(map(ShowCreation, [v_right, v_left])))
         self.wait()
         self.remove(v_right, v_left)
 
@@ -906,12 +906,12 @@ class StateSnellsLaw(PhotonScene):
         self.play(self.photon_run_along_path(path))
         self.wait()
         self.play(ShowCreation(vert_line))
-        self.play(*map(ShowCreation, arcs))
-        self.play(*map(GrowFromCenter, thetas))
+        self.play(*list(map(ShowCreation, arcs)))
+        self.play(*list(map(GrowFromCenter, thetas)))
         self.wait()
         self.play(ShimmerIn(exp1))
         self.wait()
-        self.play(*map(ShimmerIn, [equals, exp2]))
+        self.play(*list(map(ShimmerIn, [equals, exp2])))
         self.wait()
         
 

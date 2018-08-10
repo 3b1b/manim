@@ -32,7 +32,7 @@ def fractalify(vmobject, order=3, *args, **kwargs):
     return vmobject
 
 
-def fractalification_iteration(vmobject, dimension=1.05, num_inserted_anchors_range=range(1, 4)):
+def fractalification_iteration(vmobject, dimension=1.05, num_inserted_anchors_range=list(range(1, 4))):
     num_points = vmobject.get_num_points()
     if num_points > 0:
         # original_anchors = vmobject.get_anchors()
@@ -667,7 +667,7 @@ class SnakeCurve(FractalCurve):
             DOWN * (self.radius - step / 2)
 
         for y in range(resolution):
-            x_range = range(resolution)
+            x_range = list(range(resolution))
             if y % 2 == 0:
                 x_range.reverse()
             for x in x_range:

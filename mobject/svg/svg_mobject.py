@@ -103,7 +103,7 @@ class SVGMobject(VMobject):
         else:
             pass  # TODO
             # warnings.warn("Unknown element type: " + element.tagName)
-        result = filter(lambda m: m is not None, result)
+        result = [m for m in result if m is not None]
         self.handle_transforms(element, VMobject(*result))
         if len(result) > 1 and not self.unpack_groups:
             result = [VGroup(*result)]
@@ -295,15 +295,15 @@ class VMobjectFromSVGPathstring(VMobject):
             "A",  # elliptical Arc
             "Z",  # closepath
         ]
-        result += map(lambda s: s.lower(), result)
+        result += [s.lower() for s in result]
         return result
 
     def generate_points(self):
         pattern = "[%s]" % ("".join(self.get_path_commands()))
-        pairs = zip(
+        pairs = list(zip(
             re.findall(pattern, self.path_string),
             re.split(pattern, self.path_string)[1:]
-        )
+        ))
         # Which mobject should new points be added to
         self.growing_path = self
         for command, coord_string in pairs:

@@ -1,7 +1,5 @@
 # !/usr/bin/env python2
 
-from __future__ import absolute_import
-from __future__ import print_function
 import sys
 import argparse
 import imp
@@ -212,7 +210,7 @@ def prompt_user_for_choice(name_to_obj):
         print("%d: %s" % (count, name))
         num_to_name[count] = name
     try:
-        user_input = raw_input(CHOOSE_NUMBER_MESSAGE)
+        user_input = input(CHOOSE_NUMBER_MESSAGE)
         return [
             name_to_obj[num_to_name[int(num_str)]]
             for num_str in user_input.split(",")
@@ -227,14 +225,14 @@ def get_scene_classes(scene_names_to_classes, config):
         print(NO_SCENE_MESSAGE)
         return []
     if len(scene_names_to_classes) == 1:
-        return scene_names_to_classes.values()
+        return list(scene_names_to_classes.values())
     if config["scene_name"] in scene_names_to_classes:
         return [scene_names_to_classes[config["scene_name"]]]
     if config["scene_name"] != "":
         print(SCENE_NOT_FOUND_MESSAGE)
         return []
     if config["write_all"]:
-        return scene_names_to_classes.values()
+        return list(scene_names_to_classes.values())
     return prompt_user_for_choice(scene_names_to_classes)
 
 

@@ -15,8 +15,8 @@ def print_permutation(index_list):
                 "M", "N", "O", "P", "Q", "R",
                 "S", "T", "U", "V", "W", "X",
                 "Y", "Z"]
-    free_indices = range(n)
-    free_indices_p1 = range(1,n + 1)
+    free_indices = list(range(n))
+    free_indices_p1 = list(range(1,n + 1))
     #print perm_list
     for i in range(n):
         findex = index_list[i] - 1

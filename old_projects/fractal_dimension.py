@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 from functools import reduce
 
@@ -605,9 +605,9 @@ class FourSelfSimilarShapes(Scene):
         self.mention_measurements()
 
     def get_titles(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Line", "Square", "Cube", "Sierpinski"
-        ]))
+        ])))
         for title, x in zip(titles, np.linspace(-0.75, 0.75, 4)):
             title.shift(x*FRAME_X_RADIUS*RIGHT)
         titles.to_edge(UP)
@@ -656,7 +656,7 @@ class FourSelfSimilarShapes(Scene):
             FadeIn(brace_text)
         )
         self.wait()
-        self.play(*map(FadeOut, [brace, brace_text]))
+        self.play(*list(map(FadeOut, [brace, brace_text])))
         self.wait()
 
         for title in titles:
@@ -702,12 +702,12 @@ class FourSelfSimilarShapes(Scene):
     def mention_measurements(self):
         line, square, cube, sierpinski = self.shapes_copy
 
-        labels = map(TextMobject, [
+        labels = list(map(TextMobject, [
             "$1/2$ length",
             "$1/4$ area",
             "$1/8$ volume",
             "You'll see...",
-        ])
+        ]))
         for label, shape in zip(labels, self.shapes_copy):
             label.next_to(shape, DOWN)
             label.to_edge(DOWN, buff = MED_LARGE_BUFF)
@@ -735,9 +735,9 @@ class GeneralWordForMeasurement(Scene):
         mass = TextMobject("Mass")
         mass.move_to(measure)
 
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Length", "Area", "Volume"
-        ]))
+        ])))
         words.arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
         words.next_to(measure, DOWN, buff = 2*LARGE_BUFF)
         colors = color_gradient([BLUE_B, BLUE_D], len(words))
@@ -763,7 +763,7 @@ class GeneralWordForMeasurement(Scene):
 
 class ImagineShapesAsMetal(FourSelfSimilarShapes):
     def construct(self):
-        titles = VGroup(*map(VGroup, self.get_titles()))
+        titles = VGroup(*list(map(VGroup, self.get_titles())))
         shapes = self.get_shapes(titles)
         shapes.shift(DOWN)
         descriptions = VGroup(*[
@@ -1030,7 +1030,7 @@ class DefineTwoDimensional(PiCreatureScene):
             self.scale_factor,
         )
         brace.target = Brace(shape.target, LEFT)
-        self.play(*map(MoveToTarget, group))
+        self.play(*list(map(MoveToTarget, group)))
         self.play(bottom_L.next_to, brace, LEFT)
         self.wait()
 
@@ -1384,7 +1384,7 @@ class DimensionOfKoch(Scene):
             Transform(third, formula[0]),
             Transform(fourth, formula[-1]),
         )
-        self.play(*map(FadeIn, formula[1:-1]))
+        self.play(*list(map(FadeIn, formula[1:-1])))
         self.remove(third, fourth)
         self.add(formula)
         self.wait(2)
@@ -1888,7 +1888,7 @@ class BoxCountingWithDisk(BoxCountingScene):
         approx = TexMobject("\\approx 2^2")
         approx.next_to(decimal, RIGHT, aligned_edge = DOWN)
         approx.shift_onto_screen()
-        self.play(*map(Write, [frac_line, decimal]))
+        self.play(*list(map(Write, [frac_line, decimal])))
         self.play(Write(approx))
         self.wait()
 
@@ -2010,7 +2010,7 @@ class BoxCountingSierpinski(BoxCountingScene):
         counting_label = self.get_counting_label()
 
         self.play(ShowCreation(sierp))
-        self.play(*map(FadeIn, [corner_rect, counting_label]))
+        self.play(*list(map(FadeIn, [corner_rect, counting_label])))
         self.wait()
         counting_mob = self.count_boxes(boxes)
         self.wait()
@@ -2033,7 +2033,7 @@ class BoxCountingSierpinski(BoxCountingScene):
         equals_exp.next_to(approx_three, RIGHT, aligned_edge = DOWN)
         equals_exp.shift_onto_screen()
 
-        self.play(*map(Write, [frac_line, approx_three]))
+        self.play(*list(map(Write, [frac_line, approx_three])))
         self.wait()
         self.play(Write(equals_exp))
         self.wait()
@@ -2458,12 +2458,12 @@ class ListDimensionTypes(PiCreatureScene):
         "use_morty" : False,
     }
     def construct(self):
-        types = VGroup(*map(TextMobject, [
+        types = VGroup(*list(map(TextMobject, [
             "Box counting dimension",
             "Information dimension",
             "Hausdorff dimension",
             "Packing dimension"
-        ]))
+        ])))
         types.arrange_submobjects(DOWN, aligned_edge = LEFT)
         for text in types:
             self.play(
@@ -2735,7 +2735,7 @@ class CompareBritainAndNorway(Scene):
 
         self.add(britain_label, norway_label)
         self.play(
-            *map(ShowCreation, [norway, britain]),
+            *list(map(ShowCreation, [norway, britain])),
             run_time = 3
         )
         self.wait()

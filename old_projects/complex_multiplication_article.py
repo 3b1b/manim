@@ -26,7 +26,7 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
     @staticmethod
     def string_to_args(arg_string):
         args_string.replac("i", "j")
-        return map(copmlex, arg_string.split())
+        return list(map(copmlex, arg_string.split()))
 
     def construct(self, *multipliers):
         norm = abs(reduce(op.mul, multipliers, 1))
@@ -146,7 +146,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
             radius*np.exp(complex(0, 1)*(2*np.pi*k + theta)/n)
             for k in range(n)
         ]
-        points = map(plane.number_to_point, solutions)
+        points = list(map(plane.number_to_point, solutions))
         dots = [
             Dot(point, color = BLUE_B, radius = 0.1)
             for point in points
@@ -201,7 +201,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         label.shift(point - edge + buff*dot_to_label_dir)
         label.set_color(YELLOW)
 
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
 
     def add_angle_label(self, number):
@@ -210,7 +210,7 @@ class DrawComplexAngleAndMagnitude(Scene):
             radius = 0.2
         )
 
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
     def add_lines(self, tex_representation, number):
         point = self.plane.number_to_point(number)
@@ -246,5 +246,5 @@ class DrawComplexAngleAndMagnitude(Scene):
         axis = OUT if point[1] > 0 else IN
         norm_label.next_to(brace, rotate_vector(point, np.pi/2, axis))
 
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 

@@ -22,10 +22,10 @@ class LastVideo(TeacherStudentsScene):
         last_video.save_state()
         this_video = series[3]
 
-        known_formulas = VGroup(*map(TexMobject, [
+        known_formulas = VGroup(*list(map(TexMobject, [
             "\\frac{d(x^n)}{dx} = nx^{n-1}",
             "\\frac{d(\\sin(x))}{dx} = \\cos(x)",
-        ]))
+        ])))
         known_formulas.arrange_submobjects(
             DOWN, buff = MED_LARGE_BUFF,
         )
@@ -196,11 +196,11 @@ class DoublingPopulation(PiCreatureScene):
 
         for x in range(2):
             new_day_to_day, new_frac = self.get_from_day_to_day_label()
-            self.play(*map(FadeOut, [rect, frac]))
+            self.play(*list(map(FadeOut, [rect, frac])))
             frac = new_frac
             self.play(Transform(day_to_day, new_day_to_day))
             rect = self.let_day_pass_and_highlight_new_creatures(frac)
-        self.play(*map(FadeOut, [rect, frac, day_to_day]))
+        self.play(*list(map(FadeOut, [rect, frac, day_to_day])))
 
     def let_day_pass_and_highlight_new_creatures(self, frac):
         num_new_creatures = 2**self.get_curr_day()
@@ -273,9 +273,9 @@ class DoublingPopulation(PiCreatureScene):
         fading_creatures = VGroup(*self.get_on_screen_pi_creatures()[8:])
 
 
-        self.play(*map(FadeIn, [
+        self.play(*list(map(FadeIn, [
             false_deriv, false_deriv.brace, false_deriv.brace_text
-        ]))
+        ])))
         self.wait()
         self.play(
             Transform(time, new_time),
@@ -303,9 +303,9 @@ class DoublingPopulation(PiCreatureScene):
         rect.replace(real_deriv)
         rect.stretch_to_fit_width(rect.get_width()+MED_SMALL_BUFF)
         rect.stretch_to_fit_height(rect.get_height()+MED_SMALL_BUFF)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             false_deriv.brace, false_deriv.brace_text
-        ]))
+        ])))
         self.play(ShowCreation(rect))
         self.play(*[
             ApplyFunction(
@@ -348,8 +348,8 @@ class DoublingPopulation(PiCreatureScene):
         new_time.next_to(self.t_expression[-2], RIGHT)
         first_creature = self.get_pi_creatures()[0]
 
-        self.play(*map(FadeOut, faders))
-        self.play(*map(FadeIn, [first_creature, new_time]))
+        self.play(*list(map(FadeOut, faders)))
+        self.play(*list(map(FadeIn, [first_creature, new_time])))
         self.t_expression.submobjects[-1] = new_time
 
     def let_one_day_pass(self, run_time = 2):
@@ -445,8 +445,8 @@ class GraphOfTwoToT(GraphScene):
     CONFIG = {
         "x_axis_label" : "$t$",
         "y_axis_label" : "$M$",
-        "x_labeled_nums" : range(1, 7),
-        "y_labeled_nums" : range(8, 40, 8),
+        "x_labeled_nums" : list(range(1, 7)),
+        "y_labeled_nums" : list(range(8, 40, 8)),
         "x_max" : 6,
         "y_min" : 0,
         "y_max" : 32,
@@ -800,10 +800,10 @@ class AnalyzeExponentRatio(PiCreatureScene):
             Transform(*arrows),
         )
         self.wait(2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             words[0], arrows[0], add_exp_rect, mult_rect,
             two_to_t_plus_dt, exp_prop_brace,
-        ]))
+        ])))
 
         #Factor out 2^t
         self.play(*[
@@ -886,7 +886,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
         self.play(ReplacementTransform(rects[0].copy(), rects[1]))
         self.change_mode("happy")
         self.wait()
-        self.play(*map(FadeOut, rects))
+        self.play(*list(map(FadeOut, rects)))
 
         #Plug in specific values
         static_constant = self.try_specific_dt_values()
@@ -1145,7 +1145,7 @@ class GraphOfExp(GraphScene):
         "x_max" : 3,
         "x_tick_frequency" : 1,
         "x_axis_label" : "t",
-        "x_labeled_nums" : range(-3, 4),
+        "x_labeled_nums" : list(range(-3, 4)),
         "x_axis_width" : 11,
         "graph_origin" : 2*DOWN + LEFT,
         "example_inputs" : [1, 2],
@@ -1196,7 +1196,7 @@ class GraphOfExp(GraphScene):
             )
         )
         self.wait()
-        self.play(*map(ShowCreation, ss_group))
+        self.play(*list(map(ShowCreation, ss_group)))
         self.play(Write(slope_labels[0]))
         self.play(ShowCreation(v_lines[0]))
         self.play(Write(height_labels[0]))
@@ -1291,8 +1291,8 @@ class ChainRuleIntuition(ThreeLinesChainRule):
                 "center_y" : 3,
                 "x_min" : 0,
                 "x_max" : 3,
-                "numbers_to_show" : range(4),
-                "numbers_with_elongated_ticks" : range(4),
+                "numbers_to_show" : list(range(4)),
+                "numbers_with_elongated_ticks" : list(range(4)),
                 "tick_frequency" : 1,
             },
             {
@@ -1302,8 +1302,8 @@ class ChainRuleIntuition(ThreeLinesChainRule):
                 "center_y" : 0.5,
                 "x_min" : 0,
                 "x_max" : 3,
-                "numbers_to_show" : range(0, 4),
-                "numbers_with_elongated_ticks" : range(4),
+                "numbers_to_show" : list(range(0, 4)),
+                "numbers_with_elongated_ticks" : list(range(4)),
                 "tick_frequency" : 1,
             },
             {
@@ -1313,8 +1313,8 @@ class ChainRuleIntuition(ThreeLinesChainRule):
                 "center_y" : -2,
                 "x_min" : 0,
                 "x_max" : 10,
-                "numbers_to_show" : range(0, 11, 3),
-                "numbers_with_elongated_ticks" : range(11),
+                "numbers_to_show" : list(range(0, 11, 3)),
+                "numbers_with_elongated_ticks" : list(range(11)),
                 "tick_frequency" : 1,
             },
         ],
@@ -1364,7 +1364,7 @@ class ChainRuleIntuition(ThreeLinesChainRule):
             line.remove(*line.numbers)
         dt_brace, d3t_brace, dexp3t_brace = braces
 
-        self.play(*map(FadeIn, [nudge_lines, braces]))
+        self.play(*list(map(FadeIn, [nudge_lines, braces])))
         self.wait()
         for count in range(3):
             for dx in self.dx, 0:
@@ -1526,7 +1526,7 @@ class CompareWaysToWriteExponentials(GraphScene):
     }
     def construct(self):
         self.setup_axes()
-        bases = range(2, 7)
+        bases = list(range(2, 7))
         graphs = [
             self.get_graph(lambda t : base**t, color = GREEN)
             for base in bases
@@ -1783,7 +1783,7 @@ class InvestedMoney(Scene):
 
 class NaturalLog(Scene):
     def construct(self):
-        expressions = VGroup(*map(self.get_expression, [2, 3, 7]))
+        expressions = VGroup(*list(map(self.get_expression, [2, 3, 7])))
         expressions.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
         expressions.to_edge(LEFT)
 
@@ -1807,7 +1807,7 @@ class NaturalLog(Scene):
 
         log_constant, exp_constant = constant.copy(), constant.copy()
         log_base, exp_base = base.copy(), base.copy()
-        log_equals, exp_equals = map(TexMobject, "==")
+        log_equals, exp_equals = list(map(TexMobject, "=="))
 
         ln = TexMobject("\\ln(2)")
         log_base.move_to(ln[-2])        
@@ -1858,7 +1858,7 @@ class NaturalLog(Scene):
             ln_a.set_color, BLUE
         )
         self.wait()
-        self.play(*map(FadeOut, [log_expression, exp_expression]))
+        self.play(*list(map(FadeOut, [log_expression, exp_expression])))
         self.wait()
 
     def get_expression(self, base):
@@ -1895,9 +1895,9 @@ class NextVideo(TeacherStudentsScene):
         this_tex[3][1].set_color(YELLOW)
         this_tex.next_to(brace, DOWN)
 
-        next_tex = VGroup(*map(TextMobject, [
+        next_tex = VGroup(*list(map(TextMobject, [
             "Chain rule", "Product rule", "$\\vdots$"
-        ]))
+        ])))
         next_tex.arrange_submobjects(DOWN)
         next_tex.next_to(brace, DOWN)
         next_tex.shift(

@@ -177,9 +177,9 @@ class TriangleOfPowerIsBetter(Scene):
     def construct(self):
         top = TOP("x", "y", "z", radius = 0.75)
         top.set_color(BLUE)
-        alts = VMobject(*map(TexMobject, [
+        alts = VMobject(*list(map(TexMobject, [
             "x^y", "\\log_x(z)", "\\sqrt[y]{z}"
-        ]))
+        ])))
         for mob, color in zip(alts.split(), OPERATION_COLORS):
             mob.set_color(color)
         alts.arrange_submobjects(DOWN)

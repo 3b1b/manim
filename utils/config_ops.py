@@ -61,7 +61,7 @@ def digest_config(obj, kwargs, caller_locals={}):
 
 
 def merge_config(all_dicts):
-    all_config = reduce(op.add, [d.items() for d in all_dicts])
+    all_config = reduce(op.add, [list(d.items()) for d in all_dicts])
     config = dict()
     for c in all_config:
         key, value = c
@@ -79,7 +79,7 @@ def soft_dict_update(d1, d2):
     Adds key values pairs of d2 to d1 only when d1 doesn't
     already have that key
     """
-    for key, value in d2.items():
+    for key, value in list(d2.items()):
         if key not in d1:
             d1[key] = value
 
@@ -89,7 +89,7 @@ def digest_locals(obj, keys=None):
         inspect.currentframe().f_back.f_locals
     )
     if keys is None:
-        keys = caller_locals.keys()
+        keys = list(caller_locals.keys())
     for key in keys:
         setattr(obj, key, caller_locals[key])
 

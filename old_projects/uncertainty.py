@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+
 import scipy
 from big_ol_pile_of_manim_imports import *
 from old_projects.fourier import *
@@ -423,7 +423,7 @@ class FourierTradeoff(Scene):
         )
         time_axes.add(time_label)
         time_axes.center().to_edge(UP)
-        time_axes.x_axis.add_numbers(*range(1, 2*time_mean))
+        time_axes.x_axis.add_numbers(*list(range(1, 2*time_mean)))
 
         frequency_axes = Axes(
             x_min = 0,
@@ -780,7 +780,7 @@ class TwoCarsAtRedLight(Scene):
         axes.add(time_label, y_title)
         axes.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         graph = axes.get_graph(
-            self.get_multispike_function(range(1, 4)),
+            self.get_multispike_function(list(range(1, 4))),
             x_min = 0.8,
             x_max = 3.8,
         )
@@ -894,7 +894,7 @@ class TwoCarsAtRedLight(Scene):
 
         n_spikes = 12
         new_time_graph = time_axes.get_graph(
-            self.get_multispike_function(range(1, n_spikes+1)),
+            self.get_multispike_function(list(range(1, n_spikes+1))),
             x_min = 0.8,
             x_max = n_spikes + 0.8,
         )
@@ -972,12 +972,12 @@ class TwoCarsAtRedLight(Scene):
         self.play(
             FadeIn(label),
             GrowArrow(arrow),
-            *map(self.get_flashes, self.cars)
+            *list(map(self.get_flashes, self.cars))
         )
         self.play(
             GrowFromCenter(brace),
             Write(text, run_time = 1),
-            *map(self.get_flashes, self.cars)
+            *list(map(self.get_flashes, self.cars))
         )
         self.play(*[
             self.get_flashes(car, num_flashes = 10)
@@ -1095,7 +1095,7 @@ class VariousMusicalNotes(Scene):
 
         self.play(
             ShowCreation(long_graph),
-            *map(FadeOut, [last_brace, last_phrase])
+            *list(map(FadeOut, [last_brace, last_phrase]))
         )
         self.play(
             Write(short_signal_words),
@@ -1128,7 +1128,7 @@ class CrossOutDefinitenessAndCertainty(TeacherStudentsScene):
         )
         words.arrange_submobjects(DOWN)
         words.next_to(self.teacher, UP+LEFT)
-        crosses = VGroup(*map(Cross, words))
+        crosses = VGroup(*list(map(Cross, words)))
 
         self.add(words)
         self.play(
@@ -1175,7 +1175,7 @@ class FourierRecapScene(DrawFrequencyPlot):
             "x_max" : 10.0,
             "x_axis_config" : {
                 "unit_size" : 0.7,
-                "numbers_to_show" : range(1, 10, 1),
+                "numbers_to_show" : list(range(1, 10, 1)),
             }
         },
         "initial_winding_frequency" : 0.1,
@@ -1247,10 +1247,10 @@ class FourierRecapScene(DrawFrequencyPlot):
             rate_func = wiggle,
         ))
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.frequency_axes, fourier_graph,
             signal_label,  fourier_label,
-        ]))
+        ])))
 
         self.time_graph = time_graph
         self.set_variables_as_attrs(time_graph, fourier_label)
@@ -1630,9 +1630,9 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             run_time = 3
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             dot, arrow, self.center_of_mass_dot
-        ]))
+        ])))
         #This is not great...
         for attr in "center_of_mass_dot", "fourier_graph_dot":
             self.__dict__.pop(attr)
@@ -2802,16 +2802,16 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             ))
         def get_graph(func):
             return frequency_axes.get_graph(func)
-        shifted_graphs = VGroup(*map(
-            get_graph, map(get_func, self.object_velocities)
-        ))
+        shifted_graphs = VGroup(*list(map(
+            get_graph, list(map(get_func, self.object_velocities))
+        )))
         shifted_graphs.match_style(fourier_graph)
         return shifted_graphs
 
     def get_sum_graph(self, axes, graphs):
         def get_func(graph):
             return graph.underlying_function
-        funcs = map(get_func, graphs)
+        funcs = list(map(get_func, graphs))
         return axes.get_graph(
             lambda t : sum([func(t) for func in funcs]),
         )
@@ -2925,7 +2925,7 @@ class IntroduceDeBroglie(Scene):
             x_min = 1900,
             x_max = 1935,
             tick_frequency = 1,
-            numbers_with_elongated_ticks = range(1900, 1941, 10),
+            numbers_with_elongated_ticks = list(range(1900, 1941, 10)),
             color = BLUE_D
         )
         time_line.stretch_to_fit_width(FRAME_WIDTH - picture.get_width() - 2)
@@ -3486,7 +3486,7 @@ class HangingWeightsScene(MovingCameraScene):
             return spring
         alphas = np.linspace(0, 1, self.n_springs)
         bezier([0, 1, 0, 1])
-        springs = self.springs = VGroup(*map(get_spring, alphas))
+        springs = self.springs = VGroup(*list(map(get_spring, alphas)))
 
         k_tracker = self.k_tracker = VectorizedPoint()
         t_tracker = self.t_tracker = VectorizedPoint()
@@ -3542,7 +3542,7 @@ class HangingWeightsScene(MovingCameraScene):
         arrows.set_color(WHITE)
 
         self.wait(3)
-        self.play(*map(GrowArrow, arrows))
+        self.play(*list(map(GrowArrow, arrows)))
         self.play(*[
             UpdateFromAlphaFunc(
                 weight, lambda w, a : w.set_width(
@@ -3650,7 +3650,7 @@ class HangingWeightsScene(MovingCameraScene):
 
         index = int(0.5*len(self.springs))
         weights = VGroup(self.weights[index], self.weights[index+4])
-        flashes = map(self.get_peak_flash_anim, weights)
+        flashes = list(map(self.get_peak_flash_anim, weights))
         weights.save_state()
         weights.set_fill(RED)
         self.add(*flashes)
@@ -3896,9 +3896,9 @@ class FourierTransformOfWaveFunction(Scene):
                 run_time = 3,
             )
             last_f = f
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             sinusoid, v_line,  freq_label
-        ]))
+        ])))
 
     def this_is_momentum(self):
         formula = TexMobject("p", "=", "h", "\\xi")
@@ -3940,7 +3940,7 @@ class FourierTransformOfWaveFunction(Scene):
                 run_time = 2
             )
         self.wait()
-        self.play(*map(FadeOut, [brace, words, formula]))
+        self.play(*list(map(FadeOut, [brace, words, formula])))
 
     def show_tradeoff(self):
         for a in 5, 0.1, 0.01, 10, 0.5:
@@ -4156,7 +4156,7 @@ class ProbabalisticDetection(FourierTransformOfWaveFunction):
         self.play(
             FadeIn(VGroup(axes, wave)),
             question_group.next_to, v_lines, UP, {"buff" : 0},
-            *map(ShowCreation, v_lines)
+            *list(map(ShowCreation, v_lines))
         )
         self.wait(10)
 
@@ -4355,9 +4355,9 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         ]
         self.add(*continual_anims)
 
-        position, momentum, time, frequency = map(TextMobject, [
+        position, momentum, time, frequency = list(map(TextMobject, [
             "Position", "Momentum", "Time", "Frequency"
-        ])
+        ]))
         VGroup(position, time).set_color(BLUE)
         VGroup(momentum, frequency).set_color(YELLOW)
         groups = VGroup()

@@ -176,14 +176,14 @@ class Introduce1DFunctionCase(Scene):
             x_axis_config = {
                 "unit_size" : 3,
                 "tick_frequency" : 0.25,
-                "numbers_with_elongated_ticks" : range(-1, 4)
+                "numbers_with_elongated_ticks" : list(range(-1, 4))
             },
             y_min = -2, y_max = 4.5,
         )
         axes.to_corner(DOWN+LEFT)
-        axes.x_axis.add_numbers(*range(-1, 4))
+        axes.x_axis.add_numbers(*list(range(-1, 4)))
         axes.y_axis.label_direction = LEFT
-        axes.y_axis.add_numbers(-1, *range(1, 5))
+        axes.y_axis.add_numbers(-1, *list(range(1, 5)))
 
         inputs = TextMobject("Inputs")
         inputs.next_to(axes.x_axis, UP, aligned_edge = RIGHT)
@@ -279,7 +279,7 @@ class Introduce1DFunctionCase(Scene):
         self.wait()
         self.play(
             MoveToTarget(equation, replace_mobject_with_target_in_scene = True),
-            *map(FadeOut, [equation_arrow, v_line])
+            *list(map(FadeOut, [equation_arrow, v_line]))
         )
 
         self.set_variables_as_attrs(
@@ -778,7 +778,7 @@ class InputOutputScene(Scene):
         label_colors = [GREEN, RED]
         for plane, vect, text, color in zip(planes, vects, label_texts, label_colors):
             plane.stretch_to_fit_width(self.plane_width)
-            plane.add_coordinates(x_vals = range(-2, 3), y_vals = range(-2, 3))
+            plane.add_coordinates(x_vals = list(range(-2, 3)), y_vals = list(range(-2, 3)))
             plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
             plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
             plane.move_to(vect*FRAME_X_RADIUS/2 + self.y_shift*DOWN)
@@ -906,11 +906,11 @@ class IntroduceInputOutputScene(InputOutputScene):
             FadeIn(output_label)
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             input_label_arrow, input_label,
             output_label_arrow, output_label,
             curved_arrow, function_label,
-        ]))
+        ])))
 
         #General movements and wiggles
         out_dot_continual_update = self.get_output_dot_continual_update(in_dot, out_dot)
@@ -1042,9 +1042,9 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             newer_in_vectors.add(in_vector.copy())
         self.remove(*continual_updates)
         self.remove()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             out_dot, out_vector, in_vectors, in_dot, in_vector
-        ]))
+        ])))
         self.wait()
         target_length = 0.4
         for vector in newer_in_vectors:
@@ -1557,8 +1557,8 @@ class OneDRegionBoundary(Scene):
         )
         self.wait()
         self.play(*it.chain(
-            map(GrowArrow, arrows),
-            map(Write, signs)
+            list(map(GrowArrow, arrows)),
+            list(map(Write, signs))
         ))
         self.wait()
         self.play(
@@ -1737,7 +1737,7 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
         hypothesis[0].next_to(hypothesis[1:], UP)
         hypothesis[0].set_color(YELLOW)
         s = hypothesis[1].get_tex_string()
-        s = filter(lambda c : c not in string.whitespace, s)
+        s = [c for c in s if c not in string.whitespace]
         n = s.index("colors")
         hypothesis[1][n:n+len("colors")].set_color_by_gradient(
             # RED, GOLD_E, YELLOW, GREEN, BLUE, PINK,
@@ -2395,7 +2395,7 @@ class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
         )
         self.play(
             FadeIn(both_cannot_be_zero),
-            *map(GrowArrow, arrows)
+            *list(map(GrowArrow, arrows))
         )
         self.wait()
 
@@ -2438,7 +2438,7 @@ class MonomialTerm(PathContainingZero):
             if hasattr(plane, "numbers_to_show"):
                 _range = plane.numbers_to_show
             else:
-                _range = range(-2, 3)
+                _range = list(range(-2, 3))
             for x in _range:
                 if x == 0:
                     continue
@@ -2534,7 +2534,7 @@ class MonomialTerm(PathContainingZero):
 
     def rescale_output_plane(self):
         output_stuff = VGroup(self.output_plane, self.output_coloring)
-        self.play(*map(FadeOut, [self.loop, self.out_loop]))
+        self.play(*list(map(FadeOut, [self.loop, self.out_loop])))
         self.play(
             output_stuff.scale, 3.0/50, run_time = 2
         )
@@ -2564,7 +2564,7 @@ class PolynomialTerms(MonomialTerm):
     def relabel_planes(self):
         self.output_plane.x_radius = 50
         self.output_plane.y_radius = 50
-        self.output_plane.numbers_to_show = range(-45, 50, 15)
+        self.output_plane.numbers_to_show = list(range(-45, 50, 15))
         MonomialTerm.relabel_planes(self)
 
     def sweep_through_loop_interior(self):
@@ -2758,7 +2758,7 @@ class ShowComplexFunction(Scene):
             FadeIn(rect),
             LaggedStart(FadeIn, title)
         )
-        self.play(*map(FadeIn, [x_dot, x_label]))
+        self.play(*list(map(FadeIn, [x_dot, x_label])))
         self.wait()
         self.play(
             ReplacementTransform(x_dot.copy(), fx_dot, path_arc = arrow.path_arc),
@@ -2768,7 +2768,7 @@ class ShowComplexFunction(Scene):
         self.wait(2)
         self.play(
             MoveToTarget(fx_label),
-            *map(FadeOut, [title, x_dot, x_label, arrow, fx_dot])
+            *list(map(FadeOut, [title, x_dot, x_label, arrow, fx_dot]))
         )
         self.play(FadeOut(plane.coordinate_labels))
         self.wait()
@@ -2943,12 +2943,12 @@ class MentionQAndA(Scene):
         title.to_edge(UP)
         self.add(title)
 
-        questions = VGroup(*map(TextMobject, [
+        questions = VGroup(*list(map(TextMobject, [
             "If you think of the current videos as short stories, \\\\ what is the novel that you want to write?",
             "How did you get into mathematics?",
             "What motivated you to join 3b1b?",
             "$\\vdots$",
-        ]))
+        ])))
         questions.arrange_submobjects(DOWN, buff = 0.75)
         questions.next_to(title, DOWN, LARGE_BUFF)
 
@@ -3179,7 +3179,7 @@ class PatreonScroll(Scene):
         patreon_logo.shift(SMALL_BUFF*LEFT)
         self.add(patreon_logo)
 
-        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
         patrons.scale(0.75)
         random.shuffle(patrons.submobjects)
         patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)

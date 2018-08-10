@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import sys
 import os.path
 import cv2
@@ -232,11 +232,11 @@ class PreviewLearning(NetworkScene):
             edge_group.copy()
             for edge_group in edge_groups
         ])
-        tups = zip(
+        tups = list(zip(
             it.count(), nabla_b, nabla_w, 
             delta_neuron_groups, neuron_groups,
             delta_edge_groups, edge_groups
-        )
+        ))
         pc_color = self.positive_change_color
         nc_color = self.negative_change_color
         for i, nb, nw, delta_neurons, neurons, delta_edges, edges in reversed(tups):
@@ -278,7 +278,7 @@ class PreviewLearning(NetworkScene):
             [ReplacementTransform(
                 edge_groups.saved_state, edge_groups,
             )],
-            map(FadeOut, [delta_edge_groups, delta_neuron_groups]),
+            list(map(FadeOut, [delta_edge_groups, delta_neuron_groups])),
             added_outro_anims,
         ))
 
@@ -476,7 +476,7 @@ class MNistDescription(Scene):
                     FadeOut(word_group),
                 )
             else:
-                pairs = zip(last_group, group)
+                pairs = list(zip(last_group, group))
                 random.shuffle(pairs)
                 time = 0
                 for t1, t2 in pairs:
@@ -541,7 +541,7 @@ class NotSciFi(TeacherStudentsScene):
 
 class FunctionMinmization(GraphScene):
     CONFIG = {
-        "x_labeled_nums" : range(-1, 10),
+        "x_labeled_nums" : list(range(-1, 10)),
     }
     def construct(self):
         self.setup_axes()
@@ -705,7 +705,7 @@ class IntroduceCostFunction(PreviewLearning):
         ))
         self.play(
             Write(weights_word),
-            *map(GrowArrow, weights_arrow_to_syms),
+            *list(map(GrowArrow, weights_arrow_to_syms)),
             run_time = 1
         )
         self.wait()
@@ -748,11 +748,11 @@ class IntroduceCostFunction(PreviewLearning):
             rate_func = wiggle,
             run_time = 2
         ))
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             weights_word, weights_arrow_to_edges,
             bias_word, bias_arrow,
             formula
-        ]))
+        ])))
 
     def bring_back_rest_of_network(self):
         network_mob = self.network_mob
@@ -799,7 +799,7 @@ class IntroduceCostFunction(PreviewLearning):
             VGroup(*layer0.neurons[:n/2]).set_fill(opacity = 0),
             [
                 VectorizedPoint(layer0.dots.get_center())
-                for x in xrange(len(neurons)-n)
+                for x in range(len(neurons)-n)
             ],
             VGroup(*layer0.neurons[-n/2:]).set_fill(opacity = 0),
         ))
@@ -874,10 +874,10 @@ class IntroduceCostFunction(PreviewLearning):
 
     def fade_all_but_last_layer(self):
         network_mob = self.network_mob
-        to_fade = VGroup(*it.chain(*zip(
+        to_fade = VGroup(*it.chain(*list(zip(
             network_mob.layers[:-1],
             network_mob.edge_groups
-        )))
+        ))))
 
         self.play(LaggedStart(FadeOut, to_fade, run_time = 1))
 
@@ -1328,10 +1328,10 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         cost.next_to(arrow, DOWN)
 
         training_data, validation_data, test_data = load_data_wrapper()
-        training_examples = Group(*map(
+        training_examples = Group(*list(map(
             self.get_training_pair_mob, 
             training_data[:self.n_examples]
-        ))
+        )))
         training_examples.next_to(parameter_words, DOWN, buff = LARGE_BUFF)
 
         self.play(
@@ -1631,8 +1631,8 @@ class SingleVariableCostFunction(GraphScene):
         )
         self.wait()
         self.play(*it.chain(
-            map(GrowArrow, arrows),
-            map(FadeIn, q_marks),
+            list(map(GrowArrow, arrows)),
+            list(map(FadeIn, q_marks)),
         ))
         self.wait()
 
@@ -1831,12 +1831,12 @@ class TwoVariableInputSpace(Scene):
         name = TextMobject("Input space")
         name.add_background_rectangle()
         name.next_to(plane.get_corner(UP+LEFT), DOWN+RIGHT)
-        x, y = map(TexMobject, ["x", "y"])
+        x, y = list(map(TexMobject, ["x", "y"]))
         x.next_to(plane.coords_to_point(3.25, 0), UP, SMALL_BUFF)
         y.next_to(plane.coords_to_point(0, 3.6), RIGHT, SMALL_BUFF)
 
         self.play(
-            *map(Write, [plane, name, x, y]),
+            *list(map(Write, [plane, name, x, y])),
             run_time = 1
         )
         self.wait()
@@ -2027,7 +2027,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
             ),
             LaggedStart(FadeIn, words),
         )
-        self.play(*map(Write, [lb, rb, lhs]), run_time = 1)
+        self.play(*list(map(Write, [lb, rb, lhs])), run_time = 1)
         self.wait()
 
         self.column_vect = column_vect
@@ -2040,10 +2040,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
         )
         lhs.shift(2*RIGHT)
         lhs.set_color_by_tex("W", YELLOW)
-        old_decimals = VGroup(*filter(
-            lambda m : isinstance(m, DecimalNumber),
-            column_vect[1]
-        ))
+        old_decimals = VGroup(*[m for m in column_vect[1] if isinstance(m, DecimalNumber)])
         new_decimals = VGroup()
         new_nums = [0.18, 0.45, -0.51, 0.4, -0.32, 0.82]
         for decimal, new_num in zip(old_decimals, new_nums):
@@ -2754,7 +2751,7 @@ class ContinuouslyRangingNeuron(PreviewLearning):
                 decimal.set_color(WHITE)
         decimal_color_anim = UpdateFromFunc(decimal, update_decimal_color)
 
-        self.play(*map(MoveToTarget, [neuron, decimal]))
+        self.play(*list(map(MoveToTarget, [neuron, decimal])))
         for x in 0.7, 0.35, 0.97, 0.23, 0.54:
             curr_num = neuron.get_fill_opacity()
             self.play(
@@ -3401,7 +3398,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
         )
 
         hidden_layers = network_mob.layers[1:3]
-        rects = VGroup(*map(SurroundingRectangle, hidden_layers))
+        rects = VGroup(*list(map(SurroundingRectangle, hidden_layers)))
         np.random.seed(0)
 
         self.play(ShowCreation(rects))
@@ -3518,7 +3515,7 @@ class RandomlyLabeledImageData(Scene):
             group.shift(3*UP + 1.5*y*DOWN)
             groups.add(group)
             labels.add(group[-1])
-        permutation = range(len(labels))
+        permutation = list(range(len(labels)))
         while any(np.arange(len(labels)) == permutation):
             random.shuffle(permutation)
         for label, i in zip(labels, permutation):
@@ -3561,7 +3558,7 @@ class TrainOnImages(PreviewLearning, RandomlyLabeledImageData):
     def construct(self):
         self.setup_network_mob()
 
-        image_names, label_names = zip(*self.image_label_pairs)
+        image_names, label_names = list(zip(*self.image_label_pairs))
         label_names = list(label_names)
         random.shuffle(label_names)
         groups = [

@@ -42,7 +42,7 @@ class CrossProductSymbols(Scene):
         vector_text = brace.get_text("Vector")
         vector_text.set_color(RED)
         self.add(equation)
-        self.play(*map(Write, [brace, vector_text]))
+        self.play(*list(map(Write, [brace, vector_text])))
         self.wait()
 
 class DeterminantTrickCopy(DeterminantTrick):
@@ -200,7 +200,7 @@ class DotProductToTransformSymbol(Scene):
         _input = Matrix(["x", "y"])
         _input.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         left_input, right_input = [_input.copy() for x in range(2)]
-        dot, equals = map(TexMobject, ["\\cdot", "="])
+        dot, equals = list(map(TexMobject, ["\\cdot", "="]))
         equation = VGroup(
             vector, dot, left_input, equals,
             matrix, right_input
@@ -338,7 +338,7 @@ class ThreeStepPlan(Scene):
                 VGroup(linear, transformation), 
                 linear_transformation
             ),
-            *map(FadeOut, steps)
+            *list(map(FadeOut, steps))
         )
         self.wait()
         self.play(Write(left_right_arrow))
@@ -382,7 +382,7 @@ class DefineDualTransform(Scene):
 
     def show_triple_cross_product(self):
         colors = [WHITE, ORANGE, W_COLOR]
-        tex_mobs = map(TexMobject, get_vect_tex(*"uvw"))
+        tex_mobs = list(map(TexMobject, get_vect_tex(*"uvw")))
         u_tex, v_tex, w_tex = tex_mobs
         arrays = [
             Matrix(["%s_%d"%(s, d) for d in range(1, 4)])
@@ -482,7 +482,7 @@ class DefineDualTransform(Scene):
         )
         self.wait()
 
-        x, y, z = variables = map(TexMobject, "xyz")
+        x, y, z = variables = list(map(TexMobject, "xyz"))
         for var, entry in zip(variables, self.u_entries):
             var.scale(0.8) 
             var.move_to(entry)
@@ -540,7 +540,7 @@ class DefineDualTransform(Scene):
     def introduce_dual_vector(self):
         everything = VGroup(*self.get_mobjects())
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
-        q_marks = VGroup(*map(TextMobject, "???"))
+        q_marks = VGroup(*list(map(TextMobject, "???")))
         q_marks.scale(2)
         q_marks.set_color_by_gradient(*colors)
 
@@ -596,16 +596,16 @@ class DefineDualTransform(Scene):
             ShowCreation(matrix_arrow)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [matrix_words, matrix_arrow]))
+        self.play(*list(map(FadeOut, [matrix_words, matrix_arrow])))
         self.play(
             Transform(func, dual_vector),
             Write(dual_dot[1])
         )
         self.wait()
 
-        p_coords = VGroup(*map(TexMobject, [
+        p_coords = VGroup(*list(map(TexMobject, [
             "p_%d"%d for d in range(1, 4)
-        ]))
+        ])))
         p_coords.set_color(RED)        
         p_array = Matrix(list(p_coords))
         p_array.set_height(dual_vector.get_height())
@@ -690,13 +690,13 @@ class DefineDualTransform(Scene):
             sym_strings = ["(", "\\cdot", "-", "\\cdot", ")"]
             if i < 2:
                 sym_strings[-1] += "+"
-            syms = map(TexMobject, sym_strings)
+            syms = list(map(TexMobject, sym_strings))
             for mob, sym in zip(quint, syms):
                 mob.target = mob.copy()
                 mob.target.scale(1.5)
                 mob.sym = sym
             quint_targets = [mob.target for mob in quint]
-            component = VGroup(*it.chain(*zip(quint_targets, syms)))
+            component = VGroup(*it.chain(*list(zip(quint_targets, syms))))
             component.arrange_submobjects()
             cross_components.add(component)
             to_fade.add(syms[0], syms[-1], quint[0])
@@ -723,7 +723,7 @@ class DefineDualTransform(Scene):
                 ).next_to(cross_components, LEFT),
                 new_ps
             ),
-            *map(FadeOut, to_fade)
+            *list(map(FadeOut, to_fade))
         )
         self.play(*[
             Write(TexMobject("=").next_to(p, buff = 2*SMALL_BUFF))

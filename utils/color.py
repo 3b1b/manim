@@ -47,7 +47,7 @@ def color_to_int_rgba(color, opacity=1.0):
 def color_gradient(reference_colors, length_of_output):
     if length_of_output == 0:
         return reference_colors[0]
-    rgbs = map(color_to_rgb, reference_colors)
+    rgbs = list(map(color_to_rgb, reference_colors))
     alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
     floors = alphas.astype('int')
     alphas_mod1 = alphas % 1
@@ -66,7 +66,7 @@ def interpolate_color(color1, color2, alpha):
 
 
 def average_color(*colors):
-    rgbs = np.array(map(color_to_rgb, colors))
+    rgbs = np.array(list(map(color_to_rgb, colors)))
     mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
     return rgb_to_color(mean_rgb)
 

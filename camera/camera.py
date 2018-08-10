@@ -1,9 +1,9 @@
-from __future__ import print_function
+
 import itertools as it
 import numpy as np
 import operator as op
 
-import aggdraw
+# import aggdraw
 import copy
 import time
 
@@ -44,7 +44,7 @@ class Camera(object):
         # than this value will be rescaled.
         "max_allowable_norm": FRAME_WIDTH,
         "image_mode": "RGBA",
-        "n_rgb_coords": 4,
+        "n_channels": 4,
         "pixel_array_dtype": 'uint8',
         "use_z_coordinate_for_display_order": False,
         # z_buff_func is only used if the flag above is set to True.
@@ -131,7 +131,7 @@ class Camera(object):
                 self.background_color, self.background_opacity
             )
             self.background = np.zeros(
-                (height, width, self.n_rgb_coords),
+                (height, width, self.n_channels),
                 dtype=self.pixel_array_dtype
             )
             self.background[:, :] = background_rgba
@@ -372,8 +372,7 @@ class Camera(object):
             coord_strings[0] = "M" + coord_strings[0]
             # The C at the start of every 6th number communicates
             # that the following 6 define a cubic Bezier
-            coord_strings[2::6] = map(
-                lambda s: "C" + str(s), coord_strings[2::6])
+            coord_strings[2::6] = ["C" + str(s) for s in coord_strings[2::6]]
             # Possibly finish with "Z"
             if vmobject.mark_paths_closed:
                 coord_strings[-1] = coord_strings[-1] + " Z"
@@ -549,7 +548,7 @@ class Camera(object):
         return 1 + (thickness - 1) / factor
 
     def get_thickening_nudges(self, thickness):
-        _range = range(-thickness / 2 + 1, thickness / 2 + 1)
+        _range = list(range(-thickness / 2 + 1, thickness / 2 + 1))
         return np.array(list(it.product(_range, _range)))
 
     def thickened_coordinates(self, pixel_coords, thickness):

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import FRAME_HEIGHT
 from constants import FRAME_WIDTH

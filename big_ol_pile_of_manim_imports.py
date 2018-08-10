@@ -12,7 +12,7 @@ addressible by changing this file.
 Note: One should NOT import from this file for main library code, it is meant only
 as a convenience for scripts creating scenes for videos.
 """
-from __future__ import absolute_import
+
 
 from constants import *
 

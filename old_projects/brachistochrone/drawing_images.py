@@ -52,7 +52,7 @@ def sort_by_color(mob):
 
 def get_image_array(name):
     image_files = os.listdir(IMAGE_DIR)
-    possibilities = filter(lambda s : s.startswith(name), image_files)
+    possibilities = [s for s in image_files if s.startswith(name)]
     for possibility in possibilities:
         try:
             path = os.path.join(IMAGE_DIR, possibility)

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import itertools as it
 import numpy as np
@@ -67,10 +67,7 @@ class PiCreatureScene(Scene):
 
     def get_on_screen_pi_creatures(self):
         mobjects = self.get_mobjects()
-        return VGroup(*filter(
-            lambda pi: pi in mobjects,
-            self.get_pi_creatures()
-        ))
+        return VGroup(*[pi for pi in self.get_pi_creatures() if pi in mobjects])
 
     def introduce_bubble(self, *args, **kwargs):
         if isinstance(args[0], PiCreature):
@@ -99,7 +96,7 @@ class PiCreatureScene(Scene):
                 pi.bubble is not None and \
                 pi.bubble in on_screen_mobjects
 
-        pi_creatures_with_bubbles = filter(has_bubble, self.get_pi_creatures())
+        pi_creatures_with_bubbles = list(filter(has_bubble, self.get_pi_creatures()))
         if pi_creature in pi_creatures_with_bubbles:
             pi_creatures_with_bubbles.remove(pi_creature)
             old_bubble = pi_creature.bubble
@@ -161,10 +158,7 @@ class PiCreatureScene(Scene):
         if not self.any_pi_creatures_on_screen():
             return animations
 
-        non_pi_creature_anims = filter(
-            lambda anim: anim.mobject not in self.get_pi_creatures(),
-            animations
-        )
+        non_pi_creature_anims = [anim for anim in animations if anim.mobject not in self.get_pi_creatures()]
         if len(non_pi_creature_anims) == 0:
             return animations
         first_anim = non_pi_creature_anims[0]
@@ -178,10 +172,7 @@ class PiCreatureScene(Scene):
                 continue
             if pi_creature in first_anim.mobject.submobject_family():
                 continue
-            anims_with_pi_creature = filter(
-                lambda anim: pi_creature in anim.mobject.submobject_family(),
-                animations
-            )
+            anims_with_pi_creature = [anim for anim in animations if pi_creature in anim.mobject.submobject_family()]
             for anim in anims_with_pi_creature:
                 if isinstance(anim, Transform):
                     index = anim.mobject.submobject_family().index(pi_creature)
@@ -336,7 +327,7 @@ class TeacherStudentsScene(PiCreatureScene):
         )
 
     def get_student_changes(self, *modes, **kwargs):
-        pairs = zip(self.get_students(), modes)
+        pairs = list(zip(self.get_students(), modes))
         pairs = [(s, m) for s, m in pairs if m is not None]
         start = VGroup(*[s for s, m in pairs])
         target = VGroup(*[s.copy().change_mode(m) for s, m in pairs])

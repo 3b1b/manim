@@ -12,8 +12,8 @@ def choose(n, r):
         return 0
     if r == 0:
         return 1
-    denom = reduce(op.mul, xrange(1, r + 1), 1)
-    numer = reduce(op.mul, xrange(n, n - r, -1), 1)
+    denom = reduce(op.mul, range(1, r + 1), 1)
+    numer = reduce(op.mul, range(n, n - r, -1), 1)
     return numer // denom
 
 # Just to have a less heavyweight name for this extremely common operation

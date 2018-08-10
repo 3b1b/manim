@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 from once_useful_constructs.light import *
 
@@ -350,7 +350,7 @@ class IntroScene(PiCreatureScene):
 
         for i, t1, t2 in zip(it.count(1), [0]+series_terms, series_terms):
             color = next(slab_colors)
-            line = Line(*map(number_line.number_to_point, [t1, t2]))
+            line = Line(*list(map(number_line.number_to_point, [t1, t2])))
             rect = Rectangle(
                 stroke_width = 0,
                 fill_opacity = 1,
@@ -913,8 +913,8 @@ class FirstLighthouseScene(PiCreatureScene):
             color = WHITE,
             number_at_center = 1.6,
             stroke_width = 1,
-            numbers_with_elongated_ticks = range(1,6),
-            numbers_to_show = range(1,6),
+            numbers_with_elongated_ticks = list(range(1,6)),
+            numbers_to_show = list(range(1,6)),
             unit_size = 2,
             tick_frequency = 0.2,
             line_to_number_buff = LARGE_BUFF,
@@ -1245,7 +1245,7 @@ class IntroduceScreen(Scene):
             FadeIn(screen)
         )
         self.wait()
-        self.play(*map(FadeOut, [screen_label, screen_arrow]))
+        self.play(*list(map(FadeOut, [screen_label, screen_arrow])))
         screen.save_state()
         self.play(
             FadeIn(morty),
@@ -1774,7 +1774,7 @@ class InverseSquareLaw(ThreeDScene):
             copies.move_to(source_point, IN)
             copies.shift(distance*RIGHT*unit_distance)
             return copies
-        screen_copy_groups = map(get_screen_copy_group, range(1, 8))
+        screen_copy_groups = list(map(get_screen_copy_group, list(range(1, 8))))
         def get_screen_copy_group_anim(n):
             group = screen_copy_groups[n]
             prev_group = screen_copy_groups[n-1]
@@ -2281,10 +2281,10 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
             LaggedStart(GrowArrow, identical_lighthouses_arrows)
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             identical_lighthouses_words,
             identical_lighthouses_arrows,
-        ]))
+        ])))
 
         #Show labels of lengths
         self.play(ShowCreation(line_a), Write(label_a))
@@ -2306,7 +2306,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
         b_part.move_to(lsB)
         h_part.move_to(lsC)
 
-        self.play(*map(FadeOut, [lsA, lsB, lsC, indicator]))
+        self.play(*list(map(FadeOut, [lsA, lsB, lsC, indicator])))
         for ls, part in (lsA, a_part), (lsB, b_part), (lsC, h_part):
             self.add(ls)
             self.play(
@@ -2352,10 +2352,7 @@ class SimpleIPTProof(Scene):
         C = ORIGIN
         #Dumb and inefficient
         alphas = np.linspace(0, 1, 500)
-        i = np.argmin(map(
-            lambda a : np.linalg.norm(interpolate(A, B, a)),
-            alphas
-        ))
+        i = np.argmin([np.linalg.norm(interpolate(A, B, a)) for a in alphas])
         H = interpolate(A, B, alphas[i])
         triangle = VGroup(
             Line(C, A, color = BLUE),
@@ -2656,7 +2653,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
             Animation(screen_arrow),
         )
         self.add(spotlights_update_anim)
-        self.play(*map(FadeOut, [screen_word, screen_arrow]))
+        self.play(*list(map(FadeOut, [screen_word, screen_arrow])))
         self.wait()
 
         # Reshape screen
@@ -2715,9 +2712,9 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
 
         self.remove(spotlights_update_anim)
         self.add(spotlight_b)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             spotlight_a, lsA.ambient_light, lsB.ambient_light
-        ]))
+        ])))
         show_key_point(spotlight_b, A)
         self.play(
             FadeOut(spotlight_b),
@@ -2861,7 +2858,7 @@ class InscribedeAngleThreorem(TeacherStudentsScene):
             self.teacher.change, "raise_right_hand",
             ShowCreation(shape, rate_func = None),
         )
-        self.play(*map(FadeIn, [angle_mark, theta]))
+        self.play(*list(map(FadeIn, [angle_mark, theta])))
         self.play(
             ShowCreation(half_angle_mark),
             Write(theta_halves),
@@ -3608,7 +3605,7 @@ class PondScene(ThreeDScene):
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
             #numbers_with_elongated_ticks = range(-MAX_N,MAX_N + 1),
-            numbers_to_show = range(-MAX_N,MAX_N + 1,2),
+            numbers_to_show = list(range(-MAX_N,MAX_N + 1,2)),
             unit_size = LAKE0_RADIUS * TAU/4 / 2 * scale,
             tick_frequency = 1,
             line_to_number_buff = LARGE_BUFF,
@@ -3687,7 +3684,7 @@ class PondScene(ThreeDScene):
 
         two_sided_sum.scale(TEX_SCALE)
         
-        for (i,submob) in zip(range(nb_symbols),two_sided_sum.submobjects):
+        for (i,submob) in zip(list(range(nb_symbols)),two_sided_sum.submobjects):
             submob.next_to(self.number_line.number_to_point(i - 13),DOWN, buff = 2*scale)
             if (i == 0 or i % 2 == 1 or i == nb_symbols - 1): # non-fractions
                 submob.shift(0.3 * scale * DOWN)
@@ -3804,7 +3801,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         number_line = NumberLine(
             x_min = -self.x_radius, 
             x_max = self.x_radius,
-            numbers_to_show = range(-self.max_shown_n, self.max_shown_n),
+            numbers_to_show = list(range(-self.max_shown_n, self.max_shown_n)),
         )
         number_line.add_numbers()
         number_line.shift(2*DOWN)
@@ -3816,7 +3813,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
             ])
             for u in (1, -1)
         ]
-        dot_pairs = it.starmap(VGroup, zip(positive_dots, negative_dots))
+        dot_pairs = it.starmap(VGroup, list(zip(positive_dots, negative_dots)))
 
         # Decimal
         decimal = DecimalNumber(0, num_decimal_places = 6)
@@ -3863,7 +3860,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         self.add(number_line, *dot_pairs)
         self.add(zoom_out, scale_decimal)
 
-        tuples = zip(term_mobjects, plusses, partial_sums)
+        tuples = list(zip(term_mobjects, plusses, partial_sums))
         run_time = 1
         for term_mobs, plus_pair, partial_sum in tuples:
             self.play(
@@ -3878,10 +3875,10 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         zoom_out.begin_wind_down()
         self.wait()
         self.remove(zoom_out, scale_decimal)
-        self.play(*map(FadeOut, it.chain(
+        self.play(*list(map(FadeOut, it.chain(
             term_mobjects, plusses, 
             number_line.numbers, [decimal]
-        )))
+        ))))
 
         self.number_line = number_line
 
@@ -4391,7 +4388,7 @@ class InfiniteCircleScene(PiCreatureScene):
 class Credits(Scene):
     def construct(self):
         credits = VGroup(*[
-            VGroup(*map(TextMobject, pair))
+            VGroup(*list(map(TextMobject, pair)))
             for pair in [
                 ("Primary writer and animator:", "Ben Hambrecht"),
                 ("Editing, advising, narrating:", "Grant Sanderson"),

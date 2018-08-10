@@ -92,7 +92,7 @@ class LinearCombinationScene(LinearTransformationScene):
             basis.save_state()
             basis.label.save_state()
         if coord_mobs is None:
-            coord_mobs = map(TexMobject, map(str, numerical_coords))
+            coord_mobs = list(map(TexMobject, list(map(str, numerical_coords))))
             VGroup(*coord_mobs).set_fill(opacity = 0)
             for coord, basis in zip(coord_mobs, basis_vectors):
                 coord.next_to(basis.label, LEFT)
@@ -111,9 +111,9 @@ class LinearCombinationScene(LinearTransformationScene):
             )
             coord.target.next_to(basis.label.target, LEFT)
             coord.target.set_fill(basis.get_color(), opacity = 1)
-            self.play(*map(MoveToTarget, [
+            self.play(*list(map(MoveToTarget, [
                 coord, basis, basis.label
-            ]))
+            ])))
             self.wait()
         self.play(*[
             ApplyMethod(m.shift, basis_vectors[0].get_end())
@@ -164,7 +164,7 @@ class RemindOfCoordinates(LinearCombinationScene):
             )
             self.wait()
         self.wait()
-        self.play(*map(FadeOut, [x_coord, y_coord, x_line, y_line]))
+        self.play(*list(map(FadeOut, [x_coord, y_coord, x_line, y_line])))
 
 
     def show_abstract_scalar_idea(self, x_coord, y_coord):
@@ -191,7 +191,7 @@ class RemindOfCoordinates(LinearCombinationScene):
             y_coord.move_to, y_shift + 3*UP,
             Write(words)
         )
-        self.play(*map(FadeIn, [self.i_hat, self.j_hat]))
+        self.play(*list(map(FadeIn, [self.i_hat, self.j_hat])))
         self.wait()
         self.play(Transform(self.i_hat, scaled_i))
         self.play(Transform(self.j_hat, scaled_j))
@@ -204,7 +204,7 @@ class RemindOfCoordinates(LinearCombinationScene):
         self.wait()
 
     def scale_basis_vectors(self, x_coord, y_coord):
-        self.play(*map(Write, [self.i_hat.label, self.j_hat.label]))
+        self.play(*list(map(Write, [self.i_hat.label, self.j_hat.label])))
         self.show_linear_combination(
             self.vector_coords, 
             basis_vectors = [self.i_hat, self.j_hat],
@@ -423,13 +423,13 @@ class IntroduceJennifer(JenniferScene):
         self.play(ShowCreation(v))
         self.wait()
         self.play(*it.chain(
-            map(FadeIn, [
+            list(map(FadeIn, [
                 self.plane, self.i_hat, self.j_hat, 
                 self.i_hat.label, self.j_hat.label,
                 you
-            ]),
-            map(Animation, [jenny, v]),
-            map(FadeOut, self.basis_vectors),
+            ])),
+            list(map(Animation, [jenny, v])),
+            list(map(FadeOut, self.basis_vectors)),
         ))
         self.play(
             ShowCreation(you.bubble),
@@ -442,13 +442,13 @@ class IntroduceJennifer(JenniferScene):
             coord_mobs = you.coords.get_entries().copy(),
         )
         self.play(*it.chain(
-            map(FadeOut, [
+            list(map(FadeOut, [
                 self.plane, self.i_hat, self.j_hat,  
                 self.i_hat.label, self.j_hat.label,
                 you.bubble, you.coords
-            ]),
-            map(FadeIn, [self.jenny_plane, self.basis_vectors]),
-            map(Animation, [v, you, jenny]),
+            ])),
+            list(map(FadeIn, [self.jenny_plane, self.basis_vectors])),
+            list(map(Animation, [v, you, jenny])),
         ))
         self.play(
             ShowCreation(jenny.bubble),
@@ -500,9 +500,9 @@ class IntroduceJennifer(JenniferScene):
             )
             coord.target.next_to(basis.label.target, LEFT)
             coord.target.set_fill(basis.get_color(), opacity = 1)
-            self.play(*map(MoveToTarget, [
+            self.play(*list(map(MoveToTarget, [
                 coord, basis, basis.label
-            ]))
+            ])))
             self.wait()
         self.play(*[
             ApplyMethod(m.shift, basis_vectors[0].get_end())
@@ -544,19 +544,19 @@ class IntroduceJennifer(JenniferScene):
             Transform(self.jenny.bubble, self.you.bubble),
             self.you.change_mode, "speaking",
             self.jenny.change_mode, "erm",
-            *map(MoveToTarget, [
+            *list(map(MoveToTarget, [
                 self.jenny.coords,
                 b1, b2, new_label1, new_label2, sum_vect
-            ])
+            ]))
         )
         self.play(Blink(self.you))
         self.wait()
 
         self.play(*it.chain(
-            map(FadeOut, [
+            list(map(FadeOut, [
                 self.jenny.bubble, self.jenny.coords, 
                 coord_mobs, sum_vect
-            ]),
+            ])),
             [
                 ApplyMethod(pi.change_mode, "plain") 
                 for pi in (self.jenny, self.you)
@@ -608,11 +608,11 @@ class IntroduceJennifer(JenniferScene):
             FadeOut(b1_coords),
             self.jenny.change_mode, "speaking",
             self.you.change_mode, "confused",
-            *map(Animation, [
+            *list(map(Animation, [
                 self.basis_vectors,
                 b1_coords.mover,
                 b2_coords.mover,
-            ])
+            ]))
         )
         self.play(MoveToTarget(b1_coords.mover))
         self.play(MoveToTarget(b2_coords.mover))
@@ -692,7 +692,7 @@ class SpaceHasNoGrid(LinearTransformationScene):
         self.play(
             Write(words),
             FadeOut(self.plane),
-            *map(Animation, [self.i_hat, self.j_hat])
+            *list(map(Animation, [self.i_hat, self.j_hat]))
         )
         self.wait()
 
@@ -768,7 +768,7 @@ class ShowOriginOfGrid(JenniferScene):
         self.wait()
         self.play(
             Transform(self.jenny_plane, self.plane),
-            *map(Animation, [origin_word, origin_dot, arrow])
+            *list(map(Animation, [origin_word, origin_dot, arrow]))
         )
         self.wait()
         self.play(Write(coords))
@@ -779,7 +779,7 @@ class ShowOriginOfGrid(JenniferScene):
         self.wait()
         self.play(
             self.jenny_plane.restore, 
-            *map(Animation, [origin_word, origin_dot, arrow, coords])
+            *list(map(Animation, [origin_word, origin_dot, arrow, coords]))
         )
         for vect in self.b1, self.b2:
             self.play(
@@ -847,7 +847,7 @@ class TranslateFromJenny(JenniferScene):
             everything.remove(submob)
         self.play(
             Transform(self.jenny_plane, self.plane),
-            *map(Animation, everything)
+            *list(map(Animation, everything))
         )
         self.play(
             self.you.change_mode, "confused",
@@ -872,7 +872,7 @@ class TranslateFromJenny(JenniferScene):
 
     def perform_arithmetic(self):
         jenny_x, jenny_y = self.jenny.coords.get_entries().copy()
-        equals, plus, equals2 = syms = map(TexMobject, list("=+="))
+        equals, plus, equals2 = syms = list(map(TexMobject, list("=+=")))
         result = Matrix([-4, 1])
         result.set_height(self.you.coords.get_height())
         for mob in syms + [self.you.coords, self.jenny.coords, result]:
@@ -898,7 +898,7 @@ class TranslateFromJenny(JenniferScene):
             [self.you.coords, equals],
         ]
         for mover_set in mover_sets:
-            self.play(*map(MoveToTarget, mover_set))
+            self.play(*list(map(MoveToTarget, mover_set)))
             self.wait()
         self.play(
             MoveToTarget(equals2),
@@ -1102,14 +1102,14 @@ class ChangeOfBasisExample(JenniferScene):
             basis_vectors = [self.i_hat, self.j_hat],
             coord_mobs = v_coords.get_entries().copy(),
         )
-        self.play(*map(FadeOut, [self.i_hat.label, self.j_hat.label]))
+        self.play(*list(map(FadeOut, [self.i_hat.label, self.j_hat.label])))
         self.apply_transposed_matrix(self.cob_matrix().T)
         VGroup(self.i_hat, self.j_hat).fade()
         self.add(self.b1, self.b2)
         self.play(
             Transform(start_words, end_words),
             Transform(self.you, self.jenny),
-            *map(Write, [self.b1.label, self.b2.label])
+            *list(map(Write, [self.b1.label, self.b2.label]))
         )
         self.play(Blink(self.you))
         self.show_linear_combination(
@@ -1161,7 +1161,7 @@ class FeelsBackwards(Scene):
         inverse_word.next_to(matrix, LEFT, buff = MED_SMALL_BUFF)
         inverse_exponent = TexMobject("-1")
         inverse_exponent.next_to(matrix.get_corner(UP+RIGHT), RIGHT)
-        self.play(*map(Write, [inverse_word, inverse_exponent]))
+        self.play(*list(map(Write, [inverse_word, inverse_exponent])))
         self.play(
             Swap(jenny_grid, our_grid),
             top_arrow.scale_in_place, 0.8,
@@ -1327,7 +1327,7 @@ class SummarizeTranslationProcess(Scene):
     def define_matrix(self):
         matrix = Matrix([[2, -1], [1, 1]])
         matrix.set_color_columns(X_COLOR, Y_COLOR)
-        A, equals = map(TexMobject, list("A="))
+        A, equals = list(map(TexMobject, list("A=")))
         equation = VGroup(A, equals, matrix)
         equation.arrange_submobjects()
         equation.to_corner(UP+LEFT)
@@ -1344,7 +1344,7 @@ class SummarizeTranslationProcess(Scene):
         self.add(A, equals, matrix)
         self.play(
             Write(words),
-            *map(ShowCreation, [arrow1, arrow2])
+            *list(map(ShowCreation, [arrow1, arrow2]))
         )
         self.A_copy = A.copy()
 
@@ -1420,10 +1420,10 @@ class Prerequisites(Scene):
         h_line.next_to(title, DOWN)
 
         self.add(title, h_line)
-        prereqs = map(TextMobject, [
+        prereqs = list(map(TextMobject, [
             "Linear transformations",
             "Matrix multiplication",
-        ])
+        ]))
         for direction, words in zip([LEFT, RIGHT], prereqs):
             rect = Rectangle(height = 9, width = 16)
             rect.set_height(3.5)
@@ -1466,7 +1466,7 @@ class RotationExample(LinearTransformationScene):
         )
         self.wait()
 
-        i_coords, j_coords = coord_arrays = map(Matrix, self.t_matrix)
+        i_coords, j_coords = coord_arrays = list(map(Matrix, self.t_matrix))
         for coords, vect in zip(coord_arrays, [self.i_hat, self.j_hat]):
             coords.scale(0.7)
             coords.rect = BackgroundRectangle(coords)
@@ -1550,7 +1550,7 @@ class JennyWatchesRotation(JenniferScene):
                 Rotate(mob, np.pi/2, run_time = 3)
                 for mob in (self.jenny_plane, self.b1, self.b2)
             ],
-            map(Animation, [jenny, jenny.bubble, matrix])
+            list(map(Animation, [jenny, jenny.bubble, matrix]))
         ))
         self.play(jenny.change_mode, "pondering")
         self.play(Blink(jenny))
@@ -1598,13 +1598,13 @@ class HowToTranslateAMatrix(Scene):
     def construct(self):
         self.add_title()
 
-        arrays = VGroup(*map(Matrix, [
+        arrays = VGroup(*list(map(Matrix, [
             [["1/3", "-2/3"], ["5/3", "-1/3"]],
             [-1, 2],
             [[2, -1], [1, 1]],
             [[0, -1], [1, 0]],
             [[2, -1], [1, 1]],
-        ]))
+        ])))
         result, her_vector, cob_matrix, transform, inv_cob = arrays
         neg_1 = TexMobject("-1")
         neg_1.next_to(inv_cob.get_corner(UP+RIGHT), RIGHT)
@@ -1759,7 +1759,7 @@ class JennyWatchesRotationWithMatrixAndVector(JenniferScene):
                 Rotate(mob, np.pi/2, run_time = 3) 
                 for mob in (self.jenny_plane, self.b1, self.b2, vector)
             ],
-            map(Animation, [self.jenny, matrix, vector_array]),
+            list(map(Animation, [self.jenny, matrix, vector_array])),
         ))
         self.play(
             self.jenny.change_mode, "pondering",

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import *
 
@@ -117,7 +117,7 @@ class FlashThroughClass(Animation):
         if not isinstance(mobject, PiCreatureClass):
             raise Exception("FlashThroughClass mobject must be a PiCreatureClass")
         digest_config(self, kwargs)
-        self.indices = range(mobject.height * mobject.width)
+        self.indices = list(range(mobject.height * mobject.width))
         
         if mode == "random":
             np.random.shuffle(self.indices)

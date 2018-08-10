@@ -52,7 +52,7 @@ class ComplexTransformationScene(Scene):
     def play(self, *animations, **kwargs):
         Scene.play(
             self,
-            *list(animations) + map(Animation, self.foreground_mobjects),
+            *list(animations) + list(map(Animation, self.foreground_mobjects)),
             **kwargs
         )
 

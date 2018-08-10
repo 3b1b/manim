@@ -50,12 +50,12 @@ class ContrastAbstractAndConcrete(Scene):
         h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.shift((r_title.get_bottom()[1]-MED_SMALL_BUFF)*UP)
 
-        functions = VGroup(*map(TexMobject, [
+        functions = VGroup(*list(map(TexMobject, [
             "f(x) = 2x^2 - x^3",
             "f(x) = \\sin(x)",
             "f(x) = e^x",
             "\\v_dots"
-        ]))
+        ])))
         functions.arrange_submobjects(
             DOWN, 
             aligned_edge = LEFT,
@@ -65,7 +65,7 @@ class ContrastAbstractAndConcrete(Scene):
         functions[-1].shift(MED_LARGE_BUFF*RIGHT)
 
         self.add(l_title, r_title)
-        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.play(*list(map(ShowCreation, [h_line, v_line])))
         self.play(Write(functions))
         self.wait()
         anims = [
@@ -150,7 +150,7 @@ class ContrastAbstractAndConcrete(Scene):
                 anims.append(FadeIn(pi))
                 continue
             mom_index, dad_index = random.choice(
-                list(it.combinations(range(index), 2))
+                list(it.combinations(list(range(index)), 2))
             )
             pi.parents = VGroup(pis[mom_index], pis[dad_index]).copy()
             pi.parents.set_fill(opacity = 0)
@@ -183,13 +183,13 @@ class ListOfRules(PiCreatureScene):
         "use_morty" : False,
     }
     def construct(self):
-        rules = VGroup(*map(TexMobject, [
+        rules = VGroup(*list(map(TexMobject, [
             "\\frac{d}{dx} x^n = nx^{n-1}",
             "\\frac{d}{dx} \\sin(x) = \\cos(x)",
             "\\frac{d}{dx} \\cos(x) = -\\sin(x)",
             "\\frac{d}{dx} a^x = \\ln(a) a^x",
             "\\vdots"
-        ]))
+        ])))
         rules.arrange_submobjects(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
@@ -212,8 +212,8 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         "big_x" : 3,
         "dx" : 0.1,
         "x_min" : -9,
-        "x_labeled_nums" : range(-8, 0, 2) + range(2, 10, 2),
-        "y_labeled_nums" : range(2, 12, 2),
+        "x_labeled_nums" : list(range(-8, 0, 2)) + list(range(2, 10, 2)),
+        "y_labeled_nums" : list(range(2, 12, 2)),
         "little_rect_nudge" : 0.5*(1.5*UP+RIGHT),
         "graph_origin" : 2.5*DOWN + LEFT,
         "zoomed_canvas_corner" : UP+LEFT,
@@ -310,9 +310,9 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         self.wait()
         self.play(Write(df_dx))
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             v_line, nudged_v_line,
-        ]))
+        ])))
         self.ss_group = ss_group
 
     def position_little_rectangle(self, rect, ss_group):
@@ -415,7 +415,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             DrawBorderThenFill(square),
             self.pi_creature.change_mode, "plain"
         )
-        self.play(*map(GrowFromCenter, braces))
+        self.play(*list(map(GrowFromCenter, braces)))
         self.play(Write(x_squared))
         self.change_mode("pondering")
         self.wait()
@@ -478,7 +478,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
         )
         self.remove(corner_point, bottom_line, right_line)
         self.add(corner_square, bottom_rect, right_rect)
-        self.play(*map(GrowFromCenter, little_braces))
+        self.play(*list(map(GrowFromCenter, little_braces)))
         self.wait()
         self.play(*it.chain(*[
             [mob.shift, vect*SMALL_BUFF]
@@ -752,7 +752,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             )
             x_mob.save_state()
             x_mob.target = number
-        self.play(*map(MoveToTarget, xs))
+        self.play(*list(map(MoveToTarget, xs)))
         self.wait(2)
 
         #Recursively transform to what would have happened
@@ -779,7 +779,7 @@ class ChangeInAreaOverChangeInX(Scene):
     def construct(self):
         fractions = []
         for pair in ("Change in area", "Change in $x$"), ("$d(x^2)$", "$dx$"):
-            top, bottom = map(TextMobject, pair)
+            top, bottom = list(map(TextMobject, pair))
             top.set_color(YELLOW)
             bottom.set_color(BLUE_B)
             frac_line = TexMobject("-")
@@ -792,7 +792,7 @@ class ChangeInAreaOverChangeInX(Scene):
         words, symbols = fractions
 
         self.play(Write(words[0], run_time = 1))
-        self.play(*map(Write, words[1:]), run_time = 1)
+        self.play(*list(map(Write, words[1:])), run_time = 1)
         self.wait()
         self.play(Transform(words, symbols))
         self.wait()
@@ -922,7 +922,7 @@ class NudgeSideLengthOfCube(Scene):
         x_squared_dx = TexMobject("x^2", "\\, dx")
 
 
-        self.play(*map(Write, [df, equals]))
+        self.play(*list(map(Write, [df, equals])))
         self.grab_pieces(self.faces, faces)
         self.wait()
         self.shrink_dx("Faces are introduced")
@@ -1044,7 +1044,7 @@ class NudgeSideLengthOfCube(Scene):
                 np.pi/12, piece.get_center()-self.cube.get_center()
             )
             piece.target.set_color(RED)
-        self.play(*map(MoveToTarget, start_pieces), rate_func = wiggle)
+        self.play(*list(map(MoveToTarget, start_pieces)), rate_func = wiggle)
         self.wait()
         added_anims = []
         if to_write is not None:
@@ -1200,12 +1200,12 @@ class GraphOfXCubed(GraphScene):
         "x_min" : -6,
         "x_max" : 6,
         "x_axis_width" : FRAME_WIDTH,
-        "x_labeled_nums" : range(-6, 7),
+        "x_labeled_nums" : list(range(-6, 7)),
         "y_min" : -35,
         "y_max" : 35,
         "y_axis_height" : FRAME_HEIGHT,
         "y_tick_frequency" : 5,
-        "y_labeled_nums" : range(-30, 40, 10),
+        "y_labeled_nums" : list(range(-30, 40, 10)),
         "graph_origin" : ORIGIN,
         "dx" : 0.2,
         "deriv_x_min" : -3,
@@ -1287,7 +1287,7 @@ class PatternForPowerRule(PiCreatureScene):
         self.show_hopping()
 
     def introduce_pattern(self):
-        exp_range = range(1, 1+self.num_exponents)
+        exp_range = list(range(1, 1+self.num_exponents))
         colors = color_gradient([BLUE_D, YELLOW], self.num_exponents)
         derivatives = VGroup()
         for exponent, color in zip(exp_range, colors):
@@ -1367,7 +1367,7 @@ class PatternForPowerRule(PiCreatureScene):
         self.wait()
 
     def show_hopping(self):
-        exp_range = range(2, 2+self.num_exponents-1)
+        exp_range = list(range(2, 2+self.num_exponents-1))
         self.change_mode("tired")
         for exp, color in zip(exp_range, self.colors[1:]):
             form = TexMobject(
@@ -1407,7 +1407,7 @@ class PatternForPowerRule(PiCreatureScene):
                 self.pi_creature.change_mode, "hesitant",
                 self.pi_creature.look_at, lhs_copy
             )
-            self.play(*map(FadeOut, [form, lhs_copy]))
+            self.play(*list(map(FadeOut, [form, lhs_copy])))
 
 class PowerRuleAlgebra(Scene):
     CONFIG = {
@@ -1463,7 +1463,7 @@ class PowerRuleAlgebra(Scene):
         self.workout_product(equals2, full_product)
 
     def workout_product(self, equals, full_product):
-        product_part_tex_pairs = zip(full_product, full_product.expression_parts)
+        product_part_tex_pairs = list(zip(full_product, full_product.expression_parts))
         xs, dxs = [
             VGroup(*[
                 submob
@@ -1613,7 +1613,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         "y_min" : 0,
         "x_tick_frequency" : 0.5,
         "y_tick_frequency" : 0.5,
-        "x_labeled_nums" : range(0, 4),
+        "x_labeled_nums" : list(range(0, 4)),
         "y_labeled_nums" : [1],
         "y_axis_height" : 10,
         "morty_scale_val" : 0.8,
@@ -1801,7 +1801,7 @@ class OneOverX(PiCreatureScene, GraphScene):
                 stroke_width = 0
             )
             area_change_rect.replace(
-                VGroup(*map(VectorizedPoint, point_pair)),
+                VGroup(*list(map(VectorizedPoint, point_pair))),
                 stretch = True
             )
             area_changes.add(area_change_rect)
@@ -1847,12 +1847,12 @@ class OneOverX(PiCreatureScene, GraphScene):
         )
         self.play(
             GrowFromCenter(dx_brace),
-            *map(ShowCreation, v_lines)
+            *list(map(ShowCreation, v_lines))
         )
         self.wait()
         self.play(
             GrowFromCenter(df_brace),
-            *map(ShowCreation, h_lines)
+            *list(map(ShowCreation, h_lines))
         )
         self.change_mode("confused")
         self.wait()
@@ -2057,7 +2057,7 @@ class SquareRootOfX(Scene):
             DrawBorderThenFill(square),
             Write(area_label)
         )
-        self.play(*map(FadeIn, braces))
+        self.play(*list(map(FadeIn, braces)))
         self.wait()
 
         self.square = square
@@ -2117,8 +2117,8 @@ class SquareRootOfX(Scene):
         )
         self.play(Write(area_increase))
         self.play(*it.chain(
-            map(ShowCreation, lines),
-            map(FadeIn, little_braces)
+            list(map(ShowCreation, lines)),
+            list(map(FadeIn, little_braces))
         ))
         self.play(Write(question))
         self.wait()
@@ -2258,7 +2258,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
             buff = SMALL_BUFF
         )
         theta_copy.target.shift(SMALL_BUFF*UP)
-        self.play(*map(MoveToTarget, [arc_copy, theta_copy]))
+        self.play(*list(map(MoveToTarget, [arc_copy, theta_copy])))
         self.wait()
 
         self.angle_label = VGroup(arc_copy, theta_copy)
@@ -2282,7 +2282,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
         faders = [brace, brace_text, self.example_theta_equation]
         if self.remove_angle_label:
             faders += self.angle_label
-        self.play(*map(FadeOut, faders))
+        self.play(*list(map(FadeOut, faders)))
 
         self.v_line = v_line
 
@@ -2498,9 +2498,9 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
     def zoom_in(self):
         self.activate_zooming()
         self.little_rectangle.next_to(self.radial_line.get_end(), UP, LARGE_BUFF)
-        self.play(*map(FadeIn, [
+        self.play(*list(map(FadeIn, [
             self.little_rectangle, self.big_rectangle
-        ]))
+        ])))
         self.play(
             self.little_rectangle.move_to, 
             self.radial_line.get_end(), DOWN+RIGHT,
@@ -2592,7 +2592,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         new_angle_label[1].rotate_in_place(np.pi/2)
 
         little_triangle_lines = VGroup(*[
-            Line(*map(little_triangle.get_corner, pair))
+            Line(*list(map(little_triangle.get_corner, pair)))
             for pair in [
                 (DOWN+RIGHT, UP+LEFT),
                 (UP+LEFT, DOWN+LEFT)

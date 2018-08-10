@@ -92,14 +92,14 @@ class AboutLinearAlgebra(Scene):
 
     def show_dependencies(self):
         linalg = TextMobject("Linear Algebra")
-        subjects = map(TextMobject, [
+        subjects = list(map(TextMobject, [
             "Computer science",
             "Physics",
             "Electrical engineering",
             "Mechanical engineering",
             "Statistics",
             "\\vdots"
-        ])
+        ]))
         prev = subjects[0]
         for subject in subjects[1:]:
             subject.next_to(prev, DOWN, aligned_edge = LEFT)
@@ -132,7 +132,7 @@ class AboutLinearAlgebra(Scene):
         new_linalg = bubble.position_mobject_inside(linalg.copy())
         q_marks = TextMobject("???").next_to(randy, UP)
 
-        self.play(*map(FadeOut, all_else))
+        self.play(*list(map(FadeOut, all_else)))
         self.remove(*all_else)
         self.play(
             Transform(linalg, new_linalg),
@@ -813,7 +813,7 @@ class TableOfContents(Scene):
         h_line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         h_line.next_to(title, DOWN)
         h_line.to_edge(LEFT, buff = 0)
-        chapters = VMobject(*map(TextMobject, [
+        chapters = VMobject(*list(map(TextMobject, [
             "Chapter 1: Vectors, what even are they?",
             "Chapter 2: Linear combinations, span and bases",
             "Chapter 3: Matrices as linear transformations",
@@ -824,7 +824,7 @@ class TableOfContents(Scene):
             "Chapter 8: Change of basis",
             "Chapter 9: Eigenvectors and eigenvalues",
             "Chapter 10: Abstract vector spaces",
-        ]))
+        ])))
         chapters.arrange_submobjects(DOWN)
         chapters.scale(0.7)
         chapters.next_to(h_line, DOWN)
@@ -930,11 +930,11 @@ class AboutPacing(Scene):
 
 class DifferingBackgrounds(Scene):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "Just brushing up",
             "Has yet to take the course",
             "Supplementing course concurrently",
-        ])
+        ]))
         students = VMobject(*[
             Randolph(color = c)
             for c in (BLUE_D, BLUE_C, BLUE_E)

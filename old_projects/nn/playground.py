@@ -112,7 +112,7 @@ class Test(Scene):
             out[k] = 1
             in_vect = maximizing_input(network, layer, out)
             new_out = network.get_activation_of_all_layers(in_vect)[layer]
-            group = Group(*map(MNistMobject, [in_vect, new_out]))
+            group = Group(*list(map(MNistMobject, [in_vect, new_out])))
             group.arrange_submobjects(DOWN+RIGHT, SMALL_BUFF)
             groups.add(group)
         groups.arrange_submobjects_in_grid()
@@ -133,7 +133,7 @@ class Test(Scene):
     def get_set(self, network, test):
         test_in, test_out = test
         activations = network.get_activation_of_all_layers(test_in)
-        group = Group(*map(MNistMobject, activations))
+        group = Group(*list(map(MNistMobject, activations)))
         group.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         return group
 

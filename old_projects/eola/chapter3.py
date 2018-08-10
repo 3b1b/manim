@@ -98,7 +98,7 @@ class DescribeTransformation(Scene):
         f_of_x = TexMobject("f(x)")
         L_of_v = TexMobject("L(\\vec{\\textbf{v}})")
         nums = [5, 2, -3]
-        num_inputs = VMobject(*map(TexMobject, map(str, nums)))
+        num_inputs = VMobject(*list(map(TexMobject, list(map(str, nums)))))
         num_outputs = VMobject(*[
             TexMobject(str(num**2))
             for num in nums
@@ -594,7 +594,7 @@ class FollowIHatJHat(LinearTransformationScene):
         )
 
         self.wait()
-        self.play(*map(FadeOut, [i_label, j_label]))
+        self.play(*list(map(FadeOut, [i_label, j_label])))
         self.apply_transposed_matrix([[-1, 1], [-2, -1]])
         self.wait()
 
@@ -951,9 +951,9 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             ShowCreation(j_arrow)
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             i_message, i_circle, i_arrow, j_message, j_circle, j_arrow
-        ]))
+        ])))
 
 
     def multiply_by_vector(self, matrix):
@@ -1009,8 +1009,8 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         else:
             row1 = ["3", "(5)", "+", "2", "(7)"]
             row2 = ["-2", "(5)", "+", "1", "(7)"]
-        row1 = VMobject(*map(TexMobject, row1))
-        row2 = VMobject(*map(TexMobject, row2))
+        row1 = VMobject(*list(map(TexMobject, row1)))
+        row2 = VMobject(*list(map(TexMobject, row2)))
         for row in row1, row2:
             row.arrange_submobjects(RIGHT, buff = 0.1)
         final_sum = Matrix([row1, row2])
@@ -1417,8 +1417,8 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
         self.wait()
 
     def show_inputs_and_output(self):
-        numbers = range(-3, 4)
-        inputs = VMobject(*map(TexMobject, map(str, numbers)))
+        numbers = list(range(-3, 4))
+        inputs = VMobject(*list(map(TexMobject, list(map(str, numbers)))))
         inputs.arrange_submobjects(DOWN, buff = 0.5, aligned_edge = RIGHT)
         arrows = VMobject(*[
             Arrow(LEFT, RIGHT).next_to(mob)

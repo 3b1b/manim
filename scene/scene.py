@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import inspect
 import itertools as it
 import numpy as np
@@ -110,11 +110,11 @@ class Scene(Container):
         to share local variables.
         """
         caller_locals = inspect.currentframe().f_back.f_locals
-        for key, value in caller_locals.items():
+        for key, value in list(caller_locals.items()):
             for o in objects:
                 if value is o:
                     setattr(self, key, value)
-        for key, value in newly_named_objects.items():
+        for key, value in list(newly_named_objects.items()):
             setattr(self, key, value)
         return self
 
@@ -185,10 +185,7 @@ class Scene(Container):
         self.wait(wind_down_time)
         # TODO, this is not done with the remove method so as to
         # keep the relevant mobjects.  Better way?
-        self.continual_animations = filter(
-            lambda ca: ca in continual_animations,
-            self.continual_animations
-        )
+        self.continual_animations = [ca for ca in self.continual_animations if ca in continual_animations]
 
     def should_continually_update(self):
         return len(self.continual_animations) > 0 or self.always_continually_update
@@ -207,7 +204,7 @@ class Scene(Container):
                 for family in families
             ])
             return num_families == 1
-        return filter(is_top_level, mobjects)
+        return list(filter(is_top_level, mobjects))
 
     def separate_mobjects_and_continual_animations(self, mobjects_or_continual_animations):
         mobjects = []
@@ -243,7 +240,7 @@ class Scene(Container):
         So a scene can just add all mobjects it's defined up to that point
         by calling add_mobjects_among(locals().values())
         """
-        mobjects = filter(lambda x: isinstance(x, Mobject), values)
+        mobjects = [x for x in values if isinstance(x, Mobject)]
         self.add(*mobjects)
         return self
 
@@ -256,11 +253,8 @@ class Scene(Container):
         for list_name in "mobjects", "foreground_mobjects":
             self.restructure_mobjects(mobjects, list_name, False)
 
-        self.continual_animations = filter(
-            lambda ca: ca not in continual_animations and
-            ca.mobject not in to_remove,
-            self.continual_animations
-        )
+        self.continual_animations = [ca for ca in self.continual_animations if ca not in continual_animations and
+            ca.mobject not in to_remove]
         return self
 
     def restructure_mobjects(

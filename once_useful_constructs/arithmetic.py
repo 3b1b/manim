@@ -32,11 +32,11 @@ class RearrangeEquation(Scene):
             [n % len(start_mobs) for n in index_map]
         )
         unmatched_end_indices.difference_update(
-            [n % len(end_mobs) for n in index_map.values()]
+            [n % len(end_mobs) for n in list(index_map.values())]
         )
         mobject_pairs = [
             (start_mobs[a], end_mobs[b])
-            for a, b in index_map.iteritems()
+            for a, b in index_map.items()
         ] + [
             (Point(end_mobs[b].get_center()), end_mobs[b])
             for b in unmatched_end_indices

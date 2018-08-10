@@ -369,8 +369,8 @@ class ExampleThrees(PiCreatureScene):
             ),
             randy.change, "sassy",
             *it.chain(
-                map(GrowFromCenter, braces),
-                map(FadeIn, brace_labels)
+                list(map(GrowFromCenter, braces)),
+                list(map(FadeIn, brace_labels))
             )
         )
         self.wait()
@@ -415,9 +415,9 @@ class ExampleThrees(PiCreatureScene):
             self.wait(0.5)
         self.play(
             randy.change, "plain",
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 self.bubble, self.arrow, self.real_three
-            ]) + [MoveToTarget(three)]
+            ])) + [MoveToTarget(three)]
         )
         for alt_three in alt_threes[:2]:
             self.play(three.replace, alt_three)
@@ -975,11 +975,11 @@ class BreakDownName(Scene):
         )
         self.wait(2)
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             name, randy, brain, 
             q2, a1, a2,
             q1[0], q1[2]
-        ]))
+        ])))
 
         self.neuron_word = q1[1]
 
@@ -1335,7 +1335,7 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
         network_mob.set_height(4)
         network_mob.to_edge(UP, buff = LARGE_BUFF)
         layers = VGroup(*network_mob.layers[1:3])
-        rects = VGroup(*map(SurroundingRectangle, layers))
+        rects = VGroup(*list(map(SurroundingRectangle, layers)))
         self.add(network_mob)
 
         two_words = TextMobject("2 hidden layers")
@@ -1463,7 +1463,7 @@ class AskAboutLayers(PreviewMNistNetwork):
             )
             for group in neuron_groups
         ])
-        rects = map(SurroundingRectangle, neuron_groups[1:3])
+        rects = list(map(SurroundingRectangle, neuron_groups[1:3]))
 
         self.play(
             Write(question, run_time = 1),
@@ -1474,7 +1474,7 @@ class AskAboutLayers(PreviewMNistNetwork):
             )
         )
         self.wait()
-        self.play(*map(ShowCreation, rects))
+        self.play(*list(map(ShowCreation, rects)))
         self.wait()
 
 class BreakUpMacroPatterns(IntroduceEachLayer):
@@ -1506,7 +1506,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
             ))[:,:,0].flatten()/255.0
             for p in prefixes
         ]
-        mobjects = map(MNistMobject, vects)
+        mobjects = list(map(MNistMobject, vects))
         for mob in mobjects:
             image = mob[1]
             self.make_transparent(image)
@@ -1549,7 +1549,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
 
         self.play(FadeIn(nine))
         self.wait()
-        self.play(*map(FadeIn, parts))
+        self.play(*list(map(FadeIn, parts)))
         self.wait()
         self.play(
             Write(equation[1]),
@@ -1651,7 +1651,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         for pattern in patterns[5:]:
             pattern.fade(1)
 
-        self.play(*map(FadeOut, everything))
+        self.play(*list(map(FadeOut, everything)))
         self.play(
             FadeIn(
                 network_mob,
@@ -1732,9 +1732,9 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
 class GenerallyLoopyPattern(Scene):
     def construct(self):
         image_map = get_organized_images()
-        images = map(MNistMobject, it.chain(
+        images = list(map(MNistMobject, it.chain(
             image_map[8], image_map[9],
-        ))
+        )))
         random.shuffle(images)
 
         for image in images:
@@ -1914,7 +1914,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         nine_pa = self.nine[1].pixel_array
         n, k = 6, 4
         colors = color_gradient([BLUE, YELLOW, RED, MAROON_B, GREEN], 10)
-        for i, j in it.product(range(n), range(k)):
+        for i, j in it.product(list(range(n)), list(range(k))):
             mob = ImageMobject(np.zeros((28, 28, 4), dtype = 'uint8'))
             mob.replace(self.nine[1])
             pa = mob.pixel_array
@@ -1955,7 +1955,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             Write(words, run_time = 2)
         )
         self.wait()
-        self.play(*map(FadeOut, [rect, words]))
+        self.play(*list(map(FadeOut, [rect, words])))
 
     def show_propogation(self):
         nine = self.nine
@@ -2464,7 +2464,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 )
             ] + [
                 Write(weighted_sum[i])
-                for i in range(2, 12, 3) + [-4, -3]
+                for i in list(range(2, 12, 3)) + [-4, -3]
             ],
             run_time = 1.5
         )
@@ -2715,8 +2715,8 @@ class IntroduceSigmoid(GraphScene):
         "y_max" : 2,
         "y_axis_label" : "",
         "graph_origin" : DOWN,
-        "x_labeled_nums" : range(-4, 5),
-        "y_labeled_nums" : range(-1, 3),
+        "x_labeled_nums" : list(range(-4, 5)),
+        "y_labeled_nums" : list(range(-1, 3)),
     }
     def construct(self):
         self.setup_axes()
@@ -3277,7 +3277,7 @@ class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
             DrawBorderThenFill(box)
         )
         self.wait()
-        self.play(*map(FadeOut, [words, box]))
+        self.play(*list(map(FadeOut, [words, box])))
 
     def incorrect_classification(self):
         network = self.network
@@ -3567,17 +3567,17 @@ class IntroduceWeightMatrix(NetworkScene):
         lwb.align_to(rwb, UP)
 
         row_1, row_k = [
-            VGroup(*map(TexMobject, [
+            VGroup(*list(map(TexMobject, [
                 "w_{%s, 0}"%i,
                 "w_{%s, 1}"%i,
                 "\\cdots",
                 "w_{%s, n}"%i,
-            ]))
+            ])))
             for i in ("1", "k")
         ]
-        dots_row = VGroup(*map(TexMobject, [
+        dots_row = VGroup(*list(map(TexMobject, [
             "\\vdots", "\\vdots", "\\ddots", "\\vdots"
-        ]))
+        ])))
 
         lower_rows = VGroup(row_1, dots_row, row_k)
         lower_rows.scale(0.75)
@@ -3671,9 +3671,9 @@ class IntroduceWeightMatrix(NetworkScene):
         self.show_meaning_of_lower_rows(
             arrow, brace, top_row_rect, result_terms
         )
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             result_terms, result_brackets, equals, column_rect
-        ]))
+        ])))
 
     def show_meaning_of_lower_rows(self, arrow, brace, row_rect, result_terms):
         n1, n2, nk = neurons = VGroup(*[
@@ -3735,9 +3735,9 @@ class IntroduceWeightMatrix(NetworkScene):
 
         plus = TexMobject("+")
         b_brackets = a_column_brackets.copy()
-        b_column = VGroup(*map(TexMobject, [
+        b_column = VGroup(*list(map(TexMobject, [
             "b_0", "b_1", "\\vdots", "b_n",
-        ]))
+        ])))
         b_column.scale(0.85)
         b_column.arrange_submobjects(DOWN, buff = 0.35)
         b_column.move_to(a_column)
@@ -3855,13 +3855,13 @@ class IntroduceWeightMatrix(NetworkScene):
         self.wait(2)
 
     def fade_weighted_sum(self):
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.a1_label, self.a1_equals,
             self.sigma, self.sigma_parens, 
             self.weighted_sum,
             self.bias_name,
             self.sigmoid_name,
-        ]))
+        ])))
 
 
     ###
@@ -3903,10 +3903,10 @@ class SigmoidAppliedToVector(Scene):
         tex.set_width(FRAME_WIDTH - 1)
         tex.to_edge(DOWN)
         indices = it.chain(
-            [0], range(1, 5), range(16, 16+4),
-            range(25, 25+2), [25+3],
-            range(29, 29+2), [29+3],
-            range(33, 33+2), [33+3],
+            [0], list(range(1, 5)), list(range(16, 16+4)),
+            list(range(25, 25+2)), [25+3],
+            list(range(29, 29+2)), [29+3],
+            list(range(33, 33+2)), [33+3],
         )
         for i in indices:
             tex[i].set_color(YELLOW)
@@ -4050,7 +4050,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
 
         self.play(
             FadeOut(self.network_mob),
-            *map(Animation, [neuron, edges, prev_layer])
+            *list(map(Animation, [neuron, edges, prev_layer]))
         )
         self.play(LaggedStart(
             ShowCreationThenDestruction, 

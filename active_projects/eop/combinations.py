@@ -10,7 +10,7 @@ def get_stack(
     vertical_buff = MED_SMALL_BUFF,
     ):
     stack = VGroup()
-    for indices in it.combinations(range(n), k):
+    for indices in it.combinations(list(range(n)), k):
         term = VGroup(*[
              obj1.copy() if i in indices else obj2.copy()
             for i in range(n)
@@ -119,9 +119,9 @@ class ExperienceProblemSolver(PiCreatureScene):
         self.play(jenny.change, "happy")
         self.play(randy.change, "tired")
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             jenny.bubble, jenny_words, randy_words
-        ]))
+        ])))
 
     def no_genius(self):
         randy, jenny = self.randy, self.jenny
@@ -299,10 +299,7 @@ class InitialFiveChooseThreeExample(Scene):
         )
         self.wait()
         for line in stack:
-            ones = VGroup(*filter(
-                lambda mob : "1" in mob.get_tex_string(),
-                line
-            ))
+            ones = VGroup(*[mob for mob in line if "1" in mob.get_tex_string()])
             line.ones = ones
             self.play(LaggedStart(
                 ApplyMethod, ones,
@@ -340,7 +337,7 @@ class InitialFiveChooseThreeExample(Scene):
 
         self.play(ShowCreation(lines))
         count = 1
-        for indices in it.combinations(range(5), 3):
+        for indices in it.combinations(list(range(5)), 3):
             ones = VGroup(*[
                 self.get_obj1().next_to(lines[i], UP)
                 for i in indices
@@ -353,7 +350,7 @@ class InitialFiveChooseThreeExample(Scene):
             count += 1
         self.add(num, ones)
         self.wait()
-        self.play(*map(FadeOut, [lines, num, ones]))
+        self.play(*list(map(FadeOut, [lines, num, ones])))
 
     def walk_though_notation(self):
         equation = self.binomial_equations[3]
@@ -428,10 +425,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         stack.set_height(self.stack_height)
         stack.to_edge(DOWN)
         for line in stack:
-            line.ones = VGroup(*filter(
-                lambda mob : "1" in mob.get_tex_string(),
-                line
-            ))
+            line.ones = VGroup(*[mob for mob in line if "1" in mob.get_tex_string()])
 
         equation = TexMobject(
             "{%d \\choose %d}"%(self.n, self.k),
@@ -483,7 +477,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         self.wait(2)
         self.play(
             line.restore,
-            *map(FadeOut, [brace, n_options, arrows, choose_k])
+            *list(map(FadeOut, [brace, n_options, arrows, choose_k]))
         )
 
     def count_stack(self):
@@ -510,7 +504,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         coming_soon.next_to(lhs, UP)
         coming_soon.set_color(MAROON_B)
 
-        self.play(*map(FadeIn, [lhs, coming_soon]))
+        self.play(*list(map(FadeIn, [lhs, coming_soon])))
         self.wait()
         self.play(
             ApplyMethod(
@@ -519,7 +513,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
                 rate_func = running_start,
                 remover = True,
             ),
-            *map(FadeOut, [brace, num, coming_soon])
+            *list(map(FadeOut, [brace, num, coming_soon]))
         )
         self.wait()
 
@@ -569,7 +563,7 @@ class SixChooseThreeInOtherContext(Scene):
         last_rights = None
         last_ups = None
         last_line = None
-        for indices in it.combinations(range(6), 3):
+        for indices in it.combinations(list(range(6)), 3):
             bools = [i in indices for i in range(6)]
             arrows = VGroup(*[
                 right.deepcopy() if b else up.deepcopy()
@@ -1000,10 +994,10 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         last_lineup = get_lineup()
         self.play(LaggedStart(FadeIn, last_lineup, run_time = 1))
 
-        for x in xrange(self.n_examples):
+        for x in range(self.n_examples):
             lineup = get_lineup()
             anims = [last_lineup.items.fade, 1]
-            anims += map(GrowFromCenter, lineup.items)
+            anims += list(map(GrowFromCenter, lineup.items))
             if x >= 12 and x-12 < len(prob_words):
                 anims.append(FadeIn(prob_words[x-12]))
             self.play(*anims, run_time = 0.75)
@@ -1107,10 +1101,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         lineups = self.lineups
         stacks = VGroup(*[VGroup() for x in range(6)])
         for lineup in lineups:
-            lineup.women = VGroup(*filter(
-                lambda m : "female" in m.get_tex_string(),
-                lineup.items
-            ))
+            lineup.women = VGroup(*[m for m in lineup.items if "female" in m.get_tex_string()])
             stacks[len(lineup.women)].add(lineup)
         stacks.generate_target()
         stacks.target.scale(0.75)
@@ -1447,10 +1438,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
         lineups = self.lineups
         stacks = VGroup(*[VGroup() for x in range(5)])
         for lineup in lineups:
-            women = filter(
-                lambda m : "female" in m.get_tex_string(),
-                lineup.items
-            )
+            women = [m for m in lineup.items if "female" in m.get_tex_string()]
             stacks[len(women)].add(lineup)
         stacks.generate_target()
         stacks.target.scale(0.75)
@@ -1572,7 +1560,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
             bottom_stacks.numbers.shift, dist*LEFT/2,
         )
         self.wait()
-        self.play(*map(FadeOut, [add_man, add_woman, h_line]))
+        self.play(*list(map(FadeOut, [add_man, add_woman, h_line])))
 
         self.set_variables_as_attrs(top_stacks, bottom_stacks)
 
@@ -1612,7 +1600,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
 
             self.play(
                 Write(plus),
-                *map(MoveToTarget, movers)
+                *list(map(MoveToTarget, movers))
             )
         self.play(
             VGroup(top_stacks[-1], top_stacks.numbers[-1]).align_to,
@@ -1656,7 +1644,7 @@ class BuildUpFromStart(Scene):
                     for stack, num in zip(*group.target):
                         num.next_to(stack, UP)
                 group.target.next_to(ORIGIN, vect)
-            self.play(*map(MoveToTarget, [top_group, low_group]))
+            self.play(*list(map(MoveToTarget, [top_group, low_group])))
             self.wait(wait_time)
 
             #Expand
@@ -1687,10 +1675,10 @@ class BuildUpFromStart(Scene):
 
                 for num, stack in zip(stacks.numbers.target, new_stacks):
                     num.next_to(stack, UP)
-            self.play(*map(MoveToTarget, [
+            self.play(*list(map(MoveToTarget, [
                 top_stacks, low_stacks,
                 top_stacks.numbers, low_stacks.numbers,
-            ]))
+            ])))
             self.wait(wait_time)
 
             #Shift
@@ -1734,14 +1722,14 @@ class BuildUpFromStart(Scene):
             expressions.add(top_stacks.numbers[-1])
 
             self.play(*it.chain(
-                map(MoveToTarget, all_movers),
-                map(Write, plusses),
+                list(map(MoveToTarget, all_movers)),
+                list(map(Write, plusses)),
             ))
 
             #Add
             new_numbers = self.get_numbers(stacks)
             self.play(ReplacementTransform(
-                expressions, VGroup(*map(VGroup, new_numbers))
+                expressions, VGroup(*list(map(VGroup, new_numbers)))
             ))
             self.wait(wait_time)
             stacks.numbers = new_numbers
@@ -1866,9 +1854,9 @@ class IntroducePascalsTriangle(Scene):
                 color = PINK,
             )
         )
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             morty, morty.bubble, morty.bubble.content
-        ]))
+        ])))
 
     def issolate_9_choose_4_term(self):
         rows = self.rows
@@ -1967,10 +1955,10 @@ class IntroducePascalsTriangle(Scene):
         self.play(
             self.nine_choose_four_term.scale_in_place, 1./1.2,
             self.nine_choose_four_term.set_color, WHITE,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 expr, nine_choose_four_term,
                 over_512, eq_result, self.curr_line
-            ])
+            ]))
         )
         self.play(rows.shift, 3*DOWN)
 
@@ -2068,10 +2056,10 @@ class StacksApproachBellCurve(Scene):
                     #     number.set_width(bar.get_width())
                     number.next_to(bar, UP, SMALL_BUFF)
 
-            self.play(*map(MoveToTarget, [
+            self.play(*list(map(MoveToTarget, [
                 bars, bars_copy,
                 numbers, numbers_copy
-            ]))
+            ])))
             self.play(
                 bars.shift, distance*LEFT/2,
                 numbers.shift, distance*LEFT/2,
@@ -2307,7 +2295,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         updownarrow.set_color(YELLOW)
         updownarrow.next_to(triplet, DOWN, SMALL_BUFF)
         permutations = VGroup()
-        for indices in it.permutations(range(len(triplet))):
+        for indices in it.permutations(list(range(len(triplet)))):
             perm = triplet.copy()
             resorter = VGroup(*[
                 perm[i] for i in indices
@@ -2342,7 +2330,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             if i == 4:
                 anims.append(Write(words, run_time = 1))
             self.play(*anims)
-        self.play(*map(FadeOut, [triplet, curr_perm, updownarrow]))
+        self.play(*list(map(FadeOut, [triplet, curr_perm, updownarrow])))
 
         self.order_doesnt_matter_words = words
 
@@ -2385,7 +2373,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         self.play(FadeOut(q_marks))
 
         line.sort_submobjects(lambda p : p[0])
-        words = VGroup(*map(TextMobject, ["First", "Second", "Fifth"]))
+        words = VGroup(*list(map(TextMobject, ["First", "Second", "Fifth"])))
         words.set_color(YELLOW)
         words.scale(0.75)
         word_arrow_groups = VGroup()
@@ -2409,15 +2397,12 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
                 word_arrow_groups[j]
                 for j in (1, 2, 0)
             ]
-        self.play(*map(FadeOut, [line, odm_words]))
+        self.play(*list(map(FadeOut, [line, odm_words])))
 
     def pattern_is_unambiguous(self):
         all_ones = VGroup()
         for line in self.stack:
-            ones = VGroup(*filter(
-                lambda m : "1" in m.get_tex_string(),
-                line
-            )).copy()
+            ones = VGroup(*[m for m in line if "1" in m.get_tex_string()]).copy()
             ones.set_color(YELLOW)
             all_ones.add(ones)
 
@@ -2435,7 +2420,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         )
         self.wait()
         for trip in it.combinations(self.people, 3):
-            rects = VGroup(*map(SurroundingRectangle, trip))
+            rects = VGroup(*list(map(SurroundingRectangle, trip)))
             self.add(rects)
             self.wait(0.3)
             self.remove(rects)
@@ -2676,7 +2661,7 @@ class StudentsGetConfused(PiCreatureScene):
         return pis
 
     def get_shuffle_anim(self, line):
-        indices = range(len(line))
+        indices = list(range(len(line)))
         random.shuffle(indices)
         line.generate_target()
         for i, m in zip(indices, line.target):
@@ -2779,7 +2764,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         ])
         choice_numbers.generate_target()
         dots = VGroup(*[TexMobject("\\cdot") for x in range(k-1)])
-        product = VGroup(*it.chain(*zip(choice_numbers.target, dots)))
+        product = VGroup(*it.chain(*list(zip(choice_numbers.target, dots))))
         product.add(choice_numbers.target[-1])
         product.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         chosen_names_brace = Brace(chosen_names, UP)
@@ -2804,7 +2789,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         lines = self.lines
 
         n_perms = self.n_permutaitons_to_show + 1
-        for indices in list(it.permutations(range(3)))[1:n_perms]:
+        for indices in list(it.permutations(list(range(3))))[1:n_perms]:
             self.play(*[
                 ApplyMethod(
                     name.next_to, lines[i], UP, SMALL_BUFF,
@@ -2852,7 +2837,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         ])
         choice_numbers.generate_target()
         dots = VGroup(*[TexMobject("\\cdot") for x in range(k-1)])
-        product = VGroup(*it.chain(*zip(choice_numbers.target, dots)))
+        product = VGroup(*it.chain(*list(zip(choice_numbers.target, dots))))
         product.add(choice_numbers.target[-1])
         product.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         product.next_to(frac_line, DOWN, SMALL_BUFF)
@@ -3001,7 +2986,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         place_words = VGroup(*[
             TexMobject("%d^\\text{%s}"%(i+1, s))
             for i, s in zip(
-                range(k), 
+                list(range(k)), 
                 it.chain(["st", "nd", "rd"], it.repeat("th"))
             )
         ])
@@ -3183,9 +3168,9 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
             mob.set_color_by_gradient(GREEN, YELLOW)
         fraction.next_to(self.teacher, UP+LEFT)
 
-        names = VGroup(*map(TextMobject, [
+        names = VGroup(*list(map(TextMobject, [
             "Ali", "Ben", "Cam", "Denis", "Evan"
-        ]))
+        ])))
         names.arrange_submobjects(RIGHT)
         names.to_edge(UP, buff = LARGE_BUFF)
         names.save_state()
@@ -3227,12 +3212,12 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
         self.wait(2)
 
         #Go through denominators
-        permutations = list(it.permutations(range(3)))[1:]
+        permutations = list(it.permutations(list(range(3))))[1:]
 
         self.shuffle(chosen_names, permutations[:2])
         self.play(LaggedStart(
             ShowCreationThenDestruction,
-            VGroup(*map(SurroundingRectangle, bottom_numbers[::2]))
+            VGroup(*list(map(SurroundingRectangle, bottom_numbers[::2])))
         ))
         self.shuffle(chosen_names, permutations[2:])
         self.wait()
@@ -3358,9 +3343,9 @@ class SumsToPowerOf2(Scene):
         plusses = VGroup(*[TexMobject("+") for n in numbers])
         plusses.remove(plusses[-1])
         plusses.add(TexMobject("="))
-        sum_group = VGroup(*it.chain(*zip(
+        sum_group = VGroup(*it.chain(*list(zip(
             numbers.target, plusses
-        )))
+        ))))
         sum_group.arrange_submobjects(RIGHT, SMALL_BUFF)
         sum_group.next_to(numbers, UP, LARGE_BUFF)
         sum_group.shift(MED_LARGE_BUFF*RIGHT)
@@ -3405,9 +3390,9 @@ class SumsToPowerOf2(Scene):
 
         fractions = self.get_fractions(n)
         plusses.generate_target()
-        sum_group = VGroup(*it.chain(*zip(
+        sum_group = VGroup(*it.chain(*list(zip(
             fractions, plusses.target
-        )))
+        ))))
         sum_group.arrange_submobjects(RIGHT, buff = 2*SMALL_BUFF)
         sum_group.next_to(rhs, LEFT)
         sum_group.shift(0.5*SMALL_BUFF*DOWN)
@@ -3427,9 +3412,9 @@ class SumsToPowerOf2(Scene):
         plusses = VGroup(*[
             TexMobject("+") for f in fractions[:-1]
         ] + [TexMobject("=")])
-        sum_group = VGroup(*it.chain(*zip(
+        sum_group = VGroup(*it.chain(*list(zip(
             fractions, plusses
-        )))
+        ))))
         sum_group.arrange_submobjects(RIGHT)
         sum_group.next_to(
             self.n_choose_k_terms, DOWN,

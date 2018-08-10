@@ -200,7 +200,7 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 }
-PALETTE = COLOR_MAP.values()
+PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
-for name in filter(lambda s: s.endswith("_C"), COLOR_MAP.keys()):
+for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]

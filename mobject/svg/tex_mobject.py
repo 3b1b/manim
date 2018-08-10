@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from constants import *
 
 from .svg_mobject import SVGMobject
@@ -92,10 +92,7 @@ class SingleStringTexMobject(SVGMobject):
 
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
-            len(filter(
-                lambda s: s[0] in "(){}[]|.\\",
-                tex.split(substr)[1:]
-            ))
+            len([s for s in tex.split(substr)[1:] if s[0] in "(){}[]|.\\"])
             for substr in ("\\left", "\\right")
         ]
         if num_lefts != num_rights:
@@ -164,13 +161,13 @@ class TexMobject(SingleStringTexMobject):
     def break_up_tex_strings(self, tex_strings):
         substrings_to_isolate = op.add(
             self.substrings_to_isolate,
-            self.tex_to_color_map.keys()
+            list(self.tex_to_color_map.keys())
         )
         split_list = split_string_list_to_isolate_substring(
             tex_strings, *substrings_to_isolate
         )
-        split_list = map(str.strip, split_list)
-        split_list = filter(lambda s: s != '', split_list)
+        split_list = list(map(str.strip, split_list))
+        split_list = [s for s in split_list if s != '']
         return split_list
 
     def break_up_by_substrings(self):
@@ -209,10 +206,7 @@ class TexMobject(SingleStringTexMobject):
             else:
                 return tex1 == tex2
 
-        return VGroup(*filter(
-            lambda m: test(tex, m.get_tex_string()),
-            self.submobjects
-        ))
+        return VGroup(*[m for m in self.submobjects if test(tex, m.get_tex_string())])
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
@@ -225,7 +219,7 @@ class TexMobject(SingleStringTexMobject):
         return self
 
     def set_color_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
-        for texs, color in texs_to_color_map.items():
+        for texs, color in list(texs_to_color_map.items()):
             try:
                 # If the given key behaves like tex_strings
                 texs + ''

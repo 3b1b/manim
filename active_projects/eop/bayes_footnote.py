@@ -74,7 +74,7 @@ class Introduction(TeacherStudentsScene):
         cross.set_stroke(RED, 6)
         group.add(cross)
 
-        self.play(*map(FadeIn, [bayes, intuition]))
+        self.play(*list(map(FadeIn, [bayes, intuition])))
         self.play(Write(arrow))
         self.play(ShowCreation(cross))
         self.change_student_modes(*["confused"]*3)
@@ -117,9 +117,9 @@ class Introduction(TeacherStudentsScene):
         music_example.next_to(poker_example, RIGHT)
         examples = VGroup(poker_example, music_example)
         brace = Brace(examples, UP)
-        bayes_to_intuition = VGroup(*map(TextMobject, [
+        bayes_to_intuition = VGroup(*list(map(TextMobject, [
             "Bayes", "$\\leftrightarrow$", "Intuition"
-        ]))
+        ])))
         bayes_to_intuition.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         bayes_to_intuition.next_to(brace, UP, SMALL_BUFF)
         check = TexMobject("\\checkmark")
@@ -179,7 +179,7 @@ class Introduction(TeacherStudentsScene):
     def get_poker_example(self):
         rect = self.get_example_rect()
         values = IntroducePokerHand.CONFIG["community_card_values"]
-        community_cards = VGroup(*map(PlayingCard, values))
+        community_cards = VGroup(*list(map(PlayingCard, values)))
         community_cards.arrange_submobjects(RIGHT)
         deck = VGroup(*[
             PlayingCard(turned_over = True)
@@ -406,14 +406,14 @@ class AskAboutRephrasingQuestion(TeacherStudentsScene):
 
 class RephraseQuestion(Scene):
     def construct(self):
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             r"1 in $1{,000}$ chance \\ of having disease",
             r"1 in $100$ \\ false positive rate.",
             r"""\underline{\phantom{1 in 10}} chance \\
                 of having disease \\
                 after testing positive.
             """,
-        ]))
+        ])))
         words.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         words.set_width(2*(FRAME_X_RADIUS - MED_LARGE_BUFF))
 
@@ -688,7 +688,7 @@ class ShowRestrictedSpace(Scene):
         self.play(Transform(
             *arrows, run_time = 4, rate_func = there_and_back
         ))
-        self.play(*map(FadeOut, [words, arrows[0]]))
+        self.play(*list(map(FadeOut, [words, arrows[0]])))
 
         self.brace = brace
 
@@ -785,7 +785,7 @@ class DepressingForMedicalTestDesigners(TestScene):
         self.add(title)
         self.play(Write(checks))
         self.wait(2)
-        self.play(*map(MoveToTarget, [title, checks]))
+        self.play(*list(map(MoveToTarget, [title, checks])))
 
     def reject_test(self):
         randy = self.pi_creature
@@ -1236,7 +1236,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         morty = self.morty
         bubble = morty.get_bubble("", direction = LEFT)
         numbers = [
-            Integer(random.choice(range(100)))
+            Integer(random.choice(list(range(100))))
             for x in range(30)
         ]
         numbers.append(Integer(67))
@@ -1376,7 +1376,7 @@ class CompareNumbersInBothExamples(Scene):
 
         self.play(
             LaggedStart(FadeIn, titles, lag_ratio = 0.7),
-            *map(ShowCreation, [h_line, v_line])
+            *list(map(ShowCreation, [h_line, v_line]))
         )
         self.wait()
         self.play(FadeIn(priors))

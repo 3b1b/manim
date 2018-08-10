@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -255,7 +255,7 @@ class ShowReadingRule(Scene):
         self.wait()
         self.remove(question)
         self.add(answer[0])
-        counts = map(finger_tip_power_of_2, range(5))
+        counts = list(map(finger_tip_power_of_2, list(range(5))))
         for count in counts:
             self.play(SpinInFromNothing(count, run_time = 0.3))
         self.wait()
@@ -269,7 +269,7 @@ class ShowReadingRule(Scene):
         hand = Hand(num, small = True)
         bool_arr = [c == '1' for c in five_char_binary(num)]
         counts = [4-count for count in range(5) if bool_arr[count]]
-        count_mobs = map(finger_tip_power_of_2, counts)
+        count_mobs = list(map(finger_tip_power_of_2, counts))
         if num in [6, 27]:
             count_mobs[1].shift(0.2*DOWN + 0.2*LEFT)
         if num in [6, 17]:

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from colour import Color
 
@@ -316,10 +316,7 @@ class VMobject(Mobject):
         return self
 
     def get_subpath_mobjects(self):
-        return filter(
-            lambda m: hasattr(m, 'is_subpath') and m.is_subpath,
-            self.submobjects
-        )
+        return [m for m in self.submobjects if hasattr(m, 'is_subpath') and m.is_subpath]
 
     def apply_function(self, function):
         factor = self.pre_function_handle_to_anchor_scale_factor

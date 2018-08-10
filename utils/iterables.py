@@ -23,19 +23,19 @@ def list_update(l1, l2):
     Used instead of list(set(l1).update(l2)) to maintain order,
     making sure duplicates are removed from l1, not l2.
     """
-    return filter(lambda e: e not in l2, l1) + list(l2)
+    return [e for e in l1 if e not in l2] + list(l2)
 
 
 def list_difference_update(l1, l2):
-    return filter(lambda e: e not in l2, l1)
+    return [e for e in l1 if e not in l2]
 
 
 def all_elements_are_instances(iterable, Class):
-    return all(map(lambda e: isinstance(e, Class), iterable))
+    return all([isinstance(e, Class) for e in iterable])
 
 
 def adjacent_pairs(objects):
-    return zip(objects, list(objects[1:]) + [objects[0]])
+    return list(zip(objects, list(objects[1:]) + [objects[0]]))
 
 
 def batch_by_property(items, property_func):
@@ -90,8 +90,8 @@ def make_even(iterable_1, iterable_2):
     list_1, list_2 = list(iterable_1), list(iterable_2)
     length = max(len(list_1), len(list_2))
     return (
-        [list_1[(n * len(list_1)) / length] for n in xrange(length)],
-        [list_2[(n * len(list_2)) / length] for n in xrange(length)]
+        [list_1[(n * len(list_1)) / length] for n in range(length)],
+        [list_2[(n * len(list_2)) / length] for n in range(length)]
     )
 
 
@@ -105,19 +105,8 @@ def make_even_by_cycling(iterable_1, iterable_2):
     )
 
 
-def composition(func_list):
-    """
-    func_list should contain elements of the form (f, args)
-    """
-    return reduce(
-        lambda (f1, args1), (f2, args2): (lambda x: f1(f2(x, *args2), *args1)),
-        func_list,
-        lambda x: x
-    )
-
-
 def remove_nones(sequence):
-    return filter(lambda x: x, sequence)
+    return [x for x in sequence if x]
 
 # Note this is redundant with it.chain
 

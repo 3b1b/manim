@@ -281,13 +281,13 @@ class ListRecentCurrencies(Scene):
         logos.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         logos.shift(LEFT)
         logos.to_edge(UP)
-        names = map(
+        names = list(map(
             TextMobject, 
             [
                 "Bitcoin", "Ethereum", "Ripple", 
                 "Litecoin", "Ethereum Classic"
             ],
-        )
+        ))
         for logo, name in zip(logos, names):
             name.next_to(logo, RIGHT)
             anims = []
@@ -305,11 +305,11 @@ class ListRecentCurrencies(Scene):
 class Hype(TeacherStudentsScene):
     def construct(self):
         self.teacher.change_mode("guilty")
-        phrases = map(TextMobject, [
+        phrases = list(map(TextMobject, [
             "I want some!",
             "I'll get rich, right?",
             "Buy them all!"
-        ])
+        ]))
         modes = ["hooray", "conniving", "surprised"]
         for student, phrase, mode in zip(self.students, phrases, modes):
             bubble = SpeechBubble()
@@ -599,7 +599,7 @@ class LayOutPlan(LedgerScene):
             ("Alice", "You", 50),
         ]
 
-        self.play(*map(FadeIn, [network, ledger]))
+        self.play(*list(map(FadeIn, [network, ledger])))
         for payment in payments:
             new_line = self.add_payment_line_to_ledger(*payment)
             from_name, to_name, amount = payment
@@ -838,10 +838,10 @@ class InitialProtocol(Scene):
         self.add(title, h_line)
 
     def show_first_two_items(self):
-        items = VGroup(*map(self.get_new_item, [
+        items = VGroup(*list(map(self.get_new_item, [
             "Anyone can add lines to the Ledger",
             "Settle up with real money each month"
-        ]))
+        ])))
 
         for item in items:
             self.wait()
@@ -1025,7 +1025,7 @@ class DescribeDigitalSignatures(LedgerScene):
     def generate_key_pairs(self):
         title = TextMobject("Private", "key /", "Public", "key")
         title.to_edge(UP)
-        private, public = map(title.get_part_by_tex, ["Private", "Public"])
+        private, public = list(map(title.get_part_by_tex, ["Private", "Public"]))
         private.set_color(self.private_color)
         public.set_color(self.public_color)
         secret = TextMobject("Secret")
@@ -1084,7 +1084,7 @@ class DescribeDigitalSignatures(LedgerScene):
 
     def keep_secret_key_secret(self):
         keys = self.private_keys
-        rects = VGroup(*map(SurroundingRectangle, keys))
+        rects = VGroup(*list(map(SurroundingRectangle, keys)))
         rects.set_color(self.private_color)
         lock = SVGMobject(
             file_name = "lock",
@@ -1174,16 +1174,16 @@ class DescribeDigitalSignatures(LedgerScene):
             for sig in digital_signatures
         ])
 
-        words = VGroup(*map(
+        words = VGroup(*list(map(
             TextMobject,
             ["Different messages", "Completely different signatures"]
-        ))
+        )))
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
         words.scale(1.3)
         words.next_to(self.documents, RIGHT)
 
         self.play(FadeIn(rect))
-        self.play(*map(ShowCreation, arrows))
+        self.play(*list(map(ShowCreation, arrows)))
         self.play(Transform(self.signatures, digital_signatures))
         self.play(*[
             ApplyMethod(pi.change, "pondering", digital_signatures)
@@ -1450,7 +1450,7 @@ class IncludeTransactionNumber(LedgerScene):
         )
         self.play(ShowCreation(cross))
         self.wait()
-        self.play(*map(FadeOut, [payment, cross, q_marks]))
+        self.play(*list(map(FadeOut, [payment, cross, q_marks])))
         self.ledger.content.remove(payment)
 
     def copy_payment_many_times(self):
@@ -1595,11 +1595,11 @@ class ThinkAboutSettlingUp(Scene):
 class DontAllowOverdrawing(InitialProtocol):
     def construct(self):
         self.add_title()
-        lines = map(self.get_new_item, [
+        lines = list(map(self.get_new_item, [
             "Anyone can add lines to the Ledger \\,",
             "Only signed transactions are valid \\,",
             "No overspending"
-        ])
+        ]))
         lines[2].set_color(YELLOW)
 
         self.add(*lines[:2])
@@ -1717,7 +1717,7 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
         ])
         self.play(Write(invalid))
         self.wait(2)
-        self.play(*map(FadeOut, [rects, last_rect, invalid]))
+        self.play(*list(map(FadeOut, [rects, last_rect, invalid])))
 
     def running_balance(self):
         charlie_lines = VGroup(*[
@@ -1737,9 +1737,9 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
         title.next_to(rect.get_top(), DOWN)
         balance = VGroup(rect, title)
 
-        lines = VGroup(*map(TextMobject, [
+        lines = VGroup(*list(map(TextMobject, [
             "\\$100", "\\$50", "\\$0", "Overdrawn"
-        ]))
+        ])))
         lines.set_color(GREEN)
         lines[-1].set_color(RED)
         arrows = VGroup()
@@ -2042,7 +2042,7 @@ class BigDifferenceBetweenLDAndCryptocurrencies(Scene):
             cryptos.next_to, decentralized, DOWN, LARGE_BUFF,
             ld.next_to, centralized, DOWN, LARGE_BUFF,
         )
-        self.play(*map(Write, words))
+        self.play(*list(map(Write, words)))
         self.wait(2)
 
 class DistributedLedgerScene(LedgerScene):
@@ -2193,7 +2193,7 @@ class TransitionToDistributedLedger(DistributedLedgerScene):
             self.alice.change, "happy"
         )
         self.wait()
-        pairs = zip(payment_copies, self.pi_creatures)
+        pairs = list(zip(payment_copies, self.pi_creatures))
         Scene.play(self, *it.chain(*[
             [
                 pi.look_at, pi.ledger[-1],
@@ -2228,7 +2228,7 @@ class TransitionToDistributedLedger(DistributedLedgerScene):
             for ledger in ledgers
         ])
 
-        self.play(*map(ShowCreation, arrows))
+        self.play(*list(map(ShowCreation, arrows)))
         self.play(Write(question))
         self.wait()
 
@@ -2340,11 +2340,11 @@ class YouListeningToBroadcasts(LedgerScene):
 class AskWhatToAddToProtocol(InitialProtocol):
     def construct(self):
         self.add_title()
-        items = VGroup(*map(self.get_new_item, [
+        items = VGroup(*list(map(self.get_new_item, [
             "Broadcast transactions",
             "Only accept signed transactions",
             "No overspending",
-        ] + [""]*6))
+        ] + [""]*6)))
         brace = Brace(VGroup(*items[3:]), LEFT)
         question = TextMobject("What to \\\\ add here?")
         question.set_color(RED)
@@ -2746,10 +2746,7 @@ class IntroduceNonceOnTrasactions(LedgerScene):
             FadeOut(nonce_brace)
         )
         ledger.content.add(nonce)
-        decomposed_ledger = VGroup(*filter(
-            lambda m : not m.is_subpath,
-            ledger.family_members_with_points()
-        ))
+        decomposed_ledger = VGroup(*[m for m in ledger.family_members_with_points() if not m.is_subpath])
         self.play(
             ShowCreation(arrow),
             FadeIn(sha)
@@ -2993,7 +2990,7 @@ class IntroduceBlockChain(Scene):
                 rate_func = there_and_back,
                 scale_factor = 1.1,
             ))
-        self.play(*map(FadeOut, [blocks_word, arrows]))
+        self.play(*list(map(FadeOut, [blocks_word, arrows])))
 
         self.blocks = blocks
 
@@ -3095,7 +3092,7 @@ class IntroduceBlockChain(Scene):
             )
         arrow = new_arrows[0].copy().shift(-block_spacing)
         sha_arrows.add_to_back(arrow)
-        self.play(*map(FadeIn, [arrow, prev_hashes[0]]))
+        self.play(*list(map(FadeIn, [arrow, prev_hashes[0]])))
         self.wait(2)
 
         self.prev_hashes = prev_hashes
@@ -3594,11 +3591,11 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
         big_rect.set_stroke(width = 0)
         big_rect.set_fill(BLACK, opacity = 1)
 
-        comments = VGroup(*map(TextMobject, [
+        comments = VGroup(*list(map(TextMobject, [
             "- ``Block reward''",
             "- No sender/signature",
             "- Adds to total money supply",
-        ]))
+        ])))
         comments.arrange_submobjects(DOWN, aligned_edge = LEFT)
         comments.move_to(big_rect, UP+LEFT)
 
@@ -3610,7 +3607,7 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
         for comment in comments:
             self.play(FadeIn(comment))
             self.wait(2)
-        self.play(*map(FadeOut, [big_rect, comments, reward_rect]))
+        self.play(*list(map(FadeOut, [big_rect, comments, reward_rect])))
 
         self.pi_creatures = pi_creatures
 
@@ -3639,10 +3636,10 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
         arrow_creations = []
         for old_chain, new_chain  in zip(old_chains, new_chains):
             for attr in "blocks", "arrows":
-                pairs = zip(
+                pairs = list(zip(
                     getattr(old_chain, attr), 
                     getattr(new_chain, attr), 
-                )
+                ))
                 for m1, m2 in pairs:
                     anims.append(Transform(m1, m2))
             arrow_creations.append(ShowCreation(new_chain.arrows[-1]))
@@ -3763,10 +3760,7 @@ class MiningIsALottery(IntroduceBlockCreator):
 
         winner_index = 1
         winner = self.miners[winner_index]
-        losers = VGroup(*filter(
-            lambda m : m is not winner,
-            self.miners
-        ))
+        losers = VGroup(*[m for m in self.miners if m is not winner])
 
         nonces[winner_index].set_color(GREEN)
         new_digest = sha256_tex_mob("Winner", 60)
@@ -3909,7 +3903,7 @@ class TwoBlockChains(DistributedBlockChainScene):
         )
         self.play(
             Write(conflicting),
-            *map(ShowCreation, arrows)
+            *list(map(ShowCreation, arrows))
         )
         self.wait()
         self.play(ShowCreation(longer_chain_rect))
@@ -4387,14 +4381,14 @@ class WhenToTrustANewBlock(DistributedBlockChainScene):
         chain.to_edge(LEFT)
         self.add(chain)
 
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "Don't trust yet",
             "Still don't trust",
             "...a little more...",
             "Maybe trust",
             "Probably safe",
             "Alright, you're good."
-        ])
+        ]))
         colors = [RED, RED, YELLOW, YELLOW, GREEN, GREEN]
         self.add_new_block()
         arrow = Arrow(UP, DOWN, color = RED)
@@ -4937,13 +4931,13 @@ class TopicsNotCovered(TeacherStudentsScene):
         title.shift(DOWN)
         title.set_fill(opacity = 0)
 
-        topics = VGroup(*map(TextMobject, [
+        topics = VGroup(*list(map(TextMobject, [
             "Merkle trees",
             "Alternatives to proof of work",
             "Scripting",
             "$\\vdots$",
             "(See links in description)",
-        ]))
+        ])))
         topics.arrange_submobjects(DOWN, aligned_edge = LEFT)
         topics[-2].next_to(topics[-3], DOWN)
         topics.next_to(title, RIGHT)

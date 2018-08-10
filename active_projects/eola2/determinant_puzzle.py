@@ -95,10 +95,7 @@ class WorkOutNumerically(Scene):
         for matrix, det in zip([M1, M2], line1):
             numbers = VGroup(*[det[i] for i in indices])
             numbers_iter = iter(numbers)
-            non_numbers = VGroup(*filter(
-                lambda m: m not in numbers,
-                det
-            ))
+            non_numbers = VGroup(*[m for m in det if m not in numbers])
             matrix_numbers = VGroup(*[
                 matrix.mob_matrix[i][j].copy()
                 for i, j in (0, 0), (1, 1), (0, 1), (1, 0)
@@ -268,7 +265,7 @@ class SuccessiveLinearTransformations(LinearTransformationScene):
         self.reset_plane()
         self.play(
             MoveToTarget(matrices),
-            *map(GrowFromCenter, parens)
+            *list(map(GrowFromCenter, parens))
         )
         self.apply_matrix(self.matrix_product)
         self.wait()

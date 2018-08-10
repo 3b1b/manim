@@ -100,7 +100,7 @@ class IntroducePutnam(Scene):
         self.play(
             ReplacementTransform(six_hours, three_hours),
             ReplacementTransform(six_hours.copy(), three_hours_copy),
-            *map(ShowCreation, rects)
+            *list(map(ShowCreation, rects))
         )
         self.wait()
         self.play(LaggedStart(
@@ -180,11 +180,11 @@ class OtherVideoClips(Scene):
         rect.set_height(6.5)
         rect.center()
         rect.to_edge(DOWN)
-        titles = map(TextMobject, [
+        titles = list(map(TextMobject, [
             "Essence of calculus, chapter 1",
             "Pi hiding in prime regularities",
             "How do cryptocurrencies work?"
-        ])
+        ]))
 
         self.add(rect)
         last_title = None
@@ -363,7 +363,7 @@ class TwoDCase(Scene):
         self.play(
             morty.change, "happy",
             morty.fade, 1,
-            *map(FadeOut, [bubble, bubble.content])
+            *list(map(FadeOut, [bubble, bubble.content]))
         )
         self.remove(morty)
 
@@ -498,9 +498,9 @@ class TwoDCase(Scene):
         arc = self.arc
 
         self.triangle.save_state()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.push_pins, self.triangle, self.arc_lines
-        ]))
+        ])))
         self.update_animations.remove(self.triangle_update)
         self.update_animations += [
             self.get_center_lines_update(self.point_mobs, self.center_lines),
@@ -768,7 +768,7 @@ class TwoDCase(Scene):
     def get_point_mob_angles(self):
         point_mobs = self.point_mobs
         points = [pm.get_center() - self.center for pm in point_mobs]
-        return np.array(map(angle_of_vector, points))
+        return np.array(list(map(angle_of_vector, points)))
 
     def have_p3_jump_around_randomly(self, n_jumps, wait_time = 0.75, run_time = 0):
         for x in range(n_jumps):
@@ -881,7 +881,7 @@ class RevisitTwoDCase(TwoDCase):
                     self.n_in += 1
                 else:
                     self.n_out += 1
-                nums = map(Integer, [self.n_in, self.n_in, self.n_out])
+                nums = list(map(Integer, [self.n_in, self.n_in, self.n_out]))
                 VGroup(*nums[:2]).set_color(self.positive_triangle_color)
                 VGroup(*nums[2:]).set_color(self.negative_triangle_color)
                 for num, placeholder, position in zip(nums, placeholders, positions):
@@ -902,7 +902,7 @@ class RevisitTwoDCase(TwoDCase):
         nums = place_random_triangles(self.n_random_trials, 0.05)
         self.add(nums)
         self.wait()
-        self.play(*map(FadeOut, [frac, nums, title]))
+        self.play(*list(map(FadeOut, [frac, nums, title])))
 
     def add_lines_and_comment_on_them(self):
         center_lines = self.get_center_lines()
@@ -938,12 +938,12 @@ class RevisitTwoDCase(TwoDCase):
         self.play(
             center_lines.restore,
             center_lines.fade, 1,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 rect, words2, center_line_shadows,
                 self.triangle, arcs,
                 self.point_mobs,
                 self.point_labels,
-            ])
+            ]))
         )
         center_lines.restore()
         self.remove(center_lines)
@@ -960,12 +960,12 @@ class RevisitTwoDCase(TwoDCase):
         group = VGroup(random_procedure, underline)
         group.to_corner(UP+RIGHT)
 
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Choose 3 random points",
             "Choose 2 random lines",
             "Flip coin for each line \\\\ to get $P_1$ and $P_2$",
             "Choose $P_3$ at random"
-        ]))
+        ])))
         words.scale(0.8)
         words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
@@ -1210,7 +1210,7 @@ class ContrastTwoRandomProcesses(TwoDCase):
             )
             self.add(c2)
             n = len(c2) - len(c1)
-            self.play(*map(GrowFromCenter, c2[-n:]))
+            self.play(*list(map(GrowFromCenter, c2[-n:])))
 
 class Rewrite3DRandomProcedure(Scene):
     def construct(self):
@@ -1222,12 +1222,12 @@ class Rewrite3DRandomProcedure(Scene):
         group = VGroup(random_procedure, underline)
         group.to_corner(UP+LEFT)
         
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Choose 4 random points",
             "Choose 3 random lines",
             "Choose $P_4$ at random",
             "Flip coin for each line \\\\ to get $P_1$, $P_2$, $P_3$",
-        ]))
+        ])))
         words.scale(0.8)
         words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)

@@ -505,7 +505,7 @@ class ExampleApproximationWithCos(ExampleApproximationWithSine):
             for dx in (0.01, 0.7)
         ]
 
-        self.play(*map(ShowCreation, v_lines), run_time = 2)
+        self.play(*list(map(ShowCreation, v_lines)), run_time = 2)
         self.play(Transform(
             v_lines, alt_v_lines,
             run_time = 2,
@@ -623,7 +623,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         ))
         self.play(
             FadeIn(free_to_change),
-            *map(ShowCreation, arrows)
+            *list(map(ShowCreation, arrows))
         )
         self.play(*[
             ApplyMethod(
@@ -711,7 +711,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             submobject_mode = "lagged_start"
         ))
         self.wait(2)
-        self.play(*map(FadeOut, [poly_at_zero, equals_c0]))
+        self.play(*list(map(FadeOut, [poly_at_zero, equals_c0])))
 
         self.free_to_change_group.remove(
             self.free_to_change_group.arrows[0]
@@ -824,7 +824,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         ))
         self.wait(2)
 
-        self.play(*map(FadeOut, poly_group[:-1]))
+        self.play(*list(map(FadeOut, poly_group[:-1])))
         self.free_to_change_group.remove(
             self.free_to_change_group.arrows[1]
         )
@@ -855,9 +855,9 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
                 run_time = run_time
             ))
             self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             partial_cosine_graph, self.tangent_line
-        ]))
+        ])))
 
     def compute_cosine_second_derivative(self):
         second_deriv, rhs = self.get_cosine_second_derivative()
@@ -899,9 +899,9 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             for line, graph in zip(tangent_lines, graphs)
         ]
 
-        self.play(*map(ShowCreation, tangent_lines))
+        self.play(*list(map(ShowCreation, tangent_lines)))
         self.play(*tangent_change_anims)
-        self.play(*map(FadeOut, tangent_lines))
+        self.play(*list(map(FadeOut, tangent_lines)))
 
     def compute_polynomial_second_derivative(self):
         c2s = ["c_2", "\\text{\\tiny $\\left(-\\frac{1}{2}\\right)$}"]
@@ -1136,9 +1136,9 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
         self.wait(2)
         self.change_student_modes(
             *["plain"]*3,
-            added_anims = map(FadeOut, [
+            added_anims = list(map(FadeOut, [
                 approx_at_point, approx_rhs, real_result
-            ]),
+            ])),
             look_at_arg = approx_at_x
         )
 
@@ -1297,7 +1297,7 @@ class SimilarityOfChangeBehavior(ConstructQuadraticApproximation):
             FadeOut(dots)
         )
         self.play(*tangent_line_movements + dot_anims, run_time = 6)
-        self.play(*map(FadeOut, [tangent_lines, dots]))
+        self.play(*list(map(FadeOut, [tangent_lines, dots])))
         self.wait()
 
 class MoreTerms(TeacherStudentsScene):
@@ -1476,11 +1476,11 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         plus_quartic_term.next_to(polynomial, RIGHT)
         plus_quartic_term.set_color_by_tex("c_4", self.colors[4])
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.plus_cubic_term,
             self.polynomial_third_derivative,
             self.polynomial_third_derivative_brace,
-        ]))
+        ])))
         self.play(Write(plus_quartic_term))
         self.wait()
 
@@ -2084,9 +2084,9 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                 run_time = 2
             ))
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             deriv_info, arrow, output_info, outer_v_lines
-        ]))
+        ])))
 
         self.quadratic_graph = quadratic_graph
         self.v_line = center_v_line
@@ -2112,10 +2112,10 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ) 
             for d in derivs_at_x
         ])
-        group = VGroup(*it.chain(*zip(
+        group = VGroup(*it.chain(*list(zip(
             derivs_at_x,
             arrows
-        )))
+        ))))
         group.add(TexMobject("\\vdots"))
         group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
         group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
@@ -2153,7 +2153,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             derivs_at_x, derivs_at_zero
         ))
         self.wait()
-        self.play(*map(Write, rhs_group))
+        self.play(*list(map(Write, rhs_group)))
         self.wait()
         for rhs in rhs_group:
             self.play(Indicate(rhs[1]), color = WHITE)
@@ -2245,13 +2245,13 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             func, color = self.colors[0]
         )
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.cosine_derivative_group,
             self.cosine_graph,
             self.quadratic_graph,
             self.v_line,
             self.dot
-        ]))
+        ])))
         self.play(ShowCreation(graph))
 
         self.graph = graph
@@ -2525,10 +2525,10 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
             ) 
             for d in derivs_at_x
         ])
-        group = VGroup(*it.chain(*zip(
+        group = VGroup(*it.chain(*list(zip(
             derivs_at_x,
             arrows
-        )))
+        ))))
         group.add(TexMobject("\\vdots"))
         group.arrange_submobjects(DOWN, buff = 2*SMALL_BUFF)
         group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
@@ -2569,7 +2569,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
             derivs_at_x, derivs_at_zero
         ))
         self.wait()
-        self.play(*map(Write, rhs_group))
+        self.play(*list(map(Write, rhs_group)))
 
         self.derivative_values = derivative_values
 
@@ -2742,7 +2742,7 @@ class SecondTermIntuition(AreaIsDerivative):
         self.change_area_bounds(new_t_max = new_x)
         self.play(
             FadeIn(dark_area),
-            *map(Animation, self.foreground_mobjects)
+            *list(map(Animation, self.foreground_mobjects))
         )
         self.play(
             FadeOut(self.T_label_group),
@@ -3453,8 +3453,8 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         brace = self.braces[0].copy()
 
         self.play(*it.chain(
-            map(FadeIn, [approx_graph, brace]),
-            map(Animation, self.foreground_mobjects)
+            list(map(FadeIn, [approx_graph, brace])),
+            list(map(Animation, self.foreground_mobjects))
         ))
         self.wait()
         new_graphs = approx_graphs[1:self.initial_n_iterations]
@@ -3462,15 +3462,15 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             self.play(
                 Transform(approx_graph, new_graph),
                 Transform(brace, new_brace),
-                *map(Animation, self.foreground_mobjects)
+                *list(map(Animation, self.foreground_mobjects))
             )
             self.wait()
         approx_graph.remove(approx_dot)
         self.play(
             approx_dot.move_to, self.coords_to_point(self.divergent_example, 0),
             *it.chain(
-                map(FadeOut, [approx_graph, brace]),
-                map(Animation, self.foreground_mobjects)
+                list(map(FadeOut, [approx_graph, brace])),
+                list(map(Animation, self.foreground_mobjects))
             )
         )
         self.wait()
@@ -3493,7 +3493,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             ),
             FadeIn(approx_graph[0]),
             FadeIn(brace),
-            *map(Animation, self.foreground_mobjects)
+            *list(map(Animation, self.foreground_mobjects))
         )
 
         new_graphs = self.approx_graphs[1:self.initial_n_iterations]
@@ -3501,7 +3501,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             self.play(
                 Transform(approx_graph, new_graph),
                 Transform(brace, new_brace),
-                *map(Animation, self.foreground_mobjects)
+                *list(map(Animation, self.foreground_mobjects))
             )
             self.wait()
 
@@ -3528,7 +3528,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         for new_graph in new_graphs:
             self.play(
                 Transform(self.approx_graph, new_graph),
-                *map(Animation, self.foreground_mobjects)
+                *list(map(Animation, self.foreground_mobjects))
             )
             self.wait()
 

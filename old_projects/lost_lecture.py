@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from big_ol_pile_of_manim_imports import *
 
 from old_projects.div_curl import VectorField
@@ -985,7 +985,7 @@ class FeynmanElementaryQuote(Scene):
             to know ahead of time in order to understand it,
             except to have an infinite amount of intelligence.
         """
-        quote_parts = filter(lambda s: s, quote_text.split(" "))
+        quote_parts = [s for s in quote_text.split(" ") if s]
         quote = TextMobject(
             *quote_parts,
             tex_to_color_map={
@@ -1042,7 +1042,7 @@ class FeynmanElementaryQuote(Scene):
         images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
         images.to_edge(DOWN, buff=LARGE_BUFF)
         images[1].move_to(images[0])
-        crosses = VGroup(*map(Cross, images))
+        crosses = VGroup(*list(map(Cross, images)))
         crosses.set_stroke("RED", 10)
 
         for image, cross in zip(images, crosses):
@@ -1135,16 +1135,13 @@ class TableOfContents(Scene):
         ))
         self.wait()
         for item in items:
-            other_items = VGroup(*filter(
-                lambda m: m is not item,
-                items
-            ))
+            other_items = VGroup(*[m for m in items if m is not item])
             new_item = item.copy()
             new_item.scale(scale_factor, about_edge=LEFT)
             new_item.set_fill(WHITE, 1)
             self.play(
                 Transform(item, new_item),
-                *map(MoveToTarget, other_items)
+                *list(map(MoveToTarget, other_items))
             )
             self.wait()
 
@@ -1316,7 +1313,7 @@ class ShowEllipseDefiningProperty(Scene):
         self.play(
             ReplacementTransform(focus_words.copy(), foci_word),
         )
-        self.play(*map(ShowCreation, connecting_lines))
+        self.play(*list(map(ShowCreation, connecting_lines)))
         for word in list(focus_words) + [foci_word]:
             word.add_background_rectangle()
             self.add_foreground_mobjects(word)
@@ -1619,10 +1616,10 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         focal_sum_point = VectorizedPoint()
         focal_sum_point.move_to(circle.get_top())
         dots = [self.ep_dot, self.center_dot]
-        colors = map(Mobject.get_color, dots)
+        colors = list(map(Mobject.get_color, dots))
 
         def get_foci():
-            return map(Mobject.get_center, dots)
+            return list(map(Mobject.get_center, dots))
 
         focal_lines, focal_lines_update_animation = \
             self.get_focal_lines_and_update(get_foci, focal_sum_point)
@@ -1662,10 +1659,10 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             )
             self.wait()
         self.remove(*to_add)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             focal_lines, distance_labels,
             sum_expression, numbers
-        ]))
+        ])))
 
         self.set_variables_as_attrs(
             focal_lines, focal_lines_update_animation,
@@ -2027,7 +2024,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         self.wait()
 
         self.remove(*self.focal_sum_things_to_add)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             radial_line,
             QP_line,
             P_dot, P_label,
@@ -2038,7 +2035,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             self.sum_expression,
             sum_rect,
             tangency_comment,
-        ]))
+        ])))
         self.wait()
 
         # Show all lines
@@ -2578,7 +2575,7 @@ class AngularMomentumArgument(KeplersSecondLaw):
                 area_label.get_part_by_tex(tex).copy(),
                 area_expression.get_part_by_tex(tex),
             )
-            for tex in "=", "\\frac{1}{2}", "\\times"
+            for tex in ("=", "\\frac{1}{2}", "\\times")
         ])
         self.play(Restore(R_term))
         self.play(ReplacementTransform(
@@ -2761,7 +2758,7 @@ class FeynmanRecountingNewton(Scene):
             FadeInAndShiftFromDirection(
                 mob, direction=3 * LEFT
             )
-            for mob in principia, principia.rect
+            for mob in (principia, principia.rect)
         ])
         self.wait()
 
@@ -2930,7 +2927,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
 
         p1, p2 = [
             ellipse.point_from_proportion(a)
-            for a in alpha, alpha + d_alpha
+            for a in (alpha, alpha + d_alpha)
         ]
         vector = Arrow(
             p1, p2, buff=0
@@ -3111,7 +3108,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
 
         self.play(
             FadeIn(faders),
-            *map(ShowCreation, lines)
+            *list(map(ShowCreation, lines))
         )
         self.play(*[
             LaggedStart(
@@ -3670,7 +3667,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         frame.shift(3 * LEFT + 0.5 * UP)
 
         self.play(ApplyWave(ellipse))
-        self.play(*map(GrowArrow, vectors))
+        self.play(*list(map(GrowArrow, vectors)))
         self.play(
             LaggedStart(
                 MoveToTarget, vectors,
@@ -3908,7 +3905,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         self.wait()
         self.play(ShowCreation(cross))
         self.wait()
-        self.play(*map(FadeOut, [v_line, arc, theta_q, cross]))
+        self.play(*list(map(FadeOut, [v_line, arc, theta_q, cross])))
         self.wait()
         self.play(
             ReplacementTransform(
@@ -4076,7 +4073,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         self.play(
             self.ghost_lines.set_stroke, {"width": 0.5},
             self.eccentric_lines.set_stroke, {"width": 0.5},
-            *map(WiggleOutThenIn, [e_line, c_line])
+            *list(map(WiggleOutThenIn, [e_line, c_line]))
         )
         for x in range(3):
             self.play(

@@ -5,9 +5,7 @@ import itertools as it
 
 def to_camel_case(name):
     return "".join([
-        filter(
-            lambda c: c not in string.punctuation + string.whitespace, part
-        ).capitalize()
+        [c for c in part if c not in string.punctuation + string.whitespace].capitalize()
         for part in name.split("_")
     ])
 
@@ -20,11 +18,11 @@ def initials(name, sep_values=[" ", "_"]):
 
 
 def camel_case_initials(name):
-    return filter(lambda c: c.isupper(), name)
+    return [c for c in name if c.isupper()]
 
 
 def complex_string(complex_num):
-    return filter(lambda c: c not in "()", str(complex_num))
+    return [c for c in str(complex_num) if c not in "()"]
 
 
 def split_string_to_isolate_substrings(full_string, *substrings_to_isolate):
@@ -39,12 +37,12 @@ def split_string_to_isolate_substrings(full_string, *substrings_to_isolate):
     if len(substrings_to_isolate) == 0:
         return [full_string]
     substring_to_isolate = substrings_to_isolate[0]
-    all_substrings = list(it.chain(*zip(
+    all_substrings = list(it.chain(*list(zip(
         full_string.split(substring_to_isolate),
         it.repeat(substring_to_isolate)
-    )))
+    ))))
     all_substrings.pop(-1)
-    all_substrings = filter(lambda s: s != "", all_substrings)
+    all_substrings = [s for s in all_substrings if s != ""]
     return split_string_list_to_isolate_substring(
         all_substrings, *substrings_to_isolate[1:]
     )

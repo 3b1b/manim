@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-from __future__ import print_function
+
+
 
 import copy
 import itertools as it
@@ -40,7 +40,7 @@ class Mobject(Container):
 
     def __init__(self, *submobjects, **kwargs):
         Container.__init__(self, *submobjects, **kwargs)
-        if not all(map(lambda m: isinstance(m, Mobject), submobjects)):
+        if not all([isinstance(m, Mobject) for m in submobjects]):
             raise Exception("All submobjects must be of type Mobject")
         self.submobjects = list(submobjects)
         self.color = Color(self.color)
@@ -89,10 +89,7 @@ class Mobject(Container):
         Ensures all attributes which are mobjects are included
         in the submobjects list.
         """
-        mobject_attrs = filter(
-            lambda x: isinstance(x, Mobject),
-            self.__dict__.values()
-        )
+        mobject_attrs = [x for x in list(self.__dict__.values()) if isinstance(x, Mobject)]
         self.submobjects = list_update(self.submobjects, mobject_attrs)
         return self
 
@@ -127,7 +124,7 @@ class Mobject(Container):
             submob.copy() for submob in self.submobjects
         ]
         family = self.submobject_family()
-        for attr, value in self.__dict__.items():
+        for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value in family and value is not self:
                 setattr(copy_mobject, attr, value.copy())
         return copy_mobject
@@ -755,16 +752,13 @@ class Mobject(Container):
         return result + self.submobjects
 
     def submobject_family(self):
-        sub_families = map(Mobject.submobject_family, self.submobjects)
+        sub_families = list(map(Mobject.submobject_family, self.submobjects))
         all_mobjects = [self] + list(it.chain(*sub_families))
         #all_mobjects = list(it.chain(*sub_families)) + [self]
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):
-        return filter(
-            lambda m: m.get_num_points() > 0,
-            self.submobject_family()
-        )
+        return [m for m in self.submobject_family() if m.get_num_points() > 0]
 
     def arrange_submobjects(self, direction=RIGHT, center=True, **kwargs):
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):

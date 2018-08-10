@@ -113,7 +113,7 @@ class SecondDerivativeGraphically(GraphScene):
 
         self.play(
             Write(deriv),
-            *map(ShowCreation, ss_group)
+            *list(map(ShowCreation, ss_group))
         )
         self.animate_secant_slope_group_change(
             ss_group, target_x = self.x3,
@@ -208,7 +208,7 @@ class SecondDerivativeGraphically(GraphScene):
             added_anims = [Animation(positive_curve)]
         )
 
-        self.play(*map(FadeOut, [self.ss_group, positive_curve]))
+        self.play(*list(map(FadeOut, [self.ss_group, positive_curve])))
         self.animate_secant_slope_group_change(
             self.ss_group, target_x = self.x1,
             run_time = 0
@@ -225,10 +225,10 @@ class SecondDerivativeGraphically(GraphScene):
             added_anims = [Animation(negative_curve)]
         )
         self.wait(2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.graph, self.ss_group, 
             negative_curve, self.second_deriv_words
-        ]))
+        ])))
 
     def contrast_big_and_small_concavity(self):
         colors = color_gradient([GREEN, WHITE], 3)
@@ -315,9 +315,9 @@ class IntroduceNotation(TeacherStudentsScene):
 
         rp = clunky_deriv.get_part_by_tex("(")
         lp = clunky_deriv.get_part_by_tex(")")
-        dfs, overs, dxs = map(clunky_deriv.get_parts_by_tex, [
+        dfs, overs, dxs = list(map(clunky_deriv.get_parts_by_tex, [
             "df", "over", "dx"
-        ])
+        ]))
         df_over_dx = VGroup(dfs[0], overs[0], dxs[0])
         d = clunky_deriv.get_part_by_tex("d")
         d_over_dx = VGroup(d, overs[1], dxs[1])
@@ -566,7 +566,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         ddf.set_color(MAROON_B)
 
         self.play(
-            *map(MoveToTarget, [df_dx_groups, df_labels]),
+            *list(map(MoveToTarget, [df_dx_groups, df_labels])),
             run_time = 2
         )
         self.play(ShowCreation(h_lines, run_time = 2))
@@ -797,7 +797,7 @@ class SecondDerivativeAsAcceleration(Scene):
             s_graph.scale, 0.3,
             s_graph.next_to, s_words, LEFT
         )
-        self.play(*map(FadeIn, [v_graph, v_words]) )
+        self.play(*list(map(FadeIn, [v_graph, v_words])) )
         self.wait(2)
         self.play(
             v_graph.scale, 0.3,
@@ -827,7 +827,7 @@ class SecondDerivativeAsAcceleration(Scene):
         self.play(
             a_graph.scale, 0.3,
             a_graph.next_to, self.a_words, LEFT,
-            *map(FadeOut, [positive_rect, negative_rect])
+            *list(map(FadeOut, [positive_rect, negative_rect]))
         )
         self.play(
             FadeOut(self.car),

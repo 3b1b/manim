@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from big_ol_pile_of_manim_imports import *
 
 from tqdm import tqdm as ProgressDisplay
@@ -227,7 +227,7 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
 
 class MoreFiltersMoreLight(FilterScene):
     CONFIG = {
-        "filter_x_coordinates" : range(-2, 3),
+        "filter_x_coordinates" : list(range(-2, 3)),
         "pol_filter_configs" : [
             {
                 "include_arrow_label" : False,
@@ -399,7 +399,7 @@ class ShowALittleMath(TeacherStudentsScene):
                     exp1.get_parts_by_tex(tex).copy(),
                     exp2.get_parts_by_tex(tex).copy(),
                 )
-                for tex in color_map.keys()
+                for tex in list(color_map.keys())
         ] + [Write(exp2, run_time = 2)])
         self.change_student_modes(
             *["pondering"]*3,
@@ -569,7 +569,7 @@ class AngleToProbabilityChart(Scene):
         ])
         prob_mobs.set_color(YELLOW)
 
-        angle_prob_pairs = zip(angle_mobs, prob_mobs)
+        angle_prob_pairs = list(zip(angle_mobs, prob_mobs))
         for angle_mob, prob_mob in angle_prob_pairs:
             prob_mob.next_to(angle_mob, RIGHT, buff = 3)
         for prob_mob in prob_mobs[1:]:
@@ -890,7 +890,7 @@ class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
 
         self.play(LaggedStart(ShowCreation, rects))
         self.wait()
-        self.play(*map(Write, cosines), run_time = 2)
+        self.play(*list(map(Write, cosines)), run_time = 2)
         self.wait()
 
 class ForgetPreviousActions(ShowVariousFilterPairs):
@@ -1338,10 +1338,10 @@ class RemoveBFromLabeledFilters(IntroduceLabeledFiltersNoRotation):
         self.wait()
 
     def fade_in_labels(self):
-        self.play(*map(FadeIn, [
+        self.play(*list(map(FadeIn, [
             self.blocked_at_B_label_group,
             self.blocked_at_C_label_group,
-        ]))
+        ])))
         self.wait()
 
 class NumbersSuggestHiddenVariablesAreImpossible(TeacherStudentsScene):
@@ -1772,7 +1772,7 @@ class VennDiagramProofByContradiction(Scene):
         terms[0].remove(less_than)
         plus = terms[2][0][0]
         terms[2][0].remove(plus)
-        rects = map(SurroundingRectangle, terms)
+        rects = list(map(SurroundingRectangle, terms))
         terms[2][0].add_to_back(plus)
         last_rects = VGroup(*rects[1:])
 
@@ -1855,13 +1855,13 @@ class VennDiagramProofByContradiction(Scene):
 
         self.play(
             FadeIn(funny_business),
-            *map(Write, braces),
+            *list(map(Write, braces)),
             run_time = 1
         )
         self.wait()
         self.play(
             FadeIn(less_than),
-            *map(FadeOut, [funny_business, braces])
+            *list(map(FadeOut, [funny_business, braces]))
         )
 
         for term, group, region, num in zip(terms, photon_groups, regions, nums)[1:]:
@@ -2005,7 +2005,7 @@ class VennDiagramProofByContradiction(Scene):
         R = np.sqrt(len(photons) / np.pi)
         pairs = []
         rejected = []
-        for x, y in it.product(*[range(-int(R)-1, int(R)+2)]*2):
+        for x, y in it.product(*[list(range(-int(R)-1, int(R)+2))]*2):
             if x**2 + y**2 < R**2:
                 pairs.append((x, y))
             else:
@@ -2365,7 +2365,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
 
         def move_around(total_time):
             self.time
-            t_range = range(int(total_time/dt))
+            t_range = list(range(int(total_time/dt)))
             for x in ProgressDisplay(t_range):
                 self.time += dt
                 new_B_to_A = rotate_vector(B_to_A, self.time*A_freq)

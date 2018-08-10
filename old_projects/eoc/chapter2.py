@@ -297,12 +297,12 @@ class GraphCarTrajectory(GraphScene):
     CONFIG = {
         "x_min" : 0,
         "x_max" : 10,
-        "x_labeled_nums" : range(1, 11),
+        "x_labeled_nums" : list(range(1, 11)),
         "x_axis_label" : "Time (seconds)",
         "y_min" : 0,
         "y_max" : 110,
         "y_tick_frequency" : 10,
-        "y_labeled_nums" : range(10, 110, 10),
+        "y_labeled_nums" : list(range(10, 110, 10)),
         "y_axis_label" : "Distance traveled \\\\ (meters)",
         "graph_origin" : 2.5*DOWN + 5*LEFT,
         "default_graph_colors" : [DISTANCE_COLOR, VELOCITY_COLOR],
@@ -363,7 +363,7 @@ class GraphCarTrajectory(GraphScene):
             run_time = self.time_of_journey,
         )
         self.wait()
-        self.play(*map(FadeOut, [h_line, v_line, car]))
+        self.play(*list(map(FadeOut, [h_line, v_line, car])))
 
         #Show example vertical distance
         h_update(h_line, 0.6)
@@ -383,7 +383,7 @@ class GraphCarTrajectory(GraphScene):
             Write(brace_text)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [t_dot, dashed_h, brace, brace_text]))
+        self.play(*list(map(FadeOut, [t_dot, dashed_h, brace, brace_text])))
 
         #Name graph
         s_of_t = TexMobject("s(t)")
@@ -436,7 +436,7 @@ class GraphCarTrajectory(GraphScene):
                 self.play(FadeOut(text))
             else:
                 self.wait()
-        self.play(*map(FadeOut, [rect, change_lines]))
+        self.play(*list(map(FadeOut, [rect, change_lines])))
         self.rect = rect
 
     def get_change_lines(self, curr_time, delta_t = 1):
@@ -761,7 +761,7 @@ class CompareTwoTimes(Scene):
 
     def get_car_state(self, distance, time):
         line = Line(3*LEFT, 3*RIGHT)
-        dots = map(Dot, line.get_start_and_end())
+        dots = list(map(Dot, line.get_start_and_end()))
         line.add(*dots)
         car = Car()
         car.move_to(line.get_start())
@@ -1012,7 +1012,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         #Initially zoom in
         self.play(ShowCreation(input_point_line))
         self.activate_zooming()
-        self.play(*map(FadeIn, [self.big_rectangle, self.little_rectangle]))
+        self.play(*list(map(FadeIn, [self.big_rectangle, self.little_rectangle])))
         self.play(
             ApplyFunction(
                 align_little_rectangle_on_ds_dt_group,
@@ -1140,7 +1140,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         self.wait()
         self.play(ShowCreation(v_line_at_t_plus_dt))
         self.wait()
-        self.play(*map(FadeOut, [v_line_at_t, v_line_at_t_plus_dt]))
+        self.play(*list(map(FadeOut, [v_line_at_t, v_line_at_t_plus_dt])))
         self.play(
             Write(frac_line),
             Write(lower_dt)
@@ -1287,7 +1287,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             self.input_to_graph_point(time, self.graph)
             for time in (self.curr_time, self.curr_time+dt)
         ]
-        dots = map(Dot, points)
+        dots = list(map(Dot, points))
         for dot in dots:
             dot.scale_in_place(0.5)
         secant_line = Line(*points)
@@ -1531,10 +1531,10 @@ class TCubedExample(SecantLineToTangentLine):
         "y_min" : 0,
         "y_max" : 16,
         "y_tick_frequency" : 1,
-        "y_labeled_nums" : range(0, 17, 2),
+        "y_labeled_nums" : list(range(0, 17, 2)),
         "x_min" : 0,
         "x_max" : 4,
-        "x_labeled_nums" : range(1, 5),
+        "x_labeled_nums" : list(range(1, 5)),
         "graph_origin" : 2.5*DOWN + 6*LEFT,
         "start_time" : 2,
         "end_time" : 0.5,
@@ -1598,10 +1598,10 @@ class TCubedExample(SecantLineToTangentLine):
         ))
         self.play(Blink(morty))
         self.wait()
-        self.play(*map(
+        self.play(*list(map(
             FadeOut, 
             [morty, morty.bubble, morty.bubble.content]
-        ))
+        )))
 
     def add_ds_dt_group(self):
         self.curr_time = self.start_time
@@ -1655,7 +1655,7 @@ class TCubedExample(SecantLineToTangentLine):
             Write(nonzero_size),
         )
         self.wait(2)
-        self.play(*map(FadeOut, [arrow, nonzero_size]))
+        self.play(*list(map(FadeOut, [arrow, nonzero_size])))
         self.play(Write(numerator))
         self.play(ShowCreation(v_lines[1]))
         self.wait()
@@ -1667,7 +1667,7 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(Write(non_numerator))
         self.wait(2)
         self.play(
-            *map(MoveToTarget, s_pair),
+            *list(map(MoveToTarget, s_pair)),
             **{
                 "path_arc" : -np.pi/2
             }
@@ -1773,7 +1773,7 @@ class TCubedExample(SecantLineToTangentLine):
                 [DOWN+RIGHT, DOWN+LEFT]
             )
         ]))
-        self.play(*map(FadeOut, two_cubed_terms))
+        self.play(*list(map(FadeOut, two_cubed_terms)))
         numerator = VGroup(*terms[1:4])
         self.play(
             numerator.scale, 1.4, numerator.get_bottom(),
@@ -1900,7 +1900,7 @@ class TCubedExample(SecantLineToTangentLine):
         for two in twos:
             two.target = TexMobject("t")
             two.target.replace(two, dim_to_match = 1)
-        self.play(*map(MoveToTarget, twos))
+        self.play(*list(map(MoveToTarget, twos)))
         def update_as_tangent_line(group, alpha):
             self.curr_time = interpolate(self.start_time, self.end_time, alpha)
             new_group = self.get_ds_dt_group(self.end_dt)
@@ -1927,7 +1927,7 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(Blink(morty))
         self.play(
             morty.change_mode, 'happy',
-            *map(FadeOut, [morty.bubble, morty.bubble.content])
+            *list(map(FadeOut, [morty.bubble, morty.bubble.content]))
         )
 
         numerator = VGroup(*self.rhs[:12])
@@ -2055,7 +2055,7 @@ class TimeForAnActualParadox(TeacherStudentsScene):
             teacher.look_at, words,
             Write(words)
         )
-        self.play(*map(Write, [arrow, paradoxes]))
+        self.play(*list(map(Write, [arrow, paradoxes])))
         self.play(*it.chain(*[
             [pi.change_mode, mode, pi.look_at, words]
             for pi, mode in zip(
@@ -2119,7 +2119,7 @@ class ParadoxAtTEquals0(TCubedExample):
             UpdateFromFunc(v_line, v_line_update),
             run_time = 5
         )
-        self.play(*map(FadeOut, [h_line, v_line]))
+        self.play(*list(map(FadeOut, [h_line, v_line])))
 
         self.label_graph(
             graph,
@@ -2171,7 +2171,7 @@ class ParadoxAtTEquals0(TCubedExample):
         self.play(Write(derivative[0]))
         self.wait()
         self.play(FadeIn(derivative[1]))
-        self.play(*map(FadeIn, derivative[2:]))
+        self.play(*list(map(FadeIn, derivative[2:])))
         self.wait(2)
 
         self.derivative = derivative

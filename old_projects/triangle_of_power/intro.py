@@ -332,11 +332,11 @@ class WhatTheHell(Scene):
     def construct(self):
         randy = Randolph()
         randy.to_corner(DOWN+LEFT)
-        exp, rad, log = map(TexMobject,[
+        exp, rad, log = list(map(TexMobject,[
             "2^3 = 8",
             "\\sqrt[3]{8} = 2",
             "\\log_2(8) = 3",
-        ])
+        ]))
         # exp.set_color(BLUE_D)
         # rad.set_color(RED_D)
         # log.set_color(GREEN_D)
@@ -458,9 +458,9 @@ class LogarithmProperties(Scene):
 
 class HaveToShare(Scene):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "Lovely", "Symmetrical", "Utterly Reasonable"
-        ])
+        ]))
         for w1, w2 in zip(words, words[1:]):
             w2.next_to(w1, DOWN)
         VMobject(*words).center()

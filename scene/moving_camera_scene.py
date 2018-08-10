@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from scene.scene import Scene
 from camera.moving_camera import MovingCamera

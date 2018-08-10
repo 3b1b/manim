@@ -792,7 +792,7 @@ class StartingCalc101(PiCreatureScene):
 class GraphicalIntuitions(GraphScene):
     CONFIG = {
         "func": lambda x: 0.1 * (x - 2) * (x - 5) * (x - 7) + 4,
-        "x_labeled_nums": range(1, 10),
+        "x_labeled_nums": list(range(1, 10)),
     }
 
     def construct(self):
@@ -1277,10 +1277,10 @@ class StandardDerivativeVisual(GraphScene):
         x = input_tracker.get_value()
         x_min = x - dx
         x_max = x + dx
-        y, y_min, y_max = map(
+        y, y_min, y_max = list(map(
             self.graph.underlying_function,
             [x, x_min, x_max]
-        )
+        ))
         x_line = Line(
             self.coords_to_point(x_min, 0),
             self.coords_to_point(x_max, 0),
@@ -1345,10 +1345,10 @@ class IntroduceTransformationView(NumberlineTransformationScene):
 
     def show_animation_preview(self):
         input_points = self.get_sample_input_points()
-        output_points = map(
+        output_points = list(map(
             self.number_func_to_point_func(self.func),
             input_points
-        )
+        ))
         sample_dots = self.get_sample_dots()
         sample_dot_ghosts = sample_dots.copy().fade(0.5)
         arrows = VGroup(*[
@@ -1514,7 +1514,7 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
                 self.get_output_point(self.func(x)),
                 buff=MED_SMALL_BUFF
             )
-            for x, num in zip(range(1, 6), self.input_line.numbers[1:])
+            for x, num in zip(list(range(1, 6)), self.input_line.numbers[1:])
         ])
         point_func = self.number_func_to_point_func(self.func)
 
@@ -2197,9 +2197,9 @@ class GraphOnePlusOneOverX(GraphScene):
     def setup_axes(self):
         GraphScene.setup_axes(self)
         step = 2
-        self.x_axis.add_numbers(*range(-6, 0, step) + range(step, 7, step))
+        self.x_axis.add_numbers(*list(range(-6, 0, step)) + list(range(step, 7, step)))
         self.y_axis.label_direction = RIGHT
-        self.y_axis.add_numbers(*range(-2, 0, step) + range(step, 4, step))
+        self.y_axis.add_numbers(*list(range(-2, 0, step)) + list(range(step, 4, step)))
 
     def draw_graphs(self, animate=True):
         lower_func_graph, upper_func_graph = func_graph = VGroup(*[
@@ -2953,7 +2953,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             x_max=10,
         )
         sample_dots.set_stroke(BLACK, 0.5)
-        sample_points = map(Mobject.get_center, sample_dots)
+        sample_points = list(map(Mobject.get_center, sample_dots))
 
         self.play(LaggedStart(
             FadeInAndShiftFromDirection, sample_dots,
@@ -3241,10 +3241,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
 
         arrow_groups = VGroup()
         for point in phi_point, phi_bro_point:
-            arrows = VGroup(*filter(
-                lambda a: np.linalg.norm(a.get_start() - point) < 0.75,
-                self.all_arrows
-            )).copy()
+            arrows = VGroup(*[a for a in self.all_arrows if np.linalg.norm(a.get_start() - point) < 0.75]).copy()
             arrows.set_fill(PINK, 1)
             arrows.set_stroke(PINK, 3)
             arrows.second_anim = LaggedStart(
@@ -3254,7 +3251,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
                 lag_ratio=0.7,
                 run_time=2,
             )
-            arrows.anim = AnimationGroup(*map(GrowArrow, arrows))
+            arrows.anim = AnimationGroup(*list(map(GrowArrow, arrows)))
             arrow_groups.add(arrows)
         phi_arrows, phi_bro_arrows = arrow_groups
 
@@ -3318,7 +3315,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
         for deriv_label, dot_group in zip(deriv_labels, dot_groups):
             self.play(FadeInFromDown(deriv_label))
             self.play(LaggedStart(GrowFromCenter, dot_group))
-            self.play(*map(MoveToTarget, dot_group), run_time=2)
+            self.play(*list(map(MoveToTarget, dot_group)), run_time=2)
             self.wait()
 
 

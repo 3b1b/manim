@@ -16,7 +16,7 @@ def get_time_line():
         tick_frequency = 10,
         leftmost_tick = 1720,
         number_at_center = 1870,
-        numbers_with_elongated_ticks = range(1700, 2100, 100)
+        numbers_with_elongated_ticks = list(range(1700, 2100, 100))
     )
     time_line.sort_points(lambda p : p[0])        
     time_line.set_color_by_gradient(
@@ -24,7 +24,7 @@ def get_time_line():
         PeanoCurve.CONFIG["end_color"]
     )
     time_line.add_numbers(
-        2020, *range(1800, 2050, 50)
+        2020, *list(range(1800, 2050, 50))
     )
     return time_line
 
@@ -599,7 +599,7 @@ class FormalDefinitionOfContinuity(Scene):
             Homotopy(self.output_homotopy, self.output_dot, **kwargs)
         )
 
-        A, B = map(Mobject.get_center, [self.input_dot, self.output_dot])
+        A, B = list(map(Mobject.get_center, [self.input_dot, self.output_dot]))
         A_text = TextMobject("A")
         A_text.shift(A+2*(LEFT+UP))
         A_arrow = Arrow(

@@ -66,7 +66,7 @@ class TimeLine(Scene):
         speical_dates = [2016] + [
             obj["date"] for obj in dated_events
         ]
-        centuries = range(1600, 2100, 100)
+        centuries = list(range(1600, 2100, 100))
         timeline = NumberLine(
             numerical_radius = 300,
             number_at_center = 1800,
@@ -106,7 +106,7 @@ class TimeLine(Scene):
             )
             self.play(FadeIn(picture))
             self.wait(3)
-            self.play(*map(FadeOut, [event_mob, date_mob, line, picture]))
+            self.play(*list(map(FadeOut, [event_mob, date_mob, line, picture])))
 
 
 class StayedUpAllNight(Scene):
@@ -197,7 +197,7 @@ class StayedUpAllNight(Scene):
         self.play(ShimmerIn(not_newton))
         phil_trans.add(solution, not_newton)
         self.wait()
-        self.play(*map(ShimmerIn, newton_complaint.split()))
+        self.play(*list(map(ShimmerIn, newton_complaint.split())))
         self.wait()
         self.play(
             ShimmerIn(dunned_def),
@@ -337,16 +337,16 @@ class VideoLayout(Scene):
             ),
             UP
         )
-        left_brace.words = map(TextMobject, [
+        left_brace.words = list(map(TextMobject, [
             "Problem statement", 
             "History",
             "Johann Bernoulli's cleverness"
-        ])
+        ]))
         curr = left_brace
-        right_brace.words = map(TextMobject, [
+        right_brace.words = list(map(TextMobject, [
             "Challenge",
             "Mark Levi's cleverness",            
-        ])
+        ]))
         for brace in left_brace, right_brace:
             curr = brace
             direction = DOWN if brace is left_brace else UP
@@ -392,7 +392,7 @@ class ShortestPathProblem(Scene):
 
         self.play(
             ShimmerIn(words),
-            *map(GrowFromCenter, dots)
+            *list(map(GrowFromCenter, dots))
         )
         self.play(ShowCreation(path))
         self.play(Transform(

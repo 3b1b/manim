@@ -59,10 +59,10 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
             "|\\mathds{N}|"
         ]).scale(2).split()
         infinity = TexMobject("\\infty").scale(2)
-        local_mobjects = filter(
+        local_mobjects = list(filter(
             lambda m : isinstance(m, Mobject),
-            locals().values(),
-        )
+            list(locals().values()),
+        ))
         for mob in local_mobjects:    
             mob.sort_points(np.linalg.norm)
 
@@ -225,7 +225,7 @@ class SoundDataIsOneDimensional(Scene):
                 center = 2*DOWN + UP*k
             )
             for k, color in zip(
-                range(overtones),
+                list(range(overtones)),
                 Color(BLUE_E).range_to(WHITE, overtones)
             )
         ]
@@ -600,7 +600,7 @@ class WeaveLineThroughPixels(Scene):
                 side_length = unit, 
                 color = WHITE
             ).shift(x*right+y*up)
-            for x, y in it.product(range(2**order), range(2**order))
+            for x, y in it.product(list(range(2**order)), list(range(2**order)))
         ])
         squares.center()
         targets = Mobject()
@@ -813,7 +813,7 @@ class Order3PseudoHilbertCurve(Scene):
         self.wait()
         self.play(ShowCreation(grid8))
         self.wait()
-        self.play(*map(GrowFromCenter, mini_curves))
+        self.play(*list(map(GrowFromCenter, mini_curves)))
         self.wait()
         self.clear()
         self.add(words, grid8, *mini_curves)

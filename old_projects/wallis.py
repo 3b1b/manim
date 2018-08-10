@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 from once_useful_constructs.light import AmbientLight
 from once_useful_constructs.light import Lighthouse
@@ -47,7 +47,7 @@ class WallisNumeratorDenominatorGenerator(object):
     def __next__(self):
         return next(self)
 
-    def next(self):
+    def __next__(self):
         n = self.n
         self.n += 1
         if n % 2 == 0:
@@ -127,7 +127,7 @@ class Introduction(Scene):
 
         rects = VGroup(*[
             SurroundingRectangle(product_mob[:n])
-            for n in range(3, 4 * n_terms, 4) + [4 * n_terms]
+            for n in list(range(3, 4 * n_terms, 4)) + [4 * n_terms]
         ])
         rect = rects[0].copy()
 
@@ -288,7 +288,7 @@ class SourcesOfOriginality(TeacherStudentsScene):
             )
         )
         self.play(big_rect.restore)
-        self.play(*map(ShowCreation, [left_rect, right_rect]))
+        self.play(*list(map(ShowCreation, [left_rect, right_rect])))
         self.wait()
         self.play(
             math.match_color, left_rect,
@@ -518,7 +518,7 @@ class ShowProduct(Scene):
         decimal.next_to(brace, DOWN)
 
         self.add(brace, decimal, dots[0], parts[0])
-        tuples = zip(parts[1:], lines, dots[1:], partial_products[1:], braces[1:])
+        tuples = list(zip(parts[1:], lines, dots[1:], partial_products[1:], braces[1:]))
         for part, line, dot, prod, new_brace in tuples:
             self.play(
                 FadeIn(part),
@@ -636,7 +636,7 @@ class ShowProduct(Scene):
             parts.prefix.generate_target()
         larger_parts.fade(0.5)
         full_product = VGroup(*it.chain(
-            *zip(larger_parts.prefix.target, smaller_parts.prefix.target)
+            *list(zip(larger_parts.prefix.target, smaller_parts.prefix.target))
         ))
         for i, tex, vect in (0, "\\cdot", LEFT), (-1, "\\cdots", RIGHT):
             part = smaller_parts.prefix.target[i]
@@ -682,8 +682,8 @@ class ShowProduct(Scene):
         decimal = DecimalNumber(next(partial_products_iter), num_decimal_places=4)
         decimal.next_to(brace, DOWN)
 
-        self.play(*map(FadeIn, [brace, decimal, dots[0]]))
-        tuples = zip(lines, dots[1:], braces[1:])
+        self.play(*list(map(FadeIn, [brace, decimal, dots[0]])))
+        tuples = list(zip(lines, dots[1:], braces[1:]))
         for line, dot, new_brace in tuples:
             self.play(
                 Transform(brace, new_brace),
@@ -766,14 +766,14 @@ class ShowProduct(Scene):
             y_max=y_max + 0.25,
             y_axis_config={
                 "unit_size": unit_size,
-                "numbers_with_elongated_ticks": range(1, y_max + 1),
+                "numbers_with_elongated_ticks": list(range(1, y_max + 1)),
                 "tick_size": 0.05,
             },
         )
         axes.shift(6 * LEFT + 3 * DOWN - axes.coords_to_point(0, 0))
 
         axes.y_axis.label_direction = LEFT
-        axes.y_axis.add_numbers(*range(1, y_max + 1))
+        axes.y_axis.add_numbers(*list(range(1, y_max + 1)))
         return axes
 
 
@@ -1131,10 +1131,7 @@ class IntroduceDistanceProduct(DistanceProductScene):
         d_terms.set_color(YELLOW)
         plusses = sum_of_inverse_squares.get_parts_by_tex("+")
         last_term = sum_of_inverse_squares[-6:]
-        non_d_terms = VGroup(*filter(
-            lambda m: m not in d_terms and m not in last_term,
-            sum_of_inverse_squares
-        ))
+        non_d_terms = VGroup(*[m for m in sum_of_inverse_squares if m not in d_terms and m not in last_term])
 
         brace = Brace(sum_of_inverse_squares, DOWN)
         brace_text = brace.get_text("Total intensity of light")
@@ -1563,7 +1560,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         self.play(
             FadeIn(spacing_words),
             arcs_anim,
-            *map(GrowArrow, arrows)
+            *list(map(GrowArrow, arrows))
         )
         self.play(FadeOut(arrows), arcs_anim)
         self.wait()
@@ -1631,7 +1628,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
             arrow.rotate(np.pi, about_point=point)
         outer_arrow = self.outer_arrow = outer_arrows[3].copy()
 
-        values = map(plane.point_to_number, self.get_lh_points())
+        values = list(map(plane.point_to_number, self.get_lh_points()))
         complex_decimal = self.complex_decimal = DecimalNumber(
             values[3],
             num_decimal_places=3,
@@ -1760,7 +1757,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         )
         self.wait()
         self.add(line_ghost)
-        for i in range(2, self.num_lighthouses) + [0]:
+        for i in list(range(2, self.num_lighthouses)) + [0]:
             anims = [
                 Transform(angle_arc, angle_arcs[i]),
                 Transform(angle_label, angle_labels[i]),
@@ -1789,7 +1786,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         self.play(
             FadeOut(angle_arc),
             FadeOut(angle_label),
-            *map(ShowCreationThenDestruction, lines)
+            *list(map(ShowCreationThenDestruction, lines))
         )
         self.wait()
 
@@ -2296,7 +2293,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
             light[1:].fade(0.5)
         added_lights = self.lights.copy()
         added_lights.rotate(full_angle / 2, about_point=origin)
-        new_lights = VGroup(*it.chain(*zip(self.lights, added_lights)))
+        new_lights = VGroup(*it.chain(*list(zip(self.lights, added_lights))))
         self.num_lighthouses *= 2
         dot.generate_target()
         dot.target.move_to(self.get_circle_point_at_proportion(
@@ -2592,7 +2589,7 @@ class DistanceProductIsChordF(PlugObserverIntoPolynomial):
         fraction_words[0][0].set_color(YELLOW)
         fraction_words.arrange_submobjects(DOWN, SMALL_BUFF, aligned_edge=LEFT)
         fraction_words.next_to(O_dot.label, RIGHT)
-        map(TexMobject.add_background_rectangle, fraction_words)
+        list(map(TexMobject.add_background_rectangle, fraction_words))
 
         f_arc, new_arc = [
             Arc(
@@ -2771,7 +2768,7 @@ class ProveLemma2(PlugObserverIntoPolynomial):
         q_marks.match_color(product_decimal)
 
         zero_rects = VGroup(
-            *map(SurroundingRectangle, [dot, stacked_labels[0]]))
+            *list(map(SurroundingRectangle, [dot, stacked_labels[0]])))
 
         self.play(
             LaggedStart(ShowCreation, lines),
@@ -2790,7 +2787,7 @@ class ProveLemma2(PlugObserverIntoPolynomial):
         ))
         self.wait()
         self.add_foreground_mobject(zero_rects)
-        self.play(*map(ShowCreation, zero_rects))
+        self.play(*list(map(ShowCreation, zero_rects)))
         self.wait(2)
         self.play(
             VGroup(light_to_remove, zero_rects[0]
@@ -3175,7 +3172,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             )
             if pi is sailor:
                 arcs = self.get_halfway_indication_arcs()
-                self.play(*map(ShowCreationThenDestruction, arcs))
+                self.play(*list(map(ShowCreationThenDestruction, arcs)))
             self.wait()
 
     def write_distance_product_fraction(self):
@@ -3242,12 +3239,12 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         new_keeper_dp_decimal.replace(keeper_dp_decimal, dim_to_match=1)
         new_keeper_dp_decimal.set_color(YELLOW)
 
-        self.play(*map(ShowCreation, keeper_lines))
+        self.play(*list(map(ShowCreation, keeper_lines)))
         self.play(ReplacementTransform(
             keeper_lines.copy(), VGroup(fraction[0])
         ))
         self.play(FadeOut(keeper_lines))
-        self.play(*map(ShowCreation, sailor_lines))
+        self.play(*list(map(ShowCreation, sailor_lines)))
         self.play(
             ReplacementTransform(
                 sailor_lines.copy(),
@@ -3701,9 +3698,9 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         self.wait()
 
         # Organize fractions
-        fractions = VGroup(*it.chain(*zip(
+        fractions = VGroup(*it.chain(*list(zip(
             limit_fractions, cw_limit_fractions,
-        )))
+        ))))
         fractions.generate_target()
         wallis_product = VGroup()
         dots = VGroup()
@@ -4281,14 +4278,14 @@ class NonCommunitingLimitsExample(Scene):
         rows.center().to_edge(UP)
         rows[-1].shift(MED_SMALL_BUFF * UP)
 
-        row_rects = VGroup(*map(SurroundingRectangle, rows[:-1]))
+        row_rects = VGroup(*list(map(SurroundingRectangle, rows[:-1])))
         row_rects.set_color(YELLOW)
 
         columns = VGroup(*[
             VGroup(*[row[0][i] for row in rows])
             for i in range(len(rows[0][0]))
         ])
-        column_rects = VGroup(*map(SurroundingRectangle, columns))
+        column_rects = VGroup(*list(map(SurroundingRectangle, columns)))
         column_rects.set_color(BLUE)
 
         row_arrows = VGroup(*[
@@ -4365,7 +4362,7 @@ class NonCommunitingLimitsExample(Scene):
         terms = [1] * (self.num_terms_per_row)
         if seven_index < len(terms):
             terms[seven_index] = 7
-        row = VGroup(*map(Integer, terms))
+        row = VGroup(*list(map(Integer, terms)))
         self.arrange_row(row)
         dots = self.get_row_dots(row)
 
@@ -4497,9 +4494,9 @@ class DelicacyInIntermixingSeries(Scene):
         randy.flip()
         randy.to_corner(DR)
 
-        movers2 = VGroup(*it.chain(*zip(
+        movers2 = VGroup(*it.chain(*list(zip(
             top_product.parts, bottom_product.parts
-        )))
+        ))))
         final_product = VGroup()
         for mover in movers2:
             mover.final_position = mover.copy()
@@ -5217,7 +5214,7 @@ class Thumbnail(DistanceProductScene):
         product.scale(1.5)
         product.move_to(2.5 * UP)
         frac_lines = product.get_parts_by_tex("\\over")
-        frac_indices = map(product.index_of_part, frac_lines)
+        frac_indices = list(map(product.index_of_part, frac_lines))
         parts = VGroup(*[
             product[i-1:i+2]
             for i in frac_indices

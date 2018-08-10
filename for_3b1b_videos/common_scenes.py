@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import random
 import string
@@ -103,7 +103,7 @@ class PatreonThanks(Scene):
         patreon_logo = PatreonLogo()
         patreon_logo.to_edge(UP)
 
-        patrons = map(TextMobject, self.specific_patrons)
+        patrons = list(map(TextMobject, self.specific_patrons))
         num_groups = float(len(patrons)) / self.max_patron_group_size
         proportion_range = np.linspace(0, 1, num_groups + 1)
         indices = (len(patrons) * proportion_range).astype('int')
@@ -209,7 +209,7 @@ class PatreonEndScreen(PatreonThanks):
         thanks.add(underline)
         self.add(thanks)
 
-        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
         patrons.scale(self.patron_scale_val)
         for patron in patrons:
             if patron.get_width() > self.max_patron_width:

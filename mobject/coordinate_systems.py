@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import numpy as np
 
@@ -102,8 +102,8 @@ class Axes(VGroup):
             while abs(lh - rh) > 0.001:
                 mh = np.mean([lh, rh])
                 hands = [lh, mh, rh]
-                points = map(graph.point_from_proportion, hands)
-                lx, mx, rx = map(self.x_axis.point_to_number, points)
+                points = list(map(graph.point_from_proportion, hands))
+                lx, mx, rx = list(map(self.x_axis.point_to_number, points))
                 if lx <= x and rx >= x:
                     if mx > x:
                         rh = mh
@@ -240,9 +240,9 @@ class NumberPlane(VMobject):
     def get_coordinate_labels(self, x_vals=None, y_vals=None):
         coordinate_labels = VGroup()
         if x_vals is None:
-            x_vals = range(-int(self.x_radius), int(self.x_radius) + 1)
+            x_vals = list(range(-int(self.x_radius), int(self.x_radius) + 1))
         if y_vals is None:
-            y_vals = range(-int(self.y_radius), int(self.y_radius) + 1)
+            y_vals = list(range(-int(self.y_radius), int(self.y_radius) + 1))
         for index, vals in enumerate([x_vals, y_vals]):
             num_pair = [0, 0]
             for val in vals:
@@ -331,7 +331,7 @@ class ComplexPlane(NumberPlane):
 
         result = VGroup()
         if len(numbers) == 0:
-            numbers = range(-int(self.x_radius), int(self.x_radius) + 1)
+            numbers = list(range(-int(self.x_radius), int(self.x_radius) + 1))
             numbers += [
                 complex(0, y)
                 for y in range(-int(self.y_radius), int(self.y_radius) + 1)

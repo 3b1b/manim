@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from big_ol_pile_of_manim_imports import *
 
 from old_projects.lost_lecture import Orbiting
@@ -99,7 +99,7 @@ class SumOfIntegersProof(Scene):
         equation.to_edge(UP)
         one, two, three, dots, n = numbers = VGroup(*[
             equation.get_part_by_tex(tex, substring=False).copy()
-            for tex in "1", "2", "3", "\\cdots", "n",
+            for tex in ("1", "2", "3", "\\cdots", "n",)
         ])
         for number in numbers:
             number.generate_target()
@@ -230,11 +230,11 @@ class MultipleDefinitionsOfAnEllipse(Scene):
         ))
         self.wait()
         for definition in definitions:
-            others = filter(lambda d: d is not definition, definitions)
+            others = [d for d in definitions if d is not definition]
             self.play(
                 definition.set_fill, WHITE, 1,
                 definition.scale, 1.2, {"about_edge": LEFT},
-                *map(Restore, others)
+                *list(map(Restore, others))
             )
             self.wait(2)
 
@@ -324,9 +324,9 @@ class StretchACircle(Scene):
 class ShowArrayOfEccentricities(Scene):
     def construct(self):
         eccentricities = np.linspace(0, 0.99, 6)
-        eccentricity_labels = VGroup(*map(
+        eccentricity_labels = VGroup(*list(map(
             DecimalNumber, eccentricities
-        ))
+        )))
         ellipses = self.get_ellipse_row(eccentricities)
         ellipses.set_color_by_gradient(BLUE, YELLOW)
         ellipses.move_to(DOWN)
@@ -1473,7 +1473,7 @@ class LockhartQuote(Scene):
             I have no idea how it happens.  I only know that
             when it happens to me, I feel very fortunate.
         """ % strings
-        quote_parts = filter(lambda s: s, quote_text.split(" "))
+        quote_parts = [s for s in quote_text.split(" ") if s]
         quote = TextMobject(
             *quote_parts,
             tex_to_color_map={

@@ -255,9 +255,9 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             Write(one)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             words, arrow, brace, one
-        ]))
+        ])))
         self.radial_line_label = VGroup(brace, one)
 
     def show_sine_and_cosine(self):
@@ -335,9 +335,9 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             self.wait()
         self.change_mode("confused")
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             tan_frac, cot_frac, self.sin_group, self.cos_group
-        ]))
+        ])))
         self.wait()
 
         self.play(
@@ -387,7 +387,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.tangent_line = self.get_tangent_line()
         self.add(self.tangent_line)
         self.play(*it.chain(*[
-            map(FadeOut, [tan_group, cot_group]),
+            list(map(FadeOut, [tan_group, cot_group])),
             [Animation(self.theta_group[-1])]
         ]))
 
@@ -472,9 +472,9 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.change_mode("confused")
         self.wait(2)
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             sec_group, sec_frac
-        ]))
+        ])))
         self.csc_group = csc_group
         self.csc_frac =csc_frac
 
@@ -543,7 +543,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             self.pi_creature.change_mode, "confused"
         )
         self.wait(2)
-        self.play(*map(FadeOut, [question, arrow]))
+        self.play(*list(map(FadeOut, [question, arrow])))
 
 
         self.play(Write(opp_over_hyp))
@@ -578,11 +578,11 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.change_mode("happy")
         self.play(FadeOut(opp_over_hyp))
         self.reciprocate(frac1, frac2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             one, self.csc_group, tri1,
             frac1, frac2, self.csc_frac,
             arc_theta
-        ]))
+        ])))
 
     def reciprocate(self, frac1, frac2):
         # Not general, meant only for these definitions:
@@ -721,13 +721,13 @@ class RenameAllInTermsOfSine(Scene):
             "= \\frac{1}{\\sin(90^\\circ - \\theta)}",
             "= \\frac{\\sin(90^\\circ - \\theta)}{\\sin(\\theta)}",
         ]
-        mobs = VGroup(*map(TexMobject, texs))
+        mobs = VGroup(*list(map(TexMobject, texs)))
         sin, cos, tan = mobs[:3]
         sin.target_color = YELLOW
         cos.target_color = GREEN
         tan.target_color = RED
 
-        rhs_mobs = VGroup(*map(TexMobject, equivs))
+        rhs_mobs = VGroup(*list(map(TexMobject, equivs)))
         rhs_mobs.submobjects[0] = VectorizedPoint()
         for mob, shift_val in zip(mobs, shift_vals):
             mob.shift(shift_val)
@@ -741,7 +741,7 @@ class RenameAllInTermsOfSine(Scene):
             VGroup(mob.target, rhs_mob).move_to(mob)
         sin.target.set_color(sin.target_color)
         self.play(*it.chain(*[
-            map(MoveToTarget, mobs),
+            list(map(MoveToTarget, mobs)),
             [Write(rhs_mobs)]
         ]))
         self.wait(2)
