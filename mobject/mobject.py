@@ -878,7 +878,7 @@ class Mobject(Container):
             self.add(self.copy())
             n -= 1
             curr += 1
-        indices = curr * np.arange(curr + n) / (curr + n)
+        indices = curr * np.arange(curr + n) // (curr + n)
         new_submobjects = []
         for index in indices:
             submob = self.submobjects[index]

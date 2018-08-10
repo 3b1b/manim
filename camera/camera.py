@@ -10,6 +10,7 @@ import time
 from PIL import Image
 from colour import Color
 from scipy.spatial.distance import pdist
+import cairo
 
 from constants import *
 from mobject.types.image_mobject import AbstractImageMobject
@@ -50,6 +51,7 @@ class Camera(object):
         # z_buff_func is only used if the flag above is set to True.
         # round z coordinate to nearest hundredth when comparring
         "z_buff_func": lambda m: np.round(m.get_center()[2], 2),
+        "cairo_line_width_multiple": 0.01,
     }
 
     def __init__(self, background=None, **kwargs):
@@ -278,14 +280,25 @@ class Camera(object):
 
     # Methods associated with svg rendering
 
-    def get_aggdraw_canvas(self):
-        if not hasattr(self, "canvas") or not self.canvas:
-            self.reset_aggdraw_canvas()
-        return self.canvas
-
-    def reset_aggdraw_canvas(self):
-        image = Image.fromarray(self.pixel_array, mode=self.image_mode)
-        self.canvas = aggdraw.Draw(image)
+    def get_cairo_context(self):
+        # TODO, make sure this isn't run too much
+        pw = self.get_pixel_width()
+        ph = self.get_pixel_height()
+        fw = self.get_frame_width()
+        fh = self.get_frame_height()
+        surface = cairo.ImageSurface.create_for_data(
+            self.pixel_array,
+            cairo.FORMAT_ARGB32,
+            pw, ph
+        )
+        ctx = cairo.Context(surface)
+        ctx.scale(pw, ph)
+        ctx.set_matrix(cairo.Matrix(
+            fdiv(pw, fw), 0,
+            0, -fdiv(ph, fh),
+            pw / 2, ph / 2,
+        ))
+        return ctx
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
         if len(vmobjects) == 0:
@@ -301,90 +314,87 @@ class Camera(object):
                 self.display_multiple_non_background_colored_vmobjects(batch)
 
     def display_multiple_non_background_colored_vmobjects(self, vmobjects):
-        self.reset_aggdraw_canvas()
-        canvas = self.get_aggdraw_canvas()
         for vmobject in vmobjects:
-            self.display_vectorized(vmobject, canvas)
-        canvas.flush()
+            self.display_vectorized(vmobject)
 
-    def display_vectorized(self, vmobject, canvas=None):
+    def display_vectorized(self, vmobject):
         if vmobject.is_subpath:
             # Subpath vectorized mobjects are taken care
             # of by their parent
             return
-        canvas = canvas or self.get_aggdraw_canvas()
-        pen, fill = self.get_pen_and_fill(vmobject)
-        pathstring = self.get_pathstring(vmobject)
-        symbol = aggdraw.Symbol(pathstring)
-        self.draw_background_stroke(canvas, vmobject, symbol)
-        canvas.symbol((0, 0), symbol, pen, fill)
+        ctx = self.get_cairo_context()
+        self.set_cairo_context_path(ctx, vmobject)
+        self.apply_stroke(ctx, vmobject, background=True)
+        self.apply_fill(ctx, vmobject)
+        self.apply_stroke(ctx, vmobject)
+        ctx.new_path()
+        return self
 
-    def draw_background_stroke(self, canvas, vmobject, symbol):
-        bs_width = vmobject.get_background_stroke_width()
-        if bs_width == 0:
-            return
-        bs_rgb = vmobject.get_background_stroke_rgb()
-        bs_hex = rgb_to_hex(bs_rgb)
-        pen = aggdraw.Pen(bs_hex, bs_width)
-        canvas.symbol((0, 0), symbol, pen, None)
+    def set_cairo_context_path(self, ctx, vmobject):
+        for vmob in it.chain([vmobject], vmobject.get_subpath_mobjects()):
+            points = vmob.points
+            ctx.new_sub_path()
+            ctx.move_to(*points[0][:2])
+            for triplet in zip(points[1::3], points[2::3], points[3::3]):
+                ctx.curve_to(*it.chain(*[
+                    point[:2] for point in triplet
+                ]))
+            if vmob.is_closed():
+                ctx.close_path()
+        return self
 
-    def get_pen_and_fill(self, vmobject):
-        stroke_width = max(vmobject.get_stroke_width(), 0)
-        if stroke_width == 0:
-            pen = None
+    def set_cairo_context_color(self, ctx, rgbas, vmobject):
+        if len(rgbas) == 0:
+            # Use reversed rgb because cairo surface is
+            # encodes it in reverse order
+            ctx.set_source_rgba(
+                *rgbas[0][2::-1], rgbas[0][3]
+            )
         else:
-            stroke_rgb = self.get_stroke_rgb(vmobject)
-            stroke_hex = rgb_to_hex(stroke_rgb)
-            pen = aggdraw.Pen(stroke_hex, stroke_width)
+            points = vmobject.get_gradient_start_and_end_points()
+            pat = cairo.LinearGradient(*it.chain(*[
+                point[:2] for point in points
+            ]))
+            offsets = np.linspace(1, 0, len(rgbas))
+            for rgba, offset in zip(rgbas, offsets):
+                pat.add_color_stop_rgba(
+                    offset, *rgba[2::-1], rgba[3]
+                )
+            ctx.set_source(pat)
+        return self
 
-        fill_opacity = int(self.rgb_max_val * vmobject.get_fill_opacity())
-        if fill_opacity == 0:
-            fill = None
-        else:
-            fill_rgb = self.get_fill_rgb(vmobject)
-            fill_hex = rgb_to_hex(fill_rgb)
-            fill = aggdraw.Brush(fill_hex, fill_opacity)
+    def apply_fill(self, ctx, vmobject):
+        self.set_cairo_context_color(
+            ctx, self.get_fill_rgbas(vmobject), vmobject
+        )
+        ctx.fill_preserve()
+        return self
 
-        return (pen, fill)
+    def apply_stroke(self, ctx, vmobject, background=False):
+        width = vmobject.get_stroke_width(background)
+        self.set_cairo_context_color(
+            ctx,
+            self.get_stroke_rgbas(vmobject, background=background),
+            vmobject
+        )
+        ctx.set_line_width(
+            width * self.cairo_line_width_multiple
+        )
+        ctx.stroke_preserve()
+        return self
 
-    def color_to_hex_l(self, color):
-        try:
-            return color.get_hex_l()
-        except:
-            return Color(BLACK).get_hex_l()
+    def get_stroke_rgbas(self, vmobject, background=False):
+        return vmobject.get_stroke_rgbas(background)
 
-    def get_stroke_rgb(self, vmobject):
-        return vmobject.get_stroke_rgb()
-
-    def get_fill_rgb(self, vmobject):
-        return vmobject.get_fill_rgb()
-
-    def get_pathstring(self, vmobject):
-        result = ""
-        for mob in [vmobject] + vmobject.get_subpath_mobjects():
-            points = mob.points
-            # points = self.adjust_out_of_range_points(points)
-            if len(points) == 0:
-                continue
-            coords = self.points_to_pixel_coords(points)
-            coord_strings = coords.flatten().astype(str)
-            # Start new path string with M
-            coord_strings[0] = "M" + coord_strings[0]
-            # The C at the start of every 6th number communicates
-            # that the following 6 define a cubic Bezier
-            coord_strings[2::6] = ["C" + str(s) for s in coord_strings[2::6]]
-            # Possibly finish with "Z"
-            if vmobject.mark_paths_closed:
-                coord_strings[-1] = coord_strings[-1] + " Z"
-            result += " ".join(coord_strings)
-        return result
+    def get_fill_rgbas(self, vmobject):
+        return vmobject.get_fill_rgbas()
 
     def get_background_colored_vmobject_displayer(self):
         # Quite wordy to type out a bunch
-        long_name = "background_colored_vmobject_displayer"
-        if not hasattr(self, long_name):
-            setattr(self, long_name, BackgroundColoredVMobjectDisplayer(self))
-        return getattr(self, long_name)
+        bcvd = "background_colored_vmobject_displayer"
+        if not hasattr(self, bcvd):
+            setattr(self, bcvd, BackgroundColoredVMobjectDisplayer(self))
+        return getattr(self, bcvd)
 
     def display_multiple_background_colored_vmobject(self, cvmobjects):
         displayer = self.get_background_colored_vmobject_displayer()
@@ -595,6 +605,7 @@ class Camera(object):
         return centered_space_coords
 
 
+# TODO
 class BackgroundColoredVMobjectDisplayer(object):
     def __init__(self, camera):
         self.camera = camera

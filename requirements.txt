@@ -6,4 +6,4 @@ progressbar==2.5
 scipy==1.1.0
 tqdm==4.24.0
 opencv-python==3.4.2.17
-git+https://github.com/scottopell/aggdraw-64bits@c95aac4369038706943fd0effb7d888683860e5a#egg=aggdraw
+pycairo==1.17.1

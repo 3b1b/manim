@@ -1,11 +1,17 @@
 
 import os
+import hashlib
+
 from constants import TEX_DIR
 from constants import TEX_TEXT_TO_REPLACE
 
 
 def tex_hash(expression, template_tex_file):
-    return str(hash(expression + template_tex_file))
+    id_str = str(expression + template_tex_file)
+    hasher = hashlib.sha256()
+    hasher.update(id_str.encode())
+    # Truncating at 16 bytes for cleanliness
+    return hasher.hexdigest()[:16]
 
 
 def tex_to_svg_file(expression, template_tex_file):

@@ -72,7 +72,7 @@ def tuplify(obj):
         return (obj,)
     try:
         return tuple(obj)
-    except:
+    except TypeError:
         return (obj,)
 
 
@@ -90,8 +90,8 @@ def make_even(iterable_1, iterable_2):
     list_1, list_2 = list(iterable_1), list(iterable_2)
     length = max(len(list_1), len(list_2))
     return (
-        [list_1[(n * len(list_1)) / length] for n in range(length)],
-        [list_2[(n * len(list_2)) / length] for n in range(length)]
+        [list_1[(n * len(list_1)) // length] for n in range(length)],
+        [list_2[(n * len(list_2)) // length] for n in range(length)]
     )
 
 

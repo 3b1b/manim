@@ -375,7 +375,7 @@ class VMobjectFromSVGPathstring(VMobject):
         numbers = string_to_numbers(coord_string)
         if len(numbers) % 2 == 1:
             numbers.append(0)
-        num_points = len(numbers) / 2
+        num_points = len(numbers) // 2
         result = np.zeros((num_points, self.dim))
         result[:, :2] = np.array(numbers).reshape((num_points, 2))
         return result
