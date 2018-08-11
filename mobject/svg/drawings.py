@@ -726,7 +726,7 @@ class Logo(VMobject):
                     0, TAU, n_spikes, endpoint=False
                 )
             ]
-            index = 3 * n_spikes / 4
+            index = (3 * n_spikes) // 4
             if radius == radii[0]:
                 layer = VGroup(*full_spikes)
                 layer.rotate(
@@ -773,6 +773,7 @@ class Logo(VMobject):
             fill_color=BLACK,
             fill_opacity=1,
             stroke_width=0,
+            sheen=0.0
         )
         self.add(self.pupil)
 

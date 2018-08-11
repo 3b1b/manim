@@ -127,6 +127,8 @@ class Mobject(Container):
         for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value in family and value is not self:
                 setattr(copy_mobject, attr, value.copy())
+            if isinstance(value, np.ndarray):
+                setattr(copy_mobject, attr, np.array(value))
         return copy_mobject
 
     def deepcopy(self):

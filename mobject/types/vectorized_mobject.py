@@ -31,11 +31,10 @@ class VMobject(Mobject):
         "background_stroke_width": 0,
         # When a color c is set, there will be a second color
         # computed based on interpolating c to WHITE by with
-        # gradient_to_white_factor, and the display will
-        # gradient to this secondary color in the direction
-        # of color_gradient_direction.
-        "color_gradient_direction": UL,
-        "gradient_to_white_factor": 0.2,
+        # sheen, and the display will gradient to this 
+        # secondary color in the direction of sheen_direction.
+        "sheen": 0.0,
+        "sheen_direction": UL,
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
         "is_subpath": False,
@@ -69,13 +68,21 @@ class VMobject(Mobject):
             opacity=self.background_stroke_opacity,
             family=self.propagate_style_to_family,
         )
+        self.set_sheen_direction(
+            self.sheen_direction,
+            family=self.propagate_style_to_family
+        )
+        self.set_sheen(
+            self.sheen,
+            family=self.propagate_style_to_family
+        )
         return self
 
     def get_rgbas_array(self, color=None, opacity=None):
         """
         First arg can be either a color, or a tuple/list of colors.
         Likewise, opacity can either be a float, or a tuple of floats.
-        If self.gradient_to_white_factor is not zero, and only
+        If self.sheen is not zero, and only
         one color was passed in, a second slightly light color
         will automatically be added for the gradient
         """
@@ -83,29 +90,36 @@ class VMobject(Mobject):
             color = self.color
         colors = list(tuplify(color))
         opacities = list(tuplify(opacity))
-        g2w_factor = self.get_gradient_to_white_factor()
-        if g2w_factor != 0 and len(colors) == 1:
-            lighter_color = interpolate_color(
-                colors[0], WHITE, g2w_factor
-            )
-            colors.append(lighter_color)
-
-        return np.array([
+        rgbas = np.array([
             color_to_rgba(c, o)
             for c, o in zip(*make_even(colors, opacities))
         ])
 
+        sheen = self.get_sheen()
+        if sheen != 0 and len(rgbas) == 1:
+            light_rgbas = np.array(rgbas)
+            light_rgbas[:, :3] += sheen
+            light_rgbas = np.clip(light_rgbas, 0, 1)
+            rgbas = np.append(rgbas, light_rgbas, axis=0)
+        return rgbas
+
     def set_fill(self, color=None, opacity=None, family=True):
-        if opacity is None:
-            opacity = self.get_fill_opacity()
-        self.fill_rgbas = self.get_rgbas_array(color, opacity)
         if family:
             for submobject in self.submobjects:
                 submobject.set_fill(color, opacity, family)
+        if opacity is None:
+            opacity = self.get_fill_opacity()
+        self.fill_rgbas = self.get_rgbas_array(color, opacity)
         return self
 
     def set_stroke(self, color=None, width=None, opacity=None,
                    background=False, family=True):
+        if family:
+            for submobject in self.submobjects:
+                submobject.set_stroke(
+                    color, width, opacity, background, family
+                )
+
         if opacity is None:
             opacity = self.get_stroke_opacity(background)
 
@@ -119,11 +133,6 @@ class VMobject(Mobject):
         setattr(self, array_name, rgbas)
         if width is not None:
             setattr(self, width_name, width)
-        if family:
-            for submobject in self.submobjects:
-                submobject.set_stroke(
-                    color, width, opacity, background, family
-                )
         return self
 
     def set_background_stroke(self, **kwargs):
@@ -154,18 +163,16 @@ class VMobject(Mobject):
         return self
 
     def fade_no_recurse(self, darkness):
-        self.set_stroke(
-            width=(1 - darkness) * self.get_stroke_width(),
-            family=False
-        )
-        self.set_fill(
-            opacity=(1 - darkness) * self.get_fill_opacity(),
-            family=False
-        )
+        attrs = ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]
+        for attr in attrs:
+            getattr(self, attr)[:, 3] *= (1.0 - darkness)
         return self
 
     def get_fill_rgbas(self):
-        return np.clip(self.fill_rgbas, 0, 1)
+        try:
+            return np.clip(self.fill_rgbas, 0, 1)
+        except AttributeError:
+            return np.zeros((1, 4))
 
     def get_fill_color(self):
         """
@@ -191,11 +198,14 @@ class VMobject(Mobject):
         return self.get_fill_rgbas()[:, 3]
 
     def get_stroke_rgbas(self, background=False):
-        if background:
-            rgbas = self.background_stroke_rgbas
-        else:
-            rgbas = self.stroke_rgbas
-        return np.clip(rgbas, 0, 1)
+        try:
+            if background:
+                rgbas = self.background_stroke_rgbas
+            else:
+                rgbas = self.stroke_rgbas
+            return np.clip(rgbas, 0, 1)
+        except AttributeError:
+            return np.zeros((1, 4))
 
     def get_stroke_color(self, background=False):
         return self.get_stroke_colors(background)[0]
@@ -224,31 +234,33 @@ class VMobject(Mobject):
             return self.get_stroke_color()
         return self.get_fill_color()
 
-    def set_color_gradient_direction(self, direction, family=True):
+    def set_sheen_direction(self, direction, family=True):
         direction = np.array(direction)
         if family:
             for submob in self.submobject_family():
-                submob.color_gradient_direction = direction
+                submob.sheen_direction = direction
         else:
-            self.color_gradient_direction = direction
+            self.sheen_direction = direction
         return self
 
-    def set_gradient_to_white_factor(self, factor, family=True):
+    def set_sheen(self, factor, family=True):
         if family:
             for submob in self.submobject_family():
-                submob.gradient_to_white_factor = factor
+                submob.sheen = factor
         else:
-            self.gradient_to_white_factor = factor
+            self.sheen = factor
+        self.set_stroke(self.get_stroke_color(), family=family)
+        self.set_fill(self.get_fill_color(), family=family)
         return self
 
-    def get_color_gradient_direction(self):
-        return np.array(self.color_gradient_direction)
+    def get_sheen_direction(self):
+        return np.array(self.sheen_direction)
 
-    def get_gradient_to_white_factor(self):
-        return self.gradient_to_white_factor
+    def get_sheen(self):
+        return self.sheen
 
     def get_gradient_start_and_end_points(self):
-        direction = self.get_color_gradient_direction()
+        direction = self.get_sheen_direction()
         c = self.get_center()
         bases = np.array([
             self.get_edge_center(vect) - c
@@ -518,8 +530,8 @@ class VMobject(Mobject):
             "background_stroke_rgbas",
             "stroke_width",
             "background_stroke_width",
-            "color_gradient_direction",
-            "gradient_to_white_factor",
+            "sheen_direction",
+            "sheen",
         ]
         for attr in attrs:
             setattr(self, attr, interpolate(
@@ -528,7 +540,6 @@ class VMobject(Mobject):
                 alpha
             ))
             if alpha == 1.0:
-                # print getattr(mobject2, attr)
                 setattr(self, attr, getattr(mobject2, attr))
 
     def pointwise_become_partial(self, mobject, a, b):
