@@ -280,7 +280,7 @@ class Camera(object):
 
     # Methods associated with svg rendering
 
-    def get_cairo_context(self):
+    def create_new_cairo_context(self):
         # TODO, make sure this isn't run too much
         pw = self.get_pixel_width()
         ph = self.get_pixel_height()
@@ -298,6 +298,14 @@ class Camera(object):
             0, -fdiv(ph, fh),
             pw / 2, ph / 2,
         ))
+        return ctx
+
+    def get_cairo_context(self):
+        if not hasattr(self, "cairo_context"):
+            ctx = self.create_new_cairo_context()
+            self.cairo_context = ctx
+        else:
+            ctx = self.cairo_context
         return ctx
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
@@ -344,7 +352,7 @@ class Camera(object):
         return self
 
     def set_cairo_context_color(self, ctx, rgbas, vmobject):
-        if len(rgbas) == 0:
+        if len(rgbas) == 1:
             # Use reversed rgb because cairo surface is
             # encodes it in reverse order
             ctx.set_source_rgba(
