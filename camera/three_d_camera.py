@@ -53,26 +53,33 @@ class ThreeDCamera(MovingCamera):
         self.moving_center = VectorizedPoint(self.frame_center)
         self.set_position(self.phi, self.theta, self.distance)
 
-    def modified_rgb(self, vmobject, rgb):
+    def modified_rgbas(self, vmobject, rgbas):
         if should_shade_in_3d(vmobject):
-            return self.get_shaded_rgb(rgb, self.get_unit_normal_vect(vmobject))
+            return self.get_shaded_rgbas(rgbas, self.get_unit_normal_vect(vmobject))
         else:
-            return rgb
+            return rgbas
 
-    def get_stroke_rgb(self, vmobject):
-        return self.modified_rgb(vmobject, vmobject.get_stroke_rgb())
+    def get_stroke_rgbas(self, vmobject, background=False):
+        return self.modified_rgbas(
+            vmobject, vmobject.get_stroke_rgbas(background)
+        )
 
-    def get_fill_rgb(self, vmobject):
-        return self.modified_rgb(vmobject, vmobject.get_fill_rgb())
+    def get_fill_rgbas(self, vmobject):
+        return self.modified_rgbas(
+            vmobject, vmobject.get_fill_rgbas()
+        )
 
-    def get_shaded_rgb(self, rgb, normal_vect):
+    def get_shaded_rgbas(self, rgbas, normal_vect):
         brightness = np.dot(normal_vect, self.unit_sun_vect)**2
+        target = np.ones(rgbas.shape)
+        target[:, 3] = rgbas[:, 3]
         if brightness > 0:
             alpha = self.shading_factor * brightness
-            return interpolate(rgb, np.ones(3), alpha)
+            return interpolate(rgbas, target, alpha)
         else:
+            target[:, :3] = 0
             alpha = -self.shading_factor * brightness
-            return interpolate(rgb, np.zeros(3), alpha)
+            return interpolate(rgb, target, alpha)
 
     def get_unit_normal_vect(self, vmobject):
         anchors = vmobject.get_anchors()
@@ -91,25 +98,17 @@ class ThreeDCamera(MovingCamera):
         #     *self.get_spherical_coords()
         # )
 
-        def z_cmp(*vmobs):
-            # Compare to three dimensional mobjects based on
-            # how close they are to the camera
-            # return cmp(*[
-            #     -np.linalg.norm(vm.get_center()-camera_point)
-            #     for vm in vmobs
-            # ])
-            three_d_status = list(map(should_shade_in_3d, vmobs))
-            has_points = [vm.get_num_points() > 0 for vm in vmobs]
-            if all(three_d_status) and all(has_points):
-                cmp_vect = self.get_unit_normal_vect(vmobs[1])
-                return cmp(*[
-                    np.dot(vm.get_center(), cmp_vect)
-                    for vm in vmobs
-                ])
+        def z_key(vmob):
+            # Assign a number to a three dimensional mobjects 
+            # based on how close it is to the camera
+            three_d_status = should_shade_in_3d(vmob)
+            has_points = vmob.get_num_points() > 0
+            if three_d_status and has_points:
+                return vmob.get_center()[2]
             else:
                 return 0
-        Camera.display_multiple_vectorized_mobjects(
-            self, sorted(vmobjects, cmp=z_cmp)
+        MovingCamera.display_multiple_vectorized_mobjects(
+            self, sorted(vmobjects, key=z_key)
         )
 
     def get_spherical_coords(self, phi=None, theta=None, distance=None):
