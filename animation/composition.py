@@ -147,10 +147,10 @@ class Succession(Animation):
             self.current_alpha = alpha
             return
 
-        gt_alpha_iter = it.ifilter(
+        gt_alpha_iter = iter(filter(
             lambda i: self.critical_alphas[i + 1] >= alpha,
-            list(range(self.num_anims))
-        )
+            range(self.num_anims)
+        ))
         i = next(gt_alpha_iter, None)
         if i is None:
             # In this case, we assume what is happening is that alpha is 1.0,
