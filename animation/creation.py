@@ -199,7 +199,7 @@ class VFadeIn(Animation):
     """
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.set_stroke(
-            width=interpolate(0, starting_submobject.get_stroke_width(), alpha)
+            opacity=interpolate(0, starting_submobject.get_stroke_opacity(), alpha)
         )
         submobject.set_fill(
             opacity=interpolate(0, starting_submobject.get_fill_opacity(), alpha)
