@@ -37,7 +37,8 @@ class ThreeDCamera(MovingCamera):
     CONFIG = {
         "sun_vect": 5 * UP + LEFT,
         "shading_factor": 0.2,
-        "distance": 5.,
+        "distance": 5.0,
+        "default_distance": 5.0,
         "phi": 0,  # Angle off z axis
         "theta": -TAU / 4,  # Rotation about z axis
     }
@@ -176,4 +177,4 @@ class ThreeDCamera(MovingCamera):
         new_points = np.dot(points, matrix.T)
         self.frame_center = self.moving_center.points[0]
 
-        return Camera.points_to_pixel_coords(self, new_points)
+        return MovingCamera.points_to_pixel_coords(self, new_points)

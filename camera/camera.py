@@ -57,6 +57,7 @@ class Camera(object):
     def __init__(self, background=None, **kwargs):
         digest_config(self, kwargs, locals())
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
+        self.cairo_context = None  # For vectorized rendering
         self.init_background()
         self.resize_frame_shape()
         self.reset()
@@ -162,6 +163,7 @@ class Camera(object):
             pixel_array, convert_from_floats)
         if not (hasattr(self, "pixel_array") and self.pixel_array.shape == converted_array.shape):
             self.pixel_array = converted_array
+            self.cairo_context = None
         else:
             # Set in place
             self.pixel_array[:, :, :] = converted_array[:, :, :]
@@ -301,7 +303,7 @@ class Camera(object):
         return ctx
 
     def get_cairo_context(self):
-        if not hasattr(self, "cairo_context"):
+        if self.cairo_context is None:
             ctx = self.create_new_cairo_context()
             self.cairo_context = ctx
         else:
@@ -448,7 +450,7 @@ class Camera(object):
 
         new_pa = self.pixel_array.reshape((ph * pw, rgba_len))
         new_pa[indices] = rgbas
-        self.pixel_array = new_pa.reshape((ph, pw, rgba_len))
+        self.set_pixel_array(new_pa.reshape((ph, pw, rgba_len)))
 
     def display_multiple_image_mobjects(self, image_mobjects):
         for image_mobject in image_mobjects:
@@ -489,6 +491,7 @@ class Camera(object):
             mode="RGBA"
         )
         new_ul_coords = center_coords - np.array(sub_image.size) / 2
+        new_ul_coords = new_ul_coords.astype(int)
         full_image.paste(
             sub_image,
             box=(
@@ -498,7 +501,6 @@ class Camera(object):
                 new_ul_coords[1] + sub_image.size[1],
             )
         )
-
         # Paint on top of existing pixel array
         self.overlay_PIL_image(full_image)
 
@@ -506,8 +508,9 @@ class Camera(object):
         self.overlay_PIL_image(Image.fromarray(arr, mode="RGBA"))
 
     def overlay_PIL_image(self, image):
-        self.pixel_array = np.array(
-            Image.alpha_composite(self.get_image(), image)
+        self.pixel_array[:, :] = np.array(
+            Image.alpha_composite(self.get_image(), image),
+            dtype='uint8'
         )
 
     def adjust_out_of_range_points(self, points):
