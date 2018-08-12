@@ -689,7 +689,7 @@ class IntroduceElectricField(PiCreatureScene):
         ])
         shading_list = list(result)
         shading_list.sort(
-            lambda m1, m2 : cmp(m1.get_length(), m2.get_length())
+            key=lambda m: m1.get_length()
         )
         VGroup(*shading_list).set_color_by_gradient(*self.vector_field_colors)
         result.set_fill(opacity = 0.75)

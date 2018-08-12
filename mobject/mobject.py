@@ -829,10 +829,7 @@ class Mobject(Container):
 
     def sort_submobjects(self, point_to_num_func=lambda p: p[0]):
         self.submobjects.sort(
-            lambda *mobs: cmp(*[
-                point_to_num_func(mob.get_center())
-                for mob in mobs
-            ])
+            key=lambda m: point_to_num_func(mob.get_center())
         )
         return self
 

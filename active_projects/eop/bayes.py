@@ -71,10 +71,9 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             card.set_height(community_cards.get_height())
 
         selected_community_cards = VGroup(*[card for card in community_cards if card.numerical_value >= 10])
-        card_cmp = lambda c1, c2 : cmp(
-            c1.numerical_value, c2.numerical_value
+        selected_community_cards.submobjects.sort(
+            key=lambda c: c.numerical_value
         )
-        selected_community_cards.submobjects.sort(card_cmp)
 
         selected_community_cards.save_state()
         for card in selected_community_cards:
@@ -84,7 +83,9 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             you.hand.target, 
             [c.target for c in selected_community_cards]
         ))
-        straight_cards.submobjects.sort(card_cmp)
+        straight_cards.submobjects.sort(
+            key=lambda c: c.numerical_value
+        )
         straight_cards.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         straight_cards.next_to(community_cards, UP, aligned_edge = LEFT)
         you.hand.target.shift(MED_SMALL_BUFF*UP)

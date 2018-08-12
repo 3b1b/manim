@@ -2655,7 +2655,7 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         alt_path_parts = path_parts.copy()
         size = lambda m : m.get_height() + m.get_width()
         alt_path_parts.submobjects.sort(
-            lambda m1, m2 : -cmp(size(m1), size(m2))
+            key=lambda m1: -size(m1)
         )
 
         full_rect = SurroundingRectangle(

@@ -1544,7 +1544,7 @@ class PowerRuleAlgebra(Scene):
             xs_copy.generate_target()
             target_list = [dx_copy.target] + list(xs_copy.target)
             target_list.sort(
-                lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+                key=lambda m: m.get_center()[0]
             )
             dots = TexMobject("+", ".", ".", "\\dots")
             for dot_index, dot in enumerate(dots):

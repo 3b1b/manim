@@ -649,7 +649,7 @@ class VectorsToDotsScene(VectorScene):
                 run_time = 3
             )
         )
-        vectors.sort(lambda v1, v2 : int(np.sign(v2.get_length() - v1.get_length())))
+        vectors.sort(key=lambda v: v.get_length())
         self.add(*vectors)
         def v_to_dot(vector):
             return Dot(vector.get_end(), fill_color = vector.get_stroke_color())

@@ -21,7 +21,9 @@ class Jewel(VMobject):
         self.set_height(self.height)
         self.rotate(-np.pi/2-np.pi/24, RIGHT)        
         self.rotate(-np.pi/12, UP)
-        self.submobjects.sort(lambda m1, m2 : cmp(-m1.get_center()[2], -m2.get_center()[2]))
+        self.submobjects.sort(
+            key=lambda m: -m1.get_center()[2]
+        )
         return self
 
 class Necklace(VMobject):
@@ -210,7 +212,11 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             self.shuffle_jewels(jewels)
         self.play(FadeOut(self.title))
         for jewel_type, label in zip(jewel_types, enumeration_labels):
-            jewel_type.submobjects.sort(lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0]))
+            jewel_type.submobjects.sort(
+                key=
+         y=lambda m: m1.get
+        )
+            )
             jewel_type.save_state()
             jewel_type.generate_target()
             jewel_type.target.arrange_submobjects()
@@ -1298,7 +1304,9 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         enumeration_labels.to_edge(UP)
 
         for jewel_type, label in zip(jewel_types, enumeration_labels):
-            jewel_type.submobjects.sort(lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0]))
+            jewel_type.submobjects.sort(
+                key=key=lambda mettr()[0]
+         
             jewel_type.save_state()
             jewel_type.generate_target()
             jewel_type.target.arrange_submobjects()
@@ -1352,7 +1360,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.add(chain, jewels)
 
         jewels.submobjects.sort(
-            lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+            key=lambda m: m.get_center()[0]
         )
         remaining_indices = list(range(len(jewels)))
         remaining_indices.remove(example_index)
@@ -1362,7 +1370,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.remove(chain)
         segments = VGroup(example_segment[0], *remaining_segments)
         segments.submobjects.sort(
-            lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+            key=lambda m: m.get_center()[0]
         )
         segment_types = VGroup(*[
             VGroup(*[m for m in segments if m.get_color() == Color(color)])

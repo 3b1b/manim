@@ -1616,7 +1616,7 @@ class HowToTranslateAMatrix(Scene):
             array.top_brace = Brace(VGroup(array, her_vector), UP)
         for array in cob_matrix, inv_cob:
             submobs = array.split()
-            submobs.sort(lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0]))
+            submobs.sort(key=lambda m: m.get_center()[0])
             array.submobjects = submobs
         her_vector.set_color(MAROON_B)
         cob_matrix.set_color_by_gradient(BLUE, MAROON_B)

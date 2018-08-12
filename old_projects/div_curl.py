@@ -2365,7 +2365,7 @@ class IntroduceCurl(IntroduceVectorField):
             **self.vector_field_config
         )
         vector_field.submobjects.sort(
-            lambda v1, v2: cmp(v1.get_length(), v2.get_length())
+            key=lambda v: v.get_length()
         )
 
         self.play(LaggedStart(GrowArrow, vector_field))
@@ -2459,8 +2459,8 @@ class ShearCurl(IntroduceCurl):
         vector_field = self.vector_field = VectorField(
             self.func, **self.vector_field_config
         )
-        vector_field.submobjects.sort(
-            lambda a1, a2: cmp(a1.get_length(), a2.get_length())
+        vector_field.submobjects.key=sort(
+            key=lambda a: a.get_length()
         )
         self.play(LaggedStart(GrowArrow, vector_field))
 
@@ -2951,7 +2951,7 @@ class IllustrateGaussMagnetic(IllustrateGaussLaw):
             self.func, **self.vector_field_config
         )
         vector_field.submobjects.sort(
-            lambda a1, a2: -cmp(a1.get_length(), a2.get_length())
+            key=lambda a: -a1.get_length()
         )
         self.play(LaggedStart(GrowArrow, vector_field))
         self.add_foreground_mobjects(
