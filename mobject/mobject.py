@@ -692,7 +692,7 @@ class Mobject(Container):
         return np.apply_along_axis(np.mean, 0, self.get_all_points())
 
     def get_boundary_point(self, direction):
-        all_points = self.get_all_points()
+        all_points = self.get_points_defining_boundary()
         return all_points[np.argmax(np.dot(all_points, direction))]
 
     def get_top(self):
