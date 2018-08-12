@@ -10,7 +10,6 @@ from utils.bezier import interpolate
 from utils.bezier import is_closed
 from utils.bezier import partial_bezier_points
 from utils.color import color_to_rgba
-from utils.color import interpolate_color
 from utils.iterables import make_even
 from utils.iterables import tuplify
 from utils.iterables import stretch_array_to_length
@@ -31,7 +30,7 @@ class VMobject(Mobject):
         "background_stroke_width": 0,
         # When a color c is set, there will be a second color
         # computed based on interpolating c to WHITE by with
-        # sheen, and the display will gradient to this 
+        # sheen, and the display will gradient to this
         # secondary color in the direction of sheen_direction.
         "sheen": 0.0,
         "sheen_direction": UL,
@@ -78,7 +77,7 @@ class VMobject(Mobject):
         )
         return self
 
-    def get_rgbas_array(self, color=None, opacity=None):
+    def get_rgbas_array(self, color, opacity):
         """
         First arg can be either a color, or a tuple/list of colors.
         Likewise, opacity can either be a float, or a tuple of floats.
@@ -86,8 +85,6 @@ class VMobject(Mobject):
         one color was passed in, a second slightly light color
         will automatically be added for the gradient
         """
-        if color is None:
-            color = self.color
         colors = list(tuplify(color))
         opacities = list(tuplify(opacity))
         rgbas = np.array([
@@ -103,13 +100,34 @@ class VMobject(Mobject):
             rgbas = np.append(rgbas, light_rgbas, axis=0)
         return rgbas
 
+    def update_rgbas_array(self, array_name, color=None, opacity=None):
+        passed_color = color or BLACK
+        passed_opacity = opacity or 0
+        rgbas = self.get_rgbas_array(passed_color, passed_opacity)
+        if not hasattr(self, array_name):
+            setattr(self, array_name, rgbas)
+            return self
+        # Match up current rgbas array with the newly calculated
+        # one. 99% of the time they'll be the same.
+        curr_rgbas = getattr(self, array_name)
+        if len(curr_rgbas) < len(rgbas):
+            curr_rgbas = stretch_array_to_length(len(rgbas))
+            setattr(self, array_name, curr_rgbas)
+        elif len(rgbas) < len(curr_rgbas):
+            rgbas = stretch_array_to_length(len(curr_rgbas))
+        # Only update rgb if color was not None, and only
+        # update alpha channel if opacity was passed in
+        if color is not None:
+            curr_rgbas[:, :3] = rgbas[:, :3]
+        if opacity is not None:
+            curr_rgbas[:, 3] = rgbas[:, 3]
+        return self
+
     def set_fill(self, color=None, opacity=None, family=True):
         if family:
             for submobject in self.submobjects:
                 submobject.set_fill(color, opacity, family)
-        if opacity is None:
-            opacity = self.get_fill_opacity()
-        self.fill_rgbas = self.get_rgbas_array(color, opacity)
+        self.update_rgbas_array("fill_rgbas", color, opacity)
         return self
 
     def set_stroke(self, color=None, width=None, opacity=None,
@@ -119,18 +137,13 @@ class VMobject(Mobject):
                 submobject.set_stroke(
                     color, width, opacity, background, family
                 )
-
-        if opacity is None:
-            opacity = self.get_stroke_opacity(background)
-
         if background:
             array_name = "background_stroke_rgbas"
             width_name = "background_stroke_width"
         else:
             array_name = "stroke_rgbas"
             width_name = "stroke_width"
-        rgbas = self.get_rgbas_array(color, opacity)
-        setattr(self, array_name, rgbas)
+        self.update_rgbas_array(array_name, color, opacity)
         if width is not None:
             setattr(self, width_name, width)
         return self
@@ -163,9 +176,10 @@ class VMobject(Mobject):
         return self
 
     def fade_no_recurse(self, darkness):
-        attrs = ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]
-        for attr in attrs:
-            getattr(self, attr)[:, 3] *= (1.0 - darkness)
+        opacity = 1.0 - darkness
+        self.set_fill(opacity=opacity)
+        self.set_stroke(opacity=opacity)
+        self.set_background_stroke(opacity=opacity)
         return self
 
     def get_fill_rgbas(self):
