@@ -97,7 +97,7 @@ class PiCreature(SVGMobject):
         self.mouth.set_fill(BLACK, opacity=1)
         self.body.set_fill(self.color, opacity=1)
         self.pupils.set_fill(BLACK, opacity=1)
-        self.pupils.set_stroke(DARK_GREY, width=1)
+        # self.pupils.set_stroke(DARK_GREY, width=1)
         self.add_pupil_light_spot(self.pupils)
         self.eyes.set_fill(WHITE, opacity=1)
         return self
@@ -156,7 +156,7 @@ class PiCreature(SVGMobject):
             vect = direction[0] * right + direction[1] * up
             v_norm = np.linalg.norm(vect)
             p_radius = 0.5 * pupil.get_width()
-            vect *= (v_norm - p_radius) / v_norm
+            vect *= (v_norm - 0.75 * p_radius) / v_norm
             pupil.move_to(c + vect)
         self.pupils[1].align_to(self.pupils[0], DOWN)
         return self
