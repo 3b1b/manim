@@ -1,6 +1,5 @@
 import numpy as np
 import warnings
-import operator as op
 
 from constants import *
 
