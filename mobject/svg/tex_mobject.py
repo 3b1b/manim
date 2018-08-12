@@ -17,21 +17,10 @@ TEX_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
-    def pointwise_become_partial(self, mobject, a, b):
-        # TODO, this assumes a = 0
-        if b < 0.5:
-            b = 2 * b
-            added_width = 1
-            opacity = 0
-        else:
-            added_width = 2 - 2 * b
-            opacity = 2 * b - 1
-            b = 1
-        VMobjectFromSVGPathstring.pointwise_become_partial(
-            self, mobject, 0, b
-        )
-        self.set_stroke(width=added_width + mobject.get_stroke_width())
-        self.set_fill(opacity=opacity)
+    """
+    Purely a renaming of VMobjectFromSVGPathstring
+    """
+    pass
 
 
 class SingleStringTexMobject(SVGMobject):
