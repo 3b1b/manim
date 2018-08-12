@@ -162,7 +162,10 @@ class PatreonEndScreen(PatreonThanks):
             random.shuffle(self.specific_patrons)
         if self.capitalize:
             self.specific_patrons = [
-                " ".join(map(string.capitalize, patron.split(" ")))
+                " ".join(map(
+                    lambda s: s.capitalize(),
+                    patron.split(" ")
+                ))
                 for patron in self.specific_patrons
             ]
 

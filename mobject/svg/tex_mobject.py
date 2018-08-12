@@ -240,6 +240,11 @@ class TexMobject(SingleStringTexMobject):
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part)
 
+    def sort_submobjects_alphabetically(self):
+        self.submobjects.sort(
+            key=lambda m: m.get_tex_string()
+        )
+
     def split(self):
         # Many old scenes assume that when you pass in a single string
         # to TexMobject, it indexes across the characters.

@@ -174,6 +174,7 @@ class Camera(object):
         self.background = self.convert_pixel_array(
             pixel_array, convert_from_floats)
 
+    # TODO, this should live in utils, not as a method of Camera
     def make_background_from_func(self, coords_to_colors_func):
         """
         Sets background by using coords_to_colors_func to determine each pixel's color. Each input
@@ -378,6 +379,8 @@ class Camera(object):
 
     def apply_stroke(self, ctx, vmobject, background=False):
         width = vmobject.get_stroke_width(background)
+        if width == 0:
+            return self
         self.set_cairo_context_color(
             ctx,
             self.get_stroke_rgbas(vmobject, background=background),
@@ -584,6 +587,7 @@ class Camera(object):
         size = pixel_coords.size
         return pixel_coords.reshape((size / 2, 2))
 
+    # TODO, reimplement using cairo matrix
     def get_coords_of_all_pixels(self):
         # These are in x, y order, to help me keep things straight
         full_space_dims = np.array([

@@ -21,7 +21,7 @@ class VMobject(Mobject):
         "fill_opacity": 0.0,
         "stroke_color": None,
         "stroke_opacity": 1.0,
-        "stroke_width": DEFAULT_POINT_THICKNESS,
+        "stroke_width": DEFAULT_STROKE_WIDTH,
         # The purpose of background stroke is to have
         # something that won't overlap the fill, e.g.
         # For text against some textured background
