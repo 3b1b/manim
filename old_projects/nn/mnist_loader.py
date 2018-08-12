@@ -40,7 +40,11 @@ def load_data():
     below.
     """
     f = gzip.open('/Users/grant/cs/neural-networks-and-deep-learning/data/mnist.pkl.gz', 'rb')
-    training_data, validation_data, test_data = pickle.load(f)
+    u = pickle._Unpickler(f)
+    u.encoding = 'latin1'
+    # p = u.load()
+    # training_data, validation_data, test_data = pickle.load(f)
+    training_data, validation_data, test_data = u.load()
     f.close()
     return (training_data, validation_data, test_data)
 

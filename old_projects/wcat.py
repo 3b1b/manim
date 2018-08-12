@@ -453,7 +453,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         pi_loop.set_fill(opacity = 0)
         pi_loop.set_stroke(
             color = WHITE,
-            width = DEFAULT_POINT_THICKNESS
+            width = DEFAULT_STROKE_WIDTH
         )
         pi_loop.set_height(4)
         randy = Randolph()

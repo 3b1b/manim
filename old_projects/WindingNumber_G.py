@@ -2351,6 +2351,7 @@ class TransitionFromPathsToBoundariesArrowless(TransitionFromPathsToBoundaries):
 
 class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
     def construct(self):
+        TransitionFromPathsToBoundaries.construct(self)
         zero_point = 2*LEFT
 
         squares, joint_rect = self.get_squares_and_joint_rect()

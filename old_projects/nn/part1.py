@@ -144,10 +144,10 @@ class NetworkMobject(VGroup):
         if size > n_neurons:
             dots = TexMobject("\\vdots")
             dots.move_to(neurons)
-            VGroup(*neurons[:len(neurons)/2]).next_to(
+            VGroup(*neurons[:len(neurons) // 2]).next_to(
                 dots, UP, MED_SMALL_BUFF
             )
-            VGroup(*neurons[len(neurons)/2:]).next_to(
+            VGroup(*neurons[len(neurons) // 2:]).next_to(
                 dots, DOWN, MED_SMALL_BUFF
             )
             layer.dots = dots

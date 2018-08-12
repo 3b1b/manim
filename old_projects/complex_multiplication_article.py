@@ -9,7 +9,7 @@ from big_ol_pile_of_manim_imports import *
 from functools import reduce
 
 DEFAULT_PLANE_CONFIG = {
-    "stroke_width" : 2*DEFAULT_POINT_THICKNESS
+    "stroke_width" : 2*DEFAULT_STROKE_WIDTH
     }
 
 

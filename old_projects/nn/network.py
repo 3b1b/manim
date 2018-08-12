@@ -165,8 +165,8 @@ class Network(object):
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
-        """Return the vector of partial derivatives \partial C_x /
-        \partial a for the output activations."""
+        """Return the vector of partial derivatives \\partial C_x /
+        \\partial a for the output activations."""
         return (output_activations-y)
 
 #### Miscellaneous functions
@@ -195,8 +195,8 @@ def ReLU_prime(z):
     return (np.array(z) > 0).astype('int')
 
 def get_pretrained_network():
-    data_file = open(PRETRAINED_DATA_FILE)
-    weights, biases = pickle.load(data_file)
+    data_file = open(PRETRAINED_DATA_FILE, 'rb')
+    weights, biases = pickle.load(data_file, encoding='latin1')
     sizes = [w.shape[1] for w in weights]
     sizes.append(weights[-1].shape[0])
     network = Network(sizes)
@@ -275,13 +275,13 @@ def save_organized_images(n_images_per_number = 10):
         if len(image_map[value]) >= n_images_per_number:
             continue
         image_map[value].append(im)
-    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'w')
+    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'wb')
     pickle.dump(image_map, data_file)
     data_file.close()
 
 def get_organized_images():
     data_file = open(IMAGE_MAP_DATA_FILE, mode = 'r')
-    image_map = pickle.load(data_file)
+    image_map = pickle.load(data_file, encoding='latin1')
     data_file.close()
     return image_map
 

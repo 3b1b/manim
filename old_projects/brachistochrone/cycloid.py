@@ -337,7 +337,7 @@ class LeviSolution(CycloidScene):
         new_theta.next_to(new_arc, LEFT)
         new_theta.shift(0.1*DOWN)
         kwargs = {
-            "stroke_width" : 2*DEFAULT_POINT_THICKNESS,
+            "stroke_width" : 2*DEFAULT_STROKE_WIDTH,
         }
         triangle1 = Polygon(
             self.p_point, self.c_point, self.bottom_point,
