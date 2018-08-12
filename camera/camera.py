@@ -285,9 +285,18 @@ class Camera(object):
 
     # Methods associated with svg rendering
 
+    def get_cached_cairo_context(self, pixel_array):
+        return self.pixel_array_to_cairo_context.get(
+            id(pixel_array), None
+        )
+
+    def cache_cairo_context(self, pixel_array, ctx):
+        self.pixel_array_to_cairo_context[id(pixel_array)] = ctx
+
     def get_cairo_context(self, pixel_array):
-        if id(pixel_array) in self.pixel_array_to_cairo_context:
-            return self.pixel_array_to_cairo_context[id(pixel_array)]
+        cached_ctx = self.get_cached_cairo_context(pixel_array)
+        if cached_ctx:
+            return cached_ctx
         pw = self.get_pixel_width()
         ph = self.get_pixel_height()
         fw = self.get_frame_width()
@@ -304,7 +313,7 @@ class Camera(object):
             0, -fdiv(ph, fh),
             pw / 2, ph / 2,
         ))
-        self.pixel_array_to_cairo_context[id(pixel_array)] = ctx
+        self.cache_cairo_context(pixel_array, ctx)
         return ctx
 
     def display_multiple_vectorized_mobjects(self, vmobjects, pixel_array):

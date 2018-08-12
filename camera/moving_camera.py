@@ -74,6 +74,15 @@ class MovingCamera(Camera):
         # self.realign_frame_shape()
         Camera.capture_mobjects(self, mobjects, **kwargs)
 
+    # Since the frame can be moving around, the cairo
+    # context used for updating should be regenerated
+    # at each frame.  So no caching.
+    def get_cached_cairo_context(self, pixel_array):
+        return None
+
+    def cache_cairo_context(self, pixel_array, ctx):
+        pass
+
     # def reset_frame_center(self):
     #     self.frame_center = self.frame.get_center()
 
