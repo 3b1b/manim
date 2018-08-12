@@ -36,7 +36,7 @@ class TexSymbol(VMobjectFromSVGPathstring):
 
 class SingleStringTexMobject(SVGMobject):
     CONFIG = {
-        "template_tex_file": TEMPLATE_TEX_FILE,
+        "template_tex_file_body": TEMPLATE_TEX_FILE_BODY,
         "stroke_width": 0,
         "fill_opacity": 1.0,
         "background_stroke_width": 5,
@@ -54,7 +54,7 @@ class SingleStringTexMobject(SVGMobject):
         self.tex_string = tex_string
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
-            self.template_tex_file
+            self.template_tex_file_body
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
@@ -251,7 +251,7 @@ class TexMobject(SingleStringTexMobject):
 
 class TextMobject(TexMobject):
     CONFIG = {
-        "template_tex_file": TEMPLATE_TEXT_FILE,
+        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "\\centering",
     }
 
@@ -261,7 +261,7 @@ class BulletedList(TextMobject):
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
         # Have to include because of handle_multiple_args implementation
-        "template_tex_file": TEMPLATE_TEXT_FILE,
+        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "",
     }
 

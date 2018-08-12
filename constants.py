@@ -137,6 +137,10 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DI
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(THIS_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
+with open(TEMPLATE_TEX_FILE, "r") as infile:
+    TEMPLATE_TEX_FILE_BODY = infile.read()
+with open(TEMPLATE_TEXT_FILE, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY = infile.read()
 
 FFMPEG_BIN = "ffmpeg"
 
