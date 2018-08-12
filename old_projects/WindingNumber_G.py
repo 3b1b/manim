@@ -768,10 +768,10 @@ class InputOutputScene(Scene):
 
     def get_planes(self):
         input_plane = self.input_plane = NumberPlane(
-            x_radius = self.plane_width/2.0,
-            y_radius = self.plane_height/2.0,
+            x_radius = self.plane_width / 2.0,
+            y_radius = self.plane_height / 2.0,
         )
-        output_plane = self.output_plane = input_plane.copy()
+        output_plane = self.output_plane = input_plane.deepcopy()
         planes = VGroup(input_plane, output_plane)
         vects = [LEFT, RIGHT]
         label_texts = ["Input", "Output"]
@@ -780,6 +780,7 @@ class InputOutputScene(Scene):
             plane.stretch_to_fit_width(self.plane_width)
             plane.add_coordinates(x_vals = list(range(-2, 3)), y_vals = list(range(-2, 3)))
             plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
+            plane.coordinate_labels.set_background_stroke(width=0)
             plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
             plane.move_to(vect*FRAME_X_RADIUS/2 + self.y_shift*DOWN)
             label = TextMobject(text)
@@ -1452,6 +1453,7 @@ class SearchForZerosInInputSpace(ColorMappedObjectsScene):
         "func" : example_plane_func,
     }
     def construct(self):
+        ColorMappedObjectsScene.construct(self)
         title = TextMobject("Input space")
         title.scale(2)
         title.to_edge(UP)
@@ -1540,7 +1542,7 @@ class OneDRegionBoundary(Scene):
                 color = color,
                 buff = 0
             )
-            for x, fx, color in (x0, fx0, RED), (x1, fx1, GREEN)
+            for x, fx, color in [(x0, fx0, RED), (x1, fx1, GREEN)]
         ])
         minus = TexMobject("-")
         minus.match_color(x0_arrow)
@@ -3245,34 +3247,4 @@ class Thumbnail(SearchSpacePerimeterVsArea):
 
         self.clear()
         self.add(lines)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

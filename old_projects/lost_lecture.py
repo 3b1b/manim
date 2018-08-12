@@ -158,7 +158,7 @@ class ShowEmergingEllipse(Scene):
 
         fade_rect = FullScreenFadeRectangle()
 
-        line = lines[len(lines) / 5]
+        line = lines[len(lines) // 5]
         line_dot = Dot(line.get_center(), color=YELLOW)
         line_dot.scale(0.5)
 

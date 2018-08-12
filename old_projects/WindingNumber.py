@@ -640,10 +640,7 @@ class ColorMappedByFuncScene(Scene):
     }
 
     def short_path_to_long_path(self, filename_with_ext):
-        return os.path.join(
-            self.output_directory, "images", 
-            filename_with_ext
-        )
+        return self.get_image_file_path(filename_with_ext)
 
     def setup(self):
         # The composition of input_to_pos and pos_to_color 
@@ -664,11 +661,13 @@ class ColorMappedByFuncScene(Scene):
         jitter_val = 0.1
         line_coords = np.linspace(-10, 10) + jitter_val
         func_hash_points = it.product(line_coords, line_coords)
+
         def mini_hasher(p):
             rgba = point_to_rgba(self.pixel_pos_to_color_func(p))
             if rgba[3] != 1.0:
                 print("Warning! point_to_rgba assigns fractional alpha", rgba[3])
             return tuple(rgba)
+
         to_hash = tuple(mini_hasher(p) for p in func_hash_points)
         func_hash = hash(to_hash)
         # We hash just based on output image
@@ -695,7 +694,7 @@ class ColorMappedByFuncScene(Scene):
                     )
                 )
             )
-            self.save_image(self.background_image_file, mode = "RGBA")
+            self.save_image(self.background_image_file, mode="RGBA")
 
         if self.hide_background:
             # Clearing background

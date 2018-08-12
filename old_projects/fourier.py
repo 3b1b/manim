@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from constants import *
-import scipy
+import scipy.integrate
 
 from big_ol_pile_of_manim_imports import *
 
@@ -1633,9 +1633,9 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
-        rate_func = kwargs.pop(
-            "rate_func", bezier([0, 0, 1, 1])
-        )
+        rate_func = kwargs.pop("rate_func", None)
+        if rate_func is None:
+            rate_func = bezier([0, 0, 1, 1])
         added_anims = kwargs.get("added_anims", [])
         anims = [self.get_frequency_change_animation(self.graph, new_freq)]
         if hasattr(self, "winding_freq_label"):
@@ -3782,7 +3782,7 @@ class SummarizeFormula(Scene):
                 expression.get_part_by_tex(p1),
                 expression.get_part_by_tex(p2),
             ))
-            for p1, p2 in ("e", "t}"), ("g({}", "t}"), ("\\int", "dt")
+            for p1, p2 in [("e", "t}"), ("g({}", "t}"), ("\\int", "dt")]
         ]
 
         self.add(expression)
@@ -4005,7 +4005,7 @@ class ShowUncertaintyPrinciple(Scene):
         self.wait(2)
         self.add(*[
             ContinualUpdateFromFunc(graph, get_update_func(axes))
-            for graph, axes in (top_graph, top_axes), (bottom_graph, bottom_axes)
+            for graph, axes in [(top_graph, top_axes), (bottom_graph, bottom_axes)]
         ])
         for factor in factors:
             self.play(

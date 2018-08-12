@@ -858,7 +858,7 @@ class ShowMeasurementBook(TeacherStudentsScene):
         measurement.move_to(self.hold_up_spot, DOWN)
 
         words = TextMobject("Highly recommended")
-        arrow = Vector(RIGHT, buff=WHITE)
+        arrow = Vector(RIGHT, color=WHITE)
         arrow.next_to(measurement, LEFT)
         words.next_to(arrow, LEFT)
 
