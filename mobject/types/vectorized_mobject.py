@@ -147,7 +147,7 @@ class VMobject(Mobject):
 
     def match_style(self, vmobject):
         for a_name in ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]:
-            setattr(self, np.array(get_attr(vmobject, a_name)))
+            setattr(self, a_name, np.array(getattr(vmobject, a_name)))
         self.stroke_width = vmobject.stroke_width
         self.background_stroke_width = vmobject.background_stroke_width
 

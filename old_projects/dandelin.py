@@ -1,9 +1,7 @@
-
 from big_ol_pile_of_manim_imports import *
 
 from old_projects.lost_lecture import Orbiting
 from old_projects.lost_lecture import ShowWord
-
 
 
 class LogoGeneration(LogoGenerationTemplate):
@@ -53,7 +51,7 @@ class ThinkingAboutAProof(PiCreatureScene):
         cloud.rotate(90 * DEGREES)
         cloud.set_height(FRAME_HEIGHT - 0.5)
         cloud.stretch(2.8, 0)
-        cloud.next_to(bubble[0], RIGHT)
+        cloud.next_to(bubble[2], RIGHT)
         cloud.to_edge(UP, buff=0.25)
         bubble[1].shift(0.25 * UL)
 

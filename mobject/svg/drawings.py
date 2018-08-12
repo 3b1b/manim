@@ -526,7 +526,7 @@ class ThoughtBubble(Bubble):
     def __init__(self, **kwargs):
         Bubble.__init__(self, **kwargs)
         self.submobjects.sort(
-            lambda m1, m2: int((m1.get_bottom() - m2.get_bottom())[1])
+            key=lambda m: m.get_bottom()[1]
         )
 
     def make_green_screen(self):
