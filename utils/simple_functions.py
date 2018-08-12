@@ -1,5 +1,6 @@
 import numpy as np
 import operator as op
+import inspect
 from functools import reduce
 
 
@@ -15,6 +16,10 @@ def choose(n, r):
     denom = reduce(op.mul, range(1, r + 1), 1)
     numer = reduce(op.mul, range(n, n - r, -1), 1)
     return numer // denom
+
+
+def get_num_args(function):
+    return len(inspect.signature(function).parameters)
 
 # Just to have a less heavyweight name for this extremely common operation
 #

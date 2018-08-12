@@ -172,9 +172,9 @@ class Scene(Container):
         self.clear()
     ###
 
-    def continual_update(self, dt=None):
-        if dt is None:
-            dt = self.frame_duration
+    def continual_update(self, dt):
+        for mobject in self.get_mobjects():
+            mobject.update(dt)
         for continual_animation in self.continual_animations:
             continual_animation.update(dt)
 
@@ -188,7 +188,17 @@ class Scene(Container):
         self.continual_animations = [ca for ca in self.continual_animations if ca in continual_animations]
 
     def should_continually_update(self):
-        return len(self.continual_animations) > 0 or self.always_continually_update
+        if self.always_continually_update:
+            return True
+        if len(self.continual_animations) > 0:
+            return True
+        any_time_based_update = any([
+            len(m.get_time_based_updaters()) > 0
+            for m in self.get_mobjects()
+        ])
+        if any_time_based_update:
+            return True
+        return False
 
     ###
 
@@ -230,6 +240,7 @@ class Scene(Container):
         mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
             mobjects_or_continual_animations
         )
+        mobjects += self.foreground_mobjects
         self.restructure_mobjects(to_remove=mobjects)
         self.mobjects += mobjects
         self.continual_animations += continual_animations
@@ -330,15 +341,24 @@ class Scene(Container):
         return [m.copy() for m in self.mobjects]
 
     def get_moving_mobjects(self, *animations):
-        moving_mobjects = list(it.chain(
-            [
-                anim.mobject for anim in animations
-                if anim.mobject not in self.foreground_mobjects
-            ],
-            [ca.mobject for ca in self.continual_animations],
-            self.foreground_mobjects,
-        ))
-        return moving_mobjects
+        # Go through mobjects from start to end, and
+        # as soon as there's one that needs updating of
+        # some kind per frame, return the list from that
+        # point forward.
+        animation_mobjects = [anim.mobject for anim in animations]
+        ca_mobjects = [ca.mobject for ca in self.continual_animations]
+        mobjects = self.get_mobjects()
+        for i, mob in enumerate(mobjects):
+            update_possibilities = [
+                mob in animation_mobjects,
+                mob in ca_mobjects,
+                len(mob.get_updaters()) > 0,
+                mob in self.foreground_mobjects
+            ]
+            for possibility in update_possibilities:
+                if possibility:
+                    return mobjects[i:]
+        return []
 
     def get_time_progression(self, run_time):
         if self.skip_animations:
@@ -439,25 +459,30 @@ class Scene(Container):
             # This is where kwargs to play like run_time and rate_func
             # get applied to all animations
             animation.update_config(**kwargs)
+            # Anything animated that's not already in the
+            # scene gets added to the scene
+            if animation.mobject not in self.mobjects:
+                self.add(animation.mobject)
         moving_mobjects = self.get_moving_mobjects(*animations)
 
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
         self.update_frame(excluded_mobjects=moving_mobjects)
         static_image = self.get_frame()
+        total_run_time = 0
         for t in self.get_animation_time_progression(animations):
+            self.continual_update(dt=t - total_run_time)
             for animation in animations:
                 animation.update(t / animation.run_time)
-            self.continual_update()
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
-        self.add(*moving_mobjects)
-        self.mobjects_from_last_animation = moving_mobjects
+            total_run_time = t
+        self.mobjects_from_last_animation = [
+            anim.mobject for anim in animations
+        ]
         self.clean_up_animations(*animations)
         if self.skip_animations:
-            # Todo, not great that this uses a variable from
-            # a previous loop...
-            self.continual_update(t)
+            self.continual_update(total_run_time)
         else:
             self.continual_update(0)
         self.num_plays += 1
@@ -466,7 +491,6 @@ class Scene(Container):
     def clean_up_animations(self, *animations):
         for animation in animations:
             animation.clean_up(self)
-        self.add(*self.foreground_mobjects)
         return self
 
     def get_mobjects_from_last_animation(self):
@@ -476,17 +500,20 @@ class Scene(Container):
 
     def wait(self, duration=DEFAULT_WAIT_TIME):
         if self.should_continually_update():
+            total_time = 0
             for t in self.get_time_progression(duration):
-                self.continual_update()
+                self.continual_update(dt=t - total_time)
                 self.update_frame()
                 self.add_frames(self.get_frame())
+                total_time = t
         elif self.skip_animations:
             # Do nothing
             return self
         else:
             self.update_frame()
-            self.add_frames(*[self.get_frame()] *
-                            int(duration / self.frame_duration))
+            n_frames = int(duration / self.frame_duration)
+            frame = self.get_frame()
+            self.add_frames(*[frame] * n_frames)
         return self
 
     def wait_to(self, time, assert_positive=True):

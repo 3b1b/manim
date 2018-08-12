@@ -1,6 +1,4 @@
 
-
-
 import copy
 import itertools as it
 import numpy as np
@@ -22,6 +20,7 @@ from utils.paths import straight_path
 from utils.space_ops import angle_of_vector
 from utils.space_ops import complex_to_R3
 from utils.space_ops import rotation_matrix
+from utils.simple_functions import get_num_args
 from functools import reduce
 
 
@@ -46,6 +45,7 @@ class Mobject(Container):
         self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
+        self.updaters = []
         self.init_points()
         self.generate_points()
         self.init_colors()
@@ -98,6 +98,8 @@ class Mobject(Container):
             setattr(self, attr, func(getattr(self, attr)))
         return self
 
+    # Displaying
+
     def get_image(self, camera=None):
         if camera is None:
             from camera.camera import Camera
@@ -141,6 +143,42 @@ class Mobject(Container):
         else:
             self.target = self.copy()
         return self.target
+
+    # Updating
+
+    def update(self, dt):
+        for updater in self.updaters:
+            num_args = get_num_args(updater)
+            if num_args == 1:
+                updater(self)
+            elif num_args == 2:
+                updater(self, dt)
+            else:
+                raise Exception(
+                    "Mobject updater expected 1 or 2 "
+                    "arguments, %d given" % num_args
+                )
+
+    def get_time_based_updaters(self):
+        return [
+            udpater
+            for updater in self.updaters
+            if get_num_args(updater) == 2
+        ]
+
+    def get_updaters(self):
+        return self.updaters
+
+    def add_updater(self, update_function):
+        self.updaters.append(update_function)
+
+    def remove_updater(self, update_function):
+        while update_function in self.updaters:
+            self.updaters.remove(update_function)
+        return self
+
+    def clear_updaters(self):
+        self.updaters = []
 
     # Transforming operations
 
@@ -604,6 +642,7 @@ class Mobject(Container):
 
     def get_color(self):
         return self.color
+
     ##
 
     def save_state(self, use_deepcopy=False):

@@ -13,7 +13,7 @@ from utils.iterables import stretch_array_to_length
 
 class PMobject(Mobject):
     CONFIG = {
-        "stroke_width": DEFAULT_POINT_THICKNESS,
+        "stroke_width": DEFAULT_STROKE_WIDTH,
     }
 
     def init_points(self):

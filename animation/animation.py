@@ -123,6 +123,4 @@ class Animation(object):
         if surrounding_scene is not None:
             if self.is_remover():
                 surrounding_scene.remove(self.mobject)
-            else:
-                surrounding_scene.add(self.mobject)
         return self
