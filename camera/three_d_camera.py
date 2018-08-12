@@ -94,13 +94,13 @@ class ThreeDCamera(MovingCamera):
             return OUT
         return normal / length
 
-    def display_multiple_vectorized_mobjects(self, vmobjects):
+    def display_multiple_vectorized_mobjects(self, vmobjects, pixel_array):
         # camera_point = self.spherical_coords_to_point(
         #     *self.get_spherical_coords()
         # )
 
         def z_key(vmob):
-            # Assign a number to a three dimensional mobjects 
+            # Assign a number to a three dimensional mobjects
             # based on how close it is to the camera
             three_d_status = should_shade_in_3d(vmob)
             has_points = vmob.get_num_points() > 0
@@ -109,7 +109,7 @@ class ThreeDCamera(MovingCamera):
             else:
                 return 0
         MovingCamera.display_multiple_vectorized_mobjects(
-            self, sorted(vmobjects, key=z_key)
+            self, sorted(vmobjects, key=z_key), pixel_array
         )
 
     def get_spherical_coords(self, phi=None, theta=None, distance=None):
