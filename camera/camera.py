@@ -301,6 +301,7 @@ class Camera(object):
         ph = self.get_pixel_height()
         fw = self.get_frame_width()
         fh = self.get_frame_height()
+        fc = self.get_frame_center()
         surface = cairo.ImageSurface.create_for_data(
             pixel_array,
             cairo.FORMAT_ARGB32,
@@ -311,7 +312,8 @@ class Camera(object):
         ctx.set_matrix(cairo.Matrix(
             fdiv(pw, fw), 0,
             0, -fdiv(ph, fh),
-            pw / 2, ph / 2,
+            (pw / 2) + fc[0] * fdiv(pw, fw),
+            (ph / 2) + fc[1] * fdiv(ph, fh),
         ))
         self.cache_cairo_context(pixel_array, ctx)
         return ctx
