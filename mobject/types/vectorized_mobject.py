@@ -67,12 +67,9 @@ class VMobject(Mobject):
             opacity=self.background_stroke_opacity,
             family=self.propagate_style_to_family,
         )
-        self.set_sheen_direction(
-            self.sheen_direction,
-            family=self.propagate_style_to_family
-        )
         self.set_sheen(
-            self.sheen,
+            factor=self.sheen,
+            direction=self.sheen_direction,
             family=self.propagate_style_to_family
         )
         return self
@@ -111,7 +108,9 @@ class VMobject(Mobject):
         # one. 99% of the time they'll be the same.
         curr_rgbas = getattr(self, array_name)
         if len(curr_rgbas) < len(rgbas):
-            curr_rgbas = stretch_array_to_length(len(rgbas))
+            curr_rgbas = stretch_array_to_length(
+                curr_rgbas, len(rgbas)
+            )
             setattr(self, array_name, curr_rgbas)
         elif len(rgbas) < len(curr_rgbas):
             rgbas = stretch_array_to_length(len(curr_rgbas))
@@ -257,12 +256,16 @@ class VMobject(Mobject):
             self.sheen_direction = direction
         return self
 
-    def set_sheen(self, factor, family=True):
+    def set_sheen(self, factor, direction=None, family=True):
         if family:
-            for submob in self.submobject_family():
-                submob.sheen = factor
-        else:
-            self.sheen = factor
+            for submob in self.submobjects:
+                submob.set_sheen(factor, direction, family)
+        self.sheen = factor
+        if direction is not None:
+            # family set to false because recursion will
+            # already be handled above
+            self.set_sheen_direction(direction, family=False)
+        # Reset color to put sheen into effect
         self.set_stroke(self.get_stroke_color(), family=family)
         self.set_fill(self.get_fill_color(), family=family)
         return self
