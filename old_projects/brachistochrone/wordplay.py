@@ -223,7 +223,7 @@ class OneSolutionTwoInsights(Scene):
         mark.next_to(johann, RIGHT)
         name = TextMobject("Mark Levi").to_edge(UP)
 
-        self.play(*map(ShimmerIn, one_solution.split()))
+        self.play(*list(map(ShimmerIn, one_solution.split())))
         self.wait()
         for pair in zip(one_solution.split(), two_insights.split()):
             self.play(Transform(*pair, path_func = path_along_arc(np.pi)))
@@ -243,9 +243,9 @@ class OneSolutionTwoInsights(Scene):
 
 class CircleOfIdeas(Scene):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "optics", "calculus", "mechanics", "geometry", "history"
-        ])
+        ]))
         words[0].set_color(YELLOW)
         words[1].set_color(BLUE_D)
         words[2].set_color(GREY)
@@ -401,7 +401,7 @@ class BalanceCompetingFactors(Scene):
                 (2, BLUE_D)
             ]
         ]
-        real_factor1, real_factor2 = map(TextMobject, words)  
+        real_factor1, real_factor2 = list(map(TextMobject, words))  
         for word in factor1, factor2, real_factor1, real_factor2:
             word.shift(0.2*UP-word.get_bottom())
         for f1 in factor1, real_factor1:

@@ -257,7 +257,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
         ]))
         self.wait()
 
-        triplets = zip(v_equations, start_ys, end_ys)
+        triplets = list(zip(v_equations, start_ys, end_ys))
         anims = []
         for v_eq, start_y, end_y in triplets:
             anims += [

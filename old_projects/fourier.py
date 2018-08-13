@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from constants import *
-import scipy
+import scipy.integrate
 
 from big_ol_pile_of_manim_imports import *
 
@@ -108,12 +108,12 @@ class TODOInsertUnmixingSound(TODOStub):
 
 class OtherContexts(PiCreatureScene):
     def construct(self):
-        items = VGroup(*map(TextMobject, [
+        items = VGroup(*list(map(TextMobject, [
             "Extracting frequencies from sound",
             "Uncertainty principle",
             "Riemann Zeta function and primes",
             "Differential equations",
-        ]))
+        ])))
         items.arrange_submobjects(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -319,7 +319,7 @@ class AddingPureFrequencies(PiCreatureScene):
         D_label.target.next_to(D_graph.target, UP)
 
         self.play(*it.chain(
-            map(MoveToTarget, movers),
+            list(map(MoveToTarget, movers)),
             [
                 ApplyMethod(mob.shift, FRAME_Y_RADIUS*DOWN, remover = True)
                 for mob in  (randy, speaker)
@@ -352,7 +352,7 @@ class AddingPureFrequencies(PiCreatureScene):
         self.revert_to_original_skipping_status()
         self.play(GrowFromCenter(v_line))
         self.play(FadeOut(v_line))
-        self.play(*map(ShowCreation, lines))
+        self.play(*list(map(ShowCreation, lines)))
         self.wait()
         self.play(MoveToTarget(sum_lines, path_arc = np.pi/4))
         self.wait(2)
@@ -469,9 +469,9 @@ class AddingPureFrequencies(PiCreatureScene):
         thin_new_sum_graph = new_sum_graph.copy().fade()
 
         self.play(*it.chain(
-            map(ShowCreation, [F_axes, C_axes, F_graph, C_graph]),
-            map(Write, [F_label, C_label]),
-            map(FadeOut, [self.sum_graph])
+            list(map(ShowCreation, [F_axes, C_axes, F_graph, C_graph])),
+            list(map(Write, [F_label, C_label])),
+            list(map(FadeOut, [self.sum_graph]))
         ))
         self.play(ReplacementTransform(
             graphs.copy(), thin_new_sum_graph
@@ -598,7 +598,7 @@ class BreakApartSum(Scene):
             run_time = 8,
             rate_func = None,
         )
-        self.play(*map(FadeOut, [dot, v_line]))
+        self.play(*list(map(FadeOut, [dot, v_line])))
 
         self.set_variables_as_attrs(axes, graph)
 
@@ -814,7 +814,7 @@ class FourierMachineScene(Scene):
             "x_max" : 5.0,
             "x_axis_config" : {
                 "unit_size" : 1.4,
-                "numbers_to_show" : range(1, 6),
+                "numbers_to_show" : list(range(1, 6)),
             },
             "y_min" : -1.0,
             "y_max" : 1.0,
@@ -1125,7 +1125,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         self.play(
             FadeIn(words),
             LaggedStart(FadeIn, braces),
-            *map(ShowCreation, v_lines)
+            *list(map(ShowCreation, v_lines))
         )
         self.wait()
         self.play(
@@ -1296,7 +1296,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
     def get_bps_label(self, freq = 3):
         braces = VGroup(*self.get_peak_braces()[freq:2*freq])
         words = TextMobject("%d beats/second"%freq)
-        words.scale_to_fit_width(0.9*braces.get_width())
+        words.set_width(0.9*braces.get_width())
         words.move_to(braces, DOWN)
         return words
 
@@ -1633,16 +1633,13 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
-        rate_func = kwargs.pop(
-            "rate_func", bezier([0, 0, 1, 1])
-        )
+        rate_func = kwargs.pop("rate_func", None)
+        if rate_func is None:
+            rate_func = bezier([0, 0, 1, 1])
         added_anims = kwargs.get("added_anims", [])
         anims = [self.get_frequency_change_animation(self.graph, new_freq)]
         if hasattr(self, "winding_freq_label"):
-            freq_label = filter(
-                lambda sm : isinstance(sm, DecimalNumber),
-                self.winding_freq_label
-            )[0]
+            freq_label = [sm for sm in self.winding_freq_label if isinstance(sm, DecimalNumber)][0]
             anims.append(ChangeDecimalToValue(freq_label, new_freq))
         if hasattr(self, "v_lines_indicating_periods"):
             anims.append(self.get_period_v_lines_update_anim())
@@ -1731,7 +1728,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
         self.play(
             Write(bps_label),
             LaggedStart(FadeIn, braces),
-            *map(ShowCreation, v_lines),
+            *list(map(ShowCreation, v_lines)),
             run_time = 1
         )
         self.wait()
@@ -1791,7 +1788,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
             Write(com_words)
         )
         self.wait()
-        self.play(*map(FadeOut, [arrow, com_words]))
+        self.play(*list(map(FadeOut, [arrow, com_words])))
         self.change_frequency(0.0)
         self.wait()
 
@@ -2473,7 +2470,7 @@ class ApplyFourierToFourier(DrawFrequencyPlot):
             "y_max" : 1.5,
             "x_max" : 5,
             "x_axis_config" : {
-                "numbers_to_show" : range(1, 5),
+                "numbers_to_show" : list(range(1, 5)),
                 "unit_size" : 2.5,
             },
         },
@@ -2918,11 +2915,11 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
 
         ambient_ghost_dot_movement.rate = 0
         self.remove(*updates)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             update.mobject
             for update in updates
             if update.mobject is not vector
-        ]))
+        ])))
         self.play(ghost_dot.move_to, ORIGIN)
 
         exp_expression[1].add(minus, f)
@@ -2981,9 +2978,9 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         self.play(Blink(morty))
         self.play(morty.change, "hooray", rect)
         self.wait(2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             morty, rect, graph_y_vector, vector
-        ]))
+        ])))
 
         self.integrand = integrand
 
@@ -3371,10 +3368,10 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
         to_squish.generate_target()
         squish_factor = 0.75
         to_squish.target.stretch(squish_factor, 0, about_edge = LEFT)
-        pairs = zip(
+        pairs = list(zip(
             to_squish.family_members_with_points(), 
             to_squish.target.family_members_with_points()
-        )
+        ))
         to_unsquish = list(axes.x_axis.numbers) + list(axes.labels)
         for sm, tsm in pairs:
             if sm in to_unsquish:
@@ -3573,7 +3570,7 @@ class SummarizeTheFullTransform(DrawFrequencyPlot):
             "x_max" : 5,
             "x_axis_config" : {
                 "unit_size" : 1,
-                "numbers_to_show" : range(1, 5),
+                "numbers_to_show" : list(range(1, 5)),
             },
             "y_max" : 2,
             "y_min" : -2,
@@ -3785,7 +3782,7 @@ class SummarizeFormula(Scene):
                 expression.get_part_by_tex(p1),
                 expression.get_part_by_tex(p2),
             ))
-            for p1, p2 in ("e", "t}"), ("g({}", "t}"), ("\\int", "dt")
+            for p1, p2 in [("e", "t}"), ("g({}", "t}"), ("\\int", "dt")]
         ]
 
         self.add(expression)
@@ -3910,10 +3907,10 @@ class BoundsAtInfinity(SummarizeFormula):
             },
             default_num_graph_points = 1000,
         )
-        axes.x_axis.add_numbers(*filter(
+        axes.x_axis.add_numbers(*list(filter(
             lambda x : x != 0,
-            range(-8, 10, 2),
-        ))
+            list(range(-8, 10, 2)),
+        )))
         axes.shift(DOWN)
         self.add(axes)
 
@@ -4008,7 +4005,7 @@ class ShowUncertaintyPrinciple(Scene):
         self.wait(2)
         self.add(*[
             ContinualUpdateFromFunc(graph, get_update_func(axes))
-            for graph, axes in (top_graph, top_axes), (bottom_graph, bottom_axes)
+            for graph, axes in [(top_graph, top_axes), (bottom_graph, bottom_axes)]
         ])
         for factor in factors:
             self.play(
@@ -4257,7 +4254,7 @@ class Thumbnail(Scene):
                 num_graph_points = 200,
             )
             pol_graph.match_color(graph)
-            pol_graph.scale_to_fit_height(2)
+            pol_graph.set_height(2)
             pol_graphs.add(pol_graph)
         pol_graphs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         pol_graphs.set_color_by_gradient(BLUE_C, YELLOW)
@@ -4267,7 +4264,7 @@ class Thumbnail(Scene):
 
         self.clear()
         title.center().to_edge(UP)
-        pol_graphs.scale_to_fit_width(FRAME_WIDTH - 1)
+        pol_graphs.set_width(FRAME_WIDTH - 1)
         pol_graphs.center()
         title.move_to(pol_graphs)
         title.shift(SMALL_BUFF*LEFT)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 
 
@@ -25,7 +25,7 @@ class SimpleVelocityGraph(GraphScene):
         "y_tick_frequency" : 100,
         "y_min" : 0,
         "y_max" : 1000,
-        "y_labeled_nums" : range(0, 1000, 200),
+        "y_labeled_nums" : list(range(0, 1000, 200)),
         "x_axis_width" : 12,
         "graph_origin" : 2.5*DOWN + 5*LEFT,
         "trailing_average_length" : 20,
@@ -48,7 +48,7 @@ class SimpleVelocityGraph(GraphScene):
             self.draw_lines(color)
 
     def save_all_images(self):
-        indices = range(1, 20)
+        indices = list(range(1, 20))
         for i1, i2 in it.combinations(indices, 2):
             to_remove = VGroup()
             for index in i1, i2:
@@ -82,10 +82,7 @@ class SimpleVelocityGraph(GraphScene):
         for line in file:
             line = line.replace("  ", ",")
             line = line.replace("\n", "")
-            entries = filter(
-                lambda s : s is not "",
-                line.split(",")
-            )
+            entries = [s for s in line.split(",") if s is not ""]
             if len(entries) == 0:
                 continue
 
@@ -597,8 +594,8 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
             sg_copy = sg.deepcopy()
             sg_copy.scale(0.5)
             sg_copy.shift(g.get_center())
-            mover = VGroup(*it.chain(*zip(g.dots, g.lines)))
-            target = VGroup(*it.chain(*zip(sg_copy.dots, sg_copy.lines)))
+            mover = VGroup(*it.chain(*list(zip(g.dots, g.lines))))
+            target = VGroup(*it.chain(*list(zip(sg_copy.dots, sg_copy.lines))))
             for m, t in zip(mover, target):
                 m.target = t
             self.play(LaggedStart(
@@ -773,7 +770,7 @@ class ShowAllSteadyStateVelocities(SimpleVelocityGraph):
         "x_max" : 40,
         "x_axis_width" : 9,
         "x_tick_frequency" : 5,
-        "x_labeled_nums" : range(0, 50, 10),
+        "x_labeled_nums" : list(range(0, 50, 10)),
         "y_min" : 0,
         "y_max" : 400,
         "y_labeled_nums" : [],

@@ -1,10 +1,9 @@
 # !/usr/bin/env python2
 
-from __future__ import absolute_import
-from __future__ import print_function
 import sys
 import argparse
-import imp
+# import imp
+import importlib
 import inspect
 import itertools as it
 import os
@@ -30,6 +29,8 @@ HELP_MESSAGE = """
    -q don't print progress
    -f when writing to a movie file, export the frames in png sequence
    -t use transperency when exporting images
+   -n specify the number of the animation to start from
+   -r specify a resolution
 """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script
@@ -70,6 +71,7 @@ def get_configuration():
             parser.add_argument(short_arg, long_arg, action="store_true")
         parser.add_argument("-o", "--output_name")
         parser.add_argument("-n", "--start_at_animation_number")
+        parser.add_argument("-r", "--resolution")
         args = parser.parse_args()
         if args.output_name is not None:
             output_name_root, output_name_ext = os.path.splitext(
@@ -106,16 +108,39 @@ def get_configuration():
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
     }
+
+    # Camera configuration
+    config["camera_config"] = {}
     if args.low_quality:
-        config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
+        config["camera_config"].update(LOW_QUALITY_CAMERA_CONFIG)
         config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
     elif args.medium_quality:
-        config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
+        config["camera_config"].update(MEDIUM_QUALITY_CAMERA_CONFIG)
         config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
     else:
-        config["camera_config"] = PRODUCTION_QUALITY_CAMERA_CONFIG
+        config["camera_config"].update(PRODUCTION_QUALITY_CAMERA_CONFIG)
         config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
 
+    # If the resolution was passed in via -r
+    if args.resolution:
+        if "," in args.resolution:
+            height_str, width_str = args.resolution.split(",")
+            height = int(height_str)
+            width = int(width_str)
+        else:
+            height = int(args.resolution)
+            width = int(16 * height / 9)
+        config["camera_config"].update({
+            "pixel_height": height,
+            "pixel_width": width,
+        })
+
+    # If rendering a transparent image/move, make sure the
+    # scene has a background opacity of 0
+    if args.transparent:
+        config["camera_config"]["background_opacity"] = 0
+
+    # Arguments related to skipping
     stan = config["start_at_animation_number"]
     if stan is not None:
         if "," in stan:
@@ -186,7 +211,7 @@ def prompt_user_for_choice(name_to_obj):
         print("%d: %s" % (count, name))
         num_to_name[count] = name
     try:
-        user_input = raw_input(CHOOSE_NUMBER_MESSAGE)
+        user_input = input(CHOOSE_NUMBER_MESSAGE)
         return [
             name_to_obj[num_to_name[int(num_str)]]
             for num_str in user_input.split(",")
@@ -201,41 +226,20 @@ def get_scene_classes(scene_names_to_classes, config):
         print(NO_SCENE_MESSAGE)
         return []
     if len(scene_names_to_classes) == 1:
-        return scene_names_to_classes.values()
+        return list(scene_names_to_classes.values())
     if config["scene_name"] in scene_names_to_classes:
         return [scene_names_to_classes[config["scene_name"]]]
     if config["scene_name"] != "":
         print(SCENE_NOT_FOUND_MESSAGE)
         return []
     if config["write_all"]:
-        return scene_names_to_classes.values()
+        return list(scene_names_to_classes.values())
     return prompt_user_for_choice(scene_names_to_classes)
 
 
-def get_module_windows(file_name):
-    module_name = file_name.replace(".py", "")
-    last_module = imp.load_module(
-        "__init__", *imp.find_module("__init__", ['.']))
-    for part in module_name.split(os.sep):
-        load_args = imp.find_module(
-            part, [os.path.dirname(last_module.__file__)])
-        last_module = imp.load_module(part, *load_args)
-    return last_module
-
-
-def get_module_posix(file_name):
-    module_name = file_name.replace(".py", "")
-    last_module = imp.load_module(".", *imp.find_module("."))
-    for part in module_name.split(os.sep):
-        load_args = imp.find_module(part, last_module.__path__)
-        last_module = imp.load_module(part, *load_args)
-    return last_module
-
-
 def get_module(file_name):
-    if os.name == 'nt':
-        return get_module_windows(file_name)
-    return get_module_posix(file_name)
+    module_name = file_name.replace(".py", "").replace(os.sep, ".")
+    return importlib.import_module(module_name)
 
 
 def main():

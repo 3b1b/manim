@@ -97,8 +97,23 @@ class PiCreature(SVGMobject):
         self.mouth.set_fill(BLACK, opacity=1)
         self.body.set_fill(self.color, opacity=1)
         self.pupils.set_fill(BLACK, opacity=1)
+        # self.pupils.set_stroke(DARK_GREY, width=1)
+        self.add_pupil_light_spot(self.pupils)
         self.eyes.set_fill(WHITE, opacity=1)
         return self
+
+    def add_pupil_light_spot(self, pupils):
+        # Purely an artifact of how the SVGs were drawn.
+        # In a perfect world, this wouldn't be needed
+        for pupil in pupils:
+            index = 16
+            sub_points = pupil.points[:index]
+            pupil.points = pupil.points[index + 2:]
+            circle = VMobject()
+            circle.points = sub_points
+            circle.set_stroke(width=0)
+            circle.set_fill(WHITE, 1)
+            pupil.add(circle)
 
     def copy(self):
         copy_mobject = SVGMobject.copy(self)
@@ -135,19 +150,15 @@ class PiCreature(SVGMobject):
         direction /= norm
         self.purposeful_looking_direction = direction
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
-            pupil_radius = pupil.get_width() / 2.
-            eye_radius = eye.get_width() / 2.
-            pupil.move_to(eye)
-            if direction[1] < 0:
-                pupil.shift(pupil_radius * DOWN / 3)
-            pupil.shift(direction * (eye_radius - pupil_radius))
-            bottom_diff = eye.get_bottom()[1] - pupil.get_bottom()[1]
-            if bottom_diff > 0:
-                pupil.shift(bottom_diff * UP)
-            # TODO, how to handle looking up...
-            # top_diff = eye.get_top()[1]-pupil.get_top()[1]
-            # if top_diff < 0:
-            #     pupil.shift(top_diff*UP)
+            c = eye.get_center()
+            right = eye.get_right() - c
+            up = eye.get_top() - c
+            vect = direction[0] * right + direction[1] * up
+            v_norm = np.linalg.norm(vect)
+            p_radius = 0.5 * pupil.get_width()
+            vect *= (v_norm - 0.75 * p_radius) / v_norm
+            pupil.move_to(c + vect)
+        self.pupils[1].align_to(self.pupils[0], DOWN)
         return self
 
     def look_at(self, point_or_mobject):

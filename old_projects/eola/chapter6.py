@@ -25,12 +25,12 @@ class ListTerms(Scene):
         title.set_color(YELLOW)
         title.to_edge(UP)
         randy = Randolph().to_corner()
-        words = VMobject(*map(TextMobject, [
+        words = VMobject(*list(map(TextMobject, [
             "Inverse matrices", 
             "Column space", 
             "Rank",
             "Null space",
-        ]))
+        ])))
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
         words.next_to(title, DOWN, aligned_edge = LEFT)
         words.shift(RIGHT)
@@ -243,17 +243,17 @@ class SystemOfEquations(Scene):
             [1, 3, 0]
         ])
         mob_matrix = matrix.get_mob_matrix()
-        rhs = map(TexMobject, map(str, [-3, 0, 2]))
-        variables = map(TexMobject, list("xyz"))
+        rhs = list(map(TexMobject, list(map(str, [-3, 0, 2]))))
+        variables = list(map(TexMobject, list("xyz")))
         for v, color in zip(variables, [X_COLOR, Y_COLOR, Z_COLOR]):
             v.set_color(color)
         equations = VMobject()
         for row in mob_matrix:
-            equation = VMobject(*it.chain(*zip(
+            equation = VMobject(*it.chain(*list(zip(
                 row, 
                 [v.copy() for v in variables],
-                map(TexMobject, list("++="))
-            )))
+                list(map(TexMobject, list("++=")))
+            ))))
             equation.arrange_submobjects(
                 RIGHT, buff = 0.1, 
                 aligned_edge = DOWN
@@ -342,7 +342,7 @@ class SystemOfEquations(Scene):
         for mob in sine, product:
             self.play(Transform(squared, mob))
             draw_circle_slash(mob)
-        self.play(*map(FadeOut, [words, arrow, squared]))
+        self.play(*list(map(FadeOut, [words, arrow, squared])))
         self.wait()
 
 
@@ -393,13 +393,13 @@ class SystemOfEquations(Scene):
                 FadeIn(mob.words)
             )
             self.wait()
-            self.play(*map(FadeOut, [mob.square, mob.words]))
+            self.play(*list(map(FadeOut, [mob.square, mob.words])))
         self.play(
             ShowCreation(zero_circles),
             Write(zero_circles.words, run_time = 1)
         )
         self.wait()
-        self.play(*map(FadeOut, [zero_circles, zero_circles.words]))
+        self.play(*list(map(FadeOut, [zero_circles, zero_circles.words])))
         self.wait()
         title = TextMobject("``Linear system of equations''")
         title.scale(1.5)
@@ -491,7 +491,7 @@ class SystemOfEquations(Scene):
                 FadeIn(mob.words)
             )
             self.wait()
-            self.play(*map(FadeOut, [mob.brace, mob.words]))
+            self.play(*list(map(FadeOut, [mob.brace, mob.words])))
         self.wait()
         for mob in parts:
             self.play(
@@ -678,7 +678,7 @@ class ShowBijectivity(LinearTransformationScene):
             "submobject_mode" : "lagged_start",
             "run_time" : 2
         }
-        anims = map(Animation, self.foreground_mobjects)
+        anims = list(map(Animation, self.foreground_mobjects))
         self.play(ShowCreation(vectors, **kwargs), *anims)
         self.play(Transform(vectors, dots, **kwargs), *anims)
         self.wait()
@@ -812,7 +812,7 @@ class DescribeInverse(LinearTransformationScene):
             m.add(brace, label_mob)
             text.add(m)
             if text.get_width() > FRAME_WIDTH-1:
-                text.scale_to_fit_width(FRAME_WIDTH-1)
+                text.set_width(FRAME_WIDTH-1)
             text.center().to_corner(UP+RIGHT)
         matrix.set_color(PINK)
         inv_matrix.set_color(YELLOW)
@@ -1092,7 +1092,7 @@ class InvertNonInvertable(LinearTransformationScene):
         self.add_foreground_mobject(no_func)
         self.play(
             grid.restore,
-            *map(Animation, self.foreground_mobjects),
+            *list(map(Animation, self.foreground_mobjects)),
             run_time = 3
         )
         self.wait()
@@ -1122,7 +1122,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
             *[
                 Transform(output_vector.copy(), input_vector)
                 for input_vector in input_vectors.split()
-            ] + map(Animation, self.foreground_mobjects),
+            ] + list(map(Animation, self.foreground_mobjects)),
             run_time = 3
         )
         multiple_outputs = TextMobject(
@@ -1204,7 +1204,7 @@ class DefineRank(Scene):
         self.play(Write(rank))
         self.play(
             ShowCreation(arrow),
-            *map(Write, dims)
+            *list(map(Write, dims))
         )
         self.wait()
 
@@ -1364,7 +1364,7 @@ class NameColumnSpace(Scene):
         matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
         matrix.to_corner(UP+LEFT)
         cols = list(matrix.copy().get_mob_matrix().T)
-        col_arrays = map(Matrix, cols)
+        col_arrays = list(map(Matrix, cols))
 
         span_text = TexMobject(
             "\\text{Span}", 
@@ -1379,7 +1379,7 @@ class NameColumnSpace(Scene):
         for i in 1, -1:
             span_text[i].stretch(1.5, 1)
             span_text[i].do_in_place(
-                span_text[i].scale_to_fit_height, 
+                span_text[i].set_height, 
                 span_text.get_height()
             )
         for col_array, index in zip(col_arrays, [2, 4, 6]):
@@ -1406,7 +1406,7 @@ class NameColumnSpace(Scene):
         ])
         self.play(
             Write(span_text),
-            *map(Animation, self.get_mobjects_from_last_animation())
+            *list(map(Animation, self.get_mobjects_from_last_animation()))
         )
         self.play(
             ShowCreation(arrow),
@@ -1496,7 +1496,7 @@ class NameColumnSpace(Scene):
 
     def replace_number_matrix(self, matrix, new_numbers):
         starters = matrix.flatten()
-        targets = map(TexMobject, map(str, np.array(new_numbers).flatten()))
+        targets = list(map(TexMobject, list(map(str, np.array(new_numbers).flatten()))))
         for start, target in zip(starters, targets):
             target.move_to(start)
             target.set_color(start.get_color())
@@ -1674,7 +1674,7 @@ class NameNullSpace(LinearTransformationScene):
         self.play(
             vectors.restore, 
             self.plane.restore, 
-            *map(Animation, self.foreground_mobjects),
+            *list(map(Animation, self.foreground_mobjects)),
             run_time = 2
         )
         self.play(Transform(
@@ -2002,10 +2002,10 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Nonsquare matrices
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

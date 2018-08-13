@@ -1,15 +1,17 @@
-from __future__ import print_function
+
 import itertools as it
 import numpy as np
 import operator as op
+import copy
 
-import aggdraw
+# import aggdraw
 import copy
 import time
 
 from PIL import Image
 from colour import Color
 from scipy.spatial.distance import pdist
+import cairo
 
 from constants import *
 from mobject.types.image_mobject import AbstractImageMobject
@@ -39,22 +41,24 @@ class Camera(object):
         "frame_width": FRAME_WIDTH,
         "frame_center": ORIGIN,
         "background_color": BLACK,
-        "background_opacity": 0,
+        "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
         "max_allowable_norm": FRAME_WIDTH,
         "image_mode": "RGBA",
-        "n_rgb_coords": 4,
+        "n_channels": 4,
         "pixel_array_dtype": 'uint8',
         "use_z_coordinate_for_display_order": False,
         # z_buff_func is only used if the flag above is set to True.
         # round z coordinate to nearest hundredth when comparring
         "z_buff_func": lambda m: np.round(m.get_center()[2], 2),
+        "cairo_line_width_multiple": 0.01,
     }
 
     def __init__(self, background=None, **kwargs):
         digest_config(self, kwargs, locals())
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
+        self.pixel_array_to_cairo_context = {}
         self.init_background()
         self.resize_frame_shape()
         self.reset()
@@ -131,14 +135,16 @@ class Camera(object):
                 self.background_color, self.background_opacity
             )
             self.background = np.zeros(
-                (height, width, self.n_rgb_coords),
+                (height, width, self.n_channels),
                 dtype=self.pixel_array_dtype
             )
             self.background[:, :] = background_rgba
 
-    def get_image(self):
+    def get_image(self, pixel_array=None):
+        if pixel_array is None:
+            pixel_array = self.pixel_array
         return Image.fromarray(
-            self.pixel_array,
+            pixel_array,
             mode=self.image_mode
         )
 
@@ -168,6 +174,7 @@ class Camera(object):
         self.background = self.convert_pixel_array(
             pixel_array, convert_from_floats)
 
+    # TODO, this should live in utils, not as a method of Camera
     def make_background_from_func(self, coords_to_colors_func):
         """
         Sets background by using coords_to_colors_func to determine each pixel's color. Each input
@@ -274,20 +281,42 @@ class Camera(object):
             # check what the type is, and call the appropriate function
             for mobject_type, func in type_func_pairs:
                 if batch_type == mobject_type:
-                    func(batch)
+                    func(batch, self.pixel_array)
 
     # Methods associated with svg rendering
 
-    def get_aggdraw_canvas(self):
-        if not hasattr(self, "canvas") or not self.canvas:
-            self.reset_aggdraw_canvas()
-        return self.canvas
+    def get_cached_cairo_context(self, pixel_array):
+        return self.pixel_array_to_cairo_context.get(
+            id(pixel_array), None
+        )
 
-    def reset_aggdraw_canvas(self):
-        image = Image.fromarray(self.pixel_array, mode=self.image_mode)
-        self.canvas = aggdraw.Draw(image)
+    def cache_cairo_context(self, pixel_array, ctx):
+        self.pixel_array_to_cairo_context[id(pixel_array)] = ctx
 
-    def display_multiple_vectorized_mobjects(self, vmobjects):
+    def get_cairo_context(self, pixel_array):
+        cached_ctx = self.get_cached_cairo_context(pixel_array)
+        if cached_ctx:
+            return cached_ctx
+        pw = self.get_pixel_width()
+        ph = self.get_pixel_height()
+        fw = self.get_frame_width()
+        fh = self.get_frame_height()
+        surface = cairo.ImageSurface.create_for_data(
+            pixel_array,
+            cairo.FORMAT_ARGB32,
+            pw, ph
+        )
+        ctx = cairo.Context(surface)
+        ctx.scale(pw, ph)
+        ctx.set_matrix(cairo.Matrix(
+            fdiv(pw, fw), 0,
+            0, -fdiv(ph, fh),
+            pw / 2, ph / 2,
+        ))
+        self.cache_cairo_context(pixel_array, ctx)
+        return ctx
+
+    def display_multiple_vectorized_mobjects(self, vmobjects, pixel_array):
         if len(vmobjects) == 0:
             return
         batch_file_pairs = batch_by_property(
@@ -296,111 +325,120 @@ class Camera(object):
         )
         for batch, file_name in batch_file_pairs:
             if file_name:
-                self.display_multiple_background_colored_vmobject(batch)
+                self.display_multiple_background_colored_vmobject(batch, pixel_array)
             else:
-                self.display_multiple_non_background_colored_vmobjects(batch)
+                self.display_multiple_non_background_colored_vmobjects(batch, pixel_array)
 
-    def display_multiple_non_background_colored_vmobjects(self, vmobjects):
-        self.reset_aggdraw_canvas()
-        canvas = self.get_aggdraw_canvas()
+    def display_multiple_non_background_colored_vmobjects(self, vmobjects, pixel_array):
+        ctx = self.get_cairo_context(pixel_array)
         for vmobject in vmobjects:
-            self.display_vectorized(vmobject, canvas)
-        canvas.flush()
+            self.display_vectorized(vmobject, ctx)
 
-    def display_vectorized(self, vmobject, canvas=None):
+    def display_vectorized(self, vmobject, ctx):
         if vmobject.is_subpath:
             # Subpath vectorized mobjects are taken care
             # of by their parent
             return
-        canvas = canvas or self.get_aggdraw_canvas()
-        pen, fill = self.get_pen_and_fill(vmobject)
-        pathstring = self.get_pathstring(vmobject)
-        symbol = aggdraw.Symbol(pathstring)
-        canvas.symbol((0, 0), symbol, pen, fill)
+        self.set_cairo_context_path(ctx, vmobject)
+        self.apply_stroke(ctx, vmobject, background=True)
+        self.apply_fill(ctx, vmobject)
+        self.apply_stroke(ctx, vmobject)
+        return self
 
-    def get_pen_and_fill(self, vmobject):
-        stroke_width = max(vmobject.get_stroke_width(), 0)
-        if stroke_width == 0:
-            pen = None
+    def set_cairo_context_path(self, ctx, vmobject):
+        ctx.new_path()
+        for vmob in it.chain([vmobject], vmobject.get_subpath_mobjects()):
+            points = self.transform_points_pre_display(vmob.points)
+            ctx.new_sub_path()
+            ctx.move_to(*points[0][:2])
+            for triplet in zip(points[1::3], points[2::3], points[3::3]):
+                ctx.curve_to(*it.chain(*[
+                    point[:2] for point in triplet
+                ]))
+            if vmob.is_closed():
+                ctx.close_path()
+        return self
+
+    def set_cairo_context_color(self, ctx, rgbas, vmobject):
+        if len(rgbas) == 1:
+            # Use reversed rgb because cairo surface is
+            # encodes it in reverse order
+            ctx.set_source_rgba(
+                *rgbas[0][2::-1], rgbas[0][3]
+            )
         else:
-            stroke_rgb = self.get_stroke_rgb(vmobject)
-            stroke_hex = rgb_to_hex(stroke_rgb)
-            pen = aggdraw.Pen(stroke_hex, stroke_width)
+            points = vmobject.get_gradient_start_and_end_points()
+            pat = cairo.LinearGradient(*it.chain(*[
+                point[:2] for point in points
+            ]))
+            offsets = np.linspace(1, 0, len(rgbas))
+            for rgba, offset in zip(rgbas, offsets):
+                pat.add_color_stop_rgba(
+                    offset, *rgba[2::-1], rgba[3]
+                )
+            ctx.set_source(pat)
+        return self
 
-        fill_opacity = int(self.rgb_max_val * vmobject.get_fill_opacity())
-        if fill_opacity == 0:
-            fill = None
-        else:
-            fill_rgb = self.get_fill_rgb(vmobject)
-            fill_hex = rgb_to_hex(fill_rgb)
-            fill = aggdraw.Brush(fill_hex, fill_opacity)
+    def apply_fill(self, ctx, vmobject):
+        self.set_cairo_context_color(
+            ctx, self.get_fill_rgbas(vmobject), vmobject
+        )
+        ctx.fill_preserve()
+        return self
 
-        return (pen, fill)
+    def apply_stroke(self, ctx, vmobject, background=False):
+        width = vmobject.get_stroke_width(background)
+        if width == 0:
+            return self
+        self.set_cairo_context_color(
+            ctx,
+            self.get_stroke_rgbas(vmobject, background=background),
+            vmobject
+        )
+        ctx.set_line_width(
+            width * self.cairo_line_width_multiple
+        )
+        ctx.stroke_preserve()
+        return self
 
-    def color_to_hex_l(self, color):
-        try:
-            return color.get_hex_l()
-        except:
-            return Color(BLACK).get_hex_l()
+    def get_stroke_rgbas(self, vmobject, background=False):
+        return vmobject.get_stroke_rgbas(background)
 
-    def get_stroke_rgb(self, vmobject):
-        return vmobject.get_stroke_rgb()
-
-    def get_fill_rgb(self, vmobject):
-        return vmobject.get_fill_rgb()
-
-    def get_pathstring(self, vmobject):
-        result = ""
-        for mob in [vmobject] + vmobject.get_subpath_mobjects():
-            points = mob.points
-            # points = self.adjust_out_of_range_points(points)
-            if len(points) == 0:
-                continue
-            coords = self.points_to_pixel_coords(points)
-            coord_strings = coords.flatten().astype(str)
-            # Start new path string with M
-            coord_strings[0] = "M" + coord_strings[0]
-            # The C at the start of every 6th number communicates
-            # that the following 6 define a cubic Bezier
-            coord_strings[2::6] = map(
-                lambda s: "C" + str(s), coord_strings[2::6])
-            # Possibly finish with "Z"
-            if vmobject.mark_paths_closed:
-                coord_strings[-1] = coord_strings[-1] + " Z"
-            result += " ".join(coord_strings)
-        return result
+    def get_fill_rgbas(self, vmobject):
+        return vmobject.get_fill_rgbas()
 
     def get_background_colored_vmobject_displayer(self):
         # Quite wordy to type out a bunch
-        long_name = "background_colored_vmobject_displayer"
-        if not hasattr(self, long_name):
-            setattr(self, long_name, BackgroundColoredVMobjectDisplayer(self))
-        return getattr(self, long_name)
+        bcvd = "background_colored_vmobject_displayer"
+        if not hasattr(self, bcvd):
+            setattr(self, bcvd, BackgroundColoredVMobjectDisplayer(self))
+        return getattr(self, bcvd)
 
-    def display_multiple_background_colored_vmobject(self, cvmobjects):
+    def display_multiple_background_colored_vmobject(self, cvmobjects, pixel_array):
         displayer = self.get_background_colored_vmobject_displayer()
         cvmobject_pixel_array = displayer.display(*cvmobjects)
-        self.overlay_rgba_array(cvmobject_pixel_array)
+        self.overlay_rgba_array(pixel_array, cvmobject_pixel_array)
         return self
 
     # Methods for other rendering
 
-    def display_multiple_point_cloud_mobjects(self, pmobjects):
+    def display_multiple_point_cloud_mobjects(self, pmobjects, pixel_array):
         for pmobject in pmobjects:
             self.display_point_cloud(
                 pmobject.points,
                 pmobject.rgbas,
-                self.adjusted_thickness(pmobject.stroke_width)
+                self.adjusted_thickness(pmobject.stroke_width),
+                pixel_array,
             )
 
-    def display_point_cloud(self, points, rgbas, thickness):
+    def display_point_cloud(self, points, rgbas, thickness, pixel_array):
         if len(points) == 0:
             return
         pixel_coords = self.points_to_pixel_coords(points)
         pixel_coords = self.thickened_coordinates(
             pixel_coords, thickness
         )
-        rgba_len = self.pixel_array.shape[2]
+        rgba_len = pixel_array.shape[2]
 
         rgbas = (self.rgb_max_val * rgbas).astype(self.pixel_array_dtype)
         target_len = len(pixel_coords)
@@ -419,15 +457,15 @@ class Camera(object):
         indices = np.dot(pixel_coords, flattener)[:, 0]
         indices = indices.astype('int')
 
-        new_pa = self.pixel_array.reshape((ph * pw, rgba_len))
+        new_pa = pixel_array.reshape((ph * pw, rgba_len))
         new_pa[indices] = rgbas
-        self.pixel_array = new_pa.reshape((ph, pw, rgba_len))
+        pixel_array[:, :] = new_pa
 
-    def display_multiple_image_mobjects(self, image_mobjects):
+    def display_multiple_image_mobjects(self, image_mobjects, pixel_array):
         for image_mobject in image_mobjects:
-            self.display_image_mobject(image_mobject)
+            self.display_image_mobject(image_mobject, pixel_array)
 
-    def display_image_mobject(self, image_mobject):
+    def display_image_mobject(self, image_mobject, pixel_array):
         corner_coords = self.points_to_pixel_coords(image_mobject.points)
         ul_coords, ur_coords, dl_coords = corner_coords
         right_vect = ur_coords - ul_coords
@@ -462,6 +500,7 @@ class Camera(object):
             mode="RGBA"
         )
         new_ul_coords = center_coords - np.array(sub_image.size) / 2
+        new_ul_coords = new_ul_coords.astype(int)
         full_image.paste(
             sub_image,
             box=(
@@ -471,16 +510,22 @@ class Camera(object):
                 new_ul_coords[1] + sub_image.size[1],
             )
         )
-
         # Paint on top of existing pixel array
-        self.overlay_PIL_image(full_image)
+        self.overlay_PIL_image(pixel_array, full_image)
 
-    def overlay_rgba_array(self, arr):
-        self.overlay_PIL_image(Image.fromarray(arr, mode="RGBA"))
+    def overlay_rgba_array(self, pixel_array, new_array):
+        self.overlay_PIL_image(
+            pixel_array,
+            self.get_image(new_array),
+        )
 
-    def overlay_PIL_image(self, image):
-        self.pixel_array = np.array(
-            Image.alpha_composite(self.get_image(), image)
+    def overlay_PIL_image(self, pixel_array, image):
+        pixel_array[:, :] = np.array(
+            Image.alpha_composite(
+                self.get_image(pixel_array),
+                image
+            ),
+            dtype='uint8'
         )
 
     def adjust_out_of_range_points(self, points):
@@ -498,7 +543,13 @@ class Camera(object):
         points[violator_indices] = rescaled
         return points
 
+    def transform_points_pre_display(self, points):
+        # Subclasses (like ThreeDCamera) may want to
+        # adjust points before they're shown
+        return points
+
     def points_to_pixel_coords(self, points):
+        points = self.transform_points_pre_display(points)
         shifted_points = points - self.get_frame_center()
 
         result = np.zeros((len(points), 2))
@@ -539,7 +590,7 @@ class Camera(object):
         return 1 + (thickness - 1) / factor
 
     def get_thickening_nudges(self, thickness):
-        _range = range(-thickness / 2 + 1, thickness / 2 + 1)
+        _range = list(range(-thickness / 2 + 1, thickness / 2 + 1))
         return np.array(list(it.product(_range, _range)))
 
     def thickened_coordinates(self, pixel_coords, thickness):
@@ -551,6 +602,7 @@ class Camera(object):
         size = pixel_coords.size
         return pixel_coords.reshape((size / 2, 2))
 
+    # TODO, reimplement using cairo matrix
     def get_coords_of_all_pixels(self):
         # These are in x, y order, to help me keep things straight
         full_space_dims = np.array([
@@ -590,18 +642,11 @@ class BackgroundColoredVMobjectDisplayer(object):
     def __init__(self, camera):
         self.camera = camera
         self.file_name_to_pixel_array_map = {}
-        self.init_canvas()
+        self.pixel_array = np.array(camera.get_pixel_array())
+        self.reset_pixel_array()
 
-    def init_canvas(self):
-        self.pixel_array = np.zeros(
-            self.camera.pixel_array.shape,
-            dtype=self.camera.pixel_array_dtype,
-        )
-        self.reset_canvas()
-
-    def reset_canvas(self):
-        image = Image.fromarray(self.pixel_array, mode=self.camera.image_mode)
-        self.canvas = aggdraw.Draw(image)
+    def reset_pixel_array(self):
+        self.pixel_array[:, :] = 0
 
     def resize_background_array(
         self, background_array,
@@ -623,15 +668,16 @@ class BackgroundColoredVMobjectDisplayer(object):
             return self.file_name_to_pixel_array_map[file_name]
         full_path = get_full_raster_image_path(file_name)
         image = Image.open(full_path)
-        array = np.array(image)
+        back_array = np.array(image)
 
-        camera = self.camera
-        if not np.all(camera.pixel_array.shape == array.shape):
-            array = self.resize_background_array_to_match(
-                array, camera.pixel_array)
+        pixel_array = self.pixel_array
+        if not np.all(pixel_array.shape == back_array.shape):
+            back_array = self.resize_background_array_to_match(
+                back_array, pixel_array
+            )
 
-        self.file_name_to_pixel_array_map[file_name] = array
-        return array
+        self.file_name_to_pixel_array_map[file_name] = back_array
+        return back_array
 
     def display(self, *cvmobjects):
         batch_image_file_pairs = batch_by_property(
@@ -640,17 +686,17 @@ class BackgroundColoredVMobjectDisplayer(object):
         curr_array = None
         for batch, image_file in batch_image_file_pairs:
             background_array = self.get_background_array(image_file)
-            for cvmobject in batch:
-                self.camera.display_vectorized(cvmobject, self.canvas)
-            self.canvas.flush()
+            pixel_array = self.pixel_array
+            self.camera.display_multiple_non_background_colored_vmobjects(
+                batch, pixel_array
+            )
             new_array = np.array(
-                (background_array * self.pixel_array.astype('float') / 255),
+                (background_array * pixel_array.astype('float') / 255),
                 dtype=self.camera.pixel_array_dtype
             )
             if curr_array is None:
                 curr_array = new_array
             else:
                 curr_array = np.maximum(curr_array, new_array)
-            self.pixel_array[:, :] = 0
-            self.reset_canvas()
+            self.reset_pixel_array()
         return curr_array

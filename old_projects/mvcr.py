@@ -242,10 +242,10 @@ class ComputationalNetwork(MovingCameraScene):
         self.value_labels = value_labels
         self.revert_to_formula_animations = [
             ApplyMethod(term.set_fill, {"opacity": 1})
-            for term in x_in_f, x_in_g, f_in_h, g_in_h
+            for term in (x_in_f, x_in_g, f_in_h, g_in_h)
         ] + [
             FadeOut(term)
-            for term in two_copy1, two_copy2, four_copy, one_copy
+            for term in (two_copy1, two_copy2, four_copy, one_copy)
         ]
 
     def compare_x_and_h_wiggling(self):
@@ -552,7 +552,7 @@ class ComputationalNetwork(MovingCameraScene):
                     group,
                     submobject_mode="one_at_a_time"
                 )
-                for group in top_lines, bottom_lines
+                for group in (top_lines, bottom_lines)
             ])
         self.wait()
         self.play(FadeOut(rect))

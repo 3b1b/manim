@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-from __future__ import print_function
+
+
 
 import itertools as it
 import numpy as np
@@ -81,7 +81,7 @@ class Succession(Animation):
         for anim in animations:
             anim.update(0)
 
-        animations = filter(lambda x: not(x.empty), animations)
+        animations = [x for x in animations if not(x.empty)]
 
         self.run_times = [anim.run_time for anim in animations]
         if "run_time" in kwargs:
@@ -100,8 +100,8 @@ class Succession(Animation):
         # critical_alphas[i] is the start alpha of self.animations[i]
         # critical_alphas[i + 1] is the end alpha of self.animations[i]
         critical_times = np.concatenate(([0], np.cumsum(self.run_times)))
-        self.critical_alphas = map(lambda x: np.true_divide(
-            x, run_time), critical_times) if self.num_anims > 0 else [0.0]
+        self.critical_alphas = [np.true_divide(
+            x, run_time) for x in critical_times] if self.num_anims > 0 else [0.0]
 
         # self.scene_mobjects_at_time[i] is the scene's mobjects at start of self.animations[i]
         # self.scene_mobjects_at_time[i + 1] is the scene mobjects at end of self.animations[i]
@@ -147,10 +147,10 @@ class Succession(Animation):
             self.current_alpha = alpha
             return
 
-        gt_alpha_iter = it.ifilter(
+        gt_alpha_iter = iter(filter(
             lambda i: self.critical_alphas[i + 1] >= alpha,
             range(self.num_anims)
-        )
+        ))
         i = next(gt_alpha_iter, None)
         if i is None:
             # In this case, we assume what is happening is that alpha is 1.0,
@@ -188,7 +188,7 @@ class AnimationGroup(Animation):
     }
 
     def __init__(self, *sub_anims, **kwargs):
-        sub_anims = filter(lambda x: not(x.empty), sub_anims)
+        sub_anims = [x for x in sub_anims if not(x.empty)]
         digest_config(self, locals())
         self.update_config(**kwargs)  # Handles propagation to self.sub_anims
 

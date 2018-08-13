@@ -18,10 +18,12 @@ class Jewel(VMobject):
                 compass_vects.reverse()
             for vect_pair in adjacent_pairs(compass_vects):
                 self.add(Polygon(vect, *vect_pair))
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         self.rotate(-np.pi/2-np.pi/24, RIGHT)        
         self.rotate(-np.pi/12, UP)
-        self.submobjects.sort(lambda m1, m2 : cmp(-m1.get_center()[2], -m2.get_center()[2]))
+        self.submobjects.sort(
+            key=lambda m: -m1.get_center()[2]
+        )
         return self
 
 class Necklace(VMobject):
@@ -51,7 +53,7 @@ class Necklace(VMobject):
             for color in self.colors
         ])
         jewels.arrange_submobjects(buff = self.jewel_buff)
-        jewels.scale_to_fit_width(self.width)
+        jewels.set_width(self.width)
         jewels.center()
         j_to_j_dist = (jewels[1].get_center()-jewels[0].get_center())[0]
 
@@ -69,7 +71,7 @@ class Necklace(VMobject):
 class FromPreviousTopologyVideo(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(FRAME_HEIGHT-2)
+        rect.set_height(FRAME_HEIGHT-2)
         title = TextMobject("From original ``Who cares about topology'' video")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -92,7 +94,7 @@ class CheckOutMathologer(PiCreatureScene):
         name.next_to(logo, RIGHT)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(self.screen_height)
+        rect.set_height(self.screen_height)
         rect.next_to(logo, DOWN)
         rect.to_edge(LEFT)
 
@@ -110,7 +112,7 @@ class CheckOutMathologer(PiCreatureScene):
 
     def get_logo(self):
         logo = ImageMobject(self.logo_file)
-        logo.scale_to_fit_height(self.logo_height)
+        logo.set_height(self.logo_height)
         logo.to_corner(UP+LEFT)
         if self.logo_color is not None:
             logo.set_color(self.logo_color)
@@ -210,7 +212,11 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             self.shuffle_jewels(jewels)
         self.play(FadeOut(self.title))
         for jewel_type, label in zip(jewel_types, enumeration_labels):
-            jewel_type.submobjects.sort(lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0]))
+            jewel_type.submobjects.sort(
+                key=
+         y=lambda m: m1.get
+        )
+            )
             jewel_type.save_state()
             jewel_type.generate_target()
             jewel_type.target.arrange_submobjects()
@@ -245,7 +251,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                 half_label.arrange_submobjects()
                 half_labels.add(half_label)
             half_labels.arrange_submobjects(DOWN)
-            half_labels.scale_to_fit_height(thief.get_height())
+            half_labels.set_height(thief.get_height())
             half_labels.next_to(
                 thief, vect, 
                 buff = MED_LARGE_BUFF,
@@ -333,7 +339,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         self.play(
             FadeOut(necklace.chain),
             *it.chain(*[
-                map(Animation, group)
+                list(map(Animation, group))
                 for group in strand_groups
             ])
         )
@@ -401,12 +407,12 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
 
     def get_jewels_organized_by_type(self, jewels):
         return [
-            VGroup(*filter(lambda m : m.get_color() == color, jewels))
+            VGroup(*[m for m in jewels if m.get_color() == color])
             for color in map(Color, self.jewel_colors)
         ]
 
     def shuffle_jewels(self, jewels, run_time = 2, path_arc = np.pi/2, **kwargs):
-        shuffled_indices = range(len(jewels))
+        shuffled_indices = list(range(len(jewels)))
         random.shuffle(shuffled_indices)
         target_group = VGroup(*[
             jewel.copy().move_to(jewels[shuffled_indices[i]])
@@ -426,15 +432,15 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                 if jewel in jewel_type:
                     return i
             raise Exception("Not in any jewel_types")
-        type_numbers = map(jewel_to_type_number, jewels)
+        type_numbers = list(map(jewel_to_type_number, jewels))
 
         n_types = len(jewel_types)
-        for slice_indices in it.combinations(range(1, len(jewels)), n_types):
+        for slice_indices in it.combinations(list(range(1, len(jewels))), n_types):
             slice_indices = [0] + list(slice_indices) + [len(jewels)]
             if self.forced_binary_choices is not None:
                 all_binary_choices = [self.forced_binary_choices]
             else:
-                all_binary_choices = it.product(*[range(2)]*(n_types+1))
+                all_binary_choices = it.product(*[list(range(2))]*(n_types+1))
             for binary_choices in all_binary_choices:
                 subsets = [
                     type_numbers[i1:i2]
@@ -578,7 +584,7 @@ class WriteWords(Scene):
     def construct(self):
         words = TextMobject(self.words)
         words.set_color(self.color)
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         self.play(Write(words))
         self.wait(2)
@@ -711,7 +717,7 @@ class PointOutVSauce(CheckOutMathologer):
     }
     def get_logo(self):
         logo = SVGMobject(file_name = self.logo_file)
-        logo.scale_to_fit_height(self.logo_height)
+        logo.set_height(self.logo_height)
         logo.to_corner(UP+LEFT)
         logo.set_stroke(width = 0)
         logo.set_fill(GREEN)
@@ -813,7 +819,7 @@ class WalkEquatorPostTransform(GraphScene):
         self.play(ShowCreation(v_line))
         self.wait()
         self.play(FadeOut(v_line))
-        self.play(*map(FadeOut, [tilted_eq, dots]))
+        self.play(*list(map(FadeOut, [tilted_eq, dots])))
 
     def draw_transverse_curve(self):
         transverse_curve = self.get_transverse_curve(self.great_arc_images)
@@ -1151,16 +1157,16 @@ class GeneralizeBorsukUlam(Scene):
         self.wait()
 
     def get_condition(self):
-        squares = map(TexMobject, [
+        squares = list(map(TexMobject, [
             "x_%d^2"%d
             for d in range(1, 1+self.n_dims)
-        ])
+        ]))
         for square, color in zip(squares, self.colors):
             square[0].set_color(color)
             square[-1].set_color(color)
         plusses = [TexMobject("+") for x in range(self.n_dims-1)]
         plusses += [TexMobject("=1")]
-        condition = VGroup(*it.chain(*zip(squares, plusses)))
+        condition = VGroup(*it.chain(*list(zip(squares, plusses))))
         condition.arrange_submobjects(RIGHT)
 
         return condition
@@ -1290,7 +1296,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         for jewel_type in jewel_types:
             num_mob = TexMobject(str(len(jewel_type)))
             jewel_copy = jewel_type[0].copy()
-            # jewel_copy.scale_to_fit_height(num_mob.get_height())
+            # jewel_copy.set_height(num_mob.get_height())
             jewel_copy.next_to(num_mob)
             label = VGroup(num_mob, jewel_copy)
             enumeration_labels.add(label)
@@ -1298,7 +1304,9 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         enumeration_labels.to_edge(UP)
 
         for jewel_type, label in zip(jewel_types, enumeration_labels):
-            jewel_type.submobjects.sort(lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0]))
+            jewel_type.submobjects.sort(
+                key=key=lambda mettr()[0]
+         
             jewel_type.save_state()
             jewel_type.generate_target()
             jewel_type.target.arrange_submobjects()
@@ -1352,9 +1360,9 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.add(chain, jewels)
 
         jewels.submobjects.sort(
-            lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+            key=lambda m: m.get_center()[0]
         )
-        remaining_indices = range(len(jewels))
+        remaining_indices = list(range(len(jewels)))
         remaining_indices.remove(example_index)
 
         example_segment = self.color_necklace_by_indices(example_index)
@@ -1362,13 +1370,10 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.remove(chain)
         segments = VGroup(example_segment[0], *remaining_segments)
         segments.submobjects.sort(
-            lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+            key=lambda m: m.get_center()[0]
         )
         segment_types = VGroup(*[
-            VGroup(*filter(
-                lambda m : m.get_color() == Color(color), 
-                segments
-            ))
+            VGroup(*[m for m in segments if m.get_color() == Color(color)])
             for color in self.jewel_colors
         ])
 
@@ -1437,7 +1442,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
             for i in slice_indices[1:-1]
         ])
         cut_points = [
-            map(chain.point_from_proportion, pair)
+            list(map(chain.point_from_proportion, pair))
             for pair in cut_proportions
         ]
         v_lines = VGroup(*[DashedLine(UP, DOWN) for x in range(2)])
@@ -1529,9 +1534,9 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         ))
         self.play(Blink(morty))
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             morty, morty.bubble, morty.bubble.content
-        ]))
+        ])))
         
     def shift_divide_off_tick_marks(self):
         groups = self.groups
@@ -1618,13 +1623,13 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.wait()
         self.play(
             emerald_segments.restore,
-            *map(FadeOut, [brace, label])
+            *list(map(FadeOut, [brace, label]))
         )
 
         self.wait()
         self.play(ShowCreation(arrow2))
         self.wait()
-        self.play(*map(FadeOut, [words, arrow1, arrow2]))
+        self.play(*list(map(FadeOut, [words, arrow1, arrow2])))
 
         for line in v_lines:
             self.play(line.shift, segment_width*LEFT/2)
@@ -1704,7 +1709,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         ] + [final_num_pair]
 
         point_pairs = [
-            map(self.interval.number_to_point, num_pair)
+            list(map(self.interval.number_to_point, num_pair))
             for num_pair in num_pairs
         ]
         
@@ -1763,9 +1768,9 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         self.wait()
         self.transition_to_alt_config(denoms = [3, 3, 3])
         self.wait()
-        self.play(*map(FadeOut, list(braces) + [
+        self.play(*list(map(FadeOut, list(braces) + [
             brace.concrete_label for brace in braces
-        ]))
+        ])))
 
         self.choice_one_words = words
 
@@ -1781,7 +1786,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         )
 
         self.play(Write(words))
-        self.play(*map(FadeIn, [boxes, labels]))
+        self.play(*list(map(FadeIn, [boxes, labels])))
         for binary_choices in it.product(*[[0, 1]]*3):
             self.play(*[
                 ApplyMethod(group.move_to, group.target_points[choice])
@@ -1955,7 +1960,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             buff = LARGE_BUFF,
             aligned_edge = LEFT
         )
-        choices.scale_to_fit_height(FRAME_Y_RADIUS)
+        choices.set_height(FRAME_Y_RADIUS)
         choices.to_edge(LEFT)
         choices.shift(DOWN)
 
@@ -2061,7 +2066,7 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
                 )
 
         self.play(*it.chain(
-            map(GrowFromCenter, braces),
+            list(map(GrowFromCenter, braces)),
             [Write(brace.label) for brace in braces]
         ))
         self.wait()
@@ -2070,14 +2075,14 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
 
     def add_boxes_and_labels(self):
         boxes, labels = self.get_boxes_and_labels()
-        self.play(*map(FadeIn, [boxes, labels]))
+        self.play(*list(map(FadeIn, [boxes, labels])))
         self.wait()
 
     def show_binary_choice_association(self):
         groups = self.get_groups()
         self.swapping_anims = []
         final_choices = [1, 0, 1]
-        quads = zip(self.braces, self.denoms, groups, final_choices)
+        quads = list(zip(self.braces, self.denoms, groups, final_choices))
         for brace, denom, group, final_choice in quads:
             char = brace.label.args[0][1]
             choices = [
@@ -2186,12 +2191,12 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
 
     def get_fair_division_indices(self, colors):
         colors = np.array(list(colors))
-        color_types = map(Color, set([c.get_hex_l() for c in colors]))
+        color_types = list(map(Color, set([c.get_hex_l() for c in colors])))
         type_to_count = dict([
             (color, sum(colors == color))
             for color in color_types
         ])
-        for i1, i2 in it.combinations(range(1, len(colors)-1), 2):
+        for i1, i2 in it.combinations(list(range(1, len(colors)-1)), 2):
             bools = [
                 sum(colors[i1:i2] == color) == type_to_count[color]/2
                 for color in color_types
@@ -2202,10 +2207,10 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
 
     def demonstrate_fair_division(self):
         segments, tick_marks = self.necklace
-        color_types = map(Color, set([
+        color_types = list(map(Color, set([
             segment.get_color().get_hex_l()
             for segment in segments
-        ]))
+        ])))
         top_segments = VGroup(*it.chain(
             self.groups[0][0],
             self.groups[2][0],
@@ -2213,10 +2218,7 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
         bottom_segments = self.groups[1][0]
         for color in color_types:
             monochrome_groups = [
-                VGroup(*filter(
-                    lambda segment: segment.get_color() == color,
-                    segment_group
-                ))
+                VGroup(*[segment for segment in segment_group if segment.get_color() == color])
                 for segment_group in (top_segments, bottom_segments)
             ]
             labels = VGroup()
@@ -2292,7 +2294,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     def add_necklace(self):
         random.seed(self.random_seed)
         ChoicesInNecklaceCutting.add_necklace(self)
-        self.necklace.scale_to_fit_width(FRAME_X_RADIUS-1)
+        self.necklace.set_width(FRAME_X_RADIUS-1)
         self.necklace.to_edge(UP, buff = LARGE_BUFF)
         self.necklace.to_edge(LEFT, buff = SMALL_BUFF)
         self.add(self.necklace)
@@ -2311,7 +2313,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
             VGroup(*plane_class.get_top_level_mobjects())
             for plane_class in plane_classes
         ])
-        planes.scale_to_fit_width(FRAME_X_RADIUS)
+        planes.set_width(FRAME_X_RADIUS)
         planes.to_edge(RIGHT)
         self.example_coords = plane_classes[0].example_coords[0]
 
@@ -2407,7 +2409,7 @@ class JewelPairPlane(GraphScene):
 class WhatThisMappingActuallyLooksLikeWords(Scene):
     def construct(self):
         words = TextMobject("What this mapping actually looks like")
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
 
         self.play(Write(words))
@@ -2484,7 +2486,7 @@ class FourDBorsukUlam(GeneralizeBorsukUlam, PiCreatureScene):
             Write(brace_text)
         )
         self.wait()
-        self.play(*map(FadeOut, [brace, brace_text]))
+        self.play(*list(map(FadeOut, [brace, brace_text])))
         self.wait()
         self.play(
             FadeIn(lhs),
@@ -2578,7 +2580,7 @@ class MortyLookingAtRectangle(Scene):
         url.scale(0.75)
         url.to_corner(UP+LEFT)
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5)
+        rect.set_height(5)
         rect.next_to(url, DOWN)
         rect.shift_onto_screen()
         url.save_state()
@@ -2639,7 +2641,7 @@ class Test(Scene):
         # necklace.apply_function(
         #     lambda (x, y, z) : x*RIGHT + (y + 0.1*x**2)*UP
         # )
-        necklace.scale_to_fit_width(randy.get_width() + 1)
+        necklace.set_width(randy.get_width() + 1)
         necklace.move_to(randy)
 
         self.add(randy, necklace)

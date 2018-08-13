@@ -32,7 +32,7 @@ def fractalify(vmobject, order=3, *args, **kwargs):
     return vmobject
 
 
-def fractalification_iteration(vmobject, dimension=1.05, num_inserted_anchors_range=range(1, 4)):
+def fractalification_iteration(vmobject, dimension=1.05, num_inserted_anchors_range=list(range(1, 4))):
     num_points = vmobject.get_num_points()
     if num_points > 0:
         # original_anchors = vmobject.get_anchors()
@@ -105,7 +105,7 @@ class SelfSimilarFractal(VMobject):
             self.arrange_subparts(*subparts)
             result = VGroup(*subparts)
 
-        result.scale_to_fit_height(self.height)
+        result.set_height(self.height)
         result.center()
         return result
 
@@ -215,7 +215,7 @@ class PiCreatureFractal(VMobject):
         random.seed(self.random_seed)
         modes = get_all_pi_creature_modes()
         seed = PiCreature(mode=self.start_mode)
-        seed.scale_to_fit_height(self.height)
+        seed.set_height(self.height)
         seed.to_edge(DOWN)
         creatures = [seed]
         self.add(VGroup(seed))
@@ -226,7 +226,7 @@ class PiCreatureFractal(VMobject):
                     new_creature = PiCreature(
                         mode=random.choice(modes)
                     )
-                    new_creature.scale_to_fit_height(
+                    new_creature.set_height(
                         self.scale_val * eye.get_height()
                     )
                     new_creature.next_to(
@@ -259,7 +259,7 @@ class WonkyHexagonFractal(SelfSimilarFractal):
         center_row = VGroup(p1, p4, p7)
         center_row.arrange_submobjects(RIGHT, buff=0)
         for p in p2, p3, p5, p6:
-            p.scale_to_fit_width(p1.get_width())
+            p.set_width(p1.get_width())
         p2.move_to(p1.get_top(), DOWN + LEFT)
         p3.move_to(p1.get_bottom(), UP + LEFT)
         p5.move_to(p4.get_top(), DOWN + LEFT)
@@ -667,7 +667,7 @@ class SnakeCurve(FractalCurve):
             DOWN * (self.radius - step / 2)
 
         for y in range(resolution):
-            x_range = range(resolution)
+            x_range = list(range(resolution))
             if y % 2 == 0:
                 x_range.reverse()
             for x in x_range:

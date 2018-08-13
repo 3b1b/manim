@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from continual_animation.from_animation import NormalAnimationAsContinualAnimation
 from animation.numbers import ChangingDecimal

@@ -48,7 +48,7 @@ class CountingScene(Scene):
             for point in self.get_template_configuration()
         ])
         dots[-1].set_stroke(width = 0)
-        dots.scale_to_fit_height(self.dot_configuration_height)
+        dots.set_height(self.dot_configuration_height)
         return dots
 
     def initialize_configurations(self):
@@ -301,7 +301,7 @@ class TowersOfHanoiScene(Scene):
         for number, disk in enumerate(self.disks):
             label = TexMobject(str(number))
             label.set_color(BLACK)
-            label.scale_to_fit_height(self.disk_height/2)
+            label.set_height(self.disk_height/2)
             label.move_to(disk)
             disk.add(label)
             disk.label = label
@@ -372,8 +372,8 @@ class TowersOfHanoiScene(Scene):
         self.move_disk_to_peg(disk_index, next_peg_index, **kwargs)
 
     def move_subtower_to_peg(self, num_disks, next_peg_index, **kwargs):
-        disk_indices = range(num_disks)
-        peg_indices = map(self.disk_index_to_peg_index, disk_indices)
+        disk_indices = list(range(num_disks))
+        peg_indices = list(map(self.disk_index_to_peg_index, disk_indices))
         if len(set(peg_indices)) != 1:
             warnings.warn("These disks don't make up a tower right now")
         self.move_disks_to_peg(disk_indices, next_peg_index, **kwargs)
@@ -470,7 +470,7 @@ def get_binary_tex_mobs(num_list):
     nudge = zero_width + SMALL_BUFF
     for num in num_list:
         bin_string = bin(num)[2:]#Strip off the "0b" prefix
-        bits = VGroup(*map(TexMobject, bin_string))
+        bits = VGroup(*list(map(TexMobject, bin_string)))
         for n, bit in enumerate(bits):
             bit.shift(n*nudge*RIGHT)
         bits.move_to(ORIGIN, RIGHT)
@@ -487,7 +487,7 @@ def get_base_b_tex_mob(number, base, n_digits):
     for place in range(n_digits):
         remainder = number%base
         digit_mob = TexMobject(str(remainder))
-        digit_mob.scale_to_fit_height(zero_height)
+        digit_mob.set_height(zero_height)
         digit_mob.shift(place*(zero_width+SMALL_BUFF)*LEFT)
         result.add(digit_mob)
         number = (number - remainder)/base
@@ -508,7 +508,7 @@ class IntroduceKeith(Scene):
         keith = Keith(mode = "dance_kick")
         keith_image = ImageMobject("keith_schwarz", invert = False)
         # keith_image = Rectangle()
-        keith_image.scale_to_fit_height(FRAME_HEIGHT - 2)
+        keith_image.set_height(FRAME_HEIGHT - 2)
         keith_image.next_to(ORIGIN, LEFT)
         keith.move_to(keith_image, DOWN+RIGHT)
         morty.next_to(keith, buff = LARGE_BUFF, aligned_edge = DOWN)
@@ -543,7 +543,7 @@ class IntroduceKeith(Scene):
         self.play(Blink(morty))
         self.play(
             keith.change_mode, "speaking",
-            keith.scale_to_fit_height, morty.get_height(),
+            keith.set_height, morty.get_height(),
             keith.next_to, morty, LEFT, LARGE_BUFF,
             run_time = 1.5
         )
@@ -782,7 +782,7 @@ class KeithShowingBinary(Scene):
         randy.bubble.set_fill(BLACK, opacity = 1)
         randy.bubble.write("Hold on...how does \\\\ binary work again?")
 
-        binary_tex_mobs = get_binary_tex_mobs(range(16))
+        binary_tex_mobs = get_binary_tex_mobs(list(range(16)))
         binary_tex_mobs.shift(keith.get_corner(UP+LEFT))
         binary_tex_mobs.shift(0.5*(UP+RIGHT))
         bits_list = binary_tex_mobs.split()
@@ -934,7 +934,7 @@ class RhythmOfDecimalCounting(CountingScene):
         self.wait()
         self.play(
             ten_group.restore,
-            *map(FadeOut, [brace, two_digits])
+            *list(map(FadeOut, [brace, two_digits]))
         )
 
         for x in range(89):
@@ -986,7 +986,7 @@ class DecimalCountingAtHundredsScale(CountingScene):
         ).update(1)
 
         for x in range(10):
-            this_range = range(8) if x == 0 else range(9)
+            this_range = list(range(8)) if x == 0 else list(range(9))
             for y in this_range:
                 self.increment(run_time_per_anim = 0.25)
             self.increment(run_time_per_anim = 1)
@@ -1095,7 +1095,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
             Transform(twos_place, fours_place),
         )
         self.play(Blink(randy))
-        self.play(*map(FadeOut, [bubble, curr_content]))
+        self.play(*list(map(FadeOut, [bubble, curr_content])))
 
         #Up to 1000
         for x in range(4):
@@ -1105,7 +1105,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         self.play(
             randy.change_mode, "happy",
             randy.look_at, self.number_mob,
-            *map(MoveToTarget, [brace, twos_place])
+            *list(map(MoveToTarget, [brace, twos_place]))
         )
         for x in range(8):
             self.increment(total_run_time = 1)
@@ -1115,8 +1115,8 @@ class IntroduceBinaryCounting(BinaryCountingScene):
 
     def show_self_similarity(self):
         cover_rect = Rectangle()
-        cover_rect.scale_to_fit_width(FRAME_WIDTH)
-        cover_rect.scale_to_fit_height(FRAME_HEIGHT)
+        cover_rect.set_width(FRAME_WIDTH)
+        cover_rect.set_height(FRAME_HEIGHT)
         cover_rect.set_stroke(width = 0)
         cover_rect.set_fill(BLACK, opacity = 0.85)
         big_dot = self.curr_configurations[-1][0].copy()
@@ -1126,7 +1126,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         )
         self.play(
             big_dot.center,
-            big_dot.scale_to_fit_height, FRAME_HEIGHT-2,
+            big_dot.set_height, FRAME_HEIGHT-2,
             big_dot.to_edge, LEFT,
             run_time = 5
         )
@@ -1176,7 +1176,7 @@ class BinaryCountingAtEveryScale(Scene):
             bit_mob.set_color(YELLOW)
             bit_mob[0].set_color(MAROON_B)
         self.play(get_run_through(bit_mobs[1:2**(self.num_bits-1)]))
-        self.play(*map(FadeIn, [upper_brace, roll_over]))
+        self.play(*list(map(FadeIn, [upper_brace, roll_over])))
         self.play(Transform(
             VGroup(*reversed(list(curr_bits))),
             VGroup(*reversed(list(bit_mobs[2**(self.num_bits-1)]))),
@@ -1344,7 +1344,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             disk[1].set_fill, BLACK,
             eights_bit.restore,
         )
-        self.play(*map(FadeOut, [brace, words]))
+        self.play(*list(map(FadeOut, [brace, words])))
         for disk_index in get_ruler_sequence(2):
             self.play(self.get_increment_animation())
             self.move_disk(disk_index, stay_on_peg = False)
@@ -1522,7 +1522,7 @@ class RecursiveSolution(TowersOfHanoiScene):
         )
         self.wait()
         self.blink()
-        self.play(*map(FadeOut, [bubble, bubble.content]))
+        self.play(*list(map(FadeOut, [bubble, bubble.content])))
         big_disk.remove(self.eyes)
         self.move_subtower_to_peg(3, 2, run_time = 2, added_anims = [
             self.eyes.look_at_anim(self.pegs[2].get_top()),
@@ -1539,7 +1539,7 @@ class RecursiveSolution(TowersOfHanoiScene):
         arc = Arc(-5*np.pi/6, start_angle = 5*np.pi/6)
         arc.add_tip()
         arc.set_color(YELLOW)
-        arc.scale_to_fit_width(
+        arc.set_width(
             VGroup(*self.pegs[1:]).get_width()*0.8
         )
         arc.next_to(self.disks[0], UP+RIGHT, buff = SMALL_BUFF)
@@ -1553,7 +1553,7 @@ class RecursiveSolution(TowersOfHanoiScene):
         self.wait()
         self.play(
             GrowFromCenter(sub_sub_steps_brace),
-            *map(FadeOut, [arc, q_mark])
+            *list(map(FadeOut, [arc, q_mark]))
         )
 
         #Disk 2 frustration
@@ -1974,7 +1974,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         peg_sets = (self.pegs[:2], self.pegs[1:])
         for curved_arrow, pegs in zip(curved_arrows, peg_sets):
             peg_group = VGroup(*pegs)
-            curved_arrow.scale_to_fit_width(0.7*peg_group.get_width())
+            curved_arrow.set_width(0.7*peg_group.get_width())
             curved_arrow.next_to(peg_group, UP)
 
         self.play(ShowCreation(curved_arrow1))
@@ -1982,7 +1982,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         self.wait()
 
         big_curved_arrow = Arc(start_angle = 5*np.pi/6, angle = -2*np.pi/3)
-        big_curved_arrow.scale_to_fit_width(0.9*self.pegs.get_width())
+        big_curved_arrow.set_width(0.9*self.pegs.get_width())
         big_curved_arrow.next_to(self.pegs, UP)
         big_curved_arrow.add_tip(tip_length = 0.4)
         big_curved_arrow.set_color(WHITE)
@@ -2034,7 +2034,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         ]
         sub_steps, sub_sub_steps = subdivisions[:2]
         for steps in subdivisions:
-            steps.scale_to_fit_width(FRAME_WIDTH-1)
+            steps.set_width(FRAME_WIDTH-1)
         subdivisions.append(
             TextMobject("\\tiny Move disk 0, Move disk 0").set_color(BLUE)
         )
@@ -2043,9 +2043,9 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
             for steps in subdivisions
         ]
         sub_steps_brace, sub_sub_steps_brace = braces[:2]
-        steps = VGroup(title, *it.chain(*zip(
+        steps = VGroup(title, *it.chain(*list(zip(
             braces, subdivisions
-        )))
+        ))))
         steps.arrange_submobjects(DOWN)
         steps.to_edge(UP)
 
@@ -2405,19 +2405,19 @@ class TernaryCountingSelfSimilarPattern(Scene):
         title = TextMobject("Count to " + "2"*self.num_trits)
         for i, color in enumerate(colors):
             title[-i-1].set_color(color)
-        steps = VGroup(*map(TextMobject, [
+        steps = VGroup(*list(map(TextMobject, [
             "Count to %s,"%("2"*(self.num_trits-1)),
             "Roll over,",
             "Count to %s,"%("2"*(self.num_trits-1)),
             "Roll over,",
             "Count to %s,"%("2"*(self.num_trits-1)),
-        ]))
+        ])))
         steps.arrange_submobjects(RIGHT)
         for step in steps[::2]:
             for i, color in enumerate(colors[:-1]):
                 step[-i-2].set_color(color)
         VGroup(*steps[1::2]).set_color(colors[-1])
-        steps.scale_to_fit_width(FRAME_WIDTH-1)
+        steps.set_width(FRAME_WIDTH-1)
         brace = Brace(steps, UP)
         word_group = VGroup(title, brace, steps)
         word_group.arrange_submobjects(DOWN)
@@ -2572,7 +2572,7 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
         )
         self.move_next_disk(stay_on_peg = True)
         self.wait()
-        self.play(*map(FadeOut, [brace, word]))
+        self.play(*list(map(FadeOut, [brace, word])))
 
         #Count up to 22
         for x in range(5):
@@ -2595,7 +2595,7 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
         self.wait()
         self.move_next_disk(stay_on_peg = True)
         self.wait()
-        self.play(*map(FadeOut, [braces[2], words[2]]))
+        self.play(*list(map(FadeOut, [braces[2], words[2]])))
 
         for x in range(20):
             self.increment()
@@ -2694,7 +2694,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
             for d in range(self.num_disks)
         ]))
         parentheticals.arrange_submobjects()
-        parentheticals.scale_to_fit_width(FRAME_WIDTH-1)
+        parentheticals.set_width(FRAME_WIDTH-1)
         parentheticals.next_to(top_mob, DOWN)
         for parens in parentheticals:
             brace = Brace(parens)
@@ -2732,7 +2732,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
 class ThisIsMostEfficientText(Scene):
     def construct(self):
         text = TextMobject("This is the most efficient solution")
-        text.scale_to_fit_width(FRAME_WIDTH - 1)
+        text.set_width(FRAME_WIDTH - 1)
         text.to_edge(DOWN)
         self.play(Write(text))
         self.wait(2)
@@ -2743,7 +2743,7 @@ class RepeatingConfiguraiton(Scene):
         arrows = VGroup(*[Arrow(LEFT, RIGHT) for x in range(9)])
         arrows.add(VGroup())
         arrows.scale(0.5)
-        group = VGroup(*it.chain(*zip(dots, arrows)))
+        group = VGroup(*it.chain(*list(zip(dots, arrows))))
         group.arrange_submobjects()
         title = TextMobject("Same state twice")
         title.shift(3*UP)
@@ -2780,7 +2780,7 @@ class ShowSomeGraph(Scene):
         title.scale(2)
         title.to_edge(UP)
 
-        nodes = VGroup(*map(Dot, [
+        nodes = VGroup(*list(map(Dot, [
             2*LEFT, 
             UP,
             DOWN,
@@ -2788,7 +2788,7 @@ class ShowSomeGraph(Scene):
             2*RIGHT+2*UP,
             2*RIGHT+2*DOWN,
             4*RIGHT+2*UP,
-        ]))
+        ])))
         edge_pairs = [
             (0, 1),
             (0, 2),
@@ -2856,7 +2856,7 @@ class SierpinskiGraphScene(Scene):
             self.nodes.add(node)
         if self.include_towers:
             self.add_towers_to_nodes()
-        self.nodes.scale_to_fit_height(FRAME_HEIGHT-2)
+        self.nodes.set_height(FRAME_HEIGHT-2)
         self.nodes.to_edge(UP)
 
     def get_node_circles(self, order = 3):
@@ -2886,7 +2886,7 @@ class SierpinskiGraphScene(Scene):
             for mob in towers:
                 if hasattr(mob, "label"):
                     self.disks[int(mob.label.tex_string)].add(mob)
-            towers.scale_to_fit_width(0.85*node.get_width())
+            towers.set_width(0.85*node.get_width())
             towers.move_to(node)
             node.towers = towers
             node.add(towers)
@@ -2904,7 +2904,7 @@ class SierpinskiGraphScene(Scene):
         min_distance = self.distance_between_nodes(0, 1)
         min_distance *= 1.1 ##Just a little buff to be sure
         node_radius = self.nodes[0].get_width()/2
-        for i, j in it.combinations(range(3**self.num_disks), 2):
+        for i, j in it.combinations(list(range(3**self.num_disks)), 2):
             center1 = self.nodes[i].get_center()
             center2 = self.nodes[j].get_center()
             vect = center1-center2
@@ -2977,7 +2977,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             node = self.nodes[index]
             node.save_state()
             self.play(
-                node.scale_to_fit_height, FRAME_HEIGHT-2,
+                node.set_height, FRAME_HEIGHT-2,
                 node.next_to, ORIGIN, vect
             )
             self.wait()
@@ -2990,19 +2990,19 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
         for node, vect in zip(nodes, [LEFT, RIGHT]):
             node.save_state()
             node.generate_target()
-            node.target.scale_to_fit_height(5)
+            node.target.set_height(5)
             node.target.center()
             node.target.to_edge(vect)
             arc = Arc(angle = -2*np.pi/3, start_angle = 5*np.pi/6)
             if vect is RIGHT:
                 arc.flip()
-            arc.scale_to_fit_width(0.8*node.target.towers.get_width())
+            arc.set_width(0.8*node.target.towers.get_width())
             arc.next_to(node.target.towers, UP)
             arc.add_tip()
             arc.set_color(YELLOW)
             node.arc = arc
 
-        self.play(*map(MoveToTarget, nodes))
+        self.play(*list(map(MoveToTarget, nodes)))
         edge = Line(
             nodes[0].get_right(), nodes[1].get_left(),
             color = YELLOW,
@@ -3067,10 +3067,10 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
         for node, vect in zip(nodes, [LEFT, RIGHT]):
             node.save_state()
             node.generate_target()
-            node.target.scale_to_fit_height(6)
+            node.target.set_height(6)
             node.target.center().next_to(ORIGIN, vect)
 
-        self.play(*map(MoveToTarget, nodes))
+        self.play(*list(map(MoveToTarget, nodes)))
         self.wait()
         self.play(*[node.restore for node in nodes])
         bold_edges = [
@@ -3079,14 +3079,14 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
         ]
         self.play(ShowCreation(bold_edges[0]))
         self.wait()
-        self.play(*map(ShowCreation, bold_edges[1:]))
+        self.play(*list(map(ShowCreation, bold_edges[1:])))
         self.wait()
 
         power_of_three = 3**(self.scale-1)
         index_sets = [
-            range(0, power_of_three),
-            range(power_of_three, 2*power_of_three),
-            range(2*power_of_three, 3*power_of_three),
+            list(range(0, power_of_three)),
+            list(range(power_of_three, 2*power_of_three)),
+            list(range(2*power_of_three, 3*power_of_three)),
         ]
         if self.first_connect_0_and_2_islands:
             index_sets = [index_sets[0], index_sets[2], index_sets[1]]
@@ -3100,7 +3100,7 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
                 run_time = 1,
                 rate_func = wiggle
             )
-        self.play(*map(wiggle_island, islands[:2]))
+        self.play(*list(map(wiggle_island, islands[:2])))
         self.wait()
         self.play(wiggle_island(islands[2]))
         self.wait()
@@ -3205,12 +3205,12 @@ class PatreonThanks(Scene):
         special_thanks.set_color(YELLOW)
         special_thanks.shift(3*UP)
 
-        left_patrons = VGroup(*map(TextMobject, 
+        left_patrons = VGroup(*list(map(TextMobject, 
             self.specific_patrons[:n_patrons/2]
-        ))
-        right_patrons = VGroup(*map(TextMobject, 
+        )))
+        right_patrons = VGroup(*list(map(TextMobject, 
             self.specific_patrons[n_patrons/2:]
-        ))
+        )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
             patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
@@ -3239,7 +3239,7 @@ class MortyLookingAtRectangle(Scene):
         url = TextMobject("www.desmos.com/careers")
         url.to_corner(UP+LEFT)
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5)
+        rect.set_height(5)
         rect.next_to(url, DOWN)
         rect.shift_onto_screen()
         url.save_state()

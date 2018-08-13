@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 from functools import reduce
 
@@ -22,7 +22,7 @@ class Britain(SVGMobject):
         SVGMobject.__init__(self, **kwargs)
         self.points = self[0].points
         self.submobjects = []
-        self.scale_to_fit_height(self.height)
+        self.set_height(self.height)
         self.center()
 
 class Norway(Britain):
@@ -142,7 +142,7 @@ class WhatAreFractals(TeacherStudentsScene):
         name.to_corner(UP+LEFT)
         # picture = Rectangle(height = 4, width = 3)
         picture = ImageMobject("Mandelbrot")
-        picture.scale_to_fit_height(4)
+        picture.set_height(4)
         picture.next_to(name, DOWN)
         self.play(
             Write(name, run_time = 2),
@@ -180,7 +180,7 @@ class IntroduceVonKochCurve(Scene):
 
     def get_snowflake(self):
         triangle = RegularPolygon(n = 3, start_angle = np.pi/2)
-        triangle.scale_to_fit_height(4)
+        triangle.set_height(4)
         curves = VGroup(*[
             KochCurve(
                 order = self.order,
@@ -276,7 +276,7 @@ class SelfSimilarFractalsAsSubset(Scene):
             Sierpinski(order = 5),
         )
         for submob in fractals:
-            submob.scale_to_fit_width(self.fractal_width)
+            submob.set_width(self.fractal_width)
         fractals.arrange_submobjects(RIGHT)
         fractals[-1].next_to(VGroup(*fractals[:-1]), DOWN)
 
@@ -434,7 +434,7 @@ class InfiniteKochZoom(Scene):
             color = BLUE,
             stroke_width = 2,
         )
-        koch_curve.scale_to_fit_width(18)
+        koch_curve.set_width(18)
         koch_curve.shift(
             self.left_point - koch_curve.points[0]
         )
@@ -459,7 +459,7 @@ class ShowIdealizations(Scene):
         self.add(arrow, left_words, middle_words, right_words)
 
         britain = Britain()[0]
-        britain.scale_to_fit_height(4)
+        britain.set_height(4)
         britain.next_to(arrow, UP)
 
         anchors = britain.get_anchors()
@@ -473,7 +473,7 @@ class ShowIdealizations(Scene):
         koch_snowflake = KochSnowFlake(order = 5, monochromatic = True)
         koch_snowflake.set_stroke(width = 0)
         koch_snowflake.set_fill(BLUE_D, opacity = 1)
-        koch_snowflake.scale_to_fit_height(3)
+        koch_snowflake.set_height(3)
         koch_snowflake.rotate(2*np.pi/3)
         koch_snowflake.next_to(arrow, UP)
         koch_snowflake.to_edge(RIGHT)
@@ -605,9 +605,9 @@ class FourSelfSimilarShapes(Scene):
         self.mention_measurements()
 
     def get_titles(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Line", "Square", "Cube", "Sierpinski"
-        ]))
+        ])))
         for title, x in zip(titles, np.linspace(-0.75, 0.75, 4)):
             title.shift(x*FRAME_X_RADIUS*RIGHT)
         titles.to_edge(UP)
@@ -634,7 +634,7 @@ class FourSelfSimilarShapes(Scene):
 
         shapes = VGroup(line, square, cube, sierpinski)
         for shape, title in zip(shapes, titles):
-            shape.scale_to_fit_width(self.shape_width)
+            shape.set_width(self.shape_width)
             shape.next_to(title, DOWN, buff = MED_SMALL_BUFF)
         line.shift(DOWN)
 
@@ -656,7 +656,7 @@ class FourSelfSimilarShapes(Scene):
             FadeIn(brace_text)
         )
         self.wait()
-        self.play(*map(FadeOut, [brace, brace_text]))
+        self.play(*list(map(FadeOut, [brace, brace_text])))
         self.wait()
 
         for title in titles:
@@ -702,12 +702,12 @@ class FourSelfSimilarShapes(Scene):
     def mention_measurements(self):
         line, square, cube, sierpinski = self.shapes_copy
 
-        labels = map(TextMobject, [
+        labels = list(map(TextMobject, [
             "$1/2$ length",
             "$1/4$ area",
             "$1/8$ volume",
             "You'll see...",
-        ])
+        ]))
         for label, shape in zip(labels, self.shapes_copy):
             label.next_to(shape, DOWN)
             label.to_edge(DOWN, buff = MED_LARGE_BUFF)
@@ -735,9 +735,9 @@ class GeneralWordForMeasurement(Scene):
         mass = TextMobject("Mass")
         mass.move_to(measure)
 
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Length", "Area", "Volume"
-        ]))
+        ])))
         words.arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
         words.next_to(measure, DOWN, buff = 2*LARGE_BUFF)
         colors = color_gradient([BLUE_B, BLUE_D], len(words))
@@ -763,7 +763,7 @@ class GeneralWordForMeasurement(Scene):
 
 class ImagineShapesAsMetal(FourSelfSimilarShapes):
     def construct(self):
-        titles = VGroup(*map(VGroup, self.get_titles()))
+        titles = VGroup(*list(map(VGroup, self.get_titles())))
         shapes = self.get_shapes(titles)
         shapes.shift(DOWN)
         descriptions = VGroup(*[
@@ -829,7 +829,7 @@ class ScaledLineMass(Scene):
         )
 
         shape = self.get_shape()
-        shape.scale_to_fit_width(self.shape_width)
+        shape.set_width(self.shape_width)
         shape.center()
         shape.shift(FRAME_X_RADIUS*RIGHT/2 + self.vert_distance*UP)
 
@@ -958,7 +958,7 @@ class DefineTwoDimensional(PiCreatureScene):
 
     def add_shape(self):
         shape = self.get_shape()
-        shape.scale_to_fit_width(self.shape_width)
+        shape.set_width(self.shape_width)
         shape.next_to(self.title, DOWN, buff = MED_LARGE_BUFF)
         # self.shape.shift(FRAME_Y_RADIUS*UP/2)
         self.mass_color = shape.get_color()
@@ -1030,7 +1030,7 @@ class DefineTwoDimensional(PiCreatureScene):
             self.scale_factor,
         )
         brace.target = Brace(shape.target, LEFT)
-        self.play(*map(MoveToTarget, group))
+        self.play(*list(map(MoveToTarget, group)))
         self.play(bottom_L.next_to, brace, LEFT)
         self.wait()
 
@@ -1212,7 +1212,7 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
     def get_curve(self, order):
         # curve = ShowSierpinskiCurve.get_curve(self, order)
         curve = SierpinskiCurve(order = order)
-        curve.scale_to_fit_height(4).center()
+        curve.set_height(4).center()
         curve.shift(FRAME_X_RADIUS*LEFT/2)
         return curve
 
@@ -1285,7 +1285,7 @@ class DimensionOfKoch(Scene):
 
     def add_curve(self):
         curve = self.curve_class(order = self.koch_curve_order)
-        curve.scale_to_fit_width(self.koch_curve_width)
+        curve.set_width(self.koch_curve_width)
         curve.to_corner(UP+RIGHT, LARGE_BUFF)
 
         self.play(ShowCreation(curve, run_time = 2))
@@ -1384,7 +1384,7 @@ class DimensionOfKoch(Scene):
             Transform(third, formula[0]),
             Transform(fourth, formula[-1]),
         )
-        self.play(*map(FadeIn, formula[1:-1]))
+        self.play(*list(map(FadeIn, formula[1:-1])))
         self.remove(third, fourth)
         self.add(formula)
         self.wait(2)
@@ -1416,7 +1416,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
             order = order,
             monochromatic = True
         )
-        curve.scale_to_fit_width(self.koch_curve_width)
+        curve.set_width(self.koch_curve_width)
         alpha = float(order) / self.koch_curve_order
         stroke_width = interpolate(3, 1, alpha)
         curve.set_stroke(width = stroke_width)
@@ -1524,7 +1524,7 @@ class ShowSeveralSelfSimilarityDimensions(Scene):
             curves = VGroup()
             for Class, vect in zip(fractal_classes, vects):
                 curve = Class(order = order)
-                curve.scale_to_fit_width(2),
+                curve.set_width(2),
                 curve.shift(vect)
                 curves.add(curve)
             return curves
@@ -1598,7 +1598,7 @@ class ShowDiskScaling(Scene):
         britain = Britain()
         shapes = VGroup(hexagon, blob, disk, britain)
         for shape in shapes:
-            shape.scale_to_fit_width(1.5)
+            shape.set_width(1.5)
             shape.set_stroke(width = 0)
             shape.set_fill(opacity = 1)
         shapes.set_color_by_gradient(BLUE_B, BLUE_E)
@@ -1617,7 +1617,7 @@ class ShowDiskScaling(Scene):
         disk = self.disk
         self.play(
             FadeOut(self.to_fade),
-            disk.scale_to_fit_width, 2,
+            disk.set_width, 2,
             disk.next_to, ORIGIN, LEFT, 2,
             disk.set_fill, BLUE_D, 0.7
         )
@@ -1888,7 +1888,7 @@ class BoxCountingWithDisk(BoxCountingScene):
         approx = TexMobject("\\approx 2^2")
         approx.next_to(decimal, RIGHT, aligned_edge = DOWN)
         approx.shift_onto_screen()
-        self.play(*map(Write, [frac_line, decimal]))
+        self.play(*list(map(Write, [frac_line, decimal])))
         self.play(Write(approx))
         self.wait()
 
@@ -2003,14 +2003,14 @@ class BoxCountingSierpinski(BoxCountingScene):
         sierp = Sierpinski(order = self.sierpinski_order)
         sierp.set_fill(opacity = 0)
         sierp.move_to(3*DOWN, DOWN+RIGHT)
-        sierp.scale_to_fit_width(self.sierpinski_width)
+        sierp.set_width(self.sierpinski_width)
         boxes = self.get_highlighted_boxes(sierp)
 
         corner_rect = self.get_corner_rect()
         counting_label = self.get_counting_label()
 
         self.play(ShowCreation(sierp))
-        self.play(*map(FadeIn, [corner_rect, counting_label]))
+        self.play(*list(map(FadeIn, [corner_rect, counting_label])))
         self.wait()
         counting_mob = self.count_boxes(boxes)
         self.wait()
@@ -2033,7 +2033,7 @@ class BoxCountingSierpinski(BoxCountingScene):
         equals_exp.next_to(approx_three, RIGHT, aligned_edge = DOWN)
         equals_exp.shift_onto_screen()
 
-        self.play(*map(Write, [frac_line, approx_three]))
+        self.play(*list(map(Write, [frac_line, approx_three])))
         self.wait()
         self.play(Write(equals_exp))
         self.wait()
@@ -2168,7 +2168,7 @@ class GiveShapeAndPonder(Scene):
         randy.next_to(ORIGIN, DOWN).shift(3*LEFT)
 
         norway = Norway(fill_opacity = 0, stroke_width = 1)
-        norway.scale_to_fit_width(2)
+        norway.set_width(2)
         norway.next_to(morty, UP+LEFT, buff = -MED_SMALL_BUFF)
 
         self.play(
@@ -2458,12 +2458,12 @@ class ListDimensionTypes(PiCreatureScene):
         "use_morty" : False,
     }
     def construct(self):
-        types = VGroup(*map(TextMobject, [
+        types = VGroup(*list(map(TextMobject, [
             "Box counting dimension",
             "Information dimension",
             "Hausdorff dimension",
             "Packing dimension"
-        ]))
+        ])))
         types.arrange_submobjects(DOWN, aligned_edge = LEFT)
         for text in types:
             self.play(
@@ -2735,7 +2735,7 @@ class CompareBritainAndNorway(Scene):
 
         self.add(britain_label, norway_label)
         self.play(
-            *map(ShowCreation, [norway, britain]),
+            *list(map(ShowCreation, [norway, britain])),
             run_time = 3
         )
         self.wait()
@@ -2797,12 +2797,12 @@ class FractalNonFractalFlowChart(Scene):
             word.shift(arrow.get_center())
 
         britain = Britain()
-        britain.scale_to_fit_height(3)
+        britain.set_height(3)
         britain.to_corner(UP+LEFT)
         self.add(britain)
 
         randy = Randolph()
-        randy.scale_to_fit_height(3)
+        randy.set_height(3)
         randy.to_corner(UP+RIGHT)
         self.add(randy)
 
@@ -2868,7 +2868,7 @@ class AffirmLogo(SVGMobject):
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.scale_to_fit_width(self.width)
+        self.set_width(self.width)
 
 class MortyLookingAtRectangle(Scene):
     def construct(self):
@@ -2877,7 +2877,7 @@ class MortyLookingAtRectangle(Scene):
         url = TextMobject("affirmjobs.3b1b.co")
         url.to_corner(UP+LEFT)
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5)
+        rect.set_height(5)
         rect.next_to(url, DOWN)
         rect.shift_onto_screen()
         url.save_state()
@@ -2927,7 +2927,7 @@ class Thumbnail(Scene):
         koch_curve = QuadraticKoch(order = 6, monochromatic = True)
         koch_curve.set_stroke(width = 0)
         koch_curve.set_fill(BLUE)
-        koch_curve.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        koch_curve.set_height(1.5*FRAME_Y_RADIUS)
         koch_curve.to_edge(DOWN, buff = SMALL_BUFF)
 
         self.add(koch_curve, title)

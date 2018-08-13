@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from constants import *
 
 from .scene import Scene
@@ -141,7 +141,7 @@ class SampleSpaceScene(Scene):
 
         anims = [UpdateFromFunc(post_rects, update_rects)]
         if hasattr(post_rects, "braces"):
-            anims += map(Animation, [
+            anims += list(map(Animation, [
                 post_rects.labels, post_rects.braces
-            ])
+            ]))
         return anims

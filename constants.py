@@ -66,7 +66,7 @@ DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
 
-DEFAULT_POINT_THICKNESS = 4
+DEFAULT_STROKE_WIDTH = 4
 
 FRAME_HEIGHT = 8.0
 FRAME_WIDTH = FRAME_HEIGHT * DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
@@ -137,6 +137,10 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DI
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(THIS_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
+with open(TEMPLATE_TEX_FILE, "r") as infile:
+    TEMPLATE_TEX_FILE_BODY = infile.read()
+with open(TEMPLATE_TEXT_FILE, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY = infile.read()
 
 FFMPEG_BIN = "ffmpeg"
 
@@ -200,7 +204,7 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 }
-PALETTE = COLOR_MAP.values()
+PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
-for name in filter(lambda s: s.endswith("_C"), COLOR_MAP.keys()):
+for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]

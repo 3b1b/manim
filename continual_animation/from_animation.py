@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from continual_animation.continual_animation import ContinualAnimation
 

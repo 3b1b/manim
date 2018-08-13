@@ -77,7 +77,7 @@ class Chapter8OpeningQuote(OpeningQuote, PiCreatureScene):
         result.set_color_by_tex("h", GREEN, substring = False)
         result.set_color_by_tex("d\\theta", GREEN)
 
-        result.scale_to_fit_width(FRAME_WIDTH - 2*MED_SMALL_BUFF)
+        result.set_width(FRAME_WIDTH - 2*MED_SMALL_BUFF)
         return result
 
 class ThisVideo(TeacherStudentsScene):
@@ -147,7 +147,7 @@ class InCarRestrictedView(ShowSpeedometer):
         time_label = TextMobject("Time (in seconds):", "0")
         time_label.shift(2*UP)
 
-        dots = VGroup(*map(Dot, [self.point_A, self.point_B]))
+        dots = VGroup(*list(map(Dot, [self.point_A, self.point_B])))
         line = Line(*dots, buff = 0)
         line.set_color(DISTANCE_COLOR)
         brace = Brace(line, DOWN)
@@ -186,7 +186,7 @@ class InCarRestrictedView(ShowSpeedometer):
         self.wait()
 
         #Ask about distance
-        self.play(*map(ShowCreation, dots))
+        self.play(*list(map(ShowCreation, dots)))
         self.play(ShowCreation(line))
         self.play(
             GrowFromCenter(brace),
@@ -200,14 +200,14 @@ class GraphDistanceVsTime(GraphCarTrajectory):
         "y_max" : 100,
         "y_axis_height" : 6,
         "y_tick_frequency" : 10,
-        "y_labeled_nums" : range(10, 100, 10),
+        "y_labeled_nums" : list(range(10, 100, 10)),
         "y_axis_label" : "Distance (in meters)",
         "x_min" : -1,
         "x_max" : 9,
         "x_axis_width" : 9,
         "x_tick_frequency" : 1,
         "x_leftmost_tick" : None, #Change if different from x_min
-        "x_labeled_nums" : range(1, 9),
+        "x_labeled_nums" : list(range(1, 9)),
         "x_axis_label" : "$t$",
         "time_of_journey" : 8,
         "care_movement_rate_func" : s_rate_func,
@@ -233,13 +233,13 @@ class PlotVelocity(GraphScene):
         "x_max" : 9,
         "x_axis_width" : 9,
         "x_tick_frequency" : 1,
-        "x_labeled_nums" : range(1, 9),
+        "x_labeled_nums" : list(range(1, 9)),
         "x_axis_label" : "$t$",
         "y_min" : 0,
         "y_max" : 25,
         "y_axis_height" : 6,
         "y_tick_frequency" : 5,
-        "y_labeled_nums" : range(5, 30, 5),
+        "y_labeled_nums" : list(range(5, 30, 5)),
         "y_axis_label" : "Velocity in $\\frac{\\text{meters}}{\\text{second}}$",
         "num_graph_anchor_points" : 50,
     }
@@ -263,7 +263,7 @@ class PlotVelocity(GraphScene):
         self.speedometer = speedometer
 
     def plot_points(self):
-        times = range(0, 9)
+        times = list(range(0, 9))
         points = [
             self.coords_to_point(t, v_func(t))
             for t in times
@@ -343,7 +343,7 @@ class Chapter2Wrapper(Scene):
         title = TextMobject(self.title)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = WHITE)
-        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        rect.set_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -442,7 +442,7 @@ class Antiderivative(PiCreatureScene):
             self.pi_creature.change_mode, "raise_right_hand"
         )
         self.wait(2)
-        for pair in reversed(zip(functions, alt_functions)):
+        for pair in reversed(list(zip(functions, alt_functions))):
             self.play(
                 Transform(*pair),
                 self.pi_creature.change_mode, "pondering"
@@ -477,7 +477,7 @@ class Antiderivative(PiCreatureScene):
         bottom_arc = top_arc.copy()
         bottom_arc.rotate(np.pi)
         arcs = VGroup(top_arc, bottom_arc)
-        arcs.scale_to_fit_width(top_line.get_width())
+        arcs.set_width(top_line.get_width())
         for arc in arcs:
             arc.add_tip()
         top_arc.next_to(top_line, UP)
@@ -629,7 +629,7 @@ class ConstantVelocityPlot(PlotVelocity):
         self.play(randy.change_mode, "pondering")
         self.play(
             self.area_rect.set_color, YELLOW,
-            *map(Animation, self.get_mobjects()),
+            *list(map(Animation, self.get_mobjects())),
             rate_func = there_and_back
         )
         self.play(Blink(randy))
@@ -807,7 +807,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             mob.generate_target()
             mob.target.fade(0.7)
 
-        self.play(*map(MoveToTarget, faders))
+        self.play(*list(map(MoveToTarget, faders)))
         self.play(ShowCreation(pw_constant_graph, run_time = 2))
         self.wait()
         self.play(ShowCreation(line))
@@ -864,7 +864,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             ),
             Animation(right_brace)
         )
-        self.play(*map(FadeOut, [top_brace, right_brace]))
+        self.play(*list(map(FadeOut, [top_brace, right_brace])))
         self.wait()
 
         self.rects = rects
@@ -1020,10 +1020,10 @@ class PiecewiseConstantPlot(PlotVelocity):
                 rate_func = there_and_back
             )
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             group[1]
             for group in (v_lines, h_lines, height_labels)
-        ]))
+        ])))
         self.play(
             v_lines[0].set_color, RED,
             rate_func = there_and_back,
@@ -1050,11 +1050,11 @@ class PiecewiseConstantPlot(PlotVelocity):
             ShowCreation(arrow)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             area, arrow, 
             v_lines[0], h_lines[0], height_labels[0],
             rect, t_labels
-        ]))
+        ])))
 
     def show_v_dt_for_all_rectangles(self):
         dt_brace_group = VGroup(self.dt_brace, self.dt_label)
@@ -1096,7 +1096,7 @@ class PiecewiseConstantPlot(PlotVelocity):
         )
         integral.to_corner(UP+RIGHT)
         int_copy = integral.get_part_by_tex("int").copy()
-        bounds = map(integral.get_part_by_tex, ["0", "8"])
+        bounds = list(map(integral.get_part_by_tex, ["0", "8"]))
 
         sum_word = TextMobject("``Sum''")
         sum_word.next_to(integral, DOWN, MED_LARGE_BUFF, LEFT)
@@ -1187,9 +1187,9 @@ class PiecewiseConstantPlot(PlotVelocity):
         self.play(
             morty.change_mode, "pondering",
             rects.set_fill, None, 0.75,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 dt_copy, self.v_t, self.v_t_brace
-            ])
+            ]))
         )
         rects.align_submobjects(next_rects)
         for every_other_rect in rects[::2]:
@@ -1262,10 +1262,10 @@ class PiecewiseConstantPlot(PlotVelocity):
         self.wait()
         self.play(
             RemovePiCreatureBubble(morty, target_mode = "plain"),
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 cross, self.sum_word, self.ticks,
                 self.dt_brace, self.dt_label,
-            ])
+            ]))
         )
         self.play(FadeIn(brace), FadeIn(dt_to_0))
         for new_rects in self.rect_list[4:]:
@@ -1616,7 +1616,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         self.change_area_bounds(new_t_max = new_T)
         self.play(
             FadeIn(dark_area),
-            *map(Animation, self.foreground_mobjects)
+            *list(map(Animation, self.foreground_mobjects))
         )
         self.play(
             FadeOut(self.T_label_group),
@@ -1689,7 +1689,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
 
     def add_T_label(self, x_val, **kwargs):
         triangle = RegularPolygon(n=3, start_angle = np.pi/2)
-        triangle.scale_to_fit_height(MED_SMALL_BUFF)
+        triangle.set_height(MED_SMALL_BUFF)
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
         triangle.set_fill(WHITE, 1)
         triangle.set_stroke(width = 0)
@@ -1750,7 +1750,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
 
         self.play(
             UpdateFromAlphaFunc(group, update_group),
-            *map(Animation, self.foreground_mobjects),
+            *list(map(Animation, self.foreground_mobjects)),
             **kwargs
         )
 
@@ -1814,7 +1814,7 @@ class FindAntiderivative(Antiderivative):
         derivative, antiderivative = words = self.get_arc_labels(arcs)
 
         self.add(functions)
-        self.play(*map(ShowCreation, arcs))
+        self.play(*list(map(ShowCreation, arcs)))
         for word in words:
             self.play(FadeIn(word, submobject_mode = "lagged_start"))
         self.wait()
@@ -2122,7 +2122,7 @@ class LowerBound(AreaIsDerivative):
         big_brace = Brace(VGroup(at_T, at_zero))
         cancel_text = big_brace.get_text("Cancels when $T=0$")
 
-        self.play(*map(Write, [equals, at_T]))
+        self.play(*list(map(Write, [equals, at_T])))
         self.play(
             GrowFromCenter(at_T.brace),
             Write(antideriv_text, run_time = 2)
@@ -2157,10 +2157,10 @@ class LowerBound(AreaIsDerivative):
             Write(value_at_eight)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             at_eight.brace, value_at_eight,
             at_zero.brace, happens_to_be_zero,
-        ]))
+        ])))
 
         self.antideriv_diff = antideriv_diff
 
@@ -2183,7 +2183,7 @@ class LowerBound(AreaIsDerivative):
         self.change_area_bounds(1, 7, run_time = 2)
         self.play(
             self.T_label_group[0].set_fill, None, 0,
-            *map(FadeIn, numbers)
+            *list(map(FadeIn, numbers))
         )
         self.play(
             Transform(self.integral, new_integral),
@@ -2340,15 +2340,15 @@ class FundamentalTheorem(GraphScene):
             for rect in rects
         ])
         self.play(*it.chain(
-            map(GrowFromCenter, [f_brace, dx_brace]),
-            map(Write, [f_brace.label, dx_brace.label]),
+            list(map(GrowFromCenter, [f_brace, dx_brace])),
+            list(map(Write, [f_brace.label, dx_brace.label])),
         ))
         self.wait()
         for i in range(start_rect_index+1, last_rect_index):
             self.play(
                 rects[i-1].set_fill, None, low_opacity,
                 rects[i].set_fill, None, 1,
-                f_brace.scale_to_fit_height, rects[i].get_height(),
+                f_brace.set_height, rects[i].get_height(),
                 f_brace.next_to, rects[i], LEFT, 0,
                 dx_brace.next_to, rects[i], DOWN, 0,
                 *[
@@ -2358,10 +2358,10 @@ class FundamentalTheorem(GraphScene):
             )
         self.wait()
         self.play(*it.chain(
-            map(FadeOut, [
+            list(map(FadeOut, [
                 f_brace, dx_brace, 
                 f_brace.label, dx_brace.label
-            ]),
+            ])),
             [rects.set_fill, None, kwargs["fill_opacity"]]
         ))
 
@@ -2451,7 +2451,7 @@ class FundamentalTheorem(GraphScene):
             self.deriv.set_fill, None, 1,
             self.rhs.set_fill, None, 1,
         )
-        for label, line in reversed(zip(self.bound_labels, self.v_lines)):
+        for label, line in reversed(list(zip(self.bound_labels, self.v_lines))):
             new_line = line.copy().set_color(YELLOW)
             label.save_state()
             self.play(label.set_color, YELLOW)
@@ -2538,7 +2538,7 @@ class NegativeArea(GraphScene):
             ShowCreation(arrow)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [self.area, arrow]))
+        self.play(*list(map(FadeOut, [self.area, arrow])))
 
         self.negative_area_words = words
 
@@ -2649,9 +2649,9 @@ class NegativeArea(GraphScene):
         self.wait(2)
         self.play(*it.chain(
             [FadeIn(r) for r in rects if r is not rect],
-            map(FadeOut, [
+            list(map(FadeOut, [
                 dt_brace, v_brace, dt_label, v_label
-            ])
+            ]))
         ))
         self.wait()
         for new_rects in rect_list[1:]:
@@ -2756,7 +2756,7 @@ class Thumbnail(Chapter1Thumbnail):
             dx = 0.25,
         )
         words = TextMobject("Integrals")
-        words.scale_to_fit_width(8)
+        words.set_width(8)
         words.to_edge(UP)
 
         self.add(graph, rects, words)

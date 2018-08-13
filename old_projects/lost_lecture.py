@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from big_ol_pile_of_manim_imports import *
 
 from old_projects.div_curl import VectorField
@@ -117,12 +117,12 @@ class TakeOver(PiCreatureScene):
 
     def construct(self):
         gradient = ImageMobject("white_black_gradient")
-        gradient.scale_to_fit_height(FRAME_HEIGHT)
+        gradient.set_height(FRAME_HEIGHT)
         self.add(gradient)
 
         morty = self.pi_creatures
         henry = ImageMobject("Henry_As_Stick")
-        henry.scale_to_fit_height(4)
+        henry.set_height(4)
         henry.to_edge(LEFT)
         henry.to_edge(DOWN)
 
@@ -158,7 +158,7 @@ class ShowEmergingEllipse(Scene):
 
         fade_rect = FullScreenFadeRectangle()
 
-        line = lines[len(lines) / 5]
+        line = lines[len(lines) // 5]
         line_dot = Dot(line.get_center(), color=YELLOW)
         line_dot.scale(0.5)
 
@@ -329,7 +329,7 @@ class ShowFullStory(Scene):
         images.shift(-images[0].get_center())
 
         self.play(
-            images.scale_to_fit_width, FRAME_WIDTH - 1,
+            images.set_width, FRAME_WIDTH - 1,
             images.center,
             run_time=3,
         )
@@ -355,10 +355,10 @@ class FeynmanAndOrbitingPlannetOnEllipseDiagram(ShowEmergingEllipse):
         e_dot.set_color(YELLOW)
 
         comet = ImageMobject("earth")
-        comet.scale_to_fit_width(0.3)
+        comet.set_width(0.3)
 
         feynman = ImageMobject("Feynman")
-        feynman.scale_to_fit_height(6)
+        feynman.set_height(6)
         feynman.next_to(ORIGIN, LEFT)
         feynman.to_edge(UP)
         feynman_name = TextMobject("Richard Feynman")
@@ -394,7 +394,7 @@ class FeynmanFame(Scene):
             ImageMobject("Feynman_Lectures_cover"),
         )
         for book in books:
-            book.scale_to_fit_height(6)
+            book.set_height(6)
             book.move_to(FRAME_WIDTH * LEFT / 4)
 
         feynman_diagram = self.get_feynman_diagram()
@@ -428,14 +428,14 @@ class FeynmanFame(Scene):
         safe.add_to_back(safe_rect)
 
         bongo = SVGMobject(file_name="bongo")
-        bongo.scale_to_fit_height(1)
+        bongo.set_height(1)
         bongo.set_color(WHITE)
         bongo.next_to(safe, RIGHT, LARGE_BUFF)
 
         objects = VGroup(safe, bongo)
 
         feynman_smile = ImageMobject("Feynman_Los_Alamos")
-        feynman_smile.scale_to_fit_height(4)
+        feynman_smile.set_height(4)
         feynman_smile.next_to(objects, DOWN)
 
         VGroup(objects, feynman_smile).next_to(ORIGIN, RIGHT)
@@ -470,7 +470,7 @@ class FeynmanFame(Scene):
 
         # As a teacher
         feynman_teacher = ImageMobject("Feynman_teaching")
-        feynman_teacher.scale_to_fit_width(FRAME_WIDTH / 2 - 1)
+        feynman_teacher.set_width(FRAME_WIDTH / 2 - 1)
         feynman_teacher.next_to(ORIGIN, RIGHT)
 
         self.play(self.get_book_intro(feynman_teacher))
@@ -589,7 +589,7 @@ class TheMotionOfPlanets(Scene):
 
     def setup_orbits(self):
         sun = ImageMobject("sun")
-        sun.scale_to_fit_height(0.7)
+        sun.set_height(0.7)
         planets, ellipses, orbits = self.get_planets_ellipses_and_orbits(sun)
 
         archivist_words = TextMobject(
@@ -603,7 +603,7 @@ class TheMotionOfPlanets(Scene):
         alt_name.add_background_rectangle()
 
         book = ImageMobject("Lost_Lecture_cover")
-        book.scale_to_fit_height(4)
+        book.set_height(4)
         book.next_to(alt_name, DOWN)
 
         self.add(SunAnimation(sun))
@@ -638,7 +638,7 @@ class TheMotionOfPlanets(Scene):
         orbit_eccentricies = [0.206, 0.006, 0.0167, 0.0934, 0.967]
 
         for planet, size in zip(planets, sizes):
-            planet.scale_to_fit_height(0.5)
+            planet.set_height(0.5)
             planet.scale(size)
 
         ellipses = VGroup(*[
@@ -778,7 +778,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
             )
             max_width = 0.6 * radial_line.get_width()
             if new_decimal.get_width() > max_width:
-                new_decimal.scale_to_fit_width(max_width)
+                new_decimal.set_width(max_width)
             new_decimal.next_to(radial_line, UP, SMALL_BUFF)
             VGroup(new_decimal, radial_line).rotate(
                 -angle, about_point=ORIGIN
@@ -888,7 +888,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
 
         equation = VGroup(d_dt, in_vect, equals, out_vect)
         equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
-        equation.scale_to_fit_width(6)
+        equation.set_width(6)
 
         equation.to_corner(DR, buff=MED_LARGE_BUFF)
         cross = Cross(equation)
@@ -901,7 +901,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
     # Helpers
     def get_comet(self):
         comet = ImageMobject("comet")
-        comet.scale_to_fit_height(self.comet_height)
+        comet.set_height(self.comet_height)
         return comet
 
     def get_ellipse(self):
@@ -985,7 +985,7 @@ class FeynmanElementaryQuote(Scene):
             to know ahead of time in order to understand it,
             except to have an infinite amount of intelligence.
         """
-        quote_parts = filter(lambda s: s, quote_text.split(" "))
+        quote_parts = [s for s in quote_text.split(" ") if s]
         quote = TextMobject(
             *quote_parts,
             tex_to_color_map={
@@ -1002,7 +1002,7 @@ class FeynmanElementaryQuote(Scene):
             alignment=""
         )
         quote[-1].shift(2 * SMALL_BUFF * LEFT)
-        quote.scale_to_fit_width(FRAME_WIDTH - 1)
+        quote.set_width(FRAME_WIDTH - 1)
         quote.to_edge(UP)
         quote.get_part_by_tex("of").set_color(WHITE)
 
@@ -1038,11 +1038,11 @@ class FeynmanElementaryQuote(Scene):
             ImageMobject("Fourier_Thumbnail"),
         )
         for image in images:
-            image.scale_to_fit_height(3)
+            image.set_height(3)
         images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
         images.to_edge(DOWN, buff=LARGE_BUFF)
         images[1].move_to(images[0])
-        crosses = VGroup(*map(Cross, images))
+        crosses = VGroup(*list(map(Cross, images)))
         crosses.set_stroke("RED", 10)
 
         for image, cross in zip(images, crosses):
@@ -1075,7 +1075,7 @@ class LostLecturePicture(TODOStub):
 
     def construct(self):
         picture = ImageMobject("Feynman_teaching")
-        picture.scale_to_fit_height(FRAME_WIDTH)
+        picture.set_height(FRAME_WIDTH)
         picture.to_corner(UL, buff=0)
         picture.fade(0.5)
 
@@ -1135,16 +1135,13 @@ class TableOfContents(Scene):
         ))
         self.wait()
         for item in items:
-            other_items = VGroup(*filter(
-                lambda m: m is not item,
-                items
-            ))
+            other_items = VGroup(*[m for m in items if m is not item])
             new_item = item.copy()
             new_item.scale(scale_factor, about_edge=LEFT)
             new_item.set_fill(WHITE, 1)
             self.play(
                 Transform(item, new_item),
-                *map(MoveToTarget, other_items)
+                *list(map(MoveToTarget, other_items))
             )
             self.wait()
 
@@ -1163,7 +1160,7 @@ class DrawEllipseOverlay(Scene):
                 "HeldUpEllipse.jpg"
             )
         )
-        image.scale_to_fit_height(FRAME_HEIGHT)
+        image.set_height(FRAME_HEIGHT)
 
         # self.add(image)
         self.play(ShowCreation(ellipse))
@@ -1316,7 +1313,7 @@ class ShowEllipseDefiningProperty(Scene):
         self.play(
             ReplacementTransform(focus_words.copy(), foci_word),
         )
-        self.play(*map(ShowCreation, connecting_lines))
+        self.play(*list(map(ShowCreation, connecting_lines)))
         for word in list(focus_words) + [foci_word]:
             word.add_background_rectangle()
             self.add_foreground_mobjects(word)
@@ -1346,7 +1343,7 @@ class ShowEllipseDefiningProperty(Scene):
             """,
             alignment="",
         )
-        footnote.scale_to_fit_width(5)
+        footnote.set_width(5)
         footnote.to_corner(DR)
         footnote.set_stroke(WHITE, 0.5)
 
@@ -1405,7 +1402,7 @@ class ShowEllipseDefiningProperty(Scene):
                 )
                 max_width = 0.6 * line.get_width()
                 if new_decimal.get_width() > max_width:
-                    new_decimal.scale_to_fit_width(max_width)
+                    new_decimal.set_width(max_width)
                 new_decimal.next_to(line, UP, SMALL_BUFF)
                 new_decimal.set_color(color)
                 new_decimal.add_to_back(
@@ -1501,7 +1498,7 @@ class GeometryProofLand(Scene):
         word.shift(3 * RIGHT)
         word.apply_complex_function(np.exp)
         word.rotate(90 * DEGREES)
-        word.scale_to_fit_width(9)
+        word.set_width(9)
         word.center()
         word.to_edge(UP)
         word.set_color_by_gradient(*self.colors)
@@ -1619,10 +1616,10 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         focal_sum_point = VectorizedPoint()
         focal_sum_point.move_to(circle.get_top())
         dots = [self.ep_dot, self.center_dot]
-        colors = map(Mobject.get_color, dots)
+        colors = list(map(Mobject.get_color, dots))
 
         def get_foci():
-            return map(Mobject.get_center, dots)
+            return list(map(Mobject.get_center, dots))
 
         focal_lines, focal_lines_update_animation = \
             self.get_focal_lines_and_update(get_foci, focal_sum_point)
@@ -1662,10 +1659,10 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             )
             self.wait()
         self.remove(*to_add)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             focal_lines, distance_labels,
             sum_expression, numbers
-        ]))
+        ])))
 
         self.set_variables_as_attrs(
             focal_lines, focal_lines_update_animation,
@@ -2027,7 +2024,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         self.wait()
 
         self.remove(*self.focal_sum_things_to_add)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             radial_line,
             QP_line,
             P_dot, P_label,
@@ -2038,7 +2035,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             self.sum_expression,
             sum_rect,
             tangency_comment,
-        ]))
+        ])))
         self.wait()
 
         # Show all lines
@@ -2058,7 +2055,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         ellipse = self.ellipse
         ep_dot = self.ep_dot
         planet = ImageMobject("earth")
-        planet.scale_to_fit_height(0.25)
+        planet.set_height(0.25)
         orbit = Orbiting(planet, ep_dot, ellipse)
 
         lines = self.lines
@@ -2323,7 +2320,7 @@ class KeplersSecondLaw(AskAboutEllipses):
         )
         min_width = 0.8 * radius.get_length()
         if radius_words.get_width() > min_width:
-            radius_words.scale_to_fit_width(min_width)
+            radius_words.set_width(min_width)
         radius_words.match_color(radius)
         radius_words.next_to(ORIGIN, UP, SMALL_BUFF)
         angle = radius.get_angle()
@@ -2378,7 +2375,7 @@ class NonEllipticalKeplersLaw(KeplersSecondLaw):
                 0
             ])
         )
-        orbit_shape.scale_to_fit_height(7)
+        orbit_shape.set_height(7)
         orbit_shape.stretch(1.5, 0)
         orbit_shape.shift(LEFT)
         orbit_shape.set_stroke(LIGHT_GREY, 1)
@@ -2578,7 +2575,7 @@ class AngularMomentumArgument(KeplersSecondLaw):
                 area_label.get_part_by_tex(tex).copy(),
                 area_expression.get_part_by_tex(tex),
             )
-            for tex in "=", "\\frac{1}{2}", "\\times"
+            for tex in ("=", "\\frac{1}{2}", "\\times")
         ])
         self.play(Restore(R_term))
         self.play(ReplacementTransform(
@@ -2736,13 +2733,13 @@ class FeynmanRecountingNewton(Scene):
 
     def construct(self):
         feynman_teaching = ImageMobject("Feynman_teaching")
-        feynman_teaching.scale_to_fit_width(FRAME_WIDTH)
+        feynman_teaching.set_width(FRAME_WIDTH)
 
         newton = ImageMobject("Newton")
         principia = ImageMobject("Principia_equal_area")
         images = [newton, principia]
         for image in images:
-            image.scale_to_fit_height(5)
+            image.set_height(5)
         newton.to_corner(UL)
         principia.next_to(newton, RIGHT)
         for image in images:
@@ -2761,7 +2758,7 @@ class FeynmanRecountingNewton(Scene):
             FadeInAndShiftFromDirection(
                 mob, direction=3 * LEFT
             )
-            for mob in principia, principia.rect
+            for mob in (principia, principia.rect)
         ])
         self.wait()
 
@@ -2930,7 +2927,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
 
         p1, p2 = [
             ellipse.point_from_proportion(a)
-            for a in alpha, alpha + d_alpha
+            for a in (alpha, alpha + d_alpha)
         ]
         vector = Arrow(
             p1, p2, buff=0
@@ -3111,7 +3108,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
 
         self.play(
             FadeIn(faders),
-            *map(ShowCreation, lines)
+            *list(map(ShowCreation, lines))
         )
         self.play(*[
             LaggedStart(
@@ -3670,7 +3667,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         frame.shift(3 * LEFT + 0.5 * UP)
 
         self.play(ApplyWave(ellipse))
-        self.play(*map(GrowArrow, vectors))
+        self.play(*list(map(GrowArrow, vectors)))
         self.play(
             LaggedStart(
                 MoveToTarget, vectors,
@@ -3908,7 +3905,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         self.wait()
         self.play(ShowCreation(cross))
         self.wait()
-        self.play(*map(FadeOut, [v_line, arc, theta_q, cross]))
+        self.play(*list(map(FadeOut, [v_line, arc, theta_q, cross])))
         self.wait()
         self.play(
             ReplacementTransform(
@@ -4076,7 +4073,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         self.play(
             self.ghost_lines.set_stroke, {"width": 0.5},
             self.eccentric_lines.set_stroke, {"width": 0.5},
-            *map(WiggleOutThenIn, [e_line, c_line])
+            *list(map(WiggleOutThenIn, [e_line, c_line]))
         )
         for x in range(3):
             self.play(
@@ -4197,7 +4194,7 @@ class PatYourselfOnTheBack(TeacherStudentsScene):
         feynman = ImageMobject("Feynman", height=4)
         feynman.to_corner(UL)
         chess = ImageMobject("ChessGameOfTheCentury")
-        chess.scale_to_fit_height(4)
+        chess.set_height(4)
         chess.next_to(feynman)
 
         self.play(FadeInFromDown(feynman))
@@ -4216,7 +4213,7 @@ class Thumbnail(ShowEmergingEllipse):
 
     def construct(self):
         background = ImageMobject("Feynman_teaching")
-        background.scale_to_fit_width(FRAME_WIDTH)
+        background.set_width(FRAME_WIDTH)
         background.scale(1.05)
         background.to_corner(UR, buff=0)
         background.shift(2 * UP)
@@ -4225,7 +4222,7 @@ class Thumbnail(ShowEmergingEllipse):
 
         circle = self.get_circle()
         circle.set_stroke(width=6)
-        circle.scale_to_fit_height(6.5)
+        circle.set_height(6.5)
         circle.to_corner(UL)
         circle.set_fill(BLACK, 0.9)
         lines = self.get_lines()

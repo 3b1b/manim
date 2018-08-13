@@ -12,7 +12,7 @@ addressible by changing this file.
 Note: One should NOT import from this file for main library code, it is meant only
 as a convenience for scripts creating scenes for videos.
 """
-from __future__ import absolute_import
+
 
 from constants import *
 
@@ -37,6 +37,7 @@ from continual_animation.from_animation import *
 from continual_animation.numbers import *
 from continual_animation.update import *
 
+from mobject.coordinate_systems import *
 from mobject.frame import *
 from mobject.functions import *
 from mobject.geometry import *

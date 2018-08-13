@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from colour import Color
 
@@ -9,8 +9,10 @@ from utils.bezier import get_smooth_handle_points
 from utils.bezier import interpolate
 from utils.bezier import is_closed
 from utils.bezier import partial_bezier_points
-from utils.color import color_to_rgb
+from utils.color import color_to_rgba
 from utils.iterables import make_even
+from utils.iterables import tuplify
+from utils.iterables import stretch_array_to_length
 
 
 class VMobject(Mobject):
@@ -18,7 +20,20 @@ class VMobject(Mobject):
         "fill_color": None,
         "fill_opacity": 0.0,
         "stroke_color": None,
-        "stroke_width": DEFAULT_POINT_THICKNESS,
+        "stroke_opacity": 1.0,
+        "stroke_width": DEFAULT_STROKE_WIDTH,
+        # The purpose of background stroke is to have
+        # something that won't overlap the fill, e.g.
+        # For text against some textured background
+        "background_stroke_color": BLACK,
+        "background_stroke_opacity": 1.0,
+        "background_stroke_width": 0,
+        # When a color c is set, there will be a second color
+        # computed based on interpolating c to WHITE by with
+        # sheen, and the display will gradient to this
+        # secondary color in the direction of sheen_direction.
+        "sheen": 0.0,
+        "sheen_direction": UL,
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
         "is_subpath": False,
@@ -35,76 +50,119 @@ class VMobject(Mobject):
 
     # Colors
     def init_colors(self):
-        self.set_style_data(
-            stroke_color=self.stroke_color or self.color,
-            stroke_width=self.stroke_width,
-            fill_color=self.fill_color or self.color,
-            fill_opacity=self.fill_opacity,
+        self.set_fill(
+            color=self.fill_color or self.color,
+            opacity=self.fill_opacity,
+            family=self.propagate_style_to_family
+        )
+        self.set_stroke(
+            color=self.stroke_color or self.color,
+            width=self.stroke_width,
+            opacity=self.stroke_opacity,
+            family=self.propagate_style_to_family
+        )
+        self.set_background_stroke(
+            color=self.background_stroke_color,
+            width=self.background_stroke_width,
+            opacity=self.background_stroke_opacity,
+            family=self.propagate_style_to_family,
+        )
+        self.set_sheen_direction(
+            self.sheen_direction,
+            family=self.propagate_style_to_family
+        )
+        self.set_sheen(
+            self.sheen,
             family=self.propagate_style_to_family
         )
         return self
 
-    def set_family_attr(self, attr, value):
-        for mob in self.submobject_family():
-            setattr(mob, attr, value)
+    def get_rgbas_array(self, color, opacity):
+        """
+        First arg can be either a color, or a tuple/list of colors.
+        Likewise, opacity can either be a float, or a tuple of floats.
+        If self.sheen is not zero, and only
+        one color was passed in, a second slightly light color
+        will automatically be added for the gradient
+        """
+        colors = list(tuplify(color))
+        opacities = list(tuplify(opacity))
+        rgbas = np.array([
+            color_to_rgba(c, o)
+            for c, o in zip(*make_even(colors, opacities))
+        ])
 
-    def set_style_data(self,
-                       stroke_color=None,
-                       stroke_width=None,
-                       fill_color=None,
-                       fill_opacity=None,
-                       family=True
-                       ):
-        if stroke_color is not None:
-            self.stroke_rgb = color_to_rgb(stroke_color)
-        if fill_color is not None:
-            self.fill_rgb = color_to_rgb(fill_color)
-        if stroke_width is not None:
-            self.stroke_width = stroke_width
-        if fill_opacity is not None:
-            self.fill_opacity = fill_opacity
-        if family:
-            for mob in self.submobjects:
-                mob.set_style_data(
-                    stroke_color=stroke_color,
-                    stroke_width=stroke_width,
-                    fill_color=fill_color,
-                    fill_opacity=fill_opacity,
-                    family=family
-                )
+        sheen = self.get_sheen()
+        if sheen != 0 and len(rgbas) == 1:
+            light_rgbas = np.array(rgbas)
+            light_rgbas[:, :3] += sheen
+            light_rgbas = np.clip(light_rgbas, 0, 1)
+            rgbas = np.append(rgbas, light_rgbas, axis=0)
+        return rgbas
+
+    def update_rgbas_array(self, array_name, color=None, opacity=None):
+        passed_color = color or BLACK
+        passed_opacity = opacity or 0
+        rgbas = self.get_rgbas_array(passed_color, passed_opacity)
+        if not hasattr(self, array_name):
+            setattr(self, array_name, rgbas)
+            return self
+        # Match up current rgbas array with the newly calculated
+        # one. 99% of the time they'll be the same.
+        curr_rgbas = getattr(self, array_name)
+        if len(curr_rgbas) < len(rgbas):
+            curr_rgbas = stretch_array_to_length(len(rgbas))
+            setattr(self, array_name, curr_rgbas)
+        elif len(rgbas) < len(curr_rgbas):
+            rgbas = stretch_array_to_length(len(curr_rgbas))
+        # Only update rgb if color was not None, and only
+        # update alpha channel if opacity was passed in
+        if color is not None:
+            curr_rgbas[:, :3] = rgbas[:, :3]
+        if opacity is not None:
+            curr_rgbas[:, 3] = rgbas[:, 3]
         return self
 
     def set_fill(self, color=None, opacity=None, family=True):
-        return self.set_style_data(
-            fill_color=color,
-            fill_opacity=opacity,
-            family=family
-        )
+        if family:
+            for submobject in self.submobjects:
+                submobject.set_fill(color, opacity, family)
+        self.update_rgbas_array("fill_rgbas", color, opacity)
+        return self
 
-    def set_stroke(self, color=None, width=None, family=True):
-        return self.set_style_data(
-            stroke_color=color,
-            stroke_width=width,
-            family=family
-        )
+    def set_stroke(self, color=None, width=None, opacity=None,
+                   background=False, family=True):
+        if family:
+            for submobject in self.submobjects:
+                submobject.set_stroke(
+                    color, width, opacity, background, family
+                )
+        if background:
+            array_name = "background_stroke_rgbas"
+            width_name = "background_stroke_width"
+        else:
+            array_name = "stroke_rgbas"
+            width_name = "stroke_width"
+        self.update_rgbas_array(array_name, color, opacity)
+        if width is not None:
+            setattr(self, width_name, width)
+        return self
+
+    def set_background_stroke(self, **kwargs):
+        kwargs["background"] = True
+        self.set_stroke(**kwargs)
+        return self
 
     def set_color(self, color, family=True):
-        self.set_style_data(
-            stroke_color=color,
-            fill_color=color,
-            family=family
-        )
-        self.color = color
+        self.set_fill(color, family=family)
+        self.set_stroke(color, family=family)
         return self
 
     def match_style(self, vmobject):
-        self.set_style_data(
-            stroke_color=vmobject.get_stroke_color(),
-            stroke_width=vmobject.get_stroke_width(),
-            fill_color=vmobject.get_fill_color(),
-            fill_opacity=vmobject.get_fill_opacity(),
-            family=False
-        )
+        for a_name in ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]:
+            setattr(self, a_name, np.array(getattr(vmobject, a_name)))
+        self.stroke_width = vmobject.stroke_width
+        self.background_stroke_width = vmobject.background_stroke_width
 
         # Does its best to match up submobject lists, and
         # match styles accordingly
@@ -118,46 +176,112 @@ class VMobject(Mobject):
         return self
 
     def fade_no_recurse(self, darkness):
-        self.set_stroke(
-            width=(1 - darkness) * self.get_stroke_width(),
-            family=False
-        )
-        self.set_fill(
-            opacity=(1 - darkness) * self.get_fill_opacity(),
-            family=False
-        )
+        opacity = 1.0 - darkness
+        self.set_fill(opacity=opacity)
+        self.set_stroke(opacity=opacity)
+        self.set_background_stroke(opacity=opacity)
         return self
 
-    def get_fill_rgb(self):
-        return np.clip(self.fill_rgb, 0, 1)
+    def get_fill_rgbas(self):
+        try:
+            return np.clip(self.fill_rgbas, 0, 1)
+        except AttributeError:
+            return np.zeros((1, 4))
 
     def get_fill_color(self):
-        try:
-            self.fill_rgb = np.clip(self.fill_rgb, 0.0, 1.0)
-            return Color(rgb=self.fill_rgb)
-        except:
-            return Color(WHITE)
+        """
+        If there are multiple colors (for gradient)
+        this returns the first one
+        """
+        return self.get_fill_colors()[0]
 
     def get_fill_opacity(self):
-        return np.clip(self.fill_opacity, 0, 1)
+        """
+        If there are multiple opacities, this returns the
+        first
+        """
+        return self.get_fill_opacities()[0]
 
-    def get_stroke_rgb(self):
-        return np.clip(self.stroke_rgb, 0, 1)
+    def get_fill_colors(self):
+        return [
+            Color(rgb=rgba[:3])
+            for rgba in self.get_fill_rgbas()
+        ]
 
-    def get_stroke_color(self):
+    def get_fill_opacities(self):
+        return self.get_fill_rgbas()[:, 3]
+
+    def get_stroke_rgbas(self, background=False):
         try:
-            self.stroke_rgb = np.clip(self.stroke_rgb, 0, 1)
-            return Color(rgb=self.stroke_rgb)
-        except:
-            return Color(WHITE)
+            if background:
+                rgbas = self.background_stroke_rgbas
+            else:
+                rgbas = self.stroke_rgbas
+            return np.clip(rgbas, 0, 1)
+        except AttributeError:
+            return np.zeros((1, 4))
 
-    def get_stroke_width(self):
-        return max(0, self.stroke_width)
+    def get_stroke_color(self, background=False):
+        return self.get_stroke_colors(background)[0]
+
+    def get_stroke_width(self, background=False):
+        if background:
+            width = self.background_stroke_width
+        else:
+            width = self.stroke_width
+        return max(0, width)
+
+    def get_stroke_opacity(self, background=False):
+        return self.get_stroke_opacities(background)[0]
+
+    def get_stroke_colors(self, background=False):
+        return [
+            Color(rgb=rgba[:3])
+            for rgba in self.get_stroke_rgbas(background)
+        ]
+
+    def get_stroke_opacities(self, background=False):
+        return self.get_stroke_rgbas(background)[:, 3]
 
     def get_color(self):
-        if self.fill_opacity == 0:
+        if np.all(self.get_fill_opacities() == 0):
             return self.get_stroke_color()
         return self.get_fill_color()
+
+    def set_sheen_direction(self, direction, family=True):
+        direction = np.array(direction)
+        if family:
+            for submob in self.submobject_family():
+                submob.sheen_direction = direction
+        else:
+            self.sheen_direction = direction
+        return self
+
+    def set_sheen(self, factor, family=True):
+        if family:
+            for submob in self.submobject_family():
+                submob.sheen = factor
+        else:
+            self.sheen = factor
+        self.set_stroke(self.get_stroke_color(), family=family)
+        self.set_fill(self.get_fill_color(), family=family)
+        return self
+
+    def get_sheen_direction(self):
+        return np.array(self.sheen_direction)
+
+    def get_sheen(self):
+        return self.sheen
+
+    def get_gradient_start_and_end_points(self):
+        direction = self.get_sheen_direction()
+        c = self.get_center()
+        bases = np.array([
+            self.get_edge_center(vect) - c
+            for vect in [RIGHT, UP, OUT]
+        ]).transpose()
+        offset = np.dot(bases, direction)
+        return (c + offset, c - offset)
 
     def color_using_background_image(self, background_image_file):
         self.background_image_file = background_image_file
@@ -278,10 +402,7 @@ class VMobject(Mobject):
         return self
 
     def get_subpath_mobjects(self):
-        return filter(
-            lambda m: hasattr(m, 'is_subpath') and m.is_subpath,
-            self.submobjects
-        )
+        return [m for m in self.submobjects if hasattr(m, 'is_subpath') and m.is_subpath]
 
     def apply_function(self, function):
         factor = self.pre_function_handle_to_anchor_scale_factor
@@ -322,7 +443,7 @@ class VMobject(Mobject):
         return bezier(self.points[3 * n:3 * n + 4])
 
     def get_num_anchor_points(self):
-        return (len(self.points) - 1) / 3 + 1
+        return (len(self.points) - 1) // 3 + 1
 
     def point_from_proportion(self, alpha):
         num_cubics = self.get_num_anchor_points() - 1
@@ -344,12 +465,13 @@ class VMobject(Mobject):
         return self.get_anchors()
 
     # Alignment
-    def align_points(self, mobject):
-        Mobject.align_points(self, mobject)
-        is_subpath = self.is_subpath or mobject.is_subpath
-        self.is_subpath = mobject.is_subpath = is_subpath
-        mark_closed = self.mark_paths_closed and mobject.mark_paths_closed
-        self.mark_paths_closed = mobject.mark_paths_closed = mark_closed
+    def align_points(self, vmobject):
+        Mobject.align_points(self, vmobject)
+        self.align_rgbas(vmobject)
+        is_subpath = self.is_subpath or vmobject.is_subpath
+        self.is_subpath = vmobject.is_subpath = is_subpath
+        mark_closed = self.mark_paths_closed and vmobject.mark_paths_closed
+        self.mark_paths_closed = vmobject.mark_paths_closed = mark_closed
         return self
 
     def align_points_with_larger(self, larger_mobject):
@@ -376,7 +498,7 @@ class VMobject(Mobject):
         # and its value tells you the appropriate index of
         # the smaller curve.
         index_allocation = (np.arange(curr + n - 1) *
-                            num_curves) / (curr + n - 1)
+                            num_curves) // (curr + n - 1)
         for index in range(num_curves):
             curr_bezier_points = self.points[3 * index:3 * index + 4]
             num_inter_curves = sum(index_allocation == index)
@@ -392,6 +514,19 @@ class VMobject(Mobject):
         self.set_points(points)
         return self
 
+    def align_rgbas(self, vmobject):
+        attrs = ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]
+        for attr in attrs:
+            a1 = getattr(self, attr)
+            a2 = getattr(vmobject, attr)
+            if len(a1) > len(a2):
+                new_a2 = stretch_array_to_length(a2, len(a1))
+                setattr(vmobject, attr, new_a2)
+            elif len(a2) > len(a1):
+                new_a1 = stretch_array_to_length(a1, len(a2))
+                setattr(self, attr, new_a1)
+        return self
+
     def get_point_mobject(self, center=None):
         if center is None:
             center = self.get_center()
@@ -404,10 +539,13 @@ class VMobject(Mobject):
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
-            "stroke_rgb",
+            "fill_rgbas",
+            "stroke_rgbas",
+            "background_stroke_rgbas",
             "stroke_width",
-            "fill_rgb",
-            "fill_opacity",
+            "background_stroke_width",
+            "sheen_direction",
+            "sheen",
         ]
         for attr in attrs:
             setattr(self, attr, interpolate(
@@ -416,7 +554,6 @@ class VMobject(Mobject):
                 alpha
             ))
             if alpha == 1.0:
-                # print getattr(mobject2, attr)
                 setattr(self, attr, getattr(mobject2, attr))
 
     def pointwise_become_partial(self, mobject, a, b):
@@ -510,6 +647,6 @@ class DashedMobject(VMobject):
         for i in range(self.dashes_num):
             a = ((1 + buff) * i) / self.dashes_num
             b = 1 - ((1 + buff) * (self.dashes_num - 1 - i)) / self.dashes_num
-            dash = VMobject(color=self.color)
+            dash = VMobject(color=self.get_color())
             dash.pointwise_become_partial(mobject, a, b)
             self.submobjects.append(dash)

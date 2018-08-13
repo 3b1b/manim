@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
+
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -59,7 +59,7 @@ FORMULAE = [
     # "\\sum_{n = 0}^\\infty \\frac{(-1)^n}{2n+1} = \\frac{\\pi}{4} \\\\",
 ]
 
-DIGITS = map(str, list("62831853071795864769"))
+DIGITS = list(map(str, list("62831853071795864769")))
 DIGITS[1] = "." + DIGITS[1] #2->.2
 
 BUFF = 1.0
@@ -84,7 +84,7 @@ class HappyTauDayWords(Scene):
         self.play(BlinkPiCreature(pi))
 
 class TauPoem(Scene):
-    args_list = map(lambda x : (x,), range(len(POEM_LINES)))
+    args_list = [(x,) for x in range(len(POEM_LINES))]
     @staticmethod
     def args_to_string(line_num, *ignore):
         return str(line_num)

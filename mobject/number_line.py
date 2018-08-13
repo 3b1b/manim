@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import *
 
@@ -116,7 +116,7 @@ class NumberLine(VMobject):
         if len(numbers) == 0:
             numbers = self.default_numbers_to_display()
         if "force_integers" in kwargs and kwargs["force_integers"]:
-            numbers = map(int, numbers)
+            numbers = list(map(int, numbers))
         result = VGroup()
         for number in numbers:
             mob = TexMobject(str(number))

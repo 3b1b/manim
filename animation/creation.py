@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import numpy as np
 
@@ -44,36 +44,6 @@ class Uncreate(ShowCreation):
     }
 
 
-class Write(ShowCreation):
-    CONFIG = {
-        "rate_func": None,
-        "submobject_mode": "lagged_start",
-    }
-
-    def __init__(self, mob_or_text, **kwargs):
-        digest_config(self, kwargs)
-        if isinstance(mob_or_text, str):
-            mobject = TextMobject(mob_or_text)
-        else:
-            mobject = mob_or_text
-        if "run_time" not in kwargs:
-            self.establish_run_time(mobject)
-        if "lag_factor" not in kwargs:
-            if len(mobject.family_members_with_points()) < 4:
-                min_lag_factor = 1
-            else:
-                min_lag_factor = 2
-            self.lag_factor = max(self.run_time - 1, min_lag_factor)
-        ShowCreation.__init__(self, mobject, **kwargs)
-
-    def establish_run_time(self, mobject):
-        num_subs = len(mobject.family_members_with_points())
-        if num_subs < 15:
-            self.run_time = 1
-        else:
-            self.run_time = 2
-
-
 class DrawBorderThenFill(Animation):
     CONFIG = {
         "run_time": 2,
@@ -114,6 +84,36 @@ class DrawBorderThenFill(Animation):
             ]
             submobject.set_stroke(width=width)
             submobject.set_fill(opacity=opacity)
+
+
+class Write(DrawBorderThenFill):
+    CONFIG = {
+        "rate_func": None,
+        "submobject_mode": "lagged_start",
+    }
+
+    def __init__(self, mob_or_text, **kwargs):
+        digest_config(self, kwargs)
+        if isinstance(mob_or_text, str):
+            mobject = TextMobject(mob_or_text)
+        else:
+            mobject = mob_or_text
+        if "run_time" not in kwargs:
+            self.establish_run_time(mobject)
+        if "lag_factor" not in kwargs:
+            if len(mobject.family_members_with_points()) < 4:
+                min_lag_factor = 1
+            else:
+                min_lag_factor = 2
+            self.lag_factor = max(self.run_time - 1, min_lag_factor)
+        DrawBorderThenFill.__init__(self, mobject, **kwargs)
+
+    def establish_run_time(self, mobject):
+        num_subs = len(mobject.family_members_with_points())
+        if num_subs < 15:
+            self.run_time = 1
+        else:
+            self.run_time = 2
 
 # Fading
 
@@ -199,7 +199,7 @@ class VFadeIn(Animation):
     """
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.set_stroke(
-            width=interpolate(0, starting_submobject.get_stroke_width(), alpha)
+            opacity=interpolate(0, starting_submobject.get_stroke_opacity(), alpha)
         )
         submobject.set_fill(
             opacity=interpolate(0, starting_submobject.get_fill_opacity(), alpha)

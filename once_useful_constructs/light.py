@@ -242,10 +242,10 @@ class Spotlight(VMobject):
     def viewing_angles(self, screen):
 
         screen_points = screen.get_anchors()
-        projected_screen_points = map(self.project, screen_points)
+        projected_screen_points = list(map(self.project, screen_points))
 
-        viewing_angles = np.array(map(self.viewing_angle_of_point,
-                                      projected_screen_points))
+        viewing_angles = np.array(list(map(self.viewing_angle_of_point,
+                                      projected_screen_points)))
 
         lower_angle = upper_angle = 0
         if len(viewing_angles) != 0:

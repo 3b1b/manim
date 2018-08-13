@@ -84,7 +84,7 @@ class NumericalMatrixMultiplication(Scene):
         equals = TexMobject("=")
         everything = VGroup(left, right, equals, result)
         everything.arrange_submobjects()
-        everything.scale_to_fit_width(FRAME_WIDTH - 1)
+        everything.set_width(FRAME_WIDTH - 1)
         self.add(everything)
 
     def animate_product(self, left, right, result):

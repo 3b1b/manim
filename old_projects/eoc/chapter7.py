@@ -31,7 +31,7 @@ class ThisVideo(TeacherStudentsScene):
         integral_videos = VGroup(*series[7:9])
         video_groups = [deriv_videos, this_video, integral_videos]
 
-        braces = map(Brace, video_groups)
+        braces = list(map(Brace, video_groups))
         deriv_brace, this_brace, integral_brace = braces
 
         tex_mobs = [
@@ -278,11 +278,8 @@ class RefreshOnDerivativeDefinition(GraphScene):
             )
             for s in ["f", "over", "dx", "(", str(self.start_x), ")"]
         ])
-        covered_new_deriv_parts = list(it.chain(*deriv_to_new_deriv.values()))
-        uncovered_new_deriv_parts = filter(
-            lambda part : part not in covered_new_deriv_parts,
-            new_deriv
-        )
+        covered_new_deriv_parts = list(it.chain(*list(deriv_to_new_deriv.values())))
+        uncovered_new_deriv_parts = [part for part in new_deriv if part not in covered_new_deriv_parts]
         new_deriv.move_to(derivative)
         new_brace = Brace(new_deriv, DOWN)
 
@@ -295,7 +292,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
         self.wait()
         self.play(*[
             ReplacementTransform(*pair, run_time = 2)
-            for pair in deriv_to_new_deriv.items()
+            for pair in list(deriv_to_new_deriv.items())
         ]+[
             Transform(deriv_brace, new_brace),
             dx_to_0.next_to, new_brace, DOWN
@@ -460,7 +457,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         formal_definition_words = TextMobject("""
             Formal derivative definition 
         """)
-        formal_definition_words.scale_to_fit_width(rhs_rect.get_width())
+        formal_definition_words.set_width(rhs_rect.get_width())
         formal_definition_words.next_to(rhs_rect, UP)
         formal_definition_words.set_color(rhs_rect.get_color())
         formal_definition_words.add_background_rectangle()
@@ -590,7 +587,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         self.wait()
         self.add(self.rhs)
         self.play(
-            lil_rect.scale_to_fit_width,
+            lil_rect.set_width,
             self.ss_group.dx_line.get_width()*4,
             run_time = 4
         )
@@ -632,7 +629,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
             "h" : GREEN,
             "2" : RED
         }
-        for tex, color in tex_to_color.items():
+        for tex, color in list(tex_to_color.items()):
             definition.set_color_by_tex(tex, color)
         definition.scale(0.8)
         definition.to_corner(UP+LEFT)
@@ -767,11 +764,11 @@ class GraphLimitExpression(GraphScene):
         "x_min" : -8,
         "x_max" : 5,
         "x_axis_label" : "$h$",
-        "x_labeled_nums" : range(-8, 6, 2),
+        "x_labeled_nums" : list(range(-8, 6, 2)),
         "y_min" : 0,
         "y_max" : 20,
         "y_tick_frequency" : 1,
-        "y_labeled_nums" : range(5, 25, 5),
+        "y_labeled_nums" : list(range(5, 25, 5)),
         "y_axis_label" : "",
         "big_delta" : 0.7,
         "small_delta" : 0.01,
@@ -803,7 +800,7 @@ class GraphLimitExpression(GraphScene):
             "2" : self.two_color
         }
         for tex_mob in expression, limit, derivative:
-            for tex, color in tex_to_color.items():
+            for tex, color in list(tex_to_color.items()):
                 tex_mob.set_color_by_tex(tex, color)
             tex_mob.next_to(ORIGIN, RIGHT, LARGE_BUFF)
             tex_mob.to_edge(UP)
@@ -847,7 +844,7 @@ class GraphLimitExpression(GraphScene):
         self.wait(2)
         self.play(
             expression.restore,
-            *map(FadeOut, [derivative, brace, limit])
+            *list(map(FadeOut, [derivative, brace, limit]))
         )
         self.wait()
 
@@ -893,7 +890,7 @@ class GraphLimitExpression(GraphScene):
         undefined.to_edge(RIGHT)
 
         self.play(Write(h_equals_0, run_time = 2))
-        self.play(*map(ShowCreation, [arrow, dot]))
+        self.play(*list(map(ShowCreation, [arrow, dot])))
         self.wait()
         self.play(ReplacementTransform(
             expression.copy(), new_expression
@@ -989,7 +986,7 @@ class GraphLimitExpression(GraphScene):
         self.remove(self.limit_point_hole)
 
         #Show approaching
-        self.play(*map(FadeOut, [brace, brace_text]))
+        self.play(*list(map(FadeOut, [brace, brace_text])))
         for v_line, h_line in (right_v_line, top_h_line), (left_v_line, bottom_h_line):
             self.play(
                 ShowCreation(v_line),
@@ -1082,7 +1079,7 @@ class GraphLimitExpression(GraphScene):
             )
         )
         self.wait()
-        self.play(*map(GrowFromCenter, self.ed_group.epsilon_lines))
+        self.play(*list(map(GrowFromCenter, self.ed_group.epsilon_lines)))
         self.play(*[
             ApplyMethod(
                 line.copy().set_stroke(GREY, 2).move_to,
@@ -1207,11 +1204,11 @@ class LimitCounterExample(GraphLimitExpression):
     CONFIG = {
         "x_min" : -8,
         "x_max" : 8,
-        "x_labeled_nums" : range(-8, 10, 2),
+        "x_labeled_nums" : list(range(-8, 10, 2)),
         "x_axis_width" : FRAME_WIDTH - LARGE_BUFF,
         "y_min" : -4,
         "y_max" : 4,
-        "y_labeled_nums" : range(-2, 4, 1),
+        "y_labeled_nums" : list(range(-2, 4, 1)),
         "y_axis_height" : FRAME_HEIGHT+2*LARGE_BUFF,
         "graph_origin" : DOWN,
         "graph_color" : BLUE,
@@ -1288,7 +1285,7 @@ class LimitCounterExample(GraphLimitExpression):
             return lines
 
         for lines in right_lines, left_lines:
-            self.play(*map(ShowCreation, lines))
+            self.play(*list(map(ShowCreation, lines)))
             self.play(UpdateFromAlphaFunc(
                 lines, update_lines,
                 run_time = 3
@@ -1462,10 +1459,10 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         self.revert_to_original_skipping_status()
 
     def introduce_epsilon(self):
-        epsilon_group, small_epsilon_group = map(
+        epsilon_group, small_epsilon_group = list(map(
             self.get_epsilon_group,
             self.epsilon_list[:2]
-        )
+        ))
 
         twelve_line = epsilon_group.limit_line
         twelve = self.rhs[-1]
@@ -1490,15 +1487,15 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
                 ReplacementTransform(twelve_line.copy(), line)
                 for line in epsilon_group.epsilon_lines
             ], 
-            map(GrowFromCenter, epsilon_group.braces),
+            list(map(GrowFromCenter, epsilon_group.braces)),
         ))
-        self.play(*map(Write, epsilon_group.labels))
+        self.play(*list(map(Write, epsilon_group.labels)))
         self.play(
             Write(distance),
             ShowCreation(arrows)
         )
         self.wait()
-        self.play(*map(FadeOut, [distance, arrows]))
+        self.play(*list(map(FadeOut, [distance, arrows])))
         self.play(Transform(
             epsilon_group, small_epsilon_group,
             run_time = 2
@@ -1537,8 +1534,8 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
 
     def introduce_delta(self):
         delta_group = self.get_delta_group(self.delta_list[1])
-        self.play(*map(GrowFromCenter, delta_group.braces))
-        self.play(*map(Write, delta_group.labels))
+        self.play(*list(map(GrowFromCenter, delta_group.braces)))
+        self.play(*list(map(Write, delta_group.labels)))
         self.wait()
         self.play(
             ReplacementTransform(
@@ -1596,7 +1593,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         result.epsilon_lines.set_stroke(MAROON_B, width = 2)
         brace = Brace(Line(ORIGIN, 0.5*UP), RIGHT)
         result.braces = VGroup(*[
-            brace.copy().scale_to_fit_height(
+            brace.copy().set_height(
                 group.get_height()
             ).next_to(group, RIGHT, SMALL_BUFF)
             for i in (1, 2)
@@ -1607,7 +1604,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             for brace in result.braces
         ])
         for label, brace in zip(result.labels, result.braces):
-            label.scale_to_fit_height(min(
+            label.set_height(min(
                 label.get_height(),
                 0.8*brace.get_height()
             ))
@@ -1618,7 +1615,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
     def get_delta_group(self, delta):
         result = VGroup()
         brace = Brace(Line(ORIGIN, RIGHT), DOWN)
-        brace.scale_to_fit_width(
+        brace.set_width(
             (self.coords_to_point(delta, 0)-self.graph_origin)[0]
         )
         result.braces = VGroup(*[
@@ -1667,9 +1664,9 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
                 )
                 for line in epsilon_group.epsilon_lines
             ],
-            map(GrowFromCenter, epsilon_group.braces)
+            list(map(GrowFromCenter, epsilon_group.braces))
         ))
-        self.play(*map(Write, epsilon_group.labels))
+        self.play(*list(map(Write, epsilon_group.labels)))
         self.play(Write(rhs))
         self.wait()
 
@@ -1678,7 +1675,7 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
     def introduce_epsilon_delta_group(self):
         ed_group = self.get_epsilon_delta_group(self.big_delta)
 
-        self.play(*map(ShowCreation, ed_group.delta_lines))
+        self.play(*list(map(ShowCreation, ed_group.delta_lines)))
         self.play(ShowCreation(ed_group.input_range))
         self.play(ReplacementTransform(
             ed_group.input_range.copy(),
@@ -1686,7 +1683,7 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
             run_time = 2
         ))
         self.remove(self.graph_holes)
-        self.play(*map(GrowFromCenter, ed_group.epsilon_lines))
+        self.play(*list(map(GrowFromCenter, ed_group.epsilon_lines)))
         self.wait(2)
         self.animate_epsilon_delta_group_change(
             ed_group, target_delta = self.small_delta,
@@ -1810,13 +1807,13 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         "x_axis_width" : FRAME_WIDTH,
         "x_min" : -5,
         "x_max" : 5,
-        "x_labeled_nums" : range(-6, 8, 2),
+        "x_labeled_nums" : list(range(-6, 8, 2)),
         "x_axis_label" : "$x$",
         "y_axis_height" : FRAME_HEIGHT,
         "y_min" : -3.1,
         "y_max" : 3.1,
         "y_bottom_tick" : -4,
-        "y_labeled_nums" : range(-2, 4, 2),
+        "y_labeled_nums" : list(range(-2, 4, 2)),
         "y_axis_label" : "",
         "x_color" : RED,
         "hole_radius" : 0.07,
@@ -1960,9 +1957,9 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 ed_group.input_range.copy(),
                 ed_group.output_range
             ),
-            *map(ShowCreation, ed_group.delta_lines)
+            *list(map(ShowCreation, ed_group.delta_lines))
         )
-        self.play(*map(GrowFromCenter, ed_group.epsilon_lines))
+        self.play(*list(map(GrowFromCenter, ed_group.epsilon_lines)))
         self.play(morty.change_mode, "thinking")
         self.animate_epsilon_delta_group_change(
             ed_group, target_delta = self.small_delta,
@@ -1979,7 +1976,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.wait(2)
         self.play(
             func_1_group.to_corner, UP+LEFT,
-            *map(FadeOut, [morty, ed_group])
+            *list(map(FadeOut, [morty, ed_group]))
         )
         self.wait()
 
@@ -1997,7 +1994,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         rhs = TexMobject("= %.4f\\dots"%result)
         rhs.next_to(label, RIGHT)
         approx_group = VGroup(label, rhs)
-        approx_group.scale_to_fit_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
+        approx_group.set_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
         approx_group.next_to(ORIGIN, UP, buff = MED_LARGE_BUFF)
         approx_group.to_edge(RIGHT)
 
@@ -2219,7 +2216,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         cos_pi = VGroup(*cos_dx[:-1])
         cos = VGroup(*cos_dx[:-2])
         brace = Brace(Line(LEFT, RIGHT), UP)
-        brace.scale_to_fit_width(cos_pi.get_width())
+        brace.set_width(cos_pi.get_width())
         brace.move_to(cos_pi.get_top(), DOWN)
         brace_text = TextMobject(
             """
@@ -2240,7 +2237,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.play(Write(brace_text))
         self.wait(2)
         self.play(
-            brace.scale_to_fit_width, cos.get_width(),
+            brace.set_width, cos.get_width(),
             brace.next_to, cos, UP, SMALL_BUFF/self.zoom_factor,
             FadeOut(brace_text)
         )
@@ -2250,7 +2247,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.play(FadeOut(cos))
         neg = neg_one.get_part_by_tex("-").copy()
         self.play(neg.next_to, cos_dx[-2], LEFT, SMALL_BUFF/self.zoom_factor)
-        self.play(*map(FadeOut, [neg_one, brace]))
+        self.play(*list(map(FadeOut, [neg_one, brace])))
         neg_pi_dx = VGroup(neg, *cos_dx[-2:])
         self.play(
             neg_pi_dx.next_to, d_sine_arrow, 
@@ -2322,7 +2319,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.wait()
         self.play(Transform(x, dot_one))
         self.wait()
-        self.play(*map(FadeOut, [eq_x, equals]))
+        self.play(*list(map(FadeOut, [eq_x, equals])))
         self.wait()
 
     def show_final_ratio(self):
@@ -2358,7 +2355,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.wait()
 
         #Cancel dx's
-        self.play(*map(ShowCreation, circles), run_time = 2)
+        self.play(*list(map(ShowCreation, circles)), run_time = 2)
         self.wait()
         self.play(dxs.fade, 0.75, FadeOut(circles))
         self.wait()
@@ -2381,10 +2378,10 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         height.add_background_rectangle()
         
         self.disactivate_zooming()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.sine_graph, self.sine_label,
             self.parabola, self.parabola_label,
-        ]) + [
+        ])) + [
             Animation(self.final_ratio)
         ])
         self.play(GrowFromCenter(brace))
@@ -2501,7 +2498,7 @@ class GeneralLHoptial(LHopitalExample):
             ShowCreation(a_dot),
         )
         self.wait()
-        self.play(*map(FadeOut, [a_label, a_arrow]))
+        self.play(*list(map(FadeOut, [a_label, a_arrow])))
 
         self.a_dot = a_dot
         self.f_graph = f_graph
@@ -2738,7 +2735,7 @@ class GeneralLHoptial(LHopitalExample):
         bernoulli_image = ImageMobject("Johann_Bernoulli2")
         lhopital_image = ImageMobject("Guillaume_de_L'Hopital")
         for image in bernoulli_image, lhopital_image:
-            image.scale_to_fit_height(self.image_height)
+            image.set_height(self.image_height)
             image.to_edge(UP)
 
         arrow = Arrow(ORIGIN, DOWN, buff = 0, color = GREEN)
@@ -2930,7 +2927,7 @@ class Thumbnail(Scene):
     def construct(self):
         lim = TexMobject("\\lim", "_{h", "\\to 0}")
         lim.set_color_by_tex("h", GREEN)
-        lim.scale_to_fit_height(5)
+        lim.set_height(5)
         self.add(lim)
 
 

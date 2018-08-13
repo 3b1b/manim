@@ -57,7 +57,7 @@ class LinearSystem(VGroup):
         self.output_vect_mob.elements.set_color(OUTPUT_COLOR)
 
         for mob in self.matrix_mobject, self.input_vect_mob, self.output_vect_mob:
-            mob.scale_to_fit_height(self.height)
+            mob.set_height(self.height)
 
         self.add(
             self.matrix_mobject,
@@ -111,7 +111,7 @@ class LeaveItToComputers(TeacherStudentsScene):
             )
             rhs = VGroup(numer, Line(LEFT, RIGHT).match_width(numer), denom)
             rhs.arrange_submobjects(DOWN)
-            rhs.scale_to_fit_height(2.25)
+            rhs.set_height(2.25)
             rhs.move_to(self.hold_up_spot, DOWN)
             rhs.to_edge(RIGHT, buff=LARGE_BUFF)
             equals = TexMobject("=").next_to(rhs, LEFT)
@@ -259,7 +259,7 @@ class NotTheMostComputationallyEfficient(Scene):
         words = TextMobject(self.words)
         words.set_color(RED)
         words.set_stroke(WHITE, 1)
-        words.scale_to_fit_width(FRAME_WIDTH - 2 * MED_LARGE_BUFF)
+        words.set_width(FRAME_WIDTH - 2 * MED_LARGE_BUFF)
         self.play(Write(words))
         self.wait()
 
@@ -321,7 +321,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
             circle.save_state()
             circle.scale(5)
             circle.fade(1)
-        row_rects = VGroup(*map(SurroundingRectangle, system))
+        row_rects = VGroup(*list(map(SurroundingRectangle, system)))
         row_rects.set_stroke(BLUE, 2)
 
         self.add(system)
@@ -370,14 +370,14 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         )
         corner_rect.set_stroke(width=0)
         corner_rect.set_fill(BLACK, opacity=0.8)
-        corner_rect.scale_to_fit_height(2)
+        corner_rect.set_height(2)
         corner_rect.to_corner(UL, buff=0)
 
         self.play(system_in_lines.to_edge, UP)
         system_in_lines_copy = system_in_lines.deepcopy()
         self.play(
             ReplacementTransform(
-                VGroup(*map(VGroup, system_in_lines_copy.matrix_elements)),
+                VGroup(*list(map(VGroup, system_in_lines_copy.matrix_elements))),
                 matrix_system.matrix_mobject.elements,
             ),
             Write(matrix_system.matrix_mobject.brackets),
@@ -386,7 +386,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
             Write(matrix_system.equals)
         )
         self.play(ReplacementTransform(
-            VGroup(*map(VGroup, system_in_lines_copy.output_vect_elements)),
+            VGroup(*list(map(VGroup, system_in_lines_copy.output_vect_elements))),
             matrix_system.output_vect_mob.elements,
         ))
         self.play(*[
@@ -403,10 +403,10 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
                 Write(self.plane),
                 FadeOut(system_in_lines),
                 FadeIn(corner_rect),
-                matrix_system.scale_to_fit_height, corner_rect.get_height() - MED_LARGE_BUFF,
+                matrix_system.set_height, corner_rect.get_height() - MED_LARGE_BUFF,
                 matrix_system.move_to, corner_rect,
             )
-            self.play(*map(GrowArrow, self.basis_vectors))
+            self.play(*list(map(GrowArrow, self.basis_vectors)))
 
             self.add_foreground_mobject(corner_rect)
             self.add_foreground_mobject(matrix_system)
@@ -515,7 +515,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         colors = [
             color
             for i, color in zip(
-                range(len(matrix)),
+                list(range(len(matrix))),
                 it.cycle([X_COLOR, Y_COLOR, Z_COLOR, YELLOW, MAROON_B, TEAL])
             )
         ]
@@ -1236,7 +1236,7 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
 
         # Column arrays
         column_mobs = VGroup()
-        for i, vect in zip(range(2), [DR, DL]):
+        for i, vect in zip(list(range(2)), [DR, DL]):
             elements = system.matrix_mobject.deepcopy().mob_matrix[:, i]
             column_mob = MobjectMatrix(elements)
             column_mob.add_background_rectangle()
@@ -1621,9 +1621,9 @@ class TransformingAreasYCoord(LinearTransformationScene):
             GrowFromCenter(matrix_brace), Write(matrix_label),
         )
         self.add_foreground_mobjects(apply_group)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             area_words.rect, area_words, area_arrow, input_vect_label,
-        ]))
+        ])))
         self.apply_matrix(matrix)
         self.wait(2)
         self.apply_inverse(matrix, run_time=0)
@@ -1650,7 +1650,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
         q_marks_group.move_to(ip)
 
         column_mobs = VGroup()
-        for i, vect in zip(range(2), [DOWN, LEFT]):
+        for i, vect in zip(list(range(2)), [DOWN, LEFT]):
             column = matrix_mobject.deepcopy().mob_matrix[:, i]
             column_mob = MobjectMatrix(column)
             column_mob.scale(self.array_scale_factor)
@@ -1769,10 +1769,10 @@ class TransformingAreasYCoord(LinearTransformationScene):
         # Setup rhs
         frac_matrix_height = 1.5
         matrix_mobject_copy = matrix_mobject.copy()
-        matrix_mobject_copy.scale_to_fit_height(frac_matrix_height)
+        matrix_mobject_copy.set_height(frac_matrix_height)
         denom_det_text = get_det_text(matrix_mobject_copy)
         top_matrix_mobject = IntegerMatrix(new_matrix)
-        top_matrix_mobject.scale_to_fit_height(frac_matrix_height)
+        top_matrix_mobject.set_height(frac_matrix_height)
         top_matrix_mobject.set_color_columns(X_COLOR, Y_COLOR)
         VGroup(*top_matrix_mobject.mob_matrix[:, self.index]).set_color(MAROON_B)
         top_matrix_mobject.add_background_rectangle()
@@ -1815,7 +1815,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
         self.play(
             FadeOut(self.area_scale_words),
             ShowCreation(h_line),
-            *map(MoveToTarget, area_words[1:]),
+            *list(map(MoveToTarget, area_words[1:])),
             run_time=3
         )
         self.wait()
@@ -1983,7 +1983,7 @@ class ParallelepipedForYCoordinate(ExternallyAnimatedScene):
 class ThreeDCoordinatesAsVolumes(Scene):
     def construct(self):
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
-        x, y, z = coords = VGroup(*map(TexMobject, "xyz"))
+        x, y, z = coords = VGroup(*list(map(TexMobject, "xyz")))
         coords.set_color_by_gradient(*colors)
         matrix = IntegerMatrix(np.identity(3))
         matrix.set_color_columns(*colors)
@@ -2038,7 +2038,7 @@ class ThreeDCoordinatesAsVolumes(Scene):
 class WriteCramersRule(Scene):
     def construct(self):
         words = TextMobject("``Cramer's Rule''")
-        words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        words.set_width(FRAME_WIDTH - LARGE_BUFF)
         words.add_background_rectangle()
         self.play(Write(words))
         self.wait()
@@ -2153,7 +2153,7 @@ class Thumbnail(TransformingAreasYCoord):
         self.apply_transposed_matrix([[2, -0.5], [1, 2]])
 
         words = TextMobject("Cramer's", "rule")
-        words.scale_to_fit_width(7)
+        words.set_width(7)
         # words.add_background_rectangle_to_submobjects()
         words.add_background_rectangle()
         words.to_edge(UP)

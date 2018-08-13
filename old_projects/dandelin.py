@@ -1,9 +1,7 @@
-from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 
 from old_projects.lost_lecture import Orbiting
 from old_projects.lost_lecture import ShowWord
-
 
 
 class LogoGeneration(LogoGenerationTemplate):
@@ -51,9 +49,9 @@ class ThinkingAboutAProof(PiCreatureScene):
         bubble.shift(MED_SMALL_BUFF * RIGHT)
         cloud = bubble[-1]
         cloud.rotate(90 * DEGREES)
-        cloud.scale_to_fit_height(FRAME_HEIGHT - 0.5)
+        cloud.set_height(FRAME_HEIGHT - 0.5)
         cloud.stretch(2.8, 0)
-        cloud.next_to(bubble[0], RIGHT)
+        cloud.next_to(bubble[2], RIGHT)
         cloud.to_edge(UP, buff=0.25)
         bubble[1].shift(0.25 * UL)
 
@@ -99,7 +97,7 @@ class SumOfIntegersProof(Scene):
         equation.to_edge(UP)
         one, two, three, dots, n = numbers = VGroup(*[
             equation.get_part_by_tex(tex, substring=False).copy()
-            for tex in "1", "2", "3", "\\cdots", "n",
+            for tex in ("1", "2", "3", "\\cdots", "n",)
         ])
         for number in numbers:
             number.generate_target()
@@ -153,7 +151,7 @@ class SumOfIntegersProof(Scene):
             row.arrange_submobjects(RIGHT, buff=0)
             rows.add(row)
         rows.arrange_submobjects(DOWN, buff=0, aligned_edge=LEFT)
-        rows.scale_to_fit_height(5)
+        rows.set_height(5)
         rows.set_stroke(WHITE, 3)
         rows.set_fill(BLUE, 0.5)
         return rows
@@ -230,11 +228,11 @@ class MultipleDefinitionsOfAnEllipse(Scene):
         ))
         self.wait()
         for definition in definitions:
-            others = filter(lambda d: d is not definition, definitions)
+            others = [d for d in definitions if d is not definition]
             self.play(
                 definition.set_fill, WHITE, 1,
                 definition.scale, 1.2, {"about_edge": LEFT},
-                *map(Restore, others)
+                *list(map(Restore, others))
             )
             self.wait(2)
 
@@ -324,9 +322,9 @@ class StretchACircle(Scene):
 class ShowArrayOfEccentricities(Scene):
     def construct(self):
         eccentricities = np.linspace(0, 0.99, 6)
-        eccentricity_labels = VGroup(*map(
+        eccentricity_labels = VGroup(*list(map(
             DecimalNumber, eccentricities
-        ))
+        )))
         ellipses = self.get_ellipse_row(eccentricities)
         ellipses.set_color_by_gradient(BLUE, YELLOW)
         ellipses.move_to(DOWN)
@@ -407,13 +405,13 @@ class ShowArrayOfEccentricities(Scene):
         ))
         self.play(
             LaggedStart(FadeOutAndShiftDown, group),
-            circle.scale_to_fit_height, 5,
+            circle.set_height, 5,
             circle.center,
         )
 
     def get_ellipse(self, eccentricity, width=2):
         result = Circle(color=WHITE)
-        result.scale_to_fit_width(width)
+        result.set_width(width)
         a = width / 2.0
         c = eccentricity * a
         b = np.sqrt(a**2 - c**2)
@@ -452,8 +450,8 @@ class ShowOrbits(ShowArrayOfEccentricities):
         comet_eccentricity = 0.9671
         earth_orbit = self.get_ellipse(eccentricity=earth_eccentricity)
         comet_orbit = self.get_ellipse(eccentricity=comet_eccentricity)
-        earth_orbit.scale_to_fit_height(5)
-        comet_orbit.scale_to_fit_width(
+        earth_orbit.set_height(5)
+        comet_orbit.set_width(
             0.7 * FRAME_WIDTH,
             about_point=ORIGIN,
         )
@@ -461,9 +459,9 @@ class ShowOrbits(ShowArrayOfEccentricities):
         sun = ImageMobject("Sun")
         earth = ImageMobject("Earth")
         comet = ImageMobject("Comet")
-        sun.scale_to_fit_height(1)
-        earth.scale_to_fit_height(0.5)
-        comet.scale_to_fit_height(0.1)
+        sun.set_height(1)
+        earth.set_height(0.5)
+        comet.set_height(0.1)
 
         earth_parts = VGroup(sun, earth_orbit, earth)
 
@@ -497,7 +495,7 @@ class ShowOrbits(ShowArrayOfEccentricities):
         orbiting_earth.rate = 1.5
         orbiting_comet.rate = 1.5
         self.play(
-            earth_parts.scale_to_fit_height,
+            earth_parts.set_height,
             comet_orbit.get_height() / 4.53,
             earth_parts.shift, 3 * RIGHT
         )
@@ -550,7 +548,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         focus_distance.add_to_back(focus_distance.copy().set_stroke(BLACK, 5))
         focus_distance_update = ContinualUpdateFromFunc(
             focus_distance,
-            lambda m: m.scale_to_fit_width(
+            lambda m: m.set_width(
                 inner_brace_update.mobject.get_width(),
             ).next_to(inner_brace_update.mobject, DOWN, SMALL_BUFF)
         )
@@ -569,7 +567,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         fraction.to_edge(RIGHT, buff=MED_LARGE_BUFF)
         numerator_update = ContinualUpdateFromFunc(
             numerator,
-            lambda m: m.scale_to_fit_width(focus_distance.get_width()).next_to(
+            lambda m: m.set_width(focus_distance.get_width()).next_to(
                 fraction[1], UP, MED_SMALL_BUFF
             )
         )
@@ -711,7 +709,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
     def get_thumbtack(self):
         angle = 10 * DEGREES
         result = SVGMobject(file_name="push_pin")
-        result.scale_to_fit_height(0.5)
+        result.set_height(0.5)
         result.set_fill(LIGHT_GREY)
         result.rotate(angle)
         return result
@@ -782,7 +780,7 @@ class AskWhyAreTheyTheSame(TeacherStudentsScene):
             ])
         )
         egg.flip()
-        egg.scale_to_fit_width(3)
+        egg.set_width(3)
         egg.set_stroke(RED, 5)
         egg.move_to(bubble.get_bubble_center())
 
@@ -812,7 +810,7 @@ class TriangleOfEquivalences(Scene):
         title = Title("How do you prove this\\textinterrobang.")
         self.add(title)
         rects = VGroup(*[ScreenRectangle() for x in range(3)])
-        rects.scale_to_fit_height(2)
+        rects.set_height(2)
         rects[:2].arrange_submobjects(RIGHT, buff=2)
         rects[2].next_to(rects[:2], DOWN, buff=1.5)
         rects.next_to(title, DOWN)
@@ -856,11 +854,11 @@ class ShowMeasurementBook(TeacherStudentsScene):
 
     def construct(self):
         measurement = ImageMobject("MeasurementCover")
-        measurement.scale_to_fit_height(3.5)
+        measurement.set_height(3.5)
         measurement.move_to(self.hold_up_spot, DOWN)
 
         words = TextMobject("Highly recommended")
-        arrow = Vector(RIGHT, buff=WHITE)
+        arrow = Vector(RIGHT, color=WHITE)
         arrow.next_to(measurement, LEFT)
         words.next_to(arrow, LEFT)
 
@@ -919,7 +917,7 @@ class AskAboutWhyYouWouldAddSpheres(PiCreatureScene):
     def construct(self):
         randy = self.pi_creature
         randy.flip()
-        randy.scale_to_fit_height(2)
+        randy.set_height(2)
         randy.set_color(BLUE_C)
         randy.to_edge(RIGHT)
         randy.shift(2 * UP)
@@ -1001,7 +999,7 @@ class ShowSegmentSplit(Scene):
     def construct(self):
         if self.include_image:
             image = ImageMobject("ShowCircleToCircleLine")
-            image.scale_to_fit_height(FRAME_HEIGHT)
+            image.set_height(FRAME_HEIGHT)
             self.add(image)
 
         brace1 = Brace(Line(ORIGIN, 1.05 * UP), LEFT)
@@ -1070,7 +1068,7 @@ class WriteConjecture(Scene):
     def construct(self):
         if self.include_image:
             image = ImageMobject(self.image_name)
-            image.scale_to_fit_height(FRAME_HEIGHT)
+            image.set_height(FRAME_HEIGHT)
             self.add(image)
 
         title = TextMobject("Conjecture:")
@@ -1253,11 +1251,11 @@ class NameDandelin(Scene):
         title.to_edge(UP)
 
         portrait = ImageMobject("GerminalDandelin")
-        portrait.scale_to_fit_height(5)
+        portrait.set_height(5)
         portrait.next_to(title, DOWN)
 
         google_result = ImageMobject("GoogleDandelin")
-        google_result.scale_to_fit_height(4)
+        google_result.set_height(4)
         google_result.center()
         google_result.to_corner(DR)
 
@@ -1362,14 +1360,14 @@ class CreativeConstruction(PiCreatureScene):
         self.remove(randy)
 
         dandelin = ImageMobject("GerminalDandelin")
-        dandelin.scale_to_fit_height(4)
+        dandelin.set_height(4)
         dandelin.move_to(FRAME_WIDTH * RIGHT / 4)
 
         lightbulb = Lightbulb()
         lightbulb.next_to(dandelin, UP)
 
         kant = ImageMobject("Kant")
-        kant.scale_to_fit_height(3)
+        kant.set_height(3)
         bubble = ThoughtBubble(height=3, width=4)
         bubble.pin_to(kant)
         kant_words = TextMobject(
@@ -1412,7 +1410,7 @@ class CreativeConstruction(PiCreatureScene):
         for submob in lightbulb.target.family_members_with_points():
             if True or np.linalg.norm(submob.get_center() - lightbulb.get_center()) > 0.25:
                 q_mark = TexMobject("?")
-                q_mark.scale_to_fit_height(0.25)
+                q_mark.set_height(0.25)
                 q_mark.move_to(submob)
                 Transform(submob, q_mark).update(1)
                 q_marks.add(submob)
@@ -1473,7 +1471,7 @@ class LockhartQuote(Scene):
             I have no idea how it happens.  I only know that
             when it happens to me, I feel very fortunate.
         """ % strings
-        quote_parts = filter(lambda s: s, quote_text.split(" "))
+        quote_parts = [s for s in quote_text.split(" ") if s]
         quote = TextMobject(
             *quote_parts,
             tex_to_color_map={
@@ -1482,7 +1480,7 @@ class LockhartQuote(Scene):
             },
             alignment=""
         )
-        quote.scale_to_fit_width(FRAME_WIDTH - 2)
+        quote.set_width(FRAME_WIDTH - 2)
         quote.to_edge(UP)
 
         measurement = ImageMobject("MeasurementCover")
@@ -1490,12 +1488,12 @@ class LockhartQuote(Scene):
         mona_lisa = ImageMobject("MonaLisa")
         pictures = Group(measurement, madame_bovary, mona_lisa)
         for picture in pictures:
-            picture.scale_to_fit_height(4)
+            picture.set_height(4)
         pictures.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
         pictures.to_edge(DOWN)
 
         measurement.save_state()
-        measurement.scale_to_fit_width(FRAME_WIDTH)
+        measurement.set_width(FRAME_WIDTH)
         measurement.center()
         measurement.fade(1)
         self.play(Restore(measurement))
@@ -1553,7 +1551,7 @@ class ShowApollonianCircles(Scene):
             for r, c in zip(radii, centers)
         ])
 
-        circles.scale_to_fit_height(FRAME_HEIGHT - 3)
+        circles.set_height(FRAME_HEIGHT - 3)
         circles.center().to_edge(DOWN)
         # circles.set_fill(opacity=1)
         circles.submobjects.reverse()
@@ -1605,7 +1603,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
         lines.set_stroke(width=5)
 
         h_line = Line(LEFT, RIGHT, color=WHITE)
-        h_line.scale_to_fit_width(0.25)
+        h_line.set_width(0.25)
 
         def update_lines(lines):
             for line, focus in zip(lines, foci):

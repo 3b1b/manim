@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from constants import *
 
 from .svg_mobject import SVGMobject
@@ -17,28 +17,19 @@ TEX_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
-    def pointwise_become_partial(self, mobject, a, b):
-        # TODO, this assumes a = 0
-        if b < 0.5:
-            b = 2 * b
-            added_width = 1
-            opacity = 0
-        else:
-            added_width = 2 - 2 * b
-            opacity = 2 * b - 1
-            b = 1
-        VMobjectFromSVGPathstring.pointwise_become_partial(
-            self, mobject, 0, b
-        )
-        self.set_stroke(width=added_width + mobject.get_stroke_width())
-        self.set_fill(opacity=opacity)
+    """
+    Purely a renaming of VMobjectFromSVGPathstring
+    """
+    pass
 
 
 class SingleStringTexMobject(SVGMobject):
     CONFIG = {
-        "template_tex_file": TEMPLATE_TEX_FILE,
+        "template_tex_file_body": TEMPLATE_TEX_FILE_BODY,
         "stroke_width": 0,
         "fill_opacity": 1.0,
+        "background_stroke_width": 5,
+        "background_stroke_color": BLACK,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
@@ -52,7 +43,7 @@ class SingleStringTexMobject(SVGMobject):
         self.tex_string = tex_string
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
-            self.template_tex_file
+            self.template_tex_file_body
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
@@ -90,10 +81,7 @@ class SingleStringTexMobject(SVGMobject):
 
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
-            len(filter(
-                lambda s: s[0] in "(){}[]|.\\",
-                tex.split(substr)[1:]
-            ))
+            len([s for s in tex.split(substr)[1:] if s[0] in "(){}[]|.\\"])
             for substr in ("\\left", "\\right")
         ]
         if num_lefts != num_rights:
@@ -162,13 +150,13 @@ class TexMobject(SingleStringTexMobject):
     def break_up_tex_strings(self, tex_strings):
         substrings_to_isolate = op.add(
             self.substrings_to_isolate,
-            self.tex_to_color_map.keys()
+            list(self.tex_to_color_map.keys())
         )
         split_list = split_string_list_to_isolate_substring(
             tex_strings, *substrings_to_isolate
         )
-        split_list = map(str.strip, split_list)
-        split_list = filter(lambda s: s != '', split_list)
+        split_list = list(map(str.strip, split_list))
+        split_list = [s for s in split_list if s != '']
         return split_list
 
     def break_up_by_substrings(self):
@@ -207,10 +195,7 @@ class TexMobject(SingleStringTexMobject):
             else:
                 return tex1 == tex2
 
-        return VGroup(*filter(
-            lambda m: test(tex, m.get_tex_string()),
-            self.submobjects
-        ))
+        return VGroup(*[m for m in self.submobjects if test(tex, m.get_tex_string())])
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
@@ -223,7 +208,7 @@ class TexMobject(SingleStringTexMobject):
         return self
 
     def set_color_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
-        for texs, color in texs_to_color_map.items():
+        for texs, color in list(texs_to_color_map.items()):
             try:
                 # If the given key behaves like tex_strings
                 texs + ''
@@ -244,6 +229,11 @@ class TexMobject(SingleStringTexMobject):
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part)
 
+    def sort_submobjects_alphabetically(self):
+        self.submobjects.sort(
+            key=lambda m: m.get_tex_string()
+        )
+
     def split(self):
         # Many old scenes assume that when you pass in a single string
         # to TexMobject, it indexes across the characters.
@@ -255,7 +245,7 @@ class TexMobject(SingleStringTexMobject):
 
 class TextMobject(TexMobject):
     CONFIG = {
-        "template_tex_file": TEMPLATE_TEXT_FILE,
+        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "\\centering",
     }
 
@@ -265,7 +255,7 @@ class BulletedList(TextMobject):
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
         # Have to include because of handle_multiple_args implementation
-        "template_tex_file": TEMPLATE_TEXT_FILE,
+        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "",
     }
 
@@ -330,6 +320,6 @@ class Title(TextMobject):
             if self.match_underline_width_to_text:
                 underline.match_width(self)
             else:
-                underline.scale_to_fit_width(self.underline_width)
+                underline.set_width(self.underline_width)
             self.add(underline)
             self.underline = underline

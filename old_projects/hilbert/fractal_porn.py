@@ -132,12 +132,12 @@ class SurpriseFractal(Intro):
 
 class IntroduceKoch(Intro):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "This is another famous fractal.",
             "The ``Koch Snowflake''",
             "Let's finish things off by seeing how to turn \
             this into a space-filling curve"
-        ])
+        ]))
         for text in words:
             text.to_edge(UP)
 
@@ -185,12 +185,12 @@ class FromKochToSpaceFilling(Scene):
 
 
     def revisit_koch(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "First, look at how one section of this curve is made.",
             "This pattern of four lines is the ``seed''",
             "With each iteration, every straight line is \
             replaced with an appropriately small copy of the seed",
-        ])
+        ]))
         for text in words:
             text.to_edge(UP)
 
@@ -266,12 +266,12 @@ class FromKochToSpaceFilling(Scene):
         seed.shift(3*LEFT+2*DOWN)
         fractal = TextMobject("Fractal")
         fractal.shift(3*RIGHT+2*DOWN)
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "A sharper angle results in a richer curve",
             "A more obtuse angle gives a sparser curve",
             "And as the angle approaches 0\\dots",
             "We have a new space-filling curve."
-        ])
+        ]))
         for text in words:
             text.to_edge(UP)
         sharper, duller, space_filling = [

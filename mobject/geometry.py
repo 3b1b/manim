@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import *
 
@@ -177,7 +177,7 @@ class Circle(Arc):
         # TODO: Figure out and fix
         self.replace(mobject, dim_to_match, stretch)
 
-        self.scale_to_fit_width(
+        self.set_width(
             np.sqrt(mobject.get_width()**2 + mobject.get_height()**2))
         self.scale(buffer_factor)
 
@@ -334,7 +334,7 @@ class Line(VMobject):
     def set_start_and_end(self, start, end):
         start_to_end = self.pointify(end) - self.pointify(start)
         vect = np.zeros(len(start_to_end))
-        longer_dim = np.argmax(map(abs, start_to_end))
+        longer_dim = np.argmax(list(map(abs, start_to_end)))
         vect[longer_dim] = start_to_end[longer_dim]
         self.start, self.end = [
             arg.get_edge_center(unit * vect)
@@ -495,7 +495,7 @@ class Arrow(Line):
     }
 
     def __init__(self, *args, **kwargs):
-        points = map(self.pointify, args)
+        points = list(map(self.pointify, args))
         if len(args) == 1:
             args = (points[0] + UP + LEFT, points[0])
         Line.__init__(self, *args, **kwargs)

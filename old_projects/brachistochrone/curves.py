@@ -192,7 +192,7 @@ class PathSlidingScene(Scene):
     def write_time(self, time):
         if hasattr(self, "time_mob"):
             self.remove(self.time_mob)
-        digits = map(TexMobject, "%.2f"%time)
+        digits = list(map(TexMobject, "%.2f"%time))
         digits[0].next_to(self.t_equals, buff = 0.1)
         for left, right in zip(digits, digits[1:]):
             right.next_to(left, buff = 0.1, aligned_edge = DOWN)
@@ -401,7 +401,7 @@ class MinimalPotentialEnergy(Scene):
 
         side_words_start = TextMobject("Parameter describing")
         top_words, last_side_words = [
-            map(TextMobject, pair)
+            list(map(TextMobject, pair))
             for pair in [
                 ("Light's travel time", "Potential energy"),
                 ("path", "mechanical state")
@@ -483,7 +483,7 @@ class WhatGovernsSpeed(PathSlidingScene):
         slider = sliders.pop(1)
         vector = vectors.pop(1)
         faders = sliders+vectors+[words]
-        self.play(*map(FadeOut, faders))
+        self.play(*list(map(FadeOut, faders)))
         self.remove(*faders)
         self.show_geometry(slider, vector)
 
@@ -551,7 +551,7 @@ class WhatGovernsSpeed(PathSlidingScene):
                 Point(loss_in_potential.get_left()),
                 loss_in_potential
             ),
-            *map(GrowFromCenter, potential.split())
+            *list(map(GrowFromCenter, potential.split()))
         )
         self.wait(2)
         self.play(

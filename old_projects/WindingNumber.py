@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 
 import time
@@ -483,12 +483,12 @@ def plane_func_by_wind_spec(*specs):
             return (p[0], p[1], 1)
         else:
             print("Error in plane_func_by_wind_spec embiggen!")
-    specs = map(embiggen, specs)
+    specs = list(map(embiggen, specs))
 
-    pos_specs = filter(lambda x_y_z : x_y_z[2] > 0, specs)
-    neg_specs = filter(lambda x_y_z1 : x_y_z1[2] < 0, specs)
+    pos_specs = [x_y_z for x_y_z in specs if x_y_z[2] > 0]
+    neg_specs = [x_y_z1 for x_y_z1 in specs if x_y_z1[2] < 0]
 
-    neg_specs_made_pos = map (lambda x_y_z2 : (x_y_z2[0], x_y_z2[1], -x_y_z2[2]), neg_specs)
+    neg_specs_made_pos = [(x_y_z2[0], x_y_z2[1], -x_y_z2[2]) for x_y_z2 in neg_specs]
 
     def poly(c, root_specs):
         return np.prod([(c - complex(x, y))**z for (x, y, z) in root_specs])
@@ -640,10 +640,7 @@ class ColorMappedByFuncScene(Scene):
     }
 
     def short_path_to_long_path(self, filename_with_ext):
-        return os.path.join(
-            self.output_directory, "images", 
-            filename_with_ext
-        )
+        return self.get_image_file_path(filename_with_ext)
 
     def setup(self):
         # The composition of input_to_pos and pos_to_color 
@@ -664,11 +661,13 @@ class ColorMappedByFuncScene(Scene):
         jitter_val = 0.1
         line_coords = np.linspace(-10, 10) + jitter_val
         func_hash_points = it.product(line_coords, line_coords)
+
         def mini_hasher(p):
             rgba = point_to_rgba(self.pixel_pos_to_color_func(p))
             if rgba[3] != 1.0:
                 print("Warning! point_to_rgba assigns fractional alpha", rgba[3])
             return tuple(rgba)
+
         to_hash = tuple(mini_hasher(p) for p in func_hash_points)
         func_hash = hash(to_hash)
         # We hash just based on output image
@@ -695,7 +694,7 @@ class ColorMappedByFuncScene(Scene):
                     )
                 )
             )
-            self.save_image(self.background_image_file, mode = "RGBA")
+            self.save_image(self.background_image_file, mode="RGBA")
 
         if self.hide_background:
             # Clearing background
@@ -949,7 +948,7 @@ class EquationSolver2dNode(object):
         if len(self.children) == 0:
             return 0
 
-        return 1 + max(map(lambda n : n.depth(), self.children))
+        return 1 + max([n.depth() for n in self.children])
 
     def nodes_at_depth(self, n):
         if n == 0:
@@ -957,7 +956,7 @@ class EquationSolver2dNode(object):
 
         # Not the efficient way to flatten lists, because Python + is linear in list size,
         # but we have at most two children, so no big deal here
-        return sum(map(lambda c : c.nodes_at_depth(n - 1), self.children), [])
+        return sum([c.nodes_at_depth(n - 1) for c in self.children], [])
 
     # This is definitely NOT the efficient way to do BFS, but I'm just trying to write something
     # quick without thinking that gets the job done on small instances for now
@@ -966,17 +965,17 @@ class EquationSolver2dNode(object):
 
         # Not the efficient way to flatten lists, because Python + is linear in list size,
         # but this IS hacky_bfs...
-        return sum(map(lambda i : self.nodes_at_depth(i), range(depth + 1)), [])
+        return sum([self.nodes_at_depth(i) for i in range(depth + 1)], [])
 
     def display_in_series(self):
-        return Succession(self.first_anim, *map(lambda n : n.display_in_series(), self.children))
+        return Succession(self.first_anim, *[n.display_in_series() for n in self.children])
 
     def display_in_parallel(self):
-        return Succession(self.first_anim, AnimationGroup(*map(lambda n : n.display_in_parallel(), self.children)))
+        return Succession(self.first_anim, AnimationGroup(*[n.display_in_parallel() for n in self.children]))
 
     def display_in_bfs(self):
         bfs_nodes = self.hacky_bfs()
-        return Succession(*map(lambda n : n.first_anim, bfs_nodes))
+        return Succession(*[n.first_anim for n in bfs_nodes])
 
     def play_in_bfs(self, scene, border_anim):
         bfs_nodes = self.hacky_bfs()
@@ -1228,7 +1227,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
             rect.get_bottom_right(), 
             rect.get_bottom_left(),
         ]
-        border = Polygon(*map(lambda x : num_plane.coords_to_point(*x) + IN, rect_points))
+        border = Polygon(*[num_plane.coords_to_point(*x) + IN for x in rect_points])
         match_style_with_bg(border, base_line)
 
         rect_time_without_linger = 4 * run_time_base
@@ -1493,7 +1492,7 @@ class SignsExplanation(Scene):
     def construct(self):
         num_line = NumberLine()
         largest_num = 10
-        num_line.add_numbers(*range(-largest_num, largest_num + 1))
+        num_line.add_numbers(*list(range(-largest_num, largest_num + 1)))
         self.add(num_line)
         self.wait()
 
@@ -1984,7 +1983,7 @@ class LoopSplitScene(ColorMappedObjectsScene):
             return UpdateFromAlphaFunc(mob, lambda m, a : m.set_fill(opacity = interpolate(start, end, a)))
 
         def bullet_list_fade(start, end, bullet_list):
-            return map(lambda b : bullet_fade(start, end, b), bullet_list)
+            return [bullet_fade(start, end, b) for b in bullet_list]
 
         def line_fade(start, end, mob):
             return UpdateFromAlphaFunc(mob, lambda m, a : m.set_stroke(width = interpolate(start, end, a) * stroke_width))
