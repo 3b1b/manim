@@ -691,7 +691,7 @@ class UsingTheta(Scene):
         theta = TexMobject("\\theta", "=")
         theta[0].match_color(arc)
         theta.add_background_rectangle()
-        update_theta = ContinualUpdateFromFunc(
+        update_theta = ContinualUpdate(
             theta, lambda m : m.shift(
                 rotate_vector(0.9*RIGHT, radius.get_angle()/2) \
                 - m[1][0].get_center()

@@ -1322,13 +1322,13 @@ class IntroduceScreen(Scene):
 
     def rotate_screen(self):
         self.add(
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 self.light_source,
                 lambda m : m.update()
             ),
         )
         self.add(
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 self.angle_indicator,
                 lambda m : m.set_stroke(width = 0).set_fill(opacity = 1)
             )
@@ -1631,8 +1631,8 @@ class InverseSquareLaw(ThreeDScene):
         def update_spotlight(spotlight):
             spotlight.update_sectors()
 
-        spotlight_update = ContinualUpdateFromFunc(spotlight, update_spotlight)
-        shadow_update = ContinualUpdateFromFunc(
+        spotlight_update = ContinualUpdate(spotlight, update_spotlight)
+        shadow_update = ContinualUpdate(
             shadow, lambda m : light_source.update_shadow()
         )
 
@@ -1644,7 +1644,7 @@ class InverseSquareLaw(ThreeDScene):
             distance = np.linalg.norm(screen.get_reference_point() - source_point)
             light_indicator.set_intensity(1.0/(distance/unit_distance)**2)
             light_indicator.next_to(morty, UP, MED_LARGE_BUFF)
-        light_indicator_update = ContinualUpdateFromFunc(
+        light_indicator_update = ContinualUpdate(
             light_indicator, update_light_indicator
         )
         light_indicator_update.update(0)
@@ -1966,7 +1966,7 @@ class ManipulateLightsourceSetups(PiCreatureScene):
 
         self.add(light_source)
         self.add_foreground_mobjects(morty, bubble, light_indicator)
-        self.add(ContinualUpdateFromFunc(light_indicator, update_light_indicator))
+        self.add(ContinualUpdate(light_indicator, update_light_indicator))
         self.play(
             ApplyMethod(
                 light_source.shift, 0.66*unit_distance*LEFT,
@@ -2167,7 +2167,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
                     d_indensity *= ls.ambient_light.submobjects[1].get_fill_opacity()
                     intensity += d_indensity
             indicator.set_intensity(intensity)
-        indicator_update_anim = ContinualUpdateFromFunc(indicator, update_indicator)
+        indicator_update_anim = ContinualUpdate(indicator, update_indicator)
 
         new_indicator = indicator.copy()
         new_indicator.light_source = lsC
@@ -2613,7 +2613,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
             )
 
         spotlights = VGroup(spotlight_a, spotlight_b)
-        spotlights_update_anim = ContinualUpdateFromFunc(
+        spotlights_update_anim = ContinualUpdate(
             spotlights, update_spotlights
         )
 
@@ -2761,7 +2761,7 @@ class DiameterTheorem(TeacherStudentsScene):
                 circle.get_left(), circle.get_right(),
                 point.get_center(), circle.get_left(),
             ])
-        triangle_update_anim = ContinualUpdateFromFunc(
+        triangle_update_anim = ContinualUpdate(
             triangle, update_triangle
         )
         triangle_update_anim.update(0)
@@ -2826,7 +2826,7 @@ class InscribedeAngleThreorem(TeacherStudentsScene):
                 circle.point_from_proportion(1./8), 
                 point.get_center(),
             ])
-        shape_update_anim = ContinualUpdateFromFunc(
+        shape_update_anim = ContinualUpdate(
             shape, update_shape
         )
         shape_update_anim.update(0)
@@ -3854,7 +3854,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
             z = self.camera.rotation_mobject.get_center()[2]
             decimal.set_height(0.07*z)
             decimal.move_to(0.7*z*UP)
-        scale_decimal = ContinualUpdateFromFunc(decimal, update_decimal)
+        scale_decimal = ContinualUpdate(decimal, update_decimal)
 
 
         self.add(number_line, *dot_pairs)

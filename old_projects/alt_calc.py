@@ -707,14 +707,14 @@ class StartingCalc101(PiCreatureScene):
                     tracker.get_value() + dt
                 )
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 spring,
                 lambda s: s.stretch_to_fit_height(
                     1.5 + 0.5 * np.cos(3 * t_tracker.get_value()),
                     about_edge=UP
                 )
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 weight,
                 lambda w: w.move_to(spring.points[-1])
             )
@@ -934,7 +934,7 @@ class ChangingVectorField(Scene):
         self.add(ContinualGrowValue(time_tracker))
 
         vectors = self.get_vectors()
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             vectors,
             lambda vs: self.update_vectors(vs)
         ))
@@ -1111,36 +1111,36 @@ class StandardDerivativeVisual(GraphScene):
             triangle.set_stroke(width=0)
             triangle.scale(0.1)
 
-        input_triangle_update = ContinualUpdateFromFunc(
+        input_triangle_update = ContinualUpdate(
             input_triangle, lambda m: m.move_to(get_x_point(), UP)
         )
-        output_triangle_update = ContinualUpdateFromFunc(
+        output_triangle_update = ContinualUpdate(
             output_triangle, lambda m: m.move_to(get_y_point(), RIGHT)
         )
 
         x_label = TexMobject("x")
-        x_label_update = ContinualUpdateFromFunc(
+        x_label_update = ContinualUpdate(
             x_label, lambda m: m.next_to(input_triangle, DOWN, SMALL_BUFF)
         )
 
         output_label = TexMobject("f(x)")
-        output_label_update = ContinualUpdateFromFunc(
+        output_label_update = ContinualUpdate(
             output_label, lambda m: m.next_to(
                 output_triangle, LEFT, SMALL_BUFF)
         )
 
         v_line = get_v_line()
-        v_line_update = ContinualUpdateFromFunc(
+        v_line_update = ContinualUpdate(
             v_line, lambda vl: Transform(vl, get_v_line()).update(1)
         )
 
         h_line = get_h_line()
-        h_line_update = ContinualUpdateFromFunc(
+        h_line_update = ContinualUpdate(
             h_line, lambda hl: Transform(hl, get_h_line()).update(1)
         )
 
         graph_dot = Dot(color=YELLOW)
-        graph_dot_update = ContinualUpdateFromFunc(
+        graph_dot_update = ContinualUpdate(
             graph_dot, lambda m: m.move_to(get_graph_point())
         )
 
@@ -1192,7 +1192,7 @@ class StandardDerivativeVisual(GraphScene):
             ).secant_line
 
         slope_line = get_slope_line()
-        slope_line_update = ContinualUpdateFromFunc(
+        slope_line_update = ContinualUpdate(
             slope_line, lambda sg: Transform(sg, get_slope_line()).update(1)
         )
 
@@ -1203,7 +1203,7 @@ class StandardDerivativeVisual(GraphScene):
             "\\frac{df}{dx}(x) =", "\\text{Slope}", "="
         )
         deriv_label.get_part_by_tex("Slope").match_color(slope_line)
-        deriv_label_update = ContinualUpdateFromFunc(
+        deriv_label_update = ContinualUpdate(
             deriv_label, position_deriv_label
         )
 
