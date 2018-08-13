@@ -471,9 +471,9 @@ class Scene(Container):
         static_image = self.get_frame()
         total_run_time = 0
         for t in self.get_animation_time_progression(animations):
-            self.continual_update(dt=t - total_run_time)
             for animation in animations:
                 animation.update(t / animation.run_time)
+            self.continual_update(dt=t - total_run_time)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
             total_run_time = t
