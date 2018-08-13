@@ -255,6 +255,7 @@ class LogoGenerationTemplate(MovingCameraScene):
         name = TextMobject("3Blue1Brown")
         name.scale(2.5)
         name.next_to(self.logo, DOWN, buff=MED_LARGE_BUFF)
+        name.set_sheen(-0.2, DR)
         self.channel_name = name
 
     def construct(self):
