@@ -161,7 +161,7 @@ class Mobject(Container):
 
     def get_time_based_updaters(self):
         return [
-            udpater
+            updater
             for updater in self.updaters
             if get_num_args(updater) == 2
         ]
