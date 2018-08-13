@@ -80,7 +80,7 @@ class ThreeDCamera(MovingCamera):
         else:
             target[:, :3] = 0
             alpha = -self.shading_factor * brightness
-            return interpolate(rgb, target, alpha)
+            return interpolate(rgbas, target, alpha)
 
     def get_unit_normal_vect(self, vmobject):
         anchors = vmobject.get_anchors()
@@ -172,9 +172,9 @@ class ThreeDCamera(MovingCamera):
             rotation_about_z(-self.get_theta() - np.pi / 2),
         )
 
-    def points_to_pixel_coords(self, points):
+    def transform_points_pre_display(self, points):
         matrix = self.get_view_transformation_matrix()
-        new_points = np.dot(points, matrix.T)
-        self.frame_center = self.moving_center.points[0]
+        return np.dot(points, matrix.T)
 
-        return MovingCamera.points_to_pixel_coords(self, new_points)
+    def get_frame_center(self):
+        return self.moving_center.points[0]

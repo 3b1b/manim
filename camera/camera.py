@@ -348,7 +348,7 @@ class Camera(object):
     def set_cairo_context_path(self, ctx, vmobject):
         ctx.new_path()
         for vmob in it.chain([vmobject], vmobject.get_subpath_mobjects()):
-            points = vmob.points
+            points = self.transform_points_pre_display(vmob.points)
             ctx.new_sub_path()
             ctx.move_to(*points[0][:2])
             for triplet in zip(points[1::3], points[2::3], points[3::3]):
@@ -543,7 +543,13 @@ class Camera(object):
         points[violator_indices] = rescaled
         return points
 
+    def transform_points_pre_display(self, points):
+        # Subclasses (like ThreeDCamera) may want to
+        # adjust points before they're shown
+        return points
+
     def points_to_pixel_coords(self, points):
+        points = self.transform_points_pre_display(points)
         shifted_points = points - self.get_frame_center()
 
         result = np.zeros((len(points), 2))
