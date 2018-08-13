@@ -83,7 +83,7 @@ class DecimalNumber(VMobject):
         """
         config = dict(self.__dict__)
         config.update(kwargs)
-        return reduce(op.add, [
+        return "".join([
             "{",
             config.get("field_name", ""),
             ":",
@@ -94,7 +94,11 @@ class DecimalNumber(VMobject):
         ])
 
     def get_complex_formatter(self, **kwargs):
-        pass
+        return "".join([
+            self.get_formatter(field_name="0.real"),
+            self.get_formatter(field_name="0.imag", include_sign=True),
+            "i"
+        ])
 
     def set_value(self, number, **config):
         full_config = dict(self.initial_config)
