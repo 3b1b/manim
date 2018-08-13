@@ -55,9 +55,6 @@ def digest_config(obj, kwargs, caller_locals={}):
     all_dicts += static_configs
     all_new_dicts = [kwargs, caller_locals] + static_configs
     obj.__dict__ = merge_config(all_dicts)
-    # Keep track of the configuration of objects upon
-    # instantiation
-    obj.initial_config = merge_config(all_new_dicts)
 
 
 def merge_config(all_dicts):
