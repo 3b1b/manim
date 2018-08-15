@@ -6,6 +6,7 @@ from constants import WHITE
 from constants import PALETTE
 
 from utils.bezier import interpolate
+from utils.space_ops import get_norm
 
 
 def color_to_rgb(color):
@@ -82,3 +83,12 @@ def random_bright_color():
 
 def random_color():
     return random.choice(PALETTE)
+
+
+def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
+    to_sun = light_source - point
+    to_sun /= get_norm(to_sun)
+    factor = 0.5 * np.dot(unit_normal_vect, to_sun)**3
+    if factor < 0:
+        factor *= 0.5
+    return np.clip(rgb + factor, 0, 1)

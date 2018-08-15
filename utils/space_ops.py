@@ -92,6 +92,31 @@ def project_along_vector(point, vector):
     matrix = np.identity(3) - np.outer(vector, vector)
     return np.dot(point, matrix.T)
 
+
+def get_norm(vect):
+    return sum([x**2 for x in vect])**0.5
+
+
+def normalize(vect):
+    norm = get_norm(vect)
+    if norm > 0:
+        return vect / norm
+    else:
+        return np.zeros(len(vect))
+
+
+def cross(v1, v2):
+    return np.array([
+        v1[1] * v2[2] - v1[2] * v2[1],
+        v1[2] * v2[0] - v1[0] * v2[2],
+        v1[0] * v2[1] - v1[1] * v2[0]
+    ])
+
+
+def get_unit_normal(v1, v2):
+    return normalize(cross(v1, v2))
+
+
 ###
 
 

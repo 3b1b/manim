@@ -264,7 +264,7 @@ class Camera(object):
             (VMobject, self.display_multiple_vectorized_mobjects),
             (PMobject, self.display_multiple_point_cloud_mobjects),
             (AbstractImageMobject, self.display_multiple_image_mobjects),
-            (Mobject, lambda batch: batch),  # Do nothing
+            (Mobject, lambda batch, pa: batch),  # Do nothing
         ]
 
         def get_mobject_type(mobject):
@@ -370,10 +370,11 @@ class Camera(object):
             )
         else:
             points = vmobject.get_gradient_start_and_end_points()
+            points = self.transform_points_pre_display(points)
             pat = cairo.LinearGradient(*it.chain(*[
                 point[:2] for point in points
             ]))
-            offsets = np.linspace(1, 0, len(rgbas))
+            offsets = np.linspace(0, 1, len(rgbas))
             for rgba, offset in zip(rgbas, offsets):
                 pat.add_color_stop_rgba(
                     offset, *rgba[2::-1], rgba[3]

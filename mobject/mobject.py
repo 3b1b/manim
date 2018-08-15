@@ -681,12 +681,13 @@ class Mobject(Container):
         ]
 
     def get_merged_array(self, array_attr):
-        result = None
-        for mob in self.family_members_with_points():
-            if result is None:
-                result = getattr(mob, array_attr)
-            else:
-                result = np.append(result, getattr(mob, array_attr), 0)
+        result = getattr(self, array_attr)
+        for submob in self.submobjects:
+            result = np.append(
+                result, submob.get_merged_array(array_attr),
+                axis=0
+            )
+            submob.get_merged_array(array_attr)
         return result
 
     def get_all_points(self):
@@ -816,11 +817,11 @@ class Mobject(Container):
         if n_rows is not None:
             v1 = RIGHT
             v2 = DOWN
-            n = len(submobs) / n_rows
+            n = len(submobs) // n_rows
         elif n_cols is not None:
             v1 = DOWN
             v2 = RIGHT
-            n = len(submobs) / n_cols
+            n = len(submobs) // n_cols
         Group(*[
             Group(*submobs[i:i + n]).arrange_submobjects(v1, **kwargs)
             for i in range(0, len(submobs), n)
@@ -829,7 +830,7 @@ class Mobject(Container):
 
     def sort_submobjects(self, point_to_num_func=lambda p: p[0]):
         self.submobjects.sort(
-            key=lambda m: point_to_num_func(mob.get_center())
+            key=lambda m: point_to_num_func(m.get_center())
         )
         return self
 
