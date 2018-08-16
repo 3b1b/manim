@@ -79,6 +79,13 @@ class ReplacementTransform(Transform):
     }
 
 
+class TransformFromCopy(ReplacementTransform):
+    def __init__(self, mobject, target_mobject, **kwargs):
+        ReplacementTransform.__init__(
+            self, mobject.deepcopy(), target_mobject, **kwargs
+        )
+
+
 class ClockwiseTransform(Transform):
     CONFIG = {
         "path_arc": -np.pi
