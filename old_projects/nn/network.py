@@ -255,13 +255,13 @@ def maximizing_input(network, layer_index, layer_vect, n_steps = 100, seed_guess
             np.array(layer_vect).reshape((1, len(layer_vect))),
             jacobian
         ).flatten()
-        norm = np.linalg.norm(gradient)
+        norm = get_norm(gradient)
         if norm == 0:
             break
         norms.append(norm)
         old_pre_sig_guess = np.array(pre_sig_guess)
         pre_sig_guess += 0.1*gradient
-        print(np.linalg.norm(old_pre_sig_guess - pre_sig_guess))
+        print(get_norm(old_pre_sig_guess - pre_sig_guess))
     print("")
     return sigmoid(pre_sig_guess)
 

@@ -31,11 +31,11 @@ class Orbiting(ContinualAnimation):
 
         rate = self.rate
         radius_vector = planet.get_center() - star.get_center()
-        rate *= 1.0 / np.linalg.norm(radius_vector)
+        rate *= 1.0 / get_norm(radius_vector)
 
         prop = self.proportion
         d_prop = 0.001
-        ds = np.linalg.norm(op.add(
+        ds = get_norm(op.add(
             ellipse.point_from_proportion((prop + d_prop) % 1),
             -ellipse.point_from_proportion(prop),
         ))
@@ -280,7 +280,7 @@ class ShowEmergingEllipse(Scene):
 
         # Ellipse parameters
         a = radius / 2
-        c = np.linalg.norm(e_point - center) / 2
+        c = get_norm(e_point - center) / 2
         b = np.sqrt(a**2 - c**2)
 
         result = Circle(radius=b, color=self.ellipse_color)
@@ -2066,7 +2066,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
                     [self.circle.get_center(), gl.get_end()],
                     line.get_start_and_end()
                 )
-                distance = np.linalg.norm(
+                distance = get_norm(
                     intersection - planet.get_center()
                 )
                 if distance < 0.025:
@@ -2596,7 +2596,7 @@ class AngularMomentumArgument(KeplersSecondLaw):
         )
         vector_field.set_fill(opacity=0.8)
         vector_field.sort_submobjects(
-            lambda p: -np.linalg.norm(p - sun_center)
+            lambda p: -get_norm(p - sun_center)
         )
 
         stays_constant = TextMobject("Stays constant")
@@ -2918,7 +2918,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
 
     # Helpers
     def get_velocity_vector(self, alpha, d_alpha=0.01, scalar=3.0):
-        norm = np.linalg.norm
+        norm = get_norm
         ellipse = self.ellipse
         sun_center = self.sun.get_center()
 
@@ -3016,8 +3016,8 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
 
         def get_cos_angle_diff(v1, v2):
             return np.dot(
-                v1 / np.linalg.norm(v1),
-                v2 / np.linalg.norm(v2),
+                v1 / get_norm(v1),
+                v2 / get_norm(v2),
             )
 
         lines = VGroup()
@@ -4000,7 +4000,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
             circle.get_center(),
         ]
         a = circle.get_width() / 4
-        c = np.linalg.norm(foci[1] - foci[0]) / 2
+        c = get_norm(foci[1] - foci[0]) / 2
         b = np.sqrt(a**2 - c**2)
         little_ellipse = Circle(radius=a)
         little_ellipse.stretch(b / a, 1)
@@ -4127,7 +4127,7 @@ class ShowSunVectorField(Scene):
         )
         vector_field.set_fill(opacity=0.8)
         vector_field.sort_submobjects(
-            lambda p: -np.linalg.norm(p - sun_center)
+            lambda p: -get_norm(p - sun_center)
         )
 
         for vector in vector_field:

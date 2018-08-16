@@ -1448,7 +1448,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         labels = list(map(TexMobject, "ab"))
         for line, label in zip(v_lines, labels):
             vect = line.get_start()-line.get_end()
-            label.next_to(line, vect/np.linalg.norm(vect))
+            label.next_to(line, vect/get_norm(vect))
             label.set_color(line.get_color())
 
         self.y_axis_label_mob.shift(0.7*LEFT)

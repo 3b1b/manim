@@ -6,6 +6,9 @@ from functools import reduce
 
 # Matrix operations
 
+def get_norm(vect):
+    return sum([x**2 for x in vect])**0.5
+
 
 def thick_diagonal(dim, thickness=2):
     row_indices = np.arange(dim).repeat(dim).reshape((dim, dim))
@@ -36,14 +39,14 @@ def z_to_vector(vector):
     Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
     """
-    norm = np.linalg.norm(vector)
+    norm = get_norm(vector)
     if norm == 0:
         return np.identity(3)
     v = np.array(vector) / norm
     phi = np.arccos(v[2])
     if any(v[:2]):
         # projection of vector to unit circle
-        axis_proj = v[:2] / np.linalg.norm(v[:2])
+        axis_proj = v[:2] / get_norm(v[:2])
         theta = np.arccos(axis_proj[0])
         if axis_proj[1] < 0:
             theta = -theta
@@ -63,8 +66,8 @@ def rotate_vector(vector, angle, axis=OUT):
 
 def angle_between(v1, v2):
     return np.arccos(np.dot(
-        v1 / np.linalg.norm(v1),
-        v2 / np.linalg.norm(v2)
+        v1 / get_norm(v1),
+        v2 / get_norm(v2)
     ))
 
 
@@ -83,18 +86,14 @@ def angle_between_vectors(v1, v2):
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and TAU/2.
     """
-    l1 = np.linalg.norm(v1)
-    l2 = np.linalg.norm(v2)
+    l1 = get_norm(v1)
+    l2 = get_norm(v2)
     return np.arccos(np.dot(v1, v2) / (l1 * l2))
 
 
 def project_along_vector(point, vector):
     matrix = np.identity(3) - np.outer(vector, vector)
     return np.dot(point, matrix.T)
-
-
-def get_norm(vect):
-    return sum([x**2 for x in vect])**0.5
 
 
 def normalize(vect):

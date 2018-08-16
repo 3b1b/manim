@@ -96,7 +96,7 @@ class InfiniteResultsFiniteWorld(Scene):
             ]
         ]
         for mob in ex, middle:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
 
         self.play(GrowFromCenter(ex))
         self.wait()
@@ -133,7 +133,7 @@ class InfiniteResultsFiniteWorld(Scene):
             )*RIGHT
         )
         for mob in arrow, words:
-            mob.sort_points(np.linalg.norm)     
+            mob.sort_points(get_norm)     
 
         self.play(
             ApplyMethod(left_mob.shift, RIGHT),

@@ -3086,8 +3086,8 @@ class CorrectForDependence(NameBinomial):
                 mob.generate_target()
                 c = mob.get_center()
                 start, end = arrow.target.get_start_and_end()
-                to_end = np.linalg.norm(c - end)
-                to_start = np.linalg.norm(c - start)
+                to_end = get_norm(c - end)
+                to_start = get_norm(c - start)
                 if to_end < to_start:
                     mob.target.set_fill(opacity = 1)
                 else:

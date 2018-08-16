@@ -698,12 +698,12 @@ class UnmixMixedPaint(Scene):
         def update_quadrant(quadrant, alpha):
             points = quadrant.get_anchors()
             dt = 0.03 #Hmm, this has no dependency on frame rate...
-            norms = np.apply_along_axis(np.linalg.norm, 1, points)
+            norms = np.apply_along_axis(get_norm, 1, points)
 
             points[:,0] -= dt*points[:,1]/np.clip(norms, 0.1, np.inf)
             points[:,1] += dt*points[:,0]/np.clip(norms, 0.1, np.inf)
 
-            new_norms = np.apply_along_axis(np.linalg.norm, 1, points)
+            new_norms = np.apply_along_axis(get_norm, 1, points)
             new_norms = np.clip(new_norms, 0.001, np.inf)
             radius = np.max(norms)
             multiplier = norms/new_norms

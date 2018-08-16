@@ -260,7 +260,7 @@ class ShowMatrixTransform(TransformScene2D):
 
     def get_density_factor(self, matrix):
         max_norm = max([
-            abs(np.linalg.norm(column))
+            abs(get_norm(column))
             for column in np.transpose(matrix)
         ])
         return max(max_norm, 1)
@@ -516,14 +516,14 @@ class ShowMatrixTransformWithDot(TransformScene2D):
 
     def get_density_factor(self, matrix):
         max_norm = max([
-            abs(np.linalg.norm(column))
+            abs(get_norm(column))
             for column in np.transpose(matrix)
         ])
         return max(max_norm, 1)
 
     def get_path_func(self, matrix):
         rotational_components = [
-            sign*np.arccos(matrix[i,i]/np.linalg.norm(matrix[:,i]))
+            sign*np.arccos(matrix[i,i]/get_norm(matrix[:,i]))
             for i in [0, 1]
             for sign in [((-1)**i)*np.sign(matrix[1-i, i])]
         ]

@@ -6,15 +6,17 @@ from constants import WHITE
 from constants import PALETTE
 
 from utils.bezier import interpolate
-from utils.space_ops import get_norm
+from utils.space_ops import normalize
 
 
 def color_to_rgb(color):
-    return np.array(Color(color).get_rgb())
+    if not isinstance(color, Color):
+        color = Color(color)
+    return np.array(color.get_rgb())
 
 
 def color_to_rgba(color, alpha=1):
-    return np.append(color_to_rgb(color), [alpha])
+    return np.array([*color_to_rgb(color), alpha])
 
 
 def rgb_to_color(rgb):
@@ -86,8 +88,7 @@ def random_color():
 
 
 def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
-    to_sun = light_source - point
-    to_sun /= get_norm(to_sun)
+    to_sun = normalize(light_source - point)
     factor = 0.5 * np.dot(unit_normal_vect, to_sun)**3
     if factor < 0:
         factor *= 0.5

@@ -64,7 +64,7 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
             list(locals().values()),
         ))
         for mob in local_mobjects:    
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
 
         self.play(ShimmerIn(infinity))
         self.wait()
@@ -160,8 +160,8 @@ class ImageToSound(Scene):
         picture = ImageMobject("lion", invert = False)
         picture.scale(0.8)
         picture_copy = picture.copy()
-        picture.sort_points(np.linalg.norm)
-        string.mobject.sort_points(lambda p : -np.linalg.norm(p))
+        picture.sort_points(get_norm)
+        string.mobject.sort_points(lambda p : -get_norm(p))
 
         self.add(picture)
         self.wait()
@@ -174,7 +174,7 @@ class ImageToSound(Scene):
         self.play(string)
 
         for mob in picture_copy, string.mobject:
-            mob.sort_points(lambda p : np.linalg.norm(p)%1)
+            mob.sort_points(lambda p : get_norm(p)%1)
 
         self.play(Transform(
             string.mobject, picture_copy,
@@ -239,7 +239,7 @@ class SoundDataIsOneDimensional(Scene):
 
         freq_line = get_freq_line()
         freq_line.shift(floor)
-        freq_line.sort_points(np.linalg.norm)
+        freq_line.sort_points(get_norm)
         brace = Brace(freq_line, UP)
         words = TextMobject("Range of frequency values")
         words.next_to(brace, UP)
@@ -303,7 +303,7 @@ class GridOfPixels(Scene):
         )
         self.wait()
         for mob in grid, high_res:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
         self.play(DelayByOrder(Transform(high_res, grid)))
         self.wait()
 
@@ -394,7 +394,7 @@ class AssociatePixelWithFrequency(Scene):
 class ListenToAllPixels(Scene):
     def construct(self):
         grid = get_grid()
-        grid.sort_points(np.linalg.norm)        
+        grid.sort_points(get_norm)        
         freq_line = get_freq_line()
         freq_line.sort_points(lambda p : p[0])
         red, blue = Color(RED), Color(BLUE)
@@ -607,7 +607,7 @@ class WeaveLineThroughPixels(Scene):
         for square in squares.submobjects:
             center = square.get_center()
             distances = np.apply_along_axis(
-                lambda p : np.linalg.norm(p-center),
+                lambda p : get_norm(p-center),
                 1,
                 curve.points
             )
@@ -700,7 +700,7 @@ class TellMathematicianFriend(Scene):
         self.wait(2)
         self.play(
             ApplyPointwiseFunction(
-                lambda p : 15*p/np.linalg.norm(p),
+                lambda p : 15*p/get_norm(p),
                 bubble
             ),
             ApplyMethod(mathy.shift, 5*(DOWN+LEFT)),

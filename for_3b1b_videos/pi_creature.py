@@ -15,6 +15,7 @@ from animation.transform import Transform
 from utils.config_ops import digest_config
 from utils.rate_functions import squish_rate_func
 from utils.rate_functions import there_and_back
+from utils.space_ops import get_norm
 
 PI_CREATURE_DIR = os.path.join(MEDIA_DIR, "designs", "PiCreature")
 PI_CREATURE_SCALE_FACTOR = 0.5
@@ -144,7 +145,7 @@ class PiCreature(SVGMobject):
         return self.mode
 
     def look(self, direction):
-        norm = np.linalg.norm(direction)
+        norm = get_norm(direction)
         if norm == 0:
             return
         direction /= norm
@@ -154,7 +155,7 @@ class PiCreature(SVGMobject):
             right = eye.get_right() - c
             up = eye.get_top() - c
             vect = direction[0] * right + direction[1] * up
-            v_norm = np.linalg.norm(vect)
+            v_norm = get_norm(vect)
             p_radius = 0.5 * pupil.get_width()
             vect *= (v_norm - 0.75 * p_radius) / v_norm
             pupil.move_to(c + vect)

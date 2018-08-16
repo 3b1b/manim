@@ -41,7 +41,7 @@ def thicken(nparray):
 
 def sort_by_color(mob):
     indices = np.argsort(np.apply_along_axis(
-        lambda p : -np.linalg.norm(p),
+        lambda p : -get_norm(p),
         1,
         mob.rgbas
     ))
@@ -211,7 +211,7 @@ class JohannThinksHeIsBetter(Scene):
         upper_point = Point(comparitive_johann.get_corner(UP+RIGHT))
         lightbulb = ImageMobject("Lightbulb", invert = False)
         lightbulb.scale(0.1)
-        lightbulb.sort_points(np.linalg.norm)
+        lightbulb.sort_points(get_norm)
         lightbulb.next_to(upper_point, RIGHT)
 
         self.add(johann)

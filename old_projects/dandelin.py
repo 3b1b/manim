@@ -1408,7 +1408,7 @@ class CreativeConstruction(PiCreatureScene):
         lightbulb.generate_target()
         q_marks = VGroup()
         for submob in lightbulb.target.family_members_with_points():
-            if True or np.linalg.norm(submob.get_center() - lightbulb.get_center()) > 0.25:
+            if True or get_norm(submob.get_center() - lightbulb.get_center()) > 0.25:
                 q_mark = TexMobject("?")
                 q_mark.set_height(0.25)
                 q_mark.move_to(submob)
@@ -1607,7 +1607,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
 
         def update_lines(lines):
             for line, focus in zip(lines, foci):
-                d = np.linalg.norm(point.get_center() - focus)
+                d = get_norm(point.get_center() - focus)
                 line.put_start_and_end_on(
                     ORIGIN, d * UP
                 )

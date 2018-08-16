@@ -4,7 +4,7 @@ ADDER_COLOR = GREEN
 MULTIPLIER_COLOR = YELLOW
 
 def normalize(vect):
-    norm = np.linalg.norm(vect)
+    norm = get_norm(vect)
     if norm == 0:
         return OUT
     else:
@@ -548,7 +548,7 @@ class SymmetriesOfSquare(ThreeDScene):
         )
 
     def get_rotation_arcs(self, square, angle, angle_buff = SMALL_BUFF):
-        square_radius = np.linalg.norm(
+        square_radius = get_norm(
             square.points[0] - square.get_center()
         )
         arc = Arc(
@@ -1010,7 +1010,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
                 maintain_smoothness = False
             )
             arrows.move_to(cube)
-            arrows.shift(-axis*cube.get_height()/2/np.linalg.norm(axis))
+            arrows.shift(-axis*cube.get_height()/2/get_norm(axis))
             anims += list(map(ShowCreation, arrows))
         anims.append(
             Rotate(

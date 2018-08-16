@@ -21,6 +21,7 @@ from utils.space_ops import angle_of_vector
 from utils.space_ops import complex_to_R3
 from utils.space_ops import rotation_matrix
 from utils.simple_functions import get_num_args
+from utils.space_ops import get_norm
 from functools import reduce
 
 
@@ -398,7 +399,7 @@ class Mobject(Container):
             target_point = mob.get_critical_point(direction)
         else:
             target_point = mobject_or_point
-        direction_norm = np.linalg.norm(direction)
+        direction_norm = get_norm(direction)
         if direction_norm > 0:
             alignment_vect = np.array(direction) / direction_norm
             reference_point = self.get_critical_point(direction)
@@ -506,7 +507,7 @@ class Mobject(Container):
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
         target_vect = end - start
-        self.scale(np.linalg.norm(target_vect) / np.linalg.norm(curr_vect))
+        self.scale(get_norm(target_vect) / get_norm(curr_vect))
         self.rotate(
             angle_of_vector(target_vect) -
             angle_of_vector(curr_vect)
@@ -599,7 +600,7 @@ class Mobject(Container):
             center = self.get_center()
 
         for mob in self.family_members_with_points():
-            t = np.linalg.norm(mob.get_center() - center) / radius
+            t = get_norm(mob.get_center() - center) / radius
             t = min(t, 1)
             mob_color = interpolate_color(inner_color, outer_color, t)
             mob.set_color(mob_color, family=False)
@@ -703,18 +704,19 @@ class Mobject(Container):
 
     def get_critical_point(self, direction):
         result = np.zeros(self.dim)
+        all_points = self.get_all_points()
         for dim in range(self.dim):
             if direction[dim] <= 0:
-                min_point = self.reduce_across_dimension(np.min, np.min, dim)
+                min_val = np.min(all_points[:, dim])
             if direction[dim] >= 0:
-                max_point = self.reduce_across_dimension(np.max, np.max, dim)
+                max_val = np.max(all_points[:, dim])
 
             if direction[dim] == 0:
-                result[dim] = (max_point + min_point) / 2
+                result[dim] = (max_val + min_val) / 2
             elif direction[dim] < 0:
-                result[dim] = min_point
+                result[dim] = min_val
             else:
-                result[dim] = max_point
+                result[dim] = max_val
         return result
 
     # Pseudonyms for more general get_critical_point method

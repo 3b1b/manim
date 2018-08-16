@@ -280,7 +280,7 @@ class TauPoem(Scene):
     def line6(self):
         bubble = ThoughtBubble()
         self.play(ApplyFunction(
-            lambda p : 2 * p /  np.linalg.norm(p),
+            lambda p : 2 * p /  get_norm(p),
             bubble,
             rate_func = wiggle,
             run_time = 3.0,
@@ -291,7 +291,7 @@ class TauPoem(Scene):
         heart = ImageMobject("heart")
         heart.scale(0.5).shift(DOWN).set_color("red")
         for mob in bubble, heart:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
 
         self.add(bubble)
         self.wait()
@@ -478,7 +478,7 @@ class TauPoem(Scene):
             circle.rgbas
         def trianglify(xxx_todo_changeme):
             (x, y, z) = xxx_todo_changeme
-            norm = np.linalg.norm((x, y, z))
+            norm = get_norm((x, y, z))
             comp = complex(x, y)*complex(0, 1)
             return (
                 norm * np.log(comp).imag,

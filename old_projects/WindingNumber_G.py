@@ -722,7 +722,7 @@ class InputOutputScene(Scene):
 
     def func(self, coord_pair):
         out_coords = np.array(self.non_renormalized_func(coord_pair))
-        out_norm = np.linalg.norm(out_coords)
+        out_norm = get_norm(out_coords)
         if out_norm > 1:
             angle = angle_of_vector(out_coords)
             factor = 0.5-0.1*np.cos(4*angle)

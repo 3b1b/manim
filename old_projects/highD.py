@@ -165,7 +165,7 @@ class SliderScene(Scene):
         def update_sliders(sliders):
             curr_vect = self.get_vector()
             curr_vect -= self.center_point
-            curr_vect *= radius/np.linalg.norm(curr_vect)
+            curr_vect *= radius/get_norm(curr_vect)
             curr_vect += self.center_point
             self.set_to_vector(curr_vect)
             return sliders
@@ -190,14 +190,14 @@ class SliderScene(Scene):
             else:
                 unspecified_indices.append(i)
                 unspecified_vector[i] = curr_vector[i]
-        used_re = np.linalg.norm(target_vector - self.center_point)**2
+        used_re = get_norm(target_vector - self.center_point)**2
         left_over_re = self.total_real_estate - used_re
         if left_over_re < -0.001:
             raise Exception("Overspecified reset")
-        uv_norm = np.linalg.norm(unspecified_vector - self.center_point)
+        uv_norm = get_norm(unspecified_vector - self.center_point)
         if uv_norm == 0 and left_over_re > 0:
             unspecified_vector[unspecified_indices] = 1
-            uv_norm = np.linalg.norm(unspecified_vector - self.center_point)
+            uv_norm = get_norm(unspecified_vector - self.center_point)
         if uv_norm > 0:
             unspecified_vector -= self.center_point
             unspecified_vector *= np.sqrt(left_over_re)/uv_norm
@@ -273,7 +273,7 @@ class SliderScene(Scene):
 
         center_point = self.get_center_point()
         target_vector = self.get_vector() - center_point
-        if np.linalg.norm(target_vector) == 0:
+        if get_norm(target_vector) == 0:
             return
         vectors_and_magnitudes = [
             (self.ambient_acceleration, self.ambient_acceleration_magnitude),
@@ -285,9 +285,9 @@ class SliderScene(Scene):
         for vect, mag in vectors_and_magnitudes:
             vect += self.frame_duration*deriv
             if vect is self.ambient_velocity:
-                unit_r_vect = target_vector / np.linalg.norm(target_vector)
+                unit_r_vect = target_vector / get_norm(target_vector)
                 vect -= np.dot(vect, unit_r_vect)*unit_r_vect
-            vect *= mag/np.linalg.norm(vect)
+            vect *= mag/get_norm(vect)
             deriv = vect
 
         self.set_to_vector(target_vector + center_point)
@@ -295,7 +295,7 @@ class SliderScene(Scene):
 
     def get_random_vector(self, magnitude):
         result = 2*np.random.random(len(self.sliders)) - 1
-        result *= magnitude / np.linalg.norm(result)
+        result *= magnitude / get_norm(result)
         return result
 
     def update_frame(self, *args, **kwargs):
@@ -1481,7 +1481,7 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         self.wind_down_ambient_movement(wait = False)
         self.play(self.teacher.change, "speaking")
         self.sliders.remove(x_slider)
-        self.total_real_estate = np.linalg.norm(self.get_vector())**2
+        self.total_real_estate = get_norm(self.get_vector())**2
         self.initialize_ambiant_slider_movement()
         arrow = Arrow(LEFT, RIGHT, color = GREEN)
         arrow.next_to(dial, LEFT)
@@ -2058,7 +2058,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
 
     def show_center_circle(self):
         origin = self.plane.coords_to_point(0, 0)
-        radius = np.linalg.norm(
+        radius = get_norm(
             self.plane.coords_to_point(np.sqrt(2)-1, 0) - origin
         )
         circle = Circle(radius = radius, color = GREEN)
@@ -2077,7 +2077,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         h_line = Line(point[1]*UP + origin[0]*RIGHT, point)
         v_line = Line(point[0]*RIGHT+origin[1]*UP, point)
 
-        while np.linalg.norm(self.get_vector()-target_vector) > 0.5:
+        while get_norm(self.get_vector()-target_vector) > 0.5:
             self.wait()
         self.wind_down_ambient_movement(0)
         self.reset_dials(target_vector)
@@ -2210,7 +2210,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         half.next_to(half_line, LEFT, SMALL_BUFF)
 
         target_vector = np.array(2*[1-np.sqrt(0.5)])
-        while np.linalg.norm(target_vector - self.get_vector()) > 0.5:
+        while get_norm(target_vector - self.get_vector()) > 0.5:
             self.wait()
         self.wind_down_ambient_movement(0)
         self.reset_dials(target_vector)
@@ -3598,7 +3598,7 @@ class Thumbnail(SliderScene):
             self.remove(slider.label)
             slider.remove(slider.label)
         vect = np.random.random(10) - 0.5
-        vect /= np.linalg.norm(vect)
+        vect /= get_norm(vect)
         self.set_to_vector(vect)
 
         title = TextMobject("10D Sphere?")

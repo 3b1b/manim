@@ -31,7 +31,7 @@ class PhotonScene(Scene):
         result.ingest_submobjects()
         tangent_vectors = result.points[1:]-result.points[:-1]
         lengths = np.apply_along_axis(
-            np.linalg.norm, 1, tangent_vectors
+            get_norm, 1, tangent_vectors
         )
         thick_lengths = lengths.repeat(3).reshape((len(lengths), 3))
         unit_tangent_vectors = tangent_vectors/thick_lengths
@@ -568,7 +568,7 @@ class Spring(Line):
 
     def generate_points(self):
         ## self.start, self.end
-        length = np.linalg.norm(self.end-self.start)
+        length = get_norm(self.end-self.start)
         angle = angle_of_vector(self.end-self.start)
         micro_radius = self.loop_radius/length
         m = 2*np.pi*(self.num_loops+0.5)

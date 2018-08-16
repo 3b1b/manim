@@ -141,7 +141,7 @@ class LightIndicator(VMobject):
 
 
     def measured_intensity(self):
-        distance = np.linalg.norm(self.get_measurement_point() - 
+        distance = get_norm(self.get_measurement_point() - 
             self.light_source.get_source_point())
         intensity = self.light_source.opacity_function(distance) / self.opacity_for_unit_intensity
         return intensity
@@ -1914,9 +1914,9 @@ class TwoLightSourcesScene(PiCreatureScene):
             SwitchOn(ls2.ambient_light)
         )
 
-        distance1 = np.linalg.norm(C - ls1.get_source_point())
+        distance1 = get_norm(C - ls1.get_source_point())
         intensity = ls1.ambient_light.opacity_function(distance1) / indicator.opacity_for_unit_intensity
-        distance2 = np.linalg.norm(C - ls2.get_source_point())
+        distance2 = get_norm(C - ls2.get_source_point())
         intensity += ls2.ambient_light.opacity_function(distance2) / indicator.opacity_for_unit_intensity
 
         self.play(
@@ -3051,9 +3051,9 @@ class PondScene(ThreeDScene):
         def right_angle(pointA, pointB, pointC, size = 1):
 
             v1 = pointA - pointB
-            v1 = size * v1/np.linalg.norm(v1)
+            v1 = size * v1/get_norm(v1)
             v2 = pointC - pointB
-            v2 = size * v2/np.linalg.norm(v2)
+            v2 = size * v2/get_norm(v2)
             
             P = pointB
             Q = pointB + v1
@@ -4473,9 +4473,9 @@ class RightAnglesOverlay(Scene):
         def right_angle(pointA, pointB, pointC, size = 1):
 
             v1 = pointA - pointB
-            v1 = size * v1/np.linalg.norm(v1)
+            v1 = size * v1/get_norm(v1)
             v2 = pointC - pointB
-            v2 = size * v2/np.linalg.norm(v2)
+            v2 = size * v2/get_norm(v2)
             
             P = pointB
             Q = pointB + v1

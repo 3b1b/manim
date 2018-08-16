@@ -9,7 +9,7 @@ SUM_COLOR = PINK
 
 def get_projection(vector_to_project, stable_vector):
     v1, v2 = stable_vector, vector_to_project
-    return v1*np.dot(v1, v2)/(np.linalg.norm(v1)**2)
+    return v1*np.dot(v1, v2)/(get_norm(v1)**2)
 
 def get_vect_mob_projection(vector_to_project, stable_vector):
     return Vector(
@@ -303,7 +303,7 @@ class GeometricInterpretation(VectorScene):
     def project(self):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
         v_norm, w_norm = [
-            np.linalg.norm(vect.get_end())
+            get_norm(vect.get_end())
             for vect in (self.v, self.w)
         ]
         projected = Vector(
@@ -671,7 +671,7 @@ class LurkingQuestion(TeacherStudentsScene):
         self.teacher_thinks("")
         everything = VMobject(*self.get_mobjects())
         self.play(ApplyPointwiseFunction(
-            lambda p : 10*(p+2*DOWN)/np.linalg.norm(p+2*DOWN),
+            lambda p : 10*(p+2*DOWN)/get_norm(p+2*DOWN),
             everything
         ))
 

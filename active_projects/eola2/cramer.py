@@ -1031,8 +1031,8 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
         output_vect = self.output_vect_mob.get_end()
         c1 = self.basis_vectors[0].get_end()
         c2 = self.basis_vectors[1].get_end()
-        x_point = c1 * np.dot(output_vect, c1) / (np.linalg.norm(c1)**2)
-        y_point = c2 * np.dot(output_vect, c2) / (np.linalg.norm(c2)**2)
+        x_point = c1 * np.dot(output_vect, c1) / (get_norm(c1)**2)
+        y_point = c2 * np.dot(output_vect, c2) / (get_norm(c2)**2)
 
         dashed_line_to_x = DashedLine(self.output_vect_mob.get_end(), x_point)
         dashed_line_to_y = DashedLine(self.output_vect_mob.get_end(), y_point)

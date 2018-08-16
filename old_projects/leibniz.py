@@ -57,7 +57,7 @@ class LatticePointScene(Scene):
             dot.r_squared = r_squared
             self.lattice_points.add(dot)
         self.lattice_points.sort_submobjects(
-            lambda p : np.linalg.norm(p - self.plane_center)
+            lambda p : get_norm(p - self.plane_center)
         )
 
     def get_circle(self, radius = None, color = None):
@@ -298,7 +298,7 @@ class ShowSum(TeacherStudentsScene):
         arrows = [
             Arrow(
                 p1, p2, 
-                tip_length = 0.2*min(1, np.linalg.norm(p1-p2)),
+                tip_length = 0.2*min(1, get_norm(p1-p2)),
                 buff = 0
             )
             for p1, p2 in zip(points, points[1:])
@@ -556,7 +556,7 @@ class Outline(PiCreatureScene):
         plane.to_edge(LEFT)
         circle = Circle(
             color = YELLOW,
-            radius = np.linalg.norm(
+            radius = get_norm(
                 plane.coords_to_point(10, 0) - \
                 plane.coords_to_point(0, 0)
             )
@@ -574,7 +574,7 @@ class Outline(PiCreatureScene):
             if a**2 + b**2 <= 10**2
         ])
         lattice_points.sort_submobjects(
-            lambda p : np.linalg.norm(p - plane_center)
+            lambda p : get_norm(p - plane_center)
         )
         lattice_group = VGroup(plane, circle, lattice_points)
 
@@ -4173,7 +4173,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             if (x**2 + y**2) > self.max_lattice_point_radius**2
             if (x**2 + y**2) < new_max**2
         ])
-        new_dots.sort_submobjects(np.linalg.norm)
+        new_dots.sort_submobjects(get_norm)
 
         self.play(*list(map(ShowCreation, [circle, arrow])))
         self.play(*list(map(FadeOut, [circle, arrow])))

@@ -24,6 +24,7 @@ from for_3b1b_videos.pi_creature_animations import RemovePiCreatureBubble
 from scene.scene import Scene
 from utils.rate_functions import squish_rate_func
 from utils.rate_functions import there_and_back
+from utils.space_ops import get_norm
 
 
 class PiCreatureScene(Scene):
@@ -353,7 +354,7 @@ class TeacherStudentsScene(PiCreatureScene):
 
         def func(point):
             centered = point + vect
-            return radius * centered / np.linalg.norm(centered)
+            return radius * centered / get_norm(centered)
         self.play(*[
             ApplyPointwiseFunction(func, mob)
             for mob in self.get_mobjects()

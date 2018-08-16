@@ -159,7 +159,7 @@ class RadarPulseSingleton(ContinualAnimation):
     }
     def __init__(self, radar_dish, target, **kwargs):
         digest_config(self, kwargs)
-        self.direction = self.direction/np.linalg.norm(self.direction)
+        self.direction = self.direction/get_norm(self.direction)
         self.radar_dish = radar_dish
         self.target = target
         self.reflection_distance = None
@@ -1647,7 +1647,7 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             dot.scale(0.5)
             dots.add(dot)
             vect = point - axis_point
-            vect *= 1.3/np.linalg.norm(vect)
+            vect *= 1.3/get_norm(vect)
             arrow = Arrow(vect, ORIGIN, buff = SMALL_BUFF)
             arrow.set_color(YELLOW)
             arrow.shift(point)
@@ -2659,8 +2659,8 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         movements = self.object_movements = [
             ContinualMovement(
                 obj, 
-                direction = v/np.linalg.norm(v),
-                rate = np.linalg.norm(v)
+                direction = v/get_norm(v),
+                rate = get_norm(v)
             )
             for v, obj in zip(object_velocities, objects)
         ]

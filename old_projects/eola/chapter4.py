@@ -730,7 +730,7 @@ class NeverForget(TeacherStudentsScene):
         self.student_thinks("", student_index = 0)
         def warp(point):
             point += 2*DOWN+RIGHT
-            return 20*point/np.linalg.norm(point)
+            return 20*point/get_norm(point)
         self.play(ApplyPointwiseFunction(
             warp,
             VMobject(*self.get_mobjects())

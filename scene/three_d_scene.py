@@ -35,8 +35,11 @@ class ThreeDScene(Scene):
         self.ambient_camera_rotation = None
 
     def move_camera(self,
-                    phi=None, theta=None,
-                    distance=None, gamma=None,
+                    phi=None,
+                    theta=None,
+                    distance=None,
+                    gamma=None,
+                    frame_center=None,
                     added_anims=[],
                     **kwargs):
         anims = []
@@ -51,6 +54,11 @@ class ThreeDScene(Scene):
                 anims.append(
                     ApplyMethod(tracker.set_value, value, **kwargs)
                 )
+        if frame_center is not None:
+            anims.append(ApplyMethod(
+                self.camera.frame_center.move_to,
+                frame_center
+            ))
         is_camera_rotating = self.ambient_camera_rotation in self.continual_animations
         if is_camera_rotating:
             self.remove(self.ambient_camera_rotation)

@@ -845,7 +845,7 @@ class SecondDerivativeAsAcceleration(Scene):
     ##########
 
     def show_car_movement(self, *added_anims, **kwargs):
-        distance = np.linalg.norm(
+        distance = get_norm(
             self.car.get_center() - self.start_car_copy.get_center()
         )
         if distance > 1:

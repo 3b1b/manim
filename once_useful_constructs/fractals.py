@@ -49,11 +49,11 @@ def fractalification_iteration(vmobject, dimension=1.05, num_inserted_anchors_ra
             ]
             mass_scaling_factor = 1. / (num_inserts + 1)
             length_scaling_factor = mass_scaling_factor**(1. / dimension)
-            target_length = np.linalg.norm(p1 - p2) * length_scaling_factor
-            curr_length = np.linalg.norm(p1 - p2) * mass_scaling_factor
+            target_length = get_norm(p1 - p2) * length_scaling_factor
+            curr_length = get_norm(p1 - p2) * mass_scaling_factor
             # offset^2 + curr_length^2 = target_length^2
             offset_len = np.sqrt(target_length**2 - curr_length**2)
-            unit_vect = (p1 - p2) / np.linalg.norm(p1 - p2)
+            unit_vect = (p1 - p2) / get_norm(p1 - p2)
             offset_unit_vect = rotate_vector(unit_vect, np.pi / 2)
             inserted_points = [
                 point + u * offset_len * offset_unit_vect

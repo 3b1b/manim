@@ -225,7 +225,7 @@ def next_few_videos(*radians):
     thumbnail = Mobject(circle, dots, lines)
     frame = VideoIcon().set_color(
         "black",
-        lambda point : np.linalg.norm(point) < 0.5
+        lambda point : get_norm(point) < 0.5
     )
     big_frame = deepcopy(frame).scale(FRAME_X_RADIUS)
     frame.shift((-5, 0, 0))

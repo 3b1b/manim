@@ -50,7 +50,7 @@ class Introduction(TeacherStudentsScene):
         everything = VMobject(*self.get_mobjects())
         def spread_out(p):
             p = p + 2*DOWN
-            return (FRAME_X_RADIUS+FRAME_Y_RADIUS)*p/np.linalg.norm(p)
+            return (FRAME_X_RADIUS+FRAME_Y_RADIUS)*p/get_norm(p)
         self.play(
             ApplyPointwiseFunction(spread_out, everything),
             ApplyFunction(

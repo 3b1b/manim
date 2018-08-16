@@ -664,7 +664,7 @@ class TwoDCase(Scene):
             for point_mob, label in zip(point_mobs, labels):
                 label.move_to(point_mob)
                 vect = point_mob.get_center() - self.center
-                vect /= np.linalg.norm(vect)
+                vect /= get_norm(vect)
                 label.shift(MED_LARGE_BUFF*vect)
             return labels
         return UpdateFromFunc(labels, update_labels)

@@ -74,12 +74,13 @@ class ParametricSurface(VGroup):
         "u_max": 1,
         "v_min": 0,
         "v_max": 1,
-        "resolution": 10,
+        "resolution": 32,
         "u_resolution": None,
         "v_resolution": None,
         "surface_piece_config": {},
         "fill_color": BLUE_D,
         "fill_opacity": 1.0,
+        "checkerboard_colors": [BLUE_D, BLUE_E],
         "stroke_color": LIGHT_GREY,
         "stroke_width": 0.5,
         "should_make_jagged": False,
@@ -114,24 +115,29 @@ class ParametricSurface(VGroup):
                     [u1, v1, 0],
                 ])
                 faces.add(piece)
-        faces.set_stroke(width=0)
         faces.set_fill(
             color=self.fill_color,
             opacity=self.fill_opacity
         )
-
-        # TODO
-        mesh = VGroup()
-
-        mesh.set_stroke(
+        faces.set_stroke(
             color=self.stroke_color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
         )
+        self.add(*faces)
+        if self.checkerboard_colors:
+            self.set_fill_by_checkerboard(*self.checkerboard_colors)
 
-        self.faces = faces
-        self.mesh = mesh
-        self.add(self.faces, self.mesh)
+    def set_fill_by_checkerboard(self, color1, color2):
+        u_res = self.u_resolution or self.resolution
+        v_res = self.v_resolution or self.resolution
+        for i in range(u_res):
+            for j in range(v_res):
+                face = self[i * v_res + j]
+                if (i + j) % 2 == 0:
+                    face.set_fill(color1)
+                else:
+                    face.set_fill(color2)
 
 
 # Specific shapes
@@ -139,7 +145,7 @@ class ParametricSurface(VGroup):
 
 class Sphere(ParametricSurface):
     CONFIG = {
-        "resolution": 15,
+        "resolution": 12,
         "radius": 3,
         "u_min": 0.001,
     }

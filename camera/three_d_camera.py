@@ -23,7 +23,7 @@ class ThreeDCamera(Camera):
         "phi": 0,  # Angle off z axis
         "theta": -90 * DEGREES,  # Rotation about z axis
         "gamma": 0,  # Rotation about normal vector to camera
-        "light_source_start_point": 10 * DOWN + 7 * LEFT + 5 * OUT,
+        "light_source_start_point": 9 * DOWN + 7 * LEFT + 10 * OUT,
         "frame_center": ORIGIN,
     }
 
