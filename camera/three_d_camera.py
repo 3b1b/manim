@@ -156,8 +156,8 @@ class ThreeDCamera(Camera):
         points -= fc
         rot_matrix = self.get_rotation_matrix()
         points = np.dot(points, rot_matrix.T)
-        zs = points[:, 2]
-        points[:, 0] *= (distance + zs) / distance
-        points[:, 1] *= (distance + zs) / distance
+        zs = np.clip(points[:, 2], -np.inf, distance - 0.001)
+        for i in 0, 1:
+            points[:, i] *= distance / (distance - zs)
         points += fc
         return points
