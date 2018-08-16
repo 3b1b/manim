@@ -236,7 +236,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         #     label.set_height(0.5)
         # x_label.next_to(x_line, point[1]*DOWN/abs(point[1]))
         # y_label.next_to(y_line, point[0]*RIGHT/abs(point[0]))
-        norm = np.linalg.norm(point)
+        norm = get_norm(point)
         brace = Underbrace(ORIGIN, ORIGIN+norm*RIGHT)
         if point[1] > 0:
             brace.rotate(np.pi, RIGHT)

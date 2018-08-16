@@ -11,6 +11,7 @@ from mobject.svg.tex_mobject import TexMobject
 from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VMobject
 from utils.config_ops import digest_config
+from utils.space_ops import get_norm
 
 
 class Brace(TexMobject):
@@ -75,7 +76,7 @@ class Brace(TexMobject):
 
     def get_direction(self):
         vect = self.get_tip() - self.get_center()
-        return vect / np.linalg.norm(vect)
+        return vect / get_norm(vect)
 
 
 class BraceLabel(VMobject):

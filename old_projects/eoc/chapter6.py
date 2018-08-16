@@ -121,7 +121,7 @@ class SlopeOfCircleExample(ZoomedScene):
         full_group = VGroup(dot, lines, labels)
         start_angle = angle_of_vector(point)
         end_angle = np.pi/12
-        spatial_radius = np.linalg.norm(point)
+        spatial_radius = get_norm(point)
         def update_full_group(group, alpha):
             dot, lines, labels = group
             angle = interpolate(start_angle, end_angle, alpha)
@@ -233,7 +233,7 @@ class SlopeOfCircleExample(ZoomedScene):
         point = dot.get_center()
         step_vect = rotate_vector(point, np.pi/2)
         step_length = 1./self.zoom_factor
-        step_vect *= step_length/np.linalg.norm(step_vect)
+        step_vect *= step_length/get_norm(step_vect)
 
         step_line = Line(ORIGIN, LEFT)
         step_line.set_color(WHITE)
@@ -1203,7 +1203,7 @@ class RelatedRatesExample(ThreeDScene):
             return np.arctan(self.start_x/self.start_y)
 
     def get_ladder_length(self):
-        return np.linalg.norm([self.start_x, self.start_y])
+        return get_norm([self.start_x, self.start_y])
 
 class LightweightLadderScene(RelatedRatesExample):
     CONFIG = {
@@ -1444,7 +1444,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         new_s_expression = self.get_s_expression(*self.example_point)
         new_s_expression.next_to(dot, UP+RIGHT, buff = 0)
         new_s_expression.set_color(self.example_color)
-        equals_25 = TexMobject("=%d"%int(np.linalg.norm(self.example_point)**2))
+        equals_25 = TexMobject("=%d"%int(get_norm(self.example_point)**2))
         equals_25.set_color(YELLOW)
         equals_25.next_to(new_s_expression, RIGHT, align_using_submobjects = True)
         equals_25.add_background_rectangle()
@@ -1704,7 +1704,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         randy = self.randy
 
         point = dot.get_center()
-        step_vect = rotate_vector(point, np.pi/2)/np.linalg.norm(point)
+        step_vect = rotate_vector(point, np.pi/2)/get_norm(point)
         new_point = point + step_vect/self.zoom_factor
         interim_point = point[0]*RIGHT + new_point[1]*UP
         new_dot = dot.copy().move_to(new_point)
@@ -1914,7 +1914,7 @@ class AlternateExample(ZoomedScene):
 
         def update_label(label):
             point = dot.get_center()
-            vect = np.array(point)/np.linalg.norm(point)
+            vect = np.array(point)/get_norm(point)
             vect[0] *= 2
             vect[1] *= -1
             label.move_to(
@@ -2293,7 +2293,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         def update_label(label):
             point = dot.get_center()
             vect = point - FRAME_Y_RADIUS*(DOWN+RIGHT)
-            vect = vect/np.linalg.norm(vect)
+            vect = vect/get_norm(vect)
             label.move_to(
                 point + vect*0.5*label.get_width()
             )

@@ -42,7 +42,7 @@ class LabelTracksLine(Animation):
         line_center = self.line.get_center()
         line_end = self.line.points[-1]
         v = line_end - line_center
-        v = v/np.linalg.norm(v)
+        v = v/get_norm(v)
         w = np.array([-v[1],v[0],0])
         self.mobject.move_to(line_center + self.buff * w)
 
@@ -230,7 +230,7 @@ def get_circle_drawing_terms(radius = 1, positioning_func = lambda m : m.center(
     decimal.scale(0.75)
     def reposition_decimal(decimal):
         vect = radius.get_vector()
-        unit_vect = vect/np.linalg.norm(vect)
+        unit_vect = vect/get_norm(vect)
         angle = radius.get_angle()
         alpha = (-np.cos(2*angle) + 1)/2
         interp_length = interpolate(decimal.get_width(), decimal.get_height(), alpha)
@@ -691,7 +691,7 @@ class UsingTheta(Scene):
         theta = TexMobject("\\theta", "=")
         theta[0].match_color(arc)
         theta.add_background_rectangle()
-        update_theta = ContinualUpdateFromFunc(
+        update_theta = ContinualUpdate(
             theta, lambda m : m.shift(
                 rotate_vector(0.9*RIGHT, radius.get_angle()/2) \
                 - m[1][0].get_center()

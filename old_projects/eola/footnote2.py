@@ -571,7 +571,7 @@ class DotProductPreview(VectorScene):
     def project_w(self):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
         v_norm, w_norm = [
-            np.linalg.norm(vect.get_end())
+            get_norm(vect.get_end())
             for vect in (self.v, self.w)
         ]
         projected_w = Vector(

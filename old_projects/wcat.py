@@ -122,7 +122,7 @@ class ClosedLoopScene(Scene):
         loop_points = np.array(list(map(self.loop.point_from_proportion, alpha_range)))
         for dot in dots:
             vects = loop_points - dot.get_center()
-            norms = np.apply_along_axis(np.linalg.norm, 1, vects)
+            norms = np.apply_along_axis(get_norm, 1, vects)
             index = np.argmin(norms)
             alphas.append(alpha_range[index])
         return alphas
@@ -197,13 +197,13 @@ class ClosedLoopScene(Scene):
 
     def square_scores(self, all_quads):
         midpoint_diffs = np.apply_along_axis(
-            np.linalg.norm, 1,
+            get_norm, 1,
             0.5*(all_quads[:,0] + all_quads[:,2]) - 0.5*(all_quads[:,1] + all_quads[:,3])
         )
         vects1 = all_quads[:,0] - all_quads[:,2]
         vects2 = all_quads[:,1] - all_quads[:,3]
-        distances1 = np.apply_along_axis(np.linalg.norm, 1, vects1)
-        distances2 = np.apply_along_axis(np.linalg.norm, 1, vects2)
+        distances1 = np.apply_along_axis(get_norm, 1, vects1)
+        distances2 = np.apply_along_axis(get_norm, 1, vects2)
         distance_diffs = np.abs(distances1 - distances2)
         midpoint_diffs /= distances1
         distance_diffs /= distances2

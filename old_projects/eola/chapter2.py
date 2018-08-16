@@ -256,7 +256,7 @@ class ShowVaryingLinearCombinations(VectorScene):
     def get_scalar_anims(self, v1, v2, v1_label, v2_label):
         def get_val_func(vect):
             original_vect = np.array(vect.get_end()-vect.get_start())
-            square_norm = np.linalg.norm(original_vect)**2
+            square_norm = get_norm(original_vect)**2
             return lambda a : np.dot(
                 original_vect, vect.get_end()-vect.get_start()
             )/square_norm

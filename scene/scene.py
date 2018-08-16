@@ -216,6 +216,9 @@ class Scene(Container):
             return num_families == 1
         return list(filter(is_top_level, mobjects))
 
+    def get_mobject_family_members(self):
+        return self.camera.extract_mobject_family_members(self.mobjects)
+
     def separate_mobjects_and_continual_animations(self, mobjects_or_continual_animations):
         mobjects = []
         continual_animations = []
@@ -461,7 +464,7 @@ class Scene(Container):
             animation.update_config(**kwargs)
             # Anything animated that's not already in the
             # scene gets added to the scene
-            if animation.mobject not in self.mobjects:
+            if animation.mobject not in self.get_mobject_family_members():
                 self.add(animation.mobject)
         moving_mobjects = self.get_moving_mobjects(*animations)
 

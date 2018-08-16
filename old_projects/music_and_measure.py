@@ -238,7 +238,7 @@ class IntervalScene(NumberLineScene):
             center_point+spatial_width*LEFT/2,
             center_point+spatial_width*RIGHT/2
         )
-        interval_line.do_in_place(interval_line.sort_points, np.linalg.norm)
+        interval_line.do_in_place(interval_line.sort_points, get_norm)
         interval_line.set_color(color)
         if run_time > 0:
             squished_interval = deepcopy(open_interval).stretch_to_fit_width(0)
@@ -877,7 +877,7 @@ class AllValuesBetween1And2(NumberLineScene):
             )
             self.wait(0.5)
             points = list(map(self.number_line.number_to_point, [approx, irrational]))
-            distance = np.linalg.norm(points[1]-points[0])
+            distance = get_norm(points[1]-points[0])
             if distance < 0.3*FRAME_X_RADIUS and num_zooms < max_num_zooms:
                 num_zooms += 1
                 new_distance = 0.75*FRAME_X_RADIUS

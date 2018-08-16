@@ -91,7 +91,7 @@ def cylinder_flow_vector_field(point, R=1, U=1):
 
 
 def cylinder_flow_magnitude_field(point):
-    return np.linalg.norm(cylinder_flow_vector_field(point))
+    return get_norm(cylinder_flow_vector_field(point))
 
 
 def get_colored_background_image(scalar_field_func,
@@ -173,7 +173,7 @@ def four_swirls_function(point):
     x, y = point[:2]
     result = (y**3 - 4 * y) * RIGHT + (x**3 - 16 * x) * UP
     result *= 0.05
-    norm = np.linalg.norm(result)
+    norm = get_norm(result)
     if norm == 0:
         return result
     # result *= 2 * sigmoid(norm) / norm
@@ -187,7 +187,7 @@ def get_force_field_func(*point_strength_pairs, **kwargs):
         result = np.array(ORIGIN)
         for center, strength in point_strength_pairs:
             to_center = center - point
-            norm = np.linalg.norm(to_center)
+            norm = get_norm(to_center)
             if norm == 0:
                 continue
             elif norm < radius:
@@ -269,7 +269,7 @@ class StreamLines(VGroup):
             for t in np.arange(0, self.virtual_time, dt):
                 last_point = points[-1]
                 points.append(last_point + dt * func(last_point))
-                if np.linalg.norm(last_point) > self.cutoff_norm:
+                if get_norm(last_point) > self.cutoff_norm:
                     break
             line = VMobject()
             step = max(1, len(points) / self.n_anchors_per_line)
@@ -280,7 +280,7 @@ class StreamLines(VGroup):
 
         if self.color_lines_by_magnitude:
             image_file = get_color_field_image_file(
-                lambda p: np.linalg.norm(func(p)),
+                lambda p: get_norm(func(p)),
                 min_value=self.min_magnitude,
                 max_value=self.max_magnitude,
                 colors=self.colors,
@@ -323,7 +323,7 @@ class VectorField(VGroup):
 
     def get_vector(self, point, **kwargs):
         output = np.array(self.func(point))
-        norm = np.linalg.norm(output)
+        norm = get_norm(output)
         if norm == 0:
             output *= 0
         else:
@@ -841,7 +841,7 @@ class CylinderModel(Scene):
 
     def apply_joukowsky_map(self):
         shift_val = 0.1 * LEFT + 0.2 * UP
-        scale_factor = np.linalg.norm(RIGHT - shift_val)
+        scale_factor = get_norm(RIGHT - shift_val)
         movers = VGroup(self.warped_grid, self.unit_circle)
         self.unit_circle.insert_n_anchor_points(50)
 
@@ -1042,7 +1042,7 @@ class ElectricField(CylinderModel, MovingCameraScene):
 
         # New vector field
         def new_electric_field(point):
-            if np.linalg.norm(point) < 1:
+            if get_norm(point) < 1:
                 return ORIGIN
             vect = cylinder_flow_vector_field(point)
             return rotate_vector(vect, 90 * DEGREES)
@@ -1587,7 +1587,7 @@ class ChangingElectricField(Scene):
                 particle.shift(particle.velocity * dt)
 
         self.add(
-            ContinualUpdateFromFunc(vector_field, update_vector_field),
+            ContinualUpdate(vector_field, update_vector_field),
             ContinualUpdateFromTimeFunc(particles, update_particles),
         )
         self.wait(20)
@@ -1822,7 +1822,7 @@ class DefineDivergence(ChangingElectricField):
             "\\text{div} \\, \\textbf{F}(x, y) = "
         )
         div_tex.add_background_rectangle()
-        div_tex_update = ContinualUpdateFromFunc(
+        div_tex_update = ContinualUpdate(
             div_tex, lambda m: m.next_to(circle, UP, SMALL_BUFF)
         )
 
@@ -2066,7 +2066,7 @@ class DivergenceAsNewFunction(Scene):
         )
 
         self.add(func_tex, rhs)
-        # self.add(ContinualUpdateFromFunc(
+        # self.add(ContinualUpdate(
         #     rhs, lambda m: m.next_to(func_tex, RIGHT)
         # ))
 
@@ -2090,7 +2090,7 @@ class DivergenceAsNewFunction(Scene):
         out_vect.move_to(rhs)
         out_vect.set_fill(opacity=0)
         self.play(out_vect.restore)
-        self.out_vect_update = ContinualUpdateFromFunc(
+        self.out_vect_update = ContinualUpdate(
             out_vect,
             lambda ov: Transform(ov, get_out_vect()).update(1)
         )
@@ -2098,7 +2098,7 @@ class DivergenceAsNewFunction(Scene):
         self.add(self.out_vect_update)
         self.add(out_x_update, out_y_update)
 
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             VGroup(out_x, out_y),
             lambda m: m.match_style(out_vect)
         ))
@@ -2167,7 +2167,7 @@ class DivergenceAsNewFunction(Scene):
             ))
 
         vector_ring = get_vector_ring()
-        vector_ring_update = ContinualUpdateFromFunc(
+        vector_ring_update = ContinualUpdate(
             vector_ring,
             lambda vr: Transform(vr, get_vector_ring()).update(1)
         )
@@ -2195,7 +2195,7 @@ class DivergenceAsNewFunction(Scene):
         )
         # This line is a dumb hack around a Scene bug
         self.add(*[
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 mob, lambda m: m.set_fill(None, 0)
             )
             for mob in (out_x, out_y)
@@ -2261,7 +2261,7 @@ class PureCylinderFlow(Scene):
             cylinder_flow_vector_field,
         )
         for vector in vector_field:
-            if np.linalg.norm(vector.get_start()) < 1:
+            if get_norm(vector.get_start()) < 1:
                 vector_field.remove(vector)
         vector_field.set_fill(opacity=0.75)
         self.modify_vector_field(vector_field)
@@ -2279,7 +2279,7 @@ class PureCylinderFlow(Scene):
         )
         self.add(stream_lines)
         for stream_line in stream_lines:
-            if np.linalg.norm(stream_line.points[0]) < 1:
+            if get_norm(stream_line.points[0]) < 1:
                 stream_lines.remove(stream_line)
 
         self.modify_flow(stream_lines)
@@ -2309,7 +2309,7 @@ class PureCylinderFlow(Scene):
 class PureAirfoilFlow(PureCylinderFlow):
     def modify_flow(self, mobject):
         vect = 0.1 * LEFT + 0.2 * UP
-        mobject.scale(np.linalg.norm(vect - RIGHT))
+        mobject.scale(get_norm(vect - RIGHT))
         mobject.shift(vect)
         mobject.apply_complex_function(joukowsky_map)
         return mobject
@@ -2566,7 +2566,7 @@ class ShowCurlAtVariousPoints(IntroduceCurl):
         dot = Dot()
         circle = Circle(radius=0.25, color=WHITE)
         circle.move_to(dot)
-        circle_update = ContinualUpdateFromFunc(
+        circle_update = ContinualUpdate(
             circle,
             lambda m: m.move_to(dot)
         )
@@ -2575,7 +2575,7 @@ class ShowCurlAtVariousPoints(IntroduceCurl):
             "\\text{curl} \\, \\textbf{F}(x, y) = "
         )
         curl_tex.add_background_rectangle(buff=0.025)
-        curl_tex_update = ContinualUpdateFromFunc(
+        curl_tex_update = ContinualUpdate(
             curl_tex,
             lambda m: m.next_to(circle, UP, SMALL_BUFF)
         )
@@ -2962,7 +2962,7 @@ class IllustrateGaussMagnetic(IllustrateGaussLaw):
         x, y = point[:2]
         top_part = np.array([(y - 1.0), -x, 0])
         bottom_part = np.array([-(y + 1.0), x, 0])
-        norm = np.linalg.norm
+        norm = get_norm
         return 1 * op.add(
             top_part / (norm(top_part) * norm(point - UP) + 0.1),
             bottom_part / (norm(bottom_part) * norm(point - DOWN) + 0.1),
@@ -3083,10 +3083,10 @@ class ShowTwoPopulations(Scene):
 
             return update
 
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             foxes, get_updater(get_num_foxes)
         ))
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             rabbits, get_updater(get_num_rabbits)
         ))
 
@@ -3105,7 +3105,7 @@ class ShowTwoPopulations(Scene):
         ))
 
         for count in num_foxes, num_rabbits:
-            self.add(ContinualUpdateFromFunc(
+            self.add(ContinualUpdate(
                 count, self.update_count_color,
             ))
 
@@ -3254,7 +3254,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
                 position_update_func=lambda m: m.move_to(tens[i])
             )
         coord_pair.add_background_rectangle()
-        coord_pair_update = ContinualUpdateFromFunc(
+        coord_pair_update = ContinualUpdate(
             coord_pair, lambda m: m.next_to(dot, UR, SMALL_BUFF)
         )
         pop_sizes_updates = [get_pop_size_update(i) for i in (0, 1)]
@@ -3803,7 +3803,7 @@ class ShowCrossProduct(ShowDotProduct):
     }
 
     def get_product(self, v1, v2):
-        return np.linalg.norm(
+        return get_norm(
             np.cross(v1.get_vector(), v2.get_vector())
         )
 
@@ -3815,7 +3815,7 @@ class ShowCrossProduct(ShowDotProduct):
             fill_opacity=0.2,
         )
 
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             square,
             lambda s: s.set_points_as_corners([
                 ORIGIN,
@@ -3851,7 +3851,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                 np.cos(2 * y),
                 0
             ])
-            result /= (np.linalg.norm(result)**0.5 + 1)
+            result /= (get_norm(result)**0.5 + 1)
             return result
 
         vector_field = self.vector_field = VectorField(
@@ -4025,7 +4025,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                 moving_step_vector.get_end(),
                 moving_step_vector.get_end() + diff,
             )
-        self.moving_diff_vector_update = ContinualUpdateFromFunc(
+        self.moving_diff_vector_update = ContinualUpdate(
             moving_diff_vector,
             update_moving_diff_vector
         )

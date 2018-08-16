@@ -9,6 +9,7 @@ from utils.color import color_to_rgba
 from utils.color import rgba_to_color
 from utils.config_ops import digest_config
 from utils.iterables import stretch_array_to_length
+from utils.space_ops import get_norm
 
 
 class PMobject(Mobject):
@@ -185,7 +186,7 @@ class Mobject1D(PMobject):
 
     def add_line(self, start, end, color=None):
         start, end = list(map(np.array, [start, end]))
-        length = np.linalg.norm(end - start)
+        length = get_norm(end - start)
         if length == 0:
             points = [start]
         else:

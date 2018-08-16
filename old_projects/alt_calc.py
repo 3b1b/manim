@@ -707,14 +707,14 @@ class StartingCalc101(PiCreatureScene):
                     tracker.get_value() + dt
                 )
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 spring,
                 lambda s: s.stretch_to_fit_height(
                     1.5 + 0.5 * np.cos(3 * t_tracker.get_value()),
                     about_edge=UP
                 )
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 weight,
                 lambda w: w.move_to(spring.points[-1])
             )
@@ -934,7 +934,7 @@ class ChangingVectorField(Scene):
         self.add(ContinualGrowValue(time_tracker))
 
         vectors = self.get_vectors()
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             vectors,
             lambda vs: self.update_vectors(vs)
         ))
@@ -957,7 +957,7 @@ class ChangingVectorField(Scene):
         for vector in vectors:
             point = vector.get_start()
             out_point = self.func(point, time)
-            norm = np.linalg.norm(out_point)
+            norm = get_norm(out_point)
             if norm == 0:
                 out_point = RIGHT  # Fake it
                 vector.set_fill(opacity=0)
@@ -1111,36 +1111,36 @@ class StandardDerivativeVisual(GraphScene):
             triangle.set_stroke(width=0)
             triangle.scale(0.1)
 
-        input_triangle_update = ContinualUpdateFromFunc(
+        input_triangle_update = ContinualUpdate(
             input_triangle, lambda m: m.move_to(get_x_point(), UP)
         )
-        output_triangle_update = ContinualUpdateFromFunc(
+        output_triangle_update = ContinualUpdate(
             output_triangle, lambda m: m.move_to(get_y_point(), RIGHT)
         )
 
         x_label = TexMobject("x")
-        x_label_update = ContinualUpdateFromFunc(
+        x_label_update = ContinualUpdate(
             x_label, lambda m: m.next_to(input_triangle, DOWN, SMALL_BUFF)
         )
 
         output_label = TexMobject("f(x)")
-        output_label_update = ContinualUpdateFromFunc(
+        output_label_update = ContinualUpdate(
             output_label, lambda m: m.next_to(
                 output_triangle, LEFT, SMALL_BUFF)
         )
 
         v_line = get_v_line()
-        v_line_update = ContinualUpdateFromFunc(
+        v_line_update = ContinualUpdate(
             v_line, lambda vl: Transform(vl, get_v_line()).update(1)
         )
 
         h_line = get_h_line()
-        h_line_update = ContinualUpdateFromFunc(
+        h_line_update = ContinualUpdate(
             h_line, lambda hl: Transform(hl, get_h_line()).update(1)
         )
 
         graph_dot = Dot(color=YELLOW)
-        graph_dot_update = ContinualUpdateFromFunc(
+        graph_dot_update = ContinualUpdate(
             graph_dot, lambda m: m.move_to(get_graph_point())
         )
 
@@ -1192,7 +1192,7 @@ class StandardDerivativeVisual(GraphScene):
             ).secant_line
 
         slope_line = get_slope_line()
-        slope_line_update = ContinualUpdateFromFunc(
+        slope_line_update = ContinualUpdate(
             slope_line, lambda sg: Transform(sg, get_slope_line()).update(1)
         )
 
@@ -1203,7 +1203,7 @@ class StandardDerivativeVisual(GraphScene):
             "\\frac{df}{dx}(x) =", "\\text{Slope}", "="
         )
         deriv_label.get_part_by_tex("Slope").match_color(slope_line)
-        deriv_label_update = ContinualUpdateFromFunc(
+        deriv_label_update = ContinualUpdate(
             deriv_label, position_deriv_label
         )
 
@@ -2999,7 +2999,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
                     tip_length=0.15
                 )
                 for point in sample_points
-                if np.linalg.norm(point - input_zero_point) > 0.3
+                if get_norm(point - input_zero_point) > 0.3
             ])
             for func in (point_func, alt_point_func)
         ]
@@ -3241,7 +3241,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
 
         arrow_groups = VGroup()
         for point in phi_point, phi_bro_point:
-            arrows = VGroup(*[a for a in self.all_arrows if np.linalg.norm(a.get_start() - point) < 0.75]).copy()
+            arrows = VGroup(*[a for a in self.all_arrows if get_norm(a.get_start() - point) < 0.75]).copy()
             arrows.set_fill(PINK, 1)
             arrows.set_stroke(PINK, 3)
             arrows.second_anim = LaggedStart(
@@ -3556,7 +3556,7 @@ class PrinciplesOverlay(PiCreatureScene):
         q_marks.next_to(morty, UP)
         q_marks.shift_onto_screen()
         q_marks.sort_submobjects(
-            lambda p: np.linalg.norm(p - morty.get_top())
+            lambda p: get_norm(p - morty.get_top())
         )
 
         self.play(morty.change, "pondering")

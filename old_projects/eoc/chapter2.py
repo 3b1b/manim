@@ -268,7 +268,7 @@ class IntroduceCar(Scene):
             graph_scene = GraphCarTrajectory(skip_animations = True)
             origin = graph_scene.graph_origin
             top = graph_scene.coords_to_point(0, 100)
-            new_length = np.linalg.norm(top-origin)
+            new_length = get_norm(top-origin)
             new_point_B = point_A + new_length*RIGHT
             car_line_group = VGroup(car, A, B, line)
             for mob in car_line_group:

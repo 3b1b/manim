@@ -2155,7 +2155,7 @@ class MathematicianSpeakingToAll(Scene):
         vect = -bubble.get_bubble_center()
         def func(point):
             centered = point+vect
-            return 10*centered/np.linalg.norm(centered)
+            return 10*centered/get_norm(centered)
         self.play(*[
             ApplyPointwiseFunction(func, mob)
             for mob in self.get_mobjects()

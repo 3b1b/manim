@@ -108,6 +108,6 @@ class Sphere(Mobject2D):
         self.set_color(BLUE)
 
     def unit_normal(self, coords):
-        return np.array(coords) / np.linalg.norm(coords)
+        return np.array(coords) / get_norm(coords)
 
         

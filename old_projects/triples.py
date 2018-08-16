@@ -861,7 +861,7 @@ class ReframeOnLattice(PiCreatureScene):
             tex_mob.add_background_rectangle()
             point = arc_mob.point_from_proportion(0.5)
             tex_mob.move_to(point)
-            tex_mob.shift(tex_mob.get_width()*point/np.linalg.norm(point))
+            tex_mob.shift(tex_mob.get_width()*point/get_norm(point))
 
 
         self.play(self.pi_creature.change, "happy", arc)
@@ -1635,7 +1635,7 @@ class VisualizeZSquared(Scene):
                     vect = RIGHT
                 else:
                     vect = point - self.plane_center
-                    vect /= np.linalg.norm(vect)
+                    vect /= get_norm(vect)
                     if abs(vect[1]) < 0.1:
                         vect[1] = -1
                 label.next_to(point, vect)
@@ -1906,7 +1906,7 @@ class PointsWeMiss(VisualizeZSquared):
             )
             for z in z_list
         ])
-        dots.sort_submobjects(np.linalg.norm)
+        dots.sort_submobjects(get_norm)
         self.add(dots)
         self.dots = dots
 
@@ -2424,7 +2424,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
         dots = self.dots
         dots.add(*self.new_dots)
         dots.sort_submobjects(
-            lambda p : np.linalg.norm(p - self.plane_center)
+            lambda p : get_norm(p - self.plane_center)
         )
         unit_length = self.unit_circle.get_width()/2.0
         for dot in dots:
@@ -2434,7 +2434,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             if np.round(vect[0], 3) == 0 and abs(vect[1]) > 2*unit_length:
                 dot.target.set_fill(opacity = 0)
                 continue
-            distance = np.linalg.norm(vect)
+            distance = get_norm(vect)
             dot.target.scale(
                 unit_length/distance,
                 about_point = self.plane_center

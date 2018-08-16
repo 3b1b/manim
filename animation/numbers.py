@@ -21,6 +21,7 @@ class ChangingDecimal(Animation):
             dmc = decimal_number_mobject.get_center()
             tmc = self.tracked_mobject.get_center()
             self.diff_from_tracked_mobject = dmc - tmc
+            self.diff_from_tracked_mobject = dmc - tmc
         Animation.__init__(self, decimal_number_mobject, **kwargs)
 
     def update_mobject(self, alpha):

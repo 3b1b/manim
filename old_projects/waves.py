@@ -103,7 +103,7 @@ class EMWave(ContinualAnimationGroup):
         self.E_vects = VGroup()
         self.M_vects = VGroup()
 
-        self.A_vect = np.array(self.A_vect)/np.linalg.norm(self.A_vect)
+        self.A_vect = np.array(self.A_vect)/get_norm(self.A_vect)
         self.A_vect *= self.amplitude
 
         for alpha in np.linspace(0, 1, self.n_vectors):
@@ -151,7 +151,7 @@ class EMWave(ContinualAnimationGroup):
                 new_amplitude = np.clip(
                     new_smooth(middle_alpha - alpha), epsilon, 1
                 )
-                norm = np.linalg.norm(ov.A_vect)
+                norm = get_norm(ov.A_vect)
                 if norm != 0:
                     ov.A_vect = new_amplitude * np.array(ov.A_vect) / norm
 
@@ -216,7 +216,7 @@ class WavePacket(Animation):
                 em_wave.propogation_direction
             )
             A = em_wave.amplitude*self.E_func(distance_from_packet)
-            distance_from_start = np.linalg.norm(tail - em_wave.start_point)
+            distance_from_start = get_norm(tail - em_wave.start_point)
             if self.get_filtered and distance_from_start > self.filter_distance:
                 A = 0
             epsilon = 0.05
@@ -305,7 +305,7 @@ class FilterScene(ThreeDScene):
         self.add(self.pol_filters)
         self.pol_filter = self.pol_filters[0]
 
-        self.set_camera_position(self.start_phi, self.start_theta)
+        self.set_camera_orientation(self.start_phi, self.start_theta)
         if self.ambient_rotation_rate > 0:
             self.begin_ambient_camera_rotation(self.ambient_rotation_rate)
 
@@ -693,7 +693,7 @@ class IntroduceElectricField(PiCreatureScene):
         )
         VGroup(*shading_list).set_color_by_gradient(*self.vector_field_colors)
         result.set_fill(opacity = 0.75)
-        result.sort_submobjects(np.linalg.norm)
+        result.sort_submobjects(get_norm)
 
         return result
 
@@ -706,7 +706,7 @@ class IntroduceElectricField(PiCreatureScene):
         return self.normalized(result)
 
     def normalized(self, vector):
-        norm = np.linalg.norm(vector) or 1
+        norm = get_norm(vector) or 1
         target_length = self.max_vector_length * sigmoid(0.1*norm)
         return target_length * vector/norm
 
@@ -719,7 +719,7 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         self.remove(self.pi_creature)
 
     def construct(self):
-        self.set_camera_position(0.1, -np.pi/2)
+        self.set_camera_orientation(0.1, -np.pi/2)
         self.add_title()
         self.add_vector_field()
         self.introduce_moving_charge()
@@ -974,7 +974,7 @@ class IntroduceEMWave(ThreeDScene):
         self.add(self.axes)
         self.em_wave = EMWave(**self.EMWave_config)
         self.add(self.em_wave)
-        self.set_camera_position(0.8*np.pi/2, -0.7*np.pi)
+        self.set_camera_orientation(0.8*np.pi/2, -0.7*np.pi)
         self.begin_ambient_camera_rotation()
 
     def construct(self):
@@ -1066,7 +1066,7 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
         self.remove(self.axes)
         for ov in self.em_wave.continual_animations:
             ov.vector.normal_vector = RIGHT
-        self.set_camera_position(0.9*np.pi/2, -0.3*np.pi)
+        self.set_camera_orientation(0.9*np.pi/2, -0.3*np.pi)
 
     def construct(self):
         self.move_into_position()
@@ -1199,10 +1199,10 @@ class ShowVectorEquation(Scene):
             )
             brace.next_to(self.vector.get_center(), DOWN, SMALL_BUFF)
             return brace
-        moving_brace = ContinualUpdateFromFunc(
+        moving_brace = ContinualUpdate(
             Brace(Line(LEFT, RIGHT), DOWN), update_brace
         )
-        moving_x_without_phi = ContinualUpdateFromFunc(
+        moving_x_without_phi = ContinualUpdate(
             x_without_phi.copy().add_background_rectangle(),
             lambda m : m.next_to(moving_brace.mobject, DOWN, SMALL_BUFF)
         )
@@ -1548,7 +1548,7 @@ class ChangeFromHorizontalToVerticallyPolarized(DirectionOfPolarizationScene):
             vect.set_fill(opacity = 0.5)
         self.em_wave.E_vects[-1].set_fill(opacity = 1)
 
-        self.set_camera_position(0.9*np.pi/2, -0.05*np.pi)        
+        self.set_camera_orientation(0.9*np.pi/2, -0.05*np.pi)        
 
     def construct(self):
         self.wait(3)
@@ -1584,7 +1584,7 @@ class SumOfTwoWaves(ChangeFromHorizontalToVerticallyPolarized):
             self.add(axes, em_wave)
             self.side_em_waves.append(em_wave)
 
-        self.set_camera_position(0.95*np.pi/2, -0.03*np.pi)
+        self.set_camera_orientation(0.95*np.pi/2, -0.03*np.pi)
 
     def construct(self):
         plus, equals = pe = VGroup(*list(map(TexMobject, "+=")))
@@ -1621,7 +1621,7 @@ class ShowTipToTailSum(ShowVectorEquation):
         self.v_oscillating_vector.A_vect = [0, 2, 0]
         self.v_oscillating_vector.update(0)
 
-        self.d_oscillating_vector = ContinualUpdateFromFunc(
+        self.d_oscillating_vector = ContinualUpdate(
             Vector(UP+RIGHT, color = E_COLOR),
             lambda v : v.put_start_and_end_on(
                 ORIGIN,
@@ -1696,8 +1696,8 @@ class ShowTipToTailSum(ShowVectorEquation):
             self.h_oscillating_vector,
             self.v_oscillating_vector,
             self.d_oscillating_vector,
-            ContinualUpdateFromFunc(h_line, h_line.update),
-            ContinualUpdateFromFunc(v_line, v_line.update),
+            ContinualUpdate(h_line, h_line.update),
+            ContinualUpdate(v_line, v_line.update),
         )
         self.wait(4)
 
@@ -2163,10 +2163,10 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
             return update_decimal
 
         continual_updates = [
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 A_x, generate_decimal_update(np.sin),
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 A_y, generate_decimal_update(np.cos),
             ),
         ]
@@ -2404,7 +2404,7 @@ class DescribePhoton(ThreeDScene):
         self.axes = ThreeDAxes()
         self.add(self.axes)
 
-        self.set_camera_position(phi = 0.8*np.pi/2, theta = -np.pi/4)
+        self.set_camera_orientation(phi = 0.8*np.pi/2, theta = -np.pi/4)
         em_wave = EMWave(
             start_point = FRAME_X_RADIUS*LEFT,
             A_vect = [0, 1, 1],
@@ -2964,7 +2964,7 @@ class ShootPhotonThroughFilter(DirectionOfPolarizationScene):
         self.pol_filter.save_state()
         self.pol_filter.shift(5*OUT)
 
-        self.set_camera_position(theta = -0.9*np.pi)
+        self.set_camera_orientation(theta = -0.9*np.pi)
         self.play(self.pol_filter.restore)
         self.move_camera(
             theta = -0.6*np.pi,
@@ -4013,7 +4013,7 @@ class CircularPhotons(ShootPhotonThroughFilter):
         "apply_filter" : False,
     }
     def construct(self):
-        self.set_camera_position(theta = -0.75*np.pi)
+        self.set_camera_orientation(theta = -0.75*np.pi)
         self.setup_filter()
         self.show_phase_difference()
         self.shoot_circular_photons()

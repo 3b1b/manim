@@ -9,6 +9,7 @@ from mobject.geometry import Arrow
 from mobject.geometry import Line
 from utils.bezier import interpolate
 from utils.config_ops import digest_config
+from utils.space_ops import get_norm
 
 
 class NumberLine(VMobject):
@@ -99,7 +100,7 @@ class NumberLine(VMobject):
         full_vect = right_point - left_point
 
         def distance_from_left(p):
-            return np.dot(p - left_point, full_vect) / np.linalg.norm(full_vect)
+            return np.dot(p - left_point, full_vect) / get_norm(full_vect)
 
         return interpolate(
             self.x_min, self.x_max,
@@ -141,7 +142,7 @@ class NumberLine(VMobject):
 
     def add_tip(self):
         start, end = self.main_line.get_start_and_end()
-        vect = (end - start) / np.linalg.norm(end - start)
+        vect = (end - start) / get_norm(end - start)
         arrow = Arrow(start, end + MED_SMALL_BUFF * vect, buff=0)
         tip = arrow.tip
         tip.set_color(self.color)

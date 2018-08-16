@@ -291,7 +291,7 @@ class MoreFiltersMoreLight(FilterScene):
 
     def build_color_map(self, pfs):
         phi, theta = self.camera.get_phi(), self.camera.get_theta()
-        self.set_camera_position(np.pi/2, -np.pi)
+        self.set_camera_orientation(np.pi/2, -np.pi)
 
         self.original_rgbas = [(255, 255, 255)]
         self.new_rgbas = [self.arrow_rgb]
@@ -317,7 +317,7 @@ class MoreFiltersMoreLight(FilterScene):
 
             self.new_rgbas.append(new_rgb)
             self.camera.reset()
-        self.set_camera_position(phi, theta)
+        self.set_camera_orientation(phi, theta)
 
     def update_frame(self, mobjects = None, image = None):
         FilterScene.update_frame(self, mobjects)
@@ -1584,7 +1584,7 @@ class VennDiagramProofByContradiction(Scene):
 
         B_center = B.target.get_center()
         photons.sort_submobjects(
-            lambda p : np.linalg.norm(p-B_center)
+            lambda p : get_norm(p-B_center)
         )
         in_B = VGroup(*photons[:85])
         out_of_B = VGroup(*photons[85:])
@@ -1663,7 +1663,7 @@ class VennDiagramProofByContradiction(Scene):
         )
 
         in_B.sort_submobjects(
-            lambda p : np.linalg.norm(p - C_center)
+            lambda p : get_norm(p - C_center)
         )
         in_C = VGroup(*in_B[:-11])
         out_of_C = VGroup(*in_B[-11:])

@@ -408,7 +408,7 @@ class DiscreteGraphScene(Scene):
                         self.points[pair[0]],
                         self.points[pair[1]]
                     ]) - new_point
-                    new_point += FRAME_X_RADIUS * vect / np.linalg.norm(vect)
+                    new_point += FRAME_X_RADIUS * vect / get_norm(vect)
                     dual_point_pair[i] = new_point
             self.dual_edges.append(
                 Line(*dual_point_pair).set_color()

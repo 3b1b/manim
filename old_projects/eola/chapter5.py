@@ -21,7 +21,7 @@ class Blob(Circle):
 
     def probably_contains(self, point):
         border_points = np.array(self.get_anchors_and_handles()[0])
-        distances = [np.linalg.norm(p-point) for p in border_points]
+        distances = [get_norm(p-point) for p in border_points]
         min3 = border_points[np.argsort(distances)[:3]]
         center_direction = self.get_center() - point
         in_center_direction = [np.dot(p-point, center_direction) > 0 for p in min3]

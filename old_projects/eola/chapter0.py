@@ -587,7 +587,7 @@ class PhysicsExample(Scene):
 
         p1 = parabola.point_from_proportion(alpha)
         p2 = parabola.point_from_proportion(alpha + d_alpha)
-        vector = vector_length*(p2-p1)/np.linalg.norm(p2-p1)
+        vector = vector_length*(p2-p1)/get_norm(p2-p1)
         v_mob = Vector(vector, color = YELLOW)
         vx = Vector(vector[0]*RIGHT, color = GREEN_B)
         vy = Vector(vector[1]*UP, color = RED)

@@ -139,7 +139,7 @@ class PathSlidingScene(Scene):
                 self.slider, curr_index, points
             )
             if roll:
-                distance = np.linalg.norm(
+                distance = get_norm(
                     points[curr_index] - points[last_index]
                 )
                 self.roll(mobject, distance)
@@ -163,7 +163,7 @@ class PathSlidingScene(Scene):
     def get_time_slices(self, points, ceiling = None):
         dt_list = np.zeros(len(points))
         ds_list = np.apply_along_axis(
-            np.linalg.norm,
+            get_norm,
             1,
             points[1:]-points[:-1]
         )
@@ -471,7 +471,7 @@ class WhatGovernsSpeed(PathSlidingScene):
             path = Mobject().add_points(points)
             vect = points[-1] - points[-2]
             magnitude = np.sqrt(ceiling - points[-1, 1])
-            vect = magnitude*vect/np.linalg.norm(vect)
+            vect = magnitude*vect/get_norm(vect)
             slider = self.slide(randy, path, ceiling = ceiling)
             vector = Vector(slider.get_center(), vect)
             self.add(slider, vector)
@@ -584,7 +584,7 @@ class ThetaTInsteadOfXY(Scene):
         index = cycloid.get_num_points()/3
         point = cycloid.points[index]
         vect = cycloid.points[index+1]-point
-        vect /= np.linalg.norm(vect)
+        vect /= get_norm(vect)
         vect *= 3
         vect_mob = Vector(point, vect)
         dot = Dot(point)

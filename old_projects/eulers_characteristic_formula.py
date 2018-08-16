@@ -783,7 +783,7 @@ class DrawDualGraph(GraphScene):
         self.wait()
         self.reset_background()
         self.play(ApplyFunction(
-            lambda p : (FRAME_X_RADIUS + FRAME_Y_RADIUS)*p/np.linalg.norm(p),
+            lambda p : (FRAME_X_RADIUS + FRAME_Y_RADIUS)*p/get_norm(p),
             outer_region_mob
         ))
         self.wait()
@@ -1038,7 +1038,7 @@ class MortimerCannotTraverseCycle(GraphScene):
             )
             all_lines.append(line)
             center = line.get_center()
-            distances = [np.linalg.norm(center - e.get_center()) for e in self.edges]
+            distances = [get_norm(center - e.get_center()) for e in self.edges]
             matching_edges.append(
                 self.edges[distances.index(min(distances))]
             )

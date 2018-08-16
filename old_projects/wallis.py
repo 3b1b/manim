@@ -891,7 +891,7 @@ class DistanceProductScene(MovingCameraScene):
             d_label = TexMobject("d_%d" % i)
             d_label.set_height(self.d_label_height)
             vect = rotate_vector(line.get_vector(), 90 * DEGREES)
-            vect *= 2.5 * SMALL_BUFF / np.linalg.norm(vect)
+            vect *= 2.5 * SMALL_BUFF / get_norm(vect)
             d_label.move_to(line.get_center() + vect)
             self.d_labels.add(d_label)
         return self.d_labels
@@ -1004,7 +1004,7 @@ class DistanceProductScene(MovingCameraScene):
         radius = self.get_radius()
         observer_point = self.get_observer_point(fraction)
         distances = [
-            np.linalg.norm(point - observer_point) / radius
+            get_norm(point - observer_point) / radius
             for point in self.get_lh_points()
         ]
         return reduce(op.mul, distances, 1.0)
@@ -1959,7 +1959,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
     def add_circle_group(self):
         self.circle.set_color(RED)
         self.circle.set_width(
-            2 * np.linalg.norm(self.plane.number_to_point(1) - self.origin)
+            2 * get_norm(self.plane.number_to_point(1) - self.origin)
         )
         self.circle.move_to(self.origin)
 
@@ -2015,7 +2015,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
         dot.match_color(observer)
 
         vect = 2 * DOWN + LEFT
-        vect /= np.linalg.norm(vect)
+        vect /= get_norm(vect)
         arrow = self.arrow = Vector(0.5 * vect)
         arrow.next_to(observer, -vect, buff=SMALL_BUFF)
         arrow.set_color(WHITE)
@@ -3848,7 +3848,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             return fraction_tracker.get_value()
 
         def get_ks_distance():
-            return np.linalg.norm(keeper.dot.get_center() - sailor.dot.get_center())
+            return get_norm(keeper.dot.get_center() - sailor.dot.get_center())
 
         def update_title_heights(*titles):
             for title in titles:
@@ -3987,7 +3987,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         for light, label in zip(self.lights, labels):
             point = light[0].get_center()
             vect = (point - center)
-            norm = np.linalg.norm(vect)
+            norm = get_norm(vect)
             buff = label.get_height()
             vect *= (norm + buff) / norm
             label.move_to(center + vect)
@@ -4592,7 +4592,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
 
         def warp_func(point):
             vect = point - center
-            norm = np.linalg.norm(vect)
+            norm = get_norm(vect)
             new_norm = norm + 0.5 * (radius - norm)
             return center + new_norm * vect / norm
         brace1.apply_function(warp_func)

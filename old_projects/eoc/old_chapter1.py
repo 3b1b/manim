@@ -1559,7 +1559,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         graph_points = list(map(self.graph.point_from_proportion, alphas))
         curr_graph_point = self.graph_point(R)
         self.last_alpha = alphas[np.argmin([
-            np.linalg.norm(point - curr_graph_point)
+            get_norm(point - curr_graph_point)
             for point in graph_points
         ])]
         def shift_everything_to_alpha(alpha, run_time = 3):

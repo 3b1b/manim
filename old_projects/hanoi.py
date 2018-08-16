@@ -2893,7 +2893,7 @@ class SierpinskiGraphScene(Scene):
             towers_scene.move_disk(disk_index, run_time = 0)            
 
     def distance_between_nodes(self, i, j):
-        return np.linalg.norm(
+        return get_norm(
             self.nodes[i].get_center()-\
             self.nodes[j].get_center()
         )
@@ -2908,7 +2908,7 @@ class SierpinskiGraphScene(Scene):
             center1 = self.nodes[i].get_center()
             center2 = self.nodes[j].get_center()
             vect = center1-center2
-            distance = np.linalg.norm(center1 - center2)
+            distance = get_norm(center1 - center2)
             if distance < min_distance:
                 edge = Line(
                     center1 - (vect/distance)*node_radius,

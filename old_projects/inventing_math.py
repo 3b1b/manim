@@ -386,7 +386,7 @@ class YouAsMathematician(Scene):
         self.clear()
         self.play(
             ApplyPointwiseFunction(
-                lambda p : 3*FRAME_X_RADIUS*p/np.linalg.norm(p),                
+                lambda p : 3*FRAME_X_RADIUS*p/get_norm(p),                
                 everything
             ),
             *[
@@ -1721,7 +1721,7 @@ class RoomsAndSubrooms(Scene):
 
         for group in rectangle_groups:
             mob = Mobject(*group)
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
             self.play(ShowCreation(mob))
 
         self.wait()
@@ -1775,7 +1775,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 FRAME_HEIGHT-(n+2)*upper_buff, 
                 zero_one_width/(2**n)-0.85*(n+1)*side_buff
             )
-            rect.sort_points(np.linalg.norm)
+            rect.sort_points(get_norm)
             rect.to_edge(LEFT, buff = 0.2).shift(n*side_buff*RIGHT)
             rect.set_color(colors[n])
             rectangles.append(rect)
@@ -1866,7 +1866,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
     def center_in_closest_rect(mobject, rectangles):
         center = mobject.get_center()
         diffs = [r.get_center()-center for r in rectangles]
-        mobject.shift(diffs[np.argmin(list(map(np.linalg.norm, diffs)))])
+        mobject.shift(diffs[np.argmin(list(map(get_norm, diffs)))])
 
     def add_negative_one(self, num_mobs):
         neg_one = TexMobject("-1").scale(0.5)

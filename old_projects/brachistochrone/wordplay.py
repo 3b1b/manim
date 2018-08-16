@@ -22,7 +22,7 @@ class Intro(Scene):
         self.wait()
         with_word, steve = new_text.split()
         steve_copy = steve.copy().center().to_edge(UP)
-        # logo.sort_points(lambda p : -np.linalg.norm(p))
+        # logo.sort_points(lambda p : -get_norm(p))
         sort_by_color(logo)
         self.play(
             Transform(steve, steve_copy),
@@ -307,7 +307,7 @@ class FermatsPrincipleStatement(Scene):
             angle_of_vector, 1, everything.points
         )
         norms = np.apply_along_axis(
-            np.linalg.norm, 1, everything.points
+            get_norm, 1, everything.points
         )
         norms -= np.min(norms)
         norms /= np.max(norms)
@@ -316,7 +316,7 @@ class FermatsPrincipleStatement(Scene):
 
         Mobject(everything, words).show()
 
-        everything.sort_points(np.linalg.norm)        
+        everything.sort_points(get_norm)        
         self.add(words)
         self.play(
             DelayByOrder(FadeIn(everything, run_time = 3)),

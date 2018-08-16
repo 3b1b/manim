@@ -698,12 +698,12 @@ class UnmixMixedPaint(Scene):
         def update_quadrant(quadrant, alpha):
             points = quadrant.get_anchors()
             dt = 0.03 #Hmm, this has no dependency on frame rate...
-            norms = np.apply_along_axis(np.linalg.norm, 1, points)
+            norms = np.apply_along_axis(get_norm, 1, points)
 
             points[:,0] -= dt*points[:,1]/np.clip(norms, 0.1, np.inf)
             points[:,1] += dt*points[:,0]/np.clip(norms, 0.1, np.inf)
 
-            new_norms = np.apply_along_axis(np.linalg.norm, 1, points)
+            new_norms = np.apply_along_axis(get_norm, 1, points)
             new_norms = np.clip(new_norms, 0.001, np.inf)
             radius = np.max(norms)
             multiplier = norms/new_norms
@@ -2660,7 +2660,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             v_line.put_start_and_end_on(
                 plane.coords_to_point(x, 0), point
             )
-        lines_update_anim = ContinualUpdateFromFunc(lines, lines_update)
+        lines_update_anim = ContinualUpdate(lines, lines_update)
         lines_update_anim.update(0)
         self.add(lines_update_anim)
 
@@ -2758,12 +2758,12 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
                 exp_base.get_corner(UP+RIGHT), DOWN+LEFT
             )
         )
-        exp_base_update = ContinualUpdateFromFunc(
+        exp_base_update = ContinualUpdate(
             exp_base, lambda e : e.move_to(get_circle_point(
                 scalar = 1.1, t_shift = 0.01*TAU
             ))
         )
-        vector_update = ContinualUpdateFromFunc(
+        vector_update = ContinualUpdate(
             vector, lambda v : v.put_start_and_end_on(
                 plane.number_to_point(0), get_circle_point()
             )
@@ -4004,7 +4004,7 @@ class ShowUncertaintyPrinciple(Scene):
         ))
         self.wait(2)
         self.add(*[
-            ContinualUpdateFromFunc(graph, get_update_func(axes))
+            ContinualUpdate(graph, get_update_func(axes))
             for graph, axes in [(top_graph, top_axes), (bottom_graph, bottom_axes)]
         ])
         for factor in factors:

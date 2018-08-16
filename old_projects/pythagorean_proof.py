@@ -59,7 +59,7 @@ class Triangle(Polygon):
         normal_dir = rotate_vector(points[1] - points[0], np.pi/2, OUT)
         if np.dot(normal_dir, points[2]-center) > 0:
             normal_dir = -normal_dir
-        normal_dir /= np.linalg.norm(normal_dir)
+        normal_dir /= get_norm(normal_dir)
         mob.shift(nudge*normal_dir)
         self.add(mob)
         return self
@@ -69,7 +69,7 @@ class Triangle(Polygon):
         start1, start2 = self.get_vertices()[[1, 2]]
         target_vect = np.array(point2)-np.array(point1)
         curr_vect = start2-start1
-        self.scale(np.linalg.norm(target_vect)/np.linalg.norm(curr_vect))
+        self.scale(get_norm(target_vect)/get_norm(curr_vect))
         self.rotate(angle_of_vector(target_vect)-angle_of_vector(curr_vect))
         self.shift(point1-self.get_vertices()[1])
         return self

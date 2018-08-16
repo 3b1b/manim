@@ -5,7 +5,7 @@ import random
 
 
 def plane_wave_homotopy(x, y, z, t):
-    norm = np.linalg.norm([x, y])
+    norm = get_norm([x, y])
     tau = interpolate(5, -5, t) + norm/FRAME_X_RADIUS
     alpha = sigmoid(tau)
     return [x, y + 0.5*np.sin(2*np.pi*alpha)-t*SMALL_BUFF/2, z]
@@ -687,7 +687,7 @@ class VectorAddition(VectorScene):
         new_v_sum.rotate(
             angle_of_vector(alt_vect_sum) - new_v_sum.get_angle()
         )
-        new_v_sum.scale(np.linalg.norm(alt_vect_sum)/new_v_sum.get_length())
+        new_v_sum.scale(get_norm(alt_vect_sum)/new_v_sum.get_length())
         new_v_sum.shift(v1.get_end())
         new_v_sum.submobjects.reverse()#No idea why I have to do this
         original_v_sum = v_sum.copy()

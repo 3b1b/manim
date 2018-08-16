@@ -650,7 +650,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             c1 = n1.get_center()
             c2 = n2.get_center()
             vect = c2 - c1
-            norm = np.linalg.norm(vect)
+            norm = get_norm(vect)
             unit_vect = vect / norm
 
             edge.target.put_start_and_end_on(

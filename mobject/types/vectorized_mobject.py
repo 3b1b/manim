@@ -67,17 +67,14 @@ class VMobject(Mobject):
             opacity=self.background_stroke_opacity,
             family=self.propagate_style_to_family,
         )
-        self.set_sheen_direction(
-            self.sheen_direction,
-            family=self.propagate_style_to_family
-        )
         self.set_sheen(
-            self.sheen,
+            factor=self.sheen,
+            direction=self.sheen_direction,
             family=self.propagate_style_to_family
         )
         return self
 
-    def get_rgbas_array(self, color, opacity):
+    def generate_rgbas_array(self, color, opacity):
         """
         First arg can be either a color, or a tuple/list of colors.
         Likewise, opacity can either be a float, or a tuple of floats.
@@ -103,7 +100,7 @@ class VMobject(Mobject):
     def update_rgbas_array(self, array_name, color=None, opacity=None):
         passed_color = color or BLACK
         passed_opacity = opacity or 0
-        rgbas = self.get_rgbas_array(passed_color, passed_opacity)
+        rgbas = self.generate_rgbas_array(passed_color, passed_opacity)
         if not hasattr(self, array_name):
             setattr(self, array_name, rgbas)
             return self
@@ -111,10 +108,12 @@ class VMobject(Mobject):
         # one. 99% of the time they'll be the same.
         curr_rgbas = getattr(self, array_name)
         if len(curr_rgbas) < len(rgbas):
-            curr_rgbas = stretch_array_to_length(len(rgbas))
+            curr_rgbas = stretch_array_to_length(
+                curr_rgbas, len(rgbas)
+            )
             setattr(self, array_name, curr_rgbas)
         elif len(rgbas) < len(curr_rgbas):
-            rgbas = stretch_array_to_length(len(curr_rgbas))
+            rgbas = stretch_array_to_length(rgbas, len(curr_rgbas))
         # Only update rgb if color was not None, and only
         # update alpha channel if opacity was passed in
         if color is not None:
@@ -257,14 +256,19 @@ class VMobject(Mobject):
             self.sheen_direction = direction
         return self
 
-    def set_sheen(self, factor, family=True):
+    def set_sheen(self, factor, direction=None, family=True):
         if family:
-            for submob in self.submobject_family():
-                submob.sheen = factor
-        else:
-            self.sheen = factor
-        self.set_stroke(self.get_stroke_color(), family=family)
-        self.set_fill(self.get_fill_color(), family=family)
+            for submob in self.submobjects:
+                submob.set_sheen(factor, direction, family)
+        self.sheen = factor
+        if direction is not None:
+            # family set to false because recursion will
+            # already be handled above
+            self.set_sheen_direction(direction, family=False)
+        # Reset color to put sheen into effect
+        if factor != 0:
+            self.set_stroke(self.get_stroke_color(), family=family)
+            self.set_fill(self.get_fill_color(), family=family)
         return self
 
     def get_sheen_direction(self):
@@ -281,7 +285,7 @@ class VMobject(Mobject):
             for vect in [RIGHT, UP, OUT]
         ]).transpose()
         offset = np.dot(bases, direction)
-        return (c + offset, c - offset)
+        return (c - offset, c + offset)
 
     def color_using_background_image(self, background_image_file):
         self.background_image_file = background_image_file
@@ -363,7 +367,7 @@ class VMobject(Mobject):
 
     def change_anchor_mode(self, mode):
         for submob in self.family_members_with_points():
-            anchors, h1, h2 = submob.get_anchors_and_handles()
+            anchors = submob.get_anchors()
             submob.set_anchor_points(anchors, mode=mode)
         return self
 
@@ -423,15 +427,14 @@ class VMobject(Mobject):
         handles closer to their anchors, apply the function then push them out
         again.
         """
-        if self.get_num_points() == 0:
-            return
-        anchors, handles1, handles2 = self.get_anchors_and_handles()
-        # print len(anchors), len(handles1), len(handles2)
-        a_to_h1 = handles1 - anchors[:-1]
-        a_to_h2 = handles2 - anchors[1:]
-        handles1 = anchors[:-1] + factor * a_to_h1
-        handles2 = anchors[1:] + factor * a_to_h2
-        self.set_anchors_and_handles(anchors, handles1, handles2)
+        for submob in self.family_members_with_points():
+            anchors, handles1, handles2 = submob.get_anchors_and_handles()
+            # print len(anchors), len(handles1), len(handles2)
+            a_to_h1 = handles1 - anchors[:-1]
+            a_to_h2 = handles2 - anchors[1:]
+            handles1 = anchors[:-1] + factor * a_to_h1
+            handles2 = anchors[1:] + factor * a_to_h2
+            submob.set_anchors_and_handles(anchors, handles1, handles2)
 
     # Information about line
 

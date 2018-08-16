@@ -819,7 +819,7 @@ class QAndA(PiCreatureScene):
         dots = VGroup(*it.chain(*dots))
         top = dots.get_top()
         dots.sort_submobjects(
-            lambda p : np.linalg.norm(p-top)
+            lambda p : get_norm(p-top)
         )
 
         powers_of_two = VGroup(*[

@@ -1683,7 +1683,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             for e1 in r1.edges:
                 for e2 in r2.edges:
                     diff = e1.get_center()-e2.get_center()
-                    if np.linalg.norm(diff) < 0.01:
+                    if get_norm(diff) < 0.01:
                         edge_region_pair_groups.append(VGroup(
                             e1, r1, r2
                         ))

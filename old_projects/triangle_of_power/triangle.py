@@ -643,7 +643,7 @@ class RightStaysConstantQ(Scene):
             Transform(triangle, equation),
             FadeOut(eight),
             ApplyPointwiseFunction(
-                lambda p : (p+2*DOWN)*15/np.linalg.norm(p+2*DOWN),
+                lambda p : (p+2*DOWN)*15/get_norm(p+2*DOWN),
                 bubble
             ),
             FadeIn(old_style_eq1),

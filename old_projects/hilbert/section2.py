@@ -82,7 +82,7 @@ class AskMathematicianFriend(Scene):
         self.play(
             ApplyMethod(mathy.shift, 3*(DOWN+LEFT)),
             ApplyPointwiseFunction(
-                lambda p : 15*p/np.linalg.norm(p),
+                lambda p : 15*p/get_norm(p),
                 bubble
             ),
             run_time = 3
@@ -147,7 +147,7 @@ class NotPixelatedSpace(Scene):
         line = Line(5*LEFT, 5*RIGHT)
         line.set_color_by_gradient(curve.start_color, curve.end_color)
         for mob in grid, space_mobject:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
         infinitely = TextMobject("Infinitely")
         detailed = TextMobject("detailed")
         extending = TextMobject("extending")
@@ -510,7 +510,7 @@ class FormalDefinitionOfContinuity(Scene):
             for num in (min_input, max_input)
         ]
         input_circle = Circle(
-            radius = np.linalg.norm(input_left-input_right)/2,
+            radius = get_norm(input_left-input_right)/2,
             color = WHITE
         )
         input_circle.shift((input_left+input_right)/2)
@@ -525,7 +525,7 @@ class FormalDefinitionOfContinuity(Scene):
             self.output.points[int(min_input*n):int(max_input*n)]
         )
         output_center = output_points.points[int(0.5*output_points.get_num_points())]
-        max_distance = np.linalg.norm(output_center-output_points.points[-1])
+        max_distance = get_norm(output_center-output_points.points[-1])
         output_circle = Circle(
             radius = max_distance, 
             color = WHITE

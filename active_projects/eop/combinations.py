@@ -547,7 +547,7 @@ class SixChooseThreeInOtherContext(Scene):
         self.add(dots)
 
         self.dots = dots
-        self.dot_to_dot_distance = np.linalg.norm(
+        self.dot_to_dot_distance = get_norm(
             dots[1].get_center() - dots[0].get_center()
         )
 

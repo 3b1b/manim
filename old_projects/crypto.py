@@ -2324,7 +2324,7 @@ class YouListeningToBroadcasts(LedgerScene):
 
         self.add(you)
         for payment, corner in zip(payments, corners):
-            vect = corner/np.linalg.norm(corner)
+            vect = corner/get_norm(corner)
             payment.next_to(corner, vect)
             self.play(
                 Broadcast(corner),
@@ -2886,7 +2886,7 @@ class ShowSomeBroadcasting(DistributedLedgerScene):
             outgoing_lines = []
             for line in lines:
                 vect = line.get_start() - pi.get_center()
-                dist = np.linalg.norm(vect)
+                dist = get_norm(vect)
                 if dist < 2:
                     outgoing_lines.append(line)
             dots = VGroup()
@@ -2897,7 +2897,7 @@ class ShowSomeBroadcasting(DistributedLedgerScene):
                 dot.target.move_to(line.get_end())
                 for alt_pi in self.pi_creatures:
                     vect = line.get_end() - alt_pi.get_center()
-                    dist = np.linalg.norm(vect)
+                    dist = get_norm(vect)
                     if dist < 2:
                         dot.ledger = alt_pi.ledger
                 dots.add(dot)

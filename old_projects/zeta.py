@@ -41,7 +41,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
                 continue
             p1 = line.get_start()+LEFT
             p2 = line.get_end()+LEFT
-            t = (-np.dot(p1, p2-p1))/(np.linalg.norm(p2-p1)**2)
+            t = (-np.dot(p1, p2-p1))/(get_norm(p2-p1)**2)
             closest_to_one = interpolate(
                 line.get_start(), line.get_end(), t
             )
@@ -2327,7 +2327,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         vect = arc.point_from_proportion(0.5)-interpolate(
             arc.points[0], arc.points[-1], 0.5
         )
-        unit_vect = vect/np.linalg.norm(vect)
+        unit_vect = vect/get_norm(vect)
         angle_tex.move_to(arc.get_center() + 1.7*unit_vect)
 
     def get_right_angle_bracket(self, input_z):

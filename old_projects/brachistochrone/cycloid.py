@@ -7,7 +7,7 @@ class RollAlongVector(Animation):
     }
     def __init__(self, mobject, vector, **kwargs):
         radius = mobject.get_width()/2
-        radians = np.linalg.norm(vector)/radius
+        radians = get_norm(vector)/radius
         last_alpha = 0
         digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)

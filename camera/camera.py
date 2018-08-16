@@ -27,6 +27,7 @@ from utils.iterables import list_difference_update
 from utils.iterables import remove_list_redundancies
 from utils.simple_functions import fdiv
 from utils.space_ops import angle_of_vector
+from utils.space_ops import get_norm
 from functools import reduce
 
 
@@ -264,7 +265,7 @@ class Camera(object):
             (VMobject, self.display_multiple_vectorized_mobjects),
             (PMobject, self.display_multiple_point_cloud_mobjects),
             (AbstractImageMobject, self.display_multiple_image_mobjects),
-            (Mobject, lambda batch: batch),  # Do nothing
+            (Mobject, lambda batch, pa: batch),  # Do nothing
         ]
 
         def get_mobject_type(mobject):
@@ -301,6 +302,7 @@ class Camera(object):
         ph = self.get_pixel_height()
         fw = self.get_frame_width()
         fh = self.get_frame_height()
+        fc = self.get_frame_center()
         surface = cairo.ImageSurface.create_for_data(
             pixel_array,
             cairo.FORMAT_ARGB32,
@@ -311,7 +313,8 @@ class Camera(object):
         ctx.set_matrix(cairo.Matrix(
             fdiv(pw, fw), 0,
             0, -fdiv(ph, fh),
-            pw / 2, ph / 2,
+            (pw / 2) + fc[0] * fdiv(pw, fw),
+            (ph / 2) + fc[1] * fdiv(ph, fh),
         ))
         self.cache_cairo_context(pixel_array, ctx)
         return ctx
@@ -368,10 +371,12 @@ class Camera(object):
             )
         else:
             points = vmobject.get_gradient_start_and_end_points()
+            points = self.transform_points_pre_display(points)
             pat = cairo.LinearGradient(*it.chain(*[
                 point[:2] for point in points
             ]))
-            offsets = np.linspace(1, 0, len(rgbas))
+            step = 1.0 / (len(rgbas) - 1)
+            offsets = np.arange(0, 1 + step, step)
             for rgba, offset in zip(rgbas, offsets):
                 pat.add_color_stop_rgba(
                     offset, *rgba[2::-1], rgba[3]
@@ -442,7 +447,7 @@ class Camera(object):
 
         rgbas = (self.rgb_max_val * rgbas).astype(self.pixel_array_dtype)
         target_len = len(pixel_coords)
-        factor = target_len / len(rgbas)
+        factor = target_len // len(rgbas)
         rgbas = np.array([rgbas] * factor).reshape((target_len, rgba_len))
 
         on_screen_indices = self.on_screen_pixels(pixel_coords)
@@ -459,7 +464,7 @@ class Camera(object):
 
         new_pa = pixel_array.reshape((ph * pw, rgba_len))
         new_pa[indices] = rgbas
-        pixel_array[:, :] = new_pa
+        pixel_array[:, :] = new_pa.reshape((ph, pw, rgba_len))
 
     def display_multiple_image_mobjects(self, image_mobjects, pixel_array):
         for image_mobject in image_mobjects:
@@ -531,7 +536,7 @@ class Camera(object):
     def adjust_out_of_range_points(self, points):
         if not np.any(points > self.max_allowable_norm):
             return points
-        norms = np.apply_along_axis(np.linalg.norm, 1, points)
+        norms = np.apply_along_axis(get_norm, 1, points)
         violator_indices = norms > self.max_allowable_norm
         violators = points[violator_indices, :]
         violator_norms = norms[violator_indices]
@@ -590,7 +595,8 @@ class Camera(object):
         return 1 + (thickness - 1) / factor
 
     def get_thickening_nudges(self, thickness):
-        _range = list(range(-thickness / 2 + 1, thickness / 2 + 1))
+        thickness = int(thickness)
+        _range = list(range(-thickness // 2 + 1, thickness // 2 + 1))
         return np.array(list(it.product(_range, _range)))
 
     def thickened_coordinates(self, pixel_coords, thickness):
@@ -600,7 +606,7 @@ class Camera(object):
             for nudge in nudges
         ])
         size = pixel_coords.size
-        return pixel_coords.reshape((size / 2, 2))
+        return pixel_coords.reshape((size // 2, 2))
 
     # TODO, reimplement using cairo matrix
     def get_coords_of_all_pixels(self):

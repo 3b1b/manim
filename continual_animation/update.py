@@ -5,7 +5,7 @@ from animation.update import MaintainPositionRelativeTo
 from mobject.value_tracker import ValueTracker
 
 
-class ContinualUpdateFromFunc(ContinualAnimation):
+class ContinualUpdate(ContinualAnimation):
     CONFIG = {
         "function_depends_on_dt": False
     }
@@ -21,7 +21,7 @@ class ContinualUpdateFromFunc(ContinualAnimation):
             self.func(self.mobject)
 
 
-class ContinualUpdateFromTimeFunc(ContinualUpdateFromFunc):
+class ContinualUpdateFromTimeFunc(ContinualUpdate):
     CONFIG = {
         "function_depends_on_dt": True
     }
