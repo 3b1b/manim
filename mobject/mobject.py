@@ -707,9 +707,9 @@ class Mobject(Container):
         all_points = self.get_all_points()
         for dim in range(self.dim):
             if direction[dim] <= 0:
-                min_val = np.min(all_points[:, dim])
+                min_val = min(all_points[:, dim])
             if direction[dim] >= 0:
-                max_val = np.max(all_points[:, dim])
+                max_val = max(all_points[:, dim])
 
             if direction[dim] == 0:
                 result[dim] = (max_val + min_val) / 2

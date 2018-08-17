@@ -28,6 +28,14 @@ def get_num_args(function):
 # but for now, we just allow the option to handle indeterminate 0/0.
 
 
+def clip_in_place(array, min_val=None, max_val=None):
+    if max_val is not None:
+        array[array > max_val] = max_val
+    if min_val is not None:
+        array[array < min_val] = min_val
+    return array
+
+
 def fdiv(a, b, zero_over_zero_value=None):
     if zero_over_zero_value is not None:
         out = np.full_like(a, zero_over_zero_value)

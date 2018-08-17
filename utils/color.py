@@ -7,6 +7,7 @@ from constants import PALETTE
 
 from utils.bezier import interpolate
 from utils.space_ops import normalize
+from utils.simple_functions import clip_in_place
 
 
 def color_to_rgb(color):
@@ -92,4 +93,6 @@ def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
     factor = 0.5 * np.dot(unit_normal_vect, to_sun)**3
     if factor < 0:
         factor *= 0.5
-    return np.clip(rgb + factor, 0, 1)
+    result = rgb + factor
+    clip_in_place(rgb + factor, 0, 1)
+    return result
