@@ -13,6 +13,7 @@ from utils.color import color_to_rgba
 from utils.iterables import make_even
 from utils.iterables import tuplify
 from utils.iterables import stretch_array_to_length
+from utils.simple_functions import clip_in_place
 
 
 class VMobject(Mobject):
@@ -93,7 +94,7 @@ class VMobject(Mobject):
         if sheen != 0 and len(rgbas) == 1:
             light_rgbas = np.array(rgbas)
             light_rgbas[:, :3] += sheen
-            light_rgbas = np.clip(light_rgbas, 0, 1)
+            clip_in_place(light_rgbas, 0, 1)
             rgbas = np.append(rgbas, light_rgbas, axis=0)
         return rgbas
 
@@ -183,7 +184,7 @@ class VMobject(Mobject):
 
     def get_fill_rgbas(self):
         try:
-            return np.clip(self.fill_rgbas, 0, 1)
+            return self.fill_rgbas
         except AttributeError:
             return np.zeros((1, 4))
 
@@ -216,7 +217,7 @@ class VMobject(Mobject):
                 rgbas = self.background_stroke_rgbas
             else:
                 rgbas = self.stroke_rgbas
-            return np.clip(rgbas, 0, 1)
+            return rgbas
         except AttributeError:
             return np.zeros((1, 4))
 
