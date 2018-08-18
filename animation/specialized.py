@@ -126,7 +126,7 @@ class TransformEquation(AnimationGroup):
     def split_by_regex(self, eq, regex):
         match = re.match(regex, eq.tex_string)
         if not match:
-            print "{} does not match {}".format(regex, eq.tex_string)
+            print("{} does not match {}".format(regex, eq.tex_string))
             import ipdb; ipdb.set_trace(context=7)
             assert(False)
         if match.group(0) != eq.tex_string:

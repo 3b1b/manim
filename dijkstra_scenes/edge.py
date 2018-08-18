@@ -99,7 +99,7 @@ class Edge(Component):
         new_labels = ordered_labels
         return new_labels
 
-    def update(self, dic=None, animate=True):
+    def update_attrs(self, dic=None, animate=True):
         # empty update for when start or end node changes radius
         if dic is None:
             dic = OrderedDict()

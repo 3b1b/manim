@@ -34,18 +34,20 @@ def get_previous_function_name():
     return prev_function
 
 def save_state(self, filename=None):
-    if filename is None:
-        filename = get_calling_function_name() + ".mnm"
-    state = self.__dict__.copy()
-    # must be removed before save to prevent segfault
-    if "writing_process" in self.__dict__:
-        del state["writing_process"]
-    if "canvas" in state["camera"].__dict__:
-        del state["camera"].__dict__["canvas"]
-    pickle.dump(state, open(filename, "wb"))
+    pass
+    # if filename is None:
+    #     filename = get_calling_function_name() + ".mnm"
+    # state = self.__dict__.copy()
+    # # must be removed before save to prevent segfault
+    # if "writing_process" in self.__dict__:
+    #     del state["writing_process"]
+    # if "canvas" in state["camera"].__dict__:
+    #     del state["camera"].__dict__["canvas"]
+    # pickle.dump(state, open(filename, "wb"))
 
 def load_previous_state(filename=None):
-    if filename is None:
-        filename = get_previous_function_name() + ".mnm"
-    loaded_state = pickle.load(open(filename, "rb"))
-    return loaded_state
+    pass
+    # if filename is None:
+    #     filename = get_previous_function_name() + ".mnm"
+    # loaded_state = pickle.load(open(filename, "rb"))
+    # return loaded_state

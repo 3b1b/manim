@@ -6,8 +6,8 @@ from constants import TEX_DIR
 from constants import TEX_TEXT_TO_REPLACE
 
 
-def tex_hash(expression, template_tex_file_body):
-    id_str = str(expression + template_tex_file_body)
+def tex_hash(expression, template_tex_file):
+    id_str = str(expression + template_tex_file)
     hasher = hashlib.sha256()
     hasher.update(id_str.encode())
     # Truncating at 16 bytes for cleanliness
@@ -23,7 +23,7 @@ def tex_to_svg_file(expression, template_tex_file, **kwargs):
 def generate_tex_file(expression, template_tex_file, **kwargs):
     result = os.path.join(
         TEX_DIR,
-        tex_hash(expression, template_tex_file_body)
+        tex_hash(expression, template_tex_file)
     ) + ".tex"
     if not os.path.exists(result):
         print("Writing \"%s\" to %s" % (
@@ -39,7 +39,7 @@ def generate_tex_file(expression, template_tex_file, **kwargs):
                 body = body.replace("###HSIZE###", "345pt")
             body = body.replace(TEX_TEXT_TO_REPLACE, expression)
         with open(result, "w") as outfile:
-            outfile.write(new_body)
+            outfile.write(body)
     return result
 
 

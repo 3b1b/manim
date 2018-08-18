@@ -23,13 +23,13 @@ def play_chord(*nums):
 
 def play_error_sound():
     # play_chord(11, 8, 6, 1)
-    print "====================="
-    print "Encountered an error"
-    print "====================="
+    print("====================")
+    print("Encountered an error")
+    print("====================")
 
 
 def play_finish_sound():
     # play_chord(12, 9, 5, 2)
-    print "======================"
-    print "Finished without error"
-    print "======================"
+    print("======================")
+    print("Finished without error")
+    print("======================")

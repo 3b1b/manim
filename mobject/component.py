@@ -31,7 +31,6 @@ class Component(Mobject):
         delattr(self, "scale_factor")
         delattr(self, "name")
         delattr(self, "color")
-        delattr(self, "initial_config")
 
         if "attrs" in kwargs:
             attrs = kwargs["attrs"]
@@ -41,7 +40,7 @@ class Component(Mobject):
         for key in kwargs:
             if key not in attrs:
                 attrs[key] = kwargs[key]
-        self.update(attrs, animate=False)
+        self.update_attrs(attrs, animate=False)
 
     @staticmethod
     def assert_primitive(self):
@@ -52,7 +51,7 @@ class Component(Mobject):
         # implemented by subclasses
         pass
 
-    def update(self):
+    def update_attrs(self):
         # implemented by subclasses
         pass
 

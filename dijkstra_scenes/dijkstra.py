@@ -2,7 +2,6 @@ from __future__ import print_function
 from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 from dijkstra_scenes.graph import Graph
-from dijkstra_scenes.dynamic_equation import DynamicEquation
 from collections import OrderedDict
 from utils.save import save_state, load_previous_state
 import numpy.linalg as la
@@ -70,7 +69,7 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
             cursor_anims = [ApplyMethod(cursor.shift, DOWN * LINE_HEIGHT)]
         else:
             cursor_anims = []
-        scene.play(*G.update(indicate_neighbors_updates) + cursor_anims)
+        scene.play(*G.update_components(indicate_neighbors_updates) + cursor_anims)
 
     updates = OrderedDict()
     adj_edges = G.get_adjacent_edges(parent)
@@ -161,7 +160,7 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
             ]
     else:
         cursor_anims = []
-    scene.play(*G.update(updates) + cursor_anims)
+    scene.play(*G.update_components(updates) + cursor_anims)
 
     # restore edges and remove cursors
     if show_relaxation:
@@ -172,7 +171,7 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
                     ("color", saved_edge_attrs[edge]["color"]),
                     ("stroke_width", saved_edge_attrs[edge]["stroke_width"]),
                 ])
-        edge_restore_anims = G.update(restore_neighbors_updates)
+        edge_restore_anims = G.update_components(restore_neighbors_updates)
     else:
         edge_restore_anims = []
     if cursor is not None:
@@ -247,7 +246,7 @@ def extract_node(scene, G, arrows=False, code=None, cursor=None):
             cursor_anims = [MoveToTarget(cursor)]
     else:
         cursor_anims = []
-    scene.play(*G.update(updates) + cursor_anims)
+    scene.play(*G.update_components(updates) + cursor_anims)
     return min_node
 
 class RunAlgorithm(MovingCameraScene):
@@ -309,25 +308,26 @@ class RunAlgorithm(MovingCameraScene):
                 rand = random.randint(1, 9)
                 edge_updates = OrderedDict([("weight", Integer(rand))])
                 updates[edge] = edge_updates
-        self.play(*G.update(updates))
+        import ipdb; ipdb.set_trace(context=7)
+        self.play(*G.update_components(updates))
 
         # label s
         s = nodes[0]
         s_updates = OrderedDict([("variable", TexMobject("s"))])
-        self.play(*G.single_update(s, s_updates))
+        self.play(*G.update_component(s, s_updates))
 
         # set s to 0
         s_updates = OrderedDict([
             ("dist", Integer(0)),
             ("color", SPT_COLOR),
         ])
-        self.play(*G.single_update(s, s_updates))
+        self.play(*G.update_component(s, s_updates))
 
         # label neighbors with question marks
         updates = OrderedDict()
         for point in G.get_adjacent_nodes(s):
             updates[point] = OrderedDict([("dist", TexMobject("?"))])
-        self.play(*G.update(updates))
+        self.play(*G.update_components(updates))
 
         # set neighbors to edge weights with question mark
         updates = OrderedDict()
@@ -337,7 +337,7 @@ class RunAlgorithm(MovingCameraScene):
             edge_weight = G.get_edge_weight(pair)
             updates[point] = OrderedDict([
                 ("dist", TexMobject(str(edge_weight) + "?"))])
-        self.play(*G.update(updates))
+        self.play(*G.update_components(updates))
 
         # scroll down to show example
         ShiftDown = lambda t: (0, -FRAME_HEIGHT * t, 0)
@@ -380,7 +380,7 @@ class RunAlgorithm(MovingCameraScene):
         updates[edges[0]] = OrderedDict([ ("weight", Integer(10)) ])
         updates[edges[1]] = OrderedDict([ ("weight", Integer(1))  ])
         updates[edges[2]] = OrderedDict([ ("weight", Integer(1))  ])
-        self.play(*H.update(updates))
+        self.play(*H.update_components(updates))
 
         # label nodes with tentative distances
         updates = OrderedDict()
@@ -390,7 +390,7 @@ class RunAlgorithm(MovingCameraScene):
             weight = H.get_edge_weight(pair)
             weight_mobject = TexMobject(str(weight) + "?")
             updates[point] = OrderedDict([("dist", weight_mobject)])
-        self.play(*H.update(updates))
+        self.play(*H.update_components(updates))
 
         # this is antipattern; possibly allow returning a copy edge?
         self.play(
@@ -442,10 +442,10 @@ class RunAlgorithm(MovingCameraScene):
         updates[s] = OrderedDict([("dist", None)])
         for node in G.get_adjacent_nodes(s):
             updates[node] = OrderedDict([("dist", None), ("color", BLACK)])
-        self.play(*G.update(updates))
+        self.play(*G.update_components(updates))
 
         # set s to 0
-        self.play(*G.single_update(s, OrderedDict([
+        self.play(*G.update_component(s, OrderedDict([
             ("dist", Integer(0)),
             ("color", SPT_COLOR),
         ])))
@@ -603,7 +603,7 @@ class RunAlgorithm(MovingCameraScene):
         updates[(u, v)] = OrderedDict([
             ("weight", Integer(y_len)),
         ])
-        self.play(*S.update(updates) + [FadeOut(arrow1)])
+        self.play(*S.update_components(updates) + [FadeOut(arrow1)])
 
         self.play(TransformEquation(eq1, eq2, "z \\\\le (.*) \\+ (.*)"))
         self.play(TransformEquation(eq2, eq3, "z \\\\le (.*)"))
@@ -641,7 +641,7 @@ class RunAlgorithm(MovingCameraScene):
                 ("dist", None),
                 ("color", BLACK),
             ])
-        self.play(*G.update(updates))
+        self.play(*G.update_components(updates))
 
         # Indicate lengths of non-min edges
         anims = []
@@ -676,10 +676,10 @@ class RunAlgorithm(MovingCameraScene):
                 ("dist", None),
                 ("color", BLACK),
             ])
-        self.play(*G.update(updates))
+        self.play(*G.update_components(updates))
 
         min_node = s
-        self.play(*G.single_update(s, OrderedDict([
+        self.play(*G.update_component(s, OrderedDict([
             ("dist", Integer(0)),
             ("color", SPT_COLOR),
         ])))
@@ -765,7 +765,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(ShowCreation(G))
 
         min_node = (0, 0, 0)
-        self.play(*G.single_update(min_node, OrderedDict([
+        self.play(*G.update_component(min_node, OrderedDict([
             ("dist", Integer(0)),
             ("color", SPT_COLOR),
         ])))
@@ -833,7 +833,7 @@ class RunAlgorithm(MovingCameraScene):
             ("stroke_width", 4),
         ])
         spt_text = TextMobject("Shortest Path Tree", hsize="85pt").next_to(H_spt, DOWN)
-        self.play(*H_spt.update(spt_updates) + [Write(spt_text)])
+        self.play(*H_spt.update_components(spt_updates) + [Write(spt_text)])
 
         # show mst
         mst_updates = OrderedDict()
@@ -849,7 +849,7 @@ class RunAlgorithm(MovingCameraScene):
             ("stroke_width", 4),
         ])
         mst_text = TextMobject("Minimum Spanning Tree", hsize="85pt").next_to(H_mst, DOWN)
-        self.play(*H_mst.update(mst_updates) + [Write(mst_text)])
+        self.play(*H_mst.update_components(mst_updates) + [Write(mst_text)])
         self.wait()
 
         # restore spt + mst
@@ -882,7 +882,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(
             FadeOut(mst_text),
             FadeOut(spt_text),
-            *H_spt.update(spt_updates) + H_mst.update(mst_updates)
+            *H_spt.update_components(spt_updates) + H_mst.update_components(mst_updates)
         )
 
         H_spt_target = H_spt.generate_target().shift(3 * RIGHT)
@@ -910,7 +910,7 @@ class RunAlgorithm(MovingCameraScene):
             ("dist", Integer(0)),
             ("color", SPT_COLOR),
         ])
-        self.play(*H_spt.update(updates))
+        self.play(*H_spt.update_components(updates))
 
         min_node = nodes[0]
         while min_node is not None:
@@ -923,7 +923,7 @@ class RunAlgorithm(MovingCameraScene):
 
 
     def show_code(self):
-        self.__dict__.update(load_previous_state())
+        self.__dict__.update_components(load_previous_state())
 
         code = CodeMobject("""
         def dijkstra(G):
@@ -1002,7 +1002,7 @@ class RunAlgorithm(MovingCameraScene):
 
         # show the graph
         self.play(FadeIn(G))
-        self.play(*G.update(updates))
+        self.play(*G.update_components(updates))
         self.play(FadeOut(G))
 
         # shift relax header down and create next block
@@ -1190,7 +1190,7 @@ class RunAlgorithm(MovingCameraScene):
                     ("color", INFTY_COLOR),
                 ])
 
-        self.play(*G.update(updates) + [
+        self.play(*G.update_components(updates) + [
             Succession(
                 ShowCreation, initialize_cursors, {"run_time": 1},
                 Uncreate, initialize_cursors, {"run_time": 1},
@@ -1382,14 +1382,14 @@ class RunAlgorithm(MovingCameraScene):
 
     def construct(self):
         self.first_try()
-        self.counterexample()
-        self.one_step()
-        self.triangle_inequality()
-        self.generalize()
-        self.last_run()
-        self.directed_graph()
-        self.spt_vs_mst()
-        self.show_code()
-        self.run_code()
-        self.analyze()
-        self.compare_data_structures()
+        #self.counterexample()
+        #self.one_step()
+        #self.triangle_inequality()
+        #self.generalize()
+        #self.last_run()
+        #self.directed_graph()
+        #self.spt_vs_mst()
+        #self.show_code()
+        #self.run_code()
+        #self.analyze()
+        #self.compare_data_structures()

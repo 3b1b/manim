@@ -56,28 +56,28 @@ class Graph(Group):
             self.edges[edge.key] = edge
             self.add(edge)
 
-    def single_update(self, key, dic):
-        return self.update(OrderedDict([(key, dic)]))
+    def update_component(self, key, dic):
+        return self.update_components(OrderedDict([(key, dic)]))
 
-    def update(self, dic):
+    def update_components(self, dic):
         anims = []
         neighbors_to_update = set()
         for key in dic.keys():
             if key in self.nodes:
                 Node.assert_primitive(key)
-                anims.extend(self.nodes[key].update(dic.get(key, None)))
+                anims.extend(self.nodes[key].update_attrs(dic.get(key, None)))
                 # update adjacent edges in case radius changes
                 for pair in self.get_adjacent_edges(key, use_direction=False):
                     if pair not in dic and pair not in neighbors_to_update:
                         neighbors_to_update.add(pair)
             elif key in self.edges:
                 Edge.assert_primitive(key)
-                anims.extend(self.edges[key].update(dic.get(key, None)))
+                anims.extend(self.edges[key].update_attrs(dic.get(key, None)))
             else:
                 print("Unexpected key {}".format(key), file=sys.stderr)
                 ipdb.set_trace(context=7)
         for pair in neighbors_to_update:
-            anims.extend(self.edges[pair].update())
+            anims.extend(self.edges[pair].update_attrs())
         return anims
 
     def set_labels(self, dic):

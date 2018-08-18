@@ -40,7 +40,7 @@ class Node(Component):
     def make_key(self, point):
         return point
 
-    def update(self, dic, animate=True):
+    def update_attrs(self, dic, animate=True):
         if dic is None:
             return
         """
@@ -49,7 +49,7 @@ class Node(Component):
         can be placed
         """
         labels = OrderedDict()
-        for key in dic.keys():
+        for key in list(dic.keys()):
             if key == "variable":
                 labels["variable"] = dic["variable"]
                 del dic["variable"]
@@ -132,9 +132,9 @@ class Node(Component):
 
     def move_labels(self, new_labels):
         # move
-        if len(set(self.labels.keys() + new_labels.keys())) == 1:
+        if len(set(list(self.labels.keys()) + list(new_labels.keys()))) == 1:
             if len(new_labels) == 1:
-                new_labels.values()[0].move_to(self.mobject.get_center())
+                list(new_labels.values())[0].move_to(self.mobject.get_center())
             elif len(self.labels) == 1:
                 key, val = self.labels.items()[0]
                 new_labels[key] = val.copy().move_to(self.mobject.get_center())
@@ -153,16 +153,16 @@ class Node(Component):
                             label.copy().move_to(
                                     self.mobject.get_center() + vec)
                 vec = rotate_vector(
-                        vec, 2 * numpy.pi / len(set(self.labels.keys() +
-                                                    new_labels.keys())))
+                        vec, 2 * numpy.pi / len(set(list(self.labels.keys()) +
+                                                    list(new_labels.keys()))))
             for name, label in new_labels.items():
                 if name in self.labels:
                     pass
                 else:
                     label.move_to(self.mobject.get_center() + vec)
                     vec = rotate_vector(
-                            vec, 2 * numpy.pi / len(set(self.labels.keys() +
-                                                        new_labels.keys())))
+                            vec, 2 * numpy.pi / len(set(list(self.labels.keys()) +
+                                                        list(new_labels.keys()))))
             ordered_labels = OrderedDict()
             for key in self.labels:
                 if key in new_labels:
