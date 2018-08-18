@@ -14,10 +14,10 @@ class CrossingOneMillion(TeacherStudentsScene):
         number.scale(3)
         self.look_at(number, run_time=0)
 
-        confetti_spirils = self.confetti_spirils = map(
+        confetti_spirils = self.confetti_spirils = list(map(
             NormalAnimationAsContinualAnimation,
             get_confetti_animations(50)
-        )
+        ))
         self.add(*confetti_spirils)
         self.play(
             ChangeDecimalToValue(
@@ -138,12 +138,12 @@ class AllFeaturedCreators(MortyPiCreatureScene):
         dots.arrange_submobjects(DOWN, buff=LARGE_BUFF)
         dots.to_edge(LEFT, buff=2)
 
-        creators = VGroup(*map(TextMobject, [
+        creators = VGroup(*list(map(TextMobject, [
             "Think Twice",
             "LeiosOS",
             "Welch Labs",
             "Infinity plus one",
-        ]))
+        ])))
 
         for creator, dot in zip(creators, dots):
             creator.next_to(dot, RIGHT)
@@ -151,16 +151,16 @@ class AllFeaturedCreators(MortyPiCreatureScene):
             dot.scale(4)
             dot.set_fill(opacity=0)
 
-        rects = VGroup(*map(SurroundingRectangle, creators))
+        rects = VGroup(*list(map(SurroundingRectangle, creators)))
         rects.set_stroke(WHITE, 2)
         rects.set_fill(BLUE_E, 1)
 
-        think_words = VGroup(*map(TextMobject, [
+        think_words = VGroup(*list(map(TextMobject, [
             "(thinks visually)",
             "(thinks in terms of communities)",
             "(thinks in terms of series)",
             "(thinks playfully)",
-        ]))
+        ])))
         for word, creator in zip(think_words, creators):
             # word.move_to(creator, RIGHT)
             # word.align_to(RIGHT, LEFT)

@@ -186,13 +186,13 @@ class LengthOfDayGraph(GraphScene):
         "x_max" : 365,
         "x_axis_width" : 12,
         "x_tick_frequency" : 25,
-        "x_labeled_nums" : range(50, 365, 50),
+        "x_labeled_nums" : list(range(50, 365, 50)),
         "x_axis_label" : "Days since March 21",
         "y_min" : 0,
         "y_max" : 16,
         "y_axis_height" : 6,
         "y_tick_frequency" : 1,
-        "y_labeled_nums" : range(2, 15, 2),
+        "y_labeled_nums" : list(range(2, 15, 2)),
         "y_axis_label" : "Hours of daylight",
         "graph_origin" : 6*LEFT + 3*DOWN,
         "camera_class" : ThreeDCamera,
@@ -286,7 +286,7 @@ class LengthOfDayGraph(GraphScene):
                 for panel, a in zip(panels, np.linspace(0, 0.2, len(panels)))
             ])
         self.play(Blink(randy))
-        self.play(*map(FadeOut, [randy, panels]))
+        self.play(*list(map(FadeOut, [randy, panels])))
 
     def set_color_summer_months(self):
         summer_rect = Rectangle()
@@ -387,7 +387,7 @@ class AverageOfFiniteSet(Scene):
         labels.generate_target()
         symbols.generate_target()
         symbols.target.set_fill(opacity = 1)
-        sum_eq = VGroup(*it.chain(*zip(labels.target, symbols.target)))
+        sum_eq = VGroup(*it.chain(*list(zip(labels.target, symbols.target))))
         sum_eq.arrange_submobjects(RIGHT)
         sum_eq.next_to(brace, UP)
 
@@ -425,15 +425,15 @@ class AverageOfFiniteSet(Scene):
         self.wait()
         self.play(
             GrowFromCenter(brace),
-            *map(MoveToTarget, [lines, labels, symbols]),
+            *list(map(MoveToTarget, [lines, labels, symbols])),
             run_time = 2
         )
         self.play(Write(sum_mob))
         self.wait()
         self.play(ShowCreation(dividing_lines, run_time = 2))
         self.play(*it.chain(
-            map(Write, averages),
-            map(GrowFromCenter, lower_braces)
+            list(map(Write, averages)),
+            list(map(GrowFromCenter, lower_braces))
         ))
         self.play(ShowCreation(circle))
         self.wait(2)
@@ -473,14 +473,14 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
         end_lines = VGroup(*v_lines.target[15:])
 
         plusses = VGroup(*[TexMobject("+") for x in start_lines])
-        sum_eq = VGroup(*it.chain(*zip(start_lines, plusses)))
+        sum_eq = VGroup(*it.chain(*list(zip(start_lines, plusses))))
         sum_eq.add(*end_lines)
         sum_eq.arrange_submobjects(RIGHT)
         sum_eq.next_to(v_lines[0], UP, aligned_edge = LEFT)
         sum_eq.to_edge(UP, buff = MED_SMALL_BUFF)
 
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(start_lines.get_width())
+        h_line.set_width(start_lines.get_width())
         h_line.set_color(WHITE)
         h_line.next_to(sum_eq, DOWN, aligned_edge = LEFT)
 
@@ -570,7 +570,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
             TexMobject("+").scale(0.75)
             for l in v_lines
         ])
-        numerator = VGroup(*it.chain(*zip(summed_v_lines, plusses)))
+        numerator = VGroup(*it.chain(*list(zip(summed_v_lines, plusses))))
         for group in numerator, plusses:
             group.remove(plusses[-1])
         numerator.arrange_submobjects(
@@ -578,7 +578,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
             buff = SMALL_BUFF,
             aligned_edge = DOWN
         )
-        # numerator.scale_to_fit_width(FRAME_X_RADIUS)
+        # numerator.set_width(FRAME_X_RADIUS)
         numerator.scale(0.5)
         numerator.move_to(self.coords_to_point(3*np.pi/2, 0))
         numerator.to_edge(UP)
@@ -731,15 +731,15 @@ class IntegralOfSine(FiniteSample):
                 )
                 for rect in rects
             ],
-            map(GrowFromCenter, [side_brace, bottom_brace]),
-            map(Write, [sin_x, dx]),
+            list(map(GrowFromCenter, [side_brace, bottom_brace])),
+            list(map(Write, [sin_x, dx])),
         ))
         self.wait()
         for i in range(start_index+1, end_index):
             self.play(
                 rects[i-1].set_fill, None, low_opacity,
                 rects[i].set_fill, None, high_opacity,
-                side_brace.scale_to_fit_height, rects[i].get_height(),
+                side_brace.set_height, rects[i].get_height(),
                 side_brace.next_to, rects[i], LEFT, SMALL_BUFF,
                 bottom_brace.next_to, rects[i], DOWN, SMALL_BUFF,
                 MaintainPositionRelativeTo(sin_x, side_brace),
@@ -748,7 +748,7 @@ class IntegralOfSine(FiniteSample):
             self.wait()
         self.play(
             rects.restore,
-            *map(FadeOut, [sin_x, dx, side_brace, bottom_brace])
+            *list(map(FadeOut, [sin_x, dx, side_brace, bottom_brace]))
         )
 
         self.rects = rects
@@ -886,7 +886,7 @@ class IntegralOfSine(FiniteSample):
 
         dx.generate_target()
         lp, rp = parens = TexMobject("()")
-        parens.scale_to_fit_height(numerator.get_height())
+        parens.set_height(numerator.get_height())
         lp.next_to(numerator, LEFT)
         rp.next_to(numerator, RIGHT)
         dx.target.next_to(rp, RIGHT)
@@ -904,7 +904,7 @@ class IntegralOfSine(FiniteSample):
         average = VGroup(parens, numerator, dx, frac_line, pi)
         integral.generate_target()
         over_pi = TexMobject("\\frac{\\phantom{\\int \\sin(x)\\dx}}{\\pi}")
-        integral.target.scale_to_fit_width(over_pi.get_width())
+        integral.target.set_width(over_pi.get_width())
         integral.target.next_to(over_pi, UP)
         integral_over_pi = VGroup(integral.target, over_pi)
         integral_over_pi.to_corner(UP+RIGHT)
@@ -920,7 +920,7 @@ class IntegralOfSine(FiniteSample):
             MoveToTarget(integral, run_time = 2)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [self.dx_label, self.dx_brace]))
+        self.play(*list(map(FadeOut, [self.dx_label, self.dx_brace])))
 
         self.integral_over_pi = VGroup(integral, over_pi)
         self.average = average
@@ -929,7 +929,7 @@ class IntegralOfSine(FiniteSample):
     def write_area_over_width(self):
         self.play(
             self.integral_over_pi.shift, 2*LEFT,
-            *map(FadeOut, [self.average, self.average_arrow])
+            *list(map(FadeOut, [self.average, self.average_arrow]))
         )
 
         average_height = TextMobject("Average height = ")
@@ -942,7 +942,7 @@ class IntegralOfSine(FiniteSample):
         area_over_width.next_to(self.integral_over_pi[1][0], LEFT)
         average_height.next_to(area_over_width, LEFT)
 
-        self.play(*map(FadeIn, [average_height, area_over_width]))
+        self.play(*list(map(FadeIn, [average_height, area_over_width])))
         self.wait()
 
     def show_moving_v_line(self):
@@ -963,7 +963,7 @@ class IntegralOfSine(FiniteSample):
 class Approx31(Scene):
     def construct(self):
         tex = TexMobject("\\approx 31")
-        tex.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        tex.set_width(FRAME_WIDTH - LARGE_BUFF)
         tex.to_edge(LEFT)
         self.play(Write(tex))
         self.wait(3)
@@ -1109,7 +1109,7 @@ class Antiderivative(AverageOfSineStart):
             for m in faders
         ])
         self.wait()
-        self.play(*map(ShowCreation, ss_group), run_time = 2)
+        self.play(*list(map(ShowCreation, ss_group)), run_time = 2)
         kwargs = {
             "run_time" : 20,
             "rate_func" : quad_smooth,
@@ -1128,7 +1128,7 @@ class Antiderivative(AverageOfSineStart):
             **kwargs
         )
         self.play(
-            *map(FadeOut, [ss_group, v_line, sin_copy])
+            *list(map(FadeOut, [ss_group, v_line, sin_copy]))
         )
         self.wait()
 
@@ -1170,10 +1170,7 @@ class Antiderivative(AverageOfSineStart):
         self.wait()
 
         self.play(FadeIn(
-            VGroup(*filter(
-                lambda part : part not in [end_pi, end_zero],
-                rhs
-            )),
+            VGroup(*[part for part in rhs if part not in [end_pi, end_zero]]),
             submobject_mode = "lagged_start",
             run_time = 2,
         ))
@@ -1294,7 +1291,7 @@ class Antiderivative(AverageOfSineStart):
         self.play(
             equals.next_to, frac_lines[0].copy(), RIGHT,
             rhs_without_eq.next_to, frac_lines[1].copy(), UP,
-            *map(Write, frac_lines)
+            *list(map(Write, frac_lines))
         )
         self.play(*[
             ReplacementTransform(
@@ -1348,8 +1345,8 @@ class Antiderivative(AverageOfSineStart):
             fill_color = BLACK,
             fill_opacity = 0.75,
         )
-        big_rect.scale_to_fit_width(FRAME_WIDTH)
-        big_rect.scale_to_fit_height(FRAME_HEIGHT)
+        big_rect.set_width(FRAME_WIDTH)
+        big_rect.set_height(FRAME_HEIGHT)
         morty = Mortimer()
         morty.to_corner(DOWN+RIGHT)
 
@@ -1411,7 +1408,7 @@ class Antiderivative(AverageOfSineStart):
             secant_line_length = 4,
         )
 
-        self.play(*map(ShowCreation, ss_group), run_time = 2)
+        self.play(*list(map(ShowCreation, ss_group)), run_time = 2)
         for count in range(2):
             for x in reversed(self.bounds):
                 self.animate_secant_slope_group_change(
@@ -1448,10 +1445,10 @@ class GeneralAverage(AverageOfContinuousVariable):
         ])
         for line, color in zip(v_lines, self.bound_colors):
             line.set_color(color)
-        labels = map(TexMobject, "ab")
+        labels = list(map(TexMobject, "ab"))
         for line, label in zip(v_lines, labels):
             vect = line.get_start()-line.get_end()
-            label.next_to(line, vect/np.linalg.norm(vect))
+            label.next_to(line, vect/get_norm(vect))
             label.set_color(line.get_color())
 
         self.y_axis_label_mob.shift(0.7*LEFT)
@@ -1629,7 +1626,7 @@ class GeneralAverage(AverageOfContinuousVariable):
 
 
         self.play(ShowCreation(v_lines, run_time = 2))
-        self.play(*map(Write, [brace, dx]))
+        self.play(*list(map(Write, [brace, dx])))
         self.wait()
         self.play(Write(VGroup(num_samples, approx, *rhs[:-1])))
         self.play(ReplacementTransform(
@@ -1686,9 +1683,9 @@ class GeneralAverage(AverageOfContinuousVariable):
             VGroup(add_up_f_over, rhs_copy).shift, 0.4*DOWN
         )
         self.play(Write(double_arrow))
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             dx, brace, num_samples, approx, rhs
-        ]))
+        ])))
         self.wait()
 
         self.v_lines = v_lines
@@ -1922,7 +1919,7 @@ class GeneralAntiderivative(GeneralAverage):
             secant_line_length = 2,
         )
 
-        self.play(*map(ShowCreation, ss_group))
+        self.play(*list(map(ShowCreation, ss_group)))
         for x in range(2):
             for bound in reversed(self.bounds):
                 self.animate_secant_slope_group_change(
@@ -1937,7 +1934,7 @@ class LastVideoWrapper(Scene):
         title.to_edge(UP)
         rect = Rectangle(height = 9, width = 16)
         rect.set_stroke(WHITE)
-        rect.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        rect.set_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.play(Write(title), ShowCreation(rect))
@@ -1999,7 +1996,7 @@ class ASecondIntegralSensation(TeacherStudentsScene):
             ShowCreation(line),
             run_time = 2
         )
-        self.play(*map(FadeOut, [arrow]))
+        self.play(*list(map(FadeOut, [arrow])))
         self.wait(2)
         self.change_student_modes(
             *["pondering"]*3,

@@ -9,7 +9,7 @@ class OpeningQuote(Scene):
             "2x3 matrix.",
             "Some of you, to my great amusement, actually tried to do this.''" 
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words[1].set_color(GREEN)
         author = TextMobject("-(Via mathprofessorquotes.com, no name listed)")
@@ -77,7 +77,7 @@ class ColumnsRepresentBasisVectors(Scene):
         self.play(
             ApplyFunction(
                 lambda m : bubble.position_mobject_inside(
-                    m.scale_to_fit_height(2.5)
+                    m.set_height(2.5)
                 ),
                 everything
             ),
@@ -137,7 +137,7 @@ class PlaneStartState(LinearTransformationScene):
     def construct(self):
         self.add_title("Input space")
         labels = self.get_basis_vector_labels()
-        self.play(*map(Write, labels))
+        self.play(*list(map(Write, labels)))
         self.wait()
 
 class OutputIn3dWords(Scene):
@@ -440,12 +440,12 @@ class TwoDTo1DTransform(LinearTransformationScene):
         self.remove(plane_words)
         mobjects = self.get_mobjects()
         self.play(
-            *map(FadeOut, mobjects) + [ShowCreation(line)]
+            *list(map(FadeOut, mobjects)) + [ShowCreation(line)]
         )
         self.play(Write(line_words))
         self.wait()
         self.remove(line_words)
-        self.play(*map(FadeIn, mobjects))
+        self.play(*list(map(FadeIn, mobjects)))
         self.apply_transposed_matrix(self.t_matrix)
         self.play(Write(VMobject(*line.get_number_mobjects())))
         self.wait()
@@ -513,10 +513,10 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Dot products and duality
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -571,7 +571,7 @@ class DotProductPreview(VectorScene):
     def project_w(self):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
         v_norm, w_norm = [
-            np.linalg.norm(vect.get_end())
+            get_norm(vect.get_end())
             for vect in (self.v, self.w)
         ]
         projected_w = Vector(

@@ -287,7 +287,7 @@ class NumberlineTransformationScene(ZoomedScene):
         frame.generate_target()
         frame.target.move_to(input_point)
         if zoom_factor:
-            frame.target.scale_to_fit_height(
+            frame.target.set_height(
                 self.zoomed_display.get_height() * zoom_factor
             )
         movement = MoveToTarget(frame)
@@ -360,7 +360,7 @@ class NumberlineTransformationScene(ZoomedScene):
         result.add(result.tick_marks, result.numbers)
         for x in x_values:
             tick_mark = Line(UP, DOWN)
-            tick_mark.scale_to_fit_height(
+            tick_mark.set_height(
                 0.15 * self.zoomed_camera.frame.get_height()
             )
             tick_mark.move_to(line.number_to_point(x))
@@ -454,7 +454,7 @@ class WriteOpeningWords(Scene):
         ]
         words1.next_to(words2, UP, aligned_edge=LEFT, buff=LARGE_BUFF)
         words = VGroup(*it.chain(words1, words2))
-        words.scale_to_fit_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        words.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         words.to_edge(UP)
 
         letter_wait = 0.05
@@ -559,7 +559,7 @@ class StartingCalc101(PiCreatureScene):
 
         rects = images[-1].rects.copy()
         rects.center()
-        rects.scale_to_fit_height(FRAME_HEIGHT - 1)
+        rects.set_height(FRAME_HEIGHT - 1)
         # image = rects.get_image()
         open_cv_image = cv2.imread(get_full_raster_image_path("alt_calc_hidden_image"))
         blurry_iamge = cv2.blur(open_cv_image, (50, 50))
@@ -624,11 +624,11 @@ class StartingCalc101(PiCreatureScene):
         return images
 
     def adjust_size(self, group):
-        group.scale_to_fit_width(min(
+        group.set_width(min(
             group.get_width(),
             self.image_frame_width - 2 * MED_SMALL_BUFF
         ))
-        group.scale_to_fit_height(min(
+        group.set_height(min(
             group.get_height(),
             self.image_frame_height - 2 * MED_SMALL_BUFF
         ))
@@ -696,7 +696,7 @@ class StartingCalc101(PiCreatureScene):
         weight.set_stroke(width=0)
         weight.set_fill(opacity=1)
         weight.color_using_background_image("grey_gradient")
-        weight.scale_to_fit_height(0.4)
+        weight.set_height(0.4)
 
         t_tracker = ValueTracker(0)
         group = VGroup(spring, weight)
@@ -707,14 +707,14 @@ class StartingCalc101(PiCreatureScene):
                     tracker.get_value() + dt
                 )
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 spring,
                 lambda s: s.stretch_to_fit_height(
                     1.5 + 0.5 * np.cos(3 * t_tracker.get_value()),
                     about_edge=UP
                 )
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 weight,
                 lambda w: w.move_to(spring.points[-1])
             )
@@ -741,7 +741,7 @@ class StartingCalc101(PiCreatureScene):
         creature = self.pi_creature.copy()
         creature.change_mode("angry")
         equation = TexMobject("\\frac{d}{dx}(x^x)")
-        equation.scale_to_fit_height(creature.get_height() / 2)
+        equation.set_height(creature.get_height() / 2)
         equation.next_to(creature, RIGHT, aligned_edge=UP)
         creature.look_at(equation)
         return VGroup(creature, equation)
@@ -758,7 +758,7 @@ class StartingCalc101(PiCreatureScene):
             scene.cube, scene.faces,
             scene.bars, scene.corner_cube,
         )
-        group.scale_to_fit_height(0.75 * creature.get_height())
+        group.set_height(0.75 * creature.get_height())
         group.next_to(creature, RIGHT)
         creature.look_at(group)
         return VGroup(creature, group)
@@ -792,7 +792,7 @@ class StartingCalc101(PiCreatureScene):
 class GraphicalIntuitions(GraphScene):
     CONFIG = {
         "func": lambda x: 0.1 * (x - 2) * (x - 5) * (x - 7) + 4,
-        "x_labeled_nums": range(1, 10),
+        "x_labeled_nums": list(range(1, 10)),
     }
 
     def construct(self):
@@ -934,7 +934,7 @@ class ChangingVectorField(Scene):
         self.add(ContinualGrowValue(time_tracker))
 
         vectors = self.get_vectors()
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             vectors,
             lambda vs: self.update_vectors(vs)
         ))
@@ -957,7 +957,7 @@ class ChangingVectorField(Scene):
         for vector in vectors:
             point = vector.get_start()
             out_point = self.func(point, time)
-            norm = np.linalg.norm(out_point)
+            norm = get_norm(out_point)
             if norm == 0:
                 out_point = RIGHT  # Fake it
                 vector.set_fill(opacity=0)
@@ -1067,7 +1067,7 @@ class StandardDerivativeVisual(GraphScene):
         title = self.title = TextMobject("Standard derivative visual")
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        h_line.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         h_line.next_to(title, DOWN)
 
         self.add(title, h_line)
@@ -1111,36 +1111,36 @@ class StandardDerivativeVisual(GraphScene):
             triangle.set_stroke(width=0)
             triangle.scale(0.1)
 
-        input_triangle_update = ContinualUpdateFromFunc(
+        input_triangle_update = ContinualUpdate(
             input_triangle, lambda m: m.move_to(get_x_point(), UP)
         )
-        output_triangle_update = ContinualUpdateFromFunc(
+        output_triangle_update = ContinualUpdate(
             output_triangle, lambda m: m.move_to(get_y_point(), RIGHT)
         )
 
         x_label = TexMobject("x")
-        x_label_update = ContinualUpdateFromFunc(
+        x_label_update = ContinualUpdate(
             x_label, lambda m: m.next_to(input_triangle, DOWN, SMALL_BUFF)
         )
 
         output_label = TexMobject("f(x)")
-        output_label_update = ContinualUpdateFromFunc(
+        output_label_update = ContinualUpdate(
             output_label, lambda m: m.next_to(
                 output_triangle, LEFT, SMALL_BUFF)
         )
 
         v_line = get_v_line()
-        v_line_update = ContinualUpdateFromFunc(
+        v_line_update = ContinualUpdate(
             v_line, lambda vl: Transform(vl, get_v_line()).update(1)
         )
 
         h_line = get_h_line()
-        h_line_update = ContinualUpdateFromFunc(
+        h_line_update = ContinualUpdate(
             h_line, lambda hl: Transform(hl, get_h_line()).update(1)
         )
 
         graph_dot = Dot(color=YELLOW)
-        graph_dot_update = ContinualUpdateFromFunc(
+        graph_dot_update = ContinualUpdate(
             graph_dot, lambda m: m.move_to(get_graph_point())
         )
 
@@ -1192,7 +1192,7 @@ class StandardDerivativeVisual(GraphScene):
             ).secant_line
 
         slope_line = get_slope_line()
-        slope_line_update = ContinualUpdateFromFunc(
+        slope_line_update = ContinualUpdate(
             slope_line, lambda sg: Transform(sg, get_slope_line()).update(1)
         )
 
@@ -1203,7 +1203,7 @@ class StandardDerivativeVisual(GraphScene):
             "\\frac{df}{dx}(x) =", "\\text{Slope}", "="
         )
         deriv_label.get_part_by_tex("Slope").match_color(slope_line)
-        deriv_label_update = ContinualUpdateFromFunc(
+        deriv_label_update = ContinualUpdate(
             deriv_label, position_deriv_label
         )
 
@@ -1277,10 +1277,10 @@ class StandardDerivativeVisual(GraphScene):
         x = input_tracker.get_value()
         x_min = x - dx
         x_max = x + dx
-        y, y_min, y_max = map(
+        y, y_min, y_max = list(map(
             self.graph.underlying_function,
             [x, x_min, x_max]
-        )
+        ))
         x_line = Line(
             self.coords_to_point(x_min, 0),
             self.coords_to_point(x_max, 0),
@@ -1345,10 +1345,10 @@ class IntroduceTransformationView(NumberlineTransformationScene):
 
     def show_animation_preview(self):
         input_points = self.get_sample_input_points()
-        output_points = map(
+        output_points = list(map(
             self.number_func_to_point_func(self.func),
             input_points
-        )
+        ))
         sample_dots = self.get_sample_dots()
         sample_dot_ghosts = sample_dots.copy().fade(0.5)
         arrows = VGroup(*[
@@ -1514,7 +1514,7 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
                 self.get_output_point(self.func(x)),
                 buff=MED_SMALL_BUFF
             )
-            for x, num in zip(range(1, 6), self.input_line.numbers[1:])
+            for x, num in zip(list(range(1, 6)), self.input_line.numbers[1:])
         ])
         point_func = self.number_func_to_point_func(self.func)
 
@@ -1869,7 +1869,7 @@ class ZoomInMoreAndMoreToZero(ZoomInOnXSquaredNearZero):
         last_zoom_words = None
         for factor in 0.1, 0.01, 0.001, 0.0001:
             frame.save_state()
-            frame.scale_to_fit_height(factor * zoomed_display_height)
+            frame.set_height(factor * zoomed_display_height)
             self.local_coordinate_num_decimal_places = int(-np.log10(factor))
             zoom_words = TextMobject(
                 "Zoomed", "{:,}x \\\\".format(int(1.0 / factor)),
@@ -2197,9 +2197,9 @@ class GraphOnePlusOneOverX(GraphScene):
     def setup_axes(self):
         GraphScene.setup_axes(self)
         step = 2
-        self.x_axis.add_numbers(*range(-6, 0, step) + range(step, 7, step))
+        self.x_axis.add_numbers(*list(range(-6, 0, step)) + list(range(step, 7, step)))
         self.y_axis.label_direction = RIGHT
-        self.y_axis.add_numbers(*range(-2, 0, step) + range(step, 4, step))
+        self.y_axis.add_numbers(*list(range(-2, 0, step)) + list(range(step, 4, step)))
 
     def draw_graphs(self, animate=True):
         lower_func_graph, upper_func_graph = func_graph = VGroup(*[
@@ -2541,13 +2541,13 @@ class RepeatedApplicationWithNegativeSeed(RepeatedApplicationWithPhiBro, MovingC
         self.play(ShowCreation(rect))
         self.play(
             Write(question),
-            self.camera.frame.scale_to_fit_height, FRAME_HEIGHT + 1.5
+            self.camera.frame.set_height, FRAME_HEIGHT + 1.5
         )
         self.wait()
         self.play(
             FadeOut(question),
             FadeOut(rect),
-            self.camera.frame.scale_to_fit_height, FRAME_HEIGHT
+            self.camera.frame.set_height, FRAME_HEIGHT
         )
 
 
@@ -2953,7 +2953,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             x_max=10,
         )
         sample_dots.set_stroke(BLACK, 0.5)
-        sample_points = map(Mobject.get_center, sample_dots)
+        sample_points = list(map(Mobject.get_center, sample_dots))
 
         self.play(LaggedStart(
             FadeInAndShiftFromDirection, sample_dots,
@@ -2999,7 +2999,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
                     tip_length=0.15
                 )
                 for point in sample_points
-                if np.linalg.norm(point - input_zero_point) > 0.3
+                if get_norm(point - input_zero_point) > 0.3
             ])
             for func in (point_func, alt_point_func)
         ]
@@ -3176,7 +3176,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
         deriv_text[0][10:14].set_color(YELLOW)
 
         self.play(
-            zoomed_frame.scale_to_fit_height, 4,
+            zoomed_frame.set_height, 4,
             zoomed_frame.center,
             self.deriv_text.fade, 1,
             run_time=2
@@ -3241,10 +3241,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
 
         arrow_groups = VGroup()
         for point in phi_point, phi_bro_point:
-            arrows = VGroup(*filter(
-                lambda a: np.linalg.norm(a.get_start() - point) < 0.75,
-                self.all_arrows
-            )).copy()
+            arrows = VGroup(*[a for a in self.all_arrows if get_norm(a.get_start() - point) < 0.75]).copy()
             arrows.set_fill(PINK, 1)
             arrows.set_stroke(PINK, 3)
             arrows.second_anim = LaggedStart(
@@ -3254,7 +3251,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
                 lag_ratio=0.7,
                 run_time=2,
             )
-            arrows.anim = AnimationGroup(*map(GrowArrow, arrows))
+            arrows.anim = AnimationGroup(*list(map(GrowArrow, arrows)))
             arrow_groups.add(arrows)
         phi_arrows, phi_bro_arrows = arrow_groups
 
@@ -3318,14 +3315,14 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
         for deriv_label, dot_group in zip(deriv_labels, dot_groups):
             self.play(FadeInFromDown(deriv_label))
             self.play(LaggedStart(GrowFromCenter, dot_group))
-            self.play(*map(MoveToTarget, dot_group), run_time=2)
+            self.play(*list(map(MoveToTarget, dot_group)), run_time=2)
             self.wait()
 
 
 class StaticAlgebraicObject(Scene):
     def construct(self):
         frac = get_phi_continued_fraction(40)
-        frac.scale_to_fit_width(FRAME_WIDTH - 1)
+        frac.set_width(FRAME_WIDTH - 1)
         # frac.shift(2 * DOWN)
         frac.to_edge(DOWN)
         frac.set_stroke(WHITE, width=0.5)
@@ -3559,7 +3556,7 @@ class PrinciplesOverlay(PiCreatureScene):
         q_marks.next_to(morty, UP)
         q_marks.shift_onto_screen()
         q_marks.sort_submobjects(
-            lambda p: np.linalg.norm(p - morty.get_top())
+            lambda p: get_norm(p - morty.get_top())
         )
 
         self.play(morty.change, "pondering")
@@ -3580,7 +3577,7 @@ class PrinciplesOverlay(PiCreatureScene):
 class ManyInfiniteExpressions(Scene):
     def construct(self):
         frac = get_phi_continued_fraction(10)
-        frac.scale_to_fit_height(2)
+        frac.set_height(2)
         frac.to_corner(UL)
 
         n = 9

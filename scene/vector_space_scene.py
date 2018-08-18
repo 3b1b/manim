@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import numpy as np
 
@@ -32,6 +32,7 @@ from mobject.matrix import vector_coordinate_label
 from utils.rate_functions import rush_from
 from utils.rate_functions import rush_into
 from utils.space_ops import angle_of_vector
+from utils.space_ops import get_norm
 
 X_COLOR = GREEN_C
 Y_COLOR = RED_C
@@ -138,7 +139,7 @@ class VectorScene(Scene):
 
         if at_tip:
             vect = vector.get_vector()
-            vect /= np.linalg.norm(vect)
+            vect /= get_norm(vect)
             label.next_to(vector.get_end(), vect, buff=SMALL_BUFF)
         else:
             angle = vector.get_angle()
@@ -453,7 +454,7 @@ class LinearTransformationScene(VectorScene):
     def get_vector_movement(self, func):
         for v in self.moving_vectors:
             v.target = Vector(func(v.get_end()), color=v.get_color())
-            norm = np.linalg.norm(v.target.get_end())
+            norm = get_norm(v.target.get_end())
             if norm < 0.1:
                 v.target.get_tip().scale_in_place(norm)
         return self.get_piece_movement(self.moving_vectors)

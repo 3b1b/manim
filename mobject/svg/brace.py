@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import copy
 import numpy as np
@@ -12,6 +12,7 @@ from mobject.svg.tex_mobject import TexMobject
 from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VMobject
 from utils.config_ops import digest_config
+from utils.space_ops import get_norm
 
 
 class Brace(TexMobject):
@@ -20,6 +21,7 @@ class Brace(TexMobject):
         "width_multiplier": 2,
         "max_num_quads": 15,
         "min_num_quads": 0,
+        "background_stroke_width": 0,
     }
 
     def __init__(self, mobject, direction=DOWN, **kwargs):
@@ -75,7 +77,7 @@ class Brace(TexMobject):
 
     def get_direction(self):
         vect = self.get_tip() - self.get_center()
-        return vect / np.linalg.norm(vect)
+        return vect / get_norm(vect)
 
 
 class BraceLabel(VMobject):

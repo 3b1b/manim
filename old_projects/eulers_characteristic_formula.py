@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
+
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -396,10 +396,7 @@ class IntroduceCycle(WalkingRandolph):
     def construct(self):
         WalkingRandolph.construct(self)
         self.remove(self.randy)
-        encompassed_cycles = filter(
-            lambda c : set(c).issubset(self.path),
-            self.graph.region_cycles
-        )
+        encompassed_cycles = [c for c in self.graph.region_cycles if set(c).issubset(self.path)]
         regions = [
             self.region_from_cycle(cycle)
             for cycle in encompassed_cycles
@@ -473,8 +470,8 @@ class DefineSpanningTree(GraphScene):
             ))
         self.wait(2)
 
-        unneeded_edges = filter(out_of_spanning_set, self.graph.edges)
-        for edge, limit in zip(unneeded_edges, range(5)):
+        unneeded_edges = list(filter(out_of_spanning_set, self.graph.edges))
+        for edge, limit in zip(unneeded_edges, list(range(5))):
             line = Line(self.points[edge[0]], self.points[edge[1]])
             line.set_color("red")
             self.play(ShowCreation(line, run_time = 1.0))
@@ -617,10 +614,7 @@ class FacebookGraphAsAbstractSet(Scene):
 class ExamplesOfGraphs(GraphScene):
     def construct(self):
         buff = 0.5
-        self.graph.vertices = map(
-            lambda v : v + DOWN + RIGHT,
-            self.graph.vertices
-        )
+        self.graph.vertices = [v + DOWN + RIGHT for v in self.graph.vertices]
         GraphScene.construct(self)
         self.generate_regions()
         objects, notions = Mobject(*TextMobject(
@@ -667,7 +661,7 @@ class ExamplesOfGraphs(GraphScene):
                 self.wait()
 
     def handle_english_words(self, words1, words2):
-        words = map(TextMobject, ["graph", "grape", "gape", "gripe"])
+        words = list(map(TextMobject, ["graph", "grape", "gape", "gripe"]))
         words[0].shift(RIGHT)
         words[1].shift(3*RIGHT)
         words[2].shift(3*RIGHT + 2*UP)
@@ -773,17 +767,11 @@ class DrawDualGraph(GraphScene):
         outer_region      = self.regions.pop()
         outer_region_mob  = region_mobs.pop()
         outer_dual_vertex = self.dual_vertices.pop()
-        internal_edges = filter(
-            lambda e : abs(e.start[0]) < FRAME_X_RADIUS and \
+        internal_edges = [e for e in self.dual_edges if abs(e.start[0]) < FRAME_X_RADIUS and \
                        abs(e.end[0]) < FRAME_X_RADIUS and \
                        abs(e.start[1]) < FRAME_Y_RADIUS and \
-                       abs(e.end[1]) < FRAME_Y_RADIUS,
-            self.dual_edges
-        )
-        external_edges = filter(
-            lambda e : e not in internal_edges,
-            self.dual_edges
-        )
+                       abs(e.end[1]) < FRAME_Y_RADIUS]
+        external_edges = [e for e in self.dual_edges if e not in internal_edges]
 
         self.wait()
         self.reset_background()
@@ -795,7 +783,7 @@ class DrawDualGraph(GraphScene):
         self.wait()
         self.reset_background()
         self.play(ApplyFunction(
-            lambda p : (FRAME_X_RADIUS + FRAME_Y_RADIUS)*p/np.linalg.norm(p),
+            lambda p : (FRAME_X_RADIUS + FRAME_Y_RADIUS)*p/get_norm(p),
             outer_region_mob
         ))
         self.wait()
@@ -1050,10 +1038,7 @@ class MortimerCannotTraverseCycle(GraphScene):
             )
             all_lines.append(line)
             center = line.get_center()
-            distances = map(
-                lambda e : np.linalg.norm(center - e.get_center()),
-                self.edges
-            )
+            distances = [get_norm(center - e.get_center()) for e in self.edges]
             matching_edges.append(
                 self.edges[distances.index(min(distances))]
             )

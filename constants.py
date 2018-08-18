@@ -36,18 +36,19 @@ with open("media_dir.txt", 'w') as media_file:
     media_file.write(MEDIA_DIR)
 #
 
-
-DEFAULT_PIXEL_HEIGHT = 1080
-DEFAULT_PIXEL_WIDTH = 1920
-
 LOW_QUALITY_FRAME_DURATION = 1. / 15
 MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
 PRODUCTION_QUALITY_FRAME_DURATION = 1. / 60
 
 # There might be other configuration than pixel shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": DEFAULT_PIXEL_HEIGHT,
-    "pixel_width": DEFAULT_PIXEL_WIDTH,
+    "pixel_height": 1440,
+    "pixel_width": 2560,
+}
+
+HIGH_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 1080,
+    "pixel_width": 1920,
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
@@ -60,10 +61,13 @@ LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_width": 854,
 }
 
+DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
+DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
+
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
 
-DEFAULT_POINT_THICKNESS = 4
+DEFAULT_STROKE_WIDTH = 4
 
 FRAME_HEIGHT = 8.0
 FRAME_WIDTH = FRAME_HEIGHT * DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
@@ -224,7 +228,7 @@ for color_name,color_hex in COLOR_MAP.items():
     c.set_luminance(c.get_luminance() - 0.08)
     COLOR_MAP[color_name] = c.hex
 
-PALETTE = COLOR_MAP.values()
+PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
-for name in filter(lambda s: s.endswith("_C"), COLOR_MAP.keys()):
+for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]

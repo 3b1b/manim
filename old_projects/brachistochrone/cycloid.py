@@ -7,7 +7,7 @@ class RollAlongVector(Animation):
     }
     def __init__(self, mobject, vector, **kwargs):
         radius = mobject.get_width()/2
-        radians = np.linalg.norm(vector)/radius
+        radians = get_norm(vector)/radius
         last_alpha = 0
         digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
@@ -105,7 +105,7 @@ class IntroduceCycloid(CycloidScene):
         arrow.reverse_points()
         q_mark = TextMobject("?")
 
-        self.play(*map(ShimmerIn, equation.split()))
+        self.play(*list(map(ShimmerIn, equation.split())))
         self.wait()
         self.play(
             ApplyMethod(equation.shift, 2.2*UP),
@@ -337,7 +337,7 @@ class LeviSolution(CycloidScene):
         new_theta.next_to(new_arc, LEFT)
         new_theta.shift(0.1*DOWN)
         kwargs = {
-            "stroke_width" : 2*DEFAULT_POINT_THICKNESS,
+            "stroke_width" : 2*DEFAULT_STROKE_WIDTH,
         }
         triangle1 = Polygon(
             self.p_point, self.c_point, self.bottom_point,
@@ -377,7 +377,7 @@ class LeviSolution(CycloidScene):
         ]
         for line, tex, scale in triplets:
             trig_mob = TexMobject(tex)
-            trig_mob.scale_to_fit_width(
+            trig_mob.set_width(
                 scale*line.get_length()
             )
             trig_mob.shift(-1.2*trig_mob.get_top())
@@ -529,7 +529,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
             words1.next_to(arrow, LEFT)
             words2.next_to(arrow, RIGHT)
             words = Mobject(words1, arrow, words2)
-            words.scale_to_fit_width(FRAME_WIDTH-1)
+            words.set_width(FRAME_WIDTH-1)
             words.to_edge(UP, buff = 0.2)
             words.to_edge(LEFT)
 
@@ -545,7 +545,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
         self.roll_back()
         self.wait()
         if with_words:
-            self.play(*map(ShimmerIn, [words1, arrow, words2]))
+            self.play(*list(map(ShimmerIn, [words1, arrow, words2])))
         self.wait()
         self.remove(self.circle)
         start_time = len(self.frames)*self.frame_duration

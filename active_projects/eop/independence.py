@@ -9,10 +9,10 @@ def get_binomial_distribution(n, p):
     return lambda k : choose(n, k)*(p**(k))*((1-p)**(n-k))
 
 def get_quiz(*questions):
-    q_mobs = VGroup(*map(TextMobject, [
+    q_mobs = VGroup(*list(map(TextMobject, [
         "%d. %s"%(i+1, question)
         for i, question in enumerate(questions)
-    ]))
+    ])))
     q_mobs.arrange_submobjects(
         DOWN, 
         buff = MED_LARGE_BUFF,
@@ -153,9 +153,9 @@ class DangerInProbability(Scene):
     def get_warning_sign(self):
         triangle = RegularPolygon(n = 3, start_angle = np.pi/2)
         triangle.set_stroke(RED, 12)
-        triangle.scale_to_fit_height(2)
+        triangle.set_height(2)
         bang = TextMobject("!")
-        bang.scale_to_fit_height(0.6*triangle.get_height())
+        bang.set_height(0.6*triangle.get_height())
         bang.move_to(interpolate(
             triangle.get_bottom(),
             triangle.get_top(),
@@ -348,7 +348,7 @@ class IntroduceBinomial(Scene):
         dist = get_binomial_distribution(n, p)
         chart = BarChart(
             [dist(k) for k in range(n+1)],
-            bar_names = range(n+1),
+            bar_names = list(range(n+1)),
         )
         chart.to_edge(LEFT)
         self.bar_chart = chart
@@ -360,7 +360,7 @@ class IntroduceBinomial(Scene):
 
     def add_p_slider(self):
         interval = UnitInterval(color = LIGHT_GREY)
-        interval.scale_to_fit_width(4)
+        interval.set_width(4)
         interval.next_to(
             VGroup(self.bar_chart.x_axis, self.bar_chart.y_axis), 
             UP, MED_LARGE_BUFF
@@ -372,7 +372,7 @@ class IntroduceBinomial(Scene):
             fill_color = YELLOW,
             fill_opacity = 1,
         )
-        triangle.scale_to_fit_height(0.25)
+        triangle.set_height(0.25)
         triangle.move_to(interval.number_to_point(self.p), DOWN)
         label = TexMobject("p")
         label.next_to(triangle, UP, SMALL_BUFF)
@@ -411,7 +411,7 @@ class IntroduceBinomial(Scene):
         chart = self.bar_chart
         chart_copy = chart.copy()
         dist = get_binomial_distribution(self.n, self.p)
-        values = np.array(map(dist, range(self.n+1)))
+        values = np.array(list(map(dist, list(range(self.n+1)))))
         values += 0.1
         values /= sum(values)
 
@@ -500,7 +500,7 @@ class IntroduceQuiz(PiCreatureScene):
 
         self.play(
             LaggedStart(FadeIn, probabilities, run_time = 3),
-            self.quiz.scale_to_fit_height, 0.7*self.randy.get_height(),
+            self.quiz.set_height, 0.7*self.randy.get_height(),
             self.quiz.next_to, self.randy, RIGHT,
             self.randy.change, "confused", probabilities
         )
@@ -511,20 +511,20 @@ class IntroduceQuiz(PiCreatureScene):
 
     def show_distribution(self):
         dist = get_binomial_distribution(3, 0.7)
-        values = map(dist, range(4))
+        values = list(map(dist, list(range(4))))
         chart = BarChart(
             values, 
             width = 7,
-            bar_names = range(4)
+            bar_names = list(range(4))
         )
         chart.to_edge(RIGHT)
         for short_p, bar in zip(self.abbreviated_probabilities, chart.bars):
-            short_p.scale_to_fit_width(1.75*bar.get_width())
+            short_p.set_width(1.75*bar.get_width())
             short_p.next_to(bar, UP)
 
         self.play(
             LaggedStart(Write, VGroup(
-                *filter(lambda m : m is not chart.bars, chart)
+                *[m for m in chart if m is not chart.bars]
             )),
         )
         self.play(*[
@@ -654,10 +654,10 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
         self.think_about_binomial_patterns()
 
     def add_slot_groups(self):
-        self.slot_groups = VGroup(*map(
+        self.slot_groups = VGroup(*list(map(
             self.get_slot_group,
             it.product(*[[True, False]]*3)
-        ))
+        )))
         self.add(self.slot_groups)
         self.remove(self.randy)
 
@@ -733,7 +733,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
 class BeforeCounting(TeacherStudentsScene):
     def construct(self):
         triangle = PascalsTriangle(nrows = 7)
-        triangle.scale_to_fit_height(4)
+        triangle.set_height(4)
         triangle.next_to(self.teacher, UP+LEFT)
 
         prob = get_probability_of_slot_group([True, True, False])
@@ -1072,7 +1072,7 @@ class ThousandPossibleQuizzes(Scene):
         self.play(top_group.to_edge, UP, SMALL_BUFF)
         self.play(
             bottom_label.shift, LEFT,
-            *map(MoveToTarget, [left_split, right_split])
+            *list(map(MoveToTarget, [left_split, right_split]))
         )
         self.play(FadeIn(label))
         self.wait()
@@ -1136,7 +1136,7 @@ class ThousandPossibleQuizzes(Scene):
         )
         self.play(
             Write(equation),
-            *map(Animation, [num1, num2])
+            *list(map(Animation, [num1, num2]))
         )
         self.remove(num1, num2)
         self.wait()
@@ -1156,11 +1156,11 @@ class ThousandPossibleQuizzes(Scene):
             quiz[0].set_color(GREEN)
 
         line = Line(UP, DOWN, color = YELLOW)
-        line.scale_to_fit_height(self.quizzes.get_height())
+        line.set_height(self.quizzes.get_height())
         line.next_to(bottom_movers.target, LEFT, MED_LARGE_BUFF, UP)
 
         self.revert_to_original_skipping_status()
-        self.play(*map(MoveToTarget, both_movers))
+        self.play(*list(map(MoveToTarget, both_movers)))
         self.play(ShowCreation(line))
         self.play(FadeOut(line))
         self.wait()
@@ -1210,7 +1210,7 @@ class ThousandPossibleQuizzes(Scene):
 
     def get_thousand_quizzes(self):
         rows = VGroup()
-        for x in xrange(self.n_quiz_rows):
+        for x in range(self.n_quiz_rows):
             quiz = VGroup(*[
                 Rectangle(
                     height = SMALL_BUFF,
@@ -1227,7 +1227,7 @@ class ThousandPossibleQuizzes(Scene):
 
         rows.arrange_submobjects(DOWN, buff = SMALL_BUFF)
         quizzes = VGroup(*it.chain(*rows))
-        quizzes.scale_to_fit_height(self.quizzes_height)
+        quizzes.set_height(self.quizzes_height)
         quizzes.to_edge(RIGHT)
         quizzes.shift(MED_LARGE_BUFF*DOWN)
         return quizzes
@@ -1241,7 +1241,7 @@ class ExampleConditional(Scene):
         rhs.set_color_by_tex("0.925", YELLOW)
         rhs.next_to(prob, RIGHT)
         expression = VGroup(prob, rhs)
-        expression.scale_to_fit_width(FRAME_WIDTH - 1)
+        expression.set_width(FRAME_WIDTH - 1)
         expression.center().to_edge(DOWN)
 
         self.play(Write(expression))
@@ -1281,7 +1281,7 @@ class WritePSecond(Scene):
         rhs = TexMobject("= 0.8")
         rhs.next_to(prob, RIGHT)
         prob.add(rhs)
-        prob.scale_to_fit_width(FRAME_WIDTH - 1)
+        prob.set_width(FRAME_WIDTH - 1)
         prob.center().to_edge(DOWN)
         self.play(Write(prob))
 
@@ -1604,7 +1604,7 @@ class ComputeProbabilityOfOneWrong(Scene):
         probabilities = VGroup()
         point_8s = VGroup()
         point_2s = VGroup()
-        for i in reversed(range(3)):
+        for i in reversed(list(range(3))):
             bool_list = [self.default_bool]*3
             bool_list[i] = not self.default_bool
             probs = ["(%s)"%self.default_p]*3
@@ -1745,9 +1745,9 @@ class ShowFullDistribution(Scene):
             to_fade.add(VGroup(*score[3:-1]))
             value_mobs.add(score[-1])
         dist = get_binomial_distribution(3, 0.8)
-        values = map(dist, range(4))
+        values = list(map(dist, list(range(4))))
         chart = BarChart(
-            values, bar_names = range(4),
+            values, bar_names = list(range(4)),
         )
         chart.shift(DOWN)
 
@@ -1757,7 +1757,7 @@ class ShowFullDistribution(Scene):
         ])
         for term, bar in zip(new_p_terms, chart.bars):
             term[1].set_color(YELLOW)
-            term.scale_to_fit_width(1.5*bar.get_width())
+            term.set_width(1.5*bar.get_width())
             term.next_to(bar, UP)
 
         self.play(
@@ -1784,14 +1784,14 @@ class ShowFullDistribution(Scene):
 
     def compare_to_binomial_pattern(self):
         dist = get_binomial_distribution(3, 0.5)
-        values = map(dist, range(4))
+        values = list(map(dist, list(range(4))))
         alt_chart = BarChart(values)
         alt_chart.move_to(self.bar_chart)
         bars = alt_chart.bars
         bars.set_fill(GREY, opacity = 0.5)
         vect = 4*UP
         bars.shift(vect)
-        nums = VGroup(*map(TexMobject, map(str, [1, 3, 3, 1])))
+        nums = VGroup(*list(map(TexMobject, list(map(str, [1, 3, 3, 1])))))
         for num, bar in zip(nums, bars):
             num.next_to(bar, UP)
         bars_copy = bars.copy()
@@ -1831,7 +1831,7 @@ class ShowFullDistribution(Scene):
             alt_rhss.add(rhs)
 
             dist = get_binomial_distribution(3, p)
-            values = map(dist, range(4))
+            values = list(map(dist, list(range(4))))
             chart = self.bar_chart.copy()
             chart.change_bar_values(values)
             for label, bar in zip(chart.bar_top_labels, chart.bars):
@@ -1855,7 +1855,7 @@ class ShowFullDistribution(Scene):
         last = mob
         for k in range(4):
             buff = MED_LARGE_BUFF
-            for indices in it.combinations(range(3), k):
+            for indices in it.combinations(list(range(3)), k):
                 bool_list = np.array([False]*3)
                 bool_list[list(indices)] = True
                 prob = get_probability_of_slot_group(bool_list)
@@ -1907,10 +1907,10 @@ class ShowTrueDistribution(PiCreatureScene):
 
     def show_distributions(self):
         dist = get_binomial_distribution(3, 0.65)
-        values = np.array(map(dist, range(4)))
+        values = np.array(list(map(dist, list(range(4)))))
         alt_values = values + [0.2, 0, 0, 0.2]
         alt_values /= sum(alt_values)
-        chart = BarChart(values, bar_names = range(4))
+        chart = BarChart(values, bar_names = list(range(4)))
         bars = chart.bars
         old_bars = bars.copy()
         arrows = VGroup()
@@ -1933,10 +1933,10 @@ class ShowTrueDistribution(PiCreatureScene):
         arrows.set_color_by_gradient(BLUE, YELLOW)
 
         self.add(chart)
-        self.play(*map(MoveToTarget, it.chain(bars, old_bars)))
+        self.play(*list(map(MoveToTarget, it.chain(bars, old_bars))))
         self.play(
             chart.change_bar_values, alt_values,
-            *map(ShowCreation, arrows)
+            *list(map(ShowCreation, arrows))
         )
         self.wait(2)
 
@@ -2100,7 +2100,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         self.play(
             GrowFromCenter(brace), 
             FadeIn(prop),
-            *map(MoveToTarget, parts)
+            *list(map(MoveToTarget, parts))
         )
         self.wait()
         self.play(
@@ -2133,7 +2133,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         self.play(
             GrowFromCenter(brace),
             FadeIn(prop),
-            *map(MoveToTarget, parts)
+            *list(map(MoveToTarget, parts))
         )
         self.wait()
         self.play(
@@ -2166,7 +2166,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         self.play(
             GrowFromCenter(brace), 
             FadeIn(prop),
-            *map(MoveToTarget, parts)
+            *list(map(MoveToTarget, parts))
         )
         self.wait()
         self.play(
@@ -2249,8 +2249,8 @@ class NameBinomial(Scene):
         charts = VGroup()
         for n in ns:
             dist = get_binomial_distribution(n, p)
-            values = map(dist, range(n+1))
-            chart = BarChart(values, bar_names = range(n+1))
+            values = list(map(dist, list(range(n+1))))
+            chart = BarChart(values, bar_names = list(range(n+1)))
             chart.to_edge(LEFT)
             charts.add(chart)
 
@@ -2321,10 +2321,7 @@ class NameBinomial(Scene):
             VGroup(*[group[i] for i in flip_indices])
             for group in (arrows, crosses, checkmarks)
         ]
-        faded_checkmarks = VGroup(*filter(
-            lambda m : m not in full_checks,
-            checkmarks
-        ))
+        faded_checkmarks = VGroup(*[m for m in checkmarks if m not in full_checks])
 
         self.play(*[
             LaggedStart(
@@ -2400,7 +2397,7 @@ class NameBinomial(Scene):
         new_p_mob.move_to(p_mob, LEFT)
 
         dist = get_binomial_distribution(10, 0.49)
-        values = map(dist, range(11))
+        values = list(map(dist, list(range(11))))
 
         self.play(
             Transform(checkmark, female),
@@ -2523,11 +2520,11 @@ class CycleThroughPatterns(NameBinomial):
         )
         question.set_color_by_tex("male", BLUE)
         question.set_color_by_tex("female", MAROON_B)
-        question.scale_to_fit_width(FRAME_WIDTH - 1)
+        question.set_width(FRAME_WIDTH - 1)
         question.to_edge(UP, buff = LARGE_BUFF)
         self.add(question)
 
-        all_combinations = list(it.combinations(range(n), k))
+        all_combinations = list(it.combinations(list(range(n)), k))
         shown_combinations = all_combinations[:self.n_patterns_shown]
         patterns = VGroup(*[
             self.get_pattern(indicies)
@@ -2588,8 +2585,8 @@ class Compute6of10GirlsProbability(CycleThroughPatterns):
         see_chapter_one.set_color(GREEN)
         computation = TexMobject(
             "=\\frac{%s}{%s}"%(
-                 "\\cdot ".join(map(str, range(10, 4, -1))),
-                 "\\cdot ".join(map(str, range(1, 7))),
+                 "\\cdot ".join(map(str, list(range(10, 4, -1)))),
+                 "\\cdot ".join(map(str, list(range(1, 7)))),
             )
         )
         computation.move_to(ten_choose_six, UP)
@@ -2735,10 +2732,10 @@ class GeneralBinomialDistributionValues(Scene):
 
     def add_chart(self):
         dist = get_binomial_distribution(self.n, self.p)
-        values = map(dist, range(self.n+1))
+        values = list(map(dist, list(range(self.n+1))))
         chart = BarChart(
             values,
-            bar_names = range(self.n+1)
+            bar_names = list(range(self.n+1))
         )
         chart.to_edge(LEFT)
 
@@ -2797,7 +2794,7 @@ class GeneralBinomialDistributionValues(Scene):
 
     def compare_to_pascal_row(self):
         triangle = PascalsTriangle(nrows = 11)
-        triangle.scale_to_fit_width(6)
+        triangle.set_width(6)
         triangle.to_corner(UP+RIGHT)
         last_row = VGroup(*[
             triangle.coords_to_mobs[10][k]
@@ -2854,19 +2851,19 @@ class GeneralBinomialDistributionValues(Scene):
         self.wait(2)
         self.play(
             bars.restore,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 brace, words, 
                 self.pascals_triangle,
                 self.ten_choose_ks
-            ])
+            ]))
         )
 
     def generalize(self):
         alt_n = self.alt_n
         dist = get_binomial_distribution(alt_n, self.p)
-        values = map(dist, range(alt_n + 1))
+        values = list(map(dist, list(range(alt_n + 1))))
         alt_chart = BarChart(
-            values, bar_names = range(alt_n + 1)
+            values, bar_names = list(range(alt_n + 1))
         )
         alt_chart.move_to(self.chart)
 
@@ -2892,7 +2889,7 @@ class GeneralBinomialDistributionValues(Scene):
     def play_with_p_value(self):
         p = self.p
         interval = UnitInterval(color = WHITE)
-        interval.scale_to_fit_width(5)
+        interval.set_width(5)
         interval.next_to(self.full_probability, DOWN, LARGE_BUFF)
         interval.add_numbers(0, 0.5, 1)
         triangle = RegularPolygon(
@@ -2901,7 +2898,7 @@ class GeneralBinomialDistributionValues(Scene):
             fill_opacity = 1,
             stroke_width = 0,
         )
-        triangle.scale_to_fit_height(0.25)
+        triangle.set_height(0.25)
         triangle.move_to(interval.number_to_point(p), DOWN)
         p_mob = TexMobject("p")
         p_mob.set_color(MAROON_B)
@@ -2918,7 +2915,7 @@ class GeneralBinomialDistributionValues(Scene):
         for new_p in new_p_values:
             p = new_p
             dist = get_binomial_distribution(self.alt_n, p)
-            values = map(dist, range(self.alt_n + 1))
+            values = list(map(dist, list(range(self.alt_n + 1))))
             self.play(
                 self.chart.change_bar_values, values,
                 triangle.move_to, interval.number_to_point(p), DOWN
@@ -3044,7 +3041,7 @@ class CorrectForDependence(NameBinomial):
             bar.set_color(average_color(RED_E, BLACK))
 
         dist = get_binomial_distribution(10, 0.65)
-        values = np.array(map(dist, range(11)))
+        values = np.array(list(map(dist, list(range(11)))))
         alt_values = values + 0.1
         alt_values[0] -= 0.06
         alt_values[1] -= 0.03
@@ -3067,7 +3064,7 @@ class CorrectForDependence(NameBinomial):
             MoveToTarget(bars),
         )
         self.wait()
-        self.play(*map(ShowCreation, arrows))
+        self.play(*list(map(ShowCreation, arrows)))
         self.play(chart.change_bar_values, alt_values)
 
     ######
@@ -3089,8 +3086,8 @@ class CorrectForDependence(NameBinomial):
                 mob.generate_target()
                 c = mob.get_center()
                 start, end = arrow.target.get_start_and_end()
-                to_end = np.linalg.norm(c - end)
-                to_start = np.linalg.norm(c - start)
+                to_end = get_norm(c - end)
+                to_start = get_norm(c - start)
                 if to_end < to_start:
                     mob.target.set_fill(opacity = 1)
                 else:
@@ -3170,13 +3167,10 @@ class AssumeOrderDoesntMatter(Scene):
     def show_equality(self):
         n = 3
         prob_groups = VGroup(*[
-            VGroup(*map(
+            VGroup(*list(map(
                 get_probability_of_slot_group,
-                filter(
-                    lambda t : sum(t) == k,
-                    it.product(*[[True, False]]*n)
-                )
-            ))
+                [t for t in it.product(*[[True, False]]*n) if sum(t) == k]
+            )))
             for k in range(n+1)
         ])
         for prob_group in prob_groups:
@@ -3187,7 +3181,7 @@ class AssumeOrderDoesntMatter(Scene):
             prob_group.arrange_submobjects(RIGHT)
             max_width = FRAME_WIDTH - 1
             if prob_group.get_width() > max_width:
-                prob_group.scale_to_fit_width(max_width)
+                prob_group.set_width(max_width)
         prob_groups.arrange_submobjects(DOWN, buff = 0.7)
         prob_groups.next_to(self.title, DOWN, MED_LARGE_BUFF)
 
@@ -3401,25 +3395,25 @@ class SkepticalOfDistributions(TeacherStudentsScene):
     ####
 
     def get_binomial(self):
-        k_range = range(11)
+        k_range = list(range(11))
         dists = [
             get_binomial_distribution(10, p)
             for p in (0.2, 0.8, 0.5)
         ]
         values_list = [
-            map(dist, k_range)
+            list(map(dist, k_range))
             for dist in dists
         ]
         chart = BarChart(
             values = values_list[-1],
             bar_names = k_range
         )
-        chart.scale_to_fit_height(self.chart_height)
+        chart.set_height(self.chart_height)
         chart.values_list = values_list
         return chart
 
     def get_poisson(self):
-        k_range = range(11)
+        k_range = list(range(11))
         L = 2
         values = [
             np.exp(-L) * (L**k) / (scipy.special.gamma(k+1))
@@ -3430,7 +3424,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
             bar_names = k_range,
             bar_colors = [RED, YELLOW]
         )
-        chart.scale_to_fit_height(self.chart_height)
+        chart.set_height(self.chart_height)
         title = TextMobject(
             "Poisson distribution \\\\",
             "$e^{-\\lambda}\\frac{\\lambda^k}{k!}$"
@@ -3452,7 +3446,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
             fill_opacity = 1,
             stroke_color = BLUE,
         )
-        graph.scale_to_fit_width(axes.get_width())
+        graph.set_width(axes.get_width())
         graph.move_to(axes[0], DOWN)
 
         title = TextMobject(
@@ -3533,7 +3527,7 @@ class Thumbnail(DangerInProbability):
     def construct(self):
         n, p = 15, 0.5
         dist = get_binomial_distribution(n, p)
-        values = np.array(map(dist, range(n+1)))
+        values = np.array(list(map(dist, list(range(n+1)))))
         values *= 2
         chart = BarChart(
             values = values,
@@ -3546,7 +3540,7 @@ class Thumbnail(DangerInProbability):
 
 
         warning = self.get_warning_sign()
-        warning.scale_to_fit_height(2)
+        warning.set_height(2)
         warning.to_edge(UP)
         self.add(warning)
 

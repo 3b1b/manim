@@ -59,7 +59,7 @@ class Triangle(Polygon):
         normal_dir = rotate_vector(points[1] - points[0], np.pi/2, OUT)
         if np.dot(normal_dir, points[2]-center) > 0:
             normal_dir = -normal_dir
-        normal_dir /= np.linalg.norm(normal_dir)
+        normal_dir /= get_norm(normal_dir)
         mob.shift(nudge*normal_dir)
         self.add(mob)
         return self
@@ -69,7 +69,7 @@ class Triangle(Polygon):
         start1, start2 = self.get_vertices()[[1, 2]]
         target_vect = np.array(point2)-np.array(point1)
         curr_vect = start2-start1
-        self.scale(np.linalg.norm(target_vect)/np.linalg.norm(curr_vect))
+        self.scale(get_norm(target_vect)/get_norm(curr_vect))
         self.rotate(angle_of_vector(target_vect)-angle_of_vector(curr_vect))
         self.shift(point1-self.get_vertices()[1])
         return self
@@ -165,7 +165,7 @@ class IndicateTroublePointFromParallelLines(AddParallelLines):
         vect = DOWN+RIGHT
         arrow = Arrow(circle.get_center()+2*vect, circle.get_boundary_point(vect))
         arrow.set_color(circle.get_color())
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
 
 class DrawAllThreeSquaresWithMoreTriangles(DrawAllThreeSquares):
@@ -224,7 +224,7 @@ class IndicateBigRectangleTroublePoint(DrawAllThreeSquaresWithMoreTriangles):
         circle.shift(4*RIGHT)
         vect = DOWN+RIGHT
         arrow = Arrow(circle.get_center()+vect, circle.get_boundary_point(vect))
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
 class ShowBigRectangleDimensions(DrawAllThreeSquaresWithMoreTriangles):
     args_list = [(10, False)]
@@ -239,7 +239,7 @@ class ShowBigRectangleDimensions(DrawAllThreeSquaresWithMoreTriangles):
         b_plus_2a = TexMobject("b+2a").scale(TEX_MOB_SCALE_FACTOR)
         a_plus_2b.next_to(u_brace, DOWN)
         b_plus_2a.next_to(side_brace, LEFT)
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
 class FillInAreaOfBigRectangle(DrawAllThreeSquaresWithMoreTriangles):
     args_list = [(10, False)]
@@ -267,7 +267,7 @@ class DrawOnlyABSquares(Scene):
             symobl.shift(mob.get_center())
             self.add(symobl)
         triangle = Triangle()
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
 class AddTriangleCopyToABSquares(DrawOnlyABSquares):
     def construct(self):
@@ -317,7 +317,7 @@ class DrawCSquareWithAllTraingles(Scene):
     ]
     @staticmethod
     def args_to_string(*toggle_vector):
-        return "".join(map(str, map(int, toggle_vector)))
+        return "".join(map(str, list(map(int, toggle_vector))))
 
     def construct(self, *toggle_vector):
         if len(toggle_vector) == 0:
@@ -388,7 +388,7 @@ class ZoomInOnTroublePoint(Scene):
         angle1_arc.filter_out(lambda x_y_z2 : not (x_y_z2[0] > 0 and x_y_z2[1] > 0 and x_y_z2[1] < x_y_z2[0]/3))
         angle2_arc.filter_out(lambda x_y_z3 : not (x_y_z3[0] < 0 and x_y_z3[1] > 0 and x_y_z3[1] < -3*x_y_z3[0]))
 
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
         self.add_elbow()        
         if rotate:
             for mob in self.mobjects:
@@ -456,7 +456,7 @@ class CompletelyFillLargeSquare(LabelLargeSquare):
         LabelLargeSquare.construct(self)
         vertices = [2*(DOWN+LEFT), 2*(DOWN+RIGHT), 2*(UP+RIGHT), 2*(UP+LEFT)]
         vertices.append(vertices[0])
-        pairs = zip(vertices, vertices[1:])
+        pairs = list(zip(vertices, vertices[1:]))
         self.set_color_region(region_from_line_boundary(*pairs), color = BLUE)
 
 

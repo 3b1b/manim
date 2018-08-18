@@ -16,7 +16,7 @@ class Announcements(PiCreatureScene):
         title.to_edge(UP)
         title.shift(LEFT)
         underline = Line(LEFT, RIGHT)
-        underline.scale_to_fit_width(1.2*title.get_width())
+        underline.set_width(1.2*title.get_width())
         underline.next_to(title, DOWN)
 
         announcements = VGroup(*[
@@ -65,7 +65,7 @@ class PowersOfTwo(Scene):
                 group = VGroup(mob, rect)
                 two_to_ten = group.copy()
                 group.generate_target()
-                group.target.scale_to_fit_height(0.2)
+                group.target.set_height(0.2)
                 group.target[1].set_fill(BLUE, 1)
 
                 self.play(ShowCreation(rect))
@@ -79,7 +79,7 @@ class PowersOfTwo(Scene):
                 vect, buff = SMALL_BUFF
             )
             if group.get_height() > max_height:
-                group.scale_to_fit_height(max_height)
+                group.set_height(max_height)
             group.move_to(center)
             pa = np.pi/3
             self.play(
@@ -106,7 +106,7 @@ class PowersOfTwo(Scene):
         two_to_ten.replace(mob[0])
         self.play(
             two_to_ten.restore,
-            *map(ShowCreation, lines)
+            *list(map(ShowCreation, lines))
         )
 
         curr_po2_outline = curr_po2[-1].copy()
@@ -130,7 +130,7 @@ class PiHoldingScreen(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
         screen = ScreenRectangle()
-        screen.scale_to_fit_height(5.5)
+        screen.set_height(5.5)
         screen.to_edge(UP, buff = LARGE_BUFF)
         screen.to_edge(LEFT)
 
@@ -159,7 +159,7 @@ class PiHoldingScreen(PiCreatureScene):
 class QuestionsLink(Scene):
     def construct(self):
         link = TextMobject("https://3b1b.co/questions")
-        link.scale_to_fit_width(FRAME_WIDTH)
+        link.set_width(FRAME_WIDTH)
         link.to_edge(DOWN)
         self.play(Write(link))
         self.wait()
@@ -167,12 +167,12 @@ class QuestionsLink(Scene):
 class Thumbnail(Scene):
     def construct(self):
         equation = TexMobject("2^{19} = " + "{:,}".format(2**19))
-        equation.scale_to_fit_width(FRAME_X_RADIUS)
+        equation.set_width(FRAME_X_RADIUS)
         equation.to_edge(DOWN, buff = LARGE_BUFF)
 
         q_and_a = TextMobject("Q\\&A \\\\ Round 2")
         q_and_a.set_color_by_gradient(BLUE, YELLOW)
-        q_and_a.scale_to_fit_width(FRAME_X_RADIUS)
+        q_and_a.set_width(FRAME_X_RADIUS)
         q_and_a.to_edge(UP, buff = LARGE_BUFF)
 
         eater = ImageMobject("eater", height = 3)

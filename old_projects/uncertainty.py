@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+
 import scipy
 from big_ol_pile_of_manim_imports import *
 from old_projects.fourier import *
@@ -159,7 +159,7 @@ class RadarPulseSingleton(ContinualAnimation):
     }
     def __init__(self, radar_dish, target, **kwargs):
         digest_config(self, kwargs)
-        self.direction = self.direction/np.linalg.norm(self.direction)
+        self.direction = self.direction/get_norm(self.direction)
         self.radar_dish = radar_dish
         self.target = target
         self.reflection_distance = None
@@ -167,7 +167,7 @@ class RadarPulseSingleton(ContinualAnimation):
             start_angle = -30*DEGREES,
             angle = 60*DEGREES,
         )
-        self.arc.scale_to_fit_height(0.75*radar_dish.get_height())
+        self.arc.set_height(0.75*radar_dish.get_height())
         self.arc.move_to(radar_dish, UP+RIGHT)
         self.start_points = np.array(self.arc.points)
         self.start_center = self.arc.get_center()
@@ -338,7 +338,7 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
                 brace.next_to(gdw, vect)
                 text.next_to(brace, vect, buff = SMALL_BUFF)
             group.set_color(color)
-            return ContinualUpdateFromFunc(group, update_group)
+            return ContinualUpdate(group, update_group)
 
         dot_brace_anim = get_brace_text_group_update(
             dot_cloud.gaussian_distribution_wrapper,
@@ -423,7 +423,7 @@ class FourierTradeoff(Scene):
         )
         time_axes.add(time_label)
         time_axes.center().to_edge(UP)
-        time_axes.x_axis.add_numbers(*range(1, 2*time_mean))
+        time_axes.x_axis.add_numbers(*list(range(1, 2*time_mean)))
 
         frequency_axes = Axes(
             x_min = 0,
@@ -780,7 +780,7 @@ class TwoCarsAtRedLight(Scene):
         axes.add(time_label, y_title)
         axes.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         graph = axes.get_graph(
-            self.get_multispike_function(range(1, 4)),
+            self.get_multispike_function(list(range(1, 4))),
             x_min = 0.8,
             x_max = 3.8,
         )
@@ -894,7 +894,7 @@ class TwoCarsAtRedLight(Scene):
 
         n_spikes = 12
         new_time_graph = time_axes.get_graph(
-            self.get_multispike_function(range(1, n_spikes+1)),
+            self.get_multispike_function(list(range(1, n_spikes+1))),
             x_min = 0.8,
             x_max = n_spikes + 0.8,
         )
@@ -972,12 +972,12 @@ class TwoCarsAtRedLight(Scene):
         self.play(
             FadeIn(label),
             GrowArrow(arrow),
-            *map(self.get_flashes, self.cars)
+            *list(map(self.get_flashes, self.cars))
         )
         self.play(
             GrowFromCenter(brace),
             Write(text, run_time = 1),
-            *map(self.get_flashes, self.cars)
+            *list(map(self.get_flashes, self.cars))
         )
         self.play(*[
             self.get_flashes(car, num_flashes = 10)
@@ -1095,7 +1095,7 @@ class VariousMusicalNotes(Scene):
 
         self.play(
             ShowCreation(long_graph),
-            *map(FadeOut, [last_brace, last_phrase])
+            *list(map(FadeOut, [last_brace, last_phrase]))
         )
         self.play(
             Write(short_signal_words),
@@ -1128,7 +1128,7 @@ class CrossOutDefinitenessAndCertainty(TeacherStudentsScene):
         )
         words.arrange_submobjects(DOWN)
         words.next_to(self.teacher, UP+LEFT)
-        crosses = VGroup(*map(Cross, words))
+        crosses = VGroup(*list(map(Cross, words)))
 
         self.add(words)
         self.play(
@@ -1175,7 +1175,7 @@ class FourierRecapScene(DrawFrequencyPlot):
             "x_max" : 10.0,
             "x_axis_config" : {
                 "unit_size" : 0.7,
-                "numbers_to_show" : range(1, 10, 1),
+                "numbers_to_show" : list(range(1, 10, 1)),
             }
         },
         "initial_winding_frequency" : 0.1,
@@ -1247,10 +1247,10 @@ class FourierRecapScene(DrawFrequencyPlot):
             rate_func = wiggle,
         ))
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.frequency_axes, fourier_graph,
             signal_label,  fourier_label,
-        ]))
+        ])))
 
         self.time_graph = time_graph
         self.set_variables_as_attrs(time_graph, fourier_label)
@@ -1405,7 +1405,7 @@ class CenterOfMassDescription(FourierRecapScene):
         circle_plane = self.get_circle_plane()
         circle_plane.save_state()
         circle_plane.generate_target()
-        circle_plane.target.scale_to_fit_height(FRAME_HEIGHT)
+        circle_plane.target.set_height(FRAME_HEIGHT)
         circle_plane.target.center()
         circle_plane.target.axes.set_stroke(width = 2)
         circle_plane.target.main_lines.set_stroke(width = 2)
@@ -1630,9 +1630,9 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             run_time = 3
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             dot, arrow, self.center_of_mass_dot
-        ]))
+        ])))
         #This is not great...
         for attr in "center_of_mass_dot", "fourier_graph_dot":
             self.__dict__.pop(attr)
@@ -1647,7 +1647,7 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             dot.scale(0.5)
             dots.add(dot)
             vect = point - axis_point
-            vect *= 1.3/np.linalg.norm(vect)
+            vect *= 1.3/get_norm(vect)
             arrow = Arrow(vect, ORIGIN, buff = SMALL_BUFF)
             arrow.set_color(YELLOW)
             arrow.shift(point)
@@ -1705,7 +1705,7 @@ class MentionDopplerRadar(TeacherStudentsScene):
         plane.flip()
         pulse = RadarPulse(dish, plane)
         look_at_anims = [
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 pi, lambda pi : pi.look_at(pulse.mobject)
             )
             for pi in self.get_pi_creatures()
@@ -1791,7 +1791,7 @@ class IntroduceDopplerRadar(Scene):
             color = WHITE
         )
         distance_text = TextMobject("$2 \\times$ distance/(signal speed)")
-        distance_text.scale_to_fit_width(0.9*double_arrow.get_width())
+        distance_text.set_width(0.9*double_arrow.get_width())
         distance_text.next_to(double_arrow, UP, SMALL_BUFF)
 
         #v_line anim?
@@ -1807,7 +1807,7 @@ class IntroduceDopplerRadar(Scene):
                 run_time = 0.97*axes.x_max
             )
         )
-        randy_look_at = ContinualUpdateFromFunc(
+        randy_look_at = ContinualUpdate(
             randy, lambda pi : pi.look_at(pulse.mobject)
         )
         axes_anim = ContinualAnimation(axes)
@@ -2659,8 +2659,8 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         movements = self.object_movements = [
             ContinualMovement(
                 obj, 
-                direction = v/np.linalg.norm(v),
-                rate = np.linalg.norm(v)
+                direction = v/get_norm(v),
+                rate = get_norm(v)
             )
             for v, obj in zip(object_velocities, objects)
         ]
@@ -2802,16 +2802,16 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             ))
         def get_graph(func):
             return frequency_axes.get_graph(func)
-        shifted_graphs = VGroup(*map(
-            get_graph, map(get_func, self.object_velocities)
-        ))
+        shifted_graphs = VGroup(*list(map(
+            get_graph, list(map(get_func, self.object_velocities))
+        )))
         shifted_graphs.match_style(fourier_graph)
         return shifted_graphs
 
     def get_sum_graph(self, axes, graphs):
         def get_func(graph):
             return graph.underlying_function
-        funcs = map(get_func, graphs)
+        funcs = list(map(get_func, graphs))
         return axes.get_graph(
             lambda t : sum([func(t) for func in funcs]),
         )
@@ -2860,11 +2860,11 @@ class SummarizeFourierTradeoffForDoppler(Scene):
 
         top_graphs = get_top_graphs()
         bottom_graphs = get_bottom_graphs()
-        update_top_graphs = ContinualUpdateFromFunc(
+        update_top_graphs = ContinualUpdate(
             top_graphs, 
             lambda g : Transform(g, get_top_graphs()).update(1)
         )
-        update_bottom_graphs = ContinualUpdateFromFunc(
+        update_bottom_graphs = ContinualUpdate(
             bottom_graphs, 
             lambda g : Transform(g, get_bottom_graphs()).update(1)
         )
@@ -2892,7 +2892,7 @@ class IntroduceDeBroglie(Scene):
         #Overlay real tower in video editor
         eiffel_tower = Line(3*DOWN, 3*UP, stroke_width = 0)
         picture = ImageMobject("de_Broglie")
-        picture.scale_to_fit_height(4)
+        picture.set_height(4)
         picture.to_corner(UP+LEFT)
         name = TextMobject("Louis de Broglie")
         name.next_to(picture, DOWN)
@@ -2925,7 +2925,7 @@ class IntroduceDeBroglie(Scene):
             x_min = 1900,
             x_max = 1935,
             tick_frequency = 1,
-            numbers_with_elongated_ticks = range(1900, 1941, 10),
+            numbers_with_elongated_ticks = list(range(1900, 1941, 10)),
             color = BLUE_D
         )
         time_line.stretch_to_fit_width(FRAME_WIDTH - picture.get_width() - 2)
@@ -3360,7 +3360,7 @@ class SortOfDopplerEffect(PiCreatureScene):
             ])
             return 
         wave = get_wave()
-        wave_update = ContinualUpdateFromFunc(
+        wave_update = ContinualUpdate(
             wave, lambda w : Transform(w, get_wave()).update(1)
         )
 
@@ -3369,7 +3369,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         rect_movement = ContinualMovement(rect, direction = LEFT, rate = 1)
 
         randy = self.pi_creature
-        randy_look_at = ContinualUpdateFromFunc(
+        randy_look_at = ContinualUpdate(
             randy, lambda r : r.look_at(rect)
         )
 
@@ -3379,7 +3379,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         ref_frame2 = TextMobject("Reference frame 2")
         ref_frame2.next_to(rect, UP)
         # ref_frame2.set_fill(opacity = 0)
-        ref_frame2_follow = ContinualUpdateFromFunc(
+        ref_frame2_follow = ContinualUpdate(
             ref_frame2, lambda m : m.next_to(rect, UP)
         )
         ref_frame_1_continual_anim = ContinualAnimation(ref_frame1)
@@ -3486,7 +3486,7 @@ class HangingWeightsScene(MovingCameraScene):
             return spring
         alphas = np.linspace(0, 1, self.n_springs)
         bezier([0, 1, 0, 1])
-        springs = self.springs = VGroup(*map(get_spring, alphas))
+        springs = self.springs = VGroup(*list(map(get_spring, alphas)))
 
         k_tracker = self.k_tracker = VectorizedPoint()
         t_tracker = self.t_tracker = VectorizedPoint()
@@ -3502,7 +3502,7 @@ class HangingWeightsScene(MovingCameraScene):
                 d_height = A*np.cos(TAU*f*t - k*x)
                 new_spring = get_spring(spring.alpha, 2+d_height)
                 Transform(spring, new_spring).update(1)
-        spring_update_anim = ContinualUpdateFromFunc(springs, update_springs)
+        spring_update_anim = ContinualUpdate(springs, update_springs)
         self.spring_update_anim = spring_update_anim
         spring_update_anim.update(0)
 
@@ -3521,7 +3521,7 @@ class HangingWeightsScene(MovingCameraScene):
             weight.start_radius = 0.15
             weight.target_radius = 0.25*mass #For future update
             weight.spring = spring
-            weight_anim = ContinualUpdateFromFunc(
+            weight_anim = ContinualUpdate(
                 weight, lambda w : w.move_to(w.spring.get_bottom())
             )
             weight_anim.update(0)
@@ -3542,10 +3542,10 @@ class HangingWeightsScene(MovingCameraScene):
         arrows.set_color(WHITE)
 
         self.wait(3)
-        self.play(*map(GrowArrow, arrows))
+        self.play(*list(map(GrowArrow, arrows)))
         self.play(*[
             UpdateFromAlphaFunc(
-                weight, lambda w, a : w.scale_to_fit_width(
+                weight, lambda w, a : w.set_width(
                     2*interpolate(w.start_radius, w.target_radius, a)
                 ),
                 run_time = 2
@@ -3568,7 +3568,7 @@ class HangingWeightsScene(MovingCameraScene):
 
     def metaphor_for_something(self):
         de_broglie = ImageMobject("de_Broglie")
-        de_broglie.scale_to_fit_height(3.5)
+        de_broglie.set_height(3.5)
         de_broglie.to_corner(DOWN+RIGHT)
         words = TextMobject("""
             If a photon's energy is carried as a wave \\\\
@@ -3624,7 +3624,7 @@ class HangingWeightsScene(MovingCameraScene):
             original_center = camera_frame.get_center()
             self.play(
                 UpdateFromAlphaFunc(
-                    camera_frame, lambda c, a : c.scale_to_fit_height(
+                    camera_frame, lambda c, a : c.set_height(
                         interpolate(original_height, 0.95*rect.get_height(), a)
                     ).move_to(
                         interpolate(original_center, rect.get_center(), a)
@@ -3637,7 +3637,7 @@ class HangingWeightsScene(MovingCameraScene):
                 run_time = 6
             ))
             self.play(
-                camera_frame.scale_to_fit_height, original_height,
+                camera_frame.set_height, original_height,
                 camera_frame.move_to, original_center,
                 ApplyMethod(self.k_tracker.shift, LEFT)
             )
@@ -3650,7 +3650,7 @@ class HangingWeightsScene(MovingCameraScene):
 
         index = int(0.5*len(self.springs))
         weights = VGroup(self.weights[index], self.weights[index+4])
-        flashes = map(self.get_peak_flash_anim, weights)
+        flashes = list(map(self.get_peak_flash_anim, weights))
         weights.save_state()
         weights.set_fill(RED)
         self.add(*flashes)
@@ -3662,10 +3662,10 @@ class HangingWeightsScene(MovingCameraScene):
         randy = Randolph(mode = "pondering")
         randy.look(UP+RIGHT)
         de_broglie = ImageMobject("de_Broglie")
-        de_broglie.scale_to_fit_height(6)
+        de_broglie.set_height(6)
         de_broglie.next_to(4*DOWN, DOWN)
         self.add(
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 randy, lambda m : m.next_to(
                     rect.get_corner(DOWN+LEFT), UP+RIGHT, MED_LARGE_BUFF,
                 ).look_at(weights)
@@ -3725,7 +3725,7 @@ class MinutPhysicsWrapper(Scene):
         title.to_edge(UP).shift(MED_LARGE_BUFF*RIGHT)
 
         screen_rect = ScreenRectangle()
-        screen_rect.scale_to_fit_width(title.get_width() + LARGE_BUFF)
+        screen_rect.set_width(title.get_width() + LARGE_BUFF)
         screen_rect.next_to(title, DOWN)
 
         self.play(ShowCreation(screen_rect))
@@ -3896,9 +3896,9 @@ class FourierTransformOfWaveFunction(Scene):
                 run_time = 3,
             )
             last_f = f
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             sinusoid, v_line,  freq_label
-        ]))
+        ])))
 
     def this_is_momentum(self):
         formula = TexMobject("p", "=", "h", "\\xi")
@@ -3940,7 +3940,7 @@ class FourierTransformOfWaveFunction(Scene):
                 run_time = 2
             )
         self.wait()
-        self.play(*map(FadeOut, [brace, words, formula]))
+        self.play(*list(map(FadeOut, [brace, words, formula])))
 
     def show_tradeoff(self):
         for a in 5, 0.1, 0.01, 10, 0.5:
@@ -4101,8 +4101,8 @@ class ProbabalisticDetection(FourierTransformOfWaveFunction):
         rect.save_state()
         rect.stretch(0, 0)
 
-        gdw_anim = ContinualUpdateFromFunc(
-            gdw, lambda m : m.scale_to_fit_width(
+        gdw_anim = ContinualUpdate(
+            gdw, lambda m : m.set_width(
                 2.0/(self.a_tracker.get_value()**(0.5))
             ).move_to(rect)
         )
@@ -4123,7 +4123,7 @@ class ProbabalisticDetection(FourierTransformOfWaveFunction):
                 answer.submobjects = [yes]
             else:
                 answer.submobjects = [no]
-        answer_anim = ContinualUpdateFromFunc(answer, update_answer)
+        answer_anim = ContinualUpdate(answer, update_answer)
 
         self.add(gdw_anim, particle)
         self.play(
@@ -4156,7 +4156,7 @@ class ProbabalisticDetection(FourierTransformOfWaveFunction):
         self.play(
             FadeIn(VGroup(axes, wave)),
             question_group.next_to, v_lines, UP, {"buff" : 0},
-            *map(ShowCreation, v_lines)
+            *list(map(ShowCreation, v_lines))
         )
         self.wait(10)
 
@@ -4230,8 +4230,8 @@ class OneLevelDeeper(Scene):
         )
         gdw = randomness.gaussian_distribution_wrapper
         gdw.rotate(TAU/4)
-        gdw.scale_to_fit_height(1)
-        # gdw.scale_to_fit_width(4)
+        gdw.set_height(1)
+        # gdw.set_width(4)
         gdw.next_to(hup_words, UP, MED_LARGE_BUFF)
 
         self.add(hup_words, randomness)
@@ -4322,7 +4322,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
 
         dot_cloud = ProbabalisticDotCloud()
         dot_gdw = dot_cloud.gaussian_distribution_wrapper
-        dot_gdw.scale_to_fit_width(1)
+        dot_gdw.set_width(1)
         dot_gdw.rotate(TAU/8)
         dot_gdw.move_to(FRAME_X_RADIUS*RIGHT/2),
 
@@ -4330,7 +4330,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
             center_func = dot_gdw.get_center
         )
         vector_gdw = vector_cloud.gaussian_distribution_wrapper
-        vector_gdw.scale_to_fit_width(0.1)
+        vector_gdw.set_width(0.1)
         vector_gdw.rotate(TAU/8)
         vector_gdw.next_to(dot_gdw, UP+LEFT, LARGE_BUFF)
 
@@ -4339,15 +4339,15 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         freq = 1
         continual_anims = [
             ContinualMovement(time_tracker, direction = RIGHT, rate = 1),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 dot_gdw,
-                lambda d : d.scale_to_fit_width(
+                lambda d : d.set_width(
                     (np.cos(freq*time_tracker.get_value()) + 1.1)/2
                 )
             ),
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 vector_gdw,
-                lambda d : d.scale_to_fit_width(
+                lambda d : d.set_width(
                     (-np.cos(freq*time_tracker.get_value()) + 1.1)/2
                 )
             ),
@@ -4355,9 +4355,9 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         ]
         self.add(*continual_anims)
 
-        position, momentum, time, frequency = map(TextMobject, [
+        position, momentum, time, frequency = list(map(TextMobject, [
             "Position", "Momentum", "Time", "Frequency"
-        ])
+        ]))
         VGroup(position, time).set_color(BLUE)
         VGroup(momentum, frequency).set_color(YELLOW)
         groups = VGroup()
@@ -4448,7 +4448,7 @@ class Promotion(PiCreatureScene):
         url_rect.stretch_in_place(1.1, dim = 1)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(4.5)
+        rect.set_height(4.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
         rect.set_stroke(width = 0)
@@ -4458,7 +4458,7 @@ class Promotion(PiCreatureScene):
         morty = self.pi_creature
         morty.save_state()
         book = ImageMobject("AoPS_volume_2")
-        book.scale_to_fit_height(2)
+        book.set_height(2)
         book.next_to(mathy, UP+LEFT).shift(MED_LARGE_BUFF*LEFT)
         mathy.get_center = mathy.get_top
 
@@ -4586,7 +4586,7 @@ class PuzzleStatement(Scene):
             to determine who we send.  Can we make sure we don't send
              the weakest person?
         """, alignment = "")
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.next_to(group, DOWN, LARGE_BUFF)
         self.play(LaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
         self.wait(2)

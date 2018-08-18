@@ -170,7 +170,7 @@ class CompleteGraph(Graph):
             for x in range(self.num_vertices)
             for theta in [2 * np.pi * x / self.num_vertices]
         ]
-        self.edges = it.combinations(range(self.num_vertices), 2)
+        self.edges = it.combinations(list(range(self.num_vertices)), 2)
 
     def __str__(self):
         return Graph.__str__(self) + str(self.num_vertices)
@@ -193,7 +193,7 @@ class DiscreteGraphScene(Scene):
         Scene.__init__(self, *args, **kwargs)
 
     def construct(self):
-        self.points = map(np.array, self.graph.vertices)
+        self.points = list(map(np.array, self.graph.vertices))
         self.vertices = self.dots = [Dot(p) for p in self.points]
         self.edges = self.lines = [
             Line(self.points[i], self.points[j])
@@ -263,7 +263,7 @@ class DiscreteGraphScene(Scene):
         ])
 
     def annotate_edges(self, mobject, fade_in=True, **kwargs):
-        angles = map(np.arctan, map(Line.get_slope, self.edges))
+        angles = list(map(np.arctan, list(map(Line.get_slope, self.edges))))
         self.edge_annotations = [
             mobject.copy().rotate(angle).move_to(edge.get_center())
             for angle, edge in zip(angles, self.edges)
@@ -320,7 +320,7 @@ class DiscreteGraphScene(Scene):
             self.generate_spanning_tree()
         root = self.spanning_tree_root
         color = self.spanning_tree.get_color()
-        indices = range(len(self.points))
+        indices = list(range(len(self.points)))
         # Build dicts
         parent_of = dict([
             tuple(reversed(pair))
@@ -408,7 +408,7 @@ class DiscreteGraphScene(Scene):
                         self.points[pair[0]],
                         self.points[pair[1]]
                     ]) - new_point
-                    new_point += FRAME_X_RADIUS * vect / np.linalg.norm(vect)
+                    new_point += FRAME_X_RADIUS * vect / get_norm(vect)
                     dual_point_pair[i] = new_point
             self.dual_edges.append(
                 Line(*dual_point_pair).set_color()

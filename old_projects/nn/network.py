@@ -8,7 +8,7 @@ using backpropagation.  Note that I have focused on making the code
 simple, easily readable, and easily modifiable.  It is not optimized,
 and omits many desirable features.
 """
-from __future__ import print_function
+
 
 #### Libraries
 # Standard library
@@ -18,7 +18,7 @@ import random
 import numpy as np
 import os
 from PIL import Image
-import cPickle
+import pickle
 from nn.mnist_loader import load_data_wrapper
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
@@ -91,11 +91,11 @@ class Network(object):
         tracking progress, but slows things down substantially."""
         if test_data: n_test = len(test_data)
         n = len(training_data)
-        for j in xrange(epochs):
+        for j in range(epochs):
             random.shuffle(training_data)
             mini_batches = [
                 training_data[k:k+mini_batch_size]
-                for k in xrange(0, n, mini_batch_size)]
+                for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
@@ -147,7 +147,7 @@ class Network(object):
         # second-last layer, and so on.  It's a renumbering of the
         # scheme in the book, used here to take advantage of the fact
         # that Python can use negative indices in lists.
-        for l in xrange(2, self.num_layers):
+        for l in range(2, self.num_layers):
             z = zs[-l]
             sp = self.d_non_linearity(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
@@ -165,8 +165,8 @@ class Network(object):
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
-        """Return the vector of partial derivatives \partial C_x /
-        \partial a for the output activations."""
+        """Return the vector of partial derivatives \\partial C_x /
+        \\partial a for the output activations."""
         return (output_activations-y)
 
 #### Miscellaneous functions
@@ -195,8 +195,8 @@ def ReLU_prime(z):
     return (np.array(z) > 0).astype('int')
 
 def get_pretrained_network():
-    data_file = open(PRETRAINED_DATA_FILE)
-    weights, biases = cPickle.load(data_file)
+    data_file = open(PRETRAINED_DATA_FILE, 'rb')
+    weights, biases = pickle.load(data_file, encoding='latin1')
     sizes = [w.shape[1] for w in weights]
     sizes.append(weights[-1].shape[0])
     network = Network(sizes)
@@ -210,7 +210,7 @@ def save_pretrained_network(epochs = 30, mini_batch_size = 10, eta = 3.0):
     network.SGD(training_data, epochs, mini_batch_size, eta)
     weights_and_biases = (network.weights, network.biases)
     data_file = open(PRETRAINED_DATA_FILE, mode = 'w')
-    cPickle.dump(weights_and_biases, data_file)
+    pickle.dump(weights_and_biases, data_file)
     data_file.close()
 
 def test_network():
@@ -241,7 +241,7 @@ def maximizing_input(network, layer_index, layer_vect, n_steps = 100, seed_guess
     else:
         pre_sig_guess = np.random.randn(weights[0].shape[1])
     norms = []
-    for step in xrange(n_steps):
+    for step in range(n_steps):
         activations = network.get_activation_of_all_layers(
             sigmoid(pre_sig_guess), layer_index
         )
@@ -255,13 +255,13 @@ def maximizing_input(network, layer_index, layer_vect, n_steps = 100, seed_guess
             np.array(layer_vect).reshape((1, len(layer_vect))),
             jacobian
         ).flatten()
-        norm = np.linalg.norm(gradient)
+        norm = get_norm(gradient)
         if norm == 0:
             break
         norms.append(norm)
         old_pre_sig_guess = np.array(pre_sig_guess)
         pre_sig_guess += 0.1*gradient
-        print(np.linalg.norm(old_pre_sig_guess - pre_sig_guess))
+        print(get_norm(old_pre_sig_guess - pre_sig_guess))
     print("")
     return sigmoid(pre_sig_guess)
 
@@ -269,19 +269,19 @@ def save_organized_images(n_images_per_number = 10):
     training_data, validation_data, test_data = load_data_wrapper()
     image_map = dict([(k, []) for k in range(10)])
     for im, output_arr in training_data:
-        if min(map(len, image_map.values())) >= n_images_per_number:
+        if min(list(map(len, list(image_map.values())))) >= n_images_per_number:
             break
         value = int(np.argmax(output_arr))
         if len(image_map[value]) >= n_images_per_number:
             continue
         image_map[value].append(im)
-    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'w')
-    cPickle.dump(image_map, data_file)
+    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'wb')
+    pickle.dump(image_map, data_file)
     data_file.close()
 
 def get_organized_images():
     data_file = open(IMAGE_MAP_DATA_FILE, mode = 'r')
-    image_map = cPickle.load(data_file)
+    image_map = pickle.load(data_file, encoding='latin1')
     data_file.close()
     return image_map
 

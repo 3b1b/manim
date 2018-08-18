@@ -42,7 +42,7 @@ class IntroduceTriples(TeacherStudentsScene):
             hyp_line = Line(ORIGIN, a*RIGHT+b*UP)
             elbow = VMobject()
             elbow.set_points_as_corners([LEFT, LEFT+UP, UP])
-            elbow.scale_to_fit_width(0.2*triangle.get_width())
+            elbow.set_width(0.2*triangle.get_width())
             elbow.move_to(triangle, DOWN+RIGHT)
             triangle.add(elbow)
 
@@ -67,27 +67,24 @@ class IntroduceTriples(TeacherStudentsScene):
             )
             if c in [5, 13, 25]:
                 if c == 5:
-                    keys = range(0, 5, 2)
+                    keys = list(range(0, 5, 2))
                 elif c == 13:
-                    keys = range(0, 13, 3)
+                    keys = list(range(0, 13, 3))
                 elif c == 25:
-                    keys = range(0, 25, 4)
-                i_list = filter(
-                    lambda i : (i%c) in keys and (i//c) in keys,
-                    range(c**2)
-                )
+                    keys = list(range(0, 25, 4))
+                i_list = [i for i in range(c**2) if (i%c) in keys and (i//c) in keys]
             else:
-                i_list = range(a**2)
-            not_i_list = filter(
+                i_list = list(range(a**2))
+            not_i_list = list(filter(
                 lambda i : i not in i_list,
-                range(c**2),
-            )
+                list(range(c**2)),
+            ))
             c_square_parts = [
                 VGroup(*[c_square[i] for i in i_list]),
                 VGroup(*[c_square[i] for i in not_i_list]),
             ]
             full_group = VGroup(triangle, square_groups)
-            full_group.scale_to_fit_height(4)
+            full_group.set_height(4)
             full_group.center()
             full_group.to_edge(UP)
 
@@ -121,7 +118,7 @@ class IntroduceTriples(TeacherStudentsScene):
             self.play(Write(equation))
             self.play(c_square.set_color, C_COLOR)
             self.wait()
-            self.play(*map(FadeOut, [full_group, equation]))
+            self.play(*list(map(FadeOut, [full_group, equation])))
 
 class CompareToFermatsLastTheorem(TeacherStudentsScene):
     def construct(self):
@@ -181,7 +178,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
 class WritePythagoreanTriple(Scene):
     def construct(self):
         words = TextMobject("``Pythagorean triple''")
-        words.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        words.set_width(FRAME_WIDTH - LARGE_BUFF)
         words.to_corner(DOWN+LEFT)
         self.play(Write(words))
         self.wait(2)
@@ -200,12 +197,12 @@ class ShowManyTriples(Scene):
             triangle = Polygon(ORIGIN, a*RIGHT, a*RIGHT+b*UP)
             triangle.set_color(WHITE)
             max_width = max_height = 4
-            triangle.scale_to_fit_height(max_height)
+            triangle.set_height(max_height)
             if triangle.get_width() > max_width:
-                triangle.scale_to_fit_width(max_width)
+                triangle.set_width(max_width)
             triangle.move_to(2*RIGHT)
-            num_strings = map(str, (a, b, c))
-            labels = map(TexMobject, num_strings)
+            num_strings = list(map(str, (a, b, c)))
+            labels = list(map(TexMobject, num_strings))
             for label, color in zip(labels, SIDE_COLORS):
                 label.set_color(color)
             labels[0].next_to(triangle, DOWN)
@@ -299,7 +296,7 @@ class BabylonianTablets(Scene):
             triple = TexMobject(tex)
             triples.add(triple)
         triples.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        triples.scale_to_fit_height(FRAME_HEIGHT - LARGE_BUFF)
+        triples.set_height(FRAME_HEIGHT - LARGE_BUFF)
         triples.to_edge(RIGHT)
 
         self.add(title)
@@ -339,7 +336,7 @@ class PythagoreanProof(Scene):
             fill_color = WHITE,
             fill_opacity = 0.5
         )
-        triangle.scale_to_fit_height(3)
+        triangle.set_height(3)
         triangle.center()
         side_labels = self.get_triangle_side_labels(triangle)
         triangle_copy = triangle.copy()
@@ -350,7 +347,7 @@ class PythagoreanProof(Scene):
         self.add(triangle, triangle_copy)
         self.play(Write(side_labels))
         self.wait()
-        self.play(*map(DrawBorderThenFill, squares))
+        self.play(*list(map(DrawBorderThenFill, squares)))
         self.add_labels_to_squares(squares, side_labels)
         self.wait()
         self.play(
@@ -373,10 +370,10 @@ class PythagoreanProof(Scene):
         )
         self.wait()
 
-        big_squares = VGroup(*map(
+        big_squares = VGroup(*list(map(
             self.get_big_square,
             [triangle, triangle_copy]
-        ))
+        )))
         negative_space_words = TextMobject(
             "Same negative \\\\ space"
         )
@@ -389,12 +386,12 @@ class PythagoreanProof(Scene):
             FadeIn(big_squares), 
             Write(negative_space_words), 
             ShowCreation(double_arrow),
-            *map(FadeOut, squares)
+            *list(map(FadeOut, squares))
         )
         self.wait(2)
         self.play(*it.chain(
-            map(FadeIn, squares),
-            map(Animation, big_squares),
+            list(map(FadeIn, squares)),
+            list(map(Animation, big_squares)),
         ))
         self.wait(2)
 
@@ -436,7 +433,7 @@ class PythagoreanProof(Scene):
     #####
 
     def get_triangle_side_labels(self, triangle):
-        a, b, c = map(TexMobject, "abc")
+        a, b, c = list(map(TexMobject, "abc"))
         for mob, color in zip([a, b, c], SIDE_COLORS):
             mob.set_color(color)
         a.next_to(triangle, DOWN)
@@ -453,15 +450,15 @@ class PythagoreanProof(Scene):
             )
             for color in SIDE_COLORS
         ]
-        a_square.scale_to_fit_width(triangle.get_width())
+        a_square.set_width(triangle.get_width())
         a_square.move_to(triangle.get_bottom(), UP)
-        b_square.scale_to_fit_height(triangle.get_height())
+        b_square.set_height(triangle.get_height())
         b_square.move_to(triangle.get_right(), LEFT)
         hyp_line = Line(
             triangle.get_corner(UP+RIGHT),
             triangle.get_corner(DOWN+LEFT),
         )
-        c_square.scale_to_fit_width(hyp_line.get_length())
+        c_square.set_width(hyp_line.get_length())
         c_square.move_to(hyp_line.get_center(), UP)
         c_square.rotate(
             hyp_line.get_angle(), 
@@ -603,7 +600,7 @@ class ReframeOnLattice(PiCreatureScene):
                 Transform(group.line, new_group.line),
             )
             self.wait(2)
-        self.play(*map(FadeOut, [group, group.triangle, group.line]))
+        self.play(*list(map(FadeOut, [group, group.triangle, group.line])))
 
     def resize_plane(self):
         new_plane = ComplexPlane(
@@ -638,7 +635,7 @@ class ReframeOnLattice(PiCreatureScene):
 
         self.play(
             MoveToTarget(self.plane),
-            *map(MoveToTarget, self.plane.coordinate_labels),
+            *list(map(MoveToTarget, self.plane.coordinate_labels)),
             run_time = 2
         )
         self.remove(self.plane)
@@ -864,7 +861,7 @@ class ReframeOnLattice(PiCreatureScene):
             tex_mob.add_background_rectangle()
             point = arc_mob.point_from_proportion(0.5)
             tex_mob.move_to(point)
-            tex_mob.shift(tex_mob.get_width()*point/np.linalg.norm(point))
+            tex_mob.shift(tex_mob.get_width()*point/get_norm(point))
 
 
         self.play(self.pi_creature.change, "happy", arc)
@@ -922,7 +919,7 @@ class ReframeOnLattice(PiCreatureScene):
         dot.target.move_to(line.target.get_end())
         self.play(
             FadeOut(distance_label),
-            *map(MoveToTarget, [five, line, dot]),
+            *list(map(MoveToTarget, [five, line, dot])),
             run_time = 2
         )
         self.wait(2)
@@ -930,12 +927,12 @@ class ReframeOnLattice(PiCreatureScene):
     ####
 
     def get_all_plane_dots(self):
-        x_min, y_min = map(int, self.plane.point_to_coords(
+        x_min, y_min = list(map(int, self.plane.point_to_coords(
             FRAME_X_RADIUS*LEFT + FRAME_Y_RADIUS*DOWN
-        ))
-        x_max, y_max = map(int, self.plane.point_to_coords(
+        )))
+        x_max, y_max = list(map(int, self.plane.point_to_coords(
             FRAME_X_RADIUS*RIGHT + FRAME_Y_RADIUS*UP
-        ))
+        )))
         result = VGroup(*[
             Dot(
                 self.plane.coords_to_point(x, y),
@@ -964,8 +961,8 @@ class OneMoreExample(Scene):
         "unit_size" : 0.5,
         "plane_center" : 3*LEFT + 3*DOWN,
         "dot_color" : YELLOW,
-        "x_label_range" : range(-6, 25, 3),
-        "y_label_range" : range(3, 13, 3),
+        "x_label_range" : list(range(-6, 25, 3)),
+        "y_label_range" : list(range(3, 13, 3)),
     }
     def construct(self):
         self.add_plane()
@@ -1319,8 +1316,8 @@ class FiveTwoExample(GeneralExample):
     CONFIG = {
         "number" : complex(5, 2),
         "unit_size" : 0.25,
-        "x_label_range" : range(-10, 40, 5),
-        "y_label_range" : range(0, 30, 5),
+        "x_label_range" : list(range(-10, 40, 5)),
+        "y_label_range" : list(range(0, 30, 5)),
     }
 
 class WriteGeneralFormula(GeneralExample):
@@ -1419,7 +1416,7 @@ class WriteGeneralFormula(GeneralExample):
             line.set_color(self.square_color)
 
 
-        self.play(*map(FadeIn, [rect, top_line, second_line]))
+        self.play(*list(map(FadeIn, [rect, top_line, second_line])))
         self.wait()
         self.play(
             real_part.copy().next_to, real_part_line.copy(), 
@@ -1504,10 +1501,10 @@ class WriteGeneralFormula(GeneralExample):
         triple_mobs.arrange_submobjects(DOWN)
         triple_mobs.next_to(triple_title, DOWN, MED_LARGE_BUFF)
 
-        self.play(*map(FadeIn, [
+        self.play(*list(map(FadeIn, [
             rect, h_line, v_line, 
             uv_title, triple_title
-        ]))
+        ])))
         self.play(*[
             LaggedStart(
                 FadeIn, mob, 
@@ -1522,8 +1519,8 @@ class VisualizeZSquared(Scene):
         "initial_unit_size" : 0.4,
         "final_unit_size" : 0.1,
         "plane_center" : 3*LEFT + 2*DOWN,
-        "x_label_range" : range(-12, 24, 4),
-        "y_label_range" : range(-4, 24, 4),
+        "x_label_range" : list(range(-12, 24, 4)),
+        "y_label_range" : list(range(-4, 24, 4)),
         "dot_color" : YELLOW,
         "square_color" : MAROON_B,
         "big_dot_radius" : 0.075,
@@ -1638,13 +1635,13 @@ class VisualizeZSquared(Scene):
                     vect = RIGHT
                 else:
                     vect = point - self.plane_center
-                    vect /= np.linalg.norm(vect)
+                    vect /= get_norm(vect)
                     if abs(vect[1]) < 0.1:
                         vect[1] = -1
                 label.next_to(point, vect)
                 label.add_background_rectangle()
 
-            self.play(*map(FadeIn, [z_label, z_dot]))
+            self.play(*list(map(FadeIn, [z_label, z_dot])))
             self.wait()
             self.play(ShowCreation(arrow))
             self.play(ReplacementTransform(
@@ -1662,9 +1659,9 @@ class VisualizeZSquared(Scene):
             arrows.add(arrow)
             dots.add(z_dot, square_dot)
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             dots, arrows, self.z_to_z_squared
-        ]))
+        ])))
 
     def draw_dots(self):
         min_corner, max_corner = [
@@ -1673,8 +1670,8 @@ class VisualizeZSquared(Scene):
             )
             for u in (-1, 1)
         ]
-        x_min, y_min = map(int, min_corner[:2])
-        x_max, y_max = map(int, max_corner[:2])
+        x_min, y_min = list(map(int, min_corner[:2]))
+        x_max, y_max = list(map(int, max_corner[:2]))
 
         dots = VGroup(*[
             Dot(
@@ -1779,7 +1776,7 @@ class VisualizeZSquared(Scene):
 
         self.revert_to_original_skipping_status()
         self.play(
-            *map(MoveToTarget, movers),
+            *list(map(MoveToTarget, movers)),
             run_time = 3
         )
         self.wait(2)
@@ -1876,8 +1873,8 @@ class PointsWeMiss(VisualizeZSquared):
     CONFIG = {
         "final_unit_size" : 0.4,
         "plane_center" : 2*LEFT + 2*DOWN,
-        "dot_x_range" : range(-5, 6),
-        "dot_y_range" : range(-4, 4),
+        "dot_x_range" : list(range(-5, 6)),
+        "dot_y_range" : list(range(-4, 4)),
     }
     def construct(self):
         self.add_plane()
@@ -1909,17 +1906,17 @@ class PointsWeMiss(VisualizeZSquared):
             )
             for z in z_list
         ])
-        dots.sort_submobjects(np.linalg.norm)
+        dots.sort_submobjects(get_norm)
         self.add(dots)
         self.dots = dots
 
     def show_missing_point(self):
         z_list = [complex(6, 8), complex(9, 12), complex(3, 4)]
-        points = map(
+        points = list(map(
             self.background_plane.number_to_point,
             z_list 
-        )
-        dots = VGroup(*map(Dot, points))
+        ))
+        dots = VGroup(*list(map(Dot, points)))
         for dot in dots[:2]:
             dot.set_stroke(RED, 4)
             dot.set_fill(opacity = 0)
@@ -1964,11 +1961,11 @@ class PointsWeMiss(VisualizeZSquared):
 
     def show_second_missing_point(self):
         z_list = [complex(4, 3), complex(8, 6)]
-        points = map(
+        points = list(map(
             self.background_plane.number_to_point,
             z_list 
-        )
-        dots = VGroup(*map(Dot, points))
+        ))
+        dots = VGroup(*list(map(Dot, points)))
         dots[0].set_stroke(RED, 4)
         dots[0].set_fill(opacity = 0)
         labels = VGroup(*[
@@ -2067,10 +2064,10 @@ class DrawSingleRadialLine(PointsWeMiss):
 class DrawRadialLines(PointsWeMiss):
     CONFIG = {
         "final_unit_size" : 0.2,
-        "dot_x_range" : range(-4, 10),
-        "dot_y_range" : range(-4, 10),
-        "x_label_range" : range(-12, 40, 4),
-        "y_label_range" : range(-4, 32, 4),
+        "dot_x_range" : list(range(-4, 10)),
+        "dot_y_range" : list(range(-4, 10)),
+        "x_label_range" : list(range(-12, 40, 4)),
+        "y_label_range" : list(range(-4, 32, 4)),
         "big_dot_radius" : 0.05,
     }
     def construct(self):
@@ -2214,8 +2211,8 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
         self.from_rational_point_to_triple()
 
     def add_plane(self):
-        added_x_coords = range(-4, 6, 2)
-        added_y_coords = range(-2, 4, 2)
+        added_x_coords = list(range(-4, 6, 2))
+        added_y_coords = list(range(-2, 4, 2))
         self.x_label_range += added_x_coords
         self.y_label_range += added_y_coords
         DrawRadialLines.add_plane(self)
@@ -2427,7 +2424,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
         dots = self.dots
         dots.add(*self.new_dots)
         dots.sort_submobjects(
-            lambda p : np.linalg.norm(p - self.plane_center)
+            lambda p : get_norm(p - self.plane_center)
         )
         unit_length = self.unit_circle.get_width()/2.0
         for dot in dots:
@@ -2437,12 +2434,12 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             if np.round(vect[0], 3) == 0 and abs(vect[1]) > 2*unit_length:
                 dot.target.set_fill(opacity = 0)
                 continue
-            distance = np.linalg.norm(vect)
+            distance = get_norm(vect)
             dot.target.scale(
                 unit_length/distance,
                 about_point = self.plane_center
             )
-            dot.target.scale_to_fit_width(0.01)
+            dot.target.set_width(0.01)
 
         self.play(LaggedStart(
             MoveToTarget, dots,
@@ -2561,7 +2558,7 @@ class SupposeMissingPoint(PointsWeMiss):
         self.play(ShowCreation(circle))
         self.add(dot.copy().fade())
         self.add(line.copy().set_stroke(GREY, 1))
-        self.play(*map(MoveToTarget, [dot, line]))
+        self.play(*list(map(MoveToTarget, [dot, line])))
         self.wait()
         self.play(
             Write(rational_point_word),
@@ -2643,7 +2640,7 @@ class FinalProof(RationalPointsOnUnitCircle):
         rise_text = rise_brace.get_text("Rise = $\\frac{b}{c}$")
         rise_text.add_background_rectangle()
 
-        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.play(*list(map(ShowCreation, [h_line, v_line])))
         self.wait()
         self.play(
             GrowFromCenter(rise_brace),
@@ -2655,13 +2652,13 @@ class FinalProof(RationalPointsOnUnitCircle):
             FadeIn(run_text)
         )
         self.wait(3)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.example_dot, self.example_label,
             self.secant_line,
             h_line, v_line,
             run_brace, rise_brace,
             run_text, rise_text,
-        ]))
+        ])))
 
     def show_all_rational_slopes(self):
         lines = VGroup()
@@ -2707,7 +2704,7 @@ class FinalProof(RationalPointsOnUnitCircle):
                 Transform(label, new_label),
             )
             self.wait()
-        self.play(*map(FadeOut, [line, label]))
+        self.play(*list(map(FadeOut, [line, label])))
 
     def square_example_point(self):
         z = complex(2, 1)
@@ -2948,8 +2945,8 @@ class BitOfCircleGeometry(Scene):
             group.set_color(color)
             group.add(arc, label)
             if len(groups) == 0:
-                self.play(*map(ShowCreation, [dot1, dot2]))
-                self.play(*map(ShowCreation, [line1, line2]))
+                self.play(*list(map(ShowCreation, [dot1, dot2])))
+                self.play(*list(map(ShowCreation, [line1, line2])))
                 self.play(ShowCreation(arc))
                 self.play(FadeIn(label))
             groups.add(group)
@@ -3032,12 +3029,12 @@ class Thumbnail(DrawRadialLines):
             fill_opacity = 1,
         )
         rect.to_corner(UP+RIGHT, buff = 0.01)
-        triples = VGroup(*map(TexMobject, [
+        triples = VGroup(*list(map(TexMobject, [
             "3^2 + 4^2 = 5^2",
             "5^2 + 12^2 = 13^2",
             "8^2 + 15^2 = 17^2",
             "\\vdots"
-        ]))
+        ])))
         triples.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         triples.next_to(rect.get_top(), DOWN)
         self.add(rect, triples)

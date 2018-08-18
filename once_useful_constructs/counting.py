@@ -63,7 +63,7 @@ class CountingScene(Scene):
             )
             for point in self.get_template_configuration(place)
         ])
-        dots.scale_to_fit_height(self.dot_configuration_height)
+        dots.set_height(self.dot_configuration_height)
         return dots
 
     def add_configuration(self):

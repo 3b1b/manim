@@ -176,14 +176,14 @@ class Introduce1DFunctionCase(Scene):
             x_axis_config = {
                 "unit_size" : 3,
                 "tick_frequency" : 0.25,
-                "numbers_with_elongated_ticks" : range(-1, 4)
+                "numbers_with_elongated_ticks" : list(range(-1, 4))
             },
             y_min = -2, y_max = 4.5,
         )
         axes.to_corner(DOWN+LEFT)
-        axes.x_axis.add_numbers(*range(-1, 4))
+        axes.x_axis.add_numbers(*list(range(-1, 4)))
         axes.y_axis.label_direction = LEFT
-        axes.y_axis.add_numbers(-1, *range(1, 5))
+        axes.y_axis.add_numbers(-1, *list(range(1, 5)))
 
         inputs = TextMobject("Inputs")
         inputs.next_to(axes.x_axis, UP, aligned_edge = RIGHT)
@@ -279,7 +279,7 @@ class Introduce1DFunctionCase(Scene):
         self.wait()
         self.play(
             MoveToTarget(equation, replace_mobject_with_target_in_scene = True),
-            *map(FadeOut, [equation_arrow, v_line])
+            *list(map(FadeOut, [equation_arrow, v_line]))
         )
 
         self.set_variables_as_attrs(
@@ -488,7 +488,7 @@ class Introduce1DFunctionCase(Scene):
                 # show_ellipsis = True,
             )
             height = self.rect.get_height()
-            decimal.scale_to_fit_height(height)
+            decimal.set_height(height)
             next_to_kwargs = {
                 "buff" : height,
             }
@@ -722,7 +722,7 @@ class InputOutputScene(Scene):
 
     def func(self, coord_pair):
         out_coords = np.array(self.non_renormalized_func(coord_pair))
-        out_norm = np.linalg.norm(out_coords)
+        out_norm = get_norm(out_coords)
         if out_norm > 1:
             angle = angle_of_vector(out_coords)
             factor = 0.5-0.1*np.cos(4*angle)
@@ -768,18 +768,19 @@ class InputOutputScene(Scene):
 
     def get_planes(self):
         input_plane = self.input_plane = NumberPlane(
-            x_radius = self.plane_width/2.0,
-            y_radius = self.plane_height/2.0,
+            x_radius = self.plane_width / 2.0,
+            y_radius = self.plane_height / 2.0,
         )
-        output_plane = self.output_plane = input_plane.copy()
+        output_plane = self.output_plane = input_plane.deepcopy()
         planes = VGroup(input_plane, output_plane)
         vects = [LEFT, RIGHT]
         label_texts = ["Input", "Output"]
         label_colors = [GREEN, RED]
         for plane, vect, text, color in zip(planes, vects, label_texts, label_colors):
             plane.stretch_to_fit_width(self.plane_width)
-            plane.add_coordinates(x_vals = range(-2, 3), y_vals = range(-2, 3))
+            plane.add_coordinates(x_vals = list(range(-2, 3)), y_vals = list(range(-2, 3)))
             plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
+            plane.coordinate_labels.set_background_stroke(width=0)
             plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
             plane.move_to(vect*FRAME_X_RADIUS/2 + self.y_shift*DOWN)
             label = TextMobject(text)
@@ -906,11 +907,11 @@ class IntroduceInputOutputScene(InputOutputScene):
             FadeIn(output_label)
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             input_label_arrow, input_label,
             output_label_arrow, output_label,
             curved_arrow, function_label,
-        ]))
+        ])))
 
         #General movements and wiggles
         out_dot_continual_update = self.get_output_dot_continual_update(in_dot, out_dot)
@@ -963,7 +964,7 @@ class IntroduceInputOutputScene(InputOutputScene):
         return dots
 
     def get_output_dot_continual_update(self, input_dot, output_dot):
-        return ContinualUpdateFromFunc(
+        return ContinualUpdate(
             output_dot, 
             lambda od : od.move_to(self.point_function(input_dot.get_center()))
         )
@@ -991,7 +992,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             color = out_dot.get_color(),
         )
         out_vector.set_stroke(BLACK, 1)
-        continual_out_vector_update = ContinualUpdateFromFunc(
+        continual_out_vector_update = ContinualUpdate(
             out_vector, lambda ov : ov.put_start_and_end_on(
                 output_plane.coords_to_point(0, 0),
                 out_dot.get_center(),
@@ -1003,7 +1004,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             Transform(in_vector, out_vector).update(1)
             in_vector.scale(0.5)
             in_vector.shift(in_dot.get_center() - in_vector.get_start())
-        continual_in_vector_update = ContinualUpdateFromFunc(
+        continual_in_vector_update = ContinualUpdate(
             in_vector, update_in_vector
         )
         continual_updates = [
@@ -1042,9 +1043,9 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             newer_in_vectors.add(in_vector.copy())
         self.remove(*continual_updates)
         self.remove()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             out_dot, out_vector, in_vectors, in_dot, in_vector
-        ]))
+        ])))
         self.wait()
         target_length = 0.4
         for vector in newer_in_vectors:
@@ -1065,7 +1066,7 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
     def ask_about_2d_functions(self):
         in_plane = NumberPlane(x_radius = 2.5, y_radius = 2.5)
         in_plane.add_coordinates()
-        in_plane.scale_to_fit_height(3)
+        in_plane.set_height(3)
         out_plane = in_plane.copy()
 
         in_text = TextMobject("Input space")
@@ -1452,6 +1453,7 @@ class SearchForZerosInInputSpace(ColorMappedObjectsScene):
         "func" : example_plane_func,
     }
     def construct(self):
+        ColorMappedObjectsScene.construct(self)
         title = TextMobject("Input space")
         title.scale(2)
         title.to_edge(UP)
@@ -1530,7 +1532,7 @@ class OneDRegionBoundary(Scene):
         region.move_to(line)
 
         region_words = TextMobject("Input region")
-        region_words.scale_to_fit_width(0.8*region.get_width())
+        region_words.set_width(0.8*region.get_width())
         region_words.next_to(region, UP)
 
         x0_arrow, x1_arrow = arrows = VGroup(*[
@@ -1540,7 +1542,7 @@ class OneDRegionBoundary(Scene):
                 color = color,
                 buff = 0
             )
-            for x, fx, color in (x0, fx0, RED), (x1, fx1, GREEN)
+            for x, fx, color in [(x0, fx0, RED), (x1, fx1, GREEN)]
         ])
         minus = TexMobject("-")
         minus.match_color(x0_arrow)
@@ -1557,8 +1559,8 @@ class OneDRegionBoundary(Scene):
         )
         self.wait()
         self.play(*it.chain(
-            map(GrowArrow, arrows),
-            map(Write, signs)
+            list(map(GrowArrow, arrows)),
+            list(map(Write, signs))
         ))
         self.wait()
         self.play(
@@ -1737,7 +1739,7 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
         hypothesis[0].next_to(hypothesis[1:], UP)
         hypothesis[0].set_color(YELLOW)
         s = hypothesis[1].get_tex_string()
-        s = filter(lambda c : c not in string.whitespace, s)
+        s = [c for c in s if c not in string.whitespace]
         n = s.index("colors")
         hypothesis[1][n:n+len("colors")].set_color_by_gradient(
             # RED, GOLD_E, YELLOW, GREEN, BLUE, PINK,
@@ -2303,7 +2305,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
         #Setup dot, arrow and label
         dot = self.dot = Dot(radius = 0.1)
         dot.set_stroke(WHITE, self.dot_stroke_width)
-        update_dot_color = ContinualUpdateFromFunc(
+        update_dot_color = ContinualUpdate(
             dot, lambda d : d.set_fill(
                 get_output_color(),
                 self.dot_fill_opacity
@@ -2325,7 +2327,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
             arrow.scale(arrow_length/arrow.get_length())
             arrow.shift(dot.get_center() - arrow.get_start())
             return arrow
-        update_arrow = ContinualUpdateFromFunc(arrow, arrow_update_func)
+        update_arrow = ContinualUpdate(arrow, arrow_update_func)
 
         if self.include_walkers:
             self.add(update_arrow, update_dot_color, label_upadte)
@@ -2349,6 +2351,7 @@ class TransitionFromPathsToBoundariesArrowless(TransitionFromPathsToBoundaries):
 
 class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
     def construct(self):
+        TransitionFromPathsToBoundaries.construct(self)
         zero_point = 2*LEFT
 
         squares, joint_rect = self.get_squares_and_joint_rect()
@@ -2395,7 +2398,7 @@ class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
         )
         self.play(
             FadeIn(both_cannot_be_zero),
-            *map(GrowArrow, arrows)
+            *list(map(GrowArrow, arrows))
         )
         self.wait()
 
@@ -2438,7 +2441,7 @@ class MonomialTerm(PathContainingZero):
             if hasattr(plane, "numbers_to_show"):
                 _range = plane.numbers_to_show
             else:
-                _range = range(-2, 3)
+                _range = list(range(-2, 3))
             for x in _range:
                 if x == 0:
                     continue
@@ -2534,7 +2537,7 @@ class MonomialTerm(PathContainingZero):
 
     def rescale_output_plane(self):
         output_stuff = VGroup(self.output_plane, self.output_coloring)
-        self.play(*map(FadeOut, [self.loop, self.out_loop]))
+        self.play(*list(map(FadeOut, [self.loop, self.out_loop])))
         self.play(
             output_stuff.scale, 3.0/50, run_time = 2
         )
@@ -2564,7 +2567,7 @@ class PolynomialTerms(MonomialTerm):
     def relabel_planes(self):
         self.output_plane.x_radius = 50
         self.output_plane.y_radius = 50
-        self.output_plane.numbers_to_show = range(-45, 50, 15)
+        self.output_plane.numbers_to_show = list(range(-45, 50, 15))
         MonomialTerm.relabel_planes(self)
 
     def sweep_through_loop_interior(self):
@@ -2652,7 +2655,7 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         alt_path_parts = path_parts.copy()
         size = lambda m : m.get_height() + m.get_width()
         alt_path_parts.submobjects.sort(
-            lambda m1, m2 : -cmp(size(m1), size(m2))
+            key=lambda m1: -size(m1)
         )
 
         full_rect = SurroundingRectangle(
@@ -2758,7 +2761,7 @@ class ShowComplexFunction(Scene):
             FadeIn(rect),
             LaggedStart(FadeIn, title)
         )
-        self.play(*map(FadeIn, [x_dot, x_label]))
+        self.play(*list(map(FadeIn, [x_dot, x_label])))
         self.wait()
         self.play(
             ReplacementTransform(x_dot.copy(), fx_dot, path_arc = arrow.path_arc),
@@ -2768,7 +2771,7 @@ class ShowComplexFunction(Scene):
         self.wait(2)
         self.play(
             MoveToTarget(fx_label),
-            *map(FadeOut, [title, x_dot, x_label, arrow, fx_dot])
+            *list(map(FadeOut, [title, x_dot, x_label, arrow, fx_dot]))
         )
         self.play(FadeOut(plane.coordinate_labels))
         self.wait()
@@ -2793,27 +2796,27 @@ class WindingNumbersInInputOutputContext(PathContainingZero):
 
         out_loop = in_loop.copy()
         out_loop.match_background_image_file(self.output_coloring)
-        update_out_loop = ContinualUpdateFromFunc(
+        update_out_loop = ContinualUpdate(
             out_loop,
             lambda m : m.set_points(in_loop.points).apply_function(self.point_function)
         )
         # self.add(update_out_loop)
 
         in_dot = Dot(radius = 0.04)
-        update_in_dot = ContinualUpdateFromFunc(
+        update_in_dot = ContinualUpdate(
             in_dot, lambda d : d.move_to(in_loop.point_from_proportion(1))
         )
         self.add(update_in_dot)
 
         out_arrow = Arrow(LEFT, RIGHT)
-        update_out_arrow = ContinualUpdateFromFunc(
+        update_out_arrow = ContinualUpdate(
             out_arrow, 
             lambda a : a.put_start_and_end_on(
                 self.output_plane.coords_to_point(0, 0),
                 out_loop.point_from_proportion(1)
             )
         )
-        update_out_arrow_color = ContinualUpdateFromFunc(
+        update_out_arrow_color = ContinualUpdate(
             out_arrow,
             lambda a : a.set_color(rev_to_color(a.get_angle()/TAU))
         )
@@ -2899,7 +2902,7 @@ class AllOfTheVideos(Scene):
             rect.set_stroke(WHITE, 1)
             image.add(rect)
         images.arrange_submobjects_in_grid(n, n, buff = 0)
-        images.scale_to_fit_height(FRAME_HEIGHT)
+        images.set_height(FRAME_HEIGHT)
         random.shuffle(images.submobjects)
 
         self.play(LaggedStart(FadeIn, images, run_time = 4))
@@ -2943,12 +2946,12 @@ class MentionQAndA(Scene):
         title.to_edge(UP)
         self.add(title)
 
-        questions = VGroup(*map(TextMobject, [
+        questions = VGroup(*list(map(TextMobject, [
             "If you think of the current videos as short stories, \\\\ what is the novel that you want to write?",
             "How did you get into mathematics?",
             "What motivated you to join 3b1b?",
             "$\\vdots$",
-        ]))
+        ])))
         questions.arrange_submobjects(DOWN, buff = 0.75)
         questions.next_to(title, DOWN, LARGE_BUFF)
 
@@ -2963,7 +2966,7 @@ class TickingClock(Scene):
     }
     def construct(self):
         clock = Clock()
-        clock.scale_to_fit_height(FRAME_HEIGHT - 1)
+        clock.set_height(FRAME_HEIGHT - 1)
         clock.to_edge(LEFT)
         lines = [clock.hour_hand, clock.minute_hand]
         def update_line(line):
@@ -2971,7 +2974,7 @@ class TickingClock(Scene):
             line.set_color(rev_to_color(rev))
 
         for line in lines:
-            self.add(ContinualUpdateFromFunc(line, update_line))
+            self.add(ContinualUpdate(line, update_line))
 
         run_time = self.run_time
         self.play(ClockPassesTime(
@@ -3179,7 +3182,7 @@ class PatreonScroll(Scene):
         patreon_logo.shift(SMALL_BUFF*LEFT)
         self.add(patreon_logo)
 
-        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
         patrons.scale(0.75)
         random.shuffle(patrons.submobjects)
         patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
@@ -3196,7 +3199,7 @@ class PatreonScroll(Scene):
                     patrons.remove(patron)
                 alpha = smooth(np.clip(2.5 - y, 0, 1))
                 patron.set_fill(opacity = alpha)
-        opacity_update = ContinualUpdateFromFunc(patrons, patrons_opacity_update)
+        opacity_update = ContinualUpdate(patrons, patrons_opacity_update)
 
         self.add(scroll, opacity_update)
         self.wait(55)
@@ -3245,34 +3248,4 @@ class Thumbnail(SearchSpacePerimeterVsArea):
 
         self.clear()
         self.add(lines)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

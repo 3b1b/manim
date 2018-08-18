@@ -16,7 +16,7 @@ def get_time_line():
         tick_frequency = 10,
         leftmost_tick = 1720,
         number_at_center = 1870,
-        numbers_with_elongated_ticks = range(1700, 2100, 100)
+        numbers_with_elongated_ticks = list(range(1700, 2100, 100))
     )
     time_line.sort_points(lambda p : p[0])        
     time_line.set_color_by_gradient(
@@ -24,7 +24,7 @@ def get_time_line():
         PeanoCurve.CONFIG["end_color"]
     )
     time_line.add_numbers(
-        2020, *range(1800, 2050, 50)
+        2020, *list(range(1800, 2050, 50))
     )
     return time_line
 
@@ -82,7 +82,7 @@ class AskMathematicianFriend(Scene):
         self.play(
             ApplyMethod(mathy.shift, 3*(DOWN+LEFT)),
             ApplyPointwiseFunction(
-                lambda p : 15*p/np.linalg.norm(p),
+                lambda p : 15*p/get_norm(p),
                 bubble
             ),
             run_time = 3
@@ -147,7 +147,7 @@ class NotPixelatedSpace(Scene):
         line = Line(5*LEFT, 5*RIGHT)
         line.set_color_by_gradient(curve.start_color, curve.end_color)
         for mob in grid, space_mobject:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
         infinitely = TextMobject("Infinitely")
         detailed = TextMobject("detailed")
         extending = TextMobject("extending")
@@ -493,7 +493,7 @@ class FormalDefinitionOfContinuity(Scene):
         self.output.set_color(GREEN_A)
 
         self.interval = UnitInterval()
-        self.interval.scale_to_fit_width(FRAME_X_RADIUS-1)
+        self.interval.set_width(FRAME_X_RADIUS-1)
         self.interval.to_edge(LEFT)
 
         self.input_dot = Dot(color = self.input_color)
@@ -510,7 +510,7 @@ class FormalDefinitionOfContinuity(Scene):
             for num in (min_input, max_input)
         ]
         input_circle = Circle(
-            radius = np.linalg.norm(input_left-input_right)/2,
+            radius = get_norm(input_left-input_right)/2,
             color = WHITE
         )
         input_circle.shift((input_left+input_right)/2)
@@ -525,7 +525,7 @@ class FormalDefinitionOfContinuity(Scene):
             self.output.points[int(min_input*n):int(max_input*n)]
         )
         output_center = output_points.points[int(0.5*output_points.get_num_points())]
-        max_distance = np.linalg.norm(output_center-output_points.points[-1])
+        max_distance = get_norm(output_center-output_points.points[-1])
         output_circle = Circle(
             radius = max_distance, 
             color = WHITE
@@ -599,7 +599,7 @@ class FormalDefinitionOfContinuity(Scene):
             Homotopy(self.output_homotopy, self.output_dot, **kwargs)
         )
 
-        A, B = map(Mobject.get_center, [self.input_dot, self.output_dot])
+        A, B = list(map(Mobject.get_center, [self.input_dot, self.output_dot]))
         A_text = TextMobject("A")
         A_text.shift(A+2*(LEFT+UP))
         A_arrow = Arrow(

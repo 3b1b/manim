@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import *
 from mobject.geometry import Rectangle
@@ -47,4 +47,4 @@ class PictureInPictureFrame(Rectangle):
             height=self.aspect_ratio[1],
             **kwargs
         )
-        self.scale_to_fit_height(height)
+        self.set_height(height)

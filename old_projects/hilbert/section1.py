@@ -59,12 +59,12 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
             "|\\mathds{N}|"
         ]).scale(2).split()
         infinity = TexMobject("\\infty").scale(2)
-        local_mobjects = filter(
+        local_mobjects = list(filter(
             lambda m : isinstance(m, Mobject),
-            locals().values(),
-        )
+            list(locals().values()),
+        ))
         for mob in local_mobjects:    
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
 
         self.play(ShimmerIn(infinity))
         self.wait()
@@ -160,8 +160,8 @@ class ImageToSound(Scene):
         picture = ImageMobject("lion", invert = False)
         picture.scale(0.8)
         picture_copy = picture.copy()
-        picture.sort_points(np.linalg.norm)
-        string.mobject.sort_points(lambda p : -np.linalg.norm(p))
+        picture.sort_points(get_norm)
+        string.mobject.sort_points(lambda p : -get_norm(p))
 
         self.add(picture)
         self.wait()
@@ -174,7 +174,7 @@ class ImageToSound(Scene):
         self.play(string)
 
         for mob in picture_copy, string.mobject:
-            mob.sort_points(lambda p : np.linalg.norm(p)%1)
+            mob.sort_points(lambda p : get_norm(p)%1)
 
         self.play(Transform(
             string.mobject, picture_copy,
@@ -225,7 +225,7 @@ class SoundDataIsOneDimensional(Scene):
                 center = 2*DOWN + UP*k
             )
             for k, color in zip(
-                range(overtones),
+                list(range(overtones)),
                 Color(BLUE_E).range_to(WHITE, overtones)
             )
         ]
@@ -239,7 +239,7 @@ class SoundDataIsOneDimensional(Scene):
 
         freq_line = get_freq_line()
         freq_line.shift(floor)
-        freq_line.sort_points(np.linalg.norm)
+        freq_line.sort_points(get_norm)
         brace = Brace(freq_line, UP)
         words = TextMobject("Range of frequency values")
         words.next_to(brace, UP)
@@ -303,7 +303,7 @@ class GridOfPixels(Scene):
         )
         self.wait()
         for mob in grid, high_res:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
         self.play(DelayByOrder(Transform(high_res, grid)))
         self.wait()
 
@@ -346,7 +346,7 @@ class AssociatePixelWithFrequency(Scene):
         )
         pixel.set_color(WHITE)
         pixel_width = big_grid.width/big_grid.columns
-        pixel.scale_to_fit_width(pixel_width)
+        pixel.set_width(pixel_width)
         pixel.to_corner(UP+RIGHT, buff = 2)
         pixel.shift(5*pixel_width*(2*LEFT+DOWN))
 
@@ -394,7 +394,7 @@ class AssociatePixelWithFrequency(Scene):
 class ListenToAllPixels(Scene):
     def construct(self):
         grid = get_grid()
-        grid.sort_points(np.linalg.norm)        
+        grid.sort_points(get_norm)        
         freq_line = get_freq_line()
         freq_line.sort_points(lambda p : p[0])
         red, blue = Color(RED), Color(BLUE)
@@ -457,10 +457,10 @@ class LayAsideSpeculation(Scene):
     def construct(self):
         words = TextMobject("Would this actually work?")
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         mapping = Mobject(
             grid, freq_line, Arrow(grid, freq_line)
@@ -481,10 +481,10 @@ class LayAsideSpeculation(Scene):
 class RandomMapping(Scene):
     def construct(self):
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         # for mob in grid, freq_line:
         #     indices = np.arange(mob.get_num_points())
@@ -523,10 +523,10 @@ class LeverageExistingIntuitions(Scene):
 class ThinkInTermsOfReverseMapping(Scene):
     def construct(self):
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         arrow =  Arrow(grid, freq_line)
 
@@ -600,14 +600,14 @@ class WeaveLineThroughPixels(Scene):
                 side_length = unit, 
                 color = WHITE
             ).shift(x*right+y*up)
-            for x, y in it.product(range(2**order), range(2**order))
+            for x, y in it.product(list(range(2**order)), list(range(2**order)))
         ])
         squares.center()
         targets = Mobject()
         for square in squares.submobjects:
             center = square.get_center()
             distances = np.apply_along_axis(
-                lambda p : np.linalg.norm(p-center),
+                lambda p : get_norm(p-center),
                 1,
                 curve.points
             )
@@ -700,7 +700,7 @@ class TellMathematicianFriend(Scene):
         self.wait(2)
         self.play(
             ApplyPointwiseFunction(
-                lambda p : 15*p/np.linalg.norm(p),
+                lambda p : 15*p/get_norm(p),
                 bubble
             ),
             ApplyMethod(mathy.shift, 5*(DOWN+LEFT)),
@@ -813,7 +813,7 @@ class Order3PseudoHilbertCurve(Scene):
         self.wait()
         self.play(ShowCreation(grid8))
         self.wait()
-        self.play(*map(GrowFromCenter, mini_curves))
+        self.play(*list(map(GrowFromCenter, mini_curves)))
         self.wait()
         self.clear()
         self.add(words, grid8, *mini_curves)

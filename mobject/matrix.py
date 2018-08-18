@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import numpy as np
 
@@ -72,9 +72,7 @@ class Matrix(VMobject):
         or mobjects
         """
         VMobject.__init__(self, **kwargs)
-        matrix = np.array(matrix)
-        if matrix.ndim == 1:
-            matrix = matrix.reshape((matrix.size, 1))
+        matrix = np.array(matrix, ndmin=1)
         mob_matrix = self.matrix_to_mob_matrix(matrix)
         self.organize_mob_matrix(mob_matrix)
         self.elements = VGroup(*mob_matrix.flatten())
@@ -89,11 +87,9 @@ class Matrix(VMobject):
             self.add_background_rectangle()
 
     def matrix_to_mob_matrix(self, matrix):
-        return np.vectorize(
-            lambda e: self.element_to_mobject(
-                e, **self.element_to_mobject_config
-            )
-        )(matrix)
+        return np.vectorize(self.element_to_mobject)(
+            matrix
+        )
 
     def organize_mob_matrix(self, matrix):
         for i, row in enumerate(matrix):

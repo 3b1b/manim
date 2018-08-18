@@ -66,7 +66,7 @@ class TimeLine(Scene):
         speical_dates = [2016] + [
             obj["date"] for obj in dated_events
         ]
-        centuries = range(1600, 2100, 100)
+        centuries = list(range(1600, 2100, 100))
         timeline = NumberLine(
             numerical_radius = 300,
             number_at_center = 1800,
@@ -91,7 +91,7 @@ class TimeLine(Scene):
                 run_time = next(run_times)
             ))
             picture = ImageMobject(event["picture"], invert = False)
-            picture.scale_to_fit_width(2)
+            picture.set_width(2)
             picture.to_corner(UP+RIGHT)
             event_mob = TextMobject(event["text"])
             event_mob.shift(2*LEFT+2*UP)
@@ -106,7 +106,7 @@ class TimeLine(Scene):
             )
             self.play(FadeIn(picture))
             self.wait(3)
-            self.play(*map(FadeOut, [event_mob, date_mob, line, picture]))
+            self.play(*list(map(FadeOut, [event_mob, date_mob, line, picture])))
 
 
 class StayedUpAllNight(Scene):
@@ -131,7 +131,7 @@ class StayedUpAllNight(Scene):
         )
         solution.stroke_width = 3
         solution.set_color(GREY)
-        solution.scale_to_fit_width(5)
+        solution.set_width(5)
         solution.to_corner(UP+RIGHT)
         newton = ImageMobject("Old_Newton", invert = False)
         newton.scale(0.8)
@@ -139,13 +139,13 @@ class StayedUpAllNight(Scene):
         rect = Rectangle(height = 6, width = 4.5, color = WHITE)
         rect.to_corner(UP+RIGHT)
         rect.shift(DOWN)
-        phil_trans.scale_to_fit_width(0.8*rect.get_width())
+        phil_trans.set_width(0.8*rect.get_width())
         phil_trans.next_to(Point(rect.get_top()), DOWN)
         new_solution = solution.copy()
-        new_solution.scale_to_fit_width(phil_trans.get_width())
+        new_solution.set_width(phil_trans.get_width())
         new_solution.next_to(phil_trans, DOWN, buff = 1)
         not_newton = TextMobject("-Totally not by Newton")
-        not_newton.scale_to_fit_width(2.5)
+        not_newton.set_width(2.5)
         not_newton.next_to(new_solution, DOWN, aligned_edge = RIGHT)
         phil_trans.add(rect)
 
@@ -197,7 +197,7 @@ class StayedUpAllNight(Scene):
         self.play(ShimmerIn(not_newton))
         phil_trans.add(solution, not_newton)
         self.wait()
-        self.play(*map(ShimmerIn, newton_complaint.split()))
+        self.play(*list(map(ShimmerIn, newton_complaint.split())))
         self.wait()
         self.play(
             ShimmerIn(dunned_def),
@@ -337,16 +337,16 @@ class VideoLayout(Scene):
             ),
             UP
         )
-        left_brace.words = map(TextMobject, [
+        left_brace.words = list(map(TextMobject, [
             "Problem statement", 
             "History",
             "Johann Bernoulli's cleverness"
-        ])
+        ]))
         curr = left_brace
-        right_brace.words = map(TextMobject, [
+        right_brace.words = list(map(TextMobject, [
             "Challenge",
             "Mark Levi's cleverness",            
-        ])
+        ]))
         for brace in left_brace, right_brace:
             curr = brace
             direction = DOWN if brace is left_brace else UP
@@ -392,7 +392,7 @@ class ShortestPathProblem(Scene):
 
         self.play(
             ShimmerIn(words),
-            *map(GrowFromCenter, dots)
+            *list(map(GrowFromCenter, dots))
         )
         self.play(ShowCreation(path))
         self.play(Transform(
@@ -471,7 +471,7 @@ class YetAnotherMarkLevi(Scene):
         words = TextMobject("Yet another bit of Mark Levi cleverness")
         words.to_edge(UP)
         levi = ImageMobject("Mark_Levi", invert = False)
-        levi.scale_to_fit_width(6)
+        levi.set_width(6)
         levi.show()
 
         self.add(levi)

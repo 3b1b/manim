@@ -177,7 +177,7 @@ class Spotlight(VMobject):
             [phi, theta, r] = self.camera_mob.get_center()
             v = np.array([np.sin(phi) * np.cos(theta),
                           np.sin(phi) * np.sin(theta), np.cos(phi)])
-            return v  # /np.linalg.norm(v)
+            return v  # /get_norm(v)
 
     def project(self, point):
         v = self.projection_direction()
@@ -242,10 +242,10 @@ class Spotlight(VMobject):
     def viewing_angles(self, screen):
 
         screen_points = screen.get_anchors()
-        projected_screen_points = map(self.project, screen_points)
+        projected_screen_points = list(map(self.project, screen_points))
 
-        viewing_angles = np.array(map(self.viewing_angle_of_point,
-                                      projected_screen_points))
+        viewing_angles = np.array(list(map(self.viewing_angle_of_point,
+                                      projected_screen_points)))
 
         lower_angle = upper_angle = 0
         if len(viewing_angles) != 0:
@@ -260,7 +260,7 @@ class Spotlight(VMobject):
 
         lower_angle, upper_angle = self.viewing_angles(screen)
         projected_RIGHT = self.project(
-            RIGHT) / np.linalg.norm(self.project(RIGHT))
+            RIGHT) / get_norm(self.project(RIGHT))
         lower_ray = rotate_vector(
             projected_RIGHT, lower_angle, axis=self.projection_direction())
         upper_ray = rotate_vector(
@@ -582,10 +582,10 @@ class LightSource(VMobject):
             return
 
         ray1 = anchors[source_index - 1] - projected_source
-        ray1 = ray1 / np.linalg.norm(ray1) * 100
+        ray1 = ray1 / get_norm(ray1) * 100
 
         ray2 = anchors[source_index] - projected_source
-        ray2 = ray2 / np.linalg.norm(ray2) * 100
+        ray2 = ray2 / get_norm(ray2) * 100
         outpoint1 = anchors[source_index - 1] + ray1
         outpoint2 = anchors[source_index] + ray2
 

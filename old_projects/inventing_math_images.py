@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
+
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -30,7 +30,7 @@ class SimpleText(Scene):
     ]
     @staticmethod
     def args_to_string(text):
-        return initials(filter(lambda c : c in string.letters + " ", text))
+        return initials([c for c in text if c in string.letters + " "])
 
     def construct(self, text):
         self.add(TextMobject(text))

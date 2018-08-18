@@ -9,9 +9,9 @@ from old_projects.efvgt import ConfettiSpiril
 
 class HappyHolidays(TeacherStudentsScene):
     def construct(self):
-        hats = VGroup(*map(
+        hats = VGroup(*list(map(
             self.get_hat, self.pi_creatures
-        ))
+        )))
         self.add(self.get_snowflakes())
         self.change_student_modes(
             *["hooray"]*3,
@@ -83,7 +83,7 @@ class UtilitiesPuzzleScene(Scene):
         houses = VGroup()
         for x in range(3):
             house = SVGMobject(file_name = "house")
-            house.scale_to_fit_height(self.object_height)
+            house.set_height(self.object_height)
             house.set_fill(LIGHT_GREY)
             house.move_to(x*self.h_distance*RIGHT)
             houses.add(house)
@@ -125,7 +125,7 @@ class UtilitiesPuzzleScene(Scene):
             utility.set_fill(DARK_GREY)
         utility.move_to(circle)
         circle.add(utility)
-        circle.scale_to_fit_height(self.object_height)
+        circle.set_height(self.object_height)
         return circle
 
     def get_line(
@@ -267,7 +267,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
 
         cube = Cube()
         cube.set_stroke(WHITE, 2)
-        cube.scale_to_fit_height(0.75)
+        cube.set_height(0.75)
         cube.pose_at_angle()
         cube.next_to(eulers, UP)
 
@@ -362,7 +362,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
         self.play(
             LaggedStart(DrawBorderThenFill, houses),
             LaggedStart(GrowFromCenter, utilities),
-            try_it.scale_to_fit_width, house.get_width(),
+            try_it.set_width, house.get_width(),
             try_it.fade, 1,
             try_it.move_to, house,
             self.pi_creature.change, "happy",
@@ -642,7 +642,7 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
         words.to_edge(UP)
         eulers = words.get_part_by_tex("V-E+F")
         eulers.set_color(GREEN)
-        non_eulers = VGroup(*filter(lambda m : m is not eulers, words))
+        non_eulers = VGroup(*[m for m in words if m is not eulers])
 
         self.add(words)
         self.wait()
@@ -676,10 +676,10 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
         self.wait()
 
         ### Out of thin air
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             non_eulers, pi1, pi2, pi1.bubble,
             know_eulers, dont
-        ]))
+        ])))
         self.play(eulers.next_to, ORIGIN, LEFT, LARGE_BUFF)
         arrow = Arrow(eulers, objects, color = WHITE)
         self.play(
@@ -766,7 +766,7 @@ class IntroduceRegions(UtilitiesPuzzleScene):
             FadeOut(back_region),
             FadeOut(front_regions[0]),
             FadeOut(paint_bucket),
-            *map(Animation, front_regions[1:])
+            *list(map(Animation, front_regions[1:]))
         )
 
         #Line tries to escape
@@ -1055,9 +1055,9 @@ class LightUpNodes(IntroduceRegions):
             title.add(underline)
             self.add(title)
         self.count_titles = titles
-        self.v_count, self.e_count, self.f_count = self.counts = map(
+        self.v_count, self.e_count, self.f_count = self.counts = list(map(
             Integer, [1, 0, 1]
-        )
+        ))
         for count, title in zip(self.counts, titles):
             count.next_to(title, DOWN)
             self.add(count)
@@ -1097,9 +1097,9 @@ class LightUpNodes(IntroduceRegions):
             LaggedStart(GrowArrow, dim_arrows)
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             lit_word, lit_arrow, dim_word, dim_arrows
-        ]))
+        ])))
 
     def show_rule_for_lighting(self):
         lines = self.lines
@@ -1209,7 +1209,7 @@ class LightUpNodes(IntroduceRegions):
             stroke_width = 0,
             stroke_color = BLACK,
         )
-        line.scale_to_fit_width(0.5*vertex.get_width())
+        line.set_width(0.5*vertex.get_width())
         line.next_to(ORIGIN, buff = 0.75*vertex.get_width())
         lines = VGroup(*[
             line.copy().rotate(angle)
@@ -1318,7 +1318,7 @@ class ConcludeFiveRegions(LightUpNodes):
                 remover = True,
             ),
             Indicate(self.f_count),
-            *map(Animation, self.mobjects)
+            *list(map(Animation, self.mobjects))
         )
         self.wait()
 
@@ -1329,7 +1329,7 @@ class ConcludeFiveRegions(LightUpNodes):
             lines.generate_target()
             for line in lines.target:
                 line.rotate(-line.get_angle())
-                line.scale_to_fit_width(1.5)
+                line.set_width(1.5)
             lines.target.arrange_submobjects(DOWN)
             line_sets.target.add(lines.target)
         line_sets.target.arrange_submobjects(DOWN)
@@ -1367,10 +1367,7 @@ class ConcludeFiveRegions(LightUpNodes):
         f_rect = SurroundingRectangle(
             VGroup(self.count_titles[-1], self.f_count)
         )
-        on_screen_side_lines = VGroup(*filter(
-            lambda m : m in self.mobjects,
-            self.side_lines
-        ))
+        on_screen_side_lines = VGroup(*[m for m in self.side_lines if m in self.mobjects])
         side_lines_rect = SurroundingRectangle(on_screen_side_lines)
         side_lines_rect.set_color(WHITE)
 
@@ -1686,7 +1683,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             for e1 in r1.edges:
                 for e2 in r2.edges:
                     diff = e1.get_center()-e2.get_center()
-                    if np.linalg.norm(diff) < 0.01:
+                    if get_norm(diff) < 0.01:
                         edge_region_pair_groups.append(VGroup(
                             e1, r1, r2
                         ))
@@ -1701,7 +1698,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             self.play(FadeIn(r1), run_time = 0.5)
             self.play(FadeIn(r2), Animation(r1), run_time = 0.5)
             self.wait(0.5)
-            self.play(*map(FadeOut, [r2, r1, edge]), run_time = 0.5)
+            self.play(*list(map(FadeOut, [r2, r1, edge])), run_time = 0.5)
             self.remove_foreground_mobjects(edge)
 
     def ten_total_edges(self):
@@ -1762,7 +1759,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         ])
         points *= 0.75
         points += DOWN
-        vertices = VGroup(*map(Dot, points))
+        vertices = VGroup(*list(map(Dot, points)))
         vertices.set_color(YELLOW)
         edges = VGroup(*[
             VGroup(*[
@@ -1817,9 +1814,9 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         groups = [count_titles, counts]
 
         for group in groups:
-            group.symbols = VGroup(*map(TexMobject, ["-", "+", "="]))
+            group.symbols = VGroup(*list(map(TexMobject, ["-", "+", "="])))
             group.generate_target()
-            line = VGroup(*it.chain(*zip(group.target, group.symbols)))
+            line = VGroup(*it.chain(*list(zip(group.target, group.symbols))))
             line.arrange_submobjects(RIGHT)
             line.to_edge(UP, buff = MED_SMALL_BUFF)
         VGroup(counts.target, counts.symbols).shift(0.75*DOWN)

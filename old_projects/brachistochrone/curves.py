@@ -139,7 +139,7 @@ class PathSlidingScene(Scene):
                 self.slider, curr_index, points
             )
             if roll:
-                distance = np.linalg.norm(
+                distance = get_norm(
                     points[curr_index] - points[last_index]
                 )
                 self.roll(mobject, distance)
@@ -163,7 +163,7 @@ class PathSlidingScene(Scene):
     def get_time_slices(self, points, ceiling = None):
         dt_list = np.zeros(len(points))
         ds_list = np.apply_along_axis(
-            np.linalg.norm,
+            get_norm,
             1,
             points[1:]-points[:-1]
         )
@@ -192,7 +192,7 @@ class PathSlidingScene(Scene):
     def write_time(self, time):
         if hasattr(self, "time_mob"):
             self.remove(self.time_mob)
-        digits = map(TexMobject, "%.2f"%time)
+        digits = list(map(TexMobject, "%.2f"%time))
         digits[0].next_to(self.t_equals, buff = 0.1)
         for left, right in zip(digits, digits[1:]):
             right.next_to(left, buff = 0.1, aligned_edge = DOWN)
@@ -401,7 +401,7 @@ class MinimalPotentialEnergy(Scene):
 
         side_words_start = TextMobject("Parameter describing")
         top_words, last_side_words = [
-            map(TextMobject, pair)
+            list(map(TextMobject, pair))
             for pair in [
                 ("Light's travel time", "Potential energy"),
                 ("path", "mechanical state")
@@ -471,7 +471,7 @@ class WhatGovernsSpeed(PathSlidingScene):
             path = Mobject().add_points(points)
             vect = points[-1] - points[-2]
             magnitude = np.sqrt(ceiling - points[-1, 1])
-            vect = magnitude*vect/np.linalg.norm(vect)
+            vect = magnitude*vect/get_norm(vect)
             slider = self.slide(randy, path, ceiling = ceiling)
             vector = Vector(slider.get_center(), vect)
             self.add(slider, vector)
@@ -483,7 +483,7 @@ class WhatGovernsSpeed(PathSlidingScene):
         slider = sliders.pop(1)
         vector = vectors.pop(1)
         faders = sliders+vectors+[words]
-        self.play(*map(FadeOut, faders))
+        self.play(*list(map(FadeOut, faders)))
         self.remove(*faders)
         self.show_geometry(slider, vector)
 
@@ -551,7 +551,7 @@ class WhatGovernsSpeed(PathSlidingScene):
                 Point(loss_in_potential.get_left()),
                 loss_in_potential
             ),
-            *map(GrowFromCenter, potential.split())
+            *list(map(GrowFromCenter, potential.split()))
         )
         self.wait(2)
         self.play(
@@ -584,7 +584,7 @@ class ThetaTInsteadOfXY(Scene):
         index = cycloid.get_num_points()/3
         point = cycloid.points[index]
         vect = cycloid.points[index+1]-point
-        vect /= np.linalg.norm(vect)
+        vect /= get_norm(vect)
         vect *= 3
         vect_mob = Vector(point, vect)
         dot = Dot(point)

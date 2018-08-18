@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import numpy as np
 
@@ -220,10 +220,10 @@ class Vibrate(Animation):
 
     def update_mobject(self, alpha):
         time = alpha * self.run_time
-        families = map(
+        families = list(map(
             Mobject.submobject_family,
             [self.mobject, self.starting_mobject]
-        )
+        ))
         for mob, start in zip(*families):
             mob.points = np.apply_along_axis(
                 lambda (x, y, z): (x, y + self.wave_function(x, time), z),

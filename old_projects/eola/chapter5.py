@@ -17,17 +17,14 @@ class Blob(Circle):
         self.apply_complex_function(
             lambda z : z*(1+self.random_nudge_size*(random.random()-0.5))
         )
-        self.scale_to_fit_height(self.height).center()
+        self.set_height(self.height).center()
 
     def probably_contains(self, point):
         border_points = np.array(self.get_anchors_and_handles()[0])
-        distances = map(lambda p : np.linalg.norm(p-point), border_points)
+        distances = [get_norm(p-point) for p in border_points]
         min3 = border_points[np.argsort(distances)[:3]]
         center_direction = self.get_center() - point
-        in_center_direction = map(
-            lambda p : np.dot(p-point, center_direction) > 0, 
-            min3
-        )
+        in_center_direction = [np.dot(p-point, center_direction) > 0 for p in min3]
         return sum(in_center_direction) <= 2
             
 class RightHand(VMobject):
@@ -38,7 +35,7 @@ class RightHand(VMobject):
         self.outline.set_stroke(color = WHITE, width = 5)
         self.inlines.set_stroke(color = DARK_GREY, width = 3)
         VMobject.__init__(self, self.outline, self.inlines)
-        self.center().scale_to_fit_height(3)
+        self.center().set_height(3)
 
 class OpeningQuote(Scene):
     def construct(self):
@@ -49,7 +46,7 @@ class OpeningQuote(Scene):
             "numbers.",
             "''",
         ], arg_separator = "")
-        # words.scale_to_fit_width(FRAME_WIDTH - 2)
+        # words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].set_color(BLUE)
         words.split()[3].set_color(GREEN)
@@ -184,7 +181,7 @@ class DiagonalExample(LinearTransformationScene):
 
             width_target, height_target = width.copy(), height.copy()
             det = np.linalg.det(self.transposed_matrix)
-            times, eq_det = map(TexMobject, ["\\times", "=%d"%det])
+            times, eq_det = list(map(TexMobject, ["\\times", "=%d"%det]))
             words = TextMobject("New area $=$")
             equation = VMobject(
                 words, width_target, times, height_target, eq_det
@@ -198,7 +195,7 @@ class DiagonalExample(LinearTransformationScene):
                 ShowCreation(background_rect),                
                 Transform(width.copy(), width_target),
                 Transform(height.copy(), height_target),
-                *map(Write, [words, times, eq_det])
+                *list(map(Write, [words, times, eq_det]))
             )
             self.wait()
 
@@ -356,7 +353,7 @@ class NameDeterminant(LinearTransformationScene):
         self.apply_transposed_matrix(self.t_matrix)
         self.wait()
         det_mob_copy = area_label.split()[0].copy()
-        new_det_mob = det_mob_copy.copy().scale_to_fit_height(
+        new_det_mob = det_mob_copy.copy().set_height(
             det_text.split()[0].get_height()
         )
         new_det_mob.next_to(det_text, RIGHT, buff = 0.2)
@@ -412,7 +409,7 @@ class NextFewVideos(Scene):
     def construct(self):
         icon = SVGMobject("video_icon")
         icon.center()
-        icon.scale_to_fit_width(FRAME_WIDTH/12.)
+        icon.set_width(FRAME_WIDTH/12.)
         icon.set_stroke(color = WHITE, width = 0)
         icon.set_fill(WHITE, opacity = 1)
         icons = VMobject(*[icon.copy() for x in range(10)])
@@ -918,7 +915,7 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
             ]
         )
         self.wait()
-        self.play(*map(FadeOut, [i_brace, side_brace, width, height]))
+        self.play(*list(map(FadeOut, [i_brace, side_brace, width, height])))
         matrix1 = np.dot(
             [[a, b], [c, d]],
             np.linalg.inv([[a, b], [0, d]])
@@ -1018,7 +1015,7 @@ class FullFormulaExplanation(LinearTransformationScene):
 
         formula.next_to(det_text, RIGHT)
         everyone = VMobject(det_text, matrix, formula)
-        everyone.scale_to_fit_width(FRAME_WIDTH - 1)
+        everyone.set_width(FRAME_WIDTH - 1)
         everyone.next_to(DOWN, DOWN)
         background_rect = BackgroundRectangle(everyone)
         self.play(
@@ -1111,10 +1108,10 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Inverse matrices, column space and null space
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

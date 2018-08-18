@@ -6,14 +6,17 @@ from constants import WHITE
 from constants import PALETTE
 
 from utils.bezier import interpolate
+from utils.space_ops import normalize
 
 
 def color_to_rgb(color):
-    return np.array(Color(color).get_rgb())
+    if not isinstance(color, Color):
+        color = Color(color)
+    return np.array(color.get_rgb())
 
 
 def color_to_rgba(color, alpha=1):
-    return np.append(color_to_rgb(color), [alpha])
+    return np.array([*color_to_rgb(color), alpha])
 
 
 def rgb_to_color(rgb):
@@ -47,7 +50,7 @@ def color_to_int_rgba(color, opacity=1.0):
 def color_gradient(reference_colors, length_of_output):
     if length_of_output == 0:
         return reference_colors[0]
-    rgbs = map(color_to_rgb, reference_colors)
+    rgbs = list(map(color_to_rgb, reference_colors))
     alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
     floors = alphas.astype('int')
     alphas_mod1 = alphas % 1
@@ -66,7 +69,7 @@ def interpolate_color(color1, color2, alpha):
 
 
 def average_color(*colors):
-    rgbs = np.array(map(color_to_rgb, colors))
+    rgbs = np.array(list(map(color_to_rgb, colors)))
     mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
     return rgb_to_color(mean_rgb)
 
@@ -82,3 +85,11 @@ def random_bright_color():
 
 def random_color():
     return random.choice(PALETTE)
+
+
+def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
+    to_sun = normalize(light_source - point)
+    factor = 0.5 * np.dot(unit_normal_vect, to_sun)**3
+    if factor < 0:
+        factor *= 0.5
+    return np.clip(rgb + factor, 0, 1)

@@ -10,7 +10,7 @@ class OpeningQuote(Scene):
             "can be shortened by 50\\% if one",
             "throws the matrices out."
         ])
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].set_color(GREEN)
         words.split()[3].set_color(BLUE)
@@ -167,9 +167,9 @@ class FollowLinearCombination(LinearTransformationScene):
             for mob in (scaled_j, scaled_j_label)
         ])
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             scaled_i, scaled_j, scaled_i_label, scaled_j_label,
-        ]))
+        ])))
 
     def record_basis_coordinates(self, vect_array, vect):
         i_label = vector_coordinate_label(self.i_hat)
@@ -341,7 +341,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
         everything = list_difference_update(
             everything, matrix.submobject_family()
         )
-        self.play(*map(FadeOut, everything) + [Animation(matrix)])
+        self.play(*list(map(FadeOut, everything)) + [Animation(matrix)])
         new_matrix = matrix.copy()
         new_matrix.center().to_edge(UP)
         self.play(Transform(matrix, new_matrix))
@@ -350,7 +350,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
 
         self.setup()
         everything = self.get_mobjects()
-        self.play(*map(FadeIn, everything) + [Animation(matrix)])
+        self.play(*list(map(FadeIn, everything)) + [Animation(matrix)])
         func = self.get_matrix_transformation([[1, 1], [-1, 0]])
         bases = VMobject(self.i_hat, self.j_hat)
         new_bases = VMobject(*[
@@ -382,9 +382,9 @@ class ExplainWhyItsMatrixMultiplication(Scene):
         rot_matrix.set_color(TEAL)
         shear_matrix = Matrix([[1, 1], [0, 1]])
         shear_matrix.set_color(PINK)
-        l_paren, r_paren = map(TexMobject, ["\\Big(", "\\Big)"])
+        l_paren, r_paren = list(map(TexMobject, ["\\Big(", "\\Big)"]))
         for p in l_paren, r_paren:
-            p.scale_to_fit_height(1.4*vect.get_height())
+            p.set_height(1.4*vect.get_height())
         long_way = VMobject(
             shear_matrix, l_paren, rot_matrix, vect, r_paren
         )
@@ -420,9 +420,9 @@ class ExplainWhyItsMatrixMultiplication(Scene):
             [equals, comp_matrix, vect_copy],
         ]
         for group in groups:
-            self.play(*map(Write, group))
+            self.play(*list(map(Write, group)))
             self.wait()
-        self.play(*map(FadeOut, [l_paren, r_paren, vect, vect_copy]))
+        self.play(*list(map(FadeOut, [l_paren, r_paren, vect, vect_copy])))
         comp_matrix.add(equals)
         matrices = VMobject(shear_matrix, rot_matrix, comp_matrix)
         self.play(ApplyMethod(
@@ -486,12 +486,12 @@ class MoreComplicatedExampleVisually(LinearTransformationScene):
         self.play(Write(comp_matrix))
         self.add_foreground_mobject(comp_matrix)
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.background_plane,
             self.plane,
             self.i_hat,
             self.j_hat,
-        ]) + [
+        ])) + [
             Animation(m) for m in self.foreground_mobjects
         ])
         self.remove(self.i_hat, self.j_hat)
@@ -615,7 +615,7 @@ class MoreComplicatedExampleNumerically(MoreComplicatedExampleVisually):
                 Transform(question, second),
             )
             self.wait()
-            self.play(*map(FadeOut, [question, first_arrow]))
+            self.play(*list(map(FadeOut, [question, first_arrow])))
             self.play(Write(intermediate))
             self.wait()
             self.play(Write(product))
@@ -639,9 +639,9 @@ class MoreComplicatedExampleNumerically(MoreComplicatedExampleVisually):
 
 class GeneralMultiplication(MoreComplicatedExampleNumerically):
     def get_result(self):
-        entries = map(TexMobject, [
+        entries = list(map(TexMobject, [
             "ae+bg", "af+bh", "ce+dg", "cf+dh"
-        ])
+        ]))
         for mob in entries:
             mob.split()[0].set_color(PINK)
             mob.split()[3].set_color(PINK)
@@ -730,7 +730,7 @@ class NeverForget(TeacherStudentsScene):
         self.student_thinks("", student_index = 0)
         def warp(point):
             point += 2*DOWN+RIGHT
-            return 20*point/np.linalg.norm(point)
+            return 20*point/get_norm(point)
         self.play(ApplyPointwiseFunction(
             warp,
             VMobject(*self.get_mobjects())
@@ -749,7 +749,7 @@ class AskAboutCommutativity(Scene):
         neq = TexMobject("\\neq")
         neq.move_to(eq)
         
-        self.play(*map(Write, [l_m1, l_m2, eq]))
+        self.play(*list(map(Write, [l_m1, l_m2, eq])))
         self.play(
             Transform(l_m1.copy(), r_m1),
             Transform(l_m2.copy(), r_m2),
@@ -902,10 +902,10 @@ class AskAssociativityQuestion(Scene):
         everything.remove(title)
         everything = VMobject(*everything)
 
-        matrices = map(matrix_to_mobject, [
+        matrices = list(map(matrix_to_mobject, [
             np.array(list(m)).reshape((2, 2))
             for m in ("abcd", "efgh", "ijkl")
-        ])
+        ]))
         VMobject(*matrices).arrange_submobjects()
 
         self.play(everything.to_edge, UP)
@@ -922,7 +922,7 @@ class AskAssociativityQuestion(Scene):
     def move_matrix_parentheses(self, morty, matrices):
         m1, m2, m3 = matrices
         parens = TexMobject(["(", ")"])
-        parens.scale_to_fit_height(1.2*m1.get_height())
+        parens.set_height(1.2*m1.get_height())
         lp, rp = parens.split()
         state1 = VMobject(
             VectorizedPoint(m1.get_left()),
@@ -1057,10 +1057,10 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Linear transformations in three dimensions
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

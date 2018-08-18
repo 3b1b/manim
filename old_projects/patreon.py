@@ -21,7 +21,7 @@ class SideGigToFullTime(Scene):
             Line(vect, -vect, color = RED)
             for vect in (UP+RIGHT, UP+LEFT)
         ])
-        cross.scale_to_fit_height(dollar_sign.get_height())
+        cross.set_height(dollar_sign.get_height())
         no_money = VGroup(dollar_sign, cross)
         no_money.next_to(rect, DOWN)
 
@@ -122,7 +122,7 @@ class GrowingToDoList(Scene):
         underline = Line(title.get_left(), title.get_right())
         underline.next_to(title, DOWN)
 
-        lines = VGroup(*map(TextMobject, [
+        lines = VGroup(*list(map(TextMobject, [
             "That one on topology",
             "Something with quaternions",
             "Solving puzzles with binary counting",
@@ -136,7 +136,7 @@ class GrowingToDoList(Scene):
             "Fourier stuffs",
             "$1+2+3+\\cdots = -\\frac{1}{12}$",
             "Understanding entropy",
-        ]))
+        ])))
         lines.scale(0.65)
         lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         lines.set_color_by_gradient(BLUE_C, YELLOW)
@@ -177,7 +177,7 @@ class TwoTypesOfVideos(Scene):
         series.shift(FRAME_X_RADIUS*RIGHT/2)
         series.to_edge(UP)
         box = Rectangle(width = 16, height = 9, color = WHITE)
-        box.scale_to_fit_height(3)
+        box.set_height(3)
         box.next_to(stand_alone, DOWN)
         series_list = VGroup(*[  
             TextMobject("Essence of %s"%s)
@@ -191,7 +191,7 @@ class TwoTypesOfVideos(Scene):
             ]
         ])
         series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
-        series_list.scale_to_fit_width(FRAME_X_RADIUS-2)
+        series_list.set_width(FRAME_X_RADIUS-2)
         series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
 
@@ -461,7 +461,7 @@ class PythagoreanTransformation(Scene):
         b_square_tex.move_to(b_square)
 
         self.play(ShowCreation(tri1, run_time = 2))
-        self.play(*map(Write, [a, b, c]))
+        self.play(*list(map(Write, [a, b, c])))
         self.wait()
         self.play(
             FadeIn(c_square),
@@ -479,7 +479,7 @@ class PythagoreanTransformation(Scene):
         self.remove(mover)
         self.add(big_square, *[tri1]+copies)
         self.wait(2)
-        self.play(*map(FadeOut, [a, b, c, c_square]))
+        self.play(*list(map(FadeOut, [a, b, c, c_square])))
         self.play(
             tri3.shift,
             tri1.get_corner(UP+LEFT) -\
@@ -497,7 +497,7 @@ class PythagoreanTransformation(Scene):
 class KindWordsOnEoLA(TeacherStudentsScene):
     def construct(self):
         rect = Rectangle(width = 16, height = 9, color = WHITE)
-        rect.scale_to_fit_height(4)
+        rect.set_height(4)
         title = TextMobject("Essence of linear algebra")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -537,7 +537,7 @@ class MakeALotOfPiCreaturesHappy(Scene):
         for pi, color in zip(pi_list, colors):
             pi.set_color(color)
         pis = VGroup(*pi_list)
-        pis.scale_to_fit_height(6)
+        pis.set_height(6)
 
         self.add(pis)
         pis.generate_target()
@@ -612,7 +612,7 @@ class IntegrationByParts(Scene):
 
         self.draw_curve(curve)
         self.play(ShowCreation(rect))
-        self.play(*map(Write, [down_brace, left_brace, f_T, g_T]))
+        self.play(*list(map(Write, [down_brace, left_brace, f_T, g_T])))
         self.wait()
         self.play(FadeIn(upper_right))
         self.play(
@@ -660,7 +660,7 @@ class IntegrationByParts(Scene):
             rate_func = None
         )
         self.wait()
-        self.play(*map(FadeOut, [coords, dot]))
+        self.play(*list(map(FadeOut, [coords, dot])))
 
 class EndScreen(TeacherStudentsScene):
     def construct(self):

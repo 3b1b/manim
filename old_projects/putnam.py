@@ -100,7 +100,7 @@ class IntroducePutnam(Scene):
         self.play(
             ReplacementTransform(six_hours, three_hours),
             ReplacementTransform(six_hours.copy(), three_hours_copy),
-            *map(ShowCreation, rects)
+            *list(map(ShowCreation, rects))
         )
         self.wait()
         self.play(LaggedStart(
@@ -155,7 +155,7 @@ class NatureOf5sAnd6s(TeacherStudentsScene):
         )
         new_words = TextMobject("\\dots Potentially very elegant \\dots")
         new_words.set_color(GREEN)
-        new_words.scale_to_fit_height(mover.target[1].get_height())
+        new_words.set_height(mover.target[1].get_height())
         new_words.next_to(mover.target[0], RIGHT, SMALL_BUFF)
 
         self.play(
@@ -177,14 +177,14 @@ class NatureOf5sAnd6s(TeacherStudentsScene):
 class OtherVideoClips(Scene):
     def construct(self):
         rect = ScreenRectangle()
-        rect.scale_to_fit_height(6.5)
+        rect.set_height(6.5)
         rect.center()
         rect.to_edge(DOWN)
-        titles = map(TextMobject, [
+        titles = list(map(TextMobject, [
             "Essence of calculus, chapter 1",
             "Pi hiding in prime regularities",
             "How do cryptocurrencies work?"
-        ])
+        ]))
 
         self.add(rect)
         last_title = None
@@ -207,7 +207,7 @@ class IntroduceTetrahedronSupplement(Scene):
         question = TextMobject("Probability that this tetrahedron \\\\ contains the sphere's center?")
         question.next_to(title, DOWN, MED_LARGE_BUFF)
         group = VGroup(title, question)
-        group.scale_to_fit_width(FRAME_WIDTH-1)
+        group.set_width(FRAME_WIDTH-1)
         group.to_edge(DOWN)
 
         for n in range(1, 4):
@@ -363,7 +363,7 @@ class TwoDCase(Scene):
         self.play(
             morty.change, "happy",
             morty.fade, 1,
-            *map(FadeOut, [bubble, bubble.content])
+            *list(map(FadeOut, [bubble, bubble.content]))
         )
         self.remove(morty)
 
@@ -371,11 +371,11 @@ class TwoDCase(Scene):
         push_pins = VGroup()
         for point_mob in self.point_mobs[:-1]:
             push_pin = SVGMobject(file_name = "push_pin")
-            push_pin.scale_to_fit_height(0.5)
+            push_pin.set_height(0.5)
             push_pin.move_to(point_mob.get_center(), DOWN)
             line = Line(ORIGIN, UP)
             line.set_stroke(WHITE, 2)
-            line.scale_to_fit_height(0.1)
+            line.set_height(0.1)
             line.move_to(push_pin, UP)
             line.shift(0.3*SMALL_BUFF*(2*DOWN+LEFT))
             push_pin.add(line)
@@ -498,9 +498,9 @@ class TwoDCase(Scene):
         arc = self.arc
 
         self.triangle.save_state()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.push_pins, self.triangle, self.arc_lines
-        ]))
+        ])))
         self.update_animations.remove(self.triangle_update)
         self.update_animations += [
             self.get_center_lines_update(self.point_mobs, self.center_lines),
@@ -664,7 +664,7 @@ class TwoDCase(Scene):
             for point_mob, label in zip(point_mobs, labels):
                 label.move_to(point_mob)
                 vect = point_mob.get_center() - self.center
-                vect /= np.linalg.norm(vect)
+                vect /= get_norm(vect)
                 label.shift(MED_LARGE_BUFF*vect)
             return labels
         return UpdateFromFunc(labels, update_labels)
@@ -768,7 +768,7 @@ class TwoDCase(Scene):
     def get_point_mob_angles(self):
         point_mobs = self.point_mobs
         points = [pm.get_center() - self.center for pm in point_mobs]
-        return np.array(map(angle_of_vector, points))
+        return np.array(list(map(angle_of_vector, points)))
 
     def have_p3_jump_around_randomly(self, n_jumps, wait_time = 0.75, run_time = 0):
         for x in range(n_jumps):
@@ -794,7 +794,7 @@ class AverageSizeOfSphericalTriangleSectionSupplement(Scene):
             arg_separator = ""
         )
         words.set_color_by_tex("section", GREEN)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
         self.play(Write(words))
         self.wait(3)
@@ -881,7 +881,7 @@ class RevisitTwoDCase(TwoDCase):
                     self.n_in += 1
                 else:
                     self.n_out += 1
-                nums = map(Integer, [self.n_in, self.n_in, self.n_out])
+                nums = list(map(Integer, [self.n_in, self.n_in, self.n_out]))
                 VGroup(*nums[:2]).set_color(self.positive_triangle_color)
                 VGroup(*nums[2:]).set_color(self.negative_triangle_color)
                 for num, placeholder, position in zip(nums, placeholders, positions):
@@ -902,7 +902,7 @@ class RevisitTwoDCase(TwoDCase):
         nums = place_random_triangles(self.n_random_trials, 0.05)
         self.add(nums)
         self.wait()
-        self.play(*map(FadeOut, [frac, nums, title]))
+        self.play(*list(map(FadeOut, [frac, nums, title])))
 
     def add_lines_and_comment_on_them(self):
         center_lines = self.get_center_lines()
@@ -938,12 +938,12 @@ class RevisitTwoDCase(TwoDCase):
         self.play(
             center_lines.restore,
             center_lines.fade, 1,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 rect, words2, center_line_shadows,
                 self.triangle, arcs,
                 self.point_mobs,
                 self.point_labels,
-            ])
+            ]))
         )
         center_lines.restore()
         self.remove(center_lines)
@@ -960,12 +960,12 @@ class RevisitTwoDCase(TwoDCase):
         group = VGroup(random_procedure, underline)
         group.to_corner(UP+RIGHT)
 
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Choose 3 random points",
             "Choose 2 random lines",
             "Flip coin for each line \\\\ to get $P_1$ and $P_2$",
             "Choose $P_3$ at random"
-        ]))
+        ])))
         words.scale(0.8)
         words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
@@ -1210,7 +1210,7 @@ class ContrastTwoRandomProcesses(TwoDCase):
             )
             self.add(c2)
             n = len(c2) - len(c1)
-            self.play(*map(GrowFromCenter, c2[-n:]))
+            self.play(*list(map(GrowFromCenter, c2[-n:])))
 
 class Rewrite3DRandomProcedure(Scene):
     def construct(self):
@@ -1222,12 +1222,12 @@ class Rewrite3DRandomProcedure(Scene):
         group = VGroup(random_procedure, underline)
         group.to_corner(UP+LEFT)
         
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Choose 4 random points",
             "Choose 3 random lines",
             "Choose $P_4$ at random",
             "Flip coin for each line \\\\ to get $P_1$, $P_2$, $P_3$",
-        ]))
+        ])))
         words.scale(0.8)
         words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
@@ -1257,7 +1257,7 @@ class ThreeDAnswer(Scene):
             "Probability that the tetrahedron contains center:", 
             "$\\frac{1}{8}$"
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
         words[1].set_color(BLUE)
 
@@ -1297,7 +1297,7 @@ class ProblemSolvingTakeaways(Scene):
     def construct(self):
         title = TextMobject("Problem solving takeaways")
         underline = Line(LEFT, RIGHT)
-        underline.scale_to_fit_width(title.get_width()*1.1)
+        underline.set_width(title.get_width()*1.1)
         underline.next_to(title, DOWN)
         group = VGroup(title, underline)
         group.to_corner(UP+LEFT)
@@ -1397,7 +1397,7 @@ class BrilliantPuzzle(PiCreatureScene):
         rect.set_stroke(WHITE)
         lines.set_stroke(WHITE, 2)
         test = VGroup(rect, lines)
-        test.scale_to_fit_height(0.5)
+        test.set_height(0.5)
         return test
 
     def create_pi_creatures(self):
@@ -1444,7 +1444,7 @@ class BrilliantPuzzle(PiCreatureScene):
                 circled_students.remove(to_remove)
         for student in circled_students:
             circle = Circle(color = YELLOW)
-            circle.scale_to_fit_height(1.2*student.get_height())
+            circle.set_height(1.2*student.get_height())
             circle.move_to(student)
             circles.add(circle)
             self.play(ShowCreation(circle))
@@ -1465,7 +1465,7 @@ class Promotion(PiCreatureScene):
         url.to_corner(UP+LEFT)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5.5)
+        rect.set_height(5.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
 
@@ -1499,7 +1499,7 @@ class AddedPromoWords(Scene):
             "First", "$2^8$", "vistors get",
             "$(e^\\pi - \\pi)\\%$", "off"
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN)
         words.set_color_by_tex("2^8", YELLOW)
         words.set_color_by_tex("pi", PINK)

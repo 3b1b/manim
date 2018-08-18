@@ -185,7 +185,7 @@ class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
             are the ``basis vectors'' \\\\
             of the $xy$ coordinate system
         """)
-        text.scale_to_fit_width(FRAME_X_RADIUS-1)
+        text.set_width(FRAME_X_RADIUS-1)
         text.to_corner(UP+RIGHT)
         VMobject(*text.split()[:2]).set_color(X_COLOR)
         VMobject(*text.split()[5:7]).set_color(Y_COLOR)
@@ -256,7 +256,7 @@ class ShowVaryingLinearCombinations(VectorScene):
     def get_scalar_anims(self, v1, v2, v1_label, v2_label):
         def get_val_func(vect):
             original_vect = np.array(vect.get_end()-vect.get_start())
-            square_norm = np.linalg.norm(original_vect)**2
+            square_norm = get_norm(original_vect)**2
             return lambda a : np.dot(
                 original_vect, vect.get_end()-vect.get_start()
             )/square_norm
@@ -439,7 +439,7 @@ class NameLinearCombinations(Scene):
         ])
         words.split()[1].set_color(v_color)
         words.split()[3].set_color(w_color)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
 
         equation = TexMobject([
@@ -580,7 +580,7 @@ class DefineSpan(Scene):
             $\\vec{\\textbf{w}}$ is the \\\\ set of all their
             linear combinations.
         """)
-        definition.scale_to_fit_width(FRAME_WIDTH-1)
+        definition.set_width(FRAME_WIDTH-1)
         definition.to_edge(UP)
         def_mobs = np.array(definition.split())
         VMobject(*def_mobs[4:4+4]).set_color(PINK)
@@ -649,19 +649,19 @@ class VectorsToDotsScene(VectorScene):
                 run_time = 3
             )
         )
-        vectors.sort(lambda v1, v2 : int(np.sign(v2.get_length() - v1.get_length())))
+        vectors.sort(key=lambda v: v.get_length())
         self.add(*vectors)
         def v_to_dot(vector):
             return Dot(vector.get_end(), fill_color = vector.get_stroke_color())
         self.wait()
         vectors.remove(prototype_vector)
-        self.play(*map(FadeOut, vectors)+[Animation(prototype_vector)])
+        self.play(*list(map(FadeOut, vectors))+[Animation(prototype_vector)])
         self.remove(vector_group)
         self.add(prototype_vector)
         self.wait()
         self.play(Transform(prototype_vector, v_to_dot(prototype_vector)))
         self.wait()
-        self.play(*map(FadeIn, vectors) + [Animation(prototype_vector)])
+        self.play(*list(map(FadeIn, vectors)) + [Animation(prototype_vector)])
         rate_functions = [
             squish_rate_func(smooth, float(x)/(len(vectors)+2), 1)
             for x in range(len(vectors))
@@ -813,7 +813,7 @@ class LinearCombinationOfThreeVectorsText(Scene):
         VMobject(*text.split()[-9:-7]).set_color(BLUE)
         VMobject(*text.split()[-3:-1]).set_color(RED_C)
         VMobject(*text.split()[:17]).set_color(GREEN)        
-        text.scale_to_fit_width(FRAME_WIDTH - 1)
+        text.set_width(FRAME_WIDTH - 1)
         text.to_edge(UP)
 
         equation = TextMobject("""$
@@ -875,7 +875,7 @@ class SpanCasesWords(Scene):
         VMobject(*words2.split()[10:13]).set_color(RED)
 
         for words in words1, words2:
-            words.scale_to_fit_width(FRAME_WIDTH - 1)
+            words.set_width(FRAME_WIDTH - 1)
         self.play(Write(words1))
         self.wait()
         self.play(Transform(words1, words2))
@@ -912,7 +912,7 @@ class LinearDependentWords(Scene):
         rest.set_color(YELLOW)
 
         for words in words1, words2:
-            words.scale_to_fit_width(FRAME_WIDTH - 1)
+            words.set_width(FRAME_WIDTH - 1)
 
         self.play(Write(words1))
         self.wait()
@@ -1232,7 +1232,7 @@ class TechnicalDefinitionOfBasis(Scene):
         b.set_color(BLUE)
         li.set_color(GREEN)
         s.set_color(YELLOW)
-        definition.scale_to_fit_width(FRAME_WIDTH-1)
+        definition.set_width(FRAME_WIDTH-1)
 
         self.add(title)
         self.play(Write(definition))
@@ -1243,7 +1243,7 @@ class NextVideo(Scene):
         title = TextMobject("Next video: Matrices as linear transformations")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

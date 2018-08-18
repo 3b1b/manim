@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import random
 import string
@@ -14,13 +14,16 @@ from animation.creation import FadeOut
 from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
 from scene.scene import Scene
+from scene.moving_camera_scene import MovingCameraScene
 from for_3b1b_videos.pi_creature_animations import Blink
 from for_3b1b_videos.pi_creature import Mortimer
 from for_3b1b_videos.pi_creature import Randolph
+from mobject.geometry import Line
 from mobject.geometry import DashedLine
 from mobject.geometry import Rectangle
 from mobject.geometry import Square
 from mobject.svg.drawings import PatreonLogo
+from mobject.svg.drawings import Logo
 
 
 class OpeningQuote(Scene):
@@ -76,7 +79,7 @@ class OpeningQuote(Scene):
             quote.set_color_by_tex(term, color)
         quote.to_edge(UP, buff=self.top_buff)
         if quote.get_width() > max_width:
-            quote.scale_to_fit_width(max_width)
+            quote.set_width(max_width)
         return quote
 
     def get_author(self, quote):
@@ -100,7 +103,7 @@ class PatreonThanks(Scene):
         patreon_logo = PatreonLogo()
         patreon_logo.to_edge(UP)
 
-        patrons = map(TextMobject, self.specific_patrons)
+        patrons = list(map(TextMobject, self.specific_patrons))
         num_groups = float(len(patrons)) / self.max_patron_group_size
         proportion_range = np.linspace(0, 1, num_groups + 1)
         indices = (len(patrons) * proportion_range).astype('int')
@@ -159,7 +162,10 @@ class PatreonEndScreen(PatreonThanks):
             random.shuffle(self.specific_patrons)
         if self.capitalize:
             self.specific_patrons = [
-                " ".join(map(string.capitalize, patron.split(" ")))
+                " ".join(map(
+                    lambda s: s.capitalize(),
+                    patron.split(" ")
+                ))
                 for patron in self.specific_patrons
             ]
 
@@ -173,7 +179,7 @@ class PatreonEndScreen(PatreonThanks):
 
         randy, morty = self.pi_creatures = VGroup(Randolph(), Mortimer())
         for pi, vect in (randy, LEFT), (morty, RIGHT):
-            pi.scale_to_fit_height(title.get_height())
+            pi.set_height(title.get_height())
             pi.change_mode("thinking")
             pi.look(DOWN)
             pi.next_to(title, vect, buff=MED_LARGE_BUFF)
@@ -189,19 +195,28 @@ class PatreonEndScreen(PatreonThanks):
             fill_opacity=1,
             stroke_width=0,
             width=FRAME_WIDTH,
-            height=1.1 * FRAME_Y_RADIUS
+            height=0.6 * FRAME_HEIGHT,
         )
         black_rect.to_edge(UP, buff=0)
         line = DashedLine(FRAME_X_RADIUS * LEFT, FRAME_X_RADIUS * RIGHT)
-        line.move_to(black_rect, DOWN)
-        line.shift(SMALL_BUFF * SMALL_BUFF * DOWN)
+        line.move_to(ORIGIN)
         self.add(line)
 
-        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        thanks = TextMobject("Funded by the community, with special thanks to:")
+        thanks.scale(0.9)
+        thanks.next_to(black_rect.get_bottom(), UP, SMALL_BUFF)
+        thanks.set_color(YELLOW)
+        underline = Line(LEFT, RIGHT)
+        underline.set_width(thanks.get_width() + MED_SMALL_BUFF)
+        underline.next_to(thanks, DOWN, SMALL_BUFF)
+        thanks.add(underline)
+        self.add(thanks)
+
+        patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
         patrons.scale(self.patron_scale_val)
         for patron in patrons:
             if patron.get_width() > self.max_patron_width:
-                patron.scale_to_fit_width(self.max_patron_width)
+                patron.set_width(self.max_patron_width)
         columns = VGroup(*[
             VGroup(*patrons[i::self.n_patron_columns])
             for i in range(self.n_patron_columns)
@@ -213,17 +228,48 @@ class PatreonEndScreen(PatreonThanks):
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
         )
-        columns.scale_to_fit_width(total_width - 1)
+        columns.set_width(total_width - 1)
         columns.next_to(black_rect, DOWN, 3 * LARGE_BUFF)
         columns.to_edge(RIGHT)
+
+        thanks.align_to(columns, alignment_vect=RIGHT)
 
         self.play(
             columns.move_to, 2 * DOWN, DOWN,
             columns.to_edge, RIGHT,
             Animation(black_rect),
+            Animation(line),
+            Animation(thanks),
             rate_func=None,
             run_time=self.run_time,
         )
+
+
+class LogoGenerationTemplate(MovingCameraScene):
+    def setup(self):
+        MovingCameraScene.setup(self)
+        frame = self.camera_frame
+        frame.shift(DOWN)
+
+        self.logo = Logo()
+        name = TextMobject("3Blue1Brown")
+        name.scale(2.5)
+        name.next_to(self.logo, DOWN, buff=MED_LARGE_BUFF)
+        name.set_sheen(-0.2, DR)
+        self.channel_name = name
+
+    def construct(self):
+        logo = self.logo
+        name = self.channel_name
+
+        self.play(
+            Write(name, run_time=3, lag_factor=2.5),
+            *self.get_logo_animations(logo)
+        )
+        self.wait()
+
+    def get_logo_animations(self, logo):
+        return []  # For subclasses
 
 
 class ExternallyAnimatedScene(Scene):

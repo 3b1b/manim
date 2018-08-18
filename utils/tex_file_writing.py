@@ -1,11 +1,17 @@
-from __future__ import print_function
+
 import os
+import hashlib
+
 from constants import TEX_DIR
 from constants import TEX_TEXT_TO_REPLACE
 
 
-def tex_hash(expression, template_tex_file):
-    return str(hash(expression + template_tex_file))
+def tex_hash(expression, template_tex_file_body):
+    id_str = str(expression + template_tex_file_body)
+    hasher = hashlib.sha256()
+    hasher.update(id_str.encode())
+    # Truncating at 16 bytes for cleanliness
+    return hasher.hexdigest()[:16]
 
 
 def tex_to_svg_file(expression, template_tex_file, **kwargs):
@@ -17,7 +23,7 @@ def tex_to_svg_file(expression, template_tex_file, **kwargs):
 def generate_tex_file(expression, template_tex_file, **kwargs):
     result = os.path.join(
         TEX_DIR,
-        tex_hash(expression, template_tex_file)
+        tex_hash(expression, template_tex_file_body)
     ) + ".tex"
     if not os.path.exists(result):
         print("Writing \"%s\" to %s" % (
@@ -33,7 +39,7 @@ def generate_tex_file(expression, template_tex_file, **kwargs):
                 body = body.replace("###HSIZE###", "345pt")
             body = body.replace(TEX_TEXT_TO_REPLACE, expression)
         with open(result, "w") as outfile:
-            outfile.write(body)
+            outfile.write(new_body)
     return result
 
 

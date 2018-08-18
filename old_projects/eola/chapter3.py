@@ -12,7 +12,7 @@ class OpeningQuote(Scene):
             "is. You have to",
             "see it for yourself.",
         ])
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].set_color(GREEN)
         words.split()[3].set_color(BLUE)
@@ -50,7 +50,7 @@ class Introduction(TeacherStudentsScene):
         everything = VMobject(*self.get_mobjects())
         def spread_out(p):
             p = p + 2*DOWN
-            return (FRAME_X_RADIUS+FRAME_Y_RADIUS)*p/np.linalg.norm(p)
+            return (FRAME_X_RADIUS+FRAME_Y_RADIUS)*p/get_norm(p)
         self.play(
             ApplyPointwiseFunction(spread_out, everything),
             ApplyFunction(
@@ -98,7 +98,7 @@ class DescribeTransformation(Scene):
         f_of_x = TexMobject("f(x)")
         L_of_v = TexMobject("L(\\vec{\\textbf{v}})")
         nums = [5, 2, -3]
-        num_inputs = VMobject(*map(TexMobject, map(str, nums)))
+        num_inputs = VMobject(*list(map(TexMobject, list(map(str, nums)))))
         num_outputs = VMobject(*[
             TexMobject(str(num**2))
             for num in nums
@@ -594,7 +594,7 @@ class FollowIHatJHat(LinearTransformationScene):
         )
 
         self.wait()
-        self.play(*map(FadeOut, [i_label, j_label]))
+        self.play(*list(map(FadeOut, [i_label, j_label])))
         self.apply_transposed_matrix([[-1, 1], [-2, -1]])
         self.wait()
 
@@ -951,14 +951,14 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             ShowCreation(j_arrow)
         )
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             i_message, i_circle, i_arrow, j_message, j_circle, j_arrow
-        ]))
+        ])))
 
 
     def multiply_by_vector(self, matrix):
         vector = Matrix(["x", "y"]) if self.abstract else Matrix([5, 7])
-        vector.scale_to_fit_height(matrix.get_height())
+        vector.set_height(matrix.get_height())
         vector.next_to(matrix, buff = 2)
         brace = Brace(vector, DOWN)
         words = TextMobject("Any  ol' vector")
@@ -1009,8 +1009,8 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         else:
             row1 = ["3", "(5)", "+", "2", "(7)"]
             row2 = ["-2", "(5)", "+", "1", "(7)"]
-        row1 = VMobject(*map(TexMobject, row1))
-        row2 = VMobject(*map(TexMobject, row2))
+        row1 = VMobject(*list(map(TexMobject, row1)))
+        row2 = VMobject(*list(map(TexMobject, row2)))
         for row in row1, row2:
             row.arrange_submobjects(RIGHT, buff = 0.1)
         final_sum = Matrix([row1, row2])
@@ -1090,7 +1090,7 @@ class ColumnsToBasisVectors(LinearTransformationScene):
         if vector_coords is not None:
             vector = Matrix(vector_coords)
             VMobject(*vector.get_mob_matrix().flatten()).set_color(YELLOW)
-            vector.scale_to_fit_height(matrix_mob.get_height())
+            vector.set_height(matrix_mob.get_height())
             vector.next_to(matrix_mob, RIGHT)
             vector_background = BackgroundRectangle(vector)
             self.add_foreground_mobject(vector_background, vector)
@@ -1225,7 +1225,7 @@ class Describe90DegreeRotation(LinearTransformationScene):
     def show_vector(self, matrix):
         vector = Matrix(["x", "y"])
         VMobject(*vector.get_mob_matrix().flatten()).set_color(YELLOW)
-        vector.scale_to_fit_height(matrix.get_height())
+        vector.set_height(matrix.get_height())
         vector.next_to(matrix, RIGHT)
         v_background = BackgroundRectangle(vector)
 
@@ -1273,7 +1273,7 @@ class NextVideo(Scene):
         title = TextMobject("Next video: Matrix multiplication as composition")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -1306,7 +1306,7 @@ class FinalSlide(Scene):
             definition is actually equivalent to the two properties 
             above.
         """, enforce_new_line_structure = False)
-        text.scale_to_fit_height(FRAME_HEIGHT - 2)
+        text.set_height(FRAME_HEIGHT - 2)
         text.to_edge(UP)
         self.add(text)
         self.wait()
@@ -1417,8 +1417,8 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
         self.wait()
 
     def show_inputs_and_output(self):
-        numbers = range(-3, 4)
-        inputs = VMobject(*map(TexMobject, map(str, numbers)))
+        numbers = list(range(-3, 4))
+        inputs = VMobject(*list(map(TexMobject, list(map(str, numbers)))))
         inputs.arrange_submobjects(DOWN, buff = 0.5, aligned_edge = RIGHT)
         arrows = VMobject(*[
             Arrow(LEFT, RIGHT).next_to(mob)

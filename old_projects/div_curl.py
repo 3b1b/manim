@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 
 DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
@@ -29,7 +29,7 @@ def get_flow_start_points(x_min=-8, x_max=8,
         noise_factor = delta_y / 2
     return np.array([
         x * RIGHT + y * UP + noise_factor * np.random.random(3)
-        for n in xrange(n_repeats)
+        for n in range(n_repeats)
         for x in np.arange(x_min, x_max + delta_x, delta_x)
         for y in np.arange(y_min, y_max + delta_y, delta_y)
     ])
@@ -91,7 +91,7 @@ def cylinder_flow_vector_field(point, R=1, U=1):
 
 
 def cylinder_flow_magnitude_field(point):
-    return np.linalg.norm(cylinder_flow_vector_field(point))
+    return get_norm(cylinder_flow_vector_field(point))
 
 
 def get_colored_background_image(scalar_field_func,
@@ -122,7 +122,7 @@ def get_rgb_gradient_function(min_value=0, max_value=1,
                               colors=[BLUE, RED],
                               flip_alphas=True,  # Why?
                               ):
-    rgbs = np.array(map(color_to_rgb, colors))
+    rgbs = np.array(list(map(color_to_rgb, colors)))
 
     def func(values):
         alphas = inverse_interpolate(min_value, max_value, values)
@@ -173,7 +173,7 @@ def four_swirls_function(point):
     x, y = point[:2]
     result = (y**3 - 4 * y) * RIGHT + (x**3 - 16 * x) * UP
     result *= 0.05
-    norm = np.linalg.norm(result)
+    norm = get_norm(result)
     if norm == 0:
         return result
     # result *= 2 * sigmoid(norm) / norm
@@ -187,7 +187,7 @@ def get_force_field_func(*point_strength_pairs, **kwargs):
         result = np.array(ORIGIN)
         for center, strength in point_strength_pairs:
             to_center = center - point
-            norm = np.linalg.norm(to_center)
+            norm = get_norm(to_center)
             if norm == 0:
                 continue
             elif norm < radius:
@@ -210,7 +210,7 @@ def get_charged_particles(color, sign, radius=0.1):
     )
     sign = TexMobject(sign)
     sign.set_stroke(WHITE, 1)
-    sign.scale_to_fit_width(0.5 * result.get_width())
+    sign.set_width(0.5 * result.get_width())
     sign.move_to(result)
     result.add(sign)
     return result
@@ -269,7 +269,7 @@ class StreamLines(VGroup):
             for t in np.arange(0, self.virtual_time, dt):
                 last_point = points[-1]
                 points.append(last_point + dt * func(last_point))
-                if np.linalg.norm(last_point) > self.cutoff_norm:
+                if get_norm(last_point) > self.cutoff_norm:
                     break
             line = VMobject()
             step = max(1, len(points) / self.n_anchors_per_line)
@@ -280,7 +280,7 @@ class StreamLines(VGroup):
 
         if self.color_lines_by_magnitude:
             image_file = get_color_field_image_file(
-                lambda p: np.linalg.norm(func(p)),
+                lambda p: get_norm(func(p)),
                 min_value=self.min_magnitude,
                 max_value=self.max_magnitude,
                 colors=self.colors,
@@ -323,7 +323,7 @@ class VectorField(VGroup):
 
     def get_vector(self, point, **kwargs):
         output = np.array(self.func(point))
-        norm = np.linalg.norm(output)
+        norm = get_norm(output)
         if norm == 0:
             output *= 0
         else:
@@ -494,7 +494,7 @@ class Introduction(MovingCameraScene):
         self.play(
             LaggedStart(ShowPassingFlash, stream_lines),
             FadeIn(div_title[0]),
-            *map(GrowFromCenter, div_title[1])
+            *list(map(GrowFromCenter, div_title[1]))
         )
 
         # Curl
@@ -597,7 +597,7 @@ class ShowWritingTrajectory(TeacherStudentsScene):
         prev_words.next_to(arrow, RIGHT)
 
         screen.generate_target()
-        screen.target.scale_to_fit_height(3.75)
+        screen.target.set_height(3.75)
         screen.target.to_corner(UR)
         complex_words = TextMobject("Complex derivatives")
         complex_words.next_to(
@@ -841,7 +841,7 @@ class CylinderModel(Scene):
 
     def apply_joukowsky_map(self):
         shift_val = 0.1 * LEFT + 0.2 * UP
-        scale_factor = np.linalg.norm(RIGHT - shift_val)
+        scale_factor = get_norm(RIGHT - shift_val)
         movers = VGroup(self.warped_grid, self.unit_circle)
         self.unit_circle.insert_n_anchor_points(50)
 
@@ -1042,7 +1042,7 @@ class ElectricField(CylinderModel, MovingCameraScene):
 
         # New vector field
         def new_electric_field(point):
-            if np.linalg.norm(point) < 1:
+            if get_norm(point) < 1:
                 return ORIGIN
             vect = cylinder_flow_vector_field(point)
             return rotate_vector(vect, 90 * DEGREES)
@@ -1220,14 +1220,14 @@ class ScopeMeiosis(PiCreatureScene):
 
     def construct(self):
         morty = self.pi_creature
-        section_titles = VGroup(*map(TextMobject, [
+        section_titles = VGroup(*list(map(TextMobject, [
             "Background on div/curl",
             "Conformal maps",
             "Conformal map $\\Rightarrow" +
             "\\text{div}\\textbf{F} = " +
             "\\text{curl}\\textbf{F} = 0$",
             "Complex derivatives",
-        ]))
+        ])))
         sections = VGroup(*[
             VGroup(title, self.get_lines(title, 3))
             for title in section_titles
@@ -1251,7 +1251,7 @@ class ScopeMeiosis(PiCreatureScene):
             "concerned_musician",
         ]
 
-        for n, mode in zip(range(6), modes):
+        for n, mode in zip(list(range(6)), modes):
             if n % 2 == 1:
                 top_title = lines
                 lines = self.get_lines(top_title, 4)
@@ -1587,7 +1587,7 @@ class ChangingElectricField(Scene):
                 particle.shift(particle.velocity * dt)
 
         self.add(
-            ContinualUpdateFromFunc(vector_field, update_vector_field),
+            ContinualUpdate(vector_field, update_vector_field),
             ContinualUpdateFromTimeFunc(particles, update_particles),
         )
         self.wait(20)
@@ -1609,10 +1609,10 @@ class ChangingElectricField(Scene):
         return particles
 
     def get_vector_field(self):
-        func = get_force_field_func(*zip(
-            map(Mobject.get_center, self.particles),
+        func = get_force_field_func(*list(zip(
+            list(map(Mobject.get_center, self.particles)),
             [p.charge for p in self.particles]
-        ))
+        )))
         self.vector_field = VectorField(func, **self.vector_field_config)
         return self.vector_field
 
@@ -1632,7 +1632,7 @@ class ThreeDVectorFieldEquation(Scene):
             "xz",
             "xy",
         ])
-        vector.scale_to_fit_height(FRAME_HEIGHT - 1)
+        vector.set_height(FRAME_HEIGHT - 1)
         self.add(vector)
 
 
@@ -1651,7 +1651,7 @@ class TotallyToScale(Scene):
         words = TextMobject(
             "Totally drawn to scale. \\\\ Don't even worry about it."
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.add_background_rectangle()
         self.add(words)
         self.wait()
@@ -1822,7 +1822,7 @@ class DefineDivergence(ChangingElectricField):
             "\\text{div} \\, \\textbf{F}(x, y) = "
         )
         div_tex.add_background_rectangle()
-        div_tex_update = ContinualUpdateFromFunc(
+        div_tex_update = ContinualUpdate(
             div_tex, lambda m: m.next_to(circle, UP, SMALL_BUFF)
         )
 
@@ -1925,7 +1925,7 @@ class DefineDivergenceSymbols(Scene):
                 *fade_anims
             )
             self.wait(2)
-            fade_anims = map(FadeOut, [brace, label])
+            fade_anims = list(map(FadeOut, [brace, label]))
         self.wait()
 
 
@@ -2066,7 +2066,7 @@ class DivergenceAsNewFunction(Scene):
         )
 
         self.add(func_tex, rhs)
-        # self.add(ContinualUpdateFromFunc(
+        # self.add(ContinualUpdate(
         #     rhs, lambda m: m.next_to(func_tex, RIGHT)
         # ))
 
@@ -2090,7 +2090,7 @@ class DivergenceAsNewFunction(Scene):
         out_vect.move_to(rhs)
         out_vect.set_fill(opacity=0)
         self.play(out_vect.restore)
-        self.out_vect_update = ContinualUpdateFromFunc(
+        self.out_vect_update = ContinualUpdate(
             out_vect,
             lambda ov: Transform(ov, get_out_vect()).update(1)
         )
@@ -2098,7 +2098,7 @@ class DivergenceAsNewFunction(Scene):
         self.add(self.out_vect_update)
         self.add(out_x_update, out_y_update)
 
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             VGroup(out_x, out_y),
             lambda m: m.match_style(out_vect)
         ))
@@ -2167,7 +2167,7 @@ class DivergenceAsNewFunction(Scene):
             ))
 
         vector_ring = get_vector_ring()
-        vector_ring_update = ContinualUpdateFromFunc(
+        vector_ring_update = ContinualUpdate(
             vector_ring,
             lambda vr: Transform(vr, get_vector_ring()).update(1)
         )
@@ -2195,7 +2195,7 @@ class DivergenceAsNewFunction(Scene):
         )
         # This line is a dumb hack around a Scene bug
         self.add(*[
-            ContinualUpdateFromFunc(
+            ContinualUpdate(
                 mob, lambda m: m.set_fill(None, 0)
             )
             for mob in (out_x, out_y)
@@ -2261,7 +2261,7 @@ class PureCylinderFlow(Scene):
             cylinder_flow_vector_field,
         )
         for vector in vector_field:
-            if np.linalg.norm(vector.get_start()) < 1:
+            if get_norm(vector.get_start()) < 1:
                 vector_field.remove(vector)
         vector_field.set_fill(opacity=0.75)
         self.modify_vector_field(vector_field)
@@ -2279,7 +2279,7 @@ class PureCylinderFlow(Scene):
         )
         self.add(stream_lines)
         for stream_line in stream_lines:
-            if np.linalg.norm(stream_line.points[0]) < 1:
+            if get_norm(stream_line.points[0]) < 1:
                 stream_lines.remove(stream_line)
 
         self.modify_flow(stream_lines)
@@ -2309,7 +2309,7 @@ class PureCylinderFlow(Scene):
 class PureAirfoilFlow(PureCylinderFlow):
     def modify_flow(self, mobject):
         vect = 0.1 * LEFT + 0.2 * UP
-        mobject.scale(np.linalg.norm(vect - RIGHT))
+        mobject.scale(get_norm(vect - RIGHT))
         mobject.shift(vect)
         mobject.apply_complex_function(joukowsky_map)
         return mobject
@@ -2365,7 +2365,7 @@ class IntroduceCurl(IntroduceVectorField):
             **self.vector_field_config
         )
         vector_field.submobjects.sort(
-            lambda v1, v2: cmp(v1.get_length(), v2.get_length())
+            key=lambda v: v.get_length()
         )
 
         self.play(LaggedStart(GrowArrow, vector_field))
@@ -2444,7 +2444,7 @@ class IntroduceCurl(IntroduceVectorField):
         ])
         if clockwise:
             result.flip()
-        result.scale_to_fit_width(width)
+        result.set_width(width)
         return result
 
 
@@ -2459,8 +2459,8 @@ class ShearCurl(IntroduceCurl):
         vector_field = self.vector_field = VectorField(
             self.func, **self.vector_field_config
         )
-        vector_field.submobjects.sort(
-            lambda a1, a2: cmp(a1.get_length(), a2.get_length())
+        vector_field.submobjects.key=sort(
+            key=lambda a: a.get_length()
         )
         self.play(LaggedStart(GrowArrow, vector_field))
 
@@ -2566,7 +2566,7 @@ class ShowCurlAtVariousPoints(IntroduceCurl):
         dot = Dot()
         circle = Circle(radius=0.25, color=WHITE)
         circle.move_to(dot)
-        circle_update = ContinualUpdateFromFunc(
+        circle_update = ContinualUpdate(
             circle,
             lambda m: m.move_to(dot)
         )
@@ -2575,7 +2575,7 @@ class ShowCurlAtVariousPoints(IntroduceCurl):
             "\\text{curl} \\, \\textbf{F}(x, y) = "
         )
         curl_tex.add_background_rectangle(buff=0.025)
-        curl_tex_update = ContinualUpdateFromFunc(
+        curl_tex_update = ContinualUpdate(
             curl_tex,
             lambda m: m.next_to(circle, UP, SMALL_BUFF)
         )
@@ -2896,7 +2896,7 @@ class IllustrateGaussLaw(DefineDivergence, MovingCameraScene):
 
     def zoom_in(self):
         self.play(
-            self.camera_frame.scale_to_fit_width, self.final_frame_width,
+            self.camera_frame.set_width, self.final_frame_width,
             run_time=2
         )
 
@@ -2951,7 +2951,7 @@ class IllustrateGaussMagnetic(IllustrateGaussLaw):
             self.func, **self.vector_field_config
         )
         vector_field.submobjects.sort(
-            lambda a1, a2: -cmp(a1.get_length(), a2.get_length())
+            key=lambda a: -a1.get_length()
         )
         self.play(LaggedStart(GrowArrow, vector_field))
         self.add_foreground_mobjects(
@@ -2962,7 +2962,7 @@ class IllustrateGaussMagnetic(IllustrateGaussLaw):
         x, y = point[:2]
         top_part = np.array([(y - 1.0), -x, 0])
         bottom_part = np.array([-(y + 1.0), x, 0])
-        norm = np.linalg.norm
+        norm = get_norm
         return 1 * op.add(
             top_part / (norm(top_part) * norm(point - UP) + 0.1),
             bottom_part / (norm(bottom_part) * norm(point - DOWN) + 0.1),
@@ -3019,7 +3019,7 @@ class ShowTwoPopulations(Scene):
         fox, rabbit = examples = VGroup(foxes[0], rabbits[0])
         for mob in examples:
             mob.save_state()
-            mob.scale_to_fit_height(3)
+            mob.set_height(3)
         examples.arrange_submobjects(LEFT, buff=2)
 
         preditor, prey = words = VGroup(
@@ -3083,10 +3083,10 @@ class ShowTwoPopulations(Scene):
 
             return update
 
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             foxes, get_updater(get_num_foxes)
         ))
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             rabbits, get_updater(get_num_rabbits)
         ))
 
@@ -3105,7 +3105,7 @@ class ShowTwoPopulations(Scene):
         ))
 
         for count in num_foxes, num_rabbits:
-            self.add(ContinualUpdateFromFunc(
+            self.add(ContinualUpdate(
                 count, self.update_count_color,
             ))
 
@@ -3205,11 +3205,11 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         )
         axes.shift(self.origin)
         for axis in axes.x_axis, axes.y_axis:
-            axis.add_numbers(*range(10, 60, 10))
+            axis.add_numbers(*list(range(10, 60, 10)))
 
         axes_labels = self.axes_labels = VGroup(*[
             VGroup(
-                method().scale_to_fit_height(0.75),
+                method().set_height(0.75),
                 TextMobject("Population"),
             ).arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
             for method in (self.get_rabbit, self.get_fox)
@@ -3254,7 +3254,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
                 position_update_func=lambda m: m.move_to(tens[i])
             )
         coord_pair.add_background_rectangle()
-        coord_pair_update = ContinualUpdateFromFunc(
+        coord_pair_update = ContinualUpdate(
             coord_pair, lambda m: m.next_to(dot, UR, SMALL_BUFF)
         )
         pop_sizes_updates = [get_pop_size_update(i) for i in (0, 1)]
@@ -3308,7 +3308,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         for char, animal in zip(variables, animals):
             for part in equations.get_parts_by_tex(char):
                 animal_copy = animal.copy()
-                animal_copy.scale_to_fit_height(0.5)
+                animal_copy.set_height(0.5)
                 animal_copy.move_to(part, DL)
                 Transform(part, animal_copy).update(1)
 
@@ -3719,7 +3719,7 @@ class NablaNotation(PiCreatureScene, MovingCameraScene):
 
         self.add(screen_rect)
         self.play(
-            self.camera_frame.scale_to_fit_height, FRAME_HEIGHT + 3,
+            self.camera_frame.set_height, FRAME_HEIGHT + 3,
             Write(words, rate_func=squish_rate_func(smooth, 0.3, 1)),
             run_time=2,
         )
@@ -3734,10 +3734,10 @@ class DivCurlDotCross(Scene):
         ])
         rects.arrange_submobjects_in_grid(n_rows=2, buff=LARGE_BUFF)
         rects[2:].shift(MED_LARGE_BUFF * DOWN)
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Divergence", "Curl",
             "Dot product", "Cross product"
-        ]))
+        ])))
         for title, rect in zip(titles, rects):
             title.next_to(rect, UP)
 
@@ -3775,7 +3775,7 @@ class ShowDotProduct(MovingCameraScene):
             include_background_rectangle=True,
         )
 
-        self.camera_frame.scale_to_fit_height(4)
+        self.camera_frame.set_height(4)
         self.camera_frame.move_to(DL, DL)
         self.add(plane)
         self.add(dot_product, dot_product_value_update)
@@ -3803,7 +3803,7 @@ class ShowCrossProduct(ShowDotProduct):
     }
 
     def get_product(self, v1, v2):
-        return np.linalg.norm(
+        return get_norm(
             np.cross(v1.get_vector(), v2.get_vector())
         )
 
@@ -3815,7 +3815,7 @@ class ShowCrossProduct(ShowDotProduct):
             fill_opacity=0.2,
         )
 
-        self.add(ContinualUpdateFromFunc(
+        self.add(ContinualUpdate(
             square,
             lambda s: s.set_points_as_corners([
                 ORIGIN,
@@ -3851,7 +3851,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                 np.cos(2 * y),
                 0
             ])
-            result /= (np.linalg.norm(result)**0.5 + 1)
+            result /= (get_norm(result)**0.5 + 1)
             return result
 
         vector_field = self.vector_field = VectorField(
@@ -4025,7 +4025,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                 moving_step_vector.get_end(),
                 moving_step_vector.get_end() + diff,
             )
-        self.moving_diff_vector_update = ContinualUpdateFromFunc(
+        self.moving_diff_vector_update = ContinualUpdate(
             moving_diff_vector,
             update_moving_diff_vector
         )
@@ -4290,10 +4290,7 @@ class ZToHalfFlowNearWall(ComplexTransformationScene, MovingCameraScene):
             secondary_line_ratio=0,
         )
         plane.next_to(ORIGIN, UP, buff=0.001)
-        horizontal_lines = VGroup(*filter(
-            lambda l: np.abs(l.get_center()[0]) < 0.1,
-            list(plane.main_lines) + [plane.axes[0]]
-        ))
+        horizontal_lines = VGroup(*[l for l in list(plane.main_lines) + [plane.axes[0]] if np.abs(l.get_center()[0]) < 0.1])
         plane.set_stroke(MAROON_B, width=2)
         horizontal_lines.set_stroke(BLUE, width=2)
 
@@ -4567,7 +4564,7 @@ class ThoughtsOnAds(Scene):
         left_text.to_edge(LEFT)
 
         viewer, brand, creator = vcb = VGroup(
-            *map(TextMobject, ["viewer", "brand", "creator"])
+            *list(map(TextMobject, ["viewer", "brand", "creator"]))
         )
         brand.next_to(creator, LEFT, LARGE_BUFF)
         viewer.next_to(vcb[1:], UP, LARGE_BUFF)
@@ -4594,7 +4591,7 @@ class ThoughtsOnAds(Scene):
         vcb_group.to_edge(RIGHT)
 
         knob = RegularPolygon(n=3, start_angle=-90 * DEGREES)
-        knob.scale_to_fit_height(0.25)
+        knob.set_height(0.25)
         knob.set_stroke(width=0)
         knob.set_fill(YELLOW, 1)
         knob.move_to(line.get_left(), DOWN)
@@ -4626,7 +4623,7 @@ class ThoughtsOnAds(Scene):
         self.play(
             Write(misaligned),
             Write(aligned),
-            *map(GrowArrow, arrows),
+            *list(map(GrowArrow, arrows)),
             run_time=1
         )
 

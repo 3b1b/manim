@@ -42,7 +42,7 @@ class LabelTracksLine(Animation):
         line_center = self.line.get_center()
         line_end = self.line.points[-1]
         v = line_end - line_center
-        v = v/np.linalg.norm(v)
+        v = v/get_norm(v)
         w = np.array([-v[1],v[0],0])
         self.mobject.move_to(line_center + self.buff * w)
 
@@ -230,7 +230,7 @@ def get_circle_drawing_terms(radius = 1, positioning_func = lambda m : m.center(
     decimal.scale(0.75)
     def reposition_decimal(decimal):
         vect = radius.get_vector()
-        unit_vect = vect/np.linalg.norm(vect)
+        unit_vect = vect/get_norm(vect)
         angle = radius.get_angle()
         alpha = (-np.cos(2*angle) + 1)/2
         interp_length = interpolate(decimal.get_width(), decimal.get_height(), alpha)
@@ -353,7 +353,7 @@ class HartlAndPalais(Scene):
             color = WHITE,
             stroke_width = 1,
         )
-        hartl_rect.scale_to_fit_width(FRAME_X_RADIUS - 1)
+        hartl_rect.set_width(FRAME_X_RADIUS - 1)
         hartl_rect.to_edge(LEFT)
         palais_rect = hartl_rect.copy()
         palais_rect.to_edge(RIGHT)
@@ -428,7 +428,7 @@ class ManyFormulas(Scene):
 
 
         angle_group = angle_groups[0]
-        self.play(*map(FadeIn, [circle, radius]))
+        self.play(*list(map(FadeIn, [circle, radius])))
         self.play(
             circle.set_stroke, {"width" : 1,},
             FadeIn(angle_group),
@@ -473,7 +473,7 @@ class EulerWrites628(Scene):
     }
     def construct(self):
         image = ImageMobject(os.path.join(RESOURCE_DIR, "dalembert_zoom"))
-        image.scale_to_fit_width(FRAME_WIDTH - 1)
+        image.set_width(FRAME_WIDTH - 1)
         image.to_edge(UP, buff = MED_SMALL_BUFF)
         image.fade(0.15)
         rect = Rectangle(
@@ -557,7 +557,7 @@ class HeroAndVillain(Scene):
         bad_euler = get_image("Leonard_Euler_revealed")
         pictures = good_euler, bad_euler_pixelated, bad_euler
         for mob in pictures:
-            mob.scale_to_fit_height(5)
+            mob.set_height(5)
 
         good_euler.move_to(FRAME_X_RADIUS*LEFT/2)
         bad_euler.move_to(FRAME_X_RADIUS*RIGHT/2)
@@ -594,7 +594,7 @@ class HeroAndVillain(Scene):
 class AnalysisQuote(Scene):
     def construct(self):
         analysis = get_image("Analysis_page_showing_pi")
-        analysis.scale_to_fit_height(FRAME_HEIGHT)
+        analysis.set_height(FRAME_HEIGHT)
         analysis.to_edge(LEFT, buff = 0)
 
         text = TextMobject(
@@ -610,7 +610,7 @@ class AnalysisQuote(Scene):
         pi_formula = TexMobject(
             "\\pi", "=", "{ \\text{semicircumference}", "\\over", "\\text{radius}}"
         )
-        text.scale_to_fit_width(FRAME_X_RADIUS)
+        text.set_width(FRAME_X_RADIUS)
         text.next_to(analysis, RIGHT, LARGE_BUFF)
         text.to_edge(UP)
 
@@ -691,7 +691,7 @@ class UsingTheta(Scene):
         theta = TexMobject("\\theta", "=")
         theta[0].match_color(arc)
         theta.add_background_rectangle()
-        update_theta = ContinualUpdateFromFunc(
+        update_theta = ContinualUpdate(
             theta, lambda m : m.shift(
                 rotate_vector(0.9*RIGHT, radius.get_angle()/2) \
                 - m[1][0].get_center()
@@ -722,7 +722,7 @@ class UsingTheta(Scene):
 
 class ThingsNamedAfterEuler(Scene):
     def construct(self):
-        group = VGroup(*map(TextMobject, [
+        group = VGroup(*list(map(TextMobject, [
             "Euler's formula (Complex analysis)",
             "Euler's formula (Graph theory)",
             "Euler's formula (Mechanical engineering)",
@@ -733,9 +733,9 @@ class ThingsNamedAfterEuler(Scene):
             "Euler equations (fluid dynamics)",
             "Euler angles (rigid-body mechanics)",
             "Euler totient function (number theory)",
-        ]))
+        ])))
         group.arrange_submobjects(DOWN, aligned_edge = LEFT)
-        group.scale_to_fit_height(FRAME_HEIGHT - 1)
+        group.set_height(FRAME_HEIGHT - 1)
 
         self.play(LaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
         self.wait()
@@ -743,7 +743,7 @@ class ThingsNamedAfterEuler(Scene):
 class EulerThinking(Scene):
     def construct(self):
         image = get_image("Leonhard_Euler_by_Handmann")
-        image.scale_to_fit_height(4)
+        image.set_height(4)
         image.to_edge(DOWN)
         image.shift(4*LEFT)
         bubble = ThoughtBubble(height = 4.5)
@@ -973,12 +973,12 @@ class SpecialThanks(Scene):
         h_line.next_to(title, DOWN)
         h_line.set_stroke(WHITE, 1)
 
-        people = VGroup(*map(TextMobject, [
+        people = VGroup(*list(map(TextMobject, [
             "Ben Hambrecht",
             "University Library Basel",
             "Martin Mattmüller",
             "Library of the Institut de France",
-        ]))
+        ])))
         people.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
         people.next_to(h_line, DOWN)
 
@@ -1049,7 +1049,7 @@ class EndScene(PatreonEndScreen):
             ]
         ])
         for i, picture in enumerate(pictures):
-            picture.scale_to_fit_height(2)
+            picture.set_height(2)
             picture.next_to(instagram, DOWN, aligned_edge = RIGHT)
             if i%3 != 0:
                 picture.next_to(last_picture, LEFT, buff = 0)
@@ -1064,7 +1064,7 @@ class Thumbnail(Scene):
         formula.scale(2)
         pi.scale(1.5, about_edge = RIGHT)
         formula.set_stroke(BLUE, 1)
-        formula.scale_to_fit_width(FRAME_WIDTH - 2)
+        formula.set_width(FRAME_WIDTH - 2)
         # formula.shift(0.5*RIGHT)
         self.add(formula)
 

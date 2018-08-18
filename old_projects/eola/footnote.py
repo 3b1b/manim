@@ -13,7 +13,7 @@ class OpeningQuote(Scene):
             into...(dramatic pause)...""",
             "the third dimension."
         ])
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         words.split()[0].set_color(YELLOW)
         words.split()[2].set_color(YELLOW)
@@ -126,7 +126,7 @@ class PutTogether3x3Matrix(Scene):
             k_to, k_array, TexMobject("=").set_color(BLACK),
         )
         everything.arrange_submobjects(RIGHT, buff = 0.1)
-        everything.scale_to_fit_width(FRAME_WIDTH-1)
+        everything.set_width(FRAME_WIDTH-1)
         everything.to_edge(DOWN)
 
         i_array.set_color(X_COLOR)
@@ -139,10 +139,7 @@ class PutTogether3x3Matrix(Scene):
         ))
         matrix.to_edge(DOWN)
 
-        start_entries = reduce(op.add, map(
-            lambda a : a.get_entries().split(),
-            arrays
-        ))
+        start_entries = reduce(op.add, [a.get_entries().split() for a in arrays])
         target_entries = matrix.get_mob_matrix().transpose().flatten()
         start_l_bracket = i_array.get_brackets().split()[0]
         start_r_bracket = k_array.get_brackets().split()[1]
@@ -190,7 +187,7 @@ class ShowVCoordinateMeaning(Scene):
         coords = Matrix(["x", "y", "z"])
         eq2 = eq.copy()
         if self.post_transform:
-            L, l_paren, r_paren = map(TexMobject, "L()")
+            L, l_paren, r_paren = list(map(TexMobject, "L()"))
             parens = VMobject(l_paren, r_paren)
             parens.scale(2)
             parens.stretch_to_fit_height(
@@ -199,11 +196,11 @@ class ShowVCoordinateMeaning(Scene):
             VMobject(L, l_paren, coords, r_paren).arrange_submobjects(buff = 0.1)
             coords.submobjects = [L, l_paren] + coords.submobjects + [r_paren]
 
-        lin_comb = VMobject(*map(TexMobject, [
+        lin_comb = VMobject(*list(map(TexMobject, [
             "x", self.i_str, "+",
             "y", self.j_str, "+",
             "z", self.k_str,
-        ]))
+        ])))
         lin_comb.arrange_submobjects(
             RIGHT, buff = 0.1, 
             aligned_edge = ORIGIN if self.post_transform else DOWN
@@ -218,12 +215,12 @@ class ShowVCoordinateMeaning(Scene):
 
         everything = VMobject(v, eq, coords, eq2, lin_comb)
         everything.arrange_submobjects(buff = 0.2)
-        everything.scale_to_fit_width(FRAME_WIDTH - 1)
+        everything.set_width(FRAME_WIDTH - 1)
         everything.to_edge(DOWN)
         if not self.post_transform:
             lin_comb.shift(0.35*UP)
 
-        self.play(*map(Write, [v, eq, coords]))
+        self.play(*list(map(Write, [v, eq, coords])))
         self.wait()
         self.play(
             Transform(
@@ -253,13 +250,13 @@ class ShowMatrixVectorMultiplication(Scene):
     def construct(self):
         matrix = Matrix(np.arange(9).reshape((3, 3)))
         vect = Matrix(list("xyz"))
-        vect.scale_to_fit_height(matrix.get_height())
+        vect.set_height(matrix.get_height())
         col1, col2, col3 = columns = [
             Matrix(col)
             for col in matrix.copy().get_mob_matrix().transpose()
         ]
         coords = x, y, z = [m.copy() for m in vect.get_entries().split()]
-        eq, plus1, plus2 = map(TexMobject, list("=++"))
+        eq, plus1, plus2 = list(map(TexMobject, list("=++")))
         everything = VMobject(
             matrix, vect, eq,
             x, col1, plus1,
@@ -267,7 +264,7 @@ class ShowMatrixVectorMultiplication(Scene):
             z, col3
         )
         everything.arrange_submobjects(buff = 0.1)
-        everything.scale_to_fit_width(FRAME_WIDTH-1)
+        everything.set_width(FRAME_WIDTH-1)
         result = VMobject(x, col1, plus1, y, col2, plus2, z, col3)
 
         trips = [
@@ -285,17 +282,17 @@ class ShowMatrixVectorMultiplication(Scene):
         matrix_brace, vect_brace, result_brace = braces
 
 
-        self.play(*map(Write, [matrix, vect]), run_time = 2)
+        self.play(*list(map(Write, [matrix, vect])), run_time = 2)
         self.play(Write(matrix_brace, run_time = 1))
         self.play(Write(vect_brace, run_time = 1))
-        sexts = zip(
+        sexts = list(zip(
             matrix.get_mob_matrix().transpose(),
             columns,
             vect.get_entries().split(),
             coords,
             [eq, plus1, plus2],
             [X_COLOR, Y_COLOR, Z_COLOR]
-        )
+        ))
         for o_col, col, start_coord, coord, sym, color in sexts:
             o_col = VMobject(*o_col)
             self.play(
@@ -341,7 +338,7 @@ class ShowMatrixMultiplication(Scene):
             braces.append(brace)
         right_brace, left_brace = braces
 
-        VMobject(*self.get_mobjects()).scale_to_fit_width(FRAME_WIDTH-1)
+        VMobject(*self.get_mobjects()).set_width(FRAME_WIDTH-1)
 
         self.add(right, left)
         self.play(Write(right_brace))
@@ -386,12 +383,12 @@ class QuestionsToPonder(Scene):
         title = TextMobject("Questions to ponder")
         title.set_color(YELLOW).to_edge(UP)
         self.add(title)
-        questions = VMobject(*map(TextMobject, [
+        questions = VMobject(*list(map(TextMobject, [
             "1. Can you visualize these transformations?",
             "2. Can you represent them with matrices?",
             "3. How many rows and columns?",
             "4. When can you multiply these matrices?",
-        ]))
+        ])))
         questions.arrange_submobjects(DOWN, buff = 1, aligned_edge = LEFT)
         questions.to_edge(LEFT)
         for question in questions.split():
@@ -403,10 +400,10 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: The determinant
         """)
-        title.scale_to_fit_width(FRAME_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

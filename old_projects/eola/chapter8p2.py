@@ -17,7 +17,7 @@ class OpeningQuote(Scene):
         )
         words.set_color_by_tex("difficulty of a proof:", RED)
         words.set_color_by_tex("paint a landscape", GREEN)
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Pierre Deligne")
         author.set_color(YELLOW)
@@ -42,7 +42,7 @@ class CrossProductSymbols(Scene):
         vector_text = brace.get_text("Vector")
         vector_text.set_color(RED)
         self.add(equation)
-        self.play(*map(Write, [brace, vector_text]))
+        self.play(*list(map(Write, [brace, vector_text])))
         self.wait()
 
 class DeterminantTrickCopy(DeterminantTrick):
@@ -128,7 +128,7 @@ class BruteForceVerification(Scene):
             mob.set_color_by_tex("\\theta", GREEN)
             mob.next_to(last_point, DOWN, buff = MED_SMALL_BUFF)
             if mob.get_width() > max_width:
-                mob.scale_to_fit_width(max_width)
+                mob.set_width(max_width)
             last_point = mob
             self.play(FadeIn(mob))
         self.wait()
@@ -146,7 +146,7 @@ class Prerequisites(Scene):
         title.set_color(YELLOW)
 
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_width(FRAME_X_RADIUS - 1)
+        rect.set_width(FRAME_X_RADIUS - 1)
         left_rect, right_rect = [
             rect.copy().shift(DOWN/2).to_edge(edge)
             for edge in (LEFT, RIGHT)
@@ -165,7 +165,7 @@ class Prerequisites(Scene):
         self.add(title)
         for chapter, rect in (chapter5, left_rect), (chapter7, right_rect):
             if chapter.get_width() > rect.get_width():
-                chapter.scale_to_fit_width(rect.get_width())
+                chapter.set_width(rect.get_width())
             chapter.next_to(rect, UP)
             self.play(
                 Write(chapter5), 
@@ -200,7 +200,7 @@ class DotProductToTransformSymbol(Scene):
         _input = Matrix(["x", "y"])
         _input.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         left_input, right_input = [_input.copy() for x in range(2)]
-        dot, equals = map(TexMobject, ["\\cdot", "="])
+        dot, equals = list(map(TexMobject, ["\\cdot", "="]))
         equation = VGroup(
             vector, dot, left_input, equals,
             matrix, right_input
@@ -210,7 +210,7 @@ class DotProductToTransformSymbol(Scene):
         right_brace = Brace(matrix, UP)
         left_words = left_brace.get_text("Dot product")
         right_words = right_brace.get_text("Transform")
-        right_words.scale_to_fit_width(right_brace.get_width())
+        right_words.set_width(right_brace.get_width())
 
         right_v_brace = Brace(right_input, UP)
         right_v_mob = v_mob.copy()
@@ -326,7 +326,7 @@ class ThreeStepPlan(Scene):
         linear_transformation.next_to(h_line, DOWN, MED_SMALL_BUFF)
         det = self.get_det()
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(3.5)
+        rect.set_height(3.5)
         left_right_arrow = TexMobject("\\Leftrightarrow")
         left_right_arrow.shift(DOWN)
         det.next_to(left_right_arrow, LEFT)
@@ -338,7 +338,7 @@ class ThreeStepPlan(Scene):
                 VGroup(linear, transformation), 
                 linear_transformation
             ),
-            *map(FadeOut, steps)
+            *list(map(FadeOut, steps))
         )
         self.wait()
         self.play(Write(left_right_arrow))
@@ -374,7 +374,7 @@ class DefineDualTransform(Scene):
         title = TextMobject("What a student might think")
         title.not_real = TextMobject("Not the real cross product")
         for mob in title, title.not_real:
-            mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
+            mob.set_width(FRAME_X_RADIUS - 1)
             mob.set_color(RED)
             mob.to_edge(UP)
         self.add(title)
@@ -382,7 +382,7 @@ class DefineDualTransform(Scene):
 
     def show_triple_cross_product(self):
         colors = [WHITE, ORANGE, W_COLOR]
-        tex_mobs = map(TexMobject, get_vect_tex(*"uvw"))
+        tex_mobs = list(map(TexMobject, get_vect_tex(*"uvw")))
         u_tex, v_tex, w_tex = tex_mobs
         arrays = [
             Matrix(["%s_%d"%(s, d) for d in range(1, 4)])
@@ -425,7 +425,7 @@ class DefineDualTransform(Scene):
         final_mobs.next_to(self.title, DOWN, buff = MED_SMALL_BUFF)
 
         for mob in definitions, final_mobs:
-            mob.scale_to_fit_width(FRAME_X_RADIUS - 1)
+            mob.set_width(FRAME_X_RADIUS - 1)
 
         for array in arrays:
             brackets = array.get_brackets()
@@ -482,7 +482,7 @@ class DefineDualTransform(Scene):
         )
         self.wait()
 
-        x, y, z = variables = map(TexMobject, "xyz")
+        x, y, z = variables = list(map(TexMobject, "xyz"))
         for var, entry in zip(variables, self.u_entries):
             var.scale(0.8) 
             var.move_to(entry)
@@ -503,7 +503,7 @@ class DefineDualTransform(Scene):
         func_tex.scale(0.7)
         func_input = Matrix(list("xyz"))
         func_input_template = VGroup(*func_tex[3:-2])
-        func_input.scale_to_fit_height(func_input_template.get_height())
+        func_input.set_height(func_input_template.get_height())
         func_input.next_to(VGroup(*func_tex[:3]), RIGHT)
         VGroup(*func_tex[-2:]).next_to(func_input, RIGHT)
         func_tex[0].scale_in_place(1.5)
@@ -540,7 +540,7 @@ class DefineDualTransform(Scene):
     def introduce_dual_vector(self):
         everything = VGroup(*self.get_mobjects())
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
-        q_marks = VGroup(*map(TextMobject, "???"))
+        q_marks = VGroup(*list(map(TextMobject, "???")))
         q_marks.scale(2)
         q_marks.set_color_by_gradient(*colors)
 
@@ -548,9 +548,9 @@ class DefineDualTransform(Scene):
         title.set_color(GREEN)
         title.to_edge(UP)
         matrix = Matrix([list(q_marks.copy())])
-        matrix.scale_to_fit_height(self.func_tex.get_height()/2)
+        matrix.set_height(self.func_tex.get_height()/2)
         dual_vector = Matrix(list(q_marks))
-        dual_vector.scale_to_fit_height(self.func_tex.get_height())
+        dual_vector.set_height(self.func_tex.get_height())
         dual_vector.get_brackets()[0].shift(0.2*LEFT)
         dual_vector.get_entries().shift(0.1*LEFT)
         dual_vector.scale(1.25)
@@ -596,19 +596,19 @@ class DefineDualTransform(Scene):
             ShowCreation(matrix_arrow)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [matrix_words, matrix_arrow]))
+        self.play(*list(map(FadeOut, [matrix_words, matrix_arrow])))
         self.play(
             Transform(func, dual_vector),
             Write(dual_dot[1])
         )
         self.wait()
 
-        p_coords = VGroup(*map(TexMobject, [
+        p_coords = VGroup(*list(map(TexMobject, [
             "p_%d"%d for d in range(1, 4)
-        ]))
+        ])))
         p_coords.set_color(RED)        
         p_array = Matrix(list(p_coords))
-        p_array.scale_to_fit_height(dual_vector.get_height())
+        p_array.set_height(dual_vector.get_height())
         p_array.move_to(dual_vector, aligned_edge = RIGHT)
         p_brace = Brace(p_array, UP)
         p_tex = TexMobject(get_vect_tex("p"))
@@ -690,13 +690,13 @@ class DefineDualTransform(Scene):
             sym_strings = ["(", "\\cdot", "-", "\\cdot", ")"]
             if i < 2:
                 sym_strings[-1] += "+"
-            syms = map(TexMobject, sym_strings)
+            syms = list(map(TexMobject, sym_strings))
             for mob, sym in zip(quint, syms):
                 mob.target = mob.copy()
                 mob.target.scale(1.5)
                 mob.sym = sym
             quint_targets = [mob.target for mob in quint]
-            component = VGroup(*it.chain(*zip(quint_targets, syms)))
+            component = VGroup(*it.chain(*list(zip(quint_targets, syms))))
             component.arrange_submobjects()
             cross_components.add(component)
             to_fade.add(syms[0], syms[-1], quint[0])
@@ -723,7 +723,7 @@ class DefineDualTransform(Scene):
                 ).next_to(cross_components, LEFT),
                 new_ps
             ),
-            *map(FadeOut, to_fade)
+            *list(map(FadeOut, to_fade))
         )
         self.play(*[
             Write(TexMobject("=").next_to(p, buff = 2*SMALL_BUFF))
@@ -823,7 +823,7 @@ class DotProductWords(Scene):
         times.next_to(words[0], RIGHT)
 
         everyone = VGroup(dot_product, equals, times, words)
-        everyone.center().scale_to_fit_width(FRAME_X_RADIUS - 1)
+        everyone.center().set_width(FRAME_X_RADIUS - 1)
         self.add(dot_product)
         self.play(Write(equals))
         self.play(Write(words[0]))
@@ -855,7 +855,7 @@ class GeometricVolumeWords(Scene):
         words[1].set_color_by_tex(v_tex, ORANGE)
         words[1].set_color_by_tex(w_tex, W_COLOR)
         words.arrange_submobjects(RIGHT)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(DOWN, buff = SMALL_BUFF)
         for word in words:
             self.play(Write(word))
@@ -891,7 +891,7 @@ class NextVideo(Scene):
         """)
         title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)

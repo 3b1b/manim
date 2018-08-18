@@ -41,7 +41,7 @@ def thicken(nparray):
 
 def sort_by_color(mob):
     indices = np.argsort(np.apply_along_axis(
-        lambda p : -np.linalg.norm(p),
+        lambda p : -get_norm(p),
         1,
         mob.rgbas
     ))
@@ -52,7 +52,7 @@ def sort_by_color(mob):
 
 def get_image_array(name):
     image_files = os.listdir(IMAGE_DIR)
-    possibilities = filter(lambda s : s.startswith(name), image_files)
+    possibilities = [s for s in image_files if s.startswith(name)]
     for possibility in possibilities:
         try:
             path = os.path.join(IMAGE_DIR, possibility)
@@ -211,7 +211,7 @@ class JohannThinksHeIsBetter(Scene):
         upper_point = Point(comparitive_johann.get_corner(UP+RIGHT))
         lightbulb = ImageMobject("Lightbulb", invert = False)
         lightbulb.scale(0.1)
-        lightbulb.sort_points(np.linalg.norm)
+        lightbulb.sort_points(get_norm)
         lightbulb.next_to(upper_point, RIGHT)
 
         self.add(johann)
@@ -316,7 +316,7 @@ class MathematiciansOfEurope(Scene):
             name_mob = TextMobject(name.replace("_", " "))
             name_mob.to_corner(UP+LEFT, buff=0.75)
             self.add(name_mob)
-            man.scale_to_fit_height(4)
+            man.set_height(4)
             mobject = Point(man.get_corner(UP+LEFT))
             self.play(Transform(mobject, man))
             man.scale(0.2)
@@ -358,10 +358,10 @@ class NewtonConsideredEveryoneBeneathHim(Scene):
         newton = mathematicians.pop(0)
         newton.scale(0.8)
         new_newton = newton.copy()
-        new_newton.scale_to_fit_height(3)
+        new_newton.set_height(3)
         new_newton.to_edge(UP)
         for man in mathematicians:
-            man.scale_to_fit_width(1.7)
+            man.set_width(1.7)
         johann = mathematicians.pop(0)
         johann.next_to(new_newton, DOWN)
         last_left, last_right = johann, johann

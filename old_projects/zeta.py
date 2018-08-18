@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from big_ol_pile_of_manim_imports import *
 
 import mpmath
@@ -41,7 +41,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
                 continue
             p1 = line.get_start()+LEFT
             p2 = line.get_end()+LEFT
-            t = (-np.dot(p1, p2-p1))/(np.linalg.norm(p2-p1)**2)
+            t = (-np.dot(p1, p2-p1))/(get_norm(p2-p1)**2)
             closest_to_one = interpolate(
                 line.get_start(), line.get_end(), t
             )
@@ -437,7 +437,7 @@ class DefineForRealS(PiCreatureScene):
             x_min = 0,
             x_max = 3,
             tick_frequency = 0.25,
-            numbers_with_elongated_ticks = range(4),
+            numbers_with_elongated_ticks = list(range(4)),
             unit_size = 3,
         )
         number_line.add_numbers()
@@ -501,9 +501,9 @@ class DefineForRealS(PiCreatureScene):
             self.pi_creature.change_mode, "happy"
         )
         self.wait(3)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             fracs, pi_arrow, pi_dot, approx,
-        ]))
+        ])))
         self.lines = lines
         self.braces = braces
         self.dots = dots
@@ -596,13 +596,13 @@ class DefineForRealS(PiCreatureScene):
         zeta_s_eq.shift(0.5*UP)
         inputs.add(*zeta_s_eq[2:2+n_input_chars])
 
-        sum_terms = TexMobject(*it.chain(*zip(
+        sum_terms = TexMobject(*it.chain(*list(zip(
             [
                 "\\frac{1}{%d^{%s}}"%(d, input_string)
                 for d in range(1, 1+num_shown_terms)
             ],
             it.cycle(["+"])
-        )))
+        ))))
         sum_terms.add(TexMobject("\\cdots").next_to(sum_terms))
         sum_terms.next_to(zeta_s_eq, RIGHT)
         for x in range(num_shown_terms):
@@ -692,16 +692,16 @@ class ReadIntoZetaFunction(Scene):
             Line(LEFT, RIGHT).shift(0.2*DOWN),
             Line(LEFT, ORIGIN).shift(0.4*DOWN)
         )
-        paragraph_lines.scale_to_fit_width(max_width)
+        paragraph_lines.set_width(max_width)
         paragraph_lines.next_to(title, DOWN, MED_LARGE_BUFF)
         paper.add(paragraph_lines)
         max_height = 1.5*paragraph_lines.get_height()
 
         statement = TextMobject(self.statement)
         if statement.get_width() > max_width:
-            statement.scale_to_fit_width(max_width)
+            statement.set_width(max_width)
         if statement.get_height() > max_height:
-            statement.scale_to_fit_height(max_height)
+            statement.set_height(max_height)
 
         statement.next_to(paragraph_lines, DOWN)
         statement.set_color(GREEN_B)
@@ -775,7 +775,7 @@ class RiemannFatherOfComplex(ComplexTransformationScene):
         name.add_background_rectangle()
         # photo = Square()
         photo = ImageMobject("Riemann", invert = False)
-        photo.scale_to_fit_width(5)
+        photo.set_width(5)
         photo.next_to(name, DOWN, aligned_edge = LEFT)
 
 
@@ -841,7 +841,7 @@ class FromRealToComplex(ComplexTransformationScene):
         number_line = NumberLine(
             unit_size = 2,
             tick_frequency = 0.5,
-            numbers_with_elongated_ticks = range(-2, 3)
+            numbers_with_elongated_ticks = list(range(-2, 3))
         )
         number_line.add_numbers()
         input_dot = Dot(number_line.number_to_point(2))
@@ -966,7 +966,7 @@ class FromRealToComplex(ComplexTransformationScene):
         self.play(Blink(randy))
         self.play(randy.change_mode, "happy")
         self.wait()
-        self.play(*map(FadeOut, [randy, bubble, frac, words]))
+        self.play(*list(map(FadeOut, [randy, bubble, frac, words])))
 
     def show_s_equals_two_lines(self):
         self.input_label.save_state()
@@ -1003,7 +1003,7 @@ class FromRealToComplex(ComplexTransformationScene):
 
     def transition_to_spiril_sum(self):
         zeta = self.get_zeta_definition("2+i", "1.15 - 0.44i")
-        zeta.scale_to_fit_width(FRAME_WIDTH-1)
+        zeta.set_width(FRAME_WIDTH-1)
         zeta.to_corner(UP+LEFT)
         lines, output_dot = self.get_sum_lines(complex(2, 1))
 
@@ -1087,9 +1087,9 @@ class FromRealToComplex(ComplexTransformationScene):
         self.play(FadeIn(anti_domain))
         self.play(Write(anti_domain_words))
         self.wait(2)
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             anti_domain, anti_domain_words,
-        ]))
+        ])))
         self.domain_words = domain_words
 
     def ask_about_visualizing_all(self):
@@ -1114,9 +1114,9 @@ class FromRealToComplex(ComplexTransformationScene):
         self.play(
             morty.change_mode, "pondering",
             morty.look_at, self.input_dot,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 bubble, bubble.content, self.domain_words
-            ])
+            ]))
         )
         arrow = Arrow(self.input_dot, self.output_dot, buff = SMALL_BUFF)
         arrow.set_color(WHITE)
@@ -1169,7 +1169,7 @@ class FromRealToComplex(ComplexTransformationScene):
         ]
         power_sums = np.cumsum(powers)
         lines = VGroup(*[
-            Line(*map(self.z_to_point, z_pair))
+            Line(*list(map(self.z_to_point, z_pair)))
             for z_pair in zip(power_sums, power_sums[1:])
         ])
         widths = np.linspace(line_thickness, 0, len(list(lines)))
@@ -1276,7 +1276,7 @@ class ComplexExponentiation(Scene):
         self.wait()
         self.play(
             imag_part.move_to, imag_part.get_left(),
-            *map(FadeOut, [brace, we_understand, real_part])
+            *list(map(FadeOut, [brace, we_understand, real_part]))
         )
         self.wait()
         self.imag_exponent = imag_part
@@ -1371,7 +1371,7 @@ class ComplexExponentiation(Scene):
         exp = self.imag_exponent[-1]
         new_exp = TexMobject("ti")
         new_exp.set_color(exp.get_color())
-        new_exp.scale_to_fit_height(exp.get_height())
+        new_exp.set_height(exp.get_height())
         new_exp.move_to(exp, LEFT)
 
         nine = TexMobject("9")
@@ -1544,7 +1544,7 @@ class ShowMultiplicationOfRealAndImaginaryExponentialParts(FromRealToComplex):
         imag_part.generate_target()
         real_part.target.next_to(brace, UP+RIGHT, buff = 0)
         imag_part.target.next_to(real_part.target, buff = 0)
-        self.play(*map(MoveToTarget, [real_part, imag_part]))
+        self.play(*list(map(MoveToTarget, [real_part, imag_part])))
         self.wait()
 
 class ComplexFunctionsAsTransformations(ComplexTransformationScene):
@@ -1587,7 +1587,7 @@ class ComplexFunctionsAsTransformations(ComplexTransformationScene):
             2*RIGHT+DOWN,
             RIGHT+2*UP,
         ]
-        input_dots = VGroup(*map(Dot, input_points))
+        input_dots = VGroup(*list(map(Dot, input_points)))
         input_dots.set_color(YELLOW)
         output_dots = VGroup(*[
             Dot(ip + on)
@@ -1634,7 +1634,7 @@ class VisualizingSSquared(ComplexTransformationScene):
         self.title = title
 
     def plug_in_specific_values(self):
-        inputs = map(complex, [2, -1, complex(0, 1)])
+        inputs = list(map(complex, [2, -1, complex(0, 1)]))
         input_dots  = VGroup(*[
             Dot(self.z_to_point(z), color = YELLOW)
             for z in inputs
@@ -1788,7 +1788,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         self.wait()
         self.play(
             morty.look_at, self.plane.get_bottom(),
-            *map(FadeOut, [bubble, bubble.content])
+            *list(map(FadeOut, [bubble, bubble.content]))
         )
         self.play(Blink(morty))
         self.play(FadeOut(morty))
@@ -1799,10 +1799,10 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         words.next_to(ORIGIN, UP+LEFT)
         words.shift(LEFT+UP)
 
-        line = Line(*map(self.z_to_point, [
+        line = Line(*list(map(self.z_to_point, [
             complex(np.euler_gamma, u*FRAME_Y_RADIUS)
             for u in (1, -1)
-        ]))
+        ])))
         line.set_color(YELLOW)
         arrows = [
             Arrow(words.get_right(), point)
@@ -1818,7 +1818,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         )
         self.play(FadeOut(arrows[0]))
         self.wait(2)
-        self.play(*map(FadeOut, [words, line]))
+        self.play(*list(map(FadeOut, [words, line])))
 
     def set_color_i_line(self):
         right_i_lines, left_i_lines = [
@@ -1998,9 +1998,9 @@ class SquiggleOnExtensions(ZetaTransformationScene):
         arrow = Arrow(label.get_right(), dot, buff = SMALL_BUFF)
 
         self.play(Write(label, run_time = 1))
-        self.play(*map(ShowCreation, [arrow, dot]))
+        self.play(*list(map(ShowCreation, [arrow, dot])))
         self.wait()
-        self.play(*map(FadeOut, [arrow, label]))
+        self.play(*list(map(FadeOut, [arrow, label])))
         return dot
 
     def cycle_through_options(self):
@@ -2166,7 +2166,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         for index in 3, 7:
             randy.bubble.content[index].set_color(YELLOW)
 
-        self.play(*map(FadeIn, [randy, morty]))
+        self.play(*list(map(FadeIn, [randy, morty])))
         self.play(
             randy.change_mode, "speaking",
             ShowCreation(randy.bubble),
@@ -2182,11 +2182,11 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         )
         self.play(Blink(randy))
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             randy, morty,
             randy.bubble, randy.bubble.content,
             morty.bubble, morty.bubble.content,
-        ]))
+        ])))
 
 
     def cycle_through_line_pairs(self):
@@ -2215,10 +2215,10 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             for y in np.arange(0, 3, 0.5)
             if not (x <= 0 and y == 0)
         ]
-        brackets = VGroup(*map(
+        brackets = VGroup(*list(map(
             self.get_right_angle_bracket,
             intersection_inputs
-        ))
+        )))
         self.apply_function()
         self.wait()
         self.play(
@@ -2300,7 +2300,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         angle_group = VGroup(angle_tex, angle_arrow)
 
 
-        self.play(*map(ShowCreation, lines))
+        self.play(*list(map(ShowCreation, lines)))
         self.play(
             Write(angle_tex),
             ShowCreation(angle_arrow),
@@ -2321,13 +2321,13 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             ShowCreation(arrow)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [arc, angle_tex, arrow]))
+        self.play(*list(map(FadeOut, [arc, angle_tex, arrow])))
 
     def put_angle_tex_next_to_arc(self, angle_tex, arc):
         vect = arc.point_from_proportion(0.5)-interpolate(
             arc.points[0], arc.points[-1], 0.5
         )
-        unit_vect = vect/np.linalg.norm(vect)
+        unit_vect = vect/get_norm(vect)
         angle_tex.move_to(arc.get_center() + 1.7*unit_vect)
 
     def get_right_angle_bracket(self, input_z):
@@ -2478,10 +2478,10 @@ class NoteZetaFunctionAnalyticOnRightHalf(ZetaTransformationScene):
             for y in np.arange(-0.5, 0.5, 1./16)
             if abs(y) > 1./16
         ]
-        brackets = VGroup(*map(
+        brackets = VGroup(*list(map(
             self.get_right_angle_bracket,
             intersection_inputs
-        ))
+        )))
         self.play(ShowCreation(brackets, run_time = 3))
         self.wait()
 
@@ -2824,9 +2824,9 @@ class DiscussZeros(ZetaTransformationScene):
         self.play(Blink(randy))
         self.wait()
         self.play(Blink(randy))
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             randy, bubble, bubble.content, trivial_zero_words
-        ]))
+        ])))
 
     def show_critical_strip(self):
         strip = Rectangle(
@@ -2845,7 +2845,7 @@ class DiscussZeros(ZetaTransformationScene):
         primes.to_corner(UP+RIGHT)
         # photo = Square()
         photo = ImageMobject("Riemann", invert = False)
-        photo.scale_to_fit_width(5)
+        photo.set_width(5)
         photo.to_corner(UP+LEFT)
         new_dots = VGroup(*[
             Dot(0.5*RIGHT + y*UP)
@@ -2884,9 +2884,9 @@ class DiscussZeros(ZetaTransformationScene):
         self.wait(3)
         self.play(
             photo.shift, 7*LEFT,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
             primes, self.dots, strip
-            ])
+            ]))
         )
         self.remove(photo)
         self.critical_line = critical_line
@@ -2911,7 +2911,7 @@ class DiscussZeros(ZetaTransformationScene):
     def get_dot_wandering_anims(self):
         self.dot_anim_count += 1
         if self.dot_anim_count == 1:
-            return map(MoveToTarget, self.dots)
+            return list(map(MoveToTarget, self.dots))
         denom = 4*(len(list(self.dots)))
         def get_rate_func(index):
             return lambda t : (float(self.dot_anim_count + 2*index + t)/denom)%1
@@ -3100,11 +3100,11 @@ class DiscussSumOfNaturals(Scene):
 class InventingMathPreview(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(4)
+        rect.set_height(4)
         title = TextMobject("What does it feel like to invent math?")
         title.next_to(rect, UP)
         sum_tex = TexMobject("1+2+4+8+\\cdots = -1")
-        sum_tex.scale_to_fit_width(rect.get_width()-1)
+        sum_tex.set_width(rect.get_width()-1)
 
         self.play(
             ShowCreation(rect),
@@ -3162,15 +3162,15 @@ class PatreonThanks(Scene):
         special_thanks.set_color(YELLOW)
         special_thanks.shift(3*UP)
         patreon_logo = ImageMobject("patreon", invert = False)
-        patreon_logo.scale_to_fit_height(1.5)
+        patreon_logo.set_height(1.5)
         patreon_logo.next_to(special_thanks, DOWN)
 
-        left_patrons = VGroup(*map(TextMobject,
+        left_patrons = VGroup(*list(map(TextMobject,
             self.specific_patrons[:n_patrons/2]
-        ))
-        right_patrons = VGroup(*map(TextMobject,
+        )))
+        right_patrons = VGroup(*list(map(TextMobject,
             self.specific_patrons[n_patrons/2:]
-        ))
+        )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
             patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
@@ -3272,18 +3272,18 @@ class Thumbnail(ZetaTransformationScene):
         self.plane.set_stroke(width = 4)
 
         div_sum = TexMobject("-\\frac{1}{12} = ", "1+2+3+4+\\cdots")
-        div_sum.scale_to_fit_width(FRAME_WIDTH-1)
+        div_sum.set_width(FRAME_WIDTH-1)
         div_sum.to_edge(DOWN)
         div_sum.set_color(YELLOW)
         for mob in div_sum.submobjects:
             mob.add_to_back(BackgroundRectangle(mob))
 
         zeta = TexMobject("\\zeta(s)")
-        zeta.scale_to_fit_height(FRAME_Y_RADIUS-1)
+        zeta.set_height(FRAME_Y_RADIUS-1)
         zeta.to_corner(UP+LEFT)
 
         million = TexMobject("\\$1{,}000{,}000")
-        million.scale_to_fit_width(FRAME_X_RADIUS+1)
+        million.set_width(FRAME_X_RADIUS+1)
         million.to_edge(UP+RIGHT)
         million.set_color(GREEN_B)
         million.add_background_rectangle()

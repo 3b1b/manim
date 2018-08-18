@@ -19,7 +19,7 @@ class UprightCoin(Circle):
     def __init__(self, **kwargs):
         Circle.__init__(self,**kwargs)
         self.symbol_mob = TextMobject(self.symbol, stroke_color = self.stroke_color)
-        self.symbol_mob.scale_to_fit_height(0.5*self.get_height()).move_to(self)
+        self.symbol_mob.set_height(0.5*self.get_height()).move_to(self)
         self.add(self.symbol_mob)
 
 class UprightHeads(UprightCoin):

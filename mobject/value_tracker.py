@@ -1,15 +1,11 @@
-from __future__ import absolute_import
 
 import numpy as np
 
-from constants import *
-
-from mobject.types.vectorized_mobject import VectorizedPoint
-
-# TODO: Rather than using VectorizedPoint, there should be some UndisplayedPointSet type
+from mobject.mobject import Mobject
+from utils.bezier import interpolate
 
 
-class ValueTracker(VectorizedPoint):
+class ValueTracker(Mobject):
     """
     Note meant to be displayed.  Instead the position encodes some
     number, often one which another animation or continual_animation
@@ -18,14 +14,15 @@ class ValueTracker(VectorizedPoint):
     """
 
     def __init__(self, value=0, **kwargs):
-        VectorizedPoint.__init__(self, **kwargs)
+        Mobject.__init__(self, **kwargs)
+        self.points = np.zeros((1, 3))
         self.set_value(value)
 
     def get_value(self):
-        return self.get_center()[0]
+        return self.points[0, 0]
 
     def set_value(self, value):
-        self.move_to(value * RIGHT)
+        self.points[0, 0] = value
         return self
 
     def increment_value(self, d_value):
@@ -40,8 +37,7 @@ class ExponentialValueTracker(ValueTracker):
     """
 
     def get_value(self):
-        return np.exp(self.get_center()[0])
+        return np.exp(ValueTracker.get_value(self))
 
     def set_value(self, value):
-        self.move_to(np.log(value) * RIGHT)
-        return self
+        return ValueTracker.set_value(self, np.log(value))

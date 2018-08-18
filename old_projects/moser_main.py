@@ -72,12 +72,9 @@ class CircleScene(Scene):
         self.remove(*self.lines)
         self.lines = []
         for point_pair in it.combinations(self.points, 2):
-            int_points = filter(
-                lambda p : is_on_line(p, *point_pair), 
-                self.intersection_points
-            )
+            int_points = [p for p in self.intersection_points if is_on_line(p, *point_pair)]
             points = list(point_pair) + int_points
-            points = map(lambda p : (p[0], p[1], 0), points)
+            points = [(p[0], p[1], 0) for p in points]
             points.sort(cmp = lambda x,y: cmp(x[0], y[0]))
             self.lines += [
                 Line(points[i], points[i+1])
@@ -121,7 +118,7 @@ class CircleScene(Scene):
     def generate_regions(self):
         self.regions = plane_partition_from_points(*self.points)
         interior = Region(lambda x, y : x**2 + y**2 < self.radius**2)
-        map(lambda r : r.intersect(interior), self.regions)
+        list(map(lambda r : r.intersect(interior), self.regions))
         self.exterior = interior.complement()
 
 
@@ -136,8 +133,8 @@ class CountSections(CircleScene):
         ], run_time = 2.0)
         regions = plane_partition_from_points(*self.points)
         interior = Region(lambda x, y : x**2 + y**2 < self.radius**2)
-        map(lambda r : r.intersect(interior), regions)
-        regions = filter(lambda r : r.bool_grid.any(), regions)
+        list(map(lambda r : r.intersect(interior), regions))
+        regions = [r for r in regions if r.bool_grid.any()]
         self.count_regions(regions, num_offset = ORIGIN)
 
 class MoserPattern(CircleScene):
@@ -247,7 +244,7 @@ class HardProblemsSimplerQuestions(Scene):
         omega = np.array((0.5, 0.5*np.sqrt(3), 0))
         dots = Mobject(*[
             Dot(t*np.array((1, 0, 0)) + s * omega)
-            for t, s in it.product(range(-2, 3), range(-2, 3))
+            for t, s in it.product(list(range(-2, 3)), list(range(-2, 3)))
         ])
         for mob in dots, other_grid:
             mob.scale(0.5).shift(left_center + (0, 2, 0))
@@ -391,7 +388,7 @@ class GeneralPositionRule(Scene):
             (
                 np.arange(0, 2*np.pi, np.pi/3), 
                 "Not okay", 
-                zip(range(3), range(3, 6))
+                list(zip(list(range(3)), list(range(3, 6))))
             ),
             (
                 RADIANS,
@@ -401,7 +398,7 @@ class GeneralPositionRule(Scene):
             (
                 np.arange(0, 2*np.pi, np.pi/4),
                 "Not okay",
-                zip(range(4), range(4, 8))
+                list(zip(list(range(4)), list(range(4, 8))))
             ),
             (
                 [2*np.pi*random() for x in range(5)],
@@ -486,7 +483,7 @@ class IllustrateNChooseK(Scene):
 
     def __init__(self, n, k, *args, **kwargs):
         Scene.__init__(self, *args, **kwargs)
-        nrange = range(1, n+1)
+        nrange = list(range(1, n+1))
         tuples  = list(it.combinations(nrange, k))
         nrange_mobs = TexMobject([str(n) + r'\;' for n in nrange]).split()
         tuple_mobs  = TexMobjects(
@@ -550,7 +547,7 @@ class IllustrateNChooseK(Scene):
 
 class IntersectionPointCorrespondances(CircleScene):
     args_list = [
-        (RADIANS, range(0, 7, 2)),
+        (RADIANS, list(range(0, 7, 2))),
     ]
     @staticmethod
     def args_to_string(*args):
@@ -569,7 +566,7 @@ class IntersectionPointCorrespondances(CircleScene):
         intersection_dot = Dot(intersection_point)
         intersection_dot_arrow = Arrow(intersection_point).nudge()
         self.add(intersection_dot)
-        pairs = list(it.combinations(range(len(radians)), 2))
+        pairs = list(it.combinations(list(range(len(radians))), 2))
         lines_to_save = [
             self.lines[pairs.index((indices[p0], indices[p1]))]
             for p0, p1 in [(0, 2), (1, 3)]
@@ -628,7 +625,7 @@ class LinesIntersectOutside(CircleScene):
         )
         intersection_point = tuple(list(intersection_point) + [0])
         intersection_dot = Dot(intersection_point)
-        pairs = list(it.combinations(range(len(radians)), 2))
+        pairs = list(it.combinations(list(range(len(radians))), 2))
         lines_to_save = [
             self.lines[pairs.index((indices[p0], indices[p1]))]
             for p0, p1 in [(0, 1), (2, 3)]
@@ -647,7 +644,7 @@ class LinesIntersectOutside(CircleScene):
 class QuadrupletsToIntersections(CircleScene):
     def __init__(self, radians, *args, **kwargs):
         CircleScene.__init__(self, radians, *args, **kwargs)
-        quadruplets = it.combinations(range(len(radians)), 4)
+        quadruplets = it.combinations(list(range(len(radians))), 4)
         frame_time = 1.0
         for quad in quadruplets:
             intersection_dot = Dot(intersection(
@@ -780,12 +777,12 @@ class EulersFormula(GraphScene):
             (key, mob)
             for key, mob in zip(terms, TexMobjects(terms))
         ])
-        for mob in form.values():
+        for mob in list(form.values()):
             mob.shift((0, FRAME_Y_RADIUS-0.7, 0))
-        formula = Mobject(*[form[k] for k in form.keys() if k != "=2"])
+        formula = Mobject(*[form[k] for k in list(form.keys()) if k != "=2"])
         new_form = dict([
             (key, deepcopy(mob).shift((0, -0.7, 0)))
-            for key, mob in zip(form.keys(), form.values())
+            for key, mob in zip(list(form.keys()), list(form.values()))
         ])
         self.add(formula)
         colored_dots = [
@@ -870,7 +867,7 @@ class CannotDirectlyApplyEulerToMoser(CircleScene):
 
 class ShowMoserGraphLines(CircleScene):
     def __init__(self, radians, *args, **kwargs):
-        radians = list(set(map(lambda x : x%(2*np.pi), radians)))
+        radians = list(set([x%(2*np.pi) for x in radians]))
         radians.sort()
         CircleScene.__init__(self, radians, *args, **kwargs)
         n, plus_n_choose_4 = TexMobject(["n", "+{n \\choose 4}"]).split()
@@ -931,7 +928,7 @@ class ShowMoserGraphLines(CircleScene):
 
 class HowIntersectionChopsLine(CircleScene):
     args_list = [
-        (RADIANS, range(0, 7, 2)),
+        (RADIANS, list(range(0, 7, 2))),
     ]
     @staticmethod
     def args_to_string(*args):
@@ -947,7 +944,7 @@ class HowIntersectionChopsLine(CircleScene):
         )
         if len(intersection_point) == 2:
             intersection_point = list(intersection_point) + [0]
-        pairs = list(it.combinations(range(len(radians)), 2))
+        pairs = list(it.combinations(list(range(len(radians))), 2))
         lines = [
             Line(self.points[indices[p0]], self.points[indices[p1]])
             for p0, p1 in [(2, 0), (1, 3)]
@@ -1041,11 +1038,11 @@ class ApplyEulerToMoser(CircleScene):
         for d in dicts:
             if not d:
                 continue
-            main_key = d.keys()[0]
-            for key in d.keys():
+            main_key = list(d.keys())[0]
+            for key in list(d.keys()):
                 d[key].shift(shift_val)
             main_center = d[main_key].get_center()
-            for key in d.keys():
+            for key in list(d.keys()):
                 d[key] = deepcopy(d[main_key]).shift(
                     d[key].get_center() - main_center
                 )
@@ -1445,7 +1442,7 @@ class MoserSolutionInPascal(PascalsTriangleScene):
             ]
         )
         self.wait()
-        term_range = range(0, min(4, n)+1, 2)
+        term_range = list(range(0, min(4, n)+1, 2))
         target_terms = dict([
             (k, deepcopy(self.coords_to_mobs[n][k]).set_color(term_color))
             for k in term_range
@@ -1643,7 +1640,7 @@ class ExplainNChoose4Formula(Scene):
             r"There are $(4 \cdot 3 \cdot 2 \cdot 1)$ total permutations"
         ).shift((0, -2, 0))
         self.add(parens, num_perms_explain, *form_mobs)
-        perms = list(it.permutations(range(4)))        
+        perms = list(it.permutations(list(range(4))))        
         for count in range(6):
             perm = perms[randint(0, 23)]
             new_quad_mobs = [

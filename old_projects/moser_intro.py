@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
+
 import numpy as np
 import itertools as it
 import operator as op
@@ -37,7 +37,7 @@ def count_sections(*radians):
     ]
     dots = [Dot(point) for point in points]
     interior = Region(lambda x, y : x**2 + y**2 < RADIUS**2)    
-    for x in xrange(1, len(points)):
+    for x in range(1, len(points)):
         if x == 1:
             sc.animate(ShowCreation(dots[0]), ShowCreation(dots[1]))
             sc.add(dots[0], dots[1])
@@ -45,7 +45,7 @@ def count_sections(*radians):
             sc.animate(ShowCreation(dots[x]))
             sc.add(dots[x])
         new_lines = Mobject(*[
-            Line(points[x], points[y]) for y in xrange(x)
+            Line(points[x], points[y]) for y in range(x)
         ])
         sc.animate(Transform(deepcopy(dots[x]), new_lines, run_time = 2.0))
         sc.add(new_lines)
@@ -53,7 +53,7 @@ def count_sections(*radians):
         regions = plane_partition_from_points(*points[:x+1])
         for reg in regions:
             reg.intersect(interior)
-        regions = filter(lambda reg : reg.bool_grid.any(), regions)
+        regions = [reg for reg in regions if reg.bool_grid.any()]
 
         last_num = None
         for reg, count in zip(regions, it.count(1)):
@@ -81,9 +81,9 @@ def summarize_pattern(*radians):
     ]
     dots = [Dot(point) for point in points]
     last_num = None
-    for x in xrange(len(points)):
+    for x in range(len(points)):
         new_lines = Mobject(*[
-            Line(points[x], points[y]) for y in xrange(x)
+            Line(points[x], points[y]) for y in range(x)
         ])
         num = TexMobject(str(moser_function(x + 1))).center()
         sc.animate(
@@ -110,7 +110,7 @@ def connect_points(*radians):
     sc.add(*dots)
     anims = []
     all_lines = []
-    for x in xrange(len(points)):
+    for x in range(len(points)):
         lines = [Line(points[x], points[y]) for y in range(len(points))]
         lines = Mobject(*lines)
         anims.append(Transform(deepcopy(dots[x]), lines, run_time = 3.0))
@@ -225,7 +225,7 @@ def next_few_videos(*radians):
     thumbnail = Mobject(circle, dots, lines)
     frame = VideoIcon().set_color(
         "black",
-        lambda point : np.linalg.norm(point) < 0.5
+        lambda point : get_norm(point) < 0.5
     )
     big_frame = deepcopy(frame).scale(FRAME_X_RADIUS)
     frame.shift((-5, 0, 0))

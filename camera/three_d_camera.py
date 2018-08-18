@@ -1,180 +1,163 @@
-from __future__ import absolute_import
+
 
 import numpy as np
 
 from constants import *
 
-from camera.moving_camera import MovingCamera
-from mobject.types.vectorized_mobject import VectorizedPoint
-from mobject.three_dimensions import should_shade_in_3d
+from camera.camera import Camera
+from mobject.types.point_cloud_mobject import Point
+from mobject.three_dimensions import ThreeDVMobject
+from mobject.value_tracker import ValueTracker
 
-from utils.bezier import interpolate
+from utils.color import get_shaded_rgb
 from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
 
-# TODO: Make sure this plays well with latest camera updates
 
-
-# class CameraWithPerspective(Camera):
-#     CONFIG = {
-#         "camera_distance": 20,
-#     }
-
-#     def points_to_pixel_coords(self, points):
-#         distance_ratios = np.divide(
-#             self.camera_distance,
-#             self.camera_distance - points[:, 2]
-#         )
-#         scale_factors = interpolate(0, 1, distance_ratios)
-#         adjusted_points = np.array(points)
-#         for i in 0, 1:
-#             adjusted_points[:, i] *= scale_factors
-
-#         return Camera.points_to_pixel_coords(self, adjusted_points)
-
-
-class ThreeDCamera(MovingCamera):
+class ThreeDCamera(Camera):
     CONFIG = {
         "sun_vect": 5 * UP + LEFT,
         "shading_factor": 0.2,
-        "distance": 5.,
+        "distance": 20.0,
+        "default_distance": 5.0,
         "phi": 0,  # Angle off z axis
-        "theta": -TAU / 4,  # Rotation about z axis
+        "theta": -90 * DEGREES,  # Rotation about z axis
+        "gamma": 0,  # Rotation about normal vector to camera
+        "light_source_start_point": 9 * DOWN + 7 * LEFT + 10 * OUT,
+        "frame_center": ORIGIN,
     }
 
     def __init__(self, *args, **kwargs):
-        MovingCamera.__init__(self, *args, **kwargs)
-        self.unit_sun_vect = self.sun_vect / np.linalg.norm(self.sun_vect)
-        # rotation_mobject lives in the phi-theta-distance space
-        # TODO, use ValueTracker for this instead
-        self.rotation_mobject = VectorizedPoint()
-        # Moving_center lives in the x-y-z space
-        # It representes the center of rotation
-        self.moving_center = VectorizedPoint(self.frame_center)
-        self.set_position(self.phi, self.theta, self.distance)
+        Camera.__init__(self, *args, **kwargs)
+        self.phi_tracker = ValueTracker(self.phi)
+        self.theta_tracker = ValueTracker(self.theta)
+        self.distance_tracker = ValueTracker(self.distance)
+        self.gamma_tracker = ValueTracker(self.gamma)
+        self.light_source = Point(self.light_source_start_point)
+        self.frame_center = Point(self.frame_center)
+        self.reset_rotation_matrix()
 
-    def modified_rgb(self, vmobject, rgb):
-        if should_shade_in_3d(vmobject):
-            return self.get_shaded_rgb(rgb, self.get_unit_normal_vect(vmobject))
-        else:
-            return rgb
+    def capture_mobjects(self, mobjects, **kwargs):
+        self.reset_rotation_matrix()
+        Camera.capture_mobjects(self, mobjects, **kwargs)
 
-    def get_stroke_rgb(self, vmobject):
-        return self.modified_rgb(vmobject, vmobject.get_stroke_rgb())
+    def get_value_trackers(self):
+        return [
+            self.phi_tracker,
+            self.theta_tracker,
+            self.distance_tracker,
+            self.gamma_tracker,
+        ]
 
-    def get_fill_rgb(self, vmobject):
-        return self.modified_rgb(vmobject, vmobject.get_fill_rgb())
-
-    def get_shaded_rgb(self, rgb, normal_vect):
-        brightness = np.dot(normal_vect, self.unit_sun_vect)**2
-        if brightness > 0:
-            alpha = self.shading_factor * brightness
-            return interpolate(rgb, np.ones(3), alpha)
-        else:
-            alpha = -self.shading_factor * brightness
-            return interpolate(rgb, np.zeros(3), alpha)
-
-    def get_unit_normal_vect(self, vmobject):
-        anchors = vmobject.get_anchors()
-        if len(anchors) < 3:
-            return OUT
-        normal = np.cross(anchors[1] - anchors[0], anchors[2] - anchors[1])
-        if normal[2] < 0:
-            normal = -normal
-        length = np.linalg.norm(normal)
-        if length == 0:
-            return OUT
-        return normal / length
-
-    def display_multiple_vectorized_mobjects(self, vmobjects):
-        # camera_point = self.spherical_coords_to_point(
-        #     *self.get_spherical_coords()
-        # )
-
-        def z_cmp(*vmobs):
-            # Compare to three dimensional mobjects based on
-            # how close they are to the camera
-            # return cmp(*[
-            #     -np.linalg.norm(vm.get_center()-camera_point)
-            #     for vm in vmobs
-            # ])
-            three_d_status = map(should_shade_in_3d, vmobs)
-            has_points = [vm.get_num_points() > 0 for vm in vmobs]
-            if all(three_d_status) and all(has_points):
-                cmp_vect = self.get_unit_normal_vect(vmobs[1])
-                return cmp(*[
-                    np.dot(vm.get_center(), cmp_vect)
-                    for vm in vmobs
-                ])
+    def modified_rgbas(self, vmobject, rgbas):
+        is_3d = isinstance(vmobject, ThreeDVMobject)
+        has_points = (vmobject.get_num_points() > 0)
+        if is_3d and has_points:
+            light_source_point = self.light_source.points[0]
+            if len(rgbas) < 2:
+                shaded_rgbas = rgbas.repeat(2, axis=0)
             else:
-                return 0
-        Camera.display_multiple_vectorized_mobjects(
-            self, sorted(vmobjects, cmp=z_cmp)
+                shaded_rgbas = np.array(rgbas[:2])
+            shaded_rgbas[0, :3] = get_shaded_rgb(
+                shaded_rgbas[0, :3],
+                vmobject.get_start_corner(),
+                vmobject.get_start_corner_unit_normal(),
+                light_source_point,
+            )
+            shaded_rgbas[1, :3] = get_shaded_rgb(
+                shaded_rgbas[1, :3],
+                vmobject.get_end_corner(),
+                vmobject.get_end_corner_unit_normal(),
+                light_source_point,
+            )
+            return shaded_rgbas
+        return rgbas
+
+    def get_stroke_rgbas(self, vmobject, background=False):
+        return self.modified_rgbas(
+            vmobject, vmobject.get_stroke_rgbas(background)
         )
 
-    def get_spherical_coords(self, phi=None, theta=None, distance=None):
-        curr_phi, curr_theta, curr_d = self.rotation_mobject.points[0]
-        if phi is None:
-            phi = curr_phi
-        if theta is None:
-            theta = curr_theta
-        if distance is None:
-            distance = curr_d
-        return np.array([phi, theta, distance])
+    def get_fill_rgbas(self, vmobject):
+        return self.modified_rgbas(
+            vmobject, vmobject.get_fill_rgbas()
+        )
 
-    def get_cartesian_coords(self, phi=None, theta=None, distance=None):
-        spherical_coords_array = self.get_spherical_coords(
-            phi, theta, distance)
-        phi2 = spherical_coords_array[0]
-        theta2 = spherical_coords_array[1]
-        d2 = spherical_coords_array[2]
-        return self.spherical_coords_to_point(phi2, theta2, d2)
+    def display_multiple_vectorized_mobjects(self, vmobjects, pixel_array):
+        rot_matrix = self.get_rotation_matrix()
+
+        def z_key(vmob):
+            # Assign a number to a three dimensional mobjects
+            # based on how close it is to the camera
+            if isinstance(vmob, ThreeDVMobject):
+                return np.dot(
+                    vmob.get_center(),
+                    rot_matrix.T
+                )[2]
+            else:
+                return np.inf
+        Camera.display_multiple_vectorized_mobjects(
+            self, sorted(vmobjects, key=z_key), pixel_array
+        )
 
     def get_phi(self):
-        return self.get_spherical_coords()[0]
+        return self.phi_tracker.get_value()
 
     def get_theta(self):
-        return self.get_spherical_coords()[1]
+        return self.theta_tracker.get_value()
 
     def get_distance(self):
-        return self.get_spherical_coords()[2]
+        return self.distance_tracker.get_value()
 
-    def spherical_coords_to_point(self, phi, theta, distance):
-        return distance * np.array([
-            np.sin(phi) * np.cos(theta),
-            np.sin(phi) * np.sin(theta),
-            np.cos(phi)
-        ])
+    def get_gamma(self):
+        return self.gamma_tracker.get_value()
 
-    def get_center_of_rotation(self, x=None, y=None, z=None):
-        curr_x, curr_y, curr_z = self.moving_center.points[0]
-        if x is None:
-            x = curr_x
-        if y is None:
-            y = curr_y
-        if z is None:
-            z = curr_z
-        return np.array([x, y, z])
+    def get_frame_center(self):
+        return self.frame_center.points[0]
 
-    def set_position(self, phi=None, theta=None, distance=None,
-                     center_x=None, center_y=None, center_z=None):
-        point = self.get_spherical_coords(phi, theta, distance)
-        self.rotation_mobject.move_to(point)
-        self.phi, self.theta, self.distance = point
-        center_of_rotation = self.get_center_of_rotation(
-            center_x, center_y, center_z)
-        self.moving_center.move_to(center_of_rotation)
-        self.frame_center = self.moving_center.points[0]
+    def set_phi(self, value):
+        self.phi_tracker.set_value(value)
 
-    def get_view_transformation_matrix(self):
-        return (self.default_distance / self.get_distance()) * np.dot(
-            rotation_matrix(self.get_phi(), LEFT),
-            rotation_about_z(-self.get_theta() - np.pi / 2),
-        )
+    def set_theta(self, value):
+        self.theta_tracker.set_value(value)
 
-    def points_to_pixel_coords(self, points):
-        matrix = self.get_view_transformation_matrix()
-        new_points = np.dot(points, matrix.T)
-        self.frame_center = self.moving_center.points[0]
+    def set_distance(self, value):
+        self.distance_tracker.set_value(value)
 
-        return Camera.points_to_pixel_coords(self, new_points)
+    def set_gamma(self, value):
+        self.gamma_tracker.set_value(value)
+
+    def set_frame_center(self, point):
+        self.frame_center.move_to(point)
+
+    def reset_rotation_matrix(self):
+        self.rotation_matrix = self.generate_rotation_matrix()
+
+    def get_rotation_matrix(self):
+        return self.rotation_matrix
+
+    def generate_rotation_matrix(self):
+        phi = self.get_phi()
+        theta = self.get_theta()
+        gamma = self.get_gamma()
+        matrices = [
+            rotation_about_z(-theta - 90 * DEGREES),
+            rotation_matrix(-phi, RIGHT),
+            rotation_about_z(gamma),
+        ]
+        result = np.identity(3)
+        for matrix in matrices:
+            result = np.dot(matrix, result)
+        return result
+
+    def transform_points_pre_display(self, points):
+        fc = self.get_frame_center()
+        distance = self.get_distance()
+        points -= fc
+        rot_matrix = self.get_rotation_matrix()
+        points = np.dot(points, rot_matrix.T)
+        zs = points[:, 2]
+        points[:, 0] *= (distance + zs) / distance
+        points[:, 1] *= (distance + zs) / distance
+        points += fc
+        return points

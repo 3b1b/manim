@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import *
 
@@ -17,6 +17,7 @@ from utils.space_ops import angle_of_vector
 from utils.space_ops import center_of_mass
 from utils.space_ops import compass_directions
 from utils.space_ops import rotate_vector
+from utils.space_ops import get_norm
 
 
 class Arc(VMobject):
@@ -116,7 +117,7 @@ class ArcBetweenPoints(Arc):
         midpoint = 0.5 * (start_point + end_point)
         distance_vector = end_point - start_point
         normal_vector = np.array([-distance_vector[1], distance_vector[0], 0])
-        distance = np.linalg.norm(normal_vector)
+        distance = get_norm(normal_vector)
         normal_vector /= distance
         if angle < 0:
             normal_vector *= -1
@@ -178,7 +179,7 @@ class Circle(Arc):
         # TODO: Figure out and fix
         self.replace(mobject, dim_to_match, stretch)
 
-        self.scale_to_fit_width(
+        self.set_width(
             np.sqrt(mobject.get_width()**2 + mobject.get_height()**2))
         self.scale(buffer_factor)
 
@@ -250,7 +251,7 @@ class AnnularSector(VMobject):
         first_point = self.points[0]
         last_point = self.points[-2]
         v = last_point - first_point
-        radial_unit_vector = v / np.linalg.norm(v)
+        radial_unit_vector = v / get_norm(v)
         arc_center = first_point - self.inner_radius * radial_unit_vector
         return arc_center
 
@@ -335,7 +336,7 @@ class Line(VMobject):
     def set_start_and_end(self, start, end):
         start_to_end = self.pointify(end) - self.pointify(start)
         vect = np.zeros(len(start_to_end))
-        longer_dim = np.argmax(map(abs, start_to_end))
+        longer_dim = np.argmax(list(map(abs, start_to_end)))
         vect[longer_dim] = start_to_end[longer_dim]
         self.start, self.end = [
             arg.get_edge_center(unit * vect)
@@ -351,7 +352,7 @@ class Line(VMobject):
 
     def get_length(self):
         start, end = self.get_start_and_end()
-        return np.linalg.norm(start - end)
+        return get_norm(start - end)
 
     def get_midpoint(self):
         return mid(*self.get_start_and_end())
@@ -360,7 +361,7 @@ class Line(VMobject):
         if self.path_arc:
             anchors = self.get_anchors()
             return sum([
-                np.linalg.norm(a2 - a1)
+                get_norm(a2 - a1)
                 for a1, a2 in zip(anchors, anchors[1:])
             ])
         else:
@@ -374,7 +375,7 @@ class Line(VMobject):
 
     def get_unit_vector(self):
         vect = self.get_vector()
-        norm = np.linalg.norm(vect)
+        norm = get_norm(vect)
         if norm == 0:
             # TODO, is this the behavior I want?
             return np.array(ORIGIN)
@@ -413,11 +414,11 @@ class Line(VMobject):
     def put_start_and_end_on_with_projection(self, new_start, new_end):
         target_vect = np.array(new_end) - np.array(new_start)
         curr_vect = self.get_vector()
-        curr_norm = np.linalg.norm(curr_vect)
+        curr_norm = get_norm(curr_vect)
         if curr_norm == 0:
             self.put_start_and_end_on(new_start, new_end)
             return
-        target_norm = np.linalg.norm(target_vect)
+        target_norm = get_norm(target_vect)
         if target_norm == 0:
             epsilon = 0.001
             self.scale(epsilon / curr_norm)
@@ -426,7 +427,7 @@ class Line(VMobject):
         unit_target = target_vect / target_norm
         unit_curr = curr_vect / curr_norm
         normal = np.cross(unit_target, unit_curr)
-        if np.linalg.norm(normal) == 0:
+        if get_norm(normal) == 0:
             if unit_curr[0] == 0 and unit_curr[1] == 0:
                 normal = UP
             else:
@@ -450,7 +451,7 @@ class DashedLine(Line):
         Line.__init__(self, *args, **kwargs)
 
     def generate_points(self):
-        length = np.linalg.norm(self.end - self.start)
+        length = get_norm(self.end - self.start)
         if length == 0:
             self.add(Line(self.start, self.end))
             return self
@@ -499,7 +500,7 @@ class Arrow(Line):
     }
 
     def __init__(self, *args, **kwargs):
-        points = map(self.pointify, args)
+        points = list(map(self.pointify, args))
         if len(args) == 1:
             args = (points[0] + UP + LEFT, points[0])
         Line.__init__(self, *args, **kwargs)
@@ -546,7 +547,7 @@ class Arrow(Line):
         tip_base = center_of_mass(tip_base_points)
         tbp1, tbp2 = tip_base_points
         perp_vect = tbp2 - tbp1
-        tip_base_width = np.linalg.norm(perp_vect)
+        tip_base_width = get_norm(perp_vect)
         if tip_base_width > 0:
             perp_vect /= tip_base_width
         width = min(
@@ -578,7 +579,7 @@ class Arrow(Line):
             normal_vector = self.get_normal_vector()
         else:
             normal_vector = self.normal_vector
-        line_length = np.linalg.norm(self.points[-1] - self.points[0])
+        line_length = get_norm(self.points[-1] - self.points[0])
         tip_length = min(
             tip_length, self.max_tip_length_to_length_ratio * line_length
         )
@@ -591,9 +592,9 @@ class Arrow(Line):
         vect = end_point - pre_end_point
         perp_vect = np.cross(vect, normal_vector)
         for v in vect, perp_vect:
-            if np.linalg.norm(v) == 0:
+            if get_norm(v) == 0:
                 v[0] = 1
-            v *= tip_length / np.linalg.norm(v)
+            v *= tip_length / get_norm(v)
         ratio = self.tip_width_to_length_ratio
         tip.set_points_as_corners([
             end_point,
@@ -606,7 +607,7 @@ class Arrow(Line):
     def get_normal_vector(self):
         p0, p1, p2 = self.tip[0].get_anchors()
         result = np.cross(p2 - p1, p1 - p0)
-        norm = np.linalg.norm(result)
+        norm = get_norm(result)
         if norm == 0:
             return self.normal_vector
         else:

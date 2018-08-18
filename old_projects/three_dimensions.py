@@ -38,7 +38,7 @@ class CubeWithFaces(Mobject2D):
         self.set_color(BLUE)
 
     def unit_normal(self, coords):
-        return np.array(map(lambda x : 1 if abs(x) == 1 else 0, coords))
+        return np.array([1 if abs(x) == 1 else 0 for x in coords])
 
 class Cube(Mobject1D):
     def generate_points(self):
@@ -87,7 +87,7 @@ class Dodecahedron(Mobject1D):
         ]).points
         #Rotate those 5 edges into all 30.
         for i in range(3):
-            perm = map(lambda j : j%3, range(i, i+3))
+            perm = [j%3 for j in range(i, i+3)]
             for b in [-1, 1]:
                 matrix = b*np.array([x[perm], y[perm], z[perm]])
                 self.add_points(np.dot(five_lines_points, matrix))
@@ -108,6 +108,6 @@ class Sphere(Mobject2D):
         self.set_color(BLUE)
 
     def unit_normal(self, coords):
-        return np.array(coords) / np.linalg.norm(coords)
+        return np.array(coords) / get_norm(coords)
 
         

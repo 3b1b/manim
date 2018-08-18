@@ -1,9 +1,10 @@
 # Manim
 Animation engine for explanatory math videos.
 
-For those who want to play around with this tool, I should be upfront that I've mostly had my own use cases (i.e. 3b1b videos) in mind while building it, and it might not be the most friendly thing to get up and running.  In particular, I have not done a great job tracking requirements, and documentation, to put it euphemistically, almost exclusively takes the form of naming conventions.
+For those who want to play around with this tool, I should be upfront that I've mostly had my own use cases (i.e. 3b1b videos) in mind while building it, and it might not be the most friendly thing to get up and running.  In particular, I have not done a great job tracking requirements, writing
+tests, and documentation, to put it euphemistically, almost exclusively takes the form of naming conventions.
 
-For 9/10 of math animation needs, you'd probably be better off using a more well-maintained tool, like matplotlib, mathematica or even going a non-programatic route with something like After Effects.  I also happen to think the program "Grapher" built into osx is really great, and surprisingly versatile for many needs.  My own reasons for building this tool and using it for videos are twofold, and I'm not sure how well they apply to other people's use cases.
+For 9/10 of math animation needs, you'd probably be better off using a more well-maintained tool, like matplotlib, mathematica or even going a non-programatic route with something like After Effects or even Keynote. I also happen to think the program "Grapher" built into osx is really great, and surprisingly versatile for many needs.  My own reasons for building this tool and using it for videos are twofold, and I'm not sure how well they apply to other people's use cases.
 
   1) If I wish to work with some new type of mathematical thing (e.g. a fractal), or to experiment with a different type of animation, it's easier to work it into the underlying system and manipulate it the same way as more standard objects/animation.  Admittedly, though, part of the reason I find this easier is because I'm more familiar with the underlying system here than I am with others.  This keeps me from shying away from certain video topics that I would otherwise have no idea how to animate.
 
@@ -12,7 +13,7 @@ For 9/10 of math animation needs, you'd probably be better off using a more well
 
 ## Install requirements
 
-Manim depends on Python 2.7 and is not yet compatible with Python 3.
+Manim works with Python 3.7, and many of the older projects from the python 2.7 days of manim will not be supported.
 
 Manim dependencies rely on system libraries you will need to install on your
 operating system:
@@ -23,17 +24,6 @@ operating system:
 Then you can install the python dependencies:
 ```sh
 pip install -r requirements.txt
-```
-
-Note: pip will install the python module `aggdraw` from
-https://github.com/scottopell/aggdraw-64bits/ and it might have additional
-dependencies.
-
-This doesn't install freetype, but I don't think it's required for this project
-
-The latest version of aggdraw (1.3 as of 2018) does not work with manim. Uninstall it beforehand if necessary:
-```sh
-pip uninstall aggdraw
 ```
 
 ## How to Use
@@ -48,7 +38,7 @@ Use -s to skip to the end and just show the final frame.
 Use -n (number) to skip ahead to the n'th animation of a scene.
 Use -f to show the file in finder (for osx)
 
-You will probably want to change the ANIMATIONS_DIR constant to be whatever directory you want video files to be output to.
+Set MEDIA_DIR environment variable to determine where image and animation files will be written.
 
 Look through the old_projects folder to see the code for previous 3b1b videos.  Note, however, that developments are often made to the library without considering backwards compatibility on those old_projects.  To run them with a guarantee that they will work, you will have to go back to the commit which complete that project.
 
@@ -58,7 +48,7 @@ Scenes with `PiCreatures` are somewhat 3b1b specific, so the specific designs fo
 
 ## License
 
-All files in the directories active_projects and old_projects, which by and large generate the visuals for 3b1b videos, are copyright 3Blue1Brown LLC.
+All files in the directories active_projects and old_projects, which by and large generate the visuals for 3b1b videos, are copyright 3Blue1Brown.
 
 The general purpose animation code found in the remainder of the repository, on the other hand, is under the MIT license.
 

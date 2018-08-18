@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -191,10 +191,9 @@ class ShowCounting(SceneFromVideo):
             print(count)
             mob = TexMobject(str(count)).scale(1.5)
             mob.shift(0.3*LEFT).to_edge(UP, buff = 0.1)
-            index_range = range(
+            index_range = list(range(
                 max(COUNT_TO_FRAME_NUM[count]-10, 0),
-                COUNT_TO_FRAME_NUM[count+1]-10
-            )
+                COUNT_TO_FRAME_NUM[count+1]-10))
             for index in index_range:
                 self.frames[index] = disp.paint_mobject(
                     mob, self.frames[index]

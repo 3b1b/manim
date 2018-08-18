@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import *
 
@@ -32,7 +32,7 @@ class SampleSpace(Rectangle):
         # TODO, should this really exist in SampleSpaceScene
         title_mob = TextMobject(title)
         if title_mob.get_width() > self.get_width():
-            title_mob.scale_to_fit_width(self.get_width())
+            title_mob.set_width(self.get_width())
         title_mob.next_to(self, UP, buff=buff)
         self.title = title_mob
         self.add(title_mob)
@@ -181,7 +181,7 @@ class BarChart(VGroup):
         values = np.linspace(0, self.max_value, self.n_ticks + 1)
         for y, value in zip(heights, values):
             tick = Line(LEFT, RIGHT)
-            tick.scale_to_fit_width(self.tick_width)
+            tick.set_width(self.tick_width)
             tick.move_to(y * UP)
             ticks.add(tick)
         y_axis.add(ticks)
@@ -193,7 +193,7 @@ class BarChart(VGroup):
             labels = VGroup()
             for tick, value in zip(ticks, values):
                 label = TexMobject(str(np.round(value, 2)))
-                label.scale_to_fit_height(self.y_axis_label_height)
+                label.set_height(self.y_axis_label_height)
                 label.next_to(tick, LEFT, SMALL_BUFF)
                 labels.add(label)
             self.y_axis_labels = labels

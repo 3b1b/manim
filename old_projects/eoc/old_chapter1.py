@@ -219,7 +219,7 @@ class Introduction(TeacherStudentsScene):
         this_video.save_state()
         this_video.set_fill(opacity = 0)
         this_video.center()
-        this_video.scale_to_fit_height(FRAME_HEIGHT)
+        this_video.set_height(FRAME_HEIGHT)
         self.this_video = this_video
 
         words = TextMobject(
@@ -346,7 +346,7 @@ class Introduction(TeacherStudentsScene):
         this_video = self.this_video
         self.remove(this_video)
         this_video.generate_target()
-        this_video.target.scale_to_fit_height(FRAME_HEIGHT)
+        this_video.target.set_height(FRAME_HEIGHT)
         this_video.target.center()        
         this_video.target.set_fill(opacity = 0)
 
@@ -364,9 +364,9 @@ class IntroduceCircle(Scene):
         radius.set_color(MAROON_B)
         R = TexMobject("R").next_to(radius, UP)
 
-        area, circumference = words = VGroup(*map(TextMobject, [
+        area, circumference = words = VGroup(*list(map(TextMobject, [
             "Area =", "Circumference ="
-        ]))
+        ])))
         area.set_color(BLUE)
         circumference.set_color(YELLOW)
 
@@ -696,7 +696,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         expanded.shift(LEFT/2.)
 
         faders = [area_brace, area_word, new_area_brace, new_area_word]
-        self.play(*map(FadeOut, faders))
+        self.play(*list(map(FadeOut, faders)))
         trips = [
             ([0, 2, 8], pi_R_squared, plus),
             ([8, 0, 2, 1, 4, 5, 6, 7], two_pi_R_dR, plus2),
@@ -824,13 +824,13 @@ class BuildToDADR(CircleScene):
         )
         self.wait()
         self.play(*it.chain(
-            map(Write, [equals, two_pi_R, dR]),
-            map(FadeIn, [circum_text, circum_brace])
+            list(map(Write, [equals, two_pi_R, dR])),
+            list(map(FadeIn, [circum_text, circum_brace]))
         ))
         self.wait()
         self.play(*it.chain(
-            map(Write, [plus, pi, dR2, squared]),
-            map(FadeIn, [error_brace, error_text])
+            list(map(Write, [plus, pi, dR2, squared])),
+            list(map(FadeIn, [error_brace, error_text]))
         ))
         self.wait(2)
         self.change = change
@@ -860,7 +860,7 @@ class BuildToDADR(CircleScene):
 
         self.play(*it.chain(
             [Write(term.frac_line) for term in terms],
-            map(MoveToTarget, [self.equals, self.plus])
+            list(map(MoveToTarget, [self.equals, self.plus]))
         ))
         self.play(*[term.denom.restore for term in terms])
         self.wait(2)
@@ -920,7 +920,7 @@ class BuildToDADR(CircleScene):
             new_dRs.set_color(self.dR_color)
             new_outer_ring = self.get_ring(self.radius, width)
             new_nudge_line = self.nudge_line.copy()
-            new_nudge_line.scale_to_fit_width(width)
+            new_nudge_line.set_width(width)
             new_nudge_line.move_to(self.nudge_line, LEFT)
             error_brace.target = error_brace.copy()
             error_brace.target.stretch_to_fit_width(
@@ -945,9 +945,9 @@ class BuildToDADR(CircleScene):
                 error_brace.target = Brace(self.error_term.target)
                 error_text.target = error_brace.target.get_text("Truly tiny")
                 error_text.target.set_color(error_text.get_color())
-                self.play(*map(MoveToTarget, [
+                self.play(*list(map(MoveToTarget, [
                     error_brace, error_text, self.plus, self.error_term
-                ]))
+                ])))
                 self.wait()
 
         difference_text = TextMobject(
@@ -985,11 +985,11 @@ class BuildToDADR(CircleScene):
             MoveToTarget(difference_arrow),
         )
         self.wait(2)
-        self.play(*map(FadeOut, [difference_text, difference_arrow]))
+        self.play(*list(map(FadeOut, [difference_text, difference_arrow])))
 
     def elaborate_on_d(self):
         arc = Arc(-np.pi, start_angle = -np.pi/2)
-        arc.scale_to_fit_height(
+        arc.set_height(
             self.change.get_center()[1]-self.change.denom.get_center()[1]
         )
         arc.next_to(self.change.frac_line, LEFT)
@@ -1022,7 +1022,7 @@ class BuildToDADR(CircleScene):
             Write(d),
             self.pi_creature.change_mode, "speaking"
         )
-        self.play(*map(Write, [arrow, ignore_error]))
+        self.play(*list(map(Write, [arrow, ignore_error])))
         self.play(error_group.fade, 0.8)
         self.wait(2)
         equality_brace = Brace(VGroup(self.change.denom, self.circum_term))
@@ -1033,7 +1033,7 @@ class BuildToDADR(CircleScene):
             Write(equal_word, run_time = 1)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [equality_brace, equal_word]))
+        self.play(*list(map(FadeOut, [equality_brace, equal_word])))
 
         less_wrong_philosophy = TextMobject("``Less wrong'' philosophy")
         less_wrong_philosophy.move_to(ignore_error, LEFT)
@@ -1106,7 +1106,7 @@ class BuildToDADR(CircleScene):
         self.wait()
         self.play(*it.chain(
             [mob.restore for mob in to_infs],
-            map(FadeOut, [bubble, bubble.content]),
+            list(map(FadeOut, [bubble, bubble.content])),
             [randy.change_mode, "erm"],
             [self.pi_creature.change_mode, "happy"],
         ))
@@ -1240,13 +1240,13 @@ class NameDerivative(IntroduceTinyChangeInArea):
         area_circle = self.circle.copy()
         area_circle.set_stroke(width = 0)
         area_circle.generate_target()
-        area_circle.target.scale_to_fit_width(circle_width)
+        area_circle.target.set_width(circle_width)
         area_circle.target.next_to(target_formula[0], RIGHT, buff = 0)
         area_circle.target.set_color(BLUE_D)
         circum_circle = self.circle.copy()
         circum_circle.set_fill(opacity = 0)
         circum_circle.generate_target()
-        circum_circle.target.scale_to_fit_width(circle_width)
+        circum_circle.target.set_width(circle_width)
         circum_circle.target.next_to(target_formula)
 
         self.play(
@@ -1270,8 +1270,8 @@ class NameDerivative(IntroduceTinyChangeInArea):
         small_dR = 0.01
         big_ring = self.get_ring(self.radius, big_dR)
         small_ring = self.get_ring(self.radius, small_dR)
-        big_nudge_line = self.nudge_line.copy().scale_to_fit_width(big_dR)
-        small_nudge_line = self.nudge_line.copy().scale_to_fit_width(small_dR)
+        big_nudge_line = self.nudge_line.copy().set_width(big_dR)
+        small_nudge_line = self.nudge_line.copy().set_width(small_dR)
         for line in big_nudge_line, small_nudge_line:
             line.move_to(self.nudge_line, LEFT)
         new_nudge_arrow = Arrow(self.nudge_label, big_nudge_line)
@@ -1465,10 +1465,10 @@ class DerivativeAsTangentLine(ZoomedScene):
         dot.scale(0.1)
         dot.move_to(graph_point)
 
-        self.play(*map(FadeIn, [
+        self.play(*list(map(FadeIn, [
             self.little_rectangle,
             self.big_rectangle
-        ]))
+        ])))
         self.play(
             self.little_rectangle.move_to, 
             graph_point+self.little_rect_nudge
@@ -1556,10 +1556,10 @@ class DerivativeAsTangentLine(ZoomedScene):
         self.note_R_value_of_point()
 
         alphas = np.arange(0, 1, 0.01)
-        graph_points = map(self.graph.point_from_proportion, alphas)
+        graph_points = list(map(self.graph.point_from_proportion, alphas))
         curr_graph_point = self.graph_point(R)
         self.last_alpha = alphas[np.argmin([
-            np.linalg.norm(point - curr_graph_point)
+            get_norm(point - curr_graph_point)
             for point in graph_points
         ])]
         def shift_everything_to_alpha(alpha, run_time = 3):
@@ -1600,7 +1600,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         self.play(ShowCreation(arrow))
         self.play(dot.scale_in_place, 2, rate_func = there_and_back)
         self.wait()
-        self.play(*map(FadeOut, [dashed_line, dot, arrow]))
+        self.play(*list(map(FadeOut, [dashed_line, dot, arrow])))
 
     def state_commonality(self):
         morty = Mortimer()
@@ -1731,10 +1731,10 @@ class IntroduceConcentricRings(CircleScene):
         moving_rings.generate_target()
         moving_rings.target.set_stroke(width = 0)
         plusses = VGroup(*[TexMobject("+") for ring in moving_rings])
-        area_sum = VGroup(*it.chain(*zip(
+        area_sum = VGroup(*it.chain(*list(zip(
             [ring for ring in moving_rings.target],
             plusses
-        )))
+        ))))
         dots_equals_area = TexMobject("\\dots", "=", "\\pi R^2")
         area_sum.add(*dots_equals_area)
         area_sum.arrange_submobjects()
@@ -2028,13 +2028,13 @@ class GraphIntegral(GraphScene):
         "x_max" : 4,
         "x_tick_frequency" : 0.25,
         "x_leftmost_tick" : -0.25,
-        "x_labeled_nums" : range(1, 5),
+        "x_labeled_nums" : list(range(1, 5)),
         "x_axis_label" : "r",
         "y_min" : -2,
         "y_max" : 25,
         "y_tick_frequency" : 2.5,
         "y_bottom_tick" : 0,
-        "y_labeled_nums" : range(5, 30, 5),
+        "y_labeled_nums" : list(range(5, 30, 5)),
         "y_axis_label" : "",
         "dr" : 0.125,
         "R" : 3.5,
@@ -2122,7 +2122,7 @@ class GraphIntegral(GraphScene):
         rectangles.save_state()
         rectangles.stretch_to_fit_height(0)
         rectangles.move_to(self.graph_origin, DOWN+LEFT)
-        self.play(*map(FadeOut, [arrows, values_words]))
+        self.play(*list(map(FadeOut, [arrows, values_words])))
         self.play(
             rectangles.restore, 
             Animation(ticks),
@@ -2158,7 +2158,7 @@ class GraphIntegral(GraphScene):
             ShowCreation(graph)
         )
         self.wait(3)
-        self.play(*map(FadeOut, [ticks, dr_brace, dr_text]))
+        self.play(*list(map(FadeOut, [ticks, dr_brace, dr_text])))
         self.rectangles = rectangles
 
     def thinner_rectangles(self):
@@ -2463,7 +2463,7 @@ class CalculusInANutshell(CircleScene):
         first.set_fill(YELLOW)
         first.save_state()
         first.center()
-        first.scale_to_fit_height(FRAME_Y_RADIUS*2)
+        first.set_height(FRAME_Y_RADIUS*2)
         first.set_fill(opacity = 0)
         everything = VGroup(*self.get_mobjects())
         everything.generate_target()
@@ -2515,8 +2515,8 @@ class Thumbnail(CircleScene):
         deriv_eq = TexMobject("\\frac{d \\quad}{dR} = ")
         int_eq = TexMobject("\\int_0^R \\quad = ") 
         target_height = deriv_eq[0].get_height()*2
-        area_circle.scale_to_fit_height(target_height)
-        circum_circle.scale_to_fit_height(target_height)
+        area_circle.set_height(target_height)
+        circum_circle.set_height(target_height)
 
         area_circle.next_to(deriv_eq[0], buff = SMALL_BUFF)
         circum_circle.next_to(deriv_eq)

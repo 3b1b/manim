@@ -9,7 +9,7 @@ SUM_COLOR = PINK
 
 def get_projection(vector_to_project, stable_vector):
     v1, v2 = stable_vector, vector_to_project
-    return v1*np.dot(v1, v2)/(np.linalg.norm(v1)**2)
+    return v1*np.dot(v1, v2)/(get_norm(v1)**2)
 
 def get_vect_mob_projection(vector_to_project, stable_vector):
     return Vector(
@@ -34,7 +34,7 @@ class OpeningQuote(Scene):
             "No one can say how it happens. "
             "You either believe it or you don't.",
         )
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(UP)
         words[0].set_color(YELLOW)
         words[2].set_color("#fd9c2b")
@@ -57,13 +57,13 @@ class TraditionalOrdering(RandolphScene):
         title.set_color(YELLOW)
         title.scale(1.2)
         title.to_corner(UP+LEFT)
-        topics = VMobject(*map(TextMobject, [
+        topics = VMobject(*list(map(TextMobject, [
             "Topic 1: Vectors",
             "Topic 2: Dot products",
             "\\vdots",
             "(everything else)",
             "\\vdots",
-        ]))
+        ])))
         topics.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = SMALL_BUFF)
         # topics.next_to(title, DOWN+RIGHT)
 
@@ -107,7 +107,7 @@ class ThisSeriesOrdering(RandolphScene):
         chapters.arrange_submobjects(
             DOWN, buff = SMALL_BUFF, aligned_edge = LEFT
         )
-        chapters.scale_to_fit_height(1.5*FRAME_Y_RADIUS)
+        chapters.set_height(1.5*FRAME_Y_RADIUS)
         chapters.next_to(line, DOWN, buff = SMALL_BUFF)
         chapters.to_edge(RIGHT)
 
@@ -162,7 +162,7 @@ class ShowNumericalDotProduct(Scene):
         dot_product = VGroup(v1, inter_array_dot, v2)
         dot_product.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF/2)
         dot_product.to_edge(LEFT)
-        pairs = zip(v1.get_entries(), v2.get_entries())
+        pairs = list(zip(v1.get_entries(), v2.get_entries()))
 
         for pair, color in zip(pairs, [X_COLOR, Y_COLOR, Z_COLOR, PINK]):
             VGroup(*pair).set_color(color)
@@ -180,10 +180,10 @@ class ShowNumericalDotProduct(Scene):
 
         products.target = products.copy()
         plusses = ["+"]*(len(self.v1)-1)
-        symbols = VGroup(*map(TexMobject, ["="] + plusses))
-        final_sum = VGroup(*it.chain(*zip(
+        symbols = VGroup(*list(map(TexMobject, ["="] + plusses)))
+        final_sum = VGroup(*it.chain(*list(zip(
             symbols, products.target
-        )))
+        ))))
         final_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         final_sum.next_to(dot_product, RIGHT)
 
@@ -303,7 +303,7 @@ class GeometricInterpretation(VectorScene):
     def project(self):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
         v_norm, w_norm = [
-            np.linalg.norm(vect.get_end())
+            get_norm(vect.get_end())
             for vect in (self.v, self.w)
         ]
         projected = Vector(
@@ -432,11 +432,11 @@ class ShowQualitativeDotProductValues(VectorScene):
         less_than = TexMobject("<").set_color(RED).move_to(comp)
         v_sym.set_color(V_COLOR)
         w_sym.set_color(W_COLOR)
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "Similar directions",
             "Perpendicular",
             "Opposing directions"
-        ])
+        ]))
         for word, sym in zip(words, [comp, equals, less_than]):
             word.add_background_rectangle()
             word.next_to(sym, DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
@@ -555,7 +555,7 @@ class SymmetricVAndW(VectorScene):
         )
         self.wait(0.5)
         self.remove(line_of_symmetry_words)
-        self.play(*map(Uncreate, line_of_symmetry_words))
+        self.play(*list(map(Uncreate, line_of_symmetry_words)))
         for vect in w, v:
             self.play(ShowCreation(vect.proj_line))
             vect_copy = vect.copy()
@@ -563,9 +563,9 @@ class SymmetricVAndW(VectorScene):
             self.remove(vect_copy)
             self.add(vect.proj)
             self.wait()
-        self.play(*map(FadeOut,[
+        self.play(*list(map(FadeOut,[
             v.proj, v.proj_line, w.proj, w.proj_line
-        ]))
+        ])))
         self.show_doubling(v, w)
 
     def show_doubling(self, v, w):
@@ -639,9 +639,9 @@ class SymmetricVAndW(VectorScene):
                 run_time = 2
             )
             self.wait()
-            self.play(*map(FadeOut, [
+            self.play(*list(map(FadeOut, [
                 projector.proj, projector.proj_line
-            ]))
+            ])))
 
 class LurkingQuestion(TeacherStudentsScene):
     def construct(self):
@@ -671,7 +671,7 @@ class LurkingQuestion(TeacherStudentsScene):
         self.teacher_thinks("")
         everything = VMobject(*self.get_mobjects())
         self.play(ApplyPointwiseFunction(
-            lambda p : 10*(p+2*DOWN)/np.linalg.norm(p+2*DOWN),
+            lambda p : 10*(p+2*DOWN)/get_norm(p+2*DOWN),
             everything
         ))
 
@@ -702,7 +702,7 @@ class Introduce2Dto1DLinearTransformations(TwoDToOneDScene):
             ShowCreation(number_line),
             *[Animation(v) for v in (self.i_hat, self.j_hat)]
         )
-        self.play(*map(Write, [numbers, number_line_words]))
+        self.play(*list(map(Write, [numbers, number_line_words])))
         self.wait()
 
 class Symbolic2To1DTransform(Scene):
@@ -765,7 +765,7 @@ class RecommendChapter3(Scene):
         """)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
@@ -856,7 +856,7 @@ class FormalVsVisual(Scene):
             mob.next_to(text, DOWN, buff = MED_SMALL_BUFF)
 
         self.add(title)
-        self.play(*map(ShowCreation, [line, v_line]))
+        self.play(*list(map(ShowCreation, [line, v_line])))
         for mob in formal, visual, additivity, scaling, visual_statement:
             self.play(Write(mob, run_time = 2))
             self.wait()
@@ -1108,7 +1108,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
             basis_labels, array, [DOWN, RIGHT]
         )
 
-        self.play(*map(Write, basis_labels))
+        self.play(*list(map(Write, basis_labels)))
         self.play(
             ShowCreation(v),
             Write(array),
@@ -1129,7 +1129,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
                 ])
             self.wait()
         self.play(
-            *map(FadeOut, to_fade) + [
+            *list(map(FadeOut, to_fade)) + [
                 vect.restore
                 for vect in (self.i_hat, self.j_hat)
             ]
@@ -1161,7 +1161,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
         for label, vect, direction in zip(new_labels, list(bases) + [v], [UP, DOWN, UP]):
             label.next_to(vect, direction)
 
-        self.play(*map(Write, new_labels))
+        self.play(*list(map(Write, new_labels)))
         self.wait()
         scaling_anim_tuples = self.get_scaling_anim_tuples(
             new_labels, array, [UP, DOWN]
@@ -1183,10 +1183,10 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
     def get_scaling_anim_tuples(self, labels, array, directions):
         scaling_anim_tuples = []
         bases = self.i_hat, self.j_hat
-        quints = zip(
+        quints = list(zip(
             bases, self.v_coords, labels, 
             array.get_entries(), directions
-        )        
+        ))        
         for basis, scalar, label, entry, direction in quints:
             basis.save_state()
             basis.scaled = basis.copy().scale(scalar)
@@ -1242,7 +1242,7 @@ class TwoDOneDMatrixMultiplication(Scene):
         self.show_product(matrix, vector)
 
     def show_product(self, matrix, vector):
-        starter_pairs = zip(vector.get_entries(), matrix.get_entries())
+        starter_pairs = list(zip(vector.get_entries(), matrix.get_entries()))
         pairs = [
             VMobject(
                 e1.copy(), TexMobject("\\cdot"), e2.copy()
@@ -1251,8 +1251,8 @@ class TwoDOneDMatrixMultiplication(Scene):
             )
             for e1, e2 in starter_pairs
         ]
-        symbols = map(TexMobject, ["=", "+"])
-        equation = VMobject(*it.chain(*zip(symbols, pairs)))
+        symbols = list(map(TexMobject, ["=", "+"]))
+        equation = VMobject(*it.chain(*list(zip(symbols, pairs))))
         equation.arrange_submobjects(align_using_submobjects = True)
         equation.next_to(vector, RIGHT)
 
@@ -1288,8 +1288,8 @@ class AssociationBetweenMatricesAndVectors(Scene):
             matrices_words, arrow, vectors_words
         ).arrange_submobjects(buff = MED_SMALL_BUFF)
 
-        matrices = VGroup(*map(Matrix, self.matrices))
-        vectors = VGroup(*map(Matrix, [m[0] for m in self.matrices]))
+        matrices = VGroup(*list(map(Matrix, self.matrices)))
+        vectors = VGroup(*list(map(Matrix, [m[0] for m in self.matrices])))
         for m in list(matrices) + list(vectors):
             x, y = m.get_entries()
             x.set_color(X_COLOR)
@@ -1300,7 +1300,7 @@ class AssociationBetweenMatricesAndVectors(Scene):
             for m, direction in zip(group, [UP, DOWN]):
                 m.next_to(group.words, direction, buff = MED_SMALL_BUFF)
 
-        self.play(*map(Write, [matrices_words, vectors_words]))
+        self.play(*list(map(Write, [matrices_words, vectors_words])))
         self.play(ShowCreation(arrow))
         self.wait()
         self.play(FadeIn(vectors))
@@ -1344,7 +1344,7 @@ class SomeKindOfConnection(Scene):
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(FRAME_X_RADIUS)
+        plane.set_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -1360,7 +1360,7 @@ class SomeKindOfConnection(Scene):
         number_line.to_edge(RIGHT)
         squish_plane.move_to(number_line)
 
-        numbers = number_line.get_numbers(*range(-6, 8, 2))
+        numbers = number_line.get_numbers(*list(range(-6, 8, 2)))
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_color(GREY)
         v_line.set_stroke(width = 10)
@@ -1376,9 +1376,9 @@ class SomeKindOfConnection(Scene):
             array.add_to_back(BackgroundRectangle(array))
 
 
-        self.play(*map(ShowCreation, [
+        self.play(*list(map(ShowCreation, [
             plane, number_line, v_line
-        ])+[
+        ]))+[
             Write(numbers, run_time = 2)
         ])
         self.play(Write(matrix, run_time = 1))
@@ -1667,19 +1667,19 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         i_label = TexMobject(i_tex[1:-1])
         j_label = TexMobject(j_tex[1:-1])
         u_label = TexMobject("\\hat{\\textbf{u}}")
-        trips = zip(
+        trips = list(zip(
             (i_label, j_label, u_label), 
             (i_hat, j_hat, self.u_hat),
             (DOWN+RIGHT, UP+LEFT, UP),
-        )
+        ))
         for label, vect, direction in trips:
             label.set_color(vect.get_color())
             label.scale(1.2)
             label.next_to(vect.get_end(), direction, buff = MED_SMALL_BUFF/2)
 
         self.play(Write(u_label, run_time = 1))
-        self.play(*map(ShowCreation, basis_vectors))
-        self.play(*map(Write, [i_label, j_label]), run_time = 1)
+        self.play(*list(map(ShowCreation, basis_vectors)))
+        self.play(*list(map(Write, [i_label, j_label])), run_time = 1)
         self.play(ShowCreation(proj_lines))
         self.play(
             Write(question), 
@@ -1688,12 +1688,12 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
             run_time = 2,
         )
         to_remove = [proj_lines]
-        quads = zip(basis_vectors, proj_basis, proj_lines, proj_dots)
+        quads = list(zip(basis_vectors, proj_basis, proj_lines, proj_dots))
         for vect, proj_vect, proj_line, proj_dot in quads:
             self.play(Transform(vect.copy(), proj_vect))
             to_remove += self.get_mobjects_from_last_animation()
         self.wait()
-        self.play(*map(FadeOut, to_remove))
+        self.play(*list(map(FadeOut, to_remove)))
 
         # self.show_u_coords(u_label)
         u_x, u_y = [
@@ -1771,7 +1771,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
             for mob in self.get_mobjects()
             if mob not in starting_mobjects + [final_coord]
         ]
-        self.play(*map(FadeOut, added_mobjects))
+        self.play(*list(map(FadeOut, added_mobjects)))
 
 class ShowSingleProjection(ProjectBasisVectors):
     CONFIG = {
@@ -1813,10 +1813,7 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
     def construct(self):
         TwoDOneDMatrixMultiplication.construct(self)
         everything = VGroup(*self.get_mobjects())
-        to_fade = filter(
-            lambda m : isinstance(m, Brace) or isinstance(m, TextMobject),
-            everything
-        )
+        to_fade = [m for m in everything if isinstance(m, Brace) or isinstance(m, TextMobject)]
 
         u = Matrix(self.matrix[0])
         v = Matrix(self.vector)
@@ -1838,7 +1835,7 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
 
         self.play(
             everything.to_corner, UP+RIGHT,
-            *map(FadeOut, to_fade)
+            *list(map(FadeOut, to_fade))
         )
         self.remove(everything)
         self.add(*everything)
@@ -1955,7 +1952,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
                 v.label.add_background_rectangle()
                 v.label.next_to(v.get_end(), direction)
 
-        self.play(*map(ShowCreation, bases))
+        self.play(*list(map(ShowCreation, bases)))
         for b in bases:
             mover = b.copy()
             self.play(ShowCreation(b.proj_line))
@@ -1967,11 +1964,11 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
                 Transform(b.proj.label, b.scaled_proj.label)
             )
             self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             mob
             for mob in self.get_mobjects()
             if mob not in start_state
-        ]))
+        ])))
 
     def transform_some_vector(self):
         words = TextMobject(
@@ -2032,7 +2029,7 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(FRAME_X_RADIUS)
+        plane.set_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -2048,7 +2045,7 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         number_line.to_edge(RIGHT)
         squish_plane.move_to(number_line)
 
-        numbers = number_line.get_numbers(*range(-6, 8, 2))
+        numbers = number_line.get_numbers(*list(range(-6, 8, 2)))
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_color(GREY)
         v_line.set_stroke(width = 10)
@@ -2077,9 +2074,9 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         start_words.next_to(ORIGIN, RIGHT, buff = MED_SMALL_BUFF).to_edge(UP)
         end_words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF/2)
 
-        self.play(*map(ShowCreation, [
+        self.play(*list(map(ShowCreation, [
             plane, number_line, v_line
-        ])+[
+        ]))+[
             Write(numbers, run_time = 2)
         ])
         self.play(Write(start_words, run_time = 2))
@@ -2175,7 +2172,7 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
 
         brace = Brace(matrix, UP)
         word = TextMobject("Transform")
-        word.scale_to_fit_width(brace.get_width())
+        word.set_width(brace.get_width())
         brace.put_at_tip(word)
         word.set_color(BLUE)
 
@@ -2220,7 +2217,7 @@ class WhatTheVectorWantsToBe(Scene):
         j_hat = Vector([0, 1], color = Y_COLOR)
         vect = Vector(self.v_coords, color = YELLOW)
         plane.add(vect, i_hat, j_hat)
-        plane.scale_to_fit_width(FRAME_X_RADIUS)
+        plane.set_width(FRAME_X_RADIUS)
         plane.to_edge(LEFT, buff = 0)
         plane.remove(vect, i_hat, j_hat)
 
@@ -2236,7 +2233,7 @@ class WhatTheVectorWantsToBe(Scene):
         number_line.to_edge(RIGHT)
         squish_plane.move_to(number_line)
 
-        numbers = number_line.get_numbers(*range(-6, 8, 2))
+        numbers = number_line.get_numbers(*list(range(-6, 8, 2)))
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_color(GREY)
         v_line.set_stroke(width = 10)
@@ -2269,13 +2266,13 @@ class WhatTheVectorWantsToBe(Scene):
         )
         self.play(
             Transform(plane.copy(), squish_plane, run_time = 3),
-            *map(Animation, [
+            *list(map(Animation, [
                 words,
                 matrix,
                 plane,
                 vect, 
                 v_coords
-            ])
+            ]))
         )
         self.wait()
 
@@ -2285,10 +2282,10 @@ class NextVideo(Scene):
             Next video: Cross products in the
             light of linear transformations
         """)
-        title.scale_to_fit_height(1.2)
+        title.set_height(1.2)
         title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
         VGroup(title, rect).show()
 

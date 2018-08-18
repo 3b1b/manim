@@ -19,7 +19,7 @@ class FractionMobject(VGroup):
             numerator.next_to(line, LEFT, SMALL_BUFF)
             denominator.next_to(line, RIGHT, SMALL_BUFF)
             self.add(numerator, line, denominator)
-        self.scale_to_fit_height(min(self.max_height, self.get_height()))
+        self.set_height(min(self.max_height, self.get_height()))
         self.value = fraction
 
     def add_plus_if_needed(self):
@@ -192,7 +192,7 @@ class ShowRowReduction(Scene):
 
         row2.target.next_to(row1.target, DOWN, buff=MED_LARGE_BUFF)
         lp, rp = row2_parens = TexMobject("()")
-        row2_parens.scale_to_fit_height(row2.get_height() + 2 * SMALL_BUFF)
+        row2_parens.set_height(row2.get_height() + 2 * SMALL_BUFF)
         lp.next_to(row2, LEFT, SMALL_BUFF)
         rp.next_to(row2, RIGHT, SMALL_BUFF)
         scalar = FractionMobject(scale_factor)

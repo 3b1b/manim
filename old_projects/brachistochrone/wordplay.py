@@ -22,7 +22,7 @@ class Intro(Scene):
         self.wait()
         with_word, steve = new_text.split()
         steve_copy = steve.copy().center().to_edge(UP)
-        # logo.sort_points(lambda p : -np.linalg.norm(p))
+        # logo.sort_points(lambda p : -get_norm(p))
         sort_by_color(logo)
         self.play(
             Transform(steve, steve_copy),
@@ -223,7 +223,7 @@ class OneSolutionTwoInsights(Scene):
         mark.next_to(johann, RIGHT)
         name = TextMobject("Mark Levi").to_edge(UP)
 
-        self.play(*map(ShimmerIn, one_solution.split()))
+        self.play(*list(map(ShimmerIn, one_solution.split())))
         self.wait()
         for pair in zip(one_solution.split(), two_insights.split()):
             self.play(Transform(*pair, path_func = path_along_arc(np.pi)))
@@ -243,9 +243,9 @@ class OneSolutionTwoInsights(Scene):
 
 class CircleOfIdeas(Scene):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "optics", "calculus", "mechanics", "geometry", "history"
-        ])
+        ]))
         words[0].set_color(YELLOW)
         words[1].set_color(BLUE_D)
         words[2].set_color(GREY)
@@ -307,7 +307,7 @@ class FermatsPrincipleStatement(Scene):
             angle_of_vector, 1, everything.points
         )
         norms = np.apply_along_axis(
-            np.linalg.norm, 1, everything.points
+            get_norm, 1, everything.points
         )
         norms -= np.min(norms)
         norms /= np.max(norms)
@@ -316,7 +316,7 @@ class FermatsPrincipleStatement(Scene):
 
         Mobject(everything, words).show()
 
-        everything.sort_points(np.linalg.norm)        
+        everything.sort_points(get_norm)        
         self.add(words)
         self.play(
             DelayByOrder(FadeIn(everything, run_time = 3)),
@@ -401,7 +401,7 @@ class BalanceCompetingFactors(Scene):
                 (2, BLUE_D)
             ]
         ]
-        real_factor1, real_factor2 = map(TextMobject, words)  
+        real_factor1, real_factor2 = list(map(TextMobject, words))  
         for word in factor1, factor2, real_factor1, real_factor2:
             word.shift(0.2*UP-word.get_bottom())
         for f1 in factor1, real_factor1:

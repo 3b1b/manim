@@ -165,7 +165,7 @@ class SliderScene(Scene):
         def update_sliders(sliders):
             curr_vect = self.get_vector()
             curr_vect -= self.center_point
-            curr_vect *= radius/np.linalg.norm(curr_vect)
+            curr_vect *= radius/get_norm(curr_vect)
             curr_vect += self.center_point
             self.set_to_vector(curr_vect)
             return sliders
@@ -190,14 +190,14 @@ class SliderScene(Scene):
             else:
                 unspecified_indices.append(i)
                 unspecified_vector[i] = curr_vector[i]
-        used_re = np.linalg.norm(target_vector - self.center_point)**2
+        used_re = get_norm(target_vector - self.center_point)**2
         left_over_re = self.total_real_estate - used_re
         if left_over_re < -0.001:
             raise Exception("Overspecified reset")
-        uv_norm = np.linalg.norm(unspecified_vector - self.center_point)
+        uv_norm = get_norm(unspecified_vector - self.center_point)
         if uv_norm == 0 and left_over_re > 0:
             unspecified_vector[unspecified_indices] = 1
-            uv_norm = np.linalg.norm(unspecified_vector - self.center_point)
+            uv_norm = get_norm(unspecified_vector - self.center_point)
         if uv_norm > 0:
             unspecified_vector -= self.center_point
             unspecified_vector *= np.sqrt(left_over_re)/uv_norm
@@ -273,7 +273,7 @@ class SliderScene(Scene):
 
         center_point = self.get_center_point()
         target_vector = self.get_vector() - center_point
-        if np.linalg.norm(target_vector) == 0:
+        if get_norm(target_vector) == 0:
             return
         vectors_and_magnitudes = [
             (self.ambient_acceleration, self.ambient_acceleration_magnitude),
@@ -285,9 +285,9 @@ class SliderScene(Scene):
         for vect, mag in vectors_and_magnitudes:
             vect += self.frame_duration*deriv
             if vect is self.ambient_velocity:
-                unit_r_vect = target_vector / np.linalg.norm(target_vector)
+                unit_r_vect = target_vector / get_norm(target_vector)
                 vect -= np.dot(vect, unit_r_vect)*unit_r_vect
-            vect *= mag/np.linalg.norm(vect)
+            vect *= mag/get_norm(vect)
             deriv = vect
 
         self.set_to_vector(target_vector + center_point)
@@ -295,7 +295,7 @@ class SliderScene(Scene):
 
     def get_random_vector(self, magnitude):
         result = 2*np.random.random(len(self.sliders)) - 1
-        result *= magnitude / np.linalg.norm(result)
+        result *= magnitude / get_norm(result)
         return result
 
     def update_frame(self, *args, **kwargs):
@@ -319,7 +319,7 @@ class MathIsATease(Scene):
             for angle in np.linspace(-np.pi/3, np.pi/3, 12):
                 lash = Line(ORIGIN, RIGHT)
                 lash.set_stroke(DARK_GREY, 2)
-                lash.scale_to_fit_width(0.27)
+                lash.set_width(0.27)
                 lash.next_to(ORIGIN, RIGHT, buff = 0)
                 lash.rotate(angle + np.pi/2)
                 lash.shift(eye.get_center())
@@ -553,20 +553,13 @@ class BackAndForth(Scene):
         self.wait(3)
         for tup, eq, to_draw in (pair, circle_eq, circle), (triplet, sphere_eq, VMobject()):
             for mob in tup, eq:
-                mob.xyz = VGroup(*filter(
-                    lambda sm : sm is not None,
-                    map(mob.get_part_by_tex, "xyz")
-                ))
+                mob.xyz = VGroup(*[sm for sm in map(mob.get_part_by_tex, "xyz") if sm is not None])
             self.play(
                 ReplacementTransform(tup.xyz, eq.xyz),
-                FadeOut(VGroup(*filter(
-                    lambda sm : sm not in tup.xyz, tup
-                ))),
+                FadeOut(VGroup(*[sm for sm in tup if sm not in tup.xyz])),
             )
             self.play(
-                Write(VGroup(*filter(
-                    lambda sm : sm not in eq.xyz, eq
-                ))),
+                Write(VGroup(*[sm for sm in eq if sm not in eq.xyz])),
                 ShowCreation(to_draw)
             )
         self.wait(3)
@@ -576,11 +569,11 @@ class SphereForming(ExternallyAnimatedScene):
 
 class PreviousVideos(Scene):
     def construct(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Pi hiding in prime regularities",
             "Visualizing all possible pythagorean triples",
             "Borsuk-Ulam theorem",
-        ]))
+        ])))
         titles.to_edge(UP, buff = MED_SMALL_BUFF)
         screen = ScreenRectangle(height = 6)
         screen.next_to(titles, DOWN)
@@ -604,10 +597,10 @@ class AskAboutLongerLists(TeacherStudentsScene):
             "$(x_1, x_2, x_3, x_4)?$"
         )
         tup = question[1]
-        alt_tups = map(TextMobject, [
+        alt_tups = list(map(TextMobject, [
             "$(x_1, x_2, x_3, x_4, x_5)?$",
             "$(x_1, x_2, \\dots, x_{99}, x_{100})?$"
-        ])
+        ]))
 
         self.student_says(question, run_time = 1)
         self.wait()
@@ -649,11 +642,11 @@ class Professionals(PiCreatureScene):
         self.analogies()
 
     def introduce_characters(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Mathematician",
             "Computer scientist",
             "Physicist",
-        ]))
+        ])))
         self.remove(*self.pi_creatures)
         for title, pi in zip(titles, self.pi_creatures):
             title.next_to(pi, DOWN)
@@ -718,7 +711,7 @@ class Professionals(PiCreatureScene):
         examples.add(Circle())
         examples.arrange_submobjects(RIGHT, buff = 2)
         examples.to_edge(UP, buff = LARGE_BUFF)
-        labels = VGroup(*map(TextMobject, ["2D", "3D"]))
+        labels = VGroup(*list(map(TextMobject, ["2D", "3D"])))
 
         title = TextMobject("Fly by instruments")
         title.scale(1.5)
@@ -791,7 +784,7 @@ class OfferAHybrid(SliderScene):
 
         self.add(titles, h_line, v_lines, equation)
         self.wait()
-        self.play(*map(MoveToTarget, [titles, v_lines, equation]))
+        self.play(*list(map(MoveToTarget, [titles, v_lines, equation])))
         self.play(Write(self.sliders, run_time = 1))
         self.initialize_ambiant_slider_movement()
         self.wait(10)
@@ -799,9 +792,9 @@ class OfferAHybrid(SliderScene):
         self.wait()
 
     def get_titles(self):
-        titles = VGroup(*map(TextMobject, [
+        titles = VGroup(*list(map(TextMobject, [
             "Analytic", "Hybrid", "Geometric"
-        ]))
+        ])))
         titles.to_edge(UP)
         titles[1].set_color(BLUE)
         titles.generate_target()
@@ -833,11 +826,11 @@ class DismissProjection(PiCreatureScene):
         self.transition_to_next_scene()
         
     def show_all_spheres(self):
-        equations = VGroup(*map(TexMobject, [
+        equations = VGroup(*list(map(TexMobject, [
             "x^2 + y^2 = 1",
             "x^2 + y^2 + z^2 = 1",
             "x^2 + y^2 + z^2 + w^2 = 1",
-        ]))
+        ])))
         colors = [YELLOW, GREEN, BLUE]
         for equation, edge, color in zip(equations, [LEFT, ORIGIN, RIGHT], colors):
             equation.set_color(color)
@@ -875,7 +868,7 @@ class DismissProjection(PiCreatureScene):
 
     def get_sphere_screen(self, equation, vect):
         square = Rectangle()
-        square.scale_to_fit_width(equation.get_width())
+        square.set_width(equation.get_width())
         square.stretch_to_fit_height(3)
         square.next_to(equation, vect)
         square.set_color(self.screen_rect_color)
@@ -927,7 +920,7 @@ class DismissProjection(PiCreatureScene):
         sphere = self.spheres[-1]
 
         morty = self.pi_creature
-        alt_dims = VGroup(*map(TextMobject, ["5D", "6D", "7D"]))
+        alt_dims = VGroup(*list(map(TextMobject, ["5D", "6D", "7D"])))
         alt_dims.next_to(morty.eyes, UP, SMALL_BUFF)
         alt_dim = alt_dims[0]
 
@@ -968,7 +961,7 @@ class DismissProjection(PiCreatureScene):
             self.descriptor,
             self.pi_creature
         ])))
-        self.play(*map(MoveToTarget, [equation, tup]))
+        self.play(*list(map(MoveToTarget, [equation, tup])))
         self.wait()
 
     ###
@@ -1172,7 +1165,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         red_rects = VGroup()
         for slider in self.sliders:
             for x1, x2 in (-0.5, 0.5), (0.75, 1.0), (-1.0, -0.75):
-                p1, p2 = map(slider.number_to_point, [x1, x2])
+                p1, p2 = list(map(slider.number_to_point, [x1, x2]))
                 rect = Rectangle(
                     stroke_width = 0,
                     fill_opacity = 0.5,
@@ -1236,7 +1229,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         self.reset_dials([1, 0], run_time = 1)
         self.reset_dials([0.9, -np.sqrt(0.19)], run_time = 2)
         self.play(FadeOut(self.real_estate_rects))
-        self.play(*map(FadeOut, [x_brace, y_brace, x_text, y_text]))
+        self.play(*list(map(FadeOut, [x_brace, y_brace, x_text, y_text])))
         self.wait()
 
     def note_circle_steepness(self):
@@ -1488,7 +1481,7 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         self.wind_down_ambient_movement(wait = False)
         self.play(self.teacher.change, "speaking")
         self.sliders.remove(x_slider)
-        self.total_real_estate = np.linalg.norm(self.get_vector())**2
+        self.total_real_estate = get_norm(self.get_vector())**2
         self.initialize_ambiant_slider_movement()
         arrow = Arrow(LEFT, RIGHT, color = GREEN)
         arrow.next_to(dial, LEFT)
@@ -1623,7 +1616,7 @@ class TwoDBoxExample(Scene):
                 rate_func = smooth,
             ))
             self.wait(0.5)
-        self.play(*map(FadeOut, [radius, r_equals_1]))
+        self.play(*list(map(FadeOut, [radius, r_equals_1])))
         self.wait()
 
         self.corner_radius = radius
@@ -1705,7 +1698,7 @@ class TwoDBoxExample(Scene):
         self.play(ReplacementTransform(sqrt_1_plus_1, sqrt_2))
         self.play(
             Write(root_2_value, run_time = 1),
-            *map(FadeOut, [bottom_one, side_one])
+            *list(map(FadeOut, [bottom_one, side_one]))
         )
         self.wait()
         self.play(ShowCreation(corner_radius))
@@ -1736,7 +1729,7 @@ class ThreeDCubeCorners(Scene):
         name = TextMobject("Corners: ")
         name.next_to(coordinates[0], LEFT)
         group = VGroup(name, coordinates)
-        group.scale_to_fit_height(FRAME_HEIGHT - 1)
+        group.set_height(FRAME_HEIGHT - 1)
         group.to_edge(LEFT)
 
         self.play(Write(name, run_time = 2))
@@ -2040,7 +2033,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         )
         self.wait(5)
         self.wind_down_ambient_movement(wait = False)
-        self.play(*map(FadeOut, [x_brace, phrases[0]]))
+        self.play(*list(map(FadeOut, [x_brace, phrases[0]])))
 
     def swap_with_top_right_circle(self):
         alt_circle = self.corner_circles[0]
@@ -2065,7 +2058,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
 
     def show_center_circle(self):
         origin = self.plane.coords_to_point(0, 0)
-        radius = np.linalg.norm(
+        radius = get_norm(
             self.plane.coords_to_point(np.sqrt(2)-1, 0) - origin
         )
         circle = Circle(radius = radius, color = GREEN)
@@ -2084,11 +2077,11 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         h_line = Line(point[1]*UP + origin[0]*RIGHT, point)
         v_line = Line(point[0]*RIGHT+origin[1]*UP, point)
 
-        while np.linalg.norm(self.get_vector()-target_vector) > 0.5:
+        while get_norm(self.get_vector()-target_vector) > 0.5:
             self.wait()
         self.wind_down_ambient_movement(0)
         self.reset_dials(target_vector)
-        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.play(*list(map(ShowCreation, [h_line, v_line])))
         self.wait()
 
         re_line = DashedLine(
@@ -2217,7 +2210,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         half.next_to(half_line, LEFT, SMALL_BUFF)
 
         target_vector = np.array(2*[1-np.sqrt(0.5)])
-        while np.linalg.norm(target_vector - self.get_vector()) > 0.5:
+        while get_norm(target_vector - self.get_vector()) > 0.5:
             self.wait()
         self.wind_down_ambient_movement(0)
         self.reset_dials(target_vector)
@@ -2480,7 +2473,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         sphere_words.shift(2*UP)
 
         self.add(sphere_words)
-        pairs = zip(self.coordinate_mobs, self.coordinates)
+        pairs = list(zip(self.coordinate_mobs, self.coordinates))
         for coord_mob, coords in pairs[1:] + [pairs[0]]:
             coord_mob.set_color(GREEN)
             coord_mob_copy = coord_mob.copy()
@@ -2503,9 +2496,9 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         self.play(
             self.sliders.center,
             sphere_words.shift, LEFT,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 self.coordinate_mobs, self.box_vertices_title
-            ])
+            ]))
         )
         self.initialize_ambiant_slider_movement()
         self.wait(4)
@@ -2840,7 +2833,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         re_rects.generate_target()
         for rect, slider in zip(re_rects.target, self.sliders):
             height = slider.unit_size*(1-np.sqrt(0.2))
-            rect.scale_to_fit_height(height)
+            rect.set_height(height)
             rect.move_to(slider.number_to_point(0), DOWN)
 
         self.sphere_words.generate_target()
@@ -3080,7 +3073,7 @@ class ThreeDOuterBoundingBoxWords(Scene):
             "$4 \\!\\times\\! 4\\!\\times\\! 4$ outer\\\\",
             "bounding box"
         )
-        words.scale_to_fit_width(FRAME_WIDTH-1)
+        words.set_width(FRAME_WIDTH-1)
         words.to_edge(DOWN)
         words.set_color(MAROON_B)
 
@@ -3169,7 +3162,7 @@ class ProportionOfSphereInBox(GraphScene):
         "x_min" : 0,
         "x_max" : 50,
         "x_tick_frequency" : 5,
-        "x_labeled_nums" : range(10, 50, 10),
+        "x_labeled_nums" : list(range(10, 50, 10)),
         "num_graph_anchor_points" : 100,
     }
     def construct(self):
@@ -3280,12 +3273,12 @@ class FunHighDSpherePhenomena(Scene):
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
-        items = VGroup(*map(TextMobject, [
+        items = VGroup(*list(map(TextMobject, [
             "$\\cdot$ Most volume is near the equator",
             "$\\cdot$ Most volume is near the surface",
             "$\\cdot$ Sphere packing in 8 dimensions",
             "$\\cdot$ Sphere packing in 24 dimensions",
-        ]))
+        ])))
         items.arrange_submobjects(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
@@ -3449,10 +3442,10 @@ class Announcements(TeacherStudentsScene):
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
 
-        items = VGroup(*map(TextMobject, [
+        items = VGroup(*list(map(TextMobject, [
             "$\\cdot$ Where to learn more",
             "$\\cdot$ Q\\&A Followup (podcast!)",
-        ]))
+        ])))
         items.arrange_submobjects(DOWN, aligned_edge = LEFT)
         items.next_to(h_line, DOWN)
 
@@ -3475,7 +3468,7 @@ class Promotion(PiCreatureScene):
         url.to_corner(UP+LEFT)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(5.5)
+        rect.set_height(5.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
 
@@ -3605,7 +3598,7 @@ class Thumbnail(SliderScene):
             self.remove(slider.label)
             slider.remove(slider.label)
         vect = np.random.random(10) - 0.5
-        vect /= np.linalg.norm(vect)
+        vect /= get_norm(vect)
         self.set_to_vector(vect)
 
         title = TextMobject("10D Sphere?")

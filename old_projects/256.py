@@ -140,7 +140,7 @@ class BreakUp2To256(PiCreatureScene):
         ])
         target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         target.to_edge(UP)
-        target.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        target.set_width(FRAME_WIDTH - LARGE_BUFF)
         parens = VGroup(*it.chain(*[
             [t[0], t[2]] for t in target
         ]))
@@ -211,7 +211,7 @@ class MainBreakdown(Scene):
             top_line.add(mob)
             four_billions.add(mob[1])
         top_line.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        top_line.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        top_line.set_width(FRAME_WIDTH - LARGE_BUFF)
         top_line.to_edge(UP)
         four_billions.set_color(YELLOW)
         self.add(top_line)
@@ -292,7 +292,7 @@ class MainBreakdown(Scene):
             Animation(hash_names)
         )
         self.play(get_passing_flash(), Animation(hash_names))
-        self.play(*map(FadeOut, [name, hash_names]))
+        self.play(*list(map(FadeOut, [name, hash_names])))
 
         self.gpu = gpu
         self.rate_words = rate_words
@@ -438,7 +438,7 @@ class MainBreakdown(Scene):
             3, self.get_earth()
         )
         milky_way = ImageMobject("milky_way")
-        milky_way.scale_to_fit_height(3)
+        milky_way.set_height(3)
         milky_way.to_edge(LEFT, buff = 0)
         milky_way.shift(DOWN)
 
@@ -558,7 +558,7 @@ class MainBreakdown(Scene):
 
         group = VGroup(*[
             VGroup(*[
-                mobject.copy().scale_to_fit_height(0.25)
+                mobject.copy().set_height(0.25)
                 for x in range(self.n_group_rows)
             ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
             for y in range(self.n_group_cols-1)
@@ -567,10 +567,10 @@ class MainBreakdown(Scene):
         group.add(dots)
         group.add(*[group[0].copy() for x in range(2)])
         group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        group.scale_to_fit_height(FRAME_Y_RADIUS)
+        group.set_height(FRAME_Y_RADIUS)
         max_width = 1.25*FRAME_X_RADIUS
         if group.get_width() > max_width:
-            group.scale_to_fit_width(max_width)
+            group.set_width(max_width)
         group.to_corner(DOWN+RIGHT)
         group = VGroup(*it.chain(*group))
 
@@ -598,13 +598,13 @@ class MainBreakdown(Scene):
 
         space = LARGE_BUFF
         h_line = Line(LEFT, RIGHT)
-        h_line.scale_to_fit_width(four_billion.get_width())
+        h_line.set_width(four_billion.get_width())
         h_line.next_to(four_billion, DOWN, space)
         for mob in numerator, denominator:
-            mob.scale_to_fit_height(0.75*space)
+            mob.set_height(0.75*space)
             max_width = h_line.get_width()
             if mob.get_width() > max_width:
-                mob.scale_to_fit_width(max_width)
+                mob.set_width(max_width)
         numerator.next_to(h_line, UP, SMALL_BUFF)
         denominator.next_to(h_line, DOWN, SMALL_BUFF)
         fraction = VGroup(numerator, h_line, denominator)
@@ -662,7 +662,7 @@ class StateOfBitcoin(TeacherStudentsScene):
         title = TextMobject("Total", "B", "mining")
         title.to_edge(UP)
         bitcoin_logo = BitcoinLogo()
-        bitcoin_logo.scale_to_fit_height(0.5)
+        bitcoin_logo.set_height(0.5)
         bitcoin_logo.move_to(title[1])
         title.remove(title[1])
 
@@ -814,12 +814,12 @@ class QAndA(PiCreatureScene):
             ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
             for y in range(cols)
         ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        dots.scale_to_fit_width(FRAME_WIDTH - 2*LARGE_BUFF)
+        dots.set_width(FRAME_WIDTH - 2*LARGE_BUFF)
         dots.next_to(self.pi_creature, UP)
         dots = VGroup(*it.chain(*dots))
         top = dots.get_top()
         dots.sort_submobjects(
-            lambda p : np.linalg.norm(p-top)
+            lambda p : get_norm(p-top)
         )
 
         powers_of_two = VGroup(*[
@@ -853,7 +853,7 @@ class QAndA(PiCreatureScene):
 class Thumbnail(Scene):
     def construct(self):
         num = TexMobject("2^{256}")
-        num.scale_to_fit_height(2)
+        num.set_height(2)
         num.set_color(BLUE_C)
         num.set_stroke(BLUE_B, 3)
         num.shift(MED_SMALL_BUFF*UP)
@@ -871,7 +871,7 @@ class Thumbnail(Scene):
             if i%(n_chars/4) == 0:
                 new_str += " \\\\ "
         background_num = TexMobject(new_str)
-        background_num.scale_to_fit_width(FRAME_WIDTH - LARGE_BUFF)
+        background_num.set_width(FRAME_WIDTH - LARGE_BUFF)
         background_num.set_fill(opacity = 0.2)
 
         secure = TextMobject("Secure?")
@@ -884,7 +884,7 @@ class Thumbnail(Scene):
             file_name = "shield_locked",
             fill_color = WHITE,
         )
-        lock.scale_to_fit_height(6)
+        lock.set_height(6)
 
         self.add(background_num, num)
 

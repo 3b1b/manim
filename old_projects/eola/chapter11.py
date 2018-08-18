@@ -42,7 +42,7 @@ class OpeningQuote(Scene):
         )
         words.set_color_by_tex("axioms,", BLUE)
         words.set_color_by_tex("difficult for the uninitiated", RED)
-        words.scale_to_fit_width(FRAME_WIDTH - 2)
+        words.set_width(FRAME_WIDTH - 2)
         words.to_edge(UP)
         author = TextMobject("-Vladmir Arnold")
         author.set_color(YELLOW)
@@ -122,7 +122,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             student.bubble = get_small_bubble(
                 student, height = 4, width = 4,
             )
-        self.play(*map(FadeIn, students))
+        self.play(*list(map(FadeIn, students)))
         self.play(Blink(physics_student))
         self.wait()
         for student, vect in zip(students, [RIGHT, LEFT]):
@@ -152,7 +152,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             coords.target = coords.copy()
             group = VGroup(v.target, coords.target)
             group.arrange_submobjects(DOWN)
-            group.scale_to_fit_height(coords.get_height())
+            group.set_height(coords.get_height())
             group.next_to(student.arrow, RIGHT)
             student.q_marks = TexMobject("???")
             student.q_marks.set_color_by_gradient(BLUE, YELLOW)
@@ -171,16 +171,16 @@ class WhatIsA2DVector(LinearTransformationScene):
             self.play(Blink(student))
         self.wait()
         self.play(*it.chain(
-            map(FadeOut, everything + [
+            list(map(FadeOut, everything + [
                 physics_student.bubble,
                 physics_student.v,
                 physics_student.coords,
                 physics_student.arrow,
                 physics_student.q_marks,
                 cs_student.q_marks,
-            ]),
+            ])),
             [ApplyMethod(s.change_mode, "plain") for s in students],
-            map(Animation, [cs_student.bubble, cs_student.arrow]),
+            list(map(Animation, [cs_student.bubble, cs_student.arrow])),
             [mob.restore for mob in (cs_student.v, cs_student.coords)],
         ))
         bubble = cs_student.get_bubble(SpeechBubble, width = 4, height = 3)
@@ -197,18 +197,18 @@ class WhatIsA2DVector(LinearTransformationScene):
 
 class HigherDimensionalVectorsNumerically(Scene):
     def construct(self):
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "4D vector", 
             "5D vector", 
             "100D vector", 
-        ]))
+        ])))
         words.arrange_submobjects(RIGHT, buff = LARGE_BUFF*2)
         words.to_edge(UP)
-        vectors = VGroup(*map(Matrix, [
+        vectors = VGroup(*list(map(Matrix, [
             [3, 1, 4, 1],
             [5, 9, 2, 6, 5],
             [3, 5, 8, "\\vdots", 0, 8, 6]
-        ]))
+        ])))
         colors = [YELLOW, MAROON_B, GREEN]
         for word, vector, color in zip(words, vectors, colors):
             vector.shift(word.get_center()[0]*RIGHT)
@@ -255,7 +255,7 @@ class HyperCube(VMobject):
         "dims" : 4,
     }
     def generate_points(self):
-        corners = np.array(map(np.array, it.product(*[(-1, 1)]*self.dims)))
+        corners = np.array(list(map(np.array, it.product(*[(-1, 1)]*self.dims))))
         def project(four_d_array):
             result = four_d_array[:3]
             w = four_d_array[self.dims-1]
@@ -283,7 +283,7 @@ class AskAbout4DPhysicsStudent(Scene):
         hyper_cube = HyperCube()
         thought_mobs = []
         for i, mob in enumerate([line, square, cube, hyper_cube]):
-            mob.scale_to_fit_height(2)            
+            mob.set_height(2)            
             tex = TexMobject("%dD"%(i+1))
             tex.next_to(mob, UP)
             group = VGroup(mob, tex)
@@ -345,15 +345,15 @@ class ManyCoordinateSystems(LinearTransformationScene):
         for t_matrix in t_matrices:
             self.animate_coordinates()
             self.play(*it.chain(
-                map(FadeOut, movers),
-                map(Animation, self.foreground_mobjects)
+                list(map(FadeOut, movers)),
+                list(map(Animation, self.foreground_mobjects))
             ))
             for mover in movers:
                 mover.restore()
             self.apply_transposed_matrix(t_matrix, run_time = 0)
             self.play(*it.chain(
-                map(FadeIn, movers),
-                map(Animation, self.foreground_mobjects)
+                list(map(FadeIn, movers)),
+                list(map(Animation, self.foreground_mobjects))
             ))
         self.animate_coordinates()
 
@@ -367,7 +367,7 @@ class ManyCoordinateSystems(LinearTransformationScene):
         ]).T
         inv_cob = np.linalg.inv(cob_matrix)
         coords = np.dot(inv_cob, self.v_coords)
-        array = Matrix(map(DecimalNumber, coords))
+        array = Matrix(list(map(DecimalNumber, coords)))
         array.get_entries()[0].set_color(X_COLOR)
         array.get_entries()[1].set_color(Y_COLOR)
         array.add_to_back(BackgroundRectangle(array))
@@ -386,14 +386,14 @@ class ManyCoordinateSystems(LinearTransformationScene):
 
         self.play(Write(array, run_time = 1))
         self.wait()
-        self.play(*map(MoveToTarget, [self.i_hat, coord1]))
-        self.play(*map(MoveToTarget, [self.j_hat, coord2]))
+        self.play(*list(map(MoveToTarget, [self.i_hat, coord1])))
+        self.play(*list(map(MoveToTarget, [self.j_hat, coord2])))
         self.play(VGroup(self.j_hat, coord2).shift, self.i_hat.get_end())
         self.wait(2)
         self.play(
             self.i_hat.restore,
             self.j_hat.restore,
-            *map(FadeOut, [array, coord1, coord2])
+            *list(map(FadeOut, [array, coord1, coord2]))
         )
 
 class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
@@ -479,13 +479,13 @@ class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
             if cob_matrix is not None:
                 self.play(
                     FadeOut(self.plane),
-                    *map(Animation, non_plane_mobs)
+                    *list(map(Animation, non_plane_mobs))
                 )
                 transform = self.get_matrix_transformation(cob_matrix)
                 self.plane.apply_function(transform)
                 self.play(
                     FadeIn(self.plane),
-                    *map(Animation, non_plane_mobs)
+                    *list(map(Animation, non_plane_mobs))
                 )
                 self.wait()
             self.apply_transposed_matrix(
@@ -659,7 +659,7 @@ class AddTwoFunctions(FunctionGraphScene):
 
         curr_x_point = f_lines[0].get_start()
         sum_def = self.get_sum_definition(DecimalNumber(curr_x_point[0]))
-        # sum_def.scale_to_fit_width(FRAME_X_RADIUS-1)
+        # sum_def.set_width(FRAME_X_RADIUS-1)
         sum_def.to_corner(UP+LEFT)
         arrow = Arrow(sum_def[2].get_bottom(), curr_x_point, color = WHITE)        
         prefix = sum_def[0]
@@ -675,7 +675,7 @@ class AddTwoFunctions(FunctionGraphScene):
         self.wait()        
         for lines in f_lines, g_lines:
             self.add_lines(lines)
-        self.play(*map(FadeOut, [f_graph, g_graph]))
+        self.play(*list(map(FadeOut, [f_graph, g_graph])))
         self.wait()
         self.play(FadeOut(brace))
         fg_group = VGroup(*list(f_label)+list(g_label))
@@ -860,7 +860,7 @@ class ShowSlopes(Animation):
 
     def update_mobject(self, alpha):
         f = self.graph.point_from_proportion        
-        low, high = map(f, np.clip([alpha-self.dx, alpha+self.dx], 0, 1))
+        low, high = list(map(f, np.clip([alpha-self.dx, alpha+self.dx], 0, 1)))
         slope = (high[1]-low[1])/(high[0]-low[0])
         self.mobject.restore()
         self.mobject.rotate(np.arctan(slope))
@@ -957,7 +957,7 @@ class FromVectorsToFunctions(VectorScene):
 
         func_tex.generate_target()
         lp, rp = parens = TexMobject("()")
-        parens.scale_to_fit_height(func_tex.get_height())
+        parens.set_height(func_tex.get_height())
         L, equals = TexMobject("L=")
         deriv = TexMobject("\\frac{d}{dx}")
         new_func = TexMobject("\\frac{1}{3}x^2 - 1")
@@ -974,7 +974,7 @@ class FromVectorsToFunctions(VectorScene):
 
         self.play(
             MoveToTarget(func_tex),
-            *map(Write, [L, lp, rp, equals, new_func])
+            *list(map(Write, [L, lp, rp, equals, new_func]))
         )
         self.remove(func_tex)
         self.add(func_tex.target)
@@ -1188,19 +1188,19 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         rhs.next_to(vw_label, RIGHT)
         rect = BackgroundRectangle(rhs)
         self.play(*it.chain(
-            map(Write, [rect, equals, plus]),
-            map(MoveToTarget, [v_label_copy, w_label_copy]),
+            list(map(Write, [rect, equals, plus])),
+            list(map(MoveToTarget, [v_label_copy, w_label_copy])),
         ))
         to_fade = [self.plane, v, v_label, w_group, vw_label, vw_sum]
         to_fade += self.get_mobjects_from_last_animation()
 
         self.wait()
         self.play(*it.chain(
-            map(FadeOut, to_fade),
-            map(Animation, self.foreground_mobjects)
+            list(map(FadeOut, to_fade)),
+            list(map(Animation, self.foreground_mobjects))
         ))
         self.plane.restore()
-        self.play(FadeIn(self.plane), *map(Animation, self.foreground_mobjects))
+        self.play(FadeIn(self.plane), *list(map(Animation, self.foreground_mobjects)))
         self.transformable_mobjects = []
         self.moving_vectors = []        
         self.transformable_labels = []
@@ -1257,7 +1257,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             scaled_v_label, scaled_v, v_copy, 
             v, rhs
         ] + self.transformable_labels + self.moving_vectors
-        self.play(*map(FadeOut, faders))
+        self.play(*list(map(FadeOut, faders)))
 
     def add_words(self):
         randy = Randolph().shift(LEFT).to_edge(DOWN)
@@ -1416,12 +1416,12 @@ class ProposeDerivativeAsMatrix(TeacherStudentsScene):
 
 class PolynomialsHaveArbitrarilyLargeDegree(Scene):
     def construct(self):
-        polys = VGroup(*map(TexMobject, [
+        polys = VGroup(*list(map(TexMobject, [
             "x^{300} + 9x^2",
             "4x^{4{,}000{,}000{,}000} + 1",
             "3x^{\\left(10^{100}\\right)}",
             "\\vdots"
-        ]))
+        ])))
         polys.set_color_by_gradient(BLUE_B, BLUE_D)
         polys.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         polys.scale(1.3)
@@ -1569,7 +1569,7 @@ class IntroducePolynomialSpace(Scene):
             Write(brace.text),
             *[
                 ApplyMethod(self.poly1[index].set_color, color)
-                for index, color in index_to_color.items()
+                for index, color in list(index_to_color.items())
             ]
         )
         self.wait()
@@ -1674,7 +1674,7 @@ class IntroducePolynomialSpace(Scene):
         ))
         self.wait()
 
-        self.play(*map(FadeOut, [self.poly1]+more_terms))
+        self.play(*list(map(FadeOut, [self.poly1]+more_terms)))
         self.poly2.next_to(equals, LEFT)
         self.poly2.shift(MED_SMALL_BUFF*UP)
         self.poly2.set_color(WHITE)
@@ -1683,7 +1683,7 @@ class IntroducePolynomialSpace(Scene):
         new_coords = Matrix(["0", "0", "-5", "0", "0", "0", "0", "4", "\\vdots"])
         new_coords.get_entries()[2].set_color(Z_COLOR)
         new_coords.get_entries()[7].set_color(TEAL)
-        new_coords.scale_to_fit_height(6)
+        new_coords.set_height(6)
         new_coords.move_to(coords, aligned_edge = LEFT)
         self.play(
             Write(self.poly2),
@@ -1699,7 +1699,7 @@ class IntroducePolynomialSpace(Scene):
             self.remove(*self.get_mobjects_from_last_animation())
             self.add(self.poly2)
             self.wait()
-        self.play(*map(FadeOut, [self.poly2, coords, equals]))
+        self.play(*list(map(FadeOut, [self.poly2, coords, equals])))
 
     def derivative_as_matrix(self):
         matrix = Matrix([
@@ -1754,7 +1754,7 @@ class IntroducePolynomialSpace(Scene):
         deriv.target.shift(0.25*RIGHT)
         self.play(
             FadeOut(equals),
-            *map(MoveToTarget, [matrix, deriv])
+            *list(map(MoveToTarget, [matrix, deriv]))
         )
 
         poly = TexMobject(
@@ -1795,7 +1795,7 @@ class IntroducePolynomialSpace(Scene):
         poly_result.next_to(eq1)
         brace = Brace(poly_result, buff = 0)
 
-        self.play(*map(Write, [eq1, eq2, brace]))
+        self.play(*list(map(Write, [eq1, eq2, brace])))
 
         result_coefs = VGroup(*np.array(poly_result)[[6, 3, 0]])
         VGroup(*poly_result[0:2]).set_color(MAROON_B)
@@ -1836,14 +1836,14 @@ class IntroducePolynomialSpace(Scene):
         vert_rect.replace(array.get_entries(), stretch = True)
         vert_rect.stretch_in_place(1.1, 1)
         vert_rect.stretch_in_place(1.5, 0)
-        tuples = zip(
+        tuples = list(zip(
             relevant_entries,
             diag_entries,
             result_entries,
             rects,
             result_terms,
             coefs[1:]
-        )
+        ))
         self.play(Write(result_array.get_brackets()))
         for entry, diag_entry, result_entry, rect, result_term, coef in tuples:
             self.play(FadeIn(rect), FadeIn(vert_rect))
@@ -1864,7 +1864,7 @@ class IntroducePolynomialSpace(Scene):
             self.play(Transform(coef.copy(), VGroup(result_term)))
             self.wait()
             self.play(FadeOut(rect), FadeOut(vert_rect))
-        self.play(*map(Write, result_array.get_entries()[3:]))
+        self.play(*list(map(Write, result_array.get_entries()[3:])))
         self.wait()
 
 class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
@@ -1925,19 +1925,19 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
         VGroup(h_line, v_line).set_color(BLUE)
 
         self.add(l_title, r_title)
-        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.play(*list(map(ShowCreation, [h_line, v_line])))
         self.wait()
 
-        lin_alg_concepts = VGroup(*map(TextMobject, [
+        lin_alg_concepts = VGroup(*list(map(TextMobject, [
             "Linear transformations",
             "Dot products",
             "Eigenvectors",
-        ]))
-        function_concepts = VGroup(*map(TextMobject, [
+        ])))
+        function_concepts = VGroup(*list(map(TextMobject, [
             "Linear operators",
             "Inner products",
             "Eigenfunctions",
-        ]))
+        ])))
         for concepts, vect in (lin_alg_concepts, LEFT), (function_concepts, RIGHT):
             concepts.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
             concepts.next_to(h_line, DOWN, buff = LARGE_BUFF)
@@ -2100,13 +2100,13 @@ class ShowVectorSpaces(Scene):
 
 class ToolsOfLinearAlgebra(Scene):
     def construct(self):
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Linear transformations",
             "Null space",
             "Eigenvectors",
             "Dot products",
             "$\\vdots$"
-        ]))
+        ])))
         words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         words[-1].next_to(words[-2], DOWN)
         self.play(FadeIn(
@@ -2155,7 +2155,7 @@ class MathematicianSpeakingToAll(Scene):
         vect = -bubble.get_bubble_center()
         def func(point):
             centered = point+vect
-            return 10*centered/np.linalg.norm(centered)
+            return 10*centered/get_norm(centered)
         self.play(*[
             ApplyPointwiseFunction(func, mob)
             for mob in self.get_mobjects()
@@ -2224,7 +2224,7 @@ class ListAxioms(Scene):
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
-        axioms.scale_to_fit_width(FRAME_WIDTH-1)
+        axioms.set_width(FRAME_WIDTH-1)
         axioms.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(FadeIn(
@@ -2304,7 +2304,7 @@ class VectorSpaceOfPiCreatures(Scene):
             for y in range(4)
         ]).arrange_submobjects(DOWN, buff = 1.5)
         creatures = VGroup(*it.chain(*creatures))
-        creatures.scale_to_fit_height(FRAME_HEIGHT-1)
+        creatures.set_height(FRAME_HEIGHT-1)
         for pi in creatures:
             pi.change_mode(random.choice([
                 "pondering", "pondering",
@@ -2349,7 +2349,7 @@ class VectorSpaceOfPiCreatures(Scene):
         transform = Transform(pi1.copy(), pi2.copy())
         transform.update(0.5)
         sum_pi = transform.mobject
-        sum_pi.scale_to_fit_height(pi1.get_height()+pi2.get_height())
+        sum_pi.set_height(pi1.get_height()+pi2.get_height())
         for pi in pis:
             pi.generate_target()
         plus, equals = TexMobject("+=")
@@ -2373,8 +2373,8 @@ class VectorSpaceOfPiCreatures(Scene):
 
         self.play(FadeOut(creatures))
         self.play(*it.chain(
-            map(MoveToTarget, [pi1, pi2, pi3]),
-            map(Write, [plus, equals, two, equals2]),
+            list(map(MoveToTarget, [pi1, pi2, pi3])),
+            list(map(Write, [plus, equals, two, equals2])),
         ))
         self.play(
             Transform(pi1.copy(), sum_pi),

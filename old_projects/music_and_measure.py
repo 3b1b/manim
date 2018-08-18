@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
+
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -166,7 +166,7 @@ class IntervalScene(NumberLineScene):
                            pause_time = 1.0,
                            remove_as_you_go = True):
         shrink = not remove_as_you_go
-        for fraction, count in zip(rationals(), range(num_fractions)):
+        for fraction, count in zip(rationals(), list(range(num_fractions))):
             frac_mob, tick  = self.add_fraction(fraction, shrink)
             self.wait(pause_time)
             if remove_as_you_go:
@@ -189,7 +189,7 @@ class IntervalScene(NumberLineScene):
     def add_fraction_ticks(self, num_fractions = 1000, run_time = 0):
         long_tick_size = self.number_line.tick_size*TICK_STRETCH_FACTOR
         all_ticks = []
-        for frac, count in zip(rationals(), range(num_fractions)):
+        for frac, count in zip(rationals(), list(range(num_fractions))):
             point = self.number_line.number_to_point(frac)
             tick_rad = 2.0*long_tick_size/frac.denominator
             tick = Line(point+tick_rad*DOWN, point+tick_rad*UP)
@@ -238,7 +238,7 @@ class IntervalScene(NumberLineScene):
             center_point+spatial_width*LEFT/2,
             center_point+spatial_width*RIGHT/2
         )
-        interval_line.do_in_place(interval_line.sort_points, np.linalg.norm)
+        interval_line.do_in_place(interval_line.sort_points, get_norm)
         interval_line.set_color(color)
         if run_time > 0:
             squished_interval = deepcopy(open_interval).stretch_to_fit_width(0)
@@ -255,7 +255,7 @@ class IntervalScene(NumberLineScene):
 class TwoChallenges(Scene):
     def construct(self):
         two_challenges = TextMobject("Two Challenges", size = "\\Huge").to_edge(UP)
-        one, two = map(TextMobject, ["1.", "2."])
+        one, two = list(map(TextMobject, ["1.", "2."]))
         one.shift(UP).to_edge(LEFT)
         two.shift(DOWN).to_edge(LEFT)
         notes = ImageMobject("musical_notes").scale(0.3)
@@ -832,10 +832,10 @@ class AllValuesBetween1And2(NumberLineScene):
         NumberLineScene.construct(self)
         irrational = 1.2020569031595942        
         cont_frac = [1, 4, 1, 18, 1, 1, 1, 4, 1, 9, 9, 2, 1, 1, 1, 2]        
-        one, two, irr = map(
+        one, two, irr = list(map(
             self.number_line.number_to_point, 
             [1, 2, irrational]
-        )
+        ))
         top_arrow = Arrow(one+UP, one)
         bot_arrow = Arrow(irr+2*DOWN, irr)
         r = TexMobject("r").next_to(top_arrow, UP)
@@ -876,8 +876,8 @@ class AllValuesBetween1And2(NumberLineScene):
                 run_time = 0.5
             )
             self.wait(0.5)
-            points = map(self.number_line.number_to_point, [approx, irrational])
-            distance = np.linalg.norm(points[1]-points[0])
+            points = list(map(self.number_line.number_to_point, [approx, irrational]))
+            distance = get_norm(points[1]-points[0])
             if distance < 0.3*FRAME_X_RADIUS and num_zooms < max_num_zooms:
                 num_zooms += 1
                 new_distance = 0.75*FRAME_X_RADIUS
@@ -1114,13 +1114,13 @@ class StepsToSolution(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
         self.spacing = 0.7
-        steps = map(TextMobject, [
+        steps = list(map(TextMobject, [
             "Enumerate all rationals in (0, 1)",
             "Assign one interval to each rational",
             "Choose sum of the form $\\mathlarger{\\sum}_{n=1}^\\infty a_n = 1$",
             "Pick any $\\epsilon$ such that $0 < \\epsilon < 1$",
             "Stretch the $n$th interval to have length $\\epsilon/2^n$",
-        ])
+        ]))
         for step in steps:
             step.shift(DOWN)
         for step in steps[2:]:
@@ -1145,7 +1145,7 @@ class StepsToSolution(IntervalScene):
         anims = []
         commas = Mobject()
         denom_to_mobs = {}
-        for frac, count in zip(rationals(), range(1,28)):
+        for frac, count in zip(rationals(), list(range(1,28))):
             mob, tick = self.add_fraction(frac, shrink = True)
             self.wait(0.1)
             self.remove(tick)
@@ -1259,7 +1259,7 @@ class OurSumCanBeArbitrarilySmall(Scene):
         equals = TexMobject("=").next_to(epsilon)
         self.add(epsilon, equals)
         for num in np.arange(1, 0, -step_size):
-            parts = map(TexMobject, str(num))
+            parts = list(map(TexMobject, str(num)))
             parts[0].next_to(equals)
             for i in range(1, len(parts)):
                 parts[i].next_to(parts[i-1], buff = 0.1, aligned_edge = DOWN)
@@ -1285,7 +1285,7 @@ class StillFeelsCounterintuitive(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
         ticks = self.add_fraction_ticks(run_time = 1.0)
-        epsilon, equals, num = map(TexMobject, ["\\epsilon", "=", "0.3"])
+        epsilon, equals, num = list(map(TexMobject, ["\\epsilon", "=", "0.3"]))
         epsilon.shift(2*UP)
         equals.next_to(epsilon)
         num.next_to(equals)
@@ -1347,7 +1347,7 @@ class WhatDoesItLookLikeToBeOutside(Scene):
 class ZoomInOnSqrt2Over2(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
-        epsilon, equals, num = map(TexMobject, ["\\epsilon", "=", "0.3"])
+        epsilon, equals, num = list(map(TexMobject, ["\\epsilon", "=", "0.3"]))
         equals.next_to(epsilon)
         num.next_to(equals)
         self.add(Mobject(epsilon, equals, num).center().shift(2*UP))

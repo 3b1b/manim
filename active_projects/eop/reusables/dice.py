@@ -13,7 +13,7 @@ class DieFace(SVGMobject):
         
 class RowOfDice(VGroup):
     CONFIG = {
-        "values" : range(1,7),
+        "values" : list(range(1,7)),
         "direction": RIGHT,
     }
 

@@ -89,7 +89,7 @@ class ClosedLoopScene(Scene):
             pairs = adjacent_pairs(self.dots)
         else:
             n_pairs = len(list(self.dots))/2
-            pairs = zip(self.dots[:n_pairs], self.dots[n_pairs:])
+            pairs = list(zip(self.dots[:n_pairs], self.dots[n_pairs:]))
         for d1, d2 in pairs:
             line = Line(d1.get_center(), d2.get_center())
             line.start_dot = d1 
@@ -119,10 +119,10 @@ class ClosedLoopScene(Scene):
             dots = self.dots
         alphas = []
         alpha_range = np.arange(0, 1, precision)
-        loop_points = np.array(map(self.loop.point_from_proportion, alpha_range))
+        loop_points = np.array(list(map(self.loop.point_from_proportion, alpha_range)))
         for dot in dots:
             vects = loop_points - dot.get_center()
-            norms = np.apply_along_axis(np.linalg.norm, 1, vects)
+            norms = np.apply_along_axis(get_norm, 1, vects)
             index = np.argmin(norms)
             alphas.append(alpha_range[index])
         return alphas
@@ -197,13 +197,13 @@ class ClosedLoopScene(Scene):
 
     def square_scores(self, all_quads):
         midpoint_diffs = np.apply_along_axis(
-            np.linalg.norm, 1,
+            get_norm, 1,
             0.5*(all_quads[:,0] + all_quads[:,2]) - 0.5*(all_quads[:,1] + all_quads[:,3])
         )
         vects1 = all_quads[:,0] - all_quads[:,2]
         vects2 = all_quads[:,1] - all_quads[:,3]
-        distances1 = np.apply_along_axis(np.linalg.norm, 1, vects1)
-        distances2 = np.apply_along_axis(np.linalg.norm, 1, vects2)
+        distances1 = np.apply_along_axis(get_norm, 1, vects1)
+        distances2 = np.apply_along_axis(get_norm, 1, vects2)
         distance_diffs = np.abs(distances1 - distances2)
         midpoint_diffs /= distances1
         distance_diffs /= distances2
@@ -228,7 +228,7 @@ class Introduction(TeacherStudentsScene):
             pi.generate_target()
             pi.target.change_mode("happy")            
             pi.target.look_at(self.get_teacher().bubble)
-        self.play(*map(MoveToTarget, self.get_students()))
+        self.play(*list(map(MoveToTarget, self.get_students())))
         self.random_blink(3)
         self.teacher_says(
             "Here's why \\\\ I'm excited...",
@@ -236,7 +236,7 @@ class Introduction(TeacherStudentsScene):
         )
         for pi in self.get_students():
             pi.target.look_at(self.get_teacher().eyes)
-        self.play(*map(MoveToTarget, self.get_students()))
+        self.play(*list(map(MoveToTarget, self.get_students())))
         self.wait()
 
 class WhenIWasAKid(TeacherStudentsScene):
@@ -272,7 +272,7 @@ class WhenIWasAKid(TeacherStudentsScene):
         )
         self.remove(self.get_teacher())
         self.add(me)
-        self.play(*map(FadeIn, children[:-1] + [speaker]))
+        self.play(*list(map(FadeIn, children[:-1] + [speaker])))
         self.random_blink()
 
     def run_class(self):
@@ -354,10 +354,10 @@ class WhenIWasAKid(TeacherStudentsScene):
 
         self.play(
             Transform(me, morty),
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 self.students, self.teacher,
                 me.bubble, me.bubble.content
-            ])
+            ]))
         )
         self.remove(me)
         self.add(morty)
@@ -448,17 +448,17 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         ellipse.stretch(1.5, 0)
         ellipse.stretch(0.7, 1)
         ellipse.rotate(-np.pi/2)
-        ellipse.scale_to_fit_height(4)
+        ellipse.set_height(4)
         pi_loop = TexMobject("\\pi")[0]
         pi_loop.set_fill(opacity = 0)
         pi_loop.set_stroke(
             color = WHITE,
-            width = DEFAULT_POINT_THICKNESS
+            width = DEFAULT_STROKE_WIDTH
         )
-        pi_loop.scale_to_fit_height(4)
+        pi_loop.set_height(4)
         randy = Randolph()
         randy.look(DOWN)
-        randy.scale_to_fit_width(pi_loop.get_width())
+        randy.set_width(pi_loop.get_width())
         randy.move_to(pi_loop, aligned_edge = DOWN)
         randy.body.set_fill(opacity = 0)
         randy.mouth.set_stroke(width = 0)
@@ -623,12 +623,12 @@ class PairOfPairBecomeRectangle(Scene):
         ]
         midpoint = Dot(LEFT, color = RED)
 
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             "Common midpoint",
             "Same distance apart",
             "$\\Downarrow$",
             "Rectangle",
-        ]))
+        ])))
         words.arrange_submobjects(DOWN)
         words.to_edge(RIGHT)
         words[-1].set_color(BLUE)
@@ -637,7 +637,7 @@ class PairOfPairBecomeRectangle(Scene):
             ShowCreation(dots),
             Write(labels)
         )
-        self.play(*map(ShowCreation, lines))
+        self.play(*list(map(ShowCreation, lines)))
         self.wait()
         self.play(*[
             ApplyMethod(
@@ -672,7 +672,7 @@ class PairOfPairBecomeRectangle(Scene):
             ShowCreation(rectangle),
             Animation(dots)
         )
-        self.play(*map(Write, words[2:]))
+        self.play(*list(map(Write, words[2:])))
         self.wait()
 
 class SearchForRectangleOnLoop(ClosedLoopScene):
@@ -841,7 +841,7 @@ class PairOfRealsToPlane(Scene):
             DashedLine(dot, two_d_point, color = dot.get_color())
             for dot in dots
         ])
-        self.play(*map(ShowCreation, lines))
+        self.play(*list(map(ShowCreation, lines)))
         self.play(ShowCreation(two_d_point))
         everything = VGroup(*self.get_mobjects())
         self.play(
@@ -960,7 +960,7 @@ class DefineUnorderedPair(ClosedLoopScene):
         arrow_pairs = [VGroup(*arrows[:2]), VGroup(*arrows[2:])]
 
         for label, arrow_pair in zip(labels, arrow_pairs):
-            self.play(*map(FadeIn, [label, arrow_pair]))
+            self.play(*list(map(FadeIn, [label, arrow_pair])))
             self.wait()
         for x in range(2):
             self.play(
@@ -1062,7 +1062,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
         line.make_smooth()
         vert_interval = interval.copy()
         square = Square()
-        square.scale_to_fit_width(interval.get_width())
+        square.set_width(interval.get_width())
         square.set_stroke(width = 0)
         square.set_fill(color = BLUE, opacity = 0.3)
         square.move_to(
@@ -1114,7 +1114,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
         self.play(
             FadeIn(square),
             Animation(self.dots),
-            *map(Write, right_words[1:])
+            *list(map(Write, right_words[1:]))
         )
         self.wait()
 
@@ -1141,9 +1141,9 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
                     dot.target.get_center(), 
                     inner_dot.target.get_center()
                 )
-            self.play(*map(MoveToTarget, movers))
+            self.play(*list(map(MoveToTarget, movers)))
         self.wait()
-        self.play(*map(FadeOut, [dashed_lines, self.dots]))
+        self.play(*list(map(FadeOut, [dashed_lines, self.dots])))
 
 class EdgesOfSquare(Scene):
     def construct(self):
@@ -1189,7 +1189,7 @@ class EdgesOfSquare(Scene):
         vert_interval = interval.copy()
         vert_interval.rotate(np.pi, axis = UP+RIGHT, about_point = bottom_left)
         square = Square()
-        square.scale_to_fit_width(interval.get_width())
+        square.set_width(interval.get_width())
         square.set_stroke(width = 0)
         square.set_fill(color = BLUE, opacity = 0.3)
         square.move_to(
@@ -1345,7 +1345,7 @@ class WigglingPairOfPoints(ClosedLoopScene):
         self.add_connecting_lines()
         self.dots.set_color_by_gradient(GREEN, RED)
         self.connecting_lines.set_color(YELLOW)
-        for x, pair in zip(range(20), it.cycle(alpha_pairs)):
+        for x, pair in zip(list(range(20)), it.cycle(alpha_pairs)):
             self.move_dots_to_alphas(pair, run_time = 0.3)
 
 
@@ -1508,7 +1508,7 @@ class FoldUnitSquare(EdgesOfSquare):
                 vect = UP+RIGHT if a < b else DOWN+RIGHT
                 label.next_to(dot, vect, buff = SMALL_BUFF)
 
-                self.play(*map(FadeIn, [dot, label]))
+                self.play(*list(map(FadeIn, [dot, label])))
                 x_line = Line(point+a*unit*LEFT, point)
                 y_line = Line(point+b*unit*DOWN, point)
                 x_line.set_color(GREEN)
@@ -1528,7 +1528,7 @@ class FoldUnitSquare(EdgesOfSquare):
                     start_dots.add(dot)
                 else:
                     end_dots.add(dot)
-            self.play(*map(FadeOut, [x_line, y_line]))
+            self.play(*list(map(FadeOut, [x_line, y_line])))
         self.start_dots, self.end_dots = start_dots, end_dots
 
     def perform_fold(self):
@@ -1855,7 +1855,7 @@ class StripMustIntersectItself(TeacherStudentsScene):
             student.generate_target()
             student.target.change_mode("pondering")
             student.target.look_at(dot)
-        self.play(*map(MoveToTarget, self.get_students()))
+        self.play(*list(map(MoveToTarget, self.get_students())))
         self.random_blink(4)
 
 class PairOfMobiusPointsLandOnEachother(Scene):
@@ -1947,12 +1947,12 @@ class PatreonThanks(Scene):
         special_thanks.set_color(YELLOW)
         special_thanks.shift(2*UP)
 
-        left_patrons = VGroup(*map(TextMobject, 
+        left_patrons = VGroup(*list(map(TextMobject, 
             self.specific_patrons[:n_patrons/2]
-        ))
-        right_patrons = VGroup(*map(TextMobject, 
+        )))
+        right_patrons = VGroup(*list(map(TextMobject, 
             self.specific_patrons[n_patrons/2:]
-        ))
+        )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
             patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
@@ -2027,11 +2027,11 @@ class CreditThree(Scene):
         self.add(randy)
         bubble = randy.get_bubble(width = 2, height = 2)
 
-        domains = VGroup(*map(TextMobject, [
+        domains = VGroup(*list(map(TextMobject, [
             "visualnumbertheory.com",
             "buymywidgets.com",
             "learnwhatilearn.com",
-        ]))
+        ])))
         domains.arrange_submobjects(DOWN, aligned_edge = LEFT)
         domains.next_to(randy, UP, buff = LARGE_BUFF)
         domains.shift_onto_screen()

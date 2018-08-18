@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from camera.moving_camera import MovingCamera
 from utils.iterables import list_difference_update

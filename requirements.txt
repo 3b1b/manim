@@ -1,9 +1,9 @@
 argparse==1.4.0
-colour==0.1.2
-numpy==1.11.1
-Pillow==3.4.2
-progressbar==2.3
-scipy==0.17.1
-tqdm==4.7.1
-opencv-python==3.1.0
-git+https://github.com/scottopell/aggdraw-64bits@c95aac4369038706943fd0effb7d888683860e5a#egg=aggdraw
+colour==0.1.5
+numpy==1.15.0
+Pillow==5.2.0
+progressbar==2.5
+scipy==1.1.0
+tqdm==4.24.0
+opencv-python==3.4.2.17
+pycairo==1.17.1

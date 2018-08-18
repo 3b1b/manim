@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from constants import *
 
@@ -9,11 +9,12 @@ from utils.color import color_to_rgba
 from utils.color import rgba_to_color
 from utils.config_ops import digest_config
 from utils.iterables import stretch_array_to_length
+from utils.space_ops import get_norm
 
 
 class PMobject(Mobject):
     CONFIG = {
-        "stroke_width": DEFAULT_POINT_THICKNESS,
+        "stroke_width": DEFAULT_STROKE_WIDTH,
     }
 
     def init_points(self):
@@ -54,13 +55,13 @@ class PMobject(Mobject):
 
     # def set_color_by_gradient(self, start_color, end_color):
     def set_color_by_gradient(self, *colors):
-        self.rgbas = np.array(map(
+        self.rgbas = np.array(list(map(
             color_to_rgba,
             color_gradient(colors, len(self.points))
-        ))
+        )))
         return self
 
-        start_rgba, end_rgba = map(color_to_rgba, [start_color, end_color])
+        start_rgba, end_rgba = list(map(color_to_rgba, [start_color, end_color]))
         for mob in self.family_members_with_points():
             num_points = mob.get_num_points()
             mob.rgbas = np.array([
@@ -70,7 +71,7 @@ class PMobject(Mobject):
         return self
 
     def set_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
-        start_rgba, end_rgba = map(color_to_rgba, [start_color, end_color])
+        start_rgba, end_rgba = list(map(color_to_rgba, [start_color, end_color]))
         if center is None:
             center = self.get_center()
         for mob in self.family_members_with_points():
@@ -129,7 +130,7 @@ class PMobject(Mobject):
 
     def ingest_submobjects(self):
         attrs = self.get_array_attrs()
-        arrays = map(self.get_merged_array, attrs)
+        arrays = list(map(self.get_merged_array, attrs))
         for attr, array in zip(attrs, arrays):
             setattr(self, attr, array)
         self.submobjects = []
@@ -184,8 +185,8 @@ class Mobject1D(PMobject):
         Mobject.__init__(self, **kwargs)
 
     def add_line(self, start, end, color=None):
-        start, end = map(np.array, [start, end])
-        length = np.linalg.norm(end - start)
+        start, end = list(map(np.array, [start, end]))
+        length = get_norm(end - start)
         if length == 0:
             points = [start]
         else:

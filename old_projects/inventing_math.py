@@ -386,7 +386,7 @@ class YouAsMathematician(Scene):
         self.clear()
         self.play(
             ApplyPointwiseFunction(
-                lambda p : 3*FRAME_X_RADIUS*p/np.linalg.norm(p),                
+                lambda p : 3*FRAME_X_RADIUS*p/get_norm(p),                
                 everything
             ),
             *[
@@ -524,7 +524,7 @@ class OrganizePartialSums(Scene):
         partial_sums = TexMobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
         partial_sums.scale(1.5).to_edge(UP)
         partial_sum_parts = partial_sums.split()
-        for x in [0] + range(2, len(partial_sum_parts), 4):
+        for x in [0] + list(range(2, len(partial_sum_parts), 4)):
             partial_sum_parts[x].set_color("yellow")
         pure_sums = [
             partial_sum_parts[x] 
@@ -661,7 +661,7 @@ class ListOfPartialSums(Scene):
             size = "\\large"
         ).split())
         numbers, equals, sums = [
-            all_terms[range(k, 12, 3)]
+            all_terms[list(range(k, 12, 3))]
             for k in (0, 1, 2)
         ]
         dots = all_terms[12]
@@ -738,10 +738,7 @@ class CircleZoomInOnOne(Scene):
         text = TextMobject(
             "All but finitely many dots fall inside even the tiniest circle."
         )
-        numbers = map(
-            lambda s : TexMobject("\\frac{1}{%s}"%s),
-            ["100", "1,000,000", "g_{g_{64}}"]
-        )
+        numbers = [TexMobject("\\frac{1}{%s}"%s) for s in ["100", "1,000,000", "g_{g_{64}}"]]
         for num in numbers + [text]:
             num.shift(2*UP)
             num.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
@@ -796,10 +793,7 @@ class ZoomInOnOne(Scene):
             self.add(one)
 
     def zoom_with_numbers(self, numbers, next_numbers):
-        all_numbers = map(
-            lambda n_u: TexMobject(str(n_u[0])).scale(0.5).shift(0.4*DOWN+2*n_u[1]*RIGHT),
-            zip(numbers+next_numbers, it.cycle([-1, 1]))
-        )
+        all_numbers = [TexMobject(str(n_u[0])).scale(0.5).shift(0.4*DOWN+2*n_u[1]*RIGHT) for n_u in zip(numbers+next_numbers, it.cycle([-1, 1]))]
 
         num_levels = 3
         scale_factor = 10
@@ -887,8 +881,8 @@ class DefineInfiniteSum(Scene):
             if count % 3 == 2:
                 self.wait(0.5)
         self.wait()
-        esses = np.array(terms)[range(0, len(terms), 3)]
-        other_terms = filter(lambda m : m not in esses, terms)
+        esses = np.array(terms)[list(range(0, len(terms), 3))]
+        other_terms = [m for m in terms if m not in esses]
         self.play(*[
             ApplyMethod(ess.set_color, "yellow")
             for ess in esses
@@ -988,14 +982,14 @@ class ChopIntervalInProportions(Scene):
         if mode == "p":
             num_terms = 4         
             prop = 0.7
-            left_terms = map(TexMobject, ["(1-p)", ["p","(1-p)"]]+[
+            left_terms = list(map(TexMobject, ["(1-p)", ["p","(1-p)"]]+[
                 ["p^%d"%(count), "(1-p)"]
                 for count in range(2, num_terms)
-            ])
-            right_terms = map(TexMobject, ["p"] + [
+            ]))
+            right_terms = list(map(TexMobject, ["p"] + [
                 ["p", "^%d"%(count+1)]
                 for count in range(1, num_terms)
-            ])
+            ]))
         interval = zero_to_one_interval()
         left = INTERVAL_RADIUS*LEFT
         right = INTERVAL_RADIUS*RIGHT
@@ -1315,7 +1309,7 @@ class ListPartialDivergentSums(Scene):
             for n in range(num_lines)
         ]
         terms = TexMobject(
-            list(it.chain.from_iterable(zip(rhss, lhss))) + ["\\vdots&", ""],
+            list(it.chain.from_iterable(list(zip(rhss, lhss)))) + ["\\vdots&", ""],
             size = "\\large"
         ).shift(RIGHT).split()
         words = TextMobject("These numbers don't \\\\ approach anything")
@@ -1727,7 +1721,7 @@ class RoomsAndSubrooms(Scene):
 
         for group in rectangle_groups:
             mob = Mobject(*group)
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
             self.play(ShowCreation(mob))
 
         self.wait()
@@ -1781,7 +1775,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 FRAME_HEIGHT-(n+2)*upper_buff, 
                 zero_one_width/(2**n)-0.85*(n+1)*side_buff
             )
-            rect.sort_points(np.linalg.norm)
+            rect.sort_points(get_norm)
             rect.to_edge(LEFT, buff = 0.2).shift(n*side_buff*RIGHT)
             rect.set_color(colors[n])
             rectangles.append(rect)
@@ -1792,7 +1786,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
 
     def draw_remaining_rectangles(self, rectangles):
         clusters = []
-        centers = [ORIGIN] + map(Mobject.get_center, rectangles)
+        centers = [ORIGIN] + list(map(Mobject.get_center, rectangles))
         shift_vals = [
             2*(c2 - c1)[0]*RIGHT
             for c1, c2 in zip(centers[1:], centers)
@@ -1800,10 +1794,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
         for rectangle, count in zip(rectangles, it.count(1)):
             cluster = [rectangle]
             for shift_val in shift_vals[:count]:
-                cluster += map(
-                    lambda mob : mob.shift(shift_val),
-                    deepcopy(cluster)
-                )
+                cluster += [mob.shift(shift_val) for mob in deepcopy(cluster)]
             clusters.append(cluster)
             for rect in cluster[1:]:
                 self.play(FadeIn(rect, run_time = 0.6**(count-1)))
@@ -1875,7 +1866,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
     def center_in_closest_rect(mobject, rectangles):
         center = mobject.get_center()
         diffs = [r.get_center()-center for r in rectangles]
-        mobject.shift(diffs[np.argmin(map(np.linalg.norm, diffs))])
+        mobject.shift(diffs[np.argmin(list(map(get_norm, diffs)))])
 
     def add_negative_one(self, num_mobs):
         neg_one = TexMobject("-1").scale(0.5)
@@ -1901,10 +1892,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
             self.add(text)
             self.clear_way_for_text(text, cluster)
             self.add(*cluster)          
-            pairs = filter(
-                lambda a_b : (a_b[0]-a_b[1])%(2**count) == 0 and (a_b[0]-a_b[1])%(2**(count+1)) != 0,
-                it.combinations(range(16), 2)
-            )
+            pairs = [a_b for a_b in it.combinations(list(range(16)), 2) if (a_b[0]-a_b[1])%(2**count) == 0 and (a_b[0]-a_b[1])%(2**(count+1)) != 0]
             for pair in sample(pairs, min(10, len(pairs))):
                 for index in pair:
                     num_mobs[index].set_color("green")
@@ -2086,7 +2074,7 @@ class FuzzyDiscoveryToNewMath(Scene):
             )
         ]
         midpoints = []
-        triplets = zip(fuzzy_discoveries, new_maths, it.count(2, -1.75))
+        triplets = list(zip(fuzzy_discoveries, new_maths, it.count(2, -1.75)))
         for disc, math, count in triplets:
             math.scale(0.65)
             for mob in disc, math:
@@ -2095,7 +2083,7 @@ class FuzzyDiscoveryToNewMath(Scene):
             midpoints.append(count*UP)
 
         self.add(fuzzy, lines)
-        self.play(*map(ShimmerIn, fuzzy_discoveries))
+        self.play(*list(map(ShimmerIn, fuzzy_discoveries)))
         self.wait()
         self.play(DelayByOrder(Transform(
             deepcopy(fuzzy), new_math

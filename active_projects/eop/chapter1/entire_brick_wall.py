@@ -100,7 +100,7 @@ class EntireBrickWall(BrickRowScene, MovingCameraScene):
             brick_label = DecimalNumber(prob_percentage,
                 unit = "\%", num_decimal_places = 1, color = BLACK)
             brick_label.move_to(brick_copy)
-            brick_label.scale_to_fit_height(0.8 * brick_copy.get_height())
+            brick_label.set_height(0.8 * brick_copy.get_height())
             return VGroup(brick_copy, brick_label)
 
         highlighted_bricks = [

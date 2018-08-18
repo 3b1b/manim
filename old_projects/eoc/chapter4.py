@@ -17,11 +17,11 @@ class Chapter4OpeningQuote(OpeningQuote):
 
 class TransitionFromLastVideo(TeacherStudentsScene):
     def construct(self):
-        simple_rules = VGroup(*map(TexMobject, [
+        simple_rules = VGroup(*list(map(TexMobject, [
             "\\frac{d(x^3)}{dx} = 3x^2",
             "\\frac{d(\\sin(x))}{dx} = \\cos(x)",
             "\\frac{d(1/x)}{dx} = -\\frac{1}{x^2}",
-        ]))
+        ])))
 
         combination_rules = VGroup(*[
             TexMobject("\\frac{d}{dx}\\left(%s\\right)"%tex)
@@ -174,11 +174,11 @@ class TransitionFromLastVideo(TeacherStudentsScene):
             )
         self.wait()
         self.change_student_modes(*["happy"]*3)
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "composition", "product", 
             "composition", "sum",
             "composition"
-        ])
+        ]))
 
         for word, part in zip(words, reversed(parts)):
             word.set_color(YELLOW)
@@ -189,7 +189,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
                 part.set_color, YELLOW
             )
             self.wait()
-            self.play(*map(FadeOut, [word, part]))
+            self.play(*list(map(FadeOut, [word, part])))
         self.play(FadeOut(parts[0]))
 
         #Bring back combinations
@@ -245,7 +245,7 @@ class ComingUp(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
         rect.set_stroke(WHITE)
-        rect.scale_to_fit_height(FRAME_HEIGHT-2)
+        rect.set_height(FRAME_HEIGHT-2)
         title = TextMobject("Coming up...")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
@@ -425,9 +425,9 @@ class SumRule(GraphScene):
                 about_point = mob.get_bottom()
             )
             mob.shift_onto_screen()
-        self.play(*map(MoveToTarget, [
+        self.play(*list(map(MoveToTarget, [
             graph_parts, self.graph_labels
-        ]))
+        ])))
         self.wait()
 
     def show_example_stacking(self):
@@ -443,10 +443,7 @@ class SumRule(GraphScene):
             VGroup(example_v_lines[i], nudged_v_lines[i])
             for i in (0, 1)
         ]
-        faders = VGroup(*filter(
-            lambda line : line not in example_v_lines,
-            it.chain(*v_line_sets)
-        ))
+        faders = VGroup(*[line for line in it.chain(*v_line_sets) if line not in example_v_lines])
         label_groups = []
         for line, tex, vect in zip(sine_lines, ["", "+dx"], [LEFT, RIGHT]):
             dot = Dot(line.get_bottom(), radius = 0.03, color = YELLOW)
@@ -753,10 +750,7 @@ class NotGraphsForProducts(GraphScene):
             )
         self.wait()
 
-        everything = VGroup(*filter(
-            lambda m : not m.is_subpath,
-            self.get_mobjects()
-        ))
+        everything = VGroup(*[m for m in self.get_mobjects() if not m.is_subpath])
         words = TextMobject("Not the best visualization")
         words.scale(1.5)
         words.shift(FRAME_Y_RADIUS*UP/2)
@@ -855,7 +849,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         v_line = Line(ORIGIN, UP, color = WHITE, stroke_width = 2)
         def v_line_update(v_line):
             x = x_axis.point_to_number(self.x_slider[1].get_top())
-            v_line.scale_to_fit_height(np.sin(x)*scale_factor)
+            v_line.set_height(np.sin(x)*scale_factor)
             v_line.move_to(x_axis.number_to_point(x), DOWN)
         v_line_update(v_line)
 
@@ -877,7 +871,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             )
             self.wait()
         self.play(*it.chain(
-            map(FadeOut, [y_axis, graph, label, v_line]),
+            list(map(FadeOut, [y_axis, graph, label, v_line])),
             [Animation(x_axis)]
         ))
         self.wait()
@@ -918,7 +912,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         right_box, corner_box, right_box = df_boxes
 
         self.play(FocusOn(nudge_label_group))
-        self.play(*map(GrowFromCenter, nudge_label_group))
+        self.play(*list(map(GrowFromCenter, nudge_label_group)))
         self.animate_x_change(
             self.default_x+self.dx,
             rate_func = there_and_back,
@@ -1085,10 +1079,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         top_label = self.box_label_group[1][0]
         right_label = self.df_box_labels[1]
 
-        faders = VGroup(*filter(
-            lambda m : m not in [bottom_box, top_label, right_label],
-            self.full_box_parts
-        ))
+        faders = VGroup(*[m for m in self.full_box_parts if m not in [bottom_box, top_label, right_label]])
         faders.save_state()
 
         self.play(faders.fade, 0.8)
@@ -1109,10 +1100,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         top_label = self.df_box_labels[0]
         right_label = self.box_label_group[1][1]
 
-        faders = VGroup(*filter(
-            lambda m : m not in [right_box, top_label, right_label],
-            self.full_box_parts
-        ))
+        faders = VGroup(*[m for m in self.full_box_parts if m not in [right_box, top_label, right_label]])
         faders.save_state()
 
         self.play(faders.fade, 0.8)
@@ -1144,7 +1132,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         self.wait()
         self.play(Write(words), ShowCreation(arrow))
         self.wait()
-        self.play(*map(FadeOut, [words, arrow, corner_copy]))
+        self.play(*list(map(FadeOut, [words, arrow, corner_copy])))
         self.wait()
         corner_copy.set_color(BLACK)
 
@@ -1198,7 +1186,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             self.deriv.submobjects.insert(
                 index+1, self.deriv[index].copy()
             )
-        non_deriv_indices = range(len(expanded_deriv))
+        non_deriv_indices = list(range(len(expanded_deriv)))
         for indices in [(3, 4), (7, 8)]:
             top_part = VGroup()
             bottom_part = VGroup()            
@@ -1316,7 +1304,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         x_slider.x_val = target_x
 
     def get_x_slider(self, x):
-        numbers = range(int(self.slider_x_max) + 1)
+        numbers = list(range(int(self.slider_x_max) + 1))
         line = NumberLine(
             x_min = 0,
             x_max = self.slider_x_max,
@@ -1337,7 +1325,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             fill_opacity = 0.8,
             stroke_width = 0,
         )
-        triangle.scale_to_fit_height(self.x_slider_handle_height)
+        triangle.set_height(self.x_slider_handle_height)
         triangle.move_to(line.number_to_point(x), UP)
 
         x_mob = TexMobject("x")
@@ -1411,9 +1399,9 @@ class MneumonicExample(TeacherStudentsScene):
             left_words.copy(), left_terms
         ))
         self.wait()
-        self.play(*map(Indicate, [left, left_words[0], left_terms[0]]))
+        self.play(*list(map(Indicate, [left, left_words[0], left_terms[0]])))
         self.wait()
-        self.play(*map(Indicate, [right, left_words[1], left_terms[1]]))
+        self.play(*list(map(Indicate, [right, left_words[1], left_terms[1]])))
         self.wait()
 
         right_words = VGroup(*words[2:])
@@ -1426,9 +1414,9 @@ class MneumonicExample(TeacherStudentsScene):
             right_words.copy(), right_terms
         ))
         self.wait()
-        self.play(*map(Indicate, [right, right_words[1], right_terms[1]]))
+        self.play(*list(map(Indicate, [right, right_words[1], right_terms[1]])))
         self.wait()
-        self.play(*map(Indicate, [left, right_words[2], right_terms[2]]))
+        self.play(*list(map(Indicate, [left, right_words[2], right_terms[2]])))
         self.wait(3)
 
         self.play(self.get_teacher().change_mode, "shruggie")
@@ -1533,8 +1521,8 @@ class ThreeLinesChainRule(ReconfigurableScene):
                 "center_y" : 3,
                 "x_min" : 0,
                 "x_max" : 3,
-                "numbers_to_show" : range(4),
-                "numbers_with_elongated_ticks" : range(4),
+                "numbers_to_show" : list(range(4)),
+                "numbers_with_elongated_ticks" : list(range(4)),
                 "tick_frequency" : 0.25,
             },
             {
@@ -1544,8 +1532,8 @@ class ThreeLinesChainRule(ReconfigurableScene):
                 "center_y" : 0.5,
                 "x_min" : 0,
                 "x_max" : 10,
-                "numbers_to_show" : range(0, 11),
-                "numbers_with_elongated_ticks" : range(0, 11, 1),
+                "numbers_to_show" : list(range(0, 11)),
+                "numbers_with_elongated_ticks" : list(range(0, 11, 1)),
                 "tick_frequency" : 0.25,
             },
             {
@@ -1555,8 +1543,8 @@ class ThreeLinesChainRule(ReconfigurableScene):
                 "center_y" : -2,
                 "x_min" : -2,
                 "x_max" : 2,
-                "numbers_to_show" : range(-2, 3),
-                "numbers_with_elongated_ticks" : range(-2, 3),
+                "numbers_to_show" : list(range(-2, 3)),
+                "numbers_with_elongated_ticks" : list(range(-2, 3)),
                 "tick_frequency" : 0.25,
             },
         ],
@@ -1639,7 +1627,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
             ShowCreation(sine_arrow)
         )
         self.wait(2)
-        self.play(*map(FadeOut, [sine_text, sine_arrow]))
+        self.play(*list(map(FadeOut, [sine_text, sine_arrow])))
         self.animate_x_change(self.example_x, run_time = 3)
 
     def nudge_x(self):
@@ -1710,7 +1698,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
             run_time = 1,
             added_anims = it.chain(
                 [GrowFromCenter(dx_brace)],
-                map(ShowCreation, nudge_lines)
+                list(map(ShowCreation, nudge_lines))
             )
         )
         self.animate_x_change(self.example_x)
@@ -1797,7 +1785,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
         group.to_edge(RIGHT)
         arrow = Arrow(group.get_bottom(), self.final_derivative[0].get_top())
 
-        self.play(*map(FadeOut, [self.arrows, self.arrow_labels]))
+        self.play(*list(map(FadeOut, [self.arrows, self.arrow_labels])))
         self.play(FadeIn(group))
         self.play(ShowCreation(arrow))
         self.wait()
@@ -1866,7 +1854,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
             fill_opacity = 0.75,
             stroke_width = 0,
         )
-        triangle.scale_to_fit_height(self.triangle_height)
+        triangle.set_height(self.triangle_height)
         triangle.move_to(
             number_line.number_to_point(func(x)), DOWN
         )
@@ -1965,7 +1953,7 @@ class GeneralizeChainRule(Scene):
         self.wait()
 
         #Generalize
-        self.play(*map(FadeIn, general[:5]))
+        self.play(*list(map(FadeIn, general[:5])))
         self.wait()
         self.play(
             Transform(example_outer_brace, general_outer_brace),
@@ -2026,9 +2014,9 @@ class GeneralizeChainRule(Scene):
         self.play(morty.change_mode, "pondering")
         self.play(Blink(morty))
         self.wait()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             d_general_outer_copy, inner, circle
-        ]))
+        ])))
 
         #Show cancelation
         braces = [
@@ -2038,15 +2026,15 @@ class GeneralizeChainRule(Scene):
             example_outer_brace,
         ]
         texts = [brace.text for brace in braces]
-        self.play(*map(FadeOut, braces+texts))
+        self.play(*list(map(FadeOut, braces+texts)))
 
         to_collapse = VGroup(VGroup(*general[7:10]), general[12])
         dg_dh = VGroup(*general[5:7])
         dh_dx = VGroup(*general[10:12])
         to_collapse.generate_target()
-        points = VGroup(*map(VectorizedPoint, 
+        points = VGroup(*list(map(VectorizedPoint, 
             [m.get_left() for m in to_collapse]
-        ))
+        )))
         self.play(
             Transform(to_collapse, points),
             dh_dx.next_to, dg_dh,
@@ -2261,7 +2249,7 @@ class Thumbnail(IntroduceProductAsArea):
         blg[1][1].next_to(df_boxes[-1], RIGHT)
         df_box_labels = self.get_df_box_labels(df_boxes)
         blg.add(df_boxes, df_box_labels)
-        blg.scale_to_fit_height(FRAME_HEIGHT-2*MED_LARGE_BUFF)
+        blg.set_height(FRAME_HEIGHT-2*MED_LARGE_BUFF)
         blg.center()
         self.add(blg)
 

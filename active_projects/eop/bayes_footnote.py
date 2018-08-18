@@ -74,7 +74,7 @@ class Introduction(TeacherStudentsScene):
         cross.set_stroke(RED, 6)
         group.add(cross)
 
-        self.play(*map(FadeIn, [bayes, intuition]))
+        self.play(*list(map(FadeIn, [bayes, intuition])))
         self.play(Write(arrow))
         self.play(ShowCreation(cross))
         self.change_student_modes(*["confused"]*3)
@@ -117,9 +117,9 @@ class Introduction(TeacherStudentsScene):
         music_example.next_to(poker_example, RIGHT)
         examples = VGroup(poker_example, music_example)
         brace = Brace(examples, UP)
-        bayes_to_intuition = VGroup(*map(TextMobject, [
+        bayes_to_intuition = VGroup(*list(map(TextMobject, [
             "Bayes", "$\\leftrightarrow$", "Intuition"
-        ]))
+        ])))
         bayes_to_intuition.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         bayes_to_intuition.next_to(brace, UP, SMALL_BUFF)
         check = TexMobject("\\checkmark")
@@ -157,7 +157,7 @@ class Introduction(TeacherStudentsScene):
         bayes = self.bayes_to_intuition[0]
         something_else = TextMobject("Something else")
         something_else.set_color(YELLOW)
-        something_else.scale_to_fit_height(bayes.get_height())
+        something_else.set_height(bayes.get_height())
         something_else.move_to(bayes, RIGHT)
         new_group = VGroup(
             something_else, 
@@ -179,7 +179,7 @@ class Introduction(TeacherStudentsScene):
     def get_poker_example(self):
         rect = self.get_example_rect()
         values = IntroducePokerHand.CONFIG["community_card_values"]
-        community_cards = VGroup(*map(PlayingCard, values))
+        community_cards = VGroup(*list(map(PlayingCard, values)))
         community_cards.arrange_submobjects(RIGHT)
         deck = VGroup(*[
             PlayingCard(turned_over = True)
@@ -189,7 +189,7 @@ class Introduction(TeacherStudentsScene):
             card.shift(i*(0.03*RIGHT + 0.015*DOWN))
         deck.next_to(community_cards, LEFT)
         cards = VGroup(deck, community_cards)
-        cards.scale_to_fit_width(rect.get_width() - 2*SMALL_BUFF)
+        cards.set_width(rect.get_width() - 2*SMALL_BUFF)
         cards.next_to(rect.get_bottom(), UP, MED_SMALL_BUFF)
 
         probability = TexMobject(
@@ -212,7 +212,7 @@ class Introduction(TeacherStudentsScene):
         guitar.move_to(musician)
         guitar.shift(0.31*RIGHT + 0.6*UP)
         musician.add(guitar, musician.arms)
-        musician.scale_to_fit_height(0.7*rect.get_height())
+        musician.set_height(0.7*rect.get_height())
         musician.next_to(rect.get_bottom(), UP, SMALL_BUFF)
 
         probability = TexMobject(
@@ -242,14 +242,14 @@ class OneInOneThousandHaveDisease(Scene):
             ]).arrange_submobjects(DOWN, SMALL_BUFF)
             for x in range(40)
         ]).arrange_submobjects(RIGHT, SMALL_BUFF)
-        all_creatures.scale_to_fit_width(FRAME_WIDTH - 4)
+        all_creatures.set_width(FRAME_WIDTH - 4)
         all_creatures.next_to(title, DOWN)
         randy = all_creatures[0][0]
         all_creatures[0].remove(randy)
         randy.change_mode("sick")
         randy.set_color(SICKLY_GREEN)
         randy.save_state()
-        randy.scale_to_fit_height(3)
+        randy.set_height(3)
         randy.center()
         randy.change_mode("plain")
         randy.set_color(BLUE)
@@ -332,7 +332,7 @@ class TestNonDiseaseCase(TestScene):
             ]).arrange_submobjects(DOWN)
             for y in range(10)
         ]).arrange_submobjects(RIGHT)
-        all_creatures.scale_to_fit_height(6)
+        all_creatures.set_height(6)
         all_creatures.to_corner(DOWN+LEFT)
         last_guy = all_creatures[-1][-1]
         rect = SurroundingRectangle(last_guy, buff = 0)
@@ -349,7 +349,7 @@ class TestNonDiseaseCase(TestScene):
         )
         self.play(ShowCreation(rect))
         self.play(
-            last_guy.scale_to_fit_height, 2,
+            last_guy.set_height, 2,
             last_guy.next_to, all_creatures, RIGHT
         )
         result = self.get_positive_result(last_guy)
@@ -406,16 +406,16 @@ class AskAboutRephrasingQuestion(TeacherStudentsScene):
 
 class RephraseQuestion(Scene):
     def construct(self):
-        words = VGroup(*map(TextMobject, [
+        words = VGroup(*list(map(TextMobject, [
             r"1 in $1{,000}$ chance \\ of having disease",
             r"1 in $100$ \\ false positive rate.",
             r"""\underline{\phantom{1 in 10}} chance \\
                 of having disease \\
                 after testing positive.
             """,
-        ]))
+        ])))
         words.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
-        words.scale_to_fit_width(2*(FRAME_X_RADIUS - MED_LARGE_BUFF))
+        words.set_width(2*(FRAME_X_RADIUS - MED_LARGE_BUFF))
 
         prior = TextMobject("Prior")
         prior.set_color(GREEN)
@@ -574,7 +574,7 @@ class ShowRestrictedSpace(Scene):
             ShowCreation(sick_one_arrow)
         )
         self.play(
-            sick_one.scale_to_fit_height, 2,
+            sick_one.set_height, 2,
             sick_one.next_to, sick_one_words, DOWN,
             sick_one.to_edge, RIGHT,
         )
@@ -663,7 +663,7 @@ class ShowRestrictedSpace(Scene):
         )
         movers = VGroup(self.sick_one, *self.false_positives)
         movers.generate_target()
-        movers.target.scale_to_fit_width(1)
+        movers.target.set_width(1)
         movers.target.arrange_submobjects(RIGHT)
         movers.target.shift(DOWN)
         brace = Brace(VGroup(*movers.target[1:]))
@@ -688,7 +688,7 @@ class ShowRestrictedSpace(Scene):
         self.play(Transform(
             *arrows, run_time = 4, rate_func = there_and_back
         ))
-        self.play(*map(FadeOut, [words, arrows[0]]))
+        self.play(*list(map(FadeOut, [words, arrows[0]])))
 
         self.brace = brace
 
@@ -741,7 +741,7 @@ class ShowRestrictedSpace(Scene):
             ]).arrange_submobjects(DOWN, SMALL_BUFF)
             for x in range(self.n_cols)
         ]).arrange_submobjects(RIGHT, SMALL_BUFF)
-        all_creatures.scale_to_fit_height(5)
+        all_creatures.set_height(5)
         all_creatures.center().to_edge(LEFT)
 
         healthy_creatures = VGroup(*it.chain(*all_creatures))
@@ -776,7 +776,7 @@ class DepressingForMedicalTestDesigners(TestScene):
         cross.replace(checks[-1][-1])
         cross.set_color(RED)
         Transform(checks[-1][-1], cross).update(1)
-        checks.scale_to_fit_height(6)
+        checks.set_height(6)
         checks.next_to(title, DOWN)
         checks.generate_target()
         checks.target.scale(0.5)
@@ -785,7 +785,7 @@ class DepressingForMedicalTestDesigners(TestScene):
         self.add(title)
         self.play(Write(checks))
         self.wait(2)
-        self.play(*map(MoveToTarget, [title, checks]))
+        self.play(*list(map(MoveToTarget, [title, checks])))
 
     def reject_test(self):
         randy = self.pi_creature
@@ -812,7 +812,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
 
     def create_pi_creatures(self):
         creatures = self.get_all_creatures()
-        creatures.scale_to_fit_height(6.5)
+        creatures.set_height(6.5)
         creatures.center()
         creatures.submobjects  = list(it.chain(*creatures))
 
@@ -876,7 +876,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
         self.play(FadeOut(to_fade))
         self.play(
             FadeOut(self.special_rect),
-            special_group.scale_to_fit_height, 6,
+            special_group.set_height, 6,
             special_group.center,
         )
         self.wait()
@@ -1236,7 +1236,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         morty = self.morty
         bubble = morty.get_bubble("", direction = LEFT)
         numbers = [
-            Integer(random.choice(range(100)))
+            Integer(random.choice(list(range(100))))
             for x in range(30)
         ]
         numbers.append(Integer(67))
@@ -1376,7 +1376,7 @@ class CompareNumbersInBothExamples(Scene):
 
         self.play(
             LaggedStart(FadeIn, titles, lag_ratio = 0.7),
-            *map(ShowCreation, [h_line, v_line])
+            *list(map(ShowCreation, [h_line, v_line]))
         )
         self.wait()
         self.play(FadeIn(priors))

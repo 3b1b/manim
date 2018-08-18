@@ -117,10 +117,10 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         )
 
     def show_layer_variables(self):
-        layer_top_pairs = zip(
+        layer_top_pairs = list(zip(
             self.layer_tops[:self.num_variables], 
             self.layer_tops[1:]
-        )
+        ))
         v_equations = []
         start_ys = []
         end_ys = []
@@ -170,7 +170,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
             self.add(start_y)            
             self.play(GrowFromCenter(brace))
         self.wait()
-        quads = zip(v_equations, start_ys, end_ys, braces)
+        quads = list(zip(v_equations, start_ys, end_ys, braces))
         self.equations = []
         for v_eq, start_y, end_y, brace in quads:
             self.remove(brace)
@@ -223,7 +223,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 bend_point - little_square.get_center(),
                 run_time = 2
             ))
-            self.play(*map(ShowCreation, figure_marks))
+            self.play(*list(map(ShowCreation, figure_marks)))
             self.wait()
             equation_frame = little_square.copy()
             equation_frame.scale(0.5)

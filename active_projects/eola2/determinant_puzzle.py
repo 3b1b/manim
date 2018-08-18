@@ -60,7 +60,7 @@ class WorkOutNumerically(Scene):
         ))
         equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
         eq_parts.get_part_by_tex("=").shift(0.2 * SMALL_BUFF * DOWN)
-        equation.scale_to_fit_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        equation.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         equation.next_to(self.original_equation, DOWN, MED_LARGE_BUFF)
 
         self.play(LaggedStart(FadeIn, equation))
@@ -95,10 +95,7 @@ class WorkOutNumerically(Scene):
         for matrix, det in zip([M1, M2], line1):
             numbers = VGroup(*[det[i] for i in indices])
             numbers_iter = iter(numbers)
-            non_numbers = VGroup(*filter(
-                lambda m: m not in numbers,
-                det
-            ))
+            non_numbers = VGroup(*[m for m in det if m not in numbers])
             matrix_numbers = VGroup(*[
                 matrix.mob_matrix[i][j].copy()
                 for i, j in (0, 0), (1, 1), (0, 1), (1, 0)
@@ -132,7 +129,7 @@ class WorkOutNumerically(Scene):
             TexMobject("-15"),
         )
         group.arrange_submobjects(DOWN, buff=2 * SMALL_BUFF)
-        # group.scale_to_fit_height(0.4*FRAME_HEIGHT)
+        # group.set_height(0.4*FRAME_HEIGHT)
         group.next_to(self.equation_with_numbers, DOWN)
         group.shift(FRAME_WIDTH * LEFT / 4)
 
@@ -268,7 +265,7 @@ class SuccessiveLinearTransformations(LinearTransformationScene):
         self.reset_plane()
         self.play(
             MoveToTarget(matrices),
-            *map(GrowFromCenter, parens)
+            *list(map(GrowFromCenter, parens))
         )
         self.apply_matrix(self.matrix_product)
         self.wait()

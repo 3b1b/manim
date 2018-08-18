@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import numpy as np
 import re
@@ -16,6 +16,7 @@ from mobject.svg.drawings import Car
 from mobject.types.vectorized_mobject import VGroup
 from mobject.geometry import Circle
 from utils.config_ops import digest_config
+from utils.space_ops import get_norm
 
 
 class MoveCar(ApplyMethod):
@@ -27,7 +28,7 @@ class MoveCar(ApplyMethod):
         assert isinstance(car, Car)
         ApplyMethod.__init__(self, car.move_to, target_point, **kwargs)
         displacement = self.target_mobject.get_right() - self.starting_mobject.get_right()
-        distance = np.linalg.norm(displacement)
+        distance = get_norm(displacement)
         if not self.moving_forward:
             distance *= -1
         tire_radius = car.get_tires()[0].get_width() / 2
@@ -66,7 +67,7 @@ class Broadcast(LaggedStart):
             )
             circle.move_to(focal_point)
             circle.save_state()
-            circle.scale_to_fit_width(self.small_radius * 2)
+            circle.set_width(self.small_radius * 2)
             circle.set_stroke(self.color, self.start_stroke_width)
             circles.add(circle)
         LaggedStart.__init__(
