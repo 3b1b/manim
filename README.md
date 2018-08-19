@@ -27,6 +27,8 @@ pip install -r requirements.txt
 ```
 
 ## How to Use
+Todd Zimmerman put together a [very nice tutorial](https://talkingphysics.wordpress.com/2018/06/11/learning-how-to-animate-videos-using-manim-series-a-journey/) on getting started with manim.  I can't make promises that future versions will always be compatible with what is discussed in that tutorial, but he certainly does a much better job than I have laying out the basics.
+
 Try running the following:
 ```sh
 python extract_scene.py example_scenes.py SquareToCircle -pl
