@@ -201,7 +201,7 @@ def bounded_nodes(G):
                 G.get_node_label(v, "dist").tex_string.startswith("\le"):
             return True
 
-    ret = filter(in_queue, G.get_nodes())
+    ret = list(filter(in_queue, G.get_nodes()))
     return ret
 
 def extract_node(scene, G, arrows=False, code=None, cursor=None):
@@ -308,7 +308,6 @@ class RunAlgorithm(MovingCameraScene):
                 rand = random.randint(1, 9)
                 edge_updates = OrderedDict([("weight", Integer(rand))])
                 updates[edge] = edge_updates
-        import ipdb; ipdb.set_trace(context=7)
         self.play(*G.update_components(updates))
 
         # label s
@@ -497,7 +496,7 @@ class RunAlgorithm(MovingCameraScene):
         words[0].set_color(z_color)
         words[2].set_color(x_color)
         words[4].set_color(y_color)
-        words.scale_to_fit_width(FRAME_WIDTH - 1)
+        words.set_width(FRAME_WIDTH - 1)
         words.to_edge(UP, initial_offset=self.camera_frame.get_center())
 
         arrow_anim1, arrow1 = extend_arrow(S, s, v, color=z_color)
@@ -508,10 +507,10 @@ class RunAlgorithm(MovingCameraScene):
             FadeIn(S.get_node(u)),
             FadeIn(S.get_edge((u, v))),
             arrow_anim2,
-            Write(Group(words[1], words[2])),
+            Write(VMobject(words[1], words[2])),
         )
 
-        self.play(Write(Group(words[3], words[4])))
+        self.play(Write(VMobject(words[3], words[4])))
         self.wait()
 
         sx = Line(
@@ -945,7 +944,7 @@ class RunAlgorithm(MovingCameraScene):
             if v.dist > u.dist + G.weights(u, v):
                 v.dist = u.dist + G.weights(u, v)
                 v.parent = u
-        """).scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
+        """).set_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
             .to_corner(UL, buff=MED_SMALL_BUFF)
 
         dijkstra_code = code.submobjects[0].copy()
@@ -1072,7 +1071,7 @@ class RunAlgorithm(MovingCameraScene):
 
             def decrease_key(self, item, new_value):
                 pass
-        """).scale_to_fit_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
+        """).set_width(0.5 * FRAME_WIDTH - 2 * MED_SMALL_BUFF) \
             .to_corner(UL, buff=MED_SMALL_BUFF)
 
         self.remove(code.submobjects[0])
@@ -1382,11 +1381,11 @@ class RunAlgorithm(MovingCameraScene):
 
     def construct(self):
         self.first_try()
-        #self.counterexample()
-        #self.one_step()
-        #self.triangle_inequality()
-        #self.generalize()
-        #self.last_run()
+        self.counterexample()
+        self.one_step()
+        self.triangle_inequality()
+        self.generalize()
+        self.last_run()
         #self.directed_graph()
         #self.spt_vs_mst()
         #self.show_code()

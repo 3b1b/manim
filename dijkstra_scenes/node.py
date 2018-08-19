@@ -136,7 +136,7 @@ class Node(Component):
             if len(new_labels) == 1:
                 list(new_labels.values())[0].move_to(self.mobject.get_center())
             elif len(self.labels) == 1:
-                key, val = self.labels.items()[0]
+                key, val = list(self.labels.items())[0]
                 new_labels[key] = val.copy().move_to(self.mobject.get_center())
             else:
                 print("This should be impossible", file=sys.stderr)

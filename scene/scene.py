@@ -348,9 +348,13 @@ class Scene(Container):
         # as soon as there's one that needs updating of
         # some kind per frame, return the list from that
         # point forward.
+        # TODO: does this handle Successions? AnimationGroups?
         animation_mobjects = [anim.mobject for anim in animations]
         ca_mobjects = [ca.mobject for ca in self.continual_animations]
-        mobjects = self.get_mobjects()
+        mobjects = []
+        for family in map(lambda x: x.submobject_family(), self.get_mobjects()):
+            mobjects.extend(family)
+        ret = []
         for i, mob in enumerate(mobjects):
             update_possibilities = [
                 mob in animation_mobjects,
@@ -360,8 +364,8 @@ class Scene(Container):
             ]
             for possibility in update_possibilities:
                 if possibility:
-                    return mobjects[i:]
-        return []
+                    ret.append(mob)
+        return ret
 
     def get_time_progression(self, run_time):
         if self.skip_animations:
@@ -463,7 +467,8 @@ class Scene(Container):
             # get applied to all animations
             animation.update_config(**kwargs)
             # Anything animated that's not already in the
-            # scene gets added to the scene
+            # scene gets added to the scene unless it has an
+            # ancestor in the scene
             if animation.mobject not in self.get_mobject_family_members():
                 self.add(animation.mobject)
         moving_mobjects = self.get_moving_mobjects(*animations)

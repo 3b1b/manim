@@ -256,7 +256,7 @@ class TexMobject(SingleStringTexMobject):
 
 class TextMobject(TexMobject):
     CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEXT_FILE,
+        "template_tex_file": TEMPLATE_TEXT_FILE,
         "alignment": "\\centering",
     }
 
@@ -356,7 +356,7 @@ class BulletedList(TextMobject):
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
         # Have to include because of handle_multiple_args implementation
-        "template_tex_file_body": TEMPLATE_TEXT_FILE,
+        "template_tex_file": TEMPLATE_TEXT_FILE,
         "alignment": "",
     }
 

@@ -46,7 +46,7 @@ def save_state(self, filename=None):
     # pickle.dump(state, open(filename, "wb"))
 
 def load_previous_state(filename=None):
-    pass
+    return {}
     # if filename is None:
     #     filename = get_previous_function_name() + ".mnm"
     # loaded_state = pickle.load(open(filename, "rb"))
