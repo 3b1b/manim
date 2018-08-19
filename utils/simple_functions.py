@@ -8,6 +8,17 @@ def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
 
 
+CHOOSE_CACHE = {}
+
+
+def choose_using_cache(n, r):
+    if n not in CHOOSE_CACHE:
+        CHOOSE_CACHE[n] = {}
+    if r not in CHOOSE_CACHE[n]:
+        CHOOSE_CACHE[n][r] = choose(n, r)
+    return CHOOSE_CACHE[n][r]
+
+
 def choose(n, r):
     if n < r:
         return 0

@@ -11,9 +11,12 @@ from utils.simple_functions import clip_in_place
 
 
 def color_to_rgb(color):
-    if not isinstance(color, Color):
-        color = Color(color)
-    return np.array(color.get_rgb())
+    if isinstance(color, str):
+        return hex_to_rgb(color)
+    elif isinstance(color, Color):
+        return np.array(color.get_rgb())
+    else:
+        raise Exception("Invalid color type")
 
 
 def color_to_rgba(color, alpha=1):
@@ -33,6 +36,16 @@ def rgba_to_color(rgba):
 
 def rgb_to_hex(rgb):
     return "#" + "".join('%02x' % int(255 * x) for x in rgb)
+
+
+def hex_to_rgb(hex_code):
+    hex_part = hex_code[1:]
+    if len(hex_part) == 3:
+        "".join([2 * c for c in hex_part])
+    return np.array([
+        int(hex_part[i:i + 2], 16) / 255
+        for i in range(0, 6, 2)
+    ])
 
 
 def invert_color(color):
