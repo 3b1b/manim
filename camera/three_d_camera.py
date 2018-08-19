@@ -25,6 +25,7 @@ class ThreeDCamera(Camera):
         "gamma": 0,  # Rotation about normal vector to camera
         "light_source_start_point": 9 * DOWN + 7 * LEFT + 10 * OUT,
         "frame_center": ORIGIN,
+        "should_apply_shading": True,
     }
 
     def __init__(self, *args, **kwargs):
@@ -50,6 +51,8 @@ class ThreeDCamera(Camera):
         ]
 
     def modified_rgbas(self, vmobject, rgbas):
+        if not self.should_apply_shading:
+            return rgbas
         is_3d = isinstance(vmobject, ThreeDVMobject)
         has_points = (vmobject.get_num_points() > 0)
         if is_3d and has_points:
@@ -157,7 +160,8 @@ class ThreeDCamera(Camera):
         rot_matrix = self.get_rotation_matrix()
         points = np.dot(points, rot_matrix.T)
         zs = points[:, 2]
-        points[:, 0] *= (distance + zs) / distance
-        points[:, 1] *= (distance + zs) / distance
+        zs[zs >= distance] = distance - 0.001
+        for i in 0, 1:
+            points[:, i] *= distance / (distance - zs)
         points += fc
         return points

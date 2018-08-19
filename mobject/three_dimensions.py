@@ -7,6 +7,7 @@ from mobject.types.vectorized_mobject import VGroup
 from mobject.geometry import Square
 
 from utils.config_ops import digest_config
+from utils.iterables import tuplify
 from utils.space_ops import z_to_vector
 from utils.space_ops import get_unit_normal
 
@@ -75,8 +76,6 @@ class ParametricSurface(VGroup):
         "v_min": 0,
         "v_max": 1,
         "resolution": 32,
-        "u_resolution": None,
-        "v_resolution": None,
         "surface_piece_config": {},
         "fill_color": BLUE_D,
         "fill_opacity": 1.0,
@@ -94,27 +93,34 @@ class ParametricSurface(VGroup):
             self.make_jagged()
 
     def setup_in_uv_space(self):
+        res = tuplify(self.resolution)
+        if len(res) == 1:
+            u_res = v_res = res
+        else:
+            u_res, v_res = res
         u_min = self.u_min
         u_max = self.u_max
-        u_res = self.u_resolution or self.resolution
         v_min = self.v_min
         v_max = self.v_max
-        v_res = self.v_resolution or self.resolution
 
         u_values = np.linspace(u_min, u_max, u_res + 1)
         v_values = np.linspace(v_min, v_max, v_res + 1)
         faces = VGroup()
-        for u1, u2 in zip(u_values[:-1], u_values[1:]):
-            for v1, v2 in zip(v_values[:-1], v_values[1:]):
-                piece = ThreeDVMobject()
-                piece.set_points_as_corners([
+        for i in range(u_res):
+            for j in range(v_res):
+                u1, u2 = u_values[i:i + 2]
+                v1, v2 = v_values[j:j + 2]
+                face = ThreeDVMobject()
+                face.set_points_as_corners([
                     [u1, v1, 0],
                     [u2, v1, 0],
                     [u2, v2, 0],
                     [u1, v2, 0],
                     [u1, v1, 0],
                 ])
-                faces.add(piece)
+                faces.add(face)
+                face.u_index = i
+                face.v_index = j
         faces.set_fill(
             color=self.fill_color,
             opacity=self.fill_opacity
@@ -128,16 +134,11 @@ class ParametricSurface(VGroup):
         if self.checkerboard_colors:
             self.set_fill_by_checkerboard(*self.checkerboard_colors)
 
-    def set_fill_by_checkerboard(self, color1, color2):
-        u_res = self.u_resolution or self.resolution
-        v_res = self.v_resolution or self.resolution
-        for i in range(u_res):
-            for j in range(v_res):
-                face = self[i * v_res + j]
-                if (i + j) % 2 == 0:
-                    face.set_fill(color1)
-                else:
-                    face.set_fill(color2)
+    def set_fill_by_checkerboard(self, *colors, opacity=None):
+        n_colors = len(colors)
+        for face in self:
+            c_index = (face.u_index + face.v_index) % n_colors
+            face.set_fill(colors[c_index], opacity=opacity)
 
 
 # Specific shapes
@@ -145,15 +146,15 @@ class ParametricSurface(VGroup):
 
 class Sphere(ParametricSurface):
     CONFIG = {
-        "resolution": 12,
+        "resolution": (12, 24),
         "radius": 3,
         "u_min": 0.001,
+        "u_max": PI - 0.001,
+        "v_min": 0,
+        "v_max": TAU,
     }
 
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        kwargs["u_resolution"] = self.u_resolution or self.resolution
-        kwargs["v_resolution"] = self.u_resolution or 2 * self.resolution
         ParametricSurface.__init__(
             self, self.func, **kwargs
         )
@@ -161,9 +162,9 @@ class Sphere(ParametricSurface):
 
     def func(self, u, v):
         return np.array([
-            np.cos(TAU * v) * np.sin(PI * u),
-            np.sin(TAU * v) * np.sin(PI * u),
-            np.cos(PI * u)
+            np.cos(v) * np.sin(u),
+            np.sin(v) * np.sin(u),
+            np.cos(u)
         ])
 
 
