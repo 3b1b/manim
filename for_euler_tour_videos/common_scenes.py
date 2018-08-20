@@ -85,8 +85,8 @@ class OpeningScene(Scene):
         seen_edges = set()
         for inner_edge, outer_edge in \
                 zip(inner_cube.submobjects, outer_cube.submobjects):
-            inner_start_and_end = map(tuple, inner_edge.get_start_and_end())
-            outer_start_and_end = map(tuple, outer_edge.get_start_and_end())
+            inner_start_and_end = list(map(tuple, inner_edge.get_start_and_end()))
+            outer_start_and_end = list(map(tuple, outer_edge.get_start_and_end()))
 
             start_pair = (inner_start_and_end[0], outer_start_and_end[0])
             if start_pair not in seen_edges:
