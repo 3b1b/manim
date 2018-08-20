@@ -47,14 +47,14 @@ class Mobject(Container):
         if self.name is None:
             self.name = self.__class__.__name__
         self.updaters = []
-        self.init_points()
+        self.reset_points()
         self.generate_points()
         self.init_colors()
 
     def __str__(self):
         return str(self.name)
 
-    def init_points(self):
+    def reset_points(self):
         self.points = np.zeros((0, self.dim))
 
     def init_colors(self):
@@ -773,6 +773,17 @@ class Mobject(Container):
     def point_from_proportion(self, alpha):
         raise Exception("Not implemented")
 
+    def get_pieces(self, n_pieces):
+        template = self.copy()
+        template.submobjects = []
+        alphas = np.linspace(0, 1, n_pieces + 1)
+        return Group(*[
+            template.copy().pointwise_become_partial(
+                self, a1, a2
+            )
+            for a1, a2 in zip(alphas[:-1], alphas[1:])
+        ])
+
     # Family matters
 
     def __getitem__(self, value):
@@ -909,7 +920,7 @@ class Mobject(Container):
     def push_self_into_submobjects(self):
         copy = self.copy()
         copy.submobjects = []
-        self.init_points()
+        self.reset_points()
         self.add(copy)
         return self
 
