@@ -49,7 +49,6 @@ class Camera(object):
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
-        "use_z_coordinate_for_display_order": False,
         # z_buff_func is only used if the flag above is set to True.
         # round z coordinate to nearest hundredth when comparring
         "z_buff_func": lambda m: np.round(m.get_center()[2], 2),
@@ -231,16 +230,7 @@ class Camera(object):
                     excluded_mobjects
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
-        if self.use_z_coordinate_for_display_order:
-            # Should perhaps think about what happens here when include_submobjects is False,
-            # (for now, the onus is then on the caller to ensure this is handled correctly by
-            # passing us an appropriately pre-flattened list of mobjects if need be)
-            return sorted(
-                mobjects,
-                lambda a, b: cmp(self.z_buff_func(a), self.z_buff_func(b))
-            )
-        else:
-            return mobjects
+        return mobjects
 
     def is_in_frame(self, mobject):
         fc = self.get_frame_center()
