@@ -23,7 +23,7 @@ def place_arrows(block, group=None):
         elif not sub_block.tex_string.startswith("def"):
             new_cursor = TexMobject("\\blacktriangleright") \
                 .set_color(CURSOR_COLOR) \
-                .scale_to_fit_height(LINE_HEIGHT) \
+                .set_height(LINE_HEIGHT) \
                 .next_to(sub_block, LEFT)
             group.add(new_cursor)
     return group
@@ -922,7 +922,7 @@ class RunAlgorithm(MovingCameraScene):
 
 
     def show_code(self):
-        self.__dict__.update_components(load_previous_state())
+        self.__dict__.update(load_previous_state())
 
         code = CodeMobject("""
         def dijkstra(G):
@@ -991,7 +991,7 @@ class RunAlgorithm(MovingCameraScene):
         top_initialize_line = top_line.copy()
         bottom_initialize_line = SingleStringTexMobject(bottom_line.tex_string[4:-1])
         bottom_initialize_line.submobjects = bottom_line.submobjects[3:-1]
-        bottom_initialize_line_ends = SingleStringTexMobject("")
+        bottom_initialize_line_ends = VMobject()
         bottom_initialize_line_ends.submobjects = bottom_line.submobjects[0:3] + [bottom_line.submobjects[-1]]
         self.play(ReplacementTransform(top_initialize_line, bottom_initialize_line))
         self.play(
@@ -1014,7 +1014,7 @@ class RunAlgorithm(MovingCameraScene):
         top_relax_line = top_line.copy()
         bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[4:-1])
         bottom_relax_line.submobjects = bottom_line.submobjects[3:-1]
-        bottom_relax_line_ends = SingleStringTexMobject("")
+        bottom_relax_line_ends = VMobject()
         bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:3] + [bottom_line.submobjects[-1]]
         self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
         self.play(
@@ -1084,7 +1084,7 @@ class RunAlgorithm(MovingCameraScene):
         top_relax_line = Group(*top_line.copy().submobjects[17:26])
         bottom_relax_line = SingleStringTexMobject(bottom_line.tex_string[6:-1])
         bottom_relax_line.submobjects = bottom_line.submobjects[5:-1]
-        bottom_relax_line_ends = SingleStringTexMobject("")
+        bottom_relax_line_ends = VMobject()
         bottom_relax_line_ends.submobjects = bottom_line.submobjects[0:5] + [bottom_line.submobjects[-1]]
         self.play(ReplacementTransform(top_relax_line, bottom_relax_line))
         self.play(
@@ -1171,7 +1171,7 @@ class RunAlgorithm(MovingCameraScene):
         self.play(ShowCreation(G))
 
         dijkstra_cursor = TexMobject("\\blacktriangleright").set_color(CURSOR_COLOR) \
-            .scale_to_fit_height(LINE_HEIGHT) \
+            .set_height(LINE_HEIGHT) \
             .next_to(code.submobjects[0].submobjects[1], LEFT)
 
         initialize_cursors = place_arrows(code.submobjects[1])
@@ -1223,15 +1223,15 @@ class RunAlgorithm(MovingCameraScene):
             columns=3,
         ).shift(RIGHT * 3)
 
-        tbuild = SingleStringTexMobject("")
+        tbuild = VMobject()
         tbuild.submobjects = runtime.submobjects[0].submobjects[0:9]
-        v_textractmin = SingleStringTexMobject("")
+        v_textractmin = VMobject()
         v_textractmin.submobjects = runtime.submobjects[0].submobjects[10:24]
-        e_tdecreasekey = SingleStringTexMobject("")
+        e_tdecreasekey = VMobject()
         e_tdecreasekey.submobjects = runtime.submobjects[0].submobjects[25:40]
-        v = SingleStringTexMobject("")
+        v = VMobject()
         v.submobjects = runtime.submobjects[0].submobjects[41]
-        two_e = SingleStringTexMobject("")
+        two_e = VMobject()
         two_e.submobjects = runtime.submobjects[0].submobjects[43:]
 
         # time to build
@@ -1386,9 +1386,9 @@ class RunAlgorithm(MovingCameraScene):
         self.triangle_inequality()
         self.generalize()
         self.last_run()
-        #self.directed_graph()
-        #self.spt_vs_mst()
-        #self.show_code()
-        #self.run_code()
-        #self.analyze()
-        #self.compare_data_structures()
+        self.directed_graph()
+        self.spt_vs_mst()
+        self.show_code()
+        self.run_code()
+        self.analyze()
+        self.compare_data_structures()

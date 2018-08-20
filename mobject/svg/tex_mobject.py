@@ -131,6 +131,7 @@ class SingleStringTexMobject(SVGMobject):
             fill_rgb=np.array([0,0,0]),
             fill_opacity=1,
             stroke_width=0,
+            propagate_style_to_family=True,
         )
 
     def organize_submobjects_left_to_right(self):

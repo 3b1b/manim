@@ -42,9 +42,11 @@ class SquareToCircle(Scene):
         square.rotate(-3 * TAU / 8)
         circle.set_fill(PINK, opacity=0.5)
 
-
-        self.play(ShowCreation(square), ShowCreation(circle))
-        self.play(ShowCreation(TexMobject("a")))
+        a = TexMobject("a")
+        b = TexMobject("b").shift(DOWN)
+        self.play(ShowCreation(a))
+        self.play(ShowCreation(b))
+        self.wait(5)
 
 
 class WarpSquare(Scene):
