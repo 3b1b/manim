@@ -144,7 +144,7 @@ class Vibrate(Animation):
         Animation.__init__(self, Mobject1D(color = self.color), **kwargs)
 
     def update_mobject(self, alpha):
-        self.mobject.init_points()
+        self.mobject.reset_points()
         epsilon = self.mobject.epsilon
         self.mobject.add_points([
             [x*self.radius, self.func(x, alpha*self.run_time)+y, 0]
