@@ -17,7 +17,7 @@ class PMobject(Mobject):
         "stroke_width": DEFAULT_STROKE_WIDTH,
     }
 
-    def init_points(self):
+    def reset_points(self):
         self.rgbas = np.zeros((0, 4))
         self.points = np.zeros((0, 3))
         return self
