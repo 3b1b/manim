@@ -158,21 +158,22 @@ class VMobject(Mobject):
         self.set_stroke(color, family=family)
         return self
 
-    def match_style(self, vmobject):
+    def match_style(self, vmobject, family=True):
         for a_name in ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]:
             setattr(self, a_name, np.array(getattr(vmobject, a_name)))
         self.stroke_width = vmobject.stroke_width
         self.background_stroke_width = vmobject.background_stroke_width
 
-        # Does its best to match up submobject lists, and
-        # match styles accordingly
-        submobs1, submobs2 = self.submobjects, vmobject.submobjects
-        if len(submobs1) == 0:
-            return self
-        elif len(submobs2) == 0:
-            submobs2 = [vmobject]
-        for sm1, sm2 in zip(*make_even(submobs1, submobs2)):
-            sm1.match_style(sm2)
+        if family:
+            # Does its best to match up submobject lists, and
+            # match styles accordingly
+            submobs1, submobs2 = self.submobjects, vmobject.submobjects
+            if len(submobs1) == 0:
+                return self
+            elif len(submobs2) == 0:
+                submobs2 = [vmobject]
+            for sm1, sm2 in zip(*make_even(submobs1, submobs2)):
+                sm1.match_style(sm2)
         return self
 
     def fade_no_recurse(self, darkness):
