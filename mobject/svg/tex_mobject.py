@@ -29,7 +29,7 @@ class SingleStringTexMobject(SVGMobject):
         "stroke_width": 0,
         "fill_opacity": 1.0,
         "background_stroke_width": 5,
-        "background_stroke_color": BLACK,
+        "background_stroke_color": WHITE,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,

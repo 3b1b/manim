@@ -1311,7 +1311,7 @@ class RunAlgorithm(MovingCameraScene):
             "  Array & $O(E + V \\cdot V)$ \\\\" + \
             "  Binary Heap & $O(E \\log V + V \\log V)$ \\\\" + \
             "  Fibonacci Heap & $O(E + V \\log V)$ \\\\" + \
-            "\\end{tabular}"
+            "\\end{tabular}",
         )
         table_lines = VGroup(
             table.submobjects[0].submobjects[13],
