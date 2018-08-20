@@ -1,6 +1,5 @@
 import itertools as it
 import numpy as np
-from functools import reduce
 
 
 def remove_list_redundancies(l):
@@ -107,6 +106,7 @@ def make_even_by_cycling(iterable_1, iterable_2):
 
 def remove_nones(sequence):
     return [x for x in sequence if x]
+
 
 # Note this is redundant with it.chain
 

@@ -21,10 +21,11 @@ class ThreeDVMobject(VMobject):
         VMobject.__init__(self, **kwargs)
         if vmobject is not None:
             self.points = np.array(vmobject.points)
-            self.match_style(vmobject)
-            self.submobjects = map(
-                ThreeDVMobject, vmobject.submobjects
-            )
+            self.match_style(vmobject, family=False)
+            self.submobjects = [
+                ThreeDVMobject(submob, **kwargs)
+                for submob in vmobject.submobjects
+            ]
 
     def get_gradient_start_and_end_points(self):
         return self.get_start_corner(), self.get_end_corner()
