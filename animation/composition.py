@@ -29,6 +29,7 @@ class EmptyAnimation(Animation):
 class Succession(Animation):
     CONFIG = {
         "rate_func": None,
+        "add_finished_mobjects": True,
     }
 
     def __init__(self, *args, **kwargs):
@@ -111,6 +112,7 @@ class Succession(Animation):
             self.scene_mobjects_at_time[i +
                                         1] = self.scene_mobjects_at_time[i].copy()
             self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
+            self.animations[i].update(0) # restore the mobject's color
             # the next mobject to be animated next will be added in jump_to_start()
             if i + 1 < len(animations):
                 self.scene_mobjects_at_time[i + 1].remove(self.animations[i + 1].mobject)
@@ -134,7 +136,8 @@ class Succession(Animation):
         if index != self.current_anim_index:
             # Should probably have a cleaner "remove_all" method...
             self.mobject.remove(*self.mobject.submobjects)
-            self.mobject.add(*self.scene_mobjects_at_time[index].submobjects)
+            if self.add_finished_mobjects:
+                self.mobject.add(*self.scene_mobjects_at_time[index].submobjects)
             self.mobject.add(self.animations[index].mobject)
 
         for i in range(index):
@@ -184,6 +187,14 @@ class Succession(Animation):
         for anim in self.animations:
             anim.clean_up(*args, **kwargs)
 
+    def animation_family(self, mob):
+        ret = []
+        for animation in self.animations:
+            ret.extend(animation.animation_family(mob)) 
+        return ret
+
+
+
 
 class AnimationGroup(Animation):
     CONFIG = {
@@ -218,6 +229,13 @@ class AnimationGroup(Animation):
         # it is propagated to the sub_animations
         for anim in self.sub_anims:
             anim.update_config(**kwargs)
+
+    def animation_family(self, mob):
+        ret = []
+        for animation in self.sub_anims:
+            ret.extend(animation.animation_family(mob))
+        return ret
+
 
 # Variants on mappin an animation over submobjectsg
 

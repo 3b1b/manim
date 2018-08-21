@@ -101,6 +101,13 @@ class OpeningScene(Scene):
                 ending_connecting_line = \
                         Line(end_pair[0], end_pair[1], stroke_width=4)
                 hypercube.add(ending_connecting_line)
+        #hypercube = Group()
+        #hypercube.add(
+        #    Line(np.array([1, 1, 0]), np.array([1, -1, 0])),
+        #    Line(np.array([-1, 1, 0]), np.array([1, 1, 0])),
+        #    Line(np.array([-1, -1, 0]), np.array([-1, 1, 0])),
+        #    Line(np.array([-1, -1, 0]), np.array([1, -1, 0])),
+        #)
 
         hypercube.scale(3)
         hypercube.rotate(-PI / 4, Y_AXIS)
@@ -113,8 +120,8 @@ class OpeningScene(Scene):
             rotate_mob,
             start_up_time=0,
             wind_down_time=1.0,
-            end_time=14./12 * PI + 0.005)
-        )
+            end_time=14./12 * PI + 0.005,
+        ))
 
         point = Circle(
             radius=0.1,
@@ -176,6 +183,12 @@ class OpeningScene(Scene):
             successions.append(
                 AnimationGroup(point_anim, color_anim, run_time=0.1094)
             )
+
+        ## this works. now.
+        #self.play(ApplyMethod(hypercube.submobjects[0].set_color, RED))
+        #self.play(ApplyMethod(hypercube.submobjects[1].set_color, RED))
+        #self.play(ApplyMethod(hypercube.submobjects[2].set_color, RED))
+        #self.play(ApplyMethod(hypercube.submobjects[3].set_color, RED))
 
         self.play(Succession(*successions, add_finished_mobjects=False))
         self.wait(10)

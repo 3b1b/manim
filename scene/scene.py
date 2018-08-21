@@ -172,11 +172,13 @@ class Scene(Container):
         self.clear()
     ###
 
-    def continual_update(self, dt):
+    def continual_update(self, dt, animations=None):
+        if dt == 0:
+            breakpoint(context=7)
         for mobject in self.get_mobjects():
             mobject.update(dt)
         for continual_animation in self.continual_animations:
-            continual_animation.update(dt)
+            continual_animation.update(dt, animations=animations)
 
     def wind_down(self, *continual_animations, **kwargs):
         wind_down_time = kwargs.get("wind_down_time", 1)
@@ -349,8 +351,12 @@ class Scene(Container):
         # some kind per frame, return the list from that
         # point forward.
         # TODO: does this handle Successions? AnimationGroups?
-        animation_mobjects = [anim.mobject for anim in animations]
-        ca_mobjects = [ca.mobject for ca in self.continual_animations]
+        animation_mobjects = []
+        for family in map(lambda x: x.mobject.submobject_family(), animations):
+            animation_mobjects.extend(family)
+        ca_mobjects = []
+        for family in map(lambda x: x.mobject.submobject_family(), self.continual_animations):
+            ca_mobjects.extend(family)
         mobjects = []
         for family in map(lambda x: x.submobject_family(), self.get_mobjects()):
             mobjects.extend(family)
@@ -481,7 +487,7 @@ class Scene(Container):
         for t in self.get_animation_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
-            self.continual_update(dt=t - total_run_time)
+            self.continual_update(self.frame_duration, animations=animations)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
             total_run_time = t
@@ -490,9 +496,9 @@ class Scene(Container):
         ]
         self.clean_up_animations(*animations)
         if self.skip_animations:
-            self.continual_update(total_run_time)
-        else:
             self.continual_update(0)
+        else:
+            self.continual_update(self.frame_duration)
         self.num_plays += 1
         return self
 
@@ -510,7 +516,7 @@ class Scene(Container):
         if self.should_continually_update():
             total_time = 0
             for t in self.get_time_progression(duration):
-                self.continual_update(dt=t - total_time)
+                self.continual_update(self.frame_duration)
                 self.update_frame()
                 self.add_frames(self.get_frame())
                 total_time = t
