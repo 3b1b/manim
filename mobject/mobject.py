@@ -66,12 +66,19 @@ class Mobject(Container):
         pass
 
     def add(self, *mobjects):
+        if not all(map(lambda m: isinstance(m, Mobject), mobjects)):
+            raise Exception("All submobjects must be of type Mobject")
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
-        self.submobjects = list_update(self.submobjects, mobjects)
+        self.remove(*mobjects)
+        self.submobjects = self.submobjects + list(mobjects)
         return self
 
     def add_to_back(self, *mobjects):
+        if not all(map(lambda m: isinstance(m, Mobject), mobjects)):
+            raise Exception("All submobjects must be of type Mobject")
+        if self in mobjects:
+            raise Exception("Mobject cannot contain self")
         self.remove(*mobjects)
         self.submobjects = list(mobjects) + self.submobjects
         return self
@@ -90,8 +97,11 @@ class Mobject(Container):
         Ensures all attributes which are mobjects are included
         in the submobjects list.
         """
-        mobject_attrs = [x for x in list(self.__dict__.values()) if isinstance(x, Mobject)]
-        self.submobjects = list_update(self.submobjects, mobject_attrs)
+        mobject_attrs = filter(
+            lambda x: isinstance(x, Mobject),
+            self.__dict__.values()
+        )
+        self.add(*mobject_attrs)
         return self
 
     def apply_over_attr_arrays(self, func):

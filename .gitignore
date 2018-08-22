@@ -26,3 +26,8 @@ notes.txt
 log.txt
 tags
 /media_dir.txt
+.coverage
+.pytest_cache/
+/htmlcov
+manimenv/
+core
