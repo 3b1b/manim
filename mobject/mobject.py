@@ -705,6 +705,8 @@ class Mobject(Container):
     def get_critical_point(self, direction):
         result = np.zeros(self.dim)
         all_points = self.get_all_points()
+        if len(all_points) == 0:
+            return result
         for dim in range(self.dim):
             if direction[dim] <= 0:
                 min_val = min(all_points[:, dim])

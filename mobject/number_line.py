@@ -96,16 +96,18 @@ class NumberLine(VMobject):
         )
 
     def point_to_number(self, point):
-        left_point, right_point = self.main_line.get_start_and_end()
-        full_vect = right_point - left_point
+        start_point, end_point = self.main_line.get_start_and_end()
+        full_vect = end_point - start_point
+        unit_vect = normalize(full_vect)
 
-        def distance_from_left(p):
-            return np.dot(p - left_point, full_vect) / get_norm(full_vect)
+        def distance_from_start(p):
+            return np.dot(p - start_point, unit_vect)
 
-        return interpolate(
-            self.x_min, self.x_max,
-            distance_from_left(point) / distance_from_left(right_point)
+        proportion = fdiv(
+            distance_from_start(point),
+            distance_from_start(end_point)
         )
+        return interpolate(self.x_min, self.x_max, proportion)
 
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
