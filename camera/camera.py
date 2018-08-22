@@ -207,7 +207,7 @@ class Camera(object):
         if only_those_with_points:
             method = Mobject.family_members_with_points
         else:
-            method = Mobject.submobject_family
+            method = Mobject.get_family
         return remove_list_redundancies(list(
             it.chain(*[
                 method(m)

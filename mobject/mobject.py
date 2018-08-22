@@ -807,9 +807,8 @@ class Mobject(Container):
         return result + self.submobjects
 
     def get_family(self):
-        sub_families = list(map(Mobject.submobject_family, self.submobjects))
+        sub_families = list(map(Mobject.get_family, self.submobjects))
         all_mobjects = [self] + list(it.chain(*sub_families))
-        #all_mobjects = list(it.chain(*sub_families)) + [self]
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):
