@@ -336,7 +336,7 @@ class VMobject(Mobject):
     def set_points_as_corners(self, points):
         if len(points) <= 1:
             return self
-        points = np.array(points)
+        points = self.prepare_new_anchor_points(points)
         self.set_anchors_and_handles(points, *[
             interpolate(points[:-1], points[1:], alpha)
             for alpha in (1. / 3, 2. / 3)
@@ -346,19 +346,23 @@ class VMobject(Mobject):
     def set_points_smoothly(self, points):
         if len(points) <= 1:
             return self
+        points = self.prepare_new_anchor_points(points)
         h1, h2 = get_smooth_handle_points(points)
         self.set_anchors_and_handles(points, h1, h2)
         return self
+
+    def prepare_new_anchor_points(self, points):
+        if not isinstance(points, np.ndarray):
+            points = np.array(points)
+        if self.close_new_points and not is_closed(points):
+            points = np.append(points, [points[0]], axis=0)
+        return points
 
     def set_points(self, points):
         self.points = np.array(points)
         return self
 
     def set_anchor_points(self, points, mode="smooth"):
-        if not isinstance(points, np.ndarray):
-            points = np.array(points)
-        if self.close_new_points and not is_closed(points):
-            points = np.append(points, [points[0]], axis=0)
         if mode == "smooth":
             self.set_points_smoothly(points)
         elif mode == "corners":
