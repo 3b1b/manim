@@ -72,3 +72,15 @@ class ThreeDScene(Scene):
         if any([cm in moving_mobjects for cm in camera_mobjects]):
             return self.mobjects
         return moving_mobjects
+
+    def add_fixed_orientation_mobjects(self, *mobjects):
+        self.camera.add_fixed_orientation_mobjects(*mobjects)
+
+    def add_fixed_in_frame_mobjects(self, *mobjects):
+        self.camera.add_fixed_in_frame_mobjects(*mobjects)
+
+    def remove_fixed_orientation_mobjects(self, *mobjects):
+        self.camera.remove_fixed_orientation_mobjects(*mobjects)
+
+    def remove_fixed_in_frame_mobjects(self, *mobjects):
+        self.camera.remove_fixed_in_frame_mobjects(*mobjects)

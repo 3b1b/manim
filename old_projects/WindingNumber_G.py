@@ -790,7 +790,7 @@ class InputOutputScene(Scene):
             label.to_edge(UP, buff = MED_SMALL_BUFF)
             plane.add(label)
             plane.label = label
-            for submob in plane.submobject_family():
+            for submob in plane.get_family():
                 if isinstance(submob, TexMobject) and hasattr(submob, "background_rectangle"):
                     submob.remove(submob.background_rectangle)
 
@@ -1135,7 +1135,7 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
 
         everything = VGroup(laptop, *self.mobjects)
         everything.generate_target()
-        # for mob in everything.target.submobject_family():
+        # for mob in everything.target.get_family():
         #     if isinstance(mob, PiCreature):
         #         mob.change_mode("confused")
         everything.target.rotate(TAU/12, LEFT)

@@ -222,7 +222,7 @@ class Vibrate(Animation):
     def update_mobject(self, alpha):
         time = alpha * self.run_time
         families = list(map(
-            Mobject.submobject_family,
+            Mobject.get_family,
             [self.mobject, self.starting_mobject]
         ))
         for mob, start in zip(*families):

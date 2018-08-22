@@ -2847,7 +2847,7 @@ class SierpinskiGraphScene(Scene):
         circles.set_stroke(width = self.graph_stroke_width)
 
         self.nodes = VGroup()
-        for circle in circles.submobject_family():
+        for circle in circles.get_family():
             if not isinstance(circle, Circle):
                 continue
             node = VGroup()

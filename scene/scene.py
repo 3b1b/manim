@@ -206,7 +206,7 @@ class Scene(Container):
         # Return only those which are not in the family
         # of another mobject from the scene
         mobjects = self.get_mobjects()
-        families = [m.submobject_family() for m in mobjects]
+        families = [m.get_family() for m in mobjects]
 
         def is_top_level(mobject):
             num_families = sum([
@@ -296,7 +296,7 @@ class Scene(Container):
             for mob in list_to_examine:
                 if mob in set_to_remove:
                     continue
-                intersect = set_to_remove.intersection(mob.submobject_family())
+                intersect = set_to_remove.intersection(mob.get_family())
                 if intersect:
                     add_safe_mobjects_from_list(mob.submobjects, intersect)
                 else:

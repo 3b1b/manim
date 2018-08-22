@@ -207,7 +207,7 @@ class Camera(object):
         if only_those_with_points:
             method = Mobject.family_members_with_points
         else:
-            method = Mobject.submobject_family
+            method = Mobject.get_family
         return remove_list_redundancies(list(
             it.chain(*[
                 method(m)
@@ -341,7 +341,9 @@ class Camera(object):
     def set_cairo_context_path(self, ctx, vmobject):
         ctx.new_path()
         for vmob in it.chain([vmobject], vmobject.get_subpath_mobjects()):
-            points = self.transform_points_pre_display(vmob.points)
+            points = self.transform_points_pre_display(
+                vmob, vmob.points
+            )
             ctx.new_sub_path()
             ctx.move_to(*points[0][:2])
             for triplet in zip(points[1::3], points[2::3], points[3::3]):
@@ -361,7 +363,9 @@ class Camera(object):
             )
         else:
             points = vmobject.get_gradient_start_and_end_points()
-            points = self.transform_points_pre_display(points)
+            points = self.transform_points_pre_display(
+                vmobject, points
+            )
             pat = cairo.LinearGradient(*it.chain(*[
                 point[:2] for point in points
             ]))
@@ -420,16 +424,19 @@ class Camera(object):
     def display_multiple_point_cloud_mobjects(self, pmobjects, pixel_array):
         for pmobject in pmobjects:
             self.display_point_cloud(
+                pmobject,
                 pmobject.points,
                 pmobject.rgbas,
                 self.adjusted_thickness(pmobject.stroke_width),
                 pixel_array,
             )
 
-    def display_point_cloud(self, points, rgbas, thickness, pixel_array):
+    def display_point_cloud(self, pmobject, points, rgbas, thickness, pixel_array):
         if len(points) == 0:
             return
-        pixel_coords = self.points_to_pixel_coords(points)
+        pixel_coords = self.points_to_pixel_coords(
+            pmobject, points
+        )
         pixel_coords = self.thickened_coordinates(
             pixel_coords, thickness
         )
@@ -461,7 +468,9 @@ class Camera(object):
             self.display_image_mobject(image_mobject, pixel_array)
 
     def display_image_mobject(self, image_mobject, pixel_array):
-        corner_coords = self.points_to_pixel_coords(image_mobject.points)
+        corner_coords = self.points_to_pixel_coords(
+            image_mobject, image_mobject.points
+        )
         ul_coords, ur_coords, dl_coords = corner_coords
         right_vect = ur_coords - ul_coords
         down_vect = dl_coords - ul_coords
@@ -538,13 +547,15 @@ class Camera(object):
         points[violator_indices] = rescaled
         return points
 
-    def transform_points_pre_display(self, points):
+    def transform_points_pre_display(self, points, mobject):
         # Subclasses (like ThreeDCamera) may want to
         # adjust points before they're shown
         return points
 
-    def points_to_pixel_coords(self, points):
-        points = self.transform_points_pre_display(points)
+    def points_to_pixel_coords(self, mobject, points):
+        points = self.transform_points_pre_display(
+            mobject, points
+        )
         shifted_points = points - self.get_frame_center()
 
         result = np.zeros((len(points), 2))
