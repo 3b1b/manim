@@ -1394,7 +1394,7 @@ class Lemma1(DistanceProductScene):
             self.distance_lines,
             self.numeric_distance_labels,
             self.distance_product_column,
-        ).submobject_family())
+        ).get_family())
         self.play(
             ApplyMethod(
                 observer_angle_tracker.set_value, observer_angle + 0.05 * TAU,

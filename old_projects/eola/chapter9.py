@@ -843,7 +843,7 @@ class TranslateFromJenny(JenniferScene):
         )
         self.wait()
         everything = self.get_mobjects()
-        for submob in self.jenny_plane.submobject_family():
+        for submob in self.jenny_plane.get_family():
             everything.remove(submob)
         self.play(
             Transform(self.jenny_plane, self.plane),

@@ -768,7 +768,7 @@ class GroupOfCubeSymmetries(ThreeDScene):
             randy = Randolph(mode = "pondering")
             # randy.pupils.shift(0.01*OUT)
             # randy.add(randy.pupils.copy().shift(0.02*IN))
-            # for submob in randy.submobject_family():
+            # for submob in randy.get_family():
             #     submob.part_of_three_d_mobject = True
             randy.scale(0.5)
             face = cube[1]

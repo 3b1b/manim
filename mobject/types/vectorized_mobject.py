@@ -252,7 +252,7 @@ class VMobject(Mobject):
     def set_sheen_direction(self, direction, family=True):
         direction = np.array(direction)
         if family:
-            for submob in self.submobject_family():
+            for submob in self.get_family():
                 submob.sheen_direction = direction
         else:
             self.sheen_direction = direction

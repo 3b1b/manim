@@ -166,7 +166,7 @@ class PentagonalPiCreatureFractal(PentagonalFractal):
         SelfSimilarFractal.init_colors(self)
         internal_pis = [
             pi
-            for pi in self.submobject_family()
+            for pi in self.get_family()
             if isinstance(pi, PiCreature)
         ]
         colors = color_gradient(self.colors, len(internal_pis))
@@ -202,7 +202,7 @@ class PiCreatureFractal(VMobject):
         VMobject.init_colors(self)
         internal_pis = [
             pi
-            for pi in self.submobject_family()
+            for pi in self.get_family()
             if isinstance(pi, PiCreature)
         ]
         random.seed(self.random_seed)
