@@ -6,68 +6,16 @@ from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.geometry import Square
 
-from utils.config_ops import digest_config
 from utils.iterables import tuplify
 from utils.space_ops import z_to_vector
-from utils.space_ops import get_unit_normal
 
 ##############
 
 
 class ThreeDVMobject(VMobject):
-    CONFIG = {}
-
-    def __init__(self, vmobject=None, **kwargs):
-        VMobject.__init__(self, **kwargs)
-        if vmobject is not None:
-            self.points = np.array(vmobject.points)
-            self.match_style(vmobject, family=False)
-            self.submobjects = [
-                ThreeDVMobject(submob, **kwargs)
-                for submob in vmobject.submobjects
-            ]
-
-    def get_gradient_start_and_end_points(self):
-        return self.get_start_corner(), self.get_end_corner()
-
-    def get_start_corner_index(self):
-        return 0
-
-    def get_end_corner_index(self):
-        return ((len(self.points) - 1) // 6) * 3
-        # return ((len(self.points) - 1) // 12) * 3
-
-    def get_start_corner(self):
-        if self.get_num_points() == 0:
-            return np.array(ORIGIN)
-        return self.points[self.get_start_corner_index()]
-
-    def get_end_corner(self):
-        if self.get_num_points() == 0:
-            return np.array(ORIGIN)
-        return self.points[self.get_end_corner_index()]
-
-    def get_unit_normal(self, point_index):
-        n_points = self.get_num_points()
-        if self.get_num_points() == 0:
-            return np.array(ORIGIN)
-        i = point_index
-        im1 = i - 1 if i > 0 else (n_points - 2)
-        ip1 = i + 1 if i < (n_points - 1) else 1
-        return get_unit_normal(
-            self.points[ip1] - self.points[i],
-            self.points[im1] - self.points[i],
-        )
-
-    def get_start_corner_unit_normal(self):
-        return self.get_unit_normal(
-            self.get_start_corner_index()
-        )
-
-    def get_end_corner_unit_normal(self):
-        return self.get_unit_normal(
-            self.get_end_corner_index()
-        )
+    CONFIG = {
+        "shade_in_3d": True,
+    }
 
 
 class ParametricSurface(VGroup):

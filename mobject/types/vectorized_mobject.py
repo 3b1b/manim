@@ -3,6 +3,7 @@
 from colour import Color
 
 from mobject.mobject import Mobject
+from mobject.three_d_utils import get_3d_vmob_gradient_start_and_end_points
 from constants import *
 from utils.bezier import bezier
 from utils.bezier import get_smooth_handle_points
@@ -44,6 +45,7 @@ class VMobject(Mobject):
         "pre_function_handle_to_anchor_scale_factor": 0.01,
         "make_smooth_after_applying_functions": False,
         "background_image_file": None,
+        "shade_in_3d": False,
     }
 
     def get_group_class(self):
@@ -280,14 +282,17 @@ class VMobject(Mobject):
         return self.sheen
 
     def get_gradient_start_and_end_points(self):
-        direction = self.get_sheen_direction()
-        c = self.get_center()
-        bases = np.array([
-            self.get_edge_center(vect) - c
-            for vect in [RIGHT, UP, OUT]
-        ]).transpose()
-        offset = np.dot(bases, direction)
-        return (c - offset, c + offset)
+        if self.shade_in_3d:
+            return get_3d_vmob_gradient_start_and_end_points(self)
+        else:
+            direction = self.get_sheen_direction()
+            c = self.get_center()
+            bases = np.array([
+                self.get_edge_center(vect) - c
+                for vect in [RIGHT, UP, OUT]
+            ]).transpose()
+            offset = np.dot(bases, direction)
+            return (c - offset, c + offset)
 
     def color_using_background_image(self, background_image_file):
         self.background_image_file = background_image_file

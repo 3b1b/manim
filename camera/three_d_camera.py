@@ -7,6 +7,10 @@ from constants import *
 from camera.camera import Camera
 from mobject.types.point_cloud_mobject import Point
 from mobject.three_dimensions import ThreeDVMobject
+from mobject.three_d_utils import get_3d_vmob_start_corner
+from mobject.three_d_utils import get_3d_vmob_start_corner_unit_normal
+from mobject.three_d_utils import get_3d_vmob_end_corner
+from mobject.three_d_utils import get_3d_vmob_end_corner_unit_normal
 from mobject.value_tracker import ValueTracker
 
 from utils.color import get_shaded_rgb
@@ -53,9 +57,7 @@ class ThreeDCamera(Camera):
     def modified_rgbas(self, vmobject, rgbas):
         if not self.should_apply_shading:
             return rgbas
-        is_3d = isinstance(vmobject, ThreeDVMobject)
-        has_points = (vmobject.get_num_points() > 0)
-        if is_3d and has_points:
+        if vmobject.shade_in_3d and (vmobject.get_num_points() > 0):
             light_source_point = self.light_source.points[0]
             if len(rgbas) < 2:
                 shaded_rgbas = rgbas.repeat(2, axis=0)
@@ -63,14 +65,14 @@ class ThreeDCamera(Camera):
                 shaded_rgbas = np.array(rgbas[:2])
             shaded_rgbas[0, :3] = get_shaded_rgb(
                 shaded_rgbas[0, :3],
-                vmobject.get_start_corner(),
-                vmobject.get_start_corner_unit_normal(),
+                get_3d_vmob_start_corner(vmobject),
+                get_3d_vmob_start_corner_unit_normal(vmobject),
                 light_source_point,
             )
             shaded_rgbas[1, :3] = get_shaded_rgb(
                 shaded_rgbas[1, :3],
-                vmobject.get_end_corner(),
-                vmobject.get_end_corner_unit_normal(),
+                get_3d_vmob_end_corner(vmobject),
+                get_3d_vmob_end_corner_unit_normal(vmobject),
                 light_source_point,
             )
             return shaded_rgbas
@@ -92,7 +94,7 @@ class ThreeDCamera(Camera):
         def z_key(vmob):
             # Assign a number to a three dimensional mobjects
             # based on how close it is to the camera
-            if isinstance(vmob, ThreeDVMobject):
+            if vmob.shade_in_3d:
                 return np.dot(
                     vmob.get_center(),
                     rot_matrix.T
