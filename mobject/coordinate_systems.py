@@ -58,6 +58,7 @@ class Axes(VGroup):
         return tuple([
             axis.point_to_number(point)
             for axis in self
+            if isinstance(axis, NumberLine)
         ])
 
     def get_graph(
