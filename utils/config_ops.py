@@ -53,7 +53,6 @@ def digest_config(obj, kwargs, caller_locals={}):
     caller_locals = filtered_locals(caller_locals)
     all_dicts = [kwargs, caller_locals, obj.__dict__]
     all_dicts += static_configs
-    all_new_dicts = [kwargs, caller_locals] + static_configs
     obj.__dict__ = merge_config(all_dicts)
 
 
@@ -62,7 +61,7 @@ def merge_config(all_dicts):
     config = dict()
     for c in all_config:
         key, value = c
-        if not key in config:
+        if key not in config:
             config[key] = value
         else:
             # When two dictionaries have the same key, they are merged.
