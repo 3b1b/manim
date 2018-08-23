@@ -1,11 +1,7 @@
-
-
 from constants import *
-import operator as op
 
 from mobject.svg.tex_mobject import SingleStringTexMobject
 from mobject.types.vectorized_mobject import VMobject
-from functools import reduce
 
 
 class DecimalNumber(VMobject):
@@ -30,7 +26,8 @@ class DecimalNumber(VMobject):
             formatter = self.get_formatter()
         num_string = formatter.format(number)
 
-        if num_string.startswith("-") and number == 0:
+        shows_zero = np.round(number, self.num_decimal_places) == 0
+        if num_string.startswith("-") and shows_zero:
             num_string = num_string[1:]
 
         self.add(*[
