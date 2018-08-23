@@ -35,7 +35,7 @@ def get_3d_vmob_end_corner(vmob):
 
 def get_3d_vmob_unit_normal(vmob, point_index):
     n_points = vmob.get_num_points()
-    if vmob.get_num_points() == 0:
+    if len(vmob.get_anchors()) <= 2:
         return np.array(UP)
     i = point_index
     im1 = i - 1 if i > 0 else (n_points - 2)
