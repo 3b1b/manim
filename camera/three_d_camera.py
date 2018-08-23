@@ -42,7 +42,7 @@ class ThreeDCamera(Camera):
         self.gamma_tracker = ValueTracker(self.gamma)
         self.light_source = Point(self.light_source_start_point)
         self.frame_center = Point(self.frame_center)
-        self.fixed_orientation_mobjects = set()
+        self.fixed_orientation_mobjects = dict()
         self.fixed_in_frame_mobjects = set()
         self.reset_rotation_matrix()
 
@@ -189,15 +189,19 @@ class ThreeDCamera(Camera):
         if fixed_in_frame:
             return points
         if fixed_orientation:
-            center = center_of_mass(points)
+            # center = center_of_mass(points)
+            center_func = self.fixed_orientation_mobjects[mobject]
+            center = center_func()
             new_center = self.project_point(center)
             return points + (new_center - center)
         else:
             return self.project_points(points)
 
-    def add_fixed_orientation_mobjects(self, *mobjects):
-        for mobject in self.extract_mobject_family_members(mobjects):
-            self.fixed_orientation_mobjects.add(mobject)
+    def add_fixed_orientation_mobjects(self, *mobjects, center_func=None):
+        for mobject in mobjects:
+            func = center_func or mobject.get_center
+            for submob in mobject.get_family():
+                self.fixed_orientation_mobjects[submob] = func
 
     def add_fixed_in_frame_mobjects(self, *mobjects):
         for mobject in self.extract_mobject_family_members(mobjects):
