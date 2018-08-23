@@ -547,7 +547,7 @@ class Camera(object):
         points[violator_indices] = rescaled
         return points
 
-    def transform_points_pre_display(self, points, mobject):
+    def transform_points_pre_display(self, mobject, points):
         # Subclasses (like ThreeDCamera) may want to
         # adjust points before they're shown
         return points

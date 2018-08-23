@@ -17,6 +17,7 @@ from utils.color import get_shaded_rgb
 from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
 from utils.space_ops import center_of_mass
+from utils.simple_functions import fdiv
 
 
 class ThreeDCamera(Camera):
@@ -166,9 +167,15 @@ class ThreeDCamera(Camera):
         points -= frame_center
         points = np.dot(points, rot_matrix.T)
         zs = points[:, 2]
-        zs[zs >= distance] = distance - 0.001
         for i in 0, 1:
-            points[:, i] *= distance / (distance - zs)
+            # Proper projedtion would involve multiplying
+            # x and y by d / (d-z).  But for points with high
+            # z value, this causes weird artifacts, and applying
+            # the exponential helps smooth it out.
+            factor = np.exp(zs / distance)
+            lt0 = zs < 0
+            factor[lt0] = (distance / (distance - zs[lt0]))
+            points[:, i] *= factor
         points += frame_center
         return points
 

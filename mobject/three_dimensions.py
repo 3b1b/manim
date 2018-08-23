@@ -96,7 +96,7 @@ class ParametricSurface(VGroup):
 class Sphere(ParametricSurface):
     CONFIG = {
         "resolution": (12, 24),
-        "radius": 3,
+        "radius": 1,
         "u_min": 0.001,
         "u_max": PI - 0.001,
         "v_min": 0,
@@ -128,8 +128,9 @@ class Cube(VGroup):
 
     def generate_points(self):
         for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
-            face = ThreeDVMobject(
-                Square(side_length=self.side_length)
+            face = Square(
+                side_length=self.side_length,
+                shade_in_3d=True,
             )
             face.make_jagged()
             face.flip()
