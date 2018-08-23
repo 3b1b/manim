@@ -10,6 +10,8 @@ from mobject.geometry import Line
 from utils.bezier import interpolate
 from utils.config_ops import digest_config
 from utils.space_ops import get_norm
+from utils.space_ops import normalize
+from utils.simple_functions import fdiv
 
 
 class NumberLine(VMobject):
