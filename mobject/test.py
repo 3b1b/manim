@@ -8,19 +8,20 @@ import pytest
 import random
 import mobject.mobject
 import camera.camera
+import inspect
 
-from colour import Color
-from constants import *
-from container.container import Container
-from functools import reduce
-from mobject.geometry import Circle
-from mobject.geometry import Square
-from mobject.mobject import Mobject
 from pytest import approx
 from unittest.mock import MagicMock
 from unittest.mock import call
 from unittest.mock import create_autospec
 from unittest.mock import patch
+
+from colour import Color
+from constants import *
+from container.container import Container
+from functools import reduce
+from mobject.geometry import Square
+from mobject.mobject import Mobject
 from utils.bezier import interpolate
 from utils.color import color_gradient
 from utils.color import color_to_rgb
@@ -188,7 +189,7 @@ def test_copy():
     m1 = Mobject()
     for attr in m1.get_array_attrs():
         setattr(m1, attr, np.zeros((3, 3)))
-    m1.submobjects = [Circle()]
+    m1.submobjects = [Mobject()]
     m1.mob_attr = m1.submobjects[0]
     m1.submobjects[0].points = np.zeros((3, 3))
     m1.arr = [0]
@@ -196,15 +197,15 @@ def test_copy():
     m2 = m1.copy()
     for attr in m2.get_array_attrs():
         setattr(m2, attr, np.ones((3, 3)))
-    m2.submobjects = None
+    m2.add(Mobject())
     m2.mob_attr = None
     m2.arr[0] = 1
 
     # mobjects attributes, (nd)array attributes, and
     # submobjects should not be shared
     assert np.array_equal(m1.points, np.zeros((3, 3)))
-    assert m1.submobjects is not None
-    assert type(m1.mob_attr) == Circle
+    assert len(m1.submobjects) == 1
+    assert m1.mob_attr is not None
 
     # other attributes are shared
     assert m1.arr[0] == 1
@@ -214,7 +215,7 @@ def test_deepcopy():
     m1 = Mobject()
     for attr in m1.get_array_attrs():
         setattr(m1, attr, np.zeros((3, 3)))
-    m1.submobjects = [Circle()]
+    m1.submobjects = [Mobject()]
     m1.mob_attr = m1.submobjects[0]
     m1.submobjects[0].points = np.zeros((3, 3))
     m1.arr = [0]
@@ -222,14 +223,14 @@ def test_deepcopy():
     m2 = m1.deepcopy()
     for attr in m2.get_array_attrs():
         setattr(m2, attr, np.ones((3, 3)))
-    m2.submobjects = None
+    m2.add(Mobject())
     m2.mob_attr = None
     m2.arr[0] = 1
 
     # no attributes are shared
     assert np.array_equal(m1.points, np.zeros((3, 3)))
-    assert m1.submobjects is not None
-    assert type(m1.mob_attr) == Circle
+    assert len(m1.submobjects) == 1
+    assert m1.mob_attr is not None
     assert m1.arr[0] == 0
 
 
@@ -237,34 +238,34 @@ def test_generate_target():
     m1 = Mobject()
     for attr in m1.get_array_attrs():
         setattr(m1, attr, np.zeros((3, 3)))
-    m1.submobjects = [Circle()]
+    m1.submobjects = [Mobject()]
     m1.mob_attr = m1.submobjects[0]
     m1.submobjects[0].points = np.zeros((3, 3))
-    m1.arr = [1]
+    m1.arr = [0]
 
     # test shallow copy
     m1.generate_target()
     for attr in m1.target.get_array_attrs():
         setattr(m1.target, attr, np.ones((3, 3)))
-    m1.target.submobjects = [Square()]
-    m1.target.mob_attr = m1.target.submobjects[0]
+    m1.target.add(Mobject())
+    m1.target.mob_attr = None
     m1.target.arr[0] = 1
     assert np.array_equal(m1.points, np.zeros((3, 3)))
-    assert m1.submobjects is not None
-    assert type(m1.mob_attr) == Circle
+    assert len(m1.submobjects) == 1
+    assert m1.mob_attr is not None
     assert m1.arr[0] == 1
 
     # test deep copy
     m1.generate_target(use_deepcopy=True)
     m1.target = m1.deepcopy()
     for attr in m1.target.get_array_attrs():
-        setattr(m1.target, attr, np.ones((3, 3)))
-    m1.target.submobjects = [Square()]
-    m1.target.mob_attr = m1.target.submobjects[0]
+        setattr(m1.target, attr, np.full((3, 3), 2))
+    m1.target.add(Mobject())
+    m1.target.mob_attr = None
     m1.target.arr[0] = 2
     assert np.array_equal(m1.points, np.zeros((3, 3)))
-    assert m1.submobjects is not None
-    assert type(m1.mob_attr) == Circle
+    assert len(m1.submobjects) == 1
+    assert m1.mob_attr is not None
     assert m1.arr[0] == 1
 
 
@@ -336,11 +337,71 @@ def test_apply_to_family():
         assert mob.points == approx(np.ones((3, 3)))
 
 
-# def shift():
-# def scale():
-# def rotate_about_origin():
-# def rotate():
-# def flip():
+def test_shift():
+    submob = Mobject()
+    m = Mobject(submob)
+    np.random.seed(386735)
+    mob_points = np.random.rand(10, 3)
+    submob_points = np.random.rand(5, 3)
+    m.points = mob_points
+    submob.points = submob_points
+    m.shift(2 * RIGHT - 1 * UP)
+    assert m.points == approx(mob_points + np.array([2, -1, 0]))
+    assert submob.points == approx(submob_points + np.array([2, -1, 0]))
+
+
+def test_scale(mocker):
+    mocker.patch.object(
+        mobject.mobject.Mobject, "apply_points_function_about_point", autospec=True
+    )
+    m = Mobject()
+    m.scale(3)
+    m.apply_points_function_about_point.assert_called_once()
+    args, kwargs = m.apply_points_function_about_point.call_args
+    assert args[0] is m
+    assert callable(args[1])
+    assert (
+        inspect.getsource(args[1]).strip()
+        == "lambda points: scale_factor * points, **kwargs"
+    )
+    assert kwargs == {}
+
+
+def test_rotate_about_origin(mocker):
+    mocker.patch.object(mobject.mobject.Mobject, "rotate")
+    m = Mobject()
+    angle = 3 * PI / 4
+    m.rotate_about_origin(angle)
+    m.rotate.assert_called_once_with(angle, OUT, about_point=ORIGIN)
+
+
+def test_rotate(mocker):
+    mock_rotation_matrix = mocker.patch("mobject.mobject.rotation_matrix")
+    mocker.patch.object(
+        mobject.mobject.Mobject, "apply_points_function_about_point", autospec=True
+    )
+    m = Mobject()
+    angle = 3 * PI / 4
+    m.rotate(angle)
+    mock_rotation_matrix.assert_called_once_with(angle, OUT)
+    m.apply_points_function_about_point.assert_called_once()
+    args, kwargs = m.apply_points_function_about_point.call_args
+    assert args[0] is m
+    assert callable(args[1])
+    assert (
+        inspect.getsource(args[1]).strip().replace("\n", " ")
+        == "lambda points: np.dot(points, rot_matrix.T),"
+    )
+    assert kwargs == {}
+
+
+def test_flip(mocker):
+    mocker.patch.object(mobject.mobject.Mobject, "rotate", autospec=True)
+    m = Mobject()
+    m.flip()
+    m.rotate.assert_called_once_with(m, TAU / 2, UP)
+
+
 # def stretch():
 #    def func():
 # def apply_function():
