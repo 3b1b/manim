@@ -41,11 +41,13 @@ class SquareToCircle(Scene):
         square.flip(RIGHT)
         square.rotate(-3 * TAU / 8)
         circle.set_fill(PINK, opacity=0.5)
+        circle.wag(direction=UP)
+        self.play(ShowCreation(circle))
 
-        a = TexMobject("a")
-        b = TexMobject("b").shift(DOWN)
-        self.play(ShowCreation(a))
-        self.play(ShowCreation(b))
+        #a = TexMobject("a")
+        #b = TexMobject("b").shift(DOWN)
+        #self.play(ShowCreation(a))
+        #self.play(ShowCreation(b))
         self.wait(5)
 
 

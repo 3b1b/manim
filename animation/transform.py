@@ -76,15 +76,6 @@ class Transform(Animation):
                 if hasattr(self, "parent"):
                     self.parent.add(self.original_target_mobject)
 
-    def animation_family(self, mob):
-        ret = []
-        for mob in mob.submobject_family():
-            for family in self.all_families_zipped:
-                if mob == family[0]:
-                    ret.extend(family[1:])
-        return ret
-
-
 
 class ReplacementTransform(Transform):
     CONFIG = {

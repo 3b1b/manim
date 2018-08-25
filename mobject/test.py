@@ -34,6 +34,9 @@ from utils.space_ops import complex_to_R3
 from utils.space_ops import rotation_matrix
 
 
+SEED = 386735
+np.random.seed(SEED)
+
 def test_init():
     m = Mobject()
 
@@ -203,7 +206,7 @@ def test_copy():
 
     # mobjects attributes, (nd)array attributes, and
     # submobjects should not be shared
-    assert np.array_equal(m1.points, np.zeros((3, 3)))
+    assert np.allclose(m1.points, np.zeros((3, 3)))
     assert len(m1.submobjects) == 1
     assert m1.mob_attr is not None
 
@@ -228,7 +231,7 @@ def test_deepcopy():
     m2.arr[0] = 1
 
     # no attributes are shared
-    assert np.array_equal(m1.points, np.zeros((3, 3)))
+    assert np.allclose(m1.points, np.zeros((3, 3)))
     assert len(m1.submobjects) == 1
     assert m1.mob_attr is not None
     assert m1.arr[0] == 0
@@ -250,7 +253,7 @@ def test_generate_target():
     m1.target.add(Mobject())
     m1.target.mob_attr = None
     m1.target.arr[0] = 1
-    assert np.array_equal(m1.points, np.zeros((3, 3)))
+    assert np.allclose(m1.points, np.zeros((3, 3)))
     assert len(m1.submobjects) == 1
     assert m1.mob_attr is not None
     assert m1.arr[0] == 1
@@ -263,7 +266,7 @@ def test_generate_target():
     m1.target.add(Mobject())
     m1.target.mob_attr = None
     m1.target.arr[0] = 2
-    assert np.array_equal(m1.points, np.zeros((3, 3)))
+    assert np.allclose(m1.points, np.zeros((3, 3)))
     assert len(m1.submobjects) == 1
     assert m1.mob_attr is not None
     assert m1.arr[0] == 1
@@ -340,7 +343,6 @@ def test_apply_to_family():
 def test_shift():
     submob = Mobject()
     m = Mobject(submob)
-    np.random.seed(386735)
     mob_points = np.random.rand(10, 3)
     submob_points = np.random.rand(5, 3)
     m.points = mob_points
@@ -396,20 +398,150 @@ def test_rotate(mocker):
 
 
 def test_flip(mocker):
-    mocker.patch.object(mobject.mobject.Mobject, "rotate", autospec=True)
+    mocker.spy(mobject.mobject.Mobject, "rotate")
     m = Mobject()
+    m.points = np.array([
+        [ 1,  1, 0],
+        [-1, -1, 0],
+        [ 2,  2, 0],
+        [-2, -2, 0],
+    ])
     m.flip()
     m.rotate.assert_called_once_with(m, TAU / 2, UP)
+    expected = np.array([[-1,  1, 0],
+                         [ 1, -1, 0],
+                         [-2,  2, 0],
+                         [ 2, -2, 0]])
+    assert(np.allclose(m.points, expected))
 
 
-# def stretch():
-#    def func():
-# def apply_function():
-# def apply_function_to_position():
-# def apply_function_to_submobject_positions():
-# def apply_matrix():
-# def apply_complex_function():
-# def wag():
+def test_stretch(mocker):
+    mocker.spy(
+        mobject.mobject.Mobject, "apply_points_function_about_point"
+    )
+    m = Mobject()
+    m.points = np.array([
+        [0,  1, 0],
+        [0,  0, 0],
+        [0, -1, 0],
+    ])
+    m.stretch(3, 1)
+    m.apply_points_function_about_point.assert_called_once()
+    args, kwargs = m.apply_points_function_about_point.call_args
+    assert args[0] is m
+    assert callable(args[1])
+    assert (
+        inspect.getsource(args[1]).strip()
+        == "def func(points):\n"
+           "            points[:, dim] *= factor\n"
+           "            return points"
+    )
+    assert kwargs == {}
+    assert(np.allclose(m.points, [[0, 3, 0],
+                                  [0, 0, 0],
+                                  [0, -3, 0]]))
+
+
+def test_apply_function(mocker):
+    mocker.patch.object(
+        mobject.mobject.Mobject, "apply_points_function_about_point", autospec=True
+    )
+    mock_func = mocker.Mock()
+    m = Mobject()
+    m.apply_function(mock_func)
+    m.apply_points_function_about_point.assert_called_once()
+    args, kwargs = m.apply_points_function_about_point.call_args
+    assert args[0] is m
+    assert callable(args[1])
+    assert (
+        inspect.getsource(args[1]).strip()
+        == "lambda points: np.apply_along_axis(function, 1, points),"
+    )
+    assert kwargs == {"about_point": ORIGIN}
+
+def test_apply_function_to_position(mocker):
+    mock_get_center_return = np.random.randint(1000)
+    mocker.patch.object(mobject.mobject.Mobject, 'get_center', autospec=True, return_value=mock_get_center_return)
+    mock_func_return = np.random.randint(1000)
+    mock_func = mocker.Mock(return_value=mock_func_return)
+    mocker.patch.object(mobject.mobject.Mobject, 'move_to', autospec=True)
+    m = Mobject()
+    m.apply_function_to_position(mock_func)
+
+    m.get_center.assert_called_once_with(m)
+    mock_func.assert_called_once_with(mock_get_center_return) 
+    m.move_to.assert_called_once_with(m, mock_func_return)
+
+def test_apply_function_to_submobject_positions(mocker):
+    s1 = Mobject()
+    s2 = Mobject()
+    s3 = Mobject()
+    m = Mobject(s1, s2, s3)
+    mock_func = mocker.Mock()
+    mocker.patch.object(mobject.mobject.Mobject, 'apply_function_to_position')
+    m.apply_function_to_submobject_positions(mock_func)
+
+    for submob in m.submobjects:
+        submob.apply_function_to_position.assert_called_with(mock_func)
+
+def test_apply_matrix():
+    points = np.random.rand(10, 3)
+    matrix = np.random.rand(3, 3)
+    m = Mobject()
+    m.points = points.copy()
+    m.apply_matrix(matrix)
+
+    expected = points.copy()
+    expected -= ORIGIN
+    expected = np.dot(points, matrix.T)
+    expected += ORIGIN
+    assert(np.allclose(m.points, expected)) 
+
+    m.points = points
+    about_point = np.random.rand(1, 3)
+
+    expected = points.copy()
+    expected -= about_point
+    expected = np.dot(expected, matrix.T)
+    expected += about_point
+
+    m.apply_matrix(matrix, about_point=about_point)
+    assert(np.allclose(m.points, expected)) 
+
+def test_apply_complex_function(mocker):
+    mocker.patch.object(mobject.mobject.Mobject, 'apply_function', autospec=True)
+    mock_func = mocker.Mock()
+    m = Mobject()
+    m.apply_complex_function(mock_func)
+    m.apply_function.assert_called_once()
+    args, kwargs = m.apply_function.call_args
+    assert(len(args) == 2)
+    assert(args[0] is m)
+    assert (
+        inspect.getsource(args[1]).strip()
+        == "lambda x_y_z: complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),"
+    )
+    assert(kwargs == {})
+
+# this is a rather odd function. the current contract is simply that
+# wag() will do what is does in this version (0c3e1308cd40e12f795e0f8e753acca02874c2b3).
+def wag():
+    points = random.rand(10, 3)
+    m = Mobject()
+    m.point = points.copy()
+    m.wag()
+
+    expected = points.copy()
+    alphas = np.dot(expected, np.transpose(DOWN))
+    alphas -= min(alphas)
+    alphas /= max(alphas)
+    #alphas = alphas**wag_factor
+    expected += np.dot(
+        alphas.reshape((len(alphas), 1)),
+        np.array(RIGHT).reshape((1, mob.dim))
+    )
+    assert(np.allclose(m.points, expected))
+
 # def reverse_points():
 # def repeat():
 #    def repeat_array():

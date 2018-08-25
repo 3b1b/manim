@@ -1,21 +1,23 @@
-from __future__ import absolute_import
-from animation.creation import ShowCreation
-from animation.update import UpdateFromAlphaFunc
-from animation.composition import Succession
-from animation.composition import AnimationGroup
-from animation.transform import ApplyMethod
-from constants import *
-from continual_animation.update import ContinualUpdateFromTimeFunc
-from utils.rate_functions import linear
-from mobject.geometry import Circle
-from mobject.geometry import Line
-from mobject.mobject import Group
-from scene.scene import Scene
-from utils.space_ops import rotation_matrix
 import itertools
 import operator
 import random
 import time
+
+from animation.composition import AnimationGroup
+from animation.composition import Succession
+from animation.creation import ShowCreation
+from animation.creation import Write
+from animation.transform import ApplyMethod
+from animation.update import UpdateFromAlphaFunc
+from constants import *
+from continual_animation.update import ContinualUpdateFromTimeFunc
+from mobject.geometry import Circle
+from mobject.geometry import Line
+from mobject.mobject import Group
+from mobject.svg.tex_mobject import TextMobject
+from scene.scene import Scene
+from utils.rate_functions import linear
+from utils.space_ops import rotation_matrix
 
 def euler_tour(G, start_point):
     ret = [start_point]
@@ -112,7 +114,7 @@ class OpeningScene(Scene):
         hypercube.scale(3)
         hypercube.rotate(-PI / 4, Y_AXIS)
         hypercube.rotate(-np.arctan(np.sqrt(2)), X_AXIS)
-        hypercube.move_to(ORIGIN)
+        hypercube.move_to(ORIGIN).shift(0.7 * UP)
         self.add(hypercube)
         self.wait(0.1)
         self.add(ContinualUpdateFromTimeFunc(
@@ -120,6 +122,7 @@ class OpeningScene(Scene):
             rotate_mob,
             start_up_time=0,
             wind_down_time=1.0,
+            # end_time=14./12 * PI - 0.015, # hq
             end_time=14./12 * PI + 0.005,
         ))
 
@@ -190,7 +193,11 @@ class OpeningScene(Scene):
         #self.play(ApplyMethod(hypercube.submobjects[2].set_color, RED))
         #self.play(ApplyMethod(hypercube.submobjects[3].set_color, RED))
 
-        self.play(Succession(*successions, add_finished_mobjects=False))
+        title = TextMobject("Euler Tour").scale(3).shift(2.8 * DOWN)
+        self.play(
+            Succession(*successions, add_finished_mobjects=False),
+            Write(title, run_time=14./12 * PI + 0.005),
+        )
         self.wait(10)
 
     def construct(self):

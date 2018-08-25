@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
 from big_ol_pile_of_manim_imports import *
 from dijkstra_scenes.graph import Graph
 from collections import OrderedDict
