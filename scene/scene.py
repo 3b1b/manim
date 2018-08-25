@@ -208,7 +208,7 @@ class Scene(Container):
         # Return only those which are not in the family
         # of another mobject from the scene
         mobjects = self.get_mobjects()
-        families = [m.submobject_family() for m in mobjects]
+        families = [m.get_family() for m in mobjects]
 
         def is_top_level(mobject):
             num_families = sum([
@@ -298,7 +298,7 @@ class Scene(Container):
             for mob in list_to_examine:
                 if mob in set_to_remove:
                     continue
-                intersect = set_to_remove.intersection(mob.submobject_family())
+                intersect = set_to_remove.intersection(mob.get_family())
                 if intersect:
                     add_safe_mobjects_from_list(mob.submobjects, intersect)
                 else:
@@ -352,13 +352,13 @@ class Scene(Container):
         # point forward.
         # TODO: does this handle Successions? AnimationGroups?
         animation_mobjects = []
-        for family in map(lambda x: x.mobject.submobject_family(), animations):
+        for family in map(lambda x: x.mobject.get_family(), animations):
             animation_mobjects.extend(family)
         ca_mobjects = []
-        for family in map(lambda x: x.mobject.submobject_family(), self.continual_animations):
+        for family in map(lambda x: x.mobject.get_family(), self.continual_animations):
             ca_mobjects.extend(family)
         mobjects = []
-        for family in map(lambda x: x.submobject_family(), self.get_mobjects()):
+        for family in map(lambda x: x.get_family(), self.get_mobjects()):
             mobjects.extend(family)
         ret = []
         for i, mob in enumerate(mobjects):

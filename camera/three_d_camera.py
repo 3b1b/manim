@@ -6,12 +6,18 @@ from constants import *
 
 from camera.camera import Camera
 from mobject.types.point_cloud_mobject import Point
-from mobject.three_dimensions import ThreeDVMobject
+from mobject.three_d_utils import get_3d_vmob_start_corner
+from mobject.three_d_utils import get_3d_vmob_start_corner_unit_normal
+from mobject.three_d_utils import get_3d_vmob_end_corner
+from mobject.three_d_utils import get_3d_vmob_end_corner_unit_normal
 from mobject.value_tracker import ValueTracker
 
 from utils.color import get_shaded_rgb
+# from utils.config_ops import digest_config
 from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
+from utils.space_ops import center_of_mass
+from utils.simple_functions import fdiv
 
 
 class ThreeDCamera(Camera):
@@ -36,6 +42,8 @@ class ThreeDCamera(Camera):
         self.gamma_tracker = ValueTracker(self.gamma)
         self.light_source = Point(self.light_source_start_point)
         self.frame_center = Point(self.frame_center)
+        self.fixed_orientation_mobjects = set()
+        self.fixed_in_frame_mobjects = set()
         self.reset_rotation_matrix()
 
     def capture_mobjects(self, mobjects, **kwargs):
@@ -63,14 +71,14 @@ class ThreeDCamera(Camera):
                 shaded_rgbas = np.array(rgbas[:2])
             shaded_rgbas[0, :3] = get_shaded_rgb(
                 shaded_rgbas[0, :3],
-                vmobject.get_start_corner(),
-                vmobject.get_start_corner_unit_normal(),
+                get_3d_vmob_start_corner(vmobject),
+                get_3d_vmob_start_corner_unit_normal(vmobject),
                 light_source_point,
             )
             shaded_rgbas[1, :3] = get_shaded_rgb(
                 shaded_rgbas[1, :3],
-                vmobject.get_end_corner(),
-                vmobject.get_end_corner_unit_normal(),
+                get_3d_vmob_end_corner(vmobject),
+                get_3d_vmob_end_corner_unit_normal(vmobject),
                 light_source_point,
             )
             return shaded_rgbas
@@ -92,7 +100,7 @@ class ThreeDCamera(Camera):
         def z_key(vmob):
             # Assign a number to a three dimensional mobjects
             # based on how close it is to the camera
-            if isinstance(vmob, ThreeDVMobject):
+            if vmob.shade_in_3d:
                 return np.dot(
                     vmob.get_center(),
                     rot_matrix.T
@@ -153,11 +161,12 @@ class ThreeDCamera(Camera):
             result = np.dot(matrix, result)
         return result
 
-    def transform_points_pre_display(self, points):
-        fc = self.get_frame_center()
+    def project_points(self, points):
+        frame_center = self.get_frame_center()
         distance = self.get_distance()
-        points -= fc
         rot_matrix = self.get_rotation_matrix()
+
+        points -= frame_center
         points = np.dot(points, rot_matrix.T)
         zs = points[:, 2]
         zs[zs >= distance] = distance - 0.001
@@ -165,3 +174,37 @@ class ThreeDCamera(Camera):
             points[:, i] *= distance / (distance - zs)
         points += fc
         return points
+
+    def project_point(self, point):
+        return self.project_points(point.reshape((1, 3)))[0, :]
+
+    def transform_points_pre_display(self, mobject, points):
+        fixed_orientation = mobject in self.fixed_orientation_mobjects
+        fixed_in_frame = mobject in self.fixed_in_frame_mobjects
+
+        if fixed_in_frame:
+            return points
+        if fixed_orientation:
+            center = center_of_mass(points)
+            new_center = self.project_point(center)
+            return points + (new_center - center)
+        else:
+            return self.project_points(points)
+
+    def add_fixed_orientation_mobjects(self, *mobjects):
+        for mobject in self.extract_mobject_family_members(mobjects):
+            self.fixed_orientation_mobjects.add(mobject)
+
+    def add_fixed_in_frame_mobjects(self, *mobjects):
+        for mobject in self.extract_mobject_family_members(mobjects):
+            self.fixed_in_frame_mobjects.add(mobject)
+
+    def remove_fixed_orientation_mobjects(self, *mobjects):
+        for mobject in self.extract_mobject_family_members(mobjects):
+            if mobject in self.fixed_orientation_mobjects:
+                self.fixed_orientation_mobjects.remove(mobject)
+
+    def remove_fixed_in_frame_mobjects(self, *mobjects):
+        for mobject in self.extract_mobject_family_members(mobjects):
+            if mobject in self.fixed_in_frame_mobjects:
+                self.fixed_in_frame_mobjects.remove(mobject)

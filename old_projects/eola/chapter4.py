@@ -339,7 +339,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
     def show_overall_effect(self, matrix):
         everything = self.get_mobjects()
         everything = list_difference_update(
-            everything, matrix.submobject_family()
+            everything, matrix.get_family()
         )
         self.play(*list(map(FadeOut, everything)) + [Animation(matrix)])
         new_matrix = matrix.copy()

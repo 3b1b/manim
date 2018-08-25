@@ -543,7 +543,7 @@ class Arrow(Line):
 
     def set_rectangular_stem_points(self):
         start, end = self.get_start_and_end()
-        tip_base_points = self.tip[0].get_anchors()[1:]
+        tip_base_points = self.tip[0].get_anchors()[1:3]
         tip_base = center_of_mass(tip_base_points)
         tbp1, tbp2 = tip_base_points
         perp_vect = tbp2 - tbp1

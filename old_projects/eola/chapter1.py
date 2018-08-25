@@ -537,7 +537,7 @@ class CoordinateSystemWalkthrough(VectorScene):
         y_tick_marks = x_tick_marks.copy().rotate(np.pi/2)
         tick_marks = VMobject(x_tick_marks, y_tick_marks)
         tick_marks.set_color(WHITE)
-        plane_lines = [m for m in plane.submobject_family() if isinstance(m, Line)]
+        plane_lines = [m for m in plane.get_family() if isinstance(m, Line)]
         origin_words = TextMobject("Origin")
         origin_words.shift(2*UP+2*LEFT)
         dot = Dot(radius = 0.1).set_color(RED)

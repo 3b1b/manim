@@ -171,13 +171,13 @@ class PiCreatureScene(Scene):
         for pi_creature in self.get_pi_creatures():
             if pi_creature not in self.get_mobjects():
                 continue
-            if pi_creature in first_anim.mobject.submobject_family():
+            if pi_creature in first_anim.mobject.get_family():
                 continue
-            anims_with_pi_creature = [anim for anim in animations if pi_creature in anim.mobject.submobject_family()]
+            anims_with_pi_creature = [anim for anim in animations if pi_creature in anim.mobject.get_family()]
             for anim in anims_with_pi_creature:
                 if isinstance(anim, Transform):
-                    index = anim.mobject.submobject_family().index(pi_creature)
-                    target_family = anim.target_mobject.submobject_family()
+                    index = anim.mobject.get_family().index(pi_creature)
+                    target_family = anim.target_mobject.get_family()
                     target = target_family[index]
                     if isinstance(target, PiCreature):
                         target.look_at(point_of_interest)

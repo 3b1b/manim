@@ -136,7 +136,7 @@ class Mobject(Container):
         copy_mobject.submobjects = [
             submob.copy() for submob in self.submobjects
         ]
-        family = self.submobject_family()
+        family = self.get_family()
         for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value in family and value is not self:
                 setattr(copy_mobject, attr, value.copy())
@@ -639,7 +639,7 @@ class Mobject(Container):
         return self
 
     def fade_to(self, color, alpha):
-        for mob in self.submobject_family():
+        for mob in self.get_family():
             mob.fade_to_no_recurse(self, color, alpha)
         return self
 
@@ -648,7 +648,7 @@ class Mobject(Container):
         return self
 
     def fade(self, darkness=0.5):
-        for submob in self.submobject_family():
+        for submob in self.get_family():
             submob.fade_no_recurse(darkness)
         return self
 
@@ -671,7 +671,7 @@ class Mobject(Container):
         if not hasattr(self, "saved_state") or self.save_state is None:
             raise Exception("Trying to restore without having saved")
         self.align_data(self.saved_state)
-        for sm1, sm2 in zip(self.submobject_family(), self.saved_state.submobject_family()):
+        for sm1, sm2 in zip(self.get_family(), self.saved_state.get_family()):
             sm1.interpolate(sm1, sm2, 1)
         return self
 
@@ -716,6 +716,8 @@ class Mobject(Container):
     def get_critical_point(self, direction):
         result = np.zeros(self.dim)
         all_points = self.get_all_points()
+        if len(all_points) == 0:
+            return result
         for dim in range(self.dim):
             if direction[dim] <= 0:
                 min_val = min(all_points[:, dim])
@@ -817,14 +819,13 @@ class Mobject(Container):
         result = [self] if len(self.points) > 0 else []
         return result + self.submobjects
 
-    def submobject_family(self):
-        sub_families = list(map(Mobject.submobject_family, self.submobjects))
+    def get_family(self):
+        sub_families = list(map(Mobject.get_family, self.submobjects))
         all_mobjects = [self] + list(it.chain(*sub_families))
-        #all_mobjects = list(it.chain(*sub_families)) + [self]
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):
-        return [m for m in self.submobject_family() if m.get_num_points() > 0]
+        return [m for m in self.get_family() if m.get_num_points() > 0]
 
     def arrange_submobjects(self, direction=RIGHT, center=True, **kwargs):
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
@@ -864,11 +865,11 @@ class Mobject(Container):
                 submob.shuffle_submobjects(recursive=True)
         random.shuffle(self.submobjects)
 
-    def print_submobject_family(self, n_tabs=0):
+    def print_get_family(self, n_tabs=0):
         """For debugging purposes"""
         print("\t" * n_tabs, self, id(self))
         for submob in self.submobjects:
-            submob.print_submobject_family(n_tabs + 1)
+            submob.print_get_family(n_tabs + 1)
 
     # Alignment
     def align_data(self, mobject):

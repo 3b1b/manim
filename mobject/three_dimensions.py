@@ -6,10 +6,8 @@ from mobject.types.vectorized_mobject import VMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.geometry import Square
 
-from utils.config_ops import digest_config
 from utils.iterables import tuplify
 from utils.space_ops import z_to_vector
-from utils.space_ops import get_unit_normal
 
 ##############
 
@@ -180,8 +178,9 @@ class Cube(VGroup):
 
     def generate_points(self):
         for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
-            face = ThreeDVMobject(
-                Square(side_length=self.side_length)
+            face = Square(
+                side_length=self.side_length,
+                shade_in_3d=True,
             )
             face.make_jagged()
             face.flip()

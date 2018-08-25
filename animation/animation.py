@@ -133,7 +133,7 @@ class Animation(object):
 
     def animation_family(self, mob):
         ret = []
-        for mob in mob.submobject_family():
+        for mob in mob.get_family():
             for family in self.all_families_zipped:
                 if mob == family[0]:
                     ret.extend(family[1:])

@@ -1302,7 +1302,7 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
             equation.movers = VGroup(
                 moving_var, moving_output_vect_label, moving_column_mob
             )
-            for element in moving_column_mob.target.submobject_family():
+            for element in moving_column_mob.target.get_family():
                 if not isinstance(element, TexMobject):
                     continue
                 tex_string = element.get_tex_string()

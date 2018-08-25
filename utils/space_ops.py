@@ -6,6 +6,7 @@ from functools import reduce
 
 # Matrix operations
 
+
 def get_norm(vect):
     return sum([x**2 for x in vect])**0.5
 
