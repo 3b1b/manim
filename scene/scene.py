@@ -81,6 +81,12 @@ class Scene(Container):
             self.close_movie_pipe()
         print("Played a total of %d animations" % self.num_plays)
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if "writing_process" in state:
+            del state["writing_process"]
+        return state
+
     def setup(self):
         """
         This is meant to be implement by any scenes which
