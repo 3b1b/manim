@@ -854,11 +854,11 @@ class Mobject(Container):
                 submob.shuffle_submobjects(recursive=True)
         random.shuffle(self.submobjects)
 
-    def print_get_family(self, n_tabs=0):
+    def print_submobject_family(self, n_tabs=0):
         """For debugging purposes"""
         print("\t" * n_tabs, self, id(self))
         for submob in self.submobjects:
-            submob.print_get_family(n_tabs + 1)
+            submob.print_submobject_family(n_tabs + 1)
 
     # Alignment
     def align_data(self, mobject):
@@ -972,14 +972,18 @@ class Mobject(Container):
     def pointwise_become_partial(self, mobject, a, b):
         pass  # To implement in subclass
 
-    def become(self, mobject):
+    def become(self, mobject, copy_submobjects=True):
         """
         Edit points, colors and submobjects to be idential
         to another mobject
         """
         self.align_points(mobject)
         self.interpolate(self, mobject, 1)
-        self.submobjects = [sm.copy() for sm in mobject.submobjects]
+        self.submobjects = [
+            sm.copy() if copy_submobjects else sm
+            for sm in mobject.submobjects
+        ]
+        return self
 
 
 class Group(Mobject):
