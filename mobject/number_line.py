@@ -2,7 +2,7 @@
 
 from constants import *
 
-from mobject.svg.tex_mobject import TexMobject
+from mobject.numbers import DecimalNumber
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from mobject.geometry import Arrow
@@ -33,6 +33,9 @@ class NumberLine(VMobject):
         "line_to_number_buff": MED_SMALL_BUFF,
         "include_tip": False,
         "propagate_style_to_family": True,
+        "decimal_number_config": {
+            "num_decimal_places": 0,
+        }
     }
 
     def __init__(self, **kwargs):
@@ -120,11 +123,11 @@ class NumberLine(VMobject):
         # TODO, handle decimals
         if len(numbers) == 0:
             numbers = self.default_numbers_to_display()
-        if "force_integers" in kwargs and kwargs["force_integers"]:
-            numbers = list(map(int, numbers))
         result = VGroup()
         for number in numbers:
-            mob = TexMobject(str(number))
+            mob = DecimalNumber(
+                number, **self.decimal_number_config
+            )
             mob.scale(self.number_scale_val)
             mob.next_to(
                 self.number_to_point(number),
