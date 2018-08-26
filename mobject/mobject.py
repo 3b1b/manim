@@ -977,12 +977,9 @@ class Mobject(Container):
         Edit points, colors and submobjects to be idential
         to another mobject
         """
-        self.align_points(mobject)
-        self.interpolate(self, mobject, 1)
-        self.submobjects = [
-            sm.copy() if copy_submobjects else sm
-            for sm in mobject.submobjects
-        ]
+        self.align_data(mobject)
+        for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
+            sm1.interpolate(sm1, sm2, 1)
         return self
 
 
