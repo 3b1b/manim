@@ -61,53 +61,37 @@ def stereo_project_point(point, axis=0, r=1, max_norm=1000):
     return point
 
 
-# TODO, improve this function...by a lot.
-def stereo_project(mobject, axis=0, r=1, **kwargs):
-    epsilon = 0.01
+def stereo_project(mobject, axis=0, r=1, outer_r=10, **kwargs):
+    epsilon = 1
     for submob in mobject.family_members_with_points():
-        eq_neg_1 = submob.points[:, axis] == -r
-        if np.any(eq_neg_1):
-            # Whoof, pretty messy, and not general.
-            # Clean this up?
-            N = len(eq_neg_1)
-            neg_1_indices = np.arange(N)[eq_neg_1]
-
-            if len(neg_1_indices) == 2:
-                # Dumb hack
-                submob.points = np.array([
-                    *submob.points[3:-1],
-                    *submob.points[0:4],
-                ])
-                eq_neg_1 = submob.points[:, axis] == -r
-                neg_1_indices = np.arange(N)[eq_neg_1]
-
-            i = neg_1_indices[0]
-            p1 = interpolate(
-                submob.points[i - 1],
-                submob.points[i],
-                1 - epsilon
-            )
-            p2 = interpolate(
-                submob.points[i],
-                submob.points[i + 1],
-                epsilon
-            )
-            submob.points = np.array([
-                *submob.points[:i],
-                p1,
-                interpolate(p1, p2, 1 / 3),
-                interpolate(p1, p2, 2 / 3),
-                p2,
-                *submob.points[i + 1:],
-            ])
+        points = submob.points
+        n = len(points)
+        for i in range(n):
+            if points[i, axis] == -r:
+                js = it.chain(
+                    range(i + 1, n),
+                    range(i - 1, -1, -1)
+                )
+                for j in js:
+                    if points[j, axis] == -r:
+                        continue
+                    else:
+                        vect = points[j] - points[i]
+                        points[i] += epsilon * vect
+                        break
         submob.apply_function(
-            lambda p: stereo_project_point(
-                p, axis=axis, **kwargs
-            )
+            lambda p: stereo_project_point(p, axis, r, **kwargs)
         )
+
+        # If all points are outside a certain range, this
+        # shouldn't be displayed
         norms = np.apply_along_axis(get_norm, 1, submob.points)
-        if np.all(norms > FRAME_WIDTH):
-            submob.points[:] = 0
+        if np.all(norms > outer_r):
+            # TODO, instead set opacity?
+            # submob.points[:, :] = 0
+            submob.set_fill(opacity=0)
+            submob.set_stroke(opacity=0)
+
     return mobject
 
 
@@ -199,6 +183,9 @@ class PushPin(SVGMobject):
         SVGMobject.__init__(self, **kwargs)
         self.rotate(20 * DEGREES)
 
+    def pin_to(self, point):
+        self.move_to(point, DR)
+
 
 class Hand(SVGMobject):
     CONFIG = {
@@ -229,8 +216,6 @@ class CheckeredCircle(Circle):
         for i, color in enumerate(self.colors):
             self[i::n_colors].set_color(color)
 
-        # self.set_width(2 * self.radius)
-        # self.set_stroke(width=self.stroke_width)
 
 # Abstract scenes
 class SpecialThreeDScene(ThreeDScene):
@@ -1374,70 +1359,77 @@ class StereographicProjectionTitle(Scene):
 class IntroduceStereographicProjection(MovingCameraScene):
     CONFIG = {
         "n_sample_points": 16,
+        "circle_config": {
+            "n_pieces": 16,
+            "radius": 2,
+            "stroke_width": 7,
+        },
+        "example_angles": [
+            30 * DEGREES,
+            120 * DEGREES,
+            240 * DEGREES,
+            80 * DEGREES,
+            -60 * DEGREES,
+            135 * DEGREES,
+        ]
     }
 
     def construct(self):
         self.setup_plane()
         self.draw_lines()
         self.describe_individual_points()
-        self.point_at_infinity()
+        self.remind_that_most_points_are_not_projected()
 
     def setup_plane(self):
-        plane = self.plane = ComplexPlane(
-            unit_size=2,
-            color=GREY,
-            secondary_color=DARK_GREY,
-            x_radius=FRAME_WIDTH,
-            y_radius=FRAME_HEIGHT,
-        )
-        plane.add_coordinates()
-        circle = self.circle = CheckeredCircle(radius=2)
-        circle.set_stroke(width=7)
-        circle_shadow = self.circle_shadow = circle.copy()
-        circle_shadow.set_stroke(opacity=0.5)
+        self.plane = self.get_plane()
+        self.circle = self.get_circle()
+        self.circle_shadow = self.get_circle_shadow()
 
-        self.add(plane)
-        self.add(circle_shadow)
-        self.add(circle)
+        self.add(self.plane)
+        self.add(self.circle_shadow)
+        self.add(self.circle)
 
     def draw_lines(self):
         plane = self.plane
         circle = self.circle
-        for part in circle:
-            part.generate_target()
-            self.project_mobject(part.target)
+        circle.save_state()
+        circle.generate_target()
+        self.project_mobject(circle.target)
 
         circle_points = self.get_sample_circle_points()
         dots = VGroup(*[Dot(p) for p in circle_points])
         dots.set_sheen(-0.2, DR)
+        dots.set_stroke(DARK_GREY, 2, background=True)
+        arrows = VGroup()
         for dot in dots:
             dot.scale(0.75)
             dot.generate_target()
             dot.target.move_to(
                 self.project(dot.get_center())
             )
+            arrow = Arrow(
+                dot.get_center(),
+                dot.target.get_center(),
+            )
+            arrows.add(arrow)
         neg_one_point = plane.number_to_point(-1)
         neg_one_dot = Dot(neg_one_point)
         neg_one_dot.set_fill(YELLOW)
 
-        lines = VGroup(*[
-            Line(neg_one_point, point)
-            for point in circle_points
-        ])
-        for line in lines:
-            line.scale(
-                10 / line.get_length(),
-                about_point=neg_one_point
-            )
-            line.set_stroke(YELLOW, 1)
+        lines = self.get_lines()
 
         special_index = self.n_sample_points // 2 + 1
         line = lines[special_index]
         dot = dots[special_index]
+        arrow = arrows[special_index]
         dot_target_outline = dot.target.copy()
         dot_target_outline.set_stroke(RED, 2)
         dot_target_outline.set_fill(opacity=0)
         dot_target_outline.scale(1.5)
+
+        v_line = Line(UP, DOWN)
+        v_line.set_height(FRAME_HEIGHT)
+        v_line.set_stroke(RED, 5)
 
         self.play(LaggedStart(FadeInFromLarge, dots))
         self.play(FadeInFromLarge(neg_one_dot))
@@ -1449,23 +1441,184 @@ class IntroduceStereographicProjection(MovingCameraScene):
             line.set_stroke, {"width": 4},
         )
         self.play(ShowCreation(dot_target_outline))
+        self.play(ShowCreationThenDestruction(v_line))
         self.play(MoveToTarget(dot))
         self.wait()
         self.play(
             lines.set_stroke, {"width": 1},
             FadeOut(dot_target_outline),
-            LaggedStart(MoveToTarget, dots),
-            LaggedStart(MoveToTarget, circle),
+            MoveToTarget(circle),
+            *map(MoveToTarget, dots),
+            run_time=2,
         )
         self.wait()
 
-    def describe_individual_points(self):
-        pass
+        self.lines = lines
+        self.dots = dots
 
-    def point_at_infinity(self):
-        pass
+    def describe_individual_points(self):
+        plane = self.plane
+        one_point, zero_point, i_point, neg_i_point, neg_one_point = [
+            plane.number_to_point(n)
+            for n in [1, 0, complex(0, 1), complex(0, -1), -1]
+        ]
+        i_pin = PushPin()
+        i_pin.pin_to(i_point)
+        neg_i_pin = PushPin()
+        neg_i_pin.pin_to(neg_i_point)
+
+        dot = Dot()
+        dot.set_stroke(RED, 3)
+        dot.set_fill(opacity=0)
+        dot.scale(1.5)
+        dot.move_to(one_point)
+
+        arc1 = Arc(angle=TAU / 4, radius=2)
+        arc2 = Arc(
+            angle=85 * DEGREES, radius=2,
+            start_angle=TAU / 4,
+        )
+        arc3 = Arc(
+            angle=-85 * DEGREES, radius=2,
+            start_angle=-TAU / 4,
+        )
+        VGroup(arc1, arc2, arc3).set_stroke(RED)
+
+        frame = self.camera_frame
+        frame_height_tracker = ValueTracker(frame.get_height())
+        frame_height_growth = ContinualGrowValue(
+            frame_height_tracker, rate=0.4
+        )
+
+        neg_one_tangent = VGroup(
+            Line(ORIGIN, UP),
+            Line(ORIGIN, DOWN),
+        )
+        neg_one_tangent.set_height(25)
+        neg_one_tangent.set_stroke(YELLOW, 5)
+        neg_one_tangent.move_to(neg_one_point)
+
+        self.play(ShowCreation(dot))
+        self.wait()
+        self.play(dot.move_to, zero_point)
+        self.wait()
+        dot.move_to(i_point)
+        self.play(ShowCreation(dot))
+        self.play(FadeInFrom(i_pin, UL))
+        self.wait()
+        self.play(
+            dot.move_to, neg_i_point,
+            path_arc=-60 * DEGREES
+        )
+        self.play(FadeInFrom(neg_i_pin, UL))
+        self.wait()
+        self.play(
+            dot.move_to, one_point,
+            path_arc=-60 * DEGREES
+        )
+        frame.add_updater(
+            lambda m: m.set_height(frame_height_tracker.get_value())
+        )
+
+        triplets = [
+            (arc1, i_point, TAU / 4),
+            (arc2, neg_one_point, TAU / 4),
+            (arc3, neg_one_point, -TAU / 4),
+        ]
+        for arc, point, path_arc in triplets:
+            self.play(
+                ShowCreation(arc),
+                dot.move_to, point, path_arc=path_arc,
+                run_time=2
+            )
+            self.wait()
+            self.play(
+                ApplyFunction(self.project_mobject, arc, run_time=2)
+            )
+            self.wait()
+            self.play(FadeOut(arc))
+            self.wait()
+            if arc is arc1:
+                self.add(frame, frame_height_growth)
+            elif arc is arc2:
+                self.play(dot.move_to, neg_i_point)
+        frame_height_growth.begin_wind_down()
+        self.wait(2)
+        self.play(*map(ShowCreation, neg_one_tangent))
+        self.wait()
+        self.play(FadeOut(neg_one_tangent))
+        self.wait(2)
+        frame.clear_updaters()
+        self.play(
+            frame.set_height, FRAME_HEIGHT,
+            self.lines.set_stroke, {"width": 0.5},
+            FadeOut(self.dots),
+            FadeOut(dot),
+            run_time=2,
+        )
+
+    def remind_that_most_points_are_not_projected(self):
+        plane = self.plane
+        circle = self.circle
+
+        sample_values = [0, complex(1, 1), complex(-2, -1)]
+        sample_points = [
+            plane.number_to_point(value)
+            for value in sample_values
+        ]
+        sample_dots = VGroup(*[Dot(p) for p in sample_points])
+        sample_dots.set_fill(GREEN)
+
+        self.play(
+            FadeOut(self.lines),
+            Restore(circle),
+        )
+
+        for value, dot in zip(sample_values, sample_dots):
+            cross = Cross(dot)
+            cross.scale(2)
+            label = Integer(value)
+            label.next_to(dot, UR, SMALL_BUFF)
+            self.play(
+                FadeInFromLarge(dot, 3),
+                FadeInFromDown(label)
+            )
+            self.play(ShowCreation(cross))
+            self.play(*map(FadeOut, [dot, cross, label]))
+        self.wait()
+        self.play(
+            FadeIn(self.lines),
+            MoveToTarget(circle, run_time=2),
+        )
+        self.wait()
 
     # Helpers
+    def get_plane(self):
+        plane = ComplexPlane(
+            unit_size=2,
+            color=GREY,
+            secondary_color=DARK_GREY,
+            x_radius=FRAME_WIDTH,
+            y_radius=FRAME_HEIGHT,
+            stroke_width=2,
+        )
+        plane.add_coordinates()
+        return plane
+
+    def get_circle(self):
+        circle = CheckeredCircle(
+            **self.circle_config
+        )
+        circle.set_stroke(width=7)
+        return circle
+
+    def get_circle_shadow(self):
+        circle_shadow = CheckeredCircle(
+            **self.circle_config
+        )
+        circle_shadow.set_stroke(opacity=0.65)
+        return circle_shadow
+
     def get_sample_circle_points(self):
         plane = self.plane
         n = self.n_sample_points
@@ -1478,8 +1631,371 @@ class IntroduceStereographicProjection(MovingCameraScene):
             for number in numbers
         ]
 
+    def get_lines(self):
+        plane = self.plane
+        neg_one_point = plane.number_to_point(-1)
+        circle_points = self.get_sample_circle_points()
+
+        lines = VGroup(*[
+            Line(neg_one_point, point)
+            for point in circle_points
+        ])
+        for line in lines:
+            line.scale(
+                20 / line.get_length(),
+                about_point=neg_one_point
+            )
+            line.set_stroke(YELLOW, 1)
+        return lines
+
     def project(self, point):
         return stereo_project_point(point, axis=0, r=2)
 
     def project_mobject(self, mobject):
-        return stereo_project(mobject, axis=0, r=2)
+        return stereo_project(mobject, axis=0, r=2, outer_r=6)
+
+
+class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection):
+    def construct(self):
+        self.describe_individual_points()
+        self.point_at_infinity()
+        self.show_90_degree_rotation()
+        self.talk_through_90_degree_rotation()
+        self.show_four_rotations()
+        self.show_example_angles()
+
+    def describe_individual_points(self):
+        plane = self.plane = self.get_plane()
+        circle = self.circle = self.get_circle()
+        linus = self.linus =self.get_linus()
+
+        angles = np.arange(-135, 180, 45) * DEGREES
+        sample_numbers = [
+            np.exp(complex(0, angle))
+            for angle in angles
+        ]
+        sample_points = [
+            plane.number_to_point(number)
+            for number in sample_numbers
+        ]
+        projected_sample_points = [
+            self.project(point)
+            for point in sample_points
+        ]
+        dots = VGroup(*[Dot() for x in range(8)])
+        dots.set_fill(WHITE)
+        dots.set_stroke(BLACK, 1)
+
+        def generate_dot_updater(circle_piece):
+            return lambda d: d.move_to(circle_piece.points[0])
+
+        for dot, piece in zip(dots, circle[::(len(circle) // 8)]):
+            dot.add_updater(generate_dot_updater(piece))
+
+        stot = "\\frac{\\sqrt{2}}{2}"
+        labels_tex = [
+            "\\left(-{}-{}i\\right)".format(stot, stot),
+            "-i",
+            "\\left({}-{}i\\right)".format(stot, stot),
+            "1",
+            "\\left({}+{}i\\right)".format(stot, stot),
+            "i",
+            "\\left(-{}+{}i\\right)".format(stot, stot),
+        ]
+        labels = VGroup(*[TexMobject(tex) for tex in labels_tex])
+        vects = it.cycle([RIGHT, RIGHT])
+        arrows = VGroup()
+        for label, point, vect in zip(labels, projected_sample_points, vects):
+            arrow = Arrow(vect, ORIGIN)
+            arrow.next_to(point, vect, 2 * SMALL_BUFF)
+            arrows.add(arrow)
+            label.set_stroke(width=0, background=True)
+            if stot in label.get_tex_string():
+                label.set_height(0.8)
+            else:
+                label.set_height(0.5)
+            label.next_to(arrow, vect, SMALL_BUFF)
+
+        frame = self.camera_frame
+        frame.set_height(12)
+
+        self.add(linus)
+        self.add(circle, *dots)
+        self.play(
+            ApplyFunction(self.project_mobject, circle),
+            run_time=2
+        )
+        self.play(linus.change, "confused")
+        self.wait()
+        for i in [1, 0]:
+            self.play(
+                LaggedStart(GrowArrow, arrows[i::2]),
+                LaggedStart(Write, labels[i::2])
+            )
+            self.play(Blink(linus))
+
+        self.dots = dots
+
+    def point_at_infinity(self):
+        circle = self.circle
+        linus = self.linus
+
+        label = TextMobject(
+            "$-1$ is \\\\ at $\\pm \\infty$"
+        )
+        label.scale(2)
+        label.next_to(circle, LEFT, buff=1.25)
+        arrows = VGroup(*[
+            Vector(3 * v + 0.0 * RIGHT).next_to(label, v, buff=MED_LARGE_BUFF)
+            for v in [UP, DOWN]
+        ])
+        arrows.set_color(YELLOW)
+
+        self.play(
+            Write(label),
+            linus.change, "awe", label,
+            *map(GrowArrow, arrows)
+        )
+
+        self.neg_one_label = VGroup(label, arrows)
+
+    def show_90_degree_rotation(self):
+        angle_tracker = ValueTracker(0)
+        circle = self.circle
+        linus = self.linus
+        hand = Hand()
+        hand.flip()
+        one_dot = self.dots[0]
+        hand.add_updater(
+            lambda h: h.move_to(one_dot.get_center(), RIGHT)
+        )
+
+        def update_circle(circle):
+            angle = angle_tracker.get_value()
+            new_circle = self.get_circle()
+            new_circle.rotate(angle)
+            self.project_mobject(new_circle)
+            circle.become(new_circle)
+
+        circle.add_updater(update_circle)
+
+        self.play(
+            FadeIn(hand),
+            one_dot.set_fill, RED,
+        )
+        for angle in 90 * DEGREES, 0:
+            self.play(
+                ApplyMethod(
+                    angle_tracker.set_value, angle,
+                    run_time=3,
+                ),
+                linus.change, "confused", hand
+            )
+            self.wait()
+            self.play(Blink(linus))
+
+        self.hand = hand
+        self.angle_tracker = angle_tracker
+
+    def talk_through_90_degree_rotation(self):
+        linus = self.linus
+        dots = self.dots
+        one_dot = dots[0]
+        i_dot = dots[2]
+        neg_i_dot = dots[-2]
+
+        kwargs1 = {
+            "use_rectangular_stem": False,
+            "path_arc": -90 * DEGREES,
+            "buff": SMALL_BUFF,
+        }
+        kwargs2 = dict(kwargs1)
+        kwargs2["path_arc"] = -40 * DEGREES
+        arrows = VGroup(
+            Arrow(one_dot, i_dot, **kwargs1),
+            Arrow(i_dot, 6 * UP + LEFT, **kwargs2),
+            Arrow(6 * DOWN + LEFT, neg_i_dot, **kwargs2),
+            Arrow(neg_i_dot, one_dot, **kwargs1)
+        )
+        arrows.set_stroke(WHITE, 3)
+        one_to_i, i_to_neg_1, neg_one_to_neg_i, neg_i_to_one = arrows
+
+        for arrow in arrows:
+            self.play(
+                ShowCreation(arrow),
+                linus.look_at, arrow
+            )
+            self.wait(2)
+
+        self.arrows = arrows
+
+    def show_four_rotations(self):
+        angle_tracker = self.angle_tracker
+        linus = self.linus
+        hand = self.hand
+        linus.add_updater(lambda l: l.look_at(hand))
+        linus.add_updater(lambda l: l.eyes.next_to(l.body, UP, 0))
+
+        for angle in np.arange(TAU / 4, 5 * TAU / 4, TAU / 4):
+            self.play(
+                ApplyMethod(
+                    angle_tracker.set_value, angle,
+                    run_time=3,
+                ),
+            )
+            self.wait()
+        self.play(FadeOut(self.arrows))
+
+    def show_example_angles(self):
+        angle_tracker = self.angle_tracker
+        angle_tracker.set_value(0)
+
+        for angle in self.example_angles:
+            self.play(
+                ApplyMethod(
+                    angle_tracker.set_value, angle,
+                    run_time=2,
+                ),
+            )
+            self.wait()
+
+    #
+    def get_linus(self):
+        linus = Linus()
+        linus.move_to(3 * RIGHT)
+        linus.to_edge(DOWN)
+        linus.look_at(ORIGIN)
+        return linus
+
+
+class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection):
+    def construct(self):
+        self.setup_plane()
+        self.apply_projection()
+        self.show_90_degree_rotation()
+        self.talk_through_90_degree_rotation()
+        self.show_four_rotations()
+        self.show_example_angles()
+
+    def apply_projection(self):
+        plane = self.plane
+        circle = self.circle
+        neg_one_point = plane.number_to_point(-1)
+        neg_one_dot = Dot(neg_one_point)
+        neg_one_dot.set_fill(YELLOW)
+
+        lines = self.get_lines()
+
+        def generate_dot_updater(circle_piece):
+            return lambda d: d.move_to(circle_piece.points[0])
+
+        for circ, color in [(self.circle_shadow, RED), (self.circle, WHITE)]:
+            for piece in circ[::(len(circ) // 8)]:
+                dot = Dot(color=color)
+                dot.set_fill(opacity=circ.get_stroke_opacity())
+                dot.add_updater(generate_dot_updater(piece))
+                self.add(dot)
+
+        self.add(lines, neg_one_dot)
+        self.play(*map(ShowCreation, lines))
+        self.play(
+            ApplyFunction(self.project_mobject, circle),
+            lines.set_stroke, {"width": 0.5},
+            self.camera_frame.set_height, 12,
+            run_time=2
+        )
+        self.wait()
+
+    def show_90_degree_rotation(self):
+        circle = self.circle
+        circle_shadow = self.circle_shadow
+
+        def get_rotated_one_point():
+            return circle_shadow[0].points[0]
+
+        def get_angle():
+            return angle_of_vector(get_rotated_one_point())
+
+        self.get_angle = get_angle
+
+        one_dot = Dot(color=RED)
+        one_dot.add_updater(
+            lambda m: m.move_to(get_rotated_one_point())
+        )
+        hand = Hand()
+        hand.move_to(one_dot.get_center(), LEFT)
+
+        def update_circle(circle):
+            new_circle = self.get_circle()
+            new_circle.rotate(get_angle())
+            self.project_mobject(new_circle)
+            circle.become(new_circle)
+
+        circle.add_updater(update_circle)
+
+        self.add(one_dot, hand)
+        hand.add_updater(
+            lambda h: h.move_to(one_dot.get_center(), LEFT)
+        )
+        self.play(
+            FadeInFrom(hand, RIGHT),
+            FadeInFromLarge(one_dot, 3),
+        )
+        for angle in 90 * DEGREES, -90 * DEGREES:
+            self.play(
+                Rotate(circle_shadow, angle, run_time=3),
+            )
+            self.wait(2)
+
+    def talk_through_90_degree_rotation(self):
+        plane = self.plane
+        points = [
+            plane.number_to_point(z)
+            for z in [1, complex(0, 1), -1, complex(0, -1)]
+        ]
+        arrows = VGroup()
+        for p1, p2 in adjacent_pairs(points):
+            arrow = Arrow(
+                p1, p2, path_arc=180 * DEGREES,
+                use_rectangular_stem=False,
+            )
+            arrow.set_stroke(LIGHT_GREY, width=3)
+            arrow.tip.set_fill(LIGHT_GREY)
+            arrows.add(arrow)
+
+        for arrow in arrows:
+            self.play(ShowCreation(arrow))
+            self.wait(2)
+
+        self.arrows = arrows
+
+    def show_four_rotations(self):
+        circle_shadow = self.circle_shadow
+        for x in range(4):
+            self.play(
+                Rotate(circle_shadow, TAU / 4, run_time=3)
+            )
+            self.wait()
+        self.play(FadeOut(self.arrows))
+
+    def show_example_angles(self):
+        circle_shadow = self.circle_shadow
+        angle_label = Integer(0, unit="^\\circ")
+        angle_label.scale(1.5)
+        angle_label.next_to(
+            circle_shadow.get_top(), UR,
+        )
+
+        self.play(FadeInFromDown(angle_label))
+        self.add(angle_label)
+        for angle in self.example_angles:
+            d_angle = angle - self.get_angle()
+            self.play(
+                Rotate(circle_shadow, d_angle),
+                ChangingDecimal(
+                    angle_label,
+                    lambda a: (self.get_angle() % TAU) / DEGREES
+                ),
+                run_time=2
+            )
+            self.wait()
