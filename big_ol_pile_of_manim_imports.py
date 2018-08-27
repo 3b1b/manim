@@ -51,6 +51,7 @@ from mobject.svg.brace import *
 from mobject.svg.drawings import *
 from mobject.svg.svg_mobject import *
 from mobject.svg.tex_mobject import *
+from mobject.three_d_utils import *
 from mobject.three_dimensions import *
 from mobject.types.image_mobject import *
 from mobject.types.point_cloud_mobject import *
