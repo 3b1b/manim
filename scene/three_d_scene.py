@@ -22,7 +22,7 @@ class ThreeDScene(Scene):
         if gamma is not None:
             self.camera.set_gamma(gamma)
 
-    def begin_ambient_camera_rotation(self, rate=0.1):
+    def begin_ambient_camera_rotation(self, rate=0.05):
         self.ambient_camera_rotation = ContinualGrowValue(
             self.camera.theta_tracker,
             rate=rate
