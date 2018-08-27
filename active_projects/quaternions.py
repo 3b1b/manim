@@ -2,27 +2,24 @@ from big_ol_pile_of_manim_imports import *
 # from pprint import pprint
 
 
-# Constants
-# HIGH_QUALITY = True
-HIGH_QUALITY = False
-
-
 # Helpers
-def get_three_d_scene_config():
+def get_three_d_scene_config(high_quality=True):
     hq_config = {
         "camera_config": {
             "should_apply_shading": True,
+            "exponential_projection": True,
         },
         "three_d_axes_config": {
-            "num_axis_pieces": 20,
+            "num_axis_pieces": 1,
             "number_line_config": {
                 "unit_size": 2,
-                "tick_frequency": 0.5,
+                # "tick_frequency": 0.5,
+                "tick_frequency": 1,
                 "numbers_with_elongated_ticks": [0, 1, 2],
             }
         },
         "sphere_config": {
-            "radius": 1,
+            "radius": 2,
         }
     }
     lq_added_config = {
@@ -30,10 +27,13 @@ def get_three_d_scene_config():
             "should_apply_shading": False,
         },
         "three_d_axes_config": {
-            "num_axis_pieces": 5,
+            "num_axis_pieces": 1,
         },
+        "sphere_config": {
+            "resolution": (4, 12),
+        }
     }
-    if HIGH_QUALITY:
+    if high_quality:
         return hq_config
     else:
         return merge_config([
@@ -52,7 +52,7 @@ def q_mult(q1, q2):
     return np.array([w, x, y, z])
 
 
-def stereo_project_point(point, axis=0, r=1, max_norm=1000):
+def stereo_project_point(point, axis=0, r=1, max_norm=100):
     point = fdiv(point * r, point[axis] + r)
     point[axis] = 0
     norm = get_norm(point)
@@ -171,6 +171,12 @@ class Linus(VGroup):
         return self.deepcopy()
 
 
+class Felix(PiCreature):
+    CONFIG = {
+        "color": GREEN_D
+    }
+
+
 class PushPin(SVGMobject):
     CONFIG = {
         "file_name": "push_pin",
@@ -219,13 +225,48 @@ class CheckeredCircle(Circle):
 
 # Abstract scenes
 class SpecialThreeDScene(ThreeDScene):
-    CONFIG = get_three_d_scene_config()
+    CONFIG = {
+        "cut_axes_at_radius": True,
+    }
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        if self.frame_duration == PRODUCTION_QUALITY_FRAME_DURATION:
+            high_quality = True
+        else:
+            high_quality = False
+        config = get_three_d_scene_config(high_quality)
+        ThreeDScene.__init__(self, **config)
 
     def get_axes(self):
-        return ThreeDAxes(**self.three_d_axes_config)
+        axes = ThreeDAxes(**self.three_d_axes_config)
+        for axis in axes:
+            if self.cut_axes_at_radius:
+                p0 = axis.main_line.get_start()
+                p1 = axis.number_to_point(-1)
+                p2 = axis.number_to_point(1)
+                p3 = axis.main_line.get_end()
+                new_pieces = VGroup(
+                    Line(p0, p1), Line(p1, p2), Line(p2, p3),
+                )
+                for piece in new_pieces:
+                    piece.shade_in_3d = True
+                new_pieces.match_style(axis.pieces)
+                axis.pieces.submobjects = new_pieces.submobjects
+            for tick in axis.tick_marks:
+                tick.add(VectorizedPoint(
+                    1.5 * tick.get_center(),
+                ))
+        return axes
 
     def get_sphere(self):
         return Sphere(**self.sphere_config)
+
+    def get_default_camera_position(self):
+        return {
+            "phi": 70 * DEGREES,
+            "theta": -110 * DEGREES,
+        }
 
 
 # Animated scenes
@@ -1667,7 +1708,7 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
     def describe_individual_points(self):
         plane = self.plane = self.get_plane()
         circle = self.circle = self.get_circle()
-        linus = self.linus =self.get_linus()
+        linus = self.linus = self.get_linus()
 
         angles = np.arange(-135, 180, 45) * DEGREES
         sample_numbers = [
@@ -1692,15 +1733,15 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
         for dot, piece in zip(dots, circle[::(len(circle) // 8)]):
             dot.add_updater(generate_dot_updater(piece))
 
-        stot = "\\frac{\\sqrt{2}}{2}"
+        stot = "(\\sqrt{2} / 2)"
         labels_tex = [
-            "\\left(-{}-{}i\\right)".format(stot, stot),
+            "-{}-{}i".format(stot, stot),
             "-i",
-            "\\left({}-{}i\\right)".format(stot, stot),
+            "{}-{}i".format(stot, stot),
             "1",
-            "\\left({}+{}i\\right)".format(stot, stot),
+            "{}+{}i".format(stot, stot),
             "i",
-            "\\left(-{}+{}i\\right)".format(stot, stot),
+            "-{}+{}i".format(stot, stot),
         ]
         labels = VGroup(*[TexMobject(tex) for tex in labels_tex])
         vects = it.cycle([RIGHT, RIGHT])
@@ -1711,9 +1752,10 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
             arrows.add(arrow)
             label.set_stroke(width=0, background=True)
             if stot in label.get_tex_string():
-                label.set_height(0.8)
+                label.set_height(0.5)
             else:
                 label.set_height(0.5)
+                label.set_stroke(WHITE, 2, background=True)
             label.next_to(arrow, vect, SMALL_BUFF)
 
         frame = self.camera_frame
@@ -1743,7 +1785,7 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
         label = TextMobject(
             "$-1$ is \\\\ at $\\pm \\infty$"
         )
-        label.scale(2)
+        label.scale(1.5)
         label.next_to(circle, LEFT, buff=1.25)
         arrows = VGroup(*[
             Vector(3 * v + 0.0 * RIGHT).next_to(label, v, buff=MED_LARGE_BUFF)
@@ -1854,7 +1896,7 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
             self.play(
                 ApplyMethod(
                     angle_tracker.set_value, angle,
-                    run_time=2,
+                    run_time=4,
                 ),
             )
             self.wait()
@@ -1901,6 +1943,9 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
         self.play(
             ApplyFunction(self.project_mobject, circle),
             lines.set_stroke, {"width": 0.5},
+            run_time=2
+        )
+        self.play(
             self.camera_frame.set_height, 12,
             run_time=2
         )
@@ -1996,6 +2041,680 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
                     angle_label,
                     lambda a: (self.get_angle() % TAU) / DEGREES
                 ),
+                run_time=4
+            )
+            self.wait()
+
+
+class IntroduceFelix(PiCreatureScene, SpecialThreeDScene):
+    def setup(self):
+        PiCreatureScene.setup(self)
+        SpecialThreeDScene.setup(self)
+
+    def construct(self):
+        self.introduce_felix()
+        self.add_plane()
+        self.show_in_three_d()
+
+    def introduce_felix(self):
+        felix = self.felix = self.pi_creature
+
+        arrow = Vector(DL, color=WHITE)
+        arrow.next_to(felix, UR)
+
+        label = TextMobject("Felix the Flatlander")
+        label.next_to(arrow.get_start(), UP)
+
+        self.add(felix)
+        self.play(
+            felix.change, "wave_1", label,
+            Write(label),
+            GrowArrow(arrow),
+        )
+        self.play(Blink(felix))
+        self.play(felix.change, "thinking", label)
+
+        self.to_fade = VGroup(label, arrow)
+
+    def add_plane(self):
+        plane = NumberPlane(y_radius=10)
+        axes = self.get_axes()
+        to_fade = self.to_fade
+        felix = self.felix
+
+        self.add(axes, plane, felix)
+        self.play(
+            ShowCreation(axes),
+            ShowCreation(plane),
+            FadeOut(to_fade),
+        )
+        self.wait()
+
+        self.plane = plane
+        self.axes = axes
+
+    def show_in_three_d(self):
+        felix = self.pi_creature
+        plane = self.plane
+        axes = self.axes
+
+        # back_plane = Rectangle().replace(plane, stretch=True)
+        # back_plane.shade_in_3d = True
+        # back_plane.set_fill(LIGHT_GREY, opacity=0.5)
+        # back_plane.set_sheen(1, UL)
+        # back_plane.shift(SMALL_BUFF * IN)
+        # back_plane.set_stroke(width=0)
+        # back_plane = ParametricSurface(
+        #     lambda u, v: u * RIGHT + v * UP
+        # )
+        # back_plane.replace(plane, stretch=True)
+        # back_plane.set_stroke(width=0)
+        # back_plane.set_fill(LIGHT_GREY, opacity=0.5)
+
+        sphere = self.get_sphere()
+        # sphere.set_fill(BLUE_E, 0.5)
+
+        self.move_camera(
+            phi=70 * DEGREES,
+            theta=-110 * DEGREES,
+            added_anims=[FadeOut(plane)],
+            run_time=2
+        )
+        self.begin_ambient_camera_rotation()
+        self.add(axes, sphere)
+        self.play(
+            Write(sphere),
+            felix.change, "confused"
+        )
+        self.wait()
+
+        axis_angle_pairs = [
+            (RIGHT, 90 * DEGREES),
+            (OUT, 45 * DEGREES),
+            (UR + OUT, 120 * DEGREES),
+            (RIGHT, 90 * DEGREES),
+        ]
+        for axis, angle in axis_angle_pairs:
+            self.play(Rotate(
+                sphere, angle=angle, axis=axis,
+                run_time=2,
+            ))
+        self.wait(2)
+
+    #
+    def create_pi_creature(self):
+        return Felix().move_to(4 * LEFT + 2 * DOWN)
+
+
+class IntroduceThreeDNumbers(SpecialThreeDScene):
+    CONFIG = {
+        "camera_config": {
+            "exponential_projection": False,
+        }
+    }
+
+    def construct(self):
+        self.add_third_axis()
+        self.reorient_axes()
+        self.show_example_number()
+
+    def add_third_axis(self):
+        plane = ComplexPlane(
+            y_radius=FRAME_WIDTH / 4,
+            unit_size=2,
+            secondary_line_ratio=1,
+        )
+        plane.add_coordinates()
+        title = TextMobject("Complex Plane")
+        title.scale(1.8)
+        title.add_background_rectangle()
+        title.to_corner(UL, buff=MED_SMALL_BUFF)
+
+        real_line = Line(LEFT, RIGHT).set_width(FRAME_WIDTH)
+        imag_line = Line(DOWN, UP).set_height(FRAME_HEIGHT)
+        real_line.set_color(YELLOW)
+        imag_line.set_color(RED)
+
+        for label in plane.coordinate_labels:
+            label.remove(label.background_rectangle)
+            label.shift(SMALL_BUFF * IN)
+            self.add_fixed_orientation_mobjects(label)
+        reals = plane.coordinate_labels[:7]
+        imags = plane.coordinate_labels[7:]
+
+        self.add(plane, title)
+        for line, group in (real_line, reals), (imag_line, imags):
+            line.set_stroke(width=5)
+            self.play(
+                ShowCreationThenDestruction(line),
+                LaggedStart(
+                    Indicate, group,
+                    rate_func=there_and_back,
+                    color=line.get_color(),
+                ),
+                run_time=2,
+            )
+
+        self.plane = plane
+        self.title = title
+
+    def reorient_axes(self):
+        z_axis = NumberLine(unit_size=2)
+        z_axis.rotate(90 * DEGREES, axis=DOWN)
+        z_axis.rotate(90 * DEGREES, axis=OUT)
+        z_axis.set_color(WHITE)
+        z_axis_top = Line(
+            z_axis.number_to_point(0),
+            z_axis.main_line.get_end(),
+        )
+        z_axis_top.match_style(z_axis.main_line)
+
+        z_unit_line = Line(
+            z_axis.number_to_point(0),
+            z_axis.number_to_point(1),
+            color=RED,
+            stroke_width=5
+        )
+
+        j_labels = VGroup(
+            TexMobject("-2j"),
+            TexMobject("-j"),
+            TexMobject("j"),
+            TexMobject("2j"),
+        )
+        for label, num in zip(j_labels, [-2, -1, 1, 2]):
+            label.next_to(z_axis.number_to_point(num), RIGHT, MED_SMALL_BUFF)
+            self.add_fixed_orientation_mobjects(label)
+
+        plane = self.plane
+
+        x_line = Line(LEFT, RIGHT).set_width(FRAME_WIDTH)
+        y_line = Line(DOWN, UP).set_height(FRAME_WIDTH)
+        z_line = Line(IN, OUT).set_depth(FRAME_WIDTH)
+        x_line.set_stroke(GREEN, 5)
+        y_line.set_stroke(RED, 5)
+        z_line.set_stroke(YELLOW, 5)
+        coord_lines = VGroup(x_line, y_line, z_line)
+
+        self.add(z_axis, plane, z_axis_top)
+        self.move_camera(
+            phi=70 * DEGREES,
+            theta=-80 * DEGREES,
+            added_anims=[
+                plane.set_stroke, {"opacity": 0.5},
+            ],
+            run_time=2,
+        )
+        self.begin_ambient_camera_rotation(rate=0.02)
+        self.wait()
+        self.play(FadeInFrom(j_labels, IN))
+        z_axis.add(j_labels)
+        self.play(
+            ShowCreationThenDestruction(z_unit_line),
+            run_time=2
+        )
+        self.wait(4)
+
+        group = VGroup(*it.chain(plane.coordinate_labels, j_labels))
+        for label in group:
+            label.generate_target()
+            axis = np.ones(3)
+            label.target.rotate_about_origin(-120 * DEGREES, axis=axis)
+            label.target.rotate(120 * DEGREES, axis=axis)
+        for y, label in zip([-2, -1, 1, 2], j_labels):
+            label.target.scale(0.65)
+            label.target.next_to(
+                2 * y * UP, RIGHT, 2 * SMALL_BUFF
+            )
+        self.play(
+            LaggedStart(MoveToTarget, group, lag_ratio=0.8),
+            FadeOut(self.title),
+            run_time=3
+        )
+        self.wait(3)
+        for line, wait in zip(coord_lines, [False, True, True]):
+            self.play(
+                ShowCreationThenDestruction(line),
+                run_time=2
+            )
+            if wait:
+                self.wait()
+
+    def show_example_number(self):
+        x, y, z = coords = 2 * np.array([1.5, -1, 1.25])
+        dot = Sphere(radius=0.05)
+        dot.set_fill(LIGHT_GREY)
+        dot.move_to(coords)
+        point_line = Line(ORIGIN, coords)
+        point_line.set_stroke(WHITE, 1)
+
+        z_line = Line(ORIGIN, z * OUT)
+        x_line = Line(z_line.get_end(), z_line.get_end() + x * RIGHT)
+        y_line = Line(x_line.get_end(), x_line.get_end() + y * UP)
+
+        x_line.set_stroke(GREEN, 5)
+        y_line.set_stroke(RED, 5)
+        z_line.set_stroke(YELLOW, 5)
+        lines = VGroup(z_line, x_line, y_line)
+
+        number_label = TexMobject(
+            str(z / 2), "+", str(x / 2), "i", "+", str(y / 2), "j",
+            tex_to_color_map={
+                str(z / 2): YELLOW,
+                str(x / 2): GREEN,
+                str(y / 2): RED,
+            }
+        )
+        number_label.next_to(ORIGIN, RIGHT, LARGE_BUFF)
+        number_label.to_edge(UP)
+
+        self.add_fixed_in_frame_mobjects(number_label)
+        self.play(
+            ShowCreation(point_line),
+            FadeInFrom(dot, -coords),
+            FadeInFromDown(number_label)
+        )
+        self.wait()
+        for num, line in zip([z, x, y], lines):
+            tex = number_label.get_part_by_tex(str(num / 2))
+            rect = SurroundingRectangle(tex)
+            rect.set_color(WHITE)
+
+            self.add_fixed_in_frame_mobjects(rect)
+            self.play(
+                ShowCreation(line),
+                ShowCreationThenDestruction(rect),
+                run_time=2
+            )
+            self.remove_fixed_in_frame_mobjects(rect)
+            self.wait()
+        self.wait(15)
+
+
+class MentionImpossibilityOf3dNumbers(TeacherStudentsScene):
+    def construct(self):
+        equations = VGroup(
+            TexMobject("ij = ?"),
+            TexMobject("ji = ?"),
+        )
+        equations.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        equations.scale(1.5)
+        equations.to_edge(UP)
+        self.add(equations)
+
+        why = TextMobject("Why not?")
+        why.next_to(self.students[1], UP)
+
+        self.teacher_says(
+            "Such 3d number \\\\ have no good \\\\ multiplication rule",
+            bubble_kwargs={"width": 4, "height": 3},
+        )
+        self.change_all_student_modes("confused")
+        self.wait(2)
+        self.play(
+            self.students[1].change, "maybe",
+            FadeInFromLarge(why),
+        )
+        self.wait(4)
+
+
+class SphereExamplePointsDecimal(Scene):
+    CONFIG = {
+        "point_rotation_angle_axis_pairs": [
+            (45 * DEGREES, DOWN),
+            (120 * DEGREES, OUT),
+            (35 * DEGREES, rotate_vector(RIGHT, 30 * DEGREES)),
+            (90 * DEGREES, IN),
+        ]
+    }
+
+    def construct(self):
+        decimals = VGroup(*[
+            DecimalNumber(
+                0,
+                num_decimal_places=3,
+                color=color,
+                include_sign=True,
+                edge_to_fix=RIGHT,
+            )
+            for color in [YELLOW, GREEN, RED]
+        ])
+        number_label = VGroup(
+            decimals[0], TexMobject("+"),
+            decimals[1], TexMobject("i"), TexMobject("+"),
+            decimals[2], TexMobject("j"),
+        )
+        number_label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        number_label.to_corner(UL)
+
+        point = VectorizedPoint(OUT)
+
+        def generate_decimal_updater(decimal, index):
+            shifted_i = (index - 1) % 3
+            return ContinualChangingDecimal(
+                decimal,
+                lambda a: point.get_location()[shifted_i]
+            )
+
+        for i, decimal in enumerate(decimals):
+            self.add(generate_decimal_updater(decimal, i))
+
+        decimal_braces = VGroup()
+        for decimal, char in zip(decimals, "wxy"):
+            brace = Brace(decimal, DOWN, buff=SMALL_BUFF)
+            label = brace.get_tex(char, buff=SMALL_BUFF)
+            label.match_color(decimal)
+            brace.add(label)
+            decimal_braces.add(brace)
+
+        equation = TexMobject(
+            "w^2 + x^2 + y^2 = 1",
+            tex_to_color_map={
+                "w": YELLOW,
+                "x": GREEN,
+                "y": RED,
+            }
+        )
+        equation.next_to(decimal_braces, DOWN, MED_LARGE_BUFF)
+
+        self.add(number_label)
+        self.add(decimal_braces)
+        self.add(equation)
+
+        pairs = self.point_rotation_angle_axis_pairs
+        for angle, axis in pairs:
+            self.play(
+                Rotate(point, angle, axis=axis, about_point=ORIGIN),
                 run_time=2
             )
             self.wait()
+
+
+class TwoDStereographicProjection(IntroduceFelix):
+    CONFIG = {
+        "camera_config": {
+            "exponential_projection": True,
+        },
+        "sphere_sample_point_u_range": np.arange(
+            0, PI, PI / 16,
+        ),
+        "sphere_sample_point_v_range": np.arange(
+            0, TAU, TAU / 16,
+        ),
+    }
+
+    def construct(self):
+        self.add_parts()
+        # self.talk_through_sphere()
+        self.draw_projection_lines()
+        self.show_point_at_infinity()
+        self.show_a_few_rotations()
+        self.show_reference_circles()
+
+    def add_parts(self):
+        felix = self.felix = self.pi_creature
+        axes = self.axes = self.get_axes()
+        sphere = self.sphere = self.get_sphere()
+
+        felix.shift(1.5 * DL)
+
+        self.add(felix, axes, sphere)
+        self.move_camera(
+            **self.get_default_camera_position(),
+        )
+        self.begin_ambient_camera_rotation(rate=0.01)
+        self.play(felix.change, "pondering", sphere)
+
+    def talk_through_sphere(self):
+        point = VectorizedPoint(OUT)
+        arrow = Vector(IN, shade_in_3d=True)
+        arrow.set_fill(PINK)
+        arrow.set_stroke(BLACK, 1)
+
+        def get_dot():
+            dot = Sphere(radius=0.05, u_max=PI / 2)
+            dot.set_fill(PINK)
+            dot.set_stroke(width=0)
+            dot.move_to(2.05 * OUT)
+            dot.apply_matrix(
+                z_to_vector(normalize(point.get_location())),
+                about_point=ORIGIN
+            )
+            return dot
+
+        dot = get_dot()
+        dot.add_updater(
+            lambda d: d.become(get_dot())
+        )
+
+        def update_arrow(arrow):
+            target_point = 2.1 * point.get_location()
+            rot_matrix = np.dot(
+                z_to_vector(normalize(target_point)),
+                np.linalg.inv(
+                    z_to_vector(normalize(-arrow.get_vector()))
+                )
+            )
+            arrow.apply_matrix(rot_matrix)
+            arrow.shift(target_point - arrow.get_end())
+            return arrow
+        arrow.add_updater(update_arrow)
+
+        self.add(self.sphere, dot, arrow)
+        pairs = SphereExamplePointsDecimal.CONFIG.get(
+            "point_rotation_angle_axis_pairs"
+        )
+        for angle, axis in pairs:
+            self.play(
+                Rotate(point, angle, axis=axis, about_point=ORIGIN),
+                run_time=2
+            )
+            self.wait()
+        self.play(FadeOut(dot), FadeOut(arrow))
+
+    def draw_projection_lines(self):
+        sphere = self.sphere
+        axes = self.axes
+        radius = sphere.get_width() / 2
+
+        neg_one_point = axes.coords_to_point(0, 0, -1)
+        neg_one_dot = Dot(
+            neg_one_point,
+            color=YELLOW,
+            shade_in_3d=True
+        )
+
+        xy_plane = sphere.copy()
+        xy_plane.set_fill(WHITE, 0.25)
+        xy_plane.set_stroke(width=0)
+        self.project_mobject(xy_plane)
+
+        point_mob = VectorizedPoint(2 * OUT)
+        point_mob.add_updater(
+            lambda m: m.move_to(radius * normalize(m.get_center()))
+        )
+        point_mob.move_to([1, -1, 1])
+        point_mob.update(0)
+
+        def get_projection_line(sphere_point):
+            to_sphere = Line(neg_one_point, sphere_point)
+            to_plane = Line(
+                sphere_point,
+                self.project_point(sphere_point)
+            )
+            line = VGroup(to_sphere, to_plane)
+            line.set_stroke(YELLOW, 3)
+            for submob in line:
+                submob.shade_in_3d = True
+            return line
+
+        def get_sphere_dot(sphere_point):
+            dot = Dot(shade_in_3d=True)
+            dot.set_fill(PINK)
+            dot.apply_matrix(
+                z_to_vector(sphere_point),
+                about_point=ORIGIN,
+            )
+            dot.move_to(1.01 * sphere_point)
+            dot.add(VectorizedPoint(5 * sphere_point))
+            return dot
+
+        def get_projection_dot(sphere_point):
+            projection = self.project_point(sphere_point)
+            dot = Dot(projection, shade_in_3d=True)
+            dot.set_fill(WHITE)
+            return dot
+
+        point = point_mob.get_location()
+        dot = get_sphere_dot(point)
+        line = get_projection_line(point)
+        projection_dot = get_projection_dot(point)
+
+        sample_points = [
+            radius * sphere.func(u, v)
+            for u in self.sphere_sample_point_u_range
+            for v in self.sphere_sample_point_v_range
+        ]
+
+        lines = VGroup(*[get_projection_line(p) for p in sample_points])
+        lines.set_stroke(width=1)
+        north_lines = lines[:len(lines) // 2]
+        south_lines = lines[len(lines) // 2:]
+
+        self.add(xy_plane, sphere)
+        self.play(Write(xy_plane))
+        self.wait(2)
+        self.play(sphere.set_fill, BLUE_E, 0.5)
+        self.play(FadeInFromLarge(dot))
+        self.play(
+            FadeIn(neg_one_dot),
+            ShowCreation(line),
+        )
+        self.wait(2)
+        self.play(ReplacementTransform(
+            dot.copy(), projection_dot
+        ))
+
+        dot.add_updater(
+            lambda d: d.become(get_sphere_dot(
+                point_mob.get_location()
+            ))
+        )
+        line.add_updater(
+            lambda l: l.become(get_projection_line(
+                point_mob.get_location()
+            ))
+        )
+        projection_dot.add_updater(
+            lambda d: d.become(get_projection_dot(
+                point_mob.get_location()
+            ))
+        )
+
+        self.play(
+            point_mob.move_to,
+            radius * normalize(np.array([1, -1, -1])),
+            run_time=3
+        )
+        self.move_camera(
+            theta=-150 * DEGREES,
+            run_time=3
+        )
+        self.add(axes, sphere, xy_plane, dot, line)
+        for point in np.array([-2, 1, -0.5]), np.array([-0.01, -0.01, 1]):
+            self.play(
+                point_mob.move_to,
+                radius * normalize(point),
+                run_time=3
+            )
+        self.wait(2)
+
+        # Project norther hemisphere
+        north_hemisphere = self.get_sphere()
+        n = len(north_hemisphere)
+        north_hemisphere.remove(*north_hemisphere[n // 2:])
+        north_hemisphere.generate_target()
+        self.project_mobject(north_hemisphere.target)
+        north_hemisphere.set_fill(opacity=0.8)
+
+        self.play(
+            LaggedStart(ShowCreation, north_lines),
+            FadeIn(north_hemisphere)
+        )
+        self.play(
+            MoveToTarget(north_hemisphere),
+            run_time=3,
+            rate_func=lambda t: smooth(0.99 * t)
+        )
+        self.play(FadeOut(north_lines))
+        self.wait(2)
+
+        # Unit circle
+        circle = Sphere(
+            radius=2.01,
+            u_min=PI / 2 - 0.01,
+            u_max=PI / 2 + 0.01,
+            resolution=(1, 24),
+        )
+        # for submob in circle.get_family():
+        #     submob.shade_in_3d = True
+        circle.set_fill(YELLOW)
+        circle_path = Circle(radius=2)
+        circle_path.rotate(-90 * DEGREES)
+
+        self.play(FadeInFromLarge(circle))
+        self.play(point_mob.move_to, circle_path.points[0])
+        self.play(MoveAlongPath(point_mob, circle_path, run_time=6))
+        self.move_camera(
+            phi=0,
+            theta=-90 * DEGREES,
+            rate_func=there_and_back_with_pause,
+            run_time=6,
+        )
+        self.play(point_mob.move_to, OUT)
+        self.wait()
+
+        # Southern hemisphere
+        south_hemisphere = self.get_sphere()
+        n = len(south_hemisphere)
+        south_hemisphere.remove(*south_hemisphere[:n // 2])
+        south_hemisphere.generate_target()
+        self.project_mobject(south_hemisphere.target)
+        south_hemisphere.set_fill(opacity=0.8)
+
+        self.play(
+            FadeOut(xy_plane),
+            LaggedStart(ShowCreation, south_lines),
+            FadeIn(south_hemisphere)
+        )
+        self.play(
+            MoveToTarget(south_hemisphere),
+            run_time=3,
+            rate_func=lambda t: smooth(0.99 * t)
+        )
+        self.play(FadeOut(south_lines))
+        self.wait(2)
+
+        self.projected_sphere = VGroup(
+            north_hemisphere,
+            circle,
+            south_hemisphere,
+        )
+
+        self.point_mob = point_mob
+
+    def show_point_at_infinity(self):
+        pass
+
+    def show_a_few_rotations(self):
+        pass
+
+    def show_reference_circles(self):
+        pass
+
+    #
+    def project_mobject(self, mobject):
+        return stereo_project(mobject, axis=2, r=2, outer_r=20)
+
+    def project_point(self, point):
+        return stereo_project_point(point, axis=2, r=2)
