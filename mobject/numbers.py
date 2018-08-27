@@ -13,6 +13,7 @@ class DecimalNumber(VMobject):
         "show_ellipsis": False,
         "unit": None,  # Aligned to bottom unless it starts with "^"
         "include_background_rectangle": False,
+        "edge_to_fix": LEFT,
     }
 
     def __init__(self, number, **kwargs):
@@ -103,7 +104,7 @@ class DecimalNumber(VMobject):
         full_config.update(config)
         new_decimal = DecimalNumber(number, **full_config)
         new_decimal.match_height(self)
-        new_decimal.move_to(self, LEFT)
+        new_decimal.move_to(self, self.edge_to_fix)
         new_decimal.match_style(self)
 
         old_family = self.get_family()
