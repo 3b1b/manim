@@ -170,8 +170,11 @@ class Mobject(Container):
     def get_updaters(self):
         return self.updaters
 
-    def add_updater(self, update_function):
+    def add_updater(self, update_function, call_updater=True):
         self.updaters.append(update_function)
+        if call_updater:
+            self.update(0)
+        return self
 
     def remove_updater(self, update_function):
         while update_function in self.updaters:
