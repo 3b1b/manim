@@ -180,7 +180,8 @@ class ThreeDCamera(Camera):
                 factor[lt0] = (distance / (distance - zs[lt0]))
             else:
                 factor = (distance / (distance - zs))
-                clip_in_place(factor, 0, 10**6)
+                factor[(distance - zs) < 0] = 10**6
+                # clip_in_place(factor, 0, 10**6)
             points[:, i] *= factor
         points += frame_center
         return points
