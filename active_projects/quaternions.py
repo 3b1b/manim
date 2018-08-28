@@ -16,10 +16,12 @@ def get_three_d_scene_config(high_quality=True):
                 # "tick_frequency": 0.5,
                 "tick_frequency": 1,
                 "numbers_with_elongated_ticks": [0, 1, 2],
+                "stroke_width": 2,
             }
         },
         "sphere_config": {
             "radius": 2,
+            "resolution": (24, 48),
         }
     }
     lq_added_config = {
@@ -30,7 +32,7 @@ def get_three_d_scene_config(high_quality=True):
             "num_axis_pieces": 1,
         },
         "sphere_config": {
-            "resolution": (4, 12),
+            # "resolution": (4, 12),
         }
     }
     if high_quality:
@@ -52,7 +54,7 @@ def q_mult(q1, q2):
     return np.array([w, x, y, z])
 
 
-def stereo_project_point(point, axis=0, r=1, max_norm=100):
+def stereo_project_point(point, axis=0, r=1, max_norm=10000):
     point = fdiv(point * r, point[axis] + r)
     point[axis] = 0
     norm = get_norm(point)
@@ -221,6 +223,69 @@ class CheckeredCircle(Circle):
         n_colors = len(self.colors)
         for i, color in enumerate(self.colors):
             self[i::n_colors].set_color(color)
+
+
+class StereoProjectedSphere(Sphere):
+    CONFIG = {
+        "stereo_project_config": {
+            "axis": 2,
+        },
+        "max_r": 20,
+        "max_center": 32,
+        "max_width": FRAME_WIDTH,
+        "radius": 1,
+    }
+
+    def __init__(self, rotation_matrix=None, **kwargs):
+        digest_config(self, kwargs)
+        if rotation_matrix is None:
+            rotation_matrix = np.identity(3)
+        self.rotation_matrix = rotation_matrix
+
+        self.stereo_project_config["r"] = self.radius
+        ParametricSurface.__init__(
+            self, self.post_projection_func, **kwargs
+        )
+        # self.handle_outer_patch()
+        self.submobjects.sort(
+            key=lambda m: -m.get_width()
+        )
+        self.fade_far_out_submobjects()
+
+    def post_projection_func(self, u, v):
+        point = self.radius * Sphere.func(self, u, v)
+        rot_point = np.dot(point, self.rotation_matrix.T)
+        result = stereo_project_point(
+            rot_point, **self.stereo_project_config
+        )
+        if np.any(np.abs(result) == np.inf):
+            return self.func(u + 0.001, v)
+        return result
+
+    def fade_far_out_submobjects(self, max_center=None, max_width=None):
+        if max_center is None:
+            max_center = self.max_center
+        if max_width is None:
+            max_width = self.max_width
+        for submob in self.submobjects:
+            if get_norm(submob.get_center()) > max_center:
+                submob.fade(1)
+            if submob.get_width() > max_width:
+                submob.fade(1)
+        return self
+
+    # def handle_outer_patch(self):
+    #     submobs_around_origin = []
+    #     for submob in self.submobjects:
+    #         anchors = submob.get_anchors()
+    #         if np.all(np.apply_along_axis(get_norm, 1, anchors) > self.max_r):
+    #             submob.points[:, :] = 0
+    #         winding_number = get_winding_number(anchors)
+    #         if abs(winding_number) > 0.1:
+    #             submobs_around_origin.append(submob)
+    #     if submobs_around_origin:
+    #         widths = [sm.get_width() for sm in submobs_around_origin]
+    #         outer_patch = submobs_around_origin[np.argmax(widths)]
 
 
 # Abstract scenes
@@ -2433,7 +2498,7 @@ class SphereExamplePointsDecimal(Scene):
 class TwoDStereographicProjection(IntroduceFelix):
     CONFIG = {
         "camera_config": {
-            "exponential_projection": True,
+            "exponential_projection": False,
         },
         "sphere_sample_point_u_range": np.arange(
             0, PI, PI / 16,
@@ -2441,29 +2506,53 @@ class TwoDStereographicProjection(IntroduceFelix):
         "sphere_sample_point_v_range": np.arange(
             0, TAU, TAU / 16,
         ),
+        "n_sample_rotation_cycles": 2,
     }
 
     def construct(self):
         self.add_parts()
-        # self.talk_through_sphere()
+        self.talk_through_sphere()
         self.draw_projection_lines()
         self.show_point_at_infinity()
         self.show_a_few_rotations()
-        self.show_reference_circles()
 
-    def add_parts(self):
+    def add_parts(self, run_time=1):
         felix = self.felix = self.pi_creature
+        felix.shift(1.5 * DL)
         axes = self.axes = self.get_axes()
         sphere = self.sphere = self.get_sphere()
 
-        felix.shift(1.5 * DL)
+        c2p = axes.coords_to_point
+        labels = VGroup(
+            TexMobject("i").next_to(c2p(1, 0, 0), DR, SMALL_BUFF),
+            TexMobject("-i").next_to(c2p(-1, 0, 0), DL, SMALL_BUFF),
+            TexMobject("j").next_to(c2p(0, 1, 0), UL, SMALL_BUFF),
+            TexMobject("-j").next_to(c2p(0, -1, 0), DL, SMALL_BUFF),
+            TexMobject("1").rotate(
+                90 * DEGREES, RIGHT,
+            ).next_to(c2p(0, 0, 1), RIGHT + OUT, SMALL_BUFF),
+            TexMobject("-1").rotate(
+                90 * DEGREES, RIGHT,
+            ).next_to(c2p(0, 0, -1), RIGHT + IN, SMALL_BUFF),
+        )
+        for sm in labels[:4].family_members_with_points():
+            sm.add(VectorizedPoint(
+                0.25 * DOWN + 0.25 * OUT
+            ))
+        labels.set_stroke(width=0, background=True)
+        for submob in labels.get_family():
+            submob.shade_in_3d = True
 
-        self.add(felix, axes, sphere)
+        self.add(felix, axes, sphere, labels)
         self.move_camera(
             **self.get_default_camera_position(),
+            run_time=run_time
         )
         self.begin_ambient_camera_rotation(rate=0.01)
-        self.play(felix.change, "pondering", sphere)
+        self.play(
+            felix.change, "pondering", sphere,
+            run_time=run_time,
+        )
 
     def talk_through_sphere(self):
         point = VectorizedPoint(OUT)
@@ -2524,10 +2613,12 @@ class TwoDStereographicProjection(IntroduceFelix):
             shade_in_3d=True
         )
 
-        xy_plane = sphere.copy()
+        xy_plane = StereoProjectedSphere(
+            u_max=15 * PI / 16,
+            **self.sphere_config
+        )
         xy_plane.set_fill(WHITE, 0.25)
         xy_plane.set_stroke(width=0)
-        self.project_mobject(xy_plane)
 
         point_mob = VectorizedPoint(2 * OUT)
         point_mob.add_updater(
@@ -2562,6 +2653,7 @@ class TwoDStereographicProjection(IntroduceFelix):
         def get_projection_dot(sphere_point):
             projection = self.project_point(sphere_point)
             dot = Dot(projection, shade_in_3d=True)
+            dot.add(VectorizedPoint(dot.get_center() + 0.1 * OUT))
             dot.set_fill(WHITE)
             return dot
 
@@ -2595,20 +2687,17 @@ class TwoDStereographicProjection(IntroduceFelix):
             dot.copy(), projection_dot
         ))
 
+        def get_point():
+            return 2 * normalize(point_mob.get_location())
+
         dot.add_updater(
-            lambda d: d.become(get_sphere_dot(
-                point_mob.get_location()
-            ))
+            lambda d: d.become(get_sphere_dot(get_point()))
         )
         line.add_updater(
-            lambda l: l.become(get_projection_line(
-                point_mob.get_location()
-            ))
+            lambda l: l.become(get_projection_line(get_point()))
         )
         projection_dot.add_updater(
-            lambda d: d.become(get_projection_dot(
-                point_mob.get_location()
-            ))
+            lambda d: d.become(get_projection_dot(get_point()))
         )
 
         self.play(
@@ -2656,8 +2745,8 @@ class TwoDStereographicProjection(IntroduceFelix):
             u_max=PI / 2 + 0.01,
             resolution=(1, 24),
         )
-        # for submob in circle.get_family():
-        #     submob.shade_in_3d = True
+        for submob in circle:
+            submob.add(VectorizedPoint(1.5 * submob.get_center()))
         circle.set_fill(YELLOW)
         circle_path = Circle(radius=2)
         circle_path.rotate(-90 * DEGREES)
@@ -2678,6 +2767,9 @@ class TwoDStereographicProjection(IntroduceFelix):
         south_hemisphere = self.get_sphere()
         n = len(south_hemisphere)
         south_hemisphere.remove(*south_hemisphere[:n // 2])
+        south_hemisphere.remove(
+            *south_hemisphere[-3 * sphere.resolution[1] // 2:]
+        )
         south_hemisphere.generate_target()
         self.project_mobject(south_hemisphere.target)
         south_hemisphere.set_fill(opacity=0.8)
@@ -2697,20 +2789,135 @@ class TwoDStereographicProjection(IntroduceFelix):
 
         self.projected_sphere = VGroup(
             north_hemisphere,
-            circle,
             south_hemisphere,
         )
-
+        self.equator = circle
         self.point_mob = point_mob
 
     def show_point_at_infinity(self):
-        pass
+        points = list(compass_directions(
+            12, start_vect=rotate_vector(RIGHT, 7.5 * DEGREES)
+        ))
+        points.pop(7)
+        points.pop(2)
+        arrows = VGroup(*[
+            Arrow(6 * p, 9 * p)
+            for p in points
+        ])
+        arrows.set_fill(YELLOW)
+        neg_ones = VGroup(*[
+            TexMobject("-1").next_to(arrow.get_start(), -p)
+            for p, arrow in zip(points, arrows)
+        ])
+        neg_ones.set_stroke(width=0, background=True)
+
+        sphere_arcs = VGroup()
+        for angle in np.arange(0, TAU, TAU / 12):
+            arc = Arc(PI, radius=2)
+            arc.set_stroke(RED)
+            arc.rotate(PI / 2, axis=DOWN, about_point=ORIGIN)
+            arc.rotate(angle, axis=OUT, about_point=ORIGIN)
+            sphere_arcs.add(arc)
+        sphere_arcs.set_stroke(RED)
+
+        self.play(
+            LaggedStart(GrowArrow, arrows),
+            LaggedStart(Write, neg_ones)
+        )
+        self.wait(3)
+        self.play(
+            FadeOut(self.projected_sphere),
+            FadeOut(arrows),
+            FadeOut(neg_ones),
+        )
+        for x in range(2):
+            self.play(
+                ShowCreationThenDestruction(
+                    sphere_arcs,
+                    submobject_mode="all_at_once",
+                    run_time=3,
+                )
+            )
 
     def show_a_few_rotations(self):
-        pass
+        sphere = self.sphere
+        felix = self.felix
+        point_mob = self.point_mob
+        point_mob.add_updater(
+            lambda m: m.move_to(sphere.get_all_points()[0])
+        )
+        coord_point_mobs = VGroup(
+            VectorizedPoint(RIGHT),
+            VectorizedPoint(UP),
+            VectorizedPoint(OUT),
+        )
+        for pm in coord_point_mobs:
+            pm.shade_in_3d = True
 
-    def show_reference_circles(self):
-        pass
+        def get_rot_matrix():
+            return np.array([
+                pm.get_location()
+                for pm in coord_point_mobs
+            ]).T
+
+        def get_projected_sphere():
+            result = StereoProjectedSphere(
+                get_rot_matrix(),
+                max_r=10,
+                **self.sphere_config,
+            )
+            result.set_fill(opacity=0.2)
+            result.fade_far_out_submobjects(32)
+            for submob in result:
+                if submob.get_center()[1] < -11:
+                    submob.fade(1)
+            return result
+
+        projected_sphere = get_projected_sphere()
+        projected_sphere.add_updater(
+            lambda m: m.become(get_projected_sphere())
+        )
+
+        def get_projected_equator():
+            equator = CheckeredCircle(
+                n_pieces=24,
+                radius=2,
+            )
+            for submob in equator.get_family():
+                submob.shade_in_3d = True
+            equator.set_stroke(YELLOW, 5)
+            equator.apply_matrix(get_rot_matrix())
+            self.project_mobject(equator)
+            return equator
+
+        projected_equator = get_projected_equator()
+        projected_equator.add_updater(
+            lambda m: m.become(get_projected_equator())
+        )
+
+        self.add(sphere, projected_sphere)
+        self.play(
+            sphere.set_fill_by_checkerboard,
+            BLUE_E, BLUE_D, {"opacity": 0.8},
+            FadeIn(projected_sphere)
+        )
+        sphere.add(coord_point_mobs)
+        sphere.add(self.equator)
+        self.add(projected_equator)
+        pairs = self.get_sample_rotation_angle_axis_pairs()
+        for x in range(self.n_sample_rotation_cycles):
+            for angle, axis in pairs:
+                self.play(
+                    Rotate(
+                        sphere, angle=angle, axis=axis,
+                        about_point=ORIGIN,
+                        run_time=3,
+                    ),
+                    felix.change, "confused",
+                )
+                self.wait()
+
+        self.projected_sphere = projected_sphere
 
     #
     def project_mobject(self, mobject):
@@ -2718,3 +2925,321 @@ class TwoDStereographicProjection(IntroduceFelix):
 
     def project_point(self, point):
         return stereo_project_point(point, axis=2, r=2)
+
+    def get_sample_rotation_angle_axis_pairs(self):
+        return SphereExamplePointsDecimal.CONFIG.get(
+            "point_rotation_angle_axis_pairs"
+        )
+
+
+class FelixViewOfProjection(TwoDStereographicProjection):
+    CONFIG = {}
+
+    def construct(self):
+        self.add_axes()
+        self.show_a_few_rotations()
+
+    def add_axes(self):
+        axes = Axes(
+            number_line_config={
+                "unit_size": 2,
+                "color": WHITE,
+            }
+        )
+        labels = VGroup(
+            TexMobject("i"),
+            TexMobject("-i"),
+            TexMobject("j"),
+            TexMobject("-j"),
+        )
+        coords = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        vects = [DOWN, DOWN, RIGHT, RIGHT]
+        for label, coords, vect in zip(labels, coords, vects):
+            point = axes.coords_to_point(*coords)
+            label.next_to(point, vect, buff=MED_SMALL_BUFF)
+
+        self.add(axes, labels)
+        self.pi_creature.change("confused")
+
+    def show_a_few_rotations(self):
+        felix = self.pi_creature
+        coord_point_mobs = VGroup([
+            VectorizedPoint(point)
+            for point in [RIGHT, UP, OUT]
+        ])
+
+        def get_rot_matrix():
+            return np.array([
+                pm.get_location()
+                for pm in coord_point_mobs
+            ]).T
+
+        def get_projected_sphere():
+            return StereoProjectedSphere(
+                get_rot_matrix(),
+                **self.sphere_config,
+            )
+
+        def get_projected_equator():
+            equator = Circle(radius=2, num_anchors=24)
+            equator.set_stroke(YELLOW, 5)
+            equator.apply_matrix(get_rot_matrix())
+            self.project_mobject(equator)
+            return equator
+
+        projected_sphere = get_projected_sphere()
+        projected_sphere.add_updater(
+            lambda m: m.become(get_projected_sphere())
+        )
+
+        equator = get_projected_equator()
+        equator.add_updater(
+            lambda m: m.become(get_projected_equator())
+        )
+
+        dot = Dot(color=PINK)
+        dot.add_updater(
+            lambda d: d.move_to(
+                self.project_point(
+                    np.dot(2 * OUT, get_rot_matrix().T)
+                )
+            )
+        )
+        hand = Hand()
+        hand.add_updater(
+            lambda h: h.move_to(dot.get_center(), LEFT)
+        )
+        felix.add_updater(lambda f: f.look_at(dot))
+
+        self.add(projected_sphere)
+        self.add(equator)
+        self.add(dot)
+        self.add(hand)
+
+        pairs = self.get_sample_rotation_angle_axis_pairs()
+        for x in range(self.n_sample_rotation_cycles):
+            for angle, axis in pairs:
+                self.play(
+                    Rotate(
+                        coord_point_mobs, angle=angle, axis=axis,
+                        about_point=ORIGIN,
+                        run_time=3,
+                    ),
+                )
+                self.wait()
+
+
+class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
+    def construct(self):
+        self.add_parts(run_time=1)
+        self.begin_ambient_camera_rotation(rate=0.03)
+        self.edit_parts()
+        self.show_1i_circle()
+        self.show_1j_circle()
+        self.show_random_circle()
+        self.show_rotations()
+
+    def edit_parts(self):
+        sphere = self.sphere
+        xy_plane = StereoProjectedSphere(u_max=15 * PI / 16)
+        xy_plane.set_fill(WHITE, 0.2)
+        xy_plane.set_stroke(width=0, opacity=0)
+
+        self.add(xy_plane, sphere)
+        self.play(
+            FadeIn(xy_plane),
+            sphere.set_fill, BLUE_E, {"opacity": 0.2},
+            sphere.set_stroke, {"width": 0.1, "opacity": 0.5}
+        )
+
+    def show_1i_circle(self):
+        axes = self.axes
+
+        circle = self.get_circle(GREEN_E, GREEN)
+        circle.rotate(TAU / 4, RIGHT)
+        circle.rotate(TAU / 4, DOWN)
+
+        projected = self.get_projected_circle(circle)
+
+        labels = VGroup(*map(TexMobject, ["0", "2i", "3i"]))
+        labels.set_shade_in_3d(True)
+        for label, x in zip(labels, [0, 2, 3]):
+            label.next_to(
+                axes.coords_to_point(x, 0, 0), DR, SMALL_BUFF
+            )
+
+        self.play(ShowCreation(circle, run_time=3))
+        self.wait()
+        self.play(ReplacementTransform(
+            circle.copy(), projected,
+            run_time=3
+        ))
+        self.axes.x_axis.pieces.set_stroke(width=0)
+        self.wait(7)
+        self.move_camera(
+            phi=60 * DEGREES,
+        )
+        self.play(
+            LaggedStart(
+                FadeInFrom, labels,
+                lambda m: (m, UP)
+            )
+        )
+        self.wait(2)
+        self.play(FadeOut(labels))
+
+        self.one_i_circle = circle
+        self.projected_one_i_circle = projected
+
+    def show_1j_circle(self):
+        circle = self.get_circle(RED_E, RED)
+        circle.rotate(TAU / 4, DOWN)
+
+        projected = self.get_projected_circle(circle)
+
+        self.move_camera(theta=-170 * DEGREES)
+        self.play(ShowCreation(circle, run_time=3))
+        self.wait()
+        self.play(ReplacementTransform(
+            circle.copy(), projected, run_time=3
+        ))
+        self.axes.y_axis.pieces.set_stroke(width=0)
+        self.wait(3)
+
+        self.one_j_circle = circle
+        self.projected_one_j_circle = projected
+
+    def show_random_circle(self):
+        sphere = self.sphere
+
+        circle = self.get_circle(BLUE_E, BLUE)
+        circle.set_width(2 * sphere.radius * np.sin(30 * DEGREES))
+        circle.shift(sphere.radius * np.cos(30 * DEGREES) * OUT)
+        circle.rotate(150 * DEGREES, DOWN, about_point=ORIGIN)
+
+        projected = self.get_projected_circle(circle)
+
+        self.move_camera(phi=130 * DEGREES)
+        self.play(ShowCreation(circle, run_time=2))
+        self.move_camera(phi=60 * DEGREES)
+        self.play(ReplacementTransform(
+            circle.copy(), projected,
+            run_time=2
+        ))
+        self.wait(3)
+        self.play(
+            FadeOut(circle),
+            FadeOut(projected),
+        )
+
+    def show_rotations(self):
+        sphere = self.sphere
+        c1i = self.one_i_circle
+        pc1i = self.projected_one_i_circle
+        c1j = self.one_j_circle
+        pc1j = self.projected_one_j_circle
+        cij = self.get_circle(YELLOW_E, YELLOW)
+        pcij = self.get_projected_circle(cij)
+
+        circles = VGroup(c1i, c1j, cij)
+        x_axis = self.axes.x_axis
+        y_axis = self.axes.y_axis
+
+        arrow = Arrow(
+            2 * RIGHT, 2 * UP,
+            buff=SMALL_BUFF,
+            path_arc=PI,
+            use_rectangular_stem=False,
+        )
+        arrow.set_stroke(LIGHT_GREY, 3)
+        arrow.tip.set_fill(LIGHT_GREY)
+        arrows = VGroup(arrow, *[
+            arrow.copy().rotate(angle, about_point=ORIGIN)
+            for angle in np.arange(TAU / 4, TAU, TAU / 4)
+        ])
+        arrows.rotate(TAU / 4, RIGHT, about_point=ORIGIN)
+        arrows.rotate(TAU / 2, OUT, about_point=ORIGIN)
+        arrows.rotate(TAU / 4, UP, about_point=ORIGIN)
+        arrows.space_out_submobjects(1.2)
+
+        self.play(FadeInFromLarge(cij))
+        sphere.add(circles)
+
+        pc1i.add_updater(
+            lambda c: c.become(self.get_projected_circle(c1i))
+        )
+        pc1j.add_updater(
+            lambda c: c.become(self.get_projected_circle(c1j))
+        )
+        pcij.add_updater(
+            lambda c: c.become(self.get_projected_circle(cij))
+        )
+        self.add(pcij)
+
+        # About j-axis
+        self.play(ShowCreation(arrows, run_time=3, rate_func=None))
+        self.wait(3)
+        for x in range(2):
+            y_axis.pieces.set_stroke(width=2)
+            self.play(
+                Rotate(sphere, 90 * DEGREES, axis=UP),
+                run_time=4,
+            )
+            y_axis.pieces.set_stroke(width=0)
+            self.wait(2)
+
+        # About i axis
+        self.move_camera(theta=-45 * DEGREES)
+        self.play(Rotate(arrows, TAU / 4, axis=OUT))
+        self.wait(2)
+        for x in range(2):
+            x_axis.pieces.set_stroke(width=2)
+            self.play(
+                Rotate(sphere, -90 * DEGREES, axis=RIGHT),
+                run_time=4,
+            )
+            x_axis.pieces.set_stroke(width=0)
+            self.wait(2)
+        self.wait(2)
+
+        # About real axis
+        self.move_camera(
+            theta=-135 * DEGREES,
+            added_anims=[FadeOut(arrows)]
+        )
+        self.ambient_camera_rotation.rate = 0.01
+        for x in range(2):
+            x_axis.pieces.set_stroke(width=2)
+            y_axis.pieces.set_stroke(width=2)
+            self.play(
+                Rotate(sphere, 90 * DEGREES, axis=OUT),
+                run_time=4,
+            )
+            self.wait(2)
+            x_axis.pieces.set_stroke(width=0)
+            y_axis.pieces.set_stroke(width=0)
+
+    #
+    def get_circle(self, *colors):
+        sphere = self.sphere
+        circle = CheckeredCircle(colors=colors, n_pieces=48)
+        circle.set_shade_in_3d(True)
+        circle.match_width(sphere)
+
+        return circle
+
+    def get_projected_circle(self, circle):
+        result = circle.deepcopy()
+        self.project_mobject(result)
+        for sm in result:
+            if sm.get_width() > FRAME_WIDTH:
+                sm.fade(1)
+            if sm.get_height() > FRAME_HEIGHT:
+                sm.fade(1)
+        return result
+
+
+class IntroduceQuaternions(Scene):
+    def construct(self):
+        self.compare_three_number_systems()
+        self.mention_four_perpendicular_axes()
