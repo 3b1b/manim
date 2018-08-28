@@ -44,7 +44,7 @@ class ParametricSurface(VGroup):
     def setup_in_uv_space(self):
         res = tuplify(self.resolution)
         if len(res) == 1:
-            u_res = v_res = res
+            u_res = v_res = res[0]
         else:
             u_res, v_res = res
         u_min = self.u_min

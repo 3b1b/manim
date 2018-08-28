@@ -170,8 +170,11 @@ class Mobject(Container):
     def get_updaters(self):
         return self.updaters
 
-    def add_updater(self, update_function):
+    def add_updater(self, update_function, call_updater=True):
         self.updaters.append(update_function)
+        if call_updater:
+            self.update(0)
+        return self
 
     def remove_updater(self, update_function):
         while update_function in self.updaters:
@@ -854,11 +857,11 @@ class Mobject(Container):
                 submob.shuffle_submobjects(recursive=True)
         random.shuffle(self.submobjects)
 
-    def print_get_family(self, n_tabs=0):
+    def print_submobject_family(self, n_tabs=0):
         """For debugging purposes"""
         print("\t" * n_tabs, self, id(self))
         for submob in self.submobjects:
-            submob.print_get_family(n_tabs + 1)
+            submob.print_submobject_family(n_tabs + 1)
 
     # Alignment
     def align_data(self, mobject):
@@ -972,14 +975,15 @@ class Mobject(Container):
     def pointwise_become_partial(self, mobject, a, b):
         pass  # To implement in subclass
 
-    def become(self, mobject):
+    def become(self, mobject, copy_submobjects=True):
         """
         Edit points, colors and submobjects to be idential
         to another mobject
         """
-        self.align_points(mobject)
-        self.interpolate(self, mobject, 1)
-        self.submobjects = [sm.copy() for sm in mobject.submobjects]
+        self.align_data(mobject)
+        for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
+            sm1.interpolate(sm1, sm2, 1)
+        return self
 
 
 class Group(Mobject):

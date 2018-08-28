@@ -22,7 +22,7 @@ class ThreeDScene(Scene):
         if gamma is not None:
             self.camera.set_gamma(gamma)
 
-    def begin_ambient_camera_rotation(self, rate=0.1):
+    def begin_ambient_camera_rotation(self, rate=0.05):
         self.ambient_camera_rotation = ContinualGrowValue(
             self.camera.theta_tracker,
             rate=rate
@@ -73,8 +73,8 @@ class ThreeDScene(Scene):
             return self.mobjects
         return moving_mobjects
 
-    def add_fixed_orientation_mobjects(self, *mobjects):
-        self.camera.add_fixed_orientation_mobjects(*mobjects)
+    def add_fixed_orientation_mobjects(self, *mobjects, **kwargs):
+        self.camera.add_fixed_orientation_mobjects(*mobjects, **kwargs)
 
     def add_fixed_in_frame_mobjects(self, *mobjects):
         self.camera.add_fixed_in_frame_mobjects(*mobjects)

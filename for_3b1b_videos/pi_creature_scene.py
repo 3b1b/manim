@@ -63,12 +63,14 @@ class PiCreatureScene(Scene):
         return self.pi_creatures[0]
 
     def any_pi_creatures_on_screen(self):
-        mobjects = self.get_mobjects()
-        return any([pi in mobjects for pi in self.get_pi_creatures()])
+        return len(self.get_on_screen_pi_creatures()) > 0
 
     def get_on_screen_pi_creatures(self):
-        mobjects = self.get_mobjects()
-        return VGroup(*[pi for pi in self.get_pi_creatures() if pi in mobjects])
+        mobjects = self.get_mobject_family_members()
+        return VGroup(*[
+            pi for pi in self.get_pi_creatures()
+            if pi in mobjects
+        ])
 
     def introduce_bubble(self, *args, **kwargs):
         if isinstance(args[0], PiCreature):

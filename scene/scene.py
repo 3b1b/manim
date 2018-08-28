@@ -350,7 +350,7 @@ class Scene(Container):
         # point forward.
         animation_mobjects = [anim.mobject for anim in animations]
         ca_mobjects = [ca.mobject for ca in self.continual_animations]
-        mobjects = self.get_mobjects()
+        mobjects = self.get_mobject_family_members()
         for i, mob in enumerate(mobjects):
             update_possibilities = [
                 mob in animation_mobjects,
