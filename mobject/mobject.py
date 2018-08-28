@@ -254,7 +254,7 @@ class Mobject(Container):
 
     def apply_matrix(self, matrix, **kwargs):
         # Default to applying matrix about the origin, not mobjects center
-        if len(kwargs) == 0:
+        if ("about_point" not in kwargs) and ("about_edge" not in kwargs):
             kwargs["about_point"] = ORIGIN
         full_matrix = np.identity(self.dim)
         matrix = np.array(matrix)
