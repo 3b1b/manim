@@ -29,7 +29,10 @@ class DecimalNumber(VMobject):
 
         shows_zero = np.round(number, self.num_decimal_places) == 0
         if num_string.startswith("-") and shows_zero:
-            num_string = num_string[1:]
+            if self.include_sign:
+                num_string = "+" + num_string[1:]
+            else:
+                num_string = num_string[1:]
 
         self.add(*[
             SingleStringTexMobject(char, **kwargs)
