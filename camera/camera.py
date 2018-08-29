@@ -14,7 +14,6 @@ from mobject.types.image_mobject import AbstractImageMobject
 from mobject.mobject import Mobject
 from mobject.types.point_cloud_mobject import PMobject
 from mobject.types.vectorized_mobject import VMobject
-from mobject.value_tracker import ValueTracker
 from utils.color import color_to_int_rgba
 from utils.color import rgb_to_hex
 from utils.config_ops import digest_config
@@ -202,8 +201,7 @@ class Camera(object):
 
     def extract_mobject_family_members(
             self, mobjects,
-            only_those_with_points=False,
-            ignore_value_trackers=False):
+            only_those_with_points=False):
         if only_those_with_points:
             method = Mobject.family_members_with_points
         else:
@@ -213,20 +211,16 @@ class Camera(object):
                 method(m)
                 for m in mobjects
                 if not (isinstance(m, VMobject) and m.is_subpath)
-                if not (ignore_value_trackers and isinstance(m, ValueTracker))
             ])
         ))
 
     def get_mobjects_to_display(
             self, mobjects,
             include_submobjects=True,
-            ignore_value_trackers=True,
             excluded_mobjects=None):
         if include_submobjects:
             mobjects = self.extract_mobject_family_members(
-                mobjects,
-                only_those_with_points=True,
-                ignore_value_trackers=ignore_value_trackers,
+                mobjects, only_those_with_points=True,
             )
             if excluded_mobjects:
                 all_excluded = self.extract_mobject_family_members(
