@@ -230,9 +230,10 @@ class StereoProjectedSphere(Sphere):
         "stereo_project_config": {
             "axis": 2,
         },
-        "max_r": 20,
-        "max_center": 32,
+        "max_r": 32,
         "max_width": FRAME_WIDTH,
+        "max_height": FRAME_WIDTH,
+        "max_depth": FRAME_WIDTH,
         "radius": 1,
     }
 
@@ -246,7 +247,6 @@ class StereoProjectedSphere(Sphere):
         ParametricSurface.__init__(
             self, self.post_projection_func, **kwargs
         )
-        # self.handle_outer_patch()
         self.submobjects.sort(
             key=lambda m: -m.get_width()
         )
@@ -262,30 +262,128 @@ class StereoProjectedSphere(Sphere):
             return self.func(u + 0.001, v)
         return result
 
-    def fade_far_out_submobjects(self, max_center=None, max_width=None):
-        if max_center is None:
-            max_center = self.max_center
-        if max_width is None:
-            max_width = self.max_width
+    def fade_far_out_submobjects(self, **kwargs):
+        max_r = kwargs.get("max_r", self.max_r)
+        max_width = kwargs.get("max_width", self.max_width)
+        max_height = kwargs.get("max_height", self.max_height)
+        max_depth = kwargs.get("max_depth", self.max_depth)
         for submob in self.submobjects:
-            if get_norm(submob.get_center()) > max_center:
-                submob.fade(1)
-            if submob.get_width() > max_width:
+            violations = [
+                np.any(np.apply_along_axis(get_norm, 1, submob.get_anchors()) > max_r),
+                submob.get_width() > max_width,
+                submob.get_height() > max_height,
+                submob.get_depth() > max_depth
+            ]
+            if any(violations):
+                # self.remove(submob)
                 submob.fade(1)
         return self
 
-    # def handle_outer_patch(self):
-    #     submobs_around_origin = []
-    #     for submob in self.submobjects:
-    #         anchors = submob.get_anchors()
-    #         if np.all(np.apply_along_axis(get_norm, 1, anchors) > self.max_r):
-    #             submob.points[:, :] = 0
-    #         winding_number = get_winding_number(anchors)
-    #         if abs(winding_number) > 0.1:
-    #             submobs_around_origin.append(submob)
-    #     if submobs_around_origin:
-    #         widths = [sm.get_width() for sm in submobs_around_origin]
-    #         outer_patch = submobs_around_origin[np.argmax(widths)]
+
+class StereoProjectedSphereFromHypersphere(StereoProjectedSphere):
+    CONFIG = {
+        "stereo_project_config": {
+            "axis": 0,
+        },
+        "radius": 2,
+    }
+
+    def __init__(self, quaternion=None, null_axis=0, **kwargs):
+        if quaternion is None:
+            quaternion = np.array([1, 0, 0, 0])
+        self.quaternion = quaternion
+        self.null_axis = null_axis
+        ParametricSurface.__init__(self, self.q_mult_projection_func, **kwargs)
+        self.fade_far_out_submobjects()
+
+    def q_mult_projection_func(self, u, v):
+        point = list(Sphere.func(self, u, v))
+        point.insert(self.null_axis, 0)
+        post_q_mult = q_mult(self.quaternion, point)
+        projected = list(self.radius * stereo_project_point(
+            post_q_mult, **self.stereo_project_config
+        ))
+        if np.any(np.abs(projected) == np.inf):
+            return self.func(u + 0.001, v)
+        ignored_axis = self.stereo_project_config["axis"]
+        projected.pop(ignored_axis)
+        return np.array(projected)
+
+
+class StereoProjectedCircleFromHypersphere(CheckeredCircle):
+    CONFIG = {
+        "n_pieces": 48,
+        "radius": 2,
+        "max_length": FRAME_WIDTH,
+        "basis_vectors": [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+        ]
+    }
+
+    def __init__(self, quaternion=None, **kwargs):
+        CheckeredCircle.__init__(self, **kwargs)
+        if quaternion is None:
+            quaternion = [1, 0, 0, 0]
+        self.quaternion = quaternion
+        self.pre_positioning_matrix = self.get_pre_positioning_matrix()
+        self.apply_function(self.projection)
+        self.remove_large_pieces()
+        self.set_shade_in_3d(True)
+
+    def get_pre_positioning_matrix(self):
+        v1, v2 = [np.array(v) for v in self.basis_vectors]
+        v1 = normalize(v1)
+        v2 = v2 - np.dot(v1, v2) * v1
+        v2 = normalize(v2)
+        return np.array([v1, v2]).T
+
+    def projection(self, point):
+        q1 = self.quaternion
+        q2 = np.dot(self.pre_positioning_matrix, point[:2]).flatten()
+        new_q = q_mult(q1, q2)
+        projected = stereo_project_point(
+            new_q, axis=0, r=self.radius,
+        )
+        if np.any(projected == np.inf):
+            epsilon = 1e-6
+            return self.projection(rotate_vector(point, epsilon))
+        return projected[1:]
+
+    def remove_large_pieces(self):
+        for piece in self:
+            length = get_norm(piece.points[0] - piece.points[-1])
+            if length > self.max_length:
+                self.remove(piece)
+
+
+class QuaternionTracker(ValueTracker):
+    CONFIG = {
+        "force_unit": True,
+        "dim": 4,
+    }
+
+    def __init__(self, four_vector=None, **kwargs):
+        Mobject.__init__(self, **kwargs)
+        if four_vector is None:
+            four_vector = np.array([1, 0, 0, 0])
+        self.set_value(four_vector)
+        if self.force_unit:
+            self.add_updater(lambda q: q.normalize())
+
+    def set_value(self, vector):
+        self.points = np.array(vector).reshape((1, 4))
+        return self
+
+    def get_value(self):
+        return self.points[0]
+
+    def normalize(self):
+        self.set_value(normalize(
+            self.get_value(),
+            fall_back=np.array([1, 0, 0, 0])
+        ))
+        return self
 
 
 # Abstract scenes
@@ -2642,6 +2740,7 @@ class TwoDStereographicProjection(IntroduceFelix):
         def get_sphere_dot(sphere_point):
             dot = Dot(shade_in_3d=True)
             dot.set_fill(PINK)
+            dot.insert_n_anchor_points(12)  # Helps with flashing?
             dot.apply_matrix(
                 z_to_vector(sphere_point),
                 about_point=ORIGIN,
@@ -2768,24 +2867,27 @@ class TwoDStereographicProjection(IntroduceFelix):
         n = len(south_hemisphere)
         south_hemisphere.remove(*south_hemisphere[:n // 2])
         south_hemisphere.remove(
-            *south_hemisphere[-3 * sphere.resolution[1] // 2:]
+            *south_hemisphere[-sphere.resolution[1]:]
         )
         south_hemisphere.generate_target()
         self.project_mobject(south_hemisphere.target)
         south_hemisphere.set_fill(opacity=0.8)
+        south_hemisphere.target[-sphere.resolution[1] // 2:].set_fill(
+            opacity=0
+        )
 
         self.play(
-            FadeOut(xy_plane),
             LaggedStart(ShowCreation, south_lines),
             FadeIn(south_hemisphere)
         )
         self.play(
             MoveToTarget(south_hemisphere),
+            FadeOut(south_lines),
+            FadeOut(xy_plane),
             run_time=3,
             rate_func=lambda t: smooth(0.99 * t)
         )
-        self.play(FadeOut(south_lines))
-        self.wait(2)
+        self.wait(3)
 
         self.projected_sphere = VGroup(
             north_hemisphere,
@@ -2796,15 +2898,16 @@ class TwoDStereographicProjection(IntroduceFelix):
 
     def show_point_at_infinity(self):
         points = list(compass_directions(
-            12, start_vect=rotate_vector(RIGHT, 7.5 * DEGREES)
+            12, start_vect=rotate_vector(RIGHT, 3.25 * DEGREES)
         ))
         points.pop(7)
         points.pop(2)
         arrows = VGroup(*[
-            Arrow(6 * p, 9 * p)
+            Arrow(6 * p, 11 * p)
             for p in points
         ])
-        arrows.set_fill(YELLOW)
+        arrows.set_fill(RED)
+        arrows.set_stroke(RED, 10)
         neg_ones = VGroup(*[
             TexMobject("-1").next_to(arrow.get_start(), -p)
             for p, arrow in zip(points, arrows)
@@ -2896,6 +2999,7 @@ class TwoDStereographicProjection(IntroduceFelix):
         )
 
         self.add(sphere, projected_sphere)
+        self.move_camera(phi=60 * DEGREES)
         self.play(
             sphere.set_fill_by_checkerboard,
             BLUE_E, BLUE_D, {"opacity": 0.8},
@@ -3041,6 +3145,8 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
 
     def edit_parts(self):
         sphere = self.sphere
+        axes = self.axes
+        axes.set_stroke(width=1)
         xy_plane = StereoProjectedSphere(u_max=15 * PI / 16)
         xy_plane.set_fill(WHITE, 0.2)
         xy_plane.set_stroke(width=0, opacity=0)
@@ -3074,7 +3180,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
             circle.copy(), projected,
             run_time=3
         ))
-        self.axes.x_axis.pieces.set_stroke(width=0)
+        # self.axes.x_axis.pieces.set_stroke(width=0)
         self.wait(7)
         self.move_camera(
             phi=60 * DEGREES,
@@ -3103,7 +3209,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
         self.play(ReplacementTransform(
             circle.copy(), projected, run_time=3
         ))
-        self.axes.y_axis.pieces.set_stroke(width=0)
+        # self.axes.y_axis.pieces.set_stroke(width=0)
         self.wait(3)
 
         self.one_j_circle = circle
@@ -3115,13 +3221,12 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
         circle = self.get_circle(BLUE_E, BLUE)
         circle.set_width(2 * sphere.radius * np.sin(30 * DEGREES))
         circle.shift(sphere.radius * np.cos(30 * DEGREES) * OUT)
-        circle.rotate(150 * DEGREES, DOWN, about_point=ORIGIN)
+        circle.rotate(150 * DEGREES, UP, about_point=ORIGIN)
 
         projected = self.get_projected_circle(circle)
 
-        self.move_camera(phi=130 * DEGREES)
         self.play(ShowCreation(circle, run_time=2))
-        self.move_camera(phi=60 * DEGREES)
+        self.wait()
         self.play(ReplacementTransform(
             circle.copy(), projected,
             run_time=2
@@ -3180,7 +3285,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
         self.play(ShowCreation(arrows, run_time=3, rate_func=None))
         self.wait(3)
         for x in range(2):
-            y_axis.pieces.set_stroke(width=2)
+            y_axis.pieces.set_stroke(width=1)
             self.play(
                 Rotate(sphere, 90 * DEGREES, axis=UP),
                 run_time=4,
@@ -3193,7 +3298,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
         self.play(Rotate(arrows, TAU / 4, axis=OUT))
         self.wait(2)
         for x in range(2):
-            x_axis.pieces.set_stroke(width=2)
+            x_axis.pieces.set_stroke(width=1)
             self.play(
                 Rotate(sphere, -90 * DEGREES, axis=RIGHT),
                 run_time=4,
@@ -3209,15 +3314,15 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
         )
         self.ambient_camera_rotation.rate = 0.01
         for x in range(2):
-            x_axis.pieces.set_stroke(width=2)
-            y_axis.pieces.set_stroke(width=2)
+            x_axis.pieces.set_stroke(width=1)
+            y_axis.pieces.set_stroke(width=1)
             self.play(
                 Rotate(sphere, 90 * DEGREES, axis=OUT),
                 run_time=4,
             )
+            # x_axis.pieces.set_stroke(width=0)
+            # y_axis.pieces.set_stroke(width=0)
             self.wait(2)
-            x_axis.pieces.set_stroke(width=0)
-            y_axis.pieces.set_stroke(width=0)
 
     #
     def get_circle(self, *colors):
@@ -3231,6 +3336,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
     def get_projected_circle(self, circle):
         result = circle.deepcopy()
         self.project_mobject(result)
+        result[::2].fade(1)
         for sm in result:
             if sm.get_width() > FRAME_WIDTH:
                 sm.fade(1)
@@ -3243,3 +3349,841 @@ class IntroduceQuaternions(Scene):
     def construct(self):
         self.compare_three_number_systems()
         self.mention_four_perpendicular_axes()
+        self.bring_back_complex()
+        self.show_components_of_quaternion()
+
+    def compare_three_number_systems(self):
+        numbers = self.get_example_numbers()
+        labels = VGroup(
+            TextMobject("Complex number"),
+            TextMobject("Not-actually-a-number-system 3d number"),
+            TextMobject("Quaternion"),
+        )
+
+        for number, label in zip(numbers, labels):
+            label.next_to(number, UP, aligned_edge=LEFT)
+
+            self.play(
+                FadeInFromDown(number),
+                Write(label),
+            )
+            self.play(CircleThenFadeAround(
+                number[2:],
+                surrounding_rectangle_config={"color": BLUE}
+            ))
+            self.wait()
+
+        shift_size = FRAME_HEIGHT / 2 - labels[2].get_top()[1] - MED_LARGE_BUFF
+        self.play(
+            numbers.shift, shift_size * UP,
+            labels.shift, shift_size * UP,
+        )
+
+        self.numbers = numbers
+        self.labels = labels
+
+    def mention_four_perpendicular_axes(self):
+        number = self.numbers[2]
+        three_axes = VGroup(*[
+            self.get_simple_axes(label, color)
+            for label, color in zip(
+                ["i", "j", "k"],
+                [GREEN, RED, BLUE],
+            )
+        ])
+        three_axes.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        three_axes.next_to(number, DOWN, LARGE_BUFF)
+
+        self.play(LaggedStart(FadeInFromLarge, three_axes))
+        self.wait(2)
+
+        self.three_axes = three_axes
+
+    def bring_back_complex(self):
+        numbers = self.numbers
+        labels = self.labels
+        numbers[0].move_to(numbers[1], LEFT)
+        labels[0].move_to(labels[1], LEFT)
+        numbers.remove(numbers[1])
+        labels.remove(labels[1])
+
+        group = VGroup(numbers, labels)
+        self.play(
+            group.to_edge, UP,
+            FadeOutAndShift(self.three_axes, DOWN)
+        )
+        self.wait()
+
+    def show_components_of_quaternion(self):
+        quat = self.numbers[-1]
+        real_part = quat[0]
+        imag_part = quat[2:]
+        real_brace = Brace(real_part, DOWN)
+        imag_brace = Brace(imag_part, DOWN)
+        real_word = TextMobject("Real \\\\ part")
+        imag_word = TextMobject("Imaginary \\\\ part")
+        scalar_word = TextMobject("Scalar \\\\ part")
+        vector_word = TextMobject("``Vector'' \\\\ part")
+        for word in real_word, scalar_word:
+            word.next_to(real_brace, DOWN, SMALL_BUFF)
+        for word in imag_word, vector_word:
+            word.next_to(imag_brace, DOWN, SMALL_BUFF)
+        braces = VGroup(real_brace, imag_brace)
+        VGroup(scalar_word, vector_word).set_color(YELLOW)
+
+        self.play(
+            LaggedStart(GrowFromCenter, braces),
+            LaggedStart(
+                FadeInFrom, VGroup(real_word, imag_word),
+                lambda m: (m, UP)
+            )
+        )
+        self.wait()
+        self.play(
+            FadeOutAndShift(real_word, DOWN),
+            FadeInFrom(scalar_word, DOWN),
+        )
+        self.wait(2)
+        self.play(ChangeDecimalToValue(real_part, 0))
+        self.wait()
+        self.play(
+            FadeOutAndShift(imag_word, DOWN),
+            FadeInFrom(vector_word, DOWN)
+        )
+        self.wait(2)
+
+    #
+    def get_example_numbers(self):
+        number_2d = VGroup(
+            DecimalNumber(3.14),
+            TexMobject("+"),
+            DecimalNumber(1.59),
+            TexMobject("i")
+        )
+        number_3d = VGroup(
+            DecimalNumber(2.65),
+            TexMobject("+"),
+            DecimalNumber(3.58),
+            TexMobject("i"),
+            TexMobject("+"),
+            DecimalNumber(9.79),
+            TexMobject("j"),
+        )
+        number_4d = VGroup(
+            DecimalNumber(3.23),
+            TexMobject("+"),
+            DecimalNumber(8.46),
+            TexMobject("i"),
+            TexMobject("+"),
+            DecimalNumber(2.64),
+            TexMobject("j"),
+            TexMobject("+"),
+            DecimalNumber(3.38),
+            TexMobject("k"),
+        )
+        numbers = VGroup(number_2d, number_3d, number_4d)
+        for number in numbers:
+            number.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            for part in number:
+                if isinstance(part, TexMobject):
+                    # part.set_color_by_tex_to_color_map({
+                    #     "i": GREEN,
+                    #     "j": RED,
+                    #     "k": BLUE,
+                    # })
+                    if part.get_tex_string() == "j":
+                        part.shift(0.5 * SMALL_BUFF * DL)
+            number[2].set_color(GREEN)
+            if len(number) > 5:
+                number[5].set_color(RED)
+            if len(number) > 8:
+                number[8].set_color(BLUE)
+        numbers.arrange_submobjects(
+            DOWN, buff=2, aligned_edge=LEFT
+        )
+        numbers.center()
+        numbers.shift(LEFT)
+        return numbers
+
+    def get_simple_axes(self, label, color):
+        axes = Axes(
+            x_min=-2.5,
+            x_max=2.5,
+            y_min=-2.5,
+            y_max=2.5,
+        )
+        axes.set_height(2.5)
+        label_mob = TexMobject(label)
+        label_mob.set_color(color)
+        label_mob.next_to(axes.coords_to_point(0, 1.5), RIGHT, SMALL_BUFF)
+        reals_label_mob = TextMobject("Reals")
+        reals_label_mob.next_to(
+            axes.coords_to_point(1, 0), DR, SMALL_BUFF
+        )
+        axes.add(label_mob, reals_label_mob)
+        return axes
+
+
+class SimpleImaginaryQuaternionAxes(SpecialThreeDScene):
+    def construct(self):
+        self.three_d_axes_config.update({
+            "number_line_config": {"unit_size": 2},
+            "x_min": -2,
+            "x_max": 2,
+            "y_min": -2,
+            "y_max": 2,
+            "z_min": -1.25,
+            "z_max": 1.25,
+        })
+        axes = self.get_axes()
+        labels = VGroup(*[
+            TexMobject(tex).set_color(color)
+            for tex, color in zip(
+                ["i", "j", "k"],
+                [GREEN, RED, BLUE]
+            )
+        ])
+        labels[0].next_to(axes.coords_to_point(1, 0, 0), DOWN + IN, SMALL_BUFF)
+        labels[1].next_to(axes.coords_to_point(0, 1, 0), RIGHT, SMALL_BUFF)
+        labels[2].next_to(axes.coords_to_point(0, 0, 1), RIGHT, SMALL_BUFF)
+
+        self.add(axes)
+        self.add(labels)
+        for label in labels:
+            self.add_fixed_orientation_mobjects(label)
+
+        self.move_camera(**self.get_default_camera_position())
+        self.begin_ambient_camera_rotation(rate=0.05)
+        self.wait(15)
+
+
+class ShowDotProductCrossProductFromOfQMult(Scene):
+    def construct(self):
+        v_tex = "\\vec{\\textbf{v}}"
+        product = TexMobject(
+            "(", "w_1", "+",
+            "x_1", "i", "+", "y_1", "j", "+", "z_1", "k", ")"
+            "(", "w_2", "+",
+            "x_2", "i", "+", "y_2", "j", "+", "z_2", "k", ")",
+            "=",
+            "(w_1", ",", v_tex + "_1", ")",
+            "(w_2", ",", v_tex + "_2", ")",
+            "="
+        )
+        product.set_width(FRAME_WIDTH - 1)
+
+        i1 = product.index_of_part_by_tex("x_1")
+        i2 = product.index_of_part_by_tex(")")
+        i3 = product.index_of_part_by_tex("x_2")
+        i4 = product.index_of_part_by_tex("z_2") + 2
+        vector_parts = [product[i1:i2], product[i3:i4]]
+
+        vector_defs = VGroup()
+        braces = VGroup()
+        for i, vp in zip(it.count(1), vector_parts):
+            brace = Brace(vp, UP)
+            vector = Matrix([
+                ["x_" + str(i)],
+                ["y_" + str(i)],
+                ["z_" + str(i)],
+            ])
+            colors = [GREEN, RED, BLUE]
+            for mob, color in zip(vector.get_entries(), colors):
+                mob.set_color(color)
+            group = VGroup(
+                TexMobject("{}_{} = ".format(v_tex, i)),
+                vector,
+            )
+            group.arrange_submobjects(RIGHT, SMALL_BUFF)
+            group.next_to(brace, UP)
+
+            braces.add(brace)
+            vector_defs.add(group)
+
+        result = TexMobject(
+            "\\left(", "w_1", "w_2",
+            "-", v_tex + "_1", "\\cdot", v_tex, "_2", ",\\,",
+            "w_1", v_tex + "_2", "+", "w_2", v_tex + "_1",
+            "+", "{}_1 \\times {}_2".format(v_tex, v_tex),
+            "\\right)"
+        )
+        result.match_width(product)
+        result.next_to(product, DOWN, LARGE_BUFF)
+        for mob in product, result:
+            mob.set_color_by_tex_to_color_map({
+                "w": YELLOW,
+                "x": GREEN,
+                "y": RED,
+                "z": BLUE,
+            })
+            mob.set_color_by_tex(v_tex, WHITE)
+
+        self.add(product)
+        self.add(braces)
+        self.add(vector_defs)
+        self.play(LaggedStart(FadeInFromLarge, result))
+        self.wait()
+
+
+class ShowComplexMagnitude(ShowComplexMultiplicationExamples):
+    def construct(self):
+        self.add_planes()
+        plane = self.plane
+        tex_to_color_map = {
+            "a": YELLOW,
+            "b": GREEN,
+        }
+
+        z = complex(3, 2)
+        z_point = plane.number_to_point(z)
+        z_dot = Dot(z_point)
+        z_dot.set_color(PINK)
+        z_line = Line(plane.number_to_point(0), z_point)
+        z_line.set_stroke(WHITE, 2)
+        z_label = TexMobject(
+            "z", "=", "a", "+", "b", "i",
+            tex_to_color_map=tex_to_color_map
+        )
+        z_label.add_background_rectangle()
+        z_label.next_to(z_dot, UR, buff=SMALL_BUFF)
+        z_norm_label = TexMobject("||z||")
+        z_norm_label.add_background_rectangle()
+        z_norm_label.next_to(ORIGIN, UP, SMALL_BUFF)
+        z_norm_label.rotate(z_line.get_angle(), about_point=ORIGIN)
+        z_norm_label.shift(z_line.get_center())
+
+        h_line = Line(
+            plane.number_to_point(0),
+            plane.number_to_point(z.real),
+            stroke_color=YELLOW,
+            stroke_width=5,
+        )
+        v_line = Line(
+            plane.number_to_point(z.real),
+            plane.number_to_point(z),
+            stroke_color=GREEN,
+            stroke_width=5,
+        )
+
+        z_norm_equation = TexMobject(
+            "||z||", "=", "\\sqrt", "{a^2", "+", "b^2", "}",
+            tex_to_color_map=tex_to_color_map
+        )
+        z_norm_equation.set_background_stroke(width=0)
+        z_norm_equation.add_background_rectangle()
+        z_norm_equation.next_to(z_label, UP)
+
+        self.add(z_line, h_line, v_line, z_dot, z_label)
+        self.play(ShowCreation(z_line))
+        self.play(FadeInFromDown(z_norm_label))
+        self.wait()
+        self.play(
+            FadeIn(z_norm_equation[0]),
+            FadeIn(z_norm_equation[2:]),
+            TransformFromCopy(
+                z_norm_label[1:],
+                VGroup(z_norm_equation[1]),
+            ),
+        )
+        self.wait()
+
+
+class BreakUpQuaternionMultiplicationInParts(Scene):
+    def construct(self):
+        q1_color = YELLOW
+        q2_color = PINK
+
+        product = TexMobject(
+            "q_1", "\\cdot", "q_2", "=",
+            "\\left(", "{q_1", "\\over", "||", "q_1", "||}", "\\right)",
+            "||", "q_1", "||", "\\cdot", "q_2",
+        )
+        product.set_color_by_tex("q_1", q1_color)
+        product.set_color_by_tex("q_2", q2_color)
+        lhs = product[:3]
+        scale_part = product[-5:]
+        rotate_part = product[4:-5]
+        lhs_rect = SurroundingRectangle(lhs)
+        lhs_rect.set_color(YELLOW)
+        lhs_words = TextMobject("Quaternion \\\\ multiplication")
+        lhs_words.next_to(lhs_rect, UP, LARGE_BUFF)
+        scale_brace = Brace(scale_part, UP)
+        rotate_brace = Brace(rotate_part, DOWN)
+        scale_words = TextMobject("Scale", "$q_2$")
+        scale_words.set_color_by_tex("q_2", q2_color)
+        scale_words.next_to(scale_brace, UP)
+        rotate_words = TextMobject("Apply special \\\\ 4d rotation")
+        rotate_words.next_to(rotate_brace, DOWN)
+
+        norm_equation = TexMobject(
+            "||", "q_1", "||", "=",
+            "||", "w_1", "+",
+            "x_1", "i", "+",
+            "y_1", "j", "+",
+            "z_1", "k", "||", "=",
+            "\\sqrt",
+            "{w_1^2", "+",
+            "x_1^2", "+",
+            "y_1^2", "+",
+            "z_1^2", "}",
+        )
+        # norm_equation.set_color_by_tex_to_color_map({
+        #     "w": YELLOW,
+        #     "x": GREEN,
+        #     "y": RED,
+        #     "z": BLUE,
+        # })
+        norm_equation.set_color_by_tex("q_1", q1_color)
+        norm_equation.to_edge(UP)
+        norm_equation.set_background_stroke(width=0)
+
+        line1 = Line(ORIGIN, 0.5 * LEFT + 3 * UP)
+        line2 = Line(ORIGIN, UR)
+        zero_dot = Dot()
+        zero_label = TexMobject("0")
+        zero_label.next_to(zero_dot, DOWN, SMALL_BUFF)
+        q1_dot = Dot(line1.get_end())
+        q2_dot = Dot(line2.get_end())
+        q1_label = TexMobject("q_1").next_to(q1_dot, UP, SMALL_BUFF)
+        q2_label = TexMobject("q_2").next_to(q2_dot, UR, SMALL_BUFF)
+        VGroup(q1_dot, q1_label).set_color(q1_color)
+        VGroup(q2_dot, q2_label).set_color(q2_color)
+        dot_group = VGroup(
+            line1, line2, q1_dot, q2_dot, q1_label, q2_label,
+            zero_dot, zero_label,
+        )
+        dot_group.set_height(3)
+        dot_group.center()
+        dot_group.to_edge(LEFT)
+
+        q1_dot.add_updater(lambda d: d.move_to(line1.get_end()))
+        q1_label.add_updater(lambda l: l.next_to(q1_dot, UP, SMALL_BUFF))
+        q2_dot.add_updater(lambda d: d.move_to(line2.get_end()))
+        q2_label.add_updater(lambda l: l.next_to(q2_dot, UR, SMALL_BUFF))
+
+        self.add(norm_equation)
+        self.wait()
+        self.play(
+            FadeInFromDown(lhs),
+            Write(dot_group),
+        )
+        self.add(*dot_group)
+        self.add(
+            VGroup(line2, q2_dot, q2_label).copy().fade(0.5)
+        )
+        self.play(
+            ShowCreation(lhs_rect),
+            FadeIn(lhs_words)
+        )
+        self.play(FadeOut(lhs_rect))
+        self.wait()
+        self.play(
+            TransformFromCopy(lhs, product[3:]),
+            # FadeOut(lhs_words)
+        )
+        self.play(
+            GrowFromCenter(scale_brace),
+            Write(scale_words),
+        )
+        self.play(
+            line2.scale, 2, {"about_point": line2.get_start()}
+        )
+        self.wait()
+        self.play(
+            GrowFromCenter(rotate_brace),
+            FadeInFrom(rotate_words, UP),
+        )
+        self.play(
+            Rotate(
+                line2, -line1.get_angle(),
+                about_point=line2.get_start(),
+                run_time=3
+            )
+        )
+        self.wait()
+
+        # Ask
+        randy = Randolph(height=2)
+        randy.flip()
+        randy.next_to(rotate_words, RIGHT)
+        randy.to_edge(DOWN)
+        q_marks = TexMobject("???")
+        random.shuffle(q_marks.submobjects)
+        q_marks.next_to(randy, UP)
+        self.play(
+            FadeIn(randy)
+        )
+        self.play(
+            randy.change, "confused", rotate_words,
+            CircleThenFadeAround(rotate_words),
+        )
+        self.play(LaggedStart(
+            FadeInFrom, q_marks,
+            lambda m: (m, LEFT),
+            lag_ratio=0.8,
+        ))
+        self.play(Blink(randy))
+        self.wait(2)
+
+
+class SphereProjectionsWrapper(Scene):
+    def construct(self):
+        rect_rows = VGroup(*[
+            VGroup(*[
+                ScreenRectangle(height=3)
+                for x in range(3)
+            ]).arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+            for y in range(2)
+        ]).arrange_submobjects(DOWN, buff=2 * LARGE_BUFF)
+        rect_rows.set_width(FRAME_WIDTH - 1)
+
+        sphere_labels = VGroup(
+            TextMobject("Circle in 2d"),
+            TextMobject("Sphere in 3d"),
+            TextMobject("Hypersphere in 4d"),
+        )
+        for label, rect in zip(sphere_labels, rect_rows[0]):
+            label.next_to(rect, UP)
+
+        projected_labels = VGroup(
+            TextMobject("Sterographically projected \\\\ circle in 1d"),
+            TextMobject("Sterographically projected \\\\ sphere in 2d"),
+            TextMobject("Sterographically projected \\\\ hypersphere in 3d"),
+        )
+        for label, rect in zip(projected_labels, rect_rows[1]):
+            label.match_width(rect)
+            label.next_to(rect, UP)
+
+        q_marks = TexMobject("???")
+        q_marks.scale(2)
+        q_marks.move_to(rect_rows[0][2])
+
+        self.add(rect_rows)
+        for l1, l2 in zip(sphere_labels, projected_labels):
+            added_anims = []
+            if l1 is sphere_labels[2]:
+                added_anims.append(FadeIn(q_marks))
+            self.play(FadeIn(l1), *added_anims)
+            self.play(FadeIn(l2))
+            self.wait()
+
+
+class HypersphereStereographicProjection(SpecialThreeDScene):
+    CONFIG = {
+        "fancy_dot": False,
+        # "fancy_dot": True,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.introduce_quaternion_label()
+        self.show_one()
+        self.show_unit_sphere()
+        # self.show_quaternions_with_nonzero_real_part()
+        # self.emphasize_only_units()
+        self.show_reference_spheres()
+
+    def setup_axes(self):
+        axes = self.axes = self.get_axes()
+        axes.set_stroke(width=1)
+        self.add(axes)
+        self.move_camera(
+            **self.get_default_camera_position(),
+            run_time=0
+        )
+        self.begin_ambient_camera_rotation(rate=0.01)
+
+    def introduce_quaternion_label(self):
+        q_tracker = QuaternionTracker()
+        coords = [
+            DecimalNumber(0, color=color, include_sign=sign, edge_to_fix=RIGHT)
+            for color, sign in zip(
+                [YELLOW, GREEN, RED, BLUE],
+                [False, True, True, True],
+            )
+        ]
+        label = VGroup(
+            coords[0], VectorizedPoint(),
+            coords[1], TexMobject("i"),
+            coords[2], TexMobject("j"),
+            coords[3], TexMobject("k"),
+        )
+        label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        label.to_corner(UR)
+
+        def update_label(label):
+            self.remove_fixed_in_frame_mobjects(label)
+            quat = q_tracker.get_value()
+            for value, coord in zip(quat, label[::2]):
+                coord.set_value(value)
+            self.add_fixed_in_frame_mobjects(label)
+            return label
+
+        label.add_updater(update_label)
+
+        def get_pq_point():
+            return self.project_quaternion(q_tracker.get_value())
+
+        pq_dot = self.get_dot()
+        pq_dot.add_updater(lambda d: d.move_to(get_pq_point()))
+        dot_radius = pq_dot.get_width() / 2
+
+        def get_pq_line():
+            point = get_pq_point()
+            norm = get_norm(point)
+            if norm > dot_radius:
+                point *= (norm - dot_radius) / norm
+            result = Line(ORIGIN, point)
+            result.set_stroke(width=1)
+            return result
+
+        pq_line = get_pq_line()
+        pq_line.add_updater(lambda cl: cl.become(get_pq_line()))
+
+        self.add(q_tracker, label, pq_line, pq_dot)
+
+        self.q_tracker = q_tracker
+        self.q_label = label
+        self.pq_line = pq_line
+        self.pq_dot = pq_dot
+
+        rect = SurroundingRectangle(label, color=WHITE)
+        self.add_fixed_in_frame_mobjects(rect)
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+        self.remove_fixed_orientation_mobjects(rect)
+
+        sample_values = [
+            [0, 1, 0, 0],
+            [-1, 1, 0, 0],
+            [0, 0, 1, 1],
+            [0, 1, -1, 1],
+        ]
+        for value in sample_values:
+            self.set_quat(value)
+            self.wait()
+
+    def show_one(self):
+        q_tracker = self.q_tracker
+
+        one_label = TexMobject("1")
+        one_label.rotate(TAU / 4, RIGHT)
+        one_label.next_to(ORIGIN, IN + RIGHT, SMALL_BUFF)
+        one_label.set_shade_in_3d(True)
+        one_label.set_background_stroke(width=0)
+
+        self.play(
+            ApplyMethod(
+                q_tracker.set_value, [1, 0, 0, 0],
+                run_time=2
+            ),
+            FadeInFromDown(one_label)
+        )
+        self.wait(4)
+
+    def show_unit_sphere(self):
+        sphere = self.sphere = self.get_projected_sphere(
+            quaternion=[1, 0, 0, 0], null_axis=0,
+            solid=False,
+        )
+
+        c2p = self.axes.coords_to_point
+        tex_coords_vects = [
+            ("i", [1, 0, 0], IN + RIGHT),
+            ("-i", [-1, 0, 0], IN + LEFT),
+            ("j", [0, 1, 0], UP + OUT + RIGHT),
+            # ("-j", [0, -1, 0], RIGHT + DOWN),
+            ("k", [0, 0, 1], OUT + RIGHT),
+            ("-k", [0, 0, -1], IN + RIGHT),
+        ]
+        labels = VGroup()
+        for tex, coords, vect in tex_coords_vects:
+            label = TexMobject(tex)
+            label.rotate(90 * DEGREES, RIGHT)
+            label.next_to(c2p(*coords), vect, SMALL_BUFF)
+            labels.add(label)
+        labels.set_shade_in_3d(True)
+        labels.set_background_stroke(width=0)
+
+        real_part = self.q_label[0]
+        brace = Brace(real_part, DOWN)
+        words = TextMobject("Real part zero")
+        words.next_to(brace, DOWN, SMALL_BUFF, LEFT)
+
+        self.play(Write(sphere))
+        self.play(LaggedStart(
+            FadeInFrom, labels,
+            lambda m: (m, IN)
+        ))
+        self.add_fixed_in_frame_mobjects(brace, words)
+        self.set_quat(
+            [0, 1, 0, 0],
+            added_anims=[
+                GrowFromCenter(brace),
+                Write(words),
+            ]
+        )
+        self.wait()
+        self.set_quat([0, 1, -1, 1])
+        self.wait(2)
+        self.set_quat([0, -1, -1, 1])
+        self.wait(2)
+        self.set_quat([0, 0, 0, 1])
+        self.wait(2)
+        self.set_quat([0, 0, -1, 0])
+        self.wait(2)
+        self.set_quat([0, 1, 0, 0])
+        self.wait(2)
+        self.play(FadeOut(words))
+        self.remove_fixed_in_frame_mobjects(words)
+
+        self.real_part_brace = brace
+
+    def show_quaternions_with_nonzero_real_part(self):
+        # Positive real part
+        self.set_quat([1, 1, 2, 0])
+        self.wait(2)
+        self.set_quat([4, 0, -1, -1])
+        self.wait(2)
+        # Negative real part
+        self.set_quat([-1, 1, 2, 0])
+        self.wait(2)
+        self.set_quat([-2, 0, -1, 1])
+        self.wait(2)
+        self.set_quat([-1, 1, 0, 0])
+        self.move_camera(theta=-160 * DEGREES, run_time=3)
+        self.set_quat([-200, 1, 0, 0])
+        self.wait(2)
+
+    def emphasize_only_units(self):
+        q_label = self.q_label
+        brace = self.real_part_brace
+
+        brace.target = Brace(q_label, DOWN, buff=SMALL_BUFF)
+        words = TextMobject(
+            "Only those where \\\\",
+            "$w^2 + x^2 + y^2 + z^2 = 1$"
+        )
+        words.next_to(brace.target, DOWN, SMALL_BUFF)
+
+        self.add_fixed_in_frame_mobjects(words)
+        self.play(
+            MoveToTarget(brace),
+            Write(words)
+        )
+        self.set_quat([1, 1, 1, 1])
+        self.wait(2)
+        self.set_quat([1, 1, -1, 1])
+        self.wait(10)
+        self.play(FadeOut(brace), FadeOut(words))
+        self.remove_fixed_in_frame_mobjects(brace, words)
+
+    def show_reference_spheres(self):
+        sphere = self.sphere
+        self.move_camera(
+            phi=60 * DEGREES,
+            theta=-150 * DEGREES,
+            added_anims=[
+                self.q_tracker.set_value, [1, 0, 0, 0]
+            ]
+        )
+        sphere_ijk = self.get_projected_sphere(null_axis=0)
+        # sphere_1jk = self.get_projected_sphere(null_axis=1)
+        # sphere_1ik = self.get_projected_sphere(null_axis=2)
+        sphere_1ij = self.get_projected_sphere(null_axis=3)
+        circle = StereoProjectedCircleFromHypersphere(axes=[0, 1])
+
+        circle_words = TextMobject(
+            "Circle through\\\\", "$1, i, -1, -i$"
+        )
+        circle_words.to_corner(UL)
+        sphere_1ij_words = TextMobject(
+            "Sphere through\\\\", "$1, i, j, -1, -i, -j$"
+        )
+        sphere_1ij_words.to_corner(UL)
+        self.add_fixed_in_frame_mobjects(circle_words, sphere_1ij_words)
+
+        self.play(
+            ShowCreation(circle),
+            Write(circle_words),
+        )
+        self.set_quat([0, 1, 0, 0])
+        self.set_quat([1, 0, 0, 0])
+        self.play(
+            FadeOutAndShift(circle_words, DOWN),
+            FadeInFromDown(sphere_1ij_words)
+        )
+        self.add(sphere_ijk)
+        self.play(Write(sphere_1ij))
+        # sphere.set_fill_by_checkerboard(
+        #     YELLOW_E, interpolate_color(YELLOW_E, BLACK, 0.5),
+        #     opacity=1
+        # )
+        self.wait(3)
+
+
+    #
+    def project_quaternion(self, quat):
+        return self.axes.coords_to_point(
+            *stereo_project_point(quat, axis=0, r=1)[1:]
+        )
+
+    def get_dot(self):
+        if self.fancy_dot:
+            sphere = self.get_sphere()
+            sphere.set_width(0.2)
+            sphere.set_stroke(width=0)
+            sphere.set_fill(PINK)
+            return sphere
+        else:
+            return VGroup(
+                Dot(color=PINK),
+                Dot(color=PINK).rotate(TAU / 4, RIGHT),
+            )
+
+    def set_quat(self, value, run_time=3, added_anims=None):
+        if added_anims is None:
+            added_anims = []
+        self.play(
+            self.q_tracker.set_value, value,
+            *added_anims,
+            run_time=run_time
+        )
+
+    def get_projected_sphere(self, null_axis, quaternion=None, solid=True, **kwargs):
+        if quaternion is None:
+            quaternion = self.q_tracker.get_value()
+        axes_to_color = {
+            0: interpolate_color(YELLOW, BLACK, 0.5),
+            1: GREEN_E,
+            2: RED_D,
+            3: BLUE_E,
+        }
+        color = axes_to_color[null_axis]
+        config = dict(self.sphere_config)
+        config.update({
+            "stroke_color": WHITE,
+            "stroke_width": 0.5,
+            "stroke_opacity": 0.5,
+            "max_r": 24,
+        })
+        if solid:
+            config.update({
+                "checkerboard_colors": [
+                    color, interpolate_color(color, BLACK, 0.5)
+                ],
+                "fill_opacity": 1,
+            })
+        else:
+            config.update({
+                "checkerboard_colors": [],
+                "fill_color": color,
+                "fill_opacity": 0.25,
+            })
+        config.update(kwargs)
+        sphere = StereoProjectedSphereFromHypersphere(
+            quaternion=quaternion,
+            null_axis=null_axis,
+            **config
+        )
+        return sphere
