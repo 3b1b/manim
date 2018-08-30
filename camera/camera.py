@@ -341,6 +341,8 @@ class Camera(object):
             points = self.transform_points_pre_display(
                 vmob, vmob.points
             )
+            if np.any(np.isnan(points)) or np.any(points == np.inf):
+                points = np.zeros((1, 3))
             ctx.new_sub_path()
             ctx.move_to(*points[0][:2])
             for triplet in zip(points[1::3], points[2::3], points[3::3]):
