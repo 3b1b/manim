@@ -554,10 +554,10 @@ class Arrow(Line):
                 self.second_tip.get_anchors()[1:]
             )
         self.rect.set_points_as_corners([
-            tip_base + perp_vect * width / 2,
-            start + perp_vect * width / 2,
-            start - perp_vect * width / 2,
             tip_base - perp_vect * width / 2,
+            start - perp_vect * width / 2,
+            start + perp_vect * width / 2,
+            tip_base + perp_vect * width / 2,
         ])
         self.stem = self.rect  # Alternate name
         return self
