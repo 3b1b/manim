@@ -5444,8 +5444,6 @@ class RubuiksCubeOperations(SpecialThreeDScene):
         self.begin_ambient_camera_rotation()
         cube = RubiksCube()
         cube.shift(2.5 * RIGHT)
-        # for square in cube:
-        #     square.set_sheen(0.2, DOWN + LEFT + IN)
         cube2 = cube.copy()
 
         self.add(cube)
