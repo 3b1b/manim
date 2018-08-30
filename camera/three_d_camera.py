@@ -102,17 +102,12 @@ class ThreeDCamera(Camera):
         rot_matrix = self.get_rotation_matrix()
 
         def z_key(mob):
-            if not isinstance(mob, VMobject):
-                return np.inf
-            if not mob.shade_in_3d:
+            if not (hasattr(mob, "shade_in_3d") and mob.shade_in_3d):
                 return np.inf
             # Assign a number to a three dimensional mobjects
             # based on how close it is to the camera
-            points = mob.points
-            if len(points) == 0:
-                return 0
             return np.dot(
-                center_of_mass(points),
+                mob.get_center(),
                 rot_matrix.T
             )[2]
         return sorted(mobjects, key=z_key)
