@@ -117,6 +117,7 @@ class DecimalNumber(VMobject):
             # of animated mobjects
             mob.points[:] = 0
         self.number = number
+        return self
 
     def get_value(self):
         return self.number
