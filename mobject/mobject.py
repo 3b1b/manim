@@ -170,8 +170,11 @@ class Mobject(Container):
     def get_updaters(self):
         return self.updaters
 
-    def add_updater(self, update_function, call_updater=True):
-        self.updaters.append(update_function)
+    def add_updater(self, update_function, index=None, call_updater=True):
+        if index is None:
+            self.updaters.append(update_function)
+        else:
+            self.updaters.insert(index, update_function)
         if call_updater:
             self.update(0)
         return self
@@ -982,7 +985,8 @@ class Mobject(Container):
         """
         self.align_data(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
-            sm1.interpolate(sm1, sm2, 1)
+            sm1.points = np.array(sm2.points)
+            sm1.interpolate_color(sm1, sm2, 1)
         return self
 
 
