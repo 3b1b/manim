@@ -103,7 +103,7 @@ def project_along_vector(point, vector):
 def normalize(vect, fall_back=None):
     norm = get_norm(vect)
     if norm > 0:
-        return vect / norm
+        return np.array(vect) / norm
     else:
         if fall_back is not None:
             return fall_back
