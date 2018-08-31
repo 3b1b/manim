@@ -293,7 +293,7 @@ class Mobject(Container):
     def reverse_points(self):
         for mob in self.family_members_with_points():
             mob.apply_over_attr_arrays(
-                lambda arr: np.array(list(reversed(arr)))
+                lambda arr: np.flip(arr, axis=0)
             )
         return self
 

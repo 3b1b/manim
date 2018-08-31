@@ -525,10 +525,10 @@ def test_apply_complex_function(mocker):
 
 # this is a rather odd function. the current contract is simply that
 # wag() will do what is does in this version (0c3e1308cd40e12f795e0f8e753acca02874c2b3).
-def wag():
-    points = random.rand(10, 3)
+def test_wag():
+    points = np.random.rand(10, 3)
     m = Mobject()
-    m.point = points.copy()
+    m.points = points.copy()
     m.wag()
 
     expected = points.copy()
@@ -538,11 +538,19 @@ def wag():
     #alphas = alphas**wag_factor
     expected += np.dot(
         alphas.reshape((len(alphas), 1)),
-        np.array(RIGHT).reshape((1, mob.dim))
+        np.array(RIGHT).reshape((1, m.dim))
     )
     assert(np.allclose(m.points, expected))
 
-# def reverse_points():
+def test_reverse_points():
+    points = np.random.rand(10, 3)
+    m = Mobject()
+    m.points = points.copy()
+    m.reverse_points()
+
+    expected = points.copy()
+    assert(np.allclose(m.points, np.flip(expected, axis=0)))
+
 # def repeat():
 #    def repeat_array():
 ## Note, much of these are now redundant with default behavior of

@@ -117,10 +117,10 @@ class Graph(Group):
         return self.nodes[point]
 
     def get_nodes(self):
-        return self.nodes.keys()
+        return list(self.nodes.keys())
 
     def get_edges(self):
-        return self.edges.keys()
+        return list(self.edges.keys())
 
     def get_adjacent_nodes(self, point):
         Node.assert_primitive(point)

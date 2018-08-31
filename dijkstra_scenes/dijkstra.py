@@ -296,7 +296,7 @@ class RunAlgorithm(MovingCameraScene):
 
         # weight edges
         random.seed()
-        weights = [2, 4, 3, 6, 3, 5, 1, 8, 1, 3, 4, 1, 2, 7]
+        weights = [4, 6, 5, 8, 3, 5, 1, 8, 2, 3, 4, 1, 2, 7]
         updates = OrderedDict()
         for i, edge in enumerate(edges):
             if weights[i]:
@@ -319,12 +319,6 @@ class RunAlgorithm(MovingCameraScene):
             ("color", SPT_COLOR),
         ])
         self.play(*G.update_component(s, s_updates))
-
-        # label neighbors with question marks
-        updates = OrderedDict()
-        for point in G.get_adjacent_nodes(s):
-            updates[point] = OrderedDict([("dist", TexMobject("?"))])
-        self.play(*G.update_components(updates))
 
         # set neighbors to edge weights with question mark
         updates = OrderedDict()
@@ -619,31 +613,44 @@ class RunAlgorithm(MovingCameraScene):
         self.__dict__.update(load_previous_state())
         s = self.s
         G = self.G
+        edges = self.edges
 
         # tighten bound for closest node
         min_node = extract_node(self, G)
 
-        # relax neighbors of other neighbor
-        neighbor = (0, 0, 0)
-        to_revert = [
-            node for node in G.get_adjacent_nodes(neighbor) \
-            if G.get_node_label(node, "dist") is None
-        ]
-        relax_neighbors(self, G, neighbor)
+        # relax neighbors of min node
+        saved_state = []
+        for node in G.get_adjacent_nodes(min_node):
+            weight_label = G.get_node_label(node, "dist")
+            if weight_label is not None:
+                saved_state.append((node, weight_label.copy()))
+            else:
+                saved_state.append((node, weight_label))
 
-        # revert neighbors
+        relax_neighbors(self, G, min_node)
+
+        # Indicate shorter path
+        anims = []
+        anims.append(Indicate(G.edges[edges[2]].get_label("weight"), run_time=2))
+        anims.append(Indicate(G.edges[edges[6]].get_label("weight"), run_time=2))
+        self.play(*anims)
+
+        # Revert the relaxation
         updates = OrderedDict()
-        for point in to_revert:
-            updates[point] = OrderedDict([
-                ("dist", None),
-                ("color", BLACK),
-            ])
+        for node, saved_weight in saved_state:
+            updates[node] = OrderedDict([("dist", saved_weight)])
+        min_node_bound = G.get_node_label(min_node, "dist").number
+        updates[min_node] = OrderedDict([
+            ("dist", TexMobject(f"\\le {min_node_bound}")),
+            ("color", QUEUE_COLOR),
+        ])
         self.play(*G.update_components(updates))
 
-        # Indicate lengths of non-min edges
-        anims = []
+        # highlight other edge weights
         adj_edges = G.get_adjacent_edges(s)
-        min_edge = min(adj_edges, key=lambda e: G.get_edge_weight(e))
+        min_edge = min(adj_edges,
+            key = lambda x: G.get_edge(x).get_label("weight").number)
+        anims = []
         for edge in adj_edges:
             if edge != min_edge:
                 anims.extend([Indicate(G.edges[edge].get_label("weight"),
@@ -651,9 +658,9 @@ class RunAlgorithm(MovingCameraScene):
                     run_time=2,
                 )])
         self.play(*anims)
+        self.wait(2)
 
-        # relax to match earlier extract
-        relax_neighbors(self, G, min_node)
+        ### ADD TIGHTENING ANIMATIONS HERE ###
 
         while bounded_nodes(G):
             min_node = extract_node(self, G)
