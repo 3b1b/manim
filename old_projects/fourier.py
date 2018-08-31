@@ -1273,7 +1273,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
     def get_winding_frequency_label(self):
         freq = self.initial_winding_frequency
         winding_freq_label = VGroup(
-            DecimalNumber(freq, num_decimal_places = 2),
+            DecimalNumber(freq, num_decimal_places=2),
             TextMobject("cycles/second")
         )
         winding_freq_label.arrange_submobjects(RIGHT)
@@ -1639,8 +1639,14 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         added_anims = kwargs.get("added_anims", [])
         anims = [self.get_frequency_change_animation(self.graph, new_freq)]
         if hasattr(self, "winding_freq_label"):
-            freq_label = [sm for sm in self.winding_freq_label if isinstance(sm, DecimalNumber)][0]
-            anims.append(ChangeDecimalToValue(freq_label, new_freq))
+            freq_label = [
+                sm for sm in self.winding_freq_label
+                if isinstance(sm, DecimalNumber)
+            ][0]
+            self.add(freq_label)
+            anims.append(
+                ChangeDecimalToValue(freq_label, new_freq)
+            )
         if hasattr(self, "v_lines_indicating_periods"):
             anims.append(self.get_period_v_lines_update_anim())
         if hasattr(self, "center_of_mass_dot"):
@@ -1838,8 +1844,8 @@ class ShowLinearity(DrawFrequencyPlot):
         "high_freq_color": YELLOW,
         "low_freq_color": PINK,
         "sum_color": GREEN,
-        "low_freq" : 2.0,
-        "high_freq" : 3.0,
+        "low_freq" : 3.0,
+        "high_freq" : 4.0,
         "circle_plane_config" : {
             "x_radius" : 2.5,
             "y_radius" : 2.7,

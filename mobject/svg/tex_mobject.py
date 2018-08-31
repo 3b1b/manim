@@ -85,7 +85,10 @@ class SingleStringTexMobject(SVGMobject):
 
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
-            len([s for s in tex.split(substr)[1:] if s[0] in "(){}[]|.\\"])
+            len([
+                s for s in tex.split(substr)[1:]
+                if s and s[0] in "(){}[]|.\\"
+            ])
             for substr in ("\\left", "\\right")
         ]
         if num_lefts != num_rights:

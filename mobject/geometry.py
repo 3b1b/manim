@@ -605,7 +605,7 @@ class Arrow(Line):
         return self
 
     def get_normal_vector(self):
-        p0, p1, p2 = self.tip[0].get_anchors()
+        p0, p1, p2 = self.tip[0].get_anchors()[:3]
         result = np.cross(p2 - p1, p1 - p0)
         norm = get_norm(result)
         if norm == 0:

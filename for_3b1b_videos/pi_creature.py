@@ -305,49 +305,63 @@ class ThreeLeggedPiCreature(PiCreature):
 class Eyes(VMobject):
     CONFIG = {
         "height": 0.3,
-        "thing_looked_at": None,
+        "thing_to_look_at": None,
         "mode": "plain",
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, body, **kwargs):
         VMobject.__init__(self, **kwargs)
-        self.mobject = mobject
-        self.submobjects = self.get_eyes().submobjects
+        self.body = body
+        eyes = self.create_eyes()
+        self.become(eyes, copy_submobjects=False)
 
-    def get_eyes(self, mode=None, thing_to_look_at=None):
-        mode = mode or self.mode
+    def create_eyes(self, mode=None, thing_to_look_at=None):
+        if mode is None:
+            mode = self.mode
         if thing_to_look_at is None:
-            thing_to_look_at = self.thing_looked_at
+            thing_to_look_at = self.thing_to_look_at
+        self.thing_to_look_at = thing_to_look_at
+        self.mode = mode
+        looking_direction = None
 
-        pi = Randolph(mode=mode)
+        pi = PiCreature(mode=mode)
         eyes = VGroup(pi.eyes, pi.pupils)
-        pi.scale(self.height / eyes.get_height())
         if self.submobjects:
+            eyes.match_height(self)
             eyes.move_to(self, DOWN)
+            looking_direction = self[1].get_center() - self[0].get_center()
         else:
-            eyes.move_to(self.mobject.get_top(), DOWN)
+            eyes.set_height(self.height)
+            eyes.move_to(self.body.get_top(), DOWN)
+
+        height = eyes.get_height()
         if thing_to_look_at is not None:
             pi.look_at(thing_to_look_at)
+        elif looking_direction is not None:
+            pi.look(looking_direction)
+        eyes.set_height(height)
+
         return eyes
 
-    def change_mode_anim(self, mode, **kwargs):
-        self.mode = mode
-        return Transform(self, self.get_eyes(mode=mode), **kwargs)
-
-    def look_at_anim(self, point_or_mobject, **kwargs):
-        self.thing_looked_at = point_or_mobject
-        return Transform(
-            self, self.get_eyes(thing_to_look_at=point_or_mobject),
-            **kwargs
+    def change_mode(self, mode, thing_to_look_at=None):
+        new_eyes = self.create_eyes(
+            mode=mode,
+            thing_to_look_at=thing_to_look_at
         )
+        self.become(new_eyes, copy_submobjects=False)
+        return self
 
-    def blink_anim(self, **kwargs):
-        target = self.copy()
+    def look_at(self, thing_to_look_at):
+        self.change_mode(
+            self.mode,
+            thing_to_look_at=thing_to_look_at
+        )
+        return self
+
+    def blink(self, **kwargs):  # TODO, change Blink
         bottom_y = self.get_bottom()[1]
-        for submob in target:
+        for submob in self:
             submob.apply_function(
                 lambda p: [p[0], bottom_y, p[2]]
             )
-        if "rate_func" not in kwargs:
-            kwargs["rate_func"] = squish_rate_func(there_and_back)
-        return Transform(self, target, **kwargs)
+        return self

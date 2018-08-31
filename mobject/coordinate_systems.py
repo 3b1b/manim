@@ -49,16 +49,18 @@ class Axes(VGroup):
         config.update(extra_config)
         return NumberLine(x_min=min_val, x_max=max_val, **config)
 
-    def coords_to_point(self, x, y):
+    def coords_to_point(self, *coords):
         origin = self.x_axis.number_to_point(0)
-        x_axis_projection = self.x_axis.number_to_point(x)
-        y_axis_projection = self.y_axis.number_to_point(y)
-        return x_axis_projection + y_axis_projection - origin
+        result = np.array(origin)
+        for axis, coord in zip(self, coords):
+            result += (axis.number_to_point(coord) - origin)
+        return result
 
     def point_to_coords(self, point):
         return tuple([
             axis.point_to_number(point)
             for axis in self
+            if isinstance(axis, NumberLine)
         ])
 
     def get_graph(
@@ -137,11 +139,11 @@ class ThreeDAxes(Axes):
         self.set_axis_shading()
 
     def add_3d_pieces(self):
-        for attr in "x_axis", "y_axis", "z_axis":
-            axis = getattr(self, attr)
-            axis.add(VGroup(
+        for axis in self:
+            axis.pieces = VGroup(
                 *axis.main_line.get_pieces(self.num_axis_pieces)
-            ))
+            )
+            axis.add(axis.pieces)
             axis.main_line.set_stroke(width=0, family=False)
             axis_3d = ThreeDVMobject(axis)
             self.remove(axis)
@@ -368,10 +370,11 @@ class ComplexPlane(NumberPlane):
             numbers += [
                 complex(0, y)
                 for y in range(-int(self.y_radius), int(self.y_radius) + 1)
+                if y != 0
             ]
         for number in numbers:
-            if number == complex(0, 0):
-                continue
+            # if number == complex(0, 0):
+            #     continue
             point = self.number_to_point(number)
             num_str = str(number).replace("j", "i")
             if num_str.startswith("0"):

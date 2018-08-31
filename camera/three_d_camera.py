@@ -18,6 +18,7 @@ from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
 from utils.space_ops import center_of_mass
 from utils.simple_functions import fdiv
+from utils.simple_functions import clip_in_place
 
 
 class ThreeDCamera(Camera):
@@ -32,6 +33,7 @@ class ThreeDCamera(Camera):
         "light_source_start_point": 9 * DOWN + 7 * LEFT + 10 * OUT,
         "frame_center": ORIGIN,
         "should_apply_shading": True,
+        "exponential_projection": False,
     }
 
     def __init__(self, *args, **kwargs):
@@ -42,7 +44,7 @@ class ThreeDCamera(Camera):
         self.gamma_tracker = ValueTracker(self.gamma)
         self.light_source = Point(self.light_source_start_point)
         self.frame_center = Point(self.frame_center)
-        self.fixed_orientation_mobjects = set()
+        self.fixed_orientation_mobjects = dict()
         self.fixed_in_frame_mobjects = set()
         self.reset_rotation_matrix()
 
@@ -171,8 +173,19 @@ class ThreeDCamera(Camera):
         zs = points[:, 2]
         zs[zs >= distance] = distance - 0.001
         for i in 0, 1:
-            points[:, i] *= distance / (distance - zs)
-        points += fc
+            if self.exponential_projection:
+                # Proper projedtion would involve multiplying
+                # x and y by d / (d-z).  But for points with high
+                # z value that causes weird artifacts, and applying
+                # the exponential helps smooth it out.
+                factor = np.exp(zs / distance)
+                lt0 = zs < 0
+                factor[lt0] = (distance / (distance - zs[lt0]))
+            else:
+                factor = (distance / (distance - zs))
+                clip_in_place(factor, 0, 10**6)
+            points[:, i] *= factor
+        points += frame_center
         return points
 
     def project_point(self, point):
@@ -185,15 +198,33 @@ class ThreeDCamera(Camera):
         if fixed_in_frame:
             return points
         if fixed_orientation:
-            center = center_of_mass(points)
+            # center = center_of_mass(points)
+            center_func = self.fixed_orientation_mobjects[mobject]
+            center = center_func()
             new_center = self.project_point(center)
             return points + (new_center - center)
         else:
             return self.project_points(points)
 
-    def add_fixed_orientation_mobjects(self, *mobjects):
-        for mobject in self.extract_mobject_family_members(mobjects):
-            self.fixed_orientation_mobjects.add(mobject)
+    def add_fixed_orientation_mobjects(
+            self, *mobjects,
+            use_static_center_func=False,
+            center_func=None):
+        # This prevents the computation of mobject.get_center
+        # every single time a projetion happens
+        def get_static_center_func(mobject):
+            point = mobject.get_center()
+            return (lambda: point)
+
+        for mobject in mobjects:
+            if center_func:
+                func = center_func
+            elif use_static_center_func:
+                func = get_static_center_func(mobject)
+            else:
+                func = mobject.get_center
+            for submob in mobject.get_family():
+                self.fixed_orientation_mobjects[submob] = func
 
     def add_fixed_in_frame_mobjects(self, *mobjects):
         for mobject in self.extract_mobject_family_members(mobjects):

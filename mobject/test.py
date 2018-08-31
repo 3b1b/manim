@@ -291,8 +291,8 @@ def test_update(monkeypatch):
     monkeypatch.setattr(mobject.mobject, "get_num_args", mock_get_num_args)
 
     m = Mobject()
-    m.add_updater(mock_updater_1)
-    m.add_updater(mock_updater_2)
+    m.add_updater(mock_updater_1, call_updater=False)
+    m.add_updater(mock_updater_2, call_updater=False)
     assert len(m.get_updaters()) == 2
     assert len(m.get_time_based_updaters()) == 1
     m.update(1)
@@ -310,8 +310,8 @@ def test_update(monkeypatch):
 
     mock_updater_1.reset_mock()
     mock_updater_2.reset_mock()
-    m.add_updater(mock_updater_2)
-    m.add_updater(mock_updater_3)
+    m.add_updater(mock_updater_2, call_updater=False)
+    m.add_updater(mock_updater_3, call_updater=False)
     assert len(m.get_updaters()) == 3
     assert len(m.get_time_based_updaters()) == 1
     with pytest.raises(Exception):

@@ -1,6 +1,4 @@
 
-from constants import *
-
 from animation.animation import Animation
 from utils.bezier import interpolate
 from utils.config_ops import digest_config

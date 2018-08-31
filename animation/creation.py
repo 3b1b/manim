@@ -191,6 +191,14 @@ class FadeOutAndShiftDown(FadeOutAndShift):
     }
 
 
+class FadeInFromLarge(Transform):
+    def __init__(self, mobject, scale_factor=2, **kwargs):
+        target = mobject.copy()
+        mobject.scale(scale_factor)
+        mobject.fade(1)
+        Transform.__init__(self, mobject, target, **kwargs)
+
+
 class VFadeIn(Animation):
     """
     VFadeIn and VFadeOut only work for VMobjects, but they can be applied
