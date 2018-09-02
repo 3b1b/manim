@@ -2,7 +2,10 @@ from big_ol_pile_of_manim_imports import *
 from dijkstra_scenes.graph import Graph
 from collections import OrderedDict
 from utils.save import save_state, load_previous_state
+from dijkstra_scenes.edge import Side
 import numpy.linalg as la
+import sys
+import constants as const
 INFTY_COLOR = BLACK
 DEFAULT_WIDTH = 2
 SPT_WIDTH = 6
@@ -11,6 +14,7 @@ QUEUE_COLOR = MAGENTA
 RELAXATION_COLOR = ORANGE
 LINE_HEIGHT = 0.3
 CURSOR_COLOR = BLUE
+
 
 def place_arrows(block, group=None):
     if group is None:
@@ -22,18 +26,19 @@ def place_arrows(block, group=None):
             new_cursor = TexMobject("\\blacktriangleright") \
                 .set_color(CURSOR_COLOR) \
                 .set_height(LINE_HEIGHT) \
-                .next_to(sub_block, LEFT)
+                .next_to(sub_block, const.LEFT)
             group.add(new_cursor)
     return group
 
+
 def extend_arrow(G, u, v, color=None):
     u_v_vector = G.get_node(v).mobject.get_center() - \
-                 G.get_node(u).mobject.get_center()
+        G.get_node(u).mobject.get_center()
     u_v_vector /= la.norm(u_v_vector)
     u_edge_point = G.get_node(u).mobject.get_center() + \
-                   u_v_vector * G.get_node(u).mobject.radius
+        u_v_vector * G.get_node(u).mobject.radius
     v_edge_point = G.get_node(v).mobject.get_center() - \
-                   u_v_vector * G.get_node(v).mobject.radius
+        u_v_vector * G.get_node(v).mobject.radius
     arrow = Arrow(
         u_edge_point,
         u_edge_point,
@@ -48,7 +53,12 @@ def extend_arrow(G, u, v, color=None):
         ),
     ), arrow
 
-def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=None, cursor=None):
+
+def relax_neighbors(scene, G, parent,
+                    show_relaxation=True,
+                    arrows=False,
+                    code=None,
+                    cursor=None):
     if show_relaxation:
         saved_edge_attrs = {}
         for edge in G.get_adjacent_edges(parent):
@@ -67,7 +77,8 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
             cursor_anims = [ApplyMethod(cursor.shift, DOWN * LINE_HEIGHT)]
         else:
             cursor_anims = []
-        scene.play(*G.update_components(indicate_neighbors_updates) + cursor_anims)
+        scene.play(*G.update_components(indicate_neighbors_updates) +
+                   cursor_anims)
 
     updates = OrderedDict()
     adj_edges = G.get_adjacent_edges(parent)
@@ -106,8 +117,8 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
                 relabel = True
             else:
                 print("Unexpected dist label {} on child".format(old_bound),
-                        file=sys.stderr)
-                import ipdb; ipdb.set_trace(context=7)
+                      file=sys.stderr)
+                breakpoint()
 
             if new_bound < old_bound:
                 relabel = True
@@ -119,11 +130,11 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
             ])
             if arrows:
                 arrow_vec = G.get_node(parent).mobject.get_center() - \
-                            G.get_node(child).mobject.get_center()
+                    G.get_node(child).mobject.get_center()
                 arrow_vec /= la.norm(arrow_vec)
                 arrow = Arrow(G.get_node(child).mobject.get_center(),
-                              G.get_node(child).mobject.get_center() + \
-                                      arrow_vec)
+                              G.get_node(child).mobject.get_center() +
+                              arrow_vec)
                 if G.get_node_parent_edge(child) is not None:
                     updates[G.get_node_parent_edge(child)] = OrderedDict([
                         ("stroke_width", 2),
@@ -138,8 +149,11 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
 
     # highlight edges and place cursors
     if cursor is not None:
-        relax_line_cursor = cursor.copy() \
-            .next_to(code.submobjects[0].submobjects[3].submobjects[2].submobjects[1], LEFT)
+        relax_line_cursor = cursor.copy().next_to(code.submobjects[0]
+                                                      .submobjects[3]
+                                                      .submobjects[2]
+                                                      .submobjects[1],
+                                                  const.LEFT)
         relax_block_cursors = place_arrows(code.submobjects[2])
         relax_block_cursors.remove(relax_block_cursors[2])
         if not any_relabel:
@@ -152,8 +166,14 @@ def relax_neighbors(scene, G, parent, show_relaxation=True, arrows=False, code=N
             cursor_anims = [
                 ShowCreation(relax_line_cursor),
                 Succession(
-                    ShowCreation, relax_block_cursors, {"run_time": 0.5},
-                    ApplyMethod, relax_block_cursors[1].shift, DOWN * LINE_HEIGHT, {"run_time": 0.5}
+                    ShowCreation,
+                    relax_block_cursors,
+                    {"run_time": 0.5},
+
+                    ApplyMethod,
+                    relax_block_cursors[1].shift,
+                    DOWN * LINE_HEIGHT,
+                    {"run_time": 0.5},
                 ),
             ]
     else:
@@ -202,11 +222,12 @@ def bounded_nodes(G):
     ret = list(filter(in_queue, G.get_nodes()))
     return ret
 
+
 def extract_node(scene, G, arrows=False, code=None, cursor=None):
     queue = bounded_nodes(G)
     if not queue:
         return None
-    min_node  = queue[0]
+    min_node = queue[0]
     if "\infty" in G.get_node_label(min_node, "dist").tex_string:
         min_bound = float("inf")
     elif "\le 0" == G.get_node_label(min_node, "dist").tex_string:
@@ -236,44 +257,43 @@ def extract_node(scene, G, arrows=False, code=None, cursor=None):
             ])
     if cursor is not None:
         if cursor not in scene.mobjects:
-            cursor.next_to(code.submobjects[0].submobjects[3].submobjects[1], LEFT)
+            cursor.next_to(code.submobjects[0].submobjects[3].submobjects[1],
+                           const.LEFT)
             cursor_anims = [ShowCreation(cursor)]
         else:
-            cursor_target = cursor.generate_target() \
-                .next_to(code.submobjects[0].submobjects[3].submobjects[1], LEFT)
+            cursor.generate_target() \
+                .next_to(code.submobjects[0].submobjects[3].submobjects[1],
+                         const.LEFT)
             cursor_anims = [MoveToTarget(cursor)]
     else:
         cursor_anims = []
     scene.play(*G.update_components(updates) + cursor_anims)
     return min_node
 
+
 class RunAlgorithm(MovingCameraScene):
     def first_try(self):
         # Draw borders
-        top_border    = Line(TOP + LEFT_SIDE, TOP + RIGHT_SIDE)
-        bottom_border = Line(BOTTOM + LEFT_SIDE, BOTTOM + RIGHT_SIDE)
-        left_border   = Line(LEFT_SIDE + BOTTOM, LEFT_SIDE + TOP)
-        right_border  = Line(RIGHT_SIDE + BOTTOM, RIGHT_SIDE + TOP)
-        origin        = Dot(ORIGIN)
-        self.add(top_border)
-        self.add(bottom_border)
-        self.add(left_border)
-        self.add(right_border)
-        #self.add(origin)
+        self.add(Line(const.TOP + const.LEFT_SIDE,
+                      const.TOP + const.RIGHT_SIDE))
+        self.add(Line(BOTTOM + const.LEFT_SIDE, BOTTOM + const.RIGHT_SIDE))
+        self.add(Line(const.LEFT_SIDE + BOTTOM, const.LEFT_SIDE + TOP))
+        self.add(Line(const.RIGHT_SIDE + BOTTOM, const.RIGHT_SIDE + TOP))
+        self.add(Dot(ORIGIN))
 
         # draw the graph
         X_DIST = 4.3
         Y_DIST = 2.8
         nodes = [
-            (-X_DIST, Y_DIST , 0),
-            ( 0     , Y_DIST , 0),
-            ( X_DIST, Y_DIST , 0),
-            (-X_DIST, 0      , 0),
-            ( 0     , 0      , 0),
-            ( X_DIST, 0      , 0),
+            (-X_DIST, Y_DIST, 0),
+            (0, Y_DIST, 0),
+            (X_DIST, Y_DIST, 0),
+            (-X_DIST, 0, 0),
+            (0, 0, 0),
+            (X_DIST, 0, 0),
             (-X_DIST, -Y_DIST, 0),
-            ( 0     , -Y_DIST, 0),
-            ( X_DIST, -Y_DIST, 0),
+            (0, -Y_DIST, 0),
+            (X_DIST, -Y_DIST, 0),
         ]
         edges = [
             (nodes[0], nodes[1]),
@@ -331,9 +351,10 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*G.update_components(updates))
 
         # scroll down to show example
-        ShiftDown = lambda t: (0, -FRAME_HEIGHT * t, 0)
-        self.play(MoveAlongPath(self.camera_frame,
-                                ParametricFunction(ShiftDown)))
+        self.play(MoveAlongPath(
+            self.camera_frame,
+            ParametricFunction(lambda t: (0, -FRAME_HEIGHT * t, 0)),
+        ))
 
         self.G = G
         self.s = s
@@ -348,8 +369,8 @@ class RunAlgorithm(MovingCameraScene):
 
         # draw counterexample graph
         nodes = [
-            (0,    0, 0),
-            (4,  1.5, 0),
+            (0, 0, 0),
+            (4, 1.5, 0),
             (4, -1.5, 0),
         ]
         edges = [
@@ -358,7 +379,7 @@ class RunAlgorithm(MovingCameraScene):
             (nodes[1], nodes[2]),
         ]
         H = Graph(nodes, edges)
-        H.shift(DOWN * FRAME_HEIGHT + LEFT * 0.5 * H.get_width())
+        H.shift(DOWN * FRAME_HEIGHT + const.LEFT * 0.5 * H.get_width())
         self.play(ShowCreation(H))
 
         # draw s and edge weights
@@ -384,20 +405,14 @@ class RunAlgorithm(MovingCameraScene):
         self.play(*H.update_components(updates))
 
         # this is antipattern; possibly allow returning a copy edge?
-        self.play(
-            Indicate(H.edges[edges[0]].get_label("weight"),
-            rate_func=there_and_back_with_pause,
-            run_time=2,
-        ))
+        self.play(Indicate(H.edges[edges[0]].get_label("weight"), rate_func=there_and_back_with_pause, run_time=2))
 
         # switch to upper bound
         relax_neighbors(self, H, nodes[0], show_relaxation=False)
 
         # scroll back up
         initial_height = self.camera_frame.get_center()[1]
-        ShiftUp = lambda t: (0, initial_height + FRAME_HEIGHT * t, 0)
-        self.play(MoveAlongPath(self.camera_frame,
-                                ParametricFunction(ShiftUp)))
+        self.play(MoveAlongPath(self.camera_frame, ParametricFunction(lambda t: (0, initial_height + FRAME_HEIGHT * t, 0))))
 
         save_state(self)
 
@@ -406,7 +421,6 @@ class RunAlgorithm(MovingCameraScene):
         G = self.G
         s = self.s
         nodes = self.nodes
-        edges = self.edges
 
         # set neighbors to upper bound
         adj_edges = G.get_adjacent_edges(s)
@@ -554,7 +568,7 @@ class RunAlgorithm(MovingCameraScene):
         # TODO: convert this to use DynamicEquation
         x_len = 5
         y_len = 2
-        eq1 = TexMobject("z \le x + y").move_to(sx.get_end() + RIGHT * 4)
+        eq1 = TexMobject("z \le x + y").move_to(sx.get_end() + const.RIGHT * 4)
         eq1[2].set_color(x_color)
         eq1[4].set_color(y_color)
         eq1[0].set_color(z_color)
@@ -658,10 +672,160 @@ class RunAlgorithm(MovingCameraScene):
                     run_time=2,
                 )])
         self.play(*anims)
+
+        min_node = extract_node(self, G)
+        relax_neighbors(self, G, min_node)
+
+        # scroll camera
+        ShiftRightDown = lambda t: (FRAME_WIDTH * t, -FRAME_HEIGHT * t, 0)
+        self.play(MoveAlongPath(self.camera_frame,
+                                ParametricFunction(ShiftRightDown)))
+        #breakpoint(context=7)
+        save_state(self)
+
+    def tightening(self):
+        self.__dict__.update(load_previous_state())
+        H_DIST = 3
+        V_DIST = 1.5
+
+        nodes = [
+            (-H_DIST, V_DIST * 1.5, 0),
+            (-H_DIST, V_DIST * 0.5, 0),
+            (-H_DIST, -V_DIST * 0.5, 0),
+            (-H_DIST, -V_DIST * 1.5, 0),
+
+            (H_DIST, V_DIST * 1.5, 0),
+            (H_DIST, V_DIST * 0.5, 0),
+            (H_DIST, -V_DIST * 0.5, 0),
+            (H_DIST, -V_DIST * 1.5, 0),
+        ]
+        edges = [
+            (nodes[0], nodes[6]),
+            (nodes[1], nodes[7]),
+            (nodes[2], nodes[4]),
+            (nodes[3], nodes[5]),
+        ]
+        attrs = {
+            nodes[0]: OrderedDict([
+                ("dist", Integer(5)),
+                ("color", SPT_COLOR),
+            ]),
+            nodes[1]: OrderedDict([
+                ("dist", Integer(3)),
+                ("color", SPT_COLOR),
+            ]),
+            nodes[2]: OrderedDict([
+                ("dist", Integer(4)),
+                ("color", SPT_COLOR),
+            ]),
+            nodes[3]: OrderedDict([
+                ("dist", Integer(6)),
+                ("color", SPT_COLOR),
+            ]),
+
+            nodes[4]: OrderedDict([
+                ("dist", TexMobject("\\le 6")),
+                ("color", QUEUE_COLOR),
+            ]),
+            nodes[5]: OrderedDict([
+                ("dist", TexMobject("\\le 11")),
+                ("color", QUEUE_COLOR),
+            ]),
+            nodes[6]: OrderedDict([
+                ("dist", TexMobject("\\le 8")),
+                ("color", QUEUE_COLOR),
+            ]),
+            nodes[7]: OrderedDict([
+                ("dist", TexMobject("\\le 7")),
+                ("color", QUEUE_COLOR),
+            ]),
+
+            edges[0]: OrderedDict([
+                ("weight", Integer(3)),
+                ("label_location", 0.09),
+                ("label_side", Side.COUNTERCLOCKWISE),
+            ]),
+            edges[1]: OrderedDict([
+                ("weight", Integer(4)),
+                ("label_location", 0.09),
+                ("label_side", Side.COUNTERCLOCKWISE),
+            ]),
+            edges[2]: OrderedDict([
+                ("weight", Integer(2)),
+                ("label_location", 0.09),
+            ]),
+            edges[3]: OrderedDict([
+                ("weight", Integer(5)),
+                ("label_location", 0.09),
+            ]),
+        }
+        G = Graph(nodes, edges, attrs=attrs) \
+            .move_to(self.camera_frame.get_center())
+        self.play(ShowCreation(G))
+        self.wait(1)
+
+        known_nodes = Group(*[G.get_node(point) for point in nodes[:4]])
+        known_text = TextMobject("Known").next_to(known_nodes, UP)
+        unknown_nodes = Group(*[G.get_node(point) for point in nodes[4:]])
+        unknown_text = TextMobject("Unknown").next_to(unknown_nodes, UP)
+
+        unknown_nodes.save_state()
+        unknown_nodes.generate_target()
+        unknown_nodes.target.set_color(interpolate_color(BLACK, WHITE, 0.9))
+        self.play(MoveToTarget(unknown_nodes), Write(known_text))
+        self.wait(1)
+
+        known_nodes.save_state()
+        known_nodes.generate_target()
+        known_nodes.target.set_color(interpolate_color(BLACK, WHITE, 0.9))
+        known_text.save_state()
+        known_text.generate_target()
+        known_text.target.set_color(interpolate_color(BLACK, WHITE, 0.9))
+        unknown_nodes.target = unknown_nodes.saved_state
+        self.play(
+            MoveToTarget(known_nodes),
+            MoveToTarget(known_text),
+            MoveToTarget(unknown_nodes),
+            Write(unknown_text),
+        )
+        self.wait(1)
+
+        known_nodes.target = known_nodes.saved_state
+        known_text.target = known_text.saved_state
+        self.play(MoveToTarget(known_nodes), MoveToTarget(known_text))
+
+        edges = Group(*[G.get_edge(edge).mobject for edge in edges])
+        self.play(LaggedStart(
+            ApplyMethod, edges,
+            lambda m: (m.rotate_in_place, np.pi / 24),
+            rate_func=wiggle,
+            run_time=2,
+        ))
+
+        anims = []
+        for node in nodes[4:]:
+            bound = G.get_node_label(node, "dist")
+            anims.append(Indicate(bound))
+        self.play(*anims, rate_func=there_and_back_with_pause, run_time=2)
+
+        self.play(*G.update_component(nodes[4],
+                  OrderedDict([
+                      ("dist", Integer(6)),
+                      ("color", SPT_COLOR),
+                  ])))
+
         self.wait(2)
 
-        ### ADD TIGHTENING ANIMATIONS HERE ###
+        # scroll camera
+        ShiftLeftUp = lambda t: (FRAME_WIDTH * (1 - t), FRAME_HEIGHT * (t - 1), 0)
+        self.play(MoveAlongPath(self.camera_frame,
+                                ParametricFunction(ShiftLeftUp)))
 
+        save_state(self)
+
+    def first_run(self):
+        self.__dict__.update(load_previous_state())
+        G = self.G
         while bounded_nodes(G):
             min_node = extract_node(self, G)
             relax_neighbors(self, G, min_node)
@@ -815,9 +979,9 @@ class RunAlgorithm(MovingCameraScene):
             edges[2]: OrderedDict([("weight", Integer(1))]),
         }
         H_spt = Graph(nodes, edges, attrs=attrs).shift(DOWN)
-        H_spt_target = H_spt.generate_target().shift(3 * LEFT)
+        H_spt_target = H_spt.generate_target().shift(3 * const.LEFT)
         H_mst = H_spt.deepcopy()
-        H_mst_target = H_mst.generate_target().shift(3 * RIGHT)
+        H_mst_target = H_mst.generate_target().shift(3 * const.RIGHT)
 
         # split graphs
         self.play(ShowCreation(H_spt))
@@ -889,8 +1053,8 @@ class RunAlgorithm(MovingCameraScene):
             *H_spt.update_components(spt_updates) + H_mst.update_components(mst_updates)
         )
 
-        H_spt_target = H_spt.generate_target().shift(3 * RIGHT)
-        H_mst_target = H_mst.generate_target().shift(3 * LEFT)
+        H_spt_target = H_spt.generate_target().shift(3 * const.RIGHT)
+        H_mst_target = H_mst.generate_target().shift(3 * const.LEFT)
         self.play(
             MoveToTarget(H_spt),
             MoveToTarget(H_mst),
@@ -976,7 +1140,7 @@ class RunAlgorithm(MovingCameraScene):
         attrs = {
             s: OrderedDict([("variable", TexMobject("s"))]),
         }
-        G = Graph(nodes, edges, attrs=attrs).shift(RIGHT * 0.25 * FRAME_WIDTH)
+        G = Graph(nodes, edges, attrs=attrs).shift(const.RIGHT * 0.25 * FRAME_WIDTH)
 
         updates = OrderedDict()
         for node in nodes:
@@ -1045,7 +1209,7 @@ class RunAlgorithm(MovingCameraScene):
                 ("weight", Integer(2)),
             ]),
         }
-        G = Graph(nodes, edges, attrs=attrs).shift(RIGHT * 0.15 * FRAME_WIDTH)
+        G = Graph(nodes, edges, attrs=attrs).shift(const.RIGHT * 0.15 * FRAME_WIDTH)
 
         self.play(FadeIn(G))
         updates = OrderedDict()
@@ -1177,7 +1341,7 @@ class RunAlgorithm(MovingCameraScene):
 
         dijkstra_cursor = TexMobject("\\blacktriangleright").set_color(CURSOR_COLOR) \
             .set_height(LINE_HEIGHT) \
-            .next_to(code.submobjects[0].submobjects[1], LEFT)
+            .next_to(code.submobjects[0].submobjects[1], const.LEFT)
 
         initialize_cursors = place_arrows(code.submobjects[1])
 
@@ -1226,7 +1390,7 @@ class RunAlgorithm(MovingCameraScene):
             "+ \, &V \, &&       \,\, &&                          \\\\" + \
             "+ \, &2 \, &&\\cdot \,\, &&E                         \\\\",
             columns=3,
-        ).shift(RIGHT * 3)
+        ).shift(const.RIGHT * 3)
 
         tbuild = VMobject()
         tbuild.submobjects = runtime.submobjects[0].submobjects[0:9]
@@ -1277,7 +1441,7 @@ class RunAlgorithm(MovingCameraScene):
         # show
         textbook_runtime = TexMobject(
             "O(E \cdot T_\\text{decrease\_key} + V \cdot T_\\text{extract\_min})"
-        ).shift(RIGHT * 3 + UP * 0.5)
+        ).shift(const.RIGHT * 3 + UP * 0.5)
 
         textbook_term_1 = VGroup(*textbook_runtime.submobjects[0].submobjects[2:17])
         textbook_plus   = textbook_runtime.submobjects[0].submobjects[17]
@@ -1354,14 +1518,16 @@ class RunAlgorithm(MovingCameraScene):
             binheap_time2,
             "(O)(\\()(E) (\\\\log V) (\\+) (V) (\\\\log V)\\)",
             "(O)(\\()\\((E) (\\+) (V)\\) (\\\\log V)\\)",
-            [(0,0), (1,1), (1,2), (2,3), (4,4), (5,5), (3,7), (6,7), (7,8), (7,6)],
+            [(0, 0), (1, 1), (1, 2), (2, 3), (4, 4), (5, 5), (3, 7), (6, 7),
+                (7, 8), (7, 6)],
         )
         self.play(x)
 
         # Fibonacci Heap
         fibo_word = VGroup(*table.submobjects[0].submobjects[87:100])
         table_fibo_time = VGroup(*table.submobjects[0].submobjects[101:])
-        fibo_time = TexMobject("O(E + V \log V)").move_to(table_fibo_time.get_center())
+        fibo_time = TexMobject("O(E + V \log V)") \
+            .move_to(table_fibo_time.get_center())
         self.play(FadeIn(fibo_word))
         self.play(Write(fibo_time))
         self.play(
@@ -1385,15 +1551,17 @@ class RunAlgorithm(MovingCameraScene):
         save_state(self)
 
     def construct(self):
-        self.first_try()
-        self.counterexample()
-        self.one_step()
-        self.triangle_inequality()
-        self.generalize()
-        self.last_run()
-        self.directed_graph()
-        self.spt_vs_mst()
-        self.show_code()
-        self.run_code()
+        # self.first_try()
+        # self.counterexample()
+        # self.one_step()
+        # self.triangle_inequality()
+        # self.generalize()
+        # self.tightening()
+        # self.first_run()
+        # self.last_run()
+        # self.directed_graph()
+        # self.spt_vs_mst()
+        # self.show_code()
+        # self.run_code()
         self.analyze()
-        self.compare_data_structures()
+        # self.compare_data_structures()

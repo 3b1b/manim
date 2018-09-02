@@ -130,7 +130,7 @@ class Node(Component):
 
         return ret
 
-    def move_labels(self, new_labels):
+    def move_labels(self, new_labels, **kwargs):
         # move
         if len(set(list(self.labels.keys()) + list(new_labels.keys()))) == 1:
             if len(new_labels) == 1:
@@ -140,7 +140,7 @@ class Node(Component):
                 new_labels[key] = val.copy().move_to(self.mobject.get_center())
             else:
                 print("This should be impossible", file=sys.stderr)
-                ipdb.set_trace(context=7)
+                breakpoint(context=7)
         else:
             vec = rotate_vector(constants.RIGHT, numpy.pi / 2)
             vec *= LABELED_NODE_RADIUS / 2.4 * self.mobject.scale_factor

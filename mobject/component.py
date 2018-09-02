@@ -80,11 +80,11 @@ class Component(Mobject):
         # scale
         for label in new_labels.values():
             if type(label) == Arrow:
-                continue # TODO
+                continue  # TODO
             scale_factor = self.get_label_scale_factor(label, len(new_labels))
             label.scale(scale_factor)
 
-        new_labels = self.move_labels(new_labels)
+        new_labels = self.move_labels(new_labels, **kwargs)
 
         # animate / create
         if "animate" not in kwargs or kwargs["animate"]:
@@ -124,4 +124,4 @@ class Component(Mobject):
         print("You called get_center() on a Component rather than its mobject",
               file=sys.stderr)
         print("This is probably not what you want", file=sys.stderr)
-        ipdb.set_trace(context=7)
+        breakpoint(context=7)

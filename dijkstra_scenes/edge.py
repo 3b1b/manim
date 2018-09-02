@@ -1,18 +1,25 @@
 from __future__ import print_function
 from __future__ import absolute_import
-from constants import *
 from mobject.component import Component
 from dijkstra_scenes.node import Node
 from mobject.geometry import Arrow
 from mobject.geometry import Line
 from mobject.numbers import Integer
-from animation.creation import ShowCreation, FadeIn, FadeOut
+from animation.creation import FadeIn, FadeOut
 from animation.transform import ReplacementTransform
 from utils.space_ops import rotate_vector
+from utils.bezier import interpolate
 from collections import OrderedDict
-import copy
+from enum import Enum
+import constants as const
 import numpy
 import sys
+
+
+class Side(Enum):
+    CLOCKWISE = 0
+    COUNTERCLOCKWISE = 1
+
 
 class Edge(Component):
     def __init__(self, start_node, end_node, attrs=None, **kwargs):
@@ -35,7 +42,7 @@ class Edge(Component):
             Node.assert_primitive(pair[1])
         except AssertionError:
             print("Invalid Edge primitive: {}".format(pair), file=sys.stderr)
-            import ipdb; ipdb.set_trace(context=7)
+            breakpoint()
 
     def make_key(self, start_node, end_node):
         return (start_node.key, end_node.key)
@@ -56,36 +63,51 @@ class Edge(Component):
         else:
             return self.mobject.scale_factor
 
-    def move_labels(self, new_labels):
+    def move_labels(self, new_labels, **kwargs):
+        label_location = kwargs.get("label_location", 0.5)
+        label_side = kwargs.get("label_side", Side.CLOCKWISE)
         # move
         start, end = self.mobject.get_start_and_end()
         vec = start - end
         vec = vec / numpy.linalg.norm(vec)
-        vec = rotate_vector(vec, numpy.pi/2)
-        buff = MED_SMALL_BUFF if self.mobject.curved else SMALL_BUFF
+        if label_side == Side.CLOCKWISE:
+            vec = rotate_vector(vec, numpy.pi / 2)
+        else:
+            vec = rotate_vector(vec, 3 * numpy.pi / 2)
+        buff = const.MED_SMALL_BUFF \
+            if self.mobject.curved \
+            else const.SMALL_BUFF
         last_mobject = None
         old_label_copies = OrderedDict()
+        # move initially existing labels
         for name, label in self.labels.items():
             if name in new_labels:
+                # move the new label into place
                 if last_mobject:
-                    new_labels[name].next_to(last_mobject, RIGHT, buff=buff)
+                    new_labels[name].next_to(last_mobject,
+                                             const.RIGHT, buff=buff)
                 else:
-                    new_labels[name].next_to(self.mobject.get_midpoint(), vec, buff=buff)
+                    new_labels[name].next_to(
+                        interpolate(start, end, label_location), vec, buff=buff)
             else:
+                # move the old label into place
                 if last_mobject:
-                    old_label_copies[name] = label.copy().next_to(last_mobject, RIGHT, buff=buff)
+                    old_label_copies[name] = label.copy().next_to(
+                        last_mobject, const.RIGHT, buff=buff)
                 else:
-                    old_label_copies[name] = label.copy().next_to(self.mobject.get_midpoint(), vec, buff=buff)
+                    old_label_copies[name] = label.copy().next_to(
+                        interpolate(start, end, label_location), vec, buff=buff)
             last_mobject = label
 
+        # move newly added labels into place
         for name, label in new_labels.items():
             if name in self.labels:
                 pass
             else:
                 if last_mobject:
-                    label.next_to(last_mobject, RIGHT, buff=buff)
+                    label.next_to(last_mobject, const.RIGHT, buff=buff)
                 else:
-                    label.next_to(self.mobject.get_midpoint(), vec, buff=buff)
+                    label.next_to(interpolate(start, end, label_location), vec, buff=buff)
                 last_mobject = label
         ordered_labels = OrderedDict()
         for key in self.labels:
@@ -104,27 +126,31 @@ class Edge(Component):
         if dic is None:
             dic = OrderedDict()
 
-        # set mobject parameters
+        # Create a dictionary with all attributes to create a new Mobject.
+        # Unspecified values will be filled from the current Mobject if it
+        # exists, and with default values if not.
         if "stroke_width" not in dic:
             if hasattr(self, "mobject"):
                 dic["stroke_width"] = self.mobject.stroke_width
             else:
                 print("Attempted to initialize Edge without stroke_width")
-                import ipdb; ipdb.set_trace(context=7)
+                breakpoint(context=7)
 
         if "rectangular_stem_width" not in dic:
             if hasattr(self, "mobject"):
-                dic["rectangular_stem_width"] = self.mobject.rectangular_stem_width
+                dic["rectangular_stem_width"] = \
+                    self.mobject.rectangular_stem_width
             else:
-                print("Attempted to initialize Edge without rectangular_stem_width")
-                import ipdb; ipdb.set_trace(context=7)
+                print("Attempted to initialize Edge without "
+                      "rectangular_stem_width")
+                breakpoint(context=7)
 
         if "scale_factor" not in dic:
             if hasattr(self, "mobject"):
                 dic["scale_factor"] = self.mobject.scale_factor
             else:
                 print("Attempted to initialize Edge without scale_factor")
-                import ipdb; ipdb.set_trace(context=7)
+                breakpoint(context=7)
 
         if "color" not in dic:
             if hasattr(self, "mobject"):
@@ -132,44 +158,59 @@ class Edge(Component):
 
         if "directed" not in dic:
             if hasattr(self, "mobject") and self.mobject.directed:
-                dic["directed"] = True
+                dic["directed"] = self.mobject.directed
             else:
                 dic["directed"] = False
 
         if "curved" not in dic:
             if hasattr(self, "mobject") and self.mobject.curved:
-                dic["curved"] = True
+                dic["curved"] = self.mobject.curved
             else:
                 dic["curved"] = False
+
+        if "label_location" not in dic:
+            if hasattr(self, "mobject") and self.mobject.label_location:
+                dic["label_location"] = self.mobject.label_location
+            else:
+                dic["label_location"] = 0.5
+
+        if "label_side" not in dic:
+            if hasattr(self, "mobject") and self.mobject.label_side:
+                dic["label_side"] = self.mobject.label_side
+            else:
+                dic["label_side"] = Side.CLOCKWISE
 
         ret = []
         normalized_vec = self.end_node.mobject.get_center() - \
             self.start_node.mobject.get_center()
         normalized_vec = normalized_vec / numpy.linalg.norm(normalized_vec)
-        normal_vec = rotate_vector(normalized_vec, numpy.pi/2)
+        normal_vec = rotate_vector(normalized_vec, numpy.pi / 2)
         if dic["directed"]:
             mob = Arrow(
-                self.start_node.mobject.get_center() + \
-                    normalized_vec * (self.start_node.mobject.radius - 0.0),
-                self.end_node.mobject.get_center() - \
-                    normalized_vec * (self.end_node.mobject.radius - 0.0),
+                self.start_node.mobject.get_center() +
+                normalized_vec * (self.start_node.mobject.radius - 0.0),
+                self.end_node.mobject.get_center() -
+                normalized_vec * (self.end_node.mobject.radius - 0.0),
                 buff=0,
                 **dic
             )
         else:
             mob = Line(
-                self.start_node.mobject.get_center() + \
-                    normalized_vec * self.start_node.mobject.radius,
-                self.end_node.mobject.get_center() - \
-                    normalized_vec * self.end_node.mobject.radius,
+                self.start_node.mobject.get_center() +
+                normalized_vec * self.start_node.mobject.radius,
+                self.end_node.mobject.get_center() -
+                normalized_vec * self.end_node.mobject.radius,
                 **dic
             )
 
         if dic["curved"]:
             start, end = mob.get_start_and_end()
             midpoint = (start + end) / 2
+
             def f(x):
-                return x - 0.1 * normal_vec * (numpy.linalg.norm(start - midpoint) - numpy.linalg.norm(x - midpoint))
+                return x - 0.1 * normal_vec * \
+                    (numpy.linalg.norm(start - midpoint) -
+                     numpy.linalg.norm(x - midpoint))
             mob.shift(-0.05 * normal_vec).apply_function(f)
         new_mob = mob
 
@@ -180,7 +221,8 @@ class Edge(Component):
                     FadeIn(new_mob, parent=self),
                 ])
             else:
-                ret.extend([ReplacementTransform(self.mobject, new_mob, parent=self)])
+                ret.extend([ReplacementTransform(
+                    self.mobject, new_mob, parent=self)])
         else:
             if hasattr(self, "mobject"):
                 self.remove(self.mobject)
@@ -194,9 +236,10 @@ class Edge(Component):
                 labels["weight"] = dic["weight"]
         if not hasattr(self, "labels"):
             self.labels = OrderedDict()
-        if animate:
-            ret.extend(self.set_labels(labels))
-        else:
-            self.set_labels(labels, animate=False)
-
+        ret.extend(self.set_labels(
+            labels,
+            animate=animate,
+            label_location=dic["label_location"],
+            label_side=dic["label_side"],
+        ))
         return ret

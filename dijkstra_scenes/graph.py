@@ -1,9 +1,7 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from mobject.mobject import Group
-from dijkstra_scenes.node import Node
-from dijkstra_scenes.edge import Edge
 from collections import OrderedDict
+from dijkstra_scenes.edge import Edge
+from dijkstra_scenes.node import Node
+from mobject.mobject import Group
 import constants
 import copy
 import sys
@@ -75,7 +73,7 @@ class Graph(Group):
                 anims.extend(self.edges[key].update_attrs(dic.get(key, None)))
             else:
                 print("Unexpected key {}".format(key), file=sys.stderr)
-                ipdb.set_trace(context=7)
+                breakpoint(context=7)
         for pair in neighbors_to_update:
             anims.extend(self.edges[pair].update_attrs())
         return anims
@@ -91,7 +89,7 @@ class Graph(Group):
                 anims.append(self.edges[key].set_labels(dic[key]))
             else:
                 print("Unexpected key {}".format(key), file=sys.stderr)
-                ipdb.set_trace(context=7)
+                breakpoint(context=7)
         return anims
 
     def get_node_label(self, point, name):
