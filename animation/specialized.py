@@ -76,6 +76,7 @@ class Broadcast(LaggedStart):
             **kwargs
         )
 
+
 class TransformEquation(AnimationGroup):
     """
     When writing the regex, parentheses and + in the equation must be double
@@ -95,13 +96,13 @@ class TransformEquation(AnimationGroup):
             return 0
         elif regex[regex_index] == '^':
             return 0
-        elif regex[regex_index:].startswith('\\log'):
+        elif subgroup and regex[regex_index:].startswith('\\log') or not subgroup and regex[regex_index:].startswith('\\\\log'):
             return 3
         else:
             return 1
 
     def char_size(self, regex, regex_index, subgroup=False):
-        if regex[regex_index:regex_index+2] == '\\\\':
+        if regex[regex_index:regex_index + 2] == '\\\\':
             # handle tex
             # TODO: use re.search for ' ' or '\\'
             return regex[regex_index:].find(' ')
@@ -127,14 +128,14 @@ class TransformEquation(AnimationGroup):
         match = re.match(regex, eq.tex_string)
         if not match:
             print("{} does not match {}".format(regex, eq.tex_string))
-            import ipdb; ipdb.set_trace(context=7)
+            breakpoint(context=7)
             assert(False)
         if match.group(0) != eq.tex_string:
-            import ipdb; ipdb.set_trace(context=7)
+            breakpoint(context=7)
             assert(False)
         regex_index = 0
         mob_index = 0
-        group_index = 1
+        group_index = 1  # 0 is the entire string
         group = VGroup()
         mobs = []
         while True:
@@ -142,6 +143,8 @@ class TransformEquation(AnimationGroup):
                 if mobs:
                     group.submobjects.append(VGroup(*mobs))
                 break
+            # open parentheses, some characters that aren't close parentheses,
+            # then a close parentheses
             group_match = re.match("^\([^)]*\)", regex[regex_index:])
             if group_match:
                 # handle group
@@ -201,11 +204,14 @@ class TransformEquation(AnimationGroup):
                     l1 = [g1.submobjects[map_list[i][0]]]
                     l2 = [g2.submobjects[map_list[i][1]]]
                     i += 1
-                    while i < len(map_list) and map_list[i][0] == map_list[i-1][0]:
+                    while i < len(map_list) and map_list[i][0] == map_list[i - 1][0]:
                         l2.append(g2.submobjects[map_list[i][1]])
                         i += 1
                     G1.submobjects.append(VGroup(*l1))
                     G2.submobjects.append(VGroup(*l2))
+            else:
+                print("RIP", file=sys.stderr)
+                assert(False)
             for i in range(len(g1.submobjects)):
                 if i not in g1_nodes:
                     F1.submobjects.append(g1.submobjects[i])
@@ -214,7 +220,7 @@ class TransformEquation(AnimationGroup):
                     F2.submobjects.append(g2.submobjects[i])
             self.g1 = g1
             self.g2 = g2
-            trans   = ReplacementTransform(G1, G2)
+            trans = ReplacementTransform(G1, G2)
             fadeout = FadeOut(F1)
-            fadein  = FadeIn(F2)
+            fadein = FadeIn(F2)
             AnimationGroup.__init__(self, trans, fadeout, fadein)

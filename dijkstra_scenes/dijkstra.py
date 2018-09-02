@@ -389,9 +389,9 @@ class RunAlgorithm(MovingCameraScene):
             ("dist", Integer(0)),
             ("color", SPT_COLOR),
         ])
-        updates[edges[0]] = OrderedDict([ ("weight", Integer(10)) ])
-        updates[edges[1]] = OrderedDict([ ("weight", Integer(1))  ])
-        updates[edges[2]] = OrderedDict([ ("weight", Integer(1))  ])
+        updates[edges[0]] = OrderedDict([("weight", Integer(10))])
+        updates[edges[1]] = OrderedDict([("weight", Integer(1))])
+        updates[edges[2]] = OrderedDict([("weight", Integer(1))])
         self.play(*H.update_components(updates))
 
         # label nodes with tentative distances
@@ -1404,164 +1404,206 @@ class RunAlgorithm(MovingCameraScene):
         two_e.submobjects = runtime.submobjects[0].submobjects[43:]
 
         # time to build
-        self.play(
-            ReplacementTransform(
-                code.submobjects[0].submobjects[2].copy(),
-                tbuild
-            ),
-        )
-        self.wait()
+        indicated = code.submobjects[0] \
+                        .submobjects[2] \
+                        .copy().scale_in_place(1.2).set_color(YELLOW)
+        regular = code.submobjects[0].submobjects[2].copy()
+        self.play(ReplacementTransform(
+            code.submobjects[0].submobjects[2], indicated, run_time=0.7,
+        ))
+        self.play(ReplacementTransform(indicated.copy(), tbuild))
+        self.play(ReplacementTransform(indicated, regular, run_time=0.7))
+        code.submobjects[0].submobjects[2] = regular  # restore code
 
         # time to extract
+        indicated = code.submobjects[0] \
+                        .submobjects[3] \
+                        .submobjects[1] \
+                        .copy().scale_in_place(1.2).set_color(YELLOW)
+        regular = code.submobjects[0].submobjects[3].submobjects[1].copy()
+        self.play(ReplacementTransform(
+            code.submobjects[0].submobjects[3].submobjects[1],
+            indicated,
+            run_time=0.7,
+        ))
         self.play(
-            ReplacementTransform(
-                code.submobjects[0].submobjects[3].submobjects[1].copy(),
-                v_textractmin
-            ),
+            ReplacementTransform(indicated.copy(), v_textractmin),
             FadeIn(runtime.submobjects[0].submobjects[9]),
         )
-        self.wait()
+        self.play(ReplacementTransform(indicated, regular, run_time=0.7))
+        code.submobjects[0].submobjects[3].submobjects[1] = regular
 
         # time to relax
+        indicated = code.submobjects[0] \
+                        .submobjects[3] \
+                        .submobjects[2] \
+                        .submobjects[1] \
+                        .copy().scale_in_place(1.2).set_color(YELLOW)
+        regular = code.submobjects[0] \
+                      .submobjects[3] \
+                      .submobjects[2] \
+                      .submobjects[1] \
+                      .copy()
+        self.play(ReplacementTransform(
+            code.submobjects[0]
+                .submobjects[3]
+                .submobjects[2]
+                .submobjects[1],
+            indicated,
+            run_time=0.7,
+        ))
         self.play(
             ReplacementTransform(
-                code.submobjects[0].submobjects[3].submobjects[2].submobjects[1].copy(),
-                e_tdecreasekey
+                code.submobjects[0]
+                    .submobjects[3]
+                    .submobjects[2]
+                    .submobjects[1]
+                    .copy(),
+                e_tdecreasekey,
             ),
             FadeIn(runtime.submobjects[0].submobjects[24]),
         )
-        self.wait(2)
-
-        # remove time to build
-        self.play(
-            FadeOut(tbuild),
-            FadeOut(runtime.submobjects[0].submobjects[9]),
-        )
+        self.play(ReplacementTransform(indicated, regular, run_time=0.7))
+        code.submobjects[0] \
+            .submobjects[3] \
+            .submobjects[2] \
+            .submobjects[1] = regular
+        self.wait()
 
         # show
         textbook_runtime = TexMobject(
-            "O(E \cdot T_\\text{decrease\_key} + V \cdot T_\\text{extract\_min})"
-        ).shift(const.RIGHT * 3 + UP * 0.5)
-
-        textbook_term_1 = VGroup(*textbook_runtime.submobjects[0].submobjects[2:17])
-        textbook_plus   = textbook_runtime.submobjects[0].submobjects[17]
-        textbook_term_2 = VGroup(*textbook_runtime.submobjects[0].submobjects[18:32])
-
-
-        self.play(
-            ReplacementTransform(e_tdecreasekey, textbook_term_1),
-            ReplacementTransform(runtime.submobjects[0].submobjects[24], textbook_plus),
-            ReplacementTransform(v_textractmin, textbook_term_2),
-            FadeIn(Group(*textbook_runtime.submobjects[0].submobjects[:2] +
-                       [textbook_runtime.submobjects[0].submobjects[-1]]))
+            "O(T_\\text{build(V)} "
+            "+ E \cdot T_\\text{decrease\_key} "
+            "+ V \cdot T_\\text{extract\_min})"
         )
 
+        textbook_term_0 = VGroup(*textbook_runtime.submobjects[0].submobjects[2:2+9])
+        textbook_term_1 = VGroup(*textbook_runtime.submobjects[0].submobjects[11:11+16])
+        textbook_term_2 = VGroup(*textbook_runtime.submobjects[0].submobjects[27:26+16])
+
+        v_textractmin.add_to_back(runtime.submobjects[0].submobjects[9])
+        e_tdecreasekey.add_to_back(runtime.submobjects[0].submobjects[24])
+        self.play(
+            ReplacementTransform(tbuild, textbook_term_0),
+            ReplacementTransform(v_textractmin, textbook_term_2),
+            ReplacementTransform(e_tdecreasekey, textbook_term_1),
+            FadeIn(Group(*textbook_runtime.submobjects[0].submobjects[:2] +
+                         [textbook_runtime.submobjects[0].submobjects[-1]])),
+            FadeOut(code),
+        )
         self.wait(2)
 
-        self.code = code
         self.runtime = VGroup(
-              textbook_runtime.submobjects[0].submobjects[:2]    + \
-              textbook_runtime.submobjects[0].submobjects[2:17]  + \
-              [textbook_runtime.submobjects[0].submobjects[17]]  + \
-              textbook_runtime.submobjects[0].submobjects[18:32] + \
-              [textbook_runtime.submobjects[0].submobjects[-1]]
+            *textbook_runtime.submobjects[0].submobjects[:2] +
+            textbook_term_0.submobjects +
+            textbook_term_1.submobjects +
+            textbook_term_2.submobjects +
+            [textbook_runtime.submobjects[0].submobjects[-1]]
         )
         save_state(self)
 
     def compare_data_structures(self):
         self.__dict__.update(load_previous_state())
-        code = self.code
         runtime = self.runtime
 
-        self.play(FadeOut(code))
         table = TextMobject(
             "\\begin{tabular}{ c | c }" + \
-            "  Data Structure & $O(E \\cdot T_\\text{decrease\_key} + V \\cdot T_\\text{extract\_min})$ \\\\ \\hline" + \
+            "  Data Structure & $O(T_\\text{build(V)} + E \cdot T_\\text{decrease\_key} + V \cdot T_\\text{extract\_min})$ \\\\ \\hline" + \
             "  Array & $O(E + V \\cdot V)$ \\\\" + \
             "  Binary Heap & $O(E \\log V + V \\log V)$ \\\\" + \
             "  Fibonacci Heap & $O(E + V \\log V)$ \\\\" + \
             "\\end{tabular}",
-        )
+
+        ).set_width(FRAME_WIDTH - 0.1)
+        #n = Integer(0).shift(3 * DOWN)
+        #for mob in table.submobjects[0].submobjects:
+        #    next_number = Integer(n.number + 1).shift(3 * DOWN)
+        #    self.play(Indicate(mob), ReplacementTransform(n, next_number), run_time=0.7)
+        #    n = next_number
         table_lines = VGroup(
             table.submobjects[0].submobjects[13],
-            table.submobjects[0].submobjects[47],
-            table.submobjects[0].submobjects[53],
-            table.submobjects[0].submobjects[72],
-            table.submobjects[0].submobjects[100],
+            table.submobjects[0].submobjects[57],
+            table.submobjects[0].submobjects[63],
+            table.submobjects[0].submobjects[82],
+            table.submobjects[0].submobjects[110],
         )
         self.play(
-            ReplacementTransform(runtime, VGroup(*table.submobjects[0].submobjects[14:47])),
+            ReplacementTransform(runtime, VGroup(*table.submobjects[0].submobjects[14:14+43])),
             FadeIn(table_lines),
             FadeIn(Group(*table.submobjects[0].submobjects[:13])),
         )
 
         # Array
-        array_word = VGroup(*table.submobjects[0].submobjects[48:53])
-        table_array_time = VGroup(*table.submobjects[0].submobjects[54:62])
-        array_time1 = TexMobject("O(E + V \cdot V)").move_to(table_array_time.get_center())
+        array_word = VGroup(*table.submobjects[0].submobjects[58:58+5])
+        table_array_time = VGroup(*table.submobjects[0].submobjects[64:64+8])
+        array_time1 = TexMobject("O(V + E + V \cdot V)").move_to(table_array_time.get_center())
         array_time2 = TexMobject("O(E + V^2)").move_to(array_time1.get_center())
         array_time3 = TexMobject("O(V^2)").move_to(array_time2.get_center())
         self.play(FadeIn(array_word))
         self.play(Write(array_time1))
-        self.play(TransformEquation(array_time1, array_time2, "O\\(E \\+ (.*)\\)"))
+        self.play(TransformEquation(array_time1, array_time2, "O\\((.*) \\+ (.*)\\)"))
         self.play(TransformEquation(array_time2, array_time3, "O\\((.*)\\)"))
 
         # Binary Heap
-        binheap_word = VGroup(*table.submobjects[0].submobjects[62:72])
-        table_binheap_time = VGroup(*table.submobjects[0].submobjects[73:87])
-        binheap_time1 = TexMobject("O(E \log V + V \log V)").move_to(table_binheap_time.get_center())
+        binheap_word = VGroup(*table.submobjects[0].submobjects[72:72+10])
+        table_binheap_time = VGroup(*table.submobjects[0].submobjects[83:83+14])
+        binheap_time1 = TexMobject("O(V + E \log V + V \log V)").move_to(table_binheap_time.get_center())
         binheap_time2 = TexMobject("O((E + V) \log V)").move_to(DOWN + binheap_time1.get_center())
         self.play(FadeIn(binheap_word))
         self.play(Write(binheap_time1))
         x = TransformEquation(
             binheap_time1,
             binheap_time2,
-            "(O)(\\()(E) (\\\\log V) (\\+) (V) (\\\\log V)\\)",
+            "(O)(\\()(V \\+ )(E) (\\\\log V) (\\+) (V) (\\\\log V)\\)",
             "(O)(\\()\\((E) (\\+) (V)\\) (\\\\log V)\\)",
-            [(0, 0), (1, 1), (1, 2), (2, 3), (4, 4), (5, 5), (3, 7), (6, 7),
-                (7, 8), (7, 6)],
+            [(0, 0), (1, 1), (1, 2), (3, 3), (5, 4), (6, 5), (4, 7), (7, 7),
+                (8, 8), (8, 6)],
         )
         self.play(x)
 
         # Fibonacci Heap
-        fibo_word = VGroup(*table.submobjects[0].submobjects[87:100])
-        table_fibo_time = VGroup(*table.submobjects[0].submobjects[101:])
-        fibo_time = TexMobject("O(E + V \log V)") \
+        fibo_word = VGroup(*table.submobjects[0].submobjects[97:110])
+        table_fibo_time = VGroup(*table.submobjects[0].submobjects[111:])
+        fibo_time1 = TexMobject("O(V + E + V \log V)") \
+            .move_to(table_fibo_time.get_center())
+        fibo_time2 = TexMobject("O(E + V \log V)") \
             .move_to(table_fibo_time.get_center())
         self.play(FadeIn(fibo_word))
-        self.play(Write(fibo_time))
+        self.play(Write(fibo_time1))
+        x = TransformEquation(fibo_time1, fibo_time2, "O\\((.*) \\+ V \\\\log V\\)")
+        self.play(x)
         self.play(
-            Indicate(fibo_time),
+            Indicate(fibo_time2),
             rate_func=there_and_back_with_pause,
             run_time=2,
         )
         self.play(FadeOut(Group(
-            table[:13],
-            table[14:47],
+            *table.submobjects[0].submobjects[14:14 + 43] +
+            table.submobjects[0].submobjects[:13],
             table_lines,
             array_word,
             array_time3,
             binheap_word,
             binheap_time2,
             fibo_word,
-            fibo_time,
+            fibo_time2,
         )))
 
         self.wait(2)
         save_state(self)
 
     def construct(self):
-        # self.first_try()
-        # self.counterexample()
-        # self.one_step()
-        # self.triangle_inequality()
-        # self.generalize()
-        # self.tightening()
-        # self.first_run()
-        # self.last_run()
-        # self.directed_graph()
-        # self.spt_vs_mst()
-        # self.show_code()
-        # self.run_code()
+        self.first_try()
+        self.counterexample()
+        self.one_step()
+        self.triangle_inequality()
+        self.generalize()
+        self.tightening()
+        self.first_run()
+        self.last_run()
+        self.directed_graph()
+        self.spt_vs_mst()
+        self.show_code()
+        self.run_code()
         self.analyze()
-        # self.compare_data_structures()
+        self.compare_data_structures()
