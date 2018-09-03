@@ -193,14 +193,14 @@ class PatreonEndScreen(PatreonThanks):
         black_rect = Rectangle(
             fill_color=BLACK,
             fill_opacity=1,
-            stroke_width=0,
+            stroke_width=3,
+            stroke_color=BLACK,
             width=FRAME_WIDTH,
             height=0.6 * FRAME_HEIGHT,
         )
         black_rect.to_edge(UP, buff=0)
         line = DashedLine(FRAME_X_RADIUS * LEFT, FRAME_X_RADIUS * RIGHT)
         line.move_to(ORIGIN)
-        self.add(line)
 
         thanks = TextMobject("Funded by the community, with special thanks to:")
         thanks.scale(0.9)
@@ -210,7 +210,6 @@ class PatreonEndScreen(PatreonThanks):
         underline.set_width(thanks.get_width() + MED_SMALL_BUFF)
         underline.next_to(thanks, DOWN, SMALL_BUFF)
         thanks.add(underline)
-        self.add(thanks)
 
         patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
         patrons.scale(self.patron_scale_val)
@@ -234,12 +233,10 @@ class PatreonEndScreen(PatreonThanks):
 
         thanks.align_to(columns, alignment_vect=RIGHT)
 
+        self.add(columns, black_rect, line, thanks)
         self.play(
             columns.move_to, 2 * DOWN, DOWN,
             columns.to_edge, RIGHT,
-            Animation(black_rect),
-            Animation(line),
-            Animation(thanks),
             rate_func=None,
             run_time=self.run_time,
         )
