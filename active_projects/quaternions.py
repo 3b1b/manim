@@ -198,14 +198,15 @@ class PushPin(SVGMobject):
 class Hand(SVGMobject):
     CONFIG = {
         "file_name": "pinch_hand",
-        "height": 0.4,
+        "height": 0.5,
         "sheen": 0.2,
-        "fill_color": GREY,
+        "fill_color": ORANGE,
     }
 
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.add(VectorizedPoint().next_to(self, UP, buff=0.15))
+        # self.rotate(30 * DEGREES)
+        self.add(VectorizedPoint().next_to(self, UP, buff=0.17))
 
 
 class CheckeredCircle(Circle):
@@ -493,14 +494,15 @@ class SpecialThreeDScene(ThreeDScene):
 
 # Animated scenes
 
+
 class ManyNumberSystems(Scene):
     def construct(self):
         # Too much dumb manually positioning in here...
         title = Title("Number systems")
         name_location_color_example_tuples = [
             ("Reals", [-4, 2, 0], YELLOW, "1.414"),
-            ("Complex numbers", [5, 0, 0], BLUE, "2 + i"),
-            ("Quaternions", [3, 2, 0], PINK, "2 + 7i + 1j + 8k"),
+            ("Complex numbers", [4, 0, 0], BLUE, "2 + i"),
+            ("Quaternions", [0, 2, 0], PINK, "2 + 7i + 1j + 8k"),
             ("Rationals", [3, -2, 0], RED, "1 \\over 3"),
             ("p-adic numbers", [-2, -2, 0], GREEN, "\\overline{142857}2"),
             ("Octonions", [-3, 0, 0], LIGHT_GREY, "3e_1 - 2.3e_2 + \\dots + 1.6e_8"),
@@ -528,8 +530,9 @@ class ManyNumberSystems(Scene):
         C_example_dot = Dot(plane.coords_to_point(2, 1))
 
         self.add(title)
+        self.play(FadeInFromLarge(H_label))
         self.play(LaggedStart(
-            FadeInFromLarge, systems,
+            FadeInFromLarge, VGroup(*it.chain(systems[:2], systems[3:])),
             lambda m: (m, 4)
         ))
         self.wait()
@@ -560,8 +563,9 @@ class ManyNumberSystems(Scene):
             lambda m: (m.shift, 0.5 * FRAME_WIDTH * LEFT),
             lag_ratio=0.8,
         ))
-        randy = Randolph()
+        randy = Randolph(height=1.5)
         randy.next_to(plane, RIGHT)
+        randy.to_edge(DOWN)
         self.play(
             randy.change, "maybe", H_label,
             VFadeIn(randy),
@@ -604,10 +608,6 @@ class RotationsIn3d(SpecialThreeDScene):
                 run_time=2,
             ))
             self.wait()
-
-
-class TODOInsertIntroduceThreeDNumbers(TODOStub):
-    CONFIG = {"message": "Insert IntroduceThreeDNumbers"}
 
 
 class IntroduceHamilton(Scene):
@@ -707,6 +707,41 @@ class IntroduceHamilton(Scene):
             equation
         ))
         self.wait()
+
+
+class QuaternionHistory(Scene):
+    def construct(self):
+        self.show_dot_product_and_cross_product()  # With date
+        self.teaching_students_quaternions()
+        self.show_anti_quaternion_quote()
+        self.mad_hatter()
+        self.vestiges_in_modern_notation()
+
+
+    def show_dot_product_and_cross_product(self):
+        date = TexMobject("1843")
+        date.to_edge(UP)
+
+        v1, v2 = [
+            Matrix([
+                ["{}_{}".format(c, i)]
+                for c in "xyz"
+            ])
+            for i in (1, 2)
+        ]
+
+    def teaching_students_quaternions(self):
+        pass
+
+    def show_anti_quaternion_quote(self):
+        pass
+
+    def mad_hatter(self):
+        pass
+
+    def vestiges_in_modern_notation(self):
+        pass
+
 
 
 class QuaternionRotationOverlay(Scene):
@@ -833,6 +868,8 @@ class HereWeTackle4d(TeacherStudentsScene):
         self.play(self.teacher.change, "happy")
         self.look_at(self.screen)
         self.wait(3)
+        self.change_student_modes("pondering", "happy", "thinking")
+        self.wait(4)
 
 
 class TableOfContents(Scene):
@@ -1428,7 +1465,13 @@ class TextbookQuaternionDefinition(TeacherStudentsScene):
         self.look_at(equation.get_corner(UL))
         self.blink()
         self.look_at(equation.get_corner(UR))
+        self.play(self.teacher.change, "sassy", equation)
         self.wait(2)
+        self.change_all_student_modes("pondering")
+        self.look_at(equation)
+        self.wait()
+        self.play(self.teacher.change, "thinking", equation)
+        self.wait(8)
 
 
 class ProblemsWhereComplexNumbersArise(Scene):
@@ -1938,9 +1981,12 @@ class OneDegreeOfFreedomForRotation(Scene):
         arc.add_updater(lambda m: m.become(get_arc()))
 
         self.add(circle, r_line, angle_label, arc)
-        angles = np.random.uniform(-TAU, TAU, 10)
+        angles = IntroduceStereographicProjection.CONFIG.get(
+            "example_angles"
+        )
         for angle in angles:
-            self.play(Rotate(circle, angle, run_time=2))
+            self.play(Rotate(circle, angle, run_time=4))
+            self.wait()
 
 
 class StereographicProjectionTitle(Scene):
@@ -2184,7 +2230,10 @@ class IntroduceStereographicProjection(MovingCameraScene):
             cross = Cross(dot)
             cross.scale(2)
             label = Integer(value)
-            label.next_to(dot, UR, SMALL_BUFF)
+            if value is sample_values[1]:
+                label.next_to(dot, UL, SMALL_BUFF)
+            else:
+                label.next_to(dot, UR, SMALL_BUFF)
             self.play(
                 FadeInFromLarge(dot, 3),
                 FadeInFromDown(label)
@@ -2609,6 +2658,15 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
                 run_time=4
             )
             self.wait()
+
+
+class WriteITimesW(Scene):
+    def construct(self):
+        mob = TexMobject("i", "\\cdot", "w")
+        mob[0].set_color(GREEN)
+        mob.scale(3)
+        self.play(Write(mob))
+        self.wait()
 
 
 class IntroduceFelix(PiCreatureScene, SpecialThreeDScene):
@@ -3140,9 +3198,11 @@ class TwoDStereographicProjection(IntroduceFelix):
             return line
 
         def get_sphere_dot(sphere_point):
-            dot = Dot(shade_in_3d=True)
+            dot = Dot()
+            dot.rotate(90 * DEGREES)
+            dot.set_shade_in_3d(True)
             dot.set_fill(PINK)
-            dot.insert_n_anchor_points(12)  # Helps with flashing?
+            dot.shift(OUT)
             dot.apply_matrix(
                 z_to_vector(sphere_point),
                 about_point=ORIGIN,
@@ -3309,7 +3369,7 @@ class TwoDStereographicProjection(IntroduceFelix):
             for p in points
         ])
         arrows.set_fill(RED)
-        arrows.set_stroke(RED, 10)
+        arrows.set_stroke(RED, 5)
         neg_ones = VGroup(*[
             TexMobject("-1").next_to(arrow.get_start(), -p)
             for p, arrow in zip(points, arrows)
@@ -3372,7 +3432,7 @@ class TwoDStereographicProjection(IntroduceFelix):
                 **self.sphere_config,
             )
             result.set_fill(opacity=0.2)
-            result.fade_far_out_submobjects(32)
+            result.fade_far_out_submobjects(max_r=32)
             for submob in result:
                 if submob.get_center()[1] < -11:
                     submob.fade(1)
@@ -4734,7 +4794,7 @@ class RuleOfQuaternionMultiplicationOverlay(Scene):
             }
         }
         i_products = VGroup(
-            TexMobject("i", "\\cdot", "1", "=", "1", **kwargs),
+            TexMobject("i", "\\cdot", "1", "=", "i", **kwargs),
             TexMobject("i", "\\cdot", "i", "=", "-1", **kwargs),
             TexMobject("i", "\\cdot", "j", "=", "k", **kwargs),
             TexMobject("i", "\\cdot", "k", "=", "-j", **kwargs),
@@ -4993,13 +5053,13 @@ class ShowDistributionOfI(TeacherStudentsScene):
         }
         top_product = TexMobject(
             "q", "\\cdot", "\\left(",
-            "w", "+", "x", "i", "+", "y", "j", "+", "z", "k",
+            "w", "1", "+", "x", "i", "+", "y", "j", "+", "z", "k",
             "\\right)"
         )
         top_product.to_edge(UP)
         self.add(top_product)
         bottom_product = TexMobject(
-            "q", "w",
+            "w", "q", "\\cdot", "1",
             "+", "x", "q", "\\cdot", "i",
             "+", "y", "q", "\\cdot", "j",
             "+", "z", "q", "\\cdot", "k",
@@ -5028,7 +5088,7 @@ class ShowDistributionOfI(TeacherStudentsScene):
                     bottom_product.get_parts_by_tex(tex, substring=False),
                     run_time=2
                 )
-                for tex in ["w", "x", "i", "y", "j", "z", "k", "+"]
+                for tex in ["1", "w", "x", "i", "y", "j", "z", "k", "+"]
             ]
         )
         self.play(*[
@@ -5041,6 +5101,39 @@ class ShowDistributionOfI(TeacherStudentsScene):
         ])
         self.change_all_student_modes("thinking")
         self.wait(3)
+
+
+class ComplexPlane135(Scene):
+    def construct(self):
+        plane = ComplexPlane(unit_size=2)
+        plane.add_coordinates()
+        for mob in plane.coordinate_labels:
+            mob.scale(2, about_edge=UR)
+
+        angle = 3 * TAU / 8
+        circle = Circle(radius=2, color=YELLOW)
+        arc = Arc(angle, radius=0.5)
+        angle_label = Integer(0, unit="^\\circ")
+        angle_label.next_to(arc.point_from_proportion(0.5), UR, SMALL_BUFF)
+        line = Line(ORIGIN, 2 * RIGHT)
+
+        point = circle.point_from_proportion(angle / TAU)
+        dot = Dot(point, color=PINK)
+        arrow = Vector(DR)
+        arrow.next_to(dot, UL, SMALL_BUFF)
+        arrow.match_color(dot)
+        label = TexMobject("-\\frac{\\sqrt{2}}{2} + \\frac{\\sqrt{2}}{2} i")
+        label.next_to(arrow.get_start(), UP, SMALL_BUFF)
+        label.set_background_stroke(width=0)
+
+        self.add(plane, circle, line, dot, label, arrow)
+        self.play(
+            Rotate(line, angle, about_point=ORIGIN),
+            ShowCreation(arc),
+            ChangeDecimalToValue(angle_label, 135),
+            run_time=3
+        )
+        self.wait()
 
 
 class ShowMultiplicationBy135Example(RuleOfQuaternionMultiplication):
@@ -5176,7 +5269,7 @@ class JMultiplicationChart(Scene):
             }
         }
         j_products = VGroup(
-            TexMobject("j", "\\cdot", "1", "=", "1", **kwargs),
+            TexMobject("j", "\\cdot", "1", "=", "j", **kwargs),
             TexMobject("j", "\\cdot", "j", "=", "-1", **kwargs),
             TexMobject("j", "\\cdot", "i", "=", "-k", **kwargs),
             TexMobject("j", "\\cdot", "k", "=", "i", **kwargs),
@@ -5240,7 +5333,7 @@ class ShowJMultiplication(ShowMultiplicationBy135Example):
         )
 
     def show_multiplication(self):
-        self.set_camera_orientation(theta=-30 * DEGREES)
+        self.set_camera_orientation(theta=-80 * DEGREES)
 
         q_tracker = self.q_tracker
         m_tracker = self.multiplier_tracker
@@ -5270,7 +5363,9 @@ class ShowJMultiplication(ShowMultiplicationBy135Example):
         self.wait(2)
 
         # Show ik circle
-        self.move_camera(theta=-110 * DEGREES)
+        circle = self.circle_ik.deepcopy()
+        circle.clear_updaters()
+        self.play(FadeInFromLarge(circle, remover=True))
         m_tracker.set_value([1, 0, 0, 0])
         q_tracker.set_value([0, 1, 0, 0])
         self.wait()
@@ -5342,7 +5437,7 @@ class ShowArbitraryMultiplication(ShowMultiplicationBy135Example):
 
         circle1, circle2 = self.circle1, self.circle2
         for circle in [circle1, circle2]:
-            circle.tucked_away_updaters = circle1.updaters
+            circle.tucked_away_updaters = circle.updaters
             circle.clear_updaters()
             self.remove(circle)
 
@@ -5518,3 +5613,148 @@ class RotationsOfCube(SpecialThreeDScene):
             FadeInFrom(label2[1], IN),
         )
         self.wait(5)
+
+
+class QuaternionEndscreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "Juan Benet",
+            "Matt Russell",
+            "soekul",
+            "Desmos",
+            "Burt Humburg",
+            "Dinesh Dharme",
+            "Scott Walter",
+            "Brice Gower",
+            "Peter Mcinerney",
+            "brian tiger chow",
+            "Joseph Kelly",
+            "Roy Larson",
+            "Andrew Sachs",
+            "Hoàng Tùng Lâm",
+            "Devin Scott",
+            "Akash Kumar",
+            "Arthur Zey",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Yu Jun",
+            "dave nicponski",
+            "Jordan Scales",
+            "Markus Persson",
+            "Lukáš Nový",
+            "Fela",
+            "Randy C. Will",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Ryan Williams",
+            "Michael Hardel",
+            "Federico Lebron",
+            "L0j1k",
+            "Ayan Doss",
+            "Dylan Houlihan",
+            "Steven Soloway",
+            "Art Ianuzzi",
+            "Nate Heckmann",
+            "Michael Faust",
+            "Richard Comish",
+            "Nero Li",
+            "Valeriy Skobelev",
+            "Adrian Robinson",
+            "Solara570",
+            "Peter Ehrnstrom",
+            "Kai Siang   Ang",
+            "Alexis Olson",
+            "Ludwig Schubert",
+            "Omar Zrien",
+            "Sindre Reino Trosterud",
+            "Jeff Straathof",
+            "Matt Langford",
+            "Matt Roveto",
+            "Magister Mugit",
+            "Stevie Metke",
+            "Cooper Jones",
+            "James Hughes",
+            "John V Wertheim",
+            "Song Gao",
+            "Richard Burgmann",
+            "John Griffith",
+            "Chris Connett",
+            "Steven Tomlinson",
+            "Jameel Syed",
+            "Bong Choung",
+            "Zhilong Yang",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "Cody Brocious",
+            "James H. Park",
+            "Norton Wang",
+            "Kevin Le",
+            "Oliver Steele",
+            "Yaw Etse",
+            "Dave B",
+            "Delton Ding",
+            "Thomas Tarler",
+            "1st",
+            "Jacob Magnuson",
+            "Clark Gaebel",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Awoo",
+            "Dr  David G. Stork",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Robert Teed",
+            "Jason Hise",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
+
+
+class Thumbnail(RuleOfQuaternionMultiplication):
+    CONFIG = {
+        "three_d_axes_config": {
+            "num_axis_pieces": 20,
+        }
+    }
+
+    def construct(self):
+        self.setup_all_trackers()
+        quat = normalize([-0.5, 0.5, -0.5, 0.5])
+        self.multiplier_tracker.set_value(quat)
+        self.q_tracker.set_value(quat)
+        sphere = self.get_projected_sphere(0, solid=False)
+        # self.specially_color_sphere(sphere)
+        # sphere.set_fill(opacity=0.5)
+        sphere.set_fill_by_checkerboard(BLUE_E, BLUE, opacity=0.8)
+        for face in sphere:
+            face.points = face.points[::-1]
+
+        self.set_camera_orientation(
+            phi=70 * DEGREES,
+            theta=-110 * DEGREES,
+        )
+        self.add(sphere)
