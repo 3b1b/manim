@@ -2,7 +2,10 @@ import numpy as np
 
 from constants import OUT
 from constants import RIGHT
+from constants import PI
+from constants import TAU
 from functools import reduce
+from utils.iterables import adjacent_pairs
 
 # Matrix operations
 
@@ -97,12 +100,15 @@ def project_along_vector(point, vector):
     return np.dot(point, matrix.T)
 
 
-def normalize(vect):
+def normalize(vect, fall_back=None):
     norm = get_norm(vect)
     if norm > 0:
-        return vect / norm
+        return np.array(vect) / norm
     else:
-        return np.zeros(len(vect))
+        if fall_back is not None:
+            return fall_back
+        else:
+            return np.zeros(len(vect))
 
 
 def cross(v1, v2):
@@ -164,3 +170,12 @@ def line_intersection(line1, line2):
     x = det(d, x_diff) / div
     y = det(d, y_diff) / div
     return np.array([x, y, 0])
+
+
+def get_winding_number(points):
+    total_angle = 0
+    for p1, p2 in adjacent_pairs(points):
+        d_angle = angle_of_vector(p2) - angle_of_vector(p1)
+        d_angle = ((d_angle + PI) % TAU) - PI
+        total_angle += d_angle
+    return total_angle / TAU

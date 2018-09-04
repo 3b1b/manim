@@ -32,6 +32,7 @@ class ParametricSurface(VGroup):
         "stroke_color": LIGHT_GREY,
         "stroke_width": 0.5,
         "should_make_jagged": False,
+        "pre_function_handle_to_anchor_scale_factor": 0.00001,
     }
 
     def __init__(self, func, **kwargs):
@@ -70,6 +71,10 @@ class ParametricSurface(VGroup):
                 faces.add(face)
                 face.u_index = i
                 face.v_index = j
+                face.u1 = u1
+                face.u2 = u2
+                face.v1 = v1
+                face.v2 = v2
         faces.set_fill(
             color=self.fill_color,
             opacity=self.fill_opacity
