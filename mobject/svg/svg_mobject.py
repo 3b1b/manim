@@ -128,6 +128,13 @@ class SVGMobject(VMobject):
             self.ref_to_element[ref]
         )
 
+    def attribute_to_float(self, attr):
+        stripped_attr = "".join([
+            char for char in attr
+            if char in string.digits + "." + "-"
+        ])
+        return float(stripped_attr)
+
     def polygon_to_mobject(self, polygon_element):
         # TODO, This seems hacky...
         path_string = polygon_element.getAttribute("points")
@@ -140,7 +147,9 @@ class SVGMobject(VMobject):
 
     def circle_to_mobject(self, circle_element):
         x, y, r = [
-            float(circle_element.getAttribute(key))
+            self.attribute_to_float(
+                circle_element.getAttribute(key)
+            )
             if circle_element.hasAttribute(key)
             else 0.0
             for key in ("cx", "cy", "r")
@@ -149,7 +158,9 @@ class SVGMobject(VMobject):
 
     def ellipse_to_mobject(self, circle_element):
         x, y, rx, ry = [
-            float(circle_element.getAttribute(key))
+            self.attribute_to_float(
+                circle_element.getAttribute(key)
+            )
             if circle_element.hasAttribute(key)
             else 0.0
             for key in ("cx", "cy", "rx", "ry")
@@ -183,8 +194,12 @@ class SVGMobject(VMobject):
 
         if corner_radius == 0:
             mob = Rectangle(
-                width=float(rect_element.getAttribute("width")),
-                height=float(rect_element.getAttribute("height")),
+                width=self.attribute_to_float(
+                    rect_element.getAttribute("width")
+                ),
+                height=self.attribute_to_float(
+                    rect_element.getAttribute("height")
+                ),
                 stroke_width=stroke_width,
                 stroke_color=stroke_color,
                 fill_color=fill_color,
@@ -192,8 +207,12 @@ class SVGMobject(VMobject):
             )
         else:
             mob = RoundedRectangle(
-                width=float(rect_element.getAttribute("width")),
-                height=float(rect_element.getAttribute("height")),
+                width=self.attribute_to_float(
+                    rect_element.getAttribute("width")
+                ),
+                height=self.attribute_to_float(
+                    rect_element.getAttribute("height")
+                ),
                 stroke_width=stroke_width,
                 stroke_color=stroke_color,
                 fill_color=fill_color,
@@ -207,9 +226,9 @@ class SVGMobject(VMobject):
     def handle_transforms(self, element, mobject):
         x, y = 0, 0
         try:
-            x = float(element.getAttribute('x'))
+            x = self.attribute_to_float(element.getAttribute('x'))
             # Flip y
-            y = -float(element.getAttribute('y'))
+            y = -self.attribute_to_float(element.getAttribute('y'))
             mobject.shift(x * RIGHT + y * UP)
         except:
             pass
