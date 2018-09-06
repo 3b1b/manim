@@ -3,6 +3,11 @@ import operator as op
 import inspect
 from functools import reduce
 
+try:
+    xrange          # Python 2
+except NameError:
+    xrange = range  # Python 3
+
 
 def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
