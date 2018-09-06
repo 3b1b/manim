@@ -24,7 +24,7 @@ DUAL_CYCLE = [3, 4, 5, 6, 1, 0, 2, 3]
 
 class EulersFormulaWords(Scene):
     def construct(self):
-        self.add(TexMobject("V-E+F=2"))
+        self.add(TextMobject("V-E+F=2"))
 
 class TheTheoremWords(Scene):
     def construct(self):
