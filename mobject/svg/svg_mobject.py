@@ -136,7 +136,7 @@ class SVGMobject(VMobject):
     def attribute_to_float(self, attr):
         stripped_attr = "".join([
             char for char in attr
-            if char in string.digits + "." + "-"
+            if char in string.digits + "." + "-" + "e"
         ])
         return float(stripped_attr)
 
