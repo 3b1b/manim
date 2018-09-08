@@ -20,12 +20,12 @@ from mobject.geometry import Line, Dot
 from mobject.mobject import Group
 from mobject.mobject import interpolate_color
 from mobject.numbers import Integer
-from mobject.svg.tex_mobject import TexMobject
-from mobject.svg.tex_mobject import TextMobject
 from mobject.svg.brace import BraceLabel
 from mobject.svg.tex_mobject import AlignatTexMobject
 from mobject.svg.tex_mobject import CodeMobject
 from mobject.svg.tex_mobject import SingleStringTexMobject
+from mobject.svg.tex_mobject import TexMobject
+from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from scene.moving_camera_scene import MovingCameraScene
@@ -1636,15 +1636,15 @@ class RunAlgorithm(MovingCameraScene):
             "  Binary Heap & $O(E \\log V + V \\log V)$ \\\\" +
             "  Fibonacci Heap & $O(E + V \\log V)$ \\\\" +
             "\\end{tabular}", ).set_width(const.FRAME_WIDTH - 0.1)
-        n = Integer(0).shift(3 * const.DOWN)
-        for mob in table.submobjects[0].submobjects:
-            next_number = Integer(n.number + 1).shift(3 * const.DOWN)
-            self.play(
-                Indicate(mob),
-                ReplacementTransform(n, next_number),
-                run_time=0.7,
-            )
-            n = next_number
+        # n = Integer(0).shift(3 * const.DOWN)
+        # for mob in table.submobjects[0].submobjects:
+        #     next_number = Integer(n.number + 1).shift(3 * const.DOWN)
+        #     self.play(
+        #         Indicate(mob),
+        #         ReplacementTransform(n, next_number),
+        #         run_time=0.7,
+        #     )
+        #     n = next_number
         table_lines = VGroup(
             table.submobjects[0].submobjects[13],
             table.submobjects[0].submobjects[57],
