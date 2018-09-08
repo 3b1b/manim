@@ -115,6 +115,8 @@ class AnimationOnSurroundingRectangle(AnimationGroup):
         rect = SurroundingRectangle(
             mobject, **self.surrounding_rectangle_config
         )
+        if "surrounding_rectangle_config" in kwargs:
+            kwargs.pop("surrounding_rectangle_config")
         AnimationGroup.__init__(self, self.rect_to_animation(rect, **kwargs))
 
 
