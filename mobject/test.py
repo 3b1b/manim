@@ -1,41 +1,21 @@
-import copy
-import inspect
-import itertools as it
-import numpy as np
-import operator as op
-import os
-import pytest
-import random
-import mobject.mobject
-import camera.camera
-import inspect
-
+from colour import Color
+from mobject.mobject import Mobject
 from pytest import approx
-from unittest.mock import MagicMock
 from unittest.mock import call
 from unittest.mock import create_autospec
-from unittest.mock import patch
 
-from colour import Color
-from constants import *
-from container.container import Container
-from functools import reduce
-from mobject.geometry import Square
-from mobject.mobject import Mobject
-from utils.bezier import interpolate
-from utils.color import color_gradient
-from utils.color import color_to_rgb
-from utils.color import interpolate_color
-from utils.iterables import list_update
-from utils.iterables import remove_list_redundancies
-from utils.paths import straight_path
-from utils.space_ops import angle_of_vector
-from utils.space_ops import complex_to_R3
-from utils.space_ops import rotation_matrix
+import camera.camera
+import constants as const
+import inspect
+import mobject.mobject
+import numpy as np
+import os
+import pytest
 
 
 SEED = 386735
 np.random.seed(SEED)
+
 
 def test_init():
     m = Mobject()
@@ -159,7 +139,10 @@ def test_apply_over_attr_arrays():
 
 def test_get_image(mocker):
     mock_get_image = mocker.patch.object(camera.camera.Camera, "get_image")
-    mock_capture_mobject = mocker.patch.object(camera.camera.Camera, "capture_mobject")
+    mock_capture_mobject = mocker.patch.object(
+        camera.camera.Camera,
+        "capture_mobject",
+    )
     m = Mobject()
     m.get_image()
     mock_capture_mobject.assert_called_once_with(m)
@@ -347,14 +330,16 @@ def test_shift():
     submob_points = np.random.rand(5, 3)
     m.points = mob_points
     submob.points = submob_points
-    m.shift(2 * RIGHT - 1 * UP)
+    m.shift(2 * const.RIGHT - 1 * const.UP)
     assert m.points == approx(mob_points + np.array([2, -1, 0]))
     assert submob.points == approx(submob_points + np.array([2, -1, 0]))
 
 
 def test_scale(mocker):
     mocker.patch.object(
-        mobject.mobject.Mobject, "apply_points_function_about_point", autospec=True
+        mobject.mobject.Mobject,
+        "apply_points_function_about_point",
+        autospec=True,
     )
     m = Mobject()
     m.scale(3)
@@ -363,8 +348,8 @@ def test_scale(mocker):
     assert args[0] is m
     assert callable(args[1])
     assert (
-        inspect.getsource(args[1]).strip()
-        == "lambda points: scale_factor * points, **kwargs"
+        inspect.getsource(args[1]).strip() ==
+        "lambda points: scale_factor * points, **kwargs"
     )
     assert kwargs == {}
 
@@ -372,27 +357,33 @@ def test_scale(mocker):
 def test_rotate_about_origin(mocker):
     mocker.patch.object(mobject.mobject.Mobject, "rotate")
     m = Mobject()
-    angle = 3 * PI / 4
+    angle = 3 * const.PI / 4
     m.rotate_about_origin(angle)
-    m.rotate.assert_called_once_with(angle, OUT, about_point=ORIGIN)
+    m.rotate.assert_called_once_with(
+        angle,
+        const.OUT,
+        about_point=const.ORIGIN,
+    )
 
 
 def test_rotate(mocker):
     mock_rotation_matrix = mocker.patch("mobject.mobject.rotation_matrix")
     mocker.patch.object(
-        mobject.mobject.Mobject, "apply_points_function_about_point", autospec=True
+        mobject.mobject.Mobject,
+        "apply_points_function_about_point",
+        autospec=True,
     )
     m = Mobject()
-    angle = 3 * PI / 4
+    angle = 3 * const.PI / 4
     m.rotate(angle)
-    mock_rotation_matrix.assert_called_once_with(angle, OUT)
+    mock_rotation_matrix.assert_called_once_with(angle, const.OUT)
     m.apply_points_function_about_point.assert_called_once()
     args, kwargs = m.apply_points_function_about_point.call_args
     assert args[0] is m
     assert callable(args[1])
     assert (
-        inspect.getsource(args[1]).strip().replace("\n", " ")
-        == "lambda points: np.dot(points, rot_matrix.T),"
+        inspect.getsource(args[1]).strip().replace("\n", " ") ==
+        "lambda points: np.dot(points, rot_matrix.T),"
     )
     assert kwargs == {}
 
@@ -401,17 +392,17 @@ def test_flip(mocker):
     mocker.spy(mobject.mobject.Mobject, "rotate")
     m = Mobject()
     m.points = np.array([
-        [ 1,  1, 0],
+        [1, 1, 0],
         [-1, -1, 0],
-        [ 2,  2, 0],
+        [2, 2, 0],
         [-2, -2, 0],
     ])
     m.flip()
-    m.rotate.assert_called_once_with(m, TAU / 2, UP)
-    expected = np.array([[-1,  1, 0],
-                         [ 1, -1, 0],
-                         [-2,  2, 0],
-                         [ 2, -2, 0]])
+    m.rotate.assert_called_once_with(m, const.TAU / 2, const.UP)
+    expected = np.array([[-1, 1, 0],
+                         [1, -1, 0],
+                         [-2, 2, 0],
+                         [2, -2, 0]])
     assert(np.allclose(m.points, expected))
 
 
@@ -421,8 +412,8 @@ def test_stretch(mocker):
     )
     m = Mobject()
     m.points = np.array([
-        [0,  1, 0],
-        [0,  0, 0],
+        [0, 1, 0],
+        [0, 0, 0],
         [0, -1, 0],
     ])
     m.stretch(3, 1)
@@ -431,10 +422,10 @@ def test_stretch(mocker):
     assert args[0] is m
     assert callable(args[1])
     assert (
-        inspect.getsource(args[1]).strip()
-        == "def func(points):\n"
-           "            points[:, dim] *= factor\n"
-           "            return points"
+        inspect.getsource(args[1]).strip() ==
+        "def func(points):\n"
+        "            points[:, dim] *= factor\n"
+        "            return points"
     )
     assert kwargs == {}
     assert(np.allclose(m.points, [[0, 3, 0],
@@ -444,7 +435,9 @@ def test_stretch(mocker):
 
 def test_apply_function(mocker):
     mocker.patch.object(
-        mobject.mobject.Mobject, "apply_points_function_about_point", autospec=True
+        mobject.mobject.Mobject,
+        "apply_points_function_about_point",
+        autospec=True,
     )
     mock_func = mocker.Mock()
     m = Mobject()
@@ -454,14 +447,20 @@ def test_apply_function(mocker):
     assert args[0] is m
     assert callable(args[1])
     assert (
-        inspect.getsource(args[1]).strip()
-        == "lambda points: np.apply_along_axis(function, 1, points),"
+        inspect.getsource(args[1]).strip() ==
+        "lambda points: np.apply_along_axis(function, 1, points),"
     )
-    assert kwargs == {"about_point": ORIGIN}
+    assert kwargs == {"about_point": const.ORIGIN}
+
 
 def test_apply_function_to_position(mocker):
     mock_get_center_return = np.random.randint(1000)
-    mocker.patch.object(mobject.mobject.Mobject, 'get_center', autospec=True, return_value=mock_get_center_return)
+    mocker.patch.object(
+        mobject.mobject.Mobject,
+        'get_center',
+        autospec=True,
+        return_value=mock_get_center_return,
+    )
     mock_func_return = np.random.randint(1000)
     mock_func = mocker.Mock(return_value=mock_func_return)
     mocker.patch.object(mobject.mobject.Mobject, 'move_to', autospec=True)
@@ -469,8 +468,9 @@ def test_apply_function_to_position(mocker):
     m.apply_function_to_position(mock_func)
 
     m.get_center.assert_called_once_with(m)
-    mock_func.assert_called_once_with(mock_get_center_return) 
+    mock_func.assert_called_once_with(mock_get_center_return)
     m.move_to.assert_called_once_with(m, mock_func_return)
+
 
 def test_apply_function_to_submobject_positions(mocker):
     s1 = Mobject()
@@ -484,6 +484,7 @@ def test_apply_function_to_submobject_positions(mocker):
     for submob in m.submobjects:
         submob.apply_function_to_position.assert_called_with(mock_func)
 
+
 def test_apply_matrix():
     points = np.random.rand(10, 3)
     matrix = np.random.rand(3, 3)
@@ -492,10 +493,10 @@ def test_apply_matrix():
     m.apply_matrix(matrix)
 
     expected = points.copy()
-    expected -= ORIGIN
+    expected -= const.ORIGIN
     expected = np.dot(points, matrix.T)
-    expected += ORIGIN
-    assert(np.allclose(m.points, expected)) 
+    expected += const.ORIGIN
+    assert(np.allclose(m.points, expected))
 
     m.points = points
     about_point = np.random.rand(1, 3)
@@ -506,10 +507,15 @@ def test_apply_matrix():
     expected += about_point
 
     m.apply_matrix(matrix, about_point=about_point)
-    assert(np.allclose(m.points, expected)) 
+    assert(np.allclose(m.points, expected))
+
 
 def test_apply_complex_function(mocker):
-    mocker.patch.object(mobject.mobject.Mobject, 'apply_function', autospec=True)
+    mocker.patch.object(
+        mobject.mobject.Mobject,
+        'apply_function',
+        autospec=True,
+    )
     mock_func = mocker.Mock()
     m = Mobject()
     m.apply_complex_function(mock_func)
@@ -518,13 +524,14 @@ def test_apply_complex_function(mocker):
     assert(len(args) == 2)
     assert(args[0] is m)
     assert (
-        inspect.getsource(args[1]).strip()
-        == "lambda x_y_z: complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),"
+        inspect.getsource(args[1]).strip() ==
+        "lambda x_y_z: complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),"
     )
     assert(kwargs == {})
 
-# this is a rather odd function. the current contract is simply that
-# wag() will do what is does in this version (0c3e1308cd40e12f795e0f8e753acca02874c2b3).
+
+# this is a rather odd function. the current contract is simply that wag() will
+# do what is does in this version (0c3e1308cd40e12f795e0f8e753acca02874c2b3).
 def test_wag():
     points = np.random.rand(10, 3)
     m = Mobject()
@@ -532,15 +539,16 @@ def test_wag():
     m.wag()
 
     expected = points.copy()
-    alphas = np.dot(expected, np.transpose(DOWN))
+    alphas = np.dot(expected, np.transpose(const.DOWN))
     alphas -= min(alphas)
     alphas /= max(alphas)
-    #alphas = alphas**wag_factor
+    # alphas = alphas**wag_factor
     expected += np.dot(
         alphas.reshape((len(alphas), 1)),
-        np.array(RIGHT).reshape((1, m.dim))
+        np.array(const.RIGHT).reshape((1, m.dim))
     )
     assert(np.allclose(m.points, expected))
+
 
 def test_reverse_points():
     points = np.random.rand(10, 3)
@@ -553,7 +561,7 @@ def test_reverse_points():
 
 # def repeat():
 #    def repeat_array():
-## Note, much of these are now redundant with default behavior of
+# # Note, much of these are now redundant with default behavior of
 # def apply_points_function_about_point():
 # def rotate_in_place():
 #    # redundant with default behavior of rotate now.
@@ -580,7 +588,7 @@ def test_reverse_points():
 # def scale_to_fit_height():
 # def scale_to_fit_depth():
 # def space_out_submobjects():
-# def move_to(self, point_or_mobject, aligned_edge=ORIGIN,
+# def move_to(self, point_or_mobject, aligned_edge=const.ORIGIN,
 # def replace():
 # def surround():
 # def position_endpoints_on():
@@ -598,7 +606,7 @@ def test_reverse_points():
 # def set_submobject_colors_by_gradient():
 # def set_submobject_colors_by_radial_gradient():
 # def to_original_color():
-## used by default for fade()ing
+# # used by default for fade()ing
 # def fade_to_no_recurse():
 # def fade_to():
 # def fade_no_recurse():
