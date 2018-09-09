@@ -19,6 +19,7 @@ from scene.scene import Scene
 from utils.rate_functions import linear
 from utils.space_ops import rotation_matrix
 
+
 def euler_tour(G, start_point):
     ret = [start_point]
     unvisited = set(G.submobjects)
@@ -26,8 +27,8 @@ def euler_tour(G, start_point):
     while unvisited:
         next_edge_candidates = [
             line for line in unvisited
-            if np.allclose(line.get_start(), ret[-1])
-            or np.allclose(line.get_end(), ret[-1])
+            if np.allclose(line.get_start(), ret[-1]) or
+            np.allclose(line.get_end(), ret[-1])
         ]
         if next_edge_candidates:
             next_edge = random.choice(next_edge_candidates)
@@ -103,13 +104,13 @@ class OpeningScene(Scene):
                 ending_connecting_line = \
                         Line(end_pair[0], end_pair[1], stroke_width=4)
                 hypercube.add(ending_connecting_line)
-        #hypercube = Group()
-        #hypercube.add(
-        #    Line(np.array([1, 1, 0]), np.array([1, -1, 0])),
-        #    Line(np.array([-1, 1, 0]), np.array([1, 1, 0])),
-        #    Line(np.array([-1, -1, 0]), np.array([-1, 1, 0])),
-        #    Line(np.array([-1, -1, 0]), np.array([1, -1, 0])),
-        #)
+        # hypercube = Group()
+        # hypercube.add(
+        #     Line(np.array([1, 1, 0]), np.array([1, -1, 0])),
+        #     Line(np.array([-1, 1, 0]), np.array([1, 1, 0])),
+        #     Line(np.array([-1, -1, 0]), np.array([-1, 1, 0])),
+        #     Line(np.array([-1, -1, 0]), np.array([1, -1, 0])),
+        # )
 
         hypercube.scale(3)
         hypercube.rotate(-PI / 4, Y_AXIS)
@@ -117,13 +118,14 @@ class OpeningScene(Scene):
         hypercube.move_to(ORIGIN).shift(0.7 * UP)
         self.add(hypercube)
         self.wait(0.1)
+        # run_time = 14. / 12 * PI - 0.015,  # hq
+        run_time = 14. / 12 * PI + 0.005
         self.add(ContinualUpdateFromTimeFunc(
             hypercube,
             rotate_mob,
             start_up_time=0,
             wind_down_time=1.0,
-            # end_time=14./12 * PI - 0.015, # hq
-            end_time=14./12 * PI + 0.005,
+            end_time=run_time,
         ))
 
         point = Circle(
@@ -138,6 +140,7 @@ class OpeningScene(Scene):
                 line = hypercube.submobjects[i]
                 vec = line.get_vector()
                 mob.move_to(line.get_start() + vec * t)
+
             def place_along_line_from_end(mob, t):
                 line = hypercube.submobjects[i]
                 vec = -1 * line.get_vector()
@@ -187,16 +190,16 @@ class OpeningScene(Scene):
                 AnimationGroup(point_anim, color_anim, run_time=0.1094)
             )
 
-        ## this works. now.
-        #self.play(ApplyMethod(hypercube.submobjects[0].set_color, RED))
-        #self.play(ApplyMethod(hypercube.submobjects[1].set_color, RED))
-        #self.play(ApplyMethod(hypercube.submobjects[2].set_color, RED))
-        #self.play(ApplyMethod(hypercube.submobjects[3].set_color, RED))
+        # this works. now.
+        # self.play(ApplyMethod(hypercube.submobjects[0].set_color, RED))
+        # self.play(ApplyMethod(hypercube.submobjects[1].set_color, RED))
+        # self.play(ApplyMethod(hypercube.submobjects[2].set_color, RED))
+        # self.play(ApplyMethod(hypercube.submobjects[3].set_color, RED))
 
         title = TextMobject("Euler Tour").scale(3).shift(2.8 * DOWN)
         self.play(
             Succession(*successions, add_finished_mobjects=False),
-            Write(title, run_time=14./12 * PI + 0.005),
+            Write(title, run_time=run_time),
         )
         self.wait(10)
 

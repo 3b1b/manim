@@ -14,6 +14,7 @@ from animation.update import UpdateFromAlphaFunc
 from collections import OrderedDict
 from dijkstra_scenes.edge import Side
 from dijkstra_scenes.graph import Graph
+from dijkstra_scenes.graph import Node
 from mobject.functions import ParametricFunction
 from mobject.geometry import Arrow
 from mobject.geometry import Line, Dot
@@ -489,6 +490,16 @@ class RunAlgorithm(MovingCameraScene):
                 ])
         self.play(*anims)
 
+        # tighten closest node
+        min_node = G.get_edge(min_edge).opposite(s)
+        min_bound = int(G.get_node_label(min_node, "dist").tex_string[4:])
+        self.play(*G.update_component(
+            min_node, OrderedDict([
+                ("dist", Integer(min_bound)),
+                ("color", SPT_COLOR),
+            ])
+        ))
+
         # revert graph
         updates = OrderedDict()
         updates[s] = OrderedDict([("dist", None)])
@@ -502,7 +513,8 @@ class RunAlgorithm(MovingCameraScene):
             s, OrderedDict([
                 ("dist", Integer(0)),
                 ("color", SPT_COLOR),
-            ])))
+            ])
+        ))
 
         # set bound on neighbors
         relax_neighbors(self, G, s, show_relaxation=False)
@@ -672,6 +684,7 @@ class RunAlgorithm(MovingCameraScene):
                 ParametricFunction(
                     lambda t: (const.FRAME_WIDTH * (1 - t), 0, 0))))
 
+        self.S = S
         save_state(self)
 
     def generalize(self):
@@ -915,6 +928,73 @@ class RunAlgorithm(MovingCameraScene):
             relax_neighbors(self, G, min_node)
 
         self.wait(2)
+        save_state(self)
+
+    def infinite_bounds(self):
+        self.__dict__.update(load_previous_state())
+        G = self.G
+        X_DIST = self.X_DIST
+        Y_DIST = self.Y_DIST
+
+        isolated_node = Node(
+            (-X_DIST / 2, -Y_DIST / 2, 0),
+            {
+                "color": G.color,
+                "stroke_width": G.stroke_width,
+            }
+        )
+        self.play(ShowCreation(isolated_node))
+        self.wait(2)
+        self.play(*isolated_node.update_attrs({"dist": TexMobject("\\infty")}))
+        self.wait(2)
+        self.play(Uncreate(isolated_node))
+        self.wait(2)
+        save_state(self)
+
+    def parent_pointers(self):
+        self.__dict__.update(load_previous_state())
+        S = self.S
+        s, u, v = S.get_nodes()
+
+        # scroll camera
+        self.play(
+            MoveAlongPath(
+                self.camera_frame,
+                ParametricFunction(lambda t: (const.FRAME_WIDTH * t, 0, 0))))
+        self.wait(2)
+
+        updates = OrderedDict()
+        u_arrow_vec = S.get_node(s).mobject.get_center() - \
+            S.get_node(u).mobject.get_center()
+        u_arrow_vec /= np.linalg.norm(u_arrow_vec)
+        u_arrow = Arrow(
+            S.get_node(u).mobject.get_center(),
+            S.get_node(u).mobject.get_center() + 0.95 * u_arrow_vec,
+        )
+        updates[u] = OrderedDict([
+            ("parent_pointer", u_arrow),
+        ])
+
+        v_arrow_vec = S.get_node(u).mobject.get_center() - \
+            S.get_node(v).mobject.get_center()
+        v_arrow_vec /= np.linalg.norm(v_arrow_vec)
+        v_arrow = Arrow(
+            S.get_node(v).mobject.get_center(),
+            S.get_node(v).mobject.get_center() + 0.95 * v_arrow_vec,
+        )
+        updates[v] = OrderedDict([
+            ("parent_pointer", v_arrow),
+        ])
+        self.play(*S.update_components(updates))
+        self.wait(2)
+
+        # scroll back
+        self.play(
+            MoveAlongPath(
+                self.camera_frame,
+                ParametricFunction(
+                    lambda t: (const.FRAME_WIDTH * (1 - t), 0, 0)
+                )))
         save_state(self)
 
     def last_run(self):
@@ -1737,6 +1817,8 @@ class RunAlgorithm(MovingCameraScene):
         self.generalize()
         self.tightening()
         self.first_run()
+        # self.infinite_bounds() # patched
+        # self.parent_pointers() # patched
         self.last_run()
         self.directed_graph()
         self.spt_vs_mst()

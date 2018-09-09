@@ -21,7 +21,7 @@ HEIGHT_RELATIVE_TO_NODE = [0, 0.23, 0.23, 0.23]
 
 
 class Node(Component):
-    def __init__(self, point, attrs=None, **kwargs):
+    def __init__(self, point, attrs={}, **kwargs):
         Component.__init__(self, point, attrs=attrs, **kwargs)
 
     def __str__(self):
@@ -75,7 +75,7 @@ class Node(Component):
                 dic["scale_factor"] = self.mobject.scale_factor
             else:
                 print("Attempted to initialize Node without scale_factor")
-                import ipdb; ipdb.set_trace(context=7)
+                breakpoint(context=7)
 
         if "radius" in dic:
             pass
@@ -91,14 +91,14 @@ class Node(Component):
                 dic["stroke_width"] = self.mobject.stroke_width
             else:
                 print("Attempted to initialize Node without stroke_width")
-                import ipdb; ipdb.set_trace(context=7)
+                breakpoint(context=7)
 
         if "color" not in dic:
             if hasattr(self, "mobject"):
                 dic["color"] = self.mobject.color
             else:
                 print("Attempted to initialize Node without color")
-                import ipdb; ipdb.set_trace(context=7)
+                breakpoint(context=7)
 
         mobject = dic.get("mobject", None)
         if mobject is None:

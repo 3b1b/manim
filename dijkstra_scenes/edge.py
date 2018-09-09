@@ -22,7 +22,7 @@ class Side(Enum):
 
 
 class Edge(Component):
-    def __init__(self, start_node, end_node, attrs=None, **kwargs):
+    def __init__(self, start_node, end_node, attrs={}, **kwargs):
         self.start_node = start_node
         self.end_node = end_node
         Component.__init__(self, start_node, end_node, attrs=attrs, **kwargs)
@@ -54,7 +54,7 @@ class Edge(Component):
         elif numpy.allclose(self.end_node.key, point):
             return self.start_node.key
         else:
-            raise Exception("node isn't part of line")
+            raise Exception("node isn't incident to edge")
 
     def get_label_scale_factor(self, label, num_labels):
         if label.get_height() > Integer(7).get_height():

@@ -179,8 +179,6 @@ class Scene(Container):
     ###
 
     def continual_update(self, dt, animations=None):
-        if dt == 0:
-            breakpoint(context=7)
         for mobject in self.get_mobjects():
             mobject.update(dt)
         for continual_animation in self.continual_animations:
