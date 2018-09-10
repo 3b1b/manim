@@ -5,4 +5,7 @@ jobs:
       - image: eulertour/manim:circleci
     steps:
       - checkout
-      - run: MEDIA_DIR=media python3 -m pytest mobject/test.py
+      - run:
+        command: python3 -m pytest mobject/test.py
+        environment:
+          MEDIA_DIR: media
