@@ -15,6 +15,9 @@ RUN tar -xf Python-3.7.0.tgz
 WORKDIR Python-3.7.0
 RUN ./configure > /dev/null && make -s && make -s install
 RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install pytest
+RUN python3 -m pip install pytest-mock
+RUN python3 -m pip install pytest-cov
 WORKDIR /root
 RUN rm -rf Python-3.7.0*
 

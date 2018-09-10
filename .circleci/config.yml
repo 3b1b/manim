@@ -5,4 +5,4 @@ jobs:
       - image: eulertour/manim:circleci
     steps:
       - checkout
-      - run: echo "A first hello"
+      - run: python3 -m pytest mobject/test.py
