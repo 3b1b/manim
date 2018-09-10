@@ -6,6 +6,6 @@ jobs:
     steps:
       - checkout
       - run:
-        command: python3 -m pytest mobject/test.py
-        environment:
-          MEDIA_DIR: media
+          command: python3 -m pytest mobject/test.py
+          environment:
+            MEDIA_DIR: media
