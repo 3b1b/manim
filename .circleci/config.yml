@@ -5,4 +5,4 @@ jobs:
       - image: eulertour/manim:circleci
     steps:
       - checkout
-      - run: python3 -m pytest mobject/test.py
+      - run: MEDIA_DIR=media python3 -m pytest mobject/test.py
