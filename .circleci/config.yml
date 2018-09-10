@@ -1,0 +1,8 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: eulertour/manim:circleci
+    steps:
+      - checkout
+      - run: echo "A first hello"
