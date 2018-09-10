@@ -1,7 +1,7 @@
 # Manim
 Animation engine for explanatory math videos.
 
-[![CircleCI](https://circleci.com/gh/eulertour/manim.svg?style=sheild)](https://circleci.com/gh/eulertour/manim)
+[![CircleCI](https://circleci.com/gh/eulertour/manim.svg?style=shield)](https://circleci.com/gh/eulertour/manim)
 
 For those who want to play around with this tool, I should be upfront that I've mostly had my own use cases (i.e. 3b1b videos) in mind while building it, and it might not be the most friendly thing to get up and running.  In particular, I have not done a great job tracking requirements, writing
 tests, and documentation, to put it euphemistically, almost exclusively takes the form of naming conventions.
