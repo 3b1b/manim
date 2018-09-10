@@ -1,11 +1,12 @@
 version: 2
 jobs:
   build:
-    environment:
-      MEDIA_DIR: media
     docker:
       - image: eulertour/manim:circleci
     steps:
       - checkout
+      - run: mkdir media
       - run:
           command: python3 -m pytest mobject/test.py
+          environment:
+            MEDIA_DIR: media
