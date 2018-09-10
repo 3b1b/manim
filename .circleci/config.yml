@@ -7,6 +7,6 @@ jobs:
       - checkout
       - run: mkdir media
       - run:
-          command: python3 -m pytest mobject/test.py
+          command: python3 -m pytest -v mobject/test.py
           environment:
             MEDIA_DIR: media
