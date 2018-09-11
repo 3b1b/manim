@@ -74,9 +74,11 @@ class ThreeDScene(Scene):
         return moving_mobjects
 
     def add_fixed_orientation_mobjects(self, *mobjects, **kwargs):
+        self.add(*mobjects)
         self.camera.add_fixed_orientation_mobjects(*mobjects, **kwargs)
 
     def add_fixed_in_frame_mobjects(self, *mobjects):
+        self.add(*mobjects)
         self.camera.add_fixed_in_frame_mobjects(*mobjects)
 
     def remove_fixed_orientation_mobjects(self, *mobjects):
