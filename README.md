@@ -8,18 +8,15 @@ I made this fork in an effort to clean up the technical debt that has been accum
 You can probably tell from the previous paragraph that this project is very much a work in progress. You'll have to do a lot of exploration on your own to learn how the software works. Expect things to break frequently and unexpectedly early on, and to spend some time debugging. Feel free to file an issue if something seems wrong, and I'll get back to you as soon as possible.
 
 ## Installation requirements
-
 This fork of Manim runs on python 3.7 only. Earlier versions of python are not supported.
+You can install the python dependencies with `pip install -r requirements.txt`.
 
 Manim relies on system libraries you will need to install on your operating system:
 * ffmpeg
 * latex
 * sox
 
-Then you can install the python dependencies:
-```sh
-pip install -r requirements.txt
-```
+The dockerfile is (should be) the definitive source for all of Manim's requirements.
 
 ## How to Use
 Todd Zimmerman put together a [very nice tutorial](https://talkingphysics.wordpress.com/2018/06/11/learning-how-to-animate-videos-using-manim-series-a-journey/) on getting started with manim.  I can't make promises that future versions will always be compatible with what is discussed in that tutorial, but he certainly does a much better job than Grant has laying out the basics.
@@ -45,14 +42,17 @@ While developing a scene, the `-s` flag is helpful to just see what things look 
 Scenes with `PiCreatures` are somewhat 3b1b specific, so the specific designs for various expressions are not part of the public repository. You should still be able to run them, but they will fall back on using the "plain" expression for the creature.
 
 ## License
-
 All files in the directories active_projects and old_projects, which by and large generate the visuals for 3b1b videos, are copyright 3Blue1Brown.
 
 The general purpose animation code found in the remainder of the repository, on the other hand, is under the MIT license.
 
 ## Docker Method
-Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/). This is the image used by CircleCI to run tests. Since test coverage is painfully lacking, the image does not yet have dependencies for all of manim (notably it does not have latex).
+Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/). This is the image CircleCI uses to run tests.
+
+The image does not contain a copy of the repo. This is intentional, as it allows you to either bind mount a repo that you've cloned locally or clone whichever branch you want. Since test coverage is painfully lacking, the image may not have dependencies for all of manim.
 
 1. [Install Docker](https://www.docker.com/products/overview)
 2. Build docker image. `docker build -t manim .`
-3. Run it! `docker run -itv "$PWD/files":/app/files manim example_scenes.py WarpSquare`
+3. Run it!
+  3a. Bind mount a local repo: `docker run -itv /path/to/your/local/manim/repo:/root/manim` or
+  3b. Clone the repo: `docker run -it`, then `git clone https://github.com/eulertour/manim.git`
