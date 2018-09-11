@@ -5,5 +5,10 @@ jobs:
       - image: eulertour/manim:circleci
     steps:
       - checkout
-      - run:
-          command: python3 -m pytest -v mobject/test.py
+      - run: python3 --version ; pip --version
+      - run: python3 -m pytest -v mobject/test.py
+      - run: sudo pip install flake8
+      # stop the build if there are Python syntax errors or undefined names
+      - run: flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+      # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide      
+      - run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
