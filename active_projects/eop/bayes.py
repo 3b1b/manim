@@ -1010,7 +1010,7 @@ class UpdatePokerPrior(SampleSpaceScene):
                 "P(", s, self.double_heart_template, ")",
                 "= ", num
             )
-            for s, num in ("", p_str), ("\\text{not }", q_str)
+            for s, num in (("", p_str), ("\\text{not }", q_str))
         ]
         for label in labels:
             label.scale(0.7)
