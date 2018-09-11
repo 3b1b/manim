@@ -4778,7 +4778,8 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
             [-1, 1, 0, 0],
             [0, 0, 1, 1],
             [0, 1, -1, 1],
-        ]
+        ],
+        "unit_labels_scale_factor": 1,
     }
 
     def construct(self):
@@ -4827,6 +4828,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
             return label
 
         label.add_updater(update_label)
+        self.pink_dot_label = label
 
         def get_pq_point():
             point = self.project_quaternion(q_tracker.get_value())
@@ -4841,9 +4843,12 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
         def get_pq_line():
             point = get_pq_point()
             norm = get_norm(point)
+            origin = self.axes.coords_to_point(0, 0, 0)
             if norm > dot_radius:
+                point -= origin
                 point *= (norm - dot_radius) / norm
-            result = Line(ORIGIN, point)
+                point += origin
+            result = Line(origin, point)
             result.set_stroke(width=1)
             return result
 
@@ -5114,6 +5119,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
         labels = VGroup()
         for tex, coords, vect in tex_coords_vects:
             label = TexMobject(tex)
+            label.scale(self.unit_labels_scale_factor)
             label.rotate(90 * DEGREES, RIGHT)
             label.next_to(c2p(*coords), vect, SMALL_BUFF)
             labels.add(label)
@@ -5333,10 +5339,12 @@ class RuleOfQuaternionMultiplication(HypersphereStereographicProjection):
     def add_unit_labels(self):
         labels = self.unit_labels = self.get_unit_labels()
         one_label = TexMobject("1")
+        one_label.scale(self.unit_labels_scale_factor)
         one_label.set_shade_in_3d(True)
         one_label.rotate(90 * DEGREES, RIGHT)
         one_label.next_to(ORIGIN, IN + RIGHT, SMALL_BUFF)
-        self.add(labels, one_label)
+        labels.add(one_label)
+        self.add(labels)
 
     def show_multiplication_by_i_on_circle_1i(self):
         m_tracker = self.multiplier_tracker
@@ -6420,27 +6428,95 @@ class QuaternionEndscreen(PatreonEndScreen):
     }
 
 
-class Thumbnail(RuleOfQuaternionMultiplication):
+class ThumbnailP1(RuleOfQuaternionMultiplication):
     CONFIG = {
         "three_d_axes_config": {
             "num_axis_pieces": 20,
-        }
+        },
+        "unit_labels_scale_factor": 1.5,
+        "quaternion": [1, 0, 0, 0],
     }
 
     def construct(self):
         self.setup_all_trackers()
-        quat = normalize([-0.5, 0.5, -0.5, 0.5])
-        self.multiplier_tracker.set_value(quat)
-        self.q_tracker.set_value(quat)
-        sphere = self.get_projected_sphere(0, solid=False)
-        # self.specially_color_sphere(sphere)
-        # sphere.set_fill(opacity=0.5)
-        sphere.set_fill_by_checkerboard(BLUE_E, BLUE, opacity=0.8)
-        for face in sphere:
+        self.remove(self.pink_dot_label)
+        q_tracker = self.q_tracker
+        m_tracker = self.multiplier_tracker
+
+        # quat = normalize([-0.5, 0.5, -0.5, 0.5])
+        quat = normalize(self.quaternion)
+        m_tracker.set_value(quat)
+        q_tracker.set_value(quat)
+        proj_sphere = self.get_projected_sphere(0, solid=False)
+        # self.specially_color_sphere(proj_sphere)
+        proj_sphere.set_color_by_gradient(
+            BLUE, YELLOW
+        )
+        proj_sphere.set_stroke(WHITE)
+        proj_sphere.set_fill(opacity=0.4)
+        for i, face in enumerate(proj_sphere):
+            alpha = i / len(proj_sphere)
+            opacity = 0.7 * (1 - there_and_back(alpha))
+            face.set_fill(opacity=opacity)
+
+        # unit_sphere = self.get_projected_sphere(0, quaternion=[1, 0, 0, 0], solid=False)
+        # self.specially_color_sphere(unit_sphere)
+        # unit_sphere.set_stroke(width=0)
+        # proj_sphere.set_fill_by_checkerboard(BLUE_E, BLUE, opacity=0.8)
+        for face in proj_sphere:
             face.points = face.points[::-1]
+            max_r = np.max(np.apply_along_axis(get_norm, 1, face.points))
+            if max_r > 30:
+                face.fade(1)
+
+        for label in self.unit_labels:
+            label.set_shade_in_3d(False)
+            label.set_background_stroke(color=BLACK, width=2)
+
+        self.add(proj_sphere)
+        # self.add(unit_sphere)
+
+        for mobject in self.mobjects:
+            try:
+                mobject.shift(IN)
+            except ValueError:
+                pass
 
         self.set_camera_orientation(
             phi=70 * DEGREES,
             theta=-110 * DEGREES,
         )
-        self.add(sphere)
+
+
+class ThumbnailP2(ThumbnailP1):
+    CONFIG = {
+        "quaternion": [0, 1, 0, 0],
+    }
+
+
+class ThumbnailOverlay(Scene):
+    def construct(self):
+        title = TextMobject("Quaternions")
+        title.set_width(8)
+        title.to_edge(UP)
+        v_line = Line(DOWN, UP)
+        v_line.set_height(FRAME_HEIGHT)
+
+        title.set_background_stroke(color=BLACK, width=1)
+
+        rect = BackgroundRectangle(title[4:6])
+        rect.set_fill(opacity=1)
+        rect.stretch(0.9, 0)
+        rect.stretch(1.1, 1)
+        title.add_to_back(BackgroundRectangle(title[0]))
+        title.add_to_back(rect)
+
+        arrow = Arrow(LEFT, RIGHT)
+        arrow.scale(1.5)
+        arrow.tip.scale(2)
+        arrow.set_stroke(width=10)
+        arrow.set_color(YELLOW)
+
+        self.add(v_line)
+        self.add(arrow)
+        self.add(title)

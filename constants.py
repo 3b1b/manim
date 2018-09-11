@@ -2,35 +2,13 @@ import os
 import numpy as np
 import colour
 
-env_MEDIA_DIR = None
-MEDIA_DIR = "#ERROR#"
-
-try:
-    env_MEDIA_DIR = os.getenv("MEDIA_DIR")
-except NameError:
-    try:
-        env_MEDIA_DIR = os.environ['MEDIA_DIR']
-    except KeyError:
-        pass
-
-if not (env_MEDIA_DIR is None):
-    MEDIA_DIR = env_MEDIA_DIR
+if os.getenv("MEDIA_DIR"):
+    MEDIA_DIR = os.getenv("MEDIA_DIR")
 elif os.path.exists("media_dir.txt"):
     with open("media_dir.txt", 'rU') as media_file:
         MEDIA_DIR = media_file.readline().strip()
 else:
-    MEDIA_DIR = os.path.join(
-        os.path.expanduser('~'),
-        "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
-    )
-
-if not os.path.exists(MEDIA_DIR):
-    raise Exception("""
-        Redefine MEDIA_DIR by changing the MEDIA_DIR
-        environment constant or by changing
-        media_dir.txt to point to a valid directory
-        where movies and images will be written
-    """)
+    MEDIA_DIR = "media"
 
 with open("media_dir.txt", 'w') as media_file:
     media_file.write(MEDIA_DIR)

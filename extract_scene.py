@@ -16,6 +16,8 @@ from scene.scene import Scene
 from utils.sounds import play_error_sound
 from utils.sounds import play_finish_sound
 
+from colour import Color
+
 HELP_MESSAGE = """
    Usage:
    python extract_scene.py <module> [<scene name>]
@@ -31,6 +33,7 @@ HELP_MESSAGE = """
    -t use transperency when exporting images
    -n specify the number of the animation to start from
    -r specify a resolution
+   -c specify a background color
 """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script
@@ -72,6 +75,7 @@ def get_configuration():
         parser.add_argument("-o", "--output_name")
         parser.add_argument("-n", "--start_at_animation_number")
         parser.add_argument("-r", "--resolution")
+        parser.add_argument("-c", "--color")
         args = parser.parse_args()
         if args.output_name is not None:
             output_name_root, output_name_ext = os.path.splitext(
@@ -134,6 +138,14 @@ def get_configuration():
             "pixel_height": height,
             "pixel_width": width,
         })
+
+    if args.color:
+        try:
+            config["camera_config"]["background_color"] = Color(args.color)
+        except AttributeError as err:
+            print("Please use a valid color")
+            print(err)
+            sys.exit(2)
 
     # If rendering a transparent image/move, make sure the
     # scene has a background opacity of 0

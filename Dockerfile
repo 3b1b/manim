@@ -36,5 +36,14 @@ COPY requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt
 RUN rm requirements.txt
 
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get install -qqy apt-transport-https
+RUN apt-get install -qqy texlive-latex-base 
+RUN apt-get install -qqy texlive-full
+RUN apt-get install -qqy texlive-fonts-extra
+RUN apt-get install -qqy sox
+RUN apt-get install -qqy git
+
 ENV DEBIAN_FRONTEND teletype
 ENTRYPOINT ["/bin/bash"]
