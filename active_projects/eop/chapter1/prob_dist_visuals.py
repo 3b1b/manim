@@ -289,7 +289,7 @@ class ProbabilityDistributions(PiCreatureScene):
         outcome_braces = VGroup(*[
             Brace(outcome, DOWN) for outcome in outcomes
         ])
-        outcome_labels = VGroup(*[i
+        outcome_labels = VGroup(*[
             TexMobject("{1\over 8}").scale(0.5).next_to(brace, DOWN)
             for brace in outcome_braces
         ])

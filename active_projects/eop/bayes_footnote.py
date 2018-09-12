@@ -486,7 +486,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
                 TexMobject("P(\\text{Disease})", s1),
                 TexMobject("P(\\text{Not disease})", s2),
             ).scale(0.7)
-            for s1, s2 in ("", ""), ("= 0.001", "= 0.999")
+            for s1, s2 in (("", ""), ("= 0.001", "= 0.999"))
         ]
         sample_space.get_side_braces_and_labels(initial_labels)
         sample_space.add_braces_and_labels()

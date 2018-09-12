@@ -98,7 +98,7 @@ class WorkOutNumerically(Scene):
             non_numbers = VGroup(*[m for m in det if m not in numbers])
             matrix_numbers = VGroup(*[
                 matrix.mob_matrix[i][j].copy()
-                for i, j in (0, 0), (1, 1), (0, 1), (1, 0)
+                for i, j in ((0, 0), (1, 1), (0, 1), (1, 0))
             ])
             self.play(
                 LaggedStart(FadeIn, non_numbers, run_time=1),
