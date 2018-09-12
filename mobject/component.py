@@ -6,6 +6,7 @@ from mobject.mobject import Mobject
 from animation.creation import ShowCreation
 from animation.creation import Uncreate
 from animation.transform import ReplacementTransform
+import copy
 import sys
 
 
