@@ -10,6 +10,7 @@ from colour import Color
 
 from constants import *
 from container.container import Container
+from deprecated import deprecated
 from utils.bezier import interpolate
 from utils.color import color_gradient
 from utils.color import color_to_rgb
@@ -307,13 +308,9 @@ class Mobject(Container):
         """
         This can make transition animations nicer
         """
-        def repeat_array(array):
-            return reduce(
-                lambda a1, a2: np.append(a1, a2, axis=0),
-                [array] * count
-            )
         for mob in self.family_members_with_points():
-            mob.apply_over_attr_arrays(repeat_array)
+            mob.apply_over_attr_arrays(
+                lambda points: np.tile(points, (count, 1)))
         return self
 
     # In place operations.
@@ -331,16 +328,16 @@ class Mobject(Container):
             mob.points += about_point
         return self
 
+    @deprecated(reason="redundant with default behavior of rotate now")
     def rotate_in_place(self, angle, axis=OUT):
-        # redundant with default behavior of rotate now.
         return self.rotate(angle, axis=axis)
 
+    @deprecated(reason="redundant with default behavior of scale now")
     def scale_in_place(self, scale_factor, **kwargs):
-        # Redundant with default behavior of scale now.
         return self.scale(scale_factor, **kwargs)
 
+    @deprecated(reason="redundant with default behavior of scale now")
     def scale_about_point(self, scale_factor, point):
-        # Redundant with default behavior of scale now.
         return self.scale(scale_factor, about_point=point)
 
     def pose_at_angle(self, **kwargs):

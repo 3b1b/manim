@@ -15,9 +15,9 @@ RUN tar -xf Python-3.7.0.tgz
 WORKDIR Python-3.7.0
 RUN ./configure > /dev/null && make -s && make -s install
 RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install pytest
-RUN python3 -m pip install pytest-mock
-RUN python3 -m pip install pytest-cov
+COPY requirements.txt requirements.txt
+RUN python3 -m pip install -r requirements.txt
+RUN rm requirements.txt
 WORKDIR /root
 RUN rm -rf Python-3.7.0*
 
@@ -32,9 +32,6 @@ RUN rm -rf pycairo-1.17.1*
 
 WORKDIR /root
 RUN apt-get install -qqy ffmpeg
-COPY requirements.txt requirements.txt
-RUN python3 -m pip install -r requirements.txt
-RUN rm requirements.txt
 
 ENV TZ=America/Los_Angeles
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

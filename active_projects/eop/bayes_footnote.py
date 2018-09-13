@@ -1362,7 +1362,7 @@ class CompareNumbersInBothExamples(Scene):
                 "\\text{Not }", "\\text{%s}"%s2, ")",
                 "=", "1/100"
             )
-            for s1, s2 in ("+", "Sick"), ("Correct", "Powers")
+            for s1, s2 in (("+", "Sick"), ("Correct", "Powers"))
         ])
         priors.next_to(likelihoods, UP, LARGE_BUFF)
         for group in priors, likelihoods:
