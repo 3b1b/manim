@@ -559,25 +559,189 @@ def test_reverse_points():
     expected = points.copy()
     assert(np.allclose(m.points, np.flip(expected, axis=0)))
 
-# def repeat():
-#    def repeat_array():
-# # Note, much of these are now redundant with default behavior of
-# def apply_points_function_about_point():
+
+def test_repeat():
+    m_points = np.random.rand(10, 3)
+    s_points = np.random.rand(10, 3)
+    s = Mobject()
+    s.points = s_points.copy()
+    m = Mobject(s)
+    m.points = m_points.copy()
+    m.repeat(3)
+
+    m_points_expected = np.tile(m_points, (3, 1))
+    s_points_expected = np.tile(s_points, (3, 1))
+    assert np.allclose(m.points, m_points_expected)
+    assert np.allclose(s.points, s_points_expected)
+
+
+def test_apply_points_function_about_point(mocker):
+    mocker.patch.object(
+        mobject.mobject.Mobject,
+        'get_critical_point',
+        return_value=const.ORIGIN,
+    )
+    m_points = np.random.rand(10, 3)
+    func_return_points = np.random.rand(10, 3)
+    mock_func = mocker.Mock(return_value=func_return_points)
+
+    m = Mobject()
+    m.points = m_points.copy()
+    m.apply_points_function_about_point(mock_func, about_edge=const.ORIGIN)
+
+    m.get_critical_point.assert_called_once()
+    args, kwargs = m.get_critical_point.call_args
+    assert(np.allclose(args, const.ORIGIN) and kwargs == {})
+    mock_func.assert_called_once()
+    args, kwargs = mock_func.call_args
+    assert(np.allclose(args, m_points) and kwargs == {})
+
+
+# deprecated methods
 # def rotate_in_place():
-#    # redundant with default behavior of rotate now.
 # def scale_in_place():
-#    # Redundant with default behavior of scale now.
 # def scale_about_point():
-#    # Redundant with default behavior of scale now.
-# def pose_at_angle():
-# def center():
-# def align_on_border():
-# def to_corner():
-# def to_edge():
-# def next_to(self, mobject_or_point,
-# def align_to():
-# def shift_onto_screen():
-# def is_off_screen():
+
+
+def test_pose_at_angle(mocker):
+    mocker.patch.object(mobject.mobject.Mobject, 'rotate', autospec=True),
+    m = Mobject()
+    m.pose_at_angle()
+    m.rotate.assert_called_once()
+
+    args, kwargs = m.rotate.call_args
+    assert args[0] == m
+    assert args[1] == const.TAU / 14
+    assert np.allclose(args[2], const.RIGHT + const.UP)
+
+
+def test_center(mocker):
+    MOCK_CENTER = 5
+    mocker.patch.object(mobject.mobject.Mobject, 'shift')
+    mocker.patch.object(
+        mobject.mobject.Mobject,
+        'get_center',
+        return_value=MOCK_CENTER,
+    )
+    m = Mobject()
+    m.center()
+    m.shift.assert_called_once_with(-MOCK_CENTER)
+
+
+def test_align_on_border(mocker):
+    mock_dir = np.random.rand(1, 3)
+    mock_point_to_align = np.random.rand(1, 3)
+    mock_buff = np.random.rand(1, 3)
+    mock_offset = np.random.rand(1, 3)
+    mocker.patch.object(mobject.mobject.Mobject, 'get_critical_point', return_value=mock_point_to_align)
+    mocker.patch.object(mobject.mobject.Mobject, 'shift')
+
+    m = Mobject()
+    m.align_on_border(mock_dir, buff=mock_buff, initial_offset=mock_offset)
+
+    mock_target_point = \
+        np.sign(mock_dir) * (const.FRAME_X_RADIUS, const.FRAME_Y_RADIUS, 0)
+    mock_shift_val = mock_target_point - mock_point_to_align - mock_buff * np.array(mock_dir)
+    mock_shift_val = mock_shift_val * abs(np.sign(mock_dir))
+
+    m.get_critical_point.assert_called_once()
+    args, kwargs = m.get_critical_point.call_args
+    assert np.allclose(args[0], mock_dir)
+    assert kwargs == {}
+
+    m.shift.assert_called_once()
+    args, kwargs = m.shift.call_args
+    assert np.allclose(args[0], mock_shift_val + mock_offset)
+    assert kwargs == {}
+
+
+def test_to_corner(mocker):
+    mocker.patch.object(mobject.mobject.Mobject, 'align_on_border')
+    mock_corner = np.random.rand(1, 3)
+    mock_buff = np.random.rand(1, 3)
+    mock_offset = np.random.rand(1, 3)
+
+    m = Mobject()
+    m.to_corner(mock_corner, buff=mock_buff, initial_offset=mock_offset)
+
+    m.align_on_border.assert_called_once()
+    args, kwargs = m.align_on_border.call_args
+
+    assert np.allclose(args[0], mock_corner)
+    assert np.allclose(args[1], mock_buff)
+    assert np.allclose(args[2], mock_offset)
+    assert kwargs == {}
+
+
+def test_to_edge(mocker):
+    mocker.patch.object(mobject.mobject.Mobject, 'align_on_border')
+    mock_edge = np.random.rand(1, 3)
+    mock_buff = np.random.rand(1, 3)
+    mock_offset = np.random.rand(1, 3)
+
+    m = Mobject()
+    m.to_edge(mock_edge, buff=mock_buff, initial_offset=mock_offset)
+
+    m.align_on_border.assert_called_once()
+    args, kwargs = m.align_on_border.call_args
+
+    assert np.allclose(args[0], mock_edge)
+    assert np.allclose(args[1], mock_buff)
+    assert np.allclose(args[2], mock_offset)
+    assert kwargs == {}
+
+
+def test_next_to(mocker):
+    mock_point_to_align=np.random.rand(1, 3)
+    mocker.patch.object(mobject.mobject.Mobject, 'get_critical_point', return_value=mock_point_to_align)
+    mocker.patch.object(mobject.mobject.Mobject, 'shift')
+    mock_mobject_or_point = np.random.rand(1, 3)
+
+    mock_direction=np.random.rand(1, 3)
+    mock_buff=np.random.rand(1, 3)
+    mock_aligned_edge=np.random.rand(1, 3)
+
+    m = Mobject()
+    m.next_to(
+        mock_mobject_or_point,
+        mock_direction,
+        mock_buff,
+        mock_aligned_edge,
+    )
+    m.shift.assert_called_once()
+    args, kwargs = m.shift.call_args
+    assert np.allclose(args[0], (mock_mobject_or_point - mock_point_to_align) +
+                       mock_buff * mock_direction)
+
+
+def test_align_to():
+    m1_points = np.random.rand(1, 3)
+    m1 = Mobject()
+    m1.points = m1_points
+    m2_points = np.random.rand(1, 3)
+    m2 = Mobject()
+    m2.points = m2_points
+    m1.align_to(m2)
+    assert m1.get_critical_point(const.UP)[1] == m2.get_critical_point(const.UP)[1]
+
+
+def test_shift_onto_screen():
+    m = Mobject()
+    m.points = np.array([[const.FRAME_X_RADIUS + 1, const.FRAME_Y_RADIUS + 1, 0]])
+    m.shift_onto_screen()
+    assert np.dot(m.get_top(), const.UP) == const.FRAME_Y_RADIUS - const.DEFAULT_MOBJECT_TO_EDGE_BUFFER
+    assert np.dot(m.get_right(), const.RIGHT) == const.FRAME_X_RADIUS - const.DEFAULT_MOBJECT_TO_EDGE_BUFFER
+
+
+def test_is_off_screen():
+    m = Mobject()
+    m.points = np.array([[3, 4, 0]])
+    assert not m.is_off_screen()
+    m.points = np.array([[0, const.FRAME_Y_RADIUS + 1, 0]])
+    m.points = np.array([[const.FRAME_X_RADIUS + 1, 0, 0]])
+    assert m.is_off_screen()
+
+
 # def stretch_about_point():
 # def stretch_in_place():
 # def rescale_to_fit():
