@@ -7,6 +7,7 @@ flake8==3.5.0
 numpy==1.15.0
 opencv-python==3.4.2.17
 progressbar==2.5
+pycairo==1.17.1
 pytest-cov==2.5.1
 pytest-mock==1.10.0
 pytest==3.7.2

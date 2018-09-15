@@ -15,22 +15,13 @@ RUN tar -xf Python-3.7.0.tgz
 WORKDIR Python-3.7.0
 RUN ./configure > /dev/null && make -s && make -s install
 RUN python3 -m pip install --upgrade pip
+RUN apt-get install -qqy libcairo2-dev libjpeg-dev libgif-dev
 COPY requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt
 RUN rm requirements.txt
 WORKDIR /root
 RUN rm -rf Python-3.7.0*
 
-RUN wget -q https://github.com/pygobject/pycairo/releases/download/v1.17.1/pycairo-1.17.1.tar.gz
-RUN tar -xf pycairo-1.17.1.tar.gz
-RUN apt-get install -qqy libcairo2-dev libjpeg-dev libgif-dev
-WORKDIR pycairo-1.17.1
-RUN python3 setup.py build
-RUN python3 setup.py install
-WORKDIR /root
-RUN rm -rf pycairo-1.17.1*
-
-WORKDIR /root
 RUN apt-get install -qqy ffmpeg
 
 ENV TZ=America/Los_Angeles
