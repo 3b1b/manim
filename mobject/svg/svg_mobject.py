@@ -13,6 +13,7 @@ from mobject.geometry import RoundedRectangle
 from utils.bezier import is_closed
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
+from mobject.svg.tex_mobject import *
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 
@@ -73,7 +74,7 @@ class SVGMobject(VMobject):
                 self.add(*mobjects[0].submobjects)
         doc.unlink()
 
-    def get_mobjects_from(self, element):
+    def get_mobjects_from(self, element, fill_color=None):
         result = []
         if not isinstance(element, minidom.Element):
             return result
@@ -82,16 +83,19 @@ class SVGMobject(VMobject):
         elif element.tagName == 'style':
             pass  # TODO, handle style
         elif element.tagName in ['g', 'svg']:
+            if element.hasAttribute("fill"):
+                fill_color = element.getAttribute("fill")
             result += it.chain(*[
-                self.get_mobjects_from(child)
+                self.get_mobjects_from(child, fill_color=fill_color)
                 for child in element.childNodes
             ])
         elif element.tagName == 'path':
             result.append(self.path_string_to_mobject(
-                element.getAttribute('d')
+                element.getAttribute('d'),
+                fill_color=fill_color,
             ))
         elif element.tagName == 'use':
-            result += self.use_to_mobjects(element)
+            result += self.use_to_mobjects(element, fill_color=fill_color)
         elif element.tagName == 'rect':
             result.append(self.rect_to_mobject(element))
         elif element.tagName == 'circle':
@@ -118,20 +122,21 @@ class SVGMobject(VMobject):
     def path_string_to_mobject(self, path_string):
         return VMobjectFromSVGPathstring(path_string)
 
-    def use_to_mobjects(self, use_element):
+    def use_to_mobjects(self, use_element, fill_color=None):
         # Remove initial "#" character
         ref = use_element.getAttribute("xlink:href")[1:]
         if ref not in self.ref_to_element:
             warnings.warn("%s not recognized" % ref)
             return VMobject()
         return self.get_mobjects_from(
-            self.ref_to_element[ref]
+            self.ref_to_element[ref],
+            fill_color=fill_color,
         )
 
     def attribute_to_float(self, attr):
         stripped_attr = "".join([
             char for char in attr
-            if char in string.digits + "." + "-"
+            if char in string.digits + "." + "-" + "e"
         ])
         return float(stripped_attr)
 

@@ -1,5 +1,6 @@
 
 
+import copy
 import numpy as np
 
 from constants import *
@@ -60,7 +61,7 @@ class Brace(TexMobject):
 
     def get_text(self, *text, **kwargs):
         text_mob = TextMobject(*text)
-        self.put_at_tip(text_mob, **kwargs)
+        self.put_at_tip(text_mob)
         return text_mob
 
     def get_tex(self, *tex, **kwargs):
@@ -99,7 +100,7 @@ class BraceLabel(VMobject):
         if self.label_scale != 1:
             self.label.scale(self.label_scale)
 
-        self.brace.put_at_tip(self.label)
+        self.brace.put_at_tip(self.label, **kwargs)
         self.submobjects = [self.brace, self.label]
 
     def creation_anim(self, label_anim=FadeIn, brace_anim=GrowFromCenter):

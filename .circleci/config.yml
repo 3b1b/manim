@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: eulertour/manim:circleci
+    steps:
+      - checkout
+      - run:
+          command: >-
+            flake8 .
+            --exclude=old_projects
+            --count
+            --select=E901,E999,F821,F822,F823
+            --show-source
+            --statistics
+      - run:
+          command: python3 -m pytest -v mobject/test.py

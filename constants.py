@@ -1,35 +1,14 @@
 import os
 import numpy as np
+import colour
 
-env_MEDIA_DIR = None
-MEDIA_DIR = "#ERROR#"
-
-try:
-    env_MEDIA_DIR = os.getenv("MEDIA_DIR")
-except NameError:
-    try:
-        env_MEDIA_DIR = os.environ['MEDIA_DIR']
-    except KeyError:
-        pass
-
-if not (env_MEDIA_DIR is None):
-    MEDIA_DIR = env_MEDIA_DIR
+if os.getenv("MEDIA_DIR"):
+    MEDIA_DIR = os.getenv("MEDIA_DIR")
 elif os.path.exists("media_dir.txt"):
     with open("media_dir.txt", 'rU') as media_file:
         MEDIA_DIR = media_file.readline().strip()
 else:
-    MEDIA_DIR = os.path.join(
-        os.path.expanduser('~'),
-        "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
-    )
-
-if not os.path.exists(MEDIA_DIR):
-    raise Exception("""
-        Redefine MEDIA_DIR by changing the MEDIA_DIR
-        environment constant or by changing
-        media_dir.txt to point to a valid directory
-        where movies and images will be written
-    """)
+    MEDIA_DIR = "media"
 
 with open("media_dir.txt", 'w') as media_file:
     media_file.write(MEDIA_DIR)
@@ -135,13 +114,10 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DI
         os.makedirs(folder)
 
 TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE = os.path.join(THIS_DIR, "tex_template.tex")
-with open(TEMPLATE_TEX_FILE, "r") as infile:
-    TEMPLATE_TEXT_FILE_BODY = infile.read()
-    TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
-        TEX_TEXT_TO_REPLACE,
-        "\\begin{align*}" + TEX_TEXT_TO_REPLACE + "\\end{align*}",
-    )
+TEMPLATE_TEX_FILE     = os.path.join(THIS_DIR, "template.tex")
+TEMPLATE_TEXT_FILE    = os.path.join(THIS_DIR, "text_template.tex")
+TEMPLATE_CODE_FILE    = os.path.join(THIS_DIR, "code_template.tex")
+TEMPLATE_ALIGNAT_FILE = os.path.join(THIS_DIR, "alignat_template.tex")
 
 FFMPEG_BIN = "ffmpeg"
 
@@ -152,11 +128,11 @@ COLOR_MAP = {
     "DARK_BLUE": "#236B8E",
     "DARK_BROWN": "#8B4513",
     "LIGHT_BROWN": "#CD853F",
-    "BLUE_E": "#1C758A",
-    "BLUE_D": "#29ABCA",
-    "BLUE_C": "#58C4DD",
-    "BLUE_B": "#9CDCEB",
-    "BLUE_A": "#C7E9F1",
+    "BLUE_A" : "#1C758A",
+    "BLUE_B" : "#29ABCA",
+    "BLUE_C" : "#58C4DD",
+    "BLUE_D" : "#9CDCEB",
+    "BLUE_E" : "#C7E9F1",
     "TEAL_E": "#49A88F",
     "TEAL_D": "#55C1A7",
     "TEAL_C": "#5CD0B3",
@@ -187,11 +163,11 @@ COLOR_MAP = {
     "MAROON_C": "#C55F73",
     "MAROON_B": "#EC92AB",
     "MAROON_A": "#ECABC1",
-    "PURPLE_E": "#644172",
-    "PURPLE_D": "#715582",
-    "PURPLE_C": "#9A72AC",
-    "PURPLE_B": "#B189C6",
-    "PURPLE_A": "#CAA3E8",
+    "PURPLE_A" : "#644172",
+    "PURPLE_B" : "#715582",
+    "PURPLE_C" : "#9A72AC",
+    "PURPLE_D" : "#B189C6",
+    "PURPLE_E" : "#CAA3E8",
     "WHITE": "#FFFFFF",
     "BLACK": "#000000",
     "LIGHT_GRAY": "#BBBBBB",
@@ -204,7 +180,32 @@ COLOR_MAP = {
     "PINK": "#D147BD",
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
+
+    "ORANGE": "#FF7054",    # hsl(10, 67, 60)
+    "MAGENTA_E": "#993265", # hsl(330, 67, 60)
+    "MAGENTA_D": "#B23A76", # hsl(330, 67, 70)
+    "MAGENTA_C": "#CC4387", # hsl(330, 67, 80)
+    "MAGENTA_B": "#E54B98", # hsl(330, 67, 90)
+    "MAGENTA_A": "#FF54A9", # hsl(330, 67, 100)
+    "VIOLET_E": "#663399",  # hsl(270, 67, 60)
+    "VIOLET_D": "#773BB2",  # hsl(270, 67, 70)
+    "VIOLET_C": "#8844CC",  # hsl(270, 67, 80)
+    "VIOLET_B": "#994CE5",  # hsl(270, 67, 90)
+    "VIOLET_A": "#AA55FF",  # hsl(270, 67, 100)
+    "TEAL_E": "#326599",    # hsl(210, 67, 60)
+    "TEAL_D": "#3A76B2",    # hsl(210, 67, 70)
+    "TEAL_C": "#4387CC",    # hsl(210, 67, 80)
+    "TEAL_B": "#4B98E5",    # hsl(210, 67, 90)
+    "TEAL_A": "#54A9FF",    # hsl(210, 67, 100)
 }
+
+for color_name,color_hex in COLOR_MAP.items():
+    if color_name == "WHITE" or color_name == "BLACK":
+        continue
+    c = colour.Color(color_hex)
+    c.set_luminance(c.get_luminance() - 0.08)
+    COLOR_MAP[color_name] = c.hex
+
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:

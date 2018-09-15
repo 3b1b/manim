@@ -9,6 +9,7 @@ from mobject.mobject import Mobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
 from utils.bezier import interpolate
+from utils.bezier import mid
 from utils.config_ops import digest_config
 from utils.config_ops import digest_locals
 from utils.paths import path_along_arc
@@ -353,6 +354,9 @@ class Line(VMobject):
         start, end = self.get_start_and_end()
         return get_norm(start - end)
 
+    def get_midpoint(self):
+        return mid(*self.get_start_and_end())
+
     def get_arc_length(self):
         if self.path_arc:
             anchors = self.get_anchors()
@@ -516,6 +520,7 @@ class Arrow(Line):
             fill_opacity=1,
             stroke_color=self.color,
             stroke_width=0,
+            color=self.color,
         )
         tip.add_at_end = add_at_end
         self.set_tip_points(tip, add_at_end, preserve_normal=False)
@@ -701,7 +706,7 @@ class RegularPolygon(Polygon):
 
 class Rectangle(VMobject):
     CONFIG = {
-        "color": WHITE,
+        "color": BLACK,
         "height": 2.0,
         "width": 4.0,
         "mark_paths_closed": True,

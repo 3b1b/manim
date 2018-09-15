@@ -17,4 +17,17 @@ manim.sublime-project
 manim.sublime-workspace
 
 primes.py
+
+*.mnm
+*.sw*
+env/
+media/
+notes.txt
+log.txt
+tags
 /media_dir.txt
+.coverage
+.pytest_cache/
+/htmlcov
+manimenv/
+core

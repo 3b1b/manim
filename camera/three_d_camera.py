@@ -64,7 +64,9 @@ class ThreeDCamera(Camera):
     def modified_rgbas(self, vmobject, rgbas):
         if not self.should_apply_shading:
             return rgbas
-        if vmobject.shade_in_3d and (vmobject.get_num_points() > 0):
+        is_3d = isinstance(vmobject, ThreeDVMobject)
+        has_points = (vmobject.get_num_points() > 0)
+        if is_3d and has_points:
             light_source_point = self.light_source.points[0]
             if len(rgbas) < 2:
                 shaded_rgbas = rgbas.repeat(2, axis=0)
@@ -170,6 +172,7 @@ class ThreeDCamera(Camera):
         points -= frame_center
         points = np.dot(points, rot_matrix.T)
         zs = points[:, 2]
+        zs[zs >= distance] = distance - 0.001
         for i in 0, 1:
             if self.exponential_projection:
                 # Proper projedtion would involve multiplying

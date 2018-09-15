@@ -11,6 +11,7 @@ from mobject.number_line import NumberLine
 from mobject.svg.tex_mobject import TexMobject
 from mobject.types.vectorized_mobject import VGroup
 from mobject.types.vectorized_mobject import VMobject
+from mobject.three_dimensions import ThreeDVMobject
 from utils.config_ops import digest_config
 from utils.space_ops import angle_of_vector
 
@@ -144,8 +145,10 @@ class ThreeDAxes(Axes):
             )
             axis.add(axis.pieces)
             axis.main_line.set_stroke(width=0, family=False)
-            for submob in axis.family_members_with_points():
-                submob.shade_in_3d = True
+            axis_3d = ThreeDVMobject(axis)
+            self.remove(axis)
+            self.add(axis_3d)
+            setattr(self, attr, axis_3d)
 
     def set_axis_shading(self):
         def make_func(axis):

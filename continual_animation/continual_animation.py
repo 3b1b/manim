@@ -32,7 +32,7 @@ class ContinualAnimation(object):
             self.wind_down_time = wind_down_time
         self.end_time = self.external_time + self.wind_down_time
 
-    def update(self, dt):
+    def update(self, dt, animations=None):
         # TODO, currenty time moves slower for a
         # continual animation during its start up
         # to help smooth things out.  Does this have
@@ -47,7 +47,7 @@ class ContinualAnimation(object):
                 0, 1
             )
         self.internal_time += dt
-        self.update_mobject(dt)
+        self.update_mobject(dt, animations=animations)
 
     def update_mobject(self, dt):
         # To implement in subclass

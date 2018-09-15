@@ -20,6 +20,9 @@ class UpdateFromFunc(Animation):
     def update_mobject(self, alpha):
         self.update_function(self.mobject)
 
+    def animation_family(self, mob):
+        return []
+
 
 class UpdateFromAlphaFunc(UpdateFromFunc):
     def update_mobject(self, alpha):

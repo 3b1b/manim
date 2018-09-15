@@ -10,6 +10,7 @@ from colour import Color
 
 from constants import *
 from container.container import Container
+from deprecated import deprecated
 from utils.bezier import interpolate
 from utils.color import color_gradient
 from utils.color import color_to_rgb
@@ -32,7 +33,7 @@ class Mobject(Container):
     Mathematical Object
     """
     CONFIG = {
-        "color": WHITE,
+        "color": BLACK,
         "name": None,
         "dim": 3,
         "target": None,
@@ -66,12 +67,19 @@ class Mobject(Container):
         pass
 
     def add(self, *mobjects):
+        if not all(map(lambda m: isinstance(m, Mobject), mobjects)):
+            raise Exception("All submobjects must be of type Mobject")
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
-        self.submobjects = list_update(self.submobjects, mobjects)
+        self.remove(*mobjects)
+        self.submobjects = self.submobjects + list(mobjects)
         return self
 
     def add_to_back(self, *mobjects):
+        if not all(map(lambda m: isinstance(m, Mobject), mobjects)):
+            raise Exception("All submobjects must be of type Mobject")
+        if self in mobjects:
+            raise Exception("Mobject cannot contain self")
         self.remove(*mobjects)
         self.submobjects = list(mobjects) + self.submobjects
         return self
@@ -90,8 +98,11 @@ class Mobject(Container):
         Ensures all attributes which are mobjects are included
         in the submobjects list.
         """
-        mobject_attrs = [x for x in list(self.__dict__.values()) if isinstance(x, Mobject)]
-        self.submobjects = list_update(self.submobjects, mobject_attrs)
+        mobject_attrs = filter(
+            lambda x: isinstance(x, Mobject),
+            self.__dict__.values()
+        )
+        self.add(*mobject_attrs)
         return self
 
     def apply_over_attr_arrays(self, func):
@@ -289,7 +300,7 @@ class Mobject(Container):
     def reverse_points(self):
         for mob in self.family_members_with_points():
             mob.apply_over_attr_arrays(
-                lambda arr: np.array(list(reversed(arr)))
+                lambda arr: np.flip(arr, axis=0)
             )
         return self
 
@@ -297,13 +308,9 @@ class Mobject(Container):
         """
         This can make transition animations nicer
         """
-        def repeat_array(array):
-            return reduce(
-                lambda a1, a2: np.append(a1, a2, axis=0),
-                [array] * count
-            )
         for mob in self.family_members_with_points():
-            mob.apply_over_attr_arrays(repeat_array)
+            mob.apply_over_attr_arrays(
+                lambda points: np.tile(points, (count, 1)))
         return self
 
     # In place operations.
@@ -315,21 +322,22 @@ class Mobject(Container):
             assert(about_edge is not None)
             about_point = self.get_critical_point(about_edge)
         for mob in self.family_members_with_points():
+            mob.points = mob.points.astype('float')
             mob.points -= about_point
             mob.points = func(mob.points)
             mob.points += about_point
         return self
 
+    @deprecated(reason="redundant with default behavior of rotate now")
     def rotate_in_place(self, angle, axis=OUT):
-        # redundant with default behavior of rotate now.
         return self.rotate(angle, axis=axis)
 
+    @deprecated(reason="redundant with default behavior of scale now")
     def scale_in_place(self, scale_factor, **kwargs):
-        # Redundant with default behavior of scale now.
         return self.scale(scale_factor, **kwargs)
 
+    @deprecated(reason="redundant with default behavior of scale now")
     def scale_about_point(self, scale_factor, point):
-        # Redundant with default behavior of scale now.
         return self.scale(scale_factor, about_point=point)
 
     def pose_at_angle(self, **kwargs):
@@ -342,7 +350,7 @@ class Mobject(Container):
         self.shift(-self.get_center())
         return self
 
-    def align_on_border(self, direction, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+    def align_on_border(self, direction, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER, initial_offset=ORIGIN):
         """
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
@@ -351,14 +359,14 @@ class Mobject(Container):
         point_to_align = self.get_critical_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
-        self.shift(shift_val)
+        self.shift(shift_val + initial_offset)
         return self
 
-    def to_corner(self, corner=LEFT + DOWN, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
-        return self.align_on_border(corner, buff)
+    def to_corner(self, corner=LEFT + DOWN, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER, initial_offset=ORIGIN):
+        return self.align_on_border(corner, buff, initial_offset)
 
-    def to_edge(self, edge=LEFT, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
-        return self.align_on_border(edge, buff)
+    def to_edge(self, edge=LEFT, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER, initial_offset=ORIGIN):
+        return self.align_on_border(edge, buff, initial_offset)
 
     def next_to(self, mobject_or_point,
                 direction=RIGHT,
@@ -367,7 +375,7 @@ class Mobject(Container):
                 submobject_to_align=None,
                 index_of_submobject_to_align=None,
                 coor_mask=np.array([1, 1, 1]),
-                ):
+                **kwargs):
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             if index_of_submobject_to_align is not None:

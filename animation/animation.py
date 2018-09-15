@@ -123,4 +123,18 @@ class Animation(object):
         if surrounding_scene is not None:
             if self.is_remover():
                 surrounding_scene.remove(self.mobject)
+                if hasattr(self, "parent"):
+                    self.parent.remove(self.mobject)
+            else:
+                surrounding_scene.add(self.mobject)
+                if hasattr(self, "parent"):
+                    self.parent.add(self.mobject)
         return self
+
+    def animation_family(self, mob):
+        ret = []
+        for mob in mob.get_family():
+            for family in self.all_families_zipped:
+                if mob == family[0]:
+                    ret.extend(family[1:])
+        return ret

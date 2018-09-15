@@ -216,6 +216,18 @@ def is_scene(obj):
     return True
 
 
+def is_child_scene(obj, module):
+    if not inspect.isclass(obj):
+        return False
+    if not issubclass(obj, Scene):
+        return False
+    if obj == Scene:
+        return False
+    if not obj.__module__.startswith(module.__name__):
+        return False
+    return True
+
+
 def prompt_user_for_choice(name_to_obj):
     num_to_name = {}
     names = sorted(name_to_obj.keys())
@@ -257,7 +269,9 @@ def get_module(file_name):
 def main():
     config = get_configuration()
     module = get_module(config["file"])
-    scene_names_to_classes = dict(inspect.getmembers(module, is_scene))
+    members = inspect.getmembers(module, is_scene)
+    scene_names_to_classes = dict(
+            inspect.getmembers(module, lambda x: is_child_scene(x, module)))
 
     # config["output_directory"] = os.path.join(
     #     ANIMATIONS_DIR,

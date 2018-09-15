@@ -25,11 +25,11 @@ class TexSymbol(VMobjectFromSVGPathstring):
 
 class SingleStringTexMobject(SVGMobject):
     CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEX_FILE_BODY,
+        "template_tex_file": TEMPLATE_TEX_FILE,
         "stroke_width": 0,
         "fill_opacity": 1.0,
         "background_stroke_width": 5,
-        "background_stroke_color": BLACK,
+        "background_stroke_color": WHITE,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
@@ -41,9 +41,13 @@ class SingleStringTexMobject(SVGMobject):
         digest_config(self, kwargs)
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
+        if "template_tex_file" in kwargs and \
+                kwargs["template_tex_file"] == self.template_tex_file:
+            del kwargs["template_tex_file"]
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
-            self.template_tex_file_body
+            self.template_tex_file,
+            **kwargs
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
@@ -120,10 +124,18 @@ class SingleStringTexMobject(SVGMobject):
     def get_tex_string(self):
         return self.tex_string
 
-    def path_string_to_mobject(self, path_string):
+    def path_string_to_mobject(self, path_string, fill_color=None):
         # Overwrite superclass default to use
         # specialized path_string mobject
-        return TexSymbol(path_string)
+        return TexSymbol(
+            path_string,
+            color=fill_color,
+            stroke_rgb=np.array([0,0,0]),
+            fill_rgb=np.array([0,0,0]),
+            fill_opacity=1,
+            stroke_width=0,
+            propagate_style_to_family=True,
+        )
 
     def organize_submobjects_left_to_right(self):
         self.sort_submobjects(lambda p: p[0])
@@ -248,9 +260,99 @@ class TexMobject(SingleStringTexMobject):
 
 class TextMobject(TexMobject):
     CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
+        "template_tex_file": TEMPLATE_TEXT_FILE,
         "alignment": "\\centering",
     }
+
+class AlignatTexMobject(TexMobject):
+    CONFIG = {
+        "template_tex_file": TEMPLATE_ALIGNAT_FILE,
+    }
+
+class CodeMobject(TexMobject):
+    CONFIG = {
+        "template_tex_file": TEMPLATE_CODE_FILE,
+        "indent_level": 4,
+        "propagate_style_to_family": False,
+    }
+
+    def break_up_tex_strings(self, tex_string):
+        # only one string should be passed
+        assert(len(tex_string) == 1)
+        lines = tex_string[0].split('\n')
+        while len(lines[0]) == 0 or lines[0].isspace():
+            lines.pop(0)
+        while len(lines[-1]) == 0 or lines[-1].isspace():
+            lines.pop()
+        indent = len(lines[0]) - len(lines[0].lstrip())
+        lines = map(lambda l: l[indent:], lines)
+        return ['\n'.join(lines)]
+
+    def modify_special_strings(self, tex):
+        return tex
+
+    def break_up_by_substrings(self):
+        index, mob = self.organize_by_blocks(self.tex_string)
+        self.submobjects = mob.submobjects
+
+    def organize_by_blocks(self, tex_string, level=0, index=0):
+        #if "relax" in tex_string:
+        #    import ipdb; ipdb.set_trace(context=5)
+        # check for header
+        has_header = True
+        lines = tex_string.split('\n')
+        min_indent = len(lines[0]) - len(lines[0].strip())
+        for line in lines[1:]:
+            if len(line) == 0:
+                continue
+            indent = len(line) - len(line.strip())
+            if indent == min_indent:
+                has_header = False
+                break
+
+        top_mob = SingleStringTexMobject(tex_string, **self.CONFIG)
+        top_mob.submobjects = []
+        if has_header:
+            head_mob = SingleStringTexMobject(lines[0], **self.CONFIG)
+            head_mob.submobjects = self.submobjects[index:index+len(lines[0].replace(" ", ""))]
+            index += len(lines[0].replace(" ", ""))
+            top_mob.submobjects.append(head_mob)
+            lines = lines[1:]
+
+        # add children
+        i = 0
+        while i < len(lines):
+            cur_line = lines[i]
+            if len(cur_line) == 0:
+                i += 1
+                continue
+            cur_indent = len(cur_line) - len(cur_line.strip())
+            if i+1 < len(lines):
+                next_line = lines[i+1]
+                next_indent = len(next_line) - len(next_line.strip()) 
+            else:
+                next_line = None
+                next_indent = None
+            if next_indent is None or cur_indent == next_indent or len(next_line) == 0:
+                cur_mob = SingleStringTexMobject(lines[i], **self.CONFIG)
+                cur_mob.submobjects = self.submobjects[index:index+len(lines[i].replace(" ", ""))]
+                index += len(lines[i].replace(" ", ""))
+                top_mob.submobjects.append(cur_mob)
+            else:
+                child_string = lines[i]
+                j = 1
+                while i+j < len(lines):
+                    child_indent = len(lines[i+j]) - len(lines[i+j].strip())
+                    if child_indent > cur_indent or len(lines[i+j]) == 0:
+                        child_string += '\n' + lines[i+j]
+                        j += 1
+                    else:
+                        break
+                index, child_mob = self.organize_by_blocks(child_string, level=level+1, index=index)
+                top_mob.submobjects.append(child_mob)
+                i += j - 1
+            i += 1
+        return index, top_mob
 
 
 class BulletedList(TextMobject):
@@ -258,7 +360,7 @@ class BulletedList(TextMobject):
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
         # Have to include because of handle_multiple_args implementation
-        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
+        "template_tex_file": TEMPLATE_TEXT_FILE,
         "alignment": "",
     }
 

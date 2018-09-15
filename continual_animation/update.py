@@ -14,11 +14,24 @@ class ContinualUpdate(ContinualAnimation):
         self.func = func
         ContinualAnimation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, dt):
+    def update_mobject(self, dt, animations=None):
         if self.function_depends_on_dt:
             self.func(self.mobject, dt)
         else:
             self.func(self.mobject)
+        """
+        if self.mobject is contained in any animation, update that animation's
+        family as well
+        """
+        if animations is not None:
+            for animation in animations:
+                animation_family = animation.animation_family(self.mobject)
+                if animation_family:
+                    for mob in animation_family:
+                        if self.function_depends_on_dt:
+                            self.func(mob, dt)
+                        else:
+                            self.func(mob)
 
 
 class ContinualUpdateFromTimeFunc(ContinualUpdate):

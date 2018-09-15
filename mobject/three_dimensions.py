@@ -13,9 +13,59 @@ from utils.space_ops import z_to_vector
 
 
 class ThreeDVMobject(VMobject):
-    CONFIG = {
-        "shade_in_3d": True,
-    }
+    CONFIG = {}
+
+    def __init__(self, vmobject=None, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        if vmobject is not None:
+            self.points = np.array(vmobject.points)
+            self.match_style(vmobject, family=False)
+            self.submobjects = [
+                ThreeDVMobject(submob, **kwargs)
+                for submob in vmobject.submobjects
+            ]
+
+    def get_gradient_start_and_end_points(self):
+        return self.get_start_corner(), self.get_end_corner()
+
+    def get_start_corner_index(self):
+        return 0
+
+    def get_end_corner_index(self):
+        return ((len(self.points) - 1) // 6) * 3
+        # return ((len(self.points) - 1) // 12) * 3
+
+    def get_start_corner(self):
+        if self.get_num_points() == 0:
+            return np.array(ORIGIN)
+        return self.points[self.get_start_corner_index()]
+
+    def get_end_corner(self):
+        if self.get_num_points() == 0:
+            return np.array(ORIGIN)
+        return self.points[self.get_end_corner_index()]
+
+    def get_unit_normal(self, point_index):
+        n_points = self.get_num_points()
+        if self.get_num_points() == 0:
+            return np.array(ORIGIN)
+        i = point_index
+        im1 = i - 1 if i > 0 else (n_points - 2)
+        ip1 = i + 1 if i < (n_points - 1) else 1
+        return get_unit_normal(
+            self.points[ip1] - self.points[i],
+            self.points[im1] - self.points[i],
+        )
+
+    def get_start_corner_unit_normal(self):
+        return self.get_unit_normal(
+            self.get_start_corner_index()
+        )
+
+    def get_end_corner_unit_normal(self):
+        return self.get_unit_normal(
+            self.get_end_corner_index()
+        )
 
 
 class ParametricSurface(VGroup):
@@ -101,7 +151,7 @@ class ParametricSurface(VGroup):
 class Sphere(ParametricSurface):
     CONFIG = {
         "resolution": (12, 24),
-        "radius": 1,
+        "radius": 3,
         "u_min": 0.001,
         "u_max": PI - 0.001,
         "v_min": 0,
