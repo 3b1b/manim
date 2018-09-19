@@ -1977,7 +1977,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
                     slider.number_to_point(0)-slider.number_to_point(slider.center_value)
                 )
                 for slider in self.sliders
-                for mob in slider.real_estate_ticks, slider.dial
+                for mob in [slider.real_estate_ticks, slider.dial]
             ]
         )
         self.center_point = [0, 0]
@@ -1996,7 +1996,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
                     slider.number_to_point(x)-slider.number_to_point(0)
                 )
                 for x, slider in zip(original_center_point, self.sliders)
-                for mob in slider.real_estate_ticks, slider.dial
+                for mob in [slider.real_estate_ticks, slider.dial]
             ]
         )
         self.center_point = original_center_point
@@ -2296,7 +2296,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         re_words.to_corner(UP+LEFT)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(target_x) + MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (2, RIGHT)
+            for i, vect in [(0, LEFT), (2, RIGHT)]
         ])
         new_arrow = Arrow(
             re_words.get_corner(DOWN+RIGHT), re_line.get_left(),
@@ -2322,7 +2322,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
     def compare_to_halfway_point(self):
         half_line = Line(*[
             self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (2, RIGHT)
+            for i, vect in [(0, LEFT), (2, RIGHT)]
         ])
         half_line.set_stroke(MAROON_B, 6)
         half_label = TexMobject("0.5")
@@ -2507,7 +2507,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         target_vector = 0.5*np.ones(4)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in [(0, LEFT), (-1, RIGHT)]
         ])
         half_label = TexMobject("0.5")
         half_label.scale(self.sliders[0].number_scale_val)
@@ -2655,7 +2655,7 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
         randy = self.randy
         tangency_points = VGroup(*[
             Dot(self.plane.coords_to_point(x, y))
-            for x, y in (1, 0), (0, 1), (-1, 0), (0, -1)
+            for x, y in [(1, 0), (0, 1), (-1, 0), (0, -1)]
         ])
         tangency_points.set_fill(YELLOW, 0.5)
 
@@ -2747,7 +2747,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         target_x = 1-np.sqrt(0.2)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(target_x)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in [(0, LEFT), (-1, RIGHT)]
         ])
         re_words = TextMobject(
             "$0.2$", "units of real \\\\ estate each"
@@ -2785,7 +2785,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
     def show_halfway_point(self):
         half_line = Line(*[
             self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in [(0, LEFT), (-1, RIGHT)]
         ])
         half_line.set_color(MAROON_B)
         half_label = TexMobject("0.5")
@@ -2943,7 +2943,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         target_x = 1-np.sqrt(1./self.n_sliders)
         re_line = DashedLine(*[
             self.sliders[i].number_to_point(target_x)+MED_SMALL_BUFF*vect
-            for i, vect in (0, LEFT), (-1, RIGHT)
+            for i, vect in [(0, LEFT), (-1, RIGHT)]
         ])
 
         re_rects = VGroup()

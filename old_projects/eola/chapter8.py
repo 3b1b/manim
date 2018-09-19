@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from eola.chapter5 import get_det_text, RightHandRule
+from old_projects.eola.chapter5 import get_det_text, RightHandRule
 
 
 U_COLOR = ORANGE
@@ -1159,7 +1159,7 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
         w.target = w.copy().rotate(np.pi/5)
         transforms = [
             self.get_matrix_transformation([v1.get_end()[:2], v2.get_end()[:2]])
-            for v1, v2 in (v, w), (v.target, w.target)
+            for v1, v2 in [(v, w), (v.target, w.target)]
         ]
         start_square, end_square = [
             square.copy().apply_function(transform)

@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from eola.chapter3 import MatrixVectorMultiplicationAbstract
+from old_projects.eola.chapter3 import MatrixVectorMultiplicationAbstract
 
 
 class OpeningQuote(Scene):

@@ -634,7 +634,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
                     ddf_over_dx_squared.get_part_by_tex(tex),
                     path_arc = -np.pi/2,                    
                 )
-                for mob, tex in (self.ddf, "df"), (self.dx_squared, "dx")
+                for mob, tex in [(self.ddf, "df"), (self.dx_squared, "dx")]
             ]
         )
         self.wait(2)

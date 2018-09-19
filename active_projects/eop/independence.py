@@ -1515,7 +1515,7 @@ class ShowAllEightConditionals(Scene):
         equations.arrange_submobjects(DOWN)
 
         rect = SurroundingRectangle(
-            VGroup(*equations[0][7:]+equations[-1][7:]),
+            VGroup(*equations[0][7:], *equations[-1][7:]),
             buff = SMALL_BUFF
         )
         rect.shift(0.5*SMALL_BUFF*RIGHT)
@@ -1845,7 +1845,7 @@ class ShowFullDistribution(Scene):
         self.play(Transform(self.bar_chart, alt_charts[0]))
         self.wait()
         self.play(FadeOut(point_5_probs))
-        for rhs, chart in zip(alt_rhss, alt_charts)[1:]:
+        for rhs, chart in list(zip(alt_rhss, alt_charts))[1:]:
             self.play(Transform(new_prob[-1], rhs))
             self.play(Transform(self.bar_chart, chart))
             self.wait(2)

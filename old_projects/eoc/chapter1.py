@@ -2326,7 +2326,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
                 equation.get_part_by_tex(tex),
                 run_time = 2
             )
-            for mob, tex in (x_squared, f_tex), (dx, "dx"), (dA, "dA")
+            for mob, tex in [(x_squared, f_tex), (dx, "dx"), (dA, "dA")]
         ])
         self.play(Write(equation.get_part_by_tex("approx")))
         self.wait()
@@ -2361,7 +2361,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
             Circle(color = color).replace(
                 mob, stretch = True
             ).scale_in_place(1.5)
-            for mob, color in (self.A_func, RED), (self.deriv_equation, GREEN)
+            for mob, color in [(self.A_func, RED), (self.deriv_equation, GREEN)]
         ]
         q_marks = TexMobject("???")
         q_marks.next_to(A_circle, UP)

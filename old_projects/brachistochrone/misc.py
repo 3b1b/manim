@@ -2,7 +2,7 @@ import numpy as np
 import itertools as it
 
 from big_ol_pile_of_manim_imports import *
-from brachistochrone.curves import Cycloid
+from old_projects.brachistochrone.curves import Cycloid
 
 class PhysicalIntuition(Scene):
     def construct(self):

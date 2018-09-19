@@ -3443,7 +3443,7 @@ class IntroduceChi(FactorizationPattern):
     CONFIG = {
         "numbers_list" : [
             list(range(i, 36, d))
-            for i, d in (1, 4), (3, 4), (2, 2)
+            for i, d in [(1, 4), (3, 4), (2, 2)]
         ],
         "colors" : [GREEN, RED, YELLOW]
     }

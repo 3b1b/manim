@@ -3,7 +3,7 @@ import itertools as it
 import os
 
 from big_ol_pile_of_manim_imports import *
-from brachistochrone.drawing_images import sort_by_color
+from old_projects.brachistochrone.drawing_images import sort_by_color
 
 class Intro(Scene):
     def construct(self):

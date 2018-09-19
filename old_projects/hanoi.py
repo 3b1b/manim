@@ -2030,7 +2030,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
                 "Move disk %d,"%d,
                 "Move %d-tower"%d,
             ).set_color_by_tex("Move disk %d,"%d, color)
-            for d, color in (3, GREEN), (2, RED), (1, BLUE_C)
+            for d, color in [(3, GREEN), (2, RED), (1, BLUE_C)]
         ]
         sub_steps, sub_sub_steps = subdivisions[:2]
         for steps in subdivisions:

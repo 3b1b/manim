@@ -1789,7 +1789,7 @@ class HigherTermsDontMessUpLowerTerms(Scene):
                 path_arc = arc,
                 color = c.get_color()
             )
-            for c, arc in (c2, 0.9*np.pi), (c0, np.pi)
+            for c, arc in [(c2, 0.9*np.pi), (c0, np.pi)]
         ])
         no_affect_words = TextMobject(
             "Doesn't affect \\\\ previous terms"

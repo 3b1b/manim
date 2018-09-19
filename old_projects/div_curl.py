@@ -272,7 +272,7 @@ class StreamLines(VGroup):
                 if get_norm(last_point) > self.cutoff_norm:
                     break
             line = VMobject()
-            step = max(1, len(points) / self.n_anchors_per_line)
+            step = max(1, int(len(points) / self.n_anchors_per_line))
             line.set_points_smoothly(points[::step])
             self.add(line)
 

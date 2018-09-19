@@ -158,6 +158,7 @@ class TexMobject(SingleStringTexMobject):
         split_list = split_string_list_to_isolate_substring(
             tex_strings, *substrings_to_isolate
         )
+        split_list = [item for sublist in split_list for item in sublist]
         split_list = list(map(str.strip, split_list))
         split_list = [s for s in split_list if s != '']
         return split_list

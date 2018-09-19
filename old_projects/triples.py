@@ -1741,7 +1741,7 @@ class VisualizeZSquared(Scene):
     def show_triangles(self):
         z_list = [
             complex(u, v)**2
-            for u, v in (2, 1), (3, 2), (4, 1)
+            for u, v in [(2, 1), (3, 2), (4, 1)]
         ]
         triangles = self.get_triangles(z_list)
         triangle = triangles[0]

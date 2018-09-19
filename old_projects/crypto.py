@@ -14,7 +14,7 @@ def get_cursive_name(name):
     return result
 
 def sha256_bit_string(message):
-    hexdigest = sha256(message).hexdigest()
+    hexdigest = sha256(message.encode('utf-8')).hexdigest()
     return bin(int(hexdigest, 16))[2:]
 
 def bit_string_to_mobject(bit_string):
@@ -2316,7 +2316,7 @@ class YouListeningToBroadcasts(LedgerScene):
         self.remove(self.ledger)
         corners = [
             FRAME_X_RADIUS*RIGHT*u1 + FRAME_Y_RADIUS*UP*u2
-            for u1, u2 in (-1, 1), (1, 1), (-1, -1)
+            for u1, u2 in [(-1, 1), (1, 1), (-1, -1)]
         ]
         you = self.you
         you.scale(2)
@@ -5011,7 +5011,7 @@ class ShowManyExchanges(Scene):
                 path_arc = np.pi,
                 buff = MED_LARGE_BUFF
             )
-            for p1, p2 in (LEFT, RIGHT), (RIGHT, LEFT)
+            for p1, p2 in [(LEFT, RIGHT), (RIGHT, LEFT)]
         ]).set_color(WHITE)
         exchanges = VGroup(*[
             VGroup(*[

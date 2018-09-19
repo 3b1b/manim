@@ -379,7 +379,7 @@ class SystemOfEquations(Scene):
             Circle().replace(mob).scale_in_place(1.3)
             for mob in [
                 VMobject(*equations.split()[i].split()[j:j+2])
-                for i, j in (1, 3), (2, 6)
+                for i, j in [(1, 3), (2, 6)]
             ]
         ])
         zero_circles.set_color(PINK)

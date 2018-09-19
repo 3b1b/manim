@@ -2786,7 +2786,7 @@ class DihedralCubeHomomorphism(GroupOfCubeSymmetries, SymmetriesOfSquare):
                     in_place = True,
                     run_time = abs(angle/(np.pi/2))
                 )
-                for mob, axis in (square, raw_axis), (cube, posed_axis)
+                for mob, axis in [(square, raw_axis), (cube, posed_axis)]
             ])
             self.wait()
             if i == 2:

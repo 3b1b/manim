@@ -65,7 +65,7 @@ class MillionFlips(Scene):
             coins.replace, hundred_boxes[0]
         )
         hundred_boxes[0].add(coins)
-        for box, prop in zip(hundred_boxes, proportions)[1:]:
+        for box, prop in list(zip(hundred_boxes, proportions))[1:]:
             self.add(box)
             self.increment(n_flips_count, 100)
             self.increment(n_heads_count, int(np.round(prop * 100)))
@@ -77,7 +77,7 @@ class MillionFlips(Scene):
             hundred_boxes.replace, ten_k_boxes[0]
         )
         ten_k_boxes[0].add(hundred_boxes)
-        for box, prop in zip(ten_k_boxes, ten_k_proportions)[1:]:
+        for box, prop in list(zip(ten_k_boxes, ten_k_proportions))[1:]:
             self.add(box)
             self.increment(n_flips_count, 10000)
             self.increment(n_heads_count, int(np.round(prop * 10000)))
