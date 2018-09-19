@@ -43,7 +43,10 @@ def quaternion_conjugate(quaternion):
 def rotate_vector(vector, angle, axis=OUT):
     quat = quaternion_from_angle_axis(angle, axis)
     quat_inv = quaternion_conjugate(quat)
-    product = reduce(quaternion_mult, [quat, np.append(0, vector), quat_inv])
+    product = reduce(
+        quaternion_mult,
+        [quat, np.append(0, vector), quat_inv]
+    )
     return product[1:]
 
 
