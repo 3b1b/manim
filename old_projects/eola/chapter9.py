@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from eola.chapter1 import plane_wave_homotopy
+from old_projects.eola.chapter1 import plane_wave_homotopy
 
 V_COLOR = YELLOW
 

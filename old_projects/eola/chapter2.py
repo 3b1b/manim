@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from eola.chapter1 import plane_wave_homotopy
+from old_projects.eola.chapter1 import plane_wave_homotopy
 
 class OpeningQuote(Scene):
     def construct(self):
@@ -239,7 +239,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         )
         label_anims = [
             MaintainPositionRelativeTo(label, v)
-            for v, label in (v1, v1_label), (v2, v2_label)
+            for v, label in [(v1, v1_label), (v2, v2_label)]
         ]
         scalar_anims = self.get_scalar_anims(v1, v2, v1_label, v2_label)
         self.last_scalar_pair = (1, 1)
@@ -270,13 +270,13 @@ class ShowVaryingLinearCombinations(VectorScene):
                 scale_factor = 0.75,
                 value_function = get_val_func(v)
             )
-            for v, label in (v1, v1_label), (v2, v2_label)
+            for v, label in [(v1, v1_label), (v2, v2_label)]
         ]
 
     def get_rate_func_pair(self):
         return [
             squish_rate_func(smooth, a, b) 
-            for a, b in (0, 0.7), (0.3, 1)
+            for a, b in [(0, 0.7), (0.3, 1)]
         ] 
 
     def initial_scaling(self, v1, v2, label_anims, scalar_anims):

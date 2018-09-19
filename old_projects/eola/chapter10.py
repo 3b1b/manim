@@ -1,8 +1,8 @@
 from big_ol_pile_of_manim_imports import *
-from eola.chapter1 import plane_wave_homotopy
-from eola.chapter3 import ColumnsToBasisVectors
-from eola.chapter5 import get_det_text
-from eola.chapter9 import get_small_bubble
+from old_projects.eola.chapter1 import plane_wave_homotopy
+from old_projects.eola.chapter3 import ColumnsToBasisVectors
+from old_projects.eola.chapter5 import get_det_text
+from old_projects.eola.chapter9 import get_small_bubble
 
 
 class OpeningQuote(Scene):
@@ -309,7 +309,7 @@ class AllXAxisVectorsAreEigenvectors(ExampleTranformationScene):
         vectors = VGroup(*[
             self.add_vector(u*x*RIGHT, animate = False)
             for x in reversed(list(range(1, int(FRAME_X_RADIUS)+1)))
-            for u in -1, 1
+            for u in [-1, 1]
         ])
         vectors.set_color_by_gradient(YELLOW, X_COLOR)
         self.play(ShowCreation(vectors))
@@ -360,7 +360,7 @@ class FullSneakyEigenspace(ExampleTranformationScene):
         vectors = VGroup(*[
             self.add_vector(u*x*(LEFT+UP), animate = False)
             for x in reversed(np.arange(0.5, 5, 0.5))
-            for u in -1, 1
+            for u in [-1, 1]
         ])
         vectors.set_color_by_gradient(MAROON_B, YELLOW)
         words = TextMobject("Stretch by 2")
@@ -391,14 +391,14 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
         x_vectors = VGroup(*[
             self.add_vector(u*x*RIGHT, animate = False)
             for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
-            for u in -1, 1
+            for u in [-1, 1]
         ])
         x_vectors.set_color_by_gradient(YELLOW, X_COLOR)
         self.remove(x_vectors)
         sneak_vectors = VGroup(*[
             self.add_vector(u*x*(LEFT+UP), animate = False)
             for x in np.arange(int(FRAME_Y_RADIUS), 0, -0.5)
-            for u in -1, 1
+            for u in [-1, 1]
         ])
         sneak_vectors.set_color_by_gradient(MAROON_B, YELLOW)
         self.remove(sneak_vectors)
@@ -1442,7 +1442,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         vectors = VGroup(*[
             self.add_vector(u*x*(LEFT+UP), animate = False)
             for x in range(4, 0, -1)
-            for u in -1, 1
+            for u in [-1, 1]
         ])
         vectors.set_color_by_gradient(MAROON_B, YELLOW)
         vectors.save_state()
@@ -1635,7 +1635,7 @@ class ShearExample(RevisitExampleTransformation):
         vectors = VGroup(*[
             self.add_vector(u*x*RIGHT, animate = False)
             for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
-            for u in -1, 1
+            for u in [-1, 1]
         ])
         vectors.set_color_by_gradient(YELLOW, X_COLOR)
         words = VGroup(
@@ -2110,9 +2110,9 @@ class ChangeToEigenBasis(ExampleTranformationScene):
             VGroup(*[
                 self.add_vector(u*x*vect, animate = False)
                 for x in range(num, 0, -1)
-                for u in -1, 1
+                for u in [-1, 1]
             ])
-            for vect, num in (RIGHT, 7), (UP+LEFT, 4)
+            for vect, num in [(RIGHT, 7), (UP+LEFT, 4)]
         ]
         x_vectors.set_color_by_gradient(YELLOW, X_COLOR)
         v_vectors.set_color_by_gradient(MAROON_B, YELLOW)

@@ -1919,7 +1919,7 @@ class FindAntiderivative(Antiderivative):
                 path_arc = -np.pi/6,
                 run_time = 2,
             )
-            for i, j in (0, 1), (1, 0), (1, 2)
+            for i, j in [(0, 1), (1, 0), (1, 2)]
         ])
         self.wait()
         self.play(FadeIn(third))

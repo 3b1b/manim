@@ -1777,7 +1777,7 @@ class ShowTipToTailSum(ShowVectorEquation):
                         np.array(ov.A_vect)
                     )
                 )
-                for ov, A in (h_ov, h_A), (v_ov, v_A)
+                for ov, A in [(h_ov, h_A), (v_ov, v_A)]
             ]
         ))
         self.wait(4)
@@ -1917,7 +1917,7 @@ class AlternateBasis(ShowTipToTailSum):
                 "(\\dots)",
                 "|\\!\\%sarrow\\rangle"%s2,
             )
-            for s1, s2 in ("right", "up"), ("ne", "nw")
+            for s1, s2 in [("right", "up"), ("ne", "nw")]
         ]
         for superposition in superpositions:
             superposition.set_color_by_tex("rangle", YELLOW)
@@ -2519,7 +2519,7 @@ class DescribePhoton(ThreeDScene):
                 color = color,
                 normal_vector = RIGHT,
             )
-            for color, direction in (self.x_color, UP), (self.y_color, OUT)
+            for color, direction in [(self.x_color, UP), (self.y_color, OUT)]
         ]
         v_arrow.move_to(h_arrow.get_end(), IN)
         h_part = VGroup(*self.equation[1][2:4]).copy()
@@ -3905,7 +3905,7 @@ class CompareWaveEquations(TeacherStudentsScene):
                 radius = 0.05,
                 color = color
             )
-            for x, color in (-0.5, RED), (0.5, GREEN)
+            for x, color in [(-0.5, RED), (0.5, GREEN)]
         ]
         new_alpha.target.next_to(alpha_dot, UP+LEFT, 0.5*SMALL_BUFF)
         new_alpha.target.set_color(RED)

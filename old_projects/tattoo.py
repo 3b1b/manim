@@ -747,7 +747,7 @@ class RenameAllInTermsOfSine(Scene):
         self.wait(2)
 
         anims = []
-        for mob, rhs_mob in zip(mobs, rhs_mobs)[1:3]:
+        for mob, rhs_mob in list(zip(mobs, rhs_mobs))[1:3]:
             anims += [
                 FadeOut(rhs_mob),
                 mob.restore,

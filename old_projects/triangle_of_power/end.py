@@ -1,6 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 
-from triangle_of_power.triangle import TOP, OPERATION_COLORS
+from old_projects.triangle_of_power.triangle import TOP, OPERATION_COLORS
 
 class DontLearnFromSymbols(Scene):
     def construct(self):

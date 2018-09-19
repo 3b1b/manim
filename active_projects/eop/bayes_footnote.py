@@ -1,6 +1,6 @@
 from big_ol_pile_of_manim_imports import *
 
-from eop.bayes import IntroducePokerHand
+from active_projects.eop.bayes import IntroducePokerHand
 
 SICKLY_GREEN = "#9BBD37"
 
@@ -1362,7 +1362,7 @@ class CompareNumbersInBothExamples(Scene):
                 "\\text{Not }", "\\text{%s}"%s2, ")",
                 "=", "1/100"
             )
-            for s1, s2 in ("+", "Sick"), ("Correct", "Powers")
+            for s1, s2 in [("+", "Sick"), ("Correct", "Powers")]
         ])
         priors.next_to(likelihoods, UP, LARGE_BUFF)
         for group in priors, likelihoods:

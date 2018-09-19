@@ -2209,7 +2209,7 @@ class GraphOnePlusOneOverX(GraphScene):
                 x_max=x_max,
                 color=self.func_graph_color,
             )
-            for x_min, x_max in (-10, -0.1), (0.1, 10)
+            for x_min, x_max in [(-10, -0.1), (0.1, 10)]
         ])
         func_graph.label = self.get_graph_label(
             upper_func_graph, "y = 1 + \\frac{1}{x}",

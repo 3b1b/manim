@@ -1783,7 +1783,7 @@ class IntroducePascalsTriangle(Scene):
             mob.rect = SurroundingRectangle(mob, color = color)
             rects.add(mob.rect)
 
-        rows_to_fade = VGroup(*rows[1:4] + rows[6:])
+        rows_to_fade = VGroup(*rows[1:4], *rows[6:])
         rows_to_fade.save_state()
 
         top_row = rows[4]

@@ -526,7 +526,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
 
         dot_pairs = [
             VGroup(self.dots[i], self.dots[j])
-            for i, j in (0, 2), (1, 3)
+            for i, j in [(0, 2), (1, 3)]
         ]
         pair_colors = MAROON_B, PURPLE_B
         diag_lines = [
@@ -549,7 +549,7 @@ class RectangleProperties(Scene):
         ])
         dot_pairs = [
             VGroup(vertex_dots[i], vertex_dots[j])
-            for i, j in (0, 2), (1, 3)
+            for i, j in [(0, 2), (1, 3)]
         ]
         colors = [MAROON_B, PURPLE_B]
         diag_lines = [
@@ -615,7 +615,7 @@ class PairOfPairBecomeRectangle(Scene):
                 dots[j].get_center(), 
                 color = dots[i].get_color()
             )
-            for i, j in (0, 1), (2, 3)
+            for i, j in [(0, 1), (2, 3)]
         ]
         groups = [
             VGroup(dots[0], dots[1], labels[0], labels[1], lines[0]),

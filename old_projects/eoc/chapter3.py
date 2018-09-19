@@ -2085,11 +2085,11 @@ class SquareRootOfX(Scene):
                 stroke_width = 3
             ).shift(s.get_corner(corner))
             for corner, vect in [(DOWN+LEFT, RIGHT), (UP+RIGHT, DOWN)]
-            for s in square, bigger_square
+            for s in [square, bigger_square]
         ])
         little_braces = VGroup(*[
             Brace(VGroup(*line_pair), vect, buff = 0)
-            for line_pair, vect in (lines[:2], RIGHT), (lines[2:], DOWN)
+            for line_pair, vect in [(lines[:2], RIGHT), (lines[2:], DOWN)]
         ])
         for brace in little_braces:
             tex = brace.get_text("$d\\sqrt{x}$", buff = SMALL_BUFF)

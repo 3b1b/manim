@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from eola.chapter0 import UpcomingSeriesOfVidoes
+from old_projects.eola.chapter0 import UpcomingSeriesOfVidoes
 
 import random
 
