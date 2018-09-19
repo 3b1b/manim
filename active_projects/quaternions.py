@@ -6496,20 +6496,22 @@ class ThumbnailP2(ThumbnailP1):
 
 class ThumbnailOverlay(Scene):
     def construct(self):
-        title = TextMobject("Quaternions")
-        title.set_width(8)
-        title.to_edge(UP)
+        title = TextMobject("Quaternions \\\\", "visualized")
+        title.set_width(7)
+        # title[1].scale(0.7, about_edge=UP)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
         v_line = Line(DOWN, UP)
         v_line.set_height(FRAME_HEIGHT)
 
         title.set_background_stroke(color=BLACK, width=1)
 
-        rect = BackgroundRectangle(title[4:6])
-        rect.set_fill(opacity=1)
-        rect.stretch(0.9, 0)
-        rect.stretch(1.1, 1)
-        title.add_to_back(BackgroundRectangle(title[0]))
-        title.add_to_back(rect)
+        for part in (title[0][4:6], title[1][4:5]):
+            rect = BackgroundRectangle(part)
+            rect.set_fill(opacity=1)
+            rect.stretch(0.9, 0)
+            rect.stretch(1.1, 1)
+            title.add_to_back(rect)
+        # title.add_to_back(BackgroundRectangle(title[0]))
 
         arrow = Arrow(LEFT, RIGHT)
         arrow.scale(1.5)
