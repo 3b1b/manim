@@ -4,7 +4,7 @@ from constants import *
 from .svg_mobject import SVGMobject
 from .svg_mobject import VMobjectFromSVGPathstring
 from utils.config_ops import digest_config
-from utils.strings import split_string_list_to_isolate_substring
+from utils.strings import split_string_list_to_isolate_substrings
 from utils.tex_file_writing import tex_to_svg_file
 from mobject.geometry import Line
 from mobject.types.vectorized_mobject import VGroup
@@ -155,10 +155,9 @@ class TexMobject(SingleStringTexMobject):
             self.substrings_to_isolate,
             list(self.tex_to_color_map.keys())
         )
-        split_list = split_string_list_to_isolate_substring(
+        split_list = split_string_list_to_isolate_substrings(
             tex_strings, *substrings_to_isolate
         )
-        split_list = [item for sublist in split_list for item in sublist]
         split_list = list(map(str.strip, split_list))
         split_list = [s for s in split_list if s != '']
         return split_list
@@ -314,8 +313,8 @@ class Title(TextMobject):
         "underline_buff": MED_SMALL_BUFF,
     }
 
-    def __init__(self, text, **kwargs):
-        TextMobject.__init__(self, text, **kwargs)
+    def __init__(self, *text_parts, **kwargs):
+        TextMobject.__init__(self, *text_parts, **kwargs)
         self.scale(self.scale_factor)
         self.to_edge(UP)
         if self.include_underline:
