@@ -96,7 +96,7 @@ class ImageMobject(AbstractImageMobject):
         self.pixel_array[:, :, 3] = int(255 * alpha)
         return self
 
-    def fade(self, darkness=0.5):
+    def fade_no_recurse(self, darkness=0.5):
         self.set_opacity(1 - darkness)
         return self
 
