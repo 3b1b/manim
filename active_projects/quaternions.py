@@ -728,6 +728,24 @@ class IntroduceHamilton(Scene):
 
 
 class QuaternionHistory(Scene):
+    CONFIG = {
+        "names_and_quotes": [
+            (
+                "Oliver Heaviside",
+                """\\huge ``As far as the vector analysis I required was
+                concerned, the quaternion was not only not
+                required, but was a positive evil of no
+                inconsiderable magnitude.''"""
+            ),
+            (
+                "Lord Kelvin",
+                """\\huge ``Quaternions... though beautifully \\\\ ingenious,
+                have been an unmixed evil to those who have
+                touched them in any way, including Clerk Maxwell.''"""
+            ),
+        ]
+    }
+
     def construct(self):
         self.show_dot_product_and_cross_product()
         self.teaching_students_quaternions()
@@ -901,48 +919,8 @@ class QuaternionHistory(Scene):
         self.equation = equation
 
     def show_anti_quaternion_quote(self):
-        names_and_quotes = [
-            (
-                "Oliver Heaviside",
-                """``As far as the vector analysis I required was
-                concerned, the quaternion was not only not
-                required, but was a positive evil of no
-                inconsiderable magnitude.''"""
-            ),
-            (
-                "Lord Kelvin",
-                """``Quaternions... though beautifully \\\\ ingenious,
-                have been an unmixed evil to those who have
-                touched them in any way, including Clerk Maxwell.''"""
-            ),
-        ]
-        images = Group()
-        quotes = VGroup()
-        names = VGroup()
-        images_with_quotes = Group()
-        for name, quote_text in names_and_quotes:
-            image = Group(ImageMobject(name))
-            image.set_height(4)
-            label = TextMobject(name)
-            label.next_to(image, DOWN)
-            names.add(label)
-            quote = TextMobject(
-                "\\huge " + quote_text,
-                tex_to_color_map={
-                    "positive evil": RED,
-                    "unmixed evil": RED,
-                },
-                alignment=""
-            )
-            quote.scale(0.3)
-            quote.next_to(image, UP)
-            images.add(image)
-            quotes.add(quote)
-            images_with_quotes.add(Group(image, label, quote))
-
-        images_with_quotes.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
-        images_with_quotes.to_edge(DOWN, MED_LARGE_BUFF)
-
+        group = self.get_dissenter_images_quotes_and_names()
+        images, quotes, names = group
         self.play(
             LaggedStart(FadeInFromDown, images),
             LaggedStart(FadeInFromLarge, names),
@@ -1051,6 +1029,37 @@ class QuaternionHistory(Scene):
         )
         self.remove(characters)
         self.wait()
+
+    #
+    def get_dissenter_images_quotes_and_names(self):
+        names_and_quotes = self.names_and_quotes
+        images = Group()
+        quotes = VGroup()
+        names = VGroup()
+        images_with_quotes = Group()
+        for name, quote_text in names_and_quotes:
+            image = Group(ImageMobject(name))
+            image.set_height(4)
+            label = TextMobject(name)
+            label.next_to(image, DOWN)
+            names.add(label)
+            quote = TextMobject(
+                quote_text,
+                tex_to_color_map={
+                    "positive evil": RED,
+                    "unmixed evil": RED,
+                },
+                alignment=""
+            )
+            quote.scale(0.3)
+            quote.next_to(image, UP)
+            images.add(image)
+            quotes.add(quote)
+            images_with_quotes.add(Group(image, label, quote))
+
+        images_with_quotes.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        images_with_quotes.to_edge(DOWN, MED_LARGE_BUFF)
+        return Group(images, quotes, names)
 
 
 class QuaternionRotationOverlay(Scene):
