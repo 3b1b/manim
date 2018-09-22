@@ -23,7 +23,7 @@ operating system:
 
 Then you can install the python dependencies:
 ```sh
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ## How to Use
@@ -31,7 +31,7 @@ Todd Zimmerman put together a [very nice tutorial](https://talkingphysics.wordpr
 
 Try running the following:
 ```sh
-python extract_scene.py example_scenes.py SquareToCircle -pl
+python3 extract_scene.py example_scenes.py SquareToCircle -pl
 ```
 
 The -p is for previewing, meaning the the video file will automatically open when it is done rendering.
