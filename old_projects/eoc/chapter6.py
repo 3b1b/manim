@@ -396,7 +396,7 @@ class SlopeOfCircleExample(ZoomedScene):
                     equation[1][i].copy(),
                     derivative[j],
                 )
-                for i, j in (1, 0), (0, 1)
+                for i, j in ((1, 0), (0, 1))
             ]
         )
         self.play(Write(dx, run_time = 1))
@@ -406,7 +406,7 @@ class SlopeOfCircleExample(ZoomedScene):
                 equation[1][i].copy(),
                 derivative[j],
             )
-            for i, j in (2, 4), (3, 6), (4, 5)
+            for i, j in ((2, 4), (3, 6), (4, 5))
         ])
         self.play(Write(dy, run_time = 1))
         self.play(Blink(morty)) 
@@ -415,7 +415,7 @@ class SlopeOfCircleExample(ZoomedScene):
                 equation[1][i].copy(),
                 derivative[j],
             )
-            for i, j in (-3, -2), (-2, -1), (-1, -1)
+            for i, j in ((-3, -2), (-2, -1), (-1, -1))
         ])
         self.wait()
 
@@ -2668,60 +2668,4 @@ class Thumbnail(AlternateExample):
         self.draw_graph()
         self.graphs.set_stroke(width = 8)
         self.remove(self.formula)
-
-
         self.add(title)
-
-
-
-
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
