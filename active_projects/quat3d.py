@@ -66,6 +66,86 @@ class RandyPrism(Cube):
         self.center()
 
 
+class Gimbal(VGroup):
+    CONFIG = {
+        "inner_r": 1.2,
+        "outer_r": 2.6,
+    }
+
+    def __init__(self, alpha=0, beta=0, gamma=0, inner_mob=None, **kwargs):
+        VGroup.__init__(self, **kwargs)
+        r1, r2, r3, r4, r5, r6, r7 = np.linspace(
+            self.inner_r, self.outer_r, 7
+        )
+        rings = VGroup(
+            self.get_ring(r5, r6),
+            self.get_ring(r3, r4),
+            self.get_ring(r1, r2),
+        )
+        for i, p1, p2 in [(0, r6, r7), (1, r4, r5), (2, r2, r3)]:
+            annulus = rings[i]
+            lines = VGroup(
+                Line(p1 * UP, p2 * UP),
+                Line(p1 * DOWN, p2 * DOWN),
+            )
+            lines.set_stroke(RED)
+            annulus.lines = lines
+            annulus.add(lines)
+        rings[1].lines.rotate(90 * DEGREES, about_point=ORIGIN)
+        rings.rotate(90 * DEGREES, RIGHT, about_point=ORIGIN)
+        rings.set_shade_in_3d(True)
+        self.rings = rings
+        self.add(rings)
+
+        if inner_mob is not None:
+            corners = [
+                inner_mob.get_corner(v1 + v2)
+                for v1 in [LEFT, RIGHT]
+                for v2 in [IN, OUT]
+            ]
+            lines = VGroup()
+            for corner in corners:
+                corner[1] = 0
+                line = Line(
+                    corner, self.inner_r * normalize(corner),
+                    color=WHITE,
+                    stroke_width=1
+                )
+                lines.add(line)
+            lines.set_shade_in_3d(True)
+            rings[2].add(lines, inner_mob)
+
+        # Rotations
+        angles = [alpha, beta, gamma]
+        for i, angle in zip(it.count(), angles):
+            vect = rings[i].lines[0].get_vector()
+            rings[i:].rotate(angle=angle, axis=vect)
+
+    def get_ring(self, in_r, out_r, angle=TAU / 4):
+        result = VGroup()
+        for start_angle in np.arange(0, TAU, angle):
+            start_angle += angle / 2
+            sector = AnnularSector(
+                inner_radius=in_r,
+                outer_radius=out_r,
+                angle=angle,
+                start_angle=start_angle
+            )
+            sector.set_fill(LIGHT_GREY, 0.8)
+            arcs = VGroup(*[
+                Arc(
+                    angle=angle,
+                    start_angle=start_angle,
+                    radius=r
+                )
+                for r in [in_r, out_r]
+            ])
+            arcs.set_stroke(BLACK, 1, opacity=0.5)
+            sector.add(arcs)
+            result.add(sector)
+        return result
+
+
 # Scenes
 
 class Introduction(QuaternionHistory):
@@ -542,86 +622,34 @@ class RotationMatrix(ShowSeveralQuaternionRotations):
             self.add_fixed_orientation_mobjects(label)
 
 
-class EulerAnglesAndGimbal(SpecialThreeDScene):
+class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
     CONFIG = {
-        "cut_axes_at_radius": True,
-        "inner_r": 1.2,
-        "outer_r": 2.6,
-        "use_lightweight_axes": True,
-        "lightweight_axes_num_pieces": 10,
     }
 
     def construct(self):
         self.setup_position()
-        self.setup_cube()
+        self.setup_angle_trackers()
         self.setup_gimbal()
+        self.add_axes()
         self.add_title()
         self.show_rotations()
 
-    def add_axes(self):
-        if self.use_lightweight_axes:
-            self.axes = VGroup(*[
-                VGroup(*Line(-v, v).scale(10).get_pieces(
-                    self.lightweight_axes_num_pieces
-                ))
-                for v in [RIGHT, UP, OUT]
-            ])
-            self.axes.set_stroke(WHITE, 1, opacity=0.5)
-            self.axes.set_shade_in_3d(True)
-        else:
-            self.axes = self.get_axes()
-        self.add(self.axes)
-
     def setup_position(self):
-        self.add_axes()
         self.set_camera_orientation(
             theta=-140 * DEGREES,
             phi=70 * DEGREES,
         )
         self.begin_ambient_camera_rotation(rate=0.015)
 
-    def setup_cube(self):
-        cube = self.cube = RandyPrism()
-
-        points = [
-            cube[5].get_corner([i, 0, j])
-            for i in (-1, 1)
-            for j in (-1, 1)
-        ]
-        lines = VGroup()
-        for point in points:
-            point[1] = 0
-            proj_point = normalize(point) * self.inner_r
-            line = Line(point, proj_point)
-            line.set_stroke(WHITE, 1)
-            lines.add(line)
-        lines.set_shade_in_3d(True)
-        cube.add(lines)
-
-        self.add(cube)
+    def setup_angle_trackers(self):
+        self.alpha_tracker = ValueTracker(0)
+        self.beta_tracker = ValueTracker(0)
+        self.gamma_tracker = ValueTracker(0)
 
     def setup_gimbal(self):
-        r1, r2, r3, r4, r5, r6, r7 = np.linspace(
-            self.inner_r, self.outer_r, 7
-        )
-        gimbal = VGroup(
-            self.get_ring(r5, r6),
-            self.get_ring(r3, r4),
-            self.get_ring(r1, r2),
-        )
-        for i, p1, p2 in [(0, r6, r7), (1, r4, r5), (2, r2, r3)]:
-            annulus = gimbal[i]
-            lines = VGroup(
-                Line(p1 * UP, p2 * UP),
-                Line(p1 * DOWN, p2 * DOWN),
-            )
-            lines.set_stroke(RED)
-            annulus.lines = lines
-            annulus.add(lines)
-        gimbal[1].lines.rotate(90 * DEGREES, about_point=ORIGIN)
-        gimbal.rotate(90 * DEGREES, RIGHT, about_point=ORIGIN)
-        gimbal.set_shade_in_3d(True)
+        gimbal = updating_mobject_from_func(self.get_gimbal)
         self.gimbal = gimbal
+        self.add(gimbal)
 
     def add_title(self):
         title = TextMobject("Euler angles")
@@ -652,18 +680,22 @@ class EulerAnglesAndGimbal(SpecialThreeDScene):
         self.remove(gl_label)
 
     def show_rotations(self):
-        cube = self.cube
         gimbal = self.gimbal
-        self.add(cube, gimbal)
+        alpha_tracker = self.alpha_tracker
+        beta_tracker = self.beta_tracker
+        gamma_tracker = self.gamma_tracker
 
-        kwargs = {
-            "about_point": ORIGIN,
-            "run_time": 3,
-        }
         angles = [-60 * DEGREES, 50 * DEGREES, 45 * DEGREES]
-        for i, angle in zip(it.count(), angles):
-            vect = gimbal[i].lines[0].get_vector()
-            line = self.get_dotted_line(vect)
+        trackers = [alpha_tracker, beta_tracker, gamma_tracker]
+        in_rs = [0.6, 0.5, 0.6]
+        for i in range(3):
+            tracker = trackers[i]
+            angle = angles[i]
+            in_r = in_rs[i]
+            ring = gimbal.rings[i]
+
+            vect = ring.lines[0].get_vector()
+            line = self.get_dotted_line(vect, in_r=in_r)
             angle_label = self.angle_labels[i]
             line.match_color(angle_label)
             self.play(
@@ -671,172 +703,77 @@ class EulerAnglesAndGimbal(SpecialThreeDScene):
                 FadeInFromDown(angle_label)
             )
             self.play(
-                Rotate(
-                    VGroup(cube, gimbal[i:]),
-                    angle=angle,
-                    axis=vect,
-                    **kwargs
-                ),
+                tracker.set_value, angle,
+                run_time=3
             )
             self.play(FadeOut(line))
             self.wait()
         self.wait(3)
         self.play(Write(self.gimbal_lock_label))
         self.play(
-            Rotate(
-                VGroup(cube, gimbal[1:]),
-                angle=-angles[1],
-                axis=gimbal[1].lines[0].get_vector(),
-                **kwargs
-            )
+            alpha_tracker.set_value, 0,
+            beta_tracker.set_value, 0,
+            run_time=2
         )
-        self.wait()
         self.play(
-            Rotate(
-                VGroup(cube, gimbal[0:]),
-                angle=-angles[0],
-                axis=gimbal[0].lines[0].get_vector(),
-                **kwargs
-            )
+            alpha_tracker.set_value, 90 * DEGREES,
+            gamma_tracker.set_value, -90 * DEGREES,
+            run_time=3
+        )
+        self.play(
+            FadeOut(self.gimbal_lock_label),
+            *[ApplyMethod(t.set_value, 0) for t in trackers],
+            run_time=3
+        )
+        self.play(
+            alpha_tracker.set_value, 30 * DEGREES,
+            beta_tracker.set_value, 120 * DEGREES,
+            gamma_tracker.set_value, -50 * DEGREES,
+            run_time=3
+        )
+        self.play(
+            alpha_tracker.set_value, 120 * DEGREES,
+            beta_tracker.set_value, -30 * DEGREES,
+            gamma_tracker.set_value, 90 * DEGREES,
+            run_time=4
+        )
+        self.play(
+            beta_tracker.set_value, 150 * DEGREES,
+            run_time=2
+        )
+        self.play(
+            alpha_tracker.set_value, 0,
+            beta_tracker.set_value, 0,
+            gamma_tracker.set_value, 0,
+            run_time=4
         )
         self.wait()
-        for angle in [-120 * DEGREES, 120 * DEGREES]:
-            self.play(
-                Rotate(
-                    VGroup(cube, gimbal[2:]),
-                    angle=angle,
-                    axis=gimbal[2].lines[0].get_vector(),
-                    run_time=4,
-                    about_point=ORIGIN
-                )
-            )
-        self.wait(4)
 
     #
-    def get_dotted_line(self, vect):
-        line = DashedLine(ORIGIN, 10 * normalize(vect))
+    def get_gimbal(self):
+        self.prism = RandyPrism()
+        return Gimbal(
+            alpha=self.alpha_tracker.get_value(),
+            beta=self.beta_tracker.get_value(),
+            gamma=self.gamma_tracker.get_value(),
+            inner_mob=self.prism
+        )
+
+    def get_dotted_line(self, vect, in_r=0, out_r=10):
+        line = VGroup(*it.chain(*[
+            DashedLine(
+                in_r * normalize(u * vect),
+                out_r * normalize(u * vect),
+            )
+            for u in [-1, 1]
+        ]))
+        line.sort_submobjects(get_norm)
         line.set_shade_in_3d(True)
         line.set_stroke(YELLOW, 5)
         line.center()
         return line
 
-    def get_ring(self, in_r, out_r, angle=TAU / 4):
-        result = VGroup()
-        for start_angle in np.arange(0, TAU, angle):
-            start_angle += angle / 2
-            sector = AnnularSector(
-                inner_radius=in_r,
-                outer_radius=out_r,
-                angle=angle,
-                start_angle=start_angle
-            )
-            sector.set_fill(LIGHT_GREY, 0.8)
-            arcs = VGroup(*[
-                Arc(
-                    angle=angle,
-                    start_angle=start_angle,
-                    radius=r
-                )
-                for r in [in_r, out_r]
-            ])
-            arcs.set_stroke(BLACK, 1, opacity=0.5)
-            sector.add(arcs)
-            result.add(sector)
-        return result
 
-
-class QuaternionsDescribingRotation(EulerAnglesAndGimbal):
-    CONFIG = {
-        "use_lightweight_axes": True,
-        "quaternions_and_imaginary_part_labels": [
-            ([1, 1, 0, 0], "{i}"),
-            # ([1, 0, 1, 0], "{j}"),
-            # ([0, 0, 0, 1], "{k}"),
-            # ([1, 1, 1, 1], "\\left({{i} + {j} + {k} \\over \\sqrt{3}}\\right)"),
-        ],
-    }
-
+class NewSceneName(Scene):
     def construct(self):
-        self.setup_position()
-        self.show_rotations()
-
-    def show_rotations(self):
-        for quat, ipl in self.quaternions_and_imaginary_part_labels:
-            quat = normalize(quat)
-            axis = quat[1:]
-            angle = 2 * np.arccos(quat[0])
-            label = self.get_label(angle, ipl)
-
-            prism = RandyPrism()
-            prism.scale(2)
-
-            self.play(
-                LaggedStart(FadeInFromDown, label),
-                FadeIn(prism),
-            )
-            self.play(Rotate(
-                prism,
-                angle=angle, axis=axis,
-                run_time=3,
-                about_point=ORIGIN,
-            ))
-
-
-    #
-    def get_label(self, angle, imaginary_part_label):
-        deg = int(angle / DEGREES)
-        ipl = imaginary_part_label
-        kwargs = {
-            "tex_to_color_map": {
-                "{i}": I_COLOR,
-                "{j}": J_COLOR,
-                "{k}": K_COLOR,
-            }
-        }
-        p_label = TexMobject(
-            "x{i} + y{j} + z{k}", **kwargs
-        )
-        arrow = TexMobject(
-            "\\rightarrow"
-        )
-        q_label = TexMobject(
-            "\\big(\\cos(%d^\\circ) + \\sin(%d^\\circ)%s \\big)" % (deg, deg, ipl),
-            **kwargs
-        )
-        inner_p_label = TexMobject(
-            "\\left(x{i} + y{j} + z{k} \\right)",
-            **kwargs
-        )
-        q_inv_label = TexMobject(
-            "\\big(\\cos(-%d^\\circ) + \\sin(-%d^\\circ)%s \\big)" % (deg, deg, ipl),
-            **kwargs
-        )
-        equation = VGroup(
-            p_label, arrow, q_label, inner_p_label, q_inv_label
-        )
-        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
-        equation.set_width(FRAME_WIDTH - 1)
-        equation.to_edge(UP)
-
-        parts_text_colors = [
-            (p_label, "\\text{3d point}", YELLOW),
-            (q_label, "q", PINK),
-            (inner_p_label, "\\text{3d point}", YELLOW),
-            (q_inv_label, "q^{-1}", PINK),
-        ]
-        braces = VGroup()
-        for part, text, color in parts_text_colors:
-            brace = Brace(part, DOWN, buff=SMALL_BUFF)
-            label = brace.get_tex(text, buff=MED_SMALL_BUFF)
-            label.set_color(color)
-            brace.add(label)
-            braces.add(brace)
-        braces[-1][-1].shift(0.2 * UR)
-
-        equation.add_to_back(BackgroundRectangle(equation))
-        equation.braces = braces
-        equation.add(*braces)
-
-        self.add_fixed_in_frame_mobjects(equation)
-        self.add_fixed_in_frame_mobjects(braces)
-        return equation
+        pass
