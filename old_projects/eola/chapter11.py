@@ -1722,7 +1722,7 @@ class IntroducePolynomialSpace(Scene):
         last_col.arrange_submobjects(DOWN, buff = 0.83)
         last_col.move_to(last_col_top, aligned_edge = UP+RIGHT)
         ##End horrible
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR, MAROON_B)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR, MAROON_B)
 
         deriv = TexMobject("\\dfrac{d}{dx}")
         equals = TexMobject("=")
@@ -1870,8 +1870,8 @@ class IntroducePolynomialSpace(Scene):
 class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
     def construct(self):
         mv_mult = VGroup(
-            Matrix([[3, 1], [0, 2]]).set_color_columns(X_COLOR, Y_COLOR),
-            Matrix(["x", "y"]).set_color_columns(YELLOW)
+            Matrix([[3, 1], [0, 2]]).set_column_colors(X_COLOR, Y_COLOR),
+            Matrix(["x", "y"]).set_column_colors(YELLOW)
         )
         mv_mult.arrange_submobjects()
         mv_mult.scale(0.75)

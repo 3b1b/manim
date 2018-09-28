@@ -920,7 +920,7 @@ class TranslateFromJenny(JenniferScene):
         self.wait()
 
         matrix = Matrix(np.array([self.b1_coords, self.b2_coords]).T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         self.jenny.coords.target = self.jenny.coords.copy()
         self.jenny.coords.target.next_to(equals, LEFT)
         matrix.set_height(self.jenny.coords.get_height())
@@ -959,7 +959,7 @@ class TalkThroughChangeOfBasisMatrix(JenniferScene):
             pi.bubble = get_small_bubble(pi)
 
         matrix = Matrix(np.array([self.b1_coords, self.b2_coords]).T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(ORIGIN, RIGHT, buff = MED_SMALL_BUFF).to_edge(UP)
 
         b1_coords = Matrix(self.b1_coords)
@@ -1124,7 +1124,7 @@ class FeelsBackwards(Scene):
             JenniferScene.CONFIG["b1_coords"], 
             JenniferScene.CONFIG["b2_coords"],
         ]).T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.shift(UP)
         top_arrow = Arrow(matrix.get_left(), matrix.get_right())
         bottom_arrow = top_arrow.copy().rotate(np.pi)
@@ -1188,7 +1188,7 @@ class RecallInverse(JenniferScene):
         numerical_t_matrix = np.array([self.b1_coords, self.b2_coords])
         matrix = Matrix(numerical_t_matrix.T)
         matrix.add_to_back(BackgroundRectangle(matrix))
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.to_corner(UP+LEFT, buff = MED_LARGE_BUFF)
         # matrix.shift(MED_SMALL_BUFF*DOWN)
         inverse_exponent = TexMobject("-1")
@@ -1233,7 +1233,7 @@ class RecallInverse(JenniferScene):
         self.play(FadeIn(self.jenny))
         self.play(self.jenny.change_mode, "speaking")
         #Little hacky now
-        inv_matrix.set_color_columns(X_COLOR)
+        inv_matrix.set_column_colors(X_COLOR)
         self.play(*[
             ApplyMethod(
                 mob.scale_in_place, 1.2, 
@@ -1242,7 +1242,7 @@ class RecallInverse(JenniferScene):
             for mob in inv_matrix.get_mob_matrix()[:,0]
         ])
         self.wait()
-        inv_matrix.set_color_columns(X_COLOR, Y_COLOR)
+        inv_matrix.set_column_colors(X_COLOR, Y_COLOR)
         self.play(*[
             ApplyMethod(
                 mob.scale_in_place, 1.2, 
@@ -1326,7 +1326,7 @@ class SummarizeTranslationProcess(Scene):
 
     def define_matrix(self):
         matrix = Matrix([[2, -1], [1, 1]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         A, equals = list(map(TexMobject, list("A=")))
         equation = VGroup(A, equals, matrix)
         equation.arrange_submobjects()
@@ -1447,7 +1447,7 @@ class RotationExample(LinearTransformationScene):
         words.to_edge(UP)
 
         matrix = Matrix(self.t_matrix.T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.rect = BackgroundRectangle(matrix)
         matrix.add_to_back(matrix.rect)
         matrix.next_to(words, DOWN)
@@ -1559,7 +1559,7 @@ class JennyWatchesRotation(JenniferScene):
 class AksAboutTranslatingColumns(TeacherStudentsScene):
     def construct(self):
         matrix = Matrix([[0, -1], [1, 0]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.scale(0.7)
         words = TextMobject("Translate columns of")
         matrix.next_to(words, DOWN)
@@ -1620,10 +1620,10 @@ class HowToTranslateAMatrix(Scene):
             array.submobjects = submobs
         her_vector.set_color(MAROON_B)
         cob_matrix.set_color_by_gradient(BLUE, MAROON_B)
-        transform.set_color_columns(X_COLOR, Y_COLOR)
+        transform.set_column_colors(X_COLOR, Y_COLOR)
         transform.get_brackets().set_color(BLUE)
         inv_cob.set_color_by_gradient(MAROON_B, BLUE)
-        result.set_color_columns(X_COLOR, Y_COLOR)
+        result.set_column_colors(X_COLOR, Y_COLOR)
         result.get_brackets().set_color(MAROON_B)
 
         final_top_brace = Brace(VGroup(cob_matrix, inv_cob), UP)
@@ -1732,7 +1732,7 @@ class JennyWatchesRotationWithMatrixAndVector(JenniferScene):
         self.add(self.jenny_plane, self.jenny, self.b1, self.b2)
 
         matrix = Matrix([["1/3", "-2/3"], ["5/3", "-1/3"]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.to_corner(UP+LEFT)
 
         vector_coords = [1, 2]

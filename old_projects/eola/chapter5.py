@@ -154,7 +154,7 @@ class DiagonalExample(LinearTransformationScene):
     def construct(self):
         self.setup()
         matrix = Matrix(np.array(self.transposed_matrix).transpose())
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(ORIGIN, LEFT).to_edge(UP)
         matrix_background = BackgroundRectangle(matrix)
         self.play(ShowCreation(matrix_background), Write(matrix))
@@ -366,7 +366,7 @@ class NameDeterminant(LinearTransformationScene):
 
     def get_matrix(self):
         matrix = Matrix(np.array(self.t_matrix).transpose())
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(self.title, DOWN, buff = 0.5)
         matrix.shift(2*LEFT)
         matrix_background = BackgroundRectangle(matrix)
@@ -446,7 +446,7 @@ class NegativeDeterminant(Scene):
     def construct(self):
         numerical_matrix = [[1, 2], [3, 4]]
         matrix = Matrix(numerical_matrix)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         det_text = get_det_text(matrix, np.linalg.det(numerical_matrix))
         words = TextMobject("""
             How can you scale area
@@ -602,7 +602,7 @@ class WriteNegativeDeterminant(NegativeDeterminantTransformation):
         matrix = Matrix(np.array(self.t_matrix).transpose())
         matrix.next_to(ORIGIN, LEFT)
         matrix.to_edge(UP)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
 
         det_text = get_det_text(
             matrix, determinant = np.linalg.det(self.t_matrix)
@@ -720,7 +720,7 @@ class DeterminantIsVolumeOfParallelepiped(Scene):
     def construct(self):
         matrix = Matrix([[1, 0, 0.5], [0.5, 1, 0], [1, 0, 1]])
         matrix.shift(3*LEFT)
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         det_text = get_det_text(matrix)
         eq = TexMobject("=")
         eq.next_to(det_text, RIGHT)
@@ -749,7 +749,7 @@ class WriteZeroDeterminant(Scene):
     def construct(self):
         matrix = Matrix([[1, 0, 1], [0.5, 1, 1.5], [1, 0, 1]])
         matrix.shift(2*LEFT)
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         det_text = get_det_text(matrix, 0)
         brace = Brace(matrix, DOWN)
         words = TextMobject("""
@@ -842,7 +842,7 @@ class TwoDDeterminantFormula(Scene):
     def construct(self):
         eq = TextMobject("=")
         matrix = Matrix([["a", "b"], ["c", "d"]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         ma, mb, mc, md = matrix.get_entries().split()
         ma.shift(0.1*DOWN)
         mc.shift(0.7*mc.get_height()*DOWN)
@@ -940,7 +940,7 @@ class FullFormulaExplanation(LinearTransformationScene):
 
     def get_matrix(self):
         matrix = Matrix([["a", "b"], ["c", "d"]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         ma, mb, mc, md = matrix.get_entries().split()
         ma.shift(0.1*DOWN)
         mc.shift(0.7*mc.get_height()*DOWN)
@@ -1027,13 +1027,13 @@ class FullFormulaExplanation(LinearTransformationScene):
 class ThreeDDetFormula(Scene):
     def construct(self):
         matrix = Matrix([list("abc"), list("def"), list("ghi")])
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         m1 = Matrix([["e", "f"], ["h", "i"]])
-        m1.set_color_columns(Y_COLOR, Z_COLOR)
+        m1.set_column_colors(Y_COLOR, Z_COLOR)
         m2 = Matrix([["d", "f"], ["g", "i"]])
-        m2.set_color_columns(X_COLOR, Z_COLOR)
+        m2.set_column_colors(X_COLOR, Z_COLOR)
         m3 = Matrix([["d", "e"], ["g", "h"]])
-        m3.set_color_columns(X_COLOR, Y_COLOR)
+        m3.set_column_colors(X_COLOR, Y_COLOR)
 
         for m in matrix, m1, m2, m3:
             m.add(get_det_text(m))

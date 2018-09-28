@@ -145,7 +145,7 @@ class ExampleTranformationScene(LinearTransformationScene):
 
     def add_matrix(self):
         matrix = Matrix(self.t_matrix.T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(ORIGIN, LEFT, buff = MED_SMALL_BUFF)
         matrix.to_edge(UP)
         matrix.rect = BackgroundRectangle(matrix)
@@ -492,7 +492,7 @@ class EigenvalueNegativeOneHalf(LinearTransformationScene):
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
         matrix.add_to_back(BackgroundRectangle(matrix))
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(ORIGIN, LEFT)
         matrix.to_edge(UP)
         self.add_foreground_mobject(matrix)
@@ -1506,7 +1506,7 @@ class Rotate90Degrees(LinearTransformationScene):
     def setup(self):
         LinearTransformationScene.setup(self)
         matrix = Matrix(self.t_matrix.T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(ORIGIN, LEFT)
         matrix.to_edge(UP)
         matrix.rect = BackgroundRectangle(matrix)
@@ -1766,7 +1766,7 @@ class ScalingExample(LinearTransformationScene):
     }
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.add_to_back(BackgroundRectangle(matrix))
         matrix.next_to(ORIGIN, LEFT)
         matrix.to_edge(UP)
@@ -1815,7 +1815,7 @@ class BasisVectorsAreEigenvectors(LinearTransformationScene):
     }
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(ORIGIN, LEFT)
         matrix.to_edge(UP)
 
@@ -1916,7 +1916,7 @@ class DefineDiagonalMatrix(Scene):
         self.play(Write(title))
         self.wait()
         self.play(
-            matrix.set_color_columns,
+            matrix.set_column_colors,
             X_COLOR, Y_COLOR, Z_COLOR, YELLOW
         )
         self.wait()
@@ -1989,7 +1989,7 @@ class RepeatedMultiplicationInAction(Scene):
 
     def get_matrix(self, vector):
         matrix = Matrix([[3, 0], [0, 2]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(vector, LEFT)
         scalars = [matrix.get_mob_matrix()[i, i] for i in range(2)]
         matrix.remove(*scalars)
@@ -2004,7 +2004,7 @@ class RepeatedMultilpicationOfMatrices(Scene):
         vector = Matrix(["x", "y"])
         vector.set_color(YELLOW)
         matrix = Matrix(self.matrix)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrices = VGroup(*[
             matrix.copy(),
             TexMobject("\\dots\\dots"),

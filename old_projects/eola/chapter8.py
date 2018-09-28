@@ -823,7 +823,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             FadeIn(self.w.label),
             FadeIn(self.v.coord_array),
             FadeIn(self.w.coord_array),
-            matrix.set_color_columns, V_COLOR, W_COLOR
+            matrix.set_column_colors, V_COLOR, W_COLOR
         )
         self.wait()
         self.i_hat, self.j_hat = i_hat, j_hat
@@ -1666,7 +1666,7 @@ class CrossAndDualWords(Scene):
             ["v_1", "v_2", "v_3"],
             ["w_1", "w_2", "w_3"],
         ]).T)
-        matrix.set_color_columns(WHITE, U_COLOR, W_COLOR)
+        matrix.set_column_colors(WHITE, U_COLOR, W_COLOR)
         det_text = get_det_text(matrix, background_rect = False)
         det_text.add(matrix)
         dot_with_cross = TexMobject(

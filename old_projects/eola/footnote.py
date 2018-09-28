@@ -322,7 +322,7 @@ class ShowMatrixMultiplication(Scene):
         right = Matrix(np.arange(9).reshape((3, 3)))
         left = Matrix(np.random.random_integers(-5, 5, (3, 3)))
         VMobject(left, right).arrange_submobjects(buff = 0.1)
-        right.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        right.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         left.set_color(PINK)
 
         trips = [

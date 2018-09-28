@@ -195,8 +195,8 @@ class DotProductToTransformSymbol(Scene):
 
         matrix = Matrix([self.vect_coords])
         vector = Matrix(self.vect_coords)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
-        vector.set_color_columns(YELLOW)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
+        vector.set_column_colors(YELLOW)
         _input = Matrix(["x", "y"])
         _input.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         left_input, right_input = [_input.copy() for x in range(2)]
@@ -352,7 +352,7 @@ class ThreeStepPlan(Scene):
             ["v_%d"%d for d in range(1, 4)],
             ["w_%d"%d for d in range(1, 4)],
         ]).T)
-        matrix.set_color_columns(X_COLOR, V_COLOR, W_COLOR)
+        matrix.set_column_colors(X_COLOR, V_COLOR, W_COLOR)
         matrix.get_mob_matrix()[1, 0].set_color(Y_COLOR)
         matrix.get_mob_matrix()[2, 0].set_color(Z_COLOR)
         VGroup(*matrix.get_mob_matrix()[1, 1:]).shift(0.15*DOWN)
@@ -391,7 +391,7 @@ class DefineDualTransform(Scene):
         defs_equals = VGroup()
         definitions = VGroup()
         for array, tex_mob, color in zip(arrays, tex_mobs, colors):
-            array.set_color_columns(color)
+            array.set_column_colors(color)
             tex_mob.set_color(color)
             equals = TexMobject("=")
             definition = VGroup(tex_mob, equals, array)
