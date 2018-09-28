@@ -144,8 +144,7 @@ class ThreeDAxes(Axes):
             )
             axis.add(axis.pieces)
             axis.main_line.set_stroke(width=0, family=False)
-            for submob in axis.family_members_with_points():
-                submob.shade_in_3d = True
+            axis.set_shade_in_3d(True)
 
     def set_axis_shading(self):
         def make_func(axis):
