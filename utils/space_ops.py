@@ -34,6 +34,17 @@ def quaternion_from_angle_axis(angle, axis):
     )
 
 
+def angle_axis_from_quaternion(quaternion):
+    axis = normalize(
+        quaternion[1:],
+        fall_back=np.array([1, 0, 0])
+    )
+    angle = 2 * np.arccos(quaternion[0])
+    if angle > TAU / 2:
+        angle = TAU - angle
+    return angle, axis
+
+
 def quaternion_conjugate(quaternion):
     result = np.array(quaternion)
     result[1:] *= -1
