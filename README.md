@@ -60,4 +60,4 @@ a Dockerfile provided.
 
 1. [Install Docker](https://www.docker.com/products/overview)
 2. Build docker image. `docker build -t manim .`
-3. Run it! `docker run --rm -v "$PWD/files":/app/files manim example_scenes.py WarpSquare`
+3. Run it! `docker run --rm -itv "$PWD/files":/app/files manim`
