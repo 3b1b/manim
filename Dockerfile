@@ -32,6 +32,7 @@ RUN apt-get install -qqy texlive-full
 RUN apt-get install -qqy texlive-fonts-extra
 RUN apt-get install -qqy sox
 RUN apt-get install -qqy git
+RUN apt-get install -qqy vim
 
 ENV DEBIAN_FRONTEND teletype
 ENTRYPOINT ["/bin/bash"]
