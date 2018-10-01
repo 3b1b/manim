@@ -60,4 +60,7 @@ a Dockerfile provided.
 
 1. [Install Docker](https://www.docker.com/products/overview)
 2. Build docker image. `docker build -t manim .`
-3. Run it! `docker run --rm -itv "$PWD/files":/app/files manim`
+3. Run it! `docker run --rm -itv "$PWD":/root/manim/ manim`
+
+
+On a Windows system, make sure to replace `$PWD` with an absolute path to manim.
