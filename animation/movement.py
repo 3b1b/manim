@@ -1,5 +1,3 @@
-
-
 from constants import *
 
 from animation.animation import Animation

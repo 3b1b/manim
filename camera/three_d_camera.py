@@ -34,6 +34,7 @@ class ThreeDCamera(Camera):
         "frame_center": ORIGIN,
         "should_apply_shading": True,
         "exponential_projection": False,
+        "max_allowable_norm": 3 * FRAME_WIDTH,
     }
 
     def __init__(self, *args, **kwargs):
