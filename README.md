@@ -68,4 +68,4 @@ a Dockerfile provided.
 
 On a Windows system, make sure to replace `$PWD` with an absolute path to manim.
 
-Note that the shipped Docker image contains the bare requirements to run manim. To transform the Docker container into a fully-functioning development environment, you will have to edit your personal Dockerfile a bit. For a guide to create your own personal Docker image, consult []
+Note that the shipped Docker image contains the bare requirements to run manim. To transform the Docker container into a fully-functioning development environment, you will have to edit your personal Dockerfile a bit. For a guide to create your own personal Docker image, consult [this guide to Dockerfiles](https://www.howtoforge.com/tutorial/how-to-create-docker-images-with-dockerfile/).
