@@ -1,4 +1,3 @@
-
 from big_ol_pile_of_manim_imports import *
 
 from tqdm import tqdm as ProgressDisplay
@@ -219,7 +218,7 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
                 color = here.get_color(),
                 normal_vector = DOWN+OUT,
             )
-            for here, x in (here1, 0), (here2, 4)
+            for here, x in ((here1, 0), (here2, 4))
         ]
         prob_text.add(*arrows)
 
@@ -2454,19 +2453,3 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
         )
         self.add_foreground_mobject(all_pre_lines)
         self.wait(7)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
