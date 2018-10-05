@@ -12,14 +12,15 @@ and omits many desirable features.
 
 #### Libraries
 # Standard library
+import os
+import pickle
 import random
 
 # Third-party libraries
 import numpy as np
-import os
 from PIL import Image
-import pickle
 from nn.mnist_loader import load_data_wrapper
+from utils.space_ops import get_norm
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 # PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_80")
