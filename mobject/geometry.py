@@ -735,8 +735,8 @@ class Square(Rectangle):
 
 class RoundedRectangle(Rectangle):
     CONFIG = {
-        "corner_radius" : 0.5,
-        "close_new_points" : True
+        "corner_radius": 0.5,
+        "close_new_points": True
     }
 
     def generate_points(self):

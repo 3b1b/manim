@@ -1366,10 +1366,10 @@ class SomeKindOfConnection(Scene):
         v_line.set_stroke(width = 10)
 
         matrix = Matrix([self.v_coords])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(number_line, UP, buff = LARGE_BUFF)
         v_coords = Matrix(self.v_coords)
-        v_coords.set_color_columns(YELLOW)
+        v_coords.set_column_colors(YELLOW)
         v_coords.scale(0.75)
         v_coords.next_to(vect.get_end(), RIGHT)
         for array in matrix, v_coords:
@@ -1604,7 +1604,7 @@ class ProjectSingleVectorOnUHat(ProjectOntoUnitVectorNumberline):
 class AskAboutProjectionMatrix(Scene):
     def construct(self):
         matrix = Matrix([["?", "?"]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         words = TextMobject("Projection matrix:")
         VMobject(words, matrix).arrange_submobjects(buff = MED_SMALL_BUFF).shift(UP)
         basis_words = [
@@ -1912,7 +1912,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
 
     def show_matrix(self):
         matrix = Matrix([list(self.u_hat.coords.get_entries().copy())])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.add_to_back(BackgroundRectangle(matrix))
         brace = Brace(matrix)
         words = TextMobject(
@@ -2051,10 +2051,10 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         v_line.set_stroke(width = 10)
 
         matrix = Matrix([self.v_coords])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(number_line, UP, buff = LARGE_BUFF)
         v_coords = Matrix(self.v_coords)
-        v_coords.set_color_columns(YELLOW)
+        v_coords.set_column_colors(YELLOW)
         v_coords.scale(0.75)
         v_coords.next_to(vect.get_end(), RIGHT)
         for array in matrix, v_coords:
@@ -2159,12 +2159,12 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
             Matrix(["x_%d"%n, "y_%d"%n])
             for n in (1, 2)
         ]
-        v1.set_color_columns(V_COLOR)
-        v2.set_color_columns(W_COLOR)
+        v1.set_column_colors(V_COLOR)
+        v2.set_column_colors(W_COLOR)
         dot = TexMobject("\\cdot")
 
         matrix = Matrix([["x_1", "y_1"]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
 
         dot_product = VGroup(v1, dot, v2)
         dot_product.arrange_submobjects(RIGHT)
@@ -2239,10 +2239,10 @@ class WhatTheVectorWantsToBe(Scene):
         v_line.set_stroke(width = 10)
 
         matrix = Matrix([self.v_coords])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.next_to(number_line, UP, buff = LARGE_BUFF)
         v_coords = Matrix(self.v_coords)
-        v_coords.set_color_columns(YELLOW)
+        v_coords.set_column_colors(YELLOW)
         v_coords.scale(0.75)
         v_coords.next_to(vect.get_end(), RIGHT)
         for array in matrix, v_coords:

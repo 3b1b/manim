@@ -847,7 +847,7 @@ class MultiplyToIdentity(LinearTransformationScene):
         lhs.scale(1.5)
         A_inv, A, eq = lhs.split()
         identity = Matrix([[1, 0], [0, 1]])
-        identity.set_color_columns(X_COLOR, Y_COLOR)
+        identity.set_column_colors(X_COLOR, Y_COLOR)
         identity.next_to(eq, RIGHT)
         VMobject(lhs, identity).center().to_corner(UP+RIGHT)
         for mob in A, A_inv, eq:
@@ -1051,7 +1051,7 @@ class ThreeDInverseRule(Scene):
         form = TexMobject("A^{-1} A = ")
         form.scale(2)
         matrix = Matrix(np.identity(3, 'int'))
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         matrix.next_to(form, RIGHT)
         self.add(form)
         self.play(Write(matrix))
@@ -1280,7 +1280,7 @@ class TowDColumnsDontSpan(LinearTransformationScene):
     }
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         matrix.add_to_back(BackgroundRectangle(matrix))
         self.add_foreground_mobject(matrix)
         brace = Brace(matrix)
@@ -1338,7 +1338,7 @@ class ThreeDColumnsDontSpan(Scene):
             [0, 1, 1],
             [-1, -2, -1],
         ]).T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         brace = Brace(matrix)
         words = brace.get_text(
             "Columns don't",
@@ -1361,7 +1361,7 @@ class NameColumnSpace(Scene):
             [0, 1, 1],
             [-1, -2, -1],
         ]).T)
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         matrix.to_corner(UP+LEFT)
         cols = list(matrix.copy().get_mob_matrix().T)
         col_arrays = list(map(Matrix, cols))
@@ -1562,7 +1562,7 @@ class RankNumber0(RankNumber):
 class NameFullRank(Scene):
     def construct(self):
         matrix = Matrix([[2, 5, 1], [3, 1, 4], [-4, 0, 0]])
-        matrix.set_color_columns(X_COLOR, Y_COLOR, Z_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         matrix.to_edge(UP)
         brace = Brace(matrix)
         top_words = brace.get_text(

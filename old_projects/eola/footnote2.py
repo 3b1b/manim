@@ -164,7 +164,7 @@ class DescribeColumnsInSpecificTransformation(Scene):
             [-1, 1],
             [-2, 1],
         ])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         mob_matrix = matrix.get_mob_matrix()
         i_col, j_col = [VMobject(*mob_matrix[:,i]) for i in (0, 1)]
         for col, char, vect in zip([i_col, j_col], ["i", "j"], [UP, DOWN]):
@@ -195,7 +195,7 @@ class CountRowsAndColumns(Scene):
             [-1, 1],
             [-2, 1],
         ])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
         rows_brace = Brace(matrix, LEFT)
         rows_words = rows_brace.get_text("3", "rows")
         rows_words.set_color(PINK)
@@ -229,7 +229,7 @@ class WriteColumnSpaceDefinition(Scene):
             [-1, 1],
             [-2, 1],
         ])
-        matrix.set_color_columns(X_COLOR, Y_COLOR)
+        matrix.set_column_colors(X_COLOR, Y_COLOR)
 
         brace = Brace(matrix)
         words = VMobject(
@@ -276,7 +276,7 @@ class MatrixInTheWild(Scene):
             ShowCreation(bubble),
             randy.change_mode, "pondering"
         )
-        # self.play(matrix.set_color_columns, X_COLOR, Y_COLOR)
+        # self.play(matrix.set_column_colors, X_COLOR, Y_COLOR)
         self.wait()
         for x in range(3):
             self.play(Blink(randy))
@@ -309,7 +309,7 @@ class MatrixInTheWild(Scene):
         self.play(
             GrowFromCenter(top_brace),
             Write(top_words),
-            matrix.set_color_columns, X_COLOR, Y_COLOR, Z_COLOR
+            matrix.set_column_colors, X_COLOR, Y_COLOR, Z_COLOR
         )
         self.play(randy.change_mode, "happy")
         self.play(

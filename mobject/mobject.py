@@ -745,6 +745,11 @@ class Mobject(Container):
         all_points = self.get_points_defining_boundary()
         return all_points[np.argmax(np.dot(all_points, direction))]
 
+    def get_z_index_reference_point(self):
+        # TODO, better place to define default z_index_group?
+        z_index_group = getattr(self, "z_index_group", self)
+        return z_index_group.get_center()
+
     def get_top(self):
         return self.get_edge_center(UP)
 

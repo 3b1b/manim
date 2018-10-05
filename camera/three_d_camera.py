@@ -18,7 +18,6 @@ from utils.color import get_shaded_rgb
 from utils.space_ops import rotation_about_z
 from utils.space_ops import rotation_matrix
 from utils.space_ops import center_of_mass
-from utils.simple_functions import fdiv
 from utils.simple_functions import clip_in_place
 
 
@@ -35,6 +34,7 @@ class ThreeDCamera(Camera):
         "frame_center": ORIGIN,
         "should_apply_shading": True,
         "exponential_projection": False,
+        "max_allowable_norm": 3 * FRAME_WIDTH,
     }
 
     def __init__(self, *args, **kwargs):
@@ -107,7 +107,7 @@ class ThreeDCamera(Camera):
             # Assign a number to a three dimensional mobjects
             # based on how close it is to the camera
             return np.dot(
-                mob.get_center(),
+                mob.get_z_index_reference_point(),
                 rot_matrix.T
             )[2]
         return sorted(mobjects, key=z_key)

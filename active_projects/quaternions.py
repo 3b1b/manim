@@ -476,7 +476,8 @@ class SpecialThreeDScene(ThreeDScene):
             high_quality = True
         else:
             high_quality = False
-        config = get_three_d_scene_config(high_quality)
+        default_config = get_three_d_scene_config(high_quality)
+        config = merge_config([self.CONFIG, kwargs, default_config])
         ThreeDScene.__init__(self, **config)
 
     def get_axes(self):

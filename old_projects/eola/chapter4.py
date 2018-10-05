@@ -394,7 +394,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
         equals = TexMobject("=").next_to(long_way, RIGHT)
 
         comp_matrix = Matrix([[1, -1], [1, 0]])
-        comp_matrix.set_color_columns(X_COLOR, Y_COLOR)
+        comp_matrix.set_column_colors(X_COLOR, Y_COLOR)
         vect_copy = vect.copy()
         short_way = VMobject(comp_matrix, vect_copy)
         short_way.arrange_submobjects(buff = 0.1)
