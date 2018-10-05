@@ -54,6 +54,7 @@ class SVGMobject(VMobject):
         possible_paths = [
             os.path.join(SVG_IMAGE_DIR, self.file_name),
             os.path.join(SVG_IMAGE_DIR, self.file_name + ".svg"),
+            os.path.join(SVG_IMAGE_DIR, self.file_name + ".xdv"),
             self.file_name,
         ]
         for path in possible_paths:
