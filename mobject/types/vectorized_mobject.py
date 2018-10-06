@@ -1,5 +1,5 @@
 
-
+import itertools as it
 from colour import Color
 
 from mobject.mobject import Mobject
@@ -482,7 +482,9 @@ class VMobject(Mobject):
         return self.points[::3]
 
     def get_points_defining_boundary(self):
-        return self.get_anchors()
+        return np.array(list(it.chain(*[
+            sm.get_anchors() for sm in self.get_family()
+        ])))
 
     # Alignment
     def align_points(self, vmobject):
