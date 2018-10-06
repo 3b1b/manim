@@ -97,12 +97,6 @@ def stereo_project(mobject, axis=0, r=1, outer_r=10, **kwargs):
     return mobject
 
 
-def updating_mobject_from_func(func):
-    mob = func()
-    mob.add_updater(lambda m: mob.become(func()))
-    return mob
-
-
 class Linus(VGroup):
     CONFIG = {
         "body_config": {
