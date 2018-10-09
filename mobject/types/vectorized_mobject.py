@@ -313,6 +313,7 @@ class VMobject(Mobject):
             submob.shade_in_3d = value
             if z_index_as_group:
                 submob.z_index_group = self
+        return self
 
     # Drawing
     def start_at(self, point):
