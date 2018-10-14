@@ -5,11 +5,10 @@ import cv2
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from big_ol_pile_of_manim_imports import *
 
-from nn.network import *
+from .network import *
 
 #force_skipping
 #revert_to_original_skipping_status
-
 
 DEFAULT_GAUSS_BLUR_CONFIG = {
     "ksize"  : (5, 5), 
@@ -205,8 +204,8 @@ class NetworkMobject(VGroup):
                 ])
             else:
                 av = np.append(
-                    av[:n_neurons/2],
-                    av[-n_neurons/2:],
+                    av[:int(n_neurons/2)],
+                    av[-int(n_neurons/2):],
                 )
         for activation, neuron in zip(av, layer.neurons):
             neuron.set_fill(
@@ -556,13 +555,13 @@ class WriteAProgram(Scene):
 
         numbers = VGroup()
         for square in three:
-            rgb = square.fill_rgb
+            rgb = square.get_fill_color().rgb
             num = DecimalNumber(
-                square.fill_rgb[0],
+                rgb[0],
                 num_decimal_places = 1
             )
             num.set_stroke(width = 1)
-            color = rgba_to_color(1 - (rgb + 0.2)/1.2)
+            color = rgba_to_color([1 - (component + 0.2)/1.2 for component in rgb])
             num.set_color(color)
             num.set_width(0.7*square.get_width())
             num.move_to(square)
@@ -821,7 +820,7 @@ class PreviewMNistNetwork(NetworkScene):
         image_mover = VGroup(*[
             pixel.copy()
             for pixel in image
-            if pixel.fill_rgb[0] > 0.1
+            if pixel.get_fill_color().rgb[0] > 0.1
         ])
         return Transform(
             image_mover, start_neurons, 
@@ -1057,7 +1056,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         rect = SurroundingRectangle(image_mob, color = BLUE)
         neurons = VGroup()
         for pixel in image_mob:
-            pixel.set_fill(WHITE, opacity = pixel.fill_rgb[0])
+            pixel.set_fill(WHITE, opacity = pixel.get_fill_color().rgb[0])
             neuron = Circle(
                 color = WHITE,
                 stroke_width = 1,
@@ -1186,7 +1185,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         layer.rotate(np.pi/2)
         layer.center()
         layer.brace_label.rotate_in_place(-np.pi/2)
-        n = network_mob.max_shown_neurons/2
+        n = int(network_mob.max_shown_neurons/2)
 
         rows = VGroup(*[
             VGroup(*neurons[28*i:28*(i+1)])
@@ -1406,7 +1405,7 @@ class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
                 stroke_width = 1,
                 stroke_color = WHITE,
                 fill_color = WHITE,
-                fill_opacity = pixel.fill_rgb[0]
+                fill_opacity = pixel.get_fill_color().rgb[0]
             )
             neuron.move_to(pixel)
             neurons.add(neuron)
@@ -1415,9 +1414,9 @@ class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
         n = len(start_neurons)
         point = VectorizedPoint(start_neurons.get_center())
         target = VGroup(*it.chain(
-            start_neurons[:n/2],
+            start_neurons[:int(n/2)],
             [point.copy() for x in range(len(neurons)-n)],
-            start_neurons[n/2:],
+            start_neurons[int(n/2):],
         ))
         mover = image.copy()
         self.play(Transform(mover, neurons))
@@ -2471,7 +2470,7 @@ class IntroduceWeights(IntroduceEachLayer):
         self.wait()
         self.play(*[
             ReplacementTransform(w1.copy(), w2)
-            for w1, w2 in zip(self.w_labels, w_labels)[:4]
+            for w1, w2 in list(zip(self.w_labels, w_labels))[:4]
         ]+[
             ReplacementTransform(w.copy(), weighted_sum[-4])
             for w in self.w_labels[4:-1]
@@ -4570,17 +4569,3 @@ class Thumbnail(NetworkScene):
         edge_update.update(0)
 
         self.add(network_mob)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -189,7 +189,10 @@ class TexMobject(SingleStringTexMobject):
         return self
 
     def get_parts_by_tex(self, tex, substring=True, case_sensitive=True):
-        def test(tex1, tex2):
+        def test(tex1, object2):
+            if not isinstance(object2, SingleStringTexMobject):
+                return tex1 is None
+            tex2 = object2.get_tex_string()
             if not case_sensitive:
                 tex1 = tex1.lower()
                 tex2 = tex2.lower()
@@ -198,7 +201,7 @@ class TexMobject(SingleStringTexMobject):
             else:
                 return tex1 == tex2
 
-        return VGroup(*[m for m in self.submobjects if test(tex, m.get_tex_string())])
+        return VGroup(*[m for m in self.submobjects if test(tex, m)])
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)

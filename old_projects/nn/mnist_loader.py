@@ -16,6 +16,8 @@ import gzip
 # Third-party libraries
 import numpy as np
 
+DATA_FILE = '/Users/grant/cs/neural-networks-and-deep-learning/data/mnist.pkl.gz'
+
 def load_data():
     """Return the MNIST data as a tuple containing the training data,
     the validation data, and the test data.
@@ -39,7 +41,7 @@ def load_data():
     That's done in the wrapper function ``load_data_wrapper()``, see
     below.
     """
-    f = gzip.open('/Users/grant/cs/neural-networks-and-deep-learning/data/mnist.pkl.gz', 'rb')
+    f = gzip.open(DATA_FILE, 'rb')
     u = pickle._Unpickler(f)
     u.encoding = 'latin1'
     # p = u.load()

@@ -1,12 +1,11 @@
-
 import sys
 import os.path
 import cv2
 
 from big_ol_pile_of_manim_imports import *
 
-from nn.network import *
-from nn.part1 import *
+from .network import *
+from .part1 import *
 
 POSITIVE_COLOR = BLUE
 NEGATIVE_COLOR = RED
@@ -34,7 +33,7 @@ def get_decimal_vector(nums, with_dots = True):
     contents = VGroup(*decimals)
     if with_dots:
         dots = TexMobject("\\vdots")
-        contents.submobjects.insert(len(decimals)/2, dots)
+        contents.submobjects.insert(int(len(decimals)/2), dots)
     contents.arrange_submobjects(DOWN)
     lb, rb = brackets = TexMobject("\\big[", "\\big]")
     brackets.scale(2)
@@ -288,7 +287,7 @@ class PreviewLearning(NetworkScene):
         n = self.network_mob.max_shown_neurons
         if matrix.shape[1] > n:
             half = matrix.shape[1]/2
-            return matrix[:,half-n/2:half+n/2]
+            return matrix[:,int(half-n/2):int(half+n/2)]
         else:
             return matrix
 
@@ -578,7 +577,7 @@ class ChangingDecimalWithColor(ChangingDecimal):
     def update_mobject(self, alpha):
         ChangingDecimal.update_mobject(self, alpha)
         num = self.number_update_func(alpha)
-        self.decimal_number.set_fill(
+        self.decimal_number_mobject.set_fill(
             interpolate_color(BLACK, WHITE, 0.5+num*0.5), 
             opacity = 1
         )
@@ -787,7 +786,7 @@ class IntroduceCostFunction(PreviewLearning):
             Circle(
                 stroke_width = 1,
                 stroke_color = WHITE,
-                fill_opacity = pixel.fill_rgb[0],
+                fill_opacity = pixel.get_fill_color().rgb[0],
                 fill_color = WHITE,
                 radius = pixel.get_height()/2
             ).move_to(pixel)
@@ -796,12 +795,12 @@ class IntroduceCostFunction(PreviewLearning):
         layer0= self.network_mob.layers[0]
         n = self.network_mob.max_shown_neurons
         neurons.target = VGroup(*it.chain(
-            VGroup(*layer0.neurons[:n/2]).set_fill(opacity = 0),
+            VGroup(*layer0.neurons[:int(n/2)]).set_fill(opacity = 0),
             [
                 VectorizedPoint(layer0.dots.get_center())
                 for x in range(len(neurons)-n)
             ],
-            VGroup(*layer0.neurons[-n/2:]).set_fill(opacity = 0),
+            VGroup(*layer0.neurons[int(-n/2):]).set_fill(opacity = 0),
         ))
 
         self.play(
@@ -2201,7 +2200,7 @@ class NonSpatialGradientIntuition(Scene):
     def add_gradient(self):
         lb, ws, rb = vect = self.vect
         ws = VGroup(*ws)
-        dots = ws[len(ws)/2]
+        dots = ws[int(len(ws)/2)]
         ws.remove(dots)
 
         lhs = TexMobject(
@@ -2917,7 +2916,7 @@ class TestPerformance(PreviewLearning):
     def activate_layers(self, test_in):
         activations = self.network.get_activation_of_all_layers(test_in)
         layers = self.network_mob.layers
-        for layer, activation in zip(layers, activations)[1:]:
+        for layer, activation in list(zip(layers, activations))[1:]:
             for neuron, a in zip(layer.neurons, activation):
                 neuron.set_fill(opacity = a)
         return activations
@@ -3169,9 +3168,9 @@ class InputRandomData(TestPerformance):
 
         point = VectorizedPoint(neurons.get_center())
         image.target = VGroup(*it.chain(
-            target_neurons[:len(neurons)/2],
+            target_neurons[:int(len(neurons)/2)],
             [point]*(len(image) - len(neurons)),
-            target_neurons[-len(neurons)/2:]
+            target_neurons[int(-len(neurons)/2):]
         ))
 
         self.play(MoveToTarget(

@@ -1,6 +1,6 @@
-from nn.network import *
-from nn.part1 import *
-from nn.part2 import *
+from .network import *
+from .part1 import *
+from .part2 import *
 
 class LayOutPlan(Scene):
     def construct(self):
@@ -304,7 +304,7 @@ class InterpretGradientComponents(GradientNudging):
         points.replace(w_terms, dim_to_match = 0)
 
         grad_terms.generate_target()
-        grad_terms.target[len(grad_terms)/2].rotate(np.pi/2)
+        grad_terms.target[int(len(grad_terms)/2)].rotate(np.pi/2)
         grad_terms.target.arrange_submobjects(RIGHT)
         grad_terms.target.set_width(cost_expression.get_width())
         grad_terms.target.next_to(cost_expression, DOWN)
@@ -2944,7 +2944,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(
             MoveToTarget(group),
             Write(words, run_time = 1),
-            graph_parts.scale, 0.7, graph_parts.get_bottom()
+            graph_parts.scale, 0.7, about_point = graph_parts.get_bottom()
         )
         self.wait(2)
         self.play(*list(map(FadeOut, [rect, words])))
@@ -3964,7 +3964,7 @@ class GeneralFormulas(SimplestNetworkExample):
             aL_part
         ))
         self.play(
-            Write(VGroup(*a_formula[1:3] + [a_formula[-1]])),
+            Write(VGroup(list(a_formula[1:3]) + list(a_formula[-1:]))),
             ReplacementTransform(
                 z_formula[0].copy(),
                 a_formula.get_part_by_tex("z^")
@@ -4019,7 +4019,7 @@ class GeneralFormulas(SimplestNetworkExample):
 
         n = chain_rule.index_of_part_by_tex("sum")
         self.play(ReplacementTransform(
-            self.chain_rule, VGroup(*chain_rule[:n] + chain_rule[n+1:])
+            self.chain_rule, VGroup(list(chain_rule[:n]) + list(chain_rule[n+1:]))
         ))
         self.play(Write(chain_rule[n], run_time = 1))
         self.wait()

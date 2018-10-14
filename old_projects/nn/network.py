@@ -19,7 +19,7 @@ import random
 # Third-party libraries
 import numpy as np
 from PIL import Image
-from nn.mnist_loader import load_data_wrapper
+from .mnist_loader import load_data_wrapper
 from utils.space_ops import get_norm
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
@@ -73,7 +73,7 @@ class Network(object):
         if n_layers is None:
             n_layers = self.num_layers
         activations = [input_a.reshape((input_a.size, 1))]
-        for bias, weight in zip(self.biases, self.weights)[:n_layers]:
+        for bias, weight in list(zip(self.biases, self.weights))[:n_layers]:
             last_a = activations[-1]
             new_a = self.non_linearity(np.dot(weight, last_a) + bias)
             new_a = new_a.reshape((new_a.size, 1))
@@ -210,7 +210,7 @@ def save_pretrained_network(epochs = 30, mini_batch_size = 10, eta = 3.0):
     training_data, validation_data, test_data = load_data_wrapper()
     network.SGD(training_data, epochs, mini_batch_size, eta)
     weights_and_biases = (network.weights, network.biases)
-    data_file = open(PRETRAINED_DATA_FILE, mode = 'w')
+    data_file = open(PRETRAINED_DATA_FILE, mode = 'wb')
     pickle.dump(weights_and_biases, data_file)
     data_file.close()
 
@@ -276,15 +276,12 @@ def save_organized_images(n_images_per_number = 10):
         if len(image_map[value]) >= n_images_per_number:
             continue
         image_map[value].append(im)
-    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'wb')
-    pickle.dump(image_map, data_file)
-    data_file.close()
+    with open(IMAGE_MAP_DATA_FILE, 'wb') as data_file:
+        pickle.dump(image_map, data_file)
 
 def get_organized_images():
-    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'r')
-    image_map = pickle.load(data_file, encoding='latin1')
-    data_file.close()
-    return image_map
+    with open(IMAGE_MAP_DATA_FILE, 'rb') as data_file:
+        return pickle.load(data_file, encoding='bytes')
 
 # def maximizing_input(network, layer_index, layer_vect):
 #     if layer_index == 0:
