@@ -21,7 +21,6 @@ RUN ./configure > /dev/null && make -s && make -s install
 RUN python3 -m pip install --upgrade pip
 COPY requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt
-RUN rm requirements.txt
 WORKDIR /root
 RUN rm -rf Python-3.7.0*
 
