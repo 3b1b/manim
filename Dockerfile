@@ -27,9 +27,7 @@ RUN apt-get install -qqy ffmpeg
 ENV TZ=America/Los_Angeles
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get install -qqy apt-transport-https
-RUN apt-get install -qqy texlive-latex-base 
 RUN apt-get install -qqy texlive-full
-RUN apt-get install -qqy texlive-fonts-extra
 RUN apt-get install -qqy sox
 RUN apt-get install -qqy git
 
