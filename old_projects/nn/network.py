@@ -210,9 +210,8 @@ def save_pretrained_network(epochs = 30, mini_batch_size = 10, eta = 3.0):
     training_data, validation_data, test_data = load_data_wrapper()
     network.SGD(training_data, epochs, mini_batch_size, eta)
     weights_and_biases = (network.weights, network.biases)
-    data_file = open(PRETRAINED_DATA_FILE, mode = 'wb')
-    pickle.dump(weights_and_biases, data_file)
-    data_file.close()
+    with open(PRETRAINED_DATA_FILE, mode = 'wb') as data_file:
+        pickle.dump(weights_and_biases, data_file)
 
 def test_network():
     network = get_pretrained_network()

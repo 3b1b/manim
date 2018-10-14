@@ -41,14 +41,13 @@ def load_data():
     That's done in the wrapper function ``load_data_wrapper()``, see
     below.
     """
-    f = gzip.open(DATA_FILE, 'rb')
-    u = pickle._Unpickler(f)
-    u.encoding = 'latin1'
-    # p = u.load()
-    # training_data, validation_data, test_data = pickle.load(f)
-    training_data, validation_data, test_data = u.load()
-    f.close()
-    return (training_data, validation_data, test_data)
+    with gzip.open(DATA_FILE, 'rb') as data:
+        u = pickle._Unpickler(data)
+        u.encoding = 'latin1'
+        # p = u.load()
+        # training_data, validation_data, test_data = pickle.load(data)
+        training_data, validation_data, test_data = u.load()
+        return (training_data, validation_data, test_data)
 
 def load_data_wrapper():
     """Return a tuple containing ``(training_data, validation_data,
