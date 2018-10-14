@@ -235,7 +235,7 @@ class FromKochToSpaceFilling(Scene):
                 2*(np.pi/2 - curve.angle),
                 radius = r,
                 start_angle = np.pi+curve.angle
-            ).shift(curve.points[curve.get_num_points()/2])
+            ).shift(curve.points[int(curve.get_num_points()/2)])
             for curve, r in zip(curves, [0.6, 0.7, 0.4])
         ]
         theta = TexMobject("\\theta")

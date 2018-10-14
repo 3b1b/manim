@@ -2698,7 +2698,7 @@ class FinalProof(RationalPointsOnUnitCircle):
             FadeIn(label)
         )
         self.wait()
-        for new_line, new_label in zip(lines, labels)[1:]:
+        for new_line, new_label in list(zip(lines, labels))[1:]:
             self.play(
                 Transform(line, new_line),
                 Transform(label, new_label),

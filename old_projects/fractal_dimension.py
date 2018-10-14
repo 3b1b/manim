@@ -225,7 +225,7 @@ class IntroduceVonKochCurve(Scene):
 
         self.play(Transform(curve, larger_curve, run_time = 2))
         n_parts = len(curve.split())
-        sub_portion = VGroup(*curve[:n_parts/4])
+        sub_portion = VGroup(*curve[:int(n_parts/4)])
         self.play(
             sub_portion.set_color, YELLOW,
             rate_func = there_and_back
@@ -1557,7 +1557,7 @@ class SeparateFractals(Scene):
         quad_koch = last_sc.curves[1]
         length = len(quad_koch)
         new_quad_koch = VGroup(*[
-            VGroup(*quad_koch[i*length/8:(i+1)*length/8])
+            VGroup(*quad_koch[int(i*length/8):int((i+1)*length/8)])
             for i in range(8)
         ])
         curves = list(last_sc.curves)

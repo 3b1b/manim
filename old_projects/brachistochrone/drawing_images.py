@@ -194,7 +194,7 @@ class JohannThinksHeIsBetter(Scene):
         comparitive_johann.shift(UP+LEFT)
         greater_than = TexMobject(">")
         greater_than.next_to(comparitive_johann)
-        for guy, name in zip(guys, names)[1:]:
+        for guy, name in list(zip(guys, names))[1:]:
             guy.replace(template)
             guy.next_to(greater_than)
             name_mob = TextMobject(name.replace("_", " "))

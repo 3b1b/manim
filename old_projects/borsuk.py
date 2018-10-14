@@ -272,8 +272,8 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             jewel_type_copy = jewel_type.copy()
             n_jewels = len(jewel_type)
             halves = [
-                VGroup(*jewel_type_copy[:n_jewels/2]),
-                VGroup(*jewel_type_copy[n_jewels/2:]),
+                VGroup(*jewel_type_copy[:int(n_jewels/2)]),
+                VGroup(*jewel_type_copy[int(n_jewels/2):]),
             ]
             for half, thief, vect in zip(halves, thieves, [RIGHT, LEFT]):
                 half.arrange_submobjects(DOWN)

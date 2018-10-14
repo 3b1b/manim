@@ -2014,7 +2014,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
 
         self.func_1_group.save_state()
         to_fade = VGroup(
-            *self.x_axis.numbers[:len(self.x_axis.numbers)/2]
+            *self.x_axis.numbers[:int(len(self.x_axis.numbers)/2)]
         )
 
         self.play(

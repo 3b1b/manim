@@ -354,7 +354,7 @@ class SixSixSix(Scene):
         bubble.add_content(VectorizedPoint())
         for i, rule in enumerate(rules):
             if i%2 == 0:
-                anim = ShowCreation(sixes[i/2])
+                anim = ShowCreation(sixes[int(i/2)])
             else:
                 anim = Blink(randy)
             self.play(

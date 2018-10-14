@@ -1252,7 +1252,7 @@ class LookAtExampleRing(LatticePointScene):
         self.remove(x, y)
         self.wait()
 
-        for label, sum_of_squares in zip(labels, sums_of_squares)[1:]:
+        for label, sum_of_squares in list(zip(labels, sums_of_squares))[1:]:
             self.play(
                 ReplacementTransform(curr_label, label),
                 label.point.set_color, PINK,

@@ -845,7 +845,7 @@ class WhatIsRight(PiCreatureScene):
         self.wait()
 
         last_terms = VGroup()
-        for left, right in zip(left_mobs, right_mobs)[:-1]:
+        for left, right in list(zip(left_mobs, right_mobs))[:-1]:
             right.align_to(left)
             self.play(
                 randy.change, "raise_right_hand",

@@ -2027,7 +2027,7 @@ class AreaUnderParabola(GraphScene):
         rects = self.rects
         question = TextMobject("Area?")
         question.move_to(rects.get_top(), DOWN)
-        mid_rect = rects[2*len(rects)/3]
+        mid_rect = rects[int(2*len(rects)/3)]
         arrow = Arrow(question.get_bottom(), mid_rect.get_center())
 
         v_lines = VGroup(*[

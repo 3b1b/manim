@@ -639,7 +639,7 @@ class VectorsToDotsScene(VectorScene):
         )
         for vect, color in zip(vectors, colors):
             vect.set_color(color)
-        prototype_vector = vectors[3*len(vectors)/4]
+        prototype_vector = vectors[int(3*len(vectors)/4)]
 
         vector_group = VMobject(*vectors)
         self.play(

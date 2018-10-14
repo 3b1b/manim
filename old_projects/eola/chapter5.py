@@ -709,8 +709,8 @@ class NameParallelepiped(Scene):
     def construct(self):
         word = TextMobject("``Parallelepiped''")
         word.scale(2)
-        pp_part1 = VMobject(*word.split()[:len(word.split())/2])
-        pp_part2 = VMobject(*word.split()[len(word.split())/2:])
+        pp_part1 = VMobject(*word.split()[:int(len(word.split())/2)])
+        pp_part2 = VMobject(*word.split()[int(len(word.split())/2):])
         pp_part1.set_submobject_colors_by_gradient(X_COLOR, Y_COLOR)
         pp_part2.set_submobject_colors_by_gradient(Y_COLOR, Z_COLOR)
         self.play(Write(word))
@@ -729,8 +729,8 @@ class DeterminantIsVolumeOfParallelepiped(Scene):
             "parallelepiped"
         ])
         pp = words.split()[1]
-        pp_part1 = VMobject(*pp.split()[:len(pp.split())/2])
-        pp_part2 = VMobject(*pp.split()[len(pp.split())/2:])
+        pp_part1 = VMobject(*pp.split()[:int(len(pp.split())/2)])
+        pp_part2 = VMobject(*pp.split()[int(len(pp.split())/2):])
         pp_part1.set_submobject_colors_by_gradient(X_COLOR, Y_COLOR)
         pp_part2.set_submobject_colors_by_gradient(Y_COLOR, Z_COLOR)
 

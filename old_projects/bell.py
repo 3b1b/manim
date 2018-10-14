@@ -1863,7 +1863,7 @@ class VennDiagramProofByContradiction(Scene):
             *list(map(FadeOut, [funny_business, braces]))
         )
 
-        for term, group, region, num in zip(terms, photon_groups, regions, nums)[1:]:
+        for term, group, region, num in list(zip(terms, photon_groups, regions, nums))[1:]:
             group.set_stroke(WHITE)
             self.play(Write(term, run_time = 1))
             self.wait()
@@ -2010,7 +2010,7 @@ class VennDiagramProofByContradiction(Scene):
             else:
                 rejected.append((x, y))
         rejected.sort(
-            kay=lambda (x, y): (x**2 + y**2)
+            kay=lambda x, y: (x**2 + y**2)
         )
         for i in range(len(photons) - len(pairs)):
             pairs.append(rejected.pop())

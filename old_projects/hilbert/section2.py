@@ -246,7 +246,7 @@ class DefinitionOfCurve(Scene):
         fine_curve.replace(curve)
         dots = Mobject(*[
             Dot(
-                curve.points[n*curve.get_num_points()/15],
+                curve.points[int(n*curve.get_num_points()/15)],
                 color = YELLOW_C
             )
             for n in range(1, 15)
@@ -300,7 +300,7 @@ class PseudoHilbertCurvesDontFillSpace(Scene):
         square.digest_mobject_attrs()
         square.scale(2**(-5))
         square.corner.set_color(
-            Color(rgb = curve.rgbas[curve.get_num_points()/3])
+            Color(rgb = curve.rgbas[int(curve.get_num_points()/3)])
         )
         square.shift(
             grid.get_corner(UP+LEFT)-\

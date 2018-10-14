@@ -494,7 +494,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
             axes, UP
         ))
         new_graph = graph.copy()
-        midpoint = new_graph.points[new_graph.get_num_points()/2]
+        midpoint = new_graph.points[int(new_graph.get_num_points()/2)]
         new_graph.filter_out(lambda p : p[0] < midpoint[0])
         new_graph.reverse_points()
         pairs_for_end_transform = [

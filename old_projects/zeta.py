@@ -3166,10 +3166,10 @@ class PatreonThanks(Scene):
         patreon_logo.next_to(special_thanks, DOWN)
 
         left_patrons = VGroup(*list(map(TextMobject,
-            self.specific_patrons[:n_patrons/2]
+            self.specific_patrons[:int(n_patrons/2)]
         )))
         right_patrons = VGroup(*list(map(TextMobject,
-            self.specific_patrons[n_patrons/2:]
+            self.specific_patrons[int(n_patrons/2):]
         )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
             patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)

@@ -1555,7 +1555,7 @@ class DistanceIsAFunction(Scene):
             if previous:
                 self.play(*[
                     DelayByOrder(Transform(prev, mob, **kwargs))
-                    for prev, mob in zip(previous, mobs)[:-1]
+                    for prev, mob in list(zip(previous, mobs))[:-1]
                 ])
                 self.play(DelayByOrder(Transform(
                     previous[-1], mobs[-1], **kwargs

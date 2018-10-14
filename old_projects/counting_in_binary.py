@@ -280,7 +280,7 @@ class ShowReadingRule(Scene):
         self.add(hand, *count_mobs)
         self.wait()
         self.play(*[
-            Transform(count_mobs[n/2], sum_mobs[n])
+            Transform(count_mobs[int(n/2)], sum_mobs[n])
             if n%2 == 0 and n/2 < len(counts)
             else FadeIn(sum_mobs[n])
             for n in range(len(sum_mobs))

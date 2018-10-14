@@ -1571,7 +1571,7 @@ class CompareWaysToWriteExponentials(GraphScene):
         self.wait(2)
         self.play(Write(equation))
         self.wait(2)
-        for new_graph, new_equation in zip(graphs, equations)[1:]:
+        for new_graph, new_equation in list(zip(graphs, equations))[1:]:
             self.play(
                 Transform(graph, new_graph),
                 Transform(equation, new_equation)
