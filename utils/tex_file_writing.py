@@ -5,6 +5,7 @@ import hashlib
 from constants import TEX_DIR
 from constants import TEX_TEXT_TO_REPLACE
 from constants import TEX_USE_CTEX
+from constants import TEX_FIX_SVG
 
 
 def tex_hash(expression, template_tex_file_body):
@@ -96,4 +97,15 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
             get_null()
         ]
         os.system(" ".join(commands))
+
+        if TEX_FIX_SVG:
+            commands = [
+                "cairosvg",
+                result,
+                "-f",
+                "svg",
+                "-o",
+                result
+            ]
+            os.system(" ".join(commands))
     return result
