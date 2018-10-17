@@ -1112,26 +1112,31 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         example_num = None
         for neuron in neurons:
             o = neuron.get_fill_opacity()
-            num = DecimalNumber(o, num_decimal_places = 1)
-            num.set_width(0.7*neuron.get_width())
-            num.move_to(neuron)
-            if o > 0.8:
-                num.set_fill(BLACK)
-            numbers.add(num)
-            if o > 0.25 and o < 0.75 and example_neuron is None:
+            if example_neuron is None and o > 0.25 and o < 0.75:
                 example_neuron = neuron
-                example_num = num
+                example_num = DecimalNumber(o, num_decimal_places = 2, background_stroke_width=0)
+                example_num.set_width(0.7*neuron.get_width())
+                example_num.move_to(neuron)
                 example_neuron.save_state()
                 example_num.save_state()
+                num = example_num
+            else:
+                num = DecimalNumber(o, num_decimal_places = 1, background_stroke_width=0)
+                num.set_width(0.7*neuron.get_width())
+                num.move_to(neuron)
+                if o > 0.8:
+                    num.set_fill(BLACK)
+            numbers.add(num)
         example_neuron.generate_target()
         example_neuron.target.set_height(1.5)
         example_neuron.target.next_to(neurons, RIGHT)
-        example_num.target = DecimalNumber(
-            example_neuron.get_fill_opacity()
-        )
+        example_num.target = DecimalNumber(example_neuron.get_fill_opacity(), num_decimal_places=2, background_stroke_width=0)
         example_num.target.move_to(example_neuron.target)
 
         def change_activation(num):
+            def update_number(number):
+                number.set_fill(BLACK if example_neuron.get_fill_opacity() > 0.8 else WHITE)
+                number.set_stroke(width=0, background=True)
             self.play(
                 example_neuron.set_fill, None, num,
                 ChangingDecimal(
@@ -1140,9 +1145,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 ),
                 UpdateFromFunc(
                     example_num,
-                    lambda m : m.set_fill(
-                        BLACK if example_neuron.get_fill_opacity() > 0.8 else WHITE
-                    )
+                    update_number
                 )
             )
 
