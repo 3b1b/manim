@@ -196,8 +196,8 @@ def ReLU_prime(z):
     return (np.array(z) > 0).astype('int')
 
 def get_pretrained_network():
-    data_file = open(PRETRAINED_DATA_FILE, 'rb')
-    weights, biases = pickle.load(data_file, encoding='latin1')
+    with open(PRETRAINED_DATA_FILE, 'rb') as data_file:
+        weights, biases = pickle.load(data_file, encoding='bytes')
     sizes = [w.shape[1] for w in weights]
     sizes.append(weights[-1].shape[0])
     network = Network(sizes)

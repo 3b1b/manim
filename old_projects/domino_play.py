@@ -77,33 +77,32 @@ class SimpleVelocityGraph(GraphScene):
             data_file
         )
 
-        file = open(file_name, "r")
         frames, notes = [], []
-        for line in file:
-            line = line.replace("  ", ",")
-            line = line.replace("\n", "")
-            entries = [s for s in line.split(",") if s is not ""]
-            if len(entries) == 0:
-                continue
-
-            if entries[0] == "framerate":
-                frame_rate = float(entries[1])
-            elif entries[0] == "domino spacing":
-                domino_spacing = float(entries[1])
-            elif entries[0] == "domino thickness":
-                domino_thickness = float(entries[1])
-            elif entries[0] == "friction":
-                self.friction = entries[1]
-            else:
-                try:
-                    frames.append(int(entries[0]))
-                except:
-                    continue #How to treat?
-                    # frames.append(frames[-1] + (frames[-1] - frames[-2]))
-                if len(entries) > 1:
-                    notes.append(entries[1])
+        with open(file_name, "r") as file:
+            for line in file:
+                line = line.replace("  ", ",")
+                line = line.replace("\n", "")
+                entries = [s for s in line.split(",") if s is not ""]
+                if len(entries) == 0:
+                    continue
+                if entries[0] == "framerate":
+                    frame_rate = float(entries[1])
+                elif entries[0] == "domino spacing":
+                    domino_spacing = float(entries[1])
+                elif entries[0] == "domino thickness":
+                    domino_thickness = float(entries[1])
+                elif entries[0] == "friction":
+                    self.friction = entries[1]
                 else:
-                    notes.append("")
+                    try:
+                        frames.append(int(entries[0]))
+                    except:
+                        continue #How to treat?
+                        # frames.append(frames[-1] + (frames[-1] - frames[-2]))
+                    if len(entries) > 1:
+                        notes.append(entries[1])
+                    else:
+                        notes.append("")
         frames = np.array(frames)
 
         self.times = (frames - frames[0])/float(frame_rate)
