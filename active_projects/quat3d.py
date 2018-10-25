@@ -148,6 +148,25 @@ class Gimbal(VGroup):
 
 # Scenes
 
+class ButFirst(TeacherStudentsScene):
+    def construct(self):
+        for student in self.students:
+            student.change("surprised")
+
+        self.teacher_says("But first!")
+        self.change_all_student_modes("happy")
+        self.play(RemovePiCreatureBubble(
+            self.teacher,
+            target_mode="raise_right_hand"
+        ))
+        self.change_student_modes(
+            *["pondering"] * 3,
+            look_at_arg=self.screen,
+        )
+        self.play(self.teacher.look_at, self.screen)
+        self.wait(4)
+
+
 class Introduction(QuaternionHistory):
     CONFIG = {
         "names_and_quotes": [
@@ -767,6 +786,16 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
         return line
 
 
+class InterpolationFail(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Sometimes interpolating 3d\\\\"
+            "orientations is tricky..."
+        )
+        words.to_edge(UP)
+        self.add(words)
+
+
 class QuaternionInterpolation(ShowSeveralQuaternionRotations):
     def construct(self):
         self.add_q_tracker()
@@ -1354,3 +1383,27 @@ class ExpandOutFullProduct(TeacherStudentsScene):
             look_at_arg=words
         )
         self.wait(5)
+
+
+class Link(Scene):
+    def construct(self):
+        word = TextMobject("eater.net/quaternions")
+        word.add_background_rectangle()
+        rect = SurroundingRectangle(word)
+        rect.set_color(BLUE)
+        arrow = Vector(UR, color=GREEN)
+        arrow.next_to(rect, UP)
+        arrow.align_to(rect, RIGHT)
+        short_arrow = arrow.copy().scale(0.8, about_edge=DL)
+
+        self.add(word)
+        self.play(
+            ShowCreation(rect),
+            GrowArrow(arrow),
+        )
+        for x in range(10):
+            self.play(Transform(
+                arrow, short_arrow,
+                rate_func=there_and_back,
+                run_time=2
+            ))
