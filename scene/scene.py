@@ -67,6 +67,8 @@ class Scene(Container):
         self.setup()
         if self.write_to_movie:
             self.open_movie_pipe()
+        if self.is_live_streaming:
+            return None
         try:
             self.construct(*self.construct_args)
         except EndSceneEarlyException:
