@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+from manim import Manim
 
 class Shapes(Scene):
     #A few simple shapes
@@ -15,3 +16,8 @@ class Shapes(Scene):
         self.play(Transform(square,triangle))
 
 #python3 extract_scene.py test1.py Shapes -r 1080
+
+
+if __name__ == '__main__':
+    manim = Manim()
+    Shapes(**manim.config)
