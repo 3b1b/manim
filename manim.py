@@ -1,28 +1,13 @@
 #!/usr/bin/python3
 
-import sys
-import argparse
-# import imp
-import importlib
-import inspect
-import itertools as it
-import os
-import subprocess as sp
-import traceback
-
 from constants import *
-
 from scene.scene import Scene
-from utils.sounds import play_error_sound
-from utils.sounds import play_finish_sound
-
-from colour import Color
 
 
 class Manim():
 
-    def __init__(self):
-        self.config = {
+    def __new__(cls):
+        kwargs = {
             "file": "example_file.py",
             "scene_name": "LiveStream",
             "open_video_upon_completion": False,
@@ -45,3 +30,4 @@ class Manim():
             "frame_duration": PRODUCTION_QUALITY_FRAME_DURATION,
             "is_live_streaming": True,
         }
+        return Scene(**kwargs)
