@@ -211,3 +211,6 @@ PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]
+
+IS_LIVE_STREAMING = True
+LIVE_STREAM_NAME = "LiveStream"
