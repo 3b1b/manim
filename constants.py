@@ -20,7 +20,7 @@ elif os.path.exists("media_dir.txt"):
 else:
     MEDIA_DIR = os.path.join(
         os.path.expanduser('~'),
-        "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+        "Videos/"
     )
 
 if not os.path.exists(MEDIA_DIR):
