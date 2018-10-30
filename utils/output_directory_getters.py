@@ -1,7 +1,7 @@
 import inspect
 import os
 
-from constants import ANIMATIONS_DIR
+from constants import VIDEO_DIR
 
 
 def add_extension_if_not_present(file_name, extension):
@@ -28,7 +28,7 @@ def get_scene_output_directory(scene_class):
         file_path = os.path.join(*sub_parts)
     file_path = file_path.replace(".pyc", "")
     file_path = file_path.replace(".py", "")
-    return guarantee_existance(os.path.join(ANIMATIONS_DIR, file_path))
+    return guarantee_existance(os.path.join(VIDEO_DIR, file_path))
 
 
 def get_movie_output_directory(scene_class, camera_config, frame_duration):

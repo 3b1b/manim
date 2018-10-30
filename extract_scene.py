@@ -260,7 +260,7 @@ def main():
     scene_names_to_classes = dict(inspect.getmembers(module, is_scene))
 
     # config["output_directory"] = os.path.join(
-    #     ANIMATIONS_DIR,
+    #     VIDEO_DIR,
     #     config["file"].replace(".py", "")
     # )
 

@@ -57,7 +57,7 @@ class Hand(ImageMobject):
     def __init__(self, num, **kwargs):
         Mobject2D.__init__(self, **kwargs)
         path = os.path.join(
-            ANIMATIONS_DIR, MOVIE_PREFIX, "images", "Hand%d.png"%num
+            VIDEO_DIR, MOVIE_PREFIX, "images", "Hand%d.png"%num
         )
         invert = False
         if self.read_in_cached_attrs(path, invert):
@@ -83,14 +83,14 @@ class EdgeDetection(SceneFromVideo):
         return "-".join([filename.split(".")[0], str(t1), str(t2)])
 
     def construct(self, filename, t1, t2):
-        path = os.path.join(ANIMATIONS_DIR, filename)
+        path = os.path.join(VIDEO_DIR, filename)
         SceneFromVideo.construct(self, path)
         self.apply_gaussian_blur()
         self.apply_edge_detection(t1, t2)
 
 class BufferedCounting(SceneFromVideo):
     def construct(self):
-        path = os.path.join(ANIMATIONS_DIR, "CountingInBinary.m4v")
+        path = os.path.join(VIDEO_DIR, "CountingInBinary.m4v")
         time_range = (3, 42)
         SceneFromVideo.construct(self, path, time_range = time_range)
         self.buffer_pixels(spreads = (3, 2))
@@ -130,7 +130,7 @@ class ClearLeftSide(SceneFromVideo):
         return scenename
 
     def construct(self, scenename):
-        path = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, scenename + ".mp4")
+        path = os.path.join(VIDEO_DIR, MOVIE_PREFIX, scenename + ".mp4")
         SceneFromVideo.construct(self, path)
         self.set_color_region_over_time_range(
             Region(lambda x, y : x < -1, shape = self.shape)
@@ -148,7 +148,7 @@ class DraggedPixels(SceneFromVideo):
         return args[0]
 
     def construct(self, video):
-        path = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, video+".mp4")
+        path = os.path.join(VIDEO_DIR, MOVIE_PREFIX, video+".mp4")
         SceneFromVideo.construct(self, path)
         self.drag_pixels()
 
@@ -165,11 +165,11 @@ class DraggedPixels(SceneFromVideo):
 
 class SaveEachNumber(SceneFromVideo):
     def construct(self):
-        path = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, "ClearLeftSideBufferedCounting.mp4")
+        path = os.path.join(VIDEO_DIR, MOVIE_PREFIX, "ClearLeftSideBufferedCounting.mp4")
         SceneFromVideo.construct(self, path)
         for count in COUNT_TO_FRAME_NUM:
             path = os.path.join(
-                ANIMATIONS_DIR, MOVIE_PREFIX, "images",
+                VIDEO_DIR, MOVIE_PREFIX, "images",
                 "Hand%d.png"%count
             )
             Image.fromarray(self.frames[COUNT_TO_FRAME_NUM[count]]).save(path)
@@ -184,7 +184,7 @@ class ShowCounting(SceneFromVideo):
         return filename
 
     def construct(self, filename):
-        path = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, filename + ".mp4")
+        path = os.path.join(VIDEO_DIR, MOVIE_PREFIX, filename + ".mp4")
         SceneFromVideo.construct(self, path)
         total_time = len(self.frames)*self.frame_duration
         for count in range(32):
@@ -208,7 +208,7 @@ class ShowFrameNum(SceneFromVideo):
         return filename
 
     def construct(self, filename):
-        path = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, filename+".mp4")
+        path = os.path.join(VIDEO_DIR, MOVIE_PREFIX, filename+".mp4")
         SceneFromVideo.construct(self, path)
         for frame, count in zip(self.frames, it.count()):
             print(count + "of" + len(self.frames))

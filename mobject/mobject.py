@@ -113,7 +113,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(ANIMATIONS_DIR, (name or str(self)) + ".png")
+            os.path.join(VIDEO_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):
