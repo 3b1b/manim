@@ -212,5 +212,12 @@ locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]
 
+# Streaming related configurations
 IS_LIVE_STREAMING = True
 LIVE_STREAM_NAME = "LiveStream"
+IS_STREAMING_TO_TWITCH = False
+TWITCH_STREAM_KEY = "YOUR_STREAM_KEY"
+STREAMING_PROTOCOL = "tcp"
+STREAMING_IP = "127.0.0.1"
+STREAMING_PORT = "2000"
+STREAMING_CLIENT = "ffplay"

@@ -27,6 +27,5 @@ class Manim():
             "skip_animations": False,
             "camera_config": HIGH_QUALITY_CAMERA_CONFIG,
             "frame_duration": PRODUCTION_QUALITY_FRAME_DURATION,
-            "is_live_streaming": IS_LIVE_STREAMING
         }
         return Scene(**kwargs)
