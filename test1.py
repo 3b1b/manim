@@ -16,3 +16,7 @@ manim.play(GrowFromCenter(square))
 manim.play(Transform(square,triangle))
 
 manim.close_movie_pipe()
+
+# mplayer -cache 8092 ffmpeg://tcp://127.0.0.1:2000?listen
+# for listening the stream
+# start mplayer before running this script

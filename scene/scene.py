@@ -624,13 +624,20 @@ class Scene(Container):
                 '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
             ]
-        command += [temp_file_path]
+        if self.is_live_streaming:
+            command += ['-f', 'mpegts']
+            command += ['tcp://127.0.0.1:2000']
+        else:
+            command += [temp_file_path]
+        print(' '.join(command))
         # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
+        if self.is_live_streaming:
+            return True
         if os.name == 'nt':
             shutil.move(*self.args_to_rename_file)
         else:
