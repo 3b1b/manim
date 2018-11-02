@@ -29,6 +29,9 @@ from utils.output_directory_getters import get_image_output_directory
 
 from container.container import Container
 
+import position
+from mobject.svg.tex_mobject import TextMobject
+from animation.creation import Write
 
 class Scene(Container):
     CONFIG = {
@@ -343,6 +346,10 @@ class Scene(Container):
         self.mobjects = []
         self.foreground_mobjects = []
         self.continual_animation = []
+
+        if IS_LIVE_STREAMING:
+            position.current = 5 * LEFT + 3 * UP
+            print(position.current)
         return self
 
     def get_mobjects(self):
@@ -512,7 +519,7 @@ class Scene(Container):
             n_frames = 1
             frame = self.get_frame()
             self.add_frames(*[frame] * n_frames)
-            sleep(self.frame_duration * 999/1000)
+            sleep(self.frame_duration * 99/100)
 
     def clean_up_animations(self, *animations):
         for animation in animations:
@@ -631,6 +638,7 @@ class Scene(Container):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The imput comes from a pipe
+            '-c:v', 'h264_nvenc',
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
@@ -666,6 +674,10 @@ class Scene(Container):
             shutil.move(*self.args_to_rename_file)
         else:
             os.rename(*self.args_to_rename_file)
+
+    def tex(self, latex):
+        eq = TextMobject(latex)
+        self.play(Write(eq))
 
 
 class EndSceneEarlyException(Exception):

@@ -15,6 +15,8 @@ from utils.paths import counterclockwise_path
 from utils.rate_functions import double_smooth
 from utils.rate_functions import smooth
 
+import position
+
 # Drawing
 
 
@@ -98,6 +100,15 @@ class Write(DrawBorderThenFill):
             mobject = TextMobject(mob_or_text)
         else:
             mobject = mob_or_text
+
+        if IS_LIVE_STREAMING:
+            print(position.current)
+            mobject.shift(position.current)
+            position.current = position.current + 2 * DOWN
+            if position.current[1] < -3:
+                position.current[1] = 3
+                position.current = position.current + 3 * RIGHT
+
         if "run_time" not in kwargs:
             self.establish_run_time(mobject)
         if "lag_factor" not in kwargs:
