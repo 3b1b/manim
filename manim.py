@@ -26,6 +26,6 @@ class Manim():
             "end_at_animation_number": None,
             "skip_animations": False,
             "camera_config": HIGH_QUALITY_CAMERA_CONFIG,
-            "frame_duration": PRODUCTION_QUALITY_FRAME_DURATION,
+            "frame_duration": MEDIUM_QUALITY_FRAME_DURATION,
         }
         return Scene(**kwargs)

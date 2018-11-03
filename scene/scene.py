@@ -18,7 +18,7 @@ from tqdm import tqdm as ProgressDisplay
 from constants import *
 
 from animation.animation import Animation
-from animation.transform import MoveToTarget
+from animation.transform import MoveToTarget, ApplyMethod
 from camera.camera import Camera
 from continual_animation.continual_animation import ContinualAnimation
 from mobject.mobject import Mobject
@@ -29,9 +29,9 @@ from utils.output_directory_getters import get_image_output_directory
 
 from container.container import Container
 
-import position
 from mobject.svg.tex_mobject import TextMobject
 from animation.creation import Write
+import datetime
 
 class Scene(Container):
     CONFIG = {
@@ -346,10 +346,6 @@ class Scene(Container):
         self.mobjects = []
         self.foreground_mobjects = []
         self.continual_animation = []
-
-        if IS_LIVE_STREAMING:
-            position.current = 5 * LEFT + 3 * UP
-            print(position.current)
         return self
 
     def get_mobjects(self):
@@ -515,11 +511,15 @@ class Scene(Container):
 
     def idle_stream(self):
         while(self.stream_lock):
+            a = datetime.datetime.now()
             self.update_frame()
             n_frames = 1
             frame = self.get_frame()
             self.add_frames(*[frame] * n_frames)
-            sleep(self.frame_duration * 99/100)
+            b = datetime.datetime.now()
+            time_diff = (b - a).total_seconds()
+            if time_diff < self.frame_duration:
+                sleep(self.frame_duration - time_diff)
 
     def clean_up_animations(self, *animations):
         for animation in animations:
@@ -677,7 +677,11 @@ class Scene(Container):
 
     def tex(self, latex):
         eq = TextMobject(latex)
-        self.play(Write(eq))
+        anims = []
+        anims.append(Write(eq))
+        for mobject in self.mobjects:
+            anims.append(ApplyMethod(mobject.shift,2*UP))
+        self.play(*anims)
 
 
 class EndSceneEarlyException(Exception):
