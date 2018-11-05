@@ -173,7 +173,7 @@ class Scene(Container):
     ###
 
     def continual_update(self, dt):
-        for mobject in self.get_mobjects():
+        for mobject in self.get_mobject_family_members():
             mobject.update(dt)
         for continual_animation in self.continual_animations:
             continual_animation.update(dt)
@@ -194,7 +194,7 @@ class Scene(Container):
             return True
         any_time_based_update = any([
             len(m.get_time_based_updaters()) > 0
-            for m in self.get_mobjects()
+            for m in self.get_mobject_family_members()
         ])
         if any_time_based_update:
             return True
