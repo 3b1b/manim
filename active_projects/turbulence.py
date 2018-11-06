@@ -283,32 +283,68 @@ class NavierStokesEquations(TexMobject):
     CONFIG = {
         "tex_to_color_map": {
             "\\rho": YELLOW,
-            "\\mu": RED,
-            "\\textbf{u}": BLUE,
+            "\\mu": GREEN,
+            "\\textbf{v}": BLUE,
+            "p{}": RED,
         },
         "width": 10,
     }
 
     def __init__(self, **kwargs):
-        u_tex = "\\textbf{u}"
+        v_tex = "\\textbf{v}"
         TexMobject.__init__(
             self,
             "\\rho",
             "\\left("
-            "{\\partial", u_tex, "\\over",
+            "{\\partial", v_tex, "\\over",
             "\\partial", "t}",
             "+",
-            u_tex, "\\cdot", "\\nabla", u_tex,
+            v_tex, "\\cdot", "\\nabla", v_tex,
             "\\right)",
             "=",
-            "-", "\\nabla", "p", "+",
-            "\\mu", "\\nabla^2", u_tex, "+",
-            "\\frac{1}{3}", "\\mu", "\\nabla",
-            "(", "\\nabla", "\\cdot", u_tex, ")", "+",
+            "-", "\\nabla", "p{}", "+",
+            "\\mu", "\\nabla^2", v_tex, "+",
+            # "\\frac{1}{3}", "\\mu", "\\nabla",
+            # "(", "\\nabla", "\\cdot", v_tex, ")", "+",
             "\\textbf{F}",
+            "\\qquad\\qquad",
+            "\\nabla", "\\cdot", v_tex, "=", "0",
             **kwargs
         )
         self.set_width(self.width)
+
+    def get_labels(self):
+        parts = self.get_parts()
+        words = [
+            "Analogous to \\\\ mass $\\times$ acceleration",
+            "Pressure\\\\forces",
+            "Viscous\\\\forces",
+            "External\\\\forces",
+        ]
+
+        result = VGroup()
+        braces = VGroup()
+        word_mobs = VGroup()
+        for i, part, word in zip(it.count(), parts, words):
+            brace = Brace(part, DOWN, buff=SMALL_BUFF)
+            word_mob = brace.get_text(word)
+            word_mob.scale(0.7, about_edge=UP)
+            word_mobs.add(word_mob)
+            braces.add(brace)
+            result.add(VGroup(brace, word_mob))
+        word_mobs[1:].arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        word_mobs[1:].next_to(braces[2], DOWN, SMALL_BUFF)
+        word_mobs[1].set_color(RED)
+        word_mobs[2].set_color(GREEN)
+        return result
+
+    def get_parts(self):
+        return VGroup(
+            self[:12],
+            self[13:16],
+            self[17:20],
+            self[21:22],
+        )
 
 
 class Test(Scene):
@@ -321,14 +357,18 @@ class Test(Scene):
 
 class EddyReference(Scene):
     CONFIG = {
-        "radius": 0.5,
+        "radius": 1,
         "label": "Eddy",
         "label": "",
     }
 
     def construct(self):
-        eddy = Eddy()
+        eddy = Eddy(radius=self.radius)
         new_eddy = eddy.get_lines()
+        for line in new_eddy:
+            line.set_stroke(
+                width=(3 + 3 * random.random())
+            )
         label = TextMobject(self.label)
         label.next_to(new_eddy, UP)
 
@@ -348,10 +388,32 @@ class EddyReferenceWithLabel(EddyReference):
     }
 
 
+class EddyLabels(Scene):
+    def construct(self):
+        labels = VGroup(
+            TextMobject("Large eddy"),
+            TextMobject("Medium eddy"),
+            TextMobject("Small eddy"),
+        )
+        for label in labels:
+            self.play(FadeIn(
+                label,
+                rate_func=there_and_back_with_pause,
+                run_time=3
+            ))
+
+
 class LargeEddyReference(EddyReference):
     CONFIG = {
-        "radius": 1.5,
-        "label": "Large eddy"
+        "radius": 2,
+        "label": ""
+    }
+
+
+class MediumEddyReference(EddyReference):
+    CONFIG = {
+        "radius": 0.8,
+        "label": "Medium eddy"
     }
 
 
@@ -586,6 +648,14 @@ class WavingRodLabel(Scene):
         self.wait()
 
 
+class SeekOrderWords(Scene):
+    def construct(self):
+        words = TextMobject("Seek order amidst chaos")
+        words.scale(1.5)
+        self.play(Write(words))
+        self.wait()
+
+
 class LongEddy(Scene):
     def construct(self):
         self.add(Eddy())
@@ -672,6 +742,8 @@ class AskAboutTurbulence(TeacherStudentsScene):
         )
         self.wait()
 
+        self.words = words
+
     def three_qualitative_descriptors(self):
         words = VGroup(
             TextMobject("- Eddies"),
@@ -703,12 +775,20 @@ class AskAboutTurbulence(TeacherStudentsScene):
     def rigorous_definition(self):
         randy = Randolph()
         randy.move_to(FRAME_WIDTH * RIGHT / 4)
+        randy.change("pondering", self.words[1])
 
         self.play(FadeIn(randy))
+        self.play(Blink(randy))
+        self.wait()
         self.play(randy.change, "shruggie")
         for x in range(2):
             self.play(Blink(randy))
             self.wait()
+        self.play(randy.look, LEFT)
+        self.wait(2)
+        self.play(randy.look, UP)
+        self.play(Blink(randy))
+        self.wait()
 
 
 class BumpyPlaneRide(Scene):
@@ -863,6 +943,323 @@ class VorticityDoesNotImplyTurbulence(TeacherStudentsScene):
         self.wait(4)
 
 
+class SurroundingRectangleSnippet(Scene):
+    def construct(self):
+        rect = Rectangle()
+        rect.set_color(YELLOW)
+        rect.set_stroke(width=5)
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+
+
+class FeynmanOnTurbulence(Scene):
+    def construct(self):
+        feynman = ImageMobject("Feynman_Woods", height=4)
+        name = TextMobject("Richard Feynman")
+        name.next_to(feynman, DOWN)
+        quote = TextMobject(
+            "``", "Turbulence", "is the most\\\\"
+            "important", "unsolved problem\\\\",
+            "of classical physics.''",
+            tex_to_color_map={
+                "Turbulence": BLUE,
+                "unsolved problem\\\\": YELLOW,
+            },
+        )
+        quote[0].shift(SMALL_BUFF * RIGHT)
+        quote.next_to(feynman, RIGHT)
+        Group(feynman, name, quote).center()
+
+        self.play(
+            FadeInFrom(feynman, UP),
+            FadeInFrom(name, DOWN),
+            Write(quote, run_time=4, lag_factor=5)
+        )
+        self.wait()
+
+
 class ShowNavierStokesEquations(Scene):
     def construct(self):
-        pass
+        self.introduce_equations()
+        self.ask_about_evolution()
+        self.ask_about_reasonable()
+        self.ask_about_blowup()
+        self.show_money()
+
+    def introduce_equations(self):
+        name = TextMobject("Navier-Stokes equations (incompressible)")
+        equations = NavierStokesEquations()
+        name.to_edge(UP)
+        equations.next_to(name, DOWN, MED_LARGE_BUFF)
+        labels = equations.get_labels()
+        parts = equations.get_parts()
+        newtons_second = TextMobject(
+            "Newton's 2nd law \\\\ $ma = F$"
+        )
+        newtons_second.next_to(parts, DOWN)
+        variables = TexMobject(
+            "&\\textbf{v}", "\\text{ is velocity}\\\\",
+            "&\\rho", "\\text{ is density}\\\\",
+            "&p{}", "\\text{ is pressure}\\\\",
+            "&\\mu", "\\text{ is viscosity}\\\\",
+            tex_to_color_map=NavierStokesEquations.CONFIG["tex_to_color_map"]
+        )
+        variables.to_corner(DL)
+
+        self.play(FadeInFromDown(equations))
+        self.play(Write(name))
+        self.play(LaggedStart(
+            FadeInFrom, variables,
+            lambda m: (m, RIGHT),
+        ))
+        self.wait()
+        self.play(Write(newtons_second))
+        self.wait()
+        self.play(
+            FadeInFromDown(labels[0]),
+            newtons_second.next_to, variables, RIGHT, LARGE_BUFF
+        )
+        self.play(CircleThenFadeAround(parts[0]))
+        self.wait()
+        self.play(LaggedStart(FadeInFrom, labels[1:]))
+        self.wait(3)
+        self.play(LaggedStart(
+            FadeOut, VGroup(*it.chain(labels, variables, newtons_second))
+        ))
+
+        self.equations = equations
+
+    def ask_about_evolution(self):
+        words = TextMobject(
+            "Given a start state...",
+            "...how does it evolve?"
+        )
+        words.arrange_submobjects(RIGHT, buff=2)
+
+        words.next_to(self.equations, DOWN, LARGE_BUFF)
+
+        self.play(Write(words[0]))
+        self.wait()
+        self.play(Write(words[1]))
+        self.wait(2)
+        self.play(FadeOut(words))
+
+    def ask_about_reasonable(self):
+        question = TextMobject(
+            "Do ``reasonable'' \\\\"
+            "solutions always\\\\"
+            "exist?"
+        )
+        self.play(FadeInFromDown(question))
+        self.wait()
+
+        self.reasonable_question = question
+
+    def ask_about_blowup(self):
+        axes, graph = self.get_axes_and_graph()
+        question = TextMobject("Is this possible?")
+        question.set_color(YELLOW)
+        question.move_to(axes.get_corner(UR), LEFT)
+        question.align_to(axes, UP)
+        q_arrow = Arrow(
+            question.get_bottom(),
+            graph.point_from_proportion(0.8),
+            buff=SMALL_BUFF,
+            use_rectangular_stem=False,
+            path_arc=-60 * DEGREES
+        )
+        q_arrow.set_stroke(WHITE, 3)
+        morty = Mortimer()
+        morty.to_corner(DR)
+        morty.change('confused', graph)
+
+        self.play(
+            Write(axes, run_time=1),
+            self.reasonable_question.to_edge, LEFT,
+            self.reasonable_question.shift, DOWN,
+        )
+        self.play(
+            Write(question),
+            ShowCreation(graph),
+            FadeIn(morty),
+        )
+        self.add(q_arrow, morty)
+        self.play(ShowCreation(q_arrow), Blink(morty))
+        self.wait()
+        self.play(morty.look_at, question)
+        self.wait()
+        self.play(morty.change, "maybe", graph)
+        self.wait(2)
+        to_fade = VGroup(question, q_arrow, axes, graph)
+        self.play(
+            LaggedStart(FadeOut, to_fade),
+            morty.change, "pondering"
+        )
+        self.wait(2)
+        self.play(Blink(morty))
+        self.wait(2)
+
+        self.morty = morty
+
+    def show_money(self):
+        # Million dollar problem
+        problem = TextMobject(
+            "Navier-Stokes existence \\\\ and smoothness problems"
+        )
+        money = TextMobject("\\$1{,}000{,}000")
+        money.set_color(GREEN)
+        money.next_to(problem, DOWN)
+        pi1 = Randolph()
+        pi2 = self.morty
+        pi1.to_corner(DL)
+        pis = VGroup(pi1, pi2)
+        for pi in pis:
+            pi.change("pondering")
+            pi.money_eyes = VGroup()
+            for eye in pi.eyes:
+                cash = TexMobject("\\$")
+                cash.set_color(GREEN)
+                cash.replace(eye, dim_to_match=1)
+                pi.money_eyes.add(cash)
+
+        self.play(
+            ReplacementTransform(
+                self.reasonable_question,
+                problem,
+            ),
+            pi2.look_at, problem,
+            pi1.look_at, problem,
+            VFadeIn(pi1),
+        )
+        self.wait()
+        self.play(FadeInFromLarge(money))
+        self.play(
+            pi1.change, "hooray",
+            pi2.change, "hooray",
+        )
+        self.play(
+            ReplacementTransform(pi1.pupils, pi1.money_eyes),
+            ReplacementTransform(pi2.pupils, pi2.money_eyes),
+        )
+        self.wait()
+
+    # Helpers
+    def get_axes_and_graph(self):
+        axes = Axes(
+            x_min=-1,
+            x_max=5,
+            y_min=-1,
+            y_max=5,
+        )
+        time = TextMobject("Time")
+        time.next_to(axes.x_axis, RIGHT)
+        ke = TextMobject("Kinetic energy")
+        ke.next_to(axes.y_axis, UP)
+        axes.add(time, ke)
+        axes.set_height(4)
+        axes.center()
+        axes.to_edge(DOWN)
+        v_line = DashedLine(
+            axes.coords_to_point(4, 0),
+            axes.coords_to_point(4, 5),
+        )
+        axes.add(v_line)
+        graph = axes.get_graph(
+            lambda x: -1.0 / (x - 4),
+            x_min=0.01,
+            x_max=3.8,
+        )
+        graph.set_color(BLUE)
+        return axes, graph
+
+
+class NewtonsSecond(Scene):
+    def construct(self):
+        square = Square(
+            stroke_color=WHITE,
+            fill_color=LIGHT_GREY,
+            fill_opacity=0.5,
+            side_length=1
+        )
+        label = TexMobject("m")
+        label.scale(1.5)
+        label.move_to(square)
+        square.add(label)
+        square.save_state()
+        arrows = VGroup(
+            Vector(0.5 * UP).next_to(square, UP, buff=0),
+            Vector(RIGHT).next_to(square, RIGHT, buff=0),
+        )
+
+        self.play(
+            square.shift, 4 * RIGHT + 2 * UP,
+            rate_func=lambda t: t**2,
+            run_time=2
+        )
+        self.wait()
+        square.restore()
+        self.play(
+            LaggedStart(GrowArrow, arrows)
+        )
+        square.add(arrows)
+        self.play(
+            square.shift, 4 * RIGHT + 2 * UP,
+            rate_func=lambda t: t**2,
+            run_time=2
+        )
+        self.wait()
+
+
+class CandleLabel(Scene):
+    def construct(self):
+        word = TextMobject("Candle")
+        arrow = Vector(DR, color=WHITE)
+        arrow.move_to(word.get_bottom() + SMALL_BUFF * DOWN, UL)
+        self.play(
+            FadeInFromDown(word),
+            GrowArrow(arrow)
+        )
+        self.wait()
+
+
+class FiguresOfFluidDynamics(Scene):
+    def construct(self):
+        names = [
+            "Leonhard Euler",
+            "George Stokes",
+            "Hermann von Helmholtz",
+            "Lewis Richardson",
+            "Geoffrey Taylor",
+            "Andrey Kolmogorov",
+        ]
+        images = Group(*[
+            ImageMobject(name.replace(" ", "_"), height=3)
+            for name in names
+        ])
+        images.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        image_groups = Group()
+        for image, name in zip(images, names):
+            name_mob = TextMobject(name)
+            name_mob.scale(0.6)
+            name_mob.next_to(image, DOWN)
+            image_groups.add(Group(image, name_mob))
+        image_groups.arrange_submobjects_in_grid(2, 3)
+        image_groups.set_height(FRAME_HEIGHT - 1)
+
+        self.play(LaggedStart(
+            FadeInFromDown, image_groups,
+            lag_ratio=0.5,
+            run_time=3
+        ))
+        self.wait()
+        to_fade = image_groups[:-1]
+        to_fade.generate_target()
+        to_fade.target.space_out_submobjects(3)
+        to_fade.target.shift(3 * UL)
+        to_fade.target.fade(1)
+        self.play(
+            MoveToTarget(to_fade, remover=True),
+            image_groups[-1].set_height, 5,
+            image_groups[-1].center,
+        )
+        self.wait()
