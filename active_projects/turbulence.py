@@ -3,6 +3,7 @@ from old_projects.div_curl import PureAirfoilFlow
 from old_projects.div_curl import VectorFieldSubmobjectFlow
 from old_projects.div_curl import VectorFieldPointFlow
 from old_projects.div_curl import four_swirls_function
+from old_projects.lost_lecture import ShowWord
 
 
 class CreationDestructionMobject(VMobject):
@@ -433,12 +434,10 @@ class SomeTurbulenceEquations(PiCreatureScene):
         navier_stokes.scale(1.2)
 
         distribution = TexMobject(
-            "E(k)=\\alpha \\epsilon^{2/3}_d k^{-5/3}",
+            "E(k) \\propto k^{-5/3}",
             tex_to_color_map={
                 "k": GREEN,
                 "-5/3": YELLOW,
-                "\\epsilon": BLUE,
-                "_d": BLUE,
             }
         )
         distribution.next_to(morty, UL)
@@ -642,7 +641,7 @@ class SetAsideTurbulence(PiCreatureScene):
 class WavingRodLabel(Scene):
     def construct(self):
         words = TextMobject(
-            "(Waving a glass rod \\\\ through the air)"
+            "(Waving a small flag \\\\ through the air)"
         )
         self.play(Write(words))
         self.wait()
@@ -1263,3 +1262,525 @@ class FiguresOfFluidDynamics(Scene):
             image_groups[-1].center,
         )
         self.wait()
+
+
+class KineticEnergyBreakdown(Scene):
+    def construct(self):
+        title = TextMobject("Kinetic energy breakdown")
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).set_width(FRAME_WIDTH)
+        h_line.next_to(title, DOWN)
+        v_line = Line(h_line.get_center(), FRAME_HEIGHT * DOWN / 2)
+        lc_title = TextMobject("Simpler physics")
+        lc_title.set_color(YELLOW)
+        rc_title = TextMobject("Turbulence physics")
+        rc_title.set_color(GREEN)
+        for word, vect in (lc_title, LEFT), (rc_title, RIGHT):
+            word.next_to(h_line, DOWN)
+            word.shift(FRAME_WIDTH * vect / 4)
+
+        left_items = VGroup(
+            TextMobject("- Big moving things"),
+            TextMobject("- Heat"),
+        )
+        left_items.arrange_submobjects(DOWN, aligned_edge=LEFT)
+        left_items.next_to(lc_title, DOWN, MED_LARGE_BUFF)
+        left_items.to_edge(LEFT)
+
+        self.play(
+            Write(VGroup(*it.chain(
+                title, h_line, v_line, lc_title, rc_title
+            )))
+        )
+        self.wait()
+        for item in left_items:
+            self.play(FadeInFrom(item))
+            self.wait()
+
+
+class MovingCar(Scene):
+    def construct(self):
+        car = Car()
+        x = 3
+        car.move_to(x * LEFT)
+        self.play(MoveCar(car, x * RIGHT, run_time=4))
+
+
+class Heat(Scene):
+    def construct(self):
+        box = Square(
+            side_length=2,
+            stroke_color=WHITE,
+        )
+        balls = VGroup(*[
+            self.get_ball(box)
+            for x in range(20)
+        ])
+
+        self.add(box, balls)
+        self.wait(20)
+
+    def get_ball(self, box):
+        speed_factor = random.random()
+        ball = Dot(
+            radius=0.05,
+            color=interpolate_color(BLUE, RED, speed_factor)
+        )
+        speed = 2 + 3 * speed_factor
+        direction = rotate_vector(RIGHT, TAU * random.random())
+        ball.velocity = speed * direction
+        x0, y0, z0 = box.get_corner(DL)
+        x1, y1, z1 = box.get_corner(UR)
+        ball.move_to(np.array([
+            interpolate(x0, x1, random.random()),
+            interpolate(y0, y1, random.random()),
+            0
+        ]))
+
+        def update(ball, dt):
+            ball.shift(ball.velocity * dt)
+            if ball.get_left()[0] < box.get_left()[0]:
+                ball.velocity[0] = abs(ball.velocity[0])
+            if ball.get_right()[0] > box.get_right()[0]:
+                ball.velocity[0] = -abs(ball.velocity[0])
+            if ball.get_bottom()[1] < box.get_bottom()[1]:
+                ball.velocity[1] = abs(ball.velocity[1])
+            if ball.get_top()[1] > box.get_top()[1]:
+                ball.velocity[1] = -abs(ball.velocity[1])
+            return ball
+
+        ball.add_updater(update)
+        return ball
+
+
+class GrowArrowScene(Scene):
+    def construct(self):
+        arrow = Arrow(UP, DOWN, color=WHITE)
+        self.play(GrowArrow(arrow))
+        self.wait()
+
+
+class Poem(Scene):
+    def construct(self):
+        picture = ImageMobject("Lewis_Richardson")
+        picture.set_height(4)
+        picture.center().to_edge(LEFT, buff=LARGE_BUFF)
+
+        title = TextMobject("Poem by Lewis F. Richardson")
+        title.to_edge(UP)
+
+        poem_text = """
+            Big{\\,\\,}whirls have little{\\,\\,}whirls\\\\
+            which feed on their velocity,\\\\
+            And little{\\,\\,}whirls have lesser{\\,\\,}whirls\\\\
+            And so on to viscosity.\\\\
+        """
+        poem_words = [s for s in poem_text.split(" ") if s]
+        poem = TextMobject(*poem_words, alignment="")
+        poem.next_to(picture, RIGHT, LARGE_BUFF)
+
+        self.add(picture)
+        self.play(FadeInFrom(title, DOWN))
+        self.wait()
+        for word in poem:
+            if "whirl" in word.get_tex_string():
+                word.set_color(BLUE)
+            self.play(ShowWord(word))
+            self.wait(0.005 * len(word)**1.5)
+
+
+class SwirlDiameterD(Scene):
+    def construct(self):
+        kwargs = {
+            "path_arc": PI,
+            "buff": SMALL_BUFF,
+            "use_rectangular_stem": False,
+            "color": WHITE
+        }
+        swirl = VGroup(
+            Arrow(RIGHT, LEFT, **kwargs),
+            Arrow(LEFT, RIGHT, **kwargs),
+        )
+        swirl.set_stroke(width=5)
+        f = 1.5
+        swirl.scale(f)
+
+        h_line = DashedLine(
+            f * LEFT, f * RIGHT,
+            color=YELLOW,
+        )
+        D_label = TexMobject("D")
+        D_label.scale(2)
+        D_label.next_to(h_line, UP, SMALL_BUFF)
+        D_label.match_color(h_line)
+        # diam = VGroup(h_line, D_label)
+
+        self.play(*map(ShowCreation, swirl))
+        self.play(
+            GrowFromCenter(h_line),
+            FadeInFrom(D_label, UP),
+        )
+        self.wait()
+
+
+class KolmogorovGraph(Scene):
+    def construct(self):
+        axes = Axes(
+            x_min=-1,
+            y_min=-1,
+            x_max=7,
+            y_max=9,
+            y_axis_config={
+                "unit_size": 0.7,
+            }
+        )
+        axes.center().shift(1.5 * RIGHT)
+        x_label = TexMobject("\\log(D)")
+        x_label.next_to(axes.x_axis.get_right(), UP)
+        y_label = TexMobject("\\log(\\text{K.E. at length scale D})")
+        y_label.scale(0.8)
+        y_label.next_to(axes.y_axis.get_top(), LEFT)
+        y_label.shift_onto_screen()
+        axes.add(x_label, y_label)
+
+        v_lines = VGroup(*[
+            DashedLine(
+                axes.coords_to_point(x, 0),
+                axes.coords_to_point(x, 9),
+                color=YELLOW,
+                stroke_width=1
+            )
+            for x in [0.5, 5]
+        ])
+        inertial_subrange = TextMobject("``Inertial subrange''")
+        inertial_subrange.scale(0.7)
+        inertial_subrange.next_to(v_lines.get_bottom(), UP)
+
+        def func(x):
+            if 0.5 < x < 5:
+                return (5 / 3) * x
+            elif x < 0.5:
+                return 5 * (x - 0.5) + 0.5 * (5 / 3)
+            elif x > 5:
+                return np.log(x) + (5 / 3) * 5 - np.log(5)
+
+        graph = axes.get_graph(func, x_min=0.3, x_max=7)
+
+        prop_label = TexMobject("\\text{K.E.} \\propto D^{5/3}")
+        prop_label.next_to(
+            graph.point_from_proportion(0.5), UL,
+            buff=0
+        )
+
+        self.add(axes)
+        self.play(ShowCreation(graph))
+        self.play(FadeInFromDown(prop_label))
+        self.wait()
+        self.add(v_lines)
+        self.play(Write(inertial_subrange))
+        self.wait()
+
+
+class TechnicalNote(Scene):
+    def construct(self):
+        title = TextMobject("Technical note:")
+        title.to_edge(UP)
+        title.set_color(RED)
+        self.add(title)
+
+        words = TextMobject("""
+            This idea of quantifying the energy held at different
+            length scales is typically defined
+            in terms of an ``energy spectrum'' involving the Fourier
+            transform of a function measuring the correlations
+            between the fluid's velocities at different points in space.
+            I know, yikes!
+            \\quad\\\\
+            \\quad\\\\
+            Building up the relevant background for that is a bit cumbersome,
+            so we'll be thinking about the energy at different scales in
+            terms of all eddy's with a given diameter.  This is admittedly
+            a less well-defined notion, but it does capture the spirit
+            of Kolmogorov's result.
+            \\quad\\\\
+            \\quad\\\\
+            See the links in the description for more details,
+            if you're curious.
+        """, alignment="")
+        words.scale(0.75)
+        words.next_to(title, DOWN, LARGE_BUFF)
+
+        self.add(title, words)
+
+
+class FiveThirds(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject(
+            "5/3", "is a sort of fundamental\\\\ constant of turbulence"
+        )
+        self.teacher_says(words)
+        self.change_student_modes("pondering", "maybe", "erm")
+        self.play(
+            FadeOut(self.teacher.bubble),
+            FadeOut(words[1]),
+            self.teacher.change, "raise_right_hand",
+            words[0].scale, 1.5,
+            words[0].move_to, self.hold_up_spot
+        )
+        self.change_student_modes("thinking", "pondering", "hooray")
+        self.wait(3)
+
+
+class TurbulenceGifLabel(Scene):
+    def construct(self):
+        title = TextMobject("Turbulence in 2d")
+        title.to_edge(UP)
+
+        attribution = TextMobject(
+            "Animation by Gabe Weymouth (@gabrielweymouth)"
+        )
+        attribution.scale(0.5)
+        attribution.to_edge(DOWN)
+
+        self.play(Write(title))
+        self.play(FadeInFrom(attribution, UP))
+        self.wait()
+
+
+class VortexStretchingLabel(Scene):
+    def construct(self):
+        title = TextMobject("Vortex stretching")
+        self.play(Write(title))
+        self.wait()
+
+
+class VortedStretching(ThreeDScene):
+    CONFIG = {
+        "n_circles": 200,
+    }
+
+    def construct(self):
+        axes = ThreeDAxes()
+        axes.set_stroke(width=1)
+        self.add(axes)
+        self.move_camera(
+            phi=70 * DEGREES,
+            theta=-145 * DEGREES,
+            run_time=0,
+        )
+        self.begin_ambient_camera_rotation()
+
+        short_circles = self.get_cylinder_circles(2, 0.5, 0.5)
+        tall_circles = short_circles.copy().scale(0.125)
+        tall_circles.stretch(16 * 4, 2)
+        torus_circles = tall_circles.copy()
+        for circle in torus_circles:
+            circle.shift(RIGHT)
+            z = circle.get_center()[2]
+            circle.shift(z * IN)
+            angle = PI * z / 2
+            circle.rotate(angle, axis=DOWN, about_point=ORIGIN)
+
+        circles = short_circles.copy()
+        flow_lines = self.get_flow_lines(circles)
+
+        self.add(circles, flow_lines)
+        self.play(LaggedStart(ShowCreation, circles))
+        self.wait(5)
+        self.play(Transform(circles, tall_circles, run_time=3))
+        self.wait(10)
+        self.play(Transform(
+            circles, torus_circles,
+            run_time=3
+        ))
+        self.wait(10)
+
+    def get_cylinder_circles(self, radius, radius_var, max_z):
+        return VGroup(*[
+            ParametricFunction(
+                lambda t: np.array([
+                    np.cos(TAU * t) * r,
+                    np.sin(TAU * t) * r,
+                    z
+                ]),
+                **self.get_circle_kwargs()
+            )
+            for z in sorted(max_z * np.random.random(self.n_circles))
+            for r in [radius + radius_var * random.random()]
+        ]).center()
+
+    def get_torus_circles(self, out_r, in_r, in_r_var):
+        result = VGroup()
+        for u in sorted(np.random.random(self.n_circles)):
+            r = in_r + in_r_var * random.random()
+            circle = ParametricFunction(
+                lambda t: r * np.array([
+                    np.cos(TAU * t),
+                    np.sin(TAU * t),
+                    0,
+                ]),
+                **self.get_circle_kwargs()
+            )
+            circle.shift(out_r * RIGHT)
+            circle.rotate(
+                TAU * u - PI,
+                about_point=ORIGIN,
+                axis=DOWN,
+            )
+            result.add(circle)
+        return result
+
+    def get_flow_lines(self, circle_group):
+        window = 0.3
+
+        def update_circle(circle, dt):
+            circle.total_time += dt
+            diameter = get_norm(
+                circle.template.point_from_proportion(0) -
+                circle.template.point_from_proportion(0.5)
+            )
+            modulus = np.sqrt(diameter) + 0.1
+            alpha = (circle.total_time % modulus) / modulus
+            circle.pointwise_become_partial(
+                circle.template,
+                max(interpolate(-window, 1, alpha), 0),
+                min(interpolate(0, 1 + window, alpha), 1),
+            )
+
+        result = VGroup()
+        for template in circle_group:
+            circle = template.deepcopy()
+            circle.set_stroke(
+                color=interpolate_color(BLUE_A, BLUE_E, random.random()),
+                # width=3 * random.random()
+                width=1,
+            )
+            circle.template = template
+            circle.total_time = 4 * random.random()
+            circle.add_updater(update_circle)
+            result.add(circle)
+        return result
+
+    def get_circle_kwargs(self):
+        return {
+            "stroke_color": BLACK,
+            "stroke_width": 0,
+        }
+
+
+class TurbulenceEndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "1stViewMaths",
+            "Adrian Robinson",
+            "Alexis Olson",
+            "Andrew Busey",
+            "Ankalagon",
+            "Art Ianuzzi",
+            "Awoo",
+            "Ayan Doss",
+            "Bernd Sing",
+            "Boris Veselinovich",
+            "Brian Staroselsky",
+            "Britt Selvitelle",
+            "Carla Kirby",
+            "Charles Southerland",
+            "Chris Connett",
+            "Christian Kaiser",
+            "Clark Gaebel",
+            "Cooper Jones",
+            "Danger Dai",
+            "Dave B",
+            "Dave Kester",
+            "David Clark",
+            "Delton Ding",
+            "Devarsh Desai",
+            "eaglle",
+            "Eric Younge",
+            "Eryq Ouithaqueue",
+            "Federico Lebron",
+            "Florian Chudigiewitsch",
+            "Giovanni Filippi",
+            "Hal Hildebrand",
+            "Igor Napolskikh",
+            "Jacob Magnuson",
+            "Jameel Syed",
+            "James Hughes",
+            "Jan Pijpers",
+            "Jason Hise",
+            "Jeff Linse",
+            "Jeff Straathof",
+            "Jerry Ling",
+            "John Griffith",
+            "John Haley",
+            "John V Wertheim",
+            "Jonathan Eppele",
+            "Jonathan Wilson",
+            "Jordan Scales",
+            "Joseph John Cox",
+            "Julian Pulgarin",
+            "Kai-Siang Ang",
+            "Kanan Gill",
+            "L0j1k",
+            "Linh Tran",
+            "Luc Ritchie",
+            "Ludwig Schubert",
+            "Lukas -krtek.net- Novy",
+            "Magister Mugit",
+            "Magnus Dahlström",
+            "Mark B Bahu",
+            "Markus Persson",
+            "Mathew Bramson",
+            "Mathias Jansson",
+            "Matt Langford",
+            "Matt Roveto",
+            "Matthew Cocke",
+            "Mehdi Razavi",
+            "Michael Faust",
+            "Michael Hardel",
+            "Mustafa Mahdi",
+            "Márton Vaitkus",
+            "Nero Li",
+            "Oliver Steele",
+            "Omar Zrien",
+            "Peter Ehrnstrom",
+            "Prasant Jagannath",
+            "Randy C. Will",
+            "Richard Burgmann",
+            "Ripta Pasay",
+            "Rish Kundalia",
+            "Robert Teed",
+            "Roobie",
+            "Ryan Atallah",
+            "Ryan Williams",
+            "Sindre Reino Trosterud",
+            "Solara570",
+            "Song Gao",
+            "Steven Soloway",
+            "Steven Tomlinson",
+            "Stevie Metke",
+            "Ted Suzman",
+            "Valeriy Skobelev",
+            "Xavier Bernard",
+            "Yaw Etse",
+            "YinYangBalance.Asia",
+            "Zach Cardwell",
+        ],
+    }
+
+
+class LaserWord(Scene):
+    def construct(self):
+        self.add(TextMobject("Laser").scale(2))
+
+
+class TurbulenceWord(Scene):
+    def construct(self):
+        self.add(TextMobject("Turbulence").scale(2))
+
+
+class ArrowScene(Scene):
+    def construct(self):
+        arrow = Arrow(LEFT, RIGHT, color=WHITE)
+        arrow.add_to_back(arrow.copy().set_stroke(BLACK, 5))
+        self.add(arrow)
