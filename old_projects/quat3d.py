@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from active_projects.quaternions import *
+from old_projects.quaternions import *
 
 W_COLOR = YELLOW
 I_COLOR = GREEN
