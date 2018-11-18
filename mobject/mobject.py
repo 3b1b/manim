@@ -186,6 +186,7 @@ class Mobject(Container):
 
     def clear_updaters(self):
         self.updaters = []
+        return self
 
     # Transforming operations
 
