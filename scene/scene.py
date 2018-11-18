@@ -7,13 +7,18 @@ import random
 import shutil
 import subprocess as sp
 import warnings
+from time import sleep
+try:
+    import thread  # Low-level threading API (Python 2.7)
+except ImportError:
+    import _thread as thread  # Low-level threading API (Python 3.x)
 
 from tqdm import tqdm as ProgressDisplay
 
 from constants import *
 
 from animation.animation import Animation
-from animation.transform import MoveToTarget
+from animation.transform import MoveToTarget, ApplyMethod
 from camera.camera import Camera
 from continual_animation.continual_animation import ContinualAnimation
 from mobject.mobject import Mobject
@@ -24,6 +29,9 @@ from utils.output_directory_getters import get_image_output_directory
 
 from container.container import Container
 
+from mobject.svg.tex_mobject import TextMobject
+from animation.creation import Write
+import datetime
 
 class Scene(Container):
     CONFIG = {
@@ -58,6 +66,7 @@ class Scene(Container):
         self.frame_num = 0
         self.current_scene_time = 0
         self.original_skipping_status = self.skip_animations
+        self.stream_lock = False
         if self.name is None:
             self.name = self.__class__.__name__
         if self.random_seed is not None:
@@ -67,6 +76,8 @@ class Scene(Container):
         self.setup()
         if self.write_to_movie:
             self.open_movie_pipe()
+        if IS_LIVE_STREAMING:
+            return None
         try:
             self.construct(*self.construct_args)
         except EndSceneEarlyException:
@@ -453,6 +464,8 @@ class Scene(Container):
                 raise EndSceneEarlyException()
 
     def play(self, *args, **kwargs):
+        if IS_LIVE_STREAMING:
+            self.stream_lock = False
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
             return
@@ -489,7 +502,24 @@ class Scene(Container):
         else:
             self.continual_update(0)
         self.num_plays += 1
+
+        if IS_LIVE_STREAMING:
+            self.stream_lock = True
+            thread.start_new_thread(self.idle_stream, ())
+
         return self
+
+    def idle_stream(self):
+        while(self.stream_lock):
+            a = datetime.datetime.now()
+            self.update_frame()
+            n_frames = 1
+            frame = self.get_frame()
+            self.add_frames(*[frame] * n_frames)
+            b = datetime.datetime.now()
+            time_diff = (b - a).total_seconds()
+            if time_diff < self.frame_duration:
+                sleep(self.frame_duration - time_diff)
 
     def clean_up_animations(self, *animations):
         for animation in animations:
@@ -608,6 +638,7 @@ class Scene(Container):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The imput comes from a pipe
+            '-c:v', 'h264_nvenc',
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
@@ -622,17 +653,35 @@ class Scene(Container):
                 '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
             ]
-        command += [temp_file_path]
+        if IS_LIVE_STREAMING:
+            if IS_STREAMING_TO_TWITCH:
+                command += ['-f', 'flv']
+                command += ['rtmp://live.twitch.tv/app/' + TWITCH_STREAM_KEY]
+            else:
+                command += ['-f', 'mpegts']
+                command += [STREAMING_PROTOCOL + '://' + STREAMING_IP + ':' + STREAMING_PORT]
+        else:
+            command += [temp_file_path]
         # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
+        if IS_LIVE_STREAMING:
+            return True
         if os.name == 'nt':
             shutil.move(*self.args_to_rename_file)
         else:
             os.rename(*self.args_to_rename_file)
+
+    def tex(self, latex):
+        eq = TextMobject(latex)
+        anims = []
+        anims.append(Write(eq))
+        for mobject in self.mobjects:
+            anims.append(ApplyMethod(mobject.shift,2*UP))
+        self.play(*anims)
 
 
 class EndSceneEarlyException(Exception):
