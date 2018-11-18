@@ -5219,19 +5219,21 @@ class Thumbnail(DistanceProductScene):
             product[i-1:i+2]
             for i in frac_indices
         ])
-        parts[::2].set_color(GREEN)
-        parts[1::2].set_color(BLUE)
+        parts[::2].set_color(WHITE)
+        parts[1::2].set_color(WHITE)
         parts[-1].set_color(WHITE)
-        parts[-1].set_stroke(RED, 1)
+        parts[-1].set_background_stroke(color=YELLOW, width=3)
         parts[-1].scale(1.5, about_edge=LEFT)
+        product[-4:].next_to(product[:-4], DOWN, MED_LARGE_BUFF)
+        product.scale(1.2).center().to_edge(UP)
 
-        new_proof = TextMobject("New proof")
-        new_proof.scale(2.5)
-        new_proof.set_color(YELLOW)
-        new_proof.set_stroke(RED, 0.75)
-        new_proof.next_to(product, DOWN, MED_LARGE_BUFF)
+        # new_proof = TextMobject("New proof")
+        # new_proof.scale(2.5)
+        # new_proof.set_color(YELLOW)
+        # new_proof.set_stroke(RED, 0.75)
+        # new_proof.next_to(product, DOWN, MED_LARGE_BUFF)
 
-        circle = self.circle = Circle(radius=8, color=RED)
+        circle = self.circle = Circle(radius=8, color=YELLOW)
         circle.move_to(3 * DOWN, DOWN)
         bottom_dot = Dot(color=BLUE)
         bottom_dot.move_to(circle.get_bottom())
@@ -5260,7 +5262,7 @@ class Thumbnail(DistanceProductScene):
         self.add(circle)
         self.add(lights)
         self.add(product)
-        self.add(new_proof)
+        # self.add(new_proof)
         self.add(bottom_dot, observer)
 
 

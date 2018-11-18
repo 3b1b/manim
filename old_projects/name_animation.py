@@ -99,7 +99,7 @@ if __name__ == "__main__":
                 animated_name=name,
                 write_to_movie=True,
                 output_directory=os.path.join(
-                    ANIMATIONS_DIR,
+                    VIDEO_DIR,
                     "active_projects",
                     "name_animations",
                 ),

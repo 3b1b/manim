@@ -170,7 +170,7 @@ def get_unit_normal(v1, v2):
 
 
 def compass_directions(n=4, start_vect=RIGHT):
-    angle = 2 * np.pi / n
+    angle = TAU / n
     return np.array([
         rotate_vector(start_vect, k * angle)
         for k in range(n)

@@ -23,7 +23,6 @@ from utils.simple_functions import clip_in_place
 
 class ThreeDCamera(Camera):
     CONFIG = {
-        "sun_vect": 5 * UP + LEFT,
         "shading_factor": 0.2,
         "distance": 20.0,
         "default_distance": 5.0,
@@ -167,7 +166,7 @@ class ThreeDCamera(Camera):
         distance = self.get_distance()
         rot_matrix = self.get_rotation_matrix()
 
-        points -= frame_center
+        points = points - frame_center
         points = np.dot(points, rot_matrix.T)
         zs = points[:, 2]
         for i in 0, 1:
@@ -184,7 +183,7 @@ class ThreeDCamera(Camera):
                 factor[(distance - zs) < 0] = 10**6
                 # clip_in_place(factor, 0, 10**6)
             points[:, i] *= factor
-        points += frame_center
+        points = points + frame_center
         return points
 
     def project_point(self, point):

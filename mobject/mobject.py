@@ -113,7 +113,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(ANIMATIONS_DIR, (name or str(self)) + ".png")
+            os.path.join(VIDEO_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):
@@ -186,6 +186,7 @@ class Mobject(Container):
 
     def clear_updaters(self):
         self.updaters = []
+        return self
 
     # Transforming operations
 
@@ -703,7 +704,7 @@ class Mobject(Container):
     # Getters
 
     def get_points_defining_boundary(self):
-        return self.points
+        return self.get_all_points()
 
     def get_num_points(self):
         return len(self.points)
@@ -743,7 +744,8 @@ class Mobject(Container):
 
     def get_boundary_point(self, direction):
         all_points = self.get_points_defining_boundary()
-        return all_points[np.argmax(np.dot(all_points, direction))]
+        index = np.argmax(np.dot(all_points, np.array(direction).T))
+        return all_points[index]
 
     def get_z_index_reference_point(self):
         # TODO, better place to define default z_index_group?
