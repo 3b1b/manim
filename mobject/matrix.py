@@ -88,7 +88,7 @@ class Matrix(VMobject):
 
     def matrix_to_mob_matrix(self, matrix):
         return np.vectorize(self.element_to_mobject)(
-            matrix
+            matrix, **self.element_to_mobject_config
         )
 
     def organize_mob_matrix(self, matrix):
