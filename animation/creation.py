@@ -98,6 +98,7 @@ class Write(DrawBorderThenFill):
             mobject = TextMobject(mob_or_text)
         else:
             mobject = mob_or_text
+
         if "run_time" not in kwargs:
             self.establish_run_time(mobject)
         if "lag_factor" not in kwargs:

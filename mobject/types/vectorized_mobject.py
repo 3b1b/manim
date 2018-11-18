@@ -1,5 +1,5 @@
 
-
+import itertools as it
 from colour import Color
 
 from mobject.mobject import Mobject
@@ -313,6 +313,7 @@ class VMobject(Mobject):
             submob.shade_in_3d = value
             if z_index_as_group:
                 submob.z_index_group = self
+        return self
 
     # Drawing
     def start_at(self, point):
@@ -482,7 +483,9 @@ class VMobject(Mobject):
         return self.points[::3]
 
     def get_points_defining_boundary(self):
-        return self.get_anchors()
+        return np.array(list(it.chain(*[
+            sm.get_anchors() for sm in self.get_family()
+        ])))
 
     # Alignment
     def align_points(self, vmobject):

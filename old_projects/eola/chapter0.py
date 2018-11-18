@@ -187,7 +187,7 @@ class AboutLinearAlgebra(Scene):
                 \\end{array}
             \\right)
             = 
-            ac - bc
+            ad - bc
         """)
 
     def get_cross_product(self):

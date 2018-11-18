@@ -69,3 +69,18 @@ a Dockerfile provided.
 On a Windows system, make sure to replace `$PWD` with an absolute path to manim.
 
 Note that the shipped Docker image contains the bare requirements to run manim. To transform the Docker container into a fully-functioning development environment, you will have to edit your personal Dockerfile a bit. For a guide to create your own personal Docker image, consult [this guide to Dockerfiles](https://www.howtoforge.com/tutorial/how-to-create-docker-images-with-dockerfile/).
+
+## Live Streaming
+
+To live stream your animations, simply assign `IS_LIVE_STREAMING = True` in `constants.py` file and from your Python Interactive Shell (`python3`) import the stream starter with `from stream_starter import *` while under the project directory. This will provide a clean interactive shell to enter your commands. `manim` object is a `Manim()` instance so as soon as you play an animation with `manim.play()` your stream will start. A video player will pop-up and you can broadcast that video using [OBS Studio](https://obsproject.com/) which is the most practical way of streaming with this math animation library. An example:
+
+```
+>>> from stream_starter import *
+YOUR STREAM IS READY!
+>>> circle = Circle()
+>>> manim.play(ShowCreation(circle))
+Animation 0: ShowCreationCircle: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 60/60 [00:01<00:00, 37.30it/s]
+<scene.scene.Scene object at 0x7f0756d5a8d0>
+```
+
+It is also possible to stream directly to Twitch. To do that simply assign `IS_STREAMING_TO_TWITCH = True` in `constants.py` file and put your Twitch Stream Key to `TWITCH_STREAM_KEY = "YOUR_STREAM_KEY"` and when you follow the above example the stream will directly start on your Twitch channel(with no audio support).

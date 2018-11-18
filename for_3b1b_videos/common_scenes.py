@@ -227,16 +227,16 @@ class PatreonEndScreen(PatreonThanks):
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
         )
-        columns.set_width(total_width - 1)
-        columns.next_to(black_rect, DOWN, 3 * LARGE_BUFF)
-        columns.to_edge(RIGHT)
+        if columns.get_width() > self.max_patron_width:
+            columns.set_width(total_width - 1)
 
-        thanks.align_to(columns, alignment_vect=RIGHT)
+        thanks.to_edge(RIGHT)
+        columns.next_to(thanks, DOWN, 3 * LARGE_BUFF)
 
         self.add(columns, black_rect, line, thanks)
         self.play(
             columns.move_to, 2 * DOWN, DOWN,
-            columns.to_edge, RIGHT,
+            columns.align_to, thanks, {"alignment_vect": RIGHT},
             rate_func=None,
             run_time=self.run_time,
         )
