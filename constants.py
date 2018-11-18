@@ -3,10 +3,7 @@ import numpy as np
 
 # Things anyone wishing to use this repository for their
 # own use will want to change
-MEDIA_DIR = os.path.join(
-    os.path.expanduser('~'),
-    "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
-)
+MEDIA_DIR = "/home/azazel/Documents/manim-dbg/saved-animations"
 #
 
 

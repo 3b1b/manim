@@ -195,6 +195,7 @@ def prompt_user_for_choice(name_to_obj):
 
 def get_scene_classes(scene_names_to_classes, config):
     if len(scene_names_to_classes) == 0:
+        print(scene_names_to_classes, config)
         print(NO_SCENE_MESSAGE)
         return []
     if len(scene_names_to_classes) == 1:
