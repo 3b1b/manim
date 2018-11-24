@@ -1,47 +1,4 @@
 from big_ol_pile_of_manim_imports import *
-# from pprint import pprint
-
-
-# Helpers
-def get_three_d_scene_config(high_quality=True):
-    hq_config = {
-        "camera_config": {
-            "should_apply_shading": True,
-            "exponential_projection": True,
-        },
-        "three_d_axes_config": {
-            "num_axis_pieces": 1,
-            "number_line_config": {
-                "unit_size": 2,
-                # "tick_frequency": 0.5,
-                "tick_frequency": 1,
-                "numbers_with_elongated_ticks": [0, 1, 2],
-                "stroke_width": 2,
-            }
-        },
-        "sphere_config": {
-            "radius": 2,
-            "resolution": (24, 48),
-        }
-    }
-    lq_added_config = {
-        "camera_config": {
-            "should_apply_shading": False,
-        },
-        "three_d_axes_config": {
-            "num_axis_pieces": 1,
-        },
-        "sphere_config": {
-            "resolution": (12, 24),
-        }
-    }
-    if high_quality:
-        return hq_config
-    else:
-        return merge_config([
-            lq_added_config,
-            hq_config
-        ])
 
 
 def q_mult(q1, q2):
@@ -459,53 +416,6 @@ class RubiksCube(VGroup):
 
 
 # Abstract scenes
-class SpecialThreeDScene(ThreeDScene):
-    CONFIG = {
-        "cut_axes_at_radius": True,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        if self.frame_duration == PRODUCTION_QUALITY_FRAME_DURATION:
-            high_quality = True
-        else:
-            high_quality = False
-        default_config = get_three_d_scene_config(high_quality)
-        config = merge_config([self.CONFIG, kwargs, default_config])
-        ThreeDScene.__init__(self, **config)
-
-    def get_axes(self):
-        axes = ThreeDAxes(**self.three_d_axes_config)
-        for axis in axes:
-            if self.cut_axes_at_radius:
-                p0 = axis.main_line.get_start()
-                p1 = axis.number_to_point(-1)
-                p2 = axis.number_to_point(1)
-                p3 = axis.main_line.get_end()
-                new_pieces = VGroup(
-                    Line(p0, p1), Line(p1, p2), Line(p2, p3),
-                )
-                for piece in new_pieces:
-                    piece.shade_in_3d = True
-                new_pieces.match_style(axis.pieces)
-                axis.pieces.submobjects = new_pieces.submobjects
-            for tick in axis.tick_marks:
-                tick.add(VectorizedPoint(
-                    1.5 * tick.get_center(),
-                ))
-        return axes
-
-    def get_sphere(self):
-        return Sphere(**self.sphere_config)
-
-    def get_default_camera_position(self):
-        return {
-            "phi": 70 * DEGREES,
-            "theta": -110 * DEGREES,
-        }
-
-
-# Animated scenes
 
 
 class ManyNumberSystems(Scene):
