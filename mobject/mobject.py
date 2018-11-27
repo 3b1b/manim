@@ -18,7 +18,6 @@ from utils.iterables import list_update
 from utils.iterables import remove_list_redundancies
 from utils.paths import straight_path
 from utils.space_ops import angle_of_vector
-from utils.space_ops import complex_to_R3
 from utils.space_ops import rotation_matrix
 from utils.simple_functions import get_num_args
 from utils.space_ops import get_norm
@@ -270,10 +269,15 @@ class Mobject(Container):
         return self
 
     def apply_complex_function(self, function, **kwargs):
-        return self.apply_function(
-            lambda x_y_z: complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),
-            **kwargs
-        )
+        def R3_func(point):
+            x, y, z = point
+            xy_complex = function(complex(x, y))
+            return [
+                xy_complex.real,
+                xy_complex.imag,
+                z
+            ]
+        return self.apply_function(R3_func)
 
     def wag(self, direction=RIGHT, axis=DOWN, wag_factor=1.0):
         for mob in self.family_members_with_points():
