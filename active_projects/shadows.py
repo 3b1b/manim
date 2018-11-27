@@ -57,6 +57,10 @@ class ShowShadows(ThreeDScene):
         "camera_config": {
             "light_source_start_point": 10 * OUT,
             "frame_center": [0, 0, 0.5],
+        },
+        "initial_orientation_config": {
+            "phi": 60 * DEGREES,
+            "theta": -120 * DEGREES,
         }
     }
 
@@ -144,8 +148,7 @@ class ShowShadows(ThreeDScene):
         temp_shadow = updating_mobject_from_func(lambda: get_shadow(obj3d))
         self.add(temp_shadow)
         self.move_camera(
-            phi=60 * DEGREES,
-            theta=-120 * DEGREES,
+            **self.initial_orientation_config,
             added_anims=[
                 LaggedStart(DrawBorderThenFill, obj3d)
             ],
