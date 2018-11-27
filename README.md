@@ -1,42 +1,61 @@
-# Manim
-Animation engine for explanatory math videos.
+# Manim - Mathematical Animation Engine
+[![Documentation Status](https://readthedocs.org/projects/manim/badge/?version=latest)](https://manim.readthedocs.io/en/latest/?badge=latest)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
 
-[![build](https://img.shields.io/travis/3b1b/manim.svg "Travis build status")](https://travis-ci.com/3b1b/manim)
+Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically.
 
+## Installation
+Manim runs on python 3.7. You can install the python requirements with
+`pip install -r requirements.txt`. System requirements are
+[cairo](https://www.cairographics.org), [latex](https://www.latex-project.org),
+[ffmpeg](https://www.ffmpeg.org), and [sox](http://sox.sourceforge.net).
 
-For those who want to play around with this tool, I should be upfront that I've mostly had my own use cases (i.e. 3b1b videos) in mind while building it, and it might not be the most friendly thing to get up and running.  In particular, I have not done a great job tracking requirements, writing
-tests, and documentation, to put it euphemistically, almost exclusively takes the form of naming conventions.
-
-For 9/10 of math animation needs, you'd probably be better off using a more well-maintained tool, like matplotlib, mathematica, Processing or even going a non-programatic route with something like After Effects or even Keynote. I also happen to think the program "Grapher" built into osx is really great, and surprisingly versatile for many needs.  My own reasons for building this tool and using it for videos are twofold, and I'm not sure how well they apply to other people's use cases.
-
-  1) If I wish to work with some new type of mathematical thing (e.g. a fractal), or to experiment with a different type of animation, it's easier to work it into the underlying system and manipulate it the same way as more standard objects/animation.  Admittedly, though, part of the reason I find this easier is because I'm more familiar with the underlying system here than I am with others.  This keeps me from shying away from certain video topics that I would otherwise have no idea how to animate.
-
-  2) Having my own tool has been a forcing function for having a style which is more original than what I may have otherwise produced. The cost of this was slower video production when the tool was in its early days, and during points when I do some kind of rehaul, but I think the artistic benefit is a real one.  If you wish to use this tool and adopt the same style, by all means feel free.  In fact, I encourage it.  But the tricky part about anything which confers the benefit of originality is that this benefit cannot be easily shared.
-
-
-## Install requirements
-
-Manim works with Python 3.7, and many of the older projects from the Python 2.7 days of Manim will not be supported.
-
-Manim dependencies rely on system libraries you will need to install on your
-operating system:
-* ffmpeg
-* latex
-* sox
-
-Then you can install the python dependencies:
+### Directly
 ```sh
-python3 -m pip install -r requirements.txt
+git clone https://github.com/3b1b/manim.git
+cd manim
+pip install -r requirements.txt
+mkdir media
+echo "media" > media_dir.txt
+python3 extract_scene.py example_scenes.py SquareToCircle -pl
 ```
 
-## How to Use
-Todd Zimmerman put together a [very nice tutorial](https://talkingphysics.wordpress.com/2018/06/11/learning-how-to-animate-videos-using-manim-series-a-journey/) on getting started with manim.  I can't make promises that future versions will always be compatible with what is discussed in that tutorial, but he certainly does a much better job than I have laying out the basics.
+### Using `virtualenv` and `virtualenvwrapper`
+After installing `virtualenv` and `virtualenvwrapper`
+```sh
+git clone https://github.com/3b1b/manim.git
+mkvirtualenv -a manim -r requirements.txt manim
+mkdir media
+echo "media" > media_dir.txt
+python3 extract_scene.py example_scenes.py SquareToCircle -pl
+```
 
+### Using Docker
+Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/).
+
+The image does not contain a copy of the repo. This is intentional, as it allows you to either bind mount a repo that you've cloned locally or clone any fork/branch you want. Since test coverage is painfully lacking, the image may not have dependencies for all of manim.
+
+1. [Install Docker](https://www.docker.com/products/overview)
+2. Get the docker image
+  * Pull it (recommended): `docker pull eulertour/manim:latest`, or
+  * Build it: `docker build -t manim .`
+3. Start the image
+  * Bind mount a local repo (recommended): `docker run -itv /absolute/path/to/your/local/manim/repo:/root/manim eulertour/manim` or
+  * Clone a remote repo: `docker run -it eulertour/manim`, then `git clone https://github.com/eulertour/manim.git`
+4. Render an animation
+```
+cd manim
+mkdir media
+echo "media" > media_dir.txt
+python3 extract_scene.py example_scenes.py SquareToCircle -l
+```
+Note that the image doesn't have any development tools installed and can't preview animations. Its purpose is building and testing only.
+
+## Using manim
 Try running the following:
 ```sh
 python3 extract_scene.py example_scenes.py SquareToCircle -pl
 ```
-
 The -p is for previewing, meaning the the video file will automatically open when it is done rendering.
 Use -l for a faster rendering at a lower quality.
 Use -s to skip to the end and just show the final frame.
@@ -49,29 +68,13 @@ Look through the old_projects folder to see the code for previous 3b1b videos.  
 
 While developing a scene, the `-s` flag is helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the `-n` flag to skip over some number of animations.
 
-Scenes with `PiCreatures` are somewhat 3b1b specific, so the specific designs for various expressions are not part of the public repository.  You should still be able to run them, but they will fall back on using the "plain" expression for the creature.
+### Documentation
+Documentation is in progress at [manim.readthedocs.io](manim.readthedocs.io).
 
-## License
+### (Outdated) Walkthrough
+Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2018/06/11/learning-how-to-animate-videos-using-manim-series-a-journey/) on getting started with manim, but it uses an outdated version that runs on python 2.7. It may not be fully compatible with the current version of manim, but it does a good job laying out the basics.
 
-All files in the directories active_projects and old_projects, which by and large generate the visuals for 3b1b videos, are copyright 3Blue1Brown.
-
-The general purpose animation code found in the remainder of the repository, on the other hand, is under the MIT license.
-
-## Docker Method
-Since it's a bit tricky to get all the dependencies set up just right, there is
-a Dockerfile provided.
-
-1. [Install Docker](https://www.docker.com/products/overview)
-2. Build docker image. `docker build -t manim .`
-3. Run it! `docker run --rm -itv "$PWD":/root/manim/ manim`
-
-
-On a Windows system, make sure to replace `$PWD` with an absolute path to manim.
-
-Note that the shipped Docker image contains the bare requirements to run manim. To transform the Docker container into a fully-functioning development environment, you will have to edit your personal Dockerfile a bit. For a guide to create your own personal Docker image, consult [this guide to Dockerfiles](https://www.howtoforge.com/tutorial/how-to-create-docker-images-with-dockerfile/).
-
-## Live Streaming
-
+### Live Streaming
 To live stream your animations, simply assign `IS_LIVE_STREAMING = True` in `constants.py` file and from your Python Interactive Shell (`python3`) import the stream starter with `from stream_starter import *` while under the project directory. This will provide a clean interactive shell to enter your commands. `manim` object is a `Manim()` instance so as soon as you play an animation with `manim.play()` your stream will start. A video player will pop-up and you can broadcast that video using [OBS Studio](https://obsproject.com/) which is the most practical way of streaming with this math animation library. An example:
 
 ```
@@ -84,3 +87,13 @@ Animation 0: ShowCreationCircle: 100%|██████████████
 ```
 
 It is also possible to stream directly to Twitch. To do that simply assign `IS_STREAMING_TO_TWITCH = True` in `constants.py` file and put your Twitch Stream Key to `TWITCH_STREAM_KEY = "YOUR_STREAM_KEY"` and when you follow the above example the stream will directly start on your Twitch channel(with no audio support).
+
+
+## Contributing
+Is always welcome. In particular, there is a dire need for tests and documentation.
+
+
+## License
+All files in the directories active_projects and old_projects, which by and large generate the visuals for 3b1b videos, are copyright 3Blue1Brown.
+
+The general purpose animation code found in the remainder of the repository, on the other hand, is under the MIT license.
