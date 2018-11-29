@@ -69,7 +69,7 @@ Look through the old_projects folder to see the code for previous 3b1b videos.  
 While developing a scene, the `-s` flag is helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the `-n` flag to skip over some number of animations.
 
 ### Documentation
-Documentation is in progress at [manim.readthedocs.io](manim.readthedocs.io).
+Documentation is in progress at [manim.readthedocs.io](https://manim.readthedocs.io).
 
 ### (Outdated) Walkthrough
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2018/06/11/learning-how-to-animate-videos-using-manim-series-a-journey/) on getting started with manim, but it uses an outdated version that runs on python 2.7. It may not be fully compatible with the current version of manim, but it does a good job laying out the basics.
