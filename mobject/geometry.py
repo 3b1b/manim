@@ -481,6 +481,19 @@ class DashedLine(Line):
             return self.end
 
 
+class Elbow(VMobject):
+    CONFIG = {
+        "width": 0.2,
+        "angle": 0,
+    }
+
+    def __init__(self, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        self.set_points_as_corners([UP, UP + RIGHT, RIGHT])
+        self.set_width(self.width, about_point=ORIGIN)
+        self.rotate(self.angle, about_point=ORIGIN)
+
+
 class Arrow(Line):
     CONFIG = {
         "tip_length": 0.25,
