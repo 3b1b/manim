@@ -57,6 +57,13 @@ def digest_config(obj, kwargs, caller_locals={}):
 
 
 def merge_config(all_dicts):
+    """
+    Creates a dict whose keyset is the union of all the
+    input dictionaries.  The value for each key is based
+    on the first dict in the list with that key.
+
+    When values are dictionaries, it is applied recursively
+    """
     all_config = reduce(op.add, [list(d.items()) for d in all_dicts])
     config = dict()
     for c in all_config:
