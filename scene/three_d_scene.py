@@ -174,8 +174,7 @@ class SpecialThreeDScene(ThreeDScene):
         return axes
 
     def get_sphere(self, **kwargs):
-        config = dict(self.sphere_config)
-        config.update(kwargs)
+        config = merge_config([kwargs, self.sphere_config])
         return Sphere(**config)
 
     def get_default_camera_position(self):
