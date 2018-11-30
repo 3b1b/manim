@@ -2474,8 +2474,9 @@ class NobodyLikesHomework(TeacherStudentsScene):
 class SecondProof(SpecialThreeDScene):
     CONFIG = {
         "sphere_config": {
-            "resolution": (50, 50),
-        }
+            "resolution": (30, 30),
+        },
+        "n_random_subsets": 12,
     }
 
     def construct(self):
@@ -2486,20 +2487,23 @@ class SecondProof(SpecialThreeDScene):
         self.cut_cross_section()
         self.show_theta()
         self.enumerate_rings()
-        self.ask_about_ring_area()
+        self.ask_about_ring_circumference()
         self.ask_about_shadow_area()
         self.ask_about_2_to_1_correspondance()
+        self.show_all_shadow_rings()
         self.ask_about_global_correspondance()
 
     def setup_shapes(self):
         sphere = self.get_sphere()
-        u_values, v_values = sphere.get_u_values_and_v_values()
-        rings = VGroup(*[VGroup() for u in u_values])
-        for piece in sphere:
-            rings[piece.u_index].add(piece)
         sphere.set_stroke(WHITE, width=0.25)
         self.add(sphere)
         self.sphere = sphere
+
+        u_values, v_values = sphere.get_u_values_and_v_values()
+        rings = VGroup(*[VGroup() for u in u_values])
+        for piece in sphere:
+            rings[piece.u_index].add(piece.copy())
+        self.set_ring_colors(rings)
         self.rings = rings
 
         self.axes = self.get_axes()
@@ -2511,17 +2515,18 @@ class SecondProof(SpecialThreeDScene):
     def divide_into_rings(self):
         rings = self.rings
 
-        self.play(ApplyFunction(self.set_ring_colors, rings))
+        self.play(FadeIn(rings), FadeOut(self.sphere))
         self.play(
             rings.space_out_submobjects, 1.5,
             rate_func=there_and_back_with_pause,
             run_time=3
         )
         self.wait(2)
+        rings.save_state()
 
     def show_shadows(self):
         rings = self.rings
-        north_rings = self.get_northern_hemisphere(rings)
+        north_rings = rings[:len(rings) // 2]
         ghost_rings = rings.copy()
         ghost_rings.set_fill(opacity=0.0)
         ghost_rings.set_stroke(opacity=0.2)
@@ -2572,9 +2577,11 @@ class SecondProof(SpecialThreeDScene):
     def correspond_to_every_other_ring(self):
         rings = self.rings
         shadows = self.shadows
+        shadows.submobjects.reverse()
 
         every_other_ring = rings[1::2]
-        every_other_ring.set_fill(opacity=0.5)
+        # every_other_ring.set_fill(opacity=0.5)
+        every_other_ring.set_stroke(width=0)
         self.move_camera(
             phi=70 * DEGREES,
             theta=-135 * DEGREES,
@@ -2584,8 +2591,12 @@ class SecondProof(SpecialThreeDScene):
             ],
             run_time=2,
         )
+        shadows_copy = shadows.copy()
+        shadows.fade(1)
         self.play(
-            TransformFromCopy(shadows, every_other_ring),
+            ReplacementTransform(
+                shadows_copy, every_other_ring
+            ),
             run_time=2,
         )
         self.wait(5)
@@ -2600,11 +2611,13 @@ class SecondProof(SpecialThreeDScene):
 
         back_half = self.get_hemisphere(rings, UP)
         front_half = self.get_hemisphere(rings, DOWN)
+        front_half_ghost = front_half.copy()
 
         # shaded_back_half = back_half.copy()
-        # for piece in shaded_back_half:
-        #     piece.points = np.array(list(reversed(piece.points)))
-        # shaded_back_half.scale(0.99)
+        # for piece in shaded_back_half.family_members_with_points():
+        #     piece.points = piece.points[::-1]
+        # shaded_back_half.scale(0.999)
+        # shaded_back_half.set_fill(opacity=0.5)
 
         radius = self.sphere_config["radius"]
         circle = Circle(radius=radius)
@@ -2620,14 +2633,21 @@ class SecondProof(SpecialThreeDScene):
             FadeOut(ghost_rings),
         )
         self.remove(every_other_ring_copy)
+        # self.add(shaded_back_half)
         self.play(
             FadeIn(circle),
-            FadeOutAndShift(front_half, IN)
+            # FadeOutAndShift(front_half, IN)
+            FadeOut(front_half),
+            front_half_ghost.set_fill, None, 0.2,
+            front_half_ghost.set_stroke, WHITE, 1, 0.0,
         )
         self.wait()
 
-        self.back_half = back_half
-        self.circle = circle
+        self.set_variables_as_attrs(
+            back_half, front_half,
+            front_half_ghost,
+            slice_circle=circle
+        )
 
     def show_theta(self):
         theta_tracker = ValueTracker(0)
@@ -2657,10 +2677,12 @@ class SecondProof(SpecialThreeDScene):
         self.move_camera(theta=-60 * DEGREES)
 
         self.add(theta_group, lit_ring)
-        angle = PI * 8 / 50
-        for angle in [angle, 0, PI, angle]:
+        n_rings = len(self.rings) - 1
+        lit_ring_index = int((30 / 180) * n_rings)
+        angle = PI * lit_ring_index / n_rings
+        for alpha in [angle, 0, PI, angle]:
             self.play(
-                theta_tracker.set_value, angle,
+                theta_tracker.set_value, alpha,
                 theta_mob_opacity_tracker.set_value, 1,
                 Animation(self.camera.phi_tracker),
                 run_time=2,
@@ -2718,37 +2740,199 @@ class SecondProof(SpecialThreeDScene):
             theta=-70 * DEGREES,
         )
 
-        self.theta_tracker = theta_tracker
-        self.lit_ring = lit_ring
-        self.theta_group = theta_group
+        self.set_variables_as_attrs(
+            theta_tracker, lit_ring, theta_group,
+            brace, brace_label, d_theta,
+            alt_R_line, theta_mob_opacity_tracker,
+        )
 
     def enumerate_rings(self):
         pass  # Skip, for now...
 
-    def ask_about_ring_area(self):
-        pass
+    def ask_about_ring_circumference(self):
+        theta = self.theta_tracker.get_value()
+        radius = self.sphere_config["radius"]
+        circle = Circle(
+            radius=radius * np.sin(theta)
+        )
+        circle.shift(radius * np.cos(theta) * OUT)
+        circle.set_stroke(Color("red"), 5)
+
+        to_fade = VGroup(
+            self.R_label, self.radial_line,
+            self.brace, self.brace_label
+        )
+
+        self.move_camera(
+            phi=0 * DEGREES,
+            theta=-90 * DEGREES,
+            added_anims=[FadeOut(to_fade)]
+        )
+        self.play(ShowCreation(circle))
+        self.wait()
+        self.move_camera(
+            phi=70 * DEGREES,
+            theta=-70 * DEGREES,
+            added_anims=[
+                FadeIn(to_fade),
+                FadeOut(circle),
+            ]
+        )
+        self.wait()
 
     def ask_about_shadow_area(self):
-        pass
+        lit_ring = self.lit_ring
+        lit_ring_copy = lit_ring.copy()
+        lit_ring_copy.clear_updaters()
+
+        all_shadows = self.shadows
+        all_shadows.set_fill(BLUE_E, 0.5)
+        for piece in all_shadows.family_members_with_points():
+            piece.set_stroke(width=0)
+
+        radius = self.sphere_config["radius"]
+        shadow = self.get_shadow(lit_ring)
+        theta = self.theta_tracker.get_value()
+        d_theta = self.d_theta
+
+        def get_dashed_line(angle):
+            p0 = np.cos(angle) * OUT + np.sin(angle) * RIGHT
+            p0 *= radius
+            p1 = np.array([*p0[:2], 0])
+            result = DashedLine(p0, p1)
+            result.set_stroke(WHITE, 1)
+            result.add_to_back(
+                result.copy().set_stroke(BLACK, 2)
+            )
+            result.set_shade_in_3d(True)
+            return result
+
+        dashed_lines = VGroup(*[
+            get_dashed_line(t)
+            for t in [theta, theta + d_theta]
+        ])
+
+        self.play(
+            ReplacementTransform(lit_ring_copy, shadow),
+            FadeOut(self.R_label),
+            FadeOut(self.radial_line),
+            Animation(self.camera.phi_tracker),
+            *map(ShowCreation, dashed_lines),
+            run_time=2,
+        )
+        self.wait(2)
+
+        self.set_variables_as_attrs(
+            dashed_lines,
+            lit_shadow=shadow,
+        )
 
     def ask_about_2_to_1_correspondance(self):
-        pass
+        theta_tracker = ValueTracker(0)
+        get_theta = theta_tracker.get_value
+        new_lit_ring = updating_mobject_from_func(
+            lambda: self.get_ring_from_theta(
+                self.rings, get_theta()
+            ).copy().set_color(PINK)
+        )
+
+        self.add(new_lit_ring)
+        for angle in [PI, 0, PI]:
+            self.play(
+                theta_tracker.set_value, angle,
+                Animation(self.camera.phi_tracker),
+                run_time=3
+            )
+        self.remove(new_lit_ring)
+        self.remove(theta_tracker)
+
+    def show_all_shadow_rings(self):
+        lit_ring_copy = self.lit_ring.copy()
+        lit_ring_copy.clear_updaters()
+        self.remove(self.lit_ring)
+        theta_group_copy = self.theta_group.copy()
+        theta_group_copy.clear_updaters()
+        self.remove(self.theta_group, *self.theta_group)
+        to_fade = VGroup(
+            theta_group_copy, self.alt_R_line,
+            self.brace, self.brace_label,
+            lit_ring_copy, self.lit_shadow,
+            self.slice_circle,
+            self.dashed_lines,
+        )
+
+        R_label = self.R_label
+        radial_line = self.radial_line
+        R_label.rotate(
+            -90 * DEGREES,
+            axis=RIGHT, about_point=radial_line.get_center()
+        )
+        shadows = self.shadows
+        shadows.set_fill(opacity=1)
+        self.set_ring_colors(shadows, [GREEN_E, GREEN_D])
+
+        self.play(
+            FadeOut(to_fade),
+            LaggedStart(FadeIn, shadows),
+            self.theta_mob_opacity_tracker.set_value, 0,
+            ApplyMethod(
+                self.camera.phi_tracker.set_value, 60 * DEGREES,
+                run_time=2,
+            ),
+            ApplyMethod(
+                self.camera.theta_tracker.set_value, -130 * DEGREES,
+                run_time=2,
+            ),
+        )
+        self.play(
+            ShowCreation(radial_line),
+            FadeIn(R_label),
+            Animation(self.camera.phi_tracker),
+        )
+        self.begin_ambient_camera_rotation()
+        self.wait()
+
+        rings = self.rings
+        rings_copy = rings.saved_state.copy()
+        self.play(
+            FadeOut(R_label),
+            FadeOut(radial_line),
+            FadeIn(rings_copy)
+        )
+        self.remove(rings_copy)
+        rings.restore()
+        self.add(rings)
 
     def ask_about_global_correspondance(self):
-        pass
+        rings = self.rings
+        subset_size = len(rings) // 2
+
+        def get_highlighted_subset():
+            subset = random.sample(list(rings), subset_size)
+            result = VGroup(*subset).copy()
+            result.set_color(PINK)
+            return result
+
+        for x in range(self.n_random_subsets):
+            subset = get_highlighted_subset()
+            self.add(subset)
+            self.wait(0.5)
+            self.remove(subset)
 
     #
     def set_ring_colors(self, rings, colors=[BLUE_E, BLUE_D]):
         for i, ring in enumerate(rings):
             color = colors[i % len(colors)]
             ring.set_fill(color)
-            # for piece in ring[::2]:
-            #     piece.set_color(BLUE_E)
-            #     piece.points = np.array([
-            #         *piece.points[3:-1],
-            #         *piece.points[:3],
-            #         piece.points[3]
-            #     ])
+            ring.set_stroke(color, width=0.25)
+            for piece in ring:
+                piece.insert_n_anchor_points(4)
+                piece.on_sphere = True
+                piece.points = np.array([
+                    *piece.points[3:-1],
+                    *piece.points[:3],
+                    piece.points[3]
+                ])
         return rings
 
     def get_shadow(self, mobject):
@@ -2789,10 +2973,8 @@ class SecondProof(SpecialThreeDScene):
         theta_mob = TexMobject("\\theta")
         theta_mob.rotate(90 * DEGREES, RIGHT)
         vect = np.cos(theta / 2) * OUT + np.sin(theta / 2) * RIGHT
-        theta_mob.next_to(
-            arc.radius * normalize(vect),
-            vect,
-            buff=SMALL_BUFF
+        theta_mob.move_to(
+            (arc.radius + 0.25) * normalize(vect),
         )
         theta_mob.set_background_stroke(width=1)
 
@@ -2809,6 +2991,14 @@ class SecondProof(SpecialThreeDScene):
         n_rings = len(rings)
         index = min(int((theta / PI) * n_rings), n_rings - 1)
         return rings[index]
+
+
+class SecondProofHigherRes(SecondProof):
+    CONFIG = {
+        "sphere_config": {
+            "resolution": (60, 60),
+        },
+    }
 
 
 class RangeFrom0To180(Scene):
