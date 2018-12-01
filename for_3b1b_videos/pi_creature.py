@@ -1,5 +1,6 @@
 import numpy as np
 import warnings
+import os
 
 from constants import *
 
@@ -17,7 +18,12 @@ from utils.rate_functions import squish_rate_func
 from utils.rate_functions import there_and_back
 from utils.space_ops import get_norm
 
-PI_CREATURE_DIR = os.path.join(MEDIA_DIR, "designs", "PiCreature")
+pi_creature_dir_maybe = os.path.join(MEDIA_DIR, "designs", "PiCreature")
+if os.path.exists(pi_creature_dir_maybe):
+    PI_CREATURE_DIR = pi_creature_dir_maybe
+else:
+    PI_CREATURE_DIR = os.path.join(FILE_DIR)
+
 PI_CREATURE_SCALE_FACTOR = 0.5
 
 LEFT_EYE_INDEX = 0
@@ -63,7 +69,7 @@ class PiCreature(SVGMobject):
                 FILE_DIR,
                 "PiCreatures_plain.svg",
             )
-            SVGMobject.__init__(self, file_name=svg_file, **kwargs)
+            SVGMobject.__init__(self, mode="plain", file_name=svg_file, **kwargs)
 
         if self.flip_at_start:
             self.flip()
