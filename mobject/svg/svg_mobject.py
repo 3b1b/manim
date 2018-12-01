@@ -43,7 +43,7 @@ class SVGMobject(VMobject):
 
     def __init__(self, file_name=None, **kwargs):
         digest_config(self, kwargs)
-        self.file_name = self.file_name or file_name
+        self.file_name = file_name or self.file_name
         self.ensure_valid_file()
         VMobject.__init__(self, **kwargs)
         self.move_into_position()

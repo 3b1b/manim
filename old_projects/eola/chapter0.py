@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+from once_useful_constructs import *
 
 EXAMPLE_TRANFORM = [[0, 1], [-1, 1]]
 TRANFORMED_VECTOR = [[1], [2]]
@@ -192,7 +193,7 @@ class AboutLinearAlgebra(Scene):
 
     def get_cross_product(self):
         return TexMobject("""
-            \\vec\\textbf{v} \\times \\textbf{w} = 
+            \\vec{\\textbf{v}} \\times \\textbf{w} =
             \\text{Det}\\left(
                 \\begin{array}{ccc}
                     \\hat{\imath} & \\hat{\jmath} & \\hat{k} \\\\
@@ -203,8 +204,8 @@ class AboutLinearAlgebra(Scene):
         """)
 
     def get_eigenvalue(self):
-        result = TextMobject("\\Text{Det}\\left(A - \\lambda I \\right) = 0")
-        result.submobjects[-5].set_color(YELLOW)
+        result = TexMobject("\\text{Det}\\left(A - \\lambda I \\right) = 0")
+        result.submobjects[0][-5].set_color(YELLOW)
         return result
 
     def get_matrix_multiplication_question(self):

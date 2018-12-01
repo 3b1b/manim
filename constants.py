@@ -144,7 +144,7 @@ with open(TEMPLATE_TEX_FILE, "r") as infile:
     TEMPLATE_TEXT_FILE_BODY = infile.read()
     TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
         TEX_TEXT_TO_REPLACE,
-        "\\begin{align*}" + TEX_TEXT_TO_REPLACE + "\\end{align*}",
+        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
     )
 
 FFMPEG_BIN = "ffmpeg"
