@@ -16,7 +16,7 @@ VECTOR_LABEL_SCALE_FACTOR = 0.8
 
 
 def matrix_to_tex_string(matrix):
-    matrix = np.array(matrix).astype("string")
+    matrix = np.array(matrix).astype("str")
     if matrix.ndim == 1:
         matrix = matrix.reshape((matrix.size, 1))
     n_rows, n_cols = matrix.shape
