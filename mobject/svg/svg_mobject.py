@@ -267,10 +267,10 @@ class SVGMobject(VMobject):
             scale_values = string_to_numbers(transform)
             if len(scale_values) == 2:
                 scale_x, scale_y = scale_values
-                mobject.scale(np.array([scale_x, scale_y, 1]))
+                mobject.scale(np.array([scale_x, scale_y, 1]), about_point=ORIGIN)
             elif len(scale_values) == 1:
                 scale = scale_values[0]
-                mobject.scale(np.array([scale,scale,1]), about_point = ORIGIN)
+                mobject.scale(np.array([scale, scale, 1]), about_point=ORIGIN)
         except:
             pass
 
