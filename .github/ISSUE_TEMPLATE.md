@@ -2,7 +2,7 @@
 
 **Please attempt to solve the problem on your own before opening an issue.**
 Between old issues, StackOverflow, and Google, you should be able to find
-solutions to most of the common bugs.
+solutions to most of the common problems.
 
 Include at least:
 1. Steps to reproduce the issue (e.g. the command you ran)
