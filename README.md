@@ -43,7 +43,7 @@ The image does not contain a copy of the repo. This is intentional, as it allows
   * Bind mount a local repo (recommended): `docker run -itv /absolute/path/to/your/local/manim/repo:/root/manim eulertour/manim` or
   * Clone a remote repo: `docker run -it eulertour/manim`, then `git clone https://github.com/eulertour/manim.git`
 4. Render an animation
-```
+```sh
 cd manim
 mkdir media
 echo "media" > media_dir.txt
