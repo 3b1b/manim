@@ -4,7 +4,7 @@ import numpy as np
 env_MEDIA_DIR = os.getenv("MEDIA_DIR")
 if env_MEDIA_DIR:
     MEDIA_DIR = env_MEDIA_DIR
-elif os.path.exists("media_dir.txt"):
+elif os.path.isfile("media_dir.txt"):
     with open("media_dir.txt", 'rU') as media_file:
         MEDIA_DIR = media_file.readline().strip()
 else:
@@ -13,7 +13,7 @@ else:
         "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
     )
 
-if not os.path.exists(MEDIA_DIR):
+if not os.path.isdir(MEDIA_DIR):
     MEDIA_DIR = "media"
     print(
         f"Media will be stored in {MEDIA_DIR + os.sep}. You can change " + \
