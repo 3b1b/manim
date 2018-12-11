@@ -1,18 +1,8 @@
 import os
 import numpy as np
 
-env_MEDIA_DIR = None
-MEDIA_DIR = "#ERROR#"
-
-try:
-    env_MEDIA_DIR = os.getenv("MEDIA_DIR")
-except NameError:
-    try:
-        env_MEDIA_DIR = os.environ['MEDIA_DIR']
-    except KeyError:
-        pass
-
-if not (env_MEDIA_DIR is None):
+env_MEDIA_DIR = os.getenv("MEDIA_DIR")
+if env_MEDIA_DIR:
     MEDIA_DIR = env_MEDIA_DIR
 elif os.path.exists("media_dir.txt"):
     with open("media_dir.txt", 'rU') as media_file:
@@ -24,16 +14,14 @@ else:
     )
 
 if not os.path.exists(MEDIA_DIR):
-    raise Exception("""
-        Redefine MEDIA_DIR by changing the MEDIA_DIR
-        environment constant or by changing
-        media_dir.txt to point to a valid directory
-        where movies and images will be written
-    """)
+    MEDIA_DIR = "media"
+    print(
+        f"Media will be stored in {MEDIA_DIR + os.sep}. You can change " + \
+        "this behavior by writing a different directory to media_dir.txt."
+    )
 
 with open("media_dir.txt", 'w') as media_file:
     media_file.write(MEDIA_DIR)
-#
 
 LOW_QUALITY_FRAME_DURATION = 1. / 15
 MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
