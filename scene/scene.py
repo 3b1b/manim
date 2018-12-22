@@ -51,6 +51,8 @@ class Scene(Container):
         "random_seed": 0,
         "start_at_animation_number": None,
         "end_at_animation_number": None,
+        "livestreaming": False,
+        "to_twitch": False,
     }
 
     def __init__(self, **kwargs):
@@ -76,7 +78,7 @@ class Scene(Container):
         self.setup()
         if self.write_to_movie:
             self.open_movie_pipe()
-        if IS_LIVE_STREAMING:
+        if self.livestreaming:
             return None
         try:
             self.construct(*self.construct_args)
@@ -464,7 +466,7 @@ class Scene(Container):
                 raise EndSceneEarlyException()
 
     def play(self, *args, **kwargs):
-        if IS_LIVE_STREAMING:
+        if self.livestreaming:
             self.stream_lock = False
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
@@ -503,7 +505,7 @@ class Scene(Container):
             self.continual_update(0)
         self.num_plays += 1
 
-        if IS_LIVE_STREAMING:
+        if self.livestreaming:
             self.stream_lock = True
             thread.start_new_thread(self.idle_stream, ())
 
@@ -653,8 +655,8 @@ class Scene(Container):
                 '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
             ]
-        if IS_LIVE_STREAMING:
-            if IS_STREAMING_TO_TWITCH:
+        if self.livestreaming:
+            if self.to_twitch:
                 command += ['-f', 'flv']
                 command += ['rtmp://live.twitch.tv/app/' + TWITCH_STREAM_KEY]
             else:
@@ -668,7 +670,7 @@ class Scene(Container):
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
-        if IS_LIVE_STREAMING:
+        if self.livestreaming:
             return True
         if os.name == 'nt':
             shutil.move(*self.args_to_rename_file)
