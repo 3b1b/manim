@@ -237,3 +237,9 @@ STREAMING_IP = "127.0.0.1"
 STREAMING_PORT = "2000"
 STREAMING_CLIENT = "ffplay"
 STREAMING_URL = f"{STREAMING_PROTOCOL}://{STREAMING_IP}:{STREAMING_PORT}?listen"
+STREAMING_CONSOLE_BANNER = """
+Manim is now running in streaming mode. Stream animations by passing
+them to manim.play(), e.g.
+>>> c = Circle()
+>>> manim.play(ShowCreation(c))
+"""

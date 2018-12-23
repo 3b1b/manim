@@ -53,6 +53,7 @@ class Scene(Container):
         "end_at_animation_number": None,
         "livestreaming": False,
         "to_twitch": False,
+        "twitch_key": None,
     }
 
     def __init__(self, **kwargs):
@@ -658,7 +659,7 @@ class Scene(Container):
         if self.livestreaming:
             if self.to_twitch:
                 command += ['-f', 'flv']
-                command += ['rtmp://live.twitch.tv/app/' + TWITCH_STREAM_KEY]
+                command += ['rtmp://live.twitch.tv/app/' + self.twitch_key]
             else:
                 command += ['-f', 'mpegts']
                 command += [STREAMING_PROTOCOL + '://' + STREAMING_IP + ':' + STREAMING_PORT]

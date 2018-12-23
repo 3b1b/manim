@@ -20,8 +20,6 @@ def parse_cli():
             nargs="?",
             help="Name of the Scene class you want to see",
         )
-        module_location.add_argument("--livestream", action="store_true")
-        parser.add_argument("--to-twitch", action="store_true")
         optional_args = [
             ("-p", "--preview"),
             ("-w", "--write_to_movie"),
@@ -40,12 +38,33 @@ def parse_cli():
         parser.add_argument("-n", "--start_at_animation_number")
         parser.add_argument("-r", "--resolution")
         parser.add_argument("-c", "--color")
+        module_location.add_argument(
+            "--livestream",
+            action="store_true",
+            help="Run in streaming mode",
+        )
+        parser.add_argument(
+            "--to-twitch",
+            action="store_true",
+            help="Stream to twitch",
+        )
+        parser.add_argument(
+            "--with-key",
+            dest="twitch_key",
+            help="Stream key for twitch",
+        )
         args = parser.parse_args()
+
         if args.file is None and not args.livestream:
             parser.print_help()
             sys.exit(2)
-        else:
-            return args
+        if args.to_twitch and not args.livestream:
+            print("You must run in streaming mode in order to stream to twitch")
+            sys.exit(2)
+        if args.to_twitch and args.twitch_key is None:
+            print("Specify the twitch stream key with --with-key")
+            sys.exit(2)
+        return args
     except argparse.ArgumentError as err:
         print(str(err))
         sys.exit(2)

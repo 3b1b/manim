@@ -3,10 +3,11 @@ from time import sleep
 import code
 import constants
 import os
+import readline
 import subprocess
 
 
-def start_livestream(to_twitch=False):
+def start_livestream(to_twitch=False, twitch_key=None):
     class Manim():
 
         def __new__(cls):
@@ -32,6 +33,7 @@ def start_livestream(to_twitch=False):
                 "frame_duration": constants.MEDIUM_QUALITY_FRAME_DURATION,
                 "livestreaming": True,
                 "to_twitch": to_twitch,
+                "twitch_key": twitch_key,
             }
             return Scene(**kwargs)
 
@@ -43,10 +45,9 @@ def start_livestream(to_twitch=False):
             stderr=FNULL)
         sleep(3)
 
-    manim = Manim()
-    print("YOUR STREAM IS READY!")
     variables = globals().copy()
     variables.update(locals())
     shell = code.InteractiveConsole(variables)
+    shell.push("manim = Manim()")
     shell.push("from big_ol_pile_of_manim_imports import *")
-    shell.interact()
+    shell.interact(banner=constants.STREAMING_CONSOLE_BANNER)

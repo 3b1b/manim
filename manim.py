@@ -8,4 +8,7 @@ if not args.livestream:
     config = config.get_configuration(args)
     extract_scene.main(config)
 else:
-    stream_starter.start_livestream(args.to_twitch)
+    stream_starter.start_livestream(
+        to_twitch=args.to_twitch,
+        twitch_key=args.twitch_key,
+    )

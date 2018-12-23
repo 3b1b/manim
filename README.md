@@ -15,7 +15,7 @@ Manim runs on python 3.7. You can install the python requirements with
 git clone https://github.com/3b1b/manim.git
 cd manim
 pip install -r requirements.txt
-python3 extract_scene.py example_scenes.py SquareToCircle -pl
+python3 -m manim example_scenes.py SquareToCircle -pl
 ```
 
 ### Using `virtualenv` and `virtualenvwrapper`
@@ -23,7 +23,7 @@ After installing `virtualenv` and `virtualenvwrapper`
 ```sh
 git clone https://github.com/3b1b/manim.git
 mkvirtualenv -a manim -r requirements.txt manim
-python3 extract_scene.py example_scenes.py SquareToCircle -pl
+python3 -m manim example_scenes.py SquareToCircle -pl
 ```
 
 ### Using Docker
@@ -41,14 +41,14 @@ The image does not contain a copy of the repo. This is intentional, as it allows
 4. Render an animation
 ```sh
 cd manim
-python3 extract_scene.py example_scenes.py SquareToCircle -l
+python3 -m manim example_scenes.py SquareToCircle -l
 ```
 Note that the image doesn't have any development tools installed and can't preview animations. Its purpose is building and testing only.
 
 ## Using manim
 Try running the following:
 ```sh
-python3 extract_scene.py example_scenes.py SquareToCircle -pl
+python3 -m manim example_scenes.py SquareToCircle -pl
 ```
 The -p is for previewing, meaning the the video file will automatically open when it is done rendering.
 Use -l for a faster rendering at a lower quality.
@@ -69,18 +69,24 @@ Documentation is in progress at [manim.readthedocs.io](https://manim.readthedocs
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2018/06/11/learning-how-to-animate-videos-using-manim-series-a-journey/) on getting started with manim, but it uses an outdated version that runs on python 2.7. It may not be fully compatible with the current version of manim, but it does a good job laying out the basics.
 
 ### Live Streaming
-To live stream your animations, simply assign `IS_LIVE_STREAMING = True` in `constants.py` file and from your Python Interactive Shell (`python3`) import the stream starter with `from stream_starter import *` while under the project directory. This will provide a clean interactive shell to enter your commands. `manim` object is a `Manim()` instance so as soon as you play an animation with `manim.play()` your stream will start. A video player will pop-up and you can broadcast that video using [OBS Studio](https://obsproject.com/) which is the most practical way of streaming with this math animation library. An example:
+To live stream your animations, simply run manim with the `--livestreaming` option.
 
-```
->>> from stream_starter import *
-YOUR STREAM IS READY!
->>> circle = Circle()
->>> manim.play(ShowCreation(circle))
-Animation 0: ShowCreationCircle: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 60/60 [00:01<00:00, 37.30it/s]
-<scene.scene.Scene object at 0x7f0756d5a8d0>
+```sh
+> python -m manim --livestream
+Writing to media/videos/scene/scene/1080p30/LiveStreamTemp.mp4
+
+Manim is now running in streaming mode. Stream animations by passing
+them to manim.play(), e.g.
+>>> c = Circle()
+>>> manim.play(ShowCreation(c))
+
+>>>
 ```
 
-It is also possible to stream directly to Twitch. To do that simply assign `IS_STREAMING_TO_TWITCH = True` in `constants.py` file and put your Twitch Stream Key to `TWITCH_STREAM_KEY = "YOUR_STREAM_KEY"` and when you follow the above example the stream will directly start on your Twitch channel(with no audio support).
+It is also possible to stream directly to Twitch. To do that simply pass
+--livestream and --to-twitch to manim and specify the stream key with
+--with-key. Then when you follow the above example the stream will directly
+start on your Twitch channel (with no audio support).
 
 
 ## Contributing
