@@ -69,7 +69,7 @@ Documentation is in progress at [manim.readthedocs.io](https://manim.readthedocs
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2018/06/11/learning-how-to-animate-videos-using-manim-series-a-journey/) on getting started with manim, but it uses an outdated version that runs on python 2.7. It may not be fully compatible with the current version of manim, but it does a good job laying out the basics.
 
 ### Live Streaming
-To live stream your animations, simply run manim with the `--livestreaming` option.
+To live stream your animations, simply run manim with the `--livestream` option.
 
 ```sh
 > python -m manim --livestream
