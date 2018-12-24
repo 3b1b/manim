@@ -20,12 +20,14 @@ def guarantee_existance(path):
 
 
 def get_scene_output_directory(scene_class):
-    file_path = os.path.abspath(inspect.getfile(scene_class))
-
-    file_path = os.path.relpath(file_path, THIS_DIR)
-    file_path = file_path.replace(".pyc", "")
-    file_path = file_path.replace(".py", "")
-    return guarantee_existance(os.path.join(VIDEO_DIR, file_path))
+    try:
+        file_path = os.path.abspath(inspect.getfile(scene_class))
+        file_path = os.path.relpath(file_path, THIS_DIR)
+        file_path = file_path.replace(".pyc", "")
+        file_path = file_path.replace(".py", "")
+        return guarantee_existance(os.path.join(VIDEO_DIR, file_path))
+    except TypeError:
+        return guarantee_existance(os.path.join(VIDEO_DIR, "input_scenes"))
 
 
 def get_movie_output_directory(scene_class, camera_config, frame_duration):
