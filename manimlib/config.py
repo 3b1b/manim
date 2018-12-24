@@ -2,6 +2,7 @@ import argparse
 import colour
 import os
 import sys
+import types
 
 import manimlib.constants
 
@@ -70,6 +71,17 @@ def parse_cli():
         sys.exit(2)
 
 
+def get_module(file_name):
+    if file_name == "-":
+        module = types.ModuleType("InputModule")
+        code = "from big_ol_pile_of_manim_imports import *\n\n" + sys.stdin.read()
+        exec(code, module.__dict__)
+        return module
+    else:
+        module_name = file_name.replace(".py", "").replace(os.sep, ".")
+        return importlib.import_module(module_name)
+
+
 def get_configuration(args):
     if args.output_name is not None:
         output_name_root, output_name_ext = os.path.splitext(
@@ -86,7 +98,7 @@ def get_configuration(args):
         output_name = args.output_name
 
     config = {
-        "file": args.file,
+        "module": get_module(args.file),
         "scene_name": args.scene_name,
         "open_video_upon_completion": args.preview,
         "show_file_in_finder": args.show_file_in_finder,

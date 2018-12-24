@@ -97,13 +97,8 @@ def get_scene_classes(scene_names_to_classes, config):
     return prompt_user_for_choice(scene_names_to_classes)
 
 
-def get_module(file_name):
-    module_name = file_name.replace(".py", "").replace(os.sep, ".")
-    return importlib.import_module(module_name)
-
-
 def main(config):
-    module = get_module(config["file"])
+    module = config["module"]
     scene_names_to_classes = dict(inspect.getmembers(module, is_scene))
 
     scene_kwargs = dict([
