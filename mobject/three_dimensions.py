@@ -42,7 +42,7 @@ class ParametricSurface(VGroup):
         if self.should_make_jagged:
             self.make_jagged()
 
-    def setup_in_uv_space(self):
+    def get_u_values_and_v_values(self):
         res = tuplify(self.resolution)
         if len(res) == 1:
             u_res = v_res = res[0]
@@ -55,9 +55,14 @@ class ParametricSurface(VGroup):
 
         u_values = np.linspace(u_min, u_max, u_res + 1)
         v_values = np.linspace(v_min, v_max, v_res + 1)
+
+        return u_values, v_values
+
+    def setup_in_uv_space(self):
+        u_values, v_values = self.get_u_values_and_v_values()
         faces = VGroup()
-        for i in range(u_res):
-            for j in range(v_res):
+        for i in range(len(u_values) - 1):
+            for j in range(len(v_values) - 1):
                 u1, u2 = u_values[i:i + 2]
                 v1, v2 = v_values[j:j + 2]
                 face = ThreeDVMobject()

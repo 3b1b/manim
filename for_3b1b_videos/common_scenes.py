@@ -11,6 +11,7 @@ from animation.creation import DrawBorderThenFill
 from animation.creation import Write
 from animation.creation import FadeIn
 from animation.creation import FadeOut
+from continual_animation.continual_animation import ContinualMovement
 from mobject.svg.tex_mobject import TextMobject
 from mobject.types.vectorized_mobject import VGroup
 from scene.scene import Scene
@@ -18,12 +19,15 @@ from scene.moving_camera_scene import MovingCameraScene
 from for_3b1b_videos.pi_creature_animations import Blink
 from for_3b1b_videos.pi_creature import Mortimer
 from for_3b1b_videos.pi_creature import Randolph
+from for_3b1b_videos.pi_creature_scene import PiCreatureScene
 from mobject.geometry import Line
 from mobject.geometry import DashedLine
 from mobject.geometry import Rectangle
 from mobject.geometry import Square
 from mobject.svg.drawings import PatreonLogo
 from mobject.svg.drawings import Logo
+from utils.space_ops import get_norm
+from utils.space_ops import normalize
 
 
 class OpeningQuote(Scene):
@@ -147,7 +151,7 @@ class PatreonThanks(Scene):
             last_group = group
 
 
-class PatreonEndScreen(PatreonThanks):
+class PatreonEndScreen(PatreonThanks, PiCreatureScene):
     CONFIG = {
         "n_patron_columns": 3,
         "max_patron_width": 3.5,
@@ -155,6 +159,7 @@ class PatreonEndScreen(PatreonThanks):
         "randomize_order": True,
         "capitalize": True,
         "name_y_spacing": 0.7,
+        "thanks_words": "Funded by the community, with special thanks to:",
     }
 
     def construct(self):
@@ -169,10 +174,10 @@ class PatreonEndScreen(PatreonThanks):
                 for patron in self.specific_patrons
             ]
 
-        self.add_title()
+        # self.add_title()
         self.scroll_through_patrons()
 
-    def add_title(self):
+    def create_pi_creatures(self):
         title = self.title = TextMobject("Clicky Stuffs")
         title.scale(1.5)
         title.to_edge(UP, buff=MED_SMALL_BUFF)
@@ -184,6 +189,7 @@ class PatreonEndScreen(PatreonThanks):
             pi.look(DOWN)
             pi.next_to(title, vect, buff=MED_LARGE_BUFF)
         self.add_foreground_mobjects(title, randy, morty)
+        return self.pi_creatures
 
     def scroll_through_patrons(self):
         logo_box = Square(side_length=2.5)
@@ -202,12 +208,13 @@ class PatreonEndScreen(PatreonThanks):
         line = DashedLine(FRAME_X_RADIUS * LEFT, FRAME_X_RADIUS * RIGHT)
         line.move_to(ORIGIN)
 
-        thanks = TextMobject("Funded by the community, with special thanks to:")
+        thanks = TextMobject(self.thanks_words)
         thanks.scale(0.9)
         thanks.next_to(black_rect.get_bottom(), UP, SMALL_BUFF)
         thanks.set_color(YELLOW)
         underline = Line(LEFT, RIGHT)
-        underline.set_width(thanks.get_width() + MED_SMALL_BUFF)
+        underline.match_width(thanks)
+        underline.scale(1.1)
         underline.next_to(thanks, DOWN, SMALL_BUFF)
         thanks.add(underline)
 
@@ -233,13 +240,22 @@ class PatreonEndScreen(PatreonThanks):
         thanks.to_edge(RIGHT)
         columns.next_to(thanks, DOWN, 3 * LARGE_BUFF)
 
-        self.add(columns, black_rect, line, thanks)
-        self.play(
-            columns.move_to, 2 * DOWN, DOWN,
-            columns.align_to, thanks, {"alignment_vect": RIGHT},
-            rate_func=None,
-            run_time=self.run_time,
+        columns.generate_target()
+        columns.target.move_to(2 * DOWN, DOWN)
+        columns.target.align_to(
+            thanks, alignment_vect=RIGHT
         )
+        vect = columns.target.get_center() - columns.get_center()
+        distance = get_norm(vect)
+        wait_time = 20
+        columns_shift = ContinualMovement(
+            columns,
+            direction=normalize(vect),
+            rate=(distance / wait_time)
+        )
+
+        self.add(columns_shift, black_rect, line, thanks)
+        self.wait(wait_time)
 
 
 class LogoGenerationTemplate(MovingCameraScene):
