@@ -49,12 +49,14 @@ def handle_scene(scene, **config):
         sys.stdout = curr_stdout
 
 
-def is_scene(obj):
+def is_child_scene(obj, module):
     if not inspect.isclass(obj):
         return False
     if not issubclass(obj, Scene):
         return False
     if obj == Scene:
+        return False
+    if not obj.__module__.startswith(module.__name__):
         return False
     return True
 
@@ -73,20 +75,20 @@ def prompt_user_for_choice(name_to_obj):
         ]
     except KeyError:
         print(manimlib.constants.INVALID_NUMBER_MESSAGE)
-        sys.exit()
+        sys.exit(2)
         user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
         return [
             name_to_obj[num_to_name[int(num_str)]]
             for num_str in user_input.split(",")
         ]
+    except EOFError:
+        sys.exit(1)
 
 
 def get_scene_classes(scene_names_to_classes, config):
     if len(scene_names_to_classes) == 0:
         print(manimlib.constants.NO_SCENE_MESSAGE)
         return []
-    if len(scene_names_to_classes) == 1:
-        return list(scene_names_to_classes.values())
     if config["scene_name"] in scene_names_to_classes:
         return [scene_names_to_classes[config["scene_name"]]]
     if config["scene_name"] != "":
@@ -99,7 +101,8 @@ def get_scene_classes(scene_names_to_classes, config):
 
 def main(config):
     module = config["module"]
-    scene_names_to_classes = dict(inspect.getmembers(module, is_scene))
+    scene_names_to_classes = dict(
+        inspect.getmembers(module, lambda x: is_child_scene(x, module)))
 
     scene_kwargs = dict([
         (key, config[key])
@@ -125,11 +128,13 @@ def main(config):
         try:
             handle_scene(SceneClass(**scene_kwargs), **config)
             play_finish_sound()
+            sys.exit(0)
         except Exception:
             print("\n\n")
             traceback.print_exc()
             print("\n\n")
             play_error_sound()
+            sys.exit(2)
 
 
 if __name__ == "__main__":

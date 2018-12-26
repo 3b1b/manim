@@ -76,8 +76,12 @@ def get_module(file_name):
     if file_name == "-":
         module = types.ModuleType("InputModule")
         code = "from big_ol_pile_of_manim_imports import *\n\n" + sys.stdin.read()
-        exec(code, module.__dict__)
-        return module
+        try:
+            exec(code, module.__dict__)
+            return module
+        except Exception as e:
+            print(f"Failed to render scene: {str(e)}")
+            sys.exit(2)
     else:
         module_name = file_name.replace(".py", "").replace(os.sep, ".")
         return importlib.import_module(module_name)
