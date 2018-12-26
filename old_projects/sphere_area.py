@@ -286,28 +286,88 @@ class AskAboutShadowRelation(SpecialThreeDScene):
 
 
 class ButWhy(TeacherStudentsScene):
+    CONFIG = {
+        "student_mode": "raise_right_hand",
+        "question": "But why?",
+        "teacher_mode": "guilty"
+    }
+
     def construct(self):
+        for student in self.students:
+            student.change("pondering", self.screen)
         self.student_says(
-            "But why?!?",
+            "But why?",
             student_index=2,
-            target_mode="angry",
+            target_mode=self.student_mode,
             bubble_kwargs={"direction": LEFT},
         )
         self.play(
-            self.students[0].change, "pondering", self.screen,
-            self.students[1].change, "pondering", self.screen,
-            self.teacher.change, "guilty", self.screen,
+            self.teacher.change, self.teacher_mode, self.students[2]
         )
-        self.wait(3)
+        self.wait(5)
+
+
+class ButWhyHappy(ButWhy):
+    CONFIG = {
+        "teacher_mode": "happy"
+    }
+
+
+class ButWhySassy(ButWhy):
+    CONFIG = {
+        "teacher_mode": "sassy"
+    }
+
+
+class ButWhyHesitant(ButWhy):
+    CONFIG = {
+        "teacher_mode": "hesitant"
+    }
+
+
+class ButWhyAngry(ButWhy):
+    CONFIG = {
+        "teacher_mode": "angry"
+    }
 
 
 class TryFittingCirclesDirectly(ExternallyAnimatedScene):
     pass
 
 
-class PreviewTwoMethods(Scene):
+class PreviewTwoMethods(MovingCameraScene):
     def construct(self):
-        pass  # TODO
+        thumbnails = Group(
+            ImageMobject("SphereSurfaceProof1"),
+            ImageMobject("SphereSurfaceProof2"),
+        )
+        for thumbnail in thumbnails:
+            thumbnail.set_width(FRAME_WIDTH / 2 - 1)
+            thumbnail.add_to_back(SurroundingRectangle(
+                thumbnail, buff=0,
+                stroke_color=WHITE,
+                stroke_width=5
+            ))
+        thumbnails.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+
+        title = TextMobject("Two proofs")
+        title.scale(2)
+        title.to_edge(UP)
+
+        frame = self.camera.frame
+
+        self.add(title)
+        for thumbnail in thumbnails:
+            self.play(FadeInFromDown(thumbnail))
+        self.wait()
+        for thumbnail in thumbnails:
+            frame.save_state()
+            self.play(
+                frame.replace, thumbnail,
+                run_time=2
+            )
+            self.wait()
+            self.play(Restore(frame, run_time=2))
 
 
 class MapSphereOntoCylinder(SphereCylinderScene):
@@ -1279,10 +1339,40 @@ class JustifyLengthStretchHighestRes(JustifyLengthStretch):
     }
 
 
-class LengthScaleLabel(Scene):
+class ProTipNameThings(Scene):
+    CONFIG = {
+        "tip_descriptor": "(Deceptively simple) problem solving tip:",
+        "tip": "Start with names",
+    }
+
+    def construct(self):
+        words = TextMobject(
+            self.tip_descriptor,
+            self.tip,
+        )
+        words[1].set_color(YELLOW)
+        words.to_edge(UP)
+
+        self.play(FadeIn(words[0]))
+        self.wait()
+        self.play(FadeInFromDown(words[1]))
+        self.wait()
+
+
+class WidthScaleLabel(Scene):
     def construct(self):
         text = TexMobject(
-            "\\text{Length scale factor} =",
+            "\\text{Width scale factor} =",
+            "\\frac{R}{d}"
+        )
+        self.play(Write(text))
+        self.wait()
+
+
+class HeightSquishLabel(Scene):
+    def construct(self):
+        text = TexMobject(
+            "\\text{Height squish factor} =",
             "\\frac{R}{d}"
         )
         self.play(Write(text))
@@ -1836,6 +1926,27 @@ class JustifyHeightSquish(MovingCameraScene):
         return rotate_vector(self.radius * UP, -phi)
 
 
+class ProTipTangentRadii(ProTipNameThings):
+    CONFIG = {
+        "tip_descriptor": "Pro tip:",
+        "tip": "A circle's tangent is perpendicular to its radius",
+    }
+
+
+class ProTipTweakParameters(ProTipNameThings):
+    CONFIG = {
+        "tip_descriptor": "Pro tip:",
+        "tip": "Tweak parameters $\\rightarrow$ make",
+    }
+
+
+class DrawSquareThenFade(Scene):
+    def construct(self):
+        square = Square(color=YELLOW, stroke_width=5)
+        self.play(ShowCreation(square))
+        self.play(FadeOut(square))
+
+
 class WhyAreWeDoingThis(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -1859,16 +1970,28 @@ class WhyAreWeDoingThis(TeacherStudentsScene):
 
 
 class SameEffectAsRotating(Scene):
+    CONFIG = {
+        "rectangle_config": {
+            "height": 2,
+            "width": 1,
+            "stroke_width": 0,
+            "fill_color": YELLOW,
+            "fill_opacity": 1,
+            "background_stroke_width": 2,
+            "background_stroke_color": BLACK,
+        },
+        "x_stretch": 2,
+        "y_stretch": 0.5,
+    }
+
     def construct(self):
-        rect1 = Rectangle(
-            height=2, width=1,
-            stroke_width=0,
-            fill_color=YELLOW,
-            fill_opacity=1,
-            background_stroke_width=2,
-            background_stroke_color=BLACK,
-        )
-        rect2 = rect1.copy().rotate(-90 * DEGREES)
+        rect1 = Rectangle(**self.rectangle_config)
+        rect2 = rect1.copy()
+        rect2.stretch(self.x_stretch, 0)
+        rect2.stretch(self.y_stretch, 1)
+        rotated_rect1 = rect1.copy()
+        rotated_rect1.rotate(-90 * DEGREES)
+
         arrow = Arrow(ORIGIN, RIGHT, buff=0, color=WHITE)
         group = VGroup(rect1, arrow, rect2)
         group.arrange_submobjects(RIGHT)
@@ -1876,10 +1999,16 @@ class SameEffectAsRotating(Scene):
         moving_rect = rect1.copy()
 
         low_brace = updating_mobject_from_func(
-            lambda: Brace(moving_rect, DOWN, buff=SMALL_BUFF)
+            lambda: Brace(
+                moving_rect, DOWN, buff=SMALL_BUFF,
+                min_num_quads=2,
+            )
         )
         right_brace = updating_mobject_from_func(
-            lambda: Brace(moving_rect, RIGHT, buff=SMALL_BUFF)
+            lambda: Brace(
+                moving_rect, RIGHT, buff=SMALL_BUFF,
+                min_num_quads=2,
+            )
         )
         times_R_over_d = TexMobject("\\times \\frac{R}{d}")
         times_d_over_R = TexMobject("\\times \\frac{d}{R}")
@@ -1903,11 +2032,74 @@ class SameEffectAsRotating(Scene):
             FadeIn(times_d_over_R),
         )
         self.wait()
+        rotated_rect1.move_to(moving_rect)
         self.play(TransformFromCopy(
-            rect1, rect2,
+            rect1, rotated_rect1,
             path_arc=-90 * DEGREES,
             run_time=2
         ))
+
+
+class NotSameEffectAsRotating(SameEffectAsRotating):
+    CONFIG = {
+        "rectangle_config": {
+            "width": 1.5,
+            "height": 1.5,
+        }
+    }
+
+
+class ShowParameterization(Scene):
+    def construct(self):
+        u_color = PINK
+        v_color = GREEN
+        tex_kwargs = {
+            "tex_to_color_map": {
+                "u": u_color,
+                "v": v_color,
+            }
+        }
+        vector = Matrix(
+            [
+                ["\\text{cos}(u)\\text{sin}(v)"],
+                ["\\text{sin}(u)\\text{sin}(v)"],
+                ["\\text{cos}(v)"]
+            ],
+            element_to_mobject_config=tex_kwargs,
+            element_alignment_corner=DOWN,
+        )
+        vector.to_edge(UP)
+
+        ranges = VGroup(
+            TexMobject("0 \\le u \\le 2\\pi", **tex_kwargs),
+            TexMobject("0 \\le v \\le \\pi", **tex_kwargs),
+            TextMobject(
+                "Sample $u$ and $v$ with \\\\ the same density",
+                tex_to_color_map={
+                    "$u$": u_color,
+                    "$v$": v_color,
+                }
+            )
+        )
+        ranges.arrange_submobjects(DOWN)
+        ranges.next_to(vector, DOWN)
+
+        self.add(vector)
+        self.add(ranges)
+
+
+class RdLabels(Scene):
+    def construct(self):
+        rect = Rectangle(height=1, width=0.5)
+        cR = TexMobject("cR")
+        cR.next_to(rect, LEFT, SMALL_BUFF)
+        cd = TexMobject("cd")
+        cd.next_to(rect, DOWN, SMALL_BUFF)
+
+        labels = VGroup(cd, cR)
+        for label in labels:
+            label[1].set_color(BLUE)
+            self.play(FadeInFromDown(label))
 
 
 class RotateAllPiecesWithExpansion(ShowProjection):
@@ -2127,6 +2319,10 @@ class SequenceOfSpheres(SphereCylinderScene):
 
 
 class WhatIsSurfaceArea(SpecialThreeDScene):
+    CONFIG = {
+        "change_power": True,
+    }
+
     def construct(self):
         title = TextMobject("What is surface area?")
         title.scale(1.5)
@@ -2149,21 +2345,22 @@ class WhatIsSurfaceArea(SpecialThreeDScene):
 
         self.set_camera_to_default_position()
         self.begin_ambient_camera_rotation()
-        self.add(self.get_axes())
+        # self.add(self.get_axes())
         self.play(LaggedStart(
             DrawBorderThenFill, pieces,
             lag_ratio=0.2,
         ))
         self.remove(pieces)
         self.add(surface)
-        self.play(
-            power_tracker.set_value, 5,
-            run_time=2
-        )
-        self.play(
-            power_tracker.set_value, 1,
-            run_time=2
-        )
+        if self.change_power:
+            self.play(
+                power_tracker.set_value, 5,
+                run_time=2
+            )
+            self.play(
+                power_tracker.set_value, 1,
+                run_time=2
+            )
         self.wait(2)
 
     def get_surface(self, radius, amplitude, power):
@@ -2184,10 +2381,85 @@ class WhatIsSurfaceArea(SpecialThreeDScene):
         )
 
 
-class UnwrappedCircleLogic(UnfoldCircles):
+class AltWhatIsSurfaceArea(WhatIsSurfaceArea):
+    CONFIG = {
+        "change_power": False,
+    }
+
+    def get_surface(self, radius, amplitude, power):
+        return ParametricSurface(
+            lambda u, v: radius * (1 - 0.8 * (v**2) ** power) * np.array([
+                np.cos(TAU * u) * (1 + 0.5 * v * np.sin(5 * TAU * u)),
+                np.sin(TAU * u) * (1 + 0.5 * v * np.sin(5 * TAU * u)),
+                v,
+            ]),
+            v_min=-1,
+            v_max=1,
+            resolution=(100, 25),
+        )
+
+
+class EoCWrapper(Scene):
     def construct(self):
-        radius = 1.25
-        dr = 0.001
+        title = TextMobject("Essence of calculus")
+        title.scale(1.5)
+        title.to_edge(UP)
+        rect = ScreenRectangle(height=6)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.wait()
+
+
+class RoleOfCalculus(SpecialThreeDScene):
+    CONFIG = {
+        "camera_config": {
+            "light_source_start_point": [-4, 5, 7],
+        }
+    }
+
+    def construct(self):
+        calc = TexMobject("\\int", "\\int")
+        calc.space_out_submobjects(0.4)
+        calc.scale(2)
+        arrow = Vector(2 * RIGHT, color=WHITE)
+        sphere = self.get_sphere()
+        sphere.rotate(70 * DEGREES, axis=LEFT)
+
+        group = VGroup(calc, arrow, sphere)
+        group.arrange_submobjects(RIGHT)
+        group.shift(0.5 * RIGHT)
+        cross = Cross(group[:2], stroke_width=10)
+
+        # arrow2 = arrow.copy()
+
+        self.add(calc, arrow)
+        self.play(Write(sphere))
+        self.wait()
+        self.play(ShowCreation(cross))
+        self.wait()
+        self.play(
+            sphere.next_to, ORIGIN, LEFT, 1.0,
+            arrow.move_to, ORIGIN, LEFT,
+            calc.next_to, ORIGIN, RIGHT, 2.25,
+            FadeOut(cross),
+            path_arc=PI,
+            run_time=2,
+        )
+        self.wait()
+
+
+class UnwrappedCircleLogic(UnfoldCircles):
+    CONFIG = {
+        "radius": 1.25,
+        "dr": 0.01,
+    }
+
+    def construct(self):
+        radius = self.radius
+        dr = self.dr
+
         TexMobject.CONFIG["background_stroke_width"] = 2
         unwrap_factor_tracker = ValueTracker(0)
         center_tracker = VectorizedPoint()
@@ -2209,7 +2481,7 @@ class UnwrappedCircleLogic(UnfoldCircles):
             )
             self.get_submob_from_prop(
                 result, get_highlight_prop()
-            ).set_color(YELLOW)
+            ).set_stroke(YELLOW, 2)
             return result
 
         unwrapped_circle = updating_mobject_from_func(get_unwrapped_circle)
@@ -2471,6 +2743,15 @@ class NobodyLikesHomework(TeacherStudentsScene):
         self.wait(2)
 
 
+class ChallengeMode(Scene):
+    def construct(self):
+        words = TextMobject("Challenge mode: Predict the proof")
+        words.scale(1.5)
+        words.to_edge(UP)
+        self.play(Write(words))
+        self.wait()
+
+
 class SecondProof(SpecialThreeDScene):
     CONFIG = {
         "sphere_config": {
@@ -2529,7 +2810,7 @@ class SecondProof(SpecialThreeDScene):
         north_rings = rings[:len(rings) // 2]
         ghost_rings = rings.copy()
         ghost_rings.set_fill(opacity=0.0)
-        ghost_rings.set_stroke(opacity=0.2)
+        ghost_rings.set_stroke(WHITE, width=0.5, opacity=0.2)
 
         north_rings.submobjects.reverse()
         shadows = self.get_shadow(north_rings)
@@ -2579,9 +2860,9 @@ class SecondProof(SpecialThreeDScene):
         shadows = self.shadows
         shadows.submobjects.reverse()
 
+        rings.restore()
+        self.set_ring_colors(rings)
         every_other_ring = rings[1::2]
-        # every_other_ring.set_fill(opacity=0.5)
-        every_other_ring.set_stroke(width=0)
         self.move_camera(
             phi=70 * DEGREES,
             theta=-135 * DEGREES,
@@ -2597,6 +2878,7 @@ class SecondProof(SpecialThreeDScene):
             ReplacementTransform(
                 shadows_copy, every_other_ring
             ),
+            FadeOut(self.ghost_rings),
             run_time=2,
         )
         self.wait(5)
@@ -2606,12 +2888,13 @@ class SecondProof(SpecialThreeDScene):
     def cut_cross_section(self):
         shadows = self.shadows
         every_other_ring = self.every_other_ring
-        ghost_rings = self.ghost_rings
         rings = self.rings
 
         back_half = self.get_hemisphere(rings, UP)
         front_half = self.get_hemisphere(rings, DOWN)
         front_half_ghost = front_half.copy()
+        front_half_ghost.set_fill(opacity=0.2)
+        front_half_ghost.set_stroke(opacity=0)
 
         # shaded_back_half = back_half.copy()
         # for piece in shaded_back_half.family_members_with_points():
@@ -2626,20 +2909,15 @@ class SecondProof(SpecialThreeDScene):
 
         every_other_ring_copy = every_other_ring.copy()
         self.add(every_other_ring_copy)
+        self.remove(every_other_ring)
         rings.set_fill(opacity=0.8)
+        rings.set_stroke(opacity=0.6)
         self.play(
-            FadeIn(rings),
-            FadeOut(shadows),
-            FadeOut(ghost_rings),
-        )
-        self.remove(every_other_ring_copy)
-        # self.add(shaded_back_half)
-        self.play(
+            FadeIn(back_half),
+            FadeIn(front_half_ghost),
             FadeIn(circle),
-            # FadeOutAndShift(front_half, IN)
-            FadeOut(front_half),
-            front_half_ghost.set_fill, None, 0.2,
-            front_half_ghost.set_stroke, WHITE, 1, 0.0,
+            FadeOut(shadows),
+            FadeOut(every_other_ring_copy),
         )
         self.wait()
 
@@ -2723,13 +3001,17 @@ class SecondProof(SpecialThreeDScene):
         self.play(
             TransformFromCopy(theta_group[1], alt_R_line),
             GrowFromCenter(brace),
-            FadeInFrom(brace_label, IN)
+            Animation(self.camera.phi_tracker),
         )
+        self.wait()
         self.move_camera(
             phi=90 * DEGREES,
             theta=-90 * DEGREES,
         )
         self.wait()
+        self.play(
+            FadeInFrom(brace_label, IN),
+        )
         self.play(
             ShowCreation(radial_line),
             FadeIn(R_label),
@@ -2739,6 +3021,7 @@ class SecondProof(SpecialThreeDScene):
             phi=70 * DEGREES,
             theta=-70 * DEGREES,
         )
+        self.wait(3)
 
         self.set_variables_as_attrs(
             theta_tracker, lit_ring, theta_group,
@@ -2868,21 +3151,25 @@ class SecondProof(SpecialThreeDScene):
             axis=RIGHT, about_point=radial_line.get_center()
         )
         shadows = self.shadows
-        shadows.set_fill(opacity=1)
-        self.set_ring_colors(shadows, [GREEN_E, GREEN_D])
+        self.set_ring_colors(shadows, [GREY_BROWN, DARK_GREY])
+        for submob in shadows:
+            submob.save_state()
+        shadows.become(self.rings.saved_state[:len(shadows)])
 
         self.play(
             FadeOut(to_fade),
             LaggedStart(FadeIn, shadows),
             self.theta_mob_opacity_tracker.set_value, 0,
+        )
+        self.play(
+            LaggedStart(Restore, shadows),
             ApplyMethod(
                 self.camera.phi_tracker.set_value, 60 * DEGREES,
-                run_time=2,
             ),
             ApplyMethod(
                 self.camera.theta_tracker.set_value, -130 * DEGREES,
-                run_time=2,
             ),
+            run_time=3
         )
         self.play(
             ShowCreation(radial_line),
@@ -2894,37 +3181,30 @@ class SecondProof(SpecialThreeDScene):
 
         rings = self.rings
         rings_copy = rings.saved_state.copy()
+        self.set_ring_colors(rings_copy)
         self.play(
             FadeOut(R_label),
             FadeOut(radial_line),
             FadeIn(rings_copy)
         )
         self.remove(rings_copy)
-        rings.restore()
+        rings.become(rings_copy)
         self.add(rings)
 
     def ask_about_global_correspondance(self):
         rings = self.rings
-        subset_size = len(rings) // 2
 
-        def get_highlighted_subset():
-            subset = random.sample(list(rings), subset_size)
-            result = VGroup(*subset).copy()
-            result.set_color(PINK)
-            return result
-
-        for x in range(self.n_random_subsets):
-            subset = get_highlighted_subset()
-            self.add(subset)
-            self.wait(0.5)
-            self.remove(subset)
+        self.play(
+            FadeOut(rings[::2])
+        )
+        self.wait(8)
 
     #
     def set_ring_colors(self, rings, colors=[BLUE_E, BLUE_D]):
         for i, ring in enumerate(rings):
             color = colors[i % len(colors)]
-            ring.set_fill(color)
-            ring.set_stroke(color, width=0.25)
+            ring.set_fill(color, opacity=1)
+            ring.set_stroke(color, width=0.5, opacity=1)
             for piece in ring:
                 piece.insert_n_anchor_points(4)
                 piece.on_sphere = True
@@ -3001,6 +3281,14 @@ class SecondProofHigherRes(SecondProof):
     }
 
 
+class SecondProofHighestRes(SecondProof):
+    CONFIG = {
+        "sphere_config": {
+            "resolution": (120, 120),
+        },
+    }
+
+
 class RangeFrom0To180(Scene):
     def construct(self):
         angle = Integer(0, unit="^\\circ")
@@ -3013,3 +3301,408 @@ class RangeFrom0To180(Scene):
             run_time=2,
         ))
         self.wait()
+
+
+class Question1(Scene):
+    def construct(self):
+        kwargs = {
+            "tex_to_color_map": {
+                "circumference": RED,
+            }
+        }
+        question = TextMobject(
+            """
+            \\small
+            Question \\#1: What is the circumference of\\\\
+            one of these rings (in terms of $R$ and $\\theta$)?\\\\
+            """,
+            **kwargs
+        )
+        prompt = TextMobject(
+            """
+            Multiply this circumference by $R\\,d\\theta$ to \\\\
+            get an approximation of the ring's area.
+            """,
+            **kwargs
+
+        )
+        for words in question, prompt:
+            words.set_width(FRAME_WIDTH - 1)
+
+        self.play(FadeInFromDown(question))
+        self.wait(2)
+        for word in question, prompt:
+            word.circum = word.get_part_by_tex("circumference")
+            word.remove(word.circum)
+        self.play(
+            FadeOutAndShift(question, UP),
+            FadeInFromDown(prompt),
+            question.circum.replace, prompt.circum,
+            run_time=1.5
+        )
+        self.wait()
+
+
+class YouCouldIntegrate(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Integrate?",
+            student_index=2,
+            bubble_kwargs={"direction": LEFT},
+        )
+        self.play(self.teacher.change, "hesitant")
+        self.wait()
+        self.teacher_says(
+            "We'll be a bit \\\\ more Archimedean",
+            target_mode="speaking"
+        )
+        self.change_all_student_modes("confused")
+        self.wait()
+
+
+class Question2(Scene):
+    def construct(self):
+        question = TextMobject(
+            """
+            Question \\#2: What is the area of the shadow of\\\\
+            one of these rings?  (In terms of $R$, $\\theta$, and $d\\theta$).
+            """,
+            tex_to_color_map={
+                "shadow": YELLOW,
+            }
+        )
+        question.set_width(FRAME_WIDTH - 1)
+
+        self.play(FadeInFromDown(question))
+        self.wait()
+
+
+class Question3(Scene):
+    def construct(self):
+        question = TextMobject("Question \\#3:")
+        question.to_edge(LEFT)
+        equation = TextMobject(
+            "(Shadow area)", "=", "$\\frac{1}{2}$",
+            "(Area of one of the rings)"
+        )
+        equation[0][1:-1].set_color(YELLOW)
+        equation[3][1:-1].set_color(PINK)
+        equation.next_to(question, RIGHT)
+        which_one = TextMobject("Which one?")
+        # which_one.set_color(YELLOW)
+        brace = Brace(equation[-1], DOWN, buff=SMALL_BUFF)
+        which_one.next_to(brace, DOWN, SMALL_BUFF)
+
+        self.add(question)
+        self.play(FadeInFrom(equation))
+        self.wait()
+        self.play(
+            GrowFromCenter(brace),
+            Write(which_one)
+        )
+        self.wait()
+
+
+class ExtraHint(Scene):
+    def construct(self):
+        title = TextMobject("Extra hint")
+        title.scale(2.5)
+        title.shift(UP)
+        equation = TexMobject(
+            "\\sin(2\\theta) = 2\\sin(\\theta)\\cos(\\theta)"
+        )
+        equation.next_to(title, DOWN)
+        self.add(title, equation)
+
+
+class Question4(Scene):
+    def construct(self):
+        question = TextMobject(
+            "Question \\#4:",
+            "Explain how the shadows relate to\\\\"
+            "every other ring on the sphere.",
+            tex_to_color_map={
+                "shadows": YELLOW,
+                "every other ring": BLUE,
+            }
+        )
+
+        self.add(question[0])
+        self.wait()
+        self.play(FadeInFromDown(question[1:]))
+        self.wait()
+
+
+class Question5(Scene):
+    def construct(self):
+        question = TextMobject(
+            """
+            Question \\#5: Why does this imply that the \\\\
+            shadow is $\\frac{1}{4}$ the surface area?
+            """
+        )
+        self.play(FadeInFromDown(question))
+        self.wait()
+
+
+class SpherePatronThanks(Scene):
+    CONFIG = {
+        "specific_patrons": [
+            "1stViewMaths",
+            "Adrian Robinson",
+            "Alexis Olson",
+            "Ali Yahya",
+            "Andrew Busey",
+            "Ankalagon",
+            "Antonio Juarez",
+            "Art Ianuzzi",
+            "Arthur Zey",
+            "Awoo",
+            "Bernd Sing",
+            "Boris Veselinovich",
+            "Brian Staroselsky",
+            "brian tiger chow",
+            "Brice Gower",
+            "Britt Selvitelle",
+            "Burt Humburg",
+            "Carla Kirby",
+            "Charles Southerland",
+            "Chris Connett",
+            "Christian Kaiser",
+            "Clark Gaebel",
+            "Cooper Jones",
+            "Danger Dai",
+            "Dave B",
+            "Dave Kester",
+            "dave nicponski",
+            "David Clark",
+            "David Gow",
+            "Delton Ding",
+            "Devarsh Desai",
+            "Devin Scott",
+            "eaglle",
+            "Eric Younge",
+            "Eryq Ouithaqueue",
+            "Evan Phillips",
+            "Federico Lebron",
+            "Florian Chudigiewitsch",
+            "Giovanni Filippi",
+            "Graham",
+            "Hal Hildebrand",
+            "J",
+            "Jacob Magnuson",
+            "Jameel Syed",
+            "James Hughes",
+            "Jan Pijpers",
+            "Jason Hise",
+            "Jeff Linse",
+            "Jeff Straathof",
+            "Jerry Ling",
+            "John Griffith",
+            "John Haley",
+            "John Shaughnessy",
+            "John V Wertheim",
+            "Jonathan Eppele",
+            "Jonathan Wilson",
+            "Joseph John Cox",
+            "Joseph Kelly",
+            "Juan Benet",
+            "Julian Pulgarin",
+            "Kai-Siang Ang",
+            "Kanan Gill",
+            "Kaustuv DeBiswas",
+            "L0j1k",
+            "Linh Tran",
+            "Luc Ritchie",
+            "Ludwig Schubert",
+            "Lukas -krtek.net- Novy",
+            "Lukas Biewald",
+            "Magister Mugit",
+            "Magnus Dahlström",
+            "Magnus Lysfjord",
+            "Mark B Bahu",
+            "Markus Persson",
+            "Mathew Bramson",
+            "Mathias Jansson",
+            "Matt Langford",
+            "Matt Roveto",
+            "Matt Russell",
+            "Matthew Cocke",
+            "Maurício Collares",
+            "Mehdi Razavi",
+            "Michael Faust",
+            "Michael Hardel",
+            "MrSneaky",
+            "Mustafa Mahdi",
+            "Márton Vaitkus",
+            "Nathan Jessurun",
+            "Nero Li",
+            "Oliver Steele",
+            "Omar Zrien",
+            "Peter Ehrnstrom",
+            "Peter Mcinerney",
+            "Quantopian",
+            "Randy C. Will",
+            "Richard Burgmann",
+            "Ripta Pasay",
+            "Rish Kundalia",
+            "Robert Teed",
+            "Roobie",
+            "Roy Larson",
+            "Ryan Atallah",
+            "Ryan Williams",
+            "Scott Walter, Ph.D.",
+            "Sindre Reino Trosterud",
+            "soekul",
+            "Solara570",
+            "Song Gao",
+            "Steven Soloway",
+            "Stevie Metke",
+            "Ted Suzman",
+            "Valeriy Skobelev",
+            "Vassili Philippov",
+            "Xavier Bernard",
+            "Yana Chernobilsky",
+            "Yaw Etse",
+            "YinYangBalance Asia",
+            "Zach Cardwell",
+        ],
+    }
+
+    def construct(self):
+        self.add_title()
+        self.show_columns()
+
+    def add_title(self):
+        title = TextMobject("Funded by the community, with special thanks to:")
+        title.set_color(YELLOW)
+        title.to_edge(UP)
+        underline = Line(LEFT, RIGHT)
+        underline.set_width(title.get_width() + MED_SMALL_BUFF)
+        underline.next_to(title, DOWN, SMALL_BUFF)
+        title.add(underline)
+
+        self.add(title)
+        self.title = title
+
+    def show_columns(self):
+        random.seed(1)
+        random.shuffle(self.specific_patrons)
+        patrons = VGroup(*[
+            TextMobject(name)
+            for name in self.specific_patrons
+        ])
+        columns = VGroup()
+        column_size = 15
+        for n in range(0, len(patrons), column_size):
+            column = patrons[n:n + column_size]
+            column.arrange_submobjects(
+                DOWN,
+                aligned_edge=LEFT
+            )
+            columns.add(column)
+        columns.set_height(6)
+        for group in columns[:4], columns[4:]:
+            for k, column in enumerate(group):
+                column.move_to(
+                    6.5 * LEFT + 3.75 * k * RIGHT + 2.5 * UP,
+                    UL
+                )
+
+        self.add(columns[:4])
+        self.wait()
+        for k in range(4):
+            self.play(
+                FadeOut(columns[k]),
+                FadeIn(columns[k + 4]),
+            )
+        self.wait()
+
+
+class EndScreen(PatreonEndScreen):
+    CONFIG = {
+        "thanks_words": "",
+    }
+
+
+class ForThoseStillAround(Scene):
+    def construct(self):
+        words = TextMobject("Still here?")
+        words.scale(1.5)
+        url = TextMobject("3blue1brown.com/store")
+        # url.scale(1.5)
+        url.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        self.play(Write(words))
+        self.wait()
+        self.play(ReplacementTransform(words, url))
+        self.wait()
+
+
+class PatronWords(Scene):
+    def construct(self):
+        words = TextMobject("\\$2+ Patrons get \\\\ 50\\% off")
+        words.to_corner(UL)
+        words.set_color(RED)
+        self.add(words)
+
+
+class PlushMe(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("Plushie me?")
+        self.change_student_modes("happy", None, "happy")
+        self.play(self.teacher.change, "confused")
+        self.wait()
+        self.teacher_says("...why?", target_mode="maybe")
+        self.wait(2)
+
+
+class Thumbnail(SpecialThreeDScene):
+    CONFIG = {
+        "camera_config": {
+            "light_source_start_point": [-10, 5, 7],
+        }
+    }
+
+    def construct(self):
+        radius = 1.75
+        sphere = self.get_sphere(radius=radius)
+        sphere.rotate(70 * DEGREES, LEFT)
+        sphere.set_fill(BLUE_E)
+        sphere.set_stroke(WHITE, 0.5)
+
+        circles = VGroup(*[
+            Circle(radius=radius)
+            for x in range(4)
+        ])
+        circles.set_stroke(WHITE, 2)
+        circles.set_fill(BLUE_E, 1)
+        circles[0].set_fill(GREY_BROWN)
+        circles.arrange_submobjects_in_grid()
+        for circle in circles:
+            formula = TexMobject("\\pi", "R", "^2")
+            formula.set_color_by_tex("R", YELLOW)
+            formula.scale(2)
+            formula.move_to(circle)
+            circle.add(formula)
+
+        equals = TexMobject("=")
+        equals.scale(3)
+
+        group = VGroup(sphere, equals, circles)
+        group.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        equals.shift(3 * SMALL_BUFF * RIGHT)
+
+        why = TextMobject("Why?!")
+        why.set_color(YELLOW)
+        why.scale(2.5)
+        why.next_to(sphere, UP)
+
+        sa_formula = TexMobject("4\\pi", "R", "^2")
+        sa_formula.set_color_by_tex("R", YELLOW)
+        sa_formula.scale(2)
+        sa_formula.next_to(sphere, DOWN)
+
+        self.camera.distance_tracker.set_value(100)
+
+        self.add(sphere, equals, circles, why, sa_formula)
