@@ -41,3 +41,13 @@ class ExponentialValueTracker(ValueTracker):
 
     def set_value(self, value):
         return ValueTracker.set_value(self, np.log(value))
+
+
+class ComplexValueTracker(ValueTracker):
+    def get_value(self):
+        return complex(*self.points[0, :2])
+
+    def set_value(self, z):
+        z = complex(z)
+        self.points[0, :2] = (z.real, z.imag)
+        return self
