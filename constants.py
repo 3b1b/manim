@@ -1,20 +1,11 @@
 import os
 import numpy as np
 
-env_MEDIA_DIR = None
-MEDIA_DIR = "#ERROR#"
-
-try:
-    env_MEDIA_DIR = os.getenv("MEDIA_DIR")
-except NameError:
-    try:
-        env_MEDIA_DIR = os.environ['MEDIA_DIR']
-    except KeyError:
-        pass
-
-if not (env_MEDIA_DIR is None):
+# Initialize directories
+env_MEDIA_DIR = os.getenv("MEDIA_DIR")
+if env_MEDIA_DIR:
     MEDIA_DIR = env_MEDIA_DIR
-elif os.path.exists("media_dir.txt"):
+elif os.path.isfile("media_dir.txt"):
     with open("media_dir.txt", 'rU') as media_file:
         MEDIA_DIR = media_file.readline().strip()
 else:
@@ -22,18 +13,77 @@ else:
         os.path.expanduser('~'),
         "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
     )
-
-if not os.path.exists(MEDIA_DIR):
-    raise Exception("""
-        Redefine MEDIA_DIR by changing the MEDIA_DIR
-        environment constant or by changing
-        media_dir.txt to point to a valid directory
-        where movies and images will be written
-    """)
-
+if not os.path.isdir(MEDIA_DIR):
+    MEDIA_DIR = "media"
+    print(
+        f"Media will be stored in {MEDIA_DIR + os.sep}. You can change "
+        "this behavior by writing a different directory to media_dir.txt."
+    )
 with open("media_dir.txt", 'w') as media_file:
     media_file.write(MEDIA_DIR)
-#
+
+VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
+RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
+SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
+# TODO, staged scenes should really go into a subdirectory of a given scenes directory
+STAGED_SCENES_DIR = os.path.join(VIDEO_DIR, "staged_scenes")
+###
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+FILE_DIR = os.path.join(THIS_DIR, "files")
+TEX_DIR = os.path.join(FILE_DIR, "Tex")
+TEX_IMAGE_DIR = TEX_DIR  # TODO, What is this doing?
+# These two may be depricated now.
+MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
+IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
+
+for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR, TEX_DIR,
+               TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
+               STAGED_SCENES_DIR]:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+TEX_USE_CTEX = False
+TEX_TEXT_TO_REPLACE = "YourTextHere"
+TEMPLATE_TEX_FILE = os.path.join(
+    THIS_DIR, "tex_template.tex" if not TEX_USE_CTEX
+    else "ctex_template.tex"
+)
+with open(TEMPLATE_TEX_FILE, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY = infile.read()
+    TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
+    )
+
+HELP_MESSAGE = """
+   Usage:
+   python extract_scene.py <module> [<scene name>]
+   -p preview in low quality
+   -s show and save picture of last frame
+   -w write result to file [this is default if nothing else is stated]
+   -o <file_name> write to a different file_name
+   -l use low quality
+   -m use medium quality
+   -a run and save every scene in the script, or all args for the given scene
+   -q don't print progress
+   -f when writing to a movie file, export the frames in png sequence
+   -t use transperency when exporting images
+   -n specify the number of the animation to start from
+   -r specify a resolution
+   -c specify a background color
+"""
+SCENE_NOT_FOUND_MESSAGE = """
+   That scene is not in the script
+"""
+CHOOSE_NUMBER_MESSAGE = """
+Choose number corresponding to desired scene/arguments.
+(Use comma separated list for multiple entries)
+Choice(s): """
+INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
+
+NO_SCENE_MESSAGE = """
+   There are no scenes inside that module
+"""
 
 LOW_QUALITY_FRAME_DURATION = 1. / 15
 MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
@@ -114,44 +164,9 @@ PI = np.pi
 TAU = 2 * PI
 DEGREES = TAU / 360
 
-VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
-RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
-SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
-# TODO, staged scenes should really go into a subdirectory of a given scenes directory
-STAGED_SCENES_DIR = os.path.join(VIDEO_DIR, "staged_scenes")
-###
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR = os.path.join(THIS_DIR, "files")
-TEX_DIR = os.path.join(FILE_DIR, "Tex")
-TEX_IMAGE_DIR = TEX_DIR  # TODO, What is this doing?
-# These two may be depricated now.
-MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
-IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
-
-for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR, TEX_DIR,
-               TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
-               STAGED_SCENES_DIR]:
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-TEX_USE_CTEX = False
-TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE = os.path.join(
-    THIS_DIR, "tex_template.tex" if not TEX_USE_CTEX
-    else "ctex_template.tex"
-)
-with open(TEMPLATE_TEX_FILE, "r") as infile:
-    TEMPLATE_TEXT_FILE_BODY = infile.read()
-    TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
-        TEX_TEXT_TO_REPLACE,
-        "\\begin{align*}" + TEX_TEXT_TO_REPLACE + "\\end{align*}",
-    )
-
 FFMPEG_BIN = "ffmpeg"
 
-
 # Colors
-
 COLOR_MAP = {
     "DARK_BLUE": "#236B8E",
     "DARK_BROWN": "#8B4513",
@@ -214,12 +229,17 @@ locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]
 
-# Streaming related configurations
-IS_LIVE_STREAMING = False
+# Streaming related configuration
 LIVE_STREAM_NAME = "LiveStream"
-IS_STREAMING_TO_TWITCH = False
 TWITCH_STREAM_KEY = "YOUR_STREAM_KEY"
 STREAMING_PROTOCOL = "tcp"
 STREAMING_IP = "127.0.0.1"
 STREAMING_PORT = "2000"
 STREAMING_CLIENT = "ffplay"
+STREAMING_URL = f"{STREAMING_PROTOCOL}://{STREAMING_IP}:{STREAMING_PORT}?listen"
+STREAMING_CONSOLE_BANNER = """
+Manim is now running in streaming mode. Stream animations by passing
+them to manim.play(), e.g.
+>>> c = Circle()
+>>> manim.play(ShowCreation(c))
+"""

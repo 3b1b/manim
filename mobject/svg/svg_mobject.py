@@ -43,7 +43,7 @@ class SVGMobject(VMobject):
 
     def __init__(self, file_name=None, **kwargs):
         digest_config(self, kwargs)
-        self.file_name = self.file_name or file_name
+        self.file_name = file_name or self.file_name
         self.ensure_valid_file()
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
@@ -264,8 +264,13 @@ class SVGMobject(VMobject):
             if not transform.startswith(prefix) or not transform.endswith(suffix):
                 raise Exception()
             transform = transform[len(prefix):-len(suffix)]
-            scale_x, scale_y = string_to_numbers(transform)
-            mobject.scale(np.array([scale_x, scale_y, 1]))
+            scale_values = string_to_numbers(transform)
+            if len(scale_values) == 2:
+                scale_x, scale_y = scale_values
+                mobject.scale(np.array([scale_x, scale_y, 1]), about_point=ORIGIN)
+            elif len(scale_values) == 1:
+                scale = scale_values[0]
+                mobject.scale(np.array([scale, scale, 1]), about_point=ORIGIN)
         except:
             pass
 
