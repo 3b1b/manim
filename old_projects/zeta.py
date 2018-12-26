@@ -3265,18 +3265,23 @@ class Thumbnail(ZetaTransformationScene):
         "anchor_density" : 35
     }
     def construct(self):
+        self.y_min = -4
+        self.y_max = 4
+        self.x_min = 1
+        self.x_max = int(FRAME_X_RADIUS+2)
         self.add_transformable_plane()
         self.add_extra_plane_lines_for_zeta()
         self.add_reflected_plane()
-        self.apply_zeta_function()
+        # self.apply_zeta_function()
         self.plane.set_stroke(width = 4)
 
         div_sum = TexMobject("-\\frac{1}{12} = ", "1+2+3+4+\\cdots")
         div_sum.set_width(FRAME_WIDTH-1)
         div_sum.to_edge(DOWN)
         div_sum.set_color(YELLOW)
-        for mob in div_sum.submobjects:
-            mob.add_to_back(BackgroundRectangle(mob))
+        div_sum.set_background_stroke(width=8)
+        # for mob in div_sum.submobjects:
+        #     mob.add_to_back(BackgroundRectangle(mob))
 
         zeta = TexMobject("\\zeta(s)")
         zeta.set_height(FRAME_Y_RADIUS-1)
@@ -3286,7 +3291,7 @@ class Thumbnail(ZetaTransformationScene):
         million.set_width(FRAME_X_RADIUS+1)
         million.to_edge(UP+RIGHT)
         million.set_color(GREEN_B)
-        million.add_background_rectangle()
+        million.set_background_stroke(width=8)
 
         self.add(div_sum, million, zeta)
 
