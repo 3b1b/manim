@@ -1,7 +1,5 @@
 import random
-import string
 
-from manimlib.animation.animation import Animation
 from manimlib.animation.composition import LaggedStart
 from manimlib.animation.creation import DrawBorderThenFill
 from manimlib.animation.creation import FadeIn

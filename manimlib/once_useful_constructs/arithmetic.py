@@ -66,9 +66,7 @@ class RearrangeEquation(Scene):
         """
         num_start_terms = len(start_terms)
         all_mobs = np.array(
-            TexMobject(start_terms).split() +
-            TexMobject(end_terms).split()
-        )
+            TexMobject(start_terms).split() + TexMobject(end_terms).split())
         all_terms = np.array(start_terms + end_terms)
         for term in set(all_terms):
             matches = all_terms == term

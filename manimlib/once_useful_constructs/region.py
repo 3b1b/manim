@@ -99,7 +99,7 @@ def plane_partition(*lines, **kwargs):
 def plane_partition_from_points(*points, **kwargs):
     """
     Returns list of regions cut out by the complete graph
-    with points from the argument as vertices.  
+    with points from the argument as vertices.
 
     Each point comes in the form (x, y)
     """

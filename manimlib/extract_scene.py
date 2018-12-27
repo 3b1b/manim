@@ -1,7 +1,7 @@
-import importlib
 import inspect
 import itertools as it
 import os
+import platform
 import subprocess as sp
 import sys
 import traceback
@@ -13,7 +13,6 @@ import manimlib.constants
 
 
 def handle_scene(scene, **config):
-    import platform
     if config["quiet"]:
         curr_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")

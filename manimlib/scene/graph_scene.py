@@ -440,7 +440,7 @@ class GraphScene(Scene):
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
         triangle.set_fill(color, 1)
         triangle.set_stroke(width=0)
-        if label == None:
+        if label is None:
             T_label = TexMobject(self.variable_point_label, fill_color=color)
         else:
             T_label = TexMobject(label, fill_color=color)

@@ -118,7 +118,7 @@ class ApplyMethod(Transform):
         """
         if not inspect.ismethod(method):
             raise Exception(
-                "Whoops, looks like you accidentally invoked " +
+                "Whoops, looks like you accidentally invoked "
                 "the method you want to animate"
             )
         assert(isinstance(method.__self__, Mobject))

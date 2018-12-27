@@ -2,7 +2,6 @@ from time import sleep
 import _thread as thread
 import datetime
 import inspect
-import itertools as it
 import os
 import random
 import shutil
@@ -25,6 +24,7 @@ from manimlib.utils.iterables import list_update
 from manimlib.utils.output_directory_getters import add_extension_if_not_present
 from manimlib.utils.output_directory_getters import get_image_output_directory
 from manimlib.utils.output_directory_getters import get_movie_output_directory
+
 
 class Scene(Container):
     CONFIG = {
@@ -274,8 +274,9 @@ class Scene(Container):
         for list_name in "mobjects", "foreground_mobjects":
             self.restructure_mobjects(mobjects, list_name, False)
 
-        self.continual_animations = [ca for ca in self.continual_animations if ca not in continual_animations and
-            ca.mobject not in to_remove]
+        self.continual_animations = [
+            ca for ca in self.continual_animations if ca not in
+            continual_animations and ca.mobject not in to_remove]
         return self
 
     def restructure_mobjects(
@@ -676,7 +677,7 @@ class Scene(Container):
         anims = []
         anims.append(Write(eq))
         for mobject in self.mobjects:
-            anims.append(ApplyMethod(mobject.shift,2*UP))
+            anims.append(ApplyMethod(mobject.shift, 2 * UP))
         self.play(*anims)
 
 
