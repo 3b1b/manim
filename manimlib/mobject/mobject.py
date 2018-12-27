@@ -19,6 +19,7 @@ from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_num_args
 from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix
 
