@@ -1,14 +1,17 @@
 #!/usr/bin/env python
-import config
-import extract_scene
-import stream_starter
+import manimlib.config
+import manimlib.extract_scene
+import manimlib.stream_starter
 
-args = config.parse_cli()
-if not args.livestream:
-    config = config.get_configuration(args)
-    extract_scene.main(config)
+if __name__ == "__main__":
+    args = manimlib.config.parse_cli()
+    if not args.livestream:
+        config = manimlib.config.get_configuration(args)
+        manimlib.extract_scene.main(config)
+    else:
+        manimlib.stream_starter.start_livestream(
+            to_twitch=args.to_twitch,
+            twitch_key=args.twitch_key,
+        )
 else:
-    stream_starter.start_livestream(
-        to_twitch=args.to_twitch,
-        twitch_key=args.twitch_key,
-    )
+    manimlib.stream_starter.start_livestream()
