@@ -10,7 +10,6 @@ import numpy as np
 
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.functools import reduce
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
