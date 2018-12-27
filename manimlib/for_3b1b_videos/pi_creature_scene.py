@@ -1,8 +1,6 @@
 import itertools as it
 import random
 
-import numpy as np
-
 from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform

@@ -520,8 +520,8 @@ class VMobject(Mobject):
         # Each element of index_allocation is like a bucket,
         # and its value tells you the appropriate index of
         # the smaller curve.
-        index_allocation = (np.arange(curr + n - 1) *
-                            num_curves) // (curr + n - 1)
+        index_allocation = (
+            np.arange(curr + n - 1) * num_curves) // (curr + n - 1)
         for index in range(num_curves):
             curr_bezier_points = self.points[3 * index:3 * index + 4]
             num_inter_curves = sum(index_allocation == index)

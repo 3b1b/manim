@@ -242,7 +242,7 @@ class Spotlight(VMobject):
         projected_screen_points = list(map(self.project, screen_points))
 
         viewing_angles = np.array(list(map(self.viewing_angle_of_point,
-                                      projected_screen_points)))
+                                           projected_screen_points)))
 
         lower_angle = upper_angle = 0
         if len(viewing_angles) != 0:
@@ -420,7 +420,7 @@ class LightSource(VMobject):
         else:
             # Note: See below
             index = self.submobjects.index(self.spotlight)
-            camera_mob = self.spotlight.camera_mob
+            # camera_mob = self.spotlight.camera_mob
             self.remove(self.spotlight)
             self.spotlight = Spotlight(
                 source_point=VectorizedPoint(location=self.get_source_point()),

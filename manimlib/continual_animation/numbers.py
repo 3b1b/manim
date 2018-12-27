@@ -1,5 +1,3 @@
-
-
 from manimlib.animation.numbers import ChangingDecimal
 from manimlib.continual_animation.from_animation import NormalAnimationAsContinualAnimation
 

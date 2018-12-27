@@ -100,44 +100,23 @@ class RemovePiCreatureBubble(AnimationGroup):
             surrounding_scene.add(self.pi_creature)
 
 
-
 class FlashThroughClass(Animation):
     CONFIG = {
-        "highlight_color" : GREEN,
+        "highlight_color": GREEN,
     }
 
-    def __init__(self, mobject, mode = "linear", **kwargs):
-        
+    def __init__(self, mobject, mode="linear", **kwargs):
         if not isinstance(mobject, PiCreatureClass):
             raise Exception("FlashThroughClass mobject must be a PiCreatureClass")
         digest_config(self, kwargs)
         self.indices = list(range(mobject.height * mobject.width))
-        
         if mode == "random":
             np.random.shuffle(self.indices)
-
         Animation.__init__(self, mobject, **kwargs)
-        
 
     def update_mobject(self, alpha):
         index = int(np.floor(alpha * self.mobject.height * self.mobject.width))
-        
         for pi in self.mobject:
             pi.set_color(BLUE_E)
         if index < self.mobject.height * self.mobject.width:
             self.mobject[self.indices[index]].set_color(self.highlight_color)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
