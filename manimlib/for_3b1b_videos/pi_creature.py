@@ -12,8 +12,6 @@ from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.rate_functions import squish_rate_func
-from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.space_ops import get_norm
 
 pi_creature_dir_maybe = os.path.join(MEDIA_DIR, "designs", "PiCreature")
@@ -60,7 +58,7 @@ class PiCreature(SVGMobject):
                 "%s_%s.svg" % (self.file_name_prefix, mode)
             )
             SVGMobject.__init__(self, file_name=svg_file, **kwargs)
-        except:
+        except Exception:
             warnings.warn("No %s design with mode %s" %
                           (self.file_name_prefix, mode))
             svg_file = os.path.join(

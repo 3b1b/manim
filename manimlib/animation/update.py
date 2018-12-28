@@ -36,8 +36,6 @@ class MaintainPositionRelativeTo(Animation):
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
-        self.mobject.shift(
-            self.tracked_mobject.get_critical_point(self.tracked_critical_point) -
-            self.mobject.get_critical_point(self.tracked_critical_point) +
-            self.diff
-        )
+        target = self.tracked_mobject.get_critical_point(self.tracked_critical_point)
+        location = self.mobject.get_critical_point(self.tracked_critical_point)
+        self.mobject.shift(target - location + self.diff)

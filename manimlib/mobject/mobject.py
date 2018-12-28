@@ -19,7 +19,6 @@ from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_num_args
 from manimlib.utils.space_ops import angle_of_vector
-from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix
 
@@ -102,7 +101,7 @@ class Mobject(Container):
 
     def get_image(self, camera=None):
         if camera is None:
-            from camera.camera import Camera
+            from manimlib.camera.camera import Camera
             camera = Camera()
         camera.capture_mobject(self)
         return camera.get_image()
@@ -530,7 +529,7 @@ class Mobject(Container):
     def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
         # TODO, this does not behave well when the mobject has points,
         # since it gets displayed on top
-        from mobject.shape_matchers import BackgroundRectangle
+        from manimlib.mobject.shape_matchers import BackgroundRectangle
         self.background_rectangle = BackgroundRectangle(
             self, color=color,
             fill_opacity=opacity,

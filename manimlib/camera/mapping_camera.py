@@ -35,6 +35,7 @@ class MappingCamera(Camera):
             excluded_mobjects=None,
         )
 
+
 # Note: This allows layering of multiple cameras onto the same portion of the pixel array,
 # the later cameras overwriting the former
 #
@@ -42,7 +43,6 @@ class MappingCamera(Camera):
 # CameraPlusOverlay class)
 
 # TODO, the classes below should likely be deleted
-
 class OldMultiCamera(Camera):
     def __init__(self, *cameras_with_start_positions, **kwargs):
         self.shifted_cameras = [

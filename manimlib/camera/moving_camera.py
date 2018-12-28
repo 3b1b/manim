@@ -5,7 +5,6 @@ from manimlib.constants import ORIGIN
 from manimlib.constants import WHITE
 from manimlib.mobject.frame import ScreenRectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.config_ops import digest_config
 
 

@@ -1,5 +1,3 @@
-
-
 from manimlib.animation.update import MaintainPositionRelativeTo
 from manimlib.continual_animation.continual_animation import ContinualAnimation
 from manimlib.mobject.value_tracker import ValueTracker

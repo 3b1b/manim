@@ -1,4 +1,3 @@
-
 from functools import reduce
 import itertools as it
 import operator as op
@@ -15,7 +14,6 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import color_to_int_rgba
-from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import batch_by_property

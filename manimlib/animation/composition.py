@@ -1,4 +1,3 @@
-import itertools as it
 import warnings
 
 import numpy as np
@@ -104,8 +103,7 @@ class Succession(Animation):
         self.scene_mobjects_at_time = [None for i in range(self.num_anims + 1)]
         self.scene_mobjects_at_time[0] = Group()
         for i in range(self.num_anims):
-            self.scene_mobjects_at_time[i +
-                                        1] = self.scene_mobjects_at_time[i].copy()
+            self.scene_mobjects_at_time[i + 1] = self.scene_mobjects_at_time[i].copy()
             self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
 
         self.current_alpha = 0
@@ -154,7 +152,7 @@ class Succession(Animation):
             # self.critical_alphas (which is also 1.0)
             if not abs(alpha - 1) < 0.001:
                 warnings.warn(
-                    "Rounding error not near alpha=1 in Succession.update_mobject," +
+                    "Rounding error not near alpha=1 in Succession.update_mobject,"
                     "instead alpha = %f" % alpha
                 )
                 print(self.critical_alphas, alpha)

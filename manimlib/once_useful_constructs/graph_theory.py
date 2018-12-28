@@ -13,13 +13,13 @@ from manimlib.utils.space_ops import center_of_mass
 class Graph():
     def __init__(self):
         # List of points in R^3
-        vertices = []
+        # vertices = []
         # List of pairs of indices of vertices
-        edges = []
+        # edges = []
         # List of tuples of indices of vertices.  The last should
         # be a cycle whose interior is the entire graph, and when
         # regions are computed its complement will be taken.
-        region_cycles = []
+        # region_cycles = []
 
         self.construct()
 
@@ -275,7 +275,7 @@ class DiscreteGraphScene(Scene):
             ])
 
     def trace_cycle(self, cycle=None, color="yellow", run_time=2.0):
-        if cycle == None:
+        if cycle is None:
             cycle = self.graph.region_cycles[0]
         time_per_edge = run_time / len(cycle)
         next_in_cycle = it.cycle(cycle)
@@ -385,8 +385,7 @@ class DiscreteGraphScene(Scene):
             Dot(point).set_color("green")
             for point in self.dual_points
         ]
-        self.dual_vertices[-1] = Circle().scale(FRAME_X_RADIUS +
-                                                FRAME_Y_RADIUS)
+        self.dual_vertices[-1] = Circle().scale(FRAME_X_RADIUS + FRAME_Y_RADIUS)
         self.dual_points[-1] = point_at_infinity
 
         self.dual_edges = []

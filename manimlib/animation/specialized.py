@@ -1,5 +1,3 @@
-import numpy as np
-
 from manimlib.animation.composition import LaggedStart
 from manimlib.animation.transform import ApplyMethod
 from manimlib.constants import *

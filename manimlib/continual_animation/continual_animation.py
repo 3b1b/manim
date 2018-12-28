@@ -42,8 +42,7 @@ class ContinualAnimation(object):
             dt *= float(self.external_time) / self.start_up_time
         elif self.external_time > self.end_time - self.wind_down_time:
             dt *= np.clip(
-                float(self.end_time - self.external_time) /
-                self.wind_down_time,
+                float(self.end_time - self.external_time) / self.wind_down_time,
                 0, 1
             )
         self.internal_time += dt

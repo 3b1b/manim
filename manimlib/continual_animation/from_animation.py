@@ -1,5 +1,3 @@
-
-
 from manimlib.continual_animation.continual_animation import ContinualAnimation
 
 
