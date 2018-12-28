@@ -400,7 +400,7 @@ class Mobject(Container):
         mob1.align_to(mob2, UP) moves mob1 vertically so that its
         top edge lines ups with mob2's top edge.
 
-        mob1.align_to(mob2, alignment_vector = RIGHT) moves mob1
+        mob1.align_to(mob2, alignment_vect = RIGHT) moves mob1
         horizontally so that it's center is directly above/below
         the center of mob2
         """
