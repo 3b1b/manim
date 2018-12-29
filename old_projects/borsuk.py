@@ -213,9 +213,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         self.play(FadeOut(self.title))
         for jewel_type, label in zip(jewel_types, enumeration_labels):
             jewel_type.submobjects.sort(
-                key=
-         y=lambda m: m1.get
-        )
+                key=lambda m: m1.get
             )
             jewel_type.save_state()
             jewel_type.generate_target()
