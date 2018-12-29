@@ -91,8 +91,8 @@ def get_scene_classes(scene_names_to_classes, config):
     if config["scene_name"] in scene_names_to_classes:
         return [scene_names_to_classes[config["scene_name"]]]
     if config["scene_name"] != "":
-        print(manimlib.constants.SCENE_NOT_FOUND_MESSAGE)
-        return []
+        print(manimlib.constants.SCENE_NOT_FOUND_MESSAGE, file=sys.stderr)
+        sys.exit(2)
     if config["write_all"]:
         return list(scene_names_to_classes.values())
     return prompt_user_for_choice(scene_names_to_classes)
