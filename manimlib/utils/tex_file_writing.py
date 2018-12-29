@@ -37,12 +37,6 @@ def generate_tex_file(expression, template_tex_file_body):
     return result
 
 
-def get_null():
-    if os.name == "nt":
-        return "NUL"
-    return "/dev/null"
-
-
 def tex_to_dvi(tex_file):
     result = tex_file.replace(".tex", ".dvi" if not TEX_USE_CTEX else ".xdv")
     if not os.path.exists(result):
@@ -53,7 +47,7 @@ def tex_to_dvi(tex_file):
             "-output-directory=" + TEX_DIR,
             tex_file,
             ">",
-            get_null()
+            os.devnull
         ] if not TEX_USE_CTEX else [
             "xelatex",
             "-no-pdf",
@@ -62,7 +56,7 @@ def tex_to_dvi(tex_file):
             "-output-directory=" + TEX_DIR,
             tex_file,
             ">",
-            get_null()
+            os.devnull
         ]
         exit_code = os.system(" ".join(commands))
         if exit_code != 0:
@@ -92,7 +86,7 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
             "-o",
             result,
             ">",
-            get_null()
+            os.devnull
         ]
         os.system(" ".join(commands))
     return result
