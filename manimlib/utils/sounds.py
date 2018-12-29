@@ -13,7 +13,8 @@ def play_chord(*nums):
         for num in nums
     ] + [
         "fade h 0.5 1 0.5",
-        "> /dev/null"
+        ">",
+        os.devnull
     ]
     try:
         os.system(" ".join(commands))

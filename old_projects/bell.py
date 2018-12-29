@@ -2010,7 +2010,7 @@ class VennDiagramProofByContradiction(Scene):
             else:
                 rejected.append((x, y))
         rejected.sort(
-            kay=lambda (x, y): (x**2 + y**2)
+            kay=lambda x, y: (x**2 + y**2)
         )
         for i in range(len(photons) - len(pairs)):
             pairs.append(rejected.pop())
