@@ -40,6 +40,11 @@ def parse_cli():
         parser.add_argument("-n", "--start_at_animation_number")
         parser.add_argument("-r", "--resolution")
         parser.add_argument("-c", "--color")
+        parser.add_argument(
+            "--no_sound",
+            action="store_true",
+            help="Don't play a success/failure sound",
+        )
         module_location.add_argument(
             "--livestream",
             action="store_true",
@@ -120,6 +125,7 @@ def get_configuration(args):
         "output_name": output_name,
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
+        "no_sound": args.no_sound,
     }
 
     # Camera configuration
