@@ -11,8 +11,10 @@ ben_playground.py
 ben_cairo_test.py
 .floo
 .flooignore
+.vscode
 *.xml
 *.iml
+media
 manim.sublime-project
 manim.sublime-workspace
 

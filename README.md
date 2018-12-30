@@ -6,7 +6,7 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
 
 ## Installation
 Manim runs on python 3.7. You can install the python requirements with
-`pip install -r requirements.txt`. System requirements are
+`python3 -m pip install -r requirements.txt`. System requirements are
 [cairo](https://www.cairographics.org), [latex](https://www.latex-project.org),
 [ffmpeg](https://www.ffmpeg.org), and [sox](http://sox.sourceforge.net).
 
@@ -14,7 +14,7 @@ Manim runs on python 3.7. You can install the python requirements with
 ```sh
 git clone https://github.com/3b1b/manim.git
 cd manim
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
 

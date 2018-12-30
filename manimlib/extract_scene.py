@@ -25,23 +25,33 @@ def handle_scene(scene, **config):
         config["show_file_in_finder"]
     ])
     if open_file:
-        commands = ["open"]
-        if (platform.system() == "Linux"):
-            commands = ["xdg-open"]
-        elif (platform.system() == "Windows"):
-            commands = ["start"]
-
-        if config["show_file_in_finder"]:
-            commands.append("-R")
+        current_os = platform.system()
+        file_path = None
 
         if config["show_last_frame"]:
-            commands.append(scene.get_image_file_path())
+            file_path = scene.get_image_file_path()
         else:
-            commands.append(scene.get_movie_file_path())
-        # commands.append("-g")
-        FNULL = open(os.devnull, 'w')
-        sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
-        FNULL.close()
+            file_path = scene.get_movie_file_path()
+
+        if current_os == "Windows":
+            os.startfile(file_path)
+        else:
+            commands = []
+
+            if (current_os == "Linux"):
+                commands.append("xdg-open")
+            else: # Assume macOS
+                commands.append("open")
+
+            if config["show_file_in_finder"]:
+                commands.append("-R")
+
+            commands.append(file_path)
+
+            # commands.append("-g")
+            FNULL = open(os.devnull, 'w')
+            sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
+            FNULL.close()
 
     if config["quiet"]:
         sys.stdout.close()
