@@ -136,13 +136,15 @@ def main(config):
     for SceneClass in get_scene_classes(scene_names_to_classes, config):
         try:
             handle_scene(SceneClass(**scene_kwargs), **config)
-            play_finish_sound()
+            if not config["no_sound"]:
+                play_finish_sound()
             sys.exit(0)
         except Exception:
             print("\n\n")
             traceback.print_exc()
             print("\n\n")
-            play_error_sound()
+            if not config["no_sound"]:
+                play_error_sound()
             sys.exit(2)
 
 
