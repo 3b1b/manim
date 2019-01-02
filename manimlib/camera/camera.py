@@ -2,6 +2,7 @@ from functools import reduce
 import itertools as it
 import operator as op
 import time
+import copy
 
 from PIL import Image
 from scipy.spatial.distance import pdist
