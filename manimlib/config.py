@@ -1,6 +1,6 @@
 import argparse
 import colour
-import importlib
+import importlib.util
 import os
 import sys
 import types
@@ -79,7 +79,7 @@ def parse_cli():
 
 def get_module(file_name):
     if file_name == "-":
-        module = types.ModuleType("InputModule")
+        module = types.ModuleType("input_scenes")
         code = "from big_ol_pile_of_manim_imports import *\n\n" + sys.stdin.read()
         try:
             exec(code, module.__dict__)
@@ -88,8 +88,11 @@ def get_module(file_name):
             print(f"Failed to render scene: {str(e)}")
             sys.exit(2)
     else:
-        module_name = file_name.replace(".py", "").replace(os.sep, ".")
-        return importlib.import_module(module_name)
+        module_name = file_name.split(os.sep)[-1].replace(".py", "")
+        spec = importlib.util.spec_from_file_location(module_name, file_name)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
 
 
 def get_configuration(args):
