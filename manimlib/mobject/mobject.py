@@ -639,7 +639,7 @@ class Mobject(Container):
 
     def fade_to(self, color, alpha):
         for mob in self.get_family():
-            mob.fade_to_no_recurse(self, color, alpha)
+            mob.fade_to_no_recurse(color, alpha)
         return self
 
     def fade_no_recurse(self, darkness):
