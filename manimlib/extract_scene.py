@@ -40,7 +40,7 @@ def handle_scene(scene, **config):
 
             if (current_os == "Linux"):
                 commands.append("xdg-open")
-            else: # Assume macOS
+            else:  # Assume macOS
                 commands.append("open")
 
             if config["show_file_in_finder"]:
