@@ -126,3 +126,6 @@ class Integer(DecimalNumber):
     CONFIG = {
         "num_decimal_places": 0,
     }
+
+    def increment_value(self):
+        self.set_value(self.get_value() + 1)
