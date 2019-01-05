@@ -1,4 +1,6 @@
 from big_ol_pile_of_manim_imports import *
+import subprocess
+from pydub import AudioSegment
 
 
 class SlidingBlocks(VGroup):
@@ -17,7 +19,7 @@ class SlidingBlocks(VGroup):
         },
         "block_style": {
             "fill_opacity": 1,
-            "fill_color": (GREY, LIGHT_GREY),
+            "fill_color": (GREY, WHITE),
             "stroke_width": 3,
             "stroke_color": WHITE,
             "sheen_direction": UL,
@@ -32,6 +34,7 @@ class SlidingBlocks(VGroup):
 
         self.block1 = self.get_block(**self.block1_config)
         self.block2 = self.get_block(**self.block2_config)
+        self.mass_ratio = self.block2.mass / self.block1.mass
         self.phase_space_point_tracker = self.get_phase_space_point_tracker()
         self.add(
             self.block1, self.block2,
@@ -39,8 +42,7 @@ class SlidingBlocks(VGroup):
         )
         self.add_updater(self.__class__.update_positions)
 
-        # From here, there's enough information to create
-        # a list of all clack times and locations
+        self.clack_data = self.get_clack_data()
 
     def get_block(self, mass, width, distance, velocity):
         block = Square(side_length=width)
@@ -59,7 +61,7 @@ class SlidingBlocks(VGroup):
             DL,
         )
         label = block.label = TextMobject(
-            "{:,}\\,kg".format(mass)
+            "{:,}\\,kg".format(int(mass))
         )
         label.scale(0.8)
         label.next_to(block, UP, SMALL_BUFF)
@@ -124,10 +126,9 @@ class SlidingBlocks(VGroup):
         block1, block2 = self.block1, self.block2
 
         ps_point = self.phase_space_point_tracker.get_location()
-        theta = np.arctan(np.sqrt(block2.mass / block1.mass))
+        theta = np.arctan(np.sqrt(self.mass_ratio))
         ps_point_angle = angle_of_vector(ps_point)
         n_clacks = int(ps_point_angle / theta)
-        # TODO, pass on n_clack information to surrounding_scene
         reflected_point = rotate_vector(
             ps_point,
             -2 * np.ceil(n_clacks / 2) * theta
@@ -149,36 +150,111 @@ class SlidingBlocks(VGroup):
             DR,
         )
 
+        self.surrounding_scene.update_num_clacks(n_clacks)
+
+    def get_clack_data(self):
+        ps_point = self.phase_space_point_tracker.get_location()
+        ps_velocity = self.phase_space_point_tracker.velocity
+        if ps_velocity[1] != 0:
+            raise Exception(
+                "Haven't implemented anything to gather clack "
+                "data from a start state with block2 moving"
+            )
+        y = ps_point[1]
+        theta = np.arctan(np.sqrt(self.mass_ratio))
+
+        clack_data = []
+        for k in range(1, int(PI / theta) + 1):
+            clack_ps_point = np.array([
+                y / np.tan(k * theta),
+                y,
+                0
+            ])
+            time = get_norm(ps_point - clack_ps_point) / get_norm(ps_velocity)
+            reflected_point = rotate_vector(
+                clack_ps_point,
+                -2 * np.ceil((k - 1) / 2) * theta
+            )
+            block2 = self.block2
+            s2 = reflected_point[1] / np.sqrt(block2.mass)
+            location = np.array([
+                self.wall.get_right()[0] + s2,
+                block2.get_center()[1],
+                0
+            ])
+            if k % 2 == 1:
+                location += block2.get_width() * RIGHT
+            clack_data.append((location, time))
+        return clack_data
+
+
+class ClackFlashes(ContinualAnimation):
+    CONFIG = {
+        "flash_config": {
+            "run_time": 0.5,
+            "line_length": 0.1,
+            "flash_radius": 0.2,
+        },
+        "start_up_time": 0,
+    }
+
+    def __init__(self, clack_data, **kwargs):
+        digest_config(self, kwargs)
+        self.flashes = []
+        group = Group()
+        for location, time in clack_data:
+            flash = Flash(location, **self.flash_config)
+            flash.start_time = time
+            flash.end_time = time + flash.run_time
+            self.flashes.append(flash)
+        ContinualAnimation.__init__(self, group, **kwargs)
+
+    def update_mobject(self, dt):
+        total_time = self.external_time
+        for flash in self.flashes:
+            if flash.start_time < total_time < flash.end_time:
+                if flash.mobject not in self.mobject:
+                    self.mobject.add(flash.mobject)
+                flash.update(
+                    (total_time - flash.start_time) / flash.run_time
+                )
+            else:
+                if flash.mobject in self.mobject:
+                    self.mobject.remove(flash.mobject)
+
 
 class BlocksAndWallScene(Scene):
     CONFIG = {
-        "print_clack_times": False,
+        "include_sound_file": True,
         "count_clacks": True,
         "sliding_blocks_config": {},
         "floor_y": -2,
         "wall_x": -5,
+        "clack_counter_label": "\\# Collisions: "
     }
 
     def setup(self):
         self.floor = self.get_floor()
         self.wall = self.get_wall()
         self.blocks = SlidingBlocks(self, **self.sliding_blocks_config)
-        self.add(self.floor, self.wall, self.blocks)
+        self.clack_data = self.blocks.clack_data
+        self.clack_flashes = ClackFlashes(self.clack_data)
+        self.add(self.floor, self.wall, self.blocks, self.clack_flashes)
+
         if self.count_clacks:
             self.add_clack_counter()
+        self.track_time()
 
-        self.track_times()
-
-    def track_times(self):
-        self.clack_times = []
+    def track_time(self):
         time_tracker = ValueTracker()
         time_tracker.add_updater(lambda m, dt: m.increment_value(dt))
         self.add(time_tracker)
         self.get_time = time_tracker.get_value
 
     def add_clack_counter(self):
-        clack_counter_label = TextMobject("\\# Clacks: ")
-        clack_counter = Integer(0)
+        self.n_clacks = 0
+        clack_counter_label = TextMobject(self.clack_counter_label)
+        clack_counter = Integer(self.n_clacks)
         clack_counter.next_to(
             clack_counter_label[-1], RIGHT,
             aligned_edge=DOWN,
@@ -192,10 +268,6 @@ class BlocksAndWallScene(Scene):
         self.add(clack_group)
 
         self.clack_counter = clack_counter
-
-    def tear_down(self):
-        if self.print_clack_times:
-            print(self.clack_times)
 
     def get_wall(self):
         wall = Line(self.floor_y * UP, FRAME_HEIGHT * UP / 2)
@@ -215,29 +287,78 @@ class BlocksAndWallScene(Scene):
         floor.shift(self.floor_y * UP)
         return floor
 
-    def clack(self, location):
-        self.clack_times.append(self.get_time())
-        if self.count_clacks:
-            self.clack_counter.increment_value()
+    def update_num_clacks(self, n_clacks):
+        if hasattr(self, "n_clacks"):
+            if n_clacks == self.n_clacks:
+                return
+            self.clack_counter.set_value(n_clacks)
 
+    def create_sound_file(self, clack_data):
+        directory = get_scene_output_directory(self.__class__)
+        clack_file = os.path.join(directory, 'sounds', 'bell.wav')
+        output_file = self.get_movie_file_path(extension='.wav')
+        times = [
+            time
+            for location, time in clack_data
+            if time < 30
+        ]
 
-# Animted scenes
+        clack = AudioSegment.from_wav(clack_file)
+        total_time = max(times) + 1
+        clacks = AudioSegment.silent(int(1000 * total_time))
+        last_position = 0
+        min_diff = 4
+        for time in times:
+            position = int(1000 * time)
+            d_position = position - last_position
+            last_position = position
+            if d_position < min_diff:
+                continue
+            clacks = clacks.fade(-50, start=position, end=position + 10)
+            clacks = clacks.overlay(
+                clack,
+                position=position
+            )
+        clacks.export(output_file, format="wav")
+        return output_file
+
+    def close_movie_pipe(self):
+        Scene.close_movie_pipe(self)
+        if self.include_sound_file:
+            sound_file_path = self.create_sound_file(self.clack_data)
+            movie_path = self.get_movie_file_path()
+            temp_path = self.get_movie_file_path(str(self) + "TempSound")
+            commands = [
+                "ffmpeg",
+                "-i", movie_path,
+                "-i", sound_file_path,
+                "-c:v", "copy", "-c:a", "aac",
+                '-loglevel', 'error',
+                "-strict", "experimental",
+                temp_path,
+            ]
+            subprocess.call(commands)
+            subprocess.call(["rm", sound_file_path])
+            subprocess.call(["mv", temp_path, movie_path])
+
+# Animated scenes
+
 
 class MathAndPhysicsConspiring(Scene):
     def construct(self):
         pass
 
 
-class ThreeSimpleClacks(BlocksAndWallScene):
+class BlocksAndWallExample(BlocksAndWallScene):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
-                "mass": 100,
+                "mass": 1e4,
                 "width": 1.5,
+                "velocity": -2,
             }
         }
     }
 
     def construct(self):
-        while self.blocks[0].get_left()[0] < FRAME_WIDTH / 2:
-            self.wait(1)
+        self.wait(20)
