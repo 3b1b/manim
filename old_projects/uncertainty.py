@@ -234,50 +234,6 @@ class RadarPulse(ContinualAnimation):
     def is_finished(self):
         return all([ps.is_finished() for ps in self.pulse_singletons])
 
-class Flash(AnimationGroup):
-    CONFIG = {
-        "line_length" : 0.2,
-        "num_lines" : 12,
-        "flash_radius" : 0.3,
-        "line_stroke_width" : 3,
-    }
-    def __init__(self, mobject, color = YELLOW, **kwargs):
-        digest_config(self, kwargs)
-        original_color = mobject.get_color()
-        on_and_off = UpdateFromAlphaFunc(
-            mobject.copy(), lambda m, a : m.set_color(
-                color if a < 0.5 else original_color
-            ),
-            remover = True
-        )
-        lines = VGroup()
-        for angle in np.arange(0, TAU, TAU/self.num_lines):
-            line = Line(ORIGIN, self.line_length*RIGHT)
-            line.shift((self.flash_radius - self.line_length)*RIGHT)
-            line.rotate(angle, about_point = ORIGIN)
-            lines.add(line)
-        lines.move_to(mobject)
-        lines.set_color(color)
-        line_anims = [
-            ShowCreationThenDestruction(
-                line, rate_func = squish_rate_func(smooth, 0, 0.5)
-            )
-            for line in lines
-        ]
-        fade_anims = [
-            UpdateFromAlphaFunc(
-                line, lambda m, a : m.set_stroke(
-                    width = self.line_stroke_width*(1-a)
-                ),
-                rate_func = squish_rate_func(smooth, 0, 0.75)
-            )
-            for line in lines
-        ]
-        
-        AnimationGroup.__init__(
-            self, on_and_off, *line_anims+fade_anims, **kwargs
-        )
-
 class MultipleFlashes(Succession):
     CONFIG = {
         "run_time_per_flash" : 1.0,
