@@ -3,25 +3,31 @@ import subprocess
 from pydub import AudioSegment
 
 
+MIN_TIME_BETWEEN_FLASHES = 0.004
+
+
 class SlidingBlocks(VGroup):
     CONFIG = {
         "block1_config": {
             "mass": 1,
             "velocity": -2,
             "distance": 7,
-            "width": 1,
+            "width": None,
+            "color": None,
         },
         "block2_config": {
             "mass": 1,
             "velocity": 0,
             "distance": 3,
-            "width": 1,
+            "width": None,
+            "color": None,
         },
         "block_style": {
             "fill_opacity": 1,
-            "fill_color": (GREY, WHITE),
             "stroke_width": 3,
             "stroke_color": WHITE,
+            "sheen_direction": UL,
+            "sheen_factor": 0.5,
             "sheen_direction": UL,
         }
     }
@@ -44,17 +50,19 @@ class SlidingBlocks(VGroup):
 
         self.clack_data = self.get_clack_data()
 
-    def get_block(self, mass, width, distance, velocity):
+    def get_block(self, mass, distance, velocity, width, color):
+        if width is None:
+            width = self.mass_to_width(mass)
+        if color is None:
+            color = self.mass_to_color(mass)
         block = Square(side_length=width)
         block.mass = mass
         block.velocity = velocity
 
-        block.set_style(**self.block_style)
-        block.set_fill(color=interpolate_color(
-            block.get_fill_color(),
-            BLUE_E,
-            (1 - 1.0 / (max(np.log10(mass), 1)))
-        ))
+        style = dict(self.block_style)
+        style["fill_color"] = color
+
+        block.set_style(**style)
         block.move_to(
             self.floor.get_top()[1] * UP +
             (self.wall.get_right()[0] + distance) * RIGHT,
@@ -187,6 +195,23 @@ class SlidingBlocks(VGroup):
             clack_data.append((location, time))
         return clack_data
 
+    def mass_to_color(self, mass):
+        colors = [
+            LIGHT_GREY,
+            BLUE_B,
+            BLUE_D,
+            BLUE_E,
+            BLUE_E,
+            DARK_GREY,
+            DARK_GREY,
+            BLACK,
+        ]
+        index = min(int(np.log10(mass)), len(colors) - 1)
+        return colors[index]
+
+    def mass_to_width(self, mass):
+        return 1 + 0.25 * np.log10(mass)
+
 
 class ClackFlashes(ContinualAnimation):
     CONFIG = {
@@ -202,7 +227,11 @@ class ClackFlashes(ContinualAnimation):
         digest_config(self, kwargs)
         self.flashes = []
         group = Group()
+        last_time = 0
         for location, time in clack_data:
+            if (time - last_time) < MIN_TIME_BETWEEN_FLASHES:
+                continue
+            last_time = time
             flash = Flash(location, **self.flash_config)
             flash.start_time = time
             flash.end_time = time + flash.run_time
@@ -229,8 +258,9 @@ class BlocksAndWallScene(Scene):
         "count_clacks": True,
         "sliding_blocks_config": {},
         "floor_y": -2,
-        "wall_x": -5,
-        "clack_counter_label": "\\# Collisions: "
+        "wall_x": -6,
+        "counter_label": "\\# Collisions: ",
+        "collision_sound": "clack.wav",
     }
 
     def setup(self):
@@ -242,7 +272,7 @@ class BlocksAndWallScene(Scene):
         self.add(self.floor, self.wall, self.blocks, self.clack_flashes)
 
         if self.count_clacks:
-            self.add_clack_counter()
+            self.add_counter()
         self.track_time()
 
     def track_time(self):
@@ -251,23 +281,23 @@ class BlocksAndWallScene(Scene):
         self.add(time_tracker)
         self.get_time = time_tracker.get_value
 
-    def add_clack_counter(self):
+    def add_counter(self):
         self.n_clacks = 0
-        clack_counter_label = TextMobject(self.clack_counter_label)
-        clack_counter = Integer(self.n_clacks)
-        clack_counter.next_to(
-            clack_counter_label[-1], RIGHT,
+        counter_label = TextMobject(self.counter_label)
+        counter_mob = Integer(self.n_clacks)
+        counter_mob.next_to(
+            counter_label[-1], RIGHT,
             aligned_edge=DOWN,
         )
         clack_group = VGroup(
-            clack_counter_label,
-            clack_counter,
+            counter_label,
+            counter_mob,
         )
         clack_group.to_corner(UR)
         clack_group.shift(LEFT)
         self.add(clack_group)
 
-        self.clack_counter = clack_counter
+        self.counter_mob = counter_mob
 
     def get_wall(self):
         wall = Line(self.floor_y * UP, FRAME_HEIGHT * UP / 2)
@@ -291,29 +321,33 @@ class BlocksAndWallScene(Scene):
         if hasattr(self, "n_clacks"):
             if n_clacks == self.n_clacks:
                 return
-            self.clack_counter.set_value(n_clacks)
+            self.counter_mob.set_value(n_clacks)
 
     def create_sound_file(self, clack_data):
         directory = get_scene_output_directory(self.__class__)
-        clack_file = os.path.join(directory, 'sounds', 'bell.wav')
+        clack_file = os.path.join(
+            directory, 'sounds', self.collision_sound,
+        )
         output_file = self.get_movie_file_path(extension='.wav')
         times = [
             time
             for location, time in clack_data
-            if time < 30
+            if time < 300  # In case of any extremes
         ]
 
         clack = AudioSegment.from_wav(clack_file)
         total_time = max(times) + 1
         clacks = AudioSegment.silent(int(1000 * total_time))
         last_position = 0
-        min_diff = 4
+        min_diff = int(1000 * MIN_TIME_BETWEEN_FLASHES)
         for time in times:
             position = int(1000 * time)
             d_position = position - last_position
-            last_position = position
             if d_position < min_diff:
                 continue
+            if time > self.get_time():
+                break
+            last_position = position
             clacks = clacks.fade(-50, start=position, end=position + 10)
             clacks = clacks.overlay(
                 clack,
@@ -346,19 +380,197 @@ class BlocksAndWallScene(Scene):
 
 class MathAndPhysicsConspiring(Scene):
     def construct(self):
+        v_line = Line(DOWN, UP).scale(FRAME_HEIGHT)
+        v_line.save_state()
+        v_line.fade(1)
+        v_line.scale(0)
+        math_title = TextMobject("Math")
+        math_title.set_color(BLUE)
+        physics_title = TextMobject("Physics")
+        physics_title.set_color(YELLOW)
+        for title, vect in (math_title, LEFT), (physics_title, RIGHT):
+            title.scale(2)
+            title.shift(vect * FRAME_WIDTH / 4)
+            title.to_edge(UP)
+
+        math_stuffs = VGroup(
+            TexMobject("\\pi = {:.16}\\dots".format(PI)),
+            self.get_tangent_image(),
+        )
+        math_stuffs.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        math_stuffs.next_to(math_title, DOWN, LARGE_BUFF)
+        to_fade = VGroup(math_title, *math_stuffs, physics_title)
+
+        self.play(
+            LaggedStart(
+                FadeInFromDown, to_fade,
+                lag_ratio=0.7,
+                run_time=3,
+            ),
+            Restore(v_line, run_time=2, path_arc=PI / 2),
+        )
+        self.wait()
+
+    def get_tangent_image(self):
+        axes = Axes(
+            x_min=-1.5,
+            x_max=1.5,
+            y_min=-1.5,
+            y_max=1.5,
+        )
+        circle = Circle()
+        circle.set_color(WHITE)
+        theta = 30 * DEGREES
+        arc = Arc(angle=theta, radius=0.4)
+        theta_label = TexMobject("\\theta")
+        theta_label.scale(0.5)
+        theta_label.next_to(arc.get_center(), RIGHT, buff=SMALL_BUFF)
+        theta_label.shift(0.025 * UL)
+        line = Line(ORIGIN, rotate_vector(RIGHT, theta))
+        line.set_color(WHITE)
+        one = TexMobject("1").scale(0.5)
+        one.next_to(line.point_from_proportion(0.7), UL, 0.5 * SMALL_BUFF)
+        tan_line = Line(
+            line.get_end(),
+            (1.0 / np.cos(theta)) * RIGHT
+        )
+        tan_line.set_color(RED)
+        tan_text = TexMobject("\\tan(\\theta)")
+        tan_text.rotate(tan_line.get_angle())
+        tan_text.scale(0.5)
+        tan_text.move_to(tan_line)
+        tan_text.match_color(tan_line)
+        tan_text.shift(0.2 * normalize(line.get_vector()))
+
+        result = VGroup(
+            axes, circle,
+            line, one,
+            arc, theta_label,
+            tan_line, tan_text,
+        )
+        result.set_height(4)
+        return result
+
+
+class LightBouncing(Scene):
+    CONFIG = {
+        "theta": np.arctan(0.1)
+    }
+
+    def construct(self):
         pass
 
 
-class BlocksAndWallExample(BlocksAndWallScene):
+class BlocksAndWallExampleSameMass(BlocksAndWallScene):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e0,
+                "velocity": -2,
+            }
+        },
+        "wait_time": 10,
+    }
+
+    def construct(self):
+        self.wait(self.wait_time)
+
+
+class BlocksAndWallExampleMass1e1(BlocksAndWallExampleSameMass):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e1,
+                "velocity": -1.5,
+            }
+        },
+        "wait_time": 20,
+    }
+
+
+class BlocksAndWallExampleMass1e2(BlocksAndWallExampleSameMass):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e2,
+                "velocity": -1,
+            }
+        },
+        "wait_time": 20,
+    }
+
+
+class BlocksAndWallExampleMass1e4(BlocksAndWallExampleSameMass):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
                 "mass": 1e4,
-                "width": 1.5,
-                "velocity": -2,
-            }
-        }
+                "velocity": -1.5,
+            },
+        },
+        "wait_time": 25,
     }
 
-    def construct(self):
-        self.wait(20)
+
+class BlocksAndWallExampleMass1e4SlowMo(BlocksAndWallExampleSameMass):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e4,
+                "velocity": -0.1,
+                "distance": 4.1
+            },
+        },
+        "wait_time": 50,
+        "collision_sound": "slow_clack.wav",
+    }
+
+
+class BlocksAndWallExampleMass1e6(BlocksAndWallExampleSameMass):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e6,
+                "velocity": -1,
+            },
+        },
+        "wait_time": 20,
+    }
+
+
+class BlocksAndWallExampleMass1e6SlowMo(BlocksAndWallExampleSameMass):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e6,
+                "velocity": -0.1,
+                "distance": 4.1
+            },
+        },
+        "wait_time": 60,
+        "collision_sound": "slow_clack.wav",
+    }
+
+
+class BlocksAndWallExampleMass1e8(BlocksAndWallExampleSameMass):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e8,
+                "velocity": -1,
+            },
+        },
+        "wait_time": 25,
+    }
+
+
+class BlocksAndWallExampleMass1e10(BlocksAndWallExampleSameMass):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e10,
+                "velocity": -1,
+            },
+        },
+        "wait_time": 25,
+    }
