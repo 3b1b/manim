@@ -53,13 +53,21 @@ def quaternion_conjugate(quaternion):
 
 
 def rotate_vector(vector, angle, axis=OUT):
-    quat = quaternion_from_angle_axis(angle, axis)
-    quat_inv = quaternion_conjugate(quat)
-    product = reduce(
-        quaternion_mult,
-        [quat, np.append(0, vector), quat_inv]
-    )
-    return product[1:]
+    if len(vector) == 2:
+        # Use complex numbers...because why not
+        z = complex(*vector) * np.exp(complex(0, angle))
+        return np.array([z.real, z.imag])
+    elif len(vector) == 3:
+        # Use quaternions...because why not
+        quat = quaternion_from_angle_axis(angle, axis)
+        quat_inv = quaternion_conjugate(quat)
+        product = reduce(
+            quaternion_mult,
+            [quat, np.append(0, vector), quat_inv]
+        )
+        return product[1:]
+    else:
+        raise Exception("vector must be of dimension 2 or 3")
 
 
 def thick_diagonal(dim, thickness=2):

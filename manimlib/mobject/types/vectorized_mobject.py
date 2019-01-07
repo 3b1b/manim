@@ -101,8 +101,8 @@ class VMobject(Mobject):
         return rgbas
 
     def update_rgbas_array(self, array_name, color=None, opacity=None):
-        passed_color = color or BLACK
-        passed_opacity = opacity or 0
+        passed_color = color if (color is not None) else BLACK
+        passed_opacity = opacity if (opacity is not None) else 0
         rgbas = self.generate_rgbas_array(passed_color, passed_opacity)
         if not hasattr(self, array_name):
             setattr(self, array_name, rgbas)
@@ -155,16 +155,56 @@ class VMobject(Mobject):
         self.set_stroke(**kwargs)
         return self
 
-    def set_color(self, color, family=True):
-        self.set_fill(color, family=family)
-        self.set_stroke(color, family=family)
-        return self
+    def set_style(self,
+                  fill_color=None,
+                  fill_opacity=None,
+                  stroke_color=None,
+                  stroke_width=None,
+                  background_stroke_color=None,
+                  background_stroke_width=None,
+                  sheen_factor=None,
+                  sheen_direction=None,
+                  background_image_file=None,
+                  family=True):
+        self.set_fill(
+            color=fill_color,
+            opacity=fill_opacity,
+            family=family
+        )
+        self.set_stroke(
+            color=stroke_color,
+            width=stroke_width,
+            family=family,
+        )
+        self.set_background_stroke(
+            color=background_stroke_color,
+            width=background_stroke_width,
+            family=family,
+        )
+        if sheen_factor:
+            self.set_sheen(
+                factor=sheen_factor,
+                direction=sheen_direction,
+                family=family,
+            )
+        if background_image_file:
+            self.color_using_background_image(background_image_file)
+
+    def get_style(self):
+        return {
+            "fill_color": self.get_fill_colors(),
+            "fill_opacity": self.get_fill_opacities(),
+            "stroke_color": self.get_stroke_colors(),
+            "stroke_width": self.get_stroke_width(),
+            "background_stroke_color": self.get_stroke_colors(background=True),
+            "background_stroke_width": self.get_stroke_width(background=True),
+            "sheen_factor": self.get_sheen(),
+            "sheen_direction": self.get_sheen_direction(),
+            "background_image_file": self.get_background_image_file(),
+        }
 
     def match_style(self, vmobject, family=True):
-        for a_name in ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]:
-            setattr(self, a_name, np.array(getattr(vmobject, a_name)))
-        self.stroke_width = vmobject.stroke_width
-        self.background_stroke_width = vmobject.background_stroke_width
+        self.set_style(**vmobject.get_style(), family=False)
 
         if family:
             # Does its best to match up submobject lists, and
@@ -176,6 +216,11 @@ class VMobject(Mobject):
                 submobs2 = [vmobject]
             for sm1, sm2 in zip(*make_even(submobs1, submobs2)):
                 sm1.match_style(sm2)
+        return self
+
+    def set_color(self, color, family=True):
+        self.set_fill(color, family=family)
+        self.set_stroke(color, family=family)
         return self
 
     def fade_no_recurse(self, darkness):

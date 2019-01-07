@@ -40,7 +40,7 @@ def handle_scene(scene, **config):
 
             if (current_os == "Linux"):
                 commands.append("xdg-open")
-            else: # Assume macOS
+            else:  # Assume macOS
                 commands.append("open")
 
             if config["show_file_in_finder"]:
@@ -136,14 +136,14 @@ def main(config):
     for SceneClass in get_scene_classes(scene_names_to_classes, config):
         try:
             handle_scene(SceneClass(**scene_kwargs), **config)
-            if not config["no_sound"]:
+            if config["sound"]:
                 play_finish_sound()
             sys.exit(0)
         except Exception:
             print("\n\n")
             traceback.print_exc()
             print("\n\n")
-            if not config["no_sound"]:
+            if config["sound"]:
                 play_error_sound()
             sys.exit(2)
 

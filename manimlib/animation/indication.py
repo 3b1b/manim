@@ -11,12 +11,16 @@ from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import ShowPartial
 from manimlib.animation.creation import FadeOut
 from manimlib.animation.transform import Transform
+from manimlib.animation.update import UpdateFromAlphaFunc
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.shape_matchers import SurroundingRectangle
+from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.geometry import Line
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.rate_functions import wiggle
@@ -58,6 +62,46 @@ class Indicate(Transform):
         target.scale_in_place(self.scale_factor)
         target.set_color(self.color)
         Transform.__init__(self, mobject, target, **kwargs)
+
+
+class Flash(AnimationGroup):
+    CONFIG = {
+        "line_length": 0.2,
+        "num_lines": 12,
+        "flash_radius": 0.3,
+        "line_stroke_width": 3,
+    }
+
+    def __init__(self, point, color=YELLOW, **kwargs):
+        digest_config(self, kwargs)
+        lines = VGroup()
+        for angle in np.arange(0, TAU, TAU / self.num_lines):
+            line = Line(ORIGIN, self.line_length * RIGHT)
+            line.shift((self.flash_radius - self.line_length) * RIGHT)
+            line.rotate(angle, about_point=ORIGIN)
+            lines.add(line)
+        lines.move_to(point)
+        lines.set_color(color)
+        lines.set_stroke(width=3)
+        line_anims = [
+            ShowCreationThenDestruction(
+                line, rate_func=squish_rate_func(smooth, 0, 0.5)
+            )
+            for line in lines
+        ]
+        fade_anims = [
+            UpdateFromAlphaFunc(
+                line, lambda m, a: m.set_stroke(
+                    width=self.line_stroke_width * (1 - a)
+                ),
+                rate_func=squish_rate_func(smooth, 0, 0.75)
+            )
+            for line in lines
+        ]
+
+        AnimationGroup.__init__(
+            self, *line_anims + fade_anims, **kwargs
+        )
 
 
 class CircleIndicate(Indicate):
@@ -227,7 +271,8 @@ class Vibrate(Animation):
         ))
         for mob, start in zip(*families):
             mob.points = np.apply_along_axis(
-                lambda x_y_z: (x_y_z[0], x_y_z[1] + self.wave_function(x_y_z[0], time), x_y_z[2]),
+                lambda x_y_z: (
+                    x_y_z[0], x_y_z[1] + self.wave_function(x_y_z[0], time), x_y_z[2]),
                 1, start.points
             )
 

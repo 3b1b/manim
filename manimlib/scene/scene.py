@@ -84,6 +84,8 @@ class Scene(Container):
         self.skip_animations = False
         self.wait(self.frame_duration)
 
+        self.tear_down()
+
         if self.write_to_movie:
             self.close_movie_pipe()
         print("Played a total of %d animations" % self.num_plays)
@@ -94,6 +96,9 @@ class Scene(Container):
         are comonly subclassed, and have some common setup
         involved before the construct method is called.
         """
+        pass
+
+    def tear_down(self):
         pass
 
     def setup_bases(self):
