@@ -88,7 +88,7 @@ def get_module(file_name):
             print(f"Failed to render scene: {str(e)}")
             sys.exit(2)
     else:
-        module_name = file_name.split(os.sep)[-1].replace(".py", "")
+        module_name = file_name.replace(os.sep, ".").replace(".py", "")
         spec = importlib.util.spec_from_file_location(module_name, file_name)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)

@@ -20,7 +20,10 @@ def guarantee_existance(path):
 
 
 def get_scene_output_directory(scene_class):
-    return guarantee_existance(os.path.join(VIDEO_DIR, scene_class.__module__))
+    return guarantee_existance(os.path.join(
+        VIDEO_DIR,
+        scene_class.__module__.replace(".", os.path.sep)
+    ))
 
 
 def get_movie_output_directory(scene_class, camera_config, frame_duration):
