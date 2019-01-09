@@ -1,5 +1,6 @@
 import os
 import hashlib
+import codecs
 
 from manimlib.constants import TEX_DIR
 from manimlib.constants import TEX_TEXT_TO_REPLACE
@@ -32,7 +33,7 @@ def generate_tex_file(expression, template_tex_file_body):
         new_body = template_tex_file_body.replace(
             TEX_TEXT_TO_REPLACE, expression
         )
-        with open(result, "w") as outfile:
+        with open(result, "w", encoding="utf-8") as outfile:
             outfile.write(new_body)
     return result
 
