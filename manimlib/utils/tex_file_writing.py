@@ -1,6 +1,5 @@
 import os
 import hashlib
-import codecs
 
 from manimlib.constants import TEX_DIR
 from manimlib.constants import TEX_TEXT_TO_REPLACE
