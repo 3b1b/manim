@@ -1,19 +1,26 @@
+#!/usr/bin/env python
 import inspect
 import os
 import sys
+import importlib
 
 from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
 from manimlib.constants import PRODUCTION_QUALITY_FRAME_DURATION
-from manimlib.extract_scene import get_module
-from manimlib.extract_scene import is_scene
+from manimlib.config import get_module
+from manimlib.extract_scene import is_child_scene
 from manimlib.utils.output_directory_getters import get_movie_output_directory
 
 
 def get_sorted_scene_classes(module_name):
     module = get_module(module_name)
+    importlib.import_module(module.__name__)
     line_to_scene = {}
-    for name, scene_class in inspect.getmembers(module, is_scene):
-        if inspect.getmodule(scene_class) != module:
+    name_scene_list = inspect.getmembers(
+        module,
+        lambda obj: is_child_scene(obj, module)
+    )
+    for name, scene_class in name_scene_list:
+        if inspect.getmodule(scene_class).__name__ != module.__name__:
             continue
         lines, line_no = inspect.getsourcelines(scene_class)
         line_to_scene[line_no] = scene_class
