@@ -53,10 +53,12 @@ def stage_animations(module_name):
             scene_class, **output_directory_kwargs
         )
         if os.path.exists(pmf_dir):
-            for file in get_sorted_integer_files(pmf_dir):
-                sorted_files.append(
-                    os.path.join(pmf_dir, file)
+            for extension in [".mov", ".mp4"]:
+                int_files = get_sorted_integer_files(
+                    pmf_dir, extension=extension
                 )
+                for file in int_files:
+                    sorted_files.append(os.path.join(pmf_dir, file))
         else:
             for clip in [f for f in files if f.startswith(scene_name + ".")]:
                 sorted_files.append(os.path.join(animation_dir, clip))

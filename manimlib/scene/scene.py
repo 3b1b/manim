@@ -661,6 +661,7 @@ class Scene(Container):
             # should be transparent.
             command += [
                 '-vcodec', 'qtrle',
+                # '-vcodec', 'png',
             ]
         else:
             command += [
@@ -688,7 +689,8 @@ class Scene(Container):
     def combine_movie_files(self):
         partial_movie_file_directory = self.get_partial_movie_directory()
         kwargs = {
-            "remove_non_integer_files": True
+            "remove_non_integer_files": True,
+            "extension": self.movie_file_extension,
         }
         if self.start_at_animation_number is not None:
             kwargs["min_index"] = self.start_at_animation_number

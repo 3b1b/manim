@@ -50,7 +50,9 @@ def get_sorted_integer_files(directory,
                              min_index=0,
                              max_index=np.inf,
                              remove_non_integer_files=False,
-                             remove_indices_greater_than=None):
+                             remove_indices_greater_than=None,
+                             extension=None,
+                             ):
     indexed_files = []
     for file in os.listdir(directory):
         if '.' in file:
@@ -65,6 +67,8 @@ def get_sorted_integer_files(directory,
                 if index > remove_indices_greater_than:
                     os.remove(full_path)
                     continue
+            if extension is not None and not file.endswith(extension):
+                continue
             if index >= min_index and index < max_index:
                 indexed_files.append((index, file))
         elif remove_non_integer_files:
