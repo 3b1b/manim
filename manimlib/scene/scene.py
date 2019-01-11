@@ -5,7 +5,7 @@ import inspect
 import os
 import random
 import shutil
-import subprocess as sp
+import subprocess
 import warnings
 
 from tqdm import tqdm as ProgressDisplay
@@ -24,6 +24,8 @@ from manimlib.utils.iterables import list_update
 from manimlib.utils.output_directory_getters import add_extension_if_not_present
 from manimlib.utils.output_directory_getters import get_image_output_directory
 from manimlib.utils.output_directory_getters import get_movie_output_directory
+from manimlib.utils.output_directory_getters import get_partial_movie_output_directory
+from manimlib.utils.output_directory_getters import get_sorted_integer_files
 
 
 class Scene(Container):
@@ -35,11 +37,9 @@ class Scene(Container):
         "skip_animations": False,
         "ignore_waits": False,
         "write_to_movie": False,
-        "save_frames": False,
         "save_pngs": False,
         "pngs_mode": "RGBA",
         "movie_file_extension": ".mp4",
-        "name": None,
         "always_continually_update": False,
         "random_seed": 0,
         "start_at_animation_number": None,
@@ -57,38 +57,38 @@ class Scene(Container):
         self.continual_animations = []
         self.foreground_mobjects = []
         self.num_plays = 0
-        self.saved_frames = []
-        self.shared_locals = {}
         self.frame_num = 0
-        self.current_scene_time = 0
+        self.time = 0
         self.original_skipping_status = self.skip_animations
         self.stream_lock = False
-        if self.name is None:
-            self.name = self.__class__.__name__
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
 
         self.setup()
-        if self.write_to_movie:
-            self.open_movie_pipe()
         if self.livestreaming:
             return None
         try:
             self.construct(*self.construct_args)
         except EndSceneEarlyException:
             pass
-
-        # Always tack on one last frame, so that scenes
-        # with no play calls still display something
-        self.skip_animations = False
-        self.wait(self.frame_duration)
-
         self.tear_down()
 
         if self.write_to_movie:
-            self.close_movie_pipe()
-        print("Played a total of %d animations" % self.num_plays)
+            self.combine_movie_files()
+
+    def handle_play_like_call(func):
+        def wrapper(self, *args, **kwargs):
+            self.handle_animation_skipping()
+            should_write = self.write_to_movie and not self.skip_animations
+            if should_write:
+                self.open_movie_pipe()
+                func(self, *args, **kwargs)
+                self.close_movie_pipe()
+            else:
+                func(self, *args, **kwargs)
+            self.num_plays += 1
+        return wrapper
 
     def setup(self):
         """
@@ -109,11 +109,7 @@ class Scene(Container):
         pass  # To be implemented in subclasses
 
     def __str__(self):
-        return self.name
-
-    def set_name(self, name):
-        self.name = name
-        return self
+        return self.__class__.__name__
 
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
@@ -211,6 +207,14 @@ class Scene(Container):
         if any_time_based_update:
             return True
         return False
+
+    ###
+
+    def get_time(self):
+        return self.time
+
+    def increment_time(self, d_time):
+        self.time += d_time
 
     ###
 
@@ -465,13 +469,14 @@ class Scene(Container):
                 self.skip_animations = True
                 raise EndSceneEarlyException()
 
+    @handle_play_like_call
     def play(self, *args, **kwargs):
         if self.livestreaming:
             self.stream_lock = False
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
             return
-        self.handle_animation_skipping()
+
         animations = self.compile_play_args_to_animation_list(*args)
         for animation in animations:
             # This is where kwargs to play like run_time and rate_func
@@ -503,12 +508,10 @@ class Scene(Container):
             self.continual_update(total_run_time)
         else:
             self.continual_update(0)
-        self.num_plays += 1
 
         if self.livestreaming:
             self.stream_lock = True
             thread.start_new_thread(self.idle_stream, ())
-
         return self
 
     def idle_stream(self):
@@ -533,6 +536,7 @@ class Scene(Container):
             return self.mobjects_from_last_animation
         return []
 
+    @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME):
         if self.should_continually_update():
             total_time = 0
@@ -554,7 +558,7 @@ class Scene(Container):
     def wait_to(self, time, assert_positive=True):
         if self.ignore_waits:
             return
-        time -= self.current_scene_time
+        time -= self.get_time()
         if assert_positive:
             assert(time >= 0)
         elif time < 0:
@@ -575,16 +579,15 @@ class Scene(Container):
     def add_frames(self, *frames):
         if self.skip_animations:
             return
-        self.current_scene_time += len(frames) * self.frame_duration
+        self.increment_time(len(frames) * self.frame_duration)
         if self.write_to_movie:
             for frame in frames:
                 if self.save_pngs:
                     self.save_image(
-                        "frame" + str(self.frame_num), self.pngs_mode, True)
+                        "frame" + str(self.frame_num), self.pngs_mode, True
+                    )
                     self.frame_num = self.frame_num + 1
                 self.writing_process.stdin.write(frame.tostring())
-        if self.save_frames:
-            self.saved_frames += list(frames)
 
     # Display methods
 
@@ -615,17 +618,26 @@ class Scene(Container):
         if extension is None:
             extension = self.movie_file_extension
         if name is None:
-            name = self.name
+            name = str(self)
         file_path = os.path.join(directory, name)
         if not file_path.endswith(extension):
             file_path += extension
         return file_path
 
+    def get_partial_movie_directory(self):
+        return get_partial_movie_output_directory(
+            self.__class__, self.camera_config, self.frame_duration
+        )
+
     def open_movie_pipe(self):
-        name = str(self)
-        file_path = self.get_movie_file_path(name)
-        temp_file_path = file_path.replace(name, name + "Temp")
-        print("Writing to %s" % temp_file_path)
+        directory = self.get_partial_movie_directory()
+        file_path = os.path.join(
+            directory, "{}{}".format(
+                self.num_plays,
+                self.movie_file_extension,
+            )
+        )
+        temp_file_path = file_path.replace(".", "_temp.")
         self.args_to_rename_file = (temp_file_path, file_path)
 
         fps = int(1 / self.frame_duration)
@@ -649,6 +661,7 @@ class Scene(Container):
             # should be transparent.
             command += [
                 '-vcodec', 'qtrle',
+                # '-vcodec', 'png',
             ]
         else:
             command += [
@@ -664,18 +677,56 @@ class Scene(Container):
                 command += [STREAMING_PROTOCOL + '://' + STREAMING_IP + ':' + STREAMING_PORT]
         else:
             command += [temp_file_path]
-        # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
-        self.writing_process = sp.Popen(command, stdin=sp.PIPE)
+        self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
         if self.livestreaming:
             return True
-        if os.name == 'nt':
-            shutil.move(*self.args_to_rename_file)
+        shutil.move(*self.args_to_rename_file)
+
+    def combine_movie_files(self):
+        partial_movie_file_directory = self.get_partial_movie_directory()
+        kwargs = {
+            "remove_non_integer_files": True,
+            "extension": self.movie_file_extension,
+        }
+        if self.start_at_animation_number is not None:
+            kwargs["min_index"] = self.start_at_animation_number
+        if self.end_at_animation_number is not None:
+            kwargs["max_index"] = self.end_at_animation_number
         else:
-            os.rename(*self.args_to_rename_file)
+            kwargs["remove_indices_greater_than"] = self.num_plays - 1
+        partial_movie_files = get_sorted_integer_files(
+            partial_movie_file_directory,
+            **kwargs
+        )
+        # Write a file partial_file_list.txt containing all
+        # partial movie files
+        file_list = os.path.join(
+            partial_movie_file_directory,
+            "partial_movie_file_list.txt"
+        )
+        with open(file_list, 'w') as fp:
+            for pf_path in partial_movie_files:
+                fp.write("file {}\n".format(pf_path))
+
+        movie_file_path = self.get_movie_file_path()
+        commands = [
+            FFMPEG_BIN,
+            '-y',  # overwrite output file if it exists
+            '-f', 'concat',
+            '-safe', '0',
+            '-i', file_list,
+            '-c', 'copy',
+            '-an',  # Tells FFMPEG not to expect any audio
+            '-loglevel', 'error',
+            movie_file_path
+        ]
+        subprocess.call(commands)
+        os.remove(file_list)
+        print("File ready at {}".format(movie_file_path))
 
     def tex(self, latex):
         eq = TextMobject(latex)
