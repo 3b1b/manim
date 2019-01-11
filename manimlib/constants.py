@@ -31,14 +31,12 @@ STAGED_SCENES_DIR = os.path.join(VIDEO_DIR, "staged_scenes")
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR = os.path.join(THIS_DIR, "files")
 TEX_DIR = os.path.join(FILE_DIR, "Tex")
-TEX_IMAGE_DIR = TEX_DIR  # TODO, What is this doing?
 # These two may be depricated now.
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
 for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR, TEX_DIR,
-               TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
-               STAGED_SCENES_DIR]:
+               MOBJECT_DIR, IMAGE_MOBJECT_DIR, STAGED_SCENES_DIR]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
