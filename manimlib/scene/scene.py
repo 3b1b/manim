@@ -735,8 +735,11 @@ class Scene(Container):
         ]
         subprocess.call(commands)
         os.remove(file_list)
-        print("File ready at {}".format(movie_file_path))
+        print("\nAnimation ready at {}\n".format(movie_file_path))
 
+    # TODO, this doesn't belong in Scene, but should be
+    # part of some more specialized subclass optimized 
+    # for livestreaming
     def tex(self, latex):
         eq = TextMobject(latex)
         anims = []
