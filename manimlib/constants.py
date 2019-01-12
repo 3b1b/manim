@@ -69,7 +69,7 @@ HELP_MESSAGE = """
    -c specify a background color
 """
 SCENE_NOT_FOUND_MESSAGE = """
-   That scene is not in the script
+   {} is not in the script
 """
 CHOOSE_NUMBER_MESSAGE = """
 Choose number corresponding to desired scene/arguments.

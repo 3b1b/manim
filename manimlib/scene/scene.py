@@ -47,6 +47,7 @@ class Scene(Container):
         "livestreaming": False,
         "to_twitch": False,
         "twitch_key": None,
+        "output_file_name": None,
     }
 
     def __init__(self, **kwargs):
@@ -110,6 +111,11 @@ class Scene(Container):
 
     def __str__(self):
         return self.__class__.__name__
+
+    def get_output_file_name(self):
+        if self.output_file_name is not None:
+            return self.output_file_name
+        return str(self)
 
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
@@ -597,10 +603,13 @@ class Scene(Container):
 
     def get_image_file_path(self, name=None, dont_update=False):
         sub_dir = "images"
+        output_file_name = self.get_output_file_name()
         if dont_update:
-            sub_dir = str(self)
+            sub_dir = output_file_name
         path = get_image_output_directory(self.__class__, sub_dir)
-        file_name = add_extension_if_not_present(name or str(self), ".png")
+        file_name = add_extension_if_not_present(
+            name or output_file_name, ".png"
+        )
         return os.path.join(path, file_name)
 
     def save_image(self, name=None, mode="RGB", dont_update=False):
@@ -618,7 +627,7 @@ class Scene(Container):
         if extension is None:
             extension = self.movie_file_extension
         if name is None:
-            name = str(self)
+            name = self.get_output_file_name()
         file_path = os.path.join(directory, name)
         if not file_path.endswith(extension):
             file_path += extension

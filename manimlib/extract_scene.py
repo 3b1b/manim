@@ -98,20 +98,29 @@ def get_scene_classes(scene_names_to_classes, config):
     if len(scene_names_to_classes) == 0:
         print(manimlib.constants.NO_SCENE_MESSAGE)
         return []
-    if config["scene_name"] in scene_names_to_classes:
-        return [scene_names_to_classes[config["scene_name"]]]
-    if config["scene_name"] != "":
-        print(manimlib.constants.SCENE_NOT_FOUND_MESSAGE, file=sys.stderr)
-        sys.exit(2)
     if config["write_all"]:
         return list(scene_names_to_classes.values())
+    scene_classes = []
+    for scene_name in config["scene_names"]:
+        if scene_name in scene_names_to_classes:
+            scene_classes.append(scene_names_to_classes[scene_name])
+        elif scene_name != "":
+            print(
+                manimlib.constants.SCENE_NOT_FOUND_MESSAGE.format(
+                    scene_name
+                ),
+                file=sys.stderr
+            )
+    if scene_classes:
+        return scene_classes
     return prompt_user_for_choice(scene_names_to_classes)
 
 
 def main(config):
     module = config["module"]
     scene_names_to_classes = dict(
-        inspect.getmembers(module, lambda x: is_child_scene(x, module)))
+        inspect.getmembers(module, lambda x: is_child_scene(x, module))
+    )
 
     scene_kwargs = dict([
         (key, config[key])
@@ -124,10 +133,9 @@ def main(config):
             "movie_file_extension",
             "start_at_animation_number",
             "end_at_animation_number",
+            "output_file_name"
         ]
     ])
-
-    scene_kwargs["name"] = config["output_name"]
     if config["save_pngs"]:
         print("We are going to save a PNG sequence as well...")
         scene_kwargs["save_pngs"] = True
@@ -138,14 +146,12 @@ def main(config):
             handle_scene(SceneClass(**scene_kwargs), **config)
             if config["sound"]:
                 play_finish_sound()
-            sys.exit(0)
         except Exception:
             print("\n\n")
             traceback.print_exc()
             print("\n\n")
             if config["sound"]:
                 play_error_sound()
-            sys.exit(2)
 
 
 if __name__ == "__main__":

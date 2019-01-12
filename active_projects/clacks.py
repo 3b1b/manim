@@ -344,7 +344,7 @@ class BlocksAndWallScene(Scene):
             self.counter_mob.set_value(n_clacks)
 
     def create_sound_file(self, clack_data):
-        directory = get_scene_output_directory(self.__class__)
+        directory = get_scene_output_directory(BlocksAndWallScene)
         clack_file = os.path.join(
             directory, 'sounds', self.collision_sound,
         )
@@ -674,9 +674,11 @@ class Mass1e1WithElasticLabel(BlocksAndWallExampleMass1e1):
     def get_arrow(self, label, clack_flashes, flash):
         arrow = Arrow(
             label.get_bottom(),
-            flash.mobject.get_center() + 0.5 * UP,
+            flash.mobject.get_center() + 0.0 * UP,
         )
         arrow.set_fill(YELLOW)
+        arrow.set_stroke(BLACK, 1, background=True)
+        arrow.original_length = arrow.get_length()
 
         def set_opacity(arrow):
             time = self.get_time()
@@ -684,8 +686,14 @@ class Mass1e1WithElasticLabel(BlocksAndWallExampleMass1e1):
             if from_start < 0:
                 opacity = 0
             else:
-                opacity = smooth(1 - from_start)
+                opacity = smooth(1 - 2 * from_start)
             arrow.set_fill(opacity=opacity)
+            arrow.set_stroke(opacity=opacity, background=True)
+            # if opacity > 0:
+            #     arrow.scale(
+            #         opacity * arrow.original_length / arrow.get_length(),
+            #         about_point=arrow.get_end()
+            #     )
 
         arrow.add_updater(set_opacity)
         return arrow
@@ -844,10 +852,16 @@ class DigitsOfPi(Scene):
         equation = TexMobject(
             "\\pi = 3.14159265..."
         )
-        self.add(equation[:2])
+        equation.set_color(YELLOW)
+        pi_creature = Randolph(color=YELLOW)
+        pi_creature.match_width(equation[0])
+        pi_creature.scale(1.4)
+        pi_creature.move_to(equation[0], DOWN)
+        self.add(pi_creature, equation[1])
         for digit in equation[2:]:
             self.add(digit)
             self.wait(0.1)
+        self.play(Blink(pi_creature))
         self.wait()
 
 
@@ -1504,7 +1518,7 @@ class NextVideo(Scene):
 
 class EndScreen(Scene):
     def construct(self):
-        width = (500 / 1280) * FRAME_WIDTH
+        width = (475 / 1280) * FRAME_WIDTH
         height = width * (323 / 575)
         video_rect = Rectangle(
             width=width,
@@ -1537,3 +1551,48 @@ class EndScreen(Scene):
                 ShowCreation(video_rects[n % 4]),
                 run_time=2,
             )
+
+
+class Thumbnail(BlocksAndWallExample):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e4,
+                "velocity": -1.5,
+            },
+            "collect_clack_data": False,
+        },
+        "wait_time": 0,
+        "count_clacks": False,
+        "show_flash_animations": False,
+        "floor_y": -3,
+    }
+
+    def construct(self):
+        self.floor.set_stroke(WHITE, 10)
+        self.wall.set_stroke(WHITE, 10)
+        self.wall[1:].set_stroke(WHITE, 4)
+        blocks = self.blocks
+        for block in blocks.block1, blocks.block2:
+            block.remove(block.label)
+            block.label.scale(2.5, about_point=block.get_top())
+            self.add(block.label)
+
+        arrow = Vector(
+            2.5 * LEFT,
+            color=RED,
+            rectangular_stem_width=1.5,
+            tip_length=0.5
+        )
+        arrow.move_to(blocks.block1.get_center(), RIGHT)
+        arrow.add_to_back(
+            arrow.copy().set_stroke(GREY, 5)
+        )
+        self.add(arrow)
+
+        question = TextMobject("How many\\\\collisions?")
+        question.scale(2.5)
+        question.to_edge(UP)
+        question.set_color(YELLOW)
+        question.set_stroke(RED, 2, background=True)
+        self.add(question)

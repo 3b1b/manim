@@ -18,8 +18,8 @@ def parse_cli():
             help="path to file holding the python code for the scene",
         )
         parser.add_argument(
-            "scene_name",
-            nargs="?",
+            "scene_names",
+            nargs="+",
             help="Name of the Scene class you want to see",
         )
         optional_args = [
@@ -36,7 +36,7 @@ def parse_cli():
         ]
         for short_arg, long_arg in optional_args:
             parser.add_argument(short_arg, long_arg, action="store_true")
-        parser.add_argument("-o", "--output_name")
+        parser.add_argument("-o", "--output_file_name")
         parser.add_argument("-n", "--start_at_animation_number")
         parser.add_argument("-r", "--resolution")
         parser.add_argument("-c", "--color")
@@ -96,23 +96,23 @@ def get_module(file_name):
 
 
 def get_configuration(args):
-    if args.output_name is not None:
-        output_name_root, output_name_ext = os.path.splitext(
-            args.output_name)
+    if args.output_file_name is not None:
+        output_file_name_root, output_file_name_ext = os.path.splitext(
+            args.output_file_name)
         expected_ext = '.png' if args.show_last_frame else '.mp4'
-        if output_name_ext not in ['', expected_ext]:
+        if output_file_name_ext not in ['', expected_ext]:
             print("WARNING: The output will be to (doubly-dotted) %s%s" %
-                  output_name_root % expected_ext)
-            output_name = args.output_name
+                  output_file_name_root % expected_ext)
+            output_file_name = args.output_file_name
         else:
             # If anyone wants .mp4.mp4 and is surprised to only get .mp4, or such... Well, too bad.
-            output_name = output_name_root
+            output_file_name = output_file_name_root
     else:
-        output_name = args.output_name
+        output_file_name = args.output_file_name
 
     config = {
         "module": get_module(args.file),
-        "scene_name": args.scene_name,
+        "scene_names": args.scene_names,
         "open_video_upon_completion": args.preview,
         "show_file_in_finder": args.show_file_in_finder,
         # By default, write to file
@@ -125,7 +125,7 @@ def get_configuration(args):
         "quiet": args.quiet or args.write_all,
         "ignore_waits": args.preview,
         "write_all": args.write_all,
-        "output_name": output_name,
+        "output_file_name": output_file_name,
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
         "sound": args.sound,
