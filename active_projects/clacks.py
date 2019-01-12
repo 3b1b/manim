@@ -3,9 +3,6 @@ import subprocess
 from pydub import AudioSegment
 
 
-MIN_TIME_BETWEEN_FLASHES = 0.004
-
-
 class SlidingBlocks(VGroup):
     CONFIG = {
         "block1_config": {
@@ -225,6 +222,7 @@ class ClackFlashes(ContinualAnimation):
             "flash_radius": 0.2,
         },
         "start_up_time": 0,
+        "min_time_between_flashes": 1 / 30,
     }
 
     def __init__(self, clack_data, **kwargs):
@@ -233,7 +231,7 @@ class ClackFlashes(ContinualAnimation):
         group = Group()
         last_time = 0
         for location, time in clack_data:
-            if (time - last_time) < MIN_TIME_BETWEEN_FLASHES:
+            if (time - last_time) < self.min_time_between_flashes:
                 continue
             last_time = time
             flash = Flash(location, **self.flash_config)
@@ -268,6 +266,7 @@ class BlocksAndWallScene(Scene):
         "counter_label": "\\# Collisions: ",
         "collision_sound": "clack.wav",
         "show_flash_animations": True,
+        "min_time_between_sounds": 0.004,
     }
 
     def setup(self):
@@ -359,7 +358,7 @@ class BlocksAndWallScene(Scene):
         total_time = max(times) + 1
         clacks = AudioSegment.silent(int(1000 * total_time))
         last_position = 0
-        min_diff = int(1000 * MIN_TIME_BETWEEN_FLASHES)
+        min_diff = int(1000 * self.min_time_between_sounds)
         for time in times:
             position = int(1000 * time)
             d_position = position - last_position
