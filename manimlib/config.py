@@ -19,32 +19,90 @@ def parse_cli():
         )
         parser.add_argument(
             "scene_names",
-            nargs="+",
+            nargs="*",
             help="Name of the Scene class you want to see",
         )
-        optional_args = [
-            ("-p", "--preview"),
-            ("-w", "--write_to_movie"),
-            ("-s", "--show_last_frame"),
-            ("-l", "--low_quality"),
-            ("-m", "--medium_quality"),
-            ("-g", "--save_pngs"),
-            ("-f", "--show_file_in_finder"),
-            ("-t", "--transparent"),
-            ("-q", "--quiet"),
-            ("-a", "--write_all")
-        ]
-        for short_arg, long_arg in optional_args:
-            parser.add_argument(short_arg, long_arg, action="store_true")
-        parser.add_argument("-o", "--output_file_name")
-        parser.add_argument("-n", "--start_at_animation_number")
-        parser.add_argument("-r", "--resolution")
-        parser.add_argument("-c", "--color")
+        parser.add_argument(
+            "-p", "--preview",
+            action="store_true",
+            help="Automatically open movie file once its done",
+        ),
+        parser.add_argument(
+            "-w", "--write_to_movie",
+            action="store_true",
+            help="Render the scene as a movie file",
+        ),
+        parser.add_argument(
+            "-s", "--show_last_frame",
+            action="store_true",
+            help="Save the last frame and open the image file",
+        ),
+        parser.add_argument(
+            "-l", "--low_quality",
+            action="store_true",
+            help="Render at a low quality (for faster rendering)",
+        ),
+        parser.add_argument(
+            "-m", "--medium_quality",
+            action="store_true",
+            help="Render at a medium quality",
+        ),
+        parser.add_argument(
+            "-g", "--save_pngs",
+            action="store_true",
+            help="Save each frame as a png",
+        ),
+        parser.add_argument(
+            "-f", "--show_file_in_finder",
+            action="store_true",
+            help="Show the output file in finder",
+        ),
+        parser.add_argument(
+            "-t", "--transparent",
+            action="store_true",
+            help="Render to a movie file with an alpha channel",
+        ),
+        parser.add_argument(
+            "-q", "--quiet",
+            action="store_true",
+            help="",
+        ),
+        parser.add_argument(
+            "-a", "--write_all",
+            action="store_true",
+            help="Write all the scenes from a file",
+        ),
+        parser.add_argument(
+            "-o", "--output_file_name",
+            nargs=1,
+            help="Specify the name of the output file, if"
+                 "it should be different from the scene class name",
+        )
+        parser.add_argument(
+            "-n", "--start_at_animation_number",
+            nargs=1,
+            help="Start rendering not from the first animation, but"
+                 "from another, specified by its index.  If you pass"
+                 "in two comma separated values, e.g. \"3,6\", it will end"
+                 "the rendering at the second value",
+        )
+        parser.add_argument(
+            "-r", "--resolution",
+            nargs=1,
+            help="Resolution, passed as \"height,width\"",
+        )
+        parser.add_argument(
+            "-c", "--color",
+            nargs=1,
+            help="Background color",
+        )
         parser.add_argument(
             "--sound",
             action="store_true",
             help="Play a success/failure sound",
         )
+
+        # For live streaming
         module_location.add_argument(
             "--livestream",
             action="store_true",
