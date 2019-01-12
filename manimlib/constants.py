@@ -25,8 +25,6 @@ with open("media_dir.txt", 'w') as media_file:
 VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
 RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
 SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
-# TODO, staged scenes should really go into a subdirectory of a given scenes directory
-STAGED_SCENES_DIR = os.path.join(VIDEO_DIR, "staged_scenes")
 ###
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR = os.path.join(THIS_DIR, "files")
@@ -35,8 +33,8 @@ TEX_DIR = os.path.join(FILE_DIR, "Tex")
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
-for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR, TEX_DIR,
-               MOBJECT_DIR, IMAGE_MOBJECT_DIR, STAGED_SCENES_DIR]:
+for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
+               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -71,7 +69,7 @@ HELP_MESSAGE = """
    -c specify a background color
 """
 SCENE_NOT_FOUND_MESSAGE = """
-   That scene is not in the script
+   {} is not in the script
 """
 CHOOSE_NUMBER_MESSAGE = """
 Choose number corresponding to desired scene/arguments.

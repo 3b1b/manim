@@ -769,9 +769,54 @@ class Logo(VMobject):
             fill_color=BLACK,
             fill_opacity=1,
             stroke_width=0,
-            sheen=0.0
+            sheen=0.0,
+            start_angle=90 * DEGREES,
         )
         self.add(self.pupil)
+
+    def cut_pupil(self):
+        pupil = self.pupil
+        center = pupil.get_center()
+        new_pupil = VGroup(*[
+            pupil.copy().pointwise_become_partial(pupil, a, b)
+            for (a, b) in [(0.25, 1), (0, 0.25)]
+        ])
+        for sector in new_pupil:
+            sector.add_control_points([
+                sector.points[-1],
+                *[center] * 3,
+                *[sector.points[0]] * 2
+            ])
+        self.remove(pupil)
+        self.add(new_pupil)
+        self.pupil = new_pupil
+
+    def get_blue_part_and_brown_part(self):
+        if len(self.pupil) == 1:
+            self.cut_pupil()
+        # circle = Circle()
+        # circle.set_stroke(width=0)
+        # circle.set_fill(BLACK, opacity=1)
+        # circle.match_width(self)
+        # circle.move_to(self)
+        blue_part = VGroup(
+            self.iris_background[0],
+            *[
+                layer[:layer.brown_index]
+                for layer in self.spike_layers
+            ],
+            self.pupil[0],
+        )
+        brown_part = VGroup(
+            self.iris_background[1],
+            *[
+                layer[layer.brown_index:]
+                for layer in self.spike_layers
+            ],
+            self.pupil[1],
+        )
+        return blue_part, brown_part
+
 
 
 # Cards

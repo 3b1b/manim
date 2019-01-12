@@ -344,7 +344,7 @@ class BlocksAndWallScene(Scene):
             self.counter_mob.set_value(n_clacks)
 
     def create_sound_file(self, clack_data):
-        directory = get_scene_output_directory(self.__class__)
+        directory = get_scene_output_directory(BlocksAndWallScene)
         clack_file = os.path.join(
             directory, 'sounds', self.collision_sound,
         )
@@ -376,8 +376,8 @@ class BlocksAndWallScene(Scene):
         clacks.export(output_file, format="wav")
         return output_file
 
-    def close_movie_pipe(self):
-        Scene.close_movie_pipe(self)
+    def combine_movie_files(self):
+        Scene.combine_movie_files(self)
         if self.include_sound:
             sound_file_path = self.create_sound_file(self.clack_data)
             movie_path = self.get_movie_file_path()
@@ -396,6 +396,42 @@ class BlocksAndWallScene(Scene):
             subprocess.call(["mv", temp_path, movie_path])
 
 # Animated scenes
+
+
+class NameIntro(Scene):
+    def construct(self):
+        name = TextMobject("3Blue", "1Brown", arg_separator="")
+        blue, brown = name
+        name.scale(2.5)
+        for part in name:
+            part.save_state()
+        brown.to_edge(RIGHT, buff=0)
+        flash_time = 0.75
+
+        self.add(blue, brown)
+        self.play(
+            VFadeIn(blue),
+            VFadeIn(brown),
+            Restore(brown, rate_func=None),
+        )
+        self.play(
+            Flash(blue.get_right(), run_time=flash_time),
+            ApplyMethod(
+                blue.to_edge, LEFT, {"buff": 0},
+                rate_func=None,
+            ),
+        )
+        self.play(
+            Flash(blue.get_left(), run_time=flash_time),
+            Restore(blue, rate_func=None),
+        )
+        self.play(
+            Flash(blue.get_right(), run_time=flash_time),
+            ApplyMethod(
+                brown.to_edge, RIGHT, {"buff": 0},
+                rate_func=None,
+            )
+        )
 
 
 class MathAndPhysicsConspiring(Scene):
@@ -547,11 +583,12 @@ class BlocksAndWallExample(BlocksAndWallScene):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
-                "mass": 1e0,
+                # "mass": 1e0,
+                "mass": 64,
                 "velocity": -2,
             }
         },
-        "wait_time": 10,
+        "wait_time": 15,
     }
 
     def construct(self):
@@ -568,6 +605,37 @@ class BlocksAndWallExampleMass1e1(BlocksAndWallExample):
         },
         "wait_time": 20,
     }
+
+
+class TwoBlocksLabel(Scene):
+    def construct(self):
+        label = TextMobject("Two sliding \\\\ blocks")
+        label.to_edge(UP)
+        arrows = VGroup(*[
+            Arrow(label.get_bottom(), point)
+            for point in [RIGHT, LEFT]
+        ])
+        arrows.set_color(RED)
+        self.play(
+            Write(label),
+            LaggedStart(GrowArrow, arrows, lag_ratio=0.7),
+            run_time=1
+        )
+        self.wait()
+
+
+class WallLabel(Scene):
+    def construct(self):
+        wall = Line(TOP, 2 * DOWN)
+        wall.set_stroke(YELLOW, 10)
+        word = TextMobject("Wall")
+        word.rotate(-90 * DEGREES)
+        word.next_to(wall, RIGHT, MED_SMALL_BUFF)
+        self.play(
+            Write(word),
+            ShowPassingFlash(wall)
+        )
+        self.wait()
 
 
 class CowToSphere(ExternallyAnimatedScene):
@@ -606,9 +674,11 @@ class Mass1e1WithElasticLabel(BlocksAndWallExampleMass1e1):
     def get_arrow(self, label, clack_flashes, flash):
         arrow = Arrow(
             label.get_bottom(),
-            flash.mobject.get_center() + 0.5 * UP,
+            flash.mobject.get_center() + 0.0 * UP,
         )
         arrow.set_fill(YELLOW)
+        arrow.set_stroke(BLACK, 1, background=True)
+        arrow.original_length = arrow.get_length()
 
         def set_opacity(arrow):
             time = self.get_time()
@@ -616,8 +686,14 @@ class Mass1e1WithElasticLabel(BlocksAndWallExampleMass1e1):
             if from_start < 0:
                 opacity = 0
             else:
-                opacity = smooth(1 - from_start)
+                opacity = smooth(1 - 2 * from_start)
             arrow.set_fill(opacity=opacity)
+            arrow.set_stroke(opacity=opacity, background=True)
+            # if opacity > 0:
+            #     arrow.scale(
+            #         opacity * arrow.original_length / arrow.get_length(),
+            #         about_point=arrow.get_end()
+            #     )
 
         arrow.add_updater(set_opacity)
         return arrow
@@ -626,14 +702,13 @@ class Mass1e1WithElasticLabel(BlocksAndWallExampleMass1e1):
 class AskAboutSoundlessness(TeacherStudentsScene):
     def construct(self):
         self.student_says(
-            "Wait, elastic collisions should\\\\"
-            "make no sound, right?",
+            "No sound,\\\\right?"
         )
         self.play(self.teacher.change, "guilty")
         self.wait(2)
-        self.play(
-            RemovePiCreatureBubble(self.students[1], target_mode="confused"),
-            self.teacher.change, "raise_right_hand",
+        self.teacher_says(
+            "Focus on \\\\ collisions",
+            target_mode="speaking",
             added_anims=[
                 self.get_student_changes("pondering", "confused", "thinking")
             ]
@@ -681,10 +756,10 @@ class BlocksAndWallExampleMass1e2(BlocksAndWallExample):
         "sliding_blocks_config": {
             "block1_config": {
                 "mass": 1e2,
-                "velocity": -1,
+                "velocity": -0.6,
             }
         },
-        "wait_time": 20,
+        "wait_time": 25,
     }
 
 
@@ -770,6 +845,24 @@ class BlocksAndWallExampleMass1e10(BlocksAndWallExample):
         },
         "wait_time": 25,
     }
+
+
+class DigitsOfPi(Scene):
+    def construct(self):
+        equation = TexMobject(
+            "\\pi = 3.14159265..."
+        )
+        equation.set_color(YELLOW)
+        pi_creature = Randolph(color=YELLOW)
+        pi_creature.match_width(equation[0])
+        pi_creature.scale(1.4)
+        pi_creature.move_to(equation[0], DOWN)
+        self.add(pi_creature, equation[1])
+        for digit in equation[2:]:
+            self.add(digit)
+            self.wait(0.1)
+        self.play(Blink(pi_creature))
+        self.wait()
 
 
 class GalperinPaperScroll(ExternallyAnimatedScene):
@@ -902,19 +995,7 @@ class PiComputingAlgorithmsAxes(Scene):
 
 class StepsOfTheAlgorithm(TeacherStudentsScene):
     def construct(self):
-        steps = VGroup(
-            TextMobject("Step 1:", "Implement a physics engine"),
-            TextMobject(
-                "Step 2:",
-                "Choose the number of digits, $d$,\\\\"
-                "of $\\pi$ that you want to compute"
-            ),
-            TextMobject(
-                "Step 3:",
-                "Set one mass to $100^{d - 1}$, the other to $1$"
-            ),
-            TextMobject("Step 4:", "Count collisions"),
-        )
+        steps = self.get_steps()
         steps.arrange_submobjects(
             DOWN,
             buff=MED_LARGE_BUFF,
@@ -942,6 +1023,59 @@ class StepsOfTheAlgorithm(TeacherStudentsScene):
             added_anims=[self.teacher.change, "happy"]
         )
         self.wait(3)
+
+    def get_steps(self):
+        return VGroup(
+            TextMobject("Step 1:", "Implement a physics engine"),
+            TextMobject(
+                "Step 2:",
+                "Choose the number of digits, $d$,\\\\"
+                "of $\\pi$ that you want to compute"
+            ),
+            TextMobject(
+                "Step 3:",
+                "Set one mass to $100^{d - 1}$,\\\\"
+                "the other to $1$"
+            ),
+            TextMobject("Step 4:", "Count collisions"),
+        )
+
+
+class StepsOfTheAlgorithmJustTitles(StepsOfTheAlgorithm):
+    def construct(self):
+        self.remove(*self.pi_creatures)
+        titles = self.get_steps()
+        for title in titles:
+            title.scale(1.5)
+            title.to_edge(UP)
+
+        last_title = VectorizedPoint()
+        for title in titles:
+            self.play(
+                FadeInFromDown(title),
+                FadeOutAndShift(last_title, UP),
+            )
+            self.wait()
+            last_title = title
+
+
+class BlocksAndWallExampleToShowWithSteps(BlocksAndWallExample):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e22,
+                "velocity": -1,
+                "label_text": "$100^{(12 - 1)}$\\,kg",
+                "width": 2,
+            },
+            "collect_clack_data": False,
+        },
+        "wait_time": 25,
+        "counter_group_shift_vect": 5 * LEFT,
+        "count_clacks": True,
+        "include_sound": False,
+        "show_flash_animations": False,
+    }
 
 
 class CompareToGalacticMass(Scene):
@@ -1174,6 +1308,22 @@ class BlocksAndWallExampleGalacticMass(BlocksAndWallExample):
         self.add(words)
 
 
+class RealPhysicsVsThis(Scene):
+    def construct(self):
+        physics = TextMobject("Real physics")
+        this = TextMobject("This process")
+        this.set_color()
+        physics.to_edge(LEFT)
+        this.next_to(physics)
+        self.add(physics, this)
+        self.play(
+            this.shift, FRAME_WIDTH * RIGHT,
+            rate_func=rush_into,
+            run_time=3,
+        )
+        self.wait()
+
+
 class CompareAlgorithmToPhysics(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
@@ -1284,4 +1434,165 @@ class LightBouncingFanning(LightBouncingNoFanning):
 
 class NextVideo(Scene):
     def construct(self):
-        pass
+        videos = VGroup(*[VideoIcon() for x in range(2)])
+        videos.set_height(2)
+        for video in videos:
+            video.set_color(BLUE)
+            video.set_sheen(0.5, UL)
+        videos.arrange_submobjects(RIGHT, buff=2)
+
+        titles = VGroup(
+            TextMobject("Here and now"),
+            TextMobject("Solution"),
+        )
+        for title, video in zip(titles, videos):
+            # title.scale(1.5)
+            title.next_to(video, UP)
+            video.add(title)
+
+        dots = TextMobject(".....")
+        dots.scale(2)
+        dots.move_to(videos)
+
+        mid_words = TextMobject(
+            "Patient\\\\", "problem\\\\", "solving"
+        )
+        mid_words.next_to(dots, DOWN)
+        randy = Randolph(height=1)
+        randy.next_to(dots, UP, SMALL_BUFF)
+        thought_bubble = ThoughtBubble(height=2, width=2, direction=LEFT)
+        thought_bubble.set_stroke(width=2)
+        thought_bubble.move_to(randy.get_corner(UR), DL)
+        speech_bubble = SpeechBubble(height=2, width=2)
+        speech_bubble.pin_to(randy)
+        speech_bubble.write("What do \\\\ you think?")
+        friends = VGroup(
+            PiCreature(color=BLUE_E),
+            PiCreature(color=BLUE_C),
+            Mortimer()
+        )
+        friends.set_height(1)
+        friends.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        friends[:2].next_to(randy, LEFT)
+        friends[2].next_to(randy, RIGHT)
+
+        self.add(videos[0])
+        self.wait()
+        self.play(
+            TransformFromCopy(*videos),
+        )
+        self.play(Write(dots))
+        self.wait()
+        self.play(
+            LaggedStart(
+                FadeInFrom, mid_words,
+                lambda m: (m, UP),
+                lag_ratio=0.8,
+            ),
+            randy.change, "pondering",
+            VFadeIn(randy),
+            videos.space_out_submobjects, 1.3,
+        )
+        self.play(ShowCreation(thought_bubble))
+        self.play(Blink(randy))
+        self.play(
+            Uncreate(thought_bubble),
+            ShowCreation(speech_bubble),
+            Write(speech_bubble.content),
+            randy.change, "maybe", friends[0].eyes,
+            LaggedStart(FadeInFromDown, friends),
+            videos.space_out_submobjects, 1.6,
+        )
+        self.play(
+            LaggedStart(
+                ApplyMethod, friends,
+                lambda m: (m.change, "pondering"),
+                run_time=1,
+                lag_ratio=0.7,
+            )
+        )
+        self.play(Blink(friends[2]))
+        self.play(friends[0].change, "confused")
+        self.wait()
+
+
+class EndScreen(Scene):
+    def construct(self):
+        width = (475 / 1280) * FRAME_WIDTH
+        height = width * (323 / 575)
+        video_rect = Rectangle(
+            width=width,
+            height=height,
+        )
+        video_rect.shift(UP)
+        video_rects = VGroup(*[
+            video_rect.copy().set_color(color)
+            for color in [BLUE_E, BLUE_C, BLUE_D, GREY_BROWN]
+        ])
+        for rect in video_rects[1::2]:
+            rect.reverse_points()
+        video_rect.set_fill(DARK_GREY, 0.5)
+        video_rect.set_stroke(GREY_BROWN, 0.5)
+        date = TextMobject(
+            "Solution will be\\\\"
+            "posted", "1/20/19",
+        )
+        date[1].set_color(YELLOW)
+        date.set_width(video_rect.get_width() - 2 * MED_SMALL_BUFF)
+        date.move_to(video_rect)
+
+        handle = TextMobject("@3blue1brown")
+        handle.next_to(video_rect, DOWN, MED_LARGE_BUFF)
+
+        self.add(video_rect, date, handle)
+        for n in range(10):
+            self.play(
+                FadeOut(video_rects[(n - 1) % 4]),
+                ShowCreation(video_rects[n % 4]),
+                run_time=2,
+            )
+
+
+class Thumbnail(BlocksAndWallExample):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1e4,
+                "velocity": -1.5,
+            },
+            "collect_clack_data": False,
+        },
+        "wait_time": 0,
+        "count_clacks": False,
+        "show_flash_animations": False,
+        "floor_y": -3,
+    }
+
+    def construct(self):
+        self.floor.set_stroke(WHITE, 10)
+        self.wall.set_stroke(WHITE, 10)
+        self.wall[1:].set_stroke(WHITE, 4)
+        blocks = self.blocks
+        for block in blocks.block1, blocks.block2:
+            block.remove(block.label)
+            block.label.scale(2.5, about_point=block.get_top())
+            self.add(block.label)
+
+        arrow = Vector(
+            2.5 * LEFT,
+            color=RED,
+            rectangular_stem_width=1.5,
+            tip_length=0.5
+        )
+        arrow.move_to(blocks.block1.get_center(), RIGHT)
+        arrow.add_to_back(
+            arrow.copy().set_stroke(GREY, 5)
+        )
+        self.add(arrow)
+
+        question = TextMobject("How many\\\\collisions?")
+        question.scale(2.5)
+        question.to_edge(UP)
+        question.set_color(YELLOW)
+        question.set_stroke(RED, 2, background=True)
+        self.add(question)

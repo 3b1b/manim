@@ -37,7 +37,11 @@ def get_movie_output_directory(scene_class, camera_config, frame_duration):
 def get_partial_movie_output_directory(scene_class, camera_config, frame_duration):
     directory = get_movie_output_directory(scene_class, camera_config, frame_duration)
     return guarantee_existance(
-        os.path.join(directory, scene_class.__name__)
+        os.path.join(
+            directory,
+            "partial_movie_files",
+            scene_class.__name__
+        )
     )
 
 
@@ -74,4 +78,4 @@ def get_sorted_integer_files(directory,
         elif remove_non_integer_files:
             os.remove(full_path)
     indexed_files.sort(key=lambda p: p[0])
-    return map(lambda p: p[1], indexed_files)
+    return list(map(lambda p: p[1], indexed_files))
