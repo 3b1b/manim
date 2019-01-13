@@ -733,8 +733,13 @@ class Scene(Container):
             '-loglevel', 'error',
             movie_file_path
         ]
-        subprocess.call(commands)
+        combine_process = subprocess.Popen(commands)
+        combine_process.wait()
+        for pf_path in partial_movie_files:
+            os.remove(pf_path)
         os.remove(file_list)
+        os.rmdir(partial_movie_file_directory)
+        os.rmdir(os.path.join(partial_movie_file_directory, os.path.pardir))
         print("File ready at {}".format(movie_file_path))
 
     def tex(self, latex):
