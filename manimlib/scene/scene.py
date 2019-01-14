@@ -719,7 +719,10 @@ class Scene(Container):
         )
         with open(file_list, 'w') as fp:
             for pf_path in partial_movie_files:
-                fp.write("file {}\n".format(pf_path).replace('\\', '/'))
+                if os.name == 'nt':
+                    fp_path = fp_path.replace('\\', '/')
+
+                fp.write("file {}\n".format(pf_path))
 
         movie_file_path = self.get_movie_file_path()
         commands = [
