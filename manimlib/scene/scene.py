@@ -720,7 +720,7 @@ class Scene(Container):
         with open(file_list, 'w') as fp:
             for pf_path in partial_movie_files:
                 if os.name == 'nt':
-                    fp_path = fp_path.replace('\\', '/')
+                    pf_path = pf_path.replace('\\', '/')
 
                 fp.write("file {}\n".format(pf_path))
 
