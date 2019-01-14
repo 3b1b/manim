@@ -35,7 +35,6 @@ class Scene(Container):
         "frame_duration": LOW_QUALITY_FRAME_DURATION,
         "construct_args": [],
         "skip_animations": False,
-        "ignore_waits": False,
         "write_to_movie": False,
         "save_pngs": False,
         "pngs_mode": "RGBA",
@@ -386,13 +385,15 @@ class Scene(Container):
                     return mobjects[i:]
         return []
 
-    def get_time_progression(self, run_time):
+    def get_time_progression(self, run_time, n_iterations=None):
         if self.skip_animations:
             times = [run_time]
         else:
             step = self.frame_duration
             times = np.arange(0, run_time, step)
-        time_progression = ProgressDisplay(times)
+        time_progression = ProgressDisplay(
+            times, total=n_iterations
+        )
         return time_progression
 
     def get_animation_time_progression(self, animations):
@@ -543,13 +544,25 @@ class Scene(Container):
         return []
 
     @handle_play_like_call
-    def wait(self, duration=DEFAULT_WAIT_TIME):
+    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         if self.should_continually_update():
             total_time = 0
-            for t in self.get_time_progression(duration):
+            if stop_condition is not None:
+                time_progression = self.get_time_progression(
+                    duration,
+                    n_iterations=-1  # So it doesn't show % progress
+                )
+                time_progression.set_description(
+                    "Waiting for {}".format(stop_condition.__name__)
+                )
+            else:
+                time_progression = self.get_time_progression(duration)
+            for t in time_progression:
                 self.continual_update(dt=t - total_time)
                 self.update_frame()
                 self.add_frames(self.get_frame())
+                if stop_condition and stop_condition():
+                    break
                 total_time = t
         elif self.skip_animations:
             # Do nothing
@@ -561,16 +574,8 @@ class Scene(Container):
             self.add_frames(*[frame] * n_frames)
         return self
 
-    def wait_to(self, time, assert_positive=True):
-        if self.ignore_waits:
-            return
-        time -= self.get_time()
-        if assert_positive:
-            assert(time >= 0)
-        elif time < 0:
-            return
-
-        self.wait(time)
+    def wait_until(self, stop_condition, max_time=60):
+        self.wait(max_time, stop_condition=stop_condition)
 
     def force_skipping(self):
         self.original_skipping_status = self.skip_animations
