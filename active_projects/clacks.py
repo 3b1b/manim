@@ -3,31 +3,75 @@ import subprocess
 from pydub import AudioSegment
 
 
+class Block(Square):
+    CONFIG = {
+        "mass": 1,
+        "velocity": 0,
+        "width": None,
+        "label_text": None,
+        "label_scale_value": 0.8,
+        "fill_opacity": 1,
+        "stroke_width": 3,
+        "stroke_color": WHITE,
+        "fill_color": None,
+        "sheen_direction": UL,
+        "sheen": 0.5,
+        "sheen_direction": UL,
+    }
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        if self.width is None:
+            self.width = self.mass_to_width(self.mass)
+        if self.fill_color is None:
+            self.fill_color = self.mass_to_color(self.mass)
+        if self.label_text is None:
+            self.label_text = self.mass_to_label_text(self.mass)
+        Square.__init__(self, side_length=self.width, **kwargs)
+        self.label = self.get_label()
+        self.add(self.label)
+
+    def get_label(self):
+        label = TextMobject(self.label_text)
+        label.scale(self.label_scale_value)
+        label.next_to(self, UP, SMALL_BUFF)
+        return label
+
+    def get_points_defining_boundary(self):
+        return self.points
+
+    def mass_to_color(self, mass):
+        colors = [
+            LIGHT_GREY,
+            BLUE_B,
+            BLUE_D,
+            BLUE_E,
+            BLUE_E,
+            DARK_GREY,
+            DARK_GREY,
+            BLACK,
+        ]
+        index = min(int(np.log10(mass)), len(colors) - 1)
+        return colors[index]
+
+    def mass_to_width(self, mass):
+        return 1 + 0.25 * np.log10(mass)
+
+    def mass_to_label_text(self, mass):
+        return "{:,}\\,kg".format(int(mass))
+
+
 class SlidingBlocks(VGroup):
     CONFIG = {
         "block1_config": {
-            "mass": 1,
-            "velocity": -2,
             "distance": 7,
-            "width": None,
-            "color": None,
-            "label_text": None,
+            "mass": 1e6,
+            "velocity": -2,
         },
         "block2_config": {
+            "distance": 3,
             "mass": 1,
             "velocity": 0,
-            "distance": 3,
-            "width": None,
-            "color": None,
-            "label_text": None,
-        },
-        "block_style": {
-            "fill_opacity": 1,
-            "stroke_width": 3,
-            "stroke_color": WHITE,
-            "sheen_direction": UL,
-            "sheen_factor": 0.5,
-            "sheen_direction": UL,
         },
         "collect_clack_data": True,
     }
@@ -51,30 +95,13 @@ class SlidingBlocks(VGroup):
         if self.collect_clack_data:
             self.clack_data = self.get_clack_data()
 
-    def get_block(self, mass, distance, velocity, width, color, label_text):
-        if width is None:
-            width = self.mass_to_width(mass)
-        if color is None:
-            color = self.mass_to_color(mass)
-        if label_text is None:
-            label_text = "{:,}\\,kg".format(int(mass))
-        block = Square(side_length=width)
-        block.mass = mass
-        block.velocity = velocity
-
-        style = dict(self.block_style)
-        style["fill_color"] = color
-
-        block.set_style(**style)
+    def get_block(self, distance, **kwargs):
+        block = Block(**kwargs)
         block.move_to(
             self.floor.get_top()[1] * UP +
             (self.wall.get_right()[0] + distance) * RIGHT,
             DL,
         )
-        label = block.label = TextMobject(label_text)
-        label.scale(0.8)
-        label.next_to(block, UP, SMALL_BUFF)
-        block.add(label)
         return block
 
     def get_phase_space_point_tracker(self):
@@ -100,36 +127,6 @@ class SlidingBlocks(VGroup):
             self.phase_space_point_tracker.velocity * dt
         )
         self.update_blocks_from_phase_space_point_tracker()
-
-    def old_update_positions(self, dt):
-        # Based on velocity diagram bouncing...didn't work for
-        # large masses, due to frame rate mismatch
-        blocks = self.submobjects
-        for block in blocks:
-            block.shift(block.velocity * dt * RIGHT)
-        if blocks[0].get_left()[0] < blocks[1].get_right()[0]:
-            # Two blocks collide
-            m1 = blocks[0].mass
-            m2 = blocks[1].mass
-            v1 = blocks[0].velocity
-            v2 = blocks[1].velocity
-            v_phase_space_point = np.array([
-                np.sqrt(m1) * v1, -np.sqrt(m2) * v2
-            ])
-            angle = 2 * np.arctan(np.sqrt(m2 / m1))
-            new_vps_point = rotate_vector(v_phase_space_point, angle)
-            for block, value in zip(blocks, new_vps_point):
-                block.velocity = value / np.sqrt(block.mass)
-            blocks[1].move_to(blocks[0].get_corner(DL), DR)
-            self.surrounding_scene.clack(blocks[0].get_left())
-        if blocks[1].get_left()[0] < self.wall.get_right()[0]:
-            # Second block hits wall
-            blocks[1].velocity *= -1
-            blocks[1].move_to(self.wall.get_corner(DR), DL)
-            if blocks[0].get_left()[0] < blocks[1].get_right()[0]:
-                blocks[0].move_to(blocks[1].get_corner(DR), DL)
-            self.surrounding_scene.clack(blocks[1].get_left())
-        return self
 
     def update_blocks_from_phase_space_point_tracker(self):
         block1, block2 = self.block1, self.block2
@@ -196,23 +193,6 @@ class SlidingBlocks(VGroup):
             clack_data.append((location, time))
         return clack_data
 
-    def mass_to_color(self, mass):
-        colors = [
-            LIGHT_GREY,
-            BLUE_B,
-            BLUE_D,
-            BLUE_E,
-            BLUE_E,
-            DARK_GREY,
-            DARK_GREY,
-            BLACK,
-        ]
-        index = min(int(np.log10(mass)), len(colors) - 1)
-        return colors[index]
-
-    def mass_to_width(self, mass):
-        return 1 + 0.25 * np.log10(mass)
-
 
 class ClackFlashes(ContinualAnimation):
     CONFIG = {
@@ -252,6 +232,33 @@ class ClackFlashes(ContinualAnimation):
             else:
                 if flash.mobject in self.mobject:
                     self.mobject.remove(flash.mobject)
+
+
+class Wall(Line):
+    CONFIG = {
+        "tick_spacing": 0.5,
+        "tick_length": 0.25,
+        "tick_style": {
+            "stroke_width": 1,
+            "stroke_color": WHITE,
+        },
+    }
+
+    def __init__(self, height, **kwargs):
+        Line.__init__(self, ORIGIN, height * UP, **kwargs)
+        self.height = height
+        self.ticks = self.get_ticks()
+        self.add(self.ticks)
+
+    def get_ticks(self):
+        n_lines = int(self.height / self.tick_spacing)
+        lines = VGroup(*[
+            Line(ORIGIN, self.tick_length * UR).shift(n * self.tick_spacing * UP)
+            for n in range(n_lines)
+        ])
+        lines.set_style(**self.tick_style)
+        lines.move_to(self, DR)
+        return lines
 
 
 class BlocksAndWallScene(Scene):
@@ -319,16 +326,10 @@ class BlocksAndWallScene(Scene):
         self.counter_mob = counter_mob
 
     def get_wall(self):
-        wall = Line(self.floor_y * UP, FRAME_HEIGHT * UP / 2)
+        height = (FRAME_HEIGHT / 2) - self.floor_y
+        wall = Wall(height=height)
         wall.shift(self.wall_x * RIGHT)
-        lines = VGroup(*[
-            Line(ORIGIN, 0.25 * UR)
-            for x in range(self.n_wall_ticks)
-        ])
-        lines.set_stroke(width=1)
-        lines.arrange_submobjects(UP, buff=MED_SMALL_BUFF)
-        lines.move_to(wall, DR)
-        wall.add(lines)
+        wall.to_edge(UP, buff=0)
         return wall
 
     def get_floor(self):
@@ -1151,7 +1152,7 @@ class CompareToGalacticMass(Scene):
                     "velocity": -0.01,
                     "distance": 4.5,
                     "label_text": "$100^{(20 - 1)}$ kg",
-                    "color": BLACK,
+                    "fill_color": BLACK,
                 },
                 "block2_config": {
                     "distance": 1,
