@@ -385,14 +385,15 @@ class Scene(Container):
                     return mobjects[i:]
         return []
 
-    def get_time_progression(self, run_time, n_iterations=None):
-        if self.skip_animations:
+    def get_time_progression(self, run_time, n_iterations=None, override_skip_animations=False):
+        if self.skip_animations and not override_skip_animations:
             times = [run_time]
         else:
             step = self.frame_duration
             times = np.arange(0, run_time, step)
         time_progression = ProgressDisplay(
-            times, total=n_iterations
+            times, total=n_iterations,
+            leave=False,
         )
         return time_progression
 
@@ -400,7 +401,7 @@ class Scene(Container):
         run_time = np.max([animation.run_time for animation in animations])
         time_progression = self.get_time_progression(run_time)
         time_progression.set_description("".join([
-            "Animation %d: " % self.num_plays,
+            "Animation {}: ".format(self.num_plays),
             str(animations[0]),
             (", etc." if len(animations) > 1 else ""),
         ]))
@@ -543,25 +544,35 @@ class Scene(Container):
             return self.mobjects_from_last_animation
         return []
 
+    def get_wait_time_progression(self, duration, stop_condition):
+        if stop_condition is not None:
+            time_progression = self.get_time_progression(
+                duration,
+                n_iterations=-1,  # So it doesn't show % progress
+                override_skip_animations=True
+
+            )
+            time_progression.set_description(
+                "Waiting for {}".format(stop_condition.__name__)
+            )
+        else:
+            time_progression = self.get_time_progression(duration)
+            time_progression.set_description(
+                "Waiting {}".format(self.num_plays)
+            )
+        return time_progression
+
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         if self.should_continually_update():
             total_time = 0
-            if stop_condition is not None:
-                time_progression = self.get_time_progression(
-                    duration,
-                    n_iterations=-1  # So it doesn't show % progress
-                )
-                time_progression.set_description(
-                    "Waiting for {}".format(stop_condition.__name__)
-                )
-            else:
-                time_progression = self.get_time_progression(duration)
+            time_progression = self.get_wait_time_progression(duration, stop_condition)
             for t in time_progression:
                 self.continual_update(dt=t - total_time)
                 self.update_frame()
                 self.add_frames(self.get_frame())
                 if stop_condition and stop_condition():
+                    time_progression.clear()
                     break
                 total_time = t
         elif self.skip_animations:
