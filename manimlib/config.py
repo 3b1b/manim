@@ -80,7 +80,6 @@ def parse_cli():
         )
         parser.add_argument(
             "-n", "--start_at_animation_number",
-            nargs=1,
             help="Start rendering not from the first animation, but"
                  "from another, specified by its index.  If you pass"
                  "in two comma separated values, e.g. \"3,6\", it will end"
@@ -88,12 +87,10 @@ def parse_cli():
         )
         parser.add_argument(
             "-r", "--resolution",
-            nargs=1,
             help="Resolution, passed as \"height,width\"",
         )
         parser.add_argument(
             "-c", "--color",
-            nargs=1,
             help="Background color",
         )
         parser.add_argument(
