@@ -310,9 +310,9 @@ class IntegralSymbols(Scene):
 
         self.play(FadeInFrom(rhs, 4 * LEFT))
         self.wait()
-        self.play(CircleThenFadeAround(rhs[1]))
+        self.play(ShowCreationThenFadeAround(rhs[1]))
         self.wait()
-        self.play(CircleThenFadeAround(rhs[2:]))
+        self.play(ShowCreationThenFadeAround(rhs[2:]))
         self.wait()
         self.play(
             GrowFromCenter(int_brace),

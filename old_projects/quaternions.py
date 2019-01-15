@@ -4182,7 +4182,7 @@ class IntroduceQuaternions(Scene):
                 FadeInFromDown(number),
                 Write(label),
             )
-            self.play(CircleThenFadeAround(
+            self.play(ShowCreationThenFadeAround(
                 number[2:],
                 surrounding_rectangle_config={"color": BLUE}
             ))
@@ -4630,7 +4630,7 @@ class BreakUpQuaternionMultiplicationInParts(Scene):
         )
         self.play(
             randy.change, "confused", rotate_words,
-            CircleThenFadeAround(rotate_words),
+            ShowCreationThenFadeAround(rotate_words),
         )
         self.play(LaggedStart(
             FadeInFrom, q_marks,

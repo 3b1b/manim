@@ -174,7 +174,7 @@ class ShowCreationThenDestructionAround(AnimationOnSurroundingRectangle):
     }
 
 
-class CircleThenFadeAround(AnimationOnSurroundingRectangle):
+class ShowCreationThenFadeAround(AnimationOnSurroundingRectangle):
     CONFIG = {
         "rect_to_animation": lambda rect: Succession(
             ShowCreation, rect,

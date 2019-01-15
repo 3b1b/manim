@@ -927,7 +927,7 @@ class PiComputingAlgorithmsAxes(Scene):
             lag_ratio=0.4,
         ))
         self.wait()
-        self.play(CircleThenFadeAround(algorithms[-1][0]))
+        self.play(ShowCreationThenFadeAround(algorithms[-1][0]))
 
     def get_machin_like_formula(self):
         formula = TexMobject(

@@ -385,7 +385,7 @@ class AskAboutFindingNewVelocities(Scene):
         ).set_color(YELLOW)
 
         self.play(
-            CircleThenFadeAround(energy_expression),
+            ShowCreationThenFadeAround(energy_expression),
             momentum_text.set_fill, {"opacity": 0.25},
             FadeOut(self.all_velocity_labels),
         )
@@ -616,9 +616,8 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
 
         self.add(equations)
         self.play(LaggedStart(
-            AnimationGroup,
+            ShowCreationThenDestruction,
             equations.copy().set_stroke(YELLOW, 3).set_fill(opacity=0),
-            lambda m: (ShowCreation(m), FadeOut(m)),
             lag_ratio=0.8,
             remover=True,
         ))

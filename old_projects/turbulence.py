@@ -1018,7 +1018,7 @@ class ShowNavierStokesEquations(Scene):
             FadeInFromDown(labels[0]),
             newtons_second.next_to, variables, RIGHT, LARGE_BUFF
         )
-        self.play(CircleThenFadeAround(parts[0]))
+        self.play(ShowCreationThenFadeAround(parts[0]))
         self.wait()
         self.play(LaggedStart(FadeInFrom, labels[1:]))
         self.wait(3)
