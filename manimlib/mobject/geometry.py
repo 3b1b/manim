@@ -166,7 +166,7 @@ class Circle(Arc):
     }
 
     def __init__(self, **kwargs):
-        Arc.__init__(self, 2 * np.pi, **kwargs)
+        Arc.__init__(self, TAU, **kwargs)
 
     def surround(self, mobject, dim_to_match=0, stretch=False, buffer_factor=1.2):
         # Ignores dim_to_match and stretch; result will always be a circle
