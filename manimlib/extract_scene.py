@@ -133,7 +133,8 @@ def main(config):
             "movie_file_extension",
             "start_at_animation_number",
             "end_at_animation_number",
-            "output_file_name"
+            "output_file_name",
+            "leave_progress_bars",
         ]
     ])
     if config["save_pngs"]:

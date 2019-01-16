@@ -98,6 +98,11 @@ def parse_cli():
             action="store_true",
             help="Play a success/failure sound",
         )
+        parser.add_argument(
+            "--leave_progress_bars",
+            action="store_true",
+            help="Leave progress bars displayed in terminal",
+        )
 
         # For live streaming
         module_location.add_argument(
@@ -184,6 +189,7 @@ def get_configuration(args):
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
         "sound": args.sound,
+        "leave_progress_bars": args.leave_progress_bars
     }
 
     # Camera configuration
