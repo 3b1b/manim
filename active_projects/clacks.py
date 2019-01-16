@@ -274,6 +274,7 @@ class BlocksAndWallScene(Scene):
         "collision_sound": "clack.wav",
         "show_flash_animations": True,
         "min_time_between_sounds": 0.004,
+        "allow_sound": True,
     }
 
     def setup(self):
@@ -583,8 +584,7 @@ class BlocksAndWallExample(BlocksAndWallScene):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
-                # "mass": 1e0,
-                "mass": 64,
+                "mass": 1e0,
                 "velocity": -2,
             }
         },

@@ -82,7 +82,7 @@ class BlocksAndWallExampleMass1e4(BlocksAndWallExample):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
-                "mass": 64,
+                "mass": 1e4,
                 "velocity": -1.5,
             },
         },
@@ -138,10 +138,8 @@ class BlocksAndWallExampleMassTrillion(BlocksAndWallExample):
     }
 
 
-# TODO, add sound
 class AskAboutFindingNewVelocities(Scene):
     CONFIG = {
-        "sound_file": None,
         "floor_y": -3,
         "wall_x": -6.5,
         "wall_height": 7,
@@ -157,7 +155,11 @@ class AskAboutFindingNewVelocities(Scene):
         "is_halted": False,
     }
 
+    def setup(self):
+        self.add_clack_sound_file()
+
     def construct(self):
+        self.add_clack_sound_file()
         self.add_floor()
         self.add_wall()
         self.add_blocks()
@@ -166,6 +168,12 @@ class AskAboutFindingNewVelocities(Scene):
         self.ask_about_transfer()
         self.show_ms_and_vs()
         self.show_value_on_equations()
+
+    def add_clack_sound_file(self):
+        self.clack_file = os.path.join(
+            VIDEO_DIR, "active_projects",
+            "clacks", "sounds", "clack.wav"
+        )
 
     def add_floor(self):
         floor = self.floor = Line(
@@ -251,7 +259,7 @@ class AskAboutFindingNewVelocities(Scene):
         randy.fade(1)
 
         # Up to collisions
-        self.go_through_next_collision()
+        self.go_through_next_collision(include_velocity_label_animation=True)
         self.play(
             randy.restore,
             randy.change, "pondering", velocity_labels[0],
@@ -402,9 +410,7 @@ class AskAboutFindingNewVelocities(Scene):
         self.add(v_decimals)
         self.unhalt()
         for x in range(4):
-            self.go_through_next_collision(
-                include_velocity_label_animation=False,
-            )
+            self.go_through_next_collision()
         energy_decimal.clear_updaters()
         momentum_decimal.set_value(get_momentum())
         self.halt()
@@ -428,9 +434,7 @@ class AskAboutFindingNewVelocities(Scene):
             lambda m: m.next_to(momentum_const_brace, UP, SMALL_BUFF)
         )
         for x in range(4):
-            self.go_through_next_collision(
-                include_velocity_label_animation=False,
-            )
+            self.go_through_next_collision()
         self.wait(10)
 
     # Helpers
@@ -457,14 +461,16 @@ class AskAboutFindingNewVelocities(Scene):
             momentum_expression,
         )
 
-    def go_through_next_collision(self, include_velocity_label_animation=True):
+    def go_through_next_collision(self, include_velocity_label_animation=False):
         block2 = self.block2
         if block2.velocity >= 0:
             self.wait_until(self.blocks_are_hitting)
+            self.add_sound(self.clack_file)
             self.transfer_momentum()
             edge = RIGHT
         else:
             self.wait_until(self.block2_is_hitting_wall)
+            self.add_sound(self.clack_file)
             self.reflect_block2()
             edge = LEFT
         anims = [Flash(block2.get_edge_center(edge))]
@@ -526,7 +532,7 @@ class AskAboutFindingNewVelocities(Scene):
             if block.v_label.get_height() > max_height:
                 block.v_label.set_height(max_height)
             block.v_label.next_to(
-                block.arrow.get_start(), DOWN,
+                block.arrow.get_start(), UP,
                 buff=SMALL_BUFF,
             )
         return blocks
@@ -577,6 +583,19 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         "floor_y": -3.5,
         "block1_start_x": 5,
         "block2_start_x": 0,
+        "axes_config": {
+            "x_axis_config": {
+                "x_min": -5.5,
+                "x_max": 6,
+            },
+            "y_axis_config": {
+                "x_min": -3.5,
+                "x_max": 4,
+            },
+            "number_line_config": {
+                "unit_size": 0.7,
+            },
+        },
     }
 
     def construct(self):
@@ -591,7 +610,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         self.show_conservation_of_momentum_equation()
         self.show_momentum_line()
         self.reiterate_meaning_of_line_and_circle()
-        self.show_first_jump()
+        self.reshow_first_jump()
         self.show_bounce_off_wall()
         self.show_reflection_about_x()
         self.show_remaining_collisions()
@@ -606,70 +625,503 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         equations = self.get_energy_and_momentum_expressions()
         equations.arrange_submobjects(DOWN, buff=LARGE_BUFF)
         equations.shift(UP)
-        v1_terms, v2_terms = [
+        v1_terms, v2_terms = v_terms = VGroup(*[
             VGroup(*[
                 expr.get_parts_by_tex(tex)
                 for expr in equations
             ])
             for tex in ("v_1", "v_2")
-        ]
+        ])
+        for eq in equations:
+            eq.highlighted_copy = eq.copy()
+            eq.highlighted_copy.set_fill(opacity=0)
+            eq.highlighted_copy.set_stroke(YELLOW, 3)
 
         self.add(equations)
+        self.play(
+            ShowCreation(equations[0].highlighted_copy),
+            run_time=0.75,
+        )
+        self.play(
+            FadeOut(equations[0].highlighted_copy),
+            ShowCreation(equations[1].highlighted_copy),
+            run_time=0.75,
+        )
+        self.play(
+            FadeOut(equations[1].highlighted_copy),
+            run_time=0.75,
+        )
         self.play(LaggedStart(
-            ShowCreationThenDestruction,
-            equations.copy().set_stroke(YELLOW, 3).set_fill(opacity=0),
-            lag_ratio=0.8,
-            remover=True,
+            Indicate, v_terms,
+            lag_ratio=0.75,
+            rate_func=there_and_back,
         ))
-        # self.play(*[
-        #     LaggedStart(
-        #         ShowCreationThenDestruction,
-        #         expr.copy().set_stroke(YELLOW, 5),
-        #         remover=True
-        #     )
-        #     for expr in equations
-        # ])
-        self.play(*map(Indicate, v1_terms))
-        self.play(*map(Indicate, v2_terms))
         self.wait()
 
         self.equations = equations
 
     def draw_axes(self):
-        pass
+        equations = self.equations
+        energy_expression, momentum_expression = equations
+
+        axes = self.axes = Axes(**self.axes_config)
+        axes.to_edge(UP, buff=SMALL_BUFF)
+        axes.set_stroke(width=2)
+
+        # Axes labels
+        x_axis_labels = VGroup(
+            TexMobject("x = ", "v_1"),
+            TexMobject("x = ", "\\sqrt{m_1}", "\\cdot", "v_1"),
+        )
+        y_axis_labels = VGroup(
+            TexMobject("y = ", "v_2"),
+            TexMobject("y = ", "\\sqrt{m_2}", "\\cdot", "v_2"),
+        )
+        axis_labels = self.axis_labels = VGroup(x_axis_labels, y_axis_labels)
+        for label_group in axis_labels:
+            for label in label_group:
+                label.set_color_by_tex("v_", RED)
+                label.set_color_by_tex("m_", BLUE)
+        for label in x_axis_labels:
+            label.next_to(axes.x_axis.get_right(), UP)
+        for label in y_axis_labels:
+            label.next_to(axes.y_axis.get_top(), DR)
+
+        # Introduce axes and labels
+        self.play(
+            equations.scale, 0.8,
+            equations.to_corner, UL, {"buff": MED_SMALL_BUFF},
+            Write(axes),
+        )
+        self.wait()
+        self.play(
+            momentum_expression.set_fill, {"opacity": 0.2},
+            Indicate(energy_expression, scale_factor=1.05),
+        )
+        self.wait()
+        for n in range(2):
+            tex = "v_{}".format(n + 1)
+            self.play(
+                TransformFromCopy(
+                    energy_expression.get_part_by_tex(tex),
+                    axis_labels[n][0].get_part_by_tex(tex),
+                ),
+                FadeInFromDown(axis_labels[n][0][0]),
+            )
+
+        # Show vps_dot
+        vps_dot = self.vps_dot = Dot(color=RED)
+        vps_dot.set_stroke(BLACK, 2, background=True)
+        vps_dot.add_updater(
+            lambda m: m.move_to(axes.coords_to_point(
+                *self.get_velocities()
+            ))
+        )
+
+        vps_point = self.vps_point
+        vps_point.save_state()
+        kwargs = {
+            "path_arc": PI / 3,
+            "run_time": 2,
+        }
+        target_locations = [
+            6 * RIGHT + 2 * UP,
+            6 * RIGHT + 2 * DOWN,
+            6 * LEFT + 1 * UP,
+        ]
+        self.add(vps_dot)
+        for target_location in target_locations:
+            self.play(
+                vps_point.move_to, target_location,
+                **kwargs,
+            )
+        self.play(Restore(vps_point, **kwargs))
+        self.wait()
 
     def draw_ellipse(self):
-        pass
+        vps_dot = self.vps_dot
+        vps_point = self.vps_point
+        axes = self.axes
+        energy_expression = self.equations[0]
+
+        ellipse = self.ellipse = Circle(color=YELLOW)
+        ellipse.set_stroke(BLACK, 5, background=True)
+        ellipse.rotate(PI)
+        ellipse.replace(
+            Polygon(*[
+                axes.coords_to_point(x, y * np.sqrt(10))
+                for x, y in [(1, 0), (0, 1), (-1, 0), (0, -1)]
+            ]),
+            stretch=True
+        )
+
+        self.play(Indicate(energy_expression, scale_factor=1.05))
+        self.add(ellipse, vps_dot)
+        self.play(
+            ShowCreation(ellipse),
+            Rotating(vps_point, about_point=ORIGIN),
+            run_time=6,
+            rate_func=lambda t: smooth(t, 3),
+        )
+        self.wait()
 
     def rescale_axes(self):
-        pass
+        ellipse = self.ellipse
+        axis_labels = self.axis_labels
+        equations = self.equations
+        vps_point = self.vps_point
+        vps_dot = self.vps_dot
+        vps_dot.clear_updaters()
+        vps_dot.add_updater(
+            lambda m: m.move_to(ellipse.get_left())
+        )
+
+        brief_circle = ellipse.copy()
+        brief_circle.stretch(np.sqrt(10), 0)
+        brief_circle.set_stroke(WHITE, 2)
+
+        xy_equation = self.xy_equation = TexMobject(
+            "\\frac{1}{2}",
+            "\\left(", "x^2", "+", "y^2", "\\right)",
+            "=", "\\text{const.}"
+        )
+        xy_equation.scale(0.8)
+        xy_equation.next_to(equations[0], DOWN)
+
+        self.play(ShowCreationThenFadeOut(brief_circle))
+        for i, labels, block in zip(it.count(), axis_labels, self.blocks):
+            self.play(ShowCreationThenFadeAround(labels[0]))
+            self.play(
+                ReplacementTransform(labels[0][0], labels[1][0]),
+                ReplacementTransform(labels[0][-1], labels[1][-1]),
+                FadeInFromDown(labels[1][1:-1]),
+                ellipse.stretch, np.sqrt(block.mass), i,
+            )
+            self.wait()
+
+        vps_dot.clear_updaters()
+        vps_dot.add_updater(
+            lambda m: m.move_to(self.axes.coords_to_point(
+                *self.vps_point.get_location()[:2]
+            ))
+        )
+
+        self.play(
+            FadeInFrom(xy_equation, UP),
+            FadeOut(equations[1])
+        )
+        self.wait()
+        curr_x = vps_point.get_location()[0]
+        for x in [0.5 * curr_x, 2 * curr_x, curr_x]:
+            axes_center = self.axes.coords_to_point(0, 0)
+            self.play(
+                vps_point.move_to, x * RIGHT,
+                UpdateFromFunc(
+                    ellipse,
+                    lambda m: m.set_width(
+                        2 * get_norm(
+                            vps_dot.get_center() - axes_center,
+                        ),
+                    ).move_to(axes_center)
+                ),
+                run_time=2,
+            )
+        self.wait()
 
     def show_starting_point(self):
-        pass
+        vps_dot = self.vps_dot
+        block1, block2 = self.blocks
+
+        self.unhalt()
+        self.wait(3)
+        self.halt()
+        self.play(ShowCreationThenFadeAround(vps_dot))
+        self.wait()
 
     def show_initial_collide(self):
-        pass
+        self.unhalt()
+        self.go_through_next_collision()
+        self.wait()
+        self.halt()
+        self.wait()
 
     def ask_about_where_to_land(self):
-        pass
+        self.play(
+            Rotating(
+                self.vps_point,
+                about_point=ORIGIN,
+                run_time=6,
+                rate_func=lambda t: smooth(t, 3),
+            ),
+        )
+        self.wait(2)
 
     def show_conservation_of_momentum_equation(self):
-        pass
+        equations = self.equations
+        energy_expression, momentum_expression = equations
+        momentum_expression.set_fill(opacity=1)
+        momentum_expression.shift(MED_SMALL_BUFF * UP)
+        momentum_expression.shift(MED_SMALL_BUFF * LEFT)
+        xy_equation = self.xy_equation
+
+        momentum_xy_equation = self.momentum_xy_equation = TexMobject(
+            "\\sqrt{m_1}", "x", "+",
+            "\\sqrt{m_2}", "y", "=",
+            "\\text{const.}",
+        )
+        momentum_xy_equation.set_color_by_tex("m_", BLUE)
+        momentum_xy_equation.scale(0.8)
+        momentum_xy_equation.next_to(
+            momentum_expression, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=RIGHT,
+        )
+
+        self.play(
+            FadeOut(xy_equation),
+            energy_expression.set_fill, {"opacity": 0.2},
+            FadeInFromDown(momentum_expression)
+        )
+        self.play(ShowCreationThenFadeAround(momentum_expression))
+        self.wait()
+        self.play(FadeInFrom(momentum_xy_equation, UP))
+        self.wait()
 
     def show_momentum_line(self):
-        pass
+        vps_dot = self.vps_dot
+        m1 = self.block1.mass
+        m2 = self.block2.mass
+        line = Line(np.sqrt(m2) * LEFT, np.sqrt(m1) * DOWN)
+        line.scale(4)
+        line.set_stroke(GREEN, 3)
+        line.move_to(vps_dot)
+
+        slope_label = TexMobject(
+            "\\text{Slope =}", "-\\sqrt{\\frac{m_1}{m_2}}"
+        )
+        slope_label.scale(0.8)
+        slope_label.next_to(vps_dot, LEFT, LARGE_BUFF)
+        slope_arrow = Arrow(
+            slope_label.get_right(),
+            line.point_from_proportion(0.45),
+            buff=SMALL_BUFF,
+        )
+        slope_group = VGroup(line, slope_label, slope_arrow)
+        foreground_mobs = VGroup(
+            self.equations[1], self.momentum_xy_equation,
+            self.blocks, self.vps_dot
+        )
+        for mob in foreground_mobs:
+            if isinstance(mob, TexMobject):
+                mob.set_stroke(BLACK, 3, background=True)
+
+        self.add(line, *foreground_mobs)
+        self.play(ShowCreation(line))
+        self.play(
+            FadeInFrom(slope_label, RIGHT),
+            GrowArrow(slope_arrow),
+        )
+        self.wait()
+        self.add(slope_group, *foreground_mobs)
+        self.play(slope_group.shift, 4 * RIGHT, run_time=3)
+        self.play(slope_group.shift, 5 * LEFT, run_time=3)
+        self.play(
+            slope_group.shift, RIGHT,
+            run_time=1,
+            rate_func=lambda t: t**4,
+        )
+        self.wait()
+
+        self.momentum_line = line
+        self.slope_group = slope_group
 
     def reiterate_meaning_of_line_and_circle(self):
-        pass
+        line_vect = self.momentum_line.get_vector()
+        vps_point = self.vps_point
 
-    def show_first_jump(self):
-        pass
+        for x in [0.25, -0.5, 0.25]:
+            self.play(
+                vps_point.shift, x * line_vect,
+                run_time=2
+            )
+        self.wait()
+        self.play(Rotating(
+            vps_point,
+            about_point=ORIGIN,
+            rate_func=lambda t: smooth(t, 3),
+        ))
+        self.wait()
+
+    def reshow_first_jump(self):
+        vps_point = self.vps_point
+        curr_point = vps_point.get_location()
+        start_point = get_norm(curr_point) * LEFT
+
+        for n in range(8):
+            vps_point.move_to(
+                [start_point, curr_point][n % 2]
+            )
+            self.wait(0.5)
+        self.wait()
 
     def show_bounce_off_wall(self):
-        pass
+        self.unhalt()
+        self.go_through_next_collision()
+        self.halt()
 
     def show_reflection_about_x(self):
-        pass
+        vps_point = self.vps_point
+
+        curr_location = vps_point.get_location()
+        old_location = np.array(curr_location)
+        old_location[1] *= -1
+
+        # self.play(
+        #     ApplyMethod(
+        #         self.block2.move_to, self.wall.get_corner(DR), DL,
+        #         path_arc=30 * DEGREES,
+        #     )
+        # )
+        for n in range(4):
+            self.play(
+                vps_point.move_to,
+                [old_location, curr_location][n % 2]
+            )
+        self.wait()
 
     def show_remaining_collisions(self):
-        pass
+        line = self.momentum_line
+        # slope_group = self.slope_group
+        vps_dot = self.vps_dot
+        axes = self.axes
+        slope = np.sqrt(self.block2.mass / self.block1.mass)
+
+        end_region = Polygon(
+            axes.coords_to_point(0, 0),
+            axes.coords_to_point(10, 0),
+            axes.coords_to_point(10, slope * 10),
+            stroke_width=0,
+            fill_color=GREEN,
+            fill_opacity=0.3
+        )
+
+        self.unhalt()
+        for x in range(7):
+            self.go_through_next_collision()
+            if x == 0:
+                self.halt()
+                self.play(line.move_to, vps_dot)
+                self.wait()
+                self.unhalt()
+        self.play(FadeIn(end_region))
+        self.go_through_next_collision()
+        self.wait(5)
+
+    # Helpers
+    def add_update_line(self, func):
+        if hasattr(self, "vps_dot"):
+            old_vps_point = self.vps_dot.get_center()
+            func()
+            self.vps_dot.update()
+            new_vps_point = self.vps_dot.get_center()
+            line = Line(old_vps_point, new_vps_point)
+            line.set_stroke(WHITE, 2)
+            self.add(line)
+        else:
+            func()
+
+    def transfer_momentum(self):
+        self.add_update_line(super().transfer_momentum)
+
+    def reflect_block2(self):
+        self.add_update_line(super().reflect_block2)
+
+
+class CircleDiagramFromSlidingBlocks(Scene):
+    CONFIG = {
+        "BlocksAndWallSceneClass": BlocksAndWallExampleMass1e1,
+        "circle_config": {
+            "radius": 2,
+            "stroke_color": YELLOW,
+            "stroke_width": 2,
+        },
+        "line_style": {
+            "stroke_color": WHITE,
+            "stroke_width": 1,
+        }
+    }
+
+    def construct(self):
+        sliding_blocks_scene = self.BlocksAndWallSceneClass(
+            show_flash_animations=False,
+            write_to_movie=False,
+            wait_time=0,
+        )
+        blocks = sliding_blocks_scene.blocks
+        times = [pair[1] for pair in blocks.clack_data]
+        self.show_circle_lines(
+            times=times,
+            slope=(-1 / np.sqrt(blocks.mass_ratio))
+        )
+
+    def show_circle_lines(self, times, slope):
+        circle = Circle(**self.circle_config)
+        radius = circle.radius
+        theta = np.arctan(-1 / slope)
+        axes = VGroup(Line(LEFT, RIGHT), Line(DOWN, UP))
+        axes.set_width(circle.get_width() + 1, stretch=True)
+        axes.set_height(circle.get_height() + 0.5, stretch=True)
+        axes.set_stroke(LIGHT_GREY, 1)
+
+        n_clacks = int(PI / theta)
+        points = []
+        for n in range(n_clacks + 1):
+            theta_mult = (n + 1) // 2
+            angle = 2 * theta * theta_mult
+            if n % 2 == 0:
+                angle *= -1
+            new_point = radius * np.array([
+                -np.cos(angle), -np.sin(angle), 0
+            ])
+            points.append(new_point)
+
+        dot = Dot(color=RED)
+        dot.move_to(points[0])
+
+        self.add(axes, circle, dot)
+
+        last_time = 0
+        for time, p1, p2 in zip(times, points, points[1:]):
+            if time > 300:
+                time = last_time + 1
+            self.wait(time - last_time)
+            last_time = time
+
+            line = Line(p1, p2)
+            line.set_style(**self.line_style)
+            dot.move_to(p2)
+            self.add(line, dot)
+
+
+class CircleDiagramFromSlidingBlocksSameMass(CircleDiagramFromSlidingBlocks):
+    CONFIG = {
+        "BlocksAndWallSceneClass": BlocksAndWallExampleSameMass
+    }
+
+
+class CircleDiagramFromSlidingBlocksSameMass1e1(CircleDiagramFromSlidingBlocks):
+    CONFIG = {
+        "BlocksAndWallSceneClass": BlocksAndWallExampleMass1e1
+    }
+
+
+class CircleDiagramFromSlidingBlocks1e2(CircleDiagramFromSlidingBlocks):
+    CONFIG = {
+        "BlocksAndWallSceneClass": BlocksAndWallExampleMass1e2
+    }
+
+
+class CircleDiagramFromSlidingBlocks1e4(CircleDiagramFromSlidingBlocks):
+    CONFIG = {
+        "BlocksAndWallSceneClass": BlocksAndWallExampleMass1e4
+    }
