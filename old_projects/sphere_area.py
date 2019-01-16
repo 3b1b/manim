@@ -1861,7 +1861,7 @@ class JustifyHeightSquish(MovingCameraScene):
         ))
         self.wait()
         self.play(ReplacementTransform(q_mark, alpha_label1))
-        self.play(CircleThenFadeAround(
+        self.play(ShowCreationThenFadeAround(
             equation,
             surrounding_rectangle_config={
                 "buff": 0.015,

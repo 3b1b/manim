@@ -3360,7 +3360,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             delta_t_numerator.scale, 1.5, {"about_edge": DOWN},
             delta_t_numerator.set_color, YELLOW
         )
-        self.play(CircleThenFadeAround(prop_exp[:-2]))
+        self.play(ShowCreationThenFadeAround(prop_exp[:-2]))
         self.play(
             delta_t_numerator.fade, 1,
             MoveToTarget(moving_R_squared),
@@ -3447,7 +3447,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         polygon.set_fill(BLUE_E, opacity=0.8)
         polygon.set_stroke(WHITE, 3)
 
-        self.play(CircleThenFadeAround(v1))
+        self.play(ShowCreationThenFadeAround(v1))
         self.play(
             MoveToTarget(v1),
             GrowFromCenter(root_dot),

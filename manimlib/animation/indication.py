@@ -24,6 +24,7 @@ from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.rate_functions import wiggle
+from manimlib.utils.rate_functions import double_smooth
 
 
 class FocusOn(Transform):
@@ -143,6 +144,20 @@ class ShowCreationThenDestruction(ShowPassingFlash):
     }
 
 
+class ShowCreationThenFadeOut(Succession):
+    CONFIG = {
+        "remover": True,
+    }
+
+    def __init__(self, mobject, **kwargs):
+        Succession.__init__(
+            self,
+            ShowCreation, mobject,
+            FadeOut, mobject,
+            **kwargs
+        )
+
+
 class AnimationOnSurroundingRectangle(AnimationGroup):
     CONFIG = {
         "surrounding_rectangle_config": {},
@@ -174,7 +189,7 @@ class ShowCreationThenDestructionAround(AnimationOnSurroundingRectangle):
     }
 
 
-class CircleThenFadeAround(AnimationOnSurroundingRectangle):
+class ShowCreationThenFadeAround(AnimationOnSurroundingRectangle):
     CONFIG = {
         "rect_to_animation": lambda rect: Succession(
             ShowCreation, rect,

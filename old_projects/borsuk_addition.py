@@ -527,9 +527,9 @@ class FunctionGInSymbols(Scene):
             VGroup(seeking_text, g_equals_zero).shift, 1.5 * DOWN
         )
         self.wait()
-        self.play(CircleThenFadeAround(g_of_neg_p[2]))
+        self.play(ShowCreationThenFadeAround(g_of_neg_p[2]))
         self.wait()
-        self.play(CircleThenFadeAround(neg_g_of_p))
+        self.play(ShowCreationThenFadeAround(neg_g_of_p))
         self.wait()
         self.play(neg_g_of_p.restore)
         rects = VGroup(*map(SurroundingRectangle, [f_of_p, f_of_neg_p]))

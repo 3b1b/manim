@@ -10,6 +10,7 @@ import warnings
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
+from pydub import AudioSegment
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.creation import Write
@@ -35,7 +36,6 @@ class Scene(Container):
         "frame_duration": LOW_QUALITY_FRAME_DURATION,
         "construct_args": [],
         "skip_animations": False,
-        "ignore_waits": False,
         "write_to_movie": False,
         "save_pngs": False,
         "pngs_mode": "RGBA",
@@ -48,6 +48,7 @@ class Scene(Container):
         "to_twitch": False,
         "twitch_key": None,
         "output_file_name": None,
+        "leave_progress_bars": False,
     }
 
     def __init__(self, **kwargs):
@@ -66,17 +67,20 @@ class Scene(Container):
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
 
+        self.init_audio()
         self.setup()
         if self.livestreaming:
             return None
         try:
             self.construct(*self.construct_args)
         except EndSceneEarlyException:
-            pass
+            if hasattr(self, "writing_process"):
+                self.writing_process.terminate()
         self.tear_down()
 
         if self.write_to_movie:
             self.combine_movie_files()
+        self.print_end_message()
 
     def handle_play_like_call(func):
         def wrapper(self, *args, **kwargs):
@@ -117,6 +121,9 @@ class Scene(Container):
             return self.output_file_name
         return str(self)
 
+    def print_end_message(self):
+        print("Played {} animations".format(self.num_plays))
+
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
         This method is slightly hacky, making it a little easier
@@ -134,6 +141,38 @@ class Scene(Container):
 
     def get_attrs(self, *keys):
         return [getattr(self, key) for key in keys]
+
+    # Sound
+    def init_audio(self):
+        self.includes_sound = False
+
+    def create_audio_segment(self):
+        self.audio_segment = AudioSegment.silent()
+
+    def add_audio_segment(self, new_segment, time_offset=0):
+        if not self.includes_sound:
+            self.includes_sound = True
+            self.create_audio_segment()
+        segment = self.audio_segment
+        overly_time = self.get_time() + time_offset
+        if overly_time < 0:
+            raise Exception("Adding sound at timestamp < 0")
+
+        curr_end = segment.duration_seconds
+        new_end = overly_time + new_segment.duration_seconds
+        diff = new_end - curr_end
+        if diff > 0:
+            segment = segment.append(
+                AudioSegment.silent(int(np.ceil(diff * 1000))),
+                crossfade=0,
+            )
+        self.audio_segment = segment.overlay(
+            new_segment, position=int(1000 * overly_time)
+        )
+
+    def add_sound(self, sound_file, time_offset=0):
+        new_segment = AudioSegment.from_file(sound_file)
+        self.add_audio_segment(new_segment, 0)
 
     # Only these methods should touch the camera
 
@@ -386,20 +425,26 @@ class Scene(Container):
                     return mobjects[i:]
         return []
 
-    def get_time_progression(self, run_time):
-        if self.skip_animations:
+    def get_time_progression(self, run_time, n_iterations=None, override_skip_animations=False):
+        if self.skip_animations and not override_skip_animations:
             times = [run_time]
         else:
             step = self.frame_duration
             times = np.arange(0, run_time, step)
-        time_progression = ProgressDisplay(times)
+        time_progression = ProgressDisplay(
+            times, total=n_iterations,
+            leave=self.leave_progress_bars,
+        )
         return time_progression
 
+    def get_run_time(self, animations):
+        return np.max([animation.run_time for animation in animations])
+
     def get_animation_time_progression(self, animations):
-        run_time = np.max([animation.run_time for animation in animations])
+        run_time = self.get_run_time(animations)
         time_progression = self.get_time_progression(run_time)
         time_progression.set_description("".join([
-            "Animation %d: " % self.num_plays,
+            "Animation {}: ".format(self.num_plays),
             str(animations[0]),
             (", etc." if len(animations) > 1 else ""),
         ]))
@@ -498,20 +543,18 @@ class Scene(Container):
         # have to be rendered every frame
         self.update_frame(excluded_mobjects=moving_mobjects)
         static_image = self.get_frame()
-        total_run_time = 0
         for t in self.get_animation_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
-            self.continual_update(dt=t - total_run_time)
+            self.continual_update(dt=self.frame_duration)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
-            total_run_time = t
         self.mobjects_from_last_animation = [
             anim.mobject for anim in animations
         ]
         self.clean_up_animations(*animations)
         if self.skip_animations:
-            self.continual_update(total_run_time)
+            self.continual_update(self.get_run_time(animations))
         else:
             self.continual_update(0)
 
@@ -542,15 +585,35 @@ class Scene(Container):
             return self.mobjects_from_last_animation
         return []
 
+    def get_wait_time_progression(self, duration, stop_condition):
+        if stop_condition is not None:
+            time_progression = self.get_time_progression(
+                duration,
+                n_iterations=-1,  # So it doesn't show % progress
+                override_skip_animations=True
+
+            )
+            time_progression.set_description(
+                "Waiting for {}".format(stop_condition.__name__)
+            )
+        else:
+            time_progression = self.get_time_progression(duration)
+            time_progression.set_description(
+                "Waiting {}".format(self.num_plays)
+            )
+        return time_progression
+
     @handle_play_like_call
-    def wait(self, duration=DEFAULT_WAIT_TIME):
+    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         if self.should_continually_update():
-            total_time = 0
-            for t in self.get_time_progression(duration):
-                self.continual_update(dt=t - total_time)
+            time_progression = self.get_wait_time_progression(duration, stop_condition)
+            for t in time_progression:
+                self.continual_update(dt=self.frame_duration)
                 self.update_frame()
                 self.add_frames(self.get_frame())
-                total_time = t
+                if stop_condition and stop_condition():
+                    time_progression.close()
+                    break
         elif self.skip_animations:
             # Do nothing
             return self
@@ -561,16 +624,8 @@ class Scene(Container):
             self.add_frames(*[frame] * n_frames)
         return self
 
-    def wait_to(self, time, assert_positive=True):
-        if self.ignore_waits:
-            return
-        time -= self.get_time()
-        if assert_positive:
-            assert(time >= 0)
-        elif time < 0:
-            return
-
-        self.wait(time)
+    def wait_until(self, stop_condition, max_time=60):
+        self.wait(max_time, stop_condition=stop_condition)
 
     def force_skipping(self):
         self.original_skipping_status = self.skip_animations
@@ -647,7 +702,9 @@ class Scene(Container):
             )
         )
         temp_file_path = file_path.replace(".", "_temp.")
-        self.args_to_rename_file = (temp_file_path, file_path)
+
+        self.movie_file_path = file_path
+        self.temp_movie_file_path = temp_file_path
 
         fps = int(1 / self.frame_duration)
         height = self.camera.get_pixel_height()
@@ -693,9 +750,13 @@ class Scene(Container):
         self.writing_process.wait()
         if self.livestreaming:
             return True
-        shutil.move(*self.args_to_rename_file)
+        shutil.move(
+            self.temp_movie_file_path,
+            self.movie_file_path,
+        )
 
     def combine_movie_files(self):
+        # TODO, this could probably use a refactor
         partial_movie_file_directory = self.get_partial_movie_directory()
         kwargs = {
             "remove_non_integer_files": True,
@@ -729,14 +790,43 @@ class Scene(Container):
             '-safe', '0',
             '-i', file_list,
             '-c', 'copy',
-            '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
             movie_file_path
         ]
+        if not self.includes_sound:
+            commands.insert(-1, '-an')
         subprocess.call(commands)
         os.remove(file_list)
-        print("File ready at {}".format(movie_file_path))
 
+        if self.includes_sound:
+            sound_file_path = movie_file_path.replace(
+                self.movie_file_extension, ".wav"
+            )
+            # Makes sure sound file length will match video file
+            self.add_audio_segment(AudioSegment.silent(0))
+            self.audio_segment.export(sound_file_path)
+            temp_file_path = movie_file_path.replace(".", "_temp.")
+            commands = commands = [
+                "ffmpeg",
+                "-i", movie_file_path,
+                "-i", sound_file_path,
+                '-y',  # overwrite output file if it exists
+                "-c:v", "copy", "-c:a", "aac",
+                '-loglevel', 'error',
+                "-shortest",
+                "-strict", "experimental",
+                temp_file_path,
+            ]
+            subprocess.call(commands)
+            shutil.move(temp_file_path, movie_file_path)
+            # subprocess.call(["rm", self.temp_movie_file_path])
+            subprocess.call(["rm", sound_file_path])
+
+        print("\nAnimation ready at {}\n".format(movie_file_path))
+
+    # TODO, this doesn't belong in Scene, but should be
+    # part of some more specialized subclass optimized
+    # for livestreaming
     def tex(self, latex):
         eq = TextMobject(latex)
         anims = []
