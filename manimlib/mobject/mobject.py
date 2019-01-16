@@ -145,7 +145,7 @@ class Mobject(Container):
 
     # Updating
 
-    def update(self, dt):
+    def update(self, dt=0):
         for updater in self.updaters:
             num_args = get_num_args(updater)
             if num_args == 1:
