@@ -1045,10 +1045,23 @@ class CircleDiagramFromSlidingBlocks(Scene):
             "stroke_color": YELLOW,
             "stroke_width": 2,
         },
-        "line_style": {
+        "lines_style": {
             "stroke_color": WHITE,
             "stroke_width": 1,
-        }
+        },
+        "axes_config": {
+            "style": {
+                "stroke_color": LIGHT_GREY,
+                "stroke_width": 1,
+            },
+            "width": 5,
+            "height": 4.5,
+        },
+        "end_zone_style": {
+            "stroke_width": 0,
+            "fill_color": GREEN,
+            "fill_opacity": 0.3,
+        },
     }
 
     def construct(self):
@@ -1059,20 +1072,48 @@ class CircleDiagramFromSlidingBlocks(Scene):
         )
         blocks = sliding_blocks_scene.blocks
         times = [pair[1] for pair in blocks.clack_data]
+        self.mass_ratio = 1 / blocks.mass_ratio
         self.show_circle_lines(
             times=times,
             slope=(-1 / np.sqrt(blocks.mass_ratio))
         )
 
     def show_circle_lines(self, times, slope):
-        circle = Circle(**self.circle_config)
-        radius = circle.radius
-        theta = np.arctan(-1 / slope)
-        axes = VGroup(Line(LEFT, RIGHT), Line(DOWN, UP))
-        axes.set_width(circle.get_width() + 1, stretch=True)
-        axes.set_height(circle.get_height() + 0.5, stretch=True)
-        axes.set_stroke(LIGHT_GREY, 1)
+        circle = self.get_circle()
+        axes = self.get_axes()
+        lines = self.get_lines(circle.radius, slope)
+        end_zone = self.get_end_zone()
 
+        dot = Dot(color=RED, radius=0.06)
+        dot.move_to(lines[0].get_start())
+
+        self.add(end_zone, axes, circle, dot)
+
+        last_time = 0
+        for time, line in zip(times, lines):
+            if time > 300:
+                time = last_time + 1
+            self.wait(time - last_time)
+            last_time = time
+            dot.move_to(line.get_end())
+            self.add(line, dot)
+
+    def get_circle(self):
+        circle = Circle(**self.circle_config)
+        circle.rotate(PI)  # Nice to have start point on left
+        return circle
+
+    def get_axes(self):
+        config = self.axes_config
+        axes = VGroup(
+            Line(LEFT, RIGHT).set_width(config["width"]),
+            Line(DOWN, UP).set_height(config["height"])
+        )
+        axes.set_style(**config["style"])
+        return axes
+
+    def get_lines(self, radius, slope):
+        theta = np.arctan(-1 / slope)
         n_clacks = int(PI / theta)
         points = []
         for n in range(n_clacks + 1):
@@ -1085,22 +1126,21 @@ class CircleDiagramFromSlidingBlocks(Scene):
             ])
             points.append(new_point)
 
-        dot = Dot(color=RED)
-        dot.move_to(points[0])
+        lines = VGroup(*[
+            Line(p1, p2)
+            for p1, p2 in zip(points, points[1:])
+        ])
+        lines.set_style(**self.lines_style)
+        return lines
 
-        self.add(axes, circle, dot)
-
-        last_time = 0
-        for time, p1, p2 in zip(times, points, points[1:]):
-            if time > 300:
-                time = last_time + 1
-            self.wait(time - last_time)
-            last_time = time
-
-            line = Line(p1, p2)
-            line.set_style(**self.line_style)
-            dot.move_to(p2)
-            self.add(line, dot)
+    def get_end_zone(self):
+        slope = 1 / np.sqrt(self.mass_ratio)
+        x = self.axes_config["width"] / 2
+        zone = Polygon(
+            ORIGIN, x * RIGHT, x * RIGHT + slope * x * UP,
+        )
+        zone.set_style(**self.end_zone_style)
+        return zone
 
 
 class CircleDiagramFromSlidingBlocksSameMass(CircleDiagramFromSlidingBlocks):
@@ -1125,3 +1165,1117 @@ class CircleDiagramFromSlidingBlocks1e4(CircleDiagramFromSlidingBlocks):
     CONFIG = {
         "BlocksAndWallSceneClass": BlocksAndWallExampleMass1e4
     }
+
+
+class AnnouncePhaseDiagram(CircleDiagramFromSlidingBlocks):
+    def construct(self):
+        pd_words = TextMobject("Phase diagram")
+        pd_words.scale(1.5)
+        pd_words.move_to(self.hold_up_spot, DOWN)
+        pd_words_border = pd_words.copy()
+        pd_words_border.set_stroke(YELLOW, 2)
+        pd_words_border.set_fill(opacity=0)
+
+        simple_words = TextMobject("Simple but powerful")
+        simple_words.next_to(pd_words, UP, LARGE_BUFF)
+        simple_words.shift(LEFT)
+        simple_words.set_color(BLUE)
+        simple_arrow = Arrow(
+            simple_words.get_bottom(),
+            pd_words.get_top(),
+            color=simple_words.get_color(),
+        )
+
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            FadeInFromDown(pd_words)
+        )
+        self.change_student_modes(
+            "pondering", "thinking", "pondering",
+            added_anims=[ShowCreationThenFadeOut(pd_words_border)]
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(simple_words, RIGHT),
+            GrowArrow(simple_arrow),
+            self.teacher.change, "hooray",
+        )
+        self.change_student_modes(
+            "thinking", "happy", "thinking",
+        )
+        self.wait(3)
+
+
+class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
+    CONFIG = {
+        "mass_ratio": 16,
+        "circle_config": {
+            "radius": 3,
+        },
+        "axes_config": {
+            "width": FRAME_WIDTH,
+            "height": FRAME_HEIGHT,
+        },
+        "lines_style": {
+            "stroke_width": 2,
+        },
+    }
+
+    def construct(self):
+        self.add_mass_ratio_label()
+        self.add_circle_with_lines()
+        self.show_equal_arc_lengths()
+        self.use_arc_lengths_to_count()
+        self.focus_on_three_points()
+        self.show_likewise_for_all_jumps()
+        self.drop_arc_for_each_hop()
+        self.try_adding_one_more_arc()
+        self.zoom_out()
+
+    def add_mass_ratio_label(self, mass_ratio=None):
+        mass_ratio = mass_ratio or self.mass_ratio
+        mass_ratio_label = TextMobject(
+            "Mass ratio =", "{:,} : 1".format(mass_ratio)
+        )
+        mass_ratio_label.to_corner(UL, buff=MED_SMALL_BUFF)
+        self.add(mass_ratio_label)
+        self.mass_ratio_label = mass_ratio_label
+
+    def add_circle_with_lines(self):
+        circle = self.get_circle()
+        axes = self.get_axes()
+        axes_labels = self.get_axes_labels(axes)
+        slope = -np.sqrt(self.mass_ratio)
+        lines = self.get_lines(
+            radius=circle.radius,
+            slope=slope,
+        )
+        end_zone = self.get_end_zone()
+
+        end_zone_words = TextMobject("End zone")
+        end_zone_words.set_height(0.25)
+        end_zone_words.next_to(ORIGIN, UP, SMALL_BUFF)
+        end_zone_words.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+        end_zone_words.set_color(GREEN)
+
+        self.add(
+            axes, axes_labels,
+            circle, end_zone, end_zone_words,
+        )
+        self.play(ShowCreation(lines, run_time=3, rate_func=None))
+        self.wait()
+
+        self.set_variables_as_attrs(
+            circle, axes, lines,
+            end_zone, end_zone_words,
+        )
+
+    def show_equal_arc_lengths(self):
+        circle = self.circle
+        radius = circle.radius
+        theta = self.theta = np.arctan(1 / np.sqrt(self.mass_ratio))
+        n_arcs = int(PI / (2 * theta))
+
+        lower_arcs = VGroup(*[
+            Arc(
+                start_angle=(PI + n * 2 * theta),
+                angle=(2 * theta),
+                radius=radius
+            )
+            for n in range(n_arcs + 1)
+        ])
+        lower_arcs[0::2].set_color(RED)
+        lower_arcs[1::2].set_color(BLUE)
+
+        upper_arcs = lower_arcs.copy()
+        upper_arcs.rotate(PI, axis=RIGHT, about_point=ORIGIN)
+        upper_arcs[0::2].set_color(BLUE)
+        upper_arcs[1::2].set_color(RED)
+
+        all_arcs = VGroup(*it.chain(*zip(lower_arcs, upper_arcs)))
+        if int(PI / theta) % 2 == 1:
+            all_arcs.remove(all_arcs[-1])
+
+        arc_copies = lower_arcs.copy()
+        for arc_copy in arc_copies:
+            arc_copy.generate_target()
+        for arc in arc_copies:
+            arc.target.rotate(-(arc.start_angle - PI + theta))
+
+        equal_signs = VGroup(*[
+            TexMobject("=") for x in range(len(lower_arcs))
+        ])
+        equal_signs.scale(0.8)
+        for sign in equal_signs:
+            sign.generate_target()
+
+        movers = VGroup(*it.chain(*zip(
+            arc_copies, equal_signs
+        )))
+        movers.remove(movers[-1])
+        mover_targets = VGroup(*[mover.target for mover in movers])
+        mover_targets.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        mover_targets.next_to(ORIGIN, DOWN)
+        mover_targets.to_edge(LEFT)
+
+        equal_signs.scale(0)
+        equal_signs.fade(1)
+        equal_signs.move_to(mover_targets)
+
+        all_arcs.save_state()
+        for arc in all_arcs:
+            arc.rotate(90 * DEGREES)
+            arc.fade(1)
+            arc.set_stroke(width=20)
+        self.play(Restore(
+            all_arcs, submobject_mode="lagged_start",
+            run_time=2,
+        ))
+        self.wait()
+        self.play(LaggedStart(MoveToTarget, movers))
+        self.wait()
+
+        self.arcs_equation = movers
+        self.lower_arcs = lower_arcs
+        self.upper_arcs = upper_arcs
+        self.all_arcs = all_arcs
+
+    def use_arc_lengths_to_count(self):
+        all_arcs = self.all_arcs
+        lines = self.lines
+
+        arc_counts = VGroup()
+        for n, arc in enumerate(all_arcs):
+            count_mob = Integer(n + 1)
+            count_mob.scale(0.75)
+            point = arc.point_from_proportion(0.5)
+            count_mob.next_to(point, normalize(point), SMALL_BUFF)
+            arc_counts.add(count_mob)
+
+        self.play(
+            FadeOut(lines),
+            FadeOut(all_arcs),
+            FadeOut(self.arcs_equation),
+        )
+        self.play(
+            ShowIncreasingSubsets(all_arcs),
+            ShowIncreasingSubsets(lines),
+            ShowIncreasingSubsets(arc_counts),
+            run_time=5,
+            rate_func=bezier([0, 0, 1, 1])
+        )
+        self.wait()
+
+        for group in all_arcs, arc_counts:
+            targets = VGroup()
+            for elem in group:
+                elem.generate_target()
+                targets.add(elem.target)
+            targets.space_out_submobjects(1.2)
+
+        kwargs = {
+            "rate_func": there_and_back,
+            "run_time": 3,
+        }
+        self.play(
+            LaggedStart(MoveToTarget, all_arcs, **kwargs),
+            LaggedStart(MoveToTarget, arc_counts, **kwargs),
+        )
+
+        self.arc_counts = arc_counts
+
+    def focus_on_three_points(self):
+        lines = self.lines
+        arcs = self.all_arcs
+        arc_counts = self.arc_counts
+        theta = self.theta
+
+        arc = arcs[4]
+
+        lines.save_state()
+        line_pair = lines[3:5]
+        lines_to_fade = VGroup(*lines[:3], *lines[5:])
+
+        three_points = [
+            line_pair[0].get_start(),
+            line_pair[1].get_start(),
+            line_pair[1].get_end(),
+        ]
+        three_dots = VGroup(*map(Dot, three_points))
+        three_dots.set_color(RED)
+
+        theta_arc = Arc(
+            radius=1,
+            start_angle=-90 * DEGREES,
+            angle=theta
+        )
+        theta_arc.shift(three_points[1])
+        theta_label = TexMobject("\\theta")
+        theta_label.next_to(theta_arc, DOWN, SMALL_BUFF)
+
+        center_lines = VGroup(
+            Line(three_points[0], ORIGIN),
+            Line(ORIGIN, three_points[2]),
+        )
+        center_lines.match_style(line_pair)
+
+        two_theta_arc = Arc(
+            radius=1,
+            start_angle=(center_lines[0].get_angle() + PI),
+            angle=2 * theta
+        )
+        two_theta_label = TexMobject("2\\theta")
+        arc_center = two_theta_arc.point_from_proportion(0.5)
+        two_theta_label.next_to(
+            arc_center, normalize(arc_center), SMALL_BUFF
+        )
+        two_theta_label.shift(SMALL_BUFF * RIGHT)
+
+        to_fade = VGroup(arc_counts, arcs, lines_to_fade)
+
+        self.play(
+            LaggedStart(
+                FadeOut, VGroup(*to_fade.family_members_with_points())
+            )
+        )
+        lines_to_fade.fade(1)
+        self.play(FadeInFromLarge(three_dots[0]))
+        self.play(TransformFromCopy(*three_dots[:2]))
+        self.play(TransformFromCopy(*three_dots[1:3]))
+        self.wait()
+        self.play(
+            ShowCreation(theta_arc),
+            FadeInFrom(theta_label, UP)
+        )
+        self.wait()
+        self.play(
+            line_pair.set_stroke, WHITE, 1,
+            TransformFromCopy(line_pair, center_lines),
+            TransformFromCopy(theta_arc, two_theta_arc),
+            TransformFromCopy(theta_label, two_theta_label),
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(two_theta_arc, arc),
+            two_theta_label.move_to, 2.7 * arc_center,
+        )
+        self.wait()
+
+        self.three_dots = three_dots
+        self.theta_group = VGroup(theta_arc, theta_label)
+        self.center_lines_group = VGroup(
+            center_lines, two_theta_arc,
+        )
+        self.two_theta_label = two_theta_label
+
+    def show_likewise_for_all_jumps(self):
+        lines = self.lines
+        arcs = self.all_arcs
+
+        every_other_line = lines[::2]
+
+        self.play(
+            Restore(
+                lines,
+                submobject_mode="lagged_start",
+                run_time=2
+            ),
+            FadeOut(self.center_lines_group),
+            FadeOut(self.three_dots),
+        )
+        self.play(LaggedStart(
+            ApplyFunction, every_other_line,
+            lambda line: (
+                lambda l: l.scale(10 / l.get_length()).set_stroke(BLUE, 3),
+                line
+            )
+        ))
+        self.play(Restore(lines))
+        self.wait()
+
+        # Shift theta label
+        last_point = lines[3].get_end()
+        last_arc = arcs[4]
+        two_theta_label = self.two_theta_label
+        theta_group_copy = self.theta_group.copy()
+        for line, arc in zip(lines[5:10:2], arcs[6:11:2]):
+            new_point = line.get_end()
+            arc_point = arc.point_from_proportion(0.5)
+            self.play(
+                theta_group_copy.shift, new_point - last_point,
+                two_theta_label.move_to, 1.1 * arc_point,
+                FadeIn(arc),
+                FadeOut(last_arc),
+            )
+            self.wait()
+            last_point = new_point
+            last_arc = arc
+        self.play(
+            FadeOut(theta_group_copy),
+            FadeOut(two_theta_label),
+            FadeOut(last_arc),
+        )
+        self.wait()
+
+    def drop_arc_for_each_hop(self):
+        lines = self.lines
+        arcs = self.all_arcs
+
+        two_theta_labels = VGroup()
+        wedges = VGroup()
+        for arc in arcs:
+            label = TexMobject("2\\theta")
+            label.scale(0.8)
+            label.move_to(1.1 * arc.point_from_proportion(0.5))
+            two_theta_labels.add(label)
+
+            wedge = arc.copy()
+            wedge.add_control_points([
+                *3 * [ORIGIN],
+                *3 * [wedge.points[0]]
+            ])
+            wedge.set_stroke(width=0)
+            wedge.set_fill(arc.get_color(), 0.2)
+            wedges.add(wedge)
+
+        self.remove(lines)
+        for line, arc, label, wedge in zip(lines, arcs, two_theta_labels, wedges):
+            self.play(
+                ShowCreation(line),
+                FadeInFrom(arc, normalize(arc.get_center())),
+                FadeInFrom(label, normalize(arc.get_center())),
+                FadeIn(wedge),
+            )
+
+        self.wedges = wedges
+        self.two_theta_labels = two_theta_labels
+
+    def try_adding_one_more_arc(self):
+        wedges = self.wedges
+        theta = self.theta
+
+        last_wedge = wedges[-1]
+        new_wedge = last_wedge.copy()
+        new_wedge.set_color(PURPLE)
+        new_wedge.set_stroke(WHITE, 1)
+
+        self.play(FadeIn(new_wedge))
+        for angle in [-2 * theta, 4 * DEGREES, -2 * DEGREES]:
+            self.play(Rotate(new_wedge, angle, about_point=ORIGIN))
+            self.wait()
+        self.play(
+            new_wedge.shift, 10 * RIGHT,
+            rate_func=running_start,
+            path_arc=-30 * DEGREES,
+        )
+        self.remove(new_wedge)
+
+    def zoom_out(self):
+        frame = self.camera_frame
+        self.play(
+            frame.scale, 2, {"about_point": (TOP + RIGHT_SIDE)},
+            run_time=3
+        )
+        self.wait()
+
+    # Helpers
+    def get_axes_labels(self, axes):
+        axes_labels = VGroup(
+            TexMobject("x = ", "\\sqrt{m_1}", "\\cdot", "v_1"),
+            TexMobject("y = ", "\\sqrt{m_2}", "\\cdot", "v_2"),
+        )
+        for label in axes_labels:
+            label.set_height(0.4)
+        axes_labels[0].next_to(ORIGIN, DOWN, SMALL_BUFF)
+        axes_labels[0].to_edge(RIGHT, MED_SMALL_BUFF)
+        axes_labels[1].next_to(ORIGIN, RIGHT, SMALL_BUFF)
+        axes_labels[1].to_edge(UP, SMALL_BUFF)
+        return axes_labels
+
+
+class InscribedAngleTheorem(Scene):
+    def construct(self):
+        self.add_title()
+        self.show_circle()
+        self.let_point_vary()
+
+    def add_title(self):
+        title = TextMobject("Inscribed angle theorem")
+        title.scale(1.5)
+        title.to_edge(UP)
+        self.add(title)
+        self.title = title
+
+    def show_circle(self):
+        # Boy is this over engineered...
+        circle = self.circle = Circle(
+            color=BLUE,
+            radius=2,
+        )
+        center_dot = Dot(circle.get_center(), color=WHITE)
+        self.add(circle, center_dot)
+
+        angle_trackers = self.angle_trackers = VGroup(
+            ValueTracker(TAU / 8),
+            ValueTracker(PI),
+            ValueTracker(-TAU / 8),
+        )
+
+        def get_point(angle):
+            return circle.point_from_proportion(
+                (angle % TAU) / TAU
+            )
+
+        def get_dot(angle):
+            dot = Dot(get_point(angle))
+            dot.set_color(RED)
+            dot.set_stroke(BLACK, 3, background=True)
+            return dot
+
+        def get_dots():
+            return VGroup(*[
+                get_dot(at.get_value())
+                for at in angle_trackers
+            ])
+
+        def update_labels(labels):
+            center = circle.get_center()
+            for dot, label in zip(dots, labels):
+                label.move_to(
+                    center + 1.2 * (dot.get_center() - center)
+                )
+
+        def get_lines():
+            lines = VGroup(*[
+                Line(d1.get_center(), d2.get_center())
+                for d1, d2 in zip(dots, dots[1:])
+            ])
+            lines.set_stroke(WHITE, 3)
+            return lines
+
+        def get_center_lines():
+            points = [
+                dots[0].get_center(),
+                circle.get_center(),
+                dots[2].get_center(),
+            ]
+            lines = VGroup(*[
+                Line(p1, p2)
+                for p1, p2 in zip(points, points[1:])
+            ])
+            lines.set_stroke(LIGHT_GREY, 3)
+            return lines
+
+        def get_angle_label(lines, tex, reduce_angle=True):
+            a1 = (lines[0].get_angle() + PI) % TAU
+            a2 = lines[1].get_angle()
+            diff = (a2 - a1)
+            if reduce_angle:
+                diff = ((diff + PI) % TAU) - PI
+            point = lines[0].get_end()
+            arc = Arc(
+                start_angle=a1,
+                angle=diff,
+                radius=0.5,
+            )
+            arc.shift(point)
+            arc_center = arc.point_from_proportion(0.5)
+            label = TexMobject(tex)
+            vect = (arc_center - point)
+            vect = (0.3 + get_norm(vect)) * normalize(vect)
+            label.move_to(point + vect)
+            return VGroup(arc, label)
+
+        def get_theta_label():
+            return get_angle_label(lines, "\\theta")
+
+        def get_2theta_label():
+            return get_angle_label(center_lines, "2\\theta", False)
+
+        dots = get_dots()
+        lines = get_lines()
+        center_lines = get_center_lines()
+        labels = VGroup(*[
+            TexMobject("P_{}".format(n + 1))
+            for n in range(3)
+        ])
+        update_labels(labels)
+        theta_label = get_theta_label()
+        two_theta_label = get_2theta_label()
+
+        self.play(
+            FadeInFromDown(labels[0]),
+            FadeInFromLarge(dots[0]),
+        )
+        self.play(
+            TransformFromCopy(*labels[:2]),
+            TransformFromCopy(*dots[:2]),
+            ShowCreation(lines[0]),
+        )
+        self.play(
+            ShowCreation(lines[1]),
+            TransformFromCopy(*labels[1:3]),
+            TransformFromCopy(*dots[1:3]),
+            Write(theta_label),
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(lines, center_lines),
+            TransformFromCopy(theta_label, two_theta_label),
+        )
+        self.wait()
+
+        # Add updaters
+        labels.add_updater(update_labels)
+        dots.add_updater(lambda m: m.become(get_dots()))
+        lines.add_updater(lambda m: m.become(get_lines()))
+        center_lines.add_updater(lambda m: m.become(get_center_lines()))
+        theta_label.add_updater(lambda m: m.become(get_theta_label()))
+        two_theta_label.add_updater(lambda m: m.become(get_2theta_label()))
+
+        self.add(
+            labels, lines, center_lines, dots,
+            theta_label, two_theta_label,
+        )
+
+    def let_point_vary(self):
+        p1_tracker, p2_tracker, p3_tracker = self.angle_trackers
+
+        kwargs = {"run_time": 2}
+        for angle in [TAU / 4, 3 * TAU / 4]:
+            self.play(
+                p2_tracker.set_value, angle,
+                **kwargs
+            )
+            self.wait()
+        self.play(
+            p1_tracker.set_value, PI,
+            **kwargs
+        )
+        self.wait()
+        self.play(
+            p3_tracker.set_value, TAU / 3,
+            **kwargs
+        )
+        self.wait()
+        self.play(
+            p2_tracker.set_value, 7 * TAU / 8,
+            **kwargs
+        )
+        self.wait()
+
+
+class AddTwoThetaManyTimes(Scene):
+    def construct(self):
+        expression = TexMobject(
+            "2\\theta", "+",
+            "2\\theta", "+",
+            "2\\theta", "+",
+            "\\cdots", "+",
+            "2\\theta",
+            "<", "2\\pi",
+        )
+        expression.to_corner(UL)
+
+        brace = Brace(expression[:-2], DOWN)
+        question = brace.get_text("Max number of times?")
+        question.set_color(YELLOW)
+
+        central_question_group = self.get_central_question()
+        simplified, lil_brace, new_question = central_question_group
+        central_question_group.next_to(question, DOWN, LARGE_BUFF)
+        new_question.align_to(question, LEFT)
+
+        for n in range(5):
+            self.add(expression[:2 * n + 1])
+            self.wait(0.25)
+        self.play(
+            FadeInFrom(expression[-2:], LEFT),
+            GrowFromCenter(brace),
+            FadeInFrom(question, UP)
+        )
+        self.wait(3)
+        self.play(
+            TransformFromCopy(expression[:-2], simplified[:3]),
+            TransformFromCopy(expression[-2:], simplified[3:]),
+            TransformFromCopy(brace, lil_brace),
+        )
+        self.play(Write(new_question))
+        self.wait()
+
+        self.central_question_group = central_question_group
+        self.show_example()
+
+    def get_central_question(self, brace_vect=DOWN):
+        expression = TexMobject(
+            "N", "\\cdot", "\\theta", "<", "\\pi"
+        )
+        N = expression[0]
+        N.set_color(BLUE)
+        brace = Brace(N, brace_vect, buff=SMALL_BUFF)
+        question = brace.get_text(
+            "Maximal integer?",
+        )
+        question.set_color(YELLOW)
+        result = VGroup(expression, brace, question)
+        result.to_corner(UL)
+        return result
+
+    def show_example(self):
+        expression, brace, question = self.central_question_group
+        N_mob = Integer(1)
+        N_mob.match_height(expression[0])
+        N_mob.set_color(BLUE)
+        dot_theta_eq = TexMobject("\\cdot", "(0.01)", "=")
+        rhs = DecimalNumber(0, num_decimal_places=2)
+        rhs.set_color(RED)
+        dot_theta_eq.move_to(expression[1:4])
+        dot_theta_eq.shift(2 * DOWN)
+
+        def align_value(mob):
+            mob.align_to(dot_theta_eq[1][1:-1], DOWN)
+
+        N_mob.add_updater(
+            lambda m: m.next_to(dot_theta_eq, LEFT, SMALL_BUFF)
+        )
+        N_mob.add_updater(align_value)
+        rhs.add_updater(
+            lambda m: m.set_value(0.01 * N_mob.get_value())
+        )
+        rhs.add_updater(
+            lambda m: m.next_to(dot_theta_eq, RIGHT, 2 * SMALL_BUFF)
+        )
+        rhs.add_updater(align_value)
+
+        self.play(
+            TransformFromCopy(expression[0], N_mob),
+            TransformFromCopy(expression[1:4], dot_theta_eq),
+            TransformFromCopy(expression[4], rhs),
+        )
+        self.wait()
+        self.play(
+            ChangeDecimalToValue(N_mob, 314, run_time=5)
+        )
+        self.wait()
+        self.play(ChangeDecimalToValue(N_mob, 315))
+        self.wait()
+        self.play(ChangeDecimalToValue(N_mob, 314))
+        self.wait()
+        self.play(ShowCreationThenFadeAround(N_mob))
+
+
+class AskAboutTheta(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "But what is $\\theta$?",
+            target_mode="raise_left_hand",
+        )
+        self.change_student_modes(
+            "confused", "sassy", "raise_left_hand",
+            added_anims=[self.teacher.change, "happy"]
+        )
+        self.wait(3)
+
+
+class ComputeThetaFor1e4(AnalyzeCircleGeometry):
+    CONFIG = {
+        "mass_ratio": 100,
+    }
+
+    def construct(self):
+        self.add_mass_ratio_label()
+        self.add_circle_with_three_lines()
+        self.write_slope()
+        self.show_tangent()
+
+    def add_circle_with_three_lines(self):
+        circle = self.get_circle()
+        axes = self.get_axes()
+        slope = -np.sqrt(self.mass_ratio)
+        lines = self.get_lines(
+            radius=circle.radius,
+            slope=slope,
+        )
+        end_zone = self.get_end_zone()
+        axes_labels = self.get_axes_labels(axes)
+        axes.add(axes_labels)
+
+        lines_to_fade = VGroup(*lines[:11], *lines[13:])
+        two_lines = lines[11:13]
+
+        theta = self.theta = np.arctan(-1 / slope)
+        arc = Arc(
+            start_angle=(-90 * DEGREES),
+            angle=theta,
+            radius=2,
+            arc_center=two_lines[0].get_end(),
+        )
+        theta_label = TexMobject("\\theta")
+        theta_label.scale(0.8)
+        theta_label.next_to(arc, DOWN, SMALL_BUFF)
+
+        self.add(end_zone, axes, circle)
+        self.play(ShowCreation(lines, rate_func=None))
+        self.play(
+            lines_to_fade.set_stroke, WHITE, 1, 0.3,
+            ShowCreation(arc),
+            FadeInFrom(theta_label, UP)
+        )
+
+        self.two_lines = two_lines
+        self.lines = lines
+        self.circle = circle
+        self.axes = axes
+        self.theta_label_group = VGroup(theta_label, arc)
+
+    def write_slope(self):
+        line = self.two_lines[1]
+        slope_label = TexMobject(
+            "\\text{Slope}", "=",
+            "\\frac{\\text{rise}}{\\text{run}}", "=",
+            "\\frac{-\\sqrt{m_1}}{\\sqrt{m_2}}", "=", "-10"
+        )
+        for mob in slope_label:
+            mob.add_to_back(mob.copy().set_stroke(BLACK, 6))
+        slope_label.next_to(line.get_center(), UR, buff=1)
+        slope_arrow = Arrow(
+            slope_label[0].get_bottom(),
+            line.point_from_proportion(0.45),
+            color=RED,
+            buff=SMALL_BUFF,
+        )
+        new_line = line.copy().set_color(RED)
+
+        self.play(
+            FadeInFromDown(slope_label[:3]),
+            ShowCreation(new_line),
+            GrowArrow(slope_arrow),
+        )
+        self.remove(new_line)
+        line.match_style(new_line)
+        self.play(
+            FadeInFrom(slope_label[3:5], LEFT)
+        )
+        self.wait()
+        self.play(
+            Write(slope_label[5]),
+            TransformFromCopy(
+                self.mass_ratio_label[1][:3],
+                slope_label[6]
+            )
+        )
+        self.wait()
+
+        self.slope_label = slope_label
+        self.slope_arrow = slope_arrow
+
+    def show_tangent(self):
+        l1, l2 = self.two_lines
+        theta = self.theta
+        theta_label_group = self.theta_label_group
+
+        tan_equation = TexMobject(
+            "\\tan", "(", "\\theta", ")", "=",
+            "{\\text{run}", "\\over", "-\\text{rise}}", "=",
+            "\\frac{1}{10}",
+        )
+        tan_equation.scale(0.9)
+        tan_equation.to_edge(LEFT, buff=MED_SMALL_BUFF)
+        tan_equation.shift(2 * UP)
+        run_word = tan_equation.get_part_by_tex("run")
+        rise_word = tan_equation.get_part_by_tex("rise")
+
+        p1, p2 = l1.get_start(), l1.get_end()
+        p3 = p1 + get_norm(p2 - p1) * np.tan(theta) * RIGHT
+        triangle = Polygon(p1, p2, p3)
+        triangle.set_stroke(width=0)
+        triangle.set_fill(GREEN, 0.5)
+
+        opposite = Line(p1, p3)
+        adjacent = Line(p1, p2)
+        opposite.set_stroke(BLUE, 3)
+        adjacent.set_stroke(PINK, 3)
+
+        arctan_equation = TexMobject(
+            "\\theta", "=", "\\arctan", "(", "1 / 10", ")"
+        )
+        arctan_equation.next_to(tan_equation, DOWN, MED_LARGE_BUFF)
+
+        self.play(
+            FadeInFromDown(tan_equation[:8]),
+        )
+        self.play(
+            TransformFromCopy(theta_label_group[1], opposite),
+            run_word.set_color, opposite.get_color()
+        )
+        self.play(WiggleOutThenIn(run_word))
+        self.play(
+            TransformFromCopy(opposite, adjacent),
+            rise_word.set_color, adjacent.get_color()
+        )
+        self.play(WiggleOutThenIn(rise_word))
+        self.wait()
+        self.play(TransformFromCopy(
+            self.slope_label[-1],
+            tan_equation[-2:],
+        ))
+        self.wait(2)
+
+        indices = [2, 4, 0, 1, -1, 3]
+        movers = VGroup(*[tan_equation[i] for i in indices]).copy()
+        for mover, target in zip(movers, arctan_equation):
+            mover.target = target
+        # Swap last two
+        sm = movers.submobjects
+        sm[-1], sm[-2] = sm[-2], sm[-1]
+        self.play(LaggedStart(
+            Transform, movers,
+            lambda m: (m, m.target),
+            lag_ratio=0.3,
+            run_time=2,
+        ))
+        self.remove(movers)
+        self.add(arctan_equation)
+        self.play(ShowCreationThenFadeAround(arctan_equation))
+        self.wait()
+
+
+class ThetaChart(Scene):
+    def construct(self):
+        self.create_columns()
+        self.populate_columns()
+        self.show_values()
+        self.highlight_example(2)
+        self.highlight_example(3)
+
+    def create_columns(self):
+        titles = VGroup(*[
+            TextMobject("Mass ratio"),
+            TextMobject("$\\theta$ formula"),
+            TextMobject("$\\theta$ value"),
+        ])
+        titles.scale(1.5)
+        titles.arrange_submobjects(RIGHT, buff=1.5)
+        titles[-1].shift(MED_SMALL_BUFF * RIGHT)
+        titles.to_corner(UL)
+
+        lines = VGroup()
+        for t1, t2 in zip(titles, titles[1:]):
+            line = Line(TOP, BOTTOM)
+            x = np.mean([t1.get_center()[0], t2.get_center()[0]])
+            line.shift(x * RIGHT)
+            lines.add(line)
+
+        h_line = Line(LEFT_SIDE, RIGHT_SIDE)
+        h_line.next_to(titles, DOWN)
+        h_line.to_edge(LEFT, buff=0)
+        lines.add(h_line)
+        lines.set_stroke(WHITE, 1)
+
+        self.play(
+            LaggedStart(FadeInFromDown, titles),
+            LaggedStart(ShowCreation, lines, lag_ratio=0.8),
+        )
+
+        self.h_line = h_line
+        self.titles = titles
+
+    def populate_columns(self):
+        top_h_line = self.h_line
+        x_vals = [t.get_center()[0] for t in self.titles]
+
+        entries = [
+            (
+                "$m_1$ : $m_2$",
+                "$\\arctan(\\sqrt{m2} / \\sqrt{m1})$",
+                ""
+            )
+        ] + [
+            (
+                "{:,} : 1".format(10**(2 * exp)),
+                "$\\arctan(1 / {:,})$".format(10**exp),
+                "{:0.10f}".format(np.arctan(10**(-exp)))
+            )
+            for exp in [1, 2, 3, 4, 5]
+        ]
+
+        h_lines = VGroup(top_h_line)
+        entry_mobs = VGroup()
+        for entry in entries:
+            mobs = VGroup(*map(TextMobject, entry))
+            for mob, x in zip(mobs, x_vals):
+                mob.shift(x * RIGHT)
+            delta_y = (mobs.get_height() / 2) + MED_SMALL_BUFF
+            y = h_lines[-1].get_center()[1] - delta_y
+            mobs.shift(y * UP)
+            mobs[0].set_color(BLUE)
+            mobs[2].set_color(YELLOW)
+            entry_mobs.add(mobs)
+
+            h_line = DashedLine(LEFT_SIDE, RIGHT_SIDE)
+            h_line.shift((y - delta_y) * UP)
+            h_lines.add(h_line)
+
+        self.play(
+            LaggedStart(
+                FadeInFromDown,
+                VGroup(*[em[:2] for em in entry_mobs])
+            ),
+            LaggedStart(ShowCreation, h_lines[1:])
+        )
+
+        self.entry_mobs = entry_mobs
+        self.h_lines = h_lines
+
+    def show_values(self):
+        values = VGroup(*[em[2] for em in self.entry_mobs])
+        for value in values:
+            self.play(LaggedStart(
+                FadeIn, value,
+                lag_ratio=0.1,
+                run_time=0.5
+            ))
+            self.wait(0.5)
+
+    def highlight_example(self, exp):
+        entry_mobs = self.entry_mobs
+        example = entry_mobs[exp]
+        other_entries = VGroup(*entry_mobs[:exp], *entry_mobs[exp + 1:])
+
+        value = example[-1]
+        rhs = TexMobject("\\approx {:}".format(10**(-exp)))
+        rhs.next_to(value, RIGHT)
+        rhs.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+        value.generate_target()
+        value.target.set_fill(opacity=1)
+        value.target.next_to(rhs, LEFT, SMALL_BUFF)
+
+        self.play(
+            other_entries.set_fill, {"opacity": 0.25},
+            example.set_fill, {"opacity": 1},
+            ShowCreationThenFadeAround(example)
+        )
+        self.wait()
+        self.play(
+            MoveToTarget(value),
+            Write(rhs),
+        )
+        self.wait()
+        value.add(rhs)
+
+
+class CentralQuestionFor1e2(AddTwoThetaManyTimes):
+    CONFIG = {
+        "exp": 2,
+    }
+
+    def construct(self):
+        exp = self.exp
+        question = self.get_central_question(UP)
+        pi_value = TexMobject(" = {:0.10f}\\dots".format(PI))
+        pi_value.next_to(question[0][-1], RIGHT, SMALL_BUFF)
+        pi_value.shift(0.3 * SMALL_BUFF * UP)
+        question.add(pi_value)
+
+        max_count = int(PI * 10**exp)
+
+        question.center().to_edge(UP)
+        self.add(question)
+
+        b10_equation = self.get_changable_equation(
+            10**(-exp), n_decimal_places=exp
+        )
+        b10_equation.next_to(question, DOWN, buff=1.5)
+        arctan_equation = self.get_changable_equation(
+            np.arctan(10**(-exp)), n_decimal_places=10,
+        )
+        arctan_equation.next_to(b10_equation, DOWN, MED_LARGE_BUFF)
+        eq_centers = [
+            eq[1][2].get_center()
+            for eq in [b10_equation, arctan_equation]
+        ]
+        arctan_equation.shift((eq_centers[1][0] - eq_centers[1][0]) * RIGHT)
+
+        # b10_brace = Brace(b10_equation[1][1][1:-1], UP)
+        arctan_brace = Brace(arctan_equation[1][1][1:-1], DOWN)
+        # b10_tex = b10_brace.get_tex("1 / 10")
+        arctan_tex = arctan_brace.get_tex(
+            "\\theta = \\arctan(1 / {:,})".format(10**exp)
+        )
+
+        int_mobs = b10_equation[0], arctan_equation[0]
+
+        self.add(*b10_equation, *arctan_equation)
+        # self.add(b10_brace, b10_tex)
+        self.add(arctan_brace, arctan_tex)
+
+        self.wait()
+        self.play(*[
+            ChangeDecimalToValue(int_mob, max_count, run_time=3)
+            for int_mob in int_mobs
+        ])
+        self.wait()
+        self.play(*[
+            ChangeDecimalToValue(int_mob, max_count + 1, run_time=1)
+            for int_mob in int_mobs
+        ])
+        self.wait()
+        self.play(*[
+            ChangeDecimalToValue(int_mob, max_count, run_time=1)
+            for int_mob in int_mobs
+        ])
+        self.play(ShowCreationThenFadeAround(int_mobs[1]))
+        self.wait()
+
+    #
+    def get_changable_equation(self, value, tex_string=None, n_decimal_places=10):
+        int_mob = Integer(1)
+        int_mob.set_color(BLUE)
+        formatter = "({:0." + str(n_decimal_places) + "f})"
+        tex_string = tex_string or formatter.format(value)
+        tex_mob = TexMobject("\\cdot", tex_string, "=")
+        rhs = DecimalNumber(value, num_decimal_places=n_decimal_places)
+
+        def align_number(mob):
+            y0 = mob[0].get_center()[1]
+            y1 = tex_mob[1][1:-1].get_center()[1]
+            mob.shift((y1 - y0) * UP)
+
+        int_mob.add_updater(
+            lambda m: m.next_to(tex_mob, LEFT, SMALL_BUFF)
+        )
+        int_mob.add_updater(align_number)
+        rhs.add_updater(
+            lambda m: m.set_value(value * int_mob.get_value())
+        )
+        rhs.add_updater(
+            lambda m: m.next_to(tex_mob, RIGHT, SMALL_BUFF)
+        )
+        rhs.add_updater(align_number)
+
+        def get_comp_pi():
+            if rhs.get_value() < np.pi:
+                result = TexMobject("< \\pi")
+                result.set_color(GREEN)
+            elif rhs.get_value() > np.pi:
+                result = TexMobject("> \\pi")
+                result.set_color(RED)
+            else:
+                result = TexMobject("= \\pi")
+            result.next_to(rhs, RIGHT, 2 * SMALL_BUFF)
+            result[1].scale(1.5, about_edge=LEFT)
+            return result
+
+        comp_pi = updating_mobject_from_func(get_comp_pi)
+
+        return VGroup(int_mob, tex_mob, rhs, comp_pi)
+
+
+class AnalyzeCircleGeometry1e2(AnalyzeCircleGeometry):
+    CONFIG = {
+        "mass_ratio": 100,
+    }
+
+
+class CentralQuestionFor1e3(CentralQuestionFor1e2):
+    CONFIG = {"exp": 3}
