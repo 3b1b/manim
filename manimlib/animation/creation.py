@@ -113,6 +113,17 @@ class Write(DrawBorderThenFill):
         else:
             self.run_time = 2
 
+
+class ShowIncreasingSubsets(Animation):
+    def __init__(self, group, **kwargs):
+        self.all_submobs = group.submobjects
+        Animation.__init__(self, group, **kwargs)
+
+    def update_mobject(self, alpha):
+        n_submobs = len(self.all_submobs)
+        index = int(alpha * n_submobs)
+        self.mobject.submobjects = self.all_submobs[:index]
+
 # Fading
 
 
