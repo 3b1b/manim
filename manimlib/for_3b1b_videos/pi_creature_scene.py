@@ -298,7 +298,7 @@ class TeacherStudentsScene(PiCreatureScene):
                 "raise_left_hand",
             ])
             kwargs["target_mode"] = target_mode
-        student = self.get_students()[kwargs.get("student_index", 1)]
+        student = self.get_students()[kwargs.get("student_index", 2)]
         return self.pi_creature_says(
             student, *content, **kwargs
         )
@@ -309,7 +309,7 @@ class TeacherStudentsScene(PiCreatureScene):
         )
 
     def student_thinks(self, *content, **kwargs):
-        student = self.get_students()[kwargs.get("student_index", 1)]
+        student = self.get_students()[kwargs.get("student_index", 2)]
         return self.pi_creature_thinks(student, *content, **kwargs)
 
     def change_all_student_modes(self, mode, **kwargs):

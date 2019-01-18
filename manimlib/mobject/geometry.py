@@ -23,6 +23,7 @@ class Arc(VMobject):
         "start_angle": 0,
         "num_anchors": 9,
         "anchors_span_full_range": True,
+        "arc_center": ORIGIN,
     }
 
     def __init__(self, angle, **kwargs):
@@ -50,6 +51,7 @@ class Arc(VMobject):
             anchors, handles1, handles2
         )
         self.scale(self.radius, about_point=ORIGIN)
+        self.shift(self.arc_center)
 
     def add_tip(self, tip_length=0.25, at_start=False, at_end=True):
         # clear out any old tips
@@ -166,7 +168,7 @@ class Circle(Arc):
     }
 
     def __init__(self, **kwargs):
-        Arc.__init__(self, 2 * np.pi, **kwargs)
+        Arc.__init__(self, TAU, **kwargs)
 
     def surround(self, mobject, dim_to_match=0, stretch=False, buffer_factor=1.2):
         # Ignores dim_to_match and stretch; result will always be a circle
@@ -179,6 +181,14 @@ class Circle(Arc):
         self.set_width(
             np.sqrt(mobject.get_width()**2 + mobject.get_height()**2))
         self.scale(buffer_factor)
+
+    def get_point_from_angle(self, angle):
+        start_angle = angle_of_vector(
+            self.points[0] - self.get_center()
+        )
+        return self.point_from_proportion(
+            (angle - start_angle) / TAU
+        )
 
 
 class Dot(Circle):

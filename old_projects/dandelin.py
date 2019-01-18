@@ -387,7 +387,7 @@ class ShowArrayOfEccentricities(Scene):
             e_copy.set_color(RED)
             self.play(ShowCreation(e_copy))
             self.play(
-                CircleThenFadeAround(
+                ShowCreationThenFadeAround(
                     eccentricity_labels[i],
                 ),
                 FadeOut(e_copy)

@@ -857,7 +857,7 @@ class CylinderModel(Scene):
         self.wait()
         self.play(
             movers.apply_complex_function, joukowsky_map,
-            CircleThenFadeAround(self.func_label),
+            ShowCreationThenFadeAround(self.func_label),
             run_time=2
         )
         self.add(self.get_stream_lines_animation(stream_lines))

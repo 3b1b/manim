@@ -105,7 +105,10 @@ class DecimalNumber(VMobject):
         full_config.update(self.initial_config)
         full_config.update(config)
         new_decimal = DecimalNumber(number, **full_config)
-        new_decimal.match_height(self)
+        # new_decimal.match_height(self)
+        new_decimal.scale(
+            self[0].get_height() / new_decimal[0].get_height()
+        )
         new_decimal.move_to(self, self.edge_to_fix)
         new_decimal.match_style(self)
 
@@ -129,3 +132,6 @@ class Integer(DecimalNumber):
 
     def increment_value(self):
         self.set_value(self.get_value() + 1)
+
+    def get_value(self):
+        return int(np.round(super().get_value()))

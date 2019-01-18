@@ -9,6 +9,7 @@ from manimlib.mobject.svg.tex_mobject import TexMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.config_ops import merge_config
 from manimlib.utils.space_ops import angle_of_vector
 
 # TODO: There should be much more code reuse between Axes, NumberPlane and GraphScene
@@ -35,15 +36,20 @@ class Axes(VGroup):
 
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
-        self.x_axis = self.get_axis(self.x_min, self.x_max, self.x_axis_config)
-        self.y_axis = self.get_axis(self.y_min, self.y_max, self.y_axis_config)
-        self.y_axis.rotate(np.pi / 2, about_point=ORIGIN)
+        x_axis_config = merge_config([
+            self.x_axis_config,
+            {"x_min": self.x_min, "x_max": self.x_max},
+            self.number_line_config,
+        ])
+        y_axis_config = merge_config([
+            self.y_axis_config,
+            {"x_min": self.y_min, "x_max": self.y_max},
+            self.number_line_config,
+        ])
+        self.x_axis = NumberLine(**x_axis_config)
+        self.y_axis = NumberLine(**y_axis_config)
+        self.y_axis.rotate(90 * DEGREES, about_point=ORIGIN)
         self.add(self.x_axis, self.y_axis)
-
-    def get_axis(self, min_val, max_val, extra_config):
-        config = dict(self.number_line_config)
-        config.update(extra_config)
-        return NumberLine(x_min=min_val, x_max=max_val, **config)
 
     def coords_to_point(self, *coords):
         origin = self.x_axis.number_to_point(0)
