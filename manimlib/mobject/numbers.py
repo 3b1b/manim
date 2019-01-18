@@ -105,9 +105,9 @@ class DecimalNumber(VMobject):
         full_config.update(self.initial_config)
         full_config.update(config)
         new_decimal = DecimalNumber(number, **full_config)
-        # new_decimal.match_height(self)
+        # Make sure last digit has constant height
         new_decimal.scale(
-            self[0].get_height() / new_decimal[0].get_height()
+            self[-1].get_height() / new_decimal[-1].get_height()
         )
         new_decimal.move_to(self, self.edge_to_fix)
         new_decimal.match_style(self)
