@@ -756,7 +756,13 @@ class Scene(Container):
         )
 
     def combine_movie_files(self):
-        # TODO, this could probably use a refactor
+        # Manim renders the scene as many smaller movie files
+        # which are then concatenated to a larger one.  The reason
+        # for this is that sometimes video-editing is made easier when
+        # one works with the broken up scene, which effectively has
+        # cuts at all the places you might want.  But for viewing
+        # the scene as a whole, one of course wants to see it as a
+        # single piece.
         partial_movie_file_directory = self.get_partial_movie_directory()
         kwargs = {
             "remove_non_integer_files": True,
@@ -801,8 +807,6 @@ class Scene(Container):
 
         combine_process = subprocess.Popen(commands)
         combine_process.wait()
-        for pf_path in partial_movie_files:
-            os.remove(pf_path)
         os.remove(file_list)
         print("File ready at {}".format(movie_file_path))
 
