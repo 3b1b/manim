@@ -15,7 +15,7 @@ def add_extension_if_not_present(file_name, extension):
 def guarantee_existance(path):
     if not os.path.exists(path):
         os.makedirs(path)
-    return path
+    return os.path.abspath(path)
 
 
 def get_scene_output_directory(scene_class):
@@ -78,4 +78,4 @@ def get_sorted_integer_files(directory,
         elif remove_non_integer_files:
             os.remove(full_path)
     indexed_files.sort(key=lambda p: p[0])
-    return list(map(lambda p: p[1], indexed_files))
+    return list(map(lambda p: os.path.join(directory, p[1]), indexed_files))
