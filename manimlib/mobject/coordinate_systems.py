@@ -38,12 +38,12 @@ class Axes(VGroup):
         VGroup.__init__(self, **kwargs)
         x_axis_config = merge_config([
             self.x_axis_config,
-            {"x_min": self.x_min, "x_max": self.x_min},
+            {"x_min": self.x_min, "x_max": self.x_max},
             self.number_line_config,
         ])
         y_axis_config = merge_config([
             self.y_axis_config,
-            {"x_min": self.y_min, "x_max": self.y_min},
+            {"x_min": self.y_min, "x_max": self.y_max},
             self.number_line_config,
         ])
         self.x_axis = NumberLine(**x_axis_config)
