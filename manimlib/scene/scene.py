@@ -780,6 +780,9 @@ class Scene(Container):
         )
         with open(file_list, 'w') as fp:
             for pf_path in partial_movie_files:
+                if os.name == 'nt':
+                    pf_path = pf_path.replace('\\', '/')
+
                 fp.write("file {}\n".format(pf_path))
 
         movie_file_path = self.get_movie_file_path()
@@ -795,8 +798,13 @@ class Scene(Container):
         ]
         if not self.includes_sound:
             commands.insert(-1, '-an')
-        subprocess.call(commands)
+
+        combine_process = subprocess.Popen(commands)
+        combine_process.wait()
+        for pf_path in partial_movie_files:
+            os.remove(pf_path)
         os.remove(file_list)
+        print("File ready at {}".format(movie_file_path))
 
         if self.includes_sound:
             sound_file_path = movie_file_path.replace(
