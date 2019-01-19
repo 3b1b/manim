@@ -50,6 +50,7 @@ class GraphScene(Scene):
         "default_riemann_end_color": GREEN,
         "area_opacity": 0.8,
         "num_rects": 50,
+        "y_label_direction": LEFT,
     }
 
     def setup(self):
@@ -108,6 +109,7 @@ class GraphScene(Scene):
             numbers_with_elongated_ticks=self.y_labeled_nums,
             color=self.axes_color,
             line_to_number_vect=LEFT,
+            label_direction= self.y_label_direction,
         )
         y_axis.shift(self.graph_origin - y_axis.number_to_point(0))
         y_axis.rotate(np.pi / 2, about_point=y_axis.number_to_point(0))
