@@ -11,6 +11,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import counterclockwise_path
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.rate_functions import there_and_back
 
 # Drawing
 
@@ -282,3 +283,92 @@ class ShrinkToCenter(Transform):
         Transform.__init__(
             self, mobject, mobject.get_point_mobject(), **kwargs
         )
+
+class Escribe(Animation):
+    CONFIG = {
+        "run_time": 2,
+        "stroke_width": 2,
+        "stroke_color": None,
+        "rate_func": smooth,
+        "submobject_mode": "lagged_start",
+        "color_orilla" : WHITE,
+        "factor_desvanecimiento": 6
+    }
+
+    def __init__(self, vmobject, **kwargs):
+        if not isinstance(vmobject, VMobject):
+            raise Exception("DrawBorderThenFill only works for VMobjects")
+        self.reached_halfway_point_before = False
+        Animation.__init__(self, vmobject, **kwargs)
+
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.pointwise_become_partial(
+            starting_submobject, 0, min(self.factor_desvanecimiento * alpha, 1)
+        )
+        if alpha < 0.5:
+            if self.stroke_color:
+                color = self.stroke_color
+            elif starting_submobject.stroke_width > 0:
+                color = starting_submobject.get_stroke_color()
+            else:
+                color = starting_submobject.get_color()
+            submobject.set_stroke(self.color_orilla, width=self.stroke_width)
+            submobject.set_fill(opacity=0)
+        else:
+            if not self.reached_halfway_point_before:
+                self.reached_halfway_point_before = True
+                submobject.points = np.array(starting_submobject.points)
+            width, opacity = [
+                interpolate(start, end, 2 * alpha - 1)
+                for start, end in [
+                    (self.stroke_width, starting_submobject.get_stroke_width()),
+                    (0, starting_submobject.get_fill_opacity())
+                ]
+            ]
+            submobject.set_stroke(width=width)
+            submobject.set_fill(opacity=opacity)
+
+
+class Escribe_y_desvanece(Animation):
+    CONFIG = {
+        "run_time": 2,
+        "stroke_width": 2,
+        "stroke_color": None,
+        "rate_func": there_and_back,
+        "submobject_mode": "lagged_start",
+        "color_orilla" : WHITE,
+        "factor_desvanecimiento": 6
+    }
+
+    def __init__(self, vmobject, **kwargs):
+        if not isinstance(vmobject, VMobject):
+            raise Exception("DrawBorderThenFill only works for VMobjects")
+        self.reached_halfway_point_before = False
+        Animation.__init__(self, vmobject, **kwargs)
+
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.pointwise_become_partial(
+            starting_submobject, 0, min(self.factor_desvanecimiento * alpha, 1)
+        )
+        if alpha < 0.5:
+            if self.stroke_color:
+                color = self.stroke_color
+            elif starting_submobject.stroke_width > 0:
+                color = starting_submobject.get_stroke_color()
+            else:
+                color = starting_submobject.get_color()
+            submobject.set_stroke(self.color_orilla, width=self.stroke_width)
+            submobject.set_fill(opacity=0)
+        else:
+            if not self.reached_halfway_point_before:
+                self.reached_halfway_point_before = True
+                submobject.points = np.array(starting_submobject.points)
+            width, opacity = [
+                interpolate(start, end, 2 * alpha - 1)
+                for start, end in [
+                    (self.stroke_width, starting_submobject.get_stroke_width()),
+                    (0, 1)
+                ]
+            ]
+            submobject.set_stroke(width=width)
+            submobject.set_fill(opacity=opacity)
