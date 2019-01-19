@@ -25,6 +25,7 @@ with open("media_dir.txt", 'w') as media_file:
 VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
 RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
 SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
+SVG_PRUEBAS_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images","pruebas")
 ###
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR = os.path.join(THIS_DIR, "files")
@@ -34,7 +35,7 @@ MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
 for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
-               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR]:
+               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,SVG_PRUEBAS_DIR]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -219,6 +220,30 @@ COLOR_MAP = {
     "PINK": "#D147BD",
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
+    "TT_FONDO_0": "#303038",
+    "TT_FONDO_1": "#4f4a51",
+    "TT_FONDO_T": "#23262b",
+    "TT_FONDO_VERDE": "#3f7d5c",
+    "TT_FONDO_AZUL": "#474a66",
+    "TT_FONDO_NARANJA": "#e6613a",
+    "TT_FONDO_ROSA": "#942357",
+    "TT_VERDE_1": "#118559",
+    "TT_VERDE_2": "#00e300",
+    "TT_TEXTO": "#d7d7d7",
+    "TT_AZULROYAL_1": "#266bb3",
+    "TT_AZULROYAL_2": "#426391",
+    "TT_PURPURAROYAL": "#8561b5",
+    "TT_AZUL_T": "#68a8e1",
+    "TT_NARANJA_T": "#e37000",
+    "TT_ROSA_T": "#ca9797",
+    "TT_AMARILLO_T": "#fff000",
+    "TT_SIMBOLO": "#fffab3",
+    "TT_PURPURA_D": "#973097",
+    "M_FONDO_0": "#303030",
+    "M_FONDO_1": "#232323",
+    "M_TEXTO_VERDE": "#94942b",
+    "M_FONDO_GRIS": "#cacaca",
+    "M_FONDO_VERDE": "#caca94",
 }
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
