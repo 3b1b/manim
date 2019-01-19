@@ -1,0 +1,195 @@
+%
+%   This file is part of MusiXTeX
+%
+%   MusiXTeX is free software; you can redistribute it and/or modify
+%   it under the terms of the GNU General Public License as published by
+%   the Free Software Foundation; either version 2, or (at your option)
+%   any later version.
+%
+%   MusiXTeX is distributed in the hope that it will be useful,
+%   but WITHOUT ANY WARRANTY; without even the implied warranty of
+%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%   GNU General Public License for more details.
+%
+%   You should have received a copy of the GNU General Public License
+%   along with MusiXTeX; see the file COPYING.  If not, write to
+%   the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+%   Boston, MA 02111-1307, USA.
+%
+\ifx\undefined\drumclef \else \endinput \fi
+
+\immediate\write16{MusiXPERcussion T.60\space<27 September 2010>}%
+
+\ifx\undefined\dqb
+  \input musixdia
+\fi
+
+\edef\catcodeat{\the\catcode`\@}\catcode`\@=11
+
+% if you need pointed percussion notes, say '\p[p][p]t n\xqu n' or '\xqu{.n}'
+% if you need them more often define them by your one
+
+\def\drumclef{\raise2\internote\hbox{\keychar77}}
+
+%%% notes with a circled diagonal cross head, for closed hihat ...
+
+\def\dc@symbol{\def\q@u{\musixchar113}}
+
+\def\dcqu{\dc@symbol\@qu}
+\def\dcql{\dc@symbol\@ql}
+
+\def\dcqb{\dc@symbol\@qb}
+
+\def\dczq{\dc@symbol\@zq}
+
+\def\dccu{\dc@symbol\@cu}
+\def\dcccu{\dc@symbol\@ccu}
+%\def\dccccu{\dc@symbol\@cccu}
+%\def\dcccccu{\dc@symbol\@ccccu}
+\def\dccl{\dc@symbol\@cl}
+\def\dcccl{\dc@symbol\@ccl}
+%\def\dccccl{\dc@symbol\@cccl}
+%\def\dcccccl{\dc@symbol\@ccccl}
+
+%%% notes with a diagonal cross half circle head, for half open hihat ...
+
+\def\dh@symbol{\def\q@u{\musixchar112}}
+
+\def\dhqu{\dh@symbol\@qu}
+\def\dhql{\dh@symbol\@ql}
+
+\def\dhqb{\dh@symbol\@qb}
+
+\def\dhzq{\dh@symbol\@zq}
+
+\def\dhcu{\dh@symbol\@cu}
+\def\dhccu{\dh@symbol\@ccu}
+%\def\dhcccu{\dh@symbol\@cccu}
+%\def\dhccccu{\dh@symbol\@ccccu}
+\def\dhcl{\dh@symbol\@cl}
+\def\dhccl{\dh@symbol\@ccl}
+%\def\dhcccl{\dh@symbol\@cccl}
+%\def\dhccccl{\dh@symbol\@ccccl}
+
+%%% notes with a diagonal cross head, for open hihat ...
+
+\def\do@symbol{\def\q@u{\musixchar111}}
+
+\def\doqu{\do@symbol\@qu}
+\def\doql{\do@symbol\@ql}
+
+\def\doqb{\do@symbol\@qb}
+
+\def\dozq{\do@symbol\@zq}
+
+\def\docu{\do@symbol\@cu}
+\def\doccu{\do@symbol\@ccu}
+%\def\docccu{\do@symbol\@cccu}
+%\def\doccccu{\do@symbol\@ccccu}
+\def\docl{\do@symbol\@cl}
+\def\doccl{\do@symbol\@ccl}
+%\def\docccl{\do@symbol\@cccl}
+%\def\doccccl{\do@symbol\@ccccl}
+
+%%% notes with a doublesharp-head
+
+\def\x@symbol{\def\q@u{\musixchar114}}
+
+\def\xqu{\x@symbol\@qu}
+\def\xql{\x@symbol\@ql}
+
+\def\xqb{\x@symbol\@qb}
+
+\def\xzq{\x@symbol\@zq}
+
+\def\xcu{\x@symbol\@cu}
+\def\xccu{\x@symbol\@ccu}
+%\def\xcccu{\x@symbol\@cccu}
+%\def\xccccu{\x@symbol\@ccccu}
+\def\xcl{\x@symbol\@cl}
+\def\xccl{\x@symbol\@ccl}
+%\def\xcccl{\x@symbol\@cccl}
+%\def\xccccl{\x@symbol\@ccccl}
+
+%%% notes with a circled doublesharp-head
+
+\def\ox@symbol{\def\q@u{\musixfont\@cxv}}
+
+\def\oxqu{\ox@symbol\@qu}
+\def\oxql{\ox@symbol\@ql}
+
+\def\oxqb{\ox@symbol\@qb}
+
+\def\oxzq{\ox@symbol\@zq}
+
+\def\oxcu{\ox@symbol\@cu}
+\def\oxccu{\ox@symbol\@ccu}
+%\def\oxcccu{\ox@symbol\@cccu}
+%\def\oxccccu{\ox@symbol\@ccccu}
+\def\oxcl{\ox@symbol\@cl}
+\def\oxccl{\ox@symbol\@ccl}
+%\def\oxcccl{\ox@symbol\@cccl}
+%\def\oxccccl{\ox@symbol\@ccccl}
+
+%%% notes with a RhOmbus head, for shaker ...
+
+\def\r@symbol{\def\q@u{\musixchar118}}
+
+\def\roqu{\r@symbol\@qu}
+\def\roql{\r@symbol\@ql}
+
+\def\roqb{\r@symbol\@qb}
+
+\def\rozq{\r@symbol\@zq}
+
+\def\rocu{\r@symbol\@cu}
+\def\roccu{\r@symbol\@ccu}
+%\def\rocccu{\r@symbol\@cccu}
+%\def\roccccu{\r@symbol\@ccccu}
+\def\rocl{\r@symbol\@cl}
+\def\roccl{\r@symbol\@ccl}
+%\def\rocccl{\r@symbol\@cccl}
+%\def\roccccl{\r@symbol\@ccccl}
+
+%%% notes with a TrianGle head, for rattle ...
+
+\def\t@symbol{\def\q@u{\musixchar116}}
+
+\def\tgqu{\t@symbol\@qu}
+\def\tgql{\t@symbol\@ql}
+
+\def\tgqb{\t@symbol\@qb}
+
+\def\tgzq{\t@symbol\@zq}
+
+\def\tgcu{\t@symbol\@cu}
+\def\tgccu{\t@symbol\@ccu}
+%\def\tgcccu{\t@symbol\@cccu}
+%\def\tgccccu{\t@symbol\@ccccu}
+\def\tgcl{\t@symbol\@cl}
+\def\tgccl{\t@symbol\@ccl}
+%\def\tgcccl{\t@symbol\@cccl}
+%\def\tgccccl{\t@symbol\@ccccl}
+
+%%% notes with a + head, for bongos ...
+
+\def\k@symbol{\def\q@u{\musixchar117}}
+
+\def\kqu{\k@symbol\@qu}
+\def\kql{\k@symbol\@ql}
+
+\def\kqb{\k@symbol\@qb}
+
+\def\kzq{\k@symbol\@zq}
+
+\def\kcu{\k@symbol\@cu}
+\def\kccu{\k@symbol\@ccu}
+%\def\kcccu{\k@symbol\@cccu}
+%\def\kccccu{\k@symbol\@ccccu}
+\def\kcl{\k@symbol\@cl}
+\def\kccl{\k@symbol\@ccl}
+%\def\kcccl{\k@symbol\@cccl}
+%\def\kccccl{\k@symbol\@ccccl}
+
+\catcode`\@=\catcodeat
+\endinput

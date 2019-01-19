@@ -1,0 +1,184 @@
+% cancel.sty  version  2.2  12-Apr-2013.
+% Donald Arseneau         asnd@triumf.ca
+% This software is contributed to the public domain by its author, 
+% who disclaims all copyrights. For people and jurisdictions that 
+% do not recognize contribution to the public domain, this software 
+% is licensed by the terms of the unlicense, <http://unlicense.org/>.
+%
+% Commands:
+% ~~~~~~~~~
+% \cancel    draws a diagonal line (slash) through its argument. 
+% \bcancel   uses the negative slope (a backslash). 
+% \xcancel   draws an X (actually \cancel plus \bcancel).
+% \cancelto{<value>}{<expression>} draws a diagonal arrow through the 
+%            expression, pointing to the value.
+%
+% The first three work in math and text mode, but \cancelto is only
+% for math mode.
+% The slope of the line or arrow depends on what is being cancelled.  
+%
+% Options:
+% ~~~~~~~~
+% By default, none of these commands affects the horizontal spacing, 
+% so they might over-print neighboring parts of the formula (or text).
+% They do add their height to the expression, so there should never be 
+% unintended vertical overlap.  There is a package option [makeroom] to 
+% increase the horizontal spacing to make room for the cancellation value.  
+% 
+% If you use the color package, then you can declare 
+%   \renewcommand{\CancelColor}{<color_command>}
+% and the cancellation marks will be printed in that color (e.g., \blue).
+% However, if you are using color, I recommend lightly shaded blocks rather
+% than diagonal arrows for cancelling.
+%
+% The option [thicklines] asks for heavier lines and arrows. This may be
+% useful when the lines are colored a light shade.
+%
+% The size (math style) of the \cancelto value depends on package options 
+% according to this table:
+%
+% Current style       [samesize]         [smaller]          [Smaller]
+% -------------       ----------------   ----------------   ----------------
+% \displaystyle       \displaystyle      \textstyle         \scriptstyle
+% \textstyle          \textstyle         \scriptstyle       \scriptstyle
+% \scriptstyle        \scriptstyle       \scriptscriptstyle \scriptscriptstyle 
+% \scriptscriptstyle  \scriptscriptstyle \scriptscriptstyle \scriptscriptstyle
+%
+% ("smaller" is the default behavior.  It gives textstyle limits in 
+% displaystyle, whereas "Smaller" gives scriptstyle limits.)
+%
+% This package is provided without guarantees or support.  Drawing slashes
+% through math to indicate "cancellation" is poor design.  I don't recommend
+% that you use this package at all.
+
+\ProvidesPackage{cancel}[2013/04/12 v2.2 Cancel math terms]
+
+\newcommand{\CancelColor}{}
+\newcommand{\cancelto}{1}% default option = smaller
+\let\canto@fil\hidewidth
+\let\canc@thinlines\thinlines
+
+\DeclareOption{samesize}{\def\cancelto{999}}
+\DeclareOption{smaller}{\def\cancelto{1}}
+\DeclareOption{Smaller}{\def\cancelto{0}}
+\DeclareOption{makeroom}{\def\canto@fil{\hfil}}
+\DeclareOption{overlap}{\let\canto@fil\hidewidth}
+\DeclareOption{thicklines}{\let\canc@thinlines\thicklines}
+
+\ProcessOptions
+
+\DeclareRobustCommand\cancel[1]{\ifmmode
+  \mathpalette{\@cancel{\@can@slash{}}}{#1}\else 
+  \@cancel{\@can@slash{}}\hbox{#1}\fi}
+\DeclareRobustCommand\bcancel[1]{\ifmmode
+  \mathpalette{\@cancel{\@can@slash{-}}}{#1}\else 
+  \@cancel{\@can@slash{-}}\hbox{#1}\fi}
+\DeclareRobustCommand\xcancel[1]{\ifmmode
+  \mathpalette{\@cancel{\@can@slash{+}\@can@slash{-}}}{#1}\else 
+  \@cancel{\@can@slash{+}\@can@slash{-}}\hbox{#1}\fi}
+
+\newcommand\@cancel[3]{%
+\OriginalPictureCmds\@begin@tempboxa\hbox{\m@th$#2{#3}$}%
+\dimen@\height
+\setbox\@tempboxa\hbox{$\m@th\vcenter{\box\@tempboxa}$}%
+\advance\dimen@-\height % the difference in height
+\unitlength\p@ \canc@thinlines
+{\/\raise\dimen@\hbox{\ooalign{#1\hfil\box\@tempboxa\hfil \cr}}}%
+\@end@tempboxa
+}
+
+\def\@can@slash#1{\canto@fil$\m@th \CancelColor\vcenter{\hbox{%
+\dimen@\width \@min@pt\dimen@ 2\@min@pt\totalheight6%
+\ifdim\totalheight<\dimen@ % wide
+ \@min@pt\dimen@ 8%
+ \@tempcnta\totalheight \multiply\@tempcnta 5 \divide\@tempcnta\dimen@
+ \advance\dimen@ 2\p@ %  "+2"
+ \edef\@tempa{(\ifcase\@tempcnta 6,#11\or 4,#11\or 2,#11\or 4,#13\else 1,#11\fi
+   ){\strip@pt\dimen@}}%
+\else % tall
+ \@min@pt\totalheight8% 
+ \advance\totalheight2\p@ % "+2"
+ \@tempcnta\dimen@ \multiply\@tempcnta 5 \divide\@tempcnta\totalheight
+ \dimen@ \ifcase\@tempcnta .16\or .25\or .5\or .75\else 1\fi \totalheight
+ \edef\@tempa{(\ifcase\@tempcnta 1,#16\or 1,#14\or 1,#12\or 3,#14\else 1,#11\fi
+   ){\strip@pt\dimen@}}%
+\fi
+\expandafter\line\@tempa}}$\canto@fil \cr}
+
+\ifcase\cancelto
+ \def\cancelto#1#2{\mathchoice    %  Smaller option
+  {\@cancelto\scriptstyle{#1}\displaystyle{#2}}%
+  {\@cancelto\scriptstyle{#1}\textstyle{#2}}%
+  {\@cancelto\scriptscriptstyle{#1}\scriptstyle{#2}}%
+  {\@cancelto\scriptscriptstyle{#1}\scriptscriptstyle{#2}}%
+  }
+\or
+ \def\cancelto#1#2{\mathchoice    %  smaller option (default)
+  {\@cancelto\textstyle{#1}\displaystyle{#2}}%
+  {\@cancelto\scriptstyle{#1}\textstyle{#2}}%
+  {\@cancelto\scriptscriptstyle{#1}\scriptstyle{#2}}%
+  {\@cancelto\scriptscriptstyle{#1}\scriptscriptstyle{#2}}%
+  }
+\else
+ \def\cancelto#1#2{\mathchoice    %  samesize option
+  {\@cancelto\textstyle{#1}\displaystyle{#2}}%
+  {\@cancelto\textstyle{#1}\textstyle{#2}}%
+  {\@cancelto\scriptstyle{#1}\scriptstyle{#2}}%
+  {\@cancelto\scriptscriptstyle{#1}\scriptscriptstyle{#2}}%
+  }
+\fi
+
+\newcommand\@cancelto[4]{%
+\OriginalPictureCmds\@begin@tempboxa\hbox{\m@th$#3{#4}$}%
+\dimen@\width % wide
+\@min@pt\dimen@ 2\@min@pt\totalheight4
+\ifdim\totalheight<\dimen@
+ \@tempcnta\totalheight \multiply\@tempcnta 5 \divide\@tempcnta\dimen@
+ \@tempdimb 3\p@ % extra width for arrowhead ("+2")
+ \advance\dimen@ \ifcase\@tempcnta 5\or 5\or 4\or 3\else 2\fi \p@
+ \@min@pt\dimen@9\advance\dimen@\p@ 
+ \edef\@tempa{\ifcase\@tempcnta 5441\or 5441\or 5421\or 4443\else 3611\fi
+      {\strip@pt\dimen@}{\strip@pt\@tempdimb}}%
+ \def\@tempb{Cancel #4 to #2; case wide }%
+\else % tall
+ \advance\totalheight3\p@ % "+2"
+ \@tempcnta\dimen@ \multiply\@tempcnta 5 \divide\@tempcnta\totalheight
+ \advance\totalheight3\p@ % "+2"
+ \dimen@ \ifcase\@tempcnta .25\or .25\or .5\or .75\else 1\fi \totalheight
+ \@tempdimb \ifcase\@tempcnta .8\or .8\or 1.2\or 1.5\else 2\fi \p@
+ \edef\@tempa{\ifcase\@tempcnta 0814\or 0814\or 1812\or 2734\else 3611\fi
+      {\strip@pt\dimen@}{\strip@pt\@tempdimb}}%
+\fi
+\dimen@\height
+\setbox\@tempboxa\hbox{$\m@th\vcenter{\box\@tempboxa}$}%
+\advance\dimen@-\height % the difference in height
+\unitlength\p@ \canc@thinlines
+{\/\raise\dimen@\hbox{\expandafter\canto@vector\@tempa{#1}{#2}}}%
+\@end@tempboxa
+}
+
+% #1, #2 offset of label   #6 extra width to clear arrowhead
+% #3, #4 vector direction  #7 superscript label style
+% #5 vector width          #8 superscript label
+\def\canto@vector#1#2#3#4#5#6#7#8{%
+  \dimen@.5\p@
+  \setbox\z@\vbox{\boxmaxdepth.5\p@
+   \hbox{\kern-1.2\p@\kern#1\dimen@$#7{#8}\m@th$}}%
+  \ifx\canto@fil\hidewidth  \wd\z@\z@ \else \kern-#6\unitlength \fi
+  \ooalign{%
+    \canto@fil$\m@th \CancelColor
+    \vcenter{\hbox{\dimen@#6\unitlength \kern\dimen@
+      \multiply\dimen@#4\divide\dimen@#3 \vrule\@depth\dimen@\@width\z@
+      \vector(#3,#4){#5}%
+    }}^{\raise#2\dimen@\copy\z@\kern-\scriptspace}$%
+    \canto@fil \cr
+    \hfil \box\@tempboxa \kern\wd\z@ \hfil \cr}}
+
+\def\@min@pt#1#2{\ifdim#1<#2\p@ #1#2\p@ \relax\fi}
+
+% pict2e removes bounding box from line and vector, so use original
+% versions by declaring \OriginalPictureCmds; make it a no-op if undefined
+
+\@ifundefined{OriginalPictureCmds}{\let\OriginalPictureCmds\relax}{}
+
+% Sometime maybe find a better solution that uses all slopes with pict2e
