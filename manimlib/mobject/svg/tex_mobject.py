@@ -27,13 +27,14 @@ class SingleStringTexMobject(SVGMobject):
         "template_tex_file_body": TEMPLATE_TEX_FILE_BODY,
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "background_stroke_width": 1,
+        "background_stroke_width": 0,
         "background_stroke_color": BLACK,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
         "propagate_style_to_family": True,
         "alignment": "",
+        "color": TT_TEXTO,
     }
 
     def __init__(self, tex_string, **kwargs):
@@ -325,3 +326,24 @@ class Title(TextMobject):
                 underline.set_width(self.underline_width)
             self.add(underline)
             self.underline = underline
+            
+class TikzMobject(TexMobject):
+    CONFIG = {
+        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
+        "alignment": "\\centering",
+        "stroke_width": 2,
+        "fill_opacity": 0,
+        "background_stroke_width": 0,
+        "background_stroke_color": BLACK,
+        "should_center": True,
+        "height": None,
+        "organize_left_to_right": False,
+        "propagate_style_to_family": True,
+    }
+
+class Texto(TextMobject):
+    pass
+
+class Formula(TexMobject):
+    pass
+
