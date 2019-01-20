@@ -1,33 +1,32 @@
 from big_ol_pile_of_manim_imports import *
 
-grosor_linea=1
-h_tb=13.7
-b_tb=2.5
-h_tn=8.7
-b_tn=1.1
-proporcion=2.5
-origen_do=ORIGIN
-
-color_soprano=RED
-color_contra=BLUE
-color_tenor=GREEN
-color_bajo=PURPLE
-
-octavas=4
-
 class MusicalScene(Scene):
-    CONFIG={"camera_config":{"background_color":WHITE}}
+    CONFIG={
+        "camera_config":{"background_color":WHITE},
+        "grosor_linea_teclado": 1,
+        "h_tb": 13.7,
+        "b_tb": 2.5,
+        "h_tn": 8.7,
+        "b_tn": 1.1,
+        "proporcion_tecla": 2.5,
+        "origen_do": ORIGIN,
+        "octavas": 4,
+        "color_soprano": RED,
+        "color_contra": BLUE,
+        "color_tenor": GREEN,
+        "color_bajo": PURPLE,
+        }
     def tecla_origen(self,h,b,p,posicion):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.15).set_stroke(BLACK,grosor_linea).shift(posicion)
+        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.15).set_stroke(BLACK,self.grosor_linea_teclado).shift(posicion)
 
     def tecla_relativa_blanca(self,h,b,p,tecla_referencia):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.15).set_stroke(BLACK,grosor_linea).shift(tecla_referencia.get_right()+RIGHT*tecla_referencia.get_width()/2)
+        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.15).set_stroke(BLACK,self.grosor_linea_teclado).shift(tecla_referencia.get_right()+RIGHT*tecla_referencia.get_width()/2)
 
     def tecla_sostenido(self,h,b,p,tecla_referencia):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.07).set_stroke(BLACK,grosor_linea).set_fill(BLACK, opacity = 1).shift(tecla_referencia.get_right()+UP*(tecla_referencia.get_height()-h/p)/2)
+        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.07).set_stroke(BLACK,self.grosor_linea_teclado).set_fill(BLACK, opacity = 1).shift(tecla_referencia.get_right()+UP*(tecla_referencia.get_height()-h/p)/2)
 
     def tecla_sostenido_transp(self,h,b,p,tecla_referencia):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.07).set_stroke(BLACK,grosor_linea).shift(tecla_referencia.get_right()+UP*(tecla_referencia.get_height()-h/p)/2)
+        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.07).set_stroke(BLACK,self.grosor_linea_teclado).shift(tecla_referencia.get_right()+UP*(tecla_referencia.get_height()-h/p)/2)
 
     def intervalo_p(self,n1,n2,direccion,**kwargs):
         linea=Line(self.partitura[n1].get_center(),self.partitura[n2].get_center())
@@ -41,29 +40,63 @@ class MusicalScene(Scene):
         linea=Line(self.partitura[n1].get_center(),self.partitura[n2].get_center())
         return Brace(linea,direccion,**kwargs).set_stroke(None,0.1)
 
+    def intervalo_v(self,n1,n2,texto,color_texto=BLACK,direccion=RIGHT,color_parentesis=TEAL,escala_texto=1,**kwargs):
+        parentesis=self.intervalo_p(n1,n2,direccion,buff=SMALL_BUFF*2,parametro=6,width=7).set_color(color_parentesis)
+        nombre=TexMobject("%s"%texto,color=color_texto).scale(escala_texto).next_to(parentesis,direccion,buff=SMALL_BUFF*1.5).add_background_rectangle(opacity=0.8,color=color_parentesis,buff=SMALL_BUFF)
+        return VGroup(parentesis,nombre)
+
+    def intervalo_h(self,n1,n2,texto,color_texto=BLACK,direccion=UP,color_flecha=ORANGE,escala_texto=0.7,buff_flecha=0.2,buff_texto=SMALL_BUFF*0.7,**kwargs):
+        flecha=Flecha(self.partitura[n1].get_right(),self.partitura[n2].get_left(),buff=buff_flecha).set_color(color_flecha)
+        nombre=TexMobject("%s"%texto,color=color_texto).scale(escala_texto).next_to(flecha,direccion,buff=buff_texto).add_background_rectangle(opacity=0.85,color=color_flecha,buff=SMALL_BUFF)
+        return VGroup(flecha,nombre)
+
+    def ap_inter_v(self,interv):
+        self.play(
+            GrowFromCenter(interv[0]),
+            GrowFromCenter(interv[1])
+            )
+
+    def ap_inter_h(self,interv):
+        self.play(GrowArrow(interv[0]),
+            GrowFromCenter(interv[1]))
+
+
     def setup(self):
-        self.definir_teclados(octavas,ORIGIN,0.2)
-        self.definir_teclas(octavas)
+        self.importar_partitura()
+        self.definir_cifrado()
+        self.definir_cambios_notas()
+
+        self.colores=[self.color_bajo,self.color_tenor,self.color_contra,self.color_soprano]
+        self.cambios_colores_teclas=[]
+        for t in range(len(self.teclas)):
+            self.cambios_colores_teclas.append(list(zip(self.teclas[t],self.colores)))
+
+        self.definir_colores()
+
+        for i_p,color in self.colores_notas:
+            for i in i_p:
+                self.partitura[i].set_color(color)
+        
 
     def definir_octava_back(self,octavas):
         oct_1=[]
         for cont in range(octavas):
             w=cont*12
             if w==0:
-                oct_1.append(self.tecla_origen(h_tb,b_tb,proporcion,origen_do)) #0 do
+                oct_1.append(self.tecla_origen(self.h_tb,self.b_tb,self.proporcion_tecla,self.origen_do)) #0 do
             else:
-                oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0-1])) #0 do
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+0])) #1 do#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0])) #2 re
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+2])) #3 re#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+2])) #4 mi
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+4])) #5 fa
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+5])) #6 fa #
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+5])) #7 sol
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+7])) #8 sol#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+7])) #9 La
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+9])) #10 La#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+9])) #11 si
+                oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+0-1])) #0 do
+            oct_1.append(self.tecla_sostenido(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+0])) #1 do#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+0])) #2 re
+            oct_1.append(self.tecla_sostenido(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+2])) #3 re#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+2])) #4 mi
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+4])) #5 fa
+            oct_1.append(self.tecla_sostenido(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+5])) #6 fa #
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+5])) #7 sol
+            oct_1.append(self.tecla_sostenido(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+7])) #8 sol#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+7])) #9 La
+            oct_1.append(self.tecla_sostenido(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+9])) #10 La#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+9])) #11 si
 
         return VGroup(*[oct_1[i]for i in range(len(oct_1))])
 
@@ -72,20 +105,20 @@ class MusicalScene(Scene):
         for cont in range(octavas):
             w=cont*12
             if w==0:
-                oct_1.append(self.tecla_origen(h_tb,b_tb,proporcion,origen_do)) #0 do
+                oct_1.append(self.tecla_origen(self.h_tb,self.b_tb,self.proporcion_tecla,self.origen_do)) #0 do
             else:
-                oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0-1])) #0 do
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+0])) #1 do#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0])) #2 re
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+2])) #3 re#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+2])) #4 mi
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+4])) #5 fa
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+5])) #6 fa #
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+5])) #7 sol
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+7])) #8 sol#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+7])) #9 La
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+9])) #10 La#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+9])) #11 si
+                oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+0-1])) #0 do
+            oct_1.append(self.tecla_sostenido_transp(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+0])) #1 do#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+0])) #2 re
+            oct_1.append(self.tecla_sostenido_transp(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+2])) #3 re#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+2])) #4 mi
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+4])) #5 fa
+            oct_1.append(self.tecla_sostenido_transp(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+5])) #6 fa #
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+5])) #7 sol
+            oct_1.append(self.tecla_sostenido_transp(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+7])) #8 sol#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+7])) #9 La
+            oct_1.append(self.tecla_sostenido_transp(self.h_tn,self.b_tn,self.proporcion_tecla,oct_1[w+9])) #10 La#
+            oct_1.append(self.tecla_relativa_blanca(self.h_tb,self.b_tb,self.proporcion_tecla,oct_1[w+9])) #11 si
 
         return VGroup(*[oct_1[i]for i in range(len(oct_1))])
 
@@ -142,3 +175,81 @@ class MusicalScene(Scene):
         for i in self.sost:
             nota=TexMobject("%d"%i,color=RED).next_to(teclado[i],UP,buff=0.01).scale(0.5)
             self.add(nota)
+
+    def importar_partitura(self):
+        pass
+
+    def definir_cifrado(self):
+        pass
+
+    def definir_cambios_notas(self):
+        pass
+
+    def definir_colores(self):
+        pass 
+
+    def progresion(self,paso,simbolos_faltantes=[],**kwargs):
+
+        for pre_ind_n,post_ind_n in self.cambios_notas[paso]:
+            self.play(*[
+                ApplyMethod(
+                    self.teclado_transparente[i].set_fill,None,0
+                    )
+                for i,color in self.cambios_colores_teclas[paso]
+                ],
+                *[
+                ApplyMethod(
+                    self.teclado_transparente[i].set_fill,color,1
+                    )
+                for i,color in self.cambios_colores_teclas[paso+1]
+                ],
+                *[
+                ReplacementTransform(
+                    self.partitura[i].copy(),self.partitura[j],
+                    )
+                for i,j in zip(pre_ind_n,post_ind_n)
+                ],
+                Write(self.cifrado[paso+1]),
+                *[Write(self.partitura[w])for w in simbolos_faltantes],
+                **kwargs
+            )
+
+    def progresion_con_desfase(self,paso,desfase,x1=0,y1=0,x2=0,y2=0,r_n=0,simbolos_faltantes=[],**kwargs):
+
+        for pre_ind_n,post_ind_n in self.cambios_notas[r_n]:
+            self.play(*[
+                ApplyMethod(
+                    self.teclado_transparente[i].set_fill,None,0
+                    )
+                for i,color in self.cambios_colores_teclas[paso]
+                ],
+                *[
+                ApplyMethod(
+                    self.teclado_transparente[i].set_fill,color,1
+                    )
+                for i,color in self.cambios_colores_teclas[paso+1]
+                ],
+                *[
+                    ReplacementTransform(
+                        self.partitura[i].copy(),self.partitura[j],
+                        )
+                    for i,j in zip(range(desfase+x1,desfase+y1),range(desfase+x2,desfase+y2))
+                    ],
+                Write(self.cifrado[paso+1]),
+                *[Write(self.partitura[w])for w in simbolos_faltantes],
+                **kwargs
+            )   
+
+    def primer_paso(self,paso=0,simbolos_faltantes=[],run_time=0.5,**kwargs):
+        self.play(
+                *[
+                ApplyMethod(
+                    self.teclado_transparente[i].set_fill,color,1
+                    )
+                for i,color in self.cambios_colores_teclas[paso]
+                ],
+            Write(self.cifrado[paso]),
+            *[Write(self.partitura[w],run_time=2)for w in simbolos_faltantes],
+            run_time=run_time,
+            **kwargs
+        )
