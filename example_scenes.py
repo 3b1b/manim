@@ -439,157 +439,26 @@ class Percusion(Scene):
         self.wait()
 
 
-grosor_linea=1
-h_tb=13.7
-b_tb=2.5
-h_tn=8.7
-b_tn=1.1
-proporcion=2.5
-origen_do=ORIGIN
-
-color_soprano=RED
-color_contra=BLUE
-color_tenor=GREEN
-color_bajo=PURPLE
-
-octavas=4
-
-class EscenaMusica(Scene):
-    CONFIG={"camera_config":{"background_color":WHITE}}
-    def tecla_origen(self,h,b,p,posicion):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.15).set_stroke(BLACK,grosor_linea).shift(posicion)
-
-    def tecla_relativa_blanca(self,h,b,p,tecla_referencia):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.15).set_stroke(BLACK,grosor_linea).shift(tecla_referencia.get_right()+RIGHT*tecla_referencia.get_width()/2)
-
-    def tecla_sostenido(self,h,b,p,tecla_referencia):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.07).set_stroke(BLACK,grosor_linea).set_fill(BLACK, opacity = 1).shift(tecla_referencia.get_right()+UP*(tecla_referencia.get_height()-h/p)/2)
-
-    def tecla_sostenido_transp(self,h,b,p,tecla_referencia):
-        return RoundedRectangle(height = h/p, width = b/p,corner_radius=0.07).set_stroke(BLACK,grosor_linea).shift(tecla_referencia.get_right()+UP*(tecla_referencia.get_height()-h/p)/2)
-
-    def intervalo_p(self,n1,n2,direccion,**kwargs):
-        linea=Line(self.partitura[n1].get_center(),self.partitura[n2].get_center())
-        return Parentheses(linea,direccion,**kwargs)
-
-    def intervalo_b(self,n1,n2,direccion,**kwargs):
-        linea=Line(self.partitura[n1].get_center(),self.partitura[n2].get_center())
-        return Bracket(linea,direccion,**kwargs).set_stroke(None,0.1)
-
-    def intervalo_brace(self,n1,n2,direccion,**kwargs):
-        linea=Line(self.partitura[n1].get_center(),self.partitura[n2].get_center())
-        return Brace(linea,direccion,**kwargs).set_stroke(None,0.1)
-
+class EscenaMusica(MusicalScene):
     def construct(self):
-        self.importar_partitura()
-        self.definir_teclados(octavas,ORIGIN+DOWN*3,0.3)
-        self.definir_teclas(octavas)
-        self.definir_cifrado()
-        self.definir_cambios_notas()
-        self.definir_colores()
+        self.definir_teclados(self.octavas,ORIGIN+DOWN*3,0.3)
+        self.definir_teclas(self.octavas)
 
         self.wait(0.3)
         self.agregar_escenario()
         self.mandar_frente_sostenido()
 
-        self.cambio1()
-        self.cambio2()
-        self.cambio3()
-        self.cambio4()
+        self.primer_paso(simbolos_faltantes=[14,15,16,17,18,19,20,21])
+        self.progresion(0,run_time=2)
+        self.progresion_con_desfase(paso=1,desfase=22,y1=8,x2=8,y2=16,run_time=2)
+        self.progresion_con_desfase(paso=2,desfase=30,y1=8,x2=10,y2=18,simbolos_faltantes=[38,39],run_time=2)
+
         self.intervalos()
 
         self.salida_teclado()
         
         self.wait(2)
 
-    def definir_octava_back(self,octavas):
-        oct_1=[]
-        for cont in range(octavas):
-            w=cont*12
-            if w==0:
-                oct_1.append(self.tecla_origen(h_tb,b_tb,proporcion,origen_do)) #0 do
-            else:
-                oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0-1])) #0 do
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+0])) #1 do#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0])) #2 re
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+2])) #3 re#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+2])) #4 mi
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+4])) #5 fa
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+5])) #6 fa #
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+5])) #7 sol
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+7])) #8 sol#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+7])) #9 La
-            oct_1.append(self.tecla_sostenido(h_tn,b_tn,proporcion,oct_1[w+9])) #10 La#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+9])) #11 si
-
-        return VGroup(*[oct_1[i]for i in range(len(oct_1))])
-
-    def definir_octava_trans(self,octavas):
-        oct_1=[]
-        for cont in range(octavas):
-            w=cont*12
-            if w==0:
-                oct_1.append(self.tecla_origen(h_tb,b_tb,proporcion,origen_do)) #0 do
-            else:
-                oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0-1])) #0 do
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+0])) #1 do#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+0])) #2 re
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+2])) #3 re#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+2])) #4 mi
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+4])) #5 fa
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+5])) #6 fa #
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+5])) #7 sol
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+7])) #8 sol#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+7])) #9 La
-            oct_1.append(self.tecla_sostenido_transp(h_tn,b_tn,proporcion,oct_1[w+9])) #10 La#
-            oct_1.append(self.tecla_relativa_blanca(h_tb,b_tb,proporcion,oct_1[w+9])) #11 si
-
-        return VGroup(*[oct_1[i]for i in range(len(oct_1))])
-
-    def definir_teclados(self,octavas,posicion_teclados,escala):
-        self.teclado_base=self.definir_octava_back(octavas).scale(escala).move_to(posicion_teclados)
-        self.teclado_transparente=self.definir_octava_trans(octavas).scale(escala).move_to(posicion_teclados)
-
-    def definir_teclas(self,octavas):
-        self.sost=[]
-        self.tec_b=[]
-        for cont in range(octavas):
-            w=cont*12
-            self.sost=self.sost+[1+w,3+w,6+w,8+w,10+w]
-            self.tec_b=self.tec_b+[0+w,2+w,4+w,5+w,7+w,9+w,11+w]
-
-        self.do=[]
-        self.do_s=[]
-        self.re=[]
-        self.re_s=[]
-        self.mi=[]
-        self.fa=[]
-        self.fa_s=[]
-        self.sol=[]
-        self.sol_s=[]
-        self.la=[]
-        self.la_s=[]
-        self.si=[]
-        for n in range(octavas):
-            self.do.append(0+12*n)
-            self.do_s.append(1+12*n)
-            self.re.append(2+12*n)
-            self.re_s.append(3+12*n)
-            self.mi.append(4+12*n)
-            self.fa.append(5+12*n)
-            self.fa_s.append(6+12*n)
-            self.sol.append(7+12*n)
-            self.sol_s.append(8+12*n)
-            self.la.append(9+12*n)
-            self.la_s.append(10+12*n)
-            self.si.append(11+12*n)
-
-    def mandar_frente_sostenido(self):
-        for i in self.sost:
-            self.add_foreground_mobject(self.teclado_base[i])
-
-        for i in self.sost:
-            self.add_foreground_mobject(self.teclado_transparente[i])
 
     def importar_partitura(self):
         self.partitura=TextMobject("""
@@ -608,48 +477,26 @@ class EscenaMusica(Scene):
                 \\end{music}
             """,color=BLACK).shift(UP)
 
-    def mostrar_notas(self):
-        for i in self.tec_b:
-            nota=TexMobject("%d"%i).next_to(self.goct_1[i],DOWN,buff=0.01).scale(0.3)
-            self.add(nota)
-        for i in self.sost:
-            nota=TexMobject("%d"%i).next_to(self.goct_1[i],UP,buff=0.01).scale(0.3)
-            self.add(nota)
-
     def definir_cambios_notas(self):
-        self.cambios_notas=[]
-
-        self.cambios_notas.append([[
+        self.cambios_notas=[[[
                 (   14, 15, 17, 16, 18, 19, 21, 20, ),
                 (   22, 23, 25, 24, 26, 27, 29, 28, )
-        ]])
+        ]]]
 
-        self.teclas=[]
-        self.teclas.append([29,37,28,36])
-        self.teclas.append([30,35,29,36])
-        self.teclas.append([27,36,26,35])
-        self.teclas.append([1,20,28,36])
+        self.teclas=[[29,37,28,36],
+                    [30,35,29,36],
+                    [27,36,26,35],
+                    [1,20,28,36]]
 
     def definir_colores(self):
-        colores=[color_bajo,color_tenor,color_contra,color_soprano]
-
-        self.cambios_colores_teclas=[]
-
-        for t in range(len(self.teclas)):
-            self.cambios_colores_teclas.append(list(zip(self.teclas[t],colores)))
         
-        colores_notas=[
-                       ([21,20,29,28,36,37,47,46],color_soprano),
-                       ([18,19,26,27,34,35,44,45],color_contra),
-                       ([17,16,25,24,33,32,43,42],color_tenor),
-                       ([14,15,22,23,30,31,40,41],color_bajo)
+        self.colores_notas=[
+                       ([21,20,29,28,36,37,47,46],self.colores[3]),
+                       ([18,19,26,27,34,35,44,45],self.colores[2]),
+                       ([17,16,25,24,33,32,43,42],self.colores[1]),
+                       ([14,15,22,23,30,31,40,41,38,39],self.colores[0])
                       ]
 
-        for i_p,color in colores_notas:
-            for i in i_p:
-                self.partitura[i].set_color(color)
-
-        self.partitura[38:40].set_color(color_bajo)
 
     def definir_cifrado(self):
         cifrado=VGroup(
@@ -676,156 +523,35 @@ class EscenaMusica(Scene):
             LaggedStart(FadeInFromDown,self.teclado_transparente),LaggedStart(FadeInFromDown,self.teclado_base)
             )
         self.play(*[GrowFromCenter(x)for x in self.grupoA],FadeIn(self.linea))
-        w1=[*[n for n in range(6,11)]]
-        w2=[*[n for n in range(1,6)]]
-        gp=VGroup()
-        self.play(
-                  *[Succession(Animation, self.partitura[i], {"run_time" : 0.1*j},WiggleOutThenIn, self.partitura[i],{"run_time" : 1.3})
-                  for i,j in zip(w1+w2,range(1,11))]
-                )
 
-        self.play(FadeOut(self.linea,run_time=0.4),
-            Succession(Animation, self.teclado_transparente, {"run_time" : 0.4},ApplyWave, self.teclado_transparente,{"run_time" : 1}),
-            Succession(Animation, self.teclado_base, {"run_time" : 0.4},ApplyWave, self.teclado_base,{"run_time" : 1}),
-            Succession(Animation, self.linea, {"run_time" : 2},FadeIn, self.linea,{"run_time" : 0.4}),
-            )
-        self.add(self.linea)
 
-    def cambio1(self):
-        pos_teclado=self.teclado_transparente
-
-        self.play(
-                *[
-                ApplyMethod(
-                    pos_teclado[i].set_fill,color,1
-                    )
-                for i,color in self.cambios_colores_teclas[0]
-                ],
-            Write(self.partitura[14:22],run_time=2,lag_factor=1),
-            Write(self.cifrado[0]),
-            run_time=0.5
-        )
-        self.pre_teclado=pos_teclado
-        self.wait()
-
-    def cambio2(self):
-        pre_teclado=self.pre_teclado
-        pos_teclado=self.teclado_transparente
-
-        for pre_ind_n,post_ind_n in self.cambios_notas[0]:
-            self.play(*[
-                ApplyMethod(
-                    pre_teclado[i].set_fill,None,0
-                    )
-                for i,color in self.cambios_colores_teclas[0]
-                ],
-                *[
-                ApplyMethod(
-                    pos_teclado[i].set_fill,color,1
-                    )
-                for i,color in self.cambios_colores_teclas[1]
-                ],
-                *[
-                ReplacementTransform(
-                    self.partitura[i].copy(),self.partitura[j],
-                    )
-                for i,j in zip(pre_ind_n,post_ind_n)
-                ],
-                Write(self.cifrado[1]),
-                run_time=1
-            )
-        self.pre_teclado=pos_teclado
-        self.wait()
-
-    def cambio3(self):
-        pre_teclado=self.pre_teclado
-        pos_teclado=self.teclado_transparente
-        inicio=22
-        
-        for pre_ind_n,post_ind_n in self.cambios_notas[0]:
-            self.play(*[
-                ApplyMethod(
-                    pre_teclado[i].set_fill,None,0
-                    )
-                for i,color in self.cambios_colores_teclas[1]
-                ],
-                *[
-                ApplyMethod(
-                    pos_teclado[i].set_fill,color,1
-                    )
-                for i,color in self.cambios_colores_teclas[2]
-                ],
-                *[
-                    ReplacementTransform(
-                        self.partitura[i].copy(),self.partitura[j],
-                        )
-                    for i,j in zip(range(inicio,inicio+8),range(inicio+8,inicio+16))
-                    ],
-                Write(self.cifrado[2]),
-                run_time=1
-            )   
-        self.wait()
-
-    def cambio4(self):
-        pre_teclado=self.pre_teclado
-        pos_teclado=self.teclado_transparente
-        inicio=30
-
-        for pre_ind_n,post_ind_n in self.cambios_notas[0]:
-            self.play(*[
-                ApplyMethod(
-                    pre_teclado[i].set_fill,None,0
-                    )
-                for i,color in self.cambios_colores_teclas[2]
-                ],
-                *[
-                ApplyMethod(
-                    pos_teclado[i].set_fill,color,1
-                    )
-                for i,color in self.cambios_colores_teclas[3]
-                ],
-                *[
-                    ReplacementTransform(
-                        self.partitura[i].copy(),self.partitura[j],
-                        )
-                    for i,j in zip(range(inicio,inicio+8),range(inicio+8+2,inicio+16+2))
-                    ],
-                Write(self.cifrado[3]),
-                *[Write(self.partitura[w])for w in [38,39]],
-                run_time=1
-            )
-        self.wait()
 
     def intervalos(self):
-        braq1=self.intervalo_p(21,15,RIGHT,buff=SMALL_BUFF*2,parametro=0.5,color=TEAL,width=7)
-        tex_braq1=TexMobject("6-",color=BLACK).next_to(braq1,RIGHT,buff=SMALL_BUFF*1.5).add_background_rectangle(opacity=0.8,color=TEAL,buff=SMALL_BUFF)
-        braq2=self.intervalo_p(25,29,RIGHT,buff=SMALL_BUFF*2,parametro=3,color=TEAL,width=7)
-        tex_braq2=TexMobject("5\\rm J",color=BLACK).next_to(braq2,RIGHT,buff=SMALL_BUFF*1.5).add_background_rectangle(opacity=0.8,color=TEAL,buff=SMALL_BUFF)
+        i6m_v=self.intervalo_v(21,15,"6-")
+        i5J_v=self.intervalo_v(25,29,"5\\rm J",direccion=RIGHT)
 
-        flecha1=Flecha(self.partitura[17].get_right(),self.partitura[25].get_left(),buff=0.2).scale(1).set_color(ORANGE)
-        tex_f1=TexMobject("2+",color=BLACK).scale(0.7).next_to(flecha1,UP,buff=SMALL_BUFF*0.7).add_background_rectangle(opacity=0.85,color=ORANGE,buff=SMALL_BUFF)
-        flecha2=Flecha(self.partitura[15].get_right(),self.partitura[23].get_left(),buff=0.2).scale(1).set_color(ORANGE)
-        tex_f2=TexMobject("5\\rm J",color=BLACK).scale(0.7).next_to(flecha2,UP,buff=SMALL_BUFF*0.7).add_background_rectangle(opacity=0.85,color=ORANGE,buff=SMALL_BUFF)
-        self.play(GrowFromCenter(braq1),GrowFromCenter(tex_braq1))
+        i2m_h=self.intervalo_h(17,25,"2+")
+        i5J_h=self.intervalo_h(15,23,"5\\rm J")
+
+        self.ap_inter_v(i6m_v)
         self.wait()
-        self.play(ReplacementTransform(braq1.copy(),braq2),ReplacementTransform(tex_braq1.copy(),tex_braq2))
-        self.play(GrowArrow(flecha1),GrowFromCenter(tex_f1))
+        self.play(ReplacementTransform(i6m_v.copy(),i5J_v))
         self.wait()
-        self.play(ReplacementTransform(flecha1,flecha2),ReplacementTransform(tex_f1,tex_f2))
+        self.ap_inter_h(i2m_h)
+        self.wait()
+        self.play(ReplacementTransform(i2m_h,i5J_h))
+        self.wait()
         
     def salida_teclado(self):
-        pre_teclado=self.pre_teclado
         self.play(*[
                 ApplyMethod(
-                    pre_teclado[i].set_fill,None,0
+                    self.teclado_transparente[i].set_fill,None,0
                     )
                 for i,color in self.cambios_colores_teclas[3]
                 ],
                 FadeOut(self.linea),
             run_time=1
         )
-        for i in range(len(self.pre_teclado)):
-            self.remove(self.pre_teclado[i])
         for i in range(len(self.teclado_transparente)):
             self.remove(self.teclado_transparente[i])
         for i in range(len(self.teclado_base)):
@@ -834,55 +560,6 @@ class EscenaMusica(Scene):
             LaggedStart(FadeOutAndShiftDown,self.teclado_base,lambda m: (m, DOWN),run_time=1),
             LaggedStart(FadeOutAndShiftDown,self.teclado_transparente,lambda m: (m, DOWN),run_time=1)
             )
-       
-class Escala(MusicalScene):
-    def setup(self):
-        self.definir_teclados(1,ORIGIN+UP*1.7,0.6)
-        self.definir_teclas(1)
-
-    def construct(self):
-        self.agregar_escenario()
-        self.mover_teclas()
-        self.copiar_teclado()
-        self.wait()
-        #self.mostrar_notas(self.teclado_base)
-
-
-    def agregar_escenario(self):
-        #self.linea=Line(self.teclado_transparente[0].get_top(),self.teclado_transparente[-1].get_top()).set_stroke(BLACK,width=1.5)
-        self.play(
-            LaggedStart(FadeInFromDown,self.teclado_base)
-            )
-        self.wait()
-        #self.play(FadeIn(self.linea))
-
-    def mover_teclas(self):
-        self.play(self.teclado_base[self.do[0]].move_to,np.array([-2.46,-1.65,0]))
-        self.wait(0.5)
-        for i in range(1,len(self.teclado_base)):
-            self.play(self.teclado_base[i].next_to,self.teclado_base[i-1],RIGHT,{"buff":0},run_time=1.2)
-        self.wait()
-        for i in range(1,len(self.teclado_base)):
-            if i in [1,3,6,8,10]:
-                self.play(self.teclado_base[i].shift,UP*abs(self.teclado_base[i].get_height()-self.teclado_base[i-1].get_height())/2+UP*0.3*i,run_time=0.4)
-            else:
-                self.play(self.teclado_base[i].shift,UP*0.3*i,run_time=0.4)
-        #self.teclado_base.move_to(ORIGIN)
-        #self.add(Texto("%f\\\\%f"%(self.teclado_base[0].get_center()[0],self.teclado_base[0].get_center()[1]),color=RED))
-
-    def copiar_teclado(self):
-        self.play(self.teclado_base.scale,0.5)
-        self.teclado_superior1=self.teclado_base.copy()
-        self.teclado_superior1.next_to(self.teclado_base,RIGHT,buff=0).shift(UP*(self.teclado_base.get_height()/2+0.2))
-        self.teclado_inferior1=self.teclado_base.copy()
-        self.teclado_inferior1.next_to(self.teclado_base,LEFT,buff=0).shift(DOWN*(self.teclado_base.get_height()/2+0.2))
-        self.play(ReplacementTransform(self.teclado_base.copy(),self.teclado_superior1,path_arc=PI),
-            ReplacementTransform(self.teclado_base.copy(),self.teclado_inferior1,path_arc=PI),run_time=2.5)
-        self.teclado_3octavas=self.definir_octava_back(3).move_to(ORIGIN).scale(0.6)
-        self.wait()
-        self.play(*[ReplacementTransform(self.teclado_inferior1[i],self.teclado_3octavas[i])for i in range(len(self.teclado_inferior1))],
-            *[ReplacementTransform(self.teclado_base[j],self.teclado_3octavas[j+12])for j in range(len(self.teclado_base))],
-            *[ReplacementTransform(self.teclado_superior1[k],self.teclado_3octavas[k+24])for k in range(len(self.teclado_superior1))])
 
         
 class Escala2(MusicalScene):
