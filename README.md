@@ -13,4 +13,4 @@ Las principales modificaciones que tiene esta versión de Manim son:
 * Animación de conversación por [Miroslav Olšák](https://github.com/mkoconnor).
 
 # Indicaciones.
-Probablemente les falte instalar ```pydub``` y ```pyreadline```, instalenlos usando pip.
+Probablemente te falte instalar ```pydub``` y ```pyreadline```, instalenlos usando pip.
