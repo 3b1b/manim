@@ -2998,6 +2998,7 @@ class ShowTwoPopulations(Scene):
         "start_num_rabbits": 20,
         "animal_height": 0.5,
         "final_wait_time": 30,
+        "count_word_scale_val": 1,
     }
 
     def construct(self):
@@ -3093,9 +3094,13 @@ class ShowTwoPopulations(Scene):
         # Add counts for foxes and rabbits
         labels = self.get_pop_labels()
         num_foxes = Integer(10)
+        num_foxes.scale(self.count_word_scale_val)
         num_foxes.next_to(labels[0], RIGHT)
+        num_foxes.align_to(labels[0][1], DOWN)
         num_rabbits = Integer(10)
+        num_rabbits.scale(self.count_word_scale_val)
         num_rabbits.next_to(labels[1], RIGHT)
+        num_rabbits.align_to(labels[1][1], DOWN)
 
         self.add(ContinualChangingDecimal(
             num_foxes, lambda a: get_num_foxes()
@@ -3156,6 +3161,8 @@ class ShowTwoPopulations(Scene):
             TextMobject("\\# Foxes: "),
             TextMobject("\\# Rabbits: "),
         )
+        for label in labels:
+            label.scale(self.count_word_scale_val)
         labels.arrange_submobjects(RIGHT, buff=2)
         labels.to_edge(UP)
         return labels
