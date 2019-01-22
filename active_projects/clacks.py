@@ -848,9 +848,14 @@ class BlocksAndWallExampleMass1e10(BlocksAndWallExample):
 
 
 class DigitsOfPi(Scene):
+    CONFIG = {"n_digits": 9}
+
     def construct(self):
+        nd = self.n_digits
+        pow10 = int(10**nd)
+        rounded_pi = int(pow10 * PI) / pow10
         equation = TexMobject(
-            "\\pi = 3.14159265..."
+            ("\\pi = {:." + str(nd) + "f}...").format(rounded_pi)
         )
         equation.set_color(YELLOW)
         pi_creature = Randolph(color=YELLOW)
@@ -858,9 +863,11 @@ class DigitsOfPi(Scene):
         pi_creature.scale(1.4)
         pi_creature.move_to(equation[0], DOWN)
         self.add(pi_creature, equation[1])
-        for digit in equation[2:]:
-            self.add(digit)
-            self.wait(0.1)
+        self.play(ShowIncreasingSubsets(
+            equation[2:],
+            rate_func=None,
+            run_time=1,
+        ))
         self.play(Blink(pi_creature))
         self.wait()
 
@@ -1569,15 +1576,25 @@ class Thumbnail(BlocksAndWallExample):
     }
 
     def construct(self):
+        self.thicken_lines()
+        self.grow_labels()
+        self.add_vector()
+        self.add_text()
+
+    def thicken_lines(self):
         self.floor.set_stroke(WHITE, 10)
         self.wall.set_stroke(WHITE, 10)
         self.wall[1:].set_stroke(WHITE, 4)
+
+    def grow_labels(self):
         blocks = self.blocks
         for block in blocks.block1, blocks.block2:
             block.remove(block.label)
             block.label.scale(2.5, about_point=block.get_top())
             self.add(block.label)
 
+    def add_vector(self):
+        blocks = self.blocks
         arrow = Vector(
             2.5 * LEFT,
             color=RED,
@@ -1590,6 +1607,7 @@ class Thumbnail(BlocksAndWallExample):
         )
         self.add(arrow)
 
+    def add_text(self):
         question = TextMobject("How many\\\\collisions?")
         question.scale(2.5)
         question.to_edge(UP)
