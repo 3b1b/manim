@@ -48,26 +48,29 @@ def stage_animations(module_name):
     sorted_files = []
     for scene_class in scene_classes:
         scene_name = scene_class.__name__
+        clips = [f for f in files if f.startswith(scene_name + ".")]
+        for clip in clips:
+            sorted_files.append(os.path.join(animation_dir, clip))
         # Partial movie file directory
-        pmf_dir = get_partial_movie_output_directory(
-            scene_class, **output_directory_kwargs
-        )
-        if os.path.exists(pmf_dir):
-            for extension in [".mov", ".mp4"]:
-                int_files = get_sorted_integer_files(
-                    pmf_dir, extension=extension
-                )
-                for file in int_files:
-                    sorted_files.append(os.path.join(pmf_dir, file))
-        else:
-            for clip in [f for f in files if f.startswith(scene_name + ".")]:
-                sorted_files.append(os.path.join(animation_dir, clip))
+        # movie_dir = get_movie_output_directory(
+        #     scene_class, **output_directory_kwargs
+        # )
+        # if os.path.exists(movie_dir):
+        #     for extension in [".mov", ".mp4"]:
+        #         int_files = get_sorted_integer_files(
+        #             pmf_dir, extension=extension
+        #         )
+        #         for file in int_files:
+        #             sorted_files.append(os.path.join(pmf_dir, file))
+        # else:
 
-    animation_subdir = os.path.dirname(animation_dir)
+    # animation_subdir = os.path.dirname(animation_dir)
     count = 0
     while True:
         staged_scenes_dir = os.path.join(
-            animation_subdir, "staged_scenes_{}".format(count)
+            animation_dir,
+            os.pardir,
+            "staged_scenes_{}".format(count)
         )
         if not os.path.exists(staged_scenes_dir):
             os.makedirs(staged_scenes_dir)
@@ -82,8 +85,7 @@ def stage_animations(module_name):
         symlink_name = os.path.join(
             staged_scenes_dir,
             "Scene_{:03}_{}".format(
-                count,
-                "".join(f.split(os.sep)[-2:])
+                count, f.split(os.sep)[-1]
             )
         )
         os.symlink(f, symlink_name)
