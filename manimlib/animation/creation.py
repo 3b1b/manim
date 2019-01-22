@@ -246,11 +246,10 @@ class GrowFromPoint(Transform):
     def __init__(self, mobject, point, **kwargs):
         digest_config(self, kwargs)
         target = mobject.copy()
-        point_mob = VectorizedPoint(point)
+        mobject.scale(0)
+        mobject.move_to(point)
         if self.point_color:
-            point_mob.set_color(self.point_color)
-        mobject.replace(point_mob)
-        mobject.set_color(point_mob.get_color())
+            mobject.set_color(self.point_color)
         Transform.__init__(self, mobject, target, **kwargs)
 
 
