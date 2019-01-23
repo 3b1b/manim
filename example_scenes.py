@@ -80,6 +80,34 @@ class UdatersExample(Scene):
             run_time=5,
         )
         self.wait()
+	
+class ObjetoCaja(Scene):
+    def construct(self):
+        objeto=Caja(ancho=4)
+        cinta=Nota1()
+        cinta.move_to(objeto)
+        objeto_etiqueta=Formula("A",color=BLACK).move_to(objeto)
+        cinta.set_height(objeto_etiqueta.get_height()*2)
+        self.play(ShowCreation(objeto))
+        self.play(objeto.set_fill,None,0.85)
+
+        def update(imagen):
+            imagen.move_to(objeto_etiqueta)
+            return imagen
+        self.play(FadeInFrom(cinta,UP))
+        self.wait()
+
+        self.play(Escribe(objeto_etiqueta))
+        objeto.add(objeto_etiqueta)
+        self.play(objeto.shift,DOWN*3+LEFT*2,UpdateFromFunc(cinta,update),path_arc=PI/4)
+        self.wait()
+        self.play(objeto_etiqueta.move_to,objeto.get_corner(UL),objeto_etiqueta.shift,cinta.get_width()*RIGHT*1.3/2+cinta.get_height()*DOWN*1.3/2,UpdateFromFunc(cinta,update))
+        self.play(abrir_caja(objeto))
+
+        self.play(objeto.shift,UP*4.5+RIGHT*4,UpdateFromFunc(cinta,update),path_arc=PI/4)
+        self.wait()
+        self.play(cerrar_caja(objeto))
+        self.wait()
         
 class Acentos(Scene):
     def construct(self):
