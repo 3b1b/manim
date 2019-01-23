@@ -308,18 +308,19 @@ def tecla_negra():
     return svg
 
 class Caja(VMobject):
-    def __init__(self,ancho=3,alto=2,tapas=0.95,**kwargs):
+    def __init__(self,ancho=3,alto=2,tapas=0.95,grosor_tapas=11,**kwargs):
         digest_config(self, kwargs)
         VMobject.__init__(self, **kwargs)
         self.set_anchor_points([UP*alto+LEFT*ancho/2,
                                 LEFT*ancho/2,
                                 RIGHT*ancho/2,
                                 UP*alto+RIGHT*ancho/2],mode="corners")
-        tapaI=VMobject().set_anchor_points([self.points[0],self.points[0]+RIGHT*ancho*tapas/2],mode="corners")
-        tapaD=VMobject().set_anchor_points([self.points[-1],self.points[-1]+LEFT*ancho*tapas/2],mode="corners")
+        self.set_stroke(width=6)
+        tapaI=VMobject().set_anchor_points([self.points[0],self.points[0]+RIGHT*ancho*tapas/2],mode="corners").set_stroke(width=grosor_tapas)
+        tapaD=VMobject().set_anchor_points([self.points[-1],self.points[-1]+LEFT*ancho*tapas/2],mode="corners").set_stroke(width=grosor_tapas)
         self.add(tapaI,tapaD)
+        self.set_stroke("#D2B48C")
         self.set_fill("#D2B48C",0)
-        self.set_stroke("#D2B48C",6)
 
     def tapa_derecha(self):
         return self[2]
