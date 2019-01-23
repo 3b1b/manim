@@ -105,11 +105,11 @@ def TVA():
     return ImageMobject("tele1").scale(3)
 
 def Cinta1():
-    return ImageMobject("cinta1").scale()
+    return ImageMobject("cinta1")
 
 
 def Nota1():
-    return ImageMobject("nota1").scale()
+    return ImageMobject("nota1")
 
 def Audifonos():
     return SVGMobject(file_name="headphones").set_fill("#d1d5d5",1).scale(0.5)
