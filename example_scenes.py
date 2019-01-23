@@ -1,10 +1,28 @@
 from big_ol_pile_of_manim_imports import *
 
 class SVG1(PruebaSVG):
-	CONFIG={
-	"file":"music1",
-	"height":2,
-	}
+    CONFIG={
+    "file":"pruebas/mus1",
+    "escala":1.8,
+    "grosor": 1,
+    "mostrar_todos_numeros":True,
+    "remover":[19,46,1],
+    "direccion_numeros":RIGHT,
+    "muestra_elementos":[19,46,1]
+    }
+
+class SVG2(PruebaSVG):
+    CONFIG={
+    "tipo_svg": "texto",
+    "escala":3,
+    "mostrar_todos_numeros":True,
+    "remover":[7],
+    "grosor":0,
+    "direccion_numeros":RIGHT,
+    "muestra_elementos":[8]
+    }
+    def importa_texto(self):
+        return TexMobject("a+b+c+d=\\sqrt{x}")
 	
 class ImagenE(Scene):
     def construct(self):
