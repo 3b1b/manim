@@ -276,3 +276,86 @@ def GitHub():
             stroke_color = WHITE,
         )
     return svg
+
+
+def tecla_blanca():
+    svg = SVGMobject(
+            file_name = "tecla_blanca",
+            fill_opacity = 1,
+            stroke_width = 4,
+            height = 1.37,
+            stroke_color = BLACK,
+        )
+    svg.set_fill(WHITE,1)
+    return svg
+
+def tecla_negra():
+    svg = SVGMobject(
+            file_name = "tecla_negra",
+            fill_opacity = 1,
+            stroke_width = 4,
+            height = 0.87,
+            stroke_color = BLACK,
+        )
+    svg.set_fill(BLACK,1)
+    return svg
+
+class Caja(VMobject):
+    def __init__(self,ancho=3,alto=2,tapas=0.95,**kwargs):
+        digest_config(self, kwargs)
+        VMobject.__init__(self, **kwargs)
+        self.set_anchor_points([UP*alto+LEFT*ancho/2,
+                                LEFT*ancho/2,
+                                RIGHT*ancho/2,
+                                UP*alto+RIGHT*ancho/2],mode="corners")
+        tapaI=VMobject().set_anchor_points([self.points[0],self.points[0]+RIGHT*ancho*tapas/2],mode="corners")
+        tapaD=VMobject().set_anchor_points([self.points[-1],self.points[-1]+LEFT*ancho*tapas/2],mode="corners")
+        self.add(tapaI,tapaD)
+        self.set_fill("#D2B48C",0)
+        self.set_stroke("#D2B48C",6)
+
+    def tapa_derecha(self):
+        return self[2]
+
+    def tapa_izquierda(self):
+        return self[1]
+
+class abrir_caja(Rotating):
+    CONFIG={
+        "run_time":0.75,
+        "rate_func":smooth
+    }    
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        sobre_izq=self.mobject.points[0]
+        sobre_der=self.mobject.points[-1]
+        self.mobject[1].rotate(
+            alpha * PI*2.3/2,
+            about_point=sobre_izq,
+            about_edge=sobre_izq,
+        )
+        self.mobject[2].rotate(
+            -alpha * PI*2.3/2,
+            about_point=sobre_der,
+            about_edge=sobre_der,
+        )
+
+class cerrar_caja(Rotating):
+    CONFIG={
+        "run_time":0.75,
+        "rate_func":smooth
+    }    
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        sobre_izq=self.mobject.points[0]
+        sobre_der=self.mobject.points[-1]
+        self.mobject[1].rotate(
+            -alpha * PI*2.3/2,
+            about_point=sobre_izq,
+            about_edge=sobre_izq,
+        )
+        self.mobject[2].rotate(
+            alpha * PI*2.3/2,
+            about_point=sobre_der,
+            about_edge=sobre_der,
+        )
