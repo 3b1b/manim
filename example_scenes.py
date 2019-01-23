@@ -5,7 +5,16 @@ class SVG1(PruebaSVG):
 	"file":"music1",
 	"height":2,
 	}
-
+	
+class ImagenE(Scene):
+    def construct(self):
+        nota=Nota1()
+        cinta=Cinta1()
+        self.play(GrowFromCenter(nota))
+        self.wait()
+        self.play(GrowFromCenter(cinta))
+        self.wait()
+	
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
@@ -107,7 +116,7 @@ class Titulo(Scene):
                 \\node[pencildraw,draw] {\\sc Derivada};
             \\end{tikzpicture} 
               """
-        tit=TikzMobject(tikz,stroke_width=2,fill_opacity=.1).scale(1).to_edge(UL)
+        tit=TikzMobject(tikz,stroke_width=2,fill_opacity=.1).scale(3)
         tit[1:].set_stroke(None,0).set_fill(WHITE,1)
         self.play(Write(tit),run_time=3)
         self.wait()
@@ -441,12 +450,15 @@ class Percusion(Scene):
 
 class EscenaMusica(MusicalScene):
     def construct(self):
-        self.definir_teclados(self.octavas,ORIGIN+DOWN*3,0.3)
-        self.definir_teclas(self.octavas)
+        self.teclado_transparente=self.definir_teclado(4,self.prop,0).set_stroke(None,0)
+        self.teclado_base=self.definir_teclado(4,self.prop,1)
+        self.teclado_base.move_to(ORIGIN+DOWN*3)
+        self.teclado_transparente.move_to(ORIGIN+DOWN*3)
 
         self.wait(0.3)
         self.agregar_escenario()
-        self.mandar_frente_sostenido()
+        self.mandar_frente_sostenido(4,self.teclado_base)
+        self.mandar_frente_sostenido(4,self.teclado_transparente)
 
         self.primer_paso(simbolos_faltantes=[14,15,16,17,18,19,20,21])
         self.progresion(0,run_time=2)
@@ -520,7 +532,7 @@ class EscenaMusica(MusicalScene):
         self.grupoA=VGroup(*[self.partitura[cont]for cont in [12,13]])
         self.linea=Line(self.teclado_transparente[0].get_top(),self.teclado_transparente[-1].get_top()).set_stroke(BLACK,width=1.5)
         self.play(*[LaggedStart(GrowFromCenter, self.partitura[i],run_time=2)for i in range(1,11)],
-            LaggedStart(FadeInFromDown,self.teclado_transparente),LaggedStart(FadeInFromDown,self.teclado_base)
+            LaggedStart(DrawBorderThenFill,self.teclado_transparente),LaggedStart(DrawBorderThenFill,self.teclado_base)
             )
         self.play(*[GrowFromCenter(x)for x in self.grupoA],FadeIn(self.linea))
 
@@ -560,9 +572,8 @@ class EscenaMusica(MusicalScene):
             LaggedStart(FadeOutAndShiftDown,self.teclado_base,lambda m: (m, DOWN),run_time=1),
             LaggedStart(FadeOutAndShiftDown,self.teclado_transparente,lambda m: (m, DOWN),run_time=1)
             )
-
         
-class Escala2(MusicalScene):
+class Escala2(MusicalScene2):
     def setup(self):
         self.definir_teclados(1,ORIGIN,0.6)
         self.definir_teclas(1)
