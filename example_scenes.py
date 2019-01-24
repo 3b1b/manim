@@ -23,6 +23,30 @@ class SVG2(PruebaSVG):
     }
     def importa_texto(self):
         return TexMobject("a+b+c+d=\\sqrt{x}")
+
+class Indice(EscenaContenido):
+    CONFIG={
+    "escala":0.7
+    }
+    def setup(self):
+        self.contenido=[
+            "Tema de lo que \\\\ sea - (6:20)",
+                "Sub tema",
+                "Sub tema",
+            "--",
+            "Tema - (6:12)",
+                "Sub tema",
+                "Sub tema",
+            "--",
+            "Tema",
+                "Sub tema",
+                "Sub tema",
+                "Sub tema",
+            "--",
+            "Tema",
+                "Sub tema",
+            "--",]
+
 	
 class ImagenE(Scene):
     def construct(self):
