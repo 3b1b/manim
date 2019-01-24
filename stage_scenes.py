@@ -9,7 +9,6 @@ from manimlib.constants import PRODUCTION_QUALITY_FRAME_DURATION
 from manimlib.config import get_module
 from manimlib.extract_scene import is_child_scene
 from manimlib.utils.output_directory_getters import get_movie_output_directory
-from manimlib.utils.output_directory_getters import get_partial_movie_output_directory
 from manimlib.utils.output_directory_getters import get_sorted_integer_files
 
 

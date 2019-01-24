@@ -34,13 +34,15 @@ def get_movie_output_directory(scene_class, camera_config, frame_duration):
     return guarantee_existance(os.path.join(directory, sub_dir))
 
 
-def get_partial_movie_output_directory(scene_class, camera_config, frame_duration):
-    directory = get_movie_output_directory(scene_class, camera_config, frame_duration)
+def get_partial_movie_output_directory(scene, camera_config, frame_duration):
+    directory = get_movie_output_directory(
+        scene.__class__, camera_config, frame_duration
+    )
     return guarantee_existance(
         os.path.join(
             directory,
             "partial_movie_files",
-            scene_class.__name__
+            scene.get_output_file_name(),
         )
     )
 

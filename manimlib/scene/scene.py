@@ -690,7 +690,7 @@ class Scene(Container):
 
     def get_partial_movie_directory(self):
         return get_partial_movie_output_directory(
-            self.__class__, self.camera_config, self.frame_duration
+            self, self.camera_config, self.frame_duration
         )
 
     def open_movie_pipe(self):
