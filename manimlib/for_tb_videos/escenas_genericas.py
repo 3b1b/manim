@@ -162,7 +162,6 @@ class EscenaContenido2(Scene):
     		self.bloques.shift,DOWN*10,
     		self.bloques_estatica.shift,DOWN*10)
 
-
 class EscenaContenido(Scene):
     CONFIG={"camera_config":{"background_color":BLACK},
     "tiempo":2,
@@ -172,8 +171,11 @@ class EscenaContenido(Scene):
     "tiempo_espera":2,
     "escala":1
     }
-    def tema(self,texto,**kwargs):
-        return Texto("\\begin{flushleft} %s \\end{flushleft}"%texto,**kwargs)
+    def tema(self,texto,color=TT_TEXTO,**kwargs):
+        return Texto("\\begin{flushleft}\\it %s \\end{flushleft}"%texto,color=color,**kwargs)
+
+    def subtema(self,texto,color=TT_TEXTO,**kwargs):
+        return Texto("\\begin{flushleft} %s \\end{flushleft}"%texto,color=color,**kwargs)
 
     def setup(self):
         self.contenido=[]  
@@ -186,26 +188,31 @@ class EscenaContenido(Scene):
         self.salida_contenido()
 
     def convertidor_bloques(self):
-    	bloque=VGroup()
-    	self.bloques=VGroup()
-    	pasos=len(self.contenido)-1
-    	c=0
-    	while True:
-    		bloque=VGroup()
-    		while self.contenido[c]!="--":
-    			bloque.add(self.tema(self.contenido[c]))
-    			c=c+1
-    		if c<pasos-1:
-    			c=c+1
-    		self.bloques.add(bloque)
-    		if c==pasos:
-    			break
+        bloque=VGroup()
+        self.bloques=VGroup()
+        pasos=len(self.contenido)-1
+        c=0
+        while True:
+            tem=0
+            bloque=VGroup()
+            while self.contenido[c]!="--":
+                if tem==0:
+                    bloque.add(self.tema(self.contenido[c]))
+                else:
+                    bloque.add(self.subtema(self.contenido[c]))
+                c=c+1
+                tem=tem+1
+            if c<pasos-1:
+                c=c+1
+            self.bloques.add(bloque)
+            if c==pasos:
+                break
 
-    	bloque_listo=VGroup()
-    	for i in range(len(self.bloques)):
-    		bloque_listo.add(self.temas(self.bloques[i],i+1))
+        bloque_listo=VGroup()
+        for i in range(len(self.bloques)):
+            bloque_listo.add(self.temas(self.bloques[i],i+1))
 
-    	self.bloques=bloque_listo
+        self.bloques=bloque_listo
 
 
     def aparicion_contenido(self,tiempo):
@@ -214,7 +221,7 @@ class EscenaContenido(Scene):
             aligned_edge=LEFT
         )
         self.bloques.scale(self.escala)
-        self.titulo=Texto("\\sc\\underline{Contenido}").scale(2).to_edge(UR)
+        self.titulo=Texto("\\sc\\underline{Contenido}",color=TT_TEXTO).scale(2).to_edge(UR)
         self.bloques_estatica=self.bloques.copy().shift(LEFT*self.desplazamiento)
         for i in range(len(self.bloques)):
             self.bloques[i].shift(LEFT*(FRAME_X_RADIUS+self.bloques[i].get_width()/2)*np.sin(PI/2+i*PI))
@@ -234,9 +241,9 @@ class EscenaContenido(Scene):
         )
         bloque[1:].shift(RIGHT)
         indices=VGroup()
-        indices.add(Texto("%d"%num))
+        indices.add(Texto("%d"%num,color=M_TEXTO_VERDE))
         for i in range(len(bloque)-1):
-            indices.add(Texto("%d.%s"%(num,i+1)))
+            indices.add(Texto("%d.%s"%(num,i+1),color=M_TEXTO_VERDE))
         for i in range(len(bloque)):
             indices[i].next_to(bloque[i],LEFT,buff=0.5).move_to(np.array((
                                                                     indices[i].get_center()[0],
