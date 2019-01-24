@@ -82,7 +82,7 @@ from manimlib.utils.strings import *
 from manimlib.for_tb_videos.conversacion import *
 from manimlib.for_tb_videos.funciones_nuevas import *
 from manimlib.for_tb_videos.svg_basicos import *
-from manimlib.for_tb_videos.prueba_svg import *
+from manimlib.for_tb_videos.escenas_genericas import *
 from manimlib.scene.music_scene import *
 
 import inspect
