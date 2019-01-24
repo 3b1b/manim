@@ -27,6 +27,8 @@ class Block(Square):
             self.fill_color = self.mass_to_color(self.mass)
         if self.label_text is None:
             self.label_text = self.mass_to_label_text(self.mass)
+        if "width" in kwargs:
+            kwargs.pop("width")
         Square.__init__(self, side_length=self.width, **kwargs)
         self.label = self.get_label()
         self.add(self.label)
@@ -130,8 +132,8 @@ class SlidingBlocks(VGroup):
 
     def update_blocks_from_phase_space_point_tracker(self):
         block1, block2 = self.block1, self.block2
-
         ps_point = self.phase_space_point_tracker.get_location()
+
         theta = np.arctan(np.sqrt(self.mass_ratio))
         ps_point_angle = angle_of_vector(ps_point)
         n_clacks = int(ps_point_angle / theta)
@@ -274,7 +276,6 @@ class BlocksAndWallScene(Scene):
         "collision_sound": "clack.wav",
         "show_flash_animations": True,
         "min_time_between_sounds": 0.004,
-        "allow_sound": True,
     }
 
     def setup(self):
@@ -1560,7 +1561,7 @@ class EndScreen(Scene):
             )
 
 
-class Thumbnail(BlocksAndWallExample):
+class Thumbnail(BlocksAndWallExample, MovingCameraScene):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
@@ -1572,10 +1573,15 @@ class Thumbnail(BlocksAndWallExample):
         "wait_time": 0,
         "count_clacks": False,
         "show_flash_animations": False,
-        "floor_y": -3,
+        "floor_y": -3.0,
     }
 
+    def setup(self):
+        MovingCameraScene.setup(self)
+        BlocksAndWallExample.setup(self)
+
     def construct(self):
+        self.camera_frame.shift(0.9 * UP)
         self.thicken_lines()
         self.grow_labels()
         self.add_vector()
