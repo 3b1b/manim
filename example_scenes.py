@@ -81,11 +81,6 @@ class WarpSquare(Scene):
 
 
 class WriteStuff(Scene):
-    CONFIG={
-    "camera_config" :{
-            "background_image": "pizarron1.jpg"
-        }
-    }
     def construct(self):
         example_text = TextMobject(
             "This is a some text",color=WHITE,
