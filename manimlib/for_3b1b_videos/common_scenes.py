@@ -293,3 +293,82 @@ class TODOStub(Scene):
     def construct(self):
         self.add(TextMobject("TODO: %s" % self.message))
         self.wait()
+
+
+class Banner(Scene):
+    CONFIG = {
+        "camera_config": {
+            "pixel_height": 1440,
+            "pixel_width": 2560,
+        },
+        "pi_height": 1.25,
+        "pi_bottom": 0.25 * DOWN,
+        "use_date": False,
+        "date": "Sunday, February 3rd",
+        "message_scale_val": 0.9,
+        "add_supporter_note": False,
+    }
+
+    def __init__(self, **kwargs):
+        # Force these dimensions
+        self.camera_config = {
+            "pixel_height": 1440,
+            "pixel_width": 2560,
+        }
+        Scene.__init__(self, **kwargs)
+
+    def construct(self):
+        pis = self.get_pis()
+        pis.set_height(self.pi_height)
+        pis.arrange_submobjects(RIGHT, aligned_edge=DOWN)
+        pis.move_to(self.pi_bottom, DOWN)
+        self.add(pis)
+
+        if self.use_date:
+            message = self.get_date_message()
+        else:
+            message = self.get_probabalistic_message()
+        message.scale(self.message_scale_val)
+        message.next_to(pis, DOWN)
+        self.add(message)
+
+        if self.add_supporter_note:
+            note = self.get_supporter_note()
+            note.scale(0.5)
+            message.shift((MED_SMALL_BUFF - SMALL_BUFF) * UP)
+            note.next_to(message, DOWN, SMALL_BUFF)
+            self.add(note)
+
+        yellow_parts = [sm for sm in message if sm.get_color() == YELLOW]
+        for pi in pis:
+            if yellow_parts:
+                pi.look_at(yellow_parts[-1])
+            else:
+                pi.look_at(message)
+
+    def get_pis(self):
+        return VGroup(
+            Randolph(color=BLUE_E, mode="pondering"),
+            Randolph(color=BLUE_D, mode="hooray"),
+            Randolph(color=BLUE_C, mode="sassy"),
+            Mortimer(color=GREY_BROWN, mode="thinking")
+        )
+
+    def get_probabalistic_message(self):
+        return TextMobject(
+            "New video every", "Sunday",
+            "(with probability 0.3)",
+            tex_to_color_map={"Sunday": YELLOW},
+        )
+
+    def get_date_message(self):
+        return TextMobject(
+            "Next video on ", self.date,
+            tex_to_color_map={self.date: YELLOW},
+        )
+
+    def get_supporter_note(self):
+        return TextMobject(
+            "(Available to supporters for review now)",
+            color="#F96854",
+        )
