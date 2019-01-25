@@ -87,7 +87,7 @@ class CheckSVG(Scene):
 	def devolver(self,formula,adicion):
 		for i in adicion:
 			self.add_foreground_mobjects(formula[i].set_color(self.color_resaltado),
-				TexMobject("%d"%i,color=self.color_resaltado).next_to(formula[i],self.direccion_numeros,buff=self.separacion_numeros).scale(self.escala_numeros))
+				TexMobject("%d"%i,color=self.color_resaltado,background_stroke_width=0).scale(self.escala_numeros).next_to(formula[i],self.direccion_numeros,buff=self.separacion_numeros))
 
 class EscenaContenido2(Scene):
     CONFIG={"camera_config":{"background_color":BLACK},
