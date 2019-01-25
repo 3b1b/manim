@@ -123,7 +123,6 @@ def main(config):
         (key, config[key])
         for key in [
             "camera_config",
-            "frame_duration",
             "skip_animations",
             "file_writer_config",
             "start_at_animation_number",

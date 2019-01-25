@@ -31,7 +31,6 @@ def start_livestream(to_twitch=False, twitch_key=None):
                 "end_at_animation_number": None,
                 "skip_animations": False,
                 "camera_config": manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG,
-                "frame_duration": manimlib.constants.MEDIUM_QUALITY_FRAME_DURATION,
                 "livestreaming": True,
                 "to_twitch": to_twitch,
                 "twitch_key": twitch_key,

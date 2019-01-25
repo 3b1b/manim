@@ -4,6 +4,7 @@ import cv2
 from manimlib.scene.scene import Scene
 
 
+# TODO, is this depricated?
 class SceneFromVideo(Scene):
     def construct(self, file_name,
                   freeze_last_frame=True,
@@ -14,7 +15,7 @@ class SceneFromVideo(Scene):
             int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         )
         fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-        self.frame_duration = 1.0 / fps
+        self.camera.frame_rate = fps
         frame_count = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         if time_range is None:
             start_frame = 0
