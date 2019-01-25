@@ -259,9 +259,9 @@ class SceneFileWriter(object):
             "extension": self.movie_file_extension,
         }
         if self.scene.start_at_animation_number is not None:
-            kwargs["min_index"] = self.start_at_animation_number
+            kwargs["min_index"] = self.scene.start_at_animation_number
         if self.scene.end_at_animation_number is not None:
-            kwargs["max_index"] = self.end_at_animation_number
+            kwargs["max_index"] = self.scene.end_at_animation_number
         else:
             kwargs["remove_indices_greater_than"] = self.scene.num_plays - 1
         partial_movie_files = get_sorted_integer_files(
