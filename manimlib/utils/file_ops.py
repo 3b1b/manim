@@ -1,8 +1,6 @@
 import os
 import numpy as np
 
-from manimlib.constants import VIDEO_DIR
-
 
 def add_extension_if_not_present(file_name, extension):
     # This could conceivably be smarter about handling existing differing extensions
@@ -18,38 +16,38 @@ def guarantee_existance(path):
     return os.path.abspath(path)
 
 
-def get_scene_output_directory(scene_class):
-    return guarantee_existance(os.path.join(
-        VIDEO_DIR,
-        scene_class.__module__.replace(".", os.path.sep)
-    ))
+# def get_scene_output_directory(scene_class):
+#     return guarantee_existance(os.path.join(
+#         VIDEO_DIR,
+#         scene_class.__module__.replace(".", os.path.sep)
+#     ))
 
 
-def get_movie_output_directory(scene_class, camera_config, frame_duration):
-    directory = get_scene_output_directory(scene_class)
-    sub_dir = "%dp%d" % (
-        camera_config["pixel_height"],
-        int(1.0 / frame_duration)
-    )
-    return guarantee_existance(os.path.join(directory, sub_dir))
+# def get_movie_output_directory(scene_class, camera_config, frame_duration):
+#     directory = get_scene_output_directory(scene_class)
+#     sub_dir = "%dp%d" % (
+#         camera_config["pixel_height"],
+#         int(1.0 / frame_duration)
+#     )
+#     return guarantee_existance(os.path.join(directory, sub_dir))
 
 
-def get_partial_movie_output_directory(scene, camera_config, frame_duration):
-    directory = get_movie_output_directory(
-        scene.__class__, camera_config, frame_duration
-    )
-    return guarantee_existance(
-        os.path.join(
-            directory,
-            "partial_movie_files",
-            scene.get_output_file_name(),
-        )
-    )
+# def get_partial_movie_output_directory(scene, camera_config, frame_duration):
+#     directory = get_movie_output_directory(
+#         scene.__class__, camera_config, frame_duration
+#     )
+#     return guarantee_existance(
+#         os.path.join(
+#             directory,
+#             "partial_movie_files",
+#             scene.get_output_file_name(),
+#         )
+#     )
 
 
-def get_image_output_directory(scene_class, sub_dir="images"):
-    directory = get_scene_output_directory(scene_class)
-    return guarantee_existance(os.path.join(directory, sub_dir))
+# def get_image_output_directory(scene_class, sub_dir="images"):
+#     directory = get_scene_output_directory(scene_class)
+#     return guarantee_existance(os.path.join(directory, sub_dir))
 
 
 def get_sorted_integer_files(directory,

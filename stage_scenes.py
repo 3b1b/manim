@@ -8,8 +8,7 @@ from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
 from manimlib.constants import PRODUCTION_QUALITY_FRAME_DURATION
 from manimlib.config import get_module
 from manimlib.extract_scene import is_child_scene
-from manimlib.utils.output_directory_getters import get_movie_output_directory
-from manimlib.utils.output_directory_getters import get_sorted_integer_files
+from manimlib.utils.file_ops import get_movie_output_directory
 
 
 def get_sorted_scene_classes(module_name):

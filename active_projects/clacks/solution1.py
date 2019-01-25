@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from active_projects.clacks import *
+from active_projects.clacks.question import *
 from old_projects.div_curl import ShowTwoPopulations
 
 
@@ -206,10 +206,7 @@ class AskAboutFindingNewVelocities(Scene):
         self.show_value_on_equations()
 
     def add_clack_sound_file(self):
-        self.clack_file = os.path.join(
-            VIDEO_DIR, "active_projects",
-            "clacks", "sounds", "clack.wav"
-        )
+        self.clack_file = os.path.join(SOUND_DIR, "clack.wav")
 
     def add_floor(self):
         floor = self.floor = Line(

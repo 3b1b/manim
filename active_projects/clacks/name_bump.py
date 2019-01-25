@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from big_ol_pile_of_manim_imports import *
 
-from active_projects.clacks import BlocksAndWallExample
+from active_projects.clacks.question import BlocksAndWallExample
 
 
 class NameBump(BlocksAndWallExample):
@@ -70,7 +70,6 @@ class NameBump(BlocksAndWallExample):
         for block, name_mob in zip(blocks, name_mobs):
             block.label.next_to(name_mob, UP)
             block.label.set_fill(YELLOW, opacity=1)
-
 
 
 # for name in names:

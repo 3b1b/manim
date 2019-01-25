@@ -346,10 +346,7 @@ class BlocksAndWallScene(Scene):
             self.counter_mob.set_value(n_clacks)
 
     def create_sound_file(self, clack_data):
-        directory = get_scene_output_directory(BlocksAndWallScene)
-        clack_file = os.path.join(
-            directory, 'sounds', self.collision_sound,
-        )
+        clack_file = os.path.join(SOUND_DIR, self.collision_sound)
         output_file = self.get_movie_file_path(extension='.wav')
         times = [
             time

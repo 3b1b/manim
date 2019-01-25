@@ -88,7 +88,7 @@ from manimlib.utils.color import *
 from manimlib.utils.config_ops import *
 from manimlib.utils.images import *
 from manimlib.utils.iterables import *
-from manimlib.utils.output_directory_getters import *
+from manimlib.utils.file_ops import *
 from manimlib.utils.paths import *
 from manimlib.utils.rate_functions import *
 from manimlib.utils.simple_functions import *
