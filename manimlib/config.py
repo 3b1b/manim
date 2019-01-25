@@ -155,6 +155,7 @@ def get_module(file_name):
 
 
 def get_configuration(args):
+    module = get_module(args.file)
     file_writer_config = {
         # By default, write to file
         "write_to_movie": args.write_to_movie or not args.save_last_frame,
@@ -165,8 +166,10 @@ def get_configuration(args):
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
         "file_name": args.file_name,
     }
+    if hasattr(module, "OUTPUT_DIRECTORY"):
+        file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
     config = {
-        "module": get_module(args.file),
+        "module": module,
         "scene_names": args.scene_names,
         "open_video_upon_completion": args.preview,
         "show_file_in_finder": args.show_file_in_finder,
