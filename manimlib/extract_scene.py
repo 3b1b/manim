@@ -12,46 +12,43 @@ from manimlib.utils.sounds import play_finish_sound
 import manimlib.constants
 
 
-def handle_scene(scene, **config):
+def open_file_if_needed(file_writer, **config):
     if config["quiet"]:
         curr_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
-    if config["show_last_frame"]:
-        scene.save_image(mode=config["saved_image_mode"])
     open_file = any([
-        config["show_last_frame"],
         config["open_video_upon_completion"],
         config["show_file_in_finder"]
     ])
     if open_file:
         current_os = platform.system()
-        file_path = None
+        file_paths = []
 
-        if config["show_last_frame"]:
-            file_path = scene.get_image_file_path()
-        else:
-            file_path = scene.get_movie_file_path()
+        if config["file_writer_config"]["save_last_frame"]:
+            file_paths.append(file_writer.get_image_file_path())
+        if config["file_writer_config"]["write_to_movie"]:
+            file_paths.append(file_writer.get_movie_file_path())
 
-        if current_os == "Windows":
-            os.startfile(file_path)
-        else:
-            commands = []
+        for file_path in file_paths:
+            if current_os == "Windows":
+                os.startfile(file_path)
+            else:
+                commands = []
+                if (current_os == "Linux"):
+                    commands.append("xdg-open")
+                else:  # Assume macOS
+                    commands.append("open")
 
-            if (current_os == "Linux"):
-                commands.append("xdg-open")
-            else:  # Assume macOS
-                commands.append("open")
+                if config["show_file_in_finder"]:
+                    commands.append("-R")
 
-            if config["show_file_in_finder"]:
-                commands.append("-R")
+                commands.append(file_path)
 
-            commands.append(file_path)
-
-            # commands.append("-g")
-            FNULL = open(os.devnull, 'w')
-            sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
-            FNULL.close()
+                # commands.append("-g")
+                FNULL = open(os.devnull, 'w')
+                sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
+                FNULL.close()
 
     if config["quiet"]:
         sys.stdout.close()
@@ -128,23 +125,18 @@ def main(config):
             "camera_config",
             "frame_duration",
             "skip_animations",
-            "write_to_movie",
-            "save_pngs",
-            "movie_file_extension",
+            "file_writer_config",
             "start_at_animation_number",
             "end_at_animation_number",
-            "output_file_name",
             "leave_progress_bars",
         ]
     ])
-    if config["save_pngs"]:
-        print("We are going to save a PNG sequence as well...")
-        scene_kwargs["save_pngs"] = True
-        scene_kwargs["pngs_mode"] = config["saved_image_mode"]
 
     for SceneClass in get_scene_classes(scene_names_to_classes, config):
         try:
-            handle_scene(SceneClass(**scene_kwargs), **config)
+            # By invoking, this renders the full scene
+            scene = SceneClass(**scene_kwargs)
+            open_file_if_needed(scene.file_writer, **config)
             if config["sound"]:
                 play_finish_sound()
         except Exception:

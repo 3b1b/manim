@@ -27,6 +27,8 @@ class Block(Square):
             self.fill_color = self.mass_to_color(self.mass)
         if self.label_text is None:
             self.label_text = self.mass_to_label_text(self.mass)
+        if "width" in kwargs:
+            kwargs.pop("width")
         Square.__init__(self, side_length=self.width, **kwargs)
         self.label = self.get_label()
         self.add(self.label)
@@ -130,8 +132,8 @@ class SlidingBlocks(VGroup):
 
     def update_blocks_from_phase_space_point_tracker(self):
         block1, block2 = self.block1, self.block2
-
         ps_point = self.phase_space_point_tracker.get_location()
+
         theta = np.arctan(np.sqrt(self.mass_ratio))
         ps_point_angle = angle_of_vector(ps_point)
         n_clacks = int(ps_point_angle / theta)
@@ -274,7 +276,6 @@ class BlocksAndWallScene(Scene):
         "collision_sound": "clack.wav",
         "show_flash_animations": True,
         "min_time_between_sounds": 0.004,
-        "allow_sound": True,
     }
 
     def setup(self):
@@ -345,10 +346,7 @@ class BlocksAndWallScene(Scene):
             self.counter_mob.set_value(n_clacks)
 
     def create_sound_file(self, clack_data):
-        directory = get_scene_output_directory(BlocksAndWallScene)
-        clack_file = os.path.join(
-            directory, 'sounds', self.collision_sound,
-        )
+        clack_file = os.path.join(SOUND_DIR, self.collision_sound)
         output_file = self.get_movie_file_path(extension='.wav')
         times = [
             time
@@ -377,6 +375,8 @@ class BlocksAndWallScene(Scene):
         clacks.export(output_file, format="wav")
         return output_file
 
+    # TODO, this no longer works
+    # should use Scene.add_sound instead
     def combine_movie_files(self):
         Scene.combine_movie_files(self)
         if self.include_sound:
@@ -848,9 +848,14 @@ class BlocksAndWallExampleMass1e10(BlocksAndWallExample):
 
 
 class DigitsOfPi(Scene):
+    CONFIG = {"n_digits": 9}
+
     def construct(self):
+        nd = self.n_digits
+        pow10 = int(10**nd)
+        rounded_pi = int(pow10 * PI) / pow10
         equation = TexMobject(
-            "\\pi = 3.14159265..."
+            ("\\pi = {:." + str(nd) + "f}...").format(rounded_pi)
         )
         equation.set_color(YELLOW)
         pi_creature = Randolph(color=YELLOW)
@@ -858,9 +863,11 @@ class DigitsOfPi(Scene):
         pi_creature.scale(1.4)
         pi_creature.move_to(equation[0], DOWN)
         self.add(pi_creature, equation[1])
-        for digit in equation[2:]:
-            self.add(digit)
-            self.wait(0.1)
+        self.play(ShowIncreasingSubsets(
+            equation[2:],
+            rate_func=None,
+            run_time=1,
+        ))
         self.play(Blink(pi_creature))
         self.wait()
 
@@ -1553,7 +1560,7 @@ class EndScreen(Scene):
             )
 
 
-class Thumbnail(BlocksAndWallExample):
+class Thumbnail(BlocksAndWallExample, MovingCameraScene):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
@@ -1565,19 +1572,34 @@ class Thumbnail(BlocksAndWallExample):
         "wait_time": 0,
         "count_clacks": False,
         "show_flash_animations": False,
-        "floor_y": -3,
+        "floor_y": -3.0,
     }
 
+    def setup(self):
+        MovingCameraScene.setup(self)
+        BlocksAndWallExample.setup(self)
+
     def construct(self):
+        self.camera_frame.shift(0.9 * UP)
+        self.thicken_lines()
+        self.grow_labels()
+        self.add_vector()
+        self.add_text()
+
+    def thicken_lines(self):
         self.floor.set_stroke(WHITE, 10)
         self.wall.set_stroke(WHITE, 10)
         self.wall[1:].set_stroke(WHITE, 4)
+
+    def grow_labels(self):
         blocks = self.blocks
         for block in blocks.block1, blocks.block2:
             block.remove(block.label)
             block.label.scale(2.5, about_point=block.get_top())
             self.add(block.label)
 
+    def add_vector(self):
+        blocks = self.blocks
         arrow = Vector(
             2.5 * LEFT,
             color=RED,
@@ -1590,6 +1612,7 @@ class Thumbnail(BlocksAndWallExample):
         )
         self.add(arrow)
 
+    def add_text(self):
         question = TextMobject("How many\\\\collisions?")
         question.scale(2.5)
         question.to_edge(UP)

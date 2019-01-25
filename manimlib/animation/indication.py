@@ -191,10 +191,7 @@ class ShowCreationThenDestructionAround(AnimationOnSurroundingRectangle):
 
 class ShowCreationThenFadeAround(AnimationOnSurroundingRectangle):
     CONFIG = {
-        "rect_to_animation": lambda rect: Succession(
-            ShowCreation, rect,
-            FadeOut, rect,
-        )
+        "rect_to_animation": ShowCreationThenFadeOut
     }
 
 

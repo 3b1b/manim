@@ -20,7 +20,9 @@ from manimlib.utils.color import invert_color
 from manimlib.utils.space_ops import angle_of_vector
 
 # TODO, this should probably reimplemented entirely, especially so as to
-# better reuse code from mobject/coordinate_systems
+# better reuse code from mobject/coordinate_systems.
+# Also, I really dislike how the configuration is set up, this
+# is way too messy to work with.
 
 
 class GraphScene(Scene):

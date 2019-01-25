@@ -1,8 +1,8 @@
 from big_ol_pile_of_manim_imports import *
-from active_projects.clacks import *
+from active_projects.clacks.question import *
+from old_projects.div_curl import ShowTwoPopulations
 
 
-# TODO, add solution image
 class FromPuzzleToSolution(MovingCameraScene):
     def construct(self):
         big_rect = FullScreenFadeRectangle()
@@ -20,7 +20,7 @@ class FromPuzzleToSolution(MovingCameraScene):
 
         images = Group(
             ImageMobject("BlocksAndWallExampleMass16"),
-            ImageMobject("SphereSurfaceProof2"),  # TODO
+            ImageMobject("AnalyzeCircleGeometry"),
         )
         for title, rect, image in zip(titles, rects, images):
             title.scale(1.5)
@@ -138,6 +138,42 @@ class BlocksAndWallExampleMassTrillion(BlocksAndWallExample):
     }
 
 
+class First6DigitsOfPi(DigitsOfPi):
+    CONFIG = {"n_digits": 6}
+
+
+class FavoritesInDescription(Scene):
+    def construct(self):
+        words = TextMobject("(See the description for \\\\ some favorites)")
+        words.scale(1.5)
+        self.add(words)
+
+
+class V1EqualsV2Line(Scene):
+    def construct(self):
+        line = Line(LEFT, 7 * RIGHT)
+        eq = TexMobject("v_1", "=", "v_2")
+        eq.set_color_by_tex("v_", RED)
+        eq.next_to(RIGHT, UR, SMALL_BUFF)
+        self.play(
+            Write(eq, run_time=1),
+            ShowCreation(line),
+        )
+        self.wait()
+
+
+class PhaseSpaceTitle(Scene):
+    def construct(self):
+        title = TextMobject("Phase space")
+        title.scale(1.5)
+        title.to_edge(UP)
+        rect = ScreenRectangle(height=6)
+        rect.next_to(title, DOWN)
+        self.add(rect)
+        self.play(Write(title, run_time=1))
+        self.wait()
+
+
 class AskAboutFindingNewVelocities(Scene):
     CONFIG = {
         "floor_y": -3,
@@ -170,10 +206,7 @@ class AskAboutFindingNewVelocities(Scene):
         self.show_value_on_equations()
 
     def add_clack_sound_file(self):
-        self.clack_file = os.path.join(
-            VIDEO_DIR, "active_projects",
-            "clacks", "sounds", "clack.wav"
-        )
+        self.clack_file = os.path.join(SOUND_DIR, "clack.wav")
 
     def add_floor(self):
         floor = self.floor = Line(
@@ -267,6 +300,9 @@ class AskAboutFindingNewVelocities(Scene):
         self.halt()
         self.play(randy.look_at, velocity_labels[-1])
         self.play(Blink(randy))
+        self.play(randy.change, "confused")
+        self.play(Blink(randy))
+        self.wait()
         self.play(
             FadeInFrom(energy_words, RIGHT),
             FadeInFromDown(energy_expression),
@@ -409,7 +445,8 @@ class AskAboutFindingNewVelocities(Scene):
         v_decimals.add_updater(update_v_decimals)
         self.add(v_decimals)
         self.unhalt()
-        for x in range(4):
+        self.vps_point.save_state()
+        for x in range(8):
             self.go_through_next_collision()
         energy_decimal.clear_updaters()
         momentum_decimal.set_value(get_momentum())
@@ -427,13 +464,14 @@ class AskAboutFindingNewVelocities(Scene):
             ],
         ])
         self.unhalt()
+        self.vps_point.restore()
         momentum_decimal.add_updater(
             lambda m: m.set_value(get_momentum())
         )
         momentum_decimal.add_updater(
             lambda m: m.next_to(momentum_const_brace, UP, SMALL_BUFF)
         )
-        for x in range(4):
+        for x in range(9):
             self.go_through_next_collision()
         self.wait(10)
 
@@ -596,6 +634,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
                 "unit_size": 0.7,
             },
         },
+        "momentum_line_scale_factor": 4,
     }
 
     def construct(self):
@@ -747,9 +786,10 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         ellipse = self.ellipse = Circle(color=YELLOW)
         ellipse.set_stroke(BLACK, 5, background=True)
         ellipse.rotate(PI)
+        mass_ratio = self.block1.mass / self.block2.mass
         ellipse.replace(
             Polygon(*[
-                axes.coords_to_point(x, y * np.sqrt(10))
+                axes.coords_to_point(x, y * np.sqrt(mass_ratio))
                 for x, y in [(1, 0), (0, 1), (-1, 0), (0, -1)]
             ]),
             stretch=True
@@ -776,8 +816,9 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
             lambda m: m.move_to(ellipse.get_left())
         )
 
+        mass_ratio = self.block1.mass / self.block2.mass
         brief_circle = ellipse.copy()
-        brief_circle.stretch(np.sqrt(10), 0)
+        brief_circle.stretch(np.sqrt(mass_ratio), 0)
         brief_circle.set_stroke(WHITE, 2)
 
         xy_equation = self.xy_equation = TexMobject(
@@ -892,7 +933,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         m1 = self.block1.mass
         m2 = self.block2.mass
         line = Line(np.sqrt(m2) * LEFT, np.sqrt(m1) * DOWN)
-        line.scale(4)
+        line.scale(self.momentum_line_scale_factor)
         line.set_stroke(GREEN, 3)
         line.move_to(vps_dot)
 
@@ -989,6 +1030,20 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
             )
         self.wait()
 
+        group = VGroup(
+            self.ellipse,
+            self.lines[-1],
+            self.vps_dot.copy().clear_updaters()
+        )
+        for x in range(2):
+            self.play(
+                Rotate(
+                    group, PI, RIGHT,
+                    about_point=self.axes.coords_to_point(0, 0)
+                ),
+            )
+        self.remove(group[-1])
+
     def show_remaining_collisions(self):
         line = self.momentum_line
         # slope_group = self.slope_group
@@ -1019,6 +1074,8 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
 
     # Helpers
     def add_update_line(self, func):
+        if not hasattr(self, "lines"):
+            self.lines = VGroup()
         if hasattr(self, "vps_dot"):
             old_vps_point = self.vps_dot.get_center()
             func()
@@ -1027,6 +1084,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
             line = Line(old_vps_point, new_vps_point)
             line.set_stroke(WHITE, 2)
             self.add(line)
+            self.lines.add(line)
         else:
             func()
 
@@ -1037,17 +1095,98 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         self.add_update_line(super().reflect_block2)
 
 
+class IntroduceVelocityPhaseSpaceWith16(IntroduceVelocityPhaseSpace):
+    CONFIG = {
+        "block1_config": {
+            "mass": 16,
+            "velocity": -0.5,
+        },
+        "momentum_line_scale_factor": 0,
+    }
+
+
+class SimpleRect(Scene):
+    def construct(self):
+        self.add(Rectangle(width=6, height=2, color=WHITE))
+
+
+class SurprisedRandy(Scene):
+    def construct(self):
+        randy = Randolph()
+        self.play(FadeIn(randy))
+        self.play(randy.change, "surprised", 3 * UR)
+        self.play(Blink(randy))
+        self.wait()
+        self.play(randy.change, "pondering", 3 * UR)
+        self.play(Blink(randy))
+        self.wait(2)
+        self.play(FadeOut(randy))
+
+
+class HuntForPi(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Hunt for $\\pi$!",
+            bubble_kwargs={"direction": LEFT},
+            target_mode="hooray"
+        )
+        self.change_all_student_modes(
+            "hooray",
+            added_anims=[self.teacher.change, "happy"]
+        )
+        self.wait()
+
+
+class StretchBySqrt10(Scene):
+    def construct(self):
+        arrow = DoubleArrow(2 * LEFT, 2 * RIGHT)
+        arrow.tip[1].shift(0.05 * LEFT)
+        value = TexMobject("\\sqrt{10}")
+        value.next_to(arrow, UP)
+        arrow.save_state()
+        arrow.stretch(0, 0)
+        self.play(
+            Restore(arrow),
+            Write(value, run_time=1),
+        )
+        self.wait()
+
+
+class XCoordNegative(Scene):
+    def construct(self):
+        rect = Rectangle(height=4, width=4)
+        rect.set_stroke(width=0)
+        rect.set_fill(RED, 0.5)
+        rect.save_state()
+        rect.stretch(0, 0, about_edge=RIGHT)
+        self.play(Restore(rect))
+        self.wait()
+
+
+class YCoordZero(Scene):
+    def construct(self):
+        rect = Rectangle(height=4, width=8)
+        rect.set_stroke(width=0)
+        rect.set_fill(WHITE, 0.5)
+        rect.save_state()
+        self.play(
+            rect.stretch, 0.01, 1,
+            rect.set_fill, {"opacity": 1}
+        )
+        self.wait()
+
+
 class CircleDiagramFromSlidingBlocks(Scene):
     CONFIG = {
         "BlocksAndWallSceneClass": BlocksAndWallExampleMass1e1,
         "circle_config": {
             "radius": 2,
             "stroke_color": YELLOW,
-            "stroke_width": 2,
+            "stroke_width": 3,
         },
         "lines_style": {
             "stroke_color": WHITE,
-            "stroke_width": 1,
+            "stroke_width": 2,
         },
         "axes_config": {
             "style": {
@@ -1097,6 +1236,7 @@ class CircleDiagramFromSlidingBlocks(Scene):
             last_time = time
             dot.move_to(line.get_end())
             self.add(line, dot)
+        self.wait()
 
     def get_circle(self):
         circle = Circle(**self.circle_config)
@@ -1348,8 +1488,13 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
         for n, arc in enumerate(all_arcs):
             count_mob = Integer(n + 1)
             count_mob.scale(0.75)
+            buff = SMALL_BUFF
+            if len(all_arcs) > 100:
+                count_mob.scale(0.1)
+                count_mob.set_stroke(WHITE, 0.25)
+                buff = 0.4 * SMALL_BUFF
             point = arc.point_from_proportion(0.5)
-            count_mob.next_to(point, normalize(point), SMALL_BUFF)
+            count_mob.next_to(point, normalize(point), buff)
             arc_counts.add(count_mob)
 
         self.play(
@@ -1616,9 +1761,9 @@ class InscribedAngleTheorem(Scene):
         self.add(circle, center_dot)
 
         angle_trackers = self.angle_trackers = VGroup(
-            ValueTracker(TAU / 8),
+            ValueTracker(TAU / 4),
             ValueTracker(PI),
-            ValueTracker(-TAU / 8),
+            ValueTracker(-TAU / 4),
         )
 
         def get_point(angle):
@@ -1719,11 +1864,6 @@ class InscribedAngleTheorem(Scene):
             Write(theta_label),
         )
         self.wait()
-        self.play(
-            TransformFromCopy(lines, center_lines),
-            TransformFromCopy(theta_label, two_theta_label),
-        )
-        self.wait()
 
         # Add updaters
         labels.add_updater(update_labels)
@@ -1733,10 +1873,24 @@ class InscribedAngleTheorem(Scene):
         theta_label.add_updater(lambda m: m.become(get_theta_label()))
         two_theta_label.add_updater(lambda m: m.become(get_2theta_label()))
 
-        self.add(
-            labels, lines, center_lines, dots,
-            theta_label, two_theta_label,
+        self.add(labels, lines, dots, theta_label)
+        # Further animations
+        self.play(
+            angle_trackers[0].set_value, TAU / 8,
         )
+        self.play(
+            angle_trackers[2].set_value, -TAU / 8,
+        )
+        self.wait()
+        center_lines.update()
+        two_theta_label.update()
+        self.play(
+            TransformFromCopy(lines.copy().clear_updaters(), center_lines),
+            TransformFromCopy(theta_label.copy().clear_updaters(), two_theta_label),
+        )
+        self.wait()
+
+        self.add(center_lines, two_theta_label)
 
     def let_point_vary(self):
         p1_tracker, p2_tracker, p3_tracker = self.angle_trackers
@@ -1761,6 +1915,22 @@ class InscribedAngleTheorem(Scene):
         self.play(
             p2_tracker.set_value, 7 * TAU / 8,
             **kwargs
+        )
+        self.wait()
+
+
+class SimpleSlopeLabel(Scene):
+    def construct(self):
+        label = TexMobject(
+            "\\text{Slope}", "=",
+            "-\\frac{\\sqrt{m_1}}{\\sqrt{m_2}}"
+        )
+        vector = Vector(DOWN + 2 * LEFT, color=WHITE)
+        vector.move_to(label[0].get_bottom(), UR)
+        vector.shift(SMALL_BUFF * DOWN)
+        self.play(
+            Write(label),
+            GrowArrow(vector),
         )
         self.wait()
 
@@ -1822,35 +1992,17 @@ class AddTwoThetaManyTimes(Scene):
         return result
 
     def show_example(self):
+        equation = self.get_changable_equation(0.01, n_decimal_places=2)
         expression, brace, question = self.central_question_group
-        N_mob = Integer(1)
-        N_mob.match_height(expression[0])
-        N_mob.set_color(BLUE)
-        dot_theta_eq = TexMobject("\\cdot", "(0.01)", "=")
-        rhs = DecimalNumber(0, num_decimal_places=2)
-        rhs.set_color(RED)
-        dot_theta_eq.move_to(expression[1:4])
-        dot_theta_eq.shift(2 * DOWN)
+        N_mob, dot_theta_eq, rhs, comp_pi = equation
 
-        def align_value(mob):
-            mob.align_to(dot_theta_eq[1][1:-1], DOWN)
-
-        N_mob.add_updater(
-            lambda m: m.next_to(dot_theta_eq, LEFT, SMALL_BUFF)
-        )
-        N_mob.add_updater(align_value)
-        rhs.add_updater(
-            lambda m: m.set_value(0.01 * N_mob.get_value())
-        )
-        rhs.add_updater(
-            lambda m: m.next_to(dot_theta_eq, RIGHT, 2 * SMALL_BUFF)
-        )
-        rhs.add_updater(align_value)
+        equation.next_to(expression, DOWN, 2, aligned_edge=LEFT)
 
         self.play(
             TransformFromCopy(expression[0], N_mob),
             TransformFromCopy(expression[1:4], dot_theta_eq),
             TransformFromCopy(expression[4], rhs),
+            TransformFromCopy(expression[4], comp_pi),
         )
         self.wait()
         self.play(
@@ -1862,6 +2014,49 @@ class AddTwoThetaManyTimes(Scene):
         self.play(ChangeDecimalToValue(N_mob, 314))
         self.wait()
         self.play(ShowCreationThenFadeAround(N_mob))
+
+    #
+    def get_changable_equation(self, value, tex_string=None, n_decimal_places=10):
+        int_mob = Integer(1)
+        int_mob.set_color(BLUE)
+        formatter = "({:0." + str(n_decimal_places) + "f})"
+        tex_string = tex_string or formatter.format(value)
+        tex_mob = TexMobject("\\cdot", tex_string, "=")
+        rhs = DecimalNumber(value, num_decimal_places=n_decimal_places)
+
+        def align_number(mob):
+            y0 = mob[0].get_center()[1]
+            y1 = tex_mob[1][1:-1].get_center()[1]
+            mob.shift((y1 - y0) * UP)
+
+        int_mob.add_updater(
+            lambda m: m.next_to(tex_mob, LEFT, SMALL_BUFF)
+        )
+        int_mob.add_updater(align_number)
+        rhs.add_updater(
+            lambda m: m.set_value(value * int_mob.get_value())
+        )
+        rhs.add_updater(
+            lambda m: m.next_to(tex_mob, RIGHT, SMALL_BUFF)
+        )
+        rhs.add_updater(align_number)
+
+        def get_comp_pi():
+            if rhs.get_value() < np.pi:
+                result = TexMobject("< \\pi")
+                result.set_color(GREEN)
+            elif rhs.get_value() > np.pi:
+                result = TexMobject("> \\pi")
+                result.set_color(RED)
+            else:
+                result = TexMobject("= \\pi")
+            result.next_to(rhs, RIGHT, 2 * SMALL_BUFF)
+            result[1].scale(1.5, about_edge=LEFT)
+            return result
+
+        comp_pi = updating_mobject_from_func(get_comp_pi)
+
+        return VGroup(int_mob, tex_mob, rhs, comp_pi)
 
 
 class AskAboutTheta(TeacherStudentsScene):
@@ -2029,11 +2224,13 @@ class ComputeThetaFor1e4(AnalyzeCircleGeometry):
         sm = movers.submobjects
         sm[-1], sm[-2] = sm[-2], sm[-1]
         self.play(LaggedStart(
-            Transform, movers,
+            Transform, movers[:-1],
             lambda m: (m, m.target),
-            lag_ratio=0.3,
-            run_time=2,
+            lag_ratio=1,
+            run_time=1,
+            path_arc=PI / 6,
         ))
+        self.play(MoveToTarget(movers[-1]))
         self.remove(movers)
         self.add(arctan_equation)
         self.play(ShowCreationThenFadeAround(arctan_equation))
@@ -2056,7 +2253,8 @@ class ThetaChart(Scene):
         ])
         titles.scale(1.5)
         titles.arrange_submobjects(RIGHT, buff=1.5)
-        titles[-1].shift(MED_SMALL_BUFF * RIGHT)
+        titles[1].shift(MED_SMALL_BUFF * LEFT)
+        titles[2].shift(MED_SMALL_BUFF * RIGHT)
         titles.to_corner(UL)
 
         lines = VGroup()
@@ -2087,14 +2285,14 @@ class ThetaChart(Scene):
         entries = [
             (
                 "$m_1$ : $m_2$",
-                "$\\arctan(\\sqrt{m2} / \\sqrt{m1})$",
+                "$\\arctan(\\sqrt{m_2} / \\sqrt{m_1})$",
                 ""
             )
         ] + [
             (
                 "{:,} : 1".format(10**(2 * exp)),
                 "$\\arctan(1 / {:,})$".format(10**exp),
-                "{:0.10f}".format(np.arctan(10**(-exp)))
+                self.get_theta_decimal(exp),
             )
             for exp in [1, 2, 3, 4, 5]
         ]
@@ -2119,9 +2317,11 @@ class ThetaChart(Scene):
         self.play(
             LaggedStart(
                 FadeInFromDown,
-                VGroup(*[em[:2] for em in entry_mobs])
+                VGroup(*[em[:2] for em in entry_mobs]),
             ),
-            LaggedStart(ShowCreation, h_lines[1:])
+            LaggedStart(ShowCreation, h_lines[1:]),
+            lag_ratio=0.1,
+            run_time=5,
         )
 
         self.entry_mobs = entry_mobs
@@ -2148,6 +2348,7 @@ class ThetaChart(Scene):
         rhs.to_edge(RIGHT, buff=MED_SMALL_BUFF)
         value.generate_target()
         value.target.set_fill(opacity=1)
+        value.target.scale(0.9)
         value.target.next_to(rhs, LEFT, SMALL_BUFF)
 
         self.play(
@@ -2162,6 +2363,11 @@ class ThetaChart(Scene):
         )
         self.wait()
         value.add(rhs)
+
+    def get_theta_decimal(self, exp):
+        theta = np.arctan(10**(-exp))
+        rounded_theta = np.floor(1e10 * theta) / 1e10
+        return "{:0.10f}\\dots".format(rounded_theta)
 
 
 class CentralQuestionFor1e2(AddTwoThetaManyTimes):
@@ -2211,7 +2417,7 @@ class CentralQuestionFor1e2(AddTwoThetaManyTimes):
 
         self.wait()
         self.play(*[
-            ChangeDecimalToValue(int_mob, max_count, run_time=3)
+            ChangeDecimalToValue(int_mob, max_count, run_time=8)
             for int_mob in int_mobs
         ])
         self.wait()
@@ -2226,49 +2432,6 @@ class CentralQuestionFor1e2(AddTwoThetaManyTimes):
         ])
         self.play(ShowCreationThenFadeAround(int_mobs[1]))
         self.wait()
-
-    #
-    def get_changable_equation(self, value, tex_string=None, n_decimal_places=10):
-        int_mob = Integer(1)
-        int_mob.set_color(BLUE)
-        formatter = "({:0." + str(n_decimal_places) + "f})"
-        tex_string = tex_string or formatter.format(value)
-        tex_mob = TexMobject("\\cdot", tex_string, "=")
-        rhs = DecimalNumber(value, num_decimal_places=n_decimal_places)
-
-        def align_number(mob):
-            y0 = mob[0].get_center()[1]
-            y1 = tex_mob[1][1:-1].get_center()[1]
-            mob.shift((y1 - y0) * UP)
-
-        int_mob.add_updater(
-            lambda m: m.next_to(tex_mob, LEFT, SMALL_BUFF)
-        )
-        int_mob.add_updater(align_number)
-        rhs.add_updater(
-            lambda m: m.set_value(value * int_mob.get_value())
-        )
-        rhs.add_updater(
-            lambda m: m.next_to(tex_mob, RIGHT, SMALL_BUFF)
-        )
-        rhs.add_updater(align_number)
-
-        def get_comp_pi():
-            if rhs.get_value() < np.pi:
-                result = TexMobject("< \\pi")
-                result.set_color(GREEN)
-            elif rhs.get_value() > np.pi:
-                result = TexMobject("> \\pi")
-                result.set_color(RED)
-            else:
-                result = TexMobject("= \\pi")
-            result.next_to(rhs, RIGHT, 2 * SMALL_BUFF)
-            result[1].scale(1.5, about_edge=LEFT)
-            return result
-
-        comp_pi = updating_mobject_from_func(get_comp_pi)
-
-        return VGroup(int_mob, tex_mob, rhs, comp_pi)
 
 
 class AnalyzeCircleGeometry1e2(AnalyzeCircleGeometry):
@@ -2303,7 +2466,7 @@ class AskAboutArctanOfSmallValues(TeacherStudentsScene):
                 "erm", "sassy", "confused"
             )
         )
-        self.wait()
+        self.look_at(3 * UL)
         self.play(equation1.shift, UP)
         self.play(
             TransformFromCopy(
@@ -2317,20 +2480,110 @@ class AskAboutArctanOfSmallValues(TeacherStudentsScene):
                 VGroup(*[equation2[i] for i in (2, 3, 5)]),
             ),
             self.get_student_changes(
-                "confused", "erm", "sassy"
+                "confused", "erm", "sassy",
             ),
         )
-        self.wait()
-        self.student_says("Why?", target_mode="maybe")
+        self.look_at(3 * UL)
         self.wait(3)
+        # self.student_says("Why?", target_mode="maybe")
+        # self.wait(3)
 
     def add_title(self):
         title = TextMobject("For small $x$")
         subtitle = TextMobject("(e.g. $x = 0.001$)")
-        title.scale(1.5)
-        title.to_edge(UP, buff=MED_SMALL_BUFF)
+        subtitle.scale(0.75)
         subtitle.next_to(title, DOWN)
-        self.add(title, subtitle)
+        title.add(subtitle)
+        # title.scale(1.5)
+        # title.to_edge(UP, buff=MED_SMALL_BUFF)
+        title.move_to(self.hold_up_spot)
+        title.to_edge(UP)
+        self.add(title)
+
+
+class ActanAndTanGraphs(GraphScene):
+    CONFIG = {
+        "x_min": -PI / 8,
+        "x_max": 5 * PI / 8,
+        "y_min": -PI / 8,
+        "y_max": 4 * PI / 8,
+        "x_tick_frequency": PI / 8,
+        "x_leftmost_tick": -PI / 8,
+        "y_tick_frequency": PI / 8,
+        "y_leftmost_tick": -PI / 8,
+        "x_axis_width": 10,
+        "y_axis_height": 7,
+        "graph_origin": 2.5 * DOWN + 5 * LEFT,
+        "num_graph_anchor_points": 500,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        axes = self.axes
+        labels = VGroup(
+            TexMobject("\\pi / 8"),
+            TexMobject("\\pi / 4"),
+            TexMobject("3\\pi / 8"),
+            TexMobject("\\pi / 2"),
+        )
+        for n, label in zip(it.count(1), labels):
+            label.scale(0.75)
+            label.next_to(self.coords_to_point(n * PI / 8, 0), DOWN)
+            self.add(label)
+
+        id_graph = self.get_graph(lambda x: x, x_max=1.5)
+        arctan_graph = self.get_graph(np.arctan, x_max=1.5)
+        tan_graph = self.get_graph(np.tan, x_max=1.5)
+        graphs = VGroup(id_graph, arctan_graph, tan_graph)
+
+        id_label = TexMobject("f(x) = x")
+        arctan_label = TexMobject("\\arctan(x)")
+        tan_label = TexMobject("\\tan(x)")
+        labels = VGroup(id_label, arctan_label, tan_label)
+        for label, graph in zip(labels, graphs):
+            label.match_color(graph)
+            label.next_to(graph.points[-1], RIGHT)
+            if label.get_bottom()[1] > FRAME_HEIGHT / 2:
+                label.next_to(graph.point_from_proportion(0.75), LEFT)
+
+        arctan_x_tracker = ValueTracker(3 * PI / 8)
+        arctan_v_line = updating_mobject_from_func(
+            lambda: self.get_vertical_line_to_graph(
+                arctan_x_tracker.get_value(),
+                arctan_graph,
+                line_class=DashedLine,
+                color=WHITE,
+            )
+        )
+        tan_x_tracker = ValueTracker(2 * PI / 8)
+        tan_v_line = updating_mobject_from_func(
+            lambda: self.get_vertical_line_to_graph(
+                tan_x_tracker.get_value(),
+                tan_graph,
+                line_class=DashedLine,
+                color=WHITE,
+            )
+        )
+
+        self.add(axes)
+        self.play(
+            ShowCreation(id_graph),
+            Write(id_label)
+        )
+        self.play(
+            ShowCreation(arctan_graph),
+            Write(arctan_label)
+        )
+        self.add(arctan_v_line)
+        self.play(arctan_x_tracker.set_value, 0, run_time=2)
+        self.wait()
+        self.play(
+            TransformFromCopy(arctan_graph, tan_graph),
+            TransformFromCopy(arctan_label, tan_label),
+        )
+        self.add(tan_v_line)
+        self.play(tan_x_tracker.set_value, 0, run_time=2)
+        self.wait()
 
 
 class UnitCircleIntuition(Scene):
@@ -2523,6 +2776,413 @@ class UnitCircleIntuition(Scene):
         self.wait()
 
 
-class TangentTaylorSeries(Scene):
+class TangentTaylorSeries(TeacherStudentsScene):
     def construct(self):
+        series = TexMobject(
+            "\\tan", "(", "\\theta", ")", "=", "\\theta", "+",
+            "\\frac{1}{3}", "\\theta", "^3", "+",
+            "\\frac{2}{15}", "\\theta", "^5", "+", "\\cdots",
+            tex_to_color_map={"\\theta": YELLOW},
+        )
+        series.move_to(2 * UP)
+        series.move_to(self.hold_up_spot, DOWN)
+        series_error = series[7:]
+        series_error_rect = SurroundingRectangle(series_error)
+
+        example = TexMobject(
+            "\\tan", "\\left(", "\\frac{1}{100}", "\\right)",
+            "=", "\\frac{1}{100}", "+",
+            "\\frac{1}{3}", "\\left(",
+            "\\frac{1}{1{,}000{,}000}",
+            "\\right)", "+",
+            "\\frac{2}{15}", "\\left(",
+            "\\frac{1}{10{,}000{,}000{,}000}",
+            "\\right)", "+", "\\cdots",
+        )
+        example.set_color_by_tex("\\frac{1}{1", BLUE)
+        example.set_width(FRAME_WIDTH - 1)
+        example.next_to(self.students, UP, buff=2)
+        example.shift_onto_screen()
+        error = example[7:]
+        error_rect = SurroundingRectangle(error)
+        error_rect.set_color(RED)
+        error_decimal = DecimalNumber(
+            np.tan(0.01) - 0.01,
+            num_decimal_places=15,
+        )
+        error_decimal.next_to(error_rect, DOWN)
+        approx = TexMobject("\\approx")
+        approx.next_to(error_decimal, LEFT)
+        error_decimal.add(approx)
+        error_decimal.match_color(error_rect)
+
+        self.play(
+            FadeInFromDown(series),
+            self.teacher.change, "raise_right_hand",
+        )
+        self.play(
+            ShowCreation(series_error_rect),
+            self.get_student_changes(*3 * ["pondering"])
+        )
+        self.play(FadeOut(series_error_rect))
+        self.play(
+            series.center, series.to_edge, UP,
+        )
+        self.look_at(series)
+        self.play(
+            TransformFromCopy(series[:8], example[:8]),
+            TransformFromCopy(series[8], example[9]),
+            TransformFromCopy(series[10:12], example[11:13]),
+            TransformFromCopy(series[12], example[14]),
+            TransformFromCopy(series[14:], example[16:]),
+            *map(GrowFromCenter, [example[i] for i in (8, 10, 13, 15)])
+        )
+        self.change_student_modes("happy", "confused", "sad")
+        self.play(ShowCreation(error_rect))
+        self.play(ShowIncreasingSubsets(error_decimal))
+        self.change_all_student_modes("hooray")
+        self.wait(3)
+
+
+class AnalyzeCircleGeometry1e4(AnalyzeCircleGeometry):
+    CONFIG = {
+        "mass_ratio": 10000,
+    }
+
+
+class SumUpWrapper(Scene):
+    def construct(self):
+        title = TextMobject("To sum up:")
+        title.scale(1.5)
+        title.to_edge(UP)
+        screen_rect = ScreenRectangle(height=6)
+        screen_rect.set_fill(BLACK, 1)
+        screen_rect.next_to(title, DOWN)
+        self.add(FullScreenFadeRectangle(
+            fill_color=DARK_GREY,
+            fill_opacity=0.5
+        ))
+        self.play(
+            FadeInFromDown(title),
+            FadeIn(screen_rect),
+        )
+        self.wait()
+
+
+class ConservationLawSummary(Scene):
+    def construct(self):
+        energy_eq = TexMobject(
+            "\\frac{1}{2}", "m_1", "(", "v_1", ")", "^2", "+",
+            "\\frac{1}{2}", "m_2", "(", "v_2", ")", "^2", "=",
+            "\\text{const.}",
+        )
+        energy_word = TextMobject("Energy")
+        energy_word.scale(2)
+        circle = Circle(color=YELLOW, radius=2)
+        energy_group = VGroup(energy_word, energy_eq, circle)
+        momentum_eq = TexMobject(
+            "m_1", "v_1", "+", "m_2", "v_2", "=",
+            "\\text{const.}",
+        )
+        momentum_word = TextMobject("Momentum")
+        momentum_word.scale(2)
+        line = Line(ORIGIN, RIGHT + np.sqrt(10) * DOWN)
+        line.set_color(GREEN)
+        momentum_group = VGroup(momentum_word, momentum_eq, line)
+
+        equations = VGroup(energy_eq, momentum_eq)
+        words = VGroup(energy_word, momentum_word)
+
+        for equation in equations:
+            equation.set_color_by_tex("m_", BLUE)
+            equation.set_color_by_tex("v_", RED)
+
+        words.arrange_submobjects(
+            DOWN, buff=3,
+        )
+        words.to_edge(LEFT, buff=1.5)
+
+        for group in energy_group, momentum_group:
+            arrow = Arrow(
+                LEFT, 2 * RIGHT,
+                rectangular_stem_width=0.1,
+                tip_length=0.5,
+                color=WHITE
+            )
+            arrow.next_to(group[0], RIGHT)
+            group[1].next_to(group[0], DOWN)
+            group[2].next_to(arrow, RIGHT)
+            group[2].set_stroke(width=6)
+            group.add(arrow)
+        # line.scale(4, about_edge=DR)
+        red_energy_word = energy_word.copy()
+        red_energy_word.set_fill(opacity=0)
+        red_energy_word.set_stroke(RED, 2)
+
+        self.add(energy_group, momentum_group)
+        self.wait()
+        self.play(
+            LaggedStart(
+                ShowCreationThenDestruction,
+                red_energy_word
+            ),
+        )
+        for color in [RED, BLUE, PINK, YELLOW]:
+            self.play(ShowCreation(
+                circle.copy().set_color(color),
+            ))
+
+
+class FinalCommentsOnPhaseSpace(Scene):
+    def construct(self):
+        self.add_title()
+        self.show_related_fields()
+        self.state_to_point()
+        self.puzzle_as_remnant()
+
+    def add_title(self):
+        title = self.title = TextMobject("Phase space")
+        title.scale(2)
+        title.to_edge(UP)
+        title.set_color(YELLOW)
+
+        self.play(Write(title))
+
+    def show_related_fields(self):
+        title = self.title
+
+        images = Group(
+            ImageMobject("ClacksThumbnail"),
+            ImageMobject("PictoralODE"),
+            # ImageMobject("DoublePendulumStart"),
+            ImageMobject("MobiusStrip"),
+        )
+        colors = [BLUE_D, GREY_BROWN, BLUE_C]
+        for image, color in zip(images, colors):
+            image.set_height(2.5)
+            image.add(SurroundingRectangle(
+                image,
+                color=color,
+                stroke_width=5,
+                buff=0,
+            ))
+        images.arrange_submobjects(RIGHT)
+        images.move_to(DOWN)
+
+        arrows = VGroup(*[
+            Arrow(
+                title.get_bottom(), image.get_top(),
+                color=WHITE,
+            )
+            for image in images
+        ])
+
+        for image, arrow in zip(images, arrows):
+            self.play(
+                GrowArrow(arrow),
+                GrowFromPoint(image, title.get_bottom()),
+            )
+            self.wait()
+        self.wait()
+
+        self.to_fade = Group(images, arrows)
+
+    def state_to_point(self):
+        state = TextMobject("State")
+        arrow = Arrow(
+            2 * LEFT, 2 * RIGHT,
+            color=WHITE,
+            rectangular_stem_width=0.1,
+            tip_length=0.5
+        )
+        point = TextMobject("Point")
+        dynamics = TextMobject("Dynamics")
+        geometry = TextMobject("Geometry")
+        words = VGroup(state, point, dynamics, geometry)
+        for word in words:
+            word.scale(2)
+
+        group = VGroup(state, arrow, point)
+        group.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+        group.move_to(2.5 * DOWN)
+
+        dynamics.move_to(state, RIGHT)
+        geometry.move_to(point, LEFT)
+
+        self.play(
+            FadeOutAndShift(self.to_fade, UP),
+            FadeInFrom(state, UP)
+        )
+        self.play(
+            GrowArrow(arrow),
+            FadeInFrom(point, LEFT)
+        )
+        self.wait(2)
+        for w1, w2 in [(state, dynamics), (point, geometry)]:
+            self.play(
+                FadeOutAndShift(w1, UP),
+                FadeInFrom(w2, DOWN),
+            )
+            self.wait()
+        self.wait()
+
+    def puzzle_as_remnant(self):
         pass
+
+
+class AltShowTwoPopulations(ShowTwoPopulations):
+    CONFIG = {
+        "count_word_scale_val": 2,
+    }
+
+
+class SimpleTeacherHolding(TeacherStudentsScene):
+    def construct(self):
+        self.play(self.teacher.change, "raise_right_hand")
+        self.change_all_student_modes("pondering")
+        self.wait(3)
+
+
+class EndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "Juan Benet",
+            "Vassili Philippov",
+            "Burt Humburg",
+            "Matt Russell",
+            "soekul",
+            "Richard Barthel",
+            "Nathan Jessurun",
+            "Ali Yahya",
+            "dave nicponski",
+            "Yu Jun",
+            "Kaustuv DeBiswas",
+            "Yana Chernobilsky",
+            "Lukas Biewald",
+            "Arthur Zey",
+            "Roy Larson",
+            "Joseph Kelly",
+            "Peter Mcinerney",
+            "Scott Walter, Ph.D.",
+            "Magnus Lysfjord",
+            "Evan Phillips",
+            "Graham",
+            "Mauricio Collares",
+            "Quantopian",
+            "Jordan Scales",
+            "Lukas -krtek.net- Novy",
+            "John Shaughnessy",
+            "Joseph John Cox",
+            "Ryan Atallah",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Randy C. Will",
+            "Magnus Dahlström",
+            "David Gow",
+            "J",
+            "Luc Ritchie",
+            "Rish Kundalia",
+            "Bob Sanderson",
+            "Mathew Bramson",
+            "Mustafa Mahdi",
+            "Robert Teed",
+            "Cooper Jones",
+            "Jeff Linse",
+            "John Haley",
+            "Boris Veselinovich",
+            "Andrew Busey",
+            "Awoo",
+            "Linh Tran",
+            "Ripta Pasay",
+            "David Clark",
+            "Mathias Jansson",
+            "Clark Gaebel",
+            "Bernd Sing",
+            "Jason Hise",
+            "Ankalagon",
+            "Dave B",
+            "Ted Suzman",
+            "Chris Connett",
+            "Eric Younge",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Jonathan Eppele",
+            "Delton Ding",
+            "James Hughes",
+            "Stevie Metke",
+            "Yaw Etse",
+            "John Griffith",
+            "Magister Mugit",
+            "Ludwig Schubert",
+            "Giovanni Filippi",
+            "Matt Langford",
+            "Matt Roveto",
+            "Jameel Syed",
+            "Richard Burgmann",
+            "Solara570",
+            "Alexis Olson",
+            "Jeff Straathof",
+            "John V Wertheim",
+            "Sindre Reino Trosterud",
+            "Song Gao",
+            "Peter Ehrnstrom",
+            "Valeriy Skobelev",
+            "Art Ianuzzi",
+            "Michael Faust",
+            "Omar Zrien",
+            "Adrian Robinson",
+            "Federico Lebron",
+            "Kai-Siang Ang",
+            "Michael Hardel",
+            "Nero Li",
+            "Ryan Williams",
+            "Charles Southerland",
+            "Devarsh Desai",
+            "Hal Hildebrand",
+            "Jan Pijpers",
+            "L0j1k",
+            "Mark B Bahu",
+            "Márton Vaitkus",
+            "Richard Comish",
+            "Zach Cardwell",
+            "Brian Staroselsky",
+            "Matthew Cocke",
+            "Christian Kaiser",
+            "Danger Dai",
+            "Dave Kester",
+            "eaglle",
+            "Florian Chudigiewitsch",
+            "Roobie",
+            "Xavier Bernard",
+            "YinYangBalance.Asia",
+            "Eryq Ouithaqueue",
+            "Kanan Gill",
+            "j eduardo perez",
+            "Antonio Juarez",
+            "Owen Campbell-Moore",
+        ],
+    }
+
+
+class SolutionThumbnail(Thumbnail):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "label_text": "$100^{d}$ kg",
+            },
+            "collect_clack_data": False,
+        },
+    }
+
+    def add_text(self):
+        word = TextMobject("Solution")
+        question = TextMobject("How many collisions?")
+        word.set_width(7)
+        question.match_width(word)
+        question.next_to(word, UP)
+        group = VGroup(word, question)
+        group.to_edge(UP, buff=MED_LARGE_BUFF)
+        word.set_color(RED)
+        question.set_color(YELLOW)
+        group.set_stroke(RED, 2, background=True)
+        self.add(group)
