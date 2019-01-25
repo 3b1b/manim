@@ -16,6 +16,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.file_ops import guarantee_existance
 from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
+from manimlib.utils.sounds import get_full_sound_file_path
 
 
 class SceneFileWriter(object):
@@ -38,12 +39,11 @@ class SceneFileWriter(object):
     def __init__(self, scene, **kwargs):
         digest_config(self, kwargs)
         self.scene = scene
-        self.init_audio()
-        self.init_output_directories()
         self.stream_lock = False
+        self.init_output_directories()
+        self.init_audio()
 
     # Output directories and files
-
     def init_output_directories(self):
         output_directory = self.output_directory or self.get_default_output_directory()
         file_name = self.file_name or self.get_default_file_name()
@@ -59,6 +59,7 @@ class SceneFileWriter(object):
             )
         if self.write_to_movie:
             movie_dir = guarantee_existance(os.path.join(
+                VIDEO_DIR,
                 output_directory,
                 self.get_movie_directory(),
             ))
@@ -94,39 +95,6 @@ class SceneFileWriter(object):
     def get_partial_movie_directory(self):
         return "partial_movie_directory"
 
-    # Sound
-    # TODO, make work with Scene
-    def init_audio(self):
-        self.includes_sound = False
-
-    def create_audio_segment(self):
-        self.audio_segment = AudioSegment.silent()
-
-    def add_audio_segment(self, new_segment, time_offset=0):
-        if not self.includes_sound:
-            self.includes_sound = True
-            self.create_audio_segment()
-        segment = self.audio_segment
-        overly_time = self.get_time() + time_offset
-        if overly_time < 0:
-            raise Exception("Adding sound at timestamp < 0")
-
-        curr_end = segment.duration_seconds
-        new_end = overly_time + new_segment.duration_seconds
-        diff = new_end - curr_end
-        if diff > 0:
-            segment = segment.append(
-                AudioSegment.silent(int(np.ceil(diff * 1000))),
-                crossfade=0,
-            )
-        self.audio_segment = segment.overlay(
-            new_segment, position=int(1000 * overly_time)
-        )
-
-    def add_sound(self, sound_file, time_offset=0):
-        new_segment = AudioSegment.from_file(sound_file)
-        self.add_audio_segment(new_segment, 0)
-
     # Directory getters
     def get_image_file_path(self):
         return self.image_file_path
@@ -144,16 +112,41 @@ class SceneFileWriter(object):
     def get_movie_file_path(self):
         return self.movie_file_path
 
+    # Sound
+    def init_audio(self):
+        self.includes_sound = False
+
+    def create_audio_segment(self):
+        self.audio_segment = AudioSegment.silent()
+
+    def add_audio_segment(self, new_segment, time=None):
+        if not self.includes_sound:
+            self.includes_sound = True
+            self.create_audio_segment()
+        segment = self.audio_segment
+        curr_end = segment.duration_seconds
+        if time is None:
+            time = curr_end
+        if time < 0:
+            raise Exception("Adding sound at timestamp < 0")
+
+        new_end = time + new_segment.duration_seconds
+        diff = new_end - curr_end
+        if diff > 0:
+            segment = segment.append(
+                AudioSegment.silent(int(np.ceil(diff * 1000))),
+                crossfade=0,
+            )
+        self.audio_segment = segment.overlay(
+            new_segment, position=int(1000 * time)
+        )
+
+    def add_sound(self, sound_file, time):
+        file_path = get_full_sound_file_path(sound_file)
+        new_segment = AudioSegment.from_file(file_path)
+        self.add_audio_segment(new_segment, time)
+
     # Writers
-    def write_frame(self, frame):
-        if self.write_to_movie:
-            self.writing_process.stdin.write(frame.tostring())
-
-    def save_image(self, image):
-        file_path = self.get_image_file_path()
-        image.save(file_path)
-        self.print_file_ready_message(file_path)
-
     def begin_animation(self, allow_write=False):
         if self.write_to_movie and allow_write:
             self.open_movie_pipe()
@@ -166,6 +159,15 @@ class SceneFileWriter(object):
         if self.livestreaming:
             self.stream_lock = True
             thread.start_new_thread(self.idle_stream, ())
+
+    def write_frame(self, frame):
+        if self.write_to_movie:
+            self.writing_process.stdin.write(frame.tostring())
+
+    def save_image(self, image):
+        file_path = self.get_image_file_path()
+        image.save(file_path)
+        self.print_file_ready_message(file_path)
 
     def idle_stream(self):
         while self.stream_lock:

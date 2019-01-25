@@ -7,8 +7,9 @@ from big_ol_pile_of_manim_imports import *
 #
 # Use the flat -l for a faster rendering at a lower
 # quality.
-# Use -s to skip to the end and just show the final frame
-# Use the -p to have the animation pop up once done.
+# Use -s to skip to the end and just save the final frame
+# Use the -p to have the animation (or image, if -s was
+# used) pop up once done.
 # Use -n <number> to skip ahead to the n'th animation of a scene.
 
 

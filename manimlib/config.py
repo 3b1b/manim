@@ -25,7 +25,7 @@ def parse_cli():
         parser.add_argument(
             "-p", "--preview",
             action="store_true",
-            help="Automatically open movie file once its done",
+            help="Automatically open the saved file once its done",
         ),
         parser.add_argument(
             "-w", "--write_to_movie",
@@ -35,7 +35,7 @@ def parse_cli():
         parser.add_argument(
             "-s", "--save_last_frame",
             action="store_true",
-            help="Save the last frame and open the image file",
+            help="Save the last frame",
         ),
         parser.add_argument(
             "-l", "--low_quality",

@@ -33,7 +33,6 @@ class Scene(Container):
     }
 
     def __init__(self, **kwargs):
-        # Perhaps allow passing in a non-empty *mobjects parameter?
         Container.__init__(self, **kwargs)
         self.camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(
@@ -42,6 +41,7 @@ class Scene(Container):
 
         self.mobjects = []
         self.continual_animations = []
+        # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
         self.num_plays = 0
         self.time = 0
@@ -58,16 +58,6 @@ class Scene(Container):
         self.tear_down()
         self.file_writer.finish()
         self.print_end_message()
-
-    def handle_play_like_call(func):
-        def wrapper(self, *args, **kwargs):
-            self.handle_animation_skipping()
-            allow_write = not self.skip_animations
-            self.file_writer.begin_animation(allow_write)
-            func(self, *args, **kwargs)
-            self.file_writer.end_animation(allow_write)
-            self.num_plays += 1
-        return wrapper
 
     def setup(self):
         """
@@ -110,8 +100,6 @@ class Scene(Container):
 
     def get_attrs(self, *keys):
         return [getattr(self, key) for key in keys]
-
-    # TODO, Scene file writer now handles sound
 
     # Only these methods should touch the camera
     def set_camera(self, camera):
@@ -449,7 +437,7 @@ class Scene(Container):
         compile_method(state)
         return animations
 
-    def handle_animation_skipping(self):
+    def update_skipping_status(self):
         if self.start_at_animation_number:
             if self.num_plays == self.start_at_animation_number:
                 self.skip_animations = False
@@ -457,6 +445,16 @@ class Scene(Container):
             if self.num_plays >= self.end_at_animation_number:
                 self.skip_animations = True
                 raise EndSceneEarlyException()
+
+    def handle_play_like_call(func):
+        def wrapper(self, *args, **kwargs):
+            self.update_skipping_status()
+            allow_write = not self.skip_animations
+            self.file_writer.begin_animation(allow_write)
+            func(self, *args, **kwargs)
+            self.file_writer.end_animation(allow_write)
+            self.num_plays += 1
+        return wrapper
 
     @handle_play_like_call
     def play(self, *args, **kwargs):
@@ -496,7 +494,6 @@ class Scene(Container):
 
         return self
 
-    # TODO
     def idle_stream(self):
         self.file_writer.idle_stream()
 
@@ -568,6 +565,10 @@ class Scene(Container):
             return
         for frame in frames:
             self.file_writer.write_frame(frame)
+
+    def add_sound(self, sound_file, time_offset=0):
+        time = self.get_time() + time_offset
+        self.file_writer.add_sound(sound_file, time)
 
     def show_frame(self):
         self.update_frame(ignore_skipping=True)

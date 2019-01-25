@@ -1,4 +1,0 @@
-file '/Users/grant/cs/manim/active_projects/clacks/question/480p15/partial_movie_directory/NameIntro/00000.mp4'
-file '/Users/grant/cs/manim/active_projects/clacks/question/480p15/partial_movie_directory/NameIntro/00001.mp4'
-file '/Users/grant/cs/manim/active_projects/clacks/question/480p15/partial_movie_directory/NameIntro/00002.mp4'
-file '/Users/grant/cs/manim/active_projects/clacks/question/480p15/partial_movie_directory/NameIntro/00003.mp4'

@@ -60,7 +60,7 @@ Set MEDIA_DIR environment variable to determine where image and animation files 
 
 Look through the old_projects folder to see the code for previous 3b1b videos.  Note, however, that developments are often made to the library without considering backwards compatibility on those old_projects.  To run them with a guarantee that they will work, you will have to go back to the commit which complete that project.
 
-While developing a scene, the `-s` flag is helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the `-n` flag to skip over some number of animations.
+While developing a scene, the `-sp` flags are helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the `-n` flag to skip over some number of animations.
 
 ### Documentation
 Documentation is in progress at [manim.readthedocs.io](https://manim.readthedocs.io).
