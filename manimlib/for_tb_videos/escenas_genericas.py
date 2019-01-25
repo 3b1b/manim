@@ -1,11 +1,11 @@
 from big_ol_pile_of_manim_imports import *
 
-class PruebaSVG(Scene):
+class CheckSVG(Scene):
 	CONFIG={
 	"camera_config":{"background_color": WHITE},
 	"tipo_svg":"svg",
 	"file":"",
-	"escala":1.4,
+	"escala":0.9,
 	"angle":0,
 	"vflip":False,
 	"opacidad_fondo": 1,
@@ -21,6 +21,7 @@ class PruebaSVG(Scene):
 	"separacion_numeros":0,
 	"muestra_elementos":[],
 	"color_resaltado":BLUE,
+	"ancho":FRAME_WIDTH
 	}
 	def construct(self):
 		if self.tipo_svg=="svg":
@@ -29,6 +30,7 @@ class PruebaSVG(Scene):
 		        fill_opacity = 1,
 		        stroke_width = self.grosor,
 		        stroke_color = self.color,
+		        width=self.ancho,
 		    ).rotate(self.angle).set_fill(self.fondo,self.opacidad_fondo).scale(self.escala)
 		else:
 			self.imagen=self.importa_texto().set_fill(self.fondo,self.opacidad_fondo).rotate(self.angle).set_stroke(self.color,self.grosor).scale(self.escala)
