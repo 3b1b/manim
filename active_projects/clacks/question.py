@@ -375,6 +375,8 @@ class BlocksAndWallScene(Scene):
         clacks.export(output_file, format="wav")
         return output_file
 
+    # TODO, this no longer works
+    # should use Scene.add_sound instead
     def combine_movie_files(self):
         Scene.combine_movie_files(self)
         if self.include_sound:
