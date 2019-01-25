@@ -93,7 +93,7 @@ class SceneFileWriter(object):
         return "images"
 
     def get_partial_movie_directory(self):
-        return "partial_movie_directory"
+        return "partial_movie_files"
 
     # Directory getters
     def get_image_file_path(self):
