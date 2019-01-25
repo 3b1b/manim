@@ -30,6 +30,7 @@ class Camera(object):
         "background_image": None,
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "pixel_width": DEFAULT_PIXEL_WIDTH,
+        "frame_duration": DEFAULT_FRAME_DURATION,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "frame_height": FRAME_HEIGHT,

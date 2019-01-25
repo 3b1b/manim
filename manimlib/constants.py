@@ -82,33 +82,34 @@ NO_SCENE_MESSAGE = """
    There are no scenes inside that module
 """
 
-LOW_QUALITY_FRAME_DURATION = 1. / 15
-MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
-PRODUCTION_QUALITY_FRAME_DURATION = 1. / 60
-
 # There might be other configuration than pixel shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1440,
     "pixel_width": 2560,
+    "frame_rate": 60,
 }
 
 HIGH_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1080,
     "pixel_width": 1920,
+    "frame_rate": 30,
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 720,
     "pixel_width": 1280,
+    "frame_rate": 30,
 }
 
 LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 480,
     "pixel_width": 854,
+    "frame_rate": 15,
 }
 
 DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
 DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
+DEFAULT_FRAME_DURATION = 30
 
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250

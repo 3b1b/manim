@@ -155,6 +155,7 @@ def get_module(file_name):
 
 
 def get_configuration(args):
+    module = get_module(args.file)
     file_writer_config = {
         # By default, write to file
         "write_to_movie": args.write_to_movie or not args.save_last_frame,
@@ -165,8 +166,10 @@ def get_configuration(args):
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
         "file_name": args.file_name,
     }
+    if hasattr(module, "OUTPUT_DIRECTORY"):
+        file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
     config = {
-        "module": get_module(args.file),
+        "module": module,
         "scene_names": args.scene_names,
         "open_video_upon_completion": args.preview,
         "show_file_in_finder": args.show_file_in_finder,
@@ -181,43 +184,7 @@ def get_configuration(args):
     }
 
     # Camera configuration
-    config["camera_config"] = {}
-    if args.low_quality:
-        config["camera_config"].update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
-        config["frame_duration"] = manimlib.constants.LOW_QUALITY_FRAME_DURATION
-    elif args.medium_quality:
-        config["camera_config"].update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
-        config["frame_duration"] = manimlib.constants.MEDIUM_QUALITY_FRAME_DURATION
-    else:
-        config["camera_config"].update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
-        config["frame_duration"] = manimlib.constants.PRODUCTION_QUALITY_FRAME_DURATION
-
-    # If the resolution was passed in via -r
-    if args.resolution:
-        if "," in args.resolution:
-            height_str, width_str = args.resolution.split(",")
-            height = int(height_str)
-            width = int(width_str)
-        else:
-            height = int(args.resolution)
-            width = int(16 * height / 9)
-        config["camera_config"].update({
-            "pixel_height": height,
-            "pixel_width": width,
-        })
-
-    if args.color:
-        try:
-            config["camera_config"]["background_color"] = colour.Color(args.color)
-        except AttributeError as err:
-            print("Please use a valid color")
-            print(err)
-            sys.exit(2)
-
-    # If rendering a transparent image/move, make sure the
-    # scene has a background opacity of 0
-    if args.transparent:
-        config["camera_config"]["background_opacity"] = 0
+    config["camera_config"] = get_camera_configuration(args)
 
     # Arguments related to skipping
     stan = config["start_at_animation_number"]
@@ -234,3 +201,42 @@ def get_configuration(args):
         config["start_at_animation_number"],
     ])
     return config
+
+
+def get_camera_configuration(args):
+    camera_config = {}
+    if args.low_quality:
+        camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+    elif args.medium_quality:
+        camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+    else:
+        camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
+
+    # If the resolution was passed in via -r
+    if args.resolution:
+        if "," in args.resolution:
+            height_str, width_str = args.resolution.split(",")
+            height = int(height_str)
+            width = int(width_str)
+        else:
+            height = int(args.resolution)
+            width = int(16 * height / 9)
+        camera_config.update({
+            "pixel_height": height,
+            "pixel_width": width,
+        })
+
+    if args.color:
+        try:
+            camera_config["background_color"] = colour.Color(args.color)
+        except AttributeError as err:
+            print("Please use a valid color")
+            print(err)
+            sys.exit(2)
+
+    # If rendering a transparent image/move, make sure the
+    # scene has a background opacity of 0
+    if args.transparent:
+        camera_config["background_opacity"] = 0
+
+    return camera_config

@@ -37,7 +37,6 @@ def stage_animations(module_name):
         return
     output_directory_kwargs = {
         "camera_config": PRODUCTION_QUALITY_CAMERA_CONFIG,
-        "frame_duration": PRODUCTION_QUALITY_FRAME_DURATION,
     }
     animation_dir = get_movie_output_directory(
         scene_classes[0], **output_directory_kwargs

@@ -2360,7 +2360,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         C_freq = -0.7
 
         self.time = 0
-        dt = self.frame_duration
+        dt = 1 / self.camera.frame_rate
 
         def move_around(total_time):
             self.time
@@ -2371,7 +2371,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
                 new_B_to_C = rotate_vector(B_to_C, self.time*C_freq)
                 A_group.shift(B_center + new_B_to_A - center_of_mass(A_ref))
                 C_group.shift(B_center + new_B_to_C - center_of_mass(C_ref))
-                self.wait(self.frame_duration)
+                self.wait(dt)
 
         move_around(3)
         self.add(self.footnote)

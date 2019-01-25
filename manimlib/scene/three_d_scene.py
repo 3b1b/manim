@@ -1,7 +1,7 @@
 from manimlib.animation.transform import ApplyMethod
 from manimlib.camera.three_d_camera import ThreeDCamera
 from manimlib.constants import DEGREES
-from manimlib.constants import PRODUCTION_QUALITY_FRAME_DURATION
+from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
 from manimlib.continual_animation.update import ContinualGrowValue
 from manimlib.mobject.coordinate_systems import ThreeDAxes
 from manimlib.mobject.geometry import Line
@@ -146,7 +146,7 @@ class SpecialThreeDScene(ThreeDScene):
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        if self.frame_duration == PRODUCTION_QUALITY_FRAME_DURATION:
+        if self.camera.get_pixel_width() == PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]:
             config = {}
         else:
             config = self.low_quality_config

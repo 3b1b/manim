@@ -84,9 +84,9 @@ class SceneFileWriter(object):
 
     def get_movie_directory(self):
         pixel_height = self.scene.camera.pixel_height
-        frame_duration = self.scene.frame_duration
+        frame_rate = self.scene.camera.frame_rate
         return "{}p{}".format(
-            pixel_height, int(1.0 / frame_duration)
+            pixel_height, frame_rate
         )
 
     def get_image_directory(self):
@@ -178,8 +178,9 @@ class SceneFileWriter(object):
             self.add_frames(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
-            if time_diff < self.frame_duration:
-                sleep(self.frame_duration - time_diff)
+            frame_duration = 1 / self.scene.camera.frame_rate
+            if time_diff < frame_duration:
+                sleep(frame_duration - time_diff)
 
     def finish(self):
         if self.write_to_movie:
@@ -197,7 +198,7 @@ class SceneFileWriter(object):
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
 
-        fps = int(1 / self.scene.frame_duration)
+        fps = self.scene.camera.frame_rate
         height = self.scene.camera.get_pixel_height()
         width = self.scene.camera.get_pixel_width()
 
