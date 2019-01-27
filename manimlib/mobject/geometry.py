@@ -117,7 +117,7 @@ class ArcBetweenPoints(Arc):
         distance_vector = end_point - start_point
         normal_vector = np.array([-distance_vector[1], distance_vector[0], 0])
         distance = get_norm(normal_vector)
-        normal_vector /= distance
+        normal_vector = np.true_divide(normal_vector, distance)
         if angle < 0:
             normal_vector *= -1
 
