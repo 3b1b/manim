@@ -119,7 +119,7 @@ class SceneFileWriter(object):
     def create_audio_segment(self):
         self.audio_segment = AudioSegment.silent()
 
-    def add_audio_segment(self, new_segment, time=None):
+    def add_audio_segment(self, new_segment, time=None, gain=0):
         if not self.includes_sound:
             self.includes_sound = True
             self.create_audio_segment()
@@ -138,13 +138,15 @@ class SceneFileWriter(object):
                 crossfade=0,
             )
         self.audio_segment = segment.overlay(
-            new_segment, position=int(1000 * time)
+            new_segment,
+            position=int(1000 * time),
+            gain_during_overlay=gain,
         )
 
-    def add_sound(self, sound_file, time):
+    def add_sound(self, sound_file, time, gain=0):
         file_path = get_full_sound_file_path(sound_file)
         new_segment = AudioSegment.from_file(file_path)
-        self.add_audio_segment(new_segment, time)
+        self.add_audio_segment(new_segment, time, gain)
 
     # Writers
     def begin_animation(self, allow_write=False):
