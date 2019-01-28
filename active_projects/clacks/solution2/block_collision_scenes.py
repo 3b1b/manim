@@ -6,58 +6,71 @@ class PreviousTwoVideos(BlocksAndWallExample):
     CONFIG = {
         "sliding_blocks_config": {
             "block1_config": {
-                "mass": 1e4,
-                "velocity": -2,
-                "width": 3,
+                "mass": 1e2,
+                "velocity": -1,
+                "width": 4,
+                "distance": 8,
             },
             "block2_config": {
-                "width": 3,
+                "width": 4,
+                "distance": 3,
             },
         },
+        "floor_y": -3,
         "wait_time": 15,
     }
 
     def setup(self):
-        videos = Group(
-            ImageMobject
-        )
-
-        name_mobs = VGroup(*map(TextMobject, names))
-        name_mobs.set_stroke(BLACK, 3, background=True)
-        name_mobs.set_fill(LIGHT_GREY, 1)
-        name_mobs.set_sheen(3, UL)
-        name_mobs.scale(2)
-        configs = [
-            self.sliding_blocks_config["block1_config"],
-            self.sliding_blocks_config["block2_config"],
-        ]
-        for name_mob, config in zip(name_mobs, configs):
-            config["width"] = name_mob.get_width()
-        self.name_mobs = name_mobs
-
         super().setup()
-
-    def add_blocks(self):
-        super().add_blocks()
         blocks = self.blocks
-        name_mobs = self.name_mobs
+        videos = Group(
+            ImageMobject("ClacksSolution1Thumbnail"),
+            ImageMobject("ClacksQuestionThumbnail"),
+        )
+        for n, video, block in zip([2, 1], videos, blocks):
+            block.fade(1)
+            video.add(SurroundingRectangle(
+                video, buff=0,
+                color=BLUE,
+                stroke_width=3,
+            ))
+            video.replace(block)
 
-        blocks.fade(1)
+            title = TextMobject("Part {}".format(n))
+            title.scale(1.5)
+            title.next_to(video, UP, MED_SMALL_BUFF)
+            video.add(title)
 
-        def update_name_mobs(name_mobs):
-            for name_mob, block in zip(name_mobs, self.blocks):
-                name_mob.move_to(block)
-                target_y = block.get_bottom()[1] + SMALL_BUFF
-                curr_y = name_mob[0].get_bottom()[1]
-                name_mob.shift((target_y - curr_y) * UP)
+        def update_videos(videos):
+            for video, block in zip(videos, blocks):
+                video.move_to(block, DOWN)
+                video.shift(0.04 * UP)
 
-        name_mobs.add_updater(update_name_mobs)
-        self.add(name_mobs)
+        videos.add_updater(update_videos)
+        self.add(videos)
+        if self.show_flash_animations:
+            self.add(self.clack_flashes.mobject)
+        self.videos = videos
 
-        clack_y = self.name_mobs[1].get_center()[1]
-        for location, time in self.clack_data:
-            location[1] = clack_y
 
-        for block, name_mob in zip(blocks, name_mobs):
-            block.label.next_to(name_mob, UP)
-            block.label.set_fill(YELLOW, opacity=1)
+class IntroducePreviousTwoVideos(PreviousTwoVideos):
+    CONFIG = {
+        "show_flash_animations": False,
+        "include_sound": False,
+    }
+
+    def construct(self):
+        blocks = self.blocks
+        videos = self.videos
+
+        self.remove(blocks)
+        videos.clear_updaters()
+        self.remove(videos)
+
+        self.play(FadeInFromLarge(videos[1]))
+        self.play(TransformFromCopy(
+            videos[0].copy().fade(1).shift(2 * RIGHT),
+            videos[0],
+            rate_func=lambda t: rush_into(t, 3),
+        ))
+        # self.wait()

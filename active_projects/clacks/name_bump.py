@@ -6,7 +6,7 @@ from active_projects.clacks.question import BlocksAndWallExample
 
 class NameBump(BlocksAndWallExample):
     CONFIG = {
-        "name": "Magnus Lysfjord",
+        "name": "Grant Sanderson",
         "sliding_blocks_config": {
             "block1_config": {
                 "mass": 1e6,
