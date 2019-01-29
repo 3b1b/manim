@@ -45,6 +45,7 @@ class Mobject(Container):
         if self.name is None:
             self.name = self.__class__.__name__
         self.updaters = []
+        self.updating_suspended = False
         self.reset_points()
         self.generate_points()
         self.init_colors()
@@ -145,13 +146,18 @@ class Mobject(Container):
 
     # Updating
 
-    def update(self, dt=0):
-        for updater in self.updaters:
-            parameters = get_parameters(updater)
-            if "dt" in parameters:
-                updater(self, dt)
-            else:
-                updater(self)
+    def update(self, dt=0, recursive=True):
+        if not self.updating_suspended:
+            for updater in self.updaters:
+                parameters = get_parameters(updater)
+                if "dt" in parameters:
+                    updater(self, dt)
+                else:
+                    updater(self)
+        if recursive:
+            for submob in self.submobjects:
+                submob.update(dt, recursive)
+        return self
 
     def get_time_based_updaters(self):
         return [
@@ -178,6 +184,20 @@ class Mobject(Container):
 
     def clear_updaters(self):
         self.updaters = []
+        return self
+
+    def suspend_updating(self, recursive=True):
+        self.updating_suspended = True
+        if recursive:
+            for submob in self.submobjects:
+                submob.suspend_updating(recursive)
+        return self
+
+    def resume_updating(self, recursive=True):
+        self.updating_suspended = False
+        if recursive:
+            for submob in self.submobjects:
+                submob.resume_updating(recursive)
         return self
 
     # Transforming operations

@@ -151,7 +151,7 @@ class Scene(Container):
     ###
 
     def continual_update(self, dt):
-        for mobject in self.get_mobject_family_members():
+        for mobject in self.mobjects:
             mobject.update(dt)
         for continual_animation in self.continual_animations:
             continual_animation.update(dt)
@@ -470,6 +470,9 @@ class Scene(Container):
             # scene gets added to the scene
             if animation.mobject not in self.get_mobject_family_members():
                 self.add(animation.mobject)
+            # Don't call the update functions of a mobject
+            # being animated
+            animation.mobject.suspend_updating()
         moving_mobjects = self.get_moving_mobjects(*animations)
 
         # Paint all non-moving objects onto the screen, so they don't
@@ -500,6 +503,7 @@ class Scene(Container):
     def clean_up_animations(self, *animations):
         for animation in animations:
             animation.clean_up(self)
+            animation.mobject.resume_updating()
         return self
 
     def get_mobjects_from_last_animation(self):
