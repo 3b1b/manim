@@ -17,7 +17,7 @@ from manimlib.utils.color import interpolate_color
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.paths import straight_path
-from manimlib.utils.simple_functions import get_num_args
+from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix
@@ -147,22 +147,16 @@ class Mobject(Container):
 
     def update(self, dt=0):
         for updater in self.updaters:
-            num_args = get_num_args(updater)
-            if num_args == 1:
-                updater(self)
-            elif num_args == 2:
+            parameters = get_parameters(updater)
+            if "dt" in parameters:
                 updater(self, dt)
             else:
-                raise Exception(
-                    "Mobject updater expected 1 or 2 "
-                    "arguments, %d given" % num_args
-                )
+                updater(self)
 
     def get_time_based_updaters(self):
         return [
-            updater
-            for updater in self.updaters
-            if get_num_args(updater) == 2
+            updater for updater in self.updaters
+            if "dt" in get_parameters(updater)
         ]
 
     def get_updaters(self):
