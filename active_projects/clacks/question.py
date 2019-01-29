@@ -1,6 +1,4 @@
 from big_ol_pile_of_manim_imports import *
-import subprocess
-from pydub import AudioSegment
 
 
 class Block(Square):
@@ -369,27 +367,6 @@ class BlocksAndWallScene(Scene):
     def tear_down(self):
         if self.include_sound:
             self.add_clack_sounds(self.clack_data)
-
-    # TODO, this no longer works
-    # should use Scene.add_sound instead
-    def combine_movie_files(self):
-        Scene.combine_movie_files(self)
-        if self.include_sound:
-            sound_file_path = self.create_sound_file(self.clack_data)
-            movie_path = self.get_movie_file_path()
-            temp_path = self.get_movie_file_path(str(self) + "TempSound")
-            commands = [
-                "ffmpeg",
-                "-i", movie_path,
-                "-i", sound_file_path,
-                "-c:v", "copy", "-c:a", "aac",
-                '-loglevel', 'error',
-                "-strict", "experimental",
-                temp_path,
-            ]
-            subprocess.call(commands)
-            subprocess.call(["rm", sound_file_path])
-            subprocess.call(["mv", temp_path, movie_path])
 
 # Animated scenes
 
