@@ -1,93 +1,105 @@
 from big_ol_pile_of_manim_imports import *
 
 class CheckSVG(Scene):
-	CONFIG={
-	"camera_config":{"background_color": WHITE},
-	"tipo_svg":"svg",
-	"file":"",
-	"escala":0.9,
-	"angle":0,
-	"vflip":False,
-	"opacidad_fondo": 1,
-	"remover": [],
-	"color": BLACK,
-	"fondo": BLACK,
-	"grosor": 3,
-	"escala_numeros":0.5,
-	"mostrar_todos_numeros": False,
-	"animacion": False,
-	"direccion_numeros": UP,
-	"color_numeros": RED,
-	"separacion_numeros":0,
-	"muestra_elementos":[],
-	"color_resaltado":BLUE,
-	"ancho":FRAME_WIDTH
-	}
-	def construct(self):
-		if self.tipo_svg=="svg":
-			self.imagen=SVGMobject(
-		        "%s"%self.file,
-		        fill_opacity = 1,
-		        stroke_width = self.grosor,
-		        stroke_color = self.color,
-		        width=self.ancho,
-		    ).rotate(self.angle).set_fill(self.fondo,self.opacidad_fondo).scale(self.escala)
-		else:
-			self.imagen=self.importa_texto().set_fill(self.fondo,self.opacidad_fondo).rotate(self.angle).set_stroke(self.color,self.grosor).scale(self.escala)
-		if self.vflip==True:
-			self.imagen.flip()
-		self.cambiar_colores(self.imagen)
-		if self.animacion==True:
-			self.play(DrawBorderThenFill(self.imagen))
-		else:
-			self.add(self.imagen)
-		if self.mostrar_todos_numeros==True:
-			self.imprimir_formula(self.imagen,
-				self.escala_numeros,
-				self.direccion_numeros,
-				self.remover,
-				self.separacion_numeros,
-				self.color_numeros)
+    CONFIG={
+    "camera_config":{"background_color": WHITE},
+    "svg_type":"svg",
+    "file":"",
+    "svg_scale":0.9,
+    "angle":0,
+    "flip_svg":False,
+    "fill_opacity": 1,
+    "remove": [],
+    "stroke_color": BLACK,
+    "fill_color": BLACK,
+    "stroke_width": 3,
+    "numbers_scale":0.5,
+    "show_numbers": False,
+    "animation": False,
+    "direction_numbers": UP,
+    "color_numbers": RED,
+    "space_between_numbers":0,
+    "show_elements":[],
+    "color_element":BLUE,
+    "set_size":"width",
+    "remove_stroke":[],
+    "show_stroke":[],
+    "stroke_":1
+    }
+    def construct(self):
+        if self.set_size=="width":
+            width_size=FRAME_WIDTH
+            height_size=None
+        else:
+            width_size=None
+            height_size=FRAME_HEIGHT
 
-		self.devolver(self.imagen,self.muestra_elementos)
-		
-		self.wait()
-	def importa_texto(self):
-		return TexMobject("")
+        if self.svg_type=="svg":
+            self.imagen=SVGMobject(
+                "%s"%self.file,
+                #fill_opacity = 1,
+                stroke_width = self.stroke_width,
+                stroke_color = self.stroke_color,
+                width=width_size,
+                height=height_size
+            ).rotate(self.angle).set_fill(self.fill_color,self.fill_opacity).scale(self.svg_scale)
+        else:
+            self.imagen=self.import_text().set_fill(self.fill_color,self.fill_opacity).rotate(self.angle).set_stroke(self.stroke_color,self.stroke_width).scale(self.svg_scale)
+        if self.flip_svg==True:
+            self.imagen.flip()
+        if self.show_numbers==True:
+            self.print_formula(self.imagen,
+                self.numbers_scale,
+                self.direction_numbers,
+                self.remove,
+                self.space_between_numbers,
+                self.color_numbers)
 
-	def cambiar_colores(self,imagen):
-		pass
+        self.return_elements(self.imagen,self.show_elements)
+        self.change_colors(self.imagen)
+        for st in self.remove_stroke:
+            self.imagen[st].set_stroke(None,0)
+        for st in self.show_stroke:
+            self.imagen[st].set_stroke(None,self.stroke_)
+        if self.animation==True:
+            self.play(DrawBorderThenFill(self.imagen))
+        self.wait()
+    def import_text(self):
+        return TexMobject("")
 
-	def imprimir_formula(self,texto,escala_inversa,direccion,excepcion,separacion,color):
-		texto.set_color(RED)
-		self.add(texto)
-		contador = 0
-		for j in range(len(texto)):
-			permiso_imprimir=True
-			for w in excepcion:
-				if j==w:
-					permiso_imprimir=False
-			if permiso_imprimir:
-				self.add(texto[j].set_color(self.color))
-		contador = contador + 1
+    def change_colors(self,imagen):
+        pass
 
-		contador=0
-		for j in range(len(texto)):
-			permiso_imprimir=True
-			elemento = TexMobject("%d" %contador,color=color)
-			elemento.scale(escala_inversa)
-			elemento.next_to(texto[j],direccion,buff=separacion)
-			for w in excepcion:
-				if j==w:
-					permiso_imprimir=False
-			if permiso_imprimir:
-				self.add(elemento)
-			contador = contador + 1 
+    def print_formula(self,text,inverse_scale,direction,exception,buff,color):
+        text.set_color(RED)
+        self.add(text)
+        c = 0
+        for j in range(len(text)):
+            permission_print=True
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add(text[j].set_color(self.stroke_color))
+        c = c + 1
 
-	def devolver(self,formula,adicion):
-		for i in adicion:
-			self.add_foreground_mobjects(formula[i].set_color(self.color_resaltado),
-				TexMobject("%d"%i,color=self.color_resaltado,background_stroke_width=0).scale(self.escala_numeros).next_to(formula[i],self.direccion_numeros,buff=self.separacion_numeros))
+        c=0
+        for j in range(len(text)):
+            permission_print=True
+            element = TexMobject("%d" %c,color=color)
+            element.scale(inverse_scale)
+            element.next_to(text[j],direction,buff=buff)
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add(element)
+            c = c + 1 
+
+    def return_elements(self,formula,adds):
+        for i in adds:
+            self.add_foreground_mobjects(formula[i].set_color(self.color_element),
+                TexMobject("%d"%i,color=self.color_element,background_stroke_width=0).scale(self.numbers_scale).next_to(formula[i],self.direction_numbers,buff=self.space_between_numbers))
 
 class EscenaContenido2(Scene):
     CONFIG={"camera_config":{"background_color":BLACK},
