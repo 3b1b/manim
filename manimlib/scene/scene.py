@@ -572,9 +572,9 @@ class Scene(Container):
         for frame in frames:
             self.file_writer.write_frame(frame)
 
-    def add_sound(self, sound_file, time_offset=0, gain=0):
+    def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
         time = self.get_time() + time_offset
-        self.file_writer.add_sound(sound_file, time, gain)
+        self.file_writer.add_sound(sound_file, time, gain, **kwargs)
 
     def show_frame(self):
         self.update_frame(ignore_skipping=True)
