@@ -24,7 +24,6 @@ from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.rate_functions import wiggle
-from manimlib.utils.rate_functions import double_smooth
 
 
 class FocusOn(Transform):
@@ -125,10 +124,11 @@ class ShowPassingFlash(ShowPartial):
     }
 
     def get_bounds(self, alpha):
-        alpha *= (1 + self.time_width)
-        alpha -= self.time_width / 2.0
-        lower = max(0, alpha - self.time_width / 2.0)
-        upper = min(1, alpha + self.time_width / 2.0)
+        tw = self.time_width
+        upper = interpolate(0, 1 + tw, alpha)
+        lower = upper - tw
+        upper = min(upper, 1)
+        lower = max(lower, 0)
         return (lower, upper)
 
     def clean_up(self, *args, **kwargs):
