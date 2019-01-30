@@ -44,7 +44,12 @@ class CheckSVG(Scene):
                 height=height_size
             ).rotate(self.angle).set_fill(self.fill_color,self.fill_opacity).scale(self.svg_scale)
         else:
-            self.imagen=self.import_text().set_fill(self.fill_color,self.fill_opacity).rotate(self.angle).set_stroke(self.stroke_color,self.stroke_width).scale(self.svg_scale)
+            self.imagen=self.import_text().set_fill(self.fill_color,self.fill_opacity).rotate(self.angle).set_stroke(self.stroke_color,self.stroke_width)
+            if self.set_size=="width":
+                self.imagen.set_width(FRAME_WIDTH)
+            else:
+                self.imagen.set_height(FRAME_HEIGHT)
+            self.imagen.scale(self.svg_scale)
         if self.flip_svg==True:
             self.imagen.flip()
         if self.show_numbers==True:
@@ -102,6 +107,7 @@ class CheckSVG(Scene):
         for i in adds:
             self.add_foreground_mobjects(formula[i].set_color(self.color_element),
                 TexMobject("%d"%i,color=self.color_element,background_stroke_width=0).scale(self.numbers_scale).next_to(formula[i],self.direction_numbers,buff=self.space_between_numbers))
+
 
 class EscenaContenido2(Scene):
     CONFIG={"camera_config":{"background_color":BLACK},
