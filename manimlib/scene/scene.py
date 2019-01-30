@@ -69,10 +69,6 @@ class Scene(Container):
     def tear_down(self):
         pass
 
-    def setup_bases(self):
-        for base in self.__class__.__bases__:
-            base.setup(self)
-
     def construct(self):
         pass  # To be implemented in subclasses
 
