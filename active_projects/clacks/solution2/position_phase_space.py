@@ -46,15 +46,22 @@ class PositionPhaseSpaceScene(Scene):
             "background_stroke_color": BLACK,
             "radius": 0.05,
         },
+        "ps_d2_label_vect": RIGHT,
         "clack_sound": "clack",
         "mirror_line_class": Line,
         "mirror_line_style": {
             "stroke_color": WHITE,
             "stroke_width": 1,
         },
+        "d1_eq_e2_line_color": GREEN_SCREEN,
+        "trajectory_style": {
+            "stroke_color": YELLOW,
+            "stroke_width": 2,
+        }
     }
 
     def setup(self):
+        self.total_sliding_time = 0
         self.all_items = [
             self.get_floor(),
             self.get_wall(),
@@ -222,14 +229,16 @@ class PositionPhaseSpaceScene(Scene):
         pass  # TODO
 
     def tie_ps_point_to_time_tracker(self):
-        time_tracker = self.get_time_tracker()
+        time_tracker = self.get_time_tracker(
+            time=self.total_sliding_time
+        )
 
         def update_ps_point(p):
             time = time_tracker.get_value()
             ds = self.time_to_ds(time)
             p.move_to(self.ds_to_point(*ds))
         self.ps_point.add_updater(update_ps_point)
-        self.add(time_tracker)
+        self.add(time_tracker, self.ps_point)
 
     def add_clack_flashes(self):
         clack_data = self.get_clack_data()
@@ -249,29 +258,10 @@ class PositionPhaseSpaceScene(Scene):
             self.ps_flashes,
         )
 
-    def begin_sliding(self):
-        self.tie_ps_point_to_time_tracker()
-        self.add_clack_flashes()
-
-    def end_sliding(self):
-        self.ps_point.clear_updaters()
-        self.remove(self.time_tracker)
-        for attr in ["block_flashes", "ps_flashes"]:
-            if hasattr(self, attr):
-                self.remove(getattr(self, attr))
-        total_time = self.time_tracker.get_value()
-        for time in self.clack_times:
-            if time < total_time:
-                offset = total_time - time
-                self.add_sound(
-                    "clack",
-                    time_offset=-offset,
-                )
-
     def get_continually_building_trajectory(self):
         trajectory = VMobject()
-        self.continually_building_trajectory = trajectory
-        trajectory.set_stroke(YELLOW, 1)
+        self.trajectory = trajectory
+        trajectory.set_style(**self.trajectory_style)
 
         def get_point():
             return np.array(self.ps_point.get_location())
@@ -296,16 +286,58 @@ class PositionPhaseSpaceScene(Scene):
         trajectory.add_updater(update_trajectory)
         return trajectory
 
-    def get_ps_point_change_anim(self, d1, d2):
+    def begin_sliding(self, show_trajectory=True):
+        self.tie_ps_point_to_time_tracker()
+        self.add_clack_flashes()
+        if show_trajectory:
+            if hasattr(self, "trajectory"):
+                self.trajectory.resume_updating()
+            else:
+                self.add(self.get_continually_building_trajectory())
+
+    def end_sliding(self):
+        self.ps_point.clear_updaters()
+        self.remove(self.time_tracker)
+        to_remove = ["block_flashes", "ps_flashes"]
+        for attr in to_remove:
+            if hasattr(self, attr):
+                self.remove(getattr(self, attr))
+        if hasattr(self, "trajectory"):
+            self.trajectory.suspend_updating()
+        total_time = self.time_tracker.get_value()
+        self.total_sliding_time += total_time
+        for time in self.clack_times:
+            if time < total_time:
+                offset = total_time - time
+                self.add_sound(
+                    "clack",
+                    time_offset=-offset,
+                )
+
+    def slide(self, time, stop_condition=None):
+        self.begin_sliding()
+        self.wait(time, stop_condition)
+        self.end_sliding()
+
+    def slide_until(self, stop_condition, max_time=60):
+        self.slide(max_time, stop_condition=stop_condition)
+
+    def get_ps_point_change_anim(self, d1, d2, **added_kwargs):
         b1 = self.block1
         ps_speed = np.sqrt(b1.mass) * abs(b1.velocity)
         curr_d1, curr_d2 = self.get_ds()
         distance = get_norm([curr_d1 - d1, curr_d2 - d2])
+
+        # Default
+        kwargs = {
+            "run_time": (distance / ps_speed),
+            "rate_func": None,
+        }
+        kwargs.update(added_kwargs)
         return ApplyMethod(
             self.ps_point.move_to,
             self.ds_to_point(d1, d2),
-            run_time=(distance / ps_speed),
-            rate_func=None,
+            **kwargs
         )
 
     # Mobject getters
@@ -333,7 +365,7 @@ class PositionPhaseSpaceScene(Scene):
             block.shift(config["distance"] * RIGHT)
             block.label.move_to(block)
             block.label.set_fill(BLACK)
-            block.label.set_stroke(WHITE, 3, background=True)
+            block.label.set_stroke(WHITE, 1, background=True)
             self.blocks.add(block)
         self.block1, self.block2 = blocks
         return blocks
@@ -352,17 +384,21 @@ class PositionPhaseSpaceScene(Scene):
 
     def get_added_axes_lines(self, axes):
         c2p = axes.coords_to_point
+        x_mult = y_mult = 1
+        if self.rescale_coordinates:
+            x_mult = np.sqrt(self.block1.mass)
+            y_mult = np.sqrt(self.block2.mass)
         y_lines = VGroup(*[
             Line(
-                c2p(0, 0), c2p(0, axes.y_max + 1),
+                c2p(0, 0), c2p(0, axes.y_max * y_mult + 1),
             ).move_to(c2p(x, 0), DOWN)
-            for x in np.arange(0, axes.x_max)
+            for x in np.arange(0, axes.x_max) * x_mult
         ])
         x_lines = VGroup(*[
             Line(
-                c2p(0, 0), c2p(axes.x_max, 0),
+                c2p(0, 0), c2p(axes.x_max * x_mult, 0),
             ).move_to(c2p(0, y), LEFT)
-            for y in np.arange(0, axes.y_max)
+            for y in np.arange(0, axes.y_max) * y_mult
         ])
         line_groups = VGroup(x_lines, y_lines)
         for lines in line_groups:
@@ -370,11 +406,13 @@ class PositionPhaseSpaceScene(Scene):
             lines[1::2].set_stroke(width=0.5, opacity=0.25)
         return line_groups
 
-    def get_axes_labels(self, axes):
+    def get_axes_labels(self, axes, with_sqrts=None):
+        if with_sqrts is None:
+            with_sqrts = self.rescale_coordinates
         x_label = TexMobject("x = ", "d_1")
         y_label = TexMobject("y = ", "d_2")
         labels = VGroup(x_label, y_label)
-        if self.rescale_coordinates:
+        if with_sqrts:
             additions = map(TexMobject, [
                 "\\sqrt{m_1}", "\\sqrt{m_2}"
             ])
@@ -469,7 +507,8 @@ class PositionPhaseSpaceScene(Scene):
 
     def get_phase_space_d2_label(self):
         self.ps_d2_label = self.get_phase_space_d_label(
-            2, self.get_d2, self.y_line, RIGHT,
+            2, self.get_d2, self.y_line,
+            self.ps_d2_label_vect,
         )
         return self.ps_d2_label
 
@@ -531,7 +570,7 @@ class PositionPhaseSpaceScene(Scene):
         end = self.ds_to_point(15, 15)
         line = self.d1_eq_d2_line = self.mirror_line_class(start, end)
         line.set_style(**self.mirror_line_style)
-        line.set_color(PINK)
+        line.set_color(self.d1_eq_e2_line_color)
         return self.d1_eq_d2_line
 
     def get_d1_eq_d2_label(self):
@@ -543,15 +582,16 @@ class PositionPhaseSpaceScene(Scene):
             0.7,
         )
         label.next_to(point, DR, SMALL_BUFF)
-        label.set_stroke(BLACK, 3, background=True)
         label.match_color(line)
+        label.set_stroke(BLACK, 5, background=True)
         self.d1_eq_d2_label = label
         return label
 
     def get_d2_eq_w2_line(self):
         w2 = self.block2.width
         start = self.ds_to_point(0, w2)
-        end = self.ds_to_point(30, w2)
+        end = np.array(start)
+        end[0] = FRAME_WIDTH / 2
         self.d2_eq_w2_line = self.mirror_line_class(start, end)
         self.d2_eq_w2_line.set_style(**self.mirror_line_style)
         return self.d2_eq_w2_line
@@ -564,8 +604,8 @@ class PositionPhaseSpaceScene(Scene):
         self.d2_eq_w2_label = label
         return label
 
-    def get_time_tracker(self):
-        time_tracker = self.time_tracker = ValueTracker(0)
+    def get_time_tracker(self, time=0):
+        time_tracker = self.time_tracker = ValueTracker(time)
         time_tracker.add_updater(
             lambda m, dt: m.increment_value(dt)
         )
@@ -647,8 +687,6 @@ class IntroducePositionPhaseSpace(PositionPhaseSpaceScene):
 
         xy_line = self.d1_eq_d2_line
         xy_label = self.d1_eq_d2_label
-        xy_line.set_stroke(YELLOW)
-        xy_label.set_color(YELLOW)
 
         self.play(
             ShowCreation(xy_line),
@@ -716,15 +754,15 @@ class EqualMassCase(PositionPhaseSpaceScene):
             self.wall,
             self.blocks,
             self.axes,
+            self.d1_eq_d2_line,
+            self.d1_eq_d2_label,
+            self.d2_eq_w2_line,
+            self.d2_eq_w2_label,
             self.ps_dot,
             self.x_line,
             self.y_line,
             self.ps_d1_label,
             self.ps_d2_label,
-            self.d1_eq_d2_line,
-            self.d1_eq_d2_label,
-            self.d2_eq_w2_line,
-            self.d2_eq_w2_label,
         )
 
     def construct(self):
@@ -822,7 +860,7 @@ class EqualMassCase(PositionPhaseSpaceScene):
         self.block_arrow = block_arrow
 
     def up_to_second_collision(self):
-        trajectory = self.continually_building_trajectory
+        trajectory = self.trajectory
         ps_point = self.ps_point
         ps_arrow = self.ps_arrow
         block_arrow = self.block_arrow
@@ -846,7 +884,7 @@ class EqualMassCase(PositionPhaseSpaceScene):
         self.wait()
 
     def up_to_third_collision(self):
-        trajectory = self.continually_building_trajectory
+        trajectory = self.trajectory
         ps_point = self.ps_point
         ps_arrow = self.ps_arrow
         block_arrow = self.block_arrow
@@ -866,7 +904,7 @@ class EqualMassCase(PositionPhaseSpaceScene):
         trajectory.suspend_updating()
 
     def fade_distance_indicators(self):
-        trajectory = self.continually_building_trajectory
+        trajectory = self.trajectory
         self.play(
             trajectory.set_stroke, {"width": 1},
             *map(FadeOut, [
@@ -959,6 +997,9 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
             "distance": 5,
         },
         "rescale_coordinates": False,
+        "trajectory_style": {
+            "stroke_width": 2,
+        }
     }
 
     def setup(self):
@@ -982,17 +1023,7 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
         self.show_angles()
 
     def show_first_collision(self):
-        ps_point = self.ps_point
-        trajectory = self.get_continually_building_trajectory()
-        trajectory.set_stroke(YELLOW, 2)
-
-        self.add(ps_point, trajectory)
-        self.begin_sliding()
-        self.wait_until(lambda: self.get_ds()[1] < 2)
-        self.end_sliding()
-        trajectory.suspend_updating()
-
-        self.trajectory = trajectory
+        self.slide_until(lambda: self.get_ds()[1] < 2)
 
     def show_angles(self):
         trajectory = self.trajectory
@@ -1010,13 +1041,30 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
             line.shift(arc.arc_center - line.get_start())
             arc.line = line
 
-        self.play(LaggedStart(
-            FadeInFromDown,
-            VGroup(*reversed(equation)),
-            lag_ratio=0.75,
-        ))
+        arc1, arc2 = arcs
+        arc1.arrow = Arrow(
+            equation[0].get_left(), arc1.get_right(),
+            buff=SMALL_BUFF,
+            color=WHITE,
+            path_arc=0,
+        )
+        arc2.arrow = Arrow(
+            equation[2].get_corner(DL),
+            arc2.get_left(),
+            use_rectangular_stem=False,
+            path_arc=-120 * DEGREES,
+            buff=SMALL_BUFF,
+        )
+        arc2.arrow.pointwise_become_partial(arc.arrow, 0, 0.95)
+
+        arc1.word = equation[0]
+        arc2.word = equation[1:]
+
         for arc in arcs:
-            # TODO, add arrows
+            self.play(
+                FadeInFrom(arc.word, LEFT),
+                GrowArrow(arc.arrow, path_arc=arc.arrow.path_arc),
+            )
             self.play(
                 ShowCreation(arc),
                 arc.line.rotate, arc.angle,
@@ -1027,7 +1075,6 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
                         opacity=(there_and_back(a)**0.5)
                     )
                 ),
-                run_time=2,
             )
 
     #
@@ -1060,4 +1107,231 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
             TextMobject("Angle of refraction")
         )
         result.arrange_submobjects(DOWN)
+        result.set_stroke(BLACK, 5, background=True)
         return result
+
+
+class UnscaledPositionPhaseSpaceMass10(FailedAngleRelation):
+    CONFIG = {
+        "block1_config": {
+            "mass": 10
+        },
+        "wait_time": 25,
+    }
+
+    def construct(self):
+        self.slide(self.wait_time)
+
+
+class UnscaledPositionPhaseSpaceMass100(UnscaledPositionPhaseSpaceMass10):
+    CONFIG = {
+        "block1_config": {
+            "mass": 100
+        }
+    }
+
+
+class RescaleCoordinates(PositionPhaseSpaceScene, MovingCameraScene):
+    CONFIG = {
+        "rescale_coordinates": False,
+        "ps_d2_label_vect": LEFT,
+        "axes_center": 6 * LEFT + 0.65 * DOWN,
+        "block1_config": {"distance": 7},
+        "wait_time": 30,
+    }
+
+    def setup(self):
+        PositionPhaseSpaceScene.setup(self)
+        MovingCameraScene.setup(self)
+        self.add(
+            self.floor,
+            self.wall,
+            self.blocks,
+            self.axes,
+            self.d1_eq_d2_line,
+            self.d1_eq_d2_label,
+            self.d2_eq_w2_line,
+            self.ps_dot,
+            self.x_line,
+            self.y_line,
+            self.ps_d1_label,
+            self.ps_d2_label,
+            self.d1_brace,
+            self.d2_brace,
+            self.d1_label,
+            self.d2_label,
+        )
+
+    def construct(self):
+        self.show_rescaling()
+        self.comment_on_ugliness()
+        self.put_into_frame()
+
+    def show_rescaling(self):
+        axes = self.axes
+        blocks = self.blocks
+        to_stretch = VGroup(
+            axes.added_lines,
+            self.d1_eq_d2_line,
+            self.ps_point,
+        )
+        m1 = self.block1.mass
+        new_axes_labels = self.get_axes_labels(axes, with_sqrts=True)
+
+        # Show label
+        def show_label(index, block, vect):
+            self.play(
+                ShowCreationThenFadeAround(axes.labels[index])
+            )
+            self.play(
+                Transform(
+                    axes.labels[index],
+                    new_axes_labels[index][:2],
+                ),
+                GrowFromCenter(new_axes_labels[index][2])
+            )
+            group = VGroup(
+                new_axes_labels[index][2][-2:].copy(),
+                TexMobject("="),
+                block.label.copy(),
+            )
+            group.generate_target()
+            group.target.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            group.target.next_to(block, vect)
+            group[1].scale(0)
+            group[1].move_to(group.target[1])
+            group.target[2].set_fill(WHITE)
+            group.target[2].set_stroke(width=0, background=True)
+            self.play(MoveToTarget(
+                group,
+                rate_func=there_and_back_with_pause,
+                run_time=3
+            ))
+            self.remove(group)
+            self.wait()
+
+        show_label(0, self.block1, RIGHT)
+
+        # The stretch
+        blocks.suspend_updating()
+        self.play(
+            ApplyMethod(
+                to_stretch.stretch, np.sqrt(m1), 0,
+                {"about_point": axes.coords_to_point(0, 0)},
+            ),
+            self.d1_eq_d2_label.shift, 6 * RIGHT,
+            run_time=2,
+        )
+        self.rescale_coordinates = True
+        blocks.resume_updating()
+        self.wait()
+
+        # Show wiggle
+        d1, d2 = self.get_ds()
+        for new_d1 in [d1 - 2, d1]:
+            self.play(self.get_ps_point_change_anim(
+                new_d1, d2,
+                rate_func=smooth,
+                run_time=2,
+            ))
+        self.wait()
+
+        # Change y-coord
+        show_label(1, self.block2, LEFT)
+
+        axes.remove(axes.labels)
+        self.remove(axes.labels)
+        axes.labels = new_axes_labels
+        axes.add(axes.labels)
+        self.add(axes)
+
+    def comment_on_ugliness(self):
+        axes = self.axes
+
+        randy = Randolph(height=1.7)
+        randy.flip()
+        randy.next_to(self.d2_eq_w2_line, UP, buff=0)
+        randy.to_edge(RIGHT)
+        randy.change("sassy")
+        randy.save_state()
+        randy.fade(1)
+        randy.change("plain")
+
+        self.play(Restore(randy))
+        self.play(
+            PiCreatureSays(
+                randy, "Hideous!",
+                bubble_kwargs={"height": 1.5, "width": 2},
+                target_mode="angry",
+                look_at_arg=axes.labels[0]
+            )
+        )
+        self.play(randy.look_at, axes.labels[1])
+        self.play(Blink(randy))
+        self.play(
+            RemovePiCreatureBubble(
+                randy, target_mode="confused"
+            )
+        )
+        self.play(Blink(randy))
+        self.play(randy.look_at, axes.labels[0])
+        self.wait()
+        self.play(FadeOut(randy))
+
+    def put_into_frame(self):
+        rect = ScreenRectangle(height=FRAME_HEIGHT + 10)
+        inner_rect = ScreenRectangle(height=FRAME_HEIGHT)
+        rect.add_subpath(inner_rect.points[::-1])
+        rect.set_fill(DARK_GREY, opacity=1)
+        frame = self.camera_frame
+
+        self.begin_sliding()
+        self.add(rect)
+        self.play(
+            frame.scale, 1.5,
+            {"about_point": frame.get_bottom() + UP},
+            run_time=2,
+        )
+        self.wait(self.wait_time)
+        self.end_sliding()
+
+    #
+    def get_ds(self):
+        if self.rescale_coordinates:
+            return super().get_ds()
+        return (
+            self.block1_config["distance"],
+            self.block2_config["distance"],
+        )
+
+
+class RescaleCoordinatesMass16(RescaleCoordinates):
+    CONFIG = {
+        "block1_config": {
+            "mass": 16,
+            "distance": 10,
+        },
+        "rescale_coordinates": True,
+        "wait_time": 20,
+    }
+
+    def construct(self):
+        self.put_into_frame()
+
+
+class RescaleCoordinatesMass64(RescaleCoordinatesMass16):
+    CONFIG = {
+        "block1_config": {
+            "mass": 64,
+            "distance": 6,
+        },
+        "block2_config": {"distance": 3},
+    }
+
+    def construct(self):
+        self.put_into_frame()
+
+
+class NewSceneName(Scene):
+    def construct(self):
+        pass

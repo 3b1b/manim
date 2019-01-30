@@ -199,3 +199,7 @@ class ConnectionToOptics(Scene):
             title, h_line, arcs, thetas,
             dashed_lines, v_shape, beam
         )
+
+
+class ConnectionToOpticsTransparent(ConnectionToOptics):
+    pass

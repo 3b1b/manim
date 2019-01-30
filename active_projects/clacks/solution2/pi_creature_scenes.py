@@ -50,3 +50,29 @@ class OnAnsweringTwice(TeacherStudentsScene):
 class AskAboutEqualMassMomentumTransfer(TeacherStudentsScene):
     def construct(self):
         pass
+
+
+class ComplainAboutRelevanceOfAnalogy(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Why would \\\\ you care",
+            target_mode="maybe"
+        )
+        self.change_student_modes(
+            "angry", "sassy", "maybe",
+            added_anims=[self.teacher.change, "guilty"]
+        )
+        self.wait(2)
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes(
+                "pondering", "erm", "pondering",
+                look_at_arg=self.hold_up_spot,
+            ),
+            RemovePiCreatureBubble(self.students[2])
+        )
+        self.play(
+            self.students[2].change, "thinking",
+            self.hold_up_spot + UP,
+        )
+        self.wait(3)
