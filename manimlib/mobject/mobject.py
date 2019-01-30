@@ -198,6 +198,7 @@ class Mobject(Container):
         if recursive:
             for submob in self.submobjects:
                 submob.resume_updating(recursive)
+        self.update(dt=0, recursive=recursive)
         return self
 
     # Transforming operations
