@@ -30,7 +30,11 @@ def choose(n, r):
 
 
 def get_num_args(function):
-    return len(inspect.signature(function).parameters)
+    return len(get_parameters(function))
+
+
+def get_parameters(function):
+    return inspect.signature(function).parameters
 
 # Just to have a less heavyweight name for this extremely common operation
 #

@@ -119,7 +119,9 @@ class SceneFileWriter(object):
     def create_audio_segment(self):
         self.audio_segment = AudioSegment.silent()
 
-    def add_audio_segment(self, new_segment, time=None):
+    def add_audio_segment(self, new_segment,
+                          time=None,
+                          gain_to_background=None):
         if not self.includes_sound:
             self.includes_sound = True
             self.create_audio_segment()
@@ -138,13 +140,17 @@ class SceneFileWriter(object):
                 crossfade=0,
             )
         self.audio_segment = segment.overlay(
-            new_segment, position=int(1000 * time)
+            new_segment,
+            position=int(1000 * time),
+            gain_during_overlay=gain_to_background,
         )
 
-    def add_sound(self, sound_file, time):
+    def add_sound(self, sound_file, time=None, gain=None, **kwargs):
         file_path = get_full_sound_file_path(sound_file)
         new_segment = AudioSegment.from_file(file_path)
-        self.add_audio_segment(new_segment, time)
+        if gain:
+            new_segment = new_segment.apply_gain(gain)
+        self.add_audio_segment(new_segment, time, **kwargs)
 
     # Writers
     def begin_animation(self, allow_write=False):
@@ -305,17 +311,25 @@ class SceneFileWriter(object):
             )
             # Makes sure sound file length will match video file
             self.add_audio_segment(AudioSegment.silent(0))
-            self.audio_segment.export(sound_file_path)
+            self.audio_segment.export(
+                sound_file_path,
+                bitrate='312k',
+            )
             temp_file_path = movie_file_path.replace(".", "_temp.")
-            commands = commands = [
+            commands = [
                 "ffmpeg",
                 "-i", movie_file_path,
                 "-i", sound_file_path,
                 '-y',  # overwrite output file if it exists
-                "-c:v", "copy", "-c:a", "aac",
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-b:a", "320k",
+                # select video stream from first file
+                "-map", "0:v:0",
+                # select audio stream from second file
+                "-map", "1:a:0",
                 '-loglevel', 'error',
-                "-shortest",
-                "-strict", "experimental",
+                # "-shortest",
                 temp_file_path,
             ]
             subprocess.call(commands)

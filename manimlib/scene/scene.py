@@ -69,10 +69,6 @@ class Scene(Container):
     def tear_down(self):
         pass
 
-    def setup_bases(self):
-        for base in self.__class__.__bases__:
-            base.setup(self)
-
     def construct(self):
         pass  # To be implemented in subclasses
 
@@ -151,7 +147,7 @@ class Scene(Container):
     ###
 
     def continual_update(self, dt):
-        for mobject in self.get_mobject_family_members():
+        for mobject in self.mobjects:
             mobject.update(dt)
         for continual_animation in self.continual_animations:
             continual_animation.update(dt)
@@ -470,6 +466,9 @@ class Scene(Container):
             # scene gets added to the scene
             if animation.mobject not in self.get_mobject_family_members():
                 self.add(animation.mobject)
+            # Don't call the update functions of a mobject
+            # being animated
+            animation.mobject.suspend_updating()
         moving_mobjects = self.get_moving_mobjects(*animations)
 
         # Paint all non-moving objects onto the screen, so they don't
@@ -500,6 +499,7 @@ class Scene(Container):
     def clean_up_animations(self, *animations):
         for animation in animations:
             animation.clean_up(self)
+            animation.mobject.resume_updating()
         return self
 
     def get_mobjects_from_last_animation(self):
@@ -568,9 +568,9 @@ class Scene(Container):
         for frame in frames:
             self.file_writer.write_frame(frame)
 
-    def add_sound(self, sound_file, time_offset=0):
+    def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
         time = self.get_time() + time_offset
-        self.file_writer.add_sound(sound_file, time)
+        self.file_writer.add_sound(sound_file, time, gain, **kwargs)
 
     def show_frame(self):
         self.update_frame(ignore_skipping=True)

@@ -15,7 +15,7 @@ class DecimalNumber(VMobject):
         "edge_to_fix": LEFT,
     }
 
-    def __init__(self, number, **kwargs):
+    def __init__(self, number=0, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.number = number
         self.initial_config = kwargs
