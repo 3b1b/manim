@@ -298,6 +298,8 @@ class TeacherStudentsScene(PiCreatureScene):
                 "raise_left_hand",
             ])
             kwargs["target_mode"] = target_mode
+        if "bubble_kwargs" not in kwargs:
+            kwargs["bubble_kwargs"] = {"direction": LEFT}
         student = self.get_students()[kwargs.get("student_index", 2)]
         return self.pi_creature_says(
             student, *content, **kwargs
