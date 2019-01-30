@@ -220,10 +220,14 @@ class LaggedStart(Animation):
     }
 
     def __init__(self, AnimationClass, mobject, arg_creator=None, **kwargs):
+        for key in ["rate_func", "run_time"]:
+            if key in AnimationClass.CONFIG:
+                setattr(self, key, AnimationClass.CONFIG[key])
         digest_config(self, kwargs)
         for key in "rate_func", "run_time", "lag_ratio":
             if key in kwargs:
                 kwargs.pop(key)
+
         if arg_creator is None:
             def arg_creator(mobject):
                 return (mobject,)
