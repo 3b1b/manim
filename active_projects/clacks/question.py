@@ -215,6 +215,10 @@ class ClackFlashes(ContinualAnimation):
                 continue
             last_time = time
             flash = Flash(location, **self.flash_config)
+            for sm in flash.mobject.family_members_with_points():
+                if isinstance(sm, VMobject):
+                    sm.set_stroke(YELLOW, 3)
+                    sm.set_stroke(WHITE, 6, 0.5, background=True)
             flash.start_time = time
             flash.end_time = time + flash.run_time
             self.flashes.append(flash)
@@ -222,16 +226,17 @@ class ClackFlashes(ContinualAnimation):
 
     def update_mobject(self, dt):
         total_time = self.external_time
+        group = self.mobject
         for flash in self.flashes:
             if flash.start_time < total_time < flash.end_time:
-                if flash.mobject not in self.mobject:
-                    self.mobject.add(flash.mobject)
+                if flash.mobject not in group:
+                    group.add(flash.mobject)
                 flash.update(
                     (total_time - flash.start_time) / flash.run_time
                 )
             else:
-                if flash.mobject in self.mobject:
-                    self.mobject.remove(flash.mobject)
+                if flash.mobject in group:
+                    group.remove(flash.mobject)
 
 
 class Wall(Line):

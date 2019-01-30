@@ -45,3 +45,8 @@ class OnAnsweringTwice(TeacherStudentsScene):
             )
             shown_questions.add(oq)
         self.wait(3)
+
+
+class AskAboutEqualMassMomentumTransfer(TeacherStudentsScene):
+    def construct(self):
+        pass
