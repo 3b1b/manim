@@ -63,6 +63,8 @@ class CheckSVG(Scene):
             self.imagen[st].set_stroke(None,self.stroke_)
         if self.animation==True:
             self.play(DrawBorderThenFill(self.imagen))
+        else:
+            self.add(self.imagen)
         self.wait()
     def import_text(self):
         return TexMobject("")
