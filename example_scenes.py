@@ -4,6 +4,8 @@ class SVG1(CheckSVG):
     CONFIG={
     "file":"pruebas/mus1",
     }
+    def personalize_image(self):
+        self.imagen[0].set_color(RED)
 
 class SVG2(CheckSVG):
     CONFIG={
