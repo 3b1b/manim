@@ -73,3 +73,81 @@ class Curvatura(MovingCameraScene):
         self.linea=linea
         self.tray_luz=tray_luz
         self.graficos=VGroup(tierra,capas,lineas,puntos,tangentes,normales,linea,tray_luz)
+
+class DeformacionLuz1(MovingCameraScene):
+	def construct(self):
+		conjunto=VGroup()
+		for i in range(15):
+			ci=self.circ_punto(4+i*0.2,30*DEGREES+i*10*DEGREES)
+			conjunto.add(ci)
+
+		conjunto.set_submobject_colors_by_gradient(BLUE,WHITE).set_stroke(None,1)
+		conjunto.shift(DOWN*5)
+		self.add(conjunto)
+
+	def coord_pol(self,radio,angulo,origen=np.array([0,0])):
+		coord=np.array([
+			radio*np.cos(angulo)+origen[0],
+			radio*np.sin(angulo)+origen[1],
+			0
+			])
+		return coord
+	def malla(self,definicion=1):
+		pass
+
+	def circ_punto(self,radio,angulo,color=ORANGE):
+		circulo=Circle(radius=radio,color=color)
+		punto=Dot(self.coord_pol(radio,angulo),color=color)
+		grupo=VGroup(circulo,punto)
+		return grupo
+		
+class DeformacionLuz2(MovingCameraScene):
+	def construct(self):
+		conjunto=VGroup()
+		gamma=100*DEGREES
+		r1=4;r2=4.2;r3=4.4
+		th1=20*DEGREES;th2=70*DEGREES
+		c1=self.circ_punto(r1,th1,RED)
+		c2=self.circ_punto(r2,th2,BLUE)
+		c3=Circle(radius=4.4,color=ORANGE)
+		linea_r1=Line(c1[0].get_center(),c1[1].get_center())
+		linea_pre=Line(LEFT*FRAME_WIDTH,RIGHT*FRAME_WIDTH).rotate(gamma)
+		linea_pos=linea_pre.copy().move_to(c1[1].get_center())
+		linea_fin=DashedLine(
+			c1[1].get_center(),
+			c1[1].get_center()+self.proyeccion(r1,r2,th1,gamma)*linea_pre.get_unit_vector()
+			).set_color(PURPLE)
+		punto_fin=Dot(linea_fin.get_end())
+
+		linea_pre2=Line(LEFT*FRAME_WIDTH,RIGHT*FRAME_WIDTH).rotate(gamma+10*DEGREES)
+		linea_r2=Line(c3.get_center(),punto_fin.get_center()).set_color(TEAL)
+		linea_fin2=DashedLine(
+			punto_fin.get_center(),
+			punto_fin.get_center()+self.proyeccion(r2,r3,linea_r2.get_angle(),gamma+10*DEGREES)*linea_pre2.get_unit_vector()
+			).set_color(ORANGE)
+		punto_fin2=Dot(linea_fin2.get_end())
+
+		conjunto.add(c1,c2,linea_r1,linea_fin,punto_fin,c3,linea_fin2,punto_fin2,linea_r2).shift(DOWN*4).set_stroke(None,1)
+		self.add(conjunto)
+
+	def coord_pol(self,radio,angulo,origen=np.array([0,0])):
+		coord=np.array([
+			radio*np.cos(angulo)+origen[0],
+			radio*np.sin(angulo)+origen[1],
+			0
+			])
+		return coord
+	def malla(self,definicion=1):
+		pass
+
+	def circ_punto(self,radio,angulo,color=ORANGE):
+		circulo=Circle(radius=radio,color=color)
+		punto=Dot(self.coord_pol(radio,angulo),color=color)
+		grupo=VGroup(circulo,punto)
+		return grupo
+
+	def proyeccion(self,r1,r2,th,gm):
+		if gm-PI/2>=th:
+			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)+np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
+		else:
+			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)-np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
