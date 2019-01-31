@@ -50,6 +50,7 @@ class CheckSVG(Scene):
             else:
                 self.imagen.set_height(FRAME_HEIGHT)
             self.imagen.scale(self.svg_scale)
+        self.personalize_image()
         if self.flip_svg==True:
             self.imagen.flip()
         if self.show_numbers==True:
@@ -61,7 +62,6 @@ class CheckSVG(Scene):
                 self.color_numbers)
 
         self.return_elements(self.imagen,self.show_elements)
-        self.change_colors(self.imagen)
         for st in self.remove_stroke:
             self.imagen[st].set_stroke(None,0)
         for st in self.show_stroke:
@@ -74,7 +74,7 @@ class CheckSVG(Scene):
     def import_text(self):
         return TexMobject("")
 
-    def change_colors(self,imagen):
+    def personalize_image(self):
         pass
 
     def print_formula(self,text,inverse_scale,direction,exception,buff,color):
@@ -107,7 +107,6 @@ class CheckSVG(Scene):
         for i in adds:
             self.add_foreground_mobjects(formula[i].set_color(self.color_element),
                 TexMobject("%d"%i,color=self.color_element,background_stroke_width=0).scale(self.numbers_scale).next_to(formula[i],self.direction_numbers,buff=self.space_between_numbers))
-
 
 class EscenaContenido2(Scene):
     CONFIG={"camera_config":{"background_color":BLACK},
