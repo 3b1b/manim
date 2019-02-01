@@ -151,3 +151,162 @@ class DeformacionLuz2(MovingCameraScene):
 			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)+np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
 		else:
 			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)-np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
+
+
+class DeformacionLuz3(MovingCameraScene):
+	def construct(self):
+		total_niveles=9
+		r_i=4
+		Dr=0.3
+		th_i=20*DEGREES
+		Dth=10*DEGREES
+		gamma=100*DEGREES
+		c_i=Circle(radius=r_i)
+		p_i=Dot(self.coord_pol(r_i,th_i))
+		#--------------------------------------
+		conjunto_c_p=VGroup()
+		circulos=VGroup()
+		puntos=VGroup()
+		lineas_punto_punto=VGroup()
+		lineas_pasadas=VGroup()
+		lineas_tangentes=VGroup()
+		lineas_perpendiculares=VGroup()
+		#--------------------------------------
+		circulos.add(c_i)
+		puntos.add(p_i)
+		conjunto_c_p.add(VGroup(c_i,p_i))
+		#--------------------------------------
+		for cont in range(total_niveles):
+			linea_centro_punto=Line(circulos[cont].get_center(),puntos[cont].get_center())
+			linea_gamma=Line(LEFT,RIGHT).rotate(gamma+Dth*cont)
+			linea_punto_punto=DashedLine(
+											puntos[cont].get_center(),
+											puntos[cont].get_center()+self.proyeccion(r_i+Dr*cont,
+												 									  r_i+Dr*(cont+1),
+																					  linea_centro_punto.get_angle(),
+																					  gamma+Dth*(cont))*linea_gamma.get_unit_vector()
+											)
+			punto_final=Dot(linea_punto_punto.get_end())
+			circulo_final=Circle(radius=r_i+Dr*(cont+1))
+			circulos.add(circulo_final)
+			puntos.add(punto_final)
+			
+			linea_pasada=linea_punto_punto.copy().rotate(PI,about_point=linea_punto_punto.get_end(),about_edge=linea_punto_punto.get_end())
+			linea_tangente=Line(LEFT,RIGHT).rotate(Line(circulos[cont+1].get_center(),puntos[cont+1].get_center()).get_angle()+PI/2).move_to(puntos[cont+1]).set_stroke(BLUE,2)
+			linea_perpendicular=linea_tangente.copy().rotate(PI/2).set_color(ORANGE)
+
+
+			lineas_punto_punto.add(linea_punto_punto)
+			lineas_tangentes.add(linea_tangente)
+			lineas_pasadas.add(linea_pasada)
+			lineas_perpendiculares.add(linea_perpendicular)
+			conjunto_c_p.add(VGroup(circulo_final,punto_final))
+
+		conjunto_total=VGroup(conjunto_c_p,lineas_punto_punto,lineas_tangentes,lineas_perpendiculares,lineas_pasadas)
+		conjunto_total.shift(DOWN*4).set_stroke(None,2)
+
+		self.add(conjunto_total)
+
+
+
+	def coord_pol(self,radio,angulo,origen=np.array([0,0])):
+		coord=np.array([
+			radio*np.cos(angulo)+origen[0],
+			radio*np.sin(angulo)+origen[1],
+			0
+			])
+		return coord
+
+	def proyeccion(self,r1,r2,th,gm):
+		if gm-PI/2>=th:
+			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)+np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
+		else:
+			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)-np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
+
+class DeformacionLuz4(MovingCameraScene):
+	def construct(self):
+		conj1=self.escenario_capas(
+								total_niveles=9,
+								r_i=4,
+								Dr=0.2,
+								th_i=20*DEGREES,
+								Dth=10*DEGREES,
+								gamma=100*DEGREES
+								)
+		conj2=self.escenario_capas(
+								total_niveles=9,
+								r_i=4,
+								Dr=0.3,
+								th_i=20*DEGREES,
+								Dth=15*DEGREES,
+								gamma=100*DEGREES
+								)
+		conj1.shift(DOWN*4).set_stroke(width=2)
+		conj2.shift(DOWN*4).set_stroke(width=2)
+		self.play(ShowCreation(conj1))
+		self.wait()
+		self.play(Transform(conj1,conj2),run_time=3)
+		self.wait()
+
+	def escenario_capas(self,total_niveles,r_i,Dr,th_i,Dth,gamma):
+		c_i=Circle(radius=r_i)
+		p_i=Dot(self.coord_pol(r_i,th_i))
+		#--------------------------------------
+		conjunto_c_p=VGroup()
+		circulos=VGroup()
+		puntos=VGroup()
+		lineas_punto_punto=VGroup()
+		lineas_pasadas=VGroup()
+		lineas_tangentes=VGroup()
+		lineas_perpendiculares=VGroup()
+		#--------------------------------------
+		circulos.add(c_i)
+		puntos.add(p_i)
+		conjunto_c_p.add(VGroup(c_i,p_i))
+		#--------------------------------------
+		for cont in range(total_niveles):
+			linea_centro_punto=Line(circulos[cont].get_center(),puntos[cont].get_center())
+			linea_gamma=Line(LEFT,RIGHT).rotate(gamma+Dth*cont)
+			linea_punto_punto=DashedLine(
+											puntos[cont].get_center(),
+											puntos[cont].get_center()+self.proyeccion(r_i+Dr*cont,
+												 									  r_i+Dr*(cont+1),
+																					  linea_centro_punto.get_angle(),
+																					  gamma+Dth*(cont))*linea_gamma.get_unit_vector()
+											)
+			punto_final=Dot(linea_punto_punto.get_end())
+			circulo_final=Circle(radius=r_i+Dr*(cont+1))
+			circulos.add(circulo_final)
+			puntos.add(punto_final)
+			
+			linea_pasada=linea_punto_punto.copy().rotate(PI,about_point=linea_punto_punto.get_end(),about_edge=linea_punto_punto.get_end())
+			linea_tangente=Line(LEFT,RIGHT).rotate(Line(circulos[cont+1].get_center(),puntos[cont+1].get_center()).get_angle()+PI/2).move_to(puntos[cont+1]).set_stroke(BLUE,2)
+			linea_perpendicular=linea_tangente.copy().rotate(PI/2).set_color(ORANGE)
+
+
+			lineas_punto_punto.add(linea_punto_punto)
+			lineas_tangentes.add(linea_tangente)
+			lineas_pasadas.add(linea_pasada)
+			lineas_perpendiculares.add(linea_perpendicular)
+			conjunto_c_p.add(VGroup(circulo_final,punto_final))
+
+		conjunto_total=VGroup(conjunto_c_p,lineas_punto_punto,lineas_tangentes,lineas_perpendiculares,lineas_pasadas)
+		#conjunto_total.shift(DOWN*4).set_stroke(None,2)
+
+		return conjunto_total
+
+
+
+	def coord_pol(self,radio,angulo,origen=np.array([0,0])):
+		coord=np.array([
+			radio*np.cos(angulo)+origen[0],
+			radio*np.sin(angulo)+origen[1],
+			0
+			])
+		return coord
+
+	def proyeccion(self,r1,r2,th,gm):
+		if gm-PI/2>=th:
+			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)+np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
+		else:
+			return np.sqrt(r2**2-(r1**2)*(np.cos(gm-th-PI/2))**2)-np.sqrt(r1**2-(r1**2)*(np.cos(gm-th-PI/2))**2)
