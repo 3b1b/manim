@@ -5,14 +5,17 @@ import sys
 import importlib
 
 from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
-from manimlib.constants import PRODUCTION_QUALITY_FRAME_DURATION
+from manimlib.constants import VIDEO_DIR
 from manimlib.config import get_module
 from manimlib.extract_scene import is_child_scene
-from manimlib.utils.file_ops import get_movie_output_directory
 
 
 def get_sorted_scene_classes(module_name):
     module = get_module(module_name)
+    if hasattr(module, "ALL_SCENE_CLASSES"):
+        return module.ALL_SCENE_CLASSES
+    # Otherwise, deduce from the order in which
+    # they're defined in a file
     importlib.import_module(module.__name__)
     line_to_scene = {}
     name_scene_list = inspect.getmembers(
@@ -30,17 +33,19 @@ def get_sorted_scene_classes(module_name):
     ]
 
 
-def stage_animations(module_name):
+def stage_scenes(module_name):
     scene_classes = get_sorted_scene_classes(module_name)
     if len(scene_classes) == 0:
         print("There are no rendered animations from this module")
         return
-    output_directory_kwargs = {
-        "camera_config": PRODUCTION_QUALITY_CAMERA_CONFIG,
-    }
-    animation_dir = get_movie_output_directory(
-        scene_classes[0], **output_directory_kwargs
+    # output_directory_kwargs = {
+    #     "camera_config": PRODUCTION_QUALITY_CAMERA_CONFIG,
+    # }
+    # TODO, fix this
+    animation_dir = os.path.join(
+        VIDEO_DIR, "clacks_solution2", "1440p60"
     )
+    # 
     files = os.listdir(animation_dir)
     sorted_files = []
     for scene_class in scene_classes:
@@ -92,4 +97,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise Exception("No module given.")
     module_name = sys.argv[1]
-    stage_animations(module_name)
+    stage_scenes(module_name)
