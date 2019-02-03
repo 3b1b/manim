@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from active_projects.clacks.question import BlocksAndWallExample
+from old_projects.clacks.question import BlocksAndWallExample
 
 
 class PreviousTwoVideos(BlocksAndWallExample):
@@ -7,7 +7,7 @@ class PreviousTwoVideos(BlocksAndWallExample):
         "sliding_blocks_config": {
             "block1_config": {
                 "mass": 1e2,
-                "velocity": -1,
+                "velocity": -2,
                 "width": 4,
                 "distance": 8,
             },

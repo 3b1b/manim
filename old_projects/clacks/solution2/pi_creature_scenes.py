@@ -49,7 +49,16 @@ class OnAnsweringTwice(TeacherStudentsScene):
 
 class AskAboutEqualMassMomentumTransfer(TeacherStudentsScene):
     def construct(self):
-        pass
+        self.student_says("Why?")
+        self.change_student_modes("confused", "confused")
+        self.wait()
+        self.play(
+            RemovePiCreatureBubble(self.students[2]),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.change_all_student_modes("pondering")
+        self.look_at(self.hold_up_spot + 2 * UP)
+        self.wait(5)
 
 
 class ComplainAboutRelevanceOfAnalogy(TeacherStudentsScene):
@@ -76,3 +85,34 @@ class ComplainAboutRelevanceOfAnalogy(TeacherStudentsScene):
             self.hold_up_spot + UP,
         )
         self.wait(3)
+
+
+class ReplaceOneTrickySceneWithAnother(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "This replaces one tricky\\\\problem with another",
+            student_index=1,
+            target_mode="sassy",
+            added_anims=[self.teacher.change, "happy"],
+        )
+        self.change_student_modes("erm", "sassy", "angry")
+        self.wait(4)
+        self.play(
+            RemovePiCreatureBubble(self.students[1]),
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes(*3 * ["pondering"])
+        )
+        self.look_at(self.hold_up_spot + 2 * UP)
+        self.wait(5)
+
+
+class NowForTheGoodPart(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            r"Now for the \\ good part!",
+            target_mode="hooray",
+            added_anims=[self.get_student_changes(
+                "hooray", "surprised", "happy"
+            )],
+        )
+        self.wait(2)

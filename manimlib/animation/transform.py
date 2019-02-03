@@ -29,8 +29,10 @@ class Transform(Animation):
         # Copy target_mobject so as to not mess with caller
         self.original_target_mobject = target_mobject
         target_mobject = target_mobject.copy()
-        mobject.align_data(target_mobject)
+        target_mobject.update()
         self.target_mobject = target_mobject
+
+        mobject.align_data(target_mobject)
         digest_config(self, kwargs)
         self.init_path_func()
 

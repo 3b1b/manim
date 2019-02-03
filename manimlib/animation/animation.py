@@ -29,6 +29,9 @@ class Animation(object):
         mobject = instantiate(mobject)
         assert(isinstance(mobject, Mobject))
         digest_config(self, kwargs, locals())
+        # Make sure it's all up to date
+        mobject.update()
+        # Keep track of where it started
         self.starting_mobject = self.mobject.copy()
         if self.rate_func is None:
             self.rate_func = (lambda x: x)

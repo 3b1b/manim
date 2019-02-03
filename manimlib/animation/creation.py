@@ -5,7 +5,6 @@ from manimlib.animation.transform import Transform
 from manimlib.constants import *
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import counterclockwise_path

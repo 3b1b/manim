@@ -307,6 +307,7 @@ class Banner(Scene):
         "date": "Sunday, February 3rd",
         "message_scale_val": 0.9,
         "add_supporter_note": False,
+        "pre_date_text": "Next video on ",
     }
 
     def __init__(self, **kwargs):
@@ -363,7 +364,8 @@ class Banner(Scene):
 
     def get_date_message(self):
         return TextMobject(
-            "Next video on ", self.date,
+            self.pre_date_text,
+            self.date,
             tex_to_color_map={self.date: YELLOW},
         )
 

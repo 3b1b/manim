@@ -403,10 +403,11 @@ class Line(VMobject):
         start, end = self.get_start_and_end()
         return angle_of_vector(end - start)
 
-    # def put_start_and_end_on(self, new_start, new_end):
-    #     self.set_start_and_end(new_start, new_end)
-    #     self.buff = 0
-    #     self.generate_points()
+    def set_angle(self, angle):
+        self.rotate(
+            angle - self.get_angle(),
+            about_point=self.get_start(),
+        )
 
     def put_start_and_end_on(self, new_start, new_end):
         self.start = new_start

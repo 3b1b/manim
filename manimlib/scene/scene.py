@@ -528,6 +528,7 @@ class Scene(Container):
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         dt = 1 / self.camera.frame_rate
+        self.continual_update(dt=0)  # Any problems with this?
         if self.should_continually_update():
             time_progression = self.get_wait_time_progression(duration, stop_condition)
             for t in time_progression:

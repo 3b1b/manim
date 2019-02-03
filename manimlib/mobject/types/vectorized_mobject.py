@@ -32,9 +32,9 @@ class VMobject(Mobject):
         "background_stroke_width": 0,
         # When a color c is set, there will be a second color
         # computed based on interpolating c to WHITE by with
-        # sheen, and the display will gradient to this
+        # sheen_factor, and the display will gradient to this
         # secondary color in the direction of sheen_direction.
-        "sheen": 0.0,
+        "sheen_factor": 0.0,
         "sheen_direction": UL,
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
@@ -71,7 +71,7 @@ class VMobject(Mobject):
             family=self.propagate_style_to_family,
         )
         self.set_sheen(
-            factor=self.sheen,
+            factor=self.sheen_factor,
             direction=self.sheen_direction,
             family=self.propagate_style_to_family
         )
@@ -81,7 +81,7 @@ class VMobject(Mobject):
         """
         First arg can be either a color, or a tuple/list of colors.
         Likewise, opacity can either be a float, or a tuple of floats.
-        If self.sheen is not zero, and only
+        If self.sheen_factor is not zero, and only
         one color was passed in, a second slightly light color
         will automatically be added for the gradient
         """
@@ -92,10 +92,10 @@ class VMobject(Mobject):
             for c, o in zip(*make_even(colors, opacities))
         ])
 
-        sheen = self.get_sheen()
-        if sheen != 0 and len(rgbas) == 1:
+        sheen_factor = self.get_sheen_factor()
+        if sheen_factor != 0 and len(rgbas) == 1:
             light_rgbas = np.array(rgbas)
-            light_rgbas[:, :3] += sheen
+            light_rgbas[:, :3] += sheen_factor
             clip_in_place(light_rgbas, 0, 1)
             rgbas = np.append(rgbas, light_rgbas, axis=0)
         return rgbas
@@ -160,8 +160,10 @@ class VMobject(Mobject):
                   fill_opacity=None,
                   stroke_color=None,
                   stroke_width=None,
+                  stroke_opacity=None,
                   background_stroke_color=None,
                   background_stroke_width=None,
+                  background_stroke_opacity=None,
                   sheen_factor=None,
                   sheen_direction=None,
                   background_image_file=None,
@@ -174,11 +176,13 @@ class VMobject(Mobject):
         self.set_stroke(
             color=stroke_color,
             width=stroke_width,
+            opacity=stroke_opacity,
             family=family,
         )
         self.set_background_stroke(
             color=background_stroke_color,
             width=background_stroke_width,
+            opacity=background_stroke_opacity,
             family=family,
         )
         if sheen_factor:
@@ -198,7 +202,7 @@ class VMobject(Mobject):
             "stroke_width": self.get_stroke_width(),
             "background_stroke_color": self.get_stroke_colors(background=True),
             "background_stroke_width": self.get_stroke_width(background=True),
-            "sheen_factor": self.get_sheen(),
+            "sheen_factor": self.get_sheen_factor(),
             "sheen_direction": self.get_sheen_direction(),
             "background_image_file": self.get_background_image_file(),
         }
@@ -309,12 +313,12 @@ class VMobject(Mobject):
         if family:
             for submob in self.submobjects:
                 submob.set_sheen(factor, direction, family)
-        self.sheen = factor
+        self.sheen_factor = factor
         if direction is not None:
             # family set to false because recursion will
             # already be handled above
             self.set_sheen_direction(direction, family=False)
-        # Reset color to put sheen into effect
+        # Reset color to put sheen_factor into effect
         if factor != 0:
             self.set_stroke(self.get_stroke_color(), family=family)
             self.set_fill(self.get_fill_color(), family=family)
@@ -323,8 +327,8 @@ class VMobject(Mobject):
     def get_sheen_direction(self):
         return np.array(self.sheen_direction)
 
-    def get_sheen(self):
-        return self.sheen
+    def get_sheen_factor(self):
+        return self.sheen_factor
 
     def get_gradient_start_and_end_points(self):
         if self.shade_in_3d:
@@ -613,7 +617,7 @@ class VMobject(Mobject):
             "stroke_width",
             "background_stroke_width",
             "sheen_direction",
-            "sheen",
+            "sheen_factor",
         ]
         for attr in attrs:
             setattr(self, attr, interpolate(
@@ -694,7 +698,7 @@ class VectorizedPoint(VMobject):
         return self.artificial_height
 
     def get_location(self):
-        return self.points[0]
+        return np.array(self.points[0])
 
     def set_location(self, new_loc):
         self.set_points(np.array([new_loc]))
