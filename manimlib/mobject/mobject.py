@@ -125,6 +125,7 @@ class Mobject(Container):
         copy_mobject.submobjects = [
             submob.copy() for submob in self.submobjects
         ]
+        copy_mobject.updaters = list(self.updaters)
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value in family and value is not self:
@@ -147,13 +148,14 @@ class Mobject(Container):
     # Updating
 
     def update(self, dt=0, recursive=True):
-        if not self.updating_suspended:
-            for updater in self.updaters:
-                parameters = get_parameters(updater)
-                if "dt" in parameters:
-                    updater(self, dt)
-                else:
-                    updater(self)
+        if self.updating_suspended:
+            return self
+        for updater in self.updaters:
+            parameters = get_parameters(updater)
+            if "dt" in parameters:
+                updater(self, dt)
+            else:
+                updater(self)
         if recursive:
             for submob in self.submobjects:
                 submob.update(dt, recursive)
@@ -182,8 +184,11 @@ class Mobject(Container):
             self.updaters.remove(update_function)
         return self
 
-    def clear_updaters(self):
+    def clear_updaters(self, recursive=True):
         self.updaters = []
+        if recursive:
+            for submob in self.submobjects:
+                submob.clear_updaters()
         return self
 
     def suspend_updating(self, recursive=True):
