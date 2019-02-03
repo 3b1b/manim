@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-from active_projects.clacks.solution2.position_phase_space import ShowMomentumConservation
+from old_projects.clacks.solution2.position_phase_space import ShowMomentumConservation
 
 
 class ConnectionToOptics(Scene):

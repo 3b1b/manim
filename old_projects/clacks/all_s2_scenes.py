@@ -1,10 +1,10 @@
-from active_projects.clacks import question
-from active_projects.clacks.solution2 import block_collision_scenes
-from active_projects.clacks.solution2 import mirror_scenes
-from active_projects.clacks.solution2 import pi_creature_scenes
-from active_projects.clacks.solution2 import position_phase_space
-from active_projects.clacks.solution2 import simple_scenes
-from active_projects.clacks.solution2 import wordy_scenes
+from old_projects.clacks import question
+from old_projects.clacks.solution2 import block_collision_scenes
+from old_projects.clacks.solution2 import mirror_scenes
+from old_projects.clacks.solution2 import pi_creature_scenes
+from old_projects.clacks.solution2 import position_phase_space
+from old_projects.clacks.solution2 import simple_scenes
+from old_projects.clacks.solution2 import wordy_scenes
 
 OUTPUT_DIRECTORY = "clacks_solution2"
 ALL_SCENE_CLASSES = [

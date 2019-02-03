@@ -1,7 +1,7 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.lost_lecture import ShowWord
-from active_projects.clacks.solution2.mirror_scenes import ReflectWorldThroughMirrorNew
-from active_projects.clacks.question import Thumbnail
+from old_projects.clacks.solution2.mirror_scenes import ReflectWorldThroughMirrorNew
+from old_projects.clacks.question import Thumbnail
 
 
 class WrapperScene(Scene):
