@@ -13,7 +13,7 @@ class Block(Square):
         "stroke_color": WHITE,
         "fill_color": None,
         "sheen_direction": UL,
-        "sheen": 0.5,
+        "sheen_factor": 0.5,
         "sheen_direction": UL,
     }
 
@@ -43,7 +43,7 @@ class Block(Square):
     def mass_to_color(self, mass):
         colors = [
             LIGHT_GREY,
-            BLUE_B,
+            BLUE_D,
             BLUE_D,
             BLUE_E,
             BLUE_E,
@@ -225,7 +225,7 @@ class ClackFlashes(ContinualAnimation):
         ContinualAnimation.__init__(self, group, **kwargs)
 
     def update_mobject(self, dt):
-        total_time = self.external_time
+        total_time = self.get_time()
         group = self.mobject
         for flash in self.flashes:
             if flash.start_time < total_time < flash.end_time:
@@ -237,6 +237,9 @@ class ClackFlashes(ContinualAnimation):
             else:
                 if flash.mobject in group:
                     group.remove(flash.mobject)
+
+    def get_time(self):
+        return self.external_time
 
 
 class Wall(Line):
@@ -409,6 +412,10 @@ class NameIntro(Scene):
                 brown.to_edge, RIGHT, {"buff": 0},
                 rate_func=None,
             )
+        )
+        self.play(
+            Flash(brown.get_right(), run_time=flash_time),
+            Restore(brown, rate_func=None)
         )
 
 
@@ -1558,16 +1565,16 @@ class Thumbnail(BlocksAndWallExample, MovingCameraScene):
         BlocksAndWallExample.setup(self)
 
     def construct(self):
-        # self.camera_frame.shift(0.9 * UP)
-        self.mobjects.insert(
-            0,
-            FullScreenFadeRectangle(
-                color=DARK_GREY,
-                opacity=0.5,
-                sheen_direction=UL,
-                sheen=0.5,
-            ),
-        )
+        self.camera_frame.shift(0.9 * UP)
+        # self.mobjects.insert(
+        #     0,
+        #     FullScreenFadeRectangle(
+        #         color=DARK_GREY,
+        #         opacity=0.5,
+        #         sheen_direction=UL,
+        #         sheen=0.5,
+        #     ),
+        # )
         self.thicken_lines()
         self.grow_labels()
         self.add_vector()
@@ -1587,7 +1594,7 @@ class Thumbnail(BlocksAndWallExample, MovingCameraScene):
 
     def add_vector(self):
         blocks = self.blocks
-        arrow = Vector(
+        arrow = self.arrow = Vector(
             2.5 * LEFT,
             color=RED,
             rectangular_stem_width=1.5,
@@ -1600,7 +1607,9 @@ class Thumbnail(BlocksAndWallExample, MovingCameraScene):
         self.add(arrow)
 
     def add_text(self):
-        question = TextMobject("How many\\\\collisions?")
+        question = self.question = TextMobject(
+            "How many\\\\collisions?"
+        )
         question.scale(2.5)
         question.to_edge(UP)
         question.set_color(YELLOW)
