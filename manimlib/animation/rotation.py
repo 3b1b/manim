@@ -44,7 +44,7 @@ class Rotate(Transform):
         if "path_arc_axis" not in kwargs:
             kwargs["path_arc_axis"] = axis
         digest_config(self, kwargs, locals())
-        target = mobject.copy()
+        target = mobject.deepcopy()
         if self.in_place:
             self.about_point = mobject.get_center()
         target.rotate(
