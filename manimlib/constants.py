@@ -244,6 +244,19 @@ COLOR_MAP = {
     "M_TEXTO_VERDE": "#94942b",
     "M_FONDO_GRIS": "#cacaca",
     "M_FONDO_VERDE": "#caca94",
+    "N_FONDO_CLARO":"#3f3f3f",
+    "N_AZUL_CLARO":"#389ebd",
+    "N_VERDE_CLARO":"#7f7f00",
+    "N_FONDO_OSCURO":"#232323",
+    "N_FONDO_MEDIO":"#303030",
+    "N_CYAN_1":"#4282a1",
+    "N_CYAN_2":"#476e82",
+    "N_ROJO_1":"#bd3019",
+    "N_ROJO_2":"#8c2311",
+    "N_FONDO_MORADO":"#ab97b5",
+    "N_MORADO_OSCURO":"#7f7fff",
+    "N_FONDO_NARANJA":"#c58f7f",
+    "N_FONDO_VERDE_PASTEL":"#cce1d4",
 }
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
