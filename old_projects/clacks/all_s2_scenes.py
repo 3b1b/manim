@@ -6,7 +6,7 @@ from old_projects.clacks.solution2 import position_phase_space
 from old_projects.clacks.solution2 import simple_scenes
 from old_projects.clacks.solution2 import wordy_scenes
 
-OUTPUT_DIRECTORY = "clacks_solution2"
+OUTPUT_DIRECTORY = "clacks/solution2"
 ALL_SCENE_CLASSES = [
     question.NameIntro,
     block_collision_scenes.IntroducePreviousTwoVideos,

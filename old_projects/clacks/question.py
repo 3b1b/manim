@@ -1,6 +1,9 @@
 from big_ol_pile_of_manim_imports import *
 
 
+OUTPUT_DIRECTORY = "clacks/question"
+
+
 class Block(Square):
     CONFIG = {
         "mass": 1,
@@ -741,6 +744,19 @@ class BlocksAndWallExampleMass1e2(BlocksAndWallExample):
             "block1_config": {
                 "mass": 1e2,
                 "velocity": -0.6,
+            }
+        },
+        "wait_time": 25,
+    }
+
+
+class BlocksAndWallExampleMassSameSpeedAtEnd(BlocksAndWallExample):
+    CONFIG = {
+        "sliding_blocks_config": {
+            "block1_config": {
+                "mass": 1 / np.tan(PI / 5)**2,
+                "velocity": -1,
+                "label_text": "$\\frac{1}{\\tan(\\pi / 5)^2}$ kg"
             }
         },
         "wait_time": 25,

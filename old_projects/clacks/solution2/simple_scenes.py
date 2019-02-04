@@ -770,6 +770,18 @@ class ClacksSolution2Thumbnail(Scene):
         self.add_scene1()
         self.add_scene2()
 
+        arrow = Arrow(
+            self.block_word.get_top(),
+            self.light_dot.get_bottom(),
+            tip_length=0.75,
+            rectangular_stem_width=0.2,
+            color=RED,
+            buff=0.5,
+        )
+        arrow.add_to_back(arrow.copy().set_stroke(BLACK, 20))
+        self.add(arrow)
+        return
+
         arrow = TexMobject("\\Updownarrow")
         arrow.set_height(2)
         arrow.set_color(YELLOW)
@@ -785,13 +797,23 @@ class ClacksSolution2Thumbnail(Scene):
                 },
             }
         )
-        VGroup(*scene1.mobjects).shift(0.9 * DOWN)
+        group = Group(*scene1.mobjects)
+        group.scale(0.75, about_point=ORIGIN)
+        group.shift(1.5 * DOWN + 3 * LEFT)
         scene1.remove(scene1.question)
         self.add(*scene1.mobjects)
 
-        rect = FullScreenFadeRectangle(fill_opacity=1)
-        rect.shift(FRAME_HEIGHT * UP / 2)
-        self.add(rect)
+        black_rect = FullScreenFadeRectangle(fill_opacity=1)
+        black_rect.shift(3.5 * UP)
+        self.add(black_rect)
+
+        word = TextMobject("Blocks")
+        word.set_color(YELLOW)
+        word.scale(3)
+        word.to_corner(DR, buff=LARGE_BUFF)
+        word.shift(0.5 * LEFT)
+        self.block_word = word
+        self.add(word)
 
     def add_scene2(self):
         scene2 = ReflectWorldThroughMirrorNew(
@@ -800,12 +822,12 @@ class ClacksSolution2Thumbnail(Scene):
                 "write_to_movie": False,
             },
             end_at_animation_number=18,
-            center=1.5 * UP,
+            # center=1.5 * DOWN,
+            center=ORIGIN,
         )
         worlds = VGroup(scene2.world, *scene2.reflected_worlds)
         mirrors = VGroup(*[rw[1] for rw in worlds])
         mirrors.set_stroke(width=5)
-        randys = VGroup(*[rw[-1] for rw in worlds])
         triangles = VGroup(*[rw[0] for rw in worlds])
         trajectories = VGroup(
             scene2.trajectory,
@@ -832,10 +854,24 @@ class ClacksSolution2Thumbnail(Scene):
             beam.update(0.5)
             flashes.add(beam.mobject)
 
-        dot = Dot(color=YELLOW, radius=0.1)
+        dot = self.light_dot = Dot(color=YELLOW, radius=0.1)
         dot.move_to(flashes[0].get_left())
         flashes.add(dot)
 
-        self.add(mirrors, triangles, randys)
-        self.add(trajectories[0].set_stroke(width=3))
+        self.add(triangles, mirrors)
+        # self.add(randys)
+        self.add(trajectories[0].set_stroke(width=2))
         self.add(flashes)
+
+        word = TextMobject("Light beam")
+        word.scale(3.5)
+        word.set_color(YELLOW)
+        # word.set_stroke(BLACK, 25, background=True)
+        word.add_to_back(word.copy().set_stroke(
+            BLACK, 25,
+        ))
+        word.next_to(dot, UR)
+        word.shift(-word.get_center()[0] * RIGHT)
+        word.shift(SMALL_BUFF * RIGHT)
+        self.light_word = word
+        self.add(word)

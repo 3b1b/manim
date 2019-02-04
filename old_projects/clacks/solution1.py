@@ -3,6 +3,9 @@ from old_projects.clacks.question import *
 from old_projects.div_curl import ShowTwoPopulations
 
 
+OUTPUT_DIRECTORY = "clacks/solution1"
+
+
 class FromPuzzleToSolution(MovingCameraScene):
     def construct(self):
         big_rect = FullScreenFadeRectangle()
