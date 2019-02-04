@@ -72,7 +72,7 @@ class ComputationalNetwork(MovingCameraScene):
         )
 
         fg_group = VGroup(f_formula.group, g_formula.group)
-        fg_group.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        fg_group.arrange(DOWN, buff=LARGE_BUFF)
         fg_group.to_edge(UP)
         x.group.next_to(fg_group, LEFT, buff=2)
         h_formula.group.next_to(fg_group, RIGHT, buff=2)
@@ -413,7 +413,7 @@ class ComputationalNetwork(MovingCameraScene):
             TexMobject("+"),
             dg_dx.target, dh_dg.target
         )
-        rhs.arrange_submobjects(
+        rhs.arrange(
             RIGHT,
             buff=2 * SMALL_BUFF,
         )

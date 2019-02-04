@@ -114,7 +114,7 @@ class OtherContexts(PiCreatureScene):
             "Riemann Zeta function and primes",
             "Differential equations",
         ])))
-        items.arrange_submobjects(
+        items.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -613,7 +613,7 @@ class BreakApartSum(Scene):
             for freq in self.frequencies
         ])
         pure_graphs.set_color_by_gradient(BLUE, RED)
-        pure_graphs.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        pure_graphs.arrange(DOWN, buff = MED_LARGE_BUFF)
         h_line = DashedLine(6*LEFT, 6*RIGHT)
 
         self.play(
@@ -739,7 +739,7 @@ class MachineThatTreatsOneFrequencyDifferently(Scene):
             Vector(DOWN), TextMobject("???").scale(1.5), Vector(DOWN)
         )
         group.set_color(WHITE)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.next_to(graph, DOWN)
         self.add(group)
 
@@ -1276,7 +1276,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
             DecimalNumber(freq, num_decimal_places=2),
             TextMobject("cycles/second")
         )
-        winding_freq_label.arrange_submobjects(RIGHT)
+        winding_freq_label.arrange(RIGHT)
         winding_freq_label.next_to(
             self.circle_plane, RIGHT, aligned_edge = UP
         )
@@ -2030,7 +2030,7 @@ class ShowCommutativeDiagram(ShowLinearity):
         ta_group = VGroup(
             time_axes, time_axes.deepcopy(), time_axes.deepcopy(),
         )
-        ta_group.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        ta_group.arrange(DOWN, buff = MED_LARGE_BUFF)
         ta_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
 
         frequency_axes = Axes(**self.frequency_axes_config)
@@ -3978,7 +3978,7 @@ class ShowUncertaintyPrinciple(Scene):
         group = VGroup(
             title, top_axes, arrow, bottom_axes
         )
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         title.shift(MED_SMALL_BUFF*UP)
         group.to_edge(UP)
         fourier_word = TextMobject("Fourier transform")
@@ -4117,7 +4117,7 @@ class PuzzleDescription(Scene):
         VGroup(lines[2][1][4], lines[2][1][8]).set_color(MAROON_B)
         lines[2][1][10].set_color(BLUE_C)
         lines.scale(1.25)
-        lines.arrange_submobjects(DOWN, buff = LARGE_BUFF, aligned_edge = LEFT)
+        lines.arrange(DOWN, buff = LARGE_BUFF, aligned_edge = LEFT)
 
         lines.to_corner(UP+RIGHT)
 
@@ -4262,7 +4262,7 @@ class Thumbnail(Scene):
             pol_graph.match_color(graph)
             pol_graph.set_height(2)
             pol_graphs.add(pol_graph)
-        pol_graphs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        pol_graphs.arrange(RIGHT, buff = LARGE_BUFF)
         pol_graphs.set_color_by_gradient(BLUE_C, YELLOW)
         pol_graphs.match_width(graph)
         pol_graphs.set_stroke(width = 2)

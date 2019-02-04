@@ -351,7 +351,7 @@ class Introduction(TeacherStudentsScene):
         calculus.generate_target()
         invent = TextMobject("Invent")
         invent_calculus = VGroup(invent, calculus.target)
-        invent_calculus.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        invent_calculus.arrange(RIGHT, buff = MED_SMALL_BUFF)
         invent_calculus.next_to(student, UP, 1.5*LARGE_BUFF)
         invent_calculus.shift(RIGHT)
         arrow = Arrow(invent_calculus, student)
@@ -464,7 +464,7 @@ class ProductRuleDiagram(Scene):
         g_label.generate_target()
         fg_group = VGroup(f_label.target, g_label.target)
         fg_group.generate_target()
-        fg_group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        fg_group.target.arrange(RIGHT, buff = SMALL_BUFF)
         fg_group.target.move_to(rect.get_center())
 
         for mob in df_brace, df_label, dg_brace, dg_label:
@@ -573,7 +573,7 @@ class IntroduceCircle(CircleScene):
             self.get_unwrapped(ring, to_edge = None)
             for ring in rings
         ])
-        unwrapped_rings.arrange_submobjects(UP, buff = SMALL_BUFF)
+        unwrapped_rings.arrange(UP, buff = SMALL_BUFF)
         unwrapped_rings.move_to(self.unwrapped_tip, UP)
         ring_anim_kwargs = {
             "run_time" : 3,
@@ -853,7 +853,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         )
         two_pi_r_dr = VGroup(width_label, dr_label).copy()
         two_pi_r_dr.generate_target()
-        two_pi_r_dr.target.arrange_submobjects(
+        two_pi_r_dr.target.arrange(
             RIGHT, buff = SMALL_BUFF, aligned_edge = DOWN
         )
         two_pi_r_dr.target.next_to(approx, RIGHT, aligned_edge = DOWN)
@@ -1175,7 +1175,7 @@ class GraphRectangles(CircleScene, GraphScene):
             *foreground_animations
         )
         self.play(
-            self.dr_group.arrange_submobjects, DOWN,
+            self.dr_group.arrange, DOWN,
             self.dr_group.next_to, highlighted_ring, 
             DOWN, SMALL_BUFF
         )
@@ -1251,7 +1251,7 @@ class GraphRectangles(CircleScene, GraphScene):
         approximation = TextMobject("= Approximation")
         approximation.scale(0.8)
         group = VGroup(rect.target, approximation)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.to_edge(RIGHT)
 
         self.play(
@@ -1409,7 +1409,7 @@ class GraphRectangles(CircleScene, GraphScene):
         last_ring = rings[-1]
 
         arranged_group.add(last_ring.target)
-        arranged_group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        arranged_group.arrange(DOWN, buff = SMALL_BUFF)
         arranged_group.set_height(FRAME_HEIGHT-1)
         arranged_group.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
         for mob in tex_mobs:
@@ -1518,7 +1518,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
         down_arrow = TexMobject("\\Downarrow")
         sum_words = TextMobject("Sum of many \\\\ small values")
         integral_condition = VGroup(hard_problem, down_arrow, sum_words)
-        integral_condition.arrange_submobjects(DOWN)
+        integral_condition.arrange(DOWN)
         integral_condition.scale(0.8)
         integral_condition.to_corner(UP+RIGHT)
         
@@ -1706,7 +1706,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
     def full_precision(self):
         words = TextMobject("Area under \\\\ a graph")
         group = VGroup(TexMobject("\\Downarrow"), words)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.set_color(YELLOW)
         group.scale(0.8)
         group.next_to(self.integral_condition, DOWN)

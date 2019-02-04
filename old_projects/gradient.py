@@ -120,7 +120,7 @@ class ShowGradient(Scene):
             ["\\partial f / \\partial y"],
         ], v_buff=1)
         gradient = VGroup(lhs, vector)
-        gradient.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        gradient.arrange(RIGHT, buff=SMALL_BUFF)
         gradient.scale(1.5)
 
         del_x, del_y = partials = vector.get_entries()
@@ -342,7 +342,7 @@ class ShowDerivativeAtExamplePoint(Scene):
             TexMobject("="),
             result_vector
         )
-        gradient.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        gradient.arrange(RIGHT, buff=SMALL_BUFF)
 
         func_tex.to_edge(UP)
         gradient.next_to(func_tex, DOWN, buff=LARGE_BUFF)
@@ -359,7 +359,7 @@ class ShowDerivativeAtExamplePoint(Scene):
             TexMobject("="),
             example_rhs,
         )
-        example.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        example.arrange(RIGHT, buff=SMALL_BUFF)
         example.next_to(gradient, DOWN, LARGE_BUFF)
 
         self.add(func_tex, gradient)

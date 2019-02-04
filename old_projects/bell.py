@@ -555,7 +555,7 @@ class AngleToProbabilityChart(Scene):
             TexMobject(str(angle) + "^\\circ")
             for angle in angles
         ])
-        angle_mobs.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        angle_mobs.arrange(DOWN, buff = MED_LARGE_BUFF)
         angle_mobs.next_to(left_title, DOWN, LARGE_BUFF)
 
         probs = [
@@ -1758,7 +1758,7 @@ class VennDiagramProofByContradiction(Scene):
             ),
             TexMobject("+\\, N(", "A", "\\checkmark", ",", "B", ")"),
         )
-        terms.arrange_submobjects(RIGHT)
+        terms.arrange(RIGHT)
         terms.to_edge(UP)
         for term, index, group in zip(terms, [-3, -2, -2], photon_groups):
             term.set_color_by_tex("checkmark", "#00ff00")
@@ -2201,7 +2201,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             TexMobject("N(", "B", "\\checkmark", ",", "C", ")"),
             TexMobject("N(", "A", "\\checkmark", ",", "B", ")"),
         )
-        inequality.arrange_submobjects(RIGHT)
+        inequality.arrange(RIGHT)
         for tex in inequality:
             tex.set_color_by_tex("checkmark", "#00ff00")
             if len(tex) > 1:

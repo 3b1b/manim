@@ -138,7 +138,7 @@ class BreakUp2To256(PiCreatureScene):
             )
             for x in range(8)
         ])
-        target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        target.arrange(RIGHT, buff = SMALL_BUFF)
         target.to_edge(UP)
         target.set_width(FRAME_WIDTH - LARGE_BUFF)
         parens = VGroup(*it.chain(*[
@@ -210,7 +210,7 @@ class MainBreakdown(Scene):
             )
             top_line.add(mob)
             four_billions.add(mob[1])
-        top_line.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        top_line.arrange(RIGHT, buff = SMALL_BUFF)
         top_line.set_width(FRAME_WIDTH - LARGE_BUFF)
         top_line.to_edge(UP)
         four_billions.set_color(YELLOW)
@@ -239,7 +239,7 @@ class MainBreakdown(Scene):
             TextMobject("hash")
             for x in range(10)
         ])
-        hash_names.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        hash_names.arrange(DOWN, buff = MED_SMALL_BUFF)
         hash_names.next_to(name, RIGHT, buff = 2)
 
         paths = VGroup()
@@ -318,7 +318,7 @@ class MainBreakdown(Scene):
 
         self.play(FadeIn(laptop))
         self.play(
-            gpus.arrange_submobjects, RIGHT, SMALL_BUFF,
+            gpus.arrange, RIGHT, SMALL_BUFF,
             gpus.next_to, rate_words, UP,
             gpus.to_edge, LEFT
         )
@@ -560,13 +560,13 @@ class MainBreakdown(Scene):
             VGroup(*[
                 mobject.copy().set_height(0.25)
                 for x in range(self.n_group_rows)
-            ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
+            ]).arrange(DOWN, buff = SMALL_BUFF)
             for y in range(self.n_group_cols-1)
         ])
         dots = TexMobject("\\dots")
         group.add(dots)
         group.add(*[group[0].copy() for x in range(2)])
-        group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff = SMALL_BUFF)
         group.set_height(FRAME_Y_RADIUS)
         max_width = 1.25*FRAME_X_RADIUS
         if group.get_width() > max_width:
@@ -811,9 +811,9 @@ class QAndA(PiCreatureScene):
         dots = VGroup(*[
             VGroup(*[
                 Dot() for x in range(rows)
-            ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
+            ]).arrange(DOWN, buff = SMALL_BUFF)
             for y in range(cols)
-        ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        ]).arrange(RIGHT, buff = SMALL_BUFF)
         dots.set_width(FRAME_WIDTH - 2*LARGE_BUFF)
         dots.next_to(self.pi_creature, UP)
         dots = VGroup(*it.chain(*dots))

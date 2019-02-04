@@ -26,7 +26,7 @@ class Announcements(PiCreatureScene):
                 "The case against Net Neutrality?",
             ]
         ])
-        announcements.arrange_submobjects(
+        announcements.arrange(
             DOWN, 
             buff = LARGE_BUFF,
             aligned_edge = LEFT,
@@ -75,7 +75,7 @@ class PowersOfTwo(Scene):
                 self.add(mob)
             m1, m2 = mob.copy(), mob.copy()
             group = VGroup(m1, m2)
-            group.arrange_submobjects(
+            group.arrange(
                 vect, buff = SMALL_BUFF
             )
             if group.get_height() > max_height:

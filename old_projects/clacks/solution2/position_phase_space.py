@@ -1173,7 +1173,7 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
             TexMobject("\\ne").rotate(90 * DEGREES),
             TextMobject("Angle of reflection")
         )
-        result.arrange_submobjects(DOWN)
+        result.arrange(DOWN)
         result.set_stroke(BLACK, 5, background=True)
         return result
 
@@ -1266,7 +1266,7 @@ class RescaleCoordinates(PositionPhaseSpaceScene, MovingCameraScene):
                 block.label.copy(),
             )
             group.generate_target()
-            group.target.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            group.target.arrange(RIGHT, buff=SMALL_BUFF)
             group.target.next_to(block, vect)
             group[1].scale(0)
             group[1].move_to(group.target[1])
@@ -1714,7 +1714,7 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
             magnitude_bars[0], big_ps_vect,
             magnitude_bars[1], rhs
         )
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.next_to(corner_rect.get_corner(UL), DR)
 
         new_rhs = TexMobject(
@@ -1863,7 +1863,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
             new_eq[2][2:].set_color(BLUE)
             new_eq.submobjects = [new_eq[i] for i in [0, 1, 3, 2, 4]]
 
-        eqs_targets.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        eqs_targets.arrange(DOWN, buff=LARGE_BUFF)
         eqs_targets.move_to(RIGHT).to_edge(UP)
         for eq, new_eq in zip(eqs_targets, new_eqs):
             new_eq.move_to(eq)
@@ -1891,11 +1891,11 @@ class ShowMomentumConservation(IntroduceVelocityVector):
             x_eq.target[4],
             x_eq.target[3],
             x_eq.target[:3],
-        ).arrange_submobjects(RIGHT)
+        ).arrange(RIGHT)
         for p1, p2 in zip(x_eq, x_eq.target):
             p2.align_to(p1, DOWN)
         group = VGroup(y_eq.target, equals, x_eq.target)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         x_eq.target.align_to(y_eq.target, DOWN)
         equals.align_to(y_eq.target[3], DOWN)
         group.to_edge(UP, buff=MED_SMALL_BUFF)
@@ -2347,7 +2347,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         dot_product = VGroup(
             sqrty_m, dot, deriv_array, rhs
         )
-        dot_product.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        dot_product.arrange(RIGHT, buff=SMALL_BUFF)
         return dot_product
 
 

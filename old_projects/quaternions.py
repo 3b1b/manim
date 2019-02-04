@@ -385,7 +385,7 @@ class RubiksCube(VGroup):
             self.create_square(color)
             for x in range(9)
         ])
-        squares.arrange_submobjects_in_grid(
+        squares.arrange_in_grid(
             3, 3,
             buff=0
         )
@@ -701,7 +701,7 @@ class QuaternionHistory(Scene):
             cross_rhs
         )
         for product in dot_product, cross_product:
-            product.arrange_submobjects(RIGHT, buff=2 * SMALL_BUFF)
+            product.arrange(RIGHT, buff=2 * SMALL_BUFF)
             product.set_height(1.5)
         dot_product.next_to(date, DOWN, buff=MED_LARGE_BUFF)
         dot_product.to_edge(LEFT, buff=LARGE_BUFF)
@@ -739,7 +739,7 @@ class QuaternionHistory(Scene):
             for color in colors
         ])
         students.set_height(2)
-        students.arrange_submobjects(RIGHT)
+        students.arrange(RIGHT)
         students.set_width(FRAME_WIDTH - hamilton.get_width() - 1)
         students.to_corner(DL)
 
@@ -769,7 +769,7 @@ class QuaternionHistory(Scene):
             image_labels.add(label)
             images.add(image)
             images_with_labels.add(Group(image, label))
-        images_with_labels.arrange_submobjects(RIGHT)
+        images_with_labels.arrange(RIGHT)
         images_with_labels.next_to(hamilton, LEFT, LARGE_BUFF)
         images_with_labels.shift(MED_LARGE_BUFF * DOWN)
         society_title = TextMobject("Quaternion society")
@@ -962,7 +962,7 @@ class QuaternionHistory(Scene):
             quotes.add(quote)
             images_with_quotes.add(Group(image, label, quote))
 
-        images_with_quotes.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        images_with_quotes.arrange(RIGHT, buff=LARGE_BUFF)
         images_with_quotes.to_edge(DOWN, MED_LARGE_BUFF)
         return Group(images, quotes, names)
 
@@ -1082,7 +1082,7 @@ class QuantumSpin(Scene):
         z_group = VGroup(electron.copy(), z_ca, Dot(color=BLUE))
 
         groups = VGroup(x_group, y_group, z_group)
-        groups.arrange_submobjects(RIGHT, buff=1.5)
+        groups.arrange(RIGHT, buff=1.5)
         groups.move_to(UP)
 
         y_ca.rotation = Rotating(
@@ -1178,7 +1178,7 @@ class TableOfContents(Scene):
         )
         for chapter in chapters:
             chapter.space_out_submobjects(1.5)
-        chapters.arrange_submobjects(
+        chapters.arrange(
             DOWN, buff=1.5, aligned_edge=LEFT
         )
         chapters.to_edge(LEFT)
@@ -1240,7 +1240,7 @@ class IntroduceLinusTheLinelander(Scene):
             TexMobject("3 + 4 = 7"),
             TexMobject("(-2) \\cdot 3 = -6"),
         )
-        algebra.arrange_submobjects(DOWN)
+        algebra.arrange(DOWN)
         algebra.next_to(number_line, DOWN, LARGE_BUFF)
         algebra.shift(3 * RIGHT)
 
@@ -1529,13 +1529,13 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             VGroup(z1.target, z1.parens),
             VGroup(z2, z2.parens),
         )
-        product.arrange_submobjects(RIGHT, SMALL_BUFF)
+        product.arrange(RIGHT, SMALL_BUFF)
         product.move_to(2 * RIGHT + 2 * UP)
 
         foil = VGroup(*map(TextMobject, [
             "First", "Outside", "Inside", "Last",
         ]))
-        foil.arrange_submobjects(
+        foil.arrange(
             DOWN, buff=MED_SMALL_BUFF,
             aligned_edge=LEFT
         )
@@ -1562,7 +1562,7 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             z1.imag.targets[0], get_cdot(), z2.real.targets[1], get_plus(),
             z1.imag.targets[1], get_cdot(), z2.imag.targets[1],
         )
-        expansion.arrange_submobjects(RIGHT, buff=0.15)
+        expansion.arrange(RIGHT, buff=0.15)
         expansion.next_to(product, DOWN, buff=LARGE_BUFF)
         expansion_parts = VGroup(*[
             expansion[4 * i: 4 * i + 3]
@@ -1586,7 +1586,7 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             z1[2].copy(), get_cdot(), z2[0].copy(),
             get_rp(), TexMobject("i")
         )
-        final_prouct.arrange_submobjects(RIGHT, buff=0.15)
+        final_prouct.arrange(RIGHT, buff=0.15)
         final_prouct.next_to(expansion, DOWN, buff=2)
         final_arrows = VGroup()
         for i, brace in zip([1, 11, 15, 5], expansion_part_braces):
@@ -1734,7 +1734,7 @@ class TextbookQuaternionDefinition(TeacherStudentsScene):
                 "jk = -kj = i",
             ]
         ])
-        defining_products.arrange_submobjects(DOWN)
+        defining_products.arrange(DOWN)
         defining_products.next_to(self.students, UP, LARGE_BUFF)
         def_rect = SurroundingRectangle(defining_products)
 
@@ -1788,7 +1788,7 @@ class ProblemsWhereComplexNumbersArise(Scene):
             ),
             TextMobject("Frequency analysis")
         )
-        problems.arrange_submobjects(
+        problems.arrange(
             DOWN, buff=LARGE_BUFF, aligned_edge=LEFT
         )
         for problem in problems:
@@ -1835,7 +1835,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             TexMobject("z="),
             DecimalNumber(self.z, num_decimal_places=0)
         )
-        z_label.arrange_submobjects(
+        z_label.arrange(
             RIGHT, buff=SMALL_BUFF,
         )
         z_label.next_to(z_dot, UP, buff=SMALL_BUFF)
@@ -1850,7 +1850,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             TexMobject("w="),
             DecimalNumber(self.w, num_decimal_places=0)
         )
-        w_label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        w_label.arrange(RIGHT, buff=SMALL_BUFF)
         w_label.next_to(w_dot, DOWN, buff=SMALL_BUFF)
         w_label.set_color(self.w_color)
         w_label.add_background_rectangle()
@@ -1949,7 +1949,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
         zero_eq = TexMobject("z \\cdot 0 = 0")
         one_eq = TexMobject("z \\cdot 1 = z")
         equations = VGroup(zero_eq, one_eq)
-        equations.arrange_submobjects(DOWN)
+        equations.arrange(DOWN)
         equations.scale(1.5)
         for eq in equations:
             eq.add_background_rectangle()
@@ -1960,7 +1960,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             TexMobject("z \\cdot w ="),
             DecimalNumber(product, num_decimal_places=0)
         )
-        product_label.arrange_submobjects(RIGHT)
+        product_label.arrange(RIGHT)
         product_label[0].shift(0.025 * DOWN)
         product_label.next_to(product_dot, UP, SMALL_BUFF)
         product_label.add_background_rectangle()
@@ -3269,7 +3269,7 @@ class MentionImpossibilityOf3dNumbers(TeacherStudentsScene):
             TexMobject("ij = ?"),
             TexMobject("ji = ?"),
         )
-        equations.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        equations.arrange(RIGHT, buff=LARGE_BUFF)
         equations.scale(1.5)
         equations.to_edge(UP)
         self.add(equations)
@@ -3316,7 +3316,7 @@ class SphereExamplePointsDecimal(Scene):
             decimals[1], TexMobject("i"), TexMobject("+"),
             decimals[2], TexMobject("j"),
         )
-        number_label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        number_label.arrange(RIGHT, buff=SMALL_BUFF)
         number_label.to_corner(UL)
 
         point = VectorizedPoint(OUT)
@@ -4206,7 +4206,7 @@ class IntroduceQuaternions(Scene):
                 [GREEN, RED, BLUE],
             )
         ])
-        three_axes.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        three_axes.arrange(RIGHT, buff=LARGE_BUFF)
         three_axes.next_to(number, DOWN, LARGE_BUFF)
 
         self.play(LaggedStart(FadeInFromLarge, three_axes))
@@ -4298,7 +4298,7 @@ class IntroduceQuaternions(Scene):
         )
         numbers = VGroup(number_2d, number_3d, number_4d)
         for number in numbers:
-            number.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            number.arrange(RIGHT, buff=SMALL_BUFF)
             for part in number:
                 if isinstance(part, TexMobject):
                     # part.set_color_by_tex_to_color_map({
@@ -4313,7 +4313,7 @@ class IntroduceQuaternions(Scene):
                 number[5].set_color(RED)
             if len(number) > 8:
                 number[8].set_color(BLUE)
-        numbers.arrange_submobjects(
+        numbers.arrange(
             DOWN, buff=2, aligned_edge=LEFT
         )
         numbers.center()
@@ -4409,7 +4409,7 @@ class ShowDotProductCrossProductFromOfQMult(Scene):
                 TexMobject("{}_{} = ".format(v_tex, i)),
                 vector,
             )
-            group.arrange_submobjects(RIGHT, SMALL_BUFF)
+            group.arrange(RIGHT, SMALL_BUFF)
             group.next_to(brace, UP)
 
             braces.add(brace)
@@ -4647,9 +4647,9 @@ class SphereProjectionsWrapper(Scene):
             VGroup(*[
                 ScreenRectangle(height=3)
                 for x in range(3)
-            ]).arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+            ]).arrange(RIGHT, buff=LARGE_BUFF)
             for y in range(2)
-        ]).arrange_submobjects(DOWN, buff=2 * LARGE_BUFF)
+        ]).arrange(DOWN, buff=2 * LARGE_BUFF)
         rect_rows.set_width(FRAME_WIDTH - 1)
 
         sphere_labels = VGroup(
@@ -4730,7 +4730,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
             coords[2], TexMobject("j"),
             coords[3], TexMobject("k"),
         )
-        label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        label.arrange(RIGHT, buff=SMALL_BUFF)
         label.to_corner(UR)
 
         def update_label(label):
@@ -5192,7 +5192,7 @@ class RuleOfQuaternionMultiplicationOverlay(Scene):
             TexMobject("i", "\\cdot", "k", "=", "-j", **kwargs),
         )
         i_products.scale(2)
-        i_products.arrange_submobjects(
+        i_products.arrange(
             DOWN, buff=MED_LARGE_BUFF,
             aligned_edge=LEFT,
         )
@@ -5669,7 +5669,7 @@ class JMultiplicationChart(Scene):
             TexMobject("j", "\\cdot", "k", "=", "i", **kwargs),
         )
         j_products.scale(2)
-        j_products.arrange_submobjects(
+        j_products.arrange(
             DOWN, buff=MED_LARGE_BUFF,
             aligned_edge=LEFT,
         )

@@ -18,7 +18,7 @@ def get_training_image_group(train_in, train_out):
     output = np.argmax(train_out)
     output_tex = TexMobject(str(output)).scale(1.5)
     result = Group(image, arrow, output_tex)
-    result.arrange_submobjects(RIGHT)
+    result.arrange(RIGHT)
     result.to_edge(UP)
     return result
 
@@ -35,7 +35,7 @@ def get_decimal_vector(nums, with_dots = True):
     if with_dots:
         dots = TexMobject("\\vdots")
         contents.submobjects.insert(len(decimals)/2, dots)
-    contents.arrange_submobjects(DOWN)
+    contents.arrange(DOWN)
     lb, rb = brackets = TexMobject("\\big[", "\\big]")
     brackets.scale(2)
     brackets.stretch_to_fit_height(1.2*contents.get_height())
@@ -108,7 +108,7 @@ class ShowPlan(Scene):
                 "Research corner",
             ]
         ])
-        items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        items.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         items.to_edge(LEFT, buff = LARGE_BUFF)
 
         rect = SurroundingRectangle(VGroup(*items[1:3]))
@@ -351,7 +351,7 @@ class TrainingVsTestData(Scene):
             get_training_image_group,
             self.data[ci:ci+self.n_examples]
         ))
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.scale(0.5)
         return group
 
@@ -439,7 +439,7 @@ class MNistDescription(Scene):
         link_words = TextMobject("(links in the description)")
         link_words.next_to(authors, DOWN, MED_LARGE_BUFF)
         arrows = VGroup(*[Vector(DOWN) for x in range(4)])
-        arrows.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        arrows.arrange(RIGHT, buff = LARGE_BUFF)
         arrows.next_to(link_words, DOWN)
         arrows.set_color(BLUE)
 
@@ -466,7 +466,7 @@ class MNistDescription(Scene):
                 self.get_digit_pair(v_in, v_out)
                 for v_in, v_out in td_group
             ])
-            group.arrange_submobjects_in_grid(
+            group.arrange_in_grid(
                 n_rows = self.n_rows_per_grid,
             )
             group.set_height(FRAME_HEIGHT - 1)
@@ -904,7 +904,7 @@ class IntroduceCostFunction(PreviewLearning):
             last_plus = term[-1]
         for mob in terms[-1], symbols:
             mob.remove(last_plus)
-        terms.arrange_submobjects(
+        terms.arrange(
             DOWN, buff = SMALL_BUFF,
             aligned_edge = LEFT
         )
@@ -916,7 +916,7 @@ class IntroduceCostFunction(PreviewLearning):
         image_group.target.scale(0.5)
         cost_of = TextMobject("Cost of").set_color(RED)
         cost_group = VGroup(cost_of, image_group.target)
-        cost_group.arrange_submobjects(RIGHT)
+        cost_group.arrange(RIGHT)
         brace = Brace(terms, LEFT)
         cost_group.next_to(brace, LEFT)
 
@@ -1109,7 +1109,7 @@ class IntroduceCostFunction(PreviewLearning):
             DecimalNumber(n).set_fill(opacity = 0.5*n + 0.5)
             for n in num_vect
         ])
-        decimals.arrange_submobjects(DOWN)
+        decimals.arrange(DOWN)
         decimals.set_height(height)
         lb, rb = brackets = TexMobject("[]")
         brackets.scale(2)
@@ -1145,7 +1145,7 @@ class YellAtNetwork(PiCreatureScene, PreviewLearning):
         layer_copy.neurons[3].set_fill(WHITE, 1)
         layer_copy.scale(1.5)
         desired = Group(image, arrow, layer_copy)
-        desired.arrange_submobjects(RIGHT)
+        desired.arrange(RIGHT)
         desired.to_edge(UP)
 
         q_marks = TexMobject("???").set_color(RED)
@@ -1385,7 +1385,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         parameter_words = TextMobject("Parameters:", w3)
         parameter_words[0].set_color(GREEN)
         words = VGroup(input_words, output_words, parameter_words)
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.scale(0.9)
         words.next_to(ORIGIN, RIGHT)
         words.shift(UP)
@@ -1951,7 +1951,7 @@ class GradientDescentAlgorithm(Scene):
             TextMobject("Small step in", "$-\\nabla C$", "direction"),
             TextMobject("Repeat."),
         )
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.set_width(FRAME_WIDTH - 1)
         words.to_corner(DOWN+LEFT)
 
@@ -1993,7 +1993,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
         ])
         dots = TexMobject("\\vdots")
         decimals.submobjects.insert(3, dots)
-        decimals.arrange_submobjects(DOWN)
+        decimals.arrange(DOWN)
         decimals.shift(2*LEFT + 0.5*DOWN)
         lb, rb = brackets = TexMobject("\\big[", "\\big]")
         brackets.scale(2)
@@ -2183,7 +2183,7 @@ class NonSpatialGradientIntuition(Scene):
             )
         ])
         ws.set_color(self.w_color)
-        ws.arrange_submobjects(DOWN)
+        ws.arrange(DOWN)
         lb, rb = brackets = TexMobject("\\big[", "\\big]").scale(2)
         brackets.stretch_to_fit_height(1.2*ws.get_height())
         lb.next_to(ws, LEFT)
@@ -2267,7 +2267,7 @@ class NonSpatialGradientIntuition(Scene):
             phrase.set_color_by_tex(verb, color)
             w.generate_target()
             group = VGroup(w.target, phrase)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             w.target.shift(0.7*SMALL_BUFF*DOWN)
             group.move_to(decimal.get_center() + RIGHT, LEFT)
             direction_phrases.add(phrase)
@@ -2819,7 +2819,7 @@ class TestPerformance(PreviewLearning):
             word_frac, self.frac, 
             self.equals, self.decimal
         )
-        fracs.arrange_submobjects(RIGHT)
+        fracs.arrange(RIGHT)
         fracs.to_corner(UP+RIGHT, buff = LARGE_BUFF)
         self.add(fracs)
 
@@ -2855,7 +2855,7 @@ class TestPerformance(PreviewLearning):
             choice_mob = TexMobject(str(choice))
             choice_mob.scale(1.5)
             group = VGroup(image, arrow, choice_mob)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             group.shift(
                 self.title.get_bottom()+MED_SMALL_BUFF*DOWN -\
                 image.get_top()
@@ -2929,7 +2929,7 @@ class ReactToPerformance(TeacherStudentsScene):
             Arrow(LEFT, RIGHT, color = WHITE),
             TextMobject("98\\%", "testing accuracy")
         )
-        title.arrange_submobjects(RIGHT)
+        title.arrange(RIGHT)
         title.to_edge(UP)
         title[-1][0].set_color(GREEN)
         self.play(Write(title, run_time = 2))
@@ -3041,7 +3041,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
                     color = self.negative_edge_color
                 pixel.set_fill(color, opacity = abs(shade)**(0.3))
             pixel_arrays.add(pixel_array)
-        pixel_arrays.arrange_submobjects_in_grid(buff = MED_LARGE_BUFF)
+        pixel_arrays.arrange_in_grid(buff = MED_LARGE_BUFF)
         pixel_arrays.set_height(FRAME_HEIGHT - 2.5)
         pixel_arrays.to_corner(DOWN+RIGHT)
 
@@ -3377,7 +3377,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             choice.scale(2)
             arrow = Vector(RIGHT, color = WHITE)
             group = Group(image, arrow, choice)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             group.next_to(self.line, DOWN, LARGE_BUFF)
             group.to_edge(LEFT, buff = LARGE_BUFF)
 

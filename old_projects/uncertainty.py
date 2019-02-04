@@ -515,7 +515,7 @@ class ShowPlan(PiCreatureScene):
             word[2].scale(0.75)
             word[2].next_to(word[1], DOWN, buff = 1.5*SMALL_BUFF)
             words.add(word)
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
+        words.arrange(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
         words.to_edge(LEFT)
 
         return words
@@ -688,7 +688,7 @@ class TwoCarsAtRedLight(Scene):
         car1, car2 = cars = self.cars = VGroup(*[
             Car() for x in range(2)
         ])
-        cars.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        cars.arrange(RIGHT, buff = LARGE_BUFF)
         cars.next_to(
             traffic_light, LEFT, 
             buff = LARGE_BUFF, aligned_edge = DOWN
@@ -1037,7 +1037,7 @@ class VariousMusicalNotes(Scene):
                 "long" : GREEN,
                 "wide" : GREEN,
             }, case_sensitive = False)
-        phrases.arrange_submobjects(DOWN)
+        phrases.arrange(DOWN)
         phrases.to_edge(UP)
 
         long_graph = FunctionGraph(
@@ -1082,7 +1082,7 @@ class CrossOutDefinitenessAndCertainty(TeacherStudentsScene):
             TextMobject("Definiteness"),
             TextMobject("Certainty"),
         )
-        words.arrange_submobjects(DOWN)
+        words.arrange(DOWN)
         words.next_to(self.teacher, UP+LEFT)
         crosses = VGroup(*list(map(Cross, words)))
 
@@ -2663,7 +2663,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         ))
         self.wait()
         self.play(
-            shifted_graphs.arrange_submobjects, DOWN,
+            shifted_graphs.arrange, DOWN,
             shifted_graphs.move_to, fourier_graph, DOWN,
         )
         self.wait()
@@ -3100,7 +3100,7 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             for x in range(n_v_lines)
         ])
         v_lines.match_color(xi)
-        v_lines.arrange_submobjects(
+        v_lines.arrange(
             RIGHT,
             buff = float(axes.x_axis.unit_size)/self.default_wave_frequency
         )
@@ -3262,7 +3262,7 @@ class AskPhysicists(PiCreatureScene):
             PiCreature(color = c).flip()
             for c in (GREY, LIGHT_GREY, DARK_GREY)
         ])
-        physies.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        physies.arrange(RIGHT, buff = MED_SMALL_BUFF)
         physies.scale(scale_factor)
         physies.to_corner(DOWN+RIGHT)
 
@@ -4177,7 +4177,7 @@ class OneLevelDeeper(Scene):
         wave_words = TextMobject("Interpretation of the wave function")
         arrow = Vector(UP)
         group = VGroup(hup_words, arrow, wave_words)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
 
         randomness = ProbabalisticMobjectCloud(
             TextMobject("Randomness"),
@@ -4320,7 +4320,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         for m1, m2 in (position, momentum), (time, frequency):
             arrow = TexMobject("\\updownarrow").scale(1.5)
             group = VGroup(m1, arrow, m2)
-            group.arrange_submobjects(DOWN)
+            group.arrange(DOWN)
             lp, rp = parens = TexMobject("\\big(\\big)")
             parens.stretch(1.5, 1)
             parens.match_height(group)
@@ -4330,7 +4330,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
             groups.add(group)
         arrow = TexMobject("\\Leftrightarrow").scale(2)
         groups.submobjects.insert(1, arrow)
-        groups.arrange_submobjects(RIGHT)
+        groups.arrange(RIGHT)
         groups.next_to(morty, UP+RIGHT, LARGE_BUFF)
         groups.shift_onto_screen()
 
@@ -4691,7 +4691,7 @@ class Thumbnail(Scene):
             axes.get_graph(get_func(a))
             for a in (10, 3, 1, 0.3, 0.1,)
         ])
-        graphs.arrange_submobjects(DOWN, buff = 0.6)
+        graphs.arrange(DOWN, buff = 0.6)
         graphs.to_corner(UP+LEFT)
         graphs.set_color_by_gradient(BLUE_B, BLUE_D)
 

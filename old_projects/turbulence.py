@@ -245,7 +245,7 @@ class Diffusion(VMobject):
 
     def add_dots(self):
         dots = VGroup(*[Dot() for x in range(self.n_dots)])
-        dots.arrange_submobjects_in_grid(buff=SMALL_BUFF)
+        dots.arrange_in_grid(buff=SMALL_BUFF)
         dots.center()
         dots.set_height(self.height)
         dots.sort_submobjects(lambda p: p[0])
@@ -333,7 +333,7 @@ class NavierStokesEquations(TexMobject):
             word_mobs.add(word_mob)
             braces.add(brace)
             result.add(VGroup(brace, word_mob))
-        word_mobs[1:].arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        word_mobs[1:].arrange(RIGHT, buff=MED_SMALL_BUFF)
         word_mobs[1:].next_to(braces[2], DOWN, SMALL_BUFF)
         word_mobs[1].set_color(RED)
         word_mobs[2].set_color(GREEN)
@@ -486,7 +486,7 @@ class JokeRingEquation(Scene):
         line = Line(LEFT, RIGHT).set_width(items.get_width() + 1)
         items.add(line)
         items.add(TextMobject("Vortex ring"))
-        items.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        items.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
         line.shift(LEFT)
         plus = TexMobject("+")
         plus.next_to(line.get_left(), UR, SMALL_BUFF)
@@ -575,7 +575,7 @@ class CarefulWithLasers(TeacherStudentsScene):
             ),
             Line(ORIGIN, 10 * RIGHT, color=GREEN_SCREEN)
         )
-        laser.arrange_submobjects(RIGHT, buff=0)
+        laser.arrange(RIGHT, buff=0)
         laser.rotate(45 * DEGREES)
         laser.shift(randy.get_corner(UR) - laser[0].get_center() + 0.1 * DR)
 
@@ -749,7 +749,7 @@ class AskAboutTurbulence(TeacherStudentsScene):
             TextMobject("- Chaos"),
             TextMobject("- Diffusion"),
         )
-        words.arrange_submobjects(
+        words.arrange(
             DOWN, buff=1.25,
             aligned_edge=LEFT
         )
@@ -845,7 +845,7 @@ class HighCurlFieldBreakingLayers(Scene):
             self.get_line()
             for x in range(20)
         ])
-        lines.arrange_submobjects(DOWN, buff=MED_SMALL_BUFF)
+        lines.arrange(DOWN, buff=MED_SMALL_BUFF)
         lines[0::2].set_color(BLUE)
         lines[1::2].set_color(RED)
         all_dots = VGroup(*it.chain(*lines))
@@ -864,7 +864,7 @@ class HighCurlFieldBreakingLayers(Scene):
     def get_line(self):
         line = VGroup(*[Dot() for x in range(100)])
         line.set_height(0.1)
-        line.arrange_submobjects(RIGHT, buff=0)
+        line.arrange(RIGHT, buff=0)
         line.set_width(10)
         return line
 
@@ -894,7 +894,7 @@ class VorticitySynonyms(Scene):
         words[0].set_color_by_tex("vorticity", BLUE)
         words[1].set_color_by_tex("nabla", BLUE)
         words[2].set_color_by_tex("swirly", BLUE)
-        words.arrange_submobjects(
+        words.arrange(
             DOWN,
             aligned_edge=LEFT,
             buff=MED_LARGE_BUFF
@@ -1033,7 +1033,7 @@ class ShowNavierStokesEquations(Scene):
             "Given a start state...",
             "...how does it evolve?"
         )
-        words.arrange_submobjects(RIGHT, buff=2)
+        words.arrange(RIGHT, buff=2)
 
         words.next_to(self.equations, DOWN, LARGE_BUFF)
 
@@ -1235,14 +1235,14 @@ class FiguresOfFluidDynamics(Scene):
             ImageMobject(name.replace(" ", "_"), height=3)
             for name in names
         ])
-        images.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        images.arrange(RIGHT, buff=MED_SMALL_BUFF)
         image_groups = Group()
         for image, name in zip(images, names):
             name_mob = TextMobject(name)
             name_mob.scale(0.6)
             name_mob.next_to(image, DOWN)
             image_groups.add(Group(image, name_mob))
-        image_groups.arrange_submobjects_in_grid(2, 3)
+        image_groups.arrange_in_grid(2, 3)
         image_groups.set_height(FRAME_HEIGHT - 1)
 
         self.play(LaggedStart(
@@ -1283,7 +1283,7 @@ class KineticEnergyBreakdown(Scene):
             TextMobject("- Big moving things"),
             TextMobject("- Heat"),
         )
-        left_items.arrange_submobjects(DOWN, aligned_edge=LEFT)
+        left_items.arrange(DOWN, aligned_edge=LEFT)
         left_items.next_to(lc_title, DOWN, MED_LARGE_BUFF)
         left_items.to_edge(LEFT)
 

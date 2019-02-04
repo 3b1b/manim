@@ -135,7 +135,7 @@ class AllFeaturedCreators(MortyPiCreatureScene):
         title = Title("Featured creators")
 
         dots = VGroup(*[Dot(color=WHITE) for x in range(4)])
-        dots.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        dots.arrange(DOWN, buff=LARGE_BUFF)
         dots.to_edge(LEFT, buff=2)
 
         creators = VGroup(*list(map(TextMobject, [

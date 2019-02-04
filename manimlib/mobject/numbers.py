@@ -53,7 +53,7 @@ class DecimalNumber(VMobject):
             self.unit_sign = SingleStringTexMobject(self.unit, color=self.color)
             self.add(self.unit_sign)
 
-        self.arrange_submobjects(
+        self.arrange(
             buff=self.digit_to_digit_buff,
             aligned_edge=DOWN
         )

@@ -185,7 +185,7 @@ class FathersOfCalculus(Scene):
             title.next_to(image, DOWN)
             image.add(title)
             men.add(image)
-        men.arrange_submobjects(RIGHT, aligned_edge = UP)
+        men.arrange(RIGHT, aligned_edge = UP)
         men.shift(DOWN)
 
         discover_brace = Brace(Mobject(*men[:3]), UP)
@@ -740,7 +740,7 @@ class CompareTwoTimes(Scene):
             change_over_change, down_arrow2,
             formula,
         )
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_corner(UP+RIGHT)
 
         self.play(FadeIn(
@@ -2046,7 +2046,7 @@ class TimeForAnActualParadox(TeacherStudentsScene):
         paradoxes = TextMobject("Paradoxes")
         arrow = Arrow(ORIGIN, DOWN, buff = 0)
         group = VGroup(words, arrow, paradoxes)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_edge(UP)
 
         teacher = self.get_teacher()

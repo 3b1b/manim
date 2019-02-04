@@ -95,7 +95,7 @@ class InterpretGradientComponents(GradientNudging):
             cost_expression.set_color_by_tex(tex, RED)
         cost_expression.next_to(cost, DOWN)
         cost_group = VGroup(cost_expression, cost)
-        cost_group.arrange_submobjects(RIGHT)
+        cost_group.arrange(RIGHT)
         cost_group.next_to(arrow, DOWN)
 
         self.add(rect, arrow, cost_group)
@@ -174,7 +174,7 @@ class InterpretGradientComponents(GradientNudging):
             d1, TexMobject("\\vdots"),
             d2, TexMobject("\\vdots"),
         )
-        new_vect_contents.arrange_submobjects(DOWN)
+        new_vect_contents.arrange(DOWN)
         new_vect_contents.move_to(vect_contents)
 
         new_w_terms = TexMobject(
@@ -300,12 +300,12 @@ class InterpretGradientComponents(GradientNudging):
             VectorizedPoint()
             for term in grad_terms
         ])
-        points.arrange_submobjects(RIGHT)
+        points.arrange(RIGHT)
         points.replace(w_terms, dim_to_match = 0)
 
         grad_terms.generate_target()
         grad_terms.target[len(grad_terms)/2].rotate(np.pi/2)
-        grad_terms.target.arrange_submobjects(RIGHT)
+        grad_terms.target.arrange(RIGHT)
         grad_terms.target.set_width(cost_expression.get_width())
         grad_terms.target.next_to(cost_expression, DOWN)
 
@@ -377,7 +377,7 @@ class GetLostInNotation(PiCreatureScene):
                 "z" : TEAL,
             })
             equation.set_color_by_tex("nabla", WHITE)
-        equations.arrange_submobjects(
+        equations.arrange(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
 
@@ -915,7 +915,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 "w_" : w_terms.get_color(),
                 "a_" : a_terms.get_color(),
             })
-        increase_words.arrange_submobjects(
+        increase_words.arrange(
             DOWN, aligned_edge = LEFT,
             buff = LARGE_BUFF
         )
@@ -1151,7 +1151,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 Line(LEFT, RIGHT, color = s_edge.get_color())
                 for s_edge in s_edges
             ])
-            s_edges.alt_position.arrange_submobjects(DOWN, MED_SMALL_BUFF)
+            s_edges.alt_position.arrange(DOWN, MED_SMALL_BUFF)
             s_edges.alt_position.to_corner(DOWN+RIGHT, LARGE_BUFF)
 
         added_words = TextMobject("in proportion to $w_i$")
@@ -1480,7 +1480,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             Line(LEFT, RIGHT).scale(0.85*FRAME_X_RADIUS)
             for x in range(6)
         ])
-        h_lines.arrange_submobjects(DOWN, buff = 1)
+        h_lines.arrange(DOWN, buff = 1)
         h_lines.set_stroke(LIGHT_GREY, 2)
         h_lines.to_edge(DOWN, buff = MED_LARGE_BUFF)
         h_lines.to_edge(LEFT, buff = 0)
@@ -1489,7 +1489,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             Line(UP, DOWN).scale(FRAME_Y_RADIUS - MED_LARGE_BUFF)
             for x in range(self.n_examples + 1)
         ])
-        v_lines.arrange_submobjects(RIGHT, buff = 1.4)
+        v_lines.arrange(RIGHT, buff = 1.4)
         v_lines.set_stroke(LIGHT_GREY, 2)
         v_lines.to_edge(LEFT, buff = 2)
 
@@ -2004,7 +2004,7 @@ class OrganizeDataIntoMiniBatches(Scene):
         # ])
 
     def arrange_examples_in_grid(self, examples):
-        examples.arrange_submobjects_in_grid(
+        examples.arrange_in_grid(
             n_rows = self.n_rows,
             buff = SMALL_BUFF
         )
@@ -2023,7 +2023,7 @@ class SwimmingInTerms(TeacherStudentsScene):
             TextMobject("Mini-batches"),
             TextMobject("Backpropagation"),
         )
-        terms.arrange_submobjects(DOWN)
+        terms.arrange(DOWN)
         terms.to_edge(UP)
         self.play(
             LaggedStart(FadeIn, terms),
@@ -2521,8 +2521,8 @@ class SimplestNetworkExample(PreviewLearning):
             mob.generate_target()
             targets.add(mob.target)
         y.generate_target()
-        top_terms.target.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
-        targets.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        top_terms.target.arrange(RIGHT, buff = MED_LARGE_BUFF)
+        targets.arrange(DOWN, buff = LARGE_BUFF)
         targets.center().to_corner(DOWN+LEFT)
         y.target.next_to(aL.target, LEFT, LARGE_BUFF, DOWN)
 
@@ -2904,7 +2904,7 @@ class SimplestNetworkExample(PreviewLearning):
         dC_da[0].set_color(self.cost_color)
         equals = TexMobject("=")
         group = VGroup(equals, dz_dw, da_dz, dC_da)
-        group.arrange_submobjects(RIGHT, SMALL_BUFF)
+        group.arrange(RIGHT, SMALL_BUFF)
         group.scale(self.derivative_scale_val)
         group.next_to(dC_dw, RIGHT)
         for mob in group[1:]:
@@ -3001,7 +3001,7 @@ class SimplestNetworkExample(PreviewLearning):
         for deriv in derivs:
             deriv.generate_target()
             deriv_targets.add(deriv.target)
-        deriv_targets.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        deriv_targets.arrange(DOWN, buff = MED_LARGE_BUFF)
         deriv_targets.next_to(dC_dw, DOWN, LARGE_BUFF)
         for deriv in derivs:
             deriv.equals = TexMobject("=")
@@ -3056,7 +3056,7 @@ class SimplestNetworkExample(PreviewLearning):
         minus.set_fill(opacity = 0)
         moving_decimals.submobjects.insert(1, minus)
         moving_decimals.generate_target(use_deepcopy = True)
-        moving_decimals.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        moving_decimals.target.arrange(RIGHT, buff = SMALL_BUFF)
         moving_decimals.target.scale(1.5)
         moving_decimals.target.next_to(
             dC_da.rhs, DOWN, 
@@ -3220,7 +3220,7 @@ class SimplestNetworkExample(PreviewLearning):
         equals.next_to(chain_rule_equation, RIGHT)
 
         rhs_group.generate_target()
-        rhs_group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        rhs_group.target.arrange(RIGHT, buff = SMALL_BUFF)
         rhs_group.target.next_to(equals, RIGHT)
         rhs_group.target.shift(SMALL_BUFF*UP)
 
@@ -3328,7 +3328,7 @@ class SimplestNetworkExample(PreviewLearning):
                     "partial w" : BLUE,
                     "partial b" : MAROON_B,
                 })
-        terms.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        terms.arrange(DOWN, buff = MED_LARGE_BUFF)
         lb, rb = brackets = TexMobject("[]")
         brackets.scale(3)
         brackets.stretch_to_fit_height(1.1*terms.get_height())
@@ -3878,7 +3878,7 @@ class GeneralFormulas(SimplestNetworkExample):
         edges.generate_target()
         for e in edges.target:
             e.rotate(-e.get_angle())
-        edges.target.arrange_submobjects(DOWN)
+        edges.target.arrange(DOWN)
         edges.target.move_to(edges)
         edges.target.to_edge(UP)
 

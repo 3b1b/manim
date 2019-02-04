@@ -154,7 +154,7 @@ class MapOfVideo(MovingCameraScene):
             image.add(rect)
 
         image_line = Group(*images[:2], *images[3:])
-        image_line.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        image_line.arrange(RIGHT, buff=LARGE_BUFF)
         images[2].next_to(image_line, DOWN, buff=1.5)
         images.set_width(FRAME_WIDTH - 1)
         images.to_edge(UP, buff=LARGE_BUFF)
@@ -211,7 +211,7 @@ class MathIsDeep(PiCreatureScene):
         math.set_stroke(width=0, background=True)
         numbers = [13, 1, 20, 8]
         num_mobs = VGroup(*[Integer(d) for d in numbers])
-        num_mobs.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+        num_mobs.arrange(RIGHT, buff=MED_LARGE_BUFF)
         num_mobs.next_to(math, DOWN, buff=1.5)
         num_mobs.set_color(YELLOW)
         top_arrows = VGroup(*[
@@ -269,9 +269,9 @@ class MinimizeSharding(Scene):
             VGroup(*[
                 self.get_piece()
                 for x in range(3)
-            ]).arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            ]).arrange(RIGHT, buff=SMALL_BUFF)
             for y in range(4)
-        ]).arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        ]).arrange(RIGHT, buff=SMALL_BUFF)
 
         self.add(piece_groups)
         self.play(*[
@@ -282,9 +282,9 @@ class MinimizeSharding(Scene):
         group1 = piece_groups[:2]
         group2 = piece_groups[2:]
         self.play(
-            group1.arrange_submobjects, DOWN,
+            group1.arrange, DOWN,
             group1.next_to, ORIGIN, LEFT, LARGE_BUFF,
-            group2.arrange_submobjects, DOWN,
+            group2.arrange, DOWN,
             group2.next_to, ORIGIN, RIGHT, LARGE_BUFF,
         )
         self.wait()
@@ -341,12 +341,12 @@ class TopologyWordBreak(Scene):
                 signs.add(sign)
             new_group.add(group[-1])
             group.submobjects = list(new_group.submobjects)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
 
         word[2].target.shift(0.1 * DOWN)
         word[7].target.shift(0.1 * DOWN)
 
-        classes.arrange_submobjects(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
+        classes.arrange(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
         classes.shift(2 * RIGHT)
 
         genus_labels = VGroup(*[
@@ -461,7 +461,7 @@ class FunctionGInSymbols(Scene):
         f_of_neg_p.generate_target()
         f_of_p.generate_target()
         group = VGroup(f_of_p.target, minus, f_of_neg_p.target)
-        group.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        group.arrange(RIGHT, buff=SMALL_BUFF)
         group.next_to(equals, LEFT)
 
         self.play(
@@ -488,7 +488,7 @@ class FunctionGInSymbols(Scene):
             g_of_p.copy(), equals, zero_zero
         )
         g_equals_zero.generate_target()
-        g_equals_zero.target.arrange_submobjects(RIGHT, SMALL_BUFF)
+        g_equals_zero.target.arrange(RIGHT, SMALL_BUFF)
         g_equals_zero.target.next_to(seeking_text, DOWN)
 
         self.play(

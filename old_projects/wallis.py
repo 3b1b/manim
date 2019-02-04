@@ -180,7 +180,7 @@ class TableOfContents(Scene):
             dot = Dot(color=BLUE)
             dot.next_to(topic, LEFT)
             topic.add(dot)
-        topics.arrange_submobjects(
+        topics.arrange(
             DOWN, aligned_edge=LEFT, buff=LARGE_BUFF
         )
         self.add(topics)
@@ -481,7 +481,7 @@ class ShowProduct(Scene):
         smaller_parts.set_color(BLUE)
 
         for parts in larger_parts, smaller_parts:
-            parts.arrange_submobjects(RIGHT, buff=2 * SMALL_BUFF)
+            parts.arrange(RIGHT, buff=2 * SMALL_BUFF)
             # Move around the dots
             for part1, part2 in zip(parts, parts[1:]):
                 dot = part1.submobjects.pop(-1)
@@ -644,7 +644,7 @@ class ShowProduct(Scene):
             dot.match_color(part)
             dot.next_to(part, vect, buff=2 * SMALL_BUFF)
             part.add(dot)
-        full_product.arrange_submobjects(RIGHT, buff=2 * SMALL_BUFF)
+        full_product.arrange(RIGHT, buff=2 * SMALL_BUFF)
         full_product.to_edge(UP)
 
         for parts in larger_parts, smaller_parts:
@@ -934,7 +934,7 @@ class DistanceProductScene(MovingCameraScene):
         for label in stacked_labels:
             label.rotate(-label.angle)
             label.set_height(self.numeric_distance_label_height)
-        stacked_labels.arrange_submobjects(DOWN)
+        stacked_labels.arrange(DOWN)
         stacked_labels.move_to(column_top, UP)
 
         h_line = Line(LEFT, RIGHT)
@@ -1241,7 +1241,7 @@ class IntroduceDistanceProduct(DistanceProductScene):
         self.wait()
         self.play(
             FadeOut(plusses),
-            d_terms.arrange_submobjects, RIGHT, 0.25 * SMALL_BUFF,
+            d_terms.arrange, RIGHT, 0.25 * SMALL_BUFF,
             d_terms.move_to, sum_of_inverse_squares, DOWN,
         )
         self.wait()
@@ -1590,7 +1590,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
         algebraic_words = TextMobject("Algebraic property")
         algebraic_words.add_background_rectangle()
         word_group = VGroup(geometric_words.target, arrow, algebraic_words)
-        word_group.arrange_submobjects(RIGHT)
+        word_group.arrange(RIGHT)
         word_group.move_to(origin)
         word_group.to_edge(UP)
 
@@ -2587,7 +2587,7 @@ class DistanceProductIsChordF(PlugObserverIntoPolynomial):
         )
         fraction_words.scale(0.8)
         fraction_words[0][0].set_color(YELLOW)
-        fraction_words.arrange_submobjects(DOWN, SMALL_BUFF, aligned_edge=LEFT)
+        fraction_words.arrange(DOWN, SMALL_BUFF, aligned_edge=LEFT)
         fraction_words.next_to(O_dot.label, RIGHT)
         list(map(TexMobject.add_background_rectangle, fraction_words))
 
@@ -2850,7 +2850,7 @@ class ProveLemma2(PlugObserverIntoPolynomial):
             FadeIn(new_lhs_background),
             polynomial_background.stretch, 0.8, 0,
             polynomial_background.move_to, frac_line_copy, LEFT,
-            equals_remaining_factors.arrange_submobjects, RIGHT, SMALL_BUFF,
+            equals_remaining_factors.arrange, RIGHT, SMALL_BUFF,
             equals_remaining_factors.next_to, frac_line_copy, RIGHT, MED_SMALL_BUFF,
             ReplacementTransform(first_factor, O_minus_1,
                                  path_arc=-90 * DEGREES),
@@ -3223,7 +3223,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             part.generate_target()
         div = TexMobject("/")
         first_denom = VGroup(two.target, div, dist)
-        first_denom.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        first_denom.arrange(RIGHT, buff=SMALL_BUFF)
         first_denom.move_to(two, UP)
         N.next_to(frac_line, UP, SMALL_BUFF)
 
@@ -3713,7 +3713,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         final_dot = TexMobject("\\cdots")
         for group in wallis_product, dots:
             group.submobjects[-1] = final_dot
-        wallis_product.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        wallis_product.arrange(RIGHT, buff=MED_SMALL_BUFF)
         wallis_product.to_edge(RIGHT)
 
         self.play(
@@ -4094,7 +4094,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
         )
 
         top_line = VGroup(factors, equals, result)
-        top_line.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        top_line.arrange(RIGHT, buff=SMALL_BUFF)
         result.shift(SMALL_BUFF * UP)
         top_line.scale(scale_val)
         top_line.to_edge(UP)
@@ -4254,7 +4254,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
     def create_pi_creatures(self):
         group = VGroup(PiCreature(color=GREY), Mortimer())
         group.set_height(2)
-        group.arrange_submobjects(RIGHT, buff=4)
+        group.arrange(RIGHT, buff=4)
         group.to_edge(DOWN)
         return group
 
@@ -4476,7 +4476,7 @@ class DelicacyInIntermixingSeries(Scene):
         for mover in movers1:
             mover.generate_target()
             new_product.add(mover.target)
-        new_product.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        new_product.arrange(RIGHT, buff=SMALL_BUFF)
         new_product.next_to(h_line, DOWN, LARGE_BUFF, aligned_edge=LEFT)
 
         new_arrow = top_product.arrow.copy()
@@ -4505,7 +4505,7 @@ class DelicacyInIntermixingSeries(Scene):
                 final_dot = mover.final_position[-1][0]
                 mover.final_position.submobjects[-1] = final_dot
             final_product.add(mover.final_position)
-        final_product.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        final_product.arrange(RIGHT, buff=SMALL_BUFF)
         final_product.move_to(new_product, RIGHT)
 
         self.play(
@@ -4688,7 +4688,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         ]
 
         group = VGroup(arrow1, frac1, arrow2, frac2)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.next_to(self.result_fraction, DOWN)
         big_group = VGroup(self.result_fraction, *group)
 
@@ -4857,7 +4857,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         self.play(FadeOut(chord_f))
         self.wait()
         self.play(
-            f_pi.arrange_submobjects, RIGHT, {"buff": SMALL_BUFF},
+            f_pi.arrange, RIGHT, {"buff": SMALL_BUFF},
             f_pi.next_to, over, UP, SMALL_BUFF,
             FadeOut(dot_two),
             FadeOut(two_sine_f_pi[0]),
@@ -4937,7 +4937,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
             PiCreature(color=BLUE_D),
             Mortimer()
         )
-        pi_creatures.arrange_submobjects(RIGHT, LARGE_BUFF)
+        pi_creatures.arrange(RIGHT, LARGE_BUFF)
         pi_creatures.set_height(1)
         pi_creatures.next_to(rect, DOWN)
         for pi in pi_creatures:

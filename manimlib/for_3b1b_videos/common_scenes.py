@@ -115,7 +115,7 @@ class PatreonThanks(Scene):
             left_group = VGroup(*group[:len(group) / 2])
             right_group = VGroup(*group[len(group) / 2:])
             for subgroup, vect in (left_group, LEFT), (right_group, RIGHT):
-                subgroup.arrange_submobjects(DOWN, aligned_edge=LEFT)
+                subgroup.arrange(DOWN, aligned_edge=LEFT)
                 subgroup.scale(self.patron_scale_val)
                 subgroup.to_edge(vect)
 
@@ -225,7 +225,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         for column in columns:
             for n, name in enumerate(column):
                 name.shift(n * self.name_y_spacing * DOWN)
-        columns.arrange_submobjects(
+        columns.arrange(
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
         )
@@ -321,7 +321,7 @@ class Banner(Scene):
     def construct(self):
         pis = self.get_pis()
         pis.set_height(self.pi_height)
-        pis.arrange_submobjects(RIGHT, aligned_edge=DOWN)
+        pis.arrange(RIGHT, aligned_edge=DOWN)
         pis.move_to(self.pi_bottom, DOWN)
         self.add(pis)
 

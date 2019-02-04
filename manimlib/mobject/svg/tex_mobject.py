@@ -268,7 +268,7 @@ class BulletedList(TextMobject):
             dot = TexMobject("\\cdot").scale(self.dot_scale_factor)
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
-        self.arrange_submobjects(
+        self.arrange(
             DOWN,
             aligned_edge=LEFT,
             buff=self.buff

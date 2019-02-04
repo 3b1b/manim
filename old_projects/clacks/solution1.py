@@ -14,7 +14,7 @@ class FromPuzzleToSolution(MovingCameraScene):
 
         rects = VGroup(ScreenRectangle(), ScreenRectangle())
         rects.set_height(3)
-        rects.arrange_submobjects(RIGHT, buff=2)
+        rects.arrange(RIGHT, buff=2)
 
         titles = VGroup(
             TextMobject("Puzzle"),
@@ -546,7 +546,7 @@ class AskAboutFindingNewVelocities(Scene):
             TexMobject("v_1 = {:.2f}".format(v1)),
             TexMobject("v_2 = {:.2f}".format(v2)),
         )
-        labels.arrange_submobjects(
+        labels.arrange(
             DOWN,
             buff=MED_SMALL_BUFF,
             aligned_edge=LEFT,
@@ -665,7 +665,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
 
     def show_two_equations(self):
         equations = self.get_energy_and_momentum_expressions()
-        equations.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        equations.arrange(DOWN, buff=LARGE_BUFF)
         equations.shift(UP)
         v1_terms, v2_terms = v_terms = VGroup(*[
             VGroup(*[
@@ -1457,7 +1457,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
         )))
         movers.remove(movers[-1])
         mover_targets = VGroup(*[mover.target for mover in movers])
-        mover_targets.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        mover_targets.arrange(RIGHT, buff=SMALL_BUFF)
         mover_targets.next_to(ORIGIN, DOWN)
         mover_targets.to_edge(LEFT)
 
@@ -2255,7 +2255,7 @@ class ThetaChart(Scene):
             TextMobject("$\\theta$ value"),
         ])
         titles.scale(1.5)
-        titles.arrange_submobjects(RIGHT, buff=1.5)
+        titles.arrange(RIGHT, buff=1.5)
         titles[1].shift(MED_SMALL_BUFF * LEFT)
         titles[2].shift(MED_SMALL_BUFF * RIGHT)
         titles.to_corner(UL)
@@ -2900,7 +2900,7 @@ class ConservationLawSummary(Scene):
             equation.set_color_by_tex("m_", BLUE)
             equation.set_color_by_tex("v_", RED)
 
-        words.arrange_submobjects(
+        words.arrange(
             DOWN, buff=3,
         )
         words.to_edge(LEFT, buff=1.5)
@@ -2969,7 +2969,7 @@ class FinalCommentsOnPhaseSpace(Scene):
                 stroke_width=5,
                 buff=0,
             ))
-        images.arrange_submobjects(RIGHT)
+        images.arrange(RIGHT)
         images.move_to(DOWN)
 
         arrows = VGroup(*[
@@ -3006,7 +3006,7 @@ class FinalCommentsOnPhaseSpace(Scene):
             word.scale(2)
 
         group = VGroup(state, arrow, point)
-        group.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+        group.arrange(RIGHT, buff=MED_LARGE_BUFF)
         group.move_to(2.5 * DOWN)
 
         dynamics.move_to(state, RIGHT)

@@ -321,7 +321,7 @@ class ShowFullStory(Scene):
             image.add(
                 SurroundingRectangle(image, buff=0, color=WHITE)
             )
-        images.arrange_submobjects_in_grid(n_rows=4)
+        images.arrange_in_grid(n_rows=4)
 
         images.scale(
             1.01 * FRAME_WIDTH / images[0].get_width()
@@ -887,7 +887,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
         ]), element_alignment_corner=ORIGIN)
 
         equation = VGroup(d_dt, in_vect, equals, out_vect)
-        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        equation.arrange(RIGHT, buff=SMALL_BUFF)
         equation.set_width(6)
 
         equation.to_corner(DR, buff=MED_LARGE_BUFF)
@@ -1039,7 +1039,7 @@ class FeynmanElementaryQuote(Scene):
         )
         for image in images:
             image.set_height(3)
-        images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        images.arrange(RIGHT, buff=LARGE_BUFF)
         images.to_edge(DOWN, buff=LARGE_BUFF)
         images[1].move_to(images[0])
         crosses = VGroup(*list(map(Cross, images)))
@@ -1115,7 +1115,7 @@ class TableOfContents(Scene):
             TextMobject("Kepler's 2nd law"),
             TextMobject("The shape of velocities"),
         )
-        items.arrange_submobjects(
+        items.arrange(
             DOWN, buff=LARGE_BUFF, aligned_edge=LEFT
         )
         items.to_edge(LEFT, buff=1.5)
@@ -1577,13 +1577,13 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             arrows.add(arrow)
 
         labels_target = labels.copy()
-        labels_target.arrange_submobjects(
+        labels_target.arrange(
             DOWN, aligned_edge=LEFT
         )
         guess_start = TextMobject("Guess: Foci = ")
         brace = Brace(labels_target, LEFT)
         full_guess = VGroup(guess_start, brace, labels_target)
-        full_guess.arrange_submobjects(RIGHT)
+        full_guess.arrange(RIGHT)
         full_guess.to_corner(UR)
 
         self.play(
@@ -2551,7 +2551,7 @@ class AngularMomentumArgument(KeplersSecondLaw):
 
         v_perp_delta_t = VGroup(v_perp_label.copy(), delta_t.copy())
         v_perp_delta_t.generate_target()
-        v_perp_delta_t.target.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        v_perp_delta_t.target.arrange(RIGHT, buff=SMALL_BUFF)
         v_perp_delta_t.target.next_to(height, RIGHT, SMALL_BUFF)
         self.small_time_label.add(v_perp_delta_t[1])
 
@@ -2696,7 +2696,7 @@ class HistoryOfAngularMomentum(TeacherStudentsScene):
         arrow = Arrow(ORIGIN, RIGHT)
 
         group = VGroup(am, arrow, k2l)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.next_to(self.hold_up_spot, UL)
 
         k2l_image = ImageMobject("Kepler2ndLaw")

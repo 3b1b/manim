@@ -82,7 +82,7 @@ class NumericalMatrixMultiplication(Scene):
     def organize_matrices(self, left, right, result):
         equals = TexMobject("=")
         everything = VGroup(left, right, equals, result)
-        everything.arrange_submobjects()
+        everything.arrange()
         everything.set_width(FRAME_WIDTH - 1)
         self.add(everything)
 

@@ -271,7 +271,7 @@ class TeacherStudentsScene(PiCreatureScene):
             Randolph(color=c)
             for c in self.student_colors
         ])
-        self.students.arrange_submobjects(RIGHT)
+        self.students.arrange(RIGHT)
         self.students.scale(self.student_scale_factor)
         self.students.to_corner(DOWN + LEFT)
         self.teacher.look_at(self.students[-1].eyes)

@@ -49,7 +49,7 @@ class DifferentConceptions(Scene):
         compy.title = TextMobject("CS student").to_corner(DOWN+RIGHT)
         mathy.title = TextMobject("Mathematician").to_edge(DOWN)
         names = VMobject(physy.title, mathy.title, compy.title)
-        names.arrange_submobjects(RIGHT, buff = 1)
+        names.arrange(RIGHT, buff = 1)
         names.to_corner(DOWN+LEFT)
         for pi in creatures:
             pi.next_to(pi.title, UP)
@@ -188,7 +188,7 @@ class DifferentConceptions(Scene):
             [5, 0, 0, -3],
             [2.3, -7.1, 0.1],
         ])))
-        vectors.arrange_submobjects(RIGHT, buff = 1)
+        vectors.arrange(RIGHT, buff = 1)
         vectors.to_edge(LEFT)
 
         self.play(
@@ -303,14 +303,14 @@ class DifferentConceptions(Scene):
         arrays = VMobject(
             v_array, TexMobject("+"), w_array, TexMobject("="), sum_array
         )
-        arrays.arrange_submobjects(RIGHT)
+        arrays.arrange(RIGHT)
         arrays.scale(0.75)
         arrays.to_edge(RIGHT).shift(UP)
 
         v_sym = TexMobject("\\vec{\\textbf{v}}")
         w_sym = TexMobject("\\vec{\\textbf{w}}")
         syms = VMobject(v_sym, TexMobject("+"), w_sym)
-        syms.arrange_submobjects(RIGHT)
+        syms.arrange(RIGHT)
         syms.center().shift(2*UP)
 
         statement = TextMobject("We'll ignore him \\\\ for now")
@@ -347,7 +347,7 @@ class DifferentConceptions(Scene):
             TexMobject("2"), Vector([1, 1]).set_color(YELLOW), 
             TexMobject("="), Vector([2, 2]).set_color(WHITE)
         )
-        s_arrows.arrange_submobjects(RIGHT)
+        s_arrows.arrange(RIGHT)
         s_arrows.scale(0.75)
         s_arrows.next_to(arrows, DOWN)
 
@@ -357,7 +357,7 @@ class DifferentConceptions(Scene):
             TextMobject("="),
             matrix_to_mobject(["2(3)", "2(-5)"])
         )
-        s_arrays.arrange_submobjects(RIGHT)
+        s_arrays.arrange(RIGHT)
         s_arrays.scale(0.75)
         s_arrays.next_to(arrays, DOWN)
 
@@ -405,7 +405,7 @@ class HelpsToHaveOneThought(Scene):
             Randolph(color = color).scale(0.8)
             for color in (BLUE_D, BLUE_C, BLUE_E)
         ])
-        randys.arrange_submobjects(RIGHT)
+        randys.arrange(RIGHT)
         randys.to_corner(DOWN+LEFT)
         randy = randys.split()[1]
 
@@ -418,7 +418,7 @@ class HelpsToHaveOneThought(Scene):
         array = Matrix([2, 1]).scale(0.5)
         q_mark = TextMobject("?")
         thought = VMobject(arrow, or_word, array, q_mark)
-        thought.arrange_submobjects(RIGHT, buff = 0.2)
+        thought.arrange(RIGHT, buff = 0.2)
         thought_bubble.position_mobject_inside(thought)
         thought_bubble.set_fill(BLACK, opacity = 1)
 
@@ -515,7 +515,7 @@ class ListsOfNumbersAddOn(Scene):
         arrays = VMobject(*list(map(matrix_to_mobject, [
             [-2, 3], [1, 2], [2, -1], [4, 0]
         ])))
-        arrays.arrange_submobjects(buff = 0.4)
+        arrays.arrange(buff = 0.4)
         arrays.scale(2)
         self.play(Write(arrays))
         self.wait(2)
@@ -975,7 +975,7 @@ class ShowScalarMultiplication(VectorScene):
         scalars = VMobject(*list(map(TexMobject, [
             "2,", "\\dfrac{1}{3},", "-1.8,", "\\dots"
         ])))
-        scalars.arrange_submobjects(RIGHT, buff = 0.4)
+        scalars.arrange(RIGHT, buff = 0.4)
         scalars.next_to(scaling_word, DOWN, aligned_edge = LEFT)
         scalars_word = TextMobject("``Scalars''")
         scalars_word.next_to(scalars, DOWN, aligned_edge = LEFT)
@@ -1062,9 +1062,9 @@ class FollowingVideos(UpcomingSeriesOfVidoes):
             TexMobject("="),
             Vector([2, 2], color = WHITE)
         )
-        scalar_multiplication.arrange_submobjects(RIGHT)
+        scalar_multiplication.arrange(RIGHT)
         both = VMobject(v_sum, scalar_multiplication)
-        both.arrange_submobjects(RIGHT, buff = 1)
+        both.arrange(RIGHT, buff = 1)
         both.shift(2*DOWN)
         self.add(both)
 
@@ -1101,9 +1101,9 @@ class ItDoesntMatterWhich(Scene):
         array = matrix_to_mobject([2, 1])
         goes_to = TexMobject("\\Rightarrow")
         physy_statement = VMobject(arrow, goes_to, array)
-        physy_statement.arrange_submobjects(RIGHT)
+        physy_statement.arrange(RIGHT)
         compy_statement = physy_statement.copy()
-        compy_statement.arrange_submobjects(LEFT)
+        compy_statement.arrange(LEFT)
         physy_speech.position_mobject_inside(physy_statement)
         compy_speech.position_mobject_inside(compy_statement)
 
@@ -1118,7 +1118,7 @@ class ItDoesntMatterWhich(Scene):
             TexMobject("\\Leftrightarrow"),
             matrix_to_mobject([2, 1])
         )
-        back_and_forth.arrange_submobjects(LEFT).center()
+        back_and_forth.arrange(LEFT).center()
 
 
         self.wait()

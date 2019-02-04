@@ -528,7 +528,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
     def show_ddf(self):
         df_dx_groups = self.df_dx_groups.copy()
         df_dx_groups.generate_target()
-        df_dx_groups.target.arrange_submobjects(
+        df_dx_groups.target.arrange(
             RIGHT, 
             buff = MED_LARGE_BUFF,
             aligned_edge = DOWN
@@ -759,7 +759,7 @@ class SecondDerivativeAsAcceleration(Scene):
         j_words.set_color_by_tex("d^3", j_scene.graph.get_color())
         self.a_words.generate_target()
         words_group = VGroup(s_words, v_words, self.a_words.target, j_words)
-        words_group.arrange_submobjects(
+        words_group.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT

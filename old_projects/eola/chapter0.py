@@ -68,7 +68,7 @@ class UpcomingSeriesOfVidoes(Scene):
         for icon, color in zip(icons, colors):
             icon.set_fill(color, opacity = 1)
         icons = VMobject(*icons)
-        icons.arrange_submobjects(RIGHT)
+        icons.arrange(RIGHT)
         icons.to_edge(LEFT)
         icons.shift(UP)
         icons = icons.split()
@@ -826,7 +826,7 @@ class TableOfContents(Scene):
             "Chapter 9: Eigenvectors and eigenvalues",
             "Chapter 10: Abstract vector spaces",
         ])))
-        chapters.arrange_submobjects(DOWN)
+        chapters.arrange(DOWN)
         chapters.scale(0.7)
         chapters.next_to(h_line, DOWN)
 
@@ -870,7 +870,7 @@ class TableOfContents(Scene):
         for icon, color in zip(icons, colors):
             icon.set_fill(color, opacity = 1)
         icons = VMobject(*icons)
-        icons.arrange_submobjects(RIGHT)
+        icons.arrange(RIGHT)
         icons.to_edge(LEFT)
         icons.shift(UP)
 
@@ -910,7 +910,7 @@ class ResourceForTeachers(Scene):
             Randolph(color = c)
             for c in (BLUE_D, BLUE_C, BLUE_E)
         ])
-        randys.arrange_submobjects(RIGHT)
+        randys.arrange(RIGHT)
         randys.scale(0.8)
         randys.to_corner(DOWN+LEFT)
 
@@ -941,7 +941,7 @@ class DifferingBackgrounds(Scene):
             for c in (BLUE_D, BLUE_C, BLUE_E)
         ])
         modes = ["pondering", "speaking_looking_left", "sassy"]
-        students.arrange_submobjects(RIGHT)
+        students.arrange(RIGHT)
         students.scale(0.8)
         students.center().to_edge(DOWN)
 

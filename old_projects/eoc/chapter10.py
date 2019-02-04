@@ -1861,7 +1861,7 @@ class EachTermControlsOneDerivative(Scene):
                 for n in range(2, 5)
             ]
         ])
-        deriv_words.arrange_submobjects(
+        deriv_words.arrange(
             RIGHT, 
             buff = LARGE_BUFF,
             aligned_edge = UP
@@ -2117,7 +2117,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             arrows
         ))))
         group.add(TexMobject("\\vdots"))
-        group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        group.arrange(DOWN, buff = SMALL_BUFF)
         group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0, color in zip(derivs_at_x, derivs_at_zero, self.colors):
@@ -2270,7 +2270,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ])
             for arg in ("x", "0", "a")
         ]
-        derivs_at_x.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        derivs_at_x.arrange(DOWN, buff = MED_LARGE_BUFF)
         derivs_at_x.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         derivs_at_x.to_edge(LEFT)
         zeros = VGroup(*[
@@ -2530,7 +2530,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
             arrows
         ))))
         group.add(TexMobject("\\vdots"))
-        group.arrange_submobjects(DOWN, buff = 2*SMALL_BUFF)
+        group.arrange(DOWN, buff = 2*SMALL_BUFF)
         group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0 in zip(derivs_at_x, derivs_at_zero):
@@ -2874,7 +2874,7 @@ class SecondTermIntuition(AreaIsDerivative):
         equals_half.scale(tex_scale_factor)
         group = VGroup(triangle, equals_half, height_term, base_term)
         group.generate_target()
-        group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.target.arrange(RIGHT, buff = SMALL_BUFF)
         group.target[-1].next_to(
             group.target[-2], RIGHT,
             buff = SMALL_BUFF,
@@ -2917,7 +2917,7 @@ class SecondTermIntuition(AreaIsDerivative):
             TexMobject("+"), mini_rect,
             TexMobject("+"), mini_triangle,
         )
-        geometric_taylor.arrange_submobjects(
+        geometric_taylor.arrange(
             RIGHT, buff = MED_SMALL_BUFF
         )
         geometric_taylor.to_corner(UP+LEFT)
@@ -3171,9 +3171,9 @@ class ExpConvergenceExample(ConvergenceExample):
             term.set_color(color)
 
         lhs = TexMobject("e^%s"%arg, "\\rightarrow")
-        lhs.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        lhs.arrange(RIGHT, buff = SMALL_BUFF)
         group = VGroup(lhs, series)
-        group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff = SMALL_BUFF)
 
         return group
 

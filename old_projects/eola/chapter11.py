@@ -131,7 +131,7 @@ class WhatIsA2DVector(LinearTransformationScene):
                 mob.target.scale(0.7)
             arrow = TexMobject("\\Rightarrow")
             group = VGroup(v.target, arrow, coords.target)
-            group.arrange_submobjects(vect)
+            group.arrange(vect)
             student.bubble.add_content(group)
             student.v, student.coords = v.copy(), coords.copy()
             student.arrow = arrow
@@ -151,7 +151,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             v.target = v.copy()
             coords.target = coords.copy()
             group = VGroup(v.target, coords.target)
-            group.arrange_submobjects(DOWN)
+            group.arrange(DOWN)
             group.set_height(coords.get_height())
             group.next_to(student.arrow, RIGHT)
             student.q_marks = TexMobject("???")
@@ -202,7 +202,7 @@ class HigherDimensionalVectorsNumerically(Scene):
             "5D vector", 
             "100D vector", 
         ])))
-        words.arrange_submobjects(RIGHT, buff = LARGE_BUFF*2)
+        words.arrange(RIGHT, buff = LARGE_BUFF*2)
         words.to_edge(UP)
         vectors = VGroup(*list(map(Matrix, [
             [3, 1, 4, 1],
@@ -724,7 +724,7 @@ class AddTwoFunctions(FunctionGraphScene):
             [input_mob.copy()],
             TexMobject(")")
         ))
-        result.arrange_submobjects()
+        result.arrange()
         result[0].set_color(self.graph_colors[2])
         VGroup(result[5], result[7]).set_color(self.graph_colors[0])
         VGroup(result[9], result[11]).set_color(self.graph_colors[1])
@@ -774,7 +774,7 @@ class AddVectorsCoordinateByCoordinate(Scene):
             v.get_entries()[1].set_color(Y_COLOR)
             v.get_entries()[2].set_color(Z_COLOR)
         plus, equals = TexMobject("+=")
-        VGroup(v1, plus, v2, equals, v_sum).arrange_submobjects()
+        VGroup(v1, plus, v2, equals, v_sum).arrange()
 
         self.add(v1, plus, v2)
         self.wait()
@@ -832,7 +832,7 @@ class ScaleVectorByCoordinates(Scene):
         ])
         v2.get_brackets()[0].next_to(two_targets, LEFT)
         v2.add(two_targets)
-        VGroup(two, dot, v1, equals, v2).arrange_submobjects()
+        VGroup(two, dot, v1, equals, v2).arrange()
 
         self.add(two, dot, v1)
         self.play(
@@ -923,7 +923,7 @@ class FromVectorsToFunctions(VectorScene):
             ]
         ])
         words.set_color_by_gradient(BLUE_B, BLUE_D)
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.to_corner(UP+LEFT)
         self.play(FadeIn(
             words,
@@ -966,7 +966,7 @@ class FromVectorsToFunctions(VectorScene):
             L, lp, func_tex.target, rp,
             equals, new_func
         )
-        group.arrange_submobjects()
+        group.arrange()
         group.shift(2*UP).to_edge(LEFT, buff = MED_LARGE_BUFF)
         rect = BackgroundRectangle(group)
         group.add_to_back(rect)
@@ -1107,13 +1107,13 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
                 word.set_color_by_tex(v_tex, YELLOW)
                 word.set_color_by_tex(w_tex, MAROON_B)
                 word.set_color_by_tex("c", GREEN)
-            words.arrange_submobjects()
+            words.arrange()
             words.lhs = words[1]
             words.rhs = words[2]
             words.add_to_back(BackgroundRectangle(words))
             # words.scale(0.8)
             properties.add(words)
-        properties.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+        properties.arrange(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         properties.next_to(h_line, DOWN, buff = MED_LARGE_BUFF).to_edge(LEFT)
 
         self.play(Write(title), ShowCreation(h_line))
@@ -1140,7 +1140,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         w_label_copy.generate_target()
         plus = TexMobject("+")
         vw_label = VGroup(v_label_copy.target, plus, w_label_copy.target)
-        vw_label.arrange_submobjects()
+        vw_label.arrange()
         vw_label.next_to(vw_sum.get_end(), RIGHT)
         self.play(
             MoveToTarget(v_label_copy),
@@ -1163,7 +1163,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             vw_label_copy,
             TexMobject(")").scale(0.8),
         )
-        vw_label.target.arrange_submobjects()
+        vw_label.target.arrange()
         for mob in vw_label, vw_label.target:
             mob.add_to_back(BackgroundRectangle(mob))
 
@@ -1184,7 +1184,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             equals, v_label_copy.target,
             plus, w_label_copy.target
         )
-        rhs.arrange_submobjects()
+        rhs.arrange()
         rhs.next_to(vw_label, RIGHT)
         rect = BackgroundRectangle(rhs)
         self.play(*it.chain(
@@ -1347,7 +1347,7 @@ class DerivativeIsLinear(Scene):
     def show_additivity(self):
         general, deriv = self.additivity, self.deriv_additivity
         group = VGroup(general, deriv )
-        group.arrange_submobjects(DOWN, buff = 1.5)
+        group.arrange(DOWN, buff = 1.5)
 
         inner_sum = VGroup(*deriv[2:2+3])
         outer_sum_deriv = VGroup(deriv[0], deriv[1], deriv[5])
@@ -1371,7 +1371,7 @@ class DerivativeIsLinear(Scene):
     def show_scaling(self):
         general, deriv = self.scaling, self.deriv_scaling
         group = VGroup(general, deriv)
-        group.arrange_submobjects(DOWN, buff = 1.5)
+        group.arrange(DOWN, buff = 1.5)
 
         inner_scaling = VGroup(*deriv[2:4])
         lhs_deriv = VGroup(deriv[0], deriv[1], deriv[4])
@@ -1423,7 +1423,7 @@ class PolynomialsHaveArbitrarilyLargeDegree(Scene):
             "\\vdots"
         ])))
         polys.set_color_by_gradient(BLUE_B, BLUE_D)
-        polys.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        polys.arrange(DOWN, buff = MED_LARGE_BUFF)
         polys.scale(1.3)
 
         arrow = TexMobject("\\Rightarrow").scale(1.5)
@@ -1473,7 +1473,7 @@ class GeneneralPolynomialCoordinates(Scene):
 
         equals = TexMobject("=").scale(1.3)
         group = VGroup(poly, equals, array)
-        group.arrange_submobjects()
+        group.arrange()
         group.to_edge(RIGHT)
 
         pre_entries = VGroup(
@@ -1529,7 +1529,7 @@ class IntroducePolynomialSpace(Scene):
             TexMobject("\\vdots"),
         )
         polys.set_color_by_gradient(BLUE_B, BLUE_D)
-        polys.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        polys.arrange(DOWN, buff = MED_SMALL_BUFF)
         polys.next_to(cloud.get_top(), DOWN, buff = MED_LARGE_BUFF)
 
         self.play(ShowCreation(cloud))
@@ -1592,7 +1592,7 @@ class IntroducePolynomialSpace(Scene):
             x_cubed
         ).copy()
         basis_group.generate_target()
-        basis_group.target.arrange_submobjects(
+        basis_group.target.arrange(
             DOWN, buff = 0.75*LARGE_BUFF, aligned_edge = LEFT
         )
         basis_group.target.to_edge(RIGHT, buff = MED_LARGE_BUFF)
@@ -1719,7 +1719,7 @@ class IntroducePolynomialSpace(Scene):
         ##Horrible
         last_col = VGroup(*matrix.get_mob_matrix()[:,-1])
         last_col_top = last_col.get_top()
-        last_col.arrange_submobjects(DOWN, buff = 0.83)
+        last_col.arrange(DOWN, buff = 0.83)
         last_col.move_to(last_col_top, aligned_edge = UP+RIGHT)
         ##End horrible
         matrix.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR, MAROON_B)
@@ -1813,7 +1813,7 @@ class IntroducePolynomialSpace(Scene):
             entry.generate_target()
             diag_entry.generate_target()
             group = VGroup(diag_entry.target, dot, entry.target)
-            group.arrange_submobjects()
+            group.arrange()
             result_entries.append(group)
         result_array = Matrix(
             result_entries + [
@@ -1873,12 +1873,12 @@ class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
             Matrix([[3, 1], [0, 2]]).set_column_colors(X_COLOR, Y_COLOR),
             Matrix(["x", "y"]).set_column_colors(YELLOW)
         )
-        mv_mult.arrange_submobjects()
+        mv_mult.arrange()
         mv_mult.scale(0.75)
         arrow = TexMobject("\\Leftrightarrow")
         deriv = TexMobject("\\dfrac{df}{dx}")
         group = VGroup(mv_mult, arrow, deriv)
-        group.arrange_submobjects(buff = MED_SMALL_BUFF)
+        group.arrange(buff = MED_SMALL_BUFF)
         arrow.set_color(BLACK)
 
         teacher = self.get_teacher()
@@ -1939,7 +1939,7 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
             "Eigenfunctions",
         ])))
         for concepts, vect in (lin_alg_concepts, LEFT), (function_concepts, RIGHT):
-            concepts.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+            concepts.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
             concepts.next_to(h_line, DOWN, buff = LARGE_BUFF)
             concepts.shift(vect*FRAME_X_RADIUS/2)
             concepts.set_color_by_gradient(YELLOW_B, YELLOW_C)
@@ -2020,9 +2020,9 @@ class YouAsAMathematician(Scene):
             tex.set_color_by_tex("\\lambda", MAROON_B)
 
         lhs = VGroup(eigen_equation, v_ne_zero)
-        lhs.arrange_submobjects(DOWN)
+        lhs.arrange(DOWN)
         group = VGroup(lhs, arrow, det_equation)
-        group.arrange_submobjects(buff = MED_SMALL_BUFF)
+        group.arrange(buff = MED_SMALL_BUFF)
         return group
 
 class ShowVectorSpaces(Scene):
@@ -2075,8 +2075,8 @@ class ShowVectorSpaces(Scene):
             for x in range(3)
         ])
         for subgroup in arrays:
-            subgroup.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
-        arrays.arrange_submobjects(RIGHT)
+            subgroup.arrange(DOWN, buff = MED_SMALL_BUFF)
+        arrays.arrange(RIGHT)
         arrays.scale(0.7)
         arrays.set_color_by_gradient(YELLOW, MAROON_B)
         return arrays
@@ -2107,7 +2107,7 @@ class ToolsOfLinearAlgebra(Scene):
             "Dot products",
             "$\\vdots$"
         ])))
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+        words.arrange(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         words[-1].next_to(words[-2], DOWN)
         self.play(FadeIn(
             words,
@@ -2123,7 +2123,7 @@ class MathematicianSpeakingToAll(Scene):
             Randolph().flip().set_color(color)
             for color in (BLUE_D, GREEN_E, GOLD_E, BLUE_C)
         ])
-        others.arrange_submobjects()
+        others.arrange()
         others.scale(0.8)
         others.to_corner(DOWN+RIGHT)
 
@@ -2220,7 +2220,7 @@ class ListAxioms(Scene):
         for axiom in axioms:
             for tex, color in tex_color_pairs:
                 axiom.set_color_by_tex(tex, color)
-        axioms.arrange_submobjects(
+        axioms.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -2253,8 +2253,8 @@ class AxiomsAreInterface(Scene):
             VGroup(*others[2:]),
         )
         for group in others:
-            group.arrange_submobjects(RIGHT)
-        others.arrange_submobjects(DOWN)
+            group.arrange(RIGHT)
+        others.arrange(DOWN)
         others.scale(0.8)
         others.to_edge(RIGHT)
         VGroup(mathy, others).to_edge(DOWN)
@@ -2300,9 +2300,9 @@ class VectorSpaceOfPiCreatures(Scene):
             VGroup(*[
                 PiCreature()
                 for x in range(4)
-            ]).arrange_submobjects(RIGHT, buff = 1.5)
+            ]).arrange(RIGHT, buff = 1.5)
             for y in range(4)
-        ]).arrange_submobjects(DOWN, buff = 1.5)
+        ]).arrange(DOWN, buff = 1.5)
         creatures = VGroup(*it.chain(*creatures))
         creatures.set_height(FRAME_HEIGHT-1)
         for pi in creatures:
@@ -2357,7 +2357,7 @@ class VectorSpaceOfPiCreatures(Scene):
             pi1.target, plus, pi2.target,
             equals, sum_pi
         )
-        sum_equation.arrange_submobjects().center()
+        sum_equation.arrange().center()
 
         scaled_pi3 = pi3.copy().scale(2)
         equals2 = TexMobject("=")
@@ -2365,9 +2365,9 @@ class VectorSpaceOfPiCreatures(Scene):
         scale_equation = VGroup(
             two, pi3.target, equals2, scaled_pi3
         )
-        scale_equation.arrange_submobjects()
+        scale_equation.arrange()
 
-        VGroup(sum_equation, scale_equation).arrange_submobjects(
+        VGroup(sum_equation, scale_equation).arrange(
             DOWN, buff = MED_SMALL_BUFF
         )
 
@@ -2492,7 +2492,7 @@ class WhatIsThree(Scene):
             if isinstance(group, TexMobject):
                 pass
             elif isinstance(group[0], Vector):
-                group.arrange_submobjects(RIGHT)
+                group.arrange(RIGHT)
                 group.set_color_by_gradient(YELLOW, MAROON_B)
             else:
                 m1, m2, m3 = group

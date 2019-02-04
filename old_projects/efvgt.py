@@ -426,7 +426,7 @@ class SymmetriesOfSquare(ThreeDScene):
             self.square.copy().scale(0.5)
             for x in range(8)
         ])
-        all_squares.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        all_squares.arrange(RIGHT, buff = LARGE_BUFF)
 
         top_squares = VGroup(*all_squares[:4])
         bottom_squares = VGroup(*all_squares[4:])
@@ -819,7 +819,7 @@ class AddSquareSymmetries(SymmetriesOfSquare):
         equation[4].add(self.get_axis_line(equation[4], UP+RIGHT))
         for mob in equation[::2]:
             mob.scale(0.5)
-        equation.arrange_submobjects(RIGHT)
+        equation.arrange(RIGHT)
         equation.to_edge(UP)
 
         arcs = self.get_rotation_arcs(square, np.pi/2)
@@ -958,7 +958,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
             cube.copy(), TexMobject("="),
             cube.copy()
         )
-        equation.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        equation.arrange(RIGHT, buff = MED_LARGE_BUFF)
         equation.center()
 
         self.add(cube1)
@@ -1096,7 +1096,7 @@ class DihedralGroupStructure(SymmetriesOfSquare):
                 "angle" : angle,
                 "axis" : axis,
             }
-        expression.arrange_submobjects()
+        expression.arrange()
         expression.set_width(FRAME_X_RADIUS+1)
         expression.to_edge(RIGHT, buff = SMALL_BUFF)
         for square in s1, s2, s3:
@@ -1162,7 +1162,7 @@ class ThisIsAVeryGeneralIdea(Scene):
             "Numbers",
         ])))
         numbers = examples[-1]
-        examples.arrange_submobjects(buff = LARGE_BUFF)
+        examples.arrange(buff = LARGE_BUFF)
         examples.set_width(FRAME_WIDTH-1)
         examples.move_to(UP)
 
@@ -1194,7 +1194,7 @@ class ThisIsAVeryGeneralIdea(Scene):
             "Numbers \\\\ (Additive)",
             "Numbers \\\\ (Multiplicative)",
         ])))
-        sub_categories.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        sub_categories.arrange(RIGHT, buff = MED_LARGE_BUFF)
         sub_categories.next_to(numbers, DOWN, 1.5*LARGE_BUFF)
         sub_categories.to_edge(RIGHT)
         sub_categories[0].set_color(ADDER_COLOR)
@@ -1963,7 +1963,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
             for word in ["Stretch" if num > 1 else "Squish"]
         ])
         words.submobjects.insert(2, TexMobject("="))
-        words.arrange_submobjects(RIGHT)
+        words.arrange(RIGHT)
         top_words = VGroup(*words[:2])
         top_words.set_color(MULTIPLIER_COLOR)
         bottom_words = VGroup(*words[2:])
@@ -2374,7 +2374,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
         rule = VGroup(
             lhs, three_twos.target, cdot, five_twos.target
         )
-        rule.arrange_submobjects()
+        rule.arrange()
         lhs.next_to(three_twos.target, LEFT, aligned_edge = DOWN)
         rule.next_to(self.get_pi_creatures(), UP)
 
@@ -2422,7 +2422,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
             TexMobject("2^{-1}"),
             TexMobject("2^{i}"),
         )
-        alt_powers.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        alt_powers.arrange(RIGHT, buff = LARGE_BUFF)
         alt_powers.next_to(self.get_students(), UP, buff = LARGE_BUFF)
 
         self.play(
@@ -2458,7 +2458,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
             "\\big( 2^{1} \\big) = 2^{0}"
         )
         expressions = VGroup(half_expression, neg_one_expression)
-        expressions.arrange_submobjects(
+        expressions.arrange(
             DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF
         )
         expressions.next_to(self.get_students(), UP, buff = LARGE_BUFF)

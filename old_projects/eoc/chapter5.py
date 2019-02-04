@@ -26,7 +26,7 @@ class LastVideo(TeacherStudentsScene):
             "\\frac{d(x^n)}{dx} = nx^{n-1}",
             "\\frac{d(\\sin(x))}{dx} = \\cos(x)",
         ])))
-        known_formulas.arrange_submobjects(
+        known_formulas.arrange(
             DOWN, buff = MED_LARGE_BUFF,
         )
         known_formulas.set_height(2.5)
@@ -327,9 +327,9 @@ class DoublingPopulation(PiCreatureScene):
             VGroup(*[
                 PiCreature(mode = "plain")
                 for y in range(height)
-            ]).arrange_submobjects(UP, buff = MED_LARGE_BUFF)
+            ]).arrange(UP, buff = MED_LARGE_BUFF)
             for x in range(width)
-        ]).arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        ]).arrange(RIGHT, buff = MED_LARGE_BUFF)
         creatures = VGroup(*it.chain(*creature_array))
         creatures.set_height(self.pi_creature_grid_height)
         creatures.to_corner(DOWN+RIGHT)
@@ -1009,7 +1009,7 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
             for base in (2, 8)
         ])
 
-        derivs.arrange_submobjects(
+        derivs.arrange(
             DOWN, buff = 1.5, aligned_edge = LEFT
         )
         derivs.to_edge(LEFT, LARGE_BUFF).shift(UP)
@@ -1591,7 +1591,7 @@ class ManyExponentialForms(TeacherStudentsScene):
             ]
         ]
         group = VGroup(lhs, *rhs_list)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.set_width(FRAME_WIDTH - LARGE_BUFF)
         group.next_to(self.get_pi_creatures(), UP, 2*LARGE_BUFF)
         for part in group:
@@ -1784,7 +1784,7 @@ class InvestedMoney(Scene):
 class NaturalLog(Scene):
     def construct(self):
         expressions = VGroup(*list(map(self.get_expression, [2, 3, 7])))
-        expressions.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        expressions.arrange(DOWN, buff = MED_SMALL_BUFF)
         expressions.to_edge(LEFT)
 
         self.play(FadeIn(
@@ -1898,7 +1898,7 @@ class NextVideo(TeacherStudentsScene):
         next_tex = VGroup(*list(map(TextMobject, [
             "Chain rule", "Product rule", "$\\vdots$"
         ])))
-        next_tex.arrange_submobjects(DOWN)
+        next_tex.arrange(DOWN)
         next_tex.next_to(brace, DOWN)
         next_tex.shift(
             next_video.get_center()[0]*RIGHT\

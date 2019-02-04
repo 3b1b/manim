@@ -24,9 +24,9 @@ class IntroducePutnam(Scene):
             VGroup(*[
                 TextMobject("%s%d)"%(c, i))
                 for i in range(1, 7)
-            ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+            ]).arrange(DOWN, buff = MED_LARGE_BUFF)
             for c in ("A", "B")
-        ]).arrange_submobjects(RIGHT, buff = FRAME_X_RADIUS - MED_SMALL_BUFF)
+        ]).arrange(RIGHT, buff = FRAME_X_RADIUS - MED_SMALL_BUFF)
         question_groups.to_edge(LEFT)
         question_groups.to_edge(DOWN, MED_LARGE_BUFF)
         flat_questions = VGroup(*it.chain(*question_groups))
@@ -967,7 +967,7 @@ class RevisitTwoDCase(TwoDCase):
             "Choose $P_3$ at random"
         ])))
         words.scale(0.8)
-        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        words.arrange(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
         words[1].set_color(YELLOW)
 
@@ -1229,7 +1229,7 @@ class Rewrite3DRandomProcedure(Scene):
             "Flip coin for each line \\\\ to get $P_1$, $P_2$, $P_3$",
         ])))
         words.scale(0.8)
-        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        words.arrange(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
         words[1].set_color(YELLOW)
         cross = Cross(words[0])
@@ -1311,7 +1311,7 @@ class ProblemSolvingTakeaways(Scene):
         ])
         points[0].set_color(BLUE)
         points[1].set_color(YELLOW)
-        points.arrange_submobjects(
+        points.arrange(
             DOWN, buff = LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -1392,7 +1392,7 @@ class BrilliantPuzzle(PiCreatureScene):
 
     def get_test(self):
         lines = VGroup(*[Line(ORIGIN, 0.5*RIGHT) for x in range(6)])
-        lines.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        lines.arrange(DOWN, buff = SMALL_BUFF)
         rect = SurroundingRectangle(lines)
         rect.set_stroke(WHITE)
         lines.set_stroke(WHITE, 2)

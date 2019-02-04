@@ -295,7 +295,7 @@ class BabylonianTablets(Scene):
             tex = tex.replace(",", "{,}")
             triple = TexMobject(tex)
             triples.add(triple)
-        triples.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        triples.arrange(DOWN, aligned_edge = LEFT)
         triples.set_height(FRAME_HEIGHT - LARGE_BUFF)
         triples.to_edge(RIGHT)
 
@@ -1069,7 +1069,7 @@ class OneMoreExample(Scene):
         for i in 0, 2, 3:
             final_line[i].set_color(GREEN)
         lines = VGroup(top_line, second_line, final_line)
-        lines.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        lines.arrange(DOWN, buff = MED_LARGE_BUFF)
         lines.next_to(rect.get_top(), DOWN)
         minus = TexMobject("-").scale(0.9)
         minus.move_to(second_line[3])
@@ -1496,9 +1496,9 @@ class WriteGeneralFormula(GeneralExample):
             triple_mobs.add(triple_mob)
             pair_mob.scale(0.75)
             triple_mob.scale(0.75)
-        pair_mobs.arrange_submobjects(DOWN)
+        pair_mobs.arrange(DOWN)
         pair_mobs.next_to(uv_title, DOWN, MED_LARGE_BUFF)
-        triple_mobs.arrange_submobjects(DOWN)
+        triple_mobs.arrange(DOWN)
         triple_mobs.next_to(triple_title, DOWN, MED_LARGE_BUFF)
 
         self.play(*list(map(FadeIn, [
@@ -3035,7 +3035,7 @@ class Thumbnail(DrawRadialLines):
             "8^2 + 15^2 = 17^2",
             "\\vdots"
         ])))
-        triples.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        triples.arrange(DOWN, buff = MED_LARGE_BUFF)
         triples.next_to(rect.get_top(), DOWN)
         self.add(rect, triples)
 
@@ -3074,7 +3074,7 @@ class Poster(DrawRadialLines):
         #     "8^2 + 15^2 = 17^2",
         #     "\\vdots"
         # ]))
-        # triples.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        # triples.arrange(DOWN, buff = MED_LARGE_BUFF)
         # triples.next_to(rect.get_top(), DOWN)
         # self.add(rect, triples)
 

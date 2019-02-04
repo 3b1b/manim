@@ -137,7 +137,7 @@ class SliderScene(Scene):
             Slider(center_value = cv, **self.slider_config)
             for cv in self.center_point
         ])
-        sliders.arrange_submobjects(RIGHT, buff = self.slider_spacing)
+        sliders.arrange(RIGHT, buff = self.slider_spacing)
         sliders[0].add_numbers()
         sliders[0].set_value(
             self.center_point[0] + np.sqrt(self.total_real_estate)
@@ -709,7 +709,7 @@ class Professionals(PiCreatureScene):
         plane.scale(0.75)
         examples.add(plane)
         examples.add(Circle())
-        examples.arrange_submobjects(RIGHT, buff = 2)
+        examples.arrange(RIGHT, buff = 2)
         examples.to_edge(UP, buff = LARGE_BUFF)
         labels = VGroup(*list(map(TextMobject, ["2D", "3D"])))
 
@@ -756,7 +756,7 @@ class Professionals(PiCreatureScene):
         pi_creatures = VGroup(self.mathy, self.compy, self.physy)
         for pi in pi_creatures:
             pi.scale(0.7)
-        pi_creatures.arrange_submobjects(RIGHT, buff = 3)
+        pi_creatures.arrange(RIGHT, buff = 3)
         pi_creatures.to_edge(DOWN, buff = LARGE_BUFF)
         return pi_creatures
 
@@ -1122,7 +1122,7 @@ class TwoDimensionalCase(Introduce4DSliders):
             DecimalNumber(num**2) 
             for num in self.get_vector()
         ])
-        decimals.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        decimals.arrange(RIGHT, buff = LARGE_BUFF)
         decimals.next_to(rects, DOWN, LARGE_BUFF)
 
         real_estate_word = TextMobject("``Real estate''")
@@ -1342,7 +1342,7 @@ class ThreeDCase(TwoDimensionalCase):
             DecimalNumber(num**2)
             for num in self.get_vector()
         ])
-        decimals.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        decimals.arrange(RIGHT, buff = LARGE_BUFF)
         decimals.next_to(rects, DOWN, LARGE_BUFF)
 
         colors = [GREEN, RED, BLUE]
@@ -1725,7 +1725,7 @@ class ThreeDCubeCorners(Scene):
             TexMobject("(%d,\\, %d,\\, %d)"%(x, y, z))
             for x, y, z in it.product(*3*[[1, -1]])
         ])
-        coordinates.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        coordinates.arrange(DOWN, aligned_edge = LEFT)
         name = TextMobject("Corners: ")
         name.next_to(coordinates[0], LEFT)
         group = VGroup(name, coordinates)
@@ -2451,7 +2451,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
             TexMobject("(%d, %d, %d, %d)"%tup)
             for tup in coordinates
         ])
-        coordinate_mobs.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        coordinate_mobs.arrange(DOWN, aligned_edge = LEFT)
         coordinate_mobs.scale(0.8)
         left_column = VGroup(*coordinate_mobs[:8])
         right_column = VGroup(*coordinate_mobs[8:])
@@ -3279,7 +3279,7 @@ class FunHighDSpherePhenomena(Scene):
             "$\\cdot$ Sphere packing in 8 dimensions",
             "$\\cdot$ Sphere packing in 24 dimensions",
         ])))
-        items.arrange_submobjects(
+        items.arrange(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
         items.next_to(h_line, DOWN)
@@ -3446,7 +3446,7 @@ class Announcements(TeacherStudentsScene):
             "$\\cdot$ Where to learn more",
             "$\\cdot$ Q\\&A Followup (podcast!)",
         ])))
-        items.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        items.arrange(DOWN, aligned_edge = LEFT)
         items.next_to(h_line, DOWN)
 
         self.play(

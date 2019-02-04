@@ -589,7 +589,7 @@ class IntroduceGraph(PiCreatureScene):
             PiCreature(color = BLUE_E).flip(),
         )
         pis.scale(0.5)
-        pis.arrange_submobjects_in_grid(buff = 2)
+        pis.arrange_in_grid(buff = 2)
         return pis
 
 class IsK33Planar(UtilitiesPuzzleScene):
@@ -861,7 +861,7 @@ class AskAboutRegions(IntroduceRegions):
         front_regions.save_state()
         front_regions.generate_target()
         front_regions.target.scale(0.5)
-        front_regions.target.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        front_regions.target.arrange(RIGHT, buff = LARGE_BUFF)
         front_regions.target.to_edge(UP)
 
         self.add(front_regions)
@@ -1330,9 +1330,9 @@ class ConcludeFiveRegions(LightUpNodes):
             for line in lines.target:
                 line.rotate(-line.get_angle())
                 line.set_width(1.5)
-            lines.target.arrange_submobjects(DOWN)
+            lines.target.arrange(DOWN)
             line_sets.target.add(lines.target)
-        line_sets.target.arrange_submobjects(DOWN)
+        line_sets.target.arrange(DOWN)
         line_sets.target.center()
         line_sets.target.to_edge(RIGHT)
 
@@ -1507,7 +1507,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             TextMobject("5", "regions"),
             TextMobject("4", "edges each"),
         )
-        words.arrange_submobjects(DOWN)
+        words.arrange(DOWN)
         words.to_edge(UP)
         words[0][0].set_color(self.f_colors[0])
         words[1][0].set_color(self.e_color)
@@ -1517,7 +1517,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
         squares.set_stroke(width = 0)
         squares.set_fill(opacity = 1)
         squares.set_color_by_gradient(*self.f_colors)
-        squares.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        squares.arrange(RIGHT, buff = MED_LARGE_BUFF)
         squares.next_to(words, DOWN, LARGE_BUFF)
         all_edges = VGroup()
         all_vertices = VGroup()
@@ -1817,7 +1817,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
             group.symbols = VGroup(*list(map(TexMobject, ["-", "+", "="])))
             group.generate_target()
             line = VGroup(*it.chain(*list(zip(group.target, group.symbols))))
-            line.arrange_submobjects(RIGHT)
+            line.arrange(RIGHT)
             line.to_edge(UP, buff = MED_SMALL_BUFF)
         VGroup(counts.target, counts.symbols).shift(0.75*DOWN)
         for mob in count_titles.target:

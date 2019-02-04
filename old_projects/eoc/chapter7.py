@@ -138,7 +138,7 @@ class LimitJustMeansApproach(PiCreatureScene):
             ratio = ((2+dx)**3-2**3)/dx
             ratio_mob = TexMobject("%.6f\\dots"%ratio)
             group = VGroup(expression, TexMobject("="), ratio_mob)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             result.add(group)
         return result
 
@@ -740,7 +740,7 @@ class GoalsListed(Scene):
                 "L'Hôpital's rule",
             ])
         ])
-        goals.arrange_submobjects(
+        goals.arrange(
             DOWN, buff = LARGE_BUFF, aligned_edge = LEFT
         )
 
@@ -1726,7 +1726,7 @@ class TheoryHeavy(TeacherStudentsScene):
             "\\over \\,", "h}"
         )
         derivative = VGroup(lhs, equals, rhs)
-        derivative.arrange_submobjects(RIGHT)
+        derivative.arrange(RIGHT)
         for tex_mob in derivative:
             tex_mob.set_color_by_tex("x", RED)
             tex_mob.set_color_by_tex("h", GREEN)

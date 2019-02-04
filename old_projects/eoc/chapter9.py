@@ -254,10 +254,10 @@ class LengthOfDayGraph(GraphScene):
             )
             for x in range(6)
         ])
-        panel.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        panel.arrange(RIGHT, buff = SMALL_BUFF)
         panel.center()
         panels = ThreeDMobject(panel, panel.copy(), panel.copy())
-        panels.arrange_submobjects(DOWN)
+        panels.arrange(DOWN)
         panels.rotate(4*np.pi/12, DOWN)
         panels.rotate(-np.pi/6, OUT)
         side_vect = RIGHT
@@ -367,9 +367,9 @@ class AverageOfFiniteSet(Scene):
         ])
         colors = Color(BLUE).range_to(RED, len(lengths))
         lines.set_color_by_gradient(*colors)
-        lines.arrange_submobjects(RIGHT)
+        lines.arrange(RIGHT)
         lines.generate_target()
-        lines.target.arrange_submobjects(RIGHT, buff = 0)
+        lines.target.arrange(RIGHT, buff = 0)
         for mob in lines, lines.target:
             mob.shift(UP)
         brace = Brace(lines.target, UP)
@@ -388,7 +388,7 @@ class AverageOfFiniteSet(Scene):
         symbols.generate_target()
         symbols.target.set_fill(opacity = 1)
         sum_eq = VGroup(*it.chain(*list(zip(labels.target, symbols.target))))
-        sum_eq.arrange_submobjects(RIGHT)
+        sum_eq.arrange(RIGHT)
         sum_eq.next_to(brace, UP)
 
         sum_mob = TexMobject(str(sum(lengths)))
@@ -475,7 +475,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
         plusses = VGroup(*[TexMobject("+") for x in start_lines])
         sum_eq = VGroup(*it.chain(*list(zip(start_lines, plusses))))
         sum_eq.add(*end_lines)
-        sum_eq.arrange_submobjects(RIGHT)
+        sum_eq.arrange(RIGHT)
         sum_eq.next_to(v_lines[0], UP, aligned_edge = LEFT)
         sum_eq.to_edge(UP, buff = MED_SMALL_BUFF)
 
@@ -573,7 +573,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
         numerator = VGroup(*it.chain(*list(zip(summed_v_lines, plusses))))
         for group in numerator, plusses:
             group.remove(plusses[-1])
-        numerator.arrange_submobjects(
+        numerator.arrange(
             RIGHT, 
             buff = SMALL_BUFF,
             aligned_edge = DOWN
@@ -1614,7 +1614,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         for tex, color in zip("ab", self.bound_colors):
             rhs.set_color_by_tex(tex, color)
         expression = VGroup(num_samples, approx, rhs)
-        expression.arrange_submobjects(RIGHT)
+        expression.arrange(RIGHT)
         expression.next_to(self.y_axis, RIGHT)
         rhs_copy = rhs.copy()
 

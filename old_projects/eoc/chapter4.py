@@ -32,7 +32,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
             ]
         ])
         for rules in simple_rules, combination_rules:
-            rules.arrange_submobjects(buff = LARGE_BUFF)
+            rules.arrange(buff = LARGE_BUFF)
             rules.next_to(self.get_teacher(), UP, buff = MED_LARGE_BUFF)
             rules.to_edge(LEFT)
 
@@ -273,7 +273,7 @@ class PreSumRuleDiscussion(Scene):
             formula[6].set_color(SINE_COLOR)
             formula[3].set_color(X_SQUARED_COLOR)
             formula[8].set_color(X_SQUARED_COLOR)
-        VGroup(specific, general).arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        VGroup(specific, general).arrange(DOWN, buff = LARGE_BUFF)
 
         #Add on rules
         self.add(specific)
@@ -575,7 +575,7 @@ class SumRule(GraphScene):
             DashedLine(ORIGIN, 2*RIGHT, stroke_width = 3)
             for x in range(2)
         ])
-        h_lines.arrange_submobjects(DOWN, buff = distance)
+        h_lines.arrange(DOWN, buff = distance)
         h_lines.move_to(v_lines[1].get_top(), UP+RIGHT)
 
         brace = Brace(h_lines, LEFT)
@@ -1029,7 +1029,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
 
         self.play(Write(VGroup(*deriv[:2])))
         self.play(
-            df_boxes_copy.arrange_submobjects,
+            df_boxes_copy.arrange,
             df_boxes_copy.set_fill, None, self.df_box_kwargs["fill_opacity"],
             df_boxes_copy.next_to, deriv[1]
         )
@@ -1467,7 +1467,7 @@ class ShoveXSquaredInSine(Scene):
         x_squared = TexMobject("h(x)", "=", "x^2")
         x_squared.set_color(X_SQUARED_COLOR)
         group = VGroup(sine, x_squared)
-        group.arrange_submobjects(buff = LARGE_BUFF)
+        group.arrange(buff = LARGE_BUFF)
         group.shift(UP)
         composition = TexMobject(
             "g(", "h(x)", ")", "=", "\\sin(", "x^2", ")"
@@ -1780,7 +1780,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
         words = TextMobject("For example,")
         expression = TexMobject("\\cos(1.5^2)\\cdot 2(1.5)\\,dx")
         group = VGroup(words, expression)
-        group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        group.arrange(DOWN, aligned_edge = LEFT)
         group.scale(0.8)
         group.to_edge(RIGHT)
         arrow = Arrow(group.get_bottom(), self.final_derivative[0].get_top())
@@ -2101,7 +2101,7 @@ class WatchingVideo(PiCreatureScene):
                 "e^x(x^2 + 3x + 2)",
             ]
         ])
-        formulas.arrange_submobjects(
+        formulas.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT

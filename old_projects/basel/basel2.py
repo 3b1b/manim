@@ -671,7 +671,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
 
         formulas = VGroup(basel_sum, leibniz_sum, wallis_product)
         formulas.scale(0.75)
-        formulas.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        formulas.arrange(DOWN, buff = MED_LARGE_BUFF)
         for formula in formulas:
             basel_equals_x = basel_equals.get_center()[0]
             formula_equals_x = formula.get_part_by_tex("=").get_center()[0]
@@ -1769,7 +1769,7 @@ class InverseSquareLaw(ThreeDScene):
             n = int(distance)**2
             copies = VGroup(*[new_screen.copy() for x in range(n)])
             copies.rotate(-TAU/4, axis = UP)
-            copies.arrange_submobjects_in_grid(buff = 0)
+            copies.arrange_in_grid(buff = 0)
             copies.rotate(TAU/4, axis = UP)
             copies.move_to(source_point, IN)
             copies.shift(distance*RIGHT*unit_distance)
@@ -1890,7 +1890,7 @@ class OtherInstanceOfInverseSquareLaw(Scene):
                 "Heat", "Sound", "Radio waves", "Electric fields",
             ]
         ])
-        items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        items.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         items.next_to(h_line, DOWN, LARGE_BUFF)
         items.to_edge(LEFT)
 
@@ -2393,7 +2393,7 @@ class SimpleIPTProof(Scene):
                 "{1 \\over ", "a^2}",
             ),
         )
-        argument_lines.arrange_submobjects(DOWN)
+        argument_lines.arrange(DOWN)
         for line in argument_lines:
             line.set_color_by_tex_to_color_map({
                 "a" : BLUE,
@@ -4397,9 +4397,9 @@ class Credits(Scene):
         ])
         for credit, color in zip(credits, [MAROON_D, BLUE_D, WHITE]):
             credit[1].set_color(color)
-            credit.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+            credit.arrange(DOWN, buff = SMALL_BUFF)
 
-        credits.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        credits.arrange(DOWN, buff = LARGE_BUFF)
 
         credits.center()
         patreon_logo = PatreonLogo()

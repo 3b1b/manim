@@ -574,7 +574,7 @@ class MultiplyWithConstantTop(Scene):
         top_exp_equation = VMobject(
             top1, times, top2, equals, top3
         )
-        top_exp_equation.arrange_submobjects()
+        top_exp_equation.arrange()
         old_style_exp = TexMobject("(x^3)(y^3) = (xy)^3")
         old_style_exp.to_edge(UP)
         old_style_exp.set_color(GREEN)
@@ -612,7 +612,7 @@ class RightStaysConstantQ(Scene):
         equation = VMobject(
             top1, q_mark, top2, TexMobject("="), top3
         )
-        equation.arrange_submobjects(buff = 0.7)
+        equation.arrange(buff = 0.7)
         symbols_at_top = VMobject(*[
             top.values[1]
             for top in (top1, top2, top3)
@@ -697,7 +697,7 @@ class ConstantLowerRight(Scene):
         equation = VMobject(
             top1, big_oplus, top2, equals, top3
         )
-        equation.arrange_submobjects()
+        equation.arrange()
         top3.shift(0.5*RIGHT)
         x, y, xy = [
             t.put_on_vertex(0, s)

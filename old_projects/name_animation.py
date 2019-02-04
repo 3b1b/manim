@@ -40,7 +40,7 @@ class NameAnimationScene(Scene):
             TexMobject("\\times"),
             Integer(1)
         )
-        times_n_label.arrange_submobjects(RIGHT)
+        times_n_label.arrange(RIGHT)
         times_n_label.shift(FRAME_WIDTH * RIGHT / 4)
         times_n_label.to_edge(UP)
 

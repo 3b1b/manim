@@ -230,9 +230,9 @@ class Laptop(VGroup):
             VGroup(*[
                 Square(**self.key_color_kwargs)
                 for x in range(12 - y % 2)
-            ]).arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            ]).arrange(RIGHT, buff=SMALL_BUFF)
             for y in range(4)
-        ]).arrange_submobjects(DOWN, buff=MED_SMALL_BUFF)
+        ]).arrange(DOWN, buff=MED_SMALL_BUFF)
         keyboard.stretch_to_fit_width(
             self.keyboard_width_to_body_width * body.get_width(),
         )
@@ -316,7 +316,7 @@ class VideoSeries(VGroup):
         digest_config(self, kwargs)
         videos = [VideoIcon() for x in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
-        self.arrange_submobjects()
+        self.arrange()
         self.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         self.set_color_by_gradient(*self.gradient_colors)
 

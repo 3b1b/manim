@@ -106,7 +106,7 @@ class ShowShadows(ThreeDScene):
         text = TextMobject("Shadow area: ")
         decimal = DecimalNumber(0)
         label = VGroup(text, decimal)
-        label.arrange_submobjects(RIGHT)
+        label.arrange(RIGHT)
         label.scale(1.5)
         label.move_to(self.area_label_center - decimal.get_center())
         self.shadow_area_label = label
@@ -132,7 +132,7 @@ class ShowShadows(ThreeDScene):
         text = TextMobject("Surface area: ")
         decimal = DecimalNumber(self.surface_area)
         label = VGroup(text, decimal)
-        label.arrange_submobjects(RIGHT)
+        label.arrange(RIGHT)
         label.scale(1.25)
         label.set_fill(YELLOW)
         label.set_background_stroke(width=3)

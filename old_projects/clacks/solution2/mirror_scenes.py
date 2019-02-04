@@ -78,7 +78,7 @@ class MirrorScene(Scene):
             Line(ORIGIN, 2 * RIGHT),
             Line(ORIGIN, (self.line_length - 4) * RIGHT),
         )
-        mirror.arrange_submobjects(RIGHT, buff=0)
+        mirror.arrange(RIGHT, buff=0)
         mirror.set_stroke(width=5)
         mirror[0::2].set_stroke((WHITE, GREY))
         mirror[1::2].set_stroke((GREY, WHITE))
@@ -235,7 +235,7 @@ class MirrorScene(Scene):
             )
         )
         group = VGroup(lhs, radians, radians_word, equals, degrees)
-        group.arrange_submobjects(RIGHT, aligned_edge=DOWN)
+        group.arrange(RIGHT, aligned_edge=DOWN)
         equals.align_to(lhs[-1], DOWN)
         group.to_corner(UL)
         return group

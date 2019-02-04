@@ -13,7 +13,7 @@ def get_quiz(*questions):
         "%d. %s"%(i+1, question)
         for i, question in enumerate(questions)
     ])))
-    q_mobs.arrange_submobjects(
+    q_mobs.arrange(
         DOWN, 
         buff = MED_LARGE_BUFF,
         aligned_edge = LEFT, 
@@ -23,7 +23,7 @@ def get_quiz(*questions):
         Line(q_mobs.get_left(), q_mobs.get_right()),
         q_mobs
     )
-    content.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+    content.arrange(DOWN, buff = MED_SMALL_BUFF)
     rect = SurroundingRectangle(content, buff = MED_LARGE_BUFF)
     rect.shift(MED_SMALL_BUFF*DOWN)
     rect.set_color(WHITE)
@@ -60,7 +60,7 @@ def get_slot_group(
         Line(ORIGIN, MED_LARGE_BUFF*RIGHT)
         for x in range(n)
     ])
-    lines.arrange_submobjects(RIGHT, buff = buff)
+    lines.arrange(RIGHT, buff = buff)
     if include_qs:
         labels = VGroup(*[
             TextMobject("Q%d"%d) for d in range(1, n+1)
@@ -491,7 +491,7 @@ class IntroduceQuiz(PiCreatureScene):
             ]
         ]
         for group in probabilities, abbreviated_probabilities:
-            group.arrange_submobjects(
+            group.arrange(
                 DOWN, 
                 buff = MED_LARGE_BUFF,
                 aligned_edge = LEFT
@@ -673,13 +673,13 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
             score.set_color_by_tex("Score", GREEN)
             scores.add(score)
             score_group.organized = score_group.deepcopy()
-            score_group.organized.arrange_submobjects(UP, buff = SMALL_BUFF)
+            score_group.organized.arrange(UP, buff = SMALL_BUFF)
             score_group.organized.scale(self.score_group_scale_val)
             brace = Brace(score_group.organized, LEFT)
             score.next_to(brace, LEFT)
             score.add(brace)
             full_score_groups.add(VGroup(score, score_group.organized))
-        full_score_groups.arrange_submobjects(
+        full_score_groups.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = RIGHT
         )
@@ -783,7 +783,7 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
             TexMobject("P(", "\\checkmark" if b else "\\times", ")")
             for b in slot_group.bool_list
         ])
-        rhs.arrange_submobjects(RIGHT, SMALL_BUFF)
+        rhs.arrange(RIGHT, SMALL_BUFF)
         rhs.next_to(lhs, RIGHT, SMALL_BUFF)
         for part, b in zip(rhs, slot_group.bool_list):
             part.set_color_by_tex_to_color_map({
@@ -876,7 +876,7 @@ class ThousandPossibleQuizzes(Scene):
                 "Solve $\\zeta(s) = 0$",
             ),
         )
-        full_quizzes.arrange_submobjects(RIGHT)
+        full_quizzes.arrange(RIGHT)
         target_quizzes = VGroup(*quizzes[:len(full_quizzes)])
 
         for quiz in full_quizzes:
@@ -915,7 +915,7 @@ class ThousandPossibleQuizzes(Scene):
                 TexMobject(str(num)),
                 get_slot_group([b], buff = SMALL_BUFF, include_qs = False)
             )
-            label.arrange_submobjects(DOWN)
+            label.arrange(DOWN)
             label.next_to(split.target, LEFT, buff = LARGE_BUFF)
             labels.add(label)
 
@@ -945,7 +945,7 @@ class ThousandPossibleQuizzes(Scene):
             TextMobject("Where are"), sg1,
             TextMobject("and"), sg2, TextMobject("?"),
         )
-        question.arrange_submobjects(RIGHT, aligned_edge = DOWN)
+        question.arrange(RIGHT, aligned_edge = DOWN)
         question[-1].next_to(question[-2], RIGHT, SMALL_BUFF)
         question.next_to(top_split, UP, MED_LARGE_BUFF)
         slot_groups.shift(SMALL_BUFF*DOWN)
@@ -984,7 +984,7 @@ class ThousandPossibleQuizzes(Scene):
             TexMobject("(0.8)", "800 =", "640"),
             get_slot_group([True, True], buff = SMALL_BUFF, include_qs = False)
         )
-        left_label.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        left_label.arrange(RIGHT, buff = MED_LARGE_BUFF)
         left_label.next_to(left_split.target, UP)
 
         self.play(
@@ -1062,7 +1062,7 @@ class ThousandPossibleQuizzes(Scene):
         equation = TexMobject("(0.8)", "200 = ", "160")
         slot_group = get_slot_group([False, True], buff = SMALL_BUFF, include_qs = False)
         label = VGroup(equation, slot_group)
-        label.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        label.arrange(DOWN, buff = SMALL_BUFF)
         label.next_to(left_split.target, UP, SMALL_BUFF, LEFT)
         alt_equation = TexMobject("(0.3)", "200 = ", "60")
         for i in 0, 2:
@@ -1115,7 +1115,7 @@ class ThousandPossibleQuizzes(Scene):
         slot_group = get_slot_group([True, True])
         slot_group.content[0].set_fill(BLACK, 0)
         label = VGroup(equation, slot_group)
-        label.arrange_submobjects(DOWN)
+        label.arrange(DOWN)
         label.next_to(self.quizzes, LEFT, LARGE_BUFF)
 
         self.play(
@@ -1218,14 +1218,14 @@ class ThousandPossibleQuizzes(Scene):
                 )
                 for x in range(3)
             ])
-            quiz.arrange_submobjects(RIGHT, buff = 0)
+            quiz.arrange(RIGHT, buff = 0)
             quiz.set_stroke(width = 0)
             quiz.set_fill(LIGHT_GREY, 1)
             row = VGroup(*[quiz.copy() for y in range(self.n_quiz_cols)])
-            row.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            row.arrange(RIGHT, buff = SMALL_BUFF)
             rows.add(row)
 
-        rows.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        rows.arrange(DOWN, buff = SMALL_BUFF)
         quizzes = VGroup(*it.chain(*rows))
         quizzes.set_height(self.quizzes_height)
         quizzes.to_edge(RIGHT)
@@ -1261,7 +1261,7 @@ class HarderQuizzes(Scene):
                 "Prove from ZFC that $S \\notin S$.",
             ),
         )
-        quizzes.arrange_submobjects(RIGHT)
+        quizzes.arrange(RIGHT)
         quizzes.to_edge(DOWN)
         crosses = VGroup(*[
             Cross(quiz.questions[0])
@@ -1330,7 +1330,7 @@ class AccurateProductRule(SampleSpaceScene, ThreeDScene):
         p2 = TexMobject("P(", filler_tex, "|", filler_tex, ")")
         p3 = TexMobject("P(", filler_tex, "|", filler_tex, ")")
         terms = VGroup(lhs, p1, p2, p3)
-        terms.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        terms.arrange(RIGHT, buff = SMALL_BUFF)
         terms.to_edge(UP, buff = LARGE_BUFF)
 
         kwargs = {"buff" : SMALL_BUFF, "include_qs" : False}
@@ -1512,7 +1512,7 @@ class ShowAllEightConditionals(Scene):
                 index = equation.index_of_part(part)
                 equation.submobjects[index] = slot_group
             equations.add(equation)
-        equations.arrange_submobjects(DOWN)
+        equations.arrange(DOWN)
 
         rect = SurroundingRectangle(
             VGroup(*equations[0][7:], *equations[-1][7:]),
@@ -1617,7 +1617,7 @@ class ComputeProbabilityOfOneWrong(Scene):
             point_2s.add(*rhs.get_parts_by_tex("0.2"))
             rhs.next_to(lhs, RIGHT)
             probabilities.add(VGroup(lhs, rhs))
-        probabilities.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        probabilities.arrange(DOWN, buff = LARGE_BUFF)
         probabilities.center()
 
         self.play(Write(probabilities[0]))
@@ -1696,7 +1696,7 @@ class ShowFullDistribution(Scene):
                 "=", "0.512",
             ),
         )
-        scores.arrange_submobjects(
+        scores.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -2071,7 +2071,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
             get_probability_of_slot_group(2*[False], [False]),
             get_probability_of_slot_group(3*[False], 2*[False]),
         )
-        equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        equation.arrange(RIGHT, buff = SMALL_BUFF)
         equation.to_edge(UP)
 
         self.add(equation)
@@ -2300,7 +2300,7 @@ class NameBinomial(Scene):
             TexMobject("\\checkmark").set_color(GREEN)
             for x in range(n)
         ])
-        checkmarks.arrange_submobjects(DOWN, buff = 0.3)
+        checkmarks.arrange(DOWN, buff = 0.3)
         crosses = VGroup()
         arrows = VGroup()
         for checkmark in checkmarks:
@@ -2654,7 +2654,7 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
             factored_in_nums.add(num_mob)
             factored.add(p_mob)
         for group in factored, factored_in_nums:
-            group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            group.arrange(RIGHT, buff = SMALL_BUFF)
             group.next_to(prob, DOWN, MED_LARGE_BUFF)
         gp_nums.save_state()
         bp_nums.save_state()
@@ -2834,7 +2834,7 @@ class GeneralBinomialDistributionValues(Scene):
         bars = self.chart.bars
         bars.generate_target()
         bars.save_state()
-        bars.target.arrange_submobjects(UP, buff = 0)
+        bars.target.arrange(UP, buff = 0)
         bars.target.stretch_to_fit_height(self.chart.height)
         bars.target.move_to(
             self.chart.x_axis.point_from_proportion(0.05),
@@ -3178,11 +3178,11 @@ class AssumeOrderDoesntMatter(Scene):
                 equals = TexMobject("=")
                 equals.next_to(prob, RIGHT)
                 prob.add(equals)
-            prob_group.arrange_submobjects(RIGHT)
+            prob_group.arrange(RIGHT)
             max_width = FRAME_WIDTH - 1
             if prob_group.get_width() > max_width:
                 prob_group.set_width(max_width)
-        prob_groups.arrange_submobjects(DOWN, buff = 0.7)
+        prob_groups.arrange(DOWN, buff = 0.7)
         prob_groups.next_to(self.title, DOWN, MED_LARGE_BUFF)
 
         self.play(FadeIn(

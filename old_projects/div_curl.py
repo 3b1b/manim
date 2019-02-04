@@ -990,7 +990,7 @@ class ElectricField(CylinderModel, MovingCameraScene):
             for method in (get_proton, get_electron)
         ]
         for group in groups:
-            group.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+            group.arrange(RIGHT, buff=MED_SMALL_BUFF)
             random.shuffle(group.submobjects)
         protons.next_to(FRAME_HEIGHT * DOWN / 2, DOWN)
         electrons.next_to(FRAME_HEIGHT * UP / 2, UP)
@@ -1149,9 +1149,9 @@ class AskQuestions(TeacherStudentsScene):
         curl = VGroup(curl_name, curl_tex)
         for group in div, curl:
             group[1].set_color_by_tex(vec_tex("v"), YELLOW)
-            group.arrange_submobjects(DOWN)
+            group.arrange(DOWN)
         topics = VGroup(div, curl)
-        topics.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        topics.arrange(DOWN, buff=LARGE_BUFF)
         topics.move_to(self.hold_up_spot, DOWN)
         div.save_state()
         div.move_to(self.hold_up_spot, DOWN)
@@ -1232,7 +1232,7 @@ class ScopeMeiosis(PiCreatureScene):
             VGroup(title, self.get_lines(title, 3))
             for title in section_titles
         ])
-        sections.arrange_submobjects(
+        sections.arrange(
             DOWN, buff=MED_LARGE_BUFF,
             aligned_edge=LEFT
         )
@@ -1272,7 +1272,7 @@ class ScopeMeiosis(PiCreatureScene):
             Line(3 * LEFT, 3 * RIGHT, color=LIGHT_GREY)
             for x in range(n_lines)
         ])
-        lines.arrange_submobjects(DOWN, buff=MED_SMALL_BUFF)
+        lines.arrange(DOWN, buff=MED_SMALL_BUFF)
         lines.next_to(
             title, DOWN,
             buff=MED_LARGE_BUFF,
@@ -1498,7 +1498,7 @@ class IntroduceVectorField(Scene):
             )
             for color in (BLUE, RED)
         ])
-        magnet.arrange_submobjects(RIGHT, buff=0)
+        magnet.arrange(RIGHT, buff=0)
         for char, vect in ("S", LEFT), ("N", RIGHT):
             letter = TextMobject(char)
             edge = magnet.get_edge_center(vect)
@@ -1605,7 +1605,7 @@ class ChangingElectricField(Scene):
             particles.add(particle)
             particle.shift(np.random.normal(0, 0.2, 3))
 
-        particles.arrange_submobjects_in_grid(buff=LARGE_BUFF)
+        particles.arrange_in_grid(buff=LARGE_BUFF)
         return particles
 
     def get_vector_field(self):
@@ -1739,7 +1739,7 @@ class DefineDivergence(ChangingElectricField):
         particles = self.get_particles()
         random.shuffle(particles.submobjects)
         particles.remove(particles[0])
-        particles.arrange_submobjects_in_grid(
+        particles.arrange_in_grid(
             n_cols=4, buff=3
         )
         for particle in particles:
@@ -2736,7 +2736,7 @@ class MaxwellsEquations(Scene):
                 """,
             ]
         ])
-        equations.arrange_submobjects(
+        equations.arrange(
             DOWN, aligned_edge=LEFT,
             buff=MED_LARGE_BUFF
         )
@@ -2748,7 +2748,7 @@ class MaxwellsEquations(Scene):
                 "\\text{Magnetic field: } \\textbf{B}",
             ]
         ])
-        field_definitions.arrange_submobjects(
+        field_definitions.arrange(
             RIGHT, buff=MED_LARGE_BUFF
         )
         field_definitions.next_to(title, DOWN, MED_LARGE_BUFF)
@@ -2886,7 +2886,7 @@ class IllustrateGaussLaw(DefineDivergence, MovingCameraScene):
             get_proton(radius=0.1),
             get_electron(radius=0.1),
         )
-        particles.arrange_submobjects(RIGHT, buff=2.25)
+        particles.arrange(RIGHT, buff=2.25)
         particles.shift(0.25 * UP)
         for particle, sign in zip(particles, [+1, -1]):
             particle.charge = sign
@@ -3021,7 +3021,7 @@ class ShowTwoPopulations(Scene):
         for mob in examples:
             mob.save_state()
             mob.set_height(3)
-        examples.arrange_submobjects(LEFT, buff=2)
+        examples.arrange(LEFT, buff=2)
 
         preditor, prey = words = VGroup(
             TextMobject("Predator"),
@@ -3163,7 +3163,7 @@ class ShowTwoPopulations(Scene):
         )
         for label in labels:
             label.scale(self.count_word_scale_val)
-        labels.arrange_submobjects(RIGHT, buff=2)
+        labels.arrange(RIGHT, buff=2)
         labels.to_edge(UP)
         return labels
 
@@ -3218,7 +3218,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
             VGroup(
                 method().set_height(0.75),
                 TextMobject("Population"),
-            ).arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+            ).arrange(RIGHT, buff=MED_SMALL_BUFF)
             for method in (self.get_rabbit, self.get_fox)
         ])
         for axis, label, vect in zip(axes, axes_labels, [RIGHT, UP]):
@@ -3480,7 +3480,7 @@ class PhaseFlowQuestions(Scene):
             ),
             TextMobject("Where are there cycles?"),
         )
-        questions.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        questions.arrange(DOWN, buff=LARGE_BUFF)
         questions.to_corner(UR)
         for question in questions:
             self.play(FadeInFromDown(question))
@@ -3608,7 +3608,7 @@ class NablaNotation(PiCreatureScene, MovingCameraScene):
         )
         curl_nabla = curl_equation.get_part_by_tex("\\nabla")
         equations = VGroup(div_equation, curl_equation)
-        equations.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        equations.arrange(DOWN, buff=LARGE_BUFF)
         equations.next_to(morty, UP, 2)
         equations.to_edge(LEFT)
 
@@ -3654,7 +3654,7 @@ class NablaNotation(PiCreatureScene, MovingCameraScene):
         ])
         colors = [BLUE, YELLOW]
         for lhs, color in zip(lhs_groups, colors):
-            lhs.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+            lhs.arrange(RIGHT, buff=MED_SMALL_BUFF)
             VGroup(lhs[0].brackets, lhs[1]).set_color(color)
         div_lhs.to_edge(UP)
         curl_lhs.next_to(div_lhs, DOWN, buff=LARGE_BUFF)
@@ -3739,7 +3739,7 @@ class DivCurlDotCross(Scene):
             ScreenRectangle(height=2.5)
             for n in range(4)
         ])
-        rects.arrange_submobjects_in_grid(n_rows=2, buff=LARGE_BUFF)
+        rects.arrange_in_grid(n_rows=2, buff=LARGE_BUFF)
         rects[2:].shift(MED_LARGE_BUFF * DOWN)
         titles = VGroup(*list(map(TextMobject, [
             "Divergence", "Curl",
@@ -4051,7 +4051,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
             arg_separator="",
         ).scale(sf)
         group = VGroup(div_text, dot_product)
-        group.arrange_submobjects(RIGHT, buff=sf * MED_SMALL_BUFF)
+        group.arrange(RIGHT, buff=sf * MED_SMALL_BUFF)
         group.next_to(
             self.camera_frame.get_top(), DOWN,
             buff=sf * MED_SMALL_BUFF
@@ -4193,7 +4193,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
         cross_product.add_background_rectangle(opacity=1)
 
         group = VGroup(curl_text, cross_product)
-        group.arrange_submobjects(RIGHT, buff=sf * MED_SMALL_BUFF)
+        group.arrange(RIGHT, buff=sf * MED_SMALL_BUFF)
         group.next_to(self.camera_frame.get_top(), sf * DOWN)
 
         self.play(
@@ -4363,7 +4363,7 @@ class IncmpressibleAndIrrotational(Scene):
         for op, word in (div_0, incompressible), (curl_0, irrotational):
             op.generate_target()
             group = VGroup(op.target, word)
-            group.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+            group.arrange(RIGHT, buff=MED_LARGE_BUFF)
             group.move_to(op)
 
         self.play(FadeInFromDown(div_0))
@@ -4551,7 +4551,7 @@ class ThoughtsOnAds(Scene):
         line.move_to(DOWN)
 
         arrows = VGroup(Vector(2 * LEFT), Vector(2 * RIGHT))
-        arrows.arrange_submobjects(RIGHT, buff=2)
+        arrows.arrange(RIGHT, buff=2)
         arrows.next_to(line, DOWN)
 
         misaligned = TextMobject("Misaligned")
@@ -4616,7 +4616,7 @@ class ThoughtsOnAds(Scene):
             ImageMobject("3b1b_logo", height=1),
             TextMobject("(hopefully)").scale(0.8)
         )
-        right_rect_label.arrange_submobjects(DOWN, buff=SMALL_BUFF)
+        right_rect_label.arrange(DOWN, buff=SMALL_BUFF)
         # TextMobject(
         #     "Where I hope \\\\ I've been"
         # )

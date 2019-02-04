@@ -530,7 +530,7 @@ class NameImplicitDifferentation(TeacherStudentsScene):
         VGroup(*derivative[2][2:]).set_color(RED)
         arrow = Arrow(ORIGIN, DOWN, buff = SMALL_BUFF)
         group = VGroup(title, equation, arrow, derivative)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_edge(UP)
 
         self.add(title, equation)
@@ -2657,7 +2657,7 @@ class Thumbnail(AlternateExample):
         title = VGroup(*list(map(TextMobject, [
             "Implicit", "Differentiation"
         ])))
-        title.arrange_submobjects(DOWN)
+        title.arrange(DOWN)
         title.scale(3)
         title.next_to(ORIGIN, UP)
 

@@ -177,7 +177,7 @@ class IntroduceZeta(ZetaTransformationScene):
             TexMobject("\\zeta(s) = "),
             TexMobject("\\sum_{n=1}^\\infty \\frac{1}{n^s}")
         )
-        func_mob.arrange_submobjects(RIGHT, buff = 0)
+        func_mob.arrange(RIGHT, buff = 0)
         for submob in func_mob:
             submob.add_background_rectangle()
         func_mob.next_to(title, DOWN)
@@ -217,12 +217,12 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
             TexMobject("\\$1{,}000{,}000").set_color_by_gradient(GREEN_B, GREEN_D),
             TexMobject("\\zeta(s) = 0")
         )
-        mercenary_thought.arrange_submobjects(DOWN)
+        mercenary_thought.arrange(DOWN)
         divergent_sum = VGroup(
             TexMobject("1+2+3+4+\\cdots = -\\frac{1}{12}"),
             TexMobject("\\zeta(-1) = -\\frac{1}{12}")
         )
-        divergent_sum.arrange_submobjects(DOWN)
+        divergent_sum.arrange(DOWN)
         divergent_sum[0].set_color_by_gradient(YELLOW, MAROON_B)
         divergent_sum[1].set_color(BLACK)
 
@@ -372,7 +372,7 @@ class AssumeKnowledgeOfComplexNumbers(ComplexTransformationScene):
             TextMobject("2) How to work with them."),
             TextMobject("3) Maybe derivatives?"),
         )
-        text.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        text.arrange(DOWN, aligned_edge = LEFT)
         for words in text:
             words.add_background_rectangle()
         text[0].shift(LEFT)
@@ -1917,8 +1917,8 @@ class ShowConditionalDefinition(Scene):
             for s in (">", "\\le")
         ])
         definitions = VGroup(sigma, something_else)
-        definitions.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
-        conditions.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        definitions.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        conditions.arrange(DOWN, buff = LARGE_BUFF)
         definitions.shift(2*LEFT+2*UP)
         conditions.next_to(definitions, RIGHT, buff = LARGE_BUFF, aligned_edge = DOWN)
         brace = Brace(definitions, LEFT)
@@ -3172,7 +3172,7 @@ class PatreonThanks(Scene):
             self.specific_patrons[n_patrons/2:]
         )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.arrange(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
             patrons.to_edge(vect, buff = LARGE_BUFF)
 

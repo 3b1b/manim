@@ -190,7 +190,7 @@ class AskAboutShadowRelation(SpecialThreeDScene):
         )
 
         shadows = VGroup(*[shadow.copy() for x in range(4)])
-        shadows.arrange_submobjects_in_grid(buff=MED_LARGE_BUFF)
+        shadows.arrange_in_grid(buff=MED_LARGE_BUFF)
         shadows.to_edge(RIGHT)
 
         area_label = TexMobject(
@@ -348,7 +348,7 @@ class PreviewTwoMethods(MovingCameraScene):
                 stroke_color=WHITE,
                 stroke_width=5
             ))
-        thumbnails.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        thumbnails.arrange(RIGHT, buff=LARGE_BUFF)
 
         title = TextMobject("Two proofs")
         title.scale(2)
@@ -571,7 +571,7 @@ class UnfoldCircles(Scene):
             Line(radius * UP, ORIGIN).set_stroke(WHITE, 2)
             for x in range(4)
         ])
-        radii_lines.arrange_submobjects_in_grid(buff=1.3)
+        radii_lines.arrange_in_grid(buff=1.3)
         radii_lines[2:].shift(RIGHT)
         radii_lines.next_to(rect_group, DOWN, buff=1.3)
         R_labels = VGroup(*[
@@ -998,7 +998,7 @@ class ShowProjection(SphereCylinderScene):
         eq_rects.scale(2)
         equals = TexMobject("=")
         equation = VGroup(lhs, equals, rhs)
-        equation.arrange_submobjects(RIGHT)
+        equation.arrange(RIGHT)
         equation.to_corner(UR)
 
         brace = Brace(Line(ORIGIN, 0.5 * RIGHT), DOWN)
@@ -1233,7 +1233,7 @@ class JustifyLengthStretch(ShowProjection):
             TexMobject("\\sim"),
             big_triangle.copy().rotate(-3 * DEGREES)
         )
-        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        equation.arrange(RIGHT, buff=SMALL_BUFF)
         equation.to_corner(UL)
         eq_d = TexMobject("d").next_to(equation[0], DOWN, SMALL_BUFF)
         eq_R = TexMobject("R").next_to(equation[2], DOWN, SMALL_BUFF)
@@ -1994,7 +1994,7 @@ class SameEffectAsRotating(Scene):
 
         arrow = Arrow(ORIGIN, RIGHT, buff=0, color=WHITE)
         group = VGroup(rect1, arrow, rect2)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.center()
         moving_rect = rect1.copy()
 
@@ -2081,7 +2081,7 @@ class ShowParameterization(Scene):
                 }
             )
         )
-        ranges.arrange_submobjects(DOWN)
+        ranges.arrange(DOWN)
         ranges.next_to(vector, DOWN)
 
         self.add(vector)
@@ -2235,8 +2235,8 @@ class SequenceOfSpheres(SphereCylinderScene):
 
         for group in groups:
             group.add(self.get_oriented_tex("?").scale(2))
-            group.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
-        groups.arrange_submobjects(IN, buff=1.5)
+            group.arrange(RIGHT, buff=LARGE_BUFF)
+        groups.arrange(IN, buff=1.5)
 
         all_equals = VGroup()
         for sphere, cylinder in zip(spheres, cylinders):
@@ -2428,7 +2428,7 @@ class RoleOfCalculus(SpecialThreeDScene):
         sphere.rotate(70 * DEGREES, axis=LEFT)
 
         group = VGroup(calc, arrow, sphere)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.shift(0.5 * RIGHT)
         cross = Cross(group[:2], stroke_width=10)
 
@@ -2628,7 +2628,7 @@ class AskAboutDirectConnection(TeacherStudentsScene, SpecialThreeDScene):
         for mob in group:
             mob.set_height(1.5)
         formula.scale(0.5)
-        group.arrange_submobjects(RIGHT, buff=1.5)
+        group.arrange(RIGHT, buff=1.5)
         group.to_edge(UP, buff=2)
         group[1:3].to_edge(UP)
 
@@ -3596,7 +3596,7 @@ class SpherePatronThanks(Scene):
         column_size = 15
         for n in range(0, len(patrons), column_size):
             column = patrons[n:n + column_size]
-            column.arrange_submobjects(
+            column.arrange(
                 DOWN,
                 aligned_edge=LEFT
             )
@@ -3678,7 +3678,7 @@ class Thumbnail(SpecialThreeDScene):
         circles.set_stroke(WHITE, 2)
         circles.set_fill(BLUE_E, 1)
         circles[0].set_fill(GREY_BROWN)
-        circles.arrange_submobjects_in_grid()
+        circles.arrange_in_grid()
         for circle in circles:
             formula = TexMobject("\\pi", "R", "^2")
             formula.set_color_by_tex("R", YELLOW)
@@ -3690,7 +3690,7 @@ class Thumbnail(SpecialThreeDScene):
         equals.scale(3)
 
         group = VGroup(sphere, equals, circles)
-        group.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        group.arrange(RIGHT, buff=MED_SMALL_BUFF)
         equals.shift(3 * SMALL_BUFF * RIGHT)
 
         why = TextMobject("Why?!")

@@ -20,7 +20,7 @@ class OpeningManimExample(Scene):
             "\\sum_{n=1}^\\infty "
             "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"
         )
-        VGroup(title, basel).arrange_submobjects(DOWN)
+        VGroup(title, basel).arrange(DOWN)
         self.play(
             Write(title),
             FadeInFrom(basel, UP),
@@ -103,7 +103,7 @@ class WriteStuff(Scene):
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
         )
         group = VGroup(example_text, example_tex)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))

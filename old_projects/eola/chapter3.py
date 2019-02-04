@@ -104,7 +104,7 @@ class DescribeTransformation(Scene):
             for num in nums
         ])
         for mob in num_inputs, num_outputs:
-            mob.arrange_submobjects(DOWN, buff = 1)
+            mob.arrange(DOWN, buff = 1)
         num_inputs.next_to(f_of_x, LEFT, buff = 1)
         num_outputs.next_to(f_of_x, RIGHT, buff = 1)
         f_point = VectorizedPoint(f_of_x.get_center())
@@ -841,7 +841,7 @@ class DeduceResultWithGeneralCoordinates(Scene):
             y.copy(), j_coords.copy(), equals,
             result
         )
-        vect_group.arrange_submobjects(RIGHT, buff = 0.1)
+        vect_group.arrange(RIGHT, buff = 0.1)
 
         self.add(i_group, j_group)
         for mob in vect_group.split():
@@ -979,7 +979,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         formula = VMobject(
             v1.copy(), col1, TexMobject("+"), v2.copy(), col2
         )
-        formula.arrange_submobjects(RIGHT, buff = 0.1)
+        formula.arrange(RIGHT, buff = 0.1)
         formula.center()
         formula_start = VMobject(
             v1.copy(), 
@@ -1012,7 +1012,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         row1 = VMobject(*list(map(TexMobject, row1)))
         row2 = VMobject(*list(map(TexMobject, row2)))
         for row in row1, row2:
-            row.arrange_submobjects(RIGHT, buff = 0.1)
+            row.arrange(RIGHT, buff = 0.1)
         final_sum = Matrix([row1, row2])
         row1, row2 = final_sum.get_mob_matrix().flatten()
         row1.split()[0].set_color(X_COLOR)
@@ -1033,7 +1033,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
     def reposition_matrix_and_vector(self, matrix, vector, formula):
         start_state = VMobject(matrix, vector)
         end_state = start_state.copy()
-        end_state.arrange_submobjects(RIGHT, buff = 0.1)
+        end_state.arrange(RIGHT, buff = 0.1)
         equals = TexMobject("=")
         equals.next_to(formula, LEFT)
         end_state.next_to(equals, LEFT)
@@ -1419,7 +1419,7 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
     def show_inputs_and_output(self):
         numbers = list(range(-3, 4))
         inputs = VMobject(*list(map(TexMobject, list(map(str, numbers)))))
-        inputs.arrange_submobjects(DOWN, buff = 0.5, aligned_edge = RIGHT)
+        inputs.arrange(DOWN, buff = 0.5, aligned_edge = RIGHT)
         arrows = VMobject(*[
             Arrow(LEFT, RIGHT).next_to(mob)
             for mob in inputs.split()

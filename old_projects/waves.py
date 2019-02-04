@@ -945,7 +945,7 @@ class WriteCurlEquations(Scene):
             "\\frac{\\partial \\textbf{E}}{\\partial t}"
         )
         eqs = VGroup(eq1, eq2)
-        eqs.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        eqs.arrange(DOWN, buff = LARGE_BUFF)
         eqs.set_height(FRAME_HEIGHT - 1)
         eqs.to_edge(LEFT)
         for eq in eqs:
@@ -1014,7 +1014,7 @@ class ListRelevantWaveIdeas(TeacherStudentsScene):
             "- How phase influences addition",
         ])))
         topics.scale(0.8)
-        topics.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        topics.arrange(DOWN, aligned_edge = LEFT)
         topics.next_to(h_line, DOWN, aligned_edge = LEFT)
 
         quantum = TextMobject("Quantum")
@@ -1167,7 +1167,7 @@ class ShowVectorEquation(Scene):
             TexMobject("\\cos(", "2\\pi", "f_x", "t", "+ ", "\\phi_x", ")"),
             TexMobject("0", "")
         )
-        components.arrange_submobjects(DOWN)
+        components.arrange(DOWN)
         lb, rb = brackets = TexMobject("[]")
         brackets.set_height(components.get_height() + SMALL_BUFF)
         lb.next_to(components, LEFT, buff = 0.3)
@@ -1437,7 +1437,7 @@ class ShowVectorEquation(Scene):
             x.target, right_ket, plus,
             y.target, up_ket,
         )
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         E_equals.target.shift(SMALL_BUFF*UP)
         group.scale(0.8)
         group.move_to(self.brackets, DOWN)
@@ -1497,7 +1497,7 @@ class ShowVectorEquation(Scene):
 
         movers = x, x_ket, plus, y, y_ket
         group = VGroup(*[m.target for m in movers])
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.move_to(x, LEFT)
 
         vector_A_vect = np.array(self.oscillating_vector.A_vect)
@@ -1672,7 +1672,7 @@ class ShowTipToTailSum(ShowVectorEquation):
             ket.generate_target()
         plus = TexMobject("+")
         ket_sum = VGroup(h_ket.target, plus, v_ket.target)
-        ket_sum.arrange_submobjects(RIGHT)
+        ket_sum.arrange(RIGHT)
         ket_sum.next_to(3*RIGHT + 2*UP, UP, SMALL_BUFF)
 
         self.wait(4)

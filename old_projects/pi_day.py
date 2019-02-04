@@ -396,7 +396,7 @@ class ManyFormulas(Scene):
             TexMobject("n! \\approx \\sqrt{\\tau n} \\left(\\frac{n}{e} \\right)^n"),
             TexMobject("c_n = \\frac{1}{\\tau} \\int_0^\\tau f(x) e^{inx}dx"),
         )
-        formulas.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        formulas.arrange(DOWN, buff = MED_LARGE_BUFF)
         formulas.to_edge(LEFT)
 
         self.play(LaggedStart(FadeIn, formulas, run_time = 3))
@@ -734,7 +734,7 @@ class ThingsNamedAfterEuler(Scene):
             "Euler angles (rigid-body mechanics)",
             "Euler totient function (number theory)",
         ])))
-        group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        group.arrange(DOWN, aligned_edge = LEFT)
         group.set_height(FRAME_HEIGHT - 1)
 
         self.play(LaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
@@ -979,7 +979,7 @@ class SpecialThanks(Scene):
             "Martin Mattmüller",
             "Library of the Institut de France",
         ])))
-        people.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
+        people.arrange(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
         people.next_to(h_line, DOWN)
 
         self.add(title, h_line, people)

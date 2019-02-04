@@ -311,7 +311,7 @@ class TowersOfHanoiScene(Scene):
 
     def reset_disks(self, **kwargs):
         self.disks.generate_target()
-        self.disks.target.arrange_submobjects(DOWN, buff = 0)
+        self.disks.target.arrange(DOWN, buff = 0)
         self.disks.target.move_to(self.pegs[0], DOWN)
         self.play(
             MoveToTarget(self.disks), 
@@ -652,7 +652,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
             group.rotate_in_place(-11*np.pi/24, RIGHT)
             disk.set_fill(opacity = 0)
             disk_groups.add(group)
-        disk_groups.arrange_submobjects()
+        disk_groups.arrange()
         disk_groups.next_to(self.peg_labels, DOWN)
         
         self.play(FadeIn(
@@ -1457,7 +1457,7 @@ class RecursiveSolution(TowersOfHanoiScene):
             title, sub_step_brace, sub_steps, 
             sub_sub_steps_brace, sub_sub_steps
         )
-        steps.arrange_submobjects(DOWN)
+        steps.arrange(DOWN)
         steps.scale(0.7)
         steps.to_edge(UP)
         VGroup(sub_sub_steps_brace, sub_sub_steps).next_to(sub_steps[-1], DOWN)
@@ -2046,7 +2046,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         steps = VGroup(title, *it.chain(*list(zip(
             braces, subdivisions
         ))))
-        steps.arrange_submobjects(DOWN)
+        steps.arrange(DOWN)
         steps.to_edge(UP)
 
         steps_to_fade = VGroup(
@@ -2412,7 +2412,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
             "Roll over,",
             "Count to %s,"%("2"*(self.num_trits-1)),
         ])))
-        steps.arrange_submobjects(RIGHT)
+        steps.arrange(RIGHT)
         for step in steps[::2]:
             for i, color in enumerate(colors[:-1]):
                 step[-i-2].set_color(color)
@@ -2420,7 +2420,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
         steps.set_width(FRAME_WIDTH-1)
         brace = Brace(steps, UP)
         word_group = VGroup(title, brace, steps)
-        word_group.arrange_submobjects(DOWN)
+        word_group.arrange(DOWN)
         word_group.to_edge(UP)
 
         ternary_mobs = VGroup(*[
@@ -2693,7 +2693,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
             """%d)
             for d in range(self.num_disks)
         ]))
-        parentheticals.arrange_submobjects()
+        parentheticals.arrange()
         parentheticals.set_width(FRAME_WIDTH-1)
         parentheticals.next_to(top_mob, DOWN)
         for parens in parentheticals:
@@ -2744,7 +2744,7 @@ class RepeatingConfiguraiton(Scene):
         arrows.add(VGroup())
         arrows.scale(0.5)
         group = VGroup(*it.chain(*list(zip(dots, arrows))))
-        group.arrange_submobjects()
+        group.arrange()
         title = TextMobject("Same state twice")
         title.shift(3*UP)
         special_dots = VGroup(dots[2], dots[6])
@@ -3212,7 +3212,7 @@ class PatreonThanks(Scene):
             self.specific_patrons[n_patrons/2:]
         )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.arrange(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
             patrons.to_edge(vect, buff = LARGE_BUFF)
 

@@ -370,7 +370,7 @@ class IntroduceCircle(Scene):
         area.set_color(BLUE)
         circumference.set_color(YELLOW)
 
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.next_to(circle, RIGHT)
         words.to_edge(UP)
         pi_R, pre_squared = TexMobject("\\pi R", "{}^2")
@@ -389,7 +389,7 @@ class IntroduceCircle(Scene):
         )
         up_down_arrow = TexMobject("\\Updownarrow")
         calc_stuffs = VGroup(derivative, up_down_arrow, integral)
-        calc_stuffs.arrange_submobjects(DOWN)
+        calc_stuffs.arrange(DOWN)
         calc_stuffs.next_to(words, DOWN, buff = LARGE_BUFF, aligned_edge = LEFT)
 
         brace = Brace(calc_stuffs, RIGHT)
@@ -501,7 +501,7 @@ class PragmatismToArt(Scene):
         )
         arrow = DoubleArrow(LEFT, RIGHT, color = WHITE)
         circle_group = VGroup(circle1, arrow, circle2)
-        circle_group.arrange_submobjects()
+        circle_group.arrange()
         circle_group.to_corner(UP+LEFT)
         circle2.save_state()
         circle2.move_to(circle1)
@@ -645,7 +645,7 @@ class IntroduceTinyChangeInArea(CircleScene):
             change_in_area,
             two_pi_R.target, lp, dR.target.scale(1./0.7), rp
         )
-        final_area.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        final_area.arrange(RIGHT, buff = SMALL_BUFF)
         final_area.next_to(almost_rect, DOWN, buff = MED_LARGE_BUFF)
         final_area.set_color(GREEN_A)
         final_area[3].set_color(self.dR_color)
@@ -1009,7 +1009,7 @@ class BuildToDADR(CircleScene):
         arrow.next_to(d)
         ignore_error = TextMobject("Ignore error")
         d_group = VGroup(d, arrow, ignore_error)
-        d_group.arrange_submobjects()
+        d_group.arrange()
         d_group.next_to(
             self.pi_creature.get_corner(UP+RIGHT), 
             buff = LARGE_BUFF
@@ -1293,7 +1293,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         fracs.add(TexMobject("\\cdots \\rightarrow"))
         fracs.add(TexMobject("???"))
         fracs[-1].set_color_by_gradient(self.dR_color, self.outer_ring.get_color())
-        fracs.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        fracs.arrange(RIGHT, buff = MED_LARGE_BUFF)
         fracs.to_corner(DOWN+LEFT)
 
         arrows = VGroup()
@@ -1737,7 +1737,7 @@ class IntroduceConcentricRings(CircleScene):
         ))))
         dots_equals_area = TexMobject("\\dots", "=", "\\pi R^2")
         area_sum.add(*dots_equals_area)
-        area_sum.arrange_submobjects()
+        area_sum.arrange()
         area_sum.to_edge(RIGHT)
         area_sum.to_edge(UP, buff = MED_SMALL_BUFF)
         dots_equals_area[-1].shift(0.1*UP)
@@ -1842,7 +1842,7 @@ class IntroduceConcentricRings(CircleScene):
             def_int, self.two_pi_r.target,
             self.dr.target, equals_pi_R_squared
         )
-        integral_expression.arrange_submobjects()
+        integral_expression.arrange()
         integral_expression.next_to(brace, DOWN)
         self.integral_expression = VGroup(*integral_expression[:-1])
 
@@ -1923,7 +1923,7 @@ class IntroduceConcentricRings(CircleScene):
         self.r_label.save_state()
         equals_0 = TexMobject("=0")
         r_equals_0 = VGroup(self.r_label.target, equals_0)
-        r_equals_0.arrange_submobjects(buff = SMALL_BUFF)
+        r_equals_0.arrange(buff = SMALL_BUFF)
         r_equals_0.next_to(self.radial_line.target, UP+LEFT, buff = SMALL_BUFF)
         self.play(
             MoveToTarget(self.radial_line),
@@ -2270,7 +2270,7 @@ class FundamentalTheorem(CircleScene):
         circum_circle.next_to(geometric, RIGHT)
         geometric.add(area_circle, circum_circle)
         self.derivative_terms = VGroup(symbolic, geometric)
-        self.derivative_terms.arrange_submobjects(
+        self.derivative_terms.arrange(
             DOWN, buff = LARGE_BUFF, aligned_edge = LEFT
         )
         self.derivative_terms.next_to(ORIGIN, LEFT, buff = LARGE_BUFF)
@@ -2306,7 +2306,7 @@ class FundamentalTheorem(CircleScene):
         geometric.submobjects[-1] = area_circle
 
         self.integral_terms = VGroup(symbolic, geometric)
-        self.integral_terms.arrange_submobjects(
+        self.integral_terms.arrange(
             DOWN, 
             buff = LARGE_BUFF, 
             aligned_edge = LEFT

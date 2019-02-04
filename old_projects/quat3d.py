@@ -29,7 +29,7 @@ class QuaternionLabel(VGroup):
             decimals[2], TexMobject("j"),
             decimals[3], TexMobject("k"),
         )
-        self.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        self.arrange(RIGHT, buff=SMALL_BUFF)
 
         self.decimals = decimals
 
@@ -198,7 +198,7 @@ class Introduction(QuaternionHistory):
         #     for k in range(4)
         # ])
         title = VGroup(title_word, title_equation)
-        title.arrange_submobjects(RIGHT)
+        title.arrange(RIGHT)
         title.to_edge(UP)
 
         images_group = self.get_dissenter_images_quotes_and_names()
@@ -255,7 +255,7 @@ class WhoCares(TeacherStudentsScene):
             logo.move_to(quote.get_corner(UR))
             quote.add(logo)
 
-        quotes.arrange_submobjects_in_grid()
+        quotes.arrange_in_grid()
         quotes.set_height(4)
         quotes.to_corner(UL)
 
@@ -411,7 +411,7 @@ class ShowSeveralQuaternionRotations(SpecialThreeDScene):
         left_q_label.next_to(point_label, LEFT)
         right_q_label.next_to(point_label, RIGHT)
         group = VGroup(left_q_label, point_label, right_q_label)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.set_width(FRAME_WIDTH - 1)
         group.to_edge(UP)
         self.add_fixed_in_frame_mobjects(BackgroundRectangle(group))
@@ -513,7 +513,7 @@ class PauseAndPlayOverlay(Scene):
         arrow = Vector(RIGHT, color=WHITE)
         interact = TextMobject("Interact...")
         group = VGroup(pause, arrow, interact)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.scale(2)
 
         not_yet = TextMobject("...well, not yet")
@@ -673,7 +673,7 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
             TexMobject("\\gamma").set_color(PINK),
         )
         angle_labels.scale(2)
-        angle_labels.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+        angle_labels.arrange(RIGHT, buff=MED_LARGE_BUFF)
         angle_labels.next_to(title, DOWN, aligned_edge=LEFT)
         self.angle_labels = angle_labels
 
@@ -681,7 +681,7 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
             Arrow(LEFT, RIGHT, color=WHITE),
             TextMobject("Gimbal lock").scale(1.5),
         )
-        gl_label.arrange_submobjects(RIGHT)
+        gl_label.arrange(RIGHT)
         gl_label.next_to(title, RIGHT)
         self.gimbal_lock_label = gl_label
 
@@ -1036,7 +1036,7 @@ class ComplexNumberRotation(Scene):
             lp1, new_left_z, rp1,
             lp2, new_right_z, rp2,
         )
-        top_line.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        top_line.arrange(RIGHT, buff=SMALL_BUFF)
         top_line.set_width(rect.get_width() - 1)
         top_line.next_to(rect.get_top(), DOWN, MED_SMALL_BUFF)
 
@@ -1333,7 +1333,7 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         )
         for i in 1, 3:
             result[i][1].set_color(YELLOW)
-        result.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        result.arrange(RIGHT, buff=SMALL_BUFF)
         result.scale(0.7)
         return result
 

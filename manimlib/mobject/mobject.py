@@ -852,14 +852,18 @@ class Mobject(Container):
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.get_num_points() > 0]
 
-    def arrange_submobjects(self, direction=RIGHT, center=True, **kwargs):
+    def arrange(self, direction=RIGHT, center=True, **kwargs):
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
             m2.next_to(m1, direction, **kwargs)
         if center:
             self.center()
         return self
 
-    def arrange_submobjects_in_grid(self, n_rows=None, n_cols=None, **kwargs):
+    # Just here to keep from breaking old scenes.
+    def arrange_submobjects(self, *args, **kwargs):
+        return self.arrange(*args, **kwargs)
+
+    def arrange_in_grid(self, n_rows=None, n_cols=None, **kwargs):
         submobs = self.submobjects
         if n_rows is None and n_cols is None:
             n_cols = int(np.sqrt(len(submobs)))
@@ -873,9 +877,9 @@ class Mobject(Container):
             v2 = RIGHT
             n = len(submobs) // n_cols
         Group(*[
-            Group(*submobs[i:i + n]).arrange_submobjects(v1, **kwargs)
+            Group(*submobs[i:i + n]).arrange(v1, **kwargs)
             for i in range(0, len(submobs), n)
-        ]).arrange_submobjects(v2, **kwargs)
+        ]).arrange(v2, **kwargs)
         return self
 
     def sort_submobjects(self, point_to_num_func=lambda p: p[0]):

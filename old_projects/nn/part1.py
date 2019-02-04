@@ -62,7 +62,7 @@ class PixelsAsSquares(VGroup):
                     fill_color = rgba_to_color(rgba/255.0),
                 )
                 self.add(square)
-        self.arrange_submobjects_in_grid(
+        self.arrange_in_grid(
             *image_mobject.pixel_array.shape[:2],
             buff = 0
         )
@@ -111,7 +111,7 @@ class NetworkMobject(VGroup):
             self.get_layer(size)
             for size in self.layer_sizes
         ])
-        layers.arrange_submobjects(RIGHT, buff = self.layer_to_layer_buff)
+        layers.arrange(RIGHT, buff = self.layer_to_layer_buff)
         self.layers = layers
         self.add(self.layers)
         if self.include_output_labels:
@@ -132,7 +132,7 @@ class NetworkMobject(VGroup):
             )
             for x in range(n_neurons)
         ])   
-        neurons.arrange_submobjects(
+        neurons.arrange(
             DOWN, buff = self.neuron_to_neuron_buff
         )
         for neuron in neurons:
@@ -406,7 +406,7 @@ class ExampleThrees(PiCreatureScene):
             )
 
         alt_threes = VGroup(*self.three_mobs[1:])
-        alt_threes.arrange_submobjects(DOWN)
+        alt_threes.arrange(DOWN)
         alt_threes.set_height(FRAME_HEIGHT - 2)
         alt_threes.to_edge(RIGHT)
 
@@ -572,7 +572,7 @@ class WriteAProgram(Scene):
         arrow.next_to(three, RIGHT)
 
         choices = VGroup(*[TexMobject(str(n)) for n in range(10)])
-        choices.arrange_submobjects(DOWN)
+        choices.arrange(DOWN)
         choices.set_height(FRAME_HEIGHT - 1)
         choices.next_to(arrow, RIGHT)
 
@@ -748,7 +748,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             for x in range(2)
         ])
         videos.set_height(1.5)
-        videos.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        videos.arrange(RIGHT, buff = LARGE_BUFF)
         videos.next_to(self.students, UP, LARGE_BUFF)
 
         network_mob.generate_target()
@@ -1201,7 +1201,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
 
         self.play(rows.space_out_submobjects, 1.2)
         self.play(
-            rows.arrange_submobjects, RIGHT, buff = SMALL_BUFF,
+            rows.arrange, RIGHT, buff = SMALL_BUFF,
             path_arc = np.pi/2,
             run_time = 2
         )
@@ -1716,7 +1716,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
                 for m in mobs[1:-1]
             ])) + [mobs[-1]]
         )
-        equation.arrange_submobjects(RIGHT)
+        equation.arrange(RIGHT)
         return equation
 
     def make_transparent(self, image_mob):
@@ -1848,7 +1848,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             MNistMobject(image_map[n][1])
             for n in (1, 4, 7)
         ])
-        digits.arrange_submobjects(RIGHT)
+        digits.arrange(RIGHT)
         digits.next_to(randy, RIGHT)
 
         self.revert_to_original_skipping_status()
@@ -2089,7 +2089,7 @@ class EdgeDetection(Scene):
         edges = ImageMobject(edges_array)
         group = Group(lion, edges)
         group.set_height(4)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         lion_copy = lion.copy()
 
         self.play(FadeIn(lion))
@@ -2121,7 +2121,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             syllables, get_arrow(),
             word
         )
-        sequence.arrange_submobjects(RIGHT)
+        sequence.arrange(RIGHT)
         sequence.set_width(FRAME_WIDTH - 1)
         sequence.to_edge(UP)
 
@@ -2181,7 +2181,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             for x in np.arange(0, 4, 0.1)
         ])
         result.set_stroke(width = 2)
-        result.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        result.arrange(RIGHT, buff = MED_SMALL_BUFF)
         result.set_height(1)
 
         return result
@@ -2313,7 +2313,7 @@ class IntroduceWeights(IntroduceEachLayer):
             TexMobject("p_%d\\!:"%(i+1)).set_color(self.weights_color)
             for i in range(8)
         ] + [TexMobject("\\vdots")])
-        p_labels.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        p_labels.arrange(DOWN, aligned_edge = LEFT)
         p_labels.next_to(parameter_word, DOWN, LARGE_BUFF)
         p_labels[-1].shift(SMALL_BUFF*RIGHT)
 
@@ -2444,7 +2444,7 @@ class IntroduceWeights(IntroduceEachLayer):
             TexMobject("w_n").set_color(self.weights_color),
             TexMobject("a_n")
         )
-        weighted_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        weighted_sum.arrange(RIGHT, buff = SMALL_BUFF)
         weighted_sum.to_edge(UP)
 
         self.play(Transform(layer, active_layer))
@@ -3136,7 +3136,7 @@ class ShowRemainingNetwork(IntroduceWeights):
 
         added_biases = TexMobject("+ 16 + 10")
         group = VGroup(bias_count.prefix, added_biases)
-        group.arrange_submobjects(RIGHT, SMALL_BUFF)
+        group.arrange(RIGHT, SMALL_BUFF)
         group.next_to(weights_count.target[-1], DOWN, LARGE_BUFF)
         bias_count.target[-1].next_to(group, DOWN)
 
@@ -3194,7 +3194,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             "Finding the right \\\\ weights and biases"
         )
         group = VGroup(learning, finding_words)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.scale(0.8)
         group.next_to(self.final_number, DOWN, MED_LARGE_BUFF)
 
@@ -3410,7 +3410,7 @@ class IntroduceWeightMatrix(NetworkScene):
             TexMobject("a^{(0)}_n"),
         )
 
-        weighted_sum.arrange_submobjects(RIGHT)
+        weighted_sum.arrange(RIGHT)
         a1_label = TexMobject("a^{(1)}_0")
         a1_label.next_to(neuron, RIGHT)
         equals = TexMobject("=").next_to(a1_label, RIGHT)
@@ -3521,7 +3521,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
         VGroup(
             *column[:2] + [mid_as] + [column[-1]]
-        ).arrange_submobjects(DOWN)
+        ).arrange(DOWN)
         column.shift(DOWN + 3.5*RIGHT)
 
         pre_brackets = self.get_brackets(a_labels)
@@ -3561,7 +3561,7 @@ class IntroduceWeightMatrix(NetworkScene):
             2, self.symbols[-2].copy()
         )
         w_labels.generate_target()
-        w_labels.target.arrange_submobjects(RIGHT)
+        w_labels.target.arrange(RIGHT)
         w_labels.target.next_to(a_column[0], LEFT, buff = 0.8)
         lwb.next_to(w_labels.target, LEFT, SMALL_BUFF)
         lwb.align_to(rwb, UP)
@@ -3739,7 +3739,7 @@ class IntroduceWeightMatrix(NetworkScene):
             "b_0", "b_1", "\\vdots", "b_n",
         ])))
         b_column.scale(0.85)
-        b_column.arrange_submobjects(DOWN, buff = 0.35)
+        b_column.arrange(DOWN, buff = 0.35)
         b_column.move_to(a_column)
         b_column.set_color(BLUE)
         plus.next_to(a_column_brackets, RIGHT)
@@ -3977,7 +3977,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
         arrow = Arrow(ORIGIN, DOWN, color = BLUE)
         thing_words = TextMobject("Thing that holds \\\\ a number")
         group = VGroup(neuron_word, arrow, thing_words)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_corner(UP+RIGHT, buff = LARGE_BUFF)
 
         neuron = self.network_mob.layers[2].neurons[2]
@@ -4162,7 +4162,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
             arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
             num_mob = TexMobject(str(num))
             group = Group(image, arrow, num_mob)
-            group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            group.arrange(RIGHT, buff = SMALL_BUFF)
             group.next_to(ORIGIN, RIGHT)
             data_mobs.add(group)
 

@@ -35,7 +35,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         community_cards = VGroup(*list(map(
             PlayingCard, self.community_card_values
         )))
-        community_cards.arrange_submobjects(RIGHT)
+        community_cards.arrange(RIGHT)
         community_cards.move_to(self.community_cards_center)
         deck = VGroup(*[
             PlayingCard(turned_over = True)
@@ -86,7 +86,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         straight_cards.submobjects.sort(
             key=lambda c: c.numerical_value
         )
-        straight_cards.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        straight_cards.arrange(RIGHT, buff = SMALL_BUFF)
         straight_cards.next_to(community_cards, UP, aligned_edge = LEFT)
         you.hand.target.shift(MED_SMALL_BUFF*UP)
 
@@ -121,7 +121,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
 
         her.hand.save_state()
         her.hand.generate_target()
-        her.hand.target.arrange_submobjects(RIGHT)
+        her.hand.target.arrange(RIGHT)
         her.hand.target.next_to(heart_cards, UP)
         her.hand.target.to_edge(UP)
 
@@ -138,7 +138,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             heart_q = VGroup(heart, q_mark)
             for mob in heart_q:
                 mob.set_height(0.5)
-            heart_q.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            heart_q.arrange(RIGHT, buff = SMALL_BUFF)
             heart_q.move_to(target)
             heart_qs.add(heart, q_mark)
             hearts.add(heart)
@@ -292,9 +292,9 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             VGroup(*[
                 TexMobject("\\$")
                 for x in range(10)
-            ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            ]).arrange(RIGHT, buff = SMALL_BUFF)
             for y in range(4)
-        ]).arrange_submobjects(UP, buff = SMALL_BUFF)
+        ]).arrange(UP, buff = SMALL_BUFF)
         money = VGroup(*it.chain(*pre_money))
         money.set_color(GREEN)
         money.scale(0.8)
@@ -337,7 +337,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
     def move_community_cards_out_of_the_way(self):
         cards = self.community_cards
         cards.generate_target()
-        cards.target.arrange_submobjects(
+        cards.target.arrange(
             RIGHT, buff = -cards[0].get_width() + MED_SMALL_BUFF,
         )
         cards.target.move_to(self.deck)
@@ -621,7 +621,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             "What's her model of me?",
             "\\vdots"
         ])))
-        questions.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        questions.arrange(DOWN, aligned_edge = LEFT)
         questions[-1].next_to(questions[-2], DOWN)
         questions.scale(0.7)
         questions.next_to(randy, UP)
@@ -737,15 +737,15 @@ class UpdatePokerPrior(SampleSpaceScene):
         numerator = rects[0].target
         plus = TexMobject("+")
         denominator = VGroup(rects[1].target, plus, rects[2].target)
-        denominator.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        denominator.arrange(RIGHT, buff = SMALL_BUFF)
         frac_line = TexMobject("\\over")
         frac_line.stretch_to_fit_width(denominator.get_width())
         fraction = VGroup(numerator, frac_line, denominator)
-        fraction.arrange_submobjects(DOWN)
+        fraction.arrange(DOWN)
 
         arrow = TexMobject("\\downarrow")
         group = VGroup(posterior_tex, arrow, fraction)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_corner(UP+RIGHT)
 
         self.play(LaggedStart(FadeIn, posterior_tex))
@@ -854,7 +854,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             Arrow(ORIGIN, LEFT, tip_length = SMALL_BUFF)
             for x in range(3)
         ])
-        arrows.arrange_submobjects(DOWN)
+        arrows.arrange(DOWN)
         arrows.next_to(prior_rects[1], RIGHT, SMALL_BUFF)
 
         self.wait(2)
@@ -1037,7 +1037,7 @@ class UpdatePokerPrior(SampleSpaceScene):
     def insert_double_heart(self, tex_mob):
         double_heart = SuitSymbol("hearts")
         double_heart.add(SuitSymbol("hearts"))
-        double_heart.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        double_heart.arrange(RIGHT, buff = SMALL_BUFF)
         double_heart.get_tex_string = lambda : self.double_heart_template
         template = tex_mob.get_part_by_tex(self.double_heart_template)
         double_heart.replace(template)
@@ -1629,7 +1629,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             for color in (BLUE_B, GREY_BROWN, MAROON_E)
         ])
         friends.scale(0.6)
-        friends.arrange_submobjects(RIGHT)
+        friends.arrange(RIGHT)
         friends.next_to(randy, RIGHT, LARGE_BUFF, DOWN)
         friends.to_edge(RIGHT)
         for friend in friends:

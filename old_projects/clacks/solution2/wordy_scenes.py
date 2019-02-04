@@ -94,9 +94,9 @@ class ConnectionToOptics(Scene):
         momentum_group = VGroup(momentum_label, momentum_eq)
         groups = VGroup(energy_group, momentum_group)
         for group in groups:
-            group.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+            group.arrange(DOWN, buff=MED_LARGE_BUFF)
             group[0].set_color(GREEN)
-        groups.arrange_submobjects(DOWN, buff=2)
+        groups.arrange(DOWN, buff=2)
         groups.to_edge(LEFT)
         return groups
 
@@ -147,7 +147,7 @@ class ConnectionToOptics(Scene):
             "Angle of\\\\Incidence",
             "=",
             "Angle of\\\\Reflection",
-        ])).arrange_submobjects(RIGHT)
+        ])).arrange(RIGHT)
         title.set_color(YELLOW)
         h_line = Line(LEFT, RIGHT)
         h_line.match_width(title)

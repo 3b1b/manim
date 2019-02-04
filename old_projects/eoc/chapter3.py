@@ -56,7 +56,7 @@ class ContrastAbstractAndConcrete(Scene):
             "f(x) = e^x",
             "\\v_dots"
         ])))
-        functions.arrange_submobjects(
+        functions.arrange(
             DOWN, 
             aligned_edge = LEFT,
             buff = LARGE_BUFF
@@ -190,7 +190,7 @@ class ListOfRules(PiCreatureScene):
             "\\frac{d}{dx} a^x = \\ln(a) a^x",
             "\\vdots"
         ])))
-        rules.arrange_submobjects(
+        rules.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
         )
@@ -512,7 +512,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             TexMobject("+"),
             corner_square.copy()
         )
-        df_equation.arrange_submobjects()
+        df_equation.arrange()
         df_equation.next_to(
             self.function_label, DOWN, 
             aligned_edge = LEFT,
@@ -908,7 +908,7 @@ class NudgeSideLengthOfCube(Scene):
             three_d_mob.scale(self.small_piece_scaling_factor)
             # self.pose_3d_mobject(three_d_mob)
         faces.set_fill(opacity = 0.3)
-        df_equation.arrange_submobjects(RIGHT)
+        df_equation.arrange(RIGHT)
         df_equation.next_to(ORIGIN, RIGHT)
         df_equation.to_edge(UP)
 
@@ -1126,7 +1126,7 @@ class NudgeSideLengthOfCube(Scene):
                 face.rotate(np.pi/2, DOWN)
             elif thin_dim == 1:
                 face.rotate(np.pi/2, RIGHT)
-        faces.arrange_submobjects(OUT, buff = LARGE_BUFF)
+        faces.arrange(OUT, buff = LARGE_BUFF)
         self.pose_3d_mobject(faces)
         return faces
 
@@ -1142,7 +1142,7 @@ class NudgeSideLengthOfCube(Scene):
                 bar.rotate(np.pi/2, OUT)
             elif thick_dim == 2:
                 bar.rotate(np.pi/2, LEFT)
-        bars.arrange_submobjects(OUT, buff = LARGE_BUFF)
+        bars.arrange(OUT, buff = LARGE_BUFF)
         self.pose_3d_mobject(bars)
         return bars
 
@@ -1297,7 +1297,7 @@ class PatternForPowerRule(PiCreatureScene):
             )
             VGroup(*derivative[0][2:4]).set_color(color)
             derivatives.add(derivative)
-        derivatives.arrange_submobjects(
+        derivatives.arrange(
             DOWN, aligned_edge = LEFT,
             buff = MED_LARGE_BUFF
         )
@@ -1431,7 +1431,7 @@ class PowerRuleAlgebra(Scene):
             mob.set_color_by_tex("x", self.x_color)
 
         nudge_group = VGroup(x_to_n, down_arrow, x_dx_to_n)
-        nudge_group.arrange_submobjects(DOWN)
+        nudge_group.arrange(DOWN)
         nudge_group.to_corner(UP+LEFT)
         down_arrow.next_to(x_to_n[0], DOWN)
         equals.next_to(x_dx_to_n)
@@ -1550,7 +1550,7 @@ class PowerRuleAlgebra(Scene):
             for dot_index, dot in enumerate(dots):
                 target_list.insert(2*dot_index, dot)
             group = VGroup(*target_list)
-            group.arrange_submobjects(RIGHT, SMALL_BUFF)
+            group.arrange(RIGHT, SMALL_BUFF)
             if last_group is None:
                 group.next_to(x_to_n, RIGHT)
             else:
@@ -2671,7 +2671,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         cos.add_background_rectangle()
 
         group = VGroup(d_ratio, trig_ratio, cos)
-        group.arrange_submobjects()
+        group.arrange()
         group.next_to(
             self.title, DOWN, 
             buff = MED_LARGE_BUFF, 
@@ -2700,7 +2700,7 @@ class NextVideo(TeacherStudentsScene):
         d_composition = TexMobject("\\frac{d}{dx} \\cos\\left(\\frac{1}{x}\\right)")
 
         group = VGroup(d_sum, d_product, d_composition)
-        group.arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
+        group.arrange(RIGHT, buff = 2*LARGE_BUFF)
         group.next_to(VGroup(*self.get_pi_creatures()), UP, buff = LARGE_BUFF)
 
         self.play(

@@ -378,7 +378,7 @@ class WhenIWasAKid(TeacherStudentsScene):
             BabyPiCreature(color = color)
             for color in colors
         ])
-        children.arrange_submobjects(RIGHT)
+        children.arrange(RIGHT)
         children.to_edge(DOWN, buff = LARGE_BUFF)
         children.to_edge(LEFT)
         return children
@@ -629,7 +629,7 @@ class PairOfPairBecomeRectangle(Scene):
             "$\\Downarrow$",
             "Rectangle",
         ])))
-        words.arrange_submobjects(DOWN)
+        words.arrange(DOWN)
         words.to_edge(RIGHT)
         words[-1].set_color(BLUE)
 
@@ -1075,7 +1075,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
             TexMobject("\\Downarrow"),
             TextMobject("Point in \\\\ unit square")
         ])
-        right_words.arrange_submobjects(DOWN)
+        right_words.arrange(DOWN)
         right_words.to_edge(RIGHT)
 
         dot_coords = (0.3, 0.7)
@@ -1954,7 +1954,7 @@ class PatreonThanks(Scene):
             self.specific_patrons[n_patrons/2:]
         )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.arrange(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
             patrons.to_edge(vect, buff = LARGE_BUFF)
 
@@ -2032,7 +2032,7 @@ class CreditThree(Scene):
             "buymywidgets.com",
             "learnwhatilearn.com",
         ])))
-        domains.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        domains.arrange(DOWN, aligned_edge = LEFT)
         domains.next_to(randy, UP, buff = LARGE_BUFF)
         domains.shift_onto_screen()
 

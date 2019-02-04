@@ -589,7 +589,7 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
 
         fg_labels = VGroup(f_label, g_label)
         fg_labels.generate_target()
-        fg_labels.target.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        fg_labels.target.arrange(DOWN, aligned_edge = LEFT)
         fg_labels.target.to_corner(UP+RIGHT)
 
         new_equation = TexMobject("x^2", "-", "2", "=", "0")
@@ -679,7 +679,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
             arg_separator = ""
         )
         complex_group = VGroup(complex_equation, z_def)
-        complex_group.arrange_submobjects(DOWN)
+        complex_group.arrange(DOWN)
         for tex in complex_group:
             tex.set_color_by_tex("z", GREEN)
         complex_group.move_to(self.hold_up_spot, DOWN)
@@ -1085,7 +1085,7 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         )
         arrow.pointwise_become_partial(arrow, 0.0, 0.97)
         group = VGroup(in_plane, arrow, out_plane)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         arrow.shift(UP)
         group.move_to(self.students)
         group.to_edge(UP)
@@ -1928,7 +1928,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
             Square(side_length = 2) for x in range(2)
         ])
         small_squares.match_width(big_square, stretch = True)
-        small_squares.arrange_submobjects(DOWN, buff = 0)
+        small_squares.arrange(DOWN, buff = 0)
         small_squares.move_to(big_square)
         small_squares.space_out_submobjects(1.1)
         all_squares = VGroup(big_square, *small_squares)
@@ -1961,7 +1961,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
             no_answers_in_equation[1], equals,
             yes_answers_in_equation
         )
-        equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        equation.arrange(RIGHT, buff = SMALL_BUFF)
         equation.next_to(big_square, RIGHT, MED_LARGE_BUFF)
         q_marks = TexMobject("???")
         q_marks.next_to(equals, UP)
@@ -1972,7 +1972,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
         self.play(LaggedStart(Write, no_answers))
         self.wait()
         self.play(
-            small_squares.arrange_submobjects, DOWN, {"buff" : 0},
+            small_squares.arrange, DOWN, {"buff" : 0},
             small_squares.move_to, big_square,
             no_answers.space_out_submobjects, 0.9,
         )
@@ -2651,7 +2651,7 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         for path_target in path_parts.target:
             if isinstance(path_target, Line):
                 path_target.rotate(-path_target.get_angle())
-        path_parts.target.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        path_parts.target.arrange(DOWN, buff = MED_SMALL_BUFF)
         alt_path_parts = path_parts.copy()
         size = lambda m : m.get_height() + m.get_width()
         alt_path_parts.submobjects.sort(
@@ -2901,7 +2901,7 @@ class AllOfTheVideos(Scene):
             rect = SurroundingRectangle(image, buff = 0)
             rect.set_stroke(WHITE, 1)
             image.add(rect)
-        images.arrange_submobjects_in_grid(n, n, buff = 0)
+        images.arrange_in_grid(n, n, buff = 0)
         images.set_height(FRAME_HEIGHT)
         random.shuffle(images.submobjects)
 
@@ -2952,7 +2952,7 @@ class MentionQAndA(Scene):
             "What motivated you to join 3b1b?",
             "$\\vdots$",
         ])))
-        questions.arrange_submobjects(DOWN, buff = 0.75)
+        questions.arrange(DOWN, buff = 0.75)
         questions.next_to(title, DOWN, LARGE_BUFF)
 
         self.play(LaggedStart(FadeIn, questions, run_time = 3))
@@ -3002,7 +3002,7 @@ class InfiniteListOfTopics(Scene):
                 "Fixed points",
             ]
         ] + [TexMobject("\\vdots")])
-        lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        lines.arrange(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         lines.next_to(title, DOWN, MED_LARGE_BUFF)
         lines[-1].next_to(lines[-2], DOWN)
 
@@ -3022,7 +3022,7 @@ class ManyIterations(Scene):
                 "Winding numbers, v5 \\\\ (start down wrong path)",
             ]
         ])
-        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        words.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         words.scale(0.75)
         words.to_edge(RIGHT)
 
@@ -3049,7 +3049,7 @@ class MentionFree(PiCreatureScene):
             TextMobject("College course:", "$>\\$1{,}000.00$"),
             TextMobject("YouTube video:", "$=\\$0.00$"),
         )
-        # items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        # items.arrange(DOWN, buff = MED_LARGE_BUFF)
         items.next_to(morty, UP, LARGE_BUFF)
         right_x = morty.get_right()[0]
         for item in items:
@@ -3185,7 +3185,7 @@ class PatreonScroll(Scene):
         patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
         patrons.scale(0.75)
         random.shuffle(patrons.submobjects)
-        patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        patrons.arrange(DOWN, aligned_edge = LEFT)
         patrons.next_to(ORIGIN, DOWN)
         patrons.to_edge(RIGHT)
 

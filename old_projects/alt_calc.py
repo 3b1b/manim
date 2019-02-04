@@ -856,7 +856,7 @@ class GraphicalIntuitions(GraphScene):
         )
         for word in words:
             word.add_background_rectangle()
-        words.arrange_submobjects(DOWN)
+        words.arrange(DOWN)
         words.to_edge(UP)
         return LaggedStart(
             FadeIn, words,
@@ -994,7 +994,7 @@ class MoreTopics(Scene):
         )
         for word in others:
             word.add_background_rectangle()
-        others.arrange_submobjects(
+        others.arrange(
             DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT,
         )
         others.next_to(RIGHT, RIGHT)
@@ -2129,7 +2129,7 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
                 tex_to_color_map={"x": YELLOW}
             )
         )
-        fixed_point_words.arrange_submobjects(DOWN)
+        fixed_point_words.arrange(DOWN)
 
         self.play(Write(x), Write(equals))
         self.wait()
@@ -2432,7 +2432,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
             value = func(value)
             value_labels.add(value_label)
 
-        lines.arrange_submobjects(
+        lines.arrange(
             DOWN, buff=MED_LARGE_BUFF,
         )
         VGroup(lines, value_labels).scale(0.8)
@@ -2566,7 +2566,7 @@ class ShowRepeatedApplication(Scene):
             TexMobject("="),
             get_nested_one_plus_one_over_x(1)
         )
-        title.arrange_submobjects(RIGHT)
+        title.arrange(RIGHT)
         title.to_corner(UL)
         title.set_color(self.title_color)
 
@@ -3420,7 +3420,7 @@ class TopicsAfterSingleVariable(PiCreatureScene, MoreTopics):
             PiCreature(color=color)
             for color in [BLUE_E, BLUE_C, BLUE_D]
         ])
-        creatures.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        creatures.arrange(RIGHT, buff=LARGE_BUFF)
         creatures.scale(0.5)
         creatures.to_corner(DR)
         return creatures
@@ -3544,7 +3544,7 @@ class PrinciplesOverlay(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
         q_marks = VGroup(*[TexMobject("?") for x in range(40)])
-        q_marks.arrange_submobjects_in_grid(4, 10)
+        q_marks.arrange_in_grid(4, 10)
         q_marks.space_out_submobjects(1.4)
         for mark in q_marks:
             mark.shift(

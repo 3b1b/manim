@@ -2209,7 +2209,7 @@ class LowerBound(AreaIsDerivative):
         self.play(Write(plus_fives, run_time = 2))
         self.wait(2)
         self.play(
-            group.arrange_submobjects,
+            group.arrange,
             group.next_to, antideriv_diff, DOWN, MED_LARGE_BUFF
         )
         self.wait()
@@ -2249,7 +2249,7 @@ class LowerBound(AreaIsDerivative):
             TexMobject("-"), parts[1],
         )
         result.left_part, result.right_part = parts
-        result.arrange_submobjects(RIGHT)
+        result.arrange(RIGHT)
         result.scale(0.9)
         result.next_to(self.integral, RIGHT)
         return result

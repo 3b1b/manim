@@ -32,9 +32,9 @@ class Test(Scene):
         #         v = np.dot(W.T, sigmoid_inverse(v) - b)
         #         v = sigmoid(v)
         #     h_group.add(MNistMobject(v))
-        #     h_group.arrange_submobjects(LEFT)
+        #     h_group.arrange(LEFT)
         #     group.add(h_group)
-        # group.arrange_submobjects(DOWN)
+        # group.arrange(DOWN)
         # group.set_height(FRAME_HEIGHT - 1)
         # self.add(group)
 
@@ -46,9 +46,9 @@ class Test(Scene):
                 for a in network.get_activation_of_all_layers(
                     np.random.randn(784, 1)
                 )
-            ]).arrange_submobjects(RIGHT)
+            ]).arrange(RIGHT)
             for x in range(10)
-        ]).arrange_submobjects(DOWN)
+        ]).arrange(DOWN)
         group.set_height(FRAME_HEIGHT - 1)
         self.add(group)
 
@@ -61,7 +61,7 @@ class Test(Scene):
                 opacity = 2*(sigmoid(abs(n)) - 0.5)
                 pixel.set_fill(color, opacity = opacity)
             group.add(mob)
-        group.arrange_submobjects_in_grid()
+        group.arrange_in_grid()
         group.set_height(FRAME_HEIGHT - 1)
         self.add(group)
 
@@ -70,7 +70,7 @@ class Test(Scene):
             self.get_activation_images(digit, network, test_data)
             for digit in range(10)
         ])
-        image_samples.arrange_submobjects_in_grid(
+        image_samples.arrange_in_grid(
             n_rows = 2, buff = LARGE_BUFF
         )
         image_samples.set_height(FRAME_HEIGHT - 1)
@@ -86,9 +86,9 @@ class Test(Scene):
             Group(*[
                 MNistMobject(a)
                 for a in network.get_activation_of_all_layers(vect)
-            ]).arrange_submobjects(RIGHT)
+            ]).arrange(RIGHT)
             for vect in input_vectors[:n_examples]
-        ]).arrange_submobjects(DOWN)
+        ]).arrange(DOWN)
         activation_iamges.set_height(FRAME_HEIGHT - 1)
         return activation_iamges
 
@@ -113,9 +113,9 @@ class Test(Scene):
             in_vect = maximizing_input(network, layer, out)
             new_out = network.get_activation_of_all_layers(in_vect)[layer]
             group = Group(*list(map(MNistMobject, [in_vect, new_out])))
-            group.arrange_submobjects(DOWN+RIGHT, SMALL_BUFF)
+            group.arrange(DOWN+RIGHT, SMALL_BUFF)
             groups.add(group)
-        groups.arrange_submobjects_in_grid()
+        groups.arrange_in_grid()
         groups.set_height(FRAME_HEIGHT - 1)
         self.add(groups)
 
@@ -126,7 +126,7 @@ class Test(Scene):
             for test in test_data[3:20]
             if test[1] in [4, 9]
         ])
-        group.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        group.arrange(DOWN, buff = MED_LARGE_BUFF)
         group.set_height(FRAME_HEIGHT - 1)
         self.play(FadeIn(group))
 
@@ -134,7 +134,7 @@ class Test(Scene):
         test_in, test_out = test
         activations = network.get_activation_of_all_layers(test_in)
         group = Group(*list(map(MNistMobject, activations)))
-        group.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        group.arrange(RIGHT, buff = LARGE_BUFF)
         return group
 
     # def show_frame(self):

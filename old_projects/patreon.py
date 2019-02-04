@@ -47,7 +47,7 @@ class SideGigToFullTime(Scene):
             TexMobject("\\$")
             for x in range(10)
         ])
-        dollar_signs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        dollar_signs.arrange(RIGHT, buff = LARGE_BUFF)
         dollar_signs.set_color(BLACK)
         dollar_signs.next_to(morty.eyes, RIGHT, buff = 2*LARGE_BUFF)
 
@@ -138,7 +138,7 @@ class GrowingToDoList(Scene):
             "Understanding entropy",
         ])))
         lines.scale(0.65)
-        lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        lines.arrange(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         lines.set_color_by_gradient(BLUE_C, YELLOW)
         lines.next_to(title, DOWN, buff = LARGE_BUFF/2.)
         lines.to_edge(RIGHT)
@@ -190,7 +190,7 @@ class TwoTypesOfVideos(Scene):
                 "ODEs",
             ]
         ])
-        series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+        series_list.arrange(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         series_list.set_width(FRAME_X_RADIUS-2)
         series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
@@ -524,9 +524,9 @@ class MakeALotOfPiCreaturesHappy(Scene):
             VGroup(*[
                 Randolph()
                 for x in range(7)
-            ]).arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+            ]).arrange(RIGHT, buff = MED_LARGE_BUFF)
             for x in range(4)
-        ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        ]).arrange(DOWN, buff = MED_LARGE_BUFF)
 
         pi_list = list(it.chain(*[
             layer.submobjects

@@ -52,7 +52,7 @@ class Necklace(VMobject):
             Jewel(color = color)
             for color in self.colors
         ])
-        jewels.arrange_submobjects(buff = self.jewel_buff)
+        jewels.arrange(buff = self.jewel_buff)
         jewels.set_width(self.width)
         jewels.center()
         j_to_j_dist = (jewels[1].get_center()-jewels[0].get_center())[0]
@@ -149,7 +149,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             Randolph(),
             Mortimer()
         )
-        thieves.arrange_submobjects(RIGHT, buff = 4*LARGE_BUFF)
+        thieves.arrange(RIGHT, buff = 4*LARGE_BUFF)
         thieves.to_edge(DOWN)
         thieves[0].make_eye_contact(thieves[1])
 
@@ -180,7 +180,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             jewel_copy.next_to(num_mob)
             label = VGroup(num_mob, jewel_copy)
             enumeration_labels.add(label)
-        enumeration_labels.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        enumeration_labels.arrange(RIGHT, buff = LARGE_BUFF)
         enumeration_labels.to_edge(UP)
 
         self.play(
@@ -217,7 +217,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             )
             jewel_type.save_state()
             jewel_type.generate_target()
-            jewel_type.target.arrange_submobjects()
+            jewel_type.target.arrange()
             jewel_type.target.scale(2)
             jewel_type.target.move_to(2*UP)
             self.play(
@@ -246,9 +246,9 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                     TexMobject(str(num/2)),
                     jewel.copy()
                 )
-                half_label.arrange_submobjects()
+                half_label.arrange()
                 half_labels.add(half_label)
-            half_labels.arrange_submobjects(DOWN)
+            half_labels.arrange(DOWN)
             half_labels.set_height(thief.get_height())
             half_labels.next_to(
                 thief, vect, 
@@ -274,7 +274,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                 VGroup(*jewel_type_copy[n_jewels/2:]),
             ]
             for half, thief, vect in zip(halves, thieves, [RIGHT, LEFT]):
-                half.arrange_submobjects(DOWN)
+                half.arrange(DOWN)
                 half.next_to(
                     thief, vect, 
                     buff = SMALL_BUFF + type_index*half.get_width(),
@@ -1165,7 +1165,7 @@ class GeneralizeBorsukUlam(Scene):
         plusses = [TexMobject("+") for x in range(self.n_dims-1)]
         plusses += [TexMobject("=1")]
         condition = VGroup(*it.chain(*list(zip(squares, plusses))))
-        condition.arrange_submobjects(RIGHT)
+        condition.arrange(RIGHT)
 
         return condition
 
@@ -1212,7 +1212,7 @@ class GeneralizeBorsukUlam(Scene):
         f1, f2 = [TexMobject("f") for x in range(2)]
         equals = TexMobject("=")
         equation = VGroup(f1, tup, equals, f2, neg_tup)
-        equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        equation.arrange(RIGHT, buff = SMALL_BUFF)
 
         return equation
 
@@ -1298,7 +1298,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
             jewel_copy.next_to(num_mob)
             label = VGroup(num_mob, jewel_copy)
             enumeration_labels.add(label)
-        enumeration_labels.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        enumeration_labels.arrange(RIGHT, buff = LARGE_BUFF)
         enumeration_labels.to_edge(UP)
 
         for jewel_type, label in zip(jewel_types, enumeration_labels):
@@ -1307,7 +1307,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
          
             jewel_type.save_state()
             jewel_type.generate_target()
-            jewel_type.target.arrange_submobjects()
+            jewel_type.target.arrange()
             jewel_type.target.move_to(2*UP)
             self.play(
                 MoveToTarget(jewel_type), 
@@ -1502,10 +1502,10 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
                     len(jewel_type)/2, len(self.segments)
                 )),
                 Jewel(color = jewel_type[0].get_color())
-            ).arrange_submobjects()
+            ).arrange()
             for jewel_type in self.jewel_types
         ])
-        weight_description.arrange_submobjects(buff = LARGE_BUFF)
+        weight_description.arrange(buff = LARGE_BUFF)
         weight_description.next_to(boxes, UP, aligned_edge = LEFT)
 
         self.play(FadeIn(boxes))
@@ -1595,13 +1595,13 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
 
         emerald_segments.save_state()
         emerald_segments.generate_target()
-        emerald_segments.target.arrange_submobjects()
+        emerald_segments.target.arrange()
         emerald_segments.target.move_to(2*DOWN)
         brace = Brace(emerald_segments.target, DOWN)
         label = VGroup(
             TexMobject("5\\left( 1/18 \\right)"),
             Jewel(color = self.jewel_colors[1])
-        ).arrange_submobjects()
+        ).arrange()
         label.next_to(brace, DOWN)
         self.play(MoveToTarget(emerald_segments))
         self.play(GrowFromCenter(brace))
@@ -1953,7 +1953,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
                 ("z", "^2 = ", "1/2"),
             ])
         ])
-        choices.arrange_submobjects(
+        choices.arrange(
             DOWN, 
             buff = LARGE_BUFF,
             aligned_edge = LEFT
@@ -1983,7 +1983,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             ])
             for sqrt in sqrts:
                 sqrt.scale(0.6)
-            sqrts.arrange_submobjects(DOWN)
+            sqrts.arrange(DOWN)
             sqrts.next_to(choice, RIGHT, buff = LARGE_BUFF)
             sqrts.set_color(choice.get_color())
 
@@ -2223,13 +2223,13 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
             for i, group in enumerate(monochrome_groups):
                 group.save_state()
                 group.generate_target()
-                group.target.arrange_submobjects(buff = SMALL_BUFF)
+                group.target.arrange(buff = SMALL_BUFF)
                 brace = Brace(group.target, UP)
                 label = VGroup(
                     TextMobject("Thief %d"%(i+1)),
                     Jewel(color = group[0].get_color())
                 )
-                label.arrange_submobjects()
+                label.arrange()
                 label.next_to(brace, UP)
                 full_group = VGroup(group.target, brace, label)
                 vect = LEFT if i == 0 else RIGHT
@@ -2530,7 +2530,7 @@ class CircleToSphereToQMarks(Scene):
             ))
 
         pi_groups[-1].remove(pi_groups[-1][-1])
-        pi_groups.arrange_submobjects(buff = -1)
+        pi_groups.arrange(buff = -1)
         for mob in pi_groups:
             self.play(FadeIn(mob))
         self.wait(2)

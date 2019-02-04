@@ -441,7 +441,7 @@ class MathAndPhysicsConspiring(Scene):
             TexMobject("\\pi = {:.16}\\dots".format(PI)),
             self.get_tangent_image(),
         )
-        math_stuffs.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        math_stuffs.arrange(DOWN, buff=MED_LARGE_BUFF)
         math_stuffs.next_to(math_title, DOWN, LARGE_BUFF)
         to_fade = VGroup(math_title, *math_stuffs, physics_title)
 
@@ -1003,7 +1003,7 @@ class PiComputingAlgorithmsAxes(Scene):
 class StepsOfTheAlgorithm(TeacherStudentsScene):
     def construct(self):
         steps = self.get_steps()
-        steps.arrange_submobjects(
+        steps.arrange(
             DOWN,
             buff=MED_LARGE_BUFF,
             aligned_edge=LEFT,
@@ -1127,7 +1127,7 @@ class CompareToGalacticMass(Scene):
         digits_word.match_color(counter)
         counter.generate_target()
         group = VGroup(counter.target, digits_word)
-        group.arrange_submobjects(
+        group.arrange(
             RIGHT,
             index_of_submobject_to_align=0,
             aligned_edge=DOWN,
@@ -1219,7 +1219,7 @@ class CompareToGalacticMass(Scene):
         black_holes = VGroup(*[
             black_hole.copy() for k in range(10)
         ])
-        black_holes.arrange_submobjects_in_grid(5, 2)
+        black_holes.arrange_in_grid(5, 2)
         black_holes.to_corner(DR)
         random.shuffle(black_holes.submobjects)
         for bh in black_holes:
@@ -1446,7 +1446,7 @@ class NextVideo(Scene):
         for video in videos:
             video.set_color(BLUE)
             video.set_sheen(0.5, UL)
-        videos.arrange_submobjects(RIGHT, buff=2)
+        videos.arrange(RIGHT, buff=2)
 
         titles = VGroup(
             TextMobject("Here and now"),
@@ -1479,7 +1479,7 @@ class NextVideo(Scene):
             Mortimer()
         )
         friends.set_height(1)
-        friends.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        friends.arrange(RIGHT, buff=MED_SMALL_BUFF)
         friends[:2].next_to(randy, LEFT)
         friends[2].next_to(randy, RIGHT)
 

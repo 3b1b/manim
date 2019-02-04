@@ -257,7 +257,7 @@ class WonkyHexagonFractal(SelfSimilarFractal):
             piece.rotate(i * np.pi / 12, about_point=ORIGIN)
         p1, p2, p3, p4, p5, p6, p7 = subparts
         center_row = VGroup(p1, p4, p7)
-        center_row.arrange_submobjects(RIGHT, buff=0)
+        center_row.arrange(RIGHT, buff=0)
         for p in p2, p3, p5, p6:
             p.set_width(p1.get_width())
         p2.move_to(p1.get_top(), DOWN + LEFT)

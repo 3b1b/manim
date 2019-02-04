@@ -148,9 +148,9 @@ class SumOfIntegersProof(Scene):
         rows = VGroup()
         for count in range(1, self.n + 1):
             row = VGroup(*[Square() for k in range(count)])
-            row.arrange_submobjects(RIGHT, buff=0)
+            row.arrange(RIGHT, buff=0)
             rows.add(row)
-        rows.arrange_submobjects(DOWN, buff=0, aligned_edge=LEFT)
+        rows.arrange(DOWN, buff=0, aligned_edge=LEFT)
         rows.set_height(5)
         rows.set_stroke(WHITE, 3)
         rows.set_fill(BLUE, 0.5)
@@ -210,7 +210,7 @@ class MultipleDefinitionsOfAnEllipse(Scene):
             TextMobject("2. Thumbtack \\\\ \\quad\\, construction"),
             TextMobject("3. Slice a cone"),
         )
-        definitions.arrange_submobjects(
+        definitions.arrange(
             DOWN, buff=LARGE_BUFF,
             aligned_edge=LEFT
         )
@@ -426,7 +426,7 @@ class ShowArrayOfEccentricities(Scene):
             self.get_ellipse(e, **kwargs)
             for e in eccentricities
         ])
-        result.arrange_submobjects(RIGHT, buff=buff)
+        result.arrange(RIGHT, buff=buff)
         return result
 
     def get_eccentricity(self, ellipse):
@@ -478,7 +478,7 @@ class ShowOrbits(ShowArrayOfEccentricities):
             earth_orbit_words,
             eccentricity_equals, eccentricity_label
         )
-        full_label.arrange_submobjects(RIGHT, SMALL_BUFF)
+        full_label.arrange(RIGHT, SMALL_BUFF)
         earth_orbit_words.shift(0.5 * SMALL_BUFF * UL)
         full_label.to_edge(UP)
 
@@ -674,7 +674,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         words = TextMobject("Eccentricity = ")
         decimal = DecimalNumber(0, num_decimal_places=2)
         group = VGroup(words, decimal)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.to_edge(UP)
         return group
 
@@ -811,7 +811,7 @@ class TriangleOfEquivalences(Scene):
         self.add(title)
         rects = VGroup(*[ScreenRectangle() for x in range(3)])
         rects.set_height(2)
-        rects[:2].arrange_submobjects(RIGHT, buff=2)
+        rects[:2].arrange(RIGHT, buff=2)
         rects[2].next_to(rects[:2], DOWN, buff=1.5)
         rects.next_to(title, DOWN)
 
@@ -1097,7 +1097,7 @@ class WriteConjecture(Scene):
             words[1].in_equation,
             TexMobject("||"),
         )
-        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        equation.arrange(RIGHT, buff=SMALL_BUFF)
         equation.scale(0.75)
         equation.next_to(title, DOWN, MED_LARGE_BUFF)
         equation.shift_onto_screen()
@@ -1182,7 +1182,7 @@ class QuickGeometryProof(Scene):
 
         ticks = VGroup(Line(DOWN, UP), Line(DOWN, UP))
         ticks.scale(0.1)
-        ticks.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        ticks.arrange(RIGHT, buff=SMALL_BUFF)
 
         equation = TexMobject(
             "\\Delta OP_1Q \\cong \\Delta OP_2Q",
@@ -1349,7 +1349,7 @@ class AskWhyYouWouldChooseThisProof(PiCreatureScene):
         other = PiCreature(color=RED_D)
         other.flip()
         group = VGroup(randy, other)
-        group.arrange_submobjects(RIGHT, buff=5)
+        group.arrange(RIGHT, buff=5)
         group.to_edge(DOWN)
         return group
 
@@ -1489,7 +1489,7 @@ class LockhartQuote(Scene):
         pictures = Group(measurement, madame_bovary, mona_lisa)
         for picture in pictures:
             picture.set_height(4)
-        pictures.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        pictures.arrange(RIGHT, buff=LARGE_BUFF)
         pictures.to_edge(DOWN)
 
         measurement.save_state()
@@ -1611,7 +1611,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
                 line.put_start_and_end_on(
                     ORIGIN, d * UP
                 )
-            lines.arrange_submobjects(DOWN, buff=0)
+            lines.arrange(DOWN, buff=0)
             lines.next_to(arrow, RIGHT)
             h_line.move_to(lines[0].get_bottom())
         lines_animation = ContinualUpdate(

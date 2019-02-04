@@ -406,7 +406,7 @@ class ShowCalculus(PiCreatureScene):
         frac_sum.to_corner(UP+LEFT)
         frac_sum.shift(RIGHT)
         rhs_group = VGroup(int1, int2, arctan, pi_fourths)
-        rhs_group.arrange_submobjects(
+        rhs_group.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -513,7 +513,7 @@ class Outline(PiCreatureScene):
             step.set_color_by_tex("1", RED, substring = False)
             step.set_color_by_tex("i", RED, substring = False)
             step.set_color_by_tex("4", GREEN, substring = False)
-        steps.arrange_submobjects(
+        steps.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -619,7 +619,7 @@ class Outline(PiCreatureScene):
             TexMobject("\\chi(%d)"%n)
             for n in input_range
         ])
-        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.arrange(RIGHT, buff = LARGE_BUFF)
         chis.set_stroke(WHITE, width = 1)
         numerators = VGroup()
         arrows = VGroup()
@@ -837,7 +837,7 @@ class CountLatticePoints(LatticePointScene):
                 TexMobject(
                     "\\approx \\pi", "(", R, ")^2"
                 )
-            ).arrange_submobjects(RIGHT)
+            ).arrange(RIGHT)
             for R in ("10", "1{,}000{,}000", "R")
         ])
         radius_10_eq, radius_million_eq, radius_R_eq = equations
@@ -893,7 +893,7 @@ class CountLatticePoints(LatticePointScene):
         )
         self.wait(2)
         self.play(
-            final_group.arrange_submobjects, RIGHT,
+            final_group.arrange, RIGHT,
             final_group.next_to, ORIGIN, UP
         )
         rect = BackgroundRectangle(final_group)
@@ -1062,7 +1062,7 @@ class CountThroughRings(LatticePointScene):
             mob.add_background_rectangle()
             left_roots.add(VGroup(mob[0], mob[1][0]))
 
-        left_list.arrange_submobjects(
+        left_list.arrange(
             DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
@@ -1074,7 +1074,7 @@ class CountThroughRings(LatticePointScene):
             for count in counts
         ])
         top_list.set_color(YELLOW)
-        top_list.arrange_submobjects(RIGHT, aligned_edge = DOWN)
+        top_list.arrange(RIGHT, aligned_edge = DOWN)
         top_list.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         top_list.to_edge(UP, buff = SMALL_BUFF)
         top_rect = BackgroundRectangle(top_list)
@@ -1456,7 +1456,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             TexMobject("(", str(x), "+", str(y), "i", ")"),
             TexMobject("(", str(x), "-", str(y), "i", ")"),
         )
-        equation.arrange_submobjects(
+        equation.arrange(
             RIGHT, buff = SMALL_BUFF,
         )
         VGroup(*equation[-2:]).shift(0.5*SMALL_BUFF*DOWN)
@@ -1545,7 +1545,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             TexMobject(str(x), "^2"),
             TexMobject("-", "(", str(y), "i", ")^2")
         )
-        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expansion.arrange(RIGHT, buff = SMALL_BUFF)
         expansion.next_to(
             VGroup(*self.equation[-2:]), 
             DOWN, LARGE_BUFF
@@ -2219,7 +2219,7 @@ class FactorizationPattern(Scene):
             for x, y in [(2, 1), (3, 2), (4, 1), (5, 2)]
             for y_str in [str(y) if y is not 1 else ""]
         ])
-        factorizations.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        factorizations.arrange(DOWN, aligned_edge = LEFT)
         factorizations.to_corner(UP+LEFT)
         factorizations.shift(RIGHT)
         movers = VGroup()
@@ -2560,7 +2560,7 @@ class IntroduceRecipe(Scene):
         left_factors, right_factors = self.get_left_and_right_factors()
         for group in left_factors, right_factors:
             group.generate_target()
-            group.target.arrange_submobjects(DOWN)
+            group.target.arrange(DOWN)
         left_factors.target.next_to(T_chart.left_h_line, DOWN)
         right_factors.target.next_to(T_chart.right_h_line, DOWN)
 
@@ -2646,7 +2646,7 @@ class IntroduceRecipe(Scene):
             Line(ORIGIN, self.T_chart_width*RIGHT/2.0) 
             for x in range(2)
         ])
-        h_lines.arrange_submobjects(RIGHT, buff = 0)
+        h_lines.arrange(RIGHT, buff = 0)
         h_lines.shift(UP)
         v_line = Line(self.T_chart_height*UP, ORIGIN)
         v_line.move_to(h_lines.get_center(), UP)
@@ -2891,7 +2891,7 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
         for words, color in zip(words_group, self.colors):
             words.add_background_rectangle()
             words.set_color(color)
-        words_group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words_group.arrange(DOWN, aligned_edge = LEFT)
         words_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         angles = [np.pi/2, np.pi, -np.pi/2]
 
@@ -3304,7 +3304,7 @@ class SummarizeCountingRule(Show125Circle):
         choices_copy.generate_target()
 
         choices_copy.target.scale(1./0.75)
-        choices_copy.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        choices_copy.target.arrange(RIGHT, buff = SMALL_BUFF)
         choices_copy.target.next_to(equals_four, RIGHT, SMALL_BUFF)
         choices_copy.target.shift(0.25*SMALL_BUFF*DOWN)
         self.play(
@@ -3468,7 +3468,7 @@ class IntroduceChi(FactorizationPattern):
             )
         ])
         chi_expressions.scale(0.9)
-        chi_expressions.arrange_submobjects(
+        chi_expressions.arrange(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
         chi_expressions.to_corner(UP+RIGHT)
@@ -3518,7 +3518,7 @@ class IntroduceChi(FactorizationPattern):
             TexMobject("\\chi(%d)"%n)
             for n in input_range
         ])
-        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.arrange(RIGHT, buff = LARGE_BUFF)
         chis.set_stroke(WHITE, width = 1)
         numbers = VGroup()
         arrows = VGroup()
@@ -3706,7 +3706,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             TexMobject("(", "1", ")"),
             TexMobject("(", "3+1", ")"),
         )
-        count.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        count.arrange(RIGHT, buff = SMALL_BUFF)
         for i, color in zip([3, 2, 1], self.colors):
             count[i][1].set_color(color)
         count.next_to(
@@ -3747,7 +3747,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             factor.set_color_by_tex("1", color, substring = False)
             factor.scale(0.8)
             expression.add(factor)
-        expression.arrange_submobjects(
+        expression.arrange(
             DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT
         )
         equals_four.next_to(expression[1], LEFT, SMALL_BUFF)
@@ -3910,7 +3910,7 @@ class ExpandCountWith45(SummarizeCountingRule):
                 part[2].set_color(color)
             factor.scale(0.8)
             expression.add(factor)
-        expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expression.arrange(RIGHT, buff = SMALL_BUFF)
         expression.next_to(
             factorization[1], DOWN, 
             buff = LARGE_BUFF,
@@ -3975,7 +3975,7 @@ class ExpandCountWith45(SummarizeCountingRule):
                 plusses.add(plus)
                 expansion.add(plus)
         expansion.add(rp)
-        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expansion.arrange(RIGHT, buff = SMALL_BUFF)
         expansion.set_width(FRAME_WIDTH - LARGE_BUFF)
         expansion.next_to(ORIGIN, UP)
         rect = BackgroundRectangle(expansion)
@@ -4028,7 +4028,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             if product != products[-1]:
                 divisor_sum.add(TexMobject("+"))
         divisor_sum.add(rp)
-        divisor_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        divisor_sum.arrange(RIGHT, buff = SMALL_BUFF)
         divisor_sum.next_to(self.expansion, DOWN, MED_LARGE_BUFF)
         rect = BackgroundRectangle(divisor_sum)
 
@@ -4220,7 +4220,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             TexMobject("\\vdots"),
             TexMobject("\\sqrt{R^2}")
         )
-        radicals.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        radicals.arrange(DOWN, buff = MED_SMALL_BUFF)
         radicals.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         radicals.to_edge(DOWN, buff = MED_SMALL_BUFF)
         radicals.to_edge(LEFT)
@@ -4297,7 +4297,7 @@ class AddUpGrid(Scene):
                     plusses.add(plus)
                     chi_sum.add(plus)
             chi_sum.add(rp)
-            chi_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            chi_sum.arrange(RIGHT, buff = SMALL_BUFF)
             chi_sum.scale(0.7)
             chi_sum.next_to(radical, RIGHT)
             chi_sums.add(chi_sum)
@@ -4432,10 +4432,10 @@ class AddUpGrid(Scene):
                 TexMobject("\\chi(", str(d), ")"),
                 TexMobject("+")
             )
-            term.arrange_submobjects(RIGHT, SMALL_BUFF)
+            term.arrange(RIGHT, SMALL_BUFF)
             term[1][1].set_color(YELLOW)
             full_sum.add(term)
-        full_sum.arrange_submobjects(RIGHT, SMALL_BUFF)
+        full_sum.arrange(RIGHT, SMALL_BUFF)
         full_sum.scale(0.7)
         full_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
 
@@ -4503,7 +4503,7 @@ class AddUpGrid(Scene):
             new_sum.add(plus)
         new_sum.add(dots)
         new_sum.add(rp)
-        new_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        new_sum.arrange(RIGHT, buff = SMALL_BUFF)
         new_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
         R_squared.shift(0.5*SMALL_BUFF*UP)
         R_movers = VGroup()
