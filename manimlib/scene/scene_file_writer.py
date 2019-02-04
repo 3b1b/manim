@@ -275,6 +275,10 @@ class SceneFileWriter(object):
             self.partial_movie_directory,
             **kwargs
         )
+        if len(partial_movie_files) == 0:
+            print("No animations in this scene")
+            return
+
         # Write a file partial_file_list.txt containing all
         # partial movie files
         file_list = os.path.join(
@@ -303,7 +307,6 @@ class SceneFileWriter(object):
 
         combine_process = subprocess.Popen(commands)
         combine_process.wait()
-        # os.remove(file_list)
 
         if self.includes_sound:
             sound_file_path = movie_file_path.replace(
