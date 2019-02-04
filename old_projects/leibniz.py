@@ -56,7 +56,7 @@ class LatticePointScene(Scene):
             )
             dot.r_squared = r_squared
             self.lattice_points.add(dot)
-        self.lattice_points.sort_submobjects(
+        self.lattice_points.sort(
             lambda p : get_norm(p - self.plane_center)
         )
 
@@ -92,7 +92,7 @@ class LatticePointScene(Scene):
 
     def get_lattice_points_on_r_squared_circle(self, r_squared):
         points = VGroup(*[dot for dot in self.lattice_points if dot.r_squared == r_squared])
-        points.sort_submobjects(
+        points.sort(
             lambda p : angle_of_vector(p-self.plane_center)%(2*np.pi)
         )
         return points
@@ -573,7 +573,7 @@ class Outline(PiCreatureScene):
             for b in range(-10, 11)
             if a**2 + b**2 <= 10**2
         ])
-        lattice_points.sort_submobjects(
+        lattice_points.sort(
             lambda p : get_norm(p - plane_center)
         )
         lattice_group = VGroup(plane, circle, lattice_points)
@@ -4173,7 +4173,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             if (x**2 + y**2) > self.max_lattice_point_radius**2
             if (x**2 + y**2) < new_max**2
         ])
-        new_dots.sort_submobjects(get_norm)
+        new_dots.sort(get_norm)
 
         self.play(*list(map(ShowCreation, [circle, arrow])))
         self.play(*list(map(FadeOut, [circle, arrow])))

@@ -942,7 +942,7 @@ class ReframeOnLattice(PiCreatureScene):
             for x in range(int(x_min), int(x_max)+1)
             for y in range(int(y_min), int(y_max)+1)
         ])
-        result.sort_submobjects(lambda p : np.dot(p, UP+RIGHT))
+        result.sort(lambda p : np.dot(p, UP+RIGHT))
         return result
 
     def create_pi_creature(self):
@@ -1682,7 +1682,7 @@ class VisualizeZSquared(Scene):
             for x in range(x_min, x_max+1)
             for y in range(y_min, y_max+1)
         ])
-        dots.sort_submobjects(lambda p : np.dot(p, UP+RIGHT))
+        dots.sort(lambda p : np.dot(p, UP+RIGHT))
 
         self.add_foreground_mobject(self.coordinate_labels)
         self.play(LaggedStart(
@@ -1906,7 +1906,7 @@ class PointsWeMiss(VisualizeZSquared):
             )
             for z in z_list
         ])
-        dots.sort_submobjects(get_norm)
+        dots.sort(get_norm)
         self.add(dots)
         self.dots = dots
 
@@ -2423,7 +2423,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
     def project_all_dots(self):
         dots = self.dots
         dots.add(*self.new_dots)
-        dots.sort_submobjects(
+        dots.sort(
             lambda p : get_norm(p - self.plane_center)
         )
         unit_length = self.unit_circle.get_width()/2.0

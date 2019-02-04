@@ -223,7 +223,7 @@ class Laptop(VGroup):
             body.stretch(scale_factor, dim=dim)
         body.set_width(self.width)
         body.set_fill(self.shaded_body_color, opacity=1)
-        body.sort_submobjects(lambda p: p[2])
+        body.sort(lambda p: p[2])
         body[-1].set_fill(self.body_color)
         screen_plate = body.copy()
         keyboard = VGroup(*[

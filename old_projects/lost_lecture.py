@@ -1017,7 +1017,7 @@ class FeynmanElementaryQuote(Scene):
                 self.add_foreground_mobjects(nothing)
                 self.play(ShowWord(nothing))
                 self.wait(0.2)
-                nothing.sort_submobjects(lambda p: -p[0])
+                nothing.sort(lambda p: -p[0])
                 self.play(LaggedStart(
                     FadeOut, nothing,
                     run_time=1
@@ -2600,7 +2600,7 @@ class AngularMomentumArgument(KeplersSecondLaw):
             get_force_field_func((sun_center, -1))
         )
         vector_field.set_fill(opacity=0.8)
-        vector_field.sort_submobjects(
+        vector_field.sort(
             lambda p: -get_norm(p - sun_center)
         )
 
@@ -4131,7 +4131,7 @@ class ShowSunVectorField(Scene):
             get_force_field_func((sun_center, -1))
         )
         vector_field.set_fill(opacity=0.8)
-        vector_field.sort_submobjects(
+        vector_field.sort(
             lambda p: -get_norm(p - sun_center)
         )
 

@@ -4889,7 +4889,7 @@ class ShowBitcoinBlockSize(LedgerScene):
             fill_opacity = 1,
         )
         visa_logo[-1].set_color("#faa61a")
-        visa_logo.sort_submobjects()
+        visa_logo.sort()
         avg_rate = TextMobject("Avg: $1{,}700$/second")
         max_rate = TextMobject("Max: $>24{,}000$/second")
         rates = VGroup(avg_rate, max_rate)

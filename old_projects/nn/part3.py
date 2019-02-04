@@ -1914,7 +1914,7 @@ class OrganizeDataIntoMiniBatches(Scene):
 
     def divide_into_minibatches(self):
         examples = self.examples
-        examples.sort_submobjects(lambda p : -p[1])
+        examples.sort(lambda p : -p[1])
         rows = Group(*[
             Group(*examples[i*self.n_cols:(i+1)*self.n_cols])
             for i in range(self.n_rows)
@@ -1956,7 +1956,7 @@ class OrganizeDataIntoMiniBatches(Scene):
             buff = SMALL_BUFF
         )
         def indicate_row(row):
-            row.sort_submobjects(lambda p : p[0])
+            row.sort(lambda p : p[0])
             return LaggedStart(
                 ApplyFunction, row,
                 lambda row : (

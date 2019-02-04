@@ -411,7 +411,7 @@ class RubiksCube(VGroup):
         # return VGroup(square, back)
 
     def get_face(self, vect):
-        self.sort_submobjects(lambda p: np.dot(p, vect))
+        self.sort(lambda p: np.dot(p, vect))
         return self[-(12 + 9):]
 
 
@@ -1931,7 +1931,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
                     pair = VGroup(p1, p2)
                     pair.scale(0.3)
                     sparkly_plane.add(pair)
-        sparkly_plane.sort_submobjects(
+        sparkly_plane.sort(
             lambda p: 0.1 * get_norm(p) + random.random()
         )
         sparkly_plane.set_color_by_gradient(YELLOW, RED, PINK, BLUE)

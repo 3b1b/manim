@@ -125,7 +125,7 @@ class SingleStringTexMobject(SVGMobject):
         return TexSymbol(path_string)
 
     def organize_submobjects_left_to_right(self):
-        self.sort_submobjects(lambda p: p[0])
+        self.sort(lambda p: p[0])
         return self
 
 
@@ -231,7 +231,7 @@ class TexMobject(SingleStringTexMobject):
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part)
 
-    def sort_submobjects_alphabetically(self):
+    def sort_alphabetically(self):
         self.submobjects.sort(
             key=lambda m: m.get_tex_string()
         )

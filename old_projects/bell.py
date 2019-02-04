@@ -1582,12 +1582,12 @@ class VennDiagramProofByContradiction(Scene):
         )
 
         B_center = B.target.get_center()
-        photons.sort_submobjects(
+        photons.sort(
             lambda p : get_norm(p-B_center)
         )
         in_B = VGroup(*photons[:85])
         out_of_B = VGroup(*photons[85:])
-        out_of_B.sort_submobjects(lambda p : np.dot(p, 2*UP+LEFT))
+        out_of_B.sort(lambda p : np.dot(p, 2*UP+LEFT))
 
         self.play(
             MoveToTarget(B),
@@ -1661,7 +1661,7 @@ class VennDiagramProofByContradiction(Scene):
             DOWN+RIGHT, buff = SMALL_BUFF
         )
 
-        in_B.sort_submobjects(
+        in_B.sort(
             lambda p : get_norm(p - C_center)
         )
         in_C = VGroup(*in_B[:-11])
@@ -1923,7 +1923,7 @@ class VennDiagramProofByContradiction(Scene):
 
     def photons_jump_to_A_not_C_region(self):
         in_C = self.in_C
-        in_C.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
+        in_C.sort(lambda p : np.dot(p, DOWN+RIGHT))
         movers = VGroup(*self.in_C[:30])
         for mover in movers:
             mover.generate_target()

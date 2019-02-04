@@ -779,7 +779,7 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
             )
             for u in [-1, 1]
         ]))
-        line.sort_submobjects(get_norm)
+        line.sort(get_norm)
         line.set_shade_in_3d(True)
         line.set_stroke(YELLOW, 5)
         line.center()

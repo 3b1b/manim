@@ -216,7 +216,7 @@ class SphereRings(SecondProof):
     def flash_through_rings(self):
         rings = self.north_rings.copy()
         rings.fade(1)
-        rings.sort_submobjects(lambda p: p[2])
+        rings.sort(lambda p: p[2])
 
         for x in range(8):
             self.play(LaggedStart(

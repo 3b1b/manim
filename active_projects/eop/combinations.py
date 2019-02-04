@@ -2366,13 +2366,13 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         for x in range(6):
             line.generate_target()
             resorter = VGroup(*line.target)
-            resorter.sort_submobjects(lambda p : random.random())
+            resorter.sort(lambda p : random.random())
             resorter.arrange(RIGHT, buff = SMALL_BUFF)
             resorter.move_to(line)
             self.play(MoveToTarget(line, path_arc = np.pi))
         self.play(FadeOut(q_marks))
 
-        line.sort_submobjects(lambda p : p[0])
+        line.sort(lambda p : p[0])
         words = VGroup(*list(map(TextMobject, ["First", "Second", "Fifth"])))
         words.set_color(YELLOW)
         words.scale(0.75)

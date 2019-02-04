@@ -248,7 +248,7 @@ class Diffusion(VMobject):
         dots.arrange_in_grid(buff=SMALL_BUFF)
         dots.center()
         dots.set_height(self.height)
-        dots.sort_submobjects(lambda p: p[0])
+        dots.sort(lambda p: p[0])
         dots[:len(dots) // 2].set_color(self.colors[0])
         dots[len(dots) // 2:].set_color(self.colors[1])
         dots.set_fill(opacity=0.8)

@@ -2929,7 +2929,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         self.play(ghost_dot.move_to, ORIGIN)
 
         exp_expression[1].add(minus, f)
-        exp_expression[1].sort_submobjects(lambda p : p[0])
+        exp_expression[1].sort(lambda p : p[0])
 
         self.set_variables_as_attrs(
             ambient_ghost_dot_movement, ghost_dot,

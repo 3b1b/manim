@@ -487,7 +487,7 @@ class Introduction(MovingCameraScene):
         stream_lines = StreamLines(
             div_func, **self.stream_lines_config
         )
-        stream_lines.shuffle_submobjects()
+        stream_lines.shuffle()
         div_title = self.get_title("Divergence")
 
         self.add(div_vector_field)
@@ -507,7 +507,7 @@ class Introduction(MovingCameraScene):
         stream_lines = StreamLines(
             curl_func, **self.stream_lines_config
         )
-        stream_lines.shuffle_submobjects()
+        stream_lines.shuffle()
         curl_title = self.get_title("Curl")
 
         self.play(

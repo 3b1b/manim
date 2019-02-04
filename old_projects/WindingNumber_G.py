@@ -597,7 +597,7 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
         new_equation[2].match_style(equation[2])
         new_equation.move_to(equation, RIGHT)
         for tex in equation, new_equation:
-            tex.sort_submobjects_alphabetically()
+            tex.sort_alphabetically()
 
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
@@ -636,7 +636,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
             TexMobject("x^2", "-", "2", "=", "0"),
         )
         for equation in root_two_equations:
-            equation.sort_submobjects_alphabetically()
+            equation.sort_alphabetically()
             for part in equation.get_parts_by_tex("text"):
                 part[2:-1].set_color(YELLOW)
                 part[2:-1].scale(0.9)
@@ -1425,7 +1425,7 @@ class Rearrange2DEquation(AltTeacherStudentsScene):
         for equation in equations:
             equation.set_color_by_tex(g_tex, BLUE)
             equation.set_color_by_tex(h_tex, YELLOW)
-            equation.sort_submobjects_alphabetically()
+            equation.sort_alphabetically()
 
 
         self.teacher_holds_up(equations[0])
@@ -2937,7 +2937,7 @@ class MentionQAndA(Scene):
             "Sridhar" : YELLOW,
         })
         patreon_logo = VGroup(*PatreonLogo().family_members_with_points())
-        patreon_logo.sort_submobjects()
+        patreon_logo.sort()
         patreon_logo.replace(title.get_parts_by_tex("Patreon"))
         patreon_logo.scale(1.3, about_edge = LEFT)
         patreon_logo.shift(0.5*SMALL_BUFF*DOWN)

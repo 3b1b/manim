@@ -3555,7 +3555,7 @@ class PrinciplesOverlay(PiCreatureScene):
             mark.set_stroke(BLACK, 1)
         q_marks.next_to(morty, UP)
         q_marks.shift_onto_screen()
-        q_marks.sort_submobjects(
+        q_marks.sort(
             lambda p: get_norm(p - morty.get_top())
         )
 

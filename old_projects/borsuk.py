@@ -719,7 +719,7 @@ class PointOutVSauce(CheckOutMathologer):
         logo.to_corner(UP+LEFT)
         logo.set_stroke(width = 0)
         logo.set_fill(GREEN)
-        logo.sort_submobjects()
+        logo.sort()
         return logo
 
     def get_logo_intro_animation(self, logo):
@@ -1569,7 +1569,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
             left_segment.parts[0],
             right_segment.parts[1],
         )
-        emerald_segments.sort_submobjects()
+        emerald_segments.sort()
 
         self.play(v_lines.shift, segment_width*RIGHT/2)
         self.play(*[
@@ -2158,7 +2158,7 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
 
     def find_fair_division(self):
         segments, tick_marks = self.necklace
-        segments.sort_submobjects()
+        segments.sort()
         segment_colors = [
             segment.get_color()
             for segment in segments

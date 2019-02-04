@@ -903,7 +903,7 @@ class ThousandPossibleQuizzes(Scene):
         top_split = VGroup(*self.quizzes[:n])
         bottom_split = VGroup(*self.quizzes[n:])
         for split, color, vect in (top_split, GREEN, UP), (bottom_split, RED, DOWN):
-            split.sort_submobjects(lambda p : p[0])
+            split.sort(lambda p : p[0])
             split.generate_target()
             split.target.shift(MED_LARGE_BUFF*vect)
             for quiz in split.target:
@@ -1175,7 +1175,7 @@ class ThousandPossibleQuizzes(Scene):
         proportions = [0.9, 0.8, 0.8, 0.4]
         for split, prop in zip(all_splits, proportions):
             n = int(prop*len(split))
-            split.sort_submobjects(lambda p : -p[1])
+            split.sort(lambda p : -p[1])
             split.generate_target()
             top_part = VGroup(*split.target[:n])
             top_part.shift(MED_SMALL_BUFF*UP)
@@ -2111,7 +2111,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         self.wait()
 
         self.quizzes = bottom_part
-        self.quizzes.sort_submobjects(lambda p : p[0])
+        self.quizzes.sort(lambda p : p[0])
 
     def show_second_split(self):
         n = int(0.45*len(self.quizzes))
@@ -2143,7 +2143,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         self.play(left_part.fade, 0.8)
 
         self.quizzes = right_part
-        self.quizzes.sort_submobjects(lambda p : -p[1])
+        self.quizzes.sort(lambda p : -p[1])
 
     def show_third_split(self):
         quizzes = self.quizzes

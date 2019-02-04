@@ -679,7 +679,7 @@ class StateOfBitcoin(TeacherStudentsScene):
         third = TexMobject("1 \\over 3")
         third.next_to(kilo, LEFT)
         kilogoogle = VGroup(*it.chain(third, kilo, google))
-        kilogoogle.sort_submobjects()
+        kilogoogle.sort()
         kilogoogle.next_to(rate, DOWN, MED_LARGE_BUFF)
 
         rate.save_state()
@@ -818,7 +818,7 @@ class QAndA(PiCreatureScene):
         dots.next_to(self.pi_creature, UP)
         dots = VGroup(*it.chain(*dots))
         top = dots.get_top()
-        dots.sort_submobjects(
+        dots.sort(
             lambda p : get_norm(p-top)
         )
 

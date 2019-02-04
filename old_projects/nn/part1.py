@@ -337,7 +337,7 @@ class ExampleThrees(PiCreatureScene):
         self.three_mobs = self.get_three_mobs()
         three_mob = self.three_mobs[0]
         three_mob_copy = three_mob[1].copy()
-        three_mob_copy.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
+        three_mob_copy.sort(lambda p : np.dot(p, DOWN+RIGHT))
 
         braces = VGroup(*[Brace(three_mob, v) for v in (LEFT, UP)])
         brace_labels = VGroup(*[
@@ -545,7 +545,7 @@ class WriteAProgram(Scene):
         three_array = get_organized_images()[3][0]
         im_mob = ImageMobject(layer_to_image_array(three_array))
         three = PixelsAsSquares(im_mob)
-        three.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
+        three.sort(lambda p : np.dot(p, DOWN+RIGHT))
         three.set_height(6)
         three.next_to(ORIGIN, LEFT)
         three_rect = SurroundingRectangle(

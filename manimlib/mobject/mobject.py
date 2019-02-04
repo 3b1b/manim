@@ -859,10 +859,6 @@ class Mobject(Container):
             self.center()
         return self
 
-    # Just here to keep from breaking old scenes.
-    def arrange_submobjects(self, *args, **kwargs):
-        return self.arrange(*args, **kwargs)
-
     def arrange_in_grid(self, n_rows=None, n_cols=None, **kwargs):
         submobs = self.submobjects
         if n_rows is None and n_cols is None:
@@ -882,16 +878,16 @@ class Mobject(Container):
         ]).arrange(v2, **kwargs)
         return self
 
-    def sort_submobjects(self, point_to_num_func=lambda p: p[0]):
+    def sort(self, point_to_num_func=lambda p: p[0]):
         self.submobjects.sort(
             key=lambda m: point_to_num_func(m.get_center())
         )
         return self
 
-    def shuffle_submobjects(self, recursive=False):
+    def shuffle(self, recursive=False):
         if recursive:
             for submob in self.submobjects:
-                submob.shuffle_submobjects(recursive=True)
+                submob.shuffle(recursive=True)
         random.shuffle(self.submobjects)
 
     def print_family(self, n_tabs=0):
@@ -899,6 +895,16 @@ class Mobject(Container):
         print("\t" * n_tabs, self, id(self))
         for submob in self.submobjects:
             submob.print_family(n_tabs + 1)
+
+    # Just here to keep from breaking old scenes.
+    def arrange_submobjects(self, *args, **kwargs):
+        return self.arrange(*args, **kwargs)
+
+    def sort_submobjects(self, *args, **kwargs):
+        return self.sort(*args, **kwargs)
+
+    def shuffle_submobjects(self, *args, **kwargs):
+        return self.shuffle(*args, **kwargs)
 
     # Alignment
     def align_data(self, mobject):

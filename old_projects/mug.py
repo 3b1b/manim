@@ -1880,7 +1880,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
 
         self.play(FadeOut(self.vertices))
         self.play(ReplacementTransform(regions, cube, run_time = 2))
-        cube.sort_submobjects(lambda p : -p[2])
+        cube.sort(lambda p : -p[2])
         self.add(ContinualRotation(cube, axis = UP, in_place = False))
         self.wait(3)
         self.play(

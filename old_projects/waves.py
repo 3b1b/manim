@@ -693,7 +693,7 @@ class IntroduceElectricField(PiCreatureScene):
         )
         VGroup(*shading_list).set_color_by_gradient(*self.vector_field_colors)
         result.set_fill(opacity = 0.75)
-        result.sort_submobjects(get_norm)
+        result.sort(get_norm)
 
         return result
 
