@@ -894,11 +894,11 @@ class Mobject(Container):
                 submob.shuffle_submobjects(recursive=True)
         random.shuffle(self.submobjects)
 
-    def print_submobject_family(self, n_tabs=0):
+    def print_family(self, n_tabs=0):
         """For debugging purposes"""
         print("\t" * n_tabs, self, id(self))
         for submob in self.submobjects:
-            submob.print_submobject_family(n_tabs + 1)
+            submob.print_family(n_tabs + 1)
 
     # Alignment
     def align_data(self, mobject):
