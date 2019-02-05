@@ -782,7 +782,7 @@ class Logo(VMobject):
             for (a, b) in [(0.25, 1), (0, 0.25)]
         ])
         for sector in new_pupil:
-            sector.add_control_points([
+            sector.add_cubic_bezier_curve_to([
                 sector.points[-1],
                 *[center] * 3,
                 *[sector.points[0]] * 2
