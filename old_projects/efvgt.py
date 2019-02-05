@@ -2964,7 +2964,7 @@ class ComplexExponentiationAdderHalf(
         )
         line.set_color(YELLOW)
         for submob in line:
-            submob.insert_n_anchor_points(10)
+            submob.insert_n_curves(10)
             submob.make_smooth()
         circle = VGroup(
             Circle(),
@@ -3069,7 +3069,7 @@ class ComplexExponentiationMultiplierHalf(
         line.set_color(YELLOW)
         line.shift(FRAME_X_RADIUS*LEFT)
         for submob in line:
-            submob.insert_n_anchor_points(10)
+            submob.insert_n_curves(10)
             submob.make_smooth()
         circle = VGroup(
             Circle(),
@@ -3110,7 +3110,7 @@ class ComplexExponentiationMultiplierHalf(
         arc_line = Line(RIGHT, RIGHT+angle*UP)
         brace = Brace(arc_line, RIGHT, buff = 0)
         for submob in brace.family_members_with_points():
-            submob.insert_n_anchor_points(10)
+            submob.insert_n_curves(10)
         curved_brace = brace.copy()
         curved_brace.shift(LEFT)
         curved_brace.apply_complex_function(

@@ -43,12 +43,16 @@ class Arc(VMobject):
         # Appropriate tangent lines to the circle
         d_theta = self.angle / (self.num_anchors - 1.0)
         tangent_vectors = np.zeros(anchors.shape)
+        # Rotate all 90 degress, via (x, y) -> (-y, x)
         tangent_vectors[:, 1] = anchors[:, 0]
         tangent_vectors[:, 0] = -anchors[:, 1]
+        # Use tangent vectors to deduce anchors
         handles1 = anchors[:-1] + (d_theta / 3) * tangent_vectors[:-1]
         handles2 = anchors[1:] - (d_theta / 3) * tangent_vectors[1:]
         self.set_anchors_and_handles(
-            anchors, handles1, handles2
+            anchors[:-1],
+            handles1, handles2,
+            anchors[1:],
         )
         self.scale(self.radius, about_point=ORIGIN)
         self.shift(self.arc_center)
@@ -250,9 +254,9 @@ class AnnularSector(VMobject):
             for alpha in np.linspace(0, 1, 4)
         ])
         self.points = np.array(arc1.points)
-        self.add_control_points(a1_to_a2_points[1:])
-        self.add_control_points(arc2.points[1:])
-        self.add_control_points(a2_to_a1_points[1:])
+        self.add_cubic_bezier_curve(*a1_to_a2_points[1:])
+        self.add_cubic_bezier_curve(*arc2.points[1:])
+        self.add_cubic_bezier_curve(*a2_to_a1_points[1:])
 
     def get_arc_center(self):
         first_point = self.points[0]

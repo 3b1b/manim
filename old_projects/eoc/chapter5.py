@@ -1114,7 +1114,7 @@ class WhyPi(PiCreatureScene):
         circum.set_color(circle.get_color())
         circum.scale(np.pi)
         circum.next_to(circle, DOWN, LARGE_BUFF)
-        circum.insert_n_anchor_points(circle.get_num_anchor_points()-2)
+        circum.insert_n_curves(circle.get_num_curves()-2)
         circum.make_jagged()
         pi = TexMobject("\\pi")
         pi.next_to(circum, UP)

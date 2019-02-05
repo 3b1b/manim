@@ -2218,7 +2218,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
             color = YELLOW,
         )
         line.shift(FRAME_X_RADIUS*RIGHT/3).to_edge(UP)
-        line.insert_n_anchor_points(10)
+        line.insert_n_curves(10)
         line.make_smooth()
 
         arc = Arc(

@@ -15,11 +15,13 @@ def choose_using_cache(n, r):
     if n not in CHOOSE_CACHE:
         CHOOSE_CACHE[n] = {}
     if r not in CHOOSE_CACHE[n]:
-        CHOOSE_CACHE[n][r] = choose(n, r)
+        CHOOSE_CACHE[n][r] = choose(n, r, use_cache=False)
     return CHOOSE_CACHE[n][r]
 
 
-def choose(n, r):
+def choose(n, r, use_cache=True):
+    if use_cache:
+        return choose_using_cache(n, r)
     if n < r:
         return 0
     if r == 0:

@@ -1523,7 +1523,7 @@ class ShowLightInThreeDimensions(IntroduceScreen, ThreeDScene):
         screens = VGroup(
             Square(),
             RegularPolygon(8),
-            Circle().insert_n_anchor_points(25),
+            Circle().insert_n_curves(25),
         )
         for screen in screens:
             screen.set_height(self.screen_height)
@@ -3883,7 +3883,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         self.number_line = number_line
 
     def show_giant_circle(self):
-        self.number_line.main_line.insert_n_anchor_points(10000)
+        self.number_line.main_line.insert_n_curves(10000)
         everything = VGroup(*self.mobjects)
         circle = everything.copy()
         circle.move_to(ORIGIN)

@@ -2635,7 +2635,7 @@ class Test(Scene):
     def construct(self):
         randy = Randolph()
         necklace = Necklace()
-        necklace.insert_n_anchor_points(20)
+        necklace.insert_n_curves(20)
         # necklace.apply_function(
         #     lambda (x, y, z) : x*RIGHT + (y + 0.1*x**2)*UP
         # )

@@ -292,12 +292,13 @@ class CircularFractal(SelfSimilarFractal):
 
 
 class JaggedCurvePiece(VMobject):
-    def insert_n_anchor_points(self, n):
-        if self.get_num_anchor_points() == 0:
-            self.points = np.zeros((1, 3))
+    def insert_n_curves(self, n):
+        if self.get_num_curves() == 0:
+            self.set_points(np.zeros((1, 3)))
         anchors = self.get_anchors()
-        indices = np.linspace(0, len(anchors) - 1, n + len(anchors)) \
-            .astype('int')
+        indices = np.linspace(
+            0, len(anchors) - 1, n + len(anchors)
+        ).astype('int')
         self.set_points_as_corners(anchors[indices])
 
 

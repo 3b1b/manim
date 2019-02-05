@@ -2794,7 +2794,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             for t in (get_t(), TAU)
         ]
         for mob in arc, circle:
-            mob.insert_n_anchor_points(20)
+            mob.insert_n_curves(20)
             mob.set_stroke(RED, 4)
             mob.apply_function(
                 lambda p : plane.number_to_point(

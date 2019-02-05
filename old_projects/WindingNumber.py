@@ -1763,7 +1763,7 @@ class Initial2dFuncSceneWithoutMorphing(Initial2dFuncSceneBase):
 # Alternative to the above, manually implementing split screen with a morphing animation
 class Initial2dFuncSceneMorphing(Initial2dFuncSceneBase):
     CONFIG = {
-        "num_needed_anchor_points" : 10,
+        "num_needed_anchor_curves" : 10,
     }
 
     def setup(self):
@@ -1781,8 +1781,8 @@ class Initial2dFuncSceneMorphing(Initial2dFuncSceneBase):
 
     def obj_draw(self, input_object):
         output_object = input_object.copy()
-        if input_object.get_num_anchor_points() < self.num_needed_anchor_points:
-            input_object.insert_n_anchor_points(self.num_needed_anchor_points)
+        if input_object.get_num_curves() < self.num_needed_anchor_curves:
+            input_object.insert_n_curves(self.num_needed_anchor_curves)
         output_object.apply_function(self.func)
         self.squash_onto_left(input_object)
         self.squash_onto_right(output_object)

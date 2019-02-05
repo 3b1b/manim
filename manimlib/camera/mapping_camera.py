@@ -12,7 +12,7 @@ from manimlib.utils.config_ops import digest_config
 class MappingCamera(Camera):
     CONFIG = {
         "mapping_func": lambda p: p,
-        "min_anchor_points": 50,
+        "min_num_curves": 50,
         "allow_object_intrusion": False
     }
 
@@ -27,8 +27,8 @@ class MappingCamera(Camera):
             mobject_copies = [mobject.copy() for mobject in mobjects]
         for mobject in mobject_copies:
             if isinstance(mobject, VMobject) and \
-                    0 < mobject.get_num_anchor_points() < self.min_anchor_points:
-                mobject.insert_n_anchor_points(self.min_anchor_points)
+                    0 < mobject.get_num_curves() < self.min_num_curves:
+                mobject.insert_n_curves(self.min_num_curves)
         Camera.capture_mobjects(
             self, mobject_copies,
             include_submobjects=False,

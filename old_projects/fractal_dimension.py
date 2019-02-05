@@ -1442,8 +1442,8 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
         for order in range(2, self.koch_curve_order+1):
             new_curve = self.get_curve(order)
             new_curve.move_to(curve)
-            n_anchors = len(curve.get_anchors())
-            curve.insert_n_anchor_points(6*n_anchors)
+            n_curve_parts = curve.get_num_curves()
+            curve.insert_n_curves(6 * n_curve_parts)
             curve.make_jagged()
             self.play(Transform(curve, new_curve, run_time = 2))
         self.wait()

@@ -483,7 +483,7 @@ class EulerWrites628(Scene):
             fill_opacity = 0.3,
             fill_color = GREEN,
         )
-        rect.insert_n_anchor_points(20)
+        rect.insert_n_curves(20)
         rect.apply_function(lambda p : np.array([p[0], p[1] - 0.005*p[0]**2, p[2]]))
         rect.rotate(0.012*TAU)
         rect.move_to(image)

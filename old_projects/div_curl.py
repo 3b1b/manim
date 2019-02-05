@@ -843,7 +843,7 @@ class CylinderModel(Scene):
         shift_val = 0.1 * LEFT + 0.2 * UP
         scale_factor = get_norm(RIGHT - shift_val)
         movers = VGroup(self.warped_grid, self.unit_circle)
-        self.unit_circle.insert_n_anchor_points(50)
+        self.unit_circle.insert_n_curves(50)
 
         stream_lines = self.get_stream_lines()
         stream_lines.scale(scale_factor)
@@ -4493,7 +4493,7 @@ class BroughtToYouBy(PiCreatureScene):
         math.move_to(self.pi_creatures)
 
         spiral = Line(0.5 * RIGHT, 0.5 * RIGHT + 70 * UP)
-        spiral.insert_n_anchor_points(1000)
+        spiral.insert_n_curves(1000)
         from old_projects.zeta import zeta
         spiral.apply_complex_function(zeta)
         step = 0.1

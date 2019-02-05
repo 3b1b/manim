@@ -37,7 +37,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
         for line in mob.family_members_with_points():
             #Find point of line cloest to 1 on C
             if not isinstance(line, Line):
-                line.insert_n_anchor_points(self.min_added_anchors)
+                line.insert_n_curves(self.min_added_anchors)
                 continue
             p1 = line.get_start()+LEFT
             p2 = line.get_end()+LEFT
@@ -47,14 +47,14 @@ class ZetaTransformationScene(ComplexTransformationScene):
             )
             #See how big this line will become
             diameter = abs(zeta(complex(*closest_to_one[:2])))
-            target_num_anchors = np.clip(
+            target_num_curves = np.clip(
                 int(self.anchor_density*np.pi*diameter),
                 self.min_added_anchors,
                 self.max_added_anchors,
             )
-            num_anchors = line.get_num_anchor_points()
-            if num_anchors < target_num_anchors:
-                line.insert_n_anchor_points(target_num_anchors-num_anchors)
+            num_curves = line.get_num_curves()
+            if num_curves < target_num_curves:
+                line.insert_n_curves(target_num_curves-num_curves)
             line.make_smooth()
 
     def add_extra_plane_lines_for_zeta(self, animate = False, **kwargs):
@@ -2279,7 +2279,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             color = YELLOW
         )
         arc.shift(intersection_point)
-        arc.insert_n_anchor_points(10)
+        arc.insert_n_curves(10)
         arc.generate_target()
         input_z = complex(*arc.get_center()[:2])
         scale_factor = abs(2*input_z)

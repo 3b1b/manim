@@ -45,7 +45,7 @@ class NumberlineTransformationScene(ZoomedScene):
             "color": BLUE,
         },
         "output_line_config": {},
-        "num_inserted_number_line_anchors": 20,
+        "num_inserted_number_line_curves": 20,
         "default_delta_x": 0.1,
         "default_sample_dot_radius": 0.07,
         "default_sample_dot_colors": [RED, YELLOW],
@@ -76,8 +76,8 @@ class NumberlineTransformationScene(ZoomedScene):
             full_config = dict(self.number_line_config)
             full_config.update(added_config)
             number_line = NumberLine(**full_config)
-            number_line.main_line.insert_n_anchor_points(
-                self.num_inserted_number_line_anchors
+            number_line.main_line.insert_n_curves(
+                self.num_inserted_number_line_curves
             )
             number_line.shift(zero_point - number_line.number_to_point(0))
             number_lines.add(number_line)
@@ -179,8 +179,8 @@ class NumberlineTransformationScene(ZoomedScene):
         self.moving_input_line = input_line_copy
         input_line_copy.remove(input_line_copy.numbers)
         # input_line_copy.set_stroke(width=2)
-        input_line_copy.main_line.insert_n_anchor_points(
-            self.num_inserted_number_line_anchors
+        input_line_copy.main_line.insert_n_curves(
+            self.num_inserted_number_line_curves
         )
         return AnimationGroup(
             self.get_mapping_animation(
@@ -311,7 +311,7 @@ class NumberlineTransformationScene(ZoomedScene):
         # Add miniature number_line
         mini_line = self.mini_line = Line(frame.get_left(), frame.get_right())
         mini_line.scale(self.mini_line_scale_factor)
-        mini_line.insert_n_anchor_points(self.num_inserted_number_line_anchors)
+        mini_line.insert_n_curves(self.num_inserted_number_line_curves)
         mini_line.match_style(self.input_line.main_line)
         mini_line_copy = mini_line.copy()
         zcbr_group.add(mini_line_copy, mini_line)

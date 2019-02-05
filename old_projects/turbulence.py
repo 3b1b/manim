@@ -134,7 +134,7 @@ class Chaos(Eddy):
             y * UP, y * UP + self.width * RIGHT,
             stroke_width=1
         )
-        line.insert_n_anchor_points(self.n_midpoints)
+        line.insert_n_curves(self.n_midpoints)
         line.total_time = random.random()
         delta_h = self.height / (self.n_lines - 1)
 
@@ -876,7 +876,7 @@ class HighCurlFieldBreakingLayersLines(HighCurlFieldBreakingLayers):
 
     def get_line(self):
         line = Line(LEFT, RIGHT)
-        line.insert_n_anchor_points(500)
+        line.insert_n_curves(500)
         line.set_width(5)
         return line
 

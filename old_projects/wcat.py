@@ -984,7 +984,7 @@ class DeformToInterval(ClosedLoopScene):
         interval.shift(2*DOWN)
         numbers = interval.get_number_mobjects(0, 1)
         line = Line(interval.get_left(), interval.get_right())
-        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.insert_n_curves(self.loop.get_num_curves())
         line.make_smooth()
 
         self.loop.scale(0.7)
@@ -1058,7 +1058,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
         interval.shift(LEFT)
         numbers = interval.get_number_mobjects(0, 1)
         line = Line(interval.get_left(), interval.get_right())
-        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.insert_n_curves(self.loop.get_num_curves())
         line.make_smooth()
         vert_interval = interval.copy()
         square = Square()
@@ -1270,7 +1270,7 @@ class EndpointsGluedTogether(ClosedLoopScene):
         interval.shift(2*DOWN)
         numbers = interval.get_number_mobjects(0, 1)
         line = Line(interval.get_left(), interval.get_right())
-        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.insert_n_curves(self.loop.get_num_curves())
         line.make_smooth()
 
         self.loop.scale(0.7)

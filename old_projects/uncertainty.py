@@ -2039,7 +2039,7 @@ class IntroduceDopplerRadar(Scene):
                 pulse_graph.underlying_function(x),
                 echo_graph.underlying_function(x),
             ]),
-            num_graph_points = echo_graph.get_num_anchor_points(),
+            num_graph_points = echo_graph.get_num_curves(),
             color = WHITE
         )
         sum_graph.background_image_file = "blue_yellow_gradient"

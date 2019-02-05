@@ -1606,7 +1606,7 @@ class DirectionOfA2DFunctionAlongABoundary(InputOutputScene):
             input_plane.coords_to_point(2.5, -1.5),
         )
         rect.replace(line, stretch = True)
-        rect.insert_n_anchor_points(50)
+        rect.insert_n_curves(50)
         rect.match_background_image_file(colorings[0])
 
         rect_image = rect.copy()
@@ -1815,7 +1815,7 @@ class ForeverNarrowingLoop(InputOutputScene):
         # circle
         circle = Circle(color = WHITE, radius = self.circle_start_radius)
         circle.flip(axis = RIGHT)
-        circle.insert_n_anchor_points(50)
+        circle.insert_n_curves(50)
         if self.start_around_target:
             circle.move_to(input_plane.coords_to_point(*self.target_coords))
         else:
@@ -2788,7 +2788,7 @@ class WindingNumbersInInputOutputContext(PathContainingZero):
         in_loop = Circle()
         in_loop.flip(RIGHT)
         # in_loop = Square(side_length = 2)
-        in_loop.insert_n_anchor_points(100)
+        in_loop.insert_n_curves(100)
         in_loop.move_to(self.input_plane.coords_to_point(
             *self.in_loop_center_coords
         ))

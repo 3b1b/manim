@@ -156,7 +156,7 @@ class CircleScene(PiCreatureScene):
     def get_unwrapped(self, ring, to_edge = LEFT, **kwargs):
         R = ring.R
         R_plus_dr = ring.R + ring.dR
-        n_anchors = ring.get_num_anchor_points()
+        n_anchors = ring.get_num_curves()
         result = VMobject()
         result.set_points_as_corners([
             interpolate(np.pi*R_plus_dr*LEFT,  np.pi*R_plus_dr*RIGHT, a)

@@ -3206,7 +3206,7 @@ class SecondProof(SpecialThreeDScene):
             ring.set_fill(color, opacity=1)
             ring.set_stroke(color, width=0.5, opacity=1)
             for piece in ring:
-                piece.insert_n_anchor_points(4)
+                piece.insert_n_curves(4)
                 piece.on_sphere = True
                 piece.points = np.array([
                     *piece.points[3:-1],

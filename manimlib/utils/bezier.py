@@ -1,8 +1,7 @@
 from scipy import linalg
 import numpy as np
 
-from manimlib.utils.simple_functions import choose_using_cache
-from manimlib.utils.space_ops import get_norm
+from manimlib.utils.simple_functions import choose
 
 CLOSED_THRESHOLD = 0.001
 
@@ -10,7 +9,7 @@ CLOSED_THRESHOLD = 0.001
 def bezier(points):
     n = len(points) - 1
     return lambda t: sum([
-        ((1 - t)**(n - k)) * (t**k) * choose_using_cache(n, k) * point
+        ((1 - t)**(n - k)) * (t**k) * choose(n, k) * point
         for k, point in enumerate(points)
     ])
 
@@ -39,6 +38,25 @@ def partial_bezier_points(points, a, b):
 
 def interpolate(start, end, alpha):
     return (1 - alpha) * start + alpha * end
+
+
+def integer_interpolate(start, end, alpha):
+    """
+    alpha is a float between 0 and 1.  This returns
+    an integer between start and end (inclusive) representing
+    appropriate interpolation between them, along with a
+    "residue" representing a new proportion between the
+    returned integer and the next one of the
+    list.
+
+    For example, if start=0, end=10, alpha=0.46, This
+    would return (4, 0.6).
+    """
+    if alpha >= 1:
+        return (end - 1, 1.0)
+    value = int(interpolate(start, end, alpha))
+    residue = ((end - start) * alpha) % 1
+    return (value, residue)
 
 
 def mid(start, end):
@@ -134,4 +152,4 @@ def diag_to_matrix(l_and_u, diag):
 
 
 def is_closed(points):
-    return get_norm(points[0] - points[-1]) < CLOSED_THRESHOLD
+    return np.allclose(points[0], points[-1])
