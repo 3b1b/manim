@@ -24,12 +24,16 @@ def partial_bezier_points(points, a, b):
 
     This algorithm is pretty nifty, and pretty dense.
     """
+    if a == 1:
+        return [points[-1]] * len(points)
+
     a_to_1 = np.array([
         bezier(points[i:])(a)
         for i in range(len(points))
     ])
+    end_prop = (b - a) / (1. - a)
     return np.array([
-        bezier(a_to_1[:i + 1])((b - a) / (1. - a))
+        bezier(a_to_1[:i + 1])(end_prop)
         for i in range(len(points))
     ])
 
@@ -54,6 +58,8 @@ def integer_interpolate(start, end, alpha):
     """
     if alpha >= 1:
         return (end - 1, 1.0)
+    if alpha <= 0:
+        return (start, 0)
     value = int(interpolate(start, end, alpha))
     residue = ((end - start) * alpha) % 1
     return (value, residue)
