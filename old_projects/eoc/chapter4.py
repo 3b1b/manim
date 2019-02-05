@@ -237,7 +237,7 @@ class DampenedSpring(Scene):
         self.add(moving_spring, equation)
         self.play(UpdateFromAlphaFunc(
             moving_spring, update_spring, run_time = 10,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
 

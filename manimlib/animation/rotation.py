@@ -4,6 +4,7 @@ from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
 from manimlib.constants import *
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import linear
 
 
 class Rotating(Animation):
@@ -11,7 +12,7 @@ class Rotating(Animation):
         "axis": OUT,
         "radians": TAU,
         "run_time": 5,
-        "rate_func": None,
+        "rate_func": linear,
         "in_place": True,
         "about_point": None,
         "about_edge": None,

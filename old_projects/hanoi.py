@@ -1830,7 +1830,7 @@ class ShowFourDiskFourBitsParallel(IntroduceSolveByCounting):
                 self.get_increment_animation()
                 for x in range(num_tasks)
             ]),
-            rate_func = None,
+            rate_func=linear,
             run_time = self.subtask_run_time
         )
 
@@ -3151,7 +3151,7 @@ class ShowPathThroughGraph(SierpinskiGraphScene):
         self.wait()
         self.play(ShowCreation(
             arrows,
-            rate_func = None,
+            rate_func=linear,
             run_time = 5
         ))
         self.wait(2)
@@ -3286,7 +3286,7 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
 
         self.add(graph)
         self.wait()
-        self.play(ShowCreation(path, run_time = 3, rate_func = None))
+        self.play(ShowCreation(path, run_time = 3, rate_func=linear))
         self.wait()   
         self.play(graph.fade, 0.5, Animation(path))
         for other_graph in graphs[1:]:

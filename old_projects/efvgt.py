@@ -127,7 +127,7 @@ class Anniversary(TeacherStudentsScene):
             DrawBorderThenFill(
                 hats,
                 submobject_mode = "lagged_start",
-                rate_func = None,
+                rate_func=linear,
                 run_time = 2,
             ),
             *confetti_spirils + [
@@ -137,7 +137,7 @@ class Anniversary(TeacherStudentsScene):
                     ApplyMethod(pi.look, UP+RIGHT),
                     Animation(pi),
                     ApplyMethod(pi.look_at, first_video),
-                    rate_func = None
+                    rate_func=linear
                 )
                 for pi in self.get_students()
             ] + [
@@ -146,7 +146,7 @@ class Anniversary(TeacherStudentsScene):
                     Blink(self.get_teacher()),
                     Animation(self.get_teacher(), run_time = 2),
                     ApplyMethod(self.get_teacher().change_mode, "raise_right_hand"),
-                    rate_func = None
+                    rate_func=linear
                 ),
                 DrawBorderThenFill(
                     first_video, 

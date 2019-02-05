@@ -20,6 +20,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.geometry import Line
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
@@ -255,7 +256,7 @@ class Vibrate(Animation):
         "amplitude": 0.5,
         "radius": FRAME_X_RADIUS / 2,
         "run_time": 3.0,
-        "rate_func": None
+        "rate_func": linear
     }
 
     def __init__(self, mobject=None, **kwargs):

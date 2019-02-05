@@ -671,7 +671,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             submobject_mode = "lagged_start",
             run_time = 2,
             lag_factor = 8,
-            rate_func = None,
+            rate_func=linear,
         ))
         in_vect = np.random.random(self.network.sizes[0])
         self.feed_forward(in_vect)
@@ -2353,7 +2353,7 @@ class IntroduceWeights(IntroduceEachLayer):
         self.play(
             *changing_decimals + pixel_updates,
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         )
 
         self.question = question

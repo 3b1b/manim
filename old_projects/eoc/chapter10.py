@@ -197,7 +197,7 @@ class Pendulum(ReconfigurableScene):
         self.play(
             ShowCreation(
                 trajectory_dots,
-                rate_func = None,
+                rate_func=linear,
                 run_time = kwargs["run_time"]
             ),
             Rotate(self.pendulum, -2*self.angle, **kwargs),

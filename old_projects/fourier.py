@@ -233,7 +233,7 @@ class AddingPureFrequencies(PiCreatureScene):
             ShowCreation(axes.x_axis)
         )
         self.broadcast(
-            ShowCreation(graph, run_time = 4, rate_func = None),
+            ShowCreation(graph, run_time = 4, rate_func=linear),
             ShowCreation(equilibrium_line),
         )
         axes.add(equilibrium_line)
@@ -272,7 +272,7 @@ class AddingPureFrequencies(PiCreatureScene):
             GrowFromCenter(D_label),
         )
         self.broadcast(
-            ShowCreation(graph, run_time = 4, rate_func = None),
+            ShowCreation(graph, run_time = 4, rate_func=linear),
             randy.change, "happy",
             n_circles = 6,
         )
@@ -290,7 +290,7 @@ class AddingPureFrequencies(PiCreatureScene):
             self.get_broadcast_animation(n_circles = 6),
             self.pi_creature.change, "thinking",
             *[
-                ShowCreation(graph, run_time = 4, rate_func = None)
+                ShowCreation(graph, run_time = 4, rate_func=linear)
                 for graph in (self.A_graph, self.D_graph)
             ]
         )
@@ -406,7 +406,7 @@ class AddingPureFrequencies(PiCreatureScene):
             self.get_graph_line_animation(axes, sum_graph.deepcopy()),
             ShowCreation(sum_graph),
             run_time = 15,
-            rate_func = None
+            rate_func=linear
         )
         self.remove(thin_sum_graph)
         self.wait()
@@ -596,7 +596,7 @@ class BreakApartSum(Scene):
             v_line.move_to, axes.coords_to_point(5, 0), DOWN,
             MoveAlongPath(dot, graph),
             run_time = 8,
-            rate_func = None,
+            rate_func=linear,
         )
         self.play(*list(map(FadeOut, [dot, v_line])))
 
@@ -719,7 +719,7 @@ class UnmixMixedPaint(Scene):
                 UpdateFromAlphaFunc(quadrant, update_quadrant)
                 for quadrant in quadrants
             ] + [
-                ApplyMethod(mud_circle.restore, rate_func = None)
+                ApplyMethod(mud_circle.restore, rate_func=linear)
             ],
             run_time = run_time
         )
@@ -1121,7 +1121,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         words.next_to(axes.coords_to_point(1.5, 0), DOWN, MED_LARGE_BUFF)
 
         self.add(axes)
-        self.play(ShowCreation(graph, run_time = 2, rate_func = None))
+        self.play(ShowCreation(graph, run_time = 2, rate_func=linear))
         self.play(
             FadeIn(words),
             LaggedStart(FadeIn, braces),
@@ -1541,7 +1541,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         self.wait()
         self.remove(self.fourier_graph_dot)
         self.generate_fourier_dot_transform(new_fourier_graph)
-        self.change_frequency(3.0, run_time = 15, rate_func = None)
+        self.change_frequency(3.0, run_time = 15, rate_func=linear)
         self.wait()
         self.play(
             graph.restore, 
@@ -2569,7 +2569,7 @@ class ApplyFourierToFourier(DrawFrequencyPlot):
                 run_time = 0.2,
             )
         )
-        self.change_frequency(5.0, run_time = 15, rate_func = None)
+        self.change_frequency(5.0, run_time = 15, rate_func=linear)
         self.wait()
 
     ##
@@ -3520,7 +3520,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
         self.change_frequency(2.5,
             added_anims = [new_com_vector_update],
             run_time = 20,
-            rate_func = None,
+            rate_func=linear,
         )
         self.wait()
 
@@ -3556,7 +3556,7 @@ class SimpleCosineWrappingAroundCircle(WriteComplexExponentialExpression):
 
         self.change_frequency(
             2.0, 
-            rate_func = None, 
+            rate_func=linear, 
             run_time = 30
         )
         self.wait()
@@ -3766,7 +3766,7 @@ class SummarizeTheFullTransform(DrawFrequencyPlot):
         self.generate_fourier_dot_transform(fourier_graph)
         self.change_frequency(
             5.0, 
-            rate_func = None, 
+            rate_func=linear, 
             run_time = winding_run_time,
             added_anims = [
                 g_hat_f_indication, 

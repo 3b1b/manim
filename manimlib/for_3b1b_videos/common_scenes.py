@@ -21,6 +21,7 @@ from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.moving_camera_scene import MovingCameraScene
 from manimlib.scene.scene import Scene
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 
@@ -33,7 +34,7 @@ class OpeningQuote(Scene):
         "author": "",
         "fade_in_kwargs": {
             "submobject_mode": "lagged_start",
-            "rate_func": None,
+            "rate_func": linear,
             "lag_factor": 4,
             "run_time": 5,
         },

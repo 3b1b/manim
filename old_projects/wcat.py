@@ -425,7 +425,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         self.play(ShowCreation(
             self.loop, 
             run_time = 5, 
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
         self.add_rect_dots(square = True)

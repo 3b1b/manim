@@ -132,7 +132,7 @@ class TimeLineAboutSpaceFilling(Scene):
         self.play(ShowCreation(
             curve, 
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
 
@@ -1002,7 +1002,7 @@ class TilingSpace(Scene):
         all_curves.thin_out(10)
         self.play(ShowCreation(
             all_curves,
-            rate_func = None,
+            rate_func=linear,
             run_time = 15
         ))
 

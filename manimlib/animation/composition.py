@@ -8,6 +8,7 @@ from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import squish_rate_func
 
 
@@ -23,7 +24,7 @@ class EmptyAnimation(Animation):
 
 class Succession(Animation):
     CONFIG = {
-        "rate_func": None,
+        "rate_func": linear,
     }
 
     def __init__(self, *args, **kwargs):
@@ -178,7 +179,7 @@ class Succession(Animation):
 
 class AnimationGroup(Animation):
     CONFIG = {
-        "rate_func": None
+        "rate_func": linear
     }
 
     def __init__(self, *sub_anims, **kwargs):

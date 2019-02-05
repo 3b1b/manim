@@ -657,7 +657,7 @@ class IntegrationByParts(Scene):
             ),
             MaintainPositionRelativeTo(coords, dot),
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         )
         self.wait()
         self.play(*list(map(FadeOut, [coords, dot])))

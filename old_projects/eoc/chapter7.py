@@ -1871,7 +1871,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.play(ShowCreation(
             graph,
             run_time = 3,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait(4) ## Overly oscillation
         self.play(ShowCreation(colored_graph, run_time = 2))

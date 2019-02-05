@@ -4061,7 +4061,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
         self.add(pcij)
 
         # About j-axis
-        self.play(ShowCreation(arrows, run_time=3, rate_func=None))
+        self.play(ShowCreation(arrows, run_time=3, rate_func=linear))
         self.wait(3)
         for x in range(2):
             y_axis.pieces.set_stroke(width=1)

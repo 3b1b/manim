@@ -9,6 +9,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import counterclockwise_path
 from manimlib.utils.rate_functions import double_smooth
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import smooth
 
 # Drawing
@@ -84,7 +85,7 @@ class DrawBorderThenFill(Animation):
 
 class Write(DrawBorderThenFill):
     CONFIG = {
-        "rate_func": None,
+        "rate_func": linear,
         "submobject_mode": "lagged_start",
     }
 

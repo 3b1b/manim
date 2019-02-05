@@ -2070,7 +2070,7 @@ class SquiggleOnExtensions(ZetaTransformationScene):
         self.play(ShowCreation(
             self.left_plane,
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
 
@@ -2954,7 +2954,7 @@ class DiscussZeros(ZetaTransformationScene):
         full_line.set_color_by_gradient(
             YELLOW, BLUE, GREEN, RED, YELLOW, BLUE, GREEN, RED,
         )
-        self.play(ShowCreation(full_line, run_time = 20, rate_func = None))
+        self.play(ShowCreation(full_line, run_time = 20, rate_func=linear))
         self.wait()
 
 class AskAboutRelationToPrimes(TeacherStudentsScene):

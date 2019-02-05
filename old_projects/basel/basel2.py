@@ -2856,7 +2856,7 @@ class InscribedeAngleThreorem(TeacherStudentsScene):
 
         self.play(
             self.teacher.change, "raise_right_hand",
-            ShowCreation(shape, rate_func = None),
+            ShowCreation(shape, rate_func=linear),
         )
         self.play(*list(map(FadeIn, [angle_mark, theta])))
         self.play(

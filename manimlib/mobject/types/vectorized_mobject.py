@@ -844,6 +844,17 @@ class VectorizedPoint(VMobject):
         self.set_points(np.array([new_loc]))
 
 
+class CurvesAsSubmobjects(VGroup):
+    def __init__(self, vmobject, **kwargs):
+        VGroup.__init__(self, **kwargs)
+        tuples = vmobject.get_cubic_bezier_tuples()
+        for tup in tuples:
+            part = VMobject()
+            part.set_points(tup)
+            part.match_style(vmobject)
+            self.add(part)
+
+
 class DashedMobject(VMobject):
     CONFIG = {
         "dashes_num": 15,

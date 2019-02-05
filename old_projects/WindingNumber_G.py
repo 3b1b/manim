@@ -1031,7 +1031,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             self.play(
                 in_dot.move_to, path.point_from_proportion(a),
                 run_time = 0.2,
-                rate_func = None,
+                rate_func=linear,
             )
             in_vectors.add(in_vector.copy())
 

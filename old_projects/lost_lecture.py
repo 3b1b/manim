@@ -77,7 +77,7 @@ class SunAnimation(ContinualAnimation):
 class ShowWord(Animation):
     CONFIG = {
         "time_per_char": 0.06,
-        "rate_func": None,
+        "rate_func": linear,
     }
 
     def __init__(self, word, **kwargs):
@@ -2456,7 +2456,7 @@ class AngularMomentumArgument(KeplersSecondLaw):
             ),
             ApplyMethod(
                 comet.move_to, comet_end,
-                rate_func=None,
+                rate_func=linear,
             ),
             run_time=2,
         )
@@ -3169,14 +3169,14 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             Animation(foreground),
             frame.scale, 1.2,
         )
-        self.play(MoveAlongPath(comet, arc1, rate_func=None))
+        self.play(MoveAlongPath(comet, arc1, rate_func=linear))
         self.play(
             Write(words2),
             wedge2.set_fill, {"opacity": 1},
             Write(arrow2),
             Animation(foreground),
         )
-        self.play(MoveAlongPath(comet, arc2, rate_func=None, run_time=3))
+        self.play(MoveAlongPath(comet, arc2, rate_func=linear, run_time=3))
         self.wait()
 
         self.area_questions = VGroup(words1, words2)

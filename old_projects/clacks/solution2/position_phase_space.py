@@ -352,7 +352,7 @@ class PositionPhaseSpaceScene(Scene):
         # Default
         kwargs = {
             "run_time": (distance / ps_speed),
-            "rate_func": None,
+            "rate_func": linear,
         }
         kwargs.update(added_kwargs)
         return ApplyMethod(
@@ -1049,7 +1049,7 @@ class EqualMassCase(PositionPhaseSpaceScene):
                 ),
                 *flashes,
                 run_time=3,
-                rate_func=None,
+                rate_func=linear,
             )
             self.wait()
 

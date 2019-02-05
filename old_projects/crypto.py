@@ -363,7 +363,7 @@ class NoCommentOnSpeculation(TeacherStudentsScene):
         )
         self.play(ShowCreation(
             graph, run_time = 2,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
         self.play(ShowCreation(cross))

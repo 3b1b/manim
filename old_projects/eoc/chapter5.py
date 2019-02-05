@@ -1704,7 +1704,7 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
         )
         if self.include_solution:
             self.play(Write(solution))
-        graph_growth = ShowCreation(graph, rate_func = None)
+        graph_growth = ShowCreation(graph, rate_func=linear)
         delta_T_group_update = UpdateFromFunc(
             delta_T_group, update_delta_T_group
         )

@@ -300,7 +300,7 @@ class MirrorScene(Scene):
         self.play(count_anim, *beam_anims, run_time=run_time)
         self.disallow_sound()
 
-    def get_special_flash(self, mobject, stroke_width, time_width, rate_func=None, **kwargs):
+    def get_special_flash(self, mobject, stroke_width, time_width, rate_func=linear, **kwargs):
         kwargs["rate_func"] = rate_func
         mob_copy = mobject.copy()
         mob_copy.set_stroke(width=stroke_width)

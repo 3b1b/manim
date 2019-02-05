@@ -214,7 +214,7 @@ class PreviewLearning(NetworkScene):
             VGroup(*layers), VGroup(*active_layers),
             run_time = run_time,
             submobject_mode = "lagged_start",
-            rate_func = None,
+            rate_func=linear,
         )
 
         self.play(edge_animation, layer_animation, *added_anims)
@@ -3659,13 +3659,13 @@ class CompareLearningCurves(GraphScene):
         self.play(ShowCreation(
             slow_decrease,
             run_time = 12,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.play(FadeIn(fast_label), ShowCreation(fast_line))
         self.play(ShowCreation(
             faster_decrease,
             run_time = 12,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.wait()
 

@@ -3193,7 +3193,7 @@ class ProportionOfSphereInBox(GraphScene):
         )
         footnote.set_color(YELLOW)
 
-        self.play(ShowCreation(graph, run_time = 5, rate_func = None))
+        self.play(ShowCreation(graph, run_time = 5, rate_func=linear))
         self.wait()
         self.add(footnote)
         self.wait(0.25)

@@ -638,7 +638,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         return CycleAnimation(MoveAlongPath(
             dot, ellipse,
             run_time=5,
-            rate_func=None
+            rate_func=linear
         ))
 
     def get_focal_lines_update(self, ellipse, ellipse_point):
@@ -1589,7 +1589,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
             MoveAlongPath(
                 point, ellipse,
                 run_time=5,
-                rate_func=None,
+                rate_func=linear,
             )
         )
 

@@ -767,7 +767,7 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         self.play(
             particle.restore,
             run_time = 2,
-            rate_func = None,
+            rate_func=linear,
         )
         self.add(velocity)
         self.play(Write(velocity_word, run_time = 0.5))
@@ -871,7 +871,7 @@ class CurlRelationBetweenFields(ThreeDScene):
         self.wait()
         self.move_camera(0.8*np.pi/2, -0.45*np.pi)
         self.begin_ambient_camera_rotation()
-        self.play(M_vect.restore, run_time = 3, rate_func = None)
+        self.play(M_vect.restore, run_time = 3, rate_func=linear)
         self.wait(3)
 
         self.E_vects = E_vects
@@ -902,7 +902,7 @@ class CurlRelationBetweenFields(ThreeDScene):
             E_vect.rotate, np.pi, RIGHT, [], new_point,
             E_vect.scale_about_point, 3, new_point,
             run_time = 4,
-            rate_func = None,
+            rate_func=linear,
         )
         self.wait()
 
@@ -928,7 +928,7 @@ class CurlRelationBetweenFields(ThreeDScene):
         self.play(
             M_vect.rotate, np.pi, RIGHT, [], point,
             run_time = 5,
-            rate_func = None,
+            rate_func=linear,
         )
         self.wait(3)
 
@@ -1300,7 +1300,7 @@ class ShowVectorEquation(Scene):
         self.add(new_ov)
         self.play(ShowCreation(
             high_f_graph, run_time = 4,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.wait()
         self.play(FadeOut(new_ov.vector))

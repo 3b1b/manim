@@ -414,7 +414,7 @@ class StreamLineAnimation(ContinualAnimation):
         "line_anim_class": ShowPassingFlash,
         "line_anim_config": {
             "run_time": 4,
-            "rate_func": None,
+            "rate_func": linear,
             "time_width": 0.3,
         },
     }
@@ -4130,7 +4130,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                     radians=angle,
                     about_point=point,
                     run_time=15.0 / n_samples,
-                    rate_func=None,
+                    rate_func=linear,
                 )
             )
             step_vector_copy = moving_step_vector.copy()
@@ -4516,7 +4516,7 @@ class BroughtToYouBy(PiCreatureScene):
         )
         self.look_at(math)
         self.play(
-            ShowCreation(spiral, run_time=6, rate_func=None),
+            ShowCreation(spiral, run_time=6, rate_func=linear),
             math.scale, 0.5,
             math.shift, 3 * UP,
             randy.change, "thinking",

@@ -1,6 +1,7 @@
 from manimlib.animation.animation import Animation
 from manimlib.constants import *
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import linear
 
 
 class Homotopy(Animation):
@@ -47,7 +48,7 @@ class ComplexHomotopy(Homotopy):
 class PhaseFlow(Animation):
     CONFIG = {
         "virtual_time": 1,
-        "rate_func": None,
+        "rate_func": linear,
     }
 
     def __init__(self, function, mobject, **kwargs):

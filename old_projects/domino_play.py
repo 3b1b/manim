@@ -581,11 +581,11 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         hardwood.next_to(graph2, LEFT, buff = 0.75)
 
         self.play(
-            ShowCreation(graph1, run_time = 3, rate_func = None),
+            ShowCreation(graph1, run_time = 3, rate_func=linear),
             Write(felt)
         )
         self.play(
-            ShowCreation(graph2, run_time = 4, rate_func = None),
+            ShowCreation(graph2, run_time = 4, rate_func=linear),
             Write(hardwood)
         )
         self.wait()

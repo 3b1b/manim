@@ -396,29 +396,29 @@ class NameIntro(Scene):
         self.play(
             VFadeIn(blue),
             VFadeIn(brown),
-            Restore(brown, rate_func=None),
+            Restore(brown, rate_func=linear),
         )
         self.play(
             Flash(blue.get_right(), run_time=flash_time),
             ApplyMethod(
                 blue.to_edge, LEFT, {"buff": 0},
-                rate_func=None,
+                rate_func=linear,
             ),
         )
         self.play(
             Flash(blue.get_left(), run_time=flash_time),
-            Restore(blue, rate_func=None),
+            Restore(blue, rate_func=linear),
         )
         self.play(
             Flash(blue.get_right(), run_time=flash_time),
             ApplyMethod(
                 brown.to_edge, RIGHT, {"buff": 0},
-                rate_func=None,
+                rate_func=linear,
             )
         )
         self.play(
             Flash(brown.get_right(), run_time=flash_time),
-            Restore(brown, rate_func=None)
+            Restore(brown, rate_func=linear)
         )
 
 
@@ -865,7 +865,7 @@ class DigitsOfPi(Scene):
         self.add(pi_creature, equation[1])
         self.play(ShowIncreasingSubsets(
             equation[2:],
-            rate_func=None,
+            rate_func=linear,
             run_time=1,
         ))
         self.play(Blink(pi_creature))

@@ -33,24 +33,20 @@ class Animation(object):
         mobject.update()
         # Keep track of where it started
         self.starting_mobject = self.mobject.copy()
-        if self.rate_func is None:
-            self.rate_func = (lambda x: x)
         if self.name is None:
             self.name = self.__class__.__name__ + str(self.mobject)
         self.all_families_zipped = self.get_all_families_zipped()
         self.update(0)
-
-    def update_config(self, **kwargs):
-        digest_config(self, kwargs)
-        if "rate_func" in kwargs and kwargs["rate_func"] is None:
-            self.rate_func = (lambda x: x)
-        return self
 
     def __str__(self):
         return self.name
 
     def copy(self):
         return deepcopy(self)
+
+    def update_config(self, **kwargs):
+        digest_config(self, kwargs)
+        return self
 
     def update(self, alpha):
         alpha = np.clip(alpha, 0, 1)
@@ -106,9 +102,6 @@ class Animation(object):
         return self.run_time
 
     def set_rate_func(self, rate_func):
-        if rate_func is None:
-            def rate_func(x):
-                return x
         self.rate_func = rate_func
         return self
 

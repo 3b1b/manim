@@ -765,7 +765,7 @@ class TwoCarsAtRedLight(Scene):
         self.play(
             self.get_flashes(car1, num_flashes = 3),
             self.get_flashes(car2, num_flashes = 3),
-            ShowCreation(graph, rate_func = None, run_time = 3)
+            ShowCreation(graph, rate_func=linear, run_time = 3)
         )
         self.play(
             self.get_flashes(car1, num_flashes = 10),
@@ -892,7 +892,7 @@ class TwoCarsAtRedLight(Scene):
             ShowCreation(
                 new_time_graph,
                 run_time = n_spikes,
-                rate_func = None,
+                rate_func=linear,
             ),
             ApplyMethod(
                 frequency_graph.stretch, 0.1, 0,
@@ -1000,7 +1000,7 @@ class VariousMusicalNotes(Scene):
             phrase.next_to(brace, UP)
 
             if width is widths[0]:
-                self.play(ShowCreation(graph, rate_func = None)),
+                self.play(ShowCreation(graph, rate_func=linear)),
                 self.play(
                     GrowFromCenter(brace),
                     Write(phrase, run_time = 1)
@@ -1508,8 +1508,8 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             FadeOut(fourier_graph)
         )
         self.play(
-            ShowCreation(long_time_graph, rate_func = None),
-            ShowCreation(long_pol_graph, rate_func = None),
+            ShowCreation(long_time_graph, rate_func=linear),
+            ShowCreation(long_pol_graph, rate_func=linear),
             run_time = 5
         )
         self.wait()
@@ -1759,7 +1759,7 @@ class IntroduceDopplerRadar(Scene):
         graph_draw = NormalAnimationAsContinualAnimation(
             ShowCreation(
                 sum_graph, 
-                rate_func = None, 
+                rate_func=linear, 
                 run_time = 0.97*axes.x_max
             )
         )
@@ -1831,7 +1831,7 @@ class IntroduceDopplerRadar(Scene):
         echo_subtext.match_color(echo_graph)
 
         graph_draw = NormalAnimationAsContinualAnimation(
-            ShowCreation(sum_graph, run_time = 8, rate_func = None)
+            ShowCreation(sum_graph, run_time = 8, rate_func=linear)
         )
         pulse = RadarPulse(dish, plane, n_pulse_singletons = 12)
         plane_flight = ContinualMovement(
@@ -2400,7 +2400,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.wait()
         squished_rate_func = squish_rate_func(smooth, 0.6, 0.9)
         self.play(
-            ShowCreation(pulse_graph, rate_func = None),
+            ShowCreation(pulse_graph, rate_func=linear),
             GrowFromCenter(brace, rate_func = squished_rate_func),
             Write(words, rate_func = squished_rate_func),
             run_time = 3,
@@ -2470,7 +2470,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.play(
             ShowCreation(
                 sum_graph,
-                rate_func = None,
+                rate_func=linear,
                 run_time = 3.5,
             ),
             randy.change, "confused"
@@ -2517,7 +2517,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.play(
             ShowCreation(
                 sum_graph,
-                rate_func = None,
+                rate_func=linear,
                 run_time = 3.5,
             ),
             randy.change, "happy"
@@ -2970,7 +2970,7 @@ class IntroduceDeBroglie(Scene):
             self.play(
                 ApplyMethod(
                     particle.move_to, axes.coords_to_point(22, 0),
-                    rate_func = None
+                    rate_func=linear
                 ),
                 wave_update_animation,
                 run_time = 3
@@ -3086,13 +3086,13 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             ApplyMethod(particle.move_to, axes.coords_to_point(30, 0)),
             wave_update_animation,
             run_time = 4,
-            rate_func = None,
+            rate_func=linear,
         )
         stopped_wave_propagation = AnimationGroup(
             ApplyMethod(particle.move_to, xi_words),
             wave_update_animation,
             run_time = 3,
-            rate_func = None,
+            rate_func=linear,
         )
         n_v_lines = 10
         v_lines = VGroup(*[
@@ -3972,7 +3972,7 @@ class MusicalNote(AddingPureFrequencies):
             randy.change, "pondering",
             self.get_broadcast_animation(n_circles = 6, run_time  = 5),
             self.get_broadcast_animation(n_circles = 12, run_time = 5),
-            ShowCreation(graph, run_time = 5, rate_func = None),
+            ShowCreation(graph, run_time = 5, rate_func=linear),
             v_line_update
         )
         self.wait(2)

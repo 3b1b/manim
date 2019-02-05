@@ -1405,7 +1405,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
             axes, axes_labels,
             circle, end_zone, end_zone_words,
         )
-        self.play(ShowCreation(lines, run_time=3, rate_func=None))
+        self.play(ShowCreation(lines, run_time=3, rate_func=linear))
         self.wait()
 
         self.set_variables_as_attrs(
@@ -2111,7 +2111,7 @@ class ComputeThetaFor1e4(AnalyzeCircleGeometry):
         theta_label.next_to(arc, DOWN, SMALL_BUFF)
 
         self.add(end_zone, axes, circle)
-        self.play(ShowCreation(lines, rate_func=None))
+        self.play(ShowCreation(lines, rate_func=linear))
         self.play(
             lines_to_fade.set_stroke, WHITE, 1, 0.3,
             ShowCreation(arc),

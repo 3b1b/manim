@@ -257,7 +257,7 @@ class PlotVelocity(GraphScene):
         self.play(DrawBorderThenFill(
             speedometer, 
             submobject_mode = "lagged_start",
-            rate_func = None,
+            rate_func=linear,
         ))
 
         self.speedometer = speedometer
@@ -294,7 +294,7 @@ class PlotVelocity(GraphScene):
 
         self.play(
             Succession(
-                *dot_intro_anims, rate_func = None
+                *dot_intro_anims, rate_func=linear
             ),
             ApplyMethod(
                 self.speedometer.move_needle_to_velocity,
@@ -536,7 +536,7 @@ class ConstantVelocityCar(Scene):
         self.play(MoveCar(
             car, 7*RIGHT+3*DOWN,
             run_time = 5,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.wait()
 
@@ -561,7 +561,7 @@ class ConstantVelocityPlot(PlotVelocity):
             color = VELOCITY_COLOR
         )
 
-        self.play(ShowCreation(graph, rate_func = None, run_time = 3))
+        self.play(ShowCreation(graph, rate_func=linear, run_time = 3))
         self.wait()
 
         self.graph = graph
@@ -713,7 +713,7 @@ class PiecewiseConstantCar(Scene):
             car.randy.rotate_in_place(np.pi/8)
             anim = MoveCar(
                 car, start_point+shift*RIGHT,
-                rate_func = None
+                rate_func=linear
             )
 
             anim.target_mobject[0].rotate_in_place(-np.pi/8)
@@ -1574,7 +1574,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         self.change_area_bounds(new_t_max = 0, run_time = 2)
         self.change_area_bounds(
             new_t_max = 8, 
-            rate_func = None,
+            rate_func=linear,
             run_time = 7.9,
         )
         self.wait()

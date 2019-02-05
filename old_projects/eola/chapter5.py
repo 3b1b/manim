@@ -653,7 +653,7 @@ class SlowlyRotateIHat(LinearTransformationScene):
             [[-1, 0], [0, 1]],
             path_arc = np.pi,
             run_time = 30,
-            rate_func = None,
+            rate_func=linear,
         )
 
 class DeterminantGraphForRotatingIHat(Scene):
@@ -687,7 +687,7 @@ class DeterminantGraphForRotatingIHat(Scene):
 
         self.add(axes, det_word, time_word)
         self.play(ShowCreation(
-            graph, rate_func = None, run_time = 10
+            graph, rate_func=linear, run_time = 10
         ))
 
 class WhatAboutThreeDimensions(TeacherStudentsScene):
@@ -811,7 +811,7 @@ class RightHandRule(Scene):
 
         # self.add(NumberPlane())
         self.play(
-            ShowCreation(hand.outline, run_time = 2, rate_func = None),
+            ShowCreation(hand.outline, run_time = 2, rate_func=linear),
             FadeIn(hand.inlines)
         )
         self.wait()

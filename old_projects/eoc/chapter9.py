@@ -228,7 +228,7 @@ class LengthOfDayGraph(GraphScene):
                 submobject_mode = "lagged_start"
             ))
         self.play(
-            ShowCreation(graph, rate_func = None),
+            ShowCreation(graph, rate_func=linear),
             FadeIn(
                 graph_label,
                 rate_func = squish_rate_func(smooth, 0.5, 1),

@@ -623,7 +623,7 @@ class WeaveLineThroughPixels(Scene):
         self.play(ShowCreation(
             curve,
             run_time = 5, 
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
         self.play(
@@ -647,7 +647,7 @@ class WellPlayedGameOfSnake(Scene):
         self.play(ShowCreation(
             snake_curve,
             run_time = 7, 
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
         self.play(ShimmerIn(words))
@@ -885,7 +885,7 @@ class UseOrder8(Scene):
         self.clear()
         self.add(words)
         self.play(ShowCreation(
-            curve, run_time = 7, rate_func = None
+            curve, run_time = 7, rate_func=linear
         ))
         self.wait()
 

@@ -352,7 +352,7 @@ class GraphCarTrajectory(GraphScene):
         self.play(
             ShowCreation(
                 graph,
-                rate_func = None,
+                rate_func=linear,
             ),
             MoveCar(
                 car, car_target,
@@ -2114,7 +2114,7 @@ class ParadoxAtTEquals0(TCubedExample):
                 car, car_target_point,
                 rate_func = lambda t : (t*graph_x_max)**3
             ),
-            ShowCreation(graph, rate_func = None),
+            ShowCreation(graph, rate_func=linear),
             UpdateFromFunc(h_line, h_line_update),
             UpdateFromFunc(v_line, v_line_update),
             run_time = 5

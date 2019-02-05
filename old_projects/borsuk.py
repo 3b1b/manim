@@ -690,7 +690,7 @@ class TemperaturePressurePlane(GraphScene):
 
         path.set_color(GREEN)
 
-        self.play(ShowCreation(path, run_time = 10, rate_func = None))
+        self.play(ShowCreation(path, run_time = 10, rate_func=linear))
         self.wait()
 
 class AlternateSphereSquishing(ExternallyAnimatedScene):
@@ -844,11 +844,11 @@ class WalkEquatorPostTransform(GraphScene):
         target_dots += [alt_dots, alt_dots.copy()]
 
         equator_transform = Succession(*[
-            Transform(equator, arc, rate_func = None)
+            Transform(equator, arc, rate_func=linear)
             for arc in target_arcs
         ])
         dots_transform = Succession(*[
-            Transform(dots, target, rate_func = None)
+            Transform(dots, target, rate_func=linear)
             for target in target_dots
         ])
 
@@ -857,7 +857,7 @@ class WalkEquatorPostTransform(GraphScene):
             equator_transform,
             dots_transform,
             run_time = 10,
-            rate_func = None,
+            rate_func=linear,
         )
         self.wait(2)
 

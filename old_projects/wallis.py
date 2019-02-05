@@ -542,7 +542,7 @@ class ShowProduct(Scene):
                 position_update_func=lambda m: m.next_to(brace, DOWN)
             ),
             run_time=4,
-            rate_func=None,
+            rate_func=linear,
         )
         self.play(
             FadeOut(brace),
@@ -620,7 +620,7 @@ class ShowProduct(Scene):
             ShowCreation(lines),
             LaggedStart(FadeIn, dots, lag_ratio=0.1),
             run_time=3,
-            rate_func=None,
+            rate_func=linear,
         )
         self.wait(2)
         self.play(FadeOut(VGroup(dots, lines)))

@@ -20,6 +20,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import rotate_vector
@@ -377,7 +378,7 @@ class ClockPassesTime(Animation):
     CONFIG = {
         "run_time": 5,
         "hours_passed": 12,
-        "rate_func": None,
+        "rate_func": linear,
     }
 
     def __init__(self, clock, **kwargs):

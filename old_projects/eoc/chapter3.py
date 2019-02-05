@@ -167,7 +167,7 @@ class ContrastAbstractAndConcrete(Scene):
             ))
             exp += 1
 
-        return Succession(*anims, rate_func = None)
+        return Succession(*anims, rate_func=linear)
 
 class ApplicationNames(Scene):
     def construct(self):
@@ -2307,14 +2307,14 @@ class IntroduceUnitCircleWithSine(GraphScene):
             ShowCreation(filler_arc),
             UpdateFromFunc(v_line, v_line_update),
             run_time = filler_portion/self.rotations_per_second,
-            rate_func = None,
+            rate_func=linear,
         )
         for x in range(5):
             self.play(
                 Rotate(radial_line, 2*np.pi),
                 UpdateFromFunc(v_line, v_line_update),
                 run_time = 1./self.rotations_per_second,
-                rate_func = None,
+                rate_func=linear,
             )
 
     ##############
@@ -2361,7 +2361,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             ShowCreation(graph),
             UpdateFromFunc(v_line, lambda v : self.v_line_update(v, graph)),
             run_time = 2./rps,
-            rate_func = None
+            rate_func=linear
         )
         self.wait()
         self.graph = graph

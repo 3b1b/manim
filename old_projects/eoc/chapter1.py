@@ -1797,7 +1797,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             FadeIn(
                 ticks, 
                 submobject_mode = "one_at_a_time",
-                rate_func = None,
+                rate_func=linear,
             ),
             ShowCreation(line),
             FadeIn(

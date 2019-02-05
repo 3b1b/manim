@@ -601,7 +601,7 @@ def walker_animation_with_display(
             number_update_func, 
             tracked_mobject = walker_anim.compound_walker.walker,
             **kwargs)
-        anim_group = AnimationGroup(walker_anim, display_anim, rate_func = None)
+        anim_group = AnimationGroup(walker_anim, display_anim, rate_func=linear)
         return anim_group
     else:
         return walker_anim
@@ -758,7 +758,7 @@ class PiWalker(ColorMappedByFuncScene):
             polygon.stroke_width = border_stroke_width
             polygon.color_using_background_image(self.background_image_file)
         total_run_time = len(points) * self.step_run_time
-        polygon_anim = ShowCreation(polygon, run_time = total_run_time, rate_func = None)
+        polygon_anim = ShowCreation(polygon, run_time = total_run_time, rate_func=linear)
         walker_anim = empty_animation
 
         start_wind = 0
@@ -807,7 +807,7 @@ class PiWalker(ColorMappedByFuncScene):
                 new_anim = FuncRotater(base_arrow, 
                     rev_func = rev_func,
                     run_time = self.step_run_time,
-                    rate_func = None,
+                    rate_func=linear,
                     remover = i < len(walk_coords) - 1,
                 )
 
@@ -1305,7 +1305,7 @@ class ArrowCircleTest(Scene):
         arrows = [rev_rotate(base_arrow.copy(), 0.5 - (fdiv(i, num_arrows))) for i in range(num_arrows)]
         arrows_vgroup = VGroup(*arrows)
 
-        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
+        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func=linear)
 
         self.wait()
 
@@ -1385,7 +1385,7 @@ class OdometerScene(ColorMappedObjectsScene):
             FuncRotater(base_arrow, rev_func = lambda x : -self.rotate_func(x)),
             ChangingDecimal(num_display, display_func),
             run_time = self.run_time,
-            rate_func = None)
+            rate_func=linear)
 
 #############
 # Above are mostly general tools; here, we list, in order, finished or near-finished scenes

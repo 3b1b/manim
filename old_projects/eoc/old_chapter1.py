@@ -1063,7 +1063,7 @@ class BuildToDADR(CircleScene):
                     self.nudge_arrow,
                 ]
             ],
-            rate_func = None,
+            rate_func=linear,
             run_time = 7
         )
         self.play(self.pi_creature.change_mode, "hooray")

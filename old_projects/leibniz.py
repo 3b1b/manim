@@ -4195,7 +4195,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         self.play(
             ApplyMethod(
                 VGroup(self.circle, self.radius).scale_in_place, 2,
-                rate_func = None,
+                rate_func=linear,
             ),
             LaggedStart(
                 DrawBorderThenFill,

@@ -60,7 +60,7 @@ class SimplePhoton(PhotonScene):
         text.to_edge(UP)
         self.play(ShimmerIn(text))
         self.play(self.photon_run_along_path(
-            Cycloid(), rate_func = None
+            Cycloid(), rate_func=linear
         ))
         self.wait()
 
@@ -350,13 +350,13 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
         self.play(*list(map(ShimmerIn, [left, arrow, right])))
         self.play(ShowCreation(squaggle))
         self.play(self.photon_run_along_path(
-            squaggle, run_time = 2, rate_func = None
+            squaggle, run_time = 2, rate_func=linear
         ))
         self.play(Transform(
             squaggle, line, 
             path_func = path_along_arc(np.pi)
         ))
-        self.play(self.photon_run_along_path(line, rate_func = None))
+        self.play(self.photon_run_along_path(line, rate_func=linear))
         self.wait()
 
 
@@ -404,7 +404,7 @@ class PhtonBendsInWater(PhotonScene, ZoomedScene):
         # self.activate_zooming()
         self.wait()        
         self.play(ShowPassingFlash(
-            wave, run_time = 3, rate_func = None
+            wave, run_time = 3, rate_func=linear
         ))
         self.wait()
         self.play(ShowCreation(extension))
