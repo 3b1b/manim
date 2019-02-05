@@ -501,7 +501,7 @@ class SneakyNonlinearTransformationExplained(SneakyNonlinearTransformation):
             FRAME_Y_RADIUS*RIGHT + FRAME_Y_RADIUS*UP
         )
         diag.insert_n_curves(20)
-        diag.change_anchor_mode("smooth")
+        diag.make_smooth()
         diag.set_color(YELLOW)
         self.play(ShowCreation(diag))
         self.add_transformable_mobject(diag)

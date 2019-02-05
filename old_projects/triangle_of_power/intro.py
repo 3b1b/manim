@@ -43,10 +43,7 @@ class TrigAnimation(Animation):
             )*RIGHT + self.center,
         ]
         for line, point in zip(self.trig_lines, points):
-            line.set_anchor_points(
-                [circle_point, point], 
-                mode = "corners"
-            )
+            line.set_points_as_corners([circle_point, point])
 
 
 
@@ -96,8 +93,8 @@ class Notation(Scene):
         prod2.submobjects[0] = times
 
         new_sin, new_cos, new_tan = [
-            VMobject().set_anchor_points(
-                corners, mode = "corners"
+            VMobject().set_points_as_corners(
+                corners
             ).replace(trig_part.split()[0])
             for corners, trig_part in zip(
                 [

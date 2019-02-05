@@ -159,7 +159,7 @@ class StockLine(VMobject):
         for x in range(self.num_points):
             step_size = self.step_range*(random.random() - 0.5)
             points.append(points[-1] + 0.5*RIGHT + step_size*UP)
-        self.set_anchor_points(points, mode = "corners")
+        self.set_points_as_corners(points)
 
 class StockPrices(Scene):
     def construct(self):

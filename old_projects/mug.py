@@ -1564,9 +1564,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
         points *= 0.75
 
         regions = VGroup(*[
-            Square().set_anchor_points(
-                points[indices], mode = "corners"
-            )
+            Square().set_points_as_corners(points[indices])
             for indices in [
                 [0, 1, 2, 3],
                 [0, 4, 2, 1],
@@ -1894,9 +1892,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
 
     def get_cube_faces(self, eight_points):
         return VGroup(*[
-            Square().set_anchor_points(
-                eight_points[indices], mode = "corners"
-            )
+            Square().set_points_as_corners(eight_points[indices])
             for indices in [
                 [0, 1, 2, 3],
                 [0, 4, 5, 1],
