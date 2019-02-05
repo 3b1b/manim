@@ -485,37 +485,30 @@ class VMobject(Mobject):
         return points
 
     def set_points_as_corners(self, points):
+        if len(points) == 0:
+            return  # TODO, raise warning?
         self.clear_points()
         self.start_new_path(points[0])
         self.add_points_as_corners(points[1:])
         return self
 
     def set_points_smoothly(self, points):
-        assert(len(points) > 1)
-        h1, h2 = get_smooth_handle_points(points)
-        self.set_anchors_and_handles(
-            points[:-1], h1, h2, points[1:]
-        )
-        return self
-
-    def set_anchor_points(self, points, mode="smooth"):
-        if mode == "smooth":
-            self.set_points_smoothly(points)
-        elif mode == "corners":
-            self.set_points_as_corners(points)
-        else:
-            raise Exception("Unknown mode")
-        return self
-
-    # TODO, this will not work!
-    def change_anchor_mode(self, mode):
-        for submob in self.family_members_with_points():
-            anchors = submob.get_anchors()
-            submob.set_anchor_points(anchors, mode=mode)
+        self.set_points_as_corners(points)
+        self.make_smooth()
         return self
 
     def make_smooth(self):
-        return self.change_anchor_mode("smooth")
+        nppcc = self.n_points_per_cubic_curve
+        subpaths = self.get_subpaths()
+        self.clear_points()
+        for subpath in subpaths:
+            anchors = [*subpath[::nppcc], subpath[-1]]
+            h1, h2 = get_smooth_handle_points(anchors)
+            new_subpath = np.array(subpath)
+            new_subpath[1::nppcc] = h1
+            new_subpath[2::nppcc] = h2
+            self.append_points(new_subpath)
+        return self
 
     def make_jagged(self):
         return self.change_anchor_mode("corners")
@@ -795,9 +788,10 @@ class VMobject(Mobject):
         ))
         for quad in bezier_quads[lower_index + 1:upper_index]:
             self.append_points(quad)
-        self.append_points(partial_bezier_points(
-            bezier_quads[upper_index], 0, upper_residue
-        ))
+        if upper_index > lower_index:
+            self.append_points(partial_bezier_points(
+                bezier_quads[upper_index], 0, upper_residue
+            ))
         return self
 
     # Errors
