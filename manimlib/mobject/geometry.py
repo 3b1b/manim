@@ -702,15 +702,13 @@ class Polygon(VMobject):
     }
 
     def __init__(self, *vertices, **kwargs):
-        assert len(vertices) > 1
-        digest_locals(self)
         VMobject.__init__(self, **kwargs)
-
-    def generate_points(self):
-        self.set_anchor_points(self.vertices, mode="corners")
+        self.set_points_as_corners(
+            [*vertices, vertices[0]]
+        )
 
     def get_vertices(self):
-        return self.get_anchors_and_handles()[0]
+        return self.get_start_anchors()
 
 
 class RegularPolygon(Polygon):
@@ -725,7 +723,7 @@ class RegularPolygon(Polygon):
         Polygon.__init__(self, *vertices, **kwargs)
 
 
-class Rectangle(VMobject):
+class Rectangle(Polygon):
     CONFIG = {
         "color": WHITE,
         "height": 2.0,
@@ -734,14 +732,16 @@ class Rectangle(VMobject):
         "close_new_points": True,
     }
 
-    def generate_points(self):
-        y, x = self.height / 2., self.width / 2.
-        self.set_anchor_points([
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        x, y = self.width / 2., self.height / 2.
+        vertices = [
             x * LEFT + y * UP,
             x * RIGHT + y * UP,
             x * RIGHT + y * DOWN,
             x * LEFT + y * DOWN
-        ], mode="corners")
+        ]
+        Polygon.__init__(self, *vertices, **kwargs)
 
 
 class Square(Rectangle):
