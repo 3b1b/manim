@@ -608,7 +608,7 @@ class FakeDiagram(TeacherStudentsScene):
             axis_point = end_point[0]*RIGHT + gs.graph_origin[1]*UP
             for alpha in np.linspace(0, 1, 20):
                 point = interpolate(axis_point, graph.points[0], alpha)
-                graph.add_control_points(3*[point])
+                graph.add_line_to(point)
             graph.set_stroke(width = 1)
             graph.set_fill(opacity = 1)
             graph.set_color(BLUE_D)

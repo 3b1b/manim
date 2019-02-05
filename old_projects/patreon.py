@@ -574,7 +574,7 @@ class IntegrationByParts(Scene):
         regions = []
         for vect, color in (UP+RIGHT, BLUE), (DOWN+LEFT, GREEN):
             region = curve.copy()
-            region.add_control_points(3*[rect.get_corner(vect)])
+            region.add_line_to(rect.get_corner(vect))
             region.set_stroke(width = 0)
             region.set_fill(color = color, opacity = 0.5)
             regions.append(region)

@@ -1678,10 +1678,8 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
             two_theta_labels.add(label)
 
             wedge = arc.copy()
-            wedge.add_control_points([
-                *3 * [ORIGIN],
-                *3 * [wedge.points[0]]
-            ])
+            wedge.add_line_to(ORIGIN)
+            wedge.add_line_to(wedge.points[0])
             wedge.set_stroke(width=0)
             wedge.set_fill(arc.get_color(), 0.2)
             wedges.add(wedge)

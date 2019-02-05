@@ -340,7 +340,7 @@ class SourcesOfOriginality(TeacherStudentsScene):
 
         blob1, blob2 = VMobject(), VMobject()
         blob1.set_points_smoothly(points + [points[0]])
-        blob1.add_control_points(3 * len(added_points) * [points[0]])
+        blob1.append_points(3 * len(added_points) * [points[0]])
         blob2.set_points_smoothly(points + added_points + [points[0]])
         for blob in blob1, blob2:
             blob.set_stroke(width=0)

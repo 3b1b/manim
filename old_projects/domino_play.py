@@ -842,7 +842,7 @@ class Test(Scene):
         for arc, vect in zip(arcs, [DOWN+RIGHT, RIGHT]):
             arc_copy = arc.copy()
             point = domino1.get_critical_point(vect)
-            arc_copy.add_control_points(3*[point])
+            arc_copy.add_line_to([point])
             arc_copy.set_stroke(width = 0)
             arc_copy.set_fill(
                 arc.get_stroke_color(),

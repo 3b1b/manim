@@ -464,16 +464,6 @@ class VMobject(Mobject):
             ])
         return self
 
-    # TODO, remove
-    # def add_control_points(self, control_points):
-    #     assert(len(control_points) % 3 == 0)
-    #     self.points = np.append(
-    #         self.points,
-    #         control_points,
-    #         axis=0
-    #     )
-    #     return self
-
     def has_new_path_started(self):
         nppcc = self.n_points_per_cubic_curve  # 4
         return len(self.points) % nppcc == 1
@@ -580,18 +570,36 @@ class VMobject(Mobject):
         )
 
     # Information about line
-
-    def get_all_cubic_bezier_point_tuples(self):
-        points = self.get_points()
-        if self.has_new_path_started():
-            points = points[:-1]
-        # TODO, Throw error if len(points) is > 1 and
-        # not divisible by 4 (i.e. n_points_per_cubic_curve)
-        nppcc = self.n_points_per_cubic_curve
+    def get_cubic_bezier_tuples_from_points(self, points):
+        nppcc = VMobject.CONFIG["n_points_per_cubic_curve"]
+        remainder = len(points) % nppcc
+        points = points[:len(points) - remainder]
         return np.array([
             points[i:i + nppcc]
             for i in range(0, len(points), nppcc)
         ])
+
+    def get_cubic_bezier_tuples(self):
+        return self.get_cubic_bezier_tuples_from_points(
+            self.get_points()
+        )
+
+    def get_subpaths_from_points(self, points):
+        nppcc = VMobject.CONFIG["n_points_per_cubic_curve"]
+        split_indices = filter(
+            lambda n: not self.consider_points_equals(
+                points[n - 1], points[n]
+            ),
+            range(nppcc, len(points), nppcc)
+        )
+        split_indices = [0] + list(split_indices) + [len(points)]
+        return [
+            points[i1:i2]
+            for i1, i2 in zip(split_indices, split_indices[1:])
+        ]
+
+    def get_subpaths(self):
+        return self.get_subpaths_from_points(self.get_points())
 
     def get_nth_curve_points(self, n):
         assert(n < self.get_num_curves())
@@ -645,9 +653,35 @@ class VMobject(Mobject):
 
     # Alignment
     def align_points(self, vmobject):
-        # This will call back to align_points_with_larger
-        Mobject.align_points(self, vmobject)
-        self.align_rgbas(vmobject)
+        nppcc = self.n_points_per_cubic_curve
+        subpaths1 = self.get_subpaths()
+        subpaths2 = vmobject.get_subpaths()
+        new_path1 = np.zeros((0, self.dim))
+        new_path2 = np.zeros((0, self.dim))
+        n_subpaths = max(len(subpaths1), len(subpaths2))
+
+        def get_nth_subpath(path_list, n):
+            if n < len(path_list):
+                return path_list[n]
+            last_path = path_list[n - 1]
+            return [last_path[-1]] * nppcc
+
+        for n in range(n_subpaths):
+            sp1 = get_nth_subpath(subpaths1, n)
+            sp2 = get_nth_subpath(subpaths2, n)
+            diff = len(sp2) - len(sp1)
+            if diff < 0:
+                sp2 = self.insert_n_curves_to_point_list(
+                    -diff // nppcc, sp2
+                )
+            elif diff > 0:
+                sp1 = self.insert_n_curves_to_point_list(
+                    diff // nppcc, sp1
+                )
+            new_path1 = np.append(new_path1, sp1, axis=0)
+            new_path2 = np.append(new_path2, sp2, axis=0)
+        self.set_points(new_path1)
+        vmobject.set_points(new_path2)
         return self
 
     def align_points_with_larger(self, larger_mobject):
@@ -661,8 +695,18 @@ class VMobject(Mobject):
         new_path_point = None
         if self.has_new_path_started():
             new_path_point = self.get_last_point()
-        curr_curve_points = self.get_all_cubic_bezier_point_tuples()
-        curr_num = len(curr_curve_points)
+        self.set_points(
+            self.insert_n_curves_to_point_list(
+                n, self.get_points()
+            )
+        )
+        if new_path_point is not None:
+            self.append_points([new_path_point])
+        return self
+
+    def insert_n_curves_to_point_list(self, n, points):
+        bezier_quads = self.get_cubic_bezier_tuples_from_points(points)
+        curr_num = len(bezier_quads)
         target_num = curr_num + n
         # This is an array with values ranging from 0
         # up to curr_num,  with repeats such that
@@ -679,20 +723,19 @@ class VMobject(Mobject):
             sum(repeat_indices == i)
             for i in range(curr_num)
         ]
-
-        self.clear_points()
-        for points, sf in zip(curr_curve_points, split_factors):
+        new_points = np.zeros((0, self.dim))
+        for quad, sf in zip(bezier_quads, split_factors):
             # What was once a single cubic curve defined
-            # by "points" will now be broken into sf
+            # by "quad" will now be broken into sf
             # smaller cubic curves
             alphas = np.linspace(0, 1, sf + 1)
             for a1, a2 in zip(alphas, alphas[1:]):
-                self.append_points(
-                    partial_bezier_points(points, a1, a2)
+                new_points = np.append(
+                    new_points,
+                    partial_bezier_points(quad, a1, a2),
+                    axis=0
                 )
-        if new_path_point is not None:
-            self.append_points([new_path_point])
-        return self
+        return new_points
 
     def align_rgbas(self, vmobject):
         attrs = ["fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"]
@@ -740,7 +783,7 @@ class VMobject(Mobject):
         if a <= 0 and b >= 1:
             self.set_points(vmobject.points)
             return self
-        bezier_quads = vmobject.get_all_cubic_bezier_point_tuples()
+        bezier_quads = vmobject.get_cubic_bezier_tuples()
         num_cubics = len(bezier_quads)
 
         lower_index, lower_residue = integer_interpolate(0, num_cubics, a)

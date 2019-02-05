@@ -365,7 +365,7 @@ class Camera(object):
                 )
 
         last_p3 = None
-        quads = vmobject.get_all_cubic_bezier_point_tuples()
+        quads = vmobject.get_cubic_bezier_tuples()
         ctx.new_path()
         for p0, p1, p2, p3 in quads:
             if should_start_new_path(last_p3, p0):

@@ -350,7 +350,6 @@ class VMobjectFromSVGPathstring(VMobject):
 
         if command == "M":  # moveto
             self.start_new_path(new_points[0])
-
             if len(new_points) <= 1:
                 return
 
@@ -383,12 +382,7 @@ class VMobjectFromSVGPathstring(VMobject):
         elif command == "A":  # elliptical Arc
             raise Exception("Not implemented")
         elif command == "Z":  # closepath
-            if is_closed(points):
-                return
-            # Both handles and new anchor are the start
-            # TODO, is this needed?
-            new_points = points[[0, 0, 0]]
-            # self.mark_paths_closed = True
+            return
 
         # Handle situations where there's multiple relative control points
         if isLower and len(new_points) > 3:

@@ -878,10 +878,10 @@ class Mobject(Container):
         ]).arrange(v2, **kwargs)
         return self
 
-    def sort(self, point_to_num_func=lambda p: p[0]):
-        self.submobjects.sort(
-            key=lambda m: point_to_num_func(m.get_center())
-        )
+    def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
+        if submob_func is None:
+            submob_func = lambda m: point_to_num_func(m.get_center())
+        self.submobjects.sort(key=submob_func)
         return self
 
     def shuffle(self, recursive=False):
