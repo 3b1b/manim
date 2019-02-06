@@ -10,10 +10,10 @@ class ScreenRectangle(Rectangle):
     }
 
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        self.width = self.width_to_height_ratio * self.height
-        Rectangle.__init__(
-            self, height=self.height, width=self.width, **kwargs
+        Rectangle.__init__(self, **kwargs)
+        self.set_width(
+            self.width_to_height_ratio * self.get_height(),
+            stretch=True
         )
 
 
