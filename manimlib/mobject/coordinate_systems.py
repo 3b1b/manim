@@ -31,7 +31,6 @@ class Axes(VGroup):
         "x_max": FRAME_X_RADIUS,
         "y_min": -FRAME_Y_RADIUS,
         "y_max": FRAME_Y_RADIUS,
-        "default_num_graph_points": 100,
     }
 
     def __init__(self, **kwargs):
@@ -68,14 +67,12 @@ class Axes(VGroup):
         ])
 
     def get_graph(
-        self, function, num_graph_points=None,
+        self, function,
         x_min=None,
         x_max=None,
         **kwargs
     ):
         kwargs["fill_opacity"] = kwargs.get("fill_opacity", 0)
-        kwargs["num_anchor_points"] = \
-            num_graph_points or self.default_num_graph_points
         x_min = x_min or self.x_min
         x_max = x_max or self.x_max
         graph = ParametricFunction(

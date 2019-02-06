@@ -3911,7 +3911,6 @@ class BoundsAtInfinity(SummarizeFormula):
             number_line_config = {
                 "include_tip" : False,
             },
-            default_num_graph_points = 1000,
         )
         axes.x_axis.add_numbers(*list(filter(
             lambda x : x != 0,

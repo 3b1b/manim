@@ -208,7 +208,6 @@ class DampenedSpring(Scene):
             ParametricFunction(
                 lambda t : (t/denom)*RIGHT+np.sin(t)*UP+np.cos(t)*OUT,
                 t_max = 12*np.pi,
-                num_anchor_points = 100,
                 color = GREY,
             ).shift(3*LEFT)
             for denom in (12.0, 2.0)

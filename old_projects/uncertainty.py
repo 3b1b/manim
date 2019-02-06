@@ -525,7 +525,7 @@ class ShowPlan(PiCreatureScene):
         wave = FunctionGraph(
             lambda x : 0.3*np.sin(15*x)*np.sin(0.5*x),
             x_min = 0, x_max = 30,
-            num_anchor_points = 500,
+            step_size = 0.001,
         )
         wave.next_to(word, RIGHT)
         rect = BackgroundRectangle(wave, fill_opacity = 1)
@@ -965,7 +965,7 @@ class VariousMusicalNotes(Scene):
             a = graph_width_tracker.get_value()
             return FunctionGraph(
                 lambda x : np.exp(-a*x**2)*np.sin(freq*x)-0.5,
-                num_anchor_points = 500,
+                step_size = 0.001,
             )
         graph = get_graph()
         def graph_update(graph):
@@ -1044,7 +1044,7 @@ class VariousMusicalNotes(Scene):
             lambda x : 0.5*np.sin(freq*x),
             x_min = -FRAME_WIDTH,
             x_max = FRAME_WIDTH,
-            num_anchor_points = 1000
+            n_components = 0.001
         )
         long_graph.set_color(BLUE)
         long_graph.next_to(graph, UP, MED_LARGE_BUFF)

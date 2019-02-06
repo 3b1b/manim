@@ -485,11 +485,12 @@ class VMobject(Mobject):
         return points
 
     def set_points_as_corners(self, points):
-        if len(points) == 0:
-            return  # TODO, raise warning?
-        self.clear_points()
-        self.start_new_path(points[0])
-        self.add_points_as_corners(points[1:])
+        nppcc = self.n_points_per_cubic_curve
+        points = np.array(points)
+        self.set_anchors_and_handles(*[
+            interpolate(points[:-1], points[1:], a)
+            for a in np.linspace(0, 1, nppcc)
+        ])
         return self
 
     def set_points_smoothly(self, points):
