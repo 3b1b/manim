@@ -578,7 +578,7 @@ class VMobject(Mobject):
         )
 
     def get_subpaths_from_points(self, points):
-        nppcc = VMobject.CONFIG["n_points_per_cubic_curve"]
+        nppcc = self.n_points_per_cubic_curve
         split_indices = filter(
             lambda n: not self.consider_points_equals(
                 points[n - 1], points[n]
@@ -589,6 +589,7 @@ class VMobject(Mobject):
         return [
             points[i1:i2]
             for i1, i2 in zip(split_indices, split_indices[1:])
+            if (i2 - i1) >= nppcc
         ]
 
     def get_subpaths(self):
@@ -646,6 +647,7 @@ class VMobject(Mobject):
 
     # Alignment
     def align_points(self, vmobject):
+        self.align_rgbas(vmobject)
         nppcc = self.n_points_per_cubic_curve
         subpaths1 = self.get_subpaths()
         subpaths2 = vmobject.get_subpaths()
@@ -675,13 +677,6 @@ class VMobject(Mobject):
             new_path2 = np.append(new_path2, sp2, axis=0)
         self.set_points(new_path1)
         vmobject.set_points(new_path2)
-        return self
-
-    def align_points_with_larger(self, larger_mobject):
-        assert(isinstance(larger_mobject, VMobject))
-        lnc = larger_mobject.get_num_curves()
-        snc = self.get_num_curves()
-        self.insert_n_curves(lnc - snc)
         return self
 
     def insert_n_curves(self, n):
