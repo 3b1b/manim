@@ -6,12 +6,15 @@ from manimlib.utils.config_ops import digest_config
 class ScreenRectangle(Rectangle):
     CONFIG = {
         "width_to_height_ratio": 16.0 / 9.0,
-        "height": 4,
+        "height": 4
     }
 
-    def generate_points(self):
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
         self.width = self.width_to_height_ratio * self.height
-        Rectangle.generate_points(self)
+        Rectangle.__init__(
+            self, height=self.height, width=self.width, **kwargs
+        )
 
 
 class FullScreenRectangle(ScreenRectangle):
