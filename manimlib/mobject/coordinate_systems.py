@@ -50,6 +50,14 @@ class Axes(VGroup):
         self.y_axis = NumberLine(**y_axis_config)
         self.y_axis.rotate(90 * DEGREES, about_point=ORIGIN)
         self.add(self.x_axis, self.y_axis)
+        
+    def get_axis(self, min_val, max_val, axis_config):
+        new_config = merge_config([
+            axis_config,
+            {"x_min": min_val, "x_max": max_val},
+            self.number_line_config,
+        ])
+        return NumberLine(**new_config)
 
     def coords_to_point(self, *coords):
         origin = self.x_axis.number_to_point(0)
