@@ -6,6 +6,7 @@ import numpy as np
 from manimlib.animation.transform import Transform
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.geometry import Circle
 from manimlib.mobject.svg.drawings import ThoughtBubble
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.tex_mobject import TextMobject
@@ -46,6 +47,8 @@ class PiCreature(SVGMobject):
         # Range of proportions along body where arms are
         "right_arm_range": [0.55, 0.7],
         "left_arm_range": [.34, .462],
+        "pupil_to_eye_width_ratio": 0.4,
+        "pupil_dot_to_pupil_width_ratio": 0.3,
     }
 
     def __init__(self, mode="plain", **kwargs):
@@ -99,24 +102,40 @@ class PiCreature(SVGMobject):
             self.name_parts()
         self.mouth.set_fill(BLACK, opacity=1)
         self.body.set_fill(self.color, opacity=1)
-        self.pupils.set_fill(BLACK, opacity=1)
-        # self.pupils.set_stroke(DARK_GREY, width=1)
-        self.add_pupil_light_spot(self.pupils)
         self.eyes.set_fill(WHITE, opacity=1)
+        self.init_pupils()
         return self
 
-    def add_pupil_light_spot(self, pupils):
-        # Purely an artifact of how the SVGs were drawn.
-        # In a perfect world, this wouldn't be needed
-        for pupil in pupils:
-            index = 16
-            sub_points = pupil.points[:index]
-            pupil.points = pupil.points[index + 2:]
-            circle = VMobject()
-            circle.points = sub_points
-            circle.set_stroke(width=0)
-            circle.set_fill(WHITE, 1)
-            pupil.add(circle)
+    def init_pupils(self):
+        # Instead of what is drawn, make new circles.
+        # This is mostly because the paths associated
+        # with the eyes in all the drawings got slightly
+        # messed up.
+        for eye, pupil in zip(self.eyes, self.pupils):
+            pupil_r = eye.get_width() / 2
+            pupil_r *= self.pupil_to_eye_width_ratio
+            dot_r = pupil_r
+            dot_r *= self.pupil_dot_to_pupil_width_ratio
+
+            new_pupil = Circle(
+                radius=pupil_r,
+                color=BLACK,
+                fill_opacity=1,
+                stroke_width=0,
+            )
+            dot = Circle(
+                radius=dot_r,
+                color=WHITE,
+                fill_opacity=1,
+                stroke_width=0,
+            )
+            new_pupil.move_to(pupil)
+            pupil.become(new_pupil)
+            dot.shift(
+                new_pupil.get_boundary_point(UL) -
+                dot.get_boundary_point(UL)
+            )
+            pupil.add(dot)
 
     def copy(self):
         copy_mobject = SVGMobject.copy(self)
