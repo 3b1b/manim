@@ -9,7 +9,7 @@ from manimlib.mobject.number_line import NumberLine
 from manimlib.mobject.svg.tex_mobject import TexMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import merge_config
+from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
 from manimlib.utils.space_ops import angle_of_vector
 
@@ -120,11 +120,11 @@ class Axes(VGroup, CoordinateSystem):
         self.shift(self.center_point)
 
     def create_axis(self, min_val, max_val, axis_config):
-        new_config = merge_config([
-            axis_config,
-            {"x_min": min_val, "x_max": max_val},
+        new_config = merge_dicts_recursively(
             self.number_line_config,
-        ])
+            {"x_min": min_val, "x_max": max_val},
+            axis_config,
+        )
         return NumberLine(**new_config)
 
     def coords_to_point(self, *coords):
@@ -398,10 +398,10 @@ class ComplexPlane(NumberPlane):
             if abs(z.imag) > abs(z.real):
                 axis = self.get_y_axis()
                 value = z.imag
-                kwargs = merge_config([
-                    {"number_config": {"unit": "i"}},
+                kwargs = merge_dicts_recursively(
                     kwargs,
-                ])
+                    {"number_config": {"unit": "i"}},
+                )
             else:
                 axis = self.get_x_axis()
                 value = z.real

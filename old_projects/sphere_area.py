@@ -54,7 +54,7 @@ class SphereCylinderScene(SpecialThreeDScene):
     }
 
     def get_cylinder(self, **kwargs):
-        config = merge_config([kwargs, self.sphere_config])
+        config = merge_dicts_recursively(self.sphere_config, kwargs)
         return Cylinder(**config)
 
     def get_cylinder_caps(self):

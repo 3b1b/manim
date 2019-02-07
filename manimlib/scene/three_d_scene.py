@@ -10,7 +10,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.scene.scene import Scene
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import merge_config
+from manimlib.utils.config_ops import merge_dicts_recursively
 
 
 class ThreeDScene(Scene):
@@ -150,7 +150,8 @@ class SpecialThreeDScene(ThreeDScene):
             config = {}
         else:
             config = self.low_quality_config
-        ThreeDScene.__init__(self, **merge_config([kwargs, config]))
+        config = merge_dicts_recursively(config, kwargs)
+        ThreeDScene.__init__(self, **config)
 
     def get_axes(self):
         axes = ThreeDAxes(**self.three_d_axes_config)
@@ -174,7 +175,7 @@ class SpecialThreeDScene(ThreeDScene):
         return axes
 
     def get_sphere(self, **kwargs):
-        config = merge_config([kwargs, self.sphere_config])
+        config = merge_dicts_recursively(self.sphere_config, kwargs)
         return Sphere(**config)
 
     def get_default_camera_position(self):

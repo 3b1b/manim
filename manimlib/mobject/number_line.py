@@ -7,7 +7,7 @@ from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import merge_config
+from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import normalize
 
@@ -134,10 +134,10 @@ class NumberLine(Line):
                            scale_val=None,
                            direction=None,
                            buff=None):
-        number_config = merge_config([
+        number_config = merge_dicts_recursively(
+            self.decimal_number_config,
             number_config or {},
-            self.decimal_number_config
-        ])
+        )
         scale_val = scale_val or self.number_scale_val
         direction = direction or self.label_direction
         buff = buff or self.line_to_number_buff
