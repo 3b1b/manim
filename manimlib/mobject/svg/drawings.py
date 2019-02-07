@@ -573,7 +573,7 @@ class Car(SVGMobject):
             self.get_corner(UP + RIGHT),
             self.get_corner(DOWN + RIGHT),
             color=DISTANCE_COLOR,
-            dashed_segment_length=0.05,
+            dash_length=0.05,
         )
 
     def add_treds_to_tires(self):
