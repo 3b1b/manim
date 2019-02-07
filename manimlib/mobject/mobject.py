@@ -535,8 +535,20 @@ class Mobject(Container):
         self.scale_in_place((length + buff) / length)
         return self
 
+    def get_start(self):
+        self.throw_error_if_no_points()
+        return np.array(self.points[0])
+
+    def get_end(self):
+        self.throw_error_if_no_points()
+        return np.array(self.points[-1])
+
+    def get_start_and_end(self):
+        return self.get_start(), self.get_end()
+
     def put_start_and_end_on(self, start, end):
-        curr_vect = self.points[-1] - self.points[0]
+        curr_start, curr_end = self.get_start_and_end()
+        curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
         target_vect = end - start
@@ -545,7 +557,7 @@ class Mobject(Container):
             angle_of_vector(target_vect) -
             angle_of_vector(curr_vect)
         )
-        self.shift(start - self.points[0])
+        self.shift(start - self.get_start())
         return self
 
     # Background rectangle
@@ -1031,6 +1043,17 @@ class Mobject(Container):
             sm1.points = np.array(sm2.points)
             sm1.interpolate_color(sm1, sm2, 1)
         return self
+
+    # Errors
+    def has_no_points(self):
+        return len(self.points) == 0
+
+    def throw_error_if_no_points(self):
+        if self.has_no_points():
+            message = "Cannot call Mobject.{}" +\
+                      "for a Mobject with no points"
+            caller_name = sys._getframe(1).f_code.co_name
+            raise Exception(message.format(caller_name))
 
 
 class Group(Mobject):

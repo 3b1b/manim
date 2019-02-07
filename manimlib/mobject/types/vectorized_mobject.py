@@ -472,9 +472,6 @@ class VMobject(Mobject):
             self.points[0], self.points[-1]
         )
 
-    def has_no_points(self):
-        return len(self.points) == 0
-
     def add_points_as_corners(self, points):
         for point in points:
             self.add_line_to(point)
@@ -790,14 +787,6 @@ class VMobject(Mobject):
                 bezier_quads[upper_index], 0, upper_residue
             ))
         return self
-
-    # Errors
-    def throw_error_if_no_points(self):
-        if self.has_no_points():
-            message = "Cannot call VMobject.{}" +\
-                      "for a VMobject with no points"
-            caller_name = sys._getframe(1).f_code.co_name
-            raise Exception(message.format(caller_name))
 
 
 class VGroup(VMobject):

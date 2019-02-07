@@ -327,37 +327,17 @@ class Line(VMobject):
         else:
             return self.get_length()
 
-    def get_start_and_end(self):
-        return self.get_start(), self.get_end()
-
     def get_vector(self):
         return self.get_end() - self.get_start()
 
     def get_unit_vector(self):
-        vect = self.get_vector()
-        norm = get_norm(vect)
-        if norm == 0:
-            # TODO, is this the behavior I want?
-            return np.array(ORIGIN)
-        return vect / norm
-
-    def get_start(self):
-        return np.array(self.points[0])
-
-    def get_end(self):
-        return np.array(self.points[-1])
-
-    def get_slope(self):
-        start, end = self.get_start_and_end()
-        rise, run = [
-            float(end[i] - start[i])
-            for i in [1, 0]
-        ]
-        return np.inf if run == 0 else rise / run
+        return normalize(self.get_vector())
 
     def get_angle(self):
-        start, end = self.get_start_and_end()
-        return angle_of_vector(end - start)
+        return angle_of_vector(self.get_vector())
+
+    def get_slope(self):
+        return np.tan(self.get_angle())
 
     def set_angle(self, angle):
         self.rotate(
