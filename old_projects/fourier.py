@@ -2047,8 +2047,8 @@ class ShowCommutativeDiagram(ShowLinearity):
         VGroup(ta_group[1], fa_group[1]).shift(MED_LARGE_BUFF*UP)
         for ta, fa in zip(ta_group, fa_group):
             fa.next_to(
-                ta.x_axis.main_line, RIGHT,
-                submobject_to_align = fa.x_axis.main_line
+                ta.x_axis, RIGHT,
+                submobject_to_align = fa.x_axis
             )
             fa.to_edge(RIGHT)
             ta.remove(ta.labels)
@@ -2084,7 +2084,7 @@ class ShowCommutativeDiagram(ShowLinearity):
             fourier_graph.set_color(self.center_of_mass_color)
 
             arrow = Arrow(
-                ta.x_axis.main_line, fa.x_axis.main_line, 
+                ta.x_axis, fa.x_axis, 
                 color = WHITE,
                 buff = MED_LARGE_BUFF,
             )
@@ -3712,7 +3712,7 @@ class SummarizeTheFullTransform(DrawFrequencyPlot):
         )
         imaginary_fourier_graph.set_color(BLUE)
         imaginary_fourier_graph.shift(
-            frequency_axes.x_axis.main_line.get_right() - \
+            frequency_axes.x_axis.get_right() - \
             imaginary_fourier_graph.points[-1],
         )
 

@@ -96,7 +96,7 @@ class ComplexTransformationScene(Scene):
         # TODO...
 
     def paint_plane(self, plane):
-        for lines in plane.main_lines, plane.secondary_lines:
+        for lines in planes, plane.secondary_lines:
             lines.set_color_by_gradient(
                 self.vert_start_color,
                 self.vert_end_color,

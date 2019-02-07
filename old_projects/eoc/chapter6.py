@@ -65,7 +65,7 @@ class SlopeOfCircleExample(ZoomedScene):
 
     def setup_plane(self):
         self.plane = NumberPlane(**self.plane_kwargs)
-        self.plane.main_lines.fade()
+        self.planes.fade()
         self.plane.add(self.plane.get_axis_labels())
         self.plane.add_coordinates()
 

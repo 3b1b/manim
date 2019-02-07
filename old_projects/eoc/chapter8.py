@@ -652,7 +652,7 @@ class ConstantVelocityPlot(PlotVelocity):
 
     def note_units(self):
         x_line, y_line  = lines = VGroup(*[
-            axis.main_line.copy()
+            axis.copy()
             for axis in (self.x_axis, self.y_axis)
         ])
         lines.set_color(TIME_COLOR)

@@ -11,7 +11,6 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.bezier import is_closed
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import digest_locals
@@ -105,14 +104,14 @@ class SVGMobject(VMobject):
             pass  # TODO
             # warnings.warn("Unknown element type: " + element.tagName)
         result = [m for m in result if m is not None]
-        self.handle_transforms(element, VMobject(*result))
+        self.handle_transforms(element, VGroup(*result))
         if len(result) > 1 and not self.unpack_groups:
             result = [VGroup(*result)]
 
         return result
 
     def g_to_mobjects(self, g_element):
-        mob = VMobject(*self.get_mobjects_from(g_element))
+        mob = VGroup(*self.get_mobjects_from(g_element))
         self.handle_transforms(g_element, mob)
         return mob.submobjects
 
@@ -124,7 +123,7 @@ class SVGMobject(VMobject):
         ref = use_element.getAttribute("xlink:href")[1:]
         if ref not in self.ref_to_element:
             warnings.warn("%s not recognized" % ref)
-            return VMobject()
+            return VGroup()
         return self.get_mobjects_from(
             self.ref_to_element[ref]
         )

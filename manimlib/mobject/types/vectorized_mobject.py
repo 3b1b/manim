@@ -796,18 +796,11 @@ class VMobject(Mobject):
 
 
 class VGroup(VMobject):
-    def __init__(self, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], (tuple, list)):
-            args = args[0]
-
-        packed_args = []
-        for arg in args:
-            if isinstance(arg, (tuple, list)):
-                packed_args.append(VGroup(arg))
-            else:
-                packed_args.append(arg)
-
-        VMobject.__init__(self, *packed_args, **kwargs)
+    def __init__(self, *vmobjects, **kwargs):
+        if not all([isinstance(m, VMobject) for m in vmobjects]):
+            raise Exception("All submobjects must be of type VMobject")
+        VMobject.__init__(self, **kwargs)
+        self.add(*vmobjects)
 
 
 class VectorizedPoint(VMobject):

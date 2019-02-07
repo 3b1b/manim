@@ -781,7 +781,7 @@ class InputOutputScene(Scene):
             plane.add_coordinates(x_vals = list(range(-2, 3)), y_vals = list(range(-2, 3)))
             plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
             plane.coordinate_labels.set_background_stroke(width=0)
-            plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
+            plane.lines_to_fade = VGroup(planes, plane.secondary_lines)
             plane.move_to(vect*FRAME_X_RADIUS/2 + self.y_shift*DOWN)
             label = TextMobject(text)
             label.scale(1.5)

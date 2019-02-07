@@ -62,3 +62,30 @@ def fdiv(a, b, zero_over_zero_value=None):
         where = True
 
     return np.true_divide(a, b, out=out, where=where)
+
+
+def binary_search(function,
+                  target,
+                  lower_bound,
+                  upper_bound,
+                  tolerance=1e-4):
+    lh = lower_bound
+    rh = upper_bound
+    while abs(rh - lh) > tolerance:
+        mh = np.mean([lh, rh])
+        lx, mx, rx = [function(h) for h in (lh, mh, rh)]
+        if lx == target:
+            return lx
+        if rx == target:
+            return rx
+
+        if lx <= target and rx >= target:
+            if mx > target:
+                rh = mh
+            else:
+                lh = mh
+        elif lx > target and rx < target:
+            lh, rh = rh, lh
+        else:
+            return None
+    return mh

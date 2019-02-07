@@ -56,11 +56,15 @@ def digest_config(obj, kwargs, caller_locals={}):
     obj.__dict__ = merge_config(all_dicts)
 
 
+# TODO, priority here is backwards from dict.update.
+# Should I change the convention?
 def merge_config(all_dicts):
     """
     Creates a dict whose keyset is the union of all the
     input dictionaries.  The value for each key is based
     on the first dict in the list with that key.
+
+    First dicts have higher priority
 
     When values are dictionaries, it is applied recursively
     """

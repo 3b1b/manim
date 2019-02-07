@@ -877,7 +877,7 @@ class TwoCarsAtRedLight(Scene):
         ))
         self.play(
             ApplyMethod(
-                self.time_axes.x_axis.main_line.stretch, 2.5, 0,
+                self.time_axes.x_axis.stretch, 2.5, 0,
                 {"about_edge" : LEFT},
                 run_time = 4,
                 rate_func = squish_rate_func(smooth, 0.3, 0.6),
@@ -885,7 +885,7 @@ class TwoCarsAtRedLight(Scene):
             UpdateFromFunc(
                 self.time_axes.x_axis.tip,
                 lambda m : m.move_to(
-                    self.time_axes.x_axis.main_line.get_right(), 
+                    self.time_axes.x_axis.get_right(), 
                     LEFT
                 )
             ),
@@ -1364,7 +1364,7 @@ class CenterOfMassDescription(FourierRecapScene):
         circle_plane.target.set_height(FRAME_HEIGHT)
         circle_plane.target.center()
         circle_plane.target.axes.set_stroke(width = 2)
-        circle_plane.target.main_lines.set_stroke(width = 2)
+        circle_plane.targets.set_stroke(width = 2)
         circle_plane.target.secondary_lines.set_stroke(width = 1)
 
         start_coords = (0.5, 0.5)
@@ -2940,7 +2940,7 @@ class IntroduceDeBroglie(Scene):
         self.wait()
 
         #Transform time_line
-        line = time_line.main_line
+        line = time_line
         self.play(
             FadeOut(time_line.numbers),
             VGroup(arrow, words, date).shift, MED_LARGE_BUFF*UP,

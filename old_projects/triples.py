@@ -1700,7 +1700,7 @@ class VisualizeZSquared(Scene):
         color_grid = self.get_color_grid()
 
         self.play(
-            self.background_plane.main_lines.set_stroke, None, 1,
+            self.background_planes.set_stroke, None, 1,
             LaggedStart(
                 FadeIn, color_grid, 
                 run_time = 2
@@ -1807,7 +1807,7 @@ class VisualizeZSquared(Scene):
             secondary_line_ratio = 0,
             stroke_width = 2,
         )
-        color_grid.main_lines.set_color_by_gradient(
+        color_grids.set_color_by_gradient(
             *[GREEN, RED, MAROON_B, TEAL]*2
         )
         color_grid.remove(color_grid.axes[0])

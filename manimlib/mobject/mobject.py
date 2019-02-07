@@ -36,11 +36,9 @@ class Mobject(Container):
         "target": None,
     }
 
-    def __init__(self, *submobjects, **kwargs):
-        Container.__init__(self, *submobjects, **kwargs)
-        if not all([isinstance(m, Mobject) for m in submobjects]):
-            raise Exception("All submobjects must be of type Mobject")
-        self.submobjects = list(submobjects)
+    def __init__(self, **kwargs):
+        Container.__init__(self, **kwargs)
+        self.submobjects = []
         self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
@@ -1031,7 +1029,8 @@ class Mobject(Container):
 
 
 class Group(Mobject):
-    # Alternate name to improve readibility in cases where
-    # the mobject is used primarily for its submobject housing
-    # functionality.
-    pass
+    def __init__(self, *mobjects, **kwargs):
+        if not all([isinstance(m, Mobject) for m in mobjects]):
+            raise Exception("All submobjects must be of type Mobject")
+        Mobject.__init__(self, **kwargs)
+        self.add(*mobjects)

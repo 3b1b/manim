@@ -46,7 +46,7 @@ class Slider(NumberLine):
     def add_label(self, tex):
         label = TexMobject(tex)
         label.scale(self.label_scale_val)
-        label.move_to(self.main_line.get_top())
+        label.move_to(self.get_top())
         label.shift(MED_LARGE_BUFF*UP)
         self.add(label)
         self.label = label

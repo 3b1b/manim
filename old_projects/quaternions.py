@@ -1245,7 +1245,7 @@ class IntroduceLinusTheLinelander(Scene):
         algebra.shift(3 * RIGHT)
 
         self.play(
-            ShowCreation(number_line.main_line),
+            ShowCreation(number_line),
             linus.look_at, number_line
         )
         self.play(
@@ -3123,9 +3123,9 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
         z_axis.set_color(WHITE)
         z_axis_top = Line(
             z_axis.number_to_point(0),
-            z_axis.main_line.get_end(),
+            z_axis.get_end(),
         )
-        z_axis_top.match_style(z_axis.main_line)
+        z_axis_top.match_style(z_axis)
 
         z_unit_line = Line(
             z_axis.number_to_point(0),
@@ -3155,7 +3155,7 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
         colored_coord_lines = VGroup(colored_, y_line, z_line)
 
         coord_lines = VGroup(
-            plane.axes[0], plane.axes[1], z_axis.main_line,
+            plane.axes[0], plane.axes[1], z_axis,
         )
         for i1, i2 in [(0, 2), (1, 0), (2, 1)]:
             coord_lines[i1].target = coord_lines[i2].copy()

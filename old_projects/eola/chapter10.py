@@ -2221,7 +2221,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         self.play(FadeOut(self.plane))
         cob_transform = self.get_matrix_transformation([[1, 0], [-1, 1]])        
         ApplyMethod(self.plane.apply_function, cob_transform).update(1)
-        self.plane.main_lines.set_color(BLUE_D)
+        self.planes.set_color(BLUE_D)
         self.plane.axes.set_color(WHITE)
         self.play(
             FadeIn(self.plane),

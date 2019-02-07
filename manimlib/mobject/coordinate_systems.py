@@ -1,4 +1,5 @@
 import numpy as np
+import itertools as it
 
 from manimlib.constants import *
 from manimlib.mobject.functions import ParametricFunction
@@ -7,17 +8,90 @@ from manimlib.mobject.geometry import Line
 from manimlib.mobject.number_line import NumberLine
 from manimlib.mobject.svg.tex_mobject import TexMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_config
+from manimlib.utils.simple_functions import binary_search
 from manimlib.utils.space_ops import angle_of_vector
 
 # TODO: There should be much more code reuse between Axes, NumberPlane and GraphScene
 
 
-class Axes(VGroup):
+class CoordinateSystem():
+    """
+    Abstract class for Axes and NumberPlane
+    """
     CONFIG = {
-        "three_d": False,
+        "dimension": 2,
+        "x_min": -FRAME_X_RADIUS,
+        "x_max": FRAME_X_RADIUS,
+        "y_min": -FRAME_Y_RADIUS,
+        "y_max": FRAME_Y_RADIUS,
+    }
+
+    def coords_to_point(self, *coords):
+        raise Exception("Not implemented")
+
+    def point_to_coords(self, point):
+        raise Exception("Not implemented")
+
+    def get_axes(self):
+        raise Exception("Not implemented")
+
+    def get_axis(self, index):
+        return self.get_axes()[index]
+
+    def get_x_axis(self):
+        return self.get_axis(0)
+
+    def get_y_axis(self):
+        return self.get_axis(1)
+
+    def get_z_axis(self):
+        return self.get_axis(2)
+
+    def get_graph(self, function, **kwargs):
+        x_min = kwargs.pop("x_min", self.x_min)
+        x_max = kwargs.pop("x_max", self.x_max)
+        graph = ParametricFunction(
+            lambda t: self.coords_to_point(t, function(t)),
+            t_min=x_min,
+            t_max=x_max,
+            **kwargs
+        )
+        graph.underlying_function = function
+        return graph
+
+    def get_parametric_curve(self, function, **kwargs):
+        dim = self.dimension
+        graph = ParametricFunction(
+            lambda t: self.coords_to_point(
+                *function(t)[:dim]
+            ),
+            **kwargs
+        )
+        graph.underlying_function = function
+        return graph
+
+    def input_to_graph_point(self, x, graph):
+        if hasattr(graph, "underlying_function"):
+            return self.coords_to_point(x, graph.underlying_function(x))
+        else:
+            alpha = binary_search(
+                function=lambda a: self.point_to_coords(
+                    graph.point_from_proportion(a)
+                )[0],
+                target=x,
+                lower_bound=self.x_min,
+                uplper_bound=self.x_max,
+            )
+            if alpha is not None:
+                return graph.point_from_proportion(alpha)
+            else:
+                return None
+
+
+class Axes(VGroup, CoordinateSystem):
+    CONFIG = {
         "number_line_config": {
             "color": LIGHT_GREY,
             "include_tip": True,
@@ -26,24 +100,26 @@ class Axes(VGroup):
         "y_axis_config": {
             "label_direction": LEFT,
         },
-        "x_min": -FRAME_X_RADIUS,
-        "x_max": FRAME_X_RADIUS,
-        "y_min": -FRAME_Y_RADIUS,
-        "y_max": FRAME_Y_RADIUS,
+        "center_point": ORIGIN,
     }
 
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
-        self.x_axis = self.get_axis(
+        self.x_axis = self.create_axis(
             self.x_min, self.x_max, self.x_axis_config
         )
-        self.y_axis = self.get_axis(
+        self.y_axis = self.create_axis(
             self.y_min, self.y_max, self.y_axis_config
         )
         self.y_axis.rotate(90 * DEGREES, about_point=ORIGIN)
-        self.add(self.x_axis, self.y_axis)
+        # Add as a separate group incase various other
+        # mobjects are added to self, as for example in
+        # NumberPlane below
+        self.axes = VGroup(self.x_axis, self.y_axis)
+        self.add(*self.axes)
+        self.shift(self.center_point)
 
-    def get_axis(self, min_val, max_val, axis_config):
+    def create_axis(self, min_val, max_val, axis_config):
         new_config = merge_config([
             axis_config,
             {"x_min": min_val, "x_max": max_val},
@@ -54,63 +130,23 @@ class Axes(VGroup):
     def coords_to_point(self, *coords):
         origin = self.x_axis.number_to_point(0)
         result = np.array(origin)
-        for axis, coord in zip(self, coords):
+        for axis, coord in zip(self.get_axes(), coords):
             result += (axis.number_to_point(coord) - origin)
         return result
 
     def point_to_coords(self, point):
         return tuple([
             axis.point_to_number(point)
-            for axis in self
-            if isinstance(axis, NumberLine)
+            for axis in self.get_axes()
         ])
 
-    def get_graph(
-        self, function,
-        x_min=None,
-        x_max=None,
-        **kwargs
-    ):
-        kwargs["fill_opacity"] = kwargs.get("fill_opacity", 0)
-        x_min = x_min or self.x_min
-        x_max = x_max or self.x_max
-        graph = ParametricFunction(
-            lambda t: self.coords_to_point(t, function(t)),
-            t_min=x_min,
-            t_max=x_max,
-            **kwargs
-        )
-        graph.underlying_function = function
-        return graph
-
-    def input_to_graph_point(self, x, graph):
-        if hasattr(graph, "underlying_function"):
-            return self.coords_to_point(x, graph.underlying_function(x))
-        else:
-            # binary search
-            lh, rh = 0, 1
-            while abs(lh - rh) > 0.001:
-                mh = np.mean([lh, rh])
-                hands = [lh, mh, rh]
-                points = list(map(graph.point_from_proportion, hands))
-                lx, mx, rx = list(map(self.x_axis.point_to_number, points))
-                if lx <= x and rx >= x:
-                    if mx > x:
-                        rh = mh
-                    else:
-                        lh = mh
-                elif lx <= x and rx <= x:
-                    return points[2]
-                elif lx >= x and rx >= x:
-                    return points[0]
-                elif lx > x and rx < x:
-                    lh, rh = rh, lh
-            return points[1]
-        return self.coords_to_point(x, graph.underlying_function(x))
+    def get_axes(self):
+        return self.axes
 
 
 class ThreeDAxes(Axes):
     CONFIG = {
+        "dimension": 3,
         "x_min": -5.5,
         "x_max": 5.5,
         "y_min": -5.5,
@@ -125,7 +161,7 @@ class ThreeDAxes(Axes):
 
     def __init__(self, **kwargs):
         Axes.__init__(self, **kwargs)
-        z_axis = self.z_axis = self.get_axis(
+        z_axis = self.z_axis = self.create_axis(
             self.z_min, self.z_max, self.z_axis_config
         )
         z_axis.rotate(-np.pi / 2, UP, about_point=ORIGIN)
@@ -133,18 +169,19 @@ class ThreeDAxes(Axes):
             angle_of_vector(self.z_normal), OUT,
             about_point=ORIGIN
         )
+        self.axes.append(z_axis)
         self.add(z_axis)
 
         self.add_3d_pieces()
         self.set_axis_shading()
 
     def add_3d_pieces(self):
-        for axis in self:
+        for axis in self.axes:
             axis.pieces = VGroup(
-                *axis.main_line.get_pieces(self.num_axis_pieces)
+                *axis.get_pieces(self.num_axis_pieces)
             )
             axis.add(axis.pieces)
-            axis.main_line.set_stroke(width=0, family=False)
+            axis.set_stroke(width=0, family=False)
             axis.set_shade_in_3d(True)
 
     def set_axis_shading(self):
@@ -161,194 +198,179 @@ class ThreeDAxes(Axes):
                 submob.set_sheen(0.2)
 
 
-class NumberPlane(VMobject):
+class NumberPlane(Axes):
     CONFIG = {
-        "color": BLUE_D,
-        "secondary_color": BLUE_E,
-        "axes_color": WHITE,
-        "secondary_stroke_width": 1,
-        # TODO: Allow coordinate center of NumberPlane to not be at (0, 0)
-        "x_radius": None,
-        "y_radius": None,
-        "x_unit_size": 1,
-        "y_unit_size": 1,
-        "center_point": ORIGIN,
+        "axis_config": {
+            "stroke_color": WHITE,
+            "stroke_width": 2,
+            "include_ticks": False,
+            "include_tip": False,
+            "line_to_number_buff": SMALL_BUFF,
+            "label_direction": DR,
+            "number_scale_val": 0.5,
+        },
+        "y_axis_config": {
+            "label_direction": DR,
+        },
+        "background_line_style": {
+            "stroke_color": BLUE_D,
+            "stroke_width": 2,
+        },
+        # Defaults to a faded version of line_config
+        "faded_line_style": None,
         "x_line_frequency": 1,
         "y_line_frequency": 1,
-        "secondary_line_ratio": 1,
-        "written_coordinate_height": 0.2,
-        "propagate_style_to_family": False,
+        "faded_line_ratio": 1,
         "make_smooth_after_applying_functions": True,
     }
 
-    def generate_points(self):
-        if self.x_radius is None:
-            center_to_edge = (FRAME_X_RADIUS + abs(self.center_point[0]))
-            self.x_radius = center_to_edge / self.x_unit_size
-        if self.y_radius is None:
-            center_to_edge = (FRAME_Y_RADIUS + abs(self.center_point[1]))
-            self.y_radius = center_to_edge / self.y_unit_size
-        self.axes = VMobject()
-        self.main_lines = VMobject()
-        self.secondary_lines = VMobject()
-        tuples = [
-            (
-                self.x_radius,
-                self.x_line_frequency,
-                self.y_radius * DOWN,
-                self.y_radius * UP,
-                RIGHT
-            ),
-            (
-                self.y_radius,
-                self.y_line_frequency,
-                self.x_radius * LEFT,
-                self.x_radius * RIGHT,
-                UP,
-            ),
-        ]
-        for radius, freq, start, end, unit in tuples:
-            main_range = np.arange(0, radius, freq)
-            step = freq / float(freq + self.secondary_line_ratio)
-            for v in np.arange(0, radius, step):
-                line1 = Line(start + v * unit, end + v * unit)
-                line2 = Line(start - v * unit, end - v * unit)
-                if v == 0:
-                    self.axes.add(line1)
-                elif v in main_range:
-                    self.main_lines.add(line1, line2)
-                else:
-                    self.secondary_lines.add(line1, line2)
-        self.add(self.secondary_lines, self.main_lines, self.axes)
-        self.stretch(self.x_unit_size, 0)
-        self.stretch(self.y_unit_size, 1)
-        self.shift(self.center_point)
-        # Put x_axis before y_axis
-        y_axis, x_axis = self.axes.split()
-        self.axes = VMobject(x_axis, y_axis)
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        kwargs["number_line_config"] = self.axis_config
+        Axes.__init__(self, **kwargs)
+        self.init_background_lines()
 
-    def init_colors(self):
-        VMobject.init_colors(self)
-        self.axes.set_stroke(self.axes_color, self.stroke_width)
-        self.main_lines.set_stroke(self.color, self.stroke_width)
-        self.secondary_lines.set_stroke(
-            self.secondary_color, self.secondary_stroke_width
+    def init_background_lines(self):
+        if self.faded_line_style is None:
+            background_line_style = self.background_line_style
+            color = background_line_style.get(
+                "stroke_color", WHITE
+            )
+            stroke_width = background_line_style.get("stroke_width", 2) / 2
+            self.faded_line_style = {
+                "stroke_color": color,
+                "stroke_width": stroke_width,
+                "stroke_opacity": 0.5,
+            }
+
+        self.background_lines, self.faded_lines = self.get_lines()
+        self.background_lines.set_style(
+            **self.background_line_style,
         )
-        return self
+        self.faded_lines.set_style(
+            **self.faded_line_style,
+        )
+        self.add_to_back(
+            self.faded_lines,
+            self.background_lines,
+        )
+
+    def get_lines(self):
+        x_axis = self.get_x_axis()
+        y_axis = self.get_y_axis()
+        x_freq = self.x_line_frequency
+        y_freq = self.y_line_frequency
+
+        x_lines1, x_lines2 = self.get_lines_parallel_to_axis(
+            x_axis, y_axis, x_freq,
+            self.faded_line_ratio,
+        )
+        y_lines1, y_lines2 = self.get_lines_parallel_to_axis(
+            y_axis, x_axis, y_freq,
+            self.faded_line_ratio,
+        )
+        lines1 = VGroup(*x_lines1, *y_lines1)
+        lines2 = VGroup(*x_lines2, *y_lines2)
+        return lines1, lines2
+
+    def get_lines_parallel_to_axis(self, axis1, axis2, freq, ratio):
+        line = Line(axis1.get_start(), axis1.get_end())
+        vect = line.get_vector()
+        dense_freq = (1 + ratio)
+        step = 1 / dense_freq
+
+        lines1 = VGroup()
+        lines2 = VGroup()
+        ranges = (
+            np.arange(0, axis2.x_max, step),
+            np.arange(0, axis2.x_min, -step),
+        )
+        for inputs in ranges:
+            for k, x in enumerate(inputs):
+                new_line = line.copy()
+                new_line.move_to(axis2.number_to_point(x))
+                new_line.align_to(line, vect)
+                if k % (1 + ratio) == 0:
+                    lines1.add(new_line)
+                else:
+                    lines2.add(new_line)
+        return lines1, lines2
 
     def get_center_point(self):
         return self.coords_to_point(0, 0)
 
-    def coords_to_point(self, x, y):
-        x, y = np.array([x, y])
-        result = self.axes.get_center()
-        result += x * self.get_x_unit_size() * RIGHT
-        result += y * self.get_y_unit_size() * UP
-        return result
-
-    def point_to_coords(self, point):
-        new_point = point - self.axes.get_center()
-        x = new_point[0] / self.get_x_unit_size()
-        y = new_point[1] / self.get_y_unit_size()
-        return x, y
-
-    # Does not recompute center, unit_sizes for each call; useful for
-    # iterating over large lists of points, but does assume these
-    # attributes are kept accurate. (Could alternatively have a method
-    # which returns a function dynamically created after a single
-    # call to each of get_center(), get_x_unit_size(), etc.)
-    def point_to_coords_cheap(self, point):
-        new_point = point - self.center_point
-        x = new_point[0] / self.x_unit_size
-        y = new_point[1] / self.y_unit_size
-        return x, y
-
     def get_x_unit_size(self):
-        return self.axes.get_width() / (2.0 * self.x_radius)
+        return self.get_x_axis().get_unit_size()
 
     def get_y_unit_size(self):
-        return self.axes.get_height() / (2.0 * self.y_radius)
+        return self.get_x_axis().get_unit_size()
 
     def get_coordinate_labels(self, x_vals=None, y_vals=None):
-        coordinate_labels = VGroup()
-        if x_vals is None:
-            x_vals = list(range(-int(self.x_radius), int(self.x_radius) + 1))
-        if y_vals is None:
-            y_vals = list(range(-int(self.y_radius), int(self.y_radius) + 1))
-        for index, vals in enumerate([x_vals, y_vals]):
-            num_pair = [0, 0]
-            for val in vals:
-                if val == 0:
-                    continue
-                num_pair[index] = val
-                point = self.coords_to_point(*num_pair)
-                num = TexMobject(str(val))
-                num.add_background_rectangle()
-                num.set_height(
-                    self.written_coordinate_height
-                )
-                num.next_to(point, DOWN + LEFT, buff=SMALL_BUFF)
-                coordinate_labels.add(num)
-        self.coordinate_labels = coordinate_labels
-        return coordinate_labels
+        x_vals = x_vals or []
+        y_vals = y_vals or []
+        x_mobs = self.get_x_axis().get_number_mobjects(*x_vals)
+        y_mobs = self.get_y_axis().get_number_mobjects(*y_vals)
+
+        self.coordinate_labels = VGroup(x_mobs, y_mobs)
+        return self.coordinate_labels
 
     def get_axes(self):
         return self.axes
 
-    def get_axis_labels(self, x_label="x", y_label="y"):
-        x_axis, y_axis = self.get_axes().split()
-        quads = [
-            (x_axis, x_label, UP, RIGHT),
-            (y_axis, y_label, RIGHT, UP),
-        ]
-        labels = VGroup()
-        for axis, tex, vect, edge in quads:
-            label = TexMobject(tex)
-            label.add_background_rectangle()
-            label.next_to(axis, vect)
-            label.to_edge(edge)
-            labels.add(label)
-        self.axis_labels = labels
-        return labels
+    def get_x_axis_label(self, label_tex, edge=RIGHT, direction=DL, **kwargs):
+        return self.get_axis_label(
+            label_tex, self.get_x_axis(),
+            edge, direction, **kwargs
+        )
+
+    def get_y_axis_label(self, label_tex, edge=UP, direction=DR, **kwargs):
+        return self.get_axis_label(
+            label_tex, self.get_y_axis(),
+            edge, direction, **kwargs
+        )
+
+    def get_axis_label(self, label_tex, axis, edge, direction, buff=MED_SMALL_BUFF):
+        label = TexMobject(label_tex)
+        label.next_to(
+            axis.get_edge_center(edge), direction,
+            buff=buff
+        )
+        return label
+
+    def get_axis_labels(self, x_label_tex="x", y_label_tex="y"):
+        self.axis_labels = VGroup(
+            self.get_x_axis_label(x_label_tex),
+            self.get_y_axis_label(y_label_tex),
+        )
+        return self.axis_labels
 
     def add_coordinates(self, x_vals=None, y_vals=None):
-        self.add(*self.get_coordinate_labels(x_vals, y_vals))
+        self.add(self.get_coordinate_labels(x_vals, y_vals))
         return self
 
     def get_vector(self, coords, **kwargs):
-        point = coords[0] * RIGHT + coords[1] * UP
-        arrow = Arrow(ORIGIN, point, **kwargs)
-        return arrow
+        kwargs["buff"] = 0
+        return Arrow(
+            self.coords_to_point(0, 0),
+            self.coords_to_point(*coords),
+            **kwargs
+        )
 
     def prepare_for_nonlinear_transform(self, num_inserted_curves=50):
         for mob in self.family_members_with_points():
             num_curves = mob.get_num_curves()
             if num_inserted_curves > num_curves:
                 mob.insert_n_curves(
-                    num_inserted_curves - num_curves)
-                mob.make_smooth()
+                    num_inserted_curves - num_curves
+                )
         return self
 
 
 class ComplexPlane(NumberPlane):
     CONFIG = {
         "color": BLUE,
-        "unit_size": 1,
         "line_frequency": 1,
-        "faded_line_frequency": 0.5,
     }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        kwargs.update({
-            "x_unit_size": self.unit_size,
-            "y_unit_size": self.unit_size,
-            "x_line_frequency": self.line_frequency,
-            "x_faded_line_frequency": self.faded_line_frequency,
-            "y_line_frequency": self.line_frequency,
-            "y_faded_line_frequency": self.faded_line_frequency,
-        })
-        NumberPlane.__init__(self, **kwargs)
 
     def number_to_point(self, number):
         number = complex(number)
@@ -358,35 +380,35 @@ class ComplexPlane(NumberPlane):
         x, y = self.point_to_coords(point)
         return complex(x, y)
 
-    def get_coordinate_labels(self, *numbers):
-        # TODO: Should merge this with the code from NumberPlane.get_coordinate_labels
+    def get_default_coordinate_values(self):
+        x_numbers = self.get_x_axis().default_numbers_to_display()
+        y_numbers = self.get_y_axis().default_numbers_to_display()
+        y_numbers = [
+            complex(0, y) for y in y_numbers if y != 0
+        ]
+        return [*x_numbers, *y_numbers]
 
-        result = VGroup()
+    def get_coordinate_labels(self, *numbers, **kwargs):
         if len(numbers) == 0:
-            numbers = list(range(-int(self.x_radius), int(self.x_radius) + 1))
-            numbers += [
-                complex(0, y)
-                for y in range(-int(self.y_radius), int(self.y_radius) + 1)
-                if y != 0
-            ]
+            numbers = self.get_default_coordinate_values()
+
+        self.coordinate_labels = VGroup()
         for number in numbers:
-            # if number == complex(0, 0):
-            #     continue
-            point = self.number_to_point(number)
-            num_str = str(number).replace("j", "i")
-            if num_str.startswith("0"):
-                num_str = "0"
-            elif num_str in ["1i", "-1i"]:
-                num_str = num_str.replace("1", "")
-            num_mob = TexMobject(num_str)
-            num_mob.add_background_rectangle()
-            num_mob.set_height(self.written_coordinate_height)
-            num_mob.next_to(point, DOWN + LEFT, SMALL_BUFF)
-            result.add(num_mob)
-        self.coordinate_labels = result
-        return result
+            z = complex(number)
+            if abs(z.imag) > abs(z.real):
+                axis = self.get_y_axis()
+                value = z.imag
+                kwargs = merge_config([
+                    {"number_config": {"unit": "i"}},
+                    kwargs,
+                ])
+            else:
+                axis = self.get_x_axis()
+                value = z.real
+            number_mob = axis.get_number_mobject(value, **kwargs)
+            self.coordinate_labels.add(number_mob)
+        return self.coordinate_labels
 
     def add_coordinates(self, *numbers):
-        self.coordinate_labels = self.get_coordinate_labels(*numbers)
-        self.add(self.coordinate_labels)
+        self.add(self.get_coordinate_labels(*numbers))
         return self

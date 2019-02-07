@@ -674,7 +674,7 @@ class QuarterTurn(Scene):
 class UsingTheta(Scene):
     def construct(self):
         plane = NumberPlane(x_unit_size = 3, y_unit_size = 3)
-        # plane.main_lines.fade(0.5)
+        # planes.fade(0.5)
         # plane.secondary_lines.fade(0.5)
         plane.fade(0.5)
         self.add(plane)

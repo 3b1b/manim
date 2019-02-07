@@ -3883,7 +3883,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         self.number_line = number_line
 
     def show_giant_circle(self):
-        self.number_line.main_line.insert_n_curves(10000)
+        self.number_line.insert_n_curves(10000)
         everything = VGroup(*self.mobjects)
         circle = everything.copy()
         circle.move_to(ORIGIN)

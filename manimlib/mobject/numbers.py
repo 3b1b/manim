@@ -26,7 +26,7 @@ class DecimalNumber(VMobject):
             formatter = self.get_formatter()
         num_string = formatter.format(number)
 
-        rounded_num = np.round(float(number), self.num_decimal_places)
+        rounded_num = np.round(number, self.num_decimal_places)
         if num_string.startswith("-") and rounded_num == 0:
             if self.include_sign:
                 num_string = "+" + num_string[1:]

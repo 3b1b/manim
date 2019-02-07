@@ -156,10 +156,10 @@ class SpecialThreeDScene(ThreeDScene):
         axes = ThreeDAxes(**self.three_d_axes_config)
         for axis in axes:
             if self.cut_axes_at_radius:
-                p0 = axis.main_line.get_start()
+                p0 = axis.get_start()
                 p1 = axis.number_to_point(-1)
                 p2 = axis.number_to_point(1)
-                p3 = axis.main_line.get_end()
+                p3 = axis.get_end()
                 new_pieces = VGroup(
                     Line(p0, p1), Line(p1, p2), Line(p2, p3),
                 )

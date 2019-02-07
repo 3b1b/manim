@@ -76,7 +76,7 @@ class NumberlineTransformationScene(ZoomedScene):
             full_config = dict(self.number_line_config)
             full_config.update(added_config)
             number_line = NumberLine(**full_config)
-            number_line.main_line.insert_n_curves(
+            number_line.insert_n_curves(
                 self.num_inserted_number_line_curves
             )
             number_line.shift(zero_point - number_line.number_to_point(0))
@@ -179,12 +179,12 @@ class NumberlineTransformationScene(ZoomedScene):
         self.moving_input_line = input_line_copy
         input_line_copy.remove(input_line_copy.numbers)
         # input_line_copy.set_stroke(width=2)
-        input_line_copy.main_line.insert_n_curves(
+        input_line_copy.insert_n_curves(
             self.num_inserted_number_line_curves
         )
         return AnimationGroup(
             self.get_mapping_animation(
-                func, input_line_copy.main_line,
+                func, input_line_copy,
                 apply_function_to_points
             ),
             self.get_mapping_animation(
@@ -242,7 +242,7 @@ class NumberlineTransformationScene(ZoomedScene):
             zoom_anim.update(1)
             target_mini_line = Line(frame.get_left(), frame.get_right())
             target_mini_line.scale(self.mini_line_scale_factor)
-            target_mini_line.match_style(self.output_line.main_line)
+            target_mini_line.match_style(self.output_line)
             zoom_anim.update(0)
             zcbr_group.submobjects.insert(1, target_mini_line)
         if target_coordinate_values:
@@ -312,7 +312,7 @@ class NumberlineTransformationScene(ZoomedScene):
         mini_line = self.mini_line = Line(frame.get_left(), frame.get_right())
         mini_line.scale(self.mini_line_scale_factor)
         mini_line.insert_n_curves(self.num_inserted_number_line_curves)
-        mini_line.match_style(self.input_line.main_line)
+        mini_line.match_style(self.input_line)
         mini_line_copy = mini_line.copy()
         zcbr_group.add(mini_line_copy, mini_line)
         anims += [FadeIn(mini_line), FadeIn(mini_line_copy)]
@@ -2935,7 +2935,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
     def setup_number_lines(self):
         NumberlineTransformationScene.setup_number_lines(self)
         for line in self.input_line, self.output_line:
-            VGroup(line.main_line, line.tick_marks).set_stroke(width=2)
+            VGroup(line, line.tick_marks).set_stroke(width=2)
 
     def add_function_title(self):
         title = TexMobject("f(x)", "=", "1 +", "\\frac{1}{x}")

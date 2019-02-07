@@ -3223,7 +3223,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         ])
         for axis, label, vect in zip(axes, axes_labels, [RIGHT, UP]):
             label.next_to(
-                axis.main_line, vect,
+                axis, vect,
                 submobject_to_align=label[0]
             )
 
@@ -4297,7 +4297,7 @@ class ZToHalfFlowNearWall(ComplexTransformationScene, MovingCameraScene):
             secondary_line_ratio=0,
         )
         plane.next_to(ORIGIN, UP, buff=0.001)
-        horizontal_lines = VGroup(*[l for l in list(plane.main_lines) + [plane.axes[0]] if np.abs(l.get_center()[0]) < 0.1])
+        horizontal_lines = VGroup(*[l for l in list(planes) + [plane.axes[0]] if np.abs(l.get_center()[0]) < 0.1])
         plane.set_stroke(MAROON_B, width=2)
         horizontal_lines.set_stroke(BLUE, width=2)
 
