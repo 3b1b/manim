@@ -775,12 +775,17 @@ class VMobject(Mobject):
         upper_index, upper_residue = integer_interpolate(0, num_cubics, b)
 
         self.clear_points()
-        self.append_points(partial_bezier_points(
-            bezier_quads[lower_index], lower_residue, 1
-        ))
-        for quad in bezier_quads[lower_index + 1:upper_index]:
-            self.append_points(quad)
-        if upper_index > lower_index:
+        if lower_index == upper_index:
+            self.append_points(partial_bezier_points(
+                bezier_quads[lower_index],
+                lower_residue, upper_residue
+            ))
+        else:
+            self.append_points(partial_bezier_points(
+                bezier_quads[lower_index], lower_residue, 1
+            ))
+            for quad in bezier_quads[lower_index + 1:upper_index]:
+                self.append_points(quad)
             self.append_points(partial_bezier_points(
                 bezier_quads[upper_index], 0, upper_residue
             ))
