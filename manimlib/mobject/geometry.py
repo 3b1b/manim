@@ -1,5 +1,5 @@
 import itertools as it
-
+import warnings
 import numpy as np
 
 from manimlib.constants import *
@@ -8,11 +8,11 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import digest_locals
 from manimlib.utils.paths import path_along_arc
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import center_of_mass
 from manimlib.utils.space_ops import compass_directions
+from manimlib.utils.space_ops import line_intersection
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotate_vector
 
@@ -20,28 +20,33 @@ from manimlib.utils.space_ops import rotate_vector
 class Arc(VMobject):
     CONFIG = {
         "radius": 1.0,
-        "start_angle": 0,
-        "num_anchors": 9,
+        "num_components": 9,
         "anchors_span_full_range": True,
         "arc_center": ORIGIN,
     }
 
-    def __init__(self, angle, **kwargs):
+    def __init__(self, start_angle=0, angle=TAU / 4, **kwargs):
+        self.start_angle = start_angle
         self.angle = angle
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
+        self.set_pre_positioned_points()
+        self.scale(self.radius, about_point=ORIGIN)
+        self.shift(self.arc_center)
+
+    def set_pre_positioned_points(self):
         anchors = np.array([
             np.cos(a) * RIGHT + np.sin(a) * UP
             for a in np.linspace(
                 self.start_angle,
                 self.start_angle + self.angle,
-                self.num_anchors
+                self.num_components,
             )
         ])
         # Figure out which control points will give the
         # Appropriate tangent lines to the circle
-        d_theta = self.angle / (self.num_anchors - 1.0)
+        d_theta = self.angle / (self.num_components - 1.0)
         tangent_vectors = np.zeros(anchors.shape)
         # Rotate all 90 degress, via (x, y) -> (-y, x)
         tangent_vectors[:, 1] = anchors[:, 0]
@@ -54,65 +59,61 @@ class Arc(VMobject):
             handles1, handles2,
             anchors[1:],
         )
-        self.scale(self.radius, about_point=ORIGIN)
-        self.shift(self.arc_center)
 
-    def add_tip(self, tip_length=0.25, at_start=False, at_end=True):
-        # clear out any old tips
-        for submob in self.submobjects:
-            if submob.mark_paths_closed:
-                self.remove(submob)
-
-        # TODO, do this a better way
-        p1 = p2 = p3 = p4 = None
-        start_arrow = end_arrow = None
-        if at_end:
-            p1, p2 = self.points[-3:-1]
-            # self.points[-2:] did overshoot
-            start_arrow = Arrow(
-                p1, 2 * p2 - p1,
-                tip_length=tip_length,
-                max_tip_length_to_length_ratio=2.0
-            )
-            self.add(start_arrow.split()[-1])  # just the tip
-
+    def add_tip(self, tip_length=0.25, at_start=False):
+        tip = self.tip = Triangle(start_angle=PI)
+        tip.match_style(self)
+        tip.set_fill(self.get_stroke_color(), opacity=1)
+        tip.set_height(tip_length)
+        tip.set_width(tip_length, stretch=True)
+        tip.move_to(ORIGIN, LEFT)
+        # Last two control points, defining both
+        # the end, and the tangency direction
         if at_start:
-            p4, p3 = self.points[1:3]
-            # self.points[:2] did overshoot
-            end_arrow = Arrow(
-                p3, 2 * p4 - p3,
-                tip_length=tip_length,
-                max_tip_length_to_length_ratio=2.0
-            )
-            self.add(end_arrow.split()[-1])
-
-        self.set_color(self.get_color())
+            end, handle = self.points[:2]
+        else:
+            handle, end = self.points[-2:]
+        tip.rotate(
+            angle_of_vector(handle - end),
+            about_point=ORIGIN
+        )
+        tip.shift(end)
+        self.add(tip)
         return self
 
     def get_arc_center(self):
-        first_point = self.points[0]
-        radial_unit_vector = np.array(
-            [np.cos(self.start_angle), np.sin(self.start_angle), 0])
-        arc_center = first_point - self.radius * radial_unit_vector
-        return arc_center
+        """
+        Looks at the normals to the first two
+        anchors, and finds their intersection points
+        """
+        # First two anchors and handles
+        a1, h1, h2, a2 = self.points[:4]
+        # Tangent vectors
+        t1 = h1 - a1
+        t2 = h2 - a2
+        # Normals
+        n1 = rotate_vector(t1, TAU / 4)
+        n2 = rotate_vector(t2, TAU / 4)
+        try:
+            return line_intersection(
+                line1=(a1, a1 + n1),
+                line2=(a2, a2 + n2),
+            )
+        except Exception:
+            warnings.warn("Can't find Arc center, using ORIGIN instead")
+            return np.array(ORIGIN)
 
     def move_arc_center_to(self, point):
-        v = point - self.get_arc_center()
-        self.shift(v)
+        self.shift(point - self.get_arc_center())
         return self
 
     def stop_angle(self):
-        return self.start_angle + self.angle
-
-    def set_bound_angles(self, start=0, stop=np.pi):
-        self.start_angle = start
-        self.angle = stop - start
-
-        return self
+        return angle_of_vector(
+            self.points[-1] - self.get_arc_center()
+        ) % TAU
 
 
 class ArcBetweenPoints(Arc):
-
     def __init__(self, start_point, end_point, angle=TAU / 4, **kwargs):
         if angle == 0:
             raise Exception("Arc with zero curve angle: use Line instead.")
@@ -134,34 +135,28 @@ class ArcBetweenPoints(Arc):
         else:
             start_angle = np.pi / 2
 
-        Arc.__init__(self, angle,
-                     radius=radius,
-                     start_angle=start_angle,
-                     **kwargs)
-
-        self.move_arc_center_to(arc_center)
+        Arc.__init__(
+            self,
+            start_angle=start_angle,
+            angle=angle,
+            radius=radius,
+            arc_center=arc_center,
+            **kwargs
+        )
 
 
 class CurvedArrow(ArcBetweenPoints):
-
-    def __init__(self, start_point, end_point, angle=TAU / 4, **kwargs):
-        # I know this is in reverse, but it works
-        if angle >= 0:
-            ArcBetweenPoints.__init__(
-                self, start_point, end_point, angle=angle, **kwargs)
-            self.add_tip(at_start=True, at_end=False)
-        else:
-            ArcBetweenPoints.__init__(
-                self, end_point, start_point, angle=-angle, **kwargs)
-            self.add_tip(at_start=False, at_end=True)
+    def __init__(self, start_point, end_point, **kwargs):
+        ArcBetweenPoints.__init__(self, start_point, end_point, **kwargs)
+        self.add_tip()
 
 
-class CurvedDoubleArrow(ArcBetweenPoints):
-
-    def __init__(self, start_point, end_point, angle=TAU / 4, **kwargs):
-        ArcBetweenPoints.__init__(
-            self, start_point, end_point, angle=angle, **kwargs)
-        self.add_tip(at_start=True, at_end=True)
+class CurvedDoubleArrow(CurvedArrow):
+    def __init__(self, start_point, end_point, **kwargs):
+        CurvedArrow.__init__(
+            self, start_point, end_point, **kwargs
+        )
+        self.add_tip(at_start=True)
 
 
 class Circle(Arc):
@@ -172,7 +167,7 @@ class Circle(Arc):
     }
 
     def __init__(self, **kwargs):
-        Arc.__init__(self, TAU, **kwargs)
+        Arc.__init__(self, 0, TAU, **kwargs)
 
     def surround(self, mobject, dim_to_match=0, stretch=False, buffer_factor=1.2):
         # Ignores dim_to_match and stretch; result will always be a circle
@@ -183,10 +178,11 @@ class Circle(Arc):
         self.replace(mobject, dim_to_match, stretch)
 
         self.set_width(
-            np.sqrt(mobject.get_width()**2 + mobject.get_height()**2))
+            np.sqrt(mobject.get_width()**2 + mobject.get_height()**2)
+        )
         self.scale(buffer_factor)
 
-    def get_point_from_angle(self, angle):
+    def point_at_angle(self, angle):
         start_angle = angle_of_vector(
             self.points[0] - self.get_center()
         )
@@ -714,11 +710,16 @@ class RegularPolygon(Polygon):
         "start_angle": 0
     }
 
-    def __init__(self, n=3, **kwargs):
+    def __init__(self, n=6, **kwargs):
         digest_config(self, kwargs, locals())
         start_vect = rotate_vector(RIGHT, self.start_angle)
         vertices = compass_directions(n, start_vect)
         Polygon.__init__(self, *vertices, **kwargs)
+
+
+class Triangle(RegularPolygon):
+    def __init__(self, **kwargs):
+        RegularPolygon.__init__(self, n=3, **kwargs)
 
 
 class Rectangle(Polygon):

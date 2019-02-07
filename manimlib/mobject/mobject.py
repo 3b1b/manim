@@ -526,9 +526,14 @@ class Mobject(Container):
         self.shift(mobject.get_center() - self.get_center())
         return self
 
-    def surround(self, mobject, dim_to_match=0, stretch=False, buffer_factor=1.2):
+    def surround(self, mobject,
+                 dim_to_match=0,
+                 stretch=False,
+                 buff=MED_SMALL_BUFF):
         self.replace(mobject, dim_to_match, stretch)
-        self.scale_in_place(buffer_factor)
+        length = mobject.length_over_dim(dim_to_match)
+        self.scale_in_place((length + buff) / length)
+        return self
 
     def position_endpoints_on(self, start, end):
         curr_vect = self.points[-1] - self.points[0]

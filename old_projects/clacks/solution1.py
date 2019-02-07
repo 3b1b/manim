@@ -2641,7 +2641,7 @@ class UnitCircleIntuition(Scene):
         def get_r_line():
             return Line(
                 circle.get_center(),
-                circle.get_point_from_angle(get_theta())
+                circle.point_at_angle(get_theta())
             )
         r_line = updating_mobject_from_func(get_r_line)
 
@@ -2673,7 +2673,7 @@ class UnitCircleIntuition(Scene):
         theta_label = updating_mobject_from_func(get_theta_label)
 
         def get_height_line():
-            p2 = circle.get_point_from_angle(get_theta())
+            p2 = circle.point_at_angle(get_theta())
             p1 = np.array(p2)
             p1[1] = circle.get_center()[1]
             return Line(
@@ -2685,7 +2685,7 @@ class UnitCircleIntuition(Scene):
 
         def get_width_line():
             p2 = circle.get_center()
-            p1 = circle.get_point_from_angle(get_theta())
+            p1 = circle.point_at_angle(get_theta())
             p1[1] = p2[1]
             return Line(
                 p1, p2,
