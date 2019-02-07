@@ -1268,7 +1268,7 @@ class DotsHoppingToColor(InputOutputScene):
         # Show yellow points
         inspector = DashedLine(
             ORIGIN, TAU*UP,
-            dashed_segment_length = TAU/24,
+            dash_length = TAU/24,
             fill_opacity = 0,
             stroke_width = 3,
             stroke_color = WHITE,

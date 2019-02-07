@@ -1533,7 +1533,7 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
             DashedLine(
                 ps_vect.get_end(),
                 vect.get_end(),
-                dashed_segment_length=0.01,
+                dash_length=0.01,
                 color=vect.get_color(),
             )
             for vect in (x_vect, y_vect)

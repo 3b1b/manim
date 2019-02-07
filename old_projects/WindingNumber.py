@@ -127,7 +127,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             target_line_object = DashedLine(
                 self.coords_to_point(self.x_min, self.targetY), 
                 self.coords_to_point(self.x_max, self.targetY),
-                dashed_segment_length = 0.1)
+                dash_length = 0.1)
             self.add(target_line_object)
 
             target_label_num = 0 if self.show_y_as_deviation else self.targetY

@@ -250,7 +250,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
                 x, self.graph,
                 line_class = DashedLine,
                 color = RED,
-                dashed_segment_length = 0.025
+                dash_length = 0.025
             )
             for x in (self.start_x, self.start_x+self.dx)
         ]
@@ -2536,7 +2536,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         interim_point = nudged_point[0]*RIGHT+point[1]*UP
         h_line = DashedLine(
             interim_point, point, 
-            dashed_segment_length = 0.01
+            dash_length = 0.01
         )
         d_sine_line = Line(interim_point, nudged_point, color = DERIVATIVE_COLOR)
         d_sine_brace = Brace(Line(ORIGIN, UP), LEFT)

@@ -735,7 +735,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
         )
         path.apply_matrix(z_to_vector(start))
 
-        dashed_path = DashedMobject(path)
+        dashed_path = DashedVMobject(path)
         dashed_path.set_shade_in_3d(True)
 
         return dashed_path
@@ -747,9 +747,9 @@ class FunctionGInputSpace(SpecialThreeDScene):
             np.sin(lat)
         ]))
         equator.rotate(-90 * DEGREES)
-        dashed_equator = DashedMobject(
+        dashed_equator = DashedVMobject(
             equator,
-            dashes_num=40,
+            num_dashes=40,
             color=RED,
         )
         dashed_equator.set_shade_in_3d(True)
@@ -882,7 +882,7 @@ class FunctionGOutputSpace(FunctionGInputSpace):
         ])
         pre_path.rotate(-45 * DEGREES, about_point=ORIGIN)
         pre_path.shift(dot.get_center())
-        path = DashedMobject(pre_path)
+        path = DashedVMobject(pre_path)
 
         fp_label = self.fp_label
         equals = TexMobject("=")

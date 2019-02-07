@@ -1525,7 +1525,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
             DashedLine(
                 d1.get_center(), d2.get_center(), 
                 buff = 0, color = d1.get_color(),
-                dashed_segment_length = 0.15
+                dash_length = 0.15
             )
             for d1, d2 in zip(dots, proj_dots)
         ])
@@ -1941,7 +1941,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             b.proj = get_vect_mob_projection(b, self.u_hat)
             b.proj_line = DashedLine(
                 b.get_end(), b.proj.get_end(),
-                dashed_segment_length = 0.05
+                dash_length = 0.05
             )
             b.proj.label = TexMobject("u_%s"%char)
             b.proj.label.set_color(b.get_color())

@@ -981,7 +981,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         input_point_line = self.get_vertical_line_to_graph(
             self.start_time,
             line_kwargs = {
-                "dashed_segment_length" : 0.02,
+                "dash_length" : 0.02,
                 "stroke_width" : 4,
                 "color" : WHITE,
             },
@@ -1687,7 +1687,7 @@ class TCubedExample(SecantLineToTangentLine):
                 line_class = DashedLine,
                 line_kwargs = {
                     "color" : WHITE,
-                    "dashed_segment_length" : 0.05,
+                    "dash_length" : 0.05,
                 }
             )
             for time in (self.start_time, self.start_time+self.start_dt)

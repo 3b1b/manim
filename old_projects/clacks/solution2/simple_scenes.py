@@ -179,7 +179,7 @@ class ShowDotProductMeaning(Scene):
                 v_vect.get_end(),
                 proj_v.get_end(),
                 stroke_width=1,
-                dashed_segment_length=0.025,
+                dash_length=0.025,
             )
         proj_line = updating_mobject_from_func(get_proj_line)
 

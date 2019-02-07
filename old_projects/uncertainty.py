@@ -1937,7 +1937,7 @@ class IntroduceDopplerRadar(Scene):
             frequency_axes.coords_to_point(8, 0),
             frequency_axes.coords_to_point(8, 1.2*f_max),
             color = YELLOW,
-            dashed_segment_length = 0.025,
+            dash_length = 0.025,
         )
         v_line_pair = VGroup(*[
             v_line.copy().shift(u*0.6*RIGHT)

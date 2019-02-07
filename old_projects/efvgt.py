@@ -1028,7 +1028,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
 class DihedralGroupStructure(SymmetriesOfSquare):
     CONFIG = {
         "dashed_line_config" : {
-            "dashed_segment_length" : 0.1
+            "dash_length" : 0.1
         },
         "filed_sum_scale_factor" : 0.4,
         "num_rows" : 5,

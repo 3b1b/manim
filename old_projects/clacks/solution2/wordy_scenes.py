@@ -26,10 +26,10 @@ class ConnectionToOptics(Scene):
         width += 2 * MED_SMALL_BUFF
         rects = VGroup()
         for k in [0, 2]:
-            rect = DashedMobject(Rectangle(
+            rect = DashedVMobject(Rectangle(
                 height=FRAME_HEIGHT - 1.5,
                 width=width
-            ), dashes_num=100)
+            ), num_dashes=100)
             rect.move_to(everything.target[k])
             rect.to_edge(DOWN, buff=SMALL_BUFF)
             rects.add(rect)

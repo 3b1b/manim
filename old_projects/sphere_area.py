@@ -789,7 +789,7 @@ class ShowProjection(SphereCylinderScene):
         ])
         for lines in lat_lines, lon_lines:
             for line in lines:
-                line.add(DashedMobject(line, spacing=-1))
+                line.add(DashedVMobject(line, spacing=-1))
                 line.set_points([])
                 line.set_stroke(width=2)
             lines.set_shade_in_3d(True)
