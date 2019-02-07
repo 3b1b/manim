@@ -1,5 +1,5 @@
 import numpy as np
-import itertools as it
+import numbers
 
 from manimlib.constants import *
 from manimlib.mobject.functions import ParametricFunction
@@ -215,6 +215,7 @@ class NumberPlane(Axes):
         "background_line_style": {
             "stroke_color": BLUE_D,
             "stroke_width": 2,
+            "stroke_opacity": 1,
         },
         # Defaults to a faded version of line_config
         "faded_line_style": None,
@@ -232,16 +233,13 @@ class NumberPlane(Axes):
 
     def init_background_lines(self):
         if self.faded_line_style is None:
-            background_line_style = self.background_line_style
-            color = background_line_style.get(
-                "stroke_color", WHITE
-            )
-            stroke_width = background_line_style.get("stroke_width", 2) / 2
-            self.faded_line_style = {
-                "stroke_color": color,
-                "stroke_width": stroke_width,
-                "stroke_opacity": 0.5,
-            }
+            style = dict(self.background_line_style)
+            # For anything numerical, like stroke_width
+            # and stroke_opacity, chop it in half
+            for key in style:
+                if isinstance(style[key], numbers.Number):
+                    style[key] *= 0.5
+            self.faded_line_style = style
 
         self.background_lines, self.faded_lines = self.get_lines()
         self.background_lines.set_style(
