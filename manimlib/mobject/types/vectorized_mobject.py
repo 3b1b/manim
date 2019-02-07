@@ -788,6 +788,11 @@ class VMobject(Mobject):
             ))
         return self
 
+    def get_subcurve(self, a, b):
+        vmob = self.copy()
+        vmob.pointwise_become_partial(self, a, b)
+        return vmob
+
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects, **kwargs):
@@ -834,21 +839,31 @@ class CurvesAsSubmobjects(VGroup):
             self.add(part)
 
 
-class DashedMobject(VMobject):
+class DashedVMobject(VMobject):
     CONFIG = {
-        "dashes_num": 15,
-        "spacing": 0.5,
+        "num_dashes": 15,
+        "positive_space_ratio": 0.5,
         "color": WHITE
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, vmobject, **kwargs):
         VMobject.__init__(self, **kwargs)
+        num_dashes = self.num_dashes
+        ps_ratio = self.positive_space_ratio
 
-        buff = float(self.spacing) / self.dashes_num
+        # End points of the unit interval for division
+        alphas = np.linspace(0, 1, num_dashes + 1)
+        # This determines the length of each "dash"
+        full_d_alpha = (1.0 / num_dashes)
+        partial_d_alpha = full_d_alpha * ps_ratio
+        # Rescale so that the last point of vmobject will
+        # be the end of the last dash
+        alphas /= (1 - full_d_alpha + partial_d_alpha)
 
-        for i in range(self.dashes_num):
-            a = ((1 + buff) * i) / self.dashes_num
-            b = 1 - ((1 + buff) * (self.dashes_num - 1 - i)) / self.dashes_num
-            dash = VMobject(color=self.get_color())
-            dash.pointwise_become_partial(mobject, a, b)
-            self.submobjects.append(dash)
+        self.add(*[
+            vmobject.get_subcurve(alpha, alpha + partial_d_alpha)
+            for alpha in alphas[:-1]
+        ])
+        # Family is already taken care of by get_subcurve
+        # implementation
+        self.match_style(vmobject, family=False)
