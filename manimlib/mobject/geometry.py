@@ -17,6 +17,9 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotate_vector
 
 
+DEFAULT_DOT_RADIUS = 0.08
+
+
 class Arc(VMobject):
     CONFIG = {
         "radius": 1.0,
@@ -193,32 +196,29 @@ class Circle(Arc):
 
 class Dot(Circle):
     CONFIG = {
-        "radius": 0.08,
+        "radius": DEFAULT_DOT_RADIUS,
         "stroke_width": 0,
         "fill_opacity": 1.0,
         "color": WHITE
     }
 
     def __init__(self, point=ORIGIN, **kwargs):
-        Circle.__init__(self, **kwargs)
-        self.shift(point)
-        self.init_colors()
+        Circle.__init__(self, arc_center=point, **kwargs)
 
 
-class Ellipse(VMobject):
+class Ellipse(Circle):
     CONFIG = {
         "width": 2,
         "height": 1
     }
 
-    def generate_points(self):
-        circle = Circle(radius=1)
-        circle = circle.stretch_to_fit_width(self.width)
-        circle = circle.stretch_to_fit_height(self.height)
-        self.points = circle.points
+    def __init__(self, **kwargs):
+        Circle.__init__(self, **kwargs)
+        self.set_width(width, stretch=True)
+        self.set_height(width, stretch=True)
 
 
-class AnnularSector(VMobject):
+class AnnularSector(Arc):
     CONFIG = {
         "inner_radius": 1,
         "outer_radius": 2,
@@ -227,45 +227,23 @@ class AnnularSector(VMobject):
         "fill_opacity": 1,
         "stroke_width": 0,
         "color": WHITE,
-        "mark_paths_closed": True,
     }
 
     def generate_points(self):
-        arc1 = Arc(
-            angle=self.angle,
-            start_angle=self.start_angle,
-            radius=self.inner_radius,
-        )
-        arc2 = Arc(
-            angle=-1 * self.angle,
-            start_angle=self.start_angle + self.angle,
-            radius=self.outer_radius,
-        )
-        a1_to_a2_points = np.array([
-            interpolate(arc1.points[-1], arc2.points[0], alpha)
-            for alpha in np.linspace(0, 1, 4)
-        ])
-        a2_to_a1_points = np.array([
-            interpolate(arc2.points[-1], arc1.points[0], alpha)
-            for alpha in np.linspace(0, 1, 4)
-        ])
-        self.points = np.array(arc1.points)
-        self.add_cubic_bezier_curve(*a1_to_a2_points[1:])
-        self.add_cubic_bezier_curve(*arc2.points[1:])
-        self.add_cubic_bezier_curve(*a2_to_a1_points[1:])
-
-    def get_arc_center(self):
-        first_point = self.points[0]
-        last_point = self.points[-2]
-        v = last_point - first_point
-        radial_unit_vector = v / get_norm(v)
-        arc_center = first_point - self.inner_radius * radial_unit_vector
-        return arc_center
-
-    def move_arc_center_to(self, point):
-        v = point - self.get_arc_center()
-        self.shift(v)
-        return self
+        inner_arc, outer_arc = [
+            Arc(
+                start_angle=self.start_angle,
+                angle=self.angle,
+                radius=radius,
+                arc_center=self.arc_center,
+            )
+            for radius in (self.inner_radius, self.outer_radius)
+        ]
+        outer_arc.reverse_points()
+        self.append_points(inner_arc.points)
+        self.add_line_to(outer_arc.points[0])
+        self.append_points(outer_arc.points)
+        self.add_line_to(inner_arc.points[0])
 
 
 class Sector(AnnularSector):
@@ -273,14 +251,6 @@ class Sector(AnnularSector):
         "outer_radius": 1,
         "inner_radius": 0
     }
-
-    @property
-    def radius(self):
-        return self.outer_radius
-
-    @radius.setter
-    def radius(self, new_radius):
-        self.outer_radius = new_radius
 
 
 class Annulus(Circle):
@@ -294,13 +264,13 @@ class Annulus(Circle):
     }
 
     def generate_points(self):
-        self.points = []
         self.radius = self.outer_radius
         outer_circle = Circle(radius=self.outer_radius)
         inner_circle = Circle(radius=self.inner_radius)
-        inner_circle.flip()
-        self.points = outer_circle.points
-        self.add_subpath(inner_circle.points)
+        inner_circle.reverse_points()
+        self.append_points(outer_circle.points)
+        self.append_points(inner_circle.points)
+        self.shift(self.arc_center)
 
 
 class Line(VMobject):
