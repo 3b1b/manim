@@ -8,12 +8,12 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.paths import path_along_arc
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import center_of_mass
 from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import line_intersection
 from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 
 
@@ -118,34 +118,14 @@ class Arc(VMobject):
 
 class ArcBetweenPoints(Arc):
     def __init__(self, start_point, end_point, angle=TAU / 4, **kwargs):
-        if angle == 0:
-            raise Exception("Arc with zero curve angle: use Line instead.")
-
-        midpoint = 0.5 * (start_point + end_point)
-        distance_vector = end_point - start_point
-        normal_vector = np.array([-distance_vector[1], distance_vector[0], 0])
-        distance = get_norm(normal_vector)
-        normal_vector /= distance
-        if angle < 0:
-            normal_vector *= -1
-
-        radius = distance / 2 / np.sin(0.5 * np.abs(angle))
-        length = distance / 2 / np.tan(0.5 * np.abs(angle))
-        arc_center = midpoint + length * normal_vector
-        w = start_point - arc_center
-        if w[0] != 0:
-            start_angle = np.arctan2(w[1], w[0])
-        else:
-            start_angle = np.pi / 2
-
         Arc.__init__(
             self,
-            start_angle=start_angle,
             angle=angle,
-            radius=radius,
-            arc_center=arc_center,
-            **kwargs
+            **kwargs,
         )
+        if angle == 0:
+            self.set_points_as_corners([LEFT, RIGHT])
+        self.put_start_and_end_on(start_point, end_point)
 
 
 class CurvedArrow(ArcBetweenPoints):
@@ -277,7 +257,6 @@ class Line(VMobject):
     CONFIG = {
         "buff": 0,
         "path_arc": None,  # angle of arc specified here
-        "n_arc_anchors": 10,  # Only used if path_arc is not None
     }
 
     def __init__(self, start, end, **kwargs):
@@ -286,14 +265,14 @@ class Line(VMobject):
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        if self.path_arc is None:
-            self.set_points_as_corners([self.start, self.end])
+        if self.path_arc:
+            arc = ArcBetweenPoints(
+                self.start, self.end,
+                angle=self.path_arc
+            )
+            self.set_points(arc.points)
         else:
-            path_func = path_along_arc(self.path_arc)
-            self.set_points_smoothly([
-                path_func(self.start, self.end, alpha)
-                for alpha in np.linspace(0, 1, self.n_arc_anchors)
-            ])
+            self.set_points_as_corners([self.start, self.end])
         self.account_for_buff()
 
     def set_path_arc(self, new_value):
@@ -301,8 +280,10 @@ class Line(VMobject):
         self.generate_points()
 
     def account_for_buff(self):
+        if self.buff == 0:
+            return
         length = self.get_arc_length()
-        if length < 2 * self.buff or self.buff == 0:
+        if length < 2 * self.buff:
             return
         buff_proportion = self.buff / length
         self.pointwise_become_partial(
@@ -310,20 +291,24 @@ class Line(VMobject):
         )
 
     def set_start_and_end(self, start, end):
-        start_to_end = self.pointify(end) - self.pointify(start)
-        vect = np.zeros(len(start_to_end))
-        longer_dim = np.argmax(list(map(abs, start_to_end)))
-        vect[longer_dim] = start_to_end[longer_dim]
-        self.start, self.end = [
-            arg.get_edge_center(unit * vect)
-            if isinstance(arg, Mobject)
-            else np.array(arg)
-            for arg, unit in zip([start, end], [1, -1])
-        ]
+        # If either start or end are Mobjects, this
+        # gives their centers
+        rough_start = self.pointify(start)
+        rough_end = self.pointify(end)
+        vect = normalize(rough_end - rough_start)
+        # Now that we know the direction between them,
+        # we can the appropriate boundary point from
+        # start and end, if they're mobjects
+        self.start = self.pointify(start, vect)
+        self.end = self.pointify(end, -vect)
 
-    def pointify(self, mob_or_point):
+    def pointify(self, mob_or_point, direction=None):
         if isinstance(mob_or_point, Mobject):
-            return mob_or_point.get_center()
+            mob = mob_or_point
+            if direction is None:
+                return mob.get_center()
+            else:
+                return mob.get_boundary_point(direction)
         return np.array(mob_or_point)
 
     def get_length(self):
@@ -332,11 +317,13 @@ class Line(VMobject):
 
     def get_arc_length(self):
         if self.path_arc:
-            anchors = self.get_anchors()
-            return sum([
-                get_norm(a2 - a1)
-                for a1, a2 in zip(anchors, anchors[1:])
+            points = np.array([
+                self.point_from_proportion(a)
+                for a in np.linspace(0, 1, 100)
             ])
+            diffs = points[1:] - points[:-1]
+            norms = np.apply_along_axis(get_norm, 1, diffs)
+            return np.sum(norms)
         else:
             return self.get_length()
 
