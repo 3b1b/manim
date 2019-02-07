@@ -1,4 +1,3 @@
-import itertools as it
 import warnings
 import numpy as np
 
@@ -6,8 +5,9 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.bezier import interpolate
+from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import center_of_mass
 from manimlib.utils.space_ops import compass_directions
@@ -18,6 +18,7 @@ from manimlib.utils.space_ops import rotate_vector
 
 
 DEFAULT_DOT_RADIUS = 0.08
+DEFAULT_DASH_LENGTH = 0.05
 
 
 class Arc(VMobject):
@@ -345,85 +346,52 @@ class Line(VMobject):
             about_point=self.get_start(),
         )
 
-    def put_start_and_end_on(self, new_start, new_end):
-        self.start = new_start
-        self.end = new_end
-        self.buff = 0
-        self.generate_points()
-        return
-
-    def put_start_and_end_on_with_projection(self, new_start, new_end):
-        target_vect = np.array(new_end) - np.array(new_start)
-        curr_vect = self.get_vector()
-        curr_norm = get_norm(curr_vect)
-        if curr_norm == 0:
-            self.put_start_and_end_on(new_start, new_end)
-            return
-        target_norm = get_norm(target_vect)
-        if target_norm == 0:
-            epsilon = 0.001
-            self.scale(epsilon / curr_norm)
-            self.move_to(new_start)
-            return
-        unit_target = target_vect / target_norm
-        unit_curr = curr_vect / curr_norm
-        normal = np.cross(unit_target, unit_curr)
-        if get_norm(normal) == 0:
-            if unit_curr[0] == 0 and unit_curr[1] == 0:
-                normal = UP
-            else:
-                normal = OUT
-        angle_diff = np.arccos(
-            np.clip(np.dot(unit_target, unit_curr), -1, 1)
-        )
-        self.scale(target_norm / curr_norm)
-        self.rotate(-angle_diff, normal)
-        self.shift(new_start - self.get_start())
-        return self
-
 
 class DashedLine(Line):
     CONFIG = {
-        "dashed_segment_length": 0.05
+        "dash_length": DEFAULT_DASH_LENGTH,
+        "dash_spacing": None,
+        "positive_space_ratio": 0.5,
     }
 
     def __init__(self, *args, **kwargs):
-        self.init_kwargs = kwargs
         Line.__init__(self, *args, **kwargs)
+        ps_ratio = self.positive_space_ratio
+        num_dashes = self.calculate_num_dashes(ps_ratio)
+        dashes = DashedVMobject(
+            self,
+            num_dashes=num_dashes,
+            positive_space_ratio=ps_ratio
+        )
+        self.clear_points()
+        self.add(*dashes)
 
-    def generate_points(self):
-        length = get_norm(self.end - self.start)
-        if length == 0:
-            self.add(Line(self.start, self.end))
-            return self
-        num_interp_points = int(length / self.dashed_segment_length)
-        # Even number ensures that start and end points are hit
-        if num_interp_points % 2 == 1:
-            num_interp_points += 1
-        points = [
-            interpolate(self.start, self.end, alpha)
-            for alpha in np.linspace(0, 1, num_interp_points)
-        ]
-        includes = it.cycle([True, False])
-        self.submobjects = [
-            Line(p1, p2, **self.init_kwargs)
-            for p1, p2, include in zip(points, points[1:], includes)
-            if include
-        ]
-        self.put_start_and_end_on_with_projection(self.start, self.end)
-        return self
+    def calculate_num_dashes(self, positive_space_ratio):
+        try:
+            full_length = self.dash_length / positive_space_ratio
+            return int(np.ceil(
+                self.get_length() / full_length
+            ))
+        except ZeroDivisionError:
+            return 1
+
+    def calculate_positive_space_ratio(self):
+        return fdiv(
+            self.dash_length,
+            self.dash_length + self.dash_spacing,
+        )
 
     def get_start(self):
-        if len(self.points) > 0:
-            return self[0].points[0]
+        if len(self.submobjects) > 0:
+            return self.submobjects[0].get_start()
         else:
-            return self.start
+            return Line.get_start(self)
 
     def get_end(self):
-        if len(self) > 0:
-            return self[-1].points[-1]
+        if len(self.submobjects) > 0:
+            return self.submobjects[-1].get_end()
         else:
-            return self.end
+            return Line.get_end(self)
 
 
 class Elbow(VMobject):
