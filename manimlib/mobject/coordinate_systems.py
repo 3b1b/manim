@@ -17,7 +17,6 @@ from manimlib.utils.space_ops import angle_of_vector
 
 class Axes(VGroup):
     CONFIG = {
-        "propagate_style_to_family": True,
         "three_d": False,
         "number_line_config": {
             "color": LIGHT_GREY,

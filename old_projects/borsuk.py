@@ -6,7 +6,6 @@ class Jewel(VMobject):
         "color" : WHITE,
         "fill_opacity" : 0.75,
         "stroke_width" : 0,
-        "propagate_style_to_family" : True,
         "height" : 0.5,
         "num_equator_points" : 5,
         "sun_vect" : OUT+LEFT+UP,

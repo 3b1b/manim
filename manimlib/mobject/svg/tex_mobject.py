@@ -32,7 +32,6 @@ class SingleStringTexMobject(SVGMobject):
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
-        "propagate_style_to_family": True,
         "alignment": "",
     }
 

@@ -295,7 +295,6 @@ class Annulus(Circle):
         "stroke_width": 0,
         "color": WHITE,
         "mark_paths_closed": False,
-        "propagate_style_to_family": True
     }
 
     def generate_points(self):
@@ -514,7 +513,6 @@ class Arrow(Line):
         "max_tip_length_to_length_ratio": 0.35,
         "max_stem_width_to_tip_width_ratio": 0.3,
         "buff": MED_SMALL_BUFF,
-        "propagate_style_to_family": False,
         "preserve_tip_size_when_scaling": True,
         "normal_vector": OUT,
         "use_rectangular_stem": True,

@@ -49,13 +49,13 @@ class VMobject(Mobject):
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
         "close_new_points": False,
-        "propagate_style_to_family": False,
         "pre_function_handle_to_anchor_scale_factor": 0.01,
         "make_smooth_after_applying_functions": False,
         "background_image_file": None,
         "shade_in_3d": False,
         # This is within a pixel
-        # TODO, what if you're rather zoomed in?
+        # TODO, do we care about accounting for
+        # varying zoom levels?
         "tolerance_for_point_equality": 1e-6,
         "n_points_per_cubic_curve": 4,
     }
@@ -68,24 +68,20 @@ class VMobject(Mobject):
         self.set_fill(
             color=self.fill_color or self.color,
             opacity=self.fill_opacity,
-            family=self.propagate_style_to_family
         )
         self.set_stroke(
             color=self.stroke_color or self.color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
-            family=self.propagate_style_to_family
         )
         self.set_background_stroke(
             color=self.background_stroke_color,
             width=self.background_stroke_width,
             opacity=self.background_stroke_opacity,
-            family=self.propagate_style_to_family,
         )
         self.set_sheen(
             factor=self.sheen_factor,
             direction=self.sheen_direction,
-            family=self.propagate_style_to_family
         )
         return self
 

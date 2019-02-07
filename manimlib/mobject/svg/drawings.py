@@ -177,7 +177,6 @@ class PartyHat(SVGMobject):
         "pi_creature": None,
         "stroke_width": 0,
         "fill_opacity": 1,
-        "propagate_style_to_family": True,
         "frills_colors": [MAROON_B, PURPLE],
         "cone_color": GREEN,
         "dots_colors": [YELLOW],
@@ -284,7 +283,6 @@ class PatreonLogo(SVGMobject):
         "fill_opacity": 1,
         "stroke_width": 0,
         "width": 4,
-        "propagate_style_to_family": True
     }
 
     def __init__(self, **kwargs):
@@ -345,9 +343,7 @@ class Headphones(SVGMobject):
 
 
 class Clock(VGroup):
-    CONFIG = {
-        "propagate_style_to_family": True,
-    }
+    CONFIG = {}
 
     def __init__(self, **kwargs):
         circle = Circle()
@@ -415,7 +411,6 @@ class Bubble(SVGMobject):
         "width": 8,
         "bubble_center_adjustment_factor": 1. / 8,
         "file_name": None,
-        "propagate_style_to_family": True,
         "fill_color": BLACK,
         "fill_opacity": 0.8,
         "stroke_color": WHITE,

@@ -38,7 +38,6 @@ class SVGMobject(VMobject):
         "stroke_width": 0,
         "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
-        "propagate_style_to_family": True,
     }
 
     def __init__(self, file_name=None, **kwargs):

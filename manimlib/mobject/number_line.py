@@ -29,7 +29,6 @@ class NumberLine(VMobject):
         "label_direction": DOWN,
         "line_to_number_buff": MED_SMALL_BUFF,
         "include_tip": False,
-        "propagate_style_to_family": True,
         "decimal_number_config": {
             "num_decimal_places": 0,
         }

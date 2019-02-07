@@ -40,7 +40,6 @@ class ParametricFunction(VMobject):
             *(discontinuities + dt),
         ]
         boundary_times.sort()
-        print(boundary_times)
         for t1, t2 in zip(boundary_times[0::2], boundary_times[1::2]):
             t_range = list(np.arange(t1, t2, step_size))
             if t_range[-1] != t2:
