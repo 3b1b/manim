@@ -535,7 +535,7 @@ class Mobject(Container):
         self.scale_in_place((length + buff) / length)
         return self
 
-    def position_endpoints_on(self, start, end):
+    def put_start_and_end_on(self, start, end):
         curr_vect = self.points[-1] - self.points[0]
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")

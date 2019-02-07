@@ -291,7 +291,7 @@ class TryManyPaths(PathSlidingScene):
         start = target_path.points[0]
         end = target_path.points[-1]
         for path in paths:
-            path.position_endpoints_on(start, end)
+            path.put_start_and_end_on(start, end)
 
 
 class RollingRandolph(PathSlidingScene):
@@ -331,7 +331,7 @@ class NotTheCircle(PathSlidingScene):
         self.play(FadeOut(radius))
         self.play(
             ApplyMethod(
-                path.position_endpoints_on, start, end,
+                path.put_start_and_end_on, start, end,
                 path_func = path_along_arc(-angle)
             ),
             run_time = 3
