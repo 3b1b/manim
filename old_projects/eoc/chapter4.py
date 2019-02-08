@@ -90,7 +90,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
             self.play(
                 interior.set_color, YELLOW,
                 *added_anims,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             self.wait()
         self.wait()
@@ -165,7 +165,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         modes = 3*["erm"] + 3*["pleading"]
         for part, mode in zip(parts, modes):
             self.play(
-                FadeIn(part, submobject_mode = "lagged_start"),
+                FadeIn(part, lag_ratio = 0.5),
                 self.get_teacher().change_mode, "raise_right_hand",
                 *[
                     ApplyMethod(pi.change_mode, mode)
@@ -1727,7 +1727,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
         self.wait()
         self.play(
             all_x_squared_relevant_labels.restore,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             lag_factor = 3,
             run_time = 3,
         )

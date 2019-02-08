@@ -261,7 +261,7 @@ class WhatHappensToOneSquareHappensToAll(LinearTransformationScene):
             square.shift(position)
             squares.add(square)
         self.play(FadeIn(
-            squares, submobject_mode = "lagged_start",
+            squares, lag_ratio = 0.5,
             run_time = 3
         ))
         self.add_transformable_mobject(squares)
@@ -295,7 +295,7 @@ class BreakBlobIntoGridSquares(LinearTransformationScene):
             if blob.probably_contains(point):
                 squares.add(square.copy().shift(point))
         self.play(ShowCreation(
-            squares, submobject_mode = "lagged_start",
+            squares, lag_ratio = 0.5,
             run_time = 2,
         ))
         self.add_transformable_mobject(squares)
@@ -418,7 +418,7 @@ class NextFewVideos(Scene):
         icons.to_edge(LEFT)
 
         self.play(
-            FadeIn(icons, submobject_mode = "lagged_start"),
+            FadeIn(icons, lag_ratio = 0.5),
             run_time = 3
         )
         self.wait()
@@ -485,7 +485,7 @@ class FlipSpaceOver(Scene):
             plane.add(text)
 
         self.play(ShowCreation(
-            plane1, submobject_mode = "lagged_start",
+            plane1, lag_ratio = 0.5,
             run_time = 1
         ))
         self.wait()
@@ -971,7 +971,7 @@ class FullFormulaExplanation(LinearTransformationScene):
             everyone.add(shape, tex_mob)
         self.play(FadeIn(
             everyone, 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 1
         ))
 

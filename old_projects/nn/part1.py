@@ -237,7 +237,7 @@ class NetworkMobject(VGroup):
         return [ShowCreationThenDestruction(
             edge_group_copy, 
             run_time = self.edge_propogation_time,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )]
 
     def add_output_labels(self):
@@ -428,14 +428,14 @@ class ExampleThrees(PiCreatureScene):
             moving_three.target[0].set_stroke(width = 0)
             moving_three.target[1].space_out_submobjects(1.5)
             self.play(MoveToTarget(
-                moving_three, submobject_mode = "lagged_start"
+                moving_three, lag_ratio = 0.5
             ))
             self.play(
                 Animation(randy),
                 moving_three.replace, randy.eyes[1],
                 moving_three.scale_in_place, 0.7,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             )
             self.play(
                 Animation(randy),
@@ -668,7 +668,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         )
         self.play(ShowCreation(
             network_mob.edge_groups,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
             lag_factor = 8,
             rate_func=linear,
@@ -870,7 +870,7 @@ class AlternateNeuralNetworks(PiCreatureScene):
         self.wait()
         self.play(
             examples[0].shift, MED_LARGE_BUFF*UP,
-            FadeIn(examples[1], submobject_mode = "lagged_start"),
+            FadeIn(examples[1], lag_ratio = 0.5),
         )
         self.wait()
         self.play(
@@ -1424,7 +1424,7 @@ class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
         return Transform(
             mover, target, 
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             remover = True
         )
 
@@ -1655,7 +1655,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         self.play(
             FadeIn(
                 network_mob,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3,
             ),
             MoveToTarget(patterns)
@@ -2003,7 +2003,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
                 ShowCreationThenDestruction(
                     edge_groups[i-1],
                     run_time = 2,
-                    submobject_mode = "lagged_start"
+                    lag_ratio = 0.5
                 ),
                 FadeIn(active_layers[i])
             )
@@ -2014,7 +2014,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         self.play(MoveToTarget(
             neurons,
             remover = True,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
 
@@ -2075,7 +2075,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         self.play(MoveToTarget(
             image_group,
             rate_func = there_and_back,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
 
@@ -2254,7 +2254,7 @@ class IntroduceWeights(IntroduceEachLayer):
             FadeOut(self.network_mob.output_labels),
             Animation(neuron),
             neuron.edges_in.set_stroke, None, 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
 
@@ -2279,13 +2279,13 @@ class IntroduceWeights(IntroduceEachLayer):
             FadeIn(rect),
             ShowCreation(
                 pixels, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2,
             )
         )
         self.play(
             pixels_to_detect.set_fill, WHITE, 1,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.wait(2)
@@ -2507,7 +2507,7 @@ class IntroduceWeights(IntroduceEachLayer):
         self.play(
             FadeIn(
                 VGroup(*weight_grid[len(decimals):]),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ),
             *[
@@ -2538,13 +2538,13 @@ class IntroduceWeights(IntroduceEachLayer):
         self.play(MoveToTarget(
             weight_grid,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(Transform(
             pixels, digit,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(weight_grid.move_to, pixels)
@@ -2554,7 +2554,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 self.pixels_to_detect.copy(),
                 self.weighted_sum,
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(weight_grid),
         )
@@ -2878,7 +2878,7 @@ class IncludeBias(IntroduceWeights):
             colored_pixels.shift, MED_LARGE_BUFF*UP,
             rate_func = there_and_back,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -3037,7 +3037,7 @@ class ShowRemainingNetwork(IntroduceWeights):
                 ]
             edges.set_stroke(width = 2)
             self.play(
-                ShowCreation(edges, submobject_mode = "lagged_start"),
+                ShowCreation(edges, lag_ratio = 0.5),
                 FadeIn(neuron),
                 *added_anims,
                 run_time = 1.5
@@ -3597,7 +3597,7 @@ class IntroduceWeightMatrix(NetworkScene):
         self.play(FadeIn(
             lower_rows,
             run_time = 3,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait()
 
@@ -4072,7 +4072,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             FadeIn(
                 mob, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in (self.network_mob.layers, self.network_mob.edge_groups)
         ]

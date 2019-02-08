@@ -213,7 +213,7 @@ class PreviewLearning(NetworkScene):
         layer_animation = Transform(
             VGroup(*layers), VGroup(*active_layers),
             run_time = run_time,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             rate_func=linear,
         )
 
@@ -615,7 +615,7 @@ class IntroduceCostFunction(PreviewLearning):
         edges.remove(*neuron.edges_in)
         output_labels = network_mob.output_labels
         kwargs = {
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "run_time" : 2,
         }
         self.play(
@@ -694,7 +694,7 @@ class IntroduceCostFunction(PreviewLearning):
             neuron.set_fill, None, 0.5,
             FadeIn(formula),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.play(OldLaggedStart(
             ShowCreationThenDestruction, 
@@ -813,7 +813,7 @@ class IntroduceCostFunction(PreviewLearning):
         )
         self.play(
             MoveToTarget(
-                neurons, submobject_mode = "lagged_start",
+                neurons, lag_ratio = 0.5,
                 remover = True
             ),
             layer0.neurons.set_fill, None, 0,
@@ -1269,7 +1269,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         dot.move_to(input_words.get_right())
         dot.set_fill(opacity = 0.5)
 
-        self.play(FadeIn(input_words[1], submobject_mode = "lagged_start"))
+        self.play(FadeIn(input_words[1], lag_ratio = 0.5))
         self.play(
             dot.move_to, image,
             dot.set_fill, None, 0,
@@ -2023,7 +2023,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
             ReplacementTransform(
                 edges, edges_target,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             OldLaggedStart(FadeIn, words),
         )
@@ -2072,7 +2072,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
             self.play(
                 Transform(
                     nd, VectorizedPoint(od.get_center()),
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     remover = True
                 ),
                 ChangingDecimal(
@@ -2672,7 +2672,7 @@ class GradientNudging(PreviewLearning):
             edge.rotate_in_place(np.pi)
         return MoveToTarget(
             edges,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             lag_factor = 8,
             run_time = 1.5
         )
@@ -3176,7 +3176,7 @@ class InputRandomData(TestPerformance):
         self.play(MoveToTarget(
             image, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.activate_network(rand_vect, FadeOut(image))
 

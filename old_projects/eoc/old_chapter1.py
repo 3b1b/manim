@@ -233,7 +233,7 @@ class Introduction(TeacherStudentsScene):
         self.play(
             FadeIn(
                 series,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             Blink(self.get_teacher())
@@ -313,7 +313,7 @@ class Introduction(TeacherStudentsScene):
         self.play(Write(remembered_symbols))
         self.play(ApplyMethod(
             remembered_symbols.fade, 0.7,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         ))
         self.play(
@@ -469,7 +469,7 @@ class HeartOfCalculus(GraphScene):
         )
         self.play(
             rects.restore,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         )
         while rect_sets:
@@ -1747,7 +1747,7 @@ class IntroduceConcentricRings(CircleScene):
         self.play(
             MoveToTarget(
                 moving_rings,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             Write(
                 VGroup(plusses, dots_equals_area),
@@ -2106,7 +2106,7 @@ class GraphIntegral(GraphScene):
         height_label = left_brace.get_text("$2\\pi r$")
 
         self.play(
-            ShowCreation(ticks, submobject_mode = "lagged_start"),
+            ShowCreation(ticks, lag_ratio = 0.5),
             Write(R_label)
         )
         self.play(
@@ -2365,7 +2365,7 @@ class FundamentalTheorem(CircleScene):
         self.play(
             ApplyMethod(
                 rings.restore,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 5
             ),
             Animation(self.foreground_group),
@@ -2452,7 +2452,7 @@ class CalculusInANutshell(CircleScene):
         self.wait()
         self.play(Transform(
             calculus, rings,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 5
         ))
         self.wait()
@@ -2482,7 +2482,7 @@ class CalculusInANutshell(CircleScene):
         )
         self.play(FadeIn(
             VGroup(*series[1:]),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.wait()

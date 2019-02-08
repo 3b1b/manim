@@ -161,7 +161,7 @@ class ContrastAbstractAndConcrete(Scene):
             anims.append(Transform(
                 VGroup(*[pi.parents for pi in these_pis]),
                 VGroup(*[VGroup(pi, pi.copy()) for pi in these_pis]),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2,
             ))
             exp += 1
@@ -1353,7 +1353,7 @@ class PatternForPowerRule(PiCreatureScene):
                 replace_mobject_with_target_in_scene = True
             ),
             ShowCreation(lines),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         )
         self.wait()
@@ -2705,7 +2705,7 @@ class NextVideo(TeacherStudentsScene):
         self.play(
             FadeIn(
                 series,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3,
             ),
             *[

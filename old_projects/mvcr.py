@@ -692,7 +692,7 @@ class ComputationalNetwork(MovingCameraScene):
         self.wait()
         self.play(ReplacementTransform(
             full_derivative.copy(), rhs,
-            submobject_mode="lagged_start",
+            lag_ratio=0.5,
             run_time=2
         ))
         self.wait()

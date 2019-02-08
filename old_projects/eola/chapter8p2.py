@@ -438,7 +438,7 @@ class DefineDualTransform(Scene):
         self.play(FadeIn(
             definitions,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(*[
@@ -622,7 +622,7 @@ class DefineDualTransform(Scene):
         self.play(Transform(
             func, p_array,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.remove(func)
         self.add(p_array)

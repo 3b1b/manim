@@ -880,7 +880,7 @@ class ThousandPossibleQuizzes(Scene):
         target_quizzes = VGroup(*quizzes[:len(full_quizzes)])
 
         for quiz in full_quizzes:
-            self.play(FadeIn(quiz, run_time = 3, submobject_mode = "lagged_start"))
+            self.play(FadeIn(quiz, run_time = 3, lag_ratio = 0.5))
         self.play(
             Transform(full_quizzes, target_quizzes),
             FadeIn(title)
@@ -1022,7 +1022,7 @@ class ThousandPossibleQuizzes(Scene):
         self.play(
             MoveToTarget(
                 movers, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 lag_factor = 4,
                 run_time = 3,
             ),
@@ -1079,7 +1079,7 @@ class ThousandPossibleQuizzes(Scene):
         self.play(
             MoveToTarget(
                 movers, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3,
             ),
             Transform(equation, alt_equation)
@@ -1763,7 +1763,7 @@ class ShowFullDistribution(Scene):
         self.play(
             ReplacementTransform(
                 value_mobs, chart.bars,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             )
         )
@@ -2377,7 +2377,7 @@ class NameBinomial(Scene):
         for m1, m2 in (self.crosses, boys), (self.checkmarks, girls):
             self.play(ReplacementTransform(
                 m1, m2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ))
         self.wait()
@@ -2676,7 +2676,7 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
         self.play(ReplacementTransform(
             factored, factored_in_nums,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         for group, tex in (gp_nums, "0.49"), (bp_nums, "0.51"):
@@ -3188,13 +3188,13 @@ class AssumeOrderDoesntMatter(Scene):
         self.play(FadeIn(
             prob_groups[1],
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(FadeIn(
             VGroup(prob_groups[0], *prob_groups[2:]),
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -3311,7 +3311,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
 
         self.play(
             Write(title, run_time = 1),
-            FadeIn(binomial, run_time = 1, submobject_mode = "lagged_start"),
+            FadeIn(binomial, run_time = 1, lag_ratio = 0.5),
             self.teacher.change, "raise_right_hand"
         )
         for values in binomial.values_list:
@@ -3340,14 +3340,14 @@ class SkepticalOfDistributions(TeacherStudentsScene):
 
 
         self.play(
-            FadeIn(poisson, submobject_mode = "lagged_start"),
+            FadeIn(poisson, lag_ratio = 0.5),
             RemovePiCreatureBubble(self.students[0]),
             self.teacher.change, "raise_right_hand",
             self.binomial.scale, 0.5,
             self.binomial.to_corner, UP+LEFT,
         )
         self.play(Write(poisson.title, run_time = 1))
-        self.play(FadeIn(gaussian, submobject_mode = "lagged_start"))
+        self.play(FadeIn(gaussian, lag_ratio = 0.5))
         self.play(Write(gaussian.title, run_time = 1))
         self.wait(2)
         self.change_student_modes(
@@ -3381,7 +3381,7 @@ class SkepticalOfDistributions(TeacherStudentsScene):
             self.play(
                 ShowCreation(
                     arrows, 
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     run_time = 2
                 ),
                 *[

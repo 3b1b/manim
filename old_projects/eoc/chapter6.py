@@ -2595,7 +2595,7 @@ class FinalWords(TeacherStudentsScene):
             self.teacher.change_mode, "plain",
             FadeIn(
                 series, run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
         )
         self.play(

@@ -116,7 +116,7 @@ class AboutLinearAlgebra(Scene):
         self.play(Write(linalg, run_time = 1))
         self.wait()
         self.play(
-            ShowCreation(arrows, submobject_mode = "lagged_start"),
+            ShowCreation(arrows, lag_ratio = 0.5),
             FadeIn(all_subs),
             run_time = 2
         )

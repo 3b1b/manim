@@ -75,8 +75,8 @@ class SymbolicThreeDTransform(Scene):
         self.play(Write(in_vect), Write(in_words))
         self.wait()
         self.add(in_vect.copy())
-        self.play(Transform(in_vect, point, submobject_mode = "lagged_start"))
-        self.play(Transform(in_vect, out_vect, submobject_mode = "lagged_start"))
+        self.play(Transform(in_vect, point, lag_ratio = 0.5))
+        self.play(Transform(in_vect, out_vect, lag_ratio = 0.5))
         self.add(out_words)
         self.wait()
 
@@ -227,7 +227,7 @@ class ShowVCoordinateMeaning(Scene):
                 coords.get_entries().copy(),
                 VMobject(new_x, new_y, new_z),
                 path_arc = -np.pi,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Write(VMobject(*[eq2, i, j, k] + list(plusses))),
             run_time = 3

@@ -165,7 +165,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
                 new_symbol.replace(heart, dim_to_match = 1)
             self.play(Transform(
                 hearts, new_symbols,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             self.wait()
         self.play(FadeOut(heart_qs))

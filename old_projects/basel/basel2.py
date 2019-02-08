@@ -686,13 +686,13 @@ class MathematicalWebOfConnections(PiCreatureScene):
             randy.change, "raise_right_hand",
             FadeOut(jerk.bubble),
             words.next_to, jerk, UP,
-            FadeIn(basel_sum, submobject_mode = "lagged_start", run_time = 3)
+            FadeIn(basel_sum, lag_ratio = 0.5, run_time = 3)
         )
         for formula in formulas[1:]:
             self.play(
                 FadeIn(
                     formula, 
-                    submobject_mode = "lagged_start", 
+                    lag_ratio = 0.5, 
                     run_time = 3
                 ),
             )

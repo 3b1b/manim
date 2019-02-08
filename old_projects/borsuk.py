@@ -185,7 +185,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         self.play(
             FadeIn(
                 necklace,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ),
             *it.chain(*[
@@ -992,7 +992,7 @@ class MentionGenerality(TeacherStudentsScene, ThreeDScene):
             self.teacher.look_at, arrow
         )
         self.play(
-            FadeIn(necklace, run_time = 2, submobject_mode = "lagged_start"),
+            FadeIn(necklace, run_time = 2, lag_ratio = 0.5),
             Write(arrow),
             *[
                 ApplyMethod(pi.look_at, arrow)
@@ -1276,7 +1276,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         )
         self.play(FadeIn(
             self.necklace,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.shuffle_jewels(self.necklace.jewels)
         jewel_types = self.get_jewels_organized_by_type(
@@ -1416,7 +1416,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.play(jewels.shift, jewels.get_height()*UP)
         self.play(ReplacementTransform(
             jewels, segments,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.wait()
@@ -1964,7 +1964,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
         self.play(FadeIn(
             choices,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -1997,7 +1997,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             ])
 
             self.play(ShowCreation(arrows))
-            self.play(FadeIn(sqrts, submobject_mode = "lagged_start"))
+            self.play(FadeIn(sqrts, lag_ratio = 0.5))
         self.play(Write(self.choice_two_words))
         self.wait()
 

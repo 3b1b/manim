@@ -50,7 +50,7 @@ class SierpinskiTest(Scene):
         self.play(FadeIn(
             sierp,
             run_time = 5,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait()
         # self.play(sierp.scale, 2, sierp.get_top())
@@ -242,7 +242,7 @@ class IntroduceSierpinskiTriangle(PiCreatureScene):
         self.play(FadeIn(
             sierp,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(
@@ -867,7 +867,7 @@ class ScaledLineMass(Scene):
         self.wait()
         self.play(FadeIn(
             VGroup(*shape_copy[1:]),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(Transform(

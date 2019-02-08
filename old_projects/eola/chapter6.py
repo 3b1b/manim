@@ -180,7 +180,7 @@ class StockPrices(Scene):
         self.play(ShowCreation(
             VMobject(*stock_lines),
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -287,7 +287,7 @@ class SystemOfEquations(Scene):
 
         self.play(other_equations.fade, 0.7)
         self.play(Transform(scaled_vars, isolated_scaled_vars))
-        self.play(scalars.set_color, YELLOW, submobject_mode = "lagged_start")
+        self.play(scalars.set_color, YELLOW, lag_ratio = 0.5)
         self.play(*[
             ApplyMethod(m.scale_in_place, 1.2, rate_func = there_and_back)
             for m in scalars.split()
@@ -675,7 +675,7 @@ class ShowBijectivity(LinearTransformationScene):
         self.add_foreground_mobject(background, titles[0])
 
         kwargs = {
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "run_time" : 2
         }
         anims = list(map(Animation, self.foreground_mobjects))
@@ -1680,7 +1680,7 @@ class NameNullSpace(LinearTransformationScene):
         self.play(Transform(
             vectors, line, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         for label in null_space_label, kernel_label:

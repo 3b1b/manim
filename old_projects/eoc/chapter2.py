@@ -744,7 +744,7 @@ class CompareTwoTimes(Scene):
         group.to_corner(UP+RIGHT)
 
         self.play(FadeIn(
-            group, submobject_mode = "lagged_start",
+            group, lag_ratio = 0.5,
             run_time = 3
         ))
         self.wait(3)
@@ -1127,7 +1127,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         self.wait()
         for anim_class in FadeIn, FadeOut:
             self.play(anim_class(
-                t_tick_marks, submobject_mode = "lagged_start",
+                t_tick_marks, lag_ratio = 0.5,
                 run_time = 2
             ))
         self.play(
@@ -1970,7 +1970,7 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
         next_video = series[2]
         this_video.save_state()
         this_video.set_color(YELLOW)
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.play(
             this_video.restore,
             next_video.set_color, YELLOW,

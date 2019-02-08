@@ -2658,7 +2658,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
 
         self.play(ReplacementTransform(
             VGroup(fourier_graph), shifted_graphs,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.wait()
@@ -3164,7 +3164,7 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         self.wait()
         kwargs = {
             "path_arc" : TAU/4,
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "lag_ratio" : 0.7,
             "run_time" : 1.5,
         }
@@ -3390,7 +3390,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         self.play(
             Transform(time, space),
             Transform(space, time),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 1,
         )
         self.play(FadeOut(time), FadeOut(space))
@@ -4356,7 +4356,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
             morty.change, "raise_left_hand", groups,
             FadeIn(
                 groups, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3,
             )
         )

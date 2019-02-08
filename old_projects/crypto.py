@@ -1293,7 +1293,7 @@ class TryGuessingDigitalSignature(Scene):
             GrowFromCenter(brace),
             FadeIn(
                 zeros,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             )
         )
@@ -1497,7 +1497,7 @@ class IncludeTransactionNumber(LedgerScene):
         self.play(FadeOut(old_signatures))
         self.play(ReplacementTransform(
             lines.copy(), new_signatures,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.play(self.bob.change, "erm")
@@ -2558,7 +2558,7 @@ class IntroduceSHA256(Scene):
             self.play(Transform(
                 digest, new_digest,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi/2
             ))
             if arrow in self.get_mobjects():
@@ -2610,7 +2610,7 @@ class IntroduceSHA256(Scene):
             Transform(
                 self.digest, new_digest,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi/2
             ),
             Transform(self.digest_text, desired_output_text)
@@ -2655,7 +2655,7 @@ class IntroduceSHA256(Scene):
             self.play(Transform(
                 group[1], new_group[1],
                 run_time = 1,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
 
 class PonderScematic(Scene):
@@ -2821,13 +2821,13 @@ class IntroduceNonceOnTrasactions(LedgerScene):
             self.play(Transform(
                 self.digest, digest,
                 run_time = 1,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
         self.play(self.nonce.restore)
         self.play(
             self.digest.restore, 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.play(FadeOut(q_mark))
@@ -2868,7 +2868,7 @@ class IntroduceNonceOnTrasactions(LedgerScene):
         )
         self.play(Transform(
             self.digest, new_digest,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
 
 class ShowSomeBroadcasting(DistributedLedgerScene):
@@ -3035,7 +3035,7 @@ class IntroduceBlockChain(Scene):
 
         self.play(Transform(
             proofs_of_work, new_proofs_of_work,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(
             ShowCreation(arrows),
@@ -4618,7 +4618,7 @@ class VariableProofOfWork(WhenToTrustANewBlock):
             Transform(n_zeros_mob, new_n_zeros_mob),
             Transform(
                 digest, new_digest,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Transform(proof_of_work, new_pow),
         )

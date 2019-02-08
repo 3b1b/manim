@@ -819,7 +819,7 @@ class SymbolicEigenvectors(Scene):
         self.wait()
         self.play(Transform(
             q_marks, matrix.get_entries(), 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.remove(q_marks)
@@ -1449,7 +1449,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         self.play(
             ShowCreation(
                 vectors, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             *list(map(Animation, self.foreground_mobjects))

@@ -1555,7 +1555,7 @@ class ComplexFunctionsAsTransformations(ComplexTransformationScene):
         self.play(FadeIn(
             input_dots,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         for in_dot, out_dot, arrow in zip(input_dots, output_dots, arrows):
             self.play(

@@ -114,7 +114,7 @@ class DoublingPopulation(PiCreatureScene):
             FadeIn(
                 t_expression,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
         )
         self.play(Transform(f_x, P_t))
@@ -496,7 +496,7 @@ class GraphOfTwoToT(GraphScene):
             FadeIn(
                 slope_label, 
                 run_time = 4,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             ReplacementTransform(
                 height_label.copy(),
@@ -1387,7 +1387,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             FadeIn(
                 exp_c, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             self.teacher.change, "raise_right_hand"
         )
@@ -1457,7 +1457,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             ApplyMethod(
                 t_group.restore,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             self.teacher.change_mode, "speaking"
         )
@@ -1614,7 +1614,7 @@ class ManyExponentialForms(TeacherStudentsScene):
             self.play(FadeIn(
                 rhs, 
                 run_time = 2,
-                submobject_mode = 'lagged_start'
+                lag_ratio = 0.5,
             ))
             self.wait(2)
         self.wait()
@@ -1790,13 +1790,13 @@ class NaturalLog(Scene):
         self.play(FadeIn(
             expressions, 
             run_time = 3, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(
             expressions.set_fill, None, 1,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait()
         for i in 0, 2, 1:

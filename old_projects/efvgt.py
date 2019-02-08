@@ -126,7 +126,7 @@ class Anniversary(TeacherStudentsScene):
         self.play(
             DrawBorderThenFill(
                 hats,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 rate_func=linear,
                 run_time = 2,
             ),
@@ -2365,7 +2365,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
         self.play(FadeIn(
             five_twos, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
 
@@ -3288,7 +3288,7 @@ class ECLPromo(PiCreatureScene):
         self.wait(3)
         self.play(FadeIn(
             logo_part1, run_time = 3, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         logo_part2.save_state()
         logo_part2.scale(2)

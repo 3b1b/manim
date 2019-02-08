@@ -1275,7 +1275,7 @@ class CompareToGalacticMass(Scene):
             ),
             ReplacementTransform(
                 dots, commas,
-                submobject_mode="lagged_start",
+                lag_ratio=0.5,
                 run_time=2
             )
         )

@@ -69,7 +69,7 @@ class SideGigToFullTime(Scene):
             ApplyMethod(
                 dollar_signs.shift, 
                 (FRAME_Y_RADIUS+1)*DOWN,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             morty.change_mode, "guilty",
             morty.look, DOWN+RIGHT
@@ -550,7 +550,7 @@ class MakeALotOfPiCreaturesHappy(Scene):
             MoveToTarget(
                 pis,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 lag_factor = 5,
             )
         )

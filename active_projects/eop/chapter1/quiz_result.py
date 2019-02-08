@@ -76,7 +76,7 @@ class QuizResult(PiCreatureScene):
         self.play(ReplacementTransform(
             VGroup(master_quiz), all_quizzes,
             run_time=2,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         self.wait(2)
 

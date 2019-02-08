@@ -2863,7 +2863,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             MoveToTarget(
                 re_rects, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi
             ),
             MoveToTarget(self.re_words),
@@ -2997,7 +2997,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
             MoveToTarget(
                 re_rects, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi
             ),
         )

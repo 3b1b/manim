@@ -161,7 +161,7 @@ class CountingScene(Scene):
             result.append(ShowCreation(arrow))
         result.append(Transform(
             self.number_mob, new_number_mob,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         return result
 
@@ -621,7 +621,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
         self.play(
             ApplyMethod(
                 self.pegs.restore, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             Write(self.peg_labels)
@@ -658,7 +658,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
         self.play(FadeIn(
             disk_groups, 
             run_time = 2, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         for group in reversed(list(disk_groups)):
             self.play(group.restore)
@@ -710,7 +710,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
     def move_full_tower(self):
         self.move_subtower_to_peg(self.num_disks, 1, run_time = 2)
         self.wait()
-        self.reset_disks(run_time = 1, submobject_mode = "lagged_start")
+        self.reset_disks(run_time = 1, lag_ratio = 0.5)
         self.wait()
 
     def move_single_disk(self):
@@ -885,7 +885,7 @@ class IntroduceBase10(Scene):
             MoveToTarget(number),
             ShowCreation(arrows),
             ApplyMethod(
-                expansion.restore, submobject_mode = "lagged_start"),
+                expansion.restore, lag_ratio = 0.5),
             run_time = 2
         )
         self.play(Write(title))
@@ -1180,7 +1180,7 @@ class BinaryCountingAtEveryScale(Scene):
         self.play(Transform(
             VGroup(*reversed(list(curr_bits))),
             VGroup(*reversed(list(bit_mobs[2**(self.num_bits-1)]))),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             lag_factor = self.num_bits
         ))
         self.wait()
@@ -1371,7 +1371,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         return Succession(
             Transform(
                 self.curr_bit_mob, next(self.bit_mobs_iter),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = -np.pi/3
             ),
             Animation(self.curr_bit_mob)
@@ -2199,7 +2199,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.play(ApplyMethod(
             VGroup(VGroup(braces[-2], subdivisions[-2])).set_fill, None, 1,
             run_time = 3,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.blink()
         for mob in last_subdivisions:
@@ -2271,7 +2271,7 @@ class SolveConstrainedByCounting(ConstrainedTowersOfHanoiScene):
         return Succession(
             Transform(
                 self.curr_ternary_mob, next(self.ternary_mob_iter),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi/6,
             ),
             Animation(self.curr_ternary_mob),
@@ -2438,7 +2438,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
         def get_increment():
             return Transform(
                 curr_ternary_mob, next(ternary_mob_iter),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = -np.pi/3
             )
 
@@ -2506,7 +2506,7 @@ class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
         self.play(Transform(
             self.curr_ternary_mob, next(self.ternary_mob_iter),
             path_arc = -np.pi/3,
-            submobject_mode = "lagged_start", 
+            lag_ratio = 0.5, 
             run_time = run_time,
         ))
 
@@ -2810,7 +2810,7 @@ class ShowSomeGraph(Scene):
             mob.set_color_by_gradient(YELLOW, MAROON_B)
             self.play(ShowCreation(
                 mob, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2,
             ))
         self.wait()
@@ -2969,7 +2969,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
         self.play(FadeIn(
             self.nodes,
             run_time = 3,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             lag_factor = 7,
         ))
         vect = LEFT

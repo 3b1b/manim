@@ -671,11 +671,11 @@ class GeneralMultiplication(MoreComplicatedExampleNumerically):
         self.play(Write(words, run_time = 2))
         self.play(Transform(
             m1_entries, m1_entries_target, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(Transform(
             m2_entries, m2_entries_target,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -761,7 +761,7 @@ class AskAboutCommutativity(Scene):
         self.play(Transform(
             VMobject(eq, q_marks),
             VMobject(neq),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -912,7 +912,7 @@ class AskAssociativityQuestion(Scene):
         for letter, matrix in zip([a, b, c], matrices):
             self.play(Transform(
                 letter.copy(), matrix, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             self.remove(*self.get_mobjects_from_last_animation())
             self.add(matrix)

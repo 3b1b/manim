@@ -124,7 +124,7 @@ class BreakUp2To256(PiCreatureScene):
             Transform(
                 self.subexpressions, new_subexpressions,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             FadeOut(self.pi_creature)
         )
@@ -495,7 +495,7 @@ class MainBreakdown(Scene):
             ReplacementTransform(
                 self.group_of_four_billion_things, VGroup(num),
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             ShowCreation(h_line),
             ReplacementTransform(

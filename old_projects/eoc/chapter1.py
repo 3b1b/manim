@@ -235,7 +235,7 @@ class Introduction(TeacherStudentsScene):
         self.play(
             FadeIn(
                 series,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             Blink(self.get_teacher())
@@ -577,7 +577,7 @@ class IntroduceCircle(CircleScene):
         unwrapped_rings.move_to(self.unwrapped_tip, UP)
         ring_anim_kwargs = {
             "run_time" : 3,
-            "submobject_mode" : "lagged_start"
+            "lag_ratio" : 0.5
         }
 
         self.play(
@@ -696,7 +696,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             ShowCreation(
                 lines, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.radius_group),
             self.pi_creature.change_mode, "maybe"
@@ -718,7 +718,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         self.play(
             FadeIn(
                 rings,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ),
             Animation(self.radius_group),
@@ -911,7 +911,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             Animation(alt_side_brace),
             Animation(alt_dr_label),
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait(2)
 
@@ -1071,7 +1071,7 @@ class GraphRectangles(CircleScene, GraphScene):
         self.wait()
         self.play(
             Transform(moving_arrow, arrows[-1]),
-            ShowCreation(r_ticks, submobject_mode = "lagged_start"),
+            ShowCreation(r_ticks, lag_ratio = 0.5),
             run_time = 2
         )
         self.play(Indicate(self.rings[-1]))
@@ -1234,7 +1234,7 @@ class GraphRectangles(CircleScene, GraphScene):
                     lambda t : 0.1*there_and_back(t), 
                     alpha, alpha+0.5
                 ),
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for rect, flat_rect, alpha in zip(
                 self.rects, self.flat_rects,
@@ -1285,7 +1285,7 @@ class GraphRectangles(CircleScene, GraphScene):
             self.play(
                 Transform(
                     self.rects, new_rects, 
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     run_time = 2
                 ),
                 Animation(self.axes),
@@ -1296,7 +1296,7 @@ class GraphRectangles(CircleScene, GraphScene):
             self.rects,
             direction = RIGHT,
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait()
 
@@ -1382,7 +1382,7 @@ class GraphRectangles(CircleScene, GraphScene):
             Transform(
                 rings, unwrapped,
                 run_time = 5,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             Animation(self.radius_group)
         )
@@ -1525,7 +1525,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
         self.add(rings, self.radius_group)
         self.play(FadeIn(
             integral_condition, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(*draw_ring_sum_anims)
@@ -1665,7 +1665,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
             ReplacementTransform(
                 self.rings.copy(), rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.x_axis),
         )
@@ -1695,7 +1695,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
             self.play(
                 Transform(
                     self.rects, new_rects, 
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     run_time = 2
                 ),
                 Animation(self.axes),
@@ -1849,7 +1849,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             FadeIn(
                 pre_rects, 
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.ticks)
         )
@@ -1857,7 +1857,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             ReplacementTransform(
                 pre_rects, rects,
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.ticks),
             Write(self.axes, run_time = 1)
@@ -1901,7 +1901,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
                 Transform(
                     self.rects, thinner_rects,
                     run_time = 2,
-                    submobject_mode = "lagged_start"
+                    lag_ratio = 0.5
                 )
             )
             self.wait()
@@ -2004,7 +2004,7 @@ class AreaUnderParabola(GraphScene):
                 rects,
                 run_time = 2,
                 rate_func = smooth,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             *list(map(Animation, foreground_mobjects))
         )
@@ -2013,7 +2013,7 @@ class AreaUnderParabola(GraphScene):
             self.play(
                 Transform(
                     rects, new_rects,
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                 ), 
                 *list(map(Animation, foreground_mobjects))
             )
@@ -2731,7 +2731,7 @@ class EndScreen(PiCreatureScene):
             FadeIn(
                 words, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             self.pi_creature.change_mode, "hooray"
         )

@@ -4,7 +4,7 @@ from active_projects.eop.reusable_imports import *
 class Chapter1OpeningQuote(OpeningQuote):
     CONFIG = {
         "fade_in_kwargs": {
-            "submobject_mode": "lagged_start",
+            "lag_ratio": 0.5,
             "rate_func": linear,
             "lag_factor": 9,
             "run_time": 10,

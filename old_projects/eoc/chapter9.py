@@ -49,7 +49,7 @@ class AverageOfContinuousVariable(GraphScene):
         self.play(FadeIn(
             question,
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.play(ShowCreation(v_line))
         for bound in reversed(self.bounds):
@@ -77,7 +77,7 @@ class ThisVideo(TeacherStudentsScene):
         series.to_edge(UP)
         this_video = series[8]
 
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.teacher_says(
             "A new view of \\\\ the fundamental theorem",
             bubble_kwargs = {"height" : 3},
@@ -225,14 +225,14 @@ class LengthOfDayGraph(GraphScene):
             self.play(FadeIn(
                 label, 
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.play(
             ShowCreation(graph, rate_func=linear),
             FadeIn(
                 graph_label,
                 rate_func = squish_rate_func(smooth, 0.5, 1),
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             run_time = 3,
         )
@@ -271,7 +271,7 @@ class LengthOfDayGraph(GraphScene):
             FadeIn(
                 panels, 
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
         )
         for angle in -np.pi/4, np.pi/4:
@@ -419,7 +419,7 @@ class AverageOfFiniteSet(Scene):
         self.add(lines)
         self.play(FadeIn(
             labels,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         ))
         self.wait()
@@ -497,7 +497,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
             MoveToTarget(
                 v_lines,
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Write(plusses)
         )
@@ -595,7 +595,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
                 v_lines.copy(),
                 summed_v_lines,
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Write(
                 plusses,
@@ -1171,7 +1171,7 @@ class Antiderivative(AverageOfSineStart):
 
         self.play(FadeIn(
             VGroup(*[part for part in rhs if part not in [end_pi, end_zero]]),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.wait()
@@ -1574,7 +1574,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         self.play(FadeIn(
             rects, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         for new_rects in rect_list[1:]:
             self.transform_between_riemann_rects(rects, new_rects)
@@ -1712,7 +1712,7 @@ class GeneralAverage(AverageOfContinuousVariable):
             self.play(Transform(
                 self.v_lines, new_v_lines,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
 

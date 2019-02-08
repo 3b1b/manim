@@ -103,7 +103,7 @@ class LimitJustMeansApproach(PiCreatureScene):
             self.play(
                 Transform(
                     expression, next_expression,
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     lag_factor = 1.2,
                 ),
                 self.pi_creature.look_at, next_expression[-1]
@@ -318,7 +318,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
             self.play(
                 lim.scale_in_place, sf,
                 lim.set_color, color,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
         self.wait(2)
         self.animate_secant_slope_group_change(
@@ -663,7 +663,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
         self.play(ReplacementTransform(
             statements[0].h.copy(), h_group,
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             lag_factor = 1.5,
         ))
         self.wait()
@@ -823,7 +823,7 @@ class GraphLimitExpression(GraphScene):
         for i, j, func in zip(indices, indices[1:], funcs):
             anims = [FadeIn(
                 VGroup(*expression[i:j]),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 lag_factor = 1.5
             )]
             new_graph = self.get_graph(func, color = BLUE)
@@ -837,7 +837,7 @@ class GraphLimitExpression(GraphScene):
         self.wait()
         self.play(
             MoveToTarget(expression),
-            FadeIn(limit, submobject_mode = "lagged_start"),
+            FadeIn(limit, lag_ratio = 0.5),
             GrowFromCenter(brace)
         )
         self.play(Write(derivative))
@@ -2438,9 +2438,9 @@ class DerivativeLimitReciprocity(Scene):
         deriv.set_color_by_tex("df", YELLOW)
         deriv.next_to(arrow, RIGHT)
 
-        self.play(FadeIn(lim, submobject_mode = "lagged_start"))
+        self.play(FadeIn(lim, lag_ratio = 0.5))
         self.play(ShowCreation(arrow))
-        self.play(FadeIn(deriv, submobject_mode = "lagged_start"))
+        self.play(FadeIn(deriv, lag_ratio = 0.5))
         self.wait()
         self.play(Rotate(arrow, np.pi, run_time = 2))
         self.wait()

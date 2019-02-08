@@ -124,7 +124,7 @@ class IntroSceneWrapper(PiCreatureScene):
             self.play(Transform(
                 solver, rainbow_solver,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.play(solver.restore)
         self.wait()

@@ -127,7 +127,7 @@ class DescribeTransformation(Scene):
         for mob in f_point, num_outputs:
             self.play(Transform(
                 num_inputs, mob,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
 
@@ -143,7 +143,7 @@ class DescribeTransformation(Scene):
         for mob in f_point, output_vect:
             self.play(Transform(
                 input_vect, mob,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.play(Write(vector_output_words))
         self.wait()
@@ -259,13 +259,13 @@ class TransformManyVectors(LinearTransformationScene):
             for v in vectors.split()
         ])
 
-        self.play(ShowCreation(vectors, submobject_mode = "lagged_start"))
+        self.play(ShowCreation(vectors, lag_ratio = 0.5))
         self.wait()
         if self.use_dots:
             self.play(Transform(
                 vectors, self.vectors_to_dots(vectors),
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             transformed_vectors = self.vectors_to_dots(transformed_vectors)
             self.wait()
@@ -279,7 +279,7 @@ class TransformManyVectors(LinearTransformationScene):
             self.play(Transform(
                 vectors, self.dots_to_vectors(vectors),
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             self.wait()
 
@@ -312,7 +312,7 @@ class TransformInfiniteGrid(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.play(ShowCreation(
-            self.plane, run_time = 3, submobject_mode = "lagged_start"
+            self.plane, run_time = 3, lag_ratio = 0.5
         ))
         self.wait()
         self.apply_transposed_matrix([[2, 1], [1, 2]])
@@ -386,7 +386,7 @@ class LookToWordLinear(Scene):
             Transform(transformation, faded_transformation),
             Transform(transformation_brace, linear_brace),
             Transform(function, new_sub_word),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait()
 
@@ -772,10 +772,10 @@ class WatchManyVectorsMove(TransformManyVectors):
         ])
         vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         dots = self.vectors_to_dots(vectors)        
-        self.play(ShowCreation(dots, submobject_mode = "lagged_start"))
+        self.play(ShowCreation(dots, lag_ratio = 0.5))
         self.play(Transform(
             dots, vectors, 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.remove(dots)
@@ -1053,7 +1053,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         self.play(
             FadeIn(brace),
             FadeIn(brace_words),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait()
 

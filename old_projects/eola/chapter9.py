@@ -723,7 +723,7 @@ class JennysGrid(JenniferScene):
             ShowCreation(
                 self.jenny_plane, 
                 run_time = 3, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             self.jenny.change_mode, "speaking",
             self.jenny.look_at, ORIGIN,

@@ -623,7 +623,7 @@ class FunctionGraphScene(Scene):
     def add_lines(self, output_lines):
         self.play(ShowCreation(
             output_lines,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
 
@@ -750,7 +750,7 @@ class AddTwoFunctions(FunctionGraphScene):
             kwargs = {}
         else:
             kwargs = {
-                "submobject_mode" : "lagged_start",
+                "lag_ratio" : 0.5,
                 "run_time" : 3
             }
         self.play(*[
@@ -926,7 +926,7 @@ class FromVectorsToFunctions(VectorScene):
         words.to_corner(UP+LEFT)
         self.play(FadeIn(
             words,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         ))
         self.wait()
@@ -1643,7 +1643,7 @@ class IntroducePolynomialSpace(Scene):
         self.play(Write(coords.get_brackets()))
         self.play(
             entries.restore,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         )
         self.wait()
@@ -1668,7 +1668,7 @@ class IntroducePolynomialSpace(Scene):
         self.wait()
         self.play(FadeIn(
             VGroup(*more_terms), 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.wait()
@@ -1738,7 +1738,7 @@ class IntroducePolynomialSpace(Scene):
         for anim in MoveToTarget(diag_entries), diag_entries.restore:
             self.play(
                 anim,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 1.5,
             )
         self.wait()
@@ -2109,7 +2109,7 @@ class ToolsOfLinearAlgebra(Scene):
         words[-1].next_to(words[-2], DOWN)
         self.play(FadeIn(
             words,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         ))
         self.wait()
@@ -2227,7 +2227,7 @@ class ListAxioms(Scene):
 
         self.play(FadeIn(
             axioms,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 5
         ))
         self.wait()
@@ -2282,7 +2282,7 @@ class AxiomsAreInterface(Scene):
         self.play(FadeIn(mathy))
         self.play(
             ShowCreation(double_arrow),
-            FadeIn(others, submobject_mode = "lagged_start", run_time = 2)
+            FadeIn(others, lag_ratio = 0.5, run_time = 2)
         )
         self.play(axioms.copy().next_to, double_arrow, UP)
         self.play(Blink(mathy))
@@ -2326,7 +2326,7 @@ class VectorSpaceOfPiCreatures(Scene):
 
         self.play(FadeIn(
             creatures,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         ))
         self.wait()
@@ -2502,7 +2502,7 @@ class WhatIsThree(Scene):
         self.play(*[
             Transform(
                 trip, three, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             )
             for trip in triplets

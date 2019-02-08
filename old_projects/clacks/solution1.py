@@ -1471,7 +1471,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
             arc.fade(1)
             arc.set_stroke(width=20)
         self.play(Restore(
-            all_arcs, submobject_mode="lagged_start",
+            all_arcs, lag_ratio=0.5,
             run_time=2,
         ))
         self.wait()
@@ -1625,7 +1625,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
         self.play(
             Restore(
                 lines,
-                submobject_mode="lagged_start",
+                lag_ratio=0.5,
                 run_time=2
             ),
             FadeOut(self.center_lines_group),

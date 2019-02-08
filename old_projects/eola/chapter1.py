@@ -165,7 +165,7 @@ class DifferentConceptions(Scene):
         self.play(
             Write(two_dimensional),
             ApplyMethod(physy.change_mode, "pondering"),
-            ShowCreation(random_vectors, submobject_mode = "lagged_start"),
+            ShowCreation(random_vectors, lag_ratio = 0.5),
             run_time = 1 
         )
         self.wait(2)
@@ -461,7 +461,7 @@ class HowIWantYouToThinkAboutVectors(Scene):
         self.play(ShowCreation(vector))
         self.wait(2)
         self.play(
-            ShowCreation(plane, summobject_mode = "lagged_start"),
+            ShowCreation(plane, lag_ratio=0.5),
             Animation(vector)
         )
         self.play(Write(axis_labels, run_time = 1))

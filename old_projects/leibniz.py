@@ -641,7 +641,7 @@ class Outline(PiCreatureScene):
             FadeIn(
                 mob, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in [chis, arrows, numerators]
         ])
@@ -818,7 +818,7 @@ class CountLatticePoints(LatticePointScene):
             ReplacementTransform(
                 point_copies, squares,
                 run_time = 3,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 lag_factor = 4,
             ),
             Animation(self.lattice_points)
@@ -1229,7 +1229,7 @@ class LookAtExampleRing(LatticePointScene):
                 about_point = self.plane_center,
                 rate_func = smooth, 
             ),
-            FadeIn(points, submobject_mode = "lagged_start"),
+            FadeIn(points, lag_ratio = 0.5),
             run_time = 2,
         )
         self.wait()
@@ -1487,7 +1487,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.play(FadeIn(
             equation,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(
@@ -1681,7 +1681,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         )
         self.play(FadeIn(
             top_dot.magnitude_word,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(ShowCreation(top_dot.arc))
@@ -1770,7 +1770,7 @@ class NameGaussianIntegers(LatticePointScene):
         self.play(FadeIn(
             gauss_name,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(3)
         self.play(FadeOut(gauss_name))
@@ -2249,7 +2249,7 @@ class FactorizationPattern(Scene):
         self.play(FadeIn(
             factorizations, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(4)
         self.play(*list(map(FadeOut, [movers, factorizations])))
@@ -3539,7 +3539,7 @@ class IntroduceChi(FactorizationPattern):
             FadeIn(
                 mob, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in [chis, arrows, numbers]
         ])
@@ -3636,7 +3636,7 @@ class IntroduceChi(FactorizationPattern):
         else:
             self.play(
                 Write(labels),
-                FadeIn(arrows, submobject_mode = "lagged_start"),
+                FadeIn(arrows, lag_ratio = 0.5),
                 OldLaggedStart(
                     DrawBorderThenFill, dots,
                     stroke_width = 4,
@@ -4063,7 +4063,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         self.play(FadeIn(
             braces, 
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait(2)
 

@@ -301,7 +301,7 @@ class Pendulum(ReconfigurableScene):
             FadeIn(
                 cosine_approx,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             MoveToTarget(cosine),
             morty.change, "pondering", cosine_approx
@@ -619,7 +619,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             quadratic_tex, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(
             FadeIn(free_to_change),
@@ -708,7 +708,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(*list(map(FadeOut, [poly_at_zero, equals_c0])))
@@ -762,7 +762,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             VGroup(derivative, *rhs[:2]),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(Write(VGroup(*rhs[2:])), run_time = 2)
@@ -806,13 +806,13 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             derivative, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(Transform(
             derivative, derivative_at_zero,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(Write(equals_c1))
@@ -820,7 +820,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
 
@@ -865,7 +865,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             VGroup(second_deriv, *rhs[1][:2]),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(3)
         self.play(Write(VGroup(*rhs[1][2:]), run_time = 2))
@@ -947,7 +947,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(3)
 
@@ -1444,7 +1444,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         self.play(Transform(
             c3s, zeros, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
 
@@ -1547,7 +1547,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             Transform(
                 c4s, fractions,
                 run_time = 3,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             MoveToTarget(x_to_4, run_time = 2)
         )
@@ -1962,7 +1962,7 @@ class ApproximateNearNewPoint(CubicAndQuarticApproximations):
         self.play(FadeIn(
             poly_around_pi,
             run_time = 4,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(FadeIn(randy))
@@ -2303,7 +2303,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         self.play(ReplacementTransform(
             zeros.copy(), self.dot,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(ShowCreation(self.v_line))
         self.wait()
@@ -2326,7 +2326,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ReplacementTransform(
                 self.polynomial, new_polynomial,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             FadeOut(polynomial_fourth_term),
             FadeOut(self.taylor_name_group),
@@ -2944,7 +2944,7 @@ class SecondTermIntuition(AreaIsDerivative):
         self.play(FadeIn(
             geometric_taylor,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(
@@ -3388,7 +3388,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         self.play(FadeIn(
             series, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.series = series

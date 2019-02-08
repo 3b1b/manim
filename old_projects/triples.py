@@ -2169,7 +2169,7 @@ class DrawRadialLines(PointsWeMiss):
         self.play(ReplacementTransform(
             seed_dots, self.lines,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(OldLaggedStart(
             DrawBorderThenFill, new_dots,

@@ -302,7 +302,7 @@ class GraphScene(Scene):
     def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
         transform_kwargs = {
             "run_time": 2,
-            "submobject_mode": "lagged_start"
+            "lag_ratio": 0.5
         }
         added_anims = kwargs.get("added_anims", [])
         transform_kwargs.update(kwargs)

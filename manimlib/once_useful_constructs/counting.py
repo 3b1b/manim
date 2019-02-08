@@ -150,7 +150,7 @@ class CountingScene(Scene):
             result.append(ShowCreation(arrow))
         result.append(Transform(
             self.number_mob, new_number_mob,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         return result
 

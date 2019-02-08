@@ -346,7 +346,7 @@ class IntroduceNotation(TeacherStudentsScene):
             FadeIn(
                 clunky_deriv,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             RemovePiCreatureBubble(self.get_students()[1]),
             self.teacher.change_mode, "raise_right_hand"

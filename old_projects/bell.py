@@ -510,7 +510,7 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
         self.play(FadeIn(
             quantum_words,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         anim_sets = [
             [passing_photon],
@@ -526,7 +526,7 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
         for index in 0, 1:
             self.play(*anim_sets[index])
         self.play(
-            # FadeIn(prob_eq, submobject_mode = "lagged_start"),
+            # FadeIn(prob_eq, lag_ratio = 0.5),
             passing_photon
         )
         for index in 1, 0, 0, 1:
@@ -1477,7 +1477,7 @@ class VennDiagramProofByContradiction(Scene):
             Write(hundred), Write(s),
             ReplacementTransform(
                 VGroup(photon), photons,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
         )
 
@@ -2082,7 +2082,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         self.play(FadeIn(A1))
         self.play(FadeIn(B0))
         self.play(
-            FadeIn(words, submobject_mode = "lagged_start"),
+            FadeIn(words, lag_ratio = 0.5),
             ShowCreation(arrow)
         )
         self.wait()
@@ -2124,7 +2124,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             self.in_A_out_B_words.fade, 1,
             self.in_A_out_B_arrow.fade, 1,
             FadeIn(B1),
-            FadeIn(words, submobject_mode = "lagged_start"),
+            FadeIn(words, lag_ratio = 0.5),
             ShowCreation(arrow)
         )
         self.play(FadeIn(C0))

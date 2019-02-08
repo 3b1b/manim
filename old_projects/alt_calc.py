@@ -2256,7 +2256,7 @@ class GraphOnePlusOneOverX(GraphScene):
             line.fade(0.5)
             line_anim = ShowCreationThenDestruction(
                 line_copy,
-                submobject_mode="lagged_start",
+                lag_ratio=0.5,
                 run_time=2
             )
             line.continual_anim = CycleAnimation(line_anim)

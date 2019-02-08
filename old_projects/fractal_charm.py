@@ -6,7 +6,7 @@ class FractalCreation(Scene):
         "max_order" : 5,
         "transform_kwargs" : {
             "path_arc" : np.pi/6,
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "run_time" : 2,
         },
         "fractal_kwargs" : {},
@@ -79,7 +79,7 @@ class KochSnowFlakeFractalCreation(FractalCreation):
             "num_submobjects" : 100,
         },
         "transform_kwargs" : {
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "path_arc" : np.pi/6,
             "run_time" : 2,
         },

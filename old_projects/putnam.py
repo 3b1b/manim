@@ -111,7 +111,7 @@ class IntroducePutnam(Scene):
         self.wait()
         self.play(ReplacementTransform(
             out_of_tens.copy(), VGroup(out_of_120),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.wait()
@@ -218,7 +218,7 @@ class IntroduceTetrahedronSupplement(Scene):
             self.wait(0.7)
             self.remove(num)
         self.add(title[0])
-        self.play(FadeIn(title[1], submobject_mode = "lagged_start"))
+        self.play(FadeIn(title[1], lag_ratio = 0.5))
         self.wait(2)
         self.play(Write(question))
         self.wait(2)

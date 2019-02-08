@@ -1218,7 +1218,7 @@ class ShowVectorEquation(Scene):
             FadeIn(moving_brace.mobject),
             FadeIn(x_without_phi),
             FadeIn(moving_x_without_phi.mobject),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         )
         self.wait(3)

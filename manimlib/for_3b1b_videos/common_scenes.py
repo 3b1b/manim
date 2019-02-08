@@ -33,7 +33,7 @@ class OpeningQuote(Scene):
         "highlighted_quote_terms": {},
         "author": "",
         "fade_in_kwargs": {
-            "submobject_mode": "lagged_start",
+            "lag_ratio": 0.5,
             "rate_func": linear,
             "lag_factor": 4,
             "run_time": 5,

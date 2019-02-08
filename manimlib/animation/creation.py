@@ -90,7 +90,7 @@ class DrawBorderThenFill(Animation):
 class Write(DrawBorderThenFill):
     CONFIG = {
         "rate_func": linear,
-        "submobject_mode": "lagged_start",
+        "lag_ratio": 0.5,
     }
 
     def __init__(self, mob_or_text, **kwargs):

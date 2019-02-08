@@ -247,7 +247,7 @@ class EndScreen(PiCreatureScene):
             FadeIn(
                 words,
                 run_time=2,
-                submobject_mode="lagged_start"
+                lag_ratio=0.5
             ),
             self.pi_creature.change_mode, "hooray"
         )

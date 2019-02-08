@@ -3125,7 +3125,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         self.play(
             ReplacementTransform(
                 pre_dots, time_graph.dots,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2,
             ),
             MoveToTarget(time_graph),
@@ -3465,7 +3465,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
         #     com_vector_copies,
         #     path_arc = TAU/10,
         #     run_time = 1.5,
-        #     submobject_mode = "lagged_start"
+        #     lag_ratio = 0.5
         # ))
         self.wait()
 

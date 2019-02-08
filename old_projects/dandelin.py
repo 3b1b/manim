@@ -1421,7 +1421,7 @@ class CreativeConstruction(PiCreatureScene):
             lightbulb,
             run_time=3,
             rate_func=there_and_back,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         self.play(Blink(randy))
         self.wait()
@@ -1680,7 +1680,7 @@ class ReactionToGlimpseOfGenius(TeacherStudentsScene, CreativeConstruction):
             lightbulb, q_marks,
             run_time=3,
             rate_func=there_and_back_with_pause,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         self.play(
             ClockPassesTime(clock, hours_passed=4, run_tim=4),

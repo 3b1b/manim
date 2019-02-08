@@ -222,7 +222,7 @@ class InitialFiveChooseThreeExample(Scene):
             self.play(FadeIn(
                 stack, 
                 run_time = 0.2*len(stack),
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
 
@@ -650,7 +650,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             eq.next_to(stack, UP)
 
 #         self.play(
-#             FadeIn(stacks, run_time = 2, submobject_mode = "lagged_start"),
+#             FadeIn(stacks, run_time = 2, lag_ratio = 0.5),
 #             self.n_choose_k_group.to_edge, UP
 #         )
 #         new_words.move_to(n_choose_k_words, LEFT)
@@ -785,7 +785,7 @@ class SixChooseThreeInOtherContext(Scene):
 #     def add_n_choose_k_term(self):
 #         term = TexMobject("{5 \\choose 3} = 10")
 #         term.to_edge(UP)
-#         self.play(FadeIn(term, submobject_mode = "lagged_start"))
+#         self.play(FadeIn(term, lag_ratio = 0.5))
 #         self.wait()
 
 #         self.n_choose_k_term = term
@@ -2102,7 +2102,7 @@ class StacksApproachBellCurve(Scene):
             numbers_copy.target[-1].next_to(bars_copy.target[-1], UP, SMALL_BUFF)
 
             self.play(*[
-                MoveToTarget(mob, submobject_mode = "lagged_start")
+                MoveToTarget(mob, lag_ratio = 0.5)
                 for mob in (bars_copy, numbers, numbers_copy)
             ])
             self.remove(numbers, numbers_copy)
@@ -3064,7 +3064,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
             self.play(FadeIn(line, run_time = 0.1))
         self.wait(2)
         self.play(FadeOut(
-            stack, submobject_mode = "lagged_start", run_time = 2
+            stack, lag_ratio = 0.5, run_time = 2
         ))
 
     def choose_k_people(self):
@@ -3400,7 +3400,7 @@ class SumsToPowerOf2(Scene):
         self.play(
             Transform(n_choose_k_terms, fractions),
             MoveToTarget(plusses),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.wait()

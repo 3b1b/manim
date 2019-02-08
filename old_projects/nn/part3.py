@@ -321,7 +321,7 @@ class InterpretGradientComponents(GradientNudging):
             Transform(
                 grad_terms, points,
                 remover = True,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 1
             ),
             FadeOut(words),
@@ -890,7 +890,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             self.play(
                 mob.shift, MED_SMALL_BUFF*DOWN,
                 rate_func = there_and_back,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 1.5
             )
         self.wait()
@@ -2708,7 +2708,7 @@ class SimplestNetworkExample(PreviewLearning):
 
             self.play(ShowCreation(
                 mob.number_line, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             self.play(
                 ShowCreation(mob.arrow),

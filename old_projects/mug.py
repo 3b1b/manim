@@ -492,7 +492,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
         self.play(Transform(
             straight_lines, almost_solution_lines,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -546,7 +546,7 @@ class IntroduceGraph(PiCreatureScene):
         self.play(ReplacementTransform(
             pi_creatures, dots,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.add_foreground_mobjects(dots)
         self.play(
@@ -620,7 +620,7 @@ class IsK33Planar(UtilitiesPuzzleScene):
         self.play(ReplacementTransform(
             straight_lines, almost_solution_lines,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
 

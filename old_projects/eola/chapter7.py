@@ -72,7 +72,7 @@ class TraditionalOrdering(RandolphScene):
             FadeIn(
                 topics, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
         )
         self.play(topics[1].set_color, PINK)
@@ -118,7 +118,7 @@ class ThisSeriesOrdering(RandolphScene):
         self.play(
             FadeIn(
                 chapters, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ),
             self.randy.change_mode, "sassy"
@@ -1043,7 +1043,7 @@ class AlwaysfollowIHatJHat(TeacherStudentsScene):
         ])
         self.play(Transform(
             students, ponderers,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.random_blink(2)
@@ -1309,14 +1309,14 @@ class AssociationBetweenMatricesAndVectors(Scene):
         self.play(Transform(
             vectors, matrices, 
             path_arc = np.pi/2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.wait()
         self.play(
             vectors.restore, 
             path_arc = -np.pi/2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.wait()
@@ -1475,7 +1475,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         proj_lines = self.get_proj_lines(dots, proj_dots)
 
         self.wait()
-        self.play(FadeIn(vectors, submobject_mode = "lagged_start"))
+        self.play(FadeIn(vectors, lag_ratio = 0.5))
         self.wait()
         self.play(Transform(vectors, dots))
         self.wait()
@@ -1486,7 +1486,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
             Transform(vectors, proj_dots),
             Transform(proj_lines, proj_dots),
             Animation(self.u_hat),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.wait()
