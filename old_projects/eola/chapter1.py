@@ -77,12 +77,11 @@ class DifferentConceptions(Scene):
 
         self.play(ShowCreation(
             plane, 
-            submobject_mode = "lagged_start",
+            lag_ratio=1,
             run_time = 3
         ))
         self.play(ShowCreation(
             vector,
-            submobject_mode = "one_at_a_time"
         ))
         self.play(
             Write(labels),
@@ -326,7 +325,7 @@ class DifferentConceptions(Scene):
 
         self.play(
             Write(syms), Write(arrays),
-            ShowCreation(arrows, submobject_mode = "one_at_a_time"),
+            ShowCreation(arrows),
             ApplyMethod(mathy.change_mode, "pondering"),
             run_time = 2
         )
@@ -459,7 +458,7 @@ class HowIWantYouToThinkAboutVectors(Scene):
         tail_word.shift(0.5*DOWN+2.5*LEFT)
         line = Line(tail_word, dot)
 
-        self.play(ShowCreation(vector, submobject_mode = "one_at_a_time"))
+        self.play(ShowCreation(vector))
         self.wait(2)
         self.play(
             ShowCreation(plane, summobject_mode = "lagged_start"),
@@ -494,7 +493,6 @@ class HowIWantYouToThinkAboutVectors(Scene):
 
         self.play(ShowCreation(
             other_vectors, 
-            submobject_mode = "one_at_a_time",
             run_time = 3
         ))
         self.wait(3)
@@ -564,7 +562,7 @@ class CoordinateSystemWalkthrough(VectorScene):
         self.remove(origin_words, dot, line)
         self.wait()
         self.play(
-            ShowCreation(tick_marks, submobject_mode = "one_at_a_time")
+            ShowCreation(tick_marks)
         )
         self.play(
             GrowFromCenter(unit_brace),
@@ -606,7 +604,7 @@ class CoordinateSystemWalkthrough(VectorScene):
         point_word.next_to(point, DOWN)
         point.add(point_word)
 
-        self.play(ShowCreation(vector, submobject_mode = "one_at_a_time"))
+        self.play(ShowCreation(vector))
         self.play(Write(array))
         self.wait(2)
         self.play(ApplyMethod(x_label_copy.next_to, x_line, DOWN))
@@ -753,13 +751,13 @@ class AddingNumbersOnNumberLine(Scene):
 
         sum_mob = TexMobject("2 + 5").shift(3*UP)
 
-        self.play(ShowCreation(number_line, submobject_mode = "one_at_a_time"))
+        self.play(ShowCreation(number_line))
         self.wait()
         self.play(Write(sum_mob, run_time = 2))
         self.wait()
         for vect, num in zip(vects, nums):
             self.play(
-                ShowCreation(vect, submobject_mode = "one_at_a_time"),
+                ShowCreation(vect),
                 Write(num, run_time = 1)
             )
             self.wait()
@@ -1214,8 +1212,7 @@ class ManipulateSpace(LinearTransformationScene):
         self.plane.prepare_for_nonlinear_transform()
 
         self.play(ShowCreation(
-            self.plane, 
-            submobject_mode = "one_at_a_time",
+            self.plane,
             run_time = 2
         ))
         self.play(FadeIn(pi_creature))

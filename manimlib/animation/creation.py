@@ -16,9 +16,13 @@ from manimlib.utils.rate_functions import smooth
 
 
 class ShowPartial(Animation):
-    def interpolate_submobject(self, submobject, starting_submobject, alpha):
-        submobject.pointwise_become_partial(
-            starting_submobject, *self.get_bounds(alpha)
+    """
+    Abstract class for ShowCreation and ShowPassingFlash
+    """
+
+    def interpolate_submobject(self, submob, start_submob, alpha):
+        submob.pointwise_become_partial(
+            start_submob, *self.get_bounds(alpha)
         )
 
     def get_bounds(self, alpha):
@@ -27,7 +31,7 @@ class ShowPartial(Animation):
 
 class ShowCreation(ShowPartial):
     CONFIG = {
-        "submobject_mode": "one_at_a_time",
+        "lag_ratio": 1,
     }
 
     def get_bounds(self, alpha):

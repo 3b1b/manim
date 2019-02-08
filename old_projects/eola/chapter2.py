@@ -645,7 +645,6 @@ class VectorsToDotsScene(VectorScene):
         self.play(
             ShowCreation(
                 vector_group, 
-                submobject_mode = "one_at_a_time",
                 run_time = 3
             )
         )
@@ -843,7 +842,7 @@ class LinearCombinationOfThreeVectorsText(Scene):
         self.play(Write(equation))
         self.wait()
         self.play(
-            ShowCreation(arrows, submobject_mode = "one_at_a_time"),
+            ShowCreation(arrows),
             Write(span_comment)
         )
         self.wait()

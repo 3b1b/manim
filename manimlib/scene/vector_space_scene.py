@@ -49,14 +49,14 @@ class VectorScene(Scene):
     def add_plane(self, animate=False, **kwargs):
         plane = NumberPlane(**kwargs)
         if animate:
-            self.play(ShowCreation(plane, submobject_mode="lagged_start"))
+            self.play(ShowCreation(plane, lag_ratio=0.5))
         self.add(plane)
         return plane
 
     def add_axes(self, animate=False, color=WHITE, **kwargs):
         axes = Axes(color=color, tick_frequency=1)
         if animate:
-            self.play(ShowCreation(axes, submobject_mode="one_at_a_time"))
+            self.play(ShowCreation(axes))
         self.add(axes)
         return axes
 

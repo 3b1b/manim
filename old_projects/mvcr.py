@@ -514,7 +514,7 @@ class ComputationalNetwork(MovingCameraScene):
         for x in range(3):
             self.play(ShowCreationThenDestruction(
                 top_lines,
-                submobject_mode="one_at_a_time"
+                lag_ratio=1,
             ))
         self.wait()
         self.play(
@@ -550,7 +550,7 @@ class ComputationalNetwork(MovingCameraScene):
             self.play(*[
                 ShowCreationThenDestruction(
                     group,
-                    submobject_mode="one_at_a_time"
+                    lag_ratio=1,
                 )
                 for group in (top_lines, bottom_lines)
             ])

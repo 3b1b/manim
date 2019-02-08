@@ -1796,7 +1796,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             MoveCar(car, end),
             FadeIn(
                 ticks, 
-                submobject_mode = "one_at_a_time",
+                lag_ratio=1,
                 rate_func=linear,
             ),
             ShowCreation(line),

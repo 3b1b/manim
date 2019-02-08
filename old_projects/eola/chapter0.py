@@ -359,7 +359,7 @@ class NumericToComputations(Scene):
         bottom.next_to(arrow, DOWN)
 
         self.add(top)
-        self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.play(ShowCreation(arrow))
         self.play(FadeIn(bottom))
         self.wait()
 
@@ -458,7 +458,7 @@ class IntimidatingProf(Scene):
         self.add(randy, morty)
         self.play(
             FadeIn(morty_name1),
-            ShowCreation(arrow, submobject_mode = "one_at_a_time")
+            ShowCreation(arrow)
         )
         self.play(Transform(morty_name1, morty_name2))
         self.wait()
@@ -614,10 +614,9 @@ class PhysicsExample(Scene):
         vy_label.next_to(vy, RIGHT)
         vy_label.set_color(vy.get_color())
 
-        kwargs = {"submobject_mode" : "one_at_a_time"}
         for v in v_mob, vx, vy:
             self.play(
-                ShowCreation(v, submobject_mode = "one_at_a_time")
+                ShowCreation(v)
             )
         self.play(
             ShowCreation(arc),
@@ -687,7 +686,7 @@ class MatricesAre(Scene):
         matrix.next_to(arrow, LEFT)
 
         self.play(Write(matrix, run_time = 1))
-        self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.play(ShowCreation(arrow))
         self.wait()
 
 class ExampleTransformationForIntuitionList(LinearTransformationScene):
@@ -756,7 +755,7 @@ class DeterminantsAre(Scene):
 
         self.play(
             Write(tex_mob),
-            ShowCreation(arrow, submobject_mode = "one_at_a_time"),
+            ShowCreation(arrow),
             run_time = 1
         )
 
@@ -849,7 +848,7 @@ class TableOfContents(Scene):
 
         self.play(
             ApplyMethod(entry3.set_color, YELLOW),
-            ShowCreation(arrow, submobject_mode = "one_at_a_time"),
+            ShowCreation(arrow),
             Write(added_words),
             run_time = 1
         )
@@ -954,7 +953,7 @@ class DifferingBackgrounds(Scene):
                 arrow_anim = Transform(last_arrow, arrow)
             else:
                 word_anim = Write(word, run_time = 1)
-                arrow_anim = ShowCreation(arrow, submobject_mode = "one_at_a_time")
+                arrow_anim = ShowCreation(arrow)
                 last_word = word
                 last_arrow = arrow
             self.play(

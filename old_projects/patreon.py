@@ -315,14 +315,14 @@ class GrowRonaksSierpinski(Scene):
         run_time = 1
         for n, sierp_layer, dot_layer in zip(it.count(1), sierp_layers, dot_layers[1:]):
             self.play(
-                ShowCreation(sierp_layer, submobject_mode = "one_at_a_time"),
+                ShowCreation(sierp_layer, lag_ratio=1),
                 Animation(last_dot_layer),
                 run_time = run_time
             )
             self.play(ShowCreation(
                 dot_layer,
                 run_time = run_time,
-                submobject_mode = "all_at_once"
+                lag_ratio=1,
             ))
             # if n == 2:
             #     dot = dot_layer[1]
@@ -618,7 +618,6 @@ class IntegrationByParts(Scene):
         self.play(
             ShowCreation(
                 v_lines,
-                submobjects = "one_at_a_time",
                 run_time = 2
             ),
             Animation(curve),
@@ -630,7 +629,6 @@ class IntegrationByParts(Scene):
         self.play(
             ShowCreation(
                 h_lines,
-                submobjects = "one_at_a_time",
                 run_time = 2
             ),
             Animation(curve),

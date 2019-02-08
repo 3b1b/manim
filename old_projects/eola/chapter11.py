@@ -449,7 +449,6 @@ class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
         self.play(
             ShowCreation(
                 eigenvectors,
-                submobject_mode = "one_at_a_time",
                 run_time = 2,
             ),
             Animation(words)
@@ -2047,7 +2046,6 @@ class ShowVectorSpaces(Scene):
         self.add(h_line, *v_lines)
         self.play(ShowCreation(
             vectors,
-            submobject_mode = "one_at_a_time",
             run_time = 3
         ))
         self.play(Write(arrays))

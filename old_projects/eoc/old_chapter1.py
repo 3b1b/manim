@@ -1715,7 +1715,7 @@ class IntroduceConcentricRings(CircleScene):
         self.play(
             FadeIn(
                 VGroup(*rings[:-1]),
-                submobject_mode = "one_at_a_time",
+                lag_ratio=1,
                 run_time = 5
             ),
             Animation(foreground_group)
