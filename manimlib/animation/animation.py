@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_ANIMATION_RUN_TIME
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
@@ -18,9 +18,6 @@ class Animation(object):
         # TODO, replace this with a single lag parameter
         "submobject_mode": "all_at_once",
         "lag_factor": 2,
-        # Used by EmptyAnimation to announce itself ignorable
-        # in Successions and AnimationGroups
-        "empty": False
     }
 
     def __init__(self, mobject, **kwargs):
@@ -32,11 +29,12 @@ class Animation(object):
         mobject = self.mobject
         # Keep track of where it started
         self.starting_mobject = mobject.copy()
-        # All calls to mobject's internal updaters
+        # All calls to self.mobject's internal updaters
         # during the animation, either from this Animation
         # or from the surrounding scene, should do nothing.
         # It is, however, okay and desirable to call
-        # self.starting_mobject's internal updaters
+        # the internal updaters of self.starting_mobject,
+        # or any others among self.get_all_mobjects()
         mobject.suspend_updating()
         self.interpolate(0)
 
