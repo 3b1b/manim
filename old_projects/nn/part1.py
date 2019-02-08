@@ -661,7 +661,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             ),
             self.get_student_changes(
                 *["confused"]*3,
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             ),
             self.teacher.change, "plain",
             run_time = 1

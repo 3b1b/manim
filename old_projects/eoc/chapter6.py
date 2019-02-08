@@ -1891,7 +1891,7 @@ class AlternateExample(ZoomedScene):
             ShowCreation(
                 graphs, 
                 run_time = 3, 
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             ),
             Animation(self.formula)
         )

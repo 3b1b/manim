@@ -44,7 +44,7 @@ class PiCreatureFractalCreation(FractalCreation):
         "max_order" : 6,
         "fractal_kwargs" : {"height" : 6},
         "transform_kwargs" : {
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "run_time" : 2,
         },
     }
@@ -65,7 +65,7 @@ class QuadraticKochFractalCreation(FractalCreation):
         "max_order" : 5,
         "fractal_kwargs" : {"radius" : 10},
         # "transform_kwargs" : {
-        #     "submobject_mode" : "all_at_once",
+        #     "lag_ratio" : 0,
         #     "run_time" : 2,
         # },
     }

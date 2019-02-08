@@ -1251,7 +1251,7 @@ class GraphOfXCubed(GraphScene):
         self.play(Write(label, run_time = 1))
         self.wait()
         self.play(Write(deriv_label, run_time = 1))
-        self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(ss_group, lag_ratio = 0))
         self.animate_secant_slope_group_change(
             ss_group,
             target_x = self.deriv_x_max,
@@ -2377,7 +2377,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             color = RED
         )
 
-        self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(ss_group, lag_ratio = 0))
         self.play(ShowCreation(v_line))
         self.wait()
         last_theta = 0

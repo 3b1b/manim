@@ -852,7 +852,7 @@ class WalkEquatorPostTransform(GraphScene):
         ])
 
         self.play(
-            ShowCreation(transverse_curve, submobject_mode = "all_at_once"),
+            ShowCreation(transverse_curve, lag_ratio = 0),
             equator_transform,
             dots_transform,
             run_time = 10,

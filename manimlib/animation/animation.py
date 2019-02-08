@@ -16,7 +16,6 @@ class Animation(object):
         # Does this animation add or remove a mobject form the screen
         "remover": False,
         # TODO, replace this with a single lag parameter
-        # "submobject_mode": "all_at_once",
 
         # If 0, the animation is applied to all submobjects
         # at the same time

@@ -124,7 +124,7 @@ class NumericalMatrixMultiplication(Scene):
                             start_parts,
                             result_entry.copy().set_color(YELLOW),
                             path_arc=-np.pi / 2,
-                            submobject_mode="all_at_once",
+                            lag_ratio=0,
                         ),
                         *lagging_anims
                     )

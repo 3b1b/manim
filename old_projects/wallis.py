@@ -1346,7 +1346,7 @@ class Lemma1(DistanceProductScene):
         arcs.set_stroke(YELLOW, 5)
         show_arcs = ShowCreationThenDestruction(
             arcs,
-            submobject_mode="all_at_once",
+            lag_ratio=0,
             run_time=2,
         )
 
@@ -1542,7 +1542,7 @@ class FromGeometryToAlgebra(DistanceProductScene):
             arc.reverse_points()
 
         arcs_anim = ShowCreationThenDestruction(
-            arcs, submobject_mode="all_at_once", run_time=2
+            arcs, lag_ratio=0, run_time=2
         )
 
         spacing_words = self.spacing_words = TextMobject("Evenly-spaced")
@@ -4809,7 +4809,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         self.wait()
         self.play(
             # GrowFromCenter(brace),
-            ShowCreation(product_lines, submobject_mode="all_at_once"),
+            ShowCreation(product_lines, lag_ratio=0),
             FadeIn(product)
         )
         self.wait()

@@ -824,7 +824,7 @@ class CylinderModel(Scene):
         self.play(
             ShowCreationThenDestruction(
                 stream_lines_copy,
-                submobject_mode="all_at_once",
+                lag_ratio=0,
                 run_time=3,
             )
         )
@@ -1118,7 +1118,7 @@ class ElectricField(CylinderModel, MovingCameraScene):
         self.play(ShowCreation(
             h_lines,
             run_time=2,
-            submobject_mode="all_at_once"
+            lag_ratio=0
         ))
         self.add(voltage_update)
         self.add_foreground_mobjects(voltage)

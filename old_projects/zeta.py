@@ -346,7 +346,7 @@ class PreviewZetaAndContinuation(ZetaTransformationScene):
         self.wait()
         self.play(ShowCreation(
             reflected_plane,
-            submobject_mode = "all_at_once",
+            lag_ratio = 0,
             run_time = 2
         ))
         self.wait()

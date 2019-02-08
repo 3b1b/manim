@@ -659,7 +659,7 @@ class TrackBasisVectorsExample(LinearTransformationScene):
         self.play(Transform(
             pre_def, v_def, 
             run_time = 2, 
-            submobject_mode = "all_at_once"
+            lag_ratio = 0
         ))
         self.remove(pre_def)
         self.add_foreground_mobject(v_def)
@@ -907,7 +907,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             Transform(i_brackets, matrix_brackets),
             Transform(j_brackets, matrix_brackets),
             run_time = 2,
-            submobject_mode = "all_at_once"
+            lag_ratio = 0
         )
         everything = VMobject(*self.get_mobjects())
         self.play(
@@ -995,7 +995,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             Transform(
                 formula_start, formula, 
                 run_time = 2,
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             )
         )
         self.wait()
@@ -1045,7 +1045,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         self.play(
             Transform(
                 start_state, end_state, 
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             ),
             Write(equals, run_time = 1)
         )
@@ -1404,7 +1404,7 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
         self.play(
             ApplyPointwiseFunction(
                 collapse_func, axes, 
-                submobject_mode = "all_at_once",
+                lag_ratio = 0,
             ),
             ApplyPointwiseFunction(collapse_func, graph),
             ApplyMethod(point.shift, 10*DOWN),
@@ -1714,7 +1714,7 @@ class ReasonForThinkingAboutArrows(LinearTransformationScene):
         self.wait()
         self.play(Transform(
             vectors, vectors_copy, 
-            submobject_mode = "all_at_once"
+            lag_ratio = 0
         ))
         self.wait()
 

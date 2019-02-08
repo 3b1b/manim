@@ -3205,7 +3205,7 @@ class ThreeFilters(ShootPhotonThroughFilter):
         l1, l2, l3 = self.lines_group[:3]
         pf1, pf2, pf3 = self.pol_filters
         kwargs = {
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "rate_func" : None,
         }
 
@@ -3685,7 +3685,7 @@ class PhotonAtSlightAngle(ThreeFilters):
             FadeIn(self.pol_filter),
             Animation(self.arc)
         )
-        self.play(ShowCreation(filter_lines, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(filter_lines, lag_ratio = 0))
         self.play(FadeOut(filter_lines))
         self.wait()
 
@@ -3788,7 +3788,7 @@ class PhotonAtSlightAngle(ThreeFilters):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
         }
         self.play(
             ShowCreation(arrow),

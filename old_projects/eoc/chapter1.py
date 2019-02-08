@@ -1572,7 +1572,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
 
         self.play(Write(area_label))
         self.play(
-            ShowCreation(arrows, submobject_mode = "all_at_once"),
+            ShowCreation(arrows, lag_ratio = 0),
             FadeIn(radial_lines),
             *[
                 ReplacementTransform(

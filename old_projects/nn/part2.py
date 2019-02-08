@@ -266,7 +266,7 @@ class PreviewLearning(NetworkScene):
 
             self.play(
                 ShowCreation(
-                    delta_edges, submobject_mode = "all_at_once"
+                    delta_edges, lag_ratio = 0
                 ),
                 FadeIn(delta_neurons),
                 run_time = 0.5

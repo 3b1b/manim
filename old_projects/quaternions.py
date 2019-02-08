@@ -3705,7 +3705,7 @@ class TwoDStereographicProjection(IntroduceFelix):
             self.play(
                 ShowCreationThenDestruction(
                     sphere_arcs,
-                    submobject_mode="all_at_once",
+                    lag_ratio=0,
                     run_time=3,
                 )
             )

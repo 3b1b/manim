@@ -1177,7 +1177,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         circle_plane = self.get_circle_plane()
         moving_graph = graph.copy()
 
-        self.play(ShowCreation(circle_plane, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(circle_plane, lag_ratio = 0))
         self.play(ReplacementTransform(
             moving_graph,
             polarized_graph,
@@ -3502,7 +3502,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
         bps_label.add_background_rectangle()
 
         self.play(
-            ShowCreation(v_lines, submobject_mode = "all_at_once"),
+            ShowCreation(v_lines, lag_ratio = 0),
             ShowCreation(graph_portion),
             FadeIn(bps_label),
         )

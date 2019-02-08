@@ -266,7 +266,7 @@ class MainBreakdown(Scene):
         def get_passing_flash():
             return ShowPassingFlash(
                 paths,
-                submobject_mode = "all_at_once",
+                lag_ratio = 0,
                 time_width = 0.7,
                 run_time = 2,
             )

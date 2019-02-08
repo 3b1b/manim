@@ -2631,7 +2631,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
         )
 
         # Show miniature triangle
-        self.play(ShowCreation(mini_triangle, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(mini_triangle, lag_ratio = 0))
         self.play(
             MoveToTarget(mini_triangle),
             run_time = 2,

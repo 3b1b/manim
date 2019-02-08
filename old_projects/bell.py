@@ -781,7 +781,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
         }
 
         self.play(ShowCreation(lines_to_pf1, run_time = 2./3, **kwargs))
@@ -1083,7 +1083,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         lines_from_C = self.get_lines(C, ratio = 0.5)
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "run_time" : 1./3,
         }
         self.play(
@@ -1142,7 +1142,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "run_time" : 1./5,
         }
         self.play(
@@ -1309,7 +1309,7 @@ class RemoveBFromLabeledFilters(IntroduceLabeledFiltersNoRotation):
             line.scale(0.5, about_point = line.get_end())
 
         kwargs = {
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "rate_func" : None,
         }
 
@@ -2440,7 +2440,7 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once"
+            "lag_ratio" : 0
         }
         self.play(ShowCreation(all_pre_lines, **kwargs))
         self.play(

@@ -435,7 +435,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         self.play(
             ShowCreation(
                 self.connecting_lines,
-                submobject_mode = "all_at_once",
+                lag_ratio = 0,
                 run_time = 2
             ),
             Animation(self.dots)

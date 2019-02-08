@@ -236,8 +236,8 @@ class VectorScene(Scene):
         )
         self.wait()
         self.play(
-            Transform(x_coord_start, x_coord, submobject_mode="all_at_once"),
-            Transform(y_coord_start, y_coord, submobject_mode="all_at_once"),
+            Transform(x_coord_start, x_coord, lag_ratio=0),
+            Transform(y_coord_start, y_coord, lag_ratio=0),
             Write(brackets, run_time=1),
         )
         self.wait()
@@ -437,7 +437,7 @@ class LinearTransformationScene(VectorScene):
         target = VMobject(*[mob.target for mob in pieces])
         if self.leave_ghost_vectors:
             self.add(start.copy().fade(0.7))
-        return Transform(start, target, submobject_mode="all_at_once")
+        return Transform(start, target, lag_ratio=0)
 
     def get_moving_mobject_movement(self, func):
         for m in self.moving_mobjects:

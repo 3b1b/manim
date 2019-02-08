@@ -343,7 +343,7 @@ class MathIsATease(Scene):
 
         self.add(randy)
         self.play(
-            ShowCreation(lashes, submobject_mode = "all_at_once"),
+            ShowCreation(lashes, lag_ratio = 0),
             randy.change, "tease",
             randy.look, OUT,
         )

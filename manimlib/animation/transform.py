@@ -20,7 +20,6 @@ class Transform(Animation):
         "path_arc": 0,
         "path_arc_axis": OUT,
         "path_func": None,
-        "submobject_mode": "all_at_once",
         "replace_mobject_with_target_in_scene": False,
     }
 
@@ -121,7 +120,7 @@ class MoveToTarget(Transform):
 
 class ApplyMethod(Transform):
     CONFIG = {
-        "submobject_mode": "all_at_once"
+        "lag_ratio": 0
     }
 
     def __init__(self, method, *args, **kwargs):
@@ -185,7 +184,7 @@ class Restore(ApplyMethod):
 
 class ApplyFunction(Transform):
     CONFIG = {
-        "submobject_mode": "all_at_once",
+        "lag_ratio": 0,
     }
 
     def __init__(self, function, mobject, **kwargs):

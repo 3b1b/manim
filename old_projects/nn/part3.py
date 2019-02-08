@@ -2554,7 +2554,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.wait()
         self.play(MoveToTarget(zL))
         self.play(
-            ShowCreation(top_lines, submobject_mode = "all_at_once"),
+            ShowCreation(top_lines, lag_ratio = 0),
             top_lines.flash
         )
         self.wait()
