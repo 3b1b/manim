@@ -31,7 +31,18 @@ class AnimationGroup(Animation):
         return self.group
 
     def init_run_time(self):
-        # A list of triplets (anim, start_time, end_time)
+        self.build_animations_with_timings()
+        self.max_end_time = np.max([
+            awt[2] for awt in self.anims_with_timings
+        ])
+        if self.run_time is None:
+            self.run_time = self.max_end_time
+
+    def build_animations_with_timings(self):
+        """
+        Creates a list of triplets of the form
+        (anim, start_time, end_time)
+        """
         self.anims_with_timings = []
         curr_time = 0
         for anim in self.animations:
@@ -45,14 +56,6 @@ class AnimationGroup(Animation):
             curr_time = interpolate(
                 start_time, end_time, self.lag_ratio
             )
-        if self.run_time is None:
-            # Default to max end_time
-            self.run_time = self.get_default_run_time()
-
-    def get_default_run_time(self):
-        return np.max([
-            awt[2] for awt in self.anims_with_timings
-        ])
 
     def begin(self):
         for anim in self.animations:
@@ -66,8 +69,17 @@ class AnimationGroup(Animation):
         for anim in self.animations:
             anim.clean_up_from_scene(scene)
 
+    def update_mobjects(self, dt):
+        for anim in self.animations:
+            anim.update_mobjects(dt)
+
     def interpolate(self, alpha):
-        time = alpha * self.get_run_time()
+        # Note, if the run_time of AnimationGroup has been
+        # set to something other than its default, these
+        # times might not correspond to actual times,
+        # e.g. of the surrounding scene.  Instead they'd
+        # be a rescaled version.  But that's okay!
+        time = alpha * self.max_end_time
         for anim, start_time, end_time in self.anims_with_timings:
             anim_time = end_time - start_time
             if anim_time == 0:
@@ -84,6 +96,13 @@ class Succession(AnimationGroup):
     CONFIG = {
         "lag_ratio": 1,
     }
+
+
+class LaggedStart(AnimationGroup):
+    CONFIG = {
+        "lag_ratio": 0.2,
+    }
+
 
 # Variants on mapping an animation over submobjects
 
