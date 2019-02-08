@@ -29,42 +29,11 @@ class Transform(Animation):
         self.target_mobject = target_mobject
         self.init_path_func()
 
-    def begin(self):
-        mobject = self.mobject
-        target = self.target_mobject
-        # Note, this potentially changes the structure
-        # of both mobject and target_mobject
-        mobject.align_data(target)
-        super().begin()
-        # Copy target_mobject so as to not mess with caller
-        # self.original_target_mobject = self.target_mobject
-        self.target_mobject.update()
-        self.target_mobject.suspend_updating()
-        self.target_copy = self.target_mobject.copy()
-
-    def finish(self):
-        super().finish()
-        self.target_mobject.resume_updating()
-
-    def clean_up_from_scene(self, scene):
-        super().clean_up_from_scene(scene)
-        if self.replace_mobject_with_target_in_scene:
-            scene.remove(self.mobject)
-            scene.add(self.target_mobject)
-
     def __str__(self):
         return "{}To{}".format(
-            super().__str__(self),
+            super().__str__(),
             str(self.target_mobject)
         )
-
-    def update_config(self, **kwargs):
-        Animation.update_config(self, **kwargs)
-        if "path_arc" in kwargs:
-            self.path_func = path_along_arc(
-                kwargs["path_arc"],
-                kwargs.get("path_arc_axis", OUT)
-            )
 
     def init_path_func(self):
         if self.path_func is not None:
@@ -77,11 +46,43 @@ class Transform(Animation):
                 self.path_arc_axis,
             )
 
-    def get_all_mobjects(self):
-        return self.mobject, self.starting_mobject, self.target_mobject
+    def begin(self):
+        # Use a copy of target_mobject for the align_data
+        # call so that the actual target_mobject stays
+        # preserved.
+        self.target_copy = self.target_mobject.copy()
+        # Note, this potentially changes the structure
+        # of both mobject and target_mobject
+        self.mobject.align_data(self.target_copy)
+        super().begin()
 
-    def interpolate_submobject(self, submob, start, end, alpha):
-        submob.interpolate(start, end, alpha, self.path_func)
+    def clean_up_from_scene(self, scene):
+        super().clean_up_from_scene(scene)
+        if self.replace_mobject_with_target_in_scene:
+            scene.remove(self.mobject)
+            scene.add(self.target_mobject)
+
+    def update_config(self, **kwargs):
+        Animation.update_config(self, **kwargs)
+        if "path_arc" in kwargs:
+            self.path_func = path_along_arc(
+                kwargs["path_arc"],
+                kwargs.get("path_arc_axis", OUT)
+            )
+
+    def get_all_mobjects(self):
+        return [
+            self.mobject,
+            self.starting_mobject,
+            self.target_mobject,
+            self.target_copy,
+        ]
+
+    def interpolate_submobject(self, submob, start, target, target_copy, alpha):
+        submob.interpolate(
+            start, target_copy,
+            alpha, self.path_func
+        )
         return self
 
 
@@ -278,7 +279,7 @@ class TransformAnimations(Transform):
         start_anim.mobject = self.starting_mobject
         end_anim.mobject = self.target_mobject
 
-    def update(self, alpha):
-        self.start_anim.update(alpha)
-        self.end_anim.update(alpha)
-        Transform.update(self, alpha)
+    def interpolate(self, alpha):
+        self.start_anim.interpolate(alpha)
+        self.end_anim.interpolate(alpha)
+        Transform.interpolate(self, alpha)

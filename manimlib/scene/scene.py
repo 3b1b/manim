@@ -483,7 +483,9 @@ class Scene(Container):
         for t in self.get_animation_time_progression(animations):
             dt = 1 / self.camera.frame_rate
             for animation in animations:
-                animation.update(t / animation.run_time)
+                animation.update_mobjects(dt)
+                animation.interpolate(t / animation.run_time)
+
             self.continual_update(dt)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())

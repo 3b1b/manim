@@ -139,7 +139,7 @@ class FadeOut(Transform):
 
     def clean_up_from_scene(self, scene=None):
         Transform.clean_up_from_scene(self, scene)
-        self.update(0)
+        self.interpolate(0)
 
 
 class FadeIn(Transform):

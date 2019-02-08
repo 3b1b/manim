@@ -29,17 +29,20 @@ class Animation(object):
         self.mobject = mobject
 
     def begin(self):
-        # mobject = self.mobject
-        # # Make sure it's all up to date
-        # mobject.update()
-        # mobject.suspend_updating()
+        mobject = self.mobject
         # Keep track of where it started
-        self.starting_mobject = self.mobject.copy()
-        self.update(0)
+        self.starting_mobject = mobject.copy()
+        # All calls to mobject's internal updaters
+        # during the animation, either from this Animation
+        # or from the surrounding scene, should do nothing.
+        # It is, however, okay and desirable to call
+        # self.starting_mobject's internal updaters
+        mobject.suspend_updating()
+        self.interpolate(0)
 
     def finish(self):
+        self.interpolate(1)
         self.mobject.resume_updating()
-        self.update(1)
 
     def clean_up_from_scene(self, scene):
         if self.is_remover():
@@ -58,12 +61,26 @@ class Animation(object):
         return self
 
     def update_mobjects(self, dt):
+        """
+        Updates things like starting_mobject, and (for
+        Transforms) target_mobject.  Note, since typically
+        (always?) self.mobject will have its updating
+        suspended during the animation, this will do
+        nothing to self.mobject.
+        """
         for mob in self.get_all_mobjects():
             mob.update(dt)
 
-    def update(self, alpha):
+    def interpolate(self, alpha):
         alpha = np.clip(alpha, 0, 1)
         self.interpolate_mobject(self.rate_func(alpha))
+
+    def update(self, alpha):
+        """
+        This method shouldn't exist, but it's here to
+        keep many old scenes from breaking
+        """
+        self.interpolate(alpha)
 
     def interpolate_mobject(self, alpha):
         families = self.get_all_families_zipped()
@@ -102,12 +119,8 @@ class Animation(object):
             self.get_all_mobjects()
         )))
 
-    def filter_out(self, *filter_functions):
-        self.filter_functions += filter_functions
-        return self
-
-    def set_run_time(self, time):
-        self.run_time = time
+    def set_run_time(self, run_time):
+        self.run_time = run_time
         return self
 
     def get_run_time(self):
