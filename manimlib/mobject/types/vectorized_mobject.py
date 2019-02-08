@@ -235,6 +235,11 @@ class VMobject(Mobject):
         self.set_stroke(color, family=family)
         return self
 
+    def set_opacity(self, opacity, family=True):
+        self.set_fill(opacity=opacity, family=family)
+        self.set_stroke(opacity=opacity, family=family)
+        return self
+
     def fade_no_recurse(self, darkness):
         opacity = 1.0 - darkness
         self.set_fill(opacity=opacity)
@@ -853,9 +858,11 @@ class DashedVMobject(VMobject):
 
         # End points of the unit interval for division
         alphas = np.linspace(0, 1, num_dashes + 1)
+
         # This determines the length of each "dash"
         full_d_alpha = (1.0 / num_dashes)
         partial_d_alpha = full_d_alpha * ps_ratio
+
         # Rescale so that the last point of vmobject will
         # be the end of the last dash
         alphas /= (1 - full_d_alpha + partial_d_alpha)
