@@ -57,7 +57,7 @@ class Animation(object):
         digest_config(self, kwargs)
         return self
 
-    def update_mobjects_alt(self, dt):
+    def update_mobjects(self, dt):
         for mob in self.get_all_mobjects():
             mob.update(dt)
 
@@ -69,7 +69,11 @@ class Animation(object):
         families = self.get_all_families_zipped()
         for i, mobs in enumerate(families):
             sub_alpha = self.get_sub_alpha(alpha, i, len(families))
-            self.update_submobject(*mobs, sub_alpha)
+            self.interpolate_submobject(*mobs, sub_alpha)
+
+    def interpolate_submobject(self, submobject, starting_sumobject, alpha):
+        # Typically ipmlemented by subclass
+        pass
 
     def get_sub_alpha(self, alpha, index, num_submobjects):
         if self.submobject_mode in ["lagged_start", "smoothed_lagged_start"]:
@@ -86,13 +90,9 @@ class Animation(object):
             return alpha
         raise Exception("Invalid submobject mode")
 
-    def update_submobject(self, submobject, starting_sumobject, alpha):
-        # Typically ipmlemented by subclass
-        pass
-
     def get_all_mobjects(self):
         """
-        Ordering must match the ording of arguments to update_submobject
+        Ordering must match the ording of arguments to interpolate_submobject
         """
         return self.mobject, self.starting_mobject
 

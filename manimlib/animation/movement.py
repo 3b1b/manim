@@ -20,7 +20,7 @@ class Homotopy(Animation):
         digest_config(self, kwargs)
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_submobject(self, submob, start, alpha):
+    def interpolate_submobject(self, submob, start, alpha):
         submob.points = start.points
         submob.apply_function(
             self.function_at_time_t(alpha),
@@ -29,8 +29,8 @@ class Homotopy(Animation):
 
 
 class SmoothedVectorizedHomotopy(Homotopy):
-    def update_submobject(self, submob, start, alpha):
-        Homotopy.update_submobject(self, submob, start, alpha)
+    def interpolate_submobject(self, submob, start, alpha):
+        Homotopy.interpolate_submobject(self, submob, start, alpha)
         submob.make_smooth()
 
 

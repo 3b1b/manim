@@ -539,7 +539,7 @@ class WalkerAnimation(Animation):
         Animation.__init__(self, self.compound_walker, **kwargs)
 
     # Perhaps abstract this out into an "Animation updating from original object" class
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
     def interpolate_mobject(self, alpha):
@@ -1315,7 +1315,7 @@ class FuncRotater(Animation):
     }
 
     # Perhaps abstract this out into an "Animation updating from original object" class
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
     def interpolate_mobject(self, alpha):

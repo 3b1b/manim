@@ -50,7 +50,7 @@ class ConfettiSpiril(Animation):
         
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
     def interpolate_mobject(self, alpha):

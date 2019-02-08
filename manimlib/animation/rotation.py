@@ -18,7 +18,7 @@ class Rotating(Animation):
         "about_edge": None,
     }
 
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
     def interpolate_mobject(self, alpha):

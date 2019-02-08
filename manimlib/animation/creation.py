@@ -16,7 +16,7 @@ from manimlib.utils.rate_functions import smooth
 
 
 class ShowPartial(Animation):
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.pointwise_become_partial(
             starting_submobject, *self.get_bounds(alpha)
         )
@@ -55,7 +55,7 @@ class DrawBorderThenFill(Animation):
         self.reached_halfway_point_before = False
         Animation.__init__(self, vmobject, **kwargs)
 
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.pointwise_become_partial(
             starting_submobject, 0, min(2 * alpha, 1)
         )
@@ -215,7 +215,7 @@ class VFadeIn(Animation):
     then) in a way that does not work with FadeIn and FadeOut
     """
 
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.set_stroke(
             opacity=interpolate(0, starting_submobject.get_stroke_opacity(), alpha)
         )
@@ -229,8 +229,8 @@ class VFadeOut(VFadeIn):
         "remover": True
     }
 
-    def update_submobject(self, submobject, starting_submobject, alpha):
-        VFadeIn.update_submobject(
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
+        VFadeIn.interpolate_submobject(
             self, submobject, starting_submobject, 1 - alpha
         )
 

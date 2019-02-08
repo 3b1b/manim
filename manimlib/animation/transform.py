@@ -80,7 +80,7 @@ class Transform(Animation):
     def get_all_mobjects(self):
         return self.mobject, self.starting_mobject, self.target_mobject
 
-    def update_submobject(self, submob, start, end, alpha):
+    def interpolate_submobject(self, submob, start, end, alpha):
         submob.interpolate(start, end, alpha, self.path_func)
         return self
 
