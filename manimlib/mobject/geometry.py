@@ -7,8 +7,11 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.iterables import adjacent_n_tuples
+from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import line_intersection
 from manimlib.utils.space_ops import get_norm
@@ -230,7 +233,7 @@ class Arc(TipableVMobject):
 
 
 class ArcBetweenPoints(Arc):
-    def __init__(self, start_point, end_point, angle=TAU / 4, **kwargs):
+    def __init__(self, start, end, angle=TAU / 4, **kwargs):
         Arc.__init__(
             self,
             angle=angle,
@@ -238,7 +241,7 @@ class ArcBetweenPoints(Arc):
         )
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
-        self.put_start_and_end_on(start_point, end_point)
+        self.put_start_and_end_on(start, end)
 
 
 class CurvedArrow(ArcBetweenPoints):
@@ -641,6 +644,30 @@ class Polygon(VMobject):
     def get_vertices(self):
         return self.get_start_anchors()
 
+    def round_corners(self, radius=0.5):
+        vertices = self.get_vertices()
+        self.clear_points()
+        arcs = []
+        for v1, v2, v3 in adjacent_n_tuples(vertices, 3):
+            vect1 = v2 - v1
+            vect2 = v3 - v2
+            unit_vect1 = normalize(vect1)
+            unit_vect2 = normalize(vect2)
+            angle = angle_between_vectors(vect1, vect2)
+            # Distance between vertex and start of the arc
+            cut_off_length = radius * np.tan(angle / 2)
+            arcs.append(ArcBetweenPoints(
+                v2 - unit_vect1 * cut_off_length,
+                v2 + unit_vect2 * cut_off_length,
+                angle=angle
+            ))
+        # To ensure that we loop through starting with last
+        arcs = [arcs[-1], *arcs[:-1]]
+        for arc1, arc2 in adjacent_pairs(arcs):
+            self.append_points(arc1.points)
+            self.add_line_to(arc2.get_start())
+        return self
+
 
 class RegularPolygon(Polygon):
     CONFIG = {
@@ -724,32 +751,9 @@ class RoundedRectangle(Rectangle):
         "close_new_points": True
     }
 
-    def generate_points(self):
-        y, x = self.height / 2., self.width / 2.
-        r = self.corner_radius
-
-        arc_ul = ArcBetweenPoints(x * LEFT + (y - r) * UP, (x - r) * LEFT + y * UP, angle = -TAU/4)
-        arc_ur = ArcBetweenPoints((x - r) * RIGHT + y * UP, x * RIGHT + (y - r) * UP, angle = -TAU/4)
-        arc_lr = ArcBetweenPoints(x * RIGHT + (y - r) * DOWN, (x - r) * RIGHT + y * DOWN, angle = -TAU/4)
-        arc_ll = ArcBetweenPoints(x * LEFT + (y - r) * DOWN, (x - r) * LEFT + y * DOWN, angle = TAU/4) # sic! bug in ArcBetweenPoints?
-        
-        points = arc_ul.points
-        points = np.append(points,np.array([y * UP]), axis = 0)
-        points = np.append(points,np.array([y * UP]), axis = 0)
-        points = np.append(points,arc_ur.points, axis = 0)
-        points = np.append(points,np.array([x * RIGHT]), axis = 0)
-        points = np.append(points,np.array([x * RIGHT]), axis = 0)
-        points = np.append(points,arc_lr.points, axis = 0)
-        points = np.append(points,np.array([y * DOWN]), axis = 0)
-        points = np.append(points,np.array([y * DOWN]), axis = 0)
-        points = np.append(points,arc_ll.points[::-1], axis = 0) # sic! see comment above
-        points = np.append(points,np.array([x * LEFT]), axis = 0)
-        points = np.append(points,np.array([x * LEFT]), axis = 0)
-        points = np.append(points,np.array([x * LEFT + (y - r) * UP]), axis = 0)
-
-        points = points[::-1]
-
-        self.set_points(points)
+    def __init__(self, **kwargs):
+        Rectangle.__init__(self, **kwargs)
+        self.round_corners(self.corner_radius)
 
 
 class Grid(VMobject):
