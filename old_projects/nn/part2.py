@@ -3109,7 +3109,6 @@ class InputRandomData(TestPerformance):
             rect.get_top(),
             self.network_mob.layers[0].neurons.get_top(),
             path_arc = -2*np.pi/3,
-            use_rectangular_stem = False,
         )
         arrow.tip.set_stroke(width = 3)
 

@@ -4429,7 +4429,6 @@ class Promotion(PiCreatureScene):
             aops_logo.get_top(),
             morty.get_top(),
             path_arc = -0.4*TAU,
-            use_rectangular_stem = False,
             stroke_width = 5,
             tip_length = 0.5,
         )

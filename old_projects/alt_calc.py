@@ -1564,7 +1564,6 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
         if factor < 0:
             kwargs = {
                 "path_arc": np.pi,
-                "use_rectangular_stem": False,
             }
             la = Arrow(UP, DOWN, **kwargs)
             ra = Arrow(DOWN, UP, **kwargs)
@@ -2995,7 +2994,6 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             VGroup(*[
                 Arrow(
                     point, func(point), buff=SMALL_BUFF,
-                    use_rectangular_stem=False,
                     tip_length=0.15
                 )
                 for point in sample_points

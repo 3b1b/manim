@@ -2699,7 +2699,6 @@ class SimplestNetworkExample(PreviewLearning):
                 tip_length = 0.2
             mob.arrow = Arrow(
                 mob_spot, dot_spot,
-                use_rectangular_stem = False,
                 path_arc = path_arc,
                 tip_length = tip_length,
                 buff = SMALL_BUFF,
@@ -3407,7 +3406,6 @@ class SimplestNetworkExample(PreviewLearning):
         arrow = Arrow(
             dz_db.get_bottom(),
             one.get_bottom(),
-            use_rectangular_stem = False,
             path_arc = np.pi/2,
             color = WHITE,
         )
@@ -3485,7 +3483,6 @@ class SimplestNetworkExample(PreviewLearning):
         arrow = Arrow(
             dz_daLm1.get_bottom(), wL.get_bottom(),
             path_arc = np.pi/2,
-            use_rectangular_stem = False,
             color = WHITE,
         )
 

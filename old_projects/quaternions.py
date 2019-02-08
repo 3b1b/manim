@@ -1055,7 +1055,6 @@ class QuantumSpin(Scene):
         electron.set_sheen(0.3, UL)
         electron.set_fill(opacity=0.8)
         kwargs = {
-            "use_rectangular_stem": False,
             "path_arc": PI,
         }
         curved_arrows = VGroup(
@@ -1608,7 +1607,6 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
                 arrow = Arrow(
                     brace.get_bottom(),
                     target.get_top(),
-                    use_rectangular_stem=False,
                 )
             final_arrows.add(arrow)
         final_arrows.set_stroke(BLACK, width=6, background=True)
@@ -2756,7 +2754,6 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
         neg_i_dot = dots[-2]
 
         kwargs1 = {
-            "use_rectangular_stem": False,
             "path_arc": -90 * DEGREES,
             "buff": SMALL_BUFF,
         }
@@ -2911,7 +2908,6 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
         for p1, p2 in adjacent_pairs(points):
             arrow = Arrow(
                 p1, p2, path_arc=180 * DEGREES,
-                use_rectangular_stem=False,
             )
             arrow.set_stroke(LIGHT_GREY, width=3)
             arrow.tip.set_fill(LIGHT_GREY)
@@ -4033,7 +4029,6 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
             2 * RIGHT, 2 * UP,
             buff=SMALL_BUFF,
             path_arc=PI,
-            use_rectangular_stem=False,
         )
         arrow.set_stroke(LIGHT_GREY, 3)
         arrow.tip.set_fill(LIGHT_GREY)
@@ -5391,19 +5386,16 @@ class RuleOfQuaternionMultiplication(HypersphereStereographicProjection):
         c2p = self.axes.coords_to_point
         i_arrow = Arrow(
             ORIGIN, 2 * RIGHT, path_arc=-120 * DEGREES,
-            use_rectangular_stem=False,
             buff=SMALL_BUFF,
         )
         neg_one_arrow = Arrow(
             ORIGIN, 5.5 * RIGHT + UP,
             path_arc=-30 * DEGREES,
-            use_rectangular_stem=False,
             buff=SMALL_BUFF,
         )
         neg_i_arrow = Arrow(
             4.5 * LEFT + 1.5 * UP, ORIGIN,
             path_arc=-30 * DEGREES,
-            use_rectangular_stem=False,
             buff=SMALL_BUFF,
         )
         one_arrow = i_arrow.copy()
@@ -6036,7 +6028,6 @@ class MultiplicationFromTheRight(Scene):
             i.get_top(),
             j.get_top(),
             path_arc=-PI,
-            use_rectangular_stem=False,
         )
         arrow.set_stroke(width=2)
 
@@ -6122,7 +6113,6 @@ class HowQuaternionsRotate3dPoints(Scene):
             expression[0].get_top(),
             expression[2].get_top(),
             path_arc=-PI,
-            use_rectangular_stem=False,
             color=WHITE,
         )
         right_arrow.set_stroke(width=4)

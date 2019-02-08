@@ -872,7 +872,6 @@ class IntroduceInputOutputScene(InputOutputScene):
             in_dot, out_dot,
             buff = SMALL_BUFF,
             path_arc = path_arc,
-            use_rectangular_stem = False,
             color = WHITE,
         )
         curved_arrow.pointwise_become_partial(curved_arrow, 0, 0.95)
@@ -1080,7 +1079,6 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         arrow = Arrow(
             LEFT, RIGHT, 
             path_arc = -TAU/4,
-            use_rectangular_stem = False,
             color = WHITE
         )
         arrow.pointwise_become_partial(arrow, 0.0, 0.97)
@@ -2473,7 +2471,6 @@ class MonomialTerm(PathContainingZero):
         label.add_background_rectangle(opacity = 1, buff = SMALL_BUFF)
         arrow = Arrow(
             2*LEFT, 2*RIGHT, path_arc = -TAU/3,
-            use_rectangular_stem = False
         )
         arrow.pointwise_become_partial(arrow, 0, 0.95)
         label.next_to(arrow, UP)
@@ -2738,7 +2735,6 @@ class ShowComplexFunction(Scene):
         fx_dot = Dot(fx_point, color = YELLOW)
         arrow = Arrow(
             x_point, fx_point,
-            use_rectangular_stem = False,
             path_arc = TAU/3,
             color = YELLOW
         )

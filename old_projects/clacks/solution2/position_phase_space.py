@@ -1118,7 +1118,6 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
         arc2.arrow = Arrow(
             equation[2].get_corner(DL),
             arc2.get_left(),
-            use_rectangular_stem=False,
             path_arc=-120 * DEGREES,
             buff=SMALL_BUFF,
         )

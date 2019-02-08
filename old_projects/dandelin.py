@@ -576,7 +576,6 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
             eccentricity_label.get_right(),
             fraction.get_top() + MED_SMALL_BUFF * UP,
             path_arc=-60 * DEGREES,
-            use_rectangular_stem=False,
         )
         fraction_arrow.pointwise_become_partial(fraction_arrow, 0, 0.95)
 

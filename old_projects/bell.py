@@ -1112,7 +1112,6 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         arrow = Arrow(
             ORIGIN, 3.5*RIGHT,
             path_arc = -0.9*np.pi,
-            use_rectangular_stem = False,
             color = BLUE,
             stroke_width = 5,
         )
@@ -1179,7 +1178,6 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         arrow0 = Arrow(
             2*LEFT, 0.5*(UP+RIGHT),
             path_arc = 0.8*np.pi,
-            use_rectangular_stem = False,
             color = WHITE,
             stroke_width = 5,
             buff = 0
@@ -1187,7 +1185,6 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         arrow1 = Arrow(
             2*LEFT, ORIGIN,
             path_arc = 0.8*np.pi,
-            use_rectangular_stem = False,
             color = GREEN,
             stroke_width = 5,
             buff = 0

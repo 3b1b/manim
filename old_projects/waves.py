@@ -3336,7 +3336,6 @@ class ThreeFilters(ShootPhotonThroughFilter):
 
         arrow = Arrow(
             ORIGIN, 7*RIGHT,
-            use_rectangular_stem = False,
             path_arc = 0.5*np.pi,
         )
         labels = VGroup(*list(map(TexMobject, ["0\\%", "25\\%"])))
@@ -3779,7 +3778,6 @@ class PhotonAtSlightAngle(ThreeFilters):
         arrow = Arrow(
             2*LEFT, 2*RIGHT, 
             path_arc = 0.8*np.pi,
-            use_rectangular_stem = False,
         )
         label = TexMobject("15\\% \\text{ absorbed}")
         label.next_to(arrow, DOWN)
@@ -4028,7 +4026,6 @@ class CircularPhotons(ShootPhotonThroughFilter):
         arrows = VGroup(*[
             Arrow(
                 v1, v2,
-                use_rectangular_stem = False,
                 color = WHITE,
                 path_arc = np.pi,
             )

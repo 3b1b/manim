@@ -1148,7 +1148,7 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         self.change_q([1, 0, 0, 0], run_time=2)
 
         # Unit vector
-        vect_mob = Vector(2 * vect, use_rectangular_stem=False)
+        vect_mob = Vector(2 * vect)
         vect_mob.pointwise_become_partial(vect_mob, 0, 0.95)
         pieces = VGroup(*vect_mob.get_pieces(25))
         pieces.set_stroke(vect_mob.get_color(), 2)
@@ -1272,7 +1272,6 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         curved_arrow = Arrow(
             r * RIGHT, rotate_vector(r * RIGHT, 30 * DEGREES, OUT),
             buff=0,
-            use_rectangular_stem=False,
             path_arc=60 * DEGREES,
             color=LIGHT_GREY,
         )

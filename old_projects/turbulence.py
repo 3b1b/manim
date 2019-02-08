@@ -496,7 +496,6 @@ class JokeRingEquation(Scene):
         point = 3.8 * LEFT + 0.2 * UP
         arrow1 = Arrow(
             items[0].get_left(), point + 0.8 * UP + 0.3 * RIGHT,
-            use_rectangular_stem=False,
             path_arc=90 * DEGREES,
         )
         arrow1.pointwise_become_partial(arrow1, 0, 0.99)
@@ -1064,7 +1063,6 @@ class ShowNavierStokesEquations(Scene):
             question.get_bottom(),
             graph.point_from_proportion(0.8),
             buff=SMALL_BUFF,
-            use_rectangular_stem=False,
             path_arc=-60 * DEGREES
         )
         q_arrow.set_stroke(WHITE, 3)
@@ -1394,7 +1392,6 @@ class SwirlDiameterD(Scene):
         kwargs = {
             "path_arc": PI,
             "buff": SMALL_BUFF,
-            "use_rectangular_stem": False,
             "color": WHITE
         }
         swirl = VGroup(

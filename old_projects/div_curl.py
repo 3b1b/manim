@@ -2436,7 +2436,6 @@ class IntroduceCurl(IntroduceVectorField):
         result = VGroup(*[
             Arrow(
                 *points,
-                use_rectangular_stem=False,
                 buff=2 * SMALL_BUFF,
                 path_arc=90 * DEGREES
             ).set_stroke(width=5)
@@ -2646,7 +2645,6 @@ class IllustrationUseVennDiagram(Scene):
             illustrated_by.get_bottom(),
             ff_circle.get_left(),
             path_arc=90 * DEGREES,
-            use_rectangular_stem=False,
             color=YELLOW,
         )
         illustrated_by_arrow.pointwise_become_partial(
@@ -4577,7 +4575,6 @@ class ThoughtsOnAds(Scene):
         viewer.next_to(vcb[1:], UP, LARGE_BUFF)
         arrow_config = {
             "path_arc": 60 * DEGREES,
-            "use_rectangular_stem": False,
             "tip_length": 0.15,
         }
         vcb_arrows = VGroup(*[

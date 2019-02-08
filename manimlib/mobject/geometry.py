@@ -21,7 +21,76 @@ DEFAULT_DOT_RADIUS = 0.08
 DEFAULT_DASH_LENGTH = 0.05
 
 
-class Arc(VMobject):
+class TipableVMobject(VMobject):
+    CONFIG = {
+        "tip_length": 0.3,
+        # TODO
+        "normal_vector": OUT,
+    }
+    """
+    Meant simply for shard functionality between
+    Arc and Line
+    """
+
+    def add_tip(self, tip_length=None, at_start=False):
+        tip = self.get_unpositioned_tip(tip_length)
+        # Last two control points, defining both
+        # the end, and the tangency direction
+        if at_start:
+            anchor = self.get_start()
+            handle = self.get_first_handle()
+            self.start_tip = tip
+        else:
+            handle = self.get_last_handle()
+            anchor = self.get_end()
+            self.tip = tip
+        tip.rotate(angle_of_vector(handle - anchor))
+        tip.shift(anchor - tip.get_start())
+
+        self.reset_endpoints_based_on_tip(tip, at_start)
+        self.add(tip)
+        return self
+
+    def get_unpositioned_tip(self, tip_length=None):
+        if tip_length is None:
+            tip_length = self.tip_length
+        tip = Triangle(start_angle=PI)
+        tip.match_style(self)
+        tip.set_fill(self.get_stroke_color(), opacity=1)
+        tip.set_height(tip_length)
+        tip.set_width(tip_length, stretch=True)
+        return tip
+
+    def reset_endpoints_based_on_tip(self, tip, at_start):
+        tip_base = tip.point_from_proportion(0.5)
+        if at_start:
+            self.put_start_and_end_on(
+                tip_base, self.get_end()
+            )
+        else:
+            self.put_start_and_end_on(
+                self.get_start(), tip_base,
+            )
+        return self
+
+    def get_first_handle(self):
+        return self.points[1]
+
+    def get_last_handle(self):
+        return self.points[-2]
+
+    # def get_end(self):
+    #     if hasattr(self, "tip"):
+    #         return self.tip[0].get_anchors()[0]
+    #     else:
+    #         return Line.get_end(self)
+
+    # def get_start(self):
+    #     if hasattr(self, "tip"):
+    #         pass
+
+
+class Arc(TipableVMobject):
     CONFIG = {
         "radius": 1.0,
         "num_components": 9,
@@ -63,27 +132,6 @@ class Arc(VMobject):
             handles1, handles2,
             anchors[1:],
         )
-
-    def add_tip(self, tip_length=0.25, at_start=False):
-        tip = self.tip = Triangle(start_angle=PI)
-        tip.match_style(self)
-        tip.set_fill(self.get_stroke_color(), opacity=1)
-        tip.set_height(tip_length)
-        tip.set_width(tip_length, stretch=True)
-        tip.move_to(ORIGIN, LEFT)
-        # Last two control points, defining both
-        # the end, and the tangency direction
-        if at_start:
-            end, handle = self.points[:2]
-        else:
-            handle, end = self.points[-2:]
-        tip.rotate(
-            angle_of_vector(handle - end),
-            about_point=ORIGIN
-        )
-        tip.shift(end)
-        self.add(tip)
-        return self
 
     def get_arc_center(self):
         """
@@ -254,7 +302,7 @@ class Annulus(Circle):
         self.shift(self.arc_center)
 
 
-class Line(VMobject):
+class Line(TipableVMobject):
     CONFIG = {
         "buff": 0,
         "path_arc": None,  # angle of arc specified here
@@ -346,6 +394,15 @@ class Line(VMobject):
             about_point=self.get_start(),
         )
 
+    def set_opacity(self, opacity, family=True):
+        # Overwrite default, which would set
+        # the fill opacity
+        self.set_stroke(opacity=opacity)
+        if family:
+            for sm in self.submobjects:
+                sm.set_opacity(opacity, family)
+        return self
+
 
 class DashedLine(Line):
     CONFIG = {
@@ -393,6 +450,12 @@ class DashedLine(Line):
         else:
             return Line.get_end(self)
 
+    def get_first_handle(self):
+        return self.submobjects[0].points[1]
+
+    def get_last_handle(self):
+        return self.submobjects[-1].points[-2]
+
 
 class Elbow(VMobject):
     CONFIG = {
@@ -409,83 +472,41 @@ class Elbow(VMobject):
 
 class Arrow(Line):
     CONFIG = {
-        "tip_length": 0.25,
+        "stroke_width": 6,
+        "buff": MED_SMALL_BUFF,
+        # "tip_length": 0.25,
         "tip_width_to_length_ratio": 1,
         "max_tip_length_to_length_ratio": 0.35,
         "max_stem_width_to_tip_width_ratio": 0.3,
-        "buff": MED_SMALL_BUFF,
         "preserve_tip_size_when_scaling": True,
-        "normal_vector": OUT,
-        "use_rectangular_stem": True,
         "rectangular_stem_width": 0.05,
     }
 
     def __init__(self, *args, **kwargs):
-        points = list(map(self.pointify, args))
-        if len(args) == 1:
-            args = (points[0] + UP + LEFT, points[0])
         Line.__init__(self, *args, **kwargs)
-        self.init_tip()
-        if self.use_rectangular_stem and not hasattr(self, "rect"):
-            self.add_rectangular_stem()
-        self.init_colors()
+        self.add_tip(tip_length=self.tip_length)
+        # self.init_colors()
 
     def init_tip(self):
         self.add_tip()
 
-    def add_tip(self, add_at_end=True):
-        tip = VMobject(
-            close_new_points=True,
-            mark_paths_closed=True,
-            fill_color=self.color,
-            fill_opacity=1,
-            stroke_color=self.color,
-            stroke_width=0,
-        )
-        tip.add_at_end = add_at_end
-        self.set_tip_points(tip, add_at_end, preserve_normal=False)
-        self.add(tip)
-        if not hasattr(self, 'tip'):
-            self.tip = VGroup()
-            self.tip.match_style(tip)
-        self.tip.add(tip)
-        return tip
-
-    def add_rectangular_stem(self):
-        self.rect = Rectangle(
-            stroke_width=0,
-            fill_color=self.tip.get_fill_color(),
-            fill_opacity=self.tip.get_fill_opacity()
-        )
-        self.add_to_back(self.rect)
-        self.set_stroke(width=0)
-        self.set_rectangular_stem_points()
-
-    def set_rectangular_stem_points(self):
-        start, end = self.get_start_and_end()
-        tip_base_points = self.tip[0].get_anchors()[1:3]
-        tip_base = center_of_mass(tip_base_points)
-        tbp1, tbp2 = tip_base_points
-        perp_vect = tbp2 - tbp1
-        tip_base_width = get_norm(perp_vect)
-        if tip_base_width > 0:
-            perp_vect /= tip_base_width
-        width = min(
-            self.rectangular_stem_width,
-            self.max_stem_width_to_tip_width_ratio * tip_base_width,
-        )
-        if hasattr(self, "second_tip"):
-            start = center_of_mass(
-                self.second_tip.get_anchors()[1:]
-            )
-        self.rect.set_points_as_corners([
-            tip_base - perp_vect * width / 2,
-            start - perp_vect * width / 2,
-            start + perp_vect * width / 2,
-            tip_base + perp_vect * width / 2,
-        ])
-        self.stem = self.rect  # Alternate name
-        return self
+    # def add_tip(self, add_at_end=True):
+    #     tip = VMobject(
+    #         close_new_points=True,
+    #         mark_paths_closed=True,
+    #         fill_color=self.color,
+    #         fill_opacity=1,
+    #         stroke_color=self.color,
+    #         stroke_width=0,
+    #     )
+    #     tip.add_at_end = add_at_end
+    #     self.set_tip_points(tip, add_at_end, preserve_normal=False)
+    #     self.add(tip)
+    #     if not hasattr(self, 'tip'):
+    #         self.tip = VGroup()
+    #         self.tip.match_style(tip)
+    #     self.tip.add(tip)
+    #     return tip
 
     def set_tip_points(
         self, tip,
@@ -537,32 +558,23 @@ class Arrow(Line):
         self.normal_vector = self.get_normal_vector()
         return self
 
-    def get_end(self):
-        if hasattr(self, "tip"):
-            return self.tip[0].get_anchors()[0]
-        else:
-            return Line.get_end(self)
-
     def get_tip(self):
         return self.tip
 
-    def put_start_and_end_on(self, *args, **kwargs):
-        Line.put_start_and_end_on(self, *args, **kwargs)
-        self.set_tip_points(self.tip[0], preserve_normal=False)
-        self.set_rectangular_stem_points()
-        return self
+    # def put_start_and_end_on(self, *args, **kwargs):
+    #     Line.put_start_and_end_on(self, *args, **kwargs)
+    #     self.set_tip_points(self.tip[0], preserve_normal=False)
+    #     return self
 
-    def scale(self, scale_factor, **kwargs):
-        Line.scale(self, scale_factor, **kwargs)
-        if self.preserve_tip_size_when_scaling:
-            for t in self.tip:
-                self.set_tip_points(t, add_at_end=t.add_at_end)
-        if self.use_rectangular_stem:
-            self.set_rectangular_stem_points()
-        return self
+    # def scale(self, scale_factor, **kwargs):
+    #     Line.scale(self, scale_factor, **kwargs)
+    #     if self.preserve_tip_size_when_scaling:
+    #         for t in self.tip:
+    #             self.set_tip_points(t, add_at_end=t.add_at_end)
+    #     return self
 
-    def copy(self):
-        return self.deepcopy()
+    # def copy(self):
+    #     return self.deepcopy()
 
 
 class Vector(Arrow):

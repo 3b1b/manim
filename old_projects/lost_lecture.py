@@ -505,7 +505,7 @@ class FeynmanFame(Scene):
     def get_feynman_diagram(self):
         x_min = -1.5
         x_max = 1.5
-        arrow = Arrow(LEFT, RIGHT, buff=0, use_rectangular_stem=False)
+        arrow = Arrow(LEFT, RIGHT, buff=0)
         arrow.tip.move_to(arrow.get_center())
         arrows = VGroup(*[
             arrow.copy().rotate(angle).next_to(point, vect, buff=0)

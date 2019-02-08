@@ -1342,7 +1342,6 @@ class BrilliantPuzzle(PiCreatureScene):
         for s1, s2 in adjacent_pairs(self.students):
             arrow = Arrow(
                 s1.get_center(), s2.get_center(), 
-                use_rectangular_stem = False,
                 path_arc = np.pi/2,
                 buff = 0.8
             )

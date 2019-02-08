@@ -1444,13 +1444,11 @@ class EarthScene(IntroduceScreen):
 
         equator_arrow = Vector(
             DOWN+2*RIGHT, color = WHITE,
-            use_rectangular_stem = False,
         )
         equator_arrow.next_to(screen.get_center(), UP+LEFT, SMALL_BUFF)
         pole_arrow = Vector(
             UP+3*RIGHT, 
             color = WHITE,
-            use_rectangular_stem = False,
             path_arc = -60*DEGREES,
         )
         pole_arrow.shift(

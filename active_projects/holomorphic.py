@@ -80,7 +80,6 @@ class AnalyzeZSquared(ComplexTransformationScene, ZoomedScene):
             else:
                 arrow = Arrow(
                     point, out_point,
-                    use_rectangular_stem=False,
                     path_arc=path_arc,
                     buff=SMALL_BUFF,
                 )
