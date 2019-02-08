@@ -79,11 +79,11 @@ class SlidingBlocks(VGroup):
         "collect_clack_data": True,
     }
 
-    def __init__(self, surrounding_scene, **kwargs):
+    def __init__(self, scene, **kwargs):
         VGroup.__init__(self, **kwargs)
-        self.surrounding_scene = surrounding_scene
-        self.floor = surrounding_scene.floor
-        self.wall = surrounding_scene.wall
+        self.scene = scene
+        self.floor = scene.floor
+        self.wall = scene.wall
 
         self.block1 = self.get_block(**self.block1_config)
         self.block2 = self.get_block(**self.block2_config)
@@ -159,7 +159,7 @@ class SlidingBlocks(VGroup):
             DR,
         )
 
-        self.surrounding_scene.update_num_clacks(n_clacks)
+        self.scene.update_num_clacks(n_clacks)
 
     def get_clack_data(self):
         ps_point = self.phase_space_point_tracker.get_location()

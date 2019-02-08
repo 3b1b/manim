@@ -15,8 +15,7 @@ class Animation(object):
         "name": None,
         # Does this animation add or remove a mobject form the screen
         "remover": False,
-        # Options are lagged_start, smoothed_lagged_start,
-        # one_at_a_time, all_at_once
+        # TODO, replace this with a single lag parameter
         "submobject_mode": "all_at_once",
         "lag_factor": 2,
         # Used by EmptyAnimation to announce itself ignorable
@@ -26,24 +25,31 @@ class Animation(object):
 
     def __init__(self, mobject, **kwargs):
         assert(isinstance(mobject, Mobject))
-        digest_config(self, kwargs, locals())
+        self.mobject = mobject
+        digest_config(self, kwargs)
+        self.all_families_zipped = self.get_all_families_zipped()
+
+    def begin(self):
+        mobject = self.mobject
         # Make sure it's all up to date
         mobject.update()
+        mobject.suspend_updating()
         # Keep track of where it started
-        self.starting_mobject = self.mobject.copy()
-        if self.name is None:
-            self.name = self.__class__.__name__ + str(self.mobject)
-        self.all_families_zipped = self.get_all_families_zipped()
+        self.starting_mobject = mobject.copy()
         self.update(0)
 
-    def begin_animation(self):
-        pass
+    def finish(self):
+        self.mobject.resume_updating()
 
-    def end_animation(self):
-        pass
+    def clean_up_from_scene(self, scene):
+        if self.is_remover():
+            scene.remove(self.mobject)
+        return self
 
     def __str__(self):
-        return self.name
+        if self.name:
+            return self.name
+        return self.__class__.__name__ + str(self.mobject)
 
     def copy(self):
         return deepcopy(self)
@@ -63,22 +69,6 @@ class Animation(object):
             self.update_submobject(*list(mobs) + [sub_alpha])
         return self
 
-    def update_submobject(self, submobject, starting_sumobject, alpha):
-        # Typically ipmlemented by subclass
-        pass
-
-    def get_all_mobjects(self):
-        """
-        Ordering must match the ording of arguments to update_submobject
-        """
-        return self.mobject, self.starting_mobject
-
-    def get_all_families_zipped(self):
-        return list(zip(*list(map(
-            Mobject.family_members_with_points,
-            self.get_all_mobjects()
-        ))))
-
     def get_sub_alpha(self, alpha, index, num_submobjects):
         if self.submobject_mode in ["lagged_start", "smoothed_lagged_start"]:
             prop = float(index) / num_submobjects
@@ -93,6 +83,22 @@ class Animation(object):
         elif self.submobject_mode == "all_at_once":
             return alpha
         raise Exception("Invalid submobject mode")
+
+    def update_submobject(self, submobject, starting_sumobject, alpha):
+        # Typically ipmlemented by subclass
+        pass
+
+    def get_all_mobjects(self):
+        """
+        Ordering must match the ording of arguments to update_submobject
+        """
+        return self.mobject, self.starting_mobject
+
+    def get_all_families_zipped(self):
+        return list(zip(*map(
+            Mobject.family_members_with_points,
+            self.get_all_mobjects()
+        )))
 
     def filter_out(self, *filter_functions):
         self.filter_functions += filter_functions
@@ -118,10 +124,3 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
-
-    def clean_up(self, surrounding_scene=None):
-        self.update(1)
-        if surrounding_scene is not None:
-            if self.is_remover():
-                surrounding_scene.remove(self.mobject)
-        return self

@@ -137,8 +137,8 @@ class FadeOut(Transform):
         target.fade(1)
         Transform.__init__(self, mobject, target, **kwargs)
 
-    def clean_up(self, surrounding_scene=None):
-        Transform.clean_up(self, surrounding_scene)
+    def clean_up_from_scene(self, scene=None):
+        Transform.clean_up_from_scene(self, scene)
         self.update(0)
 
 

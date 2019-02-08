@@ -458,17 +458,20 @@ class Scene(Container):
             return
 
         animations = self.compile_play_args_to_animation_list(*args)
+        curr_mobjects = self.get_mobject_family_members()
         for animation in animations:
             # This is where kwargs to play like run_time and rate_func
             # get applied to all animations
             animation.update_config(**kwargs)
             # Anything animated that's not already in the
             # scene gets added to the scene
-            if animation.mobject not in self.get_mobject_family_members():
-                self.add(animation.mobject)
-            # Don't call the update functions of a mobject
-            # being animated
-            animation.mobject.suspend_updating()
+            mob = animation.mobject
+            if mob not in curr_mobjects:
+                self.add(mob)
+                curr_mobjects += mob.get_family()
+            # Begin animation
+            animation.begin()
+
         moving_mobjects = self.get_moving_mobjects(*animations)
 
         # Paint all non-moving objects onto the screen, so they don't
@@ -482,10 +485,14 @@ class Scene(Container):
             self.continual_update(dt)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
+
         self.mobjects_from_last_animation = [
             anim.mobject for anim in animations
         ]
-        self.clean_up_animations(*animations)
+        for animation in animations:
+            animation.finish()
+            
+
         if self.skip_animations:
             self.continual_update(self.get_run_time(animations))
         else:
@@ -498,8 +505,7 @@ class Scene(Container):
 
     def clean_up_animations(self, *animations):
         for animation in animations:
-            animation.clean_up(self)
-            animation.mobject.resume_updating()
+            animation.clean_up_from_scene(self)
         return self
 
     def get_mobjects_from_last_animation(self):

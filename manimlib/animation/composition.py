@@ -103,7 +103,7 @@ class Succession(Animation):
         self.scene_mobjects_at_time[0] = Group()
         for i in range(self.num_anims):
             self.scene_mobjects_at_time[i + 1] = self.scene_mobjects_at_time[i].copy()
-            self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
+            self.animations[i].clean_up_from_scene(self.scene_mobjects_at_time[i + 1])
 
         self.current_alpha = 0
         # If self.num_anims == 0, this is an invalid index, but so it goes
@@ -168,11 +168,11 @@ class Succession(Animation):
         self.animations[i].update(sub_alpha)
         self.current_alpha = alpha
 
-    def clean_up(self, *args, **kwargs):
+    def clean_up_from_scene(self, *args, **kwargs):
         # We clean up as though we've played ALL animations, even if
         # clean_up is called in middle of things
         for anim in self.animations:
-            anim.clean_up(*args, **kwargs)
+            anim.clean_up_from_scene(*args, **kwargs)
 
 
 class AnimationGroup(Animation):
@@ -197,9 +197,9 @@ class AnimationGroup(Animation):
         for anim in self.sub_anims:
             anim.update(alpha * self.run_time / anim.run_time)
 
-    def clean_up(self, *args, **kwargs):
+    def clean_up_from_scene(self, *args, **kwargs):
         for anim in self.sub_anims:
-            anim.clean_up(*args, **kwargs)
+            anim.clean_up_from_scene(*args, **kwargs)
 
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
@@ -251,9 +251,9 @@ class LaggedStart(Animation):
             anim.update(alpha)
         return self
 
-    def clean_up(self, *args, **kwargs):
+    def clean_up_from_scene(self, *args, **kwargs):
         for anim in self.subanimations:
-            anim.clean_up(*args, **kwargs)
+            anim.clean_up_from_scene(*args, **kwargs)
 
 
 class ApplyToCenters(Animation):

@@ -7,7 +7,6 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import instantiate
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.paths import path_along_arc
 from manimlib.utils.paths import straight_path
@@ -65,12 +64,12 @@ class Transform(Animation):
         submob.interpolate(start, end, alpha, self.path_func)
         return self
 
-    def clean_up(self, surrounding_scene=None):
-        Animation.clean_up(self, surrounding_scene)
-        if self.replace_mobject_with_target_in_scene and surrounding_scene is not None:
-            surrounding_scene.remove(self.mobject)
+    def clean_up_from_scene(self, scene=None):
+        Animation.clean_up_from_scene(self, scene)
+        if self.replace_mobject_with_target_in_scene and scene is not None:
+            scene.remove(self.mobject)
             if not self.remover:
-                surrounding_scene.add(self.original_target_mobject)
+                scene.add(self.original_target_mobject)
 
 
 class ReplacementTransform(Transform):

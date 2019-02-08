@@ -93,11 +93,11 @@ class RemovePiCreatureBubble(AnimationGroup):
             FadeOut(pi_creature.bubble.content),
         )
 
-    def clean_up(self, surrounding_scene=None):
-        AnimationGroup.clean_up(self, surrounding_scene)
+    def clean_up_from_scene(self, scene=None):
+        AnimationGroup.clean_up_from_scene(self, scene)
         self.pi_creature.bubble = None
-        if surrounding_scene is not None:
-            surrounding_scene.add(self.pi_creature)
+        if scene is not None:
+            scene.add(self.pi_creature)
 
 
 class FlashThroughClass(Animation):
