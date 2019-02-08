@@ -616,13 +616,9 @@ class Vector(Arrow):
 
 
 class DoubleArrow(Arrow):
-    def init_tip(self):
-        self.tip = VGroup()
-        for b in True, False:
-            t = self.add_tip(add_at_end=b)
-            t.add_at_end = b
-            self.tip.add(t)
-        self.tip.match_style(self.tip[0])
+    def __init__(self, *args, **kwargs):
+        Arrow.__init__(self, *args, **kwargs)
+        self.add_tip(at_start=True)
 
 
 class CubicBezier(VMobject):
@@ -633,9 +629,7 @@ class CubicBezier(VMobject):
 
 class Polygon(VMobject):
     CONFIG = {
-        "color": GREEN_D,
-        "mark_paths_closed": True,
-        "close_new_points": True,
+        "color": BLUE,
     }
 
     def __init__(self, *vertices, **kwargs):
@@ -704,15 +698,9 @@ class Rectangle(Polygon):
     }
 
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        x, y = self.width / 2., self.height / 2.
-        vertices = [
-            x * LEFT + y * UP,
-            x * RIGHT + y * UP,
-            x * RIGHT + y * DOWN,
-            x * LEFT + y * DOWN
-        ]
-        Polygon.__init__(self, *vertices, **kwargs)
+        Polygon.__init__(self, UL, UR, DR, DL, **kwargs)
+        self.set_width(self.width, stretch=True)
+        self.set_height(self.height, stretch=True)
 
 
 class Square(Rectangle):
