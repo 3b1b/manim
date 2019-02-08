@@ -159,7 +159,6 @@ class Introduce1DFunctionCase(Scene):
         "arrow_opacity" : 1,
         "show_dotted_line_to_f" : True,
         "arrow_config": {
-            "max_stem_width_to_tip_width_ratio" : 0.5,
             "max_tip_length_to_length_ratio" : 0.5,
         },
         "show_midpoint_value" : True,
