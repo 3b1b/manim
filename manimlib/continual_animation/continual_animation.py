@@ -4,7 +4,6 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import instantiate
 
 
 class ContinualAnimation(object):
@@ -15,7 +14,6 @@ class ContinualAnimation(object):
     }
 
     def __init__(self, mobject, **kwargs):
-        mobject = instantiate(mobject)
         assert(isinstance(mobject, Mobject))
         digest_config(self, kwargs, locals())
         self.internal_time = 0

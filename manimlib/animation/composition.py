@@ -3,9 +3,7 @@ import warnings
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.constants import *
 from manimlib.mobject.mobject import Group
-from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
@@ -192,7 +190,7 @@ class AnimationGroup(Animation):
             self.run_time = 0
         else:
             self.run_time = max([a.run_time for a in sub_anims])
-        everything = Mobject(*[a.mobject for a in sub_anims])
+        everything = Group(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
     def update(self, alpha):
@@ -262,13 +260,13 @@ class ApplyToCenters(Animation):
     def __init__(self, AnimationClass, mobjects, **kwargs):
         full_kwargs = AnimationClass.CONFIG
         full_kwargs.update(kwargs)
-        full_kwargs["mobject"] = Mobject(*[
+        full_kwargs["mobject"] = Group(*[
             mob.get_point_mobject()
             for mob in mobjects
         ])
         self.centers_container = AnimationClass(**full_kwargs)
         full_kwargs.pop("mobject")
-        Animation.__init__(self, Mobject(*mobjects), **full_kwargs)
+        Animation.__init__(self, Group(*mobjects), **full_kwargs)
         self.name = str(self) + AnimationClass.__name__
 
     def update_mobject(self, alpha):

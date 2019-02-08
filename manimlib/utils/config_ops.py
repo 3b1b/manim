@@ -2,15 +2,6 @@ import inspect
 import itertools as it
 
 
-def instantiate(obj):
-    """
-    Useful so that classes or instance of those classes can be
-    included in configuration, which can prevent defaults from
-    getting created during compilation/importing
-    """
-    return obj() if isinstance(obj, type) else obj
-
-
 def get_all_descendent_classes(Class):
     awaiting_review = [Class]
     result = []

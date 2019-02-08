@@ -5,7 +5,6 @@ import numpy as np
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import instantiate
 from manimlib.utils.rate_functions import smooth
 
 
@@ -26,7 +25,6 @@ class Animation(object):
     }
 
     def __init__(self, mobject, **kwargs):
-        mobject = instantiate(mobject)
         assert(isinstance(mobject, Mobject))
         digest_config(self, kwargs, locals())
         # Make sure it's all up to date
@@ -37,6 +35,12 @@ class Animation(object):
             self.name = self.__class__.__name__ + str(self.mobject)
         self.all_families_zipped = self.get_all_families_zipped()
         self.update(0)
+
+    def begin_animation(self):
+        pass
+
+    def end_animation(self):
+        pass
 
     def __str__(self):
         return self.name

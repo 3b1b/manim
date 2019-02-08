@@ -210,8 +210,10 @@ class ComplexFunction(ApplyPointwiseFunction):
             )
         ApplyPointwiseFunction.__init__(
             self,
-            lambda x_y_z: complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),
-            instantiate(mobject),
+            lambda p: complex_to_R3(function(
+                complex(p[0], p[1])
+            )),
+            mobject,
             **kwargs
         )
 
