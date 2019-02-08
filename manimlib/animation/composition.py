@@ -104,9 +104,6 @@ class LaggedStart(AnimationGroup):
     }
 
 
-# Variants on mapping an animation over submobjects
-
-
 # This class is depricated.  One should use OldLaggedStart
 # instead, which has different syntax, but more generality
 class OldLaggedStart(Animation):
@@ -151,26 +148,3 @@ class OldLaggedStart(Animation):
     def clean_up_from_scene(self, *args, **kwargs):
         for anim in self.subanimations:
             anim.clean_up_from_scene(*args, **kwargs)
-
-
-class ApplyToCenters(Animation):
-    def __init__(self, AnimationClass, mobjects, **kwargs):
-        full_kwargs = AnimationClass.CONFIG
-        full_kwargs.update(kwargs)
-        full_kwargs["mobject"] = Group(*[
-            mob.get_point_mobject()
-            for mob in mobjects
-        ])
-        self.centers_container = AnimationClass(**full_kwargs)
-        full_kwargs.pop("mobject")
-        Animation.__init__(self, Group(*mobjects), **full_kwargs)
-        self.name = str(self) + AnimationClass.__name__
-
-    def interpolate_mobject(self, alpha):
-        self.centers_container.interpolate_mobject(alpha)
-        center_mobs = self.centers_container.mobject.split()
-        mobjects = self.mobject.split()
-        for center_mob, mobject in zip(center_mobs, mobjects):
-            mobject.shift(
-                center_mob.get_center() - mobject.get_center()
-            )
