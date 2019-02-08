@@ -507,7 +507,7 @@ class Scene(Container):
         animations = self.compile_play_args_to_animation_list(
             *args, **kwargs
         )
-        self.begin_animations(animations, **kwargs)
+        self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
 
