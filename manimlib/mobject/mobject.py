@@ -552,12 +552,16 @@ class Mobject(Container):
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
         target_vect = end - start
-        self.scale(get_norm(target_vect) / get_norm(curr_vect))
+        self.scale(
+            get_norm(target_vect) / get_norm(curr_vect),
+            about_point=curr_start,
+        )
         self.rotate(
             angle_of_vector(target_vect) -
-            angle_of_vector(curr_vect)
+            angle_of_vector(curr_vect),
+            about_point=curr_start
         )
-        self.shift(start - self.get_start())
+        self.shift(start - curr_start)
         return self
 
     # Background rectangle
