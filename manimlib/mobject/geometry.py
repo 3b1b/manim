@@ -646,7 +646,6 @@ class Polygon(VMobject):
 
     def round_corners(self, radius=0.5):
         vertices = self.get_vertices()
-        self.clear_points()
         arcs = []
         for v1, v2, v3 in adjacent_n_tuples(vertices, 3):
             vect1 = v2 - v1
@@ -654,13 +653,19 @@ class Polygon(VMobject):
             unit_vect1 = normalize(vect1)
             unit_vect2 = normalize(vect2)
             angle = angle_between_vectors(vect1, vect2)
+            # Negative radius gives concave curves
+            angle *= np.sign(radius)
             # Distance between vertex and start of the arc
             cut_off_length = radius * np.tan(angle / 2)
+            # Determines counterclockwise vs. clockwise
+            sign = np.sign(np.cross(vect1, vect2)[2])
             arcs.append(ArcBetweenPoints(
                 v2 - unit_vect1 * cut_off_length,
                 v2 + unit_vect2 * cut_off_length,
-                angle=angle
+                angle=sign * angle
             ))
+
+        self.clear_points()
         # To ensure that we loop through starting with last
         arcs = [arcs[-1], *arcs[:-1]]
         for arc1, arc2 in adjacent_pairs(arcs):
@@ -748,7 +753,6 @@ class Square(Rectangle):
 class RoundedRectangle(Rectangle):
     CONFIG = {
         "corner_radius": 0.5,
-        "close_new_points": True
     }
 
     def __init__(self, **kwargs):
