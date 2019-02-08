@@ -1,217 +1,95 @@
-import warnings
-
 import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.mobject.mobject import Group
-from manimlib.utils.bezier import inverse_interpolate
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import squish_rate_func
 
 
-class EmptyAnimation(Animation):
-    CONFIG = {
-        "run_time": 0,
-        "empty": True
-    }
-
-    def __init__(self, *args, **kwargs):
-        return Animation.__init__(self, Group(), *args, **kwargs)
-
-
-class Succession(Animation):
-    CONFIG = {
-        "rate_func": linear,
-    }
-
-    def __init__(self, *args, **kwargs):
-        """
-        Each arg will either be an animation, or an animation class
-        followed by its arguments (and potentially a dict for
-        configuration).
-        For example,
-        Succession(
-            ShowCreation(circle),
-            Transform, circle, square,
-            Transform, circle, triangle,
-            ApplyMethod, circle.shift, 2*UP, {"run_time" : 2},
-        )
-        """
-        animations = []
-        state = {
-            "animations": animations,
-            "curr_class": None,
-            "curr_class_args": [],
-            "curr_class_config": {},
-        }
-
-        def invoke_curr_class(state):
-            if state["curr_class"] is None:
-                return
-            anim = state["curr_class"](
-                *state["curr_class_args"],
-                **state["curr_class_config"]
-            )
-            state["animations"].append(anim)
-            anim.update(1)
-            state["curr_class"] = None
-            state["curr_class_args"] = []
-            state["curr_class_config"] = {}
-
-        for arg in args:
-            if isinstance(arg, Animation):
-                animations.append(arg)
-                arg.update(1)
-                invoke_curr_class(state)
-            elif isinstance(arg, type) and issubclass(arg, Animation):
-                invoke_curr_class(state)
-                state["curr_class"] = arg
-            elif isinstance(arg, dict):
-                state["curr_class_config"] = arg
-            else:
-                state["curr_class_args"].append(arg)
-        invoke_curr_class(state)
-        for anim in animations:
-            anim.update(0)
-
-        animations = [x for x in animations if not(x.empty)]
-
-        self.run_times = [anim.run_time for anim in animations]
-        if "run_time" in kwargs:
-            run_time = kwargs.pop("run_time")
-            warnings.warn(
-                "Succession doesn't currently support explicit run_time.")
-        run_time = sum(self.run_times)
-        self.num_anims = len(animations)
-        if self.num_anims == 0:
-            self.empty = True
-        self.animations = animations
-        # Have to keep track of this run_time, because Scene.play
-        # might very well mess with it.
-        self.original_run_time = run_time
-
-        # critical_alphas[i] is the start alpha of self.animations[i]
-        # critical_alphas[i + 1] is the end alpha of self.animations[i]
-        critical_times = np.concatenate(([0], np.cumsum(self.run_times)))
-        self.critical_alphas = [np.true_divide(
-            x, run_time) for x in critical_times] if self.num_anims > 0 else [0.0]
-
-        # self.scene_mobjects_at_time[i] is the scene's mobjects at start of self.animations[i]
-        # self.scene_mobjects_at_time[i + 1] is the scene mobjects at end of self.animations[i]
-        self.scene_mobjects_at_time = [None for i in range(self.num_anims + 1)]
-        self.scene_mobjects_at_time[0] = Group()
-        for i in range(self.num_anims):
-            self.scene_mobjects_at_time[i + 1] = self.scene_mobjects_at_time[i].copy()
-            self.animations[i].clean_up_from_scene(self.scene_mobjects_at_time[i + 1])
-
-        self.current_alpha = 0
-        # If self.num_anims == 0, this is an invalid index, but so it goes
-        self.current_anim_index = 0
-        if self.num_anims > 0:
-            self.mobject = self.scene_mobjects_at_time[0]
-            self.mobject.add(self.animations[0].mobject)
-        else:
-            self.mobject = Group()
-
-        Animation.__init__(self, self.mobject, run_time=run_time, **kwargs)
-
-    # Beware: This does NOT take care of calling update(0) on the subanimation.
-    # This was important to avoid a pernicious possibility in which subanimations were called
-    # with update twice, which could in turn call a sub-Succession with update four times,
-    # continuing exponentially.
-    def jump_to_start_of_anim(self, index):
-        if index != self.current_anim_index:
-            # Should probably have a cleaner "remove_all" method...
-            self.mobject.remove(*self.mobject.submobjects)
-            self.mobject.add(*self.scene_mobjects_at_time[index].submobjects)
-            self.mobject.add(self.animations[index].mobject)
-
-        for i in range(index):
-            self.animations[i].update(1)
-
-        self.current_anim_index = index
-        self.current_alpha = self.critical_alphas[index]
-
-    def interpolate_mobject(self, alpha):
-        if self.num_anims == 0:
-            # This probably doesn't matter for anything, but just in case,
-            # we want it in the future, we set current_alpha even in this case
-            self.current_alpha = alpha
-            return
-
-        gt_alpha_iter = iter(filter(
-            lambda i: self.critical_alphas[i + 1] >= alpha,
-            range(self.num_anims)
-        ))
-        i = next(gt_alpha_iter, None)
-        if i is None:
-            # In this case, we assume what is happening is that alpha is 1.0,
-            # but that rounding error is causing us to overshoot the end of
-            # self.critical_alphas (which is also 1.0)
-            if not abs(alpha - 1) < 0.001:
-                warnings.warn(
-                    "Rounding error not near alpha=1 in Succession.interpolate_mobject,"
-                    "instead alpha = %f" % alpha
-                )
-                print(self.critical_alphas, alpha)
-            i = self.num_anims - 1
-
-        # At this point, we should have self.critical_alphas[i] <= alpha <= self.critical_alphas[i +1]
-
-        self.jump_to_start_of_anim(i)
-        sub_alpha = inverse_interpolate(
-            self.critical_alphas[i],
-            self.critical_alphas[i + 1],
-            alpha
-        )
-        self.animations[i].update(sub_alpha)
-        self.current_alpha = alpha
-
-    def clean_up_from_scene(self, *args, **kwargs):
-        # We clean up as though we've played ALL animations, even if
-        # clean_up is called in middle of things
-        for anim in self.animations:
-            anim.clean_up_from_scene(*args, **kwargs)
-
-
 class AnimationGroup(Animation):
     CONFIG = {
-        "rate_func": linear
+        # If None, this defaults to the sum of all
+        # internal animations
+        "run_time": None,
+        "rate_functions": linear,
+        # If 0, all animations are played at once.
+        # If 1, all are played successively.
+        # If >0 and <1, they start at lagged times
+        # from one and other.
+        "lag_ratio": 0,
     }
 
-    def __init__(self, *sub_anims, **kwargs):
-        sub_anims = [x for x in sub_anims if not(x.empty)]
-        digest_config(self, locals())
-        self.update_config(**kwargs)  # Handles propagation to self.sub_anims
+    def __init__(self, *animations, **kwargs):
+        self.animations = animations
+        self.group = Group(*[anim.mobject for anim in animations])
+        Animation.__init__(self, self.group, **kwargs)
+        self.init_run_time()
 
-        if len(sub_anims) == 0:
-            self.empty = True
-            self.run_time = 0
-        else:
-            self.run_time = max([a.run_time for a in sub_anims])
-        everything = Group(*[a.mobject for a in sub_anims])
-        Animation.__init__(self, everything, **kwargs)
+    def get_all_mobjects(self):
+        return self.group
 
-    def update(self, alpha):
-        for anim in self.sub_anims:
-            anim.update(alpha * self.run_time / anim.run_time)
+    def init_run_time(self):
+        # A list of triplets (anim, start_time, end_time)
+        self.anims_with_timings = []
+        curr_time = 0
+        for anim in self.animations:
+            start_time = curr_time
+            end_time = start_time + anim.get_run_time()
+            self.anims_with_timings.append(
+                (anim, start_time, end_time)
+            )
+            # Start time of next animation is based on
+            # the lag_ratio
+            curr_time = interpolate(
+                start_time, end_time, self.lag_ratio
+            )
+        if self.run_time is None:
+            # Default to max end_time
+            self.run_time = self.get_default_run_time()
 
-    def clean_up_from_scene(self, *args, **kwargs):
-        for anim in self.sub_anims:
-            anim.clean_up_from_scene(*args, **kwargs)
+    def get_default_run_time(self):
+        return np.max([
+            awt[2] for awt in self.anims_with_timings
+        ])
 
-    def update_config(self, **kwargs):
-        Animation.update_config(self, **kwargs)
+    def begin(self):
+        for anim in self.animations:
+            anim.begin()
 
-        # If AnimationGroup is called with any configuration,
-        # it is propagated to the sub_animations
-        for anim in self.sub_anims:
-            anim.update_config(**kwargs)
+    def finish(self):
+        for anim in self.animations:
+            anim.finish()
 
-# Variants on mappin an animation over submobjectsg
+    def clean_up_from_scene(self, scene):
+        for anim in self.animations:
+            anim.clean_up_from_scene(scene)
+
+    def interpolate(self, alpha):
+        time = alpha * self.get_run_time()
+        for anim, start_time, end_time in self.anims_with_timings:
+            anim_time = end_time - start_time
+            if anim_time == 0:
+                sub_alpha = 0
+            else:
+                sub_alpha = np.clip(
+                    (time - start_time) / anim_time,
+                    0, 1
+                )
+            anim.interpolate(sub_alpha)
 
 
+class Succession(AnimationGroup):
+    CONFIG = {
+        "lag_ratio": 1,
+    }
+
+# Variants on mapping an animation over submobjects
+
+
+# This class is depricated.  One should use LaggedStart
+# instead, which has different syntax, but more generality
 class LaggedStart(Animation):
     CONFIG = {
         "run_time": 2,
