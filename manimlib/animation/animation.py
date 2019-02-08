@@ -16,7 +16,15 @@ class Animation(object):
         # Does this animation add or remove a mobject form the screen
         "remover": False,
         # TODO, replace this with a single lag parameter
-        "submobject_mode": "all_at_once",
+        # "submobject_mode": "all_at_once",
+
+        # If 0, the animation is applied to all submobjects
+        # at the same time
+        # If 1, it is applied to each successively.
+        # If 0 < lag_ratio < 1, its applied to each
+        # with lagged start times
+        "lag_ratio": 0,
+        # TODO, remove anything with lag_factor
         "lag_factor": 2,
     }
 
@@ -91,19 +99,17 @@ class Animation(object):
         pass
 
     def get_sub_alpha(self, alpha, index, num_submobjects):
-        if self.submobject_mode in ["lagged_start", "smoothed_lagged_start"]:
-            prop = float(index) / num_submobjects
-            if self.submobject_mode is "smoothed_lagged_start":
-                prop = smooth(prop)
-            lf = self.lag_factor
-            return np.clip(lf * alpha - (lf - 1) * prop, 0, 1)
-        elif self.submobject_mode == "one_at_a_time":
-            lower = float(index) / num_submobjects
-            upper = float(index + 1) / num_submobjects
-            return np.clip((alpha - lower) / (upper - lower), 0, 1)
-        elif self.submobject_mode == "all_at_once":
-            return alpha
-        raise Exception("Invalid submobject mode")
+        # TODO, make this more understanable, and/or combine
+        # its functionality with AnimationGroup's method
+        # build_animations_with_timings
+        lag_ratio = self.lag_ratio
+        full_length = (num_submobjects - 1) * lag_ratio + 1
+        value = alpha * full_length
+        lower = index * lag_ratio
+        return np.clip(
+            (value - lower),
+            0, 1,
+        )
 
     def get_all_mobjects(self):
         """
