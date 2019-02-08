@@ -133,7 +133,7 @@ class Succession(Animation):
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         if self.num_anims == 0:
             # This probably doesn't matter for anything, but just in case,
             # we want it in the future, we set current_alpha even in this case
@@ -151,7 +151,7 @@ class Succession(Animation):
             # self.critical_alphas (which is also 1.0)
             if not abs(alpha - 1) < 0.001:
                 warnings.warn(
-                    "Rounding error not near alpha=1 in Succession.update_mobject,"
+                    "Rounding error not near alpha=1 in Succession.interpolate_mobject,"
                     "instead alpha = %f" % alpha
                 )
                 print(self.critical_alphas, alpha)
@@ -269,8 +269,8 @@ class ApplyToCenters(Animation):
         Animation.__init__(self, Group(*mobjects), **full_kwargs)
         self.name = str(self) + AnimationClass.__name__
 
-    def update_mobject(self, alpha):
-        self.centers_container.update_mobject(alpha)
+    def interpolate_mobject(self, alpha):
+        self.centers_container.interpolate_mobject(alpha)
         center_mobs = self.centers_container.mobject.split()
         mobjects = self.mobject.split()
         for center_mob, mobject in zip(center_mobs, mobjects):

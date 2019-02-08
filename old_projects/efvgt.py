@@ -53,8 +53,8 @@ class ConfettiSpiril(Animation):
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        Animation.interpolate_mobject(self, alpha)
         angle = alpha*self.num_spirils*2*np.pi
         vert_shift = alpha*self.total_vert_shift
 

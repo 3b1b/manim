@@ -397,9 +397,9 @@ class ClockPassesTime(Animation):
         )
         Animation.__init__(self, clock, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         for rotation in self.hour_rotation, self.minute_rotation:
-            rotation.update_mobject(alpha)
+            rotation.interpolate_mobject(alpha)
 
 
 class Bubble(SVGMobject):

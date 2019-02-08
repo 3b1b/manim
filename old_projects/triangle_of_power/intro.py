@@ -30,7 +30,7 @@ class TrigAnimation(Animation):
         self.center = mobject.get_center()
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         theta = 2*np.pi*alpha
         circle_point = np.cos(theta)*RIGHT+np.sin(theta)*UP+self.center
         points = [

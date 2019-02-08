@@ -542,8 +542,8 @@ class WalkerAnimation(Animation):
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        Animation.interpolate_mobject(self, alpha)
         cur_x, cur_y = cur_coords = self.walk_func(alpha)
         cur_point = self.coords_to_point(cur_x, cur_y)
         self.mobject.shift(cur_point - self.mobject.walker.get_center())
@@ -1318,8 +1318,8 @@ class FuncRotater(Animation):
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        Animation.interpolate_mobject(self, alpha)
         angle_revs = self.rev_func(alpha)
         self.mobject.rotate(
             angle_revs * TAU, 

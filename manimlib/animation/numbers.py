@@ -21,7 +21,7 @@ class ChangingDecimal(Animation):
             self.diff_from_tracked_mobject = dmc - tmc
         Animation.__init__(self, decimal_number_mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         self.update_number(alpha)
         self.update_position()
 

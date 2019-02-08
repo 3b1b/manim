@@ -459,6 +459,7 @@ class Scene(Container):
 
         animations = self.compile_play_args_to_animation_list(*args)
         curr_mobjects = self.get_mobject_family_members()
+        self.mobjects_from_last_animation = []
         for animation in animations:
             # This is where kwargs to play like run_time and rate_func
             # get applied to all animations
@@ -469,6 +470,7 @@ class Scene(Container):
             if mob not in curr_mobjects:
                 self.add(mob)
                 curr_mobjects += mob.get_family()
+            self.mobjects_from_last_animation.append(mob)
             # Begin animation
             animation.begin()
 
@@ -479,19 +481,16 @@ class Scene(Container):
         self.update_frame(excluded_mobjects=moving_mobjects)
         static_image = self.get_frame()
         for t in self.get_animation_time_progression(animations):
+            dt = 1 / self.camera.frame_rate
             for animation in animations:
                 animation.update(t / animation.run_time)
-            dt = 1 / self.camera.frame_rate
             self.continual_update(dt)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
 
-        self.mobjects_from_last_animation = [
-            anim.mobject for anim in animations
-        ]
         for animation in animations:
             animation.finish()
-            
+            animation.clean_up_from_scene(self)
 
         if self.skip_animations:
             self.continual_update(self.get_run_time(animations))

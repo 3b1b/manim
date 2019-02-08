@@ -263,7 +263,7 @@ class FlashThroughHistogram(Animation):
         return cell
 
 
-    def update_mobject(self,t):
+    def interpolate_mobject(self,t):
 
         if t == 0:
             self.mobject.add(self.prototype_cell)

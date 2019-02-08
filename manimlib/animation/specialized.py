@@ -23,8 +23,8 @@ class MoveCar(ApplyMethod):
         tire_radius = car.get_tires()[0].get_width() / 2
         self.total_tire_radians = -distance / tire_radius
 
-    def update_mobject(self, alpha):
-        ApplyMethod.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        ApplyMethod.interpolate_mobject(self, alpha)
         if alpha == 0:
             return
         radians = alpha * self.total_tire_radians

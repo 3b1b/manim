@@ -24,7 +24,7 @@ class ArcLengthChange(Animation):
         self.new_angle = new_angle
         Animation.__init__(self,mobject,**kwargs)
 
-    def update_mobject(self,alpha):
+    def interpolate_mobject(self,alpha):
         angle = interpolate(self.old_angle, self.new_angle, alpha)
         self.mobject.angle = angle
         self.mobject.generate_points()
@@ -38,7 +38,7 @@ class LabelTracksLine(Animation):
         self.buff = buff
         Animation.__init__(self,mobject,**kwargs)
 
-    def update_mobject(self,alpha):
+    def interpolate_mobject(self,alpha):
         line_center = self.line.get_center()
         line_end = self.line.points[-1]
         v = line_end - line_center

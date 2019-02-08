@@ -745,7 +745,7 @@ class VaryCircles(Animation):
         digest_locals(self)
         Animation.__init__(self, Mobject(), **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         radius = self.radius + 0.9*self.radius*np.sin(1.5*np.pi*alpha)
         self.mobject = Mobject(*self.scene.get_circles_and_points(
             self.input_value-radius,

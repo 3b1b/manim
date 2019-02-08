@@ -90,7 +90,7 @@ class ShowWord(Animation):
         self.stroke_width = word.get_stroke_width()
         Animation.__init__(self, word, run_time=run_time, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         word = self.mobject
         stroke_width = self.stroke_width
         count = int(alpha * len(word))

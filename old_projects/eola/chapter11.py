@@ -858,7 +858,7 @@ class ShowSlopes(Animation):
         line.save_state()
         Animation.__init__(self, line, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         f = self.graph.point_from_proportion        
         low, high = list(map(f, np.clip([alpha-self.dx, alpha+self.dx], 0, 1)))
         slope = (high[1]-low[1])/(high[0]-low[0])

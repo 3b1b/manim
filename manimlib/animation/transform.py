@@ -25,18 +25,38 @@ class Transform(Animation):
     }
 
     def __init__(self, mobject, target_mobject, **kwargs):
-        # Copy target_mobject so as to not mess with caller
-        self.original_target_mobject = target_mobject
-        target_mobject = target_mobject.copy()
-        target_mobject.update()
+        Animation.__init__(self, mobject, **kwargs)
         self.target_mobject = target_mobject
-
-        mobject.align_data(target_mobject)
-        digest_config(self, kwargs)
         self.init_path_func()
 
-        Animation.__init__(self, mobject, **kwargs)
-        self.name += "To" + str(target_mobject)
+    def begin(self):
+        mobject = self.mobject
+        target = self.target_mobject
+        # Note, this potentially changes the structure
+        # of both mobject and target_mobject
+        mobject.align_data(target)
+        super().begin()
+        # Copy target_mobject so as to not mess with caller
+        # self.original_target_mobject = self.target_mobject
+        self.target_mobject.update()
+        self.target_mobject.suspend_updating()
+        self.target_copy = self.target_mobject.copy()
+
+    def finish(self):
+        super().finish()
+        self.target_mobject.resume_updating()
+
+    def clean_up_from_scene(self, scene):
+        super().clean_up_from_scene(scene)
+        if self.replace_mobject_with_target_in_scene:
+            scene.remove(self.mobject)
+            scene.add(self.target_mobject)
+
+    def __str__(self):
+        return "{}To{}".format(
+            super().__str__(self),
+            str(self.target_mobject)
+        )
 
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
@@ -63,13 +83,6 @@ class Transform(Animation):
     def update_submobject(self, submob, start, end, alpha):
         submob.interpolate(start, end, alpha, self.path_func)
         return self
-
-    def clean_up_from_scene(self, scene=None):
-        Animation.clean_up_from_scene(self, scene)
-        if self.replace_mobject_with_target_in_scene and scene is not None:
-            scene.remove(self.mobject)
-            if not self.remover:
-                scene.add(self.original_target_mobject)
 
 
 class ReplacementTransform(Transform):

@@ -114,7 +114,7 @@ class FlashThroughClass(Animation):
             np.random.shuffle(self.indices)
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         index = int(np.floor(alpha * self.mobject.height * self.mobject.width))
         for pi in self.mobject:
             pi.set_color(BLUE_E)

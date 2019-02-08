@@ -14,12 +14,12 @@ class UpdateFromFunc(Animation):
         digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         self.update_function(self.mobject)
 
 
 class UpdateFromAlphaFunc(UpdateFromFunc):
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         self.update_function(self.mobject, alpha)
 
 
@@ -35,7 +35,7 @@ class MaintainPositionRelativeTo(Animation):
             tracked_mobject.get_critical_point(tcp)
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         target = self.tracked_mobject.get_critical_point(self.tracked_critical_point)
         location = self.mobject.get_critical_point(self.tracked_critical_point)
         self.mobject.shift(target - location + self.diff)

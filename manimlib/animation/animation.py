@@ -25,26 +25,25 @@ class Animation(object):
 
     def __init__(self, mobject, **kwargs):
         assert(isinstance(mobject, Mobject))
-        self.mobject = mobject
         digest_config(self, kwargs)
-        self.all_families_zipped = self.get_all_families_zipped()
+        self.mobject = mobject
 
     def begin(self):
-        mobject = self.mobject
-        # Make sure it's all up to date
-        mobject.update()
-        mobject.suspend_updating()
+        # mobject = self.mobject
+        # # Make sure it's all up to date
+        # mobject.update()
+        # mobject.suspend_updating()
         # Keep track of where it started
-        self.starting_mobject = mobject.copy()
+        self.starting_mobject = self.mobject.copy()
         self.update(0)
 
     def finish(self):
         self.mobject.resume_updating()
+        self.update(1)
 
     def clean_up_from_scene(self, scene):
         if self.is_remover():
             scene.remove(self.mobject)
-        return self
 
     def __str__(self):
         if self.name:
@@ -58,16 +57,19 @@ class Animation(object):
         digest_config(self, kwargs)
         return self
 
+    def update_mobjects_alt(self, dt):
+        for mob in self.get_all_mobjects():
+            mob.update(dt)
+
     def update(self, alpha):
         alpha = np.clip(alpha, 0, 1)
-        self.update_mobject(self.rate_func(alpha))
+        self.interpolate_mobject(self.rate_func(alpha))
 
-    def update_mobject(self, alpha):
-        families = self.all_families_zipped
+    def interpolate_mobject(self, alpha):
+        families = self.get_all_families_zipped()
         for i, mobs in enumerate(families):
             sub_alpha = self.get_sub_alpha(alpha, i, len(families))
-            self.update_submobject(*list(mobs) + [sub_alpha])
-        return self
+            self.update_submobject(*mobs, sub_alpha)
 
     def get_sub_alpha(self, alpha, index, num_submobjects):
         if self.submobject_mode in ["lagged_start", "smoothed_lagged_start"]:

@@ -12,7 +12,7 @@ class RollAlongVector(Animation):
         digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         d_alpha = alpha - self.last_alpha
         self.last_alpha = alpha
         self.mobject.rotate_in_place(

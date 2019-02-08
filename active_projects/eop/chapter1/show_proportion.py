@@ -83,7 +83,7 @@ class ChangeProbability(Animation):
         Animation.__init__(self, prob_mob, **kwargs)
 
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
 
         p = (1 - alpha) * self.p0 + alpha * self.p1
         self.mobject.remove(self.mobject.prob_rect, self.mobject.prob_label)

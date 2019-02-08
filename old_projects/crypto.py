@@ -4967,7 +4967,7 @@ class Exchange(Animation):
         self.changed_symbols_yet = False
         Animation.__init__(self, exchange, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         exchange = self.mobject
         if alpha < 1./3:
             self.swap.update(3*alpha)

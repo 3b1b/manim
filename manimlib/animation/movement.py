@@ -55,7 +55,7 @@ class PhaseFlow(Animation):
         digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         if hasattr(self, "last_alpha"):
             dt = self.virtual_time * (alpha - self.last_alpha)
             self.mobject.apply_function(
@@ -69,6 +69,6 @@ class MoveAlongPath(Animation):
         digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         point = self.path.point_from_proportion(alpha)
         self.mobject.move_to(point)

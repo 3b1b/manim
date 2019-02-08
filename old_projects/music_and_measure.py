@@ -143,7 +143,7 @@ class Vibrate(Animation):
         self.func = func
         Animation.__init__(self, Mobject1D(color = self.color), **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         self.mobject.reset_points()
         epsilon = self.mobject.epsilon
         self.mobject.add_points([
@@ -532,7 +532,7 @@ class FlashOnXProximity(Animation):
         self.close_mobjects = close_mobjects
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         for mob in self.close_mobjects:
             if np.min(np.abs(mob.points[:,0] - self.x_val)) < 0.1:
                 self.mobject.set_color()

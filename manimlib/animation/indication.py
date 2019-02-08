@@ -276,7 +276,7 @@ class Vibrate(Animation):
             for k in range(1, self.overtones + 1)
         ])
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         time = alpha * self.run_time
         families = list(map(
             Mobject.get_family,

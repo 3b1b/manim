@@ -58,7 +58,7 @@ class SlideWordDownCycloid(Animation):
         self.start_times = 0.5*(1-(unit_interval))
         Animation.__init__(self, word_mob, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         virtual_times = 2*(alpha - self.start_times)
         cut_offs = [
             0.1,

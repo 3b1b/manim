@@ -202,7 +202,7 @@ class WavePacket(Animation):
         ]
         Animation.__init__(self, self.vects, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         packet_center = interpolate(
             self.wave_packet_start,
             self.wave_packet_end,

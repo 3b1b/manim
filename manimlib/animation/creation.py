@@ -119,7 +119,7 @@ class ShowIncreasingSubsets(Animation):
         self.all_submobs = group.submobjects
         Animation.__init__(self, group, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         n_submobs = len(self.all_submobs)
         index = int(alpha * n_submobs)
         self.mobject.submobjects = self.all_submobs[:index]

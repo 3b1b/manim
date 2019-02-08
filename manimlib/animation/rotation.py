@@ -21,8 +21,8 @@ class Rotating(Animation):
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        Animation.interpolate_mobject(self, alpha)
         if self.in_place and self.about_point is None:
             self.about_point = self.mobject.get_center()
         self.mobject.rotate(

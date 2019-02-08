@@ -575,8 +575,8 @@ class FunctionMinmization(GraphScene):
         self.wait(10)
 
 class ChangingDecimalWithColor(ChangingDecimal):
-    def update_mobject(self, alpha):
-        ChangingDecimal.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        ChangingDecimal.interpolate_mobject(self, alpha)
         num = self.number_update_func(alpha)
         self.decimal_number.set_fill(
             interpolate_color(BLACK, WHITE, 0.5+num*0.5), 
@@ -984,7 +984,7 @@ class IntroduceCostFunction(PreviewLearning):
             ])
         term_updates.append(ChangingDecimal(sum_term, sum_update))
         for update in term_updates:
-            update.update_mobject(0)
+            update.interpolate_mobject(0)
 
         target_vect = 0.1*np.random.random(10)
         target_vect[3] = 0.97
