@@ -492,7 +492,7 @@ class Introduction(MovingCameraScene):
 
         self.add(div_vector_field)
         self.play(
-            LaggedStart(ShowPassingFlash, stream_lines),
+            OldLaggedStart(ShowPassingFlash, stream_lines),
             FadeIn(div_title[0]),
             *list(map(GrowFromCenter, div_title[1]))
         )
@@ -576,7 +576,7 @@ class ShowWritingTrajectory(TeacherStudentsScene):
             self.get_student_changes(*["sassy"] * 3)
         )
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, dashed_path,
                 lambda m: (m.scale, 0),
                 remover=True
@@ -758,7 +758,7 @@ class CylinderModel(Scene):
             dot_update,
             exp_tex_update,
             exp_decimal_update,
-            LaggedStart(
+            OldLaggedStart(
                 FadeIn, sample_labels,
                 remover=True,
                 rate_func=there_and_back,
@@ -1000,12 +1000,12 @@ class ElectricField(CylinderModel, MovingCameraScene):
             FadeOut(self.unit_circle),
             FadeOut(self.title),
             FadeOut(self.func_label),
-            LaggedStart(GrowArrow, vector_field)
+            OldLaggedStart(GrowArrow, vector_field)
         )
         self.remove_foreground_mobjects(self.title, self.func_label)
         self.wait()
         for group, vect in (protons, UP), (electrons, DOWN):
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 ApplyMethod, group,
                 lambda m: (m.shift, (FRAME_HEIGHT + 1) * vect),
                 run_time=3,
@@ -1059,8 +1059,8 @@ class ElectricField(CylinderModel, MovingCameraScene):
             self.vector_field, unit_circle, protons, electrons
         )
         self.play(
-            LaggedStart(VFadeIn, protons),
-            LaggedStart(VFadeIn, electrons),
+            OldLaggedStart(VFadeIn, protons),
+            OldLaggedStart(VFadeIn, electrons),
         )
         self.play(
             self.camera.frame.scale, 0.7,
@@ -1341,15 +1341,15 @@ class TopicsAndConnections(Scene):
         full_rect = FullScreenFadeRectangle()
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, dots,
                 lambda d: (d.restore,)
             ),
-            LaggedStart(Write, topics),
+            OldLaggedStart(Write, topics),
         )
         self.wait()
         self.play(
-            LaggedStart(ShowCreation, connections),
+            OldLaggedStart(ShowCreation, connections),
             Animation(topics),
             Animation(dots),
         )
@@ -1428,9 +1428,9 @@ class IntroduceVectorField(Scene):
             dot.target = vector
             dots.add(dot)
 
-        self.play(LaggedStart(GrowFromCenter, dots))
+        self.play(OldLaggedStart(GrowFromCenter, dots))
         self.wait()
-        self.play(LaggedStart(MoveToTarget, dots, remover=True))
+        self.play(OldLaggedStart(MoveToTarget, dots, remover=True))
         self.add(vector_field)
         self.wait()
 
@@ -1548,12 +1548,12 @@ class ShorteningLongVectors(IntroduceVectorField):
 
         self.add(adjusted)
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             MoveToTarget, adjusted,
             run_time=3
         ))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, adjusted,
             lambda m: (m.restore,),
             run_time=3
@@ -1752,12 +1752,12 @@ class DefineDivergence(ChangingElectricField):
         vector_field = self.get_vector_field()
 
         self.play(
-            LaggedStart(GrowArrow, vector_field),
-            LaggedStart(GrowFromCenter, particles),
+            OldLaggedStart(GrowArrow, vector_field),
+            OldLaggedStart(GrowFromCenter, particles),
             run_time=4
         )
         self.wait()
-        self.play(LaggedStart(FadeOut, particles))
+        self.play(OldLaggedStart(FadeOut, particles))
 
     def show_flow(self):
         stream_lines = StreamLines(
@@ -1797,8 +1797,8 @@ class DefineDivergence(ChangingElectricField):
 
             self.play(
                 self.vector_field.set_fill, {"opacity": 0.5},
-                LaggedStart(
-                    LaggedStart, vector_circle_groups,
+                OldLaggedStart(
+                    OldLaggedStart, vector_circle_groups,
                     lambda vcg: (GrowArrow, vcg),
                 ),
             )
@@ -2160,7 +2160,7 @@ class DivergenceAsNewFunction(Scene):
         def show_flow():
             stream_lines = get_stream_lines()
             random.shuffle(stream_lines.submobjects)
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 ShowCreationThenDestruction,
                 stream_lines,
                 remover=True
@@ -2202,8 +2202,8 @@ class DivergenceAsNewFunction(Scene):
         ])
         self.add_foreground_mobjects(div_tex)
         self.play(
-            LaggedStart(GrowArrow, vector_field),
-            LaggedStart(GrowArrow, vector_ring),
+            OldLaggedStart(GrowArrow, vector_field),
+            OldLaggedStart(GrowArrow, vector_ring),
         )
         self.add(vector_ring_update)
         self.wait()
@@ -2368,7 +2368,7 @@ class IntroduceCurl(IntroduceVectorField):
             key=lambda v: v.get_length()
         )
 
-        self.play(LaggedStart(GrowArrow, vector_field))
+        self.play(OldLaggedStart(GrowArrow, vector_field))
         self.wait()
 
     def begin_flow(self):
@@ -2461,7 +2461,7 @@ class ShearCurl(IntroduceCurl):
         vector_field.submobjects.key=sort(
             key=lambda a: a.get_length()
         )
-        self.play(LaggedStart(GrowArrow, vector_field))
+        self.play(OldLaggedStart(GrowArrow, vector_field))
 
     def comment_on_relevant_region(self):
         circle = Circle(color=WHITE, radius=0.75)
@@ -2683,7 +2683,7 @@ class IllustrationUseVennDiagram(Scene):
             Animation(fluid_flow),
             Animation(ff_circle),
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, examples,
             run_time=3,
         ))
@@ -2755,7 +2755,7 @@ class MaxwellsEquations(Scene):
 
         self.add(title)
         self.add(field_definitions)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, equations,
             run_time=3,
             lag_range=0.4
@@ -2951,7 +2951,7 @@ class IllustrateGaussMagnetic(IllustrateGaussLaw):
         vector_field.submobjects.sort(
             key=lambda a: -a1.get_length()
         )
-        self.play(LaggedStart(GrowArrow, vector_field))
+        self.play(OldLaggedStart(GrowArrow, vector_field))
         self.add_foreground_mobjects(
             vector_field, *self.foreground_mobjects
         )
@@ -3033,13 +3033,13 @@ class ShowTwoPopulations(Scene):
                 Write(word, run_time=1),
             )
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, examples,
                 lambda m: (m.restore,)
             ),
-            LaggedStart(FadeOut, words),
+            OldLaggedStart(FadeOut, words),
             *[
-                LaggedStart(
+                OldLaggedStart(
                     FadeIn,
                     group[1:],
                     run_time=4,
@@ -3336,7 +3336,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
             ShowCreation(rect)
         )
         self.play(
-            LaggedStart(FadeIn, equations),
+            OldLaggedStart(FadeIn, equations),
             randy.change, "confused", equations,
             VFadeIn(randy),
         )
@@ -3370,7 +3370,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         dot_vector = get_dot_vector()
 
         self.play(
-            LaggedStart(GrowArrow, vector_field),
+            OldLaggedStart(GrowArrow, vector_field),
             randy.change, "thinking", dot,
             Animation(self.differential_equation_group)
         )
@@ -4085,7 +4085,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
 
         self.play(
             Write(dot_product),
-            LaggedStart(MoveToTarget, copies)
+            OldLaggedStart(MoveToTarget, copies)
         )
         self.remove(copies)
         self.play(FadeIn(div_text))
@@ -4161,7 +4161,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                 )
             self.play(
                 all_step_vectors.set_fill, {"opacity": 0.5},
-                LaggedStart(
+                OldLaggedStart(
                     MoveToTarget, all_diff_vectors,
                     run_time=3
                 ),
@@ -4224,7 +4224,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                     )
                 )
             self.play(
-                LaggedStart(
+                OldLaggedStart(
                     MoveToTarget, all_diff_vectors,
                     run_time=2
                 ),
@@ -4267,7 +4267,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
             virtual_time=1,
         )
         random.shuffle(stream_lines.submobjects)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowPassingFlash,
             stream_lines,
             run_time=4,
@@ -4455,7 +4455,7 @@ class BroughtToYouBy(PiCreatureScene):
 
         self.play(
             Write(so_words[0]),
-            LaggedStart(
+            OldLaggedStart(
                 DrawBorderThenFill, so_words[1],
                 run_time=5
             ),
@@ -4477,7 +4477,7 @@ class BroughtToYouBy(PiCreatureScene):
             full_group,
             rate_func=running_start,
         ))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, patreon_logo
         ))
         self.wait()
@@ -4520,7 +4520,7 @@ class BroughtToYouBy(PiCreatureScene):
             randy.change, "thinking",
             morty.change, "thinking",
         )
-        self.play(LaggedStart(FadeOut, spiral, run_time=3))
+        self.play(OldLaggedStart(FadeOut, spiral, run_time=3))
         self.wait(3)
 
     # Helpers
@@ -4637,8 +4637,8 @@ class ThoughtsOnAds(Scene):
         )
         self.wait()
         self.play(
-            LaggedStart(FadeInFromDown, vcb),
-            LaggedStart(ShowCreation, vcb_arrows),
+            OldLaggedStart(FadeInFromDown, vcb),
+            OldLaggedStart(ShowCreation, vcb_arrows),
             ApplyMethod(
                 knob.move_to, line.get_right(), DOWN,
                 run_time=2
@@ -4754,7 +4754,7 @@ class PeopleValueGraph(GraphScene):
         self.play(Write(reach_words))
         self.wait()
         self.play(
-            LaggedStart(DrawBorderThenFill, area),
+            OldLaggedStart(DrawBorderThenFill, area),
             Animation(self.graph),
             Animation(self.axes),
             Write(area_words),

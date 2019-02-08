@@ -27,7 +27,7 @@ class LogoGeneration(LogoGenerationTemplate):
                 run_time=3,
             ),
             AnimationGroup(*[
-                LaggedStart(
+                OldLaggedStart(
                     Restore, layer,
                     run_time=3,
                     path_arc=180 * DEGREES,
@@ -121,17 +121,17 @@ class SumOfIntegersProof(Scene):
                 square.move_to(row, LEFT)
             row.fade(1)
 
-        self.play(LaggedStart(FadeInFromDown, equation[:-1]))
+        self.play(OldLaggedStart(FadeInFromDown, equation[:-1]))
         self.wait()
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, numbers,
                 path_arc=-90 * DEGREES,
                 lag_ratio=1,
                 run_time=1
             )
         )
-        self.play(LaggedStart(Restore, rows))
+        self.play(OldLaggedStart(Restore, rows))
         self.wait()
         self.play(
             ReplacementTransform(
@@ -221,7 +221,7 @@ class MultipleDefinitionsOfAnEllipse(Scene):
             definition.saved_state = definition.copy()
             definition.saved_state.set_fill(LIGHT_GREY, 0.5)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInAndShiftFromDirection, definitions,
             lambda m: (m, RIGHT),
             run_time=4
@@ -281,7 +281,7 @@ class StretchACircle(Scene):
                 plane_circle_group.stretch, 2, 0,
                 run_time=2,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 GrowArrow, arrows,
                 run_time=1,
                 lag_ratio=1
@@ -367,8 +367,8 @@ class ShowArrayOfEccentricities(Scene):
 
         self.play(
             Write(name),
-            LaggedStart(GrowArrow, arrows),
-            LaggedStart(Restore, eccentricity_labels)
+            OldLaggedStart(GrowArrow, arrows),
+            OldLaggedStart(Restore, eccentricity_labels)
         )
         self.wait()
         self.play(
@@ -404,7 +404,7 @@ class ShowArrayOfEccentricities(Scene):
             [morty]
         ))
         self.play(
-            LaggedStart(FadeOutAndShiftDown, group),
+            OldLaggedStart(FadeOutAndShiftDown, group),
             circle.set_height, 5,
             circle.center,
         )
@@ -755,7 +755,7 @@ class AskWhyAreTheyTheSame(TeacherStudentsScene):
         self.play(
             FadeOutAndShift(bubble),
             FadeOutAndShift(bubble.content),
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShift, self.students,
                 lambda m: (m, 3 * DOWN),
             ),
@@ -787,7 +787,7 @@ class AskWhyAreTheyTheSame(TeacherStudentsScene):
         self.wait(2)
         self.play(
             baby_morty.change, "thinking",
-            LaggedStart(DrawBorderThenFill, bubble)
+            OldLaggedStart(DrawBorderThenFill, bubble)
         )
         self.play(ShowCreation(egg))
         self.wait(3)
@@ -826,7 +826,7 @@ class TriangleOfEquivalences(Scene):
         arrows[2].move_to(rects[::2])
         arrows[1:].shift(0.5 * DOWN)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, arrows,
             lag_ratio=0.7,
             run_time=3,
@@ -893,7 +893,7 @@ class TangencyAnimation(Scene):
             ring.scale(0)
             ring.saved_state.set_stroke(width=0)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Restore, rings,
             run_time=2,
             lag_ratio=0.7
@@ -1028,7 +1028,7 @@ class ShowSegmentSplit(Scene):
             brace.scale(0)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 Restore, braces,
                 lag_ratio=0.7
             ),
@@ -1113,7 +1113,7 @@ class WriteConjecture(Scene):
             word.rotate(angle, about_point=ORIGIN)
             word.shift(line.get_center())
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromDown,
             VGroup(title, equation),
             lag_ratio=0.7
@@ -1220,7 +1220,7 @@ class QuickGeometryProof(Scene):
 
         everything = VGroup(*self.mobjects)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             GrowFromCenter, everything,
             lag_ratio=0.25,
             run_time=4
@@ -1278,7 +1278,7 @@ class NameDandelin(Scene):
         self.play(Write(cmon_google, run_time=1))
         self.wait()
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromDown, dandelions,
             lag_ratio=0.7,
             run_time=1
@@ -1446,7 +1446,7 @@ class CreativeConstruction(PiCreatureScene):
             max_radius=15.0,
             delta_r=0.025,
         )
-        return LaggedStart(
+        return OldLaggedStart(
             FadeIn, rings,
             rate_func=there_and_back,
             run_time=2,
@@ -1508,12 +1508,12 @@ class LockhartQuote(Scene):
             self.wait(0.005 * len(word)**1.5)
         self.wait(2)
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShiftDown, quote,
                 lag_ratio=0.2,
                 run_time=5,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShiftDown, pictures,
                 run_time=3,
             ),
@@ -1571,7 +1571,7 @@ class ShowApollonianCircles(Scene):
         equation.next_to(circles, UP)
 
         self.add(equation)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, circles
         ))
         self.wait()

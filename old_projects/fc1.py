@@ -28,7 +28,7 @@ class CrossingOneMillion(TeacherStudentsScene):
                 rate_func=bezier([0, 0, 0, 1, 1, 1]),
                 run_time=5,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, self.get_pi_creatures(),
                 lambda m: (m.change, "hooray", number),
                 rate_func=squish_rate_func(smooth, 0, 0.5),
@@ -172,12 +172,12 @@ class AllFeaturedCreators(MortyPiCreatureScene):
             Write(title)
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, dots,
             lambda m: (m.restore,)
         ))
         self.play(
-            LaggedStart(FadeIn, rects, lag_ratio=0.7),
+            OldLaggedStart(FadeIn, rects, lag_ratio=0.7),
             morty.change, "happy"
         )
         self.add(creators, rects)

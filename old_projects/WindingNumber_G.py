@@ -108,7 +108,7 @@ class IntroSceneWrapper(PiCreatureScene):
 
         self.play(Write(solver))
         self.play(
-            LaggedStart(FadeIn, xy_equation, run_time = 1),
+            OldLaggedStart(FadeIn, xy_equation, run_time = 1),
             morty.change, "pondering"
         )
         self.wait(2)
@@ -129,7 +129,7 @@ class IntroSceneWrapper(PiCreatureScene):
         self.play(solver.restore)
         self.wait()
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeOut, VGroup(solver, z_equation, zeta)
         ))
         self.play(
@@ -879,8 +879,8 @@ class IntroduceInputOutputScene(InputOutputScene):
         function_label.add_background_rectangle()
 
 
-        self.play(LaggedStart(GrowFromCenter, dots))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(GrowFromCenter, dots))
+        self.play(OldLaggedStart(
             MoveToTarget, dots,
             path_arc = path_arc
         ))
@@ -1053,7 +1053,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             factor = target_length / vector.get_length()
             vector.target.scale(factor, about_point = vector.get_start())
 
-        self.play(LaggedStart(MoveToTarget, newer_in_vectors))
+        self.play(OldLaggedStart(MoveToTarget, newer_in_vectors))
         self.wait()
 
 class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
@@ -1114,10 +1114,10 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
             )
         )
         self.play(
-            LaggedStart(GrowFromCenter, dots, run_time = 1),
+            OldLaggedStart(GrowFromCenter, dots, run_time = 1),
             self.get_student_changes(*3*["erm"]),
         )
-        self.play(LaggedStart(MoveToTarget, dots, path_arc = -TAU/4))
+        self.play(OldLaggedStart(MoveToTarget, dots, path_arc = -TAU/4))
         self.wait(3)
 
 
@@ -1188,8 +1188,8 @@ class EveryOutputPointHasAColor(ColorMappedObjectsScene):
         while n <= len(dots):
             dot_groups.add(dots[n-1:m*n-1])
             n *= m
-        self.play(LaggedStart(
-            LaggedStart, dot_groups,
+        self.play(OldLaggedStart(
+            OldLaggedStart, dot_groups,
             lambda dg : (GrowFromCenter,  dg),
             run_time = 8,
             lag_ratio = 0.2,
@@ -1225,22 +1225,22 @@ class DotsHoppingToColor(InputOutputScene):
             output_plane.lines_to_fade.set_stroke, {"width" : 0},
         )
         self.wait()
-        self.play(LaggedStart(GrowFromCenter, dots, run_time = 3))
+        self.play(OldLaggedStart(GrowFromCenter, dots, run_time = 3))
         self.wait()
 
         #Hop over and back
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             MoveToTarget, dots, 
             path_arc = -TAU/4,
             run_time = 3,
         ))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, dots,
             lambda d : (d.set_fill, d.target_color),
         ))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, dots,
             lambda d : (d.move_to, d.original_position),
             path_arc = TAU/4,
@@ -1352,11 +1352,11 @@ class DotsHoppingToColor(InputOutputScene):
         self.play(
             FadeOut(input_coloring),
             input_plane.white_parts.set_color, WHITE,
-            LaggedStart(GrowFromCenter, dots)
+            OldLaggedStart(GrowFromCenter, dots)
         )
         self.wait()
         random.shuffle(dots.submobjects)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeOut, dots,
             lag_ratio = 0.05,
             run_time = 10,
@@ -1747,10 +1747,10 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
 
         self.add(hypothesis[0])
         self.play(
-            LaggedStart(FadeIn, hypothesis[1]),
+            OldLaggedStart(FadeIn, hypothesis[1]),
             ShowCreation(square, run_time = 8)
         )
-        self.play(LaggedStart(FadeIn, hypothesis[2]))
+        self.play(OldLaggedStart(FadeIn, hypothesis[2]))
         self.play(square.set_fill, {"opacity" : 1}, run_time = 2)
         self.wait()
 
@@ -1965,8 +1965,8 @@ class FailureOfComposition(ColorMappedObjectsScene):
 
 
         self.add(question)
-        self.play(LaggedStart(ShowCreation, small_squares, lag_ratio = 0.8))
-        self.play(LaggedStart(Write, no_answers))
+        self.play(OldLaggedStart(ShowCreation, small_squares, lag_ratio = 0.8))
+        self.play(OldLaggedStart(Write, no_answers))
         self.wait()
         self.play(
             small_squares.arrange, DOWN, {"buff" : 0},
@@ -1985,7 +1985,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
             Write(yes_answers),
             Write(yes_answers_in_equation),
         )
-        self.play(LaggedStart(FadeIn, q_marks, run_time = 1, lag_ratio = 0.8))
+        self.play(OldLaggedStart(FadeIn, q_marks, run_time = 1, lag_ratio = 0.8))
         self.wait(2)
         self.play(
             small_squares.restore,
@@ -2671,7 +2671,7 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         self.remove(all_parts)
         for x in range(2):
             alt_path_parts.save_state()
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 FadeIn, alt_path_parts,
                 rate_func = there_and_back,
                 lag_ratio = 0.3,
@@ -2754,7 +2754,7 @@ class ShowComplexFunction(Scene):
         self.play(
             Write(plane),
             FadeIn(rect),
-            LaggedStart(FadeIn, title)
+            OldLaggedStart(FadeIn, title)
         )
         self.play(*list(map(FadeIn, [x_dot, x_label])))
         self.wait()
@@ -2900,7 +2900,7 @@ class AllOfTheVideos(Scene):
         images.set_height(FRAME_HEIGHT)
         random.shuffle(images.submobjects)
 
-        self.play(LaggedStart(FadeIn, images, run_time = 4))
+        self.play(OldLaggedStart(FadeIn, images, run_time = 4))
         self.wait()
 
 class EndingCredits(Scene):
@@ -2918,7 +2918,7 @@ class EndingCredits(Scene):
         pi.change_mode("happy")
         self.add(pi)
 
-        self.play(LaggedStart(FadeIn, text), pi.look_at, text)
+        self.play(OldLaggedStart(FadeIn, text), pi.look_at, text)
         self.play(pi.change, "wave_1", text)
         self.play(Blink(pi))
         self.play(pi.change, "happy")
@@ -2950,7 +2950,7 @@ class MentionQAndA(Scene):
         questions.arrange(DOWN, buff = 0.75)
         questions.next_to(title, DOWN, LARGE_BUFF)
 
-        self.play(LaggedStart(FadeIn, questions, run_time = 3))
+        self.play(OldLaggedStart(FadeIn, questions, run_time = 3))
         self.wait(2)
         self.play(FadeOut(questions))
         self.wait()
@@ -3002,7 +3002,7 @@ class InfiniteListOfTopics(Scene):
         lines[-1].next_to(lines[-2], DOWN)
 
         self.add(rect, title)
-        self.play(LaggedStart(FadeIn, lines, run_time = 5))
+        self.play(OldLaggedStart(FadeIn, lines, run_time = 5))
         self.wait()
 
 class ManyIterations(Scene):

@@ -45,7 +45,7 @@ class NameAnimationScene(Scene):
         times_n_label.to_edge(UP)
 
         self.play(
-            LaggedStart(FadeIn, name_mob, run_time=3),
+            OldLaggedStart(FadeIn, name_mob, run_time=3),
             ApplyMethod(randy.change, "pondering", pos2, run_time=1),
             FadeIn(times_n_label)
         )

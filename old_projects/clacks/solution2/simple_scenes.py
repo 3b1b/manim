@@ -575,21 +575,21 @@ class TwoSolutionsWrapper(WrapperScene):
 
         self.add(big_rect, title, pis)
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ShowCreation, screen_rects.copy().set_fill(opacity=0),
                 lag_ratio=0.8
             ),
-            LaggedStart(
+            OldLaggedStart(
                 FadeIn, screen_rects,
                 lag_ratio=0.8
             ),
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, pis,
                 lambda pi: (pi.change, "pondering", screen_rects[0])
             ),
         )
         self.play(Blink(random.choice(pis)))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, pis,
             lambda pi: (pi.change, "thinking", screen_rects[1])
         ))

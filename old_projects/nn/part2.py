@@ -203,7 +203,7 @@ class PreviewLearning(NetworkScene):
         ]
         all_edges = VGroup(*it.chain(*network_mob.edge_groups))
         run_time = kwargs.get("run_time", self.default_activate_run_time)
-        edge_animation = LaggedStart(
+        edge_animation = OldLaggedStart(
             ShowCreationThenDestruction, 
             all_edges.copy().set_fill(YELLOW),
             run_time = run_time,
@@ -312,7 +312,7 @@ class PreviewLearning(NetworkScene):
 
     def get_edge_animation(self):
         edges = VGroup(*it.chain(*self.network_mob.edge_groups))
-        return LaggedStart(
+        return OldLaggedStart(
             ApplyFunction, edges,
             lambda mob : (
                 lambda m : m.rotate_in_place(np.pi/12).set_color(YELLOW),
@@ -363,8 +363,8 @@ class TrainingVsTestData(Scene):
         training_examples.next_to(ORIGIN, LEFT)
         test_examples.next_to(ORIGIN, RIGHT)
         self.play(
-            LaggedStart(FadeIn, training_examples),
-            LaggedStart(FadeIn, test_examples),
+            OldLaggedStart(FadeIn, training_examples),
+            OldLaggedStart(FadeIn, test_examples),
         )
 
         self.training_examples = training_examples
@@ -449,7 +449,7 @@ class MNistDescription(Scene):
         self.add(title, authors)
         self.play(
             Write(link_words, run_time = 2),
-            LaggedStart(GrowArrow, arrows),
+            OldLaggedStart(GrowArrow, arrows),
         )
         self.wait()
 
@@ -472,7 +472,7 @@ class MNistDescription(Scene):
             group.set_height(FRAME_HEIGHT - 1)
             if i == 0:
                 self.play(
-                    LaggedStart(FadeIn, group),
+                    OldLaggedStart(FadeIn, group),
                     FadeOut(word_group),
                 )
             else:
@@ -696,7 +696,7 @@ class IntroduceCostFunction(PreviewLearning):
             run_time = 2,
             submobject_mode = "lagged_start"
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreationThenDestruction, 
             neuron.edges_in.copy().set_stroke(YELLOW, 3),
             run_time = 1.5,
@@ -742,7 +742,7 @@ class IntroduceCostFunction(PreviewLearning):
                 for edge in neuron.edges_in
             ]
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, neuron.edges_in,
             lambda m : (m.rotate_in_place, np.pi/12),
             rate_func = wiggle,
@@ -771,7 +771,7 @@ class IntroduceCostFunction(PreviewLearning):
             self.color_edge_randomly(edge, exp = self.full_edges_exp)
 
         self.play(*[
-            LaggedStart(
+            OldLaggedStart(
                 FadeIn, group,
                 run_time = 3,
             )
@@ -807,8 +807,8 @@ class IntroduceCostFunction(PreviewLearning):
         self.play(
             self.network_mob.shift, 0.5*RIGHT,
             ShowCreation(rect),
-            LaggedStart(DrawBorderThenFill, image),
-            LaggedStart(DrawBorderThenFill, neurons),
+            OldLaggedStart(DrawBorderThenFill, image),
+            OldLaggedStart(DrawBorderThenFill, neurons),
             run_time = 1
         )
         self.play(
@@ -879,7 +879,7 @@ class IntroduceCostFunction(PreviewLearning):
             network_mob.edge_groups
         ))))
 
-        self.play(LaggedStart(FadeOut, to_fade, run_time = 1))
+        self.play(OldLaggedStart(FadeOut, to_fade, run_time = 1))
 
     def break_down_cost_function(self):
         layer = self.network_mob.layers[-1]
@@ -1004,8 +1004,8 @@ class IntroduceCostFunction(PreviewLearning):
             cost_group.scale, 0.5,
             cost_group.to_corner, UP+LEFT,
             MoveToTarget(brace),
-            LaggedStart(GrowArrow, arrows),
-            LaggedStart(FadeIn, terms),
+            OldLaggedStart(GrowArrow, arrows),
+            OldLaggedStart(FadeIn, terms),
             FadeIn(sum_term),
             Animation(decimals)
         )
@@ -1018,7 +1018,7 @@ class IntroduceCostFunction(PreviewLearning):
             ]
         ))
         self.wait()
-        self.play(LaggedStart(Indicate, decimals, rate_func = there_and_back))
+        self.play(OldLaggedStart(Indicate, decimals, rate_func = there_and_back))
         self.wait()
         for update in update_decimals:
             update.rate_func = lambda a : smooth(1-a)
@@ -1867,7 +1867,7 @@ class TwoVariableInputSpace(Scene):
         self.play(dot.restore)
         self.play(
             FadeIn(question),
-            LaggedStart(GrowArrow, arrows)
+            OldLaggedStart(GrowArrow, arrows)
         )
         self.wait()
 
@@ -2025,7 +2025,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
                 run_time = 2,
                 submobject_mode = "lagged_start"
             ),
-            LaggedStart(FadeIn, words),
+            OldLaggedStart(FadeIn, words),
         )
         self.play(*list(map(Write, [lb, rb, lhs])), run_time = 1)
         self.wait()
@@ -2113,7 +2113,7 @@ class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
             for n1, n2 in zip(values, target_values)
         ]
 
-        self.play(LaggedStart(FadeIn, words, run_time = 1))
+        self.play(OldLaggedStart(FadeIn, words, run_time = 1))
         self.play(*[
             ChangingDecimal(d, update)
             for d, update in zip(decimals, updates)
@@ -2273,8 +2273,8 @@ class NonSpatialGradientIntuition(Scene):
             direction_phrases.add(phrase)
 
         self.play(
-            LaggedStart(MoveToTarget, ws),
-            LaggedStart(FadeIn, direction_phrases)
+            OldLaggedStart(MoveToTarget, ws),
+            OldLaggedStart(FadeIn, direction_phrases)
         )
         self.wait(2)
 
@@ -2312,8 +2312,8 @@ class NonSpatialGradientIntuition(Scene):
             rect.target = words
             rects.add(rect)
 
-        self.play(LaggedStart(ShowCreation, rects))
-        self.play(LaggedStart(MoveToTarget, rects))
+        self.play(OldLaggedStart(ShowCreation, rects))
+        self.play(OldLaggedStart(MoveToTarget, rects))
         self.wait(2)
 
 class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
@@ -2644,7 +2644,7 @@ class GradientNudging(PreviewLearning):
         self.play(
             ReplacementTransform(mover, target),
             FadeIn(words),
-            LaggedStart(GrowArrow, arrows, run_time = 1)
+            OldLaggedStart(GrowArrow, arrows, run_time = 1)
         )
         self.play(FadeOut(target))
         self.play(self.get_edge_change_anim(edges))
@@ -3114,7 +3114,7 @@ class InputRandomData(TestPerformance):
 
         self.play(
             ShowCreation(rect),
-            LaggedStart(
+            OldLaggedStart(
                 DrawBorderThenFill, image, 
                 stroke_width = 0.5
             )
@@ -3148,7 +3148,7 @@ class InputRandomData(TestPerformance):
             for neuron, o in zip(neurons, vect):
                 neuron.generate_target()
                 neuron.target.set_fill(WHITE, opacity = o)
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 MoveToTarget, neurons,
                 run_time = 1
             ))
@@ -3522,13 +3522,13 @@ class RandomlyLabeledImageData(Scene):
             label.target.move_to(labels[i], LEFT)
             label.target.set_color(YELLOW)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, groups,
             run_time = 3,
             lag_ratio = 0.3,
         ))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             MoveToTarget, labels, 
             run_time = 4,
             lag_ratio = 0.5,
@@ -3581,7 +3581,7 @@ class TrainOnImages(PreviewLearning, RandomlyLabeledImageData):
 
             group.to_edge(UP)
             self.add(group)
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 MoveToTarget, edges,
                 lag_ratio = 0.4,
                 run_time = 2,

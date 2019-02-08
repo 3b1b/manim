@@ -563,7 +563,7 @@ class ReflectWorldThroughMirrorNew(MirrorScene):
             mob.become(mob.pre_world)
             mob.fade(1)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Restore, new_worlds,
             lag_ratio=0.4,
             run_time=3
@@ -580,7 +580,7 @@ class ReflectWorldThroughMirrorNew(MirrorScene):
     def blink_all_randys(self):
         randys = self.randys = VGroup(self.randy)
         randys.add(*[rw[-1] for rw in self.reflected_worlds])
-        self.play(LaggedStart(Blink, randys))
+        self.play(OldLaggedStart(Blink, randys))
 
     def add_randy_updates(self):
         # Makes it run slower, but it's fun!
@@ -911,7 +911,7 @@ class MirrorAndWiresOverlay(MirrorScene):
         self.play(
             FadeIn(diagram.rect),
             ShowCreation(diagram.mirror),
-            LaggedStart(ShowCreation, diagram.wires),
+            OldLaggedStart(ShowCreation, diagram.wires),
             run_time=1
         )
         self.remove(diagram)

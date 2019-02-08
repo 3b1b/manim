@@ -93,7 +93,7 @@ class IntroducePutnam(Scene):
 
         self.add(title)
         self.play(Write(six_hours))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             GrowFromCenter, flat_questions,
             run_time = 3,
         ))
@@ -103,7 +103,7 @@ class IntroducePutnam(Scene):
             *list(map(ShowCreation, rects))
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, out_of_tens,
             run_time = 3,
             stroke_color = YELLOW
@@ -324,10 +324,10 @@ class TwoDCase(Scene):
         question.to_corner(UP+RIGHT)
         self.question = question
 
-        self.play(LaggedStart(DrawBorderThenFill, point_mobs))
+        self.play(OldLaggedStart(DrawBorderThenFill, point_mobs))
         self.play(FadeIn(triangle))
         self.wait()
-        self.play(LaggedStart(Write, point_labels))
+        self.play(OldLaggedStart(Write, point_labels))
         self.wait()
         self.play(Write(question))
         for x in range(self.n_initial_random_choices):
@@ -385,7 +385,7 @@ class TwoDCase(Scene):
             push_pin.fade(1)
             push_pins.add(push_pin)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, push_pins,
             lambda mob : (mob.restore,)
         ))
@@ -535,7 +535,7 @@ class TwoDCase(Scene):
                 rate_func = wiggle,
             )
         )
-        self.play(LaggedStart(FadeIn, proportion, run_time = 1))
+        self.play(OldLaggedStart(FadeIn, proportion, run_time = 1))
         self.wait()
 
         #Non right angles
@@ -923,9 +923,9 @@ class RevisitTwoDCase(TwoDCase):
             words.next_to(rect, UP)
             words.shift_onto_screen()
 
-        self.play(LaggedStart(ShowCreation, center_lines, run_time = 1))
+        self.play(OldLaggedStart(ShowCreation, center_lines, run_time = 1))
         self.play(
-            LaggedStart(FadeIn, arcs, run_time = 1),
+            OldLaggedStart(FadeIn, arcs, run_time = 1),
             Animation(self.point_mobs),
         )
         self.wait()
@@ -995,7 +995,7 @@ class RevisitTwoDCase(TwoDCase):
             ShowCreation(underline)
         )
         self.play(FadeIn(words[0]))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, point_label_groups,
             lambda mob : (mob.restore,),
         ))
@@ -1009,7 +1009,7 @@ class RevisitTwoDCase(TwoDCase):
         self.center_lines_update.update(1)
         self.play(
             FadeIn(words[1]),
-            LaggedStart(GrowFromCenter, center_lines)
+            OldLaggedStart(GrowFromCenter, center_lines)
         )
         for x in range(3):
             self.change_point_mobs_randomly(run_time = 1)
@@ -1242,8 +1242,8 @@ class Rewrite3DRandomProcedure(Scene):
         self.play(FadeIn(words[0]))
         self.play(ShowCreation(cross))
         self.wait()
-        self.play(LaggedStart(FadeIn, words[1]))
-        self.play(LaggedStart(FadeIn, words[2]))
+        self.play(OldLaggedStart(FadeIn, words[1]))
+        self.play(OldLaggedStart(FadeIn, words[2]))
         self.wait(2)
         self.play(Write(words[3]))
         self.wait(3)
@@ -1363,20 +1363,20 @@ class BrilliantPuzzle(PiCreatureScene):
 
         self.remove(students)
         self.play(Write(title))
-        self.play(LaggedStart(GrowFromCenter, students))
+        self.play(OldLaggedStart(GrowFromCenter, students))
         self.play(
-            LaggedStart(Write, tests),
-            LaggedStart(
+            OldLaggedStart(Write, tests),
+            OldLaggedStart(
                 ApplyMethod, students,
                 lambda m : (m.change, "horrified", m.test)
             )
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, students,
             lambda m : (m.change, "conniving")
         ))
-        self.play(LaggedStart(ShowCreation, arrows))
+        self.play(OldLaggedStart(ShowCreation, arrows))
         for x in range(2):
             self.swap_arrows_randomly(arrows)
         self.wait()

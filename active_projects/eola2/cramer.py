@@ -326,13 +326,13 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
 
         self.add(system)
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, unknown_circles,
             lambda m: (m.restore,),
             lag_ratio=0.7
         ))
         self.play(FadeOut(unknown_circles))
-        self.play(LaggedStart(ShowCreation, row_rects,
+        self.play(OldLaggedStart(ShowCreation, row_rects,
                               run_time=1, lag_ratio=0.8))
         self.play(FadeOut(row_rects))
         self.wait()
@@ -818,7 +818,7 @@ class ThinkOfPuzzleAsLinearCombination(SetupSimpleSystemOfEquations):
                 lines[i].shift(basis_vectors[1 - i].get_end() - origin)
             return lines
         update_dashed_lines(dashed_lines)
-        self.play(LaggedStart(ShowCreation, dashed_lines, lag_ratio=0.7))
+        self.play(OldLaggedStart(ShowCreation, dashed_lines, lag_ratio=0.7))
         for basis in basis_vectors:
             self.play(
                 MoveToTarget(basis, run_time=2),
@@ -990,20 +990,20 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
             MoveToTarget(corner_rect),
             Animation(self.equations),
             FadeOut(self.to_fade),
-            LaggedStart(Write, implications),
+            OldLaggedStart(Write, implications),
         )
         self.remove(self.input_vect_mob)
         self.apply_matrix(self.matrix, added_anims=[
             Animation(VGroup(corner_rect, self.equations, implications)),
             MoveToTarget(moving_equations[0]),
-            LaggedStart(FadeIn, transformed_equations[0].parts_to_write),
+            OldLaggedStart(FadeIn, transformed_equations[0].parts_to_write),
             FadeIn(self.column_mobs),
             ReplacementTransform(
                 self.input_vect_mob.copy(), self.output_vect_mob)
         ])
         self.play(
             MoveToTarget(moving_equations[1]),
-            LaggedStart(FadeIn, transformed_equations[1].parts_to_write),
+            OldLaggedStart(FadeIn, transformed_equations[1].parts_to_write),
             path_arc=-30 * DEGREES,
             run_time=2
         )
@@ -1011,7 +1011,7 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
 
         # Show rectangles
         self.play(
-            LaggedStart(ShowCreation, transformed_input_rects, lag_ratio=0.8),
+            OldLaggedStart(ShowCreation, transformed_input_rects, lag_ratio=0.8),
             ShowCreation(self.output_vect_label.rect),
         )
         for tbr, column_mob in zip(transformed_basis_rects, self.column_mobs):
@@ -1265,7 +1265,7 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
 
         self.apply_matrix(matrix)
         self.wait()
-        self.play(LaggedStart(ShowCreation, output_dashed_lines))
+        self.play(OldLaggedStart(ShowCreation, output_dashed_lines))
         self.play(*self.get_column_animations(system.matrix_mobject, column_mobs))
         self.wait()
         self.remove(*output_dashed_lines)
@@ -1325,7 +1325,7 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
             anims = [
                 FadeIn(equation.background_rectangle),
                 Write(equation.to_write),
-                LaggedStart(
+                OldLaggedStart(
                     MoveToTarget, equation.movers,
                     path_arc=60 * DEGREES
                 )
@@ -1566,7 +1566,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
         )
 
         # Fade out unneeded bits
-        self.play(LaggedStart(FadeOut, VGroup(
+        self.play(OldLaggedStart(FadeOut, VGroup(
             unit_brace, one, coord_brace, coord_brace.label,
         )))
 
@@ -1630,7 +1630,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
 
         # Show many areas
         self.play(
-            LaggedStart(DrawBorderThenFill, blobs),
+            OldLaggedStart(DrawBorderThenFill, blobs),
             Write(area_scale_words)
         )
         self.add_transformable_mobject(blobs)
@@ -1671,7 +1671,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
             Animation(basis_vectors),
             Animation(input_vect_mob),
             Write(q_marks),
-            LaggedStart(FadeOut, blobs),
+            OldLaggedStart(FadeOut, blobs),
         )
         self.transformable_mobjects.remove(blobs)
         self.play(
@@ -2005,7 +2005,7 @@ class ThreeDCoordinatesAsVolumes(Scene):
         coord_column[2].set_color(BLUE)
         coord_column.generate_target()
 
-        self.play(LaggedStart(FadeIn, VGroup(
+        self.play(OldLaggedStart(FadeIn, VGroup(
             z, equals, det_text, matrix.brackets,
             VGroup(*matrix.mob_matrix[:, :2].flatten()),
             coord_column

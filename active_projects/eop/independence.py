@@ -143,7 +143,7 @@ class DangerInProbability(Scene):
         self.play(Write(warning, run_time = 1))
         self.play(
             warning.next_to, probability, UP, LARGE_BUFF,
-            LaggedStart(FadeIn, probability)
+            OldLaggedStart(FadeIn, probability)
         )
         self.wait()
 
@@ -353,7 +353,7 @@ class IntroduceBinomial(Scene):
         chart.to_edge(LEFT)
         self.bar_chart = chart
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, VGroup(*it.chain(*chart)), 
             run_time = 2
         ))
@@ -499,7 +499,7 @@ class IntroduceQuiz(PiCreatureScene):
             group.to_corner(UP+LEFT)
 
         self.play(
-            LaggedStart(FadeIn, probabilities, run_time = 3),
+            OldLaggedStart(FadeIn, probabilities, run_time = 3),
             self.quiz.set_height, 0.7*self.randy.get_height(),
             self.quiz.next_to, self.randy, RIGHT,
             self.randy.change, "confused", probabilities
@@ -523,7 +523,7 @@ class IntroduceQuiz(PiCreatureScene):
             short_p.next_to(bar, UP)
 
         self.play(
-            LaggedStart(Write, VGroup(
+            OldLaggedStart(Write, VGroup(
                 *[m for m in chart if m is not chart.bars]
             )),
         )
@@ -693,7 +693,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
                 ReplacementTransform(
                     score_group.copy(), score_group.organized
                 ),
-                LaggedStart(FadeIn, score, run_time = 1)
+                OldLaggedStart(FadeIn, score, run_time = 1)
             )
             self.play(score_group.restore)
         self.wait()
@@ -725,7 +725,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
         )
         self.play(
             self.randy.change, "pondering",
-            LaggedStart(FadeIn, triangle, run_time = 4),
+            OldLaggedStart(FadeIn, triangle, run_time = 4),
         )
         self.play(row.set_color, YELLOW)
         self.wait(4)
@@ -753,7 +753,7 @@ class BeforeCounting(TeacherStudentsScene):
         self.play(Write(prob))
         self.play(
             GrowFromCenter(brace),
-            LaggedStart(FadeIn, q_marks)
+            OldLaggedStart(FadeIn, q_marks)
         )
         self.wait(2)
 
@@ -806,7 +806,7 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
         self.play(
             Write(lhs),
             ShowCreation(slot_group.lines),
-            LaggedStart(FadeIn, slot_group.content, run_time = 3),
+            OldLaggedStart(FadeIn, slot_group.content, run_time = 3),
             self.randy.change, "pondering"
         )
         self.wait(2)
@@ -886,7 +886,7 @@ class ThousandPossibleQuizzes(Scene):
             FadeIn(title)
         )
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeIn, quizzes, 
                 run_time = 3,
                 lag_ratio = 0.2,
@@ -993,7 +993,7 @@ class ThousandPossibleQuizzes(Scene):
             MoveToTarget(right_split),
         )
         self.play(FadeIn(left_label))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, left_split,
             lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back,
@@ -1197,7 +1197,7 @@ class ThousandPossibleQuizzes(Scene):
         for split in all_splits:
             self.play(MoveToTarget(split))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, all_right,
             lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back,
@@ -1520,7 +1520,7 @@ class ShowAllEightConditionals(Scene):
         )
         rect.shift(0.5*SMALL_BUFF*RIGHT)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, equations,
             run_time = 5,
             lag_ratio = 0.3
@@ -1629,7 +1629,7 @@ class ComputeProbabilityOfOneWrong(Scene):
             ))
         self.wait()
         for group in point_8s, point_2s:
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 Indicate, group,
                 rate_func = there_and_back,
                 lag_ratio = 0.7
@@ -1728,7 +1728,7 @@ class ShowFullDistribution(Scene):
         p_slot_group.next_to(brace, vect)
         group = VGroup(*it.chain(p_slot_group, brace, score))
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, group,
             run_time = 2,
             lag_ratio = 0.7,
@@ -1768,7 +1768,7 @@ class ShowFullDistribution(Scene):
             )
         )
         self.play(
-            LaggedStart(FadeIn, VGroup(*it.chain(*[
+            OldLaggedStart(FadeIn, VGroup(*it.chain(*[
                 submob 
                 for submob in chart
                 if submob is not chart.bars
@@ -1797,8 +1797,8 @@ class ShowFullDistribution(Scene):
         bars_copy = bars.copy()
 
         self.play(
-            LaggedStart(FadeIn, bars),
-            LaggedStart(FadeIn, nums),
+            OldLaggedStart(FadeIn, bars),
+            OldLaggedStart(FadeIn, nums),
         )
         self.wait(2)
         self.play(bars_copy.shift, -vect)
@@ -1868,7 +1868,7 @@ class ShowFullDistribution(Scene):
                 last = prob
                 buff = SMALL_BUFF
 
-        self.play(LaggedStart(FadeIn, probs))
+        self.play(OldLaggedStart(FadeIn, probs))
         self.wait()
         return probs
 
@@ -2324,7 +2324,7 @@ class NameBinomial(Scene):
         faded_checkmarks = VGroup(*[m for m in checkmarks if m not in full_checks])
 
         self.play(*[
-            LaggedStart(
+            OldLaggedStart(
                 Write, mob,
                 run_time = 3,
                 lag_ratio = 0.3
@@ -2333,7 +2333,7 @@ class NameBinomial(Scene):
         ])
         self.wait()
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 Rotate, flipped_arrows,
                 angle = np.pi,
                 in_place = True,
@@ -2440,7 +2440,7 @@ class NameBinomial(Scene):
 
 
         self.play(ShowCreation(chart_rect))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreation, girl_rects,
             run_time = 2,
             lag_ratio = 0.5,
@@ -2448,7 +2448,7 @@ class NameBinomial(Scene):
         self.wait()
 
         self.play(Write(prob))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Indicate, girls,
             run_time = 3,
             lag_ratio = 0.3,
@@ -2775,7 +2775,7 @@ class GeneralBinomialDistributionValues(Scene):
 
         self.play(FadeIn(shown_prob))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, self.full_probability,
             run_time = 4,
             lag_ratio = 0.5,
@@ -2810,7 +2810,7 @@ class GeneralBinomialDistributionValues(Scene):
         ten_choose_ks.set_color_by_gradient(BLUE, YELLOW)
 
         self.play(
-            LaggedStart(FadeIn, triangle),
+            OldLaggedStart(FadeIn, triangle),
             FadeOut(self.shown_prob)
         )
         self.play(
@@ -2820,7 +2820,7 @@ class GeneralBinomialDistributionValues(Scene):
         self.wait()
         self.play(ApplyWave(self.chart.bars, direction = UP))
         self.play(FocusOn(last_row))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, last_row,
             lambda m : (m.scale_in_place, 1.2),
             rate_func = there_and_back,
@@ -3099,7 +3099,7 @@ class CorrectForDependence(NameBinomial):
         if len(indices) > 1:
             kwargs.update({"run_time" : 2})
         return [
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, mover,
                 **kwargs
             )
@@ -3221,7 +3221,7 @@ class AssumeOrderDoesntMatter(Scene):
 
     def coming_soon(self):
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, self.assumption_group,
                 lambda m : (m.shift, FRAME_HEIGHT*DOWN),
                 remover = True,

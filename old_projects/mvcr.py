@@ -378,12 +378,12 @@ class ComputationalNetwork(MovingCameraScene):
             self.wait()
 
         self.play(
-            LaggedStart(FadeIn, partial_term_rects),
+            OldLaggedStart(FadeIn, partial_term_rects),
             Animation(derivatives)
         )
         self.wait()
         self.play(
-            LaggedStart(FadeOut, partial_term_rects),
+            OldLaggedStart(FadeOut, partial_term_rects),
             Animation(derivatives)
         )
 
@@ -425,7 +425,7 @@ class ComputationalNetwork(MovingCameraScene):
 
         self.play(
             Write(rhs[::3]),
-            LaggedStart(MoveToTarget, derivatives)
+            OldLaggedStart(MoveToTarget, derivatives)
         )
         self.wait()
 
@@ -688,7 +688,7 @@ class ComputationalNetwork(MovingCameraScene):
         result = TexMobject("=", "32", "+", "0")
         result.next_to(rhs, DOWN, aligned_edge=LEFT)
 
-        self.play(LaggedStart(Write, value_labels))
+        self.play(OldLaggedStart(Write, value_labels))
         self.wait()
         self.play(ReplacementTransform(
             full_derivative.copy(), rhs,

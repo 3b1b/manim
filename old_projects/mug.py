@@ -18,7 +18,7 @@ class HappyHolidays(TeacherStudentsScene):
             look_at_arg = FRAME_Y_RADIUS*UP,
             added_anims = [self.teacher.change, "hooray"]
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, hats
         ), Animation(self.pi_creatures))
         self.change_student_modes(
@@ -65,7 +65,7 @@ class HappyHolidays(TeacherStudentsScene):
                 mob, x_start = 2*random.random()*FRAME_X_RADIUS - FRAME_X_RADIUS,
                 **kwargs
             )
-        snowflake_spirils = LaggedStart(
+        snowflake_spirils = OldLaggedStart(
             random_confetti_spiral, snowflakes,
             run_time = 10,
             rate_func = lambda x : x,
@@ -199,7 +199,7 @@ class UtilitiesPuzzleScene(Scene):
             mob.target = Dot(color = mob.get_color())
             mob.target.scale(2)
             mob.target.move_to(mob)
-        self.play(LaggedStart(MoveToTarget, group, run_time = run_time))
+        self.play(OldLaggedStart(MoveToTarget, group, run_time = run_time))
 
 class PauseIt(PiCreatureScene):
     def construct(self):
@@ -232,10 +232,10 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
                 run_time = 2,
             ),
             FadeIn(houses[1]),
-            LaggedStart(DrawBorderThenFill, utilities, run_time = 2)
+            OldLaggedStart(DrawBorderThenFill, utilities, run_time = 2)
         )
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ShowCreation, lines, 
                 run_time = 3
             ),
@@ -326,7 +326,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
             everything.next_to, self.teacher, UP+LEFT,
             self.teacher.restore,
             self.teacher.change, "raise_right_hand", UP+LEFT,
-            LaggedStart(FadeIn, self.students)
+            OldLaggedStart(FadeIn, self.students)
         )
         self.change_student_modes(
             *["pondering"]*3, look_at_arg = everything
@@ -360,14 +360,14 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
         self.add(try_it)
         self.play(Animation(try_it))
         self.play(
-            LaggedStart(DrawBorderThenFill, houses),
-            LaggedStart(GrowFromCenter, utilities),
+            OldLaggedStart(DrawBorderThenFill, houses),
+            OldLaggedStart(GrowFromCenter, utilities),
             try_it.set_width, house.get_width(),
             try_it.fade, 1,
             try_it.move_to, house,
             self.pi_creature.change, "happy",
         )
-        self.play(LaggedStart(FadeIn, puzzle_words))
+        self.play(OldLaggedStart(FadeIn, puzzle_words))
 
         self.add_foreground_mobjects(self.objects)
         self.set_variables_as_attrs(puzzle_words)
@@ -439,7 +439,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
         for line_set, mode in zip(line_sets, modes):
             good_lines = VGroup(*line_set[:-2])
             bad_lines = line_set[-2:]
-            self.play(LaggedStart(ShowCreation, good_lines))
+            self.play(OldLaggedStart(ShowCreation, good_lines))
             for bl in bad_lines:
                 self.play(
                     ShowCreation(
@@ -453,7 +453,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
                     bl, rate_func = lambda t : smooth(1-t),
                 ))
                 self.remove(bl)
-            self.play(LaggedStart(FadeOut, good_lines))
+            self.play(OldLaggedStart(FadeOut, good_lines))
 
     def ask_meta_puzzle(self):
         randy = self.pi_creature
@@ -484,7 +484,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
 
         straight_lines = self.get_straight_lines()
         almost_solution_lines = self.get_almost_solution_lines()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreation, straight_lines,
             run_time = 2,
             lag_ratio = 0.8
@@ -534,10 +534,10 @@ class IntroduceGraph(PiCreatureScene):
             color = WHITE
         )
 
-        self.play(LaggedStart(GrowFromCenter, pi_creatures))
+        self.play(OldLaggedStart(GrowFromCenter, pi_creatures))
         self.play(
-            LaggedStart(ShowCreation, lines),
-            LaggedStart(
+            OldLaggedStart(ShowCreation, lines),
+            OldLaggedStart(
                 ApplyMethod, pi_creatures,
                 lambda pi : (pi.change, "pondering", lines)
             )
@@ -554,7 +554,7 @@ class IntroduceGraph(PiCreatureScene):
             FadeIn(vertices_word),
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, lines,
             lambda l : (l.rotate_in_place, np.pi/12),
             rate_func = wiggle
@@ -612,10 +612,10 @@ class IsK33Planar(UtilitiesPuzzleScene):
 
         self.add(question)
         self.convert_objects_to_dots()
-        self.play(LaggedStart(ShowCreation, straight_lines))
+        self.play(OldLaggedStart(ShowCreation, straight_lines))
         self.play(
             GrowFromCenter(brace),
-            LaggedStart(FadeIn, fancy_name),
+            OldLaggedStart(FadeIn, fancy_name),
         )
         self.play(ReplacementTransform(
             straight_lines, almost_solution_lines,
@@ -684,7 +684,7 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
         arrow = Arrow(eulers, objects, color = WHITE)
         self.play(
             GrowArrow(arrow),
-            LaggedStart(DrawBorderThenFill, VGroup(*it.chain(*objects)))
+            OldLaggedStart(DrawBorderThenFill, VGroup(*it.chain(*objects)))
         )
         self.wait()
         self.play(
@@ -713,7 +713,7 @@ class IntroduceRegions(UtilitiesPuzzleScene):
         front_regions = VGroup(*regions[1:])
 
         self.convert_objects_to_dots(run_time = 0)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreation, lines,
             run_time = 3,
         ))
@@ -868,7 +868,7 @@ class AskAboutRegions(IntroduceRegions):
         self.add_foreground_mobjects(lines, objects)
         self.wait()
         self.play(MoveToTarget(front_regions))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, front_regions,
             lambda m : (m.rotate_in_place, np.pi/12),
             rate_func = wiggle,
@@ -923,7 +923,7 @@ class AskAboutRegions(IntroduceRegions):
         def show_lines(line_group):
             lg_copy = line_group.copy()
             lg_copy.set_stroke(WHITE, 6)
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 FadeIn, lg_copy,
                 run_time = 3,
                 rate_func = there_and_back,
@@ -1094,7 +1094,7 @@ class LightUpNodes(IntroduceRegions):
         self.play(*self.get_lit_vertex_animations(lit_vertex))
         self.play(
             FadeIn(dim_word),
-            LaggedStart(GrowArrow, dim_arrows)
+            OldLaggedStart(GrowArrow, dim_arrows)
         )
         self.wait()
         self.play(*list(map(FadeOut, [
@@ -1218,7 +1218,7 @@ class LightUpNodes(IntroduceRegions):
         lines.move_to(vertex)
         random.shuffle(lines.submobjects)
         return [
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, lines,
                 lambda l : (l.set_stroke, YELLOW, 4),
                 rate_func = squish_rate_func(there_and_back, *squish_range),
@@ -1337,7 +1337,7 @@ class ConcludeFiveRegions(LightUpNodes):
         line_sets.target.to_edge(RIGHT)
 
         for lines in line_sets:
-            self.play(LaggedStart(ShowCreation, lines, run_time = 1))
+            self.play(OldLaggedStart(ShowCreation, lines, run_time = 1))
             self.play(MoveToTarget(lines))
         self.wait()
 
@@ -1536,12 +1536,12 @@ class FiveRegionsFourEdgesEachGraph(Scene):
 
         self.play(
             FadeIn(words[0]),
-            LaggedStart(FadeIn, squares, run_time = 1.5)
+            OldLaggedStart(FadeIn, squares, run_time = 1.5)
         )
         self.play(
             FadeIn(words[1]),
-            LaggedStart(ShowCreation, all_edges),
-            LaggedStart(GrowFromCenter, all_vertices),
+            OldLaggedStart(ShowCreation, all_edges),
+            OldLaggedStart(GrowFromCenter, all_vertices),
         )
         self.wait()
 
@@ -1610,7 +1610,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
                 rate_func = squish_rate_func(smooth, 0.7, 1),
                 run_time = 3,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, all_movers,
                 run_time = 3,
                 replace_mobject_with_target_in_scene = True,
@@ -1943,7 +1943,7 @@ class QuestionWrapper(Scene):
         self.play(ShowCreation(screen_rect))
         self.wait()
         for word in question:
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 FadeIn, word,
                 run_time = 0.05*len(word)
             ))

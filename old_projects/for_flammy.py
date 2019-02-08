@@ -219,7 +219,7 @@ class SphereRings(SecondProof):
         rings.sort(lambda p: p[2])
 
         for x in range(8):
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 ApplyMethod, rings,
                 lambda m: (m.set_fill, PINK, 0.5),
                 rate_func=there_and_back,
@@ -316,7 +316,7 @@ class IntegralSymbols(Scene):
         self.wait()
         self.play(
             GrowFromCenter(int_brace),
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFrom, q_marks,
                 lambda m: (m, UP),
             )

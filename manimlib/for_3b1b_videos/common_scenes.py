@@ -1,6 +1,6 @@
 import random
 
-from manimlib.animation.composition import LaggedStart
+from manimlib.animation.composition import OldLaggedStart
 from manimlib.animation.creation import DrawBorderThenFill
 from manimlib.animation.creation import FadeIn
 from manimlib.animation.creation import FadeOut
@@ -133,7 +133,7 @@ class PatreonThanks(Scene):
                     DrawBorderThenFill(patreon_logo),
                 ]
             self.play(
-                LaggedStart(
+                OldLaggedStart(
                     FadeIn, group,
                     run_time=2,
                 ),

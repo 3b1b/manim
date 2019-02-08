@@ -1,4 +1,4 @@
-from manimlib.animation.composition import LaggedStart
+from manimlib.animation.composition import OldLaggedStart
 from manimlib.animation.transform import ApplyMethod
 from manimlib.constants import *
 from manimlib.mobject.geometry import Circle
@@ -32,7 +32,7 @@ class MoveCar(ApplyMethod):
             tire.rotate_in_place(radians)
 
 
-class Broadcast(LaggedStart):
+class Broadcast(OldLaggedStart):
     CONFIG = {
         "small_radius": 0.0,
         "big_radius": 5,
@@ -59,7 +59,7 @@ class Broadcast(LaggedStart):
             circle.set_width(self.small_radius * 2)
             circle.set_stroke(self.color, self.start_stroke_width)
             circles.add(circle)
-        LaggedStart.__init__(
+        OldLaggedStart.__init__(
             self, ApplyMethod, circles,
             lambda c: (c.restore,),
             **kwargs

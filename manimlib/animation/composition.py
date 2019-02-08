@@ -88,9 +88,9 @@ class Succession(AnimationGroup):
 # Variants on mapping an animation over submobjects
 
 
-# This class is depricated.  One should use LaggedStart
+# This class is depricated.  One should use OldLaggedStart
 # instead, which has different syntax, but more generality
-class LaggedStart(Animation):
+class OldLaggedStart(Animation):
     CONFIG = {
         "run_time": 2,
         "lag_ratio": 0.5,

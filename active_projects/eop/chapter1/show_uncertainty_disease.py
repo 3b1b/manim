@@ -99,6 +99,6 @@ class OneIn200HasDisease(Scene):
         self.wait()
         self.play(
             Write(title),
-            LaggedStart(FadeIn, all_creatures, run_time = 3)
+            OldLaggedStart(FadeIn, all_creatures, run_time = 3)
         )
         self.wait()

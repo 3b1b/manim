@@ -330,7 +330,7 @@ class NumberlineTransformationScene(ZoomedScene):
 
         # Add tiny dots
         if local_sample_dots is not None:
-            anims.append(LaggedStart(GrowFromCenter, local_sample_dots))
+            anims.append(OldLaggedStart(GrowFromCenter, local_sample_dots))
             zcbr_group.add(local_sample_dots)
 
         if first_added_anims:
@@ -424,7 +424,7 @@ class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
         sample_dots = self.get_sample_dots()
         local_sample_dots = self.get_local_sample_dots(x)
 
-        self.play(LaggedStart(GrowFromCenter, sample_dots))
+        self.play(OldLaggedStart(GrowFromCenter, sample_dots))
         self.zoom_in_on_input(
             x,
             local_sample_dots=local_sample_dots,
@@ -461,7 +461,7 @@ class WriteOpeningWords(Scene):
         word_wait = 2 * letter_wait
         comma_wait = 5 * letter_wait
         for word in words:
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 FadeIn, word,
                 run_time=len(word) * letter_wait,
                 lag_ratio=1.5 / len(word)
@@ -836,7 +836,7 @@ class GraphicalIntuitions(GraphScene):
         )
         self.play(FadeIn(integral_text))
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 GrowFromEdge, rects,
                 lambda r: (r, DOWN)
             ),
@@ -858,7 +858,7 @@ class GraphicalIntuitions(GraphScene):
             word.add_background_rectangle()
         words.arrange(DOWN)
         words.to_edge(UP)
-        return LaggedStart(
+        return OldLaggedStart(
             FadeIn, words,
             rate_func=there_and_back,
             run_time=len(words) - 1,
@@ -1008,8 +1008,8 @@ class MoreTopics(Scene):
 
         self.add(calculus)
         self.play(
-            LaggedStart(ShowCreation, lines),
-            LaggedStart(Write, others),
+            OldLaggedStart(ShowCreation, lines),
+            OldLaggedStart(Write, others),
         )
         self.wait()
 
@@ -1362,12 +1362,12 @@ class IntroduceTransformationView(NumberlineTransformationScene):
             sd.save_state()
             sd.scale(2)
             sd.fade(1)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, sample_dots,
             lambda sd: (sd.restore,),
             run_time=2
         ))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             GrowArrow, arrows,
             run_time=6,
             lag_ratio=0.3,
@@ -1378,7 +1378,7 @@ class IntroduceTransformationView(NumberlineTransformationScene):
             run_time=3
         )
         self.wait()
-        self.play(LaggedStart(FadeOut, arrows, run_time=1))
+        self.play(OldLaggedStart(FadeOut, arrows, run_time=1))
 
         self.sample_dots = sample_dots
         self.sample_dot_ghosts = sample_dot_ghosts
@@ -1539,8 +1539,8 @@ class TalkThroughXSquaredExample(IntroduceTransformationView):
         sample_dot_ghosts = sample_dots.copy().fade(0.5)
 
         self.play(
-            LaggedStart(DrawBorderThenFill, sample_dots),
-            LaggedStart(FadeOut, int_arrows),
+            OldLaggedStart(DrawBorderThenFill, sample_dots),
+            OldLaggedStart(FadeOut, int_arrows),
         )
         self.remove(int_dot_ghosts)
         self.add(sample_dot_ghosts)
@@ -1952,8 +1952,8 @@ class XSquaredForNegativeInput(TalkThroughXSquaredExample):
         )
         sample_dots.set_fill(opacity=0.8)
 
-        self.play(LaggedStart(DrawBorderThenFill, sample_dots))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(DrawBorderThenFill, sample_dots))
+        self.play(OldLaggedStart(
             ApplyFunction, sample_dots[len(sample_dots) / 2:0:-1],
             lambda mob: (
                 lambda m: m.scale(2).shift(SMALL_BUFF * UP).set_color(PINK),
@@ -2062,7 +2062,7 @@ class IntroduceContinuedFractionPuzzle(PiCreatureScene):
         group.to_corner(UR)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 Write, frac,
                 run_time=15,
                 lag_ratio=0.15,
@@ -2370,7 +2370,7 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
             morty.change, "confused",
             friend.change, "confused",
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreationThenDestruction, plus_rects,
             run_time=2,
             lag_ratio=0.35,
@@ -2398,9 +2398,9 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
         question.next_to(arrow, RIGHT)
 
         self.play(
-            LaggedStart(FadeIn, question, run_time=1),
+            OldLaggedStart(FadeIn, question, run_time=1),
             GrowArrow(arrow),
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, frac,
                 lambda m: (m.set_color, RED),
                 rate_func=there_and_back,
@@ -2657,7 +2657,7 @@ class ShowRepeatedApplication(Scene):
         self.wait()
 
         self.play(GrowFromEdge(line[5], LEFT))
-        self.play(LaggedStart(GrowFromCenter, line[6]))
+        self.play(OldLaggedStart(GrowFromCenter, line[6]))
         self.wait()
 
         self.play(FadeIn(line[7]))
@@ -2954,7 +2954,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
         sample_dots.set_stroke(BLACK, 0.5)
         sample_points = list(map(Mobject.get_center, sample_dots))
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInAndShiftFromDirection, sample_dots,
             lambda m: (m, UP)
         ))
@@ -3011,9 +3011,9 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
         one_plus_rect = BackgroundRectangle(one_plus)
         one_plus_rect.set_fill(BLACK, opacity=0.8)
 
-        self.play(LaggedStart(GrowArrow, arrows))
+        self.play(OldLaggedStart(GrowArrow, arrows))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, arrows,
             lambda a: (a.scale, 0.7),
             rate_func=there_and_back,
@@ -3067,7 +3067,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             return arrow
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyFunction, self.all_arrows,
                 lambda a: (fade_arrow, a)
             ),
@@ -3242,7 +3242,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
             arrows = VGroup(*[a for a in self.all_arrows if get_norm(a.get_start() - point) < 0.75]).copy()
             arrows.set_fill(PINK, 1)
             arrows.set_stroke(PINK, 3)
-            arrows.second_anim = LaggedStart(
+            arrows.second_anim = OldLaggedStart(
                 ApplyMethod, arrows,
                 lambda m: (m.set_color, YELLOW),
                 rate_func=there_and_back_with_pause,
@@ -3312,7 +3312,7 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
 
         for deriv_label, dot_group in zip(deriv_labels, dot_groups):
             self.play(FadeInFromDown(deriv_label))
-            self.play(LaggedStart(GrowFromCenter, dot_group))
+            self.play(OldLaggedStart(GrowFromCenter, dot_group))
             self.play(*list(map(MoveToTarget, dot_group)), run_time=2)
             self.wait()
 
@@ -3336,7 +3336,7 @@ class StaticAlgebraicObject(Scene):
         polynomial.move_to(title)
 
         self.add(title)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             GrowFromCenter, frac,
             lag_ratio=0.1,
             run_time=3
@@ -3431,7 +3431,7 @@ class TopicsAfterSingleVariable(PiCreatureScene, MoreTopics):
             creature.target.change(mode, self.other_topics)
         creatures.fade(1)
 
-        self.play(LaggedStart(MoveToTarget, creatures))
+        self.play(OldLaggedStart(MoveToTarget, creatures))
         self.wait(2)
 
     def zero_in_on_complex_analysis(self):
@@ -3443,8 +3443,8 @@ class TopicsAfterSingleVariable(PiCreatureScene, MoreTopics):
             complex_analysis.scale, 1.25,
             complex_analysis.center,
             complex_analysis.to_edge, UP,
-            LaggedStart(FadeOut, self.other_topics),
-            LaggedStart(FadeOut, self.lines),
+            OldLaggedStart(FadeOut, self.other_topics),
+            OldLaggedStart(FadeOut, self.lines),
             FadeOut(self.calculus),
             *[
                 ApplyMethod(creature.change, "pondering")
@@ -3565,7 +3565,7 @@ class PrinciplesOverlay(PiCreatureScene):
         self.wait(4)
         self.play(FadeInFromDown(q_marks[0]))
         self.wait(2)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromDown, q_marks[1:],
             run_time=3
         ))
@@ -3598,7 +3598,7 @@ class ManyInfiniteExpressions(Scene):
         power_tower.set_color_by_gradient(BLUE, GREEN)
 
         self.play(*[
-            LaggedStart(
+            OldLaggedStart(
                 GrowFromCenter, group,
                 lag_ratio=0.1,
                 run_time=8,

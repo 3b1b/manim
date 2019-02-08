@@ -31,7 +31,7 @@ class OpeningManimExample(Scene):
         transform_title.to_corner(UP + LEFT)
         self.play(
             Transform(title, transform_title),
-            LaggedStart(FadeOutAndShiftDown, basel),
+            OldLaggedStart(FadeOutAndShiftDown, basel),
         )
         self.wait()
 

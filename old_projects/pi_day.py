@@ -165,7 +165,7 @@ class AnalysisQuote(Scene):
 
         text.to_edge(LEFT, buff = 1)
 
-        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.play(OldLaggedStart(FadeIn,text), run_time = 5)
         self.wait()
         self.play(FadeOut(text))
         self.wait()
@@ -190,7 +190,7 @@ class BernoulliQuote(Scene):
         for char in text.submobjects[151:157]:
             char.set_fill(HIGHLIGHT_COLOR)
 
-        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.play(OldLaggedStart(FadeIn,text), run_time = 5)
         self.wait()
         self.play(FadeOut(text))
         self.wait
@@ -399,7 +399,7 @@ class ManyFormulas(Scene):
         formulas.arrange(DOWN, buff = MED_LARGE_BUFF)
         formulas.to_edge(LEFT)
 
-        self.play(LaggedStart(FadeIn, formulas, run_time = 3))
+        self.play(OldLaggedStart(FadeIn, formulas, run_time = 3))
 
         circle = Circle(color = YELLOW, radius = 2)
         circle.to_edge(RIGHT)
@@ -579,10 +579,10 @@ class HeroAndVillain(Scene):
             FadeInFromDown(good_euler),
             Write(good_euler_label)
         )
-        self.play(LaggedStart(FadeIn, tau_words))
+        self.play(OldLaggedStart(FadeIn, tau_words))
         self.wait()
         self.play(FadeInFromDown(bad_euler_pixelated))
-        self.play(LaggedStart(FadeIn, pi_words))
+        self.play(OldLaggedStart(FadeIn, pi_words))
         self.wait(2)
         self.play(
             FadeIn(bad_euler),
@@ -635,7 +635,7 @@ class AnalysisQuote(Scene):
 
         self.add(analysis)
         self.play(*generate_anims2(), rate_func = lambda t : 0.5*smooth(t))
-        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.play(OldLaggedStart(FadeIn,text), run_time = 5)
         self.play(FadeIn(pi_formula))
         self.wait()
 
@@ -737,7 +737,7 @@ class ThingsNamedAfterEuler(Scene):
         group.arrange(DOWN, aligned_edge = LEFT)
         group.set_height(FRAME_HEIGHT - 1)
 
-        self.play(LaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
+        self.play(OldLaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
         self.wait()
 
 class EulerThinking(Scene):

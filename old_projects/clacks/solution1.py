@@ -363,7 +363,7 @@ class AskAboutFindingNewVelocities(Scene):
             ))
 
         for group in label_groups:
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 ShowCreation, group.rects,
                 lag_ratio=0.8,
                 run_time=1,
@@ -693,7 +693,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
             FadeOut(equations[1].highlighted_copy),
             run_time=0.75,
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Indicate, v_terms,
             lag_ratio=0.75,
             rate_func=there_and_back,
@@ -1475,7 +1475,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
             run_time=2,
         ))
         self.wait()
-        self.play(LaggedStart(MoveToTarget, movers))
+        self.play(OldLaggedStart(MoveToTarget, movers))
         self.wait()
 
         self.arcs_equation = movers
@@ -1526,8 +1526,8 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
             "run_time": 3,
         }
         self.play(
-            LaggedStart(MoveToTarget, all_arcs, **kwargs),
-            LaggedStart(MoveToTarget, arc_counts, **kwargs),
+            OldLaggedStart(MoveToTarget, all_arcs, **kwargs),
+            OldLaggedStart(MoveToTarget, arc_counts, **kwargs),
         )
 
         self.arc_counts = arc_counts
@@ -1582,7 +1582,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
         to_fade = VGroup(arc_counts, arcs, lines_to_fade)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeOut, VGroup(*to_fade.family_members_with_points())
             )
         )
@@ -1631,7 +1631,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
             FadeOut(self.center_lines_group),
             FadeOut(self.three_dots),
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyFunction, every_other_line,
             lambda line: (
                 lambda l: l.scale(10 / l.get_length()).set_stroke(BLUE, 3),
@@ -2224,7 +2224,7 @@ class ComputeThetaFor1e4(AnalyzeCircleGeometry):
         # Swap last two
         sm = movers.submobjects
         sm[-1], sm[-2] = sm[-2], sm[-1]
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Transform, movers[:-1],
             lambda m: (m, m.target),
             lag_ratio=1,
@@ -2272,8 +2272,8 @@ class ThetaChart(Scene):
         lines.set_stroke(WHITE, 1)
 
         self.play(
-            LaggedStart(FadeInFromDown, titles),
-            LaggedStart(ShowCreation, lines, lag_ratio=0.8),
+            OldLaggedStart(FadeInFromDown, titles),
+            OldLaggedStart(ShowCreation, lines, lag_ratio=0.8),
         )
 
         self.h_line = h_line
@@ -2316,11 +2316,11 @@ class ThetaChart(Scene):
             h_lines.add(h_line)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFromDown,
                 VGroup(*[em[:2] for em in entry_mobs]),
             ),
-            LaggedStart(ShowCreation, h_lines[1:]),
+            OldLaggedStart(ShowCreation, h_lines[1:]),
             lag_ratio=0.1,
             run_time=5,
         )
@@ -2331,7 +2331,7 @@ class ThetaChart(Scene):
     def show_values(self):
         values = VGroup(*[em[2] for em in self.entry_mobs])
         for value in values:
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 FadeIn, value,
                 lag_ratio=0.1,
                 run_time=0.5
@@ -2923,7 +2923,7 @@ class ConservationLawSummary(Scene):
         self.add(energy_group, momentum_group)
         self.wait()
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ShowCreationThenDestruction,
                 red_energy_word
             ),

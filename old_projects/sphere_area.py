@@ -147,7 +147,7 @@ class AskAboutShadowRelation(SpecialThreeDScene):
         #         run_time=2
         #     )
         # )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             UpdateFromAlphaFunc, sphere,
             lambda mob: (mob, lambda m, a: m.set_fill(
                 color=interpolate_color(BLUE_E, YELLOW, a),
@@ -218,7 +218,7 @@ class AskAboutShadowRelation(SpecialThreeDScene):
         self.remove(shadow)
         self.play(*anims)
         self.add_fixed_in_frame_mobjects(shadows, area_labels)
-        self.play(LaggedStart(FadeInFromLarge, area_labels))
+        self.play(OldLaggedStart(FadeInFromLarge, area_labels))
         self.wait()
 
         self.shadows = shadows
@@ -265,7 +265,7 @@ class AskAboutShadowRelation(SpecialThreeDScene):
             mob.target.space_out_submobjects(self.space_out_factor)
         self.play(*map(MoveToTarget, mobjects))
         self.play(*[
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, mob,
                 lambda m: (m.set_fill, YELLOW, 1),
                 rate_func=there_and_back,
@@ -596,9 +596,9 @@ class UnfoldCircles(Scene):
             mob.clear_updaters()
 
         self.play(
-            LaggedStart(Write, circle_copies, lag_ratio=0.7),
-            LaggedStart(Write, R_labels),
-            LaggedStart(ShowCreation, radii_lines),
+            OldLaggedStart(Write, circle_copies, lag_ratio=0.7),
+            OldLaggedStart(Write, R_labels),
+            OldLaggedStart(ShowCreation, radii_lines),
         )
         self.remove(circle_copies)
         self.add(circles, radii_lines, R_labels)
@@ -638,7 +638,7 @@ class UnfoldCircles(Scene):
         self.add(triangles, triangles.copy(), self.area_label)
         self.play(MoveToTarget(triangles[0]))
         self.wait()
-        self.play(LaggedStart(MoveToTarget, triangles))
+        self.play(OldLaggedStart(MoveToTarget, triangles))
         self.wait()
 
     #
@@ -708,7 +708,7 @@ class ShowProjection(SphereCylinderScene):
         pieces.fade(1)
 
         self.add(ghost_sphere)
-        self.play(LaggedStart(Restore, pieces))
+        self.play(OldLaggedStart(Restore, pieces))
         self.wait()
 
         self.pieces = pieces
@@ -727,7 +727,7 @@ class ShowProjection(SphereCylinderScene):
 
         self.play(*map(ShowCreation, proj_lines))
         self.play(
-            LaggedStart(MoveToTarget, pieces),
+            OldLaggedStart(MoveToTarget, pieces),
         )
         self.wait()
 
@@ -1407,7 +1407,7 @@ class TinierAndTinerRectangles(SphereCylinderScene):
             for piece in s1:
                 piece.add(VectorizedPoint(piece.get_center() / 2))
             self.play(
-                LaggedStart(Restore, s2)
+                OldLaggedStart(Restore, s2)
             )
             self.remove(s1)
         self.wait(5)
@@ -1549,7 +1549,7 @@ class JustifyHeightSquish(MovingCameraScene):
         self.wait()
         self.play(
             ShowCreation(hyp),
-            LaggedStart(
+            OldLaggedStart(
                 DrawBorderThenFill, hyp_word,
                 stroke_width=0.5,
                 run_time=1,
@@ -1759,8 +1759,8 @@ class JustifyHeightSquish(MovingCameraScene):
         self.wait()
 
         self.play(
-            LaggedStart(MoveToTarget, movers),
-            LaggedStart(FadeInFromDown, equation[1:4:2])
+            OldLaggedStart(MoveToTarget, movers),
+            OldLaggedStart(FadeInFromDown, equation[1:4:2])
         )
         self.wait()
         self.play(FadeInFrom(equation[-2:], LEFT))
@@ -2141,7 +2141,7 @@ class RotateAllPiecesWithExpansion(ShowProjection):
         self.add(ghost_sphere, sphere)
         self.wait()
         if self.with_expansion:
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 MoveToTarget, sphere
             ))
         self.wait()
@@ -2346,7 +2346,7 @@ class WhatIsSurfaceArea(SpecialThreeDScene):
         self.set_camera_to_default_position()
         self.begin_ambient_camera_rotation()
         # self.add(self.get_axes())
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, pieces,
             lag_ratio=0.2,
         ))
@@ -2654,15 +2654,15 @@ class AskAboutDirectConnection(TeacherStudentsScene, SpecialThreeDScene):
                 *3 * ["pondering"],
                 look_at_arg=group,
             ),
-            LaggedStart(FadeInFromDown, group),
-            LaggedStart(GrowArrow, arrows)
+            OldLaggedStart(FadeInFromDown, group),
+            OldLaggedStart(GrowArrow, arrows)
         )
         self.wait()
         self.play(
             self.teacher.change, "pondering",
             self.students[2].change, "raise_right_hand",
             GrowArrow(direct_arrow),
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFrom, q_marks,
                 lambda m: (m, UP),
                 lag_ratio=0.8,
@@ -2695,7 +2695,7 @@ class ExercisesGiveLearning(MovingCameraScene):
         # Knock down lectures
         self.add(lectures)
         self.play(GrowArrow(arrow1))
-        self.play(LaggedStart(DrawBorderThenFill, bulb))
+        self.play(OldLaggedStart(DrawBorderThenFill, bulb))
         self.play(ShowCreation(cross))
         self.play(
             VGroup(lectures, cross).shift, DOWN,
@@ -2825,7 +2825,7 @@ class SecondProof(SpecialThreeDScene):
 
         self.add(ghost_rings)
         self.play(FadeOut(rings), Animation(shadows))
-        self.play(LaggedStart(Restore, shadows))
+        self.play(OldLaggedStart(Restore, shadows))
         self.wait()
         self.move_camera(phi=40 * DEGREES)
         self.wait(3)
@@ -3158,11 +3158,11 @@ class SecondProof(SpecialThreeDScene):
 
         self.play(
             FadeOut(to_fade),
-            LaggedStart(FadeIn, shadows),
+            OldLaggedStart(FadeIn, shadows),
             self.theta_mob_opacity_tracker.set_value, 0,
         )
         self.play(
-            LaggedStart(Restore, shadows),
+            OldLaggedStart(Restore, shadows),
             ApplyMethod(
                 self.camera.phi_tracker.set_value, 60 * DEGREES,
             ),

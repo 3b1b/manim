@@ -189,7 +189,7 @@ class ShowEmergingEllipse(Scene):
         )
         self.wait()
         self.play(
-            LaggedStart(ShowCreation, shuffled_lines),
+            OldLaggedStart(ShowCreation, shuffled_lines),
             Animation(VGroup(e_dot, circle)),
             FadeOut(eccentric_words)
         )
@@ -219,7 +219,7 @@ class ShowEmergingEllipse(Scene):
             Animation(ghost_line)
         )
         self.play(
-            LaggedStart(MoveToTarget, lines, run_time=4),
+            OldLaggedStart(MoveToTarget, lines, run_time=4),
             Animation(VGroup(e_dot, circle))
         )
         self.wait()
@@ -403,7 +403,7 @@ class FeynmanFame(Scene):
 
         # As a physicist
         self.play(self.get_book_intro(books[0]))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Write, feynman_diagram,
             run_time=4
         ))
@@ -411,7 +411,7 @@ class FeynmanFame(Scene):
         self.play(
             self.get_book_intro(books[1]),
             self.get_book_outro(books[0]),
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, fd_parts,
                 lambda m: (m.scale, 0),
                 run_time=1
@@ -445,7 +445,7 @@ class FeynmanFame(Scene):
         )
         joke.move_to(objects)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, objects,
             lag_ratio=0.75
         ))
@@ -461,7 +461,7 @@ class FeynmanFame(Scene):
         self.play(
             self.get_book_intro(books[2]),
             self.get_book_outro(books[1]),
-            LaggedStart(FadeOut, joke, run_time=1),
+            OldLaggedStart(FadeOut, joke, run_time=1),
             ApplyMethod(
                 feynman_smile.shift, FRAME_HEIGHT * DOWN,
                 remover=True
@@ -1018,7 +1018,7 @@ class FeynmanElementaryQuote(Scene):
                 self.play(ShowWord(nothing))
                 self.wait(0.2)
                 nothing.sort(lambda p: -p[0])
-                self.play(LaggedStart(
+                self.play(OldLaggedStart(
                     FadeOut, nothing,
                     run_time=1
                 ))
@@ -1128,7 +1128,7 @@ class TableOfContents(Scene):
         scale_factor = 1.2
 
         self.add(title)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, items,
             run_time=1,
             lag_ratio=0.7,
@@ -1225,7 +1225,7 @@ class ShowEllipseDefiningProperty(Scene):
 
         self.add_foreground_mobjects(push_pins, dot)
         self.add(dot_update)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInAndShiftFromDirection, push_pins,
             lambda m: (m, 2 * UP + LEFT),
             run_time=1,
@@ -1484,11 +1484,11 @@ class GeometryProofLand(Scene):
             circle.target = letter
 
         self.play(
-            LaggedStart(MoveToTarget, circles),
+            OldLaggedStart(MoveToTarget, circles),
             run_time=2
         )
         self.add(word_outlines, circles)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, word_outlines,
             run_time=3,
             rate_func=there_and_back,
@@ -1539,7 +1539,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
 
         self.add(ghost_lines, circle, lines, ep_dot)
         self.play(
-            LaggedStart(MoveToTarget, lines),
+            OldLaggedStart(MoveToTarget, lines),
             Animation(ep_dot),
         )
         self.play(ShowCreation(ellipse))
@@ -1590,7 +1590,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             FadeInFromDown(labels[1]),
             GrowArrow(arrows[1]),
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowPassingFlash, ghost_lines_copy
         ))
         self.wait()
@@ -1719,7 +1719,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         P_label.next_to(P_dot, UP, SMALL_BUFF)
 
         self.add_foreground_mobjects(self.ellipse)
-        self.play(LaggedStart(Restore, lines))
+        self.play(OldLaggedStart(Restore, lines))
         self.play(
             FadeOut(to_fade),
             ghost_line.set_stroke, YELLOW, 3,
@@ -2050,10 +2050,10 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             line.generate_target()
             line.target.rotate(90 * DEGREES)
         self.play(
-            LaggedStart(FadeIn, ghost_lines),
-            LaggedStart(FadeIn, lines),
+            OldLaggedStart(FadeIn, ghost_lines),
+            OldLaggedStart(FadeIn, lines),
         )
-        self.play(LaggedStart(MoveToTarget, lines))
+        self.play(OldLaggedStart(MoveToTarget, lines))
         self.wait()
 
     def show_orbiting_planet(self):
@@ -2121,7 +2121,7 @@ class EndOfGeometryProofiness(GeometryProofLand):
         underline.match_width(orbital_mechanics)
         underline.next_to(orbital_mechanics, DOWN, SMALL_BUFF)
 
-        self.play(LaggedStart(FadeOutAndShiftDown, geometry_word))
+        self.play(OldLaggedStart(FadeOutAndShiftDown, geometry_word))
         self.play(FadeInFromDown(orbital_mechanics))
         self.play(ShowCreation(underline))
         self.wait()
@@ -2640,12 +2640,12 @@ class AngularMomentumArgument(KeplersSecondLaw):
         self.wait()
         foreground = VGroup(*self.get_mobjects())
         self.play(
-            LaggedStart(GrowArrow, vector_field),
+            OldLaggedStart(GrowArrow, vector_field),
             Animation(foreground)
         )
         for x in range(3):
             self.play(
-                LaggedStart(
+                OldLaggedStart(
                     ApplyFunction, vector_field,
                     lambda mob: (lambda m: m.scale(1.1).set_fill(opacity=1), mob),
                     rate_func=there_and_back,
@@ -2844,7 +2844,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
 
         moving_vector, moving_vector_animation = self.get_velocity_vector_and_update()
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreation, vectors,
             lag_ratio=0.2,
             run_time=3,
@@ -2859,7 +2859,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
         self.wait(10)
         vectors.set_fill(opacity=0.5)
         self.play(
-            LaggedStart(ShowCreation, vectors),
+            OldLaggedStart(ShowCreation, vectors),
             Animation(moving_vector)
         )
         self.wait(5)
@@ -2907,7 +2907,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
                 frame.shift, frame_shift,
                 run_time=2,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, vectors,
                 run_time=4,
             ),
@@ -3116,7 +3116,7 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
             *list(map(ShowCreation, lines))
         )
         self.play(*[
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, fader,
                 lambda m: (m.set_fill, {"opacity": 1}),
                 **kwargs
@@ -3482,8 +3482,8 @@ class ShowEqualAngleSlices(IntroduceShapeOfVelocities):
         self.add(self.orbit)
         self.wait()
         self.play(
-            LaggedStart(ShowCreation, external_angle_lines),
-            LaggedStart(ShowCreation, external_angle_arcs),
+            OldLaggedStart(ShowCreation, external_angle_lines),
+            OldLaggedStart(ShowCreation, external_angle_arcs),
             Animation(difference_vectors),
         )
         self.add_foreground_mobjects(difference_vectors)
@@ -3544,7 +3544,7 @@ class PonderOverOffCenterDiagram(PiCreatureScene):
         words.next_to(rect.get_top(), DOWN)
 
         self.play(
-            LaggedStart(GrowFromCenter, velocity_diagram),
+            OldLaggedStart(GrowFromCenter, velocity_diagram),
             randy.change, "pondering",
             morty.change, "confused",
         )
@@ -3674,7 +3674,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         self.play(ApplyWave(ellipse))
         self.play(*list(map(GrowArrow, vectors)))
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, vectors,
                 lag_ratio=1,
                 run_time=2
@@ -3859,7 +3859,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         )
 
         self.play(
-            LaggedStart(MoveToTarget, vectors),
+            OldLaggedStart(MoveToTarget, vectors),
             highlighted_vector.scale, 0,
             {"about_point": root_dot.get_center()},
             Animation(highlighted_vector),
@@ -3870,7 +3870,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
         )
         self.remove(vectors, highlighted_vector)
         self.play(
-            LaggedStart(ShowCreation, lines),
+            OldLaggedStart(ShowCreation, lines),
             ShowCreation(highlighted_line),
             Animation(highlighted_vector),
         )
@@ -4014,7 +4014,7 @@ class UseVelocityDiagramToDeduceCurve(ShowEqualAngleSlices):
 
         self.add(ghost_lines)
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, lines,
                 lag_ratio=0.1,
                 run_time=8,
@@ -4141,7 +4141,7 @@ class ShowSunVectorField(Scene):
             vector.target.set_stroke(YELLOW, 0.5)
 
         for x in range(3):
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 MoveToTarget, vector_field,
                 rate_func=there_and_back,
                 lag_ratio=0.5,
