@@ -14,7 +14,7 @@ class FadeOut(Transform):
         return self.mobject.copy().fade(1)
 
     def clean_up_from_scene(self, scene=None):
-        Transform.clean_up_from_scene(self, scene)
+        super().clean_up_from_scene(scene)
         self.interpolate(0)
 
 
