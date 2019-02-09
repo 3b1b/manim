@@ -29,16 +29,35 @@ class AnimationGroup(Animation):
             [anim.mobject for anim in animations]
         ))
         Animation.__init__(self, self.group, **kwargs)
-        self.init_run_time()
 
     def get_all_mobjects(self):
         return self.group
 
+    def begin(self):
+        self.init_run_time()
+        for anim in self.animations:
+            anim.begin()
+
+    def finish(self):
+        for anim in self.animations:
+            anim.finish()
+
+    def clean_up_from_scene(self, scene):
+        for anim in self.animations:
+            anim.clean_up_from_scene(scene)
+
+    def update_mobjects(self, dt):
+        for anim in self.animations:
+            anim.update_mobjects(dt)
+
     def init_run_time(self):
         self.build_animations_with_timings()
-        self.max_end_time = np.max([
-            awt[2] for awt in self.anims_with_timings
-        ])
+        if self.anims_with_timings:
+            self.max_end_time = np.max([
+                awt[2] for awt in self.anims_with_timings
+            ])
+        else:
+            self.max_end_time = 0
         if self.run_time is None:
             self.run_time = self.max_end_time
 
@@ -60,22 +79,6 @@ class AnimationGroup(Animation):
             curr_time = interpolate(
                 start_time, end_time, self.lag_ratio
             )
-
-    def begin(self):
-        for anim in self.animations:
-            anim.begin()
-
-    def finish(self):
-        for anim in self.animations:
-            anim.finish()
-
-    def clean_up_from_scene(self, scene):
-        for anim in self.animations:
-            anim.clean_up_from_scene(scene)
-
-    def update_mobjects(self, dt):
-        for anim in self.animations:
-            anim.update_mobjects(dt)
 
     def interpolate(self, alpha):
         # Note, if the run_time of AnimationGroup has been
@@ -101,11 +104,9 @@ class Succession(AnimationGroup):
         "lag_ratio": 1,
     }
 
-    def __init__(self, *animations, **kwargs):
-        self.active_animation = animations[0]
-        super().__init__(*animations, **kwargs)
-
     def begin(self):
+        assert(len(self.animations) > 0)
+        self.active_animation = self.animations[0]
         self.active_animation.begin()
 
     def finish(self):
