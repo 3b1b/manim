@@ -9,7 +9,6 @@ from manimlib.constants import PI
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.paths import path_along_arc
 from manimlib.utils.paths import straight_path
 from manimlib.utils.rate_functions import smooth
@@ -24,7 +23,7 @@ class Transform(Animation):
         "replace_mobject_with_target_in_scene": False,
     }
 
-    def __init__(self, mobject, target_mobject, **kwargs):
+    def __init__(self, mobject, target_mobject=None, **kwargs):
         Animation.__init__(self, mobject, **kwargs)
         self.target_mobject = target_mobject
         self.init_path_func()
@@ -50,11 +49,25 @@ class Transform(Animation):
         # Use a copy of target_mobject for the align_data
         # call so that the actual target_mobject stays
         # preserved.
+        self.target_mobject = self.create_target()
+        self.check_target_mobject_validity()
         self.target_copy = self.target_mobject.copy()
         # Note, this potentially changes the structure
         # of both mobject and target_mobject
         self.mobject.align_data(self.target_copy)
         super().begin()
+
+    def create_target(self):
+        # Has no meaningful effect here, but may be useful
+        # in subclasses
+        return self.target_mobject
+
+    def check_target_mobject_validity(self):
+        if self.target_mobject is None:
+            message = "{}.create_target not properly implemented"
+            raise Exception(
+                message.format(self.__class__.__name__)
+            )
 
     def clean_up_from_scene(self, scene):
         super().clean_up_from_scene(scene)
@@ -144,9 +157,7 @@ class ApplyMethod(Transform):
         self.check_validity_of_input(method)
         self.method = method
         self.method_args = args
-        # This will be replaced
-        temp_target = method.__self__
-        Transform.__init__(self, method.__self__, temp_target, **kwargs)
+        Transform.__init__(self, method.__self__, **kwargs)
 
     def check_validity_of_input(self, method):
         if not inspect.ismethod(method):
@@ -155,10 +166,6 @@ class ApplyMethod(Transform):
                 "the method you want to animate"
             )
         assert(isinstance(method.__self__, Mobject))
-
-    def begin(self):
-        self.target_mobject = self.create_target()
-        super().begin()
 
     def create_target(self):
         method = self.method
@@ -219,16 +226,10 @@ class Restore(ApplyMethod):
 class ApplyFunction(Transform):
     def __init__(self, function, mobject, **kwargs):
         self.function = function
-        temp_target = mobject
-        Transform.__init__(
-            self, mobject, temp_target, **kwargs
-        )
+        Transform.__init__(self, mobject, **kwargs)
 
-    def begin(self):
-        self.target_mobject = self.function(
-            self.mobject.copy()
-        )
-        super().begin()
+    def create_target(self):
+        return self.function(self.mobject.copy())
 
 
 class ApplyMatrix(ApplyPointwiseFunction):
@@ -277,19 +278,15 @@ class CyclicReplace(Transform):
     }
 
     def __init__(self, *mobjects, **kwargs):
-        group = Group(*mobjects)
-        temp_target = group
-        Transform.__init__(self, group, temp_target, **kwargs)
+        self.group = Group(*mobjects)
+        Transform.__init__(self, self.group, **kwargs)
 
-    def begin(self):
-        self.target_mobject = self.mobject.copy()
-        cycled_targets = [
-            self.target_mobject[-1],
-            *self.target_mobject[:-1],
-        ]
-        for m1, m2 in zip(cycled_targets, self.mobject):
+    def create_target(self):
+        target = self.group.copy()
+        cycled_targets = [target[-1], *target[:-1]]
+        for m1, m2 in zip(cycled_targets, self.group):
             m1.move_to(m2)
-        super().begin()
+        return target
 
 
 class Swap(CyclicReplace):
