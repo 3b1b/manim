@@ -3,7 +3,9 @@ import inspect
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_POINTWISE_FUNCTION_RUN_TIME
+from manimlib.constants import OUT
+from manimlib.constants import PI
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
@@ -12,7 +14,6 @@ from manimlib.utils.paths import path_along_arc
 from manimlib.utils.paths import straight_path
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
-from manimlib.utils.space_ops import complex_to_R3
 
 
 class Transform(Animation):
@@ -231,8 +232,17 @@ class ApplyFunction(Transform):
 
 
 class ApplyMatrix(ApplyPointwiseFunction):
-    # Truth be told, I'm not sure if this is useful.
     def __init__(self, matrix, mobject, **kwargs):
+        matrix = self.initialize_matrix(matrix)
+
+        def func(p):
+            return np.dot(p, matrix.T)
+
+        ApplyPointwiseFunction.__init__(
+            self, func, mobject, **kwargs
+        )
+
+    def initialize_matrix(self, matrix):
         matrix = np.array(matrix)
         if matrix.shape == (2, 2):
             new_matrix = np.identity(3)
@@ -240,51 +250,53 @@ class ApplyMatrix(ApplyPointwiseFunction):
             matrix = new_matrix
         elif matrix.shape != (3, 3):
             raise Exception("Matrix has bad dimensions")
-        transpose = np.transpose(matrix)
-
-        def func(p):
-            return np.dot(p, transpose)
-        ApplyPointwiseFunction.__init__(self, func, mobject, **kwargs)
+        return matrix
 
 
-class ComplexFunction(ApplyPointwiseFunction):
+class ApplyComplexFunction(ApplyMethod):
     def __init__(self, function, mobject, **kwargs):
-        if "path_func" not in kwargs:
-            self.path_func = path_along_arc(
-                np.log(function(complex(1))).imag
-            )
-        ApplyPointwiseFunction.__init__(
+        self.function = function
+        ApplyMethod.__init__(
             self,
-            lambda p: complex_to_R3(function(
-                complex(p[0], p[1])
-            )),
-            mobject,
+            mobject.apply_complex_function,
+            function,
             **kwargs
         )
+
+    def init_path_func(self):
+        func1 = self.function(complex(1))
+        self.path_arc = np.log(func1).imag
+        super().init_path_func()
 
 ###
 
 
 class CyclicReplace(Transform):
     CONFIG = {
-        "path_arc": np.pi / 2
+        "path_arc": PI / 2,
     }
 
     def __init__(self, *mobjects, **kwargs):
-        start = Group(*mobjects)
-        target = Group(*[
-            m1.copy().move_to(m2)
-            for m1, m2 in adjacent_pairs(start)
-        ])
-        Transform.__init__(self, start, target, **kwargs)
+        group = Group(*mobjects)
+        temp_target = group
+        Transform.__init__(self, group, temp_target, **kwargs)
+
+    def begin(self):
+        self.target_mobject = self.mobject.copy()
+        cycled_targets = [
+            self.target_mobject[-1],
+            *self.target_mobject[:-1],
+        ]
+        for m1, m2 in zip(cycled_targets, self.mobject):
+            m1.move_to(m2)
+        super().begin()
 
 
 class Swap(CyclicReplace):
     pass  # Renaming, more understandable for two entries
 
-# TODO: Um...does this work
 
-
+# TODO, this may be depricated...worth reimplementing?
 class TransformAnimations(Transform):
     CONFIG = {
         "rate_func": squish_rate_func(smooth)
