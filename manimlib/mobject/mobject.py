@@ -332,9 +332,10 @@ class Mobject(Container):
     # Note, much of these are now redundant with default behavior of
     # above methods
 
-    def apply_points_function_about_point(self, func, about_point=None, about_edge=ORIGIN):
+    def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
         if about_point is None:
-            assert(about_edge is not None)
+            if about_edge is None:
+                about_edge = ORIGIN
             about_point = self.get_critical_point(about_edge)
         for mob in self.family_members_with_points():
             mob.points -= about_point
