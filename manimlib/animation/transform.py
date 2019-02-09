@@ -91,11 +91,18 @@ class ReplacementTransform(Transform):
     }
 
 
-class TransformFromCopy(ReplacementTransform):
+class TransformFromCopy(Transform):
+    """
+    Performs a reversed Transform
+    """
+
     def __init__(self, mobject, target_mobject, **kwargs):
-        ReplacementTransform.__init__(
-            self, mobject.deepcopy(), target_mobject, **kwargs
+        Transform.__init__(
+            self, target_mobject, mobject, **kwargs
         )
+
+    def interpolate(self, alpha):
+        super().interpolate(1 - alpha)
 
 
 class ClockwiseTransform(Transform):
