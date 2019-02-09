@@ -1,6 +1,7 @@
+from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.animation.transform import Transform
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.paths import counterclockwise_path
+# from manimlib.utils.paths import counterclockwise_path
+from manimlib.constants import PI
 
 
 class GrowFromPoint(Transform):
@@ -9,40 +10,45 @@ class GrowFromPoint(Transform):
     }
 
     def __init__(self, mobject, point, **kwargs):
-        digest_config(self, kwargs)
-        target = mobject.copy()
-        mobject.scale(0)
-        mobject.move_to(point)
+        self.point = point
+        super().__init__(mobject, **kwargs)
+
+    def create_target(self):
+        return self.mobject
+
+    def create_starting_mobject(self):
+        start = super().create_starting_mobject()
+        start.scale(0)
+        start.move_to(self.point)
         if self.point_color:
-            mobject.set_color(self.point_color)
-        Transform.__init__(self, mobject, target, **kwargs)
+            start.set_color(self.point_color)
+        return start
 
 
 class GrowFromCenter(GrowFromPoint):
     def __init__(self, mobject, **kwargs):
-        GrowFromPoint.__init__(self, mobject, mobject.get_center(), **kwargs)
+        point = mobject.get_center()
+        super().__init__(mobject, point, **kwargs)
 
 
 class GrowFromEdge(GrowFromPoint):
     def __init__(self, mobject, edge, **kwargs):
-        GrowFromPoint.__init__(
-            self, mobject, mobject.get_critical_point(edge), **kwargs
-        )
+        point = mobject.get_critical_point(edge)
+        super().__init__(mobject, point, **kwargs)
 
 
 class GrowArrow(GrowFromPoint):
     def __init__(self, arrow, **kwargs):
-        GrowFromPoint.__init__(self, arrow, arrow.get_start(), **kwargs)
+        point = arrow.get_start()
+        super().__init__(arrow, point, **kwargs)
 
 
 class SpinInFromNothing(GrowFromCenter):
     CONFIG = {
-        "path_func": counterclockwise_path()
+        "path_arc": PI,
     }
 
 
 class ShrinkToCenter(Transform):
-    def __init__(self, mobject, **kwargs):
-        Transform.__init__(
-            self, mobject, mobject.get_point_mobject(), **kwargs
-        )
+    def create_target(self):
+        return VectorizedPoint(self.mobject.get_center())
