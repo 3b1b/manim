@@ -211,7 +211,6 @@ class ApplyWave(Homotopy):
 
         def homotopy(x, y, z, t):
             alpha = (x - left_x) / (right_x - left_x)
-            # lf = self.lag_factor
             power = np.exp(2.0 * (alpha - 0.5))
             nudge = there_and_back(t**power)
             return np.array([x, y, z]) + nudge * vect

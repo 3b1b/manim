@@ -104,7 +104,6 @@ class LimitJustMeansApproach(PiCreatureScene):
                 Transform(
                     expression, next_expression,
                     lag_ratio = 0.5,
-                    lag_factor = 1.2,
                 ),
                 self.pi_creature.look_at, next_expression[-1]
             )
@@ -664,7 +663,6 @@ class OtherViewsOfDx(TeacherStudentsScene):
             statements[0].h.copy(), h_group,
             run_time = 2,
             lag_ratio = 0.5,
-            lag_factor = 1.5,
         ))
         self.wait()
 
@@ -824,7 +822,6 @@ class GraphLimitExpression(GraphScene):
             anims = [FadeIn(
                 VGroup(*expression[i:j]),
                 lag_ratio = 0.5,
-                lag_factor = 1.5
             )]
             new_graph = self.get_graph(func, color = BLUE)
             if graph is None:

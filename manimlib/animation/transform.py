@@ -119,15 +119,18 @@ class CounterclockwiseTransform(Transform):
 
 class MoveToTarget(Transform):
     def __init__(self, mobject, **kwargs):
+        self.check_validity_of_input(mobject)
+        Transform.__init__(self, mobject, mobject.target, **kwargs)
+
+    def check_validity_of_input(self, mobject):
         if not hasattr(mobject, "target"):
             raise Exception(
-                "MoveToTarget called on mobject without attribute 'target' ")
-        Transform.__init__(self, mobject, mobject.target, **kwargs)
+                "MoveToTarget called on mobject"
+                "without attribute 'target'"
+            )
 
 
 class ApplyMethod(Transform):
-    CONFIG = {}
-
     def __init__(self, method, *args, **kwargs):
         """
         method is a method of Mobject, *args are arguments for
@@ -183,9 +186,16 @@ class ApplyPointwiseFunction(ApplyMethod):
 
 class ApplyPointwiseFunctionToCenter(ApplyPointwiseFunction):
     def __init__(self, function, mobject, **kwargs):
+        self.function = function
         ApplyMethod.__init__(
-            self, mobject.move_to, function(mobject.get_center()), **kwargs
+            self, mobject.move_to, **kwargs
         )
+
+    def begin(self):
+        self.method_args = [
+            self.function(self.mobject.get_center())
+        ]
+        super().begin()
 
 
 class FadeToColor(ApplyMethod):
@@ -195,8 +205,9 @@ class FadeToColor(ApplyMethod):
 
 class ScaleInPlace(ApplyMethod):
     def __init__(self, mobject, scale_factor, **kwargs):
-        ApplyMethod.__init__(self, mobject.scale_in_place,
-                             scale_factor, **kwargs)
+        ApplyMethod.__init__(
+            self, mobject.scale, scale_factor, **kwargs
+        )
 
 
 class Restore(ApplyMethod):
@@ -205,18 +216,18 @@ class Restore(ApplyMethod):
 
 
 class ApplyFunction(Transform):
-    CONFIG = {
-        "lag_ratio": 0,
-    }
-
     def __init__(self, function, mobject, **kwargs):
+        self.function = function
+        temp_target = mobject
         Transform.__init__(
-            self,
-            mobject,
-            function(mobject.copy()),
-            **kwargs
+            self, mobject, temp_target, **kwargs
         )
-        self.name = "ApplyFunctionTo" + str(mobject)
+
+    def begin(self):
+        self.target_mobject = self.function(
+            self.mobject.copy()
+        )
+        super().begin()
 
 
 class ApplyMatrix(ApplyPointwiseFunction):

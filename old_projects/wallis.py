@@ -4066,7 +4066,7 @@ class MentionJohnWallis(Scene):
         self.play(GrowFromEdge(image, UP))
         self.play(Write(image_name))
         self.wait(2)
-        self.play(Write(infinity, run_time=3, lag_factor=1))
+        self.play(Write(infinity, run_time=3))
         self.wait(2)
 
 

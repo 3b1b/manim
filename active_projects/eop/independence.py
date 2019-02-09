@@ -1023,7 +1023,6 @@ class ThousandPossibleQuizzes(Scene):
             MoveToTarget(
                 movers, 
                 lag_ratio = 0.5,
-                lag_factor = 4,
                 run_time = 3,
             ),
             Transform(left_label_equation, new_equation)

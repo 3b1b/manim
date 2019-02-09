@@ -2980,7 +2980,6 @@ class IntroduceBlockChain(Scene):
             OldLaggedStart(
                 ShowCreation, arrows, 
                 run_time = 1,
-                lag_factor = 0.6,
             )
         )
         self.wait()

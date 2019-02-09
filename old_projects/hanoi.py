@@ -899,7 +899,7 @@ class IntroduceBase10(Scene):
         """)
         digits.next_to(self.title, DOWN, buff = LARGE_BUFF)
         digits.shift(2*RIGHT)
-        self.play(Write(digits, lag_factor = 5))
+        self.play(Write(digits))
         self.wait()
 
 class RhythmOfDecimalCounting(CountingScene):
@@ -1181,7 +1181,6 @@ class BinaryCountingAtEveryScale(Scene):
             VGroup(*reversed(list(curr_bits))),
             VGroup(*reversed(list(bit_mobs[2**(self.num_bits-1)]))),
             lag_ratio = 0.5,
-            lag_factor = self.num_bits
         ))
         self.wait()
         self.play(
@@ -2970,7 +2969,6 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             self.nodes,
             run_time = 3,
             lag_ratio = 0.5,
-            lag_factor = 7,
         ))
         vect = LEFT
         for index in 3, 21, 8, 17, 10, 13:

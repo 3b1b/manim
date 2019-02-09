@@ -6,7 +6,6 @@ class Chapter1OpeningQuote(OpeningQuote):
         "fade_in_kwargs": {
             "lag_ratio": 0.5,
             "rate_func": linear,
-            "lag_factor": 9,
             "run_time": 10,
         },
         "text_size" : "\\normalsize",

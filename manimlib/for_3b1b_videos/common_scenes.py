@@ -35,7 +35,6 @@ class OpeningQuote(Scene):
         "fade_in_kwargs": {
             "lag_ratio": 0.5,
             "rate_func": linear,
-            "lag_factor": 4,
             "run_time": 5,
         },
         "text_size": "\\Large",
@@ -272,7 +271,7 @@ class LogoGenerationTemplate(MovingCameraScene):
         name = self.channel_name
 
         self.play(
-            Write(name, run_time=3, lag_factor=2.5),
+            Write(name, run_time=3),
             *self.get_logo_animations(logo)
         )
         self.wait()

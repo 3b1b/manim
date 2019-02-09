@@ -978,7 +978,7 @@ class UseDefiningFeatures(Scene):
         tip.set_color(YELLOW)
 
         self.add(title)
-        self.play(Write(tip, lag_factor=5, run_time=4))
+        self.play(Write(tip, run_time=4))
         self.wait()
 
 
@@ -1272,7 +1272,7 @@ class NameDandelin(Scene):
 
         self.add(title[0])
         self.play(FadeInFromDown(portrait))
-        self.play(Write(title[1], lag_factor=4))
+        self.play(Write(title[1]))
         self.wait()
         self.play(FadeInFrom(google_result, LEFT))
         self.play(Write(cmon_google, run_time=1))

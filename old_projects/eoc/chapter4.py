@@ -1728,7 +1728,6 @@ class ThreeLinesChainRule(ReconfigurableScene):
         self.play(
             all_x_squared_relevant_labels.restore,
             lag_ratio = 0.5,
-            lag_factor = 3,
             run_time = 3,
         )
         self.__dict__.update(self.__class__.CONFIG)

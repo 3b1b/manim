@@ -670,7 +670,6 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             network_mob.edge_groups,
             lag_ratio = 0.5,
             run_time = 2,
-            lag_factor = 8,
             rate_func=linear,
         ))
         in_vect = np.random.random(self.network.sizes[0])

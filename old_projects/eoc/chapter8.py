@@ -2413,7 +2413,7 @@ class FundamentalTheorem(GraphScene):
         """)
         words.to_edge(RIGHT)
 
-        self.play(Write(words, lag_factor = 3))
+        self.play(Write(words))
         self.wait()
 
     def show_integral_considering_continuum(self):

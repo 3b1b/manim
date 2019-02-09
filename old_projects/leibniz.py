@@ -819,7 +819,6 @@ class CountLatticePoints(LatticePointScene):
                 point_copies, squares,
                 run_time = 3,
                 lag_ratio = 0.5,
-                lag_factor = 4,
             ),
             Animation(self.lattice_points)
         )

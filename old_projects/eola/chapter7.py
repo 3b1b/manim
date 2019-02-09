@@ -47,7 +47,6 @@ class OpeningQuote(Scene):
             self.play(Write(
                 quote, 
                 run_time = rt,
-                lag_factor = 5 if rt > 3 else 2,
             ))
         self.wait(2)
 
@@ -2121,7 +2120,7 @@ class RememberGraphDuality(Scene):
             early video I did on graph duality
         """)
         words.to_edge(UP)
-        self.play(Write(words, lag_factor = 4))
+        self.play(Write(words))
         self.wait()
 
 class LooseDualityDescription(Scene):

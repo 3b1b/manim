@@ -15,16 +15,12 @@ class Animation(object):
         "name": None,
         # Does this animation add or remove a mobject form the screen
         "remover": False,
-        # TODO, replace this with a single lag parameter
-
         # If 0, the animation is applied to all submobjects
         # at the same time
         # If 1, it is applied to each successively.
         # If 0 < lag_ratio < 1, its applied to each
         # with lagged start times
         "lag_ratio": 0,
-        # TODO, remove anything with lag_factor
-        "lag_factor": 2,
     }
 
     def __init__(self, mobject, **kwargs):

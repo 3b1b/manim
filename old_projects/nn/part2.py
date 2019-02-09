@@ -2673,7 +2673,6 @@ class GradientNudging(PreviewLearning):
         return MoveToTarget(
             edges,
             lag_ratio = 0.5,
-            lag_factor = 8,
             run_time = 1.5
         )
 

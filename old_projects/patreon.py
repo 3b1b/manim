@@ -163,7 +163,6 @@ class GrowingToDoList(Scene):
             morty.look_at, lines,
             Write(
                 VGroup(*lines[3:]),
-                lag_factor = 7
             )
         )
 
@@ -551,7 +550,6 @@ class MakeALotOfPiCreaturesHappy(Scene):
                 pis,
                 run_time = 2,
                 lag_ratio = 0.5,
-                lag_factor = 5,
             )
         )
         for x in range(10):

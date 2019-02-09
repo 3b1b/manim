@@ -971,7 +971,7 @@ class FeynmanOnTurbulence(Scene):
         self.play(
             FadeInFrom(feynman, UP),
             FadeInFrom(name, DOWN),
-            Write(quote, run_time=4, lag_factor=5)
+            Write(quote, run_time=4)
         )
         self.wait()
 

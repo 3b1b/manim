@@ -2060,7 +2060,7 @@ class CreditThree(Scene):
         )
         self.wait()
         self.play(
-            Write(domains, run_time = 5, lag_factor = 5),
+            Write(domains, run_time = 5),
             randy.look_at, domains
         )
         self.wait()
