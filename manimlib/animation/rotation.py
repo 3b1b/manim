@@ -1,9 +1,8 @@
-import numpy as np
-
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
-from manimlib.constants import *
-from manimlib.utils.config_ops import digest_config
+from manimlib.constants import OUT
+from manimlib.constants import PI
+from manimlib.constants import TAU
 from manimlib.utils.rate_functions import linear
 
 
@@ -13,18 +12,12 @@ class Rotating(Animation):
         "radians": TAU,
         "run_time": 5,
         "rate_func": linear,
-        "in_place": True,
         "about_point": None,
         "about_edge": None,
     }
 
-    def interpolate_submobject(self, submobject, starting_submobject, alpha):
-        submobject.points = np.array(starting_submobject.points)
-
     def interpolate_mobject(self, alpha):
-        Animation.interpolate_mobject(self, alpha)
-        if self.in_place and self.about_point is None:
-            self.about_point = self.mobject.get_center()
+        self.mobject.become(self.starting_mobject)
         self.mobject.rotate(
             alpha * self.radians,
             axis=self.axis,
@@ -35,22 +28,25 @@ class Rotating(Animation):
 
 class Rotate(Transform):
     CONFIG = {
-        "in_place": False,
         "about_point": None,
+        "about_edge": None,
     }
 
-    def __init__(self, mobject, angle=np.pi, axis=OUT, **kwargs):
+    def __init__(self, mobject, angle=PI, axis=OUT, **kwargs):
         if "path_arc" not in kwargs:
             kwargs["path_arc"] = angle
         if "path_arc_axis" not in kwargs:
             kwargs["path_arc_axis"] = axis
-        digest_config(self, kwargs, locals())
-        target = mobject.deepcopy()
-        if self.in_place:
-            self.about_point = mobject.get_center()
+        self.angle = angle
+        self.axis = axis
+        super().__init__(mobject, **kwargs)
+
+    def create_target(self):
+        target = self.mobject.copy()
         target.rotate(
-            angle,
-            axis=axis,
+            self.angle,
+            axis=self.axis,
             about_point=self.about_point,
+            about_edge=self.about_edge,
         )
-        Transform.__init__(self, mobject, target, **kwargs)
+        return target
