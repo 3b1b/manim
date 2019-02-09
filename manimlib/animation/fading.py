@@ -22,12 +22,13 @@ class FadeIn(Transform):
     def create_target(self):
         return self.mobject
 
-    def begin(self):
-        super().begin()
-        self.starting_mobject.fade(1)
-        if isinstance(self.starting_mobject, VMobject):
-            self.starting_mobject.set_stroke(width=0)
-            self.starting_mobject.set_fill(opacity=0)
+    def create_starting_mobject(self):
+        start = super().create_starting_mobject()
+        start.fade(1)
+        if isinstance(start, VMobject):
+            start.set_stroke(width=0)
+            start.set_fill(opacity=0)
+        return start
 
 
 class FadeInFrom(Transform):
@@ -65,40 +66,60 @@ class FadeOutAndShift(FadeOut):
     }
 
     def __init__(self, mobject, direction=None, **kwargs):
+        if direction is not None:
+            self.direction = direction
         FadeOut.__init__(self, mobject, **kwargs)
-        if direction is None:
-            direction = self.direction
-        self.target_mobject.shift(direction)
+
+    def create_target(self):
+        target = super().create_target()
+        target.shift(self.direction)
+        return target
 
 
 class FadeOutAndShiftDown(FadeOutAndShift):
+    """
+    Identical to FadeOutAndShift, just with a name that
+    communicates the default
+    """
     CONFIG = {
         "direction": DOWN,
     }
 
 
-class FadeInFromLarge(Transform):
+class FadeInFromLarge(FadeIn):
+    CONFIG = {
+        "scale_factor": 2,
+    }
+
     def __init__(self, mobject, scale_factor=2, **kwargs):
-        target = mobject.copy()
-        mobject.scale(scale_factor)
-        mobject.fade(1)
-        Transform.__init__(self, mobject, target, **kwargs)
+        if scale_factor is not None:
+            self.scale_factor = scale_factor
+        FadeIn.__init__(self, mobject, **kwargs)
+
+    def create_starting_mobject(self):
+        start = super().create_starting_mobject()
+        start.scale(self.scale_factor)
+        return start
 
 
 class VFadeIn(Animation):
     """
-    VFadeIn and VFadeOut only work for VMobjects, but they can be applied
-    to mobjects while they are being animated in some other way (e.g. shifting
-    then) in a way that does not work with FadeIn and FadeOut
+    VFadeIn and VFadeOut only work for VMobjects,
     """
+    CONFIG = {
+        "suspend_mobject_updating": False,
+    }
 
-    def interpolate_submobject(self, submobject, starting_submobject, alpha):
-        submobject.set_stroke(
-            opacity=interpolate(0, starting_submobject.get_stroke_opacity(), alpha)
+    def interpolate_submobject(self, submob, start, alpha):
+        submob.set_stroke(
+            opacity=interpolate(0, start.get_stroke_opacity(), alpha)
         )
-        submobject.set_fill(
-            opacity=interpolate(0, starting_submobject.get_fill_opacity(), alpha)
+        submob.set_fill(
+            opacity=interpolate(0, start.get_fill_opacity(), alpha)
         )
+
+    def update_mobjects(self, dt):
+        pass
 
 
 class VFadeOut(VFadeIn):
@@ -106,7 +127,7 @@ class VFadeOut(VFadeIn):
         "remover": True
     }
 
-    def interpolate_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submob, start, alpha):
         VFadeIn.interpolate_submobject(
-            self, submobject, starting_submobject, 1 - alpha
+            self, submob, start, 1 - alpha
         )
