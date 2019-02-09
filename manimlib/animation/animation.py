@@ -28,7 +28,14 @@ class Animation(object):
         digest_config(self, kwargs)
         self.mobject = mobject
 
+    def __str__(self):
+        if self.name:
+            return self.name
+        return self.__class__.__name__ + str(self.mobject)
+
     def begin(self):
+        # As much initialization as possible, especially any
+        # mobject copying, should live in this method
         mobject = self.mobject
         # Keep track of where it started
         self.starting_mobject = mobject.copy()
@@ -49,17 +56,17 @@ class Animation(object):
         if self.is_remover():
             scene.remove(self.mobject)
 
-    def __str__(self):
-        if self.name:
-            return self.name
-        return self.__class__.__name__ + str(self.mobject)
+    def get_all_mobjects(self):
+        """
+        Ordering must match the ording of arguments to interpolate_submobject
+        """
+        return self.mobject, self.starting_mobject
 
-    def copy(self):
-        return deepcopy(self)
-
-    def update_config(self, **kwargs):
-        digest_config(self, kwargs)
-        return self
+    def get_all_families_zipped(self):
+        return list(zip(*map(
+            Mobject.family_members_with_points,
+            self.get_all_mobjects()
+        )))
 
     def update_mobjects(self, dt):
         """
@@ -72,6 +79,14 @@ class Animation(object):
         for mob in self.get_all_mobjects():
             mob.update(dt)
 
+    def copy(self):
+        return deepcopy(self)
+
+    def update_config(self, **kwargs):
+        digest_config(self, kwargs)
+        return self
+
+    # Methods for interpolation, the mean of an Animation
     def interpolate(self, alpha):
         alpha = np.clip(alpha, 0, 1)
         self.interpolate_mobject(self.rate_func(alpha))
@@ -106,18 +121,7 @@ class Animation(object):
             0, 1,
         )
 
-    def get_all_mobjects(self):
-        """
-        Ordering must match the ording of arguments to interpolate_submobject
-        """
-        return self.mobject, self.starting_mobject
-
-    def get_all_families_zipped(self):
-        return list(zip(*map(
-            Mobject.family_members_with_points,
-            self.get_all_mobjects()
-        )))
-
+    # Getters and setters
     def set_run_time(self, run_time):
         self.run_time = run_time
         return self
