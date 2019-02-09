@@ -2,6 +2,7 @@ import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
+from manimlib.animation.composition import Succession
 from manimlib.constants import *
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -45,46 +46,59 @@ class Uncreate(ShowCreation):
     }
 
 
-class DrawBorderThenFill(Animation):
+class DrawBorderThenFill(Succession):
     CONFIG = {
         "run_time": 2,
         "stroke_width": 2,
         "stroke_color": None,
-        "rate_func": double_smooth,
+        "draw_border_animation_config": {},
+        "fill_animation_config": {},
     }
 
     def __init__(self, vmobject, **kwargs):
+        self.check_validity_of_input(vmobject)
+        self.vmobject = vmobject
+        self.original_vmobject = vmobject.copy()
+        digest_config(self, kwargs)
+        Succession.__init__(
+            self,
+            self.get_draw_border_animation(vmobject),
+            self.get_fill_animation(vmobject),
+            **kwargs,
+        )
+
+    def check_validity_of_input(self, vmobject):
         if not isinstance(vmobject, VMobject):
             raise Exception("DrawBorderThenFill only works for VMobjects")
-        self.reached_halfway_point_before = False
-        Animation.__init__(self, vmobject, **kwargs)
 
-    def interpolate_submobject(self, submobject, starting_submobject, alpha):
-        submobject.pointwise_become_partial(
-            starting_submobject, 0, min(2 * alpha, 1)
+    def get_draw_border_animation(self, vmobject):
+        vmobject.set_stroke(
+            color=self.get_stroke_color(vmobject),
+            width=self.stroke_width
         )
-        if alpha < 0.5:
-            if self.stroke_color:
-                color = self.stroke_color
-            elif starting_submobject.stroke_width > 0:
-                color = starting_submobject.get_stroke_color()
-            else:
-                color = starting_submobject.get_color()
-            submobject.set_stroke(color, width=self.stroke_width)
-            submobject.set_fill(opacity=0)
-        else:
-            if not self.reached_halfway_point_before:
-                self.reached_halfway_point_before = True
-                submobject.points = np.array(starting_submobject.points)
-            width, opacity = [
-                interpolate(start, end, 2 * alpha - 1)
-                for start, end in [
-                    (self.stroke_width, starting_submobject.get_stroke_width()),
-                    (0, starting_submobject.get_fill_opacity())
-                ]
-            ]
-            submobject.set_stroke(width=width)
-            submobject.set_fill(opacity=opacity)
+        vmobject.set_fill(opacity=0)
+        return ShowCreation(
+            vmobject,
+            **self.draw_border_animation_config
+        )
+
+    def get_stroke_color(self, vmobject):
+        if self.stroke_color:
+            return self.stroke_color
+        elif vmobject.get_stroke_width() > 0:
+            return vmobject.get_stroke_color()
+        return vmobject.get_color()
+
+    def get_fill_animation(self, vmobject):
+        return Transform(
+            vmobject,
+            self.original_vmobject,
+            **self.fill_animation_config,
+        )
+
+    def update_mobjects(self, dt):
+        super().update_mobjects(dt)
+        self.original_vmobject.update(dt)
 
 
 class Write(DrawBorderThenFill):
