@@ -34,8 +34,10 @@ class Animation(object):
         return self.__class__.__name__ + str(self.mobject)
 
     def begin(self):
-        # As much initialization as possible, especially any
-        # mobject copying, should live in this method
+        # This is called right as an animation is being
+        # played.  As much initialization as possible,
+        # especially any mobject copying, should live in
+        # this method
         mobject = self.mobject
         # Keep track of where it started
         self.starting_mobject = mobject.copy()

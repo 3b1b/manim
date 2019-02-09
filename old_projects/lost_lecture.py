@@ -184,7 +184,7 @@ class ShowEmergingEllipse(Scene):
 
         self.play(ShowCreation(circle))
         self.play(
-            FadeInAndShiftFromDirection(e_dot, LEFT),
+            FadeInFrom(e_dot, LEFT),
             Write(eccentric_words, run_time=1)
         )
         self.wait()
@@ -1226,7 +1226,7 @@ class ShowEllipseDefiningProperty(Scene):
         self.add_foreground_mobjects(push_pins, dot)
         self.add(dot_update)
         self.play(OldLaggedStart(
-            FadeInAndShiftFromDirection, push_pins,
+            FadeInFrom, push_pins,
             lambda m: (m, 2 * UP + LEFT),
             run_time=1,
             lag_ratio=0.75
@@ -2760,7 +2760,7 @@ class FeynmanRecountingNewton(Scene):
         )
         self.wait()
         self.play(*[
-            FadeInAndShiftFromDirection(
+            FadeInFrom(
                 mob, direction=3 * LEFT
             )
             for mob in (principia, principia.rect)

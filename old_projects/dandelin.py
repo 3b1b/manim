@@ -67,7 +67,7 @@ class ThinkingAboutAProof(PiCreatureScene):
 
         self.add(bubble)
         self.play(
-            FadeInAndShiftFromDirection(you, LEFT),
+            FadeInFrom(you, LEFT),
             GrowArrow(you_arrow),
         )
         self.play(
@@ -222,7 +222,7 @@ class MultipleDefinitionsOfAnEllipse(Scene):
             definition.saved_state.set_fill(LIGHT_GREY, 0.5)
 
         self.play(OldLaggedStart(
-            FadeInAndShiftFromDirection, definitions,
+            FadeInFrom, definitions,
             lambda m: (m, RIGHT),
             run_time=4
         ))
@@ -293,7 +293,7 @@ class StretchACircle(Scene):
         self.play(
             GrowArrow(xy_arrow),
             Write(xy),
-            FadeInAndShiftFromDirection(start_point, UP),
+            FadeInFrom(start_point, UP),
         )
         self.wait()
         self.add(circle_ghost)
@@ -869,7 +869,7 @@ class ShowMeasurementBook(TeacherStudentsScene):
         self.wait()
         self.play(
             GrowArrow(arrow),
-            FadeInAndShiftFromDirection(words, RIGHT),
+            FadeInFrom(words, RIGHT),
             self.get_student_changes(
                 "thinking", "happy", "pondering",
                 look_at_arg=arrow

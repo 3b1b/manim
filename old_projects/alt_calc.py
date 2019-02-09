@@ -2858,7 +2858,7 @@ class RepeatedApplicationGraphically(GraphOnePlusOneOverX, PiCreatureScene):
         dot = Dot(color=RED, fill_opacity=0.7)
         dot.move_to(self.coords_to_point(x_val, curr_output))
 
-        self.play(FadeInAndShiftFromDirection(dot, 2 * UR))
+        self.play(FadeInFrom(dot, 2 * UR))
         self.wait()
 
         for n in range(self.n_jumps):
@@ -2955,7 +2955,7 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
         sample_points = list(map(Mobject.get_center, sample_dots))
 
         self.play(OldLaggedStart(
-            FadeInAndShiftFromDirection, sample_dots,
+            FadeInFrom, sample_dots,
             lambda m: (m, UP)
         ))
         self.show_arrows(sample_points)

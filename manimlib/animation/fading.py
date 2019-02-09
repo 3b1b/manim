@@ -3,7 +3,6 @@ from manimlib.animation.transform import Transform
 from manimlib.constants import *
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
 
 
 class FadeOut(Transform):
@@ -11,10 +10,8 @@ class FadeOut(Transform):
         "remover": True,
     }
 
-    def __init__(self, mobject, **kwargs):
-        target = mobject.copy()
-        target.fade(1)
-        Transform.__init__(self, mobject, target, **kwargs)
+    def create_target(self):
+        return self.mobject.copy().fade(1)
 
     def clean_up_from_scene(self, scene=None):
         Transform.clean_up_from_scene(self, scene)
@@ -22,39 +19,40 @@ class FadeOut(Transform):
 
 
 class FadeIn(Transform):
-    def __init__(self, mobject, **kwargs):
-        target = mobject.copy()
-        Transform.__init__(self, mobject, target, **kwargs)
+    def create_target(self):
+        return self.mobject
+
+    def begin(self):
+        super().begin()
         self.starting_mobject.fade(1)
         if isinstance(self.starting_mobject, VMobject):
             self.starting_mobject.set_stroke(width=0)
             self.starting_mobject.set_fill(opacity=0)
 
 
-class FadeInAndShiftFromDirection(Transform):
+class FadeInFrom(Transform):
     CONFIG = {
         "direction": DOWN,
     }
 
     def __init__(self, mobject, direction=None, **kwargs):
-        digest_config(self, kwargs)
-        target = mobject.copy()
-        if direction is None:
-            direction = self.direction
-        mobject.shift(direction)
-        mobject.fade(1)
-        Transform.__init__(self, mobject, target, **kwargs)
+        if direction is not None:
+            self.direction = direction
+        Transform.__init__(self, mobject, **kwargs)
+
+    def create_target(self):
+        return self.mobject.copy()
+
+    def begin(self):
+        super().begin()
+        self.starting_mobject.shift(self.direction)
+        self.starting_mobject.fade(1)
 
 
-class FadeInFrom(FadeInAndShiftFromDirection):
+class FadeInFromDown(FadeInFrom):
     """
-    Alternate name for FadeInAndShiftFromDirection
-    """
-
-
-class FadeInFromDown(FadeInAndShiftFromDirection):
-    """
-    Essential a more convenient form of FadeInAndShiftFromDirection
+    Identical to FadeInFrom, just with a name that
+    communicates the default
     """
     CONFIG = {
         "direction": DOWN,

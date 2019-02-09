@@ -2061,7 +2061,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
         ]
 
         self.play(
-            FadeInAndShiftFromDirection(observer, direction=-vect),
+            FadeInFrom(observer, direction=-vect),
             GrowArrow(arrow)
         )
         self.play(Write(full_name))
@@ -4167,7 +4167,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
         self.play(
             OldLaggedStart(GrowArrow, fraction_limit_arrows),
             OldLaggedStart(
-                FadeInAndShiftFromDirection, fraction_limits,
+                FadeInFrom, fraction_limits,
                 direction=UP
             ),
             run_time=4,
@@ -4181,7 +4181,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
         )
         self.play(
             GrowArrow(result_limit_arrow),
-            FadeInAndShiftFromDirection(result_limit, direction=UP),
+            FadeInFrom(result_limit, direction=UP),
             morty.change, "confused",
         )
         self.wait(2)
@@ -4447,7 +4447,7 @@ class DelicacyInIntermixingSeries(Scene):
         for product in products:
             self.play(
                 GrowArrow(product.arrow),
-                FadeInAndShiftFromDirection(product.limit, direction=LEFT)
+                FadeInFrom(product.limit, direction=LEFT)
             )
             self.wait()
         self.play(
@@ -4518,7 +4518,7 @@ class DelicacyInIntermixingSeries(Scene):
         )
         self.play(
             GrowArrow(new_arrow),
-            FadeInAndShiftFromDirection(new_limit, LEFT),
+            FadeInFrom(new_limit, LEFT),
             bottom_product.parts[3:].fade, 1,
         )
         self.play(FadeIn(randy))
@@ -4801,7 +4801,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         self.play(
             OldLaggedStart(GrowArrow, limit_arrows),
             OldLaggedStart(
-                FadeInAndShiftFromDirection, limits,
+                FadeInFrom, limits,
                 lambda m: (m, UP),
             ),
             OldLaggedStart(FadeIn, dots)

@@ -1882,7 +1882,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
         self.add(product[:-1])
         self.play(
             ReplacementTransform(w_label[1][0].copy(), w_sym),
-            FadeInAndShiftFromDirection(product[2], LEFT),
+            FadeInFrom(product[2], LEFT),
             FadeIn(product[0]),
         )
         self.wait()
