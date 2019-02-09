@@ -218,6 +218,11 @@ class ScaleInPlace(ApplyMethod):
         )
 
 
+class ShrinkToCenter(ScaleInPlace):
+    def __init__(self, mobject, **kwargs):
+        super().__init__(mobject, 0, **kwargs)
+
+
 class Restore(ApplyMethod):
     def __init__(self, mobject, **kwargs):
         ApplyMethod.__init__(self, mobject.restore, **kwargs)

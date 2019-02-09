@@ -47,8 +47,3 @@ class SpinInFromNothing(GrowFromCenter):
     CONFIG = {
         "path_arc": PI,
     }
-
-
-class ShrinkToCenter(Transform):
-    def create_target(self):
-        return VectorizedPoint(self.mobject.get_center())
