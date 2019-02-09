@@ -648,6 +648,11 @@ class VMobject(Mobject):
     def align_points(self, vmobject):
         self.align_rgbas(vmobject)
         nppcc = self.n_points_per_cubic_curve
+
+        for mob in self, vmobject:
+            if mob.has_new_path_started():
+                mob.add_line_to(mob.get_last_point())
+
         subpaths1 = self.get_subpaths()
         subpaths2 = vmobject.get_subpaths()
         new_path1 = np.zeros((0, self.dim))
@@ -682,16 +687,20 @@ class VMobject(Mobject):
         new_path_point = None
         if self.has_new_path_started():
             new_path_point = self.get_last_point()
-        self.set_points(
-            self.insert_n_curves_to_point_list(
-                n, self.get_points()
-            )
+
+        new_points = self.insert_n_curves_to_point_list(
+            n, self.get_points()
         )
+        self.set_points(new_points)
+
         if new_path_point is not None:
             self.append_points([new_path_point])
         return self
 
     def insert_n_curves_to_point_list(self, n, points):
+        if len(points) == 1:
+            nppcc = self.n_points_per_cubic_curve
+            return np.repeat(points, nppcc * n, 0)
         bezier_quads = self.get_cubic_bezier_tuples_from_points(points)
         curr_num = len(bezier_quads)
         target_num = curr_num + n
