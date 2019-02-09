@@ -21,6 +21,7 @@ class Animation(object):
         # If 0 < lag_ratio < 1, its applied to each
         # with lagged start times
         "lag_ratio": 0,
+        "suspend_mobject_updating": True,
     }
 
     def __init__(self, mobject, **kwargs):
@@ -38,25 +39,29 @@ class Animation(object):
         # played.  As much initialization as possible,
         # especially any mobject copying, should live in
         # this method
-        mobject = self.mobject
-        # Keep track of where it started
-        self.starting_mobject = mobject.copy()
-        # All calls to self.mobject's internal updaters
-        # during the animation, either from this Animation
-        # or from the surrounding scene, should do nothing.
-        # It is, however, okay and desirable to call
-        # the internal updaters of self.starting_mobject,
-        # or any others among self.get_all_mobjects()
-        mobject.suspend_updating()
+        self.starting_mobject = self.create_starting_mobject()
+        if self.suspend_mobject_updating:
+            # All calls to self.mobject's internal updaters
+            # during the animation, either from this Animation
+            # or from the surrounding scene, should do nothing.
+            # It is, however, okay and desirable to call
+            # the internal updaters of self.starting_mobject,
+            # or any others among self.get_all_mobjects()
+            self.mobject.suspend_updating()
         self.interpolate(0)
 
     def finish(self):
         self.interpolate(1)
-        self.mobject.resume_updating()
+        if self.suspend_mobject_updating:
+            self.mobject.resume_updating()
 
     def clean_up_from_scene(self, scene):
         if self.is_remover():
             scene.remove(self.mobject)
+
+    def create_starting_mobject(self):
+        # Keep track of where the mobject starts
+        return self.mobject.copy()
 
     def get_all_mobjects(self):
         """
