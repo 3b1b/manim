@@ -244,7 +244,8 @@ class ApplyWave(Homotopy):
             power = np.exp(2.0 * (alpha - 0.5))
             nudge = there_and_back(t**power)
             return np.array([x, y, z]) + nudge * vect
-        Homotopy.__init__(self, homotopy, mobject, **kwargs)
+
+        super().__init__(homotopy, mobject, **kwargs)
 
 
 class WiggleOutThenIn(Animation):
@@ -257,66 +258,24 @@ class WiggleOutThenIn(Animation):
         "rotate_about_point": None,
     }
 
-    def __init__(self, mobject, **kwargs):
-        digest_config(self, kwargs)
+    def get_scale_about_point(self):
         if self.scale_about_point is None:
-            self.scale_about_point = mobject.get_center()
+            return self.mobject.get_center()
+
+    def get_rotate_about_point(self):
         if self.rotate_about_point is None:
-            self.rotate_about_point = mobject.get_center()
-        Animation.__init__(self, mobject, **kwargs)
+            return self.mobject.get_center()
 
     def interpolate_submobject(self, submobject, starting_sumobject, alpha):
         submobject.points[:, :] = starting_sumobject.points
         submobject.scale(
             interpolate(1, self.scale_value, there_and_back(alpha)),
-            about_point=self.scale_about_point
+            about_point=self.get_scale_about_point()
         )
         submobject.rotate(
             wiggle(alpha, self.n_wiggles) * self.rotation_angle,
-            about_point=self.rotate_about_point
+            about_point=self.get_rotate_about_point()
         )
-
-
-class Vibrate(Animation):
-    CONFIG = {
-        "spatial_period": 6,
-        "temporal_period": 1,
-        "overtones": 4,
-        "amplitude": 0.5,
-        "radius": FRAME_X_RADIUS / 2,
-        "run_time": 3.0,
-        "rate_func": linear
-    }
-
-    def __init__(self, mobject=None, **kwargs):
-        if mobject is None:
-            mobject = Line(3 * LEFT, 3 * RIGHT)
-        Animation.__init__(self, mobject, **kwargs)
-
-    def wave_function(self, x, t):
-        return sum([
-            reduce(op.mul, [
-                self.amplitude / (k**2),  # Amplitude
-                np.sin(2 * np.pi * (k**1.5) * t / \
-                       self.temporal_period),  # Frequency
-                # Number of waves
-                np.sin(2 * np.pi * k * x / self.spatial_period)
-            ])
-            for k in range(1, self.overtones + 1)
-        ])
-
-    def interpolate_mobject(self, alpha):
-        time = alpha * self.run_time
-        families = list(map(
-            Mobject.get_family,
-            [self.mobject, self.starting_mobject]
-        ))
-        for mob, start in zip(*families):
-            mob.points = np.apply_along_axis(
-                lambda x_y_z: (
-                    x_y_z[0], x_y_z[1] + self.wave_function(x_y_z[0], time), x_y_z[2]),
-                1, start.points
-            )
 
 
 class TurnInsideOut(Transform):
@@ -324,7 +283,5 @@ class TurnInsideOut(Transform):
         "path_arc": TAU / 4,
     }
 
-    def __init__(self, mobject, **kwargs):
-        mob_copy = mobject.copy()
-        mob_copy.reverse_points()
-        Transform.__init__(self, mobject, mob_copy, **kwargs)
+    def create_target(self):
+        return self.mobject.copy().reverse_points()
