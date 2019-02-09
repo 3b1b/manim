@@ -6,8 +6,6 @@ from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
 
-# Drawing
-
 
 class ShowPartial(Animation):
     """
