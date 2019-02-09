@@ -1,6 +1,6 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
-from manimlib.constants import *
+from manimlib.constants import DOWN
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 
