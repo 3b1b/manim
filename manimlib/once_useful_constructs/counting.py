@@ -1,5 +1,5 @@
-from manimlib.animation.creation import FadeIn
 from manimlib.animation.creation import ShowCreation
+from manimlib.animation.fading import FadeIn
 from manimlib.animation.transform import MoveToTarget
 from manimlib.animation.transform import Transform
 from manimlib.constants import *

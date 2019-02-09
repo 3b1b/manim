@@ -3,8 +3,8 @@ from traceback import *
 from scipy.spatial import ConvexHull
 
 from manimlib.animation.composition import OldLaggedStart
-from manimlib.animation.creation import FadeIn
-from manimlib.animation.creation import FadeOut
+from manimlib.animation.fading import FadeIn
+from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import Transform
 from manimlib.constants import *
 from manimlib.continual_animation.continual_animation import ContinualAnimation

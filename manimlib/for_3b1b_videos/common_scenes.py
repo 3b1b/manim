@@ -2,9 +2,9 @@ import random
 
 from manimlib.animation.composition import OldLaggedStart
 from manimlib.animation.creation import DrawBorderThenFill
-from manimlib.animation.creation import FadeIn
-from manimlib.animation.creation import FadeOut
 from manimlib.animation.creation import Write
+from manimlib.animation.fading import FadeIn
+from manimlib.animation.fading import FadeOut
 from manimlib.constants import *
 from manimlib.continual_animation.continual_animation import ContinualMovement
 from manimlib.for_3b1b_videos.pi_creature import Mortimer

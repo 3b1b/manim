@@ -1,10 +1,10 @@
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.animation.creation import FadeOut
-from manimlib.animation.creation import GrowArrow
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import Write
+from manimlib.animation.fading import FadeOut
+from manimlib.animation.growing import GrowArrow
 from manimlib.animation.transform import ApplyFunction
 from manimlib.animation.transform import ApplyPointwiseFunction
 from manimlib.animation.transform import Transform

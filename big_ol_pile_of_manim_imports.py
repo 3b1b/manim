@@ -19,6 +19,8 @@ from manimlib.constants import *
 from manimlib.animation.animation import *
 from manimlib.animation.composition import *
 from manimlib.animation.creation import *
+from manimlib.animation.fading import *
+from manimlib.animation.growing import *
 from manimlib.animation.indication import *
 from manimlib.animation.movement import *
 from manimlib.animation.numbers import *

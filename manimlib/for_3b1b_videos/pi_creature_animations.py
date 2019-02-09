@@ -1,6 +1,6 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.composition import AnimationGroup
-from manimlib.animation.creation import FadeOut
+from manimlib.animation.fading import FadeOut
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import Write
 from manimlib.animation.transform import ApplyMethod

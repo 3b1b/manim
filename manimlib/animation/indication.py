@@ -9,7 +9,7 @@ from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.composition import Succession
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import ShowPartial
-from manimlib.animation.creation import FadeOut
+from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import Transform
 from manimlib.animation.update import UpdateFromAlphaFunc
 from manimlib.mobject.mobject import Mobject

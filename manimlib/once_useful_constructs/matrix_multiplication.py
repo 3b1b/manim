@@ -1,7 +1,7 @@
 import numpy as np
 
-from manimlib.animation.creation import FadeOut
 from manimlib.animation.creation import ShowCreation
+from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.transform import Transform
 from manimlib.constants import *
