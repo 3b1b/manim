@@ -8,9 +8,11 @@ from manimlib.constants import *
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import counterclockwise_path
 from manimlib.utils.rate_functions import linear
+from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
 
 # Drawing
@@ -46,9 +48,10 @@ class Uncreate(ShowCreation):
     }
 
 
-class DrawBorderThenFill(Succession):
+class DrawBorderThenFill(Animation):
     CONFIG = {
         "run_time": 2,
+        "rate_func": double_smooth,
         "stroke_width": 2,
         "stroke_color": None,
         "draw_border_animation_config": {},
@@ -57,34 +60,26 @@ class DrawBorderThenFill(Succession):
 
     def __init__(self, vmobject, **kwargs):
         self.check_validity_of_input(vmobject)
-        # Intialize with no animations, but add them
-        # in the begin method
-        Succession.__init__(self, **kwargs)
-        self.mobject = vmobject
+        Animation.__init__(self, vmobject, **kwargs)
 
     def check_validity_of_input(self, vmobject):
         if not isinstance(vmobject, VMobject):
-            raise Exception("DrawBorderThenFill only works for VMobjects")
+            raise Exception(
+                "DrawBorderThenFill only works for VMobjects"
+            )
 
     def begin(self):
-        vmobject = self.mobject
-        self.original_vmobject = vmobject.copy()
-        self.animations = [
-            self.get_draw_border_animation(vmobject),
-            self.get_fill_animation(vmobject),
-        ]
+        self.outline = self.get_outline()
         super().begin()
 
-    def get_draw_border_animation(self, vmobject):
-        vmobject.set_stroke(
-            color=self.get_stroke_color(vmobject),
+    def get_outline(self):
+        outline = self.mobject.copy()
+        outline.set_fill(opacity=0)
+        outline.set_stroke(
+            color=self.get_stroke_color(outline),
             width=self.stroke_width
         )
-        vmobject.set_fill(opacity=0)
-        return ShowCreation(
-            vmobject,
-            **self.draw_border_animation_config
-        )
+        return outline
 
     def get_stroke_color(self, vmobject):
         if self.stroke_color:
@@ -93,43 +88,36 @@ class DrawBorderThenFill(Succession):
             return vmobject.get_stroke_color()
         return vmobject.get_color()
 
-    def get_fill_animation(self, vmobject):
-        return Transform(
-            vmobject,
-            self.original_vmobject,
-            **self.fill_animation_config,
-        )
+    def get_all_mobjects(self):
+        return [*super().get_all_mobjects(), self.outline]
 
-    def update_mobjects(self, dt):
-        super().update_mobjects(dt)
-        self.original_vmobject.update(dt)
+    def interpolate_submobject(self, submob, start, outline, alpha):
+        index, subalpha = integer_interpolate(0, 2, alpha)
+        if index == 0:
+            submob.pointwise_become_partial(
+                outline, 0, subalpha
+            )
+            submob.match_style(outline)
+        else:
+            submob.interpolate(outline, start, subalpha)
 
 
-class Write(LaggedStart):
+class Write(DrawBorderThenFill):
     CONFIG = {
         # To be figured out in
         # set_default_config_from_lengths
         "run_time": None,
         "lag_ratio": None,
-        "draw_border_then_fill_config": {}
+        "rate_func": linear,
     }
 
-    def __init__(self, tex_mobject, **kwargs):
+    def __init__(self, mobject, **kwargs):
         digest_config(self, kwargs)
-        letters = VGroup(*tex_mobject.family_members_with_points())
-        self.tex_mobject = tex_mobject
-        self.set_default_config_from_length(len(letters))
-        subanims = [
-            DrawBorderThenFill(
-                letter,
-                **self.draw_border_then_fill_config,
-            )
-            for letter in letters
-        ]
-        LaggedStart.__init__(self, *subanims, **kwargs)
-        self.mobject = tex_mobject
+        self.set_default_config_from_length(mobject)
+        DrawBorderThenFill.__init__(self, mobject, **kwargs)
 
-    def set_default_config_from_length(self, length):
+    def set_default_config_from_length(self, mobject):
+        length = len(mobject.family_members_with_points())
         if self.run_time is None:
             if length < 15:
                 self.run_time = 1
@@ -137,20 +125,6 @@ class Write(LaggedStart):
                 self.run_time = 2
         if self.lag_ratio is None:
             self.lag_ratio = min(4.0 / length, 0.2)
-
-    # def get_all_mobjects(self):
-    #     # self.mobject here, which is what usually would
-    #     # be returned, will be a different Group of all
-    #     # letters
-    #     return self.tex_mobject
-
-    # def update_mobjects(self, dt):
-    #     self.tex_mobject.update(dt)
-
-    def clean_up_from_scene(self, scene):
-        super().clean_up_from_scene(scene)
-        scene.remove(self.mobject)
-        scene.add(self.tex_mobject)
 
 
 class ShowIncreasingSubsets(Animation):
