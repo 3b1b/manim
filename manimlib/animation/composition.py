@@ -21,22 +21,25 @@ class AnimationGroup(Animation):
         # If >0 and <1, they start at lagged times
         # from one and other.
         "lag_ratio": 0,
+        "group": None,
     }
 
     def __init__(self, *animations, **kwargs):
+        digest_config(self, kwargs)
         self.animations = animations
-        self.group = Group(*remove_list_redundancies(
-            [anim.mobject for anim in animations]
-        ))
+        if self.group is None:
+            self.group = Group(*remove_list_redundancies(
+                [anim.mobject for anim in animations]
+            ))
         Animation.__init__(self, self.group, **kwargs)
 
     def get_all_mobjects(self):
         return self.group
 
     def begin(self):
-        self.init_run_time()
         for anim in self.animations:
             anim.begin()
+        self.init_run_time()
 
     def finish(self):
         for anim in self.animations:
@@ -106,6 +109,7 @@ class Succession(AnimationGroup):
 
     def begin(self):
         assert(len(self.animations) > 0)
+        self.init_run_time()
         self.active_animation = self.animations[0]
         self.active_animation.begin()
 
