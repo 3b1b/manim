@@ -24,7 +24,7 @@ class Transform(Animation):
     }
 
     def __init__(self, mobject, target_mobject=None, **kwargs):
-        Animation.__init__(self, mobject, **kwargs)
+        super().__init__(mobject, **kwargs)
         self.target_mobject = target_mobject
         self.init_path_func()
 
@@ -111,9 +111,7 @@ class TransformFromCopy(Transform):
     """
 
     def __init__(self, mobject, target_mobject, **kwargs):
-        Transform.__init__(
-            self, target_mobject, mobject, **kwargs
-        )
+        super().__init__(target_mobject, mobject, **kwargs)
 
     def interpolate(self, alpha):
         super().interpolate(1 - alpha)
@@ -134,7 +132,7 @@ class CounterclockwiseTransform(Transform):
 class MoveToTarget(Transform):
     def __init__(self, mobject, **kwargs):
         self.check_validity_of_input(mobject)
-        Transform.__init__(self, mobject, mobject.target, **kwargs)
+        super().__init__(mobject, mobject.target, **kwargs)
 
     def check_validity_of_input(self, mobject):
         if not hasattr(mobject, "target"):
@@ -157,7 +155,7 @@ class ApplyMethod(Transform):
         self.check_validity_of_input(method)
         self.method = method
         self.method_args = args
-        Transform.__init__(self, method.__self__, **kwargs)
+        super().__init__(method.__self__, **kwargs)
 
     def check_validity_of_input(self, method):
         if not inspect.ismethod(method):
@@ -187,17 +185,13 @@ class ApplyPointwiseFunction(ApplyMethod):
     }
 
     def __init__(self, function, mobject, **kwargs):
-        ApplyMethod.__init__(
-            self, mobject.apply_function, function, **kwargs
-        )
+        super().__init__(mobject.apply_function, function, **kwargs)
 
 
 class ApplyPointwiseFunctionToCenter(ApplyPointwiseFunction):
     def __init__(self, function, mobject, **kwargs):
         self.function = function
-        ApplyMethod.__init__(
-            self, mobject.move_to, **kwargs
-        )
+        super().__init__(mobject.move_to, **kwargs)
 
     def begin(self):
         self.method_args = [
@@ -208,14 +202,12 @@ class ApplyPointwiseFunctionToCenter(ApplyPointwiseFunction):
 
 class FadeToColor(ApplyMethod):
     def __init__(self, mobject, color, **kwargs):
-        ApplyMethod.__init__(self, mobject.set_color, color, **kwargs)
+        super().__init__(mobject.set_color, color, **kwargs)
 
 
 class ScaleInPlace(ApplyMethod):
     def __init__(self, mobject, scale_factor, **kwargs):
-        ApplyMethod.__init__(
-            self, mobject.scale, scale_factor, **kwargs
-        )
+        super().__init__(mobject.scale, scale_factor, **kwargs)
 
 
 class ShrinkToCenter(ScaleInPlace):
@@ -225,13 +217,13 @@ class ShrinkToCenter(ScaleInPlace):
 
 class Restore(ApplyMethod):
     def __init__(self, mobject, **kwargs):
-        ApplyMethod.__init__(self, mobject.restore, **kwargs)
+        super().__init__(mobject.restore, **kwargs)
 
 
 class ApplyFunction(Transform):
     def __init__(self, function, mobject, **kwargs):
         self.function = function
-        Transform.__init__(self, mobject, **kwargs)
+        super().__init__(mobject, **kwargs)
 
     def create_target(self):
         return self.function(self.mobject.copy())
@@ -244,9 +236,7 @@ class ApplyMatrix(ApplyPointwiseFunction):
         def func(p):
             return np.dot(p, matrix.T)
 
-        ApplyPointwiseFunction.__init__(
-            self, func, mobject, **kwargs
-        )
+        super().__init__(func, mobject, **kwargs)
 
     def initialize_matrix(self, matrix):
         matrix = np.array(matrix)
@@ -262,12 +252,8 @@ class ApplyMatrix(ApplyPointwiseFunction):
 class ApplyComplexFunction(ApplyMethod):
     def __init__(self, function, mobject, **kwargs):
         self.function = function
-        ApplyMethod.__init__(
-            self,
-            mobject.apply_complex_function,
-            function,
-            **kwargs
-        )
+        method = mobject.apply_complex_function
+        super().__init__(method, function, **kwargs)
 
     def init_path_func(self):
         func1 = self.function(complex(1))
@@ -284,7 +270,7 @@ class CyclicReplace(Transform):
 
     def __init__(self, *mobjects, **kwargs):
         self.group = Group(*mobjects)
-        Transform.__init__(self, self.group, **kwargs)
+        super().__init__(self.group, **kwargs)
 
     def create_target(self):
         target = self.group.copy()

@@ -49,7 +49,7 @@ class DrawBorderThenFill(Animation):
 
     def __init__(self, vmobject, **kwargs):
         self.check_validity_of_input(vmobject)
-        Animation.__init__(self, vmobject, **kwargs)
+        super().__init__(vmobject, **kwargs)
 
     def check_validity_of_input(self, vmobject):
         if not isinstance(vmobject, VMobject):
@@ -103,7 +103,7 @@ class Write(DrawBorderThenFill):
     def __init__(self, mobject, **kwargs):
         digest_config(self, kwargs)
         self.set_default_config_from_length(mobject)
-        DrawBorderThenFill.__init__(self, mobject, **kwargs)
+        super().__init__(mobject, **kwargs)
 
     def set_default_config_from_length(self, mobject):
         length = len(mobject.family_members_with_points())
@@ -117,9 +117,13 @@ class Write(DrawBorderThenFill):
 
 
 class ShowIncreasingSubsets(Animation):
+    CONFIG = {
+        "suspend_mobject_updating": False,
+    }
+
     def __init__(self, group, **kwargs):
         self.all_submobs = list(group.submobjects)
-        Animation.__init__(self, group, **kwargs)
+        super().__init__(group, **kwargs)
 
     def interpolate_mobject(self, alpha):
         n_submobs = len(self.all_submobs)

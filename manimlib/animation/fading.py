@@ -39,7 +39,7 @@ class FadeInFrom(Transform):
     def __init__(self, mobject, direction=None, **kwargs):
         if direction is not None:
             self.direction = direction
-        Transform.__init__(self, mobject, **kwargs)
+        super().__init__(mobject, **kwargs)
 
     def create_target(self):
         return self.mobject.copy()
@@ -68,7 +68,7 @@ class FadeOutAndShift(FadeOut):
     def __init__(self, mobject, direction=None, **kwargs):
         if direction is not None:
             self.direction = direction
-        FadeOut.__init__(self, mobject, **kwargs)
+        super().__init__(mobject, **kwargs)
 
     def create_target(self):
         target = super().create_target()
@@ -94,7 +94,7 @@ class FadeInFromLarge(FadeIn):
     def __init__(self, mobject, scale_factor=2, **kwargs):
         if scale_factor is not None:
             self.scale_factor = scale_factor
-        FadeIn.__init__(self, mobject, **kwargs)
+        super().__init__(mobject, **kwargs)
 
     def create_starting_mobject(self):
         start = super().create_starting_mobject()
@@ -118,9 +118,6 @@ class VFadeIn(Animation):
             opacity=interpolate(0, start.get_fill_opacity(), alpha)
         )
 
-    def update_mobjects(self, dt):
-        pass
-
 
 class VFadeOut(VFadeIn):
     CONFIG = {
@@ -128,6 +125,4 @@ class VFadeOut(VFadeIn):
     }
 
     def interpolate_submobject(self, submob, start, alpha):
-        VFadeIn.interpolate_submobject(
-            self, submob, start, 1 - alpha
-        )
+        super().interpolate_submobject(submob, start, 1 - alpha)
