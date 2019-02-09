@@ -3,13 +3,13 @@ import numpy as np
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
 from manimlib.animation.composition import Succession
+from manimlib.animation.composition import LaggedStart
 from manimlib.constants import *
-from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import counterclockwise_path
-from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import smooth
 
@@ -57,19 +57,23 @@ class DrawBorderThenFill(Succession):
 
     def __init__(self, vmobject, **kwargs):
         self.check_validity_of_input(vmobject)
-        self.vmobject = vmobject
-        self.original_vmobject = vmobject.copy()
-        digest_config(self, kwargs)
-        Succession.__init__(
-            self,
-            self.get_draw_border_animation(vmobject),
-            self.get_fill_animation(vmobject),
-            **kwargs,
-        )
+        # Intialize with no animations, but add them
+        # in the begin method
+        Succession.__init__(self, **kwargs)
+        self.mobject = vmobject
 
     def check_validity_of_input(self, vmobject):
         if not isinstance(vmobject, VMobject):
             raise Exception("DrawBorderThenFill only works for VMobjects")
+
+    def begin(self):
+        vmobject = self.mobject
+        self.original_vmobject = vmobject.copy()
+        self.animations = [
+            self.get_draw_border_animation(vmobject),
+            self.get_fill_animation(vmobject),
+        ]
+        super().begin()
 
     def get_draw_border_animation(self, vmobject):
         vmobject.set_stroke(
@@ -101,30 +105,52 @@ class DrawBorderThenFill(Succession):
         self.original_vmobject.update(dt)
 
 
-class Write(DrawBorderThenFill):
+class Write(LaggedStart):
     CONFIG = {
-        "rate_func": linear,
-        "lag_ratio": 0.5,
+        # To be figured out in
+        # set_default_config_from_lengths
+        "run_time": None,
+        "lag_ratio": None,
+        "draw_border_then_fill_config": {}
     }
 
-    def __init__(self, mob_or_text, **kwargs):
+    def __init__(self, tex_mobject, **kwargs):
         digest_config(self, kwargs)
-        if isinstance(mob_or_text, str):
-            mobject = TextMobject(mob_or_text)
-        else:
-            mobject = mob_or_text
+        letters = VGroup(*tex_mobject.family_members_with_points())
+        self.tex_mobject = tex_mobject
+        self.set_default_config_from_length(len(letters))
+        subanims = [
+            DrawBorderThenFill(
+                letter,
+                **self.draw_border_then_fill_config,
+            )
+            for letter in letters
+        ]
+        LaggedStart.__init__(self, *subanims, **kwargs)
+        self.mobject = tex_mobject
 
-        if "run_time" not in kwargs:
-            self.establish_run_time(mobject)
-        # Something to be smart about lag_ratio?
-        DrawBorderThenFill.__init__(self, mobject, **kwargs)
+    def set_default_config_from_length(self, length):
+        if self.run_time is None:
+            if length < 15:
+                self.run_time = 1
+            else:
+                self.run_time = 2
+        if self.lag_ratio is None:
+            self.lag_ratio = min(4.0 / length, 0.2)
 
-    def establish_run_time(self, mobject):
-        num_subs = len(mobject.family_members_with_points())
-        if num_subs < 15:
-            self.run_time = 1
-        else:
-            self.run_time = 2
+    # def get_all_mobjects(self):
+    #     # self.mobject here, which is what usually would
+    #     # be returned, will be a different Group of all
+    #     # letters
+    #     return self.tex_mobject
+
+    # def update_mobjects(self, dt):
+    #     self.tex_mobject.update(dt)
+
+    def clean_up_from_scene(self, scene):
+        super().clean_up_from_scene(scene)
+        scene.remove(self.mobject)
+        scene.add(self.tex_mobject)
 
 
 class ShowIncreasingSubsets(Animation):
