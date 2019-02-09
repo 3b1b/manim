@@ -119,33 +119,48 @@ class MoveToTarget(Transform):
 
 
 class ApplyMethod(Transform):
-    CONFIG = {
-        "lag_ratio": 0
-    }
+    CONFIG = {}
 
     def __init__(self, method, *args, **kwargs):
         """
-        Method is a method of Mobject.  *args is for the method,
-        **kwargs is for the transform itself.
+        method is a method of Mobject, *args are arguments for
+        that method.  Key word arguments should be passed in
+        as the last arg, as a dict, since **kwargs is for
+        configuration of the transform itslef
 
         Relies on the fact that mobject methods return the mobject
         """
+        self.check_validity_of_input(method)
+        self.method = method
+        self.method_args = args
+        # This will be replaced
+        temp_target = method.__self__
+        Transform.__init__(self, method.__self__, temp_target, **kwargs)
+
+    def check_validity_of_input(self, method):
         if not inspect.ismethod(method):
             raise Exception(
                 "Whoops, looks like you accidentally invoked "
                 "the method you want to animate"
             )
         assert(isinstance(method.__self__, Mobject))
-        args = list(args)  # So that args.pop() works
-        if "method_kwargs" in kwargs:
-            method_kwargs = kwargs["method_kwargs"]
-        elif len(args) > 0 and isinstance(args[-1], dict):
+
+    def begin(self):
+        self.target_mobject = self.create_target()
+        super().begin()
+
+    def create_target(self):
+        method = self.method
+        # Make sure it's a list so that args.pop() works
+        args = list(self.method_args)
+
+        if len(args) > 0 and isinstance(args[-1], dict):
             method_kwargs = args.pop()
         else:
             method_kwargs = {}
         target = method.__self__.copy()
         method.__func__(target, *args, **method_kwargs)
-        Transform.__init__(self, method.__self__, target, **kwargs)
+        return target
 
 
 class ApplyPointwiseFunction(ApplyMethod):
