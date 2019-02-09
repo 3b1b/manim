@@ -83,8 +83,17 @@ class Animation(object):
         suspended during the animation, this will do
         nothing to self.mobject.
         """
-        for mob in self.get_all_mobjects():
+        for mob in self.get_all_mobjects_to_update():
             mob.update(dt)
+
+    def get_all_mobjects_to_update(self):
+        # The surrounding scene typically handles
+        # updating of self.mobject.  Besides, in
+        # most cases its updating is suspended anyway
+        return list(filter(
+            lambda m: m is not self.mobject,
+            self.get_all_mobjects()
+        ))
 
     def copy(self):
         return deepcopy(self)
