@@ -18,9 +18,9 @@ class MusicalScene(Scene):
     def t_n(self,prop):
         return tecla_negra().scale(prop).set_stroke(BLACK,self.grosor)
     def tec_ref(self,prop,pos,opac):
-        return self.t_b(prop).set_fill(WHITE, opacity = 0).move_to(pos)
+        return self.t_b(prop).set_fill(WHITE, opacity = opac).move_to(pos)
     def tec_rel(self,prop,ref,opac):
-        return self.t_b(prop).set_fill(WHITE, opacity = 0).next_to(ref,RIGHT,buff=0)
+        return self.t_b(prop).set_fill(WHITE, opacity = opac).next_to(ref,RIGHT,buff=0)
     def tec_sharp(self,prop,ref,opac):
         return self.t_n(prop).set_fill(BLACK, opacity = opac).move_to(ref.get_right()).shift(UP*(ref.get_height()-self.t_n(prop).get_height())/2)
     def intervalo_p(self,n1,n2,direccion,**kwargs):
@@ -88,6 +88,27 @@ class MusicalScene(Scene):
                     teclado.add(self.tec_rel(prop,teclado[-1],opac))
         return teclado
 
+
+    def definir_teclado_piano(self,octavas,prop,opac,pos=ORIGIN):
+        octavas=7
+        teclado=VGroup()
+        teclado.add(self.tec_ref(prop,pos,opac))
+        teclado.add(self.tec_sharp(prop,teclado[-1],opac))
+        teclado.add(self.tec_rel(prop,teclado[-2],opac))
+
+        for i in range(octavas):
+            teclado.add(self.tec_rel(prop,teclado[-1],opac))
+            for tec in ["N","B","N","B","B0","N","B","N","B","N","B"]:
+                if tec=="N":
+                    teclado.add(self.tec_sharp(prop,teclado[-1],opac))
+                if tec=="B":
+                    teclado.add(self.tec_rel(prop,teclado[-2],opac))
+                if tec=="B0":
+                    teclado.add(self.tec_rel(prop,teclado[-1],opac))
+
+        teclado.add(self.tec_rel(prop,teclado[-1],opac))
+        return teclado
+
     def definir_teclas(self,octavas):
         sost=[]
         tec_b=[]
@@ -96,6 +117,31 @@ class MusicalScene(Scene):
             sost=sost+[1+w,3+w,6+w,8+w,10+w]
             tec_b=tec_b+[0+w,2+w,4+w,5+w,7+w,9+w,11+w]
         return [sost,tec_b]
+
+    def definir_teclas_piano(self):
+        sost=[1]
+        tec_b=[0,2]
+        for cont in range(7):
+            w=cont*12
+            sost=sost+[3+1+w,3+3+w,3+6+w,3+8+w,3+10+w]
+            tec_b=tec_b+[3+0+w,3+2+w,3+4+w,3+5+w,3+7+w,3+9+w,3+11+w]
+        return [sost,tec_b]
+
+    def definir_notas_piano(self):
+        octavas=7
+        do=[*[3+12*n for n in range(octavas)]]
+        do_s=[*[3+1+12*n for n in range(octavas)]]
+        re=[*[3+2+12*n for n in range(octavas)]]
+        re_s=[*[3+3+12*n for n in range(octavas)]]
+        mi=[*[3+4+12*n for n in range(octavas)]]
+        fa=[*[3+5+12*n for n in range(octavas)]]
+        fa_s=[*[3+6+12*n for n in range(octavas)]]
+        sol=[*[3+7+12*n for n in range(octavas)]]
+        sol_s=[*[3+8+12*n for n in range(octavas)]]
+        la=[0,*[3+9+12*n for n in range(octavas)]]
+        la_s=[1,*[3+10+12*n for n in range(octavas)]]
+        si=[2,*[3+11+12*n for n in range(octavas)]]
+        return [do,do_s,re,re_s,mi,fa,fa_s,sol,sol_s,la,la_s,si]
 
     def definir_notas(self,octavas):
         do=[*[12*n for n in range(octavas)]]
@@ -117,6 +163,12 @@ class MusicalScene(Scene):
         for i in self.definir_teclas(octavas)[0]:
             self.add_foreground_mobject(teclado[i])
         for i in self.definir_teclas(octavas)[1]:
+            self.bring_to_back(teclado[i])
+
+    def mandar_frente_sostenido_piano(self,teclado):
+        for i in self.definir_teclas_piano()[0]:
+            self.add_foreground_mobject(teclado[i])
+        for i in self.definir_teclas_piano()[1]:
             self.bring_to_back(teclado[i])
 
     def importar_partitura(self):
