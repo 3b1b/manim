@@ -536,6 +536,16 @@ class Car(SVGMobject):
 
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
+
+        path = self.submobjects[0]
+        subpaths = path.get_subpaths()
+        path.clear_points()
+        for indices in [(0, 1), (2, 3), (4, 6, 7), (5,), (8,)]:
+            part = VMobject()
+            for index in indices:
+                part.append_points(subpaths[index])
+            path.add(part)
+
         self.set_height(self.height)
         self.set_stroke(color=WHITE, width=0)
         self.set_fill(self.color, opacity=1)
@@ -581,11 +591,11 @@ class Car(SVGMobject):
             radius = tire.get_width() / 2
             center = tire.get_center()
             tred = Line(
-                0.9 * radius * RIGHT, 1.4 * radius * RIGHT,
+                0.7 * radius * RIGHT, 1.1 * radius * RIGHT,
                 stroke_width=2,
                 color=BLACK
             )
-            tred.rotate_in_place(np.pi / 4)
+            tred.rotate(PI / 5, about_point=tred.get_end())
             for theta in np.arange(0, 2 * np.pi, np.pi / 4):
                 new_tred = tred.copy()
                 new_tred.rotate(theta, about_point=ORIGIN)
@@ -594,16 +604,16 @@ class Car(SVGMobject):
         return self
 
     def get_tires(self):
-        return VGroup(self[1][1], self[1][3])
+        return VGroup(self[1][0], self[1][1])
 
     def get_lights(self):
         return VGroup(self.get_front_light(), self.get_rear_light())
 
     def get_front_light(self):
-        return self[1][5]
+        return self[1][3]
 
     def get_rear_light(self):
-        return self[1][8]
+        return self[1][4]
 
 
 class VectorizedEarth(SVGMobject):
