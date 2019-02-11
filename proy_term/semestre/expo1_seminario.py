@@ -127,7 +127,7 @@ class FourierMachineScene(Scene):
         frequency_axes.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
 
         frequency_label = TexMobject("\\omega")
-        frequency_y_label = TexMobject("\\tt fft(\\it\\omega)")
+        frequency_y_label = TexMobject("{\\tt FFT}(\\omega)")
         frequency_y_label.scale(self.text_scale_val)
         frequency_label.scale(self.text_scale_val)
         frequency_label.next_to(
@@ -348,11 +348,14 @@ class EscenaSumaFrecuencias(FourierMachineScene):
             "x_unit_size" : 0.8,
             "y_unit_size" : 0.8,
         },
+        "camera_config":{"background_color":BLACK}
     }
     def construct(self):
         self.show_sum_of_signals()
         self.realiza_transformada()
+        self.muestra_transformada()
         self.show_winding_with_sum_graph()
+        self.wait(6)
 
     def show_sum_of_signals(self):
         low_freq, high_freq = self.low_freq, self.high_freq
@@ -405,7 +408,7 @@ class EscenaSumaFrecuencias(FourierMachineScene):
         self.play(LaggedStart(
             FadeIn, VGroup(low_freq_label,high_freq_label)
         ))
-        self.wait()
+        self.wait(7.7)
         axes_copy2=axes.copy()
         VGroup(sum_label,axes_copy2,sum_graph).shift(UP*2.3)
         self.play(
@@ -423,7 +426,7 @@ class EscenaSumaFrecuencias(FourierMachineScene):
                 sum_label[0]
             )
         )
-        self.wait()
+        self.wait(2.5)
         self.graph = sum_graph
         self.sum_label=sum_label
 
@@ -447,10 +450,10 @@ class EscenaSumaFrecuencias(FourierMachineScene):
     	self.play(ReplacementTransform(self.sum_label.copy(),transformada[1:-1]))
     	self.play(Write(transformada[0]),Write(transformada[-1]))
     	self.wait()
-    	formula=VGroup(TexMobject("f(\\omega)="),
+    	formula=VGroup(TexMobject("\\hat{f}(\\omega)="),
     		TexMobject("\\sqrt{\\frac{\\pi}{8}}\\delta(\\omega-1\\cdot 2\\pi)"),
     		TexMobject("+"),
-    		TexMobject("\\sqrt{\\frac{\\pi}{2}}\\delta(\\omega-2\\cdot 2\\pi)")).scale(1.5)
+    		TexMobject("\\sqrt{\\frac{\\pi}{2}}\\delta(\\omega-2\\cdot 2\\pi)")).scale(1.5).set_color(WHITE)
     	formula.arrange_submobjects(RIGHT)
     	formula[1].set_color(self.low_freq_color)
     	formula[-1].set_color(self.high_freq_color)
@@ -460,8 +463,53 @@ class EscenaSumaFrecuencias(FourierMachineScene):
     	self.play(FadeInFrom(aclaracion,UP))
     	self.wait(2)
     	self.play(aclaracion.shift,RIGHT*10)
-    	self.wait()
+    	self.wait(3)
     	self.formula=formula
+
+    def muestra_transformada(self):
+        formula_c=self.formula[0].copy()
+        formula_transformada=VGroup(TexMobject("\\hat{f}(\\omega)="),
+                                    TexMobject("\\sqrt{\\frac{\\beta}{2\\pi}}"),
+                                    TexMobject("\\int^","{\\infty}_","{-\\infty}"),
+                                    TexMobject("f(t)","e^","{-i\\beta\\omega t}"),
+                                    TexMobject("dt")).set_color(WHITE)
+        formula_transformada[2].set_color(ORANGE)
+        formula_transformada.arrange_submobjects(RIGHT)
+        formula_transformada.shift(UP*1.5)
+        transformada_discreta=VGroup(
+                                        TexMobject("{\\tt FFT}(\\omega)="),
+                                        TexMobject("\\sum^","{T-1}_","{t=0}"),
+                                        TexMobject("f(t)","e^","{-i2\\pi \\omega\\frac{t}{T}}")
+                                    ).set_color(WHITE)
+        transformada_discreta[1].set_color(ORANGE)
+        transformada_discreta.arrange_submobjects(RIGHT)
+        transformada_discreta.next_to(formula_transformada,DOWN,buff=MED_LARGE_BUFF*2)
+        VGroup(formula_transformada,transformada_discreta).scale(1.69).move_to(ORIGIN)
+        formula_transformada[-1].shift(LEFT*0.2)
+        nota_td=TexMobject("\\left(t=0,\\dots,T-1\\right)")
+        nota_td.next_to(transformada_discreta,DOWN,buff=0.3)
+        self.add_foreground_mobject(formula_c)
+        cuadro=Rectangle(height=FRAME_HEIGHT*3,width=FRAME_WIDTH*3,color=BLACK).set_fill(opacity=0.85)
+        self.play(FadeIn(cuadro))
+        self.wait()
+        self.play(ReplacementTransform(formula_c,formula_transformada[0]))
+        self.play(Escribe(formula_transformada[1:],rate_func=linear))
+        self.wait(6)
+        self.play(
+                    *[ReplacementTransform(formula_transformada[i].copy(),transformada_discreta[j])
+                      for i,j in [(0,0),(2,1),(3,2)]],
+                )
+        self.play(FadeInFrom(nota_td,UP))
+        self.wait(6)
+        self.play(FadeOut(cuadro),
+            FadeOut(formula_transformada),
+            FadeOut(nota_td),
+            FadeOut(transformada_discreta[1:]),
+            FadeOut(transformada_discreta[0][-1])
+            )
+        self.etiqueta=transformada_discreta[0][0:-1]
+
+
 
 
     def show_winding_with_sum_graph(self):
@@ -477,9 +525,8 @@ class EscenaSumaFrecuencias(FourierMachineScene):
         frequency_axes[2][0].fade(1)
         fa=frequency_axes
         fa[4].scale(1.3).shift(LEFT*0.3)
-        self.play(LaggedStart(FadeIn,VGroup(fa[0],fa[1],fa[2],fa[3])))
-        self.play(ReplacementTransform(self.formula[0][1:-1].copy(),VGroup(fa[4])[0][3:]),
-        	ReplacementTransform(self.formula[0][0].copy(),VGroup(fa[4])[0][0:3]))
+        self.play(LaggedStart(FadeIn,VGroup(fa[0],fa[1],fa[2],fa[3])),
+                    self.etiqueta.move_to,fa[4])
         self.play(ReplacementTransform(graph.copy(),fourier_graph))
         p1=Dot(frequency_axes.coords_to_point(1,0.45),color=self.low_freq_color)
         p2=Dot(frequency_axes.coords_to_point(2,0.85),color=self.high_freq_color)
@@ -635,6 +682,7 @@ class Armonicos(MusicalScene):
                         Escribe(armonicos_texto[0],color_orilla=TEAL),
                         ReplacementTransform(piano[progresion_piano[i]],teclas_coloreadas[i]),
                         )
+                    self.wait(2)
             if i==1:
                 self.play(ReplacementTransform(partitura[0][16].copy(),partitura[0][17]),
                     Write(partitura[1][1]),
@@ -643,6 +691,7 @@ class Armonicos(MusicalScene):
                     ReplacementTransform(piano[progresion_piano[i]],teclas_coloreadas[i]),
                     ShowCreation(particiones[i-1])
                     )
+                self.wait(2)
             if i==2:
                 self.play(ReplacementTransform(partitura[0][17].copy(),partitura[0][18]),
                     Write(partitura[1][2]),
@@ -763,17 +812,17 @@ class Armonicos(MusicalScene):
                     ReplacementTransform(particiones[i-2],particiones[i-1])
                     )
             self.mandar_frente_sostenido_piano(piano)
-            if i<6:
+            if i<4:
                 self.wait(4)
                 lpr=lineas_planas[i].copy()
-                for w in range(3):
+                for w in range(4):
                     self.play(Transform(lineas_planas[i],lineas_up[i]))
                     self.play(Transform(lineas_planas[i],lineas_down[i]))
                 self.play(ReplacementTransform(lineas_planas[i],lpr),run_time=0.7)
                 self.remove(lpr)
                 self.add(lineas_planas[i+1])
-            if i>=6:
-                self.wait(1)
+            if i>=4:
+                self.wait(0.5)
 
         self.wait()
 
@@ -862,3 +911,81 @@ class Armonicos(MusicalScene):
 
         return VGroup(partitura,numbers)
         
+
+class LogoUnam(Scene):
+    CONFIG={
+    "camera_config":{"background_color":BLACK}
+    }
+    def construct(self):
+        Logo=SVGMobject("unam")
+        Logo.set_height(FRAME_HEIGHT*1.6)
+        self.play(DrawBorderThenFill(Logo,rate_func=linear,lag_ratio=0.1,run_time=4))
+        self.wait(2)
+
+class Presentacion(Scene):
+    CONFIG={"camera_config":{"background_color":BLACK}}
+    def construct(self):
+        universidad=TextMobject("\\sc Universidad Nacional Autónoma de México",color=GOLD)
+        asignatura=TextMobject("Seminario de Ingeniería")
+        semestre=TextMobject("\\sf Semestre 2019-2")
+        alumno=TextMobject("\\it Vázquez Zaldívar Daniel Alexander",color=YELLOW_B)
+        nombre=TextMobject("\\tt ANÁLISIS DE ARMÓNICOS MUSICALES","USANDO LA TRANSFORMADA DE FOURIER").set_color(RED)
+        ingenieria=TextMobject("Ingeniería Mecánica",color=BLUE)
+        datos=VGroup(
+                        universidad,
+                        asignatura,
+                        nombre[0],
+                        nombre[1],
+                        alumno,
+                        semestre,
+                        ingenieria
+            )
+        datos.arrange_submobjects(DOWN,buff=0.5)
+        datos[0].shift(UP*3).scale(1.2)
+        datos[1].shift(UP*2).scale(1.4)
+        datos[2:4].shift(UP*0.7).scale(1.5)
+        datos[4].shift(DOWN).scale(1.6)
+        datos[5].shift(DOWN*2).scale(1.7)
+        datos[6].shift(DOWN*3).scale(1.7)
+        linea1=Line(nombre[0].get_corner(DL),nombre[0].get_corner(DR)).set_color(RED).shift(DOWN*0.1)
+        linea2=Line(nombre[1].get_corner(DL),nombre[1].get_corner(DR)).set_color(RED).shift(DOWN*0.1)
+
+        self.play(*[LaggedStart(Escribe,datos[i],rate_func=linear,color_orilla=datos[i].get_color())for i in range(len(datos))],
+            )
+        self.wait(7.7)
+        self.play(GrowFromCenter(linea1),GrowFromCenter(linea2))
+        self.wait(3)
+
+class Pendiente(Scene):
+    CONFIG={"camera_config":{"background_color":BLACK}}
+    def construct(self):
+        puntos=VGroup(*[Dot(color=WHITE)for i in range(5)])
+        puntos.arrange_submobjects(RIGHT)
+        puntos.to_corner(DOWN+LEFT).shift(DOWN*3.4)
+        puntos.fade(0.7)
+        self.play(FadeIn(puntos))
+        for i in range(len(puntos)):
+            self.play(Uncreate(puntos[-i-1]),run_time=1)
+            self.wait()
+        self.wait()
+
+class Referencias(Scene):
+    CONFIG={"camera_config":{"background_color":BLACK}}
+    def construct(self):
+        self.wait(2)
+        datos=VGroup(
+                        TextMobject("Referencias:"),
+                        TextMobject("[1] {\\sc Dennis Zill}, {\\it Matemáticas avanzadas para Ingeniería}, 4ta Edición."),
+                        TextMobject("[2] {\\sc Claudio Gabis}, {\\it Armonía Funcional}, 1ra Edición."),
+                        TextMobject("[3] {\\sc Grant Sanderson}, {\\it Pero ¿qué es la Transformada de Fourier?}, Código."),
+                        TextMobject("Programas utilizados:"),
+                        TextMobject("[A] Adobe Audition CC."),
+                        TextMobject("[B] Kdenlive."),
+                        TextMobject("[C] Manim (Python 3, Cario, \\LaTeX, FFmpeg, SoX)."),
+
+            ).scale(0.8)
+        datos.arrange_submobjects(DOWN,buff=0.5,aligned_edge=LEFT)
+
+        self.play(*[LaggedStart(Escribe,datos[i],rate_func=linear,color_orilla=datos[i].get_color())for i in range(len(datos))],
+            )
+        self.wait(5)
