@@ -35,7 +35,6 @@ from manimlib.camera.moving_camera import *
 from manimlib.camera.three_d_camera import *
 
 from manimlib.continual_animation.continual_animation import *
-from manimlib.continual_animation.from_animation import *
 from manimlib.continual_animation.numbers import *
 from manimlib.continual_animation.update import *
 
