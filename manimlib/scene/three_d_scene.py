@@ -2,7 +2,6 @@ from manimlib.animation.transform import ApplyMethod
 from manimlib.camera.three_d_camera import ThreeDCamera
 from manimlib.constants import DEGREES
 from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
-from manimlib.continual_animation.update import ContinualGrowValue
 from manimlib.mobject.coordinate_systems import ThreeDAxes
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.three_dimensions import Sphere
@@ -34,16 +33,15 @@ class ThreeDScene(Scene):
             self.camera.set_gamma(gamma)
 
     def begin_ambient_camera_rotation(self, rate=0.02):
-        self.ambient_camera_rotation = ContinualGrowValue(
-            self.camera.theta_tracker,
-            rate=rate
+        # TODO, use a ValueTracker for rate, so that it
+        # can begin and end smoothly
+        self.camera.theta_tracker.add_updater(
+            lambda m, dt: m.increment_value(rate * dt)
         )
-        self.add(self.ambient_camera_rotation)
+        self.add(self.camera.theta_tracker)
 
     def stop_ambient_camera_rotation(self):
-        if self.ambient_camera_rotation is not None:
-            self.remove(self.ambient_camera_rotation)
-        self.ambient_camera_rotation = None
+        self.camera.theta_tracker.clear_updaters()
 
     def move_camera(self,
                     phi=None,

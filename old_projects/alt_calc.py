@@ -927,8 +927,14 @@ class ChangingVectorField(Scene):
         plane.add_coordinates()
         self.add(plane)
 
+        # Obviously a silly thing to do, but I'm sweeping
+        # through trying to make sure old scenes don't
+        # completely break in spots which used to have
+        # Continual animations
         time_tracker = self.time_tracker = ValueTracker(0)
-        self.add(ContinualGrowValue(time_tracker))
+        time_tracker.add_updater(
+            lambda t: t.set_value(self.get_time())
+        )
 
         vectors = self.get_vectors()
         vectors.add_updater(self.update_vectors)

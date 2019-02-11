@@ -169,7 +169,7 @@ class ThreeDAxes(Axes):
             angle_of_vector(self.z_normal), OUT,
             about_point=ORIGIN
         )
-        self.axes.append(z_axis)
+        self.axes.add(z_axis)
         self.add(z_axis)
 
         self.add_3d_pieces()

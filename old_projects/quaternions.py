@@ -2428,8 +2428,8 @@ class IntroduceStereographicProjection(MovingCameraScene):
 
         frame = self.camera_frame
         frame_height_tracker = ValueTracker(frame.get_height())
-        frame_height_growth = ContinualGrowValue(
-            frame_height_tracker, rate=0.4
+        frame_height_growth = frame_height_tracker.add_updater(
+            lambda m, dt: m.set_value(m.get_value + 0.5 * dt)
         )
 
         neg_one_tangent = VGroup(
@@ -2484,7 +2484,6 @@ class IntroduceStereographicProjection(MovingCameraScene):
                 self.add(frame, frame_height_growth)
             elif arc is arc2:
                 self.play(dot.move_to, neg_i_point)
-        frame_height_growth.begin_wind_down()
         self.wait(2)
         self.play(*map(ShowCreation, neg_one_tangent))
         self.wait()
