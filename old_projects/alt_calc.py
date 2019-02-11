@@ -2259,7 +2259,7 @@ class GraphOnePlusOneOverX(GraphScene):
                 lag_ratio=0.5,
                 run_time=2
             )
-            line.continual_anim = CycleAnimation(line_anim)
+            cycle_animation(line_anim)
             lines.add(line)
 
         phi_line, phi_bro_line = lines

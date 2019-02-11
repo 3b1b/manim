@@ -34,29 +34,41 @@ def always_rotate(mobject, rate=20 * DEGREES, **kwargs):
     return mobject
 
 
-def turn_animation_into_updater(animation):
+def turn_animation_into_updater(animation, cycle=False, **kwargs):
     """
-    Note sure if this is actually useful.  This is really
-    here just to replace past usage of
-    turn_animation_into_updater
+    Add an updater to the animation's mobject which applies
+    the interpolation and update functions of the animation
+
+    If cycle is True, this repeats over and over.  Otherwise,
+    the updater will be popped uplon completion
     """
     mobject = animation.mobject
+    animation.update_config(**kwargs)
     animation.suspend_mobject_updating = False
     animation.begin()
     animation.total_time = 0
 
     def update(m, dt):
+        run_time = animation.get_run_time()
         alpha = np.clip(
-            animation.total_time / animation.get_run_time(),
+            animation.total_time / run_time,
             0, 1,
         )
-        if alpha >= 1:
+        if cycle:
+            animation.total_time = animation.total_time % run_time
+        elif alpha >= 1:
             animation.finish()
             m.remove_updater(update)
-        else:
-            animation.interpolate(alpha)
-            animation.total_time += dt
-            animation.update_mobjects(dt)
+            return
+        animation.interpolate(alpha)
+        animation.update_mobjects(dt)
+        animation.total_time += dt
 
     mobject.add_updater(update)
     return mobject
+
+
+def cycle_animation(animation, **kwargs):
+    return turn_animation_into_updater(
+        animation, cycle=True, **kwargs
+    )

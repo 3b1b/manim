@@ -634,7 +634,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
 
     def get_ellipse_point_update(self, ellipse):
         dot = Dot(color=RED)
-        return CycleAnimation(MoveAlongPath(
+        return cycle_animation(MoveAlongPath(
             dot, ellipse,
             run_time=5,
             rate_func=linear
@@ -1584,7 +1584,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
         foci = self.get_foci(ellipse)
 
         point = VectorizedPoint()
-        point_movement = CycleAnimation(
+        point_movement = cycle_animation(
             MoveAlongPath(
                 point, ellipse,
                 run_time=5,
