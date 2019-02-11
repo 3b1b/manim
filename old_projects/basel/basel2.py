@@ -3844,7 +3844,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
             for n in range(0, self.max_shown_n, 2)
         ])
 
-        zoom_out = ContinualMovement(
+        zoom_out = always_shift(
             self.camera.rotation_mobject,
             direction = OUT, rate = 0.4
         )

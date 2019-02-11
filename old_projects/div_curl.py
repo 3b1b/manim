@@ -1889,7 +1889,8 @@ class DefineDivergenceSymbols(Scene):
         output = DecimalNumber(0, include_sign=True)
         output.next_to(tex_mob, RIGHT)
         time_tracker = ValueTracker()
-        self.add(ContinualMovement(time_tracker, rate=1))
+        always_shift(time_tracker, rate=1)
+        self.add(time_tracker)
         output_animation = ContinualChangingDecimal(
             output, lambda a: 3 * np.cos(int(time_tracker.get_value())),
         )

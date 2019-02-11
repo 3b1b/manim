@@ -1215,9 +1215,7 @@ class ShowEllipseDefiningProperty(Scene):
                 )
             )
         )
-        position_tracker_wander = ContinualMovement(
-            position_tracker, rate=0.05,
-        )
+        always_shift(position_tracker, rate=0.05)
 
         lines, lines_update_animation = self.get_focal_lines_and_update(
             self.get_foci, dot
@@ -1233,7 +1231,7 @@ class ShowEllipseDefiningProperty(Scene):
         ))
         self.play(ShowCreation(lines))
         self.add(lines_update_animation)
-        self.add(position_tracker_wander)
+        self.add(position_tracker)
         self.wait(2)
 
         self.position_tracker = position_tracker

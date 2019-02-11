@@ -27,12 +27,12 @@ class Introduction(TeacherStudentsScene):
             student.add_updater(
                 lambda m: m.move_to(m.center_tracker)
             )
-            movement = ContinualMovement(
+            always_shift(
                 student.center_tracker,
                 direction=DOWN + 3 * LEFT,
                 rate=1.5 * random.random()
             )
-            movements.append(movement)
+            movements.append(student.center_tracker)
         self.add(*movements)
         self.change_student_modes(
             "pondering", "sad", "concerned_musician",

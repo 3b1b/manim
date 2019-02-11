@@ -2877,17 +2877,15 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         self.wait()
 
         ghost_dot.move_to(ORIGIN)
-        ambient_ghost_dot_movement = ContinualMovement(
-            ghost_dot, rate = TAU
-        )
-        self.add(ambient_ghost_dot_movement)
+        always_shift(ghost_dot, rate = TAU)
+        self.add(ghost_dot)
         
         self.play(
             Write(time_label),
             GrowArrow(time_label.arrow),
         )
         self.wait(12.5) #Leave time to say let's slow down
-        self.remove(ambient_ghost_dot_movement)
+        self.remove(ghost_dot)
         self.play(
             FadeOut(time_label),
             FadeIn(frequency_label),
@@ -2899,10 +2897,9 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             )
         )
         ghost_dot.move_to(ORIGIN)
-        ambient_ghost_dot_movement = ContinualMovement(
-            ghost_dot, rate = 0.1*TAU
-        )
-        self.add(ambient_ghost_dot_movement)
+        ghost_dot.clear_updaters()
+        always_shift(ghost_dot, rate=0.1*TAU)
+        self.add(ghost_dot)
         self.wait(3)
         self.play(
             FadeOut(frequency_label),
@@ -2910,7 +2907,8 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         )
         self.wait(15) #Give time to reference other video
         #Reverse directions
-        ambient_ghost_dot_movement.rate *= -1
+        ghost_dot.clear_updaters()
+        always_shift(ghost_dot, rate=-0.1 * TAU)
         self.play(
             FadeOut(example_frequency),
             FadeOut(frequency_label.arrow),
@@ -2919,7 +2917,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         )
         self.wait(4)
 
-        ambient_ghost_dot_movement.rate = 0
+        ghost_dot.clear_updaters()
         self.remove(*updates)
         self.play(*list(map(FadeOut, [
             update.mobject

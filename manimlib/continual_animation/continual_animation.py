@@ -68,13 +68,3 @@ class ContinualAnimationGroup(ContinualAnimation):
     def update_mobject(self, dt):
         for continual_animation in self.continual_animations:
             continual_animation.update(dt)
-
-
-class ContinualMovement(ContinualAnimation):
-    CONFIG = {
-        "direction": RIGHT,
-        "rate": 0.05,  # Units per second
-    }
-
-    def update_mobject(self, dt):
-        self.mobject.shift(dt * self.rate * self.direction)

@@ -22,9 +22,11 @@ def always_shift(mobject, direction=RIGHT, rate=0.1):
     mobject.add_updater(
         lambda m, dt: m.shift(dt * rate * direction)
     )
+    return mobject
 
 
 def always_rotate(mobject, rate=20 * DEGREES, **kwargs):
     mobject.add_updater(
         lambda m, dt: m.rotate(dt * rate, **kwargs)
     )
+    return mobject

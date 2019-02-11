@@ -531,16 +531,14 @@ class ShowPlan(PiCreatureScene):
         rect = BackgroundRectangle(wave, fill_opacity = 1)
         rect.stretch(2, 1)
         rect.next_to(wave, LEFT, buff = 0)
-        wave_shift = ContinualMovement(
-            wave, direction = LEFT, rate = 5
-        )
+        always_shift(wave, direction=LEFT, rate=5)
         wave_fader = UpdateFromAlphaFunc(
             wave, 
             lambda w, a : w.set_stroke(width = 3*a)
         )
         checkmark = self.get_checkmark(word)
 
-        self.add(wave_shift)
+        self.add(wave)
         self.add_foreground_mobjects(rect, word)
         self.play(
             Animation(word),
@@ -567,13 +565,13 @@ class ShowPlan(PiCreatureScene):
         target = Plane()
         # target.match_height(radar_dish)
         target.next_to(radar_dish, RIGHT, buff = LARGE_BUFF)
-        target_movement = ContinualMovement(target, direction = RIGHT, rate = 1.25)
+        always_shift(target, direction = RIGHT, rate = 1.25)
 
         pulse = RadarPulse(radar_dish, target)
 
         checkmark = self.get_checkmark(word)
 
-        self.add(target_movement)
+        self.add(target)
         self.play(
             Write(word),
             DrawBorderThenFill(radar_dish),
@@ -1653,11 +1651,7 @@ class MentionDopplerRadar(TeacherStudentsScene):
         plane = Plane()
         plane.to_edge(RIGHT)
         plane.align_to(dish)
-        plane_flight = ContinualMovement(
-            plane, 
-            direction = LEFT,
-            rate = 1,
-        )
+        always_shift(plane, LEFT, 1)
         plane.flip()
         pulse = RadarPulse(dish, plane)
         look_at_anims = [
@@ -1667,7 +1661,7 @@ class MentionDopplerRadar(TeacherStudentsScene):
             for pi in self.get_pi_creatures()
         ]
 
-        self.add(dish, plane_flight, pulse, *look_at_anims)
+        self.add(dish, plane, pulse, *look_at_anims)
         self.play(
             self.teacher.change, "hooray",
             words.restore
@@ -1834,11 +1828,9 @@ class IntroduceDopplerRadar(Scene):
             ShowCreation(sum_graph, run_time = 8, rate_func=linear)
         )
         pulse = RadarPulse(dish, plane, n_pulse_singletons = 12)
-        plane_flight = ContinualMovement(
-            plane, direction = LEFT, rate = 1.5
-        )
+        always_shift(plane, LEFT, 1.5)
 
-        self.add(graph_draw, pulse, plane_flight)
+        self.add(graph_draw, pulse, plane)
         self.play(UpdateFromAlphaFunc(
             plane, lambda m, a : m.set_fill(opacity = a)
         ))
@@ -1859,7 +1851,7 @@ class IntroduceDopplerRadar(Scene):
         self.wait(0.1)
         self.play(Write(echo_subtext, run_time = 1))
         self.wait()
-        self.remove(graph_draw, pulse, plane_flight)
+        self.remove(graph_draw, pulse, plane)
 
         pulse_graph.set_stroke(width = 0)
         echo_graph.set_stroke(width = 0)
@@ -2613,7 +2605,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         object_velocities = self.object_velocities
 
         movements = self.object_movements = [
-            ContinualMovement(
+            always_shift(
                 obj, 
                 direction = v/get_norm(v),
                 rate = get_norm(v)
@@ -3289,7 +3281,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         t_tracker = VectorizedPoint()
         #x-coordinate gives wave number
         k_tracker = VectorizedPoint(2*RIGHT)
-        tk_movement = ContinualMovement(t_tracker, direction = RIGHT, rate = 1)
+        always_shift(t_tracker, RIGHT, 1)
         def get_wave():
             t = t_tracker.get_center()[0]
             k = k_tracker.get_center()[0]
@@ -3322,7 +3314,8 @@ class SortOfDopplerEffect(PiCreatureScene):
 
         rect = ScreenRectangle(height = 2)
         rect.to_edge(RIGHT)
-        rect_movement = ContinualMovement(rect, direction = LEFT, rate = 1)
+        always_shift(rect, LEFT, 1)
+        rect_movement = rect
 
         randy = self.pi_creature
         randy_look_at = ContinualUpdate(
@@ -3341,7 +3334,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         ref_frame_1_continual_anim = ContinualAnimation(ref_frame1)
 
         self.add(
-            tk_movement, wave_update, rect_movement, randy_look_at,
+            t_tracker, wave_update, rect_movement, randy_look_at,
             ref_frame2_follow, ref_frame_1_continual_anim
         )
         self.add(ref_frame1)
@@ -3446,7 +3439,8 @@ class HangingWeightsScene(MovingCameraScene):
 
         k_tracker = self.k_tracker = VectorizedPoint()
         t_tracker = self.t_tracker = VectorizedPoint()
-        self.t_tracker_walk = ContinualMovement(t_tracker, direction = RIGHT, rate = 1)
+        always_shift(t_tracker, RIGHT, 1)
+        self.t_tracker_walk = t_tracker
         equilibrium_height = springs.get_height()
         def update_springs(springs):
             for spring in springs:
@@ -3560,7 +3554,7 @@ class HangingWeightsScene(MovingCameraScene):
 
     def moving_reference_frame(self):
         rect = ScreenRectangle(height = 2.1*FRAME_Y_RADIUS)
-        rect_movement = ContinualMovement(rect, direction = LEFT, rate = 2)
+        rect_movement = always_shift(rect, direction = LEFT, rate = 2)
         camera_frame = self.camera_frame
 
         self.add(rect)
@@ -4294,7 +4288,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         self.add()
         freq = 1
         continual_anims = [
-            ContinualMovement(time_tracker, direction = RIGHT, rate = 1),
+            always_shift(time_tracker, direction = RIGHT, rate = 1),
             ContinualUpdate(
                 dot_gdw,
                 lambda d : d.set_width(
