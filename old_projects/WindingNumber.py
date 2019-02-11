@@ -1,10 +1,15 @@
-
 from big_ol_pile_of_manim_imports import *
 
 import time
 
 import mpmath
 mpmath.mp.dps = 7
+
+
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
 
 # Useful constants to play around with
 UL = UP + LEFT

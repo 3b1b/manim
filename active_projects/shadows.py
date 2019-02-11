@@ -117,16 +117,17 @@ class ShowShadows(ThreeDScene):
         #     self.add_fixed_in_frame_mobjects(decimal)
 
         # decimal.add_updater(update_decimal)
-        continual_update = ContinualChangingDecimal(
-            decimal,
-            lambda a: get_area(self.shadow),
-            position_update_func=lambda d: self.add_fixed_in_frame_mobjects(d)
+        decimal.add_updater(
+            lambda d: d.set_value(get_area(self.shadow))
+        )
+        decimal.add_updater(
+            lambda d: self.add_fixed_in_frame_mobjects(d)
         )
 
         # self.add_fixed_orientation_mobjects(label)
         self.add_fixed_in_frame_mobjects(label)
         self.add(label)
-        self.add(continual_update)
+        self.add(decimal)
 
     def add_surface_area_label(self):
         text = TextMobject("Surface area: ")

@@ -1302,10 +1302,10 @@ class IntroduceScreen(Scene):
         self.angle_indicator.next_to(self.angle_arc, RIGHT)
 
         angle_update_func = lambda x: self.light_source.spotlight.opening_angle() / DEGREES
-        angle_tracker = ContinualChangingDecimal(
-            self.angle_indicator, angle_update_func
+        self.angle_indicator.add_updater(
+            lambda d: d.set_value(angle_update_func())
         )
-        self.add(angle_tracker)
+        self.add(self.angle_indicator)
 
         arc_tracker = AngleUpdater(
             self.angle_arc,

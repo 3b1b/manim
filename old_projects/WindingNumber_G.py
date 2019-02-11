@@ -5,6 +5,12 @@ from big_ol_pile_of_manim_imports import *
 from old_projects.uncertainty import Flash
 from old_projects.WindingNumber import *
 
+
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
+
 class AltTeacherStudentsScene(TeacherStudentsScene):
     def setup(self):
         TeacherStudentsScene.setup(self)

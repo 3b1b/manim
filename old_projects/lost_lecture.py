@@ -7,6 +7,11 @@ from old_projects.div_curl import get_force_field_func
 COBALT = "#0047AB"
 
 
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
+
 class Orbiting(ContinualAnimation):
     CONFIG = {
         "rate": 7.5,

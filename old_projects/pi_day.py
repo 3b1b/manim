@@ -15,6 +15,10 @@ DECIMAL_WIDTH = 0.5
 HIGHLIGHT_COLOR = YELLOW
 
 
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
 class ArcLengthChange(Animation):
 
     def __init__(self, mobject = None, new_angle = TAU/3, **kwargs):

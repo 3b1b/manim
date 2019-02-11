@@ -3319,10 +3319,10 @@ class SphereExamplePointsDecimal(Scene):
 
         def generate_decimal_updater(decimal, index):
             shifted_i = (index - 1) % 3
-            return ContinualChangingDecimal(
-                decimal,
-                lambda a: point.get_location()[shifted_i]
-            )
+            decimal.add_updater(lambda d: d.set_value(
+                point.get_location()[shifted_i]
+            ))
+            return decimal
 
         for i, decimal in enumerate(decimals):
             self.add(generate_decimal_updater(decimal, i))

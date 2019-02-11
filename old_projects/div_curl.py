@@ -18,6 +18,11 @@ FOX_COLOR = "#DF7F20"
 RABBIT_COLOR = "#C6D6EF"
 
 
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
+
 # Helper functions
 def get_flow_start_points(x_min=-8, x_max=8,
                           y_min=-5, y_max=5,
@@ -1108,9 +1113,11 @@ class ElectricField(CylinderModel, MovingCameraScene):
             y = voltage_point.get_center()[1]
             return 10 - y
 
-        voltage_update = ContinualChangingDecimal(
-            voltage, get_voltage,
-            position_update_func=lambda v: v.next_to(
+        voltage_update = voltage.add_updater(
+            lambda d: d.set_value(get_voltage),
+        )
+        voltage.add_updater(
+            lambda d: d.next_to(
                 voltage_point, UP, SMALL_BUFF
             )
         )

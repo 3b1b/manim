@@ -1,6 +1,11 @@
 from big_ol_pile_of_manim_imports import *
 
 
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
+
 class GradientDescentWrapper(Scene):
     def construct(self):
         title = TextMobject("Gradient descent")

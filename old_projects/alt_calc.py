@@ -1209,9 +1209,11 @@ class StandardDerivativeVisual(GraphScene):
 
         slope_decimal = DecimalNumber(slope_line.get_slope())
         slope_decimal.match_color(slope_line)
-        slope_decimal_update = ContinualChangingDecimal(
-            slope_decimal, lambda dt: slope_line.get_slope(),
-            position_update_func=lambda m: m.next_to(
+        slope_decimal.add_updater(
+            lambda d: d.set_value(slope_line.get_slope())
+        )
+        slope_decimal.add_upater(
+            lambda d: d.next_to(
                 deriv_label, RIGHT, SMALL_BUFF
             ).shift(0.2 * SMALL_BUFF * DOWN)
         )
@@ -1226,7 +1228,6 @@ class StandardDerivativeVisual(GraphScene):
         self.add(
             slope_line_update,
             # deriv_label_update,
-            slope_decimal_update,
         )
         for x in 9, 2, 4:
             self.play(

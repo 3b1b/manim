@@ -679,10 +679,10 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
 
     def get_eccentricity_value_update(self, eccentricity_label, ellipse):
         decimal = eccentricity_label[1]
-        return ContinualChangingDecimal(
-            decimal,
-            lambda a: self.get_eccentricity(ellipse)
-        )
+        decimal.add_updater(lambda d: d.set_value(
+            self.get_eccentricity(ellipse)
+        ))
+        return decimal
 
     def get_outer_dashed_lines(self, ellipse):
         line = DashedLine(2.5 * UP, 2.5 * DOWN)
