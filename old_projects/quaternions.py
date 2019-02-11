@@ -1288,7 +1288,7 @@ class IntroduceLinusTheLinelander(Scene):
             rate_func=there_and_back,
             lag_ratio=0.1
         )
-        q_marks_continual = NormalAnimationAsContinualAnimation(q_marks_anim)
+        q_marks_continual = turn_animation_into_updater(q_marks_anim)
 
         self.play(
             FadeOut(to_fade),

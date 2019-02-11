@@ -1750,7 +1750,7 @@ class IntroduceDopplerRadar(Scene):
             dish, randy, 
             speed = 0.97*speed, #Just needs slightly better alignment
         )
-        graph_draw = NormalAnimationAsContinualAnimation(
+        graph_draw = turn_animation_into_updater(
             ShowCreation(
                 sum_graph, 
                 rate_func=linear, 
@@ -1824,7 +1824,7 @@ class IntroduceDopplerRadar(Scene):
         echo_subtext.next_to(echo_text, RIGHT)
         echo_subtext.match_color(echo_graph)
 
-        graph_draw = NormalAnimationAsContinualAnimation(
+        graph_draw = turn_animation_into_updater(
             ShowCreation(sum_graph, run_time = 8, rate_func=linear)
         )
         pulse = RadarPulse(dish, plane, n_pulse_singletons = 12)

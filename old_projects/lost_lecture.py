@@ -1770,7 +1770,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         # Dot defining Q point
         Q_dot = Dot(color=GREEN)
         Q_dot.move_to(self.focal_sum_point)
-        focal_sum_point_animation = NormalAnimationAsContinualAnimation(
+        focal_sum_point_animation = turn_animation_into_updater(
             MaintainPositionRelativeTo(
                 self.focal_sum_point, Q_dot
             )
@@ -1784,7 +1784,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         Q_label.match_color(Q_dot)
         Q_label.add_to_back(Q_label.copy().set_stroke(BLACK, 5))
         Q_label.next_to(Q_dot, UL, buff=0)
-        Q_label_animation = NormalAnimationAsContinualAnimation(
+        Q_label_animation = turn_animation_into_updater(
             MaintainPositionRelativeTo(Q_label, Q_dot)
         )
 

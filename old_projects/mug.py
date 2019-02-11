@@ -70,7 +70,7 @@ class HappyHolidays(TeacherStudentsScene):
             run_time = 10,
             rate_func = lambda x : x,
         )
-        return NormalAnimationAsContinualAnimation(snowflake_spirils)
+        return turn_animation_into_updater(snowflake_spirils)
 
 class UtilitiesPuzzleScene(Scene):
     CONFIG = {

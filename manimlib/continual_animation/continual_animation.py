@@ -1,7 +1,6 @@
 import copy
 
 from manimlib.constants import *
-from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 
@@ -52,19 +51,3 @@ class ContinualAnimation(object):
 
     def copy(self):
         return copy.deepcopy(self)
-
-
-class ContinualAnimationGroup(ContinualAnimation):
-    CONFIG = {
-        "start_up_time": 0,
-        "wind_down_time": 0,
-    }
-
-    def __init__(self, *continual_animations, **kwargs):
-        digest_config(self, kwargs, locals())
-        self.group = Group(*[ca.mobject for ca in continual_animations])
-        ContinualAnimation.__init__(self, self.group, **kwargs)
-
-    def update_mobject(self, dt):
-        for continual_animation in self.continual_animations:
-            continual_animation.update(dt)

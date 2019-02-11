@@ -15,7 +15,7 @@ class CrossingOneMillion(TeacherStudentsScene):
         self.look_at(number, run_time=0)
 
         confetti_spirils = self.confetti_spirils = list(map(
-            NormalAnimationAsContinualAnimation,
+            turn_animation_into_updater,
             get_confetti_animations(50)
         ))
         self.add(*confetti_spirils)

@@ -781,9 +781,9 @@ class StartingCalc101(PiCreatureScene):
         group.next_to(self.title, DOWN, MED_LARGE_BUFF)
         group.rects = rects
         group.continual_animations = [
-            NormalAnimationAsContinualAnimation(Write(rects)),
-            NormalAnimationAsContinualAnimation(ShowCreation(graph)),
-            NormalAnimationAsContinualAnimation(FadeIn(gs.axes)),
+            turn_animation_into_updater(Write(rects)),
+            turn_animation_into_updater(ShowCreation(graph)),
+            turn_animation_into_updater(FadeIn(gs.axes)),
         ]
         self.adjust_size(group)
         return group

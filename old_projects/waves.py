@@ -4,6 +4,16 @@ from big_ol_pile_of_manim_imports import *
 E_COLOR = BLUE
 M_COLOR = YELLOW
 
+
+# Warning, much of what is below was implemented using
+# ConintualAnimation, which has now been deprecated.  One
+# Should use Mobject updaters instead.
+# 
+# That is, anything below implemented as a ContinualAnimation
+# should instead be a Mobject, where the update methods
+# should be added via Mobject.add_udpater.
+
+
 class OscillatingVector(ContinualAnimation):
     CONFIG = {
         "tail" : ORIGIN,
