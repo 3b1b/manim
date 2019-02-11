@@ -345,10 +345,9 @@ class Camera(object):
     #     return self
 
     def set_cairo_context_path(self, ctx, vmobject):
-        # self.old_set_cairo_context_path(ctx, vmobject)
-        # return
-
-        points = vmobject.get_points()
+        points = self.transform_points_pre_display(
+            vmobject, vmobject.points
+        )
         if len(points) == 0:
             return
         elif np.any(np.isnan(points)) or np.any(points == np.inf):
@@ -365,7 +364,7 @@ class Camera(object):
                 )
 
         last_p3 = None
-        quads = vmobject.get_cubic_bezier_tuples()
+        quads = vmobject.get_cubic_bezier_tuples_from_points(points)
         ctx.new_path()
         for p0, p1, p2, p3 in quads:
             if should_start_new_path(last_p3, p0):
