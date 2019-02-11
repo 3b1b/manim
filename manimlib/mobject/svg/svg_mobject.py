@@ -11,7 +11,6 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.bezier import is_closed
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import digest_locals
@@ -38,7 +37,6 @@ class SVGMobject(VMobject):
         "stroke_width": 0,
         "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
-        "propagate_style_to_family": True,
     }
 
     def __init__(self, file_name=None, **kwargs):
@@ -106,14 +104,14 @@ class SVGMobject(VMobject):
             pass  # TODO
             # warnings.warn("Unknown element type: " + element.tagName)
         result = [m for m in result if m is not None]
-        self.handle_transforms(element, VMobject(*result))
+        self.handle_transforms(element, VGroup(*result))
         if len(result) > 1 and not self.unpack_groups:
             result = [VGroup(*result)]
 
         return result
 
     def g_to_mobjects(self, g_element):
-        mob = VMobject(*self.get_mobjects_from(g_element))
+        mob = VGroup(*self.get_mobjects_from(g_element))
         self.handle_transforms(g_element, mob)
         return mob.submobjects
 
@@ -125,7 +123,7 @@ class SVGMobject(VMobject):
         ref = use_element.getAttribute("xlink:href")[1:]
         if ref not in self.ref_to_element:
             warnings.warn("%s not recognized" % ref)
-            return VMobject()
+            return VGroup()
         return self.get_mobjects_from(
             self.ref_to_element[ref]
         )
@@ -331,7 +329,7 @@ class VMobjectFromSVGPathstring(VMobject):
             re.split(pattern, self.path_string)[1:]
         ))
         # Which mobject should new points be added to
-        self.growing_path = self
+        self = self
         for command, coord_string in pairs:
             self.handle_command(command, coord_string)
         # people treat y-coordinate differently
@@ -342,28 +340,22 @@ class VMobjectFromSVGPathstring(VMobject):
         command = command.upper()
         # new_points are the points that will be added to the curr_points
         # list. This variable may get modified in the conditionals below.
-        points = self.growing_path.points
+        points = self.points
         new_points = self.string_to_points(coord_string)
-
-        if command == "M":  # moveto
-            if isLower and len(points) > 0:
-                new_points[0] += points[-1]
-            if len(points) > 0:
-                self.growing_path = self.add_subpath(new_points[:1])
-            else:
-                self.growing_path.start_at(new_points[0])
-
-            if len(new_points) <= 1:
-                return
-
-            points = self.growing_path.points
-            new_points = new_points[1:]
-            command = "L"
 
         if isLower and len(points) > 0:
             new_points += points[-1]
 
-        if command in ["L", "H", "V"]:  # lineto
+        if command == "M":  # moveto
+            self.start_new_path(new_points[0])
+            if len(new_points) <= 1:
+                return
+
+            # Huh? When does this come up?
+            points = self.points
+            new_points = new_points[1:]
+            command = "L"
+        elif command in ["L", "H", "V"]:  # lineto
             if command == "H":
                 new_points[0, 1] = points[-1, 1]
             elif command == "V":
@@ -372,22 +364,23 @@ class VMobjectFromSVGPathstring(VMobject):
                     new_points[0, 0] += points[-1, 1]
                 new_points[0, 1] = new_points[0, 0]
                 new_points[0, 0] = points[-1, 0]
-            new_points = new_points.repeat(3, axis=0)
-        elif command == "C":  # curveto
+            self.add_line_to(new_points[0])
+            return
+
+        if command == "C":  # curveto
             pass  # Yay! No action required
         elif command in ["S", "T"]:  # smooth curveto
-            handle1 = points[-1] + (points[-1] - points[-2])
-            new_points = np.append([handle1], new_points, axis=0)
-        if command in ["Q", "T"]:  # quadratic Bezier curve
+            self.add_smooth_curve_to(*new_points)
+            # handle1 = points[-1] + (points[-1] - points[-2])
+            # new_points = np.append([handle1], new_points, axis=0)
+            return
+        elif command == "Q":  # quadratic Bezier curve
             # TODO, this is a suboptimal approximation
             new_points = np.append([new_points[0]], new_points, axis=0)
         elif command == "A":  # elliptical Arc
             raise Exception("Not implemented")
         elif command == "Z":  # closepath
-            if not is_closed(points):
-                # Both handles and new anchor are the start
-                new_points = points[[0, 0, 0]]
-            # self.mark_paths_closed = True
+            return
 
         # Handle situations where there's multiple relative control points
         if isLower and len(new_points) > 3:
@@ -395,7 +388,7 @@ class VMobjectFromSVGPathstring(VMobject):
                 new_points[i:i + 3] -= points[-1]
                 new_points[i:i + 3] += new_points[i - 1]
 
-        self.growing_path.add_control_points(new_points)
+        self.add_cubic_bezier_curve_to(*new_points)
 
     def string_to_points(self, coord_string):
         numbers = string_to_numbers(coord_string)

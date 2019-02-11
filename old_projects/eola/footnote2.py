@@ -101,7 +101,7 @@ class Symbolic2To3DTransform(Scene):
         out_arrow = Arrow(LEFT, RIGHT, color = output_array.get_color())
         VMobject(
             input_array, in_arrow, func, out_arrow, output_array
-        ).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        ).arrange(RIGHT, buff = SMALL_BUFF)
 
         input_brace = Brace(input_array, DOWN)
         input_words = input_brace.get_text("2d input")
@@ -237,7 +237,7 @@ class WriteColumnSpaceDefinition(Scene):
             TexMobject("\\Updownarrow"),
             TextMobject("``Column space''")
         )
-        words.arrange_submobjects(DOWN, buff = 0.1)
+        words.arrange(DOWN, buff = 0.1)
         words.next_to(brace, DOWN)
         words[0][0].set_color(PINK)
         words[2].set_color(TEAL)
@@ -382,7 +382,7 @@ class Symbolic2To1DTransform(Scene):
         out_arrow = Arrow(LEFT, RIGHT, color = output_array.get_color())
         VMobject(
             input_array, in_arrow, func, out_arrow, output_array
-        ).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        ).arrange(RIGHT, buff = SMALL_BUFF)
 
         input_brace = Brace(input_array, DOWN)
         input_words = input_brace.get_text("2d input")
@@ -463,7 +463,7 @@ class TwoDTo1DTransform(LinearTransformationScene):
         matrix = Matrix([[1, 2]])
         matrix_words = TextMobject("Transformation matrix: ")
         matrix_group = VMobject(matrix_words, matrix)
-        matrix_group.arrange_submobjects(buff = MED_SMALL_BUFF)
+        matrix_group.arrange(buff = MED_SMALL_BUFF)
         matrix_group.to_edge(UP)
         entries = matrix.get_entries()
 
@@ -547,7 +547,7 @@ class DotProductPreview(VectorScene):
         w.add_background_rectangle()
         dot = TexMobject("\\cdot")
         eq = VMobject(v, dot, w)
-        eq.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        eq.arrange(RIGHT, buff = SMALL_BUFF)
         eq.to_corner(UP+LEFT)
         self.play(Write(eq), run_time = 1)
 

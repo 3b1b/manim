@@ -65,7 +65,7 @@ class LinearSystem(VGroup):
             self.equals,
             self.output_vect_mob,
         )
-        self.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        self.arrange(RIGHT, buff=SMALL_BUFF)
 
 
 # Scenes
@@ -110,7 +110,7 @@ class LeaveItToComputers(TeacherStudentsScene):
                 denom_matrix_mobject,
             )
             rhs = VGroup(numer, Line(LEFT, RIGHT).match_width(numer), denom)
-            rhs.arrange_submobjects(DOWN)
+            rhs.arrange(DOWN)
             rhs.set_height(2.25)
             rhs.move_to(self.hold_up_spot, DOWN)
             rhs.to_edge(RIGHT, buff=LARGE_BUFF)
@@ -224,7 +224,7 @@ class PrerequisiteKnowledge(TeacherStudentsScene):
             ImageMobject("eola%d_thumbnail" % d)
             for d in [5, 7, 6]
         ])
-        images.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        images.arrange(RIGHT, buff=LARGE_BUFF)
         images.next_to(h_line, DOWN, MED_LARGE_BUFF)
         for image in images:
             rect = SurroundingRectangle(image, color=BLUE)
@@ -326,13 +326,13 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
 
         self.add(system)
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, unknown_circles,
             lambda m: (m.restore,),
             lag_ratio=0.7
         ))
         self.play(FadeOut(unknown_circles))
-        self.play(LaggedStart(ShowCreation, row_rects,
+        self.play(OldLaggedStart(ShowCreation, row_rects,
                               run_time=1, lag_ratio=0.8))
         self.play(FadeOut(row_rects))
         self.wait()
@@ -545,7 +545,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
             system.output_vect_elements.add(line[-1])
 
         system.output_vect_elements.set_color(OUTPUT_COLOR)
-        system.arrange_submobjects(
+        system.arrange(
             DOWN,
             buff=0.75,
             index_of_submobject_to_align=-2
@@ -762,7 +762,7 @@ class ThinkOfPuzzleAsLinearCombination(SetupSimpleSystemOfEquations):
             equals.target,
             output_vect.target
         )
-        new_system.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        new_system.arrange(RIGHT, buff=SMALL_BUFF)
         new_system.move_to(matrix, LEFT)
 
         corner_rect.generate_target()
@@ -818,7 +818,7 @@ class ThinkOfPuzzleAsLinearCombination(SetupSimpleSystemOfEquations):
                 lines[i].shift(basis_vectors[1 - i].get_end() - origin)
             return lines
         update_dashed_lines(dashed_lines)
-        self.play(LaggedStart(ShowCreation, dashed_lines, lag_ratio=0.7))
+        self.play(OldLaggedStart(ShowCreation, dashed_lines, lag_ratio=0.7))
         for basis in basis_vectors:
             self.play(
                 MoveToTarget(basis, run_time=2),
@@ -871,10 +871,10 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
                 if isinstance(part, Matrix):
                     part.scale(self.array_scale_factor)
             equation[2].elements.set_color([X_COLOR, Y_COLOR][i])
-            equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            equation.arrange(RIGHT, buff=SMALL_BUFF)
             equation.scale(self.equation_scale_factor)
             equations.add(equation)
-        equations.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        equations.arrange(DOWN, buff=MED_LARGE_BUFF)
         equations.to_corner(UL)
         corner_rect = self.corner_rect = BackgroundRectangle(
             equations, opacity=0.8)
@@ -949,7 +949,7 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
                 T2, lp2, basis, rp2, equals,
                 coord
             )
-            transformed_equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            transformed_equation.arrange(RIGHT, buff=SMALL_BUFF)
             # transformed_equation.scale(self.equation_scale_factor)
 
             implies = TexMobject("\\Rightarrow").scale(1.2)
@@ -990,20 +990,20 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
             MoveToTarget(corner_rect),
             Animation(self.equations),
             FadeOut(self.to_fade),
-            LaggedStart(Write, implications),
+            OldLaggedStart(Write, implications),
         )
         self.remove(self.input_vect_mob)
         self.apply_matrix(self.matrix, added_anims=[
             Animation(VGroup(corner_rect, self.equations, implications)),
             MoveToTarget(moving_equations[0]),
-            LaggedStart(FadeIn, transformed_equations[0].parts_to_write),
+            OldLaggedStart(FadeIn, transformed_equations[0].parts_to_write),
             FadeIn(self.column_mobs),
             ReplacementTransform(
                 self.input_vect_mob.copy(), self.output_vect_mob)
         ])
         self.play(
             MoveToTarget(moving_equations[1]),
-            LaggedStart(FadeIn, transformed_equations[1].parts_to_write),
+            OldLaggedStart(FadeIn, transformed_equations[1].parts_to_write),
             path_arc=-30 * DEGREES,
             run_time=2
         )
@@ -1011,7 +1011,7 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
 
         # Show rectangles
         self.play(
-            LaggedStart(ShowCreation, transformed_input_rects, lag_ratio=0.8),
+            OldLaggedStart(ShowCreation, transformed_input_rects, lag_ratio=0.8),
             ShowCreation(self.output_vect_label.rect),
         )
         for tbr, column_mob in zip(transformed_basis_rects, self.column_mobs):
@@ -1120,7 +1120,7 @@ class ShowDotProductChanging(LinearTransformationScene):
             w_label.copy(),
             TexMobject(rhs),
         )
-        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        equation.arrange(RIGHT, buff=SMALL_BUFF)
         equation.add_to_back(BackgroundRectangle(equation))
         equation.scale(self.equation_scale_factor)
         return equation
@@ -1160,7 +1160,7 @@ class OrthonormalWords(Scene):
         )
         bottom_words.set_color_by_tex("Orthonormal", BLUE)
         words = VGroup(top_words, bottom_words)
-        words.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        words.arrange(DOWN, buff=MED_LARGE_BUFF)
         for word in words:
             word.add_background_rectangle()
         words.to_edge(UP)
@@ -1265,7 +1265,7 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
 
         self.apply_matrix(matrix)
         self.wait()
-        self.play(LaggedStart(ShowCreation, output_dashed_lines))
+        self.play(OldLaggedStart(ShowCreation, output_dashed_lines))
         self.play(*self.get_column_animations(system.matrix_mobject, column_mobs))
         self.wait()
         self.remove(*output_dashed_lines)
@@ -1311,11 +1311,11 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
                     element.scale(1.25)
             equation.to_write = equation[1::2]
             equation[2].match_height(equation[4])
-            equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            equation.arrange(RIGHT, buff=SMALL_BUFF)
             equation.background_rectangle = BackgroundRectangle(equation)
             equation.add_to_back(equation.background_rectangle)
             equations.add(equation)
-        equations.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        equations.arrange(DOWN, buff=MED_LARGE_BUFF)
         equations.scale(1.25)
         equations.to_corner(UR, buff=MED_SMALL_BUFF)
         equations_rect = BackgroundRectangle(equations, buff=MED_LARGE_BUFF)
@@ -1325,7 +1325,7 @@ class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
             anims = [
                 FadeIn(equation.background_rectangle),
                 Write(equation.to_write),
-                LaggedStart(
+                OldLaggedStart(
                     MoveToTarget, equation.movers,
                     path_arc=60 * DEGREES
                 )
@@ -1566,7 +1566,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
         )
 
         # Fade out unneeded bits
-        self.play(LaggedStart(FadeOut, VGroup(
+        self.play(OldLaggedStart(FadeOut, VGroup(
             unit_brace, one, coord_brace, coord_brace.label,
         )))
 
@@ -1630,7 +1630,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
 
         # Show many areas
         self.play(
-            LaggedStart(DrawBorderThenFill, blobs),
+            OldLaggedStart(DrawBorderThenFill, blobs),
             Write(area_scale_words)
         )
         self.add_transformable_mobject(blobs)
@@ -1661,7 +1661,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
 
         transformed_input_vect_label = VGroup(input_vect_label.copy())
         transformed_input_vect_label.add_to_back(matrix_label.copy())
-        transformed_input_vect_label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        transformed_input_vect_label.arrange(RIGHT, buff=SMALL_BUFF)
         transformed_input_vect_label.next_to(input_vect_mob.get_end(), UP)
 
         self.play(
@@ -1671,7 +1671,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
             Animation(basis_vectors),
             Animation(input_vect_mob),
             Write(q_marks),
-            LaggedStart(FadeOut, blobs),
+            OldLaggedStart(FadeOut, blobs),
         )
         self.transformable_mobjects.remove(blobs)
         self.play(
@@ -1755,7 +1755,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
 
         h_line = Line(LEFT, RIGHT).match_width(det)
         frac = VGroup(area.target, h_line, det.target)
-        frac.arrange_submobjects(DOWN)
+        frac.arrange(DOWN)
         coord_equation = VGroup(coord.target, equals.target, frac)
         equals.target.next_to(coord.target, RIGHT)
         frac.next_to(equals.target, RIGHT, submobject_to_align=h_line)
@@ -1784,7 +1784,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
             rhs_h_line,
             VGroup(matrix_mobject_copy, denom_det_text)
         )
-        rhs.arrange_submobjects(DOWN, buff=SMALL_BUFF)
+        rhs.arrange(DOWN, buff=SMALL_BUFF)
         rhs_equals = TexMobject("=")
         rhs_equals.next_to(h_line, RIGHT)
         rhs.next_to(rhs_equals, submobject_to_align=rhs_h_line)
@@ -1808,7 +1808,7 @@ class TransformingAreasYCoord(LinearTransformationScene):
             matrix_mobject.target,
             system_input, system_eq, system_output.target
         )
-        system.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        system.arrange(RIGHT, buff=SMALL_BUFF)
         system.to_corner(UL)
 
         # Rearrange
@@ -1957,7 +1957,7 @@ class ZEqualsVDotK(Scene):
         )
         equation[2].elements.set_color_by_gradient(X_COLOR, Y_COLOR, Z_COLOR)
         equation[4].elements.set_color(BLUE)
-        equation.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        equation.arrange(RIGHT, buff=MED_SMALL_BUFF)
         equation.to_edge(LEFT)
 
         self.play(Write(equation))
@@ -2005,7 +2005,7 @@ class ThreeDCoordinatesAsVolumes(Scene):
         coord_column[2].set_color(BLUE)
         coord_column.generate_target()
 
-        self.play(LaggedStart(FadeIn, VGroup(
+        self.play(OldLaggedStart(FadeIn, VGroup(
             z, equals, det_text, matrix.brackets,
             VGroup(*matrix.mob_matrix[:, :2].flatten()),
             coord_column
@@ -2055,7 +2055,7 @@ class CramersYEvaluation(Scene):
             TexMobject("="), frac,
             TexMobject("= \\frac{4}{2}"), TexMobject("=2")
         )
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.add_to_back(BackgroundRectangle(group))
 
         self.add(group)
@@ -2075,7 +2075,7 @@ class CramersXEvaluation(Scene):
             TexMobject("="), frac,
             TexMobject("= \\frac{6}{2}"), TexMobject("=3")
         )
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.add_to_back(BackgroundRectangle(group))
 
         self.add(group)

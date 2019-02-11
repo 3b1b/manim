@@ -83,7 +83,7 @@ class ChangeProbability(Animation):
         Animation.__init__(self, prob_mob, **kwargs)
 
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
 
         p = (1 - alpha) * self.p0 + alpha * self.p1
         self.mobject.remove(self.mobject.prob_rect, self.mobject.prob_label)
@@ -92,9 +92,9 @@ class ChangeProbability(Animation):
         self.mobject.add(self.mobject.prob_rect, self.mobject.prob_label)
 
 
-    def clean_up(self, surrounding_scene=None):
+    def clean_up_from_scene(self, scene=None):
         self.mobject.p = self.p1
-        super(ChangeProbability, self).clean_up(surrounding_scene = surrounding_scene)
+        super(ChangeProbability, self).clean_up_from_scene(scene = scene)
 
 
 

@@ -85,7 +85,7 @@ class MillionFlips(Scene):
         self.wait()
 
     def organize_group(self, group):
-        group.arrange_submobjects_in_grid(10)
+        group.arrange_in_grid(10)
         group.set_height(5)
         group.shift(DOWN + 2 * LEFT)
 

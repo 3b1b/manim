@@ -246,7 +246,7 @@ class BrickRowScene(PiCreatureScene):
             coin_seqs.add(coin_seq)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 Succession, coin_seqs, lambda m: (FadeIn(m, run_time = 0.1), MoveToTarget(m)),
                 run_time = 5,
                 lag_ratio = 0.5
@@ -446,7 +446,7 @@ class BrickRowScene(PiCreatureScene):
                 all_dice.add(dice_copy)
 
         self.play(
-            LaggedStart(FadeIn, all_dice),
+            OldLaggedStart(FadeIn, all_dice),
             FadeOut(outcomes[1])
         )
         self.wait()
@@ -709,7 +709,7 @@ class BrickRowScene(PiCreatureScene):
             inset = True)
         self.play(FadeOut(self.tallies))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeIn, outcomes,
             #rate_func = there_and_back_with_pause,
             run_time = 5))
@@ -723,11 +723,11 @@ class BrickRowScene(PiCreatureScene):
 
 
         self.play(
-            LaggedStart(ShowCreation, braces),
-            LaggedStart(Write, probs)
+            OldLaggedStart(ShowCreation, braces),
+            OldLaggedStart(Write, probs)
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeOut, outcomes,
             #rate_func = there_and_back_with_pause,
             run_time = 5),
@@ -749,7 +749,7 @@ class BrickRowScene(PiCreatureScene):
         # back to three coin flips, show all 8 outcomes
         run_time = 5
         self.play(
-            LaggedStart(FadeIn, outcomes,
+            OldLaggedStart(FadeIn, outcomes,
                 #rate_func = there_and_back_with_pause,
                 run_time = run_time),
             FadeOut(self.tallies,
@@ -757,7 +757,7 @@ class BrickRowScene(PiCreatureScene):
         )
         self.wait()
         self.play(
-            LaggedStart(FadeOut, outcomes,
+            OldLaggedStart(FadeOut, outcomes,
                 #rate_func = there_and_back_with_pause,
                 run_time = 5),
             FadeIn(self.tallies,
@@ -818,8 +818,8 @@ class BrickRowScene(PiCreatureScene):
         # for later reference
 
         self.play(
-            LaggedStart(FadeIn, grouped_outcomes),
-            LaggedStart(FadeIn, grouped_outcomes_copy),
+            OldLaggedStart(FadeIn, grouped_outcomes),
+            OldLaggedStart(FadeIn, grouped_outcomes_copy),
         )
         self.wait()
 
@@ -977,8 +977,8 @@ class ShowProbsInBrickRow3(BrickRowScene):
 
         self.wait()
         self.play(
-            LaggedStart(ShowCreation, braces, run_time = 3),
-            LaggedStart(Write, probs, run_time = 3)
+            OldLaggedStart(ShowCreation, braces, run_time = 3),
+            OldLaggedStart(Write, probs, run_time = 3)
         )
         self.wait()
 
@@ -1017,8 +1017,8 @@ class ShowOutcomesInBrickRow4(BrickRowScene):
 
 
         self.play(
-            LaggedStart(FadeIn, previous_outcomes),
-            LaggedStart(FadeIn, previous_outcomes_copy),
+            OldLaggedStart(FadeIn, previous_outcomes),
+            OldLaggedStart(FadeIn, previous_outcomes_copy),
         )
         
         self.wait()

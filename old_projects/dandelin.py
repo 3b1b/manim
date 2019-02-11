@@ -27,7 +27,7 @@ class LogoGeneration(LogoGenerationTemplate):
                 run_time=3,
             ),
             AnimationGroup(*[
-                LaggedStart(
+                OldLaggedStart(
                     Restore, layer,
                     run_time=3,
                     path_arc=180 * DEGREES,
@@ -67,7 +67,7 @@ class ThinkingAboutAProof(PiCreatureScene):
 
         self.add(bubble)
         self.play(
-            FadeInAndShiftFromDirection(you, LEFT),
+            FadeInFrom(you, LEFT),
             GrowArrow(you_arrow),
         )
         self.play(
@@ -121,17 +121,17 @@ class SumOfIntegersProof(Scene):
                 square.move_to(row, LEFT)
             row.fade(1)
 
-        self.play(LaggedStart(FadeInFromDown, equation[:-1]))
+        self.play(OldLaggedStart(FadeInFromDown, equation[:-1]))
         self.wait()
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, numbers,
                 path_arc=-90 * DEGREES,
                 lag_ratio=1,
                 run_time=1
             )
         )
-        self.play(LaggedStart(Restore, rows))
+        self.play(OldLaggedStart(Restore, rows))
         self.wait()
         self.play(
             ReplacementTransform(
@@ -148,9 +148,9 @@ class SumOfIntegersProof(Scene):
         rows = VGroup()
         for count in range(1, self.n + 1):
             row = VGroup(*[Square() for k in range(count)])
-            row.arrange_submobjects(RIGHT, buff=0)
+            row.arrange(RIGHT, buff=0)
             rows.add(row)
-        rows.arrange_submobjects(DOWN, buff=0, aligned_edge=LEFT)
+        rows.arrange(DOWN, buff=0, aligned_edge=LEFT)
         rows.set_height(5)
         rows.set_stroke(WHITE, 3)
         rows.set_fill(BLUE, 0.5)
@@ -210,7 +210,7 @@ class MultipleDefinitionsOfAnEllipse(Scene):
             TextMobject("2. Thumbtack \\\\ \\quad\\, construction"),
             TextMobject("3. Slice a cone"),
         )
-        definitions.arrange_submobjects(
+        definitions.arrange(
             DOWN, buff=LARGE_BUFF,
             aligned_edge=LEFT
         )
@@ -221,8 +221,8 @@ class MultipleDefinitionsOfAnEllipse(Scene):
             definition.saved_state = definition.copy()
             definition.saved_state.set_fill(LIGHT_GREY, 0.5)
 
-        self.play(LaggedStart(
-            FadeInAndShiftFromDirection, definitions,
+        self.play(OldLaggedStart(
+            FadeInFrom, definitions,
             lambda m: (m, RIGHT),
             run_time=4
         ))
@@ -281,7 +281,7 @@ class StretchACircle(Scene):
                 plane_circle_group.stretch, 2, 0,
                 run_time=2,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 GrowArrow, arrows,
                 run_time=1,
                 lag_ratio=1
@@ -293,7 +293,7 @@ class StretchACircle(Scene):
         self.play(
             GrowArrow(xy_arrow),
             Write(xy),
-            FadeInAndShiftFromDirection(start_point, UP),
+            FadeInFrom(start_point, UP),
         )
         self.wait()
         self.add(circle_ghost)
@@ -367,8 +367,8 @@ class ShowArrayOfEccentricities(Scene):
 
         self.play(
             Write(name),
-            LaggedStart(GrowArrow, arrows),
-            LaggedStart(Restore, eccentricity_labels)
+            OldLaggedStart(GrowArrow, arrows),
+            OldLaggedStart(Restore, eccentricity_labels)
         )
         self.wait()
         self.play(
@@ -404,7 +404,7 @@ class ShowArrayOfEccentricities(Scene):
             [morty]
         ))
         self.play(
-            LaggedStart(FadeOutAndShiftDown, group),
+            OldLaggedStart(FadeOutAndShiftDown, group),
             circle.set_height, 5,
             circle.center,
         )
@@ -426,7 +426,7 @@ class ShowArrayOfEccentricities(Scene):
             self.get_ellipse(e, **kwargs)
             for e in eccentricities
         ])
-        result.arrange_submobjects(RIGHT, buff=buff)
+        result.arrange(RIGHT, buff=buff)
         return result
 
     def get_eccentricity(self, ellipse):
@@ -478,7 +478,7 @@ class ShowOrbits(ShowArrayOfEccentricities):
             earth_orbit_words,
             eccentricity_equals, eccentricity_label
         )
-        full_label.arrange_submobjects(RIGHT, SMALL_BUFF)
+        full_label.arrange(RIGHT, SMALL_BUFF)
         earth_orbit_words.shift(0.5 * SMALL_BUFF * UL)
         full_label.to_edge(UP)
 
@@ -576,7 +576,6 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
             eccentricity_label.get_right(),
             fraction.get_top() + MED_SMALL_BUFF * UP,
             path_arc=-60 * DEGREES,
-            use_rectangular_stem=False,
         )
         fraction_arrow.pointwise_become_partial(fraction_arrow, 0, 0.95)
 
@@ -638,7 +637,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         return CycleAnimation(MoveAlongPath(
             dot, ellipse,
             run_time=5,
-            rate_func=None
+            rate_func=linear
         ))
 
     def get_focal_lines_update(self, ellipse, ellipse_point):
@@ -674,7 +673,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         words = TextMobject("Eccentricity = ")
         decimal = DecimalNumber(0, num_decimal_places=2)
         group = VGroup(words, decimal)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.to_edge(UP)
         return group
 
@@ -756,7 +755,7 @@ class AskWhyAreTheyTheSame(TeacherStudentsScene):
         self.play(
             FadeOutAndShift(bubble),
             FadeOutAndShift(bubble.content),
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShift, self.students,
                 lambda m: (m, 3 * DOWN),
             ),
@@ -788,7 +787,7 @@ class AskWhyAreTheyTheSame(TeacherStudentsScene):
         self.wait(2)
         self.play(
             baby_morty.change, "thinking",
-            LaggedStart(DrawBorderThenFill, bubble)
+            OldLaggedStart(DrawBorderThenFill, bubble)
         )
         self.play(ShowCreation(egg))
         self.wait(3)
@@ -811,7 +810,7 @@ class TriangleOfEquivalences(Scene):
         self.add(title)
         rects = VGroup(*[ScreenRectangle() for x in range(3)])
         rects.set_height(2)
-        rects[:2].arrange_submobjects(RIGHT, buff=2)
+        rects[:2].arrange(RIGHT, buff=2)
         rects[2].next_to(rects[:2], DOWN, buff=1.5)
         rects.next_to(title, DOWN)
 
@@ -827,7 +826,7 @@ class TriangleOfEquivalences(Scene):
         arrows[2].move_to(rects[::2])
         arrows[1:].shift(0.5 * DOWN)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, arrows,
             lag_ratio=0.7,
             run_time=3,
@@ -870,7 +869,7 @@ class ShowMeasurementBook(TeacherStudentsScene):
         self.wait()
         self.play(
             GrowArrow(arrow),
-            FadeInAndShiftFromDirection(words, RIGHT),
+            FadeInFrom(words, RIGHT),
             self.get_student_changes(
                 "thinking", "happy", "pondering",
                 look_at_arg=arrow
@@ -894,7 +893,7 @@ class TangencyAnimation(Scene):
             ring.scale(0)
             ring.saved_state.set_stroke(width=0)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Restore, rings,
             run_time=2,
             lag_ratio=0.7
@@ -979,7 +978,7 @@ class UseDefiningFeatures(Scene):
         tip.set_color(YELLOW)
 
         self.add(title)
-        self.play(Write(tip, lag_factor=5, run_time=4))
+        self.play(Write(tip, run_time=4))
         self.wait()
 
 
@@ -1029,7 +1028,7 @@ class ShowSegmentSplit(Scene):
             brace.scale(0)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 Restore, braces,
                 lag_ratio=0.7
             ),
@@ -1097,7 +1096,7 @@ class WriteConjecture(Scene):
             words[1].in_equation,
             TexMobject("||"),
         )
-        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        equation.arrange(RIGHT, buff=SMALL_BUFF)
         equation.scale(0.75)
         equation.next_to(title, DOWN, MED_LARGE_BUFF)
         equation.shift_onto_screen()
@@ -1114,7 +1113,7 @@ class WriteConjecture(Scene):
             word.rotate(angle, about_point=ORIGIN)
             word.shift(line.get_center())
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromDown,
             VGroup(title, equation),
             lag_ratio=0.7
@@ -1182,7 +1181,7 @@ class QuickGeometryProof(Scene):
 
         ticks = VGroup(Line(DOWN, UP), Line(DOWN, UP))
         ticks.scale(0.1)
-        ticks.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        ticks.arrange(RIGHT, buff=SMALL_BUFF)
 
         equation = TexMobject(
             "\\Delta OP_1Q \\cong \\Delta OP_2Q",
@@ -1221,7 +1220,7 @@ class QuickGeometryProof(Scene):
 
         everything = VGroup(*self.mobjects)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             GrowFromCenter, everything,
             lag_ratio=0.25,
             run_time=4
@@ -1273,13 +1272,13 @@ class NameDandelin(Scene):
 
         self.add(title[0])
         self.play(FadeInFromDown(portrait))
-        self.play(Write(title[1], lag_factor=4))
+        self.play(Write(title[1]))
         self.wait()
         self.play(FadeInFrom(google_result, LEFT))
         self.play(Write(cmon_google, run_time=1))
         self.wait()
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromDown, dandelions,
             lag_ratio=0.7,
             run_time=1
@@ -1349,7 +1348,7 @@ class AskWhyYouWouldChooseThisProof(PiCreatureScene):
         other = PiCreature(color=RED_D)
         other.flip()
         group = VGroup(randy, other)
-        group.arrange_submobjects(RIGHT, buff=5)
+        group.arrange(RIGHT, buff=5)
         group.to_edge(DOWN)
         return group
 
@@ -1422,7 +1421,7 @@ class CreativeConstruction(PiCreatureScene):
             lightbulb,
             run_time=3,
             rate_func=there_and_back,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         self.play(Blink(randy))
         self.wait()
@@ -1447,7 +1446,7 @@ class CreativeConstruction(PiCreatureScene):
             max_radius=15.0,
             delta_r=0.025,
         )
-        return LaggedStart(
+        return OldLaggedStart(
             FadeIn, rings,
             rate_func=there_and_back,
             run_time=2,
@@ -1489,7 +1488,7 @@ class LockhartQuote(Scene):
         pictures = Group(measurement, madame_bovary, mona_lisa)
         for picture in pictures:
             picture.set_height(4)
-        pictures.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        pictures.arrange(RIGHT, buff=LARGE_BUFF)
         pictures.to_edge(DOWN)
 
         measurement.save_state()
@@ -1509,12 +1508,12 @@ class LockhartQuote(Scene):
             self.wait(0.005 * len(word)**1.5)
         self.wait(2)
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShiftDown, quote,
                 lag_ratio=0.2,
                 run_time=5,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShiftDown, pictures,
                 run_time=3,
             ),
@@ -1572,7 +1571,7 @@ class ShowApollonianCircles(Scene):
         equation.next_to(circles, UP)
 
         self.add(equation)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             DrawBorderThenFill, circles
         ))
         self.wait()
@@ -1589,7 +1588,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
             MoveAlongPath(
                 point, ellipse,
                 run_time=5,
-                rate_func=None,
+                rate_func=linear,
             )
         )
 
@@ -1611,7 +1610,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
                 line.put_start_and_end_on(
                     ORIGIN, d * UP
                 )
-            lines.arrange_submobjects(DOWN, buff=0)
+            lines.arrange(DOWN, buff=0)
             lines.next_to(arrow, RIGHT)
             h_line.move_to(lines[0].get_bottom())
         lines_animation = ContinualUpdate(
@@ -1681,7 +1680,7 @@ class ReactionToGlimpseOfGenius(TeacherStudentsScene, CreativeConstruction):
             lightbulb, q_marks,
             run_time=3,
             rate_func=there_and_back_with_pause,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         self.play(
             ClockPassesTime(clock, hours_passed=4, run_tim=4),

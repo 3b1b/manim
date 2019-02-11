@@ -79,11 +79,11 @@ class SlidingBlocks(VGroup):
         "collect_clack_data": True,
     }
 
-    def __init__(self, surrounding_scene, **kwargs):
+    def __init__(self, scene, **kwargs):
         VGroup.__init__(self, **kwargs)
-        self.surrounding_scene = surrounding_scene
-        self.floor = surrounding_scene.floor
-        self.wall = surrounding_scene.wall
+        self.scene = scene
+        self.floor = scene.floor
+        self.wall = scene.wall
 
         self.block1 = self.get_block(**self.block1_config)
         self.block2 = self.get_block(**self.block2_config)
@@ -159,7 +159,7 @@ class SlidingBlocks(VGroup):
             DR,
         )
 
-        self.surrounding_scene.update_num_clacks(n_clacks)
+        self.scene.update_num_clacks(n_clacks)
 
     def get_clack_data(self):
         ps_point = self.phase_space_point_tracker.get_location()
@@ -396,29 +396,29 @@ class NameIntro(Scene):
         self.play(
             VFadeIn(blue),
             VFadeIn(brown),
-            Restore(brown, rate_func=None),
+            Restore(brown, rate_func=linear),
         )
         self.play(
             Flash(blue.get_right(), run_time=flash_time),
             ApplyMethod(
                 blue.to_edge, LEFT, {"buff": 0},
-                rate_func=None,
+                rate_func=linear,
             ),
         )
         self.play(
             Flash(blue.get_left(), run_time=flash_time),
-            Restore(blue, rate_func=None),
+            Restore(blue, rate_func=linear),
         )
         self.play(
             Flash(blue.get_right(), run_time=flash_time),
             ApplyMethod(
                 brown.to_edge, RIGHT, {"buff": 0},
-                rate_func=None,
+                rate_func=linear,
             )
         )
         self.play(
             Flash(brown.get_right(), run_time=flash_time),
-            Restore(brown, rate_func=None)
+            Restore(brown, rate_func=linear)
         )
 
 
@@ -441,12 +441,12 @@ class MathAndPhysicsConspiring(Scene):
             TexMobject("\\pi = {:.16}\\dots".format(PI)),
             self.get_tangent_image(),
         )
-        math_stuffs.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+        math_stuffs.arrange(DOWN, buff=MED_LARGE_BUFF)
         math_stuffs.next_to(math_title, DOWN, LARGE_BUFF)
         to_fade = VGroup(math_title, *math_stuffs, physics_title)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFromDown, to_fade,
                 lag_ratio=0.7,
                 run_time=3,
@@ -605,7 +605,7 @@ class TwoBlocksLabel(Scene):
         arrows.set_color(RED)
         self.play(
             Write(label),
-            LaggedStart(GrowArrow, arrows, lag_ratio=0.7),
+            OldLaggedStart(GrowArrow, arrows, lag_ratio=0.7),
             run_time=1
         )
         self.wait()
@@ -865,7 +865,7 @@ class DigitsOfPi(Scene):
         self.add(pi_creature, equation[1])
         self.play(ShowIncreasingSubsets(
             equation[2:],
-            rate_func=None,
+            rate_func=linear,
             run_time=1,
         ))
         self.play(Blink(pi_creature))
@@ -928,7 +928,7 @@ class PiComputingAlgorithmsAxes(Scene):
             method.shift_onto_screen()
             algorithms.add(VGroup(method, cross))
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromDown, algorithms,
             run_time=4,
             lag_ratio=0.4,
@@ -1003,7 +1003,7 @@ class PiComputingAlgorithmsAxes(Scene):
 class StepsOfTheAlgorithm(TeacherStudentsScene):
     def construct(self):
         steps = self.get_steps()
-        steps.arrange_submobjects(
+        steps.arrange(
             DOWN,
             buff=MED_LARGE_BUFF,
             aligned_edge=LEFT,
@@ -1127,7 +1127,7 @@ class CompareToGalacticMass(Scene):
         digits_word.match_color(counter)
         counter.generate_target()
         group = VGroup(counter.target, digits_word)
-        group.arrange_submobjects(
+        group.arrange(
             RIGHT,
             index_of_submobject_to_align=0,
             aligned_edge=DOWN,
@@ -1219,7 +1219,7 @@ class CompareToGalacticMass(Scene):
         black_holes = VGroup(*[
             black_hole.copy() for k in range(10)
         ])
-        black_holes.arrange_submobjects_in_grid(5, 2)
+        black_holes.arrange_in_grid(5, 2)
         black_holes.to_corner(DR)
         random.shuffle(black_holes.submobjects)
         for bh in black_holes:
@@ -1238,7 +1238,7 @@ class CompareToGalacticMass(Scene):
         self.play(
             Write(equals),
             Write(words),
-            LaggedStart(
+            OldLaggedStart(
                 Restore, black_holes,
                 run_time=3
             )
@@ -1275,7 +1275,7 @@ class CompareToGalacticMass(Scene):
             ),
             ReplacementTransform(
                 dots, commas,
-                submobject_mode="lagged_start",
+                lag_ratio=0.5,
                 run_time=2
             )
         )
@@ -1374,7 +1374,7 @@ class CompareAlgorithmToPhysics(PiCreatureScene):
                 target_mode="pondering",
                 look_at_arg=left_rect,
             ),
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFrom, digits,
                 lambda m: (m, LEFT),
                 run_time=5,
@@ -1446,7 +1446,7 @@ class NextVideo(Scene):
         for video in videos:
             video.set_color(BLUE)
             video.set_sheen(0.5, UL)
-        videos.arrange_submobjects(RIGHT, buff=2)
+        videos.arrange(RIGHT, buff=2)
 
         titles = VGroup(
             TextMobject("Here and now"),
@@ -1479,7 +1479,7 @@ class NextVideo(Scene):
             Mortimer()
         )
         friends.set_height(1)
-        friends.arrange_submobjects(RIGHT, buff=MED_SMALL_BUFF)
+        friends.arrange(RIGHT, buff=MED_SMALL_BUFF)
         friends[:2].next_to(randy, LEFT)
         friends[2].next_to(randy, RIGHT)
 
@@ -1491,7 +1491,7 @@ class NextVideo(Scene):
         self.play(Write(dots))
         self.wait()
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFrom, mid_words,
                 lambda m: (m, UP),
                 lag_ratio=0.8,
@@ -1507,11 +1507,11 @@ class NextVideo(Scene):
             ShowCreation(speech_bubble),
             Write(speech_bubble.content),
             randy.change, "maybe", friends[0].eyes,
-            LaggedStart(FadeInFromDown, friends),
+            OldLaggedStart(FadeInFromDown, friends),
             videos.space_out_submobjects, 1.6,
         )
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, friends,
                 lambda m: (m.change, "pondering"),
                 run_time=1,

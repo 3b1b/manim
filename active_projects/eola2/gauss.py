@@ -121,7 +121,7 @@ class ShowRowReduction(Scene):
             TexMobject(")"),
             TexMobject("r_%d" % (row_index + 1)),
         )
-        label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        label.arrange(RIGHT, buff=SMALL_BUFF)
         label.to_edge(UP)
         VGroup(label[0], label[-1]).set_color(self.changing_row_color)
 
@@ -177,7 +177,7 @@ class ShowRowReduction(Scene):
             TexMobject(")"),
             TexMobject("r_%d" % (row2_index + 1)),
         )
-        label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        label.arrange(RIGHT, buff=SMALL_BUFF)
         label.to_edge(UP)
         VGroup(label[0], label[2]).set_color(self.changing_row_color)
         label[-1].set_color(self.reference_row_color)

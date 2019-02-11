@@ -510,7 +510,7 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
         self.play(FadeIn(
             quantum_words,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         anim_sets = [
             [passing_photon],
@@ -526,7 +526,7 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
         for index in 0, 1:
             self.play(*anim_sets[index])
         self.play(
-            # FadeIn(prob_eq, submobject_mode = "lagged_start"),
+            # FadeIn(prob_eq, lag_ratio = 0.5),
             passing_photon
         )
         for index in 1, 0, 0, 1:
@@ -555,7 +555,7 @@ class AngleToProbabilityChart(Scene):
             TexMobject(str(angle) + "^\\circ")
             for angle in angles
         ])
-        angle_mobs.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        angle_mobs.arrange(DOWN, buff = MED_LARGE_BUFF)
         angle_mobs.next_to(left_title, DOWN, LARGE_BUFF)
 
         probs = [
@@ -781,7 +781,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
         }
 
         self.play(ShowCreation(lines_to_pf1, run_time = 2./3, **kwargs))
@@ -887,7 +887,7 @@ class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
         for cos, rect in zip(cosines, rects[1:]):
             cos.next_to(rect, OUT, SMALL_BUFF)
 
-        self.play(LaggedStart(ShowCreation, rects))
+        self.play(OldLaggedStart(ShowCreation, rects))
         self.wait()
         self.play(*list(map(Write, cosines)), run_time = 2)
         self.wait()
@@ -1083,7 +1083,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         lines_from_C = self.get_lines(C, ratio = 0.5)
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "run_time" : 1./3,
         }
         self.play(
@@ -1112,7 +1112,6 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         arrow = Arrow(
             ORIGIN, 3.5*RIGHT,
             path_arc = -0.9*np.pi,
-            use_rectangular_stem = False,
             color = BLUE,
             stroke_width = 5,
         )
@@ -1143,7 +1142,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "run_time" : 1./5,
         }
         self.play(
@@ -1179,7 +1178,6 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         arrow0 = Arrow(
             2*LEFT, 0.5*(UP+RIGHT),
             path_arc = 0.8*np.pi,
-            use_rectangular_stem = False,
             color = WHITE,
             stroke_width = 5,
             buff = 0
@@ -1187,7 +1185,6 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         arrow1 = Arrow(
             2*LEFT, ORIGIN,
             path_arc = 0.8*np.pi,
-            use_rectangular_stem = False,
             color = GREEN,
             stroke_width = 5,
             buff = 0
@@ -1312,7 +1309,7 @@ class RemoveBFromLabeledFilters(IntroduceLabeledFiltersNoRotation):
             line.scale(0.5, about_point = line.get_end())
 
         kwargs = {
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "rate_func" : None,
         }
 
@@ -1480,7 +1477,7 @@ class VennDiagramProofByContradiction(Scene):
             Write(hundred), Write(s),
             ReplacementTransform(
                 VGroup(photon), photons,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
         )
 
@@ -1582,12 +1579,12 @@ class VennDiagramProofByContradiction(Scene):
         )
 
         B_center = B.target.get_center()
-        photons.sort_submobjects(
+        photons.sort(
             lambda p : get_norm(p-B_center)
         )
         in_B = VGroup(*photons[:85])
         out_of_B = VGroup(*photons[85:])
-        out_of_B.sort_submobjects(lambda p : np.dot(p, 2*UP+LEFT))
+        out_of_B.sort(lambda p : np.dot(p, 2*UP+LEFT))
 
         self.play(
             MoveToTarget(B),
@@ -1661,7 +1658,7 @@ class VennDiagramProofByContradiction(Scene):
             DOWN+RIGHT, buff = SMALL_BUFF
         )
 
-        in_B.sort_submobjects(
+        in_B.sort(
             lambda p : get_norm(p - C_center)
         )
         in_C = VGroup(*in_B[:-11])
@@ -1758,7 +1755,7 @@ class VennDiagramProofByContradiction(Scene):
             ),
             TexMobject("+\\, N(", "A", "\\checkmark", ",", "B", ")"),
         )
-        terms.arrange_submobjects(RIGHT)
+        terms.arrange(RIGHT)
         terms.to_edge(UP)
         for term, index, group in zip(terms, [-3, -2, -2], photon_groups):
             term.set_color_by_tex("checkmark", "#00ff00")
@@ -1923,13 +1920,13 @@ class VennDiagramProofByContradiction(Scene):
 
     def photons_jump_to_A_not_C_region(self):
         in_C = self.in_C
-        in_C.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
+        in_C.sort(lambda p : np.dot(p, DOWN+RIGHT))
         movers = VGroup(*self.in_C[:30])
         for mover in movers:
             mover.generate_target()
             mover.target.shift(1.2*UP + 0.6*LEFT)
             mover.target.set_stroke(WHITE)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             MoveToTarget, movers,
             path_arc = np.pi,
             lag_ratio = 0.3
@@ -2085,7 +2082,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         self.play(FadeIn(A1))
         self.play(FadeIn(B0))
         self.play(
-            FadeIn(words, submobject_mode = "lagged_start"),
+            FadeIn(words, lag_ratio = 0.5),
             ShowCreation(arrow)
         )
         self.wait()
@@ -2127,7 +2124,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             self.in_A_out_B_words.fade, 1,
             self.in_A_out_B_arrow.fade, 1,
             FadeIn(B1),
-            FadeIn(words, submobject_mode = "lagged_start"),
+            FadeIn(words, lag_ratio = 0.5),
             ShowCreation(arrow)
         )
         self.play(FadeIn(C0))
@@ -2201,7 +2198,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             TexMobject("N(", "B", "\\checkmark", ",", "C", ")"),
             TexMobject("N(", "A", "\\checkmark", ",", "B", ")"),
         )
-        inequality.arrange_submobjects(RIGHT)
+        inequality.arrange(RIGHT)
         for tex in inequality:
             tex.set_color_by_tex("checkmark", "#00ff00")
             if len(tex) > 1:
@@ -2443,7 +2440,7 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once"
+            "lag_ratio" : 0
         }
         self.play(ShowCreation(all_pre_lines, **kwargs))
         self.play(

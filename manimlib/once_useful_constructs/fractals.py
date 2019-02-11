@@ -78,7 +78,6 @@ class SelfSimilarFractal(VMobject):
         "colors": [RED, WHITE],
         "stroke_width": 1,
         "fill_opacity": 1,
-        "propagate_style_to_family": True,
     }
 
     def init_colors(self):
@@ -257,7 +256,7 @@ class WonkyHexagonFractal(SelfSimilarFractal):
             piece.rotate(i * np.pi / 12, about_point=ORIGIN)
         p1, p2, p3, p4, p5, p6, p7 = subparts
         center_row = VGroup(p1, p4, p7)
-        center_row.arrange_submobjects(RIGHT, buff=0)
+        center_row.arrange(RIGHT, buff=0)
         for p in p2, p3, p5, p6:
             p.set_width(p1.get_width())
         p2.move_to(p1.get_top(), DOWN + LEFT)
@@ -292,12 +291,13 @@ class CircularFractal(SelfSimilarFractal):
 
 
 class JaggedCurvePiece(VMobject):
-    def insert_n_anchor_points(self, n):
-        if self.get_num_anchor_points() == 0:
-            self.points = np.zeros((1, 3))
+    def insert_n_curves(self, n):
+        if self.get_num_curves() == 0:
+            self.set_points(np.zeros((1, 3)))
         anchors = self.get_anchors()
-        indices = np.linspace(0, len(anchors) - 1, n + len(anchors)) \
-            .astype('int')
+        indices = np.linspace(
+            0, len(anchors) - 1, n + len(anchors)
+        ).astype('int')
         self.set_points_as_corners(anchors[indices])
 
 
@@ -313,7 +313,6 @@ class FractalCurve(VMobject):
             4: 2,
             5: 1,
         },
-        "propagate_style_to_family": True,
     }
 
     def generate_points(self):

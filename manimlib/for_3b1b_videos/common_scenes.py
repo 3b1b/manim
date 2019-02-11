@@ -1,10 +1,10 @@
 import random
 
-from manimlib.animation.composition import LaggedStart
+from manimlib.animation.composition import OldLaggedStart
 from manimlib.animation.creation import DrawBorderThenFill
-from manimlib.animation.creation import FadeIn
-from manimlib.animation.creation import FadeOut
 from manimlib.animation.creation import Write
+from manimlib.animation.fading import FadeIn
+from manimlib.animation.fading import FadeOut
 from manimlib.constants import *
 from manimlib.continual_animation.continual_animation import ContinualMovement
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
@@ -21,6 +21,7 @@ from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.moving_camera_scene import MovingCameraScene
 from manimlib.scene.scene import Scene
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 
@@ -32,9 +33,8 @@ class OpeningQuote(Scene):
         "highlighted_quote_terms": {},
         "author": "",
         "fade_in_kwargs": {
-            "submobject_mode": "lagged_start",
-            "rate_func": None,
-            "lag_factor": 4,
+            "lag_ratio": 0.5,
+            "rate_func": linear,
             "run_time": 5,
         },
         "text_size": "\\Large",
@@ -115,7 +115,7 @@ class PatreonThanks(Scene):
             left_group = VGroup(*group[:len(group) / 2])
             right_group = VGroup(*group[len(group) / 2:])
             for subgroup, vect in (left_group, LEFT), (right_group, RIGHT):
-                subgroup.arrange_submobjects(DOWN, aligned_edge=LEFT)
+                subgroup.arrange(DOWN, aligned_edge=LEFT)
                 subgroup.scale(self.patron_scale_val)
                 subgroup.to_edge(vect)
 
@@ -132,7 +132,7 @@ class PatreonThanks(Scene):
                     DrawBorderThenFill(patreon_logo),
                 ]
             self.play(
-                LaggedStart(
+                OldLaggedStart(
                     FadeIn, group,
                     run_time=2,
                 ),
@@ -225,7 +225,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         for column in columns:
             for n, name in enumerate(column):
                 name.shift(n * self.name_y_spacing * DOWN)
-        columns.arrange_submobjects(
+        columns.arrange(
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
         )
@@ -271,7 +271,7 @@ class LogoGenerationTemplate(MovingCameraScene):
         name = self.channel_name
 
         self.play(
-            Write(name, run_time=3, lag_factor=2.5),
+            Write(name, run_time=3),
             *self.get_logo_animations(logo)
         )
         self.wait()
@@ -321,7 +321,7 @@ class Banner(Scene):
     def construct(self):
         pis = self.get_pis()
         pis.set_height(self.pi_height)
-        pis.arrange_submobjects(RIGHT, aligned_edge=DOWN)
+        pis.arrange(RIGHT, aligned_edge=DOWN)
         pis.move_to(self.pi_bottom, DOWN)
         self.add(pis)
 

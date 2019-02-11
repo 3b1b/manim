@@ -103,8 +103,7 @@ class LimitJustMeansApproach(PiCreatureScene):
             self.play(
                 Transform(
                     expression, next_expression,
-                    submobject_mode = "lagged_start",
-                    lag_factor = 1.2,
+                    lag_ratio = 0.5,
                 ),
                 self.pi_creature.look_at, next_expression[-1]
             )
@@ -138,7 +137,7 @@ class LimitJustMeansApproach(PiCreatureScene):
             ratio = ((2+dx)**3-2**3)/dx
             ratio_mob = TexMobject("%.6f\\dots"%ratio)
             group = VGroup(expression, TexMobject("="), ratio_mob)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             result.add(group)
         return result
 
@@ -318,7 +317,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
             self.play(
                 lim.scale_in_place, sf,
                 lim.set_color, color,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
         self.wait(2)
         self.animate_secant_slope_group_change(
@@ -663,8 +662,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
         self.play(ReplacementTransform(
             statements[0].h.copy(), h_group,
             run_time = 2,
-            submobject_mode = "lagged_start",
-            lag_factor = 1.5,
+            lag_ratio = 0.5,
         ))
         self.wait()
 
@@ -740,7 +738,7 @@ class GoalsListed(Scene):
                 "L'Hôpital's rule",
             ])
         ])
-        goals.arrange_submobjects(
+        goals.arrange(
             DOWN, buff = LARGE_BUFF, aligned_edge = LEFT
         )
 
@@ -823,8 +821,7 @@ class GraphLimitExpression(GraphScene):
         for i, j, func in zip(indices, indices[1:], funcs):
             anims = [FadeIn(
                 VGroup(*expression[i:j]),
-                submobject_mode = "lagged_start",
-                lag_factor = 1.5
+                lag_ratio = 0.5,
             )]
             new_graph = self.get_graph(func, color = BLUE)
             if graph is None:
@@ -837,7 +834,7 @@ class GraphLimitExpression(GraphScene):
         self.wait()
         self.play(
             MoveToTarget(expression),
-            FadeIn(limit, submobject_mode = "lagged_start"),
+            FadeIn(limit, lag_ratio = 0.5),
             GrowFromCenter(brace)
         )
         self.play(Write(derivative))
@@ -1726,7 +1723,7 @@ class TheoryHeavy(TeacherStudentsScene):
             "\\over \\,", "h}"
         )
         derivative = VGroup(lhs, equals, rhs)
-        derivative.arrange_submobjects(RIGHT)
+        derivative.arrange(RIGHT)
         for tex_mob in derivative:
             tex_mob.set_color_by_tex("x", RED)
             tex_mob.set_color_by_tex("h", GREEN)
@@ -1871,7 +1868,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.play(ShowCreation(
             graph,
             run_time = 3,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait(4) ## Overly oscillation
         self.play(ShowCreation(colored_graph, run_time = 2))
@@ -2438,9 +2435,9 @@ class DerivativeLimitReciprocity(Scene):
         deriv.set_color_by_tex("df", YELLOW)
         deriv.next_to(arrow, RIGHT)
 
-        self.play(FadeIn(lim, submobject_mode = "lagged_start"))
+        self.play(FadeIn(lim, lag_ratio = 0.5))
         self.play(ShowCreation(arrow))
-        self.play(FadeIn(deriv, submobject_mode = "lagged_start"))
+        self.play(FadeIn(deriv, lag_ratio = 0.5))
         self.wait()
         self.play(Rotate(arrow, np.pi, run_time = 2))
         self.wait()

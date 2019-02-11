@@ -267,7 +267,7 @@ class CircleOfIdeas(Scene):
             Transform(
                 word, word.copy().set_color(BLACK).center().scale(0.1),
                 path_func = path_along_arc(np.pi),
-                rate_func = None,
+                rate_func=linear,
                 run_time = 2
             )
             for word in displayed_words
@@ -285,7 +285,7 @@ class CircleOfIdeas(Scene):
             anims.append(ApplyMethod(
                 word.shift, vect,
                 path_func = path_along_arc(angle), 
-                rate_func = None
+                rate_func=linear
             ))
         return anims
 

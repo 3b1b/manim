@@ -26,10 +26,10 @@ class ConnectionToOptics(Scene):
         width += 2 * MED_SMALL_BUFF
         rects = VGroup()
         for k in [0, 2]:
-            rect = DashedMobject(Rectangle(
+            rect = DashedVMobject(Rectangle(
                 height=FRAME_HEIGHT - 1.5,
                 width=width
-            ), dashes_num=100)
+            ), num_dashes=100)
             rect.move_to(everything.target[k])
             rect.to_edge(DOWN, buff=SMALL_BUFF)
             rects.add(rect)
@@ -94,9 +94,9 @@ class ConnectionToOptics(Scene):
         momentum_group = VGroup(momentum_label, momentum_eq)
         groups = VGroup(energy_group, momentum_group)
         for group in groups:
-            group.arrange_submobjects(DOWN, buff=MED_LARGE_BUFF)
+            group.arrange(DOWN, buff=MED_LARGE_BUFF)
             group[0].set_color(GREEN)
-        groups.arrange_submobjects(DOWN, buff=2)
+        groups.arrange(DOWN, buff=2)
         groups.to_edge(LEFT)
         return groups
 
@@ -147,7 +147,7 @@ class ConnectionToOptics(Scene):
             "Angle of\\\\Incidence",
             "=",
             "Angle of\\\\Reflection",
-        ])).arrange_submobjects(RIGHT)
+        ])).arrange(RIGHT)
         title.set_color(YELLOW)
         h_line = Line(LEFT, RIGHT)
         h_line.match_width(title)

@@ -371,7 +371,7 @@ class Scene(Container):
         ]))
         return time_progression
 
-    def compile_play_args_to_animation_list(self, *args):
+    def compile_play_args_to_animation_list(self, *args, **kwargs):
         """
         Each arg can either be an animation, or a mobject method
         followed by that methods arguments (and potentially follow
@@ -430,6 +430,12 @@ class Scene(Container):
             else:
                 raise Exception("Invalid play arguments")
         compile_method(state)
+
+        for animation in animations:
+            # This is where kwargs to play like run_time and rate_func
+            # get applied to all animations
+            animation.update_config(**kwargs)
+
         return animations
 
     def update_skipping_status(self):
@@ -451,55 +457,66 @@ class Scene(Container):
             self.num_plays += 1
         return wrapper
 
-    @handle_play_like_call
-    def play(self, *args, **kwargs):
-        if len(args) == 0:
-            warnings.warn("Called Scene.play with no animations")
-            return
-
-        animations = self.compile_play_args_to_animation_list(*args)
+    def begin_animations(self, animations):
+        curr_mobjects = self.get_mobject_family_members()
         for animation in animations:
-            # This is where kwargs to play like run_time and rate_func
-            # get applied to all animations
-            animation.update_config(**kwargs)
             # Anything animated that's not already in the
             # scene gets added to the scene
-            if animation.mobject not in self.get_mobject_family_members():
-                self.add(animation.mobject)
-            # Don't call the update functions of a mobject
-            # being animated
-            animation.mobject.suspend_updating()
-        moving_mobjects = self.get_moving_mobjects(*animations)
+            mob = animation.mobject
+            if mob not in curr_mobjects:
+                self.add(mob)
+                curr_mobjects += mob.get_family()
+            # Begin animation
+            animation.begin()
 
+    def progress_through_animations(self, animations):
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
+        moving_mobjects = self.get_moving_mobjects(*animations)
         self.update_frame(excluded_mobjects=moving_mobjects)
         static_image = self.get_frame()
+        last_t = 0
         for t in self.get_animation_time_progression(animations):
+            dt = t - last_t
+            last_t = t
             for animation in animations:
-                animation.update(t / animation.run_time)
-            dt = 1 / self.camera.frame_rate
+                animation.update_mobjects(dt)
+                alpha = t / animation.run_time
+                animation.interpolate(alpha)
             self.continual_update(dt)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
+
+    def finish_animations(self, animations):
+        for animation in animations:
+            animation.finish()
+            animation.clean_up_from_scene(self)
         self.mobjects_from_last_animation = [
             anim.mobject for anim in animations
         ]
-        self.clean_up_animations(*animations)
         if self.skip_animations:
             self.continual_update(self.get_run_time(animations))
         else:
             self.continual_update(0)
 
-        return self
+    @handle_play_like_call
+    def play(self, *args, **kwargs):
+        if len(args) == 0:
+            warnings.warn("Called Scene.play with no animations")
+            return
+        animations = self.compile_play_args_to_animation_list(
+            *args, **kwargs
+        )
+        self.begin_animations(animations)
+        self.progress_through_animations(animations)
+        self.finish_animations(animations)
 
     def idle_stream(self):
         self.file_writer.idle_stream()
 
     def clean_up_animations(self, *animations):
         for animation in animations:
-            animation.clean_up(self)
-            animation.mobject.resume_updating()
+            animation.clean_up_from_scene(self)
         return self
 
     def get_mobjects_from_last_animation(self):

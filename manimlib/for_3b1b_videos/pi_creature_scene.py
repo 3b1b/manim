@@ -271,7 +271,7 @@ class TeacherStudentsScene(PiCreatureScene):
             Randolph(color=c)
             for c in self.student_colors
         ])
-        self.students.arrange_submobjects(RIGHT)
+        self.students.arrange(RIGHT)
         self.students.scale(self.student_scale_factor)
         self.students.to_corner(DOWN + LEFT)
         self.teacher.look_at(self.students[-1].eyes)
@@ -332,10 +332,10 @@ class TeacherStudentsScene(PiCreatureScene):
         if "look_at_arg" in kwargs:
             for pi in target:
                 pi.look_at(kwargs["look_at_arg"])
-        submobject_mode = kwargs.get("submobject_mode", "lagged_start")
+        lag_ratio = kwargs.get("lag_ratio", 0.5)
         return Transform(
             start, target,
-            submobject_mode=submobject_mode,
+            lag_ratio=lag_ratio,
             run_time=2
         )
 

@@ -385,7 +385,7 @@ class RubiksCube(VGroup):
             self.create_square(color)
             for x in range(9)
         ])
-        squares.arrange_submobjects_in_grid(
+        squares.arrange_in_grid(
             3, 3,
             buff=0
         )
@@ -411,7 +411,7 @@ class RubiksCube(VGroup):
         # return VGroup(square, back)
 
     def get_face(self, vect):
-        self.sort_submobjects(lambda p: np.dot(p, vect))
+        self.sort(lambda p: np.dot(p, vect))
         return self[-(12 + 9):]
 
 
@@ -454,7 +454,7 @@ class ManyNumberSystems(Scene):
 
         self.add(title)
         self.play(FadeInFromLarge(H_label))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromLarge, VGroup(*it.chain(systems[:2], systems[3:])),
             lambda m: (m, 4)
         ))
@@ -476,7 +476,7 @@ class ManyNumberSystems(Scene):
         number_line.add(R_example_dot)
         plane.add(C_example_dot)
         self.wait(2)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod,
             VGroup(
                 H_label,
@@ -598,7 +598,7 @@ class IntroduceHamilton(Scene):
         self.wait()
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeIn, quote,
                 lag_ratio=0.2,
                 run_time=4
@@ -613,7 +613,7 @@ class IntroduceHamilton(Scene):
                 run_time=2,
                 rate_func=squish_rate_func(smooth, 0.5, 1),
             ),
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShiftDown, VGroup(*it.chain(
                     quote, quote_rect, quote_label
                 ))
@@ -701,7 +701,7 @@ class QuaternionHistory(Scene):
             cross_rhs
         )
         for product in dot_product, cross_product:
-            product.arrange_submobjects(RIGHT, buff=2 * SMALL_BUFF)
+            product.arrange(RIGHT, buff=2 * SMALL_BUFF)
             product.set_height(1.5)
         dot_product.next_to(date, DOWN, buff=MED_LARGE_BUFF)
         dot_product.to_edge(LEFT, buff=LARGE_BUFF)
@@ -739,7 +739,7 @@ class QuaternionHistory(Scene):
             for color in colors
         ])
         students.set_height(2)
-        students.arrange_submobjects(RIGHT)
+        students.arrange(RIGHT)
         students.set_width(FRAME_WIDTH - hamilton.get_width() - 1)
         students.to_corner(DL)
 
@@ -769,7 +769,7 @@ class QuaternionHistory(Scene):
             image_labels.add(label)
             images.add(image)
             images_with_labels.add(Group(image, label))
-        images_with_labels.arrange_submobjects(RIGHT)
+        images_with_labels.arrange(RIGHT)
         images_with_labels.next_to(hamilton, LEFT, LARGE_BUFF)
         images_with_labels.shift(MED_LARGE_BUFF * DOWN)
         society_title = TextMobject("Quaternion society")
@@ -788,12 +788,12 @@ class QuaternionHistory(Scene):
                 remover=True
             )
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFrom, students,
             lambda m: (m, LEFT),
         ))
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, students,
                 lambda pi: (
                     pi.change,
@@ -805,14 +805,14 @@ class QuaternionHistory(Scene):
         )
         blink_wait(3)
         self.play(
-            LaggedStart(FadeInFromDown, images),
-            LaggedStart(FadeInFromLarge, image_labels),
+            OldLaggedStart(FadeInFromDown, images),
+            OldLaggedStart(FadeInFromLarge, image_labels),
             Write(society_title)
         )
         blink_wait(3)
         self.play(
             FadeOutAndShift(hamilton, RIGHT),
-            LaggedStart(
+            OldLaggedStart(
                 FadeOutAndShift, images_with_labels,
                 lambda m: (m, UP)
             ),
@@ -827,13 +827,13 @@ class QuaternionHistory(Scene):
         group = self.get_dissenter_images_quotes_and_names()
         images, quotes, names = group
         self.play(
-            LaggedStart(FadeInFromDown, images),
-            LaggedStart(FadeInFromLarge, names),
+            OldLaggedStart(FadeInFromDown, images),
+            OldLaggedStart(FadeInFromLarge, names),
             lag_ratio=0.75,
             run_time=2,
         )
         for quote in quotes:
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 FadeIn, VGroup(*quote.family_members_with_points()),
                 lag_ratio=0.3
             ))
@@ -907,14 +907,14 @@ class QuaternionHistory(Scene):
             )
 
         def get_change_places():
-            return LaggedStart(
+            return OldLaggedStart(
                 change_single_place, characters,
                 lag_ratio=0.6
             )
 
         self.play(
             Write(title),
-            LaggedStart(FadeInFromDown, characters)
+            OldLaggedStart(FadeInFromDown, characters)
         )
         self.play(
             get_change_places(),
@@ -962,7 +962,7 @@ class QuaternionHistory(Scene):
             quotes.add(quote)
             images_with_quotes.add(Group(image, label, quote))
 
-        images_with_quotes.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        images_with_quotes.arrange(RIGHT, buff=LARGE_BUFF)
         images_with_quotes.to_edge(DOWN, MED_LARGE_BUFF)
         return Group(images, quotes, names)
 
@@ -1055,7 +1055,6 @@ class QuantumSpin(Scene):
         electron.set_sheen(0.3, UL)
         electron.set_fill(opacity=0.8)
         kwargs = {
-            "use_rectangular_stem": False,
             "path_arc": PI,
         }
         curved_arrows = VGroup(
@@ -1082,7 +1081,7 @@ class QuantumSpin(Scene):
         z_group = VGroup(electron.copy(), z_ca, Dot(color=BLUE))
 
         groups = VGroup(x_group, y_group, z_group)
-        groups.arrange_submobjects(RIGHT, buff=1.5)
+        groups.arrange(RIGHT, buff=1.5)
         groups.move_to(UP)
 
         y_ca.rotation = Rotating(
@@ -1107,7 +1106,7 @@ class QuantumSpin(Scene):
         self.add(title, groups)
         self.play()
         self.play(
-            LaggedStart(FadeInFromDown, matrices, run_time=3),
+            OldLaggedStart(FadeInFromDown, matrices, run_time=3),
             *rotations
         )
         for x in range(2):
@@ -1178,7 +1177,7 @@ class TableOfContents(Scene):
         )
         for chapter in chapters:
             chapter.space_out_submobjects(1.5)
-        chapters.arrange_submobjects(
+        chapters.arrange(
             DOWN, buff=1.5, aligned_edge=LEFT
         )
         chapters.to_edge(LEFT)
@@ -1240,21 +1239,21 @@ class IntroduceLinusTheLinelander(Scene):
             TexMobject("3 + 4 = 7"),
             TexMobject("(-2) \\cdot 3 = -6"),
         )
-        algebra.arrange_submobjects(DOWN)
+        algebra.arrange(DOWN)
         algebra.next_to(number_line, DOWN, LARGE_BUFF)
         algebra.shift(3 * RIGHT)
 
         self.play(
-            ShowCreation(number_line.main_line),
+            ShowCreation(number_line),
             linus.look_at, number_line
         )
         self.play(
-            LaggedStart(FadeInFromDown, number_line.numbers),
-            LaggedStart(ShowCreation, number_line.tick_marks),
+            OldLaggedStart(FadeInFromDown, number_line.numbers),
+            OldLaggedStart(ShowCreation, number_line.tick_marks),
             linus.change, "happy"
         )
         self.play(
-            LaggedStart(FadeInFromDown, algebra),
+            OldLaggedStart(FadeInFromDown, algebra),
             linus.look_at, algebra
         )
         self.play(Blink(linus))
@@ -1283,7 +1282,7 @@ class IntroduceLinusTheLinelander(Scene):
         q_marks.next_to(linus.body, UP, buff=0)
         q_marks.set_color_by_gradient(BLUE, GREEN, YELLOW)
         random.shuffle(q_marks.submobjects)
-        q_marks_anim = LaggedStart(
+        q_marks_anim = OldLaggedStart(
             FadeIn, q_marks,
             run_time=15,
             rate_func=there_and_back,
@@ -1477,14 +1476,14 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
         self.play(Write(number, run_time=1))
         self.play(
             GrowFromCenter(real_brace),
-            LaggedStart(FadeIn, real_label),
+            OldLaggedStart(FadeIn, real_label),
             linus.change, "confused", number,
             run_time=1
         )
         self.wait()
         self.play(
             GrowFromCenter(imag_brace),
-            LaggedStart(FadeIn, imag_label),
+            OldLaggedStart(FadeIn, imag_label),
             run_time=1
         )
         self.play(Blink(linus))
@@ -1529,13 +1528,13 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             VGroup(z1.target, z1.parens),
             VGroup(z2, z2.parens),
         )
-        product.arrange_submobjects(RIGHT, SMALL_BUFF)
+        product.arrange(RIGHT, SMALL_BUFF)
         product.move_to(2 * RIGHT + 2 * UP)
 
         foil = VGroup(*map(TextMobject, [
             "First", "Outside", "Inside", "Last",
         ]))
-        foil.arrange_submobjects(
+        foil.arrange(
             DOWN, buff=MED_SMALL_BUFF,
             aligned_edge=LEFT
         )
@@ -1562,7 +1561,7 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             z1.imag.targets[0], get_cdot(), z2.real.targets[1], get_plus(),
             z1.imag.targets[1], get_cdot(), z2.imag.targets[1],
         )
-        expansion.arrange_submobjects(RIGHT, buff=0.15)
+        expansion.arrange(RIGHT, buff=0.15)
         expansion.next_to(product, DOWN, buff=LARGE_BUFF)
         expansion_parts = VGroup(*[
             expansion[4 * i: 4 * i + 3]
@@ -1586,7 +1585,7 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             z1[2].copy(), get_cdot(), z2[0].copy(),
             get_rp(), TexMobject("i")
         )
-        final_prouct.arrange_submobjects(RIGHT, buff=0.15)
+        final_prouct.arrange(RIGHT, buff=0.15)
         final_prouct.next_to(expansion, DOWN, buff=2)
         final_arrows = VGroup()
         for i, brace in zip([1, 11, 15, 5], expansion_part_braces):
@@ -1608,7 +1607,6 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
                 arrow = Arrow(
                     brace.get_bottom(),
                     target.get_top(),
-                    use_rectangular_stem=False,
                 )
             final_arrows.add(arrow)
         final_arrows.set_stroke(BLACK, width=6, background=True)
@@ -1659,7 +1657,7 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             linus.look_at, final_prouct,
         )
         self.play(
-            LaggedStart(ShowCreation, final_arrows),
+            OldLaggedStart(ShowCreation, final_arrows),
             run_time=3,
         )
         self.play(linus.change, "confused")
@@ -1683,8 +1681,8 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
         braces = VGroup(real_brace, imag_brace)
         labels = VGroup(real_label, imag_label)
         self.play(
-            LaggedStart(GrowFromCenter, braces),
-            LaggedStart(Write, labels),
+            OldLaggedStart(GrowFromCenter, braces),
+            OldLaggedStart(Write, labels),
         )
         self.wait()
 
@@ -1734,12 +1732,12 @@ class TextbookQuaternionDefinition(TeacherStudentsScene):
                 "jk = -kj = i",
             ]
         ])
-        defining_products.arrange_submobjects(DOWN)
+        defining_products.arrange(DOWN)
         defining_products.next_to(self.students, UP, LARGE_BUFF)
         def_rect = SurroundingRectangle(defining_products)
 
         self.play(
-            LaggedStart(FadeInFromDown, defining_products),
+            OldLaggedStart(FadeInFromDown, defining_products),
             self.get_student_changes(*3 * ["confused"]),
             self.teacher.change, "raise_right_hand",
         )
@@ -1788,7 +1786,7 @@ class ProblemsWhereComplexNumbersArise(Scene):
             ),
             TextMobject("Frequency analysis")
         )
-        problems.arrange_submobjects(
+        problems.arrange(
             DOWN, buff=LARGE_BUFF, aligned_edge=LEFT
         )
         for problem in problems:
@@ -1802,7 +1800,7 @@ class ProblemsWhereComplexNumbersArise(Scene):
         self.add(problems, v_dots)
         self.play(
             ShowCreation(underline),
-            LaggedStart(FadeInFromDown, title, lag_ratio=0.5),
+            OldLaggedStart(FadeInFromDown, title, lag_ratio=0.5),
             run_time=3
         )
         self.wait()
@@ -1835,7 +1833,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             TexMobject("z="),
             DecimalNumber(self.z, num_decimal_places=0)
         )
-        z_label.arrange_submobjects(
+        z_label.arrange(
             RIGHT, buff=SMALL_BUFF,
         )
         z_label.next_to(z_dot, UP, buff=SMALL_BUFF)
@@ -1850,7 +1848,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             TexMobject("w="),
             DecimalNumber(self.w, num_decimal_places=0)
         )
-        w_label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        w_label.arrange(RIGHT, buff=SMALL_BUFF)
         w_label.next_to(w_dot, DOWN, buff=SMALL_BUFF)
         w_label.set_color(self.w_color)
         w_label.add_background_rectangle()
@@ -1872,7 +1870,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             z_line, z_label,
             w_line, w_label,
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromLarge, VGroup(z_dot, w_dot),
             lambda m: (m, 5),
             lag_ratio=0.8,
@@ -1884,7 +1882,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
         self.add(product[:-1])
         self.play(
             ReplacementTransform(w_label[1][0].copy(), w_sym),
-            FadeInAndShiftFromDirection(product[2], LEFT),
+            FadeInFrom(product[2], LEFT),
             FadeIn(product[0]),
         )
         self.wait()
@@ -1931,7 +1929,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
                     pair = VGroup(p1, p2)
                     pair.scale(0.3)
                     sparkly_plane.add(pair)
-        sparkly_plane.sort_submobjects(
+        sparkly_plane.sort(
             lambda p: 0.1 * get_norm(p) + random.random()
         )
         sparkly_plane.set_color_by_gradient(YELLOW, RED, PINK, BLUE)
@@ -1949,7 +1947,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
         zero_eq = TexMobject("z \\cdot 0 = 0")
         one_eq = TexMobject("z \\cdot 1 = z")
         equations = VGroup(zero_eq, one_eq)
-        equations.arrange_submobjects(DOWN)
+        equations.arrange(DOWN)
         equations.scale(1.5)
         for eq in equations:
             eq.add_background_rectangle()
@@ -1960,7 +1958,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             TexMobject("z \\cdot w ="),
             DecimalNumber(product, num_decimal_places=0)
         )
-        product_label.arrange_submobjects(RIGHT)
+        product_label.arrange(RIGHT)
         product_label[0].shift(0.025 * DOWN)
         product_label.next_to(product_dot, UP, SMALL_BUFF)
         product_label.add_background_rectangle()
@@ -1993,7 +1991,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
         )
         self.wait()
         self.play(FadeOut(VGroup(product_line, product_dot)))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreationThenDestruction, sparkly_plane,
             lag_ratio=0.5,
             run_time=2
@@ -2211,7 +2209,7 @@ class LinusThinksAboutStretching(Scene):
                     lower_line.stretch, scalar, 0,
                     run_time=2
                 ),
-                # LaggedStart(FadeIn, words, run_time=1),
+                # OldLaggedStart(FadeIn, words, run_time=1),
                 FadeInFromLarge(words, 1.0 / scalar),
                 linus.look_at, top_line.number_to_point(scalar)
             )
@@ -2375,10 +2373,10 @@ class IntroduceStereographicProjection(MovingCameraScene):
         v_line.set_height(FRAME_HEIGHT)
         v_line.set_stroke(RED, 5)
 
-        self.play(LaggedStart(FadeInFromLarge, dots))
+        self.play(OldLaggedStart(FadeInFromLarge, dots))
         self.play(FadeInFromLarge(neg_one_dot))
         self.add(lines, neg_one_dot, dots)
-        self.play(LaggedStart(ShowCreation, lines))
+        self.play(OldLaggedStart(ShowCreation, lines))
         self.wait()
         self.play(
             lines.set_stroke, {"width": 0.5},
@@ -2680,8 +2678,8 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
         self.wait()
         for i in [1, 0]:
             self.play(
-                LaggedStart(GrowArrow, arrows[i::2]),
-                LaggedStart(Write, labels[i::2])
+                OldLaggedStart(GrowArrow, arrows[i::2]),
+                OldLaggedStart(Write, labels[i::2])
             )
             self.play(Blink(linus))
 
@@ -2756,7 +2754,6 @@ class IntroduceStereographicProjectionLinusView(IntroduceStereographicProjection
         neg_i_dot = dots[-2]
 
         kwargs1 = {
-            "use_rectangular_stem": False,
             "path_arc": -90 * DEGREES,
             "buff": SMALL_BUFF,
         }
@@ -2911,7 +2908,6 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
         for p1, p2 in adjacent_pairs(points):
             arrow = Arrow(
                 p1, p2, path_arc=180 * DEGREES,
-                use_rectangular_stem=False,
             )
             arrow.set_stroke(LIGHT_GREY, width=3)
             arrow.tip.set_fill(LIGHT_GREY)
@@ -3105,7 +3101,7 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
             line.set_stroke(width=5)
             self.play(
                 ShowCreationThenDestruction(line),
-                LaggedStart(
+                OldLaggedStart(
                     Indicate, group,
                     rate_func=there_and_back,
                     color=line.get_color(),
@@ -3123,9 +3119,9 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
         z_axis.set_color(WHITE)
         z_axis_top = Line(
             z_axis.number_to_point(0),
-            z_axis.main_line.get_end(),
+            z_axis.get_end(),
         )
-        z_axis_top.match_style(z_axis.main_line)
+        z_axis_top.match_style(z_axis)
 
         z_unit_line = Line(
             z_axis.number_to_point(0),
@@ -3155,7 +3151,7 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
         colored_coord_lines = VGroup(colored_, y_line, z_line)
 
         coord_lines = VGroup(
-            plane.axes[0], plane.axes[1], z_axis.main_line,
+            plane.axes[0], plane.axes[1], z_axis,
         )
         for i1, i2 in [(0, 2), (1, 0), (2, 1)]:
             coord_lines[i1].target = coord_lines[i2].copy()
@@ -3196,8 +3192,8 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
             )
         self.remove(z_axis_top)
         self.play(
-            LaggedStart(MoveToTarget, group, lag_ratio=0.8),
-            LaggedStart(MoveToTarget, coord_lines, lag_ratio=0.8),
+            OldLaggedStart(MoveToTarget, group, lag_ratio=0.8),
+            OldLaggedStart(MoveToTarget, coord_lines, lag_ratio=0.8),
             FadeOut(self.title),
             FadeIn(new_title),
             run_time=3
@@ -3269,7 +3265,7 @@ class MentionImpossibilityOf3dNumbers(TeacherStudentsScene):
             TexMobject("ij = ?"),
             TexMobject("ji = ?"),
         )
-        equations.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        equations.arrange(RIGHT, buff=LARGE_BUFF)
         equations.scale(1.5)
         equations.to_edge(UP)
         self.add(equations)
@@ -3316,7 +3312,7 @@ class SphereExamplePointsDecimal(Scene):
             decimals[1], TexMobject("i"), TexMobject("+"),
             decimals[2], TexMobject("j"),
         )
-        number_label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        number_label.arrange(RIGHT, buff=SMALL_BUFF)
         number_label.to_corner(UL)
 
         point = VectorizedPoint(OUT)
@@ -3598,7 +3594,7 @@ class TwoDStereographicProjection(IntroduceFelix):
         north_hemisphere.set_fill(opacity=0.8)
 
         self.play(
-            LaggedStart(ShowCreation, north_lines),
+            OldLaggedStart(ShowCreation, north_lines),
             FadeIn(north_hemisphere)
         )
         self.play(
@@ -3649,7 +3645,7 @@ class TwoDStereographicProjection(IntroduceFelix):
         )
 
         self.play(
-            LaggedStart(ShowCreation, south_lines),
+            OldLaggedStart(ShowCreation, south_lines),
             FadeIn(south_hemisphere)
         )
         self.play(
@@ -3696,8 +3692,8 @@ class TwoDStereographicProjection(IntroduceFelix):
         sphere_arcs.set_stroke(RED)
 
         self.play(
-            LaggedStart(GrowArrow, arrows),
-            LaggedStart(Write, neg_ones)
+            OldLaggedStart(GrowArrow, arrows),
+            OldLaggedStart(Write, neg_ones)
         )
         self.wait(3)
         self.play(
@@ -3709,7 +3705,7 @@ class TwoDStereographicProjection(IntroduceFelix):
             self.play(
                 ShowCreationThenDestruction(
                     sphere_arcs,
-                    submobject_mode="all_at_once",
+                    lag_ratio=0,
                     run_time=3,
                 )
             )
@@ -3965,7 +3961,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
             phi=60 * DEGREES,
         )
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFrom, labels,
                 lambda m: (m, UP)
             )
@@ -4033,7 +4029,6 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
             2 * RIGHT, 2 * UP,
             buff=SMALL_BUFF,
             path_arc=PI,
-            use_rectangular_stem=False,
         )
         arrow.set_stroke(LIGHT_GREY, 3)
         arrow.tip.set_fill(LIGHT_GREY)
@@ -4061,7 +4056,7 @@ class ShowRotationsJustWithReferenceCircles(TwoDStereographicProjection):
         self.add(pcij)
 
         # About j-axis
-        self.play(ShowCreation(arrows, run_time=3, rate_func=None))
+        self.play(ShowCreation(arrows, run_time=3, rate_func=linear))
         self.wait(3)
         for x in range(2):
             y_axis.pieces.set_stroke(width=1)
@@ -4206,10 +4201,10 @@ class IntroduceQuaternions(Scene):
                 [GREEN, RED, BLUE],
             )
         ])
-        three_axes.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        three_axes.arrange(RIGHT, buff=LARGE_BUFF)
         three_axes.next_to(number, DOWN, LARGE_BUFF)
 
-        self.play(LaggedStart(FadeInFromLarge, three_axes))
+        self.play(OldLaggedStart(FadeInFromLarge, three_axes))
         self.wait(2)
 
         self.three_axes = three_axes
@@ -4247,8 +4242,8 @@ class IntroduceQuaternions(Scene):
         VGroup(scalar_word, vector_word).set_color(YELLOW)
 
         self.play(
-            LaggedStart(GrowFromCenter, braces),
-            LaggedStart(
+            OldLaggedStart(GrowFromCenter, braces),
+            OldLaggedStart(
                 FadeInFrom, VGroup(real_word, imag_word),
                 lambda m: (m, UP)
             )
@@ -4298,7 +4293,7 @@ class IntroduceQuaternions(Scene):
         )
         numbers = VGroup(number_2d, number_3d, number_4d)
         for number in numbers:
-            number.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            number.arrange(RIGHT, buff=SMALL_BUFF)
             for part in number:
                 if isinstance(part, TexMobject):
                     # part.set_color_by_tex_to_color_map({
@@ -4313,7 +4308,7 @@ class IntroduceQuaternions(Scene):
                 number[5].set_color(RED)
             if len(number) > 8:
                 number[8].set_color(BLUE)
-        numbers.arrange_submobjects(
+        numbers.arrange(
             DOWN, buff=2, aligned_edge=LEFT
         )
         numbers.center()
@@ -4409,7 +4404,7 @@ class ShowDotProductCrossProductFromOfQMult(Scene):
                 TexMobject("{}_{} = ".format(v_tex, i)),
                 vector,
             )
-            group.arrange_submobjects(RIGHT, SMALL_BUFF)
+            group.arrange(RIGHT, SMALL_BUFF)
             group.next_to(brace, UP)
 
             braces.add(brace)
@@ -4436,7 +4431,7 @@ class ShowDotProductCrossProductFromOfQMult(Scene):
         self.add(product)
         self.add(braces)
         self.add(vector_defs)
-        self.play(LaggedStart(FadeInFromLarge, result))
+        self.play(OldLaggedStart(FadeInFromLarge, result))
         self.wait()
 
 
@@ -4632,7 +4627,7 @@ class BreakUpQuaternionMultiplicationInParts(Scene):
             randy.change, "confused", rotate_words,
             ShowCreationThenFadeAround(rotate_words),
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFrom, q_marks,
             lambda m: (m, LEFT),
             lag_ratio=0.8,
@@ -4647,9 +4642,9 @@ class SphereProjectionsWrapper(Scene):
             VGroup(*[
                 ScreenRectangle(height=3)
                 for x in range(3)
-            ]).arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+            ]).arrange(RIGHT, buff=LARGE_BUFF)
             for y in range(2)
-        ]).arrange_submobjects(DOWN, buff=2 * LARGE_BUFF)
+        ]).arrange(DOWN, buff=2 * LARGE_BUFF)
         rect_rows.set_width(FRAME_WIDTH - 1)
 
         sphere_labels = VGroup(
@@ -4730,7 +4725,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
             coords[2], TexMobject("j"),
             coords[3], TexMobject("k"),
         )
-        label.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        label.arrange(RIGHT, buff=SMALL_BUFF)
         label.to_corner(UR)
 
         def update_label(label):
@@ -4820,7 +4815,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
         words.next_to(brace, DOWN, SMALL_BUFF, LEFT)
 
         self.play(Write(sphere))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFrom, labels,
             lambda m: (m, IN)
         ))
@@ -5192,7 +5187,7 @@ class RuleOfQuaternionMultiplicationOverlay(Scene):
             TexMobject("i", "\\cdot", "k", "=", "-j", **kwargs),
         )
         i_products.scale(2)
-        i_products.arrange_submobjects(
+        i_products.arrange(
             DOWN, buff=MED_LARGE_BUFF,
             aligned_edge=LEFT,
         )
@@ -5279,7 +5274,7 @@ class RuleOfQuaternionMultiplication(HypersphereStereographicProjection):
             mt.set_value(self.q_tracker.get_value())
 
         self.play(ShowCreation(circle, run_time=2))
-        self.play(LaggedStart(ShowCreation, arrows, lag_ratio=0.25))
+        self.play(OldLaggedStart(ShowCreation, arrows, lag_ratio=0.25))
         self.wait()
         circle.add_updater(lambda c: c.become(get_circle_1i()))
         m_tracker.add_updater(set_to_q_value)
@@ -5391,19 +5386,16 @@ class RuleOfQuaternionMultiplication(HypersphereStereographicProjection):
         c2p = self.axes.coords_to_point
         i_arrow = Arrow(
             ORIGIN, 2 * RIGHT, path_arc=-120 * DEGREES,
-            use_rectangular_stem=False,
             buff=SMALL_BUFF,
         )
         neg_one_arrow = Arrow(
             ORIGIN, 5.5 * RIGHT + UP,
             path_arc=-30 * DEGREES,
-            use_rectangular_stem=False,
             buff=SMALL_BUFF,
         )
         neg_i_arrow = Arrow(
             4.5 * LEFT + 1.5 * UP, ORIGIN,
             path_arc=-30 * DEGREES,
-            use_rectangular_stem=False,
             buff=SMALL_BUFF,
         )
         one_arrow = i_arrow.copy()
@@ -5669,7 +5661,7 @@ class JMultiplicationChart(Scene):
             TexMobject("j", "\\cdot", "k", "=", "i", **kwargs),
         )
         j_products.scale(2)
-        j_products.arrange_submobjects(
+        j_products.arrange(
             DOWN, buff=MED_LARGE_BUFF,
             aligned_edge=LEFT,
         )
@@ -5917,7 +5909,7 @@ class MentionCommutativity(TeacherStudentsScene):
         self.wait(3)
         self.play(
             FadeInFrom(ji_eq),
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, VGroup(ij_eq, general_eq),
                 lambda m: (m.shift, UP),
                 lag_ratio=0.8,
@@ -6036,7 +6028,6 @@ class MultiplicationFromTheRight(Scene):
             i.get_top(),
             j.get_top(),
             path_arc=-PI,
-            use_rectangular_stem=False,
         )
         arrow.set_stroke(width=2)
 
@@ -6122,7 +6113,6 @@ class HowQuaternionsRotate3dPoints(Scene):
             expression[0].get_top(),
             expression[2].get_top(),
             path_arc=-PI,
-            use_rectangular_stem=False,
             color=WHITE,
         )
         right_arrow.set_stroke(width=4)

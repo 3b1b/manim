@@ -36,11 +36,9 @@ class Mobject(Container):
         "target": None,
     }
 
-    def __init__(self, *submobjects, **kwargs):
-        Container.__init__(self, *submobjects, **kwargs)
-        if not all([isinstance(m, Mobject) for m in submobjects]):
-            raise Exception("All submobjects must be of type Mobject")
-        self.submobjects = list(submobjects)
+    def __init__(self, **kwargs):
+        Container.__init__(self, **kwargs)
+        self.submobjects = []
         self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
@@ -334,9 +332,10 @@ class Mobject(Container):
     # Note, much of these are now redundant with default behavior of
     # above methods
 
-    def apply_points_function_about_point(self, func, about_point=None, about_edge=ORIGIN):
+    def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
         if about_point is None:
-            assert(about_edge is not None)
+            if about_edge is None:
+                about_edge = ORIGIN
             about_point = self.get_critical_point(about_edge)
         for mob in self.family_members_with_points():
             mob.points -= about_point
@@ -528,21 +527,42 @@ class Mobject(Container):
         self.shift(mobject.get_center() - self.get_center())
         return self
 
-    def surround(self, mobject, dim_to_match=0, stretch=False, buffer_factor=1.2):
+    def surround(self, mobject,
+                 dim_to_match=0,
+                 stretch=False,
+                 buff=MED_SMALL_BUFF):
         self.replace(mobject, dim_to_match, stretch)
-        self.scale_in_place(buffer_factor)
+        length = mobject.length_over_dim(dim_to_match)
+        self.scale_in_place((length + buff) / length)
+        return self
 
-    def position_endpoints_on(self, start, end):
-        curr_vect = self.points[-1] - self.points[0]
+    def get_start(self):
+        self.throw_error_if_no_points()
+        return np.array(self.points[0])
+
+    def get_end(self):
+        self.throw_error_if_no_points()
+        return np.array(self.points[-1])
+
+    def get_start_and_end(self):
+        return self.get_start(), self.get_end()
+
+    def put_start_and_end_on(self, start, end):
+        curr_start, curr_end = self.get_start_and_end()
+        curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
         target_vect = end - start
-        self.scale(get_norm(target_vect) / get_norm(curr_vect))
+        self.scale(
+            get_norm(target_vect) / get_norm(curr_vect),
+            about_point=curr_start,
+        )
         self.rotate(
             angle_of_vector(target_vect) -
-            angle_of_vector(curr_vect)
+            angle_of_vector(curr_vect),
+            about_point=curr_start
         )
-        self.shift(start - self.points[0])
+        self.shift(start - curr_start)
         return self
 
     # Background rectangle
@@ -852,14 +872,14 @@ class Mobject(Container):
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.get_num_points() > 0]
 
-    def arrange_submobjects(self, direction=RIGHT, center=True, **kwargs):
+    def arrange(self, direction=RIGHT, center=True, **kwargs):
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
             m2.next_to(m1, direction, **kwargs)
         if center:
             self.center()
         return self
 
-    def arrange_submobjects_in_grid(self, n_rows=None, n_cols=None, **kwargs):
+    def arrange_in_grid(self, n_rows=None, n_cols=None, **kwargs):
         submobs = self.submobjects
         if n_rows is None and n_cols is None:
             n_cols = int(np.sqrt(len(submobs)))
@@ -873,28 +893,38 @@ class Mobject(Container):
             v2 = RIGHT
             n = len(submobs) // n_cols
         Group(*[
-            Group(*submobs[i:i + n]).arrange_submobjects(v1, **kwargs)
+            Group(*submobs[i:i + n]).arrange(v1, **kwargs)
             for i in range(0, len(submobs), n)
-        ]).arrange_submobjects(v2, **kwargs)
+        ]).arrange(v2, **kwargs)
         return self
 
-    def sort_submobjects(self, point_to_num_func=lambda p: p[0]):
-        self.submobjects.sort(
-            key=lambda m: point_to_num_func(m.get_center())
-        )
+    def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
+        if submob_func is None:
+            submob_func = lambda m: point_to_num_func(m.get_center())
+        self.submobjects.sort(key=submob_func)
         return self
 
-    def shuffle_submobjects(self, recursive=False):
+    def shuffle(self, recursive=False):
         if recursive:
             for submob in self.submobjects:
-                submob.shuffle_submobjects(recursive=True)
+                submob.shuffle(recursive=True)
         random.shuffle(self.submobjects)
 
-    def print_submobject_family(self, n_tabs=0):
+    def print_family(self, n_tabs=0):
         """For debugging purposes"""
         print("\t" * n_tabs, self, id(self))
         for submob in self.submobjects:
-            submob.print_submobject_family(n_tabs + 1)
+            submob.print_family(n_tabs + 1)
+
+    # Just here to keep from breaking old scenes.
+    def arrange_submobjects(self, *args, **kwargs):
+        return self.arrange(*args, **kwargs)
+
+    def sort_submobjects(self, *args, **kwargs):
+        return self.sort(*args, **kwargs)
+
+    def shuffle_submobjects(self, *args, **kwargs):
+        return self.shuffle(*args, **kwargs)
 
     # Alignment
     def align_data(self, mobject):
@@ -1019,9 +1049,21 @@ class Mobject(Container):
             sm1.interpolate_color(sm1, sm2, 1)
         return self
 
+    # Errors
+    def has_no_points(self):
+        return len(self.points) == 0
+
+    def throw_error_if_no_points(self):
+        if self.has_no_points():
+            message = "Cannot call Mobject.{}" +\
+                      "for a Mobject with no points"
+            caller_name = sys._getframe(1).f_code.co_name
+            raise Exception(message.format(caller_name))
+
 
 class Group(Mobject):
-    # Alternate name to improve readibility in cases where
-    # the mobject is used primarily for its submobject housing
-    # functionality.
-    pass
+    def __init__(self, *mobjects, **kwargs):
+        if not all([isinstance(m, Mobject) for m in mobjects]):
+            raise Exception("All submobjects must be of type Mobject")
+        Mobject.__init__(self, **kwargs)
+        self.add(*mobjects)

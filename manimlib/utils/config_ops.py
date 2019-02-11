@@ -1,15 +1,5 @@
-from functools import reduce
 import inspect
-import operator as op
-
-
-def instantiate(obj):
-    """
-    Useful so that classes or instance of those classes can be
-    included in configuration, which can prevent defaults from
-    getting created during compilation/importing
-    """
-    return obj() if isinstance(obj, type) else obj
+import itertools as it
 
 
 def get_all_descendent_classes(Class):
@@ -53,28 +43,27 @@ def digest_config(obj, kwargs, caller_locals={}):
     caller_locals = filtered_locals(caller_locals)
     all_dicts = [kwargs, caller_locals, obj.__dict__]
     all_dicts += static_configs
-    obj.__dict__ = merge_config(all_dicts)
+    obj.__dict__ = merge_dicts_recursively(*reversed(all_dicts))
 
 
-def merge_config(all_dicts):
+def merge_dicts_recursively(*dicts):
     """
     Creates a dict whose keyset is the union of all the
     input dictionaries.  The value for each key is based
     on the first dict in the list with that key.
 
+    dicts later in the list have higher priority
+
     When values are dictionaries, it is applied recursively
     """
-    all_config = reduce(op.add, [list(d.items()) for d in all_dicts])
-    config = dict()
-    for c in all_config:
-        key, value = c
-        if key not in config:
-            config[key] = value
+    result = dict()
+    all_items = it.chain(*[d.items() for d in dicts])
+    for key, value in all_items:
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = merge_dicts_recursively(result[key], value)
         else:
-            # When two dictionaries have the same key, they are merged.
-            if isinstance(value, dict) and isinstance(config[key], dict):
-                config[key] = merge_config([config[key], value])
-    return config
+            result[key] = value
+    return result
 
 
 def soft_dict_update(d1, d2):

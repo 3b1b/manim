@@ -179,7 +179,7 @@ class ShowDotProductMeaning(Scene):
                 v_vect.get_end(),
                 proj_v.get_end(),
                 stroke_width=1,
-                dashed_segment_length=0.025,
+                dash_length=0.025,
             )
         proj_line = updating_mobject_from_func(get_proj_line)
 
@@ -438,7 +438,7 @@ class AskAboutAddingThetaToItself(Scene):
             eq, value,
             ineq, pi
         )
-        group.arrange_submobjects(RIGHT, buff=0.2)
+        group.arrange(RIGHT, buff=0.2)
         group.next_to(ORIGIN, DOWN, buff=LARGE_BUFF)
         theta_brace = Brace(group[2], DOWN, buff=SMALL_BUFF)
         theta_symbol = theta_brace.get_tex("\\theta")
@@ -508,7 +508,7 @@ class FinalFormula(Scene):
         )
         formula.set_color_by_tex_to_color_map(t2c_map)
         group = VGroup(text, formula)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.scale(1.5)
         group.to_edge(UP)
 
@@ -556,7 +556,7 @@ class TwoSolutionsWrapper(WrapperScene):
             self.get_screen_rect(height=3)
             for x in range(2)
         ])
-        screen_rects.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        screen_rects.arrange(RIGHT, buff=LARGE_BUFF)
         title = TextMobject("Two solutions")
         title.scale(1.5)
         title.to_edge(UP)
@@ -570,26 +570,26 @@ class TwoSolutionsWrapper(WrapperScene):
             Mortimer().scale(1.2)
         )
         pis.set_height(2)
-        pis.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+        pis.arrange(RIGHT, buff=MED_LARGE_BUFF)
         pis.to_edge(DOWN, buff=SMALL_BUFF)
 
         self.add(big_rect, title, pis)
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ShowCreation, screen_rects.copy().set_fill(opacity=0),
                 lag_ratio=0.8
             ),
-            LaggedStart(
+            OldLaggedStart(
                 FadeIn, screen_rects,
                 lag_ratio=0.8
             ),
-            LaggedStart(
+            OldLaggedStart(
                 ApplyMethod, pis,
                 lambda pi: (pi.change, "pondering", screen_rects[0])
             ),
         )
         self.play(Blink(random.choice(pis)))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, pis,
             lambda pi: (pi.change, "thinking", screen_rects[1])
         ))

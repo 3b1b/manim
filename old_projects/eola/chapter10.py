@@ -769,7 +769,7 @@ class SymbolicEigenvectors(Scene):
         scaling_by = VGroup(
             TextMobject("Scaling by "), lamb_copy
         )
-        scaling_by.arrange_submobjects()
+        scaling_by.arrange()
         arrow = TexMobject("\\Updownarrow")
         matrix_multiplication = TextMobject(
             "Matrix multiplication by"
@@ -779,7 +779,7 @@ class SymbolicEigenvectors(Scene):
         corner_group = VGroup(
             scaling_by, arrow, matrix_multiplication, matrix
         )
-        corner_group.arrange_submobjects(DOWN)
+        corner_group.arrange(DOWN)
         corner_group.to_corner(UP+RIGHT)
 
         q_marks = VGroup(*[
@@ -819,7 +819,7 @@ class SymbolicEigenvectors(Scene):
         self.wait()
         self.play(Transform(
             q_marks, matrix.get_entries(), 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.remove(q_marks)
@@ -845,7 +845,7 @@ class SymbolicEigenvectors(Scene):
         VGroup(
             l_paren, lamb.target, id_text.target, 
             r_paren, v2.target
-        ).arrange_submobjects().next_to(equals).shift(SMALL_BUFF*UP)
+        ).arrange().next_to(equals).shift(SMALL_BUFF*UP)
         self.play(
             Write(parens),
             *list(map(MoveToTarget, [lamb, id_text, v2]))
@@ -874,7 +874,7 @@ class SymbolicEigenvectors(Scene):
         VGroup(
             A.target, v1.target, minus,
             lamb_group.target, v2.target
-        ).arrange_submobjects().next_to(equals, LEFT)
+        ).arrange().next_to(equals, LEFT)
         self.play(
             Write(zero), 
             Write(minus),
@@ -1182,7 +1182,7 @@ class LineOfReasoning(Scene):
             ("(", "A", "-", "\\lambda", "I)", v_tex, "=", "0"),
             ("\\det(A-", "\\lambda", "I)", "=", "0")
         ]))
-        expressions.arrange_submobjects(DOWN, buff = LARGE_BUFF/2.)
+        expressions.arrange(DOWN, buff = LARGE_BUFF/2.)
         for expression in expressions:
             for i, expression_part in enumerate(expression.expression_parts):
                 if expression_part == "=":
@@ -1220,7 +1220,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         lamb = TexMobject("\\lambda")
         lamb.set_color(MAROON_B)
         words = VGroup(seeking_eigenvalue, lamb)
-        words.arrange_submobjects()
+        words.arrange()
         words.next_to(self.matrix, DOWN, buff = LARGE_BUFF)
         self.play(Write(words))
         self.wait()
@@ -1289,10 +1289,10 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             mover.target = mover.copy()
         minus1, minus2 = [TexMobject("-") for x in range(2)]
         new_three = VGroup(three.target, minus1, lamb.target)
-        new_three.arrange_submobjects()
+        new_three.arrange()
         new_three.move_to(three)
         new_two = VGroup(two.target, minus2, lamb_copy.target)
-        new_two.arrange_submobjects()
+        new_two.arrange()
         new_two.move_to(two)
         l_bracket.target.next_to(VGroup(new_three, new_two), LEFT)
         r_bracket.target.next_to(VGroup(new_three, new_two), RIGHT)
@@ -1328,7 +1328,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             lp1, three_minus_lamb.target, rp1,
             lp2, two_minus_lamb.target, rp2,
             minus, one.target, cdot, zero.target
-        ).arrange_submobjects().next_to(equals)
+        ).arrange().next_to(equals)
 
         parens.add_background_rectangle()
         new_rect = BackgroundRectangle(VGroup(minus, zero.target))
@@ -1449,7 +1449,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         self.play(
             ShowCreation(
                 vectors, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             *list(map(Animation, self.foreground_mobjects))
@@ -1561,7 +1561,7 @@ class SolveRotationEigenvalues(Rotate90Degrees):
                 lp1, entries[0].target, rp1,
                 lp2, entries[1].target, rp2,
             )
-            group.arrange_submobjects()
+            group.arrange()
             group.next_to(sym)
             parens.add_background_rectangle()
             self.play(
@@ -1645,7 +1645,7 @@ class ShearExample(RevisitExampleTransformation):
         for word in words:
             word.set_color_by_tex("1", MAROON_B)
             word.add_to_back(BackgroundRectangle(word))
-        words.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        words.arrange(DOWN, buff = MED_SMALL_BUFF)
         words.next_to(ORIGIN, DOWN+RIGHT, buff = MED_SMALL_BUFF)
         self.play(ShowCreation(vectors), run_time = 2)
         self.play(Write(words))
@@ -1668,7 +1668,7 @@ class ShearExample(RevisitExampleTransformation):
             lp1, three_minus_lamb.target, rp1,
             lp2, two_minus_lamb.target, rp2,
             minus, one.target, cdot, zero.target
-        ).arrange_submobjects().next_to(equals)
+        ).arrange().next_to(equals)
 
         parens.add_background_rectangle()
         new_rect = BackgroundRectangle(VGroup(minus, zero.target))
@@ -1794,7 +1794,7 @@ class IntroduceEigenbasis(TeacherStudentsScene):
         )
         self.random_blink()
         new_words = VGroup(words1.copy(), words2)
-        new_words.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        new_words.arrange(DOWN, buff = MED_SMALL_BUFF)
         new_words.scale(0.8)
         self.teacher.bubble.add_content(new_words)
         self.play(
@@ -2014,7 +2014,7 @@ class RepeatedMultilpicationOfMatrices(Scene):
         ])
         last_matrix = matrices[-1]
         group = VGroup(*list(matrices) + [vector])
-        group.arrange_submobjects()
+        group.arrange()
 
         brace = Brace(matrices)
         brace_text = brace.get_text("100", "times")
@@ -2221,7 +2221,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         self.play(FadeOut(self.plane))
         cob_transform = self.get_matrix_transformation([[1, 0], [-1, 1]])        
         ApplyMethod(self.plane.apply_function, cob_transform).update(1)
-        self.plane.main_lines.set_color(BLUE_D)
+        self.planes.set_color(BLUE_D)
         self.plane.axes.set_color(WHITE)
         self.play(
             FadeIn(self.plane),

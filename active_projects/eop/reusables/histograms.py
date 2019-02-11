@@ -263,7 +263,7 @@ class FlashThroughHistogram(Animation):
         return cell
 
 
-    def update_mobject(self,t):
+    def interpolate_mobject(self,t):
 
         if t == 0:
             self.mobject.add(self.prototype_cell)
@@ -280,14 +280,14 @@ class FlashThroughHistogram(Animation):
            self.mobject.remove(self.prototype_cell)
 
 
-    def clean_up(self, surrounding_scene = None):
-        Animation.clean_up(self, surrounding_scene)
+    def clean_up_from_scene(self, scene = None):
+        Animation.clean_up_from_scene(self, scene)
         self.update(1)
-        if surrounding_scene is not None:
+        if scene is not None:
             if self.is_remover():
-                surrounding_scene.remove(self.prototype_cell)
+                scene.remove(self.prototype_cell)
             else:
-                surrounding_scene.add(self.prototype_cell)
+                scene.add(self.prototype_cell)
         return self
 
 

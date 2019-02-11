@@ -6,7 +6,7 @@ class FractalCreation(Scene):
         "max_order" : 5,
         "transform_kwargs" : {
             "path_arc" : np.pi/6,
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "run_time" : 2,
         },
         "fractal_kwargs" : {},
@@ -44,7 +44,7 @@ class PiCreatureFractalCreation(FractalCreation):
         "max_order" : 6,
         "fractal_kwargs" : {"height" : 6},
         "transform_kwargs" : {
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "run_time" : 2,
         },
     }
@@ -65,7 +65,7 @@ class QuadraticKochFractalCreation(FractalCreation):
         "max_order" : 5,
         "fractal_kwargs" : {"radius" : 10},
         # "transform_kwargs" : {
-        #     "submobject_mode" : "all_at_once",
+        #     "lag_ratio" : 0,
         #     "run_time" : 2,
         # },
     }
@@ -79,7 +79,7 @@ class KochSnowFlakeFractalCreation(FractalCreation):
             "num_submobjects" : 100,
         },
         "transform_kwargs" : {
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "path_arc" : np.pi/6,
             "run_time" : 2,
         },

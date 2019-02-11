@@ -196,7 +196,7 @@ class SplitRectsInBrickWall(AnimationGroup):
             subdiv = DashedLine(
                 mobject.get_top() + x * RIGHT,
                 mobject.get_bottom() + x * RIGHT,
-                dashed_segment_length = 0.05
+                dash_length = 0.05
             )
             subdivs.add(subdiv)
             anims.append(ShowCreation(subdiv))

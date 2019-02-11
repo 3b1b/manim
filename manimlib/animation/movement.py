@@ -1,6 +1,6 @@
 from manimlib.animation.animation import Animation
-from manimlib.constants import *
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import linear
 
 
 class Homotopy(Animation):
@@ -11,15 +11,16 @@ class Homotopy(Animation):
 
     def __init__(self, homotopy, mobject, **kwargs):
         """
-        Homotopy a function from (x, y, z, t) to (x', y', z')
+        Homotopy is a function from
+        (x, y, z, t) to (x', y', z')
         """
-        def function_at_time_t(t):
-            return lambda p: homotopy(p[0], p[1], p[2], t)
-        self.function_at_time_t = function_at_time_t
-        digest_config(self, kwargs)
-        Animation.__init__(self, mobject, **kwargs)
+        self.homotopy = homotopy
+        super().__init__(mobject, **kwargs)
 
-    def update_submobject(self, submob, start, alpha):
+    def function_at_time_t(self, t):
+        return lambda p: self.homotopy(*p, t)
+
+    def interpolate_submobject(self, submob, start, alpha):
         submob.points = start.points
         submob.apply_function(
             self.function_at_time_t(alpha),
@@ -28,8 +29,8 @@ class Homotopy(Animation):
 
 
 class SmoothedVectorizedHomotopy(Homotopy):
-    def update_submobject(self, submob, start, alpha):
-        Homotopy.update_submobject(self, submob, start, alpha)
+    def interpolate_submobject(self, submob, start, alpha):
+        Homotopy.interpolate_submobject(self, submob, start, alpha)
         submob.make_smooth()
 
 
@@ -47,14 +48,15 @@ class ComplexHomotopy(Homotopy):
 class PhaseFlow(Animation):
     CONFIG = {
         "virtual_time": 1,
-        "rate_func": None,
+        "rate_func": linear,
+        "suspend_mobject_updating": False,
     }
 
     def __init__(self, function, mobject, **kwargs):
-        digest_config(self, kwargs, locals())
-        Animation.__init__(self, mobject, **kwargs)
+        self.function = function
+        super().__init__(mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         if hasattr(self, "last_alpha"):
             dt = self.virtual_time * (alpha - self.last_alpha)
             self.mobject.apply_function(
@@ -64,10 +66,14 @@ class PhaseFlow(Animation):
 
 
 class MoveAlongPath(Animation):
-    def __init__(self, mobject, path, **kwargs):
-        digest_config(self, kwargs, locals())
-        Animation.__init__(self, mobject, **kwargs)
+    CONFIG = {
+        "suspend_mobject_updating": False,
+    }
 
-    def update_mobject(self, alpha):
+    def __init__(self, mobject, path, **kwargs):
+        self.path = path
+        super().__init__(mobject, **kwargs)
+
+    def interpolate_mobject(self, alpha):
         point = self.path.point_from_proportion(alpha)
         self.mobject.move_to(point)

@@ -294,7 +294,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             ))
         self.play(Succession(
             *[
-                Transform(mover, target, rate_func = None)
+                Transform(mover, target, rate_func=linear)
                 for target in targets
             ],
             run_time = 5, 
@@ -373,7 +373,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             ))
         self.play(Succession(
             *[
-                Transform(mover, target, rate_func = None)
+                Transform(mover, target, rate_func=linear)
                 for target in targets
             ], 
             run_time = 5, 
@@ -461,7 +461,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             ))
         self.play(Succession(
             *[
-                Transform(mover, target, rate_func = None)
+                Transform(mover, target, rate_func=linear)
                 for target in targets
             ], 
             run_time = 5, 

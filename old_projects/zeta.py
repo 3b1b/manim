@@ -37,7 +37,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
         for line in mob.family_members_with_points():
             #Find point of line cloest to 1 on C
             if not isinstance(line, Line):
-                line.insert_n_anchor_points(self.min_added_anchors)
+                line.insert_n_curves(self.min_added_anchors)
                 continue
             p1 = line.get_start()+LEFT
             p2 = line.get_end()+LEFT
@@ -47,14 +47,14 @@ class ZetaTransformationScene(ComplexTransformationScene):
             )
             #See how big this line will become
             diameter = abs(zeta(complex(*closest_to_one[:2])))
-            target_num_anchors = np.clip(
+            target_num_curves = np.clip(
                 int(self.anchor_density*np.pi*diameter),
                 self.min_added_anchors,
                 self.max_added_anchors,
             )
-            num_anchors = line.get_num_anchor_points()
-            if num_anchors < target_num_anchors:
-                line.insert_n_anchor_points(target_num_anchors-num_anchors)
+            num_curves = line.get_num_curves()
+            if num_curves < target_num_curves:
+                line.insert_n_curves(target_num_curves-num_curves)
             line.make_smooth()
 
     def add_extra_plane_lines_for_zeta(self, animate = False, **kwargs):
@@ -177,7 +177,7 @@ class IntroduceZeta(ZetaTransformationScene):
             TexMobject("\\zeta(s) = "),
             TexMobject("\\sum_{n=1}^\\infty \\frac{1}{n^s}")
         )
-        func_mob.arrange_submobjects(RIGHT, buff = 0)
+        func_mob.arrange(RIGHT, buff = 0)
         for submob in func_mob:
             submob.add_background_rectangle()
         func_mob.next_to(title, DOWN)
@@ -217,12 +217,12 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
             TexMobject("\\$1{,}000{,}000").set_color_by_gradient(GREEN_B, GREEN_D),
             TexMobject("\\zeta(s) = 0")
         )
-        mercenary_thought.arrange_submobjects(DOWN)
+        mercenary_thought.arrange(DOWN)
         divergent_sum = VGroup(
             TexMobject("1+2+3+4+\\cdots = -\\frac{1}{12}"),
             TexMobject("\\zeta(-1) = -\\frac{1}{12}")
         )
-        divergent_sum.arrange_submobjects(DOWN)
+        divergent_sum.arrange(DOWN)
         divergent_sum[0].set_color_by_gradient(YELLOW, MAROON_B)
         divergent_sum[1].set_color(BLACK)
 
@@ -346,7 +346,7 @@ class PreviewZetaAndContinuation(ZetaTransformationScene):
         self.wait()
         self.play(ShowCreation(
             reflected_plane,
-            submobject_mode = "all_at_once",
+            lag_ratio = 0,
             run_time = 2
         ))
         self.wait()
@@ -372,7 +372,7 @@ class AssumeKnowledgeOfComplexNumbers(ComplexTransformationScene):
             TextMobject("2) How to work with them."),
             TextMobject("3) Maybe derivatives?"),
         )
-        text.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        text.arrange(DOWN, aligned_edge = LEFT)
         for words in text:
             words.add_background_rectangle()
         text[0].shift(LEFT)
@@ -1555,7 +1555,7 @@ class ComplexFunctionsAsTransformations(ComplexTransformationScene):
         self.play(FadeIn(
             input_dots,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         for in_dot, out_dot, arrow in zip(input_dots, output_dots, arrows):
             self.play(
@@ -1917,8 +1917,8 @@ class ShowConditionalDefinition(Scene):
             for s in (">", "\\le")
         ])
         definitions = VGroup(sigma, something_else)
-        definitions.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
-        conditions.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        definitions.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        conditions.arrange(DOWN, buff = LARGE_BUFF)
         definitions.shift(2*LEFT+2*UP)
         conditions.next_to(definitions, RIGHT, buff = LARGE_BUFF, aligned_edge = DOWN)
         brace = Brace(definitions, LEFT)
@@ -2070,7 +2070,7 @@ class SquiggleOnExtensions(ZetaTransformationScene):
         self.play(ShowCreation(
             self.left_plane,
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
 
@@ -2279,7 +2279,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             color = YELLOW
         )
         arc.shift(intersection_point)
-        arc.insert_n_anchor_points(10)
+        arc.insert_n_curves(10)
         arc.generate_target()
         input_z = complex(*arc.get_center()[:2])
         scale_factor = abs(2*input_z)
@@ -2954,7 +2954,7 @@ class DiscussZeros(ZetaTransformationScene):
         full_line.set_color_by_gradient(
             YELLOW, BLUE, GREEN, RED, YELLOW, BLUE, GREEN, RED,
         )
-        self.play(ShowCreation(full_line, run_time = 20, rate_func = None))
+        self.play(ShowCreation(full_line, run_time = 20, rate_func=linear))
         self.wait()
 
 class AskAboutRelationToPrimes(TeacherStudentsScene):
@@ -3172,7 +3172,7 @@ class PatreonThanks(Scene):
             self.specific_patrons[n_patrons/2:]
         )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.arrange(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
             patrons.to_edge(vect, buff = LARGE_BUFF)
 

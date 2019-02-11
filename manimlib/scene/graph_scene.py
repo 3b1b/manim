@@ -44,7 +44,6 @@ class GraphScene(Scene):
         "axes_color": GREY,
         "graph_origin": 2.5 * DOWN + 4 * LEFT,
         "exclude_zero_label": True,
-        "num_graph_anchor_points": 25,
         "default_graph_colors": [BLUE, GREEN, YELLOW],
         "default_derivative_color": GREEN,
         "default_input_color": YELLOW,
@@ -149,6 +148,7 @@ class GraphScene(Scene):
         color=None,
         x_min=None,
         x_max=None,
+        **kwargs
     ):
         if color is None:
             color = next(self.default_graph_colors_cycle)
@@ -167,7 +167,7 @@ class GraphScene(Scene):
         graph = ParametricFunction(
             parameterized_function,
             color=color,
-            num_anchor_points=self.num_graph_anchor_points,
+            **kwargs
         )
         graph.underlying_function = func
         return graph
@@ -302,7 +302,7 @@ class GraphScene(Scene):
     def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
         transform_kwargs = {
             "run_time": 2,
-            "submobject_mode": "lagged_start"
+            "lag_ratio": 0.5
         }
         added_anims = kwargs.get("added_anims", [])
         transform_kwargs.update(kwargs)

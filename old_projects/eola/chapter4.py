@@ -126,10 +126,10 @@ class FollowLinearCombination(LinearTransformationScene):
         for mob in scaled_i, scaled_j:
             mob.fade(0.3)
         scaled_i_label_target = scaled_i_label.copy()
-        scaled_i_label_target.arrange_submobjects(buff = 0.1)
+        scaled_i_label_target.arrange(buff = 0.1)
         scaled_i_label_target.next_to(scaled_i, DOWN)
         scaled_j_label_target = scaled_j_label.copy()
-        scaled_j_label_target.arrange_submobjects(buff = 0.1)
+        scaled_j_label_target.arrange(buff = 0.1)
         scaled_j_label_target.next_to(scaled_j, LEFT)
 
         self.show_scaled_vectors(vect_array, vect_coords, i_label, j_label)
@@ -146,10 +146,10 @@ class FollowLinearCombination(LinearTransformationScene):
         for mob in scaled_i, scaled_j:
             mob.fade(0.3)
         scaled_i_label_target = scaled_i_label.copy()
-        scaled_i_label_target.arrange_submobjects(buff = 0.1)
+        scaled_i_label_target.arrange(buff = 0.1)
         scaled_i_label_target.next_to(scaled_i.get_center(), DOWN)
         scaled_j_label_target = scaled_j_label.copy()
-        scaled_j_label_target.arrange_submobjects(buff = 0.1)
+        scaled_j_label_target.arrange(buff = 0.1)
         scaled_j_label_target.next_to(scaled_j.get_center(), LEFT)
 
         self.play(
@@ -189,7 +189,7 @@ class FollowLinearCombination(LinearTransformationScene):
         )
         post_formula = pre_formula.copy()
         pre_formula.split()[2].fade(1)
-        post_formula.arrange_submobjects(buff = 0.1)
+        post_formula.arrange(buff = 0.1)
         post_formula.next_to(vect, DOWN)
         background = BackgroundRectangle(post_formula)
         everything = self.get_mobjects()
@@ -239,7 +239,7 @@ class RotationThenShear(LinearTransformationScene):
         shear_words = TextMobject("followed by a shear")
         rot_words.set_color(YELLOW)
         shear_words.set_color(PINK)
-        VMobject(rot_words, shear_words).arrange_submobjects(DOWN).to_edge(UP)
+        VMobject(rot_words, shear_words).arrange(DOWN).to_edge(UP)
         for words in rot_words, shear_words:
             words.add_background_rectangle()
 
@@ -388,7 +388,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
         long_way = VMobject(
             shear_matrix, l_paren, rot_matrix, vect, r_paren
         )
-        long_way.arrange_submobjects(buff = 0.1)
+        long_way.arrange(buff = 0.1)
         long_way.to_edge(LEFT).shift(UP)
 
         equals = TexMobject("=").next_to(long_way, RIGHT)
@@ -397,7 +397,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
         comp_matrix.set_column_colors(X_COLOR, Y_COLOR)
         vect_copy = vect.copy()
         short_way = VMobject(comp_matrix, vect_copy)
-        short_way.arrange_submobjects(buff = 0.1)
+        short_way.arrange(buff = 0.1)
         short_way.next_to(equals, RIGHT)
 
         pairs = [
@@ -426,7 +426,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
         comp_matrix.add(equals)
         matrices = VMobject(shear_matrix, rot_matrix, comp_matrix)
         self.play(ApplyMethod(
-            matrices.arrange_submobjects, buff = 0.1,
+            matrices.arrange, buff = 0.1,
             aligned_edge = UP
         ))
         self.wait()
@@ -513,7 +513,7 @@ class MoreComplicatedExampleVisually(LinearTransformationScene):
         comp_matrix = VMobject(BackgroundRectangle(comp_matrix), comp_matrix)
         VMobject(
             m2_mob, m1_mob, comp_matrix
-        ).arrange_submobjects(buff = 0.1).to_corner(UP+LEFT).shift(DOWN)
+        ).arrange(buff = 0.1).to_corner(UP+LEFT).shift(DOWN)
 
         for i, mob in enumerate([m1_mob, m2_mob]):
             brace = Brace(mob, UP)
@@ -590,7 +590,7 @@ class MoreComplicatedExampleNumerically(MoreComplicatedExampleVisually):
                 Matrix(new_m2_copy.get_mob_matrix()[:,1]),
                 TexMobject("=")
             )
-            intermediate.arrange_submobjects(buff = 0.1)
+            intermediate.arrange(buff = 0.1)
             intermediate.next_to(col_vect, RIGHT)
 
             product = Matrix(result[:,i])
@@ -671,11 +671,11 @@ class GeneralMultiplication(MoreComplicatedExampleNumerically):
         self.play(Write(words, run_time = 2))
         self.play(Transform(
             m1_entries, m1_entries_target, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(Transform(
             m2_entries, m2_entries_target,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -761,7 +761,7 @@ class AskAboutCommutativity(Scene):
         self.play(Transform(
             VMobject(eq, q_marks),
             VMobject(neq),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -866,7 +866,7 @@ class AskAssociativityQuestion(Scene):
         point = VectorizedPoint()
         start = VMobject(*[m.copy() for m in (point, a, b, point, c)])
         for mob in lhs, rhs, start:
-            mob.arrange_submobjects(buff = 0.1)
+            mob.arrange(buff = 0.1)
         a, lp, b, c, rp = rhs.split()
         rhs = VMobject(lp, a, b, rp, c)##Align order to lhs
         eq = TexMobject("=")
@@ -906,13 +906,13 @@ class AskAssociativityQuestion(Scene):
             np.array(list(m)).reshape((2, 2))
             for m in ("abcd", "efgh", "ijkl")
         ]))
-        VMobject(*matrices).arrange_submobjects()
+        VMobject(*matrices).arrange()
 
         self.play(everything.to_edge, UP)
         for letter, matrix in zip([a, b, c], matrices):
             self.play(Transform(
                 letter.copy(), matrix, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             self.remove(*self.get_mobjects_from_last_animation())
             self.add(matrix)
@@ -937,7 +937,7 @@ class AskAssociativityQuestion(Scene):
             m.copy() for m in (m1, lp, m2, m3, rp)
         ])
         for state in state2, state3:
-            state.arrange_submobjects(RIGHT, buff = 0.1)
+            state.arrange(RIGHT, buff = 0.1)
         m1, lp, m2, m3, rp = state3.split()
         state3 = VMobject(lp, m1, m2, rp, m3)
 

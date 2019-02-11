@@ -33,8 +33,15 @@ def all_elements_are_instances(iterable, Class):
     return all([isinstance(e, Class) for e in iterable])
 
 
+def adjacent_n_tuples(objects, n):
+    return zip(*[
+        [*objects[k:], *objects[:k]]
+        for k in range(n)
+    ])
+
+
 def adjacent_pairs(objects):
-    return list(zip(objects, list(objects[1:]) + [objects[0]]))
+    return adjacent_n_tuples(objects, 2)
 
 
 def batch_by_property(items, property_func):

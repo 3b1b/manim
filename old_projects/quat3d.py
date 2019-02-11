@@ -29,7 +29,7 @@ class QuaternionLabel(VGroup):
             decimals[2], TexMobject("j"),
             decimals[3], TexMobject("k"),
         )
-        self.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        self.arrange(RIGHT, buff=SMALL_BUFF)
 
         self.decimals = decimals
 
@@ -198,7 +198,7 @@ class Introduction(QuaternionHistory):
         #     for k in range(4)
         # ])
         title = VGroup(title_word, title_equation)
-        title.arrange_submobjects(RIGHT)
+        title.arrange(RIGHT)
         title.to_edge(UP)
 
         images_group = self.get_dissenter_images_quotes_and_names()
@@ -216,7 +216,7 @@ class Introduction(QuaternionHistory):
             self.play(
                 FadeInFrom(image, 3 * DOWN),
                 FadeInFromLarge(name),
-                LaggedStart(
+                OldLaggedStart(
                     FadeIn, VGroup(*it.chain(*quote)),
                     lag_ratio=0.3,
                     run_time=2
@@ -255,7 +255,7 @@ class WhoCares(TeacherStudentsScene):
             logo.move_to(quote.get_corner(UR))
             quote.add(logo)
 
-        quotes.arrange_submobjects_in_grid()
+        quotes.arrange_in_grid()
         quotes.set_height(4)
         quotes.to_corner(UL)
 
@@ -271,7 +271,7 @@ class WhoCares(TeacherStudentsScene):
             self.teacher.change, "raise_right_hand"
         )
         # self.play(
-        #     LaggedStart(
+        #     OldLaggedStart(
         #         FadeInFromDown, quotes,
         #         run_time=3
         #     ),
@@ -316,7 +316,7 @@ class WhoCares(TeacherStudentsScene):
         # )
         # self.add_foreground_mobjects(vr_headsets)
         # self.play(
-        #     LaggedStart(
+        #     OldLaggedStart(
         #         FadeInFrom, vr_headsets,
         #         lambda m: (m, UP),
         #     ),
@@ -411,7 +411,7 @@ class ShowSeveralQuaternionRotations(SpecialThreeDScene):
         left_q_label.next_to(point_label, LEFT)
         right_q_label.next_to(point_label, RIGHT)
         group = VGroup(left_q_label, point_label, right_q_label)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.set_width(FRAME_WIDTH - 1)
         group.to_edge(UP)
         self.add_fixed_in_frame_mobjects(BackgroundRectangle(group))
@@ -513,7 +513,7 @@ class PauseAndPlayOverlay(Scene):
         arrow = Vector(RIGHT, color=WHITE)
         interact = TextMobject("Interact...")
         group = VGroup(pause, arrow, interact)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.scale(2)
 
         not_yet = TextMobject("...well, not yet")
@@ -673,7 +673,7 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
             TexMobject("\\gamma").set_color(PINK),
         )
         angle_labels.scale(2)
-        angle_labels.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+        angle_labels.arrange(RIGHT, buff=MED_LARGE_BUFF)
         angle_labels.next_to(title, DOWN, aligned_edge=LEFT)
         self.angle_labels = angle_labels
 
@@ -681,7 +681,7 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
             Arrow(LEFT, RIGHT, color=WHITE),
             TextMobject("Gimbal lock").scale(1.5),
         )
-        gl_label.arrange_submobjects(RIGHT)
+        gl_label.arrange(RIGHT)
         gl_label.next_to(title, RIGHT)
         self.gimbal_lock_label = gl_label
 
@@ -779,7 +779,7 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
             )
             for u in [-1, 1]
         ]))
-        line.sort_submobjects(get_norm)
+        line.sort(get_norm)
         line.set_shade_in_3d(True)
         line.set_stroke(YELLOW, 5)
         line.center()
@@ -1036,7 +1036,7 @@ class ComplexNumberRotation(Scene):
             lp1, new_left_z, rp1,
             lp2, new_right_z, rp2,
         )
-        top_line.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        top_line.arrange(RIGHT, buff=SMALL_BUFF)
         top_line.set_width(rect.get_width() - 1)
         top_line.next_to(rect.get_top(), DOWN, MED_SMALL_BUFF)
 
@@ -1148,7 +1148,7 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         self.change_q([1, 0, 0, 0], run_time=2)
 
         # Unit vector
-        vect_mob = Vector(2 * vect, use_rectangular_stem=False)
+        vect_mob = Vector(2 * vect)
         vect_mob.pointwise_become_partial(vect_mob, 0, 0.95)
         pieces = VGroup(*vect_mob.get_pieces(25))
         pieces.set_stroke(vect_mob.get_color(), 2)
@@ -1209,7 +1209,7 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         self.wait()
         self.play(
             FadeInFromDown(full_angle_q[0]),
-            LaggedStart(FadeInFromDown, full_angle_q[2:]),
+            OldLaggedStart(FadeInFromDown, full_angle_q[2:]),
         )
         self.play(
             GrowFromCenter(brace),
@@ -1272,7 +1272,6 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         curved_arrow = Arrow(
             r * RIGHT, rotate_vector(r * RIGHT, 30 * DEGREES, OUT),
             buff=0,
-            use_rectangular_stem=False,
             path_arc=60 * DEGREES,
             color=LIGHT_GREY,
         )
@@ -1333,7 +1332,7 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         )
         for i in 1, 3:
             result[i][1].set_color(YELLOW)
-        result.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        result.arrange(RIGHT, buff=SMALL_BUFF)
         result.scale(0.7)
         return result
 
@@ -1371,7 +1370,7 @@ class ExpandOutFullProduct(TeacherStudentsScene):
             FadeInFromDown(product)
         )
         self.play(
-            LaggedStart(GrowFromCenter, braces),
+            OldLaggedStart(GrowFromCenter, braces),
             self.get_student_changes(
                 "confused", "horrified", "confused"
             )

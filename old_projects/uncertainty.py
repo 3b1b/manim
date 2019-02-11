@@ -515,7 +515,7 @@ class ShowPlan(PiCreatureScene):
             word[2].scale(0.75)
             word[2].next_to(word[1], DOWN, buff = 1.5*SMALL_BUFF)
             words.add(word)
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
+        words.arrange(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
         words.to_edge(LEFT)
 
         return words
@@ -525,7 +525,7 @@ class ShowPlan(PiCreatureScene):
         wave = FunctionGraph(
             lambda x : 0.3*np.sin(15*x)*np.sin(0.5*x),
             x_min = 0, x_max = 30,
-            num_anchor_points = 500,
+            step_size = 0.001,
         )
         wave.next_to(word, RIGHT)
         rect = BackgroundRectangle(wave, fill_opacity = 1)
@@ -688,7 +688,7 @@ class TwoCarsAtRedLight(Scene):
         car1, car2 = cars = self.cars = VGroup(*[
             Car() for x in range(2)
         ])
-        cars.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        cars.arrange(RIGHT, buff = LARGE_BUFF)
         cars.next_to(
             traffic_light, LEFT, 
             buff = LARGE_BUFF, aligned_edge = DOWN
@@ -758,14 +758,14 @@ class TwoCarsAtRedLight(Scene):
         self.play(
             self.get_flashes(car1, num_flashes = 2),
             self.get_flashes(car2, num_flashes = 2),
-            LaggedStart(FadeIn, VGroup(
+            OldLaggedStart(FadeIn, VGroup(
                 axes, time_label, y_title,
             ))
         )
         self.play(
             self.get_flashes(car1, num_flashes = 3),
             self.get_flashes(car2, num_flashes = 3),
-            ShowCreation(graph, rate_func = None, run_time = 3)
+            ShowCreation(graph, rate_func=linear, run_time = 3)
         )
         self.play(
             self.get_flashes(car1, num_flashes = 10),
@@ -868,7 +868,7 @@ class TwoCarsAtRedLight(Scene):
             freq_graph.points[0] = frequency_axes.coords_to_point(0, 0)
             freq_graph.points[-1] = frequency_axes.coords_to_point(2, 0)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeOut, VGroup(
                 self.time_graph_label,
                 self.frequency_graph_label,
@@ -877,7 +877,7 @@ class TwoCarsAtRedLight(Scene):
         ))
         self.play(
             ApplyMethod(
-                self.time_axes.x_axis.main_line.stretch, 2.5, 0,
+                self.time_axes.x_axis.stretch, 2.5, 0,
                 {"about_edge" : LEFT},
                 run_time = 4,
                 rate_func = squish_rate_func(smooth, 0.3, 0.6),
@@ -885,14 +885,14 @@ class TwoCarsAtRedLight(Scene):
             UpdateFromFunc(
                 self.time_axes.x_axis.tip,
                 lambda m : m.move_to(
-                    self.time_axes.x_axis.main_line.get_right(), 
+                    self.time_axes.x_axis.get_right(), 
                     LEFT
                 )
             ),
             ShowCreation(
                 new_time_graph,
                 run_time = n_spikes,
-                rate_func = None,
+                rate_func=linear,
             ),
             ApplyMethod(
                 frequency_graph.stretch, 0.1, 0,
@@ -965,7 +965,7 @@ class VariousMusicalNotes(Scene):
             a = graph_width_tracker.get_value()
             return FunctionGraph(
                 lambda x : np.exp(-a*x**2)*np.sin(freq*x)-0.5,
-                num_anchor_points = 500,
+                step_size = 0.001,
             )
         graph = get_graph()
         def graph_update(graph):
@@ -1000,7 +1000,7 @@ class VariousMusicalNotes(Scene):
             phrase.next_to(brace, UP)
 
             if width is widths[0]:
-                self.play(ShowCreation(graph, rate_func = None)),
+                self.play(ShowCreation(graph, rate_func=linear)),
                 self.play(
                     GrowFromCenter(brace),
                     Write(phrase, run_time = 1)
@@ -1037,14 +1037,14 @@ class VariousMusicalNotes(Scene):
                 "long" : GREEN,
                 "wide" : GREEN,
             }, case_sensitive = False)
-        phrases.arrange_submobjects(DOWN)
+        phrases.arrange(DOWN)
         phrases.to_edge(UP)
 
         long_graph = FunctionGraph(
             lambda x : 0.5*np.sin(freq*x),
             x_min = -FRAME_WIDTH,
             x_max = FRAME_WIDTH,
-            num_anchor_points = 1000
+            n_components = 0.001
         )
         long_graph.set_color(BLUE)
         long_graph.next_to(graph, UP, MED_LARGE_BUFF)
@@ -1082,7 +1082,7 @@ class CrossOutDefinitenessAndCertainty(TeacherStudentsScene):
             TextMobject("Definiteness"),
             TextMobject("Certainty"),
         )
-        words.arrange_submobjects(DOWN)
+        words.arrange(DOWN)
         words.next_to(self.teacher, UP+LEFT)
         crosses = VGroup(*list(map(Cross, words)))
 
@@ -1183,7 +1183,7 @@ class FourierRecapScene(DrawFrequencyPlot):
         )
         self.wait()
         self.play(
-            LaggedStart(FadeIn, self.frequency_axes),
+            OldLaggedStart(FadeIn, self.frequency_axes),
             ReplacementTransform(
                 time_graph.copy(),
                 fourier_graph,
@@ -1197,7 +1197,7 @@ class FourierRecapScene(DrawFrequencyPlot):
             ),
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Indicate, self.frequency_axes.x_axis.numbers,
             run_time = 4,
             rate_func = wiggle,
@@ -1364,7 +1364,7 @@ class CenterOfMassDescription(FourierRecapScene):
         circle_plane.target.set_height(FRAME_HEIGHT)
         circle_plane.target.center()
         circle_plane.target.axes.set_stroke(width = 2)
-        circle_plane.target.main_lines.set_stroke(width = 2)
+        circle_plane.targets.set_stroke(width = 2)
         circle_plane.target.secondary_lines.set_stroke(width = 1)
 
         start_coords = (0.5, 0.5)
@@ -1508,8 +1508,8 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             FadeOut(fourier_graph)
         )
         self.play(
-            ShowCreation(long_time_graph, rate_func = None),
-            ShowCreation(long_pol_graph, rate_func = None),
+            ShowCreation(long_time_graph, rate_func=linear),
+            ShowCreation(long_pol_graph, rate_func=linear),
             run_time = 5
         )
         self.wait()
@@ -1759,7 +1759,7 @@ class IntroduceDopplerRadar(Scene):
         graph_draw = NormalAnimationAsContinualAnimation(
             ShowCreation(
                 sum_graph, 
-                rate_func = None, 
+                rate_func=linear, 
                 run_time = 0.97*axes.x_max
             )
         )
@@ -1792,7 +1792,7 @@ class IntroduceDopplerRadar(Scene):
 
         self.remove(graph_draw, pulse, randy_look_at, axes_anim)
         self.add(axes)
-        self.play(LaggedStart(FadeOut, VGroup(
+        self.play(OldLaggedStart(FadeOut, VGroup(
             sum_graph, randy,
             pulse_graph.arrow, pulse_graph.label,
             echo_graph.arrow, echo_graph.label,
@@ -1831,7 +1831,7 @@ class IntroduceDopplerRadar(Scene):
         echo_subtext.match_color(echo_graph)
 
         graph_draw = NormalAnimationAsContinualAnimation(
-            ShowCreation(sum_graph, run_time = 8, rate_func = None)
+            ShowCreation(sum_graph, run_time = 8, rate_func=linear)
         )
         pulse = RadarPulse(dish, plane, n_pulse_singletons = 12)
         plane_flight = ContinualMovement(
@@ -1937,7 +1937,7 @@ class IntroduceDopplerRadar(Scene):
             frequency_axes.coords_to_point(8, 0),
             frequency_axes.coords_to_point(8, 1.2*f_max),
             color = YELLOW,
-            dashed_segment_length = 0.025,
+            dash_length = 0.025,
         )
         v_line_pair = VGroup(*[
             v_line.copy().shift(u*0.6*RIGHT)
@@ -2039,7 +2039,7 @@ class IntroduceDopplerRadar(Scene):
                 pulse_graph.underlying_function(x),
                 echo_graph.underlying_function(x),
             ]),
-            num_graph_points = echo_graph.get_num_anchor_points(),
+            num_graph_points = echo_graph.get_num_curves(),
             color = WHITE
         )
         sum_graph.background_image_file = "blue_yellow_gradient"
@@ -2062,7 +2062,7 @@ class DopplerFormulaInsert(Scene):
 
         self.add(randy)
         self.play(
-            LaggedStart(FadeIn, formula),
+            OldLaggedStart(FadeIn, formula),
             randy.change, "pondering", randy.get_bottom(),
         )
         self.play(Blink(randy))
@@ -2227,11 +2227,11 @@ class TimeAndFrequencyGivePositionAndVelocity(IntroduceDopplerRadar):
         self.play(ShowCreation(graph))
         self.play(
             GrowArrow(arrow),
-            LaggedStart(FadeIn, time, run_time = 1)
+            OldLaggedStart(FadeIn, time, run_time = 1)
         )
         self.play(
             GrowFromCenter(brace),
-            LaggedStart(FadeIn, frequency, run_time = 1)
+            OldLaggedStart(FadeIn, frequency, run_time = 1)
         )
         self.wait()
         self.play(
@@ -2400,7 +2400,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.wait()
         squished_rate_func = squish_rate_func(smooth, 0.6, 0.9)
         self.play(
-            ShowCreation(pulse_graph, rate_func = None),
+            ShowCreation(pulse_graph, rate_func=linear),
             GrowFromCenter(brace, rate_func = squished_rate_func),
             Write(words, rate_func = squished_rate_func),
             run_time = 3,
@@ -2419,7 +2419,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             look_at_arg = brace,
         ))
         self.play(Blink(randy))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeOut, VGroup(
                 randy.bubble, randy.bubble.content, 
                 brace, words,
@@ -2461,7 +2461,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         pulses = self.get_pulses()
 
         self.play(
-            LaggedStart(GrowFromCenter, objects[1:]),
+            OldLaggedStart(GrowFromCenter, objects[1:]),
             FadeOut(curr_graph),
             randy.change, "pondering"
         )
@@ -2470,7 +2470,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.play(
             ShowCreation(
                 sum_graph,
-                rate_func = None,
+                rate_func=linear,
                 run_time = 3.5,
             ),
             randy.change, "confused"
@@ -2517,7 +2517,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.play(
             ShowCreation(
                 sum_graph,
-                rate_func = None,
+                rate_func=linear,
                 run_time = 3.5,
             ),
             randy.change, "happy"
@@ -2552,8 +2552,8 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
                 {"buff" : SMALL_BUFF},
                 rate_func = squish_rate_func(smooth, 0.5, 1)
             ),
-            LaggedStart(FadeOut, self.objects),
-            LaggedStart(FadeOut, VGroup(
+            OldLaggedStart(FadeOut, self.objects),
+            OldLaggedStart(FadeOut, VGroup(
                 self.curr_graph, self.dish, self.pi_creature
             )),
             run_time = 2
@@ -2626,7 +2626,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.play(
             FadeOut(self.axes),
             FadeOut(self.first_echo_graph),
-            LaggedStart(FadeIn, objects),
+            OldLaggedStart(FadeIn, objects),
             FadeIn(self.dish)
         )
         self.add(*continual_anims)
@@ -2658,12 +2658,12 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
 
         self.play(ReplacementTransform(
             VGroup(fourier_graph), shifted_graphs,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.wait()
         self.play(
-            shifted_graphs.arrange_submobjects, DOWN,
+            shifted_graphs.arrange, DOWN,
             shifted_graphs.move_to, fourier_graph, DOWN,
         )
         self.wait()
@@ -2940,7 +2940,7 @@ class IntroduceDeBroglie(Scene):
         self.wait()
 
         #Transform time_line
-        line = time_line.main_line
+        line = time_line
         self.play(
             FadeOut(time_line.numbers),
             VGroup(arrow, words, date).shift, MED_LARGE_BUFF*UP,
@@ -2970,7 +2970,7 @@ class IntroduceDeBroglie(Scene):
             self.play(
                 ApplyMethod(
                     particle.move_to, axes.coords_to_point(22, 0),
-                    rate_func = None
+                    rate_func=linear
                 ),
                 wave_update_animation,
                 run_time = 3
@@ -3086,13 +3086,13 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             ApplyMethod(particle.move_to, axes.coords_to_point(30, 0)),
             wave_update_animation,
             run_time = 4,
-            rate_func = None,
+            rate_func=linear,
         )
         stopped_wave_propagation = AnimationGroup(
             ApplyMethod(particle.move_to, xi_words),
             wave_update_animation,
             run_time = 3,
-            rate_func = None,
+            rate_func=linear,
         )
         n_v_lines = 10
         v_lines = VGroup(*[
@@ -3100,7 +3100,7 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             for x in range(n_v_lines)
         ])
         v_lines.match_color(xi)
-        v_lines.arrange_submobjects(
+        v_lines.arrange(
             RIGHT,
             buff = float(axes.x_axis.unit_size)/self.default_wave_frequency
         )
@@ -3134,10 +3134,10 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             xi_words.next_to, added_xi_words, UP,
         )
         self.play(
-            LaggedStart(ShowCreation, v_lines),
+            OldLaggedStart(ShowCreation, v_lines),
             self.get_student_changes(*["pondering"]*3)
         )
-        self.play(LaggedStart(FadeOut, v_lines))
+        self.play(OldLaggedStart(FadeOut, v_lines))
         self.wait()
 
         self.formula_labels = VGroup(
@@ -3164,7 +3164,7 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         self.wait()
         kwargs = {
             "path_arc" : TAU/4,
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "lag_ratio" : 0.7,
             "run_time" : 1.5,
         }
@@ -3262,7 +3262,7 @@ class AskPhysicists(PiCreatureScene):
             PiCreature(color = c).flip()
             for c in (GREY, LIGHT_GREY, DARK_GREY)
         ])
-        physies.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        physies.arrange(RIGHT, buff = MED_SMALL_BUFF)
         physies.scale(scale_factor)
         physies.to_corner(DOWN+RIGHT)
 
@@ -3390,7 +3390,7 @@ class SortOfDopplerEffect(PiCreatureScene):
         self.play(
             Transform(time, space),
             Transform(space, time),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 1,
         )
         self.play(FadeOut(time), FadeOut(space))
@@ -3464,7 +3464,7 @@ class HangingWeightsScene(MovingCameraScene):
 
         self.play(
             ShowCreation(ceiling),
-            LaggedStart(ShowCreation, springs)
+            OldLaggedStart(ShowCreation, springs)
         )
 
     def setup_weights(self):
@@ -3487,7 +3487,7 @@ class HangingWeightsScene(MovingCameraScene):
         weights.set_color_by_gradient(BLUE_D, BLUE_E, BLUE_D)
         weights.set_stroke(WHITE, 1)
 
-        self.play(LaggedStart(GrowFromCenter, weights))
+        self.play(OldLaggedStart(GrowFromCenter, weights))
         self.add(self.t_tracker_walk)
         self.add(self.spring_update_anim)
         self.add(*weight_anims)
@@ -3972,7 +3972,7 @@ class MusicalNote(AddingPureFrequencies):
             randy.change, "pondering",
             self.get_broadcast_animation(n_circles = 6, run_time  = 5),
             self.get_broadcast_animation(n_circles = 12, run_time = 5),
-            ShowCreation(graph, run_time = 5, rate_func = None),
+            ShowCreation(graph, run_time = 5, rate_func=linear),
             v_line_update
         )
         self.wait(2)
@@ -4177,7 +4177,7 @@ class OneLevelDeeper(Scene):
         wave_words = TextMobject("Interpretation of the wave function")
         arrow = Vector(UP)
         group = VGroup(hup_words, arrow, wave_words)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
 
         randomness = ProbabalisticMobjectCloud(
             TextMobject("Randomness"),
@@ -4320,7 +4320,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
         for m1, m2 in (position, momentum), (time, frequency):
             arrow = TexMobject("\\updownarrow").scale(1.5)
             group = VGroup(m1, arrow, m2)
-            group.arrange_submobjects(DOWN)
+            group.arrange(DOWN)
             lp, rp = parens = TexMobject("\\big(\\big)")
             parens.stretch(1.5, 1)
             parens.match_height(group)
@@ -4330,7 +4330,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
             groups.add(group)
         arrow = TexMobject("\\Leftrightarrow").scale(2)
         groups.submobjects.insert(1, arrow)
-        groups.arrange_submobjects(RIGHT)
+        groups.arrange(RIGHT)
         groups.next_to(morty, UP+RIGHT, LARGE_BUFF)
         groups.shift_onto_screen()
 
@@ -4356,7 +4356,7 @@ class ThinkOfHeisenbergUncertainty(PiCreatureScene):
             morty.change, "raise_left_hand", groups,
             FadeIn(
                 groups, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3,
             )
         )
@@ -4429,7 +4429,6 @@ class Promotion(PiCreatureScene):
             aops_logo.get_top(),
             morty.get_top(),
             path_arc = -0.4*TAU,
-            use_rectangular_stem = False,
             stroke_width = 5,
             tip_length = 0.5,
         )
@@ -4455,7 +4454,7 @@ class Promotion(PiCreatureScene):
         )
         self.wait(2)
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ApplyFunction, aops_logo,
                 lambda mob : (lambda m : m.shift(0.2*UP).set_color(YELLOW), mob),
                 rate_func = there_and_back, 
@@ -4544,7 +4543,7 @@ class PuzzleStatement(Scene):
         """, alignment = "")
         words.set_width(FRAME_WIDTH - 2)
         words.next_to(group, DOWN, LARGE_BUFF)
-        self.play(LaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
+        self.play(OldLaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
         self.wait(2)
 
 class UncertaintyEndScreen(PatreonEndScreen):
@@ -4691,7 +4690,7 @@ class Thumbnail(Scene):
             axes.get_graph(get_func(a))
             for a in (10, 3, 1, 0.3, 0.1,)
         ])
-        graphs.arrange_submobjects(DOWN, buff = 0.6)
+        graphs.arrange(DOWN, buff = 0.6)
         graphs.to_corner(UP+LEFT)
         graphs.set_color_by_gradient(BLUE_B, BLUE_D)
 

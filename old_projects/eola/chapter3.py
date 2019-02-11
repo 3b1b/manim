@@ -104,7 +104,7 @@ class DescribeTransformation(Scene):
             for num in nums
         ])
         for mob in num_inputs, num_outputs:
-            mob.arrange_submobjects(DOWN, buff = 1)
+            mob.arrange(DOWN, buff = 1)
         num_inputs.next_to(f_of_x, LEFT, buff = 1)
         num_outputs.next_to(f_of_x, RIGHT, buff = 1)
         f_point = VectorizedPoint(f_of_x.get_center())
@@ -127,7 +127,7 @@ class DescribeTransformation(Scene):
         for mob in f_point, num_outputs:
             self.play(Transform(
                 num_inputs, mob,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
 
@@ -143,7 +143,7 @@ class DescribeTransformation(Scene):
         for mob in f_point, output_vect:
             self.play(Transform(
                 input_vect, mob,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.play(Write(vector_output_words))
         self.wait()
@@ -259,13 +259,13 @@ class TransformManyVectors(LinearTransformationScene):
             for v in vectors.split()
         ])
 
-        self.play(ShowCreation(vectors, submobject_mode = "lagged_start"))
+        self.play(ShowCreation(vectors, lag_ratio = 0.5))
         self.wait()
         if self.use_dots:
             self.play(Transform(
                 vectors, self.vectors_to_dots(vectors),
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             transformed_vectors = self.vectors_to_dots(transformed_vectors)
             self.wait()
@@ -279,7 +279,7 @@ class TransformManyVectors(LinearTransformationScene):
             self.play(Transform(
                 vectors, self.dots_to_vectors(vectors),
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
             self.wait()
 
@@ -312,7 +312,7 @@ class TransformInfiniteGrid(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.play(ShowCreation(
-            self.plane, run_time = 3, submobject_mode = "lagged_start"
+            self.plane, run_time = 3, lag_ratio = 0.5
         ))
         self.wait()
         self.apply_transposed_matrix([[2, 1], [1, 2]])
@@ -386,7 +386,7 @@ class LookToWordLinear(Scene):
             Transform(transformation, faded_transformation),
             Transform(transformation_brace, linear_brace),
             Transform(function, new_sub_word),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait()
 
@@ -500,8 +500,8 @@ class SneakyNonlinearTransformationExplained(SneakyNonlinearTransformation):
             FRAME_Y_RADIUS*LEFT+FRAME_Y_RADIUS*DOWN,
             FRAME_Y_RADIUS*RIGHT + FRAME_Y_RADIUS*UP
         )
-        diag.insert_n_anchor_points(20)
-        diag.change_anchor_mode("smooth")
+        diag.insert_n_curves(20)
+        diag.make_smooth()
         diag.set_color(YELLOW)
         self.play(ShowCreation(diag))
         self.add_transformable_mobject(diag)
@@ -659,7 +659,7 @@ class TrackBasisVectorsExample(LinearTransformationScene):
         self.play(Transform(
             pre_def, v_def, 
             run_time = 2, 
-            submobject_mode = "all_at_once"
+            lag_ratio = 0
         ))
         self.remove(pre_def)
         self.add_foreground_mobject(v_def)
@@ -772,10 +772,10 @@ class WatchManyVectorsMove(TransformManyVectors):
         ])
         vectors.set_submobject_colors_by_gradient(PINK, YELLOW)
         dots = self.vectors_to_dots(vectors)        
-        self.play(ShowCreation(dots, submobject_mode = "lagged_start"))
+        self.play(ShowCreation(dots, lag_ratio = 0.5))
         self.play(Transform(
             dots, vectors, 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.remove(dots)
@@ -841,7 +841,7 @@ class DeduceResultWithGeneralCoordinates(Scene):
             y.copy(), j_coords.copy(), equals,
             result
         )
-        vect_group.arrange_submobjects(RIGHT, buff = 0.1)
+        vect_group.arrange(RIGHT, buff = 0.1)
 
         self.add(i_group, j_group)
         for mob in vect_group.split():
@@ -907,7 +907,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             Transform(i_brackets, matrix_brackets),
             Transform(j_brackets, matrix_brackets),
             run_time = 2,
-            submobject_mode = "all_at_once"
+            lag_ratio = 0
         )
         everything = VMobject(*self.get_mobjects())
         self.play(
@@ -979,7 +979,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         formula = VMobject(
             v1.copy(), col1, TexMobject("+"), v2.copy(), col2
         )
-        formula.arrange_submobjects(RIGHT, buff = 0.1)
+        formula.arrange(RIGHT, buff = 0.1)
         formula.center()
         formula_start = VMobject(
             v1.copy(), 
@@ -995,7 +995,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
             Transform(
                 formula_start, formula, 
                 run_time = 2,
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             )
         )
         self.wait()
@@ -1012,7 +1012,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         row1 = VMobject(*list(map(TexMobject, row1)))
         row2 = VMobject(*list(map(TexMobject, row2)))
         for row in row1, row2:
-            row.arrange_submobjects(RIGHT, buff = 0.1)
+            row.arrange(RIGHT, buff = 0.1)
         final_sum = Matrix([row1, row2])
         row1, row2 = final_sum.get_mob_matrix().flatten()
         row1.split()[0].set_color(X_COLOR)
@@ -1033,7 +1033,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
     def reposition_matrix_and_vector(self, matrix, vector, formula):
         start_state = VMobject(matrix, vector)
         end_state = start_state.copy()
-        end_state.arrange_submobjects(RIGHT, buff = 0.1)
+        end_state.arrange(RIGHT, buff = 0.1)
         equals = TexMobject("=")
         equals.next_to(formula, LEFT)
         end_state.next_to(equals, LEFT)
@@ -1045,7 +1045,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         self.play(
             Transform(
                 start_state, end_state, 
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             ),
             Write(equals, run_time = 1)
         )
@@ -1053,7 +1053,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         self.play(
             FadeIn(brace),
             FadeIn(brace_words),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait()
 
@@ -1404,7 +1404,7 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
         self.play(
             ApplyPointwiseFunction(
                 collapse_func, axes, 
-                submobject_mode = "all_at_once",
+                lag_ratio = 0,
             ),
             ApplyPointwiseFunction(collapse_func, graph),
             ApplyMethod(point.shift, 10*DOWN),
@@ -1419,7 +1419,7 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
     def show_inputs_and_output(self):
         numbers = list(range(-3, 4))
         inputs = VMobject(*list(map(TexMobject, list(map(str, numbers)))))
-        inputs.arrange_submobjects(DOWN, buff = 0.5, aligned_edge = RIGHT)
+        inputs.arrange(DOWN, buff = 0.5, aligned_edge = RIGHT)
         arrows = VMobject(*[
             Arrow(LEFT, RIGHT).next_to(mob)
             for mob in inputs.split()
@@ -1714,7 +1714,7 @@ class ReasonForThinkingAboutArrows(LinearTransformationScene):
         self.wait()
         self.play(Transform(
             vectors, vectors_copy, 
-            submobject_mode = "all_at_once"
+            lag_ratio = 0
         ))
         self.wait()
 

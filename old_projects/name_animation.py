@@ -40,12 +40,12 @@ class NameAnimationScene(Scene):
             TexMobject("\\times"),
             Integer(1)
         )
-        times_n_label.arrange_submobjects(RIGHT)
+        times_n_label.arrange(RIGHT)
         times_n_label.shift(FRAME_WIDTH * RIGHT / 4)
         times_n_label.to_edge(UP)
 
         self.play(
-            LaggedStart(FadeIn, name_mob, run_time=3),
+            OldLaggedStart(FadeIn, name_mob, run_time=3),
             ApplyMethod(randy.change, "pondering", pos2, run_time=1),
             FadeIn(times_n_label)
         )

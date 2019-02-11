@@ -20,6 +20,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import rotate_vector
@@ -176,7 +177,6 @@ class PartyHat(SVGMobject):
         "pi_creature": None,
         "stroke_width": 0,
         "fill_opacity": 1,
-        "propagate_style_to_family": True,
         "frills_colors": [MAROON_B, PURPLE],
         "cone_color": GREEN,
         "dots_colors": [YELLOW],
@@ -223,16 +223,16 @@ class Laptop(VGroup):
             body.stretch(scale_factor, dim=dim)
         body.set_width(self.width)
         body.set_fill(self.shaded_body_color, opacity=1)
-        body.sort_submobjects(lambda p: p[2])
+        body.sort(lambda p: p[2])
         body[-1].set_fill(self.body_color)
         screen_plate = body.copy()
         keyboard = VGroup(*[
             VGroup(*[
                 Square(**self.key_color_kwargs)
                 for x in range(12 - y % 2)
-            ]).arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            ]).arrange(RIGHT, buff=SMALL_BUFF)
             for y in range(4)
-        ]).arrange_submobjects(DOWN, buff=MED_SMALL_BUFF)
+        ]).arrange(DOWN, buff=MED_SMALL_BUFF)
         keyboard.stretch_to_fit_width(
             self.keyboard_width_to_body_width * body.get_width(),
         )
@@ -283,7 +283,6 @@ class PatreonLogo(SVGMobject):
         "fill_opacity": 1,
         "stroke_width": 0,
         "width": 4,
-        "propagate_style_to_family": True
     }
 
     def __init__(self, **kwargs):
@@ -316,7 +315,7 @@ class VideoSeries(VGroup):
         digest_config(self, kwargs)
         videos = [VideoIcon() for x in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
-        self.arrange_submobjects()
+        self.arrange()
         self.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         self.set_color_by_gradient(*self.gradient_colors)
 
@@ -344,9 +343,7 @@ class Headphones(SVGMobject):
 
 
 class Clock(VGroup):
-    CONFIG = {
-        "propagate_style_to_family": True,
-    }
+    CONFIG = {}
 
     def __init__(self, **kwargs):
         circle = Circle()
@@ -377,7 +374,7 @@ class ClockPassesTime(Animation):
     CONFIG = {
         "run_time": 5,
         "hours_passed": 12,
-        "rate_func": None,
+        "rate_func": linear,
     }
 
     def __init__(self, clock, **kwargs):
@@ -400,9 +397,9 @@ class ClockPassesTime(Animation):
         )
         Animation.__init__(self, clock, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         for rotation in self.hour_rotation, self.minute_rotation:
-            rotation.update_mobject(alpha)
+            rotation.interpolate_mobject(alpha)
 
 
 class Bubble(SVGMobject):
@@ -414,7 +411,6 @@ class Bubble(SVGMobject):
         "width": 8,
         "bubble_center_adjustment_factor": 1. / 8,
         "file_name": None,
-        "propagate_style_to_family": True,
         "fill_color": BLACK,
         "fill_opacity": 0.8,
         "stroke_color": WHITE,
@@ -540,6 +536,16 @@ class Car(SVGMobject):
 
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
+
+        path = self.submobjects[0]
+        subpaths = path.get_subpaths()
+        path.clear_points()
+        for indices in [(0, 1), (2, 3), (4, 6, 7), (5,), (8,)]:
+            part = VMobject()
+            for index in indices:
+                part.append_points(subpaths[index])
+            path.add(part)
+
         self.set_height(self.height)
         self.set_stroke(color=WHITE, width=0)
         self.set_fill(self.color, opacity=1)
@@ -577,7 +583,7 @@ class Car(SVGMobject):
             self.get_corner(UP + RIGHT),
             self.get_corner(DOWN + RIGHT),
             color=DISTANCE_COLOR,
-            dashed_segment_length=0.05,
+            dash_length=0.05,
         )
 
     def add_treds_to_tires(self):
@@ -585,11 +591,11 @@ class Car(SVGMobject):
             radius = tire.get_width() / 2
             center = tire.get_center()
             tred = Line(
-                0.9 * radius * RIGHT, 1.4 * radius * RIGHT,
+                0.7 * radius * RIGHT, 1.1 * radius * RIGHT,
                 stroke_width=2,
                 color=BLACK
             )
-            tred.rotate_in_place(np.pi / 4)
+            tred.rotate(PI / 5, about_point=tred.get_end())
             for theta in np.arange(0, 2 * np.pi, np.pi / 4):
                 new_tred = tred.copy()
                 new_tred.rotate(theta, about_point=ORIGIN)
@@ -598,16 +604,16 @@ class Car(SVGMobject):
         return self
 
     def get_tires(self):
-        return VGroup(self[1][1], self[1][3])
+        return VGroup(self[1][0], self[1][1])
 
     def get_lights(self):
         return VGroup(self.get_front_light(), self.get_rear_light())
 
     def get_front_light(self):
-        return self[1][5]
+        return self[1][3]
 
     def get_rear_light(self):
-        return self[1][8]
+        return self[1][4]
 
 
 class VectorizedEarth(SVGMobject):
@@ -782,7 +788,7 @@ class Logo(VMobject):
             for (a, b) in [(0.25, 1), (0, 0.25)]
         ])
         for sector in new_pupil:
-            sector.add_control_points([
+            sector.add_cubic_bezier_curve_to([
                 sector.points[-1],
                 *[center] * 3,
                 *[sector.points[0]] * 2

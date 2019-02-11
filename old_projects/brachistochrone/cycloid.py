@@ -12,7 +12,7 @@ class RollAlongVector(Animation):
         digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         d_alpha = alpha - self.last_alpha
         self.last_alpha = alpha
         self.mobject.rotate_in_place(
@@ -492,7 +492,7 @@ class EquationsForCycloid(CycloidScene):
 
         self.play(ShimmerIn(equations))
         self.grow_parts()
-        self.draw_cycloid(rate_func = None, run_time = 5)
+        self.draw_cycloid(rate_func=linear, run_time = 5)
         self.wait()
 
 class SlidingObject(CycloidScene, PathSlidingScene):
@@ -559,7 +559,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
                 self.circle, 
                 self.cycloid.points[-1]-self.cycloid.points[0],
                 run_time = end_time-start_time,
-                rate_func = None
+                rate_func=linear
             )
         )
         self.add(self.circle, self.slider)

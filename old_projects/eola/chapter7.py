@@ -47,7 +47,6 @@ class OpeningQuote(Scene):
             self.play(Write(
                 quote, 
                 run_time = rt,
-                lag_factor = 5 if rt > 3 else 2,
             ))
         self.wait(2)
 
@@ -64,7 +63,7 @@ class TraditionalOrdering(RandolphScene):
             "(everything else)",
             "\\vdots",
         ])))
-        topics.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = SMALL_BUFF)
+        topics.arrange(DOWN, aligned_edge = LEFT, buff = SMALL_BUFF)
         # topics.next_to(title, DOWN+RIGHT)
 
         self.play(
@@ -72,7 +71,7 @@ class TraditionalOrdering(RandolphScene):
             FadeIn(
                 topics, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
         )
         self.play(topics[1].set_color, PINK)
@@ -104,7 +103,7 @@ class ThisSeriesOrdering(RandolphScene):
                 "Chapter 11: Abstract vector spaces",
             ]
         ])
-        chapters.arrange_submobjects(
+        chapters.arrange(
             DOWN, buff = SMALL_BUFF, aligned_edge = LEFT
         )
         chapters.set_height(1.5*FRAME_Y_RADIUS)
@@ -118,7 +117,7 @@ class ThisSeriesOrdering(RandolphScene):
         self.play(
             FadeIn(
                 chapters, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ),
             self.randy.change_mode, "sassy"
@@ -160,7 +159,7 @@ class ShowNumericalDotProduct(Scene):
         v2 = Matrix(self.v2)
         inter_array_dot = TexMobject("\\cdot").scale(1.5)
         dot_product = VGroup(v1, inter_array_dot, v2)
-        dot_product.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF/2)
+        dot_product.arrange(RIGHT, buff = MED_SMALL_BUFF/2)
         dot_product.to_edge(LEFT)
         pairs = list(zip(v1.get_entries(), v2.get_entries()))
 
@@ -171,10 +170,10 @@ class ShowNumericalDotProduct(Scene):
         products = VGroup(*[
             VGroup(
                 p1.copy(), dot.copy(), p2.copy()
-            ).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            ).arrange(RIGHT, buff = SMALL_BUFF)
             for p1, p2 in pairs
         ])
-        products.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        products.arrange(DOWN, buff = LARGE_BUFF)
         products.next_to(dot_product, RIGHT, buff = LARGE_BUFF)
 
 
@@ -184,7 +183,7 @@ class ShowNumericalDotProduct(Scene):
         final_sum = VGroup(*it.chain(*list(zip(
             symbols, products.target
         ))))
-        final_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        final_sum.arrange(RIGHT, buff = SMALL_BUFF)
         final_sum.next_to(dot_product, RIGHT)
 
         title = TextMobject("Two vectors of the same dimension")
@@ -264,7 +263,7 @@ class GeometricInterpretation(VectorScene):
         w.add_background_rectangle()
         dot = TexMobject("\\cdot")
         eq = VMobject(v, dot, w)
-        eq.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        eq.arrange(RIGHT, buff = SMALL_BUFF)
         eq.to_corner(UP+LEFT)
         self.play(Write(eq), run_time = 1)
         for array, char in zip([v, w], ["v", "w"]):
@@ -572,7 +571,7 @@ class SymmetricVAndW(VectorScene):
         scalar = 2
         new_v = v.copy().scale(scalar)
         new_v.label = VMobject(TexMobject("2"), v.label.copy())
-        new_v.label.arrange_submobjects(aligned_edge = DOWN)
+        new_v.label.arrange(aligned_edge = DOWN)
         new_v.label.next_to(new_v.get_end(), DOWN+RIGHT)
         new_v.proj = v.proj.copy().scale(scalar)
         new_v.proj.fade()
@@ -717,7 +716,7 @@ class Symbolic2To1DTransform(Scene):
         out_arrow = Arrow(LEFT, RIGHT, color = output_array.get_color())
         VMobject(
             input_array, in_arrow, func, out_arrow, output_array
-        ).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        ).arrange(RIGHT, buff = SMALL_BUFF)
 
         input_brace = Brace(input_array, DOWN)
         input_words = input_brace.get_text("2d input")
@@ -849,7 +848,7 @@ class FormalVsVisual(Scene):
         visual_statement.set_submobject_colors_by_gradient(YELLOW, MAROON_B)
 
         properties = VMobject(additivity, scaling)
-        properties.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        properties.arrange(DOWN, buff = MED_SMALL_BUFF)
         
         for text, mob in (formal, properties), (visual, visual_statement):
             mob.scale(0.75)
@@ -1043,7 +1042,7 @@ class AlwaysfollowIHatJHat(TeacherStudentsScene):
         ])
         self.play(Transform(
             students, ponderers,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
         self.random_blink(2)
@@ -1066,7 +1065,7 @@ class ShowMatrix(TwoDToOneDScene):
         matrix = Matrix([[1, 2]])
         matrix_words = TextMobject("Transformation matrix: ")
         matrix_group = VMobject(matrix_words, matrix)
-        matrix_group.arrange_submobjects()
+        matrix_group.arrange()
         matrix_group.to_edge(UP)
         entries = matrix.get_entries()
 
@@ -1246,14 +1245,14 @@ class TwoDOneDMatrixMultiplication(Scene):
         pairs = [
             VMobject(
                 e1.copy(), TexMobject("\\cdot"), e2.copy()
-            ).arrange_submobjects(
+            ).arrange(
                 LEFT if self.order_left_to_right else RIGHT,
             )
             for e1, e2 in starter_pairs
         ]
         symbols = list(map(TexMobject, ["=", "+"]))
         equation = VMobject(*it.chain(*list(zip(symbols, pairs))))
-        equation.arrange_submobjects(align_using_submobjects = True)
+        equation.arrange(align_using_submobjects = True)
         equation.next_to(vector, RIGHT)
 
         self.play(Write(VMobject(*symbols)))
@@ -1286,7 +1285,7 @@ class AssociationBetweenMatricesAndVectors(Scene):
         arrow = DoubleArrow(LEFT, RIGHT, color = WHITE)
         VGroup(
             matrices_words, arrow, vectors_words
-        ).arrange_submobjects(buff = MED_SMALL_BUFF)
+        ).arrange(buff = MED_SMALL_BUFF)
 
         matrices = VGroup(*list(map(Matrix, self.matrices)))
         vectors = VGroup(*list(map(Matrix, [m[0] for m in self.matrices])))
@@ -1309,14 +1308,14 @@ class AssociationBetweenMatricesAndVectors(Scene):
         self.play(Transform(
             vectors, matrices, 
             path_arc = np.pi/2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.wait()
         self.play(
             vectors.restore, 
             path_arc = -np.pi/2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.wait()
@@ -1475,7 +1474,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         proj_lines = self.get_proj_lines(dots, proj_dots)
 
         self.wait()
-        self.play(FadeIn(vectors, submobject_mode = "lagged_start"))
+        self.play(FadeIn(vectors, lag_ratio = 0.5))
         self.wait()
         self.play(Transform(vectors, dots))
         self.wait()
@@ -1486,7 +1485,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
             Transform(vectors, proj_dots),
             Transform(proj_lines, proj_dots),
             Animation(self.u_hat),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.wait()
@@ -1525,7 +1524,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
             DashedLine(
                 d1.get_center(), d2.get_center(), 
                 buff = 0, color = d1.get_color(),
-                dashed_segment_length = 0.15
+                dash_length = 0.15
             )
             for d1, d2 in zip(dots, proj_dots)
         ])
@@ -1606,7 +1605,7 @@ class AskAboutProjectionMatrix(Scene):
         matrix = Matrix([["?", "?"]])
         matrix.set_column_colors(X_COLOR, Y_COLOR)
         words = TextMobject("Projection matrix:")
-        VMobject(words, matrix).arrange_submobjects(buff = MED_SMALL_BUFF).shift(UP)
+        VMobject(words, matrix).arrange(buff = MED_SMALL_BUFF).shift(UP)
         basis_words = [
             TextMobject("Where", "$\\hat{\\%smath}$"%char, "lands")
             for char in ("i", "j")
@@ -1658,7 +1657,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         question.set_color_by_tex(j_tex, Y_COLOR)
         question.add_background_rectangle()
         matrix = Matrix([["u_x", "u_y"]])
-        VGroup(question, matrix).arrange_submobjects(DOWN).to_corner(
+        VGroup(question, matrix).arrange(DOWN).to_corner(
             UP+LEFT, buff = MED_SMALL_BUFF/2
         )
         matrix_rect = BackgroundRectangle(matrix)
@@ -1819,7 +1818,7 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
         v = Matrix(self.vector)
         self.color_matrix_and_vector(u, v)
         dot_product = VGroup(u, TexMobject("\\cdot"), v)
-        dot_product.arrange_submobjects()
+        dot_product.arrange()
         dot_product.shift(2*RIGHT+DOWN)
         words = VGroup(
             TextMobject("Matrix-vector product"),
@@ -1828,7 +1827,7 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
         )
         words[0].set_color(BLUE)
         words[2].set_color(GREEN)
-        words.arrange_submobjects(DOWN)
+        words.arrange(DOWN)
         words.to_edge(LEFT)
 
 
@@ -1941,7 +1940,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             b.proj = get_vect_mob_projection(b, self.u_hat)
             b.proj_line = DashedLine(
                 b.get_end(), b.proj.get_end(),
-                dashed_segment_length = 0.05
+                dash_length = 0.05
             )
             b.proj.label = TexMobject("u_%s"%char)
             b.proj.label.set_color(b.get_color())
@@ -2121,7 +2120,7 @@ class RememberGraphDuality(Scene):
             early video I did on graph duality
         """)
         words.to_edge(UP)
-        self.play(Write(words, lag_factor = 4))
+        self.play(Write(words))
         self.wait()
 
 class LooseDualityDescription(Scene):
@@ -2131,7 +2130,7 @@ class LooseDualityDescription(Scene):
         arrow = TexMobject("\\Leftrightarrow")
         words = TextMobject("Natural-but-surprising", "correspondence")
         words[1].set_color_by_gradient(BLUE, YELLOW)
-        VGroup(duality, arrow, words).arrange_submobjects(buff = MED_SMALL_BUFF)
+        VGroup(duality, arrow, words).arrange(buff = MED_SMALL_BUFF)
 
         self.add(duality)
         self.play(Write(arrow))
@@ -2167,7 +2166,7 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
         matrix.set_column_colors(X_COLOR, Y_COLOR)
 
         dot_product = VGroup(v1, dot, v2)
-        dot_product.arrange_submobjects(RIGHT)
+        dot_product.arrange(RIGHT)
         matrix.next_to(v2, LEFT)
 
         brace = Brace(matrix, UP)

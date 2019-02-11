@@ -1,10 +1,10 @@
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.animation.creation import FadeOut
-from manimlib.animation.creation import GrowArrow
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import Write
+from manimlib.animation.fading import FadeOut
+from manimlib.animation.growing import GrowArrow
 from manimlib.animation.transform import ApplyFunction
 from manimlib.animation.transform import ApplyPointwiseFunction
 from manimlib.animation.transform import Transform
@@ -49,14 +49,14 @@ class VectorScene(Scene):
     def add_plane(self, animate=False, **kwargs):
         plane = NumberPlane(**kwargs)
         if animate:
-            self.play(ShowCreation(plane, submobject_mode="lagged_start"))
+            self.play(ShowCreation(plane, lag_ratio=0.5))
         self.add(plane)
         return plane
 
     def add_axes(self, animate=False, color=WHITE, **kwargs):
         axes = Axes(color=color, tick_frequency=1)
         if animate:
-            self.play(ShowCreation(axes, submobject_mode="one_at_a_time"))
+            self.play(ShowCreation(axes))
         self.add(axes)
         return axes
 
@@ -236,8 +236,8 @@ class VectorScene(Scene):
         )
         self.wait()
         self.play(
-            Transform(x_coord_start, x_coord, submobject_mode="all_at_once"),
-            Transform(y_coord_start, y_coord, submobject_mode="all_at_once"),
+            Transform(x_coord_start, x_coord, lag_ratio=0),
+            Transform(y_coord_start, y_coord, lag_ratio=0),
             Write(brackets, run_time=1),
         )
         self.wait()
@@ -437,7 +437,7 @@ class LinearTransformationScene(VectorScene):
         target = VMobject(*[mob.target for mob in pieces])
         if self.leave_ghost_vectors:
             self.add(start.copy().fade(0.7))
-        return Transform(start, target, submobject_mode="all_at_once")
+        return Transform(start, target, lag_ratio=0)
 
     def get_moving_mobject_movement(self, func):
         for m in self.moving_mobjects:

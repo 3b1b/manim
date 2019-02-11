@@ -202,7 +202,7 @@ class WavePacket(Animation):
         ]
         Animation.__init__(self, self.vects, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         packet_center = interpolate(
             self.wave_packet_start,
             self.wave_packet_end,
@@ -592,7 +592,7 @@ class IntroduceElectricField(PiCreatureScene):
         morty = self.pi_creature
         vector_field = self.get_vector_field()
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 ShowCreation, vector_field, 
                 run_time = 3
             ),
@@ -651,7 +651,7 @@ class IntroduceElectricField(PiCreatureScene):
 
         self.play(
             FadeOut(self.force_vector),
-            LaggedStart(FadeIn, VGroup(*particles[1:]))
+            OldLaggedStart(FadeIn, VGroup(*particles[1:]))
         )
         self.moving_particles = particles
         self.add_foreground_mobjects(self.moving_particles, self.pi_creature)
@@ -693,7 +693,7 @@ class IntroduceElectricField(PiCreatureScene):
         )
         VGroup(*shading_list).set_color_by_gradient(*self.vector_field_colors)
         result.set_fill(opacity = 0.75)
-        result.sort_submobjects(get_norm)
+        result.sort(get_norm)
 
         return result
 
@@ -740,7 +740,7 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         vector_field = self.get_vector_field()
 
         self.play(
-            LaggedStart(ShowCreation, vector_field, run_time = 3),
+            OldLaggedStart(ShowCreation, vector_field, run_time = 3),
             Animation(self.title)
         )
         self.wait()
@@ -767,7 +767,7 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         self.play(
             particle.restore,
             run_time = 2,
-            rate_func = None,
+            rate_func=linear,
         )
         self.add(velocity)
         self.play(Write(velocity_word, run_time = 0.5))
@@ -871,7 +871,7 @@ class CurlRelationBetweenFields(ThreeDScene):
         self.wait()
         self.move_camera(0.8*np.pi/2, -0.45*np.pi)
         self.begin_ambient_camera_rotation()
-        self.play(M_vect.restore, run_time = 3, rate_func = None)
+        self.play(M_vect.restore, run_time = 3, rate_func=linear)
         self.wait(3)
 
         self.E_vects = E_vects
@@ -902,7 +902,7 @@ class CurlRelationBetweenFields(ThreeDScene):
             E_vect.rotate, np.pi, RIGHT, [], new_point,
             E_vect.scale_about_point, 3, new_point,
             run_time = 4,
-            rate_func = None,
+            rate_func=linear,
         )
         self.wait()
 
@@ -928,7 +928,7 @@ class CurlRelationBetweenFields(ThreeDScene):
         self.play(
             M_vect.rotate, np.pi, RIGHT, [], point,
             run_time = 5,
-            rate_func = None,
+            rate_func=linear,
         )
         self.wait(3)
 
@@ -945,7 +945,7 @@ class WriteCurlEquations(Scene):
             "\\frac{\\partial \\textbf{E}}{\\partial t}"
         )
         eqs = VGroup(eq1, eq2)
-        eqs.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        eqs.arrange(DOWN, buff = LARGE_BUFF)
         eqs.set_height(FRAME_HEIGHT - 1)
         eqs.to_edge(LEFT)
         for eq in eqs:
@@ -1014,7 +1014,7 @@ class ListRelevantWaveIdeas(TeacherStudentsScene):
             "- How phase influences addition",
         ])))
         topics.scale(0.8)
-        topics.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        topics.arrange(DOWN, aligned_edge = LEFT)
         topics.next_to(h_line, DOWN, aligned_edge = LEFT)
 
         quantum = TextMobject("Quantum")
@@ -1033,7 +1033,7 @@ class ListRelevantWaveIdeas(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["pondering"]*3,
-            added_anims = [LaggedStart(
+            added_anims = [OldLaggedStart(
                 FadeIn, topics,
                 run_time = 3
             )],
@@ -1167,7 +1167,7 @@ class ShowVectorEquation(Scene):
             TexMobject("\\cos(", "2\\pi", "f_x", "t", "+ ", "\\phi_x", ")"),
             TexMobject("0", "")
         )
-        components.arrange_submobjects(DOWN)
+        components.arrange(DOWN)
         lb, rb = brackets = TexMobject("[]")
         brackets.set_height(components.get_height() + SMALL_BUFF)
         lb.next_to(components, LEFT, buff = 0.3)
@@ -1218,7 +1218,7 @@ class ShowVectorEquation(Scene):
             FadeIn(moving_brace.mobject),
             FadeIn(x_without_phi),
             FadeIn(moving_x_without_phi.mobject),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         )
         self.wait(3)
@@ -1300,7 +1300,7 @@ class ShowVectorEquation(Scene):
         self.add(new_ov)
         self.play(ShowCreation(
             high_f_graph, run_time = 4,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.wait()
         self.play(FadeOut(new_ov.vector))
@@ -1437,7 +1437,7 @@ class ShowVectorEquation(Scene):
             x.target, right_ket, plus,
             y.target, up_ket,
         )
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         E_equals.target.shift(SMALL_BUFF*UP)
         group.scale(0.8)
         group.move_to(self.brackets, DOWN)
@@ -1461,7 +1461,7 @@ class ShowVectorEquation(Scene):
         self.play(*list(map(Write, [right_ket, plus, up_ket])), run_time = 1)
         self.play(
             Write(kets_word),
-            LaggedStart(ShowCreation, arrows, lag_ratio = 0.7),
+            OldLaggedStart(ShowCreation, arrows, lag_ratio = 0.7),
             run_time = 2,
         )
         self.wait()
@@ -1497,7 +1497,7 @@ class ShowVectorEquation(Scene):
 
         movers = x, x_ket, plus, y, y_ket
         group = VGroup(*[m.target for m in movers])
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.move_to(x, LEFT)
 
         vector_A_vect = np.array(self.oscillating_vector.A_vect)
@@ -1672,7 +1672,7 @@ class ShowTipToTailSum(ShowVectorEquation):
             ket.generate_target()
         plus = TexMobject("+")
         ket_sum = VGroup(h_ket.target, plus, v_ket.target)
-        ket_sum.arrange_submobjects(RIGHT)
+        ket_sum.arrange(RIGHT)
         ket_sum.next_to(3*RIGHT + 2*UP, UP, SMALL_BUFF)
 
         self.wait(4)
@@ -3205,7 +3205,7 @@ class ThreeFilters(ShootPhotonThroughFilter):
         l1, l2, l3 = self.lines_group[:3]
         pf1, pf2, pf3 = self.pol_filters
         kwargs = {
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
             "rate_func" : None,
         }
 
@@ -3336,7 +3336,6 @@ class ThreeFilters(ShootPhotonThroughFilter):
 
         arrow = Arrow(
             ORIGIN, 7*RIGHT,
-            use_rectangular_stem = False,
             path_arc = 0.5*np.pi,
         )
         labels = VGroup(*list(map(TexMobject, ["0\\%", "25\\%"])))
@@ -3686,7 +3685,7 @@ class PhotonAtSlightAngle(ThreeFilters):
             FadeIn(self.pol_filter),
             Animation(self.arc)
         )
-        self.play(ShowCreation(filter_lines, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(filter_lines, lag_ratio = 0))
         self.play(FadeOut(filter_lines))
         self.wait()
 
@@ -3779,7 +3778,6 @@ class PhotonAtSlightAngle(ThreeFilters):
         arrow = Arrow(
             2*LEFT, 2*RIGHT, 
             path_arc = 0.8*np.pi,
-            use_rectangular_stem = False,
         )
         label = TexMobject("15\\% \\text{ absorbed}")
         label.next_to(arrow, DOWN)
@@ -3790,7 +3788,7 @@ class PhotonAtSlightAngle(ThreeFilters):
 
         kwargs = {
             "rate_func" : None,
-            "submobject_mode" : "all_at_once",
+            "lag_ratio" : 0,
         }
         self.play(
             ShowCreation(arrow),
@@ -4028,7 +4026,6 @@ class CircularPhotons(ShootPhotonThroughFilter):
         arrows = VGroup(*[
             Arrow(
                 v1, v2,
-                use_rectangular_stem = False,
                 color = WHITE,
                 path_arc = np.pi,
             )

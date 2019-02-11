@@ -1,6 +1,6 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.composition import AnimationGroup
-from manimlib.animation.creation import FadeOut
+from manimlib.animation.fading import FadeOut
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import Write
 from manimlib.animation.transform import ApplyMethod
@@ -93,11 +93,11 @@ class RemovePiCreatureBubble(AnimationGroup):
             FadeOut(pi_creature.bubble.content),
         )
 
-    def clean_up(self, surrounding_scene=None):
-        AnimationGroup.clean_up(self, surrounding_scene)
+    def clean_up_from_scene(self, scene=None):
+        AnimationGroup.clean_up_from_scene(self, scene)
         self.pi_creature.bubble = None
-        if surrounding_scene is not None:
-            surrounding_scene.add(self.pi_creature)
+        if scene is not None:
+            scene.add(self.pi_creature)
 
 
 class FlashThroughClass(Animation):
@@ -114,7 +114,7 @@ class FlashThroughClass(Animation):
             np.random.shuffle(self.indices)
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         index = int(np.floor(alpha * self.mobject.height * self.mobject.width))
         for pi in self.mobject:
             pi.set_color(BLUE_E)

@@ -186,7 +186,7 @@ class DiagonalExample(LinearTransformationScene):
             equation = VMobject(
                 words, width_target, times, height_target, eq_det
             )
-            equation.arrange_submobjects(RIGHT, buff = 0.2)
+            equation.arrange(RIGHT, buff = 0.2)
             equation.next_to(self.square, UP, aligned_edge = LEFT)
             equation.shift(0.5*RIGHT)
             background_rect = BackgroundRectangle(equation)
@@ -261,7 +261,7 @@ class WhatHappensToOneSquareHappensToAll(LinearTransformationScene):
             square.shift(position)
             squares.add(square)
         self.play(FadeIn(
-            squares, submobject_mode = "lagged_start",
+            squares, lag_ratio = 0.5,
             run_time = 3
         ))
         self.add_transformable_mobject(squares)
@@ -295,7 +295,7 @@ class BreakBlobIntoGridSquares(LinearTransformationScene):
             if blob.probably_contains(point):
                 squares.add(square.copy().shift(point))
         self.play(ShowCreation(
-            squares, submobject_mode = "lagged_start",
+            squares, lag_ratio = 0.5,
             run_time = 2,
         ))
         self.add_transformable_mobject(squares)
@@ -346,7 +346,7 @@ class NameDeterminant(LinearTransformationScene):
         )
         if det < 1 and det > 0:
             area_label_target.scale(det)
-        area_label_target.arrange_submobjects(RIGHT, buff = 0.1)
+        area_label_target.arrange(RIGHT, buff = 0.1)
         self.add_moving_mobject(area_label, area_label_target)
         
         self.wait()
@@ -414,11 +414,11 @@ class NextFewVideos(Scene):
         icon.set_fill(WHITE, opacity = 1)
         icons = VMobject(*[icon.copy() for x in range(10)])
         icons.set_submobject_colors_by_gradient(BLUE_A, BLUE_D)
-        icons.arrange_submobjects(RIGHT)
+        icons.arrange(RIGHT)
         icons.to_edge(LEFT)
 
         self.play(
-            FadeIn(icons, submobject_mode = "lagged_start"),
+            FadeIn(icons, lag_ratio = 0.5),
             run_time = 3
         )
         self.wait()
@@ -485,7 +485,7 @@ class FlipSpaceOver(Scene):
             plane.add(text)
 
         self.play(ShowCreation(
-            plane1, submobject_mode = "lagged_start",
+            plane1, lag_ratio = 0.5,
             run_time = 1
         ))
         self.wait()
@@ -653,7 +653,7 @@ class SlowlyRotateIHat(LinearTransformationScene):
             [[-1, 0], [0, 1]],
             path_arc = np.pi,
             run_time = 30,
-            rate_func = None,
+            rate_func=linear,
         )
 
 class DeterminantGraphForRotatingIHat(Scene):
@@ -687,7 +687,7 @@ class DeterminantGraphForRotatingIHat(Scene):
 
         self.add(axes, det_word, time_word)
         self.play(ShowCreation(
-            graph, rate_func = None, run_time = 10
+            graph, rate_func=linear, run_time = 10
         ))
 
 class WhatAboutThreeDimensions(TeacherStudentsScene):
@@ -811,7 +811,7 @@ class RightHandRule(Scene):
 
         # self.add(NumberPlane())
         self.play(
-            ShowCreation(hand.outline, run_time = 2, rate_func = None),
+            ShowCreation(hand.outline, run_time = 2, rate_func=linear),
             FadeIn(hand.inlines)
         )
         self.wait()
@@ -971,7 +971,7 @@ class FullFormulaExplanation(LinearTransformationScene):
             everyone.add(shape, tex_mob)
         self.play(FadeIn(
             everyone, 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 1
         ))
 
@@ -1046,7 +1046,7 @@ class ThreeDDetFormula(Scene):
         ])
         parts = list(parts)
         for part in parts:
-            part.arrange_submobjects(RIGHT, buff = 0.2)
+            part.arrange(RIGHT, buff = 0.2)
         parts[1].next_to(parts[0], RIGHT)
         parts[2].next_to(parts[1], DOWN, aligned_edge = LEFT)
         parts[3].next_to(parts[2], DOWN, aligned_edge = LEFT)

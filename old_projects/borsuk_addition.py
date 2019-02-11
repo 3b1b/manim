@@ -126,7 +126,7 @@ class UnexpectedConnection(Scene):
         self.add(circle, radius, center_dot, decimal, arc)
         self.play(
             Rotate(radius, PI - 1e-7, about_point=center),
-            LaggedStart(FadeInFromDown, primes),
+            OldLaggedStart(FadeInFromDown, primes),
             run_time=4
         )
         self.remove(decimal)
@@ -154,7 +154,7 @@ class MapOfVideo(MovingCameraScene):
             image.add(rect)
 
         image_line = Group(*images[:2], *images[3:])
-        image_line.arrange_submobjects(RIGHT, buff=LARGE_BUFF)
+        image_line.arrange(RIGHT, buff=LARGE_BUFF)
         images[2].next_to(image_line, DOWN, buff=1.5)
         images.set_width(FRAME_WIDTH - 1)
         images.to_edge(UP, buff=LARGE_BUFF)
@@ -172,8 +172,8 @@ class MapOfVideo(MovingCameraScene):
             Arrow(images[3], images[4], buff=SMALL_BUFF),
         )
 
-        self.play(LaggedStart(FadeInFromDown, images, run_time=4))
-        self.play(LaggedStart(GrowArrow, arrows))
+        self.play(OldLaggedStart(FadeInFromDown, images, run_time=4))
+        self.play(OldLaggedStart(GrowArrow, arrows))
         self.wait()
         group = Group(images, arrows)
         for image in images:
@@ -211,7 +211,7 @@ class MathIsDeep(PiCreatureScene):
         math.set_stroke(width=0, background=True)
         numbers = [13, 1, 20, 8]
         num_mobs = VGroup(*[Integer(d) for d in numbers])
-        num_mobs.arrange_submobjects(RIGHT, buff=MED_LARGE_BUFF)
+        num_mobs.arrange(RIGHT, buff=MED_LARGE_BUFF)
         num_mobs.next_to(math, DOWN, buff=1.5)
         num_mobs.set_color(YELLOW)
         top_arrows = VGroup(*[
@@ -240,7 +240,7 @@ class MathIsDeep(PiCreatureScene):
         # num_mobs[1].add_subpath(num_mobs[1].points)
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 FadeInFromLarge, words,
                 scale_factor=1.5,
                 run_time=0.6,
@@ -258,7 +258,7 @@ class MathIsDeep(PiCreatureScene):
             self.pi_creature.change, "thinking",
             *map(GrowArrow, low_arrows),
         )
-        self.play(LaggedStart(ShowCreationThenDestruction, n_sum_border))
+        self.play(OldLaggedStart(ShowCreationThenDestruction, n_sum_border))
         self.play(Blink(self.pi_creature))
         self.wait()
 
@@ -269,9 +269,9 @@ class MinimizeSharding(Scene):
             VGroup(*[
                 self.get_piece()
                 for x in range(3)
-            ]).arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            ]).arrange(RIGHT, buff=SMALL_BUFF)
             for y in range(4)
-        ]).arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        ]).arrange(RIGHT, buff=SMALL_BUFF)
 
         self.add(piece_groups)
         self.play(*[
@@ -282,9 +282,9 @@ class MinimizeSharding(Scene):
         group1 = piece_groups[:2]
         group2 = piece_groups[2:]
         self.play(
-            group1.arrange_submobjects, DOWN,
+            group1.arrange, DOWN,
             group1.next_to, ORIGIN, LEFT, LARGE_BUFF,
-            group2.arrange_submobjects, DOWN,
+            group2.arrange, DOWN,
             group2.next_to, ORIGIN, RIGHT, LARGE_BUFF,
         )
         self.wait()
@@ -341,12 +341,12 @@ class TopologyWordBreak(Scene):
                 signs.add(sign)
             new_group.add(group[-1])
             group.submobjects = list(new_group.submobjects)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
 
         word[2].target.shift(0.1 * DOWN)
         word[7].target.shift(0.1 * DOWN)
 
-        classes.arrange_submobjects(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
+        classes.arrange(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
         classes.shift(2 * RIGHT)
 
         genus_labels = VGroup(*[
@@ -358,15 +358,15 @@ class TopologyWordBreak(Scene):
         genus_labels.shift(SMALL_BUFF * UP)
 
         self.play(Write(word))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, word,
             lambda m: (m.set_color, m.target_color),
             run_time=1
         ))
         self.play(
-            LaggedStart(MoveToTarget, word),
-            LaggedStart(FadeIn, signs),
-            LaggedStart(FadeInFromDown, genus_labels),
+            OldLaggedStart(MoveToTarget, word),
+            OldLaggedStart(FadeIn, signs),
+            OldLaggedStart(FadeInFromDown, genus_labels),
         )
         self.wait(3)
 
@@ -461,7 +461,7 @@ class FunctionGInSymbols(Scene):
         f_of_neg_p.generate_target()
         f_of_p.generate_target()
         group = VGroup(f_of_p.target, minus, f_of_neg_p.target)
-        group.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        group.arrange(RIGHT, buff=SMALL_BUFF)
         group.next_to(equals, LEFT)
 
         self.play(
@@ -488,7 +488,7 @@ class FunctionGInSymbols(Scene):
             g_of_p.copy(), equals, zero_zero
         )
         g_equals_zero.generate_target()
-        g_equals_zero.target.arrange_submobjects(RIGHT, SMALL_BUFF)
+        g_equals_zero.target.arrange(RIGHT, SMALL_BUFF)
         g_equals_zero.target.next_to(seeking_text, DOWN)
 
         self.play(
@@ -533,7 +533,7 @@ class FunctionGInSymbols(Scene):
         self.wait()
         self.play(neg_g_of_p.restore)
         rects = VGroup(*map(SurroundingRectangle, [f_of_p, f_of_neg_p]))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreationThenDestruction, rects,
             lag_ratio=0.8
         ))
@@ -735,7 +735,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
         )
         path.apply_matrix(z_to_vector(start))
 
-        dashed_path = DashedMobject(path)
+        dashed_path = DashedVMobject(path)
         dashed_path.set_shade_in_3d(True)
 
         return dashed_path
@@ -747,9 +747,9 @@ class FunctionGInputSpace(SpecialThreeDScene):
             np.sin(lat)
         ]))
         equator.rotate(-90 * DEGREES)
-        dashed_equator = DashedMobject(
+        dashed_equator = DashedVMobject(
             equator,
-            dashes_num=40,
+            num_dashes=40,
             color=RED,
         )
         dashed_equator.set_shade_in_3d(True)
@@ -882,7 +882,7 @@ class FunctionGOutputSpace(FunctionGInputSpace):
         ])
         pre_path.rotate(-45 * DEGREES, about_point=ORIGIN)
         pre_path.shift(dot.get_center())
-        path = DashedMobject(pre_path)
+        path = DashedVMobject(pre_path)
 
         fp_label = self.fp_label
         equals = TexMobject("=")
@@ -1128,12 +1128,12 @@ class DivisionOfUnity(Scene):
             brace.add(label)
 
         self.add(line, lower_brace)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ShowCreation, v_lines[1:3],
             lag_ratio=0.8,
             run_time=1
         ))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             GrowFromCenter, upper_braces
         ))
         self.wait()

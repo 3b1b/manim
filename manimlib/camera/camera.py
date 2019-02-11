@@ -206,11 +206,7 @@ class Camera(object):
         else:
             method = Mobject.get_family
         return remove_list_redundancies(list(
-            it.chain(*[
-                method(m)
-                for m in mobjects
-                if not (isinstance(m, VMobject) and m.is_subpath)
-            ])
+            it.chain(*[method(m) for m in mobjects])
         ))
 
     def get_mobjects_to_display(
@@ -324,32 +320,61 @@ class Camera(object):
             self.display_vectorized(vmobject, ctx)
 
     def display_vectorized(self, vmobject, ctx):
-        if vmobject.is_subpath:
-            # Subpath vectorized mobjects are taken care
-            # of by their parent
-            return
         self.set_cairo_context_path(ctx, vmobject)
         self.apply_stroke(ctx, vmobject, background=True)
         self.apply_fill(ctx, vmobject)
         self.apply_stroke(ctx, vmobject)
         return self
 
+    # def old_set_cairo_context_path(self, ctx, vmobject):
+    #     ctx.new_path()
+    #     for vmob in it.chain([vmobject], vmobject.get_subpath_mobjects()):
+    #         points = self.transform_points_pre_display(
+    #             vmob, vmob.points
+    #         )
+    #         if np.any(np.isnan(points)) or np.any(points == np.inf):
+    #             # TODO, print some kind of warning about
+    #             # mobject having invalid points?
+    #             points = np.zeros((1, 3))
+    #         ctx.new_sub_path()
+    #         ctx.move_to(*points[0][:2])
+    #         for p0, p1, p2 in zip(points[1::3], points[2::3], points[3::3]):
+    #             ctx.curve_to(*p0[:2], *p1[:2], *p2[:2])
+    #         if vmob.is_closed():
+    #             ctx.close_path()
+    #     return self
+
     def set_cairo_context_path(self, ctx, vmobject):
+        # self.old_set_cairo_context_path(ctx, vmobject)
+        # return
+
+        points = vmobject.get_points()
+        if len(points) == 0:
+            return
+        elif np.any(np.isnan(points)) or np.any(points == np.inf):
+            # TODO, print some kind of warning about
+            # mobject having invalid points?
+            points = np.zeros((1, 3))
+
+        def should_start_new_path(last_p3, p0):
+            if last_p3 is None:
+                return True
+            else:
+                return not vmobject.consider_points_equals(
+                    last_p3, p0
+                )
+
+        last_p3 = None
+        quads = vmobject.get_cubic_bezier_tuples()
         ctx.new_path()
-        for vmob in it.chain([vmobject], vmobject.get_subpath_mobjects()):
-            points = self.transform_points_pre_display(
-                vmob, vmob.points
-            )
-            if np.any(np.isnan(points)) or np.any(points == np.inf):
-                points = np.zeros((1, 3))
-            ctx.new_sub_path()
-            ctx.move_to(*points[0][:2])
-            for triplet in zip(points[1::3], points[2::3], points[3::3]):
-                ctx.curve_to(*it.chain(*[
-                    point[:2] for point in triplet
-                ]))
-            if vmob.is_closed():
-                ctx.close_path()
+        for p0, p1, p2, p3 in quads:
+            if should_start_new_path(last_p3, p0):
+                ctx.new_sub_path()
+                ctx.move_to(*p0[:2])
+            ctx.curve_to(*p1[:2], *p2[:2], *p3[:2])
+            last_p3 = p3
+        if vmobject.is_closed():
+            ctx.close_path()
         return self
 
     def set_cairo_context_color(self, ctx, rgbas, vmobject):

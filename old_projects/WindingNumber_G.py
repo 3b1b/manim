@@ -108,7 +108,7 @@ class IntroSceneWrapper(PiCreatureScene):
 
         self.play(Write(solver))
         self.play(
-            LaggedStart(FadeIn, xy_equation, run_time = 1),
+            OldLaggedStart(FadeIn, xy_equation, run_time = 1),
             morty.change, "pondering"
         )
         self.wait(2)
@@ -124,12 +124,12 @@ class IntroSceneWrapper(PiCreatureScene):
             self.play(Transform(
                 solver, rainbow_solver,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.play(solver.restore)
         self.wait()
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeOut, VGroup(solver, z_equation, zeta)
         ))
         self.play(
@@ -159,7 +159,6 @@ class Introduce1DFunctionCase(Scene):
         "arrow_opacity" : 1,
         "show_dotted_line_to_f" : True,
         "arrow_config": {
-            "max_stem_width_to_tip_width_ratio" : 0.5,
             "max_tip_length_to_length_ratio" : 0.5,
         },
         "show_midpoint_value" : True,
@@ -589,7 +588,7 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
 
         fg_labels = VGroup(f_label, g_label)
         fg_labels.generate_target()
-        fg_labels.target.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        fg_labels.target.arrange(DOWN, aligned_edge = LEFT)
         fg_labels.target.to_corner(UP+RIGHT)
 
         new_equation = TexMobject("x^2", "-", "2", "=", "0")
@@ -597,7 +596,7 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
         new_equation[2].match_style(equation[2])
         new_equation.move_to(equation, RIGHT)
         for tex in equation, new_equation:
-            tex.sort_submobjects_alphabetically()
+            tex.sort_alphabetically()
 
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
@@ -636,7 +635,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
             TexMobject("x^2", "-", "2", "=", "0"),
         )
         for equation in root_two_equations:
-            equation.sort_submobjects_alphabetically()
+            equation.sort_alphabetically()
             for part in equation.get_parts_by_tex("text"):
                 part[2:-1].set_color(YELLOW)
                 part[2:-1].scale(0.9)
@@ -679,7 +678,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
             arg_separator = ""
         )
         complex_group = VGroup(complex_equation, z_def)
-        complex_group.arrange_submobjects(DOWN)
+        complex_group.arrange(DOWN)
         for tex in complex_group:
             tex.set_color_by_tex("z", GREEN)
         complex_group.move_to(self.hold_up_spot, DOWN)
@@ -781,7 +780,7 @@ class InputOutputScene(Scene):
             plane.add_coordinates(x_vals = list(range(-2, 3)), y_vals = list(range(-2, 3)))
             plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
             plane.coordinate_labels.set_background_stroke(width=0)
-            plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
+            plane.lines_to_fade = VGroup(planes, plane.secondary_lines)
             plane.move_to(vect*FRAME_X_RADIUS/2 + self.y_shift*DOWN)
             label = TextMobject(text)
             label.scale(1.5)
@@ -872,7 +871,6 @@ class IntroduceInputOutputScene(InputOutputScene):
             in_dot, out_dot,
             buff = SMALL_BUFF,
             path_arc = path_arc,
-            use_rectangular_stem = False,
             color = WHITE,
         )
         curved_arrow.pointwise_become_partial(curved_arrow, 0, 0.95)
@@ -881,8 +879,8 @@ class IntroduceInputOutputScene(InputOutputScene):
         function_label.add_background_rectangle()
 
 
-        self.play(LaggedStart(GrowFromCenter, dots))
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(GrowFromCenter, dots))
+        self.play(OldLaggedStart(
             MoveToTarget, dots,
             path_arc = path_arc
         ))
@@ -1031,7 +1029,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             self.play(
                 in_dot.move_to, path.point_from_proportion(a),
                 run_time = 0.2,
-                rate_func = None,
+                rate_func=linear,
             )
             in_vectors.add(in_vector.copy())
 
@@ -1055,7 +1053,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             factor = target_length / vector.get_length()
             vector.target.scale(factor, about_point = vector.get_start())
 
-        self.play(LaggedStart(MoveToTarget, newer_in_vectors))
+        self.play(OldLaggedStart(MoveToTarget, newer_in_vectors))
         self.wait()
 
 class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
@@ -1080,12 +1078,11 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         arrow = Arrow(
             LEFT, RIGHT, 
             path_arc = -TAU/4,
-            use_rectangular_stem = False,
             color = WHITE
         )
         arrow.pointwise_become_partial(arrow, 0.0, 0.97)
         group = VGroup(in_plane, arrow, out_plane)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         arrow.shift(UP)
         group.move_to(self.students)
         group.to_edge(UP)
@@ -1117,10 +1114,10 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
             )
         )
         self.play(
-            LaggedStart(GrowFromCenter, dots, run_time = 1),
+            OldLaggedStart(GrowFromCenter, dots, run_time = 1),
             self.get_student_changes(*3*["erm"]),
         )
-        self.play(LaggedStart(MoveToTarget, dots, path_arc = -TAU/4))
+        self.play(OldLaggedStart(MoveToTarget, dots, path_arc = -TAU/4))
         self.wait(3)
 
 
@@ -1191,8 +1188,8 @@ class EveryOutputPointHasAColor(ColorMappedObjectsScene):
         while n <= len(dots):
             dot_groups.add(dots[n-1:m*n-1])
             n *= m
-        self.play(LaggedStart(
-            LaggedStart, dot_groups,
+        self.play(OldLaggedStart(
+            OldLaggedStart, dot_groups,
             lambda dg : (GrowFromCenter,  dg),
             run_time = 8,
             lag_ratio = 0.2,
@@ -1228,22 +1225,22 @@ class DotsHoppingToColor(InputOutputScene):
             output_plane.lines_to_fade.set_stroke, {"width" : 0},
         )
         self.wait()
-        self.play(LaggedStart(GrowFromCenter, dots, run_time = 3))
+        self.play(OldLaggedStart(GrowFromCenter, dots, run_time = 3))
         self.wait()
 
         #Hop over and back
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             MoveToTarget, dots, 
             path_arc = -TAU/4,
             run_time = 3,
         ))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, dots,
             lambda d : (d.set_fill, d.target_color),
         ))
         self.wait()
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, dots,
             lambda d : (d.move_to, d.original_position),
             path_arc = TAU/4,
@@ -1268,7 +1265,7 @@ class DotsHoppingToColor(InputOutputScene):
         # Show yellow points
         inspector = DashedLine(
             ORIGIN, TAU*UP,
-            dashed_segment_length = TAU/24,
+            dash_length = TAU/24,
             fill_opacity = 0,
             stroke_width = 3,
             stroke_color = WHITE,
@@ -1355,11 +1352,11 @@ class DotsHoppingToColor(InputOutputScene):
         self.play(
             FadeOut(input_coloring),
             input_plane.white_parts.set_color, WHITE,
-            LaggedStart(GrowFromCenter, dots)
+            OldLaggedStart(GrowFromCenter, dots)
         )
         self.wait()
         random.shuffle(dots.submobjects)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeOut, dots,
             lag_ratio = 0.05,
             run_time = 10,
@@ -1425,7 +1422,7 @@ class Rearrange2DEquation(AltTeacherStudentsScene):
         for equation in equations:
             equation.set_color_by_tex(g_tex, BLUE)
             equation.set_color_by_tex(h_tex, YELLOW)
-            equation.sort_submobjects_alphabetically()
+            equation.sort_alphabetically()
 
 
         self.teacher_holds_up(equations[0])
@@ -1606,7 +1603,7 @@ class DirectionOfA2DFunctionAlongABoundary(InputOutputScene):
             input_plane.coords_to_point(2.5, -1.5),
         )
         rect.replace(line, stretch = True)
-        rect.insert_n_anchor_points(50)
+        rect.insert_n_curves(50)
         rect.match_background_image_file(colorings[0])
 
         rect_image = rect.copy()
@@ -1750,10 +1747,10 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
 
         self.add(hypothesis[0])
         self.play(
-            LaggedStart(FadeIn, hypothesis[1]),
+            OldLaggedStart(FadeIn, hypothesis[1]),
             ShowCreation(square, run_time = 8)
         )
-        self.play(LaggedStart(FadeIn, hypothesis[2]))
+        self.play(OldLaggedStart(FadeIn, hypothesis[2]))
         self.play(square.set_fill, {"opacity" : 1}, run_time = 2)
         self.wait()
 
@@ -1815,7 +1812,7 @@ class ForeverNarrowingLoop(InputOutputScene):
         # circle
         circle = Circle(color = WHITE, radius = self.circle_start_radius)
         circle.flip(axis = RIGHT)
-        circle.insert_n_anchor_points(50)
+        circle.insert_n_curves(50)
         if self.start_around_target:
             circle.move_to(input_plane.coords_to_point(*self.target_coords))
         else:
@@ -1928,7 +1925,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
             Square(side_length = 2) for x in range(2)
         ])
         small_squares.match_width(big_square, stretch = True)
-        small_squares.arrange_submobjects(DOWN, buff = 0)
+        small_squares.arrange(DOWN, buff = 0)
         small_squares.move_to(big_square)
         small_squares.space_out_submobjects(1.1)
         all_squares = VGroup(big_square, *small_squares)
@@ -1961,18 +1958,18 @@ class FailureOfComposition(ColorMappedObjectsScene):
             no_answers_in_equation[1], equals,
             yes_answers_in_equation
         )
-        equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        equation.arrange(RIGHT, buff = SMALL_BUFF)
         equation.next_to(big_square, RIGHT, MED_LARGE_BUFF)
         q_marks = TexMobject("???")
         q_marks.next_to(equals, UP)
 
 
         self.add(question)
-        self.play(LaggedStart(ShowCreation, small_squares, lag_ratio = 0.8))
-        self.play(LaggedStart(Write, no_answers))
+        self.play(OldLaggedStart(ShowCreation, small_squares, lag_ratio = 0.8))
+        self.play(OldLaggedStart(Write, no_answers))
         self.wait()
         self.play(
-            small_squares.arrange_submobjects, DOWN, {"buff" : 0},
+            small_squares.arrange, DOWN, {"buff" : 0},
             small_squares.move_to, big_square,
             no_answers.space_out_submobjects, 0.9,
         )
@@ -1988,7 +1985,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
             Write(yes_answers),
             Write(yes_answers_in_equation),
         )
-        self.play(LaggedStart(FadeIn, q_marks, run_time = 1, lag_ratio = 0.8))
+        self.play(OldLaggedStart(FadeIn, q_marks, run_time = 1, lag_ratio = 0.8))
         self.wait(2)
         self.play(
             small_squares.restore,
@@ -2473,7 +2470,6 @@ class MonomialTerm(PathContainingZero):
         label.add_background_rectangle(opacity = 1, buff = SMALL_BUFF)
         arrow = Arrow(
             2*LEFT, 2*RIGHT, path_arc = -TAU/3,
-            use_rectangular_stem = False
         )
         arrow.pointwise_become_partial(arrow, 0, 0.95)
         label.next_to(arrow, UP)
@@ -2651,7 +2647,7 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         for path_target in path_parts.target:
             if isinstance(path_target, Line):
                 path_target.rotate(-path_target.get_angle())
-        path_parts.target.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        path_parts.target.arrange(DOWN, buff = MED_SMALL_BUFF)
         alt_path_parts = path_parts.copy()
         size = lambda m : m.get_height() + m.get_width()
         alt_path_parts.submobjects.sort(
@@ -2675,7 +2671,7 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         self.remove(all_parts)
         for x in range(2):
             alt_path_parts.save_state()
-            self.play(LaggedStart(
+            self.play(OldLaggedStart(
                 FadeIn, alt_path_parts,
                 rate_func = there_and_back,
                 lag_ratio = 0.3,
@@ -2738,7 +2734,6 @@ class ShowComplexFunction(Scene):
         fx_dot = Dot(fx_point, color = YELLOW)
         arrow = Arrow(
             x_point, fx_point,
-            use_rectangular_stem = False,
             path_arc = TAU/3,
             color = YELLOW
         )
@@ -2759,7 +2754,7 @@ class ShowComplexFunction(Scene):
         self.play(
             Write(plane),
             FadeIn(rect),
-            LaggedStart(FadeIn, title)
+            OldLaggedStart(FadeIn, title)
         )
         self.play(*list(map(FadeIn, [x_dot, x_label])))
         self.wait()
@@ -2788,7 +2783,7 @@ class WindingNumbersInInputOutputContext(PathContainingZero):
         in_loop = Circle()
         in_loop.flip(RIGHT)
         # in_loop = Square(side_length = 2)
-        in_loop.insert_n_anchor_points(100)
+        in_loop.insert_n_curves(100)
         in_loop.move_to(self.input_plane.coords_to_point(
             *self.in_loop_center_coords
         ))
@@ -2901,11 +2896,11 @@ class AllOfTheVideos(Scene):
             rect = SurroundingRectangle(image, buff = 0)
             rect.set_stroke(WHITE, 1)
             image.add(rect)
-        images.arrange_submobjects_in_grid(n, n, buff = 0)
+        images.arrange_in_grid(n, n, buff = 0)
         images.set_height(FRAME_HEIGHT)
         random.shuffle(images.submobjects)
 
-        self.play(LaggedStart(FadeIn, images, run_time = 4))
+        self.play(OldLaggedStart(FadeIn, images, run_time = 4))
         self.wait()
 
 class EndingCredits(Scene):
@@ -2923,7 +2918,7 @@ class EndingCredits(Scene):
         pi.change_mode("happy")
         self.add(pi)
 
-        self.play(LaggedStart(FadeIn, text), pi.look_at, text)
+        self.play(OldLaggedStart(FadeIn, text), pi.look_at, text)
         self.play(pi.change, "wave_1", text)
         self.play(Blink(pi))
         self.play(pi.change, "happy")
@@ -2937,7 +2932,7 @@ class MentionQAndA(Scene):
             "Sridhar" : YELLOW,
         })
         patreon_logo = VGroup(*PatreonLogo().family_members_with_points())
-        patreon_logo.sort_submobjects()
+        patreon_logo.sort()
         patreon_logo.replace(title.get_parts_by_tex("Patreon"))
         patreon_logo.scale(1.3, about_edge = LEFT)
         patreon_logo.shift(0.5*SMALL_BUFF*DOWN)
@@ -2952,10 +2947,10 @@ class MentionQAndA(Scene):
             "What motivated you to join 3b1b?",
             "$\\vdots$",
         ])))
-        questions.arrange_submobjects(DOWN, buff = 0.75)
+        questions.arrange(DOWN, buff = 0.75)
         questions.next_to(title, DOWN, LARGE_BUFF)
 
-        self.play(LaggedStart(FadeIn, questions, run_time = 3))
+        self.play(OldLaggedStart(FadeIn, questions, run_time = 3))
         self.wait(2)
         self.play(FadeOut(questions))
         self.wait()
@@ -3002,12 +2997,12 @@ class InfiniteListOfTopics(Scene):
                 "Fixed points",
             ]
         ] + [TexMobject("\\vdots")])
-        lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        lines.arrange(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         lines.next_to(title, DOWN, MED_LARGE_BUFF)
         lines[-1].next_to(lines[-2], DOWN)
 
         self.add(rect, title)
-        self.play(LaggedStart(FadeIn, lines, run_time = 5))
+        self.play(OldLaggedStart(FadeIn, lines, run_time = 5))
         self.wait()
 
 class ManyIterations(Scene):
@@ -3022,7 +3017,7 @@ class ManyIterations(Scene):
                 "Winding numbers, v5 \\\\ (start down wrong path)",
             ]
         ])
-        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        words.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         words.scale(0.75)
         words.to_edge(RIGHT)
 
@@ -3049,7 +3044,7 @@ class MentionFree(PiCreatureScene):
             TextMobject("College course:", "$>\\$1{,}000.00$"),
             TextMobject("YouTube video:", "$=\\$0.00$"),
         )
-        # items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        # items.arrange(DOWN, buff = MED_LARGE_BUFF)
         items.next_to(morty, UP, LARGE_BUFF)
         right_x = morty.get_right()[0]
         for item in items:
@@ -3185,7 +3180,7 @@ class PatreonScroll(Scene):
         patrons = VGroup(*list(map(TextMobject, self.specific_patrons)))
         patrons.scale(0.75)
         random.shuffle(patrons.submobjects)
-        patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        patrons.arrange(DOWN, aligned_edge = LEFT)
         patrons.next_to(ORIGIN, DOWN)
         patrons.to_edge(RIGHT)
 

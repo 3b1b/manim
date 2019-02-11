@@ -78,7 +78,7 @@ class MirrorScene(Scene):
             Line(ORIGIN, 2 * RIGHT),
             Line(ORIGIN, (self.line_length - 4) * RIGHT),
         )
-        mirror.arrange_submobjects(RIGHT, buff=0)
+        mirror.arrange(RIGHT, buff=0)
         mirror.set_stroke(width=5)
         mirror[0::2].set_stroke((WHITE, GREY))
         mirror[1::2].set_stroke((GREY, WHITE))
@@ -235,7 +235,7 @@ class MirrorScene(Scene):
             )
         )
         group = VGroup(lhs, radians, radians_word, equals, degrees)
-        group.arrange_submobjects(RIGHT, aligned_edge=DOWN)
+        group.arrange(RIGHT, aligned_edge=DOWN)
         equals.align_to(lhs[-1], DOWN)
         group.to_corner(UL)
         return group
@@ -300,7 +300,7 @@ class MirrorScene(Scene):
         self.play(count_anim, *beam_anims, run_time=run_time)
         self.disallow_sound()
 
-    def get_special_flash(self, mobject, stroke_width, time_width, rate_func=None, **kwargs):
+    def get_special_flash(self, mobject, stroke_width, time_width, rate_func=linear, **kwargs):
         kwargs["rate_func"] = rate_func
         mob_copy = mobject.copy()
         mob_copy.set_stroke(width=stroke_width)
@@ -563,7 +563,7 @@ class ReflectWorldThroughMirrorNew(MirrorScene):
             mob.become(mob.pre_world)
             mob.fade(1)
 
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Restore, new_worlds,
             lag_ratio=0.4,
             run_time=3
@@ -580,7 +580,7 @@ class ReflectWorldThroughMirrorNew(MirrorScene):
     def blink_all_randys(self):
         randys = self.randys = VGroup(self.randy)
         randys.add(*[rw[-1] for rw in self.reflected_worlds])
-        self.play(LaggedStart(Blink, randys))
+        self.play(OldLaggedStart(Blink, randys))
 
     def add_randy_updates(self):
         # Makes it run slower, but it's fun!
@@ -911,7 +911,7 @@ class MirrorAndWiresOverlay(MirrorScene):
         self.play(
             FadeIn(diagram.rect),
             ShowCreation(diagram.mirror),
-            LaggedStart(ShowCreation, diagram.wires),
+            OldLaggedStart(ShowCreation, diagram.wires),
             run_time=1
         )
         self.remove(diagram)

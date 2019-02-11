@@ -143,7 +143,7 @@ class Vibrate(Animation):
         self.func = func
         Animation.__init__(self, Mobject1D(color = self.color), **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         self.mobject.reset_points()
         epsilon = self.mobject.epsilon
         self.mobject.add_points([
@@ -518,7 +518,7 @@ class DecomposeTwoFrequencies(Scene):
         self.play(ApplyMethod(
             comp.shift, 15*LEFT,
             run_time = 7.5,
-            rate_func = None
+            rate_func=linear
         ))
 
 
@@ -532,7 +532,7 @@ class FlashOnXProximity(Animation):
         self.close_mobjects = close_mobjects
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         for mob in self.close_mobjects:
             if np.min(np.abs(mob.points[:,0] - self.x_val)) < 0.1:
                 self.mobject.set_color()
@@ -701,7 +701,7 @@ class PianoTuning(Scene):
             FadeIn(twelfth_root)
         )
         self.wait()
-        self.play(ShowCreation(semicircles, rate_func = None))
+        self.play(ShowCreation(semicircles, rate_func=linear))
         self.wait()
 
         self.show_interval(5, 7)
@@ -917,7 +917,7 @@ class CoveringSetsWithOpenIntervals(IntervalScene):
         self.wait()
         for x in range(2*len(theorems)):
             self.play(*[
-                ApplyMethod(th.shift, UP, rate_func = None)
+                ApplyMethod(th.shift, UP, rate_func=linear)
                 for th in theorems[:x+1]
             ])
 

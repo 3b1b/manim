@@ -671,7 +671,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
 
         formulas = VGroup(basel_sum, leibniz_sum, wallis_product)
         formulas.scale(0.75)
-        formulas.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        formulas.arrange(DOWN, buff = MED_LARGE_BUFF)
         for formula in formulas:
             basel_equals_x = basel_equals.get_center()[0]
             formula_equals_x = formula.get_part_by_tex("=").get_center()[0]
@@ -686,13 +686,13 @@ class MathematicalWebOfConnections(PiCreatureScene):
             randy.change, "raise_right_hand",
             FadeOut(jerk.bubble),
             words.next_to, jerk, UP,
-            FadeIn(basel_sum, submobject_mode = "lagged_start", run_time = 3)
+            FadeIn(basel_sum, lag_ratio = 0.5, run_time = 3)
         )
         for formula in formulas[1:]:
             self.play(
                 FadeIn(
                     formula, 
-                    submobject_mode = "lagged_start", 
+                    lag_ratio = 0.5, 
                     run_time = 3
                 ),
             )
@@ -828,8 +828,8 @@ class MathematicalWebOfConnections(PiCreatureScene):
 
         self.play(
             Write(title),
-            LaggedStart(ShowCreation, edges, run_time = 3),
-            LaggedStart(GrowFromCenter, dots, run_time = 3)
+            OldLaggedStart(ShowCreation, edges, run_time = 3),
+            OldLaggedStart(GrowFromCenter, dots, run_time = 3)
         )
         self.play(path_dots[0].set_color, RED)
         for dot, edge in zip(path_dots[1:], path_edges):
@@ -956,12 +956,12 @@ class FirstLighthouseScene(PiCreatureScene):
         self.play(morty.restore)
         self.play(
             morty.change, "pondering",
-            LaggedStart(
+            OldLaggedStart(
                 FadeIn, lighthouses,
                 run_time = 1
             )
         )
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             SwitchOn, VGroup(*[
                 ls.ambient_light
                 for ls in light_sources
@@ -1043,7 +1043,7 @@ class FirstLighthouseScene(PiCreatureScene):
         )
 
         # First lighthouse has apparent reading
-        self.play(LaggedStart(FadeOut, light_sources[1:]))
+        self.play(OldLaggedStart(FadeOut, light_sources[1:]))
         self.wait()
         self.play(
             triangle_anim,
@@ -1088,11 +1088,11 @@ class FirstLighthouseScene(PiCreatureScene):
 
         #Switch them all on
         self.play(
-            LaggedStart(FadeIn, lighthouses[1:]),
+            OldLaggedStart(FadeIn, lighthouses[1:]),
             morty.change, "hooray",
         )
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 SwitchOn, VGroup(*[
                     ls.ambient_light
                     for ls in light_sources[1:]
@@ -1121,7 +1121,7 @@ class FirstLighthouseScene(PiCreatureScene):
         morty = self.pi_creature
 
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 Rotate, light_sources,
                 lambda m : (m, (2*random.random()-1)*90*DEGREES),
                 about_point = origin, 
@@ -1444,13 +1444,11 @@ class EarthScene(IntroduceScreen):
 
         equator_arrow = Vector(
             DOWN+2*RIGHT, color = WHITE,
-            use_rectangular_stem = False,
         )
         equator_arrow.next_to(screen.get_center(), UP+LEFT, SMALL_BUFF)
         pole_arrow = Vector(
             UP+3*RIGHT, 
             color = WHITE,
-            use_rectangular_stem = False,
             path_arc = -60*DEGREES,
         )
         pole_arrow.shift(
@@ -1523,7 +1521,7 @@ class ShowLightInThreeDimensions(IntroduceScreen, ThreeDScene):
         screens = VGroup(
             Square(),
             RegularPolygon(8),
-            Circle().insert_n_anchor_points(25),
+            Circle().insert_n_curves(25),
         )
         for screen in screens:
             screen.set_height(self.screen_height)
@@ -1769,7 +1767,7 @@ class InverseSquareLaw(ThreeDScene):
             n = int(distance)**2
             copies = VGroup(*[new_screen.copy() for x in range(n)])
             copies.rotate(-TAU/4, axis = UP)
-            copies.arrange_submobjects_in_grid(buff = 0)
+            copies.arrange_in_grid(buff = 0)
             copies.rotate(TAU/4, axis = UP)
             copies.move_to(source_point, IN)
             copies.shift(distance*RIGHT*unit_distance)
@@ -1840,7 +1838,7 @@ class InverseSquareLaw(ThreeDScene):
             run_time = 2,
         )
         self.begin_ambient_camera_rotation(rate = -0.01)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             ApplyMethod, screen_copy_groups[2],
             lambda m : (m.set_color, RED),
             run_time = 5,
@@ -1890,7 +1888,7 @@ class OtherInstanceOfInverseSquareLaw(Scene):
                 "Heat", "Sound", "Radio waves", "Electric fields",
             ]
         ])
-        items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        items.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         items.next_to(h_line, DOWN, LARGE_BUFF)
         items.to_edge(LEFT)
 
@@ -1901,7 +1899,7 @@ class OtherInstanceOfInverseSquareLaw(Scene):
             return Broadcast(dot, big_radius = 5, run_time = 5)
 
         self.play(
-            LaggedStart(FadeIn, items, run_time = 4, lag_ratio = 0.7),
+            OldLaggedStart(FadeIn, items, run_time = 4, lag_ratio = 0.7),
             Succession(*[
                 get_broadcast()
                 for x in range(2)
@@ -2278,7 +2276,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
         self.play(FadeIn(lsC))
         self.play(
             Write(identical_lighthouses_words),
-            LaggedStart(GrowArrow, identical_lighthouses_arrows)
+            OldLaggedStart(GrowArrow, identical_lighthouses_arrows)
         )
         self.wait()
         self.play(*list(map(FadeOut, [
@@ -2339,7 +2337,7 @@ class MathologerVideoWrapper(Scene):
 
         self.play(
             logo.shift, FRAME_WIDTH*LEFT,
-            LaggedStart(FadeIn, title),
+            OldLaggedStart(FadeIn, title),
             run_time = 2
         )
         self.play(ShowCreation(screen))
@@ -2393,7 +2391,7 @@ class SimpleIPTProof(Scene):
                 "{1 \\over ", "a^2}",
             ),
         )
-        argument_lines.arrange_submobjects(DOWN)
+        argument_lines.arrange(DOWN)
         for line in argument_lines:
             line.set_color_by_tex_to_color_map({
                 "a" : BLUE,
@@ -2633,7 +2631,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
         )
 
         # Show miniature triangle
-        self.play(ShowCreation(mini_triangle, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(mini_triangle, lag_ratio = 0))
         self.play(
             MoveToTarget(mini_triangle),
             run_time = 2,
@@ -2648,8 +2646,8 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
         self.wait()
         spotlights_update_anim.update(0)
         self.play(
-            LaggedStart(FadeIn, spotlight_a),
-            LaggedStart(FadeIn, spotlight_b),
+            OldLaggedStart(FadeIn, spotlight_a),
+            OldLaggedStart(FadeIn, spotlight_b),
             Animation(screen_arrow),
         )
         self.add(spotlights_update_anim)
@@ -2856,7 +2854,7 @@ class InscribedeAngleThreorem(TeacherStudentsScene):
 
         self.play(
             self.teacher.change, "raise_right_hand",
-            ShowCreation(shape, rate_func = None),
+            ShowCreation(shape, rate_func=linear),
         )
         self.play(*list(map(FadeIn, [angle_mark, theta])))
         self.play(
@@ -3883,7 +3881,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
         self.number_line = number_line
 
     def show_giant_circle(self):
-        self.number_line.main_line.insert_n_anchor_points(10000)
+        self.number_line.insert_n_curves(10000)
         everything = VGroup(*self.mobjects)
         circle = everything.copy()
         circle.move_to(ORIGIN)
@@ -4045,11 +4043,11 @@ class FinalSumManipulationScene(PiCreatureScene):
             full_ambient_lights.add(ls.ambient_light)
 
         self.play(
-            LaggedStart(FadeIn, full_lighthouses, lag_ratio = 0.2, run_time = 3),
+            OldLaggedStart(FadeIn, full_lighthouses, lag_ratio = 0.2, run_time = 3),
         )
 
         self.play(
-            LaggedStart(SwitchOn, full_ambient_lights, lag_ratio = 0.2, run_time = 3)
+            OldLaggedStart(SwitchOn, full_ambient_lights, lag_ratio = 0.2, run_time = 3)
         )
 
         # for ls in full_lights.submobjects:
@@ -4335,7 +4333,7 @@ class InfiniteCircleScene(PiCreatureScene):
 
         self.wait()
         self.play(
-            LaggedStart(FadeIn,infsum,lag_ratio = 0.2)
+            OldLaggedStart(FadeIn,infsum,lag_ratio = 0.2)
         )
         self.wait()
 
@@ -4397,16 +4395,16 @@ class Credits(Scene):
         ])
         for credit, color in zip(credits, [MAROON_D, BLUE_D, WHITE]):
             credit[1].set_color(color)
-            credit.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+            credit.arrange(DOWN, buff = SMALL_BUFF)
 
-        credits.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        credits.arrange(DOWN, buff = LARGE_BUFF)
 
         credits.center()
         patreon_logo = PatreonLogo()
         patreon_logo.to_edge(UP)
 
         for credit in credits:
-            self.play(LaggedStart(FadeIn, credit[0]))
+            self.play(OldLaggedStart(FadeIn, credit[0]))
             self.play(FadeIn(credit[1]))
         self.wait()
         self.play(

@@ -32,7 +32,6 @@ class SingleStringTexMobject(SVGMobject):
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
-        "propagate_style_to_family": True,
         "alignment": "",
     }
 
@@ -125,7 +124,7 @@ class SingleStringTexMobject(SVGMobject):
         return TexSymbol(path_string)
 
     def organize_submobjects_left_to_right(self):
-        self.sort_submobjects(lambda p: p[0])
+        self.sort(lambda p: p[0])
         return self
 
 
@@ -231,7 +230,7 @@ class TexMobject(SingleStringTexMobject):
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part)
 
-    def sort_submobjects_alphabetically(self):
+    def sort_alphabetically(self):
         self.submobjects.sort(
             key=lambda m: m.get_tex_string()
         )
@@ -268,7 +267,7 @@ class BulletedList(TextMobject):
             dot = TexMobject("\\cdot").scale(self.dot_scale_factor)
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
-        self.arrange_submobjects(
+        self.arrange(
             DOWN,
             aligned_edge=LEFT,
             buff=self.buff

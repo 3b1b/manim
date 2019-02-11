@@ -16,7 +16,7 @@ class DecimalNumber(VMobject):
     }
 
     def __init__(self, number=0, **kwargs):
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.number = number
         self.initial_config = kwargs
 
@@ -24,9 +24,10 @@ class DecimalNumber(VMobject):
             formatter = self.get_complex_formatter()
         else:
             formatter = self.get_formatter()
+            print(formatter)
         num_string = formatter.format(number)
 
-        rounded_num = np.round(float(number), self.num_decimal_places)
+        rounded_num = np.round(number, self.num_decimal_places)
         if num_string.startswith("-") and rounded_num == 0:
             if self.include_sign:
                 num_string = "+" + num_string[1:]
@@ -53,7 +54,7 @@ class DecimalNumber(VMobject):
             self.unit_sign = SingleStringTexMobject(self.unit, color=self.color)
             self.add(self.unit_sign)
 
-        self.arrange_submobjects(
+        self.arrange(
             buff=self.digit_to_digit_buff,
             aligned_edge=DOWN
         )
@@ -81,7 +82,14 @@ class DecimalNumber(VMobject):
         - num_decimal_places
         - field_name (e.g. 0 or 0.real)
         """
-        config = dict(self.__dict__)
+        config = dict([
+            (attr, getattr(self, attr))
+            for attr in [
+                "include_sign",
+                "group_with_commas",
+                "num_decimal_places",
+            ]
+        ])
         config.update(kwargs)
         return "".join([
             "{",

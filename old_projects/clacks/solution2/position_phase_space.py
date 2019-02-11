@@ -352,7 +352,7 @@ class PositionPhaseSpaceScene(Scene):
         # Default
         kwargs = {
             "run_time": (distance / ps_speed),
-            "rate_func": None,
+            "rate_func": linear,
         }
         kwargs.update(added_kwargs)
         return ApplyMethod(
@@ -844,7 +844,7 @@ class EqualMassCase(PositionPhaseSpaceScene):
 
     def show_same_mass(self):
         blocks = self.blocks
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             Indicate, blocks,
             lag_ratio=0.8,
             run_time=1,
@@ -1049,7 +1049,7 @@ class EqualMassCase(PositionPhaseSpaceScene):
                 ),
                 *flashes,
                 run_time=3,
-                rate_func=None,
+                rate_func=linear,
             )
             self.wait()
 
@@ -1118,7 +1118,6 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
         arc2.arrow = Arrow(
             equation[2].get_corner(DL),
             arc2.get_left(),
-            use_rectangular_stem=False,
             path_arc=-120 * DEGREES,
             buff=SMALL_BUFF,
         )
@@ -1173,7 +1172,7 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
             TexMobject("\\ne").rotate(90 * DEGREES),
             TextMobject("Angle of reflection")
         )
-        result.arrange_submobjects(DOWN)
+        result.arrange(DOWN)
         result.set_stroke(BLACK, 5, background=True)
         return result
 
@@ -1266,7 +1265,7 @@ class RescaleCoordinates(PositionPhaseSpaceScene, MovingCameraScene):
                 block.label.copy(),
             )
             group.generate_target()
-            group.target.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+            group.target.arrange(RIGHT, buff=SMALL_BUFF)
             group.target.next_to(block, vect)
             group[1].scale(0)
             group[1].move_to(group.target[1])
@@ -1469,7 +1468,7 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
         ps_vect = self.ps_velocity_vector
         block_vectors = self.get_block_velocity_vectors(ps_vect)
 
-        self.play(LaggedStart(GrowArrow, block_vectors))
+        self.play(OldLaggedStart(GrowArrow, block_vectors))
         self.play(Rotating(
             ps_vect,
             angle=TAU,
@@ -1533,7 +1532,7 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
             DashedLine(
                 ps_vect.get_end(),
                 vect.get_end(),
-                dashed_segment_length=0.01,
+                dash_length=0.01,
                 color=vect.get_color(),
             )
             for vect in (x_vect, y_vect)
@@ -1714,7 +1713,7 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
             magnitude_bars[0], big_ps_vect,
             magnitude_bars[1], rhs
         )
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.next_to(corner_rect.get_corner(UL), DR)
 
         new_rhs = TexMobject(
@@ -1812,7 +1811,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         self.block_vectors = self.get_block_velocity_vectors(self.ps_vect)
         self.play(
             GrowArrow(self.ps_vect),
-            LaggedStart(GrowArrow, self.block_vectors, run_time=1),
+            OldLaggedStart(GrowArrow, self.block_vectors, run_time=1),
         )
         self.add(self.ps_vect, self.block_vectors)
 
@@ -1863,12 +1862,12 @@ class ShowMomentumConservation(IntroduceVelocityVector):
             new_eq[2][2:].set_color(BLUE)
             new_eq.submobjects = [new_eq[i] for i in [0, 1, 3, 2, 4]]
 
-        eqs_targets.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        eqs_targets.arrange(DOWN, buff=LARGE_BUFF)
         eqs_targets.move_to(RIGHT).to_edge(UP)
         for eq, new_eq in zip(eqs_targets, new_eqs):
             new_eq.move_to(eq)
 
-        self.play(LaggedStart(MoveToTarget, eqs, lag_ratio=0.7))
+        self.play(OldLaggedStart(MoveToTarget, eqs, lag_ratio=0.7))
         self.play(*[
             Transform(
                 eq, new_eq,
@@ -1891,11 +1890,11 @@ class ShowMomentumConservation(IntroduceVelocityVector):
             x_eq.target[4],
             x_eq.target[3],
             x_eq.target[:3],
-        ).arrange_submobjects(RIGHT)
+        ).arrange(RIGHT)
         for p1, p2 in zip(x_eq, x_eq.target):
             p2.align_to(p1, DOWN)
         group = VGroup(y_eq.target, equals, x_eq.target)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         x_eq.target.align_to(y_eq.target, DOWN)
         equals.align_to(y_eq.target[3], DOWN)
         group.to_edge(UP, buff=MED_SMALL_BUFF)
@@ -1928,7 +1927,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         for mover, part in zip(movers, final_eq):
             mover.target = part
         self.play(
-            LaggedStart(
+            OldLaggedStart(
                 MoveToTarget, movers,
                 path_arc=30 * DEGREES,
                 lag_ratio=0.9
@@ -2293,7 +2292,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         arcs = VGroup(arc1, arc2)
 
         self.slide(0.5)
-        self.play(LaggedStart(
+        self.play(OldLaggedStart(
             FadeInFromLarge, arcs,
             lag_ratio=0.75,
         ))
@@ -2347,7 +2346,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         dot_product = VGroup(
             sqrty_m, dot, deriv_array, rhs
         )
-        dot_product.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        dot_product.arrange(RIGHT, buff=SMALL_BUFF)
         return dot_product
 
 
