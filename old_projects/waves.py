@@ -1209,10 +1209,10 @@ class ShowVectorEquation(Scene):
             )
             brace.next_to(self.vector.get_center(), DOWN, SMALL_BUFF)
             return brace
-        moving_brace = ContinualUpdate(
+        moving_brace = Mobject.add_updater(
             Brace(Line(LEFT, RIGHT), DOWN), update_brace
         )
-        moving_x_without_phi = ContinualUpdate(
+        moving_x_without_phi = Mobject.add_updater(
             x_without_phi.copy().add_background_rectangle(),
             lambda m : m.next_to(moving_brace.mobject, DOWN, SMALL_BUFF)
         )
@@ -1631,7 +1631,7 @@ class ShowTipToTailSum(ShowVectorEquation):
         self.v_oscillating_vector.A_vect = [0, 2, 0]
         self.v_oscillating_vector.update(0)
 
-        self.d_oscillating_vector = ContinualUpdate(
+        self.d_oscillating_vector = Mobject.add_updater(
             Vector(UP+RIGHT, color = E_COLOR),
             lambda v : v.put_start_and_end_on(
                 ORIGIN,
@@ -1706,8 +1706,8 @@ class ShowTipToTailSum(ShowVectorEquation):
             self.h_oscillating_vector,
             self.v_oscillating_vector,
             self.d_oscillating_vector,
-            ContinualUpdate(h_line, h_line.update),
-            ContinualUpdate(v_line, v_line.update),
+            Mobject.add_updater(h_line, h_line.update),
+            Mobject.add_updater(v_line, v_line.update),
         )
         self.wait(4)
 
@@ -2173,10 +2173,10 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
             return update_decimal
 
         continual_updates = [
-            ContinualUpdate(
+            Mobject.add_updater(
                 A_x, generate_decimal_update(np.sin),
             ),
-            ContinualUpdate(
+            Mobject.add_updater(
                 A_y, generate_decimal_update(np.cos),
             ),
         ]

@@ -5808,7 +5808,7 @@ class ShowArbitraryMultiplication(ShowMultiplicationBy135Example):
             t.set_value(normalize(t.get_value()))
 
         # for tracker in q_tracker, m_tracker:
-        #     self.add(ContinualUpdate(tracker, normalize_tracker))
+        #     self.add(Mobject.add_updater(tracker, normalize_tracker))
         updates = [
             UpdateFromFunc(tracker, normalize_tracker)
             for tracker in (q_tracker, m_tracker)

@@ -3,28 +3,6 @@ from manimlib.continual_animation.continual_animation import ContinualAnimation
 from manimlib.mobject.value_tracker import ValueTracker
 
 
-class ContinualUpdate(ContinualAnimation):
-    CONFIG = {
-        "function_depends_on_dt": False
-    }
-
-    def __init__(self, mobject, func, **kwargs):
-        self.func = func
-        ContinualAnimation.__init__(self, mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        if self.function_depends_on_dt:
-            self.func(self.mobject, dt)
-        else:
-            self.func(self.mobject)
-
-
-class ContinualUpdateFromTimeFunc(ContinualUpdate):
-    CONFIG = {
-        "function_depends_on_dt": True
-    }
-
-
 class ContinualMaintainPositionRelativeTo(ContinualAnimation):
     # TODO: Possibly reimplement using CycleAnimation?
     def __init__(self, mobject, tracked_mobject, **kwargs):

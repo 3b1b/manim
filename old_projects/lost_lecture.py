@@ -755,7 +755,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
             l2.put_start_and_end_on(f2, P)
             return lines
 
-        animation = ContinualUpdate(
+        animation = Mobject.add_updater(
             lines, update_lines
         )
         self.add(animation)
@@ -790,7 +790,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
             )
             Transform(measurement, new_decimal).update(1)
 
-        radius_measurement_animation = ContinualUpdate(
+        radius_measurement_animation = Mobject.add_updater(
             radius_measurement, update_radial_measurement
         )
 
@@ -948,7 +948,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
             arrow.shift(
                 radial_line.get_end() - arrow.get_start()
             )
-        force_arrow_animation = ContinualUpdate(
+        force_arrow_animation = Mobject.add_updater(
             force_arrow, update_force_arrow
         )
 
@@ -957,7 +957,7 @@ class AskAboutEllipses(TheMotionOfPlanets):
     def get_radial_line_and_update(self, comet):
         line = Line(LEFT, RIGHT)
         line.set_stroke(LIGHT_GREY, 1)
-        line_update = ContinualUpdate(
+        line_update = Mobject.add_updater(
             line, lambda l: l.put_start_and_end_on(
                 self.sun.get_center(),
                 comet.get_center(),
@@ -1212,7 +1212,7 @@ class ShowEllipseDefiningProperty(Scene):
         dot = Dot()
         dot.scale(0.5)
         position_tracker = ValueTracker(0.125)
-        dot_update = ContinualUpdate(
+        dot_update = Mobject.add_updater(
             dot,
             lambda d: d.move_to(
                 self.ellipse.point_from_proportion(
@@ -1381,7 +1381,7 @@ class ShowEllipseDefiningProperty(Scene):
                     focus, focal_sum_point.get_center()
                 )
             lines[1].rotate(np.pi)
-        lines_update_animation = ContinualUpdate(
+        lines_update_animation = Mobject.add_updater(
             lines, update_lines
         )
         return lines, lines_update_animation
@@ -1416,7 +1416,7 @@ class ShowEllipseDefiningProperty(Scene):
                 )
                 label.submobjects = list(new_decimal.submobjects)
 
-        distance_labels_animation = ContinualUpdate(
+        distance_labels_animation = Mobject.add_updater(
             distance_labels, update_distance_labels
         )
 
@@ -1799,7 +1799,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             if line.get_end()[0] > line.get_start()[0]:
                 vect = label.get_center() - line.get_center()
                 label.shift(-2 * vect)
-        distance_label_shift_update_animation = ContinualUpdate(
+        distance_label_shift_update_animation = Mobject.add_updater(
             self.distance_labels[0],
             distance_label_shift_update
         )
@@ -1810,7 +1810,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
         # Define QP line
         QP_line = Line(LEFT, RIGHT)
         QP_line.match_style(self.focal_lines)
-        QP_line_update = ContinualUpdate(
+        QP_line_update = Mobject.add_updater(
             QP_line, lambda l: l.put_start_and_end_on(
                 Q_dot.get_center(), P_dot.get_center(),
             )
@@ -1818,7 +1818,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
 
         QE_line = Line(LEFT, RIGHT)
         QE_line.set_stroke(YELLOW, 3)
-        QE_line_update = ContinualUpdate(
+        QE_line_update = Mobject.add_updater(
             QE_line, lambda l: l.put_start_and_end_on(
                 Q_dot.get_center(),
                 self.get_eccentricity_point()
@@ -1848,7 +1848,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
             label.rotate(angle, about_point=Q_dot.get_center())
             return label
 
-        distance_label_rotate_update_animation = ContinualUpdate(
+        distance_label_rotate_update_animation = Mobject.add_updater(
             self.distance_labels[0],
             distance_label_rotate_update
         )
@@ -2083,7 +2083,7 @@ class ProveEllipse(ShowEmergingEllipse, ShowEllipseDefiningProperty):
                 else:
                     line.set_stroke(WHITE, 1)
 
-        lines_update_animation = ContinualUpdate(
+        lines_update_animation = Mobject.add_updater(
             lines, update_lines
         )
 
@@ -2364,7 +2364,7 @@ class NonEllipticalKeplersLaw(KeplersSecondLaw):
         arrow, arrow_update = self.get_force_arrow_and_update(
             comet
         )
-        alt_arrow_update = ContinualUpdate(
+        alt_arrow_update = Mobject.add_updater(
             arrow, lambda a: a.scale(
                 1.0 / a.get_length(),
                 about_point=a.get_start()
@@ -2971,7 +2971,7 @@ class IntroduceShapeOfVelocities(AskAboutEllipses, MovingCameraScene):
             )
             Transform(vector, new_vector).update(1)
 
-        moving_vector_animation = ContinualUpdate(
+        moving_vector_animation = Mobject.add_updater(
             moving_vector, update_moving_vector
         )
         return moving_vector, moving_vector_animation

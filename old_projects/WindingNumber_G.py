@@ -968,7 +968,7 @@ class IntroduceInputOutputScene(InputOutputScene):
         return dots
 
     def get_output_dot_continual_update(self, input_dot, output_dot):
-        return ContinualUpdate(
+        return Mobject.add_updater(
             output_dot, 
             lambda od : od.move_to(self.point_function(input_dot.get_center()))
         )
@@ -996,7 +996,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             color = out_dot.get_color(),
         )
         out_vector.set_stroke(BLACK, 1)
-        continual_out_vector_update = ContinualUpdate(
+        continual_out_vector_update = Mobject.add_updater(
             out_vector, lambda ov : ov.put_start_and_end_on(
                 output_plane.coords_to_point(0, 0),
                 out_dot.get_center(),
@@ -1008,7 +1008,7 @@ class IntroduceVectorField(IntroduceInputOutputScene):
             Transform(in_vector, out_vector).update(1)
             in_vector.scale(0.5)
             in_vector.shift(in_dot.get_center() - in_vector.get_start())
-        continual_in_vector_update = ContinualUpdate(
+        continual_in_vector_update = Mobject.add_updater(
             in_vector, update_in_vector
         )
         continual_updates = [
@@ -2308,7 +2308,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
         #Setup dot, arrow and label
         dot = self.dot = Dot(radius = 0.1)
         dot.set_stroke(WHITE, self.dot_stroke_width)
-        update_dot_color = ContinualUpdate(
+        update_dot_color = Mobject.add_updater(
             dot, lambda d : d.set_fill(
                 get_output_color(),
                 self.dot_fill_opacity
@@ -2330,7 +2330,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
             arrow.scale(arrow_length/arrow.get_length())
             arrow.shift(dot.get_center() - arrow.get_start())
             return arrow
-        update_arrow = ContinualUpdate(arrow, arrow_update_func)
+        update_arrow = Mobject.add_updater(arrow, arrow_update_func)
 
         if self.include_walkers:
             self.add(update_arrow, update_dot_color, label_upadte)
@@ -2797,27 +2797,27 @@ class WindingNumbersInInputOutputContext(PathContainingZero):
 
         out_loop = in_loop.copy()
         out_loop.match_background_image_file(self.output_coloring)
-        update_out_loop = ContinualUpdate(
+        update_out_loop = Mobject.add_updater(
             out_loop,
             lambda m : m.set_points(in_loop.points).apply_function(self.point_function)
         )
         # self.add(update_out_loop)
 
         in_dot = Dot(radius = 0.04)
-        update_in_dot = ContinualUpdate(
+        update_in_dot = Mobject.add_updater(
             in_dot, lambda d : d.move_to(in_loop.point_from_proportion(1))
         )
         self.add(update_in_dot)
 
         out_arrow = Arrow(LEFT, RIGHT)
-        update_out_arrow = ContinualUpdate(
+        update_out_arrow = Mobject.add_updater(
             out_arrow, 
             lambda a : a.put_start_and_end_on(
                 self.output_plane.coords_to_point(0, 0),
                 out_loop.point_from_proportion(1)
             )
         )
-        update_out_arrow_color = ContinualUpdate(
+        update_out_arrow_color = Mobject.add_updater(
             out_arrow,
             lambda a : a.set_color(rev_to_color(a.get_angle()/TAU))
         )
@@ -2975,7 +2975,7 @@ class TickingClock(Scene):
             line.set_color(rev_to_color(rev))
 
         for line in lines:
-            self.add(ContinualUpdate(line, update_line))
+            self.add(Mobject.add_updater(line, update_line))
 
         run_time = self.run_time
         self.play(ClockPassesTime(
