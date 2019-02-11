@@ -30,12 +30,13 @@ class Camera(object):
         "background_image": None,
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "pixel_width": DEFAULT_PIXEL_WIDTH,
+        "frame_rate": DEFAULT_FRAME_RATE,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "frame_height": FRAME_HEIGHT,
         "frame_width": FRAME_WIDTH,
         "frame_center": ORIGIN,
-        "background_color": TT_FONDO_T,
+        "background_color": BLACK,
         "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
