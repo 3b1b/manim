@@ -12,46 +12,43 @@ from manimlib.utils.sounds import play_finish_sound
 import manimlib.constants
 
 
-def handle_scene(scene, **config):
+def open_file_if_needed(file_writer, **config):
     if config["quiet"]:
         curr_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
-    if config["show_last_frame"]:
-        scene.save_image(mode=config["saved_image_mode"])
     open_file = any([
-        config["show_last_frame"],
         config["open_video_upon_completion"],
         config["show_file_in_finder"]
     ])
     if open_file:
         current_os = platform.system()
-        file_path = None
+        file_paths = []
 
-        if config["show_last_frame"]:
-            file_path = scene.get_image_file_path()
-        else:
-            file_path = scene.get_movie_file_path()
+        if config["file_writer_config"]["save_last_frame"]:
+            file_paths.append(file_writer.get_image_file_path())
+        if config["file_writer_config"]["write_to_movie"]:
+            file_paths.append(file_writer.get_movie_file_path())
 
-        if current_os == "Windows":
-            os.startfile(file_path)
-        else:
-            commands = []
+        for file_path in file_paths:
+            if current_os == "Windows":
+                os.startfile(file_path)
+            else:
+                commands = []
+                if (current_os == "Linux"):
+                    commands.append("xdg-open")
+                else:  # Assume macOS
+                    commands.append("open")
 
-            if (current_os == "Linux"):
-                commands.append("xdg-open")
-            else:  # Assume macOS
-                commands.append("open")
+                if config["show_file_in_finder"]:
+                    commands.append("-R")
 
-            if config["show_file_in_finder"]:
-                commands.append("-R")
+                commands.append(file_path)
 
-            commands.append(file_path)
-
-            # commands.append("-g")
-            FNULL = open(os.devnull, 'w')
-            sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
-            FNULL.close()
+                # commands.append("-g")
+                FNULL = open(os.devnull, 'w')
+                sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
+                FNULL.close()
 
     if config["quiet"]:
         sys.stdout.close()
@@ -70,16 +67,16 @@ def is_child_scene(obj, module):
     return True
 
 
-def prompt_user_for_choice(name_to_obj):
-    num_to_name = {}
-    names = sorted(name_to_obj.keys())
-    for count, name in zip(it.count(1), names):
+def prompt_user_for_choice(scene_classes):
+    num_to_class = {}
+    for count, scene_class in zip(it.count(1), scene_classes):
+        name = scene_class.__name__
         print("%d: %s" % (count, name))
-        num_to_name[count] = name
+        num_to_class[count] = scene_class
     try:
         user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
         return [
-            name_to_obj[num_to_name[int(num_str)]]
+            num_to_class[int(num_str)]
             for num_str in user_input.split(",")
         ]
     except KeyError:
@@ -87,64 +84,74 @@ def prompt_user_for_choice(name_to_obj):
         sys.exit(2)
         user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
         return [
-            name_to_obj[num_to_name[int(num_str)]]
+            num_to_class[int(num_str)]
             for num_str in user_input.split(",")
         ]
     except EOFError:
         sys.exit(1)
 
 
-def get_scene_classes(scene_names_to_classes, config):
-    if len(scene_names_to_classes) == 0:
+def get_scenes_to_render(scene_classes, config):
+    if len(scene_classes) == 0:
         print(manimlib.constants.NO_SCENE_MESSAGE)
         return []
     if config["write_all"]:
-        return list(scene_names_to_classes.values())
-    scene_classes = []
+        return scene_classes
+    result = []
     for scene_name in config["scene_names"]:
-        if scene_name in scene_names_to_classes:
-            scene_classes.append(scene_names_to_classes[scene_name])
-        elif scene_name != "":
+        found = False
+        for scene_class in scene_classes:
+            if scene_class.__name__ == scene_name:
+                result.append(scene_class)
+                found = True
+                break
+        if not found and (scene_name != ""):
             print(
                 manimlib.constants.SCENE_NOT_FOUND_MESSAGE.format(
                     scene_name
                 ),
                 file=sys.stderr
             )
-    if scene_classes:
-        return scene_classes
-    return prompt_user_for_choice(scene_names_to_classes)
+    if result:
+        return result
+    return prompt_user_for_choice(scene_classes)
+
+
+def get_scene_classes_from_module(module):
+    if hasattr(module, "ALL_SCENE_CLASSES"):
+        return module.ALL_SCENE_CLASSES
+    else:
+        return [
+            member[1]
+            for member in inspect.getmembers(
+                module,
+                lambda x: is_child_scene(x, module)
+            )
+        ]
 
 
 def main(config):
     module = config["module"]
-    scene_names_to_classes = dict(
-        inspect.getmembers(module, lambda x: is_child_scene(x, module))
-    )
+    all_scene_classes = get_scene_classes_from_module(module)
+    scene_classes_to_render = get_scenes_to_render(all_scene_classes, config)
 
     scene_kwargs = dict([
         (key, config[key])
         for key in [
             "camera_config",
-            "frame_duration",
+            "file_writer_config",
             "skip_animations",
-            "write_to_movie",
-            "save_pngs",
-            "movie_file_extension",
             "start_at_animation_number",
             "end_at_animation_number",
-            "output_file_name",
-            "leave_progress_bars",
+            "remove_progress_bars",
         ]
     ])
-    if config["save_pngs"]:
-        print("We are going to save a PNG sequence as well...")
-        scene_kwargs["save_pngs"] = True
-        scene_kwargs["pngs_mode"] = config["saved_image_mode"]
 
-    for SceneClass in get_scene_classes(scene_names_to_classes, config):
+    for SceneClass in scene_classes_to_render:
         try:
-            handle_scene(SceneClass(**scene_kwargs), **config)
+            # By invoking, this renders the full scene
+            scene = SceneClass(**scene_kwargs)
+            open_file_if_needed(scene.file_writer, **config)
             if config["sound"]:
                 play_finish_sound()
         except Exception:
