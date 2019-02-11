@@ -2406,11 +2406,9 @@ class IntroduceCurl(IntroduceVectorField):
                 label.add_background_rectangle()
                 label.next_to(arrows, DOWN)
                 self.add_foreground_mobjects(label)
-                self.add(ContinualRotation(
-                    arrows, rate=u * 30 * DEGREES
-                ))
+                always_rotate(arrows, rate=u * 30 * DEGREES)
                 self.play(
-                    VFadeIn(arrows),
+                    FadeIn(arrows),
                     FadeIn(label)
                 )
         self.wait(2)
@@ -2488,9 +2486,8 @@ class ShearCurl(IntroduceCurl):
         )
         twig.add(Dot(twig.get_center()))
         twig.move_to(circle)
-        twig_rotation = ContinualRotation(
+        always_rotate(
             twig, rate=-90 * DEGREES,
-            start_up_time=8,
         )
 
         self.play(FadeInFrom(twig, UP))

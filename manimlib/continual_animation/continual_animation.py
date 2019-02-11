@@ -70,27 +70,6 @@ class ContinualAnimationGroup(ContinualAnimation):
             continual_animation.update(dt)
 
 
-class ContinualRotation(ContinualAnimation):
-    CONFIG = {
-        "axis": OUT,
-        "rate": np.pi / 12,  # Radians per second
-        "in_place": True,
-        "about_point": None,
-    }
-
-    def update_mobject(self, dt):
-        if self.about_point:
-            about_point = self.about_point
-        elif self.in_place:
-            about_point = self.mobject.get_center()
-        else:
-            about_point = ORIGIN
-        self.mobject.rotate(
-            dt * self.rate, axis=self.axis,
-            about_point=about_point
-        )
-
-
 class ContinualMovement(ContinualAnimation):
     CONFIG = {
         "direction": RIGHT,

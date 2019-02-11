@@ -288,7 +288,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
             eulers.get_bottom(),
             color = WHITE
         )
-        self.add(ContinualRotation(cube, axis = UP))
+        always_rotate(cube, axis=UP)
         self.play(
             GrowArrow(arrow_to_eulers),
             Write(eulers),
@@ -1879,7 +1879,8 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         self.play(FadeOut(self.vertices))
         self.play(ReplacementTransform(regions, cube, run_time = 2))
         cube.sort(lambda p : -p[2])
-        self.add(ContinualRotation(cube, axis = UP, in_place = False))
+        always_rotate(cube, axis=UP, about_point=ORIGIN)
+        self.add(cube)
         self.wait(3)
         self.play(
             FadeOut(self.top_formula),
