@@ -13,7 +13,7 @@ from manimlib.animation.fading import FadeIn
 from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import Transform
 from manimlib.animation.update import UpdateFromAlphaFunc
-from manimlib.mobject.mobject_update_utils import updating_mobject_from_func
+from manimlib.mobject.mobject_update_utils import always_redraw
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Circle

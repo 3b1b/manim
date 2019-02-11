@@ -455,7 +455,7 @@ class ShowSeveralQuaternionRotations(SpecialThreeDScene):
         self.add(prism)
 
     def add_axes(self):
-        axes = self.axes = updating_mobject_from_func(self.get_axes)
+        axes = self.axes = always_redraw(self.get_axes)
         self.add(axes)
 
     def apply_quaternions(self):
@@ -659,7 +659,7 @@ class EulerAnglesAndGimbal(ShowSeveralQuaternionRotations):
         self.gamma_tracker = ValueTracker(0)
 
     def setup_gimbal(self):
-        gimbal = updating_mobject_from_func(self.get_gimbal)
+        gimbal = always_redraw(self.get_gimbal)
         self.gimbal = gimbal
         self.add(gimbal)
 
@@ -1245,7 +1245,7 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
             result.rotate(angle=angle, axis=axis, about_point=ORIGIN)
             return result
 
-        sphere = updating_mobject_from_func(get_sphere)
+        sphere = always_redraw(get_sphere)
 
         point_label = TexMobject(
             "p", "=",

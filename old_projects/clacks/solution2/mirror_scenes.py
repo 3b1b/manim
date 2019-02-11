@@ -99,7 +99,7 @@ class MirrorScene(Scene):
         return mirrors
 
     def get_arc(self, radius=0.5):
-        return updating_mobject_from_func(lambda: Arc(
+        return always_redraw(lambda: Arc(
             start_angle=0,
             angle=self.get_theta(),
             arc_center=self.get_center(),
@@ -483,7 +483,7 @@ class ReflectWorldThroughMirrorNew(MirrorScene):
             rw[0].set_fill(opacity=0.25)
 
     def create_reflected_trajectories(self):
-        self.reflected_trajectories = updating_mobject_from_func(
+        self.reflected_trajectories = always_redraw(
             lambda: self.get_reflected_worlds(self.trajectory)
         )
 
@@ -951,7 +951,7 @@ class MirrorAndWiresOverlay(MirrorScene):
                 angle=dl_wire.get_angle(),
                 **arc_config,
             )
-        dl_arc = updating_mobject_from_func(get_dl_arc)
+        dl_arc = always_redraw(get_dl_arc)
 
         def get_dr_arc():
             return Arc(
@@ -959,7 +959,7 @@ class MirrorAndWiresOverlay(MirrorScene):
                 angle=dr_wire.get_angle() - PI,
                 **arc_config,
             )
-        dr_arc = updating_mobject_from_func(get_dr_arc)
+        dr_arc = always_redraw(get_dr_arc)
 
         incidence = TextMobject("Incidence")
         reflection = TextMobject("Reflection")

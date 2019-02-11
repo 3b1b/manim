@@ -2832,7 +2832,7 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
         neg_one_dot = Dot(neg_one_point)
         neg_one_dot.set_fill(YELLOW)
 
-        lines = updating_mobject_from_func(self.get_lines)
+        lines = always_redraw(self.get_lines)
 
         def generate_dot_updater(circle_piece):
             return lambda d: d.move_to(circle_piece.points[0])

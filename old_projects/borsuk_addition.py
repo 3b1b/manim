@@ -106,7 +106,7 @@ class UnexpectedConnection(Scene):
                 stroke_width=5
             ).shift(center)
 
-        arc = updating_mobject_from_func(get_arc)
+        arc = always_redraw(get_arc)
 
         decimal = DecimalNumber(0)
         decimal.add_updater(
@@ -613,7 +613,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
 
     def show_antipodal_point(self):
         path = self.get_antipodal_path()
-        end_dot = updating_mobject_from_func(
+        end_dot = always_redraw(
             lambda: self.get_dot(
                 path[-1].point_from_proportion(1)
             ).set_color(RED)
@@ -701,7 +701,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
         self.add(self.tracked_point)
 
     def init_dot(self):
-        self.dot = updating_mobject_from_func(
+        self.dot = always_redraw(
             lambda: self.get_dot(self.tracked_point.get_center())
         )
 

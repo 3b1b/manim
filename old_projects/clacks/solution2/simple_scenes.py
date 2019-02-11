@@ -161,7 +161,7 @@ class ShowDotProductMeaning(Scene):
                 stroke_color=LIGHT_GREY,
                 stroke_width=1,
             )
-        w_line = updating_mobject_from_func(get_w_line)
+        w_line = always_redraw(get_w_line)
 
         def get_proj_v():
             center = dot.get_center()
@@ -172,7 +172,7 @@ class ShowDotProductMeaning(Scene):
             result.set_fill(v_vect.get_color(), 0.5)
             result.shift(center - result.get_start())
             return result
-        proj_v = updating_mobject_from_func(get_proj_v)
+        proj_v = always_redraw(get_proj_v)
 
         def get_proj_line():
             return DashedLine(
@@ -181,7 +181,7 @@ class ShowDotProductMeaning(Scene):
                 stroke_width=1,
                 dash_length=0.025,
             )
-        proj_line = updating_mobject_from_func(get_proj_line)
+        proj_line = always_redraw(get_proj_line)
 
         template_line = Line(LEFT, RIGHT)
 
@@ -194,10 +194,10 @@ class ShowDotProductMeaning(Scene):
             brace.rotate(angle, about_point=ORIGIN)
             brace.shift(vect.get_center())
             return brace
-        w_brace = updating_mobject_from_func(
+        w_brace = always_redraw(
             lambda: get_vect_brace(w_vect)
         )
-        proj_v_brace = updating_mobject_from_func(
+        proj_v_brace = always_redraw(
             lambda: get_vect_brace(proj_v)
         )
 
@@ -217,7 +217,7 @@ class ShowDotProductMeaning(Scene):
                 center + 1.5 * (p - center)
             )
             return VGroup(arc, theta)
-        arc = updating_mobject_from_func(get_arc)
+        arc = always_redraw(get_arc)
 
         self.add(
             title[:3],
@@ -464,7 +464,7 @@ class AskAboutAddingThetaToItself(Scene):
             result.set_color(get_color())
             result.move_to(ineq)
             return result
-        dynamic_ineq = updating_mobject_from_func(get_ineq)
+        dynamic_ineq = always_redraw(get_ineq)
         group.remove(ineq)
         group.add(dynamic_ineq)
 
