@@ -25,7 +25,7 @@ def parse_cli():
         parser.add_argument(
             "-p", "--preview",
             action="store_true",
-            help="Automatically open movie file once its done",
+            help="Automatically open the saved file once its done",
         ),
         parser.add_argument(
             "-w", "--write_to_movie",
@@ -33,9 +33,9 @@ def parse_cli():
             help="Render the scene as a movie file",
         ),
         parser.add_argument(
-            "-s", "--show_last_frame",
+            "-s", "--save_last_frame",
             action="store_true",
-            help="Save the last frame and open the image file",
+            help="Save the last frame",
         ),
         parser.add_argument(
             "-l", "--low_quality",
@@ -73,8 +73,7 @@ def parse_cli():
             help="Write all the scenes from a file",
         ),
         parser.add_argument(
-            "-o", "--output_file_name",
-            nargs=1,
+            "-o", "--file_name",
             help="Specify the name of the output file, if"
                  "it should be different from the scene class name",
         )
@@ -99,9 +98,9 @@ def parse_cli():
             help="Play a success/failure sound",
         )
         parser.add_argument(
-            "--leave_progress_bars",
-            action="store_true",
-            help="Leave progress bars displayed in terminal",
+            "--remove_progress_bars",
+            action="store_false",
+            help="Remove progress bars in terminal",
         )
 
         # For live streaming
@@ -156,80 +155,36 @@ def get_module(file_name):
 
 
 def get_configuration(args):
-    if args.output_file_name is not None:
-        output_file_name_root, output_file_name_ext = os.path.splitext(
-            args.output_file_name)
-        expected_ext = '.png' if args.show_last_frame else '.mp4'
-        if output_file_name_ext not in ['', expected_ext]:
-            print("WARNING: The output will be to (doubly-dotted) %s%s" %
-                  output_file_name_root % expected_ext)
-            output_file_name = args.output_file_name
-        else:
-            # If anyone wants .mp4.mp4 and is surprised to only get .mp4, or such... Well, too bad.
-            output_file_name = output_file_name_root
-    else:
-        output_file_name = args.output_file_name
-
+    module = get_module(args.file)
+    file_writer_config = {
+        # By default, write to file
+        "write_to_movie": args.write_to_movie or not args.save_last_frame,
+        "save_last_frame": args.save_last_frame,
+        "save_pngs": args.save_pngs,
+        # If -t is passed in (for transparent), this will be RGBA
+        "png_mode": "RGBA" if args.transparent else "RGB",
+        "movie_file_extension": ".mov" if args.transparent else ".mp4",
+        "file_name": args.file_name,
+    }
+    if hasattr(module, "OUTPUT_DIRECTORY"):
+        file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
     config = {
-        "module": get_module(args.file),
+        "module": module,
         "scene_names": args.scene_names,
         "open_video_upon_completion": args.preview,
         "show_file_in_finder": args.show_file_in_finder,
-        # By default, write to file
-        "write_to_movie": args.write_to_movie or not args.show_last_frame,
-        "show_last_frame": args.show_last_frame,
-        "save_pngs": args.save_pngs,
-        # If -t is passed in (for transparent), this will be RGBA
-        "saved_image_mode": "RGBA" if args.transparent else "RGB",
-        "movie_file_extension": ".mov" if args.transparent else ".mp4",
+        "file_writer_config": file_writer_config,
         "quiet": args.quiet or args.write_all,
         "ignore_waits": args.preview,
         "write_all": args.write_all,
-        "output_file_name": output_file_name,
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
         "sound": args.sound,
-        "leave_progress_bars": args.leave_progress_bars
+        "remove_progress_bars": args.remove_progress_bars
     }
 
     # Camera configuration
-    config["camera_config"] = {}
-    if args.low_quality:
-        config["camera_config"].update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
-        config["frame_duration"] = manimlib.constants.LOW_QUALITY_FRAME_DURATION
-    elif args.medium_quality:
-        config["camera_config"].update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
-        config["frame_duration"] = manimlib.constants.MEDIUM_QUALITY_FRAME_DURATION
-    else:
-        config["camera_config"].update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
-        config["frame_duration"] = manimlib.constants.PRODUCTION_QUALITY_FRAME_DURATION
-
-    # If the resolution was passed in via -r
-    if args.resolution:
-        if "," in args.resolution:
-            height_str, width_str = args.resolution.split(",")
-            height = int(height_str)
-            width = int(width_str)
-        else:
-            height = int(args.resolution)
-            width = int(16 * height / 9)
-        config["camera_config"].update({
-            "pixel_height": height,
-            "pixel_width": width,
-        })
-
-    if args.color:
-        try:
-            config["camera_config"]["background_color"] = colour.Color(args.color)
-        except AttributeError as err:
-            print("Please use a valid color")
-            print(err)
-            sys.exit(2)
-
-    # If rendering a transparent image/move, make sure the
-    # scene has a background opacity of 0
-    if args.transparent:
-        config["camera_config"]["background_opacity"] = 0
+    config["camera_config"] = get_camera_configuration(args)
 
     # Arguments related to skipping
     stan = config["start_at_animation_number"]
@@ -242,7 +197,46 @@ def get_configuration(args):
             config["start_at_animation_number"] = int(stan)
 
     config["skip_animations"] = any([
-        config["show_last_frame"] and not config["write_to_movie"],
+        file_writer_config["save_last_frame"],
         config["start_at_animation_number"],
     ])
     return config
+
+
+def get_camera_configuration(args):
+    camera_config = {}
+    if args.low_quality:
+        camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+    elif args.medium_quality:
+        camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+    else:
+        camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
+
+    # If the resolution was passed in via -r
+    if args.resolution:
+        if "," in args.resolution:
+            height_str, width_str = args.resolution.split(",")
+            height = int(height_str)
+            width = int(width_str)
+        else:
+            height = int(args.resolution)
+            width = int(16 * height / 9)
+        camera_config.update({
+            "pixel_height": height,
+            "pixel_width": width,
+        })
+
+    if args.color:
+        try:
+            camera_config["background_color"] = colour.Color(args.color)
+        except AttributeError as err:
+            print("Please use a valid color")
+            print(err)
+            sys.exit(2)
+
+    # If rendering a transparent image/move, make sure the
+    # scene has a background opacity of 0
+    if args.transparent:
+        camera_config["background_opacity"] = 0
+
+    return camera_config
