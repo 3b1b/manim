@@ -17,7 +17,7 @@ from manimlib.utils.color import interpolate_color
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.paths import straight_path
-from manimlib.utils.simple_functions import get_num_args
+from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix
@@ -45,6 +45,7 @@ class Mobject(Container):
         if self.name is None:
             self.name = self.__class__.__name__
         self.updaters = []
+        self.updating_suspended = False
         self.reset_points()
         self.generate_points()
         self.init_colors()
@@ -124,6 +125,7 @@ class Mobject(Container):
         copy_mobject.submobjects = [
             submob.copy() for submob in self.submobjects
         ]
+        copy_mobject.updaters = list(self.updaters)
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value in family and value is not self:
@@ -145,24 +147,24 @@ class Mobject(Container):
 
     # Updating
 
-    def update(self, dt=0):
+    def update(self, dt=0, recursive=True):
+        if self.updating_suspended:
+            return self
         for updater in self.updaters:
-            num_args = get_num_args(updater)
-            if num_args == 1:
-                updater(self)
-            elif num_args == 2:
+            parameters = get_parameters(updater)
+            if "dt" in parameters:
                 updater(self, dt)
             else:
-                raise Exception(
-                    "Mobject updater expected 1 or 2 "
-                    "arguments, %d given" % num_args
-                )
+                updater(self)
+        if recursive:
+            for submob in self.submobjects:
+                submob.update(dt, recursive)
+        return self
 
     def get_time_based_updaters(self):
         return [
-            updater
-            for updater in self.updaters
-            if get_num_args(updater) == 2
+            updater for updater in self.updaters
+            if "dt" in get_parameters(updater)
         ]
 
     def get_updaters(self):
@@ -182,8 +184,26 @@ class Mobject(Container):
             self.updaters.remove(update_function)
         return self
 
-    def clear_updaters(self):
+    def clear_updaters(self, recursive=True):
         self.updaters = []
+        if recursive:
+            for submob in self.submobjects:
+                submob.clear_updaters()
+        return self
+
+    def suspend_updating(self, recursive=True):
+        self.updating_suspended = True
+        if recursive:
+            for submob in self.submobjects:
+                submob.suspend_updating(recursive)
+        return self
+
+    def resume_updating(self, recursive=True):
+        self.updating_suspended = False
+        if recursive:
+            for submob in self.submobjects:
+                submob.resume_updating(recursive)
+        self.update(dt=0, recursive=recursive)
         return self
 
     # Transforming operations
