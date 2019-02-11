@@ -25,6 +25,7 @@ with open("media_dir.txt", 'w') as media_file:
 VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
 RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
 SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
+SOUND_DIR = os.path.join(MEDIA_DIR, "designs", "sounds")
 SVG_PRUEBAS_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images","pruebas")
 ###
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -90,25 +91,30 @@ PRODUCTION_QUALITY_FRAME_DURATION = 1. / 60
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1440,
     "pixel_width": 2560,
+    "frame_rate": 60,
 }
 
 HIGH_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1080,
     "pixel_width": 1920,
+    "frame_rate": 30,
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 720,
-    "pixel_width": 1280,
+    "pixel_height": 1200,
+    "pixel_width": 1200,
+    "frame_rate": 30,
 }
 
 LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 480,
     "pixel_width": 854,
+    "frame_rate": 15,
 }
 
 DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
 DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
+DEFAULT_FRAME_RATE = 60
 
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
@@ -256,7 +262,7 @@ COLOR_MAP = {
     "N_FONDO_MORADO":"#ab97b5",
     "N_MORADO_OSCURO":"#7f7fff",
     "N_FONDO_NARANJA":"#c58f7f",
-    "N_FONDO_VERDE_PASTEL":"#cce1d4",
+    "N_FONDO_VERDE_PASTEL":"#cce1d4"
 }
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
