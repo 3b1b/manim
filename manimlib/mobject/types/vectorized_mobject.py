@@ -656,7 +656,8 @@ class VMobject(Mobject):
     # Alignment
     def align_points(self, vmobject):
         self.align_rgbas(vmobject)
-        nppcc = self.n_points_per_cubic_curve
+        if self.get_num_points() == vmobject.get_num_points():
+            return
 
         for mob in self, vmobject:
             # If there are no points, add one to
@@ -675,6 +676,8 @@ class VMobject(Mobject):
         # Start building new ones
         new_path1 = np.zeros((0, self.dim))
         new_path2 = np.zeros((0, self.dim))
+
+        nppcc = self.n_points_per_cubic_curve
 
         def get_nth_subpath(path_list, n):
             if n >= len(path_list):
