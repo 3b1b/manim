@@ -2,10 +2,13 @@ from copy import deepcopy
 
 import numpy as np
 
-from manimlib.constants import DEFAULT_ANIMATION_RUN_TIME
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
+
+
+DEFAULT_ANIMATION_RUN_TIME = 1.0
+DEFAULT_ANIMATION_LAG_RATIO = 0.005
 
 
 class Animation(object):
@@ -20,7 +23,7 @@ class Animation(object):
         # If 1, it is applied to each successively.
         # If 0 < lag_ratio < 1, its applied to each
         # with lagged start times
-        "lag_ratio": 0,
+        "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
         "suspend_mobject_updating": True,
     }
 
@@ -132,10 +135,7 @@ class Animation(object):
         full_length = (num_submobjects - 1) * lag_ratio + 1
         value = alpha * full_length
         lower = index * lag_ratio
-        return np.clip(
-            (value - lower),
-            0, 1,
-        )
+        return np.clip((value - lower), 0, 1)
 
     # Getters and setters
     def set_run_time(self, run_time):
