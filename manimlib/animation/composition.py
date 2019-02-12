@@ -10,6 +10,9 @@ from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import squish_rate_func
 
 
+DEFAULT_LAGGED_START_LAG_RATIO = 0.05
+
+
 class AnimationGroup(Animation):
     CONFIG = {
         # If None, this defaults to the sum of all
@@ -133,7 +136,7 @@ class Succession(AnimationGroup):
 
 class LaggedStart(AnimationGroup):
     CONFIG = {
-        "lag_ratio": 0.2,
+        "lag_ratio": DEFAULT_LAGGED_START_LAG_RATIO,
     }
 
 
