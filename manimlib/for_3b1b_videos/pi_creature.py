@@ -157,7 +157,7 @@ class PiCreature(SVGMobject):
         new_self.shift(self.eyes.get_center() - new_self.eyes.get_center())
         if hasattr(self, "purposeful_looking_direction"):
             new_self.look(self.purposeful_looking_direction)
-        Transform(self, new_self).update(1)
+        self.become(new_self)
         self.mode = mode
         return self
 
