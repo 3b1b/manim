@@ -1,7 +1,6 @@
 import operator as op
 
 from manimlib.constants import *
-from manimlib.mobject.geometry import RegularPolygon
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -128,7 +127,7 @@ class NumberLine(Line):
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
             return self.numbers_to_show
-        numbers = np.arange(int(self.leftmost_tick), int(self.x_max) + 1)
+        numbers = np.arange(int(self.leftmost_tick), int(self.x_max))
         if self.exclude_zero_from_default_numbers:
             numbers = numbers[numbers != 0]
         return numbers
@@ -172,17 +171,6 @@ class NumberLine(Line):
         )
         self.add(self.numbers)
         return self
-
-    # def add_tip(self):
-    #     tip = RegularPolygon(3)
-    #     color = self.color
-    #     tip.set_stroke(color, width=self.get_stroke_width())
-    #     tip.set_fill(color, opacity=1)
-    #     tip.set_width(self.tip_width)
-    #     tip.set_height(self.tip_height, stretch=True)
-    #     tip.move_to(self.get_end(), LEFT)
-    #     self.tip = tip
-    #     self.add(tip)
 
 
 class UnitInterval(NumberLine):
