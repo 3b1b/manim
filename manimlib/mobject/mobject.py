@@ -10,9 +10,7 @@ import numpy as np
 
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_gradient
-from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import interpolate_color
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import remove_list_redundancies
@@ -827,6 +825,12 @@ class Mobject(Container):
             for a1, a2 in zip(alphas[:-1], alphas[1:])
         ])
 
+    def has_points(self):
+        return len(self.points) > 0
+
+    def has_no_points(self):
+        return not self.has_points()
+
     # Family matters
 
     def __getitem__(self, value):
@@ -913,6 +917,7 @@ class Mobject(Container):
 
     # Alignment
     def align_data(self, mobject):
+        self.null_point_align(mobject)
         self.align_submobjects(mobject)
         self.align_points(mobject)
         # Recurse
@@ -950,13 +955,14 @@ class Mobject(Container):
 
     def null_point_align(self, mobject):
         """
-        If self has no points, but needs to align
-        with mobject, which has points
+        If a mobject with points is being aligned to
+        one without, treat both as groups, and push
+        the one with points into its own submobjects
+        list.
         """
-        if self.submobjects:
-            mobject.push_self_into_submobjects()
-        else:
-            self.points = np.array([mobject.points[0]])
+        for m1, m2 in (self, mobject), (mobject, self):
+            if m1.has_no_points() and m2.has_points():
+                m2.push_self_into_submobjects()
         return self
 
     def push_self_into_submobjects(self):
@@ -980,7 +986,8 @@ class Mobject(Container):
             return
 
         target = curr + n
-        # TODO, factor this out to utils
+        # TODO, factor this out to utils so as to reuse
+        # with VMobject.insert_n_curves
         repeat_indices = (np.arange(target) * curr) // target
         split_factors = [
             sum(repeat_indices == i)
@@ -990,7 +997,9 @@ class Mobject(Container):
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
             for k in range(1, sf):
-                new_submobs.append(submob.get_point_mobject())
+                new_submobs.append(
+                    submob.copy().fade(1)
+                )
         self.submobjects = new_submobs
         return self
 
@@ -1037,9 +1046,6 @@ class Mobject(Container):
         return self
 
     # Errors
-    def has_no_points(self):
-        return len(self.points) == 0
-
     def throw_error_if_no_points(self):
         if self.has_no_points():
             message = "Cannot call Mobject.{}" +\
