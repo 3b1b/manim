@@ -24,7 +24,6 @@ class DecimalNumber(VMobject):
             formatter = self.get_complex_formatter()
         else:
             formatter = self.get_formatter()
-            print(formatter)
         num_string = formatter.format(number)
 
         rounded_num = np.round(number, self.num_decimal_places)
