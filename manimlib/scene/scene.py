@@ -460,14 +460,14 @@ class Scene(Container):
     def begin_animations(self, animations):
         curr_mobjects = self.get_mobject_family_members()
         for animation in animations:
+            # Begin animation
+            animation.begin()
             # Anything animated that's not already in the
             # scene gets added to the scene
             mob = animation.mobject
             if mob not in curr_mobjects:
                 self.add(mob)
                 curr_mobjects += mob.get_family()
-            # Begin animation
-            animation.begin()
 
     def progress_through_animations(self, animations):
         # Paint all non-moving objects onto the screen, so they don't
