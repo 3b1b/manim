@@ -696,9 +696,7 @@ class Mobject(Container):
     def restore(self):
         if not hasattr(self, "saved_state") or self.save_state is None:
             raise Exception("Trying to restore without having saved")
-        self.align_data(self.saved_state)
-        for sm1, sm2 in zip(self.get_family(), self.saved_state.get_family()):
-            sm1.interpolate(sm1, sm2, 1)
+        self.become(self.saved_state)
         return self
 
     ##
