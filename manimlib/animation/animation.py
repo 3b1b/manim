@@ -70,10 +70,10 @@ class Animation(object):
         return self.mobject, self.starting_mobject
 
     def get_all_families_zipped(self):
-        return list(zip(*map(
-            Mobject.family_members_with_points,
-            self.get_all_mobjects()
-        )))
+        return zip(*[
+            mob.family_members_with_points()
+            for mob in self.get_all_mobjects()
+        ])
 
     def update_mobjects(self, dt):
         """
@@ -115,7 +115,7 @@ class Animation(object):
         self.interpolate(alpha)
 
     def interpolate_mobject(self, alpha):
-        families = self.get_all_families_zipped()
+        families = list(self.get_all_families_zipped())
         for i, mobs in enumerate(families):
             sub_alpha = self.get_sub_alpha(alpha, i, len(families))
             self.interpolate_submobject(*mobs, sub_alpha)
