@@ -91,7 +91,17 @@ class Transform(Animation):
             self.target_copy,
         ]
 
-    def interpolate_submobject(self, submob, start, target, target_copy, alpha):
+    def get_all_families_zipped(self):
+        return zip(*[
+            mob.family_members_with_points()
+            for mob in [
+                self.mobject,
+                self.starting_mobject,
+                self.target_copy,
+            ]
+        ])
+
+    def interpolate_submobject(self, submob, start, target_copy, alpha):
         submob.interpolate(
             start, target_copy,
             alpha, self.path_func
