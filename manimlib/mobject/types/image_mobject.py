@@ -93,8 +93,9 @@ class ImageMobject(AbstractImageMobject):
         self.pixel_array[:, :, 3] = int(255 * alpha)
         return self
 
-    def fade_no_recurse(self, darkness=0.5):
+    def fade(self, darkness=0.5, family=True):
         self.set_opacity(1 - darkness)
+        super().fade(darkness, family)
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):

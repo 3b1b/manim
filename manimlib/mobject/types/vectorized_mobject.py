@@ -240,11 +240,20 @@ class VMobject(Mobject):
         self.set_stroke(opacity=opacity, family=family)
         return self
 
-    def fade_no_recurse(self, darkness):
-        opacity = 1.0 - darkness
-        self.set_fill(opacity=opacity)
-        self.set_stroke(opacity=opacity)
-        self.set_background_stroke(opacity=opacity)
+    def fade(self, darkness=0.5, family=True):
+        factor = 1.0 - darkness
+        self.set_fill(
+            opacity=factor * self.get_fill_opacity()
+        )
+        self.set_stroke(
+            opacity=factor * self.get_stroke_opacity()
+        )
+        self.set_background_stroke(
+            opacity=factor * self.get_stroke_opacity(
+                background=True
+            )
+        )
+        super().fade(darkness, family)
         return self
 
     def get_fill_rgbas(self):
