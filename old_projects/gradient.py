@@ -1,6 +1,11 @@
 from big_ol_pile_of_manim_imports import *
 
 
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
+
 class GradientDescentWrapper(Scene):
     def construct(self):
         title = TextMobject("Gradient descent")
@@ -48,7 +53,8 @@ class ShowSimpleMultivariableFunction(Scene):
         decimal.scale(scale_val)
         decimal.next_to(tex, RIGHT)
         value_tracker = ValueTracker(0)
-        self.add(ContinualMovement(value_tracker, rate=0.5))
+        always_shift(value_tracker, rate=0.5)
+        self.add(value_tracker)
         decimal_change = ContinualChangingDecimal(
             decimal,
             lambda a: 1 + np.sin(value_tracker.get_value())

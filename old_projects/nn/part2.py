@@ -569,7 +569,7 @@ class FunctionMinmization(GraphScene):
             dot.move_to(self.input_to_graph_point(x, graph))
 
         self.add(*[
-            ContinualUpdate(dot, update_dot)
+            Mobject.add_updater(dot, update_dot)
             for dot in dots
         ])
         self.wait(10)
@@ -1752,8 +1752,8 @@ class SingleVariableCostFunction(GraphScene):
             new_ball.point = point
             balls.add(new_ball)
             updates += [
-                ContinualUpdate(point, update_point),
-                ContinualUpdate(new_ball, update_ball)
+                Mobject.add_updater(point, update_point),
+                Mobject.add_updater(new_ball, update_ball)
             ]
         balls.set_color_by_gradient(BLUE, GREEN)
 

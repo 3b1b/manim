@@ -582,7 +582,7 @@ class UnfoldCircles(Scene):
         unwrap_factor_tracker = ValueTracker(0)
 
         def get_circle(line):
-            return updating_mobject_from_func(
+            return always_redraw(
                 lambda: self.get_unwrapped_circle(
                     radius=radius, dr=self.dr,
                     unwrap_factor=unwrap_factor_tracker.get_value(),
@@ -1073,7 +1073,7 @@ class SlantedShadowSquishing(ShowShadows):
         self.begin_ambient_camera_rotation(0.01)
         square = self.obj3d.deepcopy()
         square.clear_updaters()
-        shadow = updating_mobject_from_func(lambda: get_shadow(square))
+        shadow = always_redraw(lambda: get_shadow(square))
 
         # Reorient
         self.add(square, shadow)
@@ -1998,13 +1998,13 @@ class SameEffectAsRotating(Scene):
         group.center()
         moving_rect = rect1.copy()
 
-        low_brace = updating_mobject_from_func(
+        low_brace = always_redraw(
             lambda: Brace(
                 moving_rect, DOWN, buff=SMALL_BUFF,
                 min_num_quads=2,
             )
         )
-        right_brace = updating_mobject_from_func(
+        right_brace = always_redraw(
             lambda: Brace(
                 moving_rect, RIGHT, buff=SMALL_BUFF,
                 min_num_quads=2,
@@ -2331,7 +2331,7 @@ class WhatIsSurfaceArea(SpecialThreeDScene):
         self.add_fixed_in_frame_mobjects(title)
 
         power_tracker = ValueTracker(1)
-        surface = updating_mobject_from_func(
+        surface = always_redraw(
             lambda: self.get_surface(
                 radius=3,
                 amplitude=1,
@@ -2484,7 +2484,7 @@ class UnwrappedCircleLogic(UnfoldCircles):
             ).set_stroke(YELLOW, 2)
             return result
 
-        unwrapped_circle = updating_mobject_from_func(get_unwrapped_circle)
+        unwrapped_circle = always_redraw(get_unwrapped_circle)
         circle = unwrapped_circle.copy()
         circle.clear_updaters()
         R_line = Line(circle.get_center(), circle.get_bottom())
@@ -2493,7 +2493,7 @@ class UnwrappedCircleLogic(UnfoldCircles):
         R_label.next_to(R_line, LEFT)
         circle_group = VGroup(circle, R_line, R_label)
 
-        tri_R_line = updating_mobject_from_func(
+        tri_R_line = always_redraw(
             lambda: Line(
                 ORIGIN, radius * DOWN
             ).shift(center_tracker.get_center())
@@ -2515,7 +2515,7 @@ class UnwrappedCircleLogic(UnfoldCircles):
         self.wait()
 
         # Change radius
-        r_line = updating_mobject_from_func(
+        r_line = always_redraw(
             lambda: Line(
                 ORIGIN, get_r() * DOWN,
                 stroke_width=2,
@@ -2930,7 +2930,7 @@ class SecondProof(SpecialThreeDScene):
     def show_theta(self):
         theta_tracker = ValueTracker(0)
         get_theta = theta_tracker.get_value
-        theta_group = updating_mobject_from_func(
+        theta_group = always_redraw(
             lambda: self.get_theta_group(get_theta())
         )
         theta_mob_opacity_tracker = ValueTracker(0)
@@ -2945,7 +2945,7 @@ class SecondProof(SpecialThreeDScene):
             )
         )
 
-        lit_ring = updating_mobject_from_func(
+        lit_ring = always_redraw(
             lambda: self.get_ring_from_theta(
                 self.rings, get_theta()
             ).copy().set_color(YELLOW)
@@ -3113,7 +3113,7 @@ class SecondProof(SpecialThreeDScene):
     def ask_about_2_to_1_correspondance(self):
         theta_tracker = ValueTracker(0)
         get_theta = theta_tracker.get_value
-        new_lit_ring = updating_mobject_from_func(
+        new_lit_ring = always_redraw(
             lambda: self.get_ring_from_theta(
                 self.rings, get_theta()
             ).copy().set_color(PINK)

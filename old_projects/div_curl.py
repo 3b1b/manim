@@ -18,6 +18,11 @@ FOX_COLOR = "#DF7F20"
 RABBIT_COLOR = "#C6D6EF"
 
 
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
+
 # Helper functions
 def get_flow_start_points(x_min=-8, x_max=8,
                           y_min=-5, y_max=5,
@@ -646,7 +651,7 @@ class ShowWritingTrajectory(TeacherStudentsScene):
             s0.target_center += dt * LEFT * 0.5
             s0.move_to(s0.target_center)
 
-        self.add(ContinualUpdateFromTimeFunc(s0, update_s0))
+        self.add(Mobject.add_updater(s0, update_s0))
         self.change_student_modes("tired", "horrified", "sad")
         self.play(s0.look, LEFT)
         self.wait(4)
@@ -1108,9 +1113,11 @@ class ElectricField(CylinderModel, MovingCameraScene):
             y = voltage_point.get_center()[1]
             return 10 - y
 
-        voltage_update = ContinualChangingDecimal(
-            voltage, get_voltage,
-            position_update_func=lambda v: v.next_to(
+        voltage_update = voltage.add_updater(
+            lambda d: d.set_value(get_voltage),
+        )
+        voltage.add_updater(
+            lambda d: d.next_to(
                 voltage_point, UP, SMALL_BUFF
             )
         )
@@ -1587,8 +1594,8 @@ class ChangingElectricField(Scene):
                 particle.shift(particle.velocity * dt)
 
         self.add(
-            ContinualUpdate(vector_field, update_vector_field),
-            ContinualUpdateFromTimeFunc(particles, update_particles),
+            Mobject.add_updater(vector_field, update_vector_field),
+            Mobject.add_updater(particles, update_particles),
         )
         self.wait(20)
 
@@ -1822,7 +1829,7 @@ class DefineDivergence(ChangingElectricField):
             "\\text{div} \\, \\textbf{F}(x, y) = "
         )
         div_tex.add_background_rectangle()
-        div_tex_update = ContinualUpdate(
+        div_tex_update = Mobject.add_updater(
             div_tex, lambda m: m.next_to(circle, UP, SMALL_BUFF)
         )
 
@@ -1889,7 +1896,8 @@ class DefineDivergenceSymbols(Scene):
         output = DecimalNumber(0, include_sign=True)
         output.next_to(tex_mob, RIGHT)
         time_tracker = ValueTracker()
-        self.add(ContinualMovement(time_tracker, rate=1))
+        always_shift(time_tracker, rate=1)
+        self.add(time_tracker)
         output_animation = ContinualChangingDecimal(
             output, lambda a: 3 * np.cos(int(time_tracker.get_value())),
         )
@@ -2066,7 +2074,7 @@ class DivergenceAsNewFunction(Scene):
         )
 
         self.add(func_tex, rhs)
-        # self.add(ContinualUpdate(
+        # self.add(Mobject.add_updater(
         #     rhs, lambda m: m.next_to(func_tex, RIGHT)
         # ))
 
@@ -2090,7 +2098,7 @@ class DivergenceAsNewFunction(Scene):
         out_vect.move_to(rhs)
         out_vect.set_fill(opacity=0)
         self.play(out_vect.restore)
-        self.out_vect_update = ContinualUpdate(
+        self.out_vect_update = Mobject.add_updater(
             out_vect,
             lambda ov: Transform(ov, get_out_vect()).update(1)
         )
@@ -2098,7 +2106,7 @@ class DivergenceAsNewFunction(Scene):
         self.add(self.out_vect_update)
         self.add(out_x_update, out_y_update)
 
-        self.add(ContinualUpdate(
+        self.add(Mobject.add_updater(
             VGroup(out_x, out_y),
             lambda m: m.match_style(out_vect)
         ))
@@ -2167,7 +2175,7 @@ class DivergenceAsNewFunction(Scene):
             ))
 
         vector_ring = get_vector_ring()
-        vector_ring_update = ContinualUpdate(
+        vector_ring_update = Mobject.add_updater(
             vector_ring,
             lambda vr: Transform(vr, get_vector_ring()).update(1)
         )
@@ -2195,7 +2203,7 @@ class DivergenceAsNewFunction(Scene):
         )
         # This line is a dumb hack around a Scene bug
         self.add(*[
-            ContinualUpdate(
+            Mobject.add_updater(
                 mob, lambda m: m.set_fill(None, 0)
             )
             for mob in (out_x, out_y)
@@ -2406,11 +2414,9 @@ class IntroduceCurl(IntroduceVectorField):
                 label.add_background_rectangle()
                 label.next_to(arrows, DOWN)
                 self.add_foreground_mobjects(label)
-                self.add(ContinualRotation(
-                    arrows, rate=u * 30 * DEGREES
-                ))
+                always_rotate(arrows, rate=u * 30 * DEGREES)
                 self.play(
-                    VFadeIn(arrows),
+                    FadeIn(arrows),
                     FadeIn(label)
                 )
         self.wait(2)
@@ -2488,9 +2494,8 @@ class ShearCurl(IntroduceCurl):
         )
         twig.add(Dot(twig.get_center()))
         twig.move_to(circle)
-        twig_rotation = ContinualRotation(
+        always_rotate(
             twig, rate=-90 * DEGREES,
-            start_up_time=8,
         )
 
         self.play(FadeInFrom(twig, UP))
@@ -2565,7 +2570,7 @@ class ShowCurlAtVariousPoints(IntroduceCurl):
         dot = Dot()
         circle = Circle(radius=0.25, color=WHITE)
         circle.move_to(dot)
-        circle_update = ContinualUpdate(
+        circle_update = Mobject.add_updater(
             circle,
             lambda m: m.move_to(dot)
         )
@@ -2574,7 +2579,7 @@ class ShowCurlAtVariousPoints(IntroduceCurl):
             "\\text{curl} \\, \\textbf{F}(x, y) = "
         )
         curl_tex.add_background_rectangle(buff=0.025)
-        curl_tex_update = ContinualUpdate(
+        curl_tex_update = Mobject.add_updater(
             curl_tex,
             lambda m: m.next_to(circle, UP, SMALL_BUFF)
         )
@@ -3082,10 +3087,10 @@ class ShowTwoPopulations(Scene):
 
             return update
 
-        self.add(ContinualUpdate(
+        self.add(Mobject.add_updater(
             foxes, get_updater(get_num_foxes)
         ))
-        self.add(ContinualUpdate(
+        self.add(Mobject.add_updater(
             rabbits, get_updater(get_num_rabbits)
         ))
 
@@ -3108,7 +3113,7 @@ class ShowTwoPopulations(Scene):
         ))
 
         for count in num_foxes, num_rabbits:
-            self.add(ContinualUpdate(
+            self.add(Mobject.add_updater(
                 count, self.update_count_color,
             ))
 
@@ -3259,7 +3264,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
                 position_update_func=lambda m: m.move_to(tens[i])
             )
         coord_pair.add_background_rectangle()
-        coord_pair_update = ContinualUpdate(
+        coord_pair_update = Mobject.add_updater(
             coord_pair, lambda m: m.next_to(dot, UR, SMALL_BUFF)
         )
         pop_sizes_updates = [get_pop_size_update(i) for i in (0, 1)]
@@ -3820,7 +3825,7 @@ class ShowCrossProduct(ShowDotProduct):
             fill_opacity=0.2,
         )
 
-        self.add(ContinualUpdate(
+        self.add(Mobject.add_updater(
             square,
             lambda s: s.set_points_as_corners([
                 ORIGIN,
@@ -4030,7 +4035,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
                 moving_step_vector.get_end(),
                 moving_step_vector.get_end() + diff,
             )
-        self.moving_diff_vector_update = ContinualUpdate(
+        self.moving_diff_vector_update = Mobject.add_updater(
             moving_diff_vector,
             update_moving_diff_vector
         )

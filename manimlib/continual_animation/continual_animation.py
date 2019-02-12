@@ -1,7 +1,6 @@
 import copy
 
 from manimlib.constants import *
-from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 
@@ -52,50 +51,3 @@ class ContinualAnimation(object):
 
     def copy(self):
         return copy.deepcopy(self)
-
-
-class ContinualAnimationGroup(ContinualAnimation):
-    CONFIG = {
-        "start_up_time": 0,
-        "wind_down_time": 0,
-    }
-
-    def __init__(self, *continual_animations, **kwargs):
-        digest_config(self, kwargs, locals())
-        self.group = Group(*[ca.mobject for ca in continual_animations])
-        ContinualAnimation.__init__(self, self.group, **kwargs)
-
-    def update_mobject(self, dt):
-        for continual_animation in self.continual_animations:
-            continual_animation.update(dt)
-
-
-class ContinualRotation(ContinualAnimation):
-    CONFIG = {
-        "axis": OUT,
-        "rate": np.pi / 12,  # Radians per second
-        "in_place": True,
-        "about_point": None,
-    }
-
-    def update_mobject(self, dt):
-        if self.about_point:
-            about_point = self.about_point
-        elif self.in_place:
-            about_point = self.mobject.get_center()
-        else:
-            about_point = ORIGIN
-        self.mobject.rotate(
-            dt * self.rate, axis=self.axis,
-            about_point=about_point
-        )
-
-
-class ContinualMovement(ContinualAnimation):
-    CONFIG = {
-        "direction": RIGHT,
-        "rate": 0.05,  # Units per second
-    }
-
-    def update_mobject(self, dt):
-        self.mobject.shift(dt * self.rate * self.direction)

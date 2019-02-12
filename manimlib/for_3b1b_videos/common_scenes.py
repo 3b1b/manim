@@ -6,7 +6,6 @@ from manimlib.animation.creation import Write
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.fading import FadeOut
 from manimlib.constants import *
-from manimlib.continual_animation.continual_animation import ContinualMovement
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import Randolph
 from manimlib.for_3b1b_videos.pi_creature_animations import Blink
@@ -19,6 +18,7 @@ from manimlib.mobject.svg.drawings import Logo
 from manimlib.mobject.svg.drawings import PatreonLogo
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.mobject_update_utils import always_shift
 from manimlib.scene.moving_camera_scene import MovingCameraScene
 from manimlib.scene.scene import Scene
 from manimlib.utils.rate_functions import linear
@@ -243,13 +243,13 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         vect = columns.target.get_center() - columns.get_center()
         distance = get_norm(vect)
         wait_time = 20
-        columns_shift = ContinualMovement(
+        always_shift(
             columns,
             direction=normalize(vect),
             rate=(distance / wait_time)
         )
 
-        self.add(columns_shift, black_rect, line, thanks)
+        self.add(columns, black_rect, line, thanks)
         self.wait(wait_time)
 
 

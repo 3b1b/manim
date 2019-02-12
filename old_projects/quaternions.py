@@ -1288,7 +1288,7 @@ class IntroduceLinusTheLinelander(Scene):
             rate_func=there_and_back,
             lag_ratio=0.1
         )
-        q_marks_continual = NormalAnimationAsContinualAnimation(q_marks_anim)
+        q_marks_continual = turn_animation_into_updater(q_marks_anim)
 
         self.play(
             FadeOut(to_fade),
@@ -2428,8 +2428,8 @@ class IntroduceStereographicProjection(MovingCameraScene):
 
         frame = self.camera_frame
         frame_height_tracker = ValueTracker(frame.get_height())
-        frame_height_growth = ContinualGrowValue(
-            frame_height_tracker, rate=0.4
+        frame_height_growth = frame_height_tracker.add_updater(
+            lambda m, dt: m.set_value(m.get_value + 0.5 * dt)
         )
 
         neg_one_tangent = VGroup(
@@ -2484,7 +2484,6 @@ class IntroduceStereographicProjection(MovingCameraScene):
                 self.add(frame, frame_height_growth)
             elif arc is arc2:
                 self.play(dot.move_to, neg_i_point)
-        frame_height_growth.begin_wind_down()
         self.wait(2)
         self.play(*map(ShowCreation, neg_one_tangent))
         self.wait()
@@ -2832,7 +2831,7 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
         neg_one_dot = Dot(neg_one_point)
         neg_one_dot.set_fill(YELLOW)
 
-        lines = updating_mobject_from_func(self.get_lines)
+        lines = always_redraw(self.get_lines)
 
         def generate_dot_updater(circle_piece):
             return lambda d: d.move_to(circle_piece.points[0])
@@ -3319,10 +3318,10 @@ class SphereExamplePointsDecimal(Scene):
 
         def generate_decimal_updater(decimal, index):
             shifted_i = (index - 1) % 3
-            return ContinualChangingDecimal(
-                decimal,
-                lambda a: point.get_location()[shifted_i]
-            )
+            decimal.add_updater(lambda d: d.set_value(
+                point.get_location()[shifted_i]
+            ))
+            return decimal
 
         for i, decimal in enumerate(decimals):
             self.add(generate_decimal_updater(decimal, i))
@@ -5808,7 +5807,7 @@ class ShowArbitraryMultiplication(ShowMultiplicationBy135Example):
             t.set_value(normalize(t.get_value()))
 
         # for tracker in q_tracker, m_tracker:
-        #     self.add(ContinualUpdate(tracker, normalize_tracker))
+        #     self.add(Mobject.add_updater(tracker, normalize_tracker))
         updates = [
             UpdateFromFunc(tracker, normalize_tracker)
             for tracker in (q_tracker, m_tracker)

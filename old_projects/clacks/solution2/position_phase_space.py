@@ -470,7 +470,7 @@ class PositionPhaseSpaceScene(Scene):
                 y_axis_point, point,
                 **self.ps_x_line_config,
             )
-        self.x_line = updating_mobject_from_func(get_x_line)
+        self.x_line = always_redraw(get_x_line)
         return self.x_line
 
     def get_phase_space_y_line(self):
@@ -483,7 +483,7 @@ class PositionPhaseSpaceScene(Scene):
                 x_axis_point, point,
                 **self.ps_y_line_config,
             )
-        self.y_line = updating_mobject_from_func(get_y_line)
+        self.y_line = always_redraw(get_y_line)
         return self.y_line
 
     def get_phase_space_dot(self):
@@ -541,7 +541,7 @@ class PositionPhaseSpaceScene(Scene):
             line.put_start_and_end_on(left_point, right_point)
             return Brace(line, UP, buff=SMALL_BUFF)
 
-        brace = updating_mobject_from_func(get_brace)
+        brace = always_redraw(get_brace)
         return brace
 
     def get_d1_brace(self):

@@ -546,7 +546,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         focus_distance.set_color(GREEN)
         focus_distance.next_to(inner_brace_update.mobject, DOWN, SMALL_BUFF)
         focus_distance.add_to_back(focus_distance.copy().set_stroke(BLACK, 5))
-        focus_distance_update = ContinualUpdate(
+        focus_distance_update = Mobject.add_updater(
             focus_distance,
             lambda m: m.set_width(
                 inner_brace_update.mobject.get_width(),
@@ -565,7 +565,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         fraction.set_color_by_tex("Diameter", RED)
         fraction.move_to(2 * UP)
         fraction.to_edge(RIGHT, buff=MED_LARGE_BUFF)
-        numerator_update = ContinualUpdate(
+        numerator_update = Mobject.add_updater(
             numerator,
             lambda m: m.set_width(focus_distance.get_width()).next_to(
                 fraction[1], UP, MED_SMALL_BUFF
@@ -630,11 +630,11 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
                 thumbtack.move_to(focus, DR)
             return thumbtacks
 
-        return ContinualUpdate(thumbtacks, update_thumbtacks)
+        return Mobject.add_updater(thumbtacks, update_thumbtacks)
 
     def get_ellipse_point_update(self, ellipse):
         dot = Dot(color=RED)
-        return CycleAnimation(MoveAlongPath(
+        return cycle_animation(MoveAlongPath(
             dot, ellipse,
             run_time=5,
             rate_func=linear
@@ -651,10 +651,10 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
                 line.put_start_and_end_on(focus, Q)
             return lines
 
-        return ContinualUpdate(lines, update_lines)
+        return Mobject.add_updater(lines, update_lines)
 
     def get_focus_to_focus_line_update(self, ellipse):
-        return ContinualUpdate(
+        return Mobject.add_updater(
             Line(LEFT, RIGHT, color=WHITE),
             lambda m: m.put_start_and_end_on(*self.get_foci(ellipse))
         )
@@ -662,7 +662,7 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
     def get_focus_line_to_focus_line_brace_update(self, line):
         brace = Brace(Line(LEFT, RIGHT))
         brace.add_to_back(brace.copy().set_stroke(BLACK, 5))
-        return ContinualUpdate(
+        return Mobject.add_updater(
             brace,
             lambda b: b.match_width(line, stretch=True).next_to(
                 line, DOWN, buff=SMALL_BUFF
@@ -679,10 +679,10 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
 
     def get_eccentricity_value_update(self, eccentricity_label, ellipse):
         decimal = eccentricity_label[1]
-        return ContinualChangingDecimal(
-            decimal,
-            lambda a: self.get_eccentricity(ellipse)
-        )
+        decimal.add_updater(lambda d: d.set_value(
+            self.get_eccentricity(ellipse)
+        ))
+        return decimal
 
     def get_outer_dashed_lines(self, ellipse):
         line = DashedLine(2.5 * UP, 2.5 * DOWN)
@@ -1584,7 +1584,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
         foci = self.get_foci(ellipse)
 
         point = VectorizedPoint()
-        point_movement = CycleAnimation(
+        point_movement = cycle_animation(
             MoveAlongPath(
                 point, ellipse,
                 run_time=5,
@@ -1613,7 +1613,7 @@ class EllipseLengthsLinedUp(EccentricityInThumbtackCase):
             lines.arrange(DOWN, buff=0)
             lines.next_to(arrow, RIGHT)
             h_line.move_to(lines[0].get_bottom())
-        lines_animation = ContinualUpdate(
+        lines_animation = Mobject.add_updater(
             lines, update_lines
         )
 

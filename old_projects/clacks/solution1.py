@@ -2055,7 +2055,7 @@ class AddTwoThetaManyTimes(Scene):
             result[1].scale(1.5, about_edge=LEFT)
             return result
 
-        comp_pi = updating_mobject_from_func(get_comp_pi)
+        comp_pi = always_redraw(get_comp_pi)
 
         return VGroup(int_mob, tex_mob, rhs, comp_pi)
 
@@ -2548,7 +2548,7 @@ class ActanAndTanGraphs(GraphScene):
                 label.next_to(graph.point_from_proportion(0.75), LEFT)
 
         arctan_x_tracker = ValueTracker(3 * PI / 8)
-        arctan_v_line = updating_mobject_from_func(
+        arctan_v_line = always_redraw(
             lambda: self.get_vertical_line_to_graph(
                 arctan_x_tracker.get_value(),
                 arctan_graph,
@@ -2557,7 +2557,7 @@ class ActanAndTanGraphs(GraphScene):
             )
         )
         tan_x_tracker = ValueTracker(2 * PI / 8)
-        tan_v_line = updating_mobject_from_func(
+        tan_v_line = always_redraw(
             lambda: self.get_vertical_line_to_graph(
                 tan_x_tracker.get_value(),
                 tan_graph,
@@ -2643,7 +2643,7 @@ class UnitCircleIntuition(Scene):
                 circle.get_center(),
                 circle.point_at_angle(get_theta())
             )
-        r_line = updating_mobject_from_func(get_r_line)
+        r_line = always_redraw(get_r_line)
 
         def get_arc(radius=None, **kwargs):
             if radius is None:
@@ -2656,8 +2656,8 @@ class UnitCircleIntuition(Scene):
                 arc_center=circle.get_center(),
                 **kwargs
             )
-        arc = updating_mobject_from_func(get_arc)
-        self.circle_arc = updating_mobject_from_func(
+        arc = always_redraw(get_arc)
+        self.circle_arc = always_redraw(
             lambda: get_arc(radius=circle.radius, color=RED)
         )
 
@@ -2670,7 +2670,7 @@ class UnitCircleIntuition(Scene):
             vect = (get_norm(vect) + 2 * SMALL_BUFF) * normalize(vect)
             label.move_to(center + vect)
             return label
-        theta_label = updating_mobject_from_func(get_theta_label)
+        theta_label = always_redraw(get_theta_label)
 
         def get_height_line():
             p2 = circle.point_at_angle(get_theta())
@@ -2681,7 +2681,7 @@ class UnitCircleIntuition(Scene):
                 stroke_color=YELLOW,
                 stroke_width=3,
             )
-        self.height_line = updating_mobject_from_func(get_height_line)
+        self.height_line = always_redraw(get_height_line)
 
         def get_width_line():
             p2 = circle.get_center()
@@ -2692,7 +2692,7 @@ class UnitCircleIntuition(Scene):
                 stroke_color=PINK,
                 stroke_width=3,
             )
-        self.width_line = updating_mobject_from_func(get_width_line)
+        self.width_line = always_redraw(get_width_line)
 
         def get_h_label():
             label = TexMobject("h")
@@ -2702,7 +2702,7 @@ class UnitCircleIntuition(Scene):
             label.set_stroke(BLACK, 3, background=True)
             label.next_to(height_line, RIGHT, SMALL_BUFF)
             return label
-        self.h_label = updating_mobject_from_func(get_h_label)
+        self.h_label = always_redraw(get_h_label)
 
         def get_w_label():
             label = TexMobject("w")
@@ -2710,7 +2710,7 @@ class UnitCircleIntuition(Scene):
             label.match_color(width_line)
             label.next_to(width_line, DOWN, SMALL_BUFF)
             return label
-        self.w_label = updating_mobject_from_func(get_w_label)
+        self.w_label = always_redraw(get_w_label)
 
         self.add(r_line, theta_label, arc, self.radius_line)
         self.play(

@@ -871,8 +871,10 @@ class SingleLighthouseScene(PiCreatureScene):
         self.angle_indicator.next_to(self.angle_arc,RIGHT)
 
         angle_update_func = lambda x: self.light_source.spotlight.opening_angle() / DEGREES
-        ca1 = ContinualChangingDecimal(self.angle_indicator,angle_update_func)
-        self.add(ca1)
+        self.angle_indicator.add_updater(
+            lambda d: d.set_value(angle_update_func())
+        )
+        self.add(self.angle_indicator)
 
         ca2 = AngleUpdater(self.angle_arc, self.light_source.spotlight)
         self.add(ca2)
