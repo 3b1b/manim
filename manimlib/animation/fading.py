@@ -5,9 +5,13 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 
 
+DEFAULT_FADE_LAG_RATIO = 0.05
+
+
 class FadeOut(Transform):
     CONFIG = {
         "remover": True,
+        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
     }
 
     def create_target(self):
@@ -19,6 +23,10 @@ class FadeOut(Transform):
 
 
 class FadeIn(Transform):
+    CONFIG = {
+        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
+    }
+
     def create_target(self):
         return self.mobject
 
@@ -34,6 +42,7 @@ class FadeIn(Transform):
 class FadeInFrom(Transform):
     CONFIG = {
         "direction": DOWN,
+        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
     }
 
     def __init__(self, mobject, direction=None, **kwargs):
