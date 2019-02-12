@@ -235,14 +235,6 @@ class TexMobject(SingleStringTexMobject):
             key=lambda m: m.get_tex_string()
         )
 
-    def split(self):
-        # Many old scenes assume that when you pass in a single string
-        # to TexMobject, it indexes across the characters.
-        if len(self.submobjects) == 1:
-            return self.submobjects[0].split()
-        else:
-            return super(TexMobject, self).split()
-
 
 class TextMobject(TexMobject):
     CONFIG = {
