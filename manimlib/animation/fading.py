@@ -1,4 +1,5 @@
 from manimlib.animation.animation import Animation
+from manimlib.animation.animation import DEFAULT_ANIMATION_LAG_RATIO
 from manimlib.animation.transform import Transform
 from manimlib.constants import DOWN
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -42,7 +43,7 @@ class FadeIn(Transform):
 class FadeInFrom(Transform):
     CONFIG = {
         "direction": DOWN,
-        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
+        "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
     }
 
     def __init__(self, mobject, direction=None, **kwargs):
@@ -66,6 +67,7 @@ class FadeInFromDown(FadeInFrom):
     """
     CONFIG = {
         "direction": DOWN,
+        "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
     }
 
 
