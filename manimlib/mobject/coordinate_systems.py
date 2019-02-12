@@ -95,6 +95,7 @@ class Axes(VGroup, CoordinateSystem):
         "number_line_config": {
             "color": LIGHT_GREY,
             "include_tip": True,
+            "exclude_zero_from_default_numbers": True,
         },
         "x_axis_config": {},
         "y_axis_config": {
@@ -142,6 +143,19 @@ class Axes(VGroup, CoordinateSystem):
 
     def get_axes(self):
         return self.axes
+
+    def get_coordinate_labels(self, x_vals=None, y_vals=None):
+        x_vals = x_vals or []
+        y_vals = y_vals or []
+        x_mobs = self.get_x_axis().get_number_mobjects(*x_vals)
+        y_mobs = self.get_y_axis().get_number_mobjects(*y_vals)
+
+        self.coordinate_labels = VGroup(x_mobs, y_mobs)
+        return self.coordinate_labels
+
+    def add_coordinates(self, x_vals=None, y_vals=None):
+        self.add(self.get_coordinate_labels(x_vals, y_vals))
+        return self
 
 
 class ThreeDAxes(Axes):
@@ -303,15 +317,6 @@ class NumberPlane(Axes):
     def get_y_unit_size(self):
         return self.get_x_axis().get_unit_size()
 
-    def get_coordinate_labels(self, x_vals=None, y_vals=None):
-        x_vals = x_vals or []
-        y_vals = y_vals or []
-        x_mobs = self.get_x_axis().get_number_mobjects(*x_vals)
-        y_mobs = self.get_y_axis().get_number_mobjects(*y_vals)
-
-        self.coordinate_labels = VGroup(x_mobs, y_mobs)
-        return self.coordinate_labels
-
     def get_axes(self):
         return self.axes
 
@@ -341,10 +346,6 @@ class NumberPlane(Axes):
             self.get_y_axis_label(y_label_tex),
         )
         return self.axis_labels
-
-    def add_coordinates(self, x_vals=None, y_vals=None):
-        self.add(self.get_coordinate_labels(x_vals, y_vals))
-        return self
 
     def get_vector(self, coords, **kwargs):
         kwargs["buff"] = 0

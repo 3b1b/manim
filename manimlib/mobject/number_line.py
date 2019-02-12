@@ -38,7 +38,8 @@ class NumberLine(Line):
         "tip_height": 0.25,
         "decimal_number_config": {
             "num_decimal_places": 0,
-        }
+        },
+        "exclude_zero_from_default_numbers": False,
     }
 
     def __init__(self, **kwargs):
@@ -49,10 +50,10 @@ class NumberLine(Line):
         self.shift(-self.number_to_point(self.number_at_center))
 
         self.init_leftmost_tick()
-        if self.include_ticks:
-            self.add_tick_marks()
         if self.include_tip:
             self.add_tip()
+        if self.include_ticks:
+            self.add_tick_marks()
         if self.include_numbers:
             self.add_numbers()
 
@@ -97,7 +98,7 @@ class NumberLine(Line):
     def get_tick_numbers(self):
         return np.arange(
             self.leftmost_tick,
-            self.x_max + self.tick_frequency / 2,
+            self.x_max - self.tick_frequency / 2,
             self.tick_frequency
         )
 
@@ -127,7 +128,10 @@ class NumberLine(Line):
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
             return self.numbers_to_show
-        return np.arange(int(self.leftmost_tick), int(self.x_max) + 1)
+        numbers = np.arange(int(self.leftmost_tick), int(self.x_max) + 1)
+        if self.exclude_zero_from_default_numbers:
+            numbers = numbers[numbers != 0]
+        return numbers
 
     def get_number_mobject(self, number,
                            number_config=None,
@@ -169,16 +173,16 @@ class NumberLine(Line):
         self.add(self.numbers)
         return self
 
-    def add_tip(self):
-        tip = RegularPolygon(3)
-        color = self.color
-        tip.set_stroke(color, width=self.get_stroke_width())
-        tip.set_fill(color, opacity=1)
-        tip.set_width(self.tip_width)
-        tip.set_height(self.tip_height, stretch=True)
-        tip.move_to(self.get_end(), LEFT)
-        self.tip = tip
-        self.add(tip)
+    # def add_tip(self):
+    #     tip = RegularPolygon(3)
+    #     color = self.color
+    #     tip.set_stroke(color, width=self.get_stroke_width())
+    #     tip.set_fill(color, opacity=1)
+    #     tip.set_width(self.tip_width)
+    #     tip.set_height(self.tip_height, stretch=True)
+    #     tip.move_to(self.get_end(), LEFT)
+    #     self.tip = tip
+    #     self.add(tip)
 
 
 class UnitInterval(NumberLine):
