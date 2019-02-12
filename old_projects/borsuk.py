@@ -1302,7 +1302,8 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
 
         for jewel_type, label in zip(jewel_types, enumeration_labels):
             jewel_type.submobjects.sort(
-                key=key=lambda mettr()[0]
+                key=lambda mettr()[0]
+            )
          
             jewel_type.save_state()
             jewel_type.generate_target()
