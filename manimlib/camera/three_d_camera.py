@@ -183,6 +183,7 @@ class ThreeDCamera(Camera):
         return self.project_points(point.reshape((1, 3)))[0, :]
 
     def transform_points_pre_display(self, mobject, points):
+        points = super().transform_points_pre_display(mobject, points)
         fixed_orientation = mobject in self.fixed_orientation_mobjects
         fixed_in_frame = mobject in self.fixed_in_frame_mobjects
 
