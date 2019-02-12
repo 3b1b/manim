@@ -2216,7 +2216,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
                 m2.copy(), m1.copy(),
                 VGroup(*self.circles).copy()
             )
-            for m1, m2 in (C0, A1_yellow_copy), (C0, B1), (B0, A1)
+            for m1, m2 in [(C0, A1_yellow_copy), (C0, B1), (B0, A1)]
         ])
         for group, vect in zip(groups[1:], [UP, 5*RIGHT+UP]):
             group.scale_in_place(0.5)
