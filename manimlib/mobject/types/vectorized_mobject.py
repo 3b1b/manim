@@ -650,33 +650,36 @@ class VMobject(Mobject):
         nppcc = self.n_points_per_cubic_curve
 
         for mob in self, vmobject:
+            # If there are no points, add one to
+            # whereever the "center" is
+            if mob.has_no_points():
+                mob.start_new_path(mob.get_center())
+            # If there's only one point, turn it into
+            # a null curve
             if mob.has_new_path_started():
                 mob.add_line_to(mob.get_last_point())
 
+        # Figure out what the subpaths are, and align
         subpaths1 = self.get_subpaths()
         subpaths2 = vmobject.get_subpaths()
+        n_subpaths = max(len(subpaths1), len(subpaths2))
+        # Start building new ones
         new_path1 = np.zeros((0, self.dim))
         new_path2 = np.zeros((0, self.dim))
-        n_subpaths = max(len(subpaths1), len(subpaths2))
 
         def get_nth_subpath(path_list, n):
-            if n < len(path_list):
-                return path_list[n]
-            last_path = path_list[n - 1]
-            return [last_path[-1]] * nppcc
+            if n >= len(path_list):
+                # Create a null path at the very end
+                return [path_list[-1][-1]] * nppcc
+            return path_list[n]
 
         for n in range(n_subpaths):
             sp1 = get_nth_subpath(subpaths1, n)
             sp2 = get_nth_subpath(subpaths2, n)
-            diff = len(sp2) - len(sp1)
-            if diff < 0:
-                sp2 = self.insert_n_curves_to_point_list(
-                    -diff // nppcc, sp2
-                )
-            elif diff > 0:
-                sp1 = self.insert_n_curves_to_point_list(
-                    diff // nppcc, sp1
-                )
+            diff1 = max(0, (len(sp2) - len(sp1)) // nppcc)
+            diff2 = max(0, (len(sp1) - len(sp2)) // nppcc)
+            sp1 = self.insert_n_curves_to_point_list(diff1, sp1)
+            sp2 = self.insert_n_curves_to_point_list(diff2, sp2)
             new_path1 = np.append(new_path1, sp1, axis=0)
             new_path2 = np.append(new_path2, sp2, axis=0)
         self.set_points(new_path1)
@@ -749,7 +752,9 @@ class VMobject(Mobject):
     def get_point_mobject(self, center=None):
         if center is None:
             center = self.get_center()
-        return VectorizedPoint(center)
+        point = VectorizedPoint(center)
+        point.match_style(self)
+        return point
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
