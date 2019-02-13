@@ -16,7 +16,7 @@ from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import stretch_array_to_length
 from manimlib.utils.iterables import tuplify
 from manimlib.utils.simple_functions import clip_in_place
-
+from manimlib.utils.space_ops import rotate_vector
 
 # TODO
 # - Change cubic curve groups to have 4 points instead of 3
