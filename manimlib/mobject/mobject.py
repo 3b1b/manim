@@ -411,31 +411,6 @@ class Mobject(Container):
                     buff * direction) * coor_mask)
         return self
 
-    def align_to(self, mobject_or_point, direction=ORIGIN, alignment_vect=UP):
-        """
-        Examples:
-        mob1.align_to(mob2, UP) moves mob1 vertically so that its
-        top edge lines ups with mob2's top edge.
-
-        mob1.align_to(mob2, alignment_vect = RIGHT) moves mob1
-        horizontally so that it's center is directly above/below
-        the center of mob2
-        """
-        if isinstance(mobject_or_point, Mobject):
-            mob = mobject_or_point
-            target_point = mob.get_critical_point(direction)
-        else:
-            target_point = mobject_or_point
-        direction_norm = get_norm(direction)
-        if direction_norm > 0:
-            alignment_vect = np.array(direction) / direction_norm
-            reference_point = self.get_critical_point(direction)
-        else:
-            reference_point = self.get_center()
-        diff = target_point - reference_point
-        self.shift(alignment_vect * np.dot(diff, alignment_vect))
-        return self
-
     def shift_onto_screen(self, **kwargs):
         space_lengths = [FRAME_X_RADIUS, FRAME_Y_RADIUS]
         for vect in UP, DOWN, LEFT, RIGHT:
@@ -493,6 +468,22 @@ class Mobject(Container):
     def set_depth(self, depth, stretch=False, **kwargs):
         return self.rescale_to_fit(depth, 2, stretch=stretch, **kwargs)
 
+    def set_coord(self, value, dim, direction=ORIGIN):
+        curr = self.get_coord(dim, direction)
+        shift_vect = np.zeros(self.dim)
+        shift_vect[dim] = value - curr
+        self.shift(shift_vect)
+        return self
+
+    def set_x(self, x, direction=ORIGIN):
+        return self.set_coord(x, 0, direction)
+
+    def set_y(self, y, direction=ORIGIN):
+        return self.set_coord(y, 1, direction)
+
+    def set_z(self, z, direction=ORIGIN):
+        return self.set_coord(z, 2, direction)
+
     def space_out_submobjects(self, factor=1.5, **kwargs):
         self.scale(factor, **kwargs)
         for submob in self.submobjects:
@@ -534,17 +525,6 @@ class Mobject(Container):
         self.scale_in_place((length + buff) / length)
         return self
 
-    def get_start(self):
-        self.throw_error_if_no_points()
-        return np.array(self.points[0])
-
-    def get_end(self):
-        self.throw_error_if_no_points()
-        return np.array(self.points[-1])
-
-    def get_start_and_end(self):
-        return self.get_start(), self.get_end()
-
     def put_start_and_end_on(self, start, end):
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
@@ -585,26 +565,6 @@ class Mobject(Container):
         for mob in self.family_members_with_points():
             mob.add_background_rectangle(**kwargs)
         return self
-
-    # Match other mobject properties
-
-    def match_color(self, mobject):
-        return self.set_color(mobject.get_color())
-
-    def match_dim(self, mobject, dim, **kwargs):
-        return self.rescale_to_fit(
-            mobject.length_over_dim(dim), dim,
-            **kwargs
-        )
-
-    def match_width(self, mobject, **kwargs):
-        return self.match_dim(mobject, 0, **kwargs)
-
-    def match_height(self, mobject, **kwargs):
-        return self.match_dim(mobject, 1, **kwargs)
-
-    def match_depth(self, mobject, **kwargs):
-        return self.match_dim(mobject, 2, **kwargs)
 
     # Color functions
 
@@ -735,23 +695,31 @@ class Mobject(Container):
     def get_num_points(self):
         return len(self.points)
 
+    def get_extremum_along_dim(self, points=None, dim=0, key=0):
+        if points is None:
+            points = self.get_points_defining_boundary()
+        values = points[:, dim]
+        if key < 0:
+            return np.min(values)
+        elif key == 0:
+            return (np.min(values) + np.max(values)) / 2
+        else:
+            return np.max(values)
+
     def get_critical_point(self, direction):
+        """
+        Picture a box bounding the mobject.  Such a box has
+        9 'critical points': 4 corners, 4 edge center, the
+        center.  This returns one of them.
+        """
         result = np.zeros(self.dim)
         all_points = self.get_points_defining_boundary()
         if len(all_points) == 0:
             return result
         for dim in range(self.dim):
-            if direction[dim] <= 0:
-                min_val = min(all_points[:, dim])
-            if direction[dim] >= 0:
-                max_val = max(all_points[:, dim])
-
-            if direction[dim] == 0:
-                result[dim] = (max_val + min_val) / 2
-            elif direction[dim] < 0:
-                result[dim] = min_val
-            else:
-                result[dim] = max_val
+            result[dim] = self.get_extremum_along_dim(
+                all_points, dim=dim, key=direction[dim]
+            )
         return result
 
     # Pseudonyms for more general get_critical_point method
@@ -772,11 +740,6 @@ class Mobject(Container):
         all_points = self.get_points_defining_boundary()
         index = np.argmax(np.dot(all_points, np.array(direction).T))
         return all_points[index]
-
-    def get_z_index_reference_point(self):
-        # TODO, better place to define default z_index_group?
-        z_index_group = getattr(self, "z_index_group", self)
-        return z_index_group.get_center()
 
     def get_top(self):
         return self.get_edge_center(UP)
@@ -811,6 +774,34 @@ class Mobject(Container):
     def get_depth(self):
         return self.length_over_dim(2)
 
+    def get_coord(self, dim, direction=ORIGIN):
+        """
+        Meant to generalize get_x, get_y, get_z
+        """
+        return self.get_extremum_along_dim(
+            dim=dim, key=direction[dim]
+        )
+
+    def get_x(self, direction=ORIGIN):
+        return self.get_coord(0, direction)
+
+    def get_y(self, direction=ORIGIN):
+        return self.get_coord(1, direction)
+
+    def get_z(self, direction=ORIGIN):
+        return self.get_coord(2, direction)
+
+    def get_start(self):
+        self.throw_error_if_no_points()
+        return np.array(self.points[0])
+
+    def get_end(self):
+        self.throw_error_if_no_points()
+        return np.array(self.points[-1])
+
+    def get_start_and_end(self):
+        return self.get_start(), self.get_end()
+
     def point_from_proportion(self, alpha):
         raise Exception("Not implemented")
 
@@ -825,11 +816,72 @@ class Mobject(Container):
             for a1, a2 in zip(alphas[:-1], alphas[1:])
         ])
 
+    def get_z_index_reference_point(self):
+        # TODO, better place to define default z_index_group?
+        z_index_group = getattr(self, "z_index_group", self)
+        return z_index_group.get_center()
+
     def has_points(self):
         return len(self.points) > 0
 
     def has_no_points(self):
         return not self.has_points()
+
+    # Match other mobject properties
+
+    def match_color(self, mobject):
+        return self.set_color(mobject.get_color())
+
+    def match_dim_size(self, mobject, dim, **kwargs):
+        return self.rescale_to_fit(
+            mobject.length_over_dim(dim), dim,
+            **kwargs
+        )
+
+    def match_width(self, mobject, **kwargs):
+        return self.match_dim_size(mobject, 0, **kwargs)
+
+    def match_height(self, mobject, **kwargs):
+        return self.match_dim_size(mobject, 1, **kwargs)
+
+    def match_depth(self, mobject, **kwargs):
+        return self.match_dim_size(mobject, 2, **kwargs)
+
+    def match_coord(self, mobject, dim, direction=ORIGIN):
+        return self.set_coord(
+            mobject.get_coord(dim, direction),
+            dim=dim,
+            direction=direction,
+        )
+
+    def match_x(self, mobject, direction=ORIGIN):
+        return self.match_coord(mobject, 0, direction)
+
+    def match_y(self, mobject, direction=ORIGIN):
+        return self.match_coord(mobject, 1, direction)
+
+    def match_z(self, mobject, direction=ORIGIN):
+        return self.match_coord(mobject, 2, direction)
+
+    def align_to(self, mobject_or_point, direction=ORIGIN, alignment_vect=UP):
+        """
+        Examples:
+        mob1.align_to(mob2, UP) moves mob1 vertically so that its
+        top edge lines ups with mob2's top edge.
+
+        mob1.align_to(mob2, alignment_vect = RIGHT) moves mob1
+        horizontally so that it's center is directly above/below
+        the center of mob2
+        """
+        if isinstance(mobject_or_point, Mobject):
+            point = mobject_or_point.get_critical_point(direction)
+        else:
+            point = mobject_or_point
+
+        for dim in range(self.dim):
+            if direction[dim] != 0:
+                self.set_coord(point[dim], dim, direction)
+        return self
 
     # Family matters
 
