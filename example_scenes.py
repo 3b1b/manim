@@ -31,7 +31,7 @@ class OpeningManimExample(Scene):
         transform_title.to_corner(UP + LEFT)
         self.play(
             Transform(title, transform_title),
-            OldLaggedStart(FadeOutAndShiftDown, basel),
+            LaggedStart(*map(FadeOutAndShiftDown, basel)),
         )
         self.wait()
 
@@ -44,7 +44,7 @@ class OpeningManimExample(Scene):
         self.play(
             FadeOut(title),
             FadeInFromDown(grid_title),
-            Write(grid),
+            ShowCreation(grid, run_time=3, lag_ratio=0.1),
         )
         self.wait()
 
