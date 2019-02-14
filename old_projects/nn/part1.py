@@ -357,11 +357,11 @@ class ExampleThrees(PiCreatureScene):
 
         self.play(
             FadeIn(three_mob[0]),
-            OldLaggedStart(FadeIn, three_mob[1])
+            LaggedStartMap(FadeIn, three_mob[1])
         )
         self.wait()
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill, three_mob_copy,
                 run_time = 3,
                 stroke_color = WHITE,
@@ -577,13 +577,13 @@ class WriteAProgram(Scene):
         choices.next_to(arrow, RIGHT)
 
         self.play(
-            OldLaggedStart(DrawBorderThenFill, three),
+            LaggedStartMap(DrawBorderThenFill, three),
             ShowCreation(three_rect)
         )
         self.play(Write(numbers))
         self.play(
             ShowCreation(arrow),
-            OldLaggedStart(FadeIn, choices),
+            LaggedStartMap(FadeIn, choices),
         )
 
         rect = SurroundingRectangle(choices[0], buff = SMALL_BUFF)
@@ -1146,7 +1146,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 )
             )
 
-        self.play(OldLaggedStart(FadeIn, numbers))
+        self.play(LaggedStartMap(FadeIn, numbers))
         self.play(
             MoveToTarget(example_neuron),
             MoveToTarget(example_num)
@@ -1229,7 +1229,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         self.wait()
         for edge_group, layer in zip(network_mob.edge_groups, network_mob.layers[1:]):
             self.play(
-                OldLaggedStart(FadeIn, layer, run_time = 1),
+                LaggedStartMap(FadeIn, layer, run_time = 1),
                 ShowCreation(edge_group),
             )
         self.wait()
@@ -1270,7 +1270,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             )
 
         self.play(ShowCreation(rect))
-        self.play(OldLaggedStart(FadeIn, labels))
+        self.play(LaggedStartMap(FadeIn, labels))
         self.wait()
         self.play(
             MoveToTarget(neuron),
@@ -1344,7 +1344,7 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
         for words in two_words, sixteen_words:
             words.next_to(rects, UP)
 
-        neurons_anim = OldLaggedStart(
+        neurons_anim = LaggedStartMap(
             Indicate, 
             VGroup(*it.chain(*[layer.neurons for layer in layers])),
             rate_func = there_and_back,
@@ -1466,7 +1466,7 @@ class AskAboutLayers(PreviewMNistNetwork):
 
         self.play(
             Write(question, run_time = 1),
-            OldLaggedStart(
+            LaggedStartMap(
                 GrowFromPoint, arrows,
                 lambda a : (a, a.get_start()),
                 run_time = 2
@@ -1615,7 +1615,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         self.play(ReplacementTransform(
             self.right_line.copy(), right_line
         ))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*equation[3:])
         ))
         self.wait(2)
@@ -1699,7 +1699,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         edge_group = self.network_mob.edge_groups[-1].copy()
         edge_group.set_stroke(YELLOW, 4)
         for x in range(3):
-            self.play(OldLaggedStart(
+            self.play(LaggedStartMap(
                 ShowCreationThenDestruction, edge_group,
                 run_time = 3
             ))
@@ -1808,7 +1808,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         )
         self.play(Blink(randy))
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, edges,
             lambda e : (e.restore,),
             run_time = 4
@@ -1856,10 +1856,10 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             randy.change, "hesitant", line
         )
         self.play(Blink(randy))
-        self.play(OldLaggedStart(FadeIn, digits))
+        self.play(LaggedStartMap(FadeIn, digits))
         self.wait()
         self.play(
-            OldLaggedStart(FadeIn, Group(*equation[1:])),
+            LaggedStartMap(FadeIn, Group(*equation[1:])),
             randy.change, "pondering", equation
         )
         self.wait(3)
@@ -2161,12 +2161,12 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
         self.wait()
         self.play(
             GrowFromPoint(arrows[1], arrows[1].get_start()),
-            OldLaggedStart(FadeIn, syllables, run_time = 1)
+            LaggedStartMap(FadeIn, syllables, run_time = 1)
         )
         self.wait()
         self.play(
             GrowFromPoint(arrows[2], arrows[2].get_start()),
-            OldLaggedStart(FadeIn, word, run_time = 1)
+            LaggedStartMap(FadeIn, word, run_time = 1)
         )
         self.wait()
 
@@ -2345,8 +2345,8 @@ class IntroduceWeights(IntroduceEachLayer):
             GrowFromPoint(arrow, arrow.get_start()),
             pixels_group.set_height, 3,
             pixels_group.to_edge, RIGHT,
-            OldLaggedStart(FadeIn, p_labels),
-            OldLaggedStart(FadeIn, decimals),
+            LaggedStartMap(FadeIn, p_labels),
+            LaggedStartMap(FadeIn, decimals),
         )
         self.wait()
         self.play(
@@ -2404,7 +2404,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 for decimal, r in zip(decimals, random_numbers)
             ]
         )
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, edges,
             lambda m : (m.rotate_in_place, np.pi/24),
             rate_func = wiggle,
@@ -2916,7 +2916,7 @@ class IncludeBias(IntroduceWeights):
         weight_grid = self.weight_grid
         bias_name = self.bias_name
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, weight_grid,
             lambda p : (p.set_fill, 
                 random.choice([GREEN, GREEN, RED]),
@@ -3043,13 +3043,13 @@ class ShowRemainingNetwork(IntroduceWeights):
             )
             last_edges = edges
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 ShowCreation, VGroup(*[
                     n.edges_in for n in neurons[7:]
                 ]),
                 run_time = 3,
             ),
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, VGroup(*neurons[7:]),
                 run_time = 3,
             ),
@@ -3074,7 +3074,7 @@ class ShowRemainingNetwork(IntroduceWeights):
 
         self.play(
             FadeIn(words),
-            OldLaggedStart(
+            LaggedStartMap(
                 GrowArrow, arrows, 
                 run_time = 3,
                 lag_ratio = 0.3,
@@ -3109,7 +3109,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             FadeOut(bb1),
             ReplacementTransform(bb2, bias_count[1]),
             FadeOut(bb3),
-            OldLaggedStart(FadeOut, bias_arrows)
+            LaggedStartMap(FadeOut, bias_arrows)
         )
         self.wait()
 
@@ -3150,12 +3150,12 @@ class ShowRemainingNetwork(IntroduceWeights):
             MoveToTarget(bias_count),
             Write(added_weights, run_time = 1),
             Write(added_biases, run_time = 1),
-            OldLaggedStart(
+            LaggedStartMap(
                 ShowCreation, edges,
                 run_time = 4,
                 lag_ratio = 0.3,
             ),
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, neurons,
                 run_time = 4,
                 lag_ratio = 0.3,
@@ -3212,7 +3212,7 @@ class ShowRemainingNetwork(IntroduceWeights):
                 width = 3*random.random()**7
             )
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 MoveToTarget, edges,
                 lag_ratio = 0.6,
                 run_time = 2,
@@ -3528,7 +3528,7 @@ class IntroduceWeightMatrix(NetworkScene):
         pre_brackets.set_fill(opacity = 0)
 
         self.play(FocusOn(self.a_labels[0]))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Indicate, self.a_labels,
             rate_func = there_and_back,
             run_time = 1
@@ -3540,7 +3540,7 @@ class IntroduceWeightMatrix(NetworkScene):
         )
         self.wait()
         self.play(*[
-            OldLaggedStart(Indicate, mob, rate_func = there_and_back)
+            LaggedStartMap(Indicate, mob, rate_func = there_and_back)
             for mob in (a_labels, a_labels_in_sum)
         ])
         self.wait()
@@ -3612,7 +3612,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
         self.play(ShowCreation(rect))
         for x in range(2):
-            self.play(OldLaggedStart(
+            self.play(LaggedStartMap(
                 ShowCreationThenDestruction, edges,
                 lag_ratio = 0.8
             ))
@@ -3663,7 +3663,7 @@ class IntroduceWeightMatrix(NetworkScene):
             VGroup(top_row_rect, column_rect).copy(),
             result_terms[0]
         ))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*result_terms[1:])
         ))
         self.wait(2)
@@ -3690,7 +3690,7 @@ class IntroduceWeightMatrix(NetworkScene):
         rowk = self.lower_matrix_rows[-1]
 
         def show_edges(neuron):
-            self.play(OldLaggedStart(
+            self.play(LaggedStartMap(
                 ShowCreationThenDestruction,
                 neuron.edges_in.copy().set_stroke(GREEN, 5),
                 lag_ratio = 0.7,
@@ -3754,7 +3754,7 @@ class IntroduceWeightMatrix(NetworkScene):
             Transform(self.bias[1].copy(), b_column[0]),
             run_time = 1
         )
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*b_column[1:])
         ))
         self.wait()
@@ -4051,7 +4051,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             FadeOut(self.network_mob),
             *list(map(Animation, [neuron, edges, prev_layer]))
         )
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ShowCreationThenDestruction, 
             edges.copy().set_stroke(YELLOW, 4),
         ))
@@ -4277,7 +4277,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
             video.move_to(pair, LEFT)
             pair.target = video
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, neuron_pairs,
             run_time = 3
         ))

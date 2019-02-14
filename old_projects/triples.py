@@ -100,11 +100,11 @@ class IntroduceTriples(TeacherStudentsScene):
                 FadeIn(triangle),
                 self.teacher.change_mode, "raise_right_hand"
             )
-            self.play(OldLaggedStart(FadeIn, a_square))
+            self.play(LaggedStartMap(FadeIn, a_square))
             self.change_student_modes(
                 *["pondering"]*3,
                 look_at_arg = triangle,
-                added_anims = [OldLaggedStart(FadeIn, b_square)]
+                added_anims = [LaggedStartMap(FadeIn, b_square)]
             )
             self.play(self.teacher.change_mode, "happy")
             for start, target in zip([a_square, b_square], c_square_parts):
@@ -254,7 +254,7 @@ class ShowManyTriples(Scene):
                 )
                 self.wait()
         self.play(FadeOut(triangle))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, 
             VGroup(*[
                 title.target 
@@ -301,7 +301,7 @@ class BabylonianTablets(Scene):
 
         self.add(title)
         self.wait()
-        self.play(OldLaggedStart(FadeIn, triples, run_time = 5))
+        self.play(LaggedStartMap(FadeIn, triples, run_time = 5))
         self.wait()
 
 class AskAboutFavoriteProof(TeacherStudentsScene):
@@ -403,7 +403,7 @@ class PythagoreanProof(Scene):
             label.target.move_to(square)
             square.add(label)
 
-        self.play(OldLaggedStart(MoveToTarget, side_labels))
+        self.play(LaggedStartMap(MoveToTarget, side_labels))
 
     def add_new_triangles(self, triangle, added_triangles):
         brace = Brace(added_triangles, DOWN)
@@ -548,7 +548,7 @@ class ReframeOnLattice(PiCreatureScene):
         for new_group in dot_tuple_groups[1:len(initial_examples)]:
             self.play(Transform(dot_tuple_group, new_group))
             self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, all_dots,
             rate_func = there_and_back,
             run_time = 3,
@@ -1506,7 +1506,7 @@ class WriteGeneralFormula(GeneralExample):
             uv_title, triple_title
         ])))
         self.play(*[
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, mob, 
                 run_time = 5,
                 lag_ratio = 0.2
@@ -1685,7 +1685,7 @@ class VisualizeZSquared(Scene):
         dots.sort(lambda p : np.dot(p, UP+RIGHT))
 
         self.add_foreground_mobject(self.coordinate_labels)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, dots,
             stroke_width = 3,
             stroke_color = PINK,
@@ -1701,7 +1701,7 @@ class VisualizeZSquared(Scene):
 
         self.play(
             self.background_planes.set_stroke, None, 1,
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, color_grid, 
                 run_time = 2
             ),
@@ -1730,7 +1730,7 @@ class VisualizeZSquared(Scene):
         self.play(self.color_grid.set_stroke, None, 3)
         self.wait()
         scale_factor = self.big_dot_radius/self.dot_radius
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, self.dots,
             lambda d : (d.scale_in_place, scale_factor),
             rate_func = there_and_back,
@@ -2053,7 +2053,7 @@ class DrawSingleRadialLine(PointsWeMiss):
         self.play(Indicate(dot))
         self.play(ShowCreation(line), Animation(dot))
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, added_dots,
             stroke_color = PINK,
             stroke_width = 4,
@@ -2146,7 +2146,7 @@ class DrawRadialLines(PointsWeMiss):
         )
         self.play(ReplacementTransform(dot, line))
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, line.new_dots,
             stroke_width = 4,
             stroke_color = PINK,
@@ -2162,7 +2162,7 @@ class DrawRadialLines(PointsWeMiss):
             dot.target.scale_in_place(1.5)
             dot.target.set_color(RED)
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, seed_dots,
             run_time = 2
         ))
@@ -2171,7 +2171,7 @@ class DrawRadialLines(PointsWeMiss):
             run_time = 3,
             lag_ratio = 0.5
         ))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, new_dots,
             stroke_width = 4,
             stroke_color = PINK,
@@ -2441,7 +2441,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             )
             dot.target.set_width(0.01)
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, dots,
             run_time = 3,
             lag_ratio = 0.2
@@ -2470,7 +2470,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             for vect in compass_directions(1000)
         ])
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ShowCreation, lines,
             run_time = 3
         ))

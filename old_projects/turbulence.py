@@ -374,7 +374,7 @@ class EddyReference(Scene):
         label.next_to(new_eddy, UP)
 
         self.play(
-            OldLaggedStart(ShowCreationThenDestruction, new_eddy),
+            LaggedStartMap(ShowCreationThenDestruction, new_eddy),
             FadeIn(
                 label,
                 rate_func=there_and_back_with_pause,
@@ -462,7 +462,7 @@ class SomeTurbulenceEquations(PiCreatureScene):
         self.wait(3)
         dist_group = VGroup(distribution, brace_group)
         self.play(
-            OldLaggedStart(FadeOut, VGroup(randy, morty, navier_stokes)),
+            LaggedStartMap(FadeOut, VGroup(randy, morty, navier_stokes)),
             dist_group.scale, 1.5,
             dist_group.center,
             dist_group.to_edge, UP,
@@ -511,7 +511,7 @@ class JokeRingEquation(Scene):
                 ShowCreation(arrows[i])
             )
             self.wait()
-        self.play(OldLaggedStart(FadeIn, items[2:]))
+        self.play(LaggedStartMap(FadeIn, items[2:]))
         self.wait()
         self.play(FadeOut(arrows))
         self.wait()
@@ -588,7 +588,7 @@ class CarefulWithLasers(TeacherStudentsScene):
             )
         laser.add_updater(update_laser)
 
-        self.play(OldLaggedStart(FadeInFromDown, self.pi_creatures, run_time=1))
+        self.play(LaggedStartMap(FadeInFromDown, self.pi_creatures, run_time=1))
         self.add(self.pi_creatures, laser)
         for pi in self.pi_creatures:
             pi.add_updater(lambda p: p.look_at(laser[1]))
@@ -711,7 +711,7 @@ class AskAboutTurbulence(TeacherStudentsScene):
         )
         self.play(
             ShowCreation(h_line),
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeOutAndShiftDown, self.pi_creatures,
                 run_time=1,
                 lag_ratio=0.8
@@ -736,7 +736,7 @@ class AskAboutTurbulence(TeacherStudentsScene):
         words[1].shift(FRAME_WIDTH * RIGHT / 4)
         self.play(
             ShowCreation(v_line),
-            OldLaggedStart(FadeInFromDown, words)
+            LaggedStartMap(FadeInFromDown, words)
         )
         self.wait()
 
@@ -1006,7 +1006,7 @@ class ShowNavierStokesEquations(Scene):
 
         self.play(FadeInFromDown(equations))
         self.play(Write(name))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeInFrom, variables,
             lambda m: (m, RIGHT),
         ))
@@ -1019,9 +1019,9 @@ class ShowNavierStokesEquations(Scene):
         )
         self.play(ShowCreationThenFadeAround(parts[0]))
         self.wait()
-        self.play(OldLaggedStart(FadeInFrom, labels[1:]))
+        self.play(LaggedStartMap(FadeInFrom, labels[1:]))
         self.wait(3)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeOut, VGroup(*it.chain(labels, variables, newtons_second))
         ))
 
@@ -1089,7 +1089,7 @@ class ShowNavierStokesEquations(Scene):
         self.wait(2)
         to_fade = VGroup(question, q_arrow, axes, graph)
         self.play(
-            OldLaggedStart(FadeOut, to_fade),
+            LaggedStartMap(FadeOut, to_fade),
             morty.change, "pondering"
         )
         self.wait(2)
@@ -1196,7 +1196,7 @@ class NewtonsSecond(Scene):
         self.wait()
         square.restore()
         self.play(
-            OldLaggedStart(GrowArrow, arrows)
+            LaggedStartMap(GrowArrow, arrows)
         )
         square.add(arrows)
         self.play(
@@ -1243,7 +1243,7 @@ class FiguresOfFluidDynamics(Scene):
         image_groups.arrange_in_grid(2, 3)
         image_groups.set_height(FRAME_HEIGHT - 1)
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeInFromDown, image_groups,
             lag_ratio=0.5,
             run_time=3
@@ -1582,7 +1582,7 @@ class VortedStretching(ThreeDScene):
         flow_lines = self.get_flow_lines(circles)
 
         self.add(circles, flow_lines)
-        self.play(OldLaggedStart(ShowCreation, circles))
+        self.play(LaggedStartMap(ShowCreation, circles))
         self.wait(5)
         self.play(Transform(circles, tall_circles, run_time=3))
         self.wait(10)

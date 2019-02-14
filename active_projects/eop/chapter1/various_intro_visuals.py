@@ -128,5 +128,5 @@ class BinaryChoices(Scene):
         all = all.scale(2)
 
         self.play(
-            OldLaggedStart(FadeIn, all)
+            LaggedStartMap(FadeIn, all)
         )

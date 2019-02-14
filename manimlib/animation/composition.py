@@ -7,7 +7,6 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.rate_functions import linear
-from manimlib.utils.rate_functions import squish_rate_func
 
 
 DEFAULT_LAGGED_START_LAG_RATIO = 0.05
@@ -140,52 +139,20 @@ class LaggedStart(AnimationGroup):
     }
 
 
-# This class is depricated.  One should use OldLaggedStart
-# instead, which has different syntax, but more generality
-class OldLaggedStart(Animation):
+class LaggedStartMap(LaggedStart):
     CONFIG = {
         "run_time": 2,
-        "lag_ratio": 0.5,
     }
 
     def __init__(self, AnimationClass, mobject, arg_creator=None, **kwargs):
-        print(
-            "Warning, this scene is using the animation "
-            "OldLaggedStart, which is now deprecated.  Use "
-            "LaggedStart instead."
-        )
-        for key in ["rate_func", "run_time"]:
-            if key in AnimationClass.CONFIG:
-                setattr(self, key, AnimationClass.CONFIG[key])
-        digest_config(self, kwargs)
-        for key in "rate_func", "run_time", "lag_ratio":
-            if key in kwargs:
-                kwargs.pop(key)
-
-        if arg_creator is None:
-            def arg_creator(mobject):
-                return (mobject,)
-        self.subanimations = [
-            AnimationClass(
-                *arg_creator(submob),
-                run_time=self.run_time,
-                rate_func=squish_rate_func(
-                    self.rate_func, beta, beta + self.lag_ratio
-                ),
-                **kwargs
-            )
-            for submob, beta in zip(
-                mobject,
-                np.linspace(0, 1 - self.lag_ratio, len(mobject))
-            )
+        args_list = []
+        for submob in mobject:
+            if arg_creator:
+                args_list.append(arg_creator(submob))
+            else:
+                args_list.append((submob,))
+        animations = [
+            AnimationClass(*args, **kwargs)
+            for args in args_list
         ]
-        Animation.__init__(self, mobject, **kwargs)
-
-    def update(self, alpha):
-        for anim in self.subanimations:
-            anim.update(alpha)
-        return self
-
-    def clean_up_from_scene(self, *args, **kwargs):
-        for anim in self.subanimations:
-            anim.clean_up_from_scene(*args, **kwargs)
+        super().__init__(*animations, **kwargs)

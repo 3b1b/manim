@@ -126,7 +126,7 @@ class UnexpectedConnection(Scene):
         self.add(circle, radius, center_dot, decimal, arc)
         self.play(
             Rotate(radius, PI - 1e-7, about_point=center),
-            OldLaggedStart(FadeInFromDown, primes),
+            LaggedStartMap(FadeInFromDown, primes),
             run_time=4
         )
         self.remove(decimal)
@@ -172,8 +172,8 @@ class MapOfVideo(MovingCameraScene):
             Arrow(images[3], images[4], buff=SMALL_BUFF),
         )
 
-        self.play(OldLaggedStart(FadeInFromDown, images, run_time=4))
-        self.play(OldLaggedStart(GrowArrow, arrows))
+        self.play(LaggedStartMap(FadeInFromDown, images, run_time=4))
+        self.play(LaggedStartMap(GrowArrow, arrows))
         self.wait()
         group = Group(images, arrows)
         for image in images:
@@ -240,7 +240,7 @@ class MathIsDeep(PiCreatureScene):
         # num_mobs[1].add_subpath(num_mobs[1].points)
 
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeInFromLarge, words,
                 scale_factor=1.5,
                 run_time=0.6,
@@ -258,7 +258,7 @@ class MathIsDeep(PiCreatureScene):
             self.pi_creature.change, "thinking",
             *map(GrowArrow, low_arrows),
         )
-        self.play(OldLaggedStart(ShowCreationThenDestruction, n_sum_border))
+        self.play(LaggedStartMap(ShowCreationThenDestruction, n_sum_border))
         self.play(Blink(self.pi_creature))
         self.wait()
 
@@ -358,15 +358,15 @@ class TopologyWordBreak(Scene):
         genus_labels.shift(SMALL_BUFF * UP)
 
         self.play(Write(word))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, word,
             lambda m: (m.set_color, m.target_color),
             run_time=1
         ))
         self.play(
-            OldLaggedStart(MoveToTarget, word),
-            OldLaggedStart(FadeIn, signs),
-            OldLaggedStart(FadeInFromDown, genus_labels),
+            LaggedStartMap(MoveToTarget, word),
+            LaggedStartMap(FadeIn, signs),
+            LaggedStartMap(FadeInFromDown, genus_labels),
         )
         self.wait(3)
 
@@ -533,7 +533,7 @@ class FunctionGInSymbols(Scene):
         self.wait()
         self.play(neg_g_of_p.restore)
         rects = VGroup(*map(SurroundingRectangle, [f_of_p, f_of_neg_p]))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ShowCreationThenDestruction, rects,
             lag_ratio=0.8
         ))
@@ -1128,12 +1128,12 @@ class DivisionOfUnity(Scene):
             brace.add(label)
 
         self.add(line, lower_brace)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ShowCreation, v_lines[1:3],
             lag_ratio=0.8,
             run_time=1
         ))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             GrowFromCenter, upper_braces
         ))
         self.wait()

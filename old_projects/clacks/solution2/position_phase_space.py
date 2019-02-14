@@ -844,7 +844,7 @@ class EqualMassCase(PositionPhaseSpaceScene):
 
     def show_same_mass(self):
         blocks = self.blocks
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Indicate, blocks,
             lag_ratio=0.8,
             run_time=1,
@@ -1468,7 +1468,7 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
         ps_vect = self.ps_velocity_vector
         block_vectors = self.get_block_velocity_vectors(ps_vect)
 
-        self.play(OldLaggedStart(GrowArrow, block_vectors))
+        self.play(LaggedStartMap(GrowArrow, block_vectors))
         self.play(Rotating(
             ps_vect,
             angle=TAU,
@@ -1811,7 +1811,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         self.block_vectors = self.get_block_velocity_vectors(self.ps_vect)
         self.play(
             GrowArrow(self.ps_vect),
-            OldLaggedStart(GrowArrow, self.block_vectors, run_time=1),
+            LaggedStartMap(GrowArrow, self.block_vectors, run_time=1),
         )
         self.add(self.ps_vect, self.block_vectors)
 
@@ -1867,7 +1867,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         for eq, new_eq in zip(eqs_targets, new_eqs):
             new_eq.move_to(eq)
 
-        self.play(OldLaggedStart(MoveToTarget, eqs, lag_ratio=0.7))
+        self.play(LaggedStartMap(MoveToTarget, eqs, lag_ratio=0.7))
         self.play(*[
             Transform(
                 eq, new_eq,
@@ -1927,7 +1927,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         for mover, part in zip(movers, final_eq):
             mover.target = part
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 MoveToTarget, movers,
                 path_arc=30 * DEGREES,
                 lag_ratio=0.9
@@ -2292,7 +2292,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         arcs = VGroup(arc1, arc2)
 
         self.slide(0.5)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeInFromLarge, arcs,
             lag_ratio=0.75,
         ))
