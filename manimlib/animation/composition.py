@@ -149,6 +149,11 @@ class OldLaggedStart(Animation):
     }
 
     def __init__(self, AnimationClass, mobject, arg_creator=None, **kwargs):
+        print(
+            "Warning, this scene is using the animation "
+            "OldLaggedStart, which is now deprecated.  Use "
+            "LaggedStart instead."
+        )
         for key in ["rate_func", "run_time"]:
             if key in AnimationClass.CONFIG:
                 setattr(self, key, AnimationClass.CONFIG[key])
