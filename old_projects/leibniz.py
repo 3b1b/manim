@@ -945,7 +945,7 @@ class CountThroughRings(LatticePointScene):
     
         self.add_foreground_mobject(self.lattice_points)
         self.play(FadeIn(circles))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             circles,
             arg_creator = lambda m : (m.set_stroke, PINK, 4),
@@ -2544,7 +2544,7 @@ class IntroduceRecipe(Scene):
                 movers.add(mover)
             index += 1
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget,
             movers,
             replace_mobject_with_target_in_scene = True
@@ -3111,7 +3111,7 @@ class Show125CircleSimple(LatticePointScene):
                 about_point = self.plane_center
             ),
             ShowCreation(circle),
-            OldLaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill,
                 dots,
                 stroke_width = 4,
@@ -3180,7 +3180,7 @@ class SummarizeCountingRule(Show125Circle):
             ShowCreation(circle),
             run_time = 2,
         )
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill,
             dots,
             stroke_width = 4,
@@ -3418,7 +3418,7 @@ class EffectOfPowersOfTwo(LatticePointScene):
         group = groups[0]
 
         self.add(group)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, dots_list[0],
             stroke_width = 4,
             stroke_color = PINK
@@ -3543,7 +3543,7 @@ class IntroduceChi(FactorizationPattern):
             for mob in [chis, arrows, numbers]
         ])
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             numbers,
             lambda m : (m.shift, MED_SMALL_BUFF*UP),
@@ -3636,7 +3636,7 @@ class IntroduceChi(FactorizationPattern):
             self.play(
                 Write(labels),
                 FadeIn(arrows, lag_ratio = 0.5),
-                OldLaggedStart(
+                LaggedStartMap(
                     DrawBorderThenFill, dots,
                     stroke_width = 4,
                     stroke_color = YELLOW
@@ -4045,7 +4045,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             FadeIn(rect),
             Write(divisor_sum, run_time = 2)
         )
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, prime_pairs, 
             run_time = 4,
             lag_ratio = 0.25,
@@ -4053,7 +4053,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         self.remove(prime_pairs)
         product_mobs.set_color(YELLOW)
         self.wait(2)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             product_mobs,
             lambda m : (m.shift, MED_LARGE_BUFF*DOWN),
@@ -4133,14 +4133,14 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         radicals = self.get_radicals()
 
         self.play(
-            OldLaggedStart(FadeIn, rings),
+            LaggedStartMap(FadeIn, rings),
             Animation(self.lattice_points),
-            OldLaggedStart(FadeIn, radicals),
+            LaggedStartMap(FadeIn, radicals),
             run_time = 3
         )
         self.add_foreground_mobject(radicals)
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod,
                 dot_groups,
                 lambda m : (m.set_stroke, PINK, 5),
@@ -4196,7 +4196,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
                 VGroup(self.circle, self.radius).scale_in_place, 2,
                 rate_func=linear,
             ),
-            OldLaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill,
                 new_dots,
                 stroke_width = 4,
@@ -4262,7 +4262,7 @@ class AddUpGrid(Scene):
             row_lines[-2].get_left()[0]*RIGHT
         )
 
-        self.play(OldLaggedStart(ShowCreation, row_lines))
+        self.play(LaggedStartMap(ShowCreation, row_lines))
         self.wait()
 
         self.row_lines = row_lines
@@ -4302,7 +4302,7 @@ class AddUpGrid(Scene):
             chi_sums.add(chi_sum)
             radical.chi_sum = chi_sum
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Write, chi_sums, 
             run_time = 5,
             rate_func = lambda t : t,
@@ -4755,7 +4755,7 @@ class Sponsorship(PiCreatureScene):
 
         self.play(
             morty.change_mode, "raise_right_hand",
-            OldLaggedStart(DrawBorderThenFill, logo, run_time = 3)
+            LaggedStartMap(DrawBorderThenFill, logo, run_time = 3)
         )
         self.wait()
         self.play(

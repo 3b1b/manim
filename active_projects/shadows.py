@@ -151,7 +151,7 @@ class ShowShadows(ThreeDScene):
         self.move_camera(
             **self.initial_orientation_config,
             added_anims=[
-                OldLaggedStart(DrawBorderThenFill, obj3d)
+                LaggedStartMap(DrawBorderThenFill, obj3d)
             ],
             run_time=2
         )
@@ -276,7 +276,7 @@ class ShowInfinitelyFarLightSource(ShowShadows):
         source_obj3d.set_shade_in_3d(False)
         source_obj3d.fade(1)
 
-        self.play(OldLaggedStart(ShowCreation, lines))
+        self.play(LaggedStartMap(ShowCreation, lines))
         self.wait()
         self.add(source_obj3d, lines)
         self.play(

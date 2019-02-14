@@ -200,7 +200,7 @@ class QuizResult(PiCreatureScene):
             for i in range(4)
         ])
         self.wait()
-        self.play(Write(nb_students_label), OldLaggedStart(GrowArrow,arrows))
+        self.play(Write(nb_students_label), LaggedStartMap(GrowArrow,arrows))
 
         percentage_label = TextMobject("\% of students", color = highlight_color)
         percentage_label.move_to(nb_students_label)

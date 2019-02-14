@@ -2009,7 +2009,7 @@ class LoopSplitScene(ColorMappedObjectsScene):
             play_combined_fade(start, end, midline_lines_vmobject, midline_bullets)
 
         def flash_circles(circles):
-            self.play(OldLaggedStart(FadeIn, VGroup(circles)))
+            self.play(LaggedStartMap(FadeIn, VGroup(circles)))
             self.wait()
             self.play(FadeOut(VGroup(circles)))
             self.wait()

@@ -4046,11 +4046,11 @@ class FinalSumManipulationScene(PiCreatureScene):
             full_ambient_lights.add(ls.ambient_light)
 
         self.play(
-            OldLaggedStart(FadeIn, full_lighthouses, lag_ratio = 0.2, run_time = 3),
+            LaggedStartMap(FadeIn, full_lighthouses, lag_ratio = 0.2, run_time = 3),
         )
 
         self.play(
-            OldLaggedStart(SwitchOn, full_ambient_lights, lag_ratio = 0.2, run_time = 3)
+            LaggedStartMap(SwitchOn, full_ambient_lights, lag_ratio = 0.2, run_time = 3)
         )
 
         # for ls in full_lights.submobjects:
@@ -4399,7 +4399,7 @@ class InfiniteCircleScene(PiCreatureScene):
 
         self.wait()
         self.play(
-            OldLaggedStart(FadeIn,infsum,lag_ratio = 0.2)
+            LaggedStartMap(FadeIn,infsum,lag_ratio = 0.2)
         )
         self.wait()
 

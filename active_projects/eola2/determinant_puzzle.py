@@ -63,7 +63,7 @@ class WorkOutNumerically(Scene):
         equation.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         equation.next_to(self.original_equation, DOWN, MED_LARGE_BUFF)
 
-        self.play(OldLaggedStart(FadeIn, equation))
+        self.play(LaggedStartMap(FadeIn, equation))
 
     def compute_rhs(self):
         M1, M2 = self.M1_copy, self.M2_copy
@@ -101,15 +101,15 @@ class WorkOutNumerically(Scene):
                 for i, j in ((0, 0), (1, 1), (0, 1), (1, 0))
             ])
             self.play(
-                OldLaggedStart(FadeIn, non_numbers, run_time=1),
-                OldLaggedStart(
+                LaggedStartMap(FadeIn, non_numbers, run_time=1),
+                LaggedStartMap(
                     ReplacementTransform,
                     matrix_numbers,
                     lambda m: (m, next(numbers_iter)),
                     path_arc=TAU / 6
                 ),
             )
-        self.play(OldLaggedStart(FadeIn, lines[1:], run_time=3))
+        self.play(LaggedStartMap(FadeIn, lines[1:], run_time=3))
 
     def compute_lhs(self):
         matrix = Matrix([[-3, 7], [0, 5]])
@@ -138,7 +138,7 @@ class WorkOutNumerically(Scene):
             ReplacementTransform(M.copy(), matrix)
             for M in (self.M1, self.M2)
         ])
-        self.play(OldLaggedStart(FadeIn, group[1:]))
+        self.play(LaggedStartMap(FadeIn, group[1:]))
         self.wait()
 
 

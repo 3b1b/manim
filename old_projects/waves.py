@@ -602,7 +602,7 @@ class IntroduceElectricField(PiCreatureScene):
         morty = self.pi_creature
         vector_field = self.get_vector_field()
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 ShowCreation, vector_field, 
                 run_time = 3
             ),
@@ -661,7 +661,7 @@ class IntroduceElectricField(PiCreatureScene):
 
         self.play(
             FadeOut(self.force_vector),
-            OldLaggedStart(FadeIn, VGroup(*particles[1:]))
+            LaggedStartMap(FadeIn, VGroup(*particles[1:]))
         )
         self.moving_particles = particles
         self.add_foreground_mobjects(self.moving_particles, self.pi_creature)
@@ -750,7 +750,7 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         vector_field = self.get_vector_field()
 
         self.play(
-            OldLaggedStart(ShowCreation, vector_field, run_time = 3),
+            LaggedStartMap(ShowCreation, vector_field, run_time = 3),
             Animation(self.title)
         )
         self.wait()
@@ -1043,7 +1043,7 @@ class ListRelevantWaveIdeas(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["pondering"]*3,
-            added_anims = [OldLaggedStart(
+            added_anims = [LaggedStartMap(
                 FadeIn, topics,
                 run_time = 3
             )],
@@ -1471,7 +1471,7 @@ class ShowVectorEquation(Scene):
         self.play(*list(map(Write, [right_ket, plus, up_ket])), run_time = 1)
         self.play(
             Write(kets_word),
-            OldLaggedStart(ShowCreation, arrows, lag_ratio = 0.7),
+            LaggedStartMap(ShowCreation, arrows, lag_ratio = 0.7),
             run_time = 2,
         )
         self.wait()
