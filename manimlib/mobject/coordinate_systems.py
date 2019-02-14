@@ -287,7 +287,6 @@ class NumberPlane(Axes):
 
     def get_lines_parallel_to_axis(self, axis1, axis2, freq, ratio):
         line = Line(axis1.get_start(), axis1.get_end())
-        vect = line.get_vector()
         dense_freq = (1 + ratio)
         step = 1 / dense_freq
 
@@ -301,7 +300,6 @@ class NumberPlane(Axes):
             for k, x in enumerate(inputs):
                 new_line = line.copy()
                 new_line.move_to(axis2.number_to_point(x))
-                new_line.align_to(line, vect)
                 if k % (1 + ratio) == 0:
                     lines1.add(new_line)
                 else:
