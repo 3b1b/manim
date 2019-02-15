@@ -28,7 +28,7 @@ SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
 SOUND_DIR = os.path.join(MEDIA_DIR, "designs", "sounds")
 ###
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR = os.path.join(THIS_DIR, "files")
+FILE_DIR = os.path.join(os.getenv("FILE_DIR", default=THIS_DIR), "files")
 TEX_DIR = os.path.join(FILE_DIR, "Tex")
 # These two may be depricated now.
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
