@@ -776,8 +776,8 @@ class Logo(VMobject):
             fill_opacity=1,
             stroke_width=0,
             sheen=0.0,
-            start_angle=90 * DEGREES,
         )
+        self.pupil.rotate(90 * DEGREES)
         self.add(self.pupil)
 
     def cut_pupil(self):

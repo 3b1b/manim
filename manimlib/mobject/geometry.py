@@ -547,7 +547,6 @@ class Arrow(Line):
     CONFIG = {
         "stroke_width": 6,
         "buff": MED_SMALL_BUFF,
-        # "tip_length": 0.25,
         "tip_width_to_length_ratio": 1,
         "max_tip_length_to_length_ratio": 0.2,
         "max_stroke_width_to_length_ratio": 6,
