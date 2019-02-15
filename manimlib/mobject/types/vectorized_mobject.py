@@ -519,7 +519,11 @@ class VMobject(Mobject):
         return self
 
     def make_jagged(self):
-        return self.change_anchor_mode("corners")
+        anchors = self.get_start_anchors()
+        last_point = self.get_last_point()
+        return self.set_points_as_corners(
+            [*anchors, last_point]
+        )
 
     def add_subpath(self, points):
         assert(len(points) % 4 == 0)
