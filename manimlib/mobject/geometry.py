@@ -404,13 +404,19 @@ class Line(TipableVMobject):
     def account_for_buff(self):
         if self.buff == 0:
             return
-        length = self.get_arc_length()
+        #
+        if self.path_arc == 0:
+            length = self.get_length()
+        else:
+            length = self.get_arc_length()
+        #
         if length < 2 * self.buff:
             return
         buff_proportion = self.buff / length
         self.pointwise_become_partial(
             self, buff_proportion, 1 - buff_proportion
         )
+        return self
 
     def set_start_and_end_attrs(self, start, end):
         # If either start or end are Mobjects, this
@@ -436,18 +442,6 @@ class Line(TipableVMobject):
     def get_length(self):
         start, end = self.get_start_and_end()
         return get_norm(start - end)
-
-    def get_arc_length(self):
-        if self.path_arc:
-            points = np.array([
-                self.point_from_proportion(a)
-                for a in np.linspace(0, 1, 100)
-            ])
-            diffs = points[1:] - points[:-1]
-            norms = np.apply_along_axis(get_norm, 1, diffs)
-            return np.sum(norms)
-        else:
-            return self.get_length()
 
     def get_vector(self):
         return self.get_end() - self.get_start()
@@ -658,28 +652,40 @@ class Polygon(VMobject):
             cut_off_length = radius * np.tan(angle / 2)
             # Determines counterclockwise vs. clockwise
             sign = np.sign(np.cross(vect1, vect2)[2])
-            arcs.append(ArcBetweenPoints(
+            arc = ArcBetweenPoints(
                 v2 - unit_vect1 * cut_off_length,
                 v2 + unit_vect2 * cut_off_length,
                 angle=sign * angle
-            ))
+            )
+            arcs.append(arc)
 
         self.clear_points()
         # To ensure that we loop through starting with last
         arcs = [arcs[-1], *arcs[:-1]]
         for arc1, arc2 in adjacent_pairs(arcs):
             self.append_points(arc1.points)
-            self.add_line_to(arc2.get_start())
+            line = Line(arc1.get_end(), arc2.get_start())
+            # Make sure anchors are evenly distributed
+            len_ratio = line.get_length() / arc1.get_arc_length()
+            line.insert_n_curves(
+                int(arc1.get_num_curves() * len_ratio)
+            )
+            self.append_points(line.get_points())
         return self
 
 
 class RegularPolygon(Polygon):
     CONFIG = {
-        "start_angle": 0
+        "start_angle": None,
     }
 
     def __init__(self, n=6, **kwargs):
         digest_config(self, kwargs, locals())
+        if self.start_angle is None:
+            if n % 2 == 0:
+                self.start_angle = 0
+            else:
+                self.start_angle = 90 * DEGREES
         start_vect = rotate_vector(RIGHT, self.start_angle)
         vertices = compass_directions(n, start_vect)
         Polygon.__init__(self, *vertices, **kwargs)
