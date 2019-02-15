@@ -216,7 +216,7 @@ class Introduction(QuaternionHistory):
             self.play(
                 FadeInFrom(image, 3 * DOWN),
                 FadeInFromLarge(name),
-                OldLaggedStart(
+                LaggedStartMap(
                     FadeIn, VGroup(*it.chain(*quote)),
                     lag_ratio=0.3,
                     run_time=2
@@ -271,7 +271,7 @@ class WhoCares(TeacherStudentsScene):
             self.teacher.change, "raise_right_hand"
         )
         # self.play(
-        #     OldLaggedStart(
+        #     LaggedStartMap(
         #         FadeInFromDown, quotes,
         #         run_time=3
         #     ),
@@ -316,7 +316,7 @@ class WhoCares(TeacherStudentsScene):
         # )
         # self.add_foreground_mobjects(vr_headsets)
         # self.play(
-        #     OldLaggedStart(
+        #     LaggedStartMap(
         #         FadeInFrom, vr_headsets,
         #         lambda m: (m, UP),
         #     ),
@@ -1209,7 +1209,7 @@ class RuleForQuaternionRotations(EulerAnglesAndGimbal):
         self.wait()
         self.play(
             FadeInFromDown(full_angle_q[0]),
-            OldLaggedStart(FadeInFromDown, full_angle_q[2:]),
+            LaggedStartMap(FadeInFromDown, full_angle_q[2:]),
         )
         self.play(
             GrowFromCenter(brace),
@@ -1370,7 +1370,7 @@ class ExpandOutFullProduct(TeacherStudentsScene):
             FadeInFromDown(product)
         )
         self.play(
-            OldLaggedStart(GrowFromCenter, braces),
+            LaggedStartMap(GrowFromCenter, braces),
             self.get_student_changes(
                 "confused", "horrified", "confused"
             )

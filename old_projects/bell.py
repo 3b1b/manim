@@ -887,7 +887,7 @@ class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
         for cos, rect in zip(cosines, rects[1:]):
             cos.next_to(rect, OUT, SMALL_BUFF)
 
-        self.play(OldLaggedStart(ShowCreation, rects))
+        self.play(LaggedStartMap(ShowCreation, rects))
         self.wait()
         self.play(*list(map(Write, cosines)), run_time = 2)
         self.wait()
@@ -1926,7 +1926,7 @@ class VennDiagramProofByContradiction(Scene):
             mover.generate_target()
             mover.target.shift(1.2*UP + 0.6*LEFT)
             mover.target.set_stroke(WHITE)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, movers,
             path_arc = np.pi,
             lag_ratio = 0.3

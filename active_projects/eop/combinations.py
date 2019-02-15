@@ -131,7 +131,7 @@ class ExperienceProblemSolver(PiCreatureScene):
         cross = Cross(lightbulb)
         cross.set_stroke(RED, 8)
 
-        self.play(OldLaggedStart(ShowCreation, lightbulb))
+        self.play(LaggedStartMap(ShowCreation, lightbulb))
         self.play(
             ShowCreation(cross),
             jenny.change, "sassy", cross,
@@ -264,7 +264,7 @@ class InitialFiveChooseThreeExample(Scene):
             mover.add(group)
 
         self.play(FadeIn(nCk_group))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, mover,
             run_time = 3,
         ))
@@ -301,7 +301,7 @@ class InitialFiveChooseThreeExample(Scene):
         for line in stack:
             ones = VGroup(*[mob for mob in line if "1" in mob.get_tex_string()])
             line.ones = ones
-            self.play(OldLaggedStart(
+            self.play(LaggedStartMap(
                 ApplyMethod, ones,
                 lambda mob : (mob.set_color, YELLOW),
                 rate_func = there_and_back,
@@ -436,7 +436,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         equation.next_to(stack, RIGHT, LARGE_BUFF)
 
         self.add(equation)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, stack,
             lag_ratio = 0.1,
             run_time = 10,
@@ -471,7 +471,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             run_time = 1
         )
         self.play(
-            OldLaggedStart(GrowArrow, arrows),
+            LaggedStartMap(GrowArrow, arrows),
             Write(choose_k, run_time = 1)
         )
         self.wait(2)
@@ -712,7 +712,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         self.play(ShowCreation(line))
 #         self.play(Write(add_x, run_time = 1))
 #         self.play(Transform(top_stacks, new_top_stacks))
-#         self.play(OldLaggedStart(
+#         self.play(LaggedStartMap(
 #             Indicate, new_top_stacks.start_terms,
 #             rate_func = there_and_back,
 #             run_time = 1,
@@ -721,7 +721,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         self.wait()
 #         self.play(Write(add_y, run_time = 1))
 #         self.play(Transform(stacks, new_stacks))
-#         self.play(OldLaggedStart(
+#         self.play(LaggedStartMap(
 #             Indicate, new_stacks.start_terms,
 #             rate_func = there_and_back,
 #             run_time = 1,
@@ -852,7 +852,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         self.play(Write(letter_set, run_time = 1))
 #         self.play(
 #             Write(choose_words, run_time = 1),
-#             OldLaggedStart(FadeIn, subset_mobs)
+#             LaggedStartMap(FadeIn, subset_mobs)
 #         )
 #         self.wait()
 #         for subset, subset_mob in zip(letter_subsets, subset_mobs):
@@ -950,7 +950,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         words.next_to(cards, LEFT)
 #         words.shift_onto_screen()
 
-#         self.play(OldLaggedStart(DrawBorderThenFill, cards))
+#         self.play(LaggedStartMap(DrawBorderThenFill, cards))
 #         self.play(Write(words))
 #         self.wait(3)
 
@@ -992,7 +992,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
             return lineup
 
         last_lineup = get_lineup()
-        self.play(OldLaggedStart(FadeIn, last_lineup, run_time = 1))
+        self.play(LaggedStartMap(FadeIn, last_lineup, run_time = 1))
 
         for x in range(self.n_examples):
             lineup = get_lineup()
@@ -1073,7 +1073,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
                 else:
                     men.add(item)
             for group in men, women:
-                self.play(OldLaggedStart(
+                self.play(LaggedStartMap(
                     ApplyMethod, group,
                     lambda m : (m.shift, MED_SMALL_BUFF*RIGHT),
                     rate_func = there_and_back,
@@ -1152,7 +1152,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
                 lines.set_stroke, WHITE, 3,
                 Write(equation, run_time = 1)
             )
-            self.play(OldLaggedStart(Indicate, women, rate_func = there_and_back))
+            self.play(LaggedStartMap(Indicate, women, rate_func = there_and_back))
         self.wait()
 
         self.equations = equations
@@ -1165,7 +1165,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         numbers = self.numbers
 
         self.play(ShowCreation(n_possibilities_rect))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Indicate, twos, 
             rate_func = wiggle
         ))
@@ -1231,8 +1231,8 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         ])
         circles.set_color(WHITE)
 
-        self.play(OldLaggedStart(FadeIn, question))
-        self.play(OldLaggedStart(ShowCreationThenDestruction, circles))
+        self.play(LaggedStartMap(FadeIn, question))
+        self.play(LaggedStartMap(ShowCreationThenDestruction, circles))
         self.wait(2)
 
     ######
@@ -1323,14 +1323,14 @@ class TeacherHoldingSomething(TeacherStudentsScene):
 #             numbers.add(number)
 
 #         self.add(title)
-#         self.play(OldLaggedStart(
-#             OldLaggedStart, stacks,
+#         self.play(LaggedStartMap(
+#             LaggedStartMap, stacks,
 #             lambda s : (FadeIn, s),
 #             run_time = 3,
 #         ))
 #         self.play(Write(numbers, run_time = 3))
 #         self.wait()
-#         self.play(OldLaggedStart(
+#         self.play(LaggedStartMap(
 #             ApplyMethod, women_groups,
 #             lambda m : (m.set_color, PINK),
 #             lag_ratio = 0.1,
@@ -1578,7 +1578,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
 
         new_numbers = VGroup()
 
-        self.play(OldLaggedStart(ShowCreation, rects, run_time = 1))
+        self.play(LaggedStartMap(ShowCreation, rects, run_time = 1))
         for i, top_stack in enumerate(top_stacks[:-1]):
             bottom_stack = bottom_stacks[i+1]
             top_number = top_stacks.numbers[i]
@@ -1848,7 +1848,7 @@ class IntroducePascalsTriangle(Scene):
         ))
         self.play(
             Blink(morty),
-            OldLaggedStart(
+            LaggedStartMap(
                 Indicate, numbers,
                 rate_func = wiggle,
                 color = PINK,
@@ -2197,10 +2197,10 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
 
         self.play(
             Write(braces),
-            OldLaggedStart(FadeIn, people),
+            LaggedStartMap(FadeIn, people),
             VGroup(self.stack, self.equation).to_edge, RIGHT, LARGE_BUFF
         )
-        self.play(OldLaggedStart(FadeIn, names))
+        self.play(LaggedStartMap(FadeIn, names))
 
         self.set_variables_as_attrs(names, braces)
 
@@ -2226,7 +2226,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         if hasattr(self, "stack"):
             movers.target.align_to(self.stack, UP)
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, movers,
             lag_ratio = 0.2,
             run_time = 4,
@@ -2264,7 +2264,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         self.play(ShowCreation(line_rect))
         self.play(MoveToTarget(line))
         self.play(
-            OldLaggedStart(ShowCreation, people_rects),
+            LaggedStartMap(ShowCreation, people_rects),
             MoveToTarget(people),
             MoveToTarget(names),
         )
@@ -2351,16 +2351,16 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         q_marks.set_color(YELLOW)
 
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 ShowCreationThenDestruction, odm_words_outline,
                 lag_ratio = 0.2,
                 run_time = 1,
             ),
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod, self.people,
                 lambda pi : (pi.change, "confused", odm_words,)
             ),
-            OldLaggedStart(FadeIn, q_marks),
+            LaggedStartMap(FadeIn, q_marks),
         )
         self.play(line.next_to, odm_words, UP)
         for x in range(6):
@@ -2407,13 +2407,13 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             all_ones.add(ones)
 
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, all_ones,
                 lag_ratio = 0.2,
                 run_time = 3,
                 rate_func = there_and_back
             ),
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod, self.people,
                 lambda pi : (pi.change, "happy", ones),
             )
@@ -2742,7 +2742,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         for name, line, count, arrow in zip(chosen_names, lines, choice_counts, arrows):
             self.play(
                 FadeIn(count),
-                OldLaggedStart(
+                LaggedStartMap(
                     FadeIn, name_rects,
                     rate_func = there_and_back,
                     remover = True,
@@ -2908,7 +2908,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
 
         self.play(
             Write(VGroup(*rhs[:-1])),
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod, all_groups,
                 lambda g : (g.restore,),
                 rate_func = lambda t : smooth(1-t),
@@ -2918,7 +2918,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         )
         self.wait()
         self.play(
-            OldLaggedStart(FadeIn, rects),
+            LaggedStartMap(FadeIn, rects),
             Write(rhs[-1])
         )
         self.wait()
@@ -3081,13 +3081,13 @@ class NineChooseFourExample(HowToComputeNChooseK):
 
         self.play(
             Write(braces),
-            OldLaggedStart(FadeIn, people, run_time = 1),
+            LaggedStartMap(FadeIn, people, run_time = 1),
             FadeIn(n_items),
         )
         self.wait()
         self.play(
             FadeIn(choose_k),
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod, chosen_subset,
                 lambda m : (m.shift, MED_LARGE_BUFF*DOWN)
             )
@@ -3102,8 +3102,8 @@ class NineChooseFourExample(HowToComputeNChooseK):
     def count_how_to_choose_k(self):
         lines, place_words = self.get_lines_and_place_words()
         self.play(
-            OldLaggedStart(FadeIn, lines),
-            OldLaggedStart(FadeIn, place_words),
+            LaggedStartMap(FadeIn, lines),
+            LaggedStartMap(FadeIn, place_words),
             run_time = 1
         )
         self.count_possibilities()
@@ -3192,9 +3192,9 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
             RemovePiCreatureBubble(
                 self.teacher, target_mode = "raise_right_hand"
             ),
-            OldLaggedStart(FadeIn, fraction, run_time = 1),
+            LaggedStartMap(FadeIn, fraction, run_time = 1),
             FadeIn(braces),
-            OldLaggedStart(FadeIn, names)
+            LaggedStartMap(FadeIn, names)
         )
         self.change_student_modes(
             *["pondering"]*3,
@@ -3215,7 +3215,7 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
         permutations = list(it.permutations(list(range(3))))[1:]
 
         self.shuffle(chosen_names, permutations[:2])
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ShowCreationThenDestruction,
             VGroup(*list(map(SurroundingRectangle, bottom_numbers[::2])))
         ))
@@ -3322,8 +3322,8 @@ class SumsToPowerOf2(Scene):
             number.next_to(stack, UP)
 
         self.play(
-            OldLaggedStart(FadeIn, stacks),
-            OldLaggedStart(FadeIn, numbers),
+            LaggedStartMap(FadeIn, stacks),
+            LaggedStartMap(FadeIn, numbers),
         )
         self.wait()
 
@@ -3429,11 +3429,11 @@ class SumsToPowerOf2(Scene):
         rhs.next_to(sum_group, RIGHT)
 
         self.play(
-            OldLaggedStart(FadeOut, self.stacks),
-            OldLaggedStart(FadeOut, self.numbers),
-            OldLaggedStart(FadeIn, sum_group),
+            LaggedStartMap(FadeOut, self.stacks),
+            LaggedStartMap(FadeOut, self.numbers),
+            LaggedStartMap(FadeIn, sum_group),
         )
-        self.play(OldLaggedStart(FadeIn, rhs))
+        self.play(LaggedStartMap(FadeIn, rhs))
         self.wait(2)
 
     ####
@@ -3489,7 +3489,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
         self.student_says(
             "Why are they called \\\\ ``binomial coefficients''?"
         )
-        self.play(OldLaggedStart(FadeIn, pascals))
+        self.play(LaggedStartMap(FadeIn, pascals))
         self.wait()
         self.play(
             FadeIn(example_binomials[0]),
@@ -3505,7 +3505,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
         #Name themn
         self.play(
             Write(binomial_word),
-            OldLaggedStart(GrowArrow, arrows)
+            LaggedStartMap(GrowArrow, arrows)
         )
         self.change_student_modes(*["pondering"]*3)
         self.play(Write(two_variables))

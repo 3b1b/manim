@@ -154,7 +154,7 @@ class BreakUp2To256(PiCreatureScene):
         self.play(
             self.bits.to_corner, DOWN+LEFT,
             Transform(four_billions, target_four_billions),
-            OldLaggedStart(FadeIn, parens),
+            LaggedStartMap(FadeIn, parens),
             FadeOut(to_fade)
         )
         self.wait()
@@ -331,7 +331,7 @@ class MainBreakdown(Scene):
         )
         self.wait()
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyFunction, gpus,
                 lambda g : (
                     lambda m : m.scale(0.01).move_to(laptop),
@@ -384,7 +384,7 @@ class MainBreakdown(Scene):
         self.wait(2)
         self.play(Write(millions))
         self.wait(2)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Indicate, self.group_of_four_billion_things,
             run_time = 4,
             rate_func = there_and_back,
@@ -454,7 +454,7 @@ class MainBreakdown(Scene):
         self.play(FadeIn(milky_way))
         self.play(Write(n_stars_estimate))
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Indicate, self.group_of_four_billion_things,
             rate_func = there_and_back,
             lag_ratio = 0.2,
@@ -580,7 +580,7 @@ class MainBreakdown(Scene):
             four_billion.scale, 2,
             four_billion.next_to, brace, LEFT,
             GrowFromCenter(brace),
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, group,
                 run_time = 3,
                 lag_ratio = 0.2
@@ -731,7 +731,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             rate.restore,
         )
         self.change_student_modes(*["pondering"]*3)
-        self.play(OldLaggedStart(FadeIn, kilogoogle))
+        self.play(LaggedStartMap(FadeIn, kilogoogle))
         self.change_student_modes(*["surprised"]*3)
         self.wait()
         self.change_student_modes(
@@ -758,7 +758,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             *["pondering"]*3,
             added_anims = [Write(asic_rate)]
         )
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, circuit,
             run_time = 3,
             lag_ratio = 0.2,

@@ -431,11 +431,11 @@ class SridharWatchingScene(PiCreatureScene):
         basel.set_color(YELLOW)
         wallis.set_color(BLUE)
 
-        self.play(OldLaggedStart(DrawBorderThenFill, laptop))
+        self.play(LaggedStartMap(DrawBorderThenFill, laptop))
         self.play(sridhar.change, "pondering", laptop.screen)
         self.wait()
         self.play(ShowCreation(bubble))
-        self.play(OldLaggedStart(FadeIn, basel))
+        self.play(LaggedStartMap(FadeIn, basel))
         self.play(
             ReplacementTransform(basel.copy(), wallis),
             GrowFromPoint(arrow, arrow.get_top())
@@ -443,7 +443,7 @@ class SridharWatchingScene(PiCreatureScene):
         self.wait(4)
         self.play(sridhar.change, "thinking", wallis)
         self.wait(4)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyFunction,
             VGroup(*list(laptop) + [bubble, basel, arrow, wallis, sridhar]),
             lambda mob: (lambda m: m.set_color(BLACK).fade(1).scale(0.8), mob),
@@ -534,8 +534,8 @@ class ShowProduct(Scene):
             self.wait(0.5)
         N = len(parts)
         self.play(
-            OldLaggedStart(ShowCreation, lines[N - 1:], lag_ratio=0.2),
-            OldLaggedStart(FadeIn, dots[N:], lag_ratio=0.2),
+            LaggedStartMap(ShowCreation, lines[N - 1:], lag_ratio=0.2),
+            LaggedStartMap(FadeIn, dots[N:], lag_ratio=0.2),
             brace.stretch, 1.2, 0, {"about_edge": LEFT},
             ChangeDecimalToValue(
                 decimal, partial_products[-1],
@@ -618,7 +618,7 @@ class ShowProduct(Scene):
 
         self.play(
             ShowCreation(lines),
-            OldLaggedStart(FadeIn, dots, lag_ratio=0.1),
+            LaggedStartMap(FadeIn, dots, lag_ratio=0.1),
             run_time=3,
             rate_func=linear,
         )
@@ -1018,8 +1018,8 @@ class DistanceProductScene(MovingCameraScene):
         if not hasattr(self, "numeric_distance_labels"):
             self.get_numeric_distance_labels()
         if show_line_creation:
-            anims.append(OldLaggedStart(ShowCreation, self.distance_lines))
-        anims.append(OldLaggedStart(FadeIn, self.numeric_distance_labels))
+            anims.append(LaggedStartMap(ShowCreation, self.distance_lines))
+        anims.append(LaggedStartMap(FadeIn, self.numeric_distance_labels))
 
         self.play(*anims)
 
@@ -1083,8 +1083,8 @@ class IntroduceDistanceProduct(DistanceProductScene):
 
         self.play(ShowCreation(circle))
         self.play(
-            OldLaggedStart(ShowCreation, lh_dots),
-            OldLaggedStart(GrowArrow, lh_dot_arrows),
+            LaggedStartMap(ShowCreation, lh_dots),
+            LaggedStartMap(GrowArrow, lh_dot_arrows),
             Write(evenly_space_dots_label)
         )
         self.wait()
@@ -1108,9 +1108,9 @@ class IntroduceDistanceProduct(DistanceProductScene):
         observer.to_edge(RIGHT)
 
         self.play(
-            OldLaggedStart(FadeOut, self.lh_dots),
-            OldLaggedStart(FadeIn, lighthouses),
-            OldLaggedStart(SwitchOn, lights),
+            LaggedStartMap(FadeOut, self.lh_dots),
+            LaggedStartMap(FadeIn, lighthouses),
+            LaggedStartMap(SwitchOn, lights),
         )
         self.wait()
         self.play(FadeIn(observer))
@@ -1160,8 +1160,8 @@ class IntroduceDistanceProduct(DistanceProductScene):
         light_rings = VGroup(*it.chain(*self.lights))
 
         self.play(
-            OldLaggedStart(ShowCreation, lines),
-            OldLaggedStart(Write, labels),
+            LaggedStartMap(ShowCreation, lines),
+            LaggedStartMap(Write, labels),
         )
         circle_group = VGroup(*self.get_top_level_mobjects())
         self.wait()
@@ -1181,7 +1181,7 @@ class IntroduceDistanceProduct(DistanceProductScene):
             circle_group.scale, 0.8, {"about_point": FRAME_Y_RADIUS * DOWN}
         )
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, light_rings,
             lambda m: (m.set_fill, {"opacity": 2 * m.get_fill_opacity()}),
             rate_func=there_and_back,
@@ -1255,9 +1255,9 @@ class IntroduceDistanceProduct(DistanceProductScene):
             Write(distance_product_label)
         )
         line_copies = lines.copy().set_color(RED)
-        self.play(OldLaggedStart(ShowCreationThenDestruction, line_copies))
+        self.play(LaggedStartMap(ShowCreationThenDestruction, line_copies))
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyFunction, light_rings,
             lambda mob: (
                 lambda m: m.shift(
@@ -1329,7 +1329,7 @@ class Lemma1(DistanceProductScene):
     def add_circle_group(self):
         self.circle.to_corner(DL)
         circle_group = self.get_circle_group()
-        self.play(OldLaggedStart(FadeIn, VGroup(
+        self.play(LaggedStartMap(FadeIn, VGroup(
             *circle_group.family_members_with_points())))
 
     def state_lemma_premise(self):
@@ -1661,12 +1661,12 @@ class FromGeometryToAlgebra(DistanceProductScene):
         arrows.set_color(YELLOW)
         self.play(
             ReplacementTransform(unit_circle_words, roots_of_unity_words),
-            OldLaggedStart(GrowArrow, arrows)
+            LaggedStartMap(GrowArrow, arrows)
         )
         self.wait()
         self.play(
             complex_plane_words.move_to, word_group,
-            OldLaggedStart(FadeOut, VGroup(*it.chain(
+            LaggedStartMap(FadeOut, VGroup(*it.chain(
                 arrows, roots_of_unity_words
             )))
         )
@@ -1905,11 +1905,11 @@ class FromGeometryToAlgebra(DistanceProductScene):
             n_term.shift(0.25 * SMALL_BUFF * DR)
             n_terms.add(n_term)
 
-        self.play(OldLaggedStart(FadeOut, VGroup(*it.chain(
+        self.play(LaggedStartMap(FadeOut, VGroup(*it.chain(
             L1_rhs, self.outer_arrows, self.L_labels, self.outer_arrow,
             self.angle_line, self.ghost_angle_line
         ))))
-        self.play(OldLaggedStart(SwitchOn, new_lights), morty.look_at, new_lights)
+        self.play(LaggedStartMap(SwitchOn, new_lights), morty.look_at, new_lights)
         self.play(Transform(sevens, n_terms))
         self.wait()
         self.play(Blink(morty))
@@ -2087,7 +2087,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
         # Show distances
         self.play(ShowCreation(rhs_rect))
         self.play(
-            OldLaggedStart(ShowCreation, lines),
+            LaggedStartMap(ShowCreation, lines),
             Animation(dot)
         )
 
@@ -2248,7 +2248,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
 
         # Talk through current example
         light_rings = VGroup(*it.chain(self.lights))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, light_rings,
             lambda m: (m.shift, MED_SMALL_BUFF * UP),
             rate_func=wiggle
@@ -2660,8 +2660,8 @@ class DistanceProductIsChordF(PlugObserverIntoPolynomial):
         self.play(Write(fraction_words))
         self.wait()
         self.play(
-            OldLaggedStart(ShowCreation, lines),
-            OldLaggedStart(FadeIn, labels),
+            LaggedStartMap(ShowCreation, lines),
+            LaggedStartMap(FadeIn, labels),
         )
         self.play(
             FadeIn(black_rect),
@@ -2771,8 +2771,8 @@ class ProveLemma2(PlugObserverIntoPolynomial):
             *list(map(SurroundingRectangle, [dot, stacked_labels[0]])))
 
         self.play(
-            OldLaggedStart(ShowCreation, lines),
-            OldLaggedStart(FadeIn, labels),
+            LaggedStartMap(ShowCreation, lines),
+            LaggedStartMap(FadeIn, labels),
         )
         self.play(
             FadeIn(black_rect),
@@ -2840,7 +2840,7 @@ class ProveLemma2(PlugObserverIntoPolynomial):
 
         self.play(ShowCreation(lhs_rect))
         self.add_foreground_mobject(roots_of_unity_circle)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, roots_of_unity_circle,
             lambda m: (m.restore,)
         ))
@@ -3021,8 +3021,8 @@ class ArmedWithTwoKeyFacts(TeacherStudentsScene, DistanceProductScene):
             group = VGroup(lines, observer, label)
             self.play(
                 FadeIn(circle),
-                OldLaggedStart(FadeIn, VGroup(*it.chain(lights))),
-                OldLaggedStart(
+                LaggedStartMap(FadeIn, VGroup(*it.chain(lights))),
+                LaggedStartMap(
                     FadeIn, VGroup(
                         *it.chain(group.family_members_with_points()))
                 ),
@@ -3031,7 +3031,7 @@ class ArmedWithTwoKeyFacts(TeacherStudentsScene, DistanceProductScene):
             )
         wallis_product.move_to(labels).to_edge(RIGHT)
         self.play(
-            OldLaggedStart(FadeIn, wallis_product),
+            LaggedStartMap(FadeIn, wallis_product),
             self.teacher.change_mode, "hooray",
             self.get_student_changes(
                 *["thinking"] * 3, look_at_arg=wallis_product)
@@ -3128,9 +3128,9 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             self.add_foreground_mobject(lights)
         self.add_foreground_mobject(words)
         self.play(
-            OldLaggedStart(FadeIn, VGroup(*it.chain(lights))),
-            OldLaggedStart(FadeIn, lighthouses),
-            OldLaggedStart(GrowArrow, arrows),
+            LaggedStartMap(FadeIn, VGroup(*it.chain(lights))),
+            LaggedStartMap(FadeIn, lighthouses),
+            LaggedStartMap(GrowArrow, arrows),
         )
         self.remove_foreground_mobjects(words)
         self.play(FadeOut(words), FadeOut(arrows))
@@ -3149,7 +3149,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             pi.dot.next_to(pi, LEFT)
             pi.dot.set_fill(opacity=0)
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Succession, observers,
             lambda m: (FadeIn, m, ApplyMethod, m.change, "wave_1")
         ))
@@ -3253,7 +3253,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             ShowCreation(fraction[1])
         )
         self.wait()
-        self.play(OldLaggedStart(FadeIn, sailor_line_lengths))
+        self.play(LaggedStartMap(FadeIn, sailor_line_lengths))
         self.play(ReplacementTransform(
             sailor_line_lengths.copy(), sailor_dp_column[0]
         ))
@@ -3376,10 +3376,10 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         # Animations
         self.replace_lighthouses_with_labels()
         self.play(
-            OldLaggedStart(FadeIn, product_parts),
-            OldLaggedStart(FadeIn, sailor_lines,
+            LaggedStartMap(FadeIn, product_parts),
+            LaggedStartMap(FadeIn, sailor_lines,
                         rate_func=there_and_back, remover=True),
-            OldLaggedStart(FadeIn, keeper_lines,
+            LaggedStartMap(FadeIn, keeper_lines,
                         rate_func=there_and_back, remover=True),
         )
         sailor_lines.restore()
@@ -3662,7 +3662,7 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
             cw_product_parts.restore,
         )
         term_rect = cw_term_rects[0].copy()
-        self.play(OldLaggedStart(ShowCreationThenDestruction, cw_label_rects))
+        self.play(LaggedStartMap(ShowCreationThenDestruction, cw_label_rects))
         self.wait()
         self.play(
             FadeIn(term_rect),
@@ -4156,7 +4156,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
                 look_at_arg=factors,
             ),
             morty.change, "pondering", factors,
-            OldLaggedStart(FadeIn, factors),
+            LaggedStartMap(FadeIn, factors),
         )
         self.wait()
         self.play(
@@ -4165,8 +4165,8 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
         )
         self.wait()
         self.play(
-            OldLaggedStart(GrowArrow, fraction_limit_arrows),
-            OldLaggedStart(
+            LaggedStartMap(GrowArrow, fraction_limit_arrows),
+            LaggedStartMap(
                 FadeInFrom, fraction_limits,
                 direction=UP
             ),
@@ -4175,7 +4175,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
         )
         self.wait()
         self.play(
-            OldLaggedStart(FadeIn, mult_signs),
+            LaggedStartMap(FadeIn, mult_signs),
             FadeIn(lower_equals),
             mathy.change, "sassy",
         )
@@ -4323,12 +4323,12 @@ class NonCommunitingLimitsExample(Scene):
 
         self.add(rows)
         self.wait()
-        self.play(OldLaggedStart(ShowCreation, row_rects))
+        self.play(LaggedStartMap(ShowCreation, row_rects))
         self.wait(2)
         row_products_iter = iter(row_products)
         self.play(
-            OldLaggedStart(Write, row_arrows),
-            OldLaggedStart(
+            LaggedStartMap(Write, row_arrows),
+            LaggedStartMap(
                 ReplacementTransform, rows[:-1].copy(),
                 lambda r: (r, next(row_products_iter))
             )
@@ -4338,13 +4338,13 @@ class NonCommunitingLimitsExample(Scene):
         self.play(Write(row_product_limit))
         self.wait()
 
-        self.play(OldLaggedStart(FadeOut, row_rects))
-        self.play(OldLaggedStart(FadeIn, column_rects))
+        self.play(LaggedStartMap(FadeOut, row_rects))
+        self.play(LaggedStartMap(FadeIn, column_rects))
         self.wait()
         column_limit_iter = iter(column_limits)
         self.play(
-            OldLaggedStart(Write, column_arrows),
-            OldLaggedStart(
+            LaggedStartMap(Write, column_arrows),
+            LaggedStartMap(
                 ReplacementTransform, columns.copy(),
                 lambda c: (c, next(column_limit_iter))
             )
@@ -4440,8 +4440,8 @@ class DelicacyInIntermixingSeries(Scene):
 
         # Show initial products
         self.play(
-            OldLaggedStart(FadeIn, top_product),
-            OldLaggedStart(FadeIn, bottom_product),
+            LaggedStartMap(FadeIn, top_product),
+            LaggedStartMap(FadeIn, bottom_product),
         )
         self.wait()
         for product in products:
@@ -4510,7 +4510,7 @@ class DelicacyInIntermixingSeries(Scene):
 
         self.play(
             FadeOut(q_marks),
-            OldLaggedStart(
+            LaggedStartMap(
                 MoveToTarget, movers1,
                 run_time=5,
                 lag_ratio=0.2,
@@ -4526,7 +4526,7 @@ class DelicacyInIntermixingSeries(Scene):
         self.wait()
         self.play(Blink(randy))
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Transform, movers2,
             lambda m: (m, m.final_position),
             run_time=3,
@@ -4645,7 +4645,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
 
         self.play(
             ShowCreation(sailor_dp_rect),
-            OldLaggedStart(ShowCreation, sailor_lines),
+            LaggedStartMap(ShowCreation, sailor_lines),
         )
         self.wait()
         self.play(ShowCreation(two_cross))
@@ -4662,7 +4662,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
             )
         )
         self.wait()
-        self.play(OldLaggedStart(FadeOut, VGroup(
+        self.play(LaggedStartMap(FadeOut, VGroup(
             sailor_lines, sailor_dp_rect, two_group
         )))
 
@@ -4707,7 +4707,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         )
         fraction_words.target.next_to(fraction_brace.target, LEFT, SMALL_BUFF)
 
-        self.play(OldLaggedStart(FadeIn, group))
+        self.play(LaggedStartMap(FadeIn, group))
         self.grow_circle_and_N(
             added_anims=[
                 MoveToTarget(fraction_brace),
@@ -4785,9 +4785,9 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         product_lines.set_color(YELLOW)
 
         self.play(
-            OldLaggedStart(FadeIn, fractions),
+            LaggedStartMap(FadeIn, fractions),
             *[
-                OldLaggedStart(
+                LaggedStartMap(
                     FadeIn, VGroup(*list(lines[-10:]) + list(lines[1:10])),
                     rate_func=there_and_back,
                     remover=True,
@@ -4799,12 +4799,12 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         )
         self.wait()
         self.play(
-            OldLaggedStart(GrowArrow, limit_arrows),
-            OldLaggedStart(
+            LaggedStartMap(GrowArrow, limit_arrows),
+            LaggedStartMap(
                 FadeInFrom, limits,
                 lambda m: (m, UP),
             ),
-            OldLaggedStart(FadeIn, dots)
+            LaggedStartMap(FadeIn, dots)
         )
         self.wait()
         self.play(
@@ -4882,7 +4882,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
             pair.target[1].move_to(pair[0], DOWN)
 
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 MoveToTarget, pairs,
                 path_arc=180 * DEGREES,
                 run_time=3,
@@ -4948,7 +4948,7 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
 
         self.play(
             ShowCreation(rect),
-            OldLaggedStart(ApplyMethod, pi_creatures, lambda m: (m.restore,))
+            LaggedStartMap(ApplyMethod, pi_creatures, lambda m: (m.restore,))
         )
         for x in range(4):
             self.play(Blink(random.choice(pi_creatures)))
@@ -5012,7 +5012,7 @@ class Conclusion(TeacherStudentsScene):
         euler.next_to(sine_formula, UP)
         self.play(
             FadeIn(euler),
-            OldLaggedStart(FadeIn, basel_problem),
+            LaggedStartMap(FadeIn, basel_problem),
             self.teacher.change, "happy",
             self.get_student_changes("sassy", "confused", "hesitant")
         )

@@ -75,7 +75,7 @@ class ShowSimpleMultivariableFunction(Scene):
                 inputs,
                 many_inputs[:len(inputs)]
             ),
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn,
                 many_inputs[len(inputs):]
             ),
@@ -88,7 +88,7 @@ class ShowSimpleMultivariableFunction(Scene):
                 func_tex[0], alt_func_tex[0]
             ),
             Write(alt_func_tex[1:3]),
-            OldLaggedStart(FadeOutAndShiftDown, many_inputs)
+            LaggedStartMap(FadeOutAndShiftDown, many_inputs)
         )
         self.wait(3)
 
@@ -144,8 +144,8 @@ class ShowGradient(Scene):
         partials.set_fill(opacity=0)
 
         self.play(
-            OldLaggedStart(FadeIn, gradient),
-            OldLaggedStart(
+            LaggedStartMap(FadeIn, gradient),
+            LaggedStartMap(
                 FadeIn, background_rects,
                 rate_func=squish_rate_func(smooth, 0.5, 1)
             )
@@ -237,9 +237,9 @@ class TakePartialDerivatives(Scene):
         self.wait()
 
         # Label y as constant
-        self.play(OldLaggedStart(ShowCreation, ys.rects))
+        self.play(LaggedStartMap(ShowCreation, ys.rects))
         self.play(
-            OldLaggedStart(GrowArrow, ys.arrows, lag_ratio=0.8),
+            LaggedStartMap(GrowArrow, ys.arrows, lag_ratio=0.8),
             Write(treat_as_constant)
         )
         self.wait(2)
@@ -283,8 +283,8 @@ class TakePartialDerivatives(Scene):
 
         treat_as_constant.next_to(xs.arrows[1], UP, SMALL_BUFF)
         self.play(
-            OldLaggedStart(ShowCreation, xs.rects),
-            OldLaggedStart(GrowArrow, xs.arrows),
+            LaggedStartMap(ShowCreation, xs.rects),
+            LaggedStartMap(GrowArrow, xs.arrows),
             Write(treat_as_constant),
             lag_ratio=0.8
         )

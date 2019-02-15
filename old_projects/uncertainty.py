@@ -756,7 +756,7 @@ class TwoCarsAtRedLight(Scene):
         self.play(
             self.get_flashes(car1, num_flashes = 2),
             self.get_flashes(car2, num_flashes = 2),
-            OldLaggedStart(FadeIn, VGroup(
+            LaggedStartMap(FadeIn, VGroup(
                 axes, time_label, y_title,
             ))
         )
@@ -866,7 +866,7 @@ class TwoCarsAtRedLight(Scene):
             freq_graph.points[0] = frequency_axes.coords_to_point(0, 0)
             freq_graph.points[-1] = frequency_axes.coords_to_point(2, 0)
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeOut, VGroup(
                 self.time_graph_label,
                 self.frequency_graph_label,
@@ -1181,7 +1181,7 @@ class FourierRecapScene(DrawFrequencyPlot):
         )
         self.wait()
         self.play(
-            OldLaggedStart(FadeIn, self.frequency_axes),
+            LaggedStartMap(FadeIn, self.frequency_axes),
             ReplacementTransform(
                 time_graph.copy(),
                 fourier_graph,
@@ -1195,7 +1195,7 @@ class FourierRecapScene(DrawFrequencyPlot):
             ),
         )
         self.wait()
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Indicate, self.frequency_axes.x_axis.numbers,
             run_time = 4,
             rate_func = wiggle,
@@ -1786,7 +1786,7 @@ class IntroduceDopplerRadar(Scene):
 
         self.remove(graph_draw, pulse, randy_look_at, axes_anim)
         self.add(axes)
-        self.play(OldLaggedStart(FadeOut, VGroup(
+        self.play(LaggedStartMap(FadeOut, VGroup(
             sum_graph, randy,
             pulse_graph.arrow, pulse_graph.label,
             echo_graph.arrow, echo_graph.label,
@@ -2054,7 +2054,7 @@ class DopplerFormulaInsert(Scene):
 
         self.add(randy)
         self.play(
-            OldLaggedStart(FadeIn, formula),
+            LaggedStartMap(FadeIn, formula),
             randy.change, "pondering", randy.get_bottom(),
         )
         self.play(Blink(randy))
@@ -2219,11 +2219,11 @@ class TimeAndFrequencyGivePositionAndVelocity(IntroduceDopplerRadar):
         self.play(ShowCreation(graph))
         self.play(
             GrowArrow(arrow),
-            OldLaggedStart(FadeIn, time, run_time = 1)
+            LaggedStartMap(FadeIn, time, run_time = 1)
         )
         self.play(
             GrowFromCenter(brace),
-            OldLaggedStart(FadeIn, frequency, run_time = 1)
+            LaggedStartMap(FadeIn, frequency, run_time = 1)
         )
         self.wait()
         self.play(
@@ -2411,7 +2411,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             look_at_arg = brace,
         ))
         self.play(Blink(randy))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeOut, VGroup(
                 randy.bubble, randy.bubble.content, 
                 brace, words,
@@ -2453,7 +2453,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         pulses = self.get_pulses()
 
         self.play(
-            OldLaggedStart(GrowFromCenter, objects[1:]),
+            LaggedStartMap(GrowFromCenter, objects[1:]),
             FadeOut(curr_graph),
             randy.change, "pondering"
         )
@@ -2544,8 +2544,8 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
                 {"buff" : SMALL_BUFF},
                 rate_func = squish_rate_func(smooth, 0.5, 1)
             ),
-            OldLaggedStart(FadeOut, self.objects),
-            OldLaggedStart(FadeOut, VGroup(
+            LaggedStartMap(FadeOut, self.objects),
+            LaggedStartMap(FadeOut, VGroup(
                 self.curr_graph, self.dish, self.pi_creature
             )),
             run_time = 2
@@ -2618,7 +2618,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.play(
             FadeOut(self.axes),
             FadeOut(self.first_echo_graph),
-            OldLaggedStart(FadeIn, objects),
+            LaggedStartMap(FadeIn, objects),
             FadeIn(self.dish)
         )
         self.add(*continual_anims)
@@ -3126,10 +3126,10 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             xi_words.next_to, added_xi_words, UP,
         )
         self.play(
-            OldLaggedStart(ShowCreation, v_lines),
+            LaggedStartMap(ShowCreation, v_lines),
             self.get_student_changes(*["pondering"]*3)
         )
-        self.play(OldLaggedStart(FadeOut, v_lines))
+        self.play(LaggedStartMap(FadeOut, v_lines))
         self.wait()
 
         self.formula_labels = VGroup(
@@ -3458,7 +3458,7 @@ class HangingWeightsScene(MovingCameraScene):
 
         self.play(
             ShowCreation(ceiling),
-            OldLaggedStart(ShowCreation, springs)
+            LaggedStartMap(ShowCreation, springs)
         )
 
     def setup_weights(self):
@@ -3481,7 +3481,7 @@ class HangingWeightsScene(MovingCameraScene):
         weights.set_color_by_gradient(BLUE_D, BLUE_E, BLUE_D)
         weights.set_stroke(WHITE, 1)
 
-        self.play(OldLaggedStart(GrowFromCenter, weights))
+        self.play(LaggedStartMap(GrowFromCenter, weights))
         self.add(self.t_tracker_walk)
         self.add(self.spring_update_anim)
         self.add(*weight_anims)
@@ -4448,7 +4448,7 @@ class Promotion(PiCreatureScene):
         )
         self.wait(2)
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyFunction, aops_logo,
                 lambda mob : (lambda m : m.shift(0.2*UP).set_color(YELLOW), mob),
                 rate_func = there_and_back, 
@@ -4537,7 +4537,7 @@ class PuzzleStatement(Scene):
         """, alignment = "")
         words.set_width(FRAME_WIDTH - 2)
         words.next_to(group, DOWN, LARGE_BUFF)
-        self.play(OldLaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
+        self.play(LaggedStartMap(FadeIn, words, run_time = 5, lag_ratio = 0.2))
         self.wait(2)
 
 class UncertaintyEndScreen(PatreonEndScreen):

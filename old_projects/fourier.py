@@ -127,7 +127,7 @@ class OtherContexts(PiCreatureScene):
         self.add(items)
         for item in items[1:]:
             self.play(
-                OldLaggedStart(
+                LaggedStartMap(
                     ApplyMethod, item,
                     lambda m : (m.set_fill, {"opacity" : 1}),
                 ), 
@@ -646,7 +646,7 @@ class BreakApartSum(Scene):
         rect = SurroundingRectangle(pure_graphs, color = WHITE)
         self.play(
             ShowCreation(rect),
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyFunction, pure_graphs,
                 lambda g : (lambda m : m.shift(SMALL_BUFF*UP).set_color(YELLOW), g),
                 rate_func = wiggle
@@ -1124,7 +1124,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         self.play(ShowCreation(graph, run_time = 2, rate_func=linear))
         self.play(
             FadeIn(words),
-            OldLaggedStart(FadeIn, braces),
+            LaggedStartMap(FadeIn, braces),
             *list(map(ShowCreation, v_lines))
         )
         self.wait()
@@ -1227,7 +1227,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
 
         self.play(ShowCreation(bps_label.rect))
         self.play(FadeOut(bps_label.rect))
-        self.play(OldLaggedStart(FadeIn, braces, run_time = 3))
+        self.play(LaggedStartMap(FadeIn, braces, run_time = 3))
         self.play(FadeOut(braces))
         self.play(ShowCreation(wps_label.rect))
         self.play(FadeOut(wps_label.rect))
@@ -1252,7 +1252,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
             )
             self.wait()
             if count == 2:
-                self.play(OldLaggedStart(
+                self.play(LaggedStartMap(
                     ApplyFunction, v_lines,
                     lambda mob : (
                         lambda m : m.shift(0.25*UP).set_color(YELLOW), 
@@ -1430,7 +1430,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             wps_label.move_to, self.circle_plane.get_top(),
             com_label.move_to, self.circle_plane, DOWN,
         )
-        self.play(OldLaggedStart(FadeIn, frequency_axes))
+        self.play(LaggedStartMap(FadeIn, frequency_axes))
         self.wait()
         self.play(MoveAlongPath(
             self.center_of_mass_dot, flower_path,
@@ -1733,7 +1733,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
         self.remove(start_graph)
         self.play(
             Write(bps_label),
-            OldLaggedStart(FadeIn, braces),
+            LaggedStartMap(FadeIn, braces),
             *list(map(ShowCreation, v_lines)),
             run_time = 1
         )
@@ -1904,7 +1904,7 @@ class ShowLinearity(DrawFrequencyPlot):
             FadeIn(axes_copy),
             ShowCreation(high_freq_graph),
         )
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(high_freq_label, low_freq_label)
         ))
         self.wait()
@@ -1961,7 +1961,7 @@ class ShowLinearity(DrawFrequencyPlot):
 
         self.generate_fourier_dot_transform(fourier_graph)                
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(
                 circle_plane, wps_label,
                 frequency_axes, x_coord_label,
@@ -2185,9 +2185,9 @@ class ShowCommutativeDiagram(ShowLinearity):
             flat_rect.target = spike_rect
             flat_rects.add(flat_rect)
 
-        self.play(OldLaggedStart(GrowFromCenter, flat_rects))
+        self.play(LaggedStartMap(GrowFromCenter, flat_rects))
         self.wait()
-        self.play(OldLaggedStart(MoveToTarget, flat_rects))
+        self.play(LaggedStartMap(MoveToTarget, flat_rects))
         self.wait()
 
         sum_spike_rects = VGroup(*[
@@ -2197,7 +2197,7 @@ class ShowCommutativeDiagram(ShowLinearity):
         self.play(ReplacementTransform(
             flat_rects, sum_spike_rects
         ))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             WiggleOutThenIn, sum_spike_rects,
             run_time = 1,
             lag_ratio = 0.7,
@@ -3044,7 +3044,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
                 t_mob.shift(0.5*SMALL_BUFF*LEFT)
 
         self.play(MoveToTarget(t_mobs))
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             Indicate, dots[1],
             rate_func = there_and_back,
             color = TEAL,
@@ -3873,7 +3873,7 @@ class BoundsAtInfinity(SummarizeFormula):
         self.play(ReplacementTransform(
             self.get_time_interval(0, 0.01), time_interval
         ))
-        self.play(OldLaggedStart(ShowCreation, bound_rects))
+        self.play(LaggedStartMap(ShowCreation, bound_rects))
         self.wait()
         self.play(FadeOut(bound_rects))
         self.play(ReplacementTransform(bounds, inf_bounds))
@@ -4049,7 +4049,7 @@ class SubscribeOrBinge(PiCreatureScene):
         for video, color in zip(videos, colors):
             video.set_color(color)
         videos.move_to(binge.get_bottom(), UP)
-        video_anim = OldLaggedStart(
+        video_anim = LaggedStartMap(
             Succession, videos, 
             lambda v : (
                 FadeIn, v,

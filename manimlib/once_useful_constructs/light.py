@@ -2,7 +2,7 @@ from traceback import *
 
 from scipy.spatial import ConvexHull
 
-from manimlib.animation.composition import OldLaggedStart
+from manimlib.animation.composition import LaggedStartMap
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import Transform
@@ -44,7 +44,7 @@ def inverse_quadratic(maxint, scale, cutoff):
     return inverse_power_law(maxint, scale, cutoff, 2)
 
 
-class SwitchOn(OldLaggedStart):
+class SwitchOn(LaggedStartMap):
     CONFIG = {
         "lag_ratio": 0.2,
         "run_time": SWITCH_ON_RUN_TIME
@@ -54,12 +54,12 @@ class SwitchOn(OldLaggedStart):
         if (not isinstance(light, AmbientLight) and not isinstance(light, Spotlight)):
             raise Exception(
                 "Only AmbientLights and Spotlights can be switched on")
-        OldLaggedStart.__init__(
+        LaggedStartMap.__init__(
             self, FadeIn, light, **kwargs
         )
 
 
-class SwitchOff(OldLaggedStart):
+class SwitchOff(LaggedStartMap):
     CONFIG = {
         "lag_ratio": 0.2,
         "run_time": SWITCH_ON_RUN_TIME
@@ -70,7 +70,7 @@ class SwitchOff(OldLaggedStart):
             raise Exception(
                 "Only AmbientLights and Spotlights can be switched off")
         light.submobjects = light.submobjects[::-1]
-        OldLaggedStart.__init__(self,
+        LaggedStartMap.__init__(self,
                              FadeOut, light, **kwargs)
         light.submobjects = light.submobjects[::-1]
 

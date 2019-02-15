@@ -446,7 +446,7 @@ class MathAndPhysicsConspiring(Scene):
         to_fade = VGroup(math_title, *math_stuffs, physics_title)
 
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeInFromDown, to_fade,
                 lag_ratio=0.7,
                 run_time=3,
@@ -605,7 +605,7 @@ class TwoBlocksLabel(Scene):
         arrows.set_color(RED)
         self.play(
             Write(label),
-            OldLaggedStart(GrowArrow, arrows, lag_ratio=0.7),
+            LaggedStartMap(GrowArrow, arrows, lag_ratio=0.7),
             run_time=1
         )
         self.wait()
@@ -928,7 +928,7 @@ class PiComputingAlgorithmsAxes(Scene):
             method.shift_onto_screen()
             algorithms.add(VGroup(method, cross))
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeInFromDown, algorithms,
             run_time=4,
             lag_ratio=0.4,
@@ -1238,7 +1238,7 @@ class CompareToGalacticMass(Scene):
         self.play(
             Write(equals),
             Write(words),
-            OldLaggedStart(
+            LaggedStartMap(
                 Restore, black_holes,
                 run_time=3
             )
@@ -1374,7 +1374,7 @@ class CompareAlgorithmToPhysics(PiCreatureScene):
                 target_mode="pondering",
                 look_at_arg=left_rect,
             ),
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeInFrom, digits,
                 lambda m: (m, LEFT),
                 run_time=5,
@@ -1491,7 +1491,7 @@ class NextVideo(Scene):
         self.play(Write(dots))
         self.wait()
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeInFrom, mid_words,
                 lambda m: (m, UP),
                 lag_ratio=0.8,
@@ -1507,11 +1507,11 @@ class NextVideo(Scene):
             ShowCreation(speech_bubble),
             Write(speech_bubble.content),
             randy.change, "maybe", friends[0].eyes,
-            OldLaggedStart(FadeInFromDown, friends),
+            LaggedStartMap(FadeInFromDown, friends),
             videos.space_out_submobjects, 1.6,
         )
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod, friends,
                 lambda m: (m.change, "pondering"),
                 run_time=1,

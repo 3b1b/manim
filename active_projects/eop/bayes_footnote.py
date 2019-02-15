@@ -263,7 +263,7 @@ class OneInOneThousandHaveDisease(Scene):
         self.play(randy.restore)
         self.play(
             Write(title),
-            OldLaggedStart(FadeIn, all_creatures, run_time = 3)
+            LaggedStartMap(FadeIn, all_creatures, run_time = 3)
         )
         self.wait()
 
@@ -344,7 +344,7 @@ class TestNonDiseaseCase(TestScene):
         self.play(Blink(randy))
         self.play(
             ReplacementTransform(randy, all_creatures[0][0]),
-            OldLaggedStart(FadeIn, all_creatures, run_time = 2),
+            LaggedStartMap(FadeIn, all_creatures, run_time = 2),
             FadeOut(result)
         )
         self.play(ShowCreation(rect))
@@ -434,7 +434,7 @@ class RephraseQuestion(Scene):
 
         self.add(words[0])
         self.play(
-            OldLaggedStart(FadeIn, prior),
+            LaggedStartMap(FadeIn, prior),
             ShowCreation(prior_arrow),
             run_time = 1
         )
@@ -443,7 +443,7 @@ class RephraseQuestion(Scene):
         self.wait()
         self.play(FadeIn(words[2]))
         self.play(
-            OldLaggedStart(FadeIn, posterior),
+            LaggedStartMap(FadeIn, posterior),
             ShowCreation(posterior_arrow),
             run_time = 1
         )
@@ -568,7 +568,7 @@ class ShowRestrictedSpace(Scene):
         healthy_words.set_color(BLUE)
 
         self.add(title)
-        self.play(OldLaggedStart(FadeIn, all_creatures))
+        self.play(LaggedStartMap(FadeIn, all_creatures))
         self.play(
             FadeIn(sick_one_words),
             ShowCreation(sick_one_arrow)
@@ -582,7 +582,7 @@ class ShowRestrictedSpace(Scene):
         self.play(sick_one.restore)
         self.play(
             Write(healthy_words),
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod, healthy_creatures,
                 lambda m : (m.shift, MED_SMALL_BUFF*UP),
                 rate_func = there_and_back,
@@ -641,7 +641,7 @@ class ShowRestrictedSpace(Scene):
 
         self.play(
             GrowFromCenter(brace),
-            OldLaggedStart(
+            LaggedStartMap(
                 ApplyMethod, false_positives,
                 lambda pi : (pi.set_color, self.false_positive_color),
                 run_time = 1
@@ -954,7 +954,7 @@ class ShowTheFormula(TeacherStudentsScene):
         #Show initial formula
         lhs_copy = lhs.copy()
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, initial_formula, 
                 lag_ratio = 0.7
             ),
@@ -975,7 +975,7 @@ class ShowTheFormula(TeacherStudentsScene):
             FadeIn(VGroup(*number_fraction[:3]))
         )
         self.wait(2)
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*number_fraction[3:]),
             run_time = 3,
             lag_ratio = 0.7
@@ -1331,7 +1331,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         arcs.move_to(pi1.eyes, vect)
         arcs.set_stroke(WHITE, 4)
 
-        self.play(OldLaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, arcs,
             lambda m : (m.restore,),
             lag_ratio = 0.7,
@@ -1375,7 +1375,7 @@ class CompareNumbersInBothExamples(Scene):
                 mob.shift(vect*FRAME_X_RADIUS/2)
 
         self.play(
-            OldLaggedStart(FadeIn, titles, lag_ratio = 0.7),
+            LaggedStartMap(FadeIn, titles, lag_ratio = 0.7),
             *list(map(ShowCreation, [h_line, v_line]))
         )
         self.wait()
@@ -1437,7 +1437,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
         self.revert_to_original_skipping_status()
         self.play(bayes_to_intuition.to_edge, UP)
         self.play(
-            OldLaggedStart(FadeIn, statistics_to_belief),
+            LaggedStartMap(FadeIn, statistics_to_belief),
             cross.move_to, arrow
         )
         self.change_student_modes(

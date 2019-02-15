@@ -36,7 +36,7 @@ class Announcements(PiCreatureScene):
 
         self.play(
             Write(title),
-            OldLaggedStart(FadeIn, announcements),
+            LaggedStartMap(FadeIn, announcements),
             ShowCreation(underline),
             self.pi_creature.change, "hooray", underline,
         )
@@ -117,7 +117,7 @@ class PowersOfTwo(Scene):
         )
 
         self.play(
-            OldLaggedStart(
+            LaggedStartMap(
                 FadeIn, curr_po2_outline,
                 rate_func = lambda t : wiggle(t, 8),
                 run_time = 2,
