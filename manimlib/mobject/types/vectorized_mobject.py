@@ -505,25 +505,36 @@ class VMobject(Mobject):
         self.make_smooth()
         return self
 
-    def make_smooth(self):
+    def change_anchor_mode(self, mode):
+        assert(mode in ["jagged", "smooth"])
         nppcc = self.n_points_per_cubic_curve
-        subpaths = self.get_subpaths()
-        self.clear_points()
-        for subpath in subpaths:
-            anchors = [*subpath[::nppcc], subpath[-1]]
-            h1, h2 = get_smooth_handle_points(anchors)
-            new_subpath = np.array(subpath)
-            new_subpath[1::nppcc] = h1
-            new_subpath[2::nppcc] = h2
-            self.append_points(new_subpath)
+        for submob in self.family_members_with_points():
+            subpaths = submob.get_subpaths()
+            submob.clear_points()
+            for subpath in subpaths:
+                anchors = np.append(
+                    subpath[::nppcc],
+                    subpath[-1:],
+                    0
+                )
+                if mode == "smooth":
+                    h1, h2 = get_smooth_handle_points(anchors)
+                elif mode == "jagged":
+                    a1 = anchors[:-1]
+                    a2 = anchors[1:]
+                    h1 = interpolate(a1, a2, 1.0 / 3)
+                    h2 = interpolate(a1, a2, 2.0 / 3)
+                new_subpath = np.array(subpath)
+                new_subpath[1::nppcc] = h1
+                new_subpath[2::nppcc] = h2
+                submob.append_points(new_subpath)
         return self
 
+    def make_smooth(self):
+        return self.change_anchor_mode("smooth")
+
     def make_jagged(self):
-        anchors = self.get_start_anchors()
-        last_point = self.get_last_point()
-        return self.set_points_as_corners(
-            [*anchors, last_point]
-        )
+        return self.change_anchor_mode("jagged")
 
     def add_subpath(self, points):
         assert(len(points) % 4 == 0)
