@@ -136,10 +136,10 @@ class CheckFormula(Scene):
     }
     def construct(self):
         self.imagen=self.import_text()
-            if self.set_size=="width":
-                self.imagen.set_width(FRAME_WIDTH)
-            else:
-                self.imagen.set_height(FRAME_HEIGHT)
+        if self.set_size=="width":
+            self.imagen.set_width(FRAME_WIDTH)
+        else:
+            self.imagen.set_height(FRAME_HEIGHT)
             self.imagen.scale(self.svg_scale)
         if self.flip_svg==True:
             self.imagen.flip()
