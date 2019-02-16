@@ -197,7 +197,9 @@ class SlidingBlocks(VGroup):
         return clack_data
 
 
-class ClackFlashes(ContinualAnimation):
+# TODO, this is untested after turning it from a
+# ContinualAnimation into a VGroup
+class ClackFlashes(VGroup):
     CONFIG = {
         "flash_config": {
             "run_time": 0.5,
@@ -209,9 +211,8 @@ class ClackFlashes(ContinualAnimation):
     }
 
     def __init__(self, clack_data, **kwargs):
-        digest_config(self, kwargs)
+        VGroup.__init__(self, **kwargs)
         self.flashes = []
-        group = Group()
         last_time = 0
         for location, time in clack_data:
             if (time - last_time) < self.min_time_between_flashes:
@@ -225,24 +226,23 @@ class ClackFlashes(ContinualAnimation):
             flash.start_time = time
             flash.end_time = time + flash.run_time
             self.flashes.append(flash)
-        ContinualAnimation.__init__(self, group, **kwargs)
 
-    def update_mobject(self, dt):
-        total_time = self.get_time()
-        group = self.mobject
+        self.time = 0
+        self.add_updater(lambda m: m.update(dt))
+
+    def update(self, dt):
+        time = self.time
+        self.time += dt
         for flash in self.flashes:
-            if flash.start_time < total_time < flash.end_time:
-                if flash.mobject not in group:
-                    group.add(flash.mobject)
+            if flash.start_time < time < flash.end_time:
+                if flash.mobject not in self.submobjects:
+                    self.add(flash.mobject)
                 flash.update(
-                    (total_time - flash.start_time) / flash.run_time
+                    (time - flash.start_time) / flash.run_time
                 )
             else:
-                if flash.mobject in group:
-                    group.remove(flash.mobject)
-
-    def get_time(self):
-        return self.external_time
+                if flash.mobject in self.submobjects:
+                    self.remove(flash.mobject)
 
 
 class Wall(Line):

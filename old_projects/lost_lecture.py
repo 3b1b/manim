@@ -12,12 +12,16 @@ COBALT = "#0047AB"
 # updater instead
 
 
-class Orbiting(ContinualAnimation):
+# TODO, this is untested after turning it from a
+# ContinualAnimation into a VGroup
+class Orbiting(VGroup):
     CONFIG = {
         "rate": 7.5,
     }
 
     def __init__(self, planet, star, ellipse, **kwargs):
+        VGroup.__init__(self, **kwargs)
+        self.add(planet)
         self.planet = planet
         self.star = star
         self.ellipse = ellipse
@@ -25,9 +29,9 @@ class Orbiting(ContinualAnimation):
         self.proportion = 0
         planet.move_to(ellipse.point_from_proportion(0))
 
-        ContinualAnimation.__init__(self, planet, **kwargs)
+        self.add_updater(lambda m, dt: m.update(dt))
 
-    def update_mobject(self, dt):
+    def update(self, dt):
         # time = self.internal_time
 
         planet = self.planet
@@ -53,22 +57,27 @@ class Orbiting(ContinualAnimation):
         )
 
 
-class SunAnimation(ContinualAnimation):
+# TODO, this is untested after turning it from a
+# ContinualAnimation into a Group
+class SunAnimation(Group):
     CONFIG = {
         "rate": 0.2,
         "angle": 60 * DEGREES,
     }
 
     def __init__(self, sun, **kwargs):
+        Group.__init__(self, **kwargs)
         self.sun = sun
         self.rotated_sun = sun.deepcopy()
         self.rotated_sun.rotate(60 * DEGREES)
-        ContinualAnimation.__init__(
-            self, Group(sun, self.rotated_sun), **kwargs
-        )
+        self.time = 0
 
-    def update_mobject(self, dt):
-        time = self.internal_time
+        self.add(self.sun, self.rotated_sun)
+        self.add_updater(lambda m, dt: m.update(dt))
+
+    def update(self, dt):
+        time = self.time
+        self.time += dt
         a = (np.sin(self.rate * time * TAU) + 1) / 2.0
         self.rotated_sun.rotate(-self.angle)
         self.rotated_sun.move_to(self.sun)

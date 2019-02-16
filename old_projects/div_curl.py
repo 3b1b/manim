@@ -5,7 +5,7 @@ DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
 
 # Quick note to anyone coming to this file with the
 # intent of recreating animations from the video.  Some
-# of these, especially those involving StreamLineAnimation,
+# of these, especially those involving AnimatedStreamLines,
 # can take an extremely long time to run, but much of the
 # computational cost is just for giving subtle little effects
 # which don't matter too much.  Switching the line_anim_class
@@ -349,41 +349,39 @@ class VectorField(VGroup):
         return vect
 
 
-# Continual animations
+# Redefining what was once a ContinualAnimation class
+# as a function
+def VectorFieldFlow(mobject, func):
+    mobject.add_updater(
+        lambda m, dt: m.shift(
+            func(m.get_center()) * dt
+        )
+    )
+    return mobject
 
 
-class VectorFieldFlow(ContinualAnimation):
-    CONFIG = {
-        "mode": None,
-    }
-
-    def __init__(self, mobject, func, **kwargs):
-        """
-        Func should take in a vector in R3, and output a vector in R3
-        """
-        self.func = func
-        ContinualAnimation.__init__(self, mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        self.apply_nudge(dt)
-
-    def apply_nudge(self, dt):
-        self.mobject.shift(self.func(self.mobject.get_center()) * dt)
-
-
-class VectorFieldSubmobjectFlow(VectorFieldFlow):
-    def apply_nudge(self, dt):
-        for submob in self.mobject:
+# Redefining what was once a ContinualAnimation class
+# as a function
+def VectorFieldSubmobjectFlow(mobject, func):
+    def apply_nudge(mob, dt):
+        for submob in mob:
             x, y = submob.get_center()[:2]
             if abs(x) < FRAME_WIDTH and abs(y) < FRAME_HEIGHT:
-                submob.shift(self.func(submob.get_center()) * dt)
+                submob.shift(func(submob.get_center()) * dt)
+
+    mobject.add_updater(apply_nudge)
+    return mobject
 
 
-class VectorFieldPointFlow(VectorFieldFlow):
+# Redefining what was once a ContinualAnimation class
+# as a function
+def VectorFieldPointFlow(mobject, func):
     def apply_nudge(self, dt):
         self.mobject.apply_function(
-            lambda p: p + self.func(p) * dt
+            lambda p: p + func(p) * dt
         )
+    mobject.add_updater(apply_nudge)
+    return mobject
 
 
 # TODO: Make it so that you can have a group of stream_lines
@@ -413,7 +411,9 @@ class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
         ])
 
 
-class StreamLineAnimation(ContinualAnimation):
+# TODO, this is untested after turning it from a
+# ContinualAnimation into a VGroup
+class AnimatedStreamLines(VGroup):
     CONFIG = {
         "lag_range": 4,
         "line_anim_class": ShowPassingFlash,
@@ -425,16 +425,16 @@ class StreamLineAnimation(ContinualAnimation):
     }
 
     def __init__(self, stream_lines, **kwargs):
-        digest_config(self, kwargs)
+        VGroup.__init__(self, **kwargs)
         self.stream_lines = stream_lines
-        group = VGroup()
         for line in stream_lines:
             line.anim = self.line_anim_class(line, **self.line_anim_config)
             line.time = -self.lag_range * random.random()
-            group.add(line.anim.mobject)
-        ContinualAnimation.__init__(self, group, **kwargs)
+            self.add(line.anim.mobject)
 
-    def update_mobject(self, dt):
+        self.add_updater(lambda m, dt: m.update(dt))
+
+    def update(self, dt):
         stream_lines = self.stream_lines
         for line in stream_lines:
             line.time += dt
@@ -442,22 +442,26 @@ class StreamLineAnimation(ContinualAnimation):
             line.anim.update(adjusted_time / line.anim.run_time)
 
 
-class JigglingSubmobjects(ContinualAnimation):
+# TODO, this is untested after turning it from a
+# ContinualAnimation into a VGroup
+class JigglingSubmobjects(VGroup):
     CONFIG = {
         "amplitude": 0.05,
         "jiggles_per_second": 1,
     }
 
     def __init__(self, group, **kwargs):
+        VGroup.__init__(self, **kwargs)
         for submob in group.submobjects:
             submob.jiggling_direction = rotate_vector(
                 RIGHT, np.random.random() * TAU,
             )
             submob.jiggling_phase = np.random.random() * TAU
-        ContinualAnimation.__init__(self, group, **kwargs)
+            self.add(submob)
+        self.add_updater(lambda m, dt: m.update(dt))
 
-    def update_mobject(self, dt):
-        for submob in self.mobject.submobjects:
+    def update(self, dt):
+        for submob in self.submobjects:
             submob.jiggling_phase += dt * self.jiggles_per_second * TAU
             submob.shift(
                 self.amplitude *
@@ -670,7 +674,7 @@ class TestVectorField(Scene):
             min_magnitude=0,
             max_magnitude=2,
         )
-        self.add(StreamLineAnimation(
+        self.add(AnimatedStreamLines(
             lines,
             line_anim_class=ShowPassingFlash
         ))
@@ -930,7 +934,7 @@ class CylinderModel(Scene):
             line_anim_class = ShowPassingFlashWithThinningStrokeWidth
         else:
             line_anim_class = ShowPassingFlash
-        return StreamLineAnimation(
+        return AnimatedStreamLines(
             stream_lines,
             line_anim_class=line_anim_class,
         )
@@ -1447,7 +1451,7 @@ class IntroduceVectorField(Scene):
             vector_field.func,
             **self.stream_line_config
         )
-        stream_line_animation = StreamLineAnimation(
+        stream_line_animation = AnimatedStreamLines(
             stream_lines,
             **self.stream_line_animation_config
         )
@@ -1771,7 +1775,7 @@ class DefineDivergence(ChangingElectricField):
             self.vector_field.func,
             **self.stream_line_config
         )
-        stream_line_animation = StreamLineAnimation(
+        stream_line_animation = AnimatedStreamLines(
             stream_lines,
             **self.stream_line_animation_config
         )
@@ -1990,7 +1994,7 @@ class DivergenceAtSlowFastPoint(Scene):
             self.vector_field.func,
             **self.stream_lines_config
         )
-        stream_line_animation = StreamLineAnimation(stream_lines)
+        stream_line_animation = AnimatedStreamLines(stream_lines)
         stream_line_animation.update(3)
         self.add(stream_line_animation)
 
@@ -2292,7 +2296,7 @@ class PureCylinderFlow(Scene):
 
         self.modify_flow(stream_lines)
 
-        stream_line_animation = StreamLineAnimation(stream_lines)
+        stream_line_animation = AnimatedStreamLines(stream_lines)
         stream_line_animation.update(3)
 
         self.add(stream_line_animation)
@@ -2384,7 +2388,7 @@ class IntroduceCurl(IntroduceVectorField):
             self.vector_field.func,
             **self.stream_line_config
         )
-        stream_line_animation = StreamLineAnimation(
+        stream_line_animation = AnimatedStreamLines(
             stream_lines,
             **self.stream_line_animation_config
         )
@@ -3453,7 +3457,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
             max_magnitude=vector_field.max_magnitude,
             virtual_time=4,
         )
-        stream_line_animation = StreamLineAnimation(
+        stream_line_animation = AnimatedStreamLines(
             stream_lines,
         )
         self.add(stream_line_animation)
@@ -4344,7 +4348,7 @@ class ZToHalfFlowNearWall(ComplexTransformationScene, MovingCameraScene):
             stroke_width=2,
             max_magnitude=10,
         )
-        stream_line_animation = StreamLineAnimation(stream_lines)
+        stream_line_animation = AnimatedStreamLines(stream_lines)
 
         self.add(stream_line_animation)
         self.wait(7)

@@ -5,6 +5,14 @@ import cv2
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from big_ol_pile_of_manim_imports import *
 
+import warnings
+warnings.warn("""
+    Warning: This file makes use of
+    ContinualAnimation, which has since
+    been deprecated
+""")
+
+
 from nn.network import *
 
 #force_skipping

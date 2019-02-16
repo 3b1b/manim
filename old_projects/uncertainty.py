@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 
-
 import scipy
 from big_ol_pile_of_manim_imports import *
 from old_projects.fourier import *
+
+import warnings
+warnings.warn("""
+    Warning: This file makes use of
+    ContinualAnimation, which has since
+    been deprecated
+""")
 
 FREQUENCY_COLOR = RED
 USE_ALMOST_FOURIER_BY_DEFAULT = False

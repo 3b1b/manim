@@ -11,7 +11,6 @@ from manimlib.animation.transform import MoveToTarget, ApplyMethod
 from manimlib.camera.camera import Camera
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.continual_animation.continual_animation import ContinualAnimation
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter

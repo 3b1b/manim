@@ -7,10 +7,8 @@ from manimlib.animation.fading import FadeIn
 from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import Transform
 from manimlib.constants import *
-from manimlib.continual_animation.continual_animation import ContinualAnimation
 from manimlib.mobject.geometry import AnnularSector
 from manimlib.mobject.geometry import Annulus
-from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
@@ -70,8 +68,7 @@ class SwitchOff(LaggedStartMap):
             raise Exception(
                 "Only AmbientLights and Spotlights can be switched off")
         light.submobjects = light.submobjects[::-1]
-        LaggedStartMap.__init__(self,
-                             FadeOut, light, **kwargs)
+        LaggedStartMap.__init__(self, FadeOut, light, **kwargs)
         light.submobjects = light.submobjects[::-1]
 
 
@@ -596,11 +593,8 @@ class LightSource(VMobject):
         self.shadow.mark_paths_closed = True
 
 
-class ScreenTracker(ContinualAnimation):
-    def __init__(self, light_source, **kwargs):
-        self.light_source = light_source
-        dummy_mob = Mobject()
-        ContinualAnimation.__init__(self, dummy_mob, **kwargs)
-
-    def update_mobject(self, dt):
-        self.light_source.update()
+# Redefining what was once a ContinualAnimation class
+# as a function
+def ScreenTracker(light_source):
+    light_source.add_updater(lambda m: m.update())
+    return light_source
