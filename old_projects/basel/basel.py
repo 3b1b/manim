@@ -146,7 +146,7 @@ class LightIndicator(VMobject):
         intensity = self.light_source.opacity_function(distance) / self.opacity_for_unit_intensity
         return intensity
 
-    def continual_update(self):
+    def update_mobjects(self):
         if self.light_source == None:
             print("Indicator cannot update, reason: no light source found")
         self.set_intensity(self.measured_intensity())
@@ -172,7 +172,7 @@ class UpdateLightIndicator(AnimationGroup):
 class ContinualLightIndicatorUpdate(ContinualAnimation):
 
     def update_mobject(self,dt):
-        self.mobject.continual_update()
+        self.mobject.update_mobjects()
 
 
 def copy_func(f):

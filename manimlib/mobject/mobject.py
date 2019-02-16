@@ -163,6 +163,12 @@ class Mobject(Container):
             if "dt" in get_parameters(updater)
         ]
 
+    def has_time_based_updater(self):
+        for updater in self.udpaters:
+            if "dt" in get_parameters(updater):
+                return True
+        return False
+
     def get_updaters(self):
         return self.updaters
 

@@ -276,8 +276,8 @@ class MirrorScene(Scene):
     def disallow_sound(self):
         self.is_sound_allowed = False
 
-    def continual_update(self, dt):
-        super().continual_update(dt)
+    def update_mobjects(self, dt):
+        super().update_mobjects(dt)
         if self.get_count() != self.last_count:
             self.last_count = self.get_count()
             if self.is_sound_allowed:

@@ -30,7 +30,7 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
         if not self.show_M_vects:
             for M_vect in self.em_wave.M_vects:
                 M_vect.set_fill(opacity = 0)
-        self.continual_update()
+        self.update_mobjects()
         for vect in it.chain(self.em_wave.E_vects, self.em_wave.M_vects):
             vect.reset_normal_vector()
         self.remove(self.em_wave)
@@ -186,7 +186,7 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
 
     def get_photons(self):
         self.reference_line.rotate(np.pi/4)
-        self.continual_update()
+        self.update_mobjects()
         return [
             WavePacket(
                 filter_distance = FRAME_X_RADIUS + x,
@@ -496,7 +496,7 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
             "A_vect" : [0, 1, -1],
         })
         self.em_wave = EMWave(**config)
-        self.continual_update()
+        self.update_mobjects()
         passing_photon = WavePacket(
             em_wave = self.em_wave.copy(),
             run_time = 1.5,
@@ -936,7 +936,7 @@ class ForgetPreviousActions(ShowVariousFilterPairs):
         self.remove(*possible_second_filters)
         self.add(second_filter)
         self.apply_filter = True
-        self.continual_update()
+        self.update_mobjects()
         self.photons = self.get_photons()[1:]
 
         group = VGroup(*self.pol_filters)

@@ -316,7 +316,7 @@ class PositionPhaseSpaceScene(Scene):
                 self.add(self.get_continually_building_trajectory())
 
     def end_sliding(self):
-        self.continual_update(dt=0)
+        self.update_mobjects(dt=0)
         self.ps_point.clear_updaters()
         if hasattr(self, "sliding_time_tracker"):
             self.remove(self.sliding_time_tracker)
@@ -2183,7 +2183,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         for x in range(2):
             for u in [-1, 1]:
                 ps_vect.rotate(u * 2 * theta, **kwargs)
-                self.continual_update(dt=0)
+                self.update_mobjects(dt=0)
                 self.wait()
         ps_vect.resume_updating()
 
