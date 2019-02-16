@@ -149,16 +149,6 @@ class Scene(Container):
         for mobject in self.mobjects:
             mobject.update(dt)
 
-    # TODO, remove this, and calls to this
-    def wind_down(self, *continual_animations, **kwargs):
-        wind_down_time = kwargs.get("wind_down_time", 1)
-        for continual_animation in continual_animations:
-            continual_animation.begin_wind_down(wind_down_time)
-        self.wait(wind_down_time)
-        # TODO, this is not done with the remove method so as to
-        # keep the relevant mobjects.  Better way?
-        self.continual_animations = [ca for ca in self.continual_animations if ca in continual_animations]
-
     def should_update_mobjects(self):
         return self.always_update_mobjects or any([
             mob.has_time_based_updater()
@@ -192,28 +182,12 @@ class Scene(Container):
     def get_mobject_family_members(self):
         return self.camera.extract_mobject_family_members(self.mobjects)
 
-    # def separate_mobjects_and_continual_animations(self, mobjects_or_continual_animations):
-    #     mobjects = []
-    #     continual_animations = []
-    #     for item in mobjects_or_continual_animations:
-    #         if isinstance(item, Mobject):
-    #             mobjects.append(item)
-    #         elif isinstance(item, ContinualAnimation):
-    #             mobjects.append(item.mobject)
-    #             continual_animations.append(item)
-    #         else:
-    #             raise Exception("""
-    #                 Adding/Removing something which is
-    #                 not a Mobject or a ContinualAnimation
-    #              """)
-    #     return mobjects, continual_animations
-
     def add(self, *mobjects):
         """
         Mobjects will be displayed, from background to
         foreground in the order with which they are added.
         """
-        mobjects += self.foreground_mobjects
+        mobjects = [*mobjects, *self.foreground_mobjects]
         self.restructure_mobjects(to_remove=mobjects)
         self.mobjects += mobjects
         return self
@@ -318,9 +292,8 @@ class Scene(Container):
                 len(mob.get_updaters()) > 0,
                 mob in self.foreground_mobjects
             ]
-            for possibility in update_possibilities:
-                if possibility:
-                    return mobjects[i:]
+            if any(update_possibilities):
+                return mobjects[i:]
         return []
 
     def get_time_progression(self, run_time, n_iterations=None, override_skip_animations=False):
@@ -472,6 +445,7 @@ class Scene(Container):
             anim.mobject for anim in animations
         ]
         if self.skip_animations:
+            # TODO, run this call in for each animation?
             self.update_mobjects(self.get_run_time(animations))
         else:
             self.update_mobjects(0)
@@ -507,7 +481,6 @@ class Scene(Container):
                 duration,
                 n_iterations=-1,  # So it doesn't show % progress
                 override_skip_animations=True
-
             )
             time_progression.set_description(
                 "Waiting for {}".format(stop_condition.__name__)
@@ -525,6 +498,8 @@ class Scene(Container):
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.should_update_mobjects():
             time_progression = self.get_wait_time_progression(duration, stop_condition)
+            # TODO, be smart about setting a static image
+            # the same way Scene.play does
             for t in time_progression:
                 self.update_mobjects(dt)
                 self.update_frame()
