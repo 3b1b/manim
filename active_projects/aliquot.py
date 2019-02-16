@@ -12,11 +12,6 @@ class AmicableNumbers(Scene):
     CONFIG = {
         "n1": 28,
         "n2": 284,
-        # "colors": [
-        #     BLUE, RED, YELLOW, GREEN,
-        #     MAROON_B, PURPLE_E, TEAL,
-        #     LIGHT_GREY, PINK, GREY_BROWN,
-        # ]
         "colors": [
             BLUE_C,
             BLUE_B,
