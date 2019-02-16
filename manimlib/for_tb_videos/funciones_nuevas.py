@@ -40,3 +40,35 @@ def Flecha(not1,not2,proporcion=0.96,**kwargs):
 	tip.rotate(flecha.get_angle()+PI/2)
 	flecha.add(tip)
 	return flecha
+
+def TypeWriter(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],time_spaces=0.25,num_random=89,end=False):
+    def devuelve_random(numero):
+        for num in range(numero):
+                for i in range(random.randint(1,5)):
+                    t_random=random.randint(i,5)
+        return t_random
+    for num in range(num_random):
+        for i in range(random.randint(1,2)):
+            c_random=random.randint(i+1,3)
+    for i in range(len(texto)):
+        if i in spaces:
+            self.add_sound("typewriter/espacio")
+            self.wait(time_spaces)
+        if i!=len(texto)-1:
+            self.add_sound("typewriter/tecla%s"%devuelve_random(num_random))
+            self.play(LaggedStart(FadeIn, 
+                        texto[i], run_time = p*len(texto[i]),
+                        lag_ratio=lag/len(texto[i])))
+            self.wait(0.1*devuelve_random(num_random)*time_random)
+        elif i==len(texto)-1 and end==False:
+            self.add_sound("typewriter/enter")
+            self.play(LaggedStart(FadeIn, 
+                        texto[i], run_time = p*len(texto[i]),
+                        lag_ratio=lag/len(texto[i])))
+            self.wait(0.1*devuelve_random(num_random)*time_random)
+        elif i==len(texto)-1 and end==True:
+            self.add_sound("typewriter/fin")
+            self.play(LaggedStart(FadeIn, 
+                        texto[i], run_time = p*len(texto[i]),
+                        lag_ratio=lag/len(texto[i])))
+            self.wait(0.1*c_random*time_random)
