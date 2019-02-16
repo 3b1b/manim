@@ -219,6 +219,7 @@ class ClackFlashes(VGroup):
                 continue
             last_time = time
             flash = Flash(location, **self.flash_config)
+            flash.begin()
             for sm in flash.mobject.family_members_with_points():
                 if isinstance(sm, VMobject):
                     sm.set_stroke(YELLOW, 3)
