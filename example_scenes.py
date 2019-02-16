@@ -1,5 +1,162 @@
 from big_ol_pile_of_manim_imports import *
 
+class MaquinaEscribir(Scene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        self.wait()
+        texto=TextMobject("\\tt <opinión>").scale(2)
+        TypeWriter(self,texto,end=True)
+        self.wait()
+
+
+class SoundTest(Scene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        title=TextMobject("Sound Test").to_edge(UP)
+        self.play(Write(title))
+        self.wait()
+        self.add_sound("a3",gain=-10)
+        self.add_sound("a5",gain=-10)
+        self.add_sound("a6",gain=-10)
+        self.wait()
+
+class NuevoEfecto1(Scene):
+    def construct(self):
+        texto=TextMobject("Texto",color=WHITE).scale(3)
+        self.play(Escribe(texto))
+        pre_rectangulo=Rectangle(width=0.01,height=texto.get_height()*1.1).set_fill(YELLOW).fade(0.7).set_stroke(None,0)
+        pos_rectangulo=Rectangle(width=texto.get_width()*1.1,height=texto.get_height()*1.1).set_fill(YELLOW).fade(0.7).set_stroke(None,0)
+        pos_rectangulo.move_to(texto)
+        pre_rectangulo.next_to(pos_rectangulo,LEFT,buff=0)
+        self.play(Transform(pre_rectangulo,pos_rectangulo))
+        self.wait()
+        self.play(pre_rectangulo.fade,1)
+        self.wait()
+
+class NuevoEfecto2(Scene):
+    def construct(self):
+        texto1=TextMobject("Texto 1",color=WHITE).scale(3)
+        texto2=TextMobject("Texto 2",color=WHITE).scale(3)
+        VGroup(texto1,texto2).arrange_submobjects(DOWN,buff=0.5)
+        self.play(Escribe(texto1),Escribe(texto2))
+        rectangulo1=Rectangle(width=FRAME_WIDTH,height=texto1.get_height()*1.1).set_fill(YELLOW).fade(0.7).set_stroke(None,0)
+        rectangulo2=Rectangle(width=FRAME_WIDTH,height=texto2.get_height()*1.1).set_fill(YELLOW).fade(0.7).set_stroke(None,0)
+        rectangulo1.move_to(texto1)
+        rectangulo2.move_to(texto2)
+        #self.add(rectangulo1)
+        self.wait()
+        self.play(FadeIn(rectangulo1))
+        self.wait()
+        self.play(Transform(rectangulo1,rectangulo2))
+        #self.remove(rectangulo1)
+        #self.add(rectangulo2)
+        self.wait()
+
+
+
+class Patron(Scene):
+    CONFIG={
+    "camera_config":{"background_color":BLACK}}
+    def construct(self):
+        H=6
+        W=1
+        b=0.2
+        lineas=VGroup()
+        if H>=W:
+            n=0
+            while n*b<W:
+                x_i=W/2-n*b
+                x_f=W/2
+                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
+                                    color = GREEN,
+                                    stroke_width = 2,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                lineas.add(pat)
+                n=n+1
+            n=0
+            while n*b<=H-W:
+                x_f=W/2
+                x_i=-W/2
+                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
+                                    color = GREEN,
+                                    stroke_width = 2,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                lineas.add(pat)
+                n=n+1
+            while n*b-H/2<H/2:
+                x_f=H-n*b+x_i
+                x_i=-W/2
+                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
+                                    color = GREEN,
+                                    stroke_width = 2,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                lineas.add(pat)
+                n=n+1
+        else:
+            n=0
+            while n*b-H/2<W+H/2:
+                if n*b-H/2<H/2:
+                    x_i=W/2-n*b
+                    x_f=W/2
+                if H/2<=n*b-H/2 and n*b-H/2<W-H/2:
+                    x_i=W/2-n*b
+                    x_f=H+W/2-n*b
+                if W-H/2<=n*b-H/2 and n*b-H/2<W+H/2:
+                    x_i=-W/2
+                    x_f=H+W/2-n*b
+                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
+                                    color = ORANGE,
+                                    stroke_width = 2,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                lineas.add(pat)
+                n=n+1
+
+            
+        '''
+        n=0
+        fin=-fin
+        while -n*b>=fin:
+            x_f=-fin+n*b+x_i
+            pat=FunctionGraph(lambda x : x-x_i-n*b, 
+                                color = GREEN,
+                                stroke_width = 2,
+                                x_min = x_i,
+                                x_max = x_f
+                                )
+            lineas.add(pat)
+            n=n+1
+        '''
+        self.add(cuadro,lineas)
+
+class Patron2(Scene):
+    def construct(self):
+        pat=Soporte(width=2,height=7,grosor=0.5,direccion="R",stroke_width=5)
+        pat[-1].scale(1.007).shift(RIGHT*0.02)
+        pat.shift(LEFT*4)
+        self.play(*[LaggedStart(ShowCreation,pat[i])for i in range(len(pat))])
+        self.wait()
+
+class Patron3(Scene):
+    def construct(self):
+        pat=Soporte(width=2,height=3)
+        direccion=UP
+        if np.any(direccion)or np.any(RIGHT):
+            grosor=Rectangle(height=3,width=0.7).set_fill(GREEN,1).set_stroke(None,0)
+            grosor.shift(direccion*2/2-direccion*grosor.get_width()/2).fade(0.5)
+        else:
+            grosor=Rectangle(height=0.7,width=3).set_fill(GREEN,1).set_stroke(None,0)
+            grosor.shift(direccion*2/2-direccion*grosor.get_height()/2).fade(0.5)
+        pat.add(grosor)
+        self.add(pat)
+
 class SVG1(CheckSVG):
     CONFIG={
     "file":"pruebas/mus1",
