@@ -1,5 +1,122 @@
 from big_ol_pile_of_manim_imports import *
 
+class Codigu(Scene):
+    def construct(self):
+        cod=TikzMobject("""
+\\begin{lstlisting}[language=Python,style=basic]
+import numpy as np
+    
+def incmatrix(genl1,genl2):
+    m = len(genl1)
+    n = len(genl2)
+    M = None #to become the incidence matrix
+    VT = np.zeros((n*m,1), int)        #dummy variable
+    
+\\end{lstlisting}
+            """,color=WHITE).set_width(FRAME_WIDTH*0.85).set_stroke(None,0).set_fill(WHITE,1)
+        self.play(Write(cod))
+        self.wait()
+
+class Diagrama(Scene):
+    def construct(self):
+        cod=TikzMobject("""
+\\begin{tikzpicture}[node distance = 1.5cm, auto]
+\\node [cloud] (init) {Inicio};
+\\node [oi, below of= init, node distance=1.7cm] (imp) {Hola Mundo!};
+\\node [cloud, below of=imp, node distance=1.7cm] (fin) {Fin}; 
+\\path [line] (init)--(imp);
+\\path [line] (imp)--(fin);
+\\end{tikzpicture}
+            """).set_height(FRAME_HEIGHT*0.85).set_width(FRAME_WIDTH*0.85).set_stroke(None,0).set_fill(WHITE,1)
+        self.play(Write(cod))
+        self.wait()
+
+class Tabla(Scene):
+    def construct(self):
+        cod=TextMobject("""
+   \\begin{tabular}{|c|c|c|}\\hline
+Medición    &   $x_n$   &   $y_{n,k}$   \\\\\\hline
+1   &   67  &   62.5    \\\\\\cline{1-1} \\cline{3-3}
+2   &   &   61.04   \\\\\\cline{1-1} \\cline{3-3}
+3   &   &   61.04   \\\\\\cline{1-1} \\cline{3-3}
+4   &   &   62.01   \\\\\\cline{1-1} \\cline{3-3}
+5   &   &   62.5    \\\\\\cline{1-1} \\cline{3-3}
+6   &   &   63.48   \\\\\\cline{1-1} \\cline{3-3}
+7   &   &   63.48   \\\\\\cline{1-1} \\cline{3-3}
+8   &   &   63.96   \\\\\\cline{1-1} \\cline{3-3}
+9   &   &   64.94   \\\\\\cline{1-1} \\cline{3-3}
+10  &   &   65.043  \\\\\\hline
+   \\end{tabular}
+            """).set_height(FRAME_HEIGHT*0.85)
+        self.play(Write(cod))
+        self.wait()
+
+class Grafica(Scene):
+    def construct(self):
+        cod=TikzMobject("""
+    \\begin{tikzpicture}[scale=1]
+\\begin{axis}[
+    xlabel={$x_n$ [\\textcelsius]},
+    ylabel={$y_n$ [\\textcelsius]},
+    xmin=15, xmax=70,
+    ymin=15, ymax=70,
+    xtick={15,20,...,70},
+    ytick={15,20,...,70},
+    legend pos=north west,
+    ymajorgrids=true,
+    xmajorgrids=true,
+    grid style=dashed,
+]
+
+\\addplot[
+    color=blue,
+    mark=square,
+    ]
+    coordinates {
+(   67  ,   62.9993 )
+(   43  ,   36.603  )
+(   28  ,   32.52   )
+(   28  ,   31.787  )
+(   24  ,   23.342  )
+(   22  ,   23.636  )
+(   18  ,   22.509  )
+(   24  ,   24.41   )
+(   20  ,   21.97   )
+(   21.5    ,   22.85   )
+
+    };
+    \\addlegendentry{Abajo hacia arriba}
+
+\\addplot [blue, domain=15:70,dashed] {5.7675+0.8289*x};
+\\addlegendentry{$y_n=mx_n+b$ ($\\uparrow$)}
+    
+\\addplot[
+    color=red,
+    mark=triangle,
+    ]
+    coordinates {
+(   22.5    ,   20.95   )
+(   25  ,   22.36   )
+(   24  ,   24.36   )
+(   26  ,   25.97   )
+(   26  ,   24.07   )
+(   29  ,   27.05   )
+(   33  ,   29.91   )
+(   37.5    ,   31.61   )
+(   41  ,   33.49   )
+(   52.3    ,   36.37   )
+    };
+    \\addlegendentry{Arriba hacia abajo}
+
+\\addplot [red, domain=15:70,dashed] {11.0398+0.5127*x};
+\\addlegendentry{$y_n=mx_n+b$ ($\\downarrow$)}
+\\end{axis}
+\\end{tikzpicture}
+            """).set_height(FRAME_HEIGHT*0.85).set_fill(None,0).set_stroke(None,1)
+        self.play(Write(cod))
+        self.wait()
+
+
 class MaquinaEscribir(Scene):
     CONFIG = {"include_sound": True}
     def construct(self):
@@ -8,6 +125,82 @@ class MaquinaEscribir(Scene):
         TypeWriter(self,texto,end=True)
         self.wait()
 
+class Teclado(Scene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        self.wait()
+        texto=TextMobject("""
+            \\tt </contenido>
+            """).scale(2)
+        KeyBoard_(self,texto,p=0.1,time_random=0.1)
+        self.wait()
+
+class Teclado2(Scene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        self.wait()
+        texto=TextMobject("""
+            \\tt Qué onda Denyche\\\\
+            ¿Qué te parece mi animación\\\\
+            de máquina de escribir?\\\\
+            :)
+            """).scale(2)
+        TypeWriter(self,texto,spaces=[3,7,18,20,26,28,39,46,48],enters=[14,37,60],p=0.08,time_random=0.08,end=True)
+        self.wait()
+
+class TecladoPrueba(Scene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        self.wait()
+        texto="""
+            \\tt Qué onda Denyche\\\\
+            Qué te .
+            """
+        texto_t=TextMobject(texto).scale(2)
+        KeyBoard_(self,texto_t,p=0.05,time_random=0.06)
+        self.wait()
+
+class PruebaSplit(Scene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        texto=TextMobject("\\tt <a> ... ||| ,,,\\\\ Empieza contenido\\\\ </a>",color=WHITE)
+        contador_espacios=0
+        contador_enters=0
+        for i in range(len(texto)-1):
+            pre_ty=texto[i].get_center()[1]
+            pre_tx=texto[i].get_center()[0]
+            pos_ty=texto[i+1].get_center()[1]
+            pos_tx=texto[i+1].get_center()[0]
+            pre_width=texto[i].get_width()/2
+            pos_width=texto[i+1].get_width()/2
+            pre_height=texto[i].get_height()/2
+            pos_height=texto[i+1].get_height()/2
+            dist_min_x=(pre_width+pos_width)*1.6
+            dist_min_y=(pre_height+pos_height)*1.2
+            if abs(pre_ty-pos_ty)>dist_min_y:
+                contador_enters+=1
+            elif abs(pre_tx-pos_tx)>dist_min_x and abs(pre_ty-pos_ty)<dist_min_y:
+                contador_espacios+=1
+
+
+        resultados=VGroup(TextMobject("%d"%contador_espacios),
+                    TextMobject("%d"%contador_enters),texto
+                    ).arrange_submobjects(DOWN)
+        self.add(resultados)
+        self.wait()
+
+class TecladoCheck(CheckFormula):
+    CONFIG={
+    "svg_type": "text",
+    "show_numbers": True
+    }
+    def import_text(self):
+        return TextMobject("""
+            \\tt Qué onda Denyche\\\\
+            ¿Qué te parece mi animación\\\\
+            de teclado de computadora?\\\\
+            :)
+            """).scale(2)
 
 class SoundTest(Scene):
     CONFIG = {"include_sound": True}
@@ -55,114 +248,65 @@ class NuevoEfecto2(Scene):
 
 
 class Patron(Scene):
-    CONFIG={
-    "camera_config":{"background_color":BLACK}}
     def construct(self):
-        H=6
-        W=1
-        b=0.2
-        lineas=VGroup()
-        if H>=W:
-            n=0
-            while n*b<W:
-                x_i=W/2-n*b
-                x_f=W/2
-                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
-                                    color = GREEN,
-                                    stroke_width = 2,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                lineas.add(pat)
-                n=n+1
-            n=0
-            while n*b<=H-W:
-                x_f=W/2
-                x_i=-W/2
-                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
-                                    color = GREEN,
-                                    stroke_width = 2,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                lineas.add(pat)
-                n=n+1
-            while n*b-H/2<H/2:
-                x_f=H-n*b+x_i
-                x_i=-W/2
-                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
-                                    color = GREEN,
-                                    stroke_width = 2,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                lineas.add(pat)
-                n=n+1
-        else:
-            n=0
-            while n*b-H/2<W+H/2:
-                if n*b-H/2<H/2:
-                    x_i=W/2-n*b
-                    x_f=W/2
-                if H/2<=n*b-H/2 and n*b-H/2<W-H/2:
-                    x_i=W/2-n*b
-                    x_f=H+W/2-n*b
-                if W-H/2<=n*b-H/2 and n*b-H/2<W+H/2:
-                    x_i=-W/2
-                    x_f=H+W/2-n*b
-                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
-                                    color = ORANGE,
-                                    stroke_width = 2,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                lineas.add(pat)
-                n=n+1
-
-            
-        '''
-        n=0
-        fin=-fin
-        while -n*b>=fin:
-            x_f=-fin+n*b+x_i
-            pat=FunctionGraph(lambda x : x-x_i-n*b, 
-                                color = GREEN,
-                                stroke_width = 2,
-                                x_min = x_i,
-                                x_max = x_f
-                                )
-            lineas.add(pat)
-            n=n+1
-        '''
-        self.add(cuadro,lineas)
-
-class Patron2(Scene):
-    def construct(self):
-        pat=Soporte(width=2,height=7,grosor=0.5,direccion="R",stroke_width=5)
-        pat[-1].scale(1.007).shift(RIGHT*0.02)
-        pat.shift(LEFT*4)
-        self.play(*[LaggedStart(ShowCreation,pat[i])for i in range(len(pat))])
+        pat1=Soporte(width=4,height=7,grosor=0.5,agregar_base=True,direccion="R",stroke_width=5)
+        pat1[-1].scale(1.007).shift(RIGHT*0.02)
+        pat2=Soporte(width=2,height=7,grosor=0.5,agregar_base=True,direccion="R",stroke_width=5)
+        pat2[-1].scale(1.007).shift(RIGHT*0.02)
+        pat1.shift(LEFT*4)
+        pat2.shift(LEFT*4)
+        self.play(*[LaggedStart(ShowCreation,pat1[i],rate_func=linear)for i in range(len(pat1))])
+        self.play(Transform(pat1,pat2))
         self.wait()
 
-class Patron3(Scene):
+class Codigo(Scene):
     def construct(self):
-        pat=Soporte(width=2,height=3)
-        direccion=UP
-        if np.any(direccion)or np.any(RIGHT):
-            grosor=Rectangle(height=3,width=0.7).set_fill(GREEN,1).set_stroke(None,0)
-            grosor.shift(direccion*2/2-direccion*grosor.get_width()/2).fade(0.5)
-        else:
-            grosor=Rectangle(height=0.7,width=3).set_fill(GREEN,1).set_stroke(None,0)
-            grosor.shift(direccion*2/2-direccion*grosor.get_height()/2).fade(0.5)
-        pat.add(grosor)
-        self.add(pat)
+        cod=TikzMobject("""
+\\begin{lstlisting}[language=Python]
+import numpy as np
+    
+def incmatrix(genl1,genl2):
+    m = len(genl1)
+    n = len(genl2)
+    M = None #to become the incidence matrix
+    VT = np.zeros((n*m,1), int)  #dummy variable
+    
+    #compute the bitwise xor matrix
+    M1 = bitxormatrix(genl1)
+    M2 = np.triu(bitxormatrix(genl2),1) 
+
+    for i in range(m-1):
+        for j in range(i+1, m):
+            [r,c] = np.where(M2 == M1[i,j])
+            for k in range(len(r)):
+                VT[(i)*n + r[k]] = 1;
+                VT[(i)*n + c[k]] = 1;
+                VT[(j)*n + r[k]] = 1;
+                VT[(j)*n + c[k]] = 1;
+                
+                if M is None:
+                    M = np.copy(VT)
+                else:
+                    M = np.concatenate((M, VT), 1)
+                
+                VT = np.zeros((n*m,1), int)
+    
+    return M
+\\end{lstlisting}
+            """)
+        self.play(Write(cod))
+        self.wait()
+
+
 
 class SVG1(CheckSVG):
     CONFIG={
-    "file":"pruebas/mus1",
+    "camera_config":{"background_color":N_FONDO_VERDE_PASTEL},
+    "file":"pruebas/output3",
+    "set_size":"height",
+    "stroke_width":0.1,
+    "animation":True
     }
-    def personalize_image(self):
-        self.imagen[0].set_color(RED)
 
 class SVG2(CheckSVG):
     CONFIG={
@@ -231,7 +375,7 @@ class WriteStuff(Scene):
     def construct(self):
         example_text = TextMobject(
             "This is a some text",color=WHITE,
-            tex_to_color_map={"text": YELLOW}
+            tex_to_color_map={"text": YELLOW,"some":N_ROJO_1}
         )
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
@@ -947,3 +1091,470 @@ class Armonicos(Scene):
                 linea_v.add(cuerda)
             conjunto_lineas.add(linea_v)
         return conjunto_lineas
+
+class Cylinder(Sphere):
+    """
+    Inherits from sphere so as to be as aligned as possible
+    for transformations
+    """
+
+    def func(self, u, v):
+        return np.array([
+            np.cos(v),
+            np.sin(v),
+            np.cos(u)
+        ])
+
+
+class UnwrappedCylinder(Cylinder):
+    def func(self, u, v):
+        return np.array([
+            v - PI,
+            -self.radius,
+            np.cos(u)
+        ])
+
+
+class ParametricDisc(Sphere):
+    CONFIG = {
+        "u_min": 0,
+        "u_max": 1,
+        "stroke_width": 0,
+        "checkerboard_colors": [BLUE_D],
+    }
+
+    def func(self, u, v):
+        return np.array([
+            u * np.cos(v),
+            u * np.sin(v),
+            0,
+        ])
+
+
+class SphereCylinderScene(SpecialThreeDScene):
+    CONFIG = {
+        "cap_config": {
+            "stroke_width": 1,
+            "stroke_color": WHITE,
+            "fill_color": BLUE_D,
+            "fill_opacity": 1,
+        }
+    }
+
+    def get_cylinder(self, **kwargs):
+        config = merge_config([kwargs, self.sphere_config])
+        return Cylinder(**config)
+
+    def get_cylinder_caps(self):
+        R = self.sphere_config["radius"]
+        caps = VGroup(*[
+            Circle(
+                radius=R,
+                **self.cap_config,
+            ).shift(R * vect)
+            for vect in [IN, OUT]
+        ])
+        caps.set_shade_in_3d(True)
+        return caps
+
+    def get_unwrapped_cylinder(self):
+        return UnwrappedCylinder(**self.sphere_config)
+
+    def get_xy_plane(self):
+        pass
+
+    def get_ghost_surface(self, surface):
+        result = surface.copy()
+        result.set_fill(BLUE_E, opacity=0.5)
+        result.set_stroke(WHITE, width=0.5, opacity=0.5)
+        return result
+
+    def project_point(self, point):
+        radius = self.sphere_config["radius"]
+        result = np.array(point)
+        result[:2] = normalize(result[:2]) * radius
+        return result
+
+    def project_mobject(self, mobject):
+        return mobject.apply_function(self.project_point)
+
+class ShowProjection(SphereCylinderScene):
+    CONFIG = {
+        # "default_angled_camera_position": {
+        #     "theta": -155 * DEGREES,
+        # }
+    }
+
+    def construct(self):
+        self.setup_shapes()
+        self.show_many_tiny_rectangles()
+        #self.project_all_rectangles()
+        #self.focus_on_one()
+        #self.label_sides()
+        #self.show_length_scaled_up()
+        #self.show_height_scaled_down()
+
+    def setup_shapes(self):
+        self.sphere = self.get_sphere()
+        self.cylinder = self.get_cylinder()
+        self.ghost_sphere = self.get_ghost_surface(self.sphere)
+        self.ghost_sphere.scale(0.99)
+        self.ghost_cylinder = self.get_ghost_surface(self.cylinder)
+        self.ghost_cylinder.set_stroke(width=0)
+
+        self.add(self.get_axes())
+        self.set_camera_to_default_position()
+        self.begin_ambient_camera_rotation()
+
+    def show_many_tiny_rectangles(self):
+        ghost_sphere = self.ghost_sphere
+        pieces = self.sphere.copy()
+        random.shuffle(pieces.submobjects)
+        for piece in pieces:
+            piece.save_state()
+        pieces.space_out_submobjects(2)
+        pieces.fade(1)
+
+        self.add(ghost_sphere)
+        self.play(LaggedStart(Restore, pieces))
+        self.wait()
+
+        self.pieces = pieces
+
+    def project_all_rectangles(self):
+        pieces = self.pieces
+        for piece in pieces:
+            piece.save_state()
+            piece.generate_target()
+            self.project_mobject(piece.target)
+            piece.target.set_fill(opacity=0.5)
+
+        example_group = self.get_example_group([1, -1, 2])
+        proj_lines = example_group[1]
+        self.example_group = example_group
+
+        self.play(*map(ShowCreation, proj_lines))
+        self.play(
+            LaggedStart(MoveToTarget, pieces),
+        )
+        self.wait()
+
+    def focus_on_one(self):
+        ghost_cylinder = self.ghost_cylinder
+        pieces = self.pieces
+
+        example_group = self.example_group
+        original_rect, rect_proj_lines, rect = example_group
+
+        equation = self.get_equation(rect)
+        lhs, equals, rhs = equation[:3]
+        lhs.save_state()
+        rhs.save_state()
+
+        self.play(
+            FadeIn(ghost_cylinder),
+            FadeOut(pieces),
+            FadeIn(original_rect),
+        )
+        self.play(TransformFromCopy(original_rect, rect))
+        self.wait()
+        self.add_fixed_in_frame_mobjects(lhs, equals, rhs)
+        self.move_fixed_in_frame_mob_to_unfixed_mob(lhs, original_rect)
+        self.move_fixed_in_frame_mob_to_unfixed_mob(rhs, rect)
+        self.play(
+            Restore(lhs),
+            Restore(rhs),
+            FadeInFromDown(equals),
+        )
+        self.wait(5)
+
+        self.equation = equation
+        self.example_group = example_group
+
+    def label_sides(self):
+        sphere = self.sphere
+        equation = self.equation
+        w_brace, h_brace = equation.braces
+        width_label, height_label = equation.labels
+
+        u_values, v_values = sphere.get_u_values_and_v_values()
+        radius = sphere.radius
+        lat_lines = VGroup(*[
+            ParametricFunction(
+                lambda t: radius * sphere.func(u, t),
+                t_min=sphere.v_min,
+                t_max=sphere.v_max,
+            )
+            for u in u_values
+        ])
+        lon_lines = VGroup(*[
+            ParametricFunction(
+                lambda t: radius * sphere.func(t, v),
+                t_min=sphere.u_min,
+                t_max=sphere.u_max,
+            )
+            for v in v_values
+        ])
+        for lines in lat_lines, lon_lines:
+            for line in lines:
+                line.add(DashedMobject(line, spacing=-1))
+                line.set_points([])
+                line.set_stroke(width=2)
+            lines.set_shade_in_3d(True)
+        lat_lines.set_color(RED)
+        lon_lines.set_color(PINK)
+
+        self.play(
+            *map(ShowCreationThenDestruction, lat_lines),
+            run_time=2
+        )
+        self.add_fixed_in_frame_mobjects(w_brace, width_label)
+        self.play(
+            GrowFromCenter(w_brace),
+            Write(width_label),
+        )
+        self.wait()
+        self.play(
+            *map(ShowCreationThenDestruction, lon_lines),
+            run_time=2
+        )
+        self.add_fixed_in_frame_mobjects(h_brace, height_label)
+        self.play(
+            GrowFromCenter(h_brace),
+            Write(height_label),
+        )
+        self.wait(2)
+
+    def show_length_scaled_up(self):
+        ghost_sphere = self.ghost_sphere
+        example_group = self.example_group
+        equation = self.equation
+        equation.save_state()
+        new_example_groups = [
+            self.get_example_group([1, -1, z])
+            for z in [6, 0.25]
+        ]
+        r1, lines, r2 = example_group
+
+        self.stop_ambient_camera_rotation()
+        self.move_camera(
+            phi=65 * DEGREES,
+            theta=-80 * DEGREES,
+            added_anims=[
+                ghost_sphere.set_stroke, {"opacity": 0.1},
+                lines.set_stroke, {"width": 3},
+            ]
+        )
+        for eg in new_example_groups:
+            eg[1].set_stroke(width=3)
+        self.show_length_stretch_of_rect(example_group)
+        all_example_groups = [example_group, *new_example_groups]
+        for eg1, eg2 in zip(all_example_groups, all_example_groups[1:]):
+            if eg1 is new_example_groups[0]:
+                self.move_camera(
+                    phi=70 * DEGREES,
+                    theta=-110 * DEGREES
+                )
+            self.remove(eg1)
+            self.play(
+                ReplacementTransform(eg1.deepcopy(), eg2),
+                Transform(
+                    equation,
+                    self.get_equation(eg2[2])
+                )
+            )
+            if eg1 is example_group:
+                self.move_camera(
+                    phi=0,
+                    theta=-90 * DEGREES,
+                )
+            self.show_length_stretch_of_rect(eg2)
+        self.play(
+            ReplacementTransform(all_example_groups[-1], example_group),
+            Restore(equation)
+        )
+
+    def show_length_stretch_of_rect(self, example_group):
+        s_rect, proj_lines, c_rect = example_group
+        rects = VGroup(s_rect, c_rect)
+        line1, line2 = lines = VGroup(*[
+            Line(m.get_anchors()[1], m.get_anchors()[2])
+            for m in rects
+        ])
+        lines.set_stroke(YELLOW, 5)
+        lines.set_shade_in_3d(True)
+        proj_lines_to_fade = VGroup(
+            proj_lines[0],
+            proj_lines[3],
+        )
+        self.play(
+            FadeIn(lines[0]),
+            FadeOut(rects),
+            FadeOut(proj_lines_to_fade)
+        )
+        for x in range(3):
+            anims = []
+            if lines[1] in self.mobjects:
+                anims.append(FadeOut(lines[1]))
+            self.play(
+                TransformFromCopy(lines[0], lines[1]),
+                *anims
+            )
+        self.play(
+            FadeOut(lines),
+            FadeIn(rects),
+            FadeIn(proj_lines_to_fade),
+        )
+        self.remove(rects, proj_lines_to_fade)
+        self.add(example_group)
+
+    def show_height_scaled_down(self):
+        ghost_sphere = self.ghost_sphere
+        ghost_cylinder = self.ghost_cylinder
+        example_group = self.example_group
+        equation = self.equation
+        r1, lines, r2 = example_group
+        to_fade = VGroup(*[
+            mob
+            for mob in it.chain(ghost_sphere, ghost_cylinder)
+            if np.dot(mob.get_center(), [1, 1, 0]) < 0
+        ])
+        to_fade.save_state()
+
+        new_example_groups = [
+            self.get_example_group([1, -1, z])
+            for z in [6, 0.25]
+        ]
+        for eg in new_example_groups:
+            eg[::2].set_stroke(YELLOW, 2)
+            eg.set_stroke(width=1)
+        all_example_groups = VGroup(example_group, *new_example_groups)
+
+        self.play(
+            to_fade.shift, IN,
+            to_fade.fade, 1,
+            remover=True
+        )
+        self.move_camera(
+            phi=85 * DEGREES,
+            theta=-135 * DEGREES,
+            added_anims=[
+                lines.set_stroke, {"width": 1},
+                r1.set_stroke, YELLOW, 2, 1,
+                r2.set_stroke, YELLOW, 2, 1,
+            ]
+        )
+        self.show_shadow(example_group)
+        for eg1, eg2 in zip(all_example_groups, all_example_groups[1:]):
+            self.remove(*eg1.get_family())
+            self.play(
+                ReplacementTransform(eg1.deepcopy(), eg2),
+                Transform(
+                    equation,
+                    self.get_equation(eg2[2])
+                )
+            )
+            self.show_shadow(eg2)
+        self.move_camera(
+            phi=70 * DEGREES,
+            theta=-115 * DEGREES,
+            added_anims=[
+                ReplacementTransform(
+                    all_example_groups[-1],
+                    example_group,
+                ),
+                Restore(equation),
+            ]
+        )
+        self.begin_ambient_camera_rotation()
+        self.play(Restore(to_fade))
+        self.wait(5)
+
+    def show_shadow(self, example_group):
+        s_rect, lines, c_rect = example_group
+        for x in range(3):
+            self.play(TransformFromCopy(s_rect, c_rect))
+
+    #
+    def get_projection_lines(self, piece):
+        result = VGroup()
+        radius = self.sphere_config["radius"]
+        for corner in piece.get_anchors()[:-1]:
+            start = np.array(corner)
+            end = np.array(corner)
+            start[:2] = np.zeros(2)
+            end[:2] = (radius + 0.03) * normalize(end[:2])
+            kwargs = {
+                "color": YELLOW,
+                "stroke_width": 0.5,
+            }
+            result.add(VGroup(*[
+                Line(p1, p2, **kwargs)
+                for p1, p2 in [(start, corner), (corner, end)]
+            ]))
+        result.set_shade_in_3d(True)
+        return result
+
+    def get_equation(self, rect):
+        length = get_norm(rect.get_anchors()[1] - rect.get_anchors()[0])
+        height = get_norm(rect.get_anchors()[2] - rect.get_anchors()[1])
+        lhs = Rectangle(width=length, height=height)
+        rhs = Rectangle(width=height, height=length)
+        eq_rects = VGroup(lhs, rhs)
+        eq_rects.set_stroke(width=0)
+        eq_rects.set_fill(YELLOW, 1)
+        eq_rects.scale(2)
+        equals = TexMobject("=")
+        equation = VGroup(lhs, equals, rhs)
+        equation.arrange_submobjects(RIGHT)
+        equation.to_corner(UR)
+
+        brace = Brace(Line(ORIGIN, 0.5 * RIGHT), DOWN)
+        w_brace = brace.copy().match_width(lhs, stretch=True)
+        h_brace = brace.copy().rotate(-90 * DEGREES)
+        h_brace.match_height(lhs, stretch=True)
+        w_brace.next_to(lhs, DOWN, buff=SMALL_BUFF)
+        h_brace.next_to(lhs, LEFT, buff=SMALL_BUFF)
+        braces = VGroup(w_brace, h_brace)
+
+        width_label = TextMobject("Width")
+        height_label = TextMobject("Height")
+        labels = VGroup(width_label, height_label)
+        labels.scale(0.75)
+        width_label.next_to(w_brace, DOWN, SMALL_BUFF)
+        height_label.next_to(h_brace, LEFT, SMALL_BUFF)
+
+        equation.braces = braces
+        equation.labels = labels
+        equation.add(braces, labels)
+
+        return equation
+
+    def move_fixed_in_frame_mob_to_unfixed_mob(self, m1, m2):
+        phi = self.camera.phi_tracker.get_value()
+        theta = self.camera.theta_tracker.get_value()
+        target = m2.get_center()
+        target = rotate_vector(target, -theta - 90 * DEGREES, OUT)
+        target = rotate_vector(target, -phi, RIGHT)
+
+        m1.move_to(target)
+        m1.scale(0.1)
+        m1.shift(SMALL_BUFF * UR)
+        return m1
+
+    def get_example_group(self, vect):
+        pieces = self.pieces
+        rect = pieces[np.argmax([
+            np.dot(r.saved_state.get_center(), vect)
+            for r in pieces
+        ])].saved_state.copy()
+        rect_proj_lines = self.get_projection_lines(rect)
+        rect.set_fill(YELLOW, 1)
+        original_rect = rect.copy()
+        self.project_mobject(rect)
+        rect.shift(
+            0.001 * np.array([*rect.get_center()[:2], 0])
+        )
+        result = VGroup(original_rect, rect_proj_lines, rect)
+        result.set_shade_in_3d(True)
+        return result
