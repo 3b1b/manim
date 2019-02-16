@@ -6,12 +6,39 @@ from manimlib.constants import RIGHT
 from manimlib.mobject.mobject import Mobject
 
 
-def always(method, *args, **kwargs):
+def assert_is_mobject_method(method):
     assert(inspect.ismethod(method))
     mobject = method.__self__
     assert(isinstance(mobject, Mobject))
+
+
+def always(method, *args, **kwargs):
+    assert_is_mobject_method(method)
+    mobject = method.__self__
     func = method.__func__
     mobject.add_updater(lambda m: func(m, *args, **kwargs))
+    return mobject
+
+
+def f_always(method, *arg_generators, **kwargs):
+    """
+    More functional version of always, where insetead
+    of taking in args, it takes in functions which ouput
+    the relevant arguments.
+    """
+    assert_is_mobject_method(method)
+    mobject = method.__self__
+    func = method.__func__
+
+    def updater(mob):
+        args = [
+            arg_generator()
+            for arg_generator in arg_generators
+        ]
+        func(mob, *args, **kwargs)
+
+    mobject.add_updater(updater)
+    return mobject
 
 
 def always_redraw(func):

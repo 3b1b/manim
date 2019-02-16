@@ -17,6 +17,7 @@ from manimlib.utils.iterables import stretch_array_to_length
 from manimlib.utils.iterables import tuplify
 from manimlib.utils.simple_functions import clip_in_place
 from manimlib.utils.space_ops import rotate_vector
+from manimlib.utils.space_ops import get_norm
 
 # TODO
 # - Change cubic curve groups to have 4 points instead of 3
@@ -667,6 +668,17 @@ class VMobject(Mobject):
             sm.get_anchors()
             for sm in self.get_family()
         ])))
+
+    def get_arc_length(self, n_sample_points=None):
+        if n_sample_points is None:
+            n_sample_points = 4 * self.get_num_curves() + 1
+        points = np.array([
+            self.point_from_proportion(a)
+            for a in np.linspace(0, 1, n_sample_points)
+        ])
+        diffs = points[1:] - points[:-1]
+        norms = np.apply_along_axis(get_norm, 1, diffs)
+        return np.sum(norms)
 
     # Alignment
     def align_points(self, vmobject):

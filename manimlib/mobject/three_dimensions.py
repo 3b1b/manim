@@ -137,7 +137,6 @@ class Cube(VGroup):
                 side_length=self.side_length,
                 shade_in_3d=True,
             )
-            # face.make_jagged()
             face.flip()
             face.shift(self.side_length * OUT / 2.0)
             face.apply_matrix(z_to_vector(vect))
