@@ -367,3 +367,84 @@ class cerrar_caja(Rotating):
             about_point=sobre_der,
             about_edge=sobre_der,
         )
+        
+class Medicion(VGroup):
+    CONFIG = {
+        "color":RED_B,
+        "buff":0.3,
+        "laterales":0.3,
+        "invertir":False,
+        "dashed_segment_length":0.09,
+        "dashed":True,
+        "con_flechas":True,
+        "ang_flechas":30*DEGREES,
+        "tam_flechas":0.2,
+    }
+    def __init__(self,objeto,**kwargs):
+        VGroup.__init__(self,**kwargs)
+        if self.dashed==True:
+            medicion=DashedLine(ORIGIN,objeto.get_length()*RIGHT,dashed_segment_length=self.dashed_segment_length)
+        else:
+            medicion=Line(ORIGIN,objeto.get_length()*RIGHT)
+
+        pre_medicion=Line(ORIGIN,self.laterales*RIGHT).rotate(PI/2)
+        pos_medicion=pre_medicion.copy()
+
+        pre_medicion.move_to(medicion.get_start())
+        pos_medicion.move_to(medicion.get_end())
+
+        angulo=objeto.get_angle()
+        matriz_rotacion=rotation_matrix(PI/2,OUT)
+        vector_unitario=objeto.get_unit_vector()
+        direccion=np.matmul(matriz_rotacion,vector_unitario)
+        self.direccion=direccion
+
+        self.add(medicion,pre_medicion,pos_medicion)
+        self.rotate(angulo)
+        self.move_to(objeto)
+        if self.invertir==True:
+            self.shift(-direccion*self.buff)
+        else:
+            self.shift(direccion*self.buff)
+        self.set_color(self.color)
+        
+
+    def add_tips(self):
+        linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
+        vector_unitario=linea_referencia.get_unit_vector()
+
+        punto_final1=self[0][-1].get_end()
+        punto_inicial1=punto_final1-vector_unitario*self.tam_flechas
+
+        punto_inicial2=self[0][0].get_start()
+        punto_final2=punto_inicial2+vector_unitario*self.tam_flechas
+
+        lin1_1=Line(punto_inicial1,punto_final1).set_color(self[0].get_color())
+        lin1_2=lin1_1.copy()
+        lin2_1=Line(punto_inicial2,punto_final2).set_color(self[0].get_color())
+        lin2_2=lin2_1.copy()
+
+        lin1_1.rotate(self.ang_flechas,about_point=punto_final1,about_edge=punto_final1)
+        lin1_2.rotate(-self.ang_flechas,about_point=punto_final1,about_edge=punto_final1)
+
+        lin2_1.rotate(self.ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
+        lin2_2.rotate(-self.ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
+
+        return self.add(lin1_1,lin1_2,lin2_1,lin2_2)
+
+    def add_text(self,text,escala=1,buff=0.1,**moreargs):
+        linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
+        texto=TextMobject(text,**moreargs)
+        ancho=texto.get_height()/2
+        texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+        texto.shift(self.direccion*(buff+1)*ancho)
+        return self.add(texto)
+
+    def add_tex(self,texto,escala=1,buff=0.1,**moreargs):
+        linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
+        texto=TexMobject(text,**moreargs)
+        ancho=texto.get_height()/2
+        texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+        texto.shift(self.direccion*(buff+1)*ancho)
+        return self.add(texto)
+
