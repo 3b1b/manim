@@ -1,5 +1,81 @@
 from big_ol_pile_of_manim_imports import *
 
+class Perturbacion(ContinualAnimation):
+    CONFIG = {
+        "amplitude": 0.4,
+        "jiggles_per_second": 1,
+    }
+
+    def __init__(self, group, **kwargs):
+        for submob in group.submobjects:
+            submob.jiggling_direction = rotate_vector(
+                RIGHT, np.random.random() * TAU,
+            )
+            submob.jiggling_phase = np.random.random() * TAU
+        ContinualAnimation.__init__(self, group, **kwargs)
+
+    def update_mobject(self, dt):
+        for submob in self.mobject.submobjects:
+            submob.jiggling_phase += dt * self.jiggles_per_second * TAU
+            submob.shift(
+                self.amplitude *
+                submob.jiggling_direction *
+                np.sin(submob.jiggling_phase) * dt
+            )
+
+class Particula(Scene):
+    def construct(self):
+        punto=VGroup(Dot(radius=0.6).shift(LEFT+UP),Dot(radius=0.6).shift(RIGHT+DOWN),Dot(radius=0.6))
+        punto2=punto.copy().shift(LEFT*2)
+        self.play(GrowFromCenter(punto),GrowFromCenter(punto2))
+        self.add(Perturbacion(punto),Perturbacion(punto2))
+        self.wait(5)
+        self.remove(Perturbacion(punto),Perturbacion(punto2))
+        self.add(Perturbacion(punto,amplitude=0.6),Perturbacion(punto2,amplitude=0.6))
+        self.wait(5)
+        self.remove(Perturbacion(punto),Perturbacion(punto2))
+        self.add(Perturbacion(punto,amplitude=0.8),Perturbacion(punto2,amplitude=0.8))
+        self.wait(5)
+        self.remove(Perturbacion(punto),Perturbacion(punto2))
+        self.add(punto,punto2)
+        self.wait(5)
+
+class Dimensiones(Scene):
+    def construct(self):
+        rectangulo=Rectangle(width=5,height=3)
+        rectangulo.rotate(30*DEGREES)
+        linea=Line(LEFT*1.5,RIGHT*1.5)
+        linea.rotate(20*DEGREES)
+        linea.shift(LEFT*2)
+        v_medicion=Medicion(linea,color=BLUE,dashed=False)
+        self.play(ShowCreation(linea))
+        self.play(GrowFromCenter(v_medicion))
+        def update(grupo):
+            angulo=linea.get_angle()
+            tam_med=grupo[1].get_length()/2
+            vu=linea.get_unit_vector()
+            mr=rotation_matrix(PI/2,OUT)
+            #grupo.rotate(angulo)
+            grupo[0].put_start_and_end_on(linea.get_start(),linea.get_end())
+            direccion=np.matmul(mr,vu)
+            grupo[0].shift(direccion*0.3)
+            origen1=grupo[0].get_end()
+            fin1_1=origen1+direccion*tam_med
+            fin1_2=origen1-direccion*tam_med
+            grupo[1].put_start_and_end_on(fin1_1,fin1_2)
+
+            origen2=grupo[0].get_start()
+            fin2_1=origen2+direccion*tam_med
+            fin2_2=origen2-direccion*tam_med
+            grupo[2].put_start_and_end_on(fin2_1,fin2_2)
+
+
+        self.play(linea.scale,2,linea.rotate,PI/8,
+            UpdateFromFunc(
+            v_medicion,update))
+        self.wait(2)
+
+
 class Codigu(Scene):
     def construct(self):
         cod=TikzMobject("""
