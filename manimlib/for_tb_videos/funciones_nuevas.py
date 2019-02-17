@@ -115,7 +115,9 @@ def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[
         for i in range(random.randint(1,2)):
             c_random=random.randint(i+1,3)
     for i in range(len(texto)):
+
         self.add_sound("computer_keyboard/tecla%s"%devuelve_random(num_random))
+        texto[i].set_fill(None,1)
         self.play(LaggedStart(FadeIn, 
                     texto[i], run_time = p*len(texto[i]),
                     lag_ratio=lag/len(texto[i])))
@@ -131,10 +133,14 @@ def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[
             pos_height=texto[i+1].get_height()/2
             dist_min_x=(pre_width+pos_width)*1.6
             dist_min_y=(pre_height+pos_height)*1.2
-            if abs(pre_ty-pos_ty)>dist_min_y:
+            if i==0 or dist_max_x<dist_min_x:
+                dist_max_x=dist_min_x
+            if i==0 or dist_max_y<dist_min_y:
+                dist_max_y=dist_min_y
+            if abs(pre_ty-pos_ty)>dist_max_y:
                 self.add_sound("computer_keyboard/enter")
                 self.wait(time_spaces)
-            elif abs(pre_tx-pos_tx)>dist_min_x and abs(pre_ty-pos_ty)<dist_min_y:
+            elif abs(pre_tx-pos_tx)>dist_max_x and abs(pre_ty-pos_ty)<dist_max_y:
                 self.add_sound("computer_keyboard/espacio")
                 self.wait(time_spaces)
         if i==len(texto)-1:
