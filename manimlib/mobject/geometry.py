@@ -316,8 +316,8 @@ class Ellipse(Circle):
 
     def __init__(self, **kwargs):
         Circle.__init__(self, **kwargs)
-        self.set_width(width, stretch=True)
-        self.set_height(width, stretch=True)
+        self.set_width(self.width, stretch=True)
+        self.set_height(self.width, stretch=True)
 
 
 class AnnularSector(Arc):
