@@ -331,7 +331,7 @@ class SceneFileWriter(object):
                 "-map", "0:v:0",
                 # select audio stream from second file
                 "-map", "1:a:0",
-                '-loglevel', 'error',
+                '-loglevel', 'error',#"-strict","-2",
                 # "-shortest",
                 temp_file_path,
             ]
