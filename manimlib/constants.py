@@ -262,7 +262,11 @@ COLOR_MAP = {
     "N_FONDO_MORADO":"#ab97b5",
     "N_MORADO_OSCURO":"#7f7fff",
     "N_FONDO_NARANJA":"#c58f7f",
-    "N_FONDO_VERDE_PASTEL":"#cce1d4"
+    "N_FONDO_VERDE_PASTEL":"#cce1d4",
+    "ROSA_ST":"#F8206B",
+    "VERDE_ST":"#A1E303",
+    "AMARILLO_ST":"#E6DC6B",
+    "FONDO_ST":"#272822"
 }
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
