@@ -368,6 +368,86 @@ class cerrar_caja(Rotating):
             about_edge=sobre_der,
         )
         
+class Soporte(VGroup):
+    def __init__(self,width,height,separacion=0.2,color=GREEN,agregar_base=False,direccion="R",grosor=1,stroke_width=2,**kwargs):
+        digest_config(self, kwargs)
+        VGroup.__init__(self, **kwargs)
+        W=width
+        H=height
+        b=separacion
+        if H>=W:
+            n=0
+            while n*b<W:
+                x_i=W/2-n*b
+                x_f=W/2
+                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
+                                    color = color,
+                                    stroke_width = stroke_width,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                self.add(pat)
+                n=n+1
+            n=0
+            while n*b<=H-W:
+                x_f=W/2
+                x_i=-W/2
+                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
+                                    color = color,
+                                    stroke_width = stroke_width,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                self.add(pat)
+                n=n+1
+            while n*b-H/2<H/2:
+                x_f=H-n*b+x_i
+                x_i=-W/2
+                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
+                                    color = color,
+                                    stroke_width = stroke_width,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                self.add(pat)
+                n=n+1
+        else:
+            n=0
+            while n*b-H/2<W+H/2:
+                if n*b-H/2<H/2:
+                    x_i=W/2-n*b
+                    x_f=W/2
+                if H/2<=n*b-H/2 and n*b-H/2<W-H/2:
+                    x_i=W/2-n*b
+                    x_f=H+W/2-n*b
+                if W-H/2<=n*b-H/2 and n*b-H/2<W+H/2:
+                    x_i=-W/2
+                    x_f=H+W/2-n*b
+                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
+                                    color = color,
+                                    stroke_width = stroke_width,
+                                    x_min = x_i,
+                                    x_max = x_f
+                                    )
+                self.add(pat)
+                n=n+1
+        if agregar_base==True:
+            if direccion=="L":
+                orientacion=LEFT
+            elif direccion=="R":
+                orientacion=RIGHT
+            elif direccion=="U":
+                orientacion=UP
+            elif direccion=="D":
+                orientacion=DOWN
+            if direccion=="L" or direccion=="R":
+                grosor=Rectangle(height=H,width=grosor).set_fill(color,1).set_stroke(None,0)
+                grosor.shift(orientacion*W/2-orientacion*grosor.get_width()/2)
+            else:
+                grosor=Rectangle(height=grosor,width=W).set_fill(GREEN,1).set_stroke(None,0)
+                grosor.shift(orientacion*H/2-orientacion*grosor.get_height()/2)
+            self.add(grosor)
+        
 class Medicion(VGroup):
     CONFIG = {
         "color":RED_B,
