@@ -1,5 +1,42 @@
 from big_ol_pile_of_manim_imports import *
 
+class NuevaEscrituraA(Scene):
+    def construct(self):
+        texto=Texto("Teoría de la gravedad").to_corner(UL)
+        texto2=Texto("Contradicción con la ciencia").move_to(texto,aligned_edge=LEFT+UP)
+        #self.add(texto2)
+        linea_guia=Line(texto.get_corner(UL),texto.get_corner(DL)).shift(LEFT*0.4).scale(1.3)
+        self.play(FadeIn(linea_guia))
+        grupo_lineas=VGroup()
+        for letter in texto:
+            linea = Line(letter.get_top(),letter.get_bottom())
+            # circle = letter.copy()
+            linea.replace(letter, dim_to_match=1)
+            linea.fade(1)
+            linea.save_state()
+            grupo_lineas.add(linea)
+            linea.target = letter
+        #------------------------------------------
+        linea_guia2=Line(texto2.get_corner(UL),texto2.get_corner(DL)).shift(LEFT*0.4).scale(1.3)
+        grupo_lineas2=VGroup()
+        for letter in texto2:
+            linea = Line(letter.get_top(),letter.get_bottom())
+            # circle = letter.copy()
+            linea.replace(letter, dim_to_match=1)
+            linea.fade(1)
+            linea.save_state()
+            grupo_lineas2.add(linea)
+            linea.target = letter
+        
+        self.play(LaggedStart(MoveToTarget,grupo_lineas,run_time=1.1),linea_guia.move_to,texto[-1].get_right()+RIGHT*0.4)
+        self.play(FadeOut(linea_guia))
+        self.wait()
+        self.play(FadeIn(linea_guia2))
+        self.play(LaggedStart(Restore,grupo_lineas,run_time=1.1),LaggedStart(MoveToTarget,grupo_lineas2,run_time=1.1),
+            linea_guia2.move_to,texto2[-1].get_right()+RIGHT*0.4)
+        self.play(FadeOut(linea_guia2))
+        self.wait()
+
 class Perturbacion(ContinualAnimation):
     CONFIG = {
         "amplitude": 0.4,
