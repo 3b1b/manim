@@ -289,9 +289,10 @@ class Escribe(Animation):
         "run_time": 2,
         "stroke_width": 2,
         "stroke_color": None,
-        "rate_func": smooth,
+        "rate_func": linear,
         "submobject_mode": "lagged_start",
         "color_orilla" : WHITE,
+        "usar_otra_orilla":False,
         "factor_desvanecimiento": 6
     }
 
@@ -305,6 +306,10 @@ class Escribe(Animation):
         submobject.pointwise_become_partial(
             starting_submobject, 0, min(self.factor_desvanecimiento * alpha, 1)
         )
+        if self.usar_otra_orilla==True:
+            color_orilla=self.color_orilla
+        else:
+            color_orilla=submobject.get_color()
         if alpha < 0.5:
             if self.stroke_color:
                 color = self.stroke_color
@@ -312,7 +317,7 @@ class Escribe(Animation):
                 color = starting_submobject.get_stroke_color()
             else:
                 color = starting_submobject.get_color()
-            submobject.set_stroke(self.color_orilla, width=self.stroke_width)
+            submobject.set_stroke(color_orilla, width=self.stroke_width)
             submobject.set_fill(opacity=0)
         else:
             if not self.reached_halfway_point_before:
