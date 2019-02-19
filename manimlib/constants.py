@@ -36,7 +36,7 @@ MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
 for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
-               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,SVG_PRUEBAS_DIR]:
+               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,SVG_PRUEBAS_DIR,SOUND_DIR]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -85,13 +85,13 @@ NO_SCENE_MESSAGE = """
 
 LOW_QUALITY_FRAME_DURATION = 1. / 15
 MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
-PRODUCTION_QUALITY_FRAME_DURATION = 1. / 60
+PRODUCTION_QUALITY_FRAME_DURATION = 1. / 30
 
 # There might be other configuration than pixel shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1440,
-    "pixel_width": 2560,
-    "frame_rate": 60,
+    "pixel_height": 1080,
+    "pixel_width": 1920,
+    "frame_rate": 30,
 }
 
 HIGH_QUALITY_CAMERA_CONFIG = {
@@ -101,8 +101,8 @@ HIGH_QUALITY_CAMERA_CONFIG = {
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1200,
-    "pixel_width": 1200,
+    "pixel_height": 720,
+    "pixel_width": 1280,
     "frame_rate": 30,
 }
 
@@ -114,7 +114,7 @@ LOW_QUALITY_CAMERA_CONFIG = {
 
 DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
 DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
-DEFAULT_FRAME_RATE = 60
+DEFAULT_FRAME_RATE = 30
 
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
