@@ -17,7 +17,7 @@ from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.space_ops import get_norm
 
-OMEGA_CREATURE_DIR = os.path.join(MEDIA_DIR, "designs","OmegaCreature")
+OMEGA_CREATURE_DIR = os.path.join("OmegaCreature")
 OMEGA_CREATURE_SCALE_FACTOR = 0.5
 
 LEFT_EYE_INDEX = 0
