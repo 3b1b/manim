@@ -1,5 +1,12 @@
 from big_ol_pile_of_manim_imports import *
 
+class Grilla3(Scene):
+    def construct(self):
+        grillax=Grilla()
+        p1=Dot(coord(3.05,-1))
+        self.play(ShowCreation(grillax),DrawBorderThenFill(p1))
+        self.wait()
+
 class NuevaEscrituraA(Scene):
     def construct(self):
         texto=Texto("Teoría de la gravedad").to_corner(UL)
