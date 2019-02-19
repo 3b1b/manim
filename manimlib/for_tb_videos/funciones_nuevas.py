@@ -146,3 +146,42 @@ def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[
         if i==len(texto)-1:
             self.add_sound("computer_keyboard/enter")
             self.wait(time_spaces)
+		
+def escribe_texto(self,texto,tiempo_texto=1.1,escala_linea=1.5,buff_linea=0.2,**kwargs):
+    linea_guia=Line(texto.get_corner(UL),texto.get_corner(DL)).shift(LEFT*buff_linea).scale(escala_linea)
+    grupo_lineas=VGroup()
+    for letter in texto:
+        linea = Line(letter.get_top(),letter.get_bottom())
+        linea.replace(letter, dim_to_match=1)
+        linea.fade(1)
+        linea.save_state()
+        grupo_lineas.add(linea)
+        linea.target = letter
+
+    coord1=texto.get_right()+RIGHT*buff_linea
+    coord2=linea.get_center()
+    coordf=np.array([coord1[0],coord1[1],0])
+    self.play(FadeIn(linea_guia))
+    self.play(LaggedStart(MoveToTarget,grupo_lineas,run_time=tiempo_texto),linea_guia.move_to,coordf,**kwargs)
+    self.play(FadeOut(linea_guia))
+    return grupo_lineas
+
+def reescribe_texto(self,texto_i,texto,tiempo_pre_texto=1.1,tiempo_pos_texto=1.1,escala_linea=1.5,buff_linea=0.2,alineacion=UL,**kwargs):
+    texto.move_to(texto_i,aligned_edge=alineacion)
+    linea_guia=Line(texto.get_corner(UL),texto.get_corner(DL)).shift(LEFT*buff_linea).scale(escala_linea)
+    grupo_lineas=VGroup()
+    for letter in texto:
+        linea = Line(letter.get_top(),letter.get_bottom())
+        linea.replace(letter, dim_to_match=1)
+        linea.fade(1)
+        linea.save_state()
+        grupo_lineas.add(linea)
+        linea.target = letter
+    coord1=texto.get_right()+RIGHT*buff_linea
+    coord2=linea.get_center()
+    coordf=np.array([coord1[0],coord1[1],0])
+    self.play(FadeIn(linea_guia))
+    self.play(LaggedStart(Restore,texto_i,run_time=tiempo_pre_texto),LaggedStart(MoveToTarget,grupo_lineas,run_time=tiempo_pos_texto),
+        linea_guia.move_to,coordf,**kwargs)
+    self.play(FadeOut(linea_guia))
+    return grupo_lineas
