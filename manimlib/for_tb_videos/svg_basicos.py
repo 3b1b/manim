@@ -528,3 +528,67 @@ class Medicion(VGroup):
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
 
+class Grilla(VGroup):
+    CONFIG = {
+        "rows":8,
+        "columns":14,
+        "height": FRAME_Y_RADIUS*2,
+        "width": FRAME_X_RADIUS*2,
+        "grid_stroke":0.5,
+        "grid_color":WHITE,
+        "axis_color":RED,
+        "axis_stroke":2,
+        "show_points":False,
+        "point_radius":0,
+        "labels_scale":0.5,
+        "labels_buff":0,
+        "number_decimals":2
+    }
+
+    def __init__(self,**kwargs):
+        VGroup.__init__(self,**kwargs)
+        rows=self.rows
+        columns=self.columns
+        grilla=Grid(width=self.width,height=self.height,rows=rows,columns=columns).set_stroke(self.grid_color,self.grid_stroke)
+
+        vector_ii=ORIGIN+np.array((-FRAME_X_RADIUS,-FRAME_Y_RADIUS,0))
+        vector_id=ORIGIN+np.array((FRAME_X_RADIUS,-FRAME_Y_RADIUS,0))
+        vector_si=ORIGIN+np.array((-FRAME_X_RADIUS,FRAME_Y_RADIUS,0))
+        vector_sd=ORIGIN+np.array((FRAME_X_RADIUS,FRAME_Y_RADIUS,0))
+
+        ejes_x=Line(LEFT*FRAME_X_RADIUS,RIGHT*FRAME_X_RADIUS)
+        ejes_y=Line(DOWN*FRAME_Y_RADIUS,UP*FRAME_Y_RADIUS)
+
+        ejes=VGroup(ejes_x,ejes_y).set_stroke(self.axis_color,self.axis_stroke)
+
+        divisiones_x=FRAME_X_RADIUS*2/columns
+        divisiones_y=FRAME_Y_RADIUS*2/rows
+
+        direcciones_buff_x=[UP,DOWN]
+        direcciones_buff_y=[RIGHT,LEFT]
+        dd_buff=[direcciones_buff_x,direcciones_buff_y]
+        vectores_inicio_x=[vector_ii,vector_si]
+        vectores_inicio_y=[vector_si,vector_sd]
+        vectores_inicio=[vectores_inicio_x,vectores_inicio_y]
+        tam_buff=[0,0]
+        divisiones=[divisiones_x,divisiones_y]
+        orientaciones=[RIGHT,DOWN]
+        puntos=VGroup()
+        leyendas=VGroup()
+
+
+        for tipo,division,orientacion,coordenada,vi_c,d_buff in zip([columns,rows],divisiones,orientaciones,[0,1],vectores_inicio,dd_buff):
+            for i in range(1,tipo):
+                for v_i,direcciones_buff in zip(vi_c,d_buff):
+                    ubicacion=v_i+orientacion*division*i
+                    punto=Dot(ubicacion,radius=self.point_radius)
+                    coord=round(punto.get_center()[coordenada],self.number_decimals)
+                    leyenda=TextMobject("%s"%coord).scale(self.labels_scale)
+                    leyenda.next_to(punto,direcciones_buff,buff=self.labels_buff)
+                    puntos.add(punto)
+                    leyendas.add(leyenda)
+
+        self.add(grilla,ejes,leyendas)
+        if self.show_points==True:
+            self.add(puntos)
+
