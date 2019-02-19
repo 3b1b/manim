@@ -11,6 +11,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import counterclockwise_path
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import there_and_back
 
 # Drawing
