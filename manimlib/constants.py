@@ -2,6 +2,7 @@ import numpy as np
 import os
 
 # Initialize directories
+'''
 env_MEDIA_DIR = os.getenv("MEDIA_DIR")
 if env_MEDIA_DIR:
     MEDIA_DIR = env_MEDIA_DIR
@@ -21,12 +22,13 @@ if not os.path.isdir(MEDIA_DIR):
     )
 with open("media_dir.txt", 'w') as media_file:
     media_file.write(MEDIA_DIR)
+'''
 
-VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
-RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
-SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
-SOUND_DIR = os.path.join(MEDIA_DIR, "designs", "sounds")
-SVG_PRUEBAS_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images","pruebas")
+VIDEO_DIR = os.path.join("videos")
+RASTER_IMAGE_DIR = os.path.join("raster_images")
+SVG_IMAGE_DIR = os.path.join("svg_images")
+SOUND_DIR = os.path.join("sounds")
+SVG_PRUEBAS_DIR = os.path.join("svg_images","pruebas")
 ###
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR = os.path.join(THIS_DIR, "files")
