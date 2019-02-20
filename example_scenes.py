@@ -367,11 +367,11 @@ class NuevoEfecto2(Scene):
 
 
 
-class Patron(Scene):
+class Soporte(Scene):
     def construct(self):
-        pat1=Soporte(width=4,height=7,grosor=0.5,agregar_base=True,direccion="R",stroke_width=5)
+        pat1=Patron(width=4,height=7,grosor=0.5,agregar_base=True,direccion="R",stroke_width=5)
         pat1[-1].scale(1.007).shift(RIGHT*0.02)
-        pat2=Soporte(width=2,height=7,grosor=0.5,agregar_base=True,direccion="R",stroke_width=5)
+        pat2=Patron(width=2,height=7,grosor=0.5,agregar_base=True,direccion="R",stroke_width=5)
         pat2[-1].scale(1.007).shift(RIGHT*0.02)
         pat1.shift(LEFT*4)
         pat2.shift(LEFT*4)
