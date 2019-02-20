@@ -42,6 +42,42 @@ def Flecha(not1,not2,proporcion=0.96,**kwargs):
 	return flecha
 
 def TypeWriter(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89,end=False):
+    def devuelve_random():
+        return random.randint(1,3)
+    for i in range(len(texto)):
+
+        self.add_sound("typewriter/tecla%s"%devuelve_random())
+        texto[i].set_fill(None,1)
+        self.play(LaggedStart(FadeIn, 
+                    texto[i], run_time = p*len(texto[i]),
+                    lag_ratio=lag/len(texto[i])))
+        self.wait(0.1*devuelve_random()*time_random)
+        if i<len(texto)-1:
+            pre_ty=texto[i].get_center()[1]
+            pre_tx=texto[i].get_center()[0]
+            pos_ty=texto[i+1].get_center()[1]
+            pos_tx=texto[i+1].get_center()[0]
+            pre_width=texto[i].get_width()/2
+            pos_width=texto[i+1].get_width()/2
+            pre_height=texto[i].get_height()/2
+            pos_height=texto[i+1].get_height()/2
+            dist_min_x=(pre_width+pos_width)*1.6
+            dist_min_y=(pre_height+pos_height)*1.2
+            if i==0 or dist_max_x<dist_min_x:
+                dist_max_x=dist_min_x
+            if i==0 or dist_max_y<dist_min_y:
+                dist_max_y=dist_min_y
+            if abs(pre_ty-pos_ty)>dist_max_y:
+                self.add_sound("typewriter/enter")
+                self.wait(time_spaces)
+            elif abs(pre_tx-pos_tx)>dist_max_x and abs(pre_ty-pos_ty)<dist_max_y:
+                self.add_sound("typewriter/espacio")
+                self.wait(time_spaces)
+        if i==len(texto)-1:
+            self.add_sound("typewriter/enter")
+            self.wait(time_spaces)
+
+def TypeWriter_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89,end=False):
     def devuelve_random(numero):
         for num in range(numero):
                 for i in range(random.randint(1,5)):
@@ -71,7 +107,7 @@ def TypeWriter(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=
             self.add_sound("typewriter/fin")
             self.wait(0.1*c_random*time_random)
 
-def KeyBoard(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89):
+def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89):
     def devuelve_random(numero):
         for num in range(numero):
                 for i in range(random.randint(1,4)):
@@ -101,7 +137,7 @@ def KeyBoard(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[]
             self.wait(time_spaces)
 
 
-def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89):
+def KeyBoard(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89):
     def devuelve_random(numero):
         for num in range(numero):
                 for i in range(random.randint(1,4)):
