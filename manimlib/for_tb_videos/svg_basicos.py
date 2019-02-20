@@ -109,7 +109,23 @@ def Cinta1():
 
 
 def Nota1():
-    return ImageMobject("nota1")
+    return ImageMobject("notas/nota1")
+def Nota2():
+    return ImageMobject("notas/nota2")
+def Nota3():
+    return ImageMobject("notas/nota3")
+def Nota4():
+    return ImageMobject("notas/nota4")
+def Nota5():
+    return ImageMobject("notas/nota5")
+def Nota6():
+    return ImageMobject("notas/nota6")
+def Nota7():
+    return ImageMobject("notas/nota7")
+def Nota8():
+    return ImageMobject("notas/nota8")
+def Nota9():
+    return ImageMobject("notas/nota9")
 
 def Audifonos():
     return SVGMobject(file_name="headphones").set_fill("#d1d5d5",1).scale(0.5)
@@ -368,7 +384,7 @@ class cerrar_caja(Rotating):
             about_edge=sobre_der,
         )
         
-class Soporte(VGroup):
+class Patron(VGroup):
     def __init__(self,width,height,separacion=0.2,color=GREEN,agregar_base=False,direccion="R",grosor=1,stroke_width=2,**kwargs):
         digest_config(self, kwargs)
         VGroup.__init__(self, **kwargs)
