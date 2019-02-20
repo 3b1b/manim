@@ -185,3 +185,27 @@ def reescribe_texto(self,texto_i,texto,tiempo_pre_texto=1.1,tiempo_pos_texto=1.1
         linea_guia.move_to,coordf,**kwargs)
     self.play(FadeOut(linea_guia))
     return grupo_lineas
+
+def seleccion_texto(self,texto,color=YELLOW,proporcion_h=1.2,proporcion_w=1.2,opacidad=0.7,direccion=LEFT):
+    texto.rect=Rectangle(width=0.001,height=texto.get_height()*proporcion_h).set_fill(color).fade(opacidad).set_stroke(None,0)
+    texto.pos_rect=Rectangle(width=texto.get_width()*proporcion_w,height=texto.get_height()*proporcion_h).set_fill(color).fade(opacidad).set_stroke(None,0)
+    texto.pos_rect.move_to(texto)
+    texto.rect.next_to(texto.pos_rect,direccion,buff=0)
+
+def mostrar_seleccion_texto(self,texto):
+    return Transform(texto.rect,texto.pos_rect)
+
+def seleccion_grande_texto(self,texto,escala=1.1,color=YELLOW,opacidad=0.7):
+    rectg=Rectangle(width=FRAME_X_RADIUS*2,height=texto.get_height()*escala).set_fill(color).fade(opacidad).set_stroke(None,0)
+    rectg.move_to(ORIGIN)
+    coord_x=rectg.get_center()[0]
+    coord_y=texto.get_center()[1]
+    rectg.move_to(np.array([coord_x,coord_y,0]))
+    return rectg
+
+def mueve_seleccion(self,rectg,objeto,**kwargs):
+    rectg.generate_target()
+    coord_x=rectg.get_center()[0]
+    coord_y=objeto.get_center()[1]
+    rectg.target.move_to(np.array([coord_x,coord_y,0]))
+    self.play(MoveToTarget(rectg),**kwargs)
