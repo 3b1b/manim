@@ -41,7 +41,27 @@ def Flecha(not1,not2,proporcion=0.96,**kwargs):
 	flecha.add(tip)
 	return flecha
 
-def TypeWriter(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89,end=False):
+def TypeWriter_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,end=False):
+    def devuelve_random():
+        return random.randint(1,5)
+    for i in range(len(texto)):
+        if i in spaces:
+            self.add_sound("typewriter/espacio")
+            self.wait(time_spaces)
+        if i in enters:
+            self.add_sound("typewriter/enter")
+            self.wait(time_spaces)
+
+        self.add_sound("typewriter/tecla%s"%devuelve_random())
+        self.play(LaggedStart(FadeIn, 
+                    texto[i], run_time = p*len(texto[i]),
+                    lag_ratio=lag/len(texto[i])))
+        self.wait(0.1*devuelve_random()*time_random)
+        if i==len(texto)-1 and end==True:
+            self.add_sound("typewriter/fin")
+            self.wait(0.1*devuelve_random()*time_random)
+
+def TypeWriter(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,end=False):
     def devuelve_random():
         return random.randint(1,3)
     for i in range(len(texto)):
@@ -77,49 +97,9 @@ def TypeWriter(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=
             self.add_sound("typewriter/enter")
             self.wait(time_spaces)
 
-def TypeWriter_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89,end=False):
-    def devuelve_random(numero):
-        for num in range(numero):
-                for i in range(random.randint(1,5)):
-                    if i==0:
-                        i=i+1
-                    if i==5:
-                       i=i-1
-                    t_random=random.randint(i,5)
-        return t_random
-    for num in range(num_random):
-        for i in range(random.randint(1,2)):
-            c_random=random.randint(i+1,3)
-    for i in range(len(texto)):
-        if i in spaces:
-            self.add_sound("typewriter/espacio")
-            self.wait(time_spaces)
-        if i in enters:
-            self.add_sound("typewriter/enter")
-            self.wait(time_spaces)
-
-        self.add_sound("typewriter/tecla%s"%devuelve_random(num_random))
-        self.play(LaggedStart(FadeIn, 
-                    texto[i], run_time = p*len(texto[i]),
-                    lag_ratio=lag/len(texto[i])))
-        self.wait(0.1*devuelve_random(num_random)*time_random)
-        if i==len(texto)-1 and end==True:
-            self.add_sound("typewriter/fin")
-            self.wait(0.1*c_random*time_random)
-
-def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89):
-    def devuelve_random(numero):
-        for num in range(numero):
-                for i in range(random.randint(1,4)):
-                    if i==0:
-                        i=i+1
-                    if i==3:
-                    	i=i-1
-                    t_random=random.randint(i,3)
-        return t_random
-    for num in range(num_random):
-        for i in range(random.randint(1,2)):
-            c_random=random.randint(i+1,3)
+def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25):
+    def devuelve_random():
+        return random.randint(1,3)
     for i in range(len(texto)):
         if i in spaces:
             self.add_sound("computer_keyboard/espacio")
@@ -127,37 +107,27 @@ def KeyBoard_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[
         if i in enters:
             self.add_sound("computer_keyboard/enter")
             self.wait(time_spaces)
-        self.add_sound("computer_keyboard/tecla%s"%devuelve_random(num_random))
+        self.add_sound("computer_keyboard/tecla%s"%devuelve_random())
         self.play(LaggedStart(FadeIn, 
                     texto[i], run_time = p*len(texto[i]),
                     lag_ratio=lag/len(texto[i])))
-        self.wait(0.1*devuelve_random(num_random)*time_random)
+        self.wait(0.1*devuelve_random()*time_random)
         if i==len(texto)-1:
             self.add_sound("computer_keyboard/enter")
             self.wait(time_spaces)
 
 
-def KeyBoard(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,num_random=89):
-    def devuelve_random(numero):
-        for num in range(numero):
-                for i in range(random.randint(1,4)):
-                    if i==0:
-                        i=i+1
-                    if i==3:
-                    	i=i-1
-                    t_random=random.randint(i,3)
-        return t_random
-    for num in range(num_random):
-        for i in range(random.randint(1,2)):
-            c_random=random.randint(i+1,3)
+def KeyBoard(self,texto,p=0.037,lag=0.037,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25):
+    def devuelve_random():
+        return random.randint(1,3)
     for i in range(len(texto)):
 
-        self.add_sound("computer_keyboard/tecla%s"%devuelve_random(num_random))
+        self.add_sound("computer_keyboard/tecla%s"%devuelve_random())
         texto[i].set_fill(None,1)
         self.play(LaggedStart(FadeIn, 
                     texto[i], run_time = p*len(texto[i]),
                     lag_ratio=lag/len(texto[i])))
-        self.wait(0.1*devuelve_random(num_random)*time_random)
+        self.wait(0.1*devuelve_random()*time_random)
         if i<len(texto)-1:
             pre_ty=texto[i].get_center()[1]
             pre_tx=texto[i].get_center()[0]
