@@ -26,20 +26,6 @@ def direcciones_v3(text):
 def coord(x,y):
 	return np.array([x,y,0])
 
-def Flecha(not1,not2,proporcion=0.96,**kwargs):
-	flecha=Line(not1,not2,**kwargs)
-	tip = Polygon(coord(0,0),coord(-0.13,0.3),coord(0,0.2),coord(0.13,0.3))
-	tip.set_height(0.3)
-	tip.set_stroke(width=0)
-	tip.set_fill(opacity=1)
-	v=(flecha.get_end()-flecha.get_start())/get_norm(flecha.get_end()-flecha.get_start())
-	flecha.put_start_and_end_on(flecha.get_start(),flecha.get_start()+v*get_norm(flecha.get_end()-flecha.get_start())*proporcion)
-
-
-	tip.move_to(flecha.get_end())
-	tip.rotate(flecha.get_angle()+PI/2)
-	flecha.add(tip)
-	return flecha
 
 def TypeWriter_(self,texto,p=0.1,lag=0.08,time_random=0.05,random_begin=3,spaces=[],enters=[],time_spaces=0.25,end=False):
     def devuelve_random():
