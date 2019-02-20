@@ -351,10 +351,19 @@ class VMobjectFromSVGPathstring(VMobject):
             if len(new_points) <= 1:
                 return
 
-            # Huh? When does this come up?
+            # Draw relative line-to values.
             points = self.points
             new_points = new_points[1:]
             command = "L"
+
+            # Treat everything as relative line-to until empty
+            for p in new_points:
+                # Treat as relative
+                p[0] += self.points[-1, 0]
+                p[1] += self.points[-1, 1]
+                self.add_line_to(p)
+            return
+
         elif command in ["L", "H", "V"]:  # lineto
             if command == "H":
                 new_points[0, 1] = points[-1, 1]
@@ -382,13 +391,17 @@ class VMobjectFromSVGPathstring(VMobject):
         elif command == "Z":  # closepath
             return
 
-        # Handle situations where there's multiple relative control points
-        if isLower and len(new_points) > 3:
-            for i in range(3, len(new_points), 3):
-                new_points[i:i + 3] -= points[-1]
-                new_points[i:i + 3] += new_points[i - 1]
+        # Add first three points
+        self.add_cubic_bezier_curve_to(*new_points[0:3])
 
-        self.add_cubic_bezier_curve_to(*new_points)
+        # Handle situations where there's multiple relative control points
+        if len(new_points) > 3:
+            # Add subsequent offset points relatively.
+            for i in range(3, len(new_points), 3):
+                if isLower:
+                    new_points[i:i + 3] -= points[-1]
+                    new_points[i:i + 3] += new_points[i - 1]
+                self.add_cubic_bezier_curve_to(*new_points[i:i+3])
 
     def string_to_points(self, coord_string):
         numbers = string_to_numbers(coord_string)
