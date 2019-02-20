@@ -455,19 +455,22 @@ class Medicion(VGroup):
         "laterales":0.3,
         "invertir":False,
         "dashed_segment_length":0.09,
-        "dashed":True,
+        "dashed":False,
         "con_flechas":True,
         "ang_flechas":30*DEGREES,
         "tam_flechas":0.2,
+        "stroke":2.4
     }
     def __init__(self,objeto,**kwargs):
         VGroup.__init__(self,**kwargs)
         if self.dashed==True:
-            medicion=DashedLine(ORIGIN,objeto.get_length()*RIGHT,dashed_segment_length=self.dashed_segment_length)
+            medicion=DashedLine(ORIGIN,objeto.get_length()*RIGHT,dashed_segment_length=self.dashed_segment_length).set_color(self.color)
         else:
             medicion=Line(ORIGIN,objeto.get_length()*RIGHT)
 
-        pre_medicion=Line(ORIGIN,self.laterales*RIGHT).rotate(PI/2)
+        medicion.set_stroke(None,self.stroke)
+
+        pre_medicion=Line(ORIGIN,self.laterales*RIGHT).rotate(PI/2).set_stroke(None,self.stroke)
         pos_medicion=pre_medicion.copy()
 
         pre_medicion.move_to(medicion.get_start())
@@ -482,6 +485,7 @@ class Medicion(VGroup):
         self.add(medicion,pre_medicion,pos_medicion)
         self.rotate(angulo)
         self.move_to(objeto)
+
         if self.invertir==True:
             self.shift(-direccion*self.buff)
         else:
@@ -499,9 +503,9 @@ class Medicion(VGroup):
         punto_inicial2=self[0][0].get_start()
         punto_final2=punto_inicial2+vector_unitario*self.tam_flechas
 
-        lin1_1=Line(punto_inicial1,punto_final1).set_color(self[0].get_color())
+        lin1_1=Line(punto_inicial1,punto_final1).set_color(self[0].get_color()).set_stroke(None,self.stroke)
         lin1_2=lin1_1.copy()
-        lin2_1=Line(punto_inicial2,punto_final2).set_color(self[0].get_color())
+        lin2_1=Line(punto_inicial2,punto_final2).set_color(self[0].get_color()).set_stroke(None,self.stroke)
         lin2_2=lin2_1.copy()
 
         lin1_1.rotate(self.ang_flechas,about_point=punto_final1,about_edge=punto_final1)
@@ -512,6 +516,14 @@ class Medicion(VGroup):
 
         return self.add(lin1_1,lin1_2,lin2_1,lin2_2)
 
+    def add_tex(self,texto,escala=1,buff=0.1,**moreargs):
+        linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
+        texto=TexMobject(texto,**moreargs)
+        ancho=texto.get_height()/2
+        texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+        texto.shift(self.direccion*(buff+1)*ancho)
+        return self.add(texto)
+
     def add_text(self,text,escala=1,buff=0.1,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
         texto=TextMobject(text,**moreargs)
@@ -520,11 +532,18 @@ class Medicion(VGroup):
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
 
-    def add_tex(self,texto,escala=1,buff=0.1,**moreargs):
+    def add_size(self,texto,escala=1,buff=0.1,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
-        texto=TexMobject(text,**moreargs)
+        texto=TextMobject(texto,**moreargs)
         ancho=texto.get_height()/2
-        texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+        texto.rotate(linea_referencia.get_angle())
+        texto.shift(self.direccion*(buff+1)*ancho)
+        return self.add(texto)
+
+    def add_letter(self,texto,escala=1,buff=0.1,**moreargs):
+        linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
+        texto=TexMobject(texto,**moreargs).scale(escala).move_to(self)
+        ancho=texto.get_height()/2
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
 
