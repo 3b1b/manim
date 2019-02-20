@@ -627,3 +627,50 @@ class Grilla(VGroup):
         if self.show_points==True:
             self.add(puntos)
 
+class Flecha(VMobject):
+    CONFIG = {
+        "color":ORANGE,
+        "stroke":5,
+        "proporcion":0.1,
+        "height":0.35,
+        "v_i":"obj",
+        "v_f":"obj",        
+    }
+    def __init__(self,not1,not2,**kwargs):
+        VGroup.__init__(self,**kwargs)
+        if self.v_i=="obj":
+            coord1=not1.get_center()
+        else:
+            coord1=not1
+        if self.v_f=="obj":
+            coord2=not2.get_center()
+        else:
+            coord2=not2
+        linea_principal=Line(coord1,coord2,**kwargs)
+        tip = Polygon(coord(0,0),coord(-0.13,0.3),coord(0,0.2),coord(0.13,0.3))
+        tip.set_height(0.35)
+        tip.set_stroke(width=0)
+        tip.set_fill(opacity=1)
+        tip.move_to(linea_principal.get_end())
+        tip.rotate(linea_principal.get_angle()+PI/2)
+        vector_unitario_linea_principal=linea_principal.get_unit_vector()
+        punta_flecha=tip.points[0]
+        delta_e=coord2-punta_flecha
+
+        tip.shift(delta_e)
+
+        flecha=Line(LEFT,RIGHT)
+
+
+        flecha.put_start_and_end_on(linea_principal.get_start(),linea_principal.get_end()-vector_unitario_linea_principal*self.proporcion)
+
+        flecha.set_stroke(self.color,self.stroke)
+        tip.set_color(self.color)
+
+        self.add(flecha,tip)
+
+class VFlecha(Flecha):
+    CONFIG = {
+        "v_i":"vect",
+        "v_f":"vect",        
+    }
