@@ -634,7 +634,8 @@ class Flecha(VMobject):
         "proporcion":0.1,
         "height":0.35,
         "v_i":"obj",
-        "v_f":"obj",        
+        "v_f":"obj",
+        "buff":0
     }
     def __init__(self,not1,not2,**kwargs):
         VGroup.__init__(self,**kwargs)
@@ -655,7 +656,8 @@ class Flecha(VMobject):
         tip.rotate(linea_principal.get_angle()+PI/2)
         vector_unitario_linea_principal=linea_principal.get_unit_vector()
         punta_flecha=tip.points[0]
-        delta_e=coord2-punta_flecha
+
+        delta_e=linea_principal.get_end()-punta_flecha
 
         tip.shift(delta_e)
 
@@ -669,12 +671,19 @@ class Flecha(VMobject):
 
         self.add(flecha,tip)
 
+    def get_start(self):
+        return self[0].get_start()
+
+    def get_end(self):
+        return self[0].get_end()
+
 class VFlecha(Flecha):
     CONFIG = {
         "v_i":"vect",
         "v_f":"vect",        
     }
-    
+
+
 class DFlecha(VMobject):
     CONFIG = {
         "color":ORANGE,
@@ -709,12 +718,12 @@ class DFlecha(VMobject):
 
         vector_unitario_linea_principal=linea_principal.get_unit_vector()
         punta_flecha=tip.points[0]
-        delta_e=coord2-punta_flecha
+        delta_e=linea_principal.get_end()-punta_flecha
 
         tip.shift(delta_e)
 
         dpunta_flecha=dtip.points[0]
-        ddelta_e=coord1-dpunta_flecha
+        ddelta_e=linea_principal.get_start()-dpunta_flecha
 
         dtip.shift(ddelta_e)
 
@@ -728,6 +737,12 @@ class DFlecha(VMobject):
         dtip.set_color(self.color)
 
         self.add(flecha,tip,dtip)
+
+    def get_start(self):
+        return self[0].get_start()
+
+    def get_end(self):
+        return self[0].get_end()
 
 class DVFlecha(DFlecha):
     CONFIG = {
