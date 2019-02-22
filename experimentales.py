@@ -2,7 +2,6 @@ from big_ol_pile_of_manim_imports import *
 
 class PTexto(Scene):
     def construct(self):
-        texto=Texto("Qué onda ñero")
         flecha=Arc(PI/2).add_tip()
         self.add(flecha)
         def update(grupo,alpha):
