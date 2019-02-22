@@ -1,5 +1,20 @@
 from big_ol_pile_of_manim_imports import *
 
+class PTexto(Scene):
+    def construct(self):
+        texto=Texto("Qué onda ñero")
+        flecha=Arc(PI/2).add_tip()
+        self.add(flecha)
+        def update(grupo,alpha):
+            dx = interpolate(0, 360*DEGREES, alpha)
+            nuevo_grupo=Arc(PI/2).add_tip().rotate(dx,about_point=ORIGIN,
+            about_edge=ORIGIN)
+            Transform(grupo,nuevo_grupo).update(1)
+            return grupo
+        self.wait(0.5)
+        self.play(UpdateFromAlphaFunc(flecha,update),run_time=5)
+        self.wait(0.5)
+
 class Perturbacion(ContinualAnimation):
     CONFIG = {
         "amplitude": 0.4,
