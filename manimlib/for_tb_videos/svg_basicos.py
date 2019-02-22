@@ -675,7 +675,7 @@ class Flecha(VMobject):
         return self[0].get_start()
 
     def get_end(self):
-        return self[0].get_end()
+        return self[1].points[0]
 
 class VFlecha(Flecha):
     CONFIG = {
@@ -739,13 +739,50 @@ class DFlecha(VMobject):
         self.add(flecha,tip,dtip)
 
     def get_start(self):
-        return self[0].get_start()
+        return self[2].points[0]
 
     def get_end(self):
-        return self[0].get_end()
+        return self[1].points[0]
 
 class DVFlecha(DFlecha):
     CONFIG = {
         "v_i":"vect",
         "v_f":"vect",        
     }
+    
+class ParteDomo(VMobject):
+    CONFIG = {
+        "inner_radius": 3,
+        "outer_radius": 3,
+        "desfase":0,
+        "angle": 10*DEGREES,
+        "start_angle": 0,
+        "fill_opacity": 1,
+        "stroke_width": 0,
+        "color": WHITE,
+        "mark_paths_closed": False,
+    }
+
+    def generate_points(self):
+        arc1 = Arc(
+            angle=self.angle,
+            start_angle=self.start_angle+self.desfase,
+            radius=self.inner_radius,
+        )
+        arc2 = Arc(
+            angle=self.angle,
+            start_angle=PI-self.angle-self.desfase,
+            radius=self.outer_radius,
+        )
+        a1_to_a2_points = np.array([
+            interpolate(arc1.points[-1], arc2.points[0], alpha)
+            for alpha in np.linspace(0, 1, 4)
+        ])
+        a2_to_a1_points = np.array([
+            interpolate(arc2.points[-1], arc1.points[0], alpha)
+            for alpha in np.linspace(0, 1, 4)
+        ])
+        self.points = np.array(arc1.points)
+        self.add_control_points(a1_to_a2_points[1:])
+        self.add_control_points(arc2.points[1:])
+        self.add_control_points(a2_to_a1_points[1:])
