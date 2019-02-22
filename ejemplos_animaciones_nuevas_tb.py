@@ -67,6 +67,49 @@ class Dimensiones2(Scene):
             UpdateFromFunc(
             v_medicion,update))
         self.wait(2)
+        
+class Dimensiones3(Scene):
+    def construct(self):
+        rectangulo=Rectangle(width=5,height=3)
+        rectangulo.rotate(30*DEGREES)
+        linea=Line(LEFT*1.5,RIGHT*1.5)
+        linea.rotate(20*DEGREES)
+        linea.shift(LEFT*2)
+        v_medicion=Medicion(linea,color=BLUE,dashed=True).add_tips().add_tex("x",buff=1)
+        self.play(ShowCreation(linea))
+        self.play(GrowFromCenter(v_medicion))
+        def update_f(grupo):
+            nuevo_grupo=Medicion(linea,dashed=True,color=BLUE).add_tips().add_tex("x",buff=1)
+            Transform(grupo,nuevo_grupo).update(1)
+            return grupo
+
+
+        self.play(linea.scale,2,linea.rotate,PI/8,linea.shift,RIGHT*3,
+            UpdateFromFunc(
+            v_medicion,update_f))
+        self.wait(2)
+        
+class CambioArco(Scene):
+    def construct(self):
+        flecha=Arc(0)
+        self.add(flecha)
+        def update(grupo,alpha):
+            dx = interpolate(0, 45*DEGREES, alpha)
+            nuevo_grupo=Arc(dx)
+            Transform(grupo,nuevo_grupo).update(1)
+            return grupo
+        self.wait(0.5)
+        self.play(UpdateFromAlphaFunc(flecha,update))
+        self.wait(0.5)
+        def update2(grupo,alpha):
+            dx = interpolate(45*DEGREES, 80*DEGREES, alpha)
+            nuevo_grupo=Arc(dx)
+            Transform(grupo,nuevo_grupo).update(1)
+            return grupo
+        self.play(UpdateFromAlphaFunc(flecha,update2))
+        linea=Line(LEFT,UL)
+        self.play(Transform(flecha,linea))
+        self.wait(0.5)
 
 class Teclado(Scene):
     CONFIG = {"include_sound": True,
