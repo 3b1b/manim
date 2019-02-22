@@ -41,7 +41,7 @@ class MusicalScene(Scene):
         return VGroup(parentesis,nombre)
 
     def intervalo_h(self,n1,n2,texto,color_texto=BLACK,direccion=UP,color_flecha=ORANGE,escala_texto=0.7,buff_flecha=0.2,buff_texto=SMALL_BUFF*0.7,**kwargs):
-        flecha=Flecha(self.partitura[n1].get_right(),self.partitura[n2].get_left(),buff=buff_flecha).set_color(color_flecha)
+        flecha=VFlecha(self.partitura[n1].get_right(),self.partitura[n2].get_left(),buff=buff_flecha).set_color(color_flecha)
         nombre=TexMobject("%s"%texto,color=color_texto).scale(escala_texto).next_to(flecha,direccion,buff=buff_texto).add_background_rectangle(opacity=0.85,color=color_flecha,buff=SMALL_BUFF)
         return VGroup(flecha,nombre)
 
@@ -81,7 +81,7 @@ class MusicalScene(Scene):
                 teclado.add(self.tec_rel(prop,teclado[-1],opac))
             for tec in ["N","B","N","B","B0","N","B","N","B","N","B"]:
                 if tec=="N":
-                    teclado.add(self.tec_sharp(prop,teclado[-1],opac))
+                    teclado.add(self.tec_sharp(prop,teclado[-1],1))
                 if tec=="B":
                     teclado.add(self.tec_rel(prop,teclado[-2],opac))
                 if tec=="B0":
