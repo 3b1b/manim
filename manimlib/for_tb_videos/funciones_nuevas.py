@@ -169,7 +169,11 @@ def reescribe_texto(self,texto_i,texto,tiempo_pre_texto=1.1,tiempo_pos_texto=1.1
         linea.save_state()
         grupo_lineas.add(linea)
         linea.target = letter
-    coord1=texto.get_right()+RIGHT*buff_linea
+    if texto.get_width()<texto_i.get_width():
+        texto_ref=texto_i
+    else:
+        texto_ref=texto
+    coord1=texto_ref.get_right()+RIGHT*buff_linea
     coord2=linea.get_center()
     coordf=np.array([coord1[0],coord1[1],0])
     self.play(FadeIn(linea_guia))
