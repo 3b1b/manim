@@ -248,8 +248,6 @@ class MusicalScene(Scene):
             **kwargs
         )
 
-from big_ol_pile_of_manim_imports import *
-
 class MusicalScene2(Scene):
     CONFIG={
         "camera_config":{"background_color":WHITE},
