@@ -74,6 +74,18 @@ def Dedo2():
     )
     return dedo
 
+def Dedo_i1():
+    dedo=ImageMobject("dedo3",
+    fill_opacity = 1,
+    ).set_color(WHITE).scale(0.7)
+    return dedo
+
+def Dedo_i2():
+    dedo=ImageMobject("dedo4_espejo",
+    fill_opacity = 1,invert=True
+    ).set_color(WHITE).scale(0.7)
+    return dedo
+
 
 def Pin():
     pin=SVGMobject(
