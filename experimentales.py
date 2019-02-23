@@ -1,5 +1,55 @@
 from big_ol_pile_of_manim_imports import *
 
+class TestPlot(PlotScene):
+    CONFIG = {
+        "y_max" : 10,
+        "y_min" : 0,
+        "x_max" : 5,
+        "x_min" : 0,
+        "y_tick_frequency" : 1, 
+        "x_tick_frequency" : 0.5, 
+        "axes_color" : PURPLE_E, 
+        "num_graph_anchor_points": 300,
+        "y_labeled_nums":rango(0,10),
+        "x_labeled_nums":rango(0,5,0.5),
+        "x_label_decimal":1,
+        "x_tick_size":0.035,
+        "y_tick_size":0.035,
+    }
+    def construct(self):
+        self.setup_axes(animate=False)
+        graph =self.get_graph(lambda x : 1/x,
+                                    color = TT_AZUL_T,
+                                    x_min = 0.1,
+                                    x_max = 5,
+                                    ).set_stroke(None,2)
+        self.play(
+            ShowCreation(graph),
+            run_time = 1
+        )
+        self.wait()
+
+    def pre_setup(self):
+        lineas1=VMobject()
+        lineas2=VMobject()
+        self.x_axis[:2].set_stroke(None,2)
+        self.y_axis[3].next_to(self.y_axis[1][-1],UP+RIGHT,buff=0.1)
+        self.y_axis[:2].set_stroke(None,2)
+        for i in list(np.arange(self.x_min,self.x_max+self.x_tick_frequency,self.x_tick_frequency)):
+            if i!=0:
+                lin1=DashedLine(self.coords_to_point(i,self.y_min),self.coords_to_point(i,self.y_max))
+                #lin1=DashedMobject(lin1)
+                lineas1.add(lin1)
+        for i in list(np.arange(self.y_min,self.y_max+self.y_tick_frequency,self.y_tick_frequency)):
+            if i!=0:
+                lin2=DashedLine(self.coords_to_point(self.x_min,i),self.coords_to_point(self.x_max,i))
+                lineas2.add(lin2)
+        self.lineas_punteadas=VMobject(lineas1,lineas2).set_color(GRAY).fade(0.5).set_stroke(None,1.5)
+
+        self.play(Write(self.x_axis),Write(self.y_axis),
+            *[GrowFromCenter(self.lineas_punteadas[i][j])for i in [0,1] 
+                for j in range(len(self.lineas_punteadas[i]))],)
+
 class Triangulo4(Scene):
     def construct(self):
         tr1=Polygon(LEFT*2,ORIGIN,UP*2)
