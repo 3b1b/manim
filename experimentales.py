@@ -1,5 +1,38 @@
 from big_ol_pile_of_manim_imports import *
 
+class Triangulo2(Scene):
+	def construct(self):
+		tr1=Polygon(LEFT*2,ORIGIN,UP*2)
+		tr1.move_to(Dot())
+		med=Medicion(Line(tr1.points[0],tr1.points[3]),invertir=True,dashed=True).add_tips().add_letter("x",buff=-3.2)
+		med2=Medicion(Line(tr1.points[3],tr1.points[6]),invertir=True,dashed=True).add_tips().add_letter("y",buff=-2.6)
+		med3=Medicion(Line(tr1.points[0],tr1.points[6]),dashed=True).add_tips().add_letter("z",buff=1.2)
+		ang_alpha=np.arctan(Line(tr1.points[3],tr1.points[6]).get_length()/Line(tr1.points[0],tr1.points[3]).get_length())
+		arco=Arc(ang_alpha,arc_center=tr1.points[0])
+		arco2=Arc(np.arctan(Line(tr1.points[0],tr1.points[3]).get_length()/Line(tr1.points[3],tr1.points[6]).get_length()),arc_center=tr1.points[6],start_angle=ang_alpha)
+		arco2.rotate(180*DEGREES,about_point=tr1.points[6],about_edge=tr1.points[6])
+		self.add(tr1,med,med2,med3,arco,arco2)
+		def updatef(self):
+			sub_med=Medicion(Line(tr1.points[0],tr1.points[3]),invertir=True,dashed=True).add_tips().add_letter("x",buff=-3.2)
+			sub_med2=Medicion(Line(tr1.points[3],tr1.points[6]),invertir=True,dashed=True).add_tips().add_letter("y",buff=-2.6)
+			sub_med3=Medicion(Line(tr1.points[0],tr1.points[6]),dashed=True).add_tips().add_letter("z",buff=1.2)
+			new_arco=Arc(np.arctan(Line(tr1.points[3],tr1.points[6]).get_length()/Line(tr1.points[0],tr1.points[3]).get_length()),arc_center=tr1.points[0])
+			new_ang_alpha=np.arctan(Line(tr1.points[3],tr1.points[6]).get_length()/Line(tr1.points[0],tr1.points[3]).get_length())
+			arco2b=Arc(np.arctan(Line(tr1.points[0],tr1.points[3]).get_length()/Line(tr1.points[3],tr1.points[6]).get_length()),arc_center=tr1.points[6],start_angle=new_ang_alpha)
+			arco2b.rotate(180*DEGREES,about_point=tr1.points[6],about_edge=tr1.points[6])
+			Transform(med,sub_med).update(1)
+			Transform(med2,sub_med2).update(1)
+			Transform(med3,sub_med3).update(1)
+			Transform(arco,new_arco).update(1)
+			Transform(arco2,arco2b).update(1)
+		self.wait()
+		self.play(tr1.stretch_to_fit_width,4,tr1.stretch_to_fit_height,2,
+			UpdateFromFunc(med,updatef))
+		#tr1.stretch_to_fit_width(1)
+		#self.wait()
+		#tr1.stretch_to_fit_height(3)
+		self.wait()
+
 class PTexto(Scene):
     def construct(self):
         flecha=Arc(PI/2).add_tip()
