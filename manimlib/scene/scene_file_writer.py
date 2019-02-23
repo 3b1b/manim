@@ -231,7 +231,8 @@ class SceneFileWriter(object):
         else:
             if self.hd==True:
                 command += [
-                '-vcodec', 'png',
+                '-vcodec', 'libx264',
+                '-preset','fast','-crf','0',
                 '-pix_fmt', 'yuv420p',
             ]
             else:
