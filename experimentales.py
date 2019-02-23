@@ -33,8 +33,11 @@ class TestPlot(PlotScene):
         lineas1=VMobject()
         lineas2=VMobject()
         self.x_axis[:2].set_stroke(None,2)
-        self.y_axis[3].next_to(self.y_axis[1][-1],UP+RIGHT,buff=0.1)
+        self.y_axis_label_mob.next_to(self.y_axis[1][-1],UP+RIGHT,buff=0.1)
         self.y_axis[:2].set_stroke(None,2)
+        self.x_axis_label_mob.set_color(ORANGE)
+        self.y_axis_label_mob.set_color(BLUE_D)
+        self.y_axis[2].set_color(TEAL)
         for i in list(np.arange(self.x_min,self.x_max+self.x_tick_frequency,self.x_tick_frequency)):
             if i!=0:
                 lin1=DashedLine(self.coords_to_point(i,self.y_min),self.coords_to_point(i,self.y_max))
@@ -46,7 +49,7 @@ class TestPlot(PlotScene):
                 lineas2.add(lin2)
         self.lineas_punteadas=VMobject(lineas1,lineas2).set_color(GRAY).fade(0.5).set_stroke(None,1.5)
 
-        self.play(Write(self.x_axis),Write(self.y_axis),
+        self.play(Write(self.axes),
             *[GrowFromCenter(self.lineas_punteadas[i][j])for i in [0,1] 
                 for j in range(len(self.lineas_punteadas[i]))],)
 
