@@ -105,6 +105,9 @@ class Arc(VMobject):
         self.angle = stop - start
 
         return self
+    
+    def get_angle(self):
+        return self.angle
 
 
 class ArcBetweenPoints(Arc):
