@@ -347,3 +347,7 @@ class Texto(TextMobject):
 class Formula(TexMobject):
     pass
 
+class Tikz(TikzMobject):
+	pass
+
+
