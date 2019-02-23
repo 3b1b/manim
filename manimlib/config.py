@@ -63,6 +63,11 @@ def parse_cli():
             help="Render to a movie file with an alpha channel",
         ),
         parser.add_argument(
+            "--hd",
+            action="store_true",
+            help="mp4 en alta definicion",
+        ),
+        parser.add_argument(
             "-q", "--quiet",
             action="store_true",
             help="",
@@ -180,7 +185,8 @@ def get_configuration(args):
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
         "sound": args.sound,
-        "remove_progress_bars": args.remove_progress_bars
+        "remove_progress_bars": args.remove_progress_bars,
+        "hd": args.hd
     }
 
     # Camera configuration
