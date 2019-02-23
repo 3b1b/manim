@@ -170,6 +170,7 @@ def get_configuration(args):
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
         "file_name": args.file_name,
+        "hd": args.hd
     }
     if hasattr(module, "OUTPUT_DIRECTORY"):
         file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
@@ -186,7 +187,6 @@ def get_configuration(args):
         "end_at_animation_number": None,
         "sound": args.sound,
         "remove_progress_bars": args.remove_progress_bars,
-        "hd": args.hd
     }
 
     # Camera configuration
