@@ -1,6 +1,14 @@
 from big_ol_pile_of_manim_imports import *
 
 
+import warnings
+warnings.warn("""
+    Warning: This file makes use of
+    ContinualAnimation, which has since
+    been deprecated
+""")
+
+
 E_COLOR = BLUE
 M_COLOR = YELLOW
 
@@ -375,10 +383,10 @@ class DirectionOfPolarizationScene(FilterScene):
 
         self.rectangles = VGroup(rect1, rect2)
 
-    def continual_update(self, *args, **kwargs):
+    def update_mobjects(self, *args, **kwargs):
         reference_angle = self.reference_line.get_angle()
         self.em_wave.rotation = reference_angle
-        FilterScene.continual_update(self, *args, **kwargs)
+        FilterScene.update_mobjects(self, *args, **kwargs)
         if self.apply_filter:
             self.apply_filters()
         self.update_rectangles()
@@ -665,13 +673,13 @@ class IntroduceElectricField(PiCreatureScene):
         )
         self.moving_particles = particles
         self.add_foreground_mobjects(self.moving_particles, self.pi_creature)
-        self.always_continually_update = True
+        self.always_update_mobjects = True
         self.wait(10)
 
     ###
 
-    def continual_update(self, *args, **kwargs):
-        Scene.continual_update(self, *args, **kwargs)
+    def update_mobjects(self, *args, **kwargs):
+        Scene.update_mobjects(self, *args, **kwargs)
         if hasattr(self, "moving_particles"):
             dt = self.frame_duration
             for p in self.moving_particles:
@@ -832,8 +840,8 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         
     ###
 
-    def continual_update(self, *args, **kwargs):
-        Scene.continual_update(self, *args, **kwargs)
+    def update_mobjects(self, *args, **kwargs):
+        Scene.update_mobjects(self, *args, **kwargs)
         if hasattr(self, "moving_particles"):
             dt = self.frame_duration
             for p in self.moving_particles:
@@ -1085,7 +1093,7 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
 
     def move_into_position(self):
         self.wait(2)
-        self.continual_update()
+        self.update_mobjects()
         faded_vectors = VGroup(*[
             ov.vector
             for ov in self.em_wave.continual_animations[:-2]

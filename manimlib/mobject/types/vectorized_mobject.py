@@ -17,6 +17,7 @@ from manimlib.utils.iterables import stretch_array_to_length
 from manimlib.utils.iterables import tuplify
 from manimlib.utils.simple_functions import clip_in_place
 from manimlib.utils.space_ops import rotate_vector
+from manimlib.utils.space_ops import get_norm
 
 # TODO
 # - Change cubic curve groups to have 4 points instead of 3
@@ -505,21 +506,36 @@ class VMobject(Mobject):
         self.make_smooth()
         return self
 
-    def make_smooth(self):
+    def change_anchor_mode(self, mode):
+        assert(mode in ["jagged", "smooth"])
         nppcc = self.n_points_per_cubic_curve
-        subpaths = self.get_subpaths()
-        self.clear_points()
-        for subpath in subpaths:
-            anchors = [*subpath[::nppcc], subpath[-1]]
-            h1, h2 = get_smooth_handle_points(anchors)
-            new_subpath = np.array(subpath)
-            new_subpath[1::nppcc] = h1
-            new_subpath[2::nppcc] = h2
-            self.append_points(new_subpath)
+        for submob in self.family_members_with_points():
+            subpaths = submob.get_subpaths()
+            submob.clear_points()
+            for subpath in subpaths:
+                anchors = np.append(
+                    subpath[::nppcc],
+                    subpath[-1:],
+                    0
+                )
+                if mode == "smooth":
+                    h1, h2 = get_smooth_handle_points(anchors)
+                elif mode == "jagged":
+                    a1 = anchors[:-1]
+                    a2 = anchors[1:]
+                    h1 = interpolate(a1, a2, 1.0 / 3)
+                    h2 = interpolate(a1, a2, 2.0 / 3)
+                new_subpath = np.array(subpath)
+                new_subpath[1::nppcc] = h1
+                new_subpath[2::nppcc] = h2
+                submob.append_points(new_subpath)
         return self
 
+    def make_smooth(self):
+        return self.change_anchor_mode("smooth")
+
     def make_jagged(self):
-        return self.change_anchor_mode("corners")
+        return self.change_anchor_mode("jagged")
 
     def add_subpath(self, points):
         assert(len(points) % 4 == 0)
@@ -652,6 +668,17 @@ class VMobject(Mobject):
             sm.get_anchors()
             for sm in self.get_family()
         ])))
+
+    def get_arc_length(self, n_sample_points=None):
+        if n_sample_points is None:
+            n_sample_points = 4 * self.get_num_curves() + 1
+        points = np.array([
+            self.point_from_proportion(a)
+            for a in np.linspace(0, 1, n_sample_points)
+        ])
+        diffs = points[1:] - points[:-1]
+        norms = np.apply_along_axis(get_norm, 1, diffs)
+        return np.sum(norms)
 
     # Alignment
     def align_points(self, vmobject):

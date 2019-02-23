@@ -824,7 +824,7 @@ class FunctionGOutputSpace(FunctionGInputSpace):
 
         point_mob.move_to(self.get_start_point())
         self.add(dot)
-        self.continual_update(0)
+        self.update_mobjects(0)
         self.remove(dot)
 
         p_tex = "\\vec{\\textbf{p}}"

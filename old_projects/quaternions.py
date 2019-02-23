@@ -4141,7 +4141,7 @@ class ReferernceSpheresFelixView(ShowRotationsJustWithReferenceCircles):
         ShowRotationsJustWithReferenceCircles.move_camera(self, **kwargs)
 
     def begin_ambient_camera_rotation(self, rate):
-        self.ambient_camera_rotation = ContinualAnimation(VectorizedPoint())
+        self.ambient_camera_rotation = VectorizedPoint()
 
     def capture_mobjects_in_camera(self, mobjects, **kwargs):
         mobs_on_xy = [
