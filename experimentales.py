@@ -1,5 +1,46 @@
 from big_ol_pile_of_manim_imports import *
 
+class TestArco(Scene):
+    def construct(self):
+        arco=Arc(PI/2,radius=3)
+        linea_arco=Line(arco.points[-2],arco.points[-1],color=RED)
+        puntas_flecha=self.add_tips(linea_arco)
+        poligono=VMobject().set_points_as_corners([puntas_flecha[0].get_start(),
+                                                   #puntas_flecha[2].get_end(),
+                                                   puntas_flecha[1].get_start(),
+                                                   puntas_flecha[1].get_end(),
+                                                   puntas_flecha[0].get_start()]).set_fill(WHITE,1)
+        linea_base=DashedLine(LEFT*4,RIGHT*4)
+        linea_tope=Line(LEFT*0.15,RIGHT*0.15).rotate(arco.get_angle()).move_to(arco.points[-1])
+        conjunto=VGroup(DashedMobject(arco),puntas_flecha,linea_tope).set_stroke(width=2.2)
+        self.add(conjunto)
+
+    def add_tips(self,linea,ang_flechas=30*DEGREES,tam_flechas=0.3):
+        linea_referencia=Line(linea.get_start(),linea.get_end())
+        vector_unitario=linea_referencia.get_unit_vector()
+
+        punto_final1=linea.get_end()
+        punto_inicial1=punto_final1-vector_unitario*tam_flechas
+        punto_intermedio=punto_final1-vector_unitario*tam_flechas*0.6
+
+        punto_inicial2=linea.get_start()
+        punto_final2=punto_inicial2+vector_unitario*tam_flechas
+
+        lin1_1=Line(punto_inicial1,punto_final1)
+        lin1_2=lin1_1.copy()
+        lin2_1=Line(punto_inicial2,punto_final2)
+        lin2_2=lin2_1.copy()
+
+        lin_int=Line(linea.get_end(),punto_final1-vector_unitario*tam_flechas*0.6)
+
+        lin1_1.rotate(ang_flechas,about_point=punto_final1,about_edge=punto_final1)
+        lin1_2.rotate(-ang_flechas,about_point=punto_final1,about_edge=punto_final1)
+
+        lin2_1.rotate(ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
+        lin2_2.rotate(-ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
+
+        return VMobject(lin1_1,lin1_2)
+
 class TestPlot(PlotScene):
     CONFIG = {
         "y_max" : 10,
