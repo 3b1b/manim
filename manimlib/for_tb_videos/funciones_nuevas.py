@@ -1,5 +1,8 @@
 from big_ol_pile_of_manim_imports import *
 
+def rango(v_in,v_fin,step=1):
+    return list(np.arange(v_in,v_fin+step,step))
+
 def direcciones_v1(text):
 	direccion=[]
 	for i in range(len(text)):
