@@ -199,7 +199,7 @@ class SceneFileWriter(object):
     
     def open_movie_pipe(self):
         file_path = self.get_next_partial_movie_path()
-        temp_file_path = file_path[:file_path.index(self.movie_file_extension)] + '_temp.' + file_path[file_path.index(self.movie_file_extension)+1:]
+        temp_file_path = file_path[:-len(self.movie_file_extension)] + '_temp.' + file_path[-len(self.movie_file_extension)+1:]
 
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
