@@ -108,6 +108,15 @@ class SceneFileWriter(object):
             )
         )
         return result
+    def get_next_temp_partial_movie_path(self):
+        result = os.path.join(
+            self.partial_movie_directory,
+            "{:05}_temp{}".format(
+                self.scene.num_plays,
+                self.movie_file_extension,
+            )
+        )
+        return result
 
     def get_movie_file_path(self):
         return self.movie_file_path
@@ -196,10 +205,9 @@ class SceneFileWriter(object):
         if self.save_last_frame:
             self.scene.update_frame(ignore_skipping=True)
             self.save_image(self.scene.get_image())
-
     def open_movie_pipe(self):
         file_path = self.get_next_partial_movie_path()
-        temp_file_path = file_path[:file_path.index('.', -4)] + '_temp.' + file_path[file_path.index('.',-4)+1:]
+        temp_file_path = self.get_next_temp_partial_movie_path()
 
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
