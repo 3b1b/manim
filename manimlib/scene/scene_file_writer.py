@@ -108,6 +108,7 @@ class SceneFileWriter(object):
             )
         )
         return result
+    
     def get_next_temp_partial_movie_path(self):
         result = os.path.join(
             self.partial_movie_directory,
@@ -205,6 +206,7 @@ class SceneFileWriter(object):
         if self.save_last_frame:
             self.scene.update_frame(ignore_skipping=True)
             self.save_image(self.scene.get_image())
+    
     def open_movie_pipe(self):
         file_path = self.get_next_partial_movie_path()
         temp_file_path = self.get_next_temp_partial_movie_path()
