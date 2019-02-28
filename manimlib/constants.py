@@ -19,8 +19,6 @@ if not os.path.isdir(MEDIA_DIR):
         f"Media will be stored in {MEDIA_DIR + os.sep}. You can change "
         "this behavior by writing a different directory to media_dir.txt."
     )
-with open("media_dir.txt", 'w') as media_file:
-    media_file.write(MEDIA_DIR)
 
 VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
 RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
