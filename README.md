@@ -1,6 +1,6 @@
 # Manim personalizado
 
-Esta es mi versión personal que uso para hacer mis proyectos. Tiene algunas modificaciónes y adiciones, los códigos de mis proyectos están en la carpeta "projects".
+Esta es mi versión personal que uso para hacer mis proyectos. Tiene algunas modificaciónes y adiciones, los códigos de mis proyectos están en las carpetas "proy_act" y "proy_term".
 
 Debido a las modificaciones que hice no podrás compilar mis proyectos en la [versión original de Manim](https://github.com/3b1b/manim), por lo que recomiendo que uses esta versión si es que quieres compilarlos. Tengo un curso tanto en [español](https://github.com/Elteoremadebeethoven/AnimacionesConManim/) como en [inglés](https://github.com/Elteoremadebeethoven/AnimationsWithManim) que puede ser de interés a las personas que quieran aprender desde cero (aún sin conocimientos de LaTeX y/o Python).
 
