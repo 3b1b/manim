@@ -84,6 +84,7 @@ from manimlib.for_tb_videos.funciones_nuevas import *
 from manimlib.for_tb_videos.svg_basicos import *
 from manimlib.for_tb_videos.escenas_genericas import *
 from manimlib.scene.music_scene import *
+from manimlib.scene.plot_scene import *
 
 import inspect
 import itertools as it
