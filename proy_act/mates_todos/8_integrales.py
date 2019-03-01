@@ -16,9 +16,9 @@ class EscenaIntegral(GraphScene):
     def construct(self):
         self.setup_axes()
         self.mostrar_grafica()
-        #self.mostrar_randolf()
+        self.mostrar_randolf()
         self.desglose_integral()
-        #self.mostrar_randolf2()
+        self.mostrar_randolf2()
 
     def setup_axes(self):
         # Linea por defecto
@@ -313,23 +313,23 @@ class EscenaIntegral(GraphScene):
         
 
     def mostrar_randolf(self):
-        randy = Randolph()
-        randy[4].set_color(RED)
+        randy = Alex()
         randy.to_corner(DOWN+LEFT)
         randy.shift(2*RIGHT)
         words = TextMobject("Yo s\\'olo s\\'e calcular\\\\ \\'areas de rect\\'angulos")
         words.scale(0.7)
 
         self.play(FadeIn(randy))
-        self.play(PiCreatureSays(
+        self.play(OmegaCreatureDice(
             randy, words, 
             bubble_kwargs = {"height" : 3, "width" : 4},
+            target_mode="speaking"
         ))
         self.play(Blink(randy))
         self.wait(2)
         self.play(Blink(randy))
         self.wait(0.5)
-        self.play(RemovePiCreatureBubble(randy))
+        self.play(RemueveDialogo(randy))
         self.play(FadeOut(randy))
 
     def desglose_integral(self):
@@ -1159,22 +1159,22 @@ class EscenaIntegral(GraphScene):
         #'''
 
     def mostrar_randolf2(self):
-        randy = Randolph()
-        randy[4].set_color(RED)
+        randy = Alex()
         randy.to_corner(DOWN+LEFT)
         randy.shift(2*RIGHT)
         words = TextMobject("Qué fácil!")
         words.scale(0.7)
 
         self.play(FadeIn(randy))
-        self.play(PiCreatureSays(
+        self.play(OmegaCreatureDice(
             randy, words, 
             bubble_kwargs = {"height" : 3, "width" : 4},
+            target_mode="speaking"
         ))
         self.play(Blink(randy))
         self.wait()
         self.play(Blink(randy))
         self.wait(0.5)
-        self.play(RemovePiCreatureBubble(randy))
+        self.play(RemueveDialogo(randy))
         self.play(FadeOut(randy))
         #'''
