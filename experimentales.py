@@ -1,5 +1,118 @@
 from big_ol_pile_of_manim_imports import *
 
+class ZoomT2(ZoomedScene):
+    CONFIG = {
+        "show_basis_vectors": False,
+        "show_coordinates": True,
+        "zoom_factor": 0.3,
+        "zoomed_display_height": 1,
+        "zoomed_display_width": 6,
+    }
+
+    def setup(self):
+        ZoomedScene.setup(self)
+
+    def construct(self):
+        grilla=Grilla()
+        #self.add_foreground_mobject(grilla)
+        texto1=Texto("Undolatory theory",color=RED)
+        texto2=Texto("Experimento de Airy",color=PURPLE)
+
+        conj_texto1=VGroup(texto1,texto2)
+        conj_texto1.arrange_submobjects(DOWN,aligned_edge=LEFT)
+
+
+
+        imagen=ImageMobject("flat_earth/airy3")
+        imagen.set_height(7)
+        imagen.shift(LEFT*3)
+        self.add(imagen)
+
+        zoomed_camera = self.zoomed_camera
+        zoomed_display = self.zoomed_display
+        frame = zoomed_camera.frame
+
+        frame.move_to(3.05 * LEFT + 1.4 * UP)
+        frame.set_color(WHITE)
+
+        zoomed_display.display_frame.set_color(WHITE)
+
+        zd_rect = BackgroundRectangle(
+            zoomed_display,
+            fill_opacity=0,
+            buff=MED_SMALL_BUFF,
+        )
+
+        self.add_foreground_mobject(zd_rect)
+
+        zd_rect.anim = UpdateFromFunc(
+            zd_rect,
+            lambda rect: rect.replace(zoomed_display).scale(1.1)
+        )
+        #zd_rect.next_to(FRAME_HEIGHT * RIGHT, UP)
+
+        zoomed_display.move_to(ORIGIN+RIGHT*3+UP*3)
+
+        conj_texto1.next_to(zoomed_display,DOWN)
+
+        self.play(ShowCreation(frame))
+        self.activate_zooming()
+        #'''
+        self.play(
+            self.get_zoomed_display_pop_out_animation(),
+            zd_rect.anim
+        )
+        self.play(Escribe(texto1))
+        #'''
+        self.wait()
+        '''
+        self.play(
+            #self.get_zoomed_display_pop_out_animation(),
+            zd_rect.anim,
+            rate_func=lambda t: smooth(1-t)
+        )
+        #'''
+        print("aqui")
+        self.play(
+            frame.scale,[0.5,1.5,1],
+            zoomed_display.scale,[0.5,1.5,1],
+            zoomed_display.display_frame.scale,[0.5,1.5,1],
+            )
+        self.play(
+            frame.scale,1.5,
+            frame.shift,2.5*DOWN
+            )
+
+        self.wait()
+        self.play(
+            self.get_zoomed_display_pop_out_animation(),
+            zd_rect.anim,
+            rate_func=lambda t: smooth(1-t)
+        )
+        self.play(
+            zoomed_display.display_frame.fade,1,
+            frame.fade,1
+            )
+        self.wait()
+
+class Justificado(Scene):
+    def construct(self):
+        texto=Texto("""
+        \\justify
+This  is  the  second  paragraph. Hello, here is some text without
+a meaning.  This text should show what 
+a printed text will look like at this place.  If you read this text, 
+you will get no information.  Really?  Is there no information?  Is there 
+a difference between this text and some nonsense like not at all!  A 
+blind text like this gives you information about the selected font, how 
+the letters are written and an impression of the look.  This text should
+contain all letters of the alphabet and it should be written in of the
+original language.There is no need for special content, but the length of
+words should match the language.
+        """).scale(0.7)
+        self.play(LaggedStart(FadeIn,texto))
+        self.wait()
+
 class ZoomT(ZoomedScene):
     CONFIG = {
         "show_basis_vectors": False,
