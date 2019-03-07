@@ -119,7 +119,7 @@ class GraphScene(Scene):
         if self.y_axis_label:
             y_label = TextMobject(self.y_axis_label)
             y_label.next_to(
-                y_axis.get_tick_marks(), UP + RIGHT,
+                y_axis.get_corner(UP + RIGHT), UP + RIGHT,
                 buff=SMALL_BUFF
             )
             y_label.shift_onto_screen()
