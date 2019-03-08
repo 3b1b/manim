@@ -109,6 +109,7 @@ class GraphScene(Scene):
             numbers_with_elongated_ticks=self.y_labeled_nums,
             color=self.axes_color,
             line_to_number_vect=LEFT,
+            label_direction=LEFT,
         )
         y_axis.shift(self.graph_origin - y_axis.number_to_point(0))
         y_axis.rotate(np.pi / 2, about_point=y_axis.number_to_point(0))
