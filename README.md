@@ -37,7 +37,7 @@ The image does not contain a copy of the repo. This is intentional, as it allows
   * Build it: `docker build -t manim .`
 3. Start the image
   * Bind mount a local repo (recommended): `docker run -itv /absolute/path/to/your/local/manim/repo:/root/manim eulertour/manim` or
-  * Clone a remote repo: `docker run -it eulertour/manim`, then `git clone https://github.com/eulertour/manim.git`
+  * Clone a remote repo: `docker run -it eulertour/manim`, then `git clone https://github.com/3b1b/manim.git`
 4. Render an animation
 ```sh
 cd manim

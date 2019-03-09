@@ -138,6 +138,10 @@ class TipableVMobject(VMobject):
         else:
             return VMobject.get_start(self)
 
+    def get_length(self):
+       start, end = self.get_start_and_end()
+       return get_norm(start - end)
+
     def has_tip(self):
         return hasattr(self, "tip") and self.tip in self
 
@@ -317,7 +321,7 @@ class Ellipse(Circle):
     def __init__(self, **kwargs):
         Circle.__init__(self, **kwargs)
         self.set_width(self.width, stretch=True)
-        self.set_height(self.width, stretch=True)
+        self.set_height(self.height, stretch=True)
 
 
 class AnnularSector(Arc):
@@ -438,10 +442,6 @@ class Line(TipableVMobject):
             else:
                 return mob.get_boundary_point(direction)
         return np.array(mob_or_point)
-
-    def get_length(self):
-        start, end = self.get_start_and_end()
-        return get_norm(start - end)
 
     def get_vector(self):
         return self.get_end() - self.get_start()
