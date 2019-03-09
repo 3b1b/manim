@@ -119,7 +119,6 @@ def TVA():
 def Cinta1():
     return ImageMobject("cinta1")
 
-
 def Nota1():
     return ImageMobject("notas/nota1")
 def Nota2():
@@ -138,6 +137,7 @@ def Nota8():
     return ImageMobject("notas/nota8")
 def Nota9():
     return ImageMobject("notas/nota9")
+
 
 def Audifonos():
     return SVGMobject(file_name="headphones").set_fill("#d1d5d5",1).scale(0.5)
@@ -336,7 +336,7 @@ def tecla_negra():
     return svg
 
 class Caja(VMobject):
-    def __init__(self,ancho=3,alto=2,tapas=0.95,grosor_tapas=11,**kwargs):
+    def __init__(self,ancho=3,alto=2,tapas=0.95,grosor_tapas=11,stroke_color="#D2B48C",fill_color="#cdab7e",**kwargs):
         digest_config(self, kwargs)
         VMobject.__init__(self, **kwargs)
         self.set_anchor_points([UP*alto+LEFT*ancho/2,
@@ -347,8 +347,8 @@ class Caja(VMobject):
         tapaI=VMobject().set_anchor_points([self.points[0],self.points[0]+RIGHT*ancho*tapas/2],mode="corners").set_stroke(width=grosor_tapas)
         tapaD=VMobject().set_anchor_points([self.points[-1],self.points[-1]+LEFT*ancho*tapas/2],mode="corners").set_stroke(width=grosor_tapas)
         self.add(tapaI,tapaD)
-        self.set_stroke("#D2B48C")
-        self.set_fill("#D2B48C",0)
+        self.set_stroke(stroke_color)
+        self.set_fill(fill_color,1)
 
     def tapa_derecha(self):
         return self[2]
@@ -395,7 +395,40 @@ class cerrar_caja(Rotating):
             about_point=sobre_der,
             about_edge=sobre_der,
         )
-        
+
+class girar_cuerda(Rotating):
+    CONFIG={
+        "run_time":3,
+        "rate_func":there_and_back,
+        "axis":DOWN
+    }    
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        origen=self.mobject.get_end()
+        self.mobject.rotate(
+            alpha * 30*DEGREES,
+            about_point=origen,
+            about_edge=origen,
+            axis=self.axis
+        )
+
+class girar_sistema(Rotating):
+    CONFIG={
+        "run_time":3,
+        "rate_func":there_and_back,
+        "axis":UP,
+        "origen":ORIGIN
+    }    
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        self.mobject.rotate(
+            alpha * 45*DEGREES,
+            about_point=self.origen,
+            about_edge=self.origen,
+            axis=self.axis
+        )
+
+
 class Patron(VGroup):
     def __init__(self,width,height,separacion=0.2,color=GREEN,agregar_base=False,direccion="R",grosor=1,stroke_width=2,**kwargs):
         digest_config(self, kwargs)
@@ -475,7 +508,7 @@ class Patron(VGroup):
                 grosor=Rectangle(height=grosor,width=W).set_fill(GREEN,1).set_stroke(None,0)
                 grosor.shift(orientacion*H/2-orientacion*grosor.get_height()/2)
             self.add(grosor)
-        
+
 class Medicion(VGroup):
     CONFIG = {
         "color":RED_B,
@@ -761,7 +794,7 @@ class DVFlecha(DFlecha):
         "v_i":"vect",
         "v_f":"vect",        
     }
-    
+
 class ParteDomo(VMobject):
     CONFIG = {
         "inner_radius": 3,
