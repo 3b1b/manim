@@ -658,6 +658,8 @@ class VMobject(Mobject):
         return self.points[nppcc - 1::nppcc]
 
     def get_anchors(self):
+        if self.points.shape[0] == 1:
+            return self.points
         return np.array(list(it.chain(*zip(
             self.get_start_anchors(),
             self.get_end_anchors(),
