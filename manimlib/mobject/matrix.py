@@ -99,7 +99,7 @@ class Matrix(VMobject):
         return self
 
     def add_brackets(self):
-        bracket_pair = TexMobject("\\big[ \\big]")
+        bracket_pair = TexMobject("\\big[", "\\big]")
         bracket_pair.scale(2)
         bracket_pair.stretch_to_fit_height(self.get_height() + 0.5)
         l_bracket, r_bracket = bracket_pair.split()
