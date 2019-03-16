@@ -65,6 +65,8 @@ While developing a scene, the `-sp` flags are helpful to just see what things lo
 ### Documentation
 Documentation is in progress at [manim.readthedocs.io](https://manim.readthedocs.io).
 
+Documentation Yiyu Version is also in progress at [niyiyu2316.github.io/manim/](https://niyiyu2316.github.io/manim/)
+
 ### Walkthrough
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on python 3.7.
 
