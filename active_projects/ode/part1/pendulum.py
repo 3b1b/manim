@@ -87,10 +87,29 @@ class Pendulum(VGroup):
 
     def add_velocity_vector(self):
         def make_vector():
-            vector = Vector(0.5 * self.get_omega() * RIGHT)
+            omega = self.get_omega()
+            theta = self.get_theta()
+            vector = Vector(
+                0.5 * omega * RIGHT,
+                **self.velocity_vector_config,
+            )
+            vector.rotate(theta, about_point=ORIGIN)
+            vector.shift(self.rod.get_end())
+            return vector
+
         self.velocity_vector = always_redraw(make_vector)
         self.add(self.velocity_vector)
         return self
+
+    def add_theta_label(self):
+        label = self.theta_label = TexMobject("\\theta")
+
+        def update_label(l):
+            top = self.get_fixed_point()
+            arc_center = self.angle_arc.point_from_proportion(0.5)
+            l.move_to(top + 1.3 * (arc_center - top))
+        label.add_updater(update_label)
+        self.add(label)
 
     #
     def get_theta(self):
@@ -141,11 +160,49 @@ class Pendulum(VGroup):
         return self
 
 
+class GravityVector(Vector):
+    CONFIG = {
+        "color": YELLOW,
+        "length": 1,
+    }
+
+    def __init__(self, pendulum, **kwargs):
+        super().__init__(DOWN)
+        self.pendulum = pendulum
+        self.scale(self.length)
+        self.add_updater(lambda m: m.shift(
+            pendulum.rod.get_end() - self.get_start(),
+        ))
+
+    def add_component_lines(self):
+        self.component_lines = always_redraw(self.create_component_lines)
+        self.add(self.component_lines)
+
+    def create_component_lines(self):
+        theta = self.pendulum.get_theta()
+        x_new = rotate(RIGHT, theta)
+        base = self.get_start()
+        tip = self.get_end()
+        vect = tip - base
+        corner = base + x_new * np.dot(vect, x_new)
+        kw = {"dash_length": 0.025}
+        return VGroup(
+            DashedLine(base, corner, **kw),
+            DashedLine(tip, corner, **kw),
+        )
+
+
 class PendulumTest(Scene):
     def construct(self):
         pendulum = Pendulum(
             initial_theta=150 * DEGREES,
         )
-        self.add(pendulum)
+        pendulum.add_velocity_vector()
+        pendulum.add_theta_label()
+
+        gravity_vector = GravityVector(pendulum)
+        gravity_vector.add_component_lines()
+
+        self.add(pendulum, gravity_vector)
         pendulum.start_swinging()
         self.wait(10)
