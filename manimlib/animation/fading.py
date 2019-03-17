@@ -6,7 +6,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 
 
-DEFAULT_FADE_LAG_RATIO = 0.05
+DEFAULT_FADE_LAG_RATIO = 0
 
 
 class FadeOut(Transform):
