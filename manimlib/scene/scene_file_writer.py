@@ -170,7 +170,7 @@ class SceneFileWriter(object):
         if self.write_to_movie:
             self.writing_process.stdin.write(frame.tostring())
 
-    def save_image(self, image):
+    def save_final_image(self, image):
         file_path = self.get_image_file_path()
         image.save(file_path)
         self.print_file_ready_message(file_path)
@@ -195,7 +195,7 @@ class SceneFileWriter(object):
             self.combine_movie_files()
         if self.save_last_frame:
             self.scene.update_frame(ignore_skipping=True)
-            self.save_image(self.scene.get_image())
+            self.save_final_image(self.scene.get_image())
 
     def open_movie_pipe(self):
         file_path = self.get_next_partial_movie_path()
