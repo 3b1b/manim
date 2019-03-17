@@ -1,9 +1,11 @@
 import itertools as it
 import random
+import copy
 
 from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
+from manimlib.animation.composition import LaggedStart
 from manimlib.constants import *
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import PiCreature
@@ -158,11 +160,12 @@ class PiCreatureScene(Scene):
         non_pi_creature_anims = [anim for anim in animations if anim.mobject not in self.get_pi_creatures()]
         if len(non_pi_creature_anims) == 0:
             return animations
-        first_anim = non_pi_creature_anims[0]
         # Look at ending state
-        first_anim.update(1)
-        point_of_interest = first_anim.mobject.get_center()
-        first_anim.update(0)
+        first_anim = non_pi_creature_anims[0]
+        first_anim_copy = copy.deepcopy(first_anim)
+        first_anim_copy.begin()
+        first_anim_copy.update(1)
+        point_of_interest = first_anim_copy.mobject.get_center()
 
         for pi_creature in self.get_pi_creatures():
             if pi_creature not in self.get_mobjects():
@@ -332,12 +335,20 @@ class TeacherStudentsScene(PiCreatureScene):
         if "look_at_arg" in kwargs:
             for pi in target:
                 pi.look_at(kwargs["look_at_arg"])
-        lag_ratio = kwargs.get("lag_ratio", 0.5)
-        return Transform(
-            start, target,
-            lag_ratio=lag_ratio,
-            run_time=2
+        anims = [
+            Transform(s, t)
+            for s, t in zip(start, target)
+        ]
+        return LaggedStart(
+            *anims,
+            lag_ratio=kwargs.get("lag_ratio", 0.5),
+            run_time=1,
         )
+        # return Transform(
+        #     start, target,
+        #     lag_ratio=lag_ratio,
+        #     run_time=2
+        # )
 
     def zoom_in_on_thought_bubble(self, bubble=None, radius=FRAME_Y_RADIUS + FRAME_X_RADIUS):
         if bubble is None:

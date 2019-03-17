@@ -244,15 +244,18 @@ class VMobject(Mobject):
     def fade(self, darkness=0.5, family=True):
         factor = 1.0 - darkness
         self.set_fill(
-            opacity=factor * self.get_fill_opacity()
+            opacity=factor * self.get_fill_opacity(),
+            family=False,
         )
         self.set_stroke(
-            opacity=factor * self.get_stroke_opacity()
+            opacity=factor * self.get_stroke_opacity(),
+            family=False,
         )
         self.set_background_stroke(
             opacity=factor * self.get_stroke_opacity(
                 background=True
-            )
+            ),
+            family=False,
         )
         super().fade(darkness, family)
         return self

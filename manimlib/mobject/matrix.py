@@ -155,8 +155,8 @@ class MobjectMatrix(Matrix):
     }
 
 
-def get_det_text(matrix, determinant=None, background_rect=True, initial_scale_factor=2):
-    parens = TexMobject(["(", ")"])
+def get_det_text(matrix, determinant=None, background_rect=False, initial_scale_factor=2):
+    parens = TexMobject("(", ")")
     parens.scale(initial_scale_factor)
     parens.stretch_to_fit_height(matrix.get_height())
     l_paren, r_paren = parens.split()
@@ -167,7 +167,7 @@ def get_det_text(matrix, determinant=None, background_rect=True, initial_scale_f
     det.next_to(l_paren, LEFT, buff=0.1)
     if background_rect:
         det.add_background_rectangle()
-    det_text = VMobject(det, l_paren, r_paren)
+    det_text = VGroup(det, l_paren, r_paren)
     if determinant is not None:
         eq = TexMobject("=")
         eq.next_to(r_paren, RIGHT, buff=0.1)
