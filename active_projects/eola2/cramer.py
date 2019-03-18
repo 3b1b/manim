@@ -2268,7 +2268,8 @@ class Thumbnail(TransformingAreasYCoord, MovingCameraScene):
         ip = self.get_input_parallelogram(vect)
         self.add_transformable_mobject(ip)
         self.apply_transposed_matrix([[2, -0.5], [1, 2]])
-        # self.square.set_fill(YELLOW, 0.7)
+        self.square.set_fill(opacity=0.7)
+        self.square.set_sheen(0.75, UR)
         self.camera_frame.shift(UP)
 
         words = TextMobject("Cramer's", "rule")
