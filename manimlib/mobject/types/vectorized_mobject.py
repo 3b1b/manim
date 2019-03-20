@@ -202,6 +202,7 @@ class VMobject(Mobject):
             )
         if background_image_file:
             self.color_using_background_image(background_image_file)
+        return self
 
     def get_style(self):
         return {
