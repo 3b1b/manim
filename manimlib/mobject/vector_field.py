@@ -2,6 +2,7 @@ import numpy as np
 import os
 import itertools as it
 from PIL import Image
+import random
 
 from manimlib.constants import *
 
@@ -14,6 +15,7 @@ from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_color
+from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.simple_functions import sigmoid
 from manimlib.utils.space_ops import get_norm
@@ -53,7 +55,9 @@ def get_rgb_gradient_function(min_value=0, max_value=1,
     rgbs = np.array(list(map(color_to_rgb, colors)))
 
     def func(values):
-        alphas = inverse_interpolate(min_value, max_value, values)
+        alphas = inverse_interpolate(
+            min_value, max_value, np.array(values)
+        )
         alphas = np.clip(alphas, 0, 1)
         # if flip_alphas:
         #     alphas = 1 - alphas
@@ -64,7 +68,6 @@ def get_rgb_gradient_function(min_value=0, max_value=1,
         inter_alphas = inter_alphas.repeat(3).reshape((len(indices), 3))
         result = interpolate(rgbs[indices], rgbs[next_indices], inter_alphas)
         return result
-
     return func
 
 
@@ -123,72 +126,6 @@ def move_points_along_vector_field(mobject, func):
 
 
 # Mobjects
-
-class StreamLines(VGroup):
-    CONFIG = {
-        # "start_points_generator": get_flow_start_points,
-        "start_points_generator_config": {},
-        "dt": 0.05,
-        "virtual_time": 3,
-        "n_anchors_per_line": 100,
-        "stroke_width": 1,
-        "stroke_color": WHITE,
-        "color_lines_by_magnitude": False,
-        "min_magnitude": 0.5,
-        "max_magnitude": 1.5,
-        "colors": DEFAULT_SCALAR_FIELD_COLORS,
-        "cutoff_norm": 15,
-    }
-
-    def __init__(self, func, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        self.func = func
-        dt = self.dt
-
-        start_points = self.get_start_points(
-            **self.start_points_generator_config
-        )
-        for point in start_points:
-            points = [point]
-            for t in np.arange(0, self.virtual_time, dt):
-                last_point = points[-1]
-                points.append(last_point + dt * func(last_point))
-                if get_norm(last_point) > self.cutoff_norm:
-                    break
-            line = VMobject()
-            step = max(1, int(len(points) / self.n_anchors_per_line))
-            line.set_points_smoothly(points[::step])
-            self.add(line)
-
-        self.set_stroke(self.stroke_color, self.stroke_width)
-
-        if self.color_lines_by_magnitude:
-            image_file = get_color_field_image_file(
-                lambda p: get_norm(func(p)),
-                min_value=self.min_magnitude,
-                max_value=self.max_magnitude,
-                colors=self.colors,
-            )
-            self.color_using_background_image(image_file)
-
-    def get_start_points(self,
-                         x_min=-8,
-                         x_max=8,
-                         y_min=-5,
-                         y_max=5,
-                         delta_x=0.5,
-                         delta_y=0.5,
-                         n_repeats=1,
-                         noise_factor=None):
-        if noise_factor is None:
-            noise_factor = delta_y / 2
-        return np.array([
-            x * RIGHT + y * UP + noise_factor * np.random.random(3)
-            for n in range(n_repeats)
-            for x in np.arange(x_min, x_max + delta_x, delta_x)
-            for y in np.arange(y_min, y_max + delta_y, delta_y)
-        ])
-
 
 class VectorField(VGroup):
     CONFIG = {
@@ -249,6 +186,102 @@ class VectorField(VGroup):
         return vect
 
 
+class StreamLines(VGroup):
+    CONFIG = {
+        # TODO, this is an awkward way to inherit
+        # defaults to a method.
+        "start_points_generator_config": {},
+        # Config for choosing start points
+        "x_min": -8,
+        "x_max": 8,
+        "y_min": -5,
+        "y_max": 5,
+        "delta_x": 0.5,
+        "delta_y": 0.5,
+        "n_repeats": 1,
+        "noise_factor": None,
+        # Config for drawing lines
+        "dt": 0.05,
+        "virtual_time": 3,
+        "n_anchors_per_line": 100,
+        "stroke_width": 1,
+        "stroke_color": WHITE,
+        "color_by_arc_length": True,
+        # Min and max arc lengths meant to define
+        # the color range, should color_by_arc_length be True
+        "min_arc_length": 0,
+        "max_arc_length": 12,
+        "color_by_magnitude": False,
+        # Min and max magnitudes meant to define
+        # the color range, should color_by_magnitude be True
+        "min_magnitude": 0.5,
+        "max_magnitude": 1.5,
+        "colors": DEFAULT_SCALAR_FIELD_COLORS,
+        "cutoff_norm": 15,
+    }
+
+    def __init__(self, func, **kwargs):
+        VGroup.__init__(self, **kwargs)
+        self.func = func
+        dt = self.dt
+
+        start_points = self.get_start_points(
+            **self.start_points_generator_config
+        )
+        for point in start_points:
+            points = [point]
+            for t in np.arange(0, self.virtual_time, dt):
+                last_point = points[-1]
+                points.append(last_point + dt * func(last_point))
+                if get_norm(last_point) > self.cutoff_norm:
+                    break
+            line = VMobject()
+            step = max(1, int(len(points) / self.n_anchors_per_line))
+            line.set_points_smoothly(points[::step])
+            self.add(line)
+
+        self.set_stroke(self.stroke_color, self.stroke_width)
+
+        if self.color_by_arc_length:
+            len_to_rgb = get_rgb_gradient_function(
+                self.min_arc_length,
+                self.max_arc_length,
+                colors=self.colors,
+            )
+            for line in self:
+                arc_length = line.get_arc_length()
+                rgb = len_to_rgb([arc_length])[0]
+                color = rgb_to_color(rgb)
+                line.set_color(color)
+        elif self.color_by_magnitude:
+            image_file = get_color_field_image_file(
+                lambda p: get_norm(func(p)),
+                min_value=self.min_magnitude,
+                max_value=self.max_magnitude,
+                colors=self.colors,
+            )
+            self.color_using_background_image(image_file)
+
+    def get_start_points(self):
+        x_min = self.x_min
+        x_max = self.x_max
+        y_min = self.y_min
+        y_max = self.y_max
+        delta_x = self.delta_x
+        delta_y = self.delta_y
+        n_repeats = self.n_repeats
+        noise_factor = self.noise_factor
+
+        if noise_factor is None:
+            noise_factor = delta_y / 2
+        return np.array([
+            x * RIGHT + y * UP + noise_factor * np.random.random(3)
+            for n in range(n_repeats)
+            for x in np.arange(x_min, x_max + delta_x, delta_x)
+            for y in np.arange(y_min, y_max + delta_y, delta_y)
+        ])
+
+
 # TODO: Make it so that you can have a group of stream_lines
 # varying in response to a changing vector field, and still
 # animate the resulting flow
@@ -294,6 +327,7 @@ class AnimatedStreamLines(VGroup):
         self.stream_lines = stream_lines
         for line in stream_lines:
             line.anim = self.line_anim_class(line, **self.line_anim_config)
+            line.anim.begin()
             line.time = -self.lag_range * random.random()
             self.add(line.anim.mobject)
 
