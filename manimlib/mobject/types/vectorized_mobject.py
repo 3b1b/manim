@@ -836,6 +836,8 @@ class VMobject(Mobject):
         upper_index, upper_residue = integer_interpolate(0, num_cubics, b)
 
         self.clear_points()
+        if num_cubics == 0:
+            return self
         if lower_index == upper_index:
             self.append_points(partial_bezier_points(
                 bezier_quads[lower_index],
