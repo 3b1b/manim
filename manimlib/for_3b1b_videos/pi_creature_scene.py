@@ -148,12 +148,12 @@ class PiCreatureScene(Scene):
         self.pi_creature_thinks(
             self.get_primary_pi_creature(), *content, **kwargs)
 
-    def compile_play_args_to_animation_list(self, *args):
+    def compile_play_args_to_animation_list(self, *args, **kwargs):
         """
         Add animations so that all pi creatures look at the
         first mobject being animated with each .play call
         """
-        animations = Scene.compile_play_args_to_animation_list(self, *args)
+        animations = Scene.compile_play_args_to_animation_list(self, *args, **kwargs)
         if not self.any_pi_creatures_on_screen():
             return animations
 
