@@ -1,6 +1,15 @@
 from big_ol_pile_of_manim_imports import *
 
 
+Lg_formula_config = {
+    "tex_to_color_map": {
+        "\\theta_0": WHITE,
+        "{L}": BLUE,
+        "{g}": YELLOW,
+    },
+}
+
+
 class Pendulum(VGroup):
     CONFIG = {
         "length": 3,
@@ -22,6 +31,9 @@ class Pendulum(VGroup):
             "fill_color": GREY_BROWN,
             "sheen_direction": UL,
             "sheen_factor": 0.5,
+            "background_stroke_color": BLACK,
+            "background_stroke_width": 3,
+            "background_stroke_opacity": 0.5,
         },
         "dashed_line_config": {
             "num_dashes": 25,
@@ -512,6 +524,139 @@ class IntroducePendulum(MovingCameraScene):
             brace.stretch, 0.5, 0, {"about_edge": LEFT},
         )
         self.wait(6)
+
+
+class LowAnglePendulum(Scene):
+    CONFIG = {
+        "pendulum_config": {
+            "initial_theta": 20 * DEGREES,
+            "length": 2.0,
+            "damping": 0,
+            "top_point": ORIGIN,
+        },
+        "axes_config": {
+            "y_axis_config": {"unit_size": 0.75},
+            "x_axis_config": {
+                "unit_size": 0.5,
+                "numbers_to_show": range(2, 25, 2),
+                "number_scale_val": 0.5,
+            },
+            "x_max": 25,
+            "number_line_config": {
+                "tip_length": 0.3,
+                "stroke_width": 2,
+            }
+        },
+        "axes_corner": UL,
+    }
+
+    def construct(self):
+        pendulum = Pendulum(**self.pendulum_config)
+        axes = ThetaVsTAxes(**self.axes_config)
+        axes.center()
+        axes.to_corner(self.axes_corner, buff=LARGE_BUFF)
+        graph = axes.get_live_drawn_graph(pendulum)
+
+        L = pendulum.length
+        g = pendulum.gravity
+        theta0 = pendulum.initial_theta
+        prediction = axes.get_graph(
+            lambda t: theta0 * np.cos(t * np.sqrt(g / L))
+        )
+        dashed_prediction = DashedVMobject(prediction, num_dashes=300)
+        dashed_prediction.set_stroke(WHITE, 1)
+        prediction_formula = TexMobject(
+            "\\theta_0", "\\cos(\\sqrt{g / L} \\cdot t)"
+        )
+        prediction_formula.scale(0.75)
+        prediction_formula.next_to(
+            dashed_prediction, UP, SMALL_BUFF,
+        )
+
+        theta0 = prediction_formula.get_part_by_tex("\\theta_0")
+        theta0_brace = Brace(theta0, UP, buff=SMALL_BUFF)
+        theta0_brace.stretch(0.5, 1, about_edge=DOWN)
+        theta0_label = Integer(
+            pendulum.initial_theta * 180 / PI,
+            unit="^\\circ"
+        )
+        theta0_label.scale(0.75)
+        theta0_label.next_to(theta0_brace, UP, SMALL_BUFF)
+
+        group = VGroup(theta0_brace, theta0_label, prediction_formula)
+        group.shift_onto_screen(buff=MED_SMALL_BUFF)
+
+        self.add(axes, dashed_prediction, pendulum)
+        self.play(
+            ShowCreation(dashed_prediction, run_time=2),
+            FadeInFromDown(prediction_formula),
+            FadeInFromDown(theta0_brace),
+            FadeInFromDown(theta0_label),
+        )
+        self.play(
+            ShowCreationThenFadeAround(theta0_label),
+            ShowCreationThenFadeAround(pendulum.theta_label),
+        )
+        self.wait()
+
+        pendulum.start_swinging()
+        self.add(graph)
+        self.wait(30)
+
+
+class ApproxWordsLowAnglePendulum(Scene):
+    def construct(self):
+        period = TexMobject(
+            "\\text{Period}", "\\approx",
+            "2\\pi \\sqrt{\\,{L} / {g}}",
+            **Lg_formula_config
+        )
+        checkmark = TexMobject("\\checkmark")
+        checkmark.set_color(GREEN)
+        checkmark.scale(2)
+        checkmark.next_to(period, RIGHT, MED_LARGE_BUFF)
+
+        self.add(period, checkmark)
+
+
+class MediumAnglePendulum(LowAnglePendulum):
+    CONFIG = {
+        "pendulum_config": {
+            "initial_theta": 50 * DEGREES,
+            "n_steps_per_frame": 1000,
+        },
+        "axes_config": {
+            "y_axis_config": {"unit_size": 0.75},
+            "y_max": PI / 2,
+            "y_min": -PI / 2,
+            "number_line_config": {
+                "tip_length": 0.3,
+                "stroke_width": 2,
+            }
+        },
+        "pendulum_shift_vect": 1 * RIGHT,
+    }
+
+
+class HighAnglePendulum(LowAnglePendulum):
+    CONFIG = {
+        "pendulum_config": {
+            "initial_theta": 175 * DEGREES,
+            "n_steps_per_frame": 1000,
+            "top_point": 1.5 * DOWN,
+            "length": 2,
+        },
+        "axes_config": {
+            "y_axis_config": {"unit_size": 0.5},
+            "y_max": PI,
+            "y_min": -PI,
+            "number_line_config": {
+                "tip_length": 0.3,
+                "stroke_width": 2,
+            }
+        },
+        "pendulum_shift_vect": 1 * RIGHT,
+    }
 
 
 class PendulumTest(Scene):
