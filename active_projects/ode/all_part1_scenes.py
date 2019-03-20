@@ -3,6 +3,8 @@ from active_projects.ode.part1.staging import *
 
 OUTPUT_DIRECTORY = "ode/part1"
 ALL_SCENE_CLASSES = [
+    IntroducePendulum,
+    # Tests
     PendulumTest,
     VectorFieldTest,
 ]

@@ -19,7 +19,7 @@ class Pendulum(VGroup):
         "weight_style": {
             "stroke_width": 0,
             "fill_opacity": 1,
-            "fill_color": DARK_GREY,
+            "fill_color": GREY_BROWN,
             "sheen_direction": UL,
             "sheen_factor": 0.5,
         },
@@ -36,7 +36,8 @@ class Pendulum(VGroup):
         "velocity_vector_config": {
             "color": RED,
         },
-        "n_steps_per_frame": 10,
+        "theta_label_height": 0.25,
+        "n_steps_per_frame": 100,
     }
 
     def __init__(self, **kwargs):
@@ -47,12 +48,15 @@ class Pendulum(VGroup):
         self.rotating_group = VGroup(self.rod, self.weight)
         self.create_dashed_line()
         self.create_angle_arc()
+        self.add_theta_label()
 
         self.set_theta(self.initial_theta)
         self.update()
 
     def create_fixed_point(self):
         self.fixed_point_tracker = VectorizedPoint(self.top_point)
+        self.add(self.fixed_point_tracker)
+        return self
 
     def create_rod(self):
         rod = self.rod = Line(UP, DOWN)
@@ -103,11 +107,14 @@ class Pendulum(VGroup):
 
     def add_theta_label(self):
         label = self.theta_label = TexMobject("\\theta")
+        label.set_height(self.theta_label_height)
 
         def update_label(l):
             top = self.get_fixed_point()
             arc_center = self.angle_arc.point_from_proportion(0.5)
-            l.move_to(top + 1.3 * (arc_center - top))
+            vect = arc_center - top
+            vect = normalize(vect) * (1 + self.theta_label_height)
+            l.move_to(top + vect)
         label.add_updater(update_label)
         self.add(label)
 
@@ -163,13 +170,18 @@ class Pendulum(VGroup):
 class GravityVector(Vector):
     CONFIG = {
         "color": YELLOW,
-        "length": 1,
+        "length_multiple": 1 / 9.8,
+        # TODO, continually update the length based
+        # on the pendulum's gravity?
     }
 
     def __init__(self, pendulum, **kwargs):
-        super().__init__(DOWN)
+        super().__init__(DOWN, **kwargs)
         self.pendulum = pendulum
-        self.scale(self.length)
+        self.scale(self.length_multiple * pendulum.gravity)
+        self.attach_to_pendulum(pendulum)
+
+    def attach_to_pendulum(self, pendulum):
         self.add_updater(lambda m: m.shift(
             pendulum.rod.get_end() - self.get_start(),
         ))
@@ -192,10 +204,322 @@ class GravityVector(Vector):
         )
 
 
+class ThetaValueDisplay(VGroup):
+    CONFIG = {
+
+    }
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class ThetaVsTAxes(Axes):
+    CONFIG = {
+        "x_min": 0,
+        "x_max": 8,
+        "y_min": -PI / 2,
+        "y_max": PI / 2,
+        "y_axis_config": {
+            "tick_frequency": PI / 8,
+            "unit_size": 1.5,
+        },
+        "number_line_config": {
+            "color": "#EEEEEE",
+        },
+        "graph_style": {
+            "stroke_color": GREEN,
+            "stroke_width": 3,
+            "fill_opacity": 0,
+        },
+    }
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_labels()
+
+    def add_axes(self):
+        self.axes = Axes(**self.axes_config)
+        self.add(self.axes)
+
+    def add_labels(self):
+        x_axis = self.get_x_axis()
+        y_axis = self.get_y_axis()
+
+        t_label = self.t_label = TexMobject("t")
+        t_label.next_to(x_axis.get_right(), UP, MED_SMALL_BUFF)
+        x_axis.label = t_label
+        x_axis.add(t_label)
+        theta_label = self.theta_label = TexMobject("\\theta(t)")
+        theta_label.next_to(y_axis.get_top(), RIGHT, MED_SMALL_BUFF)
+        y_axis.label = theta_label
+        y_axis.add(theta_label)
+
+        x_axis.add_numbers()
+        y_axis.add(self.get_y_axis_coordinates(y_axis))
+
+    def get_y_axis_coordinates(self, y_axis):
+        texs = [
+            # "\\pi \\over 4",
+            # "\\pi \\over 2",
+            # "3 \\pi \\over 4",
+            # "\\pi",
+            "\\pi / 4",
+            "\\pi / 2",
+            "3 \\pi / 4",
+            "\\pi",
+        ]
+        values = np.arange(1, 5) * PI / 4
+        labels = VGroup()
+        for pos_tex, pos_value in zip(texs, values):
+            neg_tex = "-" + pos_tex
+            neg_value = -1 * pos_value
+            for tex, value in (pos_tex, pos_value), (neg_tex, neg_value):
+                if value > self.y_max or value < self.y_min:
+                    continue
+                symbol = TexMobject(tex)
+                symbol.scale(0.5)
+                point = y_axis.number_to_point(value)
+                symbol.next_to(point, LEFT, MED_SMALL_BUFF)
+                labels.add(symbol)
+        return labels
+
+    def get_live_drawn_graph(self, pendulum,
+                             t_max=None,
+                             t_step=1.0 / 60,
+                             **style):
+        style = merge_dicts_recursively(self.graph_style, style)
+        if t_max is None:
+            t_max = self.x_max
+
+        graph = VMobject()
+        graph.set_style(**style)
+
+        graph.all_coords = [(0, pendulum.get_theta())]
+        graph.time = 0
+        graph.time_of_last_addition = 0
+
+        def update_graph(graph, dt):
+            graph.time += dt
+            if graph.time > t_max:
+                graph.remove_updater(update_graph)
+                return
+            new_coords = (graph.time, pendulum.get_theta())
+            if graph.time - graph.time_of_last_addition >= t_step:
+                graph.all_coords.append(new_coords)
+                graph.time_of_last_addition = graph.time
+            points = [
+                self.coords_to_point(*coords)
+                for coords in [*graph.all_coords, new_coords]
+            ]
+            graph.set_points_smoothly(points)
+
+        graph.add_updater(update_graph)
+        return graph
+
+
+# Scenes
+class IntroducePendulum(MovingCameraScene):
+    CONFIG = {
+        "pendulum_config": {
+            "length": 3,
+            "top_point": 4 * RIGHT,
+            "weight_diameter": 0.35,
+        },
+        "theta_vs_t_axes_config": {},
+    }
+
+    def construct(self):
+        self.add_pendulum()
+        self.add_graph()
+        self.show_graph_period()
+        self.show_length_and_gravity()
+        self.tweak_length_and_gravity()
+        self.tweak_gravity()
+
+    def add_pendulum(self):
+        pendulum = self.pendulum = Pendulum(**self.pendulum_config)
+        pendulum.start_swinging()
+        frame = self.camera_frame
+        frame.save_state()
+        frame.scale(0.5)
+        frame.move_to(pendulum.dashed_line)
+
+        label = pendulum.theta_label
+        rect = SurroundingRectangle(label, buff=0.5 * SMALL_BUFF)
+        rect.add_updater(lambda r: r.move_to(label))
+
+        self.add(pendulum)
+        self.wait(2)
+        self.add(rect)
+        self.play(
+            ShowCreationThenFadeOut(rect),
+            ShowCreationThenDestruction(
+                label.copy().set_style(
+                    fill_opacity=0,
+                    stroke_color=PINK,
+                    stroke_width=2,
+                )
+            )
+        )
+
+    def add_graph(self):
+        axes = self.axes = ThetaVsTAxes(**self.theta_vs_t_axes_config)
+        axes.to_corner(UL)
+
+        self.play(
+            Restore(self.camera_frame),
+            DrawBorderThenFill(
+                axes,
+                rate_func=squish_rate_func(smooth, 0.5, 1),
+                lag_ratio=0.9,
+            ),
+            Transform(
+                self.pendulum.theta_label.copy().clear_updaters(),
+                axes.y_axis.label.copy(),
+                remover=True,
+                rate_func=squish_rate_func(smooth, 0, 0.8),
+            ),
+            run_time=3,
+        )
+        self.graph = axes.get_live_drawn_graph(self.pendulum)
+
+        self.add(self.graph)
+        self.wait(4)
+
+    def show_graph_period(self):
+        pendulum = self.pendulum
+        axes = self.axes
+
+        period = self.period = TAU * np.sqrt(
+            pendulum.length / pendulum.gravity
+        )
+        amplitude = pendulum.initial_theta
+
+        line = Line(
+            axes.coords_to_point(0, amplitude),
+            axes.coords_to_point(period, amplitude),
+        )
+        line.shift(SMALL_BUFF * RIGHT)
+        brace = Brace(line, UP, buff=SMALL_BUFF)
+        brace.add_to_back(brace.copy().set_style(BLACK, 10))
+        formula = TexMobject(
+            "\\sqrt{\\,", "2\\pi", "L", "/", "g", "}",
+            tex_to_color_map={
+                "L": BLUE,
+                "g": YELLOW,
+            }
+        )
+        formula.next_to(brace, UP, SMALL_BUFF)
+
+        self.period_formula = formula
+        self.period_brace = brace
+
+        self.play(
+            GrowFromCenter(brace),
+            FadeInFromDown(formula),
+        )
+        self.wait(2)
+
+    def show_length_and_gravity(self):
+        formula = self.period_formula
+        L = formula.get_part_by_tex("L")
+        g = formula.get_part_by_tex("g")
+
+        rod = self.pendulum.rod
+        new_rod = rod.copy()
+        new_rod.set_stroke(BLUE, 7)
+        new_rod.add_updater(lambda r: r.put_start_and_end_on(
+            *rod.get_start_and_end()
+        ))
+
+        g_vect = GravityVector(
+            self.pendulum,
+            length_multiple=0.5 / 9.8,
+        )
+
+        self.play(ShowCreationThenDestructionAround(L))
+        self.play(ShowCreation(new_rod))
+        self.play(FadeOut(new_rod))
+        self.wait()
+        self.play(
+            ShowCreationThenDestructionAround(g),
+            GrowArrow(g_vect)
+        )
+        self.wait(2)
+
+        self.gravity_vector = g_vect
+
+    def tweak_length_and_gravity(self):
+        pendulum = self.pendulum
+        axes = self.axes
+        graph = self.graph
+        brace = self.period_brace
+        formula = self.period_formula
+        g_vect = self.gravity_vector
+
+        graph.clear_updaters()
+        period2 = self.period * np.sqrt(2)
+        period3 = self.period / np.sqrt(2)
+        amplitude = pendulum.initial_theta
+        graph2, graph3 = [
+            axes.get_graph(
+                lambda t: amplitude * np.cos(TAU * t / p),
+                color=RED,
+            )
+            for p in (period2, period3)
+        ]
+        formula.add_updater(lambda m: m.next_to(
+            brace, UP, SMALL_BUFF
+        ))
+
+        new_pendulum_config = dict(self.pendulum_config)
+        new_pendulum_config["length"] *= 2
+        new_pendulum_config["top_point"] += 3.5 * UP
+        # new_pendulum_config["initial_theta"] = pendulum.get_theta()
+        new_pendulum = Pendulum(**new_pendulum_config)
+
+        down_vectors = VGroup(*[
+            Vector(0.5 * DOWN)
+            for x in range(10 * 150)
+        ])
+        down_vectors.arrange_in_grid(10, 150, buff=MED_SMALL_BUFF)
+        down_vectors.set_color_by_gradient(BLUE, RED)
+        # for vect in down_vectors:
+        #     vect.shift(0.1 * np.random.random(3))
+        down_vectors.to_edge(RIGHT)
+
+        self.play(ReplacementTransform(pendulum, new_pendulum))
+        g_vect.attach_to_pendulum(new_pendulum)
+        new_pendulum.start_swinging()
+        self.play(
+            ReplacementTransform(graph, graph2),
+            brace.stretch, np.sqrt(2), 0, {"about_edge": LEFT},
+        )
+        self.add(g_vect)
+        self.wait(3)
+
+        new_pendulum.gravity *= 4
+        g_vect.scale(2)
+        self.play(
+            FadeOut(graph2),
+            LaggedStart(*[
+                FadeIn(v, rate_func=there_and_back)
+                for v in down_vectors
+            ], lag_ratio=0.0005, run_time=2, remover=True)
+        )
+        self.play(
+            FadeIn(graph3),
+            brace.stretch, 0.5, 0, {"about_edge": LEFT},
+        )
+        self.wait(6)
+
+
 class PendulumTest(Scene):
     def construct(self):
         pendulum = Pendulum(
-            initial_theta=150 * DEGREES,
+            initial_theta=170 * DEGREES,
+            top_point=ORIGIN,
+            damping=0
         )
         pendulum.add_velocity_vector()
         pendulum.add_theta_label()
@@ -203,6 +527,25 @@ class PendulumTest(Scene):
         gravity_vector = GravityVector(pendulum)
         gravity_vector.add_component_lines()
 
+        axes = ThetaVsTAxes(
+            y_max=PI,
+            y_min=-PI,
+            y_axis_config={
+                "unit_size": 0.7,
+                "tick_frequency": PI / 4,
+            },
+            x_max=14
+        )
+        axes.to_corner(UL)
+        axes.add_live_drawn_graph(pendulum)
+
         self.add(pendulum, gravity_vector)
+        self.add(axes)
+
         pendulum.start_swinging()
-        self.wait(10)
+        self.wait(14)
+
+
+class NewSceneName(Scene):
+    def construct(self):
+        pass
