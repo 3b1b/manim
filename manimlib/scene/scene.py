@@ -503,7 +503,7 @@ class Scene(Container):
                 self.update_mobjects(dt)
                 self.update_frame()
                 self.add_frames(self.get_frame())
-                if stop_condition and stop_condition():
+                if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
         elif self.skip_animations:
