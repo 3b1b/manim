@@ -4,12 +4,12 @@ from active_projects.ode.part1.staging import *
 OUTPUT_DIRECTORY = "ode/part1"
 ALL_SCENE_CLASSES = [
     IntroducePendulum,
-    FormulasAreLies,
-    HighAnglePendulum,
+    MultiplePendulumsOverlayed,
+    # FormulasAreLies,
     MediumAnglePendulum,
+    MediumHighAnglePendulum,
+    HighAnglePendulum,
     LowAnglePendulum,
-    ApproxWordsLowAnglePendulum,
-    FailedApproxWordsHighAnglePendulum,
     # Tests
     PendulumTest,
     VectorFieldTest,

@@ -237,6 +237,8 @@ class ThetaVsTAxes(Axes):
         },
         "number_line_config": {
             "color": "#EEEEEE",
+            "stroke_width": 2,
+            "include_tip": False,
         },
         "graph_style": {
             "stroke_color": GREEN,
@@ -262,7 +264,7 @@ class ThetaVsTAxes(Axes):
         x_axis.label = t_label
         x_axis.add(t_label)
         theta_label = self.theta_label = TexMobject("\\theta(t)")
-        theta_label.next_to(y_axis.get_top(), RIGHT, MED_SMALL_BUFF)
+        theta_label.next_to(y_axis.get_top(), UP, SMALL_BUFF)
         y_axis.label = theta_label
         y_axis.add(theta_label)
 
@@ -330,23 +332,48 @@ class ThetaVsTAxes(Axes):
 
 
 # Scenes
-class IntroducePendulum(MovingCameraScene):
+class IntroducePendulum(PiCreatureScene, MovingCameraScene):
     CONFIG = {
         "pendulum_config": {
             "length": 3,
             "top_point": 4 * RIGHT,
             "weight_diameter": 0.35,
         },
-        "theta_vs_t_axes_config": {},
+        "theta_vs_t_axes_config": {
+            "y_max": PI / 4,
+            "y_min": -PI / 4,
+            "y_axis_config": {
+                "tick_frequency": PI / 16,
+                "unit_size": 2,
+                "tip_length": 0.3,
+            },
+            "number_line_config": {
+                "stroke_width": 2,
+            }
+        },
     }
+
+    def setup(self):
+        MovingCameraScene.setup(self)
+        PiCreatureScene.setup(self)
 
     def construct(self):
         self.add_pendulum()
+        self.label_pi_creatures()
+        self.label_pendulum()
         self.add_graph()
         self.show_graph_period()
         self.show_length_and_gravity()
         self.tweak_length_and_gravity()
-        self.tweak_gravity()
+
+    def create_pi_creatures(self):
+        randy = Randolph(color=BLUE_C)
+        morty = Mortimer(color=MAROON_E)
+        creatures = VGroup(randy, morty)
+        creatures.scale(0.5)
+        creatures.arrange(RIGHT, buff=2.5)
+        creatures.to_corner(DR)
+        return creatures
 
     def add_pendulum(self):
         pendulum = self.pendulum = Pendulum(**self.pendulum_config)
@@ -356,12 +383,50 @@ class IntroducePendulum(MovingCameraScene):
         frame.scale(0.5)
         frame.move_to(pendulum.dashed_line)
 
+        self.add(pendulum, frame)
+
+    def label_pi_creatures(self):
+        randy, morty = self.pi_creatures
+        randy_label = TextMobject("Physics\\\\", "student")
+        morty_label = TextMobject("Physics\\\\", "teacher")
+        labels = VGroup(randy_label, morty_label)
+        labels.scale(0.5)
+        randy_label.next_to(randy, UP, LARGE_BUFF)
+        morty_label.next_to(morty, UP, LARGE_BUFF)
+
+        for label, pi in zip(labels, self.pi_creatures):
+            label.arrow = Arrow(
+                label.get_bottom(), pi.eyes.get_top()
+            )
+            label.arrow.set_color(WHITE)
+            label.arrow.set_stroke(width=5)
+
+        morty.labels = VGroup(
+            morty_label,
+            morty_label.arrow,
+        )
+
+        self.play(
+            FadeInFromDown(randy_label),
+            GrowArrow(randy_label.arrow),
+            randy.change, "hooray",
+        )
+        self.play(
+            Animation(self.pendulum.fixed_point_tracker),
+            TransformFromCopy(randy_label[0], morty_label[0]),
+            FadeIn(morty_label[1]),
+            GrowArrow(morty_label.arrow),
+            morty.change, "raise_right_hand",
+        )
+        self.wait()
+
+    def label_pendulum(self):
+        pendulum = self.pendulum
+        randy, morty = self.pi_creatures
         label = pendulum.theta_label
         rect = SurroundingRectangle(label, buff=0.5 * SMALL_BUFF)
         rect.add_updater(lambda r: r.move_to(label))
 
-        self.add(pendulum)
-        self.wait(2)
         self.add(rect)
         self.play(
             ShowCreationThenFadeOut(rect),
@@ -371,11 +436,15 @@ class IntroducePendulum(MovingCameraScene):
                     stroke_color=PINK,
                     stroke_width=2,
                 )
-            )
+            ),
+            randy.change, "pondering",
+            morty.change, "pondering",
         )
+        self.wait()
 
     def add_graph(self):
         axes = self.axes = ThetaVsTAxes(**self.theta_vs_t_axes_config)
+        axes.y_axis.label.next_to(axes.y_axis, UP, buff=0)
         axes.to_corner(UL)
 
         self.play(
@@ -393,6 +462,7 @@ class IntroducePendulum(MovingCameraScene):
             ),
             run_time=3,
         )
+        self.wait(2)
         self.graph = axes.get_live_drawn_graph(self.pendulum)
 
         self.add(self.graph)
@@ -450,13 +520,26 @@ class IntroducePendulum(MovingCameraScene):
         )
 
         self.play(ShowCreationThenDestructionAround(L))
-        self.play(ShowCreation(new_rod))
+        dot = Dot(fill_opacity=0.25)
+        dot.move_to(L)
+        self.play(
+            ShowCreation(new_rod),
+            dot.move_to, new_rod,
+            dot.fade, 1,
+        )
+        self.remove(dot)
         self.play(FadeOut(new_rod))
         self.wait()
+
+        self.play(ShowCreationThenDestructionAround(g))
+        dot.move_to(g)
+        dot.set_fill(opacity=0.5)
         self.play(
-            ShowCreationThenDestructionAround(g),
-            GrowArrow(g_vect)
+            GrowArrow(g_vect),
+            dot.move_to, g_vect,
+            dot.fade, 1,
         )
+        self.remove(dot)
         self.wait(2)
 
         self.gravity_vector = g_vect
@@ -468,6 +551,7 @@ class IntroducePendulum(MovingCameraScene):
         brace = self.period_brace
         formula = self.period_formula
         g_vect = self.gravity_vector
+        randy, morty = self.pi_creatures
 
         graph.clear_updaters()
         period2 = self.period * np.sqrt(2)
@@ -500,7 +584,14 @@ class IntroducePendulum(MovingCameraScene):
         #     vect.shift(0.1 * np.random.random(3))
         down_vectors.to_edge(RIGHT)
 
-        self.play(ReplacementTransform(pendulum, new_pendulum))
+        self.play(randy.change, "happy")
+        self.play(
+            ReplacementTransform(pendulum, new_pendulum),
+            morty.change, "horrified",
+            morty.shift, 3 * RIGHT,
+            morty.labels.shift, 3 * RIGHT,
+        )
+        self.remove(morty, morty.labels)
         g_vect.attach_to_pendulum(new_pendulum)
         new_pendulum.start_swinging()
         self.play(
@@ -515,7 +606,7 @@ class IntroducePendulum(MovingCameraScene):
         self.play(
             FadeOut(graph2),
             LaggedStart(*[
-                FadeIn(v, rate_func=there_and_back)
+                GrowArrow(v, rate_func=there_and_back)
                 for v in down_vectors
             ], lag_ratio=0.0005, run_time=2, remover=True)
         )
@@ -524,6 +615,75 @@ class IntroducePendulum(MovingCameraScene):
             brace.stretch, 0.5, 0, {"about_edge": LEFT},
         )
         self.wait(6)
+
+
+class MultiplePendulumsOverlayed(Scene):
+    CONFIG = {
+        "initial_thetas": [
+            150 * DEGREES,
+            90 * DEGREES,
+            60 * DEGREES,
+            30 * DEGREES,
+            10 * DEGREES,
+        ],
+        "weight_colors": [
+            PINK, RED, GREEN, BLUE, GREY,
+        ],
+        "pendulum_config": {
+            "top_point": ORIGIN,
+            "length": 3,
+        },
+    }
+
+    def construct(self):
+        pendulums = VGroup(*[
+            Pendulum(
+                initial_theta=theta,
+                weight_style={
+                    "fill_color": wc,
+                    "fill_opacity": 0.5,
+                },
+                **self.pendulum_config,
+            )
+            for theta, wc in zip(
+                self.initial_thetas,
+                self.weight_colors,
+            )
+        ])
+        for pendulum in pendulums:
+            pendulum.start_swinging()
+            pendulum.remove(pendulum.theta_label)
+
+        randy = Randolph(color=BLUE_C)
+        randy.to_corner(DL)
+        randy.add_updater(lambda r: r.look_at(pendulums[0].weight))
+
+        axes = ThetaVsTAxes(
+            x_max=20,
+            y_axis_config={
+                "unit_size": 0.5,
+                "tip_length": 0.3,
+            },
+        )
+        axes.to_corner(UL)
+        graphs = VGroup(*[
+            axes.get_live_drawn_graph(
+                pendulum,
+                stroke_color=pendulum.weight.get_color(),
+                stroke_width=1,
+            )
+            for pendulum in pendulums
+        ])
+
+        self.add(pendulums)
+        self.add(axes, *graphs)
+        self.play(randy.change, "sassy")
+        self.wait(2)
+        self.play(Blink(randy))
+        self.wait(5)
+        self.play(randy.change, "angry")
+        self.play(Blink(randy))
+        self.wait(10)
 
 
 class LowAnglePendulum(Scene):
@@ -635,6 +795,15 @@ class MediumAnglePendulum(LowAnglePendulum):
             }
         },
         "pendulum_shift_vect": 1 * RIGHT,
+    }
+
+
+class MediumHighAnglePendulum(MediumAnglePendulum):
+    CONFIG = {
+        "pendulum_config": {
+            "initial_theta": 90 * DEGREES,
+            "n_steps_per_frame": 1000,
+        },
     }
 
 
