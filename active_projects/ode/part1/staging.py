@@ -219,3 +219,196 @@ class StrogatzQuote(Scene):
             run_time=1.5,
         )
         self.wait(2)
+
+
+class ShowGravityAcceleration(Scene):
+    def construct(self):
+        self.add_gravity_field()
+        self.add_title()
+        self.pulse_gravity_down()
+        self.show_trajectory()
+        self.combine_v_vects()
+
+    def add_gravity_field(self):
+        gravity_field = self.gravity_field = VectorField(
+            lambda p: DOWN,
+            # delta_x=2,
+            # delta_y=2,
+        )
+        gravity_field.set_opacity(0.5)
+        gravity_field.sort_submobjects(
+            lambda p: -p[1],
+        )
+        self.add(gravity_field)
+
+    def add_title(self):
+        title = self.title = TextMobject("Gravitational acceleration")
+        title.scale(1.5)
+        title.to_edge(UP)
+        g_eq = self.g_eq = TexMobject(
+            "{g}", "=", "-9.8", "\\frac{\\text{m/s}}{\\text{s}}",
+            **Lg_formula_config
+        )
+        g_eq.next_to(title, DOWN)
+        for mob in title, g_eq:
+            mob.add_background_rectangle_to_submobjects(
+                buff=0.05,
+                opacity=1,
+            )
+        self.add(title, g_eq)
+
+    def pulse_gravity_down(self):
+        field = self.gravity_field
+        self.play(LaggedStart(*[
+            ApplyFunction(
+                lambda v: v.set_opacity(1).scale(1.2),
+                vector,
+                rate_func=there_and_back,
+            )
+            for vector in field
+        ]), run_time=2, lag_ratio=0.001)
+        self.add(self.title, self.g_eq)
+
+    def show_trajectory(self):
+        ball = Circle(
+            stroke_width=1,
+            stroke_color=WHITE,
+            fill_color=GREY,
+            fill_opacity=1,
+            sheen_factor=1,
+            sheen_direction=UL,
+            radius=0.25,
+        )
+        randy = Randolph(mode="pondering")
+        randy.eyes.set_stroke(BLACK, 0.5)
+        randy.match_height(ball)
+        randy.scale(0.75)
+        randy.move_to(ball)
+        ball.add(randy)
+
+        total_time = 6
+
+        p0 = 3 * DOWN + 5 * LEFT
+        v0 = 2.8 * UP + 1.5 * RIGHT
+        g = 0.9 * DOWN
+        graph = ParametricFunction(
+            lambda t: p0 + v0 * t + 0.5 * g * t**2,
+            t_min=0,
+            t_max=total_time,
+        )
+        # graph.center().to_edge(DOWN)
+        dashed_graph = DashedVMobject(graph, num_dashes=60)
+        dashed_graph.set_stroke(WHITE, 1)
+
+        ball.move_to(graph.get_start())
+        randy.add_updater(
+            lambda m, dt: m.rotate(dt).move_to(ball)
+        )
+        times = np.arange(0, total_time + 1)
+
+        velocity_graph = ParametricFunction(
+            lambda t: v0 + g * t,
+            t_min=0, t_max=total_time,
+        )
+        v_point = VectorizedPoint()
+        v_point.move_to(velocity_graph.get_start())
+
+        def get_v_vect():
+            result = Vector(
+                v_point.get_location(),
+                color=RED,
+                tip_length=0.2,
+            )
+            result.scale(0.5, about_point=result.get_start())
+            result.shift(ball.get_center())
+            result.set_stroke(width=2, family=False)
+            return result
+        v_vect = always_redraw(get_v_vect)
+        self.add(v_vect)
+
+        flash_rect = FullScreenRectangle(
+            stroke_width=0,
+            fill_color=WHITE,
+            fill_opacity=0.2,
+        )
+        flash = FadeOut(
+            flash_rect,
+            rate_func=squish_rate_func(smooth, 0, 0.1)
+        )
+
+        ball_copies = VGroup()
+        v_vect_copies = VGroup()
+        self.add(dashed_graph, ball)
+        for t1, t2 in zip(times, times[1:]):
+            v_vect_copy = v_vect.copy()
+            v_vect_copies.add(v_vect_copy)
+            self.add(v_vect_copy)
+            ball_copy = ball.copy()
+            ball_copy.clear_updaters()
+            ball_copies.add(ball_copy)
+            self.add(ball_copy)
+
+            dashed_graph.save_state()
+            kw = {
+                "rate_func": lambda alpha: interpolate(
+                    t1 / total_time,
+                    t2 / total_time,
+                    alpha
+                )
+            }
+            self.play(
+                ShowCreation(dashed_graph, **kw),
+                MoveAlongPath(ball, graph, **kw),
+                MoveAlongPath(v_point, velocity_graph, **kw),
+                flash,
+                run_time=1,
+            )
+            dashed_graph.restore()
+        randy.clear_updaters()
+        self.wait()
+
+        self.v_vects = v_vect_copies
+
+    def combine_v_vects(self):
+        v_vects = self.v_vects.copy()
+        v_vects.generate_target()
+        new_center = 2 * DOWN + 2 * LEFT
+        for vect in v_vects.target:
+            vect.scale(1.5)
+            vect.set_stroke(width=2)
+            vect.shift(new_center - vect.get_start())
+
+        self.play(MoveToTarget(v_vects))
+
+        delta_vects = VGroup(*[
+            Arrow(
+                v1.get_end(),
+                v2.get_end(),
+                buff=0.01,
+                color=YELLOW,
+            ).set_opacity(0.5)
+            for v1, v2 in zip(v_vects, v_vects[1:])
+        ])
+        brace = Brace(Line(ORIGIN, UP), RIGHT)
+        braces = VGroup(*[
+            brace.copy().match_height(arrow).next_to(
+                arrow, RIGHT, buff=0.2 * SMALL_BUFF
+            )
+            for arrow in delta_vects
+        ])
+        amounts = VGroup(*[
+            TextMobject("9.8 m/s").scale(0.5).next_to(
+                brace, RIGHT, SMALL_BUFF
+            )
+            for brace in braces
+        ])
+
+        self.play(
+            FadeOut(self.gravity_field),
+            FadeIn(delta_vects, lag_ratio=0.1),
+        )
+        self.play(
+            LaggedStartMap(GrowFromCenter, braces),
+            LaggedStartMap(FadeInFrom, amounts, lambda m: (m, LEFT)),
+        )
+        self.wait()

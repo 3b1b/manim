@@ -16,7 +16,7 @@ ALL_SCENE_CLASSES = [
     VeryLowAnglePendulum,
     FollowThisThread,
     StrogatzQuote,
-    # Tests
-    PendulumTest,
-    VectorFieldTest,
+    # Something...
+    ShowGravityAcceleration,
+    BuildUpEquation,
 ]

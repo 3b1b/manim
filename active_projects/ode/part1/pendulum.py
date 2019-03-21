@@ -187,7 +187,7 @@ class GravityVector(Vector):
 
     def attach_to_pendulum(self, pendulum):
         self.add_updater(lambda m: m.shift(
-            pendulum.rod.get_end() - self.get_start(),
+            pendulum.weight.get_center() - self.get_start(),
         ))
 
     def add_component_lines(self):
@@ -204,7 +204,7 @@ class GravityVector(Vector):
         kw = {"dash_length": 0.025}
         return VGroup(
             DashedLine(base, corner, **kw),
-            DashedLine(tip, corner, **kw),
+            DashedLine(corner, tip, **kw),
         )
 
 
@@ -841,8 +841,143 @@ class VeryLowAnglePendulum(LowAnglePendulum):
     }
 
 
-class BuildUpEquation(Scene):
+class BuildUpEquation(MovingCameraScene):
+    CONFIG = {
+        "pendulum_config": {
+            "length": 5,
+            "top_point": 3 * UP,
+            "initial_theta": 45 * DEGREES,
+        },
+        "g_vect_config": {
+            "length_multiple": 0.25,
+        },
+        "tan_line_color": BLUE,
+        "perp_line_color": PINK,
+    }
+
     def construct(self):
+        self.add_pendulum()
+        self.show_constraint()
+        self.break_g_vect_into_components()
+        self.show_angle_geometry()
+        self.show_gsin_formula()
+        self.show_acceleration_at_different_angles()
+        self.ask_about_what_to_do()
+        self.show_velocity_and_position()
+        self.show_derivatives()
+        self.show_equation()
+        self.talk_about_sine_component()
+        self.add_air_resistance()
+
+    def add_pendulum(self):
+        self.pendulum = Pendulum(**self.pendulum_config)
+        self.add(self.pendulum)
+
+    def show_constraint(self):
+        pendulum = self.pendulum
+        weight = pendulum.weight
+
+        g_vect = self.g_vect = GravityVector(
+            pendulum, **self.g_vect_config,
+        )
+        g_word = self.g_word = TextMobject("Gravity")
+        g_word.rotate(-90 * DEGREES)
+        g_word.scale(0.75)
+        g_word.add_updater(lambda m: m.next_to(
+            g_vect, RIGHT, buff=-SMALL_BUFF,
+        ))
+
+        theta_tracker = ValueTracker(pendulum.get_theta())
+
+        p = weight.get_center()
+        path = CubicBezier([p, p + 3 * DOWN, p + 3 * UP, p])
+
+        g_word.suspend_updating()
+        self.play(
+            GrowArrow(g_vect),
+            FadeInFrom(g_word, UP, lag_ratio=0.1),
+        )
+        g_word.resume_updating()
+
+        self.play(MoveAlongPath(weight, path, run_time=2))
+        self.wait()
+
+        pendulum.add_updater(lambda p: p.set_theta(
+            theta_tracker.get_value()
+        ))
+        arcs = VGroup()
+        for u in [-1, 2, -1]:
+            d_theta = 40 * DEGREES * u
+            arc = Arc(
+                start_angle=pendulum.get_theta() - 90 * DEGREES,
+                angle=d_theta,
+                radius=pendulum.length,
+                arc_center=pendulum.get_fixed_point(),
+                stroke_width=2,
+                stroke_color=RED,
+                stroke_opacity=0.5,
+            )
+            self.play(
+                theta_tracker.increment_value, d_theta,
+                ShowCreation(arc)
+            )
+            arcs.add(arc)
+        pendulum.clear_updaters()
+        self.wait()
+        self.play(FadeOut(arc))
+
+    def break_g_vect_into_components(self):
+        g_vect = self.g_vect
+        g_vect.component_lines = always_redraw(
+            g_vect.create_component_lines
+        )
+        tan_line, perp_line = g_vect.component_lines
+        g_vect.tangent = always_redraw(lambda: Arrow(
+            tan_line.get_start(),
+            tan_line.get_end(),
+            buff=0,
+            color=self.tan_line_color,
+        ))
+        g_vect.perp = always_redraw(lambda: Arrow(
+            perp_line.get_start(),
+            perp_line.get_end(),
+            buff=0,
+            color=self.perp_line_color,
+        ))
+
+        self.play(
+            ShowCreation(g_vect.component_lines),
+        )
+        self.play(GrowArrow(g_vect.tangent))
+        self.wait()
+        self.play(GrowArrow(g_vect.perp))
+        self.wait()
+
+    def show_angle_geometry(self):
+        g_vect = self.g_vect
+
+    def show_gsin_formula(self):
+        pass
+
+    def show_acceleration_at_different_angles(self):
+        pass
+
+    def ask_about_what_to_do(self):
+        pass
+
+    def show_velocity_and_position(self):
+        pass
+
+    def show_derivatives(self):
+        pass
+
+    def show_equation(self):
+        pass
+
+    def talk_about_sine_component(self):
+        pass
+
+    def add_air_resistance(self):
         pass
 
 
