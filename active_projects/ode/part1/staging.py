@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+from active_projects.ode.part1.shared_constructs import *
 
 
 def pendulum_vector_field(point, mu=0.1, g=9.8, L=3):
@@ -44,83 +45,177 @@ class VectorFieldTest(Scene):
         self.wait(10)
 
 
-class FormulasAreLies(PiCreatureScene):
+class SmallAngleApproximationTex(Scene):
     def construct(self):
-        morty = self.pi_creature
-        t2c = {
-            "{L}": BLUE,
-            "{g}": YELLOW,
-            "\\theta_0": WHITE,
-            "\\sqrt{\\,": WHITE,
+        approx = TexMobject(
+            "\\sin", "(", "\\theta", ") \\approx \\theta",
+            tex_to_color_map={"\\theta": RED},
+            arg_separator="",
+        )
+
+        implies = TexMobject("\\Downarrow")
+        period = TexMobject(
+            "\\text{Period}", "\\approx",
+            "2\\pi \\sqrt{\\,{L} / {g}}",
+            **Lg_formula_config,
+        )
+        group = VGroup(approx, implies, period)
+        group.arrange(DOWN)
+
+        approx_brace = Brace(approx, UP, buff=SMALL_BUFF)
+        approx_words = TextMobject(
+            "For small $\\theta$",
+            tex_to_color_map={"$\\theta$": RED},
+        )
+        approx_words.scale(0.75)
+        approx_words.next_to(approx_brace, UP, SMALL_BUFF)
+
+        self.add(approx, approx_brace, approx_words)
+        self.play(
+            Write(implies),
+            FadeInFrom(period, LEFT)
+        )
+        self.wait()
+
+
+class FollowThisThread(Scene):
+    CONFIG = {
+        "screen_rect_style": {
+            "stroke_width": 2,
+            "stroke_color": WHITE,
+            "fill_opacity": 1,
+            "fill_color": DARKER_GREY,
         }
-        kwargs = {"tex_to_color_map": t2c}
-        period_eq = TexMobject(
-            "\\text{Period} = 2\\pi \\sqrt{\\,{L} / {g}}",
-            **kwargs
-        )
-        theta_eq = TexMobject(
-            "\\theta(t) = \\theta_0 \\cos\\left("
-            "\\sqrt{\\,{L} / {g}} \\cdot t"
-            "\\right)",
-            **kwargs
-        )
-        equations = VGroup(theta_eq, period_eq)
-        equations.arrange(DOWN, buff=LARGE_BUFF)
+    }
 
-        for eq in period_eq, theta_eq:
-            i = eq.index_of_part_by_tex("\\sqrt")
-            eq.sqrt_part = eq[i:i + 4]
-
-        theta0 = theta_eq.get_part_by_tex("\\theta_0")
-        theta0_words = TextMobject("Starting angle")
-        theta0_words.next_to(theta0, UL)
-        theta0_words.shift(UP + 0.5 * RIGHT)
-        arrow = Arrow(
-            theta0_words.get_bottom(),
-            theta0,
-            color=WHITE,
-            tip_length=0.25,
-        )
-
-        bubble = SpeechBubble()
-        bubble.pin_to(morty)
-        bubble.write("Lies!")
-        bubble.content.scale(2)
-        bubble.resize_to_content()
-
-        self.add(period_eq)
-        morty.change("pondering", period_eq)
-        self.wait()
-        theta_eq.remove(*theta_eq.sqrt_part)
-        self.play(
-            TransformFromCopy(
-                period_eq.sqrt_part,
-                theta_eq.sqrt_part,
-            ),
-            FadeIn(theta_eq)
-        )
-        theta_eq.add(*theta_eq.sqrt_part)
-        self.play(
-            FadeInFrom(theta0_words, LEFT),
-            GrowArrow(arrow),
-        )
-        self.wait()
-        self.play(morty.change, "confused")
-        self.wait(0)
-        self.play(
-            morty.change, "angry",
-            ShowCreation(bubble),
-            FadeInFromPoint(bubble.content, morty.mouth),
-            equations.to_edge, LEFT,
-            FadeOut(arrow),
-            FadeOut(theta0_words),
-        )
-        self.wait()
-
-    def create_pi_creature(self):
-        return Mortimer().to_corner(DR)
-
-
-class NewSceneName(Scene):
     def construct(self):
-        pass
+        self.show_thumbnails()
+        self.show_words()
+
+    def show_thumbnails(self):
+        # TODO, replace each of these with a picture?
+        thumbnails = self.thumbnails = VGroup(
+            ScreenRectangle(**self.screen_rect_style),
+            ScreenRectangle(**self.screen_rect_style),
+            ScreenRectangle(**self.screen_rect_style),
+            ScreenRectangle(**self.screen_rect_style),
+            ScreenRectangle(**self.screen_rect_style),
+        )
+        n = len(thumbnails)
+        thumbnails.set_height(1.5)
+
+        line = self.line = CubicBezier([
+            [-5, 3, 0],
+            [3, 3, 0],
+            [-3, -3, 0],
+            [5, -3, 0],
+        ])
+        for thumbnail, a in zip(thumbnails, np.linspace(0, 1, n)):
+            thumbnail.move_to(line.point_from_proportion(a))
+
+        self.play(
+            ShowCreation(
+                line,
+                rate_func=lambda t: np.clip(t * (n + 1) / n, 0, 1)
+            ),
+            LaggedStart(*[
+                GrowFromCenter(
+                    thumbnail,
+                    rate_func=squish_rate_func(
+                        smooth,
+                        0, 0.7,
+                    )
+                )
+                for thumbnail in thumbnails
+            ], lag_ratio=1),
+            run_time=5
+        )
+
+    def show_words(self):
+        words = VGroup(
+            TextMobject("Generalize"),
+            TextMobject("Put in context"),
+            TextMobject("Modify"),
+        )
+        # words.arrange(DOWN, aligned_edge=LEFT, buff=LARGE_BUFF)
+        words.scale(1.5)
+        words.to_corner(UR)
+        words.add_to_back(VectorizedPoint(words.get_center()))
+        words.add(VectorizedPoint(words.get_center()))
+
+        diffEq = TextMobject("Differential\\\\equations")
+        diffEq.scale(1.5)
+        diffEq.to_corner(DL, buff=LARGE_BUFF)
+
+        for word1, word2 in zip(words, words[1:]):
+            self.play(
+                FadeInFromDown(word2),
+                FadeOutAndShift(word1, UP),
+            )
+            self.wait()
+        self.play(
+            ReplacementTransform(
+                VGroup(self.thumbnails).copy().fade(1),
+                diffEq,
+                lag_ratio=0.01,
+            )
+        )
+        self.wait()
+
+
+class StrogatzQuote(Scene):
+    def construct(self):
+        law_words = "laws of physics"
+        language_words = "language of differential equations"
+        author = "-Steven Strogatz"
+        quote = TextMobject(
+            """
+            \\Large
+            ``Since Newton, mankind has come to realize
+            that the laws of physics are always expressed
+            in the language of differential equations.''\\\\
+            """ + author,
+            alignment="",
+            arg_separator=" ",
+            substrings_to_isolate=[law_words, language_words, author]
+        )
+        law_part = quote.get_part_by_tex(law_words)
+        language_part = quote.get_part_by_tex(language_words)
+        author_part = quote.get_part_by_tex(author)
+        quote.set_width(12)
+        quote.to_edge(UP)
+        quote[-2].shift(SMALL_BUFF * LEFT)
+        author_part.shift(RIGHT + 0.5 * DOWN)
+        author_part.scale(1.2, about_edge=UL)
+
+        movers = VGroup(*quote[:-1].family_members_with_points())
+        for mover in movers:
+            mover.save_state()
+            disc = Circle(radius=0.05)
+            disc.set_stroke(width=0)
+            disc.set_fill(BLACK, 0)
+            disc.move_to(mover)
+            mover.become(disc)
+        self.play(
+            FadeInFrom(author_part, LEFT),
+            LaggedStartMap(
+                # FadeInFromLarge,
+                # quote[:-1].family_members_with_points(),
+                Restore, movers,
+                lag_ratio=0.005,
+                run_time=2,
+            )
+            # FadeInFromDown(quote[:-1]),
+            # lag_ratio=0.01,
+        )
+        self.wait()
+        self.play(
+            Write(law_part.copy().set_color(YELLOW)),
+            run_time=1,
+        )
+        self.wait()
+        self.play(
+            Write(language_part.copy().set_color(BLUE)),
+            run_time=1.5,
+        )
+        self.wait(2)

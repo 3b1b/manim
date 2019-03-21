@@ -1,13 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-
-
-Lg_formula_config = {
-    "tex_to_color_map": {
-        "\\theta_0": WHITE,
-        "{L}": BLUE,
-        "{g}": YELLOW,
-    },
-}
+from active_projects.ode.part1.shared_constructs import *
 
 
 class Pendulum(VGroup):
@@ -828,36 +820,30 @@ class HighAnglePendulum(LowAnglePendulum):
     }
 
 
-class PendulumTest(Scene):
+class VeryLowAnglePendulum(LowAnglePendulum):
+    CONFIG = {
+        "pendulum_config": {
+            "initial_theta": 10 * DEGREES,
+            "n_steps_per_frame": 1000,
+            "top_point": ORIGIN,
+            "length": 3,
+        },
+        "axes_config": {
+            "y_axis_config": {"unit_size": 2},
+            "y_max": PI / 4,
+            "y_min": -PI / 4,
+            "number_line_config": {
+                "tip_length": 0.3,
+                "stroke_width": 2,
+            }
+        },
+        "pendulum_shift_vect": 1 * RIGHT,
+    }
+
+
+class BuildUpEquation(Scene):
     def construct(self):
-        pendulum = Pendulum(
-            initial_theta=170 * DEGREES,
-            top_point=ORIGIN,
-            damping=0
-        )
-        pendulum.add_velocity_vector()
-        pendulum.add_theta_label()
-
-        gravity_vector = GravityVector(pendulum)
-        gravity_vector.add_component_lines()
-
-        axes = ThetaVsTAxes(
-            y_max=PI,
-            y_min=-PI,
-            y_axis_config={
-                "unit_size": 0.7,
-                "tick_frequency": PI / 4,
-            },
-            x_max=14
-        )
-        axes.to_corner(UL)
-        axes.add_live_drawn_graph(pendulum)
-
-        self.add(pendulum, gravity_vector)
-        self.add(axes)
-
-        pendulum.start_swinging()
-        self.wait(14)
+        pass
 
 
 class NewSceneName(Scene):
