@@ -18,5 +18,6 @@ ALL_SCENE_CLASSES = [
     StrogatzQuote,
     # Something...
     ShowGravityAcceleration,
+    AnalyzePendulumForce,
     BuildUpEquation,
 ]

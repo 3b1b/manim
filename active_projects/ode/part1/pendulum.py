@@ -110,17 +110,21 @@ class Pendulum(VGroup):
         return self
 
     def add_theta_label(self):
-        label = self.theta_label = TexMobject("\\theta")
-        label.set_height(self.theta_label_height)
+        self.theta_label = always_redraw(self.get_label)
+        self.add(self.theta_label)
 
-        def update_label(l):
-            top = self.get_fixed_point()
-            arc_center = self.angle_arc.point_from_proportion(0.5)
-            vect = arc_center - top
-            vect = normalize(vect) * (1 + self.theta_label_height)
-            l.move_to(top + vect)
-        label.add_updater(update_label)
-        self.add(label)
+    def get_label(self):
+        label = TexMobject("\\theta")
+        label.set_height(min(
+            self.theta_label_height,
+            self.angle_arc.get_width(),
+        ))
+        top = self.get_fixed_point()
+        arc_center = self.angle_arc.point_from_proportion(0.5)
+        vect = arc_center - top
+        vect = normalize(vect) * (1 + self.theta_label_height)
+        label.move_to(top + vect)
+        return label
 
     #
     def get_theta(self):
@@ -841,12 +845,12 @@ class VeryLowAnglePendulum(LowAnglePendulum):
     }
 
 
-class BuildUpEquation(MovingCameraScene):
+class AnalyzePendulumForce(MovingCameraScene):
     CONFIG = {
         "pendulum_config": {
             "length": 5,
-            "top_point": 3 * UP,
-            "initial_theta": 45 * DEGREES,
+            "top_point": 3.5 * UP,
+            "initial_theta": 60 * DEGREES,
         },
         "g_vect_config": {
             "length_multiple": 0.25,
@@ -859,15 +863,12 @@ class BuildUpEquation(MovingCameraScene):
         self.add_pendulum()
         self.show_constraint()
         self.break_g_vect_into_components()
-        self.show_angle_geometry()
         self.show_gsin_formula()
         self.show_acceleration_at_different_angles()
+        self.show_angle_geometry()
         self.ask_about_what_to_do()
-        self.show_velocity_and_position()
-        self.show_derivatives()
-        self.show_equation()
-        self.talk_about_sine_component()
-        self.add_air_resistance()
+        # TODO, indication of theta?
+        # pendulum movement?  Things like that?
 
     def add_pendulum(self):
         self.pendulum = Pendulum(**self.pendulum_config)
@@ -922,9 +923,9 @@ class BuildUpEquation(MovingCameraScene):
                 ShowCreation(arc)
             )
             arcs.add(arc)
-        pendulum.clear_updaters()
         self.wait()
-        self.play(FadeOut(arc))
+
+        self.theta_tracker = theta_tracker
 
     def break_g_vect_into_components(self):
         g_vect = self.g_vect
@@ -945,25 +946,218 @@ class BuildUpEquation(MovingCameraScene):
             color=self.perp_line_color,
         ))
 
-        self.play(
-            ShowCreation(g_vect.component_lines),
-        )
+        self.play(ShowCreation(g_vect.component_lines))
         self.play(GrowArrow(g_vect.tangent))
         self.wait()
         self.play(GrowArrow(g_vect.perp))
         self.wait()
 
-    def show_angle_geometry(self):
-        g_vect = self.g_vect
-
     def show_gsin_formula(self):
-        pass
+        g_vect = self.g_vect
+        g_word = self.g_word
+        g_word.clear_updaters()
+
+        g_term = self.g_term = TexMobject("-g")
+        g_term.add_updater(lambda m: m.next_to(
+            g_vect,
+            RIGHT * np.sign(self.pendulum.get_theta()),
+            SMALL_BUFF
+        ))
+
+        def create_vect_label(vect, tex, direction):
+            label = TexMobject(tex)
+            label.set_stroke(BLACK, 5, background=True)
+            label.add_background_rectangle()
+            label.scale(0.7)
+            max_width = 0.9 * vect.get_length()
+            if label.get_width() > max_width:
+                label.set_width(max_width)
+            angle = vect.get_angle()
+            angle = (angle + PI / 2) % PI - PI / 2
+            label.next_to(ORIGIN, direction, SMALL_BUFF)
+            label.rotate(angle, about_point=ORIGIN)
+            label.shift(vect.get_center())
+            return label
+
+        g_sin_label = always_redraw(lambda: create_vect_label(
+            g_vect.tangent, "-g\\sin(\\theta)", UP,
+        ))
+        g_cos_label = always_redraw(lambda: create_vect_label(
+            g_vect.perp, "-g\\cos(\\theta)", DOWN,
+        ))
+
+        self.play(ReplacementTransform(g_word, g_term))
+        self.wait()
+        self.play(TransformFromCopy(g_term, g_sin_label))
+        self.wait()
+        self.play(TransformFromCopy(g_term, g_cos_label))
+        self.wait()
+
+        self.g_sin_label = g_sin_label
+        self.g_cos_label = g_cos_label
 
     def show_acceleration_at_different_angles(self):
-        pass
+        to_fade = VGroup(
+            self.g_cos_label,
+            self.g_vect.perp,
+            self.g_vect.component_lines,
+        )
+
+        self.play(to_fade.set_opacity, 0.25)
+        for mob in to_fade:
+            mob.add_updater(lambda m: m.set_opacity(0.25))
+
+        get_theta = self.pendulum.get_theta
+        theta_decimal = DecimalNumber(include_sign=True)
+        theta_decimal.add_updater(lambda d: d.set_value(
+            get_theta()
+        ))
+        theta_decimal.add_updater(lambda m: m.next_to(
+            self.pendulum.theta_label, DOWN
+        ))
+        theta_decimal.add_updater(lambda m: m.set_color(
+            GREEN if get_theta() > 0 else RED
+        ))
+
+        self.set_theta(0)
+        self.wait(2)
+        self.set_theta(89.9 * DEGREES, run_time=3)
+        self.wait(2)
+        self.set_theta(60 * DEGREES, run_time=2)
+        self.wait()
+
+        self.play(FadeInFrom(theta_decimal, UP))
+        self.set_theta(-60 * DEGREES, run_time=4)
+        self.set_theta(60 * DEGREES, run_time=4)
+        self.play(FadeOut(theta_decimal))
+
+    def show_angle_geometry(self):
+        g_vect = self.g_vect
+        vectors = VGroup(
+            g_vect, g_vect.tangent, g_vect.perp,
+        )
+        g_line = Line(
+            g_vect.get_start(),
+            g_vect.get_end(),
+            stroke_width=1,
+            stroke_color=WHITE,
+        )
+
+        arc = Arc(
+            start_angle=90 * DEGREES,
+            angle=self.pendulum.get_theta(),
+            radius=0.5,
+            arc_center=g_vect.get_end(),
+        )
+        q_mark = TexMobject("?")
+        q_mark.next_to(arc.get_center(), UL, SMALL_BUFF)
+        theta_label = TexMobject("\\theta")
+        theta_label.move_to(q_mark)
+
+        opposite = g_vect.component_lines[0].copy()
+        adjascent = g_line.copy()
+        opposite.set_stroke(BLUE, 5, opacity=1)
+        adjascent.set_stroke(YELLOW, 5)
+
+        vectors.save_state()
+        vectors.clear_updaters()
+        self.add(g_line, g_vect)
+        self.play(vectors.set_opacity, 0.3)
+        self.play(
+            ShowCreation(arc),
+            Write(q_mark)
+        )
+        self.play(ShowCreationThenFadeAround(q_mark))
+        self.wait()
+        self.play(ShowCreationThenFadeAround(
+            self.pendulum.theta_label
+        ))
+        self.play(
+            TransformFromCopy(
+                self.pendulum.theta_label,
+                theta_label,
+            ),
+            FadeOut(q_mark)
+        )
+        self.wait()
+        self.play(ShowCreation(opposite))
+        self.play(ShowCreation(adjascent))
+        self.wait()
+        self.play(
+            FadeOut(opposite),
+            FadeOut(adjascent),
+        )
+        self.play(
+            Restore(vectors),
+            FadeOut(arc),
+            FadeOut(theta_label),
+        )
+
+        # vectors.resume_updating()
 
     def ask_about_what_to_do(self):
-        pass
+        g_vect = self.g_vect
+        g_sin_label = self.g_sin_label
+        angle = g_vect.tangent.get_angle()
+        angle = (angle - PI) % TAU
+
+        randy = You()
+        randy.to_corner(DL)
+        bubble = randy.get_bubble(
+            height=2,
+            width=2,
+        )
+        thought_term = g_sin_label.copy()
+        thought_term.rotate(-angle)
+        thought_term.move_to(bubble.get_bubble_center())
+        rect = SurroundingRectangle(thought_term)
+        rect.rotate(angle)
+        rect.move_to(g_sin_label)
+
+        randy.save_state()
+        randy.fade(1)
+        self.play(randy.restore, randy.change, "pondering")
+        self.play(ShowCreationThenFadeOut(rect))
+        self.play(
+            ShowCreation(bubble),
+            TransformFromCopy(g_sin_label, thought_term),
+            randy.look_at, bubble,
+        )
+        self.play(Blink(randy))
+        self.wait()
+        thought_term.remove(thought_term[0])
+        self.play(
+            ShowCreationThenDestruction(
+                thought_term.copy().set_style(
+                    stroke_color=YELLOW,
+                    stroke_width=2,
+                    fill_opacity=0,
+                ),
+                run_time=2
+            )
+        )
+        self.play(
+            randy.change, "confused", thought_term,
+        )
+        self.play(Blink(randy))
+
+    #
+    def set_theta(self, value, *added_anims, **kwargs):
+        kwargs["run_time"] = kwargs.get("run_time", 2)
+        self.play(
+            self.theta_tracker.set_value, value,
+            *added_anims,
+            **kwargs,
+        )
+
+
+class BuildUpEquation(Scene):
+    def construct(self):
+        self.show_velocity_and_position()
+        self.show_derivatives()
+        self.show_equation()
+        self.talk_about_sine_component()
+        self.add_air_resistance()
 
     def show_velocity_and_position(self):
         pass
