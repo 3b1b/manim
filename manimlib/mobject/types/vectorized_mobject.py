@@ -202,6 +202,7 @@ class VMobject(Mobject):
             )
         if background_image_file:
             self.color_using_background_image(background_image_file)
+        return self
 
     def get_style(self):
         return {
@@ -209,8 +210,10 @@ class VMobject(Mobject):
             "fill_opacity": self.get_fill_opacities(),
             "stroke_color": self.get_stroke_colors(),
             "stroke_width": self.get_stroke_width(),
+            "stroke_opacity": self.get_stroke_opacity(),
             "background_stroke_color": self.get_stroke_colors(background=True),
             "background_stroke_width": self.get_stroke_width(background=True),
+            "background_stroke_opacity": self.get_stroke_opacity(background=True),
             "sheen_factor": self.get_sheen_factor(),
             "sheen_direction": self.get_sheen_direction(),
             "background_image_file": self.get_background_image_file(),
@@ -835,6 +838,8 @@ class VMobject(Mobject):
         upper_index, upper_residue = integer_interpolate(0, num_cubics, b)
 
         self.clear_points()
+        if num_cubics == 0:
+            return self
         if lower_index == upper_index:
             self.append_points(partial_bezier_points(
                 bezier_quads[lower_index],

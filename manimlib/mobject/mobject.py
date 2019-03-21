@@ -4,6 +4,7 @@ import itertools as it
 import operator as op
 import os
 import random
+import sys
 
 from colour import Color
 import numpy as np

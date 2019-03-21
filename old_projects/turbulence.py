@@ -1,7 +1,7 @@
 from big_ol_pile_of_manim_imports import *
 from old_projects.div_curl import PureAirfoilFlow
-from old_projects.div_curl import VectorFieldSubmobjectFlow
-from old_projects.div_curl import VectorFieldPointFlow
+from old_projects.div_curl import move_submobjects_along_vector_field
+from old_projects.div_curl import move_points_along_vector_field
 from old_projects.div_curl import four_swirls_function
 from old_projects.lost_lecture import ShowWord
 
@@ -836,7 +836,7 @@ class LaminarFlowLabel(Scene):
 
 class HighCurlFieldBreakingLayers(Scene):
     CONFIG = {
-        "flow_anim": VectorFieldSubmobjectFlow,
+        "flow_anim": move_submobjects_along_vector_field,
     }
 
     def construct(self):
@@ -870,7 +870,7 @@ class HighCurlFieldBreakingLayers(Scene):
 
 class HighCurlFieldBreakingLayersLines(HighCurlFieldBreakingLayers):
     CONFIG = {
-        "flow_anim": VectorFieldPointFlow
+        "flow_anim": move_points_along_vector_field
     }
 
     def get_line(self):

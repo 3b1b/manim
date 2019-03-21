@@ -148,12 +148,12 @@ class PiCreatureScene(Scene):
         self.pi_creature_thinks(
             self.get_primary_pi_creature(), *content, **kwargs)
 
-    def compile_play_args_to_animation_list(self, *args):
+    def compile_play_args_to_animation_list(self, *args, **kwargs):
         """
         Add animations so that all pi creatures look at the
         first mobject being animated with each .play call
         """
-        animations = Scene.compile_play_args_to_animation_list(self, *args)
+        animations = Scene.compile_play_args_to_animation_list(self, *args, **kwargs)
         if not self.any_pi_creatures_on_screen():
             return animations
 
@@ -211,21 +211,24 @@ class PiCreatureScene(Scene):
         ])
         return self
 
-    def wait(self, time=1, blink=True):
+    def wait(self, time=1, blink=True, **kwargs):
+        if "stop_condition" in kwargs:
+            self.non_blink_wait(time, **kwargs)
+            return
         while time >= 1:
             time_to_blink = self.total_wait_time % self.seconds_to_blink == 0
             if blink and self.any_pi_creatures_on_screen() and time_to_blink:
                 self.blink()
             else:
-                self.non_blink_wait()
+                self.non_blink_wait(**kwargs)
             time -= 1
             self.total_wait_time += 1
         if time > 0:
-            self.non_blink_wait(time)
+            self.non_blink_wait(time, **kwargs)
         return self
 
-    def non_blink_wait(self, time=1):
-        Scene.wait(self, time)
+    def non_blink_wait(self, time=1, **kwargs):
+        Scene.wait(self, time, **kwargs)
         return self
 
     def change_mode(self, mode):

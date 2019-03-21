@@ -287,6 +287,9 @@ class LinearTransformationScene(VectorScene):
         },
         "background_plane_kwargs": {
             "color": GREY,
+            "axis_config": {
+                "stroke_color": LIGHT_GREY,
+            },
             "number_line_config": {
                 "color": GREY,
             },
@@ -358,7 +361,7 @@ class LinearTransformationScene(VectorScene):
         self.add_special_mobjects(self.moving_mobjects, mobject)
 
     def get_unit_square(self, color=YELLOW, opacity=0.3, stroke_width=3):
-        square = Rectangle(
+        square = self.square = Rectangle(
             color=color,
             width=self.plane.get_x_unit_size(),
             height=self.plane.get_y_unit_size(),
