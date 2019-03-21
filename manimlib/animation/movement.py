@@ -1,5 +1,4 @@
 from manimlib.animation.animation import Animation
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
 
 
