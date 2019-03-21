@@ -97,7 +97,7 @@ class NumberLine(Line):
     def get_tick_numbers(self):
         return np.arange(
             self.leftmost_tick,
-            self.x_max - self.tick_frequency / 2,
+            self.x_max + self.tick_frequency / 2,
             self.tick_frequency
         )
 
