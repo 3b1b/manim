@@ -1,14 +1,6 @@
-import warnings
-
 from manimlib.constants import *
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.rate_functions import smooth
-
-POINTLESS_VMOBJECT_WARNING = """
-
-Calling AnimatedBoundary on a VMobject with no points.
-"""
 
 
 class AnimatedBoundary(VGroup):
@@ -20,11 +12,12 @@ class AnimatedBoundary(VGroup):
 
     def __init__(self, vmobject, **kwargs):
         super().__init__(**kwargs)
-        if len(vmobject.points) == 0:
-            warnings.warn(POINTLESS_VMOBJECT_WARNING)
         self.vmobject = vmobject
         self.boundary_copies = [
-            VMobject(stroke_width=0, fill_opacity=0)
+            vmobject.copy().set_style(
+                stroke_width=0,
+                fill_opacity=0
+            )
             for x in range(2)
         ]
         self.add(*self.boundary_copies)
@@ -39,6 +32,7 @@ class AnimatedBoundary(VGroup):
         growing, fading = self.boundary_copies
         colors = self.colors
         msw = self.max_stroke_width
+        vmobject = self.vmobject
 
         index = int(time % len(colors))
         alpha = smooth(time % 1)
@@ -47,14 +41,21 @@ class AnimatedBoundary(VGroup):
             bounds = (0, alpha)
         else:
             bounds = (1 - alpha, 1)
-        growing.pointwise_become_partial(self.vmobject, *bounds)
+        self.full_family_become_partial(growing, vmobject, *bounds)
         growing.set_stroke(colors[index], width=msw)
 
-        if time > 1:
-            fading.pointwise_become_partial(self.vmobject, 0, 1)
+        if time >= 1:
+            self.full_family_become_partial(fading, vmobject, 0, 1)
             fading.set_stroke(
                 color=colors[index - 1],
                 width=(1 - alpha) * msw
             )
 
         self.total_time += dt
+
+    def full_family_become_partial(self, mob1, mob2, a, b):
+        family1 = mob1.family_members_with_points()
+        family2 = mob2.family_members_with_points()
+        for sm1, sm2 in zip(family1, family2):
+            sm1.pointwise_become_partial(sm2, a, b)
+        return self
