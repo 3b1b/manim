@@ -47,39 +47,6 @@ class VectorFieldTest(Scene):
         self.wait(10)
 
 
-class SmallAngleApproximationTex(Scene):
-    def construct(self):
-        approx = TexMobject(
-            "\\sin", "(", "\\theta", ") \\approx \\theta",
-            tex_to_color_map={"\\theta": RED},
-            arg_separator="",
-        )
-
-        implies = TexMobject("\\Downarrow")
-        period = TexMobject(
-            "\\text{Period}", "\\approx",
-            "2\\pi \\sqrt{\\,{L} / {g}}",
-            **Lg_formula_config,
-        )
-        group = VGroup(approx, implies, period)
-        group.arrange(DOWN)
-
-        approx_brace = Brace(approx, UP, buff=SMALL_BUFF)
-        approx_words = TextMobject(
-            "For small $\\theta$",
-            tex_to_color_map={"$\\theta$": RED},
-        )
-        approx_words.scale(0.75)
-        approx_words.next_to(approx_brace, UP, SMALL_BUFF)
-
-        self.add(approx, approx_brace, approx_words)
-        self.play(
-            Write(implies),
-            FadeInFrom(period, LEFT)
-        )
-        self.wait()
-
-
 class FollowThisThread(Scene):
     CONFIG = {
         "screen_rect_style": {
@@ -163,64 +130,6 @@ class FollowThisThread(Scene):
             )
         )
         self.wait()
-
-
-class StrogatzQuote(Scene):
-    def construct(self):
-        law_words = "laws of physics"
-        language_words = "language of differential equations"
-        author = "-Steven Strogatz"
-        quote = TextMobject(
-            """
-            \\Large
-            ``Since Newton, mankind has come to realize
-            that the laws of physics are always expressed
-            in the language of differential equations.''\\\\
-            """ + author,
-            alignment="",
-            arg_separator=" ",
-            substrings_to_isolate=[law_words, language_words, author]
-        )
-        law_part = quote.get_part_by_tex(law_words)
-        language_part = quote.get_part_by_tex(language_words)
-        author_part = quote.get_part_by_tex(author)
-        quote.set_width(12)
-        quote.to_edge(UP)
-        quote[-2].shift(SMALL_BUFF * LEFT)
-        author_part.shift(RIGHT + 0.5 * DOWN)
-        author_part.scale(1.2, about_edge=UL)
-
-        movers = VGroup(*quote[:-1].family_members_with_points())
-        for mover in movers:
-            mover.save_state()
-            disc = Circle(radius=0.05)
-            disc.set_stroke(width=0)
-            disc.set_fill(BLACK, 0)
-            disc.move_to(mover)
-            mover.become(disc)
-        self.play(
-            FadeInFrom(author_part, LEFT),
-            LaggedStartMap(
-                # FadeInFromLarge,
-                # quote[:-1].family_members_with_points(),
-                Restore, movers,
-                lag_ratio=0.005,
-                run_time=2,
-            )
-            # FadeInFromDown(quote[:-1]),
-            # lag_ratio=0.01,
-        )
-        self.wait()
-        self.play(
-            Write(law_part.copy().set_color(YELLOW)),
-            run_time=1,
-        )
-        self.wait()
-        self.play(
-            Write(language_part.copy().set_color(BLUE)),
-            run_time=1.5,
-        )
-        self.wait(2)
 
 
 class ShowGravityAcceleration(Scene):
@@ -472,6 +381,7 @@ class DefineODE(Scene):
         self.show_value_slope_curvature()
         self.write_ode()
         self.show_second_order()
+        self.show_higher_order_examples()
         self.show_changing_curvature_group()
 
     def add_graph(self):
@@ -494,8 +404,8 @@ class DefineODE(Scene):
         de_word.to_edge(UP)
 
         equation = TexMobject(
-            "\\ddot \\theta({t}) = "
-            "-\\mu \\dot \\theta({t})"
+            "\\ddot \\theta({t})", "=",
+            "-\\mu \\dot \\theta({t})",
             "-{g \\over L} \\sin\\big(\\theta({t})\\big)",
             tex_to_color_map={
                 "\\theta": BLUE,
@@ -693,6 +603,7 @@ class DefineODE(Scene):
             v_line, slope_line, curve, dot
         )
         self.curvature_group_labels = VGroup(thetas, words)
+        self.fake_graph = graph
 
     def write_ode(self):
         equation = self.equation
@@ -761,12 +672,102 @@ class DefineODE(Scene):
         self.ode_initials = ode_initials
 
     def show_second_order(self):
-        pass
+        so = TextMobject("Second order")
+        so.scale(1.4)
+        ode = self.ode_initials
+        ode.generate_target()
+        group = VGroup(so, ode.target)
+        group.arrange(RIGHT, aligned_edge=DOWN)
+        group.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        second_deriv = self.equation[:5]
+
+        self.play(
+            Write(so),
+            MoveToTarget(ode),
+        )
+        self.wait()
+        self.play(FocusOn(second_deriv))
+        self.play(
+            Indicate(second_deriv, color=RED),
+        )
+        self.wait()
+
+        self.second_order_word = so
+
+    def show_higher_order_examples(self):
+        main_example = VGroup(
+            self.second_order_word,
+            self.ode_initials,
+            self.equation
+        )
+        tex_config = {"tex_to_color_map": {"{x}": BLUE}}
+        example3 = VGroup(
+            TextMobject("Third order ODE"),
+            TexMobject(
+                "\\dddot {x}(t) + \\dot {x}(t)^2 = 0",
+                **tex_config,
+            )
+        )
+        example4 = VGroup(
+            TextMobject("Fourth order ODE"),
+            TexMobject(
+                "\\ddddot {x}(t) +",
+                "a\\dddot {x}(t) \\dot {x}(t) + ",
+                "b \\ddot {x}(t) {x}(t)",
+                "= 1",
+                **tex_config,
+            )
+        )
+        for example in [example3, example4]:
+            example[0].scale(1.2)
+            example.arrange(DOWN, buff=MED_LARGE_BUFF)
+            example.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        self.play(
+            FadeOut(main_example),
+            FadeIn(example3),
+        )
+        self.wait(2)
+        self.play(
+            FadeOut(example3),
+            FadeIn(example4),
+        )
+        self.wait(2)
+        self.play(
+            FadeOut(example4),
+            FadeIn(main_example),
+        )
+        self.wait(2)
 
     def show_changing_curvature_group(self):
-        pass
+        t_tracker = self.t_tracker
+        curvature_group = self.curvature_group
+        labels = self.curvature_group_labels
+        graph = VMobject()
+        graph.pointwise_become_partial(
+            self.fake_graph,
+            0.25, 1,
+        )
+        dashed_graph = DashedVMobject(graph, num_dashes=100)
+        dashed_graph.set_stroke(GREEN, 1)
+
+        self.play(FadeOut(labels))
+        self.add(dashed_graph, curvature_group)
+        self.play(
+            t_tracker.set_value, 10,
+            ShowCreation(dashed_graph),
+            run_time=15,
+            rate_func=linear,
+        )
+        self.wait()
 
 
 class ODEvsPDEinFrames(Scene):
+    def construct(self):
+        pass
+
+
+class VisualizeStates(Scene):
     def construct(self):
         pass

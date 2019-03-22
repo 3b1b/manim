@@ -14,3 +14,19 @@ class You(PiCreature):
     CONFIG = {
         "color": BLUE_C,
     }
+
+
+def get_ode():
+    tex_config = {
+        "tex_to_color_map": {
+            "{\\theta}": BLUE,
+            "{t}": WHITE,
+        }
+    }
+    ode = TexMobject(
+        "\\ddot {\\theta}({t})", "=",
+        "-\\mu \\dot {\\theta}({t})",
+        "-{g \\over L} \\sin\\big({\\theta}({t})\\big)",
+        **tex_config,
+    )
+    return ode

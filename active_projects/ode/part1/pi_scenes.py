@@ -103,6 +103,95 @@ class FormulasAreLies(PiCreatureScene):
         return You().flip().to_corner(DR)
 
 
-class NewSceneName(Scene):
+class ProveTeacherWrong(TeacherStudentsScene):
     def construct(self):
-        pass
+        tex_config = {
+            "tex_to_color_map": {"{\\theta}": BLUE}
+        }
+        func = TexMobject(
+            "{\\theta}(t)", "=",
+            "\\theta_0", "\\cos(\\sqrt{g / L} \\cdot t)",
+            **tex_config,
+        )
+        d_func = TexMobject(
+            "\\dot {\\theta}(t)", "=",
+            "-\\left(\\sqrt{g / L}\\right)",
+            "\\theta_0", "\\sin(\\sqrt{g / L} \\cdot t)",
+            **tex_config,
+        )
+        dd_func = TexMobject(
+            "\\ddot {\\theta}(t)", "=",
+            "-\\left(g / L\\right)",
+            "\\theta_0", "\\cos(\\sqrt{g / L} \\cdot t)",
+            **tex_config,
+        )
+        ode = TexMobject(
+            "\\ddot {\\theta}({t})", "=",
+            "-\\mu \\dot {\\theta}({t})",
+            "-{g \\over L} \\sin\\big({\\theta}({t})\\big)",
+            **tex_config,
+        )
+        arrows = [TexMobject("\\Downarrow") for x in range(2)]
+
+        VGroup(func, d_func, dd_func, ode, *arrows).scale(0.7)
+
+        teacher = self.teacher
+        you = self.students[2]
+
+        self.student_thinks(ode)
+        you.add_updater(lambda m: m.look_at(func))
+        self.teacher_holds_up(func)
+        self.wait()
+
+        group = VGroup(arrows[0], d_func, arrows[1], dd_func)
+        group.arrange(DOWN)
+        group.move_to(func, DOWN)
+
+        arrow = Arrow(
+            group.get_corner(UL),
+            ode.get_top(),
+            path_arc=PI / 2,
+        )
+        q_marks = VGroup(*[
+            TexMobject("?").scale(1.5).next_to(
+                arrow.point_from_proportion(a),
+                UP
+            )
+            for a in np.linspace(0.2, 0.8, 5)
+        ])
+        cycle_animation(VFadeInThenOut(
+            q_marks,
+            lag_ratio=0.2,
+            run_time=4,
+            rate_func=squish_rate_func(smooth, 0, 0.5)
+        ))
+
+        self.play(
+            func.next_to, group, UP,
+            LaggedStartMap(
+                FadeInFrom, group,
+                lambda m: (m, UP)
+            ),
+            teacher.change, "guilty",
+            you.change, "sassy",
+        )
+
+        rect = SurroundingRectangle(
+            VGroup(group, func)
+        )
+        dashed_rect = DashedVMobject(rect, num_dashes=75)
+        animated_rect = AnimatedBoundary(dashed_rect, cycle_rate=1)
+
+        self.wait()
+        self.add(animated_rect, q_marks)
+        self.play(
+            ShowCreation(arrow),
+            # FadeInFromDown(q_mark),
+            self.get_student_changes("confused", "confused")
+        )
+        self.wait(4)
+        self.change_student_modes(
+            *3 * ["pondering"],
+            self.teacher.change, "maybe"
+        )
+        self.wait(8)
