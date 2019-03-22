@@ -35,6 +35,7 @@ from manimlib.camera.moving_camera import *
 from manimlib.camera.three_d_camera import *
 
 from manimlib.mobject.coordinate_systems import *
+from manimlib.mobject.changing import *
 from manimlib.mobject.frame import *
 from manimlib.mobject.functions import *
 from manimlib.mobject.geometry import *
