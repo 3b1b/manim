@@ -66,6 +66,8 @@ class SingleStringTexMobject(SVGMobject):
             # Need to add blank subscript or superscript
             tex.endswith("_"),
             tex.endswith("^"),
+            tex.endswith("\\ddot"),
+            tex.endswith("\\dot"),
         ])
         if should_add_filler:
             filler = "{\\quad}"
