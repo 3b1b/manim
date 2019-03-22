@@ -1,5 +1,7 @@
 from big_ol_pile_of_manim_imports import *
 from active_projects.ode.part1.shared_constructs import *
+from active_projects.ode.part1.pendulum import Pendulum
+from active_projects.ode.part1.pendulum import ThetaVsTAxes
 
 
 def pendulum_vector_field(point, mu=0.1, g=9.8, L=3):
@@ -415,10 +417,356 @@ class ShowGravityAcceleration(Scene):
 
 
 class ShowDerivativeVideo(Scene):
+    CONFIG = {
+        "camera_config": {"background_color": DARKER_GREY}
+    }
+
+    def construct(self):
+        title = TextMobject("Essence of Calculus")
+        title.scale(1.25)
+        title.to_edge(UP)
+        rect = ScreenRectangle(height=6)
+        rect = rect.copy()
+        rect.set_style(
+            fill_opacity=1,
+            fill_color=BLACK,
+            stroke_width=0,
+        )
+        rect.next_to(title, DOWN)
+        animated_rect = AnimatedBoundary(rect)
+
+        self.add(title, rect)
+        self.add(animated_rect)
+        self.wait(10)
+
+
+class SubtleAirCurrents(Scene):
     def construct(self):
         pass
 
 
-class SubtleAirCurrents(Scene):
+class DefineODE(Scene):
+    CONFIG = {
+        "pendulum_config": {
+            "length": 2,
+            "top_point": 5 * RIGHT + 2 * UP,
+            "initial_theta": 150 * DEGREES,
+            "mu": 0.3,
+        },
+        "axes_config": {
+            "y_axis_config": {"unit_size": 0.75},
+            "y_max": PI,
+            "y_min": -PI,
+            "x_max": 10,
+            "x_axis_config": {
+                "numbers_to_show": range(2, 10, 2),
+                "unit_size": 1,
+            }
+        },
+    }
+
+    def construct(self):
+        self.add_graph()
+        self.write_differential_equation()
+        self.dont_know_the_value()
+        self.show_value_slope_curvature()
+        self.write_ode()
+        self.show_second_order()
+        self.show_changing_curvature_group()
+
+    def add_graph(self):
+        pendulum = Pendulum(**self.pendulum_config)
+        axes = ThetaVsTAxes(**self.axes_config)
+
+        axes.center()
+        axes.to_corner(DL)
+        graph = axes.get_live_drawn_graph(pendulum)
+
+        pendulum.start_swinging()
+        self.add(axes, pendulum, graph)
+
+        self.pendulum = pendulum
+        self.axes = axes
+        self.graph = graph
+
+    def write_differential_equation(self):
+        de_word = TextMobject("Differential", "Equation")
+        de_word.to_edge(UP)
+
+        equation = TexMobject(
+            "\\ddot \\theta({t}) = "
+            "-\\mu \\dot \\theta({t})"
+            "-{g \\over L} \\sin\\big(\\theta({t})\\big)",
+            tex_to_color_map={
+                "\\theta": BLUE,
+                "{t}": WHITE
+            }
+        )
+        equation.next_to(de_word, DOWN)
+        thetas = equation.get_parts_by_tex("\\theta")
+
+        lines = VGroup(*[
+            Line(v, 1.2 * v)
+            for v in compass_directions(25)
+        ])
+        lines.replace(equation, stretch=True)
+        lines.scale(1.5)
+        lines.set_stroke(YELLOW)
+        lines.shuffle()
+
+        self.add(equation)
+        self.wait(5)
+        self.play(
+            ShowPassingFlashWithThinningStrokeWidth(
+                lines,
+                lag_ratio=0.002,
+                run_time=1.5,
+                time_width=0.9,
+                n_segments=5,
+            )
+        )
+        self.play(FadeInFromDown(de_word))
+        self.wait(2)
+        self.play(
+            LaggedStartMap(
+                ApplyMethod, thetas,
+                lambda m: (m.shift, 0.25 * DOWN),
+                rate_func=there_and_back,
+            )
+        )
+        self.wait()
+
+        self.de_word = de_word
+        self.equation = equation
+
+    def dont_know_the_value(self):
+        graph = self.graph
+        pendulum = self.pendulum
+
+        q_marks = VGroup(*[
+            TexMobject("?").move_to(graph.point_from_proportion(a))
+            for a in np.linspace(0, 1, 20)
+        ])
+        q_marks.set_stroke(width=0, background=True)
+        self.play(
+            VFadeOut(graph),
+            FadeOut(pendulum),
+            LaggedStart(*[
+                UpdateFromAlphaFunc(
+                    q_mark,
+                    lambda m, a: m.set_height(0.5 * (1 + a)).set_fill(
+                        opacity=there_and_back(a)
+                    ),
+                )
+                for q_mark in q_marks
+            ], lag_ratio=0.01, run_time=2)
+        )
+        self.remove(q_marks)
+
+    def show_value_slope_curvature(self):
+        axes = self.axes
+        p = self.pendulum
+        graph = axes.get_graph(
+            lambda t: p.initial_theta * np.cos(
+                np.sqrt(p.gravity / p.length) * t
+            ) * np.exp(-p.mu * t / 2)
+        )
+
+        tex_config = {
+            "tex_to_color_map": {"\\theta": BLUE},
+            "height": 0.5,
+        }
+        theta, d_theta, dd_theta = [
+            TexMobject(s + "\\theta(t)", **tex_config)
+            for s in ("", "\\dot", "\\ddot")
+        ]
+
+        t_tracker = ValueTracker(2.5)
+        get_t = t_tracker.get_value
+
+        def get_point(t):
+            return graph.point_from_proportion(t / axes.x_max)
+
+        def get_dot():
+            return Dot(get_point(get_t())).scale(0.5)
+
+        def get_v_line():
+            point = get_point(get_t())
+            x_point = axes.x_axis.number_to_point(
+                axes.x_axis.point_to_number(point)
+            )
+            return DashedLine(
+                x_point, point,
+                dash_length=0.025,
+                stroke_color=WHITE,
+                stroke_width=2,
+            )
+
+        def get_tangent_line(curve, alpha):
+            line = Line(
+                ORIGIN, 1.5 * RIGHT,
+                color=YELLOW,
+                stroke_width=1.5,
+            )
+            da = 0.0001
+            p0 = curve.point_from_proportion(alpha)
+            p1 = curve.point_from_proportion(alpha - da)
+            p2 = curve.point_from_proportion(alpha + da)
+            angle = angle_of_vector(p2 - p1)
+            line.rotate(angle)
+            line.move_to(p0)
+            return line
+
+        def get_slope_line():
+            return get_tangent_line(
+                graph, get_t() / axes.x_max
+            )
+
+        def get_curve():
+            curve = VMobject()
+            t = get_t()
+            curve.set_points_smoothly([
+                get_point(t + a)
+                for a in np.linspace(-0.5, 0.5, 11)
+            ])
+            curve.set_stroke(RED, 1)
+            return curve
+
+        v_line = always_redraw(get_v_line)
+        dot = always_redraw(get_dot)
+        slope_line = always_redraw(get_slope_line)
+        curve = always_redraw(get_curve)
+
+        theta.next_to(v_line, RIGHT, SMALL_BUFF)
+        d_theta.next_to(slope_line.get_end(), UP, SMALL_BUFF)
+        dd_theta.next_to(curve.get_end(), RIGHT, SMALL_BUFF)
+        thetas = VGroup(theta, d_theta, dd_theta)
+
+        words = VGroup(
+            TextMobject("= Height"),
+            TextMobject("= Slope").set_color(YELLOW),
+            TextMobject("= ``Curvature''").set_color(RED),
+        )
+        words.scale(0.75)
+        for word, sym in zip(words, thetas):
+            word.next_to(sym, RIGHT, buff=2 * SMALL_BUFF)
+            sym.word = word
+
+        self.play(
+            ShowCreation(v_line),
+            FadeInFromPoint(dot, v_line.get_start()),
+            FadeInFrom(theta, DOWN),
+            FadeInFrom(theta.word, DOWN),
+        )
+        self.add(slope_line, dot)
+        self.play(
+            ShowCreation(slope_line),
+            FadeInFrom(d_theta, LEFT),
+            FadeInFrom(d_theta.word, LEFT),
+        )
+
+        a_tracker = ValueTracker(0)
+        curve_copy = curve.copy()
+        changing_slope = always_redraw(
+            lambda: get_tangent_line(
+                curve_copy,
+                a_tracker.get_value(),
+            ).set_stroke(
+                opacity=there_and_back(a_tracker.get_value())
+            )
+        )
+        self.add(curve, dot)
+        self.play(
+            ShowCreation(curve),
+            FadeInFrom(dd_theta, LEFT),
+            FadeInFrom(dd_theta.word, LEFT),
+        )
+        self.add(changing_slope)
+        self.play(
+            a_tracker.set_value, 1,
+            run_time=3,
+        )
+        self.remove(changing_slope, a_tracker)
+
+        self.t_tracker = t_tracker
+        self.curvature_group = VGroup(
+            v_line, slope_line, curve, dot
+        )
+        self.curvature_group_labels = VGroup(thetas, words)
+
+    def write_ode(self):
+        equation = self.equation
+        axes = self.axes
+        de_word = self.de_word
+
+        ts = equation.get_parts_by_tex("{t}")
+        t_rects = VGroup(*map(SurroundingRectangle, ts))  # Rawr
+        x_axis = axes.x_axis
+        x_axis_line = Line(
+            x_axis.get_start(), x_axis.get_end(),
+            stroke_color=YELLOW,
+            stroke_width=5,
+        )
+
+        ordinary = TextMobject("Ordinary")
+        de_word.generate_target()
+        group = VGroup(ordinary, de_word.target)
+        group.arrange(RIGHT)
+        group.to_edge(UP)
+        ordinary_underline = Line(LEFT, RIGHT)
+        ordinary_underline.replace(ordinary, dim_to_match=0)
+        ordinary_underline.next_to(ordinary, DOWN, SMALL_BUFF)
+        ordinary_underline.set_color(YELLOW)
+
+        self.play(
+            ShowCreationThenFadeOut(
+                t_rects,
+                lag_ratio=0.8
+            ),
+            ShowCreationThenFadeOut(x_axis_line)
+        )
+        self.play(
+            MoveToTarget(de_word),
+            FadeInFrom(ordinary, RIGHT),
+            GrowFromCenter(ordinary_underline)
+        )
+        self.play(FadeOut(ordinary_underline))
+        self.wait()
+
+        self.remove(ordinary, de_word)
+        ode_word = self.ode_word = VGroup(*ordinary, *de_word)
+        ode_initials = VGroup(*[word[0] for word in ode_word])
+        ode_initials.generate_target()
+        ode_initials.target.scale(1.2)
+        ode_initials.target.set_color(PINK)
+        ode_initials.target.arrange(
+            RIGHT, buff=0.5 * SMALL_BUFF, aligned_edge=DOWN
+        )
+        ode_initials.target.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        ode_remaining_letters = VGroup(*it.chain(*[
+            word[1:] for word in ode_word
+        ]))
+        ode_remaining_letters.generate_target()
+        for mob in ode_remaining_letters.target:
+            mob.shift(0.2 * UP)
+            mob.fade(1)
+
+        self.play(
+            MoveToTarget(ode_initials),
+            MoveToTarget(ode_remaining_letters, lag_ratio=0.05),
+        )
+        self.wait()
+
+        self.ode_initials = ode_initials
+
+    def show_second_order(self):
+        pass
+
+    def show_changing_curvature_group(self):
+        pass
+
+
+class ODEvsPDEinFrames(Scene):
     def construct(self):
         pass

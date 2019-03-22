@@ -1187,6 +1187,8 @@ class AnalyzePendulumForce(MovingCameraScene):
             thought_term.next_to, self.pendulum, DOWN, LARGE_BUFF
         )
 
+        self.accleration_equation = thought_term
+
     def emphasize_theta(self):
         pendulum = self.pendulum
 
@@ -1297,7 +1299,11 @@ class AnalyzePendulumForce(MovingCameraScene):
         pass
 
     def circle_g_sin_formula(self):
-        pass
+        self.play(
+            ShowCreationThenFadeAround(
+                self.accleration_equation
+            )
+        )
 
     #
     def set_theta(self, value, *added_anims, **kwargs):
@@ -1323,7 +1329,7 @@ class BuildUpEquation(Scene):
     }
 
     def construct(self):
-        self.add_center_line()
+        # self.add_center_line()
         self.show_derivatives()
         self.show_theta_double_dot_equation()
         self.talk_about_sine_component()

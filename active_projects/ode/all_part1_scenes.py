@@ -23,4 +23,6 @@ ALL_SCENE_CLASSES = [
     BuildUpEquation,
     ShowDerivativeVideo,
     SubtleAirCurrents,
+    DefineODE,
+    ODEvsPDEinFrames,
 ]
