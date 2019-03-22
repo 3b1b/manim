@@ -14,10 +14,13 @@ ALL_SCENE_CLASSES = [
     SomeOfYouWatching,
     SmallAngleApproximationTex,
     VeryLowAnglePendulum,
+    FormulasAreLies,
     FollowThisThread,
     StrogatzQuote,
     # Something...
     ShowGravityAcceleration,
     AnalyzePendulumForce,
     BuildUpEquation,
+    ShowDerivativeVideo,
+    SubtleAirCurrents,
 ]

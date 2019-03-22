@@ -88,7 +88,7 @@ class FormulasAreLies(PiCreatureScene):
         )
         self.wait()
         self.play(you.change, "confused")
-        self.wait(0)
+        self.wait()
         self.play(
             you.change, "angry",
             ShowCreation(bubble),

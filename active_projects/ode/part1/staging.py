@@ -412,3 +412,13 @@ class ShowGravityAcceleration(Scene):
             LaggedStartMap(FadeInFrom, amounts, lambda m: (m, LEFT)),
         )
         self.wait()
+
+
+class ShowDerivativeVideo(Scene):
+    def construct(self):
+        pass
+
+
+class SubtleAirCurrents(Scene):
+    def construct(self):
+        pass
