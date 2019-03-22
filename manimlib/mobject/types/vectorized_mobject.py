@@ -577,6 +577,8 @@ class VMobject(Mobject):
         again.
         """
         for submob in self.family_members_with_points():
+            if len(submob.points) < self.n_points_per_cubic_curve:
+                continue
             a1, h1, h2, a2 = submob.get_anchors_and_handles()
             a1_to_h1 = h1 - a1
             a2_to_h2 = h2 - a2
