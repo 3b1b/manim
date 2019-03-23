@@ -108,8 +108,7 @@ class Animation(object):
     # Methods for interpolation, the mean of an Animation
     def interpolate(self, alpha):
         alpha = np.clip(alpha, 0, 1)
-        # self.interpolate_mobject(self.rate_func(alpha))
-        self.interpolate_mobject(alpha)  # TODO, check
+        self.interpolate_mobject(self.rate_func(alpha))
 
     def update(self, alpha):
         """
@@ -122,10 +121,7 @@ class Animation(object):
         families = list(self.get_all_families_zipped())
         for i, mobs in enumerate(families):
             sub_alpha = self.get_sub_alpha(alpha, i, len(families))
-            self.interpolate_submobject(
-                *mobs,
-                self.rate_func(sub_alpha)  # TODO, check
-            )
+            self.interpolate_submobject(*mobs, sub_alpha)
 
     def interpolate_submobject(self, submobject, starting_sumobject, alpha):
         # Typically ipmlemented by subclass
