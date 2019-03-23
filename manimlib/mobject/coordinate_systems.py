@@ -288,7 +288,7 @@ class NumberPlane(Axes):
     def get_lines_parallel_to_axis(self, axis1, axis2, freq, ratio):
         line = Line(axis1.get_start(), axis1.get_end())
         dense_freq = (1 + ratio)
-        step = 1 / dense_freq
+        step = (1 / dense_freq) * freq
 
         lines1 = VGroup()
         lines2 = VGroup()
@@ -336,6 +336,7 @@ class NumberPlane(Axes):
             axis.get_edge_center(edge), direction,
             buff=buff
         )
+        label.shift_onto_screen(buff=MED_SMALL_BUFF)
         return label
 
     def get_axis_labels(self, x_label_tex="x", y_label_tex="y"):
