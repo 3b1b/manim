@@ -43,6 +43,10 @@ class Pendulum(VGroup):
         "theta_label_height": 0.25,
         "set_theta_label_height_cap": False,
         "n_steps_per_frame": 100,
+        "include_theta_label": True,
+        "include_velocity_vector": False,
+        "velocity_vector_multiple": 0.5,
+        "max_velocity_vector_length_to_length_ratio": 0.5,
     }
 
     def __init__(self, **kwargs):
@@ -53,7 +57,10 @@ class Pendulum(VGroup):
         self.rotating_group = VGroup(self.rod, self.weight)
         self.create_dashed_line()
         self.create_angle_arc()
-        self.add_theta_label()
+        if self.include_theta_label:
+            self.add_theta_label()
+        if self.include_velocity_vector:
+            self.add_velocity_vector()
 
         self.set_theta(self.initial_theta)
         self.update()
@@ -89,17 +96,27 @@ class Pendulum(VGroup):
         self.angle_arc = always_redraw(lambda: Arc(
             arc_center=self.get_fixed_point(),
             start_angle=-90 * DEGREES,
-            angle=self.get_theta(),
+            angle=self.get_arc_angle_theta(),
             **self.angle_arc_config,
         ))
         self.add(self.angle_arc)
+
+    def get_arc_angle_theta(self):
+        # Might be changed in certain scenes
+        return self.get_theta()
 
     def add_velocity_vector(self):
         def make_vector():
             omega = self.get_omega()
             theta = self.get_theta()
+            mvlr = self.max_velocity_vector_length_to_length_ratio
+            max_len = mvlr * self.rod.get_length()
+            vvm = self.velocity_vector_multiple
+            multiple = np.clip(
+                vvm * omega, -max_len, max_len
+            )
             vector = Vector(
-                0.5 * omega * RIGHT,
+                multiple * RIGHT,
                 **self.velocity_vector_config,
             )
             vector.rotate(theta, about_point=ORIGIN)
@@ -124,7 +141,8 @@ class Pendulum(VGroup):
         top = self.get_fixed_point()
         arc_center = self.angle_arc.point_from_proportion(0.5)
         vect = arc_center - top
-        vect = normalize(vect) * (1 + self.theta_label_height)
+        norm = get_norm(vect)
+        vect = normalize(vect) * (norm + self.theta_label_height)
         label.move_to(top + vect)
         return label
 

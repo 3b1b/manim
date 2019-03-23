@@ -768,6 +768,11 @@ class ODEvsPDEinFrames(Scene):
         pass
 
 
-class VisualizeStates(Scene):
+class ReferencePiCollisionStateSpaces(Scene):
+    def construct(self):
+        pass
+
+
+class NewSceneName(Scene):
     def construct(self):
         pass
