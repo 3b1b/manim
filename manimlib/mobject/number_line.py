@@ -141,8 +141,10 @@ class NumberLine(Line):
             self.decimal_number_config,
             number_config or {},
         )
-        scale_val = scale_val or self.number_scale_val
-        direction = direction or self.label_direction
+        if scale_val is None:
+            scale_val = self.number_scale_val
+        if direction is None:
+            direction = self.label_direction
         buff = buff or self.line_to_number_buff
 
         num_mob = DecimalNumber(number, **number_config)
