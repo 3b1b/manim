@@ -557,6 +557,9 @@ class Arrow(Line):
         self.set_stroke_width_from_length()
 
     def scale(self, factor, **kwargs):
+        if self.get_length() == 0:
+            return self
+
         has_tip = self.has_tip()
         has_start_tip = self.has_start_tip()
         if has_tip or has_start_tip:
