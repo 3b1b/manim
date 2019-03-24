@@ -4,15 +4,6 @@ from active_projects.ode.part1.pendulum import Pendulum
 from active_projects.ode.part1.pendulum import ThetaVsTAxes
 
 
-def pendulum_vector_field(point, mu=0.1, g=9.8, L=3):
-    theta, omega = point[:2]
-    return np.array([
-        omega,
-        -np.sqrt(g / L) * np.sin(theta) - mu * omega,
-        0,
-    ])
-
-
 # Scenes
 
 
@@ -769,6 +760,11 @@ class ODEvsPDEinFrames(Scene):
 
 
 class ReferencePiCollisionStateSpaces(Scene):
+    def construct(self):
+        pass
+
+
+class BreakingSecondOrderIntoTwoFirstOrder(Scene):
     def construct(self):
         pass
 

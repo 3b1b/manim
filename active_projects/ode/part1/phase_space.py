@@ -3,6 +3,8 @@ from active_projects.ode.part1.shared_constructs import *
 from active_projects.ode.part1.pendulum import Pendulum
 
 
+# TODO: Arguably separate the part showing many
+# configurations with the part showing just one.
 class VisualizeStates(Scene):
     CONFIG = {
         "coordinate_plane_config": {
@@ -36,7 +38,7 @@ class VisualizeStates(Scene):
             "max_velocity_vector_length_to_length_ratio": 0.8,
         },
         "big_pendulum_config": {
-            "length": 1.7,
+            "length": 1.6,
             "gravity": 4.9,
             "damping": 0.2,
             "weight_diameter": 0.3,
@@ -48,21 +50,21 @@ class VisualizeStates(Scene):
             "omega": -1,
             "set_theta_label_height_cap": True,
         },
-        # "n_thetas": 11,
-        # "n_omegas": 7,
-        "n_thetas": 3,
-        "n_omegas": 5,
+        "n_thetas": 11,
+        "n_omegas": 7,
+        # "n_thetas": 5,
+        # "n_omegas": 3,
         "initial_grid_wait_time": 15,
     }
 
     def construct(self):
-        self.initialize_grid_of_states()
         self.initialize_plane()
 
-        simple = True
+        simple = False
         if simple:
             self.add(self.plane)
         else:
+            self.initialize_grid_of_states()
             self.show_all_states_evolving()
             self.show_grid_of_states_creation()
             self.collapse_grid_into_points()
@@ -159,17 +161,13 @@ class VisualizeStates(Scene):
         self.wait(self.initial_grid_wait_time)
 
     def show_grid_of_states_creation(self):
+        self.remove(self.state_grid)
+        self.initialize_grid_of_states()  # Again
         state_grid = self.state_grid
-        pendulums = self.pendulums
 
         title = TextMobject("All states")
         title.to_edge(UP, buff=MED_SMALL_BUFF)
         self.all_states_title = title
-
-        self.remove(state_grid)
-        state_grid.restore()
-        for pendulum in pendulums:
-            pendulum.end_swinging()
 
         state_grid.set_height(
             FRAME_HEIGHT - title.get_height() - 2 * MED_SMALL_BUFF
@@ -195,12 +193,14 @@ class VisualizeStates(Scene):
             ShowIncreasingSubsets(middle_row),
             ShowIncreasingSubsets(middle_row_copy),
             run_time=2,
+            rate_func=linear,
         )
         self.wait()
         self.play(
             ShowIncreasingSubsets(state_grid),
             ShowIncreasingSubsets(right_column_copy),
             run_time=2,
+            rate_func=linear,
         )
         self.remove(middle_row_copy)
         self.remove(middle_row)
@@ -234,16 +234,19 @@ class VisualizeStates(Scene):
 
         self.add(plane)
         self.remove(state_grid)
+        flat_state_group = VGroup(*it.chain(*state_grid))
+        flat_dot_group = VGroup(*it.chain(*dots))
+        self.clear()  # The nuclear option
         self.play(
             ShowCreation(plane),
+            FadeOut(self.all_states_title),
             LaggedStart(*[
                 TransformFromCopy(m1, m2)
-                for m1, m2 in zip(
-                    VGroup(*it.chain(*state_grid)),
-                    VGroup(*it.chain(*dots)),
-                )
+                for m1, m2 in zip(flat_state_group, flat_dot_group)
             ], lag_ratio=0.1, run_time=4)
         )
+        self.clear()  # Again, not sure why I need this
+        self.add(plane, dots)
         self.wait()
 
         self.state_dots = dots
@@ -282,8 +285,8 @@ class VisualizeStates(Scene):
                 )
             )
         self.wait()
-        for vect in 2 * LEFT, 3 * UP, 2 * DR:
-            self.play(dot.shift, vect)
+        for vect in 2 * LEFT, 3 * UP, 2 * RIGHT, 2 * DOWN:
+            self.play(dot.shift, vect, run_time=1.5)
         self.wait()
 
         self.state = state
@@ -317,6 +320,7 @@ class VisualizeStates(Scene):
                 rate_func=smooth,
             )
         )
+        self.wait()
 
         # Show initial trajectory
         state.pendulum.clear_updaters(recursive=False)
@@ -333,8 +337,7 @@ class VisualizeStates(Scene):
         dot.clear_updaters()
         self.tie_state_to_dot_position(state, dot)
 
-        # alphas = np.linspace(0, 0.1, 100)
-        alphas = np.linspace(0, 1, 1000)
+        alphas = np.linspace(0, 0.1, 1000)
         index = np.argmin([
             trajectory.point_from_proportion(a)[1]
             for a in alphas
@@ -378,6 +381,7 @@ class VisualizeStates(Scene):
 
         # Abstract vs. physical
         abstract = TextMobject("Abstract")
+        abstract.add_background_rectangle()
         abstract.scale(2)
         abstract.to_corner(UR)
         physical = TextMobject("Physical")
@@ -385,11 +389,11 @@ class VisualizeStates(Scene):
 
         self.play(
             ApplyMethod(
-                self.plane.set_stroke, YELLOW, 1,
+                self.plane.set_stroke, YELLOW, 0.5,
                 rate_func=there_and_back,
-                lag_ratio=0.01,
+                lag_ratio=0.2,
             ),
-            Write(abstract),
+            FadeInFromDown(abstract),
             Animation(state),
         )
         self.wait()
@@ -421,7 +425,8 @@ class VisualizeStates(Scene):
         )
 
     def get_flexible_state_picture(self):
-        height = (FRAME_HEIGHT - SMALL_BUFF) / 2
+        buff = MED_SMALL_BUFF
+        height = FRAME_HEIGHT / 2 - buff
         rect = Square(
             side_length=height,
             stroke_color=WHITE,
@@ -429,7 +434,7 @@ class VisualizeStates(Scene):
             fill_color="#111111",
             fill_opacity=1,
         )
-        rect.to_corner(UL, buff=SMALL_BUFF / 2)
+        rect.to_corner(UL, buff=buff / 2)
         pendulum = Pendulum(
             top_point=rect.get_center(),
             **self.big_pendulum_config
@@ -495,12 +500,393 @@ class VisualizeStates(Scene):
 
         def update_trajectory(traj):
             point = mobject.get_center()
-            if not np.all(trajectory.points[-1] == point):
+            if get_norm(trajectory.points[-1] == point) > 0.05:
                 traj.add_smooth_curve_to(point)
         trajectory.add_updater(update_trajectory)
         return trajectory
 
 
-class NewSceneName(Scene):
+class IntroduceVectorField(VisualizeStates):
+    CONFIG = {
+        "vector_field_config": {
+            "max_magnitude": 3,
+            # "delta_x": 2,
+            # "delta_y": 2,
+        },
+        "big_pendulum_config": {
+            "initial_theta": -60 * DEGREES,
+            "omega": 1,
+        }
+    }
+
     def construct(self):
-        pass
+        self.initialize_plane()
+        self.add_flexible_state()
+        self.initialize_vector_field()
+        self.add_equation()
+        self.preview_vector_field()
+        self.write_vector_derivative()
+        self.interpret_first_coordinate()
+        self.interpret_second_coordinate()
+        self.show_full_vector_field()
+        self.show_trajectory()
+
+    def initialize_plane(self):
+        super().initialize_plane()
+        self.add(self.plane)
+
+    def initialize_vector_field(self):
+        self.vector_field = VectorField(
+            self.vector_field_func,
+            **self.vector_field_config,
+        )
+        self.vector_field.sort(get_norm)
+
+    def add_flexible_state(self):
+        self.state = self.get_flexible_state_picture()
+        self.add(self.state)
+
+    def add_equation(self):
+        ode = get_ode()
+        ode.set_width(self.state.get_width() - MED_LARGE_BUFF)
+        ode.next_to(self.state.get_top(), DOWN, SMALL_BUFF)
+        thetas = ode.get_parts_by_tex("\\theta")
+        thetas[0].set_color(RED)
+        thetas[1].set_color(YELLOW)
+        ode_word = TextMobject("Differential equation")
+        ode_word.match_width(ode)
+        ode_word.next_to(ode, DOWN)
+
+        self.play(
+            FadeInFrom(ode, 0.5 * DOWN),
+            FadeInFrom(ode_word, 0.5 * UP),
+        )
+
+        self.ode = ode
+        self.ode_word = ode_word
+
+    def preview_vector_field(self):
+        vector_field = self.vector_field
+
+        growth = LaggedStartMap(
+            GrowArrow, vector_field,
+            run_time=3,
+            lag_ratio=0.01,
+        )
+        self.add(
+            growth.mobject,
+            vector_field,
+            self.state, self.ode, self.ode_word
+        )
+
+        self.play(growth)
+        self.wait()
+        self.play(FadeOut(vector_field))
+        self.remove(growth.mobject)
+
+    def write_vector_derivative(self):
+        state = self.state
+        plane = self.plane
+
+        dot = self.get_state_dot(state)
+
+        # Vector
+        vect = Arrow(
+            plane.coords_to_point(0, 0),
+            dot.get_center(),
+            buff=0,
+            color=dot.get_color()
+        )
+        vect_sym, d_vect_sym = [
+            self.get_vector_symbol(
+                "{" + a + "\\theta}(t)",
+                "{" + b + "\\theta}(t)",
+            )
+            for a, b in [("", "\\dot"), ("\\dot", "\\ddot")]
+        ]
+        # vect_sym.get_entries()[1][0][1].set_color(YELLOW)
+        # d_vect_sym.get_entries()[0][0][1].set_color(YELLOW)
+        # d_vect_sym.get_entries()[1][0][1].set_color(RED)
+        vect_sym.next_to(vect.get_end(), UP, MED_LARGE_BUFF)
+        time_inputs = VGroup(*[
+            e[-1][-2] for e in vect_sym.get_entries()
+        ])
+
+        # Derivative
+        ddt = TexMobject("d \\over dt")
+        ddt.set_height(0.9 * vect_sym.get_height())
+        ddt.next_to(vect_sym, LEFT)
+        ddt.set_stroke(BLACK, 5, background=True)
+        equals = TexMobject("=")
+        equals.add_background_rectangle()
+        equals.next_to(vect_sym, RIGHT, SMALL_BUFF)
+        d_vect_sym.next_to(equals, RIGHT, SMALL_BUFF)
+
+        # Little vector
+        angle_tracker = ValueTracker(0)
+        mag_tracker = ValueTracker(0.75)
+        d_vect = always_redraw(
+            lambda: Vector(
+                rotate_vector(
+                    mag_tracker.get_value() * RIGHT,
+                    angle_tracker.get_value(),
+                ),
+                color=WHITE
+            ).shift(dot.get_center()),
+        )
+        d_vect_magnitude_factor_tracker = ValueTracker(2)
+        real_d_vect = always_redraw(
+            lambda: self.vector_field.get_vector(
+                dot.get_center()
+            ).scale(
+                d_vect_magnitude_factor_tracker.get_value(),
+                about_point=dot.get_center()
+            )
+        )
+
+        # Show vector
+        self.play(TransformFromCopy(state[1], vect))
+        self.play(FadeInFromDown(vect_sym))
+        self.wait()
+        self.play(ReplacementTransform(vect, dot))
+        self.wait()
+        self.play(LaggedStartMap(
+            ShowCreationThenFadeAround, time_inputs,
+            lag_ratio=0.1,
+        ))
+        self.wait()
+
+        # Write Derivative
+        self.play(Write(ddt))
+        self.play(
+            plane.y_axis.numbers.fade, 1,
+            FadeInFrom(equals, LEFT),
+            TransformFromCopy(vect_sym, d_vect_sym)
+        )
+        self.wait()
+
+        # Show as little vector
+        equation_group = VGroup(
+            ddt, vect_sym, equals, d_vect_sym
+        )
+        self.play(
+            # equation_group.shift, 4 * DOWN,
+            equation_group.to_edge, RIGHT, LARGE_BUFF,
+            GrowArrow(d_vect),
+        )
+        self.wait()
+        self.play(angle_tracker.set_value, 120 * DEGREES)
+        self.play(mag_tracker.set_value, 1.5)
+        self.wait()
+
+        # Highlight new vector
+        self.play(
+            ShowCreationThenFadeAround(d_vect_sym),
+            FadeOut(d_vect)
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(d_vect_sym, real_d_vect),
+            dot.set_color, WHITE,
+        )
+        self.wait()
+
+        # Take a walk
+        trajectory = VMobject()
+        trajectory.start_new_path(dot.get_center())
+        dt = 0.01
+        for x in range(130):
+            p = trajectory.points[-1]
+            dp_dt = self.vector_field_func(p)
+            trajectory.add_smooth_curve_to(p + dp_dt * dt)
+        self.tie_state_to_dot_position(state, dot)
+        self.play(
+            MoveAlongPath(dot, trajectory),
+            run_time=5,
+            rate_func=bezier([0, 0, 1, 1]),
+        )
+
+        self.state_dot = dot
+        self.d_vect = real_d_vect
+        self.equation_group = equation_group
+        self.d_vect_magnitude_factor_tracker = d_vect_magnitude_factor_tracker
+
+    def interpret_first_coordinate(self):
+        equation = self.equation_group
+        ddt, vect_sym, equals, d_vect_sym = equation
+        dot = self.state_dot
+
+        first_components_copy = VGroup(
+            vect_sym.get_entries()[0],
+            d_vect_sym.get_entries()[0],
+        ).copy()
+        rect = SurroundingRectangle(first_components_copy)
+        rect.set_stroke(YELLOW, 2)
+
+        equation.save_state()
+
+        self.play(
+            ShowCreation(rect),
+            equation.fade, 0.5,
+            Animation(first_components_copy),
+        )
+        self.wait()
+        dot.save_state()
+        self.play(dot.shift, 2 * UP)
+        self.wait()
+        self.play(dot.shift, 6 * DOWN)
+        self.wait()
+        self.play(dot.restore)
+        self.wait()
+
+        self.play(
+            equation.restore,
+            FadeOut(rect),
+        )
+        self.remove(first_components_copy)
+
+    def interpret_second_coordinate(self):
+        equation = self.equation_group
+        ddt, vect_sym, equals, d_vect_sym = equation
+
+        second_components = VGroup(
+            vect_sym.get_entries()[1],
+            d_vect_sym.get_entries()[1],
+        )
+        rect = SurroundingRectangle(second_components)
+        rect.set_stroke(YELLOW, 2)
+
+        expanded_derivative = self.get_vector_symbol(
+            "{\\dot\\theta}(t)",
+            "-\\mu {\\dot\\theta}(t)" +
+            "-(g / L) \\sin\\big({\\theta}(t)\\big)",
+        )
+        expanded_derivative.move_to(d_vect_sym)
+        expanded_derivative.to_edge(RIGHT, MED_SMALL_BUFF)
+        equals2 = TexMobject("=")
+        equals2.next_to(expanded_derivative, LEFT, SMALL_BUFF)
+
+        equation.save_state()
+        self.play(
+            ShowCreation(rect),
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(expanded_derivative, LEFT),
+            FadeIn(equals2),
+            equation.next_to, equals2, LEFT, SMALL_BUFF,
+            MaintainPositionRelativeTo(rect, equation),
+            VFadeOut(rect),
+        )
+        self.wait()
+
+        self.full_equation = VGroup(
+            *equation, equals2, expanded_derivative,
+        )
+
+    def show_full_vector_field(self):
+        vector_field = self.vector_field
+        state = self.state
+        ode = self.ode
+        ode_word = self.ode_word
+        equation = self.full_equation
+        d_vect = self.d_vect
+        dot = self.state_dot
+
+        equation.generate_target()
+        equation.target.scale(0.7)
+        equation.target.to_edge(DOWN, LARGE_BUFF)
+        equation.target.to_edge(LEFT, MED_SMALL_BUFF)
+        equation_rect = BackgroundRectangle(equation.target)
+
+        growth = LaggedStartMap(
+            GrowArrow, vector_field,
+            run_time=3,
+            lag_ratio=0.01,
+        )
+        self.add(
+            growth.mobject,
+            state, ode, ode_word,
+            equation_rect, equation, dot,
+            d_vect,
+        )
+        self.play(
+            growth,
+            FadeIn(equation_rect),
+            MoveToTarget(equation),
+            self.d_vect_magnitude_factor_tracker.set_value, 1,
+        )
+
+    def show_trajectory(self):
+        state = self.state
+        dot = self.state_dot
+
+        state.pendulum.clear_updaters(recursive=False)
+        self.tie_dot_position_to_state(dot, state)
+        state.pendulum.start_swinging()
+
+        trajectory = self.get_evolving_trajectory(dot)
+        trajectory.set_stroke(WHITE, 3)
+
+        self.add(trajectory, dot)
+        self.wait(25)
+
+    #
+    def get_vector_symbol(self, tex1, tex2):
+        return Matrix(
+            [[tex1], [tex2]],
+            include_background_rectangle=True,
+            bracket_h_buff=SMALL_BUFF,
+            bracket_v_buff=SMALL_BUFF,
+            element_to_mobject_config={
+                "tex_to_color_map": {
+                    "{\\dot\\theta}": YELLOW,
+                    "{\\ddot\\theta}": RED,
+                }
+            },
+            element_alignment_corner=ORIGIN,
+        ).scale(0.9)
+
+    def vector_field_func(self, point):
+        x, y = self.plane.point_to_coords(point)
+        pend = self.state.pendulum
+        return pendulum_vector_field_func(
+            x * RIGHT + y * UP,
+            mu=pend.damping,
+            g=pend.gravity,
+            L=pend.length,
+        )
+
+    def ask_about_change(self):
+        state = self.state
+
+        dot = self.get_state_dot(state)
+        d_vect = Vector(0.75 * RIGHT, color=WHITE)
+        d_vect.shift(dot.get_center())
+        q_mark = always_redraw(
+            lambda: TexMobject("?").move_to(
+                d_vect.get_end() + 0.4 * rotate_vector(
+                    d_vect.get_vector(), 90 * DEGREES,
+                ),
+            )
+        )
+
+        self.play(TransformFromCopy(state[1], dot))
+        self.tie_state_to_dot_position(state, dot)
+        self.play(
+            GrowArrow(d_vect),
+            FadeInFromDown(q_mark)
+        )
+        for x in range(4):
+            angle = 90 * DEGREES
+            self.play(
+                Rotate(
+                    d_vect, angle,
+                    about_point=d_vect.get_start(),
+                )
+            )
+            self.play(
+                dot.shift,
+                0.3 * d_vect.get_vector(),
+                rate_func=there_and_back,
+            )

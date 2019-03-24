@@ -31,4 +31,6 @@ ALL_SCENE_CLASSES = [
     SetAsideSeekingSolution,
     ReferencePiCollisionStateSpaces,
     VisualizeStates,
+    IntroduceVectorField,
+    BreakingSecondOrderIntoTwoFirstOrder,
 ]
