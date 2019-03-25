@@ -183,4 +183,7 @@ class UnitInterval(NumberLine):
         "tick_frequency": 0.1,
         "numbers_with_elongated_ticks": [0, 1],
         "number_at_center": 0.5,
+        "decimal_number_config": {
+            "num_decimal_places": 1,
+        }
     }
