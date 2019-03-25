@@ -37,4 +37,9 @@ ALL_SCENE_CLASSES = [
     ShowHighVelocityCase,
     TweakMuInFormula,
     TweakMuInVectorField,
+    FromODEToVectorField,
+    LorenzVectorField,
+    ThreeBodiesInSpace,
+    ThreeBodySymbols,
+    AskAboutActuallySolving,
 ]

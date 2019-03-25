@@ -841,6 +841,168 @@ class BreakingSecondOrderIntoTwoFirstOrder(IntroduceVectorField):
         return system
 
 
+class FromODEToVectorField(Scene):
+    def construct(self):
+        matrix_config = {
+            "bracket_v_buff": 2 * SMALL_BUFF,
+            "element_to_mobject_config": {
+                "tex_to_color_map": {
+                    "x": GREEN,
+                    "y": RED,
+                    "z": BLUE,
+                },
+            }
+        }
+        vect = get_vector_symbol(
+            "x(t)", "y(t)", "z(t)",
+            **matrix_config,
+        )
+        d_vect = get_vector_symbol(
+            "\\sigma\\big(y(t) - x(t)\\big)",
+            "x(t)\\big(\\rho - z(t)\\big) - y(t)",
+            "x(t)y(t) - \\beta z(t)",
+            **matrix_config
+        )
+        equation = VGroup(
+            TexMobject("d \\over dt").scale(1.5),
+            vect,
+            TexMobject("="),
+            d_vect
+        )
+        equation.scale(0.8)
+        equation.arrange(RIGHT)
+        equation.to_edge(UP)
+
+        arrow = Vector(DOWN, color=YELLOW)
+        arrow.next_to(equation, DOWN)
+
+        self.add(equation)
+        self.play(ShowCreation(arrow))
+        self.wait()
+
+
+class LorenzVectorField(ExternallyAnimatedScene):
+    pass
+
+
+class ThreeBodiesInSpace(SpecialThreeDScene):
+    CONFIG = {
+        "masses": [1, 2, 3],
+        "G": 0.5,
+        "play_time": 60,
+    }
+
+    def construct(self):
+        self.add_axes()
+        self.add_bodies()
+        self.add_trajectories()
+        self.let_play()
+
+    def add_axes(self):
+        axes = self.axes = self.get_axes()
+        self.add(axes)
+
+    def add_bodies(self):
+        bodies = self.bodies = VGroup()
+        velocity_vectors = VGroup()
+
+        for mass in self.masses:
+            body = self.get_sphere(
+                checkerboard_colors=[DARK_BROWN, DARK_BROWN],
+                stroke_width=0.1,
+            )
+            body.mass = mass
+            body.set_width(0.2 * mass)
+
+            point = np.dot(
+                2 * (np.random.random(3) - 0.5),
+                [RIGHT, UP, OUT]
+            )
+            velocity = normalize(np.cross(point, OUT))
+            body.move_to(point)
+            body.velocity = velocity
+            body.add_updater(self.update_body)
+
+            vect = self.get_velocity_vector_mob(body)
+
+            bodies.add(body)
+            velocity_vectors.add(vect)
+
+            self.add(body)
+            # self.add(vect)
+
+        total_mass = np.sum([body.mass for body in bodies])
+        center_of_mass = reduce(op.add, [
+            body.mass * body.get_center() / total_mass
+            for body in bodies
+        ])
+        average_momentum = reduce(op.add, [
+            body.mass * body.velocity / total_mass
+            for body in bodies
+        ])
+        for body in bodies:
+            body.shift(-center_of_mass)
+            body.velocity -= average_momentum
+
+    def add_trajectories(self):
+        def update_trajectory(traj, dt):
+            new_point = traj.body.get_center()
+            if get_norm(new_point - traj.points[-1]) > 0.01:
+                traj.add_smooth_curve_to(new_point)
+
+        for body in self.bodies:
+            traj = VMobject()
+            traj.body = body
+            traj.start_new_path(body.get_center())
+            traj.set_stroke(WHITE, 1)
+            traj.add_updater(update_trajectory)
+            self.add(traj, body)
+
+    def let_play(self):
+        self.move_camera(
+            phi=70 * DEGREES,
+            theta=-110 * DEGREES,
+            run_time=3,
+        )
+        self.begin_ambient_camera_rotation()
+        for x in range(6):
+            self.wait(self.play_time / 6)
+
+    #
+    def get_velocity_vector_mob(self, body):
+        def draw_vector():
+            center = body.get_center()
+            vect = Arrow(
+                center,
+                center + body.velocity,
+                buff=0,
+                color=RED,
+            )
+            vect.set_shade_in_3d(True)
+            return vect
+            # length = vect.get_length()
+            # if length > 2:
+            #     vect.scale(
+            #         2 / length,
+            #         about_point=vect.get_start(),
+            #     )
+        return always_redraw(draw_vector)
+
+    def update_body(self, body, dt):
+        G = self.G
+        acceleration = np.zeros(3)
+        for body2 in self.bodies:
+            if body2 is body:
+                continue
+            diff = body2.get_center() - body.get_center()
+            m2 = body2.mass
+            R = get_norm(diff)
+            acceleration += G * m2 * diff / (R**3)
+
+        body.shift(body.velocity * dt)
+        body.velocity += acceleration * dt
+
+
 class NewSceneName(Scene):
     def construct(self):
         pass

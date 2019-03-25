@@ -195,3 +195,17 @@ class ProveTeacherWrong(TeacherStudentsScene):
             self.teacher.change, "maybe"
         )
         self.wait(8)
+
+
+class AskAboutActuallySolving(Scene):
+    def construct(self):
+        ode = get_ode()
+        ode.to_corner(UL)
+        morty = self.teacher
+
+        self.student_says(
+            "Yeah, yeah, but how do\\\\"
+            "you acutally \\emph{solve} it?",
+            target_mode="sassy",
+            added_anims=[morty.change, "thinking"],
+        )

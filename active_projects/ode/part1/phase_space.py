@@ -836,20 +836,17 @@ class IntroduceVectorField(VisualizeStates):
 
     #
     def get_vector_symbol(self, tex1, tex2):
-        return Matrix(
-            [[tex1], [tex2]],
-            include_background_rectangle=True,
-            bracket_h_buff=SMALL_BUFF,
-            bracket_v_buff=SMALL_BUFF,
+        t2c = {
+            "{\\theta}": BLUE,
+            "{\\dot\\theta}": YELLOW,
+            "{\\omega}": YELLOW,
+            "{\\ddot\\theta}": RED,
+        }
+        return get_vector_symbol(
+            tex1, tex2,
             element_to_mobject_config={
-                "tex_to_color_map": {
-                    "{\\theta}": BLUE,
-                    "{\\dot\\theta}": YELLOW,
-                    "{\\omega}": YELLOW,
-                    "{\\ddot\\theta}": RED,
-                },
-            },
-            element_alignment_corner=ORIGIN,
+                "tex_to_color_map": t2c,
+            }
         ).scale(0.9)
 
     def vector_field_func(self, point):
@@ -1001,9 +998,118 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
 
 class TweakMuInFormula(Scene):
     def construct(self):
-        pass
+        ode = get_ode()
+        ode.to_edge(DOWN, buff=LARGE_BUFF)
+        mu = ode.get_part_by_tex("\\mu")
+        lil_rect = SurroundingRectangle(mu, buff=0.5 * SMALL_BUFF)
+        lil_rect.stretch(1.2, 1, about_edge=DOWN)
+        lil_rect.set_stroke(PINK, 2)
+
+        interval = UnitInterval()
+        interval.add_numbers(
+            *np.arange(0, 1.2, 0.2)
+        )
+        interval.next_to(ode, UP, LARGE_BUFF)
+        big_rect_seed = SurroundingRectangle(interval, buff=MED_SMALL_BUFF)
+        big_rect_seed.stretch(1.5, 1, about_edge=DOWN)
+        big_rect_seed.stretch(1.2, 0)
+        big_rect = VGroup(*[
+            DashedLine(v1, v2)
+            for v1, v2 in adjacent_pairs(big_rect_seed.get_vertices())
+        ])
+        big_rect.set_stroke(PINK, 2)
+
+        arrow = Arrow(
+            lil_rect.get_top(),
+            big_rect_seed.point_from_proportion(0.65),
+            buff=SMALL_BUFF,
+        )
+        arrow.match_color(lil_rect)
+
+        mu_tracker = ValueTracker(0.1)
+        get_mu = mu_tracker.get_value
+
+        triangle = Triangle(
+            start_angle=-90 * DEGREES,
+            stroke_width=0,
+            fill_opacity=1,
+            fill_color=WHITE,
+        )
+        triangle.set_height(0.2)
+        triangle.add_updater(lambda t: t.next_to(
+            interval.number_to_point(get_mu()),
+            UP, buff=0,
+        ))
+
+        equation = VGroup(
+            TexMobject("\\mu = "),
+            DecimalNumber(),
+        )
+        equation.add_updater(
+            lambda e: e.arrange(RIGHT).next_to(
+                triangle, UP, SMALL_BUFF,
+            ).shift(0.4 * RIGHT)
+        )
+        equation[-1].add_updater(
+            lambda d: d.set_value(get_mu()).shift(0.05 * UL)
+        )
+
+        self.add(ode)
+        self.play(ShowCreation(lil_rect))
+        self.play(
+            GrowFromPoint(interval, mu.get_center()),
+            GrowFromPoint(triangle, mu.get_center()),
+            GrowFromPoint(equation, mu.get_center()),
+            TransformFromCopy(lil_rect, big_rect),
+            ShowCreation(arrow)
+        )
+        self.wait()
+        self.play(mu_tracker.set_value, 0.9, run_time=5)
+        self.wait()
 
 
-class TweakMuInVectorField(Scene):
+class TweakMuInVectorField(ShowPendulumPhaseFlow):
     def construct(self):
-        pass
+        self.initialize_plane()
+        plane = self.plane
+        self.add(plane)
+
+        mu_tracker = ValueTracker(0.1)
+        get_mu = mu_tracker.get_value
+
+        def vector_field_func(p):
+            x, y = plane.point_to_coords(p)
+            mu = get_mu()
+            g = self.big_pendulum_config.get("gravity")
+            L = self.big_pendulum_config.get("length")
+            return pendulum_vector_field_func(
+                x * RIGHT + y * UP,
+                mu=mu, g=g, L=L
+            )
+
+        def get_vector_field():
+            return VectorField(
+                vector_field_func,
+                **self.vector_field_config,
+            )
+
+        field = always_redraw(get_vector_field)
+        self.add(field)
+
+        self.play(
+            mu_tracker.set_value, 0.9,
+            run_time=5,
+        )
+        field.suspend_updating()
+
+        stream_lines = StreamLines(
+            field.func,
+            delta_x=0.3,
+            delta_y=0.3,
+        )
+        animated_stream_lines = AnimatedStreamLines(
+            stream_lines,
+            line_anim_class=ShowPassingFlashWithThinningStrokeWidth,
+        )
+        self.add(animated_stream_lines)
+        self.wait(self.flow_time)
