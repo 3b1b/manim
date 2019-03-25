@@ -33,4 +33,8 @@ ALL_SCENE_CLASSES = [
     VisualizeStates,
     IntroduceVectorField,
     BreakingSecondOrderIntoTwoFirstOrder,
+    ShowPendulumPhaseFlow,
+    ShowHighVelocityCase,
+    TweakMuInFormula,
+    TweakMuInVectorField,
 ]

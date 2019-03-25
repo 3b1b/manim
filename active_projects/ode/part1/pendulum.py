@@ -90,6 +90,9 @@ class Pendulum(VGroup):
             self.get_fixed_point() + self.length * DOWN,
             **self.dashed_line_config
         )
+        line.add_updater(
+            lambda l: l.move_to(self.get_fixed_point(), UP)
+        )
         self.add_to_back(line)
 
     def create_angle_arc(self):

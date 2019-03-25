@@ -2,6 +2,7 @@ from big_ol_pile_of_manim_imports import *
 from active_projects.ode.part1.shared_constructs import *
 from active_projects.ode.part1.pendulum import Pendulum
 from active_projects.ode.part1.pendulum import ThetaVsTAxes
+from active_projects.ode.part1.phase_space import IntroduceVectorField
 
 
 # Scenes
@@ -764,9 +765,80 @@ class ReferencePiCollisionStateSpaces(Scene):
         pass
 
 
-class BreakingSecondOrderIntoTwoFirstOrder(Scene):
+class BreakingSecondOrderIntoTwoFirstOrder(IntroduceVectorField):
     def construct(self):
-        pass
+        ode = TexMobject(
+            "{\\ddot\\theta}", "(t)", "=",
+            "-\\mu", "{\\dot\\theta}", "(t)"
+            "-(g / L)\\sin\\big(", "{\\theta}", "(t)\\big)",
+            tex_to_color_map={
+                "{\\ddot\\theta}": RED,
+                "{\\dot\\theta}": YELLOW,
+                "{\\theta}": BLUE,
+                # "{t}": WHITE,
+            }
+        )
+        so_word = TextMobject("Second order ODE")
+        sys_word = TextMobject("System of two first order ODEs")
+
+        system1 = self.get_system("{\\theta}", "{\\dot\\theta}")
+        system2 = self.get_system("{\\theta}", "{\\omega}")
+
+        so_word.to_edge(UP)
+        ode.next_to(so_word, DOWN)
+        sys_word.move_to(ORIGIN)
+        system1.next_to(sys_word, DOWN)
+        system2.move_to(system1)
+
+        self.add(ode)
+        self.play(FadeInFrom(so_word, 0.5 * DOWN))
+        self.wait()
+
+        self.play(
+            TransformFromCopy(
+                ode[3:], system1[3].get_entries()[1],
+            ),
+            TransformFromCopy(ode[2], system1[2]),
+            TransformFromCopy(
+                ode[:2], VGroup(
+                    system1[0],
+                    system1[1].get_entries()[1],
+                )
+            ),
+        )
+        self.play(
+            FadeIn(system1[1].get_brackets()),
+            FadeIn(system1[1].get_entries()[0]),
+            FadeIn(system1[3].get_brackets()),
+            FadeIn(system1[3].get_entries()[0]),
+        )
+        self.play(
+            FadeInFromDown(sys_word)
+        )
+        self.wait()
+
+        self.play(ReplacementTransform(system1, system2))
+        self.wait()
+
+    def get_system(self, tex1, tex2):
+        system = VGroup(
+            TexMobject("d \\over dt"),
+            self.get_vector_symbol(
+                tex1 + "(t)",
+                tex2 + "(t)",
+            ),
+            TexMobject("="),
+            self.get_vector_symbol(
+                tex2 + "(t)",
+                "".join([
+                    "-\\mu", tex2, "(t)",
+                    "-(g / L) \\sin\\big(",
+                    tex1, "(t)", "\\big)",
+                ])
+            )
+        )
+        system.arrange(RIGHT)
+        return system
 
 
 class NewSceneName(Scene):

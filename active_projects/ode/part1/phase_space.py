@@ -439,6 +439,9 @@ class VisualizeStates(Scene):
             top_point=rect.get_center(),
             **self.big_pendulum_config
         )
+        pendulum.fixed_point_tracker.add_updater(
+            lambda m: m.move_to(rect.get_center())
+        )
 
         state = VGroup(rect, pendulum)
         state.rect = rect
@@ -514,7 +517,7 @@ class IntroduceVectorField(VisualizeStates):
             # "delta_y": 2,
         },
         "big_pendulum_config": {
-            "initial_theta": -60 * DEGREES,
+            "initial_theta": -80 * DEGREES,
             "omega": 1,
         }
     }
@@ -840,21 +843,24 @@ class IntroduceVectorField(VisualizeStates):
             bracket_v_buff=SMALL_BUFF,
             element_to_mobject_config={
                 "tex_to_color_map": {
+                    "{\\theta}": BLUE,
                     "{\\dot\\theta}": YELLOW,
+                    "{\\omega}": YELLOW,
                     "{\\ddot\\theta}": RED,
-                }
+                },
             },
             element_alignment_corner=ORIGIN,
         ).scale(0.9)
 
     def vector_field_func(self, point):
         x, y = self.plane.point_to_coords(point)
-        pend = self.state.pendulum
+        mu, g, L = [
+            self.big_pendulum_config.get(key)
+            for key in ["damping", "gravity", "length"]
+        ]
         return pendulum_vector_field_func(
             x * RIGHT + y * UP,
-            mu=pend.damping,
-            g=pend.gravity,
-            L=pend.length,
+            mu=mu, g=g, L=L
         )
 
     def ask_about_change(self):
@@ -890,3 +896,114 @@ class IntroduceVectorField(VisualizeStates):
                 0.3 * d_vect.get_vector(),
                 rate_func=there_and_back,
             )
+
+
+class ShowPendulumPhaseFlow(IntroduceVectorField):
+    CONFIG = {
+        "coordinate_plane_config": {
+            "x_axis_config": {
+                "unit_size": 0.8,
+            },
+            "x_max": 9,
+            "x_min": -9,
+        },
+        "flow_time": 20,
+    }
+
+    def construct(self):
+        self.initialize_plane()
+        self.initialize_vector_field()
+        plane = self.plane
+        field = self.vector_field
+        self.add(plane, field)
+
+        stream_lines = StreamLines(
+            field.func,
+            delta_x=0.3,
+            delta_y=0.3,
+        )
+        animated_stream_lines = AnimatedStreamLines(
+            stream_lines,
+            line_anim_class=ShowPassingFlashWithThinningStrokeWidth,
+        )
+
+        self.add(animated_stream_lines)
+        self.wait(self.flow_time)
+
+
+class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
+    CONFIG = {
+        "coordinate_plane_config": {
+            "x_max": 15,
+            "x_min": -15,
+        },
+        "vector_field_config": {
+            "x_max": 15,
+        },
+        "big_pendulum_config": {
+            "max_velocity_vector_length_to_length_ratio": 1,
+        },
+    }
+
+    def setup(self):
+        MovingCameraScene.setup(self)
+
+    def construct(self):
+        self.initialize_plane()
+        self.add(self.plane)
+        self.initialize_vector_field()
+        self.add(self.vector_field)
+        self.add_flexible_state()
+        self.show_trajectory()
+
+    def show_trajectory(self):
+        state = self.state
+        plane = self.plane
+        field = self.vector_field
+        frame = self.camera_frame
+
+        state.to_edge(DOWN, buff=SMALL_BUFF),
+        start_point = plane.coords_to_point(0, 4)
+        dot = self.get_state_controlling_dot(state)
+        dot.move_to(start_point)
+        state.update()
+
+        traj = VMobject()
+        traj.start_new_path(start_point)
+        dt = 0.01
+        total_time = 25
+        for x in range(int(total_time / dt)):
+            end = traj.points[-1]
+            dp_dt = field.func(end)
+            traj.add_smooth_curve_to(end + dp_dt * dt)
+
+        traj.set_stroke(WHITE, 2)
+
+        self.add(traj, dot)
+        self.play(
+            ShowCreation(
+                traj,
+                rate_func=linear,
+            ),
+            UpdateFromFunc(
+                dot, lambda d: d.move_to(traj.points[-1])
+            ),
+            ApplyMethod(
+                frame.shift, TAU * RIGHT,
+                rate_func=squish_rate_func(
+                    smooth, 0, 0.3,
+                )
+            ),
+            MaintainPositionRelativeTo(state.rect, frame),
+            run_time=total_time,
+        )
+
+
+class TweakMuInFormula(Scene):
+    def construct(self):
+        pass
+
+
+class TweakMuInVectorField(Scene):
+    def construct(self):
+        pass
