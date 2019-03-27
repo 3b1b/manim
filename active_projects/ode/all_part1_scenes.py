@@ -17,7 +17,8 @@ ALL_SCENE_CLASSES = [
     SmallAngleApproximationTex,
     VeryLowAnglePendulum,
     FormulasAreLies,
-    FollowThisThread,
+    TourOfDifferentialEquations,
+    # FollowThisThread,
     StrogatzQuote,
     # Something...
     ShowGravityAcceleration,
@@ -40,6 +41,11 @@ ALL_SCENE_CLASSES = [
     FromODEToVectorField,
     LorenzVectorField,
     ThreeBodiesInSpace,
+    AltThreeBodiesInSpace,
     ThreeBodySymbols,
     AskAboutActuallySolving,
+    WriteODESolvingCode,
+    TakeManyTinySteps,
+    InaccurateComputation,
+    HungerForExactness,
 ]

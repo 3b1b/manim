@@ -1113,3 +1113,127 @@ class TweakMuInVectorField(ShowPendulumPhaseFlow):
         )
         self.add(animated_stream_lines)
         self.wait(self.flow_time)
+
+
+class TakeManyTinySteps(IntroduceVectorField):
+    CONFIG = {
+        "initial_theta": 60 * DEGREES,
+        "initial_theta_dot": 0,
+    }
+
+    def construct(self):
+        self.initialize_plane()
+        self.initialize_vector_field()
+        field = self.vector_field
+        field.set_opacity(0.35)
+        self.add(self.plane, field)
+
+        self.take_many_time_steps()
+
+    def take_many_time_steps(self):
+        delta_t_tracker = ValueTracker(0.5)
+        get_delta_t = delta_t_tracker.get_value
+
+        time_tracker = ValueTracker(10)
+        get_t = time_tracker.get_value
+
+        traj = always_redraw(
+            lambda: self.get_time_step_trajectory(
+                get_delta_t(), get_t()
+            )
+        )
+        vectors = always_redraw(
+            lambda: self.get_path_vectors(
+                get_delta_t(), get_t()
+            )
+        )
+
+        t_label, dt_label = labels = VGroup(*[
+            VGroup(
+                TexMobject("{} = ".format(s)),
+                DecimalNumber(0)
+            ).arrange(RIGHT, aligned_edge=DOWN)
+            for s in ("t", "{\\Delta t}")
+        ])
+        init_labels = VGroup(
+            TexMobject(
+                "\\theta_0", "= \\pi / 3",
+                tex_to_color_map={"\\theta": BLUE},
+            ),
+            TexMobject(
+                "{\\dot\\theta}_0 = 0",
+                tex_to_color_map={"{\\dot\\theta}": YELLOW},
+            ),
+        )
+        for group in labels, init_labels:
+            for label in group:
+                label.scale(1.25)
+                label.add_background_rectangle()
+            group.arrange(DOWN)
+            group.shift(FRAME_WIDTH * RIGHT / 4)
+        labels.to_edge(UP)
+        init_labels.shift(2 * DOWN)
+
+        dt_label[-1].add_updater(
+            lambda d: d.set_value(get_delta_t())
+        )
+        t_label[-1].add_updater(
+            lambda d: d.set_value(
+                int(get_t() / get_delta_t()) * get_delta_t()
+            )
+        )
+
+        self.add(traj, vectors, init_labels, labels)
+        time_tracker.set_value(0)
+        self.play(
+            time_tracker.set_value, 10,
+            run_time=5,
+            rate_func=linear,
+        )
+        self.wait()
+        t_label[-1].clear_updaters()
+        self.play(
+            delta_t_tracker.set_value, 0.01,
+            run_time=7,
+        )
+        self.wait()
+
+    #
+    def get_time_step_points(self, delta_t, total_time):
+        plane = self.plane
+        field = self.vector_field
+        curr_point = plane.coords_to_point(
+            self.initial_theta,
+            self.initial_theta_dot,
+        )
+        points = [curr_point]
+        t = 0
+        while t < total_time:
+            new_point = curr_point + field.func(curr_point) * delta_t
+            points.append(new_point)
+            curr_point = new_point
+            t += delta_t
+        return points
+
+    def get_time_step_trajectory(self, delta_t, total_time):
+        traj = VMobject()
+        traj.set_points_as_corners(
+            self.get_time_step_points(delta_t, total_time)
+        )
+        traj.set_stroke(WHITE, 2)
+        return traj
+
+    def get_path_vectors(self, delta_t, total_time):
+        corners = self.get_time_step_points(
+            delta_t, total_time
+        )
+        result = VGroup()
+        for a1, a2 in zip(corners, corners[1:]):
+            vector = Arrow(
+                a1, a2, buff=0,
+            )
+            vector.match_style(
+                self.vector_field.get_vector(a1)
+            )
+            result.add(vector)
+        return result
