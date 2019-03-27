@@ -543,7 +543,7 @@ class Arrow(Line):
         "buff": MED_SMALL_BUFF,
         "tip_width_to_length_ratio": 1,
         "max_tip_length_to_length_ratio": 0.25,
-        "max_stroke_width_to_length_ratio": 6,
+        "max_stroke_width_to_length_ratio": 4,
         "preserve_tip_size_when_scaling": True,
         "rectangular_stem_width": 0.05,
     }
@@ -557,6 +557,9 @@ class Arrow(Line):
         self.set_stroke_width_from_length()
 
     def scale(self, factor, **kwargs):
+        if self.get_length() == 0:
+            return self
+
         has_tip = self.has_tip()
         has_start_tip = self.has_start_tip()
         if has_tip or has_start_tip:

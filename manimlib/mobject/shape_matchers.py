@@ -25,6 +25,7 @@ class BackgroundRectangle(SurroundingRectangle):
     CONFIG = {
         "color": BLACK,
         "stroke_width": 0,
+        "stroke_opacity": 0,
         "fill_opacity": 0.75,
         "buff": 0
     }

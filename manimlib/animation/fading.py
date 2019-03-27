@@ -4,6 +4,7 @@ from manimlib.animation.transform import Transform
 from manimlib.constants import DOWN
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.rate_functions import there_and_back
 
 
 DEFAULT_FADE_LAG_RATIO = 0
@@ -149,3 +150,10 @@ class VFadeOut(VFadeIn):
 
     def interpolate_submobject(self, submob, start, alpha):
         super().interpolate_submobject(submob, start, 1 - alpha)
+
+
+class VFadeInThenOut(VFadeIn):
+    CONFIG = {
+        "rate_func": there_and_back,
+        "remover": True,
+    }

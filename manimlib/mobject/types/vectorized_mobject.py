@@ -577,6 +577,8 @@ class VMobject(Mobject):
         again.
         """
         for submob in self.family_members_with_points():
+            if len(submob.points) < self.n_points_per_cubic_curve:
+                continue
             a1, h1, h2, a2 = submob.get_anchors_and_handles()
             a1_to_h1 = h1 - a1
             a2_to_h2 = h2 - a2
@@ -918,22 +920,22 @@ class DashedVMobject(VMobject):
         VMobject.__init__(self, **kwargs)
         num_dashes = self.num_dashes
         ps_ratio = self.positive_space_ratio
+        if num_dashes > 0:
+            # End points of the unit interval for division
+            alphas = np.linspace(0, 1, num_dashes + 1)
 
-        # End points of the unit interval for division
-        alphas = np.linspace(0, 1, num_dashes + 1)
+            # This determines the length of each "dash"
+            full_d_alpha = (1.0 / num_dashes)
+            partial_d_alpha = full_d_alpha * ps_ratio
 
-        # This determines the length of each "dash"
-        full_d_alpha = (1.0 / num_dashes)
-        partial_d_alpha = full_d_alpha * ps_ratio
+            # Rescale so that the last point of vmobject will
+            # be the end of the last dash
+            alphas /= (1 - full_d_alpha + partial_d_alpha)
 
-        # Rescale so that the last point of vmobject will
-        # be the end of the last dash
-        alphas /= (1 - full_d_alpha + partial_d_alpha)
-
-        self.add(*[
-            vmobject.get_subcurve(alpha, alpha + partial_d_alpha)
-            for alpha in alphas[:-1]
-        ])
+            self.add(*[
+                vmobject.get_subcurve(alpha, alpha + partial_d_alpha)
+                for alpha in alphas[:-1]
+            ])
         # Family is already taken care of by get_subcurve
         # implementation
         self.match_style(vmobject, family=False)
