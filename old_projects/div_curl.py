@@ -2817,18 +2817,16 @@ class ShowTwoPopulations(Scene):
         num_foxes = Integer(10)
         num_foxes.scale(self.count_word_scale_val)
         num_foxes.next_to(labels[0], RIGHT)
-        num_foxes.align_to(labels[0][1], DOWN)
+        num_foxes.align_to(labels[0][0][1], DOWN)
         num_rabbits = Integer(10)
         num_rabbits.scale(self.count_word_scale_val)
         num_rabbits.next_to(labels[1], RIGHT)
-        num_rabbits.align_to(labels[1][1], DOWN)
+        num_rabbits.align_to(labels[1][0][1], DOWN)
 
-        self.add(ContinualChangingDecimal(
-            num_foxes, lambda a: get_num_foxes()
-        ))
-        self.add(ContinualChangingDecimal(
-            num_rabbits, lambda a: get_num_rabbits()
-        ))
+        num_foxes.add_updater(lambda d: d.set_value(get_num_foxes()))
+        num_rabbits.add_updater(lambda d: d.set_value(get_num_rabbits()))
+
+        self.add(num_foxes, num_rabbits)
 
         for count in num_foxes, num_rabbits:
             self.add(Mobject.add_updater(
@@ -2853,13 +2851,13 @@ class ShowTwoPopulations(Scene):
             height=self.animal_height,
             fill_color=color,
         )
-        for submob in result.family_members_with_points():
-            if submob.is_subpath:
-                submob.is_subpath = False
-                submob.set_fill(
-                    interpolate_color(color, BLACK, 0.8),
-                    opacity=1
-                )
+        # for submob in result.family_members_with_points():
+            # if submob.is_subpath:
+            #     submob.is_subpath = False
+            #     submob.set_fill(
+            #         interpolate_color(color, BLACK, 0.8),
+            #         opacity=1
+            #     )
         x_shift, y_shift = [
             (2 * random.random() - 1) * max_val
             for max_val in [
@@ -3021,25 +3019,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
         self.pop_sizes_updates = pop_sizes_updates
 
     def write_differential_equations(self):
-        variables = ["X", "YY"]
-        equations = TexMobject(
-            """
-                {dX \\over dt} =
-                X \\cdot (\\alpha - \\beta YY \\,) \\\\
-                \\quad \\\\
-                {dYY \\over dt} =
-                YY \\cdot (\\delta X - \\gamma)
-            """,
-            substrings_to_isolate=variables
-        )
-        animals = [self.get_rabbit(), self.get_fox().flip()]
-        for char, animal in zip(variables, animals):
-            for part in equations.get_parts_by_tex(char):
-                animal_copy = animal.copy()
-                animal_copy.set_height(0.5)
-                animal_copy.move_to(part, DL)
-                Transform(part, animal_copy).update(1)
-
+        equations = self.get_equations()
         equations.shift(2 * DOWN)
         rect = SurroundingRectangle(equations, color=YELLOW)
         rect.set_fill(BLACK, 0.8)
@@ -3182,6 +3162,28 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
             run_time=self.flow_time,
         )
         self.wait(self.flow_time)
+
+    #
+    def get_equations(self):
+        variables = ["X", "YY"]
+        equations = TexMobject(
+            """
+                {dX \\over dt} =
+                X \\cdot (\\alpha - \\beta YY \\,) \\\\
+                \\quad \\\\
+                {dYY \\over dt} =
+                YY \\cdot (\\delta X - \\gamma)
+            """,
+            substrings_to_isolate=variables
+        )
+        animals = [self.get_rabbit(), self.get_fox().flip()]
+        for char, animal in zip(variables, animals):
+            for part in equations.get_parts_by_tex(char):
+                animal_copy = animal.copy()
+                animal_copy.set_height(0.5)
+                animal_copy.move_to(part, DL)
+                part.become(animal_copy)
+        return equations
 
 
 class PhaseFlowWords(Scene):
