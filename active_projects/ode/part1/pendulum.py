@@ -287,6 +287,9 @@ class ThetaVsTAxes(Axes):
         y_axis.label = theta_label
         y_axis.add(theta_label)
 
+        self.y_axis_label = theta_label
+        self.x_axis_label = t_label
+
         x_axis.add_numbers()
         y_axis.add(self.get_y_axis_coordinates(y_axis))
 
@@ -357,6 +360,7 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
             "length": 3,
             "top_point": 4 * RIGHT,
             "weight_diameter": 0.35,
+            "gravity": 20,
         },
         "theta_vs_t_axes_config": {
             "y_max": PI / 4,
@@ -366,6 +370,7 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
                 "unit_size": 2,
                 "tip_length": 0.3,
             },
+            "x_max": 12,
             "number_line_config": {
                 "stroke_width": 2,
             }
@@ -378,12 +383,13 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
 
     def construct(self):
         self.add_pendulum()
-        self.label_pi_creatures()
+        # self.label_pi_creatures()
         self.label_pendulum()
         self.add_graph()
+        self.label_function()
         self.show_graph_period()
         self.show_length_and_gravity()
-        self.tweak_length_and_gravity()
+        # self.tweak_length_and_gravity()
 
     def create_pi_creatures(self):
         randy = Randolph(color=BLUE_C)
@@ -437,7 +443,7 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
             GrowArrow(morty_label.arrow),
             morty.change, "raise_right_hand",
         )
-        self.wait()
+        self.wait(2)
 
     def label_pendulum(self):
         pendulum = self.pendulum
@@ -446,18 +452,18 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
         rect = SurroundingRectangle(label, buff=0.5 * SMALL_BUFF)
         rect.add_updater(lambda r: r.move_to(label))
 
-        self.add(rect)
+        for pi in randy, morty:
+            pi.add_updater(
+                lambda m: m.look_at(pendulum.weight)
+            )
+
+        self.play(randy.change, "pondering")
+        self.play(morty.change, "pondering")
+        self.wait(3)
+        randy.clear_updaters()
+        morty.clear_updaters()
         self.play(
             ShowCreationThenFadeOut(rect),
-            ShowCreationThenDestruction(
-                label.copy().set_style(
-                    fill_opacity=0,
-                    stroke_color=PINK,
-                    stroke_width=2,
-                )
-            ),
-            randy.change, "pondering",
-            morty.change, "pondering",
         )
         self.wait()
 
@@ -467,7 +473,10 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
         axes.to_corner(UL)
 
         self.play(
-            Restore(self.camera_frame),
+            Restore(
+                self.camera_frame,
+                rate_func=squish_rate_func(smooth, 0, 0.9),
+            ),
             DrawBorderThenFill(
                 axes,
                 rate_func=squish_rate_func(smooth, 0.5, 1),
@@ -481,11 +490,30 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
             ),
             run_time=3,
         )
-        self.wait(2)
-        self.graph = axes.get_live_drawn_graph(self.pendulum)
 
+        self.wait(1.5)
+        self.graph = axes.get_live_drawn_graph(self.pendulum)
         self.add(self.graph)
-        self.wait(4)
+
+    def label_function(self):
+        hm_word = TextMobject("Simple harmonic motion")
+        hm_word.scale(1.25)
+        hm_word.to_edge(UP)
+
+        formula = TexMobject(
+            "=\\theta_0 \\cos(\\sqrt{g / L} t)"
+        )
+        formula.next_to(
+            self.axes.y_axis_label, RIGHT, SMALL_BUFF
+        )
+        formula.set_stroke(width=0, background=True)
+
+        self.play(FadeInFrom(hm_word, DOWN))
+        self.wait()
+        self.play(
+            Write(formula),
+            hm_word.to_corner, UR
+        )
 
     def show_graph_period(self):
         pendulum = self.pendulum
@@ -503,13 +531,7 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
         line.shift(SMALL_BUFF * RIGHT)
         brace = Brace(line, UP, buff=SMALL_BUFF)
         brace.add_to_back(brace.copy().set_style(BLACK, 10))
-        formula = TexMobject(
-            "\\sqrt{\\,", "2\\pi", "L", "/", "g", "}",
-            tex_to_color_map={
-                "L": BLUE,
-                "g": YELLOW,
-            }
-        )
+        formula = get_period_formula()
         formula.next_to(brace, UP, SMALL_BUFF)
 
         self.period_formula = formula
@@ -537,29 +559,22 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
             self.pendulum,
             length_multiple=0.5 / 9.8,
         )
+        down_vectors = self.get_down_vectors()
+        down_vectors.set_color(YELLOW)
+        down_vectors.set_opacity(0.5)
 
-        self.play(ShowCreationThenDestructionAround(L))
-        dot = Dot(fill_opacity=0.25)
-        dot.move_to(L)
         self.play(
+            ShowCreationThenDestructionAround(L),
             ShowCreation(new_rod),
-            dot.move_to, new_rod,
-            dot.fade, 1,
         )
-        self.remove(dot)
         self.play(FadeOut(new_rod))
-        self.wait()
 
-        self.play(ShowCreationThenDestructionAround(g))
-        dot.move_to(g)
-        dot.set_fill(opacity=0.5)
         self.play(
+            ShowCreationThenDestructionAround(g),
             GrowArrow(g_vect),
-            dot.move_to, g_vect,
-            dot.fade, 1,
         )
-        self.remove(dot)
-        self.wait(2)
+        self.play(self.get_down_vectors_animation(down_vectors))
+        self.wait(6)
 
         self.gravity_vector = g_vect
 
@@ -593,15 +608,7 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
         # new_pendulum_config["initial_theta"] = pendulum.get_theta()
         new_pendulum = Pendulum(**new_pendulum_config)
 
-        down_vectors = VGroup(*[
-            Vector(0.5 * DOWN)
-            for x in range(10 * 150)
-        ])
-        down_vectors.arrange_in_grid(10, 150, buff=MED_SMALL_BUFF)
-        down_vectors.set_color_by_gradient(BLUE, RED)
-        # for vect in down_vectors:
-        #     vect.shift(0.1 * np.random.random(3))
-        down_vectors.to_edge(RIGHT)
+        down_vectors = self.get_down_vectors()
 
         self.play(randy.change, "happy")
         self.play(
@@ -624,16 +631,37 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
         g_vect.scale(2)
         self.play(
             FadeOut(graph2),
-            LaggedStart(*[
-                GrowArrow(v, rate_func=there_and_back)
-                for v in down_vectors
-            ], lag_ratio=0.0005, run_time=2, remover=True)
+            self.get_down_vectors_animation(down_vectors)
         )
         self.play(
             FadeIn(graph3),
             brace.stretch, 0.5, 0, {"about_edge": LEFT},
         )
         self.wait(6)
+
+    #
+    def get_down_vectors(self):
+        down_vectors = VGroup(*[
+            Vector(0.5 * DOWN)
+            for x in range(10 * 150)
+        ])
+        down_vectors.arrange_in_grid(10, 150, buff=MED_SMALL_BUFF)
+        down_vectors.set_color_by_gradient(BLUE, RED)
+        # for vect in down_vectors:
+        #     vect.shift(0.1 * np.random.random(3))
+        down_vectors.to_edge(RIGHT)
+        return down_vectors
+
+    def get_down_vectors_animation(self, down_vectors):
+        return LaggedStart(
+            *[
+                GrowArrow(v, rate_func=there_and_back)
+                for v in down_vectors
+            ],
+            lag_ratio=0.0005,
+            run_time=2,
+            remover=True
+        )
 
 
 class MultiplePendulumsOverlayed(Scene):
@@ -866,6 +894,95 @@ class VeryLowAnglePendulum(LowAnglePendulum):
         },
         "pendulum_shift_vect": 1 * RIGHT,
     }
+
+
+class WherePendulumLeads(PiCreatureScene):
+    def construct(self):
+        pendulum = Pendulum(
+            top_point=UP,
+            length=3,
+            gravity=20,
+        )
+        pendulum.start_swinging()
+
+        l_title = TextMobject("Linearization")
+        l_title.scale(1.5)
+        l_title.to_corner(UL)
+        c_title = TextMobject("Chaos")
+        c_title.scale(1.5)
+        c_title.move_to(l_title)
+        c_title.move_to(
+            c_title.get_center() * np.array([-1, 1, 1])
+        )
+
+        get_theta = pendulum.get_theta
+        spring = always_redraw(
+            lambda: ParametricFunction(
+                lambda t: np.array([
+                    np.cos(TAU * t) + (1.4 + get_theta()) * t,
+                    np.sin(TAU * t) - 0.5,
+                    0,
+                ]),
+                t_min=-0.5,
+                t_max=7,
+                color=GREY,
+                sheen_factor=1,
+                sheen_direction=UL,
+            ).scale(0.2).to_edge(LEFT, buff=0)
+        )
+        spring_rect = SurroundingRectangle(
+            spring, buff=MED_LARGE_BUFF,
+            stroke_width=0,
+            fill_color=BLACK,
+            fill_opacity=0,
+        )
+
+        weight = Dot(radius=0.25)
+        weight.add_updater(lambda m: m.move_to(
+            spring.points[-1]
+        ))
+        weight.set_color(BLUE)
+        weight.set_sheen(1, UL)
+        spring_system = VGroup(spring, weight)
+
+        linear_formula = TexMobject(
+            "\\frac{d \\vec{\\textbf{x}}}{dt}="
+            "A\\vec{\\textbf{x}}"
+        )
+        linear_formula.next_to(spring, UP, LARGE_BUFF)
+        linear_formula.match_x(l_title)
+
+        randy = self.pi_creature
+        randy.set_height(2)
+        randy.center()
+        randy.to_edge(DOWN)
+        randy.shift(3 * LEFT)
+        q_marks = TexMobject("???")
+        q_marks.next_to(randy, UP)
+
+        self.add(pendulum, randy)
+        self.play(
+            randy.change, "pondering", pendulum,
+            FadeInFromDown(q_marks, lag_ratio=0.3)
+        )
+        self.play(randy.look_at, pendulum)
+        self.wait(5)
+        self.play(
+            Animation(VectorizedPoint(pendulum.get_top())),
+            FadeOutAndShift(q_marks, UP, lag_ratio=0.3),
+        )
+        self.add(spring_system)
+        self.play(
+            FadeOut(spring_rect),
+            FadeInFrom(linear_formula, UP),
+            FadeInFromDown(l_title),
+        )
+        self.play(FadeInFromDown(c_title))
+        self.wait(8)
+
+
+class LongDoublePendulum(ExternallyAnimatedScene):
+    pass
 
 
 class AnalyzePendulumForce(MovingCameraScene):
@@ -1215,13 +1332,22 @@ class AnalyzePendulumForce(MovingCameraScene):
 
         self.play(FocusOn(pendulum.theta_label))
         self.play(Indicate(pendulum.theta_label))
-        old_updaters = pendulum.get_updaters()
-        pendulum.clear_updaters(recursive=False)
-        pendulum.start_swinging()
+
+        pendulum_copy = pendulum.deepcopy()
+        pendulum_copy.clear_updaters()
+        pendulum_copy.fade(1)
+        pendulum_copy.start_swinging()
+
+        def new_updater(p):
+            p.set_theta(pendulum_copy.get_theta())
+        pendulum.add_updater(new_updater)
+
+        self.add(pendulum_copy)
         self.wait(5)
-        pendulum.clear_updaters()
-        for updater in old_updaters:
-            pendulum.add_updater(updater)
+        pendulum_copy.end_swinging()
+        self.remove(pendulum_copy)
+        pendulum.remove_updater(new_updater)
+        self.update_mobjects(0)
 
     def show_arc_length(self):
         pendulum = self.pendulum
@@ -1662,6 +1788,18 @@ class BuildUpEquation(Scene):
             Write(words)
         )
         self.wait()
+
+
+class SimpleDampenedPendulum(Scene):
+    def construct(self):
+        pendulum = Pendulum(
+            top_point=ORIGIN,
+            initial_theta=150 * DEGREES,
+            mu=0.5,
+        )
+        self.add(pendulum)
+        pendulum.start_swinging()
+        self.wait(20)
 
 
 class NewSceneName(Scene):

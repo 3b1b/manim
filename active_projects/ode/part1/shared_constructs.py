@@ -35,6 +35,16 @@ def get_ode():
     return ode
 
 
+def get_period_formula():
+    return TexMobject(
+        "\\sqrt{\\,", "2\\pi", "L", "/", "g", "}",
+        tex_to_color_map={
+            "L": BLUE,
+            "g": YELLOW,
+        }
+    )
+
+
 def pendulum_vector_field_func(point, mu=0.1, g=9.8, L=3):
     theta, omega = point[:2]
     return np.array([

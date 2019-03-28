@@ -111,7 +111,11 @@ class FormulasAreLies(PiCreatureScene):
 class ProveTeacherWrong(TeacherStudentsScene):
     def construct(self):
         tex_config = {
-            "tex_to_color_map": {"{\\theta}": BLUE}
+            "tex_to_color_map": {
+                "{\\theta}": BLUE,
+                "{\\dot\\theta}": YELLOW,
+                "{\\ddot\\theta}": RED,
+            }
         }
         func = TexMobject(
             "{\\theta}(t)", "=",
@@ -119,23 +123,24 @@ class ProveTeacherWrong(TeacherStudentsScene):
             **tex_config,
         )
         d_func = TexMobject(
-            "\\dot {\\theta}(t)", "=",
+            "{\\dot\\theta}(t)", "=",
             "-\\left(\\sqrt{g / L}\\right)",
             "\\theta_0", "\\sin(\\sqrt{g / L} \\cdot t)",
             **tex_config,
         )
         dd_func = TexMobject(
-            "\\ddot {\\theta}(t)", "=",
+            "{\\ddot\\theta}(t)", "=",
             "-\\left(g / L\\right)",
             "\\theta_0", "\\cos(\\sqrt{g / L} \\cdot t)",
             **tex_config,
         )
-        ode = TexMobject(
-            "\\ddot {\\theta}({t})", "=",
-            "-\\mu \\dot {\\theta}({t})",
-            "-{g \\over L} \\sin\\big({\\theta}({t})\\big)",
-            **tex_config,
-        )
+        # ode = TexMobject(
+        #     "\\ddot {\\theta}({t})", "=",
+        #     "-\\mu \\dot {\\theta}({t})",
+        #     "-{g \\over L} \\sin\\big({\\theta}({t})\\big)",
+        #     **tex_config,
+        # )
+        ode = get_ode()
         arrows = [TexMobject("\\Downarrow") for x in range(2)]
 
         VGroup(func, d_func, dd_func, ode, *arrows).scale(0.7)
@@ -376,9 +381,44 @@ class HungerForExactness(TeacherStudentsScene):
             )
             self.wait()
         self.wait(3)
+        self.change_student_modes("tired", "sad", "concerned_musician")
+        self.wait(4)
+        self.look_at(solution)
+        self.wait(5)
         self.play(
             FadeOutAndShift(solution, 2 * LEFT),
             Restore(ode),
-            self.get_student_changes(*3 * ["sick"])
+            self.get_student_changes(
+                "sick", "angry", "tired",
+            )
         )
         self.wait(3)
+
+        mystery = TexMobject(
+            "\\theta(t) = ???",
+            tex_to_color_map={"\\theta": BLUE},
+        )
+        mystery.scale(2)
+        mystery.to_edge(UP)
+        mystery.set_stroke(width=0, background=True)
+
+        self.play(
+            FadeInFromDown(mystery),
+            self.teacher.change, "pondering"
+        )
+        self.add(
+            AnimatedBoundary(mystery, stroke_width=1),
+            mystery,
+        )
+        self.change_all_student_modes("sad")
+        self.look_at(mystery)
+        self.wait(5)
+
+
+class ItGetsWorse(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("It gets\\\\worse")
+        self.change_student_modes(
+            "hesitant", "pleading", "erm"
+        )
+        self.wait(2)

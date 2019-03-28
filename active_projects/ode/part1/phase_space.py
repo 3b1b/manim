@@ -951,19 +951,46 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
         self.initialize_vector_field()
         self.add(self.vector_field)
         self.add_flexible_state()
+        self.show_high_vector()
         self.show_trajectory()
 
-    def show_trajectory(self):
+    def add_flexible_state(self):
+        super().add_flexible_state()
         state = self.state
         plane = self.plane
-        field = self.vector_field
-        frame = self.camera_frame
 
         state.to_edge(DOWN, buff=SMALL_BUFF),
         start_point = plane.coords_to_point(0, 4)
         dot = self.get_state_controlling_dot(state)
         dot.move_to(start_point)
         state.update()
+
+        self.dot = dot
+        self.start_point = start_point
+
+    def show_high_vector(self):
+        field = self.vector_field
+        top_vectors = VGroup(*filter(
+            lambda a: np.all(a.get_center() > [-10, 1.5, -10]),
+            field
+        )).copy()
+        top_vectors.set_stroke(PINK, 3)
+        top_vectors.sort(lambda p: p[0])
+
+        self.play(
+            ShowCreationThenFadeOut(
+                top_vectors,
+                run_time=2,
+                lag_ratio=0.01,
+            )
+        )
+
+    def show_trajectory(self):
+        state = self.state
+        field = self.vector_field
+        frame = self.camera_frame
+        dot = self.dot
+        start_point = self.start_point
 
         traj = VMobject()
         traj.start_new_path(start_point)
@@ -998,6 +1025,10 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
 
 class TweakMuInFormula(Scene):
     def construct(self):
+        self.add(FullScreenFadeRectangle(
+            opacity=0.75,
+        ))
+
         ode = get_ode()
         ode.to_edge(DOWN, buff=LARGE_BUFF)
         mu = ode.get_part_by_tex("\\mu")
