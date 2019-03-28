@@ -22,9 +22,11 @@ class AnimatedBoundary(VGroup):
         ]
         self.add(*self.boundary_copies)
         self.total_time = 0
-        self.add_updater(lambda m, dt: self.update(dt))
+        self.add_updater(
+            lambda m, dt: self.update_boundary_copies(dt)
+        )
 
-    def update(self, dt):
+    def update_boundary_copies(self, dt):
         # Not actual time, but something which passes at
         # an altered rate to make the implementation below
         # cleaner
