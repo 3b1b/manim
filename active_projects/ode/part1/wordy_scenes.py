@@ -97,6 +97,289 @@ class StrogatzQuote(Scene):
         return quote
 
 
+class WriteInRadians(Scene):
+    def construct(self):
+        words = TextMobject("In radians")
+        words.set_color(YELLOW)
+        square = SurroundingRectangle(TexMobject("\\theta"))
+        square.next_to(words, UP)
+        self.play(ShowCreation(square))
+        self.play(Write(words), FadeOut(square))
+        self.wait()
+
+
+class XEqLThetaToCorner(Scene):
+    def construct(self):
+        equation = TexMobject(
+            "x = L\\theta",
+            tex_to_color_map={
+                "x": GREEN,
+                "\\theta": BLUE,
+            }
+        )
+        equation.move_to(DOWN + 3 * RIGHT)
+        self.add(equation)
+        self.play(equation.to_corner, DL, {"buff": LARGE_BUFF})
+        self.wait()
+
+
+class ComingUp(Scene):
+    CONFIG = {
+        "camera_config": {"background_color": DARKER_GREY}
+    }
+
+    def construct(self):
+        frame = ScreenRectangle(
+            stroke_width=0,
+            fill_color=BLACK,
+            fill_opacity=1,
+            height=6
+        )
+        title = TextMobject("Coming up")
+        title.scale(1.5)
+        title.to_edge(UP)
+        frame.next_to(title, DOWN)
+        animated_frame = AnimatedBoundary(frame)
+        self.add(frame, title, animated_frame)
+        self.wait(10)
+
+
+class InputLabel(Scene):
+    def construct(self):
+        label = TextMobject("Input")
+        label.scale(1.25)
+        arrow = Vector(UP)
+        arrow.next_to(label, UP)
+        self.play(
+            FadeInFrom(label, UP),
+            GrowArrow(arrow)
+        )
+        self.wait()
+
+
+class ReallyHardToSolve(Scene):
+    def construct(self):
+        words = TextMobject(
+            "They're", "really\\\\",
+            "freaking", "hard\\\\",
+            "to", "solve\\\\",
+        )
+        words.set_height(6)
+
+        self.wait()
+        for word in words:
+            wait_time = 0.05 * len(word)
+            self.add(word)
+            self.wait(wait_time)
+        self.wait()
+
+
+class ReasonForSolution(Scene):
+    def construct(self):
+        # Words
+        eq_word = TextMobject("Differential\\\\Equation")
+        s_word = TextMobject("Solution")
+        u_word = TextMobject("Understanding")
+        c_word = TextMobject("Computation")
+        cu_group = VGroup(u_word, c_word)
+        cu_group.arrange(DOWN, buff=2)
+        group = VGroup(eq_word, s_word, cu_group)
+        group.arrange(RIGHT, buff=2)
+        words = VGroup(eq_word, s_word, u_word, c_word)
+
+        # Arrows
+        arrows = VGroup(
+            Arrow(eq_word.get_right(), s_word.get_left()),
+            Arrow(s_word.get_right(), u_word.get_left()),
+            Arrow(s_word.get_right(), c_word.get_left()),
+        )
+        arrows.set_color(LIGHT_GREY)
+        new_arrows = VGroup(
+            Arrow(
+                eq_word.get_corner(UR),
+                u_word.get_left(),
+                path_arc=-60 * DEGREES,
+            ),
+            Arrow(
+                eq_word.get_corner(DR),
+                c_word.get_left(),
+                path_arc=60 * DEGREES,
+            ),
+        )
+        new_arrows.set_color(BLUE)
+
+        # Define first examples
+        t2c = {
+            "{x}": BLUE,
+            "{\\dot x}": RED,
+        }
+        equation = TexMobject(
+            "{\\dot x}(t) = k {x}(t)",
+            tex_to_color_map=t2c,
+        )
+        equation.next_to(eq_word, DOWN)
+        solution = TexMobject(
+            "{x}(t) = x_0 e^{kt}",
+            tex_to_color_map=t2c,
+        )
+        solution.next_to(s_word, DOWN, MED_LARGE_BUFF)
+        equation.align_to(solution, DOWN)
+
+        axes = Axes(
+            x_min=-1,
+            x_max=5.5,
+            y_min=-1,
+            y_max=4.5,
+            y_axis_config={"unit_size": 0.5}
+        )
+        axes.set_stroke(width=2)
+        graph_line = axes.get_graph(
+            lambda x: np.exp(0.4 * x)
+        )
+        graph_line.set_stroke(width=2)
+        graph = VGroup(axes, graph_line)
+        graph.scale(0.5)
+        graph.next_to(u_word, UP)
+
+        computation = TexMobject(
+            # "\\displaystyle "
+            "e^x = \\sum_{n=0}^\\infty "
+            "\\frac{x^n}{n!}"
+        )
+        computation.next_to(c_word, DOWN)
+
+        first_examples = VGroup(
+            equation, solution, graph, computation
+        )
+
+        # Second example
+        ode = get_ode()
+        ode.scale(0.75)
+        second_examples = VGroup(
+            ode,
+            TexMobject("???").set_color(LIGHT_GREY),
+            ScreenRectangle(
+                height=2,
+                stroke_width=1,
+            ),
+        )
+        for fe, se in zip(first_examples, second_examples):
+            se.move_to(fe, DOWN)
+
+        ode.shift(2 * SMALL_BUFF * DOWN)
+        ode.add_to_back(BackgroundRectangle(ode[-4:]))
+
+        self.add(eq_word)
+        self.add(equation)
+        self.play(
+            FadeInFrom(s_word, LEFT),
+            GrowArrow(arrows[0]),
+            TransformFromCopy(equation, solution)
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(c_word, UL),
+            GrowArrow(arrows[2]),
+            FadeInFrom(computation, UP)
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(u_word, DL),
+            GrowArrow(arrows[1]),
+            FadeInFromDown(graph)
+        )
+        self.wait(2)
+
+        self.play(
+            FadeOut(first_examples),
+            FadeIn(second_examples[:2])
+        )
+        self.wait()
+        self.play(
+            arrows.fade, 0.75,
+            s_word.fade, 0.75,
+            second_examples[1].fade, 0.75,
+            ShowCreation(new_arrows[0]),
+            FadeIn(second_examples[2])
+        )
+        self.play(
+            ShowCreation(new_arrows[1]),
+            Animation(second_examples),
+        )
+        self.wait()
+
+
+class WritePhaseSpace(Scene):
+    def construct(self):
+        word = TextMobject("Phase space")
+        word.scale(2)
+        word.shift(FRAME_WIDTH * LEFT / 4)
+        word.to_edge(UP)
+        word.add_background_rectangle()
+
+        lines = VGroup(*[
+            Line(v, 1.3 * v)
+            for v in compass_directions(50)
+        ])
+        lines.replace(word, stretch=True)
+        lines.scale(1.5)
+        lines.set_stroke(YELLOW)
+        lines.shuffle()
+
+        self.add(word)
+        self.play(
+            ShowPassingFlashWithThinningStrokeWidth(
+                lines,
+                lag_ratio=0.002,
+                run_time=1.5,
+                time_width=0.9,
+                n_segments=5,
+            )
+        )
+        self.wait()
+
+
+class GleickQuote(Scene):
+    def construct(self):
+        quote = TextMobject(
+            "``[Phase space is] one of the most\\\\",
+            "powerful inventions", "of modern science.''\\\\",
+        )
+        quote.power_part = quote.get_part_by_tex("power")
+        book = ImageMobject("ChaosBookCover")
+        book.set_height(5)
+        book.next_to(ORIGIN, LEFT)
+        book.to_edge(DOWN)
+        gleick = ImageMobject("JamesGleick")
+        gleick.set_height(5)
+        gleick.next_to(ORIGIN, RIGHT)
+        gleick.to_edge(DOWN)
+        quote.to_edge(UP)
+
+        self.play(
+            FadeInFrom(book, RIGHT),
+            FadeInFrom(gleick, LEFT),
+        )
+        self.wait()
+        self.play(Write(quote))
+        self.play(Write(
+            quote.power_part.copy().set_color(BLUE),
+            run_time=1
+        ))
+        self.wait()
+
+
+class WritePhaseFlow(Scene):
+    def construct(self):
+        words = TextMobject("Phase flow")
+        words.scale(2)
+        words.shift(FRAME_WIDTH * LEFT / 4)
+        words.to_edge(UP)
+        words.add_background_rectangle()
+        self.play(Write(words))
+        self.wait()
+
+
 class ShowSineValues(Scene):
     def construct(self):
         angle_tracker = ValueTracker(60 * DEGREES)

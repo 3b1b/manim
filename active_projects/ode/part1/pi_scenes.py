@@ -108,6 +108,29 @@ class FormulasAreLies(PiCreatureScene):
 #         pass
 
 
+class SoWhatIsThetaThen(TeacherStudentsScene):
+    def construct(self):
+        ode = get_ode()
+        ode.to_corner(UL)
+        self.add(ode)
+
+        self.student_says(
+            "Okay, but then\\\\"
+            "what \\emph{is} $\\theta(t)$?"
+        )
+        self.wait()
+        self.play(self.teacher.change, "happy")
+        self.wait(2)
+        self.teacher_says(
+            "First, you must appreciate\\\\"
+            "a deep truth...",
+            added_anims=[self.get_student_changes(
+                *3 * ["confused"]
+            )]
+        )
+        self.wait(4)
+
+
 class ProveTeacherWrong(TeacherStudentsScene):
     def construct(self):
         tex_config = {
@@ -247,9 +270,7 @@ class HungerForExactness(TeacherStudentsScene):
         ode.to_corner(UL)
         left_part = ode[:5]
         friction_part = ode[5:11]
-        right_part = ode[11:]
         self.add(ode)
-        frictionless_group = VGroup(left_part, right_part)
 
         proposed_solution = TexMobject(
             "\\theta_0\\cos((\\sqrt{g/L})t)e^{-\\mu t}"
@@ -401,18 +422,36 @@ class HungerForExactness(TeacherStudentsScene):
         mystery.scale(2)
         mystery.to_edge(UP)
         mystery.set_stroke(width=0, background=True)
+        mystery_boundary = AnimatedBoundary(
+            mystery, stroke_width=1
+        )
 
         self.play(
             FadeInFromDown(mystery),
             self.teacher.change, "pondering"
         )
-        self.add(
-            AnimatedBoundary(mystery, stroke_width=1),
-            mystery,
-        )
+        self.add(mystery_boundary, mystery)
         self.change_all_student_modes("sad")
         self.look_at(mystery)
         self.wait(5)
+
+        # Define
+        self.student_says(
+            "Let $\\text{P}(\\mu, g, L; t)$ be a\\\\"
+            "function satisfying this ODE.",
+            student_index=0,
+            target_mode="speaking",
+            added_anims=[
+                FadeOut(mystery),
+                FadeOut(mystery_boundary),
+                ode.to_corner, UR
+            ]
+        )
+        self.change_student_modes(
+            "hooray", "sassy", "sassy",
+            look_at_arg=students[0].eyes.get_corner(UR),
+        )
+        self.wait(2)
 
 
 class ItGetsWorse(TeacherStudentsScene):
@@ -421,4 +460,4 @@ class ItGetsWorse(TeacherStudentsScene):
         self.change_student_modes(
             "hesitant", "pleading", "erm"
         )
-        self.wait(2)
+        self.wait(5)

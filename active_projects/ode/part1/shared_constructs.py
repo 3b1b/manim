@@ -20,8 +20,8 @@ def get_ode():
     tex_config = {
         "tex_to_color_map": {
             "{\\theta}": BLUE,
-            "{\\dot\\theta}": YELLOW,
-            "{\\ddot\\theta}": RED,
+            "{\\dot\\theta}": RED,
+            "{\\ddot\\theta}": YELLOW,
             "{t}": WHITE,
             "{\\mu}": WHITE,
         }
@@ -37,7 +37,7 @@ def get_ode():
 
 def get_period_formula():
     return TexMobject(
-        "\\sqrt{\\,", "2\\pi", "L", "/", "g", "}",
+        "2\\pi", "\\sqrt{\\,", "L", "/", "g", "}",
         tex_to_color_map={
             "L": BLUE,
             "g": YELLOW,

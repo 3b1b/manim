@@ -940,19 +940,26 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
         "big_pendulum_config": {
             "max_velocity_vector_length_to_length_ratio": 1,
         },
+        "run_time": 25,
+        "initial_theta": 0,
+        "initial_theta_dot": 4,
+        "frame_shift_vect": TAU * RIGHT,
     }
 
     def setup(self):
         MovingCameraScene.setup(self)
 
     def construct(self):
+        self.initialize_plane_and_field()
+        self.add_flexible_state()
+        self.show_high_vector()
+        self.show_trajectory()
+
+    def initialize_plane_and_field(self):
         self.initialize_plane()
         self.add(self.plane)
         self.initialize_vector_field()
         self.add(self.vector_field)
-        self.add_flexible_state()
-        self.show_high_vector()
-        self.show_trajectory()
 
     def add_flexible_state(self):
         super().add_flexible_state()
@@ -960,7 +967,10 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
         plane = self.plane
 
         state.to_edge(DOWN, buff=SMALL_BUFF),
-        start_point = plane.coords_to_point(0, 4)
+        start_point = plane.coords_to_point(
+            self.initial_theta,
+            self.initial_theta_dot,
+        )
         dot = self.get_state_controlling_dot(state)
         dot.move_to(start_point)
         state.update()
@@ -987,24 +997,14 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
 
     def show_trajectory(self):
         state = self.state
-        field = self.vector_field
         frame = self.camera_frame
         dot = self.dot
         start_point = self.start_point
 
-        traj = VMobject()
-        traj.start_new_path(start_point)
-        dt = 0.01
-        total_time = 25
-        for x in range(int(total_time / dt)):
-            end = traj.points[-1]
-            dp_dt = field.func(end)
-            traj.add_smooth_curve_to(end + dp_dt * dt)
-
-        traj.set_stroke(WHITE, 2)
+        traj = self.get_trajectory(start_point, self.run_time)
 
         self.add(traj, dot)
-        self.play(
+        anims = [
             ShowCreation(
                 traj,
                 rate_func=linear,
@@ -1012,15 +1012,32 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
             UpdateFromFunc(
                 dot, lambda d: d.move_to(traj.points[-1])
             ),
-            ApplyMethod(
-                frame.shift, TAU * RIGHT,
-                rate_func=squish_rate_func(
-                    smooth, 0, 0.3,
-                )
-            ),
-            MaintainPositionRelativeTo(state.rect, frame),
-            run_time=total_time,
-        )
+        ]
+        if get_norm(self.frame_shift_vect) > 0:
+            anims += [
+                ApplyMethod(
+                    frame.shift, self.frame_shift_vect,
+                    rate_func=squish_rate_func(
+                        smooth, 0, 0.3,
+                    )
+                ),
+                MaintainPositionRelativeTo(state.rect, frame),
+            ]
+        self.play(*anims, run_time=total_time)
+
+    def get_trajectory(self, start_point, time, dt=0.1, added_steps=1000):
+        field = self.vector_field
+        traj = VMobject()
+        traj.start_new_path(start_point)
+        for x in range(int(time / dt)):
+            last_point = traj.points[-1]
+            for y in range(added_steps):
+                dp_dt = field.func(last_point)
+                last_point += dp_dt * dt / added_steps
+            traj.add_smooth_curve_to(last_point)
+        traj.make_smooth()
+        traj.set_stroke(WHITE, 2)
+        return traj
 
 
 class TweakMuInFormula(Scene):
@@ -1146,6 +1163,216 @@ class TweakMuInVectorField(ShowPendulumPhaseFlow):
         self.wait(self.flow_time)
 
 
+class HighAmplitudePendulum(ShowHighVelocityCase):
+    CONFIG = {
+        "big_pendulum_config": {
+            "damping": 0.02,
+        },
+        "initial_theta": 175 * DEGREES,
+        "initial_theta_dot": 0,
+        "frame_shift_vect": 0 * RIGHT,
+    }
+
+    def construct(self):
+        self.initialize_plane_and_field()
+        self.add_flexible_state()
+        self.show_trajectory()
+
+
+class SpectrumOfStartingStates(ShowHighVelocityCase):
+    CONFIG = {
+        "run_time": 15,
+    }
+
+    def construct(self):
+        self.initialize_plane_and_field()
+        self.vector_field.set_opacity(0.5)
+        self.show_many_trajectories()
+
+    def show_many_trajectories(self):
+        plane = self.plane
+
+        delta_x = 0.5
+        delta_y = 0.5
+        n = 20
+
+        start_points = [
+            plane.coords_to_point(x, y)
+            for x in np.linspace(PI - delta_x, PI + delta_x, n)
+            for y in np.linspace(-delta_y, delta_y, n)
+        ]
+        start_points.sort(
+            key=lambda p: np.dot(p, UL)
+        )
+        time = self.run_time
+
+        # Count points
+        dots = VGroup(*[
+            Dot(sp, radius=0.025)
+            for sp in start_points
+        ])
+        dots.set_color_by_gradient(PINK, BLUE, YELLOW)
+        words = TextMobject(
+            "Spectrum of\\\\", "initial conditions"
+        )
+        words.set_stroke(BLACK, 5, background=True)
+        words.next_to(dots, UP)
+
+        self.play(
+            # ShowIncreasingSubsets(dots, run_time=2),
+            LaggedStartMap(
+                FadeInFromLarge, dots,
+                lambda m: (m, 10),
+                run_time=2
+            ),
+            FadeInFromDown(words),
+        )
+        self.wait()
+
+        trajs = VGroup()
+        for sp in start_points:
+            trajs.add(
+                self.get_trajectory(
+                    sp, time,
+                    added_steps=10,
+                )
+            )
+        for traj, dot in zip(trajs, dots):
+            traj.set_stroke(dot.get_color(), 1)
+
+        def update_dots(ds):
+            for d, t in zip(ds, trajs):
+                d.move_to(t.points[-1])
+            return ds
+        dots.add_updater(update_dots)
+
+        self.add(dots, trajs, words)
+        self.play(
+            ShowCreation(
+                trajs,
+                lag_ratio=0,
+            ),
+            rate_func=linear,
+            run_time=time,
+        )
+        self.wait()
+
+
+class AskAboutStability(ShowHighVelocityCase):
+    CONFIG = {
+        "initial_theta": 60 * DEGREES,
+        "initial_theta_dot": 1,
+    }
+
+    def construct(self):
+        self.initialize_plane_and_field()
+        self.add_flexible_state()
+        self.show_fixed_points()
+        self.label_fixed_points()
+        self.ask_about_stability()
+        self.show_nudges()
+
+    def show_fixed_points(self):
+        state1 = self.state
+        plane = self.plane
+        dot1 = self.dot
+
+        state2 = self.get_flexible_state_picture()
+        state2.to_corner(DR, buff=SMALL_BUFF)
+        dot2 = self.get_state_controlling_dot(state2)
+        dot2.set_color(BLUE)
+
+        fp1 = plane.coords_to_point(0, 0)
+        fp2 = plane.coords_to_point(PI, 0)
+
+        self.play(
+            dot1.move_to, fp1,
+            run_time=3,
+        )
+        self.wait()
+        self.play(FadeIn(state2))
+        self.play(
+            dot2.move_to, fp2,
+            path_arc=-30 * DEGREES,
+            run_time=2,
+        )
+        self.wait()
+
+        self.state1 = state1
+        self.state2 = state2
+        self.dot1 = dot1
+        self.dot2 = dot2
+
+    def label_fixed_points(self):
+        dots = VGroup(self.dot1, self.dot2)
+
+        label = TextMobject("Fixed points")
+        label.scale(1.5)
+        label.set_stroke(BLACK, 5, background=True)
+        label.next_to(dots, UP, buff=2)
+        label.shift(SMALL_BUFF * DOWN)
+
+        arrows = VGroup(*[
+            Arrow(
+                label.get_bottom(), dot.get_center(),
+                color=dot.get_color(),
+            )
+            for dot in dots
+        ])
+
+        self.play(
+            self.vector_field.set_opacity, 0.5,
+            FadeInFromDown(label)
+        )
+        self.play(ShowCreation(arrows))
+        self.wait(2)
+
+        self.to_fade = VGroup(label, arrows)
+
+    def ask_about_stability(self):
+        question = TextMobject("Stable?")
+        question.scale(2)
+        question.shift(FRAME_WIDTH * RIGHT / 4)
+        question.to_edge(UP)
+        question.set_stroke(BLACK, 5, background=True)
+
+        self.play(Write(question))
+        self.play(FadeOut(self.to_fade))
+
+    def show_nudges(self):
+        dots = VGroup(self.dot1, self.dot2)
+        time = 20
+
+        self.play(*[
+            ApplyMethod(
+                dot.shift, 0.1 * UL,
+                rate_func=rush_from,
+            )
+            for dot in dots
+        ])
+
+        trajs = VGroup()
+        for dot in dots:
+            traj = self.get_trajectory(
+                dot.get_center(),
+                time,
+            )
+            traj.set_stroke(dot.get_color(), 2)
+            trajs.add(traj)
+
+        def update_dots(ds):
+            for t, d in zip(trajs, ds):
+                d.move_to(t.points[-1])
+        dots.add_updater(update_dots)
+        self.add(trajs, dots)
+        self.play(
+            ShowCreation(trajs, lag_ratio=0),
+            rate_func=linear,
+            run_time=time
+        )
+        self.wait()
+
+
 class TakeManyTinySteps(IntroduceVectorField):
     CONFIG = {
         "initial_theta": 60 * DEGREES,
@@ -1153,13 +1380,15 @@ class TakeManyTinySteps(IntroduceVectorField):
     }
 
     def construct(self):
+        self.initialize_plane_and_field()
+        self.take_many_time_steps()
+
+    def initialize_plane_and_field(self):
         self.initialize_plane()
         self.initialize_vector_field()
         field = self.vector_field
         field.set_opacity(0.35)
         self.add(self.plane, field)
-
-        self.take_many_time_steps()
 
     def take_many_time_steps(self):
         delta_t_tracker = ValueTracker(0.5)
@@ -1170,12 +1399,18 @@ class TakeManyTinySteps(IntroduceVectorField):
 
         traj = always_redraw(
             lambda: self.get_time_step_trajectory(
-                get_delta_t(), get_t()
+                get_delta_t(),
+                get_t(),
+                self.initial_theta,
+                self.initial_theta_dot,
             )
         )
         vectors = always_redraw(
             lambda: self.get_path_vectors(
-                get_delta_t(), get_t()
+                get_delta_t(),
+                get_t(),
+                self.initial_theta,
+                self.initial_theta_dot,
             )
         )
 
@@ -1214,28 +1449,99 @@ class TakeManyTinySteps(IntroduceVectorField):
             )
         )
 
+        theta_t_label = TexMobject("\\theta(t)...\\text{ish}")
+        theta_t_label.scale(0.75)
+        theta_t_label.add_updater(lambda m: m.next_to(
+            vectors[-1].get_end(),
+            vectors[-1].get_vector(),
+            SMALL_BUFF,
+        ))
+
         self.add(traj, vectors, init_labels, labels)
         time_tracker.set_value(0)
+        target_time = 10
         self.play(
-            time_tracker.set_value, 10,
-            run_time=5,
-            rate_func=linear,
+            VFadeIn(theta_t_label),
+            ApplyMethod(
+                time_tracker.set_value, target_time,
+                run_time=5,
+                rate_func=linear,
+            )
         )
         self.wait()
         t_label[-1].clear_updaters()
+        self.remove(theta_t_label)
+        target_delta_t = 0.01
         self.play(
-            delta_t_tracker.set_value, 0.01,
+            delta_t_tracker.set_value, target_delta_t,
             run_time=7,
         )
         self.wait()
+        traj.clear_updaters()
+        vectors.clear_updaters()
+
+        # Show steps
+        count_tracker = ValueTracker(0)
+        count = Integer()
+        count.scale(1.5)
+        count.to_edge(LEFT)
+        count.shift(UP)
+        count.add_updater(lambda c: c.set_value(
+            count_tracker.get_value()
+        ))
+        count_label = TextMobject("steps")
+        count_label.scale(1.5)
+        count_label.add_updater(
+            lambda m: m.next_to(count, RIGHT).shift(SMALL_BUFF * DOWN)
+        )
+
+        scaled_vectors = vectors.copy()
+        scaled_vectors.clear_updaters()
+        for vector in scaled_vectors:
+            vector.scale(
+                1 / vector.get_length(),
+                about_point=vector.get_start()
+            )
+            vector.set_color(YELLOW)
+
+        def update_scaled_vectors(group):
+            group.set_opacity(0)
+            group[min(
+                int(count.get_value()),
+                len(group) - 1,
+            )].set_opacity(1)
+
+        scaled_vectors.add_updater(update_scaled_vectors)
+
+        self.add(count, count_label, scaled_vectors)
+        self.play(
+            # LaggedStartMap(
+            #     ApplyFunction, vectors,
+            #     lambda vector: (
+            #         lambda v: v.scale(
+            #             1 / v.get_length()
+            #         ),
+            #         vector
+            #     ),
+            #     rate_func=there_and_back,
+            # ),
+            ApplyMethod(
+                count_tracker.set_value,
+                int(target_time / target_delta_t),
+                rate_func=linear,
+            ),
+            run_time=5,
+        )
+        self.play(FadeOut(scaled_vectors))
+        self.wait()
 
     #
-    def get_time_step_points(self, delta_t, total_time):
+    def get_time_step_points(self, delta_t, total_time, theta_0, theta_dot_0):
         plane = self.plane
         field = self.vector_field
         curr_point = plane.coords_to_point(
-            self.initial_theta,
-            self.initial_theta_dot,
+            theta_0,
+            theta_dot_0,
         )
         points = [curr_point]
         t = 0
@@ -1246,17 +1552,21 @@ class TakeManyTinySteps(IntroduceVectorField):
             t += delta_t
         return points
 
-    def get_time_step_trajectory(self, delta_t, total_time):
+    def get_time_step_trajectory(self, delta_t, total_time, theta_0, theta_dot_0):
         traj = VMobject()
         traj.set_points_as_corners(
-            self.get_time_step_points(delta_t, total_time)
+            self.get_time_step_points(
+                delta_t, total_time,
+                theta_0, theta_dot_0,
+            )
         )
         traj.set_stroke(WHITE, 2)
         return traj
 
-    def get_path_vectors(self, delta_t, total_time):
+    def get_path_vectors(self, delta_t, total_time, theta_0, theta_dot_0):
         corners = self.get_time_step_points(
-            delta_t, total_time
+            delta_t, total_time,
+            theta_0, theta_dot_0,
         )
         result = VGroup()
         for a1, a2 in zip(corners, corners[1:]):
@@ -1268,3 +1578,51 @@ class TakeManyTinySteps(IntroduceVectorField):
             )
             result.add(vector)
         return result
+
+
+class ManyStepsFromDifferentStartingPoints(TakeManyTinySteps):
+    CONFIG = {
+        "initial_thetas": np.linspace(0.1, PI - 0.1, 10),
+        "initial_theta_dot": 0,
+    }
+
+    def construct(self):
+        self.initialize_plane_and_field()
+        self.take_many_time_steps()
+
+    def take_many_time_steps(self):
+        delta_t_tracker = ValueTracker(0.2)
+        get_delta_t = delta_t_tracker.get_value
+
+        time_tracker = ValueTracker(10)
+        get_t = time_tracker.get_value
+        # traj = always_redraw(
+        #     lambda: VGroup(*[
+        #         self.get_time_step_trajectory(
+        #             get_delta_t(),
+        #             get_t(),
+        #             theta,
+        #             self.initial_theta_dot,
+        #         )
+        #         for theta in self.initial_thetas
+        #     ])
+        # )
+        vectors = always_redraw(
+            lambda: VGroup(*[
+                self.get_path_vectors(
+                    get_delta_t(),
+                    get_t(),
+                    theta,
+                    self.initial_theta_dot,
+                )
+                for theta in self.initial_thetas
+            ])
+        )
+
+        self.add(vectors)
+        time_tracker.set_value(0)
+        self.play(
+            time_tracker.set_value, 5,
+            run_time=5,
+            rate_func=linear,
+        )
