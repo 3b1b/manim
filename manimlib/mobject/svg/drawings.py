@@ -393,11 +393,13 @@ class ClockPassesTime(Animation):
             radians=hour_radians,
             **rot_kwargs
         )
+        self.hour_rotation.begin()
         self.minute_rotation = Rotating(
             clock.minute_hand,
             radians=12 * hour_radians,
             **rot_kwargs
         )
+        self.minute_rotation.begin()
         Animation.__init__(self, clock, **kwargs)
 
     def interpolate_mobject(self, alpha):
