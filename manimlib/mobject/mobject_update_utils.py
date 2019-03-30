@@ -22,7 +22,7 @@ def always(method, *args, **kwargs):
 
 def f_always(method, *arg_generators, **kwargs):
     """
-    More functional version of always, where insetead
+    More functional version of always, where instead
     of taking in args, it takes in functions which ouput
     the relevant arguments.
     """
