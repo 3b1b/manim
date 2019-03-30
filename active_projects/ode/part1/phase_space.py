@@ -1025,7 +1025,7 @@ class ShowHighVelocityCase(ShowPendulumPhaseFlow, MovingCameraScene):
             ]
         self.play(*anims, run_time=total_time)
 
-    def get_trajectory(self, start_point, time, dt=0.1, added_steps=1000):
+    def get_trajectory(self, start_point, time, dt=0.1, added_steps=100):
         field = self.vector_field
         traj = VMobject()
         traj.start_new_path(start_point)
@@ -1373,10 +1373,261 @@ class AskAboutStability(ShowHighVelocityCase):
         self.wait()
 
 
+class LovePhaseSpace(ShowHighVelocityCase):
+    CONFIG = {
+        "vector_field_config": {
+            "max_magnitude": 4,
+            # "delta_x": 2,
+            # "delta_y": 2,
+        },
+        "a": 0.5,
+        "b": 0.3,
+        "mu": 0.2,
+    }
+
+    def construct(self):
+        self.setup_plane()
+        self.add_equations()
+        self.show_vector_field()
+        self.show_example_trajectories()
+        self.add_resistance_term()
+        self.show_new_trajectories()
+
+    def setup_plane(self):
+        plane = self.plane = NumberPlane()
+        plane.add_coordinates()
+        self.add(plane)
+
+        h1, h2 = hearts = VGroup(*[
+            get_heart_var(i)
+            for i in (1, 2)
+        ])
+        hearts.scale(0.5)
+        hearts.set_stroke(BLACK, 5, background=True)
+
+        h1.next_to(plane.x_axis.get_right(), UL, SMALL_BUFF)
+        h2.next_to(plane.y_axis.get_top(), DR, SMALL_BUFF)
+        for h in hearts:
+            h.shift_onto_screen(buff=MED_SMALL_BUFF)
+        plane.add(hearts)
+
+        self.axis_hearts = hearts
+
+    def add_equations(self):
+        equations = VGroup(
+            get_love_equation1(),
+            get_love_equation2(),
+        )
+        equations.scale(0.5)
+        equations.arrange(
+            DOWN,
+            aligned_edge=LEFT,
+            buff=MED_LARGE_BUFF
+        )
+        equations.to_corner(UL)
+        equations.add_background_rectangle_to_submobjects()
+        # for eq in equations:
+        #     eq.add_background_rectangle_to_submobjects()
+
+        self.add(equations)
+        self.equations = equations
+
+    def show_vector_field(self):
+        field = VectorField(
+            lambda p: np.array([
+                self.a * p[1], -self.b * p[0], 0
+            ]),
+            **self.vector_field_config
+        )
+        field.sort(get_norm)
+        x_range = np.arange(-7, 7.5, 0.5)
+        y_range = np.arange(-4, 4.5, 0.5)
+        x_axis_arrows = VGroup(*[
+            field.get_vector([x, 0, 0])
+            for x in x_range
+        ])
+        y_axis_arrows = VGroup(*[
+            field.get_vector([0, y, 0])
+            for y in y_range
+        ])
+        axis_arrows = VGroup(*x_axis_arrows, *y_axis_arrows)
+
+        axis_arrows.save_state()
+        for arrow in axis_arrows:
+            real_len = get_norm(field.func(arrow.get_start()))
+            arrow.scale(
+                0.5 * real_len / arrow.get_length(),
+                about_point=arrow.get_start()
+            )
+
+        self.play(
+            LaggedStartMap(GrowArrow, x_axis_arrows),
+        )
+        self.play(
+            LaggedStartMap(GrowArrow, y_axis_arrows),
+        )
+        self.wait()
+        self.add(field, self.equations, self.axis_hearts)
+        self.play(
+            axis_arrows.restore,
+            # axis_arrows.fade, 1,
+            ShowCreation(field),
+            run_time=3
+        )
+        self.remove(axis_arrows)
+        self.wait()
+
+        self.field = self.vector_field = field
+
+    def show_example_trajectories(self):
+        n_points = 20
+        total_time = 30
+
+        start_points = self.start_points = [
+            2.5 * np.random.random() * rotate_vector(
+                RIGHT,
+                TAU * np.random.random()
+            )
+            for x in range(n_points)
+        ]
+        dots = VGroup(*[Dot(sp) for sp in start_points])
+        dots.set_color_by_gradient(BLUE, WHITE)
+
+        words = TextMobject("Possible initial\\\\", "conditions")
+        words.scale(1.5)
+        words.add_background_rectangle_to_submobjects()
+        words.set_stroke(BLACK, 5, background=True)
+        words.shift(FRAME_WIDTH * RIGHT / 4)
+        words.to_edge(UP)
+        self.possibility_words = words
+
+        self.play(
+            LaggedStartMap(
+                FadeInFromLarge, dots,
+                lambda m: (m, 5)
+            ),
+            FadeInFromDown(words)
+        )
+
+        trajs = VGroup(*[
+            self.get_trajectory(
+                sp, total_time,
+                added_steps=10,
+            )
+            for sp in start_points
+        ])
+        trajs.set_color_by_gradient(BLUE, WHITE)
+
+        dots.trajs = trajs
+
+        def update_dots(ds):
+            for d, t in zip(ds, ds.trajs):
+                d.move_to(t.points[-1])
+        dots.add_updater(update_dots)
+
+        self.add(trajs, dots)
+        self.play(
+            ShowCreation(
+                trajs,
+                lag_ratio=0,
+                run_time=10,
+                rate_func=linear,
+            )
+        )
+
+        self.trajs = trajs
+        self.dots = dots
+
+    def add_resistance_term(self):
+        added_term = VGroup(
+            TexMobject("-\\mu"),
+            get_heart_var(2).scale(0.5),
+        )
+        added_term.arrange(RIGHT, buff=SMALL_BUFF)
+        equation2 = self.equations[1]
+        equation2.generate_target()
+        br, deriv, eq, neg_b, h1 = equation2.target
+        added_term.next_to(eq, RIGHT, SMALL_BUFF)
+        added_term.align_to(h1, DOWN)
+        VGroup(neg_b, h1).next_to(
+            added_term, RIGHT, SMALL_BUFF,
+            aligned_edge=DOWN,
+        )
+        br.stretch(1.2, 0, about_edge=LEFT)
+
+        brace = Brace(added_term, DOWN, buff=SMALL_BUFF)
+        words = brace.get_text(
+            "``Resistance'' term"
+        )
+        words.set_stroke(BLACK, 5, background=True)
+        words.add_background_rectangle()
+
+        self.add(equation2, added_term)
+        self.play(
+            MoveToTarget(equation2),
+            FadeInFromDown(added_term),
+            GrowFromCenter(brace),
+            Write(words),
+        )
+        self.play(ShowCreationThenFadeAround(added_term))
+
+        equation2.add(added_term, brace, words)
+
+    def show_new_trajectories(self):
+        dots = self.dots
+        trajs = self.trajs
+        field = self.field
+
+        new_field = VectorField(
+            lambda p: np.array([
+                self.a * p[1],
+                -self.mu * p[1] - self.b * p[0],
+                0
+            ]),
+            **self.vector_field_config
+        )
+        new_field.sort(get_norm)
+
+        field.generate_target()
+        for vect in field.target:
+            vect.become(new_field.get_vector(vect.get_start()))
+
+        self.play(*map(
+            FadeOut,
+            [trajs, dots, self.possibility_words]
+        ))
+        self.play(MoveToTarget(field))
+        self.vector_field = new_field
+
+        total_time = 30
+        new_trajs = VGroup(*[
+            self.get_trajectory(
+                sp, total_time,
+                added_steps=10,
+            )
+            for sp in self.start_points
+        ])
+        new_trajs.set_color_by_gradient(BLUE, WHITE)
+        dots.trajs = new_trajs
+
+        self.add(new_trajs, dots)
+        self.play(
+            ShowCreation(
+                new_trajs,
+                lag_ratio=0,
+                run_time=10,
+                rate_func=linear,
+            ),
+        )
+        self.wait()
+
+
 class TakeManyTinySteps(IntroduceVectorField):
     CONFIG = {
         "initial_theta": 60 * DEGREES,
         "initial_theta_dot": 0,
+        "initial_theta_tex": "\\pi / 3",
+        "initial_theta_dot_tex": "0",
     }
 
     def construct(self):
@@ -1391,10 +1642,10 @@ class TakeManyTinySteps(IntroduceVectorField):
         self.add(self.plane, field)
 
     def take_many_time_steps(self):
-        delta_t_tracker = ValueTracker(0.5)
+        self.setup_trackers()
+        delta_t_tracker = self.delta_t_tracker
         get_delta_t = delta_t_tracker.get_value
-
-        time_tracker = ValueTracker(10)
+        time_tracker = self.time_tracker
         get_t = time_tracker.get_value
 
         traj = always_redraw(
@@ -1414,40 +1665,9 @@ class TakeManyTinySteps(IntroduceVectorField):
             )
         )
 
-        t_label, dt_label = labels = VGroup(*[
-            VGroup(
-                TexMobject("{} = ".format(s)),
-                DecimalNumber(0)
-            ).arrange(RIGHT, aligned_edge=DOWN)
-            for s in ("t", "{\\Delta t}")
-        ])
-        init_labels = VGroup(
-            TexMobject(
-                "\\theta_0", "= \\pi / 3",
-                tex_to_color_map={"\\theta": BLUE},
-            ),
-            TexMobject(
-                "{\\dot\\theta}_0 = 0",
-                tex_to_color_map={"{\\dot\\theta}": YELLOW},
-            ),
-        )
-        for group in labels, init_labels:
-            for label in group:
-                label.scale(1.25)
-                label.add_background_rectangle()
-            group.arrange(DOWN)
-            group.shift(FRAME_WIDTH * RIGHT / 4)
-        labels.to_edge(UP)
-        init_labels.shift(2 * DOWN)
-
-        dt_label[-1].add_updater(
-            lambda d: d.set_value(get_delta_t())
-        )
-        t_label[-1].add_updater(
-            lambda d: d.set_value(
-                int(get_t() / get_delta_t()) * get_delta_t()
-            )
-        )
+        # Labels
+        labels, init_labels = self.get_labels(get_t, get_delta_t)
+        t_label, dt_label = labels
 
         theta_t_label = TexMobject("\\theta(t)...\\text{ish}")
         theta_t_label.scale(0.75)
@@ -1485,14 +1705,18 @@ class TakeManyTinySteps(IntroduceVectorField):
         count = Integer()
         count.scale(1.5)
         count.to_edge(LEFT)
-        count.shift(UP)
+        count.shift(UP + MED_SMALL_BUFF * UR)
         count.add_updater(lambda c: c.set_value(
             count_tracker.get_value()
         ))
         count_label = TextMobject("steps")
         count_label.scale(1.5)
         count_label.add_updater(
-            lambda m: m.next_to(count, RIGHT).shift(SMALL_BUFF * DOWN)
+            lambda m: m.next_to(
+                count[-1], RIGHT,
+                submobject_to_align=m[0][0],
+                aligned_edge=DOWN
+            )
         )
 
         scaled_vectors = vectors.copy()
@@ -1515,16 +1739,6 @@ class TakeManyTinySteps(IntroduceVectorField):
 
         self.add(count, count_label, scaled_vectors)
         self.play(
-            # LaggedStartMap(
-            #     ApplyFunction, vectors,
-            #     lambda vector: (
-            #         lambda v: v.scale(
-            #             1 / v.get_length()
-            #         ),
-            #         vector
-            #     ),
-            #     rate_func=there_and_back,
-            # ),
             ApplyMethod(
                 count_tracker.set_value,
                 int(target_time / target_delta_t),
@@ -1534,6 +1748,49 @@ class TakeManyTinySteps(IntroduceVectorField):
         )
         self.play(FadeOut(scaled_vectors))
         self.wait()
+
+    def setup_trackers(self):
+        self.delta_t_tracker = ValueTracker(0.5)
+        self.time_tracker = ValueTracker(10)
+
+    def get_labels(self, get_t, get_delta_t):
+        t_label, dt_label = labels = VGroup(*[
+            VGroup(
+                TexMobject("{} = ".format(s)),
+                DecimalNumber(0)
+            ).arrange(RIGHT, aligned_edge=DOWN)
+            for s in ("t", "{\\Delta t}")
+        ])
+
+        dt_label[-1].add_updater(
+            lambda d: d.set_value(get_delta_t())
+        )
+        t_label[-1].add_updater(
+            lambda d: d.set_value(
+                int(np.ceil(get_t() / get_delta_t())) * get_delta_t()
+            )
+        )
+
+        init_labels = VGroup(
+            TexMobject(
+                "\\theta_0", "=", self.initial_theta_tex,
+                tex_to_color_map={"\\theta": BLUE},
+            ),
+            TexMobject(
+                "{\\dot\\theta}_0 =", self.initial_theta_dot_tex,
+                tex_to_color_map={"{\\dot\\theta}": YELLOW},
+            ),
+        )
+        for group in labels, init_labels:
+            for label in group:
+                label.scale(1.25)
+                label.add_background_rectangle()
+            group.arrange(DOWN)
+            group.shift(FRAME_WIDTH * RIGHT / 4)
+        labels.to_edge(UP)
+        init_labels.shift(2 * DOWN)
+
+        return labels, init_labels
 
     #
     def get_time_step_points(self, delta_t, total_time, theta_0, theta_dot_0):
@@ -1578,6 +1835,130 @@ class TakeManyTinySteps(IntroduceVectorField):
             )
             result.add(vector)
         return result
+
+
+class SetupToTakingManyTinySteps(TakeManyTinySteps):
+    CONFIG = {
+    }
+
+    def construct(self):
+        self.initialize_plane_and_field()
+        self.show_step()
+
+    def show_step(self):
+        self.setup_trackers()
+        get_delta_t = self.delta_t_tracker.get_value
+        get_t = self.time_tracker.get_value
+
+        labels, init_labels = self.get_labels(get_t, get_delta_t)
+        t_label, dt_label = labels
+
+        dt_part = dt_label[1][0][:-1].copy()
+
+        init_labels_rect = SurroundingRectangle(init_labels)
+        init_labels_rect.set_color(PINK)
+
+        field = self.vector_field
+        point = self.plane.coords_to_point(
+            self.initial_theta,
+            self.initial_theta_dot,
+        )
+        dot = Dot(point, color=init_labels_rect.get_color())
+
+        vector_value = field.func(point)
+        vector = field.get_vector(point)
+        vector.scale(
+            get_norm(vector_value) / vector.get_length(),
+            about_point=vector.get_start()
+        )
+        scaled_vector = vector.copy()
+        scaled_vector.scale(
+            get_delta_t(),
+            about_point=scaled_vector.get_start()
+        )
+
+        v_label = TexMobject("\\vec{\\textbf{v}}")
+        v_label.set_stroke(BLACK, 5, background=True)
+        v_label.next_to(vector, LEFT, SMALL_BUFF)
+
+        real_field = field.copy()
+        for v in real_field:
+            p = v.get_start()
+            v.scale(
+                get_norm(field.func(p)) / v.get_length(),
+                about_point=p
+            )
+
+        self.add(init_labels)
+        self.play(ShowCreation(init_labels_rect))
+        self.play(ReplacementTransform(
+            init_labels_rect,
+            dot,
+        ))
+        self.wait()
+        self.add(vector, dot)
+        self.play(
+            ShowCreation(vector),
+            FadeInFrom(v_label, RIGHT),
+        )
+        self.play(FadeInFromDown(dt_label))
+        self.wait()
+
+        #
+        v_label.generate_target()
+        dt_part.generate_target()
+        dt_part.target.next_to(scaled_vector, LEFT, SMALL_BUFF)
+        v_label.target.next_to(dt_part.target, LEFT, SMALL_BUFF)
+        rect = BackgroundRectangle(
+            VGroup(v_label.target, dt_part.target)
+        )
+
+        self.add(rect, v_label, dt_part)
+        self.play(
+            ReplacementTransform(vector, scaled_vector),
+            FadeIn(rect),
+            MoveToTarget(v_label),
+            MoveToTarget(dt_part),
+        )
+        self.add(scaled_vector, dot)
+        self.wait()
+
+        self.play(
+            LaggedStart(*[
+                Transform(
+                    sm1, sm2,
+                    rate_func=there_and_back_with_pause,
+                )
+                for sm1, sm2 in zip(field, real_field)
+            ], lag_ratio=0.001, run_time=3)
+        )
+        self.wait()
+
+
+class ShowClutterPrevention(SetupToTakingManyTinySteps):
+    def construct(self):
+        self.initialize_plane_and_field()
+
+        # Copied from above scene
+        field = self.vector_field
+        real_field = field.copy()
+        for v in real_field:
+            p = v.get_start()
+            v.scale(
+                get_norm(field.func(p)) / v.get_length(),
+                about_point=p
+            )
+
+        self.play(
+            LaggedStart(*[
+                Transform(
+                    sm1, sm2,
+                    rate_func=there_and_back_with_pause,
+                )
+                for sm1, sm2 in zip(field, real_field)
+            ], lag_ratio=0.001, run_time=3)
+        )
+        self.wait()
 
 
 class ManyStepsFromDifferentStartingPoints(TakeManyTinySteps):
