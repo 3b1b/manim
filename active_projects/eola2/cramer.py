@@ -7,6 +7,9 @@ OUTPUT_COLOR = YELLOW
 INPUT_COLOR = MAROON_B
 
 
+OUTPUT_DIRECTORY = "eola2/cramer"
+
+
 def get_cramer_matrix(matrix, output_vect, index=0):
     """
     The inputs matrix and output_vect should be Matrix mobjects
@@ -71,6 +74,43 @@ class LinearSystem(VGroup):
 # Scenes
 
 
+class AltOpeningQuote(OpeningQuote):
+    def construct(self):
+        kw = {
+            "tex_to_color_map": {
+                "Jerry": YELLOW,
+                "Kramer": BLUE,
+            },
+            "arg_separator": "",
+            "alignment": "",
+        }
+        parts = VGroup(
+            TextMobject("Jerry: Ah, you're crazy!", **kw),
+            TextMobject(
+                "Kramer:",
+                "{} Am I? Or am I so sane that\\\\",
+                "you just blew your mind?",
+                **kw
+            ),
+            TextMobject("Jerry: It's impossible!", **kw),
+            TextMobject(
+                "Kramer:", "{} Is it?! Or is it so possible\\\\",
+                "your head is spinning like a top?",
+                **kw
+            )
+        )
+        for part in parts[1::2]:
+            part[-1].align_to(part[-2], LEFT)
+
+        parts.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+
+        self.add(parts[0])
+        self.play(FadeIn(parts[1], lag_ratio=0.1, run_time=2))
+        self.play(FadeIn(parts[2], lag_ratio=0))
+        self.play(FadeIn(parts[3], lag_ratio=0.1, run_time=2))
+        self.wait()
+
+
 class CramerOpeningQuote(OpeningQuote):
     CONFIG = {
         "quote": ["Computers are useless. They \\\\ can only give you answers."],
@@ -90,15 +130,16 @@ class LeaveItToComputers(TeacherStudentsScene):
         system.target.scale(0.5)
         system.target.to_corner(UL)
 
-        colors = [X_COLOR, Y_COLOR, Z_COLOR]
         cramer_groups = VGroup()
         for i in range(3):
             numer_matrix = get_cramer_matrix(
                 system.matrix_mobject, system.output_vect_mob,
                 index=i
             )
-            VGroup(*numer_matrix.mob_matrix[:, i]).set_color(colors[i])
-            VGroup(*numer_matrix.mob_matrix[:, i]).set_stroke(colors[i], 1)
+            # color = colors[i]
+            color = YELLOW
+            VGroup(*numer_matrix.mob_matrix[:, i]).set_color(color)
+            VGroup(*numer_matrix.mob_matrix[:, i]).set_stroke(color, 1)
             numer = VGroup(
                 get_det_text(numer_matrix, initial_scale_factor=3),
                 numer_matrix
@@ -167,7 +208,7 @@ class LeaveItToComputers(TeacherStudentsScene):
             ReplacementTransform(
                 system.output_vect_mob.elements.copy(),
                 VGroup(*numer[1].mob_matrix[:, 0]),
-                path_arc=180 * DEGREES
+                path_arc=90 * DEGREES
             ),
             self.teacher.change, "happy",
         )
@@ -202,6 +243,19 @@ class LeaveItToComputers(TeacherStudentsScene):
             )
         )
         self.wait(3)
+
+
+class ShowComputer(ThreeDScene):
+    def construct(self):
+        laptop = Laptop()
+        laptop.add_updater(lambda m, dt: m.rotate(0.1 * dt, axis=UP))
+        self.play(DrawBorderThenFill(
+            laptop,
+            lag_ratio=0.1,
+            rate_func=smooth
+        ))
+        self.wait(8)
+        self.play(FadeOut(laptop))
 
 
 class PrerequisiteKnowledge(TeacherStudentsScene):
@@ -261,6 +315,20 @@ class NotTheMostComputationallyEfficient(Scene):
         words.set_stroke(WHITE, 1)
         words.set_width(FRAME_WIDTH - 2 * MED_LARGE_BUFF)
         self.play(Write(words))
+        self.wait()
+
+
+class GaussTitle(Scene):
+    def construct(self):
+        title = TextMobject("Gaussian Elimination")
+        title.scale(1.5)
+        title.to_edge(UP)
+        line = Line(LEFT, RIGHT).scale(7)
+        line.next_to(title, DOWN)
+        self.play(
+            FadeIn(title, lag_ratio=0.2),
+            ShowCreation(line),
+        )
         self.wait()
 
 
@@ -474,8 +542,8 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         for column, column_mob, m in zip(columns, column_mobs, matrices):
             column_mob.save_state()
             column_mob[0].scale(0).move_to(matrix_mobject)
-            Transform(column_mob.elements, column).update(1)
-            Transform(column_mob.brackets, matrix_mobject.brackets).update(1)
+            column_mob.elements.become(column)
+            column_mob.brackets.become(matrix_mobject.brackets)
             self.add_foreground_mobject(column_mob)
             self.apply_matrix(m, added_anims=[
                 ApplyMethod(column_mob.restore, path_arc=90 * DEGREES)
@@ -551,6 +619,13 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
             index_of_submobject_to_align=-2
         )
         return system
+
+
+class FloatingMinus(Scene):
+    def construct(self):
+        minus = TexMobject("-")
+        self.add(minus)
+        self.play(minus.shift, 2.9 * UP, run_time=1)
 
 
 class ShowZeroDeterminantCase(LinearTransformationScene):
@@ -1172,14 +1247,17 @@ class OrthonormalWords(Scene):
 class ShowSomeOrthonormalTransformations(LinearTransformationScene):
     CONFIG = {
         "random_seed": 1,
-        "n_angles": 5
+        "n_angles": 7,
     }
 
     def construct(self):
         for x in range(self.n_angles):
             angle = TAU * np.random.random() - TAU / 2
             matrix = rotation_matrix(angle, OUT)[:2, :2]
-            self.apply_matrix(matrix)
+            if x in [2, 4]:
+                matrix[:, 1] *= -1
+            self.apply_matrix(matrix, run_time=1)
+            self.wait()
 
 
 class SolvingASystemWithOrthonormalMatrix(LinearTransformationScene):
@@ -2046,7 +2124,7 @@ class WriteCramersRule(Scene):
 
 class CramersYEvaluation(Scene):
     def construct(self):
-        frac = TexMobject("{(2)(2) - (4)(0) \\over (2)(1) - (-1)(0)}")
+        frac = TexMobject("{(2)(2) - (4)(0) \\over (2)(1) - (-1)(0)}")[0]
         VGroup(frac[1], frac[11], frac[15], frac[26]).set_color(GREEN)
         VGroup(frac[4], frac[8]).set_color(MAROON_B)
         VGroup(frac[18], frac[22], frac[23]).set_color(RED)
@@ -2056,7 +2134,6 @@ class CramersYEvaluation(Scene):
             TexMobject("= \\frac{4}{2}"), TexMobject("=2")
         )
         group.arrange(RIGHT)
-        group.add_to_back(BackgroundRectangle(group))
 
         self.add(group)
         self.wait(1)
@@ -2065,7 +2142,7 @@ class CramersYEvaluation(Scene):
 # Largely copy-pasted.  Not great, but what are you gonna do.
 class CramersXEvaluation(Scene):
     def construct(self):
-        frac = TexMobject("{(4)(1) - (-1)(2) \\over (2)(1) - (-1)(0)}")
+        frac = TexMobject("{(4)(1) - (-1)(2) \\over (2)(1) - (-1)(0)}")[0]
         VGroup(frac[1], frac[12]).set_color(MAROON_B)
         VGroup(frac[4], frac[8], frac[9]).set_color(RED)
         VGroup(frac[16], frac[27]).set_color(GREEN)
@@ -2082,6 +2159,25 @@ class CramersXEvaluation(Scene):
         self.wait(1)
 
 
+class FourPlusTwo(Scene):
+    def construct(self):
+        p1 = TexMobject("(4)(1)")
+        p2 = TexMobject("-(-1)(2)")
+        p2.next_to(p1, RIGHT, SMALL_BUFF)
+        b1 = Brace(p1, UP)
+        b2 = Brace(p2, UP)
+        t1 = b1.get_tex("4", buff=SMALL_BUFF)
+        t2 = b2.get_tex("+2", buff=SMALL_BUFF)
+
+        for b, t in (b1, t1), (b2, t2):
+            t.set_stroke(BLACK, 3, background=True)
+            self.play(
+                GrowFromCenter(b),
+                Write(t)
+            )
+        self.wait()
+
+
 class Equals2(Scene):
     def construct(self):
         self.add(TexMobject("=2").add_background_rectangle())
@@ -2096,8 +2192,8 @@ class Equals3(Scene):
 
 class Introduce3DSystem(SetupSimpleSystemOfEquations):
     CONFIG = {
-        "matrix": [[3, 2, 7], [-1, 2, -4], [4, 0, 1]],
-        "output_vect": [-4, -2, 5],
+        "matrix": [[3, 2, -7], [1, 2, -4], [4, 0, 1]],
+        "output_vect": [4, 2, 5],
         "compare_to_big_system": False,
         "transition_to_geometric_view": False,
     }
@@ -2106,6 +2202,17 @@ class Introduce3DSystem(SetupSimpleSystemOfEquations):
         self.remove_grid()
         self.introduce_system()
         self.from_system_to_matrix()
+
+
+class MysteryInputLabel(Scene):
+    def construct(self):
+        brace = Brace(Line(ORIGIN, RIGHT), DOWN)
+        text = brace.get_text("Mystery input")
+        self.play(
+            GrowFromCenter(brace),
+            Write(text)
+        )
+        self.wait()
 
 
 class ThinkItThroughYourself(TeacherStudentsScene):
@@ -2144,17 +2251,30 @@ class AreYouPausingAndPondering(TeacherStudentsScene):
         self.wait(6)
 
 
-class Thumbnail(TransformingAreasYCoord):
+class Thumbnail(TransformingAreasYCoord, MovingCameraScene):
+    CONFIG = {
+        "background_plane_kwargs": {
+            "y_max": 6,
+        },
+    }
+
+    def setup(self):
+        TransformingAreasYCoord.setup(self)
+        MovingCameraScene.setup(self)
+
     def construct(self):
         self.matrix = np.array(self.matrix)
         vect = self.add_vector([1, 1.5], color=MAROON_B)
         ip = self.get_input_parallelogram(vect)
         self.add_transformable_mobject(ip)
         self.apply_transposed_matrix([[2, -0.5], [1, 2]])
+        self.square.set_fill(opacity=0.7)
+        self.square.set_sheen(0.75, UR)
+        self.camera_frame.shift(UP)
 
         words = TextMobject("Cramer's", "rule")
-        words.set_width(7)
-        # words.add_background_rectangle_to_submobjects()
+        words.scale(3)
+        words.set_stroke(BLACK, 6, background=True)
+        words.to_edge(UP, buff=-MED_LARGE_BUFF)
         words.add_background_rectangle()
-        words.to_edge(UP)
         self.add(words)
