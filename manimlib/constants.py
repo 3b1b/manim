@@ -37,7 +37,7 @@ for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-TEX_USE_CTEX = True
+TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(
     THIS_DIR, "tex_template.tex" if not TEX_USE_CTEX

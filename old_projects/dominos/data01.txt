@@ -1,0 +1,19 @@
+framerate  4000
+domino thickness  7.5438
+domino spacing  9.38
+friction  low
+1910    
+2099    
+2297    
+2404    
+2488    
+2575    twist
+2665    
+2751    
+2829    
+2891    
+2961    
+3043    
+3118    
+3184    
+3259    
