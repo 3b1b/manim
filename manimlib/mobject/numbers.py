@@ -62,7 +62,8 @@ class DecimalNumber(VMobject):
         # to the bottom
         for i, c in enumerate(num_string):
             if c == "-" and len(num_string) > i + 1:
-                self[i].align_to(self[i + 1], alignment_vect=UP)
+                self[i].align_to(self[i + 1], UP)
+                self[i].shift(self[i+1].get_height() * DOWN / 2)
             elif c == ",":
                 self[i].shift(self[i].get_height() * DOWN / 2)
         if self.unit and self.unit.startswith("^"):
