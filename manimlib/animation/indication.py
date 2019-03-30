@@ -1,5 +1,3 @@
-from functools import reduce
-
 import numpy as np
 
 from manimlib.constants import *
@@ -9,12 +7,8 @@ from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.composition import Succession
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import ShowPartial
-from manimlib.animation.fading import FadeIn
 from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import Transform
-from manimlib.animation.update import UpdateFromAlphaFunc
-from manimlib.mobject.mobject_update_utils import always_redraw
-from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
@@ -23,9 +17,6 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.geometry import Line
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.rate_functions import linear
-from manimlib.utils.rate_functions import smooth
-from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.rate_functions import wiggle
 

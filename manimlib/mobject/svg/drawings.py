@@ -212,12 +212,15 @@ class Laptop(VGroup):
             "fill_color": BLACK,
             "fill_opacity": 1,
         },
+        "fill_opacity": 1,
+        "stroke_width": 0,
         "body_color": LIGHT_GREY,
         "shaded_body_color": GREY,
         "open_angle": np.pi / 4,
     }
 
-    def generate_points(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         body = Cube(side_length=1)
         for dim, scale_factor in enumerate(self.body_dimensions):
             body.stretch(scale_factor, dim=dim)
@@ -443,7 +446,10 @@ class Bubble(SVGMobject):
         return self.get_center() + factor * self.get_height() * UP
 
     def move_tip_to(self, point):
-        VGroup(self, self.content).shift(point - self.get_tip())
+        mover = VGroup(self)
+        if self.content is not None:
+            mover.add(self.content)
+        mover.shift(point - self.get_tip())
         return self
 
     def flip(self):

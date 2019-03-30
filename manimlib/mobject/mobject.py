@@ -4,6 +4,7 @@ import itertools as it
 import operator as op
 import os
 import random
+import sys
 
 from colour import Color
 import numpy as np
@@ -1106,7 +1107,7 @@ class Mobject(Container):
     # Errors
     def throw_error_if_no_points(self):
         if self.has_no_points():
-            message = "Cannot call Mobject.{}" +\
+            message = "Cannot call Mobject.{} " +\
                       "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
             raise Exception(message.format(caller_name))

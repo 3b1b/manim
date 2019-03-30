@@ -1,4 +1,3 @@
-from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.animation.transform import Transform
 # from manimlib.utils.paths import counterclockwise_path
 from manimlib.constants import PI

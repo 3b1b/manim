@@ -97,7 +97,7 @@ class NumberLine(Line):
     def get_tick_numbers(self):
         return np.arange(
             self.leftmost_tick,
-            self.x_max - self.tick_frequency / 2,
+            self.x_max + self.tick_frequency / 2,
             self.tick_frequency
         )
 
@@ -141,8 +141,10 @@ class NumberLine(Line):
             self.decimal_number_config,
             number_config or {},
         )
-        scale_val = scale_val or self.number_scale_val
-        direction = direction or self.label_direction
+        if scale_val is None:
+            scale_val = self.number_scale_val
+        if direction is None:
+            direction = self.label_direction
         buff = buff or self.line_to_number_buff
 
         num_mob = DecimalNumber(number, **number_config)
@@ -181,4 +183,7 @@ class UnitInterval(NumberLine):
         "tick_frequency": 0.1,
         "numbers_with_elongated_ticks": [0, 1],
         "number_at_center": 0.5,
+        "decimal_number_config": {
+            "num_decimal_places": 1,
+        }
     }

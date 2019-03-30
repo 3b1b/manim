@@ -4,9 +4,10 @@ from manimlib.animation.transform import Transform
 from manimlib.constants import DOWN
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.rate_functions import there_and_back
 
 
-DEFAULT_FADE_LAG_RATIO = 0.05
+DEFAULT_FADE_LAG_RATIO = 0
 
 
 class FadeOut(Transform):
@@ -97,6 +98,18 @@ class FadeOutAndShiftDown(FadeOutAndShift):
     }
 
 
+class FadeInFromPoint(FadeIn):
+    def __init__(self, mobject, point, **kwargs):
+        self.point = point
+        super().__init__(mobject, **kwargs)
+
+    def create_starting_mobject(self):
+        start = super().create_starting_mobject()
+        start.scale(0)
+        start.move_to(self.point)
+        return start
+
+
 class FadeInFromLarge(FadeIn):
     CONFIG = {
         "scale_factor": 2,
@@ -137,3 +150,10 @@ class VFadeOut(VFadeIn):
 
     def interpolate_submobject(self, submob, start, alpha):
         super().interpolate_submobject(submob, start, 1 - alpha)
+
+
+class VFadeInThenOut(VFadeIn):
+    CONFIG = {
+        "rate_func": there_and_back,
+        "remover": True,
+    }

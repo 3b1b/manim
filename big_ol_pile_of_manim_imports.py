@@ -35,6 +35,7 @@ from manimlib.camera.moving_camera import *
 from manimlib.camera.three_d_camera import *
 
 from manimlib.mobject.coordinate_systems import *
+from manimlib.mobject.changing import *
 from manimlib.mobject.frame import *
 from manimlib.mobject.functions import *
 from manimlib.mobject.geometry import *
@@ -55,6 +56,7 @@ from manimlib.mobject.types.point_cloud_mobject import *
 from manimlib.mobject.types.vectorized_mobject import *
 from manimlib.mobject.mobject_update_utils import *
 from manimlib.mobject.value_tracker import *
+from manimlib.mobject.vector_field import *
 
 from manimlib.for_3b1b_videos.common_scenes import *
 from manimlib.for_3b1b_videos.pi_creature import *

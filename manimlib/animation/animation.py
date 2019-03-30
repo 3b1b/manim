@@ -8,7 +8,7 @@ from manimlib.utils.rate_functions import smooth
 
 
 DEFAULT_ANIMATION_RUN_TIME = 1.0
-DEFAULT_ANIMATION_LAG_RATIO = 0.005
+DEFAULT_ANIMATION_LAG_RATIO = 0
 
 
 class Animation(object):

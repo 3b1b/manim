@@ -64,10 +64,11 @@ class DrawBorderThenFill(Animation):
     def get_outline(self):
         outline = self.mobject.copy()
         outline.set_fill(opacity=0)
-        outline.set_stroke(
-            color=self.get_stroke_color(outline),
-            width=self.stroke_width
-        )
+        for sm in outline.family_members_with_points():
+            sm.set_stroke(
+                color=self.get_stroke_color(sm),
+                width=self.stroke_width
+            )
         return outline
 
     def get_stroke_color(self, vmobject):

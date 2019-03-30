@@ -279,15 +279,24 @@ class LinearTransformationScene(VectorScene):
         "include_background_plane": True,
         "include_foreground_plane": True,
         "foreground_plane_kwargs": {
-            "x_radius": FRAME_WIDTH,
-            "y_radius": FRAME_HEIGHT,
-            "secondary_line_ratio": 0
+            "x_max": FRAME_WIDTH / 2,
+            "x_min": -FRAME_WIDTH / 2,
+            "y_max": FRAME_WIDTH / 2,
+            "y_min": -FRAME_WIDTH / 2,
+            "faded_line_ratio": 0
         },
         "background_plane_kwargs": {
             "color": GREY,
-            "secondary_color": DARK_GREY,
-            "axes_color": GREY,
-            "stroke_width": 2,
+            "axis_config": {
+                "stroke_color": LIGHT_GREY,
+            },
+            "number_line_config": {
+                "color": GREY,
+            },
+            "background_line_style": {
+                "stroke_color": GREY,
+                "stroke_width": 1,
+            },
         },
         "show_coordinates": False,
         "show_basis_vectors": True,
@@ -352,7 +361,7 @@ class LinearTransformationScene(VectorScene):
         self.add_special_mobjects(self.moving_mobjects, mobject)
 
     def get_unit_square(self, color=YELLOW, opacity=0.3, stroke_width=3):
-        square = Rectangle(
+        square = self.square = Rectangle(
             color=color,
             width=self.plane.get_x_unit_size(),
             height=self.plane.get_y_unit_size(),
@@ -433,8 +442,8 @@ class LinearTransformationScene(VectorScene):
         return lambda point: np.dot(point, transposed_matrix)
 
     def get_piece_movement(self, pieces):
-        start = VMobject(*pieces)
-        target = VMobject(*[mob.target for mob in pieces])
+        start = VGroup(*pieces)
+        target = VGroup(*[mob.target for mob in pieces])
         if self.leave_ghost_vectors:
             self.add(start.copy().fade(0.7))
         return Transform(start, target, lag_ratio=0)

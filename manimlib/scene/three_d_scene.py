@@ -42,6 +42,7 @@ class ThreeDScene(Scene):
 
     def stop_ambient_camera_rotation(self):
         self.camera.theta_tracker.clear_updaters()
+        self.remove(self.camera.theta_tracker)
 
     def move_camera(self,
                     phi=None,
@@ -68,12 +69,8 @@ class ThreeDScene(Scene):
                 self.camera.frame_center.move_to,
                 frame_center
             ))
-        is_camera_rotating = self.ambient_camera_rotation in self.continual_animations
-        if is_camera_rotating:
-            self.remove(self.ambient_camera_rotation)
+
         self.play(*anims + added_anims)
-        if is_camera_rotating:
-            self.add(self.ambient_camera_rotation)
 
     def get_moving_mobjects(self, *animations):
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
