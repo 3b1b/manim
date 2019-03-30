@@ -1,6 +1,6 @@
 argparse==1.4.0
 colour==0.1.5
-numpy==1.16.1
+numpy==1.16.2
 Pillow==5.4.1
 progressbar==2.5
 scipy==1.2.1
