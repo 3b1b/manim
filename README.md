@@ -35,7 +35,7 @@ The image does not contain a copy of the repo. This is intentional, as it allows
 2. [Install Docker Compose](https://docs.docker.com/compose/install/)
 3. Render an animation
 ```sh
-MANIM_PATH=/absolute/path/to/manim/repo docker-compose run python -m manim example_scenes.py SquareToCircle -l
+MANIM_PATH=/absolute/path/to/manim/repo docker-compose run manim example_scenes.py SquareToCircle -l
 ```
 The first time you execute the above command, Docker will pull the image from Docker Hub and cache it. Any subsequent runs until the image is evicted will use the cached image.
 Note that the image doesn't have any development tools installed and can't preview animations. Its purpose is building and testing only.
