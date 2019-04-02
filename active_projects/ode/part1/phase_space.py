@@ -2007,3 +2007,67 @@ class ManyStepsFromDifferentStartingPoints(TakeManyTinySteps):
             run_time=5,
             rate_func=linear,
         )
+
+
+class Thumbnail(IntroduceVectorField):
+    CONFIG = {
+        "vector_field_config": {
+            "delta_x": 1,
+            "delta_y": 1,
+            "max_magnitude": 5,
+            "length_func": lambda norm: 0.75 * sigmoid(norm),
+        }
+    }
+
+    def construct(self):
+        self.initialize_plane()
+        self.initialize_vector_field()
+
+        field = self.vector_field
+        field.set_stroke(width=5)
+
+        title = TextMobject("Differential\\\\", "equations")
+        title.space_out_submobjects(0.8)
+        # title.scale(3)
+        title.set_width(FRAME_WIDTH - 3)
+        # title.to_edge(UP)
+        # title[1].to_edge(DOWN)
+
+        subtitle = TextMobject("Studying the unsolvable")
+        subtitle.set_width(FRAME_WIDTH - 1)
+        subtitle.set_color(WHITE)
+        subtitle.to_edge(DOWN, buff=1)
+
+        # title.center()
+        title.to_edge(UP, buff=1)
+        title.add(subtitle)
+        # title.set_stroke(BLACK, 15, background=True)
+        # title.add_background_rectangle_to_submobjects(opacity=0.5)
+        title.set_stroke(BLACK, 15, background=True)
+        subtitle.set_stroke(RED, 2, background=True)
+        # for part in title:
+        #     part[0].set_fill(opacity=0.25)
+        #     part[0].set_stroke(width=0)
+        black_parts = VGroup()
+        for mob in title.family_members_with_points():
+            for sp in mob.get_subpaths():
+                new_mob = VMobject()
+                new_mob.set_points(sp)
+                new_mob.set_fill(BLACK, 0.25)
+                new_mob.set_stroke(width=0)
+                black_parts.add(new_mob)
+
+        for vect in field:
+            for mob in title.family_members_with_points():
+                for p in [vect.get_start(), vect.get_end()]:
+                    x, y = p[:2]
+                    x0, y0 = mob.get_corner(DL)[:2]
+                    x1, y1 = mob.get_corner(UR)[:2]
+                    if x0 < x < x1 and y0 < y < y1:
+                        vect.set_opacity(0.25)
+                        vect.tip.set_stroke(width=0)
+
+        self.add(self.plane)
+        self.add(field)
+        self.add(black_parts)
+        self.add(title)

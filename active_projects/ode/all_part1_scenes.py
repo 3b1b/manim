@@ -6,6 +6,7 @@ from active_projects.ode.part1.wordy_scenes import *
 
 OUTPUT_DIRECTORY = "ode/part1"
 ALL_SCENE_CLASSES = [
+    WhenChangeIsEasier,
     VectorFieldTest,
     IntroducePendulum,
     MultiplePendulumsOverlayed,
@@ -30,10 +31,14 @@ ALL_SCENE_CLASSES = [
     # Something...
     ShowSimpleTrajectory,
     SimpleProjectileEquation,
+    SimpleProjectileEquationVGraphFreedom,
     ShowGravityAcceleration,
+    UniversalGravityLawSymbols,
+    ExampleTypicalODE,
     AnalyzePendulumForce,
     ShowSineValues,
     BuildUpEquation,
+    AirResistanceBrace,
     ShowDerivativeVideo,
     SubtleAirCurrents,
     SimpleDampenedPendulum,
@@ -50,6 +55,7 @@ ALL_SCENE_CLASSES = [
     SoWhatIsThetaThen,
     ReallyHardToSolve,
     ReasonForSolution,
+    PhysicistPhaseSpace,
     GleickQuote,
     SpectrumOfStartingStates,
     WritePhaseFlow,
@@ -97,4 +103,5 @@ ALL_SCENE_CLASSES = [
     ChaosTitle,
     RevisitQuote,
     EndScreen,
+    Thumbnail,
 ]

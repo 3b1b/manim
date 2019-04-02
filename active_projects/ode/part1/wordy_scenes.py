@@ -667,7 +667,7 @@ class JumpToThisPoint(Scene):
 
 class ChaosTitle(Scene):
     def construct(self):
-        title = TextMobject("Chaos theorey")
+        title = TextMobject("Chaos theory")
         title.scale(1.5)
         title.to_edge(UP)
         line = Line(LEFT, RIGHT)
