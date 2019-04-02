@@ -9,3 +9,7 @@ services:
     environment:
       - PYTHONPATH=/opt/manim
     working_dir: /opt/manim
+    entrypoint:
+      - python
+      - -m
+      - manim
