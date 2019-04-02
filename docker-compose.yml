@@ -8,3 +8,4 @@ services:
       - ${MANIM_PATH:?MANIM_PATH environment variable isn't set}:/opt/manim
     environment:
       - PYTHONPATH=/opt/manim
+    working_dir: /opt/manim

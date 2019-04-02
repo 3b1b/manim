@@ -11,5 +11,4 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt && rm requirements.txt
-WORKDIR /opt/manim
 ENTRYPOINT ["python", "-m", "manim"]
