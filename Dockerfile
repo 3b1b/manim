@@ -11,4 +11,4 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements.txt
 RUN python -m pip install -r requirements.txt && rm requirements.txt
-ENTRYPOINT ["python", "-m", "manim"]
+ENTRYPOINT ["/bin/bash"]
