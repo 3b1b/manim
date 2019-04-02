@@ -1,0 +1,18 @@
+version: '3.1'
+
+services:
+  manim:
+    # comment this line if you build the image to prevent overwriting the tag
+    image: eulertour/manim:latest
+    # uncomment this line to build rather than pull the image
+    # build: .
+    volumes:
+      - ${MANIM_PATH:?MANIM_PATH environment variable isn't set}:/opt/manim
+    environment:
+      - PYTHONPATH=/opt/manim
+    working_dir: /opt/manim
+    entrypoint:
+      - python
+      - -m
+      - manim
+    network_mode: "none"
