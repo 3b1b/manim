@@ -1,0 +1,11 @@
+version: '3.1'
+
+services:
+  manim:
+    image: manim
+    build: .
+    volumes:
+      - ${MANIM_PATH:?MANIM_PATH environment variable isn't set}:/opt/manim
+    environment:
+      - PYTHONPATH=/opt/manim
+    working_dir: /opt/manim
