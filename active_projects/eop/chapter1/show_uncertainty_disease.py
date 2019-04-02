@@ -67,9 +67,9 @@ class OneIn200HasDisease(Scene):
             VGroup(*[
                 creature.copy()
                 for y in range(20)
-            ]).arrange_submobjects(DOWN, SMALL_BUFF)
+            ]).arrange(DOWN, SMALL_BUFF)
             for x in range(10)
-        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
+        ]).arrange(RIGHT, SMALL_BUFF)
         all_creatures.set_height(FRAME_HEIGHT * 0.8)
         all_creatures.next_to(title, DOWN)
         randy = all_creatures[0][0]
@@ -99,6 +99,6 @@ class OneIn200HasDisease(Scene):
         self.wait()
         self.play(
             Write(title),
-            LaggedStart(FadeIn, all_creatures, run_time = 3)
+            LaggedStartMap(FadeIn, all_creatures, run_time = 3)
         )
         self.wait()

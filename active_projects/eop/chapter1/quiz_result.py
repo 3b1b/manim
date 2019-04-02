@@ -76,7 +76,7 @@ class QuizResult(PiCreatureScene):
         self.play(ReplacementTransform(
             VGroup(master_quiz), all_quizzes,
             run_time=2,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         self.wait(2)
 
@@ -200,7 +200,7 @@ class QuizResult(PiCreatureScene):
             for i in range(4)
         ])
         self.wait()
-        self.play(Write(nb_students_label), LaggedStart(GrowArrow,arrows))
+        self.play(Write(nb_students_label), LaggedStartMap(GrowArrow,arrows))
 
         percentage_label = TextMobject("\% of students", color = highlight_color)
         percentage_label.move_to(nb_students_label)

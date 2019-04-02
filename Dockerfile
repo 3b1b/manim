@@ -1,39 +1,15 @@
-FROM ubuntu:18.04
-ENV DEBIAN_FRONTEND noninteractive
-
-RUN apt-get update -qqy
-RUN apt-get install -qqy --no-install-recommends apt-utils
-
-# Install Python 3.7.
-WORKDIR /root
-RUN apt-get install -qqy build-essential libsqlite3-dev sqlite3 bzip2 \
-                         libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev \
-                         libgdbm-compat-dev liblzma-dev libreadline-dev \
-                         libncursesw5-dev libffi-dev uuid-dev
-RUN apt-get install -qqy wget
-RUN wget -q https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz
-RUN tar -xf Python-3.7.0.tgz
-WORKDIR Python-3.7.0
-RUN ./configure > /dev/null && make -s && make -s install
-RUN python3 -m pip install --upgrade pip
-WORKDIR /root
-RUN rm -rf Python-3.7.0*
-
-# Install requirements.
-RUN apt-get install -qqy libcairo2-dev libjpeg-dev libgif-dev
+FROM python:3.7
+RUN apt-get update \
+    && apt-get install -qqy --no-install-recommends \
+        apt-utils \
+        ffmpeg \
+        texlive-latex-base \
+        texlive-full \
+        texlive-fonts-extra \
+        sox \
+        libcairo2-dev \
+    && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements.txt
-RUN python3 -m pip install -r requirements.txt
-RUN rm requirements.txt
-RUN apt-get install -qqy ffmpeg
-
-# Setup timezone, necessary for textlive.
-ENV TZ=America/Los_Angeles
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-RUN apt-get install -qqy apt-transport-https
-RUN apt-get install -qqy texlive-full
-RUN apt-get install -qqy sox
-RUN apt-get install -qqy git
-
-ENV DEBIAN_FRONTEND teletype
-ENTRYPOINT ["/bin/bash"]
+RUN python3 -m pip install -r requirements.txt && rm requirements.txt
+WORKDIR /opt/manim
+ENTRYPOINT ["python", "-m", "manim"]

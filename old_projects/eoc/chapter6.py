@@ -65,7 +65,7 @@ class SlopeOfCircleExample(ZoomedScene):
 
     def setup_plane(self):
         self.plane = NumberPlane(**self.plane_kwargs)
-        self.plane.main_lines.fade()
+        self.planes.fade()
         self.plane.add(self.plane.get_axis_labels())
         self.plane.add_coordinates()
 
@@ -530,7 +530,7 @@ class NameImplicitDifferentation(TeacherStudentsScene):
         VGroup(*derivative[2][2:]).set_color(RED)
         arrow = Arrow(ORIGIN, DOWN, buff = SMALL_BUFF)
         group = VGroup(title, equation, arrow, derivative)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_edge(UP)
 
         self.add(title, equation)
@@ -1891,7 +1891,7 @@ class AlternateExample(ZoomedScene):
             ShowCreation(
                 graphs, 
                 run_time = 3, 
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             ),
             Animation(self.formula)
         )
@@ -2595,7 +2595,7 @@ class FinalWords(TeacherStudentsScene):
             self.teacher.change_mode, "plain",
             FadeIn(
                 series, run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
         )
         self.play(
@@ -2657,7 +2657,7 @@ class Thumbnail(AlternateExample):
         title = VGroup(*list(map(TextMobject, [
             "Implicit", "Differentiation"
         ])))
-        title.arrange_submobjects(DOWN)
+        title.arrange(DOWN)
         title.scale(3)
         title.next_to(ORIGIN, UP)
 

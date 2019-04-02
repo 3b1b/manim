@@ -50,8 +50,8 @@ class IllustrateAreaModelExpectation(Scene):
             p_labels.add(p_label)
             
         self.play(
-            LaggedStart(FadeIn,braces),
-            LaggedStart(FadeIn, p_labels)
+            LaggedStartMap(FadeIn,braces),
+            LaggedStartMap(FadeIn, p_labels)
         )
 
 

@@ -100,11 +100,11 @@ class IntroduceTriples(TeacherStudentsScene):
                 FadeIn(triangle),
                 self.teacher.change_mode, "raise_right_hand"
             )
-            self.play(LaggedStart(FadeIn, a_square))
+            self.play(LaggedStartMap(FadeIn, a_square))
             self.change_student_modes(
                 *["pondering"]*3,
                 look_at_arg = triangle,
-                added_anims = [LaggedStart(FadeIn, b_square)]
+                added_anims = [LaggedStartMap(FadeIn, b_square)]
             )
             self.play(self.teacher.change_mode, "happy")
             for start, target in zip([a_square, b_square], c_square_parts):
@@ -254,7 +254,7 @@ class ShowManyTriples(Scene):
                 )
                 self.wait()
         self.play(FadeOut(triangle))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, 
             VGroup(*[
                 title.target 
@@ -295,13 +295,13 @@ class BabylonianTablets(Scene):
             tex = tex.replace(",", "{,}")
             triple = TexMobject(tex)
             triples.add(triple)
-        triples.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        triples.arrange(DOWN, aligned_edge = LEFT)
         triples.set_height(FRAME_HEIGHT - LARGE_BUFF)
         triples.to_edge(RIGHT)
 
         self.add(title)
         self.wait()
-        self.play(LaggedStart(FadeIn, triples, run_time = 5))
+        self.play(LaggedStartMap(FadeIn, triples, run_time = 5))
         self.wait()
 
 class AskAboutFavoriteProof(TeacherStudentsScene):
@@ -403,7 +403,7 @@ class PythagoreanProof(Scene):
             label.target.move_to(square)
             square.add(label)
 
-        self.play(LaggedStart(MoveToTarget, side_labels))
+        self.play(LaggedStartMap(MoveToTarget, side_labels))
 
     def add_new_triangles(self, triangle, added_triangles):
         brace = Brace(added_triangles, DOWN)
@@ -548,7 +548,7 @@ class ReframeOnLattice(PiCreatureScene):
         for new_group in dot_tuple_groups[1:len(initial_examples)]:
             self.play(Transform(dot_tuple_group, new_group))
             self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, all_dots,
             rate_func = there_and_back,
             run_time = 3,
@@ -942,7 +942,7 @@ class ReframeOnLattice(PiCreatureScene):
             for x in range(int(x_min), int(x_max)+1)
             for y in range(int(y_min), int(y_max)+1)
         ])
-        result.sort_submobjects(lambda p : np.dot(p, UP+RIGHT))
+        result.sort(lambda p : np.dot(p, UP+RIGHT))
         return result
 
     def create_pi_creature(self):
@@ -1069,7 +1069,7 @@ class OneMoreExample(Scene):
         for i in 0, 2, 3:
             final_line[i].set_color(GREEN)
         lines = VGroup(top_line, second_line, final_line)
-        lines.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        lines.arrange(DOWN, buff = MED_LARGE_BUFF)
         lines.next_to(rect.get_top(), DOWN)
         minus = TexMobject("-").scale(0.9)
         minus.move_to(second_line[3])
@@ -1496,9 +1496,9 @@ class WriteGeneralFormula(GeneralExample):
             triple_mobs.add(triple_mob)
             pair_mob.scale(0.75)
             triple_mob.scale(0.75)
-        pair_mobs.arrange_submobjects(DOWN)
+        pair_mobs.arrange(DOWN)
         pair_mobs.next_to(uv_title, DOWN, MED_LARGE_BUFF)
-        triple_mobs.arrange_submobjects(DOWN)
+        triple_mobs.arrange(DOWN)
         triple_mobs.next_to(triple_title, DOWN, MED_LARGE_BUFF)
 
         self.play(*list(map(FadeIn, [
@@ -1506,7 +1506,7 @@ class WriteGeneralFormula(GeneralExample):
             uv_title, triple_title
         ])))
         self.play(*[
-            LaggedStart(
+            LaggedStartMap(
                 FadeIn, mob, 
                 run_time = 5,
                 lag_ratio = 0.2
@@ -1682,10 +1682,10 @@ class VisualizeZSquared(Scene):
             for x in range(x_min, x_max+1)
             for y in range(y_min, y_max+1)
         ])
-        dots.sort_submobjects(lambda p : np.dot(p, UP+RIGHT))
+        dots.sort(lambda p : np.dot(p, UP+RIGHT))
 
         self.add_foreground_mobject(self.coordinate_labels)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, dots,
             stroke_width = 3,
             stroke_color = PINK,
@@ -1700,8 +1700,8 @@ class VisualizeZSquared(Scene):
         color_grid = self.get_color_grid()
 
         self.play(
-            self.background_plane.main_lines.set_stroke, None, 1,
-            LaggedStart(
+            self.background_planes.set_stroke, None, 1,
+            LaggedStartMap(
                 FadeIn, color_grid, 
                 run_time = 2
             ),
@@ -1730,7 +1730,7 @@ class VisualizeZSquared(Scene):
         self.play(self.color_grid.set_stroke, None, 3)
         self.wait()
         scale_factor = self.big_dot_radius/self.dot_radius
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, self.dots,
             lambda d : (d.scale_in_place, scale_factor),
             rate_func = there_and_back,
@@ -1807,7 +1807,7 @@ class VisualizeZSquared(Scene):
             secondary_line_ratio = 0,
             stroke_width = 2,
         )
-        color_grid.main_lines.set_color_by_gradient(
+        color_grids.set_color_by_gradient(
             *[GREEN, RED, MAROON_B, TEAL]*2
         )
         color_grid.remove(color_grid.axes[0])
@@ -1906,7 +1906,7 @@ class PointsWeMiss(VisualizeZSquared):
             )
             for z in z_list
         ])
-        dots.sort_submobjects(get_norm)
+        dots.sort(get_norm)
         self.add(dots)
         self.dots = dots
 
@@ -2053,7 +2053,7 @@ class DrawSingleRadialLine(PointsWeMiss):
         self.play(Indicate(dot))
         self.play(ShowCreation(line), Animation(dot))
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, added_dots,
             stroke_color = PINK,
             stroke_width = 4,
@@ -2146,7 +2146,7 @@ class DrawRadialLines(PointsWeMiss):
         )
         self.play(ReplacementTransform(dot, line))
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, line.new_dots,
             stroke_width = 4,
             stroke_color = PINK,
@@ -2162,16 +2162,16 @@ class DrawRadialLines(PointsWeMiss):
             dot.target.scale_in_place(1.5)
             dot.target.set_color(RED)
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, seed_dots,
             run_time = 2
         ))
         self.play(ReplacementTransform(
             seed_dots, self.lines,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, new_dots,
             stroke_width = 4,
             stroke_color = PINK,
@@ -2423,7 +2423,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
     def project_all_dots(self):
         dots = self.dots
         dots.add(*self.new_dots)
-        dots.sort_submobjects(
+        dots.sort(
             lambda p : get_norm(p - self.plane_center)
         )
         unit_length = self.unit_circle.get_width()/2.0
@@ -2441,7 +2441,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             )
             dot.target.set_width(0.01)
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, dots,
             run_time = 3,
             lag_ratio = 0.2
@@ -2470,7 +2470,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             for vect in compass_directions(1000)
         ])
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ShowCreation, lines,
             run_time = 3
         ))
@@ -3035,7 +3035,7 @@ class Thumbnail(DrawRadialLines):
             "8^2 + 15^2 = 17^2",
             "\\vdots"
         ])))
-        triples.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        triples.arrange(DOWN, buff = MED_LARGE_BUFF)
         triples.next_to(rect.get_top(), DOWN)
         self.add(rect, triples)
 
@@ -3074,7 +3074,7 @@ class Poster(DrawRadialLines):
         #     "8^2 + 15^2 = 17^2",
         #     "\\vdots"
         # ]))
-        # triples.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        # triples.arrange(DOWN, buff = MED_LARGE_BUFF)
         # triples.next_to(rect.get_top(), DOWN)
         # self.add(rect, triples)
 

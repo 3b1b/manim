@@ -14,7 +14,6 @@ class Britain(SVGMobject):
         "stroke_width" : 0,
         "fill_color" : BLUE_D,
         "fill_opacity" : 1,
-        "propagate_style_to_family" : True,
         "height" : 5,
         "mark_paths_closed" : True,
     }
@@ -51,7 +50,7 @@ class SierpinskiTest(Scene):
         self.play(FadeIn(
             sierp,
             run_time = 5,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait()
         # self.play(sierp.scale, 2, sierp.get_top())
@@ -243,7 +242,7 @@ class IntroduceSierpinskiTriangle(PiCreatureScene):
         self.play(FadeIn(
             sierp,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(
@@ -277,7 +276,7 @@ class SelfSimilarFractalsAsSubset(Scene):
         )
         for submob in fractals:
             submob.set_width(self.fractal_width)
-        fractals.arrange_submobjects(RIGHT)
+        fractals.arrange(RIGHT)
         fractals[-1].next_to(VGroup(*fractals[:-1]), DOWN)
 
         title = TextMobject("Self-similar fractals")
@@ -738,7 +737,7 @@ class GeneralWordForMeasurement(Scene):
         words = VGroup(*list(map(TextMobject, [
             "Length", "Area", "Volume"
         ])))
-        words.arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
+        words.arrange(RIGHT, buff = 2*LARGE_BUFF)
         words.next_to(measure, DOWN, buff = 2*LARGE_BUFF)
         colors = color_gradient([BLUE_B, BLUE_D], len(words))
         for word, color in zip(words, colors):
@@ -868,7 +867,7 @@ class ScaledLineMass(Scene):
         self.wait()
         self.play(FadeIn(
             VGroup(*shape_copy[1:]),
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(Transform(
@@ -987,7 +986,7 @@ class DefineTwoDimensional(PiCreatureScene):
         top_group = VGroup(top_length, top_mass)
         bottom_group = VGroup(bottom_length, bottom_mass)
         for group in top_group, bottom_group:
-            group.arrange_submobjects(
+            group.arrange(
                 DOWN,
                 buff = MED_LARGE_BUFF,
                 aligned_edge = LEFT
@@ -1120,7 +1119,7 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
 
         equation = self.distilled_equation
         self.play(
-            equation.arrange_submobjects, RIGHT,
+            equation.arrange, RIGHT,
             equation.scale, self.equation_scale_factor,
             equation.to_corner, UP+RIGHT,
             run_time = 2
@@ -1442,8 +1441,8 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
         for order in range(2, self.koch_curve_order+1):
             new_curve = self.get_curve(order)
             new_curve.move_to(curve)
-            n_anchors = len(curve.get_anchors())
-            curve.insert_n_anchor_points(6*n_anchors)
+            n_curve_parts = curve.get_num_curves()
+            curve.insert_n_curves(6 * n_curve_parts)
             curve.make_jagged()
             self.play(Transform(curve, new_curve, run_time = 2))
         self.wait()
@@ -1602,7 +1601,7 @@ class ShowDiskScaling(Scene):
             shape.set_stroke(width = 0)
             shape.set_fill(opacity = 1)
         shapes.set_color_by_gradient(BLUE_B, BLUE_E)
-        shapes.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        shapes.arrange(RIGHT, buff = LARGE_BUFF)
         shapes.next_to(title, DOWN)
         for shape in shapes:
             self.play(FadeIn(shape))
@@ -2099,7 +2098,7 @@ class BoxCountingWithBritain(BoxCountingScene):
 
         simpler_eq = VGroup(N, approx, c, s, dim)
         simpler_eq.generate_target()
-        simpler_eq.target.arrange_submobjects(buff = SMALL_BUFF)
+        simpler_eq.target.arrange(buff = SMALL_BUFF)
         simpler_eq.target.move_to(N, LEFT)
         simpler_eq.target[-1].next_to(
             simpler_eq.target[-2].get_corner(UP+RIGHT),
@@ -2464,7 +2463,7 @@ class ListDimensionTypes(PiCreatureScene):
             "Hausdorff dimension",
             "Packing dimension"
         ])))
-        types.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        types.arrange(DOWN, aligned_edge = LEFT)
         for text in types:
             self.play(
                 Write(text, run_time = 1),
@@ -2862,7 +2861,6 @@ class AffirmLogo(SVGMobject):
         "fill_opacity" : 1,
         "stroke_color" : "#0FA0EA",
         "stroke_width" : 0,
-        "propagate_style_to_family" : True,
         "file_name" : "affirm_logo",
         "width" : 3,
     }

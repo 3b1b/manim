@@ -378,7 +378,7 @@ class WhenIWasAKid(TeacherStudentsScene):
             BabyPiCreature(color = color)
             for color in colors
         ])
-        children.arrange_submobjects(RIGHT)
+        children.arrange(RIGHT)
         children.to_edge(DOWN, buff = LARGE_BUFF)
         children.to_edge(LEFT)
         return children
@@ -425,7 +425,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         self.play(ShowCreation(
             self.loop, 
             run_time = 5, 
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
         self.add_rect_dots(square = True)
@@ -435,7 +435,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         self.play(
             ShowCreation(
                 self.connecting_lines,
-                submobject_mode = "all_at_once",
+                lag_ratio = 0,
                 run_time = 2
             ),
             Animation(self.dots)
@@ -629,7 +629,7 @@ class PairOfPairBecomeRectangle(Scene):
             "$\\Downarrow$",
             "Rectangle",
         ])))
-        words.arrange_submobjects(DOWN)
+        words.arrange(DOWN)
         words.to_edge(RIGHT)
         words[-1].set_color(BLUE)
 
@@ -984,7 +984,7 @@ class DeformToInterval(ClosedLoopScene):
         interval.shift(2*DOWN)
         numbers = interval.get_number_mobjects(0, 1)
         line = Line(interval.get_left(), interval.get_right())
-        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.insert_n_curves(self.loop.get_num_curves())
         line.make_smooth()
 
         self.loop.scale(0.7)
@@ -1058,7 +1058,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
         interval.shift(LEFT)
         numbers = interval.get_number_mobjects(0, 1)
         line = Line(interval.get_left(), interval.get_right())
-        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.insert_n_curves(self.loop.get_num_curves())
         line.make_smooth()
         vert_interval = interval.copy()
         square = Square()
@@ -1075,7 +1075,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
             TexMobject("\\Downarrow"),
             TextMobject("Point in \\\\ unit square")
         ])
-        right_words.arrange_submobjects(DOWN)
+        right_words.arrange(DOWN)
         right_words.to_edge(RIGHT)
 
         dot_coords = (0.3, 0.7)
@@ -1270,7 +1270,7 @@ class EndpointsGluedTogether(ClosedLoopScene):
         interval.shift(2*DOWN)
         numbers = interval.get_number_mobjects(0, 1)
         line = Line(interval.get_left(), interval.get_right())
-        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.insert_n_curves(self.loop.get_num_curves())
         line.make_smooth()
 
         self.loop.scale(0.7)
@@ -1954,7 +1954,7 @@ class PatreonThanks(Scene):
             self.specific_patrons[n_patrons/2:]
         )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.arrange(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
             patrons.to_edge(vect, buff = LARGE_BUFF)
 
@@ -2032,7 +2032,7 @@ class CreditThree(Scene):
             "buymywidgets.com",
             "learnwhatilearn.com",
         ])))
-        domains.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        domains.arrange(DOWN, aligned_edge = LEFT)
         domains.next_to(randy, UP, buff = LARGE_BUFF)
         domains.shift_onto_screen()
 
@@ -2060,7 +2060,7 @@ class CreditThree(Scene):
         )
         self.wait()
         self.play(
-            Write(domains, run_time = 5, lag_factor = 5),
+            Write(domains, run_time = 5),
             randy.look_at, domains
         )
         self.wait()

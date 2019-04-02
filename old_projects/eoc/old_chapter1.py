@@ -156,7 +156,7 @@ class CircleScene(PiCreatureScene):
     def get_unwrapped(self, ring, to_edge = LEFT, **kwargs):
         R = ring.R
         R_plus_dr = ring.R + ring.dR
-        n_anchors = ring.get_num_anchor_points()
+        n_anchors = ring.get_num_curves()
         result = VMobject()
         result.set_points_as_corners([
             interpolate(np.pi*R_plus_dr*LEFT,  np.pi*R_plus_dr*RIGHT, a)
@@ -233,7 +233,7 @@ class Introduction(TeacherStudentsScene):
         self.play(
             FadeIn(
                 series,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             Blink(self.get_teacher())
@@ -313,7 +313,7 @@ class Introduction(TeacherStudentsScene):
         self.play(Write(remembered_symbols))
         self.play(ApplyMethod(
             remembered_symbols.fade, 0.7,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         ))
         self.play(
@@ -370,7 +370,7 @@ class IntroduceCircle(Scene):
         area.set_color(BLUE)
         circumference.set_color(YELLOW)
 
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.next_to(circle, RIGHT)
         words.to_edge(UP)
         pi_R, pre_squared = TexMobject("\\pi R", "{}^2")
@@ -389,7 +389,7 @@ class IntroduceCircle(Scene):
         )
         up_down_arrow = TexMobject("\\Updownarrow")
         calc_stuffs = VGroup(derivative, up_down_arrow, integral)
-        calc_stuffs.arrange_submobjects(DOWN)
+        calc_stuffs.arrange(DOWN)
         calc_stuffs.next_to(words, DOWN, buff = LARGE_BUFF, aligned_edge = LEFT)
 
         brace = Brace(calc_stuffs, RIGHT)
@@ -469,7 +469,7 @@ class HeartOfCalculus(GraphScene):
         )
         self.play(
             rects.restore,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 3
         )
         while rect_sets:
@@ -501,7 +501,7 @@ class PragmatismToArt(Scene):
         )
         arrow = DoubleArrow(LEFT, RIGHT, color = WHITE)
         circle_group = VGroup(circle1, arrow, circle2)
-        circle_group.arrange_submobjects()
+        circle_group.arrange()
         circle_group.to_corner(UP+LEFT)
         circle2.save_state()
         circle2.move_to(circle1)
@@ -645,7 +645,7 @@ class IntroduceTinyChangeInArea(CircleScene):
             change_in_area,
             two_pi_R.target, lp, dR.target.scale(1./0.7), rp
         )
-        final_area.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        final_area.arrange(RIGHT, buff = SMALL_BUFF)
         final_area.next_to(almost_rect, DOWN, buff = MED_LARGE_BUFF)
         final_area.set_color(GREEN_A)
         final_area[3].set_color(self.dR_color)
@@ -1009,7 +1009,7 @@ class BuildToDADR(CircleScene):
         arrow.next_to(d)
         ignore_error = TextMobject("Ignore error")
         d_group = VGroup(d, arrow, ignore_error)
-        d_group.arrange_submobjects()
+        d_group.arrange()
         d_group.next_to(
             self.pi_creature.get_corner(UP+RIGHT), 
             buff = LARGE_BUFF
@@ -1063,7 +1063,7 @@ class BuildToDADR(CircleScene):
                     self.nudge_arrow,
                 ]
             ],
-            rate_func = None,
+            rate_func=linear,
             run_time = 7
         )
         self.play(self.pi_creature.change_mode, "hooray")
@@ -1293,7 +1293,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         fracs.add(TexMobject("\\cdots \\rightarrow"))
         fracs.add(TexMobject("???"))
         fracs[-1].set_color_by_gradient(self.dR_color, self.outer_ring.get_color())
-        fracs.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        fracs.arrange(RIGHT, buff = MED_LARGE_BUFF)
         fracs.to_corner(DOWN+LEFT)
 
         arrows = VGroup()
@@ -1715,7 +1715,7 @@ class IntroduceConcentricRings(CircleScene):
         self.play(
             FadeIn(
                 VGroup(*rings[:-1]),
-                submobject_mode = "one_at_a_time",
+                lag_ratio=1,
                 run_time = 5
             ),
             Animation(foreground_group)
@@ -1737,7 +1737,7 @@ class IntroduceConcentricRings(CircleScene):
         ))))
         dots_equals_area = TexMobject("\\dots", "=", "\\pi R^2")
         area_sum.add(*dots_equals_area)
-        area_sum.arrange_submobjects()
+        area_sum.arrange()
         area_sum.to_edge(RIGHT)
         area_sum.to_edge(UP, buff = MED_SMALL_BUFF)
         dots_equals_area[-1].shift(0.1*UP)
@@ -1747,7 +1747,7 @@ class IntroduceConcentricRings(CircleScene):
         self.play(
             MoveToTarget(
                 moving_rings,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             Write(
                 VGroup(plusses, dots_equals_area),
@@ -1842,7 +1842,7 @@ class IntroduceConcentricRings(CircleScene):
             def_int, self.two_pi_r.target,
             self.dr.target, equals_pi_R_squared
         )
-        integral_expression.arrange_submobjects()
+        integral_expression.arrange()
         integral_expression.next_to(brace, DOWN)
         self.integral_expression = VGroup(*integral_expression[:-1])
 
@@ -1923,7 +1923,7 @@ class IntroduceConcentricRings(CircleScene):
         self.r_label.save_state()
         equals_0 = TexMobject("=0")
         r_equals_0 = VGroup(self.r_label.target, equals_0)
-        r_equals_0.arrange_submobjects(buff = SMALL_BUFF)
+        r_equals_0.arrange(buff = SMALL_BUFF)
         r_equals_0.next_to(self.radial_line.target, UP+LEFT, buff = SMALL_BUFF)
         self.play(
             MoveToTarget(self.radial_line),
@@ -2106,7 +2106,7 @@ class GraphIntegral(GraphScene):
         height_label = left_brace.get_text("$2\\pi r$")
 
         self.play(
-            ShowCreation(ticks, submobject_mode = "lagged_start"),
+            ShowCreation(ticks, lag_ratio = 0.5),
             Write(R_label)
         )
         self.play(
@@ -2270,7 +2270,7 @@ class FundamentalTheorem(CircleScene):
         circum_circle.next_to(geometric, RIGHT)
         geometric.add(area_circle, circum_circle)
         self.derivative_terms = VGroup(symbolic, geometric)
-        self.derivative_terms.arrange_submobjects(
+        self.derivative_terms.arrange(
             DOWN, buff = LARGE_BUFF, aligned_edge = LEFT
         )
         self.derivative_terms.next_to(ORIGIN, LEFT, buff = LARGE_BUFF)
@@ -2306,7 +2306,7 @@ class FundamentalTheorem(CircleScene):
         geometric.submobjects[-1] = area_circle
 
         self.integral_terms = VGroup(symbolic, geometric)
-        self.integral_terms.arrange_submobjects(
+        self.integral_terms.arrange(
             DOWN, 
             buff = LARGE_BUFF, 
             aligned_edge = LEFT
@@ -2365,7 +2365,7 @@ class FundamentalTheorem(CircleScene):
         self.play(
             ApplyMethod(
                 rings.restore,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 5
             ),
             Animation(self.foreground_group),
@@ -2452,7 +2452,7 @@ class CalculusInANutshell(CircleScene):
         self.wait()
         self.play(Transform(
             calculus, rings,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 5
         ))
         self.wait()
@@ -2482,7 +2482,7 @@ class CalculusInANutshell(CircleScene):
         )
         self.play(FadeIn(
             VGroup(*series[1:]),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.wait()

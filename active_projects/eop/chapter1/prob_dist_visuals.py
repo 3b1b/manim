@@ -198,7 +198,7 @@ class ProbabilityDistributions(PiCreatureScene):
         #     cell.add(label)
 
         # self.play(
-        #     LaggedStart(FadeIn, dice_table_grouped_cells,
+        #     LaggedStartMap(FadeIn, dice_table_grouped_cells,
         #         lag_ratio = lag_ratio, run_time = run_time)
         # )
         self.play(

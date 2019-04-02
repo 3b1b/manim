@@ -101,7 +101,7 @@ class LinearCombinationScene(LinearTransformationScene):
             basis.label.target = basis.label.copy()
             coord.target = coord.copy()
             new_label = VGroup(coord.target, basis.label.target)
-            new_label.arrange_submobjects(aligned_edge = DOWN)
+            new_label.arrange(aligned_edge = DOWN)
             new_label.move_to(
                 basis.label, 
                 aligned_edge = basis.get_center()-basis.label.get_center()
@@ -221,16 +221,16 @@ class RemindOfCoordinates(LinearCombinationScene):
 
         ass1 = TextMobject("-First coordinate")
         ass1 = VGroup(ass1, self.i_hat.copy())
-        ass1.arrange_submobjects(buff = MED_SMALL_BUFF)
+        ass1.arrange(buff = MED_SMALL_BUFF)
 
         ass2 = TextMobject("-Second coordinate")
         ass2 = VGroup(ass2, self.j_hat.copy())
-        ass2.arrange_submobjects(buff = MED_SMALL_BUFF)
+        ass2.arrange(buff = MED_SMALL_BUFF)
 
         ass3 = TextMobject("-Unit of distance")
 
         group = VGroup(title, ass1, ass2, ass3)
-        group.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+        group.arrange(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         group.to_corner(UP+LEFT)
         # VGroup(*group[1:]).shift(0.5*DOWN)
         for words in group:
@@ -490,7 +490,7 @@ class IntroduceJennifer(JenniferScene):
             basis.label.target = basis.label.copy()
             coord.target = coord.copy()
             new_label = VGroup(coord.target, basis.label.target)
-            new_label.arrange_submobjects(aligned_edge = DOWN)
+            new_label.arrange(aligned_edge = DOWN)
             new_label.move_to(
                 basis.label, 
                 aligned_edge = basis.get_center()-basis.label.get_center()
@@ -723,7 +723,7 @@ class JennysGrid(JenniferScene):
             ShowCreation(
                 self.jenny_plane, 
                 run_time = 3, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             self.jenny.change_mode, "speaking",
             self.jenny.look_at, ORIGIN,
@@ -886,7 +886,7 @@ class TranslateFromJenny(JenniferScene):
         for mover in movers:
             mover.target = mover.copy()
         mover_targets = VGroup(*[mover.target for mover in movers])
-        mover_targets.arrange_submobjects()
+        mover_targets.arrange()
         mover_targets.to_edge(UP)
         for mob in syms + [result]:
             mob.move_to(mob.target)
@@ -976,7 +976,7 @@ class TalkThroughChangeOfBasisMatrix(JenniferScene):
             TexMobject(","),
             Matrix([0, 1]).set_color(Y_COLOR).scale(0.7),
         )
-        basis_coords_pair.arrange_submobjects(aligned_edge = DOWN)
+        basis_coords_pair.arrange(aligned_edge = DOWN)
         self.you.bubble.add_content(basis_coords_pair)
 
         t_matrix1 = np.array([self.b1_coords, [0, 1]])
@@ -1083,7 +1083,7 @@ class ChangeOfBasisExample(JenniferScene):
         start_words = TextMobject("How", "we", "think of")
         start_words.add_background_rectangle()
         start_group = VGroup(start_words, v_coords)
-        start_group.arrange_submobjects(buff = MED_SMALL_BUFF)
+        start_group.arrange(buff = MED_SMALL_BUFF)
         start_group.next_to(self.you, LEFT, buff = 0)
         start_group.to_edge(UP)
         end_words = TextMobject("How", "Jennifer", "thinks of")
@@ -1266,7 +1266,7 @@ class WorkOutInverseComputation(Scene):
         for mob in equation:
             if isinstance(mob, Matrix):
                 mob.set_height(2)
-        equation.arrange_submobjects()
+        equation.arrange()
 
         matrix_brace = Brace(matrix, UP)
         our_vector_brace = Brace(our_vector)
@@ -1329,7 +1329,7 @@ class SummarizeTranslationProcess(Scene):
         matrix.set_column_colors(X_COLOR, Y_COLOR)
         A, equals = list(map(TexMobject, list("A=")))
         equation = VGroup(A, equals, matrix)
-        equation.arrange_submobjects()
+        equation.arrange()
         equation.to_corner(UP+LEFT)
         equation.shift(RIGHT)
         words = TextMobject("""
@@ -1359,7 +1359,7 @@ class SummarizeTranslationProcess(Scene):
         equals = TexMobject("=")
 
         equation = VGroup(A, her_vector, equals, our_vector)
-        equation.arrange_submobjects()
+        equation.arrange()
         equation.to_edge(RIGHT)
         equation.shift(0.5*UP)
         A_inv.next_to(our_vector, LEFT)
@@ -1609,7 +1609,7 @@ class HowToTranslateAMatrix(Scene):
         neg_1 = TexMobject("-1")
         neg_1.next_to(inv_cob.get_corner(UP+RIGHT), RIGHT)
         inv_cob.add(neg_1)
-        arrays.arrange_submobjects(LEFT)
+        arrays.arrange(LEFT)
         arrays.to_edge(LEFT, buff = LARGE_BUFF/2.)
         for array in arrays:
             array.brace = Brace(array)

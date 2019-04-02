@@ -50,11 +50,11 @@ class ConfettiSpiril(Animation):
         
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        Animation.interpolate_mobject(self, alpha)
         angle = alpha*self.num_spirils*2*np.pi
         vert_shift = alpha*self.total_vert_shift
 
@@ -126,8 +126,8 @@ class Anniversary(TeacherStudentsScene):
         self.play(
             DrawBorderThenFill(
                 hats,
-                submobject_mode = "lagged_start",
-                rate_func = None,
+                lag_ratio = 0.5,
+                rate_func=linear,
                 run_time = 2,
             ),
             *confetti_spirils + [
@@ -137,7 +137,7 @@ class Anniversary(TeacherStudentsScene):
                     ApplyMethod(pi.look, UP+RIGHT),
                     Animation(pi),
                     ApplyMethod(pi.look_at, first_video),
-                    rate_func = None
+                    rate_func=linear
                 )
                 for pi in self.get_students()
             ] + [
@@ -146,7 +146,7 @@ class Anniversary(TeacherStudentsScene):
                     Blink(self.get_teacher()),
                     Animation(self.get_teacher(), run_time = 2),
                     ApplyMethod(self.get_teacher().change_mode, "raise_right_hand"),
-                    rate_func = None
+                    rate_func=linear
                 ),
                 DrawBorderThenFill(
                     first_video, 
@@ -426,7 +426,7 @@ class SymmetriesOfSquare(ThreeDScene):
             self.square.copy().scale(0.5)
             for x in range(8)
         ])
-        all_squares.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        all_squares.arrange(RIGHT, buff = LARGE_BUFF)
 
         top_squares = VGroup(*all_squares[:4])
         bottom_squares = VGroup(*all_squares[4:])
@@ -819,7 +819,7 @@ class AddSquareSymmetries(SymmetriesOfSquare):
         equation[4].add(self.get_axis_line(equation[4], UP+RIGHT))
         for mob in equation[::2]:
             mob.scale(0.5)
-        equation.arrange_submobjects(RIGHT)
+        equation.arrange(RIGHT)
         equation.to_edge(UP)
 
         arcs = self.get_rotation_arcs(square, np.pi/2)
@@ -958,7 +958,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
             cube.copy(), TexMobject("="),
             cube.copy()
         )
-        equation.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        equation.arrange(RIGHT, buff = MED_LARGE_BUFF)
         equation.center()
 
         self.add(cube1)
@@ -1028,7 +1028,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
 class DihedralGroupStructure(SymmetriesOfSquare):
     CONFIG = {
         "dashed_line_config" : {
-            "dashed_segment_length" : 0.1
+            "dash_length" : 0.1
         },
         "filed_sum_scale_factor" : 0.4,
         "num_rows" : 5,
@@ -1096,7 +1096,7 @@ class DihedralGroupStructure(SymmetriesOfSquare):
                 "angle" : angle,
                 "axis" : axis,
             }
-        expression.arrange_submobjects()
+        expression.arrange()
         expression.set_width(FRAME_X_RADIUS+1)
         expression.to_edge(RIGHT, buff = SMALL_BUFF)
         for square in s1, s2, s3:
@@ -1162,7 +1162,7 @@ class ThisIsAVeryGeneralIdea(Scene):
             "Numbers",
         ])))
         numbers = examples[-1]
-        examples.arrange_submobjects(buff = LARGE_BUFF)
+        examples.arrange(buff = LARGE_BUFF)
         examples.set_width(FRAME_WIDTH-1)
         examples.move_to(UP)
 
@@ -1194,7 +1194,7 @@ class ThisIsAVeryGeneralIdea(Scene):
             "Numbers \\\\ (Additive)",
             "Numbers \\\\ (Multiplicative)",
         ])))
-        sub_categories.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        sub_categories.arrange(RIGHT, buff = MED_LARGE_BUFF)
         sub_categories.next_to(numbers, DOWN, 1.5*LARGE_BUFF)
         sub_categories.to_edge(RIGHT)
         sub_categories[0].set_color(ADDER_COLOR)
@@ -1963,7 +1963,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
             for word in ["Stretch" if num > 1 else "Squish"]
         ])
         words.submobjects.insert(2, TexMobject("="))
-        words.arrange_submobjects(RIGHT)
+        words.arrange(RIGHT)
         top_words = VGroup(*words[:2])
         top_words.set_color(MULTIPLIER_COLOR)
         bottom_words = VGroup(*words[2:])
@@ -2365,7 +2365,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
         self.play(FadeIn(
             five_twos, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
 
@@ -2374,7 +2374,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
         rule = VGroup(
             lhs, three_twos.target, cdot, five_twos.target
         )
-        rule.arrange_submobjects()
+        rule.arrange()
         lhs.next_to(three_twos.target, LEFT, aligned_edge = DOWN)
         rule.next_to(self.get_pi_creatures(), UP)
 
@@ -2422,7 +2422,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
             TexMobject("2^{-1}"),
             TexMobject("2^{i}"),
         )
-        alt_powers.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        alt_powers.arrange(RIGHT, buff = LARGE_BUFF)
         alt_powers.next_to(self.get_students(), UP, buff = LARGE_BUFF)
 
         self.play(
@@ -2458,7 +2458,7 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
             "\\big( 2^{1} \\big) = 2^{0}"
         )
         expressions = VGroup(half_expression, neg_one_expression)
-        expressions.arrange_submobjects(
+        expressions.arrange(
             DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF
         )
         expressions.next_to(self.get_students(), UP, buff = LARGE_BUFF)
@@ -2964,7 +2964,7 @@ class ComplexExponentiationAdderHalf(
         )
         line.set_color(YELLOW)
         for submob in line:
-            submob.insert_n_anchor_points(10)
+            submob.insert_n_curves(10)
             submob.make_smooth()
         circle = VGroup(
             Circle(),
@@ -3069,7 +3069,7 @@ class ComplexExponentiationMultiplierHalf(
         line.set_color(YELLOW)
         line.shift(FRAME_X_RADIUS*LEFT)
         for submob in line:
-            submob.insert_n_anchor_points(10)
+            submob.insert_n_curves(10)
             submob.make_smooth()
         circle = VGroup(
             Circle(),
@@ -3110,7 +3110,7 @@ class ComplexExponentiationMultiplierHalf(
         arc_line = Line(RIGHT, RIGHT+angle*UP)
         brace = Brace(arc_line, RIGHT, buff = 0)
         for submob in brace.family_members_with_points():
-            submob.insert_n_anchor_points(10)
+            submob.insert_n_curves(10)
         curved_brace = brace.copy()
         curved_brace.shift(LEFT)
         curved_brace.apply_complex_function(
@@ -3257,7 +3257,6 @@ class EmeraldLogo(SVGMobject):
         "file_name" : "emerald_logo",
         "stroke_width" : 0,
         "fill_opacity" : 1,
-        "propagate_style_to_family" : True,
         # "helix_color" : "#439271",
         "helix_color" : GREEN_E,
     }
@@ -3289,7 +3288,7 @@ class ECLPromo(PiCreatureScene):
         self.wait(3)
         self.play(FadeIn(
             logo_part1, run_time = 3, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         logo_part2.save_state()
         logo_part2.scale(2)

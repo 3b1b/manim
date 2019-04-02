@@ -40,12 +40,12 @@ class NameAnimationScene(Scene):
             TexMobject("\\times"),
             Integer(1)
         )
-        times_n_label.arrange_submobjects(RIGHT)
+        times_n_label.arrange(RIGHT)
         times_n_label.shift(FRAME_WIDTH * RIGHT / 4)
         times_n_label.to_edge(UP)
 
         self.play(
-            LaggedStart(FadeIn, name_mob, run_time=3),
+            LaggedStartMap(FadeIn, name_mob, run_time=3),
             ApplyMethod(randy.change, "pondering", pos2, run_time=1),
             FadeIn(times_n_label)
         )
@@ -99,7 +99,7 @@ if __name__ == "__main__":
                 animated_name=name,
                 write_to_movie=True,
                 output_directory=os.path.join(
-                    ANIMATIONS_DIR,
+                    VIDEO_DIR,
                     "active_projects",
                     "name_animations",
                 ),

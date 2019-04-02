@@ -92,22 +92,13 @@ class IllustrateAreaModelErf(GraphScene):
         )
         self.add_foreground_mobject(cdf_value)
 
-        cdf_percentage = DecimalNumber(0, unit = "\%")
+        cdf_percentage = DecimalNumber(0, unit = "\\%")
         cdf_percentage.move_to(self.coords_to_point(0,0.2))
         self.add_foreground_mobject(cdf_percentage)
 
-        self.add(ContinualChangingDecimal(
-            decimal_number_mobject = cdf_value,
-            number_update_func = integral_update_func,
-            num_decimal_places = 3
-        ))
-
-        self.add(ContinualChangingDecimal(
-            decimal_number_mobject = cdf_percentage,
-            number_update_func = integral_update_func_percent,
-            num_decimal_places = 1
-        ))
-
+        cdf_value.add_updater(
+            lambda m: m.set_value(integral_update_func())
+        )
 
         anim = self.get_animation_integral_bounds_change(
             graph, x_min_2, x_max_2,

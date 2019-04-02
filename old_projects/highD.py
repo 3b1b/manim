@@ -46,7 +46,7 @@ class Slider(NumberLine):
     def add_label(self, tex):
         label = TexMobject(tex)
         label.scale(self.label_scale_val)
-        label.move_to(self.main_line.get_top())
+        label.move_to(self.get_top())
         label.shift(MED_LARGE_BUFF*UP)
         self.add(label)
         self.label = label
@@ -137,7 +137,7 @@ class SliderScene(Scene):
             Slider(center_value = cv, **self.slider_config)
             for cv in self.center_point
         ])
-        sliders.arrange_submobjects(RIGHT, buff = self.slider_spacing)
+        sliders.arrange(RIGHT, buff = self.slider_spacing)
         sliders[0].add_numbers()
         sliders[0].set_value(
             self.center_point[0] + np.sqrt(self.total_real_estate)
@@ -343,7 +343,7 @@ class MathIsATease(Scene):
 
         self.add(randy)
         self.play(
-            ShowCreation(lashes, submobject_mode = "all_at_once"),
+            ShowCreation(lashes, lag_ratio = 0),
             randy.change, "tease",
             randy.look, OUT,
         )
@@ -709,7 +709,7 @@ class Professionals(PiCreatureScene):
         plane.scale(0.75)
         examples.add(plane)
         examples.add(Circle())
-        examples.arrange_submobjects(RIGHT, buff = 2)
+        examples.arrange(RIGHT, buff = 2)
         examples.to_edge(UP, buff = LARGE_BUFF)
         labels = VGroup(*list(map(TextMobject, ["2D", "3D"])))
 
@@ -756,7 +756,7 @@ class Professionals(PiCreatureScene):
         pi_creatures = VGroup(self.mathy, self.compy, self.physy)
         for pi in pi_creatures:
             pi.scale(0.7)
-        pi_creatures.arrange_submobjects(RIGHT, buff = 3)
+        pi_creatures.arrange(RIGHT, buff = 3)
         pi_creatures.to_edge(DOWN, buff = LARGE_BUFF)
         return pi_creatures
 
@@ -847,7 +847,7 @@ class DismissProjection(PiCreatureScene):
         for equation, sphere in zip(equations, spheres):
             self.play(
                 Write(equation),
-                LaggedStart(ShowCreation, sphere),
+                LaggedStartMap(ShowCreation, sphere),
             )
         self.wait()
 
@@ -955,7 +955,7 @@ class DismissProjection(PiCreatureScene):
         tup.target.next_to(equation.target, DOWN)
         tup.target.set_color(WHITE)
 
-        self.play(LaggedStart(FadeOut, VGroup(*[
+        self.play(LaggedStartMap(FadeOut, VGroup(*[
             self.equations, self.spheres,
             self.sphere_words, self.sphere_arrow,
             self.descriptor,
@@ -1021,7 +1021,7 @@ class Introduce4DSliders(SliderScene):
         dial_copies = dials.copy()
         dials.set_fill(opacity = 0)
 
-        self.play(LaggedStart(FadeIn, self.sliders))
+        self.play(LaggedStartMap(FadeIn, self.sliders))
         self.play(*[
             Transform(
                 num, dial,
@@ -1122,7 +1122,7 @@ class TwoDimensionalCase(Introduce4DSliders):
             DecimalNumber(num**2) 
             for num in self.get_vector()
         ])
-        decimals.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        decimals.arrange(RIGHT, buff = LARGE_BUFF)
         decimals.next_to(rects, DOWN, LARGE_BUFF)
 
         real_estate_word = TextMobject("``Real estate''")
@@ -1342,7 +1342,7 @@ class ThreeDCase(TwoDimensionalCase):
             DecimalNumber(num**2)
             for num in self.get_vector()
         ])
-        decimals.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        decimals.arrange(RIGHT, buff = LARGE_BUFF)
         decimals.next_to(rects, DOWN, LARGE_BUFF)
 
         colors = [GREEN, RED, BLUE]
@@ -1603,7 +1603,7 @@ class TwoDBoxExample(Scene):
             UP+RIGHT, SMALL_BUFF
         )
 
-        self.play(LaggedStart(ShowCreation, circles))
+        self.play(LaggedStartMap(ShowCreation, circles))
         self.play(
             ShowCreation(radius),
             Write(r_equals_1)
@@ -1725,7 +1725,7 @@ class ThreeDCubeCorners(Scene):
             TexMobject("(%d,\\, %d,\\, %d)"%(x, y, z))
             for x, y, z in it.product(*3*[[1, -1]])
         ])
-        coordinates.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        coordinates.arrange(DOWN, aligned_edge = LEFT)
         name = TextMobject("Corners: ")
         name.next_to(coordinates[0], LEFT)
         group = VGroup(name, coordinates)
@@ -1733,7 +1733,7 @@ class ThreeDCubeCorners(Scene):
         group.to_edge(LEFT)
 
         self.play(Write(name, run_time = 2))
-        self.play(LaggedStart(FadeIn, coordinates, run_time = 3))
+        self.play(LaggedStartMap(FadeIn, coordinates, run_time = 3))
         self.wait()
 
 class ShowDistanceFormula(TeacherStudentsScene):
@@ -2166,14 +2166,14 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.wait()
         self.play(ShowCreation(crosses))
         self.play(
-            LaggedStart(MoveToTarget, new_words),
+            LaggedStartMap(MoveToTarget, new_words),
             Animation(crosses)
         )
         self.wait(3)
 
         #Return to original position
         target_vector = np.array(2*[1-np.sqrt(0.5)])
-        self.play(LaggedStart(FadeOut, VGroup(*[
+        self.play(LaggedStartMap(FadeOut, VGroup(*[
             ghost_dials, 
             x_words, y_words, 
             x_arrow, y_arrow, 
@@ -2277,7 +2277,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         )
 
         self.play(
-            LaggedStart(FadeIn, sphere_name,),
+            LaggedStartMap(FadeIn, sphere_name,),
             ShowCreation(arrow, rate_func = squish_rate_func(smooth, 0.7, 1)),
             run_time = 3
         )
@@ -2313,7 +2313,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
             FadeOut(self.sphere_name),
             Transform(self.arrow, new_arrow),
         )
-        self.play(LaggedStart(FadeIn, re_words))
+        self.play(LaggedStartMap(FadeIn, re_words))
         self.wait(2)
 
         self.re_words = re_words
@@ -2387,7 +2387,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         self.play(
             Animation(self.sliders),
             FadeOut(self.re_words),
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, all_re_ticks,
                 lambda m : (m.shift, shift_vect)
             )
@@ -2451,7 +2451,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
             TexMobject("(%d, %d, %d, %d)"%tup)
             for tup in coordinates
         ])
-        coordinate_mobs.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        coordinate_mobs.arrange(DOWN, aligned_edge = LEFT)
         coordinate_mobs.scale(0.8)
         left_column = VGroup(*coordinate_mobs[:8])
         right_column = VGroup(*coordinate_mobs[8:])
@@ -2459,7 +2459,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         coordinate_mobs.next_to(title, DOWN)
 
         self.play(Write(title))
-        self.play(LaggedStart(FadeIn, coordinate_mobs))
+        self.play(LaggedStartMap(FadeIn, coordinate_mobs))
         self.wait()
 
         self.coordinate_mobs = coordinate_mobs
@@ -2547,7 +2547,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
             re_rects.add(rect)
 
         self.play(FadeIn(re_words))
-        self.play(LaggedStart(DrawBorderThenFill, re_rects, run_time = 3))
+        self.play(LaggedStartMap(DrawBorderThenFill, re_rects, run_time = 3))
         self.wait(2)
 
         self.re_words = re_words
@@ -2578,7 +2578,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         )
         self.wait(2)
         re_shift_vect = 0.5*self.sliders[0].unit_size*DOWN
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, self.re_rects,
             lambda m : (m.shift, re_shift_vect),
             path_arc = np.pi
@@ -2610,7 +2610,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         brace_text.scale(0.8, about_point = brace_text.get_bottom())
         VGroup(brace, brace_text).set_color(RED)
 
-        self.play(LaggedStart(FadeIn, computation, run_time = 3))
+        self.play(LaggedStartMap(FadeIn, computation, run_time = 3))
         self.play(GrowFromCenter(brace))
         self.play(Write(brace_text, run_time = 2))
         self.wait(16)
@@ -2675,7 +2675,7 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
         self.play(big_inner_circle.move_to, self.circle)
         self.play(big_inner_circle.restore)
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, tangency_points,
             rate_func = double_smooth
         ))
@@ -2772,7 +2772,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             ShowCreation(re_line),
             Write(re_words, run_time = 2)
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, re_rects,
             rate_func = double_smooth
         ))
@@ -2852,7 +2852,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
 
         self.play(
             Animation(self.sliders),
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, re_ticks,
                 lambda m : (m.shift, shift_vect),
                 path_arc = np.pi
@@ -2863,7 +2863,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             MoveToTarget(
                 re_rects, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi
             ),
             MoveToTarget(self.re_words),
@@ -2961,7 +2961,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         self.wind_down_ambient_movement()
         self.reset_dials(self.n_sliders*[target_x])
         self.play(ShowCreation(re_line))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, re_rects,
             rate_func = double_smooth
         ))
@@ -2987,7 +2987,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
 
         self.play(
             Animation(self.sliders),
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, re_ticks,
                 lambda m : (m.shift, shift_vect),
                 path_arc = np.pi
@@ -2997,7 +2997,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
             MoveToTarget(
                 re_rects, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi
             ),
         )
@@ -3131,12 +3131,12 @@ class TenDCornerIsVeryFarAway(TenDBoxExampleWithSliders):
 
         self.set_to_vector(np.zeros(10))
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, re_rects,
                 lambda m : (m.restore,),
                 lag_ratio = 0.3,
             ),
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, self.sliders,
                 lambda m : (m.set_value, 1),
                 lag_ratio = 0.3,
@@ -3193,7 +3193,7 @@ class ProportionOfSphereInBox(GraphScene):
         )
         footnote.set_color(YELLOW)
 
-        self.play(ShowCreation(graph, run_time = 5, rate_func = None))
+        self.play(ShowCreation(graph, run_time = 5, rate_func=linear))
         self.wait()
         self.add(footnote)
         self.wait(0.25)
@@ -3279,13 +3279,13 @@ class FunHighDSpherePhenomena(Scene):
             "$\\cdot$ Sphere packing in 8 dimensions",
             "$\\cdot$ Sphere packing in 24 dimensions",
         ])))
-        items.arrange_submobjects(
+        items.arrange(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
         items.next_to(h_line, DOWN)
 
         for item in items:
-            self.play(LaggedStart(FadeIn, item, run_time = 2))
+            self.play(LaggedStartMap(FadeIn, item, run_time = 2))
         self.wait()
 
 class TODOBugOnSurface(TODOStub):
@@ -3393,7 +3393,7 @@ class Skeptic(TeacherStudentsScene, SliderScene):
                 for pi in self.students
             ]
         )
-        self.play(Animation(self.sliders), LaggedStart(
+        self.play(Animation(self.sliders), LaggedStartMap(
             ApplyMethod, all_real_estate_ticks,
             lambda m : (m.shift, SMALL_BUFF*LEFT),
             rate_func = wiggle,
@@ -3427,7 +3427,7 @@ class JustBecauseYouCantVisualize(Scene):
         phrase_mob.next_to(ORIGIN, UP)
 
         for part in phrase_mob:
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 FadeIn, part,
                 run_time = 0.05*len(part)
             ))
@@ -3446,7 +3446,7 @@ class Announcements(TeacherStudentsScene):
             "$\\cdot$ Where to learn more",
             "$\\cdot$ Q\\&A Followup (podcast!)",
         ])))
-        items.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        items.arrange(DOWN, aligned_edge = LEFT)
         items.next_to(h_line, DOWN)
 
         self.play(
@@ -3514,7 +3514,7 @@ class Podcast(TeacherStudentsScene):
         q_and_a.next_to(self.teacher.get_corner(UP+LEFT), UP, LARGE_BUFF)
 
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, self.pi_creatures,
                 lambda pi : (pi.change, "hooray", title)
             ), 

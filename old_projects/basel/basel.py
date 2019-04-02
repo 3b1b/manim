@@ -5,6 +5,13 @@ from big_ol_pile_of_manim_imports import *
 
 from once_useful_constructs.light import *
 
+import warnings
+warnings.warn("""
+    Warning: This file makes use of
+    ContinualAnimation, which has since
+    been deprecated
+""")
+
 import types
 import functools
 
@@ -146,7 +153,7 @@ class LightIndicator(VMobject):
         intensity = self.light_source.opacity_function(distance) / self.opacity_for_unit_intensity
         return intensity
 
-    def continual_update(self):
+    def update_mobjects(self):
         if self.light_source == None:
             print("Indicator cannot update, reason: no light source found")
         self.set_intensity(self.measured_intensity())
@@ -172,7 +179,7 @@ class UpdateLightIndicator(AnimationGroup):
 class ContinualLightIndicatorUpdate(ContinualAnimation):
 
     def update_mobject(self,dt):
-        self.mobject.continual_update()
+        self.mobject.update_mobjects()
 
 
 def copy_func(f):
@@ -871,8 +878,10 @@ class SingleLighthouseScene(PiCreatureScene):
         self.angle_indicator.next_to(self.angle_arc,RIGHT)
 
         angle_update_func = lambda x: self.light_source.spotlight.opening_angle() / DEGREES
-        ca1 = ContinualChangingDecimal(self.angle_indicator,angle_update_func)
-        self.add(ca1)
+        self.angle_indicator.add_updater(
+            lambda d: d.set_value(angle_update_func())
+        )
+        self.add(self.angle_indicator)
 
         ca2 = AngleUpdater(self.angle_arc, self.light_source.spotlight)
         self.add(ca2)
@@ -4044,11 +4053,11 @@ class FinalSumManipulationScene(PiCreatureScene):
             full_ambient_lights.add(ls.ambient_light)
 
         self.play(
-            LaggedStart(FadeIn, full_lighthouses, lag_ratio = 0.2, run_time = 3),
+            LaggedStartMap(FadeIn, full_lighthouses, lag_ratio = 0.2, run_time = 3),
         )
 
         self.play(
-            LaggedStart(SwitchOn, full_ambient_lights, lag_ratio = 0.2, run_time = 3)
+            LaggedStartMap(SwitchOn, full_ambient_lights, lag_ratio = 0.2, run_time = 3)
         )
 
         # for ls in full_lights.submobjects:
@@ -4397,7 +4406,7 @@ class InfiniteCircleScene(PiCreatureScene):
 
         self.wait()
         self.play(
-            LaggedStart(FadeIn,infsum,lag_ratio = 0.2)
+            LaggedStartMap(FadeIn,infsum,lag_ratio = 0.2)
         )
         self.wait()
 

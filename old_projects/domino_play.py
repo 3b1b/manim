@@ -581,11 +581,11 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         hardwood.next_to(graph2, LEFT, buff = 0.75)
 
         self.play(
-            ShowCreation(graph1, run_time = 3, rate_func = None),
+            ShowCreation(graph1, run_time = 3, rate_func=linear),
             Write(felt)
         )
         self.play(
-            ShowCreation(graph2, run_time = 4, rate_func = None),
+            ShowCreation(graph2, run_time = 4, rate_func=linear),
             Write(hardwood)
         )
         self.wait()
@@ -598,7 +598,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
             target = VGroup(*it.chain(*list(zip(sg_copy.dots, sg_copy.lines))))
             for m, t in zip(mover, target):
                 m.target = t
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 MoveToTarget, mover,
                 rate_func = lambda t : 0.3*wiggle(t),
                 run_time = 3,
@@ -671,8 +671,8 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         hardwood.next_to(felt, DOWN, LARGE_BUFF)
 
         self.play(
-            LaggedStart(FadeIn, felt),
-            LaggedStart(FadeIn, hardwood),
+            LaggedStartMap(FadeIn, felt),
+            LaggedStartMap(FadeIn, hardwood),
             run_time = 1
         )
         self.wait()
@@ -693,7 +693,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
 
         self.play(ShowCreation(rect1))
         for x in range(2):
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 ApplyMethod, dot_group1,
                 lambda m : (m.scale_in_place, 0.5),
                 rate_func = wiggle,
@@ -703,7 +703,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         self.wait()
         self.play(ReplacementTransform(rect1, rect2))
         for x in range(2):
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 ApplyMethod, dot_group2,
                 lambda m : (m.scale_in_place, 0.5),
                 rate_func = wiggle,
@@ -713,7 +713,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         self.wait()
         self.play(ReplacementTransform(rect1, rect3))
         for x in range(2):
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 ApplyMethod, dot_group3,
                 lambda m : (m.scale_in_place, 0.5),
                 rate_func = wiggle,
@@ -842,7 +842,7 @@ class Test(Scene):
         for arc, vect in zip(arcs, [DOWN+RIGHT, RIGHT]):
             arc_copy = arc.copy()
             point = domino1.get_critical_point(vect)
-            arc_copy.add_control_points(3*[point])
+            arc_copy.add_line_to([point])
             arc_copy.set_stroke(width = 0)
             arc_copy.set_fill(
                 arc.get_stroke_color(),

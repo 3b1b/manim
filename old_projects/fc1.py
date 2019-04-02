@@ -15,7 +15,7 @@ class CrossingOneMillion(TeacherStudentsScene):
         self.look_at(number, run_time=0)
 
         confetti_spirils = self.confetti_spirils = list(map(
-            NormalAnimationAsContinualAnimation,
+            turn_animation_into_updater,
             get_confetti_animations(50)
         ))
         self.add(*confetti_spirils)
@@ -28,7 +28,7 @@ class CrossingOneMillion(TeacherStudentsScene):
                 rate_func=bezier([0, 0, 0, 1, 1, 1]),
                 run_time=5,
             ),
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, self.get_pi_creatures(),
                 lambda m: (m.change, "hooray", number),
                 rate_func=squish_rate_func(smooth, 0, 0.5),
@@ -135,7 +135,7 @@ class AllFeaturedCreators(MortyPiCreatureScene):
         title = Title("Featured creators")
 
         dots = VGroup(*[Dot(color=WHITE) for x in range(4)])
-        dots.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        dots.arrange(DOWN, buff=LARGE_BUFF)
         dots.to_edge(LEFT, buff=2)
 
         creators = VGroup(*list(map(TextMobject, [
@@ -172,12 +172,12 @@ class AllFeaturedCreators(MortyPiCreatureScene):
             Write(title)
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, dots,
             lambda m: (m.restore,)
         ))
         self.play(
-            LaggedStart(FadeIn, rects, lag_ratio=0.7),
+            LaggedStartMap(FadeIn, rects, lag_ratio=0.7),
             morty.change, "happy"
         )
         self.add(creators, rects)
@@ -247,7 +247,7 @@ class EndScreen(PiCreatureScene):
             FadeIn(
                 words,
                 run_time=2,
-                submobject_mode="lagged_start"
+                lag_ratio=0.5
             ),
             self.pi_creature.change_mode, "hooray"
         )

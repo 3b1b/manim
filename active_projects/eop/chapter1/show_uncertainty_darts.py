@@ -20,7 +20,7 @@ class ShowUncertaintyDarts(Scene):
             self.add(dot)
 
         self.play(
-            LaggedStart(FadeIn, dots, lag_ratio = 0.01, run_time = run_time)
+            LaggedStartMap(FadeIn, dots, lag_ratio = 0.01, run_time = run_time)
         )
 
 

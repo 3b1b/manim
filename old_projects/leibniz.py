@@ -56,7 +56,7 @@ class LatticePointScene(Scene):
             )
             dot.r_squared = r_squared
             self.lattice_points.add(dot)
-        self.lattice_points.sort_submobjects(
+        self.lattice_points.sort(
             lambda p : get_norm(p - self.plane_center)
         )
 
@@ -92,7 +92,7 @@ class LatticePointScene(Scene):
 
     def get_lattice_points_on_r_squared_circle(self, r_squared):
         points = VGroup(*[dot for dot in self.lattice_points if dot.r_squared == r_squared])
-        points.sort_submobjects(
+        points.sort(
             lambda p : angle_of_vector(p-self.plane_center)%(2*np.pi)
         )
         return points
@@ -406,7 +406,7 @@ class ShowCalculus(PiCreatureScene):
         frac_sum.to_corner(UP+LEFT)
         frac_sum.shift(RIGHT)
         rhs_group = VGroup(int1, int2, arctan, pi_fourths)
-        rhs_group.arrange_submobjects(
+        rhs_group.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -513,7 +513,7 @@ class Outline(PiCreatureScene):
             step.set_color_by_tex("1", RED, substring = False)
             step.set_color_by_tex("i", RED, substring = False)
             step.set_color_by_tex("4", GREEN, substring = False)
-        steps.arrange_submobjects(
+        steps.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -573,7 +573,7 @@ class Outline(PiCreatureScene):
             for b in range(-10, 11)
             if a**2 + b**2 <= 10**2
         ])
-        lattice_points.sort_submobjects(
+        lattice_points.sort(
             lambda p : get_norm(p - plane_center)
         )
         lattice_group = VGroup(plane, circle, lattice_points)
@@ -619,7 +619,7 @@ class Outline(PiCreatureScene):
             TexMobject("\\chi(%d)"%n)
             for n in input_range
         ])
-        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.arrange(RIGHT, buff = LARGE_BUFF)
         chis.set_stroke(WHITE, width = 1)
         numerators = VGroup()
         arrows = VGroup()
@@ -641,7 +641,7 @@ class Outline(PiCreatureScene):
             FadeIn(
                 mob, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in [chis, arrows, numerators]
         ])
@@ -818,8 +818,7 @@ class CountLatticePoints(LatticePointScene):
             ReplacementTransform(
                 point_copies, squares,
                 run_time = 3,
-                submobject_mode = "lagged_start",
-                lag_factor = 4,
+                lag_ratio = 0.5,
             ),
             Animation(self.lattice_points)
         )
@@ -837,7 +836,7 @@ class CountLatticePoints(LatticePointScene):
                 TexMobject(
                     "\\approx \\pi", "(", R, ")^2"
                 )
-            ).arrange_submobjects(RIGHT)
+            ).arrange(RIGHT)
             for R in ("10", "1{,}000{,}000", "R")
         ])
         radius_10_eq, radius_million_eq, radius_R_eq = equations
@@ -893,7 +892,7 @@ class CountLatticePoints(LatticePointScene):
         )
         self.wait(2)
         self.play(
-            final_group.arrange_submobjects, RIGHT,
+            final_group.arrange, RIGHT,
             final_group.next_to, ORIGIN, UP
         )
         rect = BackgroundRectangle(final_group)
@@ -946,7 +945,7 @@ class CountThroughRings(LatticePointScene):
     
         self.add_foreground_mobject(self.lattice_points)
         self.play(FadeIn(circles))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             circles,
             arg_creator = lambda m : (m.set_stroke, PINK, 4),
@@ -1062,7 +1061,7 @@ class CountThroughRings(LatticePointScene):
             mob.add_background_rectangle()
             left_roots.add(VGroup(mob[0], mob[1][0]))
 
-        left_list.arrange_submobjects(
+        left_list.arrange(
             DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
@@ -1074,7 +1073,7 @@ class CountThroughRings(LatticePointScene):
             for count in counts
         ])
         top_list.set_color(YELLOW)
-        top_list.arrange_submobjects(RIGHT, aligned_edge = DOWN)
+        top_list.arrange(RIGHT, aligned_edge = DOWN)
         top_list.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         top_list.to_edge(UP, buff = SMALL_BUFF)
         top_rect = BackgroundRectangle(top_list)
@@ -1229,7 +1228,7 @@ class LookAtExampleRing(LatticePointScene):
                 about_point = self.plane_center,
                 rate_func = smooth, 
             ),
-            FadeIn(points, submobject_mode = "lagged_start"),
+            FadeIn(points, lag_ratio = 0.5),
             run_time = 2,
         )
         self.wait()
@@ -1456,7 +1455,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             TexMobject("(", str(x), "+", str(y), "i", ")"),
             TexMobject("(", str(x), "-", str(y), "i", ")"),
         )
-        equation.arrange_submobjects(
+        equation.arrange(
             RIGHT, buff = SMALL_BUFF,
         )
         VGroup(*equation[-2:]).shift(0.5*SMALL_BUFF*DOWN)
@@ -1487,7 +1486,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.play(FadeIn(
             equation,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(
@@ -1545,7 +1544,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             TexMobject(str(x), "^2"),
             TexMobject("-", "(", str(y), "i", ")^2")
         )
-        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expansion.arrange(RIGHT, buff = SMALL_BUFF)
         expansion.next_to(
             VGroup(*self.equation[-2:]), 
             DOWN, LARGE_BUFF
@@ -1681,7 +1680,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         )
         self.play(FadeIn(
             top_dot.magnitude_word,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(ShowCreation(top_dot.arc))
@@ -1770,7 +1769,7 @@ class NameGaussianIntegers(LatticePointScene):
         self.play(FadeIn(
             gauss_name,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(3)
         self.play(FadeOut(gauss_name))
@@ -2219,7 +2218,7 @@ class FactorizationPattern(Scene):
             for x, y in [(2, 1), (3, 2), (4, 1), (5, 2)]
             for y_str in [str(y) if y is not 1 else ""]
         ])
-        factorizations.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        factorizations.arrange(DOWN, aligned_edge = LEFT)
         factorizations.to_corner(UP+LEFT)
         factorizations.shift(RIGHT)
         movers = VGroup()
@@ -2249,7 +2248,7 @@ class FactorizationPattern(Scene):
         self.play(FadeIn(
             factorizations, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(4)
         self.play(*list(map(FadeOut, [movers, factorizations])))
@@ -2545,7 +2544,7 @@ class IntroduceRecipe(Scene):
                 movers.add(mover)
             index += 1
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget,
             movers,
             replace_mobject_with_target_in_scene = True
@@ -2560,7 +2559,7 @@ class IntroduceRecipe(Scene):
         left_factors, right_factors = self.get_left_and_right_factors()
         for group in left_factors, right_factors:
             group.generate_target()
-            group.target.arrange_submobjects(DOWN)
+            group.target.arrange(DOWN)
         left_factors.target.next_to(T_chart.left_h_line, DOWN)
         right_factors.target.next_to(T_chart.right_h_line, DOWN)
 
@@ -2646,7 +2645,7 @@ class IntroduceRecipe(Scene):
             Line(ORIGIN, self.T_chart_width*RIGHT/2.0) 
             for x in range(2)
         ])
-        h_lines.arrange_submobjects(RIGHT, buff = 0)
+        h_lines.arrange(RIGHT, buff = 0)
         h_lines.shift(UP)
         v_line = Line(self.T_chart_height*UP, ORIGIN)
         v_line.move_to(h_lines.get_center(), UP)
@@ -2891,7 +2890,7 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
         for words, color in zip(words_group, self.colors):
             words.add_background_rectangle()
             words.set_color(color)
-        words_group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words_group.arrange(DOWN, aligned_edge = LEFT)
         words_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         angles = [np.pi/2, np.pi, -np.pi/2]
 
@@ -3112,7 +3111,7 @@ class Show125CircleSimple(LatticePointScene):
                 about_point = self.plane_center
             ),
             ShowCreation(circle),
-            LaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill,
                 dots,
                 stroke_width = 4,
@@ -3181,7 +3180,7 @@ class SummarizeCountingRule(Show125Circle):
             ShowCreation(circle),
             run_time = 2,
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill,
             dots,
             stroke_width = 4,
@@ -3304,7 +3303,7 @@ class SummarizeCountingRule(Show125Circle):
         choices_copy.generate_target()
 
         choices_copy.target.scale(1./0.75)
-        choices_copy.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        choices_copy.target.arrange(RIGHT, buff = SMALL_BUFF)
         choices_copy.target.next_to(equals_four, RIGHT, SMALL_BUFF)
         choices_copy.target.shift(0.25*SMALL_BUFF*DOWN)
         self.play(
@@ -3419,7 +3418,7 @@ class EffectOfPowersOfTwo(LatticePointScene):
         group = groups[0]
 
         self.add(group)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, dots_list[0],
             stroke_width = 4,
             stroke_color = PINK
@@ -3468,7 +3467,7 @@ class IntroduceChi(FactorizationPattern):
             )
         ])
         chi_expressions.scale(0.9)
-        chi_expressions.arrange_submobjects(
+        chi_expressions.arrange(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
         chi_expressions.to_corner(UP+RIGHT)
@@ -3518,7 +3517,7 @@ class IntroduceChi(FactorizationPattern):
             TexMobject("\\chi(%d)"%n)
             for n in input_range
         ])
-        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.arrange(RIGHT, buff = LARGE_BUFF)
         chis.set_stroke(WHITE, width = 1)
         numbers = VGroup()
         arrows = VGroup()
@@ -3539,12 +3538,12 @@ class IntroduceChi(FactorizationPattern):
             FadeIn(
                 mob, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in [chis, arrows, numbers]
         ])
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             numbers,
             lambda m : (m.shift, MED_SMALL_BUFF*UP),
@@ -3636,8 +3635,8 @@ class IntroduceChi(FactorizationPattern):
         else:
             self.play(
                 Write(labels),
-                FadeIn(arrows, submobject_mode = "lagged_start"),
-                LaggedStart(
+                FadeIn(arrows, lag_ratio = 0.5),
+                LaggedStartMap(
                     DrawBorderThenFill, dots,
                     stroke_width = 4,
                     stroke_color = YELLOW
@@ -3706,7 +3705,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             TexMobject("(", "1", ")"),
             TexMobject("(", "3+1", ")"),
         )
-        count.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        count.arrange(RIGHT, buff = SMALL_BUFF)
         for i, color in zip([3, 2, 1], self.colors):
             count[i][1].set_color(color)
         count.next_to(
@@ -3747,7 +3746,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             factor.set_color_by_tex("1", color, substring = False)
             factor.scale(0.8)
             expression.add(factor)
-        expression.arrange_submobjects(
+        expression.arrange(
             DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT
         )
         equals_four.next_to(expression[1], LEFT, SMALL_BUFF)
@@ -3910,7 +3909,7 @@ class ExpandCountWith45(SummarizeCountingRule):
                 part[2].set_color(color)
             factor.scale(0.8)
             expression.add(factor)
-        expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expression.arrange(RIGHT, buff = SMALL_BUFF)
         expression.next_to(
             factorization[1], DOWN, 
             buff = LARGE_BUFF,
@@ -3975,7 +3974,7 @@ class ExpandCountWith45(SummarizeCountingRule):
                 plusses.add(plus)
                 expansion.add(plus)
         expansion.add(rp)
-        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expansion.arrange(RIGHT, buff = SMALL_BUFF)
         expansion.set_width(FRAME_WIDTH - LARGE_BUFF)
         expansion.next_to(ORIGIN, UP)
         rect = BackgroundRectangle(expansion)
@@ -4028,7 +4027,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             if product != products[-1]:
                 divisor_sum.add(TexMobject("+"))
         divisor_sum.add(rp)
-        divisor_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        divisor_sum.arrange(RIGHT, buff = SMALL_BUFF)
         divisor_sum.next_to(self.expansion, DOWN, MED_LARGE_BUFF)
         rect = BackgroundRectangle(divisor_sum)
 
@@ -4046,7 +4045,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             FadeIn(rect),
             Write(divisor_sum, run_time = 2)
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, prime_pairs, 
             run_time = 4,
             lag_ratio = 0.25,
@@ -4054,7 +4053,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         self.remove(prime_pairs)
         product_mobs.set_color(YELLOW)
         self.wait(2)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             product_mobs,
             lambda m : (m.shift, MED_LARGE_BUFF*DOWN),
@@ -4063,7 +4062,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         self.play(FadeIn(
             braces, 
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait(2)
 
@@ -4134,14 +4133,14 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         radicals = self.get_radicals()
 
         self.play(
-            LaggedStart(FadeIn, rings),
+            LaggedStartMap(FadeIn, rings),
             Animation(self.lattice_points),
-            LaggedStart(FadeIn, radicals),
+            LaggedStartMap(FadeIn, radicals),
             run_time = 3
         )
         self.add_foreground_mobject(radicals)
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod,
                 dot_groups,
                 lambda m : (m.set_stroke, PINK, 5),
@@ -4173,7 +4172,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             if (x**2 + y**2) > self.max_lattice_point_radius**2
             if (x**2 + y**2) < new_max**2
         ])
-        new_dots.sort_submobjects(get_norm)
+        new_dots.sort(get_norm)
 
         self.play(*list(map(ShowCreation, [circle, arrow])))
         self.play(*list(map(FadeOut, [circle, arrow])))
@@ -4195,9 +4194,9 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         self.play(
             ApplyMethod(
                 VGroup(self.circle, self.radius).scale_in_place, 2,
-                rate_func = None,
+                rate_func=linear,
             ),
-            LaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill,
                 new_dots,
                 stroke_width = 4,
@@ -4220,7 +4219,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             TexMobject("\\vdots"),
             TexMobject("\\sqrt{R^2}")
         )
-        radicals.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        radicals.arrange(DOWN, buff = MED_SMALL_BUFF)
         radicals.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         radicals.to_edge(DOWN, buff = MED_SMALL_BUFF)
         radicals.to_edge(LEFT)
@@ -4263,7 +4262,7 @@ class AddUpGrid(Scene):
             row_lines[-2].get_left()[0]*RIGHT
         )
 
-        self.play(LaggedStart(ShowCreation, row_lines))
+        self.play(LaggedStartMap(ShowCreation, row_lines))
         self.wait()
 
         self.row_lines = row_lines
@@ -4297,13 +4296,13 @@ class AddUpGrid(Scene):
                     plusses.add(plus)
                     chi_sum.add(plus)
             chi_sum.add(rp)
-            chi_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            chi_sum.arrange(RIGHT, buff = SMALL_BUFF)
             chi_sum.scale(0.7)
             chi_sum.next_to(radical, RIGHT)
             chi_sums.add(chi_sum)
             radical.chi_sum = chi_sum
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             Write, chi_sums, 
             run_time = 5,
             rate_func = lambda t : t,
@@ -4432,10 +4431,10 @@ class AddUpGrid(Scene):
                 TexMobject("\\chi(", str(d), ")"),
                 TexMobject("+")
             )
-            term.arrange_submobjects(RIGHT, SMALL_BUFF)
+            term.arrange(RIGHT, SMALL_BUFF)
             term[1][1].set_color(YELLOW)
             full_sum.add(term)
-        full_sum.arrange_submobjects(RIGHT, SMALL_BUFF)
+        full_sum.arrange(RIGHT, SMALL_BUFF)
         full_sum.scale(0.7)
         full_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
 
@@ -4503,7 +4502,7 @@ class AddUpGrid(Scene):
             new_sum.add(plus)
         new_sum.add(dots)
         new_sum.add(rp)
-        new_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        new_sum.arrange(RIGHT, buff = SMALL_BUFF)
         new_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
         R_squared.shift(0.5*SMALL_BUFF*UP)
         R_movers = VGroup()
@@ -4756,7 +4755,7 @@ class Sponsorship(PiCreatureScene):
 
         self.play(
             morty.change_mode, "raise_right_hand",
-            LaggedStart(DrawBorderThenFill, logo, run_time = 3)
+            LaggedStartMap(DrawBorderThenFill, logo, run_time = 3)
         )
         self.wait()
         self.play(

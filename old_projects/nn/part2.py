@@ -18,7 +18,7 @@ def get_training_image_group(train_in, train_out):
     output = np.argmax(train_out)
     output_tex = TexMobject(str(output)).scale(1.5)
     result = Group(image, arrow, output_tex)
-    result.arrange_submobjects(RIGHT)
+    result.arrange(RIGHT)
     result.to_edge(UP)
     return result
 
@@ -35,7 +35,7 @@ def get_decimal_vector(nums, with_dots = True):
     if with_dots:
         dots = TexMobject("\\vdots")
         contents.submobjects.insert(len(decimals)/2, dots)
-    contents.arrange_submobjects(DOWN)
+    contents.arrange(DOWN)
     lb, rb = brackets = TexMobject("\\big[", "\\big]")
     brackets.scale(2)
     brackets.stretch_to_fit_height(1.2*contents.get_height())
@@ -108,7 +108,7 @@ class ShowPlan(Scene):
                 "Research corner",
             ]
         ])
-        items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        items.arrange(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         items.to_edge(LEFT, buff = LARGE_BUFF)
 
         rect = SurroundingRectangle(VGroup(*items[1:3]))
@@ -203,7 +203,7 @@ class PreviewLearning(NetworkScene):
         ]
         all_edges = VGroup(*it.chain(*network_mob.edge_groups))
         run_time = kwargs.get("run_time", self.default_activate_run_time)
-        edge_animation = LaggedStart(
+        edge_animation = LaggedStartMap(
             ShowCreationThenDestruction, 
             all_edges.copy().set_fill(YELLOW),
             run_time = run_time,
@@ -213,8 +213,8 @@ class PreviewLearning(NetworkScene):
         layer_animation = Transform(
             VGroup(*layers), VGroup(*active_layers),
             run_time = run_time,
-            submobject_mode = "lagged_start",
-            rate_func = None,
+            lag_ratio = 0.5,
+            rate_func=linear,
         )
 
         self.play(edge_animation, layer_animation, *added_anims)
@@ -266,7 +266,7 @@ class PreviewLearning(NetworkScene):
 
             self.play(
                 ShowCreation(
-                    delta_edges, submobject_mode = "all_at_once"
+                    delta_edges, lag_ratio = 0
                 ),
                 FadeIn(delta_neurons),
                 run_time = 0.5
@@ -312,7 +312,7 @@ class PreviewLearning(NetworkScene):
 
     def get_edge_animation(self):
         edges = VGroup(*it.chain(*self.network_mob.edge_groups))
-        return LaggedStart(
+        return LaggedStartMap(
             ApplyFunction, edges,
             lambda mob : (
                 lambda m : m.rotate_in_place(np.pi/12).set_color(YELLOW),
@@ -351,7 +351,7 @@ class TrainingVsTestData(Scene):
             get_training_image_group,
             self.data[ci:ci+self.n_examples]
         ))
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.scale(0.5)
         return group
 
@@ -363,8 +363,8 @@ class TrainingVsTestData(Scene):
         training_examples.next_to(ORIGIN, LEFT)
         test_examples.next_to(ORIGIN, RIGHT)
         self.play(
-            LaggedStart(FadeIn, training_examples),
-            LaggedStart(FadeIn, test_examples),
+            LaggedStartMap(FadeIn, training_examples),
+            LaggedStartMap(FadeIn, test_examples),
         )
 
         self.training_examples = training_examples
@@ -439,7 +439,7 @@ class MNistDescription(Scene):
         link_words = TextMobject("(links in the description)")
         link_words.next_to(authors, DOWN, MED_LARGE_BUFF)
         arrows = VGroup(*[Vector(DOWN) for x in range(4)])
-        arrows.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        arrows.arrange(RIGHT, buff = LARGE_BUFF)
         arrows.next_to(link_words, DOWN)
         arrows.set_color(BLUE)
 
@@ -449,7 +449,7 @@ class MNistDescription(Scene):
         self.add(title, authors)
         self.play(
             Write(link_words, run_time = 2),
-            LaggedStart(GrowArrow, arrows),
+            LaggedStartMap(GrowArrow, arrows),
         )
         self.wait()
 
@@ -466,13 +466,13 @@ class MNistDescription(Scene):
                 self.get_digit_pair(v_in, v_out)
                 for v_in, v_out in td_group
             ])
-            group.arrange_submobjects_in_grid(
+            group.arrange_in_grid(
                 n_rows = self.n_rows_per_grid,
             )
             group.set_height(FRAME_HEIGHT - 1)
             if i == 0:
                 self.play(
-                    LaggedStart(FadeIn, group),
+                    LaggedStartMap(FadeIn, group),
                     FadeOut(word_group),
                 )
             else:
@@ -569,14 +569,14 @@ class FunctionMinmization(GraphScene):
             dot.move_to(self.input_to_graph_point(x, graph))
 
         self.add(*[
-            ContinualUpdate(dot, update_dot)
+            Mobject.add_updater(dot, update_dot)
             for dot in dots
         ])
         self.wait(10)
 
 class ChangingDecimalWithColor(ChangingDecimal):
-    def update_mobject(self, alpha):
-        ChangingDecimal.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        ChangingDecimal.interpolate_mobject(self, alpha)
         num = self.number_update_func(alpha)
         self.decimal_number.set_fill(
             interpolate_color(BLACK, WHITE, 0.5+num*0.5), 
@@ -615,7 +615,7 @@ class IntroduceCostFunction(PreviewLearning):
         edges.remove(*neuron.edges_in)
         output_labels = network_mob.output_labels
         kwargs = {
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "run_time" : 2,
         }
         self.play(
@@ -694,9 +694,9 @@ class IntroduceCostFunction(PreviewLearning):
             neuron.set_fill, None, 0.5,
             FadeIn(formula),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ShowCreationThenDestruction, 
             neuron.edges_in.copy().set_stroke(YELLOW, 3),
             run_time = 1.5,
@@ -742,7 +742,7 @@ class IntroduceCostFunction(PreviewLearning):
                 for edge in neuron.edges_in
             ]
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, neuron.edges_in,
             lambda m : (m.rotate_in_place, np.pi/12),
             rate_func = wiggle,
@@ -771,7 +771,7 @@ class IntroduceCostFunction(PreviewLearning):
             self.color_edge_randomly(edge, exp = self.full_edges_exp)
 
         self.play(*[
-            LaggedStart(
+            LaggedStartMap(
                 FadeIn, group,
                 run_time = 3,
             )
@@ -807,13 +807,13 @@ class IntroduceCostFunction(PreviewLearning):
         self.play(
             self.network_mob.shift, 0.5*RIGHT,
             ShowCreation(rect),
-            LaggedStart(DrawBorderThenFill, image),
-            LaggedStart(DrawBorderThenFill, neurons),
+            LaggedStartMap(DrawBorderThenFill, image),
+            LaggedStartMap(DrawBorderThenFill, neurons),
             run_time = 1
         )
         self.play(
             MoveToTarget(
-                neurons, submobject_mode = "lagged_start",
+                neurons, lag_ratio = 0.5,
                 remover = True
             ),
             layer0.neurons.set_fill, None, 0,
@@ -879,7 +879,7 @@ class IntroduceCostFunction(PreviewLearning):
             network_mob.edge_groups
         ))))
 
-        self.play(LaggedStart(FadeOut, to_fade, run_time = 1))
+        self.play(LaggedStartMap(FadeOut, to_fade, run_time = 1))
 
     def break_down_cost_function(self):
         layer = self.network_mob.layers[-1]
@@ -904,7 +904,7 @@ class IntroduceCostFunction(PreviewLearning):
             last_plus = term[-1]
         for mob in terms[-1], symbols:
             mob.remove(last_plus)
-        terms.arrange_submobjects(
+        terms.arrange(
             DOWN, buff = SMALL_BUFF,
             aligned_edge = LEFT
         )
@@ -916,7 +916,7 @@ class IntroduceCostFunction(PreviewLearning):
         image_group.target.scale(0.5)
         cost_of = TextMobject("Cost of").set_color(RED)
         cost_group = VGroup(cost_of, image_group.target)
-        cost_group.arrange_submobjects(RIGHT)
+        cost_group.arrange(RIGHT)
         brace = Brace(terms, LEFT)
         cost_group.next_to(brace, LEFT)
 
@@ -984,7 +984,7 @@ class IntroduceCostFunction(PreviewLearning):
             ])
         term_updates.append(ChangingDecimal(sum_term, sum_update))
         for update in term_updates:
-            update.update_mobject(0)
+            update.interpolate_mobject(0)
 
         target_vect = 0.1*np.random.random(10)
         target_vect[3] = 0.97
@@ -1004,8 +1004,8 @@ class IntroduceCostFunction(PreviewLearning):
             cost_group.scale, 0.5,
             cost_group.to_corner, UP+LEFT,
             MoveToTarget(brace),
-            LaggedStart(GrowArrow, arrows),
-            LaggedStart(FadeIn, terms),
+            LaggedStartMap(GrowArrow, arrows),
+            LaggedStartMap(FadeIn, terms),
             FadeIn(sum_term),
             Animation(decimals)
         )
@@ -1018,7 +1018,7 @@ class IntroduceCostFunction(PreviewLearning):
             ]
         ))
         self.wait()
-        self.play(LaggedStart(Indicate, decimals, rate_func = there_and_back))
+        self.play(LaggedStartMap(Indicate, decimals, rate_func = there_and_back))
         self.wait()
         for update in update_decimals:
             update.rate_func = lambda a : smooth(1-a)
@@ -1109,7 +1109,7 @@ class IntroduceCostFunction(PreviewLearning):
             DecimalNumber(n).set_fill(opacity = 0.5*n + 0.5)
             for n in num_vect
         ])
-        decimals.arrange_submobjects(DOWN)
+        decimals.arrange(DOWN)
         decimals.set_height(height)
         lb, rb = brackets = TexMobject("[]")
         brackets.scale(2)
@@ -1145,7 +1145,7 @@ class YellAtNetwork(PiCreatureScene, PreviewLearning):
         layer_copy.neurons[3].set_fill(WHITE, 1)
         layer_copy.scale(1.5)
         desired = Group(image, arrow, layer_copy)
-        desired.arrange_submobjects(RIGHT)
+        desired.arrange(RIGHT)
         desired.to_edge(UP)
 
         q_marks = TexMobject("???").set_color(RED)
@@ -1269,7 +1269,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         dot.move_to(input_words.get_right())
         dot.set_fill(opacity = 0.5)
 
-        self.play(FadeIn(input_words[1], submobject_mode = "lagged_start"))
+        self.play(FadeIn(input_words[1], lag_ratio = 0.5))
         self.play(
             dot.move_to, image,
             dot.set_fill, None, 0,
@@ -1385,7 +1385,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         parameter_words = TextMobject("Parameters:", w3)
         parameter_words[0].set_color(GREEN)
         words = VGroup(input_words, output_words, parameter_words)
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.scale(0.9)
         words.next_to(ORIGIN, RIGHT)
         words.shift(UP)
@@ -1752,8 +1752,8 @@ class SingleVariableCostFunction(GraphScene):
             new_ball.point = point
             balls.add(new_ball)
             updates += [
-                ContinualUpdate(point, update_point),
-                ContinualUpdate(new_ball, update_ball)
+                Mobject.add_updater(point, update_point),
+                Mobject.add_updater(new_ball, update_ball)
             ]
         balls.set_color_by_gradient(BLUE, GREEN)
 
@@ -1867,7 +1867,7 @@ class TwoVariableInputSpace(Scene):
         self.play(dot.restore)
         self.play(
             FadeIn(question),
-            LaggedStart(GrowArrow, arrows)
+            LaggedStartMap(GrowArrow, arrows)
         )
         self.wait()
 
@@ -1951,7 +1951,7 @@ class GradientDescentAlgorithm(Scene):
             TextMobject("Small step in", "$-\\nabla C$", "direction"),
             TextMobject("Repeat."),
         )
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.set_width(FRAME_WIDTH - 1)
         words.to_corner(DOWN+LEFT)
 
@@ -1993,7 +1993,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
         ])
         dots = TexMobject("\\vdots")
         decimals.submobjects.insert(3, dots)
-        decimals.arrange_submobjects(DOWN)
+        decimals.arrange(DOWN)
         decimals.shift(2*LEFT + 0.5*DOWN)
         lb, rb = brackets = TexMobject("\\big[", "\\big]")
         brackets.scale(2)
@@ -2023,9 +2023,9 @@ class ShowFullCostFunctionGradient(PreviewLearning):
             ReplacementTransform(
                 edges, edges_target,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
-            LaggedStart(FadeIn, words),
+            LaggedStartMap(FadeIn, words),
         )
         self.play(*list(map(Write, [lb, rb, lhs])), run_time = 1)
         self.wait()
@@ -2072,7 +2072,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
             self.play(
                 Transform(
                     nd, VectorizedPoint(od.get_center()),
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     remover = True
                 ),
                 ChangingDecimal(
@@ -2113,7 +2113,7 @@ class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
             for n1, n2 in zip(values, target_values)
         ]
 
-        self.play(LaggedStart(FadeIn, words, run_time = 1))
+        self.play(LaggedStartMap(FadeIn, words, run_time = 1))
         self.play(*[
             ChangingDecimal(d, update)
             for d, update in zip(decimals, updates)
@@ -2183,7 +2183,7 @@ class NonSpatialGradientIntuition(Scene):
             )
         ])
         ws.set_color(self.w_color)
-        ws.arrange_submobjects(DOWN)
+        ws.arrange(DOWN)
         lb, rb = brackets = TexMobject("\\big[", "\\big]").scale(2)
         brackets.stretch_to_fit_height(1.2*ws.get_height())
         lb.next_to(ws, LEFT)
@@ -2267,14 +2267,14 @@ class NonSpatialGradientIntuition(Scene):
             phrase.set_color_by_tex(verb, color)
             w.generate_target()
             group = VGroup(w.target, phrase)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             w.target.shift(0.7*SMALL_BUFF*DOWN)
             group.move_to(decimal.get_center() + RIGHT, LEFT)
             direction_phrases.add(phrase)
 
         self.play(
-            LaggedStart(MoveToTarget, ws),
-            LaggedStart(FadeIn, direction_phrases)
+            LaggedStartMap(MoveToTarget, ws),
+            LaggedStartMap(FadeIn, direction_phrases)
         )
         self.wait(2)
 
@@ -2312,8 +2312,8 @@ class NonSpatialGradientIntuition(Scene):
             rect.target = words
             rects.add(rect)
 
-        self.play(LaggedStart(ShowCreation, rects))
-        self.play(LaggedStart(MoveToTarget, rects))
+        self.play(LaggedStartMap(ShowCreation, rects))
+        self.play(LaggedStartMap(MoveToTarget, rects))
         self.wait(2)
 
 class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
@@ -2644,7 +2644,7 @@ class GradientNudging(PreviewLearning):
         self.play(
             ReplacementTransform(mover, target),
             FadeIn(words),
-            LaggedStart(GrowArrow, arrows, run_time = 1)
+            LaggedStartMap(GrowArrow, arrows, run_time = 1)
         )
         self.play(FadeOut(target))
         self.play(self.get_edge_change_anim(edges))
@@ -2672,8 +2672,7 @@ class GradientNudging(PreviewLearning):
             edge.rotate_in_place(np.pi)
         return MoveToTarget(
             edges,
-            submobject_mode = "lagged_start",
-            lag_factor = 8,
+            lag_ratio = 0.5,
             run_time = 1.5
         )
 
@@ -2819,7 +2818,7 @@ class TestPerformance(PreviewLearning):
             word_frac, self.frac, 
             self.equals, self.decimal
         )
-        fracs.arrange_submobjects(RIGHT)
+        fracs.arrange(RIGHT)
         fracs.to_corner(UP+RIGHT, buff = LARGE_BUFF)
         self.add(fracs)
 
@@ -2855,7 +2854,7 @@ class TestPerformance(PreviewLearning):
             choice_mob = TexMobject(str(choice))
             choice_mob.scale(1.5)
             group = VGroup(image, arrow, choice_mob)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             group.shift(
                 self.title.get_bottom()+MED_SMALL_BUFF*DOWN -\
                 image.get_top()
@@ -2929,7 +2928,7 @@ class ReactToPerformance(TeacherStudentsScene):
             Arrow(LEFT, RIGHT, color = WHITE),
             TextMobject("98\\%", "testing accuracy")
         )
-        title.arrange_submobjects(RIGHT)
+        title.arrange(RIGHT)
         title.to_edge(UP)
         title[-1][0].set_color(GREEN)
         self.play(Write(title, run_time = 2))
@@ -3041,7 +3040,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
                     color = self.negative_edge_color
                 pixel.set_fill(color, opacity = abs(shade)**(0.3))
             pixel_arrays.add(pixel_array)
-        pixel_arrays.arrange_submobjects_in_grid(buff = MED_LARGE_BUFF)
+        pixel_arrays.arrange_in_grid(buff = MED_LARGE_BUFF)
         pixel_arrays.set_height(FRAME_HEIGHT - 2.5)
         pixel_arrays.to_corner(DOWN+RIGHT)
 
@@ -3109,13 +3108,12 @@ class InputRandomData(TestPerformance):
             rect.get_top(),
             self.network_mob.layers[0].neurons.get_top(),
             path_arc = -2*np.pi/3,
-            use_rectangular_stem = False,
         )
         arrow.tip.set_stroke(width = 3)
 
         self.play(
             ShowCreation(rect),
-            LaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill, image, 
                 stroke_width = 0.5
             )
@@ -3149,7 +3147,7 @@ class InputRandomData(TestPerformance):
             for neuron, o in zip(neurons, vect):
                 neuron.generate_target()
                 neuron.target.set_fill(WHITE, opacity = o)
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 MoveToTarget, neurons,
                 run_time = 1
             ))
@@ -3177,7 +3175,7 @@ class InputRandomData(TestPerformance):
         self.play(MoveToTarget(
             image, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.activate_network(rand_vect, FadeOut(image))
 
@@ -3377,7 +3375,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             choice.scale(2)
             arrow = Vector(RIGHT, color = WHITE)
             group = Group(image, arrow, choice)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             group.next_to(self.line, DOWN, LARGE_BUFF)
             group.to_edge(LEFT, buff = LARGE_BUFF)
 
@@ -3523,13 +3521,13 @@ class RandomlyLabeledImageData(Scene):
             label.target.move_to(labels[i], LEFT)
             label.target.set_color(YELLOW)
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, groups,
             run_time = 3,
             lag_ratio = 0.3,
         ))
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, labels, 
             run_time = 4,
             lag_ratio = 0.5,
@@ -3582,7 +3580,7 @@ class TrainOnImages(PreviewLearning, RandomlyLabeledImageData):
 
             group.to_edge(UP)
             self.add(group)
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 MoveToTarget, edges,
                 lag_ratio = 0.4,
                 run_time = 2,
@@ -3659,13 +3657,13 @@ class CompareLearningCurves(GraphScene):
         self.play(ShowCreation(
             slow_decrease,
             run_time = 12,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.play(FadeIn(fast_label), ShowCreation(fast_line))
         self.play(ShowCreation(
             faster_decrease,
             run_time = 12,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.wait()
 

@@ -26,7 +26,7 @@ class LastVideo(TeacherStudentsScene):
             "\\frac{d(x^n)}{dx} = nx^{n-1}",
             "\\frac{d(\\sin(x))}{dx} = \\cos(x)",
         ])))
-        known_formulas.arrange_submobjects(
+        known_formulas.arrange(
             DOWN, buff = MED_LARGE_BUFF,
         )
         known_formulas.set_height(2.5)
@@ -114,7 +114,7 @@ class DoublingPopulation(PiCreatureScene):
             FadeIn(
                 t_expression,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
         )
         self.play(Transform(f_x, P_t))
@@ -327,9 +327,9 @@ class DoublingPopulation(PiCreatureScene):
             VGroup(*[
                 PiCreature(mode = "plain")
                 for y in range(height)
-            ]).arrange_submobjects(UP, buff = MED_LARGE_BUFF)
+            ]).arrange(UP, buff = MED_LARGE_BUFF)
             for x in range(width)
-        ]).arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        ]).arrange(RIGHT, buff = MED_LARGE_BUFF)
         creatures = VGroup(*it.chain(*creature_array))
         creatures.set_height(self.pi_creature_grid_height)
         creatures.to_corner(DOWN+RIGHT)
@@ -496,7 +496,7 @@ class GraphOfTwoToT(GraphScene):
             FadeIn(
                 slope_label, 
                 run_time = 4,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             ReplacementTransform(
                 height_label.copy(),
@@ -608,7 +608,7 @@ class FakeDiagram(TeacherStudentsScene):
             axis_point = end_point[0]*RIGHT + gs.graph_origin[1]*UP
             for alpha in np.linspace(0, 1, 20):
                 point = interpolate(axis_point, graph.points[0], alpha)
-                graph.add_control_points(3*[point])
+                graph.add_line_to(point)
             graph.set_stroke(width = 1)
             graph.set_fill(opacity = 1)
             graph.set_color(BLUE_D)
@@ -1009,7 +1009,7 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
             for base in (2, 8)
         ])
 
-        derivs.arrange_submobjects(
+        derivs.arrange(
             DOWN, buff = 1.5, aligned_edge = LEFT
         )
         derivs.to_edge(LEFT, LARGE_BUFF).shift(UP)
@@ -1114,7 +1114,7 @@ class WhyPi(PiCreatureScene):
         circum.set_color(circle.get_color())
         circum.scale(np.pi)
         circum.next_to(circle, DOWN, LARGE_BUFF)
-        circum.insert_n_anchor_points(circle.get_num_anchor_points()-2)
+        circum.insert_n_curves(circle.get_num_curves()-2)
         circum.make_jagged()
         pi = TexMobject("\\pi")
         pi.next_to(circum, UP)
@@ -1387,7 +1387,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             FadeIn(
                 exp_c, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             self.teacher.change, "raise_right_hand"
         )
@@ -1457,7 +1457,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             ApplyMethod(
                 t_group.restore,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             self.teacher.change_mode, "speaking"
         )
@@ -1591,7 +1591,7 @@ class ManyExponentialForms(TeacherStudentsScene):
             ]
         ]
         group = VGroup(lhs, *rhs_list)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.set_width(FRAME_WIDTH - LARGE_BUFF)
         group.next_to(self.get_pi_creatures(), UP, 2*LARGE_BUFF)
         for part in group:
@@ -1614,7 +1614,7 @@ class ManyExponentialForms(TeacherStudentsScene):
             self.play(FadeIn(
                 rhs, 
                 run_time = 2,
-                submobject_mode = 'lagged_start'
+                lag_ratio = 0.5,
             ))
             self.wait(2)
         self.wait()
@@ -1704,7 +1704,7 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
         )
         if self.include_solution:
             self.play(Write(solution))
-        graph_growth = ShowCreation(graph, rate_func = None)
+        graph_growth = ShowCreation(graph, rate_func=linear)
         delta_T_group_update = UpdateFromFunc(
             delta_T_group, update_delta_T_group
         )
@@ -1784,19 +1784,19 @@ class InvestedMoney(Scene):
 class NaturalLog(Scene):
     def construct(self):
         expressions = VGroup(*list(map(self.get_expression, [2, 3, 7])))
-        expressions.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        expressions.arrange(DOWN, buff = MED_SMALL_BUFF)
         expressions.to_edge(LEFT)
 
         self.play(FadeIn(
             expressions, 
             run_time = 3, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(
             expressions.set_fill, None, 1,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait()
         for i in 0, 2, 1:
@@ -1898,7 +1898,7 @@ class NextVideo(TeacherStudentsScene):
         next_tex = VGroup(*list(map(TextMobject, [
             "Chain rule", "Product rule", "$\\vdots$"
         ])))
-        next_tex.arrange_submobjects(DOWN)
+        next_tex.arrange(DOWN)
         next_tex.next_to(brace, DOWN)
         next_tex.shift(
             next_video.get_center()[0]*RIGHT\

@@ -96,7 +96,7 @@ class ThisVideo(TeacherStudentsScene):
         formula.set_color_by_tex("v", VELOCITY_COLOR)
         formula.next_to(self.teacher.get_corner(UP+LEFT), UP, MED_LARGE_BUFF)
 
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.play(
             this_video.shift, this_video.get_height()*DOWN/2,
             this_video.set_color, YELLOW,
@@ -256,8 +256,8 @@ class PlotVelocity(GraphScene):
 
         self.play(DrawBorderThenFill(
             speedometer, 
-            submobject_mode = "lagged_start",
-            rate_func = None,
+            lag_ratio = 0.5,
+            rate_func=linear,
         ))
 
         self.speedometer = speedometer
@@ -294,7 +294,7 @@ class PlotVelocity(GraphScene):
 
         self.play(
             Succession(
-                *dot_intro_anims, rate_func = None
+                *dot_intro_anims, rate_func=linear
             ),
             ApplyMethod(
                 self.speedometer.move_needle_to_velocity,
@@ -522,7 +522,7 @@ class AreaUnderVGraph(PlotVelocity):
             self.play(Transform(
                 rects, new_rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
 
@@ -536,7 +536,7 @@ class ConstantVelocityCar(Scene):
         self.play(MoveCar(
             car, 7*RIGHT+3*DOWN,
             run_time = 5,
-            rate_func = None,
+            rate_func=linear,
         ))
         self.wait()
 
@@ -561,7 +561,7 @@ class ConstantVelocityPlot(PlotVelocity):
             color = VELOCITY_COLOR
         )
 
-        self.play(ShowCreation(graph, rate_func = None, run_time = 3))
+        self.play(ShowCreation(graph, rate_func=linear, run_time = 3))
         self.wait()
 
         self.graph = graph
@@ -652,7 +652,7 @@ class ConstantVelocityPlot(PlotVelocity):
 
     def note_units(self):
         x_line, y_line  = lines = VGroup(*[
-            axis.main_line.copy()
+            axis.copy()
             for axis in (self.x_axis, self.y_axis)
         ])
         lines.set_color(TIME_COLOR)
@@ -692,7 +692,7 @@ class ConstantVelocityPlot(PlotVelocity):
             self.play(
                 FadeClass(
                     units_of_area, 
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     run_time = 3
                 ),
                 Animation(self.s_label),
@@ -713,7 +713,7 @@ class PiecewiseConstantCar(Scene):
             car.randy.rotate_in_place(np.pi/8)
             anim = MoveCar(
                 car, start_point+shift*RIGHT,
-                rate_func = None
+                rate_func=linear
             )
 
             anim.target_mobject[0].rotate_in_place(-np.pi/8)
@@ -860,7 +860,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             ReplacementTransform(
                 flat_rects, rects,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             Animation(right_brace)
         )
@@ -904,7 +904,7 @@ class PiecewiseConstantPlot(PlotVelocity):
         self.play(ReplacementTransform(
             rects, target_rects,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         rects.restore()
         self.wait()
@@ -921,7 +921,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             FadeIn(
                 example_text, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             ReplacementTransform(
                 dt_label.copy(),
@@ -1200,12 +1200,12 @@ class PiecewiseConstantPlot(PlotVelocity):
             ReplacementTransform(
                 rects, next_rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Transform(
                 self.ticks, self.get_ticks(next_rects),
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
         )
         self.rects = rects = next_rects
@@ -1276,7 +1276,7 @@ class PiecewiseConstantPlot(PlotVelocity):
                 Transform(
                     rects, new_rects, 
                     run_time = 2,
-                    submobject_mode = "lagged_start"
+                    lag_ratio = 0.5
                 ),
                 morty.look_at, rects,
             )
@@ -1461,7 +1461,7 @@ class AreaUnderACurve(GraphScene):
             self.play(Transform(
                 rects, new_rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
 
@@ -1574,7 +1574,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         self.change_area_bounds(new_t_max = 0, run_time = 2)
         self.change_area_bounds(
             new_t_max = 8, 
-            rate_func = None,
+            rate_func=linear,
             run_time = 7.9,
         )
         self.wait()
@@ -1782,7 +1782,7 @@ class DirectInterpretationOfDsDt(TeacherStudentsScene):
                 FadeIn(
                     words, 
                     run_time = 2,
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                 ),
                 self.students[1].change_mode, "raise_right_hand"
             )
@@ -1816,7 +1816,7 @@ class FindAntiderivative(Antiderivative):
         self.add(functions)
         self.play(*list(map(ShowCreation, arcs)))
         for word in words:
-            self.play(FadeIn(word, submobject_mode = "lagged_start"))
+            self.play(FadeIn(word, lag_ratio = 0.5))
         self.wait()
         self.change_mode("confused")
         self.wait(2)
@@ -2209,7 +2209,7 @@ class LowerBound(AreaIsDerivative):
         self.play(Write(plus_fives, run_time = 2))
         self.wait(2)
         self.play(
-            group.arrange_submobjects,
+            group.arrange,
             group.next_to, antideriv_diff, DOWN, MED_LARGE_BUFF
         )
         self.wait()
@@ -2249,7 +2249,7 @@ class LowerBound(AreaIsDerivative):
             TexMobject("-"), parts[1],
         )
         result.left_part, result.right_part = parts
-        result.arrange_submobjects(RIGHT)
+        result.arrange(RIGHT)
         result.scale(0.9)
         result.next_to(self.integral, RIGHT)
         return result
@@ -2413,7 +2413,7 @@ class FundamentalTheorem(GraphScene):
         """)
         words.to_edge(RIGHT)
 
-        self.play(Write(words, lag_factor = 3))
+        self.play(Write(words))
         self.wait()
 
     def show_integral_considering_continuum(self):
@@ -2515,7 +2515,7 @@ class NegativeArea(GraphScene):
             FadeIn(
                 area, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             )
         )
 
@@ -2688,7 +2688,7 @@ class NextVideo(TeacherStudentsScene):
         integral = TexMobject("\\int")
         integral.next_to(next_video, DOWN, LARGE_BUFF)
 
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.play(
             next_video.set_color, YELLOW,
             next_video.shift, next_video.get_height()*DOWN/2,

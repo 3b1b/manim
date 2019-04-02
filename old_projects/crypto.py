@@ -22,7 +22,7 @@ def bit_string_to_mobject(bit_string):
     pre_result = VGroup(*[
         line.copy() for row in range(8)
     ])
-    pre_result.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+    pre_result.arrange(DOWN, buff = SMALL_BUFF)
     result = VGroup(*it.chain(*pre_result))
     result.scale(0.7)
     bit_string = (256 - len(bit_string))*"0" + bit_string
@@ -120,7 +120,7 @@ class AskQuestion(Scene):
             n_chars = len(word.strip())
             n_spaces = len(word) - n_chars
             self.play(
-                LaggedStart(FadeIn, part),
+                LaggedStartMap(FadeIn, part),
                 run_time = self.time_per_char * len(word),
                 rate_func = squish_rate_func(smooth, 0, 0.5)
             )
@@ -143,7 +143,7 @@ class ListOfAttributes(Scene):
             for word in ("government", "bank")
         ]
         attributes = VGroup(digital, *buildings)
-        attributes.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        attributes.arrange(RIGHT, buff = LARGE_BUFF)
         for building in buildings:
             building.cross = Cross(building)
             building.cross.set_stroke(width = 12)
@@ -278,7 +278,7 @@ class ListRecentCurrencies(Scene):
         )
         for logo in logos:
             logo.set_height(0.75)
-        logos.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        logos.arrange(DOWN, buff = MED_LARGE_BUFF)
         logos.shift(LEFT)
         logos.to_edge(UP)
         names = list(map(
@@ -299,7 +299,7 @@ class ListRecentCurrencies(Scene):
             self.play(*anims)
         dots = TexMobject("\\vdots")
         dots.next_to(logos, DOWN)
-        self.play(LaggedStart(FadeIn, dots, run_time = 1))
+        self.play(LaggedStartMap(FadeIn, dots, run_time = 1))
         self.wait()
 
 class Hype(TeacherStudentsScene):
@@ -363,7 +363,7 @@ class NoCommentOnSpeculation(TeacherStudentsScene):
         )
         self.play(ShowCreation(
             graph, run_time = 2,
-            rate_func = None
+            rate_func=linear
         ))
         self.wait()
         self.play(ShowCreation(cross))
@@ -503,7 +503,7 @@ class LedgerScene(PiCreatureScene):
 
     def animate_payment_addition(self, *args, **kwargs):
         line = self.add_payment_line_to_ledger(*args, **kwargs)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, 
             VGroup(*it.chain(*line)),
             run_time = 1
@@ -577,7 +577,7 @@ class LayOutPlan(LedgerScene):
     def ask_question(self):
         btc = BitcoinLogo()
         group = VGroup(btc, TexMobject("= ???"))
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
 
         self.play(
             DrawBorderThenFill(btc),
@@ -797,7 +797,7 @@ class IntroduceLedgerSystem(LedgerScene):
             FadeIn(tally_up)
         )
         self.play(
-            LaggedStart(FadeIn, results),
+            LaggedStartMap(FadeIn, results),
             *[
                 ApplyMethod(pi.change, "happy")
                 for pi in creditors
@@ -813,7 +813,7 @@ class IntroduceLedgerSystem(LedgerScene):
         ]
         self.play(FadeIn(debtor_cash))
         self.play(
-            debtor_cash.arrange_submobjects, RIGHT, SMALL_BUFF,
+            debtor_cash.arrange, RIGHT, SMALL_BUFF,
             debtor_cash.move_to, self.pi_creatures,
         )
         self.wait()
@@ -845,7 +845,7 @@ class InitialProtocol(Scene):
 
         for item in items:
             self.wait()
-            self.play(LaggedStart(FadeIn, item))
+            self.play(LaggedStartMap(FadeIn, item))
         self.wait(2)
 
     def get_new_item(self, item_string):
@@ -941,7 +941,7 @@ class IntroduceSignatures(LedgerScene):
             self.add_payment_line_to_ledger(*payment)
             for payment in self.payments
         ])
-        self.play(LaggedStart(FadeIn, transactions))
+        self.play(LaggedStartMap(FadeIn, transactions))
         self.wait()
 
     def add_signatures(self):
@@ -986,7 +986,7 @@ class AskHowDigitalSignaturesArePossible(TeacherStudentsScene):
         )
         self.change_student_modes("pondering", "confused", "erm")
         self.play(Write(signature))
-        self.play(LaggedStart(FadeIn, bits, run_time = 1))
+        self.play(LaggedStartMap(FadeIn, bits, run_time = 1))
         self.wait()
         self.play(ReplacementTransform(
             bits.copy(), bits_copy,
@@ -1015,7 +1015,7 @@ class DescribeDigitalSignatures(LedgerScene):
             VGroup(pi, pi.label).scale(1.7)
             for pi in self.pi_creatures
         ])
-        creature_groups.arrange_submobjects(RIGHT, buff = 2)
+        creature_groups.arrange(RIGHT, buff = 2)
         creature_groups.to_edge(DOWN)
         self.add(creature_groups)
         for pi in self.pi_creatures:
@@ -1052,7 +1052,7 @@ class DescribeDigitalSignatures(LedgerScene):
             ]
         ]
         key_pairs = [
-            VGroup(*pair).arrange_submobjects(DOWN, aligned_edge = LEFT)
+            VGroup(*pair).arrange(DOWN, aligned_edge = LEFT)
             for pair in zip(public_keys, private_keys)
         ]
         for key_pair, pi in zip(key_pairs, self.pi_creatures):
@@ -1099,7 +1099,7 @@ class DescribeDigitalSignatures(LedgerScene):
         ])
 
         self.play(ShowCreation(rects))
-        self.play(LaggedStart(DrawBorderThenFill, locks))
+        self.play(LaggedStartMap(DrawBorderThenFill, locks))
         self.wait()
 
         self.private_key_rects = rects
@@ -1107,7 +1107,7 @@ class DescribeDigitalSignatures(LedgerScene):
 
     def show_handwritten_signatures(self):
         lines = VGroup(*[Line(LEFT, RIGHT) for x in range(5)])
-        lines.arrange_submobjects(DOWN)
+        lines.arrange(DOWN)
         last_line = lines[-1]
         last_line.scale(0.7, about_point = last_line.get_left())
 
@@ -1129,7 +1129,7 @@ class DescribeDigitalSignatures(LedgerScene):
             document.copy()
             for x in range(2)
         ])
-        documents.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        documents.arrange(RIGHT, buff = MED_LARGE_BUFF)
         documents.to_corner(UP+LEFT)
 
         signatures = VGroup()
@@ -1142,7 +1142,7 @@ class DescribeDigitalSignatures(LedgerScene):
 
         self.play(
             FadeOut(self.title),
-            LaggedStart(FadeIn, documents, run_time = 1)
+            LaggedStartMap(FadeIn, documents, run_time = 1)
         )
         self.play(Write(signatures))
         self.wait()
@@ -1178,7 +1178,7 @@ class DescribeDigitalSignatures(LedgerScene):
             TextMobject,
             ["Different messages", "Completely different signatures"]
         )))
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.scale(1.3)
         words.next_to(self.documents, RIGHT)
 
@@ -1285,7 +1285,7 @@ class TryGuessingDigitalSignature(Scene):
 
         zeros_row = TexMobject("0"*32)
         zeros = VGroup(*[zeros_row.copy() for x in range(8)])
-        zeros.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        zeros.arrange(DOWN, buff = SMALL_BUFF)
         zeros.next_to(brace, UP)
 
         self.add(verify)
@@ -1293,7 +1293,7 @@ class TryGuessingDigitalSignature(Scene):
             GrowFromCenter(brace),
             FadeIn(
                 zeros,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             )
         )
@@ -1456,11 +1456,11 @@ class IncludeTransactionNumber(LedgerScene):
     def copy_payment_many_times(self):
         line = self.ledger.content[-1]
         copies = VGroup(*[line.copy() for x in range(4)])
-        copies.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        copies.arrange(DOWN, buff = MED_SMALL_BUFF)
         copies.next_to(line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(
-            LaggedStart(FadeIn, copies, run_time = 3),
+            LaggedStartMap(FadeIn, copies, run_time = 3),
             self.bob.change, "conniving",
         )
         self.play(self.alice.change, "angry")
@@ -1497,7 +1497,7 @@ class IncludeTransactionNumber(LedgerScene):
         self.play(FadeOut(old_signatures))
         self.play(ReplacementTransform(
             lines.copy(), new_signatures,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.play(self.bob.change, "erm")
@@ -1546,7 +1546,7 @@ class CharlieRacksUpDebt(SignedLedgerScene):
             for payment in self.payments
         ])
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, lines, 
             run_time = 3,
             lag_ratio = 0.25
@@ -1633,7 +1633,7 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
             money.move_to(corner)
 
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, moneys,
                 lambda m : (m.restore,)
             ),
@@ -1665,7 +1665,7 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
         lines[-1].add(line)
 
         self.play(
-            LaggedStart(FadeIn, lines),
+            LaggedStartMap(FadeIn, lines),
             *[
                 ApplyMethod(pi.change, "thinking", self.ledger)
                 for pi in self.pi_creatures
@@ -1757,8 +1757,8 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
             FadeIn(balance)
         )
         self.play(
-            LaggedStart(FadeIn, lines, run_time = 3),
-            LaggedStart(ShowCreation, arrows, run_time = 3),
+            LaggedStartMap(FadeIn, lines, run_time = 3),
+            LaggedStartMap(ShowCreation, arrows, run_time = 3),
         )
         self.wait()
 
@@ -1852,7 +1852,7 @@ class RenameToLedgerDollars(LedgerScene):
             for payment in self.payments
         ])
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, lines,
             run_time = 4,
             lag_ratio = 0.3
@@ -1973,7 +1973,7 @@ class BitcoinIsALedger(Scene):
         ledger = self.get_ledger()
         arrow = TexMobject("\\Leftrightarrow")
         group = VGroup(logo, arrow, ledger)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
 
         self.play(DrawBorderThenFill(logo))
         self.wait()
@@ -2009,7 +2009,7 @@ class BitcoinIsALedger(Scene):
             Line(LEFT, RIGHT)
             for x in range(8)
         ])
-        lines.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        lines.arrange(DOWN, buff = SMALL_BUFF)
         lines.stretch_to_fit_width(title.get_width())
         lines.next_to(title, DOWN)
         return VGroup(rect, title, lines)
@@ -2062,7 +2062,7 @@ class DistributedLedgerScene(LedgerScene):
         title.next_to(ledger.get_top(), DOWN, MED_LARGE_BUFF)
         h_line.next_to(title, DOWN)
         added_lines = VGroup(*[h_line.copy() for x in range(5)])
-        added_lines.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        added_lines.arrange(DOWN, buff = MED_LARGE_BUFF)
         added_lines.next_to(h_line, DOWN, MED_LARGE_BUFF)
         ledger.content.add(added_lines)
 
@@ -2126,7 +2126,7 @@ class TransitionToDistributedLedger(DistributedLedgerScene):
         ])
 
         for payment in payments:
-            self.play(LaggedStart(FadeIn, payment, run_time = 1))
+            self.play(LaggedStartMap(FadeIn, payment, run_time = 1))
             self.wait()
 
     def ask_who_controls_ledger(self):
@@ -2216,7 +2216,7 @@ class TransitionToDistributedLedger(DistributedLedgerScene):
         self.play(
             FadeOut(self.network),
             ledgers.scale, 2,
-            ledgers.arrange_submobjects, RIGHT,
+            ledgers.arrange, RIGHT,
             ledgers.space_out_submobjects,
         )
 
@@ -2244,7 +2244,7 @@ class BobDoubtsBroadcastTransaction(DistributedLedgerScene):
         for pi in self.pi_creatures:
             pi.flip()
         self.pi_creatures.scale(2)
-        self.pi_creatures.arrange_submobjects(RIGHT, buff = 5)
+        self.pi_creatures.arrange(RIGHT, buff = 5)
 
         for name in "bob", "charlie":
             label = TextMobject(name.capitalize())
@@ -2449,9 +2449,9 @@ class ThisIsWellIntoTheWeeds(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["pondering"]*3,
-            added_anims = [LaggedStart(FadeIn, lightbulb)]
+            added_anims = [LaggedStartMap(FadeIn, lightbulb)]
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, lightbulb,
             lambda b : (b.set_color, YELLOW_A),
             rate_func = there_and_back
@@ -2515,7 +2515,7 @@ class IntroduceSHA256(Scene):
         self.remove(digest)
         for brace, text in brace_text_pairs:
             if brace is digest_brace:
-                self.play(LaggedStart(
+                self.play(LaggedStartMap(
                     FadeIn, digest,
                     run_time = 4,
                     lag_ratio = 0.05
@@ -2529,7 +2529,7 @@ class IntroduceSHA256(Scene):
         self.play(Write(looks_random))
         self.wait(2)
         for mob in digest, message:
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 ApplyMethod, mob,
                 lambda m : (m.set_color, YELLOW),
                 rate_func = there_and_back,
@@ -2558,7 +2558,7 @@ class IntroduceSHA256(Scene):
             self.play(Transform(
                 digest, new_digest,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi/2
             ))
             if arrow in self.get_mobjects():
@@ -2610,7 +2610,7 @@ class IntroduceSHA256(Scene):
             Transform(
                 self.digest, new_digest,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi/2
             ),
             Transform(self.digest_text, desired_output_text)
@@ -2655,7 +2655,7 @@ class IntroduceSHA256(Scene):
             self.play(Transform(
                 group[1], new_group[1],
                 run_time = 1,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
 
 class PonderScematic(Scene):
@@ -2676,7 +2676,7 @@ class SHA256ToProofOfWork(TeacherStudentsScene):
         proof = TextMobject("Proof of work")
         arrow = Arrow(LEFT, RIGHT)
         group = VGroup(sha, arrow, proof)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.next_to(self.teacher, UP, buff = LARGE_BUFF)
         group.to_edge(RIGHT, buff = LARGE_BUFF)
 
@@ -2736,7 +2736,7 @@ class IntroduceNonceOnTrasactions(LedgerScene):
         zeros_brace = Brace(zeros, UP)
         zeros_words = zeros_brace.get_text("30 zeros")
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(special_word, nonce_brace, nonce)
         ))
         self.wait()
@@ -2751,20 +2751,20 @@ class IntroduceNonceOnTrasactions(LedgerScene):
             ShowCreation(arrow),
             FadeIn(sha)
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, decomposed_ledger,
             lambda m : (m.set_color, YELLOW),
             rate_func = there_and_back
         ))
         point = VectorizedPoint(sha.get_center())
         point.set_fill(opacity = 1)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             Transform, decomposed_ledger.copy(),
             lambda m : (m, point),
             run_time = 1
         ))
         bit_iter = iter(digest)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ReplacementTransform, 
             VGroup(*[point.copy() for x in range(256)]),
             lambda m : (m, next(bit_iter)),
@@ -2775,7 +2775,7 @@ class IntroduceNonceOnTrasactions(LedgerScene):
             GrowFromCenter(zeros_brace),
             Write(zeros_words, run_time = 1)
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, zeros,
             lambda m : (m.set_color, YELLOW)
         ))
@@ -2821,13 +2821,13 @@ class IntroduceNonceOnTrasactions(LedgerScene):
             self.play(Transform(
                 self.digest, digest,
                 run_time = 1,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
         self.wait()
         self.play(self.nonce.restore)
         self.play(
             self.digest.restore, 
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.play(FadeOut(q_mark))
@@ -2868,7 +2868,7 @@ class IntroduceNonceOnTrasactions(LedgerScene):
         )
         self.play(Transform(
             self.digest, new_digest,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
 
 class ShowSomeBroadcasting(DistributedLedgerScene):
@@ -2952,7 +2952,7 @@ class IntroduceBlockChain(Scene):
         blocks = VGroup(*[
             self.get_block() for x in range(3)
         ])
-        blocks.arrange_submobjects(RIGHT, buff = 1.5)
+        blocks.arrange(RIGHT, buff = 1.5)
         blocks.to_edge(UP)
 
         all_payments = VGroup()
@@ -2974,18 +2974,17 @@ class IntroduceBlockChain(Scene):
             for block in blocks
         ])
 
-        self.play(LaggedStart(FadeIn, blocks))
+        self.play(LaggedStartMap(FadeIn, blocks))
         self.play(
             Write(blocks_word),
-            LaggedStart(
+            LaggedStartMap(
                 ShowCreation, arrows, 
                 run_time = 1,
-                lag_factor = 0.6,
             )
         )
         self.wait()
         for group in all_payments, all_proofs_of_work:
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 Indicate, group,
                 rate_func = there_and_back,
                 scale_factor = 1.1,
@@ -3035,7 +3034,7 @@ class IntroduceBlockChain(Scene):
 
         self.play(Transform(
             proofs_of_work, new_proofs_of_work,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(
             ShowCreation(arrows),
@@ -3045,7 +3044,7 @@ class IntroduceBlockChain(Scene):
         self.play(Write(digests))
         self.wait()
         for group in signatures, proofs_of_work:
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 Indicate, group,
                 run_time = 2,
                 rate_func = there_and_back,
@@ -3208,7 +3207,7 @@ class IntroduceBlockChain(Scene):
             payments.add(payment)
             self.transaction_counter += 1
         payments.add(TexMobject("\\dots").scale(0.5))
-        payments.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        payments.arrange(DOWN, buff = MED_SMALL_BUFF)
         payments.next_to(h_line1, DOWN)
 
         proof_of_work = TextMobject("Proof of work")
@@ -3259,7 +3258,7 @@ class DistributedBlockChainScene(DistributedLedgerScene):
             self.get_block() 
             for x in range(self.n_blocks)
         ])
-        blocks.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        blocks.arrange(RIGHT, buff = MED_SMALL_BUFF)
         arrows = VGroup()
 
         for b1, b2 in zip(blocks, blocks[1:]):
@@ -3325,7 +3324,7 @@ class FromBankToDecentralizedSystem(DistributedBlockChainScene):
         cross.set_stroke(width = 10)
         group = VGroup(bank, cross)
 
-        self.play(LaggedStart(DrawBorderThenFill, bank))
+        self.play(LaggedStartMap(DrawBorderThenFill, bank))
         self.play(ShowCreation(cross))
         self.wait()
         self.play(
@@ -3349,9 +3348,9 @@ class FromBankToDecentralizedSystem(DistributedBlockChainScene):
         center_chain.scale(2)
         center_chain.center()
 
-        self.play(LaggedStart(FadeIn, creatures, run_time = 1))
+        self.play(LaggedStartMap(FadeIn, creatures, run_time = 1))
         self.play(
-            LaggedStart(FadeIn, center_chain.blocks, run_time = 1),
+            LaggedStartMap(FadeIn, center_chain.blocks, run_time = 1),
             ShowCreation(center_chain.arrows),
         )
         self.wait()
@@ -3439,10 +3438,10 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
             block_creators.add(block_creator)
             labels.add(label)
             everything.add(VGroup(block_creator, label))
-        everything.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        everything.arrange(DOWN, buff = LARGE_BUFF)
         everything.to_edge(LEFT)
 
-        self.play(LaggedStart(FadeIn, everything))
+        self.play(LaggedStartMap(FadeIn, everything))
         self.pi_creatures.add(*block_creators)
         self.wait()
 
@@ -3478,7 +3477,7 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
             payment.set_fill(opacity = 0)
             payment.move_to(pi)
             payments.add(payment)
-        payment_targets.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        payment_targets.arrange(DOWN, aligned_edge = LEFT)
         payment_targets.next_to(
             self.block_creator_labels, RIGHT,
             MED_LARGE_BUFF
@@ -3596,7 +3595,7 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
             "- No sender/signature",
             "- Adds to total money supply",
         ])))
-        comments.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        comments.arrange(DOWN, aligned_edge = LEFT)
         comments.move_to(big_rect, UP+LEFT)
 
         pi_creatures = self.pi_creatures
@@ -3688,7 +3687,7 @@ class MiningIsALottery(IntroduceBlockCreator):
             for n in range(self.n_miners)
         ])
         miners.scale(0.5)
-        miners.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        miners.arrange(DOWN, buff = LARGE_BUFF)
         miners.to_edge(LEFT)
         for x, miner in enumerate(miners):
             label = TextMobject("Miner %d"%(x+1))
@@ -3809,7 +3808,7 @@ class MiningIsALottery(IntroduceBlockCreator):
         lines.add(TexMobject("\\vdots"))
         for line in lines:
             line.set_height(0.5)
-        lines.arrange_submobjects(
+        lines.arrange(
             DOWN, buff = SMALL_BUFF, aligned_edge = LEFT
         )
         lines[-1].next_to(lines[-2], DOWN, buff = SMALL_BUFF)
@@ -3927,7 +3926,7 @@ class TwoBlockChains(DistributedBlockChainScene):
         arrow_block = VGroup(arrow, block).copy()
 
         block_chains.generate_target()
-        block_chains.target.arrange_submobjects(
+        block_chains.target.arrange(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
         block_chains.target.next_to(randy, UP)
@@ -4078,7 +4077,7 @@ class DoubleSpendingAttack(DistributedBlockChainScene):
             self.charlie.change, "shruggie",
             self.you.change, "shruggie",
         )
-        self.play(LaggedStart(FadeIn, bubble))
+        self.play(LaggedStartMap(FadeIn, bubble))
         self.play(self.bob.change, "confused", words)
         self.wait(2)
 
@@ -4114,7 +4113,7 @@ class DoubleSpendingAttack(DistributedBlockChainScene):
             payment,
             TexMobject("\\vdots")
         )
-        payments.arrange_submobjects(DOWN)
+        payments.arrange(DOWN)
         payments.set_width(0.9*block.get_width())
         payments.move_to(block)
         content.add(payments)
@@ -4168,7 +4167,7 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
             for x in range(self.n_miners)
         ])
         miners.set_height(alice.get_height())
-        miners.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        miners.arrange(RIGHT, buff = LARGE_BUFF)
         miners.to_edge(DOWN+LEFT)
         miners.shift(0.5*UP)
         miners_word = TextMobject("Miners")
@@ -4487,7 +4486,7 @@ class MainIdeas(Scene):
         colors = BLUE, WHITE, RED, GREEN, YELLOW
         for idea, color in zip(ideas, colors):
             idea.set_color(color)
-        ideas.arrange_submobjects(
+        ideas.arrange(
             DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -4496,7 +4495,7 @@ class MainIdeas(Scene):
 
         self.add(title, h_line)
         for idea in ideas:
-            self.play(LaggedStart(FadeIn, idea))
+            self.play(LaggedStartMap(FadeIn, idea))
         self.wait()
 
 class VariableProofOfWork(WhenToTrustANewBlock):
@@ -4589,12 +4588,12 @@ class VariableProofOfWork(WhenToTrustANewBlock):
             for x in range(self.n_miners - 1)
         ])
         everyone = VGroup(target, *copies)
-        everyone.arrange_submobjects(DOWN)
+        everyone.arrange(DOWN)
         everyone.set_height(FRAME_HEIGHT - LARGE_BUFF)
         everyone.to_corner(UP+LEFT)
 
         self.play(Transform(miner_block, target))
-        self.play(LaggedStart(FadeIn, copies))
+        self.play(LaggedStartMap(FadeIn, copies))
         self.change_challenge(72)
         self.wait(2)
 
@@ -4618,7 +4617,7 @@ class VariableProofOfWork(WhenToTrustANewBlock):
             Transform(n_zeros_mob, new_n_zeros_mob),
             Transform(
                 digest, new_digest,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Transform(proof_of_work, new_pow),
         )
@@ -4642,7 +4641,7 @@ class CompareBlockTimes(Scene):
             TextMobject("XRP: ", "3.5 Seconds"),
             TextMobject("LTC: ", "2.5 Minutes"),
         )
-        examples.arrange_submobjects(
+        examples.arrange(
             DOWN, 
             buff = LARGE_BUFF,
             aligned_edge = LEFT,
@@ -4667,7 +4666,7 @@ class CompareBlockTimes(Scene):
         )
         self.wait()
         self.play(*[
-            LaggedStart(FadeIn, VGroup(*group[1:]))
+            LaggedStartMap(FadeIn, VGroup(*group[1:]))
             for group in (examples, logos)
         ])
         self.wait(2)
@@ -4705,7 +4704,7 @@ class BlockRewards(Scene):
             TextMobject("Jul 2016 - Feb 2020$^*$:", "12.5", "BTC"),
             TextMobject("Feb 2020$^*$ - Sep 2023$^*$:", "6.25", "BTC"),
         )
-        rewards.arrange_submobjects(
+        rewards.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -4720,7 +4719,7 @@ class BlockRewards(Scene):
         footnote.scale(0.5)
         footnote.to_corner(DOWN+RIGHT)
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, rewards,
             run_time = 4,
             lag_ratio = 0.5
@@ -4860,7 +4859,7 @@ class ShowBitcoinBlockSize(LedgerScene):
             BitcoinLogo(height = 0.75), 
             TextMobject("Block").scale(1.5)
         )
-        title.arrange_submobjects(RIGHT, SMALL_BUFF)
+        title.arrange(RIGHT, SMALL_BUFF)
         title.next_to(block, UP)
 
         brace = Brace(payments_rect, RIGHT)
@@ -4876,7 +4875,7 @@ class ShowBitcoinBlockSize(LedgerScene):
             GrowFromCenter(brace),
             Write(limit)
         )
-        self.play(LaggedStart(FadeIn, payments))
+        self.play(LaggedStartMap(FadeIn, payments))
         self.wait()
 
         ####Visa
@@ -4889,20 +4888,20 @@ class ShowBitcoinBlockSize(LedgerScene):
             fill_opacity = 1,
         )
         visa_logo[-1].set_color("#faa61a")
-        visa_logo.sort_submobjects()
+        visa_logo.sort()
         avg_rate = TextMobject("Avg: $1{,}700$/second")
         max_rate = TextMobject("Max: $>24{,}000$/second")
         rates = VGroup(avg_rate, max_rate)
         rates.scale(0.8)
-        rates.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        rates.arrange(DOWN, aligned_edge = LEFT)
         rates.next_to(visa_logo, RIGHT, buff = MED_SMALL_BUFF)
         visa = VGroup(visa_logo, rates)
         visa.to_corner(UP+RIGHT)
 
-        self.play(LaggedStart(DrawBorderThenFill, visa_logo))
-        self.play(LaggedStart(FadeIn, avg_rate))
+        self.play(LaggedStartMap(DrawBorderThenFill, visa_logo))
+        self.play(LaggedStartMap(FadeIn, avg_rate))
         self.wait()
-        self.play(LaggedStart(FadeIn, max_rate))
+        self.play(LaggedStartMap(FadeIn, max_rate))
         self.wait(2)
 
 class CurrentAverageFees(Scene):
@@ -4938,7 +4937,7 @@ class TopicsNotCovered(TeacherStudentsScene):
             "$\\vdots$",
             "(See links in description)",
         ])))
-        topics.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        topics.arrange(DOWN, aligned_edge = LEFT)
         topics[-2].next_to(topics[-3], DOWN)
         topics.next_to(title, RIGHT)
         topics.to_edge(UP)
@@ -4951,7 +4950,7 @@ class TopicsNotCovered(TeacherStudentsScene):
             self.change_student_modes(
                 "confused", "thinking","pondering",
                 look_at_arg = topic,
-                added_anims = [LaggedStart(FadeIn, topic)]
+                added_anims = [LaggedStartMap(FadeIn, topic)]
             )
             self.wait()
 
@@ -4967,7 +4966,7 @@ class Exchange(Animation):
         self.changed_symbols_yet = False
         Animation.__init__(self, exchange, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         exchange = self.mobject
         if alpha < 1./3:
             self.swap.update(3*alpha)
@@ -5017,9 +5016,9 @@ class ShowManyExchanges(Scene):
             VGroup(*[
                 exchange.copy()
                 for x in range(3)
-            ]).arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
+            ]).arrange(RIGHT, buff = 2*LARGE_BUFF)
             for y in range(3)
-        ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        ]).arrange(DOWN, buff = MED_LARGE_BUFF)
         exchanges = VGroup(*it.chain(*exchanges))
         self.add(exchanges)
         start_times = list(np.linspace(0, 2, len(exchanges)))
@@ -5176,7 +5175,7 @@ class ProtocolLabs(PiCreatureScene):
 
         self.play(
             DrawBorderThenFill(logo[0]),
-            LaggedStart(FadeIn, logo[1]),
+            LaggedStartMap(FadeIn, logo[1]),
             morty.change, "raise_right_hand",
         )
         self.wait()
@@ -5227,7 +5226,7 @@ class Thumbnail(DistributedBlockChainScene):
         # for logo in logos:
         #     logo.set_height(1)
         # logos.add(TexMobject("\\dots").scale(2))
-        # logos.arrange_submobjects(RIGHT)
+        # logos.arrange(RIGHT)
         # logos.next_to(title, RIGHT, LARGE_BUFF)
         # self.add(logos)
 

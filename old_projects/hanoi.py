@@ -161,7 +161,7 @@ class CountingScene(Scene):
             result.append(ShowCreation(arrow))
         result.append(Transform(
             self.number_mob, new_number_mob,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         return result
 
@@ -311,7 +311,7 @@ class TowersOfHanoiScene(Scene):
 
     def reset_disks(self, **kwargs):
         self.disks.generate_target()
-        self.disks.target.arrange_submobjects(DOWN, buff = 0)
+        self.disks.target.arrange(DOWN, buff = 0)
         self.disks.target.move_to(self.pegs[0], DOWN)
         self.play(
             MoveToTarget(self.disks), 
@@ -621,7 +621,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
         self.play(
             ApplyMethod(
                 self.pegs.restore, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             Write(self.peg_labels)
@@ -652,13 +652,13 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
             group.rotate_in_place(-11*np.pi/24, RIGHT)
             disk.set_fill(opacity = 0)
             disk_groups.add(group)
-        disk_groups.arrange_submobjects()
+        disk_groups.arrange()
         disk_groups.next_to(self.peg_labels, DOWN)
         
         self.play(FadeIn(
             disk_groups, 
             run_time = 2, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         for group in reversed(list(disk_groups)):
             self.play(group.restore)
@@ -710,7 +710,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
     def move_full_tower(self):
         self.move_subtower_to_peg(self.num_disks, 1, run_time = 2)
         self.wait()
-        self.reset_disks(run_time = 1, submobject_mode = "lagged_start")
+        self.reset_disks(run_time = 1, lag_ratio = 0.5)
         self.wait()
 
     def move_single_disk(self):
@@ -885,7 +885,7 @@ class IntroduceBase10(Scene):
             MoveToTarget(number),
             ShowCreation(arrows),
             ApplyMethod(
-                expansion.restore, submobject_mode = "lagged_start"),
+                expansion.restore, lag_ratio = 0.5),
             run_time = 2
         )
         self.play(Write(title))
@@ -899,7 +899,7 @@ class IntroduceBase10(Scene):
         """)
         digits.next_to(self.title, DOWN, buff = LARGE_BUFF)
         digits.shift(2*RIGHT)
-        self.play(Write(digits, lag_factor = 5))
+        self.play(Write(digits))
         self.wait()
 
 class RhythmOfDecimalCounting(CountingScene):
@@ -1180,8 +1180,7 @@ class BinaryCountingAtEveryScale(Scene):
         self.play(Transform(
             VGroup(*reversed(list(curr_bits))),
             VGroup(*reversed(list(bit_mobs[2**(self.num_bits-1)]))),
-            submobject_mode = "lagged_start",
-            lag_factor = self.num_bits
+            lag_ratio = 0.5,
         ))
         self.wait()
         self.play(
@@ -1371,7 +1370,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         return Succession(
             Transform(
                 self.curr_bit_mob, next(self.bit_mobs_iter),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = -np.pi/3
             ),
             Animation(self.curr_bit_mob)
@@ -1457,7 +1456,7 @@ class RecursiveSolution(TowersOfHanoiScene):
             title, sub_step_brace, sub_steps, 
             sub_sub_steps_brace, sub_sub_steps
         )
-        steps.arrange_submobjects(DOWN)
+        steps.arrange(DOWN)
         steps.scale(0.7)
         steps.to_edge(UP)
         VGroup(sub_sub_steps_brace, sub_sub_steps).next_to(sub_steps[-1], DOWN)
@@ -1830,7 +1829,7 @@ class ShowFourDiskFourBitsParallel(IntroduceSolveByCounting):
                 self.get_increment_animation()
                 for x in range(num_tasks)
             ]),
-            rate_func = None,
+            rate_func=linear,
             run_time = self.subtask_run_time
         )
 
@@ -2046,7 +2045,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         steps = VGroup(title, *it.chain(*list(zip(
             braces, subdivisions
         ))))
-        steps.arrange_submobjects(DOWN)
+        steps.arrange(DOWN)
         steps.to_edge(UP)
 
         steps_to_fade = VGroup(
@@ -2199,7 +2198,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.play(ApplyMethod(
             VGroup(VGroup(braces[-2], subdivisions[-2])).set_fill, None, 1,
             run_time = 3,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.blink()
         for mob in last_subdivisions:
@@ -2271,7 +2270,7 @@ class SolveConstrainedByCounting(ConstrainedTowersOfHanoiScene):
         return Succession(
             Transform(
                 self.curr_ternary_mob, next(self.ternary_mob_iter),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = np.pi/6,
             ),
             Animation(self.curr_ternary_mob),
@@ -2412,7 +2411,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
             "Roll over,",
             "Count to %s,"%("2"*(self.num_trits-1)),
         ])))
-        steps.arrange_submobjects(RIGHT)
+        steps.arrange(RIGHT)
         for step in steps[::2]:
             for i, color in enumerate(colors[:-1]):
                 step[-i-2].set_color(color)
@@ -2420,7 +2419,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
         steps.set_width(FRAME_WIDTH-1)
         brace = Brace(steps, UP)
         word_group = VGroup(title, brace, steps)
-        word_group.arrange_submobjects(DOWN)
+        word_group.arrange(DOWN)
         word_group.to_edge(UP)
 
         ternary_mobs = VGroup(*[
@@ -2438,7 +2437,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
         def get_increment():
             return Transform(
                 curr_ternary_mob, next(ternary_mob_iter),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 path_arc = -np.pi/3
             )
 
@@ -2506,7 +2505,7 @@ class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
         self.play(Transform(
             self.curr_ternary_mob, next(self.ternary_mob_iter),
             path_arc = -np.pi/3,
-            submobject_mode = "lagged_start", 
+            lag_ratio = 0.5, 
             run_time = run_time,
         ))
 
@@ -2693,7 +2692,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
             """%d)
             for d in range(self.num_disks)
         ]))
-        parentheticals.arrange_submobjects()
+        parentheticals.arrange()
         parentheticals.set_width(FRAME_WIDTH-1)
         parentheticals.next_to(top_mob, DOWN)
         for parens in parentheticals:
@@ -2744,7 +2743,7 @@ class RepeatingConfiguraiton(Scene):
         arrows.add(VGroup())
         arrows.scale(0.5)
         group = VGroup(*it.chain(*list(zip(dots, arrows))))
-        group.arrange_submobjects()
+        group.arrange()
         title = TextMobject("Same state twice")
         title.shift(3*UP)
         special_dots = VGroup(dots[2], dots[6])
@@ -2810,7 +2809,7 @@ class ShowSomeGraph(Scene):
             mob.set_color_by_gradient(YELLOW, MAROON_B)
             self.play(ShowCreation(
                 mob, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2,
             ))
         self.wait()
@@ -2969,8 +2968,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
         self.play(FadeIn(
             self.nodes,
             run_time = 3,
-            submobject_mode = "lagged_start",
-            lag_factor = 7,
+            lag_ratio = 0.5,
         ))
         vect = LEFT
         for index in 3, 21, 8, 17, 10, 13:
@@ -3151,7 +3149,7 @@ class ShowPathThroughGraph(SierpinskiGraphScene):
         self.wait()
         self.play(ShowCreation(
             arrows,
-            rate_func = None,
+            rate_func=linear,
             run_time = 5
         ))
         self.wait(2)
@@ -3212,7 +3210,7 @@ class PatreonThanks(Scene):
             self.specific_patrons[n_patrons/2:]
         )))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.arrange(DOWN, aligned_edge = LEFT)
             patrons.next_to(special_thanks, DOWN)
             patrons.to_edge(vect, buff = LARGE_BUFF)
 
@@ -3286,7 +3284,7 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
 
         self.add(graph)
         self.wait()
-        self.play(ShowCreation(path, run_time = 3, rate_func = None))
+        self.play(ShowCreation(path, run_time = 3, rate_func=linear))
         self.wait()   
         self.play(graph.fade, 0.5, Animation(path))
         for other_graph in graphs[1:]:

@@ -146,7 +146,7 @@ class TracePicture(Scene):
             ShowCreation(
                 edge_mobject,
                 run_time = run_time,
-                rate_func = None
+                rate_func=linear
             )
         )
         self.remove(edge_mobject)

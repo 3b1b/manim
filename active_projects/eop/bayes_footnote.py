@@ -62,7 +62,7 @@ class Introduction(TeacherStudentsScene):
         intuition = TextMobject("Intuition")
 
         group = VGroup(bayes, arrow, intuition)
-        group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff = SMALL_BUFF)
         group.scale(0.8)
         group.next_to(self.example, UP, buff = SMALL_BUFF)
         group.shift_onto_screen()
@@ -120,7 +120,7 @@ class Introduction(TeacherStudentsScene):
         bayes_to_intuition = VGroup(*list(map(TextMobject, [
             "Bayes", "$\\leftrightarrow$", "Intuition"
         ])))
-        bayes_to_intuition.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        bayes_to_intuition.arrange(RIGHT, buff = SMALL_BUFF)
         bayes_to_intuition.next_to(brace, UP, SMALL_BUFF)
         check = TexMobject("\\checkmark")
         check.set_color(GREEN)
@@ -180,7 +180,7 @@ class Introduction(TeacherStudentsScene):
         rect = self.get_example_rect()
         values = IntroducePokerHand.CONFIG["community_card_values"]
         community_cards = VGroup(*list(map(PlayingCard, values)))
-        community_cards.arrange_submobjects(RIGHT)
+        community_cards.arrange(RIGHT)
         deck = VGroup(*[
             PlayingCard(turned_over = True)
             for x in range(5)
@@ -239,9 +239,9 @@ class OneInOneThousandHaveDisease(Scene):
             VGroup(*[
                 creature.copy()
                 for y in range(25)
-            ]).arrange_submobjects(DOWN, SMALL_BUFF)
+            ]).arrange(DOWN, SMALL_BUFF)
             for x in range(40)
-        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
+        ]).arrange(RIGHT, SMALL_BUFF)
         all_creatures.set_width(FRAME_WIDTH - 4)
         all_creatures.next_to(title, DOWN)
         randy = all_creatures[0][0]
@@ -263,7 +263,7 @@ class OneInOneThousandHaveDisease(Scene):
         self.play(randy.restore)
         self.play(
             Write(title),
-            LaggedStart(FadeIn, all_creatures, run_time = 3)
+            LaggedStartMap(FadeIn, all_creatures, run_time = 3)
         )
         self.wait()
 
@@ -329,9 +329,9 @@ class TestNonDiseaseCase(TestScene):
             VGroup(*[
                 randy.copy()
                 for y in range(10)
-            ]).arrange_submobjects(DOWN)
+            ]).arrange(DOWN)
             for y in range(10)
-        ]).arrange_submobjects(RIGHT)
+        ]).arrange(RIGHT)
         all_creatures.set_height(6)
         all_creatures.to_corner(DOWN+LEFT)
         last_guy = all_creatures[-1][-1]
@@ -344,7 +344,7 @@ class TestNonDiseaseCase(TestScene):
         self.play(Blink(randy))
         self.play(
             ReplacementTransform(randy, all_creatures[0][0]),
-            LaggedStart(FadeIn, all_creatures, run_time = 2),
+            LaggedStartMap(FadeIn, all_creatures, run_time = 2),
             FadeOut(result)
         )
         self.play(ShowCreation(rect))
@@ -414,7 +414,7 @@ class RephraseQuestion(Scene):
                 after testing positive.
             """,
         ])))
-        words.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        words.arrange(RIGHT, buff = LARGE_BUFF)
         words.set_width(2*(FRAME_X_RADIUS - MED_LARGE_BUFF))
 
         prior = TextMobject("Prior")
@@ -434,7 +434,7 @@ class RephraseQuestion(Scene):
 
         self.add(words[0])
         self.play(
-            LaggedStart(FadeIn, prior),
+            LaggedStartMap(FadeIn, prior),
             ShowCreation(prior_arrow),
             run_time = 1
         )
@@ -443,7 +443,7 @@ class RephraseQuestion(Scene):
         self.wait()
         self.play(FadeIn(words[2]))
         self.play(
-            LaggedStart(FadeIn, posterior),
+            LaggedStartMap(FadeIn, posterior),
             ShowCreation(posterior_arrow),
             run_time = 1
         )
@@ -568,7 +568,7 @@ class ShowRestrictedSpace(Scene):
         healthy_words.set_color(BLUE)
 
         self.add(title)
-        self.play(LaggedStart(FadeIn, all_creatures))
+        self.play(LaggedStartMap(FadeIn, all_creatures))
         self.play(
             FadeIn(sick_one_words),
             ShowCreation(sick_one_arrow)
@@ -582,7 +582,7 @@ class ShowRestrictedSpace(Scene):
         self.play(sick_one.restore)
         self.play(
             Write(healthy_words),
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, healthy_creatures,
                 lambda m : (m.shift, MED_SMALL_BUFF*UP),
                 rate_func = there_and_back,
@@ -641,7 +641,7 @@ class ShowRestrictedSpace(Scene):
 
         self.play(
             GrowFromCenter(brace),
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod, false_positives,
                 lambda pi : (pi.set_color, self.false_positive_color),
                 run_time = 1
@@ -664,7 +664,7 @@ class ShowRestrictedSpace(Scene):
         movers = VGroup(self.sick_one, *self.false_positives)
         movers.generate_target()
         movers.target.set_width(1)
-        movers.target.arrange_submobjects(RIGHT)
+        movers.target.arrange(RIGHT)
         movers.target.shift(DOWN)
         brace = Brace(VGroup(*movers.target[1:]))
 
@@ -738,9 +738,9 @@ class ShowRestrictedSpace(Scene):
             VGroup(*[
                 creature.copy()
                 for y in range(self.n_rows)
-            ]).arrange_submobjects(DOWN, SMALL_BUFF)
+            ]).arrange(DOWN, SMALL_BUFF)
             for x in range(self.n_cols)
-        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
+        ]).arrange(RIGHT, SMALL_BUFF)
         all_creatures.set_height(5)
         all_creatures.center().to_edge(LEFT)
 
@@ -769,9 +769,9 @@ class DepressingForMedicalTestDesigners(TestScene):
             VGroup(*[
                 TexMobject("\\checkmark").set_color(GREEN)
                 for y in range(10)
-            ]).arrange_submobjects(DOWN)
+            ]).arrange(DOWN)
             for x in range(10)
-        ]).arrange_submobjects(RIGHT)
+        ]).arrange(RIGHT)
         cross = TexMobject("\\times")
         cross.replace(checks[-1][-1])
         cross.set_color(RED)
@@ -954,7 +954,7 @@ class ShowTheFormula(TeacherStudentsScene):
         #Show initial formula
         lhs_copy = lhs.copy()
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 FadeIn, initial_formula, 
                 lag_ratio = 0.7
             ),
@@ -975,7 +975,7 @@ class ShowTheFormula(TeacherStudentsScene):
             FadeIn(VGroup(*number_fraction[:3]))
         )
         self.wait(2)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*number_fraction[3:]),
             run_time = 3,
             lag_ratio = 0.7
@@ -1007,7 +1007,7 @@ class SourceOfConfusion(Scene):
             mob.set_color_by_tex("S", SICKLY_GREEN)
             mob.set_color_by_tex("+", YELLOW)
         progression = VGroup(prior, arrow, posterior)
-        progression.arrange_submobjects(RIGHT)
+        progression.arrange(RIGHT)
         progression.shift(DOWN)
 
         bayes_rule_words = TextMobject("Bayes' rule")
@@ -1331,7 +1331,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         arcs.move_to(pi1.eyes, vect)
         arcs.set_stroke(WHITE, 4)
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, arcs,
             lambda m : (m.restore,),
             lag_ratio = 0.7,
@@ -1375,7 +1375,7 @@ class CompareNumbersInBothExamples(Scene):
                 mob.shift(vect*FRAME_X_RADIUS/2)
 
         self.play(
-            LaggedStart(FadeIn, titles, lag_ratio = 0.7),
+            LaggedStartMap(FadeIn, titles, lag_ratio = 0.7),
             *list(map(ShowCreation, [h_line, v_line]))
         )
         self.wait()
@@ -1437,7 +1437,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
         self.revert_to_original_skipping_status()
         self.play(bayes_to_intuition.to_edge, UP)
         self.play(
-            LaggedStart(FadeIn, statistics_to_belief),
+            LaggedStartMap(FadeIn, statistics_to_belief),
             cross.move_to, arrow
         )
         self.change_student_modes(

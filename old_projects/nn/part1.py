@@ -5,6 +5,14 @@ import cv2
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from big_ol_pile_of_manim_imports import *
 
+import warnings
+warnings.warn("""
+    Warning: This file makes use of
+    ContinualAnimation, which has since
+    been deprecated
+""")
+
+
 from nn.network import *
 
 #force_skipping
@@ -62,7 +70,7 @@ class PixelsAsSquares(VGroup):
                     fill_color = rgba_to_color(rgba/255.0),
                 )
                 self.add(square)
-        self.arrange_submobjects_in_grid(
+        self.arrange_in_grid(
             *image_mobject.pixel_array.shape[:2],
             buff = 0
         )
@@ -111,7 +119,7 @@ class NetworkMobject(VGroup):
             self.get_layer(size)
             for size in self.layer_sizes
         ])
-        layers.arrange_submobjects(RIGHT, buff = self.layer_to_layer_buff)
+        layers.arrange(RIGHT, buff = self.layer_to_layer_buff)
         self.layers = layers
         self.add(self.layers)
         if self.include_output_labels:
@@ -132,7 +140,7 @@ class NetworkMobject(VGroup):
             )
             for x in range(n_neurons)
         ])   
-        neurons.arrange_submobjects(
+        neurons.arrange(
             DOWN, buff = self.neuron_to_neuron_buff
         )
         for neuron in neurons:
@@ -237,7 +245,7 @@ class NetworkMobject(VGroup):
         return [ShowCreationThenDestruction(
             edge_group_copy, 
             run_time = self.edge_propogation_time,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )]
 
     def add_output_labels(self):
@@ -337,7 +345,7 @@ class ExampleThrees(PiCreatureScene):
         self.three_mobs = self.get_three_mobs()
         three_mob = self.three_mobs[0]
         three_mob_copy = three_mob[1].copy()
-        three_mob_copy.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
+        three_mob_copy.sort(lambda p : np.dot(p, DOWN+RIGHT))
 
         braces = VGroup(*[Brace(three_mob, v) for v in (LEFT, UP)])
         brace_labels = VGroup(*[
@@ -357,11 +365,11 @@ class ExampleThrees(PiCreatureScene):
 
         self.play(
             FadeIn(three_mob[0]),
-            LaggedStart(FadeIn, three_mob[1])
+            LaggedStartMap(FadeIn, three_mob[1])
         )
         self.wait()
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill, three_mob_copy,
                 run_time = 3,
                 stroke_color = WHITE,
@@ -406,7 +414,7 @@ class ExampleThrees(PiCreatureScene):
             )
 
         alt_threes = VGroup(*self.three_mobs[1:])
-        alt_threes.arrange_submobjects(DOWN)
+        alt_threes.arrange(DOWN)
         alt_threes.set_height(FRAME_HEIGHT - 2)
         alt_threes.to_edge(RIGHT)
 
@@ -428,14 +436,14 @@ class ExampleThrees(PiCreatureScene):
             moving_three.target[0].set_stroke(width = 0)
             moving_three.target[1].space_out_submobjects(1.5)
             self.play(MoveToTarget(
-                moving_three, submobject_mode = "lagged_start"
+                moving_three, lag_ratio = 0.5
             ))
             self.play(
                 Animation(randy),
                 moving_three.replace, randy.eyes[1],
                 moving_three.scale_in_place, 0.7,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             )
             self.play(
                 Animation(randy),
@@ -545,7 +553,7 @@ class WriteAProgram(Scene):
         three_array = get_organized_images()[3][0]
         im_mob = ImageMobject(layer_to_image_array(three_array))
         three = PixelsAsSquares(im_mob)
-        three.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
+        three.sort(lambda p : np.dot(p, DOWN+RIGHT))
         three.set_height(6)
         three.next_to(ORIGIN, LEFT)
         three_rect = SurroundingRectangle(
@@ -572,18 +580,18 @@ class WriteAProgram(Scene):
         arrow.next_to(three, RIGHT)
 
         choices = VGroup(*[TexMobject(str(n)) for n in range(10)])
-        choices.arrange_submobjects(DOWN)
+        choices.arrange(DOWN)
         choices.set_height(FRAME_HEIGHT - 1)
         choices.next_to(arrow, RIGHT)
 
         self.play(
-            LaggedStart(DrawBorderThenFill, three),
+            LaggedStartMap(DrawBorderThenFill, three),
             ShowCreation(three_rect)
         )
         self.play(Write(numbers))
         self.play(
             ShowCreation(arrow),
-            LaggedStart(FadeIn, choices),
+            LaggedStartMap(FadeIn, choices),
         )
 
         rect = SurroundingRectangle(choices[0], buff = SMALL_BUFF)
@@ -661,17 +669,16 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             ),
             self.get_student_changes(
                 *["confused"]*3,
-                submobject_mode = "all_at_once"
+                lag_ratio = 0
             ),
             self.teacher.change, "plain",
             run_time = 1
         )
         self.play(ShowCreation(
             network_mob.edge_groups,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
-            lag_factor = 8,
-            rate_func = None,
+            rate_func=linear,
         ))
         in_vect = np.random.random(self.network.sizes[0])
         self.feed_forward(in_vect)
@@ -748,7 +755,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             for x in range(2)
         ])
         videos.set_height(1.5)
-        videos.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        videos.arrange(RIGHT, buff = LARGE_BUFF)
         videos.next_to(self.students, UP, LARGE_BUFF)
 
         network_mob.generate_target()
@@ -870,7 +877,7 @@ class AlternateNeuralNetworks(PiCreatureScene):
         self.wait()
         self.play(
             examples[0].shift, MED_LARGE_BUFF*UP,
-            FadeIn(examples[1], submobject_mode = "lagged_start"),
+            FadeIn(examples[1], lag_ratio = 0.5),
         )
         self.wait()
         self.play(
@@ -1147,7 +1154,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 )
             )
 
-        self.play(LaggedStart(FadeIn, numbers))
+        self.play(LaggedStartMap(FadeIn, numbers))
         self.play(
             MoveToTarget(example_neuron),
             MoveToTarget(example_num)
@@ -1201,7 +1208,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
 
         self.play(rows.space_out_submobjects, 1.2)
         self.play(
-            rows.arrange_submobjects, RIGHT, buff = SMALL_BUFF,
+            rows.arrange, RIGHT, buff = SMALL_BUFF,
             path_arc = np.pi/2,
             run_time = 2
         )
@@ -1230,7 +1237,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         self.wait()
         for edge_group, layer in zip(network_mob.edge_groups, network_mob.layers[1:]):
             self.play(
-                LaggedStart(FadeIn, layer, run_time = 1),
+                LaggedStartMap(FadeIn, layer, run_time = 1),
                 ShowCreation(edge_group),
             )
         self.wait()
@@ -1271,7 +1278,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             )
 
         self.play(ShowCreation(rect))
-        self.play(LaggedStart(FadeIn, labels))
+        self.play(LaggedStartMap(FadeIn, labels))
         self.wait()
         self.play(
             MoveToTarget(neuron),
@@ -1345,7 +1352,7 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
         for words in two_words, sixteen_words:
             words.next_to(rects, UP)
 
-        neurons_anim = LaggedStart(
+        neurons_anim = LaggedStartMap(
             Indicate, 
             VGroup(*it.chain(*[layer.neurons for layer in layers])),
             rate_func = there_and_back,
@@ -1424,7 +1431,7 @@ class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
         return Transform(
             mover, target, 
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             remover = True
         )
 
@@ -1467,7 +1474,7 @@ class AskAboutLayers(PreviewMNistNetwork):
 
         self.play(
             Write(question, run_time = 1),
-            LaggedStart(
+            LaggedStartMap(
                 GrowFromPoint, arrows,
                 lambda a : (a, a.get_start()),
                 run_time = 2
@@ -1616,7 +1623,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         self.play(ReplacementTransform(
             self.right_line.copy(), right_line
         ))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*equation[3:])
         ))
         self.wait(2)
@@ -1655,7 +1662,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         self.play(
             FadeIn(
                 network_mob,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3,
             ),
             MoveToTarget(patterns)
@@ -1700,7 +1707,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         edge_group = self.network_mob.edge_groups[-1].copy()
         edge_group.set_stroke(YELLOW, 4)
         for x in range(3):
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 ShowCreationThenDestruction, edge_group,
                 run_time = 3
             ))
@@ -1716,7 +1723,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
                 for m in mobs[1:-1]
             ])) + [mobs[-1]]
         )
-        equation.arrange_submobjects(RIGHT)
+        equation.arrange(RIGHT)
         return equation
 
     def make_transparent(self, image_mob):
@@ -1809,7 +1816,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         )
         self.play(Blink(randy))
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, edges,
             lambda e : (e.restore,),
             run_time = 4
@@ -1848,7 +1855,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             MNistMobject(image_map[n][1])
             for n in (1, 4, 7)
         ])
-        digits.arrange_submobjects(RIGHT)
+        digits.arrange(RIGHT)
         digits.next_to(randy, RIGHT)
 
         self.revert_to_original_skipping_status()
@@ -1857,10 +1864,10 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             randy.change, "hesitant", line
         )
         self.play(Blink(randy))
-        self.play(LaggedStart(FadeIn, digits))
+        self.play(LaggedStartMap(FadeIn, digits))
         self.wait()
         self.play(
-            LaggedStart(FadeIn, Group(*equation[1:])),
+            LaggedStartMap(FadeIn, Group(*equation[1:])),
             randy.change, "pondering", equation
         )
         self.wait(3)
@@ -2003,7 +2010,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
                 ShowCreationThenDestruction(
                     edge_groups[i-1],
                     run_time = 2,
-                    submobject_mode = "lagged_start"
+                    lag_ratio = 0.5
                 ),
                 FadeIn(active_layers[i])
             )
@@ -2014,7 +2021,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         self.play(MoveToTarget(
             neurons,
             remover = True,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         ))
 
@@ -2075,7 +2082,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         self.play(MoveToTarget(
             image_group,
             rate_func = there_and_back,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
 
@@ -2089,7 +2096,7 @@ class EdgeDetection(Scene):
         edges = ImageMobject(edges_array)
         group = Group(lion, edges)
         group.set_height(4)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         lion_copy = lion.copy()
 
         self.play(FadeIn(lion))
@@ -2121,7 +2128,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             syllables, get_arrow(),
             word
         )
-        sequence.arrange_submobjects(RIGHT)
+        sequence.arrange(RIGHT)
         sequence.set_width(FRAME_WIDTH - 1)
         sequence.to_edge(UP)
 
@@ -2162,12 +2169,12 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
         self.wait()
         self.play(
             GrowFromPoint(arrows[1], arrows[1].get_start()),
-            LaggedStart(FadeIn, syllables, run_time = 1)
+            LaggedStartMap(FadeIn, syllables, run_time = 1)
         )
         self.wait()
         self.play(
             GrowFromPoint(arrows[2], arrows[2].get_start()),
-            LaggedStart(FadeIn, word, run_time = 1)
+            LaggedStartMap(FadeIn, word, run_time = 1)
         )
         self.wait()
 
@@ -2181,7 +2188,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             for x in np.arange(0, 4, 0.1)
         ])
         result.set_stroke(width = 2)
-        result.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        result.arrange(RIGHT, buff = MED_SMALL_BUFF)
         result.set_height(1)
 
         return result
@@ -2254,7 +2261,7 @@ class IntroduceWeights(IntroduceEachLayer):
             FadeOut(self.network_mob.output_labels),
             Animation(neuron),
             neuron.edges_in.set_stroke, None, 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
 
@@ -2279,13 +2286,13 @@ class IntroduceWeights(IntroduceEachLayer):
             FadeIn(rect),
             ShowCreation(
                 pixels, 
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2,
             )
         )
         self.play(
             pixels_to_detect.set_fill, WHITE, 1,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2
         )
         self.wait(2)
@@ -2313,7 +2320,7 @@ class IntroduceWeights(IntroduceEachLayer):
             TexMobject("p_%d\\!:"%(i+1)).set_color(self.weights_color)
             for i in range(8)
         ] + [TexMobject("\\vdots")])
-        p_labels.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        p_labels.arrange(DOWN, aligned_edge = LEFT)
         p_labels.next_to(parameter_word, DOWN, LARGE_BUFF)
         p_labels[-1].shift(SMALL_BUFF*RIGHT)
 
@@ -2346,14 +2353,14 @@ class IntroduceWeights(IntroduceEachLayer):
             GrowFromPoint(arrow, arrow.get_start()),
             pixels_group.set_height, 3,
             pixels_group.to_edge, RIGHT,
-            LaggedStart(FadeIn, p_labels),
-            LaggedStart(FadeIn, decimals),
+            LaggedStartMap(FadeIn, p_labels),
+            LaggedStartMap(FadeIn, decimals),
         )
         self.wait()
         self.play(
             *changing_decimals + pixel_updates,
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         )
 
         self.question = question
@@ -2405,7 +2412,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 for decimal, r in zip(decimals, random_numbers)
             ]
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, edges,
             lambda m : (m.rotate_in_place, np.pi/24),
             rate_func = wiggle,
@@ -2444,7 +2451,7 @@ class IntroduceWeights(IntroduceEachLayer):
             TexMobject("w_n").set_color(self.weights_color),
             TexMobject("a_n")
         )
-        weighted_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        weighted_sum.arrange(RIGHT, buff = SMALL_BUFF)
         weighted_sum.to_edge(UP)
 
         self.play(Transform(layer, active_layer))
@@ -2507,7 +2514,7 @@ class IntroduceWeights(IntroduceEachLayer):
         self.play(
             FadeIn(
                 VGroup(*weight_grid[len(decimals):]),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ),
             *[
@@ -2538,13 +2545,13 @@ class IntroduceWeights(IntroduceEachLayer):
         self.play(MoveToTarget(
             weight_grid,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(Transform(
             pixels, digit,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(weight_grid.move_to, pixels)
@@ -2554,7 +2561,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 self.pixels_to_detect.copy(),
                 self.weighted_sum,
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(weight_grid),
         )
@@ -2878,7 +2885,7 @@ class IncludeBias(IntroduceWeights):
             colored_pixels.shift, MED_LARGE_BUFF*UP,
             rate_func = there_and_back,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -2917,7 +2924,7 @@ class IncludeBias(IntroduceWeights):
         weight_grid = self.weight_grid
         bias_name = self.bias_name
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, weight_grid,
             lambda p : (p.set_fill, 
                 random.choice([GREEN, GREEN, RED]),
@@ -3037,20 +3044,20 @@ class ShowRemainingNetwork(IntroduceWeights):
                 ]
             edges.set_stroke(width = 2)
             self.play(
-                ShowCreation(edges, submobject_mode = "lagged_start"),
+                ShowCreation(edges, lag_ratio = 0.5),
                 FadeIn(neuron),
                 *added_anims,
                 run_time = 1.5
             )
             last_edges = edges
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 ShowCreation, VGroup(*[
                     n.edges_in for n in neurons[7:]
                 ]),
                 run_time = 3,
             ),
-            LaggedStart(
+            LaggedStartMap(
                 FadeIn, VGroup(*neurons[7:]),
                 run_time = 3,
             ),
@@ -3075,7 +3082,7 @@ class ShowRemainingNetwork(IntroduceWeights):
 
         self.play(
             FadeIn(words),
-            LaggedStart(
+            LaggedStartMap(
                 GrowArrow, arrows, 
                 run_time = 3,
                 lag_ratio = 0.3,
@@ -3110,7 +3117,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             FadeOut(bb1),
             ReplacementTransform(bb2, bias_count[1]),
             FadeOut(bb3),
-            LaggedStart(FadeOut, bias_arrows)
+            LaggedStartMap(FadeOut, bias_arrows)
         )
         self.wait()
 
@@ -3136,7 +3143,7 @@ class ShowRemainingNetwork(IntroduceWeights):
 
         added_biases = TexMobject("+ 16 + 10")
         group = VGroup(bias_count.prefix, added_biases)
-        group.arrange_submobjects(RIGHT, SMALL_BUFF)
+        group.arrange(RIGHT, SMALL_BUFF)
         group.next_to(weights_count.target[-1], DOWN, LARGE_BUFF)
         bias_count.target[-1].next_to(group, DOWN)
 
@@ -3151,12 +3158,12 @@ class ShowRemainingNetwork(IntroduceWeights):
             MoveToTarget(bias_count),
             Write(added_weights, run_time = 1),
             Write(added_biases, run_time = 1),
-            LaggedStart(
+            LaggedStartMap(
                 ShowCreation, edges,
                 run_time = 4,
                 lag_ratio = 0.3,
             ),
-            LaggedStart(
+            LaggedStartMap(
                 FadeIn, neurons,
                 run_time = 4,
                 lag_ratio = 0.3,
@@ -3194,7 +3201,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             "Finding the right \\\\ weights and biases"
         )
         group = VGroup(learning, finding_words)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.scale(0.8)
         group.next_to(self.final_number, DOWN, MED_LARGE_BUFF)
 
@@ -3213,7 +3220,7 @@ class ShowRemainingNetwork(IntroduceWeights):
                 width = 3*random.random()**7
             )
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 MoveToTarget, edges,
                 lag_ratio = 0.6,
                 run_time = 2,
@@ -3410,7 +3417,7 @@ class IntroduceWeightMatrix(NetworkScene):
             TexMobject("a^{(0)}_n"),
         )
 
-        weighted_sum.arrange_submobjects(RIGHT)
+        weighted_sum.arrange(RIGHT)
         a1_label = TexMobject("a^{(1)}_0")
         a1_label.next_to(neuron, RIGHT)
         equals = TexMobject("=").next_to(a1_label, RIGHT)
@@ -3521,7 +3528,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
         VGroup(
             *column[:2] + [mid_as] + [column[-1]]
-        ).arrange_submobjects(DOWN)
+        ).arrange(DOWN)
         column.shift(DOWN + 3.5*RIGHT)
 
         pre_brackets = self.get_brackets(a_labels)
@@ -3529,7 +3536,7 @@ class IntroduceWeightMatrix(NetworkScene):
         pre_brackets.set_fill(opacity = 0)
 
         self.play(FocusOn(self.a_labels[0]))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             Indicate, self.a_labels,
             rate_func = there_and_back,
             run_time = 1
@@ -3541,7 +3548,7 @@ class IntroduceWeightMatrix(NetworkScene):
         )
         self.wait()
         self.play(*[
-            LaggedStart(Indicate, mob, rate_func = there_and_back)
+            LaggedStartMap(Indicate, mob, rate_func = there_and_back)
             for mob in (a_labels, a_labels_in_sum)
         ])
         self.wait()
@@ -3561,7 +3568,7 @@ class IntroduceWeightMatrix(NetworkScene):
             2, self.symbols[-2].copy()
         )
         w_labels.generate_target()
-        w_labels.target.arrange_submobjects(RIGHT)
+        w_labels.target.arrange(RIGHT)
         w_labels.target.next_to(a_column[0], LEFT, buff = 0.8)
         lwb.next_to(w_labels.target, LEFT, SMALL_BUFF)
         lwb.align_to(rwb, UP)
@@ -3597,7 +3604,7 @@ class IntroduceWeightMatrix(NetworkScene):
         self.play(FadeIn(
             lower_rows,
             run_time = 3,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait()
 
@@ -3613,7 +3620,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
         self.play(ShowCreation(rect))
         for x in range(2):
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 ShowCreationThenDestruction, edges,
                 lag_ratio = 0.8
             ))
@@ -3664,7 +3671,7 @@ class IntroduceWeightMatrix(NetworkScene):
             VGroup(top_row_rect, column_rect).copy(),
             result_terms[0]
         ))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*result_terms[1:])
         ))
         self.wait(2)
@@ -3691,7 +3698,7 @@ class IntroduceWeightMatrix(NetworkScene):
         rowk = self.lower_matrix_rows[-1]
 
         def show_edges(neuron):
-            self.play(LaggedStart(
+            self.play(LaggedStartMap(
                 ShowCreationThenDestruction,
                 neuron.edges_in.copy().set_stroke(GREEN, 5),
                 lag_ratio = 0.7,
@@ -3739,7 +3746,7 @@ class IntroduceWeightMatrix(NetworkScene):
             "b_0", "b_1", "\\vdots", "b_n",
         ])))
         b_column.scale(0.85)
-        b_column.arrange_submobjects(DOWN, buff = 0.35)
+        b_column.arrange(DOWN, buff = 0.35)
         b_column.move_to(a_column)
         b_column.set_color(BLUE)
         plus.next_to(a_column_brackets, RIGHT)
@@ -3755,7 +3762,7 @@ class IntroduceWeightMatrix(NetworkScene):
             Transform(self.bias[1].copy(), b_column[0]),
             run_time = 1
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, VGroup(*b_column[1:])
         ))
         self.wait()
@@ -3977,7 +3984,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
         arrow = Arrow(ORIGIN, DOWN, color = BLUE)
         thing_words = TextMobject("Thing that holds \\\\ a number")
         group = VGroup(neuron_word, arrow, thing_words)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_corner(UP+RIGHT, buff = LARGE_BUFF)
 
         neuron = self.network_mob.layers[2].neurons[2]
@@ -4052,7 +4059,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             FadeOut(self.network_mob),
             *list(map(Animation, [neuron, edges, prev_layer]))
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ShowCreationThenDestruction, 
             edges.copy().set_stroke(YELLOW, 4),
         ))
@@ -4072,7 +4079,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             FadeIn(
                 mob, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in (self.network_mob.layers, self.network_mob.edge_groups)
         ]
@@ -4162,7 +4169,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
             arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
             num_mob = TexMobject(str(num))
             group = Group(image, arrow, num_mob)
-            group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            group.arrange(RIGHT, buff = SMALL_BUFF)
             group.next_to(ORIGIN, RIGHT)
             data_mobs.add(group)
 
@@ -4278,7 +4285,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
             video.move_to(pair, LEFT)
             pair.target = video
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, neuron_pairs,
             run_time = 3
         ))

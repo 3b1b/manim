@@ -56,7 +56,7 @@ class ContrastAbstractAndConcrete(Scene):
             "f(x) = e^x",
             "\\v_dots"
         ])))
-        functions.arrange_submobjects(
+        functions.arrange(
             DOWN, 
             aligned_edge = LEFT,
             buff = LARGE_BUFF
@@ -97,7 +97,6 @@ class ContrastAbstractAndConcrete(Scene):
             ParametricFunction(
                 lambda t : (t/denom)*RIGHT+np.sin(t)*UP+np.cos(t)*OUT,
                 t_max = 12*np.pi,
-                num_anchor_points = 100,
             )
             for denom in (12.0, 4.0)
         ]
@@ -162,12 +161,12 @@ class ContrastAbstractAndConcrete(Scene):
             anims.append(Transform(
                 VGroup(*[pi.parents for pi in these_pis]),
                 VGroup(*[VGroup(pi, pi.copy()) for pi in these_pis]),
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2,
             ))
             exp += 1
 
-        return Succession(*anims, rate_func = None)
+        return Succession(*anims, rate_func=linear)
 
 class ApplicationNames(Scene):
     def construct(self):
@@ -190,7 +189,7 @@ class ListOfRules(PiCreatureScene):
             "\\frac{d}{dx} a^x = \\ln(a) a^x",
             "\\vdots"
         ])))
-        rules.arrange_submobjects(
+        rules.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
         )
@@ -251,7 +250,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
                 x, self.graph,
                 line_class = DashedLine,
                 color = RED,
-                dashed_segment_length = 0.025
+                dash_length = 0.025
             )
             for x in (self.start_x, self.start_x+self.dx)
         ]
@@ -512,7 +511,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             TexMobject("+"),
             corner_square.copy()
         )
-        df_equation.arrange_submobjects()
+        df_equation.arrange()
         df_equation.next_to(
             self.function_label, DOWN, 
             aligned_edge = LEFT,
@@ -908,7 +907,7 @@ class NudgeSideLengthOfCube(Scene):
             three_d_mob.scale(self.small_piece_scaling_factor)
             # self.pose_3d_mobject(three_d_mob)
         faces.set_fill(opacity = 0.3)
-        df_equation.arrange_submobjects(RIGHT)
+        df_equation.arrange(RIGHT)
         df_equation.next_to(ORIGIN, RIGHT)
         df_equation.to_edge(UP)
 
@@ -1126,7 +1125,7 @@ class NudgeSideLengthOfCube(Scene):
                 face.rotate(np.pi/2, DOWN)
             elif thin_dim == 1:
                 face.rotate(np.pi/2, RIGHT)
-        faces.arrange_submobjects(OUT, buff = LARGE_BUFF)
+        faces.arrange(OUT, buff = LARGE_BUFF)
         self.pose_3d_mobject(faces)
         return faces
 
@@ -1142,7 +1141,7 @@ class NudgeSideLengthOfCube(Scene):
                 bar.rotate(np.pi/2, OUT)
             elif thick_dim == 2:
                 bar.rotate(np.pi/2, LEFT)
-        bars.arrange_submobjects(OUT, buff = LARGE_BUFF)
+        bars.arrange(OUT, buff = LARGE_BUFF)
         self.pose_3d_mobject(bars)
         return bars
 
@@ -1252,7 +1251,7 @@ class GraphOfXCubed(GraphScene):
         self.play(Write(label, run_time = 1))
         self.wait()
         self.play(Write(deriv_label, run_time = 1))
-        self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(ss_group, lag_ratio = 0))
         self.animate_secant_slope_group_change(
             ss_group,
             target_x = self.deriv_x_max,
@@ -1297,7 +1296,7 @@ class PatternForPowerRule(PiCreatureScene):
             )
             VGroup(*derivative[0][2:4]).set_color(color)
             derivatives.add(derivative)
-        derivatives.arrange_submobjects(
+        derivatives.arrange(
             DOWN, aligned_edge = LEFT,
             buff = MED_LARGE_BUFF
         )
@@ -1354,7 +1353,7 @@ class PatternForPowerRule(PiCreatureScene):
                 replace_mobject_with_target_in_scene = True
             ),
             ShowCreation(lines),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         )
         self.wait()
@@ -1431,7 +1430,7 @@ class PowerRuleAlgebra(Scene):
             mob.set_color_by_tex("x", self.x_color)
 
         nudge_group = VGroup(x_to_n, down_arrow, x_dx_to_n)
-        nudge_group.arrange_submobjects(DOWN)
+        nudge_group.arrange(DOWN)
         nudge_group.to_corner(UP+LEFT)
         down_arrow.next_to(x_to_n[0], DOWN)
         equals.next_to(x_dx_to_n)
@@ -1550,7 +1549,7 @@ class PowerRuleAlgebra(Scene):
             for dot_index, dot in enumerate(dots):
                 target_list.insert(2*dot_index, dot)
             group = VGroup(*target_list)
-            group.arrange_submobjects(RIGHT, SMALL_BUFF)
+            group.arrange(RIGHT, SMALL_BUFF)
             if last_group is None:
                 group.next_to(x_to_n, RIGHT)
             else:
@@ -2218,7 +2217,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
             color = YELLOW,
         )
         line.shift(FRAME_X_RADIUS*RIGHT/3).to_edge(UP)
-        line.insert_n_anchor_points(10)
+        line.insert_n_curves(10)
         line.make_smooth()
 
         arc = Arc(
@@ -2307,14 +2306,14 @@ class IntroduceUnitCircleWithSine(GraphScene):
             ShowCreation(filler_arc),
             UpdateFromFunc(v_line, v_line_update),
             run_time = filler_portion/self.rotations_per_second,
-            rate_func = None,
+            rate_func=linear,
         )
         for x in range(5):
             self.play(
                 Rotate(radial_line, 2*np.pi),
                 UpdateFromFunc(v_line, v_line_update),
                 run_time = 1./self.rotations_per_second,
-                rate_func = None,
+                rate_func=linear,
             )
 
     ##############
@@ -2361,7 +2360,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             ShowCreation(graph),
             UpdateFromFunc(v_line, lambda v : self.v_line_update(v, graph)),
             run_time = 2./rps,
-            rate_func = None
+            rate_func=linear
         )
         self.wait()
         self.graph = graph
@@ -2378,7 +2377,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             color = RED
         )
 
-        self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(ss_group, lag_ratio = 0))
         self.play(ShowCreation(v_line))
         self.wait()
         last_theta = 0
@@ -2537,7 +2536,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         interim_point = nudged_point[0]*RIGHT+point[1]*UP
         h_line = DashedLine(
             interim_point, point, 
-            dashed_segment_length = 0.01
+            dash_length = 0.01
         )
         d_sine_line = Line(interim_point, nudged_point, color = DERIVATIVE_COLOR)
         d_sine_brace = Brace(Line(ORIGIN, UP), LEFT)
@@ -2671,7 +2670,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         cos.add_background_rectangle()
 
         group = VGroup(d_ratio, trig_ratio, cos)
-        group.arrange_submobjects()
+        group.arrange()
         group.next_to(
             self.title, DOWN, 
             buff = MED_LARGE_BUFF, 
@@ -2700,13 +2699,13 @@ class NextVideo(TeacherStudentsScene):
         d_composition = TexMobject("\\frac{d}{dx} \\cos\\left(\\frac{1}{x}\\right)")
 
         group = VGroup(d_sum, d_product, d_composition)
-        group.arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
+        group.arrange(RIGHT, buff = 2*LARGE_BUFF)
         group.next_to(VGroup(*self.get_pi_creatures()), UP, buff = LARGE_BUFF)
 
         self.play(
             FadeIn(
                 series,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3,
             ),
             *[

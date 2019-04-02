@@ -15,6 +15,10 @@ DECIMAL_WIDTH = 0.5
 HIGHLIGHT_COLOR = YELLOW
 
 
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
 class ArcLengthChange(Animation):
 
     def __init__(self, mobject = None, new_angle = TAU/3, **kwargs):
@@ -24,7 +28,7 @@ class ArcLengthChange(Animation):
         self.new_angle = new_angle
         Animation.__init__(self,mobject,**kwargs)
 
-    def update_mobject(self,alpha):
+    def interpolate_mobject(self,alpha):
         angle = interpolate(self.old_angle, self.new_angle, alpha)
         self.mobject.angle = angle
         self.mobject.generate_points()
@@ -38,7 +42,7 @@ class LabelTracksLine(Animation):
         self.buff = buff
         Animation.__init__(self,mobject,**kwargs)
 
-    def update_mobject(self,alpha):
+    def interpolate_mobject(self,alpha):
         line_center = self.line.get_center()
         line_end = self.line.points[-1]
         v = line_end - line_center
@@ -165,7 +169,7 @@ class AnalysisQuote(Scene):
 
         text.to_edge(LEFT, buff = 1)
 
-        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.play(LaggedStartMap(FadeIn,text), run_time = 5)
         self.wait()
         self.play(FadeOut(text))
         self.wait()
@@ -190,7 +194,7 @@ class BernoulliQuote(Scene):
         for char in text.submobjects[151:157]:
             char.set_fill(HIGHLIGHT_COLOR)
 
-        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.play(LaggedStartMap(FadeIn,text), run_time = 5)
         self.wait()
         self.play(FadeOut(text))
         self.wait
@@ -396,10 +400,10 @@ class ManyFormulas(Scene):
             TexMobject("n! \\approx \\sqrt{\\tau n} \\left(\\frac{n}{e} \\right)^n"),
             TexMobject("c_n = \\frac{1}{\\tau} \\int_0^\\tau f(x) e^{inx}dx"),
         )
-        formulas.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        formulas.arrange(DOWN, buff = MED_LARGE_BUFF)
         formulas.to_edge(LEFT)
 
-        self.play(LaggedStart(FadeIn, formulas, run_time = 3))
+        self.play(LaggedStartMap(FadeIn, formulas, run_time = 3))
 
         circle = Circle(color = YELLOW, radius = 2)
         circle.to_edge(RIGHT)
@@ -483,7 +487,7 @@ class EulerWrites628(Scene):
             fill_opacity = 0.3,
             fill_color = GREEN,
         )
-        rect.insert_n_anchor_points(20)
+        rect.insert_n_curves(20)
         rect.apply_function(lambda p : np.array([p[0], p[1] - 0.005*p[0]**2, p[2]]))
         rect.rotate(0.012*TAU)
         rect.move_to(image)
@@ -579,10 +583,10 @@ class HeroAndVillain(Scene):
             FadeInFromDown(good_euler),
             Write(good_euler_label)
         )
-        self.play(LaggedStart(FadeIn, tau_words))
+        self.play(LaggedStartMap(FadeIn, tau_words))
         self.wait()
         self.play(FadeInFromDown(bad_euler_pixelated))
-        self.play(LaggedStart(FadeIn, pi_words))
+        self.play(LaggedStartMap(FadeIn, pi_words))
         self.wait(2)
         self.play(
             FadeIn(bad_euler),
@@ -635,7 +639,7 @@ class AnalysisQuote(Scene):
 
         self.add(analysis)
         self.play(*generate_anims2(), rate_func = lambda t : 0.5*smooth(t))
-        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.play(LaggedStartMap(FadeIn,text), run_time = 5)
         self.play(FadeIn(pi_formula))
         self.wait()
 
@@ -674,7 +678,7 @@ class QuarterTurn(Scene):
 class UsingTheta(Scene):
     def construct(self):
         plane = NumberPlane(x_unit_size = 3, y_unit_size = 3)
-        # plane.main_lines.fade(0.5)
+        # planes.fade(0.5)
         # plane.secondary_lines.fade(0.5)
         plane.fade(0.5)
         self.add(plane)
@@ -691,7 +695,7 @@ class UsingTheta(Scene):
         theta = TexMobject("\\theta", "=")
         theta[0].match_color(arc)
         theta.add_background_rectangle()
-        update_theta = ContinualUpdate(
+        update_theta = Mobject.add_updater(
             theta, lambda m : m.shift(
                 rotate_vector(0.9*RIGHT, radius.get_angle()/2) \
                 - m[1][0].get_center()
@@ -734,10 +738,10 @@ class ThingsNamedAfterEuler(Scene):
             "Euler angles (rigid-body mechanics)",
             "Euler totient function (number theory)",
         ])))
-        group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        group.arrange(DOWN, aligned_edge = LEFT)
         group.set_height(FRAME_HEIGHT - 1)
 
-        self.play(LaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
+        self.play(LaggedStartMap(FadeIn, group, lag_ratio = 0.2, run_time = 12))
         self.wait()
 
 class EulerThinking(Scene):
@@ -979,7 +983,7 @@ class SpecialThanks(Scene):
             "Martin Mattmüller",
             "Library of the Institut de France",
         ])))
-        people.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
+        people.arrange(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
         people.next_to(h_line, DOWN)
 
         self.add(title, h_line, people)

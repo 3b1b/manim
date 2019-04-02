@@ -72,7 +72,7 @@ class ComputationalNetwork(MovingCameraScene):
         )
 
         fg_group = VGroup(f_formula.group, g_formula.group)
-        fg_group.arrange_submobjects(DOWN, buff=LARGE_BUFF)
+        fg_group.arrange(DOWN, buff=LARGE_BUFF)
         fg_group.to_edge(UP)
         x.group.next_to(fg_group, LEFT, buff=2)
         h_formula.group.next_to(fg_group, RIGHT, buff=2)
@@ -378,12 +378,12 @@ class ComputationalNetwork(MovingCameraScene):
             self.wait()
 
         self.play(
-            LaggedStart(FadeIn, partial_term_rects),
+            LaggedStartMap(FadeIn, partial_term_rects),
             Animation(derivatives)
         )
         self.wait()
         self.play(
-            LaggedStart(FadeOut, partial_term_rects),
+            LaggedStartMap(FadeOut, partial_term_rects),
             Animation(derivatives)
         )
 
@@ -413,7 +413,7 @@ class ComputationalNetwork(MovingCameraScene):
             TexMobject("+"),
             dg_dx.target, dh_dg.target
         )
-        rhs.arrange_submobjects(
+        rhs.arrange(
             RIGHT,
             buff=2 * SMALL_BUFF,
         )
@@ -425,7 +425,7 @@ class ComputationalNetwork(MovingCameraScene):
 
         self.play(
             Write(rhs[::3]),
-            LaggedStart(MoveToTarget, derivatives)
+            LaggedStartMap(MoveToTarget, derivatives)
         )
         self.wait()
 
@@ -514,7 +514,7 @@ class ComputationalNetwork(MovingCameraScene):
         for x in range(3):
             self.play(ShowCreationThenDestruction(
                 top_lines,
-                submobject_mode="one_at_a_time"
+                lag_ratio=1,
             ))
         self.wait()
         self.play(
@@ -550,7 +550,7 @@ class ComputationalNetwork(MovingCameraScene):
             self.play(*[
                 ShowCreationThenDestruction(
                     group,
-                    submobject_mode="one_at_a_time"
+                    lag_ratio=1,
                 )
                 for group in (top_lines, bottom_lines)
             ])
@@ -688,11 +688,11 @@ class ComputationalNetwork(MovingCameraScene):
         result = TexMobject("=", "32", "+", "0")
         result.next_to(rhs, DOWN, aligned_edge=LEFT)
 
-        self.play(LaggedStart(Write, value_labels))
+        self.play(LaggedStartMap(Write, value_labels))
         self.wait()
         self.play(ReplacementTransform(
             full_derivative.copy(), rhs,
-            submobject_mode="lagged_start",
+            lag_ratio=0.5,
             run_time=2
         ))
         self.wait()

@@ -26,7 +26,7 @@ class WorkOutNumerically(Scene):
         challenge = TextMobject("Explain in one sentence")
         challenge.set_color(YELLOW)
         group = VGroup(challenge, equation)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_edge(UP)
 
         self.add(equation)
@@ -58,12 +58,12 @@ class WorkOutNumerically(Scene):
             eq_parts[i2:i3], [self.M2_copy],
             eq_parts[i3:],
         ))
-        equation.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        equation.arrange(RIGHT, buff=SMALL_BUFF)
         eq_parts.get_part_by_tex("=").shift(0.2 * SMALL_BUFF * DOWN)
         equation.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
         equation.next_to(self.original_equation, DOWN, MED_LARGE_BUFF)
 
-        self.play(LaggedStart(FadeIn, equation))
+        self.play(LaggedStartMap(FadeIn, equation))
 
     def compute_rhs(self):
         M1, M2 = self.M1_copy, self.M2_copy
@@ -78,7 +78,7 @@ class WorkOutNumerically(Scene):
                 "4", "\\cdot", "1", "\\big)"
             ),
         )
-        line1.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        line1.arrange(RIGHT, buff=SMALL_BUFF)
         line1[0].set_color(self.M1_COLOR)
         line1[1].set_color(self.M2_COLOR)
         indices = [1, 3, 5, 7]
@@ -88,7 +88,7 @@ class WorkOutNumerically(Scene):
         line3 = TexMobject("-15")
         arrows = [TexMobject("\\downarrow") for x in range(2)]
         lines = VGroup(line1, arrows[0], line2, arrows[1], line3)
-        lines.arrange_submobjects(DOWN, buff=MED_SMALL_BUFF)
+        lines.arrange(DOWN, buff=MED_SMALL_BUFF)
         lines.next_to(self.equation_with_numbers, DOWN, buff=MED_LARGE_BUFF)
         lines.to_edge(RIGHT)
 
@@ -101,15 +101,15 @@ class WorkOutNumerically(Scene):
                 for i, j in ((0, 0), (1, 1), (0, 1), (1, 0))
             ])
             self.play(
-                LaggedStart(FadeIn, non_numbers, run_time=1),
-                LaggedStart(
+                LaggedStartMap(FadeIn, non_numbers, run_time=1),
+                LaggedStartMap(
                     ReplacementTransform,
                     matrix_numbers,
                     lambda m: (m, next(numbers_iter)),
                     path_arc=TAU / 6
                 ),
             )
-        self.play(LaggedStart(FadeIn, lines[1:], run_time=3))
+        self.play(LaggedStartMap(FadeIn, lines[1:], run_time=3))
 
     def compute_lhs(self):
         matrix = Matrix([[-3, 7], [0, 5]])
@@ -119,7 +119,7 @@ class WorkOutNumerically(Scene):
         empty_det_tex[1:].scale(1.5)
         empty_det_tex[1:].match_height(matrix, stretch=True)
         det_tex = VGroup(empty_det_tex[:2], matrix, *empty_det_tex[2:])
-        det_tex.arrange_submobjects(RIGHT, buff=SMALL_BUFF)
+        det_tex.arrange(RIGHT, buff=SMALL_BUFF)
 
         group = VGroup(
             det_tex,
@@ -128,7 +128,7 @@ class WorkOutNumerically(Scene):
             TexMobject("\\downarrow"),
             TexMobject("-15"),
         )
-        group.arrange_submobjects(DOWN, buff=2 * SMALL_BUFF)
+        group.arrange(DOWN, buff=2 * SMALL_BUFF)
         # group.set_height(0.4*FRAME_HEIGHT)
         group.next_to(self.equation_with_numbers, DOWN)
         group.shift(FRAME_WIDTH * LEFT / 4)
@@ -138,7 +138,7 @@ class WorkOutNumerically(Scene):
             ReplacementTransform(M.copy(), matrix)
             for M in (self.M1, self.M2)
         ])
-        self.play(LaggedStart(FadeIn, group[1:]))
+        self.play(LaggedStartMap(FadeIn, group[1:]))
         self.wait()
 
 

@@ -162,7 +162,7 @@ class CircleScene(PiCreatureScene):
     def get_unwrapped(self, ring, to_edge = LEFT, **kwargs):
         R = ring.R
         R_plus_dr = ring.R + ring.dR
-        n_anchors = ring.get_num_anchor_points()
+        n_anchors = ring.get_num_curves()
         result = VMobject()
         result.set_points_as_corners([
             interpolate(np.pi*R_plus_dr*LEFT,  np.pi*R_plus_dr*RIGHT, a)
@@ -235,7 +235,7 @@ class Introduction(TeacherStudentsScene):
         self.play(
             FadeIn(
                 series,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 2
             ),
             Blink(self.get_teacher())
@@ -351,7 +351,7 @@ class Introduction(TeacherStudentsScene):
         calculus.generate_target()
         invent = TextMobject("Invent")
         invent_calculus = VGroup(invent, calculus.target)
-        invent_calculus.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        invent_calculus.arrange(RIGHT, buff = MED_SMALL_BUFF)
         invent_calculus.next_to(student, UP, 1.5*LARGE_BUFF)
         invent_calculus.shift(RIGHT)
         arrow = Arrow(invent_calculus, student)
@@ -464,7 +464,7 @@ class ProductRuleDiagram(Scene):
         g_label.generate_target()
         fg_group = VGroup(f_label.target, g_label.target)
         fg_group.generate_target()
-        fg_group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        fg_group.target.arrange(RIGHT, buff = SMALL_BUFF)
         fg_group.target.move_to(rect.get_center())
 
         for mob in df_brace, df_label, dg_brace, dg_label:
@@ -573,11 +573,11 @@ class IntroduceCircle(CircleScene):
             self.get_unwrapped(ring, to_edge = None)
             for ring in rings
         ])
-        unwrapped_rings.arrange_submobjects(UP, buff = SMALL_BUFF)
+        unwrapped_rings.arrange(UP, buff = SMALL_BUFF)
         unwrapped_rings.move_to(self.unwrapped_tip, UP)
         ring_anim_kwargs = {
             "run_time" : 3,
-            "submobject_mode" : "lagged_start"
+            "lag_ratio" : 0.5
         }
 
         self.play(
@@ -696,7 +696,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             ShowCreation(
                 lines, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.radius_group),
             self.pi_creature.change_mode, "maybe"
@@ -718,7 +718,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         self.play(
             FadeIn(
                 rings,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
                 run_time = 3
             ),
             Animation(self.radius_group),
@@ -853,7 +853,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         )
         two_pi_r_dr = VGroup(width_label, dr_label).copy()
         two_pi_r_dr.generate_target()
-        two_pi_r_dr.target.arrange_submobjects(
+        two_pi_r_dr.target.arrange(
             RIGHT, buff = SMALL_BUFF, aligned_edge = DOWN
         )
         two_pi_r_dr.target.next_to(approx, RIGHT, aligned_edge = DOWN)
@@ -911,7 +911,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             Animation(alt_side_brace),
             Animation(alt_dr_label),
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         )
         self.wait(2)
 
@@ -1071,7 +1071,7 @@ class GraphRectangles(CircleScene, GraphScene):
         self.wait()
         self.play(
             Transform(moving_arrow, arrows[-1]),
-            ShowCreation(r_ticks, submobject_mode = "lagged_start"),
+            ShowCreation(r_ticks, lag_ratio = 0.5),
             run_time = 2
         )
         self.play(Indicate(self.rings[-1]))
@@ -1115,7 +1115,7 @@ class GraphRectangles(CircleScene, GraphScene):
 
             ring.rect = rect
 
-            n_anchors = ring.get_num_anchor_points()            
+            n_anchors = ring.get_num_curves()            
             target = VMobject()
             target.set_points_as_corners([
                 interpolate(ORIGIN,  DOWN, a)
@@ -1175,7 +1175,7 @@ class GraphRectangles(CircleScene, GraphScene):
             *foreground_animations
         )
         self.play(
-            self.dr_group.arrange_submobjects, DOWN,
+            self.dr_group.arrange, DOWN,
             self.dr_group.next_to, highlighted_ring, 
             DOWN, SMALL_BUFF
         )
@@ -1234,7 +1234,7 @@ class GraphRectangles(CircleScene, GraphScene):
                     lambda t : 0.1*there_and_back(t), 
                     alpha, alpha+0.5
                 ),
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for rect, flat_rect, alpha in zip(
                 self.rects, self.flat_rects,
@@ -1251,7 +1251,7 @@ class GraphRectangles(CircleScene, GraphScene):
         approximation = TextMobject("= Approximation")
         approximation.scale(0.8)
         group = VGroup(rect.target, approximation)
-        group.arrange_submobjects(RIGHT)
+        group.arrange(RIGHT)
         group.to_edge(RIGHT)
 
         self.play(
@@ -1285,7 +1285,7 @@ class GraphRectangles(CircleScene, GraphScene):
             self.play(
                 Transform(
                     self.rects, new_rects, 
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     run_time = 2
                 ),
                 Animation(self.axes),
@@ -1296,7 +1296,7 @@ class GraphRectangles(CircleScene, GraphScene):
             self.rects,
             direction = RIGHT,
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
         self.wait()
 
@@ -1382,7 +1382,7 @@ class GraphRectangles(CircleScene, GraphScene):
             Transform(
                 rings, unwrapped,
                 run_time = 5,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             Animation(self.radius_group)
         )
@@ -1409,7 +1409,7 @@ class GraphRectangles(CircleScene, GraphScene):
         last_ring = rings[-1]
 
         arranged_group.add(last_ring.target)
-        arranged_group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        arranged_group.arrange(DOWN, buff = SMALL_BUFF)
         arranged_group.set_height(FRAME_HEIGHT-1)
         arranged_group.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
         for mob in tex_mobs:
@@ -1518,14 +1518,14 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
         down_arrow = TexMobject("\\Downarrow")
         sum_words = TextMobject("Sum of many \\\\ small values")
         integral_condition = VGroup(hard_problem, down_arrow, sum_words)
-        integral_condition.arrange_submobjects(DOWN)
+        integral_condition.arrange(DOWN)
         integral_condition.scale(0.8)
         integral_condition.to_corner(UP+RIGHT)
         
         self.add(rings, self.radius_group)
         self.play(FadeIn(
             integral_condition, 
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(*draw_ring_sum_anims)
@@ -1572,7 +1572,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
 
         self.play(Write(area_label))
         self.play(
-            ShowCreation(arrows, submobject_mode = "all_at_once"),
+            ShowCreation(arrows, lag_ratio = 0),
             FadeIn(radial_lines),
             *[
                 ReplacementTransform(
@@ -1665,7 +1665,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
             ReplacementTransform(
                 self.rings.copy(), rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.x_axis),
         )
@@ -1695,7 +1695,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
             self.play(
                 Transform(
                     self.rects, new_rects, 
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     run_time = 2
                 ),
                 Animation(self.axes),
@@ -1706,7 +1706,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
     def full_precision(self):
         words = TextMobject("Area under \\\\ a graph")
         group = VGroup(TexMobject("\\Downarrow"), words)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.set_color(YELLOW)
         group.scale(0.8)
         group.next_to(self.integral_condition, DOWN)
@@ -1796,8 +1796,8 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             MoveCar(car, end),
             FadeIn(
                 ticks, 
-                submobject_mode = "one_at_a_time",
-                rate_func = None,
+                lag_ratio=1,
+                rate_func=linear,
             ),
             ShowCreation(line),
             FadeIn(
@@ -1849,7 +1849,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             FadeIn(
                 pre_rects, 
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.ticks)
         )
@@ -1857,7 +1857,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             ReplacementTransform(
                 pre_rects, rects,
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Animation(self.ticks),
             Write(self.axes, run_time = 1)
@@ -1901,7 +1901,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
                 Transform(
                     self.rects, thinner_rects,
                     run_time = 2,
-                    submobject_mode = "lagged_start"
+                    lag_ratio = 0.5
                 )
             )
             self.wait()
@@ -2004,7 +2004,7 @@ class AreaUnderParabola(GraphScene):
                 rects,
                 run_time = 2,
                 rate_func = smooth,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             *list(map(Animation, foreground_mobjects))
         )
@@ -2013,7 +2013,7 @@ class AreaUnderParabola(GraphScene):
             self.play(
                 Transform(
                     rects, new_rects,
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                 ), 
                 *list(map(Animation, foreground_mobjects))
             )
@@ -2731,7 +2731,7 @@ class EndScreen(PiCreatureScene):
             FadeIn(
                 words, 
                 run_time = 2, 
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             self.pi_creature.change_mode, "hooray"
         )

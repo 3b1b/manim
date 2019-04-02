@@ -59,5 +59,5 @@ class IdealizedDieHistogram(Scene):
 
 
         self.play(FadeIn(hist))
-        self.play(LaggedStart(FadeIn, hist.y_labels_group))
+        self.play(LaggedStartMap(FadeIn, hist.y_labels_group))
 

@@ -24,9 +24,9 @@ class IntroducePutnam(Scene):
             VGroup(*[
                 TextMobject("%s%d)"%(c, i))
                 for i in range(1, 7)
-            ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+            ]).arrange(DOWN, buff = MED_LARGE_BUFF)
             for c in ("A", "B")
-        ]).arrange_submobjects(RIGHT, buff = FRAME_X_RADIUS - MED_SMALL_BUFF)
+        ]).arrange(RIGHT, buff = FRAME_X_RADIUS - MED_SMALL_BUFF)
         question_groups.to_edge(LEFT)
         question_groups.to_edge(DOWN, MED_LARGE_BUFF)
         flat_questions = VGroup(*it.chain(*question_groups))
@@ -93,7 +93,7 @@ class IntroducePutnam(Scene):
 
         self.add(title)
         self.play(Write(six_hours))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             GrowFromCenter, flat_questions,
             run_time = 3,
         ))
@@ -103,7 +103,7 @@ class IntroducePutnam(Scene):
             *list(map(ShowCreation, rects))
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, out_of_tens,
             run_time = 3,
             stroke_color = YELLOW
@@ -111,7 +111,7 @@ class IntroducePutnam(Scene):
         self.wait()
         self.play(ReplacementTransform(
             out_of_tens.copy(), VGroup(out_of_120),
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
             run_time = 2,
         ))
         self.wait()
@@ -218,7 +218,7 @@ class IntroduceTetrahedronSupplement(Scene):
             self.wait(0.7)
             self.remove(num)
         self.add(title[0])
-        self.play(FadeIn(title[1], submobject_mode = "lagged_start"))
+        self.play(FadeIn(title[1], lag_ratio = 0.5))
         self.wait(2)
         self.play(Write(question))
         self.wait(2)
@@ -324,10 +324,10 @@ class TwoDCase(Scene):
         question.to_corner(UP+RIGHT)
         self.question = question
 
-        self.play(LaggedStart(DrawBorderThenFill, point_mobs))
+        self.play(LaggedStartMap(DrawBorderThenFill, point_mobs))
         self.play(FadeIn(triangle))
         self.wait()
-        self.play(LaggedStart(Write, point_labels))
+        self.play(LaggedStartMap(Write, point_labels))
         self.wait()
         self.play(Write(question))
         for x in range(self.n_initial_random_choices):
@@ -385,7 +385,7 @@ class TwoDCase(Scene):
             push_pin.fade(1)
             push_pins.add(push_pin)
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, push_pins,
             lambda mob : (mob.restore,)
         ))
@@ -535,7 +535,7 @@ class TwoDCase(Scene):
                 rate_func = wiggle,
             )
         )
-        self.play(LaggedStart(FadeIn, proportion, run_time = 1))
+        self.play(LaggedStartMap(FadeIn, proportion, run_time = 1))
         self.wait()
 
         #Non right angles
@@ -923,9 +923,9 @@ class RevisitTwoDCase(TwoDCase):
             words.next_to(rect, UP)
             words.shift_onto_screen()
 
-        self.play(LaggedStart(ShowCreation, center_lines, run_time = 1))
+        self.play(LaggedStartMap(ShowCreation, center_lines, run_time = 1))
         self.play(
-            LaggedStart(FadeIn, arcs, run_time = 1),
+            LaggedStartMap(FadeIn, arcs, run_time = 1),
             Animation(self.point_mobs),
         )
         self.wait()
@@ -967,7 +967,7 @@ class RevisitTwoDCase(TwoDCase):
             "Choose $P_3$ at random"
         ])))
         words.scale(0.8)
-        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        words.arrange(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
         words[1].set_color(YELLOW)
 
@@ -995,7 +995,7 @@ class RevisitTwoDCase(TwoDCase):
             ShowCreation(underline)
         )
         self.play(FadeIn(words[0]))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, point_label_groups,
             lambda mob : (mob.restore,),
         ))
@@ -1009,7 +1009,7 @@ class RevisitTwoDCase(TwoDCase):
         self.center_lines_update.update(1)
         self.play(
             FadeIn(words[1]),
-            LaggedStart(GrowFromCenter, center_lines)
+            LaggedStartMap(GrowFromCenter, center_lines)
         )
         for x in range(3):
             self.change_point_mobs_randomly(run_time = 1)
@@ -1229,7 +1229,7 @@ class Rewrite3DRandomProcedure(Scene):
             "Flip coin for each line \\\\ to get $P_1$, $P_2$, $P_3$",
         ])))
         words.scale(0.8)
-        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        words.arrange(DOWN, buff = MED_LARGE_BUFF)
         words.next_to(underline, DOWN)
         words[1].set_color(YELLOW)
         cross = Cross(words[0])
@@ -1242,8 +1242,8 @@ class Rewrite3DRandomProcedure(Scene):
         self.play(FadeIn(words[0]))
         self.play(ShowCreation(cross))
         self.wait()
-        self.play(LaggedStart(FadeIn, words[1]))
-        self.play(LaggedStart(FadeIn, words[2]))
+        self.play(LaggedStartMap(FadeIn, words[1]))
+        self.play(LaggedStartMap(FadeIn, words[2]))
         self.wait(2)
         self.play(Write(words[3]))
         self.wait(3)
@@ -1311,7 +1311,7 @@ class ProblemSolvingTakeaways(Scene):
         ])
         points[0].set_color(BLUE)
         points[1].set_color(YELLOW)
-        points.arrange_submobjects(
+        points.arrange(
             DOWN, buff = LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -1342,7 +1342,6 @@ class BrilliantPuzzle(PiCreatureScene):
         for s1, s2 in adjacent_pairs(self.students):
             arrow = Arrow(
                 s1.get_center(), s2.get_center(), 
-                use_rectangular_stem = False,
                 path_arc = np.pi/2,
                 buff = 0.8
             )
@@ -1364,20 +1363,20 @@ class BrilliantPuzzle(PiCreatureScene):
 
         self.remove(students)
         self.play(Write(title))
-        self.play(LaggedStart(GrowFromCenter, students))
+        self.play(LaggedStartMap(GrowFromCenter, students))
         self.play(
-            LaggedStart(Write, tests),
-            LaggedStart(
+            LaggedStartMap(Write, tests),
+            LaggedStartMap(
                 ApplyMethod, students,
                 lambda m : (m.change, "horrified", m.test)
             )
         )
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod, students,
             lambda m : (m.change, "conniving")
         ))
-        self.play(LaggedStart(ShowCreation, arrows))
+        self.play(LaggedStartMap(ShowCreation, arrows))
         for x in range(2):
             self.swap_arrows_randomly(arrows)
         self.wait()
@@ -1392,7 +1391,7 @@ class BrilliantPuzzle(PiCreatureScene):
 
     def get_test(self):
         lines = VGroup(*[Line(ORIGIN, 0.5*RIGHT) for x in range(6)])
-        lines.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        lines.arrange(DOWN, buff = SMALL_BUFF)
         rect = SurroundingRectangle(lines)
         rect.set_stroke(WHITE)
         lines.set_stroke(WHITE, 2)

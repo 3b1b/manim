@@ -197,7 +197,7 @@ class Pendulum(ReconfigurableScene):
         self.play(
             ShowCreation(
                 trajectory_dots,
-                rate_func = None,
+                rate_func=linear,
                 run_time = kwargs["run_time"]
             ),
             Rotate(self.pendulum, -2*self.angle, **kwargs),
@@ -301,7 +301,7 @@ class Pendulum(ReconfigurableScene):
             FadeIn(
                 cosine_approx,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             MoveToTarget(cosine),
             morty.change, "pondering", cosine_approx
@@ -619,7 +619,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             quadratic_tex, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(
             FadeIn(free_to_change),
@@ -708,7 +708,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(*list(map(FadeOut, [poly_at_zero, equals_c0])))
@@ -762,7 +762,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             VGroup(derivative, *rhs[:2]),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(Write(VGroup(*rhs[2:])), run_time = 2)
@@ -806,13 +806,13 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             derivative, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(Transform(
             derivative, derivative_at_zero,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(Write(equals_c1))
@@ -820,7 +820,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
 
@@ -865,7 +865,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             VGroup(second_deriv, *rhs[1][:2]),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(3)
         self.play(Write(VGroup(*rhs[1][2:]), run_time = 2))
@@ -947,7 +947,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(3)
 
@@ -1444,7 +1444,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         self.play(Transform(
             c3s, zeros, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
 
@@ -1547,7 +1547,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             Transform(
                 c4s, fractions,
                 run_time = 3,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             MoveToTarget(x_to_4, run_time = 2)
         )
@@ -1861,7 +1861,7 @@ class EachTermControlsOneDerivative(Scene):
                 for n in range(2, 5)
             ]
         ])
-        deriv_words.arrange_submobjects(
+        deriv_words.arrange(
             RIGHT, 
             buff = LARGE_BUFF,
             aligned_edge = UP
@@ -1962,7 +1962,7 @@ class ApproximateNearNewPoint(CubicAndQuarticApproximations):
         self.play(FadeIn(
             poly_around_pi,
             run_time = 4,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait(2)
         self.play(FadeIn(randy))
@@ -2117,7 +2117,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             arrows
         ))))
         group.add(TexMobject("\\vdots"))
-        group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        group.arrange(DOWN, buff = SMALL_BUFF)
         group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0, color in zip(derivs_at_x, derivs_at_zero, self.colors):
@@ -2270,7 +2270,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ])
             for arg in ("x", "0", "a")
         ]
-        derivs_at_x.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        derivs_at_x.arrange(DOWN, buff = MED_LARGE_BUFF)
         derivs_at_x.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         derivs_at_x.to_edge(LEFT)
         zeros = VGroup(*[
@@ -2303,7 +2303,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         self.play(ReplacementTransform(
             zeros.copy(), self.dot,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(ShowCreation(self.v_line))
         self.wait()
@@ -2326,7 +2326,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ReplacementTransform(
                 self.polynomial, new_polynomial,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             FadeOut(polynomial_fourth_term),
             FadeOut(self.taylor_name_group),
@@ -2530,7 +2530,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
             arrows
         ))))
         group.add(TexMobject("\\vdots"))
-        group.arrange_submobjects(DOWN, buff = 2*SMALL_BUFF)
+        group.arrange(DOWN, buff = 2*SMALL_BUFF)
         group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0 in zip(derivs_at_x, derivs_at_zero):
@@ -2874,7 +2874,7 @@ class SecondTermIntuition(AreaIsDerivative):
         equals_half.scale(tex_scale_factor)
         group = VGroup(triangle, equals_half, height_term, base_term)
         group.generate_target()
-        group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.target.arrange(RIGHT, buff = SMALL_BUFF)
         group.target[-1].next_to(
             group.target[-2], RIGHT,
             buff = SMALL_BUFF,
@@ -2917,7 +2917,7 @@ class SecondTermIntuition(AreaIsDerivative):
             TexMobject("+"), mini_rect,
             TexMobject("+"), mini_triangle,
         )
-        geometric_taylor.arrange_submobjects(
+        geometric_taylor.arrange(
             RIGHT, buff = MED_SMALL_BUFF
         )
         geometric_taylor.to_corner(UP+LEFT)
@@ -2944,7 +2944,7 @@ class SecondTermIntuition(AreaIsDerivative):
         self.play(FadeIn(
             geometric_taylor,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.play(
@@ -3171,9 +3171,9 @@ class ExpConvergenceExample(ConvergenceExample):
             term.set_color(color)
 
         lhs = TexMobject("e^%s"%arg, "\\rightarrow")
-        lhs.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        lhs.arrange(RIGHT, buff = SMALL_BUFF)
         group = VGroup(lhs, series)
-        group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff = SMALL_BUFF)
 
         return group
 
@@ -3388,7 +3388,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         self.play(FadeIn(
             series, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         self.series = series

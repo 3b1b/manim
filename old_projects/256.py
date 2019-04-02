@@ -124,7 +124,7 @@ class BreakUp2To256(PiCreatureScene):
             Transform(
                 self.subexpressions, new_subexpressions,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             FadeOut(self.pi_creature)
         )
@@ -138,7 +138,7 @@ class BreakUp2To256(PiCreatureScene):
             )
             for x in range(8)
         ])
-        target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        target.arrange(RIGHT, buff = SMALL_BUFF)
         target.to_edge(UP)
         target.set_width(FRAME_WIDTH - LARGE_BUFF)
         parens = VGroup(*it.chain(*[
@@ -154,7 +154,7 @@ class BreakUp2To256(PiCreatureScene):
         self.play(
             self.bits.to_corner, DOWN+LEFT,
             Transform(four_billions, target_four_billions),
-            LaggedStart(FadeIn, parens),
+            LaggedStartMap(FadeIn, parens),
             FadeOut(to_fade)
         )
         self.wait()
@@ -210,7 +210,7 @@ class MainBreakdown(Scene):
             )
             top_line.add(mob)
             four_billions.add(mob[1])
-        top_line.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        top_line.arrange(RIGHT, buff = SMALL_BUFF)
         top_line.set_width(FRAME_WIDTH - LARGE_BUFF)
         top_line.to_edge(UP)
         four_billions.set_color(YELLOW)
@@ -239,7 +239,7 @@ class MainBreakdown(Scene):
             TextMobject("hash")
             for x in range(10)
         ])
-        hash_names.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        hash_names.arrange(DOWN, buff = MED_SMALL_BUFF)
         hash_names.next_to(name, RIGHT, buff = 2)
 
         paths = VGroup()
@@ -266,7 +266,7 @@ class MainBreakdown(Scene):
         def get_passing_flash():
             return ShowPassingFlash(
                 paths,
-                submobject_mode = "all_at_once",
+                lag_ratio = 0,
                 time_width = 0.7,
                 run_time = 2,
             )
@@ -318,7 +318,7 @@ class MainBreakdown(Scene):
 
         self.play(FadeIn(laptop))
         self.play(
-            gpus.arrange_submobjects, RIGHT, SMALL_BUFF,
+            gpus.arrange, RIGHT, SMALL_BUFF,
             gpus.next_to, rate_words, UP,
             gpus.to_edge, LEFT
         )
@@ -331,7 +331,7 @@ class MainBreakdown(Scene):
         )
         self.wait()
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 ApplyFunction, gpus,
                 lambda g : (
                     lambda m : m.scale(0.01).move_to(laptop),
@@ -384,7 +384,7 @@ class MainBreakdown(Scene):
         self.wait(2)
         self.play(Write(millions))
         self.wait(2)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             Indicate, self.group_of_four_billion_things,
             run_time = 4,
             rate_func = there_and_back,
@@ -454,7 +454,7 @@ class MainBreakdown(Scene):
         self.play(FadeIn(milky_way))
         self.play(Write(n_stars_estimate))
         self.wait()
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             Indicate, self.group_of_four_billion_things,
             rate_func = there_and_back,
             lag_ratio = 0.2,
@@ -495,7 +495,7 @@ class MainBreakdown(Scene):
             ReplacementTransform(
                 self.group_of_four_billion_things, VGroup(num),
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             ShowCreation(h_line),
             ReplacementTransform(
@@ -560,13 +560,13 @@ class MainBreakdown(Scene):
             VGroup(*[
                 mobject.copy().set_height(0.25)
                 for x in range(self.n_group_rows)
-            ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
+            ]).arrange(DOWN, buff = SMALL_BUFF)
             for y in range(self.n_group_cols-1)
         ])
         dots = TexMobject("\\dots")
         group.add(dots)
         group.add(*[group[0].copy() for x in range(2)])
-        group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff = SMALL_BUFF)
         group.set_height(FRAME_Y_RADIUS)
         max_width = 1.25*FRAME_X_RADIUS
         if group.get_width() > max_width:
@@ -580,7 +580,7 @@ class MainBreakdown(Scene):
             four_billion.scale, 2,
             four_billion.next_to, brace, LEFT,
             GrowFromCenter(brace),
-            LaggedStart(
+            LaggedStartMap(
                 FadeIn, group,
                 run_time = 3,
                 lag_ratio = 0.2
@@ -679,7 +679,7 @@ class StateOfBitcoin(TeacherStudentsScene):
         third = TexMobject("1 \\over 3")
         third.next_to(kilo, LEFT)
         kilogoogle = VGroup(*it.chain(third, kilo, google))
-        kilogoogle.sort_submobjects()
+        kilogoogle.sort()
         kilogoogle.next_to(rate, DOWN, MED_LARGE_BUFF)
 
         rate.save_state()
@@ -731,7 +731,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             rate.restore,
         )
         self.change_student_modes(*["pondering"]*3)
-        self.play(LaggedStart(FadeIn, kilogoogle))
+        self.play(LaggedStartMap(FadeIn, kilogoogle))
         self.change_student_modes(*["surprised"]*3)
         self.wait()
         self.change_student_modes(
@@ -758,7 +758,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             *["pondering"]*3,
             added_anims = [Write(asic_rate)]
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             FadeIn, circuit,
             run_time = 3,
             lag_ratio = 0.2,
@@ -811,14 +811,14 @@ class QAndA(PiCreatureScene):
         dots = VGroup(*[
             VGroup(*[
                 Dot() for x in range(rows)
-            ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
+            ]).arrange(DOWN, buff = SMALL_BUFF)
             for y in range(cols)
-        ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        ]).arrange(RIGHT, buff = SMALL_BUFF)
         dots.set_width(FRAME_WIDTH - 2*LARGE_BUFF)
         dots.next_to(self.pi_creature, UP)
         dots = VGroup(*it.chain(*dots))
         top = dots.get_top()
-        dots.sort_submobjects(
+        dots.sort(
             lambda p : get_norm(p-top)
         )
 

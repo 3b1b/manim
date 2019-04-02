@@ -185,7 +185,7 @@ class FathersOfCalculus(Scene):
             title.next_to(image, DOWN)
             image.add(title)
             men.add(image)
-        men.arrange_submobjects(RIGHT, aligned_edge = UP)
+        men.arrange(RIGHT, aligned_edge = UP)
         men.shift(DOWN)
 
         discover_brace = Brace(Mobject(*men[:3]), UP)
@@ -352,7 +352,7 @@ class GraphCarTrajectory(GraphScene):
         self.play(
             ShowCreation(
                 graph,
-                rate_func = None,
+                rate_func=linear,
             ),
             MoveCar(
                 car, car_target,
@@ -740,11 +740,11 @@ class CompareTwoTimes(Scene):
             change_over_change, down_arrow2,
             formula,
         )
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_corner(UP+RIGHT)
 
         self.play(FadeIn(
-            group, submobject_mode = "lagged_start",
+            group, lag_ratio = 0.5,
             run_time = 3
         ))
         self.wait(3)
@@ -981,7 +981,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         input_point_line = self.get_vertical_line_to_graph(
             self.start_time,
             line_kwargs = {
-                "dashed_segment_length" : 0.02,
+                "dash_length" : 0.02,
                 "stroke_width" : 4,
                 "color" : WHITE,
             },
@@ -1127,7 +1127,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         self.wait()
         for anim_class in FadeIn, FadeOut:
             self.play(anim_class(
-                t_tick_marks, submobject_mode = "lagged_start",
+                t_tick_marks, lag_ratio = 0.5,
                 run_time = 2
             ))
         self.play(
@@ -1687,7 +1687,7 @@ class TCubedExample(SecantLineToTangentLine):
                 line_class = DashedLine,
                 line_kwargs = {
                     "color" : WHITE,
-                    "dashed_segment_length" : 0.05,
+                    "dash_length" : 0.05,
                 }
             )
             for time in (self.start_time, self.start_time+self.start_dt)
@@ -1970,7 +1970,7 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
         next_video = series[2]
         this_video.save_state()
         this_video.set_color(YELLOW)
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.play(
             this_video.restore,
             next_video.set_color, YELLOW,
@@ -2046,7 +2046,7 @@ class TimeForAnActualParadox(TeacherStudentsScene):
         paradoxes = TextMobject("Paradoxes")
         arrow = Arrow(ORIGIN, DOWN, buff = 0)
         group = VGroup(words, arrow, paradoxes)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_edge(UP)
 
         teacher = self.get_teacher()
@@ -2114,7 +2114,7 @@ class ParadoxAtTEquals0(TCubedExample):
                 car, car_target_point,
                 rate_func = lambda t : (t*graph_x_max)**3
             ),
-            ShowCreation(graph, rate_func = None),
+            ShowCreation(graph, rate_func=linear),
             UpdateFromFunc(h_line, h_line_update),
             UpdateFromFunc(v_line, v_line_update),
             run_time = 5

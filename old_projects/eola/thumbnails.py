@@ -20,7 +20,7 @@ class Chapter1(Scene):
         array = Matrix([1, 2])
         array.set_color(TEAL)
         everyone = VMobject(arrow, vs, array)
-        everyone.arrange_submobjects(RIGHT, buff = 0.5)
+        everyone.arrange(RIGHT, buff = 0.5)
         everyone.set_height(4)
         self.add(everyone)
 

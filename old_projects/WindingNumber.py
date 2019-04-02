@@ -1,10 +1,22 @@
-
 from big_ol_pile_of_manim_imports import *
+
+import warnings
+warnings.warn("""
+    Warning: This file makes use of
+    ContinualAnimation, which has since
+    been deprecated
+""")
 
 import time
 
 import mpmath
 mpmath.mp.dps = 7
+
+
+# Warning, this file uses ContinualChangingDecimal,
+# which has since been been deprecated.  Use a mobject
+# updater instead
+
 
 # Useful constants to play around with
 UL = UP + LEFT
@@ -127,7 +139,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             target_line_object = DashedLine(
                 self.coords_to_point(self.x_min, self.targetY), 
                 self.coords_to_point(self.x_max, self.targetY),
-                dashed_segment_length = 0.1)
+                dash_length = 0.1)
             self.add(target_line_object)
 
             target_label_num = 0 if self.show_y_as_deviation else self.targetY
@@ -539,11 +551,11 @@ class WalkerAnimation(Animation):
         Animation.__init__(self, self.compound_walker, **kwargs)
 
     # Perhaps abstract this out into an "Animation updating from original object" class
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        Animation.interpolate_mobject(self, alpha)
         cur_x, cur_y = cur_coords = self.walk_func(alpha)
         cur_point = self.coords_to_point(cur_x, cur_y)
         self.mobject.shift(cur_point - self.mobject.walker.get_center())
@@ -601,7 +613,7 @@ def walker_animation_with_display(
             number_update_func, 
             tracked_mobject = walker_anim.compound_walker.walker,
             **kwargs)
-        anim_group = AnimationGroup(walker_anim, display_anim, rate_func = None)
+        anim_group = AnimationGroup(walker_anim, display_anim, rate_func=linear)
         return anim_group
     else:
         return walker_anim
@@ -758,7 +770,7 @@ class PiWalker(ColorMappedByFuncScene):
             polygon.stroke_width = border_stroke_width
             polygon.color_using_background_image(self.background_image_file)
         total_run_time = len(points) * self.step_run_time
-        polygon_anim = ShowCreation(polygon, run_time = total_run_time, rate_func = None)
+        polygon_anim = ShowCreation(polygon, run_time = total_run_time, rate_func=linear)
         walker_anim = empty_animation
 
         start_wind = 0
@@ -807,7 +819,7 @@ class PiWalker(ColorMappedByFuncScene):
                 new_anim = FuncRotater(base_arrow, 
                     rev_func = rev_func,
                     run_time = self.step_run_time,
-                    rate_func = None,
+                    rate_func=linear,
                     remover = i < len(walk_coords) - 1,
                 )
 
@@ -1305,7 +1317,7 @@ class ArrowCircleTest(Scene):
         arrows = [rev_rotate(base_arrow.copy(), 0.5 - (fdiv(i, num_arrows))) for i in range(num_arrows)]
         arrows_vgroup = VGroup(*arrows)
 
-        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
+        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func=linear)
 
         self.wait()
 
@@ -1315,11 +1327,11 @@ class FuncRotater(Animation):
     }
 
     # Perhaps abstract this out into an "Animation updating from original object" class
-    def update_submobject(self, submobject, starting_submobject, alpha):
+    def interpolate_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        Animation.interpolate_mobject(self, alpha)
         angle_revs = self.rev_func(alpha)
         self.mobject.rotate(
             angle_revs * TAU, 
@@ -1385,7 +1397,7 @@ class OdometerScene(ColorMappedObjectsScene):
             FuncRotater(base_arrow, rev_func = lambda x : -self.rotate_func(x)),
             ChangingDecimal(num_display, display_func),
             run_time = self.run_time,
-            rate_func = None)
+            rate_func=linear)
 
 #############
 # Above are mostly general tools; here, we list, in order, finished or near-finished scenes
@@ -1763,7 +1775,7 @@ class Initial2dFuncSceneWithoutMorphing(Initial2dFuncSceneBase):
 # Alternative to the above, manually implementing split screen with a morphing animation
 class Initial2dFuncSceneMorphing(Initial2dFuncSceneBase):
     CONFIG = {
-        "num_needed_anchor_points" : 10,
+        "num_needed_anchor_curves" : 10,
     }
 
     def setup(self):
@@ -1781,8 +1793,8 @@ class Initial2dFuncSceneMorphing(Initial2dFuncSceneBase):
 
     def obj_draw(self, input_object):
         output_object = input_object.copy()
-        if input_object.get_num_anchor_points() < self.num_needed_anchor_points:
-            input_object.insert_n_anchor_points(self.num_needed_anchor_points)
+        if input_object.get_num_curves() < self.num_needed_anchor_curves:
+            input_object.insert_n_curves(self.num_needed_anchor_curves)
         output_object.apply_function(self.func)
         self.squash_onto_left(input_object)
         self.squash_onto_right(output_object)
@@ -2004,7 +2016,7 @@ class LoopSplitScene(ColorMappedObjectsScene):
             play_combined_fade(start, end, midline_lines_vmobject, midline_bullets)
 
         def flash_circles(circles):
-            self.play(LaggedStart(FadeIn, VGroup(circles)))
+            self.play(LaggedStartMap(FadeIn, VGroup(circles)))
             self.wait()
             self.play(FadeOut(VGroup(circles)))
             self.wait()

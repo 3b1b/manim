@@ -133,7 +133,7 @@ class CoordinatesAsScalars(VectorScene):
             scaled_v = Vector(factor*v.get_end(), color = v.get_color())
 
             scaled_label = VMobject(coord.copy(), label.copy())
-            scaled_label.arrange_submobjects(RIGHT, buff = 0.1)
+            scaled_label.arrange(RIGHT, buff = 0.1)
             scaled_label.move_to(label, DOWN+RIGHT)
             scaled_label.shift((scaled_v.get_end()-v.get_end())/2)
             coord_copy = coord.copy()
@@ -445,7 +445,7 @@ class NameLinearCombinations(Scene):
         equation = TexMobject([
             "a", "\\vec{\\textbf{v}}", "+", "b", "\\vec{\\textbf{w}}"
         ])
-        equation.arrange_submobjects(buff = 0.1, aligned_edge = DOWN)
+        equation.arrange(buff = 0.1, aligned_edge = DOWN)
         equation.split()[1].set_color(v_color)
         equation.split()[4].set_color(w_color)
         a, b = np.array(equation.split())[[0, 3]]
@@ -591,7 +591,7 @@ class DefineSpan(Scene):
         equation = TexMobject([
             "a", "\\vec{\\textbf{v}}", "+", "b", "\\vec{\\textbf{w}}"
         ])
-        equation.arrange_submobjects(buff = 0.1, aligned_edge = DOWN)
+        equation.arrange(buff = 0.1, aligned_edge = DOWN)
         equation.split()[1].set_color(v_color)
         equation.split()[4].set_color(w_color)
         a, b = np.array(equation.split())[[0, 3]]
@@ -645,7 +645,6 @@ class VectorsToDotsScene(VectorScene):
         self.play(
             ShowCreation(
                 vector_group, 
-                submobject_mode = "one_at_a_time",
                 run_time = 3
             )
         )
@@ -843,7 +842,7 @@ class LinearCombinationOfThreeVectorsText(Scene):
         self.play(Write(equation))
         self.wait()
         self.play(
-            ShowCreation(arrows, submobject_mode = "one_at_a_time"),
+            ShowCreation(arrows),
             Write(span_comment)
         )
         self.wait()

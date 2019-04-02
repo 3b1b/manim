@@ -158,7 +158,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         for v_eq, path, time in zip(v_equations, center_paths, [2, 1, 0.5]):
             photon_run = self.photon_run_along_path(
                 path,
-                rate_func = None
+                rate_func=linear
             )
             self.play(
                 ShimmerIn(v_eq[0]),

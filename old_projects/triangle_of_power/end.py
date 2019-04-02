@@ -15,7 +15,7 @@ class DontLearnFromSymbols(Scene):
             TexMobject("="),
             TOP(2, "x+y")
         )
-        equation.arrange_submobjects()
+        equation.arrange()
         q_marks = TextMobject("???")
         q_marks.set_color(YELLOW)
         q_marks.next_to(randy, UP)
@@ -58,7 +58,7 @@ class AsymmetriesInTheMath(Scene):
         assyms_of_top = VMobject(
             TextMobject("Asymmetries of "),
             TOP("a", "b", "c", radius = 0.75).set_color(BLUE)
-        ).arrange_submobjects()
+        ).arrange()
         assyms_of_top.to_edge(UP)
         assyms_of_math = TextMobject("""
             Asymmetries of 
@@ -182,7 +182,7 @@ class TriangleOfPowerIsBetter(Scene):
         ])))
         for mob, color in zip(alts.split(), OPERATION_COLORS):
             mob.set_color(color)
-        alts.arrange_submobjects(DOWN)
+        alts.arrange(DOWN)
         greater_than = TexMobject(">")
         top.next_to(greater_than, LEFT)
         alts.next_to(greater_than, RIGHT)
@@ -253,13 +253,13 @@ class Qwerty(Scene):
             TextMobject(list("ASDFGHJKL")),
             TextMobject(list("ZXCVBNM")),
         )
-        qwerty.arrange_submobjects(DOWN)
+        qwerty.arrange(DOWN)
         dvorak = VMobject(
             TextMobject(list("PYFGCRL")),
             TextMobject(list("AOEUIDHTNS")),
             TextMobject(list("QJKXBMWVZ")),
         )
-        dvorak.arrange_submobjects(DOWN)
+        dvorak.arrange(DOWN)
         d1, d2, d3 = dvorak.split()
         d1.shift(0.9*RIGHT)
         d3.shift(0.95*RIGHT)
@@ -278,7 +278,7 @@ class ShowLog(Scene):
             TOP(2, None, "y"),
             TexMobject("="),
             TOP(2, None, "xy")
-        ]).arrange_submobjects()
+        ]).arrange()
         old_eq = TexMobject("\\log_2(x) + \\log_2(y) = \\log_2(xy)")
         old_eq.to_edge(UP)
         

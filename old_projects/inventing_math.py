@@ -131,7 +131,7 @@ class FlipThroughNumbers(Animation):
         mobject = TexMobject(str(self.current_number)).shift(start_center)
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         new_number = self.function(
             self.start + int(alpha *(self.end-self.start))
         )

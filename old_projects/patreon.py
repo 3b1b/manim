@@ -47,7 +47,7 @@ class SideGigToFullTime(Scene):
             TexMobject("\\$")
             for x in range(10)
         ])
-        dollar_signs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        dollar_signs.arrange(RIGHT, buff = LARGE_BUFF)
         dollar_signs.set_color(BLACK)
         dollar_signs.next_to(morty.eyes, RIGHT, buff = 2*LARGE_BUFF)
 
@@ -69,7 +69,7 @@ class SideGigToFullTime(Scene):
             ApplyMethod(
                 dollar_signs.shift, 
                 (FRAME_Y_RADIUS+1)*DOWN,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             morty.change_mode, "guilty",
             morty.look, DOWN+RIGHT
@@ -138,7 +138,7 @@ class GrowingToDoList(Scene):
             "Understanding entropy",
         ])))
         lines.scale(0.65)
-        lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        lines.arrange(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         lines.set_color_by_gradient(BLUE_C, YELLOW)
         lines.next_to(title, DOWN, buff = LARGE_BUFF/2.)
         lines.to_edge(RIGHT)
@@ -163,7 +163,6 @@ class GrowingToDoList(Scene):
             morty.look_at, lines,
             Write(
                 VGroup(*lines[3:]),
-                lag_factor = 7
             )
         )
 
@@ -190,7 +189,7 @@ class TwoTypesOfVideos(Scene):
                 "ODEs",
             ]
         ])
-        series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+        series_list.arrange(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         series_list.set_width(FRAME_X_RADIUS-2)
         series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
@@ -315,14 +314,14 @@ class GrowRonaksSierpinski(Scene):
         run_time = 1
         for n, sierp_layer, dot_layer in zip(it.count(1), sierp_layers, dot_layers[1:]):
             self.play(
-                ShowCreation(sierp_layer, submobject_mode = "one_at_a_time"),
+                ShowCreation(sierp_layer, lag_ratio=1),
                 Animation(last_dot_layer),
                 run_time = run_time
             )
             self.play(ShowCreation(
                 dot_layer,
                 run_time = run_time,
-                submobject_mode = "all_at_once"
+                lag_ratio=1,
             ))
             # if n == 2:
             #     dot = dot_layer[1]
@@ -524,9 +523,9 @@ class MakeALotOfPiCreaturesHappy(Scene):
             VGroup(*[
                 Randolph()
                 for x in range(7)
-            ]).arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+            ]).arrange(RIGHT, buff = MED_LARGE_BUFF)
             for x in range(4)
-        ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        ]).arrange(DOWN, buff = MED_LARGE_BUFF)
 
         pi_list = list(it.chain(*[
             layer.submobjects
@@ -550,8 +549,7 @@ class MakeALotOfPiCreaturesHappy(Scene):
             MoveToTarget(
                 pis,
                 run_time = 2,
-                submobject_mode = "lagged_start",
-                lag_factor = 5,
+                lag_ratio = 0.5,
             )
         )
         for x in range(10):
@@ -574,7 +572,7 @@ class IntegrationByParts(Scene):
         regions = []
         for vect, color in (UP+RIGHT, BLUE), (DOWN+LEFT, GREEN):
             region = curve.copy()
-            region.add_control_points(3*[rect.get_corner(vect)])
+            region.add_line_to(rect.get_corner(vect))
             region.set_stroke(width = 0)
             region.set_fill(color = color, opacity = 0.5)
             regions.append(region)
@@ -618,7 +616,6 @@ class IntegrationByParts(Scene):
         self.play(
             ShowCreation(
                 v_lines,
-                submobjects = "one_at_a_time",
                 run_time = 2
             ),
             Animation(curve),
@@ -630,7 +627,6 @@ class IntegrationByParts(Scene):
         self.play(
             ShowCreation(
                 h_lines,
-                submobjects = "one_at_a_time",
                 run_time = 2
             ),
             Animation(curve),
@@ -657,7 +653,7 @@ class IntegrationByParts(Scene):
             ),
             MaintainPositionRelativeTo(coords, dot),
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         )
         self.wait()
         self.play(*list(map(FadeOut, [coords, dot])))

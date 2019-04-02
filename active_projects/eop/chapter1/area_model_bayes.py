@@ -43,7 +43,7 @@ class IllustrateAreaModelBayes(Scene):
         label_not_A = TexMobject("P(\\text{not }A)").next_to(brace_not_A, DOWN).scale(0.7)
 
         # self.play(
-        #     LaggedStart(FadeIn, VGroup(rect_A, rect_not_A), lag_factor = 0.5)
+        #     LaggedStartMap(FadeIn, VGroup(rect_A, rect_not_A))
         # )
         # self.play(
         #     ShowCreation(brace_A),
@@ -75,7 +75,7 @@ class IllustrateAreaModelBayes(Scene):
         label_not_B = TexMobject("P(\\text{not }B)").next_to(brace_not_B, LEFT).scale(0.7)
 
         # self.play(
-        #     LaggedStart(FadeIn, VGroup(rect_B, rect_not_B), lag_factor = 0.5)
+        #     LaggedStartMap(FadeIn, VGroup(rect_B, rect_not_B))
         # )
         # self.play(
         #     ShowCreation(brace_B),

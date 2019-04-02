@@ -1,21 +1,29 @@
-
-
+#!/usr/bin/env python
 import inspect
 import os
 import sys
+import importlib
 
-from constants import PRODUCTION_QUALITY_CAMERA_CONFIG
-from constants import PRODUCTION_QUALITY_FRAME_DURATION
-from extract_scene import get_module
-from extract_scene import is_scene
-from utils.output_directory_getters import get_movie_output_directory
+from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
+from manimlib.constants import VIDEO_DIR
+from manimlib.config import get_module
+from manimlib.extract_scene import is_child_scene
 
 
 def get_sorted_scene_classes(module_name):
     module = get_module(module_name)
+    if hasattr(module, "ALL_SCENE_CLASSES"):
+        return module.ALL_SCENE_CLASSES
+    # Otherwise, deduce from the order in which
+    # they're defined in a file
+    importlib.import_module(module.__name__)
     line_to_scene = {}
-    for name, scene_class in inspect.getmembers(module, is_scene):
-        if inspect.getmodule(scene_class) != module:
+    name_scene_list = inspect.getmembers(
+        module,
+        lambda obj: is_child_scene(obj, module)
+    )
+    for name, scene_class in name_scene_list:
+        if inspect.getmodule(scene_class).__name__ != module.__name__:
             continue
         lines, line_no = inspect.getsourcelines(scene_class)
         line_to_scene[line_no] = scene_class
@@ -25,28 +33,46 @@ def get_sorted_scene_classes(module_name):
     ]
 
 
-def stage_animations(module_name):
+def stage_scenes(module_name):
     scene_classes = get_sorted_scene_classes(module_name)
     if len(scene_classes) == 0:
         print("There are no rendered animations from this module")
         return
-    animation_dir = get_movie_output_directory(
-        scene_classes[0],
-        PRODUCTION_QUALITY_CAMERA_CONFIG,
-        PRODUCTION_QUALITY_FRAME_DURATION,
+    # output_directory_kwargs = {
+    #     "camera_config": PRODUCTION_QUALITY_CAMERA_CONFIG,
+    # }
+    # TODO, fix this
+    animation_dir = os.path.join(
+        VIDEO_DIR, "clacks_solution2", "1440p60"
     )
+    # 
     files = os.listdir(animation_dir)
     sorted_files = []
     for scene_class in scene_classes:
         scene_name = scene_class.__name__
-        for clip in [f for f in files if f.startswith(scene_name + ".")]:
+        clips = [f for f in files if f.startswith(scene_name + ".")]
+        for clip in clips:
             sorted_files.append(os.path.join(animation_dir, clip))
+        # Partial movie file directory
+        # movie_dir = get_movie_output_directory(
+        #     scene_class, **output_directory_kwargs
+        # )
+        # if os.path.exists(movie_dir):
+        #     for extension in [".mov", ".mp4"]:
+        #         int_files = get_sorted_integer_files(
+        #             pmf_dir, extension=extension
+        #         )
+        #         for file in int_files:
+        #             sorted_files.append(os.path.join(pmf_dir, file))
+        # else:
 
-    animation_subdir = os.path.dirname(animation_dir)
+    # animation_subdir = os.path.dirname(animation_dir)
     count = 0
     while True:
         staged_scenes_dir = os.path.join(
-            animation_subdir, "staged_scenes_%d" % count
+            animation_dir,
+            os.pardir,
+            "staged_scenes_{}".format(count)
         )
         if not os.path.exists(staged_scenes_dir):
             os.makedirs(staged_scenes_dir)
@@ -54,10 +80,15 @@ def stage_animations(module_name):
         # Otherwise, keep trying new names until
         # there is a free one
         count += 1
-    for count, f in enumerate(sorted_files):
+    for count, f in reversed(list(enumerate(sorted_files))):
+        # Going in reversed order means that when finder
+        # sorts by date modified, it shows up in the
+        # correct order
         symlink_name = os.path.join(
             staged_scenes_dir,
-            "Scene_%03d" % count + f.split(os.sep)[-1]
+            "Scene_{:03}_{}".format(
+                count, f.split(os.sep)[-1]
+            )
         )
         os.symlink(f, symlink_name)
 
@@ -66,4 +97,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise Exception("No module given.")
     module_name = sys.argv[1]
-    stage_animations(module_name)
+    stage_scenes(module_name)

@@ -31,7 +31,7 @@ class ListTerms(Scene):
             "Rank",
             "Null space",
         ])))
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.arrange(DOWN, aligned_edge = LEFT)
         words.next_to(title, DOWN, aligned_edge = LEFT)
         words.shift(RIGHT)
 
@@ -108,7 +108,7 @@ class UsefulnessOfMatrices(Scene):
             m.copy().set_color(c) 
             for m, c in zip(syms.split(), [X_COLOR, Y_COLOR, Z_COLOR])
         ])
-        new_syms.arrange_submobjects(RIGHT, buff = 0.5)
+        new_syms.arrange(RIGHT, buff = 0.5)
         new_syms.next_to(equations, LEFT, buff = 3)
         sym_brace = Brace(new_syms, DOWN)
         unknowns = sym_brace.get_text("Unknown variables")
@@ -159,7 +159,7 @@ class StockLine(VMobject):
         for x in range(self.num_points):
             step_size = self.step_range*(random.random() - 0.5)
             points.append(points[-1] + 0.5*RIGHT + step_size*UP)
-        self.set_anchor_points(points, mode = "corners")
+        self.set_points_as_corners(points)
 
 class StockPrices(Scene):
     def construct(self):
@@ -180,7 +180,7 @@ class StockPrices(Scene):
         self.play(ShowCreation(
             VMobject(*stock_lines),
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
 
@@ -198,10 +198,10 @@ class MachineLearningNetwork(Scene):
                 sym = TexMobject("x_{%d, %d}"%(i, j))
                 sym.move_to(mob)
                 mob.add(sym)
-            layer.arrange_submobjects(DOWN, buff = 0.5)
+            layer.arrange(DOWN, buff = 0.5)
             layer.center()
             layers.append(layer)
-        VMobject(*layers).arrange_submobjects(RIGHT, buff = 1.5)
+        VMobject(*layers).arrange(RIGHT, buff = 1.5)
         lines = VMobject()
         for l_layer, r_layer in zip(layers, layers[1:]):
             for l_node, r_node in it.product(l_layer.split(), r_layer.split()):
@@ -254,14 +254,14 @@ class SystemOfEquations(Scene):
                 [v.copy() for v in variables],
                 list(map(TexMobject, list("++=")))
             ))))
-            equation.arrange_submobjects(
+            equation.arrange(
                 RIGHT, buff = 0.1, 
                 aligned_edge = DOWN
             )
             equation.split()[4].shift(0.1*DOWN)
             equation.split()[-1].next_to(equation.split()[-2], RIGHT)
             equations.add(equation)
-        equations.arrange_submobjects(DOWN, aligned_edge = RIGHT)
+        equations.arrange(DOWN, aligned_edge = RIGHT)
         for eq, rhs_elem in zip(equations.split(), rhs):
             rhs_elem.next_to(eq, RIGHT)
             eq.add(rhs_elem)
@@ -287,7 +287,7 @@ class SystemOfEquations(Scene):
 
         self.play(other_equations.fade, 0.7)
         self.play(Transform(scaled_vars, isolated_scaled_vars))
-        self.play(scalars.set_color, YELLOW, submobject_mode = "lagged_start")
+        self.play(scalars.set_color, YELLOW, lag_ratio = 0.5)
         self.play(*[
             ApplyMethod(m.scale_in_place, 1.2, rate_func = there_and_back)
             for m in scalars.split()
@@ -428,7 +428,7 @@ class SystemOfEquations(Scene):
         v_array = Matrix(copy.deepcopy(rhs_entries))
         equals = TexMobject("=")
         ax_equals_v = VMobject(matrix, x_array, equals, v_array)
-        ax_equals_v.arrange_submobjects(RIGHT)
+        ax_equals_v.arrange(RIGHT)
         ax_equals_v.to_edge(RIGHT)
         all_brackets = [
             mob.get_brackets()
@@ -505,7 +505,7 @@ class SystemOfEquations(Scene):
             2, TexMobject("=").next_to(x_array, RIGHT)
         )
         compact_equation.target = compact_equation.copy()
-        compact_equation.target.arrange_submobjects(buff = 0.1)
+        compact_equation.target.arrange(buff = 0.1)
         compact_equation.target.to_edge(UP)
 
         self.play(Transform(
@@ -618,7 +618,7 @@ class SystemOfTwoEquationsTwoUnknowns(Scene):
         matrix_system = VMobject(
             matrix, x, TexMobject("="), v
         )
-        matrix_system.arrange_submobjects(RIGHT)
+        matrix_system.arrange(RIGHT)
         matrix_system.next_to(system, DOWN, buff = 1)
         matrix.label = "A"
         matrix.label_color = WHITE
@@ -675,7 +675,7 @@ class ShowBijectivity(LinearTransformationScene):
         self.add_foreground_mobject(background, titles[0])
 
         kwargs = {
-            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.5,
             "run_time" : 2
         }
         anims = list(map(Animation, self.foreground_mobjects))
@@ -1222,7 +1222,7 @@ class DefineColumnSpace(Scene):
         right_words[0].set_color(left_words[1].get_color())
 
         everyone = VMobject(left_words, arrow, right_words)
-        everyone.arrange_submobjects(RIGHT)
+        everyone.arrange(RIGHT)
         everyone.to_edge(UP)
 
         self.play(Write(left_words))
@@ -1289,7 +1289,7 @@ class TowDColumnsDontSpan(LinearTransformationScene):
             TexMobject("\\Updownarrow"),
             TextMobject("``Column space''")
         )
-        words.arrange_submobjects(DOWN, buff = 0.1)
+        words.arrange(DOWN, buff = 0.1)
         words.next_to(brace, DOWN)
         words[0][0].set_color(PINK)
         words[2].set_color(TEAL)
@@ -1385,14 +1385,14 @@ class NameColumnSpace(Scene):
         for col_array, index in zip(col_arrays, [2, 4, 6]):
             col_array.replace(span_text[index], dim_to_match = 1)
             span_text.submobjects[index] = col_array
-        span_text.arrange_submobjects(RIGHT, buff = 0.2)
+        span_text.arrange(RIGHT, buff = 0.2)
 
         arrow = DoubleArrow(LEFT, RIGHT)
         column_space = TextMobject("``Column space''")
         for mob in column_space, arrow:
             mob.set_color(TEAL)
         text = VMobject(span_text, arrow, column_space)
-        text.arrange_submobjects(RIGHT)
+        text.arrange(RIGHT)
         text.next_to(matrix, DOWN, buff = 1, aligned_edge = LEFT)
 
         self.add(matrix)
@@ -1457,7 +1457,7 @@ class NameColumnSpace(Scene):
             col.get_entries().set_color(c)
         for index in 5, 6:
             two_d_span[index].scale(0)
-        two_d_span.arrange_submobjects(RIGHT, buff = 0.2)
+        two_d_span.arrange(RIGHT, buff = 0.2)
         two_d_span[-1].next_to(two_d_span[4], RIGHT, buff = 0.2)
         two_d_span.move_to(span_text, aligned_edge = RIGHT)
         mob_matrix = np.array([
@@ -1624,7 +1624,7 @@ class FullRankCase(LinearTransformationScene):
             TextMobject("Only"), vector,
             TextMobject("lands on"), vector.copy()
         )
-        title.arrange_submobjects(buff = 0.2)
+        title.arrange(buff = 0.2)
         title.to_edge(UP)
         for mob in title:
             mob.add_to_back(BackgroundRectangle(mob))
@@ -1680,7 +1680,7 @@ class NameNullSpace(LinearTransformationScene):
         self.play(Transform(
             vectors, line, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.wait()
         for label in null_space_label, kernel_label:

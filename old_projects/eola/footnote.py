@@ -75,8 +75,8 @@ class SymbolicThreeDTransform(Scene):
         self.play(Write(in_vect), Write(in_words))
         self.wait()
         self.add(in_vect.copy())
-        self.play(Transform(in_vect, point, submobject_mode = "lagged_start"))
-        self.play(Transform(in_vect, out_vect, submobject_mode = "lagged_start"))
+        self.play(Transform(in_vect, point, lag_ratio = 0.5))
+        self.play(Transform(in_vect, out_vect, lag_ratio = 0.5))
         self.add(out_words)
         self.wait()
 
@@ -125,7 +125,7 @@ class PutTogether3x3Matrix(Scene):
             j_to, j_array, TexMobject("=").set_color(BLACK),
             k_to, k_array, TexMobject("=").set_color(BLACK),
         )
-        everything.arrange_submobjects(RIGHT, buff = 0.1)
+        everything.arrange(RIGHT, buff = 0.1)
         everything.set_width(FRAME_WIDTH-1)
         everything.to_edge(DOWN)
 
@@ -193,7 +193,7 @@ class ShowVCoordinateMeaning(Scene):
             parens.stretch_to_fit_height(
                 coords.get_height()
             )
-            VMobject(L, l_paren, coords, r_paren).arrange_submobjects(buff = 0.1)
+            VMobject(L, l_paren, coords, r_paren).arrange(buff = 0.1)
             coords.submobjects = [L, l_paren] + coords.submobjects + [r_paren]
 
         lin_comb = VMobject(*list(map(TexMobject, [
@@ -201,7 +201,7 @@ class ShowVCoordinateMeaning(Scene):
             "y", self.j_str, "+",
             "z", self.k_str,
         ])))
-        lin_comb.arrange_submobjects(
+        lin_comb.arrange(
             RIGHT, buff = 0.1, 
             aligned_edge = ORIGIN if self.post_transform else DOWN
         )
@@ -214,7 +214,7 @@ class ShowVCoordinateMeaning(Scene):
         k.set_color(Z_COLOR)
 
         everything = VMobject(v, eq, coords, eq2, lin_comb)
-        everything.arrange_submobjects(buff = 0.2)
+        everything.arrange(buff = 0.2)
         everything.set_width(FRAME_WIDTH - 1)
         everything.to_edge(DOWN)
         if not self.post_transform:
@@ -227,7 +227,7 @@ class ShowVCoordinateMeaning(Scene):
                 coords.get_entries().copy(),
                 VMobject(new_x, new_y, new_z),
                 path_arc = -np.pi,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Write(VMobject(*[eq2, i, j, k] + list(plusses))),
             run_time = 3
@@ -263,7 +263,7 @@ class ShowMatrixVectorMultiplication(Scene):
             y, col2, plus2,
             z, col3
         )
-        everything.arrange_submobjects(buff = 0.1)
+        everything.arrange(buff = 0.1)
         everything.set_width(FRAME_WIDTH-1)
         result = VMobject(x, col1, plus1, y, col2, plus2, z, col3)
 
@@ -321,7 +321,7 @@ class ShowMatrixMultiplication(Scene):
     def construct(self):
         right = Matrix(np.arange(9).reshape((3, 3)))
         left = Matrix(np.random.random_integers(-5, 5, (3, 3)))
-        VMobject(left, right).arrange_submobjects(buff = 0.1)
+        VMobject(left, right).arrange(buff = 0.1)
         right.set_column_colors(X_COLOR, Y_COLOR, Z_COLOR)
         left.set_color(PINK)
 
@@ -354,7 +354,7 @@ class ComputerGraphicsAndRobotics(Scene):
             TextMobject("Computer graphics"),
             TextMobject("Robotics")
         )
-        mob.arrange_submobjects(DOWN, buff = 1)
+        mob.arrange(DOWN, buff = 1)
         self.play(Write(mob, run_time = 1))
         self.wait()
 
@@ -389,7 +389,7 @@ class QuestionsToPonder(Scene):
             "3. How many rows and columns?",
             "4. When can you multiply these matrices?",
         ])))
-        questions.arrange_submobjects(DOWN, buff = 1, aligned_edge = LEFT)
+        questions.arrange(DOWN, buff = 1, aligned_edge = LEFT)
         questions.to_edge(LEFT)
         for question in questions.split():
             self.play(Write(question, run_time = 1))
