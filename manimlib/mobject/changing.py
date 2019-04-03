@@ -8,6 +8,9 @@ class AnimatedBoundary(VGroup):
         "colors": [BLUE_D, BLUE_B, BLUE_E, GREY_BROWN],
         "max_stroke_width": 3,
         "cycle_rate": 0.5,
+        "back_and_forth": True,
+        "draw_rate_func": smooth,
+        "fade_rate_func": smooth,
     }
 
     def __init__(self, vmobject, **kwargs):
@@ -37,12 +40,14 @@ class AnimatedBoundary(VGroup):
         vmobject = self.vmobject
 
         index = int(time % len(colors))
-        alpha = smooth(time % 1)
+        alpha = time % 1
+        draw_alpha = self.draw_rate_func(alpha)
+        fade_alpha = self.fade_rate_func(alpha)
 
-        if int(time) % 2 == 0:
-            bounds = (0, alpha)
+        if self.back_and_forth and int(time) % 1 == 0:
+            bounds = (1 - draw_alpha, 1)
         else:
-            bounds = (1 - alpha, 1)
+            bounds = (0, draw_alpha)
         self.full_family_become_partial(growing, vmobject, *bounds)
         growing.set_stroke(colors[index], width=msw)
 
@@ -50,7 +55,7 @@ class AnimatedBoundary(VGroup):
             self.full_family_become_partial(fading, vmobject, 0, 1)
             fading.set_stroke(
                 color=colors[index - 1],
-                width=(1 - alpha) * msw
+                width=(1 - fade_alpha) * msw
             )
 
         self.total_time += dt
