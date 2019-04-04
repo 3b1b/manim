@@ -82,7 +82,7 @@ class CoordinateSystem():
                 )[0],
                 target=x,
                 lower_bound=self.x_min,
-                uplper_bound=self.x_max,
+                upper_bound=self.x_max,
             )
             if alpha is not None:
                 return graph.point_from_proportion(alpha)

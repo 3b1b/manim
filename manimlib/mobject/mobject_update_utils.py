@@ -22,7 +22,7 @@ def always(method, *args, **kwargs):
 
 def f_always(method, *arg_generators, **kwargs):
     """
-    More functional version of always, where insetead
+    More functional version of always, where instead
     of taking in args, it takes in functions which ouput
     the relevant arguments.
     """
@@ -77,16 +77,15 @@ def turn_animation_into_updater(animation, cycle=False, **kwargs):
 
     def update(m, dt):
         run_time = animation.get_run_time()
-        alpha = np.clip(
-            animation.total_time / run_time,
-            0, 1,
-        )
+        time_ratio = animation.total_time / run_time
         if cycle:
-            animation.total_time = animation.total_time % run_time
-        elif alpha >= 1:
-            animation.finish()
-            m.remove_updater(update)
-            return
+            alpha = time_ratio % 1
+        else:
+            alpha = np.clip(time_ratio, 0, 1)
+            if alpha >= 1:
+                animation.finish()
+                m.remove_updater(update)
+                return
         animation.interpolate(alpha)
         animation.update_mobjects(dt)
         animation.total_time += dt

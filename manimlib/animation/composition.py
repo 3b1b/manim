@@ -151,8 +151,11 @@ class LaggedStartMap(LaggedStart):
                 args_list.append(arg_creator(submob))
             else:
                 args_list.append((submob,))
+        anim_kwargs = dict(kwargs)
+        if "lag_ratio" in anim_kwargs:
+            anim_kwargs.pop("lag_ratio")
         animations = [
-            AnimationClass(*args, **kwargs)
+            AnimationClass(*args, **anim_kwargs)
             for args in args_list
         ]
         super().__init__(*animations, **kwargs)

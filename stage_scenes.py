@@ -43,7 +43,7 @@ def stage_scenes(module_name):
     # }
     # TODO, fix this
     animation_dir = os.path.join(
-        VIDEO_DIR, "clacks_solution2", "1440p60"
+        VIDEO_DIR, "ode", "part1", "1440p60"
     )
     # 
     files = os.listdir(animation_dir)
