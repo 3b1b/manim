@@ -288,7 +288,7 @@ class Scene(Container):
         for i, mob in enumerate(mobjects):
             update_possibilities = [
                 mob in animation_mobjects,
-                len(mob.get_updaters()) > 0,
+                len(mob.get_family_updaters()) > 0,
                 mob in self.foreground_mobjects
             ]
             if any(update_possibilities):

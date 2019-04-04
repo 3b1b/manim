@@ -173,6 +173,12 @@ class Mobject(Container):
     def get_updaters(self):
         return self.updaters
 
+    def get_family_updaters(self):
+        return list(it.chain(*[
+            sm.get_updaters()
+            for sm in self.get_family()
+        ]))
+
     def add_updater(self, update_function, index=None, call_updater=True):
         if index is None:
             self.updaters.append(update_function)
