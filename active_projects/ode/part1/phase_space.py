@@ -2012,19 +2012,25 @@ class ManyStepsFromDifferentStartingPoints(TakeManyTinySteps):
 class Thumbnail(IntroduceVectorField):
     CONFIG = {
         "vector_field_config": {
-            "delta_x": 1,
-            "delta_y": 1,
+            "delta_x": 0.5,
+            "delta_y": 0.5,
             "max_magnitude": 5,
-            "length_func": lambda norm: 0.75 * sigmoid(norm),
+            "length_func": lambda norm: 0.5 * sigmoid(norm),
         }
     }
 
     def construct(self):
         self.initialize_plane()
+        self.plane.axes.set_stroke(width=0.5)
         self.initialize_vector_field()
 
         field = self.vector_field
         field.set_stroke(width=5)
+        for vector in field:
+            vector.set_stroke(width=3)
+            vector.tip.set_stroke(width=0)
+            vector.tip.scale(1.5, about_point=vector.get_last_point())
+            vector.set_opacity(1)
 
         title = TextMobject("Differential\\\\", "equations")
         title.space_out_submobjects(0.8)
