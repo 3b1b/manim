@@ -290,6 +290,7 @@ class FourierOfPiSymbol(FourierCirclesScene):
                 1 / np.sqrt(k),
                 1,
             ))
+            print(circle.freq, abs(circle.coefficient))
 
         # approx_path = self.get_circle_end_path(circles)
         drawn_path = self.get_drawn_path(circles)
@@ -493,7 +494,7 @@ class ExplainCircleAnimations(FourierCirclesScene):
 
     def show_vector_sum(self):
         top_circles = self.top_circles
-        top_vectors = self.top_vectors
+        top_circles = self.top_circles
 
         self.play(
             FadeOut(self.path),
