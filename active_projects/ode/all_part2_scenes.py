@@ -8,12 +8,15 @@ ALL_SCENE_CLASSES = [
     FourierOfPiSymbol,
     FourierOfPiSymbol5,
     FourierOfTrebleClef,
+    FourierOfEighthNote,
+    FourierOfN,
     # CirclesDrawingWave,
     # Scenes for video
     ExplainCircleAnimations,
-    FourierSeriesIntro,
     FourierSeriesIntroBackground4,
     FourierSeriesIntroBackground8,
     FourierSeriesIntroBackground12,
     FourierSeriesIntroBackground20,
+    FourierSeriesIntro,
+    PartTwoOfTour,
 ]
