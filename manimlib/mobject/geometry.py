@@ -1,5 +1,6 @@
 import warnings
 import numpy as np
+import operator as op
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -139,8 +140,8 @@ class TipableVMobject(VMobject):
             return VMobject.get_start(self)
 
     def get_length(self):
-       start, end = self.get_start_and_end()
-       return get_norm(start - end)
+        start, end = self.get_start_and_end()
+        return get_norm(start - end)
 
     def has_tip(self):
         return hasattr(self, "tip") and self.tip in self
@@ -541,7 +542,6 @@ class Arrow(Line):
     CONFIG = {
         "stroke_width": 6,
         "buff": MED_SMALL_BUFF,
-        "tip_width_to_length_ratio": 1,
         "max_tip_length_to_length_ratio": 0.25,
         "max_stroke_width_to_length_ratio": 4,
         "preserve_tip_size_when_scaling": True,
@@ -568,12 +568,19 @@ class Arrow(Line):
         VMobject.scale(self, factor, **kwargs)
         self.set_stroke_width_from_length()
 
+        # So horribly confusing, must redo
         if has_tip:
             self.add_tip()
-            self.tip.match_style(old_tips[0])
+            old_tips[0].points[:, :] = self.tip.points
+            self.remove(self.tip)
+            self.tip = old_tips[0]
+            self.add(self.tip)
         if has_start_tip:
             self.add_tip(at_start=True)
-            self.start_tip.match_style(old_tips[1])
+            old_tips[1].points[:, :] = self.start_tip.points
+            self.remove(self.start_tip)
+            self.start_tip = old_tips[1]
+            self.add(self.start_tip)
         return self
 
     def get_normal_vector(self):
