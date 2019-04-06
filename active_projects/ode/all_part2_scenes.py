@@ -27,4 +27,5 @@ ALL_SCENE_CLASSES = [
     TwoDBodyWithManyTemperatures,
     TwoDBodyWithManyTemperaturesGraph,
     TwoDBodyWithManyTemperaturesContour,
+    BringTwoRodsTogether,
 ]

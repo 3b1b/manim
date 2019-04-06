@@ -152,5 +152,130 @@ class TwoDBodyWithManyTemperaturesContour(ExternallyAnimatedScene):
 
 
 class BringTwoRodsTogether(Scene):
+    CONFIG = {
+        "step_size": 0.1,
+        "axes_config": {
+            "x_min": -1,
+            "x_max": 11,
+            "y_min": -10,
+            "y_max": 100,
+            "y_axis_config": {
+                "unit_size": 0.06,
+                "tick_frequency": 10,
+                # "numbers_with_elongated_ticks": range(20, 100, 20)
+            },
+        },
+        "wait_time": 5,
+    }
+
     def construct(self):
+        self.setup_axes()
+        self.setup_graph()
+        self.setup_clock()
+
+        self.add(self.axes)
+        self.add(self.graph)
+
+        self.show_rods()
+        self.show_equilibration()
+
+    def setup_axes(self):
+        axes = Axes(**self.axes_config)
+        axes.center().to_edge(UP)
+
+        y_label = axes.get_y_axis_label("\\text{Temperature}")
+        y_label.to_edge(UP)
+        axes.y_axis.add(y_label)
+        axes.y_axis.add_numbers(
+            *range(20, 100, 20)
+        )
+
+        self.axes = axes
+
+    def setup_graph(self):
+        graph = self.axes.get_graph(
+            lambda x: 90 if x <= 5 else 10,
+            x_min=0,
+            x_max=10,
+            step_size=self.step_size,
+            discontinuities=[5],
+        )
+        graph.color_using_background_image("VerticalTempGradient")
+
+        self.graph = graph
+
+    def setup_clock(self):
+        clock = Clock()
+        clock.set_height(1)
+        clock.to_corner(UR)
+        clock.shift(MED_LARGE_BUFF * LEFT)
+
+        time_lhs = TextMobject("Time: ")
+        time_label = DecimalNumber(
+            0, num_decimal_places=2,
+        )
+        time_rhs = TextMobject("s")
+        time_group = VGroup(
+            time_lhs,
+            time_label,
+            # time_rhs
+        )
+        time_group.arrange(RIGHT, aligned_edge=DOWN)
+        time_rhs.shift(SMALL_BUFF * LEFT)
+        time_group.next_to(clock, DOWN)
+
+        self.time_group = time_group
+        self.time_label = time_label
+        self.clock = clock
+
+    def show_rods(self):
         pass
+
+    def show_equilibration(self):
+        self.add(self.time_group)
+        self.add(self.clock)
+
+        self.graph.add_updater(self.update_graph)
+        self.time_label.add_updater(
+            lambda d, dt: d.increment_value(dt)
+        )
+
+        self.play(
+            ClockPassesTime(
+                self.clock,
+                run_time=self.wait_time,
+                hours_passed=self.wait_time,
+            )
+        )
+
+    #
+    def update_graph(self, graph, dt, alpha=1.0, n_mini_steps=100):
+        points = np.append(
+            graph.get_start_anchors(),
+            [graph.get_last_point()],
+            axis=0,
+        )
+        for k in range(n_mini_steps):
+            change = np.zeros(points.shape)
+            dx = points[1][0] - points[0][0]
+            for i in range(len(points)):
+                p = points[i]
+                lp = points[max(i - 1, 0)]
+                rp = points[min(i + 1, len(points) - 1)]
+                d2y = (rp[1] - 2 * p[1] + lp[1])
+
+                if (0 < i < len(points) - 1):
+                    second_deriv = d2y / (dx**2)
+                else:
+                    second_deriv = 0.5 * d2y / dx
+                    second_deriv = 0
+
+                change[i][1] = alpha * second_deriv * dt / n_mini_steps
+
+            change[0][1] = change[1][1]
+            change[-1][1] = change[-2][1]
+            # change[0][1] = 0
+            # change[-1][1] = 0
+            points += change
+        graph.set_points_smoothly(points)
+        return graph
