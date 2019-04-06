@@ -304,6 +304,7 @@ class Scene(Container):
         time_progression = ProgressDisplay(
             times, total=n_iterations,
             leave=self.leave_progress_bars,
+            ascii=True
         )
         return time_progression
 

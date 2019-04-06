@@ -25,7 +25,7 @@ class SceneFromVideo(Scene):
 
         frame_count = end_frame - start_frame
         print("Reading in " + file_name + "...")
-        for count in show_progress(list(range(start_frame, end_frame + 1))):
+        for count in show_progress(list(range(start_frame, end_frame + 1)), ascii=True):
             returned, frame = cap.read()
             if not returned:
                 break

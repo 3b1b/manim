@@ -2362,7 +2362,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         def move_around(total_time):
             self.time
             t_range = list(range(int(total_time/dt)))
-            for x in ProgressDisplay(t_range):
+            for x in ProgressDisplay(t_range, ascii=True):
                 self.time += dt
                 new_B_to_A = rotate_vector(B_to_A, self.time*A_freq)
                 new_B_to_C = rotate_vector(B_to_C, self.time*C_freq)
