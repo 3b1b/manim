@@ -10,6 +10,11 @@ ALL_SCENE_CLASSES = [
     FourierOfTrebleClef,
     FourierOfEighthNote,
     FourierOfN,
+    FourierNailAndGear,
+    FourierNDQ,
+    FourierBatman,
+    FourierGoogleG,
+    FourierHeart,
     # CirclesDrawingWave,
     # Scenes for video
     ExplainCircleAnimations,
@@ -19,4 +24,7 @@ ALL_SCENE_CLASSES = [
     FourierSeriesIntroBackground20,
     FourierSeriesIntro,
     PartTwoOfTour,
+    TwoDBodyWithManyTemperatures,
+    TwoDBodyWithManyTemperaturesGraph,
+    TwoDBodyWithManyTemperaturesContour,
 ]

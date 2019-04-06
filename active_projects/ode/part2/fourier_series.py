@@ -15,6 +15,13 @@ class FourierCirclesScene(Scene):
         "circle_style": {
             "stroke_width": 2,
         },
+        "arrow_config": {
+            "buff": 0,
+            "max_tip_length_to_length_ratio": 0.35,
+            "tip_length": 0.15,
+            "max_stroke_width_to_length_ratio": 10,
+            "stroke_width": 2,
+        },
         "use_vectors": True,
         "base_frequency": 1,
         "slow_factor": 0.25,
@@ -77,18 +84,21 @@ class FourierCirclesScene(Scene):
             color=color,
             **self.circle_style,
         )
-        if self.use_vectors:
-            LineClass = Arrow
-        else:
-            LineClass = Line
-        circle.radial_line = LineClass(
+        line_points = (
             circle.get_center(),
             circle.get_start(),
-            color=WHITE,
-            buff=0,
-            max_tip_length_to_length_ratio=0.1,
-            **self.circle_style,
         )
+        if self.use_vectors:
+            circle.radial_line = Arrow(
+                *line_points,
+                **self.arrow_config,
+            )
+        else:
+            circle.radial_line = Line(
+                *line_points,
+                color=WHITE,
+                **self.circle_style,
+            )
         circle.add(circle.radial_line)
         circle.freq = freq
         circle.phase = phase
@@ -154,10 +164,11 @@ class FourierCirclesScene(Scene):
                     width = 0
                 else:
                     width = stroke_width * (1 - (b % 1))
-                sp.set_stroke(YELLOW, width=width)
+                sp.set_stroke(width=width)
             path.curr_time += dt
             return path
 
+        broken_path.set_color(YELLOW)
         broken_path.add_updater(update_path)
         return broken_path
 
@@ -365,11 +376,119 @@ class FourierOfEighthNote(FourierOfTrebleClef):
 class FourierOfN(FourierOfTrebleClef):
     CONFIG = {
         "height": 6,
-        "n_circles": 200,
+        "n_circles": 1000,
     }
 
     def get_shape(self):
         return TexMobject("N")
+
+
+class FourierNailAndGear(FourierOfTrebleClef):
+    CONFIG = {
+        "height": 6,
+        "n_circles": 200,
+        "run_time": 10,
+        "arrow_config": {
+            "tip_length": 0.1,
+            "stroke_width": 2,
+        }
+    }
+
+    def get_shape(self):
+        shape = SVGMobject("Nail_And_Gear")[1]
+        return shape
+
+
+class FourierBatman(FourierOfTrebleClef):
+    CONFIG = {
+        "height": 4,
+        "n_circles": 100,
+        "run_time": 10,
+        "arrow_config": {
+            "tip_length": 0.1,
+            "stroke_width": 2,
+        }
+    }
+
+    def get_shape(self):
+        shape = SVGMobject("BatmanLogo")[1]
+        return shape
+
+
+class FourierHeart(FourierOfTrebleClef):
+    CONFIG = {
+        "height": 4,
+        "n_circles": 100,
+        "run_time": 10,
+        "arrow_config": {
+            "tip_length": 0.1,
+            "stroke_width": 2,
+        }
+    }
+
+    def get_shape(self):
+        shape = SuitSymbol("hearts")
+        return shape
+
+    def get_drawn_path(self, *args, **kwargs):
+        kwargs["stroke_width"] = 5
+        path = super().get_drawn_path(*args, **kwargs)
+        path.set_color(PINK)
+        return path
+
+
+class FourierNDQ(FourierOfTrebleClef):
+    CONFIG = {
+        "height": 4,
+        "n_circles": 1000,
+        "run_time": 10,
+        "arrow_config": {
+            "tip_length": 0.1,
+            "stroke_width": 2,
+        }
+    }
+
+    def get_shape(self):
+        path = VMobject()
+        shape = TexMobject("Hayley")
+        for sp in shape.family_members_with_points():
+            path.append_points(sp.points)
+        return path
+
+
+class FourierGoogleG(FourierOfTrebleClef):
+    CONFIG = {
+        "n_circles": 10,
+        "height": 5,
+        "g_colors": [
+            "#4285F4",
+            "#DB4437",
+            "#F4B400",
+            "#0F9D58",
+        ]
+    }
+
+    def get_shape(self):
+        g = SVGMobject("google_logo")[5]
+        g.center()
+        self.add(g)
+        return g
+
+    def get_drawn_path(self, *args, **kwargs):
+        kwargs["stroke_width"] = 7
+        path = super().get_drawn_path(*args, **kwargs)
+
+        blue, red, yellow, green = self.g_colors
+
+        path[:250].set_color(blue)
+        path[250:333].set_color(green)
+        path[333:370].set_color(yellow)
+        path[370:755].set_color(red)
+        path[755:780].set_color(yellow)
+        path[780:860].set_color(green)
+        path[860:].set_color(blue)
+
+        return path
 
 
 class ExplainCircleAnimations(FourierCirclesScene):
@@ -521,26 +640,25 @@ class ExplainCircleAnimations(FourierCirclesScene):
     def show_as_vectors(self):
         top_circles = self.top_circles
         top_vectors = self.get_rotating_vectors(top_circles)
-        top_vectors.set_color(RED)
-        lines = VGroup(*filter(
-            lambda sm: isinstance(sm, Line),
-            top_circles.family_members_with_points()
-        ))
+        top_vectors.set_color(WHITE)
 
-        self.add(lines, top_circles)
+        original_circles = top_circles.copy()
         self.play(
             FadeIn(top_vectors),
-            lines.fade, 1,
+            top_circles.set_opacity, 0,
         )
         self.wait(3)
+        self.play(
+            top_circles.match_style, original_circles
+        )
+        self.remove(top_vectors)
 
         self.top_vectors = top_vectors
 
     def show_vector_sum(self):
-        # trackers = self.center_trackers.deepcopy()
         trackers = self.center_trackers.copy()
         trackers.sort(
-            submob_func=lambda t: abs(t.circle.freq)
+            submob_func=lambda t: abs(t.circle.freq - 0.1)
         )
         plane = self.plane = NumberPlane(
             x_min=-3,
@@ -556,7 +674,6 @@ class ExplainCircleAnimations(FourierCirclesScene):
         plane.move_to(self.center_point)
 
         self.play(
-            # FadeOut(self.path),
             FadeOut(self.drawn_path),
             FadeOut(self.circles),
             self.slow_factor_tracker.set_value, 0.05,
@@ -565,7 +682,6 @@ class ExplainCircleAnimations(FourierCirclesScene):
         self.play(FadeIn(plane))
 
         new_circles = VGroup()
-        new_vectors = VGroup()
         last_tracker = None
         for tracker in trackers:
             if last_tracker:
@@ -574,20 +690,11 @@ class ExplainCircleAnimations(FourierCirclesScene):
                 tracker.new_location_func = lambda: self.center_point
 
             original_circle = tracker.circle
-            original_vector = tracker.circle.vector
             tracker.circle = original_circle.copy()
             tracker.circle.center_func = tracker.get_location
-            tracker.vector = original_vector.copy()
-            tracker.vector.clear_updaters()
-            tracker.vector.circle = tracker.circle
-            tracker.vector.add_updater(lambda v: v.put_start_and_end_on(
-                v.circle.get_center(),
-                v.circle.get_start(),
-            ))
             new_circles.add(tracker.circle)
-            new_vectors.add(tracker.vector)
 
-            self.add(tracker, tracker.circle, tracker.vector)
+            self.add(tracker, tracker.circle)
             start_point = tracker.get_location()
             self.play(
                 UpdateFromAlphaFunc(
@@ -613,7 +720,6 @@ class ExplainCircleAnimations(FourierCirclesScene):
         self.slow_factor_tracker.set_value(0.1)
         self.add(
             self.top_circles,
-            self.top_vectors,
             self.freq_numbers,
             self.path,
         )
@@ -629,7 +735,6 @@ class ExplainCircleAnimations(FourierCirclesScene):
 
     def tweak_starting_vectors(self):
         top_circles = self.top_circles
-        top_vectors = self.top_vectors
         circles = self.circles
         path = self.path
         drawn_path = self.drawn_path
@@ -658,9 +763,7 @@ class ExplainCircleAnimations(FourierCirclesScene):
         self.wait()
         self.play(
             ReplacementTransform(top_circles, new_top_circles),
-            ReplacementTransform(top_vectors, new_top_vectors),
             ReplacementTransform(circles, new_circles),
-            # ReplacementTransform(path, new_path),
             FadeOut(path),
             run_time=3,
         )

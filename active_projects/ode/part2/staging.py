@@ -56,7 +56,7 @@ class FourierSeriesIntro(Scene):
             TransformFromCopy(
                 title.get_part_by_tex("Fourier"),
                 name.get_part_by_tex("Fourier"),
-                path_arc=-45 * DEGREES,
+                path_arc=90 * DEGREES,
             ),
             FadeIn(name.get_part_by_tex("Joseph")),
         )
@@ -81,3 +81,8 @@ class PartTwoOfTour(TourOfDifferentialEquations):
     CONFIG = {
         "zoomed_thumbnail_index": 1,
     }
+
+
+class CompareODEToPDE(Scene):
+    def construct(self):
+        pass
