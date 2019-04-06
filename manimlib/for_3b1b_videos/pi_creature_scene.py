@@ -174,6 +174,7 @@ class PiCreatureScene(Scene):
                 continue
             anims_with_pi_creature = [anim for anim in animations if pi_creature in anim.mobject.get_family()]
             for anim in anims_with_pi_creature:
+                continue  # TODO, this is broken
                 if isinstance(anim, Transform):
                     index = anim.mobject.get_family().index(pi_creature)
                     target_family = anim.target_mobject.get_family()

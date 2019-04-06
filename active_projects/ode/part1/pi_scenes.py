@@ -108,10 +108,37 @@ class FormulasAreLies(PiCreatureScene):
 #         pass
 
 
+class SoWhatIsThetaThen(TeacherStudentsScene):
+    def construct(self):
+        ode = get_ode()
+        ode.to_corner(UL)
+        self.add(ode)
+
+        self.student_says(
+            "Okay, but then\\\\"
+            "what \\emph{is} $\\theta(t)$?"
+        )
+        self.wait()
+        self.play(self.teacher.change, "happy")
+        self.wait(2)
+        self.teacher_says(
+            "First, you must appreciate\\\\"
+            "a deep truth...",
+            added_anims=[self.get_student_changes(
+                *3 * ["confused"]
+            )]
+        )
+        self.wait(4)
+
+
 class ProveTeacherWrong(TeacherStudentsScene):
     def construct(self):
         tex_config = {
-            "tex_to_color_map": {"{\\theta}": BLUE}
+            "tex_to_color_map": {
+                "{\\theta}": BLUE,
+                "{\\dot\\theta}": YELLOW,
+                "{\\ddot\\theta}": RED,
+            }
         }
         func = TexMobject(
             "{\\theta}(t)", "=",
@@ -119,23 +146,24 @@ class ProveTeacherWrong(TeacherStudentsScene):
             **tex_config,
         )
         d_func = TexMobject(
-            "\\dot {\\theta}(t)", "=",
+            "{\\dot\\theta}(t)", "=",
             "-\\left(\\sqrt{g / L}\\right)",
             "\\theta_0", "\\sin(\\sqrt{g / L} \\cdot t)",
             **tex_config,
         )
         dd_func = TexMobject(
-            "\\ddot {\\theta}(t)", "=",
+            "{\\ddot\\theta}(t)", "=",
             "-\\left(g / L\\right)",
             "\\theta_0", "\\cos(\\sqrt{g / L} \\cdot t)",
             **tex_config,
         )
-        ode = TexMobject(
-            "\\ddot {\\theta}({t})", "=",
-            "-\\mu \\dot {\\theta}({t})",
-            "-{g \\over L} \\sin\\big({\\theta}({t})\\big)",
-            **tex_config,
-        )
+        # ode = TexMobject(
+        #     "\\ddot {\\theta}({t})", "=",
+        #     "-\\mu \\dot {\\theta}({t})",
+        #     "-{g \\over L} \\sin\\big({\\theta}({t})\\big)",
+        #     **tex_config,
+        # )
+        ode = get_ode()
         arrows = [TexMobject("\\Downarrow") for x in range(2)]
 
         VGroup(func, d_func, dd_func, ode, *arrows).scale(0.7)
@@ -202,6 +230,58 @@ class ProveTeacherWrong(TeacherStudentsScene):
         self.wait(8)
 
 
+class PhysicistPhaseSpace(PiCreatureScene):
+    def construct(self):
+        physy = self.pi_creature
+        name = TextMobject("Physicist")
+        name.scale(1.5)
+        name.to_corner(DL, buff=MED_SMALL_BUFF)
+        physy.next_to(name, UP, SMALL_BUFF)
+        VGroup(name, physy).shift_onto_screen()
+
+        axes = Axes(
+            x_min=-1,
+            x_max=10,
+            y_min=-1,
+            y_max=7,
+        )
+        axes.set_height(6)
+        axes.next_to(physy, RIGHT)
+        axes.to_edge(UP)
+        axes.set_stroke(width=1)
+        x_label = TextMobject("Position")
+        x_label.next_to(axes.x_axis.get_right(), UP)
+        y_label = TextMobject("Momentum")
+        y_label.next_to(axes.y_axis.get_top(), RIGHT)
+
+        title = TextMobject("Phase space")
+        title.scale(1.5)
+        title.set_color(YELLOW)
+        title.move_to(axes)
+
+        self.add(name, physy)
+
+        self.play(
+            physy.change, "angry",
+            Write(axes),
+            FadeInFromDown(title)
+        )
+        self.wait(2)
+        self.play(
+            GrowFromPoint(x_label, physy.get_corner(UR)),
+            physy.change, "raise_right_hand",
+            axes.x_axis.get_right()
+        )
+        self.play(
+            GrowFromPoint(y_label, physy.get_corner(UR)),
+            physy.look_at, axes.y_axis.get_top(),
+        )
+        self.wait(3)
+
+    def create_pi_creature(self):
+        return PiCreature(color=GREY).to_corner(DL)
+
+
 class AskAboutActuallySolving(TeacherStudentsScene):
     def construct(self):
         ode = get_ode()
@@ -211,7 +291,7 @@ class AskAboutActuallySolving(TeacherStudentsScene):
 
         self.student_says(
             "Yeah yeah, but how do\\\\"
-            "you acutally \\emph{solve} it?",
+            "you actually \\emph{solve} it?",
             student_index=1,
             target_mode="sassy",
             added_anims=[morty.change, "thinking"],
@@ -242,9 +322,7 @@ class HungerForExactness(TeacherStudentsScene):
         ode.to_corner(UL)
         left_part = ode[:5]
         friction_part = ode[5:11]
-        right_part = ode[11:]
         self.add(ode)
-        frictionless_group = VGroup(left_part, right_part)
 
         proposed_solution = TexMobject(
             "\\theta_0\\cos((\\sqrt{g/L})t)e^{-\\mu t}"
@@ -376,9 +454,62 @@ class HungerForExactness(TeacherStudentsScene):
             )
             self.wait()
         self.wait(3)
+        self.change_student_modes("tired", "sad", "concerned_musician")
+        self.wait(4)
+        self.look_at(solution)
+        self.wait(5)
         self.play(
             FadeOutAndShift(solution, 2 * LEFT),
             Restore(ode),
-            self.get_student_changes(*3 * ["sick"])
+            self.get_student_changes(
+                "sick", "angry", "tired",
+            )
         )
         self.wait(3)
+
+        mystery = TexMobject(
+            "\\theta(t) = ???",
+            tex_to_color_map={"\\theta": BLUE},
+        )
+        mystery.scale(2)
+        mystery.to_edge(UP)
+        mystery.set_stroke(width=0, background=True)
+        mystery_boundary = AnimatedBoundary(
+            mystery, stroke_width=1
+        )
+
+        self.play(
+            FadeInFromDown(mystery),
+            self.teacher.change, "pondering"
+        )
+        self.add(mystery_boundary, mystery)
+        self.change_all_student_modes("sad")
+        self.look_at(mystery)
+        self.wait(5)
+
+        # Define
+        self.student_says(
+            "Let $\\text{P}(\\mu, g, L; t)$ be a\\\\"
+            "function satisfying this ODE.",
+            student_index=0,
+            target_mode="speaking",
+            added_anims=[
+                FadeOut(mystery),
+                FadeOut(mystery_boundary),
+                ode.to_corner, UR
+            ]
+        )
+        self.change_student_modes(
+            "hooray", "sassy", "sassy",
+            look_at_arg=students[0].eyes.get_corner(UR),
+        )
+        self.wait(2)
+
+
+class ItGetsWorse(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("It gets\\\\worse")
+        self.change_student_modes(
+            "hesitant", "pleading", "erm"
+        )
+        self.wait(5)

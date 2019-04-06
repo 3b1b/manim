@@ -35,8 +35,10 @@ def open_file_if_needed(file_writer, **config):
                 os.startfile(file_path)
             else:
                 commands = []
-                if (current_os == "Linux"):
+                if current_os == "Linux":
                     commands.append("xdg-open")
+                elif current_os.startswith("CYGWIN"):
+                    commands.append("cygstart")
                 else:  # Assume macOS
                     commands.append("open")
 
