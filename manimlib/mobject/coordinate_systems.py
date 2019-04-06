@@ -49,6 +49,34 @@ class CoordinateSystem():
     def get_z_axis(self):
         return self.get_axis(2)
 
+    def get_x_axis_label(self, label_tex, edge=RIGHT, direction=DL, **kwargs):
+        return self.get_axis_label(
+            label_tex, self.get_x_axis(),
+            edge, direction, **kwargs
+        )
+
+    def get_y_axis_label(self, label_tex, edge=UP, direction=DR, **kwargs):
+        return self.get_axis_label(
+            label_tex, self.get_y_axis(),
+            edge, direction, **kwargs
+        )
+
+    def get_axis_label(self, label_tex, axis, edge, direction, buff=MED_SMALL_BUFF):
+        label = TexMobject(label_tex)
+        label.next_to(
+            axis.get_edge_center(edge), direction,
+            buff=buff
+        )
+        label.shift_onto_screen(buff=MED_SMALL_BUFF)
+        return label
+
+    def get_axis_labels(self, x_label_tex="x", y_label_tex="y"):
+        self.axis_labels = VGroup(
+            self.get_x_axis_label(x_label_tex),
+            self.get_y_axis_label(y_label_tex),
+        )
+        return self.axis_labels
+
     def get_graph(self, function, **kwargs):
         x_min = kwargs.pop("x_min", self.x_min)
         x_max = kwargs.pop("x_max", self.x_max)
@@ -317,34 +345,6 @@ class NumberPlane(Axes):
 
     def get_axes(self):
         return self.axes
-
-    def get_x_axis_label(self, label_tex, edge=RIGHT, direction=DL, **kwargs):
-        return self.get_axis_label(
-            label_tex, self.get_x_axis(),
-            edge, direction, **kwargs
-        )
-
-    def get_y_axis_label(self, label_tex, edge=UP, direction=DR, **kwargs):
-        return self.get_axis_label(
-            label_tex, self.get_y_axis(),
-            edge, direction, **kwargs
-        )
-
-    def get_axis_label(self, label_tex, axis, edge, direction, buff=MED_SMALL_BUFF):
-        label = TexMobject(label_tex)
-        label.next_to(
-            axis.get_edge_center(edge), direction,
-            buff=buff
-        )
-        label.shift_onto_screen(buff=MED_SMALL_BUFF)
-        return label
-
-    def get_axis_labels(self, x_label_tex="x", y_label_tex="y"):
-        self.axis_labels = VGroup(
-            self.get_x_axis_label(x_label_tex),
-            self.get_y_axis_label(y_label_tex),
-        )
-        return self.axis_labels
 
     def get_vector(self, coords, **kwargs):
         kwargs["buff"] = 0
