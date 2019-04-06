@@ -386,7 +386,7 @@ class Line(TipableVMobject):
         "path_arc": None,  # angle of arc specified here
     }
 
-    def __init__(self, start, end, **kwargs):
+    def __init__(self, start=LEFT, end=RIGHT, **kwargs):
         digest_config(self, kwargs)
         self.set_start_and_end_attrs(start, end)
         VMobject.__init__(self, **kwargs)
@@ -443,6 +443,16 @@ class Line(TipableVMobject):
             else:
                 return mob.get_boundary_point(direction)
         return np.array(mob_or_point)
+
+    def put_start_and_end_on(self, start, end):
+        curr_start, curr_end = self.get_start_and_end()
+        if np.all(curr_start == curr_end):
+            # TODO, any problems with resetting
+            # these attrs?
+            self.start = start
+            self.end = end
+            self.generate_points()
+        super().put_start_and_end_on(start, end)
 
     def get_vector(self):
         return self.get_end() - self.get_start()
@@ -620,7 +630,7 @@ class Vector(Arrow):
         "buff": 0,
     }
 
-    def __init__(self, direction, **kwargs):
+    def __init__(self, direction=RIGHT, **kwargs):
         if len(direction) == 2:
             direction = np.append(np.array(direction), 0)
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
