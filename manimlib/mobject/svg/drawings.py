@@ -350,7 +350,7 @@ class Clock(VGroup):
     CONFIG = {}
 
     def __init__(self, **kwargs):
-        circle = Circle()
+        circle = Circle(color=WHITE)
         ticks = []
         for x in range(12):
             alpha = x / 12.
