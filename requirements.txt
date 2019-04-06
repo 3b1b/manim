@@ -8,3 +8,4 @@ tqdm==4.31.1
 opencv-python==4.0.0.21
 pycairo==1.18.0
 pydub==0.23.1
+pyreadline==2.1
