@@ -108,12 +108,8 @@ class SingleStringTexMobject(SVGMobject):
             tex.count(char)
             for char in "{}"
         ]
-        while num_rights > num_lefts:
-            tex = "{" + tex
-            num_lefts += 1
-        while num_lefts > num_rights:
-            tex = tex + "}"
-            num_rights += 1
+        tex = "{" * (num_rights - num_lefts) + tex
+        tex = tex + "}" * (num_lefts - num_rights)
         return tex
 
     def get_tex_string(self):
