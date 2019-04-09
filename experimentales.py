@@ -896,3 +896,65 @@ class FiguraPunteada(Scene):
         self.play(ShowCreation(cuadro))
         self.play(Transform(cuadro[0].copy(),cuadro_c))
         self.wait()
+	
+class BielaManivelaCorredera(Scene):
+	CONFIG={
+		"a":2,
+		"b":-5,
+		"c":1.7,
+		"theta_in":70,
+		"theta_fin":70-3*360,
+		"biela_color":RED,
+		"manivela_color":BLUE,
+		"piston_color":GREEN
+	}
+	def construct(self):
+		O2=Dot().shift(LEFT*3+DOWN)
+		a=self.a
+		b=self.b
+		c=self.c
+		theta_in=self.theta_in
+		theta_fin=self.theta_fin
+		biela_color=self.biela_color
+		piston_color=self.piston_color
+
+		biela 		=self.posicion_biela(O2.get_center(),theta_in,a,biela_color)
+		theta_3		=np.arcsin((a*np.sin(theta_in*DEGREES)-c)/b)*180/PI
+		piston  	=self.posicion_piston(O2.get_center(),theta_in,theta_3,a,b,c,piston_color)
+		manivela  	=Line(biela.get_end(),piston.get_center()).set_stroke(self.manivela_color,4)
+		grupo   	=VGroup(biela,manivela,piston)
+
+		def update(grupo,alpha):
+			dx 			=interpolate(theta_in, theta_fin, alpha)
+			biela 		=self.posicion_biela(O2.get_center(),dx,self.a,self.biela_color)
+
+			if dx>=0:
+				theta_3=np.arcsin((self.a*np.sin(dx*DEGREES)-self.c)/self.b)
+			else:
+				theta_3=np.arcsin(-((self.a*np.sin(dx*DEGREES)-self.c)/self.b))
+
+			#print("%s"%theta_3)
+			piston 		=self.posicion_piston(O2.get_center(),dx,theta_3*180/PI,self.a,self.b,self.c,self.piston_color)
+			manivela 	=Line(biela.get_end(),piston.get_center()).set_stroke(self.manivela_color,4)
+			nuevo_grupo =VGroup(biela,manivela,piston)
+			grupo.become(nuevo_grupo)
+			return grupo
+
+		self.add(grupo)
+		self.wait()
+		self.play(UpdateFromAlphaFunc(grupo,update),run_time=15,rate_func=linear)
+
+	def posicion_biela(self,origen,theta_2,longitud,color):
+		punto_final_x=longitud*np.cos(theta_2*DEGREES)
+		punto_final_y=longitud*np.sin(theta_2*DEGREES)
+		punto_final=origen+np.array([punto_final_x,punto_final_y,0])
+		biela=Line(origen,punto_final,color=color).set_stroke(None,4)
+		return biela
+
+	def posicion_piston(self,origen,theta_2,theta_3,a,b,c,color):
+		d=a*np.cos(theta_2*DEGREES)-b*np.cos(theta_3*DEGREES)
+		punto_final=origen+RIGHT*d+UP*c
+		piston=Square(color=color).scale(0.7).move_to(origen+RIGHT*d+UP*c)
+		return piston
+
+
