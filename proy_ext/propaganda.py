@@ -7,7 +7,7 @@ class BielaManivelaCorredera(Scene):
 		"b":-6.5,
 		"c":1.7,
 		"theta_in":70,
-		"theta_fin":70-3*360,
+		"theta_fin":70-2.5*360,
 		"biela_color":RED,
 		"manivela_color":BLUE,
 		"piston_color":GREEN,
@@ -30,9 +30,10 @@ class BielaManivelaCorredera(Scene):
 		base_down[0:-1].shift(0.1*DOWN)
 		base_up[0:-1].shift(0.1*UP)
 		punto_ancla=Dot(O2.get_center(),radius=radio)
-		semi_circulo_ancla=Dot(O2.get_center(),radius=0.3,color=self.ancla_color)
-		rect_ancla=Square(side_length=0.6).set_stroke(None,0).set_fill(self.ancla_color,1).move_to(O2.get_center()+DOWN*semi_circulo_ancla.get_width()/2)
-		patron_ancla=Patron(0.9,0.2,color=self.ancla_color,separacion=0.1,direccion="U",agregar_base=True,grosor=0.1).next_to(rect_ancla,DOWN,buff=0)
+		semi_circulo_ancla=Dot(O2.get_center(),radius=0.2,color=self.ancla_color)
+		rect_ancla=Square(side_length=0.4).set_stroke(None,0).set_fill(self.ancla_color,1).move_to(O2.get_center()+DOWN*semi_circulo_ancla.get_width()/2)
+		patron_ancla=Patron(0.6,0.15,color=self.ancla_color,separacion=0.1,direccion="U",agregar_base=True,grosor=0.1).next_to(rect_ancla,DOWN,buff=0)
+		patron_ancla[-1].shift(0.1*UP)
 		ancla=VGroup(semi_circulo_ancla,rect_ancla,patron_ancla)
 
 		titulo=Texto("\\sc Animar mecanismos",color=WHITE).scale(1.5).to_corner(UL).shift(RIGHT)
@@ -48,7 +49,7 @@ class BielaManivelaCorredera(Scene):
 
 		base_down.next_to(piston,DOWN,buff=0).shift(LEFT)
 		base_up.next_to(piston,UP,buff=0).shift(LEFT)
-		self.play(Escribe(titulo),ShowCreation(underline))
+		self.play(Escribe(titulo),ShowCreation(underline),run_time=1)
 		self.play(*[FadeIn(objeto)for objeto in [ancla,base_up,base_down]],
 					ShowCreation(biela),DrawBorderThenFill(piston),ShowCreation(manivela),
 					GrowFromCenter(punto_mp),GrowFromCenter(punto_bm),GrowFromCenter(punto_ancla),
@@ -70,7 +71,12 @@ class BielaManivelaCorredera(Scene):
 			grupo.become(nuevo_grupo)
 			return grupo
 
-		self.play(UpdateFromAlphaFunc(grupo,update),run_time=6,rate_func=double_smooth)
+		self.play(UpdateFromAlphaFunc(grupo,update),run_time=8,rate_func=double_smooth)
+		self.wait()
+		cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
+		self.add_foreground_mobject(cuadro_negro)
+		self.play(cuadro_negro.set_fill,None,1)
+		self.wait()
 
 	def posicion_biela(self,origen,theta_2,longitud,color):
 		punto_final_x=longitud*np.cos(theta_2*DEGREES)
@@ -84,4 +90,3 @@ class BielaManivelaCorredera(Scene):
 		punto_final=origen+RIGHT*d+UP*c
 		piston=Rectangle(color=color,height=1,witdh=1.5).set_fill(color,0.7).scale(0.7).move_to(origen+RIGHT*d+UP*c)
 		return piston
-
