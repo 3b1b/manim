@@ -505,7 +505,7 @@ class Patron(VGroup):
                 grosor=Rectangle(height=H,width=grosor).set_fill(color,1).set_stroke(None,0)
                 grosor.shift(orientacion*W/2-orientacion*grosor.get_width()/2)
             else:
-                grosor=Rectangle(height=grosor,width=W).set_fill(GREEN,1).set_stroke(None,0)
+                grosor=Rectangle(height=grosor,width=W).set_fill(color,1).set_stroke(None,0)
                 grosor.shift(orientacion*H/2-orientacion*grosor.get_height()/2)
             self.add(grosor)
 
