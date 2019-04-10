@@ -86,3 +86,70 @@ class PartTwoOfTour(TourOfDifferentialEquations):
 class CompareODEToPDE(Scene):
     def construct(self):
         pass
+
+
+class WriteHeatEquation(Scene):
+    def construct(self):
+        d1_words = TextMobject("Heat equation\\\\", "(1 dimension)")
+        d3_words = TextMobject("Heat equation\\\\", "(3 dimensions)")
+
+        kwargs = {
+            "tex_to_color_map": {
+                "{T}": YELLOW,
+                "{t}": WHITE,
+                "{x}": GREEN,
+                "{y}": RED,
+                "{z}": BLUE,
+            }
+        }
+        d1_equation = TexMobject(
+            "{\\partial {T} \\over \\partial {t}}({x}, {t})="
+            "{\\partial^2 {T} \\over \\partial {x}^2} ({x}, {t})",
+            **kwargs
+        )
+        d3_equation = TexMobject(
+            "{\\partial {T} \\over \\partial {t}} = ",
+            "{\\partial^2 {T} \\over \\partial {x}^2} + ",
+            "{\\partial^2 {T} \\over \\partial {y}^2} + ",
+            "{\\partial^2 {T} \\over \\partial {z}^2}",
+            **kwargs
+        )
+
+        d1_group = VGroup(d1_words, d1_equation)
+        d3_group = VGroup(d3_words, d3_equation)
+        groups = VGroup(d1_group, d3_group)
+        for group in groups:
+            group.arrange(DOWN, buff=MED_LARGE_BUFF)
+        groups.arrange(RIGHT, buff=2)
+        groups.to_edge(UP)
+
+        d3_rhs = d3_equation[6:]
+        d3_brace = Brace(d3_rhs, DOWN)
+        nabla_words = TextMobject("Sometimes written as")
+        nabla_words.match_width(d3_brace)
+        nabla_words.next_to(d3_brace, DOWN)
+        nabla_exp = TexMobject("\\nabla^2 {T}", **kwargs)
+        nabla_exp.next_to(nabla_words, DOWN)
+        # nabla_group = VGroup(nabla_words, nabla_exp)
+
+        d1_group.save_state()
+        d1_group.center().to_edge(UP)
+
+        self.play(
+            Write(d1_words),
+            FadeInFrom(d1_equation, UP),
+            run_time=1,
+        )
+        self.wait(2)
+        self.play(
+            Restore(d1_group),
+            FadeInFrom(d3_group, LEFT)
+        )
+        self.wait()
+        self.play(
+            GrowFromCenter(d3_brace),
+            Write(nabla_words),
+            TransformFromCopy(d3_rhs, nabla_exp),
+            run_time=1,
+        )
+        self.wait()

@@ -153,7 +153,7 @@ class TwoDBodyWithManyTemperaturesContour(ExternallyAnimatedScene):
 
 class BringTwoRodsTogether(Scene):
     CONFIG = {
-        "step_size": 0.1,
+        "step_size": 0.05,
         "axes_config": {
             "x_min": -1,
             "x_max": 11,
@@ -162,19 +162,18 @@ class BringTwoRodsTogether(Scene):
             "y_axis_config": {
                 "unit_size": 0.06,
                 "tick_frequency": 10,
-                # "numbers_with_elongated_ticks": range(20, 100, 20)
             },
         },
-        "wait_time": 5,
+        "graph_x_min": 0,
+        "graph_x_max": 10,
+        "wait_time": 30,
+        "alpha": 1.0,
     }
 
     def construct(self):
         self.setup_axes()
         self.setup_graph()
         self.setup_clock()
-
-        self.add(self.axes)
-        self.add(self.graph)
 
         self.show_rods()
         self.show_equilibration()
@@ -194,9 +193,9 @@ class BringTwoRodsTogether(Scene):
 
     def setup_graph(self):
         graph = self.axes.get_graph(
-            lambda x: 90 if x <= 5 else 10,
-            x_min=0,
-            x_max=10,
+            self.initial_function,
+            x_min=self.graph_x_min,
+            x_max=self.graph_x_max,
             step_size=self.step_size,
             discontinuities=[5],
         )
@@ -229,34 +228,115 @@ class BringTwoRodsTogether(Scene):
         self.clock = clock
 
     def show_rods(self):
-        pass
+        rod1, rod2 = rods = VGroup(
+            self.get_rod(0, 5),
+            self.get_rod(5, 10),
+        )
+        rod1.set_color(rod1[0].get_color())
+        rod2.set_color(rod2[-1].get_color())
+
+        rods.save_state()
+        rods.space_out_submobjects(1.5)
+        rods.center()
+
+        labels = VGroup(
+            TexMobject("90^\\circ"),
+            TexMobject("10^\\circ"),
+        )
+        for rod, label in zip(rods, labels):
+            label.next_to(rod, DOWN)
+            rod.label = label
+
+        self.play(
+            FadeInFrom(rod1, UP),
+            Write(rod1.label),
+        )
+        self.play(
+            FadeInFrom(rod2, DOWN),
+            Write(rod2.label)
+        )
+        self.wait()
+
+        self.rods = rods
+        self.rod_labels = labels
 
     def show_equilibration(self):
-        self.add(self.time_group)
-        self.add(self.clock)
+        rods = self.rods
+        axes = self.axes
+        graph = self.graph
+        labels = self.rod_labels
+        self.play(
+            Write(axes),
+            rods.restore,
+            rods.space_out_submobjects, 1.1,
+            FadeIn(self.time_group),
+            FadeIn(self.clock),
+            *[
+                MaintainPositionRelativeTo(
+                    rod.label, rod
+                )
+                for rod in rods
+            ],
+        )
 
-        self.graph.add_updater(self.update_graph)
+        br1 = Rectangle(height=0.2, width=1)
+        br1.set_stroke(width=0)
+        br1.set_fill(BLACK, opacity=1)
+        br2 = br1.copy()
+        br1.add_updater(lambda b: b.move_to(axes.c2p(0, 90)))
+        br1.add_updater(
+            lambda b: b.align_to(rods[0].get_right(), LEFT)
+        )
+        br2.add_updater(lambda b: b.move_to(axes.c2p(0, 10)))
+        br2.add_updater(
+            lambda b: b.align_to(rods[1].get_left(), RIGHT)
+        )
+
+        self.add(graph, br1, br2)
+        self.play(
+            ShowCreation(graph),
+            labels[0].align_to, axes.c2p(0, 87), UP,
+            labels[1].align_to, axes.c2p(0, 13), DOWN,
+        )
+        self.play()
+        self.play(
+            rods.restore,
+            rate_func=rush_into,
+        )
+        self.remove(br1, br2)
+
+        graph.add_updater(self.update_graph)
         self.time_label.add_updater(
             lambda d, dt: d.increment_value(dt)
         )
+        rods.add_updater(self.update_rods)
 
         self.play(
             ClockPassesTime(
                 self.clock,
                 run_time=self.wait_time,
                 hours_passed=self.wait_time,
-            )
+            ),
+            FadeOut(labels)
         )
 
     #
-    def update_graph(self, graph, dt, alpha=1.0, n_mini_steps=100):
+    def initial_function(self, x):
+        if x <= 5:
+            return 90
+        else:
+            return 10
+
+    def update_graph(self, graph, dt, alpha=None, n_mini_steps=100):
+        if alpha is None:
+            alpha = self.alpha
         points = np.append(
             graph.get_start_anchors(),
             [graph.get_last_point()],
             axis=0,
         )
         for k in range(n_mini_steps):
-            change = np.zeros(points.shape)
+            y_change = np.zeros(points.shape[0])
             dx = points[1][0] - points[0][0]
             for i in range(len(points)):
                 p = points[i]
@@ -270,12 +350,188 @@ class BringTwoRodsTogether(Scene):
                     second_deriv = 0.5 * d2y / dx
                     second_deriv = 0
 
-                change[i][1] = alpha * second_deriv * dt / n_mini_steps
+                y_change[i] = alpha * second_deriv * dt / n_mini_steps
 
-            change[0][1] = change[1][1]
-            change[-1][1] = change[-2][1]
-            # change[0][1] = 0
-            # change[-1][1] = 0
-            points += change
+            # y_change[0] = y_change[1]
+            # y_change[-1] = y_change[-2]
+            y_change[0] = 0
+            y_change[-1] = 0
+            y_change -= np.mean(y_change)
+            points[:, 1] += y_change
         graph.set_points_smoothly(points)
         return graph
+
+    def get_second_derivative(self, x, dx=0.001):
+        graph = self.graph
+        x_min = self.graph_x_min
+        x_max = self.graph_x_max
+
+        ly, y, ry = [
+            graph.point_from_proportion(
+                inverse_interpolate(x_min, x_max, alt_x)
+            )[1]
+            for alt_x in (x - dx, x, x + dx)
+        ]
+        d2y = ry - 2 * y + ly
+        return d2y / (dx**2)
+
+    def get_rod(self, x_min, x_max, n_pieces=20):
+        axes = self.axes
+        line = Line(axes.c2p(x_min, 0), axes.c2p(x_max, 0))
+        rod = VGroup(*[
+            Square()
+            for n in range(n_pieces)
+        ])
+        rod.arrange(RIGHT, buff=0)
+        rod.match_width(line)
+        rod.set_height(0.2, stretch=True)
+        rod.move_to(axes.c2p(x_min, 0), LEFT)
+        rod.set_fill(opacity=1)
+        rod.set_stroke(width=1)
+        rod.set_sheen_direction(RIGHT)
+        self.color_rod_by_graph(rod)
+        return rod
+
+    def update_rods(self, rods):
+        for rod in rods:
+            self.color_rod_by_graph(rod)
+
+    def color_rod_by_graph(self, rod):
+        for piece in rod:
+            piece.set_color(color=[
+                self.rod_point_to_color(piece.get_left()),
+                self.rod_point_to_color(piece.get_right()),
+            ])
+
+    def rod_point_to_color(self, point):
+        axes = self.axes
+        x = axes.x_axis.p2n(point)
+
+        graph = self.graph
+        alpha = inverse_interpolate(
+            self.graph_x_min,
+            self.graph_x_max,
+            x,
+        )
+        y = axes.y_axis.p2n(
+            graph.point_from_proportion(alpha)
+        )
+        return temperature_to_color(
+            (y - 45) / 45
+        )
+
+
+class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
+    CONFIG = {
+        "alpha": 0.1,
+        "n_arrows": 20,
+        "wait_time": 30,
+    }
+
+    def construct(self):
+        self.add_axes()
+        self.add_graph()
+        self.add_clock()
+        self.add_rod()
+        self.add_arrows()
+        self.let_play()
+
+    def add_axes(self):
+        self.setup_axes()
+        self.add(self.axes)
+
+    def add_graph(self):
+        self.setup_graph()
+        self.add(self.graph)
+
+    def add_clock(self):
+        self.setup_clock()
+        self.add(self.clock)
+        self.add(self.time_label)
+
+    def add_rod(self):
+        rod = self.rod = self.get_rod(0, 10)
+        self.add(rod)
+
+    def add_arrows(self):
+        graph = self.graph
+        x_min = self.graph_x_min
+        x_max = self.graph_x_max
+
+        xs = np.linspace(x_min, x_max, self.n_arrows + 2)[1:-1]
+        arrows = VGroup(*[Vector(DOWN) for x in xs])
+
+        def update_arrows(arrows):
+            for x, arrow in zip(xs, arrows):
+                d2y_dx2 = self.get_second_derivative(x)
+                mag = np.sign(d2y_dx2) * np.sqrt(abs(d2y_dx2))
+                mag = np.clip(mag, -2, 2)
+                arrow.put_start_and_end_on(
+                    ORIGIN, mag * UP
+                )
+                point = graph.point_from_proportion(
+                    inverse_interpolate(x_min, x_max, x)
+                )
+                arrow.shift(point - arrow.get_start())
+                arrow.set_color(
+                    self.rod_point_to_color(point)
+                )
+
+        arrows.add_updater(update_arrows)
+
+        self.add(arrows)
+        self.arrows = arrows
+
+    def let_play(self):
+        graph = self.graph
+        rod = self.rod
+        clock = self.clock
+        time_label = self.time_label
+
+        graph.add_updater(self.update_graph)
+        time_label.add_updater(
+            lambda d, dt: d.increment_value(dt)
+        )
+        rod.add_updater(self.color_rod_by_graph)
+
+        # return
+        self.play(
+            ClockPassesTime(
+                clock,
+                run_time=self.wait_time,
+                hours_passed=self.wait_time,
+            ),
+        )
+
+    #
+    def initial_function(self, x):
+        new_x = TAU * x / 10
+        return 50 + 20 * np.sum([
+            np.sin(new_x),
+            np.sin(2 * new_x),
+            0.5 * np.sin(3 * new_x),
+            0.3 * np.sin(4 * new_x),
+            0.3 * np.sin(5 * new_x),
+            0.2 * np.sin(7 * new_x),
+            0.1 * np.sin(21 * new_x),
+            0.05 * np.sin(41 * new_x),
+        ])
+
+
+class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows):
+    def construct(self):
+        self.add_axes()
+        self.add_graph()
+        self.add_rod()
+
+    #
+    def initial_function(self, x):
+        new_x = TAU * x / 10
+        return 50 + 20 * np.sum([
+            np.sin(new_x),
+            np.sin(2 * new_x),
+            0.5 * np.sin(3 * new_x),
+            0.3 * np.sin(4 * new_x),
+            0.3 * np.sin(5 * new_x),
+            0.2 * np.sin(7 * new_x),
+        ])

@@ -387,7 +387,9 @@ class FourierNailAndGear(FourierOfTrebleClef):
     CONFIG = {
         "height": 6,
         "n_circles": 200,
-        "run_time": 10,
+        "run_time": 100,
+        "slow_factor": 0.01,
+        "parametric_function_step_size": 0.0001,
         "arrow_config": {
             "tip_length": 0.1,
             "stroke_width": 2,
