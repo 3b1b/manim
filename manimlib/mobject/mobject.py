@@ -200,6 +200,12 @@ class Mobject(Container):
                 submob.clear_updaters()
         return self
 
+    def match_updaters(self, mobject):
+        self.clear_updaters()
+        for updater in mobject.get_updaters():
+            self.add_updater(updater)
+        return self
+
     def suspend_updating(self, recursive=True):
         self.updating_suspended = True
         if recursive:
