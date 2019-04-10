@@ -167,6 +167,7 @@ class BringTwoRodsTogether(Scene):
         "graph_x_min": 0,
         "graph_x_max": 10,
         "wait_time": 30,
+        "default_n_rod_pieces": 20,
         "alpha": 1.0,
     }
 
@@ -375,7 +376,9 @@ class BringTwoRodsTogether(Scene):
         d2y = ry - 2 * y + ly
         return d2y / (dx**2)
 
-    def get_rod(self, x_min, x_max, n_pieces=20):
+    def get_rod(self, x_min, x_max, n_pieces=None):
+        if n_pieces is None:
+            n_pieces = self.default_n_rod_pieces
         axes = self.axes
         line = Line(axes.c2p(x_min, 0), axes.c2p(x_max, 0))
         rod = VGroup(*[
@@ -426,6 +429,16 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         "alpha": 0.1,
         "n_arrows": 20,
         "wait_time": 30,
+        "freq_amplitude_pairs": [
+            (1, 1),
+            (2, 1),
+            (3, 0.5),
+            (4, 0.3),
+            (5, 0.3),
+            (7, 0.2),
+            (21, 0.1),
+            (41, 0.05),
+        ],
     }
 
     def construct(self):
@@ -504,34 +517,442 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         )
 
     #
-    def initial_function(self, x):
+    def temp_func(self, x, t):
         new_x = TAU * x / 10
         return 50 + 20 * np.sum([
-            np.sin(new_x),
-            np.sin(2 * new_x),
-            0.5 * np.sin(3 * new_x),
-            0.3 * np.sin(4 * new_x),
-            0.3 * np.sin(5 * new_x),
-            0.2 * np.sin(7 * new_x),
-            0.1 * np.sin(21 * new_x),
-            0.05 * np.sin(41 * new_x),
+            amp * np.sin(freq * new_x) *
+            np.exp(-(self.alpha * freq**2) * t)
+            for freq, amp in self.freq_amplitude_pairs
         ])
 
+    def initial_function(self, x, time=0):
+        return self.temp_func(x, 0)
 
-class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows):
+
+class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene):
+    CONFIG = {
+        "freq_amplitude_pairs": [
+            (1, 0.7),
+            (2, 1),
+            (3, 0.5),
+            (4, 0.3),
+            (5, 0.3),
+            (7, 0.2),
+        ],
+    }
+
     def construct(self):
         self.add_axes()
         self.add_graph()
         self.add_rod()
 
-    #
-    def initial_function(self, x):
-        new_x = TAU * x / 10
-        return 50 + 20 * np.sum([
-            np.sin(new_x),
-            np.sin(2 * new_x),
-            0.5 * np.sin(3 * new_x),
-            0.3 * np.sin(4 * new_x),
-            0.3 * np.sin(5 * new_x),
-            0.2 * np.sin(7 * new_x),
+        self.emphasize_graph()
+        self.emphasize_rod()
+        self.show_x_axis()
+        self.show_changes_over_time()
+        self.show_surface()
+
+    def add_graph(self):
+        self.graph = self.get_graph()
+        self.add(self.graph)
+
+    def emphasize_graph(self):
+        graph = self.graph
+        q_marks = VGroup(*[
+            TexMobject("?").move_to(
+                graph.point_from_proportion(a),
+                UP,
+            ).set_stroke(BLACK, 3, background=True)
+            for a in np.linspace(0, 1, 20)
         ])
+
+        self.play(LaggedStart(*[
+            Succession(
+                FadeInFromLarge(q_mark),
+                FadeOutAndShift(q_mark, DOWN),
+            )
+            for q_mark in q_marks
+        ]))
+        self.wait()
+
+    def emphasize_rod(self):
+        alt_rod = self.get_rod(0, 10, 50)
+        word = TextMobject("Rod")
+        word.scale(2)
+        word.next_to(alt_rod, UP, MED_SMALL_BUFF)
+
+        self.play(
+            LaggedStart(
+                *[
+                    Rotating(piece, rate_func=smooth)
+                    for piece in alt_rod
+                ],
+                run_time=2,
+                lag_ratio=0.01,
+            ),
+            Write(word)
+        )
+        self.remove(*alt_rod)
+        self.wait()
+
+        self.rod_word = word
+
+    def show_x_axis(self):
+        rod = self.rod
+        axes = self.axes
+        graph = self.graph
+        x_axis = axes.x_axis
+        x_numbers = x_axis.get_number_mobjects(*range(1, 11))
+        x_label = TexMobject("x")
+        x_label.next_to(x_axis.get_right(), UP)
+
+        self.play(
+            rod.set_opacity, 0.5,
+            FadeInFrom(x_label, UL),
+            LaggedStartMap(
+                FadeInFrom, x_numbers,
+                lambda m: (m, UP),
+            )
+        )
+        self.wait()
+
+        # Show x-values
+        triangle = ArrowTip(
+            start_angle=-90 * DEGREES,
+            color=LIGHT_GREY,
+        )
+        x_tracker = ValueTracker(PI)
+        get_x = x_tracker.get_value
+
+        def get_x_point():
+            return x_axis.n2p(get_x())
+
+        def get_graph_point():
+            return graph.point_from_proportion(
+                inverse_interpolate(
+                    self.graph_x_min,
+                    self.graph_x_max,
+                    get_x(),
+                )
+            )
+
+        triangle.add_updater(
+            lambda t: t.next_to(get_x_point(), UP)
+        )
+        x_label = VGroup(
+            TexMobject("x"),
+            TexMobject("="),
+            DecimalNumber(
+                0,
+                num_decimal_places=3,
+                include_background_rectangle=True,
+            ).scale(0.9)
+        )
+        x_label.set_stroke(BLACK, 5, background=True)
+        x_label.add_updater(lambda m: m[-1].set_value(get_x()))
+        x_label.add_updater(lambda m: m.arrange(RIGHT, buff=SMALL_BUFF))
+        x_label.add_updater(lambda m: m[-1].align_to(m[0], DOWN))
+        x_label.add_updater(lambda m: m.next_to(triangle, UP, SMALL_BUFF))
+        x_label.add_updater(lambda m: m.shift(SMALL_BUFF * RIGHT))
+        rod_piece = always_redraw(
+            lambda: self.get_rod(
+                get_x() - 0.05, get_x() + 0.05,
+                n_pieces=1,
+            )
+        )
+
+        self.play(
+            FadeInFrom(triangle, UP),
+            FadeIn(x_label),
+            FadeIn(rod_piece),
+            FadeOut(self.rod_word),
+        )
+        for value in [np.exp(2), (np.sqrt(5) + 1) / 2]:
+            self.play(x_tracker.set_value, value, run_time=2)
+            self.wait()
+
+        # Show graph
+        v_line = always_redraw(
+            lambda: DashedLine(
+                get_x_point(),
+                get_graph_point(),
+                color=self.rod_point_to_color(get_x_point()),
+            )
+        )
+        graph_dot = Dot()
+        graph_dot.add_updater(
+            lambda m: m.set_color(
+                self.rod_point_to_color(m.get_center())
+            )
+        )
+        graph_dot.add_updater(
+            lambda m: m.move_to(get_graph_point())
+        )
+        t_label = TexMobject("T(", "x", ")")
+        t_label.set_stroke(BLACK, 3, background=True)
+        t_label.add_updater(
+            lambda m: m.next_to(graph_dot, UR, buff=0)
+        )
+
+        self.add(v_line, rod_piece, x_label, triangle)
+        self.play(
+            TransformFromCopy(x_label[0], t_label[1]),
+            FadeIn(t_label[0::2]),
+            ShowCreation(v_line),
+            GrowFromPoint(graph_dot, get_x_point()),
+        )
+        self.add(t_label)
+        self.wait()
+        self.play(
+            x_tracker.set_value, TAU,
+            run_time=5,
+        )
+
+        self.x_tracker = x_tracker
+        self.graph_label_group = VGroup(
+            v_line, rod_piece, triangle, x_label,
+            graph_dot, t_label,
+        )
+        self.set_variables_as_attrs(*self.graph_label_group)
+
+    def show_changes_over_time(self):
+        graph = self.graph
+        t_label = self.t_label
+        new_t_label = TexMobject("T(", "x", ",", "t", ")")
+        new_t_label.set_color_by_tex("t", YELLOW)
+        new_t_label.match_updaters(t_label)
+
+        self.setup_clock()
+        clock = self.clock
+        time_label = self.time_label
+        time_group = self.time_group
+
+        time = 5
+        self.play(
+            FadeIn(clock),
+            FadeIn(time_group),
+        )
+        self.play(
+            self.get_graph_time_change_animation(
+                graph, time
+            ),
+            ClockPassesTime(clock),
+            ChangeDecimalToValue(
+                time_label, time,
+                rate_func=linear,
+            ),
+            ReplacementTransform(
+                t_label,
+                new_t_label,
+                rate_func=squish_rate_func(smooth, 0.5, 0.7),
+            ),
+            run_time=time
+        )
+        self.play(
+            ShowCreationThenFadeAround(
+                new_t_label.get_part_by_tex("t")
+            ),
+        )
+        self.wait()
+        self.play(
+            FadeOut(clock),
+            ChangeDecimalToValue(time_label, 0),
+            VFadeOut(time_group),
+            self.get_graph_time_change_animation(
+                graph,
+                new_time=0,
+            ),
+            run_time=1,
+            rate_func=smooth,
+        )
+
+        self.graph_label_group.remove(t_label)
+        self.graph_label_group.add(new_t_label)
+
+    def show_surface(self):
+        axes = self.axes
+        graph = self.graph
+
+        axes_copy = axes.deepcopy()
+
+        # Time axis
+        t_min = 0
+        t_max = 10
+        t_axis = NumberLine(
+            x_min=t_min,
+            x_max=t_max,
+        )
+        origin = axes.c2p(0, 0)
+        t_axis.shift(origin - t_axis.n2p(0))
+        t_axis.add_numbers(
+            *range(1, t_max + 1),
+            direction=UP,
+        )
+        time_label = TextMobject("Time")
+        time_label.scale(1.5)
+        time_label.next_to(t_axis, UP)
+        t_axis.add(time_label)
+        # t_axis.rotate(90 * DEGREES, LEFT, about_point=origin)
+        t_axis.rotate(90 * DEGREES, UP, about_point=origin)
+
+        # New parts of graph
+        step = 0.25
+        graph_slices = VGroup(*[
+            self.get_graph(time=t).shift(
+                t * IN
+            )
+            for t in np.arange(0, t_max + step, step)
+        ])
+        graph_slices.set_stroke(width=1)
+
+        # Input plane
+        x_axis = self.axes.x_axis
+        y = axes.c2p(0, 0)[1]
+        surface_config = {
+            "u_min": self.graph_x_min,
+            "u_max": self.graph_x_max,
+            "v_min": t_min,
+            "v_max": t_max,
+            "resolution": 20,
+        }
+        input_plane = ParametricSurface(
+            lambda x, t: np.array([
+                x_axis.n2p(x)[0],
+                y,
+                t_axis.n2p(t)[2],
+            ]),
+            **surface_config,
+        )
+        input_plane.set_style(
+            fill_opacity=0.5,
+            fill_color=BLUE_B,
+            stroke_width=0.5,
+            stroke_color=WHITE,
+        )
+
+        # Surface
+        y_axis = axes.y_axis
+        surface = ParametricSurface(
+            lambda x, t: np.array([
+                x_axis.n2p(x)[0],
+                y_axis.n2p(self.temp_func(x, t))[1],
+                t_axis.n2p(t)[2],
+            ]),
+            **surface_config,
+        )
+        surface.set_style(
+            fill_opacity=0,
+            stroke_width=0.5,
+            stroke_color=WHITE,
+            stroke_opacity=0.5,
+        )
+
+        # Rotate everything on screen and move camera
+        # in such a way that it looks the same
+        curr_group = Group(*self.get_mobjects())
+        curr_group.clear_updaters()
+        self.set_camera_orientation(
+            phi=90 * DEGREES,
+        )
+        mobs = [
+            curr_group,
+            graph_slices,
+            t_axis,
+            input_plane,
+            surface,
+        ]
+        for mob in mobs:
+            self.orient_mobject_for_3d(mob)
+
+        # Clean current mobjects
+        self.x_label.set_stroke(BLACK, 2, background=True)
+        self.x_label[-1][0].fade(1)
+
+        self.move_camera(
+            phi=80 * DEGREES,
+            theta=-85 * DEGREES,
+            added_anims=[
+                Write(input_plane),
+                Write(t_axis),
+                FadeOut(self.graph_label_group),
+                self.rod.set_opacity, 1,
+            ]
+        )
+        self.begin_ambient_camera_rotation()
+        self.add(*graph_slices, *self.get_mobjects())
+        self.play(
+            FadeIn(surface),
+            LaggedStart(*[
+                TransformFromCopy(graph, graph_slice)
+                for graph_slice in graph_slices
+            ])
+        )
+        self.wait(4)
+
+        # Show slices
+        self.axes = axes_copy  # So get_graph works...
+
+        def get_time_slice(t):
+            new_slice = self.get_graph(t)
+            new_slice.set_shade_in_3d(True)
+            self.orient_mobject_for_3d(new_slice)
+            new_slice.shift(t * UP)
+            return new_slice
+
+        graph.set_shade_in_3d(True)
+        t_tracker = ValueTracker(0)
+        graph.add_updater(lambda g: g.become(
+            get_time_slice(t_tracker.get_value())
+        ))
+
+        self.play(
+            t_tracker.set_value, 10,
+            self.rod.shift, 10 * UP,
+            ApplyMethod(
+                graph_slices.set_stroke, {"opacity": 0.5},
+                rate_func=squish_rate_func(smooth, 0, 0.2),
+            ),
+            run_time=10,
+            rate_func=linear,
+        )
+        self.wait()
+
+    #
+    def get_graph(self, time=0):
+        graph = self.axes.get_graph(
+            lambda x: self.temp_func(x, time),
+            x_min=self.graph_x_min,
+            x_max=self.graph_x_max,
+            step_size=self.step_size,
+        )
+        graph.time = time
+        graph.color_using_background_image("VerticalTempGradient")
+        return graph
+
+    def get_graph_time_change_animation(self, graph, new_time, **kwargs):
+        old_time = graph.time
+        graph.time = new_time
+        config = {
+            "run_time": abs(new_time - old_time),
+            "rate_func": linear,
+        }
+        config.update(kwargs)
+
+        return UpdateFromAlphaFunc(
+            graph,
+            lambda g, a: g.become(
+                self.get_graph(interpolate(
+                    old_time, new_time, a
+                ))
+            ),
+            **config
+        )
+
+    def orient_mobject_for_3d(self, mob):
+        mob.rotate(
+            90 * DEGREES,
+            axis=RIGHT,
+            about_point=ORIGIN
+        )
+        mob.shift(1 * DOWN)
+        return mob
