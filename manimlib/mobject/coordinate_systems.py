@@ -34,6 +34,14 @@ class CoordinateSystem():
     def point_to_coords(self, point):
         raise Exception("Not implemented")
 
+    def c2p(self, *coords):
+        """Abbreviation for coords_to_point"""
+        return self.coords_to_point(*coords)
+
+    def p2c(self, point):
+        """Abbreviation for point_to_coords"""
+        return self.point_to_coords(point)
+
     def get_axes(self):
         raise Exception("Not implemented")
 
