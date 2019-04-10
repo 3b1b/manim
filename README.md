@@ -61,7 +61,7 @@ Start by downloading LaTex [source](https://miktex.org/download).
 
 
 
-### Using `virtualenv` and `virtualenvwrapper
+### Using `virtualenv` and `virtualenvwrapper`
 After installing `virtualenv` and `virtualenvwrapper`
 ```sh
 git clone https://github.com/3b1b/manim.git
