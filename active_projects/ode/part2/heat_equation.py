@@ -603,12 +603,12 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         graph = self.graph
         x_axis = axes.x_axis
         x_numbers = x_axis.get_number_mobjects(*range(1, 11))
-        x_label = TexMobject("x")
-        x_label.next_to(x_axis.get_right(), UP)
+        x_axis_label = TexMobject("x")
+        x_axis_label.next_to(x_axis.get_right(), UP)
 
         self.play(
             rod.set_opacity, 0.5,
-            FadeInFrom(x_label, UL),
+            FadeInFrom(x_axis_label, UL),
             LaggedStartMap(
                 FadeInFrom, x_numbers,
                 lambda m: (m, UP),
@@ -714,6 +714,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             graph_dot, t_label,
         )
         self.set_variables_as_attrs(*self.graph_label_group)
+        self.set_variables_as_attrs(x_numbers, x_axis_label)
 
     def show_changes_over_time(self):
         graph = self.graph
@@ -772,12 +773,22 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
     def show_surface(self):
         axes = self.axes
         graph = self.graph
-
-        axes_copy = axes.deepcopy()
-
-        # Time axis
         t_min = 0
         t_max = 10
+
+        axes_copy = axes.deepcopy()
+        original_axes = self.axes
+
+        # Set rod final state
+        final_graph = self.get_graph(t_max)
+        curr_graph = self.graph
+        self.graph = final_graph
+        final_rod = self.rod.copy()
+        final_rod.set_opacity(1)
+        self.color_rod_by_graph(final_rod)
+        self.graph = curr_graph
+
+        # Time axis
         t_axis = NumberLine(
             x_min=t_min,
             x_max=t_max,
@@ -791,6 +802,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         time_label = TextMobject("Time")
         time_label.scale(1.5)
         time_label.next_to(t_axis, UP)
+        t_axis.time_label = time_label
         t_axis.add(time_label)
         # t_axis.rotate(90 * DEGREES, LEFT, about_point=origin)
         t_axis.rotate(90 * DEGREES, UP, about_point=origin)
@@ -804,6 +816,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             for t in np.arange(0, t_max + step, step)
         ])
         graph_slices.set_stroke(width=1)
+        graph_slices.set_shade_in_3d(True)
 
         # Input plane
         x_axis = self.axes.x_axis
@@ -885,12 +898,23 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             LaggedStart(*[
                 TransformFromCopy(graph, graph_slice)
                 for graph_slice in graph_slices
-            ])
+            ], lag_ratio=0.02)
         )
         self.wait(4)
 
         # Show slices
         self.axes = axes_copy  # So get_graph works...
+        slicing_plane = Rectangle(
+            stroke_width=0,
+            fill_color=WHITE,
+            fill_opacity=0.2,
+        )
+        slicing_plane.set_shade_in_3d(True)
+        slicing_plane.replace(
+            Line(axes_copy.c2p(0, 0), axes_copy.c2p(10, 100)),
+            stretch=True
+        )
+        self.orient_mobject_for_3d(slicing_plane)
 
         def get_time_slice(t):
             new_slice = self.get_graph(t)
@@ -905,17 +929,25 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             get_time_slice(t_tracker.get_value())
         ))
 
+        self.orient_mobject_for_3d(final_rod)
+        final_rod.shift(10 * UP)
+        kw = {"run_time": 10, "rate_func": linear}
         self.play(
-            t_tracker.set_value, 10,
-            self.rod.shift, 10 * UP,
-            ApplyMethod(
-                graph_slices.set_stroke, {"opacity": 0.5},
-                rate_func=squish_rate_func(smooth, 0, 0.2),
-            ),
-            run_time=10,
-            rate_func=linear,
+            ApplyMethod(t_tracker.set_value, 10, **kw),
+            Transform(self.rod, final_rod, **kw),
+            ApplyMethod(slicing_plane.shift, 10 * UP, **kw),
         )
+        graph.clear_updaters()
         self.wait()
+
+        self.set_variables_as_attrs(
+            t_axis,
+            input_plane,
+            surface,
+            graph_slices,
+            slicing_plane,
+        )
+        self.axes = original_axes
 
     #
     def get_graph(self, time=0):
@@ -954,5 +986,177 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             axis=RIGHT,
             about_point=ORIGIN
         )
-        mob.shift(1 * DOWN)
         return mob
+
+
+class TransitionToTempVsTime(TalkThrough1DHeatGraph):
+    def construct(self):
+        self.force_skipping()
+
+        # super().construct()
+        self.add_axes()
+        self.add_graph()
+        self.add_rod()
+
+        # self.emphasize_graph()
+        # self.emphasize_rod()
+        self.rod_word = Point()
+        self.show_x_axis()
+        # self.show_changes_over_time()
+        self.show_surface()
+
+        self.revert_to_original_skipping_status()
+
+        axes = self.axes
+        t_axis = self.t_axis
+        y_axis = axes.y_axis
+        x_axis = axes.x_axis
+
+        self.stop_ambient_camera_rotation()
+        self.move_camera(
+            phi=90 * DEGREES,
+            theta=0 * DEGREES,
+            added_anims=[
+                Rotate(
+                    y_axis, 90 * DEGREES,
+                    axis=OUT,
+                    about_point=y_axis.n2p(0),
+                ),
+                FadeOut(VGroup(
+                    self.graph_slices,
+                    self.surface,
+                    self.slicing_plane,
+                    self.rod,
+                    self.graph,
+                    self.x_numbers,
+                    self.x_axis_label,
+                )),
+                self.camera.frame_center.shift, 5 * LEFT,
+            ]
+        )
+        self.play(
+            VGroup(x_axis, self.input_plane).stretch,
+            0, 0, {"about_point": y_axis.n2p(0)},
+        )
+        self.play(
+            t_axis.time_label.scale, 1 / 1.5,
+            t_axis.time_label.next_to, t_axis, IN, MED_LARGE_BUFF,
+            t_axis.numbers.shift, 0.7 * IN,
+        )
+        self.wait()
+
+
+class ShowNewtonsLawGraph(Scene):
+    CONFIG = {
+        "k": 0.2,
+        "initial_water_temp": 80,
+        "room_temp": 20,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.show_temperatures()
+        self.show_graph()
+        self.show_equation()
+        self.talk_through_examples()
+
+    def setup_axes(self):
+        axes = Axes(
+            x_min=0,
+            x_max=10,
+            y_min=0,
+            y_max=100,
+            y_axis_config={
+                "unit_size": 0.06,
+                "tick_frequency": 10,
+            },
+            center_point=5 * LEFT + 2.5 * DOWN
+        )
+        x_axis = axes.x_axis
+        y_axis = axes.y_axis
+        y_axis.add_numbers(*range(20, 100, 20))
+        x_axis.add_numbers(*range(1, 11))
+
+        x_axis.label = TextMobject("Time")
+        x_axis.label.next_to(x_axis, DOWN, MED_SMALL_BUFF)
+
+        y_axis.label = TexMobject("\\text{Temperature}")
+        y_axis.label.next_to(y_axis, RIGHT, buff=SMALL_BUFF)
+        y_axis.label.align_to(axes, UP)
+        for axis in [x_axis, y_axis]:
+            axis.add(axis.label)
+
+        self.add(axes)
+        self.axes = axes
+
+    def show_temperatures(self):
+        axes = self.axes
+
+        water_dot = Dot()
+        water_dot.color_using_background_image("VerticalTempGradient")
+        water_dot.move_to(axes.c2p(0, self.initial_water_temp))
+        room_line = DashedLine(
+            axes.c2p(0, self.room_temp),
+            axes.c2p(10, self.room_temp),
+        )
+        room_line.set_color(BLUE)
+        room_line.color_using_background_image("VerticalTempGradient")
+
+        water_arrow = Vector(LEFT, color=WHITE)
+        water_arrow.next_to(water_dot, RIGHT, SMALL_BUFF)
+        water_words = TextMobject(
+            "Initial water temperature"
+        )
+        water_words.next_to(water_arrow, RIGHT)
+
+        room_words = TextMobject("Room temperature")
+        room_words.next_to(room_line, DOWN, SMALL_BUFF)
+
+        self.play(
+            FadeInFrom(water_dot, RIGHT),
+            GrowArrow(water_arrow),
+            Write(water_words),
+        )
+        self.play(ShowCreation(room_line))
+        self.play(FadeInFromDown(room_words))
+        self.wait()
+
+        self.set_variables_as_attrs(
+            water_dot,
+            water_arrow,
+            water_words,
+            room_line,
+            room_words,
+        )
+
+    def show_graph(self):
+        axes = self.axes
+        water_dot = self.water_dot
+
+        k = self.k
+        rt = self.room_temp
+        t0 = self.initial_water_temp
+        graph = axes.get_graph(
+            lambda t: rt + (t0 - rt) * np.exp(-k * t)
+        )
+        graph.color_using_background_image("VerticalTempGradient")
+
+        def get_x():
+            return axes.x_axis.p2n(water_dot.get_center())
+
+        brace_line = always_redraw(lambda: Line(
+            axes.c2p(get_x(), rt),
+            water_dot.get_center(),
+            stroke_width=0,
+        ))
+        brace = Brace(brace_line, RIGHT, SMALL_BUFF)
+        brace.add_updater(lambda b: b.match_height(brace_line))
+        brace.add_updater(lambda b: b.next_to(brace_line, RIGHT, SMALL_BUFF))
+
+        self.add(graph)
+
+    def show_equation(self):
+        pass
+
+    def talk_through_examples(self):
+        pass
