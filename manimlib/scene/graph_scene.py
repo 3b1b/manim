@@ -552,7 +552,7 @@ class GraphScene(Scene):
             kwargs["dx"] = dx
             kwargs["x"] = x
             new_group = self.get_secant_slope_group(**kwargs)
-            Transform(group, new_group).update(1)
+            group.become(new_group)
             return group
 
         self.play(
