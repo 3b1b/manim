@@ -37,7 +37,7 @@ class BielaManivelaCorredera(Scene):
 		patron_ancla[-1].shift(0.1*UP)
 		ancla=VGroup(semi_circulo_ancla,rect_ancla,patron_ancla)
 
-		titulo=Texto("\\sc Animar mecanismos",color=WHITE).scale(1.5).to_corner(UL).shift(RIGHT)
+		titulo=Texto("\\sc Animaciones de mecanismos.",color=WHITE).scale(1.5).to_corner(UL).shift(RIGHT)
 		underline=Line(titulo.get_corner(DL),titulo.get_corner(DR)).shift(DOWN*0.1)
 
 		biela 		=self.posicion_biela(O2.get_center(),theta_in,a,biela_color)
@@ -74,9 +74,9 @@ class BielaManivelaCorredera(Scene):
 
 		self.play(UpdateFromAlphaFunc(grupo,update),run_time=8,rate_func=double_smooth)
 		self.wait()
-		cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
-		self.add_foreground_mobject(cuadro_negro)
-		self.play(cuadro_negro.set_fill,None,1)
+		cuadro_blanco=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(WHITE,0).set_stroke(WHITE,1)
+		self.add_foreground_mobject(cuadro_blanco)
+		self.play(cuadro_blanco.set_fill,None,1)
 		self.wait()
 
 	def posicion_biela(self,origen,theta_2,longitud,color):
@@ -109,7 +109,7 @@ class PatronHexagonos(Scene):
 		h2=h1.copy().set_stroke(opacity=0.5)
 		VGroup(h1,h2).arrange_submobjects(RIGHT)
 
-		titulo=Texto("\\sc Que esta animación\\\\ no te engañe",color=WHITE,background_stroke_width=2).scale(2.5)
+		titulo=Texto("\\sc Que esta animación\\\\\\sc no te engañe",color=WHITE,background_stroke_width=2).scale(2.5)
 
 
 
@@ -127,7 +127,7 @@ class PatronHexagonos(Scene):
 		Escribe_y_desvanece(titulo,run_time=7,rate_func=lambda t:there_and_back(1.1*t))
 		)
 
-	def conjunto_hexagonos(self,particiones,rotacion=PI/2,grosor_inicial=5,grosor_final=25):
+	def conjunto_hexagonos(self,particiones,rotacion=PI/2,grosor_inicial=1,grosor_final=25):
 		hexagonos=VGroup()
 		for part in range(1,particiones+1):
 			hexagono=RegularPolygon(n=6,color=self.color_hexagonos).scale(part/particiones).rotate(rotacion)
@@ -156,19 +156,24 @@ class Teclado(Scene):
 
 class CreadaPython3(Scene):
 	def construct(self):
-		texto=Texto("Fué hecha en\\\\ {\\tt PYTHON 3.7}!!!!\\\\ Con {\\it software libre}").scale(2.5)
+		texto=Texto("\\sc Fué hecha en\\\\ {\\tt PYTHON 3.7}!!!!\\\\ Con \\underline{\\it software libre}",
+			color=WHITE).scale(2.5)
+		texto[-14:].set_color(RED)
+		texto[-30:-17].set_color(GREEN)
 		self.play(
 			LaggedStart(GrowFromCenter,texto)
 			)
 		self.wait(1.7)
+		#'''
 		self.play(
 			LaggedStart(FadeOutAndShiftDown,texto)
 			)
+		#'''
 		self.wait(0.3)
 
 class CreadoPor(Scene):
 	def construct(self):
-		texto=Texto("Esta herramienta fue creada por:",color=WHITE).to_edge(UP)
+		texto=Texto("\\sc Esta herramienta fue creada por:",color=WHITE).to_edge(UP)
 		grant=ImageMobject("grant",height=5)
 		i3b1b=ImageMobject("3b1b",height=5)
 		imagenes=Mobject(grant,i3b1b).arrange_submobjects(RIGHT).next_to(texto,DOWN)
@@ -183,8 +188,8 @@ class CreadoPor(Scene):
 class QuePuedoHacer(Scene):
 	def construct(self):
 		texto=VGroup(
-			Texto("¿Qué animaciones"),
-			Texto("se pueden hacer?")
+			Texto("\\sc ¿Qué animaciones",color=WHITE),
+			Texto("\\sc se pueden hacer?",color=WHITE)
 			).arrange_submobjects(DOWN).scale(2.5).fade(1)
 		textoc=texto.copy()
 		textoc[0].shift(FRAME_WIDTH*LEFT+textoc[0].get_width()*LEFT)
@@ -206,26 +211,27 @@ class QuePuedoHacer(Scene):
 			)
 
 class EscenaMusica(MusicalScene):
+    CONFIG = {"include_sound": True}
     def construct(self):
         self.teclado_transparente=self.definir_teclado(4,self.prop,0).set_stroke(None,0)
         self.teclado_base=self.definir_teclado(4,self.prop,1)
         self.teclado_base.move_to(ORIGIN+DOWN*3)
         self.teclado_transparente.move_to(ORIGIN+DOWN*3)
 
-        self.wait(0.3)
         self.agregar_escenario()
-
         self.primer_paso(simbolos_faltantes=[14,15,16,17,18,19,20,21])
-        self.wait()
+        self.add_sound("armonicos/pI",gain=-12)
         self.progresion(0,run_time=2)
+        self.add_sound("armonicos/pIV",gain=-12)
         self.progresion_con_desfase(paso=1,desfase=22,y1=8,x2=8,y2=16,run_time=2)
+        self.add_sound("armonicos/pV",gain=-12)
         self.progresion_con_desfase(paso=2,desfase=30,y1=8,x2=10,y2=18,simbolos_faltantes=[38,39],run_time=2)
+        self.add_sound("armonicos/pI2",gain=-12)
 
         self.intervalos()
 
         self.salida_teclado()
         
-        self.wait(2)
 
 
     def importar_partitura(self):
@@ -243,7 +249,7 @@ class EscenaMusica(MusicalScene):
                 \\NOTEs\\zhl{C}\\hu{'G}|\\zhl{e}\\hu{'c}\\en
                 \\endextract
                 \\end{music}
-            """,color=BLACK).shift(UP)
+            """,color=BLACK).shift(UP).scale(0.8)
 
     def definir_cambios_notas(self):
         self.cambios_notas=[[[
@@ -286,14 +292,16 @@ class EscenaMusica(MusicalScene):
 
     def agregar_escenario(self):
         self.grupoA=VGroup(*[self.partitura[cont]for cont in [12,13]])
+        titulo=Texto("\\sc Y en general, hasta donde tu imaginación te deje.",color=BLACK).to_corner(UL)
+        ul=underline(titulo,color=BLACK)
 
         self.mandar_frente_sostenido(4,self.teclado_base)
         self.mandar_frente_sostenido(4,self.teclado_transparente)
 
         self.play(*[LaggedStart(GrowFromCenter, self.partitura[i],run_time=2)for i in range(1,11)],
-            LaggedStart(DrawBorderThenFill,self.teclado_base),LaggedStart(DrawBorderThenFill,self.teclado_transparente)
+            LaggedStart(DrawBorderThenFill,self.teclado_base),LaggedStart(DrawBorderThenFill,self.teclado_transparente),
+            Write(titulo),ShowCreation(ul),*[GrowFromCenter(x)for x in self.grupoA]
             )
-        self.play(*[GrowFromCenter(x)for x in self.grupoA])
 
 
 
@@ -305,13 +313,9 @@ class EscenaMusica(MusicalScene):
         i5J_h=self.intervalo_h(15,23,"5\\rm J")
 
         self.ap_inter_v(i6m_v)
-        self.wait()
         self.play(ReplacementTransform(i6m_v.copy(),i5J_v))
-        self.wait()
         self.ap_inter_h(i2m_h)
-        self.wait()
         self.play(ReplacementTransform(i2m_h,i5J_h))
-        self.wait()
         
     def salida_teclado(self):
         self.play(*[
@@ -327,66 +331,11 @@ class EscenaMusica(MusicalScene):
         self.remove(self.teclado_transparente)
         self.mandar_frente_sostenido_parcial(4,self.teclado_base)
         self.play(
-            LaggedStart(FadeOutAndShiftDown,self.teclado_base,run_time=1),
+            *[LaggedStart(FadeOutAndShiftDown,objeto,run_time=1)for objeto in self.mobjects],
             )
-
-class Ejemplo1(Scene):
-    def construct(self):
-        titulo=Texto("Se especializa en animaciones de car\\'acter matem\\'atico.").to_edge(UP)
-        ul=underline(titulo)
-
-        tr1=Polygon(LEFT*2,ORIGIN,UP*2)
-        tr1.move_to(Dot())
-        med=Medicion(Line(tr1.points[0],tr1.points[3]),invertir=True,dashed=True).add_tips().add_letter("x",buff=-3.2)
-        med2=Medicion(Line(tr1.points[3],tr1.points[6]),invertir=True,dashed=True).add_tips().add_letter("y",buff=-2.6)
-        med3=Medicion(Line(tr1.points[0],tr1.points[6]),dashed=True).add_tips().add_letter("z",buff=1.2)
-        ang_alpha=np.arctan(Line(tr1.points[3],tr1.points[6]).get_length()/Line(tr1.points[0],tr1.points[3]).get_length())
-        arco=Arc(ang_alpha,arc_center=tr1.points[0])
-        arco2=Arc(np.arctan(Line(tr1.points[0],tr1.points[3]).get_length()/Line(tr1.points[3],tr1.points[6]).get_length()),arc_center=tr1.points[6],start_angle=ang_alpha)
-        arco2.rotate(180*DEGREES,about_point=tr1.points[6],about_edge=tr1.points[6])
-        self.add(tr1,med,med2,med3,arco,arco2)
-        def updatef(self):
-            sub_med=Medicion(Line(tr1.points[0],tr1.points[3]),invertir=True,dashed=True).add_tips().add_letter("x",buff=-3.2)
-            sub_med2=Medicion(Line(tr1.points[3],tr1.points[6]),invertir=True,dashed=True).add_tips().add_letter("y",buff=-2.6)
-            sub_med3=Medicion(Line(tr1.points[0],tr1.points[6]),dashed=True).add_tips().add_letter("z",buff=1.2)
-            new_arco=Arc(np.arctan(Line(tr1.points[3],tr1.points[6]).get_length()/Line(tr1.points[0],tr1.points[3]).get_length()),arc_center=tr1.points[0])
-            new_ang_alpha=np.arctan(Line(tr1.points[3],tr1.points[6]).get_length()/Line(tr1.points[0],tr1.points[3]).get_length())
-            arco2b=Arc(np.arctan(Line(tr1.points[0],tr1.points[3]).get_length()/Line(tr1.points[3],tr1.points[6]).get_length()),arc_center=tr1.points[6],start_angle=new_ang_alpha)
-            arco2b.rotate(180*DEGREES,about_point=tr1.points[6],about_edge=tr1.points[6])
-            med.become(sub_med)
-            med2.become(sub_med2)
-            med3.become(sub_med3)
-            arco.become(new_arco)
-            arco2.become(arco2b)
-            tr1.move_to(ORIGIN)
-        self.wait()
-        self.play(
-            tr1.stretch_to_fit_width,6,
-            tr1.stretch_to_fit_height,3.5,
-            UpdateFromFunc(med,updatef))
-        tmz=med3[-1].copy()
-        tmy=med2[-1].copy()
-        tmx=med[-1].copy()
-        formula=Formula("z","^2=","x","^2+","y","^2")
-        formula.next_to(tr1,DOWN,buff=1)
-        self.play(
-            Escribe(titulo),
-            ShowCreation(ul)
-            )
-        self.play(
-            ReplacementTransform(tmx[:],formula[2]),
-            ReplacementTransform(tmy[:],formula[4]),
-            ReplacementTransform(tmz[:],formula[0]),
-            run_time=2
-            )
-        self.play(
-            *[Escribe(formula[i][:])for i in [1,3,5]]
-            )
-        #self.add(formula)
-        todos_objetos=VGroup(*self.mobjects)
-        self.play(
-            todos_objetos.shift,LEFT*FRAME_WIDTH)
-        self.wait()
+        cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
+        self.add_foreground_mobject(cuadro_negro)
+        self.play(cuadro_negro.set_fill,None,1)
 
 class EjemploGrafica(GraphScene):
     CONFIG = {
@@ -402,7 +351,7 @@ class EjemploGrafica(GraphScene):
         #self.otra_definicion()
 
     def add_title(self):
-        title = self.title = TextMobject("Crear gráficas y animarlas.")
+        title = self.title = TextMobject("\\sc Animar gráficas en 2D.")
         title.to_edge(UP)
         
         h_line = Line(LEFT, RIGHT)
@@ -750,10 +699,12 @@ class ProcesosMatematicos(Scene):
 		self.conversion_formulas(n_paso=7,
 			cambios=self.conjunto_cambios[6],
 			pos_write=[25,28],
+			run_time=0.2,
 			)
 		self.conversion_formulas(n_paso=8,
 			cambios=self.conjunto_cambios[7],
 			pos_write=[32,26],
+			run_time=0.2,
 			)
 		self.conversion_formulas(n_paso=9,
 			cambios=self.conjunto_cambios[8],
@@ -781,14 +732,19 @@ class ProcesosMatematicos(Scene):
 		c2=SurroundingRectangle(self.formulas[14],buff=0.2)
 		c2.rotate(PI)
 		self.play(ShowCreationThenDestruction(c1),ShowCreationThenDestruction(c2))
-		self.wait(2)
+		todos_objetos=VGroup(*self.mobjects)
+		self.play(todos_objetos.shift,RIGHT*FRAME_WIDTH)
+		self.wait()
 
 	def importar_formulas(self):
 		self.formulas=formulas
 
 
 	def imprime_formula(self):
-		self.play(Write(self.formulas[0]))
+		titulo=Texto("\\sc Animaciones de carácter matemático.",color=WHITE).to_corner(UL)
+		ul=underline(titulo)
+		formulas_tex=Texto("Fórmulas escritas en \\LaTeX",color=TEAL).to_edge(DOWN)
+		self.play(Escribe(self.formulas[0]),Escribe(titulo),ShowCreation(ul),Escribe(formulas_tex),run_time=1.5)
 
 	def configurar_cambios(self):
 		self.conjunto_cambios=[
@@ -878,7 +834,8 @@ class ProcesosMatematicos(Scene):
 							pos_copias=[],
 							tiempo_pre_cambios=0,
 							tiempo_cambios_final=0,
-							run_time=0.8,
+							run_time=0.9,
+							rate_func=linear,
 							tiempo_final=0,
 							pre_orden=["w","f"],
 							pos_orden=["w","f"]
@@ -889,9 +846,9 @@ class ProcesosMatematicos(Scene):
 
 		for ani_ in pre_orden:
 			if len(pre_write)>0 and ani_=="w":
-				self.play(*[Write(self.formulas[n_paso-1][w])for w in pre_write])
+				self.play(*[Write(self.formulas[n_paso-1][w])for w in pre_write],rate_func=rate_func)
 			if len(pre_fade)>0 and ani_=="f":
-				self.play(*[FadeOut(self.formulas[n_paso-1][w])for w in pre_fade])
+				self.play(*[FadeOut(self.formulas[n_paso-1][w])for w in pre_fade],rate_func=rate_func)
 
 		self.wait(tiempo_pre_cambios)
 
@@ -899,24 +856,337 @@ class ProcesosMatematicos(Scene):
 			self.play(*[
 				ReplacementTransform(
 					self.formulas[n_paso-1][i],self.formulas[n_paso][j],
-					path_arc=arco
+					path_arc=arco,rate_func=rate_func
 					)
 				for i,j in zip(pre_ind,post_ind)
 				],
-				*[FadeOut(self.formulas[n_paso-1][f])for f in fade if len(fade)>0],
-				*[Write(self.formulas[n_paso][w])for w in write if len(write)>0],
-				*[ReplacementTransform(formula_copia[j],self.formulas[n_paso][f])
+				*[FadeOut(self.formulas[n_paso-1][f],rate_func=rate_func)for f in fade if len(fade)>0],
+				*[Write(self.formulas[n_paso][w],rate_func=rate_func)for w in write if len(write)>0],
+				*[ReplacementTransform(formula_copia[j],self.formulas[n_paso][f],rate_func=rate_func)
 				for j,f in zip(range(len(pos_copias)),pos_copias) if len(pre_copias)>0
 				],
-				run_time=run_time
+				run_time=run_time,rate_func=rate_func
 			)
 
 		self.wait(tiempo_cambios_final)
 
 		for ani_ in pos_orden:
 			if len(pos_write)>0 and ani_=="w":
-				self.play(*[Write(self.formulas[n_paso][w])for w in pos_write])
+				self.play(*[Write(self.formulas[n_paso][w])for w in pos_write],rate_func=rate_func)
 			if len(pos_fade)>0 and ani_=="f":
-				self.play(*[FadeOut(self.formulas[n_paso][w])for w in pos_fade])
+				self.play(*[FadeOut(self.formulas[n_paso][w])for w in pos_fade],rate_func=rate_func)
 
 		self.wait(tiempo_final)
+
+class TeoremaPitagoras(Scene):
+	CONFIG={
+	"color_triangulos":YELLOW,
+	"color_rect_c":RED,
+	"color_rect_b":ORANGE,
+	"color_rect_a":ORANGE,
+	"color_cuadrado_c":ORANGE,
+	"opacidad_triangulos":0.6,
+	"opacidad_cuadradro_a":0.6,
+	"opacidad_cuadradro_b":0.6,
+	"opacidad_cuadradro_c":0.6,
+	"grosor_lineas":1,
+	"l_a":5/5,
+	"l_b":12/5,
+	"l_c":13/5,
+	}
+	def construct(self):
+		self.pre_cuadrado()
+		self.pos_cuadrado()
+		self.tran_pre_pos_cuadrado()
+
+	def pre_cuadrado(self):
+		cuadro=Square(side_length=self.l_a+self.l_b)
+		coordenadas_esquinas=[]
+		for punto in [DL,DR,UL,UR]:
+			coordenadas_esquinas.append(cuadro.get_corner(punto))
+		eii,eid,esi,esd=coordenadas_esquinas
+		p_eii=Dot(eii)
+		p_eid=Dot(eid)
+		p_esi=Dot(esi)
+		p_esd=Dot(esd)
+		puntos_esquinas=VGroup(p_eii,p_eid,p_esi,p_esd)
+
+		coordenadas_lados=[]
+		#               lin 			liz					ls 				   ld
+		for punto in [eid+LEFT*self.l_b,eii+UP*self.l_b,esi+RIGHT*self.l_b,esd+DOWN*self.l_b]:
+			coordenadas_lados.append(punto)
+		lin,liz,ls,ld=coordenadas_lados
+		p_lin=Dot(lin)
+		p_liz=Dot(liz)
+		p_ls=Dot(ls)
+		p_ld=Dot(ld)
+		puntos_lados=VGroup(p_lin,p_liz,p_ls,p_ld)
+
+		t1=Polygon(lin,eid,ld,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		t2=Polygon(lin,eii,liz,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		t3=Polygon(liz,esi,ls,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		t4=Polygon(ld,esd,ls,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		cuadrado_c=Polygon(*coordenadas_lados,color=self.color_cuadrado_c).set_fill(self.color_cuadrado_c,self.opacidad_cuadradro_c)
+
+		self.cuadrado_c=cuadrado_c
+
+		med_ia=Medicion(Line(eii,lin),invertir=True,dashed=True,buff=0.5).add_tips().add_tex("a",buff=-3.7,color=WHITE)
+		med_ib=Medicion(Line(lin,eid),invertir=True,dashed=True,buff=0.5).add_tips().add_tex("b",buff=-2.7,color=WHITE)
+		med_izb=Medicion(Line(eii,liz),invertir=False,dashed=True,buff=0.5).add_tips().add_tex("b",buff=1,color=WHITE)
+		med_iza=Medicion(Line(liz,esi),invertir=False,dashed=True,buff=0.5).add_tips().add_tex("a",buff=2,color=WHITE)
+		med_iza[-1].rotate(-PI/2)
+		med_izb[-1].rotate(-PI/2)
+		mediciones_1=VGroup(med_ia,med_ib,med_iza,med_izb)
+		
+		
+		titulo=Texto("\\sc Animaciones de demostraciones gráficas.",color=WHITE).to_corner(UL)
+		ul=underline(titulo)
+		self.titulo=VGroup(titulo,ul)
+		self.play(Escribe(titulo,run_time=1),ShowCreation(ul,run_time=1),ShowCreation(cuadro,run_time=1),
+			*[DrawBorderThenFill(triangulo)for triangulo in [t1,t2,t3,t4]],
+			*[GrowFromCenter(objeto)for objeto in [*mediciones_1]],run_time=1
+			)
+
+		conjunto_pre_cuadrado=VGroup(cuadro,t1,t2,t3,t4)
+		#self.add(cuadro,t1,t2,t3,t4,cuadrado_c)
+		self.conjunto_pre_cuadrado=conjunto_pre_cuadrado
+		self.conjunto_pre_cuadrado.add(med_ia,med_ib,med_iza,med_izb)
+		self.play(conjunto_pre_cuadrado.to_edge,LEFT,{"buff":1.7})
+		cuadrado_c.move_to(cuadro)
+
+	def pos_cuadrado(self):
+		cuadro=Square(side_length=self.l_a+self.l_b)
+		coordenadas_esquinas=[]
+		for punto in [DL,DR,UL,UR]:
+			coordenadas_esquinas.append(cuadro.get_corner(punto))
+		eii,eid,esi,esd=coordenadas_esquinas
+		p_eii=Dot(eii)
+		p_eid=Dot(eid)
+		p_esi=Dot(esi)
+		p_esd=Dot(esd)
+		puntos_esquinas=VGroup(p_eii,p_eid,p_esi,p_esd)
+
+		coordenadas_lados=[]
+		#               lin 				liz					ls 				   ld
+		for punto in [eid+LEFT*self.l_b,eii+UP*self.l_a,esi+RIGHT*self.l_a,esd+DOWN*self.l_b,eii+self.l_a*(UP+RIGHT)]:
+			coordenadas_lados.append(punto)
+		lin,liz,ls,ld,centro=coordenadas_lados
+		p_lin=Dot(lin)
+		p_liz=Dot(liz)
+		p_ls=Dot(ls)
+		p_ld=Dot(ld)
+		p_centro=Dot(centro)
+		puntos_lados=VGroup(p_lin,p_liz,p_ls,p_ld,p_centro)
+
+		t1=Polygon(lin,eid,ld,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		t2=Polygon(lin,centro,ld,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		t3=Polygon(esi,liz,centro,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		t4=Polygon(centro,ls,esi,color=self.color_triangulos).set_fill(self.color_triangulos,self.opacidad_triangulos).set_stroke(None,self.grosor_lineas)
+		cuadrado_a=Polygon(*[eii,liz,centro,lin],color=self.color_rect_a).set_fill(self.color_rect_a,self.opacidad_cuadradro_a)
+		cuadrado_b=Polygon(*[centro,ls,esd,ld],color=self.color_rect_b).set_fill(self.color_rect_b,self.opacidad_cuadradro_b)
+
+		med_ia=Medicion(Line(eii,lin),invertir=True,dashed=True,buff=0.5).add_tips().add_tex("a",buff=-3.7,color=WHITE)
+		med_ib=Medicion(Line(lin,eid),invertir=True,dashed=True,buff=0.5).add_tips().add_tex("b",buff=-2.7,color=WHITE)
+		med_iza=Medicion(Line(eii,liz),invertir=False,dashed=True,buff=0.5).add_tips().add_tex("a",buff=1.8,color=WHITE)
+		med_izb=Medicion(Line(liz,esi),invertir=False,dashed=True,buff=0.5).add_tips().add_tex("b",buff=1,color=WHITE)
+		med_iza[-1].rotate(-PI/2)
+		med_izb[-1].rotate(-PI/2)
+		mediciones_2=VGroup(med_ia,med_ib,med_iza,med_izb)
+
+		conjunto_pos_cuadrado=VGroup(cuadro,t1,t2,t3,t4,cuadrado_a,cuadrado_b,mediciones_2)
+		conjunto_pos_cuadrado.to_edge(RIGHT,buff=1.7)
+		self.conjunto_pos_cuadrado=conjunto_pos_cuadrado
+
+		self.mediciones_2=mediciones_2
+
+		self.cuadrado_a=cuadrado_a
+		self.cuadrado_b=cuadrado_b
+
+	def tran_pre_pos_cuadrado(self):
+		self.play(
+			ReplacementTransform(
+					self.conjunto_pre_cuadrado[0].copy(),self.conjunto_pos_cuadrado[0],
+				),run_time=1
+			)
+		self.play(
+					*[ReplacementTransform(
+						self.conjunto_pre_cuadrado[i].copy(),self.conjunto_pos_cuadrado[i],
+						)for i in range(1,5)],run_time=1
+				)
+		self.play(*[GrowFromCenter(objeto)for objeto in [*self.mediciones_2]],run_time=1)
+		self.play(DrawBorderThenFill(self.cuadrado_c),DrawBorderThenFill(self.conjunto_pos_cuadrado[-3]),DrawBorderThenFill(self.conjunto_pos_cuadrado[-2]),run_time=1)
+
+
+		t_a2=Formula("a^2",color=WHITE).move_to(self.cuadrado_a)
+		t_b2=Formula("b^2",color=WHITE).move_to(self.cuadrado_b)
+		t_c2=Formula("c^2",color=WHITE).move_to(self.cuadrado_c)
+
+		self.play(*[Write(t_)for t_ in [t_a2,t_b2,t_c2]])
+
+		teorema=Formula("c^2","=","a^2","+","b^2",color=BLUE).to_edge(DOWN)
+		self.play(
+					*[ReplacementTransform(
+						t_.copy()[:],r_
+						)for t_,r_ in zip([t_a2,t_b2,t_c2],[teorema[2],teorema[-1],teorema[0]])],
+					Write(teorema[1]),Write(teorema[-2]),run_time=1
+				)
+		self.wait()
+		self.play(
+			self.titulo.shift,UP*3,
+			teorema.shift,DOWN*3,
+			self.conjunto_pos_cuadrado.shift,RIGHT*7,
+			self.conjunto_pre_cuadrado.shift,LEFT*7,
+			VGroup(t_a2,t_b2).shift,RIGHT*7,
+			t_c2.shift,LEFT*5,
+			self.cuadrado_c.shift,LEFT*7,
+			)
+
+class Chat(Scene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        conversation = Conversation(self)
+        self.add_sound("efectos_sonido/send_message",gain=-5)
+        conversation.add_bubble("Qué ventajas tiene?")
+        self.wait(1.5)
+        self.add_sound("efectos_sonido/notification1",gain=-20)
+        conversation.add_bubble("$-$Es software libre.\\\\ $-$Funciona en computadoras antiguas.\\\\ $-$Aprendes a programar.\\\\ $-$Funciona en Windows, Mac y GNU/Linux.")
+        self.wait(3)
+        self.add_sound("efectos_sonido/send_message",gain=-5)
+        conversation.add_bubble("Donde puedo aprender gratis?")
+        self.wait(1.5) 
+        self.add_sound("efectos_sonido/notification1",gain=-20)
+        conversation.add_bubble("En youtube busca\\\\``{\\tt tutorial de manim en español}''")
+        self.wait(2) 
+        self.add_sound("efectos_sonido/send_message",gain=-5)
+        conversation.add_bubble("Hay clases particulares?")
+        self.wait(1.5)
+        self.add_sound("efectos_sonido/notification1",gain=-20)
+        conversation.add_bubble("Sí, manda inbox a {\\tt Alexander VZ} o\\\\ Whatsapp: 5513374414\\\\ Envía mensaje para más info.")
+        self.wait(3)
+        self.add_sound("efectos_sonido/send_message",gain=-5)
+        conversation.add_bubble("Gracias! :D")
+        self.wait(1.5)
+        self.play(FadeOut(conversation.dialog[:]))
+        self.wait()
+
+class Superficies(ThreeDScene):
+	def construct(self):
+		self.axes = ThreeDAxes()
+		cylinder = ParametricSurface(
+		    lambda u, v: np.array([
+		        np.cos(TAU * v),
+		        np.sin(TAU * v),
+		        2 * (1 - u)
+		    ]),
+		    resolution=(6, 32)).fade(0.5)
+		paraboloide = ParametricSurface(
+		    lambda u, v: np.array([
+		        np.cos(v)*u,
+		        np.sin(v)*u,
+		        u**2
+		    ]),v_max=TAU,
+		    checkerboard_colors=[PURPLE_D, PURPLE_E],
+		    resolution=(10, 32)).scale(2)
+		phi=2
+		hiper_para = ParametricSurface(
+		    lambda u, v: np.array([
+		        u,
+		        v,
+		        u**2-v**2
+		    ]),v_min=-phi,v_max=phi,u_min=-phi,u_max=phi,checkerboard_colors=[BLUE_D, BLUE_E],
+		    resolution=(15, 32)).scale(1)
+		phi=2
+		cono = ParametricSurface(
+		    lambda u, v: np.array([
+		        u*np.cos(v),
+		        u*np.sin(v),
+		        u
+		    ]),v_min=0,v_max=TAU,u_min=-phi,u_max=phi,checkerboard_colors=[GREEN_D, GREEN_E],
+		    resolution=(15, 32)).scale(1)
+		phi=2
+		hip_una_hoja = ParametricSurface(
+		    lambda u, v: np.array([
+		        np.cosh(u)*np.cos(v),
+		        np.cosh(u)*np.sin(v),
+		        np.sinh(u)
+		    ]),v_min=0,v_max=TAU,u_min=-phi,u_max=phi,checkerboard_colors=[YELLOW_D, YELLOW_E],
+		    resolution=(15, 32)).scale(1)
+		elipsoide=ParametricSurface(
+		    lambda u, v: np.array([
+		        1*np.cos(u)*np.cos(v),
+		        2*np.cos(u)*np.sin(v),
+		        0.5*np.sin(u)
+		    ]),v_min=0,v_max=TAU,u_min=-PI/2,u_max=PI/2,checkerboard_colors=[TEAL_D, TEAL_E],
+		    resolution=(15, 32)).scale(2)
+		sphere = ParametricSurface(
+		    lambda u, v: np.array([
+		        1.5*np.cos(u)*np.cos(v),
+		        1.5*np.cos(u)*np.sin(v),
+		        1.5*np.sin(u)
+		    ]),v_min=0,v_max=TAU,u_min=-PI/2,u_max=PI/2,checkerboard_colors=[RED_D, RED_E],
+		    resolution=(15, 32)).scale(2)
+		curva1=ParametricFunction(
+                lambda u : np.array([
+		        1.2*np.cos(u),
+		        1.2*np.sin(u),
+		        u/2
+		    ]),color=RED,t_min=-TAU,t_max=TAU,
+            )
+		curva2=ParametricFunction(
+                lambda u : np.array([
+		        1.2*np.cos(u),
+		        1.2*np.sin(u),
+		        u
+		    ]),color=RED,t_min=-TAU,t_max=TAU,
+            )
+		#sphere.shift(IN)
+		question = TextMobject("Animaciones con funciones 3D.",color=WHITE)
+		question.set_width(FRAME_WIDTH - 3)
+		self.set_camera_orientation(phi=75 * DEGREES)
+		self.begin_ambient_camera_rotation()
+		self.add_fixed_in_frame_mobjects(question.scale(0.6))
+		question.to_corner(UL)
+		ul=underline(question)
+		self.add_fixed_in_frame_mobjects(ul)
+		self.play(Write(self.axes),Write(question),ShowCreation(ul))
+		ghost_sphere = sphere.copy()
+		pieces = self.get_ghost_surface(sphere)
+		random.shuffle(pieces.submobjects)
+		for piece in pieces:
+		    piece.save_state()
+		pieces.space_out_submobjects(2)
+		pieces.fade(1)
+
+		#self.add(ghost_sphere)
+		self.play(LaggedStart(Restore, pieces))
+		self.remove(pieces)
+		self.add(sphere)
+		self.wait(0.3)
+		#self.play(ReplacementTransform(pieces,sphere))
+		#self.wait()
+		#'''
+		self.play(ReplacementTransform(sphere,elipsoide))
+		self.wait()
+		self.play(ReplacementTransform(elipsoide,cono))
+		self.wait()
+		'''
+		self.play(ReplacementTransform(cono,hip_una_hoja))
+		self.wait()
+		self.play(ReplacementTransform(hip_una_hoja,hiper_para))
+		self.wait()
+		self.play(ReplacementTransform(hiper_para,paraboloide))
+		self.wait()
+		self.play(FadeOut(paraboloide))
+		self.add_foreground_mobjects(self.axes,question)
+		self.play(ShowCreation(curva1))
+		self.play(Transform(curva1,curva2,rate_func=there_and_back))
+		self.play(FadeOut(curva1))
+		#self.play(Transform(curva2,curva1))
+		
+		#'''
+
+	def get_ghost_surface(self, surface):
+		result = surface.copy()
+		#result.set_fill(RED_D, opacity=0.5)
+		#result.set_stroke(RED_E, width=0.5, opacity=0.5)
+		return result
