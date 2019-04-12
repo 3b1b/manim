@@ -1,0 +1,8 @@
+mkdir -p `kpsewhich --var-value=TEXMFHOME`
+cd `kpsewhich --var-value=TEXMFHOME`
+wget http://mirror.ctan.org/fonts/emerald.zip
+unzip emerald.zip
+cp -r emerald/. . && rm -rf emerald/
+rm emerald.zip
+updmap --enable Map emerald.map  -user
+texhash
