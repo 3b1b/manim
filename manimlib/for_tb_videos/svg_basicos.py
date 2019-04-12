@@ -552,6 +552,7 @@ class Medicion(VGroup):
         else:
             self.shift(direccion*self.buff)
         self.set_color(self.color)
+        self.tip_point_index = -np.argmin(self.get_all_points()[-1, :])
         
 
     def add_tips(self):
@@ -574,6 +575,7 @@ class Medicion(VGroup):
 
         lin2_1.rotate(self.ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
         lin2_2.rotate(-self.ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
+
 
         return self.add(lin1_1,lin1_2,lin2_1,lin2_2)
 
@@ -607,6 +609,48 @@ class Medicion(VGroup):
         ancho=texto.get_height()/2
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
+
+    def get_text(self, text,escala=1,buff=0.1,invert_dir=False,invert_texto=False,elim_rot=False,**moreargs):
+        linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
+        texto=TextMobject(text,**moreargs)
+        ancho=texto.get_height()/2
+        if invert_texto:
+            inv=PI
+        else:
+            inv=0
+        if elim_rot:
+            texto.scale(escala).move_to(self)
+        else:
+            texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+            texto.rotate(inv)
+        if invert_dir:
+            inv=-1
+        else:
+            inv=1
+        texto.shift(self.direccion*(buff+1)*ancho*inv)
+        return texto
+
+    def get_tex(self, tex,escala=1,buff=0.1,invert_dir=False,invert_texto=False,elim_rot=False,**moreargs):
+        linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
+        texto=TexMobject(texto,**moreargs)
+        ancho=texto.get_height()/2
+        if invert_texto:
+            inv=PI
+        else:
+            inv=0
+        if elim_rot:
+            texto.scale(escala).move_to(self)
+        else:
+            texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+            texto.rotate(inv)
+        if invert_dir:
+            inv=-1
+        else:
+            inv=1
+        texto.shift(self.direccion*(buff+1)*ancho)
+        return texto
+
+
 
 class Grilla(VGroup):
     CONFIG = {
@@ -831,10 +875,8 @@ class ParteDomo(VMobject):
         self.add_control_points(a1_to_a2_points[1:])
         self.add_control_points(arc2.points[1:])
         self.add_control_points(a2_to_a1_points[1:])
-        
+
 class underline(Line):
     def __init__(self,texto,buff=0.07,**kwargs):
         Line.__init__(self,texto.get_corner(DL),texto.get_corner(DR),**kwargs)
         self.shift(DOWN*buff)
-
-
