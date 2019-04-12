@@ -1,5 +1,6 @@
 from big_ol_pile_of_manim_imports import *
-
+from proy_ext.formulas_txt import formulas
+from proy_ext.formulas_txt import CheckFormulaByTXT
 
 class BielaManivelaCorredera(Scene):
 	CONFIG={
@@ -90,6 +91,119 @@ class BielaManivelaCorredera(Scene):
 		punto_final=origen+RIGHT*d+UP*c
 		piston=Rectangle(color=color,height=1,witdh=1.5).set_fill(color,0.7).scale(0.7).move_to(origen+RIGHT*d+UP*c)
 		return piston
+
+class PatronHexagonos(Scene):
+	CONFIG={
+	"color_hexagonos":BLUE_C,
+	}
+	def construct(self):
+		hexagonos1=self.conjunto_hexagonos(6).scale(2)
+		hexagonos2=self.conjunto_hexagonos(6).scale(2)
+		hexagonos3=self.conjunto_hexagonos(6).scale(2)
+		hexagonos4=self.conjunto_hexagonos(6).scale(2)
+		VGroup(hexagonos1,hexagonos2).arrange_submobjects(RIGHT).move_to(ORIGIN)
+		VGroup(hexagonos3,hexagonos4).arrange_submobjects(DOWN).move_to(ORIGIN)
+		hexagonos3.shift(UP)
+		hexagonos4.shift(DOWN)
+		h1=VGroup(hexagonos1,hexagonos2,hexagonos3,hexagonos4).set_stroke(opacity=0.5)
+		h2=h1.copy().set_stroke(opacity=0.5)
+		VGroup(h1,h2).arrange_submobjects(RIGHT)
+
+		titulo=Texto("\\sc Que esta animación\\\\ no te engañe",color=WHITE,background_stroke_width=2).scale(2.5)
+
+
+
+		self.play(
+		*[LaggedStart(ShowCreationThenDestruction,
+			h,
+			run_time=4.5,
+			lag_ratio=0.7,
+			rate_func=lambda t:smooth(t*1.3,inflection=11))for h in h1],
+		*[LaggedStart(ShowCreationThenDestruction,
+			h,
+			run_time=4.5,
+			lag_ratio=0.7,
+			rate_func=lambda t:smooth(t*1.3,inflection=11))for h in h2],
+		Escribe_y_desvanece(titulo,run_time=7,rate_func=lambda t:there_and_back(1.1*t))
+		)
+
+	def conjunto_hexagonos(self,particiones,rotacion=PI/2,grosor_inicial=5,grosor_final=25):
+		hexagonos=VGroup()
+		for part in range(1,particiones+1):
+			hexagono=RegularPolygon(n=6,color=self.color_hexagonos).scale(part/particiones).rotate(rotacion)
+			gradiente_grosor=(grosor_inicial-grosor_final)/part
+			hexagono.set_stroke(None,grosor_inicial-gradiente_grosor)
+			hexagono.move_to(ORIGIN)
+			hexagonos.add(hexagono)
+		return hexagonos
+
+class Teclado(Scene):
+    CONFIG = {"include_sound": True,
+    "camera_config":{"background_color":BLACK}}
+    def construct(self):
+        self.wait()
+        texto=Texto("""
+     		\\tt No fué creada en \\\\
+     		{\\sc After Effects}\\\\
+     		\\tt ni similares.
+            """).set_stroke(None,0).set_fill(WHITE,0).scale(2).move_to(ORIGIN).set_color_by_gradient(WHITE,BLUE,PURPLE)
+        self.add(texto)
+        #'''
+        KeyBoard(self,texto,p=0.0656,time_random=0.0656)
+        self.wait(0.1)
+        self.play(Write(texto,rate_func=lambda t:smooth(1-t)))
+        self.wait()
+
+class CreadaPython3(Scene):
+	def construct(self):
+		texto=Texto("Fué hecha en\\\\ {\\tt PYTHON 3.7}!!!!\\\\ Con {\\it software libre}").scale(2.5)
+		self.play(
+			LaggedStart(GrowFromCenter,texto)
+			)
+		self.wait(1.7)
+		self.play(
+			LaggedStart(FadeOutAndShiftDown,texto)
+			)
+		self.wait(0.3)
+
+class CreadoPor(Scene):
+	def construct(self):
+		texto=Texto("Esta herramienta fue creada por:",color=WHITE).to_edge(UP)
+		grant=ImageMobject("grant",height=5)
+		i3b1b=ImageMobject("3b1b",height=5)
+		imagenes=Mobject(grant,i3b1b).arrange_submobjects(RIGHT).next_to(texto,DOWN)
+		t_grant=Texto("Grant Sanderson / 3Blue1Brown",color=WHITE).next_to(imagenes,DOWN)
+
+		self.play(Write(texto),FadeIn(imagenes),Write(t_grant))
+		self.wait(1.5)
+		cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
+		self.add_foreground_mobject(cuadro_negro)
+		self.play(cuadro_negro.set_fill,None,1)
+
+class QuePuedoHacer(Scene):
+	def construct(self):
+		texto=VGroup(
+			Texto("¿Qué animaciones"),
+			Texto("se pueden hacer?")
+			).arrange_submobjects(DOWN).scale(2.5).fade(1)
+		textoc=texto.copy()
+		textoc[0].shift(FRAME_WIDTH*LEFT+textoc[0].get_width()*LEFT)
+		textoc[1].shift(FRAME_WIDTH*RIGHT+textoc[1].get_width()*RIGHT)
+		self.play(
+			textoc[0].fade,0,
+			textoc[0].move_to,texto[0],
+			textoc[1].fade,0,
+			textoc[1].move_to,texto[1],
+			run_time=1.8
+			)
+		self.wait(1.3)
+		self.play(
+			textoc[0].fade,1,
+			textoc[0].shift,FRAME_WIDTH*RIGHT+textoc[1].get_width()*RIGHT,
+			textoc[1].fade,1,
+			textoc[1].shift,FRAME_WIDTH*LEFT+textoc[0].get_width()*LEFT,
+			run_time=1.8
+			)
 
 class EscenaMusica(MusicalScene):
     def construct(self):
@@ -278,6 +392,8 @@ class EjemploGrafica(GraphScene):
     CONFIG = {
         "y_max": 8,
         "y_axis_height": 5,
+        "default_riemann_start_color": PINK,
+        "default_riemann_end_color": PINK,
     }
 
     def construct(self):
@@ -286,22 +402,22 @@ class EjemploGrafica(GraphScene):
         #self.otra_definicion()
 
     def add_title(self):
-        title = self.title = TextMobject("\\underline{\\sc Visualizaci\\'on de la Derivada}")
+        title = self.title = TextMobject("Crear gráficas y animarlas.")
         title.to_edge(UP)
-        self.add_foreground_mobject(title)
+        
         h_line = Line(LEFT, RIGHT)
         h_line.set_height(FRAME_WIDTH - 2 * LARGE_BUFF)
         h_line.next_to(title, DOWN)
         h_line.set_stroke(WHITE,3)
         title.to_edge(UP+LEFT)
         title.shift(RIGHT)
-
-        self.add(title)
+        self.title=title
         self.lin_h = h_line
 
     def show_function_graph(self):
-        self.setup_axes()
-
+        ul=underline(self.title)
+        self.setup_axes(animate=True,add_anims=[Escribe(self.title),ShowCreation(ul)])
+        self.add_foreground_mobjects(self.title,ul)
         def func(x):
             return 0.1 * (x + 3-5) * (x - 3-5) * (x-5) + 5
 
@@ -439,30 +555,20 @@ class EjemploGrafica(GraphScene):
             ShowCreation(graph),
         )
         # Animacion del punto a
+        self.add_foreground_mobject(graph_dot_p1)
+        self.add_foreground_mobject(graph_dot_p2)
         self.play(
             DrawBorderThenFill(input_triangle_p1),
             Write(x_label_p1),
             ShowCreation(v_line_p1),
             GrowFromCenter(graph_dot_p1),
-            run_time=0.5
-        )
-        self.add_foreground_mobject(graph_dot_p1)
-        self.play(
             ShowCreation(h_line_p1),
             Write(output_label_p1),
             DrawBorderThenFill(output_triangle_p1),
-            run_time=0.5
-        )
-        # Animacion del punto b
-        self.play(
             DrawBorderThenFill(input_triangle_p2),
             Write(x_label_p2),
             ShowCreation(v_line_p2),
             GrowFromCenter(graph_dot_p2),
-            run_time=0.5
-        )
-        self.add_foreground_mobject(graph_dot_p2)
-        self.play(
             ShowCreation(h_line_p2),
             Write(output_label_p2),
             DrawBorderThenFill(output_triangle_p2),
@@ -493,14 +599,6 @@ class EjemploGrafica(GraphScene):
             df_line_color= TT_FONDO_VERDE,
             secant_line_color = RED,
         )
-        grupo_secantep = self.get_secant_slope_group(
-            1.5, graph, dx = 2,
-            df_label = None,
-            dx_label = None,
-            dx_line_color = PURPLE,
-            df_line_color=ORANGE,
-            secant_line_color = RED,
-        )
         start_dx = grupo_secante.kwargs["dx"]
         start_x = grupo_secante.kwargs["x"]
         def update_func_0(group, alpha):
@@ -522,7 +620,6 @@ class EjemploGrafica(GraphScene):
             Transform(group, new_group).update(1)
             return group
 
-        self.play(FadeIn(grupo_secante))
         self.add(
             input_triangle_update_p2,
             graph_dot_update_p2,
@@ -530,9 +627,8 @@ class EjemploGrafica(GraphScene):
             h_line_update_p2,
             output_triangle_update_p2,
         )
-        self.play(
-                
-                )
+        self.play(FadeIn(grupo_secante))
+
         self.play(
             UpdateFromAlphaFunc(
                 grupo_secante, update_func_1,
@@ -577,38 +673,250 @@ class EjemploGrafica(GraphScene):
             output_triangle_p1,
             output_label_p1,
         )
-        self.wait()
-
 
         kwargs = {
             "x_min" : 2,
             "x_max" : 8,
             "fill_opacity" : 0.75,
             "stroke_width" : 0.25,
+            #"start_color":PURPLE,
+            #"end_color":ORANGE,
         }
         self.graph=graph
         iteraciones=6
 
 
         self.rect_list = self.get_riemann_rectangles_list(
-            graph, iteraciones, **kwargs
+            graph, iteraciones,start_color=PURPLE,end_color=ORANGE, **kwargs
         )
         flat_rects = self.get_riemann_rectangles(
-            self.get_graph(lambda x : 0), dx = 0.5, **kwargs
+            self.get_graph(lambda x : 0), dx = 0.5,start_color=invert_color(PURPLE),end_color=invert_color(ORANGE),**kwargs
         )
         rects = self.rect_list[0]
-        rects.save_state()
         self.transform_between_riemann_rects(
             flat_rects, rects, 
             replace_mobject_with_target_in_scene = True,
+            run_time=0.9
         )
+        for j in range(4,6):
+            for w in self.rect_list[j]:
+                    color=w.get_color()
+                    w.set_stroke(color,1.5)
         for j in range(1,6):
             self.transform_between_riemann_rects(
             self.rect_list[j-1], self.rect_list[j], dx=1,
             replace_mobject_with_target_in_scene = True,
+            run_time=0.9
             )
         self.wait()
         cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
         self.add_foreground_mobject(cuadro_negro)
         self.play(cuadro_negro.set_fill,None,1)
         self.wait()
+
+class ProcesosMatematicos(Scene):
+	def construct(self):
+		self.importar_formulas()
+		self.imprime_formula()
+		self.configurar_cambios()
+		self.conversion_formulas(n_paso=1,
+			cambios=self.conjunto_cambios[0],
+			fade=[10],
+			arco=-PI/2
+			)
+		self.conversion_formulas(n_paso=2,
+			cambios=self.conjunto_cambios[1],
+			write=[6,14],
+			pre_copias=[0],
+			pos_copias=[15]
+			)
+		self.conversion_formulas(n_paso=3,
+			cambios=self.conjunto_cambios[2],
+			pos_write=[10,	11,	13,	14,	15,	16,	18,	20,	28,	29,	31,	32,	33,	34,	36,	38],
+			)
+		self.conversion_formulas(n_paso=4,
+			cambios=self.conjunto_cambios[3],
+			)
+		self.conversion_formulas(n_paso=5,
+			cambios=self.conjunto_cambios[4],
+			fade=[20,27],
+			pre_copias=[29],
+			pos_copias=[28]
+			)
+		self.conversion_formulas(n_paso=6,
+			cambios=self.conjunto_cambios[5],
+			fade=[19],
+			)
+		self.conversion_formulas(n_paso=7,
+			cambios=self.conjunto_cambios[6],
+			pos_write=[25,28],
+			)
+		self.conversion_formulas(n_paso=8,
+			cambios=self.conjunto_cambios[7],
+			pos_write=[32,26],
+			)
+		self.conversion_formulas(n_paso=9,
+			cambios=self.conjunto_cambios[8],
+			)
+		self.conversion_formulas(n_paso=10,
+			cambios=self.conjunto_cambios[9],
+			pos_write=[0,	1,	16,	18,	20],
+			)
+		self.conversion_formulas(n_paso=11,
+			cambios=self.conjunto_cambios[10],
+			fade=[0,	1,	2,	12,	14]
+			)
+		self.conversion_formulas(n_paso=12,
+			cambios=self.conjunto_cambios[11],
+			)
+		self.conversion_formulas(n_paso=13,
+			cambios=self.conjunto_cambios[12],
+			fade=[25]
+			)
+		self.conversion_formulas(n_paso=14,
+			cambios=self.conjunto_cambios[13],
+			)
+		#
+		c1=SurroundingRectangle(self.formulas[14],buff=0.2)
+		c2=SurroundingRectangle(self.formulas[14],buff=0.2)
+		c2.rotate(PI)
+		self.play(ShowCreationThenDestruction(c1),ShowCreationThenDestruction(c2))
+		self.wait(2)
+
+	def importar_formulas(self):
+		self.formulas=formulas
+
+
+	def imprime_formula(self):
+		self.play(Write(self.formulas[0]))
+
+	def configurar_cambios(self):
+		self.conjunto_cambios=[
+		#1
+		[[
+						(	0,	1,	3,	4,	5,	6,	7,	8,	9	),
+						(	0,	1,	3,	4,	5,	6,	8,	9,	7	)
+		]],
+		#2
+		[[
+						(	0,		1,	3,	4,	5,	6,	7,	8,	9	),
+						(	7,		0,	2,	3,	5,	9,	10,	11,	13	)
+		]],
+		#3
+		[[
+			(	0,	2,	3,	5,	6,	7,	9,	10,	11,	13,	14,	15	),
+			(	0,	2,	3,	5,	6,	7,	9,	21,	22,	24,	25,	26	)
+		]],
+		#4
+		[[
+				(	0,	2,	10,	11,	13,	14,	15,	16,	18,	20,	21,	22,	24,	25,	26,	28,	29,	31,	32,	33,	34,	36,	38	,5,6,7,9,3),
+				(	1,	11,	2,	0,	4,	5,	6,	7,	9,	11,	12,	13,	15,	16,	17,	19,	20,	22,	23,	24,	25,	27,	29	,4,5,7,1,2)
+		]],
+		#5
+		[[
+		(	0,	1,	2,	4,	5,	6,	7,	9,	11,	12,	13,	15,	16,	17,	19,	22,	23,	24,	25,	29),
+		(	0,	1,	2,	4,	5,	6,	7,	9,	11,	12,	13,	15,	16,	17,	19,	21,	24,	25,	26,	23)
+		]],
+		#6
+		[[
+			(	0,	1,	2,	4,	5,	6,	7,	9,	11,	12,	13,	15,	16,	17,	21,	23,	24,	25,	26,	28	),
+			(	0,	1,	2,	4,	5,	6,	7,	9,	11,	12,	23,	25,	26,	27,	14,	16,	17,	18,	19,	21	)
+		]],
+		#7
+		[[
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,		16,	17,	18,	19,		21,		23,		25,	26,	27	),
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,		16,	17,	18,	19,		21,		23,		26,	27,	29	)
+		]],
+		#8
+		[[
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,		16,	17,	18,	19,		21,		23,		25,	26,	27,	28,	29,	),
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,		16,	17,	18,	19,		21,		23,		25,	27,	28,	29,	30,	)
+		]],
+		#9
+		[[
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,		16,	17,	18,	19,		21,		23,		25,	26,	27,	28,	29,	30,		32,	),
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,		16,	21,	22,	23,		25,		17,		18,	19,	20,	21,	22,	23,		25,	)
+		]],
+		#10
+		[[
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,		16,	17,	18,	19,	20,	21,	22,	23,		25,	),
+			(	2,	3,	5,		6,	7,	8,	10,		12,		14,	15,		21,		22,	23,	24,	25,	26,	27,	30,	31,		32,	)
+		]],
+		#11
+		[[
+			(				3,		5,	6,	7,	8,		10,					15,	16,		18,		20,	21,	22,	23,	24,	25,	26,	27,			30,	31,	32,	),
+			(				0,		1,	3,	4,	5,		6,					8,	9,		10,		12,	14,	15,	16,	17,	18,	19,	20,			21,	24,	25,	)
+		]],
+		#12
+		[[
+			(	0,	1,		3,	4,	5,	6,		8,	9,	10,		12,		14,	15,	16,	17,	18,	19,	20,	21,			24,	25,	),
+			(	0,	2,		4,	5,	6,	7,		1,	9,	10,		12,		14,	15,	16,	17,	18,	19,	20,	21,			24,	25,	)
+		]],
+		#13
+		[[
+			(	0,	1,	2,		4,	5,	6,	7,		9,	10,		12,		14,	15,	16,	17,	18,	19,	20,	21,			24,	),
+			(	0,	1,	2,		4,	5,	6,	7,		9,	11,		12,		14,	15,	16,	17,	18,	20,	21,	22,			23,	)
+		]],
+		#14
+		[[
+			(	0,	1,	2,		4,	5,	6,	7,		9,		11,	12,		14,	15,	16,	17,	18,		20,	21,	22,	23,	),
+			(	0,	1,	3,		4,	16,	17,	18,		5,		6,	7,		9,	10,	11,	12,	13,		15,	16,	17,	18,	)
+		]]
+		]
+
+	def conversion_formulas(self,
+							pre_write=[],
+							pos_write=[],
+							pre_fade=[],
+							pos_fade=[],
+							fade=[],
+							write=[],
+							cambios=[[]],
+							arco=0,
+							n_paso=0,
+							pre_copias=[],
+							pos_copias=[],
+							tiempo_pre_cambios=0,
+							tiempo_cambios_final=0,
+							run_time=0.8,
+							tiempo_final=0,
+							pre_orden=["w","f"],
+							pos_orden=["w","f"]
+							):
+		formula_copia=[]
+		for c in pre_copias:
+			formula_copia.append(self.formulas[n_paso-1][c].copy())
+
+		for ani_ in pre_orden:
+			if len(pre_write)>0 and ani_=="w":
+				self.play(*[Write(self.formulas[n_paso-1][w])for w in pre_write])
+			if len(pre_fade)>0 and ani_=="f":
+				self.play(*[FadeOut(self.formulas[n_paso-1][w])for w in pre_fade])
+
+		self.wait(tiempo_pre_cambios)
+
+		for pre_ind,post_ind in cambios:
+			self.play(*[
+				ReplacementTransform(
+					self.formulas[n_paso-1][i],self.formulas[n_paso][j],
+					path_arc=arco
+					)
+				for i,j in zip(pre_ind,post_ind)
+				],
+				*[FadeOut(self.formulas[n_paso-1][f])for f in fade if len(fade)>0],
+				*[Write(self.formulas[n_paso][w])for w in write if len(write)>0],
+				*[ReplacementTransform(formula_copia[j],self.formulas[n_paso][f])
+				for j,f in zip(range(len(pos_copias)),pos_copias) if len(pre_copias)>0
+				],
+				run_time=run_time
+			)
+
+		self.wait(tiempo_cambios_final)
+
+		for ani_ in pos_orden:
+			if len(pos_write)>0 and ani_=="w":
+				self.play(*[Write(self.formulas[n_paso][w])for w in pos_write])
+			if len(pos_fade)>0 and ani_=="f":
+				self.play(*[FadeOut(self.formulas[n_paso][w])for w in pos_fade])
+
+		self.wait(tiempo_final)
