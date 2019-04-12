@@ -81,7 +81,7 @@ class MusicalScene(Scene):
                 teclado.add(self.tec_rel(prop,teclado[-1],opac))
             for tec in ["N","B","N","B","B0","N","B","N","B","N","B"]:
                 if tec=="N":
-                    teclado.add(self.tec_sharp(prop,teclado[-1],1))
+                    teclado.add(self.tec_sharp(prop,teclado[-1],opac))
                 if tec=="B":
                     teclado.add(self.tec_rel(prop,teclado[-2],opac))
                 if tec=="B0":
@@ -162,14 +162,20 @@ class MusicalScene(Scene):
     def mandar_frente_sostenido(self,octavas,teclado):
         for i in self.definir_teclas(octavas)[0]:
             self.add_foreground_mobject(teclado[i])
-        for i in self.definir_teclas(octavas)[1]:
-            self.bring_to_back(teclado[i])
+        #for i in self.definir_teclas(octavas)[1]:
+        #    self.bring_to_back(teclado[i])
+
+    def mandar_frente_sostenido_parcial(self,octavas,teclado):
+        for i in self.definir_teclas(octavas)[0]:
+            self.add_foreground_mobject(teclado[i])
+        #for i in self.definir_teclas(octavas)[1]:
+        #    self.bring_to_back(teclado[i])
 
     def mandar_frente_sostenido_piano(self,teclado):
         for i in self.definir_teclas_piano()[0]:
             self.add_foreground_mobject(teclado[i])
-        for i in self.definir_teclas_piano()[1]:
-            self.bring_to_back(teclado[i])
+        #for i in self.definir_teclas_piano()[1]:
+        #    self.bring_to_back(teclado[i])
 
     def importar_partitura(self):
         pass
