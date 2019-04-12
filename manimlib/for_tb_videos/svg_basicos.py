@@ -831,3 +831,10 @@ class ParteDomo(VMobject):
         self.add_control_points(a1_to_a2_points[1:])
         self.add_control_points(arc2.points[1:])
         self.add_control_points(a2_to_a1_points[1:])
+        
+class underline(Line):
+    def __init__(self,texto,buff=0.07,**kwargs):
+        Line.__init__(self,texto.get_corner(DL),texto.get_corner(DR),**kwargs)
+        self.shift(DOWN*buff)
+
+
