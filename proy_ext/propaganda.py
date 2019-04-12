@@ -1,6 +1,6 @@
 from big_ol_pile_of_manim_imports import *
-from proy_ext.formulas_txt import formulas
-from proy_ext.formulas_txt import CheckFormulaByTXT
+from proy_ext.formulas_txt.formulas import formulas
+from proy_ext.formulas_txt.formulas import CheckFormulaByTXT
 
 class BielaManivelaCorredera(Scene):
 	CONFIG={
