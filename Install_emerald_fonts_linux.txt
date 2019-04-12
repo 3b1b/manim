@@ -6,3 +6,5 @@ cp -r emerald/. . && rm -rf emerald/
 rm emerald.zip
 updmap --enable Map emerald.map  -user
 texhash
+
+http://www.deanbodenham.com/learn/beamer-installing-emerald.html
