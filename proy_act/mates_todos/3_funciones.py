@@ -1,5 +1,5 @@
 from big_ol_pile_of_manim_imports import *
-
+#Cambiar el color de Texto en tex_mobject.py
 h_resulution=420
 v_frame_rate=12
 video_parameters=[
