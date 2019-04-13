@@ -350,4 +350,25 @@ class Formula(TexMobject):
 class Tikz(TikzMobject):
 	pass
 
+class TextoB(TextMobject):
+    CONFIG={
+    "color": WHITE,
+    }
+
+class TextoN(TextMobject):
+    CONFIG={
+    "color": BLACK,
+    }
+
+class FormulaB(TexMobject):
+    CONFIG={
+    "color": WHITE,
+    }  
+
+class FormulaN(TexMobject):
+    CONFIG={
+    "color": BLACK,
+    }  
+
+
 
