@@ -35,6 +35,31 @@ python3 -m manim example_scenes.py SquareToCircle -pl
     pip3 install -r requirements.txt
     python3 manim.py example_scenes.py SquareToCircle -pl
     ```
+### Directly (Linux)
+1. Install system requirements
+Start by downloading LaTex [source](https://miktex.org/download).
+    ```
+    sudo apt-get update
+    sudo apt-get install ffmpeg sox libcairo2-dev miktex virtualenv
+    ```
+2. Create a python environnement
+    ``` 
+    virtualenv -p python3 your_environnement
+    source your_environnement/bin/activate
+    cd your_environnement
+    git clone https://github.com/3b1b/manim.git
+    ```
+3. Install the remaining python package
+    ```
+    cd manim
+    pip3 install -r requirements.txt
+    ```
+4. Test it !
+    ```
+    python3 -m manim example_scenes.py SquareToCircle -pl
+    ```
+
+
 
 ### Using `virtualenv` and `virtualenvwrapper`
 After installing `virtualenv` and `virtualenvwrapper`
