@@ -15,3 +15,15 @@ Las principales modificaciones que tiene esta versión de Manim son:
 
 # Indicaciones.
 Probablemente te falte instalar ```pydub``` y ```pyreadline```, instálalo usando pip.
+
+Si usas Mac o GNU/Linux, seguramente tendrás problemas con las fórmulas TeX porque uso la paqueterìa emerald, así que te recomiendo que las instales con las siguientes instrucciones (funciona igual para GNU/Linux y Mac, necesitas tener instalado wget):
+```
+mkdir -p `kpsewhich --var-value=TEXMFHOME`
+cd `kpsewhich --var-value=TEXMFHOME`
+wget http://mirror.ctan.org/fonts/emerald.zip
+unzip emerald.zip
+cp -r emerald/. . && rm -rf emerald/
+rm emerald.zip
+updmap --enable Map emerald.map  -user
+texhash
+```
