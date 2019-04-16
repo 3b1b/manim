@@ -493,13 +493,15 @@ class Scene(Container):
 
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        dt = 1 / self.camera.frame_rate
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.should_update_mobjects():
             time_progression = self.get_wait_time_progression(duration, stop_condition)
             # TODO, be smart about setting a static image
             # the same way Scene.play does
+            last_t = 0
             for t in time_progression:
+                dt = t - last_t
+                last_t = t
                 self.update_mobjects(dt)
                 self.update_frame()
                 self.add_frames(self.get_frame())
@@ -511,6 +513,7 @@ class Scene(Container):
             return self
         else:
             self.update_frame()
+            dt = 1 / self.camera.frame_rate
             n_frames = int(duration / dt)
             frame = self.get_frame()
             self.add_frames(*[frame] * n_frames)
