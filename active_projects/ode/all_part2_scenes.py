@@ -38,6 +38,7 @@ ALL_SCENE_CLASSES = [
     ShowCubeFormation,
     CompareInputsOfGeneralCaseTo1D,
     ContrastXChangesToTChanges,
+    ShowPartialDerivativeSymbols,
     TransitionToTempVsTime,
     ShowNewton,
     ShowCupOfWater,

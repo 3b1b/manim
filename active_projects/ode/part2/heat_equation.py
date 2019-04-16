@@ -1023,6 +1023,7 @@ class ContrastXChangesToTChanges(TalkThrough1DHeatGraph):
         plane = self.input_plane
         plane_copy = plane.copy()
         plane_copy.set_color(BLUE_E)
+        plane_copy.shift(SMALL_BUFF * 0.5 * OUT)
 
         plane_copy1 = plane_copy.copy()
         plane_copy1.stretch(0.01, 1, about_edge=DOWN)
