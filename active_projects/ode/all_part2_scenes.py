@@ -37,6 +37,7 @@ ALL_SCENE_CLASSES = [
     TalkThrough1DHeatGraph,
     ShowCubeFormation,
     CompareInputsOfGeneralCaseTo1D,
+    ContrastXChangesToTChanges,
     TransitionToTempVsTime,
     ShowNewton,
     ShowCupOfWater,

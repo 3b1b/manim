@@ -539,6 +539,8 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             (5, 0.3),
             (7, 0.2),
         ],
+        "surface_resolution": 20,
+        "graph_slice_step": 0.5,
     }
 
     def construct(self):
@@ -777,7 +779,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         t_max = 10
 
         axes_copy = axes.deepcopy()
-        original_axes = self.axes
+        self.original_axes = self.axes
 
         # Set rod final state
         final_graph = self.get_graph(t_max)
@@ -808,7 +810,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         t_axis.rotate(90 * DEGREES, UP, about_point=origin)
 
         # New parts of graph
-        step = 0.25
+        step = self.graph_slice_step
         graph_slices = VGroup(*[
             self.get_graph(time=t).shift(
                 t * IN
@@ -826,7 +828,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             "u_max": self.graph_x_max,
             "v_min": t_min,
             "v_max": t_max,
-            "resolution": 20,
+            "resolution": self.surface_resolution,
         }
         input_plane = ParametricSurface(
             lambda x, t: np.array([
@@ -854,7 +856,8 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             **surface_config,
         )
         surface.set_style(
-            fill_opacity=0,
+            fill_opacity=0.1,
+            fill_color=LIGHT_GREY,
             stroke_width=0.5,
             stroke_color=WHITE,
             stroke_opacity=0.5,
@@ -932,12 +935,12 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         self.orient_mobject_for_3d(final_rod)
         final_rod.shift(10 * UP)
         kw = {"run_time": 10, "rate_func": linear}
+        self.rod.save_state()
         self.play(
             ApplyMethod(t_tracker.set_value, 10, **kw),
             Transform(self.rod, final_rod, **kw),
             ApplyMethod(slicing_plane.shift, 10 * UP, **kw),
         )
-        graph.clear_updaters()
         self.wait()
 
         self.set_variables_as_attrs(
@@ -946,8 +949,8 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
             surface,
             graph_slices,
             slicing_plane,
+            t_tracker,
         )
-        self.axes = original_axes
 
     #
     def get_graph(self, time=0):
@@ -989,29 +992,200 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         return mob
 
 
-class TransitionToTempVsTime(TalkThrough1DHeatGraph):
+class ContrastXChangesToTChanges(TalkThrough1DHeatGraph):
+    CONFIG = {
+        # "surface_resolution": 5,
+        # "graph_slice_step": 1,
+    }
+
     def construct(self):
+        self.catchup_with_last_scene()
+        self.emphasize_dimensions_of_input_space()
+        self.reset_time_to_zero()
+
+        self.show_changes_with_x()
+        self.show_changes_with_t()
+
+    def catchup_with_last_scene(self):
         self.force_skipping()
 
-        # super().construct()
         self.add_axes()
         self.add_graph()
         self.add_rod()
 
-        # self.emphasize_graph()
-        # self.emphasize_rod()
         self.rod_word = Point()
         self.show_x_axis()
-        # self.show_changes_over_time()
         self.show_surface()
 
         self.revert_to_original_skipping_status()
 
-        axes = self.axes
+    def emphasize_dimensions_of_input_space(self):
+        plane = self.input_plane
+        plane_copy = plane.copy()
+        plane_copy.set_color(BLUE_E)
+
+        plane_copy1 = plane_copy.copy()
+        plane_copy1.stretch(0.01, 1, about_edge=DOWN)
+        plane_copy0 = plane_copy1.copy()
+        plane_copy0.stretch(0, 0, about_edge=LEFT)
+
+        words = TextMobject("2d input\\\\space")
+        words.scale(2)
+        words.move_to(plane.get_center() + SMALL_BUFF * OUT)
+
+        self.play(
+            Write(words),
+            self.camera.phi_tracker.set_value, 60 * DEGREES,
+            self.camera.theta_tracker.set_value, -95 * DEGREES,
+            run_time=1
+        )
+        self.play(
+            ReplacementTransform(plane_copy0, plane_copy1)
+        )
+        self.play(
+            ReplacementTransform(plane_copy1, plane_copy)
+        )
+        self.wait(2)
+        self.play(FadeOut(plane_copy))
+
+        self.input_plane_words = words
+
+    def reset_time_to_zero(self):
+        self.play(
+            self.t_tracker.set_value, 0,
+            VFadeOut(self.slicing_plane),
+            Restore(self.rod),
+        )
+
+    def show_changes_with_x(self):
+        alpha_tracker = ValueTracker(0)
+        line = always_redraw(
+            lambda: self.get_tangent_line(
+                self.graph, alpha_tracker.get_value(),
+            )
+        )
+
+        self.stop_ambient_camera_rotation()
+        self.play(
+            ShowCreation(line),
+            FadeOut(self.input_plane_words),
+            self.camera.phi_tracker.set_value, 80 * DEGREES,
+            self.camera.theta_tracker.set_value, -90 * DEGREES,
+        )
+        self.play(
+            alpha_tracker.set_value, 0.425,
+            run_time=5,
+            rate_func=bezier([0, 0, 1, 1]),
+        )
+
+        # Show dx and dT
+        p0 = line.point_from_proportion(0.3)
+        p2 = line.point_from_proportion(0.7)
+        p1 = np.array([p2[0], *p0[1:]])
+        dx_line = DashedLine(p0, p1)
+        dT_line = DashedLine(p1, p2)
+        dx = TexMobject("dx")
+        dT = TexMobject("dT")
+        VGroup(dx, dT).scale(0.7)
+        VGroup(dx, dT).rotate(90 * DEGREES, RIGHT)
+        dx.next_to(dx_line, IN, SMALL_BUFF)
+        dT.next_to(dT_line, RIGHT, SMALL_BUFF)
+
+        self.play(
+            ShowCreation(dx_line),
+            FadeInFrom(dx, LEFT)
+        )
+        self.wait()
+        self.play(
+            ShowCreation(dT_line),
+            FadeInFrom(dT, IN)
+        )
+        self.wait()
+        self.play(*map(FadeOut, [
+            line, dx_line, dT_line, dx, dT,
+        ]))
+
+    def show_changes_with_t(self):
+        slices = self.graph_slices
+        slice_alpha = 0.075
+        graph = VMobject()
+        graph.set_points_smoothly([
+            gs.point_from_proportion(slice_alpha)
+            for gs in slices
+        ])
+        graph.color_using_background_image("VerticalTempGradient")
+        graph.set_shade_in_3d(True)
+
+        alpha_tracker = ValueTracker(0)
+        line = always_redraw(
+            lambda: self.get_tangent_line(
+                graph, alpha_tracker.get_value(),
+            )
+        )
+
+        self.play(
+            self.camera.theta_tracker.set_value, -10 * DEGREES,
+            self.camera.frame_center.shift, 5 * LEFT,
+        )
+
+        self.play(
+            ShowCreation(
+                graph.copy(),
+                remover=True
+            ),
+            VFadeIn(line),
+            ApplyMethod(
+                alpha_tracker.set_value, 1,
+                run_time=8,
+            )
+        )
+        self.add(graph)
+
+        self.begin_ambient_camera_rotation(-0.02)
+        self.camera.frame_center.add_updater(
+            lambda m, dt: m.shift(0.05 * dt * RIGHT)
+        )
+
+        self.play(FadeOut(line))
+        self.wait(30)  # Let rotate
+
+        self.t_graph = graph
+
+    #
+    def get_tangent_line(self, graph, alpha, d_alpha=0.001, length=2):
+        if alpha < 1 - d_alpha:
+            a1 = alpha
+            a2 = alpha + d_alpha
+        else:
+            a1 = alpha - d_alpha
+            a2 = alpha
+
+        p1 = graph.point_from_proportion(a1)
+        p2 = graph.point_from_proportion(a2)
+        line = Line(p1, p2, color=WHITE)
+        line.scale(
+            length / line.get_length()
+        )
+        line.move_to(p1)
+        return line
+
+
+class TransitionToTempVsTime(ContrastXChangesToTChanges):
+    CONFIG = {
+        # "surface_resolution": 5,
+        # "graph_slice_step": 1,
+    }
+
+    def construct(self):
+        self.catchup_with_last_scene()
+
+        axes = self.original_axes
         t_axis = self.t_axis
         y_axis = axes.y_axis
         x_axis = axes.x_axis
 
+        for mob in self.get_mobjects():
+            mob.clear_updaters()
         self.stop_ambient_camera_rotation()
         self.move_camera(
             phi=90 * DEGREES,
@@ -1030,8 +1204,9 @@ class TransitionToTempVsTime(TalkThrough1DHeatGraph):
                     self.graph,
                     self.x_numbers,
                     self.x_axis_label,
+                    self.t_graph,
                 )),
-                self.camera.frame_center.shift, 5 * LEFT,
+                self.camera.frame_center.move_to, 5 * LEFT,
             ]
         )
         self.play(
@@ -1045,12 +1220,32 @@ class TransitionToTempVsTime(TalkThrough1DHeatGraph):
         )
         self.wait()
 
+    def catchup_with_last_scene(self):
+        self.force_skipping()
+
+        self.add_axes()
+        self.add_graph()
+        self.add_rod()
+
+        self.rod_word = Point()
+        self.show_x_axis()
+        self.show_surface()
+
+        self.emphasize_dimensions_of_input_space()
+        self.reset_time_to_zero()
+
+        self.show_changes_with_x()
+        self.show_changes_with_t()
+
+        self.revert_to_original_skipping_status()
+
 
 class ShowNewtonsLawGraph(Scene):
     CONFIG = {
         "k": 0.2,
         "initial_water_temp": 80,
         "room_temp": 20,
+        "delta_T_color": YELLOW,
     }
 
     def construct(self):
@@ -1105,17 +1300,20 @@ class ShowNewtonsLawGraph(Scene):
         water_arrow = Vector(LEFT, color=WHITE)
         water_arrow.next_to(water_dot, RIGHT, SMALL_BUFF)
         water_words = TextMobject(
-            "Initial water temperature"
+            "Initial water\\\\temperature"
         )
+        water_words.scale(0.7)
         water_words.next_to(water_arrow, RIGHT)
 
         room_words = TextMobject("Room temperature")
+        room_words.scale(0.7)
         room_words.next_to(room_line, DOWN, SMALL_BUFF)
 
         self.play(
             FadeInFrom(water_dot, RIGHT),
             GrowArrow(water_arrow),
             Write(water_words),
+            run_time=1,
         )
         self.play(ShowCreation(room_line))
         self.play(FadeInFromDown(room_words))
@@ -1149,14 +1347,117 @@ class ShowNewtonsLawGraph(Scene):
             water_dot.get_center(),
             stroke_width=0,
         ))
-        brace = Brace(brace_line, RIGHT, SMALL_BUFF)
-        brace.add_updater(lambda b: b.match_height(brace_line))
-        brace.add_updater(lambda b: b.next_to(brace_line, RIGHT, SMALL_BUFF))
+        brace = always_redraw(
+            lambda: Brace(
+                brace_line, RIGHT, buff=SMALL_BUFF
+            )
+        )
 
-        self.add(graph)
+        delta_T = TexMobject("\\Delta T")
+        delta_T.set_color(self.delta_T_color)
+        delta_T.add_updater(lambda m: m.next_to(
+            brace, RIGHT, SMALL_BUFF
+        ))
+
+        self.add(brace_line)
+        self.play(
+            GrowFromCenter(brace),
+            Write(delta_T),
+        )
+        self.play(
+            ShowCreation(graph),
+            UpdateFromFunc(
+                water_dot,
+                lambda m: m.move_to(graph.get_end())
+            ),
+            run_time=10,
+            rate_func=linear,
+        )
+        self.wait()
+
+        self.graph = graph
+        self.brace = brace
+        self.delta_T = delta_T
 
     def show_equation(self):
-        pass
+        delta_T = self.delta_T
+
+        equation = TexMobject(
+            "{d ({\\Delta T}) \\over dt} = -k \\cdot {\\Delta T}",
+            tex_to_color_map={
+                "{\\Delta T}": self.delta_T_color,
+                "-k": WHITE,
+                "=": WHITE,
+            }
+        )
+        equation.to_corner(UR)
+        equation.shift(LEFT)
+
+        delta_T_parts = equation.get_parts_by_tex("\\Delta T")
+        eq_i = equation.index_of_part_by_tex("=")
+        deriv = equation[:eq_i]
+        prop_to = equation.get_part_by_tex("-k")
+        parts = VGroup(deriv, prop_to, delta_T_parts[1])
+
+        words = TextMobject(
+            "Rate of change",
+            "is proportional to",
+            "itself",
+        )
+        words.scale(0.7)
+        words.next_to(equation, DOWN)
+        colors = [BLUE, WHITE, YELLOW]
+        for part, word, color in zip(parts, words, colors):
+            part.word = word
+            word.set_color(color)
+            word.save_state()
+        words[0].next_to(parts[0], DOWN)
+
+        self.play(
+            TransformFromCopy(
+                VGroup(delta_T),
+                delta_T_parts,
+            ),
+            Write(VGroup(*filter(
+                lambda p: p not in delta_T_parts,
+                equation
+            )))
+        )
+
+        rects = VGroup()
+        for part in parts:
+            rect = SurroundingRectangle(
+                part,
+                color=part.word.get_color(),
+                buff=SMALL_BUFF,
+                stroke_width=2,
+            )
+            anims = [
+                ShowCreation(rect),
+                FadeIn(part.word),
+            ]
+            if part is parts[1]:
+                anims.append(Restore(words[0]))
+            self.play(*anims)
+            rects.add(rect)
+
+        self.play(FadeOut(rects, lag_ratio=0.2))
+
+        self.equation = equation
+        self.equation_words = words
 
     def talk_through_examples(self):
+        dot = self.water_dot
+        graph = self.graph
+
+        self.play(
+            MoveAlongPath(
+                dot, graph,
+                rate_func=lambda t: smooth(1 - t),
+                run_time=2,
+            )
+        )
+
+    #
+    def get_slope_line(self, graph, x):
         pass
