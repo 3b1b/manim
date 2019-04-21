@@ -367,6 +367,33 @@ class FourierOfTrebleClef(FourierOfPiSymbol):
         return path
 
 
+class FourierOfIP(FourierOfTrebleClef):
+    CONFIG = {
+        "file_name": "IP_logo2",
+        "height": 6,
+        "n_circles": 100,
+    }
+
+    # def construct(self):
+    #     path = self.get_path()
+    #     self.add(path)
+
+    def get_shape(self):
+        shape = SVGMobject(self.file_name)
+        return shape
+
+    def get_path(self):
+        shape = self.get_shape()
+        path = shape.family_members_with_points()[0]
+        path.add_line_to(path.get_start())
+        # path.make_smooth()
+
+        path.set_height(self.height)
+        path.set_fill(opacity=0)
+        path.set_stroke(WHITE, 0)
+        return path
+
+
 class FourierOfEighthNote(FourierOfTrebleClef):
     CONFIG = {
         "file_name": "EighthNote"

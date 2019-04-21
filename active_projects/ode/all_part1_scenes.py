@@ -5,7 +5,7 @@ from active_projects.ode.part1.phase_space import *
 from active_projects.ode.part1.wordy_scenes import *
 
 OUTPUT_DIRECTORY = "ode/part1"
-ALL_SCENE_CLASSES = [
+SCENES_IN_ORDER = [
     WhenChangeIsEasier,
     VectorFieldTest,
     IntroducePendulum,

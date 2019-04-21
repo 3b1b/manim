@@ -108,6 +108,7 @@ class TourOfDifferentialEquations(MovingCameraScene):
     def construct(self):
         self.add_title()
         self.show_thumbnails()
+        self.zoom_in_to_one_thumbnail()
         # self.show_words()
 
     def add_title(self):
@@ -166,9 +167,13 @@ class TourOfDifferentialEquations(MovingCameraScene):
         )
         self.play(Write(dots))
         self.wait()
+
+        self.thumbnails = thumbnails
+
+    def zoom_in_to_one_thumbnail(self):
         self.play(
             self.camera_frame.replace,
-            thumbnails[self.zoomed_thumbnail_index],
+            self.thumbnails[self.zoomed_thumbnail_index],
             run_time=3,
         )
         self.wait()
