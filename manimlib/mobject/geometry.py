@@ -1,6 +1,5 @@
 import warnings
 import numpy as np
-import operator as op
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
