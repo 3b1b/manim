@@ -748,6 +748,42 @@ class StrogatzMention(PiCreatureScene):
         return Mortimer().to_corner(DR)
 
 
+class Thumbnail(Scene):
+    def construct(self):
+        image = ImageMobject("HeatSurfaceExampleFlipped")
+        image.set_height(6.5)
+        image.to_edge(DOWN, buff=-SMALL_BUFF)
+        self.add(image)
+
+        equation = TexMobject(
+            "{\\partial {T} \\over \\partial {t}}", "=",
+            "\\alpha", "\\nabla^2 {T}",
+            tex_to_color_map={
+                "{t}": YELLOW,
+                "{T}": RED,
+            }
+        )
+        equation.scale(2)
+        equation.to_edge(UP)
+
+        self.add(equation)
+
+        Group(equation, image).shift(1.5 * RIGHT)
+
+        question = TextMobject("What is\\\\this?")
+        question.scale(2.5)
+        question.to_edge(LEFT)
+        arrow = Arrow(
+            question.get_top(),
+            equation.get_left(),
+            buff=0.5,
+            path_arc=-90 * DEGREES,
+        )
+        arrow.set_stroke(width=5)
+
+        self.add(question, arrow)
+
+
 class ShowNewton(Scene):
     def construct(self):
         pass
