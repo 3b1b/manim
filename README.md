@@ -24,7 +24,7 @@ python3 -m manim example_scenes.py SquareToCircle -pl
     ```sh
     pip3 install C:\path\to\wheel\pycairo‑1.18.0‑cp37‑cp37m‑win32.whl
     ```
-3. Install a LaTeX distibution. [MiKTeX](https://miktex.org/download) is recommended.
+3. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
 
 4. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
 
