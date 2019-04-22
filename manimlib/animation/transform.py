@@ -5,7 +5,7 @@ import numpy as np
 from manimlib.animation.animation import Animation
 from manimlib.constants import DEFAULT_POINTWISE_FUNCTION_RUN_TIME
 from manimlib.constants import OUT
-from manimlib.constants import PI
+from manimlib.constants import DEGREES
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
@@ -27,12 +27,6 @@ class Transform(Animation):
         super().__init__(mobject, **kwargs)
         self.target_mobject = target_mobject
         self.init_path_func()
-
-    def __str__(self):
-        return "{}To{}".format(
-            super().__str__(),
-            str(self.target_mobject)
-        )
 
     def init_path_func(self):
         if self.path_func is not None:
@@ -275,7 +269,7 @@ class ApplyComplexFunction(ApplyMethod):
 
 class CyclicReplace(Transform):
     CONFIG = {
-        "path_arc": PI / 2,
+        "path_arc": 90 * DEGREES,
     }
 
     def __init__(self, *mobjects, **kwargs):

@@ -122,6 +122,14 @@ class NumberLine(Line):
         )
         return interpolate(self.x_min, self.x_max, proportion)
 
+    def n2p(self, number):
+        """Abbreviation for number_to_point"""
+        return self.number_to_point(number)
+
+    def p2n(self, point):
+        """Abbreviation for point_to_number"""
+        return self.point_to_number(point)
+
     def get_unit_size(self):
         return (self.x_max - self.x_min) / self.get_length()
 

@@ -239,14 +239,11 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         if columns.get_width() > self.max_patron_width:
             columns.set_width(total_width - 1)
 
-        thanks.to_edge(RIGHT)
-        columns.next_to(thanks, DOWN, 3 * LARGE_BUFF)
+        thanks.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+        columns.next_to(underline, DOWN, buff=2)
 
         columns.generate_target()
-        columns.target.move_to(2 * DOWN, DOWN)
-        columns.target.align_to(
-            thanks, alignment_vect=RIGHT
-        )
+        columns.target.to_edge(DOWN, buff=2)
         vect = columns.target.get_center() - columns.get_center()
         distance = get_norm(vect)
         wait_time = 20

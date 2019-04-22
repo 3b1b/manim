@@ -7,7 +7,7 @@ from old_projects.clacks.solution2 import simple_scenes
 from old_projects.clacks.solution2 import wordy_scenes
 
 OUTPUT_DIRECTORY = "clacks/solution2"
-ALL_SCENE_CLASSES = [
+SCENES_IN_ORDER = [
     question.NameIntro,
     block_collision_scenes.IntroducePreviousTwoVideos,
     block_collision_scenes.PreviousTwoVideos,
