@@ -5,17 +5,30 @@
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
 ## Installation
-Manim runs on python 3.7. You can install the python requirements with
+Manim runs on python 3.7. You can install the Python requirements with
 `python3 -m pip install -r requirements.txt`. System requirements are
-[cairo](https://www.cairographics.org), [latex](https://www.latex-project.org),
-[ffmpeg](https://www.ffmpeg.org), and [sox](http://sox.sourceforge.net).
+[cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
 
 ### Directly
+Clone this repository and in that directory execute:
 ```sh
-git clone https://github.com/3b1b/manim.git
-cd manim
+# Install python requirements
 python3 -m pip install -r requirements.txt
+
+# Try it out
 python3 -m manim example_scenes.py SquareToCircle -pl
+```
+
+### Installing into your system
+For the previous "direct" method you always have to have this git repository. alternatively you can install it permanently in your system and run it on your own scene files:
+
+```sh
+# Inside repository - Install manim (also installs Python requirements)
+python3 -m pip install .
+
+# Now you don't need the repository anymore and can run it in other directories
+cd anywhere
+manim.py example_scenes.py SquareToCircle -pl
 ```
 
 ### Directly (Windows)
