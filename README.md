@@ -49,6 +49,14 @@ manim.py example_scenes.py SquareToCircle -pl
     python3 manim.py example_scenes.py SquareToCircle -pl
     ```
 
+
+## Anaconda Install
+
+* Install sox and latex as above. 
+* Create a conda environment using `conda env create -f environment.yml`
+* **WINDOWS ONLY** Install `pyreadline` via `pip install pyreadline`. 
+
+
 ### Using `virtualenv` and `virtualenvwrapper`
 After installing `virtualenv` and `virtualenvwrapper`
 ```sh
