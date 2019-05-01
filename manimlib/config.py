@@ -165,6 +165,7 @@ def get_configuration(args):
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
         "file_name": args.file_name,
+        "input_file_path": args.file,
     }
     if hasattr(module, "OUTPUT_DIRECTORY"):
         file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
