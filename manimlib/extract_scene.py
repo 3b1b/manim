@@ -64,8 +64,6 @@ def is_child_scene(obj, module):
         return False
     if obj == Scene:
         return False
-    if not obj.__module__.startswith(module.__name__):
-        return False
     return True
 
 
@@ -121,16 +119,13 @@ def get_scenes_to_render(scene_classes, config):
 
 
 def get_scene_classes_from_module(module):
-    if hasattr(module, "ALL_SCENE_CLASSES"):
-        return module.ALL_SCENE_CLASSES
-    else:
-        return [
-            member[1]
-            for member in inspect.getmembers(
-                module,
-                lambda x: is_child_scene(x, module)
-            )
-        ]
+    return [
+        member[1]
+        for member in inspect.getmembers(
+            module,
+            lambda x: is_child_scene(x, module)
+        )
+    ]
 
 
 def main(config):

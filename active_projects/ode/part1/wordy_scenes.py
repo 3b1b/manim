@@ -185,7 +185,7 @@ class ReasonForSolution(Scene):
         cu_group.arrange(DOWN, buff=2)
         group = VGroup(eq_word, s_word, cu_group)
         group.arrange(RIGHT, buff=2)
-        words = VGroup(eq_word, s_word, u_word, c_word)
+        # words = VGroup(eq_word, s_word, u_word, c_word)
 
         # Arrows
         arrows = VGroup(

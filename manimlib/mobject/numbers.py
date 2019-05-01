@@ -132,14 +132,14 @@ class DecimalNumber(VMobject):
     def get_value(self):
         return self.number
 
+    def increment_value(self, delta_t=1):
+        self.set_value(self.get_value() + delta_t)
+
 
 class Integer(DecimalNumber):
     CONFIG = {
         "num_decimal_places": 0,
     }
-
-    def increment_value(self):
-        self.set_value(self.get_value() + 1)
 
     def get_value(self):
         return int(np.round(super().get_value()))

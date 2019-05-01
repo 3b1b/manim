@@ -2,21 +2,60 @@
 [![Documentation Status](https://readthedocs.org/projects/manim/badge/?version=latest)](https://manim.readthedocs.io/en/latest/?badge=latest)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
 
-Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically.
+Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
 ## Installation
-Manim runs on python 3.7. You can install the python requirements with
+Manim runs on python 3.7. You can install the Python requirements with
 `python3 -m pip install -r requirements.txt`. System requirements are
-[cairo](https://www.cairographics.org), [latex](https://www.latex-project.org),
-[ffmpeg](https://www.ffmpeg.org), and [sox](http://sox.sourceforge.net).
+[cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
 
 ### Directly
+Clone this repository and in that directory execute:
 ```sh
-git clone https://github.com/3b1b/manim.git
-cd manim
+# Install python requirements
 python3 -m pip install -r requirements.txt
+
+# Try it out
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
+
+### Installing into your system
+For the previous "direct" method you always have to have this git repository. alternatively you can install it permanently in your system and run it on your own scene files:
+
+```sh
+# Inside repository - Install manim (also installs Python requirements)
+python3 -m pip install .
+
+# Now you don't need the repository anymore and can run it in other directories
+cd anywhere
+manim.py example_scenes.py SquareToCircle -pl
+```
+
+### Directly (Windows)
+1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
+2. Install Cairo. Download the wheel from https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo. For most users, ``pycairo‑1.18.0‑cp37‑cp37m‑win32.whl`` will do fine.
+    ```sh
+    pip3 install C:\path\to\wheel\pycairo‑1.18.0‑cp37‑cp37m‑win32.whl
+    ```
+3. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
+
+4. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
+
+5. Install the remaining Python packages. Make sure that ``pycairo==1.17.1`` is changed to ``pycairo==1.18.0`` in requirements.txt.
+    ```sh
+    git clone https://github.com/3b1b/manim.git
+    cd manim
+    pip3 install -r requirements.txt
+    python3 manim.py example_scenes.py SquareToCircle -pl
+    ```
+
+
+## Anaconda Install
+
+* Install sox and latex as above. 
+* Create a conda environment using `conda env create -f environment.yml`
+* **WINDOWS ONLY** Install `pyreadline` via `pip install pyreadline`. 
+
 
 ### Using `virtualenv` and `virtualenvwrapper`
 After installing `virtualenv` and `virtualenvwrapper`
@@ -45,7 +84,7 @@ Try running the following:
 ```sh
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
-The -p is for previewing, meaning the the video file will automatically open when it is done rendering.
+The -p is for previewing, meaning the video file will automatically open when it is done rendering.
 Use -l for a faster rendering at a lower quality.
 Use -s to skip to the end and just show the final frame.
 Use -n (number) to skip ahead to the n'th animation of a scene.

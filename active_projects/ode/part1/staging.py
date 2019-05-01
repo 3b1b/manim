@@ -102,11 +102,13 @@ class TourOfDifferentialEquations(MovingCameraScene):
             "fill_color": BLACK,
         },
         "camera_config": {"background_color": DARKER_GREY},
+        "zoomed_thumbnail_index": 0,
     }
 
     def construct(self):
         self.add_title()
         self.show_thumbnails()
+        self.zoom_in_to_one_thumbnail()
         # self.show_words()
 
     def add_title(self):
@@ -140,6 +142,7 @@ class TourOfDifferentialEquations(MovingCameraScene):
         dots = TexMobject("\\dots")
         dots.next_to(thumbnails[-1], RIGHT)
 
+        self.add_phase_space_preview(thumbnails[0])
         self.add_heat_preview(thumbnails[1])
         self.add_fourier_series(thumbnails[2])
         self.add_matrix_exponent(thumbnails[3])
@@ -164,9 +167,13 @@ class TourOfDifferentialEquations(MovingCameraScene):
         )
         self.play(Write(dots))
         self.wait()
+
+        self.thumbnails = thumbnails
+
+    def zoom_in_to_one_thumbnail(self):
         self.play(
             self.camera_frame.replace,
-            thumbnails[0],
+            self.thumbnails[self.zoomed_thumbnail_index],
             run_time=3,
         )
         self.wait()
@@ -203,6 +210,11 @@ class TourOfDifferentialEquations(MovingCameraScene):
         self.wait()
 
     #
+    def add_phase_space_preview(self, thumbnail):
+        image = ImageMobject("LovePhaseSpace")
+        image.replace(thumbnail)
+        thumbnail.add(image)
+
     def add_heat_preview(self, thumbnail):
         image = ImageMobject("HeatSurfaceExample")
         image.replace(thumbnail)

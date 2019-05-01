@@ -1,11 +1,10 @@
 import itertools as it
 import random
-import copy
 
-from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.animation.composition import LaggedStart
+from manimlib.animation.update import UpdateFromAlphaFunc
 from manimlib.constants import *
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import PiCreature
@@ -18,6 +17,7 @@ from manimlib.mobject.svg.drawings import SpeechBubble
 from manimlib.mobject.svg.drawings import ThoughtBubble
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.scene import Scene
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.space_ops import get_norm
@@ -157,34 +157,31 @@ class PiCreatureScene(Scene):
         if not self.any_pi_creatures_on_screen():
             return animations
 
-        non_pi_creature_anims = [anim for anim in animations if anim.mobject not in self.get_pi_creatures()]
+        pi_creatures = self.get_on_screen_pi_creatures()
+        non_pi_creature_anims = [
+            anim
+            for anim in animations
+            if len(set(anim.mobject.get_family()).intersection(pi_creatures)) == 0
+        ]
         if len(non_pi_creature_anims) == 0:
             return animations
-        # Look at ending state
+        # Get pi creatures to look at whatever
+        # is being animated
         first_anim = non_pi_creature_anims[0]
-        first_anim_copy = copy.deepcopy(first_anim)
-        first_anim_copy.begin()
-        first_anim_copy.update(1)
-        point_of_interest = first_anim_copy.mobject.get_center()
-
-        for pi_creature in self.get_pi_creatures():
-            if pi_creature not in self.get_mobjects():
-                continue
-            if pi_creature in first_anim.mobject.get_family():
-                continue
-            anims_with_pi_creature = [anim for anim in animations if pi_creature in anim.mobject.get_family()]
-            for anim in anims_with_pi_creature:
-                continue  # TODO, this is broken
-                if isinstance(anim, Transform):
-                    index = anim.mobject.get_family().index(pi_creature)
-                    target_family = anim.target_mobject.get_family()
-                    target = target_family[index]
-                    if isinstance(target, PiCreature):
-                        target.look_at(point_of_interest)
-            if not anims_with_pi_creature:
-                animations.append(
-                    ApplyMethod(pi_creature.look_at, point_of_interest)
-                )
+        main_mobject = first_anim.mobject
+        animations += [
+            UpdateFromAlphaFunc(
+                pi_creature,
+                lambda p, a: p.look_at(
+                    interpolate(
+                        p.get_look_at_spot(),
+                        main_mobject.get_center(),
+                        a,
+                    )
+                ),
+            )
+            for pi_creature in pi_creatures
+        ]
         return animations
 
     def blink(self):
