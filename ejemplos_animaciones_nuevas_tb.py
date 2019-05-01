@@ -506,3 +506,123 @@ class Escala2(MusicalScene2):
 
         self.play(self.teclado_3octavas.shift,LEFT*3,rate_func=there_and_back,run_time=3)
         self.play(self.teclado_3octavas.shift,RIGHT*3,rate_func=there_and_back,run_time=3)
+
+class EscenaMusica2(MusicalScene):
+    CONFIG = {"include_sound": True}
+    def construct(self):
+        self.teclado_transparente=self.definir_teclado(4,self.prop,0).set_stroke(None,0)
+        self.teclado_base=self.definir_teclado(4,self.prop,1)
+        self.teclado_base.move_to(ORIGIN+DOWN*3)
+        self.teclado_transparente.move_to(ORIGIN+DOWN*3)
+
+        self.agregar_escenario()
+        self.primer_paso(simbolos_faltantes=[14,15,16,17,18,19,20,21])
+        self.progresion(0,run_time=1)
+        self.progresion_con_desfase(paso=1,desfase=22,y1=8,x2=8,y2=16,run_time=1)
+        self.progresion_con_desfase(paso=2,desfase=30,y1=8,x2=10,y2=18,simbolos_faltantes=[38,39],run_time=1)
+
+        self.intervalos()
+        
+
+
+    def importar_partitura(self):
+        self.partitura=TextMobject("""
+                \\begin{music}
+                \\parindent10mm
+                \\instrumentnumber{1}
+                \\setname1{} 
+                \\setstaffs1{2}
+                \\setclef16
+                \\startextract
+                \\NOTEs\\zql{'C}\\qu G|\\zql{e}\\qu j\\en
+                \\NOTEs\\zql{F}\\qu{''A}|\\zql{f}\\qu{'c}\\en
+                \\NOTEs\\zql{G}\\qu{'G}|\\zql{d}\\qu{'b}\\en
+                \\NOTEs\\zhl{C}\\hu{'G}|\\zhl{e}\\hu{'c}\\en
+                \\endextract
+                \\end{music}
+            """,color=BLACK).shift(UP).scale(0.8)
+
+    def definir_cambios_notas(self):
+        self.cambios_notas=[[[
+                (   14, 15, 17, 16, 18, 19, 21, 20, ),
+                (   22, 23, 25, 24, 26, 27, 29, 28, )
+        ]]]
+        tt=self.definir_notas(4)
+        self.teclas=[[tt[0][1],tt[7][1],28,36],
+                    [tt[5][0],tt[9][1],tt[5][2],tt[0][3]],
+                    [tt[7][0],tt[7][1],tt[2][2],tt[11][2]],
+                    [tt[0][0],tt[7][1],28,36]]
+
+    def definir_colores(self):
+        
+        self.colores_notas=[
+                       ([21,20,29,28,36,37,47,46],self.colores[3]),
+                       ([18,19,26,27,34,35,44,45],self.colores[2]),
+                       ([17,16,25,24,33,32,43,42],self.colores[1]),
+                       ([14,15,22,23,30,31,40,41,38,39],self.colores[0])
+                      ]
+
+
+    def definir_cifrado(self):
+        cifrado=VGroup(
+            TexMobject("\\mbox{I}",color=BLACK),
+            TexMobject("\\mbox{IV}",color=BLACK),
+            TexMobject("\\mbox{V}",color=BLACK),
+            TexMobject("\\mbox{I}",color=BLACK)
+            )
+        bajo=[15,23,31,41]
+        cifrado[0].next_to(self.partitura[15],DOWN,buff=1.3)
+        cords_x=[*[self.partitura[w].get_center()[0]for w in bajo]]
+        
+        for i in range(1,4):
+            cifrado[i].move_to(cifrado[i-1])
+            dis=cords_x[i]-cords_x[i-1]
+            cifrado[i].shift(np.array([dis,0,0]))
+
+        self.cifrado=cifrado        
+
+    def agregar_escenario(self):
+        self.grupoA=VGroup(*[self.partitura[cont]for cont in [12,13]])
+
+
+        self.mandar_frente_sostenido(4,self.teclado_base)
+        self.mandar_frente_sostenido(4,self.teclado_transparente)
+
+        self.play(*[LaggedStart(GrowFromCenter, self.partitura[i],run_time=2)for i in range(1,11)],
+            LaggedStart(DrawBorderThenFill,self.teclado_base),LaggedStart(DrawBorderThenFill,self.teclado_transparente),
+            *[GrowFromCenter(x)for x in self.grupoA]
+            )
+
+
+
+    def intervalos(self):
+        i6m_v=self.intervalo_v(21,15,"8\\rm J")
+        i5J_v=self.intervalo_v(25,29,"3-",direccion=RIGHT)
+
+        i2m_h=self.intervalo_h(17,25,"2+")
+        i5J_h=self.intervalo_h(15,23,"5\\rm J")
+
+        self.ap_inter_v(i6m_v)
+        self.play(ReplacementTransform(i6m_v.copy(),i5J_v))
+        self.ap_inter_h(i2m_h)
+        self.play(ReplacementTransform(i2m_h,i5J_h))
+        
+    def salida_teclado(self):
+        self.play(*[
+                ApplyMethod(
+                    self.teclado_transparente[i].set_fill,None,0
+                    )
+                for i,color in self.cambios_colores_teclas[3]
+                ],
+            run_time=1
+        )
+        self.remove_foreground_mobjects(self.teclado_transparente)
+        self.remove_foreground_mobjects(self.teclado_base)
+        self.remove(self.teclado_transparente)
+        self.mandar_frente_sostenido_parcial(4,self.teclado_base)
+        self.play(
+            *[LaggedStart(FadeOutAndShiftDown,objeto,run_time=1)for objeto in self.mobjects],
+            )
+        cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
+        self.add_foreground_mobject(cuadro_negro)
+        self.play(cuadro_negro.set_fill,None,1)
