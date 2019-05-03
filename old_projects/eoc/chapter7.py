@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 class Chapter7OpeningQuote(OpeningQuote):
     CONFIG = {

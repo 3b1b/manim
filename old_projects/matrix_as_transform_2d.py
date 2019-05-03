@@ -5,7 +5,7 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 ARROW_CONFIG = {"stroke_width" : 2*DEFAULT_STROKE_WIDTH}
 LIGHT_RED = RED_E
