@@ -20,6 +20,6 @@ setup(name='manim',
          'pycairo',
          'pydub',
       ],
-      scripts=['manim.py', 'stage_scenes.py', 'big_ol_pile_of_manim_imports.py'],
+      scripts=['manim.py', 'stage_scenes.py'],
       package_data={'manimlib': ['*.tex', 'files/**']},
 )

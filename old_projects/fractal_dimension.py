@@ -1,5 +1,5 @@
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from functools import reduce
 
 def break_up(mobject, factor = 1.3):

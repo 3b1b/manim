@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 SINE_COLOR = BLUE
 X_SQUARED_COLOR = GREEN

@@ -2,7 +2,7 @@
 from constants import *
 import scipy.integrate
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 USE_ALMOST_FOURIER_BY_DEFAULT = True
 NUM_SAMPLES_FOR_FFT = 1000

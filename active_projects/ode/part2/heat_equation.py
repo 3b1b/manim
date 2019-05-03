@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from active_projects.ode.part2.shared_constructs import *
 
 

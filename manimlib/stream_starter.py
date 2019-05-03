@@ -49,5 +49,5 @@ def start_livestream(to_twitch=False, twitch_key=None):
     variables.update(locals())
     shell = code.InteractiveConsole(variables)
     shell.push("manim = Manim()")
-    shell.push("from big_ol_pile_of_manim_imports import *")
+    shell.push("from manimlib.imports import *")
     shell.interact(banner=manimlib.constants.STREAMING_CONSOLE_BANNER)

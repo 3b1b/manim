@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from active_projects.eop.reusables.eop_helpers import *
 from active_projects.eop.reusables.eop_constants import *
 from active_projects.eop.reusables.upright_coins import *

@@ -3,7 +3,7 @@ import sys
 import os.path
 import cv2
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 from nn.network import *
 from nn.part1 import *
