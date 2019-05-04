@@ -85,6 +85,7 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
             "0",
             "-o",
             result,
+            #"--libgs='/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib'" , # Enable this line with the directory pf libgs.dylib
             ">",
             os.devnull
         ]
