@@ -473,3 +473,52 @@ class EscenaContenido(Scene):
     		self.titulo.shift,UP*5,
     		self.bloques.shift,DOWN*10,
     		self.bloques_estatica.shift,DOWN*10)
+        
+class EscenaTitulo(Scene):
+	CONFIG={
+	"title":"Hola mundo!",
+	"te":0.4,
+	"escala":2,
+	"especificaciones":{},
+	"tipo_animacion":"escribe_texto"
+	}
+	def construct(self):
+		self.muestra_titulo()
+
+	def muestra_titulo(self):
+		tit=TikzMobject("""
+		\\begin{tikzpicture}[pencildraw/.style={decorate,
+		decoration={random steps,segment length=0.8pt,amplitude=0.3pt}}]
+		    \\node[pencildraw,draw] {\\sc %s};
+		\\end{tikzpicture} 
+		  """%self.title,stroke_width=2,fill_opacity=.1,color=WHITE).scale(self.escala)
+		tit[0].set_fill(BLACK,1)
+		tit[1:].set_stroke(None,0).set_fill(WHITE,1)
+		if self.tipo_animacion=="escribe_texto":
+			titulo=escribe_texto(self,tit[1:],**self.especificaciones)
+		elif self.tipo_animacion=="Escribe":
+			titulo=tit[1:]
+			self.play(Escribe(titulo),**self.especificaciones)
+		elif self.tipo_animacion=="Aparece":
+			titulo=tit[1:]
+			seleccion_texto(self,titulo,opacidad=0,color=BLACK,direccion=RIGHT)
+			self.add(titulo)
+			self.play(Transform(titulo.pos_rect,titulo.rect),**self.especificaciones)
+		elif self.tipo_animacion=="Teclea":
+			titulo=tit[1:]
+			TypeWriter(self,titulo,**self.especificaciones)
+			self.wait()
+		self.add_foreground_mobject(tit[0])
+		self.add_foreground_mobject(tit[1:])
+		self.play(Write(tit[0]))
+		esq_left=tit[1:].get_left()
+		esq_right=tit[1:].get_right()
+		cuerda_left=Line(esq_left+UP*5,esq_left,color=WHITE)
+		cuerda_right=Line(esq_right+UP*5,esq_right,color=WHITE)
+		self.play(ShowCreation(cuerda_left),ShowCreation(cuerda_right))
+		self.wait(self.te)
+		self.add_foreground_mobjects(tit[0],tit[1:])
+		self.play(
+		VGroup(tit[0],cuerda_left,cuerda_right,titulo,tit[1:]).shift,UP*8
+		)
+
