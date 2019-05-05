@@ -15,7 +15,7 @@ before_script:
   - flake8 manimlib/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
   - true  # add other tests here
-publish:
+deploy:
   provider: pypi
   user: swegener
   on:
