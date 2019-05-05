@@ -15,3 +15,10 @@ before_script:
   - flake8 manimlib/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
   - true  # add other tests here
+publish:
+  provider: pypi
+  user: swegener
+  on:
+    tags: true
+  password:
+    secure: ONfT0jmsqfoYzxg6U7o0tRRxK9pa7dEhN4LS79Li1+ZjJx5zw+aQMzGwSteFmZSnLEzGM1fldXbr18VOKxtjL+TYt8c/FvsZAoWVhabDesh1coO/Jp22LTXc7G9jHXef2Q8RInhyUdwVFopySv5xBgWUXZAVK8wabVbbxhqQyHUbM4Ag1lvHPIAylTPCeYptVhBUNM5Q6E7D4BnmScOM5eo/H8t3QGCDh0SNKjw9hD8ySBEFREwu+IBnu8c8ZIqcdFb8VYA0tccsMBSlTOLsVnxmMfHyZWmZb83NAO6cwZknoMPntRzTpF1Gk9cWrfMU0eHMymaqMACPxGgfyCiBx/VSP/5fCx7DQK7ZVygsiq3CuKD5PqyplDqqwpvfHQ/U+MLUedJqIINi6P1yHZLUF+cP/KYsWHz9vMumoGxQ5IuF8kUgmTl5e0mrYG9cKEVmgtPI+WBjVM1ZY9nkGf1t0SBptZT+cLoPi92+m5+QlPLc/6+cOvMBuU+vUYRqRTJpnXRs6CZcbtIAO9GKPrDAcLRpX7MMvkDnG4dLapX4Lig3BFH9hCXnsBtNXz+qc7qnG8HJqZ2Acv0GuFYUn5qFirUXIsmVotFCh9lqVX47L8hl5bZYeY8/g3wXPOhZ5np2XSKztun8kq2Wnz0TLwxNTC4InPGr9jFp01QK08ihtw8=
