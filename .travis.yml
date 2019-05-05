@@ -14,7 +14,8 @@ before_script:
   # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
   - flake8 manimlib/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
-  - true  # add other tests here
+  - python setup.py test
+  - python setup.py bdist_wheel
 deploy:
   provider: pypi
   user: swegener
