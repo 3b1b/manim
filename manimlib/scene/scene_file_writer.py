@@ -27,6 +27,7 @@ class SceneFileWriter(object):
         "png_mode": "RGBA",
         "save_last_frame": False,
         "movie_file_extension": ".mp4",
+        "gif_file_extension": ".gif",
         "livestreaming": False,
         "to_twitch": False,
         "twitch_key": None,
@@ -67,6 +68,12 @@ class SceneFileWriter(object):
                 movie_dir,
                 add_extension_if_not_present(
                     file_name, self.movie_file_extension
+                )
+            )
+            self.gif_file_path = os.path.join(
+                movie_dir,
+                add_extension_if_not_present(
+                    file_name, self.gif_file_extension
                 )
             )
             self.partial_movie_directory = guarantee_existance(os.path.join(
@@ -299,10 +306,14 @@ class SceneFileWriter(object):
             '-f', 'concat',
             '-safe', '0',
             '-i', file_list,
-            '-c', 'copy',
+            #'-c', 'copy',
             '-loglevel', 'error',
             movie_file_path
         ]
+        if self.save_as_gif:
+            commands +=[
+                self.gif_file_path,
+            ]
         if not self.includes_sound:
             commands.insert(-1, '-an')
 
