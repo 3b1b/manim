@@ -256,9 +256,21 @@ def Facebook():
     svg = SVGMobject(
             file_name = "facebook",
             fill_opacity = 1,
+            fill_color="#3C5A9A",
             stroke_width = 1,
             height = 4,
-            stroke_color = WHITE,
+            stroke_color ="#3C5A9A",
+        )
+    return svg
+
+def Reddits():
+    svg = SVGMobject(
+            file_name = "reddit",
+            fill_opacity = 1,
+            stroke_width = 1,
+            fill_color= "#FF3F18",
+            height = 4,
+            stroke_color = "#FF3F18",
         )
     return svg
 
@@ -278,7 +290,8 @@ def Twitter():
             fill_opacity = 1,
             stroke_width = 1,
             height = 4,
-            stroke_color = WHITE,
+            stroke_color ="#12C0FF",
+            fill_color="#12C0FF",
         )
     return svg
 
@@ -287,8 +300,9 @@ def YouTube():
             file_name = "youtube",
             fill_opacity = 1,
             stroke_width = 1,
+            fill_color="#FE0000",
             height = 4,
-            stroke_color = WHITE,
+            stroke_color ="#FE0000",
         )
     return svg
 
