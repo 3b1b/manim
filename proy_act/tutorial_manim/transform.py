@@ -132,6 +132,7 @@ class EjemploTransform(Scene):
 			obj[3:5].set_color(YELLOW)
 			grupo_comillas.add(obj[0:2],obj[3:5])
 		#Escribe(lista1[:-2]),
+		lista1.next_to(self.texto_1,DOWN,buff=0.5)
 		self.play(Escribe(grupo_comillas),LaggedStart(ShowCreation,lista1[-2]),Escribe(VGroup(lista1[0],lista1[-3])))
 		self.lista1=lista1
 		self.wait()
@@ -175,13 +176,28 @@ class EjemploTransform(Scene):
 		renglones=[84,103,122,134]
 		grupo_letras=VGroup(*[self.texto[i]for i in [63,82,101,120]])
 		grupo_m_texto=VGroup(*[self.texto[i:i+2]for i in [47,66,85,104]])
+		grupo_m_pre=VGroup(*[TextMobject("\\tt M%s"%i).match_width(obj).move_to(obj)for i,obj in zip(range(1,5),grupo_m_texto)])
+		grupo_letras_pre=VGroup(*[TextMobject(i).match_width(obj).move_to(obj).match_color(obj)for i,obj in zip(["A","B","C","D"],grupo_letras)])
 		grupo_m_lista=VGroup(*self.lista1[-1])
 		self.play(Write(flecha))
-		for obj_c,obj_l,obj_mt,obj_ml,reng in zip(grupo_letras,*[self.lista1[1:6]],grupo_m_texto,grupo_m_lista,renglones):
-			self.play(ReplacementTransform(obj_mt.copy()[:],obj_ml),run_time=2)
-			self.play(ReplacementTransform(obj_c.copy(),obj_l[2]),run_time=2)
-			self.wait(2)
-			self.play(flecha.next_to,self.texto[reng])
+		contador1=0
+		for obj_c,obj_l,obj_mt,obj_ml,reng in zip(grupo_letras_pre,*[self.lista1[1:6]],grupo_m_pre,grupo_m_lista,renglones):
+			if contador1>1:
+				run_time=0.7
+				wait_time=0.3
+				move_time=0.3
+			else:
+				run_time=2
+				wait_time=2
+				move_time=1
+			if contador1==3:
+				move_time=1
+				wait_time=1.5
+			self.play(ReplacementTransform(obj_mt,obj_ml),run_time=run_time)
+			self.play(ReplacementTransform(obj_c[:],obj_l[2][:]),run_time=run_time)
+			self.wait(wait_time)
+			self.play(flecha.next_to,self.texto[reng],run_time=move_time)
+			contador1=contador1+1
 
 		self.pantalla=Square(color=WHITE).scale(0.8).next_to(self.lista1,DOWN)
 		esc1=1.6
@@ -191,8 +207,8 @@ class EjemploTransform(Scene):
 		self.Dp=self.lista1[4][2].copy().scale(esc1)
 		
 		self.play(ShowCreation(self.pantalla))
-		self.wait(2)
-		self.add(self.Ap)
+		self.play(ReplacementTransform(self.lista1[1][2].copy(),self.Ap))
+		#self.add(self.Ap)
 		self.wait(2)
 		self.play(Write(flecha,rate_func=lambda t: smooth(1-t)))
 		self.play(FadeOut(self.texto_1),self.lista1.to_edge,UP)
@@ -274,6 +290,7 @@ class EjemploTransform(Scene):
 		self.wait(2)
 
 		self.play(flecha.next_to,self.texto[posiciones_flecha[1]])
+		self.wait(2)
 
 		new_letter2=grupo_letras_lista[2].copy()
 		self.play(FadeOut(new_letter),
@@ -282,6 +299,7 @@ class EjemploTransform(Scene):
 		self.wait(2)
 
 		self.play(flecha.next_to,self.texto[posiciones_flecha[2]])
+		self.wait(2)
 
 		new_letter3=grupo_letras_lista[3].copy()
 		self.play(FadeOut(new_letter2),
@@ -290,6 +308,7 @@ class EjemploTransform(Scene):
 		self.wait(2)
 
 		self.play(flecha.next_to,self.texto[posiciones_flecha[3]])
+		self.wait(2)
 
 		self.play(FadeOut(self.Dp),
 			LaggedStart(ShowCreation,
@@ -304,7 +323,6 @@ class EjemploTransform(Scene):
 		self.wait(2)
 
 	def explicacion_replacementtransform(self):
-		self.play(LaggedStart(ShowCreation,self.grupo_proyeccion[0]),ShowCreation(self.rectangulos[0]),FadeToColor(self.pantalla,PURPLE))
 		self.texto2=TextMobject(codigo2)
 		t1=self.texto[156:173];rt1=self.texto2[177:194];wrt1=self.texto2[166:177]
 		t2=self.texto[194:211];rt2=self.texto2[226:243];wrt2=self.texto2[215:226]
@@ -321,6 +339,7 @@ class EjemploTransform(Scene):
 			ReplacementTransform(t4,rt4),
 			Escribe(wrt1),Escribe(wrt2),Escribe(wrt3),FadeIn(self.vars[0])
 			)
+		self.play(LaggedStart(ShowCreation,self.grupo_proyeccion[0]),ShowCreation(self.rectangulos[0]),FadeToColor(self.pantalla,PURPLE))
 		flecha=Dedo1().flip().scale(0.4)
 		posiciones_flecha=[193,242,291,324]
 		flecha.next_to(self.texto2[posiciones_flecha[0]])
