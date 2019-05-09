@@ -32,7 +32,7 @@ class WhatIsReplacementTransform(Scene):
 		M2 = TextMobject("|\\rm B|")
 		M3 = TextMobject("|\\rm C|")
 		M4 = TextMobject("|\\rm D|")
-		self.add(1)
+		self.add(M1)
 		self.wait()
 
 		self.play(ReplacementTransform(M1,M2))
