@@ -34,6 +34,7 @@ class SceneFileWriter(object):
         # TODO, address this in extract_scene et. al.
         "file_name": None,
         "output_directory": None,
+        "input_file_path": './media/'
     }
 
     def __init__(self, scene, **kwargs):
