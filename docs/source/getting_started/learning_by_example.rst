@@ -2,11 +2,13 @@ Learning by Example
 ===================
 
 You create videos in manim by writing :class:`~scene.scene.Scene` instances.
-``example_scenes.py`` contains a few simple ones that we can use to learn about
-manim. For instance, take ``SquareToCircle``.
+`example_scenes.py <https://github.com/3b1b/manim/blob/master/example_scenes.py>`_. contains a few simple ones that we can use to learn about
+manim. For instance, take ``SquareToCircle``. Copy the code given below to a new file (say test_manim.py) and run it with ``$ manim test_manim.py SquareToCircle -p``.
 
 .. code-block:: python
    :linenos:
+
+   from manimlib.imports import *
 
    class SquareToCircle(Scene):
        def construct(self):
@@ -20,49 +22,63 @@ manim. For instance, take ``SquareToCircle``.
            self.play(Transform(square, circle))
            self.play(FadeOut(square))
 
+
 :meth:`~scene.scene.Scene.construct` specifies what is displayed on the screen
-when the :class:`~scene.scene.Scene` is rendered to video. You can render a
-:class:`~scene.scene.Scene` by running ``extract_scene.py``. Run ``python
-extract_scene.py -h`` to see how it's used.
+when the :class:`~scene.scene.Scene` is rendered to video. The flag ``-p`` automatically plays the rendered video.
+Other frequently used flags are ``-l`` for rendering video in lower resolution (in favour of higher speed) and ``-s`` to show the last frame of the video.
+Run ``manim -h`` all the available flags
 
 .. code-block:: none
 
-   > python extract_scene.py -h
-   usage: extract_scene.py [-h] [-p] [-w] [-s] [-l] [-m] [-g] [-f] [-t] [-q] [-a]
-                   [-o OUTPUT_NAME] [-n START_AT_ANIMATION_NUMBER]
-                   [-r RESOLUTION] [-c COLOR] [-d OUTPUT_DIRECTORY]
-                   file [scene_name]
+   > manim -h
+   Media will be stored in ./media/. You can change this behavior by writing a different directory to media_dir.txt.
+    usage: manim [-h] [-p] [-w] [-s] [-l] [-m] [-g] [-f] [-t] [-q] [-a]
+                 [-o FILE_NAME] [-n START_AT_ANIMATION_NUMBER] [-r RESOLUTION]
+                 [-c COLOR] [--sound] [--leave_progress_bars] [--livestream]
+                 [--to-twitch] [--with-key TWITCH_KEY]
+                 [file] [scene_names [scene_names ...]]
 
-   positional arguments:
-     file                  path to file holding the python code for the scene
-     scene_name            Name of the Scene class you want to see
+    positional arguments:
+      file                  path to file holding the python code for the scene
+      scene_names           Name of the Scene class you want to see
 
-   optional arguments:
-     -h, --help            show this help message and exit
-     -p, --preview
-     -w, --write_to_movie
-     -s, --show_last_frame
-     -l, --low_quality
-     -m, --medium_quality
-     -g, --save_pngs
-     -f, --show_file_in_finder
-     -t, --transparent
-     -q, --quiet
-     -a, --write_all
-     -o OUTPUT_NAME, --output_name OUTPUT_NAME
-     -n START_AT_ANIMATION_NUMBER, --start_at_animation_number START_AT_ANIMATION_NUMBER
-     -r RESOLUTION, --resolution RESOLUTION
-     -c COLOR, --color COLOR
-     -d OUTPUT_DIRECTORY, --output_directory OUTPUT_DIRECTORY
+    optional arguments:
+      -h, --help            show this help message and exit
+      -p, --preview         Automatically open the saved file once its done
+      -w, --write_to_movie  Render the scene as a movie file
+      -s, --save_last_frame
+                            Save the last frame
+      -l, --low_quality     Render at a low quality (for faster rendering)
+      -m, --medium_quality  Render at a medium quality
+      -g, --save_pngs       Save each frame as a png
+      -f, --show_file_in_finder
+                            Show the output file in finder
+      -t, --transparent     Render to a movie file with an alpha channel
+      -q, --quiet
+      -a, --write_all       Write all the scenes from a file
+      -o FILE_NAME, --file_name FILE_NAME
+                            Specify the name of the output file, ifit should be
+                            different from the scene class name
+      -n START_AT_ANIMATION_NUMBER, --start_at_animation_number START_AT_ANIMATION_NUMBER
+                            Start rendering not from the first animation, butfrom
+                            another, specified by its index. If you passin two
+                            comma separated values, e.g. "3,6", it will endthe
+                            rendering at the second value
+      -r RESOLUTION, --resolution RESOLUTION
+                            Resolution, passed as "height,width"
+      -c COLOR, --color COLOR
+                            Background color
+      --sound               Play a success/failure sound
+      --leave_progress_bars
+                            Leave progress bars displayed in terminal
+      --livestream          Run in streaming mode
+      --to-twitch           Stream to twitch
+      --with-key TWITCH_KEY
+                            Stream key for twitch
 
-The most common flags are ``-p``, to automatically play the generated video,
-``-l``, to render in lower quality in favor of speed, and ``-s``, to show the
-last frame of the :class:`~scene.scene.Scene` for faster development. Run
-``python extract_scene.py example_scenes.py SquareToCircle -pl`` to produce a
-file called SquareToCircle.mp4 in the media directory that you have configured,
-and automatically play it.
 
-.. raw:: html
+
+
 
     <video width="560" height="315" controls>
         <source src="../_static/SquareToCircle.mp4" type="video/mp4">
