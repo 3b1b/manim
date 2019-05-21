@@ -111,7 +111,7 @@ class WriteStuff(Scene):
         self.wait()
 
 
-class UdatersExample(Scene):
+class UpdatersExample(Scene):
     def construct(self):
         decimal = DecimalNumber(
             0,
