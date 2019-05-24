@@ -34,6 +34,7 @@ class SceneFileWriter(object):
         # TODO, address this in extract_scene et. al.
         "file_name": None,
         "output_directory": None,
+        "file_name": None,
     }
 
     def __init__(self, scene, **kwargs):
@@ -81,7 +82,10 @@ class SceneFileWriter(object):
         return root if root else ext[1:]
 
     def get_default_file_name(self):
-        return self.scene.__class__.__name__
+        if self.file_name is None:
+            return self.scene.__class__.__name__
+        else:
+            return self.file_name
 
     def get_movie_directory(self):
         pixel_height = self.scene.camera.pixel_height
