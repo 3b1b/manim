@@ -2964,7 +2964,7 @@ class BiasForInactiviyWords(Scene):
         self.play(Write(words))
         self.wait(3)
 
-class ContinualEdgeUpdate(ContinualAnimation):
+class ContinualEdgeUpdate(VGroup):
     CONFIG = {
         "max_stroke_width" : 3,
         "stroke_width_exp" : 7,
@@ -2972,7 +2972,8 @@ class ContinualEdgeUpdate(ContinualAnimation):
         "colors" : [GREEN, GREEN, GREEN, RED],
     }
     def __init__(self, network_mob, **kwargs):
-        digest_config(self, kwargs)
+        VGroup.__init__(self, **kwargs)
+        self.internal_time = 0
         n_cycles = self.n_cycles
         edges = VGroup(*it.chain(*network_mob.edge_groups))
         self.move_to_targets = []
@@ -2990,11 +2991,14 @@ class ContinualEdgeUpdate(ContinualAnimation):
 
             edge.generate_target()
             edge.target.set_stroke(edge.colors[0], edge.widths[0])
-            self.move_to_targets.append(MoveToTarget(edge))
+            edge.become(edge.target)
+            self.move_to_targets.append(edge)
         self.edges = edges
-        ContinualAnimation.__init__(self, edges, **kwargs)
+        self.add(edges)
+        self.add_updater(lambda m, dt: self.update_edges(dt))
 
-    def update_mobject(self, dt):
+    def update_edges(self, dt):
+        self.internal_time += dt
         if self.internal_time < 1:
             alpha = smooth(self.internal_time)
             for move_to_target in self.move_to_targets:
@@ -4559,14 +4563,32 @@ class ShowAmplify(PiCreatureScene):
 class Thumbnail(NetworkScene):
     CONFIG = {
         "network_mob_config" : {
-            'neuron_stroke_color' : WHITE
-        }
+            'neuron_stroke_color' : WHITE,
+            'layer_to_layer_buff': 1.25,
+        },
     }
     def construct(self):
         network_mob = self.network_mob
         network_mob.set_height(FRAME_HEIGHT - 1)
         for layer in network_mob.layers:
             layer.neurons.set_stroke(width = 5)
+
+        network_mob.set_height(5)
+        network_mob.to_edge(DOWN)
+        network_mob.to_edge(LEFT, buff=1)
+
+        subtitle = TextMobject(
+            "From the\\\\",
+            "ground up\\\\",
+        )
+        # subtitle.arrange(
+        #     DOWN,
+        #     buff=0.25,
+        #     aligned_edge=LEFT,
+        # )
+        subtitle.set_color(YELLOW)
+        subtitle.set_height(2.75)
+        subtitle.next_to(network_mob, RIGHT, buff=MED_LARGE_BUFF)
 
         edge_update = ContinualEdgeUpdate(
             network_mob,
@@ -4576,7 +4598,18 @@ class Thumbnail(NetworkScene):
         edge_update.internal_time = 3
         edge_update.update(0)
 
+        for mob in network_mob.family_members_with_points():
+            if mob.get_stroke_width() < 2:
+                mob.set_stroke(width=2)
+
+
+        title = TextMobject("Neural Networks")
+        title.scale(3)
+        title.to_edge(UP)
+
         self.add(network_mob)
+        self.add(subtitle)
+        self.add(title)
 
 
 
