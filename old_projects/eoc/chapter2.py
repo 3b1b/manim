@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 DISTANCE_COLOR = BLUE
 TIME_COLOR = YELLOW

@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.eola.chapter9 import Jennifer, You
 
 class Chapter0(LinearTransformationScene):

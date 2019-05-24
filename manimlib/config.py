@@ -139,7 +139,7 @@ def parse_cli():
 def get_module(file_name):
     if file_name == "-":
         module = types.ModuleType("input_scenes")
-        code = "from big_ol_pile_of_manim_imports import *\n\n" + sys.stdin.read()
+        code = "from manimlib.imports import *\n\n" + sys.stdin.read()
         try:
             exec(code, module.__dict__)
             return module
@@ -165,6 +165,7 @@ def get_configuration(args):
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
         "file_name": args.file_name,
+        "input_file_path": args.file,
     }
     if hasattr(module, "OUTPUT_DIRECTORY"):
         file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY

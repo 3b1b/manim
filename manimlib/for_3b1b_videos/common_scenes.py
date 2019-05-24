@@ -257,7 +257,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         self.wait(wait_time)
 
     def modify_patron_name(self, name):
-        if name is "RedAgent14":
+        if name == "RedAgent14":
             return "Brian Shepetofsky"
         return name
 

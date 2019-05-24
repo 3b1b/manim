@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from active_projects.ode.part1.shared_constructs import *
 from active_projects.ode.part1.pendulum import Pendulum
 from active_projects.ode.part1.pendulum import ThetaVsTAxes

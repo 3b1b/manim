@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 class NumberLineScene(Scene):
     def construct(self, **number_line_config):

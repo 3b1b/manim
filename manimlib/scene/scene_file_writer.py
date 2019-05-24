@@ -77,8 +77,9 @@ class SceneFileWriter(object):
             ))
 
     def get_default_output_directory(self):
-        scene_module = self.scene.__class__.__module__
-        return scene_module.replace(".", os.path.sep)
+        filename = os.path.basename(self.input_file_path)
+        root, ext = os.path.splitext(filename)
+        return root if root else ext[1:]
 
     def get_default_file_name(self):
         if self.file_name is None:

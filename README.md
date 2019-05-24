@@ -1,34 +1,38 @@
-# Manim - Mathematical Animation Engine
+<img src="logo/cropped.png"/>
+
 [![Documentation Status](https://readthedocs.org/projects/manim/badge/?version=latest)](https://manim.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/3b1b/manim.svg?branch=master)](https://travis-ci.org/3b1b/manim)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
 ## Installation
-Manim runs on python 3.7. You can install the Python requirements with
-`python3 -m pip install -r requirements.txt`. System requirements are
-[cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
+Manim runs on python 3.7. You can install it from PyPI via pip
+
+```sh
+pip3 install manimlib
+```
+
+System requirements are [cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
+
+You can now use it via the `manim` command. For example:
+
+```sh
+manim my_project.py MyScene
+```
+
+For more options, take a look at the “Using manim“ sections further below.
 
 ### Directly
-Clone this repository and in that directory execute:
+
+If you want to hack on manimlib itself, clone this repository and in that directory execute:
+
 ```sh
 # Install python requirements
 python3 -m pip install -r requirements.txt
 
 # Try it out
 python3 -m manim example_scenes.py SquareToCircle -pl
-```
-
-### Installing into your system
-For the previous "direct" method you always have to have this git repository. alternatively you can install it permanently in your system and run it on your own scene files:
-
-```sh
-# Inside repository - Install manim (also installs Python requirements)
-python3 -m pip install .
-
-# Now you don't need the repository anymore and can run it in other directories
-cd anywhere
-manim.py example_scenes.py SquareToCircle -pl
 ```
 
 ### Directly (Windows)
@@ -48,6 +52,14 @@ manim.py example_scenes.py SquareToCircle -pl
     pip3 install -r requirements.txt
     python3 manim.py example_scenes.py SquareToCircle -pl
     ```
+
+
+## Anaconda Install
+
+* Install sox and latex as above. 
+* Create a conda environment using `conda env create -f environment.yml`
+* **WINDOWS ONLY** Install `pyreadline` via `pip install pyreadline`. 
+
 
 ### Using `virtualenv` and `virtualenvwrapper`
 After installing `virtualenv` and `virtualenvwrapper`
