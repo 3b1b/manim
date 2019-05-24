@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from active_projects.ode.part2.fourier_series import FourierOfName
 
 name_color_pairs = [
