@@ -1,34 +1,38 @@
-# Manim - Mathematical Animation Engine
+<img src="logo/cropped.png"/>
+
 [![Documentation Status](https://readthedocs.org/projects/manim/badge/?version=latest)](https://manim.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/3b1b/manim.svg?branch=master)](https://travis-ci.org/3b1b/manim)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
 ## Installation
-Manim runs on python 3.7. You can install the Python requirements with
-`python3 -m pip install -r requirements.txt`. System requirements are
-[cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
+Manim runs on python 3.7. You can install it from PyPI via pip
+
+```sh
+pip3 install manimlib
+```
+
+System requirements are [cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
+
+You can now use it via the `manim` command. For example:
+
+```sh
+manim my_project.py MyScene
+```
+
+For more options, take a look at the “Using manim“ sections further below.
 
 ### Directly
-Clone this repository and in that directory execute:
+
+If you want to hack on manimlib itself, clone this repository and in that directory execute:
+
 ```sh
 # Install python requirements
 python3 -m pip install -r requirements.txt
 
 # Try it out
 python3 -m manim example_scenes.py SquareToCircle -pl
-```
-
-### Installing into your system
-For the previous "direct" method you always have to have this git repository. alternatively you can install it permanently in your system and run it on your own scene files:
-
-```sh
-# Inside repository - Install manim (also installs Python requirements)
-python3 -m pip install .
-
-# Now you don't need the repository anymore and can run it in other directories
-cd anywhere
-manim.py example_scenes.py SquareToCircle -pl
 ```
 
 ### Directly (Windows)
@@ -84,15 +88,17 @@ Try running the following:
 ```sh
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
-The -p is for previewing, meaning the video file will automatically open when it is done rendering.
-Use -l for a faster rendering at a lower quality.
-Use -s to skip to the end and just show the final frame.
-Use -n (number) to skip ahead to the n'th animation of a scene.
-Use -f to show the file in finder (for osx)
+The `-p` flag in the command above is for previewing, meaning the video file will automatically open when it is done rendering. The `-l` flag is for a faster rendering at a lower quality.
 
-Set MEDIA_DIR environment variable to determine where image and animation files will be written.
+Some other useful flags include:
 
-Look through the old_projects folder to see the code for previous 3b1b videos.  Note, however, that developments are often made to the library without considering backwards compatibility on those old_projects.  To run them with a guarantee that they will work, you will have to go back to the commit which complete that project.
+* `-s` to skip to the end and just show the final frame.
+* `-n <number>` to skip ahead to the `n`'th animation of a scene.
+* `-f` to show the file in finder (for OSX).
+
+Set `MEDIA_DIR` environment variable to specify where the image and animation files will be written.
+
+Look through the `old_projects` folder to see the code for previous 3b1b videos.  Note, however, that developments are often made to the library without considering backwards compatibility with those old projects.  To run an old project with a guarantee that it will work, you will have to go back to the commit which completed that project.
 
 While developing a scene, the `-sp` flags are helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the `-n` flag to skip over some number of animations.
 

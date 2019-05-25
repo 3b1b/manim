@@ -20,7 +20,7 @@ import random
 import numpy as np
 from PIL import Image
 from nn.mnist_loader import load_data_wrapper
-from utils.space_ops import get_norm
+# from utils.space_ops import get_norm
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 # PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_80")

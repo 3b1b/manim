@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 
 #### Warning, scenes here not updated based on most recent GraphScene changes #######

@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 ## Warning, much of what is in this class
 ## likely not supported anymore.

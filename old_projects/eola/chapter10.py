@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.eola.chapter1 import plane_wave_homotopy
 from old_projects.eola.chapter3 import ColumnsToBasisVectors
 from old_projects.eola.chapter5 import get_det_text

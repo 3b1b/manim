@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 # To watch one of these scenes, run the following:
 # python -m manim example_scenes.py SquareToCircle -pl
@@ -11,6 +11,8 @@ from big_ol_pile_of_manim_imports import *
 # Use the -p to have the animation (or image, if -s was
 # used) pop up once done.
 # Use -n <number> to skip ahead to the n'th animation of a scene.
+# Use -r <number> to specify a resolution (for example, -r 1080
+# for a 1920x1080 video)
 
 
 class OpeningManimExample(Scene):
@@ -111,7 +113,7 @@ class WriteStuff(Scene):
         self.wait()
 
 
-class UdatersExample(Scene):
+class UpdatersExample(Scene):
     def construct(self):
         decimal = DecimalNumber(
             0,

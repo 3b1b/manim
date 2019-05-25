@@ -1,7 +1,7 @@
 import scipy
 import math
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.eoc.chapter1 import Car, MoveCar
 from old_projects.eoc.chapter10 import derivative
 

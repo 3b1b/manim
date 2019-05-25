@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import scipy
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.fourier import *
 
 import warnings

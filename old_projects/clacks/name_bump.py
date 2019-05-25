@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.clacks.question import BlocksAndWallExample
 
 
