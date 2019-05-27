@@ -12,7 +12,7 @@ how ``manim`` is used, but the examples won't run on the latest version of
     :caption: Contents:
     :maxdepth: 2
 
-    getting_started/learning_by_example
-    getting_started/mathematical_objects
-    getting_started/animating_mobjects
-    getting_started/making_a_scene
+    learning_by_example
+    mathematical_objects
+    animating_mobjects
+    making_a_scene
