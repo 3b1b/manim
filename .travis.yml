@@ -4,6 +4,9 @@ dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
 python: "3.7"
 cache: pip
 
+env:
+  global:
+    secure: GYWORGegczM/4Nuir8nOh5PHQkAONDuwqIIcJIFE1v32DpIAhIocEX5MuZ/a5A+0bcBg63D4tJDE58ZIhFzKeAzmky4rkSlfmDUyE/vKe6Rr2C9NBGrO7mlTpUrEPkxIRAjQq1q4oHJEkKoXZRd/Sv3Zcs0sYjO9xJhOErEn4Sp2Yn4Qs62Ibvu9yR3mKZ3529k58kVX7iPSsQWIzpYWAQfOeap2Pjts6WuB1O/Gec40jiQ8VyTO+IC9vfH5txX3epkk2vRwra3IQ6RNRqblAXVRlg7LRLi9NUOQyBXfl36OsJ3jg2X+kS3xp5AO9Cz3ZOGiJx1pGNpyrfIKVFXdMaQHjR+9QDhFK2VC9j2RYqTlrK1yVrganlfSSJ3+U/OhjBGIakPYTj4ncJ+OPcyaycnqtGbBrAo5Xza5u9++9S94Qa6KFn/sZEs9y/K9rWggV5y2fZgJa2x6poZKwV3aVJTLeF8FgcvnHwdZuFRaQJ2WqXWuEunYAW3Ov3Ipws4OO9+6Zgb4XahV2o//IMzCWj0z4L7M8qLFu8MgqP41YiV6tHE550cH5WK+XF2PNN7MpVZLaOb28K/zUO4hMHfFuBXmbAgXMjIapxpTm5ab1lG0IVVg1weE81smqDoAOqnUYum3tTIdkBrmxoUnk5zlFaDLZvbGkyvJ7r4GaSgrP6Q=
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
@@ -16,6 +19,10 @@ before_script:
 script:
   - python setup.py test
   - python setup.py bdist_wheel
+after_success:
+  - openssl aes-256-cbc -K $encrypted_1b28e850a424_key -iv $encrypted_1b28e850a424_iv -in travis/crypt.enc -out travis/crypt -d
+  - tar xf travis/crypt
+  - test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "false" && travis/deploy_docs.sh
 deploy:
   provider: pypi
   user: eulertour
