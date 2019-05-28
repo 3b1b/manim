@@ -205,6 +205,10 @@ def center_of_mass(points):
     return sum(points) / len(points)
 
 
+def midpoint(point1, point2):
+    return center_of_mass([point1, point2])
+
+
 def line_intersection(line1, line2):
     """
     return intersection point of two lines,

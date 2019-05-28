@@ -1,4 +1,5 @@
-# Manim - Mathematical Animation Engine
+<img src="logo/cropped.png"/>
+
 [![Documentation Status](https://readthedocs.org/projects/manim/badge/?version=latest)](https://manim.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/3b1b/manim.svg?branch=master)](https://travis-ci.org/3b1b/manim)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
@@ -87,15 +88,17 @@ Try running the following:
 ```sh
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
-The -p is for previewing, meaning the video file will automatically open when it is done rendering.
-Use -l for a faster rendering at a lower quality.
-Use -s to skip to the end and just show the final frame.
-Use -n (number) to skip ahead to the n'th animation of a scene.
-Use -f to show the file in finder (for osx)
+The `-p` flag in the command above is for previewing, meaning the video file will automatically open when it is done rendering. The `-l` flag is for a faster rendering at a lower quality.
 
-Set MEDIA_DIR environment variable to determine where image and animation files will be written.
+Some other useful flags include:
 
-Look through the old_projects folder to see the code for previous 3b1b videos.  Note, however, that developments are often made to the library without considering backwards compatibility on those old_projects.  To run them with a guarantee that they will work, you will have to go back to the commit which complete that project.
+* `-s` to skip to the end and just show the final frame.
+* `-n <number>` to skip ahead to the `n`'th animation of a scene.
+* `-f` to show the file in finder (for OSX).
+
+Set `MEDIA_DIR` environment variable to specify where the image and animation files will be written.
+
+Look through the `old_projects` folder to see the code for previous 3b1b videos.  Note, however, that developments are often made to the library without considering backwards compatibility with those old projects.  To run an old project with a guarantee that it will work, you will have to go back to the commit which completed that project.
 
 While developing a scene, the `-sp` flags are helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the `-n` flag to skip over some number of animations.
 

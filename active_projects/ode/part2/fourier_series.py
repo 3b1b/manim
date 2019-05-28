@@ -313,12 +313,7 @@ class FourierOfPiSymbol(FourierCirclesScene):
         coefs = self.get_coefficients_of_path(path)
 
         circles = self.get_circles(coefficients=coefs)
-        for k, circle in zip(it.count(1), circles):
-            circle.set_stroke(width=max(
-                1 / np.sqrt(k),
-                1,
-            ))
-
+        self.set_decreasing_stroke_widths(circles)
         # approx_path = self.get_circle_end_path(circles)
         drawn_path = self.get_drawn_path(circles)
         if self.start_drawn:
@@ -329,6 +324,14 @@ class FourierOfPiSymbol(FourierCirclesScene):
         self.add(drawn_path)
         self.wait(self.run_time)
 
+    def set_decreasing_stroke_widths(self, circles):
+        for k, circle in zip(it.count(1), circles):
+            circle.set_stroke(width=max(
+                1 / np.sqrt(k),
+                1,
+            ))
+        return circles
+
     def get_path(self):
         tex_mob = TexMobject(self.tex)
         tex_mob.set_height(6)
@@ -336,6 +339,51 @@ class FourierOfPiSymbol(FourierCirclesScene):
         path.set_fill(opacity=0)
         path.set_stroke(WHITE, 1)
         return path
+
+
+class FourierOfName(FourierOfPiSymbol):
+    CONFIG = {
+        "n_circles": 100,
+        "name_color": WHITE,
+        "name_text": "Abc",
+        "time_per_symbol": 5,
+        "slow_factor": 1 / 5,
+    }
+
+    def construct(self):
+        name = TextMobject(self.name_text)
+        max_width = FRAME_WIDTH - 2
+        max_height = FRAME_HEIGHT - 2
+        name.set_width(max_width)
+        if name.get_height() > max_height:
+            name.set_height(max_height)
+
+        circles = VGroup(VectorizedPoint())
+        for path in name.family_members_with_points():
+            for subpath in path.get_subpaths():
+                sp_mob = VMobject()
+                sp_mob.set_points(subpath)
+                coefs = self.get_coefficients_of_path(sp_mob)
+                new_circles = self.get_circles(
+                    coefficients=coefs
+                )
+                self.set_decreasing_stroke_widths(new_circles)
+                drawn_path = self.get_drawn_path(new_circles)
+                drawn_path.clear_updaters()
+                drawn_path.set_stroke(self.name_color, 3)
+
+                new_circles.suspend_updating()
+                self.play(ReplacementTransform(circles, new_circles))
+                new_circles.resume_updating()
+                circles = new_circles
+                self.play(
+                    ShowCreation(drawn_path),
+                    rate_func=linear,
+                    run_time=self.time_per_symbol
+                )
+                circles.suspend_updating()
+        self.play(FadeOut(circles))
+        self.wait(3)
 
 
 class FourierOfPiSymbol5(FourierOfPiSymbol):
@@ -479,7 +527,7 @@ class FourierNDQ(FourierOfTrebleClef):
 
     def get_shape(self):
         path = VMobject()
-        shape = TexMobject("Hayley")
+        shape = TexMobject("NDQ")
         for sp in shape.family_members_with_points():
             path.append_points(sp.points)
         return path
