@@ -221,32 +221,21 @@ class FourierSeriesIllustraiton(Scene):
             y_min=-1,
             y_max=1,
         )
-        axes2 = axes1.copy()
-        step_func = axes2.get_graph(
-            lambda x: (1 if x < 0.5 else -1),
-            discontinuities=[0.5],
-            color=YELLOW,
-            stroke_width=3,
+        axes1.x_axis.add_numbers(
+            0.5, 1,
+            number_config={"num_decimal_places": 1}
         )
-        dot = Dot(axes2.c2p(0.5, 0), color=step_func.get_color())
-        dot.scale(0.5)
-        step_func.add(dot)
-        axes2.add(step_func)
+        axes2 = axes1.copy()
+        target_func_graph = self.get_target_func_graph(axes2)
+        axes2.add(target_func_graph)
 
         arrow = Arrow(LEFT, RIGHT, color=WHITE)
-        VGroup(axes1, arrow, axes2).arrange(RIGHT).shift(UP)
-
-        def generate_nth_func(n):
-            return lambda x: (4 / n / PI) * np.sin(TAU * n * x)
-
-        def generate_kth_partial_sum_func(k):
-            return lambda x: np.sum([
-                generate_nth_func(n)(x)
-                for n in n_range[:k]
-            ])
+        group = VGroup(axes1, arrow, axes2)
+        group.arrange(RIGHT, buff=LARGE_BUFF)
+        group.shift(2 * UP)
 
         sine_graphs = VGroup(*[
-            axes1.get_graph(generate_nth_func(n))
+            axes1.get_graph(self.generate_nth_func(n))
             for n in n_range
         ])
         sine_graphs.set_stroke(width=3)
@@ -256,44 +245,43 @@ class FourierSeriesIllustraiton(Scene):
         )
 
         partial_sums = VGroup(*[
-            axes1.get_graph(generate_kth_partial_sum_func(k + 1))
+            axes1.get_graph(self.generate_kth_partial_sum_func(k + 1))
             for k in range(len(n_range))
         ])
         partial_sums.match_style(sine_graphs)
 
-        sum_tex = TexMobject(
-            "\\frac{4}{\\pi}"
-            "\\sum_{1, 3, 5, \\dots}"
-            "\\frac{1}{n} \\sin(2\\pi \\cdot n \\cdot x)"
-        )
-        sum_tex.next_to(partial_sums, DOWN, buff=0.7)
+        sum_tex = self.get_sum_tex()
+        sum_tex.next_to(axes1, DOWN, LARGE_BUFF)
+        sum_tex.shift(RIGHT)
         eq = TexMobject("=")
-        step_tex = TexMobject(
-            """
-            1 \\quad \\text{if $x < 0.5$} \\\\
-            0 \\quad \\text{if $x = 0.5$} \\\\
-            -1 \\quad \\text{if $x > 0.5$} \\\\
-            """
-        )
-        lb = Brace(step_tex, LEFT, buff=SMALL_BUFF)
-        step_tex.add(lb)
-        step_tex.next_to(axes2, DOWN, buff=MED_LARGE_BUFF)
+        target_func_tex = self.get_target_func_tex()
+        target_func_tex.next_to(axes2, DOWN)
+        target_func_tex.match_y(sum_tex)
         eq.move_to(midpoint(
-            step_tex.get_left(),
+            target_func_tex.get_left(),
             sum_tex.get_right()
         ))
 
+        range_words = TextMobject(
+            "For $0 \\le x \\le 1$"
+        )
+        range_words.next_to(
+            VGroup(sum_tex, target_func_tex),
+            DOWN,
+        )
+
         rects = it.chain(
             [
-                SurroundingRectangle(sum_tex[0][i])
-                for i in [4, 6, 8]
+                SurroundingRectangle(piece)
+                for piece in self.get_sum_tex_pieces(sum_tex)
             ],
             it.cycle([None])
         )
 
         self.add(axes1, arrow, axes2)
-        self.add(step_func)
-        self.add(sum_tex, eq, step_tex)
+        self.add(target_func_graph)
+        self.add(sum_tex, eq, target_func_tex)
+        self.add(range_words)
 
         curr_partial_sum = axes1.get_graph(lambda x: 0)
         curr_partial_sum.set_stroke(width=1)
@@ -319,6 +307,101 @@ class FourierSeriesIllustraiton(Scene):
             self.play(*anims1)
             self.play(*anims2)
             curr_partial_sum = partial_sum
+
+    def get_sum_tex(self):
+        return TexMobject(
+            "\\frac{4}{\\pi} \\left(",
+            "\\frac{\\cos(\\pi x)}{1}",
+            "-\\frac{\\cos(3\\pi x)}{3}",
+            "+\\frac{\\cos(5\\pi x)}{5}",
+            "- \\cdots \\right)"
+        ).scale(0.75)
+
+    def get_sum_tex_pieces(self, sum_tex):
+        return sum_tex[1:4]
+
+    def get_target_func_tex(self):
+        step_tex = TexMobject(
+            """
+            1 \\quad \\text{if $x < 0.5$} \\\\
+            0 \\quad \\text{if $x = 0.5$} \\\\
+            -1 \\quad \\text{if $x > 0.5$} \\\\
+            """
+        )
+        lb = Brace(step_tex, LEFT, buff=SMALL_BUFF)
+        step_tex.add(lb)
+        return step_tex
+
+    def get_target_func_graph(self, axes):
+        step_func = axes.get_graph(
+            lambda x: (1 if x < 0.5 else -1),
+            discontinuities=[0.5],
+            color=YELLOW,
+            stroke_width=3,
+        )
+        dot = Dot(axes.c2p(0.5, 0), color=step_func.get_color())
+        dot.scale(0.5)
+        step_func.add(dot)
+        return step_func
+
+    # def generate_nth_func(self, n):
+    #     return lambda x: (4 / n / PI) * np.sin(TAU * n * x)
+
+    def generate_nth_func(self, n):
+        return lambda x: np.prod([
+            (4 / PI),
+            (1 / n) * (-1)**((n - 1) / 2),
+            np.cos(PI * n * x)
+        ])
+
+    def generate_kth_partial_sum_func(self, k):
+        return lambda x: np.sum([
+            self.generate_nth_func(n)(x)
+            for n in self.n_range[:k]
+        ])
+
+
+class FourierSeriesOfLineIllustration(FourierSeriesIllustraiton):
+    CONFIG = {
+        "n_range": range(1, 31, 2)
+    }
+
+    def get_sum_tex(self):
+        return TexMobject(
+            "\\frac{8}{\\pi^2} \\left(",
+            "\\frac{\\cos(\\pi x)}{1^2}",
+            "+\\frac{\\cos(3\\pi x)}{3^2}",
+            "+\\frac{\\cos(5\\pi x)}{5^2}",
+            "+ \\cdots \\right)"
+        ).scale(0.75)
+
+    # def get_sum_tex_pieces(self, sum_tex):
+    #     return sum_tex[1:4]
+
+    def get_target_func_tex(self):
+        result = TexMobject("1 - 2x")
+        result.scale(1.5)
+        point = VectorizedPoint()
+        point.next_to(result, RIGHT, 1.5 * LARGE_BUFF)
+        # result.add(point)
+        return result
+
+    def get_target_func_graph(self, axes):
+        return axes.get_graph(
+            lambda x: 1 - 2 * x,
+            color=YELLOW,
+            stroke_width=3,
+        )
+
+    # def generate_nth_func(self, n):
+    #     return lambda x: (4 / n / PI) * np.sin(TAU * n * x)
+
+    def generate_nth_func(self, n):
+        return lambda x: np.prod([
+            (8 / PI**2),
+            (1 / n**2),
+            np.cos(PI * n * x)
+        ])
 
 
 class CircleAnimationOfF(FourierOfTrebleClef):
