@@ -8,7 +8,7 @@ class ParametricFunction(VMobject):
     CONFIG = {
         "t_min": 0,
         "t_max": 1,
-        "step_size": 0.01, # use "auto" (lwoercase) for automatic step size
+        "step_size": 0.01,  # Use "auto" (lowercase) for automatic step size
         "dt": 1e-8,
         # TODO, be smarter about figuring these out?
         "discontinuities": [],
