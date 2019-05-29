@@ -6,6 +6,10 @@
 Welcome to Manim's documentation!
 =================================
 
+These docs are generated from the master branch of the
+`Manim repo <https://github.com/3b1b/manim>`_. You can contribute by submitting
+a pull request there.
+
 .. toctree::
     :maxdepth: 2
     :caption: Contents:
