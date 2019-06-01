@@ -1,5 +1,56 @@
 from big_ol_pile_of_manim_imports import *
 
+class PatreonSVG(SVGMobject):
+    CONFIG={
+    "file_name":"patreon.svg"
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        SVGMobject.__init__(self, file_name=self.file_name, **kwargs)
+        self[0].set_color("#F96855")
+        self[2].set_color("#042F42")
+
+        self.set_height(4)
+
+class PatreonSVG2(SVGMobject):
+    CONFIG={
+    "file_name":"patreon2.svg"
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        SVGMobject.__init__(self, file_name=self.file_name, **kwargs)
+        self[0].set_color("#F96855")
+        self[2].set_color("#042F42")
+
+        self.set_height(4)
+
+class Patreon(VGroup):
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        VGroup.__init__(self, **kwargs)
+        patreon_svg=PatreonSVG()
+        circ1 = Circle()
+        circ2 = Circle()
+        rect  = Rectangle(
+            width=patreon_svg[2].get_width(),
+            height=patreon_svg[2].get_height(),
+            )\
+            .set_fill(patreon_svg[2].get_color(),1)\
+            .set_stroke(None,0)
+
+        circ1.match_style(patreon_svg[0])\
+             .match_width(patreon_svg[0])
+        circ2.match_style(patreon_svg[1])\
+             .match_width(patreon_svg[1])
+
+
+        for obj,p in zip([circ1,circ2,rect],patreon_svg):
+            obj.move_to(p.get_center())
+        for obj,p in zip([circ2,rect],patreon_svg[1:]):
+            obj.shift(DOWN*0.1)
+
+        self.add(circ1,circ2,rect)
+
 
 def Celular():
     pad = SVGMobject(
