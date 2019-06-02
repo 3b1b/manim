@@ -13,7 +13,8 @@ Welcome to Manim's documentation!
     about
     installation/index
     getting_started/index
-
+    constants
+    
 
 Indices and tables
 ==================
