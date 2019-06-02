@@ -53,6 +53,11 @@ def parse_cli():
             help="Save each frame as a png",
         ),
         parser.add_argument(
+            "-i", "--save_as_gif",
+            action="store_true",
+            help="Save the video as gif",
+        ),
+        parser.add_argument(
             "-f", "--show_file_in_finder",
             action="store_true",
             help="Show the output file in finder",
@@ -161,6 +166,7 @@ def get_configuration(args):
         "write_to_movie": args.write_to_movie or not args.save_last_frame,
         "save_last_frame": args.save_last_frame,
         "save_pngs": args.save_pngs,
+        "save_as_gif": args.save_as_gif,
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
