@@ -12,7 +12,7 @@ a pull request there.
 
 .. toctree::
     :maxdepth: 2
-    :caption: Contents:
+    :caption: Contents
 
     about
     installation/index
