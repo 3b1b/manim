@@ -6,11 +6,10 @@ RUN apt-get update \
         sox \
         libcairo2-dev \
         texlive \
-        texlive-latex-extra \
         texlive-fonts-extra \
+        texlive-latex-extra \
         texlive-latex-recommended \
         texlive-science \
-        texlive-fonts-extra \
         tipa \
     && rm -rf /var/lib/apt/lists/*
 COPY . /manim
