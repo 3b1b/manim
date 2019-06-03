@@ -97,4 +97,20 @@ class InFouriersShoes(PiCreatureScene, WriteHeatEquationTemplate):
 
 class SineCurveIsUnrealistic(TeacherStudentsScene):
     def construct(self):
-        pass
+        self.student_says(
+            "But that would\\\\never happen!",
+            student_index=1,
+            bubble_kwargs={
+                "direction": RIGHT,
+                "height": 3,
+                "width": 4,
+            },
+            target_mode="angry"
+        )
+        self.change_student_modes(
+            "guilty", "angry", "hesitant",
+            added_anims=[
+                self.teacher.change, "tease"
+            ]
+        )
+        self.wait(2)

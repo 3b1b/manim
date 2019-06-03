@@ -628,16 +628,14 @@ class OceanOfPossibilities(TemperatureGraphScene):
             phi=80 * DEGREES,
             theta=-80 * DEGREES,
         )
-        self.camera.frame_center.move_to(
-            3 * RIGHT
-        )
         self.begin_ambient_camera_rotation(rate=0.01)
 
     def setup_axes(self):
         axes = self.get_three_d_axes(include_numbers=True)
         axes.add(axes.input_plane)
-        # axes.scale(1.25)
-        axes.shift(1.5 * IN)
+        axes.scale(0.9)
+        axes.center()
+        axes.shift(OUT + RIGHT)
 
         self.add(axes)
         self.axes = axes
@@ -770,7 +768,6 @@ class OceanOfPossibilities(TemperatureGraphScene):
         self.stop_ambient_camera_rotation()
         self.move_camera(
             theta=-45 * DEGREES,
-            frame_center=ORIGIN,
             added_anims=[
                 LaggedStartMap(ShowCreation, lines),
                 LaggedStartMap(
@@ -790,7 +787,6 @@ class OceanOfPossibilities(TemperatureGraphScene):
         self.wait()
         self.move_camera(
             theta=-70 * DEGREES,
-            frame_center=3 * RIGHT,
         )
 
         self.surface_boundary_lines = surface_boundary_lines
@@ -833,6 +829,7 @@ class OceanOfPossibilities(TemperatureGraphScene):
         self.surface_boundary_lines.resume_updating()
         self.surface.resume_updating()
         self.graph.resume_updating()
+        self.begin_ambient_camera_rotation(rate=0.01)
         self.wait(30)
 
 

@@ -20,4 +20,5 @@ SCENES_IN_ORDER = [
     OceanOfPossibilities,
     InFouriersShoes,
     AnalyzeSineCurve,
+    SineCurveIsUnrealistic,
 ]
