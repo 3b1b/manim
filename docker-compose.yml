@@ -6,13 +6,13 @@ services:
     image: eulertour/manim:latest
     # uncomment this line to build rather than pull the image
     # build: .
-    volumes:
-      - ${MANIM_PATH:?MANIM_PATH environment variable isn't set}:/opt/manim
-    environment:
-      - PYTHONPATH=/opt/manim
-    working_dir: /opt/manim
     entrypoint:
-      - python
-      - -m
       - manim
+    volumes:
+      - ${INPUT_DIR:?INPUT_DIR environment variable isn't set}:/tmp/input
+      - ${OUTPUT_DIR:?OUTPUT_DIR environment variable isn't set}:/tmp/output
+    environment:
+      - FILE_DIR=/tmp/output
+      - MEDIA_DIR=/tmp/output
+    working_dir: /tmp/input
     network_mode: "none"
