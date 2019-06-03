@@ -75,18 +75,23 @@ def prompt_user_for_choice(scene_classes):
         num_to_class[count] = scene_class
     try:
         user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
-        return [
-            num_to_class[int(num_str)]
-            for num_str in user_input.split(",")
-        ]
+        if user_input=="n":
+            sys.exit(1)
+        else:
+            return [
+                num_to_class[int(num_str)]
+                for num_str in user_input.split(",")
+            ]
     except KeyError:
         print(manimlib.constants.INVALID_NUMBER_MESSAGE)
         sys.exit(2)
-        user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
-        return [
-            num_to_class[int(num_str)]
-            for num_str in user_input.split(",")
-        ]
+        if user_input=="n":
+            sys.exit(1)
+        else:
+            return [
+                num_to_class[int(num_str)]
+                for num_str in user_input.split(",")
+            ]
     except EOFError:
         sys.exit(1)
 
