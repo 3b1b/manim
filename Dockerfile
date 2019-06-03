@@ -3,9 +3,15 @@ RUN apt-get update \
     && apt-get install -qqy --no-install-recommends \
         apt-utils \
         ffmpeg \
-        texlive-full \
         sox \
         libcairo2-dev \
+        texlive \
+        texlive-latex-extra \
+        texlive-fonts-extra \
+        texlive-latex-recommended \
+        texlive-science \
+        texlive-fonts-extra \
+        tipa \
     && rm -rf /var/lib/apt/lists/*
 COPY . /manim
 RUN cd /manim \
