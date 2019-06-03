@@ -45,7 +45,7 @@ Tex
     TEX_USE_CTEX
               A boolean value. Change it to True if you need to use Chinese typesetting.
     TEX_TEXT_TO_REPLACE
-              ????????
+              Placeholder text used by manim when generating tex files
     TEMPLATE_TEX_FILE
               By default ``manimlib/tex_template.tex`` is used. If ``TEX_USE_CTEX``
               is set to True then ``manimlib/ctex_template.tex`` is used.
@@ -67,13 +67,13 @@ Camera Configuration
 Render setting presets
 
     PRODUCTION_QUALITY_CAMERA_CONFIG
-            2560x1440 @ 60fps
+            2560x1440 @ 60fps # This is the default when rendering a scene
     HIGH_QUALITY_CAMERA_CONFIG
-            1920x1080 @ 60fps. This is the default when rendering a scene
+            1920x1080 @ 60fps.
     MEDIUM_QUALITY_CAMERA_CONFIG
-            1280x720 @ 30fps
+            1280x720 @ 30fps # Used when ``-m`` flag is passed
     LOW_QUALITY_CAMERA_CONFIG
-            854x480 @ 15fps. Used when ``-l`` flag is passed
+            854x480 @ 15fps. # Used when ``-l`` flag is passed
 
 Coordinates
 -----------
