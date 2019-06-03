@@ -17,7 +17,8 @@ a pull request there.
     about
     installation/index
     getting_started/index
-
+    constants
+    
 
 Indices and tables
 ==================
