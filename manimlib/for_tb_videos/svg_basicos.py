@@ -1,5 +1,34 @@
 from big_ol_pile_of_manim_imports import *
 
+class Instagram(VGroup):
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        back1=self.color_cell(
+            SVGMobject("instagram")[2],
+            colors = ["#FED372","#B52C94","#4D67D8"]
+            )
+        back2=self.color_cell(
+            SVGMobject("instagram")[0],
+            colors = ["#B52C94"]
+            )
+        back3=self.color_cell(
+            SVGMobject("instagram")[1],
+            colors = ["#B83D8D","#8A5DA2","#8A5DA2"]
+            )
+        back4=self.color_cell(
+            SVGMobject("instagram")[3],
+            colors = ["#D77A84","#B52C94","#BD368A"],
+            vect=[0.2,1,0]
+            )
+        VGroup.__init__(self,**kwargs)
+        self.add(back1,back2,back3,back4)
+
+    def color_cell(self,cell,colors,vect=[0.45,1,0]):
+        cell.set_color(color=colors,family=True)
+        cell.set_stroke(color=colors)
+        cell.set_sheen_direction(vect)
+        return cell
+
 class PatreonSVG(SVGMobject):
     CONFIG={
     "file_name":"patreon.svg"
