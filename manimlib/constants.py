@@ -20,28 +20,19 @@ if not os.path.isdir(MEDIA_DIR):
         "this behavior by writing a different directory to media_dir.txt."
     )
 
-VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
-RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
-SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
-SOUND_DIR = os.path.join(MEDIA_DIR, "designs", "sounds")
-###
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR = os.path.join(os.getenv("FILE_DIR", default="."), "files")
-TEX_DIR = os.path.join(FILE_DIR, "Tex")
-# These two may be depricated now.
-MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
-IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
+VIDEO_DIR  = os.path.join(MEDIA_DIR, "video")
+ASSETS_DIR = os.path.join(MEDIA_DIR, "assets")
+TEX_DIR    = os.path.join(MEDIA_DIR, "Tex")
 
-for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
-               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR]:
+for folder in [VIDEO_DIR, ASSETS_DIR, TEX_DIR]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
 TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(
-    THIS_DIR, "tex_template.tex" if not TEX_USE_CTEX
-    else "ctex_template.tex"
+    os.path.dirname(os.path.realpath(__file__)),
+    "tex_template.tex" if not TEX_USE_CTEX else "ctex_template.tex"
 )
 with open(TEMPLATE_TEX_FILE, "r") as infile:
     TEMPLATE_TEXT_FILE_BODY = infile.read()

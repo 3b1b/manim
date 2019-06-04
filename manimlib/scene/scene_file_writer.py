@@ -13,7 +13,7 @@ from manimlib.constants import STREAMING_PORT
 from manimlib.constants import STREAMING_PROTOCOL
 from manimlib.constants import VIDEO_DIR
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.file_ops import guarantee_existance
+from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
 from manimlib.utils.sounds import get_full_sound_file_path
@@ -35,7 +35,6 @@ class SceneFileWriter(object):
         # TODO, address this in extract_scene et. al.
         "file_name": None,
         "output_directory": None,
-        "file_name": None,
     }
 
     def __init__(self, scene, **kwargs):
@@ -47,65 +46,61 @@ class SceneFileWriter(object):
 
     # Output directories and files
     def init_output_directories(self):
-        output_directory = self.output_directory or self.get_default_output_directory()
-        file_name = self.file_name or self.get_default_file_name()
+        module_directory = self.output_directory or self.get_default_module_directory()
+        scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
-            image_dir = guarantee_existance(os.path.join(
+            image_dir = guarantee_existence(os.path.join(
                 VIDEO_DIR,
-                output_directory,
-                self.get_image_directory(),
+                module_directory,
+                scene_name,
+                "images",
             ))
             self.image_file_path = os.path.join(
                 image_dir,
-                add_extension_if_not_present(file_name, ".png")
+                add_extension_if_not_present(scene_name, ".png")
             )
         if self.write_to_movie:
-            movie_dir = guarantee_existance(os.path.join(
+            movie_dir = guarantee_existence(os.path.join(
                 VIDEO_DIR,
-                output_directory,
-                self.get_movie_directory(),
+                module_directory,
+                scene_name,
+                self.get_resolution_directory(),
             ))
             self.movie_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(
-                    file_name, self.movie_file_extension
+                    scene_name, self.movie_file_extension
                 )
             )
             self.gif_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(
-                    file_name, self.gif_file_extension
+                    scene_name, self.gif_file_extension
                 )
             )
-            self.partial_movie_directory = guarantee_existance(os.path.join(
+            self.partial_movie_directory = guarantee_existence(os.path.join(
                 movie_dir,
-                self.get_partial_movie_directory(),
-                file_name,
+                "partial_movie_files",
+                scene_name,
             ))
 
-    def get_default_output_directory(self):
+    def get_default_module_directory(self):
         filename = os.path.basename(self.input_file_path)
-        root, ext = os.path.splitext(filename)
-        return root if root else ext[1:]
+        root, _ = os.path.splitext(filename)
+        return root
 
-    def get_default_file_name(self):
+    def get_default_scene_name(self):
         if self.file_name is None:
             return self.scene.__class__.__name__
         else:
             return self.file_name
 
-    def get_movie_directory(self):
+    def get_resolution_directory(self):
         pixel_height = self.scene.camera.pixel_height
         frame_rate = self.scene.camera.frame_rate
         return "{}p{}".format(
             pixel_height, frame_rate
         )
-
-    def get_image_directory(self):
-        return "images"
-
-    def get_partial_movie_directory(self):
-        return "partial_movie_files"
 
     # Directory getters
     def get_image_file_path(self):
