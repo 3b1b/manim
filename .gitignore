@@ -1,2 +1,4 @@
 videos
 manimlib/files/Tex
+__pycache__/
+*.pyc
