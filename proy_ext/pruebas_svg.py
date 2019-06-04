@@ -12,10 +12,10 @@ class EscenaReddit(Scene):
 
 class RedesEspanhol(Scene):
     def construct(self):
-        twitter = Twitter().scale(0.6)
-        reddits = Reddits().scale(0.6)
-        instagram = Instagram().scale(0.6)
-        patreon=Patreon().scale(0.6)
+        twitter = Twitter()
+        reddits = Reddits()
+        instagram = Instagram()
+        patreon=Patreon()
 
         patreon[1].set_fill(BLACK)
         back_negro=patreon[1].copy().move_to(patreon[1])
@@ -89,10 +89,10 @@ class RedesEspanhol(Scene):
 
 class RedesIngles(Scene):
     def construct(self):
-        twitter = Twitter().scale(0.6)
-        reddits = Reddits().scale(0.6)
-        instagram = Instagram().scale(0.6)
-        patreon=Patreon().scale(0.6)
+        twitter = Twitter()
+        reddits = Reddits()
+        instagram = Instagram()
+        patreon=Patreon()
 
         patreon[1].set_fill(BLACK)
         back_negro=patreon[1].copy().move_to(patreon[1])
