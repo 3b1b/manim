@@ -1,0 +1,139 @@
+\documentclass[preview]{standalone}
+\usepackage{musixtex}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,automata,positioning,decorations.pathmorphing}
+\usetikzlibrary{arrows,shapes,trees}
+\usetikzlibrary{intersections}
+\usetikzlibrary{calc}
+\usetikzlibrary{automata}
+\usetikzlibrary{calendar}
+\usetikzlibrary{er}
+\usetikzlibrary{matrix}
+\usetikzlibrary{folding}
+\usetikzlibrary{patterns}
+\usetikzlibrary{plothandlers}
+\usetikzlibrary{shapes}
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{snakes}
+\usetikzlibrary{topaths}
+\usetikzlibrary{babel}
+\usepackage{circuitikz}
+\usepackage[utf8]{inputenc} %usar utf8 si es que no genera bien los acentos
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{circuitikz}
+\usepackage{tikz}
+\usepackage{auncial}
+\usepackage{listings}
+%\usepackage{emerald}  %Problemas con TexLive y MacTeX, pero funciona bien en MikTeX, instalenlo usando las instrucciones en http://www.deanbodenham.com/learn/beamer-installing-emerald.html
+\usepackage{mathtools}
+\usepackage{abraces}
+\usepackage{wesa}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{setspace}
+\usepackage{tipa}
+\usepackage{relsize}
+\usepackage{textcomp}
+\usepackage{mathrsfs}
+\usepackage{calligra}
+\usepackage{wasysym}
+\usepackage{ragged2e}
+\usepackage{physics}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{microtype}
+\usepackage{cancel}
+\usepackage{pgfplots}
+\usepackage{multicol}
+\usepackage{multirow}
+\input{musixper} % Importa archivo musixper para notacion de percusion
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{pstricks}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\DeclareFontFamily{U}{matha}{\hyphenchar\font45}
+\DeclareFontShape{U}{matha}{m}{n}{
+	<5> <6> <7> <8> <9> <10> gen * matha
+	<10.95> matha10 <12> <14.4> <17.28> <20.74> <24.88> matha12
+}{}
+\DeclareSymbolFont{matha}{U}{matha}{m}{n}
+\DeclareFontSubstitution{U}{matha}{m}{n}
+
+\DeclareFontFamily{U}{mathb}{\hyphenchar\font45}
+\DeclareFontShape{U}{mathb}{m}{n}{
+	<5> <6> <7> <8> <9> <10> <11> <12> gen * mathb
+	<10.95> mathb10 <12> <14.4> <17.28> <20.74> <24.88> mathb12
+}{}
+\DeclareSymbolFont{mathb}{U}{mathb}{m}{n}
+\DeclareFontSubstitution{U}{mathb}{m}{n}
+
+\DeclareMathSymbol{\supa}{3}{mathb}{"F1}
+
+
+\DeclareMathSymbol{\leftarrow}{3}{matha}{"D0}
+\DeclareMathSymbol{\rightarrow}{3}{matha}{"D1}
+\DeclareMathSymbol{\to}{3}{matha}{"D1}
+\DeclareMathSymbol{\syx}{3}{matha}{"D8}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\DisableLigatures{encoding = *, family = * }
+%\usepackage[UTF8]{ctex}
+\linespread{1}
+\providecommand{\cos}{} \renewcommand{\cos}{\hspace{2pt}\textrm{cos}}
+\providecommand{\sin}{} \renewcommand{\sin}{\hspace{2pt}\textrm{sen}}
+\providecommand{\det}{} \renewcommand{\det}{\hspace{2pt}\textrm{Det}}
+\newcommand{\mus}[1]{\begin{music} #1 \end{music}}
+\newcommand{\bfi}{\bf i}
+\newcommand{\bfu}{\bf u}
+\newcommand{\bfv}{\bf v}
+\newcommand{\bfr}{\bf r}
+\newcommand{\bfom}{\bf \Omega}
+\newcommand{\bfomi}{\omega}
+\newcommand{\bfa}{\bf a}
+\newcommand{\bfrp}{\dot{\bf r}}
+\newcommand{\bfrpp}{\ddot{\bf r}}
+\newcommand{\bfomp}{\dot{\bf{\Omega}}}
+\newcommand{\bfomip}{\dot{\bf{\omega}}}
+\newcommand{\un}[1]{\left[{\rm #1}\right]} 
+
+%---------------------------------------------
+\lstdefinestyle{basic}
+{  
+	basicstyle=\scriptsize\ttfamily,
+	tabsize=4, % tab space width
+	showtabs=true,
+	showstringspaces=false, % don't mark spaces in strings
+	numbers=left, % display line numbers on the left
+	frame=single,
+	numbers=left,
+	numbersep=10pt,
+	showstringspaces=false,
+	breakatwhitespace=false,                 
+	captionpos=t,abovecaptionskip=0pt,
+	columns=fullflexible,    
+	keepspaces=true,
+	xleftmargin=10pt,
+	framexleftmargin=17pt,
+	framexrightmargin=0pt,
+	framexbottommargin=0pt,
+	framextopmargin=0pt,
+	mathescape=false,escapechar=|,%
+	framerule=0pt,
+	breaklines=false,
+}
+%---------------------------------------------
+%--------------Caption format---
+\tikzstyle{decision} = [diamond,  text width=5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, text width=5em, text badly centered, rounded corners, minimum height=3em]
+\tikzstyle{pros} = [rectangle, text width=5em, text badly centered, rounded corners, minimum height=3em]
+\tikzstyle{line} = [draw, -latex,thick]
+\tikzstyle{lin} = [draw,thick]
+\tikzstyle{cloud} = [ellipse, node distance=1cm,minimum height=2em]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, node distance=3cm,minimum height=2em,text width=5em,text badly centered]
+\tikzstyle{oi} = [trapezium, trapezium left angle=-70, trapezium right angle=-110, node distance=3cm,minimum height=2em,text badly centered]
+\tikzstyle{con} = [circle, fill=black, node distance=3cm,minimum height=2em]
+%-------------------------------------------
+\begin{document}
+
+\centering some
+
+\end{document}
