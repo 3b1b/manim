@@ -494,7 +494,7 @@ class WarpSquare(Scene):
 class WriteStuff(Scene):
     def construct(self):
         example_text = TextMobject(
-            "This is a some text",color=WHITE,
+            "Alexander is a some text",color=WHITE,
             tex_to_color_map={"text": YELLOW,"some":N_ROJO_1}
         )
         example_tex = TexMobject(
