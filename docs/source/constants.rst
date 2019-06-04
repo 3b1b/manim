@@ -75,6 +75,8 @@ Render setting presets
     LOW_QUALITY_CAMERA_CONFIG
             854x480 @ 15fps. # Used when ``-l`` flag is passed
 
+.. _ref-directions:
+
 Coordinates
 -----------
 
