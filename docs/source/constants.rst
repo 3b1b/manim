@@ -9,36 +9,18 @@ Directories
 -----------
 
     MEDIA_DIR
-              The root directory for media files. First the environment variable
-              ``MEDIA_DIR`` is queried. If the env is not found, use the path
-              as specified in ``manimlib/media_dir.txt``. If media_dir.txt is empty,
-              a directory is created under users home. If ``MEDIA_DIR`` is not a
-              directory, ``media`` will be created under current working directory.
-              Defaults to ``manimlib/media``
+              The directory where ``VIDEO_DIR`` and ``TEX_DIR`` will be created,
+              if they aren't specified via flags.
     VIDEO_DIR
-              Created under ``MEDIA_DIR``. Used to store rendered manim scenes.
-              When scene finished rendering, it will be stored under ``media/project_name/quality/scene_name.mp4``
-    RASTER_IMAGE_DIR
-              Created under ``media/designs/raster_images``. For storing
-              raster images like jpg, png, etc.
-    SVG_IMAGE_DIR
-              Created under ``media/designs/svg_images``. For storing svg files.
-    SOUND_DIR
-              Created under ``media/designs/sounds``. For storing sound files.
-    THIS_DIR
-              Path to the directory which ``constants.py`` resides.
-    FILE_DIR
-              The root directory for misc files. Specified by the environment variable
-              ``FILE_DIR``. If the variable is not found, a directory ``files`` will be
-              created under current working directory.
+              Used to store the scenes rendered by Manim. When a scene is
+              finished rendering, it will be stored under
+              ``VIDEO_DIR/module_name/scene_name/quality/scene_name.mp4``.
+              Created under ``MEDIA_DIR`` by default.
     TEX_DIR
-              Created under ``FILE_DIR/files``. TexMObject and TextMobject are rendered
-              here for temporary storage.
+              Files written by Latex are stored here. It also acts as a cache
+              so that the files aren't rewritten each Latex is needed.
 
 Those directories are created if they don't exist.
-
-.. note::
-    ``MOBJECT_DIR`` and ``IMAGE_MOBJECT_DIR`` is deprecated.
 
 Tex
 ---
@@ -69,11 +51,14 @@ Render setting presets
     PRODUCTION_QUALITY_CAMERA_CONFIG
             2560x1440 @ 60fps # This is the default when rendering a scene
     HIGH_QUALITY_CAMERA_CONFIG
-            1920x1080 @ 60fps.
+            1920x1080 @ 60fps. # Used when the ``-h`` or ``--high_quality`` flag
+            is passed.
     MEDIUM_QUALITY_CAMERA_CONFIG
-            1280x720 @ 30fps # Used when ``-m`` flag is passed
+            1280x720 @ 30fps. # Used when the ``-m`` or ``--medium_quality``
+            flag is passed.
     LOW_QUALITY_CAMERA_CONFIG
-            854x480 @ 15fps. # Used when ``-l`` flag is passed
+            854x480 @ 15fps. # Used when the ``-l`` or ``--low_quality`` flag is
+            passed.
 
 Coordinates
 -----------
