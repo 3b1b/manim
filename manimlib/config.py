@@ -112,6 +112,18 @@ def parse_cli():
             action="store_true",
             help="Leave progress bars displayed in terminal",
         )
+        parser.add_argument(
+            "--media_dir",
+            help="directory to write media",
+        )
+        parser.add_argument(
+            "--video_dir",
+            help="directory to write video",
+        )
+        parser.add_argument(
+            "--tex_dir",
+            help="directory to write tex",
+        )
 
         # For live streaming
         module_location.add_argument(
@@ -192,7 +204,10 @@ def get_configuration(args):
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
         "sound": args.sound,
-        "leave_progress_bars": args.leave_progress_bars
+        "leave_progress_bars": args.leave_progress_bars,
+        "media_dir": args.media_dir,
+        "video_dir": args.video_dir,
+        "tex_dir": args.tex_dir,
     }
 
     # Camera configuration

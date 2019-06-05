@@ -9,6 +9,7 @@ import sys
 from colour import Color
 import numpy as np
 
+import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
@@ -109,7 +110,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(VIDEO_DIR, (name or str(self)) + ".png")
+            os.path.join(consts.VIDEO_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):

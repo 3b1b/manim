@@ -7,11 +7,11 @@ import _thread as thread
 from time import sleep
 import datetime
 
+import manimlib.constants as consts
 from manimlib.constants import FFMPEG_BIN
 from manimlib.constants import STREAMING_IP
 from manimlib.constants import STREAMING_PORT
 from manimlib.constants import STREAMING_PROTOCOL
-from manimlib.constants import VIDEO_DIR
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.file_ops import add_extension_if_not_present
@@ -50,7 +50,7 @@ class SceneFileWriter(object):
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
             image_dir = guarantee_existence(os.path.join(
-                VIDEO_DIR,
+                consts.VIDEO_DIR,
                 module_directory,
                 scene_name,
                 "images",
@@ -61,7 +61,7 @@ class SceneFileWriter(object):
             )
         if self.write_to_movie:
             movie_dir = guarantee_existence(os.path.join(
-                VIDEO_DIR,
+                consts.VIDEO_DIR,
                 module_directory,
                 scene_name,
                 self.get_resolution_directory(),
