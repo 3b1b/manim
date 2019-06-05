@@ -60,6 +60,8 @@ Render setting presets
             854x480 @ 15fps. # Used when the ``-l`` or ``--low_quality`` flag is
             passed.
 
+.. _ref-directions:
+
 Coordinates
 -----------
 
