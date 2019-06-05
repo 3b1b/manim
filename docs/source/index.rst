@@ -17,8 +17,9 @@ a pull request there.
     about
     installation/index
     getting_started/index
+    animation
     constants
-    
+
 
 Indices and tables
 ==================
