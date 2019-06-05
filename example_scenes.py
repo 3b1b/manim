@@ -1678,3 +1678,9 @@ class ShowProjection(SphereCylinderScene):
         result = VGroup(original_rect, rect_proj_lines, rect)
         result.set_shade_in_3d(True)
         return result
+
+class Example1(Scene):
+    def construct(self):
+        text=TextMobject("Hola")
+        self.play(Write(text))
+        self.wait()
