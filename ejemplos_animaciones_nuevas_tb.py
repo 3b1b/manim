@@ -626,3 +626,15 @@ class EscenaMusica2(MusicalScene):
         cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
         self.add_foreground_mobject(cuadro_negro)
         self.play(cuadro_negro.set_fill,None,1)
+
+class CheckNewMatrix(CheckFormula):
+    CONFIG={
+    #"set_size":"height"
+    }
+    def import_text(self):
+        matrix_complete=MatrixGroup(np.transpose([
+            [["a"],["\\sqrt{","{a","\\over","\\sqrt[2]{xb}}","}"]],
+            [["\\displaystyle\\int^x_yf(x)"],       ["e"]],
+        ]),start=3)
+        matrix_complete[0][1].set_color(PINK)
+        return matrix_complete
