@@ -1,6 +1,5 @@
 from big_ol_pile_of_manim_imports import *
 import csv
-
 class CheckSVG(Scene):
     CONFIG={
     "camera_config":{"background_color": WHITE},
@@ -585,6 +584,8 @@ class ExportCSV(Scene):
     "csv_complete":False,
     "csv_name_complete":"complete",
     "csv_range":None,
+    "csv_desfase":[],
+    "cvs_sobrantes":0,
     "file":"",
     "directory":"",
     "svg_scale":0.9,
@@ -630,7 +631,7 @@ class ExportCSV(Scene):
             self.imagen.set_height(FRAME_HEIGHT)
         self.imagen.scale(self.svg_scale)
         if self.show_numbers==True:
-            tex_string,tex_number = self.print_formula(self.imagen.copy(),
+            pre_tex_string,tex_number = self.print_formula(self.imagen.copy(),
                 self.numbers_scale,
                 self.direction_numbers,
                 self.remove,
@@ -638,6 +639,21 @@ class ExportCSV(Scene):
                 self.color_numbers)
         with open(self.directory+'%s_%s.csv'%(self.csv_name,self.csv_number),'w',newline='') as fp:
             a = csv.writer(fp, delimiter=',')
+            tex_string=[]
+            if len(self.csv_desfase)==0:
+                tex_string=pre_tex_string
+            else:
+                tex_number_c=tex_number.copy()
+                for i in self.remove:
+                    tex_number_c.append("x")
+                for i in  range(len(tex_number_c)):
+                    if i in self.csv_desfase:
+                        tex_string.append("DES")
+                        tex_string.append(pre_tex_string[i])
+                        i+=1
+                    else:
+                        tex_string.append(pre_tex_string[i])
+
             data = [
                         tex_number,
                         tex_string
@@ -830,9 +846,6 @@ class ExportCSVPairs(Scene):
         list_1.append(self.csv_range)
         list_1.pop(0)
 
-        #print(list_0)
-        #print(list_1)
-
         for f_i,f_f in zip(list_0,list_1):
             for string in range(f_i,f_f+1):
                 pre_rows=[]
@@ -841,11 +854,28 @@ class ExportCSVPairs(Scene):
                     for row in reader:
                         pre_rows.append(row)
                     if string==f_i:
-                        rows.append(add_quote(pre_rows[0]))
-                        rows.append(pre_rows[1])
+                        rows.append(['Step: %s'%(f_i+1)])
+                        rows.append(['\t']+['N']+add_quote(pre_rows[0])+['),'])
+                        rows.append(['\t']+['[%s]'%f_i]+pre_rows[1])
                     else:
-                        rows.append(pre_rows[1])
-                        rows.append(add_quote(pre_rows[0]))
+                        rows.append(['\t']+['[%s]'%f_f]+pre_rows[1])
+                        rows.append(['\t']+['N']+add_quote(pre_rows[0])+[')'])
+                        rows.append("\n")
+                        rows.append(['pre_fade:']+['('])
+                        rows.append(['pre_write:']+['('])
+                        rows.append(['pre_copy:']+['('])
+                        rows.append("\n")
+                        rows.append(['pre_form:']+['('])
+                        rows.append(['pos_form:']+['('])
+                        rows.append("\n")
+                        rows.append(['pos_copy:']+['('])
+                        rows.append(['pos_fade:']+['('])
+                        rows.append(['pos_write:']+['('])
+                        rows.append("\n")
+                        rows.append(['run_fade:']+['('])
+                        rows.append(['run_write:']+['('])
+                        rows.append("\n")
+                        rows.append(['---------']*50)
                         rows.append("\n")
 
 
@@ -857,4 +887,5 @@ class ExportCSVPairs(Scene):
                       *rows
                     ]
             a.writerows(data)
-        os.remove(self.directory+'%s_None.csv'%self.csv_name)
+            os.remove(self.directory+'%s_None.csv'%self.csv_name)
+        
