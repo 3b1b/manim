@@ -26,6 +26,12 @@ class Export2(Export):
     "csv_number":1,
     }
 
+class Export5(Export):
+    CONFIG={
+    "text":formulas[3],
+    "csv_number":3,
+    "remove":[1,8,4,12,19,23,27,30,37,35,17]
+    }
 
 class ExportFin(Export):
 	CONFIG={
