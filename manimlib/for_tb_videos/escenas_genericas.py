@@ -1,4 +1,5 @@
 from big_ol_pile_of_manim_imports import *
+import csv
 
 class CheckSVG(Scene):
     CONFIG={
@@ -50,7 +51,6 @@ class CheckSVG(Scene):
             else:
                 self.imagen.set_height(FRAME_HEIGHT)
             self.imagen.scale(self.svg_scale)
-        self.personalize_image()
         if self.flip_svg==True:
             self.imagen.flip()
         if self.show_numbers==True:
@@ -70,6 +70,7 @@ class CheckSVG(Scene):
             self.play(DrawBorderThenFill(self.imagen))
         else:
             self.add(self.imagen)
+        self.personalize_image()
         self.wait()
     def import_text(self):
         return TexMobject("")
@@ -473,52 +474,387 @@ class EscenaContenido(Scene):
     		self.titulo.shift,UP*5,
     		self.bloques.shift,DOWN*10,
     		self.bloques_estatica.shift,DOWN*10)
-        
-class EscenaTitulo(Scene):
-	CONFIG={
-	"title":"Hola mundo!",
-	"te":0.4,
-	"escala":2,
-	"especificaciones":{},
-	"tipo_animacion":"escribe_texto"
-	}
-	def construct(self):
-		self.muestra_titulo()
 
-	def muestra_titulo(self):
-		tit=TikzMobject("""
-		\\begin{tikzpicture}[pencildraw/.style={decorate,
-		decoration={random steps,segment length=0.8pt,amplitude=0.3pt}}]
-		    \\node[pencildraw,draw] {\\sc %s};
-		\\end{tikzpicture} 
-		  """%self.title,stroke_width=2,fill_opacity=.1,color=WHITE).scale(self.escala)
-		tit[0].set_fill(BLACK,1)
-		tit[1:].set_stroke(None,0).set_fill(WHITE,1)
-		if self.tipo_animacion=="escribe_texto":
-			titulo=escribe_texto(self,tit[1:],**self.especificaciones)
-		elif self.tipo_animacion=="Escribe":
-			titulo=tit[1:]
-			self.play(Escribe(titulo),**self.especificaciones)
-		elif self.tipo_animacion=="Aparece":
-			titulo=tit[1:]
-			seleccion_texto(self,titulo,opacidad=0,color=BLACK,direccion=RIGHT)
-			self.add(titulo)
-			self.play(Transform(titulo.pos_rect,titulo.rect),**self.especificaciones)
-		elif self.tipo_animacion=="Teclea":
-			titulo=tit[1:]
-			TypeWriter(self,titulo,**self.especificaciones)
-			self.wait()
-		self.add_foreground_mobject(tit[0])
-		self.add_foreground_mobject(tit[1:])
-		self.play(Write(tit[0]))
-		esq_left=tit[1:].get_left()
-		esq_right=tit[1:].get_right()
-		cuerda_left=Line(esq_left+UP*5,esq_left,color=WHITE)
-		cuerda_right=Line(esq_right+UP*5,esq_right,color=WHITE)
-		self.play(ShowCreation(cuerda_left),ShowCreation(cuerda_right))
-		self.wait(self.te)
-		self.add_foreground_mobjects(tit[0],tit[1:])
-		self.play(
-		VGroup(tit[0],cuerda_left,cuerda_right,titulo,tit[1:]).shift,UP*8
-		)
+class ShowNumberElements(Scene):
+    CONFIG={
+    "camera_config":{"background_color": BLACK},
+    "svg_type":"text",
+    "text": TexMobject(""),
+    "file":"",
+    "svg_scale":0.9,
+    "angle":0,
+    "flip_svg":False,
+    "fill_opacity": 1,
+    "remove": [],
+    "stroke_color": WHITE,
+    "fill_color": WHITE,
+    "stroke_width": 3,
+    "numbers_scale":0.5,
+    "show_numbers": True,
+    "animation": False,
+    "direction_numbers": UP,
+    "color_numbers": RED,
+    "space_between_numbers":0,
+    "show_elements":[],
+    "color_element":BLUE,
+    "set_size":"width",
+    "remove_stroke":[],
+    "show_stroke":[],
+    "warning_color":RED,
+    "stroke_":1
+    }
+    def construct(self):
+        self.imagen=self.text
+        if self.set_size=="width":
+            self.imagen.set_width(FRAME_WIDTH)
+        else:
+            self.imagen.set_height(FRAME_HEIGHT)
+        self.imagen.scale(self.svg_scale)
+        if self.flip_svg==True:
+            self.imagen.flip()
+        if self.show_numbers==True:
+            self.print_formula(self.imagen.copy(),
+                self.numbers_scale,
+                self.direction_numbers,
+                self.remove,
+                self.space_between_numbers,
+                self.color_numbers)
 
+        self.return_elements(self.imagen.copy(),self.show_elements)
+        for st in self.remove_stroke:
+            self.imagen[st].set_stroke(None,0)
+        for st in self.show_stroke:
+            self.imagen[st].set_stroke(None,self.stroke_)
+        if self.animation==True:
+            self.play(DrawBorderThenFill(self.imagen))
+        else:
+            c=0
+            for j in range(len(self.imagen)):
+                permission_print=True
+                for w in self.remove:
+                    if j==w:
+                        permission_print=False
+                if permission_print:
+                    self.add(self.imagen[j])
+            c = c + 1
+        self.personalize_image()
+        self.wait()
+
+    def personalize_image(self):
+        pass
+
+    def print_formula(self,text,inverse_scale,direction,exception,buff,color):
+        text.set_color(self.warning_color)
+        self.add(text)
+        c = 0
+        for j in range(len(text)):
+            permission_print=True
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add(text[j].set_color(self.stroke_color))
+        c = c + 1
+
+        c=0
+        for j in range(len(text)):
+            permission_print=True
+            element = TexMobject("%d" %c,color=color)
+            element.scale(inverse_scale)
+            element.next_to(text[j],direction,buff=buff)
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add_foreground_mobjects(element)
+                print(text[j].get_tex_string(),"\t\t\t",j)
+            c = c + 1 
+
+    def return_elements(self,formula,adds):
+        for i in adds:
+            self.add_foreground_mobjects(formula[i].set_color(self.color_element),
+                TexMobject("%d"%i,color=self.color_element,background_stroke_width=0).scale(self.numbers_scale).next_to(formula[i],self.direction_numbers,buff=self.space_between_numbers))
+
+class ExportCSV(Scene):
+    CONFIG={
+    "camera_config":{"background_color": BLACK},
+    "svg_type":"text",
+    "text": TexMobject(""),
+    "csv_name":"",
+    "csv_number":None,
+    "csv_complete":False,
+    "csv_name_complete":"complete",
+    "csv_range":None,
+    "file":"",
+    "directory":"",
+    "svg_scale":0.9,
+    "angle":0,
+    "flip_svg":False,
+    "fill_opacity": 1,
+    "remove": [],
+    "stroke_color": WHITE,
+    "fill_color": WHITE,
+    "stroke_width": 3,
+    "numbers_scale":0.5,
+    "show_numbers": True,
+    "animation": False,
+    "direction_numbers": UP,
+    "color_numbers": RED,
+    "space_between_numbers":0,
+    "show_elements":[],
+    "color_element":BLUE,
+    "set_size":"width",
+    "remove_stroke":[],
+    "show_stroke":[],
+    "warning_color":RED,
+    "stroke_":1
+    }
+    def construct(self):
+        CSV_DIR = os.path.join(self.directory)
+
+        if not os.path.exists(CSV_DIR):
+            os.makedirs(CSV_DIR)
+
+        if not self.csv_complete:
+            self.create_csv()
+        else:
+            self.create_complete_csv()
+
+
+
+    def create_csv(self):
+        self.imagen=self.text
+        if self.set_size=="width":
+            self.imagen.set_width(FRAME_WIDTH)
+        else:
+            self.imagen.set_height(FRAME_HEIGHT)
+        self.imagen.scale(self.svg_scale)
+        if self.show_numbers==True:
+            tex_string,tex_number = self.print_formula(self.imagen.copy(),
+                self.numbers_scale,
+                self.direction_numbers,
+                self.remove,
+                self.space_between_numbers,
+                self.color_numbers)
+        with open(self.directory+'%s_%s.csv'%(self.csv_name,self.csv_number),'w',newline='') as fp:
+            a = csv.writer(fp, delimiter=',')
+            data = [
+                        tex_number,
+                        tex_string
+                    ]
+            a.writerows(data)
+
+    def print_formula(self,text,inverse_scale,direction,exception,buff,color):
+        tex_string=[]
+        tex_number=[]
+        text.set_color(self.warning_color)
+        self.add(text)
+        c = 0
+        for j in range(len(text)):
+            permission_print=True
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add(text[j].set_color(self.stroke_color))
+        c = c + 1
+
+        c=0
+        for j in range(len(text)):
+            permission_print=True
+            element = TexMobject("%d" %c,color=color)
+            element.scale(inverse_scale)
+            element.next_to(text[j],direction,buff=buff)
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add_foreground_mobjects(element)
+                tex_string.append(text[j].get_tex_string())
+                tex_number.append(j)
+            c = c + 1 
+        return tex_string,tex_number
+
+    def create_complete_csv(self):
+        def rango(n):
+            return range(n+1)
+
+        rows=[]
+
+        for string in rango(self.csv_range):
+            with open(self.directory+'%s_%s.csv'%(self.csv_name,string), 'r') as f:
+                reader = csv.reader(f,delimiter=',')
+                cont=0
+                for row in reader:
+                    new_row=[]
+                    if cont==0:
+                        for r in row:
+                            r+=','
+                            new_row.append(r)
+                            cont+=1
+                        rows.append(new_row)
+                    else:
+                        rows.append(row)
+                
+                rows.append("\n")
+
+
+        with open(self.directory+'%s.csv'%self.csv_name,'w',newline='') as fp:
+            a = csv.writer(fp, delimiter=',')
+            data = [
+                      *rows
+                    ]
+            a.writerows(data)
+        os.remove(self.directory+'%s_None.csv'%self.csv_name)
+
+class ExportCSVPairs(Scene):
+    CONFIG={
+    "camera_config":{"background_color": BLACK},
+    "svg_type":"text",
+    "text": TexMobject(""),
+    "csv_name":"",
+    "csv_number":None,
+    "csv_complete":False,
+    "csv_name_complete":"complete",
+    "csv_range":None,
+    "file":"",
+    "directory":"",
+    "svg_scale":0.9,
+    "angle":0,
+    "flip_svg":False,
+    "fill_opacity": 1,
+    "remove": [],
+    "stroke_color": WHITE,
+    "fill_color": WHITE,
+    "stroke_width": 3,
+    "numbers_scale":0.5,
+    "show_numbers": True,
+    "animation": False,
+    "direction_numbers": UP,
+    "color_numbers": RED,
+    "space_between_numbers":0,
+    "show_elements":[],
+    "color_element":BLUE,
+    "set_size":"width",
+    "remove_stroke":[],
+    "show_stroke":[],
+    "warning_color":RED,
+    "stroke_":1
+    }
+    def construct(self):
+        CSV_DIR = os.path.join(self.directory)
+
+        if not os.path.exists(CSV_DIR):
+            os.makedirs(CSV_DIR)
+
+        if not self.csv_complete:
+            self.create_csv()
+        else:
+            self.create_complete_csv()
+
+
+
+    def create_csv(self):
+        self.imagen=self.text
+        if self.set_size=="width":
+            self.imagen.set_width(FRAME_WIDTH)
+        else:
+            self.imagen.set_height(FRAME_HEIGHT)
+        self.imagen.scale(self.svg_scale)
+        if self.show_numbers==True:
+            tex_string,tex_number = self.print_formula(self.imagen.copy(),
+                self.numbers_scale,
+                self.direction_numbers,
+                self.remove,
+                self.space_between_numbers,
+                self.color_numbers)
+        with open(self.directory+'%s_%s.csv'%(self.csv_name,self.csv_number),'w',newline='') as fp:
+            a = csv.writer(fp, delimiter=',')
+            data = [
+                        tex_number,
+                        tex_string
+                    ]
+            a.writerows(data)
+
+    def print_formula(self,text,inverse_scale,direction,exception,buff,color):
+        tex_string=[]
+        tex_number=[]
+        text.set_color(self.warning_color)
+        self.add(text)
+        c = 0
+        for j in range(len(text)):
+            permission_print=True
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add(text[j].set_color(self.stroke_color))
+        c = c + 1
+
+        c=0
+        for j in range(len(text)):
+            permission_print=True
+            element = TexMobject("%d" %c,color=color)
+            element.scale(inverse_scale)
+            element.next_to(text[j],direction,buff=buff)
+            for w in exception:
+                if j==w:
+                    permission_print=False
+            if permission_print:
+                self.add_foreground_mobjects(element)
+                tex_string.append(text[j].get_tex_string())
+                tex_number.append(j)
+            c = c + 1 
+        return tex_string,tex_number
+
+    def create_complete_csv(self):
+        def rango(n):
+            return range(n+1)
+        def add_quote(row):
+            new_row=[]
+            for r in row:
+                r+=','
+                new_row.append(r)
+            return new_row
+        def es_par(n):
+            if n%2==0:
+                return True
+            else:
+                return False
+
+
+        rows=[]
+        list_0=list(range(self.csv_range))
+        list_1=list_0.copy()
+
+        list_1.append(self.csv_range)
+        list_1.pop(0)
+
+        #print(list_0)
+        #print(list_1)
+
+        for f_i,f_f in zip(list_0,list_1):
+            for string in range(f_i,f_f+1):
+                pre_rows=[]
+                with open(self.directory+'%s_%s.csv'%(self.csv_name,string), 'r') as f:
+                    reader = csv.reader(f,delimiter=',')
+                    for row in reader:
+                        pre_rows.append(row)
+                    if string==f_i:
+                        rows.append(add_quote(pre_rows[0]))
+                        rows.append(pre_rows[1])
+                    else:
+                        rows.append(pre_rows[1])
+                        rows.append(add_quote(pre_rows[0]))
+                        rows.append("\n")
+
+
+
+
+        with open(self.directory+'%s.csv'%self.csv_name,'w',newline='') as fp:
+            a = csv.writer(fp, delimiter=',')
+            data = [
+                      *rows
+                    ]
+            a.writerows(data)
+        os.remove(self.directory+'%s_None.csv'%self.csv_name)
