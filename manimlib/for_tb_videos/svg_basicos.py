@@ -1,5 +1,53 @@
 from big_ol_pile_of_manim_imports import *
 
+class MatrixGroup(VGroup):
+    def __init__(self,matrix_complete,show_desg=False,start=3):
+        matrix_complete_full=""
+        coords=[]
+        for w in range(len(matrix_complete)):
+            coords_r=[]
+            for i in range(len(matrix_complete[w])):
+                tex_i=""
+                for j in matrix_complete[w][i]:
+                    matrix_complete_full+=j
+                    tex_i+=j
+                    matrix_complete_full+=" "
+                    tex_i+=" "
+                l_tex=len(Formula(tex_i))
+                coords_r.append(l_tex)
+                print(l_tex)
+                if i<len(matrix_complete[w])-1:
+                    matrix_complete_full+=" & "
+                else:
+                    matrix_complete_full+=r" \\ "
+            coords.append(coords_r)
+
+        VGroup.__init__(self)
+        matrix_frag=VGroup()
+
+        matrix_desg=TexMobject(r"""
+            \begin{bmatrix}
+            %s
+            \end{bmatrix}
+        """%(matrix_complete_full))
+        end=start
+        
+        for w in range(len(matrix_complete)):
+            matrix_rows=VGroup()
+            for i in range(len(matrix_complete[w])):
+                element=VGroup(Formula(*matrix_complete[w][i]))
+                element.set_height(matrix_desg[start:start+coords[w][i]].get_height())
+                element.move_to(matrix_desg[start:start+coords[w][i]])
+                start+=coords[w][i]
+                matrix_rows.add(element)
+            matrix_frag.add(matrix_rows)
+        matrix_frag.add(matrix_desg[:end],matrix_desg[-end:])
+
+        if show_desg==True:
+            self.add(*matrix_desg)
+        else:
+            self.add(*matrix_frag)
+
 class Instagram(VGroup):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
