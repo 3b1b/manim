@@ -721,7 +721,7 @@ class ExportCSV(Scene):
                       *rows
                     ]
             a.writerows(data)
-        os.remove(self.directory+'%s_None.csv'%self.csv_name)
+        #os.remove(self.directory+'%s_None.csv'%self.csv_name)
 
 class ExportCSVPairs(Scene):
     CONFIG={
@@ -887,5 +887,5 @@ class ExportCSVPairs(Scene):
                       *rows
                     ]
             a.writerows(data)
-            os.remove(self.directory+'%s_None.csv'%self.csv_name)
+            #os.remove(self.directory+'%s_None.csv'%self.csv_name)
         
