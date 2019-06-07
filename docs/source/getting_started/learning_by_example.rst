@@ -64,7 +64,9 @@ and automatically play it.
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/8tvYDIGLJJA?ecver=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <video width="560" height="315" controls>
+        <source src="../_static/SquareToCircle.mp4" type="video/mp4">
+    </video>
 
 Let's step through each line of the :class:`~scene.scene.Scene`. Lines 3 and 4
 instantiate a :class:`~mobject.geometry.Circle` and

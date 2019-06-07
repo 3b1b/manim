@@ -16,7 +16,13 @@ Animation are used in conjunction with ``scene.Play``
 Fade
 ----
 
-FadeIn :download:`/assets/AnimationFadeIn.mp4`::
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationFadeIn.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
 
   class AnimationFadeIn(Scene):
       def construct(self):
@@ -27,9 +33,13 @@ FadeIn :download:`/assets/AnimationFadeIn.mp4`::
           self.add(anno)
           self.play(FadeIn(square))
 
+.. raw:: html
 
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationFadeOut.mp4" type="video/mp4">
+    </video>
 
-FadeOut :download:`/assets/AnimationFadeOut.mp4`::
+.. code-block:: python
 
   class AnimationFadeOut(Scene):
       def construct(self):
@@ -43,7 +53,13 @@ FadeOut :download:`/assets/AnimationFadeOut.mp4`::
 
 
 
-FadeInFrom :download:`/assets/AnimationFadeInFrom.mp4`::
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationFadeInFrom.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
 
   class AnimationFadeInFrom(Scene):
       def construct(self):
@@ -60,7 +76,13 @@ FadeInFrom :download:`/assets/AnimationFadeInFrom.mp4`::
 
 
 
-FadeOutAndShift :download:`assets/AnimationFadeOutAndShift.mp4`::
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationFadeOutAndShift.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
 
   class AnimationFadeOutAndShift(Scene):
       def construct(self):
@@ -77,7 +99,13 @@ FadeOutAndShift :download:`assets/AnimationFadeOutAndShift.mp4`::
 
 
 
-FadeInFromLarge :download:`assets/AnimationFadeInFromLarge.mp4`::
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationFadeInFromLarge.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
 
   class AnimationFadeInFromLarge(Scene):
       def construct(self):
@@ -91,9 +119,13 @@ FadeInFromLarge :download:`assets/AnimationFadeInFromLarge.mp4`::
               self.play(FadeInFromLarge(square, scale_factor=factor))
               self.remove(anno, square)
 
+.. raw:: html
 
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationFadeInFromPoint.mp4" type="video/mp4">
+    </video>
 
-FadeInFromPoint :download:`assets/AnimationFadeInFromPoint.mp4`::
+.. code-block:: python
 
   class AnimationFadeInFromPoint(Scene):
       def construct(self):
@@ -110,7 +142,13 @@ FadeInFromPoint :download:`assets/AnimationFadeInFromPoint.mp4`::
 Grow
 ----
 
-GrowFromEdge :download:`assets/AnimationGrowFromEdge.mp4`::
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationGrowFromEdge.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
 
   class AnimationGrowFromEdge(Scene):
       def construct(self):
@@ -127,7 +165,13 @@ GrowFromEdge :download:`assets/AnimationGrowFromEdge.mp4`::
 
 
 
-GrowFromCenter :download:`assets/AnimationGrowFromCenter.mp4`::
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationGrowFromCenter.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
 
   class AnimationGrowFromCenter(Scene):
       def construct(self):
@@ -145,15 +189,21 @@ GrowFromCenter :download:`assets/AnimationGrowFromCenter.mp4`::
 Diagonal Directions
 -------------------
 
-You can combine cardinal directions to form diagonal animations :download:`assets/AnimationFadeInFromDiagnal.mp4`::
+You can combine cardinal directions to form diagonal animations
 
-  class AnimationFadeInFromDiagnal(Scene):
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/AnimationFadeInFromDiagonal.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+  class AnimationFadeInFromDiagonal(Scene):
       def construct(self):
           square = Square()
           for diag in [UP + LEFT, UP + RIGHT, DOWN + LEFT, DOWN + RIGHT]:
               self.play(FadeInFrom(square, diag))
-
-
 
 .. note::
     You can also use the abbreviated forms like ``UL, UR, DL, DR``.
