@@ -4,9 +4,9 @@ Learning by Example
 SquareToCircle
 --------------
 
-You create videos in manim by writing :class:`~scene.scene.Scene` classes.
 ``example_scenes.py`` contains a few simple ones that we can use to learn about manim.
-For instance, try out the ``SquareToCircle`` scene by running it with ``$ manim example_scenes.py SquareToCircle -p``
+
+Go ahead and try out the ``SquareToCircle`` scene by running it with ``$ manim example_scenes.py SquareToCircle -p``
 in manim directory.
 
 .. code-block:: python
@@ -47,29 +47,38 @@ in manim directory.
 
 Let's step through each line of ``SquareToCircle``
 
+.. code-block:: python
+   :lineno-start: 3
+
+   class SquareToCircle(Scene):
+
+You create videos in manim by writing :class:`~scene.scene.Scene` classes.
+
 Each :class:`~scene.scene.Scene` in manim is self-contained. That means everything
 you created under this scene does not exist outside the class.
+
+.. code-block:: python
+   :lineno-start: 4
+
+   def construct(self):
 
 :meth:`~scene.scene.Scene.construct` specifies what is displayed on the screen
 when the :class:`~scene.scene.Scene` is rendered to video.
 
-``Circle()`` and ``Square`` :class:`~mobject.geometry.Circle` and
-:class:`~mobject.geometry.Square`, respectively.
-
 .. code-block:: python
-   :linenos:
    :lineno-start: 5
 
    circle = Circle()
    square = Square()
 
-Both of these subclass :class:`~mobject.mobject.Mobject`, the base class for objects in manim. Note
+``Circle()`` and ``Square()`` create :class:`~mobject.geometry.Circle` and :class:`~mobject.geometry.Square`.
+
+Both of these are instances of :class:`~mobject.mobject.Mobject` subclasses, the base class for objects in manim. Note
 that instantiating a :class:`~mobject.mobject.Mobject` does not add it to the
 :class:`~scene.scene.Scene`, so you wouldn't see anything if you were to render
 the :class:`~scene.scene.Scene` at this point.
 
 .. code-block:: python
-   :linenos:
    :lineno-start: 7
 
    square.flip(RIGHT)
@@ -88,7 +97,6 @@ The call to :meth:`~mobject.mobject.Mobject.set_fill` sets
 the fill color for the :class:`~mobject.geometry.Circle` to pink, and its opacity to 0.5.
 
 .. code-block:: python
-   :linenos:
    :lineno-start: 11
 
    self.play(ShowCreation(square))
