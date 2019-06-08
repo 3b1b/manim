@@ -79,7 +79,7 @@ environment variable to the directory containing your source code and the
 `OUTPUT_DIRECTORY` environment variable to the directory where you want media
 to be written.
 
-1. [Install Docker](https://www.docker.com/products/overview)
+1. [Install Docker](https://docs.docker.com)
 2. [Install Docker Compose](https://docs.docker.com/compose/install/)
 3. Render an animation
 ```sh
