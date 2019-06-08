@@ -4,7 +4,7 @@ Learning by Example
 SquareToCircle
 --------------
 
-``example_scenes.py`` contains a few simple ones that we can use to learn about manim.
+``example_scenes.py`` contains simple examples that we can use to learn about manim.
 
 Go ahead and try out the ``SquareToCircle`` scene by running it with ``$ manim example_scenes.py SquareToCircle -p``
 in manim directory.
