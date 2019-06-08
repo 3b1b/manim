@@ -2,4 +2,6 @@ videos
 files/Tex
 manimlib/files/Tex
 __pycache__/
+.DS_Store
+manimlib/.DS_Store
 *.pyc

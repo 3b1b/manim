@@ -1,5 +1,6 @@
 import os
 import hashlib
+import platform
 
 from manimlib.constants import TEX_DIR
 from manimlib.constants import TEX_TEXT_TO_REPLACE
@@ -77,6 +78,7 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
     """
     result = dvi_file.replace(".dvi" if not TEX_USE_CTEX else ".xdv", ".svg")
     if not os.path.exists(result):
+        current_os = platform.system()
         commands = [
             "dvisvgm",
             dvi_file,
@@ -85,9 +87,14 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
             "0",
             "-o",
             result,
-            #"--libgs='/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib'" , # Enable this line with the directory pf libgs.dylib
-            ">",
-            os.devnull
         ]
+        if current_os=="Darwin":
+            commands+=[
+                "--libgs='/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib'" 
+            ]
+        commands+=[
+                ">",
+                os.devnull
+            ]
         os.system(" ".join(commands))
     return result
