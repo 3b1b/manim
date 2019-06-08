@@ -79,3 +79,24 @@ class LearnManim(Scene):
         texto.set_color_by_gradient(YELLOW,RED)
         
         self.add(texto)
+
+class Arrays(Scene):
+    def construct(self):
+        texto=Texto("Manim tutorial\\\\","\\sc 3\\\\","Arrays")\
+             .scale(3.7).set_color_by_gradient(N_CYAN_2,TT_PURPURAROYAL)
+        texto[1].scale(1.1)
+        texto[2].scale(1.2)
+        VGroup(texto[0],texto[1],texto[2]).move_to(ORIGIN)
+        self.add(texto)
+
+class NumberCreatureScene(Scene):
+    def construct(self):
+        texto=Texto("Manim tutorial\\\\","How to create your\\\\ own Number Creature")\
+             .scale(3.7)
+        texto[1].scale(0.78)
+        VGroup(texto[0],texto[1]).move_to(ORIGIN)
+        ul=underline(texto[0]).shift(DOWN*0.5).scale(1.1)
+
+        VGroup(texto).set_color_by_gradient(YELLOW,RED)
+        ul.set_color(ORANGE)
+        self.add(texto,ul)
