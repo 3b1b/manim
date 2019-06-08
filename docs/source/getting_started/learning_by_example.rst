@@ -1,9 +1,13 @@
 Learning by Example
 ===================
 
-You create videos in manim by writing :class:`~scene.scene.Scene` instances.
-`example_scenes.py <https://github.com/3b1b/manim/blob/master/example_scenes.py>`_. contains a few simple ones that we can use to learn about
-manim. For instance, take ``SquareToCircle``. Copy the code given below to a new file (say test_manim.py) and run it with ``$ manim test_manim.py SquareToCircle -p``.
+SquareToCircle
+--------------
+
+You create videos in manim by writing :class:`~scene.scene.Scene` classes.
+``example_scenes.py`` contains a few simple ones that we can use to learn about manim.
+For instance, try out the ``SquareToCircle`` scene by running it with ``$ manim example_scenes.py SquareToCircle -p``
+in manim directory.
 
 .. code-block:: python
    :linenos:
@@ -22,129 +26,98 @@ manim. For instance, take ``SquareToCircle``. Copy the code given below to a new
            self.play(Transform(square, circle))
            self.play(FadeOut(square))
 
+.. raw:: html
+
+   <video width="560" height="315" controls>
+       <source src="../_static/SquareToCircle.mp4" type="video/mp4">
+   </video>
+
+
+.. note::
+
+  The flag ``-p`` plays the rendered video with default video player.
+
+  Other frequently used flags are:
+
+    * ``-l`` for rendering video in lower resolution (which renders faster)
+    * ``-s`` to show the last frame of the video.
+
+  Run ``manim -h`` all the available flags (``python -m manim -h`` if you installed it to a venv)
+
+
+Let's step through each line of ``SquareToCircle``
+
+Each :class:`~scene.scene.Scene` in manim is self-contained. That means everything
+you created under this scene does not exist outside the class.
 
 :meth:`~scene.scene.Scene.construct` specifies what is displayed on the screen
-when the :class:`~scene.scene.Scene` is rendered to video. The flag ``-p`` automatically plays the rendered video.
-Other frequently used flags are ``-l`` for rendering video in lower resolution (in favour of higher speed) and ``-s`` to show the last frame of the video.
-Run ``manim -h`` all the available flags
+when the :class:`~scene.scene.Scene` is rendered to video.
 
-.. code-block:: none
+``Circle()`` and ``Square`` :class:`~mobject.geometry.Circle` and
+:class:`~mobject.geometry.Square`, respectively.
 
-   > manim -h
-   Media will be stored in ./media/. You can change this behavior by writing a different directory to media_dir.txt.
-    usage: manim [-h] [-p] [-w] [-s] [-l] [-m] [-g] [-f] [-t] [-q] [-a]
-                 [-o FILE_NAME] [-n START_AT_ANIMATION_NUMBER] [-r RESOLUTION]
-                 [-c COLOR] [--sound] [--leave_progress_bars] [--livestream]
-                 [--to-twitch] [--with-key TWITCH_KEY]
-                 [file] [scene_names [scene_names ...]]
+.. code-block:: python
+   :linenos:
+   :lineno-start: 5
 
-    positional arguments:
-      file                  path to file holding the python code for the scene
-      scene_names           Name of the Scene class you want to see
+   circle = Circle()
+   square = Square()
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -p, --preview         Automatically open the saved file once its done
-      -w, --write_to_movie  Render the scene as a movie file
-      -s, --save_last_frame
-                            Save the last frame
-      -l, --low_quality     Render at a low quality (for faster rendering)
-      -m, --medium_quality  Render at a medium quality
-      -g, --save_pngs       Save each frame as a png
-      -f, --show_file_in_finder
-                            Show the output file in finder
-      -t, --transparent     Render to a movie file with an alpha channel
-      -q, --quiet
-      -a, --write_all       Write all the scenes from a file
-      -o FILE_NAME, --file_name FILE_NAME
-                            Specify the name of the output file, ifit should be
-                            different from the scene class name
-      -n START_AT_ANIMATION_NUMBER, --start_at_animation_number START_AT_ANIMATION_NUMBER
-                            Start rendering not from the first animation, butfrom
-                            another, specified by its index. If you passin two
-                            comma separated values, e.g. "3,6", it will endthe
-                            rendering at the second value
-      -r RESOLUTION, --resolution RESOLUTION
-                            Resolution, passed as "height,width"
-      -c COLOR, --color COLOR
-                            Background color
-      --sound               Play a success/failure sound
-      --leave_progress_bars
-                            Leave progress bars displayed in terminal
-      --livestream          Run in streaming mode
-      --to-twitch           Stream to twitch
-      --with-key TWITCH_KEY
-                            Stream key for twitch
-
-
-
-
-.. raw:: html
-    <video width="560" height="315" controls>
-        <source src="../_static/SquareToCircle.mp4" type="video/mp4">
-    </video>
-
-Let's step through each line of the :class:`~scene.scene.Scene`. Lines 3 and 4
-instantiate a :class:`~mobject.geometry.Circle` and
-:class:`~mobject.geometry.Square`, respectively. Both of these subclass
-:class:`~mobject.mobject.Mobject`, the base class for objects in manim. Note
+Both of these subclass :class:`~mobject.mobject.Mobject`, the base class for objects in manim. Note
 that instantiating a :class:`~mobject.mobject.Mobject` does not add it to the
 :class:`~scene.scene.Scene`, so you wouldn't see anything if you were to render
 the :class:`~scene.scene.Scene` at this point.
 
 .. code-block:: python
    :linenos:
-   :lineno-start: 3
-
-   circle = Circle()
-   square = Square()
-
-Lines 5, 6, and 7 apply various modifications to the mobjects before animating
-them.  The call to :meth:`~mobject.mobject.Mobject.flip` on line 5 flips the
-:class:`~mobject.geometry.Square` across the RIGHT vector.  This is equivalent
-to a refection across the x-axis. Then the call to
-:meth:`~mobject.mobject.Mobject.rotate` on line 6 rotates the
-:class:`~mobject.geometry.Square` 3/8ths of a full rotation counterclockwise.
-Finally, the call to :meth:`~mobject.mobject.Mobject.set_fill` on line 7 sets
-the fill color for the :class:`~mobject.geometry.Circle` to pink, and its
-opacity to 0.5.
-
-.. code-block:: python
-   :linenos:
-   :lineno-start: 5
+   :lineno-start: 7
 
    square.flip(RIGHT)
    square.rotate(-3 * TAU / 8)
    circle.set_fill(PINK, opacity=0.5)
 
-Line 9 is the first to generate video.
-:class:`~animation.creation.ShowCreation`,
-:class:`~animation.transform.Transform`, and
-:class:`~animation.creation.FadeOut` are
-:class:`~animation.animation.Animation` instances. Each
-:class:`~animation.animation.Animation` takes one or more
-:class:`~mobject.mobject.Mobject` instances as arguments, which it animates
-when passed to :meth:`~scene.scene.Scene.play`. This is how video is typically
-created in manim. :class:`~mobject.mobject.Mobject` instances are automatically
-added to the :class:`~scene.scene.Scene` when they are animated. You can add a
-:class:`~mobject.mobject.Mobject` to the :class:`~scene.scene.Scene` manually
-by passing it as an argument to :meth:`~scene.scene.Scene.add`.
+``flip()`` ``rotate()`` ``set_fill()`` apply various modifications to the mobjects before animating
+them.  The call to :meth:`~mobject.mobject.Mobject.flip` flips the
+:class:`~mobject.geometry.Square` across the RIGHT vector.  This is equivalent
+to a refection across the x-axis.
+
+The call to :meth:`~mobject.mobject.Mobject.rotate` rotates the
+:class:`~mobject.geometry.Square` 3/8ths of a full rotation counterclockwise.
+
+The call to :meth:`~mobject.mobject.Mobject.set_fill` sets
+the fill color for the :class:`~mobject.geometry.Circle` to pink, and its opacity to 0.5.
 
 .. code-block:: python
    :linenos:
-   :lineno-start: 9
+   :lineno-start: 11
 
    self.play(ShowCreation(square))
    self.play(Transform(square, circle))
    self.play(FadeOut(square))
 
-:class:`~animation.creation.ShowCreation` draws a
-:class:`~mobject.mobject.Mobject` to the screen,
-:class:`~animation.transform.Transform` morphs one
-:class:`~mobject.mobject.Mobject` into another, and
-:class:`~animation.creation.FadeOut` fades a
-:class:`~mobject.mobject.Mobject` out of the :class:`~scene.scene.Scene`. Note
-that only the first argument to :class:`~animation.transform.Transform` is
-modified, and the second is not added to the :class:`~scene.scene.Scene`. After
-line 10 is executed ``square`` is a :class:`~mobject.geometry.Square` instance
-with the shape of a :class:`~mobject.geometry.Circle`.
+To generated animation, :class:`~animation.animation.Animation` classes are used.
+
+Each :class:`~animation.animation.Animation` takes one or more :class:`~mobject.mobject.Mobject` instances as arguments, which it animates
+when passed to :meth:`~scene.scene.Scene.play`. This is how video is typically
+created in manim.
+
+:class:`~mobject.mobject.Mobject` instances are automatically
+added to the :class:`~scene.scene.Scene` when they are animated. You can add a
+:class:`~mobject.mobject.Mobject` to the :class:`~scene.scene.Scene` manually
+by passing it as an argument to :meth:`~scene.scene.Scene.add`.
+
+
+:class:`~animation.creation.ShowCreation` draws a :class:`~mobject.mobject.Mobject` to the screen.
+
+:class:`~animation.transform.Transform` morphs one :class:`~mobject.mobject.Mobject` into another.
+
+:class:`~animation.creation.FadeOut` fades a :class:`~mobject.mobject.Mobject` out of the :class:`~scene.scene.Scene`.
+
+.. note::
+
+  Only the first argument to :class:`~animation.transform.Transform` is modified,
+  the second is not added to the :class:`~scene.scene.Scene`. :class:`~animation.tranform.Transform`
+  only changes the appearance but not the underlying properties.
+
+  After the call to ``transform()`` ``square`` is still a :class:`~mobject.geometry.Square` instance
+  but with the shape of :class:`~mobject.geometry.Circle`.
