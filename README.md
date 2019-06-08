@@ -74,13 +74,18 @@ python3 -m manim example_scenes.py SquareToCircle -pl
 ### Using Docker
 Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile and Compose file provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/). The Dockerfile contains instructions on how to build a manim image, while the Compose file contains instructions on how to run the image.
 
-The image does not contain a copy of the repo. This is intentional, as it allows you to either bind mount a repo that you've cloned locally or clone any fork/branch you want. In order to do this with the Compose file, you must set the `MANIM_PATH` environment variable to the absolute path to the manim repo.
+In order to do this with the Compose file, you must set the `INPUT_PATH`
+environment variable to the directory containing your source code and the
+`OUTPUT_DIRECTORY` environment variable to the directory where you want media
+to be written.
 
 1. [Install Docker](https://www.docker.com/products/overview)
 2. [Install Docker Compose](https://docs.docker.com/compose/install/)
 3. Render an animation
 ```sh
-MANIM_PATH=/absolute/path/to/manim/repo docker-compose run manim example_scenes.py SquareToCircle -l
+INPUT_PATH=/path/to/dir/containing/source/code \
+OUTPUT_PATH=/path/to/dir/for/media \
+docker-compose run manim example_scenes.py SquareToCircle -l
 ```
 The first time you execute the above command, Docker will pull the image from Docker Hub and cache it. Any subsequent runs until the image is evicted will use the cached image.
 Note that the image doesn't have any development tools installed and can't preview animations. Its purpose is building and testing only.
