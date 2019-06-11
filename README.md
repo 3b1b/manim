@@ -34,7 +34,7 @@ If you want to hack on manimlib itself, clone this repository and in that direct
 python3 -m pip install -r requirements.txt
 
 # Try it out
-python3 -m manim example_scenes.py SquareToCircle -pl
+python3 ./manim.py example_scenes.py SquareToCircle -pl
 ```
 
 ### Directly (Windows)
