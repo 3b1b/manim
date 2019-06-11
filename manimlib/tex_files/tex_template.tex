@@ -1,0 +1,52 @@
+\documentclass[preview]{standalone}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{setspace}
+\usepackage{tipa}
+\usepackage{relsize}
+\usepackage{textcomp}
+\usepackage{mathrsfs}
+\usepackage{calligra}
+\usepackage{wasysym}
+\usepackage{ragged2e}
+\usepackage{physics}
+\usepackage{xcolor}
+\usepackage{microtype}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\DeclareFontFamily{U}{matha}{\hyphenchar\font45}
+\DeclareFontShape{U}{matha}{m}{n}{
+	<5> <6> <7> <8> <9> <10> gen * matha
+	<10.95> matha10 <12> <14.4> <17.28> <20.74> <24.88> matha12
+}{}
+\DeclareSymbolFont{matha}{U}{matha}{m}{n}
+\DeclareFontSubstitution{U}{matha}{m}{n}
+
+\DeclareFontFamily{U}{mathb}{\hyphenchar\font45}
+\DeclareFontShape{U}{mathb}{m}{n}{
+	<5> <6> <7> <8> <9> <10> <11> <12> gen * mathb
+	<10.95> mathb10 <12> <14.4> <17.28> <20.74> <24.88> mathb12
+}{}
+\DeclareSymbolFont{mathb}{U}{mathb}{m}{n}
+\DeclareFontSubstitution{U}{mathb}{m}{n}
+
+\DeclareMathSymbol{\supa}{3}{mathb}{"F1}
+
+
+\DeclareMathSymbol{\leftarrow}{3}{matha}{"D0}
+\DeclareMathSymbol{\rightarrow}{3}{matha}{"D1}
+\DeclareMathSymbol{\to}{3}{matha}{"D1}
+\DeclareMathSymbol{\syx}{3}{matha}{"D8}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\DisableLigatures{encoding = *, family = * }
+%\usepackage[UTF8]{ctex}
+\linespread{1}
+
+\begin{document}
+
+YourTextHere
+
+\end{document}
