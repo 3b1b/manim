@@ -362,7 +362,7 @@ class NuevoEfecto2(Scene):
         self.wait()
         self.play(Transform(rectangulo1,rectangulo2))
         #self.remove(rectangulo1)
-        #self.add(rectangulo2)
+        #self.add(rectangulo2)aaeraer
         self.wait()
 
 
