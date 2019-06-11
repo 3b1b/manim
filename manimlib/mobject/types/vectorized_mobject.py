@@ -234,9 +234,9 @@ class VMobject(Mobject):
                 sm1.match_style(sm2)
         return self
 
-    def set_color(self, color, family=True):
-        self.set_fill(color, family=family)
-        self.set_stroke(color, family=family)
+    def set_color(self, fill_color, stroke_color=None, family=True):
+        self.set_fill(fill_color, family=family)
+        self.set_stroke(stroke_color, family=family)
         return self
 
     def set_opacity(self, opacity, family=True):
