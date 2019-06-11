@@ -1,0 +1,252 @@
+% \iffalse  % This section (iffalse to fi) won't appear in the source code
+% documentation. It is irrelevant for the package and only includes the "driver"
+% for the documentation. it will be stripped off by docstrip when producing the
+% .sty file.
+%<*driver>
+\documentclass{article}
+\usepackage[T1]{fontenc}             % character encoding
+\usepackage[ngerman, english]{babel} % to demonstrate \glqq etc.
+\usepackage{doc}                     % to create the documentation file
+\usepackage{dirtytalk}               % the package we're talking about
+\usepackage{booktabs}                % nicer tables
+\usepackage[colorlinks]{hyperref}    % click able links in PDF and PDF meta data
+\usepackage{lmodern}                 % font used
+\EnableCrossrefs
+\CodelineIndex
+\newcommand{\mdash}{\,---\,}
+
+% the following weired code is to obfuscate my e-mail address and so hide it
+% from spam bots:
+\newcommand{\partone}{mori$\mathrm{t}$z.kla}
+\newcommand{\parttwo}{mmler$\,\!$$\partial$stud}
+\newcommand{\partthree}{ent.$\mathrm{kit.}$edu}
+\newcommand{\myemail}{\partone\parttwo\partthree}
+\newcommand{\humanproof}{(If you felt sad when Littlefoot's mother died in the%
+original \textit{Land Before Time} you'll know what the $\partial$ means\dots)}
+
+\parskip.5em
+\title{The \textsf{dirtytalk} Package}
+\author{M. Klammler\footnote{\myemail\newline\humanproof}}
+\date{\today}
+
+\hypersetup{%
+  pdftitle={The dirtytalk Package},%
+  pdfauthor={M. Klammler},%
+  pdfsubject={LaTeX},%
+  pdfkeywords={LaTeX, package, dirtytalk, quotes, quoting, quotations}%
+}%
+
+\begin{document}
+  \DocInput{dirtytalk.dtx}
+\end{document}
+%</driver>
+% \fi
+
+% \maketitle
+% \begin{abstract}
+% This document explains the usage of the \textsf{dirtytalk} package for
+% \LaTeXe. It can be used to typeset \say{quotations} more comfortable. The source
+% code is also explained.
+% \end{abstract}
+% \tableofcontents
+% \clearpage{}
+% \paragraph{Who should use this package?} Everybody who feels typesetting
+% quotes in \LaTeX{} could be more comfortable.
+% \paragraph{Who should \textit{really} use this package?} Everybody who
+% typesets German texts using \verb+\glqq{}Hallo Welt\grqq{}+ for a simple
+% \glqq{}Hallo Welt\grqq{} or\mdash even worse\mdash those who already started
+% writing a text using the same glyphs for nested quotations and soon after find
+% themselves in the embarrassing position of replacing them while being no
+% \textsf{regexp} whiz.
+% \section{Usage}
+% \subsection{Loading}
+% Put \verb+\usepackage{dirtytalk}+ in the preamble of your document.
+% \subsection{Macros}\DescribeMacro{\say}
+% Loaded the package you can typeset quotations by \verb+\say{hello world}+ to
+% get \say{hello world}. Nested quotations are recognized as in:
+% 
+% \begin{tabular}{p{50.mm}p{50.mm}}
+% \verb+Alice said: \say{Why did+\linebreak%
+% \verb+you do that, Bob?}+%
+% &Alice said: \say{Why did you do that, Bob?}\\[\parskip]
+% \verb+And Bob answered: \say{+\linebreak%
+% \verb+What do you mean with+\linebreak%
+% \verb+\say{that}, dear Alice?}+%
+% &And Bob answered: \say{What do you mean with \say{that}, dear Alice?}\\
+% \end{tabular} 
+% \subsection{Options}
+% The package can be loaded with a couple of options to alter the glyphs being
+% used. These are given in the \texttt{key=value} style.
+% \begin{table}[ht]
+% \begin{center}
+% \begin{tabular}{lll}
+% \toprule
+% key               &default value  &glyph\\
+% \midrule
+% \texttt{left}     &\verb+``+      &``\\
+% \texttt{right}    &\verb+''+      &''\\
+% \texttt{leftsub}  &\verb+`+       &`\\
+% \texttt{rightsub} &\verb+'+       &'\\
+% \bottomrule
+% \end{tabular}
+% \caption{Options for the \textsf{dirtytalk} package.}
+% \end{center}
+% \end{table}
+% 
+% So my fellow German citizens might load the package with
+% \begin{verbatim}
+% \usepackage[%
+%   left     = \glqq,%
+%   right    = \grqq,%
+%   leftsub  = \glq,%
+%   rightsub = \grq%
+% ]{dirtytalk}
+% \end{verbatim}
+% 
+% to get German glyphs. Pleas note that the package does \textit{not} check your
+% document language to alter the symbols used. It depends on you as the author to
+% specify those you want.
+% 
+% Happy \LaTeX ing!
+% 
+% \section{Source Code Documentation}
+% This section shows and explains the entire code of the package. (It is
+% intended for \LaTeX{} programmers only.)
+% \subsection{Identification}
+%    \begin{macrocode}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{dirtytalk}[2010/11/21 A package making "quoting" easier]
+%    \end{macrocode}
+% \subsection{Preliminary Declarations}
+% We use options from the \texttt{key=value} type so we need to load a package
+% supporting this:
+%    \begin{macrocode}
+\RequirePackage{kvoptions}
+%    \end{macrocode}
+% Define the glyphs that will enclose the phrases. We initially define them for
+% English which will probably be the most requested standard. If the package is
+% loaded with options, the following macros will be redefined.
+% 
+% \begin{macro}{\dirtytalk@lqq}
+% Outer opening (left) quotation mark glyph.
+%    \begin{macrocode}
+\newcommand{\dirtytalk@lqq}{``}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\dirtytalk@rqq}
+% Outer closing (right) quotation mark glyph.
+%    \begin{macrocode}
+\newcommand{\dirtytalk@rqq}{''}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\dirtytalk@lq}
+% Inner opening (left) quotation mark glyph.
+%    \begin{macrocode}
+\newcommand{\dirtytalk@lq}{`}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\dirtytalk@rq}
+% Inner closing (right) quotation mark glyph.
+%    \begin{macrocode}
+\newcommand{\dirtytalk@rq}{'}
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Options}
+% We allow the author to specify own quotation mark glyphs instead of those
+% defined above by passing them as options.
+%    \begin{macrocode}
+\DeclareStringOption{left}
+\DeclareStringOption{right}
+\DeclareStringOption{leftsub}
+\DeclareStringOption{rightsub}
+%    \end{macrocode}
+%    \begin{macrocode}
+\ProcessKeyvalOptions*
+%    \end{macrocode}
+% \subsection{More Declarations}
+% After processing the options (in case of the \textsf{kvoptions}' string
+% options that means a macro has been defined holding the key value) we check if
+% they are empty and, if not so, redefine the default glyphs. For this task we
+% need the \textsf{ifthen} package.
+%    \begin{macrocode}
+\RequirePackage{ifthen}
+%    \end{macrocode}
+%    \begin{macrocode}
+\ifthenelse%
+  {\equal{\dirtytalk@left}{}}%
+  {}%
+  {\renewcommand{\dirtytalk@lqq}{\dirtytalk@left}}
+%    \end{macrocode}
+%    \begin{macrocode}
+\ifthenelse%
+  {\equal{\dirtytalk@right}{}}%
+  {}%
+  {\renewcommand{\dirtytalk@rqq}{\dirtytalk@right}}
+%    \end{macrocode}
+%    \begin{macrocode}
+\ifthenelse%
+  {\equal{\dirtytalk@leftsub}{}}%
+  {}%
+  {\renewcommand{\dirtytalk@lq}{\dirtytalk@leftsub}}
+%    \end{macrocode}
+%    \begin{macrocode}
+\ifthenelse%
+  {\equal{\dirtytalk@rightsub}{}}%
+  {}%
+  {\renewcommand{\dirtytalk@rq}{\dirtytalk@rightsub}}
+%    \end{macrocode}
+% And we define a counter that represents the depth to which a quotation is
+% nested. However, we will only distinguish between \say{not nested} and
+% \say{nested} (\texttt{dirtytalk@qdepth} $>$ 1). Since there is no convention for
+% sub-sub-quotes. (At least, I don't know any.)
+%    \begin{macrocode}
+\newcounter{dirtytalk@qdepth}
+%    \end{macrocode}
+% Using this counter, we can now determine which glyph we have to use.
+% \begin{macro}{\dirtytalk@lsymb}
+% We define one macro for opening quotes:
+%    \begin{macrocode}
+\newcommand%
+  {\dirtytalk@lsymb}%
+  {\ifthenelse%
+    {\value{dirtytalk@qdepth}>1}%
+    {\dirtytalk@lq}%
+    {\dirtytalk@lqq}%
+  }%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\dirtytalk@rsymb}
+% And one for closing quotes:
+%    \begin{macrocode}
+\newcommand{\dirtytalk@rsymb}%
+  {\ifthenelse%
+    {\value{dirtytalk@qdepth}>1}%
+    {\dirtytalk@rq}%
+    {\dirtytalk@rqq}%
+  }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\say}
+% And so finally we can declare the only macro this package provides to the
+% author. On opening quotes we increment the \texttt{dirtytalk@qdepth} counter and
+% decrement it on closing ones. The appropriate glyph is obtained form
+% \verb+\dirtytalk@lsymb+ or \verb+\dirtytalk@rsymb+ respectively.
+%    \begin{macrocode}
+\providecommand{\say}[1]%
+  {%
+    \addtocounter{dirtytalk@qdepth}{1}%
+    \dirtytalk@lsymb%
+    #1%
+    \dirtytalk@rsymb%
+    \addtocounter{dirtytalk@qdepth}{-1}%
+  }
+%    \end{macrocode}
+% \end{macro}
+% \section{Copyright Statement}
+% I, the copyright holder of this work, release the source code of the
+% \textsf{dirtytalk} package as well as this documentation into the \textbf{public
+% domain}. This applies worldwide.
+% 
+% In some countries this may not be legally possible; if so: I grant anyone the
+% right to use this work for any purpose, without any conditions, unless such
+% conditions are required by law.
