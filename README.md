@@ -88,6 +88,8 @@ docker-compose run manim example_scenes.py SquareToCircle -l
 ```
 The command needs to be run as root if your username is not in the docker group.
 
+example_scenes.py or your own project should point to the file on the host machine.
+
 After running the output will say files ready at `tmp/output/`, which is inside the container. Your OUTPUT_DIR is bind mounted to this `/tmp/output` so any changes made by the container to `/tmp/output` will be mirrored on your OUTPUT_DIR. `/media/` will be created in `OUTPUT_DIR`.
 
 `-p` won't work as manim would look for video player in the container system, which it does not have.
