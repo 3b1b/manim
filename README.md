@@ -11,6 +11,7 @@ Las principales modificaciones que tiene esta versión de Manim son:
 * Nuevas paqueterías añadidas de LaTeX: Fuentes, símbolos de química, música, etcétera.
 * Imágenes SVG que utilizo en mis videos.
 * Animación de conversación por [Miroslav Olšák](https://github.com/mkoconnor).
+* Animación de conversación por <a target="_blank" href="https://github.com/mkoconnor">Miroslav Olšák</a>
 * Activa mp4 en alta definición usando ```--hd```.
 
 # Indicaciones.
