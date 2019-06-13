@@ -15,8 +15,8 @@ class DecimalNumber(VMobject):
         "edge_to_fix": LEFT,
     }
 
-    def __init__(self, number, **kwargs):
-        VMobject.__init__(self, **kwargs)
+    def __init__(self, number=0, **kwargs):
+        super().__init__(**kwargs)
         self.number = number
         self.initial_config = kwargs
 
@@ -26,7 +26,7 @@ class DecimalNumber(VMobject):
             formatter = self.get_formatter()
         num_string = formatter.format(number)
 
-        rounded_num = np.round(float(number), self.num_decimal_places)
+        rounded_num = np.round(number, self.num_decimal_places)
         if num_string.startswith("-") and rounded_num == 0:
             if self.include_sign:
                 num_string = "+" + num_string[1:]
@@ -53,7 +53,7 @@ class DecimalNumber(VMobject):
             self.unit_sign = SingleStringTexMobject(self.unit, color=self.color)
             self.add(self.unit_sign)
 
-        self.arrange_submobjects(
+        self.arrange(
             buff=self.digit_to_digit_buff,
             aligned_edge=DOWN
         )
@@ -62,7 +62,8 @@ class DecimalNumber(VMobject):
         # to the bottom
         for i, c in enumerate(num_string):
             if c == "-" and len(num_string) > i + 1:
-                self[i].align_to(self[i + 1], alignment_vect=UP)
+                self[i].align_to(self[i + 1], UP)
+                self[i].shift(self[i+1].get_height() * DOWN / 2)
             elif c == ",":
                 self[i].shift(self[i].get_height() * DOWN / 2)
         if self.unit and self.unit.startswith("^"):
@@ -81,7 +82,14 @@ class DecimalNumber(VMobject):
         - num_decimal_places
         - field_name (e.g. 0 or 0.real)
         """
-        config = dict(self.__dict__)
+        config = dict([
+            (attr, getattr(self, attr))
+            for attr in [
+                "include_sign",
+                "group_with_commas",
+                "num_decimal_places",
+            ]
+        ])
         config.update(kwargs)
         return "".join([
             "{",
@@ -124,14 +132,14 @@ class DecimalNumber(VMobject):
     def get_value(self):
         return self.number
 
+    def increment_value(self, delta_t=1):
+        self.set_value(self.get_value() + delta_t)
+
 
 class Integer(DecimalNumber):
     CONFIG = {
         "num_decimal_places": 0,
     }
-
-    def increment_value(self):
-        self.set_value(self.get_value() + 1)
 
     def get_value(self):
         return int(np.round(super().get_value()))

@@ -1,0 +1,848 @@
+div {
+    float: left;
+    padding: 60px;
+    border: 10px;
+    margin: 0;
+    width: 100px;
+    height: 100px;
+    text-align: center;
+}
+a{
+    position: relative;
+    top:50%;
+    font-size: 10px
+}
+h2{
+    clear:both;
+}
+h3{
+    clear:both;
+}
+/* -------------
+REDs
+------------- */
+.RED_A{
+    background: #F7A1A3;
+    color:#F7A1A3;
+}
+.RED_A:hover{
+    background: #F7A1A3;
+    color:white;
+}
+
+.RED_B{
+    background: #FF8080;
+    color:#FF8080;
+}
+.RED_B:hover{
+    background: #FF8080;
+    color:white;
+}
+
+.RED_C{
+    background: #FC6255;
+    color:#FC6255;
+}
+.RED_C:hover{
+    background: #FC6255;
+    color:white;
+}
+
+.RED_D{
+    background: #E65A4C;
+    color:#E65A4C;
+}
+.RED_D:hover{
+    background: #E65A4C;
+    color:white;
+}
+
+.RED_E{
+    background: #CF5044;
+    color:#CF5044;
+}
+.RED_E:hover{
+    background: #CF5044;
+    color:white;
+}
+
+/* -------------
+BLUEs
+------------- */
+.BLUE_A{
+    background: #C7E9F1;
+    color:#C7E9F1;
+}
+.BLUE_A:hover{
+    background: #C7E9F1;
+    color:white;
+}
+
+.BLUE_B{
+    background: #9CDCEB;
+    color:#9CDCEB;
+}
+.BLUE_B:hover{
+    background: #9CDCEB;
+    color:white;
+}
+
+.BLUE_C{
+    background: #58C4DD;
+    color:#58C4DD;
+}
+.BLUE_C:hover{
+    background:#58C4DD ;
+    color:white;
+}
+
+.BLUE_D{
+    background: #29ABCA;
+    color:#29ABCA;
+}
+.BLUE_D:hover{
+    background: #29ABCA;
+    color:white;
+}
+
+.BLUE_E{
+    background: #1C758A;
+    color:#1C758A;
+}
+.BLUE_E:hover{
+    background: #1C758A;
+    color:white;
+}
+
+/* -------------
+GREENs
+------------- */
+.GREEN_A{
+    background: #C9E2AE;
+    color: #C9E2AE;
+}
+.GREEN_A:hover{
+    background: #C9E2AE;
+    color:white;
+}
+
+.GREEN_B{
+    background: #A6CF8C;
+    color: #A6CF8C;
+}
+.GREEN_B:hover{
+    background: #A6CF8C;
+    color:white;
+}
+
+.GREEN_C{
+    background: #83C167;
+    color: #83C167;
+}
+.GREEN_C:hover{
+    background: #83C167;
+    color:white;
+}
+
+.GREEN_D{
+    background: #77B05D;
+    color: #77B05D;
+}
+.GREEN_D:hover{
+    background: #77B05D;
+    color:white;
+}
+
+.GREEN_E{
+    background: #699C52;
+    color: #699C52;
+}
+.GREEN_E:hover{
+    background: #699C52;
+    color:white;
+}
+
+/* -------------
+YELLOWs
+------------- */
+.YELLOW_A{
+    background: #FFF1B6;
+    color: #FFF1B6;
+}
+.YELLOW_A:hover{
+    background: #FFF1B6;
+    color:white;
+}
+
+.YELLOW_B{
+    background: #FFEA94;
+    color:#FFEA94 ;
+}
+.YELLOW_B:hover{
+    background: #FFEA94;
+    color: white;
+}
+
+.YELLOW_C{
+    background: #FFFF00;
+    color: #FFFF00;
+}
+.YELLOW_C:hover{
+    background: #FFFF00;
+    color:white;
+}
+
+.YELLOW_D{
+    background: #F4D345;
+    color: #F4D345;
+}
+.YELLOW_D:hover{
+    background: #F4D345;
+    color:white;
+}
+
+.YELLOW_E{
+    background: #E8C11C;
+    color: #E8C11C;
+}
+.YELLOW_E:hover{
+    background: #E8C11C;
+    color:white;
+}
+
+/* -------------
+TEALs
+------------- */
+.TEAL_A{
+    background: #ACEAD7;
+    color:#ACEAD7 ;
+}
+.TEAL_A:hover{
+    background: #ACEAD7;
+    color:white;
+}
+
+.TEAL_B{
+    background: #76DDC0;
+    color: #76DDC0;
+}
+.TEAL_B:hover{
+    background: #76DDC0;
+    color: white;
+}
+
+.TEAL_C{
+    background: #5CD0B3;
+    color: #5CD0B3;
+}
+.TEAL_C:hover{
+    background: #5CD0B3;
+    color:white;
+}
+
+.TEAL_D{
+    background: #55C1A7;
+    color: #55C1A7;
+}
+.TEAL_D:hover{
+    background: #55C1A7;
+    color:white;
+}
+
+.TEAL_E{
+    background: #49A88F;
+    color: #49A88F;
+}
+.TEAL_E:hover{
+    background: #49A88F;
+    color:white;
+}
+
+/* -------------
+PURPLEs
+------------- */
+.PURPLE_A{
+    background: #CAA3E8;
+    color: #CAA3E8;
+}
+.PURPLE_A:hover{
+    background: #CAA3E8;
+    color:white;
+}
+
+.PURPLE_B{
+    background: #B189C6;
+    color: #B189C6;
+}
+.PURPLE_B:hover{
+    background: #B189C6;
+    color: white;
+}
+
+.PURPLE_C{
+    background: #9A72AC;
+    color: #9A72AC;
+}
+.PURPLE_C:hover{
+    background: #9A72AC;
+    color:white;
+}
+
+.PURPLE_D{
+    background: #715582;
+    color: #715582;
+}
+.PURPLE_D:hover{
+    background: #715582;
+    color:white;
+}
+
+.PURPLE_E{
+    background: #644172;
+    color: #644172;
+}
+.PURPLE_E:hover{
+    background: #644172;
+    color:white;
+}
+
+/* -------------
+MAROONs
+------------- */
+.MAROON_A{
+    background: #ECABC1;
+    color: #ECABC1;
+}
+.MAROON_A:hover{
+    background: #ECABC1;
+    color:white;
+}
+
+.MAROON_B{
+    background: #EC92AB;
+    color: #EC92AB;
+}
+.MAROON_B:hover{
+    background: #EC92AB;
+    color: white;
+}
+
+.MAROON_C{
+    background: #C55F73;
+    color: #C55F73;
+}
+.MAROON_C:hover{
+    background: #C55F73;
+    color:white;
+}
+
+.MAROON_D{
+    background: #A24D61;
+    color: #A24D61;
+}
+.MAROON_D:hover{
+    background: #A24D61;
+    color:white;
+}
+
+.MAROON_E{
+    background: #94424F;
+    color: #94424F;
+}
+.MAROON_E:hover{
+    background: #94424F;
+    color:white;
+}
+
+/* -------------
+MixColors
+------------- */
+.PINK{
+    background: #D147BD;
+    color: #D147BD;
+}
+.PINK:hover{
+    background: #D147BD;
+    color:white;
+}
+
+.GREEN_SCREEN{
+    background: #00FF00;
+    color: #00FF00;
+}
+.GREEN_SCREEN:hover{
+    background: #00FF00;
+    color:white;
+}
+
+.ORANGE{
+    background: #FF862F;
+    color: #FF862F;
+}
+.ORANGE:hover{
+    background: #FF862F;
+    color:white;
+}
+
+.GREY_BROWN{
+    background: #736357;
+    color: #736357;
+}
+.GREY_BROWN:hover{
+    background: #736357;
+    color:white;
+}
+
+.DARK_GRAY{
+    background: #444444;
+    color: #444444;
+}
+.DARK_GRAY:hover{
+    background: #444444;
+    color:white;
+}
+
+.GRAY{
+    background: #888888;
+    color: #888888;
+}
+.GRAY:hover{
+    background: #888888;
+    color:white;
+}
+
+.LIGHT_GRAY{
+    background: #BBBBBB;
+    color: #BBBBBB;
+}
+.LIGHT_GRAY:hover{
+    background: #BBBBBB;
+    color:white;
+}
+
+.BLACK{
+    background:#000000 ;
+    color: #000000;
+}
+.BLACK:hover{
+    background: #000000;
+    color:white;
+}
+
+.WHITE{
+    background: #FFFFFF;
+    color: #FFFFFF;
+}
+.WHITE:hover{
+    background: #FFFFFF;
+    color:white;
+}
+
+.LIGHT_BROWN{
+    background: #CD853F;
+    color: #CD853F;
+}
+.LIGHT_BROWN:hover{
+    background: #CD853F;
+    color:white;
+}
+
+.DARK_BROWN{
+    background: #8B4513;
+    color:#8B4513 ;
+}
+.DARK_BROWN:hover{
+    background: #8B4513;
+    color:white;
+}
+
+.DARK_BLUE{
+    background: #236B8E;
+    color: #236B8E;
+}
+.DARK_BLUE:hover{
+    background: #236B8E;
+    color:white;
+}
+
+/* -------------
+TB-Colors
+------------- */
+
+.TT_FONDO_1{
+    background: #4f4a51;
+    color: #4f4a51;
+}
+.TT_FONDO_1:hover{
+    background:#4f4a51 ;
+    color:white;
+}
+
+.TT_FONDO_2{
+    background: #23262b;
+    color:#23262b ;
+}
+.TT_FONDO_2:hover{
+    background: #23262b;
+    color:white;
+}
+
+.TT_FONDO_VERDE{
+    background: #3f7d5c;
+    color: #3f7d5c;
+}
+.TT_FONDO_VERDE:hover{
+    background: #3f7d5c;
+    color:white;
+}
+
+.TT_FONDO_AZUL{
+    background: #474a66;
+    color: #474a66;
+}
+.TT_FONDO_AZUL:hover{
+    background:#474a66 ;
+    color:white;
+}
+
+.TT_FONDO_NARANJA{
+    background: #e6613a;
+    color: #e6613a;
+}
+.TT_FONDO_NARANJA:hover{
+    background: #e6613a;
+    color:white;
+}
+
+.TT_FONDO_ROSA{
+    background: #942357;
+    color: #942357;
+}
+.TT_FONDO_ROSA:hover{
+    background: #942357;
+    color:white;
+}
+
+.TT_VERDE_1{
+    background: #118559;
+    color: #118559;
+}
+.TT_VERDE_1:hover{
+    background: #118559;
+    color:white;
+}
+
+.TT_VERDE_2{
+    background: #00e300;
+    color: #00e300;
+}
+.TT_VERDE_2:hover{
+    background: #00e300;
+    color:white;
+}
+
+.TT_TEXTO{
+    background: #d7d7d7;
+    color: #d7d7d7;
+}
+.TT_TEXTO:hover{
+    background: #d7d7d7;
+    color:white;
+}
+
+.TT_AZULROYAL_1{
+    background: #266bb3;
+    color: #266bb3;
+}
+.TT_AZULROYAL_1:hover{
+    background: #266bb3;
+    color:white;
+}
+
+.TT_AZULROYAL_2{
+    background: #426391;
+    color: #426391;
+}
+.TT_AZULROYAL_2:hover{
+    background: #426391;
+    color:white;
+}
+
+.TT_PURPURAROYAL{
+    background: #8561b5;
+    color: #8561b5;
+}
+.TT_PURPURAROYAL:hover{
+    background: #8561b5;
+    color:white;
+}
+
+.TT_AZUL_T{
+    background: #68a8e1;
+    color: #68a8e1;
+}
+.TT_AZUL_T:hover{
+    background: #68a8e1;
+    color:white;
+}
+
+.TT_NARANJA_T{
+    background: #e37000;
+    color: #e37000;
+}
+.TT_NARANJA_T:hover{
+    background: #e37000;
+    color:white;
+}
+
+.TT_ROSA_T{
+    background: #ca9797;
+    color: #ca9797;
+}
+.TT_ROSA_T:hover{
+    background: #ca9797;
+    color:white;
+}
+
+.TT_AMARILLO_T{
+    background: #fff000;
+    color: #fff000;
+}
+.TT_AMARILLO_T:hover{
+    background: #fff000;
+    color:white;
+}
+
+.TT_SIMBOLO{
+    background: #fffab3;
+    color: #fffab3;
+}
+.TT_SIMBOLO:hover{
+    background: #fffab3;
+    color:white;
+}
+.TT_PURPURA_D{
+    background: #973097;
+    color: #973097;
+}
+.TT_PURPURA_D:hover{
+    background: #973097;
+    color:white;
+}
+
+.M_FONDO_0{
+    background: #303030;
+    color: #303030;
+}
+.M_FONDO_0:hover{
+    background: #303030;
+    color:white;
+}
+
+.M_FONDO_1{
+    background: #232323;
+    color: #232323;
+}
+.M_FONDO_1:hover{
+    background: #232323;
+    color:white;
+}
+
+.M_FONDO_2{
+    background: #3f3f3f;
+    color: #3f3f3f;
+}
+.M_FONDO_2:hover{
+    background: #3f3f3f;
+    color:white;
+}
+
+.M_TEXTO_VERDE{
+    background: #94942b;
+    color: #94942b;
+}
+.M_TEXTO_VERDE:hover{
+    background: #94942b;
+    color:white;
+}
+
+.M_TEXTO_GRIS{
+    background: #cacaca;
+    color: #cacaca;
+}
+.M_TEXTO_GRIS:hover{
+    background: #cacaca;
+    color:white;
+}
+
+.M_FONDO_VERDE{
+    background: #caca94;
+    color: #caca94;
+}
+.M_FONDO_VERDE:hover{
+    background: #caca94;
+    color:white;
+}
+
+.N_AZUL_CLARO{
+    background: #389ebd;
+    color: #389ebd;
+}
+.N_AZUL_CLARO:hover{
+    background: #389ebd;
+    color:white;
+}
+
+.N_VERDE_CLARO{
+    background: #7f7f00;
+    color: #7f7f00;
+}
+.N_VERDE_CLARO:hover{
+    background: #7f7f00;
+    color:white;
+}
+
+.N_FONDO_OSCURO{
+    background: #232323;
+    color: #232323;
+}
+.N_FONDO_OSCURO:hover{
+    background: #232323;
+    color:white;
+}
+
+.N_FONDO_MEDIO{
+    background: #303030;
+    color: #303030;
+}
+.N_FONDO_MEDIO:hover{
+    background: #303030;
+    color:white;
+}
+
+.N_CYAN_1{
+    background: #4282a1;
+    color: #4282a1;
+}
+.N_CYAN_1:hover{
+    background: #4282a1;
+    color:white;
+}
+
+.N_CYAN_2{
+    background: #476e82;
+    color: #476e82;
+}
+.N_CYAN_2:hover{
+    background:#476e82 ;
+    color:white;
+}
+
+.N_ROJO_1{
+    background: #bd3019;
+    color: #bd3019;
+}
+.N_ROJO_1:hover{
+    background: #bd3019;
+    color:white;
+}
+
+.N_ROJO_2{
+    background: #8c2311;
+    color: #8c2311;
+}
+.N_ROJO_2:hover{
+    background: #8c2311;
+    color:white;
+}
+
+.N_FONDO_MORADO{
+    background: #ab97b5;
+    color: #ab97b5;
+}
+.N_FONDO_MORADO:hover{
+    background: #ab97b5;
+    color:white;
+}
+
+.N_MORADO_OSCURO{
+    background: #7f7fff;
+    color: #7f7fff;
+}
+.N_MORADO_OSCURO:hover{
+    background: #7f7fff;
+    color:white;
+}
+
+.N_FONDO_NARANJA{
+    background:#c58f7f ;
+    color: #c58f7f;
+}
+.N_FONDO_NARANJA:hover{
+    background: #c58f7f;
+    color:white;
+}
+
+.N_FONDO_VERDE_PASTEL{
+    background: #cce1d4;
+    color: #cce1d4;
+}
+.N_FONDO_VERDE_PASTEL:hover{
+    background: #cce1d4;
+    color:white;
+}
+
+.ROSA_ST{
+    background: #F8206B;
+    color: #F8206B;
+}
+.ROSA_ST:hover{
+    background: #F8206B;
+    color:white;
+}
+
+.VERDE_ST{
+    background: #A1E303;
+    color: #A1E303;
+}
+.VERDE_ST:hover{
+    background: #A1E303;
+    color:white;
+}
+
+.AMARILLO_ST{
+    background: #E6DC6B;
+    color: #E6DC6B;
+}
+.AMARILLO_ST:hover{
+    background: #E6DC6B;
+    color:white;
+}
+
+
+.FONDO_ST{
+    background: #272822;
+    color: #272822;
+}
+.FONDO_ST:hover{
+    background: #272822;
+    color:white;
+}
+
+.AZUL_ST{
+    background: #64DAF8;
+    color: #64DAF8;
+}
+._ST:hover{
+    background: #64DAF8;
+    color:white;
+}
+
+.NARANJA_ST{
+    background: #FF9514;
+    color: #FF9514;
+}
+.NARANJA_ST:hover{
+    background: #FF9514;
+    color:white;
+}

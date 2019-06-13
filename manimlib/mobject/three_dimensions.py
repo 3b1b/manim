@@ -128,7 +128,6 @@ class Cube(VGroup):
         "fill_opacity": 0.75,
         "fill_color": BLUE,
         "stroke_width": 0,
-        "propagate_style_to_family": True,
         "side_length": 2,
     }
 
@@ -138,7 +137,6 @@ class Cube(VGroup):
                 side_length=self.side_length,
                 shade_in_3d=True,
             )
-            face.make_jagged()
             face.flip()
             face.shift(self.side_length * OUT / 2.0)
             face.apply_matrix(z_to_vector(vect))

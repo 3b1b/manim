@@ -2,7 +2,6 @@ import numpy as np
 import os
 
 # Initialize directories
-'''
 env_MEDIA_DIR = os.getenv("MEDIA_DIR")
 if env_MEDIA_DIR:
     MEDIA_DIR = env_MEDIA_DIR
@@ -12,40 +11,38 @@ elif os.path.isfile("media_dir.txt"):
 else:
     MEDIA_DIR = os.path.join(
         os.path.expanduser('~'),
-        "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+        "/"
     )
 if not os.path.isdir(MEDIA_DIR):
-    MEDIA_DIR = "media"
+    MEDIA_DIR = "./media"
     print(
         f"Media will be stored in {MEDIA_DIR + os.sep}. You can change "
         "this behavior by writing a different directory to media_dir.txt."
     )
-with open("media_dir.txt", 'w') as media_file:
-    media_file.write(MEDIA_DIR)
-'''
 
 VIDEO_DIR = os.path.join("videos")
-RASTER_IMAGE_DIR = os.path.join("raster_images")
-SVG_IMAGE_DIR = os.path.join("svg_images")
-SOUND_DIR = os.path.join("sounds")
-SVG_PRUEBAS_DIR = os.path.join("svg_images","pruebas")
+RASTER_IMAGE_DIR = os.path.join("media","raster_images")
+SVG_IMAGE_DIR = os.path.join("media","svg_images")
+SOUND_DIR = os.path.join("media","sounds")
 ###
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR = os.path.join(THIS_DIR, "files")
+FILE_DIR = os.path.join(os.getenv("FILE_DIR", default="."), "files")
 TEX_DIR = os.path.join(FILE_DIR, "Tex")
 # These two may be depricated now.
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
 for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
-               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,SVG_PRUEBAS_DIR,SOUND_DIR]:
+               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,SOUND_DIR]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
 TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
+#-----------TEX OPTIONS-------------------
+#-----------Normal
 TEMPLATE_TEX_FILE = os.path.join(
-    THIS_DIR, "tex_template.tex" if not TEX_USE_CTEX
+    THIS_DIR,"tex_files", "tex_template.tex" if not TEX_USE_CTEX
     else "ctex_template.tex"
 )
 with open(TEMPLATE_TEX_FILE, "r") as infile:
@@ -54,6 +51,71 @@ with open(TEMPLATE_TEX_FILE, "r") as infile:
         TEX_TEXT_TO_REPLACE,
         "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
     )
+#-----------Tikz
+TEMPLATE_TEX_FILE_TIKZ = os.path.join(
+    THIS_DIR,"tex_files", "tex_template_tikz.tex")
+with open(TEMPLATE_TEX_FILE_TIKZ, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY_TIKZ = infile.read()
+    TEMPLATE_TEX_FILE_BODY_TIKZ = TEMPLATE_TEXT_FILE_BODY_TIKZ.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{tikzpicture}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{tikzpicture}",
+    )
+#-----------Listings
+TEMPLATE_TEX_FILE_LISTINGS = os.path.join(
+    THIS_DIR,"tex_files", "tex_template_listings.tex")
+with open(TEMPLATE_TEX_FILE_LISTINGS, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY_LISTINGS = infile.read()
+    TEMPLATE_TEX_FILE_BODY_LISTINGS = TEMPLATE_TEXT_FILE_BODY_LISTINGS.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{lstlisting}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{lstlisting}",
+    )
+#-----------Music
+TEMPLATE_TEX_FILE_MUSIC = os.path.join(
+    THIS_DIR,"tex_files", "tex_template_music.tex")
+with open(TEMPLATE_TEX_FILE_MUSIC, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY_MUSIC = infile.read()
+    TEMPLATE_TEX_FILE_BODY_MUSIC = TEMPLATE_TEXT_FILE_BODY_MUSIC.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{music}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{music}",
+    )
+#-----------Braces
+TEMPLATE_TEX_FILE_BRACES = os.path.join(
+    THIS_DIR,"tex_files", "tex_template_braces.tex")
+with open(TEMPLATE_TEX_FILE_BRACES, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY_BRACES = infile.read()
+    TEMPLATE_TEX_FILE_BODY_BRACES = TEMPLATE_TEXT_FILE_BODY_BRACES.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
+    )
+#-----------Fonts
+TEMPLATE_TEX_FILE_FONTS = os.path.join(
+    THIS_DIR,"tex_files", "tex_template_fonts.tex")
+with open(TEMPLATE_TEX_FILE_FONTS, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY_FONTS = infile.read()
+    TEMPLATE_TEX_FILE_BODY_FONTS = TEMPLATE_TEXT_FILE_BODY_FONTS.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
+    )
+#-----------FULL
+TEMPLATE_TEX_FILE_FULL = os.path.join(
+    THIS_DIR,"tex_files", "tex_template_full.tex")
+with open(TEMPLATE_TEX_FILE_FULL, "r") as infile:
+    TEMPLATE_TEXT_FILE_BODY_FULL = infile.read()
+    TEMPLATE_TEX_FILE_BODY_FULL = TEMPLATE_TEXT_FILE_BODY_FULL.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
+    )
+#----------Custom
+def get_template_tex(mode,begin="\\begin{align*}\n",end="\n\\end{align*}"):
+    ttf=os.path.join(THIS_DIR,"tex_files", "tex_template_%s.tex"%mode)
+    with open(ttf, "r") as infile:
+        ttextfb = infile.read()
+        ttexfb = ttextfb.replace(
+            TEX_TEXT_TO_REPLACE,
+            begin + TEX_TEXT_TO_REPLACE + end,
+        )
+        return ttextfb,ttexfb
+
 
 HELP_MESSAGE = """
    Usage:
@@ -85,10 +147,6 @@ NO_SCENE_MESSAGE = """
    There are no scenes inside that module
 """
 
-LOW_QUALITY_FRAME_DURATION = 1. / 15
-MEDIUM_QUALITY_FRAME_DURATION = 1. / 30
-PRODUCTION_QUALITY_FRAME_DURATION = 1. / 30
-
 # There might be other configuration than pixel shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1080,
@@ -112,6 +170,12 @@ LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 480,
     "pixel_width": 854,
     "frame_rate": 15,
+}
+
+CUSTOM_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 720,
+    "pixel_width": 1280,
+    "frame_rate": 10,
 }
 
 DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
@@ -138,7 +202,6 @@ DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF
 
 
 # All in seconds
-DEFAULT_ANIMATION_RUN_TIME = 1.0
 DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0
 DEFAULT_WAIT_TIME = 1.0
 
@@ -224,51 +287,12 @@ COLOR_MAP = {
     "GREY": "#888888",
     "DARK_GREY": "#444444",
     "DARK_GRAY": "#444444",
+    "DARKER_GREY": "#222222",
+    "DARKER_GRAY": "#222222",
     "GREY_BROWN": "#736357",
     "PINK": "#D147BD",
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
-    "TT_FONDO_0": "#303038",
-    "TT_FONDO_1": "#4f4a51",
-    "TT_FONDO_T": "#23262b",
-    "TT_FONDO_VERDE": "#3f7d5c",
-    "TT_FONDO_AZUL": "#474a66",
-    "TT_FONDO_NARANJA": "#e6613a",
-    "TT_FONDO_ROSA": "#942357",
-    "TT_VERDE_1": "#118559",
-    "TT_VERDE_2": "#00e300",
-    "TT_TEXTO": "#d7d7d7",
-    "TT_AZULROYAL_1": "#266bb3",
-    "TT_AZULROYAL_2": "#426391",
-    "TT_PURPURAROYAL": "#8561b5",
-    "TT_AZUL_T": "#68a8e1",
-    "TT_NARANJA_T": "#e37000",
-    "TT_ROSA_T": "#ca9797",
-    "TT_AMARILLO_T": "#fff000",
-    "TT_SIMBOLO": "#fffab3",
-    "TT_PURPURA_D": "#973097",
-    "M_FONDO_0": "#303030",
-    "M_FONDO_1": "#232323",
-    "M_TEXTO_VERDE": "#94942b",
-    "M_FONDO_GRIS": "#cacaca",
-    "M_FONDO_VERDE": "#caca94",
-    "N_FONDO_CLARO":"#3f3f3f",
-    "N_AZUL_CLARO":"#389ebd",
-    "N_VERDE_CLARO":"#7f7f00",
-    "N_FONDO_OSCURO":"#232323",
-    "N_FONDO_MEDIO":"#303030",
-    "N_CYAN_1":"#4282a1",
-    "N_CYAN_2":"#476e82",
-    "N_ROJO_1":"#bd3019",
-    "N_ROJO_2":"#8c2311",
-    "N_FONDO_MORADO":"#ab97b5",
-    "N_MORADO_OSCURO":"#7f7fff",
-    "N_FONDO_NARANJA":"#c58f7f",
-    "N_FONDO_VERDE_PASTEL":"#cce1d4",
-    "ROSA_ST":"#F8206B",
-    "VERDE_ST":"#A1E303",
-    "AMARILLO_ST":"#E6DC6B",
-    "FONDO_ST":"#272822"
 }
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
@@ -289,3 +313,12 @@ them to manim.play(), e.g.
 >>> c = Circle()
 >>> manim.play(ShowCreation(c))
 """
+
+def set_custom_quality(height,fps):
+    video_parameters=[
+        ("pixel_height",height),
+        ("pixel_width",int(height*16/9)),
+        ("frame_rate",fps)
+    ]
+    for v_property,v_value in video_parameters:
+        CUSTOM_QUALITY_CAMERA_CONFIG[v_property]=v_value

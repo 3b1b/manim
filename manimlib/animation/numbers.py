@@ -1,47 +1,52 @@
+import warnings
+
 from manimlib.animation.animation import Animation
+from manimlib.mobject.numbers import DecimalNumber
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
 
 
 class ChangingDecimal(Animation):
     CONFIG = {
-        "num_decimal_places": None,
-        "show_ellipsis": None,
-        "position_update_func": None,
-        "include_sign": None,
-        "tracked_mobject": None,
+        "suspend_mobject_updating": False,
     }
 
-    def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
-        digest_config(self, kwargs, locals())
-        if self.tracked_mobject:
-            dmc = decimal_number_mobject.get_center()
-            tmc = self.tracked_mobject.get_center()
-            self.diff_from_tracked_mobject = dmc - tmc
-            self.diff_from_tracked_mobject = dmc - tmc
-        Animation.__init__(self, decimal_number_mobject, **kwargs)
+    def __init__(self, decimal_mob, number_update_func, **kwargs):
+        self.check_validity_of_input(decimal_mob)
+        self.yell_about_depricated_configuration(**kwargs)
+        self.number_update_func = number_update_func
+        super().__init__(decimal_mob, **kwargs)
 
-    def update_mobject(self, alpha):
-        self.update_number(alpha)
-        self.update_position()
+    def check_validity_of_input(self, decimal_mob):
+        if not isinstance(decimal_mob, DecimalNumber):
+            raise Exception(
+                "ChangingDecimal can only take "
+                "in a DecimalNumber"
+            )
 
-    def update_number(self, alpha):
-        self.decimal_number_mobject.set_value(
+    def yell_about_depricated_configuration(self, **kwargs):
+        # Obviously this would optimally be removed at
+        # some point.
+        for attr in ["tracked_mobject", "position_update_func"]:
+            if attr in kwargs:
+                warnings.warn("""
+                    Don't use {} for ChangingDecimal,
+                    that functionality has been depricated
+                    and you should use a mobject updater
+                    instead
+                """.format(attr)
+            )
+
+    def interpolate_mobject(self, alpha):
+        self.mobject.set_value(
             self.number_update_func(alpha)
         )
 
-    def update_position(self):
-        if self.position_update_func is not None:
-            self.position_update_func(self.decimal_number_mobject)
-        elif self.tracked_mobject is not None:
-            self.decimal_number_mobject.move_to(
-                self.tracked_mobject.get_center() + self.diff_from_tracked_mobject)
-
 
 class ChangeDecimalToValue(ChangingDecimal):
-    def __init__(self, decimal_number_mobject, target_number, **kwargs):
-        start_number = decimal_number_mobject.number
-
-        def func(alpha):
-            return interpolate(start_number, target_number, alpha)
-        ChangingDecimal.__init__(self, decimal_number_mobject, func, **kwargs)
+    def __init__(self, decimal_mob, target_number, **kwargs):
+        start_number = decimal_mob.number
+        super().__init__(
+            decimal_mob,
+            lambda a: interpolate(start_number, target_number, a),
+            **kwargs
+        )

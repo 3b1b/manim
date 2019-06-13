@@ -1,6 +1,10 @@
+import operator as op
+
 from manimlib.animation.composition import LaggedStart
 from manimlib.animation.transform import ApplyMethod
-from manimlib.constants import *
+from manimlib.animation.transform import Restore
+from manimlib.constants import WHITE
+from manimlib.constants import BLACK
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.svg.drawings import Car
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -11,20 +15,32 @@ from manimlib.utils.space_ops import get_norm
 class MoveCar(ApplyMethod):
     CONFIG = {
         "moving_forward": True,
+        "run_time": 5,
     }
 
     def __init__(self, car, target_point, **kwargs):
-        assert isinstance(car, Car)
-        ApplyMethod.__init__(self, car.move_to, target_point, **kwargs)
-        displacement = self.target_mobject.get_right() - self.starting_mobject.get_right()
-        distance = get_norm(displacement)
+        self.check_if_input_is_car(car)
+        self.target_point = target_point
+        super().__init__(car.move_to, target_point, **kwargs)
+
+    def check_if_input_is_car(self, car):
+        if not isinstance(car, Car):
+            raise Exception("MoveCar must take in Car object")
+
+    def begin(self):
+        super().begin()
+        car = self.mobject
+        distance = get_norm(op.sub(
+            self.target_mobject.get_right(),
+            self.starting_mobject.get_right(),
+        ))
         if not self.moving_forward:
             distance *= -1
         tire_radius = car.get_tires()[0].get_width() / 2
         self.total_tire_radians = -distance / tire_radius
 
-    def update_mobject(self, alpha):
-        ApplyMethod.update_mobject(self, alpha)
+    def interpolate_mobject(self, alpha):
+        ApplyMethod.interpolate_mobject(self, alpha)
         if alpha == 0:
             return
         radians = alpha * self.total_tire_radians
@@ -40,7 +56,7 @@ class Broadcast(LaggedStart):
         "start_stroke_width": 8,
         "color": WHITE,
         "remover": True,
-        "lag_ratio": 0.7,
+        "lag_ratio": 0.2,
         "run_time": 3,
         "remover": True,
     }
@@ -54,13 +70,15 @@ class Broadcast(LaggedStart):
                 stroke_color=BLACK,
                 stroke_width=0,
             )
-            circle.move_to(focal_point)
+            circle.add_updater(
+                lambda c: c.move_to(focal_point)
+            )
             circle.save_state()
             circle.set_width(self.small_radius * 2)
             circle.set_stroke(self.color, self.start_stroke_width)
             circles.add(circle)
-        LaggedStart.__init__(
-            self, ApplyMethod, circles,
-            lambda c: (c.restore,),
-            **kwargs
-        )
+        animations = [
+            Restore(circle)
+            for circle in circles
+        ]
+        super().__init__(*animations, **kwargs)

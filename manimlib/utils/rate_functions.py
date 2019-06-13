@@ -16,12 +16,12 @@ def smooth(t, inflection=10.0):
     )
 
 
-def rush_into(t):
-    return 2 * smooth(t / 2.0)
+def rush_into(t, inflection=10.0):
+    return 2 * smooth(t / 2.0, inflection)
 
 
-def rush_from(t):
-    return 2 * smooth(t / 2.0 + 0.5) - 1
+def rush_from(t, inflection=10.0):
+    return 2 * smooth(t / 2.0 + 0.5, inflection) - 1
 
 
 def slow_into(t):

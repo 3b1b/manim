@@ -10,7 +10,6 @@ from manimlib.mobject.types.point_cloud_mobject import Point
 from manimlib.mobject.value_tracker import ValueTracker
 from manimlib.utils.color import get_shaded_rgb
 from manimlib.utils.simple_functions import clip_in_place
-from manimlib.utils.space_ops import center_of_mass
 from manimlib.utils.space_ops import rotation_about_z
 from manimlib.utils.space_ops import rotation_matrix
 
@@ -184,13 +183,13 @@ class ThreeDCamera(Camera):
         return self.project_points(point.reshape((1, 3)))[0, :]
 
     def transform_points_pre_display(self, mobject, points):
+        points = super().transform_points_pre_display(mobject, points)
         fixed_orientation = mobject in self.fixed_orientation_mobjects
         fixed_in_frame = mobject in self.fixed_in_frame_mobjects
 
         if fixed_in_frame:
             return points
         if fixed_orientation:
-            # center = center_of_mass(points)
             center_func = self.fixed_orientation_mobjects[mobject]
             center = center_func()
             new_center = self.project_point(center)

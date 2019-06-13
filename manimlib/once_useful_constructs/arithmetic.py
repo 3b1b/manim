@@ -89,7 +89,7 @@ class FlipThroughSymbols(Animation):
         mobject = TexMobject(self.curr_tex).shift(start_center)
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         new_tex = self.tex_list[np.ceil(alpha * len(self.tex_list)) - 1]
 
         if new_tex != self.curr_tex:

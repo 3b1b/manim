@@ -1,7 +1,10 @@
 videos
-files/Tex
 manimlib/files/Tex
+files/Tex
+files
 __pycache__/
 .DS_Store
 manimlib/.DS_Store
+manimlib/3b1b_projects
+csv_files
 *.pyc

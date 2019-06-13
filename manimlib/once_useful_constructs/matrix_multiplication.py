@@ -1,7 +1,7 @@
 import numpy as np
 
-from manimlib.animation.creation import FadeOut
 from manimlib.animation.creation import ShowCreation
+from manimlib.animation.fading import FadeOut
 from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.transform import Transform
 from manimlib.constants import *
@@ -82,7 +82,7 @@ class NumericalMatrixMultiplication(Scene):
     def organize_matrices(self, left, right, result):
         equals = TexMobject("=")
         everything = VGroup(left, right, equals, result)
-        everything.arrange_submobjects()
+        everything.arrange()
         everything.set_width(FRAME_WIDTH - 1)
         self.add(everything)
 
@@ -124,7 +124,7 @@ class NumericalMatrixMultiplication(Scene):
                             start_parts,
                             result_entry.copy().set_color(YELLOW),
                             path_arc=-np.pi / 2,
-                            submobject_mode="all_at_once",
+                            lag_ratio=0,
                         ),
                         *lagging_anims
                     )

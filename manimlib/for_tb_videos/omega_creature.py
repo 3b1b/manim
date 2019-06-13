@@ -1,24 +1,41 @@
-import numpy as np
+import os
 import warnings
 
-from manimlib.constants import *
+import numpy as np
 
+from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.geometry import Circle
+from manimlib.mobject.svg.drawings import ThoughtBubble
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.config_ops import digest_config
+from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import normalize
 
-from manimlib.mobject.svg.drawings import ThoughtBubble
-
-from manimlib.animation.transform import Transform
+from manimlib.animation.animation import Animation
+from manimlib.animation.composition import AnimationGroup
+from manimlib.animation.fading import FadeOut
+from manimlib.animation.creation import ShowCreation
+from manimlib.animation.creation import Write
+from manimlib.animation.transform import ApplyMethod
+from manimlib.animation.transform import MoveToTarget
+from manimlib.constants import *
+from manimlib.mobject.mobject import Group
+from manimlib.mobject.svg.drawings import SpeechBubble
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
-from manimlib.utils.space_ops import get_norm
 
-OMEGA_CREATURE_DIR = os.path.join("OmegaCreature")
-OMEGA_CREATURE_SCALE_FACTOR = 0.5
+pi_creature_dir_maybe = os.path.join("media","svg_images","omega_creature")
+if os.path.exists(pi_creature_dir_maybe):
+    PI_CREATURE_DIR = pi_creature_dir_maybe
+else:
+    PI_CREATURE_DIR = os.path.join(FILE_DIR)
+
+PI_CREATURE_SCALE_FACTOR = 0.5
 
 LEFT_EYE_INDEX = 0
 RIGHT_EYE_INDEX = 1
@@ -35,12 +52,16 @@ class OmegaCreature(SVGMobject):
         "stroke_width": 0,
         "stroke_color": BLACK,
         "fill_opacity": 1.0,
-        "propagate_style_to_family": True,
         "height": 3,
         "corner_scale_factor": 0.75,
         "flip_at_start": False,
         "is_looking_direction_purposeful": False,
         "start_corner": None,
+        # Range of proportions along body where arms are
+        "right_arm_range": [0.55, 0.7],
+        "left_arm_range": [.34, .462],
+        "pupil_to_eye_width_ratio": 0.4,
+        "pupil_dot_to_pupil_width_ratio": 0.3,
     }
 
     def __init__(self, mode="plain", **kwargs):
@@ -49,18 +70,19 @@ class OmegaCreature(SVGMobject):
         self.parts_named = False
         try:
             svg_file = os.path.join(
-                OMEGA_CREATURE_DIR,
+                PI_CREATURE_DIR,
                 "%s_%s.svg" % (self.file_name_prefix, mode)
             )
             SVGMobject.__init__(self, file_name=svg_file, **kwargs)
-        except:
+        except Exception:
             warnings.warn("No %s design with mode %s" %
                           (self.file_name_prefix, mode))
             svg_file = os.path.join(
-                FILE_DIR,
+                "media",
+                "svg_images","omega_creature",
                 "OmegaCreature_plain.svg",
             )
-            SVGMobject.__init__(self, file_name=svg_file, **kwargs)
+            SVGMobject.__init__(self, mode="plain", file_name=svg_file, **kwargs)
 
         if self.flip_at_start:
             self.flip()
@@ -94,24 +116,40 @@ class OmegaCreature(SVGMobject):
             self.name_parts()
         self.mouth.set_fill(BLACK, opacity=1)
         self.body.set_fill(self.color, opacity=1)
-        self.pupils.set_fill(BLACK, opacity=1)
-        # self.pupils.set_stroke(DARK_GREY, width=1)
-        self.add_pupil_light_spot(self.pupils)
         self.eyes.set_fill(WHITE, opacity=1)
+        self.init_pupils()
         return self
 
-    def add_pupil_light_spot(self, pupils):
-        # Purely an artifact of how the SVGs were drawn.
-        # In a perfect world, this wouldn't be needed
-        for pupil in pupils:
-            index = 16
-            sub_points = pupil.points[:index]
-            pupil.points = pupil.points[index + 2:]
-            circle = VMobject()
-            circle.points = sub_points
-            circle.set_stroke(width=0)
-            circle.set_fill(WHITE, 1)
-            pupil.add(circle)
+    def init_pupils(self):
+        # Instead of what is drawn, make new circles.
+        # This is mostly because the paths associated
+        # with the eyes in all the drawings got slightly
+        # messed up.
+        for eye, pupil in zip(self.eyes, self.pupils):
+            pupil_r = eye.get_width() / 2
+            pupil_r *= self.pupil_to_eye_width_ratio
+            dot_r = pupil_r
+            dot_r *= self.pupil_dot_to_pupil_width_ratio
+
+            new_pupil = Circle(
+                radius=pupil_r,
+                color=BLACK,
+                fill_opacity=1,
+                stroke_width=0,
+            )
+            dot = Circle(
+                radius=dot_r,
+                color=WHITE,
+                fill_opacity=1,
+                stroke_width=0,
+            )
+            new_pupil.move_to(pupil)
+            pupil.become(new_pupil)
+            dot.shift(
+                new_pupil.get_boundary_point(UL) -
+                dot.get_boundary_point(UL)
+            )
+            pupil.add(dot)
 
     def copy(self):
         copy_mobject = SVGMobject.copy(self)
@@ -134,7 +172,7 @@ class OmegaCreature(SVGMobject):
         new_self.shift(self.eyes.get_center() - new_self.eyes.get_center())
         if hasattr(self, "purposeful_looking_direction"):
             new_self.look(self.purposeful_looking_direction)
-        Transform(self, new_self).update(1)
+        self.become(new_self)
         self.mode = mode
         return self
 
@@ -174,10 +212,11 @@ class OmegaCreature(SVGMobject):
         return self
 
     def get_looking_direction(self):
-        return np.sign(np.round(
-            self.pupils.get_center() - self.eyes.get_center(),
-            decimals=2
-        ))
+        vect = self.pupils.get_center() - self.eyes.get_center()
+        return normalize(vect)
+
+    def get_look_at_spot(self):
+        return self.eyes.get_center() + self.get_looking_direction()
 
     def is_flipped(self):
         return self.eyes.submobjects[0].get_center()[0] > \
@@ -228,13 +267,19 @@ class OmegaCreature(SVGMobject):
         self.look(top_mouth_point - bottom_mouth_point)
         return self
 
+    def get_arm_copies(self):
+        body = self.body
+        return VGroup(*[
+            body.copy().pointwise_become_partial(body, *alpha_range)
+            for alpha_range in (self.right_arm_range, self.left_arm_range)
+        ])
 
 
 def get_all_pi_creature_modes():
     result = []
-    prefix = "%s_" % OmegaCreature.CONFIG["file_name_prefix"]
+    prefix = "%s_" % PiCreature.CONFIG["file_name_prefix"]
     suffix = ".svg"
-    for file in os.listdir(OMEGA_CREATURE_DIR):
+    for file in os.listdir(PI_CREATURE_DIR):
         if file.startswith(prefix) and file.endswith(suffix):
             result.append(
                 file[len(prefix):-len(suffix)]
@@ -245,3 +290,123 @@ def get_all_pi_creature_modes():
 class Alex(OmegaCreature):
     pass  # Nothing more than an alternative name
 
+
+
+
+
+class Eyes(VMobject):
+    CONFIG = {
+        "height": 0.3,
+        "thing_to_look_at": None,
+        "mode": "plain",
+    }
+
+    def __init__(self, body, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        self.body = body
+        eyes = self.create_eyes()
+        self.become(eyes, copy_submobjects=False)
+
+    def create_eyes(self, mode=None, thing_to_look_at=None):
+        if mode is None:
+            mode = self.mode
+        if thing_to_look_at is None:
+            thing_to_look_at = self.thing_to_look_at
+        self.thing_to_look_at = thing_to_look_at
+        self.mode = mode
+        looking_direction = None
+
+        pi = PiCreature(mode=mode)
+        eyes = VGroup(pi.eyes, pi.pupils)
+        if self.submobjects:
+            eyes.match_height(self)
+            eyes.move_to(self, DOWN)
+            looking_direction = self[1].get_center() - self[0].get_center()
+        else:
+            eyes.set_height(self.height)
+            eyes.move_to(self.body.get_top(), DOWN)
+
+        height = eyes.get_height()
+        if thing_to_look_at is not None:
+            pi.look_at(thing_to_look_at)
+        elif looking_direction is not None:
+            pi.look(looking_direction)
+        eyes.set_height(height)
+
+        return eyes
+
+    def change_mode(self, mode, thing_to_look_at=None):
+        new_eyes = self.create_eyes(
+            mode=mode,
+            thing_to_look_at=thing_to_look_at
+        )
+        self.become(new_eyes, copy_submobjects=False)
+        return self
+
+    def look_at(self, thing_to_look_at):
+        self.change_mode(
+            self.mode,
+            thing_to_look_at=thing_to_look_at
+        )
+        return self
+
+    def blink(self, **kwargs):  # TODO, change Blink
+        bottom_y = self.get_bottom()[1]
+        for submob in self:
+            submob.apply_function(
+                lambda p: [p[0], bottom_y, p[2]]
+            )
+        return self
+
+class PiCreatureBubbleIntroduction(AnimationGroup):
+    CONFIG = {
+        "target_mode": "speaking",
+        "bubble_class": SpeechBubble,
+        "change_mode_kwargs": {},
+        "bubble_creation_class": ShowCreation,
+        "bubble_creation_kwargs": {},
+        "bubble_kwargs": {},
+        "content_introduction_class": Write,
+        "content_introduction_kwargs": {},
+        "look_at_arg": None,
+    }
+
+    def __init__(self, pi_creature, *content, **kwargs):
+        digest_config(self, kwargs)
+        bubble = pi_creature.get_bubble(
+            *content,
+            bubble_class=self.bubble_class,
+            **self.bubble_kwargs
+        )
+        Group(bubble, bubble.content).shift_onto_screen()
+
+        pi_creature.generate_target()
+        pi_creature.target.change_mode(self.target_mode)
+        if self.look_at_arg is not None:
+            pi_creature.target.look_at(self.look_at_arg)
+
+        change_mode = MoveToTarget(pi_creature, **self.change_mode_kwargs)
+        bubble_creation = self.bubble_creation_class(
+            bubble, **self.bubble_creation_kwargs
+        )
+        content_introduction = self.content_introduction_class(
+            bubble.content, **self.content_introduction_kwargs
+        )
+        AnimationGroup.__init__(
+            self, change_mode, bubble_creation, content_introduction,
+            **kwargs
+        )
+
+class OmegaCreatureSays(PiCreatureBubbleIntroduction):
+    CONFIG = {
+        "target_mode": "speaking",
+        "bubble_class": SpeechBubble,
+    }
+
+class Blink(ApplyMethod):
+    CONFIG = {
+        "rate_func": squish_rate_func(there_and_back)
+    }
+
+    def __init__(self, pi_creature, **kwargs):
+        ApplyMethod.__init__(self, pi_creature.blink, **kwargs)

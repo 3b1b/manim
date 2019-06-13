@@ -58,19 +58,28 @@ def parse_cli():
             help="Save the video as gif",
         ),
         parser.add_argument(
+            "-k","--custom_quality",
+            action="store_true",
+            help="Custom size in file",
+        ),
+        parser.add_argument(
+            "-x","--fps",
+            help="Custom fps",
+        ),
+        parser.add_argument(
             "-f", "--show_file_in_finder",
             action="store_true",
             help="Show the output file in finder",
         ),
         parser.add_argument(
-            "-t", "--transparent",
-            action="store_true",
-            help="Render to a movie file with an alpha channel",
-        ),
-        parser.add_argument(
             "--hd",
             action="store_true",
             help="mp4 en alta definicion",
+        ),
+        parser.add_argument(
+            "-t", "--transparent",
+            action="store_true",
+            help="Render to a movie file with an alpha channel",
         ),
         parser.add_argument(
             "-q", "--quiet",
@@ -110,7 +119,7 @@ def parse_cli():
         parser.add_argument(
             "--remove_progress_bars",
             action="store_false",
-            help="Remove progress bars in terminal",
+            help="Remove progress bars displayed in terminal",
         )
 
         # For live streaming
@@ -149,7 +158,7 @@ def parse_cli():
 def get_module(file_name):
     if file_name == "-":
         module = types.ModuleType("input_scenes")
-        code = "from big_ol_pile_of_manim_imports import *\n\n" + sys.stdin.read()
+        code = "from manimlib.imports import *\n\n" + sys.stdin.read()
         try:
             exec(code, module.__dict__)
             return module
@@ -176,7 +185,9 @@ def get_configuration(args):
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
         "file_name": args.file_name,
-        "hd": args.hd
+        "input_file_path": args.file,
+        "hd": args.hd,
+        "fps": args.fps
     }
     if hasattr(module, "OUTPUT_DIRECTORY"):
         file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
@@ -192,7 +203,7 @@ def get_configuration(args):
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
         "sound": args.sound,
-        "remove_progress_bars": args.remove_progress_bars,
+        "remove_progress_bars": args.remove_progress_bars
     }
 
     # Camera configuration
@@ -221,6 +232,12 @@ def get_camera_configuration(args):
         camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
     elif args.medium_quality:
         camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+    elif args.custom_quality:
+        try:
+            manimlib.constants.CUSTOM_QUALITY_CAMERA_CONFIG["frame_rate"]=int(args.fps)
+        except:
+            pass
+        camera_config.update(manimlib.constants.CUSTOM_QUALITY_CAMERA_CONFIG)
     else:
         camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
 

@@ -33,7 +33,7 @@ class SampleSpaceScene(Scene):
         for part, p in zip(parts.target, p_list):
             part.replace(space_copy, stretch=True)
             part.stretch(p, dimension)
-        parts.target.arrange_submobjects(vect, buff=0)
+        parts.target.arrange(vect, buff=0)
         parts.target.move_to(space_copy)
         anims.append(MoveToTarget(parts))
         if hasattr(parts, "labels") and parts.labels is not None:
@@ -106,7 +106,7 @@ class SampleSpaceScene(Scene):
             rect.stretch_to_fit_width(
                 area / rect.get_height()
             )
-        post_rects.arrange_submobjects(DOWN, buff=0)
+        post_rects.arrange(DOWN, buff=0)
         post_rects.next_to(
             self.sample_space, RIGHT, buff
         )

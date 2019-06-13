@@ -7,6 +7,7 @@ from manimlib.constants import PI
 from manimlib.constants import RIGHT
 from manimlib.constants import TAU
 from manimlib.utils.iterables import adjacent_pairs
+from manimlib.utils.simple_functions import fdiv
 
 
 def get_norm(vect):
@@ -140,11 +141,12 @@ def angle_of_vector(vector):
 def angle_between_vectors(v1, v2):
     """
     Returns the angle between two 3D vectors.
-    This angle will always be btw 0 and TAU/2.
+    This angle will always be btw 0 and pi
     """
-    l1 = get_norm(v1)
-    l2 = get_norm(v2)
-    return np.arccos(np.dot(v1, v2) / (l1 * l2))
+    return np.arccos(fdiv(
+        np.dot(v1, v2),
+        get_norm(v1) * get_norm(v2)
+    ))
 
 
 def project_along_vector(point, vector):
@@ -201,6 +203,10 @@ def complex_func_to_R3_func(complex_func):
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
+
+
+def midpoint(point1, point2):
+    return center_of_mass([point1, point2])
 
 
 def line_intersection(line1, line2):

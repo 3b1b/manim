@@ -1,7 +1,6 @@
 import numpy as np
 
 from manimlib.mobject.mobject import Mobject
-from manimlib.utils.bezier import interpolate
 
 
 class ValueTracker(Mobject):

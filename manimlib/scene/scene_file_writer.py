@@ -1,6 +1,7 @@
 import numpy as np
 from pydub import AudioSegment
 import shutil
+import platform
 import subprocess
 import os
 import _thread as thread
@@ -27,14 +28,15 @@ class SceneFileWriter(object):
         "png_mode": "RGBA",
         "save_last_frame": False,
         "movie_file_extension": ".mp4",
+        "gif_file_extension": ".gif",
         "livestreaming": False,
         "to_twitch": False,
-        "gif_file_extension": ".gif",
         "twitch_key": None,
         # Previous output_file_name
         # TODO, address this in extract_scene et. al.
         "file_name": None,
         "output_directory": None,
+        "file_name": None,
         "hd":False,
     }
 
@@ -82,13 +84,18 @@ class SceneFileWriter(object):
                 self.get_partial_movie_directory(),
                 file_name,
             ))
+            self.movie_dir=movie_dir
 
     def get_default_output_directory(self):
-        scene_module = self.scene.__class__.__module__
-        return scene_module.replace(".", os.path.sep)
+        filename = os.path.basename(self.input_file_path)
+        root, ext = os.path.splitext(filename)
+        return root if root else ext[1:]
 
     def get_default_file_name(self):
-        return self.scene.__class__.__name__
+        if self.file_name is None:
+            return self.scene.__class__.__name__
+        else:
+            return self.file_name
 
     def get_movie_directory(self):
         pixel_height = self.scene.camera.pixel_height
@@ -178,7 +185,7 @@ class SceneFileWriter(object):
         if self.write_to_movie:
             self.writing_process.stdin.write(frame.tostring())
 
-    def save_image(self, image):
+    def save_final_image(self, image):
         file_path = self.get_image_file_path()
         image.save(file_path)
         self.print_file_ready_message(file_path)
@@ -203,11 +210,11 @@ class SceneFileWriter(object):
             self.combine_movie_files()
         if self.save_last_frame:
             self.scene.update_frame(ignore_skipping=True)
-            self.save_image(self.scene.get_image())
+            self.save_final_image(self.scene.get_image())
 
     def open_movie_pipe(self):
         file_path = self.get_next_partial_movie_path()
-        temp_file_path = file_path.replace(".", "_temp.")
+        temp_file_path = os.path.splitext(file_path)[0] + '_temp' + self.movie_file_extension
 
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
@@ -236,7 +243,7 @@ class SceneFileWriter(object):
                 # '-vcodec', 'png',
             ]
         else:
-            if self.hd==True:
+            if self.hd:
                 command += [
                 '-vcodec', 'libx264',
                 '-preset','fast','-crf','0',
@@ -338,6 +345,7 @@ class SceneFileWriter(object):
                 bitrate='312k',
             )
             temp_file_path = movie_file_path.replace(".", "_temp.")
+            current_os = platform.system()
             commands = [
                 "ffmpeg",
                 "-i", movie_file_path,
@@ -350,15 +358,24 @@ class SceneFileWriter(object):
                 "-map", "0:v:0",
                 # select audio stream from second file
                 "-map", "1:a:0",
-                '-loglevel', 'error',#"-strict","-2",
-                # "-shortest",
-                temp_file_path,
+                '-loglevel', 'error'
             ]
+            if current_os=="Windows":
+                commands += [
+                "-strict","-2",
+                temp_file_path,
+                ]
+            else:
+                commands += [
+                temp_file_path,
+                ]
+            
             subprocess.call(commands)
             shutil.move(temp_file_path, movie_file_path)
             subprocess.call(["rm", sound_file_path])
 
         self.print_file_ready_message(movie_file_path)
+        subprocess.call(["rm","-r",self.partial_movie_directory])
 
     def print_file_ready_message(self, file_path):
         print("\nFile ready at {}\n".format(file_path))

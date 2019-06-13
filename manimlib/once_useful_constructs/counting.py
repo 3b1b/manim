@@ -1,5 +1,5 @@
-from manimlib.animation.creation import FadeIn
 from manimlib.animation.creation import ShowCreation
+from manimlib.animation.fading import FadeIn
 from manimlib.animation.transform import MoveToTarget
 from manimlib.animation.transform import Transform
 from manimlib.constants import *
@@ -150,7 +150,7 @@ class CountingScene(Scene):
             result.append(ShowCreation(arrow))
         result.append(Transform(
             self.number_mob, new_number_mob,
-            submobject_mode="lagged_start"
+            lag_ratio=0.5
         ))
         return result
 

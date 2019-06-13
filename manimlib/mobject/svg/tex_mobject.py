@@ -32,9 +32,7 @@ class SingleStringTexMobject(SVGMobject):
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
-        "propagate_style_to_family": True,
         "alignment": "",
-        "color": TT_TEXTO,
     }
 
     def __init__(self, tex_string, **kwargs):
@@ -68,6 +66,7 @@ class SingleStringTexMobject(SVGMobject):
             # Need to add blank subscript or superscript
             tex.endswith("_"),
             tex.endswith("^"),
+            tex.endswith("dot"),
         ])
         if should_add_filler:
             filler = "{\\quad}"
@@ -126,7 +125,7 @@ class SingleStringTexMobject(SVGMobject):
         return TexSymbol(path_string)
 
     def organize_submobjects_left_to_right(self):
-        self.sort_submobjects(lambda p: p[0])
+        self.sort(lambda p: p[0])
         return self
 
 
@@ -158,7 +157,8 @@ class TexMobject(SingleStringTexMobject):
         split_list = split_string_list_to_isolate_substrings(
             tex_strings, *substrings_to_isolate
         )
-        split_list = list(map(str.strip, split_list))
+        split_list = [str(x).strip() for x in split_list]
+        #split_list = list(map(str.strip, split_list))
         split_list = [s for s in split_list if s != '']
         return split_list
 
@@ -232,18 +232,10 @@ class TexMobject(SingleStringTexMobject):
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part)
 
-    def sort_submobjects_alphabetically(self):
+    def sort_alphabetically(self):
         self.submobjects.sort(
             key=lambda m: m.get_tex_string()
         )
-
-    def split(self):
-        # Many old scenes assume that when you pass in a single string
-        # to TexMobject, it indexes across the characters.
-        if len(self.submobjects) == 1:
-            return self.submobjects[0].split()
-        else:
-            return super(TexMobject, self).split()
 
 
 class TextMobject(TexMobject):
@@ -269,7 +261,7 @@ class BulletedList(TextMobject):
             dot = TexMobject("\\cdot").scale(self.dot_scale_factor)
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
-        self.arrange_submobjects(
+        self.arrange(
             DOWN,
             aligned_edge=LEFT,
             buff=self.buff
@@ -326,49 +318,63 @@ class Title(TextMobject):
                 underline.set_width(self.underline_width)
             self.add(underline)
             self.underline = underline
-            
-class TikzMobject(TexMobject):
-    CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
-        "alignment": "\\centering",
-        "stroke_width": 2,
-        "fill_opacity": 0,
-        "background_stroke_width": 0,
-        "background_stroke_color": BLACK,
-        "should_center": True,
-        "height": None,
-        "organize_left_to_right": False,
-        "propagate_style_to_family": True,
-    }
 
-class Texto(TextMobject):
+class Text(TextMobject):
     pass
 
 class Formula(TexMobject):
     pass
 
-class Tikz(TikzMobject):
-	pass
-
-class TextoB(TextMobject):
+class SimpleTikz(TextMobject):
     CONFIG={
-    "color": WHITE,
+    "template_tex_file_body": TEMPLATE_TEX_FILE_BODY_TIKZ,
+    "stroke_width": 1,
+    "fill_opacity": 1,
+    "background_stroke_width": 0,
+    "background_stroke_color": BLACK,
     }
 
-class TextoN(TextMobject):
+class Tikz(TextMobject):
     CONFIG={
-    "color": BLACK,
+    "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY_TIKZ,
+    "stroke_width": 1,
+    "fill_opacity": 1,
+    "background_stroke_width": 0,
+    "background_stroke_color": BLACK,
     }
 
-class FormulaB(TexMobject):
+class SimpleListings(TexMobject):
     CONFIG={
-    "color": WHITE,
-    }  
+    "template_tex_file_body": TEMPLATE_TEX_FILE_BODY_LISTINGS,
+    }
 
-class FormulaN(TexMobject):
+class Listings(TextMobject):
     CONFIG={
-    "color": BLACK,
-    }  
+    "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY_LISTINGS,
+    }
 
+class MusicTeX(TexMobject):
+    CONFIG={
+    "template_tex_file_body": TEMPLATE_TEX_FILE_BODY_MUSIC,
+    }
 
+class GenericFont(TexMobject):
+    CONFIG={
+    "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY_FONTS,
+    "font":""
+    }
+    def get_modified_expression(self, tex_string):
+        result = self.alignment + " " + self.font + " " + tex_string
+        result = result.strip()
+        result = self.modify_special_strings(result)
+        return result
 
+class TextFull(TextMobject):
+    CONFIG={
+    "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY_FULL,
+    }
+
+class FormulaFull(TexMobject):
+    CONFIG={
+    "template_tex_file_body": TEMPLATE_TEX_FILE_BODY_FULL,
+    }
