@@ -1,5 +1,6 @@
 <hr/>
-<div font-size="40px"><p align=center><i> ESPAÑOL </i></p></div>
+
+<h2 font-size=40px> ESPAÑOL </h2>
 
 # Manim personalizado
 
