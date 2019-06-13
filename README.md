@@ -12,7 +12,7 @@ The main modifications that this version of Manim has are:
 * SVG images that I use in my videos.
 * Export svg with `-i`.
 * Export with custom fps with `-kx FPS`.
-* Activate mp4 in high definition using `` `--hd```.
+* Activate mp4 in high definition using ```--hd```.
 
 # Indications.
 You probably have to install `pydub` and `pyreadline`, install it using pip.
