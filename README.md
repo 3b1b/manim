@@ -1,5 +1,5 @@
 <hr/>
-<h2 font-size:50px > <i> ESPAÑOL </i> </h2>
+<p align=center ><i> ESPAÑOL </i></p>
   
 # Manim personalizado
 
