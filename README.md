@@ -1,6 +1,6 @@
 <hr/>
-<p align=center font-size=40px><i> ESPAÑOL </i></p>
-  
+<div><p align=center><i> ESPAÑOL </i></p></div>
+
 # Manim personalizado
 
 Esta es mi versión personal que uso para hacer mis proyectos. Tiene algunas modificaciónes y adiciones, los códigos de mis proyectos están en las carpetas "proy_act" y "proy_term".
