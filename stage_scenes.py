@@ -4,7 +4,8 @@ import os
 import sys
 import importlib
 
-from manimlib.constants import VIDEO_DIR
+import manimlib.constants as consts
+from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
 from manimlib.config import get_module
 from manimlib.extract_scene import is_child_scene
 
@@ -42,7 +43,7 @@ def stage_scenes(module_name):
     # }
     # TODO, fix this
     animation_dir = os.path.join(
-        VIDEO_DIR, "ode", "part3", "1440p60"
+        consts.VIDEO_DIR, "ode", "part3", "1440p60"
     )
     # 
     files = os.listdir(animation_dir)

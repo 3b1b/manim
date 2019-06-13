@@ -12,6 +12,7 @@ ben_cairo_test.py
 .floo
 .flooignore
 .vscode
+.vs
 *.xml
 *.iml
 media

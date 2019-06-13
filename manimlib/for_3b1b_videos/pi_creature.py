@@ -15,11 +15,11 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 
-pi_creature_dir_maybe = os.path.join(MEDIA_DIR, "designs", "PiCreature")
+pi_creature_dir_maybe = os.path.join(MEDIA_DIR, "assets", "PiCreature")
 if os.path.exists(pi_creature_dir_maybe):
     PI_CREATURE_DIR = pi_creature_dir_maybe
 else:
-    PI_CREATURE_DIR = os.path.join(FILE_DIR)
+    PI_CREATURE_DIR = os.path.join("assets")
 
 PI_CREATURE_SCALE_FACTOR = 0.5
 

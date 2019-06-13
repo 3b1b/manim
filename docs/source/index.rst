@@ -12,11 +12,13 @@ a pull request there.
 
 .. toctree::
     :maxdepth: 2
-    :caption: Contents:
+    :caption: Contents
 
     about
     installation/index
     getting_started/index
+    animation
+    constants
 
 
 Indices and tables
