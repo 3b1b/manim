@@ -668,7 +668,6 @@ class Arrow(Line):
 
 class Vector(Arrow):
     CONFIG = {
-        "color": YELLOW,
         "buff": 0,
     }
 
