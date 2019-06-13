@@ -1,6 +1,57 @@
+<h2 align=center><i> ENGLISH </i></h2>
+
+This is my personal version that I use to make my projects. It has some modifications and additions, the codes of my projects are in the folders "projects".
+
+Due to the modifications I made, you will not be able to compile my projects in the original version of Manim, so I recommend that you use this version if you want to compile them. I have a course in both Spanish and English that may be of interest to people who want to learn from scratch (even without knowledge of LaTeX and / or Python).
+
+The main modifications that this version of Manim has are:
+* Configuration to write texts in Spanish (try with `utf8` or` latin1` in "tex_template.tex")
+* New predefined colors.
+* New objects: Brackets and custom brackets (similar to Brace) and so on.
+* New LaTeX packages added: Sources, chemistry symbols, music, etcetera.
+* SVG images that I use in my videos.
+* Export svg with `-i`.
+* Export with custom fps with `-kx FPS`.
+* Activate mp4 in high definition using `` `--hd```.
+
+# Indications.
+You probably have to install `` `pydub``` and` `` pyreadline```, install it using pip.
+
+## Installing emerald fonts in Linux and MacOS
+
+If you use Mac or GNU / Linux, you will probably have problems with TeX formulas because I use the emerald packet, so I recommend that you install them with the following instructions (it works the same for GNU / Linux and Mac, you need to have installed wget):
+`` `
+mkdir -p `kpsewhich --var-value = TEXMFHOME`
+cd `kpsewhich --var-value = TEXMFHOME`
+wget http://mirror.ctan.org/fonts/emerald.zip
+unzip emerald.zip
+cp -r emerald /. . && rm -rf emerald /
+rm emerald.zip
+updmap --enable Map emerald.map -user
+texhash
+`` `
+## Enable the use of Tikz in MacOS
+
+Some of my animations use the Tikz package and LaTeX pgfplots, but in MacOS the conversion of .dvi to .svg when using these packages is not complete, so it is necessary to force that conversion.
+The first thing you need is to locate the libgs.dylib file, this you can do by typing in the terminal:
+`` `
+sudo find / -name "libgs.dylib"
+`` `
+You enter the password of your user and will look for it, in my case it is:
+`` `
+/usr/local/Cellar/ghostscript/9.26_1/lib/
+`` `
+If you do not have it installed, you can install it with `` `brew install ghostscript```.
+
+Once this is done, open the manimlib / utils / tex_file_writing.py file and line 88 enables the following command:
+`` `python3
+"--libgs = '/ usr / local / Cellar / ghostscript / 9.26_1 / lib / libgs.dylib'", # Enable this line with the directory pf libgs.dylib
+`` `
+Change `` `/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib```to the directory that you have.
+
 <hr/>
 
-<h2 style="font-size:70px;"> ESPAÑOL </h2>
+<h2 align=center><i> ESPAÑOL </i></h2>
 
 # Manim personalizado
 
