@@ -1,9 +1,19 @@
 from manimlib.imports import *
 import platform
+
+class Texto2(CheckText):
+    CONFIG={
+    "text":Text("""
+¡NO ES UN ENUNCIADO \\underline{TAN}\\\\
+\\underline{EVIDENTE} QUE NO REQUIERE \\\\
+DEMOSTRACIÓN!
+        	""")
+    }
+
 class WriteStuff(Scene):
     def construct(self):
         example_text = TextMobject(
-            "PruebaGit is a some text",
+            "PruebáGit is a some text",
             tex_to_color_map={"text": YELLOW}
         )
         example_tex = TexMobject(

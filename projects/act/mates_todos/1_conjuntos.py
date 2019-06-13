@@ -1,16 +1,5 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
-h_resulution=810
-v_frame_rate=5
-video_parameters=[
-    ("pixel_height",h_resulution),
-    ("pixel_width",int(h_resulution*16/9)),
-    ("frame_rate",v_frame_rate)
-]
-for v_property,v_value in video_parameters:
-    LOW_QUALITY_CAMERA_CONFIG[v_property]=v_value
-
-# python -m manim proy_act\mates_todos\2_conjuntos.py -pl
 class Texto1(CheckSVG):
     CONFIG={
     #"set_size":"height",
@@ -26,44 +15,38 @@ se considera como verdadero\\\\
 sin necesidad de ser demostrado.''}
         	""")
 
-class Texto2(CheckSVG):
+class Texto2(CheckText):
     CONFIG={
-    #"set_size":"height",
-    "svg_type":"text",
-    "show_numbers":True
-    }
-    def import_text(self):
-        return Texto("""
+    "text":Text("""
 ¡NO ES UN ENUNCIADO \\underline{TAN}\\\\
 \\underline{EVIDENTE} QUE NO REQUIERE \\\\
 DEMOSTRACIÓN!
         	""")
-
-class Texto3(CheckSVG):
-    CONFIG={
-    "stroke_width":3,
-    "show_numbers":True,
-    "svg_type":"text",
     }
-    def import_text(self):
-        return TextMobject("""
+
+class Texto3(CheckText):
+    CONFIG={
+    "text":Tikz("""
             \\begin{tikzpicture}[pencildraw/.style={decorate,
             decoration={random steps,segment length=2pt,amplitude=1.1pt}}]
-                \\node[pencildraw,draw] {Teoría de conjuntos};
+                \\node[pencildraw,draw] {áéíóúñÑ};
             \\end{tikzpicture}
-              """)
+              """),
+    "color":[RED,BLUE],
+    "sheen_direction":LEFT,
+    }
 
 class QueEsTeoriaConjuntos(Scene):
     def construct(self):
         self.importar_objetos()
         self.no_hay_una_sola_teoria()
-        self.teoria_nbg_extensionalidad()
-        self.teoria_nbg_conjunto()
-        self.wait(2)
+        #self.teoria_nbg_extensionalidad()
+        #self.teoria_nbg_conjunto()
+        #self.wait(2)
 
 
     def importar_objetos(self):
-        self.estrella=SVGMobject("estrella").set_height(0.5).set_fill(YELLOW).set_stroke(None,0)
+        self.estrella=SVGMobject("mix/estrella").set_height(0.5).set_fill(YELLOW).set_stroke(None,0)
         self.cuadrado=Square().set_height(0.5).set_fill(BLUE,1).set_stroke(None,0)
         self.circulo=Circle().set_height(0.5).set_fill(ORANGE,1).set_stroke(None,0)
 
@@ -79,19 +62,19 @@ class QueEsTeoriaConjuntos(Scene):
             \\end{tikzpicture}
               """).scale(2)
         #tit=TikzMobject(tikz,stroke_width=2,fill_opacity=.1)
-        titulo.set_stroke(None,0).set_fill(WHITE,1)
-        titulo[0].set_fill(None,0).set_stroke(WHITE,4)
+        titulo[0].set_stroke(None,0).set_fill(WHITE,1)
+        titulo[0][0].set_fill(None,0).set_stroke(WHITE,4)
         ##................................................
-        texto1a=Texto("\\ECFAugie No existe una s\\'ola teor\\'ia de conjuntos.")
+        texto1a=TextFull("\\ECFAugie No existe una s\\'ola teor\\'ia de conjuntos.")[0]
         texto1b=VGroup(
-        		Texto("$\\blacktriangleright$ \\ECFAugie Zermelo-Fraenkel"),
-        		Texto("$\\blacktriangleright$ \\ECFAugie Neumann-Bernays-Gödel"),
-        		Texto("$\\blacktriangleright$ \\ECFAugie Morse-Kelley"),
-        		Texto("$\\blacktriangleright$ \\ECFAugie Kaye-Foster"),
-        		Texto("$\\blacktriangleright$ \\ECFAugie Mac Lane"),
-        		Texto("$\\blacktriangleright$ \\ECFAugie Kripke-Platek"),
-        		Formula("\\vdots")
-        	).arrange_submobjects(DOWN,aligned_edge=LEFT).next_to(texto1a,DOWN,buff=0.2).shift(UP*2)
+        		TextFull("$\\blacktriangleright$ \\ECFAugie Zermelo-Fraenkel")[0],
+        		TextFull("$\\blacktriangleright$ \\ECFAugie Neumann-Bernays-Gödel")[0],
+        		TextFull("$\\blacktriangleright$ \\ECFAugie Morse-Kelley")[0],
+        		TextFull("$\\blacktriangleright$ \\ECFAugie Kaye-Foster")[0],
+        		TextFull("$\\blacktriangleright$ \\ECFAugie Mac Lane")[0],
+        		TextFull("$\\blacktriangleright$ \\ECFAugie Kripke-Platek")[0],
+        		Formula("\\vdots")[0]
+        	).arrange(DOWN,aligned_edge=LEFT).next_to(texto1a,DOWN,buff=0.2).shift(UP*2)
         c=0
         for i in texto1b:
             cont=len(texto1b)
@@ -99,15 +82,15 @@ class QueEsTeoriaConjuntos(Scene):
                 break
             i[0].set_color(YELLOW_B)
             c+=1
-        texto1c=Texto("\\sc ¿{\\ECFAugie Teorías axiomáticas}?").scale(2)
+        texto1c=TextFull("\\sc ¿{\\ECFAugie Teorías axiomáticas}?")[0].scale(2)
         pc1=texto1c[0].fade(1)
         pc2=texto1c[-1].fade(1)
         texto1d=VGroup(
-        				Texto("$\\bullet$ \\ECFAugie Axioma 1"),
-        				Texto("$\\bullet$ \\ECFAugie Axioma 2"),
-        				Texto("$\\bullet$ \\ECFAugie Axioma 3"),
-        				Texto("$\\bullet$ \\ECFAugie Axioma 4"),
-        				Formula("\\vdots")
+        				TextFull("$\\bullet$ \\ECFAugie Axioma 1")[0],
+        				TextFull("$\\bullet$ \\ECFAugie Axioma 2")[0],
+        				TextFull("$\\bullet$ \\ECFAugie Axioma 3")[0],
+        				TextFull("$\\bullet$ \\ECFAugie Axioma 4")[0],
+        				Formula("\\vdots")[0]
         			).arrange_submobjects(DOWN,aligned_edge=LEFT)
         c=0
         for i in texto1d:
@@ -117,12 +100,12 @@ class QueEsTeoriaConjuntos(Scene):
             i[0].set_color(PURPLE)
             c+=1
         lista_elementos=VGroup(
-        				Texto("$\\bullet$ \\ECFAugie Enunciado 1"),
-        				Texto("$\\bullet$ \\ECFAugie Enunciado 2"),
-        				Texto("$\\bullet$ \\ECFAugie Enunciado 3"),
-        				Texto("$\\bullet$ \\ECFAugie Enunciado 4"),
-        				Formula("\\vdots")
-        			).arrange_submobjects(DOWN,aligned_edge=LEFT)
+        				TextFull("$\\bullet$ \\ECFAugie Enunciado 1")[0],
+        				TextFull("$\\bullet$ \\ECFAugie Enunciado 2")[0],
+        				TextFull("$\\bullet$ \\ECFAugie Enunciado 3")[0],
+        				TextFull("$\\bullet$ \\ECFAugie Enunciado 4")[0],
+        				Formula("\\vdots")[0]
+        			).arrange(DOWN,aligned_edge=LEFT)
         c=0
         for i in lista_elementos:
             cont=len(lista_elementos)
@@ -130,54 +113,56 @@ class QueEsTeoriaConjuntos(Scene):
                 break
             i[0].set_color(PURPLE)
             c+=1
-        texto1e=Texto("\\sc ¿{\\ECFAugie Axioma}?")
-        texto1f=Texto("\\sc ¿{\\ECFAugie Qué es un Axioma}?").scale(1.5).to_edge(UP)
-        texto1g=Texto("""   
+        texto1e=TextFull("\\sc ¿{\\ECFAugie Axioma}?")[0]
+        texto1f=TextFull("\\sc ¿{\\ECFAugie Qué es un Axioma}?")[0].scale(1.5).to_edge(UP)
+        texto1g=Text("""   
 \\textit{``Es un enunciado matemático,\\\\
 que en ciertos contextos,\\\\
 se considera como verdadero\\\\
 sin necesidad de ser demostrado.''}
-        	""").scale(1.3)
+        	""")[0].scale(1.3)
         texto1g[6:15].set_color(RED)
         texto1g[48:59].set_color(RED_B)
-        texto1h=Texto("""
+        texto1h=Text("""
 ¡NO ES UN ENUNCIADO \\underline{TAN}\\\\
 \\underline{EVIDENTE} QUE NO REQUIERE \\\\
 DEMOSTRACIÓN!
-        	""").scale(1.4).shift(LEFT*13)
+        	""")[0].scale(1.4).shift(LEFT*13)
         texto1h[1:5].set_color(RED)
         texto1h[16:29].set_color(BLUE)
         #
         #-------------------Objetos auxiliares
-        cuadro_negro=Rectangle(width=self.camera.get_pixel_width(),height=self.camera.get_pixel_height(),color=BLACK).fade(0.1)
+        cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT,color=BLACK)
         cuadro_negro.move_to(ORIGIN)
+        cuadro_negro.set_fill(BLACK,0.9)
         #---------------------------------------------------------
-        self.play(Escribe(titulo),run_time=3)
+        self.Oldplay(Escribe(titulo),run_time=3)
         self.wait(vt)
         self.play(titulo.scale,0.4,titulo.to_corner,UL)
         self.wait(vt)
 
-        self.play(Escribe(texto1a))
+        self.Oldplay(Escribe(texto1a))
         self.wait(vt)
         self.play(texto1a.shift,UP*2,
-        		  LaggedStart(FadeIn,texto1b))
+        		  LaggedStart(FadeIn(texto1b)))
         self.wait(vt)
         self.play(*[ReplacementTransform(texto[:],texto1c[1:-1])for texto in texto1b])
         self.wait(vt)
         pc1.fade(0)
         pc2.fade(0)
-        self.play(texto1a.fade,1,
-        			Write(pc1),Write(pc2))
+        self.Oldplay(texto1a.fade,1,
+        			OldWrite(pc1),OldWrite(pc2))
         self.wait(vt)
         self.play(texto1c.shift,UP*2,texto1c[0].fade,1,texto1c[-1].fade,1)
         self.wait(vt)
         texto1d.next_to(texto1c[1:-1],DOWN)
-        self.play(LaggedStart(Escribe,texto1d))
+        self.Oldplay(OldLaggedStart(Escribe,texto1d))
         self.wait(vt)
+        print("Aqui tiene que aparecer el cuadro negro")
         self.play(FadeIn(cuadro_negro))
         self.wait(vt)
-        self.play(Escribe(texto1f))
-        self.play(Escribe(texto1g))
+        self.Oldplay(Escribe(texto1f))
+        self.Oldplay(Escribe(texto1g))
         self.wait(vt)
         self.play(texto1g.shift,RIGHT*13,texto1h.shift,RIGHT*13)
         self.wait(vt)
@@ -186,8 +171,6 @@ DEMOSTRACIÓN!
         		texto1h.fade,1,
         		texto1f.fade,1,
         		cuadro_negro.fade,1,
-        		#texto1d.fade,1,
-        		#texto1c.fade,1
         	)
         self.wait(vt)
         for i in range(len(lista_elementos)):
@@ -204,18 +187,18 @@ DEMOSTRACIÓN!
 
     def teoria_nbg_extensionalidad(self):
         print("Empieza: teoria_nbg_extensionalidad")
-        grilla=Grilla().fade(0.5)
+        grilla=ScreenGrid().fade(0.5)
         #self.add_foreground_mobject(grilla)
         vt=2
         #Textos---------------------------------------------------------
-        texto2a=Texto("\\sc Teoría Neumann-Bernays-Gödel (NBG)")
-        nombra_elementos=Texto("\\ECFAugie Elementos de\\\\\\ECFAugie la Clase $A$")
-        claseA=Texto("\\ECFAugie Clase $A$")
+        texto2a=Text("\\sc Teoría Neumann-Bernays-Gödel (NBG)")[0]
+        nombra_elementos=TextFull("\\ECFAugie Elementos de\\\\\\ECFAugie la Clase $A$")[0]
+        claseA=TextFull("\\ECFAugie Clase $A$")[0]
         e_cA=Formula("A",color=BLACK).set_height(0.6)
         e_cB=Formula("B",color=BLACK).set_height(0.6)
         A_igual_B=Formula("A","=","B").scale(1.5)
         A_igual_B_copy=A_igual_B.copy()
-        axioma_1=Formula("\\text{\\ECFAugie Axioma de Extensionalidad:}","A","=","B","\\Leftrightarrow \\forall x: x\\in A \\syx x\\in B")
+        axioma_1=FormulaFull("\\text{\\ECFAugie Axioma de Extensionalidad:}","A","=","B","\\Leftrightarrow \\forall x: x\\in A \\syx x\\in B")[0]
         #Objetos--------------------------------------------------------
         cA=Caja(ancho=4).move_to(ORIGIN)
         cA.nota=Nota1().set_height(1).move_to(cA)
@@ -241,7 +224,7 @@ DEMOSTRACIÓN!
         cA.cuadrado=self.cuadrado.copy().move_to(cA).shift(-UP*0.5).scale(1.2)
         cA.elementos=VGroup(cA.estrella,cA.circulo,cA.cuadrado)
 
-        self.play(Write(e_cA),Escribe(claseA))
+        self.Oldplay(OldWrite(e_cA),OldEscribe(claseA))
 
         cA.add(cA.nota,e_cA)
         self.add_foreground_mobject(cA)
@@ -252,9 +235,9 @@ DEMOSTRACIÓN!
         self.play(cA.elementos.shift,UP*2)
         self.wait(vt)
         nombra_elementos.next_to(cA.elementos,RIGHT)
-        self.play(Escribe(nombra_elementos))
+        self.Oldplay(OldEscribe(nombra_elementos))
         self.wait(vt)
-        self.play(Escribe(nombra_elementos),rate_func=lambda t: smooth(1-t))
+        self.Oldplay(OldEscribe(nombra_elementos),rate_func=lambda t: smooth(1-t))
         self.play(cA.elementos.shift,-UP*2)
         self.play(VGroup(cA,cA.elementos).shift,LEFT*3.2+DOWN*2)
 
@@ -410,7 +393,7 @@ DEMOSTRACIÓN!
 
     def teoria_nbg_conjunto(self):
         print("Empieza: teoria_nbg_conjunto")
-        grilla=Grilla().fade(0.5)
+        grilla=ScreenGrid().fade(0.5)
         #self.add_foreground_mobject(grilla)
         vt=2
         #Pre definiciones-----------------------------------------------
@@ -420,11 +403,11 @@ DEMOSTRACIÓN!
         cA.elementos=self.cA.elementos
         #Textos---------------------------------------------------------
         cC=Caja(ancho=5,alto=3,stroke_color=GREEN_B,fill_color=GREEN_B).move_to(cA)
-        cC.etiqueta=Formula("C",color=BLACK).set_height(0.6)
-        A_conjunto=Formula("A","\\text{ \\ECFAugie es un conjunto}")
-        definicion=Formula("\\text{Definición: }","{\\rm cto}","A","\\equiv\\exists C: A\\in C").shift(UP*2).scale(1.5)
+        cC.etiqueta=Formula("C",color=BLACK)[0].set_height(0.6)
+        A_conjunto=FormulaFull("A","\\text{ \\ECFAugie es un conjunto}")[0]
+        definicion=Formula("\\text{Definición: }","{\\rm cto}","A","\\equiv\\exists C: A\\in C")[0].shift(UP*2).scale(1.5)
         #Objetos--------------------------------------------------------
-        cC.nota=Nota1().set_height(1).move_to(cC.get_corner(UL))
+        cC.nota=Notepad1().set_height(1).move_to(cC.get_corner(UL))
         dx_c=cC.nota.get_height()*DOWN*1.1/2
         dy_c=cC.nota.get_width()*RIGHT*1.1/2
         cC.nota.shift(dx_c+dy_c)
@@ -440,23 +423,23 @@ DEMOSTRACIÓN!
         self.play(cerrar_caja(cA))
         self.play(DrawBorderThenFill(cC))
         self.play(FadeInFrom(cC.nota,UP))
-        self.play(Write(cC.etiqueta))
+        self.Oldplay(OldWrite(cC.etiqueta))
         self.add_foreground_mobjects(cC,cC.nota,cC.etiqueta)
         self.play(cC.set_fill,None,0.5)
         self.wait(vt)
 
-        self.play(
-            ReplacementTransform(
+        self.Oldplay(
+            OldReplacementTransform(
                 cA.etiqueta.copy()[:],A_conjunto[0]
             ),
-            Escribe(A_conjunto[1])
+            OldEscribe(A_conjunto[1])
         )
         self.wait(vt)
-        self.play(
-            ReplacementTransform(A_conjunto[0],definicion[2]),
-            ReplacementTransform(A_conjunto[1],definicion[1]),
-            Escribe(definicion[0]),
-            Escribe(definicion[3]),
+        self.Oldplay(
+            OldReplacementTransform(A_conjunto[0],definicion[2]),
+            OldReplacementTransform(A_conjunto[1],definicion[1]),
+            OldEscribe(definicion[0]),
+            OldEscribe(definicion[3]),
         )
         self.wait(vt)
 
