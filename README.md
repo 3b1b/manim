@@ -5,7 +5,7 @@ This is my personal version that I use to make my projects. It has some modifica
 Due to the modifications I made, you will not be able to compile my projects in the original version of Manim, so I recommend that you use this version if you want to compile them. I have a course in both Spanish and English that may be of interest to people who want to learn from scratch (even without knowledge of LaTeX and / or Python).
 
 The main modifications that this version of Manim has are:
-* Configuration to write texts in Spanish (try with `utf8` or` latin1` in "tex_template.tex")
+* Configuration to write texts in Spanish (try with `utf8` or `latin1` in "tex_template.tex")
 * New predefined colors.
 * New objects: Brackets and custom brackets (similar to Brace) and so on.
 * New LaTeX packages added: Sources, chemistry symbols, music, etcetera.
@@ -44,9 +44,9 @@ You enter the password of your user and will look for it, in my case it is:
 ```
 If you do not have it installed, you can install it with `brew install ghostscript`.
 
-Once this is done, open the manimlib / utils / tex_file_writing.py file and line 88 enables the following command:
+Once this is done, open the manimlib/utils/tex_file_writing.py file and line 88 enables the following command:
 ```python3
-"--libgs = '/ usr / local / Cellar / ghostscript / 9.26_1 / lib / libgs.dylib'", # Enable this line with the directory pf libgs.dylib
+"--libgs = '/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib'", # Enable this line with the directory pf libgs.dylib
 ```
 Change ```/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib``` to the directory that you have.
 
@@ -57,7 +57,7 @@ Manual [here](https://manim-tb-manual.000webhostapp.com/colors.html).
 
 # Manim personalizado
 
-Esta es mi versión personal que uso para hacer mis proyectos. Tiene algunas modificaciónes y adiciones, los códigos de mis proyectos están en las carpetas "proy_act" y "proy_term".
+Esta es mi versión personal que uso para hacer mis proyectos. Tiene algunas modificaciónes y adiciones, los códigos de mis proyectos están en las carpeta projects.
 
 Debido a las modificaciones que hice no podrás compilar mis proyectos en la [versión original de Manim](https://github.com/3b1b/manim), por lo que recomiendo que uses esta versión si es que quieres compilarlos. Tengo un curso tanto en [español](https://github.com/Elteoremadebeethoven/AnimacionesConManim/) como en [inglés](https://github.com/Elteoremadebeethoven/AnimationsWithManim) que puede ser de interés a las personas que quieran aprender desde cero (aún sin conocimientos de LaTeX y/o Python).
 
@@ -67,7 +67,8 @@ Las principales modificaciones que tiene esta versión de Manim son:
 * Nuevos objetos: Brackets y paréntesis personalizados (similares a Brace) etcétera.
 * Nuevas paqueterías añadidas de LaTeX: Fuentes, símbolos de química, música, etcétera.
 * Imágenes SVG que utilizo en mis videos.
-* Animación de conversación por [Miroslav Olšák](https://github.com/mkoconnor).
+* Exporta a gif con `-i`
+* Espeficifa fps con `-kx FPS`
 * Activa mp4 en alta definición usando ```--hd```.
 
 # Indicaciones.
