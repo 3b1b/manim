@@ -1,4 +1,6 @@
 <hr/>
+<h2 font-size:30px color=red > ESPAÑOL </h2>
+  
 # Manim personalizado
 
 Esta es mi versión personal que uso para hacer mis proyectos. Tiene algunas modificaciónes y adiciones, los códigos de mis proyectos están en las carpetas "proy_act" y "proy_term".
