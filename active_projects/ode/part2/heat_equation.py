@@ -349,16 +349,16 @@ class BringTwoRodsTogether(Scene):
                 if (0 < i < len(points) - 1):
                     second_deriv = d2y / (dx**2)
                 else:
-                    second_deriv = 0.5 * d2y / dx
-                    second_deriv = 0
+                    second_deriv = d2y / dx
+                    # second_deriv = 0
 
                 y_change[i] = alpha * second_deriv * dt / n_mini_steps
 
             # y_change[0] = y_change[1]
             # y_change[-1] = y_change[-2]
-            y_change[0] = 0
-            y_change[-1] = 0
-            y_change -= np.mean(y_change)
+            # y_change[0] = 0
+            # y_change[-1] = 0
+            # y_change -= np.mean(y_change)
             points[:, 1] += y_change
         graph.set_points_smoothly(points)
         return graph
@@ -374,8 +374,17 @@ class BringTwoRodsTogether(Scene):
             )[1]
             for alt_x in (x - dx, x, x + dx)
         ]
-        d2y = ry - 2 * y + ly
-        return d2y / (dx**2)
+
+        # At the boundary, don't return the second deriv,
+        # but instead something matching the Neumann
+        # boundary condition.
+        if x == x_max:
+            return (ly - y) / dx
+        elif x == x_min:
+            return (ry - y) / dx
+        else:
+            d2y = ry - 2 * y + ly
+            return d2y / (dx**2)
 
     def get_rod(self, x_min, x_max, n_pieces=None):
         if n_pieces is None:
@@ -407,7 +416,7 @@ class BringTwoRodsTogether(Scene):
                 self.rod_point_to_color(piece.get_right()),
             ])
 
-    def rod_point_to_color(self, point):
+    def rod_point_to_graph_y(self, point):
         axes = self.axes
         x = axes.x_axis.p2n(point)
 
@@ -417,11 +426,16 @@ class BringTwoRodsTogether(Scene):
             self.graph_x_max,
             x,
         )
-        y = axes.y_axis.p2n(
+        return axes.y_axis.p2n(
             graph.point_from_proportion(alpha)
         )
-        return temperature_to_color(
-            (y - 45) / 45
+
+    def y_to_color(self, y):
+        return temperature_to_color((y - 45) / 45)
+
+    def rod_point_to_color(self, point):
+        return self.y_to_color(
+            self.rod_point_to_graph_y(point)
         )
 
 
@@ -467,7 +481,10 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         self.time_label.next_to(self.clock, DOWN)
 
     def add_rod(self):
-        rod = self.rod = self.get_rod(0, 10)
+        rod = self.rod = self.get_rod(
+            self.graph_x_min,
+            self.graph_x_max,
+        )
         self.add(rod)
 
     def add_arrows(self):

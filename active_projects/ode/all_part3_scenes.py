@@ -6,19 +6,38 @@ from active_projects.ode.part3.wordy_scenes import *
 
 OUTPUT_DIRECTORY = "ode/part3"
 SCENES_IN_ORDER = [
+    LastChapterWrapper,
+    ThreeConstraints,
+    OceanOfPossibilities,
+    # TODO
+    ThreeMainObservations,
+    BreakDownAFunction,
+    SineCurveIsUnrealistic,
+    AnalyzeSineCurve,
+    EquationAboveSineAnalysis,
+    ExponentialDecay,
+    InvestmentGrowth,
+    GrowingPileOfMoney,
+    CarbonDecayCurve,
+    CarbonDecayingInMammoth,
+    SineWaveScaledByExp,
+    ShowSinExpDerivatives,
+    IfOnly,
+    BoundaryConditionInterlude,
+    BoundaryConditionReference,
+    GiantCross,
+    SimulateRealSineCurve,
+    SimulateLinearGraph,
+
+    # SimpleCosExpGraph,
+    # AddMultipleSolutions,
+    # IveHeardOfThis,
+    # FourierSeriesOfLineIllustration,
+    # InFouriersShoes,
+]
+
+PART_4_SCENES = [
     FourierSeriesIllustraiton,
     FourierNameIntro,
     CircleAnimationOfF,
-    LastChapterWrapper,
-    ThreeMainObservations,
-    SimpleCosExpGraph,
-    AddMultipleSolutions,
-    IveHeardOfThis,
-    FourierSeriesOfLineIllustration,
-    BreakDownAFunction,
-    ThreeConstraints,
-    OceanOfPossibilities,
-    InFouriersShoes,
-    AnalyzeSineCurve,
-    SineCurveIsUnrealistic,
 ]

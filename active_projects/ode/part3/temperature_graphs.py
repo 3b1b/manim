@@ -1,6 +1,7 @@
 from scipy import integrate
 
 from manimlib.imports import *
+from active_projects.ode.part2.heat_equation import *
 
 
 class TemperatureGraphScene(SpecialThreeDScene):
@@ -24,11 +25,6 @@ class TemperatureGraphScene(SpecialThreeDScene):
             "background_image_file": "VerticalTempGradient",
         },
         "default_surface_config": {
-            "u_min": 0,
-            "u_max": TAU,
-            "v_min": 0,
-            "v_max": 10,
-            "resolution": (16, 10),
             "fill_opacity": 0.1,
             "checkerboard_colors": [LIGHT_GREY],
             "stroke_width": 0.5,
@@ -90,6 +86,7 @@ class TemperatureGraphScene(SpecialThreeDScene):
             label.next_to(x_axis.n2p(val), DOWN)
             x_labels.add(label)
         x_axis.add(x_labels)
+        x_axis.numbers = x_labels
 
         y_axis.add_numbers()
         for number in y_axis.numbers:
@@ -117,26 +114,39 @@ class TemperatureGraphScene(SpecialThreeDScene):
     def get_time_slice_graph(self, axes, func, t, **kwargs):
         config = dict()
         config.update(self.default_graph_style)
+        config.update({
+            "t_min": axes.x_min,
+            "t_max": axes.x_max,
+        })
         config.update(kwargs)
         return ParametricFunction(
             lambda x: axes.c2p(
                 x, t, func(x, t)
             ),
-            t_min=axes.x_min,
-            t_max=axes.x_max,
             **config,
         )
 
     def get_initial_state_graph(self, axes, func, **kwargs):
         return self.get_time_slice_graph(
-            axes, func, t=0, **kwargs
+            axes,
+            lambda x, t: func(x),
+            t=0,
+            **kwargs
         )
 
     def get_surface(self, axes, func, **kwargs):
-        config = merge_dicts_recursively(
-            self.default_surface_config,
-            kwargs
-        )
+        config = {
+            "u_min": axes.x_min,
+            "u_max": axes.x_max,
+            "v_min": axes.y_min,
+            "v_max": axes.y_max,
+            "resolution": (
+                (axes.x_max - axes.x_min) // axes.x_axis.tick_frequency,
+                (axes.y_max - axes.y_min) // axes.y_axis.tick_frequency,
+            ),
+        }
+        config.update(self.default_surface_config)
+        config.update(kwargs)
         return ParametricSurface(
             lambda x, t: axes.c2p(
                 x, t, func(x, t)
@@ -150,6 +160,9 @@ class TemperatureGraphScene(SpecialThreeDScene):
         mobject.rotate(-90 * DEGREES - theta, OUT)
         mobject.rotate(phi, LEFT)
         return mobject
+
+    def get_rod_length(self):
+        return self.axes_config["x_max"]
 
 
 class SimpleCosExpGraph(TemperatureGraphScene):
@@ -336,9 +349,11 @@ class BreakDownAFunction(SimpleCosExpGraph):
                 "unit_size": 0.75,
                 "include_tip": False,
             },
-            "z_min": 0,
+            "z_min": -2,
+            "y_max": 20,
         },
         "n_low_axes": 4,
+        "k": 0.2,
     }
 
     def construct(self):
@@ -407,12 +422,12 @@ class BreakDownAFunction(SimpleCosExpGraph):
                 lambda x: A * np.cos(n * x / 2)
             )
             for n, axes, A in zip(
-                it.count(0, 2),
+                it.count(),
                 low_axes_group,
-                fourier_terms[::2],
+                fourier_terms
             )
         ])
-        k = 0.1
+        k = self.k
         low_surfaces = VGroup(*[
             self.get_surface(
                 axes,
@@ -423,9 +438,9 @@ class BreakDownAFunction(SimpleCosExpGraph):
                 ])
             )
             for n, axes, A in zip(
-                it.count(0, 2),
+                it.count(),
                 low_axes_group,
-                fourier_terms[::2],
+                fourier_terms
             )
         ])
         top_surface = self.get_surface(
@@ -437,8 +452,8 @@ class BreakDownAFunction(SimpleCosExpGraph):
                     np.exp(-k * (n / 2)**2 * t)
                 ])
                 for n, A in zip(
-                    it.count(0, 2),
-                    fourier_terms[::2]
+                    it.count(),
+                    fourier_terms
                 )
             ])
         )
@@ -463,10 +478,11 @@ class BreakDownAFunction(SimpleCosExpGraph):
         ])
         dots = TexMobject("\\cdots")
         dots.next_to(plusses, RIGHT, MED_SMALL_BUFF)
+
         arrow = Arrow(
             dots.get_right(),
-            top_axes.get_right(),
-            path_arc=110 * DEGREES,
+            top_graph.get_end() + 1.4 * DOWN + 1.7 * RIGHT,
+            path_arc=90 * DEGREES,
         )
 
         top_words = TextMobject("Arbitrary\\\\function")
@@ -474,7 +490,7 @@ class BreakDownAFunction(SimpleCosExpGraph):
         top_words.set_color(YELLOW)
         top_arrow = Arrow(
             top_words.get_right(),
-            top_graph.get_center() + LEFT,
+            top_graph.point_from_proportion(0.3)
         )
 
         low_words = TextMobject("Sine curves")
@@ -491,14 +507,11 @@ class BreakDownAFunction(SimpleCosExpGraph):
         self.play(
             LaggedStartMap(FadeIn, low_axes_group),
             FadeInFrom(low_words, UP),
+            LaggedStartMap(FadeInFromDown, [*plusses, dots]),
             *[
                 TransformFromCopy(top_graph, low_graph)
                 for low_graph in low_graphs
-            ]
-        )
-        self.wait()
-        self.play(
-            LaggedStartMap(FadeInFromDown, [*plusses, dots]),
+            ],
         )
         self.play(ShowCreation(arrow))
         self.wait()
@@ -515,7 +528,11 @@ class BreakDownAFunction(SimpleCosExpGraph):
             surface.sort(lambda p: -p[2])
 
         anims1 = []
-        anims2 = []
+        anims2 = [
+            ApplyMethod(
+                top_axes.y_axis.set_opacity, 1,
+            ),
+        ]
         for axes, surface, graph in zip(low_axes_group, low_surfaces, low_graphs):
             axes.y_axis.set_opacity(1)
             axes.y_axis.label.fade(1)
@@ -558,38 +575,35 @@ class BreakDownAFunction(SimpleCosExpGraph):
 
     #
     def initial_func(self, x):
-        return 3 * np.exp(-(x - PI)**2)
+        # return 3 * np.exp(-(x - PI)**2)
 
-        x1 = TAU / 4 - 0.1
-        x2 = TAU / 4 + 0.1
-        x3 = 3 * TAU / 4 - 0.1
-        x4 = 3 * TAU / 4 + 0.1
+        x1 = TAU / 4 - 1
+        x2 = TAU / 4 + 1
+        x3 = 3 * TAU / 4 - 1.6
+        x4 = 3 * TAU / 4 + 0.3
 
         T0 = -2
         T1 = 2
+        T2 = 1
 
         if x < x1:
             return T0
         elif x < x2:
-            return interpolate(
-                T0, T1,
-                inverse_interpolate(x1, x2, x)
-            )
+            alpha = inverse_interpolate(x1, x2, x)
+            return bezier([T0, T0, T1, T1])(alpha)
         elif x < x3:
             return T1
         elif x < x4:
-            return interpolate(
-                T1, T0,
-                inverse_interpolate(x3, x4, x)
-            )
+            alpha = inverse_interpolate(x3, x4, x)
+            return bezier([T1, T1, T2, T2])(alpha)
         else:
-            return T0
+            return T2
 
     def get_initial_func_discontinuities(self):
         # return [TAU / 4, 3 * TAU / 4]
         return []
 
-    def get_fourier_cosine_terms(self, func, n_terms=20):
+    def get_fourier_cosine_terms(self, func, n_terms=40):
         result = [
             integrate.quad(
                 lambda x: (1 / PI) * func(x) * np.cos(n * x / 2),
@@ -914,7 +928,7 @@ class AnalyzeSineCurve(TemperatureGraphScene):
     def show_sine_wave_on_axes(self):
         axes = self.axes
         graph = self.get_initial_state_graph(
-            axes, lambda x, t: np.sin(x)
+            axes, lambda x: np.sin(x)
         )
         graph.set_stroke(width=4)
         graph_label = TexMobject(
@@ -1020,7 +1034,7 @@ class AnalyzeSineCurve(TemperatureGraphScene):
         curve_x_tracker = self.curve_x_tracker
 
         d2_graph = self.get_initial_state_graph(
-            axes, lambda x, t: -np.sin(x),
+            axes, lambda x: -np.sin(x),
         )
         dashed_d2_graph = DashedVMobject(d2_graph, num_dashes=50)
         dashed_d2_graph.color_using_background_image(None)
@@ -1266,3 +1280,326 @@ class AnalyzeSineCurve(TemperatureGraphScene):
             self.get_lil_vector(graph, x)
             for x in np.linspace(0, TAU, n)
         ])
+
+
+class SineWaveScaledByExp(TemperatureGraphScene):
+    CONFIG = {
+        "axes_config": {
+            "z_min": -1.5,
+            "z_max": 1.5,
+            "z_axis_config": {
+                "unit_size": 2,
+                "tick_frequency": 0.5,
+                "label_direction": LEFT,
+            },
+            "y_axis_config": {
+                "label_direction": RIGHT,
+            },
+        },
+        "k": 0.3,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.setup_camera()
+        self.show_sine_wave()
+        self.show_decay_surface()
+        self.linger_at_end()
+
+    def setup_axes(self):
+        axes = self.get_three_d_axes()
+
+        # Add number labels
+        self.add_axes_numbers(axes)
+        for axis in [axes.x_axis, axes.y_axis]:
+            axis.numbers.rotate(
+                90 * DEGREES,
+                axis=axis.get_vector(),
+                about_point=axis.point_from_proportion(0.5)
+            )
+            axis.numbers.set_shade_in_3d(True)
+        axes.z_axis.add_numbers(*range(-1, 2))
+        for number in axes.z_axis.numbers:
+            number.rotate(90 * DEGREES, RIGHT)
+
+        axes.z_axis.label.next_to(
+            axes.z_axis.get_end(), OUT,
+        )
+
+        # Input plane
+        axes.input_plane.set_opacity(0.25)
+        self.add(axes.input_plane)
+
+        # Shift into place
+        # axes.shift(5 * LEFT)
+        self.axes = axes
+        self.add(axes)
+
+    def setup_camera(self):
+        self.set_camera_orientation(
+            phi=80 * DEGREES,
+            theta=-80 * DEGREES,
+            distance=50,
+        )
+        self.camera.set_frame_center(
+            2 * RIGHT,
+        )
+
+    def show_sine_wave(self):
+        time_tracker = ValueTracker(0)
+        graph = always_redraw(
+            lambda: self.get_time_slice_graph(
+                self.axes,
+                self.sin_exp,
+                t=time_tracker.get_value(),
+            )
+        )
+        graph.suspend_updating()
+
+        graph_label = TexMobject("\\sin(x)")
+        graph_label.set_color(BLUE)
+        graph_label.rotate(90 * DEGREES, RIGHT)
+        graph_label.next_to(
+            graph.point_from_proportion(0.25),
+            OUT,
+            SMALL_BUFF,
+        )
+
+        self.play(
+            ShowCreation(graph),
+            FadeInFrom(graph_label, IN)
+        )
+        self.wait()
+        graph.resume_updating()
+
+        self.time_tracker = time_tracker
+        self.graph = graph
+
+    def show_decay_surface(self):
+        time_tracker = self.time_tracker
+        axes = self.axes
+
+        plane = Rectangle()
+        plane.rotate(90 * DEGREES, RIGHT)
+        plane.set_stroke(width=0)
+        plane.set_fill(WHITE, 0.2)
+        plane.match_depth(axes.z_axis)
+        plane.match_width(axes.x_axis, stretch=True)
+        plane.add_updater(
+            lambda p: p.move_to(axes.c2p(
+                0,
+                time_tracker.get_value(),
+                0,
+            ), LEFT)
+        )
+
+        time_slices = VGroup(*[
+            self.get_time_slice_graph(
+                self.axes,
+                self.sin_exp,
+                t=t,
+            )
+            for t in range(0, 10)
+        ])
+        surface_t_tracker = ValueTracker(0)
+        surface = always_redraw(
+            lambda: self.get_surface(
+                self.axes,
+                self.sin_exp,
+                v_max=surface_t_tracker.get_value(),
+            ).set_stroke(opacity=0)
+        )
+
+        exp_graph = ParametricFunction(
+            lambda t: axes.c2p(
+                PI / 2,
+                t,
+                self.sin_exp(PI / 2, t)
+            ),
+            t_min=axes.y_min,
+            t_max=axes.y_max,
+        )
+        exp_graph.set_stroke(RED, 3)
+        exp_graph.set_shade_in_3d(True)
+
+        exp_label = TexMobject("e^{-\\alpha t}")
+        exp_label.scale(1.5)
+        exp_label.set_color(RED)
+        exp_label.rotate(90 * DEGREES, RIGHT)
+        exp_label.rotate(90 * DEGREES, OUT)
+        exp_label.next_to(
+            exp_graph.point_from_proportion(0.3),
+            OUT + UP,
+        )
+
+        self.move_camera(
+            theta=-25 * DEGREES,
+        )
+        self.add(surface)
+        self.add(plane)
+        self.play(
+            surface_t_tracker.set_value, axes.y_max,
+            time_tracker.set_value, axes.y_max,
+            ShowIncreasingSubsets(
+                time_slices,
+                int_func=np.ceil,
+            ),
+            run_time=5,
+            rate_func=linear,
+        )
+        surface.clear_updaters()
+
+        self.play(
+            ShowCreation(exp_graph),
+            FadeOut(plane),
+            FadeInFrom(exp_label, IN),
+            time_slices.set_stroke, {"width": 1},
+        )
+
+    def linger_at_end(self):
+        self.wait()
+        self.begin_ambient_camera_rotation(rate=-0.02)
+        self.wait(20)
+
+    #
+    def sin_exp(self, x, t):
+        return np.sin(x) * np.exp(-self.k * t)
+
+
+class BoundaryConditionReference(ShowEvolvingTempGraphWithArrows):
+    def construct(self):
+        self.setup_axes()
+        self.setup_graph()
+
+        rod = self.get_rod(0, 10)
+        self.color_rod_by_graph(rod)
+
+        boundary_points = [
+            rod.get_right(),
+            rod.get_left(),
+        ]
+        boundary_dots = VGroup(*[
+            Dot(point, radius=0.2)
+            for point in boundary_points
+        ])
+        boundary_arrows = VGroup(*[
+            Vector(2 * DOWN).next_to(dot, UP)
+            for dot in boundary_dots
+        ])
+        boundary_arrows.set_stroke(YELLOW, 10)
+
+        words = TextMobject(
+            "Different rules\\\\",
+            "at the boundary",
+        )
+        words.scale(1.5)
+        words.to_edge(UP)
+
+        # self.add(self.axes)
+        # self.add(self.graph)
+        self.add(rod)
+        self.play(FadeInFromDown(words))
+        self.play(
+            LaggedStartMap(GrowArrow, boundary_arrows),
+            LaggedStartMap(GrowFromCenter, boundary_dots),
+            lag_ratio=0.3,
+            run_time=1,
+        )
+        self.wait()
+
+
+class SimulateRealSineCurve(ShowEvolvingTempGraphWithArrows):
+    CONFIG = {
+        "axes_config": {
+            "x_min": 0,
+            "x_max": TAU,
+            "x_axis_config": {
+                "unit_size": 1.5,
+                "include_tip": False,
+                "tick_frequency": PI / 4,
+            },
+            "y_min": -1.5,
+            "y_max": 1.5,
+            "y_axis_config": {
+                "tick_frequency": 0.5,
+                "unit_size": 2,
+            },
+        },
+        "graph_x_min": 0,
+        "graph_x_max": TAU,
+        "arrow_xs": np.linspace(0, TAU, 13),
+        "wait_time": 30,
+        "alpha": 0.5,
+    }
+
+    def construct(self):
+        self.add_axes()
+        self.add_graph()
+        self.add_clock()
+        self.add_rod()
+        self.add_arrows()
+        self.let_play()
+
+    def add_labels_to_axes(self):
+        x_axis = self.axes.x_axis
+        x_axis.add(*[
+            TexMobject(tex).scale(0.5).next_to(
+                x_axis.n2p(n),
+                DOWN,
+                buff=MED_SMALL_BUFF
+            )
+            for tex, n in [
+                ("\\tau \\over 4", TAU / 4),
+                ("\\tau \\over 2", TAU / 2),
+                ("3 \\tau \\over 4", 3 * TAU / 4),
+                ("\\tau", TAU),
+            ]
+        ])
+
+    def add_axes(self):
+        super().add_axes()
+        self.add_labels_to_axes()
+
+    def add_rod(self):
+        super().add_rod()
+        self.rod.set_opacity(0.5)
+        self.rod.set_stroke(width=0)
+
+    def initial_function(self, x):
+        return np.sin(x)
+
+    def y_to_color(self, y):
+        return temperature_to_color(0.8 * y)
+
+
+class SimulateLinearGraph(SimulateRealSineCurve):
+    CONFIG = {
+        "axes_config": {
+            "y_min": 0,
+            "y_max": 3,
+            "y_axis_config": {
+                "tick_frequency": 0.5,
+                "unit_size": 2,
+            },
+        },
+        "arrow_scale_factor": 2,
+        "alpha": 1,
+        "wait_time": 40,
+        "step_size": 0.02,
+    }
+
+    # def let_play(self):
+    #     pass
+
+    def add_labels_to_axes(self):
+        pass
+
+    def y_to_color(self, y):
+        return temperature_to_color(0.8 * (y - 1.5))
+
+    def initial_function(self, x):
+        axes = self.axes
+        y_max = axes.y_max
+        x_max = axes.x_max
+        slope = y_max/ x_max
+        return slope * x

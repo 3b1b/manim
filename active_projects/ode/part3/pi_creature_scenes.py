@@ -113,4 +113,28 @@ class SineCurveIsUnrealistic(TeacherStudentsScene):
                 self.teacher.change, "tease"
             ]
         )
-        self.wait(2)
+        self.wait(3)
+        self.play(
+            RemovePiCreatureBubble(self.students[1]),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.change_all_student_modes(
+            "pondering",
+            look_at_arg=3 * UP,
+        )
+        self.wait(5)
+
+
+
+class IfOnly(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "If only!",
+            target_mode="angry"
+        )
+        self.change_all_student_modes(
+            "confused",
+            look_at_arg=self.screen
+        )
+        self.wait(3)
+
