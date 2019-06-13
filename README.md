@@ -50,6 +50,7 @@ Once this is done, open the manimlib / utils / tex_file_writing.py file and line
 ```
 Change ```/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib``` to the directory that you have.
 
+Manual [here](https://manim-tb-manual.000webhostapp.com/colors.html).
 <hr/>
 
 <h2 align=center><i> ESPAÑOL </i></h2>
