@@ -1,0 +1,9 @@
+\lim
+_
+{
+x
+\to
+\infty
+}
+\sin
+\theta
