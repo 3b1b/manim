@@ -164,6 +164,33 @@ class TemperatureGraphScene(SpecialThreeDScene):
     def get_rod_length(self):
         return self.axes_config["x_max"]
 
+    def get_const_time_plane(self, axes):
+        t_tracker = ValueTracker(0)
+        plane = Polygon(
+            *[
+                axes.c2p(x, 0, z)
+                for x, z in [
+                    (axes.x_min, axes.z_min),
+                    (axes.x_max, axes.z_min),
+                    (axes.x_max, axes.z_max),
+                    (axes.x_min, axes.z_max),
+                ]
+            ],
+            stroke_width=0,
+            fill_color=WHITE,
+            fill_opacity=0.2
+        )
+        plane.add_updater(lambda m: m.move_to(
+            axes.c2p(
+                axes.x_min,
+                t_tracker.get_value(),
+                axes.z_min,
+            ),
+            IN + LEFT,
+        ))
+        plane.t_tracker = t_tracker
+        return plane
+
 
 class SimpleCosExpGraph(TemperatureGraphScene):
     def construct(self):
@@ -1538,6 +1565,7 @@ class SimulateRealSineCurve(ShowEvolvingTempGraphWithArrows):
         self.add_clock()
         self.add_rod()
         self.add_arrows()
+        self.initialize_updaters()
         self.let_play()
 
     def add_labels_to_axes(self):
@@ -1572,6 +1600,64 @@ class SimulateRealSineCurve(ShowEvolvingTempGraphWithArrows):
         return temperature_to_color(0.8 * y)
 
 
+class StraightLine3DGraph(TemperatureGraphScene):
+    CONFIG = {
+        "axes_config": {
+            "z_min": 0,
+            "z_max": 10,
+            "z_axis_config": {
+                'unit_size': 0.5,
+            }
+        },
+        "c": 1.2,
+    }
+
+    def construct(self):
+        axes = self.get_three_d_axes()
+        axes.add(axes.input_plane)
+        axes.move_to(2 * IN + UP, IN)
+        surface = self.get_surface(
+            axes, self.func,
+        )
+        initial_graph = self.get_initial_state_graph(
+            axes, lambda x: self.func(x, 0)
+        )
+
+        plane = self.get_const_time_plane(axes)
+        initial_graph.add_updater(
+            lambda m: m.move_to(plane, IN)
+        )
+
+        self.set_camera_orientation(
+            phi=80 * DEGREES,
+            theta=-100 * DEGREES,
+        )
+        self.begin_ambient_camera_rotation()
+
+        self.add(axes)
+        self.add(initial_graph)
+        self.play(
+            TransformFromCopy(initial_graph, surface)
+        )
+        self.add(surface, initial_graph)
+        self.wait()
+
+        self.play(
+            FadeIn(plane),
+            ApplyMethod(
+                plane.t_tracker.set_value, 10,
+                rate_func=linear,
+                run_time=10,
+            )
+        )
+        self.play(FadeOut(plane))
+        self.wait(15)
+
+    def func(self, x, t):
+        return self.c * x
+
+
+
 class SimulateLinearGraph(SimulateRealSineCurve):
     CONFIG = {
         "axes_config": {
@@ -1603,3 +1689,67 @@ class SimulateLinearGraph(SimulateRealSineCurve):
         x_max = axes.x_max
         slope = y_max/ x_max
         return slope * x
+
+
+class EmphasizeBoundaryPoints(SimulateLinearGraph):
+    CONFIG = {
+        "wait_time": 30,
+    }
+
+    def let_play(self):
+        rod = self.rod
+        self.graph.update(0.01)
+        self.arrows.update()
+
+        to_update = VGroup(
+            self.graph,
+            self.arrows,
+            self.time_label,
+        )
+        for mob in to_update:
+            mob.suspend_updating()
+
+        dots = VGroup(
+            Dot(rod.get_left()),
+            Dot(rod.get_right()),
+        )
+        for dot in dots:
+            dot.set_height(0.2)
+            dot.set_color(YELLOW)
+
+        words = TextMobject(
+            "Different rules\\\\"
+            "at the boundary"
+        )
+        words.next_to(rod, UP)
+
+        arrows = VGroup(*[
+            Arrow(
+                words.get_corner(corner),
+                dot.get_top(),
+                path_arc=u * 60 * DEGREES,
+            )
+            for corner, dot, u in zip(
+                [LEFT, RIGHT], dots, [1, -1]
+            )
+        ])
+
+        self.add(words)
+        self.play(
+            LaggedStartMap(
+                FadeInFromLarge, dots,
+                scale_factor=5,
+            ),
+            LaggedStartMap(
+                ShowCreation, arrows,
+            ),
+            lag_ratio=0.4
+        )
+        self.wait()
+
+        for mob in to_update:
+            mob.resume_updating()
+
+        super().let_play()
+
+

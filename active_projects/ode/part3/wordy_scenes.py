@@ -463,3 +463,81 @@ class ShowSinExpDerivatives(WriteHeatEquationTemplate):
             FadeOutAndShift(q_mark, UP)
         )
         self.wait()
+
+
+class DerivativesOfLinearFunction(WriteHeatEquationTemplate):
+    CONFIG = {
+        "tex_mobject_config": {
+            "tex_to_color_map": {
+                "{c}": WHITE,
+            }
+        }
+    }
+
+    def construct(self):
+        func = TexMobject(
+            "T({x}, {t}) = {c} \\cdot {x}",
+            **self.tex_mobject_config
+        )
+        dx_T = TexMobject("{c}", **self.tex_mobject_config)
+        ddx_T = TexMobject("0")
+        dt_T = TexMobject("0")
+
+        for mob in func, dx_T, ddx_T, dt_T:
+            mob.scale(1.5)
+
+        func.generate_target()
+
+        arrows = VGroup(*[
+            Vector(1.5 * RIGHT, color=WHITE)
+            for x in range(3)
+        ])
+        dx_arrows = arrows[:2]
+        dt_arrow = arrows[2]
+        dt_arrow.rotate(-TAU / 4)
+        dx_group = VGroup(
+            func.target,
+            dx_arrows[0],
+            dx_T,
+            dx_arrows[1],
+            ddx_T,
+        )
+        dx_group.arrange(RIGHT)
+        for arrow, char, vect in zip(arrows, "xxt", [UP, UP, RIGHT]):
+            label = TexMobject(
+                "\\partial \\over \\partial {%s}"%char,
+                **self.tex_mobject_config
+            )
+            label.scale(0.7)
+            label.next_to(arrow.get_center(), vect)
+            arrow.add(label)
+
+        dt_arrow.shift(
+            func.target[-3:].get_bottom() + MED_SMALL_BUFF * DOWN -
+            dt_arrow.get_start(),
+        )
+        dt_T.next_to(dt_arrow.get_end(), DOWN)
+
+        self.play(FadeInFromDown(func))
+        self.wait()
+        self.play(
+            MoveToTarget(func),
+            LaggedStartMap(Write, dx_arrows),
+            run_time=1,
+        )
+        self.play(
+            TransformFromCopy(func[-3:], dx_T),
+            path_arc=-TAU / 4,
+        )
+        self.play(
+            TransformFromCopy(dx_T, ddx_T),
+            path_arc=-TAU / 4,
+        )
+        self.wait()
+
+        # dt
+        self.play(Write(dt_arrow))
+        self.play(
+            TransformFromCopy(func[-3:], dt_T)
+        )
+        self.wait()

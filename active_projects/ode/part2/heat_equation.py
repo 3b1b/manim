@@ -329,7 +329,7 @@ class BringTwoRodsTogether(Scene):
         else:
             return 10
 
-    def update_graph(self, graph, dt, alpha=None, n_mini_steps=100):
+    def update_graph(self, graph, dt, alpha=None, n_mini_steps=500):
         if alpha is None:
             alpha = self.alpha
         points = np.append(
@@ -464,6 +464,7 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         self.add_clock()
         self.add_rod()
         self.add_arrows()
+        self.initialize_updaters()
         self.let_play()
 
     def add_axes(self):
@@ -521,10 +522,9 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         self.add(arrows)
         self.arrows = arrows
 
-    def let_play(self):
+    def initialize_updaters(self):
         graph = self.graph
         rod = self.rod
-        clock = self.clock
         time_label = self.time_label
 
         graph.add_updater(self.update_graph)
@@ -532,6 +532,9 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
             lambda d, dt: d.increment_value(dt)
         )
         rod.add_updater(self.color_rod_by_graph)
+
+    def let_play(self):
+        clock = self.clock
 
         # return
         self.play(

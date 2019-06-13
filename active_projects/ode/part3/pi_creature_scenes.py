@@ -125,7 +125,6 @@ class SineCurveIsUnrealistic(TeacherStudentsScene):
         self.wait(5)
 
 
-
 class IfOnly(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
