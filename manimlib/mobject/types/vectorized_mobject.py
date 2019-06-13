@@ -242,6 +242,7 @@ class VMobject(Mobject):
     def set_opacity(self, opacity, family=True):
         self.set_fill(opacity=opacity, family=family)
         self.set_stroke(opacity=opacity, family=family)
+        self.set_stroke(opacity=opacity, family=family, background=True)
         return self
 
     def fade(self, darkness=0.5, family=True):

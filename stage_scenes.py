@@ -43,7 +43,7 @@ def stage_scenes(module_name):
     # }
     # TODO, fix this
     animation_dir = os.path.join(
-        consts.VIDEO_DIR, "ode", "part2", "1440p60"
+        consts.VIDEO_DIR, "ode", "part3", "1440p60"
     )
     # 
     files = os.listdir(animation_dir)
