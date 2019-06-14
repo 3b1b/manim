@@ -349,7 +349,7 @@ class BringTwoRodsTogether(Scene):
                 if (0 < i < len(points) - 1):
                     second_deriv = d2y / (dx**2)
                 else:
-                    second_deriv = d2y / dx
+                    second_deriv = 2 * d2y / (dx**2)
                     # second_deriv = 0
 
                 y_change[i] = alpha * second_deriv * dt / n_mini_steps

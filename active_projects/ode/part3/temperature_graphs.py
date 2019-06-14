@@ -1657,7 +1657,6 @@ class StraightLine3DGraph(TemperatureGraphScene):
         return self.c * x
 
 
-
 class SimulateLinearGraph(SimulateRealSineCurve):
     CONFIG = {
         "axes_config": {
@@ -1753,3 +1752,46 @@ class EmphasizeBoundaryPoints(SimulateLinearGraph):
         super().let_play()
 
 
+class FlatEdgesContinuousEvolution(ShowEvolvingTempGraphWithArrows):
+    CONFIG = {
+        "wait_time": 30,
+        "freq_amplitude_pairs": [
+            (1, 0.5),
+            (2, 1),
+            (3, 0.5),
+            (4, 0.3),
+        ],
+    }
+
+    def construct(self):
+        self.add_axes()
+        self.add_graph()
+        self.add_clock()
+        self.add_rod()
+        # self.add_arrows()
+        self.initialize_updaters()
+        self.add_boundary_lines()
+        self.let_play()
+
+    def add_boundary_lines(self):
+
+        lines = VGroup(*[
+            Line(LEFT, RIGHT)
+            for x in range(2)
+        ])
+        lines.set_width(1.5)
+        lines.set_stroke(WHITE, 5, opacity=0.5)
+        lines.add_updater(self.update_lines)
+
+        turn_animation_into_updater(
+            ShowCreation(lines, run_time=2)
+        )
+        self.add(lines)
+
+    def update_lines(self, lines):
+        graph = self.graph
+        lines[0].move_to(graph.get_start())
+        lines[1].move_to(graph.get_end())
+
+    def initial_function(self, x):
+        return ShowEvolvingTempGraphWithArrows.initial_function(self, x)

@@ -505,7 +505,7 @@ class DerivativesOfLinearFunction(WriteHeatEquationTemplate):
         dx_group.arrange(RIGHT)
         for arrow, char, vect in zip(arrows, "xxt", [UP, UP, RIGHT]):
             label = TexMobject(
-                "\\partial \\over \\partial {%s}"%char,
+                "\\partial \\over \\partial {%s}" % char,
                 **self.tex_mobject_config
             )
             label.scale(0.7)
@@ -540,4 +540,14 @@ class DerivativesOfLinearFunction(WriteHeatEquationTemplate):
         self.play(
             TransformFromCopy(func[-3:], dt_T)
         )
+        self.wait()
+
+
+class FlatAtBoundaryWords(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Flat at boundary\\\\"
+            "for all $t > 0$"
+        )
+        self.play(Write(words))
         self.wait()

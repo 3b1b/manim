@@ -32,6 +32,13 @@ SCENES_IN_ORDER = [
     StraightLine3DGraph,
     SimulateLinearGraph,
     EmphasizeBoundaryPoints,
+    ShowNewRuleAtDiscreteBoundary,
+    DiscreteEvolutionPoint25,
+    DiscreteEvolutionPoint1,
+    FlatEdgesForDiscreteEvolution,
+    FlatEdgesForDiscreteEvolutionTinySteps,
+    FlatEdgesContinuousEvolution,
+    FlatAtBoundaryWords,
 
     # SimpleCosExpGraph,
     # AddMultipleSolutions,
