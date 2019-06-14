@@ -1,0 +1,127 @@
+framerate  4000
+domino thickness  7.5438
+domino spacing  9.38
+friction  low
+852 
+1072    
+1240    
+1359    twist
+1457    
+1533    twist
+1603    
+1661    
+1735    
+1785    
+1836    
+1893    
+1950    
+2011    
+2058    
+2105    
+2154    
+2208    
+2266    
+2318    
+2371    
+2424    
+2471    
+2525    
+2579    
+2629    
+2678    
+2721    twist
+2776    twist
+2846    twist
+2896    
+2947    
+2997    twist
+3047    
+3096    
+3154    
+3201    
+3276    low-hitting impact
+3323    
+3371    
+3423    
+3466    
+3509    
+3556    
+3611    
+3667    
+3733    low-hitting impact
+3778    
+3843    unclear
+3893    unclear
+3948    unclear
+4000    
+4065    low-hitting impact
+4115    
+4160    
+4209    
+4255    
+4306    
+4355    
+4412    
+4472    
+4526    
+4572    unclear
+4632    
+4686    
+4751    low-hitting impact
+4805    low-hitting impact
+4862    offscreen
+4898    twist
+4962    
+5017    
+5065    
+5109    
+5161    
+5207    offscreen
+5249    low-hitting impact
+5305    offscreen
+5360    offscreen
+5435    offscreen
+5471    offscreen
+5528    unclear
+5596    offscreen
+5641    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+    offscreen
+6346    
+6395    
+6454    
+6519    
+6578    
+6644    
+6695    
+6741    
+6798    
+6851    
+6905    
+6971    
+7024    
+7074    
+7122    
+7174    
+7223    
+7272    
+7331    
+7382    
+7434    
+7478    
+7519    
+7565    
+7607    twist
+7661    twist
+7724    
