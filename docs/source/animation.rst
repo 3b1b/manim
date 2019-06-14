@@ -13,6 +13,73 @@ without any animation::
 
 Animation are used in conjunction with ``scene.Play``
 
+Creation
+--------
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/WriteHelloWorld.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+
+  class WriteHelloWorld(Scene):
+      def construct(self):
+          hello_world = TextMobject("Hello World!")
+          self.play(Write(hello_world))
+          self.wait()
+
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/DrawBorderThenFillAnimation.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+
+  class DrawBorderThenFillAnimation(Scene):
+      def construct(self):
+          square = Square(
+              fill_color=ORANGE,
+              fill_opacity=1
+            )
+          self.play(DrawBorderThenFill(square))
+          self.wait()
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/ShowCreationAnimation.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+
+  class ShowCreationAnimation(Scene):
+      def construct(self):
+          line = Line(LEFT*3,RIGHT*3)
+          self.play(ShowCreation(line))
+          self.wait()
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/GrowArrowAnimation.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+
+  class GrowArrowAnimation(Scene):
+      def construct(self):
+          arrow = Arrow(LEFT*3,RIGHT*3)
+          self.play(GrowArrow(arrow))
+          self.wait()
+
 Fade
 ----
 
@@ -32,6 +99,8 @@ Fade
           anno.shift(2 * DOWN)
           self.add(anno)
           self.play(FadeIn(square))
+
+
 
 .. raw:: html
 
@@ -208,3 +277,78 @@ You can combine cardinal directions to form diagonal animations
 .. note::
     You can also use the abbreviated forms like ``UL, UR, DL, DR``.
     See :ref:`ref-directions`.
+
+Indication
+----------
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/FocusOnAnimation.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+  class FocusOnAnimation(Scene):
+      def construct(self):
+          points_group = VGroup(*[Dot()for x in range(3)])
+          points_group.arrange(RIGHT,buff=2)
+      
+          colors = [RED,ORANGE,BLUE]
+          self.add(points_group)
+      
+          for dot,color in zip(points_group,colors):
+              self.play(FocusOn(dot,color=color))
+          self.wait()
+
+
+..
+
+**Parameters:**
+
+* Requred: 1
+
+  * ``VMobject``
+
+* Optional:
+
+  * ``opacity = 0.2``
+
+  * ``color = GRAY``
+
+  * ``remover = True``
+
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/IndicateAnimation.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+  class IndicateAnimation(Scene):
+      def construct(self):
+          formula = TexMobject("\\nabla","{\\bf u}")
+          formula.scale(3)
+          colors = [RED,BLUE]
+          
+          self.add(formula)
+          
+          for text,color in zip(formula,colors):
+              self.play(Indicate(text,color=color))
+
+          self.wait()
+..
+
+**Parameters:**
+
+* Requred: 1
+
+  * ``VMobject``
+
+* Optional:
+
+  * ``scale_factor = 1.2``
+
+  * ``color = YELLOW``
