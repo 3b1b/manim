@@ -129,14 +129,14 @@ class Patron(VGroup):
                 grosor.shift(orientacion*H/2-orientacion*grosor.get_height()/2)
             self.add(grosor)
 
-class Medicion(VGroup):
+class MeasureDistance(VGroup):
     CONFIG = {
         "color":RED_B,
         "buff":0.3,
         "laterales":0.3,
-        "invertir":False,
+        "invertir":True,
         "dashed_segment_length":0.09,
-        "dashed":False,
+        "dashed":True,
         "con_flechas":True,
         "ang_flechas":30*DEGREES,
         "tam_flechas":0.2,
