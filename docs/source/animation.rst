@@ -13,6 +13,24 @@ without any animation::
 
 Animation are used in conjunction with ``scene.Play``
 
+Write
+-----
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/WriteHelloWorld.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+
+  class WriteHelloWorld(Scene):
+      def construct(self):
+          hello_world = TextMobject("Hello World!")
+          self.play(Write(hello_world))
+          self.wait()
+
 Fade
 ----
 
