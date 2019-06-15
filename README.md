@@ -74,23 +74,25 @@ python3 -m manim example_scenes.py SquareToCircle -pl
 ### Using Docker
 Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile and Compose file provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/). The Dockerfile contains instructions on how to build a manim image, while the Compose file contains instructions on how to run the image.
 
-In order to do this with the Compose file, you must set the `INPUT_DIR`
+In order to do this with the Compose file, you must set the `INPUT_PATH`
 environment variable to the directory containing manim repository and the
-`OUTPUT_DIR` environment variable to the directory where you want media to be written.
+`OUTPUT_PATH` environment variable to the directory where you want media to be written.
 
 1. [Install Docker](https://docs.docker.com)
 2. [Install Docker Compose](https://docs.docker.com/compose/install/)
 3. Render an animation
 ```sh
-INPUT_DIR=/path/to/dir/containing/source/code \
-OUTPUT_DIR=/path/to/output/ \
+INPUT_PATH=/path/to/dir/containing/source/code \
+OUTPUT_PATH=/path/to/output/ \
 docker-compose run manim example_scenes.py SquareToCircle -l
 ```
 The command needs to be run as root if your username is not in the docker group.
 
-example_scenes.py or your own project should point to the file on the host machine.
+replace `example_scenes.py` with your own on the host machine for your projects.
 
-After running the output will say files ready at `tmp/output/`, which is inside the container. Your OUTPUT_DIR is bind mounted to this `/tmp/output` so any changes made by the container to `/tmp/output` will be mirrored on your OUTPUT_DIR. `/media/` will be created in `OUTPUT_DIR`.
+<img src=./manim_docker_diagram.png/>
+
+After running the output will say files ready at `/tmp/output/`, which refers to path inside the container. Your OUTPUT_PATH is bind mounted to this `/tmp/output` so any changes made by the container to `/tmp/output` will be mirrored on your OUTPUT_PATH. `/media/` will be created in `OUTPUT_PATH`.
 
 `-p` won't work as manim would look for video player in the container system, which it does not have.
 
