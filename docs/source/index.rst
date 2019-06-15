@@ -17,6 +17,7 @@ a pull request there.
     about
     installation/index
     getting_started/index
+    coordinate
     animation
     constants
 
