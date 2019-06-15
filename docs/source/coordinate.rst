@@ -103,7 +103,7 @@ Here coordinates are used for animations
           self.wait(0.5)
 
           for text, aliase in aliases.items():
-              anno = TexMobject(text)
+              anno = TexMobject(f"\\texttt{{{text}}}")
               self.play(Write(anno, run_time=0.2))
               self.play(ApplyMethod(circle.shift, aliase))
               self.wait(0.2)
@@ -165,7 +165,7 @@ Numpy array allows arithmetic operations::
               "RIGHT * 3.75 + DOWN": RIGHT * 3.75 + DOWN}
 
           for text, aliase in aliases.items():
-              anno = TexMobject(text)
+              anno = TexMobject(f"\\texttt{{{text}}}")
               self.play(Write(anno, run_time=0.2))
               self.play(ApplyMethod(circle.shift, aliase))
               self.wait(0.2)
