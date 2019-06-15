@@ -577,6 +577,25 @@ class DashedLine(Line):
         return self.submobjects[-1].points[-2]
 
 
+class TangentLine(Line):
+    CONFIG = {
+        "length": 1,
+        "d_alpha": 1e-6
+    }
+
+    def __init__(self, vmob, alpha, **kwargs):
+        digest_config(self, kwargs)
+        da = self.d_alpha
+        a1 = np.clip(alpha - da, 0, 1)
+        a2 = np.clip(alpha + da, 0, 1)
+        super().__init__(
+            vmob.point_from_proportion(a1),
+            vmob.point_from_proportion(a2),
+            **kwargs
+        )
+        self.scale(self.length / self.get_length())
+
+
 class Elbow(VMobject):
     CONFIG = {
         "width": 0.2,
