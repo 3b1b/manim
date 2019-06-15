@@ -74,10 +74,10 @@ class TemperatureGraphScene(SpecialThreeDScene):
         x_axis = axes.x_axis
         y_axis = axes.y_axis
         tex_vals = [
-            ("\\pi \\over 2", PI / 2),
-            ("\\pi", PI),
-            ("3 \\pi \\over 2", 3 * PI / 2),
-            ("\\tau", TAU)
+            ("\\pi \\over 2", TAU / 4),
+            ("\\pi", TAU / 2),
+            ("3\\pi \\over 2", 3 * TAU / 4),
+            ("2\\pi", TAU)
         ]
         x_labels = VGroup()
         for tex, val in tex_vals:
@@ -100,7 +100,7 @@ class TemperatureGraphScene(SpecialThreeDScene):
 
         t_label = TextMobject("Time")
         t_label.rotate(90 * DEGREES, OUT)
-        t_label.next_to(axes.y_axis.get_top(), DL)
+        t_label.next_to(axes.y_axis.get_end(), UP)
         axes.y_axis.label = t_label
 
         temp_label = TextMobject("Temperature")
@@ -1686,7 +1686,7 @@ class SimulateLinearGraph(SimulateRealSineCurve):
         axes = self.axes
         y_max = axes.y_max
         x_max = axes.x_max
-        slope = y_max/ x_max
+        slope = y_max / x_max
         return slope * x
 
 
@@ -1768,7 +1768,6 @@ class FlatEdgesContinuousEvolution(ShowEvolvingTempGraphWithArrows):
         self.add_graph()
         self.add_clock()
         self.add_rod()
-        # self.add_arrows()
         self.initialize_updaters()
         self.add_boundary_lines()
         self.let_play()
@@ -1795,3 +1794,705 @@ class FlatEdgesContinuousEvolution(ShowEvolvingTempGraphWithArrows):
 
     def initial_function(self, x):
         return ShowEvolvingTempGraphWithArrows.initial_function(self, x)
+
+
+class SlopeToHeatFlow(FlatEdgesContinuousEvolution):
+    CONFIG = {
+        "wait_time": 20,
+        "xs": [1.75, 5.25, 7.8],
+        "axes_config": {
+            "x_min": 0,
+            "x_max": 10,
+            "x_axis_config": {
+                "include_tip": False,
+            }
+        },
+        "n_arrows": 10,
+        "random_seed": 1,
+    }
+
+    def construct(self):
+        self.add_axes()
+        self.add_graph()
+        self.add_rod()
+        #
+        self.show_slope_labels()
+        self.show_heat_flow()
+
+    def show_slope_labels(self):
+        axes = self.axes
+        # axes.x_axis.add_numbers()
+        graph = self.graph
+        xs = self.xs
+
+        lines = VGroup(*[
+            TangentLine(
+                graph,
+                inverse_interpolate(
+                    axes.x_min,
+                    axes.x_max,
+                    x
+                ),
+                length=2,
+                stroke_opacity=0.75,
+            )
+            for x in xs
+        ])
+
+        slope_words = VGroup()
+        for line in lines:
+            slope = line.get_slope()
+            word = TextMobject(
+                "Slope =",
+                "${:.2}$".format(slope)
+            )
+            if slope > 0:
+                word[1].set_color(GREEN)
+            else:
+                word[1].set_color(RED)
+
+            word.set_width(line.get_length())
+            word.next_to(ORIGIN, UP, SMALL_BUFF)
+            word.rotate(
+                line.get_angle(),
+                about_point=ORIGIN,
+            )
+            word.shift(line.get_center())
+            slope_words.add(word)
+
+        self.play(
+            LaggedStartMap(ShowCreation, lines),
+            LaggedStartMap(Write, slope_words),
+            lag_ratio=0.5,
+            run_time=1,
+        )
+        self.wait()
+
+        self.lines = lines
+        self.slope_words = slope_words
+
+    def show_heat_flow(self):
+        axes = self.axes
+        xs = self.xs
+        slope_words = self.slope_words
+        tan_lines = self.lines
+
+        slopes = map(Line.get_slope, self.lines)
+        flow_rates = [-s for s in slopes]
+
+        points = list(map(axes.x_axis.n2p, xs))
+        v_lines = VGroup(*[
+            Line(
+                line.get_center(), point,
+                stroke_width=1,
+            )
+            for point, line in zip(points, tan_lines)
+        ])
+
+        flow_words = VGroup(*[
+            TextMobject("Heat flow").next_to(
+                point, DOWN
+            ).scale(0.8)
+            for point in points
+        ])
+        flow_mobjects = VGroup(*[
+            self.get_flow(x, flow_rate)
+            for x, flow_rate in zip(xs, flow_rates)
+        ])
+
+        self.add(flow_mobjects)
+        self.wait()
+        self.play(
+            LaggedStart(*[
+                TransformFromCopy(
+                    sw[0], fw[0]
+                )
+                for sw, fw in zip(slope_words, flow_words)
+            ]),
+            LaggedStartMap(ShowCreation, v_lines),
+            lag_ratio=0.4,
+            run_time=2,
+        )
+        self.wait(self.wait_time)
+
+    def get_flow(self, x, flow_rate):
+        return VGroup(*[
+            self.get_single_flow_arrow(
+                x, flow_rate,
+                t_offset=to
+            )
+            for to in np.linspace(0, 5, self.n_arrows)
+        ])
+
+    def get_single_flow_arrow(self, x, flow_rate, t_offset):
+        axes = self.axes
+        point = axes.x_axis.n2p(x)
+
+        h_shift = 0.5
+        v_shift = 0.4 * np.random.random() + 0.1
+
+        arrow = Vector(0.5 * RIGHT * np.sign(flow_rate))
+        arrow.move_to(point)
+        arrow.shift(v_shift * UP)
+        lp = arrow.get_center() + h_shift * LEFT
+        rp = arrow.get_center() + h_shift * RIGHT
+        lc = self.rod_point_to_color(lp)
+        rc = self.rod_point_to_color(rp)
+
+        run_time = 3 / flow_rate
+        animation = UpdateFromAlphaFunc(
+            arrow,
+            lambda m, a: m.move_to(
+                interpolate(lp, rp, a)
+            ).set_color(
+                interpolate_color(lc, rc, a)
+            ).set_opacity(there_and_back(a)),
+            run_time=run_time,
+        )
+        result = cycle_animation(animation)
+        animation.total_time += t_offset
+        return result
+
+
+class CloserLookAtStraightLine(SimulateLinearGraph):
+    def construct(self):
+        self.add_axes()
+        self.add_graph()
+        self.add_clock()
+        self.add_rod()
+        # self.initialize_updaters()
+        #
+        self.show_t_eq_0_state()
+        self.show_t_gt_0_state()
+
+    def show_t_eq_0_state(self):
+        t_eq = TexMobject("t", "=", "0")
+        t_eq.next_to(self.time_label, DOWN)
+
+        circles = VGroup(*[
+            Circle(
+                radius=0.25,
+                stroke_color=YELLOW,
+            )
+            for x in range(2)
+        ])
+        circles.add_updater(self.attach_to_endpoints)
+
+        self.play(Write(t_eq))
+        self.play(ShowCreation(circles))
+        self.wait()
+        self.play(FadeOut(circles))
+
+        self.circles = circles
+        self.t_eq = t_eq
+
+    def show_t_gt_0_state(self):
+        # circles = self.circles
+        t_eq = self.t_eq
+
+        t_ineq = TexMobject("t", ">", "0")
+        t_ineq.move_to(t_eq)
+
+        slope_lines = VGroup(*[
+            Line(LEFT, RIGHT)
+            for x in range(2)
+        ])
+        slope_lines.set_opacity(0.5)
+        slope_lines.add_updater(self.attach_to_endpoints)
+
+        self.remove(t_eq)
+        self.add(t_ineq)
+
+        self.initialize_updaters()
+        self.run_clock(0.1)
+        for mob in self.mobjects:
+            mob.suspend_updating()
+        self.wait()
+
+        self.add(slope_lines)
+        self.add(self.clock, self.time_label, t_ineq)
+        self.play(ShowCreation(slope_lines))
+        for mob in self.mobjects:
+            mob.resume_updating()
+
+        self.run_clock(self.wait_time)
+
+    #
+    def attach_to_endpoints(self, mobs):
+        points = [
+            self.graph.get_start(),
+            self.graph.get_end(),
+        ]
+        for mob, point in zip(mobs, points):
+            mob.move_to(point)
+        return mobs
+
+
+class ManipulateSinExpSurface(TemperatureGraphScene):
+    CONFIG = {
+        "axes_config": {
+            "z_max": 1.25,
+            "z_min": -1.25,
+            "z_axis_config": {
+                "unit_size": 2.5,
+                "tick_frequency": 0.5,
+            },
+            "x_axis_config": {
+                # "unit_size": 1.5,
+                "unit_size": 1.0,
+                "tick_frequency": 1,
+            },
+            "x_max": 10,
+            "y_max": 15,
+        },
+        "alpha": 0.2,
+        "tex_mobject_config": {
+            "tex_to_color_map": {
+                "{x}": GREEN,
+                "{t}": YELLOW,
+                "\\omega": MAROON_B,
+                "^2": WHITE,
+            },
+        },
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.add_sine_wave()
+        self.shift_sine_to_cosine()
+        self.show_derivatives_of_cos()
+        self.show_cos_exp_surface()
+        self.change_frequency()
+        self.talk_through_omega()
+        self.show_cos_omega_derivatives()
+        self.show_rebalanced_exp()
+
+    def setup_axes(self):
+        axes = self.get_three_d_axes(include_numbers=True)
+        axes.x_axis.remove(axes.x_axis.numbers)
+        L = TexMobject("L")
+        L.rotate(90 * DEGREES, RIGHT)
+        L.next_to(axes.x_axis.get_end(), IN)
+        axes.x_axis.add(L)
+
+        axes.shift(5 * LEFT + 0.5 * IN)
+        axes.z_axis.label[0].remove(
+            *axes.z_axis.label[0][1:]
+        )
+        axes.z_axis.label.next_to(
+            axes.z_axis.get_end(), OUT
+        )
+        axes.z_axis.add_numbers(
+            *np.arange(-1, 1.5, 0.5),
+            direction=LEFT,
+            number_config={
+                "num_decimal_places": 1,
+            }
+        )
+        for number in axes.z_axis.numbers:
+            number.rotate(90 * DEGREES, RIGHT)
+
+        self.set_camera_orientation(
+            phi=90 * DEGREES,
+            theta=-90 * DEGREES,
+            distance=100,
+        )
+
+        self.add(axes)
+        self.remove(axes.y_axis)
+        self.axes = axes
+
+    def add_sine_wave(self):
+        self.initialize_parameter_trackers()
+        graph = always_redraw(
+            lambda: self.get_time_slice_graph(
+                self.axes, self.func,
+                t=self.t_tracker.get_value(),
+            )
+        )
+        sin_label = TexMobject(
+            "\\sin\\left({x}\\right)",
+            **self.tex_mobject_config,
+        )
+        sin_label.shift(2 * LEFT + 2.75 * UP)
+
+        self.add_fixed_in_frame_mobjects(sin_label)
+        graph.suspend_updating()
+        self.play(
+            ShowCreation(graph),
+            Write(sin_label),
+        )
+        graph.resume_updating()
+        self.wait()
+
+        self.sin_label = sin_label
+        self.graph = graph
+
+    def shift_sine_to_cosine(self):
+        graph = self.graph
+        sin_label = self.sin_label
+
+        sin_cross = Cross(sin_label)
+        sin_cross.add_updater(
+            lambda m: m.move_to(sin_label)
+        )
+        cos_label = TexMobject(
+            "\\cos\\left({x}\\right)",
+            **self.tex_mobject_config,
+        )
+        cos_label.move_to(sin_label, LEFT)
+        cos_label.shift(LEFT)
+        # cos_label.shift(
+        #     axes.c2p(0, 0) - axes.c2p(PI / 2, 0),
+        # )
+
+        left_tangent = Line(ORIGIN, RIGHT)
+        left_tangent.set_stroke(WHITE, 5)
+
+        self.add_fixed_in_frame_mobjects(cos_label)
+        self.play(
+            ApplyMethod(
+                self.phi_tracker.set_value, 0,
+            ),
+            FadeOutAndShift(sin_label, LEFT),
+            FadeInFrom(cos_label, RIGHT),
+            run_time=2,
+        )
+        left_tangent.move_to(graph.get_start(), LEFT)
+        self.play(ShowCreation(left_tangent))
+        self.play(FadeOut(left_tangent))
+
+        self.cos_label = cos_label
+
+    def show_derivatives_of_cos(self):
+        cos_label = self.cos_label
+        cos_exp_label = TexMobject(
+            "\\cos\\left({x}\\right)",
+            "e^{-\\alpha {t}}",
+            **self.tex_mobject_config
+        )
+        cos_exp_label.move_to(cos_label, LEFT)
+
+        ddx_group, ddx_exp_group = [
+            self.get_ddx_computation_group(
+                label,
+                *[
+                    TexMobject(
+                        s + "\\left({x}\\right)" + exp,
+                        **self.tex_mobject_config,
+                    )
+                    for s in ["-\\sin", "-\\cos"]
+                ]
+            )
+            for label, exp in [
+                (cos_label, ""),
+                (cos_exp_label, "e^{-\\alpha {t}}"),
+            ]
+        ]
+
+        self.add_fixed_in_frame_mobjects(ddx_group)
+        self.play(FadeIn(ddx_group))
+        self.wait()
+
+        # Cos exp
+        transforms = [
+            ReplacementTransform(
+                cos_label, cos_exp_label,
+            ),
+            ReplacementTransform(
+                ddx_group, ddx_exp_group,
+            ),
+        ]
+        for trans in transforms:
+            trans.begin()
+            self.add_fixed_in_frame_mobjects(trans.mobject)
+        self.play(*transforms)
+        self.add_fixed_in_frame_mobjects(
+            cos_exp_label, ddx_exp_group
+        )
+        self.remove_fixed_in_frame_mobjects(
+            cos_label,
+            *[
+                trans.mobject
+                for trans in transforms
+            ]
+        )
+
+        self.cos_exp_label = cos_exp_label
+        self.ddx_exp_group = ddx_exp_group
+
+    def show_cos_exp_surface(self):
+        axes = self.axes
+
+        max_t_tracker = ValueTracker(0)
+        surface = always_redraw(
+            lambda: self.get_surface(
+                self.axes, self.func,
+                v_max=max_t_tracker.get_value(),
+            )
+        )
+        self.add(surface)
+        self.move_camera(
+            phi=85 * DEGREES,
+            theta=-80 * DEGREES,
+            added_anims=[
+                ApplyMethod(
+                    max_t_tracker.set_value,
+                    axes.y_max,
+                    run_time=4,
+                ),
+                Write(axes.y_axis),
+            ]
+        )
+        self.wait()
+
+        self.surface = surface
+
+    def change_frequency(self):
+        cos_exp_label = self.cos_exp_label
+        ddx_exp_group = self.ddx_exp_group
+        omega_tracker = self.omega_tracker
+
+        cos_omega = TexMobject(
+            "\\cos\\left(",
+            "\\omega", "\\cdot", "{x}",
+            "\\right)",
+            **self.tex_mobject_config
+        )
+        cos_omega.move_to(cos_exp_label, LEFT)
+
+        omega = cos_omega.get_part_by_tex("\\omega")
+        brace = Brace(omega, UP, buff=SMALL_BUFF)
+        omega_decimal = always_redraw(
+            lambda: DecimalNumber(
+                omega_tracker.get_value(),
+                color=omega.get_color(),
+            ).next_to(brace, UP, SMALL_BUFF)
+        )
+
+        self.add_fixed_in_frame_mobjects(
+            cos_omega,
+            brace,
+            omega_decimal,
+        )
+        self.play(
+            self.camera.phi_tracker.set_value, 90 * DEGREES,
+            self.camera.theta_tracker.set_value, -90 * DEGREES,
+            FadeOut(self.surface),
+            FadeOut(self.axes.y_axis),
+            FadeOut(cos_exp_label),
+            FadeOut(ddx_exp_group),
+            FadeIn(cos_omega),
+            GrowFromCenter(brace),
+            FadeInFromDown(omega_decimal)
+        )
+        for n in [2, 6, 1, 4]:
+            freq = n * PI / self.axes.x_max
+            self.play(
+                omega_tracker.set_value, freq,
+                run_time=2
+            )
+            self.wait()
+        self.wait()
+
+        self.cos_omega = cos_omega
+        self.omega_brace = brace
+
+    def talk_through_omega(self):
+        axes = self.axes
+
+        x_tracker = ValueTracker(0)
+        get_x = x_tracker.get_value
+        v_line = always_redraw(lambda: DashedLine(
+            axes.c2p(get_x(), 0, 0),
+            axes.c2p(get_x(), 0, self.func(get_x(), 0)),
+        ))
+
+        x = self.cos_omega.get_part_by_tex("{x}")
+        brace = Brace(x, DOWN)
+        x_decimal = always_redraw(
+            lambda: DecimalNumber(
+                get_x(),
+                color=x.get_color()
+            ).next_to(brace, DOWN, SMALL_BUFF)
+        )
+
+        self.add(v_line)
+        self.add_fixed_in_frame_mobjects(brace, x_decimal)
+        self.play(
+            x_tracker.set_value, 5,
+            run_time=5,
+            rate_func=linear,
+        )
+        self.play(
+            FadeOut(v_line),
+            FadeOut(brace),
+            FadeOut(x_decimal),
+        )
+        self.remove_fixed_in_frame_mobjects(
+            brace, x_decimal
+        )
+
+    def show_cos_omega_derivatives(self):
+        cos_omega = self.cos_omega
+        ddx_omega_group = self.get_ddx_computation_group(
+            cos_omega,
+            *[
+                TexMobject(
+                    s + "\\left(\\omega \\cdot {x}\\right)",
+                    **self.tex_mobject_config,
+                )
+                for s in ["-\\omega \\sin", "-\\omega^2 \\cos"]
+            ]
+        )
+
+        omega_squared = ddx_omega_group[-1][1:3]
+        rect = SurroundingRectangle(omega_squared)
+
+        self.add_fixed_in_frame_mobjects(ddx_omega_group)
+        self.play(FadeIn(ddx_omega_group))
+        self.wait()
+        self.add_fixed_in_frame_mobjects(rect)
+        self.play(ShowCreationThenFadeOut(rect))
+        self.wait()
+
+        self.ddx_omega_group = ddx_omega_group
+
+    def show_rebalanced_exp(self):
+        cos_omega = self.cos_omega
+        ddx_omega_group = self.ddx_omega_group
+
+        cos_exp = TexMobject(
+            "\\cos\\left(",
+            "\\omega", "\\cdot", "{x}",
+            "\\right)",
+            "e^{-\\alpha \\omega^2 {t}}",
+            **self.tex_mobject_config
+        )
+        cos_exp.move_to(cos_omega, DL)
+
+        self.add_fixed_in_frame_mobjects(cos_exp)
+        self.play(
+            FadeOut(cos_omega),
+            FadeOut(ddx_omega_group),
+            FadeIn(cos_exp),
+        )
+        self.remove_fixed_in_frame_mobjects(
+            cos_omega,
+            ddx_omega_group,
+        )
+
+        self.play(
+            FadeIn(self.surface),
+            FadeIn(self.axes.y_axis),
+            VGroup(
+                cos_exp,
+                self.omega_brace,
+            ).shift, 4 * RIGHT,
+            self.camera.phi_tracker.set_value, 80 * DEGREES,
+            self.camera.theta_tracker.set_value, -80 * DEGREES,
+        )
+        self.wait()
+        self.play(
+            self.omega_tracker.set_value, TAU / 10,
+            run_time=6,
+        )
+
+    #
+    def initialize_parameter_trackers(self):
+        self.phi_tracker = ValueTracker(-90 * DEGREES)
+        self.omega_tracker = ValueTracker(1)
+        self.t_tracker = ValueTracker(0)
+
+    def func(self, x, t):
+        phi = self.phi_tracker.get_value()
+        omega = self.omega_tracker.get_value()
+        alpha = self.alpha
+        return op.mul(
+            np.cos(omega * (x + phi)),
+            np.exp(-alpha * (omega**2) * t)
+        )
+
+    def get_ddx_computation_group(self, f, df, ddf):
+        arrows = VGroup(*[
+            Vector(0.5 * RIGHT) for x in range(2)
+        ])
+        group = VGroup(
+            arrows[0], df, arrows[1], ddf
+        )
+        group.arrange(RIGHT)
+        group.next_to(f, RIGHT)
+
+        for arrow in arrows:
+            label = TexMobject(
+                "\\partial \\over \\partial {x}",
+                **self.tex_mobject_config,
+            )
+            label.scale(0.5)
+            label.next_to(arrow, UP, SMALL_BUFF)
+            arrow.add(label)
+
+        group.arrows = arrows
+        group.funcs = VGroup(df, ddf)
+
+        return group
+
+
+class ShowFreq1CosExpDecay(ManipulateSinExpSurface):
+    CONFIG = {
+        "freq": 1,
+        "alpha": 0.1,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.initialize_parameter_trackers()
+        self.phi_tracker.set_value(0)
+        self.omega_tracker.set_value(self.freq)
+        #
+        self.show_decay()
+
+    def show_decay(self):
+        axes = self.axes
+        t_tracker = self.t_tracker
+        t_max = self.axes.y_max
+
+        graph = always_redraw(
+            lambda: self.get_time_slice_graph(
+                axes,
+                self.func,
+                t=t_tracker.get_value(),
+                stroke_width=5,
+            )
+        )
+
+        surface = self.get_surface(
+            self.axes, self.func,
+        )
+        plane = self.get_const_time_plane(axes)
+
+        self.add(surface, plane, graph)
+        self.add(axes.y_axis)
+        self.set_camera_orientation(
+            phi=85 * DEGREES,
+            theta=-80 * DEGREES,
+        )
+        self.play(
+            t_tracker.set_value, t_max,
+            plane.t_tracker.set_value, t_max,
+            # run_time=t_max,
+            run_time=5,
+            rate_func=linear,
+        )
+
+
+class ShowFreq2CosExpDecay(ShowFreq1CosExpDecay):
+    CONFIG = {
+        "freq": 2,
+    }
+
+
+class ShowFreq4CosExpDecay(ShowFreq1CosExpDecay):
+    CONFIG = {
+        "freq": 4,
+    }

@@ -152,6 +152,11 @@ class ThreeConstraints(WriteHeatEquationTemplate):
         self.play(Write(items[2][1]))
         self.wait(2)
 
+        self.title = title
+        self.items = items
+        self.pde = equation
+        self.bc_paren = bc_paren
+
 
 class EquationAboveSineAnalysis(WriteHeatEquationTemplate):
     def construct(self):
@@ -545,9 +550,113 @@ class DerivativesOfLinearFunction(WriteHeatEquationTemplate):
 
 class FlatAtBoundaryWords(Scene):
     def construct(self):
-        words = TextMobject(
-            "Flat at boundary\\\\"
-            "for all $t > 0$"
-        )
+        words = self.get_bc_words()
         self.play(Write(words))
         self.wait()
+
+    def get_bc_words(self):
+        return TextMobject(
+            "Flat at boundary\\\\"
+            "for all", "${t}$", "$> 0$",
+        )
+
+
+class WriteOutBoundaryCondition(FlatAtBoundaryWords, ThreeConstraints, MovingCameraScene):
+    def construct(self):
+        self.force_skipping()
+        ThreeConstraints.construct(self)
+        self.revert_to_original_skipping_status()
+
+        self.add_ic()
+        self.write_bc_words()
+        self.write_bc_equation()
+
+    def add_ic(self):
+        image = ImageMobject("temp_initial_condition_example")
+        image.set_width(3)
+        border = SurroundingRectangle(image, buff=SMALL_BUFF)
+        border.shift(SMALL_BUFF * UP)
+        border.set_stroke(WHITE, 2)
+        group = Group(image, border)
+        group.next_to(self.items[2], DOWN)
+        self.add(group)
+
+    def write_bc_words(self):
+        bc_paren = self.bc_paren
+        bc_words = self.get_bc_words()
+        bc_words.match_width(self.items[1][1])
+        bc_words.move_to(bc_paren, UP)
+        bc_words.set_color_by_tex("{t}", YELLOW)
+
+        self.play(ShowCreationThenFadeAround(
+            VGroup(self.items[0], self.pde)
+        ))
+        self.play(
+            FadeOutAndShift(bc_paren, UP),
+            FadeInFrom(bc_words, DOWN),
+        )
+        self.wait()
+
+        self.bc_words = bc_words
+
+    def write_bc_equation(self):
+        bc_words = self.bc_words
+
+        equation = TexMobject(
+            "{\\partial {T} \\over \\partial {x}}(0, {t}) = ",
+            "{\\partial {T} \\over \\partial {x}}(L, {t}) = ",
+            "0",
+            **self.tex_mobject_config,
+        )
+        equation.next_to(bc_words, DOWN, MED_LARGE_BUFF)
+
+        self.play(
+            self.camera_frame.shift, 0.8 * DOWN,
+        )
+        self.play(FadeInFrom(equation, UP))
+        self.wait()
+
+
+class HeatEquationFrame(WriteHeatEquationTemplate):
+    def construct(self):
+        equation = self.get_d1_equation()
+        equation.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        ddx = equation[-11:]
+        dt = equation[:11]
+
+        full_rect = FullScreenFadeRectangle(
+            fill_color=DARK_GREY,
+            fill_opacity=1,
+        )
+        smaller_rect = ScreenRectangle(
+            height=6,
+            fill_color=BLACK,
+            fill_opacity=1,
+            stroke_color=WHITE,
+            stroke_width=2,
+        )
+        smaller_rect.next_to(equation, DOWN)
+
+        self.add(full_rect)
+        self.add(smaller_rect)
+        self.add(equation)
+        self.wait()
+        self.play(ShowCreationThenFadeAround(
+            ddx,
+            surrounding_rectangle_config={
+                "stroke_color": GREEN,
+            }
+        ))
+        self.wait()
+        self.play(ShowCreationThenFadeAround(dt))
+        self.wait()
+
+
+class CompareFreqDecays(Scene):
+    CONFIG = {
+        "freqs": [1, 2]
+    }
+
+    def construct(self):
+        pass

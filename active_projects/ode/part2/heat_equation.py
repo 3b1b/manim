@@ -523,25 +523,24 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         self.arrows = arrows
 
     def initialize_updaters(self):
-        graph = self.graph
-        rod = self.rod
-        time_label = self.time_label
-
-        graph.add_updater(self.update_graph)
-        time_label.add_updater(
-            lambda d, dt: d.increment_value(dt)
-        )
-        rod.add_updater(self.color_rod_by_graph)
+        if hasattr(self, "graph"):
+            self.graph.add_updater(self.update_graph)
+        if hasattr(self, "rod"):
+            self.rod.add_updater(self.color_rod_by_graph)
+        if hasattr(self, "time_label"):
+            self.time_label.add_updater(
+                lambda d, dt: d.increment_value(dt)
+            )
 
     def let_play(self):
-        clock = self.clock
+        self.run_clock(self.wait_time)
 
-        # return
+    def run_clock(self, time):
         self.play(
             ClockPassesTime(
-                clock,
-                run_time=self.wait_time,
-                hours_passed=self.wait_time,
+                self.clock,
+                run_time=time,
+                hours_passed=time,
             ),
         )
 
