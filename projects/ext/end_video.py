@@ -1,9 +1,12 @@
 from manimlib.imports import *
 
-set_custom_quality(800,10)
+#set_custom_quality(800,10)
 
 class RedesEspanhol(Scene):
     def construct(self):
+        self.redes_esp()
+
+    def redes_esp(self):
         twitter = Twitter()
         reddits = Reddits()
         instagram = Instagram()
@@ -13,13 +16,20 @@ class RedesEspanhol(Scene):
         back_negro=patreon[1].copy().move_to(patreon[1])
         patreon.add(back_negro)
 
-        redes_s=VGroup(*[obj.set_height(2.5)for obj in [patreon,reddits,twitter,instagram]])\
+        redes_s=VGroup(*[obj.set_height(2)for obj in [patreon,reddits,twitter,instagram]])\
                 .arrange_submobjects(RIGHT,buff=0.8)
         redes_s.move_to(ORIGIN)
-        redes_f=redes_s.copy()
-        redes_f.arrange_submobjects(
+        redes_f_pre=redes_s.copy()
+        """ redes_f.arrange_submobjects(
             DOWN, aligned_edge=LEFT, buff=0.4
-            )
+            ) """
+        redes_f1=redes_f_pre[:2]
+        redes_f2=redes_f_pre[2:]
+        for redes_ in [redes_f1,redes_f2]:
+            redes_.arrange(DOWN,buff=1.5)
+        redes_f_pre2=VGroup(redes_f1,redes_f2).arrange(RIGHT,buff=7)
+        redes_f=VGroup(*redes_f_pre).shift(UP*1.6)
+
         texto=VGroup(
             TextMobject("\\tt Theorem of Beethoven").set_color("#F96855"),
             TextMobject("\\tt r/ElteoremaDeBeethoven").match_color(reddits),
@@ -28,7 +38,7 @@ class RedesEspanhol(Scene):
             )
         redes_f.to_edge(LEFT).scale(0.7).shift(LEFT*0.7)
         for i in range(len(texto)):
-            texto[i].next_to(redes_f[i],RIGHT,buff=0.8)
+            texto[i].scale(0.8).next_to(redes_f[i],DOWN,buff=0.2)
 
 
         self.play(DrawBorderThenFill(redes_s),run_time=3)
@@ -61,26 +71,47 @@ class RedesEspanhol(Scene):
         redes_fc.set_fill(opacity=0)
         redes_fc.set_stroke(WHITE,3)
         redes_fc[-1].set_stroke(BLACK,1.5)
-        
+
+        grupo_circulos=VGroup(*[Circle(color=WHITE).match_width(redes_fc[0])for x in range(4)])
+        c=0
+        for circulo in grupo_circulos:
+            circulo.move_to(redes_fc[c].get_center())
+            c+=1
+
+        agradecimientos=Text("\\sc Agradecimientos\\\\ especiales a:",color=YELLOW)
+        patreons=VGroup(
+            Text("Guadalupe Martínez")
+        )
+
+        agradecimientos.move_to(LEFT*3)
+        patreons.next_to(agradecimientos,DOWN)
+        grupo_patreon=VGroup(agradecimientos,patreons).arrange(DOWN).to_edge(DOWN)
+        #patreons.align_on_border(DOWN,buff=0)
         
         for x in range(2):
             self.play(
-                ShowPassingFlash(
-                    redes_fc[:-1], 
+                ShowCreationThenDestruction(
+                    grupo_circulos, 
                     time_width = 0.5,
                     run_time = 2,
                     rate_func=linear
                 ),
+                *[FadeIn(agradecimientos)for w in range(1) if x==0],
+                *[Write(patreons)for w in range(1) if x==0]
             )
 
-        
-        self.wait()
+        self.wait(2)
         cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
         self.add_foreground_mobject(cuadro_negro)
         self.play(cuadro_negro.set_fill,None,1)
+        self.wait(5)
 
+        #-----------------------------------
 class RedesIngles(Scene):
     def construct(self):
+        self.redes_ing()
+
+    def redes_ing(self):
         twitter = Twitter()
         reddits = Reddits()
         instagram = Instagram()
@@ -90,13 +121,20 @@ class RedesIngles(Scene):
         back_negro=patreon[1].copy().move_to(patreon[1])
         patreon.add(back_negro)
 
-        redes_s=VGroup(*[obj.set_height(2.5)for obj in [patreon,reddits,twitter,instagram]])\
-                .arrange(RIGHT,buff=0.8)
+        redes_s=VGroup(*[obj.set_height(2)for obj in [patreon,reddits,twitter,instagram]])\
+                .arrange_submobjects(RIGHT,buff=0.8)
         redes_s.move_to(ORIGIN)
-        redes_f=redes_s.copy()
-        redes_f.arrange(
+        redes_f_pre=redes_s.copy()
+        """ redes_f.arrange_submobjects(
             DOWN, aligned_edge=LEFT, buff=0.4
-            )
+            ) """
+        redes_f1=redes_f_pre[:2]
+        redes_f2=redes_f_pre[2:]
+        for redes_ in [redes_f1,redes_f2]:
+            redes_.arrange(DOWN,buff=1.5)
+        redes_f_pre2=VGroup(redes_f1,redes_f2).arrange(RIGHT,buff=7)
+        redes_f=VGroup(*redes_f_pre).shift(UP*1.6)
+
         texto=VGroup(
             TextMobject("\\tt Theorem of Beethoven").set_color("#F96855"),
             TextMobject("\\tt r/TheoremOfBeethoven").match_color(reddits),
@@ -105,7 +143,7 @@ class RedesIngles(Scene):
             )
         redes_f.to_edge(LEFT).scale(0.7).shift(LEFT*0.7)
         for i in range(len(texto)):
-            texto[i].next_to(redes_f[i],RIGHT,buff=0.8)
+            texto[i].scale(0.8).next_to(redes_f[i],DOWN,buff=0.2)
 
 
         self.play(DrawBorderThenFill(redes_s),run_time=3)
@@ -138,20 +176,37 @@ class RedesIngles(Scene):
         redes_fc.set_fill(opacity=0)
         redes_fc.set_stroke(WHITE,3)
         redes_fc[-1].set_stroke(BLACK,1.5)
-        
+
+        grupo_circulos=VGroup(*[Circle(color=WHITE).match_width(redes_fc[0])for x in range(4)])
+        c=0
+        for circulo in grupo_circulos:
+            circulo.move_to(redes_fc[c].get_center())
+            c+=1
+
+        agradecimientos=Text("\\sc Special thanks to:",color=YELLOW)
+        patreons=VGroup(
+            Text("Guadalupe Martínez")
+        )
+
+        agradecimientos.move_to(LEFT*3)
+        patreons.next_to(agradecimientos,DOWN)
+        grupo_patreon=VGroup(agradecimientos,patreons).arrange(DOWN).to_edge(DOWN)
+        #patreons.align_on_border(DOWN,buff=0)
         
         for x in range(2):
-            self.Oldplay(
-                OldShowPassingFlash(
-                    redes_fc[:-1], 
+            self.play(
+                ShowCreationThenDestruction(
+                    grupo_circulos, 
                     time_width = 0.5,
                     run_time = 2,
                     rate_func=linear
                 ),
+                *[FadeIn(agradecimientos)for w in range(1) if x==0],
+                *[Write(patreons)for w in range(1) if x==0]
             )
 
-        
-        self.wait()
+        self.wait(2)
         cuadro_negro=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT).set_fill(BLACK,0).set_stroke(None,0)
         self.add_foreground_mobject(cuadro_negro)
         self.play(cuadro_negro.set_fill,None,1)
+        self.wait(5)

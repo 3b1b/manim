@@ -1,6 +1,6 @@
 from manimlib.imports import *
 
-class OperationsGraph(GraphScene):
+class OperationsGraph(GraphScene,RedesIngles):
     CONFIG = {
         "x_min": -9,
         "x_max": 9,
@@ -18,7 +18,7 @@ class OperationsGraph(GraphScene):
         "num_rects": 50,
         "axes_stroke":3,
         "tick_size":0.07,
-        "tiempo_wait":1.5,
+        "tiempo_wait":1,
     }
     def espera(self):
         self.wait(self.tiempo_wait)
@@ -28,6 +28,7 @@ class OperationsGraph(GraphScene):
         self.setup_axes()
         self.move_graph()
         self.reflect_graph()
+        self.redes_ing()
 
     def include_title(self):
         tikz="""
@@ -48,7 +49,7 @@ class OperationsGraph(GraphScene):
         cuerda_left=Line(esq_left+UP*5,esq_left,color=WHITE)
         cuerda_right=Line(esq_right+UP*5,esq_right,color=WHITE)
         self.play(ShowCreation(cuerda_left),ShowCreation(cuerda_right))
-        self.espera()
+        self.wait()
         self.add_foreground_mobjects(tit[0],tit[1:])
         self.play(
         VGroup(tit[0],cuerda_left,cuerda_right,tit[1:]).shift,UP*8
@@ -174,7 +175,7 @@ class OperationsGraph(GraphScene):
             Escribe(x_label),
             Escribe(y_label),
             )
-        self.espera()
+        self.wait(0.2)
 
         self.Oldplay(
             OldShowCreation(graph),
@@ -449,3 +450,7 @@ class OperationsGraph(GraphScene):
             )
         
         self.espera()
+        
+        self.play(
+            *[FadeOut(mobject)for mobject in self.mobjects]
+        )
