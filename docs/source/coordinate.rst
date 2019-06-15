@@ -34,7 +34,7 @@ array in the form of [x, y, z]. For 2D animations only the x and y axes are used
 Using Coordinates
 -----------------
 
-Coordinates are used for creating Geometries and animations.
+Coordinates are used for creating geometries (`VMobject` in manim) and animations.
 
 Here coordinates are used to create this Polygon
 
