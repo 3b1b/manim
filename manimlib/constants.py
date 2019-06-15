@@ -151,7 +151,7 @@ NO_SCENE_MESSAGE = """
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1080,
     "pixel_width": 1920,
-    "frame_rate": 30,
+    "frame_rate": 60,
 }
 
 HIGH_QUALITY_CAMERA_CONFIG = {
