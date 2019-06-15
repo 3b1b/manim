@@ -1,7 +1,7 @@
 Coordinate
 ==========
 
-The scene in manim is made up by 8 x 14 grid. The grid is addressed using a numpy
+By default, the scene in manim is made up by 8 x 14 grid. The grid is addressed using a numpy
 array in the form of [x, y, z]. For 2D animations only the x and y axes are used.
 
 .. code-block:: python
@@ -29,7 +29,7 @@ array in the form of [x, y, z]. For 2D animations only the x and y axes are used
     </video>
 
 .. note::
-  You can place objects outside this boundary, just that it won't show up in the render.
+  You can place objects outside this boundary, but it won't show up in the render.
 
 Using Coordinates
 -----------------
