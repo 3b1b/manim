@@ -29,7 +29,7 @@ def initialize_directories(config):
                 "Ignoring --media_dir, since --video_dir and --tex_dir were "
                 "both passed"
             )
-    VIDEO_DIR  = config["video_dir"] or os.path.join(MEDIA_DIR, "video")
+    VIDEO_DIR  = config["video_dir"] or os.path.join(MEDIA_DIR, "videos")
     TEX_DIR    = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
 
     for folder in [VIDEO_DIR, TEX_DIR]:
