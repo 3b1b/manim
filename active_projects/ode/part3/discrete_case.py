@@ -99,7 +99,7 @@ class ShowNewRuleAtDiscreteBoundary(DiscreteSetup):
         )
         self.wait()
 
-        # Point to inward neighbord
+        # Point to inward neighbor
         new_arrows = VGroup(*[
             Arrow(
                 d1.get_center(),

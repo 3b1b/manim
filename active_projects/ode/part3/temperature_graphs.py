@@ -45,7 +45,7 @@ class TemperatureGraphScene(SpecialThreeDScene):
         if include_labels:
             self.add_axes_labels(axes)
 
-        # Adjust axis orinetations
+        # Adjust axis orientation
         axes.x_axis.rotate(
             90 * DEGREES, RIGHT,
             about_point=axes.c2p(0, 0, 0),
@@ -674,9 +674,9 @@ class OceanOfPossibilities(TemperatureGraphScene):
     def setup_axes(self):
         axes = self.get_three_d_axes(include_numbers=True)
         axes.add(axes.input_plane)
-        axes.scale(0.9)
+        axes.scale(0.8)
         axes.center()
-        axes.shift(0.5 * OUT + RIGHT)
+        axes.shift(OUT + RIGHT)
 
         self.add(axes)
         self.axes = axes
@@ -2073,6 +2073,7 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
                 "^2": WHITE,
             },
         },
+        "graph_config": {},
         "initial_phi": -90 * DEGREES,
         "initial_omega": 1,
     }
@@ -2094,6 +2095,7 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
         L = TexMobject("L")
         L.rotate(90 * DEGREES, RIGHT)
         L.next_to(axes.x_axis.get_end(), IN)
+        axes.x_axis.label = L
         axes.x_axis.add(L)
 
         axes.shift(5 * LEFT + 0.5 * IN)
@@ -2424,6 +2426,7 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
             lambda: self.get_time_slice_graph(
                 self.axes, self.func,
                 t=self.t_tracker.get_value(),
+                **self.graph_config
             )
         )
 
@@ -2769,3 +2772,58 @@ class ShowHarmonicSurfaces(ManipulateSinExpSurface):
         )
         result.to_edge(UP)
         return result
+
+
+class Thumbnail(ShowHarmonicSurfaces):
+    CONFIG = {
+        "default_surface_config": {
+            "resolution": (40, 30),
+            # "resolution": (10, 10),
+        },
+        "graph_config": {
+            "stroke_width": 8,
+        },
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.initialize_parameter_trackers()
+        self.add_surface()
+        self.add_graph()
+        #
+        self.omega_tracker.set_value(3 * PI / 10)
+        self.set_camera_orientation(
+            theta=-70 * DEGREES,
+        )
+
+        axes = self.axes
+        for axis in [axes.y_axis, axes.z_axis]:
+            axis.numbers.set_opacity(0)
+            axis.remove(*axis.numbers)
+        axes.x_axis.label.set_opacity(0)
+        axes.z_axis.label.set_opacity(0)
+
+        for n in range(2, 16, 2):
+            new_graph = self.get_time_slice_graph(
+                axes, self.func, t=n,
+                **self.graph_config
+            )
+            new_graph.set_shade_in_3d(True)
+            new_graph.set_stroke(
+                width=8 / np.sqrt(n),
+                # opacity=1 / n**(1 / 4),
+            )
+            self.add(new_graph)
+
+        words = TextMobject(
+            "Sine waves + Linearity + Fourier = Solution"
+        )
+        words.set_width(FRAME_WIDTH - 1)
+        words.to_edge(DOWN)
+        words.shift(2 * DOWN)
+        self.add_fixed_in_frame_mobjects(words)
+
+        self.camera.frame_center.shift(DOWN)
+        self.update_mobjects(0)
+        self.surface.set_stroke(width=0.1)
+        self.surface.set_fill(opacity=0.2)

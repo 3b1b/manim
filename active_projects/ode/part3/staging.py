@@ -1140,7 +1140,7 @@ class EndScreen(PatreonEndScreen):
             "Jonathan Eppele",
             "Kai-Siang Ang",
             "Kanan Gill",
-            "Kartik Cating-Subramanian",
+            "Kartik\\\\Cating-Subramanian",
             "L0j1k",
             "Lee Redden",
             "Linh Tran",
