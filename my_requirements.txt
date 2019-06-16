@@ -1,0 +1,11 @@
+argparse==1.4.0
+colour==0.1.5
+numpy==1.16.2
+Pillow==6.0.0
+progressbar==2.5
+scipy==1.2.1
+tqdm==4.31.1
+opencv-python==4.0.0.21
+pycairo==1.18.0
+pydub==0.23.1
+pyreadline==2.1
