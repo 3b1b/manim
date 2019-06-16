@@ -527,7 +527,7 @@ class FourierNDQ(FourierOfTrebleClef):
 
     def get_shape(self):
         path = VMobject()
-        shape = TexMobject("Hayley")
+        shape = TexMobject("NDQ")
         for sp in shape.family_members_with_points():
             path.append_points(sp.points)
         return path

@@ -3,12 +3,17 @@ RUN apt-get update \
     && apt-get install -qqy --no-install-recommends \
         apt-utils \
         ffmpeg \
-        texlive-latex-base \
-        texlive-full \
-        texlive-fonts-extra \
         sox \
         libcairo2-dev \
+        texlive \
+        texlive-fonts-extra \
+        texlive-latex-extra \
+        texlive-latex-recommended \
+        texlive-science \
+        tipa \
     && rm -rf /var/lib/apt/lists/*
-COPY requirements.txt requirements.txt
-RUN python -m pip install -r requirements.txt && rm requirements.txt
+COPY . /manim
+RUN cd /manim \
+    && python setup.py sdist \
+    && python -m pip install dist/manimlib*
 ENTRYPOINT ["/bin/bash"]

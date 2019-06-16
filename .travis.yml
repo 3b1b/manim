@@ -4,6 +4,10 @@ dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
 python: "3.7"
 cache: pip
 
+addons:
+  apt:
+    packages:
+      - python3-sphinx
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
@@ -16,6 +20,8 @@ before_script:
 script:
   - python setup.py test
   - python setup.py bdist_wheel
+after_success:
+  - test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "false" && travis/build_docs.sh
 deploy:
   provider: pypi
   user: eulertour

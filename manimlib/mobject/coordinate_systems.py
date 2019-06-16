@@ -171,11 +171,17 @@ class Axes(VGroup, CoordinateSystem):
             result += (axis.number_to_point(coord) - origin)
         return result
 
+    def c2p(self, *coords):
+        return self.coords_to_point(*coords)
+
     def point_to_coords(self, point):
         return tuple([
             axis.point_to_number(point)
             for axis in self.get_axes()
         ])
+
+    def p2c(self, point):
+        return self.point_to_coords(point)
 
     def get_axes(self):
         return self.axes

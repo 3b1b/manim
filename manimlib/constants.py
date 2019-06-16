@@ -1,47 +1,46 @@
 import numpy as np
 import os
 
-# Initialize directories
-env_MEDIA_DIR = os.getenv("MEDIA_DIR")
-if env_MEDIA_DIR:
-    MEDIA_DIR = env_MEDIA_DIR
-elif os.path.isfile("media_dir.txt"):
-    with open("media_dir.txt", 'rU') as media_file:
-        MEDIA_DIR = media_file.readline().strip()
-else:
-    MEDIA_DIR = os.path.join(
-        os.path.expanduser('~'),
-        "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
-    )
-if not os.path.isdir(MEDIA_DIR):
-    MEDIA_DIR = "./media"
-    print(
-        f"Media will be stored in {MEDIA_DIR + os.sep}. You can change "
-        "this behavior by writing a different directory to media_dir.txt."
-    )
+MEDIA_DIR = ""
+VIDEO_DIR = ""
+TEX_DIR = ""
 
-VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
-RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
-SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
-SOUND_DIR = os.path.join(MEDIA_DIR, "designs", "sounds")
-###
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR = os.path.join(os.getenv("FILE_DIR", default="."), "files")
-TEX_DIR = os.path.join(FILE_DIR, "Tex")
-# These two may be depricated now.
-MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
-IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
+def initialize_directories(config):
+    global MEDIA_DIR
+    global VIDEO_DIR
+    global TEX_DIR
+    if not (config["video_dir"] and config["tex_dir"]):
+        if config["media_dir"]:
+            MEDIA_DIR = config["media_dir"]
+        else:
+            MEDIA_DIR = os.path.join(
+                os.path.expanduser('~'),
+                "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+            )
+        if not os.path.isdir(MEDIA_DIR):
+            MEDIA_DIR = "./media"
+        print(
+            f"Media will be written to {MEDIA_DIR + os.sep}. You can change "
+            "this behavior with the --media_dir flag."
+        )
+    else:
+        if config["media_dir"]:
+            print(
+                "Ignoring --media_dir, since --video_dir and --tex_dir were "
+                "both passed"
+            )
+    VIDEO_DIR  = config["video_dir"] or os.path.join(MEDIA_DIR, "video")
+    TEX_DIR    = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
 
-for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
-               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR]:
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    for folder in [VIDEO_DIR, TEX_DIR]:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
 TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(
-    THIS_DIR, "tex_template.tex" if not TEX_USE_CTEX
-    else "ctex_template.tex"
+    os.path.dirname(os.path.realpath(__file__)),
+    "tex_template.tex" if not TEX_USE_CTEX else "ctex_template.tex"
 )
 with open(TEMPLATE_TEX_FILE, "r") as infile:
     TEMPLATE_TEXT_FILE_BODY = infile.read()
@@ -90,7 +89,7 @@ PRODUCTION_QUALITY_CAMERA_CONFIG = {
 HIGH_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1080,
     "pixel_width": 1920,
-    "frame_rate": 30,
+    "frame_rate": 60,
 }
 
 MEDIUM_QUALITY_CAMERA_CONFIG = {
