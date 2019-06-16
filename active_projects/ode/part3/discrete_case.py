@@ -17,6 +17,7 @@ class ShowNewRuleAtDiscreteBoundary(DiscreteSetup):
             (3, 0.5),
             (4, 0.3),
         ],
+        "v_line_class": DashedLine,
         "v_line_config": {
 
         },
@@ -183,7 +184,7 @@ class ShowNewRuleAtDiscreteBoundary(DiscreteSetup):
         bottom = dot.get_bottom()
         x = x_axis.p2n(bottom)
         proj_point = x_axis.n2p(x)
-        return DashedLine(
+        return self.v_line_class(
             proj_point, bottom,
             **self.v_line_config,
         )
@@ -294,9 +295,9 @@ class FlatEdgesForDiscreteEvolution(DiscreteEvolutionPoint1):
 class FlatEdgesForDiscreteEvolutionTinySteps(FlatEdgesForDiscreteEvolution):
     CONFIG = {
         "step_size": 0.025,
-        "wait_time": 0,
+        "wait_time": 10,
+        "v_line_class": Line,
         "v_line_config": {
-            "positive_space_ratio": 1,
             "stroke_opacity": 0.5,
         }
     }

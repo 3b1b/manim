@@ -676,7 +676,7 @@ class OceanOfPossibilities(TemperatureGraphScene):
         axes.add(axes.input_plane)
         axes.scale(0.9)
         axes.center()
-        axes.shift(OUT + RIGHT)
+        axes.shift(0.5 * OUT + RIGHT)
 
         self.add(axes)
         self.axes = axes
@@ -687,7 +687,7 @@ class OceanOfPossibilities(TemperatureGraphScene):
 
         # Parameters for surface function
         initial_As = [2] + [
-            random.choice([-1, 1]) / n
+            0.8 * random.choice([-1, 1]) / n
             for n in range(1, 20)
         ]
         A_trackers = Group(*[
@@ -1555,6 +1555,7 @@ class SimulateRealSineCurve(ShowEvolvingTempGraphWithArrows):
         "graph_x_min": 0,
         "graph_x_max": TAU,
         "arrow_xs": np.linspace(0, TAU, 13),
+        "rod_opacity": 0.5,
         "wait_time": 30,
         "alpha": 0.5,
     }
@@ -1590,7 +1591,7 @@ class SimulateRealSineCurve(ShowEvolvingTempGraphWithArrows):
 
     def add_rod(self):
         super().add_rod()
-        self.rod.set_opacity(0.5)
+        self.rod.set_opacity(self.rod_opacity)
         self.rod.set_stroke(width=0)
 
     def initial_function(self, x):
@@ -1794,6 +1795,24 @@ class FlatEdgesContinuousEvolution(ShowEvolvingTempGraphWithArrows):
 
     def initial_function(self, x):
         return ShowEvolvingTempGraphWithArrows.initial_function(self, x)
+
+
+class MoreAccurateTempFlowWithArrows(ShowEvolvingTempGraphWithArrows):
+    CONFIG = {
+        "arrow_scale_factor": 1,
+        "max_magnitude": 1,
+        "freq_amplitude_pairs": [
+            (1, 0.5),
+            (2, 1),
+            (3, 0.5),
+            (4, 0.3),
+        ],
+    }
+
+    def setup_axes(self):
+        super().setup_axes()
+        y_axis = self.axes.y_axis
+        y_axis.remove(y_axis.label)
 
 
 class SlopeToHeatFlow(FlatEdgesContinuousEvolution):
@@ -2054,6 +2073,8 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
                 "^2": WHITE,
             },
         },
+        "initial_phi": -90 * DEGREES,
+        "initial_omega": 1,
     }
 
     def construct(self):
@@ -2104,12 +2125,7 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
 
     def add_sine_wave(self):
         self.initialize_parameter_trackers()
-        graph = always_redraw(
-            lambda: self.get_time_slice_graph(
-                self.axes, self.func,
-                t=self.t_tracker.get_value(),
-            )
-        )
+        graph = self.get_graph()
         sin_label = TexMobject(
             "\\sin\\left({x}\\right)",
             **self.tex_mobject_config,
@@ -2224,20 +2240,15 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
     def show_cos_exp_surface(self):
         axes = self.axes
 
-        max_t_tracker = ValueTracker(0)
-        surface = always_redraw(
-            lambda: self.get_surface(
-                self.axes, self.func,
-                v_max=max_t_tracker.get_value(),
-            )
-        )
+        surface = self.get_cos_exp_surface()
         self.add(surface)
+        surface.max_t_tracker.set_value(0)
         self.move_camera(
             phi=85 * DEGREES,
             theta=-80 * DEGREES,
             added_anims=[
                 ApplyMethod(
-                    max_t_tracker.set_value,
+                    surface.max_t_tracker.set_value,
                     axes.y_max,
                     run_time=4,
                 ),
@@ -2400,9 +2411,33 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
 
     #
     def initialize_parameter_trackers(self):
-        self.phi_tracker = ValueTracker(-90 * DEGREES)
-        self.omega_tracker = ValueTracker(1)
+        self.phi_tracker = ValueTracker(
+            self.initial_phi
+        )
+        self.omega_tracker = ValueTracker(
+            self.initial_omega
+        )
         self.t_tracker = ValueTracker(0)
+
+    def get_graph(self):
+        return always_redraw(
+            lambda: self.get_time_slice_graph(
+                self.axes, self.func,
+                t=self.t_tracker.get_value(),
+            )
+        )
+
+    def get_cos_exp_surface(self):
+        max_t_tracker = ValueTracker(self.axes.y_max)
+        surface = always_redraw(
+            lambda: self.get_surface(
+                self.axes,
+                self.func,
+                v_max=max_t_tracker.get_value(),
+            )
+        )
+        surface.max_t_tracker = max_t_tracker
+        return surface
 
     def func(self, x, t):
         phi = self.phi_tracker.get_value()
@@ -2441,16 +2476,25 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
 class ShowFreq1CosExpDecay(ManipulateSinExpSurface):
     CONFIG = {
         "freq": 1,
-        "alpha": 0.1,
+        "alpha": 0.2,
     }
 
     def construct(self):
         self.setup_axes()
+        self.add_back_y_axis()
         self.initialize_parameter_trackers()
         self.phi_tracker.set_value(0)
-        self.omega_tracker.set_value(self.freq)
+        self.omega_tracker.set_value(
+            self.freq * TAU / 10,
+        )
         #
         self.show_decay()
+
+    def add_back_y_axis(self):
+        axes = self.axes
+        self.add(axes.y_axis)
+        self.remove(axes.y_axis.numbers)
+        self.remove(axes.y_axis.label)
 
     def show_decay(self):
         axes = self.axes
@@ -2472,16 +2516,16 @@ class ShowFreq1CosExpDecay(ManipulateSinExpSurface):
         plane = self.get_const_time_plane(axes)
 
         self.add(surface, plane, graph)
-        self.add(axes.y_axis)
+
         self.set_camera_orientation(
-            phi=85 * DEGREES,
-            theta=-80 * DEGREES,
+            phi=80 * DEGREES,
+            theta=-85 * DEGREES,
         )
+        self.begin_ambient_camera_rotation(rate=0.01)
         self.play(
             t_tracker.set_value, t_max,
             plane.t_tracker.set_value, t_max,
-            # run_time=t_max,
-            run_time=5,
+            run_time=t_max,
             rate_func=linear,
         )
 
@@ -2496,3 +2540,232 @@ class ShowFreq4CosExpDecay(ShowFreq1CosExpDecay):
     CONFIG = {
         "freq": 4,
     }
+
+
+class ShowHarmonics(SimulateRealSineCurve):
+    CONFIG = {
+        "rod_opacity": 0.75,
+        "initial_omega": 1.27,
+        "default_n_rod_pieces": 32,
+    }
+
+    def construct(self):
+        self.add_axes()
+        self.add_graph()
+        self.add_rod()
+        self.rod.add_updater(self.color_rod_by_graph)
+        #
+        self.show_formula()
+
+    def add_graph(self):
+        omega_tracker = ValueTracker(self.initial_omega)
+        get_omega = omega_tracker.get_value
+        graph = always_redraw(
+            lambda: self.axes.get_graph(
+                lambda x: np.cos(get_omega() * x),
+                x_min=self.graph_x_min,
+                x_max=self.graph_x_max,
+                step_size=self.step_size,
+                discontinuities=[5],
+            ).color_using_background_image("VerticalTempGradient")
+        )
+
+        self.add(graph)
+        self.graph = graph
+        self.omega_tracker = omega_tracker
+
+    def show_formula(self):
+        rod = self.rod
+        graph = self.graph
+        axes = self.axes
+        omega_tracker = self.omega_tracker
+        L = TAU
+
+        formula = TexMobject(
+            "=", "\\cos\\left(",
+            "2(\\pi / L)", "\\cdot", "{x}",
+            "\\right)",
+            tex_to_color_map={
+                "{x}": GREEN,
+            }
+        )
+        formula.next_to(
+            self.axes.y_axis.label, RIGHT, SMALL_BUFF
+        )
+        omega_part = formula.get_part_by_tex("\\pi")
+        omega_brace = Brace(omega_part, DOWN)
+        omega = TexMobject("\\omega")
+        omega.set_color(MAROON_B)
+        omega.next_to(omega_brace, DOWN, SMALL_BUFF)
+        formula.remove(omega_part)
+
+        pi_over_L = TexMobject("(\\pi / L)")
+        pi_over_L.move_to(omega_part)
+        pi_over_L.match_color(omega)
+
+        self.add(formula)
+        self.add(omega_brace)
+        self.add(omega)
+
+        self.remove(graph)
+        self.play(GrowFromEdge(rod, LEFT))
+        self.play(
+            ShowCreationThenFadeAround(axes.x_axis.label)
+        )
+        self.wait()
+        self.play(FadeIn(graph))
+        self.play(FadeInFromDown(pi_over_L))
+        self.play(
+            omega_tracker.set_value, PI / L,
+            run_time=2
+        )
+        self.wait()
+
+        # Show x
+        x_tracker = ValueTracker(0)
+        tip = ArrowTip(
+            start_angle=-90 * DEGREES,
+            color=WHITE,
+        )
+        tip.add_updater(lambda m: m.move_to(
+            axes.x_axis.n2p(x_tracker.get_value()),
+            DOWN,
+        ))
+        x_sym = TexMobject("x")
+        x_sym.set_color(GREEN)
+        x_sym.add_background_rectangle(buff=SMALL_BUFF)
+        x_sym.add_updater(lambda m: m.next_to(tip, UP, SMALL_BUFF))
+
+        self.play(
+            Write(tip),
+            Write(x_sym),
+        )
+        self.play(
+            x_tracker.set_value, L,
+            run_time=3,
+        )
+        self.wait()
+        self.play(TransformFromCopy(
+            x_sym, formula.get_part_by_tex("{x}")
+        ))
+        self.play(
+            FadeOut(tip),
+            FadeOut(x_sym),
+        )
+
+        # Harmonics
+        pi_over_L.generate_target()
+        n_sym = Integer(2)
+        n_sym.match_color(pi_over_L)
+        group = VGroup(n_sym, pi_over_L.target)
+        group.arrange(RIGHT, buff=SMALL_BUFF)
+        group.move_to(pi_over_L)
+
+        self.play(
+            MoveToTarget(pi_over_L),
+            FadeInFromDown(n_sym),
+            ApplyMethod(
+                omega_tracker.set_value, 2 * PI / L,
+                run_time=2,
+            )
+        )
+        self.wait()
+        for n in [*range(3, 9), 0]:
+            new_n_sym = Integer(n)
+            new_n_sym.move_to(n_sym, DR)
+            new_n_sym.match_style(n_sym)
+            self.play(
+                FadeOutAndShift(n_sym, UP),
+                FadeInFrom(new_n_sym, DOWN),
+                omega_tracker.set_value, n * PI / L,
+            )
+            self.wait()
+            n_sym = new_n_sym
+
+    #
+    def add_labels_to_axes(self):
+        x_axis = self.axes.x_axis
+        L = TexMobject("L")
+        L.next_to(x_axis.get_end(), DOWN)
+        x_axis.add(L)
+        x_axis.label = L
+
+
+class ShowHarmonicSurfaces(ManipulateSinExpSurface):
+    CONFIG = {
+        "alpha": 0.2,
+        "initial_phi": 0,
+        "initial_omega": PI / 10,
+        "n_iterations": 8,
+        "default_surface_config": {
+            "resolution": (40, 30),
+            "surface_piece_config": {
+                "stroke_width": 0.5,
+            }
+        }
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.initialize_parameter_trackers()
+        self.add_surface()
+        self.add_graph()
+        self.show_all_harmonic_surfaces()
+
+    def setup_axes(self):
+        super().setup_axes()
+        self.add(self.axes.y_axis)
+        self.set_camera_orientation(
+            phi=82 * DEGREES,
+            theta=-80 * DEGREES,
+        )
+
+    def add_surface(self):
+        self.surface = self.get_cos_exp_surface()
+        self.add(self.surface)
+
+    def add_graph(self):
+        self.graph = self.get_graph()
+        self.add(self.graph)
+
+    def show_all_harmonic_surfaces(self):
+        omega_tracker = self.omega_tracker
+        formula = self.get_formula(str(1))
+        L = self.axes.x_max
+
+        self.begin_ambient_camera_rotation(rate=0.01)
+        self.add_fixed_in_frame_mobjects(formula)
+        self.wait(2)
+        for n in range(2, self.n_iterations):
+            if n > 5:
+                n_str = "n"
+            else:
+                n_str = str(n)
+            new_formula = self.get_formula(n_str)
+            self.play(
+                Transform(formula, new_formula),
+                ApplyMethod(
+                    omega_tracker.set_value,
+                    n * PI / L
+                ),
+            )
+            self.wait(3)
+
+    #
+    def get_formula(self, n_str):
+        n_str = "{" + n_str + "}"
+        result = TexMobject(
+            "\\cos\\left(",
+            n_str, "(", "\\pi / L", ")", "{x}"
+            "\\right)"
+            "e^{-\\alpha (", n_str, "\\pi / L", ")^2",
+            "{t}}",
+            tex_to_color_map={
+                "{x}": GREEN,
+                "{t}": YELLOW,
+                "\\pi / L": MAROON_B,
+                n_str: MAROON_B,
+            }
+        )
+        result.to_edge(UP)
+        return result

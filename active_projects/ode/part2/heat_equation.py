@@ -185,6 +185,7 @@ class BringTwoRodsTogether(Scene):
 
         y_label = axes.get_y_axis_label("\\text{Temperature}")
         y_label.to_edge(UP)
+        axes.y_axis.label = y_label
         axes.y_axis.add(y_label)
         axes.y_axis.add_numbers(
             *range(20, 100, 20)

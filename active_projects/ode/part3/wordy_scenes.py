@@ -5,6 +5,10 @@ from active_projects.ode.part2.wordy_scenes import *
 class ThreeMainObservations(Scene):
     def construct(self):
         fourier = ImageMobject("Joseph Fourier")
+        name = TextMobject("Joseph Fourier")
+        name.match_width(fourier)
+        name.next_to(fourier, DOWN, SMALL_BUFF)
+        fourier.add(name)
         fourier.set_height(5)
         fourier.to_corner(DR)
         fourier.shift(LEFT)
@@ -18,18 +22,15 @@ class ThreeMainObservations(Scene):
         observations = VGroup(
             TextMobject(
                 "1)",
-                # "Sine waves",
-                # "H",
-                # "Heat equation",
+                "Sine = Nice",
             ),
             TextMobject(
                 "2)",
-                # "Linearity"
+                "Linearity"
             ),
             TextMobject(
                 "3)",
-                # "Any$^{*}$ function is\\\\",
-                # "a sum of sine waves",
+                "Fourier series"
             ),
         )
         # heart = SuitSymbol("hearts")
@@ -43,7 +44,7 @@ class ThreeMainObservations(Scene):
         observations.arrange(
             DOWN,
             aligned_edge=LEFT,
-            buff=LARGE_BUFF,
+            buff=2 * LARGE_BUFF,
         )
         observations.set_height(FRAME_HEIGHT - 2)
         observations.to_corner(UL, buff=LARGE_BUFF)
@@ -52,7 +53,7 @@ class ThreeMainObservations(Scene):
         self.play(ShowCreation(bubble))
         self.wait()
         self.play(LaggedStart(*[
-            TransformFromCopy(bubble, observation)
+            TransformFromCopy(bubble, observation[0])
             for observation in observations
         ], lag_ratio=0.2))
         self.play(
@@ -60,6 +61,9 @@ class ThreeMainObservations(Scene):
             FadeOut(bubble),
         )
         self.wait()
+        for obs in observations:
+            self.play(FadeInFrom(obs[1], LEFT))
+            self.wait()
 
 
 class LastChapterWrapper(Scene):
@@ -158,6 +162,34 @@ class ThreeConstraints(WriteHeatEquationTemplate):
         self.bc_paren = bc_paren
 
 
+class RectAroundEquation(WriteHeatEquationTemplate):
+    def construct(self):
+        eq = self.get_d1_equation()
+        self.play(ShowCreationThenFadeAround(eq))
+
+
+class BorderRect(Scene):
+    def construct(self):
+        rect = FullScreenFadeRectangle()
+        rect.set_stroke(WHITE, 3)
+        rect.set_fill(opacity=0)
+        self.add(rect)
+
+
+class SecondDerivativeOfSine(Scene):
+    def construct(self):
+        equation = TexMobject(
+            "{d^2 \\over d{x}^2}",
+            "\\cos\\left({x}\\right) =",
+            "-\\cos\\left({x}\\right)",
+            tex_to_color_map={
+                "{x}": GREEN,
+            }
+        )
+
+        self.add(equation)
+
+
 class EquationAboveSineAnalysis(WriteHeatEquationTemplate):
     def construct(self):
         equation = self.get_d1_equation()
@@ -211,6 +243,31 @@ class EquationAboveSineAnalysis(WriteHeatEquationTemplate):
         )
         self.play(ShowCreationThenFadeAround(lhs[:6]))
         self.play(ShowCreationThenFadeAround(new_rhs[1:-3]))
+        self.wait()
+
+
+class ExpVideoWrapper(Scene):
+    def construct(self):
+        self.add(FullScreenFadeRectangle(
+            fill_color=DARKER_GREY,
+            fill_opacity=1,
+        ))
+
+        screen = ImageMobject("eoc_chapter5_thumbnail")
+        screen.set_height(6)
+        rect = SurroundingRectangle(screen, buff=0)
+        rect.set_stroke(WHITE, 2)
+        screen.add(rect)
+        title = TextMobject("Need a refresher?")
+        title.scale(1.5)
+        title.to_edge(UP)
+        screen.next_to(title, DOWN)
+
+        screen.center()
+        self.play(
+            # FadeInFrom(title, LEFT),
+            FadeInFrom(screen, DOWN),
+        )
         self.wait()
 
 
@@ -653,10 +710,62 @@ class HeatEquationFrame(WriteHeatEquationTemplate):
         self.wait()
 
 
-class CompareFreqDecays(Scene):
+class CompareFreqDecays1to2(Scene):
     CONFIG = {
         "freqs": [1, 2]
     }
 
     def construct(self):
-        pass
+        background = FullScreenFadeRectangle(
+            fill_color=DARKER_GREY,
+            fill_opacity=1,
+        )
+
+        screens = VGroup(*[
+            ScreenRectangle(
+                height=4,
+                fill_color=BLACK,
+                fill_opacity=1,
+                stroke_width=1,
+                stroke_color=WHITE,
+            )
+            for x in range(2)
+        ])
+        screens.arrange(RIGHT)
+        screens.set_width(FRAME_WIDTH - 1)
+
+        formulas = VGroup(*[
+            self.get_formula(freq)
+            for freq in self.freqs
+        ])
+        for formula, screen in zip(formulas, screens):
+            formula.next_to(screen, UP)
+
+        self.add(background)
+        self.add(screens)
+        self.add(formulas)
+        self.wait()
+
+    def get_formula(self, freq):
+        f_str = str(freq)
+        return TexMobject(
+            "\\cos\\left(%s \\cdot {x}\\right)" % f_str,
+            "e^{-\\alpha \\cdot %s^2 \\cdot {t}}" % f_str,
+            tex_to_color_map={
+                "{x}": GREEN,
+                "{t}": YELLOW,
+                f_str: MAROON_B,
+            }
+        )
+
+
+class CompareFreqDecays1to4(CompareFreqDecays1to2):
+    CONFIG = {
+        "freqs": [1, 4],
+    }
+
+
+class CompareFreqDecays2to4(CompareFreqDecays1to2):
+    CONFIG = {
+        "freqs": [2, 4],
+    }

@@ -233,24 +233,25 @@ class ManyCousinsOfFourierThings(Scene):
 class FourierSeriesIllustraiton(Scene):
     CONFIG = {
         "n_range": range(1, 31, 2),
+        "axes_config": {
+            "number_line_config": {
+                "include_tip": False,
+            },
+            "x_axis_config": {
+                "tick_frequency": 1 / 4,
+                "unit_size": 4,
+            },
+            "x_min": 0,
+            "x_max": 1,
+            "y_min": -1,
+            "y_max": 1,
+        }
     }
 
     def construct(self):
         n_range = self.n_range
 
-        axes1 = Axes(
-            number_line_config={
-                "include_tip": False,
-            },
-            x_axis_config={
-                "tick_frequency": 1 / 4,
-                "unit_size": 4,
-            },
-            x_min=0,
-            x_max=1,
-            y_min=-1,
-            y_max=1,
-        )
+        axes1 = Axes(**self.axes_config)
         axes1.x_axis.add_numbers(
             0.5, 1,
             number_config={"num_decimal_places": 1}
@@ -263,6 +264,7 @@ class FourierSeriesIllustraiton(Scene):
         group = VGroup(axes1, arrow, axes2)
         group.arrange(RIGHT, buff=LARGE_BUFF)
         group.shift(2 * UP)
+        group.shift_onto_screen()
 
         sine_graphs = VGroup(*[
             axes1.get_graph(self.generate_nth_func(n))
@@ -393,7 +395,14 @@ class FourierSeriesIllustraiton(Scene):
 
 class FourierSeriesOfLineIllustration(FourierSeriesIllustraiton):
     CONFIG = {
-        "n_range": range(1, 31, 2)
+        "n_range": range(1, 31, 2),
+        "axes_config": {
+            "y_axis_config": {
+                "unit_size": 2,
+                "tick_frequency": 0.25,
+                "numbers_with_elongated_ticks": [-1, 1],
+            }
+        }
     }
 
     def get_sum_tex(self):
@@ -661,7 +670,7 @@ class InvestmentGrowth(Scene):
         "k": 0.05,
         "k_tex": "0.05",
         "total_time": 43,
-        "time_rate": 4,
+        "time_rate": 3,
     }
 
     def construct(self):
@@ -752,7 +761,7 @@ class InvestmentGrowth(Scene):
         self.add(time_tracker)
 
         self.play(FadeInFromDown(ode))
-        self.wait(2)
+        self.wait(6)
         self.play(FadeInFrom(exp, UP))
         self.wait(2)
         self.play(
@@ -908,6 +917,7 @@ class BoundaryConditionInterlude(Scene):
             path_arc=60 * DEGREES,
         )
 
+        # BC detour
         self.add(background)
         self.add(storyline[0])
         for im1, im2, arrow in zip(storyline, storyline[1:], storyline.arrows):
@@ -930,6 +940,66 @@ class BoundaryConditionInterlude(Scene):
             ),
         )
         self.play(ShowCreation(new_mid_arrow))
+        self.wait()
+
+        # From BC to next step
+        rect1 = bc_image[2].copy()
+        rect2 = storyline[1][2].copy()
+        rect3 = storyline[2][2].copy()
+        for rect in rect1, rect2, rect3:
+            rect.set_stroke(YELLOW, 3)
+
+        self.play(FadeIn(rect1))
+        kw = {"path_arc": 60 * DEGREES}
+        self.play(
+            LaggedStart(
+                Transform(rect1, rect2, **kw),
+                # TransformFromCopy(rect1, rect3, **kw),
+                lag_ratio=0.4,
+            )
+        )
+        self.play(
+            FadeOut(rect1),
+            # FadeOut(rect3),
+        )
+
+        # Reorganize images
+        im1, im3, im4 = storyline
+        im2 = bc_image
+        l_group = Group(im1, im2)
+        r_group = Group(im3, im4)
+        for group in l_group, r_group:
+            group.generate_target()
+            group.target.arrange(DOWN, buff=LARGE_BUFF)
+            group.target.center()
+
+        l_group.target.to_edge(LEFT)
+        r_group.target.move_to(
+            FRAME_WIDTH * RIGHT / 4
+        )
+        brace = Brace(r_group.target, LEFT)
+        nv_text = brace.get_text("Next\\\\video")
+        nv_text.scale(1.5, about_edge=RIGHT)
+        nv_text.set_color(YELLOW)
+        brace.set_color(YELLOW)
+
+        arrows = VGroup(
+            storyline.arrows,
+            new_mid_arrow,
+        )
+
+        self.play(
+            LaggedStart(
+                MoveToTarget(l_group),
+                MoveToTarget(r_group),
+                lag_ratio=0.3,
+            ),
+            FadeOut(arrows),
+        )
+        self.play(
+            GrowFromCenter(brace),
+            FadeInFrom(nv_text, RIGHT)
+        )
         self.wait()
 
     def get_main_storyline(self):
@@ -1012,3 +1082,149 @@ class GiantCross(Scene):
         )
         self.wait()
 
+
+class EndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "1stViewMaths",
+            "Adrian Robinson",
+            "Alexis Olson",
+            "Andreas Benjamin Brössel",
+            "Andrew Busey",
+            "Ankalagon",
+            "Antoine Bruguier",
+            "Antonio Juarez",
+            "Arjun Chakroborty",
+            "Art Ianuzzi",
+            "Awoo",
+            "Ayan Doss",
+            "AZsorcerer",
+            "Barry Fam",
+            "Bernd Sing",
+            "Boris Veselinovich",
+            "Brian Staroselsky",
+            "Charles Southerland",
+            "Chris Connett",
+            "Christian Kaiser",
+            "Clark Gaebel",
+            "Cooper Jones",
+            "Danger Dai",
+            "Daniel Pang",
+            "Dave B",
+            "Dave Kester",
+            "David B. Hill",
+            "David Clark",
+            "Delton Ding",
+            "eaglle",
+            "Empirasign",
+            "emptymachine",
+            "Eric Younge",
+            "Eryq Ouithaqueue",
+            "Federico Lebron",
+            "Fernando Via Canel",
+            "Giovanni Filippi",
+            "Hal Hildebrand",
+            "Hitoshi Yamauchi",
+            "Isaac Jeffrey Lee",
+            "j eduardo perez",
+            "Jacob Hartmann",
+            "Jacob Magnuson",
+            "Jameel Syed",
+            "Jason Hise",
+            "Jeff Linse",
+            "Jeff Straathof",
+            "John C. Vesey",
+            "John Griffith",
+            "John Haley",
+            "John V Wertheim",
+            "Jonathan Eppele",
+            "Kai-Siang Ang",
+            "Kanan Gill",
+            "Kartik Cating-Subramanian",
+            "L0j1k",
+            "Lee Redden",
+            "Linh Tran",
+            "Ludwig Schubert",
+            "Magister Mugit",
+            "Mark B Bahu",
+            "Martin Price",
+            "Mathias Jansson",
+            "Matt Langford",
+            "Matt Roveto",
+            "Matthew Bouchard",
+            "Matthew Cocke",
+            "Michael Faust",
+            "Michael Hardel",
+            "Mirik Gogri",
+            "Mustafa Mahdi",
+            "Márton Vaitkus",
+            "Nero Li",
+            "Nikita Lesnikov",
+            "Omar Zrien",
+            "Owen Campbell-Moore",
+            "Patrick",
+            "Peter Ehrnstrom",
+            "RedAgent14",
+            "rehmi post",
+            "Richard Comish",
+            "Ripta Pasay",
+            "Rish Kundalia",
+            "Robert Teed",
+            "Roobie",
+            "Ryan Williams",
+            "Sebastian Garcia",
+            "Solara570",
+            "Stephan Arlinghaus",
+            "Steven Siddals",
+            "Stevie Metke",
+            "Tal Einav",
+            "Ted Suzman",
+            "Thomas Tarler",
+            "Tianyu Ge",
+            "Tom Fleming",
+            "Valeriy Skobelev",
+            "Xuanji Li",
+            "Yavor Ivanov",
+            "YinYangBalance.Asia",
+            "Zach Cardwell",
+            "Luc Ritchie",
+            "Britt Selvitelle",
+            "David Gow",
+            "J",
+            "Jonathan Wilson",
+            "Joseph John Cox",
+            "Magnus Dahlström",
+            "Randy C. Will",
+            "Ryan Atallah",
+            "Lukas -krtek.net- Novy",
+            "Jordan Scales",
+            "Ali Yahya",
+            "Arthur Zey",
+            "Atul S",
+            "dave nicponski",
+            "Evan Phillips",
+            "Joseph Kelly",
+            "Kaustuv DeBiswas",
+            "Lambda AI Hardware",
+            "Lukas Biewald",
+            "Mark Heising",
+            "Mike Coleman",
+            "Nicholas Cahill",
+            "Peter Mcinerney",
+            "Quantopian",
+            "Roy Larson",
+            "Scott Walter, Ph.D.",
+            "Yana Chernobilsky",
+            "Yu Jun",
+            "D. Sivakumar",
+            "Richard Barthel",
+            "Burt Humburg",
+            "Matt Russell",
+            "Scott Gray",
+            "soekul",
+            "Tihan Seale",
+            "Juan Benet",
+            "Vassili Philippov",
+            "Kurt Dicus",
+        ],
+    }
