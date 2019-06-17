@@ -5,7 +5,7 @@ The simplest way to install the system dependencies on Mac OS X is with Homebrew
 Mac come preinstalled with python2, but to use manim, python3 is required
 
 1. Install python3 https://docs.python.org/3/using/mac.html
-2. Install Cairo: ``brew install cairo``
+2. Install Cairo: ``brew install cairo``; ``export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig``
 3. Install Sox: ``brew install sox``
 4. Install ffmpeg: ``brew install ffmpeg``
 5. Install latex (MiKTeX): https://miktex.org/howto/install-miktex-mac
