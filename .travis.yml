@@ -1,5 +1,4 @@
 language: python
-sudo: required  # required for Python 3.7 (travis-ci/travis-ci#9069)
 dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
 python: "3.7"
 cache: pip
