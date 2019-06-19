@@ -31,6 +31,7 @@ class TemperatureGraphScene(SpecialThreeDScene):
             "stroke_color": WHITE,
             "stroke_opacity": 0.5,
         },
+        "temp_text": "Temperature",
     }
 
     def get_three_d_axes(self, include_labels=True, include_numbers=False, **kwargs):
@@ -103,7 +104,7 @@ class TemperatureGraphScene(SpecialThreeDScene):
         t_label.next_to(axes.y_axis.get_end(), UP)
         axes.y_axis.label = t_label
 
-        temp_label = TextMobject("Temperature")
+        temp_label = TextMobject(self.temp_text)
         temp_label.rotate(90 * DEGREES, RIGHT)
         temp_label.next_to(axes.z_axis.get_zenith(), RIGHT)
         axes.z_axis.label = temp_label
