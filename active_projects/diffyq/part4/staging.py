@@ -1,6 +1,6 @@
 from manimlib.imports import *
-from active_projects.ode.part3.temperature_graphs import TemperatureGraphScene
-from active_projects.ode.part2.wordy_scenes import WriteHeatEquationTemplate
+from active_projects.diffyq.part3.temperature_graphs import TemperatureGraphScene
+from active_projects.diffyq.part2.wordy_scenes import WriteHeatEquationTemplate
 
 
 class RelationToOtherVideos(Scene):

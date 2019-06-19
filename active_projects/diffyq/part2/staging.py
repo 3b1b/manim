@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from active_projects.ode.part1.staging import TourOfDifferentialEquations
+from active_projects.diffyq.part1.staging import TourOfDifferentialEquations
 
 
 class PartTwoOfTour(TourOfDifferentialEquations):

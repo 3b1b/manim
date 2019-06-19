@@ -1,7 +1,7 @@
 from scipy import integrate
 
 from manimlib.imports import *
-from active_projects.ode.part2.heat_equation import *
+from active_projects.diffyq.part2.heat_equation import *
 
 
 class TemperatureGraphScene(SpecialThreeDScene):

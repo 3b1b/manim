@@ -1,6 +1,6 @@
 from manimlib.imports import *
 
-from active_projects.ode.part2.fourier_series import FourierOfTrebleClef
+from active_projects.diffyq.part2.fourier_series import FourierOfTrebleClef
 
 
 class FourierNameIntro(Scene):
