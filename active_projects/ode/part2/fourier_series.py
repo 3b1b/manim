@@ -4,7 +4,7 @@ from manimlib.imports import *
 
 class FourierCirclesScene(Scene):
     CONFIG = {
-        "n_circles": 10,
+        "n_vectors": 10,
         "big_radius": 2,
         "colors": [
             BLUE_D,
@@ -15,14 +15,16 @@ class FourierCirclesScene(Scene):
         "circle_style": {
             "stroke_width": 2,
         },
-        "arrow_config": {
+        "vector_config": {
             "buff": 0,
             "max_tip_length_to_length_ratio": 0.35,
             "tip_length": 0.15,
             "max_stroke_width_to_length_ratio": 10,
             "stroke_width": 2,
         },
-        "use_vectors": True,
+        "circle_config": {
+            "stroke_width": 1,
+        },
         "base_frequency": 1,
         "slow_factor": 0.25,
         "center_point": ORIGIN,
@@ -39,20 +41,19 @@ class FourierCirclesScene(Scene):
 
     #
     def get_freqs(self):
-        n = self.n_circles
+        n = self.n_vectors
         all_freqs = list(range(n // 2, -n // 2, -1))
         all_freqs.sort(key=abs)
         return all_freqs
 
     def get_coefficients(self):
-        return [complex(0) for x in range(self.n_circles)]
+        return [complex(0) for x in range(self.n_vectors)]
 
     def get_color_iterator(self):
         return it.cycle(self.colors)
 
-    def get_circles(self, freqs=None, coefficients=None):
-        circles = VGroup()
-        color_iterator = self.get_color_iterator()
+    def get_rotating_vectors(self, freqs=None, coefficients=None):
+        vectors = VGroup()
         self.center_tracker = VectorizedPoint(self.center_point)
 
         if freqs is None:
@@ -60,80 +61,70 @@ class FourierCirclesScene(Scene):
         if coefficients is None:
             coefficients = self.get_coefficients()
 
-        last_circle = None
+        last_vector = None
         for freq, coefficient in zip(freqs, coefficients):
-            if last_circle:
-                center_func = last_circle.get_start
+            if last_vector:
+                center_func = last_vector.get_end
             else:
                 center_func = self.center_tracker.get_location
-            circle = self.get_circle(
+            vector = self.get_rotating_vector(
                 coefficient=coefficient,
                 freq=freq,
-                color=next(color_iterator),
                 center_func=center_func,
             )
-            circles.add(circle)
-            last_circle = circle
-        return circles
+            vectors.add(vector)
+            last_vector = vector
+        return vectors
 
-    def get_circle(self, coefficient, freq, color, center_func):
-        radius = abs(coefficient)
+    def get_rotating_vector(self, coefficient, freq, center_func):
+        vector = Vector(RIGHT, **self.vector_config)
+        vector.scale(abs(coefficient))
         phase = np.log(coefficient).imag
-        circle = Circle(
-            radius=radius,
-            color=color,
-            **self.circle_style,
+        vector.rotate(phase, about_point=ORIGIN)
+        vector.freq = freq
+        vector.phase = phase
+        vector.coefficient = coefficient
+        vector.center_func = center_func
+        vector.add_updater(self.update_vector)
+        return vector
+
+    def update_vector(self, vector, dt):
+        vector.rotate(
+            self.get_slow_factor() * vector.freq * dt * TAU
         )
-        line_points = (
-            circle.get_center(),
-            circle.get_start(),
+        vector.shift(
+            vector.center_func() - vector.get_start()
         )
-        if self.use_vectors:
-            circle.radial_line = Arrow(
-                *line_points,
-                **self.arrow_config,
+        return vector
+
+    def get_circles(self, vectors):
+        return VGroup(*[
+            self.get_circle(
+                vector,
+                color=color
             )
-        else:
-            circle.radial_line = Line(
-                *line_points,
-                color=WHITE,
-                **self.circle_style,
+            for vector, color in zip(
+                vectors,
+                self.get_color_iterator()
             )
-        circle.add(circle.radial_line)
-        circle.freq = freq
-        circle.phase = phase
-        circle.rotate(phase)
-        circle.coefficient = coefficient
-        circle.center_func = center_func
+        ])
+
+    def get_circle(self, vector, color=BLUE):
+        circle = Circle(color=color, **self.circle_config)
+        circle.vector = vector
+        vector.circle = circle
         circle.add_updater(self.update_circle)
         return circle
 
-    def update_circle(self, circle, dt):
-        circle.rotate(
-            self.get_slow_factor() * circle.freq * dt * TAU
-        )
-        circle.move_to(circle.center_func())
+    def update_circle(self, circle):
+        circle.set_width(2 * circle.vector.get_length())
+        circle.move_to(circle.vector.get_start())
         return circle
 
-    def get_rotating_vectors(self, circles):
-        return VGroup(*[
-            self.get_rotating_vector(circle)
-            for circle in circles
-        ])
-
-    def get_rotating_vector(self, circle):
-        vector = Vector(RIGHT, color=WHITE)
-        vector.add_updater(lambda v, dt: v.put_start_and_end_on(
-            circle.get_center(),
-            circle.get_start(),
-        ))
-        circle.vector = vector
-        return vector
-
-    def get_circle_end_path(self, circles, color=YELLOW):
-        coefs = [c.coefficient for c in circles]
-        freqs = [c.freq for c in circles]
-        center = circles[0].get_center()
+    def get_vector_sum_path(self, vectors, color=YELLOW):
+        coefs = [v.coefficient for v in vectors]
+        freqs = [v.freq for v in vectors]
+        center = vectors[0].get_start()
 
         path = ParametricFunction(
             lambda t: center + reduce(op.add, [
@@ -150,8 +141,8 @@ class FourierCirclesScene(Scene):
         return path
 
     # TODO, this should be a general animated mobect
-    def get_drawn_path(self, circles, stroke_width=2, **kwargs):
-        path = self.get_circle_end_path(circles, **kwargs)
+    def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
+        path = self.get_vector_sum_path(vectors, **kwargs)
         broken_path = CurvesAsSubmobjects(path)
         broken_path.curr_time = 0
 
@@ -173,12 +164,12 @@ class FourierCirclesScene(Scene):
         return broken_path
 
     def get_y_component_wave(self,
-                             circles,
+                             vectors,
                              left_x=1,
                              color=PINK,
                              n_copies=2,
                              right_shift_rate=5):
-        path = self.get_circle_end_path(circles)
+        path = self.get_vector_sum_path(vectors)
         wave = ParametricFunction(
             lambda t: op.add(
                 right_shift_rate * t * LEFT,
@@ -216,15 +207,16 @@ class FourierCirclesScene(Scene):
 
         return VGroup(wave, wave_copies)
 
-    def get_wave_y_line(self, circles, wave):
+    def get_wave_y_line(self, vectors, wave):
         return DashedLine(
-            circles[-1].get_start(),
+            vectors[-1].get_end(),
             wave[0].get_end(),
             stroke_width=1,
             dash_length=DEFAULT_DASH_LENGTH * 0.5,
         )
 
     # Computing Fourier series
+    # i.e. where all the math happens
     def get_coefficients_of_path(self, path, n_samples=10000, freqs=None):
         if freqs is None:
             freqs = self.get_freqs()
@@ -250,7 +242,7 @@ class FourierCirclesScene(Scene):
 
 class FourierSeriesIntroBackground4(FourierCirclesScene):
     CONFIG = {
-        "n_circles": 4,
+        "n_vectors": 4,
         "center_point": 4 * LEFT,
         "run_time": 30,
         "big_radius": 1.5,
@@ -271,7 +263,7 @@ class FourierSeriesIntroBackground4(FourierCirclesScene):
         self.wait(self.run_time)
 
     def get_ks(self):
-        return np.arange(1, 2 * self.n_circles + 1, 2)
+        return np.arange(1, 2 * self.n_vectors + 1, 2)
 
     def get_freqs(self):
         return self.base_frequency * self.get_ks()
@@ -282,25 +274,25 @@ class FourierSeriesIntroBackground4(FourierCirclesScene):
 
 class FourierSeriesIntroBackground8(FourierSeriesIntroBackground4):
     CONFIG = {
-        "n_circles": 8,
+        "n_vectors": 8,
     }
 
 
 class FourierSeriesIntroBackground12(FourierSeriesIntroBackground4):
     CONFIG = {
-        "n_circles": 12,
+        "n_vectors": 12,
     }
 
 
 class FourierSeriesIntroBackground20(FourierSeriesIntroBackground4):
     CONFIG = {
-        "n_circles": 20,
+        "n_vectors": 20,
     }
 
 
 class FourierOfPiSymbol(FourierCirclesScene):
     CONFIG = {
-        "n_circles": 50,
+        "n_vectors": 51,
         "center_point": ORIGIN,
         "slow_factor": 0.1,
         "run_time": 30,
@@ -312,14 +304,16 @@ class FourierOfPiSymbol(FourierCirclesScene):
         path = self.get_path()
         coefs = self.get_coefficients_of_path(path)
 
-        circles = self.get_circles(coefficients=coefs)
+        vectors = self.get_rotating_vectors(coefficients=coefs)
+        circles = self.get_circles(vectors)
         self.set_decreasing_stroke_widths(circles)
-        # approx_path = self.get_circle_end_path(circles)
-        drawn_path = self.get_drawn_path(circles)
+        # approx_path = self.get_vector_sum_path(circles)
+        drawn_path = self.get_drawn_path(vectors)
         if self.start_drawn:
             drawn_path.curr_time = 1 / self.slow_factor
 
         self.add(path)
+        self.add(vectors)
         self.add(circles)
         self.add(drawn_path)
         self.wait(self.run_time)
@@ -343,7 +337,7 @@ class FourierOfPiSymbol(FourierCirclesScene):
 
 class FourierOfName(FourierOfPiSymbol):
     CONFIG = {
-        "n_circles": 100,
+        "n_vectors": 100,
         "name_color": WHITE,
         "name_text": "Abc",
         "time_per_symbol": 5,
@@ -388,14 +382,14 @@ class FourierOfName(FourierOfPiSymbol):
 
 class FourierOfPiSymbol5(FourierOfPiSymbol):
     CONFIG = {
-        "n_circles": 5,
+        "n_vectors": 5,
         "run_time": 10,
     }
 
 
 class FourierOfTrebleClef(FourierOfPiSymbol):
     CONFIG = {
-        "n_circles": 100,
+        "n_vectors": 101,
         "run_time": 10,
         "start_drawn": True,
         "file_name": "TrebleClef",
@@ -419,7 +413,7 @@ class FourierOfIP(FourierOfTrebleClef):
     CONFIG = {
         "file_name": "IP_logo2",
         "height": 6,
-        "n_circles": 100,
+        "n_vectors": 100,
     }
 
     # def construct(self):
@@ -451,7 +445,7 @@ class FourierOfEighthNote(FourierOfTrebleClef):
 class FourierOfN(FourierOfTrebleClef):
     CONFIG = {
         "height": 6,
-        "n_circles": 1000,
+        "n_vectors": 1000,
     }
 
     def get_shape(self):
@@ -461,7 +455,7 @@ class FourierOfN(FourierOfTrebleClef):
 class FourierNailAndGear(FourierOfTrebleClef):
     CONFIG = {
         "height": 6,
-        "n_circles": 200,
+        "n_vectors": 200,
         "run_time": 100,
         "slow_factor": 0.01,
         "parametric_function_step_size": 0.0001,
@@ -479,7 +473,7 @@ class FourierNailAndGear(FourierOfTrebleClef):
 class FourierBatman(FourierOfTrebleClef):
     CONFIG = {
         "height": 4,
-        "n_circles": 100,
+        "n_vectors": 100,
         "run_time": 10,
         "arrow_config": {
             "tip_length": 0.1,
@@ -495,7 +489,7 @@ class FourierBatman(FourierOfTrebleClef):
 class FourierHeart(FourierOfTrebleClef):
     CONFIG = {
         "height": 4,
-        "n_circles": 100,
+        "n_vectors": 100,
         "run_time": 10,
         "arrow_config": {
             "tip_length": 0.1,
@@ -517,7 +511,7 @@ class FourierHeart(FourierOfTrebleClef):
 class FourierNDQ(FourierOfTrebleClef):
     CONFIG = {
         "height": 4,
-        "n_circles": 1000,
+        "n_vectors": 1000,
         "run_time": 10,
         "arrow_config": {
             "tip_length": 0.1,
@@ -535,7 +529,7 @@ class FourierNDQ(FourierOfTrebleClef):
 
 class FourierGoogleG(FourierOfTrebleClef):
     CONFIG = {
-        "n_circles": 10,
+        "n_vectors": 10,
         "height": 5,
         "g_colors": [
             "#4285F4",
@@ -570,7 +564,7 @@ class FourierGoogleG(FourierOfTrebleClef):
 
 class ExplainCircleAnimations(FourierCirclesScene):
     CONFIG = {
-        "n_circles": 100,
+        "n_vectors": 100,
         "center_point": 2 * DOWN,
         "n_top_circles": 9,
         "path_height": 3,
