@@ -514,6 +514,9 @@ class Line(TipableVMobject):
             about_point=self.get_start(),
         )
 
+    def set_length(self, length):
+        self.scale(length / self.get_length())
+
     def set_opacity(self, opacity, family=True):
         # Overwrite default, which would set
         # the fill opacity
