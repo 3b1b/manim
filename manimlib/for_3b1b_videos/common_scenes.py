@@ -102,7 +102,7 @@ class PatreonThanks(Scene):
         patreon_logo = PatreonLogo()
         patreon_logo.to_edge(UP)
 
-        patrons = list(map(TextMobject, self.specific_patronds))
+        patrons = list(map(TextMobject, self.specific_patrons))
         num_groups = float(len(patrons)) / self.max_patron_group_size
         proportion_range = np.linspace(0, 1, num_groups + 1)
         indices = (len(patrons) * proportion_range).astype('int')
