@@ -333,7 +333,7 @@ class Camera(object):
             vmobject, vmobject.points
         )
         # TODO, shouldn't this be handled in transform_points_pre_display?
-        points = points - self.get_frame_center()
+        # points = points - self.get_frame_center()
         if len(points) == 0:
             return
 
