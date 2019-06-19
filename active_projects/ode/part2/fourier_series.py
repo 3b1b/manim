@@ -35,9 +35,19 @@ class FourierCirclesScene(Scene):
         self.slow_factor_tracker = ValueTracker(
             self.slow_factor
         )
+        self.vector_clock = ValueTracker(0)
+        self.vector_clock.add_updater(
+            lambda m, dt: m.increment_value(
+                self.get_slow_factor() * dt
+            )
+        )
+        self.add(self.vector_clock)
 
     def get_slow_factor(self):
         return self.slow_factor_tracker.get_value()
+
+    def get_vector_time(self):
+        return self.vector_clock.get_value()
 
     #
     def get_freqs(self):
@@ -79,7 +89,10 @@ class FourierCirclesScene(Scene):
     def get_rotating_vector(self, coefficient, freq, center_func):
         vector = Vector(RIGHT, **self.vector_config)
         vector.scale(abs(coefficient))
-        phase = np.log(coefficient).imag
+        if abs(coefficient) == 0:
+            phase = 0
+        else:
+            phase = np.log(coefficient).imag
         vector.rotate(phase, about_point=ORIGIN)
         vector.freq = freq
         vector.phase = phase
@@ -89,8 +102,9 @@ class FourierCirclesScene(Scene):
         return vector
 
     def update_vector(self, vector, dt):
-        vector.rotate(
-            self.get_slow_factor() * vector.freq * dt * TAU
+        time = self.get_vector_time()
+        vector.set_angle(
+            vector.phase + time * vector.freq * TAU
         )
         vector.shift(
             vector.center_func() - vector.get_start()
@@ -111,14 +125,14 @@ class FourierCirclesScene(Scene):
 
     def get_circle(self, vector, color=BLUE):
         circle = Circle(color=color, **self.circle_config)
-        circle.vector = vector
-        vector.circle = circle
+        circle.center_func = vector.get_start
+        circle.radius_func = vector.get_length
         circle.add_updater(self.update_circle)
         return circle
 
     def update_circle(self, circle):
-        circle.set_width(2 * circle.vector.get_length())
-        circle.move_to(circle.vector.get_start())
+        circle.set_width(2 * circle.radius_func())
+        circle.move_to(circle.center_func())
         return circle
 
     def get_vector_sum_path(self, vectors, color=YELLOW):
@@ -147,7 +161,8 @@ class FourierCirclesScene(Scene):
         broken_path.curr_time = 0
 
         def update_path(path, dt):
-            alpha = path.curr_time * self.get_slow_factor()
+            # alpha = path.curr_time * self.get_slow_factor()
+            alpha = self.get_vector_time()
             n_curves = len(path)
             for a, sp in zip(np.linspace(0, 1, n_curves), path):
                 b = alpha - a
@@ -295,34 +310,49 @@ class FourierOfPiSymbol(FourierCirclesScene):
         "n_vectors": 51,
         "center_point": ORIGIN,
         "slow_factor": 0.1,
-        "run_time": 30,
+        "n_cycles": 1,
         "tex": "\\pi",
         "start_drawn": False,
+        "max_circle_stroke_width": 1,
     }
 
     def construct(self):
+        self.add_vectors_circles_path()
+        for n in range(self.n_cycles):
+            self.run_one_cycle()
+
+    def add_vectors_circles_path(self):
         path = self.get_path()
         coefs = self.get_coefficients_of_path(path)
-
         vectors = self.get_rotating_vectors(coefficients=coefs)
         circles = self.get_circles(vectors)
         self.set_decreasing_stroke_widths(circles)
         # approx_path = self.get_vector_sum_path(circles)
         drawn_path = self.get_drawn_path(vectors)
         if self.start_drawn:
-            drawn_path.curr_time = 1 / self.slow_factor
+            self.vector_clock.increment_value(1)
 
         self.add(path)
         self.add(vectors)
         self.add(circles)
         self.add(drawn_path)
-        self.wait(self.run_time)
+
+        self.vectors = vectors
+        self.circles = circles
+        self.path = path
+        self.drawn_path = drawn_path
+
+    def run_one_cycle(self):
+        time = 1 / self.slow_factor
+        self.wait(time)
 
     def set_decreasing_stroke_widths(self, circles):
+        mcsw = self.max_circle_stroke_width
         for k, circle in zip(it.count(1), circles):
             circle.set_stroke(width=max(
-                1 / np.sqrt(k),
-                1,
+                # mcsw / np.sqrt(k),
+                mcsw / k,
+                mcsw,
             ))
         return circles
 
