@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.efvgt import ConfettiSpiril
 
 #revert_to_original_skipping_status

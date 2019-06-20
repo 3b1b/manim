@@ -1,7 +1,7 @@
 import numpy as np
 import itertools as it
 
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.brachistochrone.curves import Cycloid
 
 class PhysicalIntuition(Scene):

@@ -3,7 +3,6 @@ import warnings
 
 import numpy as np
 
-from manimlib.animation.transform import Transform
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import Circle
@@ -14,12 +13,13 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import normalize
 
-pi_creature_dir_maybe = os.path.join(MEDIA_DIR, "designs", "PiCreature")
+pi_creature_dir_maybe = os.path.join(MEDIA_DIR, "assets", "PiCreature")
 if os.path.exists(pi_creature_dir_maybe):
     PI_CREATURE_DIR = pi_creature_dir_maybe
 else:
-    PI_CREATURE_DIR = os.path.join(FILE_DIR)
+    PI_CREATURE_DIR = os.path.join("assets")
 
 PI_CREATURE_SCALE_FACTOR = 0.5
 
@@ -197,10 +197,11 @@ class PiCreature(SVGMobject):
         return self
 
     def get_looking_direction(self):
-        return np.sign(np.round(
-            self.pupils.get_center() - self.eyes.get_center(),
-            decimals=2
-        ))
+        vect = self.pupils.get_center() - self.eyes.get_center()
+        return normalize(vect)
+
+    def get_look_at_spot(self):
+        return self.eyes.get_center() + self.get_looking_direction()
 
     def is_flipped(self):
         return self.eyes.submobjects[0].get_center()[0] > \

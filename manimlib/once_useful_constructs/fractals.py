@@ -370,9 +370,9 @@ class LindenmayerCurve(FractalCurve):
         curr = np.zeros(3)
         result = [curr]
         for letter in self.get_command_string():
-            if letter is "+":
+            if letter == "+":
                 step = rotate(step, self.angle)
-            elif letter is "-":
+            elif letter == "-":
                 step = rotate(step, -self.angle)
             else:
                 curr = curr + step

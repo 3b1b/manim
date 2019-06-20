@@ -1,21 +1,22 @@
 from manimlib.constants import *
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
+import math
 
 
 class ParametricFunction(VMobject):
     CONFIG = {
         "t_min": 0,
         "t_max": 1,
-        # TODO, be smarter about choosing this number
-        "step_size": 0.01,
+        "step_size": 0.01,  # Use "auto" (lowercase) for automatic step size
         "dt": 1e-8,
-        # TODO, be smar about figuring these out?
+        # TODO, be smarter about figuring these out?
         "discontinuities": [],
     }
 
-    def __init__(self, function, **kwargs):
-        self.function = function
+    def __init__(self, function=None, **kwargs):
+        # either get a function from __init__ or from CONFIG
+        self.function = function or self.function
         VMobject.__init__(self, **kwargs)
 
     def get_function(self):
@@ -24,10 +25,30 @@ class ParametricFunction(VMobject):
     def get_point_from_function(self, t):
         return self.function(t)
 
+    def get_step_size(self, t=None):
+        if self.step_size == "auto":
+            """
+            for x between -1 to 1, return 0.01
+            else, return log10(x) (rounded)
+            e.g.: 10.5 -> 0.1 ; 1040 -> 10
+            """
+            if t == 0:
+                scale = 0
+            else:
+                scale = math.log10(abs(t))
+                if scale < 0:
+                    scale = 0
+
+                scale = math.floor(scale)
+
+            scale -= 2
+            return math.pow(10, scale)
+        else:
+            return self.step_size
+
     def generate_points(self):
         t_min, t_max = self.t_min, self.t_max
         dt = self.dt
-        step_size = self.step_size
 
         discontinuities = filter(
             lambda t: t_min <= t <= t_max,
@@ -41,7 +62,7 @@ class ParametricFunction(VMobject):
         ]
         boundary_times.sort()
         for t1, t2 in zip(boundary_times[0::2], boundary_times[1::2]):
-            t_range = list(np.arange(t1, t2, step_size))
+            t_range = list(np.arange(t1, t2, self.get_step_size(t1)))
             if t_range[-1] != t2:
                 t_range.append(t2)
             points = np.array([self.function(t) for t in t_range])

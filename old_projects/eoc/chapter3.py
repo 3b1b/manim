@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.eoc.chapter2 import DISTANCE_COLOR, TIME_COLOR, \
     VELOCITY_COLOR, Car, MoveCar
 

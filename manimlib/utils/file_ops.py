@@ -10,7 +10,7 @@ def add_extension_if_not_present(file_name, extension):
         return file_name
 
 
-def guarantee_existance(path):
+def guarantee_existence(path):
     if not os.path.exists(path):
         os.makedirs(path)
     return os.path.abspath(path)

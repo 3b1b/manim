@@ -6,6 +6,8 @@ from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
 
+import numpy as np
+
 
 class ShowPartial(Animation):
     """
@@ -120,6 +122,7 @@ class Write(DrawBorderThenFill):
 class ShowIncreasingSubsets(Animation):
     CONFIG = {
         "suspend_mobject_updating": False,
+        "int_func": np.floor,
     }
 
     def __init__(self, group, **kwargs):
@@ -128,5 +131,5 @@ class ShowIncreasingSubsets(Animation):
 
     def interpolate_mobject(self, alpha):
         n_submobs = len(self.all_submobs)
-        index = int(alpha * n_submobs)
+        index = int(self.int_func(alpha * n_submobs))
         self.mobject.submobjects = self.all_submobs[:index]

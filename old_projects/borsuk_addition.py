@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.lost_lecture import GeometryProofLand
 from old_projects.quaternions import SpecialThreeDScene
 from old_projects.uncertainty import Flash

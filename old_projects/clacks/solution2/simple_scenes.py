@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 from old_projects.lost_lecture import ShowWord
 from old_projects.clacks.solution2.mirror_scenes import ReflectWorldThroughMirrorNew
 from old_projects.clacks.question import Thumbnail

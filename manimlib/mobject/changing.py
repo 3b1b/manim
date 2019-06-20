@@ -1,6 +1,8 @@
 from manimlib.constants import *
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.space_ops import get_norm
 
 
 class AnimatedBoundary(VGroup):
@@ -66,3 +68,31 @@ class AnimatedBoundary(VGroup):
         for sm1, sm2 in zip(family1, family2):
             sm1.pointwise_become_partial(sm2, a, b)
         return self
+
+
+class TracedPath(VMobject):
+    CONFIG = {
+        "stroke_width": 2,
+        "stroke_color": WHITE,
+        "min_distance_to_new_point": 0.1,
+    }
+
+    def __init__(self, traced_point_func, **kwargs):
+        super().__init__(**kwargs)
+        self.traced_point_func = traced_point_func
+        self.add_updater(lambda m: m.update_path())
+
+    def update_path(self):
+        new_point = self.traced_point_func()
+        if self.has_no_points():
+            self.start_new_path(new_point)
+            self.add_line_to(new_point)
+        else:
+            # Set the end to be the new point
+            self.points[-1] = new_point
+
+            # Second to last point
+            nppcc = self.n_points_per_cubic_curve
+            dist = get_norm(new_point - self.points[-nppcc])
+            if dist >= self.min_distance_to_new_point:
+                self.add_line_to(new_point)

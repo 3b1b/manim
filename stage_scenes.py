@@ -4,16 +4,16 @@ import os
 import sys
 import importlib
 
+import manimlib.constants as consts
 from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
-from manimlib.constants import VIDEO_DIR
 from manimlib.config import get_module
 from manimlib.extract_scene import is_child_scene
 
 
 def get_sorted_scene_classes(module_name):
     module = get_module(module_name)
-    if hasattr(module, "ALL_SCENE_CLASSES"):
-        return module.ALL_SCENE_CLASSES
+    if hasattr(module, "SCENES_IN_ORDER"):
+        return module.SCENES_IN_ORDER
     # Otherwise, deduce from the order in which
     # they're defined in a file
     importlib.import_module(module.__name__)
@@ -43,7 +43,7 @@ def stage_scenes(module_name):
     # }
     # TODO, fix this
     animation_dir = os.path.join(
-        VIDEO_DIR, "ode", "part1", "1440p60"
+        consts.VIDEO_DIR, "ode", "part3", "1440p60"
     )
     # 
     files = os.listdir(animation_dir)

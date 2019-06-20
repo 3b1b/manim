@@ -1,4 +1,5 @@
 import itertools as it
+import string
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.rotation import Rotating
@@ -349,7 +350,7 @@ class Clock(VGroup):
     CONFIG = {}
 
     def __init__(self, **kwargs):
-        circle = Circle()
+        circle = Circle(color=WHITE)
         ticks = []
         for x in range(12):
             alpha = x / 12.
@@ -454,9 +455,10 @@ class Bubble(SVGMobject):
         mover.shift(point - self.get_tip())
         return self
 
-    def flip(self):
-        Mobject.flip(self)
-        self.direction = -np.array(self.direction)
+    def flip(self, axis=UP):
+        Mobject.flip(self, axis=axis)
+        if abs(axis[0]) > 0:
+            self.direction = -np.array(self.direction)
         return self
 
     def pin_to(self, mobject):
@@ -832,10 +834,7 @@ class Logo(VMobject):
         return blue_part, brown_part
 
 
-
 # Cards
-
-
 class DeckOfCards(VGroup):
     def __init__(self, **kwargs):
         possible_values = list(map(str, list(range(1, 11)))) + ["J", "Q", "K"]

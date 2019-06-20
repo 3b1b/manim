@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 from old_projects.crypto import sha256_tex_mob, bit_string_to_mobject, BitcoinLogo
 
