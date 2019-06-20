@@ -1,6 +1,4 @@
 from manimlib.imports import *
-from active_projects.diffyq.part3.temperature_graphs import TemperatureGraphScene
-from active_projects.diffyq.part2.wordy_scenes import WriteHeatEquationTemplate
 
 
 class RelationToOtherVideos(Scene):
@@ -104,242 +102,82 @@ class RelationToOtherVideos(Scene):
         return thumbnails
 
 
-class ShowLinearity(WriteHeatEquationTemplate, TemperatureGraphScene):
+class FourierGainsImmortality(Scene):
     CONFIG = {
-        "temp_text": "Temp",
-        "alpha": 0.1,
-        "axes_config": {
-            "z_max": 2,
-            "z_min": -2,
-            "z_axis_config": {
-                "tick_frequency": 0.5,
-                "unit_size": 1.5,
-            },
-        },
-        "default_surface_config": {
-            "resolution": (16, 16)
-            # "resolution": (4, 4)
-        },
-        "freqs": [2, 5],
+        "mathematicians": [
+            "Pythagoras",
+            "Euclid",
+            "Archimedes",
+            "Fermat",
+            "Newton",
+            "Leibniz",
+            "Johann_Bernoulli2",
+            "Euler",
+            "Joseph Fourier",
+            "Gauss",
+            "Riemann",
+            "Cantor",
+            "Noether",
+            "Ramanujan",
+            "Godel",
+            "Turing",
+        ]
     }
 
-    def setup(self):
-        TemperatureGraphScene.setup(self)
-        WriteHeatEquationTemplate.setup(self)
-
     def construct(self):
-        self.init_camera()
-        self.add_three_graphs()
-        self.show_words()
-        self.add_function_labels()
-        self.change_scalars()
+        fourier = ImageMobject("Joseph Fourier")
+        fourier.set_height(5)
+        fourier.to_edge(LEFT)
+        name = TextMobject("Joseph Fourier")
+        name.next_to(fourier, DOWN)
 
-    def init_camera(self):
-        self.camera.set_distance(1000)
+        immortals = self.get_immortals()
+        immortals.remove(immortals.fourier)
+        immortals.to_edge(RIGHT)
 
-    def add_three_graphs(self):
-        axes_group = self.get_axes_group()
-        axes0, axes1, axes2 = axes_group
-        freqs = self.freqs
-        scalar_trackers = Group(
-            ValueTracker(1),
-            ValueTracker(1),
-        )
-        graphs = VGroup(
-            self.get_graph(axes0, [freqs[0]], [scalar_trackers[0]]),
-            self.get_graph(axes1, [freqs[1]], [scalar_trackers[1]]),
-            self.get_graph(axes2, freqs, scalar_trackers),
-        )
-
-        plus = TexMobject("+").scale(2)
-        equals = TexMobject("=").scale(2)
-        plus.move_to(midpoint(
-            axes0.get_right(),
-            axes1.get_left(),
+        self.add(fourier, name)
+        self.play(LaggedStartMap(
+            FadeIn, immortals,
+            lag_ratio=0.1,
+            run_time=2,
         ))
-        equals.move_to(midpoint(
-            axes1.get_right(),
-            axes2.get_left(),
-        ))
-
-        self.add(axes_group)
-        self.add(graphs)
-        self.add(plus)
-        self.add(equals)
-
-        self.axes_group = axes_group
-        self.graphs = graphs
-        self.scalar_trackers = scalar_trackers
-        self.plus = plus
-        self.equals = equals
-
-    def show_words(self):
-        equation = self.get_d1_equation()
-        name = TextMobject("Heat equation")
-        name.next_to(equation, DOWN)
-        name.set_color_by_gradient(RED, YELLOW)
-        group = VGroup(equation, name)
-        group.to_edge(UP)
-
-        shift_val = 0.5 * RIGHT
-
-        arrow = Vector(1.5 * RIGHT)
-        arrow.move_to(group)
-        arrow.shift(shift_val)
-        linear_word = TextMobject("``Linear''")
-        linear_word.scale(2)
-        linear_word.next_to(arrow, RIGHT)
-
-        self.add(group)
-        self.wait()
         self.play(
-            ShowCreation(arrow),
-            group.next_to, arrow, LEFT
-        )
-        self.play(FadeInFrom(linear_word, LEFT))
-        self.wait()
-
-    def add_function_labels(self):
-        axes_group = self.axes_group
-        graphs = self.graphs
-
-        solution_labels = VGroup()
-        for axes in axes_group:
-            label = TextMobject("Solution", "$\\checkmark$")
-            label.set_color_by_tex("checkmark", GREEN)
-            label.next_to(axes, DOWN)
-            solution_labels.add(label)
-
-        kw = {
-            "tex_to_color_map": {
-                "T_1": BLUE,
-                "T_2": GREEN,
-            }
-        }
-        T1 = TexMobject("a", "T_1", **kw)
-        T2 = TexMobject("b", "T_2", **kw)
-        T_sum = TexMobject("T_1", "+", "T_2", **kw)
-        T_sum_with_scalars = TexMobject(
-            "a", "T_1", "+", "b", "T_2", **kw
-        )
-
-        T1.next_to(graphs[0], UP)
-        T2.next_to(graphs[1], UP)
-        T_sum.next_to(graphs[2], UP)
-        T_sum.shift(SMALL_BUFF * DOWN)
-        T_sum_with_scalars.move_to(T_sum)
-
-        a_brace = Brace(T1[0], UP, buff=SMALL_BUFF)
-        b_brace = Brace(T2[0], UP, buff=SMALL_BUFF)
-        s1_decimal = DecimalNumber()
-        s1_decimal.match_color(T1[1])
-        s1_decimal.next_to(a_brace, UP, SMALL_BUFF)
-        s1_decimal.add_updater(lambda m: m.set_value(
-            self.scalar_trackers[0].get_value()
-        ))
-        s2_decimal = DecimalNumber()
-        s2_decimal.match_color(T2[1])
-        s2_decimal.next_to(b_brace, UP, SMALL_BUFF)
-        s2_decimal.add_updater(lambda m: m.set_value(
-            self.scalar_trackers[1].get_value()
-        ))
-
-        self.play(
-            FadeInFrom(T1[1], DOWN),
-            FadeInFrom(solution_labels[0], UP),
-        )
-        self.play(
-            FadeInFrom(T2[1], DOWN),
-            FadeInFrom(solution_labels[1], UP),
+            TransformFromCopy(fourier, immortals.fourier)
         )
         self.wait()
-        self.play(
-            TransformFromCopy(T1[1], T_sum[0]),
-            TransformFromCopy(T2[1], T_sum[2]),
-            TransformFromCopy(self.plus, T_sum[1]),
-            *[
-                Transform(
-                    graph.copy().set_fill(opacity=0),
-                    graphs[2].copy().set_fill(opacity=0),
-                    remover=True
-                )
-                for graph in graphs[:2]
-            ]
-        )
-        self.wait()
-        self.play(FadeInFrom(solution_labels[2], UP))
-        self.wait()
 
-        # Show constants
-        self.play(
-            FadeIn(T1[0]),
-            FadeIn(T2[0]),
-            FadeIn(a_brace),
-            FadeIn(b_brace),
-            FadeIn(s1_decimal),
-            FadeIn(s2_decimal),
-            FadeOut(T_sum),
-            FadeIn(T_sum_with_scalars),
-        )
-
-    def change_scalars(self):
-        s1, s2 = self.scalar_trackers
-
-        kw = {
-            "run_time": 2,
-        }
-        for graph in self.graphs:
-            graph.resume_updating()
-        self.play(s2.set_value, -0.5, **kw)
-        self.play(s1.set_value, -0.2, **kw)
-        self.play(s2.set_value, 1.5, **kw)
-        self.play(s1.set_value, 1.2)
-        self.play(s2.set_value, 0.3)
-        self.wait()
-
-    #
-    def get_axes_group(self):
-        axes_group = VGroup(*[
-            self.get_axes()
-            for x in range(3)
+    def get_immortals(self):
+        images = Group(*[
+            ImageMobject(name)
+            for name in self.mathematicians
         ])
-        axes_group.arrange(RIGHT, buff=2)
-        axes_group.set_width(FRAME_WIDTH - 1)
-        axes_group.to_edge(DOWN, buff=1)
-        return axes_group
+        for image in images:
+            image.set_height(1)
+        images.arrange_in_grid(n_rows=4)
 
-    def get_axes(self):
-        axes = self.get_three_d_axes()
-        # axes.input_plane.set_fill(opacity=0)
-        # axes.input_plane.set_stroke(width=0.5)
-        # axes.add(axes.input_plane)
-        self.orient_three_d_mobject(axes)
-        axes.rotate(-5 * DEGREES, UP)
-        axes.set_width(4)
-        axes.x_axis.label.next_to(
-            axes.x_axis.get_end(), DOWN,
-            buff=2 * SMALL_BUFF
-        )
-        return axes
+        last_row = images[-4:]
+        low_center = last_row.get_center()
+        last_row.arrange(RIGHT, buff=0.4, center=False)
+        last_row.move_to(low_center)
 
-    def get_graph(self, axes, freqs, scalar_trackers):
-        L = axes.x_max
-        a = self.alpha
+        frame = SurroundingRectangle(images)
+        frame.set_color(WHITE)
+        title = TextMobject("Immortals of Math")
+        title.match_width(frame)
+        title.next_to(frame, UP)
 
-        def func(x, t):
-            scalars = [st.get_value() for st in scalar_trackers]
-            return np.sum([
-                s * np.cos(k * x) * np.exp(-a * (k**2) * t)
-                for freq, s in zip(freqs, scalars)
-                for k in [freq * PI / L]
-            ])
-
-        def get_surface_graph_group():
-            return VGroup(
-                self.get_surface(axes, func),
-                self.get_time_slice_graph(axes, func, t=0),
+        result = Group(title, frame, *images)
+        result.set_height(FRAME_HEIGHT - 1)
+        result.to_edge(RIGHT)
+        for image, name in zip(images, self.mathematicians):
+            setattr(
+                result,
+                name.split(" ")[-1].lower(),
+                image,
             )
-
-        result = always_redraw(get_surface_graph_group)
-        result.suspend_updating()
         return result
+
+
+class WhichWavesAreAvailable(Scene):
+    def construct(self):
+        pass

@@ -137,19 +137,19 @@ class TemperatureGraphScene(SpecialThreeDScene):
 
     def get_surface(self, axes, func, **kwargs):
         config = {
-            "u_min": axes.x_min,
-            "u_max": axes.x_max,
-            "v_min": axes.y_min,
-            "v_max": axes.y_max,
+            "u_min": axes.y_min,
+            "u_max": axes.y_max,
+            "v_min": axes.x_min,
+            "v_max": axes.x_max,
             "resolution": (
-                (axes.x_max - axes.x_min) // axes.x_axis.tick_frequency,
                 (axes.y_max - axes.y_min) // axes.y_axis.tick_frequency,
+                (axes.x_max - axes.x_min) // axes.x_axis.tick_frequency,
             ),
         }
         config.update(self.default_surface_config)
         config.update(kwargs)
         return ParametricSurface(
-            lambda x, t: axes.c2p(
+            lambda t, x: axes.c2p(
                 x, t, func(x, t)
             ),
             **config
@@ -181,13 +181,12 @@ class TemperatureGraphScene(SpecialThreeDScene):
             fill_color=WHITE,
             fill_opacity=0.2
         )
-        plane.add_updater(lambda m: m.move_to(
+        plane.add_updater(lambda m: m.shift(
             axes.c2p(
                 axes.x_min,
                 t_tracker.get_value(),
                 axes.z_min,
-            ),
-            IN + LEFT,
+            ) - plane.points[0]
         ))
         plane.t_tracker = t_tracker
         return plane

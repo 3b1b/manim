@@ -5,7 +5,7 @@ from active_projects.diffyq.part3.wordy_scenes import *
 from active_projects.diffyq.part3.discrete_case import *
 
 
-OUTPUT_DIRECTORY = "ode/part3"
+OUTPUT_DIRECTORY = "diffyq/part3"
 SCENES_IN_ORDER = [
     LastChapterWrapper,
     ThreeConstraints,

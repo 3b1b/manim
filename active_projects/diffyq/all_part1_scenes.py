@@ -4,7 +4,7 @@ from active_projects.diffyq.part1.pi_scenes import *
 from active_projects.diffyq.part1.phase_space import *
 from active_projects.diffyq.part1.wordy_scenes import *
 
-OUTPUT_DIRECTORY = "ode/part1"
+OUTPUT_DIRECTORY = "diffyq/part1"
 SCENES_IN_ORDER = [
     WhenChangeIsEasier,
     VectorFieldTest,

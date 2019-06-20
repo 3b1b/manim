@@ -248,9 +248,27 @@ class FourierSeriesIllustraiton(Scene):
         }
     }
 
-    def construct(self):
-        n_range = self.n_range
+    def get_sine_graphs(self, axes):
+        sine_graphs = VGroup(*[
+            axes.get_graph(self.generate_nth_func(n))
+            for n in self.n_range
+        ])
+        sine_graphs.set_stroke(width=3)
+        sine_graphs.set_color_by_gradient(
+            BLUE, GREEN, RED, YELLOW, PINK,
+            BLUE, GREEN, RED, YELLOW, PINK,
+        )
+        return sine_graphs
 
+    def get_partial_sums(self, axes, sine_graphs):
+        partial_sums = VGroup(*[
+            axes.get_graph(self.generate_kth_partial_sum_func(k + 1))
+            for k in range(len(self.n_range))
+        ])
+        partial_sums.match_style(sine_graphs)
+        return partial_sums
+
+    def construct(self):
         axes1 = Axes(**self.axes_config)
         axes1.x_axis.add_numbers(
             0.5, 1,
@@ -266,21 +284,8 @@ class FourierSeriesIllustraiton(Scene):
         group.shift(2 * UP)
         group.shift_onto_screen()
 
-        sine_graphs = VGroup(*[
-            axes1.get_graph(self.generate_nth_func(n))
-            for n in n_range
-        ])
-        sine_graphs.set_stroke(width=3)
-        sine_graphs.set_color_by_gradient(
-            BLUE, GREEN, RED, YELLOW, PINK,
-            BLUE, GREEN, RED, YELLOW, PINK,
-        )
-
-        partial_sums = VGroup(*[
-            axes1.get_graph(self.generate_kth_partial_sum_func(k + 1))
-            for k in range(len(n_range))
-        ])
-        partial_sums.match_style(sine_graphs)
+        sine_graphs = self.get_sine_graphs(axes1)
+        partial_sums = self.get_partial_sums(axes1, sine_graphs)
 
         sum_tex = self.get_sum_tex()
         sum_tex.next_to(axes1, DOWN, LARGE_BUFF)

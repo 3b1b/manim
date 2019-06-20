@@ -1,6 +1,6 @@
 from manimlib.imports import *
 
-from active_projects.ode.part2.fourier_series import FourierOfTrebleClef
+from active_projects.diffyq.part2.fourier_series import FourierOfTrebleClef
 
 
 class ComplexFourierSeriesExample(FourierOfTrebleClef):
@@ -200,9 +200,9 @@ class FourierSeriesExampleWithRectForZoom(ComplexFourierSeriesExample):
     CONFIG = {
         "n_vectors": 100,
         "slow_factor": 0.01,
-        "rect_scale_factor": 0.15,
-        "parametric_function_step_size": 0.0001,
+        "rect_scale_factor": 0.1,
         "start_drawn": True,
+        "drawing_height": 7,
     }
 
     def construct(self):
@@ -211,17 +211,20 @@ class FourierSeriesExampleWithRectForZoom(ComplexFourierSeriesExample):
         rect = self.get_rect()
         rect.set_height(self.rect_scale_factor * FRAME_HEIGHT)
         rect.add_updater(lambda m: m.move_to(
-            center_of_mass([
-                v.get_end()
-                for v in self.vectors
-            ])
+            self.get_rect_center()
         ))
         self.add(rect)
         self.run_one_cycle()
 
+    def get_rect_center(self):
+        return center_of_mass([
+            v.get_end()
+            for v in self.vectors
+        ])
+
     def get_rect(self):
         return ScreenRectangle(
-            color=WHITE,
+            color=BLUE,
             stroke_width=2,
         )
 
@@ -231,7 +234,8 @@ class ZoomedInFourierSeriesExample(FourierSeriesExampleWithRectForZoom, MovingCa
         "vector_config": {
             "max_tip_length_to_length_ratio": 0.15,
             "tip_length": 0.05,
-        }
+        },
+        "parametric_function_step_size": 0.001,
     }
 
     def setup(self):
@@ -240,3 +244,66 @@ class ZoomedInFourierSeriesExample(FourierSeriesExampleWithRectForZoom, MovingCa
 
     def get_rect(self):
         return self.camera_frame
+
+    def add_vectors_circles_path(self):
+        super().add_vectors_circles_path()
+        for v in self.vectors:
+            if v.get_stroke_width() < 1:
+                v.set_stroke(width=1)
+
+    def get_path_end(self, vectors, stroke_width=2, **kwargs):
+        full_path = self.get_vector_sum_path(vectors, **kwargs)
+        path = VMobject()
+        path.set_stroke(YELLOW, stroke_width)
+
+        def update_path(p):
+            alpha = self.get_vector_time() % 1
+            p.pointwise_become_partial(
+                full_path, 0, np.clip(alpha, 0, 1),
+            )
+            p.points[-1] = vectors[-1].get_end()
+
+        path.add_updater(update_path)
+        return path
+
+    def get_drawn_path_alpha(self):
+        return super().get_drawn_path_alpha() - 0.002
+
+    def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
+        odp = super().get_drawn_path(vectors, stroke_width, **kwargs)
+        return VGroup(
+            odp,
+            self.get_path_end(vectors, stroke_width, **kwargs),
+        )
+
+
+class ZoomedInFourierSeriesExample10xMore(ZoomedInFourierSeriesExample):
+    CONFIG = {
+        "vector_config": {
+            "max_tip_length_to_length_ratio": 0.15 * 0.4,
+            "tip_length": 0.05 * 0.2,
+            "max_stroke_width_to_length_ratio": 80,
+            "stroke_width": 3,
+        },
+        "max_circle_stroke_width": 0.5,
+        "rect_scale_factor": 0.01,
+        # "parametric_function_step_size": 0.01,
+    }
+
+    def get_rect_center(self):
+        return self.vectors[-1].get_end()
+
+    # def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
+    #     return self.get_path_end(vectors, stroke_width, **kwargs)
+
+
+class FourierSeriesExampleWithRectForZoomTrebleClef(FourierSeriesExampleWithRectForZoom):
+    CONFIG = {
+        "file_name": "TrebleClef",
+    }
+
+
+class ZoomedInFourierSeriesExampleTrebleClef(ZoomedInFourierSeriesExample):
+    CONFIG = {
+        "file_name": "TrebleClef",
+    }

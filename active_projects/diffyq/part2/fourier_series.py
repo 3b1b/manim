@@ -155,6 +155,9 @@ class FourierCirclesScene(Scene):
         return path
 
     # TODO, this should be a general animated mobect
+    def get_drawn_path_alpha(self):
+        return self.get_vector_time()
+
     def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
         path = self.get_vector_sum_path(vectors, **kwargs)
         broken_path = CurvesAsSubmobjects(path)
@@ -162,7 +165,7 @@ class FourierCirclesScene(Scene):
 
         def update_path(path, dt):
             # alpha = path.curr_time * self.get_slow_factor()
-            alpha = self.get_vector_time()
+            alpha = self.get_drawn_path_alpha()
             n_curves = len(path)
             for a, sp in zip(np.linspace(0, 1, n_curves), path):
                 b = alpha - a
