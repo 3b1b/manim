@@ -4,11 +4,13 @@ import os
 MEDIA_DIR = ""
 VIDEO_DIR = ""
 TEX_DIR = ""
+ADDON_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "addons")
 
 def initialize_directories(config):
     global MEDIA_DIR
     global VIDEO_DIR
     global TEX_DIR
+    global ADDON_DIR
     if not (config["video_dir"] and config["tex_dir"]):
         if config["media_dir"]:
             MEDIA_DIR = config["media_dir"]
@@ -29,7 +31,7 @@ def initialize_directories(config):
                 "Ignoring --media_dir, since --video_dir and --tex_dir were "
                 "both passed"
             )
-    VIDEO_DIR  = config["video_dir"] or os.path.join(MEDIA_DIR, "videos")
+    VIDEO_DIR  = config["video_dir"] or os.path.join(MEDIA_DIR, "video")
     TEX_DIR    = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
 
     for folder in [VIDEO_DIR, TEX_DIR]:

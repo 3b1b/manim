@@ -146,8 +146,12 @@ def main(config):
 
     for SceneClass in scene_classes_to_render:
         try:
+            # Before we start rendering, fire the on_render_ready() function in each addon
+
             # By invoking, this renders the full scene
             scene = SceneClass(**scene_kwargs)
+            # By this point, the scene is done rendering, so fire the on_render() function in each addon
+            manimlib.addon_helper.run_on_rendered()
             open_file_if_needed(scene.file_writer, **config)
             if config["sound"]:
                 play_finish_sound()

@@ -6,6 +6,7 @@ import sys
 import types
 
 import manimlib.constants
+import manimlib.addon_helper
 
 
 def parse_cli():
@@ -141,6 +142,8 @@ def parse_cli():
             dest="twitch_key",
             help="Stream key for twitch",
         )
+        parser = manimlib.addon_helper.load_parser_args(parser)
+
         args = parser.parse_args()
 
         if args.file is None and not args.livestream:
@@ -208,6 +211,7 @@ def get_configuration(args):
         "media_dir": args.media_dir,
         "video_dir": args.video_dir,
         "tex_dir": args.tex_dir,
+        "all_args": args,
     }
 
     # Camera configuration
