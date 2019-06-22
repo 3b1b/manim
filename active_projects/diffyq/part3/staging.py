@@ -245,44 +245,17 @@ class FourierSeriesIllustraiton(Scene):
             "x_max": 1,
             "y_min": -1,
             "y_max": 1,
-        }
+        },
+        "colors": [BLUE, GREEN, RED, YELLOW, PINK],
     }
 
-    def get_sine_graphs(self, axes):
-        sine_graphs = VGroup(*[
-            axes.get_graph(self.generate_nth_func(n))
-            for n in self.n_range
-        ])
-        sine_graphs.set_stroke(width=3)
-        sine_graphs.set_color_by_gradient(
-            BLUE, GREEN, RED, YELLOW, PINK,
-            BLUE, GREEN, RED, YELLOW, PINK,
-        )
-        return sine_graphs
-
-    def get_partial_sums(self, axes, sine_graphs):
-        partial_sums = VGroup(*[
-            axes.get_graph(self.generate_kth_partial_sum_func(k + 1))
-            for k in range(len(self.n_range))
-        ])
-        partial_sums.match_style(sine_graphs)
-        return partial_sums
-
     def construct(self):
-        axes1 = Axes(**self.axes_config)
-        axes1.x_axis.add_numbers(
-            0.5, 1,
-            number_config={"num_decimal_places": 1}
-        )
-        axes2 = axes1.copy()
-        target_func_graph = self.get_target_func_graph(axes2)
-        axes2.add(target_func_graph)
+        aaa_group = self.get_axes_arrow_axes()
+        aaa_group.shift(2 * UP)
+        aaa_group.shift_onto_screen()
+        axes1, arrow, axes2 = aaa_group
 
-        arrow = Arrow(LEFT, RIGHT, color=WHITE)
-        group = VGroup(axes1, arrow, axes2)
-        group.arrange(RIGHT, buff=LARGE_BUFF)
-        group.shift(2 * UP)
-        group.shift_onto_screen()
+        axes2.add(self.get_target_func_graph(axes2))
 
         sine_graphs = self.get_sine_graphs(axes1)
         partial_sums = self.get_partial_sums(axes1, sine_graphs)
@@ -316,7 +289,6 @@ class FourierSeriesIllustraiton(Scene):
         )
 
         self.add(axes1, arrow, axes2)
-        self.add(target_func_graph)
         self.add(sum_tex, eq, target_func_tex)
         self.add(range_words)
 
@@ -344,6 +316,42 @@ class FourierSeriesIllustraiton(Scene):
             self.play(*anims1)
             self.play(*anims2)
             curr_partial_sum = partial_sum
+
+    def get_axes_arrow_axes(self):
+        axes1 = Axes(**self.axes_config)
+        axes1.x_axis.add_numbers(
+            0.5, 1,
+            number_config={"num_decimal_places": 1}
+        )
+        axes1.y_axis.add_numbers(
+            -1, 1,
+            number_config={"num_decimal_places": 1},
+            direction=LEFT,
+        )
+        axes2 = axes1.deepcopy()
+
+        arrow = Arrow(LEFT, RIGHT, color=WHITE)
+        group = VGroup(axes1, arrow, axes2)
+        group.arrange(RIGHT, buff=LARGE_BUFF)
+        return group
+
+    def get_sine_graphs(self, axes):
+        sine_graphs = VGroup(*[
+            axes.get_graph(self.generate_nth_func(n))
+            for n in self.n_range
+        ])
+        sine_graphs.set_stroke(width=3)
+        for graph, color in zip(sine_graphs, it.cycle(self.colors)):
+            graph.set_color(color)
+        return sine_graphs
+
+    def get_partial_sums(self, axes, sine_graphs):
+        partial_sums = VGroup(*[
+            axes.get_graph(self.generate_kth_partial_sum_func(k + 1))
+            for k in range(len(self.n_range))
+        ])
+        partial_sums.match_style(sine_graphs)
+        return partial_sums
 
     def get_sum_tex(self):
         return TexMobject(

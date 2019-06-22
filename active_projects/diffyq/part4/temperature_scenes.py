@@ -132,6 +132,7 @@ class StepFunctionExample(BringTwoRodsTogether, FourierSeriesIllustraiton):
             graph.restore,
             time_label.set_value, 0,
         )
+        rods.clear_updaters()
         self.wait()
 
     def add_labels(self):
@@ -146,16 +147,15 @@ class StepFunctionExample(BringTwoRodsTogether, FourierSeriesIllustraiton):
             }
         )
         x_numbers = x_axis.get_number_mobjects(
-            *np.arange(0.25, 1.25, 0.25),
+            *np.arange(0.2, 1.2, 0.2),
             number_config={
-                "num_decimal_places": 2,
+                "num_decimal_places": 1,
             },
         )
 
         self.play(FadeIn(y_numbers))
         self.play(ShowCreationThenFadeAround(y_numbers[-1]))
         self.play(ShowCreationThenFadeAround(y_numbers[0]))
-        self.wait()
         self.play(
             LaggedStartMap(
                 FadeInFrom, x_numbers,
@@ -185,14 +185,12 @@ class StepFunctionExample(BringTwoRodsTogether, FourierSeriesIllustraiton):
         self.wait()
         self.play(A_tracker.set_value, 1.25)
         self.play(A_tracker.set_value, 0.75)
-        self.play(
-            phi_tracker.set_value, -PI / 2,
-            k_tracker.set_value, 3 * TAU,
-        )
-        self.wait()
+        self.play(phi_tracker.set_value, -PI / 2)
+        self.play(k_tracker.set_value, 3 * TAU)
+        self.play(k_tracker.set_value, 2 * TAU)
         self.play(
             k_tracker.set_value, PI,
-            A_tracker.set_value, 1,
+            A_tracker.set_value, 4 / PI,
             run_time=3
         )
         self.wait()
@@ -206,13 +204,15 @@ class StepFunctionExample(BringTwoRodsTogether, FourierSeriesIllustraiton):
         sine_graphs = self.get_sine_graphs(axes)
         partial_sums = self.get_partial_sums(axes, sine_graphs)
 
+        curr_partial_sum = partial_sums[0]
+        curr_partial_sum.set_color(WHITE)
         self.play(
             FadeOut(curr_sine_wave),
-            FadeIn(partial_sums[0])
+            FadeIn(curr_partial_sum),
+            FadeOut(self.rods),
         )
         # Copy-pasting from superclass...in theory,
         # this should be better abstracted, but eh.
-        curr_partial_sum = partial_sums[0]
         pairs = list(zip(sine_graphs, partial_sums))[1:]
         for sine_graph, partial_sum in pairs:
             anims1 = [
@@ -239,3 +239,8 @@ class StepFunctionExample(BringTwoRodsTogether, FourierSeriesIllustraiton):
         self.axes.shift(
             self.axes.c2p(0, 0)[1] * DOWN
         )
+
+
+class NewSceneName(Scene):
+    def construct(self):
+        pass

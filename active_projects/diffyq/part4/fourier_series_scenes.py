@@ -225,7 +225,39 @@ class FourierSeriesExampleWithRectForZoom(ComplexFourierSeriesExample):
     def get_rect(self):
         return ScreenRectangle(
             color=BLUE,
-            stroke_width=2,
+            stroke_width=1,
+        )
+
+    def get_path_end(self, vectors, stroke_width=None, **kwargs):
+        if stroke_width is None:
+            stroke_width = self.drawn_path_st
+        full_path = self.get_vector_sum_path(vectors, **kwargs)
+        path = VMobject()
+        path.set_stroke(
+            self.drawn_path_color,
+            stroke_width
+        )
+
+        def update_path(p):
+            alpha = self.get_vector_time() % 1
+            p.pointwise_become_partial(
+                full_path,
+                np.clip(alpha - 0.01, 0, 1),
+                np.clip(alpha, 0, 1),
+            )
+            p.points[-1] = vectors[-1].get_end()
+
+        path.add_updater(update_path)
+        return path
+
+    def get_drawn_path_alpha(self):
+        return super().get_drawn_path_alpha() - 0.002
+
+    def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
+        odp = super().get_drawn_path(vectors, stroke_width, **kwargs)
+        return VGroup(
+            odp,
+            self.get_path_end(vectors, stroke_width, **kwargs),
         )
 
 
@@ -251,31 +283,6 @@ class ZoomedInFourierSeriesExample(FourierSeriesExampleWithRectForZoom, MovingCa
             if v.get_stroke_width() < 1:
                 v.set_stroke(width=1)
 
-    def get_path_end(self, vectors, stroke_width=2, **kwargs):
-        full_path = self.get_vector_sum_path(vectors, **kwargs)
-        path = VMobject()
-        path.set_stroke(YELLOW, stroke_width)
-
-        def update_path(p):
-            alpha = self.get_vector_time() % 1
-            p.pointwise_become_partial(
-                full_path, 0, np.clip(alpha, 0, 1),
-            )
-            p.points[-1] = vectors[-1].get_end()
-
-        path.add_updater(update_path)
-        return path
-
-    def get_drawn_path_alpha(self):
-        return super().get_drawn_path_alpha() - 0.002
-
-    def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
-        odp = super().get_drawn_path(vectors, stroke_width, **kwargs)
-        return VGroup(
-            odp,
-            self.get_path_end(vectors, stroke_width, **kwargs),
-        )
-
 
 class ZoomedInFourierSeriesExample10xMore(ZoomedInFourierSeriesExample):
     CONFIG = {
@@ -297,13 +304,48 @@ class ZoomedInFourierSeriesExample10xMore(ZoomedInFourierSeriesExample):
     #     return self.get_path_end(vectors, stroke_width, **kwargs)
 
 
-class FourierSeriesExampleWithRectForZoomTrebleClef(FourierSeriesExampleWithRectForZoom):
+class TrebleClefFourierSeriesExampleWithRectForZoom(FourierSeriesExampleWithRectForZoom):
     CONFIG = {
         "file_name": "TrebleClef",
     }
 
 
-class ZoomedInFourierSeriesExampleTrebleClef(ZoomedInFourierSeriesExample):
+class TrebleClefZoomedInFourierSeriesExample(ZoomedInFourierSeriesExample):
     CONFIG = {
         "file_name": "TrebleClef",
     }
+
+
+class NailAndGearFourierSeriesExampleWithRectForZoom(FourierSeriesExampleWithRectForZoom):
+    CONFIG = {
+        "file_name": "Nail_And_Gear",
+        "n_vectors": 200,
+        "drawn_path_color": "#39FF14",
+    }
+
+
+class NailAndGearZoomedInFourierSeriesExample(ZoomedInFourierSeriesExample):
+    CONFIG = {
+        "file_name": "Nail_And_Gear",
+        "n_vectors": 200,
+        "drawn_path_color": "#39FF14",
+    }
+
+
+class SigmaFourierSeriesExampleWithRectForZoom(FourierSeriesExampleWithRectForZoom):
+    CONFIG = {
+        "n_vectors": 200,
+        "drawn_path_color": PINK,
+    }
+
+    def get_shape(self):
+        return TexMobject("\\Sigma")
+
+    def get_rect(self):
+        result = super().get_rect()
+        result.set_opacity(0)
+        return result
+
+
+class SigmaZoomedInFourierSeriesExample(SigmaFourierSeriesExampleWithRectForZoom, ZoomedInFourierSeriesExample):
+    pass

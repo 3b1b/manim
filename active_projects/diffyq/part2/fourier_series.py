@@ -29,6 +29,8 @@ class FourierCirclesScene(Scene):
         "slow_factor": 0.25,
         "center_point": ORIGIN,
         "parametric_function_step_size": 0.001,
+        "drawn_path_color": YELLOW,
+        "drawn_path_stroke_width": 2,
     }
 
     def setup(self):
@@ -158,7 +160,9 @@ class FourierCirclesScene(Scene):
     def get_drawn_path_alpha(self):
         return self.get_vector_time()
 
-    def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
+    def get_drawn_path(self, vectors, stroke_width=None, **kwargs):
+        if stroke_width is None:
+            stroke_width = self.drawn_path_stroke_width
         path = self.get_vector_sum_path(vectors, **kwargs)
         broken_path = CurvesAsSubmobjects(path)
         broken_path.curr_time = 0
@@ -177,7 +181,7 @@ class FourierCirclesScene(Scene):
             path.curr_time += dt
             return path
 
-        broken_path.set_color(YELLOW)
+        broken_path.set_color(self.drawn_path_color)
         broken_path.add_updater(update_path)
         return broken_path
 

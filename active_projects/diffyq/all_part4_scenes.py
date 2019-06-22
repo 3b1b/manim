@@ -11,6 +11,7 @@ SCENES_IN_ORDER = [
     FourierSeriesExampleWithRectForZoom,
     ZoomedInFourierSeriesExample,
     ZoomedInFourierSeriesExample10xMore,
+    FourierSeriesFormula,
     RelationToOtherVideos,
     WhyWouldYouCare,
     ShowLinearity,
@@ -19,6 +20,11 @@ SCENES_IN_ORDER = [
     CycleThroughManyLinearCombinations,
     StepFunctionExample,
     WhichWavesAreAvailable,
+    AlternateBoundaryConditions,
+    AskQuestionOfGraph,
+    CommentOnFouriersImmortality,
+    HangOnThere,
+    ShowInfiniteSum,
     # Oldies
 
     # FourierSeriesIllustraiton,

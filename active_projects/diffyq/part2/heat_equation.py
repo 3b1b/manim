@@ -329,7 +329,7 @@ class BringTwoRodsTogether(Scene):
             "hours_passed": time,
         }
         config.update(kwargs)
-        return ClockPassesTime(self.clock, **kwargs)
+        return ClockPassesTime(self.clock, **config)
 
     def initial_function(self, x):
         epsilon = 1e-10
