@@ -125,7 +125,6 @@ class SineCurveIsUnrealistic(TeacherStudentsScene):
         self.wait(5)
 
 
-
 class IfOnly(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
@@ -138,3 +137,39 @@ class IfOnly(TeacherStudentsScene):
         )
         self.wait(3)
 
+
+class SoWeGotNowhere(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "So we've gotten\\\\nowhere!",
+            target_mode="angry",
+            added_anims=[
+                self.teacher.change, "guilty"
+            ]
+        )
+        self.change_all_student_modes("angry")
+        self.wait()
+        text = TexMobject(
+            "&\\text{Actually,}\\\\",
+            "&\\sin\\left({x}\\right)"
+            "e^{-\\alpha {t}}\\\\",
+            "&\\text{isn't far off.}",
+            tex_to_color_map={
+                "{x}": GREEN,
+                "{t}": YELLOW,
+            }
+        )
+        text.scale(0.8)
+        self.teacher_says(
+            text,
+            content_introduction_class=FadeIn,
+            bubble_kwargs={
+                "width": 4,
+                "height": 3.5,
+            }
+        )
+        self.change_all_student_modes(
+            "pondering",
+            look_at_arg=self.screen
+        )
+        self.wait(3)

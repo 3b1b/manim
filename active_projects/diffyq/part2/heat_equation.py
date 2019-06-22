@@ -185,6 +185,7 @@ class BringTwoRodsTogether(Scene):
 
         y_label = axes.get_y_axis_label("\\text{Temperature}")
         y_label.to_edge(UP)
+        axes.y_axis.label = y_label
         axes.y_axis.add(y_label)
         axes.y_axis.add_numbers(
             *range(20, 100, 20)
@@ -329,7 +330,7 @@ class BringTwoRodsTogether(Scene):
         else:
             return 10
 
-    def update_graph(self, graph, dt, alpha=None, n_mini_steps=100):
+    def update_graph(self, graph, dt, alpha=None, n_mini_steps=500):
         if alpha is None:
             alpha = self.alpha
         points = np.append(
@@ -349,7 +350,7 @@ class BringTwoRodsTogether(Scene):
                 if (0 < i < len(points) - 1):
                     second_deriv = d2y / (dx**2)
                 else:
-                    second_deriv = d2y / dx
+                    second_deriv = 2 * d2y / (dx**2)
                     # second_deriv = 0
 
                 y_change[i] = alpha * second_deriv * dt / n_mini_steps
@@ -464,6 +465,7 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         self.add_clock()
         self.add_rod()
         self.add_arrows()
+        self.initialize_updaters()
         self.let_play()
 
     def add_axes(self):
@@ -521,24 +523,25 @@ class ShowEvolvingTempGraphWithArrows(BringTwoRodsTogether):
         self.add(arrows)
         self.arrows = arrows
 
+    def initialize_updaters(self):
+        if hasattr(self, "graph"):
+            self.graph.add_updater(self.update_graph)
+        if hasattr(self, "rod"):
+            self.rod.add_updater(self.color_rod_by_graph)
+        if hasattr(self, "time_label"):
+            self.time_label.add_updater(
+                lambda d, dt: d.increment_value(dt)
+            )
+
     def let_play(self):
-        graph = self.graph
-        rod = self.rod
-        clock = self.clock
-        time_label = self.time_label
+        self.run_clock(self.wait_time)
 
-        graph.add_updater(self.update_graph)
-        time_label.add_updater(
-            lambda d, dt: d.increment_value(dt)
-        )
-        rod.add_updater(self.color_rod_by_graph)
-
-        # return
+    def run_clock(self, time):
         self.play(
             ClockPassesTime(
-                clock,
-                run_time=self.wait_time,
-                hours_passed=self.wait_time,
+                self.clock,
+                run_time=time,
+                hours_passed=time,
             ),
         )
 

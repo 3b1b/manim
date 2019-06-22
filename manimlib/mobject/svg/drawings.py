@@ -455,9 +455,10 @@ class Bubble(SVGMobject):
         mover.shift(point - self.get_tip())
         return self
 
-    def flip(self):
-        Mobject.flip(self)
-        self.direction = -np.array(self.direction)
+    def flip(self, axis=UP):
+        Mobject.flip(self, axis=axis)
+        if abs(axis[0]) > 0:
+            self.direction = -np.array(self.direction)
         return self
 
     def pin_to(self, mobject):

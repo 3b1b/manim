@@ -1088,6 +1088,7 @@ class Mobject(Container):
             mobject1.points, mobject2.points, alpha
         )
         self.interpolate_color(mobject1, mobject2, alpha)
+        return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         pass  # To implement in subclass
