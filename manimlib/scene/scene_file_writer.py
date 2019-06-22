@@ -49,21 +49,30 @@ class SceneFileWriter(object):
         module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
-            image_dir = guarantee_existence(os.path.join(
-                consts.VIDEO_DIR,
-                module_directory,
-                "images",
-            ))
+            if consts.VIDEO_DIR != "":
+                image_dir = guarantee_existence(os.path.join(
+                    consts.VIDEO_DIR,
+                    module_directory,
+                    "images",
+                ))
+            else:
+                image_dir = guarantee_existence(os.path.join(
+                    consts.VIDEO_OUTPUT_DIR,
+                    "images",
+                ))
             self.image_file_path = os.path.join(
                 image_dir,
                 add_extension_if_not_present(scene_name, ".png")
             )
         if self.write_to_movie:
-            movie_dir = guarantee_existence(os.path.join(
-                consts.VIDEO_DIR,
-                module_directory,
-                self.get_resolution_directory(),
-            ))
+            if consts.VIDEO_DIR != "":
+                movie_dir = guarantee_existence(os.path.join(
+                    consts.VIDEO_DIR,
+                    module_directory,
+                    self.get_resolution_directory(),
+                ))
+            else:
+                movie_dir = guarantee_existence(consts.VIDEO_OUTPUT_DIR)
             self.movie_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(
