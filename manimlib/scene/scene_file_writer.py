@@ -52,7 +52,6 @@ class SceneFileWriter(object):
             image_dir = guarantee_existence(os.path.join(
                 consts.VIDEO_DIR,
                 module_directory,
-                scene_name,
                 "images",
             ))
             self.image_file_path = os.path.join(
@@ -63,7 +62,6 @@ class SceneFileWriter(object):
             movie_dir = guarantee_existence(os.path.join(
                 consts.VIDEO_DIR,
                 module_directory,
-                scene_name,
                 self.get_resolution_directory(),
             ))
             self.movie_file_path = os.path.join(
