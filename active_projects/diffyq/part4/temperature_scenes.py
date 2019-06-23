@@ -20,6 +20,7 @@ class StepFunctionExample(BringTwoRodsTogether, FourierSeriesIllustraiton):
                 "include_tip": False,
             },
         },
+        "y_labels": [-1, 1],
         "graph_x_min": 0,
         "graph_x_max": 1,
         "midpoint": 0.5,
@@ -241,6 +242,117 @@ class StepFunctionExample(BringTwoRodsTogether, FourierSeriesIllustraiton):
         )
 
 
-class NewSceneName(Scene):
+class BreakDownStepFunction(StepFunctionExample):
+    CONFIG = {
+        "axes_config": {
+            "x_axis_config": {
+                "stroke_width": 2,
+            },
+            "y_axis_config": {
+                "tick_frequency": 0.25,
+                "stroke_width": 2,
+            },
+            "y_min": -1.25,
+            "y_max": 1.25,
+        },
+        "alpha": 0.1,
+        "wait_time": 30,
+    }
+
     def construct(self):
-        pass
+        self.setup_axes()
+        self.setup_graph()
+        self.setup_clock()
+        self.add_rod()
+
+        self.wait()
+        self.init_updaters()
+        self.play(
+            self.get_clock_anim(self.wait_time)
+        )
+
+    def setup_axes(self):
+        super().setup_axes()
+        axes = self.axes
+        axes.to_edge(LEFT)
+
+        mini_axes = VGroup(*[
+            axes.deepcopy()
+            for x in range(4)
+        ])
+        for mob in mini_axes.get_family():
+            if isinstance(mob, Line):
+                mob.set_stroke(width=1, family=False)
+        mini_axes.arrange(DOWN, buff=2)
+        mini_axes.set_height(FRAME_HEIGHT - 1.5)
+        mini_axes.to_corner(UR)
+        self.scale_factor = fdiv(
+            mini_axes[0].get_width(),
+            axes.get_width(),
+        )
+
+        # mini_axes.arrange(RIGHT, buff=2)
+        # mini_axes.set_width(FRAME_WIDTH - 1.5)
+        # mini_axes.to_edge(LEFT)
+
+        dots = TexMobject("\\vdots")
+        dots.next_to(mini_axes, DOWN)
+        dots.shift_onto_screen()
+
+        self.add(axes)
+        self.add(mini_axes)
+        self.add(dots)
+
+        self.mini_axes = mini_axes
+
+    def setup_graph(self):
+        super().setup_graph()
+        graph = self.graph
+        self.add(graph)
+
+        mini_axes = self.mini_axes
+        mini_graphs = VGroup()
+        for axes, u, n in zip(mini_axes, it.cycle([1, -1]), it.count(1, 2)):
+            mini_graph = axes.get_graph(
+                lambda x: (4 / PI) * (u / n) * np.cos(PI * n * x),
+            )
+            mini_graph.set_stroke(width=2)
+            mini_graphs.add(mini_graph)
+        # mini_graphs.set_color_by_gradient(
+        #     BLUE, GREEN, RED, YELLOW,
+        # )
+
+        self.mini_graphs = mini_graphs
+        self.add(mini_graphs)
+
+    def setup_clock(self):
+        super().setup_clock()
+        clock = self.clock
+        time_label = self.time_label
+
+        clock.move_to(3 * RIGHT)
+        clock.to_corner(UP)
+        time_label.next_to(clock, DOWN)
+
+        self.add(clock)
+        self.add(time_label)
+
+    def add_rod(self):
+        self.rod = self.get_rod(0, 1)
+        self.add(self.rod)
+
+    def init_updaters(self):
+        self.graph.add_updater(self.update_graph)
+        for mg in self.mini_graphs:
+            mg.add_updater(
+                lambda m, dt: self.update_graph(
+                    m, dt,
+                    alpha=self.scale_factor * self.alpha
+                )
+            )
+        self.time_label.add_updater(
+            lambda d, dt: d.increment_value(dt)
+        )
+        self.rod.add_updater(
+            lambda r: self.update_rods([r])
+        )

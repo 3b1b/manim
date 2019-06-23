@@ -1,5 +1,6 @@
 from manimlib.imports import *
 from active_projects.diffyq.part3.staging import FourierSeriesIllustraiton
+from active_projects.diffyq.part2.wordy_scenes import WriteHeatEquationTemplate
 
 
 class FourierSeriesFormula(Scene):
@@ -687,10 +688,9 @@ class ShowInfiniteSum(FourierSeriesIllustraiton):
             self.play(
                 Transform(brace, new_brace),
                 value_tracker.set_value, ps,
-                run_time=0.2,
             )
             self.leave_mark(number_line, ps)
-            self.wait(0.8)
+            self.wait()
 
         count = 0
         num_moving_values = n_braces + 8
@@ -723,7 +723,7 @@ class ShowInfiniteSum(FourierSeriesIllustraiton):
             ShowIncreasingSubsets(new_marks),
             term_count_tracker.set_value, len(partial_sums),
             run_time=10,
-            rate_func=linear,
+            rate_func=smooth,
         )
         self.play(LaggedStartMap(
             FadeOut, VGroup(
@@ -947,8 +947,11 @@ class ShowInfiniteSum(FourierSeriesIllustraiton):
         for x in range(6):
             self.play(get_ps_anim())
         self.play(input_tracker.set_value, 0.5)
-        for x in range(10):
-            self.play(get_ps_anim())
+        for x in range(40):
+            self.play(
+                get_ps_anim(),
+                run_time=0.5,
+            )
 
     #
     def get_dot_line(self, dot, axis, line_class=Line):
@@ -1026,3 +1029,85 @@ class ShowInfiniteSum(FourierSeriesIllustraiton):
         eq.next_to(brace, LEFT)
 
         return VGroup(eq, brace, values, conditions)
+
+
+class StepFunctionSolutionFormla(WriteHeatEquationTemplate):
+    CONFIG = {
+        "tex_mobject_config": {
+            "tex_to_color_map": {
+                "{1}": WHITE,  # BLUE,
+                "{3}": WHITE,  # GREEN,
+                "{5}": WHITE,  # RED,
+                "{7}": WHITE,  # YELLOW,
+            },
+        },
+    }
+
+    def construct(self):
+        formula = TexMobject(
+            "T({x}, {t}) = ",
+            "{4 \\over \\pi}",
+            "\\left(",
+            "{\\cos\\left({1}\\pi {x}\\right) \\over {1}}",
+            "e^{-\\alpha {1}^2 {t} }",
+            "-"
+            "{\\cos\\left({3}\\pi {x}\\right) \\over {3}}",
+            "e^{-\\alpha {3}^2 {t} }",
+            "+",
+            "{\\cos\\left({5}\\pi {x}\\right) \\over {5}}",
+            "e^{-\\alpha {5}^2 {t} }",
+            "- \\cdots",
+            "\\right)",
+            **self.tex_mobject_config,
+        )
+
+        formula.set_width(FRAME_WIDTH - 1)
+        formula.to_edge(UP)
+
+        self.play(FadeInFromDown(formula))
+        self.wait()
+
+
+class AskAboutComplexNotVector(Scene):
+    def construct(self):
+        c_ex = DecimalNumber(
+            complex(2, 1),
+            num_decimal_places=0
+        )
+        i_part = c_ex[-1]
+        v_ex = IntegerMatrix(
+            [[2], [1]],
+            bracket_h_buff=SMALL_BUFF,
+            bracket_v_buff=SMALL_BUFF,
+        )
+        group = VGroup(v_ex, c_ex)
+        group.scale(1.5)
+        # group.arrange(RIGHT, buff=4)
+        group.arrange(DOWN, buff=0.9)
+        group.to_corner(UL, buff=0.2)
+
+        q1, q2 = questions = VGroup(
+            TextMobject("Why not this?").set_color(BLUE),
+            TextMobject("Instead of this?").set_color(YELLOW),
+        )
+        questions.scale(1.5)
+        for q, ex in zip(questions, group):
+            ex.add_background_rectangle()
+            q.add_background_rectangle()
+            q.next_to(ex, RIGHT)
+
+        plane = NumberPlane(axis_config={"unit_size": 2})
+        vect = Vector([4, 2, 0])
+
+        self.play(
+            ShowCreation(plane, lag_ratio=0.1),
+            FadeIn(vect),
+        )
+        for q, ex in zip(questions, group):
+            self.play(
+                FadeInFrom(q, LEFT),
+                FadeIn(ex)
+            )
+        self.wait()
+        self.play(ShowCreationThenFadeAround(i_part))
+        self.wait()

@@ -137,3 +137,22 @@ class HangOnThere(TeacherStudentsScene):
             "confused", "confused", "angry"
         )
         self.wait(3)
+
+
+class YouSaidThisWasEasier(TeacherStudentsScene):
+    def construct(self):
+        self.change_all_student_modes(
+            "confused", look_at_arg=self.screen,
+        )
+        self.student_says(
+            "I'm sorry, you said\\\\this was easier?",
+            target_mode="sassy"
+        )
+        self.play(self.teacher.change, "guilty")
+        self.wait(3)
+        self.teacher_says(
+            "Bear with\\\\me",
+            bubble_kwargs={"height": 3, "width": 3},
+        )
+        self.look_at(self.screen)
+        self.wait(3)

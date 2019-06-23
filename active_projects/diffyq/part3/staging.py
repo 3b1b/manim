@@ -332,7 +332,7 @@ class FourierSeriesIllustraiton(Scene):
 
         arrow = Arrow(LEFT, RIGHT, color=WHITE)
         group = VGroup(axes1, arrow, axes2)
-        group.arrange(RIGHT, buff=LARGE_BUFF)
+        group.arrange(RIGHT, buff=MED_LARGE_BUFF)
         return group
 
     def get_sine_graphs(self, axes):

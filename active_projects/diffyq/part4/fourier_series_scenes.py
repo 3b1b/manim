@@ -69,14 +69,19 @@ class ComplexFourierSeriesExample(FourierOfTrebleClef):
         new_path.set_height(4)
         new_path.move_to(self.path, DOWN)
         new_path.shift(0.5 * UP)
+
+        self.transition_to_alt_path(new_path)
+        for n in range(self.n_cycles):
+            self.run_one_cycle()
+
+    def transition_to_alt_path(self, new_path, morph_path=False):
         new_coefs = self.get_coefficients_of_path(new_path)
         new_vectors = self.get_rotating_vectors(
             coefficients=new_coefs
         )
         new_drawn_path = self.get_drawn_path(new_vectors)
 
-        self.vector_clock.set_value(0)
-        self.vector_clock.suspend_updating(0)
+        self.vector_clock.suspend_updating()
 
         vectors = self.vectors
         anims = []
@@ -101,18 +106,28 @@ class ComplexFourierSeriesExample(FourierOfTrebleClef):
                     *v.line.get_start_and_end()
                 )
             )
-        anims += [
-            FadeOut(self.drawn_path)
-        ]
+        if morph_path:
+            anims.append(
+                ReplacementTransform(
+                    self.drawn_path,
+                    new_drawn_path
+                )
+            )
+        else:
+            anims.append(
+                FadeOut(self.drawn_path)
+            )
 
         self.play(*anims, run_time=3)
-        self.vector_clock.resume_updating()
         for vect in self.vectors:
             vect.remove_updater(vect.updaters[-1])
 
-        self.add(new_drawn_path)
-        for n in range(self.n_cycles):
-            self.run_one_cycle()
+        if not morph_path:
+            self.add(new_drawn_path)
+            self.vector_clock.set_value(0)
+
+        self.vector_clock.resume_updating()
+        self.drawn_path = new_drawn_path
 
     #
     def get_path(self):
@@ -192,9 +207,151 @@ class ComplexFourierSeriesExample(FourierOfTrebleClef):
         return labels
 
 
-class ComplexFourierSeriesExampleEnd(ExternallyAnimatedScene):
-    pass
+class PiFourierSeries(ComplexFourierSeriesExample):
+    CONFIG = {
+        "n_vectors": 101,
+        "max_circle_stroke_width": 1,
+        "top_row_copy_scale_factor": 0.6,
+    }
 
+    def construct(self):
+        self.setup_plane()
+        self.add_vectors_circles_path()
+        self.add_top_row(self.vectors, self.circles)
+
+        for n in range(self.n_cycles):
+            self.run_one_cycle()
+
+    def setup_plane(self):
+        plane = ComplexPlane(
+            axis_config={"unit_size": 2},
+            y_min=-1.25,
+            y_max=1.25,
+            x_min=-2.5,
+            x_max=2.5,
+            background_line_style={
+                "stroke_width": 1,
+                "stroke_color": LIGHT_GREY,
+            },
+        )
+        plane.shift(self.center_point)
+        # plane.fade(0.5)
+        plane.add_coordinates()
+
+        top_rect = Rectangle(
+            width=FRAME_WIDTH,
+            fill_color=BLACK,
+            fill_opacity=1,
+            stroke_width=0,
+            height=2.5
+        )
+        top_rect.to_edge(UP, buff=0)
+
+        self.plane = plane
+        self.add(plane)
+        self.add(top_rect)
+
+    def get_path(self):
+        pi = TexMobject("\\pi")
+        path = pi.family_members_with_points()[0]
+        path.set_height(3.5)
+        path.move_to(3 * DOWN, DOWN)
+        path.set_stroke(YELLOW, 0)
+        path.set_fill(opacity=0)
+        return path
+
+
+class RealValuedFunctionFourierSeries(PiFourierSeries):
+    CONFIG = {
+        "n_vectors": 101,
+        "start_drawn": True,
+    }
+
+    def construct(self):
+        self.setup_plane()
+        self.add_vectors_circles_path()
+        self.add_top_row(self.vectors, self.circles)
+
+        self.flatten_path()
+        self.focus_on_vector_pair()
+
+    def flatten_path(self):
+        new_path = self.path.copy()
+        new_path.stretch(0, 1)
+        new_path.set_y(self.plane.n2p(0)[1])
+        self.vector_clock.set_value(10)
+        self.transition_to_alt_path(new_path, morph_path=True)
+        self.run_one_cycle()
+
+    def focus_on_vector_pair(self):
+        vectors = self.vectors
+        circles = self.circles
+        top_row = self.top_row
+        top_vectors, top_circles, dots, labels = top_row
+
+        rects1, rects2, rects3 = [
+            VGroup(*[
+                SurroundingRectangle(VGroup(
+                    top_circles[i],
+                    labels[i],
+                ))
+                for i in pair
+            ]).set_stroke(LIGHT_GREY, 2)
+            for pair in [(1, 2), (3, 4), (5, 6)]
+        ]
+
+        def get_opacity_animation(i1, i2, alpha_func):
+            v_group = vectors[i1:i2]
+            c_group = circles[i1:i2]
+            return AnimationGroup(
+                UpdateFromAlphaFunc(
+                    VectorizedPoint(),
+                    lambda m, a: v_group.set_opacity(
+                        alpha_func(a)
+                    )
+                ),
+                UpdateFromAlphaFunc(
+                    VectorizedPoint(),
+                    lambda m, a: c_group.set_stroke(
+                        opacity=alpha_func(a)
+                    )
+                ),
+            )
+
+        self.remove(self.path)
+        self.play(
+            get_opacity_animation(
+                3, len(vectors), lambda a: smooth(1 - a),
+            ),
+            ShowCreation(rects1, lag_ratio=0.3),
+        )
+        for n in range(2):
+            self.run_one_cycle()
+
+        self.play(
+            get_opacity_animation(3, 5, smooth),
+            get_opacity_animation(
+                0, 3,
+                lambda a: 1 - 0.75 * smooth(a)
+            ),
+            ReplacementTransform(rects1, rects2),
+        )
+        self.run_one_cycle()
+        self.play(
+            get_opacity_animation(5, 7, smooth),
+            get_opacity_animation(
+                3, 5,
+                lambda a: 1 - 0.75 * smooth(a)
+            ),
+            ReplacementTransform(rects2, rects3),
+        )
+        self.run_one_cycle()
+        self.run_one_cycle()
+
+
+# Pure fourier series with zooming.
+# Note to self, put out a single video with nothing
+# but these?
 
 class FourierSeriesExampleWithRectForZoom(ComplexFourierSeriesExample):
     CONFIG = {

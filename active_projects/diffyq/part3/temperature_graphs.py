@@ -379,6 +379,10 @@ class BreakDownAFunction(SimpleCosExpGraph):
             "z_min": -2,
             "y_max": 20,
         },
+        "low_axes_config": {
+            "z_min": -3,
+            "z_axis_config": {"unit_size": 1}
+        },
         "n_low_axes": 4,
         "k": 0.2,
     }
@@ -402,10 +406,7 @@ class BreakDownAFunction(SimpleCosExpGraph):
         top_axes.center()
         top_axes.to_edge(UP)
 
-        low_axes = self.get_three_d_axes(
-            z_min=-3,
-            z_axis_config={"unit_size": 1}
-        )
+        low_axes = self.get_three_d_axes(**self.low_axes_config)
         low_axes.y_axis.set_opacity(0)
         for axis in low_axes:
             axis.label.fade(1)

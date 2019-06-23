@@ -164,6 +164,7 @@ class BringTwoRodsTogether(Scene):
                 "tick_frequency": 10,
             },
         },
+        "y_labels": range(20, 100, 20),
         "graph_x_min": 0,
         "graph_x_max": 10,
         "midpoint": 5,
@@ -190,9 +191,7 @@ class BringTwoRodsTogether(Scene):
         y_label.to_edge(UP)
         axes.y_axis.label = y_label
         axes.y_axis.add(y_label)
-        axes.y_axis.add_numbers(
-            *range(20, 100, 20)
-        )
+        axes.y_axis.add_numbers(*self.y_labels)
 
         self.axes = axes
         self.y_label = y_label
