@@ -494,7 +494,7 @@ class Line(TipableVMobject):
             self.start = start
             self.end = end
             self.generate_points()
-        super().put_start_and_end_on(start, end)
+        return super().put_start_and_end_on(start, end)
 
     def get_vector(self):
         return self.get_end() - self.get_start()
