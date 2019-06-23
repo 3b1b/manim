@@ -388,9 +388,15 @@ class ComplexPlane(NumberPlane):
         number = complex(number)
         return self.coords_to_point(number.real, number.imag)
 
+    def n2p(self, number):
+        return self.number_to_point(number)
+
     def point_to_number(self, point):
         x, y = self.point_to_coords(point)
         return complex(x, y)
+
+    def p2n(self, point):
+        return self.point_to_number(point)
 
     def get_default_coordinate_values(self):
         x_numbers = self.get_x_axis().default_numbers_to_display()
