@@ -319,14 +319,17 @@ class SceneFileWriter(object):
             '-y',  # overwrite output file if it exists
             '-f', 'concat',
             '-safe', '0',
-            '-i', file_list,
-            #'-c', 'copy',
+            '-i', file_list]
+        if not self.save_as_gif:
+            commands+=[
+            '-c', 'copy']
+        commands+=[
             '-loglevel', 'error',
-            movie_file_path
         ]
         if self.save_as_gif:
-            commands +=[
-                self.gif_file_path,
+            movie_file_path=self.gif_file_path
+        commands +=[
+            movie_file_path
             ]
         if not self.includes_sound:
             commands.insert(-1, '-an')
@@ -372,10 +375,10 @@ class SceneFileWriter(object):
             
             subprocess.call(commands)
             shutil.move(temp_file_path, movie_file_path)
-            subprocess.call(["rm", sound_file_path])
+            os.remove(sound_file_path)
 
         self.print_file_ready_message(movie_file_path)
-        subprocess.call(["rm","-r",self.partial_movie_directory])
+        shutil.rmtree(self.partial_movie_directory)
 
     def print_file_ready_message(self, file_path):
         print("\nFile ready at {}\n".format(file_path))

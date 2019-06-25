@@ -13,7 +13,7 @@ DEMOSTRACIÓN!
 class WriteStuff(Scene):
     def construct(self):
         example_text = TextMobject(
-            "PruebáGit is a some text",
+            "Pñáéíó is a some text",
             tex_to_color_map={"text": YELLOW}
         )
         example_tex = TexMobject(
