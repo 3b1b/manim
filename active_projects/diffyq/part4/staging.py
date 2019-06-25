@@ -6,7 +6,7 @@ from active_projects.diffyq.part2.wordy_scenes import WriteHeatEquationTemplate
 class FourierSeriesFormula(Scene):
     def construct(self):
         formula = TexMobject(
-            "c_{n} = \\int_0^1 e^{-2\\pi i {n} {t}}f({t})d{t}",
+            "c_{n} = \\int_0^1 e^{-2\\pi i {n} {t}}f({t}){dt}",
             tex_to_color_map={
                 "{n}": RED,
                 "{t}": YELLOW,
@@ -1111,3 +1111,103 @@ class AskAboutComplexNotVector(Scene):
         self.wait()
         self.play(ShowCreationThenFadeAround(i_part))
         self.wait()
+
+
+class SwapIntegralAndSum(Scene):
+    def construct(self):
+        self.perform_swap()
+        self.show_average_of_individual_terms()
+
+    def perform_swap(self):
+        tex_config = {
+            "tex_to_color_map": {
+                "=": WHITE,
+                "\\int_0^1": WHITE,
+                "{t}": PINK,
+                "{dt}": interpolate_color(PINK, WHITE, 0.25),
+                "{\\cdot 1}": YELLOW,
+                "{0}": YELLOW,
+                "{1}": YELLOW,
+                "{2}": YELLOW,
+            },
+        }
+        int_ft = TexMobject(
+            "\\int_0^1 f({t}) {dt}",
+            **tex_config
+        )
+        int_sum = TexMobject(
+            """
+            =
+            \\int_0^1 \\left(
+            \\cdots +
+            c_{\\cdot 1}e^{{\\cdot 1} \\cdot 2\\pi i {t}} +
+            c_{0}e^{{0} \\cdot 2\\pi i {t}} +
+            c_{1}e^{{1} \\cdot 2\\pi i {t}} +
+            c_{2}e^{{2} \\cdot 2\\pi i {t}} +
+            \\cdots
+            \\right){dt}
+            """,
+            **tex_config
+        )
+        sum_int = TexMobject(
+            """
+            = \\cdots +
+            \\int_0^1
+            c_{\\cdot 1}e^{{\\cdot 1} \\cdot 2\\pi i {t}}
+            {dt} +
+            \\int_0^1
+            c_{0}e^{{0} \\cdot 2\\pi i {t}}
+            {dt} +
+            \\int_0^1
+            c_{1}e^{{1} \\cdot 2\\pi i {t}}
+            {dt} +
+            \\int_0^1
+            c_{2}e^{{2} \\cdot 2\\pi i {t}}
+            {dt} +
+            \\cdots
+            """,
+            **tex_config
+        )
+
+        self.fix_minuses(int_sum)
+        self.fix_minuses(sum_int)
+
+        # top_line = VGroup(int_ft, int_sum)
+        # top_line.arrange(RIGHT, buff=SMALL_BUFF)
+        # top_line.set_width(FRAME_WIDTH - 1)
+        # top_line.to_corner(UL)
+
+
+        group = VGroup(int_ft, int_sum, sum_int)
+        group.arrange(
+            DOWN, buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
+        )
+        group.set_width(FRAME_WIDTH - 1)
+        group.to_corner(UL)
+        int_ft.align_to(int_sum[1], LEFT)
+        int_ft.shift(0.2 * RIGHT)
+
+        self.add(int_ft)
+        self.add(int_sum)
+        self.add(sum_int)
+
+    def show_average_of_individual_terms(self):
+        pass
+
+    #
+    def fix_minuses(self, tex_mob):
+        for mob in tex_mob.get_parts_by_tex("{\\cdot 1}"):
+            minus = TexMobject("-")
+            minus.match_style(mob[0])
+            minus.set_width(
+                3 * mob[0].get_width(),
+                stretch=True,
+            )
+            minus.move_to(mob, LEFT)
+            mob.submobjects[0] = minus
+
+
+class FootnoteOnSwappingIntegralAndSum(Scene):
+    def construct(self):
+        pass

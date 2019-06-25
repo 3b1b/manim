@@ -97,7 +97,6 @@ class FourierCirclesScene(Scene):
             phase = np.log(coefficient).imag
         vector.rotate(phase, about_point=ORIGIN)
         vector.freq = freq
-        vector.phase = phase
         vector.coefficient = coefficient
         vector.center_func = center_func
         vector.add_updater(self.update_vector)
@@ -105,12 +104,13 @@ class FourierCirclesScene(Scene):
 
     def update_vector(self, vector, dt):
         time = self.get_vector_time()
-        vector.set_angle(
-            vector.phase + time * vector.freq * TAU
-        )
-        vector.shift(
-            vector.center_func() - vector.get_start()
-        )
+        coef = vector.coefficient
+        freq = vector.freq
+        phase = np.log(coef).imag
+
+        vector.set_length(abs(coef))
+        vector.set_angle(phase + time * freq * TAU)
+        vector.shift(vector.center_func() - vector.get_start())
         return vector
 
     def get_circles(self, vectors):

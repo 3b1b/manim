@@ -672,3 +672,32 @@ class SimpleComplexExponentExample(ClarifyInputAndOutput):
         )
         input_line.add_numbers(*range(0, 30, 5))
         return input_line
+
+
+class TRangingFrom0To1(SimpleComplexExponentExample):
+    CONFIG = {
+        "input_space_rect_config": {
+            "width": 6,
+            "height": 2,
+        },
+    }
+
+    def construct(self):
+        self.setup_input_space()
+        self.setup_input_trackers()
+
+        self.play(
+            self.input_tracker.set_value, 1,
+            run_time=10,
+            rate_func=linear
+        )
+
+    def get_input_line(self, rect):
+        result = ClarifyInputAndOutput.get_input_line(self, rect)
+        result.stretch(0.9, 0)
+        result.set_stroke(width=2)
+        for sm in result.get_family():
+            if isinstance(sm, DecimalNumber):
+                sm.stretch(1 / 0.9, 0)
+                sm.set_stroke(width=0)
+        return result

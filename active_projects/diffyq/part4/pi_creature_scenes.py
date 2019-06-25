@@ -156,3 +156,36 @@ class YouSaidThisWasEasier(TeacherStudentsScene):
         )
         self.look_at(self.screen)
         self.wait(3)
+
+
+class LooseWithLanguage(TeacherStudentsScene):
+    def construct(self):
+        terms = VGroup(
+            TextMobject("``Complex number''"),
+            TextMobject("``Vector''"),
+        )
+        colors = [YELLOW, BLUE]
+        for term, color in zip(terms, colors):
+            term.set_color(color)
+
+        terms.scale(1.5)
+        terms.arrange(DOWN, buff=LARGE_BUFF)
+        terms.to_edge(UP)
+        terms.match_x(self.students)
+
+        self.teacher_says(
+            "Loose with\\\\language",
+            bubble_kwargs={"width": 3, "height": 3},
+            run_time=2,
+        )
+        self.play(
+            FadeInFrom(terms[1], DOWN),
+            self.get_student_changes(
+                "thinking", "pondering", "erm",
+                look_at_arg=terms,
+            )
+        )
+        self.play(FadeInFromDown(terms[0]))
+        self.wait()
+        self.play(Swap(*terms))
+        self.wait(3)

@@ -40,6 +40,13 @@ SCENES_IN_ORDER = [
     YouSaidThisWasEasier,
     AskAboutComplexNotVector,
     SimpleComplexExponentExample,
+    LooseWithLanguage,
+    DemonstrateAddingArrows,
+    TRangingFrom0To1,
+    LabelRotatingVectors,
+    IntegralTrick,
+    SwapIntegralAndSum,
+    FootnoteOnSwappingIntegralAndSum,
 
     # Oldies
     # FourierSeriesIllustraiton,
