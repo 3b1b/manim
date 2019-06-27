@@ -6,6 +6,7 @@ import sys
 import types
 
 import manimlib.constants
+import manimlib.addon_helper
 
 
 def parse_cli():
@@ -116,8 +117,13 @@ def parse_cli():
             "--media_dir",
             help="directory to write media",
         )
-        parser.add_argument(
+        video_group = parser.add_mutually_exclusive_group()
+        video_group.add_argument(
             "--video_dir",
+            help="directory to write file tree for video",
+        )
+        video_group.add_argument(
+            "--video_output_dir",
             help="directory to write video",
         )
         parser.add_argument(
@@ -141,6 +147,9 @@ def parse_cli():
             dest="twitch_key",
             help="Stream key for twitch",
         )
+        # Now that the built-in arguments have been loaded, include the additional flags from the addons
+        parser = manimlib.addon_helper.load_parser_args(parser)
+
         args = parser.parse_args()
 
         if args.file is None and not args.livestream:
@@ -207,7 +216,9 @@ def get_configuration(args):
         "leave_progress_bars": args.leave_progress_bars,
         "media_dir": args.media_dir,
         "video_dir": args.video_dir,
+        "video_output_dir": args.video_output_dir,
         "tex_dir": args.tex_dir,
+        "all_args": args,
     }
 
     # Camera configuration
