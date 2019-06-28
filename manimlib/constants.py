@@ -13,7 +13,7 @@ def initialize_directories(config):
     global VIDEO_OUTPUT_DIR
     global TEX_DIR
     global ADDON_DIR
-
+    
     video_path_specified = config["video_dir"] or config["video_output_dir"]
     if not video_path_specified:
         VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")

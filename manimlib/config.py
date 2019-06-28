@@ -147,6 +147,7 @@ def parse_cli():
             dest="twitch_key",
             help="Stream key for twitch",
         )
+
         # Now that the built-in arguments have been loaded, include the additional flags from the addons
         parser = manimlib.addon_helper.load_parser_args(parser)
 

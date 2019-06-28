@@ -1,5 +1,6 @@
 import os
 import glob
+import importlib
 import manimlib.constants
 import manimlib.config
 
@@ -13,7 +14,7 @@ def load_parser_args(parser):
     if addons_read == False:
         read_addons()
     for addon in Addons:
-        # TODO: Check if parser_args() exists in the module. If so, add it to the current parser
+        # Check if parser_args() exists in the module. If so, add it to the current parser
         if 'parser_args' in dir(addon.Main):
             new_args = addon.Main.parser_args()
             for arg in new_args:
