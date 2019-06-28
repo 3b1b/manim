@@ -17,6 +17,7 @@ from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
 from manimlib.utils.sounds import get_full_sound_file_path
+import manimlib.addon_helper
 
 
 class SceneFileWriter(object):
@@ -49,21 +50,30 @@ class SceneFileWriter(object):
         module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
-            image_dir = guarantee_existence(os.path.join(
-                consts.VIDEO_DIR,
-                module_directory,
-                "images",
-            ))
+            if consts.VIDEO_DIR != "":
+                image_dir = guarantee_existence(os.path.join(
+                    consts.VIDEO_DIR,
+                    module_directory,
+                    "images",
+                ))
+            else:
+                image_dir = guarantee_existence(os.path.join(
+                    consts.VIDEO_OUTPUT_DIR,
+                    "images",
+                ))
             self.image_file_path = os.path.join(
                 image_dir,
                 add_extension_if_not_present(scene_name, ".png")
             )
         if self.write_to_movie:
-            movie_dir = guarantee_existence(os.path.join(
-                consts.VIDEO_DIR,
-                module_directory,
-                self.get_resolution_directory(),
-            ))
+            if consts.VIDEO_DIR != "":
+                movie_dir = guarantee_existence(os.path.join(
+                    consts.VIDEO_DIR,
+                    module_directory,
+                    self.get_resolution_directory(),
+                ))
+            else:
+                movie_dir = guarantee_existence(consts.VIDEO_OUTPUT_DIR)
             self.movie_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(
@@ -353,6 +363,8 @@ class SceneFileWriter(object):
             shutil.move(temp_file_path, movie_file_path)
             subprocess.call(["rm", sound_file_path])
 
+        # Send the file path to the addon helper so it can be passed to addons that need it
+        manimlib.addon_helper.movie_paths.append(movie_file_path)
         self.print_file_ready_message(movie_file_path)
 
     def print_file_ready_message(self, file_path):
