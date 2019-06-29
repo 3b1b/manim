@@ -10,7 +10,7 @@ services:
       - manim
       - --media_dir=/tmp/output
     volumes:
-      - ${INPUT_DIR:?INPUT_DIR environment variable isn't set}:/tmp/input
-      - ${OUTPUT_DIR:?OUTPUT_DIR environment variable isn't set}:/tmp/output
+      - ${INPUT_PATH:?INPUT_PATH environment variable isn't set}:/tmp/input
+      - ${OUTPUT_PATH:?OUTPUT_PATH environment variable isn't set}:/tmp/output
     working_dir: /tmp/input
     network_mode: "none"

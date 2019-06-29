@@ -44,8 +44,8 @@ def tex_to_dvi(tex_file):
             "latex",
             "-interaction=batchmode",
             "-halt-on-error",
-            "-output-directory=\'{}\'".format(consts.TEX_DIR),
-            "\'{}\'".format(tex_file),
+            "-output-directory=\"{}\"".format(consts.TEX_DIR),
+            "\"{}\"".format(tex_file),
             ">",
             os.devnull
         ] if not TEX_USE_CTEX else [
@@ -53,8 +53,8 @@ def tex_to_dvi(tex_file):
             "-no-pdf",
             "-interaction=batchmode",
             "-halt-on-error",
-            "-output-directory=\'{}\'".format(consts.TEX_DIR),
-            "\'{}\'".format(tex_file),
+            "-output-directory=\"{}\"".format(consts.TEX_DIR),
+            "\"{}\"".format(tex_file),
             ">",
             os.devnull
         ]
@@ -79,12 +79,12 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
     if not os.path.exists(result):
         commands = [
             "dvisvgm",
-            "\'{}\'".format(dvi_file),
+            "\"{}\"".format(dvi_file),
             "-n",
             "-v",
             "0",
             "-o",
-            "\'{}\'".format(result),
+            "\"{}\"".format(result),
             ">",
             os.devnull
         ]
