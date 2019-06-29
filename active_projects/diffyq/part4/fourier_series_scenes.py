@@ -2,6 +2,7 @@ from manimlib.imports import *
 
 from active_projects.diffyq.part2.fourier_series import FourierOfTrebleClef
 from active_projects.diffyq.part4.complex_functions import TRangingFrom0To1
+from active_projects.diffyq.part4.complex_functions import SimpleComplexExponentExample
 
 
 class ComplexFourierSeriesExample(FourierOfTrebleClef):
@@ -45,7 +46,7 @@ class ComplexFourierSeriesExample(FourierOfTrebleClef):
         title.to_edge(LEFT)
         title.match_y(self.path)
 
-        self.wait(5)
+        self.wait(11)
         self.play(FadeInFromDown(title))
         self.wait(2)
         self.title = title
@@ -110,7 +111,6 @@ class ComplexFourierSeriesExample(FourierOfTrebleClef):
                 *new_vect.get_start_and_end()
             ))
             vect.freq = new_vect.freq
-            vect.phase = new_vect.phase
             vect.coefficient = new_vect.coefficient
 
             vect.line = line
@@ -268,6 +268,18 @@ class ComplexFourierSeriesExample(FourierOfTrebleClef):
             self.get_path_end(vectors, stroke_width, **kwargs),
         )
 
+    def get_vertically_falling_tracing(self, vector, color, stroke_width=3, rate=0.25):
+        path = VMobject()
+        path.set_stroke(color, stroke_width)
+        path.start_new_path(vector.get_end())
+        path.vector = vector
+
+        def update_path(p, dt):
+            p.shift(rate * dt * DOWN)
+            p.add_smooth_curve_to(p.vector.get_end())
+        path.add_updater(update_path)
+        return path
+
 
 class PiFourierSeries(ComplexFourierSeriesExample):
     CONFIG = {
@@ -353,14 +365,16 @@ class RealValuedFunctionFourierSeries(PiFourierSeries):
                 ),
             )
 
-        self.remove(self.path)
+        self.remove(self.path, self.drawn_path)
         self.play(
             get_opacity_animation(
                 3, len(vectors), lambda a: smooth(1 - a),
             ),
             ShowCreation(rects1, lag_ratio=0.3),
         )
-        for n in range(2):
+        traced_path2 = self.get_vertically_falling_tracing(vectors[2], GREEN)
+        self.add(traced_path2)
+        for n in range(3):
             self.run_one_cycle()
 
         self.play(
@@ -371,6 +385,9 @@ class RealValuedFunctionFourierSeries(PiFourierSeries):
             ),
             ReplacementTransform(rects1, rects2),
         )
+        traced_path2.set_stroke(width=1)
+        traced_path4 = self.get_vertically_falling_tracing(vectors[4], YELLOW)
+        self.add(traced_path4)
         self.run_one_cycle()
         self.play(
             get_opacity_animation(5, 7, smooth),
@@ -380,8 +397,12 @@ class RealValuedFunctionFourierSeries(PiFourierSeries):
             ),
             ReplacementTransform(rects2, rects3),
         )
-        self.run_one_cycle()
-        self.run_one_cycle()
+        traced_path2.set_stroke(width=1)
+        traced_path4.set_stroke(width=1)
+        traced_path6 = self.get_vertically_falling_tracing(vectors[6], TEAL)
+        self.add(traced_path6)
+        for n in range(2):
+            self.run_one_cycle()
 
 
 class DemonstrateAddingArrows(PiFourierSeries):
@@ -1427,6 +1448,448 @@ class IntegralTrick(LabelRotatingVectors, TRangingFrom0To1):
         return VGroup(input_dots, output_dots)
 
 
+class IncreaseOrderOfApproximation(ComplexFourierSeriesExample):
+    CONFIG = {
+        "file_name": "FourierOneLine",
+        "drawing_height": 6,
+        "n_vectors": 250,
+        "parametric_function_step_size": 0.001,
+        "run_time": 10,
+        # "n_vectors": 25,
+        # "parametric_function_step_size": 0.01,
+        # "run_time": 5,
+        "slow_factor": 0.05,
+    }
+
+    def construct(self):
+        path = self.get_path()
+        path.to_edge(DOWN)
+        path.set_stroke(YELLOW, 2)
+        freqs = self.get_freqs()
+        coefs = self.get_coefficients_of_path(
+            path, freqs=freqs,
+        )
+        vectors = self.get_rotating_vectors(freqs, coefs)
+        circles = self.get_circles(vectors)
+
+        n_tracker = ValueTracker(2)
+        n_label = VGroup(
+            TextMobject("Approximation using"),
+            Integer(100).set_color(YELLOW),
+            TextMobject("vectors")
+        )
+        n_label.arrange(RIGHT)
+        n_label.to_corner(UL)
+        n_label.add_updater(
+            lambda n: n[1].set_value(
+                n_tracker.get_value()
+            ).align_to(n[2], DOWN)
+        )
+
+        changing_path = VMobject()
+        vector_copies = VGroup()
+        circle_copies = VGroup()
+
+        def update_changing_path(cp):
+            n = n_label[1].get_value()
+            cp.become(self.get_vector_sum_path(vectors[:n]))
+            cp.set_stroke(YELLOW, 2)
+            # While we're at it...
+            vector_copies.submobjects = list(vectors[:n])
+            circle_copies.submobjects = list(circles[:n])
+
+        changing_path.add_updater(update_changing_path)
+
+        self.add(n_label, n_tracker, changing_path)
+        self.add(vector_copies, circle_copies)
+        self.play(
+            n_tracker.set_value, self.n_vectors,
+            rate_func=smooth,
+            run_time=self.run_time,
+        )
+        self.wait(5)
+
+
+class ShowStepFunctionIn2dView(SimpleComplexExponentExample, ComplexFourierSeriesExample):
+    CONFIG = {
+        "input_space_rect_config": {
+            "width": 5,
+            "height": 2,
+        },
+        "input_line_config": {
+            "unit_size": 3,
+            "x_min": 0,
+            "x_max": 1,
+            "tick_frequency": 0.1,
+            "stroke_width": 2,
+            "decimal_number_config": {
+                "num_decimal_places": 1,
+            }
+        },
+        "input_numbers": [0, 0.5, 1],
+        "input_tex_args": [],
+        # "n_vectors": 300,
+        "n_vectors": 2,
+    }
+
+    def construct(self):
+        self.setup_plane()
+        self.setup_input_space()
+        self.setup_input_trackers()
+        self.clear()
+
+        self.transition_from_step_function()
+        self.show_output()
+        self.show_fourier_series()
+
+    def setup_input_space(self):
+        super().setup_input_space()
+        rect = self.input_rect
+        line = self.input_line
+        # rect.stretch(1.2, 1, about_edge=UP)
+        line.shift(MED_SMALL_BUFF * UP)
+        sf = 1.2
+        line.stretch(sf, 0)
+        for n in line.numbers:
+            n.stretch(1 / sf, 0)
+
+        label = TextMobject("Input space")
+        label.next_to(rect.get_bottom(), UP, SMALL_BUFF)
+        self.add(label)
+        self.input_space_label = label
+
+    def transition_from_step_function(self):
+        x_axis = self.input_line
+        input_tip = self.input_tip
+        input_label = self.input_label
+        input_rect = self.input_rect
+        input_space_label = self.input_space_label
+        plane = self.plane
+        plane.set_opacity(0)
+
+        x_axis.save_state()
+        # x_axis.center()
+        x_axis.move_to(ORIGIN, LEFT)
+        sf = 1.5
+        x_axis.stretch(sf, 0)
+        for number in x_axis.numbers:
+            number.stretch(1 / sf, 0)
+        x_axis.numbers[0].set_opacity(0)
+
+        y_axis = NumberLine(
+            unit_size=2,
+            x_min=-1.5,
+            x_max=1.5,
+            tick_frequency=0.5,
+            stroke_color=LIGHT_GREY,
+            stroke_width=2,
+        )
+        # y_axis.match_style(x_axis)
+        y_axis.rotate(90 * DEGREES)
+        y_axis.shift(x_axis.n2p(0) - y_axis.n2p(0))
+        y_axis.add_numbers(
+            -1, 0, 1,
+            direction=LEFT,
+        )
+        axes = Axes()
+        axes.x_axis = x_axis
+        axes.y_axis = y_axis
+        axes.axes = VGroup(x_axis, y_axis)
+
+        graph = VGroup(
+            Line(
+                axes.c2p(0, 1),
+                axes.c2p(0.5, 1),
+                color=RED,
+            ),
+            Line(
+                axes.c2p(0.5, -1),
+                axes.c2p(1, -1),
+                color=BLUE,
+            ),
+        )
+
+        dot1 = Dot(color=RED)
+        dot2 = Dot(color=BLUE)
+        dot1.add_updater(lambda d: d.move_to(y_axis.n2p(1)))
+        dot2.add_updater(lambda d: d.move_to(y_axis.n2p(-1)))
+        squish_graph = VGroup(dot1, dot2)
+
+        self.add(x_axis)
+        self.add(y_axis)
+        self.add(input_tip)
+        self.add(input_label)
+
+        self.play(
+            self.input_tracker.set_value, 1,
+            ShowCreation(graph),
+            run_time=3,
+            rate_func=lambda t: smooth(t, 1)
+        )
+        self.wait()
+        self.add(
+            plane, input_rect, input_space_label,
+            x_axis, input_tip, input_label,
+        )
+        self.play(
+            FadeIn(input_rect),
+            FadeIn(input_space_label),
+            Restore(x_axis),
+        )
+        self.play(ReplacementTransform(graph, squish_graph))
+
+        # Rotate y-axis, fade in plane
+        y_axis.generate_target(use_deepcopy=True)
+        y_axis.target.rotate(-TAU / 4)
+        y_axis.target.shift(
+            plane.n2p(0) - y_axis.target.n2p(0)
+        )
+        y_axis.target.numbers.set_opacity(0)
+
+        plane.set_opacity(1)
+        self.play(
+            MoveToTarget(y_axis),
+            ShowCreation(plane),
+        )
+        self.play(FadeOut(y_axis))
+        self.wait()
+        self.play(self.input_tracker.set_value, 0)
+
+        self.output_dots = squish_graph
+
+    def show_output(self):
+        input_tracker = self.input_tracker
+
+        def get_output_point():
+            return self.get_output_point(input_tracker.get_value())
+
+        tip = ArrowTip(start_angle=-TAU / 4)
+        tip.set_fill(YELLOW)
+        tip.match_height(self.input_tip)
+        tip.add_updater(lambda m: m.move_to(
+            get_output_point(), DOWN,
+        ))
+        output_label = TextMobject("Output")
+        output_label.add_background_rectangle()
+        output_label.add_updater(lambda m: m.next_to(
+            tip, UP, SMALL_BUFF,
+        ))
+
+        self.play(
+            FadeIn(tip),
+            FadeIn(output_label),
+        )
+
+        self.play(
+            input_tracker.set_value, 1,
+            run_time=8,
+            rate_func=linear
+        )
+        self.wait()
+        self.play(input_tracker.set_value, 0)
+
+        self.output_tip = tip
+
+    def show_fourier_series(self):
+        plane = self.plane
+        input_tracker = self.input_tracker
+        output_tip = self.output_tip
+
+        self.play(
+            plane.axes.set_stroke, WHITE, 1,
+            plane.background_lines.set_stroke, LIGHT_GREY, 0.5,
+            plane.faded_lines.set_stroke, LIGHT_GREY, 0.25, 0.5,
+        )
+
+        self.vector_clock.set_value(0)
+        self.add(self.vector_clock)
+        input_tracker.add_updater(lambda m: m.set_value(
+            self.vector_clock.get_value() % 1
+        ))
+        self.add_vectors_circles_path()
+        self.remove(self.drawn_path)
+        self.add(self.vectors)
+        output_tip.clear_updaters()
+        output_tip.add_updater(lambda m: m.move_to(
+            self.vectors[-1].get_end(), DOWN
+        ))
+
+        self.run_one_cycle()
+        path = self.get_vertically_falling_tracing(
+            self.vectors[1], GREEN, rate=0.5,
+        )
+        self.add(path)
+        for x in range(3):
+            self.run_one_cycle()
+
+    #
+    def get_freqs(self):
+        n = self.n_vectors
+        all_freqs = [
+            *range(1, n + 1 // 2, 2),
+            *range(-1, -n + 1 // 2, -2),
+        ]
+        all_freqs.sort(key=abs)
+        return all_freqs
+
+    def get_path(self):
+        path = VMobject()
+        p0, p1 = [
+            self.get_output_point(x)
+            for x in [0, 1]
+        ]
+        for p in p0, p1:
+            path.start_new_path(p)
+            path.add_line_to(p)
+        return path
+
+    def get_output_point(self, x):
+        return self.plane.n2p(self.step(x))
+
+    def step(self, x):
+        if x < 0.5:
+            return 1
+        elif x == 0.5:
+            return 0
+        else:
+            return -1
+
+
+class AddVectorsOneByOne(IntegralTrick):
+    CONFIG = {
+        "file_name": "TrebleClef",
+        # "start_drawn": True,
+        "n_vectors": 101,
+        "path_height": 5,
+    }
+
+    def construct(self):
+        self.setup_plane()
+        self.add_vectors_circles_path()
+        self.setup_input_space()
+        self.setup_input_trackers()
+        self.setup_top_row()
+        self.setup_sum()
+
+        self.show_sum()
+
+    def show_sum(self):
+        vectors = self.vectors
+        vector_clock = self.vector_clock
+        terms = self.terms
+
+        vector_clock.suspend_updating()
+        coef_tracker = ValueTracker(0)
+
+        def update_vector(vector):
+            vector.coefficient = interpolate(
+                1, vector.original_coefficient,
+                coef_tracker.get_value()
+            )
+
+        for vector in vectors:
+            vector.original_coefficient = vector.coefficient
+            vector.add_updater(update_vector)
+
+        rects = VGroup(*[
+            SurroundingRectangle(t[0])
+            for t in terms[:5]
+        ])
+
+        self.remove(self.drawn_path)
+        self.play(LaggedStartMap(
+            VFadeInThenOut, rects
+        ))
+        self.play(
+            coef_tracker.set_value, 1,
+            run_time=3
+        )
+        self.wait()
+        vector_clock.resume_updating()
+        self.input_tracker.add_updater(
+            lambda m: m.set_value(vector_clock.get_value() % 1)
+        )
+        self.add(self.drawn_path, self.input_tracker)
+        self.wait(10)
+
+    def get_path(self):
+        mob = SVGMobject(self.file_name)
+        path = mob.family_members_with_points()[0]
+        path.set_height(self.path_height)
+        path.move_to(self.plane.n2p(0))
+        path.set_stroke(YELLOW, 0)
+        path.set_fill(opacity=0)
+        return path
+
+
+class DE4Thumbnail(ComplexFourierSeriesExample):
+    CONFIG = {
+        "file_name": "FourierOneLine",
+        "start_drawn": True,
+        "n_vectors": 300,
+        "parametric_function_step_size": 0.0025,
+        "drawn_path_stroke_width": 7,
+        "drawing_height": 6,
+    }
+
+    def construct(self):
+        name = TextMobject("Fourier series")
+        name.set_width(FRAME_WIDTH - 2)
+        name.to_edge(UP)
+        name.set_color(YELLOW)
+        subname = TextMobject("a.k.a ``everything is rotations''")
+        subname.match_width(name)
+        subname.next_to(name, DOWN)
+
+        self.add(name)
+        self.add(subname)
+
+        path = self.get_path()
+        path.to_edge(DOWN)
+        path.set_stroke(YELLOW, 2)
+        freqs = self.get_freqs()
+        coefs = self.get_coefficients_of_path(path, freqs=freqs)
+        vectors = self.get_rotating_vectors(freqs, coefs)
+        # circles = self.get_circles(vectors)
+
+        ns = [10, 50, 250]
+        approxs = VGroup(*[
+            self.get_vector_sum_path(vectors[:n])
+            for n in ns
+        ])
+        approxs.arrange(RIGHT, buff=2.5)
+        approxs.set_height(4)
+        approxs.to_edge(DOWN, buff=LARGE_BUFF)
+        for a, c, w in zip(approxs, [BLUE, GREEN, YELLOW], [4, 3, 2]):
+            a.set_stroke(c, w)
+
+        labels = VGroup()
+        for n, approx in zip(ns, approxs):
+            label = TexMobject("n = ", str(n))
+            label[1].match_color(approx)
+            label.scale(2)
+            label.next_to(approx, DOWN)
+            label.to_edge(DOWN, buff=MED_SMALL_BUFF)
+            labels.add(label)
+
+        self.add(approxs)
+        self.add(labels)
+
+        return
+
+        self.add_vectors_circles_path()
+        n = 6
+        self.circles[n:].set_opacity(0)
+        self.circles[:n].set_stroke(width=3)
+        path = self.drawn_path
+        # path.set_stroke(BLACK, 8, background=True)
+        # path = self.path
+        # path.set_stroke(YELLOW, 5)
+        # path.set_stroke(BLACK, 8, background=True)
+        self.add(path, self.circles, self.vectors)
+
+        self.update_mobjects(0)
+
 # Pure fourier series with zooming.
 # Note to self, put out a single video with nothing
 # but these?
@@ -1567,7 +2030,7 @@ class FourierOfFourierZoomedIn(ZoomedInFourierSeriesExample):
     }
 
 
-class FourierOfFourier100xZoom(ZoomedInFourierSeriesExample10xMore):
+class FourierOfFourier100xZoom(ZoomedInFourierSeriesExample100x):
     CONFIG = {
         "file_name": "FourierOneLine",
         "max_circle_stroke_width": 0.3,
@@ -1580,9 +2043,9 @@ class FourierOfFourier100xZoom(ZoomedInFourierSeriesExample10xMore):
         self.wait(40)
 
 
-class FourierOfFourierPortrait(FourierSeriesExampleWithRectForZoom):
+class FourierOfFourierOneLineArtsy(FourierSeriesExampleWithRectForZoom):
     CONFIG = {
-        "file_name": "FourierPortraitOneLine",
-        "n_vectors": 1000,
+        "file_name": "JosephFourierOneLineArtsy",
+        "n_vectors": 100,
         "rect_stroke_width": 1,
     }

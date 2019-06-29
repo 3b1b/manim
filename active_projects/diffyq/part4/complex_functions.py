@@ -455,6 +455,10 @@ class ClarifyInputAndOutput(GeneralizeToComplexFunctions):
 
 
 class GraphForFlattenedPi(ClarifyInputAndOutput):
+    CONFIG = {
+        "camera_config": {"background_color": DARKER_GREY},
+    }
+
     def construct(self):
         self.setup_plane()
         plane = self.plane
@@ -474,10 +478,12 @@ class GraphForFlattenedPi(ClarifyInputAndOutput):
             y_max=1.5,
             y_axis_config={
                 "include_tip": False,
-                "unit_size": 2,
+                "unit_size": 2.5,
                 "tick_frequency": 0.5,
             },
         )
+        axes.set_width(FRAME_WIDTH - 1)
+        axes.set_height(FRAME_HEIGHT - 1, stretch=True)
         axes.center()
 
         axes.x_axis.add_numbers(
@@ -490,7 +496,7 @@ class GraphForFlattenedPi(ClarifyInputAndOutput):
         )
 
         def func(t):
-            return plane.y_axis.p2n(
+            return plane.x_axis.p2n(
                 path.point_from_proportion(t)
             )
 
@@ -520,6 +526,14 @@ class SimpleComplexExponentExample(ClarifyInputAndOutput):
             "width": 14,
             "height": 1.5,
         },
+        "input_line_config": {
+            "unit_size": 0.5,
+            "x_min": 0,
+            "x_max": 25,
+            "stroke_width": 2,
+        },
+        "input_numbers": range(0, 30, 5),
+        "input_tex_args": ["t", "="],
     }
 
     def construct(self):
@@ -529,7 +543,7 @@ class SimpleComplexExponentExample(ClarifyInputAndOutput):
         self.setup_output_trackers()
 
         # Testing
-        time = 12
+        time = self.input_line.x_max
         self.play(
             self.input_tracker.set_value, time,
             run_time=time,
@@ -559,7 +573,7 @@ class SimpleComplexExponentExample(ClarifyInputAndOutput):
         )
 
         input_label = VGroup(
-            TexMobject("t", "="),
+            TexMobject(*self.input_tex_args),
             DecimalNumber(),
         )
         input_label[0].set_color_by_tex("t", PINK)
@@ -659,18 +673,13 @@ class SimpleComplexExponentExample(ClarifyInputAndOutput):
 
     #
     def get_input_line(self, input_rect):
-        input_line = NumberLine(
-            unit_size=0.5,
-            x_min=0,
-            x_max=25,
-            stroke_width=2
-        )
+        input_line = NumberLine(**self.input_line_config)
         input_line.move_to(input_rect)
         input_line.set_width(
             input_rect.get_width() - 1.5,
             stretch=True,
         )
-        input_line.add_numbers(*range(0, 30, 5))
+        input_line.add_numbers(*self.input_numbers)
         return input_line
 
 

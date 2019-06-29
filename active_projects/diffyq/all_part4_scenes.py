@@ -10,15 +10,16 @@ from active_projects.diffyq.part3.staging import *
 OUTPUT_DIRECTORY = "diffyq/part4"
 SCENES_IN_ORDER = [
     ComplexFourierSeriesExample,
-    FourierSeriesExampleWithRectForZoom,
-    ZoomedInFourierSeriesExample,
-    ZoomedInFourierSeriesExample10xMore,
+    FourierOfFourier,
+    FourierOfFourierZoomedIn,
+    FourierOfFourier100xZoom,
     FourierSeriesFormula,
     RelationToOtherVideos,
     WhyWouldYouCare,
     ShowLinearity,
     CombineSeveralSolutions,
     FourierGainsImmortality,
+    SolveForWavesNothingElse,
     CycleThroughManyLinearCombinations,
     StepFunctionExample,
     WhichWavesAreAvailable,
@@ -27,7 +28,7 @@ SCENES_IN_ORDER = [
     CommentOnFouriersImmortality,
     HangOnThere,
     ShowInfiniteSum,
-    # TODO
+    TechnicalNuances,
     BreakDownStepFunction,
     StepFunctionSolutionFormla,
     # How to compute
@@ -47,6 +48,14 @@ SCENES_IN_ORDER = [
     IntegralTrick,
     SwapIntegralAndSum,
     FootnoteOnSwappingIntegralAndSum,
+    FormulaOutOfContext,
+    ShowRangeOfCnFormulas,
+    DescribeSVG,
+    # TODO
+    IncreaseOrderOfApproximation,
+    ShowStepFunctionIn2dView,
+    StepFunctionIntegral,
+    GeneralChallenge,
 
     # Oldies
     # FourierSeriesIllustraiton,

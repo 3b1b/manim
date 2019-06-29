@@ -3,17 +3,32 @@ from active_projects.diffyq.part3.staging import FourierSeriesIllustraiton
 from active_projects.diffyq.part2.wordy_scenes import WriteHeatEquationTemplate
 
 
+class FourierName(Scene):
+    def construct(self):
+        name = TextMobject("Joseph Fourier")
+        name.scale(1.5)
+        self.add(name)
+
+
 class FourierSeriesFormula(Scene):
     def construct(self):
         formula = TexMobject(
             "c_{n} = \\int_0^1 e^{-2\\pi i {n} {t}}f({t}){dt}",
             tex_to_color_map={
-                "{n}": RED,
-                "{t}": YELLOW,
+                "{n}": YELLOW,
+                "{t}": PINK,
             }
         )
 
         self.play(Write(formula))
+        self.wait()
+
+
+class Zoom100Label(Scene):
+    def construct(self):
+        text = TextMobject("100x Zoom")
+        text.scale(2)
+        self.play(GrowFromCenter(text))
         self.wait()
 
 
@@ -63,9 +78,10 @@ class RelationToOtherVideos(Scene):
         bubble[:-1].rotate(20 * DEGREES)
         for mob in bubble[:-1]:
             mob.rotate(-20 * DEGREES)
-        bubble.move_tip_to(
-            fourier.get_corner(UL) + DOWN
+        bubble.move_to(
+            fourier.get_center(), RIGHT
         )
+        bubble.shift(LEFT)
         bubble.to_edge(UP, buff=SMALL_BUFF)
 
         self.play(
@@ -1068,6 +1084,77 @@ class StepFunctionSolutionFormla(WriteHeatEquationTemplate):
         self.wait()
 
 
+class TechnicalNuances(Scene):
+    def construct(self):
+        title = TextMobject("Technical nuances not discussed")
+        title.scale(1.5)
+        title.set_color(YELLOW)
+        line = DashedLine(title.get_left(), title.get_right())
+        line.next_to(title, DOWN, SMALL_BUFF)
+        line.set_stroke(LIGHT_GREY, 3)
+
+        questions = VGroup(*map(TextMobject, [
+            "Does the value at $0.5$ matter?",
+            "What does it mean to solve a PDE with\\\\"
+            "a discontinuous initial condition?",
+            "Is the limit of a sequence of solutions\\\\"
+            "also a solution?",
+            "Do all functions have a Fourier series?",
+        ]))
+
+        self.play(
+            Write(title),
+            ShowCreation(line),
+        )
+        title.add(line)
+        self.play(
+            title.to_edge, UP,
+        )
+
+        last_question = VMobject()
+        for question in questions:
+            question.next_to(line, DOWN, MED_LARGE_BUFF)
+            self.play(
+                FadeInFromDown(question),
+                FadeOutAndShift(last_question, UP)
+            )
+            self.wait(2)
+            last_question = question
+
+
+class ArrowAndCircle(Scene):
+    def construct(self):
+        circle = Circle(color=RED)
+        circle.set_stroke(width=4)
+        circle.set_height(0.25)
+
+        arrow = Vector(DL)
+        arrow.set_color(RED)
+        arrow.next_to(circle, UR)
+        self.play(ShowCreation(arrow))
+        self.play(ShowCreation(circle))
+        self.play(FadeOut(circle))
+        self.wait()
+
+
+class SineWaveResidue(Scene):
+    def construct(self):
+        f = 2
+        wave = FunctionGraph(
+            lambda x: np.cos(-0.1 * f * TAU * x),
+            x_min=0,
+            x_max=20,
+            color=YELLOW,
+        )
+        wave.next_to(LEFT_SIDE, LEFT, buff=0)
+        time = 10
+        self.play(
+            wave.shift, time * RIGHT,
+            run_time=f * time,
+            rate_func=linear,
+        )
+
+
 class AskAboutComplexNotVector(Scene):
     def construct(self):
         c_ex = DecimalNumber(
@@ -1117,18 +1204,29 @@ class SwapIntegralAndSum(Scene):
     def construct(self):
         self.perform_swap()
         self.show_average_of_individual_terms()
+        self.ask_about_c2()
+        self.multiply_f_by_exp_neg_2()
+        self.show_modified_averages()
+        self.add_general_expression()
 
     def perform_swap(self):
-        tex_config = {
+        light_pink = self.light_pink = interpolate_color(
+            PINK, WHITE, 0.25
+        )
+        tex_config = self.tex_config = {
             "tex_to_color_map": {
                 "=": WHITE,
                 "\\int_0^1": WHITE,
+                "+": WHITE,
+                "\\cdots": WHITE,
                 "{t}": PINK,
-                "{dt}": interpolate_color(PINK, WHITE, 0.25),
+                "{dt}": light_pink,
+                "{-2}": YELLOW,
                 "{\\cdot 1}": YELLOW,
                 "{0}": YELLOW,
                 "{1}": YELLOW,
                 "{2}": YELLOW,
+                "{n}": YELLOW,
             },
         }
         int_ft = TexMobject(
@@ -1172,12 +1270,6 @@ class SwapIntegralAndSum(Scene):
         self.fix_minuses(int_sum)
         self.fix_minuses(sum_int)
 
-        # top_line = VGroup(int_ft, int_sum)
-        # top_line.arrange(RIGHT, buff=SMALL_BUFF)
-        # top_line.set_width(FRAME_WIDTH - 1)
-        # top_line.to_corner(UL)
-
-
         group = VGroup(int_ft, int_sum, sum_int)
         group.arrange(
             DOWN, buff=MED_LARGE_BUFF,
@@ -1188,16 +1280,430 @@ class SwapIntegralAndSum(Scene):
         int_ft.align_to(int_sum[1], LEFT)
         int_ft.shift(0.2 * RIGHT)
 
+        int_sum.exp_terms = self.get_exp_terms(int_sum)
+        sum_int.exp_terms = self.get_exp_terms(sum_int)
+        sum_int.int_terms = self.get_integral_terms(sum_int)
+
+        breakdown_label = TextMobject(
+            "Break this down"
+        )
+        arrow = Vector(LEFT)
+        arrow.next_to(int_ft, RIGHT)
+        breakdown_label.next_to(arrow, RIGHT)
+
+        aos_label = TextMobject(
+            "Average of a sum",
+            tex_to_color_map={
+                "Average": light_pink,
+                "sum": YELLOW,
+            }
+        )
+        soa_label = TextMobject(
+            "Sum over averages",
+            tex_to_color_map={
+                "averages": light_pink,
+                "Sum": YELLOW,
+            }
+        )
+        aos_label.next_to(ORIGIN, RIGHT, buff=2)
+        aos_label.to_edge(UP)
+        soa_label.move_to(2.5 * DOWN)
+        aos_arrow = Arrow(
+            aos_label.get_corner(DL),
+            int_sum.get_corner(TOP) + 2 * RIGHT,
+            buff=0.3,
+        )
+        soa_arrow = Arrow(
+            soa_label.get_top(),
+            sum_int.get_bottom(),
+            buff=0.3,
+        )
+
         self.add(int_ft)
-        self.add(int_sum)
-        self.add(sum_int)
+        self.play(
+            FadeInFrom(breakdown_label, LEFT),
+            GrowArrow(arrow),
+        )
+        self.wait()
+        self.play(
+            FadeOut(breakdown_label),
+            FadeOut(arrow),
+            FadeIn(int_sum.get_parts_by_tex("=")),
+            FadeIn(int_sum.get_parts_by_tex("+")),
+            FadeIn(int_sum.get_parts_by_tex("\\cdots")),
+            FadeIn(int_sum.get_parts_by_tex("(")),
+            FadeIn(int_sum.get_parts_by_tex(")")),
+            *[
+                TransformFromCopy(
+                    int_ft.get_part_by_tex(tex),
+                    int_sum.get_part_by_tex(tex),
+                )
+                for tex in ["\\int_0^1", "{dt}"]
+            ]
+        )
+        self.play(LaggedStart(*[
+            GrowFromPoint(
+                term,
+                int_ft.get_part_by_tex("{t}").get_center(),
+            )
+            for term in int_sum.exp_terms
+        ]))
+        self.wait()
+        self.play(
+            FadeIn(aos_label),
+            GrowArrow(aos_arrow)
+        )
+        self.play(
+            *[
+                TransformFromCopy(
+                    int_sum.get_parts_by_tex(tex),
+                    sum_int.get_parts_by_tex(tex),
+                    run_time=2,
+                )
+                for tex in ["\\cdots", "+"]
+            ],
+            TransformFromCopy(
+                int_sum.exp_terms,
+                sum_int.exp_terms,
+                run_time=2,
+            ),
+            FadeIn(soa_label),
+            GrowArrow(soa_arrow),
+        )
+        self.play(
+            *[
+                TransformFromCopy(
+                    int_sum.get_part_by_tex("\\int_0^1"),
+                    part,
+                    run_time=2,
+                )
+                for part in sum_int.get_parts_by_tex(
+                    "\\int_0^1"
+                )
+            ],
+            FadeIn(sum_int.get_parts_by_tex("{dt}"))
+        )
+        self.wait()
+        self.play(
+            FadeOut(soa_arrow),
+            soa_label.to_edge, DOWN,
+        )
+
+        self.int_sum = int_sum
+        self.sum_int = sum_int
+        self.int_ft = int_ft
+        self.aos_label = aos_label
+        self.aos_arrow = aos_arrow
+        self.soa_label = soa_label
+        self.soa_arrow = soa_arrow
 
     def show_average_of_individual_terms(self):
-        pass
+        sum_int = self.sum_int
+        int_ft = self.int_ft
+
+        braces = VGroup(*[
+            Brace(term, DOWN, buff=SMALL_BUFF)
+            for term in sum_int.int_terms
+        ])
+        self.play(LaggedStartMap(
+            GrowFromCenter, braces
+        ))
+
+        self.show_individual_average(braces[0], -1)
+        self.show_individual_average(braces[2], 1)
+        self.show_individual_average(braces[3], 2)
+        self.show_individual_average(braces[1], 0)
+
+        eq = TexMobject("=")
+        eq.next_to(int_ft, RIGHT)
+        c0 = self.c0.copy()
+        c0.generate_target()
+        c0.target.next_to(eq, RIGHT)
+        c0.target.shift(0.05 * DOWN)
+        self.play(
+            FadeIn(eq),
+            MoveToTarget(c0, run_time=2)
+        )
+        self.wait()
+
+        self.braces = braces
+        self.eq_c0 = VGroup(eq, c0)
+
+    def ask_about_c2(self):
+        int_sum = self.int_sum
+        sum_int = self.sum_int
+
+        c2 = int_sum.exp_terms[-1][:2]
+        c2_rect = SurroundingRectangle(c2, buff=0.05)
+        c2_rect.set_stroke(WHITE, 2)
+        c2_rect.stretch(1.5, 1, about_edge=DOWN)
+
+        q_marks = TexMobject("???")
+        q_marks.next_to(c2_rect, UP)
+
+        last_diagram = self.all_average_diagrams[-2]
+        last_int = sum_int.int_terms[-1]
+        big_rect = SurroundingRectangle(
+            VGroup(last_int, last_diagram)
+        )
+        big_rect.set_stroke(WHITE, 2)
+
+        self.play(
+            ShowCreation(c2_rect),
+            FadeOut(self.aos_arrow),
+            FadeInFromDown(q_marks),
+        )
+        self.play(ShowCreation(big_rect))
+        self.wait(2)
+        self.to_fade = VGroup(c2_rect, q_marks, big_rect)
+
+    def multiply_f_by_exp_neg_2(self):
+        int_ft = self.int_ft
+        int_sum = self.int_sum
+        sum_int = self.sum_int
+        eq_c0 = self.eq_c0
+        diagrams = self.all_average_diagrams
+        diagrams.sort(lambda p: p[0])
+
+        dt_part = int_ft.get_part_by_tex("{dt}")
+        pre_dt_part = int_ft[:-1]
+        new_exp = TexMobject(
+            "e^{{-2} \\cdot 2\\pi i {t}}",
+            **self.tex_config,
+        )
+        new_exp.next_to(pre_dt_part, RIGHT, SMALL_BUFF)
+        new_exp.shift(0.05 * UP)
+        something = TextMobject("(something)")
+        something.replace(new_exp, dim_to_match=0)
+        something.align_to(new_exp, DOWN)
+
+        self.play(
+            FadeOut(eq_c0),
+            Write(something, run_time=1),
+            dt_part.next_to, new_exp, RIGHT, SMALL_BUFF,
+            dt_part.align_to, dt_part, DOWN,
+        )
+        self.wait()
+        self.play(*[
+            Rotating(
+                diagram[2],
+                radians=n * TAU,
+                about_point=diagram[0].n2p(0),
+                run_time=3,
+                rate_func=lambda t: smooth(t, 1)
+            )
+            for n, diagram in zip(it.count(-3), diagrams)
+        ])
+        self.wait()
+        self.play(
+            FadeOutAndShift(something, UP),
+            FadeInFrom(new_exp, DOWN),
+        )
+        self.play(FadeOut(self.to_fade))
+
+        # Go through each term
+        moving_exp = new_exp.copy()
+        rect = SurroundingRectangle(moving_exp)
+        rect.set_stroke(LIGHT_GREY, width=1)
+        times = TexMobject("\\times")
+        times.next_to(rect, LEFT, SMALL_BUFF)
+        moving_exp.add(VGroup(rect, times))
+        moving_exp[-1].set_opacity(0)
+        moving_exp.save_state()
+        moving_exp.generate_target()
+
+        quads = zip(
+            it.count(-3),
+            int_sum.exp_terms,
+            sum_int.exp_terms,
+            diagrams,
+        )
+        for n, c_exp1, c_exp2, diagram in quads:
+            exp1 = c_exp1[2:]
+            exp2 = c_exp2[2:]
+            moving_exp.target[-1][0].set_stroke(opacity=1)
+            moving_exp.target[-1][1].set_fill(opacity=1)
+            moving_exp.target.next_to(exp1, UP, SMALL_BUFF)
+            if n < 0:
+                n_str = "{\\cdot" + str(abs(n)) + "}"
+            else:
+                n_str = "{" + str(n) + "}"
+            replacement1 = TexMobject(
+                "e^{", n_str, "\\cdot 2\\pi i", "{t}",
+                tex_to_color_map={
+                    "{t}": PINK,
+                    n_str: YELLOW,
+                }
+            )
+            self.fix_minuses(replacement1)
+            replacement1[1][0].shift(0.025 * LEFT)
+            replacement1.match_height(exp1)
+            replacement1.move_to(exp1, DL)
+            replacement2 = replacement1.copy()
+            replacement2.move_to(exp2, DL)
+            self.play(MoveToTarget(moving_exp))
+            self.play(
+                TransformFromCopy(
+                    moving_exp[1],
+                    replacement1[1],
+                ),
+                FadeOutAndShift(exp1[1], DOWN),
+                Transform(exp1[0], replacement1[0]),
+                Transform(exp1[2:], replacement1[2:]),
+            )
+            self.play(
+                TransformFromCopy(replacement1, replacement2),
+                FadeOutAndShift(exp2, DOWN),
+                FadeOut(diagram),
+            )
+        self.play(Restore(moving_exp))
+
+    def show_modified_averages(self):
+        braces = self.braces
+
+        for brace, n in zip(braces, it.count(-3)):
+            self.show_individual_average(brace, n, "c_2")
+
+        int_ft = self.int_ft
+        c2 = self.c0.copy()
+        c2.generate_target()
+        eq = TexMobject("=")
+        eq.next_to(int_ft, RIGHT)
+        c2.target.next_to(eq, RIGHT)
+        c2.target.shift(0.05 * DOWN)
+        self.play(
+            FadeIn(eq),
+            MoveToTarget(c2)
+        )
+        self.wait()
+
+    def add_general_expression(self):
+        expression = TexMobject(
+            """
+            c_{n} =
+            \\int_0^1 f({t})
+            e^{-{n} \\cdot 2\\pi i {t}}{dt}
+            """,
+            **self.tex_config,
+        )
+        rect = SurroundingRectangle(expression, buff=MED_SMALL_BUFF)
+        rect.set_fill(DARK_GREY, 1)
+        rect.set_stroke(WHITE, 3)
+        group = VGroup(rect, expression)
+        group.to_edge(UP, buff=SMALL_BUFF)
+        group.to_edge(RIGHT, buff=LARGE_BUFF)
+
+        self.play(
+            FadeOut(self.aos_label),
+            FadeIn(rect),
+            FadeIn(expression)
+        )
+        self.wait()
+
+    #
+    def show_individual_average(self, brace, n, cn_tex=None):
+        if not hasattr(self, "all_average_diagrams"):
+            self.all_average_diagrams = VGroup()
+
+        seed = brace.get_center()[0] + 1
+        int_seed = np.array([seed]).astype("uint32")
+        np.random.seed(int_seed)
+        if n == 0:
+            if cn_tex is None:
+                cn_tex = "c_" + str(n)
+            result = TexMobject(cn_tex)
+            result[0][1].set_color(YELLOW)
+            self.c0 = result
+        else:
+            result = TexMobject("0")
+            result.set_color(self.light_pink)
+        result.next_to(brace, DOWN, SMALL_BUFF)
+
+        coord_max = 1.25
+        plane = ComplexPlane(
+            x_min=-coord_max,
+            x_max=coord_max,
+            y_min=-coord_max,
+            y_max=coord_max,
+            axis_config={
+                "stroke_color": LIGHT_GREY,
+                "stroke_width": 1,
+                "unit_size": 0.75,
+            },
+            background_line_style={
+                "stroke_color": LIGHT_GREY,
+                "stroke_width": 1,
+            },
+        )
+        plane.next_to(result, DOWN, SMALL_BUFF)
+
+        vector = Arrow(
+            plane.n2p(0),
+            plane.n2p(
+                (0.2 + 0.8 * np.random.random()) * np.exp(complex(
+                    0, TAU * np.random.random()
+                ))
+            ),
+            buff=0,
+            color=WHITE,
+        )
+        circle = Circle()
+        circle.set_stroke(BLUE, 2)
+        circle.rotate(vector.get_angle())
+        circle.set_width(2 * vector.get_length())
+        circle.move_to(plane.n2p(0))
+
+        dots = VGroup(*[
+            Dot(
+                circle.point_from_proportion(
+                    (n * a) % 1
+                ),
+                radius=0.04,
+                color=PINK,
+                fill_opacity=0.75,
+            )
+            for a in np.arange(0, 1, 1 / 25)
+        ])
+        dot_center = center_of_mass([
+            d.get_center() for d in dots
+        ])
+
+        self.play(
+            FadeIn(plane),
+            FadeIn(circle),
+            FadeIn(vector),
+        )
+        self.play(
+            Rotating(
+                vector,
+                radians=n * TAU,
+                about_point=plane.n2p(0),
+            ),
+            ShowIncreasingSubsets(
+                dots,
+                int_func=np.ceil,
+            ),
+            rate_func=lambda t: smooth(t, 1),
+            run_time=3,
+        )
+        dot_copies = dots.copy()
+        self.play(*[
+            ApplyMethod(dot.move_to, dot_center)
+            for dot in dot_copies
+        ])
+        self.play(
+            TransformFromCopy(dot_copies[0], result)
+        )
+        self.wait()
+
+        self.all_average_diagrams.add(VGroup(
+            plane, circle, vector,
+            dots, dot_copies, result,
+        ))
 
     #
     def fix_minuses(self, tex_mob):
-        for mob in tex_mob.get_parts_by_tex("{\\cdot 1}"):
+        for mob in tex_mob.get_parts_by_tex("{\\cdot"):
             minus = TexMobject("-")
             minus.match_style(mob[0])
             minus.set_width(
@@ -1207,7 +1713,759 @@ class SwapIntegralAndSum(Scene):
             minus.move_to(mob, LEFT)
             mob.submobjects[0] = minus
 
+    def get_terms_by_tex_bounds(self, tex_mob, tex1, tex2):
+        c_parts = tex_mob.get_parts_by_tex(tex1)
+        t_parts = tex_mob.get_parts_by_tex(tex2)
+        result = VGroup()
+        for p1, p2 in zip(c_parts, t_parts):
+            i1 = tex_mob.index_of_part(p1)
+            i2 = tex_mob.index_of_part(p2)
+            result.add(tex_mob[i1:i2 + 1])
+        return result
+
+    def get_exp_terms(self, tex_mob):
+        return self.get_terms_by_tex_bounds(
+            tex_mob, "c_", "{t}"
+        )
+
+    def get_integral_terms(self, tex_mob):
+        return self.get_terms_by_tex_bounds(
+            tex_mob, "\\int", "{dt}"
+        )
+
 
 class FootnoteOnSwappingIntegralAndSum(Scene):
     def construct(self):
+        words = TextMobject(
+            """
+            Typically in math, you have to be more\\\\
+            careful swapping the order of sums like\\\\
+            this when infinities are involved. Again,\\\\
+            such questions are what real analysis \\\\
+            is built for.
+            """,
+            alignment=""
+        )
+
+        self.add(words)
+        self.wait()
+
+
+class ShowRangeOfCnFormulas(Scene):
+    def construct(self):
+        formulas = VGroup(*[
+            self.get_formula(n)
+            for n in [-50, None, -1, 0, 1, None, 50]
+        ])
+        formulas.scale(0.7)
+        formulas.arrange(
+            DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
+        )
+        dots = formulas[1::4]
+        dots.shift(MED_LARGE_BUFF * RIGHT)
+
+        formulas.set_height(FRAME_HEIGHT - 0.5)
+        formulas.to_edge(LEFT)
+
+        self.play(LaggedStartMap(
+            FadeInFrom, formulas,
+            lambda m: (m, UP),
+            lag_ratio=0.2,
+            run_time=4,
+        ))
+        self.wait()
+
+    def get_formula(self, n):
+        if n is None:
+            return TexMobject("\\vdots")
+        light_pink = interpolate_color(PINK, WHITE, 0.25)
+        n_str = "{" + str(n) + "}"
+        neg_n_str = "{" + str(-n) + "}"
+        expression = TexMobject(
+            "c_" + n_str, "=",
+            "\\int_0^1 f({t})",
+            "e^{", neg_n_str,
+            "\\cdot 2\\pi i {t}}{dt}",
+            tex_to_color_map={
+                "{t}": light_pink,
+                "{dt}": light_pink,
+                n_str: YELLOW,
+                neg_n_str: YELLOW,
+            }
+        )
+        return expression
+
+
+class DescribeSVG(Scene):
+    def construct(self):
+        plane = ComplexPlane(
+            axis_config={"unit_size": 2}
+        )
+        plane.add_coordinates()
+        self.add(plane)
+
+        svg_mob = SVGMobject("TrebleClef")
+        path = svg_mob.family_members_with_points()[0]
+        path.set_fill(opacity=0)
+        path.set_stroke(YELLOW, 2)
+        path.set_height(6)
+        path.shift(0.5 * RIGHT)
+        path_parts = CurvesAsSubmobjects(path)
+        path_parts.set_stroke(GREEN, 3)
+        self.add(path)
+
+        dot = Dot()
+        dot.set_color(PINK)
+        ft_label = TexMobject("f(t) = ")
+        ft_label.to_corner(UL)
+        z_decimal = DecimalNumber(num_decimal_places=3)
+        z_decimal.next_to(ft_label, RIGHT)
+        z_decimal.add_updater(lambda m: m.set_value(
+            plane.p2n(dot.get_center())
+        ))
+        z_decimal.set_color(interpolate_color(PINK, WHITE, 0.25))
+        rect = BackgroundRectangle(VGroup(ft_label, z_decimal))
+
+        brace = Brace(rect, DOWN)
+        question = TextMobject("Where is this defined?")
+        question.add_background_rectangle()
+        question.next_to(brace, DOWN)
+
+        answer = TextMobject("Read in some .svg")
+        answer.add_background_rectangle()
+        answer.next_to(question, DOWN, LARGE_BUFF)
+
+        self.add(rect, ft_label, z_decimal)
+        self.add(question, brace)
+        self.play(UpdateFromAlphaFunc(
+            dot,
+            lambda d, a: d.move_to(path.point_from_proportion(a)),
+            run_time=5,
+            rate_func=lambda t: 0.3 * there_and_back(t)
+        ))
+        self.wait()
+        self.play(FadeInFrom(answer, UP))
+        self.play(
+            FadeOut(path),
+            FadeOut(dot),
+            FadeIn(path_parts),
+        )
+
+        path_parts.generate_target()
+        path_parts.save_state()
+        path_parts.target.space_out_submobjects(1.3)
+        for part in path_parts.target:
+            part.shift(0.2 * part.get_center()[0] * RIGHT)
+        path_parts.target.move_to(path_parts)
+        self.play(
+            MoveToTarget(path_parts)
+        )
+
+        indicators = self.get_bezier_point_indicators(path_parts)
+        self.play(ShowCreation(
+            indicators,
+            lag_ratio=0.5,
+            run_time=3,
+        ))
+        self.wait()
+        self.play(
+            FadeOut(indicators),
+            path_parts.restore,
+        )
+
+    def get_bezier_point_indicators(self, path):
+        dots = VGroup()
+        lines = VGroup()
+        for part in path.family_members_with_points():
+            for tup in part.get_cubic_bezier_tuples():
+                a1, h1, h2, a2 = tup
+                dots.add(
+                    Dot(a1),
+                    Dot(a2),
+                    Dot(h2, color=YELLOW),
+                    Dot(h1, color=YELLOW),
+                )
+                lines.add(
+                    Line(a1, h1),
+                    Line(a2, h2),
+                )
+        for dot in dots:
+            dot.set_width(0.05)
+        lines.set_stroke(WHITE, 1)
+        return VGroup(dots, lines)
+
+
+class NumericalIntegration(Scene):
+    CONFIG = {
+        "tex_config": {
+            "tex_to_color_map": {
+                "{t}": LIGHT_PINK,
+                "{dt}": LIGHT_PINK,
+                "{n}": YELLOW,
+                "{0.01}": WHITE,
+            }
+        }
+    }
+
+    def construct(self):
+        self.add_title()
+        self.add_integral()
+
+    def add_title(self):
+        title = TextMobject("Integrate numerically")
+        title.scale(1.5)
+        title.to_edge(UP)
+        line = Line()
+        line.set_width(title.get_width() + 1)
+        line.next_to(title, DOWN)
+        self.add(title, line)
+        self.title = title
+
+    def add_integral(self):
+        integral = TexMobject(
+            "c_{n}", "=", "\\int_0^1 f({t})"
+            "e^{-{n} \\cdot 2\\pi i {t}}{dt}",
+            **self.tex_config,
+        )
+        integral.to_edge(LEFT)
+
+        sum_tex = TexMobject(
+            " \\approx \\text{sum([} \\dots",
+            "f({0.01}) e^{-{n} \\cdot 2\\pi i ({0.01})}({0.01})"
+            "\\dots \\text{])}",
+            **self.tex_config,
+        )
+        sum_tex.next_to(
+            integral.get_part_by_tex("="), DOWN,
+            buff=LARGE_BUFF,
+            aligned_edge=LEFT,
+        )
+
+        group = VGroup(integral, sum_tex)
+        group.next_to(self.title, DOWN, LARGE_BUFF)
+
+        t_tracker = ValueTracker(0)
+        decimal_templates = sum_tex.get_parts_by_tex("{0.01}")
+        decimal_templates.set_color(LIGHT_PINK)
+        decimals = VGroup(*[DecimalNumber() for x in range(2)])
+        for d, dt in zip(decimals, decimal_templates):
+            d.replace(dt)
+            d.set_color(LIGHT_PINK)
+            d.add_updater(lambda d: d.set_value(
+                t_tracker.get_value()
+            ))
+            dt.set_opacity(0)
+
+        delta_t_brace = Brace(decimal_templates[-1], UP, buff=SMALL_BUFF)
+        delta_t = delta_t_brace.get_tex(
+            "\\Delta t", buff=SMALL_BUFF
+        )
+        delta_t.set_color(PINK)
+
+        input_line = UnitInterval(
+            unit_size=10,
+        )
+        input_line.next_to(group, DOWN, LARGE_BUFF)
+        input_line.add_numbers(0, 0.5, 1)
+        dots = VGroup(*[
+            Dot(
+                input_line.n2p(t),
+                color=PINK,
+                radius=0.03,
+            ).stretch(2, 1)
+            for t in np.arange(0, 1, 0.01)
+        ])
+
+        self.add(integral)
+        self.add(sum_tex)
+        self.add(decimals)
+        self.add(delta_t, delta_t_brace)
+        self.add(input_line)
+
+        time = 15
+        self.play(
+            t_tracker.set_value, 0.99,
+            ShowIncreasingSubsets(dots),
+            run_time=time,
+            rate_func=lambda t: smooth(t, 1),
+        )
+        self.wait()
+
+    def get_term(self, t, dt):
         pass
+
+
+class StepFunctionIntegral(Scene):
+    def construct(self):
+        light_pink = interpolate_color(PINK, WHITE, 0.25)
+        tex_config = {
+            "tex_to_color_map": {
+                "{t}": light_pink,
+                "{dt}": light_pink,
+                "{n}": YELLOW,
+            }
+        }
+        cn_expression = TexMobject(
+            """
+            c_{n} =
+            \\int_0^1 \\text{step}({t})
+            e^{-{n}\\cdot 2\\pi i {t}} {dt}
+            """,
+            **tex_config
+        )
+        expansion = TexMobject(
+            """
+            =
+            \\int_0^{0.5} 1 \\cdot e^{-{n}\\cdot 2\\pi i {t}} {dt} +
+            \\int_{0.5}^1 -1 \\cdot e^{-{n}\\cdot 2\\pi i {t}} {dt}
+            """,
+            **tex_config
+        )
+        group = VGroup(cn_expression, expansion)
+        group.arrange(RIGHT)
+        group.set_width(FRAME_WIDTH - 1)
+        group.to_corner(UL)
+
+        words1 = TexMobject(
+            "\\text{Challenge 1: Show that }"
+            "c_{n} = {2 \\over {n} \\pi i}",
+            "\\text{ for odd }", "{n}",
+            "\\text{ and 0 otherwise}",
+            **tex_config,
+        )
+        words2 = TexMobject(
+            "\\text{Challenge 2: }",
+            "&\\text{Using }",
+            "\\sin(x) = (e^{ix} - e^{-ix}) / 2i,",
+            "\\text{ show that}\\\\"
+            "&\\text{step}({t}) = "
+            "\\sum_{n = -\\infty}^{\\infty}",
+            "c_{n} e^{{n} \\cdot 2\\pi i {t}}",
+            "=",
+            "\\sum_{n = 1, 3, 5, \\dots}",
+            "{4 \\over {n} \\pi}",
+            "\\sin\\left({n} \\cdot 2\\pi {t}\\right)",
+            **tex_config,
+        )
+        words3 = TextMobject(
+            "Challenge 3: How can you turn this into an "
+            "expansion with \\\\ \\phantom{Challenge 3:} cosines? "
+            "(Hint: Draw the sine waves over $[0.25, 0.75]$)",
+            # "Challenge 3: By focusing on the range $[0.25, 0.75]$, relate\\\\"
+            # "\\quad\\;\\, this to an expansion with cosines."
+            alignment="",
+        )
+
+        all_words = VGroup(words1, words2, words3)
+        all_words.arrange(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
+        all_words.scale(0.8)
+        all_words.to_edge(DOWN)
+
+        self.add(cn_expression)
+        self.wait()
+        self.play(FadeInFrom(expansion, LEFT))
+        for words in all_words:
+            self.play(FadeIn(words))
+            self.wait()
+
+
+class GeneralChallenge(Scene):
+    def construct(self):
+        title = TextMobject("More ambitious challenge")
+        title.scale(1.5)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+        title.set_color(BLUE)
+        line = Line()
+        line.match_width(title)
+        line.next_to(title, DOWN, SMALL_BUFF)
+        self.add(title, line)
+
+        light_pink = interpolate_color(PINK, WHITE, 0.25)
+        tex_config = {
+            "tex_to_color_map": {
+                "{t}": light_pink,
+                "{dt}": light_pink,
+                # "{0}": YELLOW,
+                "{n}": YELLOW,
+            }
+        }
+        words1 = TextMobject(
+            "In some texts, for a function $f$ on the input range $[0, 1]$,\\\\",
+            "its Fourier series is presented like this:",
+            alignment="",
+        )
+        formula1 = TexMobject(
+            "f(t) = {a_{0} \\over 2} + "
+            "\\sum_{n = 1}^{\\infty} \\big("
+            "a_{n} \\cos\\left({n} \\cdot 2\\pi {t}\\right) + "
+            "b_{n} \\sin\\left({n} \\cdot 2\\pi {t}\\right) \\big)",
+            **tex_config
+        )
+        formula1[0][6].set_color(YELLOW)
+        words2 = TextMobject("where")
+        formula2 = TexMobject(
+            "a_{n} = 2\\int_0^1 f({t})\\cos\\left({n} \\cdot 2\\pi {t}\\right) {dt}\\\\"
+            # "\\text{ and }"
+            "b_{n} = 2\\int_0^1 f({t})\\sin\\left({n} \\cdot 2\\pi {t}\\right) {dt}",
+            **tex_config
+        )
+        words3 = TextMobject("How is this the same as what we just did?")
+
+        prompt = VGroup(words1, formula1, words2, formula2, words3)
+        prompt.arrange(DOWN, buff=MED_LARGE_BUFF)
+        words2.align_to(words1, LEFT)
+        words3.align_to(words1, LEFT)
+        prompt.set_height(6)
+        prompt.next_to(line, DOWN)
+
+        self.add(prompt)
+        self.wait()
+
+
+class HintToGeneralChallenge(Scene):
+    def construct(self):
+        self.add(FullScreenFadeRectangle(
+            fill_color=DARKER_GREY,
+            fill_opacity=1,
+        ))
+        words1 = TextMobject("Hint: Try writing")
+        formula1 = TexMobject(
+            "c_{n} =",
+            "{", "a_{n} \\over 2} +",
+            "{", "b_{n} \\over 2} i",
+            tex_to_color_map={
+                "{n}": YELLOW,
+            }
+        )
+        words2 = TextMobject("and")
+        formula2 = TexMobject(
+            "e^{i{x}} =",
+            "\\cos\\left({x}\\right) +",
+            "i\\sin\\left({x}\\right)",
+            tex_to_color_map={
+                "{x}": GREEN
+            }
+        )
+
+        all_words = VGroup(
+            words1, formula1,
+            words2, formula2
+        )
+        all_words.arrange(DOWN, buff=LARGE_BUFF)
+
+        self.add(all_words)
+
+
+class OtherResources(Scene):
+    def construct(self):
+        thumbnails = Group(
+            ImageMobject("MathologerFourier"),
+            ImageMobject("CodingTrainFourier"),
+        )
+        names = VGroup(
+            TextMobject("Mathologer"),
+            TextMobject("The Coding Train"),
+        )
+
+        for thumbnail, name in zip(thumbnails, names):
+            thumbnail.set_height(3)
+
+        thumbnails.arrange(RIGHT, buff=LARGE_BUFF)
+        thumbnails.set_width(FRAME_WIDTH - 1)
+
+        for thumbnail, name in zip(thumbnails, names):
+            name.scale(1.5)
+            name.next_to(thumbnail, UP)
+            thumbnail.add(name)
+            self.play(
+                FadeInFromDown(name),
+                GrowFromCenter(thumbnail)
+            )
+            self.wait()
+
+        url = TextMobject("www.jezzamon.com")
+        url.scale(1.5)
+        url.move_to(FRAME_WIDTH * RIGHT / 5)
+        url.to_edge(UP)
+        self.play(
+            thumbnails.arrange, DOWN, {"buff": LARGE_BUFF},
+            thumbnails.set_height, FRAME_HEIGHT - 2,
+            thumbnails.to_edge, LEFT
+        )
+        self.play(FadeInFromDown(url))
+        self.wait()
+
+
+class ExponentialsMoreBroadly(Scene):
+    def construct(self):
+        self.write_fourier_series()
+        self.pull_out_complex_exponent()
+        self.show_matrix_exponent()
+
+    def write_fourier_series(self):
+        formula = TexMobject(
+            "f({t}) = "
+            "\\sum_{n = -\\infty}^\\infty",
+            "c_{n}", "e^{{n} \\cdot 2\\pi i {t}}"
+            "",
+            tex_to_color_map={
+                "{t}": LIGHT_PINK,
+                "{n}": YELLOW
+            }
+        )
+        formula[2][4].set_color(YELLOW)
+        formula.scale(1.5)
+        formula.to_edge(UP)
+        formula.add_background_rectangle_to_submobjects()
+
+        plane = ComplexPlane(
+            axis_config={"unit_size": 2}
+        )
+
+        self.play(FadeInFromDown(formula))
+        self.wait()
+        self.add(plane, formula)
+        self.play(
+            formula.scale, 0.7,
+            formula.to_corner, UL,
+            ShowCreation(plane)
+        )
+
+        self.formula = formula
+        self.plane = plane
+
+    def pull_out_complex_exponent(self):
+        formula = self.formula
+
+        c_exp = TexMobject("e^{it}")
+        c_exp[0][2].set_color(LIGHT_PINK)
+        c_exp.set_stroke(BLACK, 3, background=True)
+        c_exp.move_to(formula.get_part_by_tex("e^"), DL)
+        c_exp.set_opacity(0)
+
+        dot = Dot()
+        circle = Circle(radius=2)
+        circle.set_color(YELLOW)
+        dot.add_updater(lambda d: d.move_to(circle.get_end()))
+
+        self.play(
+            c_exp.set_opacity, 1,
+            c_exp.scale, 1.5,
+            c_exp.next_to, dot, UR, SMALL_BUFF,
+            GrowFromCenter(dot),
+        )
+        c_exp.add_updater(
+            lambda m: m.next_to(dot, UR, SMALL_BUFF)
+        )
+        self.play(
+            ShowCreation(circle),
+            run_time=4,
+        )
+        self.wait()
+
+        self.c_exp = c_exp
+        self.circle = circle
+        self.dot = dot
+
+    def show_matrix_exponent(self):
+        c_exp = self.c_exp
+        formula = self.formula
+        circle = self.circle
+        dot = self.dot
+
+        m_exp = TexMobject(
+            "\\text{exp}\\left("
+            "\\left[ \\begin{array}{cc}0 & -1 \\\\ 1 & 0 \\end{array} \\right]",
+            "{t} \\right)",
+            "=",
+            "\\left[ \\begin{array}{cc}"
+            "\\cos(t) & -\\sin(t) \\\\ \\sin(t) & \\cos(t)"
+            "\\end{array} \\right]",
+        )
+        VGroup(
+            m_exp[1][0],
+            m_exp[3][5],
+            m_exp[3][12],
+            m_exp[3][18],
+            m_exp[3][24],
+        ).set_color(LIGHT_PINK)
+        m_exp.to_corner(UL)
+        m_exp.add_background_rectangle_to_submobjects()
+
+        vector_field = VectorField(
+            lambda p: rotate_vector(p, TAU / 4),
+            max_magnitude=7,
+            delta_x=0.5,
+            delta_y=0.5,
+            length_func=lambda norm: 0.35 * sigmoid(norm),
+        )
+        vector_field.sort(get_norm)
+
+        self.play(
+            FadeInFromDown(m_exp),
+            FadeOutAndShift(formula, UP),
+            FadeOut(c_exp)
+        )
+        self.add(vector_field, circle, dot, m_exp)
+        self.play(
+            ShowCreation(
+                vector_field,
+                lag_ratio=0.001,
+            )
+        )
+        self.play(Rotating(circle, run_time=TAU))
+        self.wait()
+
+
+class Part4EndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "1stViewMaths",
+            "Adrian Robinson",
+            "Alexis Olson",
+            "Andreas Benjamin Brössel",
+            "Andrew Busey",
+            "Ankalagon",
+            "Antoine Bruguier",
+            "Antonio Juarez",
+            "Arjun Chakroborty",
+            "Art Ianuzzi",
+            "Awoo",
+            "Ayan Doss",
+            "AZsorcerer",
+            "Barry Fam",
+            "Bernd Sing",
+            "Boris Veselinovich",
+            "Brian Staroselsky",
+            "Caleb Johnstone",
+            "Charles Southerland",
+            "Chris Connett",
+            "Christian Kaiser",
+            "Clark Gaebel",
+            "Cooper Jones",
+            "Danger Dai",
+            "Daniel Pang",
+            "Dave B",
+            "Dave Kester",
+            "David B. Hill",
+            "David Clark",
+            "DeathByShrimp",
+            "Delton Ding",
+            "eaglle",
+            "Empirasign",
+            "emptymachine",
+            "Eric Younge",
+            "Eryq Ouithaqueue",
+            "Federico Lebron",
+            "Fernando Via Canel",
+            "Giovanni Filippi",
+            "Hal Hildebrand",
+            "Hitoshi Yamauchi",
+            "Isaac Jeffrey Lee",
+            "j eduardo perez",
+            "Jacob Harmon",
+            "Jacob Hartmann",
+            "Jacob Magnuson",
+            "Jameel Syed",
+            "Jason Hise",
+            "Jeff Linse",
+            "Jeff Straathof",
+            "John C. Vesey",
+            "John Griffith",
+            "John Haley",
+            "John V Wertheim",
+            "Jonathan Eppele",
+            "Josh Kinnear",
+            "Kai-Siang Ang",
+            "Kanan Gill",
+            "Kartik Cating-Subramanian",
+            "L0j1k",
+            "Lee Redden",
+            "Linh Tran",
+            "Ludwig Schubert",
+            "Magister Mugit",
+            "Mark B Bahu",
+            "Martin Price",
+            "Mathias Jansson",
+            "Matt Langford",
+            "Matt Roveto",
+            "Matthew Bouchard",
+            "Matthew Cocke",
+            "Michael Faust",
+            "Michael Hardel",
+            "Michael R Rader",
+            "Mirik Gogri",
+            "Mustafa Mahdi",
+            "Márton Vaitkus",
+            "Nero Li",
+            "Nikita Lesnikov",
+            "Omar Zrien",
+            "Oscar Wu",
+            "Owen Campbell-Moore",
+            "Patrick Lucas",
+            "Peter Ehrnstrom",
+            "RedAgent14",
+            "rehmi post",
+            "Richard Comish",
+            "Ripta Pasay",
+            "Rish Kundalia",
+            "Roobie",
+            "Ryan Williams",
+            "Sebastian Garcia",
+            "Solara570",
+            "Steven Siddals",
+            "Stevie Metke",
+            "Tal Einav",
+            "Ted Suzman",
+            "Tianyu Ge",
+            "Tom Fleming",
+            "Tyler VanValkenburg",
+            "Valeriy Skobelev",
+            "Xuanji Li",
+            "Yavor Ivanov",
+            "YinYangBalance.Asia",
+            "Zach Cardwell",
+            "Luc Ritchie",
+            "Britt Selvitelle",
+            "David Gow",
+            "J",
+            "Jonathan Wilson",
+            "Joseph John Cox",
+            "Magnus Dahlström",
+            "Randy C. Will",
+            "Ryan Atallah",
+            "Lukas -krtek.net- Novy",
+            "Jordan Scales",
+            "Ali Yahya",
+            "Arthur Zey",
+            "Atul S",
+            "dave nicponski",
+            "Evan Phillips",
+            "Joseph Kelly",
+            "Kaustuv DeBiswas",
+            "Lambda AI Hardware",
+            "Lukas Biewald",
+            "Mark Heising",
+            "Mike Coleman",
+            "Nicholas Cahill",
+            "Peter Mcinerney",
+            "Quantopian",
+            "Roy Larson",
+            "Scott Walter, Ph.D.",
+            "Yana Chernobilsky",
+            "Yu Jun",
+            "D. Sivakumar",
+            "Richard Barthel",
+            "Burt Humburg",
+            "Matt Russell",
+            "Scott Gray",
+            "soekul",
+            "Tihan Seale",
+            "Juan Benet",
+            "Vassili Philippov",
+            "Kurt Dicus",
+        ],
+    }
+

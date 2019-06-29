@@ -280,6 +280,19 @@ class BreakDownStepFunction(StepFunctionExample):
             axes.deepcopy()
             for x in range(4)
         ])
+        for n, ma in zip(it.count(1, 2), mini_axes):
+            if n == 1:
+                t1 = TexMobject("1")
+                t2 = TexMobject("-1")
+            else:
+                t1 = TexMobject("1 / " + str(n))
+                t2 = TexMobject("-1 / " + str(n))
+            VGroup(t1, t2).scale(1.5)
+            t1.next_to(ma.y_axis.n2p(1), LEFT, MED_SMALL_BUFF)
+            t2.next_to(ma.y_axis.n2p(-1), LEFT, MED_SMALL_BUFF)
+            ma.y_axis.numbers.set_opacity(0)
+            ma.y_axis.add(t1, t2)
+
         for mob in mini_axes.get_family():
             if isinstance(mob, Line):
                 mob.set_stroke(width=1, family=False)
@@ -314,9 +327,9 @@ class BreakDownStepFunction(StepFunctionExample):
         mini_graphs = VGroup()
         for axes, u, n in zip(mini_axes, it.cycle([1, -1]), it.count(1, 2)):
             mini_graph = axes.get_graph(
-                lambda x: (4 / PI) * (u / n) * np.cos(PI * n * x),
+                lambda x: (4 / PI) * (u / 1) * np.cos(PI * n * x),
             )
-            mini_graph.set_stroke(width=2)
+            mini_graph.set_stroke(WHITE, width=2)
             mini_graphs.add(mini_graph)
         # mini_graphs.set_color_by_gradient(
         #     BLUE, GREEN, RED, YELLOW,

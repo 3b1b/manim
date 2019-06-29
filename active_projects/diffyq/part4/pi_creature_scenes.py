@@ -22,6 +22,29 @@ class WhyWouldYouCare(TeacherStudentsScene):
         self.wait(5)
 
 
+class SolveForWavesNothingElse(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Sure, we can\\\\solve it for\\\\sums of waves...",
+            target_mode="sassy",
+            student_index=2,
+            added_anims=[self.teacher.change, "guilty"]
+        )
+        self.change_student_modes("pondering", "pondering", "sassy")
+        self.look_at(self.screen)
+        self.wait(4)
+        self.student_says(
+            "But nothing else!",
+            target_mode="angry",
+        )
+        self.change_student_modes(
+            "concerned_musician",
+            "concerned_musician",
+            "angry",
+        )
+        self.wait(5)
+
+
 class HangOnThere(TeacherStudentsScene):
     def construct(self):
         student = self.students[2]
@@ -188,4 +211,25 @@ class LooseWithLanguage(TeacherStudentsScene):
         self.play(FadeInFromDown(terms[0]))
         self.wait()
         self.play(Swap(*terms))
+        self.wait(3)
+
+
+class FormulaOutOfContext(TeacherStudentsScene):
+    def construct(self):
+        formula = TexMobject(
+            "c_{n} = \\int_0^1 e^{-2\\pi i {n} {t}}f({t}){dt}",
+            tex_to_color_map={
+                "{n}": YELLOW,
+                "{t}": PINK,
+            }
+        )
+        formula.scale(1.5)
+        formula.next_to(self.students, UP, LARGE_BUFF)
+
+        self.add(formula)
+        self.change_all_student_modes(
+            "horrified",
+            look_at_arg=formula,
+        )
+        self.play(self.teacher.change, "tease")
         self.wait(3)
