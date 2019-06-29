@@ -217,6 +217,7 @@ COLOR_MAP = {
     "DARKER_GRAY": "#222222",
     "GREY_BROWN": "#736357",
     "PINK": "#D147BD",
+    "LIGHT_PINK": "#DC75CD",
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 }
