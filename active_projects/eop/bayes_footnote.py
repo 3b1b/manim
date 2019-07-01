@@ -7,13 +7,14 @@ SICKLY_GREEN = "#9BBD37"
 
 class BayesClassicExampleOpeningQuote(OpeningQuote):
     CONFIG = {
-        "quote" : [
-            "When faced with a difficult question, we often " \
-            "answer an easier one instead, usually without " \
+        "quote": [
+            "When faced with a difficult question, we often "
+            "answer an easier one instead, usually without "
             "noticing the substitution.",
         ],
-        "author" : "Daniel Kahneman",
+        "author": "Daniel Kahneman",
     }
+
 
 class Introduction(TeacherStudentsScene):
     def construct(self):
@@ -62,15 +63,15 @@ class Introduction(TeacherStudentsScene):
         intuition = TextMobject("Intuition")
 
         group = VGroup(bayes, arrow, intuition)
-        group.arrange(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff=SMALL_BUFF)
         group.scale(0.8)
-        group.next_to(self.example, UP, buff = SMALL_BUFF)
+        group.next_to(self.example, UP, buff=SMALL_BUFF)
         group.shift_onto_screen()
         cross = VGroup(
             Line(UP+LEFT, DOWN+RIGHT),
             Line(UP+RIGHT, DOWN+LEFT),
         )
-        cross.replace(arrow, stretch = True)
+        cross.replace(arrow, stretch=True)
         cross.set_stroke(RED, 6)
         group.add(cross)
 
@@ -88,8 +89,8 @@ class Introduction(TeacherStudentsScene):
 
         self.teacher_says(
             "Who doesn't love \\\\ crazy results?",
-            target_mode = "hooray",
-            added_anims = [disease_group.to_corner, UP+LEFT]
+            target_mode="hooray",
+            added_anims=[disease_group.to_corner, UP+LEFT]
         )
         self.wait(2)
 
@@ -105,12 +106,12 @@ class Introduction(TeacherStudentsScene):
             disease_group.to_edge, LEFT,
             RemovePiCreatureBubble(
                 self.teacher,
-                target_mode = "hesitant"
+                target_mode="hesitant"
             )
         )
         self.change_student_modes(
-            *["pondering"]*3, 
-            look_at_arg = disease_group
+            *["pondering"]*3,
+            look_at_arg=disease_group
         )
 
         poker_example.next_to(self.example, RIGHT)
@@ -120,7 +121,7 @@ class Introduction(TeacherStudentsScene):
         bayes_to_intuition = VGroup(*list(map(TextMobject, [
             "Bayes", "$\\leftrightarrow$", "Intuition"
         ])))
-        bayes_to_intuition.arrange(RIGHT, buff = SMALL_BUFF)
+        bayes_to_intuition.arrange(RIGHT, buff=SMALL_BUFF)
         bayes_to_intuition.next_to(brace, UP, SMALL_BUFF)
         check = TexMobject("\\checkmark")
         check.set_color(GREEN)
@@ -145,8 +146,8 @@ class Introduction(TeacherStudentsScene):
         )
 
         self.play(
-            disease_group.next_to, 
-                self.teacher.get_corner(UP+LEFT), UP,
+            disease_group.next_to,
+            self.teacher.get_corner(UP+LEFT), UP,
             disease_group.shift, LEFT,
             intuitive_examples.scale, 0.7,
             intuitive_examples.to_corner, UP+LEFT,
@@ -160,7 +161,7 @@ class Introduction(TeacherStudentsScene):
         something_else.set_height(bayes.get_height())
         something_else.move_to(bayes, RIGHT)
         new_group = VGroup(
-            something_else, 
+            something_else,
             *self.bayes_to_intuition[1:]
         )
 
@@ -169,10 +170,9 @@ class Introduction(TeacherStudentsScene):
         self.play(new_group.next_to, self.example, UP, SMALL_BUFF)
         self.change_student_modes(
             "erm", "confused", "hesitant",
-            added_anims = [self.teacher.change_mode, "happy"]
+            added_anims=[self.teacher.change_mode, "happy"]
         )
         self.wait(3)
-
 
     #####
 
@@ -182,7 +182,7 @@ class Introduction(TeacherStudentsScene):
         community_cards = VGroup(*list(map(PlayingCard, values)))
         community_cards.arrange(RIGHT)
         deck = VGroup(*[
-            PlayingCard(turned_over = True)
+            PlayingCard(turned_over=True)
             for x in range(5)
         ])
         for i, card in enumerate(deck):
@@ -205,7 +205,7 @@ class Introduction(TeacherStudentsScene):
     def get_music_example(self):
         rect = self.get_example_rect()
 
-        musician = Randolph(mode = "soulful_musician")
+        musician = Randolph(mode="soulful_musician")
         musician.left_arm_range = [.36, .45]
         musician.arms = musician.get_arm_copies()
         guitar = musician.guitar = Guitar()
@@ -229,6 +229,7 @@ class Introduction(TeacherStudentsScene):
         rect = self.example[0].copy()
         rect.set_color(WHITE)
         return rect
+
 
 class OneInOneThousandHaveDisease(Scene):
     def construct(self):
@@ -263,9 +264,10 @@ class OneInOneThousandHaveDisease(Scene):
         self.play(randy.restore)
         self.play(
             Write(title),
-            LaggedStartMap(FadeIn, all_creatures, run_time = 3)
+            LaggedStartMap(FadeIn, all_creatures, run_time=3)
         )
         self.wait()
+
 
 class TestScene(PiCreatureScene):
     def get_result(self, creature, word, color):
@@ -274,7 +276,7 @@ class TestScene(PiCreatureScene):
         test_result.set_color(color)
         test_result.next_to(arrow.get_end(), RIGHT)
         group = VGroup(arrow, test_result)
-        group.next_to(creature, RIGHT, aligned_edge = UP)
+        group.next_to(creature, RIGHT, aligned_edge=UP)
         return group
 
     def get_positive_result(self, creature):
@@ -285,12 +287,12 @@ class TestScene(PiCreatureScene):
 
     def get_test_arrow(self):
         arrow = Arrow(
-            LEFT, RIGHT, 
-            color = WHITE,
+            LEFT, RIGHT,
+            color=WHITE,
         )
         word = TextMobject("Test")
         word.scale(0.8)
-        word.next_to(arrow, UP, buff = 0)
+        word.next_to(arrow, UP, buff=0)
         arrow.add(word)
         return arrow
 
@@ -298,6 +300,7 @@ class TestScene(PiCreatureScene):
         randy = Randolph()
         randy.next_to(ORIGIN, LEFT)
         return randy
+
 
 class TestDiseaseCase(TestScene):
     def construct(self):
@@ -314,6 +317,7 @@ class TestDiseaseCase(TestScene):
         self.play(Write(result[1]))
         self.play(FadeIn(accuracy))
         self.wait()
+
 
 class TestNonDiseaseCase(TestScene):
     def construct(self):
@@ -335,7 +339,7 @@ class TestNonDiseaseCase(TestScene):
         all_creatures.set_height(6)
         all_creatures.to_corner(DOWN+LEFT)
         last_guy = all_creatures[-1][-1]
-        rect = SurroundingRectangle(last_guy, buff = 0)
+        rect = SurroundingRectangle(last_guy, buff=0)
         rect.set_color(YELLOW)
 
         self.add(randy, accuracy)
@@ -344,7 +348,7 @@ class TestNonDiseaseCase(TestScene):
         self.play(Blink(randy))
         self.play(
             ReplacementTransform(randy, all_creatures[0][0]),
-            LaggedStartMap(FadeIn, all_creatures, run_time = 2),
+            LaggedStartMap(FadeIn, all_creatures, run_time=2),
             FadeOut(result)
         )
         self.play(ShowCreation(rect))
@@ -359,7 +363,7 @@ class TestNonDiseaseCase(TestScene):
         false_positive.to_edge(RIGHT)
         arrow = Arrow(
             false_positive.get_bottom(), result[1].get_top(),
-            buff = SMALL_BUFF
+            buff=SMALL_BUFF
         )
         self.play(FadeIn(result))
         self.play(
@@ -370,6 +374,7 @@ class TestNonDiseaseCase(TestScene):
         for x in range(2):
             self.play(Blink(last_guy))
             self.wait(2)
+
 
 class ReceivePositiveResults(TestScene):
     def construct(self):
@@ -390,19 +395,21 @@ class ReceivePositiveResults(TestScene):
         self.wait(2)
         self.play(
             randy.change, "pleading", accuracy,
-            Write(accuracy, run_time = 1)
+            Write(accuracy, run_time=1)
         )
         self.wait()
         self.play(randy.change, "sad", accuracy)
         self.wait(2)
 
+
 class AskAboutRephrasingQuestion(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "What if we rephrased \\\\ the question?",
-            run_time = 1
+            run_time=1
         )
         self.wait(3)
+
 
 class RephraseQuestion(Scene):
     def construct(self):
@@ -414,7 +421,7 @@ class RephraseQuestion(Scene):
                 after testing positive.
             """,
         ])))
-        words.arrange(RIGHT, buff = LARGE_BUFF)
+        words.arrange(RIGHT, buff=LARGE_BUFF)
         words.set_width(2*(FRAME_X_RADIUS - MED_LARGE_BUFF))
 
         prior = TextMobject("Prior")
@@ -436,7 +443,7 @@ class RephraseQuestion(Scene):
         self.play(
             LaggedStartMap(FadeIn, prior),
             ShowCreation(prior_arrow),
-            run_time = 1
+            run_time=1
         )
         self.wait()
         self.play(FadeIn(words[1]))
@@ -445,9 +452,10 @@ class RephraseQuestion(Scene):
         self.play(
             LaggedStartMap(FadeIn, posterior),
             ShowCreation(posterior_arrow),
-            run_time = 1
+            run_time=1
         )
         self.wait(2)
+
 
 class TryUnitSquareVisual(SampleSpaceScene):
     def construct(self):
@@ -468,12 +476,12 @@ class TryUnitSquareVisual(SampleSpaceScene):
         self.wait()
         anims = self.get_division_change_animations(
             sample_space, sample_space.horizontal_parts,
-            0.001, new_label_kwargs = {"labels" : final_labels}
+            0.001, new_label_kwargs={"labels": final_labels}
         )
-        self.play(*anims, run_time = 2)
+        self.play(*anims, run_time=2)
         self.wait()
         self.play(
-            Write(hard_to_see, run_time = 2),
+            Write(hard_to_see, run_time=2),
             ShowCreation(arrow)
         )
         self.wait(2)
@@ -510,7 +518,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
         self.wait()
 
         bottom_part.divide_vertically(
-            0.95, colors = [BLUE_E, YELLOW_E]
+            0.95, colors=[BLUE_E, YELLOW_E]
         )
         bottom_label = TexMobject(
             "P(", "+", "|", "\\text{Not disease}", ")", "=", "1"
@@ -529,13 +537,15 @@ class TryUnitSquareVisual(SampleSpaceScene):
         self.play(FadeIn(bottom_label))
         self.wait()
 
+
 class ShowRestrictedSpace(Scene):
     CONFIG = {
-        "n_rows" : 25,
-        "n_cols" : 40,
-        "n_false_positives" : 10,
-        "false_positive_color" : YELLOW_E,
+        "n_rows": 25,
+        "n_cols": 40,
+        "n_false_positives": 10,
+        "false_positive_color": YELLOW_E,
     }
+
     def construct(self):
         self.add_all_creatures()
         self.show_accurate_positive_result()
@@ -559,7 +569,7 @@ class ShowRestrictedSpace(Scene):
         sick_one_words.set_color(SICKLY_GREEN)
         sick_one_arrow = Arrow(
             sick_one_words, sick_one,
-            color = SICKLY_GREEN
+            color=SICKLY_GREEN
         )
 
         healthy_words = TextMobject("999 healthy")
@@ -584,9 +594,9 @@ class ShowRestrictedSpace(Scene):
             Write(healthy_words),
             LaggedStartMap(
                 ApplyMethod, healthy_creatures,
-                lambda m : (m.shift, MED_SMALL_BUFF*UP),
-                rate_func = there_and_back,
-                lag_ratio = 0.2,
+                lambda m: (m.shift, MED_SMALL_BUFF*UP),
+                rate_func=there_and_back,
+                lag_ratio=0.2,
             )
         )
         self.wait()
@@ -600,21 +610,21 @@ class ShowRestrictedSpace(Scene):
 
     def show_accurate_positive_result(self):
         equation = TexMobject(
-            "P(", "\\text{Test positive }", "|", 
+            "P(", "\\text{Test positive }", "|",
             "\\text{ sick}", ")", "=", "100\\%"
         )
         equation.set_color_by_tex("positive", YELLOW)
         equation.set_color_by_tex("sick", SICKLY_GREEN)
         equation.to_corner(UP+LEFT)
 
-        self.play(Write(equation, run_time = 1))
+        self.play(Write(equation, run_time=1))
         self.wait(2)
 
         self.disease_conditional = equation
 
     def show_false_positive_conditional(self):
         equation = TexMobject(
-            "P(", "\\text{Test positive }", "|", 
+            "P(", "\\text{Test positive }", "|",
             "\\text{ healthy}", ")", "=", "1\\%"
         )
         equation.set_color_by_tex("positive", YELLOW)
@@ -643,8 +653,8 @@ class ShowRestrictedSpace(Scene):
             GrowFromCenter(brace),
             LaggedStartMap(
                 ApplyMethod, false_positives,
-                lambda pi : (pi.set_color, self.false_positive_color),
-                run_time = 1
+                lambda pi: (pi.set_color, self.false_positive_color),
+                run_time=1
             )
         )
         self.play(Write(words))
@@ -682,11 +692,11 @@ class ShowRestrictedSpace(Scene):
             self.false_positives_words.next_to, brace, DOWN
         )
         self.play(
-            Write(words, run_time = 2),
+            Write(words, run_time=2),
             ShowCreation(arrows[0])
         )
         self.play(Transform(
-            *arrows, run_time = 4, rate_func = there_and_back
+            *arrows, run_time=4, rate_func=there_and_back
         ))
         self.play(*list(map(FadeOut, [words, arrows[0]])))
 
@@ -694,7 +704,7 @@ class ShowRestrictedSpace(Scene):
 
     def show_posterior_probability(self):
         posterior = TexMobject(
-            "P(", "\\text{Sick }", "|", 
+            "P(", "\\text{Sick }", "|",
             "\\text{ Positive test result}", ")",
             "\\approx \\frac{1}{11}", "\\approx 9\\%"
         )
@@ -717,17 +727,17 @@ class ShowRestrictedSpace(Scene):
 
         self.revert_to_original_skipping_status()
         self.play(
-            Write(prior, run_time = 1),
+            Write(prior, run_time=1),
             self.posterior.shift, DOWN,
         )
         arrow = Arrow(
             prior.get_right(), self.posterior.get_right(),
-            path_arc = -np.pi,
+            path_arc=-np.pi,
         )
         times_90 = TexMobject("\\times 90")
         times_90.next_to(arrow, RIGHT)
         self.play(ShowCreation(arrow))
-        self.play(Write(times_90, run_time = 1))
+        self.play(Write(times_90, run_time=1))
         self.wait(2)
 
     ######
@@ -752,6 +762,7 @@ class ShowRestrictedSpace(Scene):
         all_creatures.sick_one = sick_one
         all_creatures.healthy_creatures = healthy_creatures
         return all_creatures
+
 
 class DepressingForMedicalTestDesigners(TestScene):
     def construct(self):
@@ -800,9 +811,10 @@ class DepressingForMedicalTestDesigners(TestScene):
         self.wait()
         self.say(
             "Whatever, I'm 91\\% \\\\ sure that's wrong",
-            target_mode = "shruggie"
+            target_mode="shruggie"
         )
         self.wait(2)
+
 
 class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
     def construct(self):
@@ -814,7 +826,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
         creatures = self.get_all_creatures()
         creatures.set_height(6.5)
         creatures.center()
-        creatures.submobjects  = list(it.chain(*creatures))
+        creatures.submobjects = list(it.chain(*creatures))
 
         self.add(creatures)
         self.sick_one = creatures.sick_one
@@ -838,7 +850,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
                 self.pi_creatures[i+25:i+25+5:]
             ))
             for i in range(0, 1000)
-            if i%5 == 0 and (i/25)%2 == 0
+            if i % 5 == 0 and (i/25) % 2 == 0
         ])
         special_group = subgroups[-5]
         special_group.add(self.sick_one)
@@ -857,12 +869,12 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
 
         rects = VGroup(*[
             SurroundingRectangle(
-                group, buff = 0, color = GREEN
+                group, buff=0, color=GREEN
             )
             for group in subgroups
         ])
         special_rect = SurroundingRectangle(
-            special_group, buff = 0, color = RED
+            special_group, buff=0, color=RED
         )
         self.play(FadeIn(rects), FadeIn(special_rect))
         self.wait()
@@ -881,10 +893,12 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
         )
         self.wait()
 
+
 class ShowTheFormula(TeacherStudentsScene):
     CONFIG = {
-        "seconds_to_blink" : 3,
+        "seconds_to_blink": 3,
     }
+
     def construct(self):
         scale_factor = 0.7
         sick = "\\text{sick}"
@@ -898,7 +912,7 @@ class ShowTheFormula(TeacherStudentsScene):
         )
         formula.scale(scale_factor)
         formula.next_to(self.pi_creatures, UP, LARGE_BUFF)
-        formula.shift_onto_screen(buff = MED_LARGE_BUFF)
+        formula.shift_onto_screen(buff=MED_LARGE_BUFF)
         equals_group = formula.get_parts_by_tex("=")
         equals_indices = [
             formula.index_of_part(equals)
@@ -935,15 +949,14 @@ class ShowTheFormula(TeacherStudentsScene):
             mob.set_color_by_tex(sick, SICKLY_GREEN)
             mob.set_color_by_tex(positive, YELLOW)
 
-
-        #Ask question
+        # Ask question
         self.student_says("What does the \\\\ formula look like here?")
         self.play(self.teacher.change, "happy")
         self.wait()
         self.play(
             Write(lhs),
             RemovePiCreatureBubble(
-                self.students[1], target_mode = "pondering",
+                self.students[1], target_mode="pondering",
             ),
             self.teacher.change, "raise_right_hand",
             self.students[0].change, "pondering",
@@ -951,14 +964,14 @@ class ShowTheFormula(TeacherStudentsScene):
         )
         self.wait()
 
-        #Show initial formula
+        # Show initial formula
         lhs_copy = lhs.copy()
         self.play(
             LaggedStartMap(
-                FadeIn, initial_formula, 
-                lag_ratio = 0.7
+                FadeIn, initial_formula,
+                lag_ratio=0.7
             ),
-            Animation(lhs_copy, remover = True),
+            Animation(lhs_copy, remover=True),
         )
         self.wait(2)
         self.play(ShowCreation(numerator_rect))
@@ -969,7 +982,7 @@ class ShowTheFormula(TeacherStudentsScene):
         formula.add(*numerator)
         self.wait(3)
 
-        #Show number_fraction
+        # Show number_fraction
         self.play(
             initial_formula.move_to, initial_formula.saved_state,
             FadeIn(VGroup(*number_fraction[:3]))
@@ -977,22 +990,24 @@ class ShowTheFormula(TeacherStudentsScene):
         self.wait(2)
         self.play(LaggedStartMap(
             FadeIn, VGroup(*number_fraction[3:]),
-            run_time = 3,
-            lag_ratio = 0.7
+            run_time=3,
+            lag_ratio=0.7
         ))
         self.wait(2)
 
-        #Show rhs
+        # Show rhs
         self.play(formula.shift, UP)
         self.play(Write(rhs))
         self.change_student_modes(*["happy"]*3)
         self.look_at(rhs)
         self.wait(2)
 
+
 class SourceOfConfusion(Scene):
     CONFIG = {
-        "arrow_width" : 5,
+        "arrow_width": 5,
     }
+
     def construct(self):
         self.add_progression()
         self.ask_question()
@@ -1011,7 +1026,7 @@ class SourceOfConfusion(Scene):
         progression.shift(DOWN)
 
         bayes_rule_words = TextMobject("Bayes' rule")
-        bayes_rule_words.next_to(arrow, UP, buff = 0)
+        bayes_rule_words.next_to(arrow, UP, buff=0)
         arrow.add(bayes_rule_words)
 
         for mob, word in (prior, "Prior"), (posterior, "Posterior"):
@@ -1031,7 +1046,7 @@ class SourceOfConfusion(Scene):
         question_arrow = Arrow(
             question.get_bottom(),
             self.bayes_rule_words.get_top(),
-            color = WHITE
+            color=WHITE
         )
 
         self.play(Write(question))
@@ -1045,8 +1060,8 @@ class SourceOfConfusion(Scene):
         words = self.bayes_rule_words
         words_rect = SurroundingRectangle(words)
         rule = TexMobject(
-            "P(", "S", "|", "+", ")", "=", 
-            "P(", "S", ")", 
+            "P(", "S", "|", "+", ")", "=",
+            "P(", "S", ")",
             "{P(", "+", "|", "S", ")", "\\over",
             "P(", "+", ")}"
         )
@@ -1058,13 +1073,13 @@ class SourceOfConfusion(Scene):
         rule.save_state()
         rule.replace(words_rect)
         rule.scale_in_place(0.9)
-        rule.set_fill(opacity = 0)
+        rule.set_fill(opacity=0)
 
         self.play(ShowCreation(words_rect))
         self.play(
             ReplacementTransform(words_rect, rule_rect),
             rule.restore,
-            run_time = 2
+            run_time=2
         )
         self.wait(3)
 
@@ -1072,7 +1087,7 @@ class SourceOfConfusion(Scene):
         new_arrow = Arrow(
             self.question.get_bottom(),
             self.progression[0].get_top(),
-            color = WHITE
+            color=WHITE
         )
 
         self.play(Transform(
@@ -1080,6 +1095,7 @@ class SourceOfConfusion(Scene):
             new_arrow
         ))
         self.wait(2)
+
 
 class StatisticsVsEmpathy(PiCreatureScene):
     def construct(self):
@@ -1090,7 +1106,7 @@ class StatisticsVsEmpathy(PiCreatureScene):
             sick_one, VectorizedPoint(sick_one.get_bottom())
         )
         priors = VGroup(*[
-            TexMobject("%.1f"%p+ "\\%").move_to(ORIGIN, RIGHT)
+            TexMobject("%.1f" % p + "\\%").move_to(ORIGIN, RIGHT)
             for p in np.arange(0.1, 2.0, 0.1)
         ])
         priors.next_to(randy, UP+LEFT, LARGE_BUFF)
@@ -1098,9 +1114,9 @@ class StatisticsVsEmpathy(PiCreatureScene):
         prior.save_state()
 
         self.play(PiCreatureSays(
-            morty, 
+            morty,
             "1 in 1{,}000 people \\\\ have this disease.",
-            look_at_arg = randy.eyes
+            look_at_arg=randy.eyes
         ))
         self.play(randy.change, "pondering", morty.eyes)
         self.wait()
@@ -1115,10 +1131,10 @@ class StatisticsVsEmpathy(PiCreatureScene):
         self.play(
             PiCreatureBubbleIntroduction(
                 randy, sick_group,
-                target_mode = "guilty",
-                bubble_class = ThoughtBubble,
-                content_introduction_class = FadeIn,
-                look_at_arg = sick_one,
+                target_mode="guilty",
+                bubble_class=ThoughtBubble,
+                content_introduction_class=FadeIn,
+                look_at_arg=sick_one,
             ),
             RemovePiCreatureBubble(morty)
         )
@@ -1137,13 +1153,13 @@ class StatisticsVsEmpathy(PiCreatureScene):
         target_sick_group.scale(0.8)
         self.pi_creature_thinks(
             target_sick_group,
-            target_mode = "pleading",
+            target_mode="pleading",
         )
         self.wait(2)
 
         self.play(prior.restore)
         for new_prior in priors[1:]:
-            self.play(Transform(prior, new_prior, run_time = 0.5))
+            self.play(Transform(prior, new_prior, run_time=0.5))
         self.wait()
 
     ######
@@ -1154,6 +1170,7 @@ class StatisticsVsEmpathy(PiCreatureScene):
         randy.to_edge(DOWN).shift(3*LEFT)
         morty.to_edge(DOWN).shift(3*RIGHT)
         return VGroup(randy, morty)
+
 
 class LessMedicalExample(Scene):
     def construct(self):
@@ -1170,22 +1187,23 @@ class LessMedicalExample(Scene):
         )
         self.wait()
 
+
 class PlaneCrashProbability(Scene):
     def construct(self):
         plane_prob = TexMobject(
-            "P(\\text{Dying in a }", "\\text{plane}", "\\text{ crash})", 
+            "P(\\text{Dying in a }", "\\text{plane}", "\\text{ crash})",
             "\\approx", "1/", "11{,}000{,}000"
         )
         plane_prob.set_color_by_tex("plane", BLUE)
         car_prob = TexMobject(
-            "P(\\text{Dying in a }", "\\text{car}", "\\text{ crash})", 
+            "P(\\text{Dying in a }", "\\text{car}", "\\text{ crash})",
             "\\approx", "1/", "5{,}000"
         )
         car_prob.set_color_by_tex("car", YELLOW)
         plane_prob.shift(UP)
         car_prob.shift(
-            plane_prob.get_part_by_tex("approx").get_center() -\
-            car_prob.get_part_by_tex("approx").get_center() +\
+            plane_prob.get_part_by_tex("approx").get_center() -
+            car_prob.get_part_by_tex("approx").get_center() +
             DOWN
         )
 
@@ -1195,6 +1213,7 @@ class PlaneCrashProbability(Scene):
             plane_prob.copy(), car_prob
         ))
         self.wait(2)
+
 
 class IntroduceTelepathyExample(StatisticsVsEmpathy):
     def construct(self):
@@ -1222,19 +1241,19 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         randy, morty = self.randy, self.morty
         self.play(PiCreatureSays(
             randy, "I have the gift.",
-            run_time = 1,
-            look_at_arg = morty.eyes,
+            run_time=1,
+            look_at_arg=morty.eyes,
         ))
         self.wait()
         self.play(RemovePiCreatureBubble(
             randy,
-            target_mode = "happy",
-            look_at_arg = morty.eyes
+            target_mode="happy",
+            look_at_arg=morty.eyes
         ))
 
     def generate_random_number(self):
         morty = self.morty
-        bubble = morty.get_bubble("", direction = LEFT)
+        bubble = morty.get_bubble("", direction=LEFT)
         numbers = [
             Integer(random.choice(list(range(100))))
             for x in range(30)
@@ -1243,7 +1262,6 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         for number in numbers:
             number.next_to(morty, UP, LARGE_BUFF, RIGHT)
 
-
         for number in numbers:
             self.add(number)
             Scene.wait(self, 0.1)
@@ -1251,7 +1269,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         self.play(
             ShowCreation(bubble),
             number.move_to, bubble.get_bubble_center(), DOWN+LEFT,
-            morty.change, "pondering", 
+            morty.change, "pondering",
         )
         self.wait()
 
@@ -1265,8 +1283,8 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         self.read_mind(randy, morty)
         self.play(PiCreatureSays(
             randy, number_copy,
-            target_mode = "hooray",
-            look_at_arg = morty.eyes
+            target_mode="hooray",
+            look_at_arg=morty.eyes
         ))
         self.wait()
 
@@ -1292,18 +1310,17 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         self.play(
             PiCreatureSays(
                 morty, "You probably \\\\ got lucky.",
-                target_mode = "sassy",
-                look_at_arg = randy.eyes,
-                bubble_kwargs = {"height" : 3, "width" : 4}
+                target_mode="sassy",
+                look_at_arg=randy.eyes,
+                bubble_kwargs={"height": 3, "width": 4}
             ),
             RemovePiCreatureBubble(
-                randy, 
-                target_mode = "plain",
-                look_at_arg = morty.eyes,
+                randy,
+                target_mode="plain",
+                look_at_arg=morty.eyes,
             )
         )
         self.wait(2)
-
 
     ###
 
@@ -1319,8 +1336,8 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         vect = pi2.eyes.get_center() - pi1.eyes.get_center()
         vect[1] = 0
 
-        arc = Arc(angle = angle)
-        arc.rotate(-angle/2 + angle_of_vector(vect), about_point = ORIGIN)
+        arc = Arc(angle=angle)
+        arc.rotate(-angle/2 + angle_of_vector(vect), about_point=ORIGIN)
         arc.scale(3)
         arcs = VGroup(*[arc.copy() for x in range(n_arcs)])
         arcs.move_to(pi2.eyes.get_center(), vect)
@@ -1333,33 +1350,34 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
 
         self.play(LaggedStartMap(
             ApplyMethod, arcs,
-            lambda m : (m.restore,),
-            lag_ratio = 0.7,
+            lambda m: (m.restore,),
+            lag_ratio=0.7,
         ))
         self.remove(arcs)
+
 
 class CompareNumbersInBothExamples(Scene):
     def construct(self):
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.shift(MED_LARGE_BUFF*LEFT)
         h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
-        h_line.to_edge(UP, buff = 1.25*LARGE_BUFF)
+        h_line.to_edge(UP, buff=1.25*LARGE_BUFF)
         titles = VGroup()
         for word, vect in ("Disease", LEFT), ("Telepathy", RIGHT):
-            title = TextMobject("%s example"%word)
+            title = TextMobject("%s example" % word)
             title.shift(vect*FRAME_X_RADIUS/2.0)
             title.to_edge(UP)
             titles.add(title)
         priors = VGroup(*[
             TexMobject(
-                "P(", "\\text{%s}"%s, ")", "= 1/1{,}000}"
+                "P(", "\\text{%s}" % s, ")", "= 1/1{,}000}"
             )
             for s in ("Sick", "Powers")
         ])
         likelihoods = VGroup(*[
             TexMobject(
-                "P(", "\\text{%s}"%s1, "|", 
-                "\\text{Not }", "\\text{%s}"%s2, ")",
+                "P(", "\\text{%s}" % s1, "|",
+                "\\text{Not }", "\\text{%s}" % s2, ")",
                 "=", "1/100"
             )
             for s1, s2 in [("+", "Sick"), ("Correct", "Powers")]
@@ -1375,7 +1393,7 @@ class CompareNumbersInBothExamples(Scene):
                 mob.shift(vect*FRAME_X_RADIUS/2)
 
         self.play(
-            LaggedStartMap(FadeIn, titles, lag_ratio = 0.7),
+            LaggedStartMap(FadeIn, titles, lag_ratio=0.7),
             *list(map(ShowCreation, [h_line, v_line]))
         )
         self.wait()
@@ -1395,25 +1413,27 @@ class NonchalantReactionToPositiveTest(TestScene):
         accuracy.next_to(result, DOWN, LARGE_BUFF, RIGHT)
 
         self.add(accuracy)
-        self.play(Write(result, run_time = 2))
+        self.play(Write(result, run_time=2))
         self.play(randy.change, "pondering", result)
         self.wait()
         words = TextMobject("Pssht, I'm probably fine.")
         words.scale(0.8)
         self.pi_creature_says(
             words,
-            target_mode = "shruggie",
-            bubble_kwargs = {
-                "direction" : RIGHT,
-                "width" : 6,
-                "height" : 3,
+            target_mode="shruggie",
+            bubble_kwargs={
+                "direction": RIGHT,
+                "width": 6,
+                "height": 3,
             },
-            content_introduction_class = FadeIn,
+            content_introduction_class=FadeIn,
         )
         self.wait(4)
 
+
 class OneInOneThousandHaveDiseaseCopy(OneInOneThousandHaveDisease):
     pass
+
 
 class ExampleMeasuresDisbeliefInStatistics(Introduction):
     def construct(self):
@@ -1442,7 +1462,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
         )
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = statistics_to_belief
+            look_at_arg=statistics_to_belief
         )
         self.wait(3)
 
@@ -1452,7 +1472,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
     def either_way(self):
         b_to_i = self.bayes_to_intuition
         s_to_b = self.statistics_to_belief
-        
+
         self.play(FadeOut(self.example))
         self.play(
             self.teacher.change_mode, "raise_left_hand",
@@ -1470,12 +1490,13 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
         )
         self.wait(2)
 
+
 class AlwaysPictureTheSpaceOfPossibilities(PiCreatureScene):
     def construct(self):
         self.pi_creature_thinks(
-            "", bubble_kwargs = {
-                "height" : 4.5,
-                "width" : 8,
+            "", bubble_kwargs={
+                "height": 4.5,
+                "width": 8,
             }
         )
         self.wait(3)
@@ -1483,13 +1504,14 @@ class AlwaysPictureTheSpaceOfPossibilities(PiCreatureScene):
     def create_pi_creature(self):
         return Randolph().to_corner(DOWN+LEFT)
 
+
 class Thumbnail(Scene):
     def construct(self):
         title = TextMobject("Why is this \\\\ counterintuitive?")
         title.scale(2)
         title.to_edge(UP)
 
-        randy = Randolph(mode = "sick",  color = SICKLY_GREEN)
+        randy = Randolph(mode="sick",  color=SICKLY_GREEN)
         # randy.look_at(title)
         randy.scale(1.5)
         randy.shift(3*LEFT)
@@ -1502,31 +1524,3 @@ class Thumbnail(Scene):
         prob.next_to(randy, RIGHT)
 
         self.add(title, randy, prob)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

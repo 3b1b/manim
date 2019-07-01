@@ -150,7 +150,8 @@ class Camera(object):
         retval = np.array(pixel_array)
         if convert_from_floats:
             retval = np.apply_along_axis(
-                lambda f: (f * self.rgb_max_val).astype(self.pixel_array_dtype),
+                lambda f: (
+                    f * self.rgb_max_val).astype(self.pixel_array_dtype),
                 2,
                 retval
             )
@@ -177,14 +178,16 @@ class Camera(object):
         pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
         """
 
-        print("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
+        print("Starting set_background; for reference, the current time is ",
+              time.strftime("%H:%M:%S"))
         coords = self.get_coords_of_all_pixels()
         new_background = np.apply_along_axis(
             coords_to_colors_func,
             2,
             coords
         )
-        print("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
+        print("Ending set_background; for reference, the current time is ",
+              time.strftime("%H:%M:%S"))
 
         return self.convert_pixel_array(new_background, convert_from_floats=True)
 
@@ -312,9 +315,11 @@ class Camera(object):
         )
         for batch, file_name in batch_file_pairs:
             if file_name:
-                self.display_multiple_background_colored_vmobject(batch, pixel_array)
+                self.display_multiple_background_colored_vmobject(
+                    batch, pixel_array)
             else:
-                self.display_multiple_non_background_colored_vmobjects(batch, pixel_array)
+                self.display_multiple_non_background_colored_vmobjects(
+                    batch, pixel_array)
 
     def display_multiple_non_background_colored_vmobjects(self, vmobjects, pixel_array):
         ctx = self.get_cairo_context(pixel_array)

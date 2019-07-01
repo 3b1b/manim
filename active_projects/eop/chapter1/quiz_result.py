@@ -4,13 +4,13 @@ from active_projects.eop.independence import *
 
 from for_3b1b_videos.pi_class import PiCreatureClass
 
+
 class QuizResult(PiCreatureScene):
     CONFIG = {
-        "pi_creatures_start_on_screen" : False,
-        "random_seed" : 0
+        "pi_creatures_start_on_screen": False,
+        "random_seed": 0
     }
     def construct(self):
-
 
         def get_example_quiz():
             quiz = get_quiz(
@@ -18,12 +18,11 @@ class QuizResult(PiCreatureScene):
                 "Define ``Tautochrone'' ",
                 "Define ``Cycloid'' ",
             )
-            rect = SurroundingRectangle(quiz, buff = 0)
-            rect.set_fill(color = BLACK, opacity = 1)
-            rect.set_stroke(width = 0)
+            rect = SurroundingRectangle(quiz, buff=0)
+            rect.set_fill(color=BLACK, opacity=1)
+            rect.set_stroke(width=0)
             quiz.add_to_back(rect)
             return quiz
-
 
         highlight_color = WHITE
 
@@ -33,7 +32,7 @@ class QuizResult(PiCreatureScene):
         spacing_students_y = 2.2
 
         all_students = PiCreatureClass(
-            width = nb_students_x, height = nb_students_y)# VGroup()
+            width=nb_students_x, height=nb_students_y)  # VGroup()
         student_points = []
         grades = []
         grades_count = []
@@ -43,9 +42,9 @@ class QuizResult(PiCreatureScene):
                 x = i * spacing_students_x
                 y = j * spacing_students_y
                 #pi = PiCreature().scale(0.3)
-                #pi.move_to([x,y,0])
-                #all_students.add(pi)
-                all_students[i*nb_students_y + j].move_to([x,y,0])
+                # pi.move_to([x,y,0])
+                # all_students.add(pi)
+                all_students[i*nb_students_y + j].move_to([x, y, 0])
                 q1 = np.random.choice([True, False])
                 q2 = np.random.choice([True, False])
                 q3 = np.random.choice([True, False])
@@ -56,7 +55,6 @@ class QuizResult(PiCreatureScene):
                 # How many times has this grade already occured?
                 grade_count = grades.count(grade)
                 grades_count.append(grade_count)
-
 
         all_students.move_to(ORIGIN)
         self.pi_creatures = all_students
@@ -71,7 +69,7 @@ class QuizResult(PiCreatureScene):
             all_quizzes.add(quiz_copy)
 
         master_quiz = get_example_quiz()
-        self.play(Write(master_quiz), run_time = 2)
+        self.play(Write(master_quiz), run_time=2)
         self.wait()
         self.play(ReplacementTransform(
             VGroup(master_quiz), all_quizzes,
@@ -100,7 +98,7 @@ class QuizResult(PiCreatureScene):
 
         students_points_mob = VGroup()
         for (pi, quiz, points) in zip(all_students, all_quizzes, student_points):
-            slot = get_slot_group(points, include_qs = False)
+            slot = get_slot_group(points, include_qs=False)
             slot.scale(0.5).move_to(quiz)
             students_points_mob.add(slot)
 
@@ -128,9 +126,9 @@ class QuizResult(PiCreatureScene):
         )
         self.wait()
         scale = 1.5
-        self.play(randy_points.scale,scale)
-        self.play(randy_points.scale,1.0/scale, morty_points.scale,scale)
-        self.play(morty_points.scale,1.0/scale)
+        self.play(randy_points.scale, scale)
+        self.play(randy_points.scale, 1.0/scale, morty_points.scale, scale)
+        self.play(morty_points.scale, 1.0/scale)
 
         self.wait()
         self.play(
@@ -164,12 +162,12 @@ class QuizResult(PiCreatureScene):
 
         grade_labels = VGroup()
         for i in range(4):
-            grade_label = Integer(i, color = highlight_color)
+            grade_label = Integer(i, color=highlight_color)
             grade_label.move_to(i * RIGHT)
             grade_labels.add(grade_label)
         grade_labels.next_to(all_students, DOWN)
-        out_of_label = TextMobject("out of 3", color = highlight_color)
-        out_of_label.next_to(grade_labels, RIGHT, buff = MED_LARGE_BUFF)
+        out_of_label = TextMobject("out of 3", color=highlight_color)
+        out_of_label.next_to(grade_labels, RIGHT, buff=MED_LARGE_BUFF)
         grade_labels.add(out_of_label)
         self.wait()
         self.play(Write(grade_labels))
@@ -177,11 +175,11 @@ class QuizResult(PiCreatureScene):
         grade_hist = Histogram(
             np.ones(4),
             hist_y_values,
-            mode = "widths",
-            x_labels = "none",
-            y_label_position = "center",
-            bar_stroke_width = 0,
-            outline_stroke_width = 5
+            mode="widths",
+            x_labels="none",
+            y_label_position="center",
+            bar_stroke_width=0,
+            outline_stroke_width=5
         )
         grade_hist.move_to(all_students)
 
@@ -191,27 +189,27 @@ class QuizResult(PiCreatureScene):
             FadeOut(all_students)
         )
 
-
-        nb_students_label = TextMobject("\# of students", color = highlight_color)
+        nb_students_label = TextMobject(
+            "\# of students", color=highlight_color)
         nb_students_label.move_to(5 * RIGHT + 1 * UP)
         arrows = VGroup(*[
             Arrow(nb_students_label.get_left(), grade_hist.bars[i].get_center(),
-                color = highlight_color)
+                  color=highlight_color)
             for i in range(4)
         ])
         self.wait()
-        self.play(Write(nb_students_label), LaggedStartMap(GrowArrow,arrows))
+        self.play(Write(nb_students_label), LaggedStartMap(GrowArrow, arrows))
 
-        percentage_label = TextMobject("\% of students", color = highlight_color)
+        percentage_label = TextMobject("\% of students", color=highlight_color)
         percentage_label.move_to(nb_students_label)
         percentages = hist_y_values / (nb_students_x * nb_students_y) * 100
         anims = []
         for (label, percentage) in zip(grade_hist.y_labels_group, percentages):
             new_label = DecimalNumber(percentage,
-                num_decimal_places = 1,
-                unit = "\%",
-                color = highlight_color
-            )
+                                      num_decimal_places=1,
+                                      unit="\%",
+                                      color=highlight_color
+                                      )
             new_label.scale(0.7)
             new_label.move_to(label)
             anims.append(Transform(label, new_label))
@@ -221,7 +219,7 @@ class QuizResult(PiCreatureScene):
 
         self.remove(all_quizzes)
         # put small copy of class in corner
-        for (i,pi) in enumerate(all_students):
+        for (i, pi) in enumerate(all_students):
             x = i % 5
             y = i / 5
             pi.move_to(x * RIGHT + y * UP)
@@ -230,7 +228,7 @@ class QuizResult(PiCreatureScene):
         self.wait()
         self.play(FadeIn(all_students))
 
-        prob_label = TextMobject("probability", color = highlight_color)
+        prob_label = TextMobject("probability", color=highlight_color)
         prob_label.move_to(percentage_label)
         self.wait()
         self.play(
@@ -247,32 +245,23 @@ class QuizResult(PiCreatureScene):
         )
 
         flash_hist = FlashThroughHistogram(
-                    grade_hist,
-                    direction = "vertical",
-                    mode = "random",
-                    cell_opacity = 0.5,
-                    run_time = 5,
-                    rate_func = linear
-                )
+            grade_hist,
+            direction="vertical",
+            mode="random",
+            cell_opacity=0.5,
+            run_time=5,
+            rate_func=linear
+        )
 
         flash_class = FlashThroughClass(
-                    all_students,
-                    mode = "random",
-                    highlight_color = MAROON_E,
-                    run_time = 5,
-                    rate_func = linear
-                )
+            all_students,
+            mode="random",
+            highlight_color=MAROON_E,
+            run_time=5,
+            rate_func=linear
+        )
 
         self.wait()
         for i in range(3):
             self.play(flash_hist, flash_class)
             self.remove(flash_hist.prototype_cell)
-
-
-
-
-
-
-
-
-

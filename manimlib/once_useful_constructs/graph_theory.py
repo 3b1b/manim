@@ -385,7 +385,8 @@ class DiscreteGraphScene(Scene):
             Dot(point).set_color("green")
             for point in self.dual_points
         ]
-        self.dual_vertices[-1] = Circle().scale(FRAME_X_RADIUS + FRAME_Y_RADIUS)
+        self.dual_vertices[-1] = Circle().scale(FRAME_X_RADIUS +
+                                                FRAME_Y_RADIUS)
         self.dual_points[-1] = point_at_infinity
 
         self.dual_edges = []

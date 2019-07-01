@@ -31,7 +31,8 @@ class LogoGeneration(LogoGenerationTemplate):
                     Restore, layer,
                     run_time=3,
                     path_arc=180 * DEGREES,
-                    rate_func=squish_rate_func(smooth, a / 3.0, (a + 0.9) / 3.0),
+                    rate_func=squish_rate_func(
+                        smooth, a / 3.0, (a + 0.9) / 3.0),
                     lag_ratio=0.8,
                 )
                 for layer, a in zip(layers, [0, 2, 1, 0])
@@ -531,7 +532,8 @@ class EccentricityInThumbtackCase(ShowArrayOfEccentricities):
         focal_lines_update = self.get_focal_lines_update(
             ellipse, ellipse_point_update.mobject
         )
-        focus_to_focus_line_update = self.get_focus_to_focus_line_update(ellipse)
+        focus_to_focus_line_update = self.get_focus_to_focus_line_update(
+            ellipse)
         eccentricity_label = self.get_eccentricity_label()
         eccentricity_value_update = self.get_eccentricity_value_update(
             eccentricity_label, ellipse,

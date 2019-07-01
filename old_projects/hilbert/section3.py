@@ -7,8 +7,6 @@ from hilbert.curves import \
 from hilbert.section1 import get_mathy_and_bubble
 
 
-
-
 class SectionThree(Scene):
     def construct(self):
         self.add(TextMobject("A few words on the usefulness of infinite math"))
@@ -40,10 +38,10 @@ class InfiniteResultsFiniteWorld(Scene):
         left_mobs = [left_words, left_formula]
         right_mobs = [right_words, right_formula]
         for mob in left_mobs:
-            mob.to_edge(RIGHT, buff = 1)
+            mob.to_edge(RIGHT, buff=1)
             mob.shift(FRAME_X_RADIUS*LEFT)
         for mob in right_mobs:
-            mob.to_edge(LEFT, buff = 1)
+            mob.to_edge(LEFT, buff=1)
             mob.shift(FRAME_X_RADIUS*RIGHT)
         arrow = Arrow(left_words, right_words)
         right_overwords.next_to(right_formula, UP)
@@ -68,7 +66,6 @@ class InfiniteResultsFiniteWorld(Scene):
             Mobject(right_formula, right_words)
         )
 
-
     def finite_analog(self, left_mob, arrow, right_mob):
         self.clear()
         self.add(left_mob, arrow, right_mob)
@@ -88,10 +85,10 @@ class InfiniteResultsFiniteWorld(Scene):
             Arrow(
                 mob1.get_right()[0]*RIGHT,
                 mob2.get_left()[0]*RIGHT,
-                buff = 0
+                buff=0
             )
             for mob1, mob2 in [
-                (new_left, middle), 
+                (new_left, middle),
                 (middle, new_right)
             ]
         ]
@@ -114,7 +111,7 @@ class InfiniteResultsFiniteWorld(Scene):
         self.wait()
         self.equivalence(
             left_mob,
-            left_arrow, 
+            left_arrow,
             Mobject(middle, brace, finite_analog)
         )
 
@@ -127,13 +124,13 @@ class InfiniteResultsFiniteWorld(Scene):
         new_left = left_mob.copy().shift(RIGHT)
         new_right = right_mob.copy()
         new_right.shift(
-            (words.get_right()[0]-\
-             right_mob.get_left()[0]+\
+            (words.get_right()[0] -
+             right_mob.get_left()[0] +
              0.5
-            )*RIGHT
+             )*RIGHT
         )
         for mob in arrow, words:
-            mob.sort_points(get_norm)     
+            mob.sort_points(get_norm)
 
         self.play(
             ApplyMethod(left_mob.shift, RIGHT),
@@ -146,14 +143,14 @@ class InfiniteResultsFiniteWorld(Scene):
 class HilbertCurvesStayStable(Scene):
     def construct(self):
         scale_factor = 0.9
-        grid = Grid(4, 4, stroke_width = 1)
-        curve = HilbertCurve(order = 2)
+        grid = Grid(4, 4, stroke_width=1)
+        curve = HilbertCurve(order=2)
         for mob in grid, curve:
             mob.scale(scale_factor)
         words = TextMobject("""
             Sequence of curves is stable 
             $\\leftrightarrow$ existence of limit curve
-        """, size = "\\normal")
+        """, size="\\normal")
         words.scale(1.25)
         words.to_edge(UP)
 
@@ -162,8 +159,8 @@ class HilbertCurvesStayStable(Scene):
         for n in range(3, 7):
             if n == 5:
                 self.play(ShimmerIn(words))
-            new_grid = Grid(2**n, 2**n, stroke_width = 1)
-            new_curve = HilbertCurve(order = n)
+            new_grid = Grid(2**n, 2**n, stroke_width=1)
+            new_curve = HilbertCurve(order=n)
             for mob in new_grid, new_curve:
                 mob.scale(scale_factor)
             self.play(
@@ -176,14 +173,13 @@ class HilbertCurvesStayStable(Scene):
             self.wait()
 
 
-
 class InfiniteObjectsEncapsulateFiniteObjects(Scene):
     def get_triangles(self):
         triangle = Polygon(
             LEFT/np.sqrt(3),
             UP,
             RIGHT/np.sqrt(3),
-            color = GREEN
+            color=GREEN
         )
         triangles = Mobject(
             triangle.copy().scale(0.5).shift(LEFT),
@@ -194,25 +190,25 @@ class InfiniteObjectsEncapsulateFiniteObjects(Scene):
         return triangles
 
     def construct(self):
-        words =[
-            TextMobject(text, size = "\\large")
+        words = [
+            TextMobject(text, size="\\large")
             for text in [
-                "Truths about infinite objects", 
-                " encapsulate ", 
+                "Truths about infinite objects",
+                " encapsulate ",
                 "facts about finite objects"
             ]
         ]
-        
+
         words[0].set_color(RED)
         words[1].next_to(words[0])
         words[2].set_color(GREEN).next_to(words[1])
         Mobject(*words).center().to_edge(UP)
         infinite_objects = [
             TexMobject(
-                "\\sum_{n=0}^\\infty", 
-                size = "\\normal"
+                "\\sum_{n=0}^\\infty",
+                size="\\normal"
             ).set_color(RED_E),
-            Sierpinski(order = 8).scale(0.3),
+            Sierpinski(order=8).scale(0.3),
             TextMobject(
                 "$\\exists$ something infinite $\\dots$"
             ).set_color(RED_B)
@@ -220,7 +216,7 @@ class InfiniteObjectsEncapsulateFiniteObjects(Scene):
         finite_objects = [
             TexMobject(
                 "\\sum_{n=0}^N",
-                size = "\\normal"
+                size="\\normal"
             ).set_color(GREEN_E),
             self.get_triangles(),
             TextMobject(
@@ -228,8 +224,8 @@ class InfiniteObjectsEncapsulateFiniteObjects(Scene):
             ).set_color(GREEN_B)
         ]
         for infinite, finite, n in zip(infinite_objects, finite_objects, it.count(1, 2)):
-            infinite.next_to(words[0], DOWN, buff = n)
-            finite.next_to(words[2], DOWN, buff = n)
+            infinite.next_to(words[0], DOWN, buff=n)
+            finite.next_to(words[2], DOWN, buff=n)
 
         self.play(ShimmerIn(words[0]))
         self.wait()
@@ -271,13 +267,5 @@ class StatementRemovedFromReality(Scene):
             self.play(ShimmerIn(bub.content))
             self.play(ApplyMethod(
                 buddy.blink,
-                rate_func = squish_rate_func(there_and_back)
+                rate_func=squish_rate_func(there_and_back)
             ))
-
-
-
-
-
-
-
-

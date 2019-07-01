@@ -95,7 +95,8 @@ class PiCreatureScene(Scene):
                 pi.bubble is not None and \
                 pi.bubble in on_screen_mobjects
 
-        pi_creatures_with_bubbles = list(filter(has_bubble, self.get_pi_creatures()))
+        pi_creatures_with_bubbles = list(
+            filter(has_bubble, self.get_pi_creatures()))
         if pi_creature in pi_creatures_with_bubbles:
             pi_creatures_with_bubbles.remove(pi_creature)
             old_bubble = pi_creature.bubble
@@ -153,7 +154,8 @@ class PiCreatureScene(Scene):
         Add animations so that all pi creatures look at the
         first mobject being animated with each .play call
         """
-        animations = Scene.compile_play_args_to_animation_list(self, *args, **kwargs)
+        animations = Scene.compile_play_args_to_animation_list(
+            self, *args, **kwargs)
         if not self.any_pi_creatures_on_screen():
             return animations
 
@@ -265,7 +267,8 @@ class TeacherStudentsScene(PiCreatureScene):
         PiCreatureScene.setup(self)
         self.screen = ScreenRectangle(height=self.screen_height)
         self.screen.to_corner(UP + LEFT)
-        self.hold_up_spot = self.teacher.get_corner(UP + LEFT) + MED_LARGE_BUFF * UP
+        self.hold_up_spot = self.teacher.get_corner(
+            UP + LEFT) + MED_LARGE_BUFF * UP
 
     def create_pi_creatures(self):
         self.teacher = Mortimer(color=self.teacher_color)

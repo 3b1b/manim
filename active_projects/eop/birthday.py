@@ -1,11 +1,12 @@
 from manimlib.imports import *
 
+
 class Birthday(Scene):
 
     def construct(self):
 
         sidelength = 6.0
-        corner = np.array([-sidelength/2,-sidelength/2,0])
+        corner = np.array([-sidelength/2, -sidelength/2, 0])
         nb_days_left = 365.0
         toggle = False
 
@@ -25,8 +26,7 @@ class Birthday(Scene):
                 dim = 0
             else:
                 dim = 1
-            
+
             rect.stretch_about_point(nb_days_left / 365, dim, corner)
 
             toggle = not toggle
-

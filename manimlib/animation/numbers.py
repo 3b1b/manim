@@ -34,7 +34,7 @@ class ChangingDecimal(Animation):
                     and you should use a mobject updater
                     instead
                 """.format(attr)
-            )
+                )
 
     def interpolate_mobject(self, alpha):
         self.mobject.set_value(

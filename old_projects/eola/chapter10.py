@@ -9,15 +9,15 @@ class OpeningQuote(Scene):
     def construct(self):
         words = TextMobject(
             "``Last time, I asked: `What does",
-            "mathematics", 
+            "mathematics",
             """ mean to you?', and some people answered: `The 
             manipulation of numbers, the manipulation of structures.' 
             And if I had asked what""",
             "music",
             """means to you, would you have answered: `The 
-            manipulation of notes?' '' """, 
-            enforce_new_line_structure = False,
-            alignment = "",
+            manipulation of notes?' '' """,
+            enforce_new_line_structure=False,
+            alignment="",
         )
         words.set_color_by_tex("mathematics", BLUE)
         words.set_color_by_tex("music", BLUE)
@@ -25,12 +25,13 @@ class OpeningQuote(Scene):
         words.to_edge(UP)
         author = TextMobject("-Serge Lang")
         author.set_color(YELLOW)
-        author.next_to(words, DOWN, buff = 0.5)
+        author.next_to(words, DOWN, buff=0.5)
 
-        self.play(Write(words, run_time = 10))
+        self.play(Write(words, run_time=10))
         self.wait()
         self.play(FadeIn(author))
         self.wait(3)
+
 
 class StudentsFindThisConfusing(TeacherStudentsScene):
     def construct(self):
@@ -39,7 +40,7 @@ class StudentsFindThisConfusing(TeacherStudentsScene):
         students = self.get_students()
 
         self.play(
-            Write(title), 
+            Write(title),
             *[
                 ApplyMethod(pi.look_at, title)
                 for pi in self.get_pi_creatures()
@@ -54,14 +55,14 @@ class StudentsFindThisConfusing(TeacherStudentsScene):
         self.random_blink()
         self.student_says(
             "Why are we doing this?",
-            student_index = 0,
-            run_time = 2,
+            student_index=0,
+            run_time=2,
         )
         question1 = students[0].bubble.content.copy()
         self.student_says(
             "What does this actually mean?",
-            student_index = 2,
-            added_anims = [
+            student_index=2,
+            added_anims=[
                 question1.scale_in_place, 0.8,
                 question1.to_edge, LEFT,
                 question1.shift, DOWN,
@@ -70,12 +71,12 @@ class StudentsFindThisConfusing(TeacherStudentsScene):
         question2 = students[2].bubble.content.copy()
         question2.target = question2.copy()
         question2.target.next_to(
-            question1, DOWN, 
-            aligned_edge = LEFT, 
-            buff = MED_SMALL_BUFF
+            question1, DOWN,
+            aligned_edge=LEFT,
+            buff=MED_SMALL_BUFF
         )
         equation = TexMobject(
-            "\\det\\left( %s \\right)=0"%matrix_to_tex_string([
+            "\\det\\left( %s \\right)=0" % matrix_to_tex_string([
                 ["a-\\lambda", "b"],
                 ["c", "d-\\lambda"],
             ])
@@ -83,24 +84,27 @@ class StudentsFindThisConfusing(TeacherStudentsScene):
         equation.set_color(YELLOW)
         self.teacher_says(
             equation,
-            added_anims = [MoveToTarget(question2)]
+            added_anims=[MoveToTarget(question2)]
         )
         self.change_student_modes(*["confused"]*3)
         self.random_blink(3)
 
+
 class ShowComments(Scene):
-    pass #TODO
+    pass  # TODO
+
 
 class EigenThingsArentAllThatBad(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "Eigen-things aren't \\\\ actually so bad",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(
             "pondering", "pondering", "erm"
         )
         self.random_blink(4)
+
 
 class ManyPrerequisites(Scene):
     def construct(self):
@@ -111,7 +115,7 @@ class ManyPrerequisites(Scene):
         self.add(title)
         self.play(ShowCreation(h_line))
 
-        rect = Rectangle(height = 9, width = 16, color = BLUE)
+        rect = Rectangle(height=9, width=16, color=BLUE)
         rect.set_width(FRAME_X_RADIUS-2)
         rects = [rect]+[rect.copy() for i in range(3)]
         words = [
@@ -122,23 +126,25 @@ class ManyPrerequisites(Scene):
         ]
         for rect, word in zip(rects, words):
             word_mob = TextMobject(word)
-            word_mob.next_to(rect, UP, buff = MED_SMALL_BUFF)
+            word_mob.next_to(rect, UP, buff=MED_SMALL_BUFF)
             rect.add(word_mob)
 
         Matrix(np.array(rects).reshape((2, 2)))
         rects = VGroup(*rects)
         rects.set_height(FRAME_HEIGHT - 1.5)
-        rects.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
+        rects.next_to(h_line, DOWN, buff=MED_SMALL_BUFF)
 
         self.play(Write(rects[0]))
         self.wait()
         self.play(*list(map(FadeIn, rects[1:])))
         self.wait()
 
+
 class ExampleTranformationScene(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[3, 0], [1, 2]]
+        "t_matrix": [[3, 0], [1, 2]]
     }
+
     def setup(self):
         LinearTransformationScene.setup(self)
         self.add_matrix()
@@ -146,7 +152,7 @@ class ExampleTranformationScene(LinearTransformationScene):
     def add_matrix(self):
         matrix = Matrix(self.t_matrix.T)
         matrix.set_column_colors(X_COLOR, Y_COLOR)
-        matrix.next_to(ORIGIN, LEFT, buff = MED_SMALL_BUFF)
+        matrix.next_to(ORIGIN, LEFT, buff=MED_SMALL_BUFF)
         matrix.to_edge(UP)
         matrix.rect = BackgroundRectangle(matrix)
         matrix.add_to_back(matrix.rect)
@@ -156,6 +162,7 @@ class ExampleTranformationScene(LinearTransformationScene):
     def remove_matrix(self):
         self.remove(self.matrix)
         self.foreground_mobjects.remove(self.matrix)
+
 
 class IntroduceExampleTransformation(ExampleTranformationScene):
     def construct(self):
@@ -176,35 +183,36 @@ class IntroduceExampleTransformation(ExampleTranformationScene):
         self.play(*[
             Transform(*pair)
             for pair in [
-                (i_coords_copy.rect, self.matrix.rect),            
+                (i_coords_copy.rect, self.matrix.rect),
                 (i_coords_copy.get_brackets(), self.matrix.get_brackets()),
                 (
-                    i_coords_copy.get_entries(), 
-                    VGroup(*self.matrix.get_mob_matrix()[:,0])
+                    i_coords_copy.get_entries(),
+                    VGroup(*self.matrix.get_mob_matrix()[:, 0])
                 )
             ]
         ])
         to_remove = self.get_mobjects_from_last_animation()
         self.play(Transform(
             j_coords.copy().get_entries(),
-            VGroup(*self.matrix.get_mob_matrix()[:,1])
+            VGroup(*self.matrix.get_mob_matrix()[:, 1])
         ))
         to_remove += self.get_mobjects_from_last_animation()
         self.wait()
         self.remove(*to_remove)
         self.add(self.matrix)
 
+
 class VectorKnockedOffSpan(ExampleTranformationScene):
     def construct(self):
         vector = Vector([2, 1])
-        line = Line(vector.get_end()*-4, vector.get_end()*4, color = MAROON_B)
+        line = Line(vector.get_end()*-4, vector.get_end()*4, color=MAROON_B)
         vector.scale(0.7)
         top_words, off, span_label = all_words = TextMobject(
             "\\centering Vector gets knocked", "\\\\ off", "Span"
         )
         all_words.shift(
-            line.point_from_proportion(0.75) - \
-            span_label.get_corner(DOWN+RIGHT) + \
+            line.point_from_proportion(0.75) -
+            span_label.get_corner(DOWN+RIGHT) +
             MED_SMALL_BUFF*LEFT
         )
         for text in all_words:
@@ -223,11 +231,12 @@ class VectorKnockedOffSpan(ExampleTranformationScene):
         self.play(Animation(span_label.copy()), Write(all_words))
         self.wait()
 
+
 class VectorRemainsOnSpan(ExampleTranformationScene):
     def construct(self):
         vector = Vector([1, -1])
         v_end = vector.get_end()
-        line = Line(-4*v_end, 4*v_end, color = MAROON_B)
+        line = Line(-4*v_end, 4*v_end, color=MAROON_B)
         words = TextMobject("Vector remains on", "\\\\its own span")
         words.next_to(ORIGIN, DOWN+LEFT)
         for part in words:
@@ -244,23 +253,24 @@ class VectorRemainsOnSpan(ExampleTranformationScene):
             for scalar in (2, -2, 1)
         ]
         for target, time in zip(target_vectors, [1, 2, 2]):
-            self.play(Transform(vector, target, run_time = time))
+            self.play(Transform(vector, target, run_time=time))
         self.wait()
+
 
 class IHatAsEigenVector(ExampleTranformationScene):
     def construct(self):
         self.set_color_first_column()
-        self.set_color_x_axis()        
-        self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
+        self.set_color_x_axis()
+        self.apply_transposed_matrix(self.t_matrix, path_arc=0)
         self.label_i_hat_landing_spot()
 
     def set_color_first_column(self):
         faders = VGroup(self.plane, self.i_hat, self.j_hat)
         faders.save_state()
-        column1 = VGroup(*self.matrix.get_mob_matrix()[:,0])
+        column1 = VGroup(*self.matrix.get_mob_matrix()[:, 0])
 
         self.play(faders.fade, 0.7, Animation(self.matrix))
-        self.play(column1.scale_in_place, 1.3, rate_func = there_and_back)
+        self.play(column1.scale_in_place, 1.3, rate_func=there_and_back)
         self.wait()
         self.play(faders.restore, Animation(self.matrix))
         self.wait()
@@ -272,12 +282,12 @@ class IHatAsEigenVector(ExampleTranformationScene):
             for val in (-FRAME_X_RADIUS, FRAME_X_RADIUS, 1)
         ]
         lines = [
-            Line(v1.get_end(), v2.get_end(), color = YELLOW)
+            Line(v1.get_end(), v2.get_end(), color=YELLOW)
             for v1, v2 in adjacent_pairs([self.i_hat]+targets)
         ]
         for target, line in zip(targets, lines):
             self.play(
-                ShowCreation(line),                
+                ShowCreation(line),
                 Transform(self.i_hat, target),
             )
         self.wait()
@@ -289,7 +299,7 @@ class IHatAsEigenVector(ExampleTranformationScene):
         array.set_color(X_COLOR)
         array.rect = BackgroundRectangle(array)
         array.add_to_back(array.rect)
-        brace = Brace(self.i_hat, buff = 0)
+        brace = Brace(self.i_hat, buff=0)
         brace.put_at_tip(array)
 
         self.play(GrowFromCenter(brace))
@@ -298,24 +308,26 @@ class IHatAsEigenVector(ExampleTranformationScene):
             Transform(matrix.rect, array.rect),
             Transform(matrix.get_brackets(), array.get_brackets()),
             Transform(
-                VGroup(*matrix.get_mob_matrix()[:,0]), 
+                VGroup(*matrix.get_mob_matrix()[:, 0]),
                 array.get_entries()
             ),
         )
         self.wait()
 
+
 class AllXAxisVectorsAreEigenvectors(ExampleTranformationScene):
     def construct(self):
         vectors = VGroup(*[
-            self.add_vector(u*x*RIGHT, animate = False)
+            self.add_vector(u*x*RIGHT, animate=False)
             for x in reversed(list(range(1, int(FRAME_X_RADIUS)+1)))
             for u in [-1, 1]
         ])
         vectors.set_color_by_gradient(YELLOW, X_COLOR)
         self.play(ShowCreation(vectors))
         self.wait()
-        self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
+        self.apply_transposed_matrix(self.t_matrix, path_arc=0)
         self.wait()
+
 
 class SneakierEigenVector(ExampleTranformationScene):
     def construct(self):
@@ -324,7 +336,7 @@ class SneakierEigenVector(ExampleTranformationScene):
         array = Matrix(coords)
         array.scale(0.7)
         array.set_color(vector.get_color())
-        array.add_to_back(BackgroundRectangle(array))        
+        array.add_to_back(BackgroundRectangle(array))
         array.target = array.copy()
         array.next_to(vector.get_end(), LEFT)
         array.target.next_to(2*vector.get_end(), LEFT)
@@ -339,64 +351,67 @@ class SneakierEigenVector(ExampleTranformationScene):
         self.add_vector(vector)
         self.play(Write(array))
         self.play(
-            ShowCreation(span_line), 
+            ShowCreation(span_line),
             Animation(vector),
             Animation(array),
         )
         self.wait()
         self.apply_transposed_matrix(
             self.t_matrix,
-            added_anims = [
+            added_anims=[
                 MoveToTarget(array),
                 Transform(VectorizedPoint(array.get_left()), two_times)
             ],
-            path_arc = 0,
+            path_arc=0,
         )
         self.wait()
+
 
 class FullSneakyEigenspace(ExampleTranformationScene):
     def construct(self):
         self.matrix.shift(-2*self.matrix.get_center()[0]*RIGHT)
         vectors = VGroup(*[
-            self.add_vector(u*x*(LEFT+UP), animate = False)
+            self.add_vector(u*x*(LEFT+UP), animate=False)
             for x in reversed(np.arange(0.5, 5, 0.5))
             for u in [-1, 1]
         ])
         vectors.set_color_by_gradient(MAROON_B, YELLOW)
         words = TextMobject("Stretch by 2")
         words.add_background_rectangle()
-        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF)
+        words.next_to(ORIGIN, DOWN+LEFT, buff=MED_SMALL_BUFF)
         words.shift(MED_SMALL_BUFF*LEFT)
         words.rotate(vectors[0].get_angle())
         words.start = words.copy()
         words.start.scale(0.5)
-        words.start.set_fill(opacity = 0)
+        words.start.set_fill(opacity=0)
 
         self.play(ShowCreation(vectors))
         self.wait()
         self.apply_transposed_matrix(
             self.t_matrix,
-            added_anims = [Transform(words.start, words)],
-            path_arc = 0
+            added_anims=[Transform(words.start, words)],
+            path_arc=0
         )
         self.wait()
 
+
 class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
     CONFIG = {
-        "show_basis_vectors" : False
+        "show_basis_vectors": False
     }
+
     def construct(self):
         self.remove(self.matrix)
         self.foreground_mobjects.remove(self.matrix)
         x_vectors = VGroup(*[
-            self.add_vector(u*x*RIGHT, animate = False)
+            self.add_vector(u*x*RIGHT, animate=False)
             for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
             for u in [-1, 1]
         ])
         x_vectors.set_color_by_gradient(YELLOW, X_COLOR)
         self.remove(x_vectors)
         sneak_vectors = VGroup(*[
-            self.add_vector(u*x*(LEFT+UP), animate = False)
+            self.add_vector(u*x*(LEFT+UP), animate=False)
             for x in np.arange(int(FRAME_Y_RADIUS), 0, -0.5)
             for u in [-1, 1]
         ])
@@ -408,17 +423,17 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
         for words in x_words, sneak_words:
             words.add_background_rectangle()
             words.next_to(x_vectors, DOWN)
-            words.next_to(words.get_center(), LEFT, buff = 1.5)
+            words.next_to(words.get_center(), LEFT, buff=1.5)
             eigen_word = TextMobject("Eigenvectors")
             eigen_word.add_background_rectangle()
             eigen_word.replace(words)
             words.target = eigen_word
             eigen_val_words = TextMobject(
                 "with eigenvalue ",
-                "%s"%words.get_tex_string()[-1]
+                "%s" % words.get_tex_string()[-1]
             )
             eigen_val_words.add_background_rectangle()
-            eigen_val_words.next_to(words, DOWN, aligned_edge = RIGHT)
+            eigen_val_words.next_to(words, DOWN, aligned_edge=RIGHT)
             words.eigen_val_words = eigen_val_words
         x_words.eigen_val_words.set_color(X_COLOR)
         sneak_words.eigen_val_words.set_color(YELLOW)
@@ -429,11 +444,11 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
             sneak_words.eigen_val_words,
         ).rotate(sneak_vectors[0].get_angle())
 
-        non_eigen = Vector([1, 1], color = PINK)
+        non_eigen = Vector([1, 1], color=PINK)
         non_eigen_span = Line(
-            -FRAME_Y_RADIUS*non_eigen.get_end(), 
-            FRAME_Y_RADIUS*non_eigen.get_end(), 
-            color = RED
+            -FRAME_Y_RADIUS*non_eigen.get_end(),
+            FRAME_Y_RADIUS*non_eigen.get_end(),
+            color=RED
         )
         non_eigen_words = TextMobject("""
             Knocked off
@@ -445,10 +460,10 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
         non_eigen_span.fade()
 
         for vectors in x_vectors, sneak_vectors:
-            self.play(ShowCreation(vectors, run_time = 1))
+            self.play(ShowCreation(vectors, run_time=1))
         self.wait()
         for words in x_words, sneak_words:
-            self.play(Write(words, run_time = 1.5))
+            self.play(Write(words, run_time=1.5))
             self.add_foreground_mobject(words)
             self.wait()
         self.play(ShowCreation(non_eigen))
@@ -457,38 +472,41 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
             Write(non_eigen_words),
             Animation(non_eigen)
         )
-        self.add_vector(non_eigen, animate = False)
+        self.add_vector(non_eigen, animate=False)
         self.wait()
         self.apply_transposed_matrix(
             self.t_matrix,
-            added_anims = [FadeOut(non_eigen_words)],
-            path_arc = 0,
+            added_anims=[FadeOut(non_eigen_words)],
+            path_arc=0,
         )
         self.wait(2)
         self.play(*list(map(FadeOut, [non_eigen, non_eigen_span])))
         self.play(*list(map(MoveToTarget, [x_words, sneak_words])))
         self.wait()
         for words in x_words, sneak_words:
-            self.play(Write(words.eigen_val_words), run_time = 2)
+            self.play(Write(words.eigen_val_words), run_time=2)
             self.wait()
+
 
 class CanEigenvaluesBeNegative(TeacherStudentsScene):
     def construct(self):
         self.student_says("Can eigenvalues be negative?")
         self.random_blink()
-        self.teacher_says("But of course!", target_mode = "hooray")
+        self.teacher_says("But of course!", target_mode="hooray")
         self.random_blink()
+
 
 class EigenvalueNegativeOneHalf(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[0.5, -1], [-1, 0.5]],
-        "foreground_plane_kwargs" : {
-            "x_radius" : FRAME_WIDTH,
-            "y_radius" : FRAME_WIDTH,
-            "secondary_line_ratio" : 0
+        "t_matrix": [[0.5, -1], [-1, 0.5]],
+        "foreground_plane_kwargs": {
+            "x_radius": FRAME_WIDTH,
+            "y_radius": FRAME_WIDTH,
+            "secondary_line_ratio": 0
         },
-        "include_background_plane" : False
+        "include_background_plane": False
     }
+
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
         matrix.add_to_back(BackgroundRectangle(matrix))
@@ -502,29 +520,30 @@ class EigenvalueNegativeOneHalf(LinearTransformationScene):
         words.add_background_rectangle()
         words.next_to(vector.get_end(), RIGHT)
         span = Line(
-            -FRAME_Y_RADIUS*vector.get_end(), 
+            -FRAME_Y_RADIUS*vector.get_end(),
             FRAME_Y_RADIUS*vector.get_end(),
-            color = MAROON_B
+            color=MAROON_B
         )
 
         self.play(Write(words))
         self.play(
-            ShowCreation(span), 
+            ShowCreation(span),
             Animation(vector),
             Animation(words),
         )
         self.wait()
         self.apply_transposed_matrix(
             self.t_matrix,
-            added_anims = [FadeOut(words)]
+            added_anims=[FadeOut(words)]
         )
         self.wait()
         self.play(
-            Rotate(span, np.pi/12, rate_func = wiggle),
+            Rotate(span, np.pi/12, rate_func=wiggle),
             Animation(vector),
         )
         self.wait()
-        
+
+
 class ThreeDRotationTitle(Scene):
     def construct(self):
         title = TextMobject("3D Rotation")
@@ -532,11 +551,14 @@ class ThreeDRotationTitle(Scene):
         self.play(Write(title))
         self.wait()
 
+
 class ThreeDShowRotation(Scene):
     pass
 
+
 class ThreeDShowRotationWithEigenvector(Scene):
     pass
+
 
 class EigenvectorToAxisOfRotation(Scene):
     def construct(self):
@@ -551,6 +573,7 @@ class EigenvectorToAxisOfRotation(Scene):
         self.play(Transform(*words))
         self.wait()
 
+
 class EigenvalueOne(Scene):
     def construct(self):
         text = TextMobject("Eigenvalue = $1$")
@@ -558,18 +581,19 @@ class EigenvalueOne(Scene):
         self.play(Write(text))
         self.wait()
 
+
 class ContrastMatrixUnderstandingWithEigenvalue(TeacherStudentsScene):
     def construct(self):
         axis_and_rotation = TextMobject(
-            "Rotate", "$30^\\circ$", "around", 
-            "$%s$"%matrix_to_tex_string([2, 3, 1])
+            "Rotate", "$30^\\circ$", "around",
+            "$%s$" % matrix_to_tex_string([2, 3, 1])
         )
         axis_and_rotation[1].set_color(BLUE)
         axis_and_rotation[-1].set_color(MAROON_B)
 
         matrix = Matrix([
             [
-                "\\cos(\\theta)\\cos(\\phi)", 
+                "\\cos(\\theta)\\cos(\\phi)",
                 "-\\sin(\\phi)",
                 "\\cos(\\theta)\\sin(\\phi)",
             ],
@@ -597,7 +621,7 @@ class ContrastMatrixUnderstandingWithEigenvalue(TeacherStudentsScene):
                 [pi.look_at for pi in everyone],
                 [axis_and_rotation]*4,
             ))),
-            run_time = 2
+            run_time=2
         )
         self.random_blink(2)
         self.play(
@@ -612,6 +636,7 @@ class ContrastMatrixUnderstandingWithEigenvalue(TeacherStudentsScene):
         )
         self.random_blink(3)
 
+
 class CommonPattern(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("""
@@ -619,6 +644,7 @@ class CommonPattern(TeacherStudentsScene):
             in linear algebra.
         """)
         self.random_blink(2)
+
 
 class DeduceTransformationFromMatrix(ColumnsToBasisVectors):
     def construct(self):
@@ -629,17 +655,18 @@ class DeduceTransformationFromMatrix(ColumnsToBasisVectors):
             to our coordinate system
         """)
         words.add_background_rectangle()
-        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF)
+        words.next_to(ORIGIN, DOWN+LEFT, buff=MED_SMALL_BUFF)
         words.shift_onto_screen()
         self.play(Write(words))
         self.wait()
+
 
 class WordsOnComputation(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "I won't cover the full\\\\",
             "details of computation...",
-            target_mode = "guilty"
+            target_mode="guilty"
         )
         self.change_student_modes("angry", "sassy", "angry")
         self.random_blink()
@@ -649,6 +676,7 @@ class WordsOnComputation(TeacherStudentsScene):
         )
         self.change_student_modes(*["happy"]*3)
         self.random_blink(3)
+
 
 class SymbolicEigenvectors(Scene):
     def construct(self):
@@ -660,7 +688,7 @@ class SymbolicEigenvectors(Scene):
 
     def introduce_terms(self):
         self.expression = TexMobject(
-            "A", "\\vec{\\textbf{v}}", "=", 
+            "A", "\\vec{\\textbf{v}}", "=",
             "\\lambda", "\\vec{\\textbf{v}}"
         )
         self.expression.scale(1.5)
@@ -670,18 +698,18 @@ class SymbolicEigenvectors(Scene):
         vs.set_color(YELLOW)
         lamb.set_color(MAROON_B)
 
-        A_brace = Brace(A, UP, buff = 0)
+        A_brace = Brace(A, UP, buff=0)
         A_text = TextMobject("Transformation \\\\ matrix")
         A_text.next_to(A_brace, UP)
 
-        lamb_brace = Brace(lamb, UP, buff = 0)
+        lamb_brace = Brace(lamb, UP, buff=0)
         lamb_text = TextMobject("Eigenvalue")
         lamb_text.set_color(lamb.get_color())
-        lamb_text.next_to(lamb_brace, UP, aligned_edge = LEFT)
+        lamb_text.next_to(lamb_brace, UP, aligned_edge=LEFT)
 
         v_text = TextMobject("Eigenvector")
         v_text.set_color(vs.get_color())
-        v_text.next_to(vs, DOWN, buff = 1.5*LARGE_BUFF)
+        v_text.next_to(vs, DOWN, buff=1.5*LARGE_BUFF)
         v_arrows = VGroup(*[
             Arrow(v_text.get_top(), v.get_bottom())
             for v in vs
@@ -705,7 +733,7 @@ class SymbolicEigenvectors(Scene):
         )
         self.wait(2)
         self.play(*list(map(FadeOut, [
-            A_brace, A_text, 
+            A_brace, A_text,
             lamb_brace, lamb_text,
             v_text, v_arrows
         ])))
@@ -715,7 +743,8 @@ class SymbolicEigenvectors(Scene):
 
         left_group = VGroup(A, v1)
         left_group.brace = Brace(left_group, UP)
-        left_group.text = left_group.brace.get_text("Matrix-vector multiplication")
+        left_group.text = left_group.brace.get_text(
+            "Matrix-vector multiplication")
 
         right_group = VGroup(lamb, v2)
         right_group.brace = Brace(right_group, DOWN)
@@ -725,14 +754,14 @@ class SymbolicEigenvectors(Scene):
         for group in left_group, right_group:
             self.play(
                 GrowFromCenter(group.brace),
-                Write(group.text, run_time = 2)
+                Write(group.text, run_time=2)
             )
-            self.play(group.scale_in_place, 1.2, rate_func = there_and_back)
+            self.play(group.scale_in_place, 1.2, rate_func=there_and_back)
             self.wait()
 
         morty = Mortimer().to_edge(DOWN)
         morty.change_mode("speaking")
-        bubble = morty.get_bubble(SpeechBubble, width = 5, direction = LEFT)
+        bubble = morty.get_bubble(SpeechBubble, width=5, direction=LEFT)
         VGroup(morty, bubble).to_edge(RIGHT)
         solve_text = TextMobject(
             "Solve for \\\\",
@@ -774,7 +803,7 @@ class SymbolicEigenvectors(Scene):
         matrix_multiplication = TextMobject(
             "Matrix multiplication by"
         )
-        matrix = Matrix(np.identity(3, dtype = int))
+        matrix = Matrix(np.identity(3, dtype=int))
 
         corner_group = VGroup(
             scaling_by, arrow, matrix_multiplication, matrix
@@ -788,7 +817,7 @@ class SymbolicEigenvectors(Scene):
         ])
         q_marks.set_color_by_gradient(X_COLOR, Y_COLOR, Z_COLOR)
         diag_entries = VGroup(*[
-            matrix.get_mob_matrix()[i,i]
+            matrix.get_mob_matrix()[i, i]
             for i in range(3)
         ])
         diag_entries.save_state()
@@ -814,13 +843,13 @@ class SymbolicEigenvectors(Scene):
             arrow,
             matrix.get_brackets(),
             q_marks,
-        ), run_time = 2
+        ), run_time=2
         ))
         self.wait()
         self.play(Transform(
-            q_marks, matrix.get_entries(), 
-            lag_ratio = 0.5,
-            run_time = 2
+            q_marks, matrix.get_entries(),
+            lag_ratio=0.5,
+            run_time=2
         ))
         self.remove(q_marks)
         self.add(*matrix.get_entries())
@@ -843,7 +872,7 @@ class SymbolicEigenvectors(Scene):
         for mob in lamb, id_text, v2:
             mob.target = mob.copy()
         VGroup(
-            l_paren, lamb.target, id_text.target, 
+            l_paren, lamb.target, id_text.target,
             r_paren, v2.target
         ).arrange().next_to(equals).shift(SMALL_BUFF*UP)
         self.play(
@@ -855,7 +884,7 @@ class SymbolicEigenvectors(Scene):
             corner_group, id_brace, id_text_copy, new_lamb
         ])))
         self.expression = VGroup(
-            A, v1, equals, 
+            A, v1, equals,
             VGroup(l_paren, lamb, id_text, r_paren),
             v2
         )
@@ -876,10 +905,10 @@ class SymbolicEigenvectors(Scene):
             lamb_group.target, v2.target
         ).arrange().next_to(equals, LEFT)
         self.play(
-            Write(zero), 
+            Write(zero),
             Write(minus),
             *list(map(MoveToTarget, movers)),
-            path_arc = np.pi/3
+            path_arc=np.pi/3
         )
         self.wait()
         A.target.next_to(minus, LEFT)
@@ -888,7 +917,7 @@ class SymbolicEigenvectors(Scene):
         self.play(
             MoveToTarget(A),
             MoveToTarget(l_paren),
-            Transform(v1, v2, path_arc = np.pi/3)
+            Transform(v1, v2, path_arc=np.pi/3)
         )
         self.remove(v1)
         self.wait()
@@ -905,7 +934,7 @@ class SymbolicEigenvectors(Scene):
         matrix.scale(0.7)
         VGroup(
             matrix.get_brackets()[1],
-            *matrix.get_mob_matrix()[:,2]
+            *matrix.get_mob_matrix()[:, 2]
         ).shift(0.5*RIGHT)
         matrix.next_to(brace.text, DOWN)
         for entry in matrix.get_entries():
@@ -926,16 +955,16 @@ class SymbolicEigenvectors(Scene):
         vect_words.to_corner(UP+LEFT)
         arrow = Arrow(vect_words.get_bottom(), v2.get_top())
         self.play(
-            Write(vect_words), 
+            Write(vect_words),
             ShowCreation(arrow)
         )
         self.wait()
 
     def bring_in_determinant(self):
-        randy = Randolph(mode = "speaking").to_edge(DOWN)
+        randy = Randolph(mode="speaking").to_edge(DOWN)
         randy.flip()
         randy.look_at(self.expression)
-        bubble = randy.get_bubble(SpeechBubble, direction = LEFT, width = 5)
+        bubble = randy.get_bubble(SpeechBubble, direction=LEFT, width=5)
         words = TextMobject("We need")
         equation = TexMobject(
             "\\det(A-", "\\lambda", "I)", "=0"
@@ -964,11 +993,13 @@ class SymbolicEigenvectors(Scene):
         )
         self.wait()
 
+
 class NonZeroSolutionsVisually(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[1, 1], [2, 2]],
-        "v_coords" : [2, -1]
+        "t_matrix": [[1, 1], [2, 2]],
+        "v_coords": [2, -1]
     }
+
     def construct(self):
         equation = TexMobject(
             "(A-", "\\lambda", "I)", "\\vec{\\textbf{v}}",
@@ -978,7 +1009,7 @@ class NonZeroSolutionsVisually(LinearTransformationScene):
         equation.set_color_by_tex("\\lambda", MAROON_B)
         equation.set_color_by_tex("\\vec{\\textbf{v}}", YELLOW)
         equation.add_background_rectangle()
-        equation.next_to(ORIGIN, DOWN, buff = MED_SMALL_BUFF)
+        equation.next_to(ORIGIN, DOWN, buff=MED_SMALL_BUFF)
         equation.to_edge(LEFT)
 
         det_equation = TexMobject(
@@ -987,10 +1018,9 @@ class NonZeroSolutionsVisually(LinearTransformationScene):
         )
         det_equation_matrix = VGroup(*det_equation[2:2+4])
         det_equation.set_color_by_tex("\\lambda", MAROON_B)
-        det_equation.next_to(equation, DOWN, buff = MED_SMALL_BUFF)
+        det_equation.next_to(equation, DOWN, buff=MED_SMALL_BUFF)
         det_equation.to_edge(LEFT)
         det_equation.add_background_rectangle()
-
 
         self.add_foreground_mobject(equation)
         v = self.add_vector(self.v_coords)
@@ -1003,33 +1033,34 @@ class NonZeroSolutionsVisually(LinearTransformationScene):
         self.play(Write(det_equation), transform)
         self.wait()
 
+
 class TweakLambda(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[2, 1], [2, 3]],
-        "include_background_plane" : False,
-        "foreground_plane_kwargs" : {
-            "x_radius" : FRAME_WIDTH,
-            "y_radius" : FRAME_WIDTH,
-            "secondary_line_ratio" : 1
+        "t_matrix": [[2, 1], [2, 3]],
+        "include_background_plane": False,
+        "foreground_plane_kwargs": {
+            "x_radius": FRAME_WIDTH,
+            "y_radius": FRAME_WIDTH,
+            "secondary_line_ratio": 1
         },
     }
+
     def construct(self):
         matrix = Matrix([
             ["2-0.00", "2"],
             ["1", "3-0.00"],
         ])
         matrix.add_to_back(BackgroundRectangle(matrix))
-        matrix.next_to(ORIGIN, LEFT, buff = LARGE_BUFF)
+        matrix.next_to(ORIGIN, LEFT, buff=LARGE_BUFF)
         matrix.to_edge(UP)
 
         self.lambda_vals = []
         for i in range(2):
-            entry = matrix.get_mob_matrix()[i,i]
+            entry = matrix.get_mob_matrix()[i, i]
             place_holders = VGroup(*entry[2:])
             entry.remove(*place_holders)
             place_holders.set_color(MAROON_B)
             self.lambda_vals.append(place_holders)
-
 
         brace = Brace(matrix)
         brace_text = TexMobject("(A-", "\\lambda", "I)")
@@ -1066,19 +1097,19 @@ class TweakLambda(LinearTransformationScene):
         self.matrix.add(det_text, equals, det.rect)
         self.wait()
 
-        self.range_lambda(0, 3, run_time = 5)
+        self.range_lambda(0, 3, run_time=5)
         self.wait()
-        self.range_lambda(3, 0.5, run_time = 5)
+        self.range_lambda(3, 0.5, run_time=5)
         self.wait()
-        self.range_lambda(0.5, 1.5, run_time = 3)
+        self.range_lambda(0.5, 1.5, run_time=3)
         self.wait()
-        self.range_lambda(1.5, 1, run_time = 2)
+        self.range_lambda(1.5, 1, run_time=2)
         self.wait()
 
     def get_t_matrix(self, lambda_val):
         return self.t_matrix - lambda_val*np.identity(2)
 
-    def range_lambda(self, start_val, end_val, run_time = 3):
+    def range_lambda(self, start_val, end_val, run_time=3):
         alphas = np.linspace(0, 1, run_time/self.frame_duration)
         matrix_transform = self.get_matrix_transformation(
             self.get_t_matrix(end_val)
@@ -1089,12 +1120,12 @@ class TweakLambda(LinearTransformationScene):
             transformations.append(MoveToTarget(mob))
         transformations += [
             Transform(
-                self.i_hat, 
-                Vector(matrix_transform(RIGHT), color = X_COLOR)
+                self.i_hat,
+                Vector(matrix_transform(RIGHT), color=X_COLOR)
             ),
             Transform(
-                self.j_hat, 
-                Vector(matrix_transform(UP), color = Y_COLOR)
+                self.j_hat,
+                Vector(matrix_transform(UP), color=Y_COLOR)
             ),
         ]
         for alpha in alphas:
@@ -1109,7 +1140,7 @@ class TweakLambda(LinearTransformationScene):
             new_lambda_vals = []
             for lambda_val in self.lambda_vals:
                 new_lambda = DecimalNumber(val)
-                new_lambda.move_to(lambda_val, aligned_edge = LEFT)
+                new_lambda.move_to(lambda_val, aligned_edge=LEFT)
                 new_lambda.set_color(lambda_val.get_color())
                 new_lambda_vals.append(new_lambda)
             self.lambda_vals = new_lambda_vals
@@ -1121,24 +1152,26 @@ class TweakLambda(LinearTransformationScene):
                     self.j_hat.get_end()[:2],
                 ])
             )
-            new_det.move_to(self.det, aligned_edge = LEFT)
+            new_det.move_to(self.det, aligned_edge=LEFT)
             new_det.set_color(self.det.get_color())
             self.det = new_det
             self.add(self.det)
 
             self.wait(self.frame_duration)
 
+
 class ShowEigenVectorAfterComputing(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[2, 1], [2, 3]],
-        "v_coords" : [2, -1],
-        "include_background_plane" : False,
-        "foreground_plane_kwargs" : {
-            "x_radius" : FRAME_WIDTH,
-            "y_radius" : FRAME_WIDTH,
-            "secondary_line_ratio" : 1
+        "t_matrix": [[2, 1], [2, 3]],
+        "v_coords": [2, -1],
+        "include_background_plane": False,
+        "foreground_plane_kwargs": {
+            "x_radius": FRAME_WIDTH,
+            "y_radius": FRAME_WIDTH,
+            "secondary_line_ratio": 1
         },
     }
+
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
         matrix.add_to_back(BackgroundRectangle(matrix))
@@ -1149,7 +1182,7 @@ class ShowEigenVectorAfterComputing(LinearTransformationScene):
         v_label = TexMobject(
             "\\vec{\\textbf{v}}",
             "=",
-            "1", 
+            "1",
             "\\vec{\\textbf{v}}",
         )
         v_label.next_to(matrix, RIGHT)
@@ -1165,13 +1198,14 @@ class ShowEigenVectorAfterComputing(LinearTransformationScene):
         self.play(Write(eigenvector))
         self.add_foreground_mobject(eigenvector)
 
-        line = Line(v.get_end()*(-4), v.get_end()*4, color = MAROON_B)
+        line = Line(v.get_end()*(-4), v.get_end()*4, color=MAROON_B)
         self.play(Write(v_label))
         self.add_foreground_mobject(v_label)
         self.play(ShowCreation(line), Animation(v))
         self.wait()
         self.apply_transposed_matrix(self.t_matrix)
         self.wait()
+
 
 class LineOfReasoning(Scene):
     def construct(self):
@@ -1182,7 +1216,7 @@ class LineOfReasoning(Scene):
             ("(", "A", "-", "\\lambda", "I)", v_tex, "=", "0"),
             ("\\det(A-", "\\lambda", "I)", "=", "0")
         ]))
-        expressions.arrange(DOWN, buff = LARGE_BUFF/2.)
+        expressions.arrange(DOWN, buff=LARGE_BUFF/2.)
         for expression in expressions:
             for i, expression_part in enumerate(expression.expression_parts):
                 if expression_part == "=":
@@ -1193,6 +1227,7 @@ class LineOfReasoning(Scene):
             expression.set_color_by_tex("\\lambda", MAROON_B)
             self.play(FadeIn(expression))
         self.wait()
+
 
 class IfYouDidntKnowDeterminants(TeacherStudentsScene):
     def construct(self):
@@ -1211,6 +1246,7 @@ class IfYouDidntKnowDeterminants(TeacherStudentsScene):
         )
         self.random_blink(4)
 
+
 class RevisitExampleTransformation(ExampleTranformationScene):
     def construct(self):
         self.introduce_matrix()
@@ -1221,13 +1257,13 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         lamb.set_color(MAROON_B)
         words = VGroup(seeking_eigenvalue, lamb)
         words.arrange()
-        words.next_to(self.matrix, DOWN, buff = LARGE_BUFF)
+        words.next_to(self.matrix, DOWN, buff=LARGE_BUFF)
         self.play(Write(words))
         self.wait()
         self.play(*self.get_lambda_to_diag_movements(lamb.copy()))
         self.add_foreground_mobject(*self.get_mobjects_from_last_animation())
         self.wait()
-        self.show_determinant(to_fade = words)
+        self.show_determinant(to_fade=words)
         self.show_diagonally_altered_transform()
         self.show_unaltered_transform()
 
@@ -1246,7 +1282,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             coords.rect = BackgroundRectangle(coords)
             coords.add_to_back(coords.rect)
             coords.next_to(
-                vect.get_end(), 
+                vect.get_end(),
                 RIGHT+DOWN if coords is i_coords else RIGHT
             )
         self.play(
@@ -1257,11 +1293,11 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         self.play(*[
             Transform(*pair)
             for pair in [
-                (i_coords.rect, self.matrix.rect),            
+                (i_coords.rect, self.matrix.rect),
                 (i_coords.get_brackets(), self.matrix.get_brackets()),
                 (
-                    i_coords.get_entries(), 
-                    VGroup(*self.matrix.get_mob_matrix()[:,0])
+                    i_coords.get_entries(),
+                    VGroup(*self.matrix.get_mob_matrix()[:, 0])
                 )
             ]
         ])
@@ -1271,7 +1307,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             FadeOut(j_coords.rect),
             Transform(
                 j_coords.get_entries(),
-                VGroup(*self.matrix.get_mob_matrix()[:,1])
+                VGroup(*self.matrix.get_mob_matrix()[:, 1])
             ),
         )
         to_remove += self.get_mobjects_from_last_animation()
@@ -1299,7 +1335,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         rect.target = BackgroundRectangle(
             VGroup(l_bracket.target, r_bracket.target)
         )
-        result = list(map(MoveToTarget, movers)) 
+        result = list(map(MoveToTarget, movers))
         result += list(map(Write, [minus1, minus2]))
         result += list(map(Animation, [
             self.matrix.get_mob_matrix()[i, 1-i]
@@ -1311,7 +1347,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         ]
         return result
 
-    def show_determinant(self, to_fade = None):
+    def show_determinant(self, to_fade=None):
         det_text = get_det_text(self.matrix)
         equals = TexMobject("=").next_to(det_text)
         three_minus_lamb, two_minus_lamb = diag_entries = [
@@ -1333,7 +1369,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         parens.add_background_rectangle()
         new_rect = BackgroundRectangle(VGroup(minus, zero.target))
 
-        brace = Brace(new_rect, buff = 0)
+        brace = Brace(new_rect, buff=0)
         brace_text = brace.get_text("Equals 0, so ", "ignore")
         brace_text.add_background_rectangle()
 
@@ -1365,10 +1401,10 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         )
         self.wait()
         self.play(
-            Write(parens),            
+            Write(parens),
             MoveToTarget(three_minus_lamb),
             MoveToTarget(two_minus_lamb),
-            run_time = 2
+            run_time=2
         )
         self.wait()
         self.play(
@@ -1377,7 +1413,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             MoveToTarget(zero),
             Write(minus),
             Write(cdot),
-            run_time = 2
+            run_time=2
         )
         self.play(
             GrowFromCenter(brace),
@@ -1397,9 +1433,9 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         )
         self.wait()
         faders = [
-            det_text, equals, parens, 
+            det_text, equals, parens,
             three_minus_lamb, two_minus_lamb,
-            brace, brace_text, equals_0, 
+            brace, brace_text, equals_0,
         ]
         if to_fade is not None:
             faders.append(to_fade)
@@ -1407,7 +1443,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             list(map(FadeOut, faders)),
             [
                 lambda_equals_two.scale_in_place, 1.3,
-                lambda_equals_two.next_to, self.matrix, DOWN                
+                lambda_equals_two.next_to, self.matrix, DOWN
             ]
         ))
         self.add_foreground_mobject(lambda_equals_two)
@@ -1423,7 +1459,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             self.play(Transform(lamb, two))
         self.play(*it.chain(
             [mob.restore for mob in (self.plane, self.i_hat, self.j_hat)],
-            list(map(Animation, self.foreground_mobjects)),            
+            list(map(Animation, self.foreground_mobjects)),
         ))
 
         xy_array = Matrix(["x", "y"])
@@ -1440,7 +1476,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         self.wait()
 
         vectors = VGroup(*[
-            self.add_vector(u*x*(LEFT+UP), animate = False)
+            self.add_vector(u*x*(LEFT+UP), animate=False)
             for x in range(4, 0, -1)
             for u in [-1, 1]
         ])
@@ -1448,9 +1484,9 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         vectors.save_state()
         self.play(
             ShowCreation(
-                vectors, 
-                lag_ratio = 0.5,
-                run_time = 2
+                vectors,
+                lag_ratio=0.5,
+                run_time=2
             ),
             *list(map(Animation, self.foreground_mobjects))
         )
@@ -1460,7 +1496,8 @@ class RevisitExampleTransformation(ExampleTranformationScene):
         )
         self.wait()
         self.play(*it.chain(
-            [mob.restore for mob in (self.plane, self.i_hat, self.j_hat, vectors)],
+            [mob.restore for mob in (
+                self.plane, self.i_hat, self.j_hat, vectors)],
             list(map(FadeOut, [xy_array, equals, zero_array])),
             list(map(Animation, self.foreground_mobjects))
         ))
@@ -1484,11 +1521,12 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             list(map(FadeOut, faders)),
             [GrowFromCenter(brace)]
         ))
-        VGroup(*faders).set_fill(opacity = 0)
+        VGroup(*faders).set_fill(opacity=0)
         self.add_foreground_mobject(brace)
         self.wait()
         self.apply_transposed_matrix(self.t_matrix)
         self.wait()
+
 
 class ThereMightNotBeEigenvectors(TeacherStudentsScene):
     def construct(self):
@@ -1498,11 +1536,13 @@ class ThereMightNotBeEigenvectors(TeacherStudentsScene):
         """)
         self.random_blink(3)
 
+
 class Rotate90Degrees(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[0, 1], [-1, 0]],
-        "example_vector_coords" : None,
+        "t_matrix": [[0, 1], [-1, 0]],
+        "example_vector_coords": None,
     }
+
     def setup(self):
         LinearTransformationScene.setup(self)
         matrix = Matrix(self.t_matrix.T)
@@ -1514,8 +1554,8 @@ class Rotate90Degrees(LinearTransformationScene):
         self.add_foreground_mobject(matrix)
         self.matrix = matrix
         if self.example_vector_coords is not None:
-            v = self.add_vector(self.example_vector_coords, animate = False)
-            line = Line(v.get_end()*(-4), v.get_end()*4, color = MAROON_B)
+            v = self.add_vector(self.example_vector_coords, animate=False)
+            line = Line(v.get_end()*(-4), v.get_end()*4, color=MAROON_B)
             self.play(ShowCreation(line), Animation(v))
             self.add_foreground_mobject(line)
 
@@ -1524,17 +1564,19 @@ class Rotate90Degrees(LinearTransformationScene):
         self.apply_transposed_matrix(self.t_matrix)
         self.wait()
 
+
 class Rotate90DegreesWithVector(Rotate90Degrees):
     CONFIG = {
-        "example_vector_coords" : [1, 2]
+        "example_vector_coords": [1, 2]
     }
+
 
 class SolveRotationEigenvalues(Rotate90Degrees):
     def construct(self):
-        self.apply_transposed_matrix(self.t_matrix, run_time = 0)
+        self.apply_transposed_matrix(self.t_matrix, run_time=0)
         self.wait()
         diag_entries = [
-            self.matrix.get_mob_matrix()[i, i] 
+            self.matrix.get_mob_matrix()[i, i]
             for i in range(2)
         ]
         off_diag_entries = [
@@ -1567,7 +1609,7 @@ class SolveRotationEigenvalues(Rotate90Degrees):
             self.play(
                 Write(parens),
                 *[MoveToTarget(entry.copy()) for entry in entries],
-                run_time = 2
+                run_time=2
             )
             self.wait()
             if entries == diag_entries:
@@ -1578,7 +1620,8 @@ class SolveRotationEigenvalues(Rotate90Degrees):
         )
         polynomial.set_color_by_tex("\\lambda^2", MAROON_B)
         polynomial.add_background_rectangle()
-        polynomial.next_to(equals, DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        polynomial.next_to(
+            equals, DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
         self.play(Write(polynomial))
         self.wait()
 
@@ -1588,7 +1631,8 @@ class SolveRotationEigenvalues(Rotate90Degrees):
         )
         result.set_color_by_tex("\\lambda", MAROON_B)
         result.add_background_rectangle()
-        result.next_to(polynomial, DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        result.next_to(polynomial, DOWN, buff=MED_LARGE_BUFF,
+                       aligned_edge=LEFT)
         self.play(Write(result))
         self.wait()
 
@@ -1601,23 +1645,25 @@ class SolveRotationEigenvalues(Rotate90Degrees):
             note that that eigenvalues which are complex numbers 
             generally correspond to some kind of rotation in the 
             transformation.
-        """, alignment = "")
+        """, alignment="")
         interesting_tidbit.add_background_rectangle()
         interesting_tidbit.set_height(FRAME_Y_RADIUS-0.5)
         interesting_tidbit.to_corner(DOWN+RIGHT)
         self.play(FadeIn(interesting_tidbit))
         self.wait()
 
+
 class ShearExample(RevisitExampleTransformation):
     CONFIG = {
-        "t_matrix" : [[1, 0], [1, 1]],
-        "include_background_plane" : False,
-        "foreground_plane_kwargs" : {
-            "x_radius" : FRAME_WIDTH,
-            "y_radius" : FRAME_HEIGHT,
-            "secondary_line_ratio" : 1
+        "t_matrix": [[1, 0], [1, 1]],
+        "include_background_plane": False,
+        "foreground_plane_kwargs": {
+            "x_radius": FRAME_WIDTH,
+            "y_radius": FRAME_HEIGHT,
+            "secondary_line_ratio": 1
         },
     }
+
     def construct(self):
         self.plane.fade()
         self.introduce_matrix()
@@ -1633,7 +1679,7 @@ class ShearExample(RevisitExampleTransformation):
 
     def point_out_eigenvectors(self):
         vectors = VGroup(*[
-            self.add_vector(u*x*RIGHT, animate = False)
+            self.add_vector(u*x*RIGHT, animate=False)
             for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
             for u in [-1, 1]
         ])
@@ -1645,9 +1691,9 @@ class ShearExample(RevisitExampleTransformation):
         for word in words:
             word.set_color_by_tex("1", MAROON_B)
             word.add_to_back(BackgroundRectangle(word))
-        words.arrange(DOWN, buff = MED_SMALL_BUFF)
-        words.next_to(ORIGIN, DOWN+RIGHT, buff = MED_SMALL_BUFF)
-        self.play(ShowCreation(vectors), run_time = 2)
+        words.arrange(DOWN, buff=MED_SMALL_BUFF)
+        words.next_to(ORIGIN, DOWN+RIGHT, buff=MED_SMALL_BUFF)
+        self.play(ShowCreation(vectors), run_time=2)
         self.play(Write(words))
         self.wait()
 
@@ -1673,7 +1719,7 @@ class ShearExample(RevisitExampleTransformation):
         parens.add_background_rectangle()
         new_rect = BackgroundRectangle(VGroup(minus, zero.target))
 
-        brace = Brace(new_rect, buff = 0)
+        brace = Brace(new_rect, buff=0)
         brace_text = brace.get_text("Equals 0, so ", "ignore")
         brace_text.add_background_rectangle()
 
@@ -1702,10 +1748,10 @@ class ShearExample(RevisitExampleTransformation):
         )
         self.wait()
         self.play(
-            Write(parens),            
+            Write(parens),
             MoveToTarget(three_minus_lamb),
             MoveToTarget(two_minus_lamb),
-            run_time = 2
+            run_time=2
         )
         self.wait()
         self.play(
@@ -1714,7 +1760,7 @@ class ShearExample(RevisitExampleTransformation):
             MoveToTarget(zero),
             Write(minus),
             Write(cdot),
-            run_time = 2
+            run_time=2
         )
         self.play(
             GrowFromCenter(brace),
@@ -1733,9 +1779,9 @@ class ShearExample(RevisitExampleTransformation):
         )
         self.wait()
         # faders = [
-        #     det_text, equals, parens, 
+        #     det_text, equals, parens,
         #     three_minus_lamb, two_minus_lamb,
-        #     brace, brace_text, equals_0, 
+        #     brace, brace_text, equals_0,
         # ]
         # if to_fade is not None:
         #     faders.append(to_fade)
@@ -1743,12 +1789,13 @@ class ShearExample(RevisitExampleTransformation):
         #     map(FadeOut, faders),
         #     [
         #         lambda_equals_two.scale_in_place, 1.3,
-        #         lambda_equals_two.next_to, self.matrix, DOWN                
+        #         lambda_equals_two.next_to, self.matrix, DOWN
         #     ]
         # ))
         # self.add_foreground_mobject(lambda_equals_two)
         # self.lambda_equals_two = lambda_equals_two
         # self.wait()
+
 
 class EigenvalueCanHaveMultipleEigenVectors(TeacherStudentsScene):
     def construct(self):
@@ -1760,10 +1807,12 @@ class EigenvalueCanHaveMultipleEigenVectors(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.random_blink(2)
 
+
 class ScalingExample(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[2, 0], [0, 2]]
+        "t_matrix": [[2, 0], [0, 2]]
     }
+
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
         matrix.set_column_colors(X_COLOR, Y_COLOR)
@@ -1775,10 +1824,11 @@ class ScalingExample(LinearTransformationScene):
         words.next_to(matrix, RIGHT)
         self.add_foreground_mobject(matrix, words)
         for coords in [2, 1], [-2.5, -1], [1, -1]:
-            self.add_vector(coords, color = random_color())
+            self.add_vector(coords, color=random_color())
         self.wait()
         self.apply_transposed_matrix(self.t_matrix)
         self.wait()
+
 
 class IntroduceEigenbasis(TeacherStudentsScene):
     def construct(self):
@@ -1794,7 +1844,7 @@ class IntroduceEigenbasis(TeacherStudentsScene):
         )
         self.random_blink()
         new_words = VGroup(words1.copy(), words2)
-        new_words.arrange(DOWN, buff = MED_SMALL_BUFF)
+        new_words.arrange(DOWN, buff=MED_SMALL_BUFF)
         new_words.scale(0.8)
         self.teacher.bubble.add_content(new_words)
         self.play(
@@ -1809,10 +1859,12 @@ class IntroduceEigenbasis(TeacherStudentsScene):
         )
         self.random_blink(2)
 
+
 class BasisVectorsAreEigenvectors(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[-1, 0], [0, 2]]
+        "t_matrix": [[-1, 0], [0, 2]]
     }
+
     def construct(self):
         matrix = Matrix(self.t_matrix.T)
         matrix.set_column_colors(X_COLOR, Y_COLOR)
@@ -1851,20 +1903,19 @@ class BasisVectorsAreEigenvectors(LinearTransformationScene):
             Transform(i_coords.rect, matrix.rect),
             Transform(i_coords.get_brackets(), matrix.get_brackets()),
             i_coords.get_entries().move_to, VGroup(
-                *matrix.get_mob_matrix()[:,0]
+                *matrix.get_mob_matrix()[:, 0]
             )
         )
         self.play(
             FadeOut(j_coords.rect),
             FadeOut(j_coords.get_brackets()),
             j_coords.get_entries().move_to, VGroup(
-                *matrix.get_mob_matrix()[:,1]
+                *matrix.get_mob_matrix()[:, 1]
             )
         )
         self.remove(i_coords, j_coords)
         self.add(matrix)
         self.wait()
-
 
         diag_entries = VGroup(*[
             matrix.get_mob_matrix()[i, i]
@@ -1878,20 +1929,21 @@ class BasisVectorsAreEigenvectors(LinearTransformationScene):
             self.play(
                 entries.scale_in_place, 1.3,
                 entries.set_color, YELLOW,
-                run_time = 2,
-                rate_func = there_and_back
+                run_time=2,
+                rate_func=there_and_back
             )
         self.wait()
+
 
 class DefineDiagonalMatrix(Scene):
     def construct(self):
         n_dims = 4
-        numerical_matrix = np.identity(n_dims, dtype = 'int')
+        numerical_matrix = np.identity(n_dims, dtype='int')
         for x in range(n_dims):
             numerical_matrix[x, x] = random.randint(-9, 9)
         matrix = Matrix(numerical_matrix)
         diag_entries = VGroup(*[
-            matrix.get_mob_matrix()[i,i]
+            matrix.get_mob_matrix()[i, i]
             for i in range(n_dims)
         ])
         off_diag_entries = VGroup(*[
@@ -1910,7 +1962,7 @@ class DefineDiagonalMatrix(Scene):
             self.play(
                 entries.scale_in_place, 1.1,
                 entries.set_color, YELLOW,
-                rate_func = there_and_back,
+                rate_func=there_and_back,
             )
         self.wait()
         self.play(Write(title))
@@ -1923,9 +1975,10 @@ class DefineDiagonalMatrix(Scene):
         self.play(diag_entries.set_color, MAROON_B)
         self.play(
             diag_entries.scale_in_place, 1.1,
-            rate_func = there_and_back,
+            rate_func=there_and_back,
         )
         self.wait()
+
 
 class RepeatedMultiplicationInAction(Scene):
     def construct(self):
@@ -1934,7 +1987,7 @@ class RepeatedMultiplicationInAction(Scene):
         vector.scale(1.2)
         vector.shift(RIGHT)
         matrix, scalars = self.get_matrix(vector)
-        #First multiplication
+        # First multiplication
         for v_entry, scalar in zip(vector.get_entries(), scalars):
             scalar.target = scalar.copy()
             scalar.target.next_to(v_entry, LEFT)
@@ -1952,7 +2005,7 @@ class RepeatedMultiplicationInAction(Scene):
             *list(map(MoveToTarget, scalars + [l_bracket]))
         )
         self.wait()
-        #nth multiplications                    
+        # nth multiplications
         for scalar in scalars:
             scalar.exp = VectorizedPoint(scalar.get_corner(UP+RIGHT))
             scalar.exp.shift(SMALL_BUFF*RIGHT/2.)
@@ -1964,11 +2017,11 @@ class RepeatedMultiplicationInAction(Scene):
             for v_entry, scalar, new_scalar in zip(vector.get_entries(), scalars, new_scalars):
                 scalar.exp.target = new_exp_mob.copy()
                 scalar.exp.target.set_color(scalar.get_color())
-                scalar.exp.target.move_to(scalar.exp, aligned_edge = LEFT)
+                scalar.exp.target.move_to(scalar.exp, aligned_edge=LEFT)
                 new_scalar.target = scalar.exp.target
                 scalar.target = scalar.copy()
                 VGroup(scalar.target, scalar.exp.target).next_to(
-                    v_entry, LEFT, aligned_edge = DOWN
+                    v_entry, LEFT, aligned_edge=DOWN
                 )
                 movers += [scalar, scalar.exp, new_scalar]
                 to_remove.append(new_scalar)
@@ -1986,7 +2039,6 @@ class RepeatedMultiplicationInAction(Scene):
             self.remove(*to_remove)
             self.wait()
 
-
     def get_matrix(self, vector):
         matrix = Matrix([[3, 0], [0, 2]])
         matrix.set_column_colors(X_COLOR, Y_COLOR)
@@ -1995,11 +2047,13 @@ class RepeatedMultiplicationInAction(Scene):
         matrix.remove(*scalars)
         return matrix, scalars
 
+
 class RepeatedMultilpicationOfMatrices(Scene):
     CONFIG = {
-        "matrix" : [[3, 0], [0, 2]],
-        "diagonal" : True,
+        "matrix": [[3, 0], [0, 2]],
+        "diagonal": True,
     }
+
     def construct(self):
         vector = Matrix(["x", "y"])
         vector.set_color(YELLOW)
@@ -2037,9 +2091,9 @@ class RepeatedMultilpicationOfMatrices(Scene):
                 entry = last_matrix.target.get_mob_matrix()[i, i]
                 hund.target = hund.copy()
                 hund.target.scale(0.5)
-                hund.target.next_to(entry, UP+RIGHT, buff = 0)
+                hund.target.next_to(entry, UP+RIGHT, buff=0)
                 hund.target.set_color(entry.get_color())
-                VGroup(hund.target, entry).move_to(entry, aligned_edge = DOWN)
+                VGroup(hund.target, entry).move_to(entry, aligned_edge=DOWN)
             lb, rb = last_matrix.target.get_brackets()
             lb.shift(SMALL_BUFF*LEFT)
             rb.shift(SMALL_BUFF*RIGHT)
@@ -2048,9 +2102,10 @@ class RepeatedMultilpicationOfMatrices(Scene):
             ).next_to(vector, LEFT)
 
             self.play(*it.chain(
-                list(map(FadeOut, [brace, brace_text[1]] + list(matrices[:-1]))),
+                list(map(FadeOut, [brace, brace_text[1]] +
+                         list(matrices[:-1]))),
                 list(map(MoveToTarget, [hundred, hundred_copy, last_matrix]))
-            ), run_time = 2)
+            ), run_time=2)
             self.wait()
         else:
             randy = Randolph().to_corner()
@@ -2061,11 +2116,13 @@ class RepeatedMultilpicationOfMatrices(Scene):
             self.play(Blink(randy))
             self.wait()
 
+
 class RepeatedMultilpicationOfNonDiagonalMatrices(RepeatedMultilpicationOfMatrices):
     CONFIG = {
-        "matrix" : [[3, 4], [1, 1]],
-        "diagonal" : False,
+        "matrix": [[3, 4], [1, 1]],
+        "diagonal": False,
     }
+
 
 class WhatAreTheOddsOfThat(TeacherStudentsScene):
     def construct(self):
@@ -2077,28 +2134,31 @@ class WhatAreTheOddsOfThat(TeacherStudentsScene):
         self.change_student_modes("pondering")
         self.random_blink(3)
 
+
 class LastVideo(Scene):
     def construct(self):
         title = TextMobject("Last chapter: Change of basis")
         title.to_edge(UP)
-        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect = Rectangle(width=16, height=9, color=BLUE)
         rect.set_height(6)
-        rect.next_to(title, DOWN, buff = MED_SMALL_BUFF)
+        rect.next_to(title, DOWN, buff=MED_SMALL_BUFF)
 
         self.add(title)
         self.play(ShowCreation(rect))
         self.wait()
 
+
 class ChangeToEigenBasis(ExampleTranformationScene):
     CONFIG = {
-        "show_basis_vectors" : False,
-        "include_background_plane" : False,
-        "foreground_plane_kwargs" : {
-            "x_radius" : FRAME_WIDTH,
-            "y_radius" : FRAME_HEIGHT,
-            "secondary_line_ratio" : 0
+        "show_basis_vectors": False,
+        "include_background_plane": False,
+        "foreground_plane_kwargs": {
+            "x_radius": FRAME_WIDTH,
+            "y_radius": FRAME_HEIGHT,
+            "secondary_line_ratio": 0
         },
     }
+
     def construct(self):
         self.plane.fade()
         self.introduce_eigenvectors()
@@ -2108,7 +2168,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
     def introduce_eigenvectors(self):
         x_vectors, v_vectors = [
             VGroup(*[
-                self.add_vector(u*x*vect, animate = False)
+                self.add_vector(u*x*vect, animate=False)
                 for x in range(num, 0, -1)
                 for u in [-1, 1]
             ])
@@ -2117,14 +2177,14 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         x_vectors.set_color_by_gradient(YELLOW, X_COLOR)
         v_vectors.set_color_by_gradient(MAROON_B, YELLOW)
         self.remove(x_vectors, v_vectors)
-        self.play(ShowCreation(x_vectors, run_time = 2))
-        self.play(ShowCreation(v_vectors, run_time = 2))
+        self.play(ShowCreation(x_vectors, run_time=2))
+        self.play(ShowCreation(v_vectors, run_time=2))
         self.wait()
         self.plane.save_state()
         self.apply_transposed_matrix(
-            self.t_matrix, 
-            rate_func = there_and_back,
-            path_arc = 0
+            self.t_matrix,
+            rate_func=there_and_back,
+            path_arc=0
         )
 
         x_vector = x_vectors[-1]
@@ -2135,7 +2195,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         new_words = TextMobject("Use eigenvectors as basis")
         for text in words, new_words:
             text.add_background_rectangle()
-            text.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF)
+            text.next_to(ORIGIN, DOWN+LEFT, buff=MED_SMALL_BUFF)
             # text.to_edge(RIGHT)
 
         self.play(Write(words))
@@ -2175,7 +2235,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         cob_matrix.next_to(self.matrix)
         brace = Brace(cob_matrix)
         brace_text = brace.get_text("Change of basis matrix")
-        brace_text.next_to(brace, DOWN, aligned_edge = LEFT)
+        brace_text.next_to(brace, DOWN, aligned_edge=LEFT)
         brace_text.add_background_rectangle()
 
         copies = [vect.coords.copy() for vect in (b1, b2)]
@@ -2204,14 +2264,14 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         neg_1 = TexMobject("-1")
         neg_1.add_background_rectangle()
         inv_cob.target.next_to(
-            self.matrix, LEFT, buff = neg_1.get_width()+2*SMALL_BUFF
+            self.matrix, LEFT, buff=neg_1.get_width()+2*SMALL_BUFF
         )
         neg_1.next_to(
-            inv_cob.target.get_corner(UP+RIGHT), 
-            RIGHT, 
+            inv_cob.target.get_corner(UP+RIGHT),
+            RIGHT,
         )
         self.play(
-            MoveToTarget(inv_cob, path_arc = -np.pi/2),
+            MoveToTarget(inv_cob, path_arc=-np.pi/2),
             Write(neg_1)
         )
         self.wait()
@@ -2219,7 +2279,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         self.play(*list(map(FadeOut, self.to_fade)))
         self.wait()
         self.play(FadeOut(self.plane))
-        cob_transform = self.get_matrix_transformation([[1, 0], [-1, 1]])        
+        cob_transform = self.get_matrix_transformation([[1, 0], [-1, 1]])
         ApplyMethod(self.plane.apply_function, cob_transform).update(1)
         self.planes.set_color(BLUE_D)
         self.plane.axes.set_color(WHITE)
@@ -2227,7 +2287,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
             FadeIn(self.plane),
             *list(map(Animation, self.foreground_mobjects+self.moving_vectors))
         )
-        self.add(self.plane.copy().set_color(GREY).set_stroke(width = 2))
+        self.add(self.plane.copy().set_color(GREY).set_stroke(width=2))
         self.apply_transposed_matrix(self.t_matrix)
 
         equals = TexMobject("=").next_to(cob_matrix)
@@ -2252,14 +2312,14 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         morty = Mortimer()
         morty.to_edge(DOWN).shift(LEFT)
         bubble = morty.get_bubble(
-            "speech", height = 3, width = 5, direction = RIGHT
+            "speech", height=3, width=5, direction=RIGHT
         )
-        bubble.set_fill(BLACK, opacity = 1)
+        bubble.set_fill(BLACK, opacity=1)
         matrix_copy = self.matrix.copy().scale(0.7)
         hundred = TexMobject("100").scale(0.7)
         hundred.next_to(matrix_copy.get_corner(UP+RIGHT), RIGHT)
         compute = TextMobject("Compute")
-        compute.next_to(matrix_copy, LEFT, buff = MED_SMALL_BUFF)
+        compute.next_to(matrix_copy, LEFT, buff=MED_SMALL_BUFF)
         words = VGroup(compute, matrix_copy, hundred)
         bubble.add_content(words)
 
@@ -2273,6 +2333,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
             self.play(Blink(morty))
             self.wait(2)
 
+
 class CannotDoWithWithAllTransformations(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("""
@@ -2281,19 +2342,3 @@ class CannotDoWithWithAllTransformations(TeacherStudentsScene):
         """)
         self.change_student_modes(*["tired"]*3)
         self.random_blink(2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

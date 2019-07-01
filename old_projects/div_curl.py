@@ -158,6 +158,8 @@ def preditor_prey_vector_field(point):
 
 # TODO, this is untested after turning it from a
 # ContinualAnimation into a VGroup
+
+
 class JigglingSubmobjects(VGroup):
     CONFIG = {
         "amplitude": 0.05,
@@ -1189,7 +1191,8 @@ class IntroduceVectorField(Scene):
         earth.move_to(earth_center)
         moon.move_to(moon_center)
 
-        gravity_func = get_force_field_func((earth_center, -6), (moon_center, -1))
+        gravity_func = get_force_field_func(
+            (earth_center, -6), (moon_center, -1))
         gravity_field = VectorField(
             gravity_func,
             **self.vector_field_config
@@ -1560,7 +1563,8 @@ class DefineDivergence(ChangingElectricField):
         div_value_update = ContinualChangingDecimal(
             div_value,
             lambda a: np.round(div_func(circle.get_center()), 1),
-            position_update_func=lambda m: m.next_to(div_tex, RIGHT, SMALL_BUFF),
+            position_update_func=lambda m: m.next_to(
+                div_tex, RIGHT, SMALL_BUFF),
             include_sign=True,
         )
 
@@ -1941,7 +1945,8 @@ class DivergenceAsNewFunction(Scene):
         )
         div_rhs_update = ContinualChangingDecimal(
             div_rhs, lambda a: div_func(in_dot.get_center()),
-            position_update_func=lambda d: d.next_to(func_tex, RIGHT, SMALL_BUFF)
+            position_update_func=lambda d: d.next_to(
+                func_tex, RIGHT, SMALL_BUFF)
         )
 
         self.play(FadeIn(div_rhs))
@@ -2182,7 +2187,7 @@ class ShearCurl(IntroduceCurl):
         vector_field = self.vector_field = VectorField(
             self.func, **self.vector_field_config
         )
-        vector_field.submobjects.key=sort(
+        vector_field.submobjects.key = sort(
             key=lambda a: a.get_length()
         )
         self.play(LaggedStartMap(GrowArrow, vector_field))
@@ -2852,12 +2857,12 @@ class ShowTwoPopulations(Scene):
             fill_color=color,
         )
         # for submob in result.family_members_with_points():
-            # if submob.is_subpath:
-            #     submob.is_subpath = False
-            #     submob.set_fill(
-            #         interpolate_color(color, BLACK, 0.8),
-            #         opacity=1
-            #     )
+        # if submob.is_subpath:
+        #     submob.is_subpath = False
+        #     submob.set_fill(
+        #         interpolate_color(color, BLACK, 0.8),
+        #         opacity=1
+        #     )
         x_shift, y_shift = [
             (2 * random.random() - 1) * max_val
             for max_val in [
@@ -3124,7 +3129,8 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
             vector_field.set_fill, {"opacity": 1.0},
             VFadeOut(dot),
             VFadeOut(self.coord_pair),
-            UpdateFromAlphaFunc(self.pop_sizes, lambda m, a: m.set_fill(opacity=1 - a)),
+            UpdateFromAlphaFunc(self.pop_sizes, lambda m,
+                                a: m.set_fill(opacity=1 - a)),
         )
         self.remove(
             dot_movement,
@@ -3683,7 +3689,8 @@ class DivergenceTinyNudgesView(MovingCameraScene):
         )
         diff_words = TextMobject("Difference").scale(sf)
         diff_words.add_background_rectangle()
-        diff_words.next_to(diff_vector.get_start(), UR, buff=2 * sf * SMALL_BUFF)
+        diff_words.next_to(diff_vector.get_start(), UR,
+                           buff=2 * sf * SMALL_BUFF)
         diff_words.match_color(diff_vector)
         diff_words.rotate(
             diff_vector.get_angle(),
@@ -3717,7 +3724,8 @@ class DivergenceTinyNudgesView(MovingCameraScene):
         self.wait()
         self.play(
             vector.scale, 0, {"about_point": vector.get_start()},
-            shifted_vector.scale, 0, {"about_point": shifted_vector.get_start()},
+            shifted_vector.scale, 0, {
+                "about_point": shifted_vector.get_start()},
             ReplacementTransform(
                 new_vector,
                 diff_vector.copy().shift(-vector.get_vector()),
@@ -4020,7 +4028,8 @@ class ZToHalfFlowNearWall(ComplexTransformationScene, MovingCameraScene):
             secondary_line_ratio=0,
         )
         plane.next_to(ORIGIN, UP, buff=0.001)
-        horizontal_lines = VGroup(*[l for l in list(planes) + [plane.axes[0]] if np.abs(l.get_center()[0]) < 0.1])
+        horizontal_lines = VGroup(
+            *[l for l in list(planes) + [plane.axes[0]] if np.abs(l.get_center()[0]) < 0.1])
         plane.set_stroke(MAROON_B, width=2)
         horizontal_lines.set_stroke(BLUE, width=2)
 

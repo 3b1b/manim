@@ -403,7 +403,8 @@ class VMobject(Mobject):
         return np.array(self.points)
 
     def set_anchors_and_handles(self, anchors1, handles1, handles2, anchors2):
-        assert(len(anchors1) == len(handles1) == len(handles2) == len(anchors2))
+        assert(len(anchors1) == len(handles1) ==
+               len(handles2) == len(anchors2))
         nppcc = self.n_points_per_cubic_curve  # 4
         total_len = nppcc * len(anchors1)
         self.points = np.zeros((total_len, self.dim))

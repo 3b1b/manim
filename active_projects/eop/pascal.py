@@ -11,55 +11,57 @@ GRADE_COLOR_1 = RED
 GRADE_COLOR_2 = BLUE
 
 
-
-def graded_square(n,k):
+def graded_square(n, k):
     return Square(
-        side_length = 1, 
-        fill_color = graded_color(n,k), 
-        fill_opacity = 1, 
-        stroke_width = 1
+        side_length=1,
+        fill_color=graded_color(n, k),
+        fill_opacity=1,
+        stroke_width=1
     )
 
-def graded_binomial(n,k):
+
+def graded_binomial(n, k):
     return Integer(
-        choose(n,k), 
-        color = graded_color(n,k)
+        choose(n, k),
+        color=graded_color(n, k)
     )
 
-def split_square(n,k):
+
+def split_square(n, k):
     width = 1
     height = 1
 
-    proportion = float(choose(n,k)) / 2**n
-    
+    proportion = float(choose(n, k)) / 2**n
+
     lower_height = proportion * height
     upper_height = (1 - proportion) * height
     lower_rect = Rectangle(
-        width = width,
-        height = lower_height,
-        fill_color = RED,
-        fill_opacity = 1.0,
-        stroke_color = WHITE,
-        stroke_width = 3
+        width=width,
+        height=lower_height,
+        fill_color=RED,
+        fill_opacity=1.0,
+        stroke_color=WHITE,
+        stroke_width=3
     )
     upper_rect = Rectangle(
-        width = width,
-        height = upper_height,
-        fill_color = BLUE,
-        fill_opacity = 1.0,
-        stroke_color = WHITE,
-        stroke_width = 3
+        width=width,
+        height=upper_height,
+        fill_color=BLUE,
+        fill_opacity=1.0,
+        stroke_color=WHITE,
+        stroke_width=3
     )
-    upper_rect.next_to(lower_rect,UP,buff = 0)
+    upper_rect.next_to(lower_rect, UP, buff=0)
     square = VGroup(lower_rect, upper_rect).move_to(ORIGIN)
     return square
 
 
 class BuildNewPascalRow(Transform):
 
-    def __init__(self,mobject, duplicate_row = None, **kwargs):
+    def __init__(self, mobject, duplicate_row=None, **kwargs):
         if mobject.__class__ != GeneralizedPascalsTriangle and mobject.__class__ != PascalsTriangle:
-            raise("Transform BuildNewPascalRow only works on members of (Generalized)PascalsTriangle!")
+            raise(
+                "Transform BuildNewPascalRow only works on members of (Generalized)PascalsTriangle!")
 
         n = mobject.nrows - 1
         lowest_row_copy1 = mobject.get_lowest_row()
@@ -79,25 +81,22 @@ class BuildNewPascalRow(Transform):
 
         new_row_left_copy = VGroup(*[
             new_pt.coords_to_mobs[n+1][k]
-            for k in range(0,n+1)
+            for k in range(0, n+1)
         ])
 
         new_row_right_copy = VGroup(*[
             new_pt.coords_to_mobs[n+1][k]
-            for k in range(1,n+2)
+            for k in range(1, n+2)
         ]).copy()
 
         target_mob = VGroup(new_row_left_copy, new_row_right_copy)
 
         Transform.__init__(self, start_mob, target_mob, **kwargs)
 
-        
-
-
 
 class SimplePascal(Scene):
 
-    def build_new_pascal_row(self,old_pt):
+    def build_new_pascal_row(self, old_pt):
 
         lowest_row_copy = old_pt.get_lowest_row().copy()
         self.add(lowest_row_copy)
@@ -105,7 +104,6 @@ class SimplePascal(Scene):
         n = old_pt.nrows - 1
         lowest_row_copy1 = old_pt.get_lowest_row()
         lowest_row_copy2 = lowest_row_copy1.copy()
-
 
         start_mob = VGroup(lowest_row_copy1, lowest_row_copy2)
         self.add(start_mob)
@@ -126,12 +124,12 @@ class SimplePascal(Scene):
 
         new_row_left_copy = VGroup(*[
             new_pt.coords_to_mobs[n+1][k]
-            for k in range(0,n+1)
+            for k in range(0, n+1)
         ])
 
         new_row_right_copy = VGroup(*[
             new_pt.coords_to_mobs[n+1][k]
-            for k in range(1,n+2)
+            for k in range(1, n+2)
         ]).copy()
 
         target_mob = VGroup(new_row_left_copy, new_row_right_copy)
@@ -139,19 +137,17 @@ class SimplePascal(Scene):
 
         return new_pt
 
-
-
     def construct(self):
 
         cell_height = 1
         cell_width = 1
         nrows = 1
         pt = GeneralizedPascalsTriangle(
-            nrows = nrows, 
-            height = nrows * cell_height, 
-            width = nrows * cell_width, 
-            submob_class = graded_square,
-            portion_to_fill = 0.9
+            nrows=nrows,
+            height=nrows * cell_height,
+            width=nrows * cell_width,
+            submob_class=graded_square,
+            portion_to_fill=0.9
         )
         pt.shift(3 * UP)
         self.add(pt)
@@ -160,9 +156,6 @@ class SimplePascal(Scene):
         #self.play(BuildNewPascalRow(pt, duplicate_row = lowest_row_copy))
         for i in range(7):
             pt = self.build_new_pascal_row(pt)
-        
-
-
 
 
 class PascalNetScene(Scene):
@@ -184,39 +177,38 @@ class PascalNetScene(Scene):
             half_width = 0.5 * (n + 0.5) * unit_width
 
             stop_points_left = start_points.copy()
-            stop_points_left[:,0] -= 0.5 * unit_width
-            stop_points_left[:,1] -= level_height
+            stop_points_left[:, 0] -= 0.5 * unit_width
+            stop_points_left[:, 1] -= level_height
 
             stop_points_right = start_points.copy()
-            stop_points_right[:,0] += 0.5 * unit_width
-            stop_points_right[:,1] -= level_height
-            
-            for (p,q) in zip(start_points,stop_points_left):
+            stop_points_right[:, 0] += 0.5 * unit_width
+            stop_points_right[:, 1] -= level_height
+
+            for (p, q) in zip(start_points, stop_points_left):
                 alpha = np.abs((p[0]+q[0])/2) / half_width
                 color = rainbow_color(alpha)
-                line = Line(p,q, stroke_color = color)
+                line = Line(p, q, stroke_color=color)
                 self.add(line)
 
-            for (i,(p,q)) in enumerate(zip(start_points,stop_points_right)):
+            for (i, (p, q)) in enumerate(zip(start_points, stop_points_right)):
                 alpha = np.abs((p[0]+q[0])/2) / half_width
                 color = rainbow_color(alpha)
-                line = Line(p,q, stroke_color = color)
+                line = Line(p, q, stroke_color=color)
                 self.add(line)
 
             if (n + 1) % dev_y_step == 0 and n != 1:
                 j += dev_x_step
                 dev_stop = stop_points_left[j]
-                line = Line(dev_start,dev_stop,stroke_color = WHITE)
+                line = Line(dev_start, dev_stop, stroke_color=WHITE)
                 self.add(line)
-                dot = Dot(dev_stop, fill_color = WHITE)
+                dot = Dot(dev_stop, fill_color=WHITE)
                 self.add_foreground_mobject(dot)
                 dev_start = dev_stop
 
-            start_points = np.append(stop_points_left,[stop_points_right[-1]], axis = 0)
-
+            start_points = np.append(
+                stop_points_left, [stop_points_right[-1]], axis=0)
 
         self.wait()
-
 
 
 class RescaledPascalNetScene(Scene):
@@ -241,23 +233,23 @@ class RescaledPascalNetScene(Scene):
                 start_points_left_shift = np.array([left_edge])
             else:
                 start_points_left_shift = start_points[:-1]
-                start_points_left_shift = np.insert(start_points_left_shift,0,left_edge, axis = 0)
+                start_points_left_shift = np.insert(
+                    start_points_left_shift, 0, left_edge, axis=0)
             stop_points_left = 0.5 * (start_points + start_points_left_shift)
             stop_points_left += level_height * DOWN
 
-            
             if n == 0:
                 start_points_right_shift = np.array([right_edge])
             else:
                 start_points_right_shift = start_points[1:]
-                start_points_right_shift = np.append(start_points_right_shift,np.array([right_edge]), axis = 0)
+                start_points_right_shift = np.append(
+                    start_points_right_shift, np.array([right_edge]), axis=0)
             stop_points_right = 0.5 * (start_points + start_points_right_shift)
             stop_points_right += level_height * DOWN
 
-            
-            for (i,(p,q)) in enumerate(zip(start_points,stop_points_left)):
-                
-                color = LIGHT_GRAY 
+            for (i, (p, q)) in enumerate(zip(start_points, stop_points_left)):
+
+                color = LIGHT_GRAY
 
                 if n % 2 == 0 and i <= n/2:
                     m = n/2 + 0.25
@@ -283,11 +275,11 @@ class RescaledPascalNetScene(Scene):
                     alpha = 1 - float(jj)/m
                     color = rainbow_color(alpha)
 
-                line = Line(p,q, stroke_color = color)
+                line = Line(p, q, stroke_color=color)
                 self.add(line)
 
-            for (i,(p,q)) in enumerate(zip(start_points,stop_points_right)):
-                
+            for (i, (p, q)) in enumerate(zip(start_points, stop_points_right)):
+
                 color = LIGHT_GRAY
 
                 if n % 2 == 0 and i < n/2:
@@ -314,34 +306,22 @@ class RescaledPascalNetScene(Scene):
                     alpha = 1 - float(jj)/m
                     color = rainbow_color(alpha)
 
-
-                line = Line(p,q, stroke_color = color)
+                line = Line(p, q, stroke_color=color)
                 self.add(line)
 
             if (n + 1) % dev_y_step == 0 and n != 1:
                 j += dev_x_step
                 dev_stop = stop_points_left[j]
-                line = Line(dev_start,dev_stop,stroke_color = WHITE)
+                line = Line(dev_start, dev_stop, stroke_color=WHITE)
                 self.add(line)
-                dot = Dot(dev_stop, fill_color = WHITE)
+                dot = Dot(dev_stop, fill_color=WHITE)
                 self.add_foreground_mobject(dot)
                 dev_start = dev_stop
 
+            start_points = np.append(
+                stop_points_left, [stop_points_right[-1]], axis=0)
 
-
-            start_points = np.append(stop_points_left,[stop_points_right[-1]], axis = 0)
-            
             left_edge += level_height * DOWN
             right_edge += level_height * DOWN
 
-
         self.wait()
-
-
-
-
-
-
-
-
-

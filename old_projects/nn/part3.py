@@ -2,6 +2,7 @@ from nn.network import *
 from nn.part1 import *
 from nn.part2 import *
 
+
 class LayOutPlan(Scene):
     def construct(self):
         title = TextMobject("Plan")
@@ -15,7 +16,7 @@ class LayOutPlan(Scene):
             "Intuitive walkthrough",
             "Derivatives in \\\\ computational graphs",
         )
-        items.to_edge(LEFT, buff = LARGE_BUFF)
+        items.to_edge(LEFT, buff=LARGE_BUFF)
         self.add(items)
 
         rect = ScreenRectangle()
@@ -26,43 +27,49 @@ class LayOutPlan(Scene):
             Write(title),
             ShowCreation(h_line),
             ShowCreation(rect),
-            run_time = 2
+            run_time=2
         )
         for i in range(len(items)):
             self.play(items.fade_all_but, i)
             self.wait(2)
 
+
 class TODOInsertFeedForwardAnimations(TODOStub):
     CONFIG = {
-        "message" : "Insert Feed Forward Animations"
+        "message": "Insert Feed Forward Animations"
     }
+
 
 class TODOInsertStepsDownCostSurface(TODOStub):
     CONFIG = {
-        "message" : "Insert Steps Down Cost Surface"
+        "message": "Insert Steps Down Cost Surface"
     }
+
 
 class TODOInsertDefinitionOfCostFunction(TODOStub):
     CONFIG = {
-        "message" : "Insert Definition of cost function"
+        "message": "Insert Definition of cost function"
     }
+
 
 class TODOInsertGradientNudging(TODOStub):
     CONFIG = {
-        "message" : "Insert GradientNudging"
+        "message": "Insert GradientNudging"
     }
+
 
 class InterpretGradientComponents(GradientNudging):
     CONFIG = {
-        "network_mob_config" : {
-            "layer_to_layer_buff" : 3,
+        "network_mob_config": {
+            "layer_to_layer_buff": 3,
         },
-        "stroke_width_exp" : 2,
-        "n_decimals" : 6,
-        "n_steps" : 3,
-        "start_cost" : 3.48,
-        "delta_cost" : -0.21,
+        "stroke_width_exp": 2,
+        "n_decimals": 6,
+        "n_steps": 3,
+        "start_cost": 3.48,
+        "delta_cost": -0.21,
     }
+
     def construct(self):
         self.setup_network()
         self.add_cost()
@@ -82,7 +89,7 @@ class InterpretGradientComponents(GradientNudging):
     def add_cost(self):
         rect = SurroundingRectangle(self.network_mob)
         rect.set_color(RED)
-        arrow = Vector(DOWN, color = RED)
+        arrow = Vector(DOWN, color=RED)
         arrow.shift(rect.get_bottom())
         cost = DecimalNumber(self.start_cost)
         cost.set_color(RED)
@@ -102,7 +109,7 @@ class InterpretGradientComponents(GradientNudging):
 
         self.set_variables_as_attrs(
             cost, cost_expression, cost_group,
-            network_rect = rect
+            network_rect=rect
         )
 
     def change_weights_repeatedly(self):
@@ -130,7 +137,7 @@ class InterpretGradientComponents(GradientNudging):
         arrow = Arrow(
             words.get_top(),
             grad_vect.get_bottom(),
-            buff = SMALL_BUFF
+            buff=SMALL_BUFF
         )
 
         randy = Randolph()
@@ -139,7 +146,7 @@ class InterpretGradientComponents(GradientNudging):
         randy.shift_onto_screen()
 
         self.play(
-            Write(words, run_time = 2), 
+            Write(words, run_time=2),
             GrowArrow(arrow),
         )
         self.play(FadeIn(randy))
@@ -164,7 +171,7 @@ class InterpretGradientComponents(GradientNudging):
         edges = self.network_mob.edge_groups
         edge1 = self.network_mob.layers[1].neurons[3].edges_in[0].copy()
         edge2 = self.network_mob.layers[1].neurons[9].edges_in[15].copy()
-        VGroup(edge1, edge2).set_stroke(width = 4)
+        VGroup(edge1, edge2).set_stroke(width=4)
         d1 = DecimalNumber(3.2)
         d2 = DecimalNumber(0.1)
         VGroup(edge1, d1).set_color(YELLOW)
@@ -187,7 +194,7 @@ class InterpretGradientComponents(GradientNudging):
         for d, edge in (d1, edge1), (d2, edge2):
             d.arrow = Arrow(
                 d.get_right(), edge.get_center(),
-                color = d.get_color()
+                color=d.get_color()
             )
 
         self.play(
@@ -207,8 +214,8 @@ class InterpretGradientComponents(GradientNudging):
         self.cost_expression.remove(w_terms)
         self.cost_expression.add(new_w_terms)
         self.set_variables_as_attrs(
-            edge1, edge2, new_w_terms, 
-            new_decimals = VGroup(d1, d2)
+            edge1, edge2, new_w_terms,
+            new_decimals=VGroup(d1, d2)
         )
 
     def shift_cost_expression(self):
@@ -224,15 +231,15 @@ class InterpretGradientComponents(GradientNudging):
         wk = self.new_w_terms[3]
 
         number_line_template = NumberLine(
-            x_min = -1,
-            x_max = 1,
-            tick_frequency = 0.25,
-            numbers_with_elongated_ticks = [],
-            color = WHITE
+            x_min=-1,
+            x_max=1,
+            tick_frequency=0.25,
+            numbers_with_elongated_ticks=[],
+            color=WHITE
         )
         for term in wn, wk, cost:
             term.number_line = number_line_template.copy()
-            term.brace = Brace(term.number_line, DOWN, buff = SMALL_BUFF)
+            term.brace = Brace(term.number_line, DOWN, buff=SMALL_BUFF)
             group = VGroup(term.number_line, term.brace)
             group.next_to(term, UP)
             term.dot = Dot()
@@ -240,7 +247,7 @@ class InterpretGradientComponents(GradientNudging):
             term.dot.move_to(term.number_line.get_center())
             term.dot.save_state()
             term.dot.move_to(term)
-            term.dot.set_fill(opacity = 0)
+            term.dot.set_fill(opacity=0)
             term.words = TextMobject("Nudge this weight")
             term.words.scale(0.7)
             term.words.next_to(term.number_line, UP, MED_SMALL_BUFF)
@@ -270,11 +277,11 @@ class InterpretGradientComponents(GradientNudging):
                 GrowFromCenter(w.brace),
                 ShowCreation(w.number_line),
                 w.dot.restore,
-                Write(w.words, run_time = 1),
+                Write(w.words, run_time=1),
                 *added_anims
             )
             for x in range(2):
-                func = lambda a : interpolate(
+                def func(a): return interpolate(
                     cost_num, cost_num-change, a
                 )
                 self.play(
@@ -282,14 +289,13 @@ class InterpretGradientComponents(GradientNudging):
                     cost.dot.shift, change*RIGHT,
                     w.dot.shift, 0.25*RIGHT,
                     edge.set_stroke, None, 8,
-                    rate_func = lambda t : wiggle(t, 4),
-                    run_time = 2,
+                    rate_func=lambda t: wiggle(t, 4),
+                    run_time=2,
                 )
                 self.wait()
             self.play(*list(map(FadeOut, [
                 w.dot, w.brace, w.number_line, w.words
             ])))
-
 
     ######
 
@@ -301,7 +307,7 @@ class InterpretGradientComponents(GradientNudging):
             for term in grad_terms
         ])
         points.arrange(RIGHT)
-        points.replace(w_terms, dim_to_match = 0)
+        points.replace(w_terms, dim_to_match=0)
 
         grad_terms.generate_target()
         grad_terms.target[len(grad_terms)/2].rotate(np.pi/2)
@@ -320,9 +326,9 @@ class InterpretGradientComponents(GradientNudging):
         self.play(
             Transform(
                 grad_terms, points,
-                remover = True,
-                lag_ratio = 0.5,
-                run_time = 1
+                remover=True,
+                lag_ratio=0.5,
+                run_time=1
             ),
             FadeOut(words),
             *added_anims
@@ -337,51 +343,52 @@ class InterpretGradientComponents(GradientNudging):
             self.get_edge_change_anim(edges),
             LaggedStartMap(
                 Indicate, w_terms,
-                rate_func = there_and_back,
-                run_time = 1.5,
+                rate_func=there_and_back,
+                run_time=1.5,
             ),
             ChangingDecimal(
-                cost, 
-                lambda a : interpolate(start_cost, target_cost, a),
-                run_time = 1.5
+                cost,
+                lambda a: interpolate(start_cost, target_cost, a),
+                run_time=1.5
             )
         ]
+
 
 class GetLostInNotation(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
         equations = VGroup(
             TexMobject(
-                "\\delta", "^L", "=", "\\nabla_a", "C", 
+                "\\delta", "^L", "=", "\\nabla_a", "C",
                 "\\odot \\sigma'(", "z", "^L)"
             ),
             TexMobject(
-                "\\delta", "^l = ((", "w", "^{l+1})^T", 
+                "\\delta", "^l = ((", "w", "^{l+1})^T",
                 "\\delta", "^{l+1}) \\odot \\sigma'(", "z", "^l)"
             ),
             TexMobject(
-                "{\\partial", "C", "\\over \\partial", "b", 
+                "{\\partial", "C", "\\over \\partial", "b",
                 "_j^l} =", "\\delta", "_j^l"
             ),
             TexMobject(
-                "{\\partial", "C", " \\over \\partial", 
+                "{\\partial", "C", " \\over \\partial",
                 "w", "_{jk}^l} = ", "a", "_k^{l-1}", "\\delta", "_j^l"
             ),
         )
         for equation in equations:
             equation.set_color_by_tex_to_color_map({
-                "\\delta" : YELLOW,
-                "C" : RED,
-                "b" : MAROON_B,
-                "w" : BLUE,
-                "z" : TEAL,
+                "\\delta": YELLOW,
+                "C": RED,
+                "b": MAROON_B,
+                "w": BLUE,
+                "z": TEAL,
             })
             equation.set_color_by_tex("nabla", WHITE)
         equations.arrange(
-            DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
+            DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT
         )
 
-        circle = Circle(radius = 3*FRAME_X_RADIUS)
+        circle = Circle(radius=3*FRAME_X_RADIUS)
         circle.set_fill(WHITE, 0)
         circle.set_stroke(WHITE, 0)
 
@@ -400,36 +407,39 @@ class GetLostInNotation(PiCreatureScene):
             if mover.is_subpath:
                 movers.remove(mover)
                 continue
-            mover.set_stroke(WHITE, width = 0)
+            mover.set_stroke(WHITE, width=0)
             mover.target = Circle()
             mover.target.scale(0.5)
-            mover.target.set_fill(mover.get_color(), opacity = 0)
-            mover.target.set_stroke(BLACK, width = 1)
+            mover.target.set_fill(mover.get_color(), opacity=0)
+            mover.target.set_stroke(BLACK, width=1)
             mover.target.move_to(mover)
         self.play(
             LaggedStartMap(
                 MoveToTarget, movers,
-                run_time = 2,
+                run_time=2,
             ),
             morty.change, "pondering",
         )
         self.wait()
 
+
 class TODOInsertPreviewLearning(TODOStub):
     CONFIG = {
-        "message" : "Insert PreviewLearning"
+        "message": "Insert PreviewLearning"
     }
+
 
 class ShowAveragingCost(PreviewLearning):
     CONFIG = {
-        "network_scale_val" : 0.8,
-        "stroke_width_exp" : 1,
-        "start_examples_time" : 5,
-        "examples_per_adjustment_time" : 2,
-        "n_adjustments" : 5,
-        "time_per_example" : 1./15,
-        "image_height" : 1.2,
+        "network_scale_val": 0.8,
+        "stroke_width_exp": 1,
+        "start_examples_time": 5,
+        "examples_per_adjustment_time": 2,
+        "n_adjustments": 5,
+        "time_per_example": 1./15,
+        "image_height": 1.2,
     }
+
     def construct(self):
         self.setup_network()
         self.setup_diff_words()
@@ -449,10 +459,10 @@ class ShowAveragingCost(PreviewLearning):
         double_arrow = DoubleArrow(
             self.network_mob.output_labels,
             last_layer_copy,
-            color = RED
+            color=RED
         )
         brace = Brace(
-            VGroup(self.network_mob.layers[-1], last_layer_copy), 
+            VGroup(self.network_mob.layers[-1], last_layer_copy),
             UP
         )
         cost_words = brace.get_text("Cost of \\\\ one example")
@@ -473,29 +483,30 @@ class ShowAveragingCost(PreviewLearning):
         self.add(average_words)
 
         n_start_examples = int(self.start_examples_time/self.time_per_example)
-        n_examples_per_adjustment = int(self.examples_per_adjustment_time/self.time_per_example)
+        n_examples_per_adjustment = int(
+            self.examples_per_adjustment_time/self.time_per_example)
         for train_in, train_out in training_data[:n_start_examples]:
             self.show_one_example(train_in, train_out)
             self.wait(self.time_per_example)
 
-        #Wiggle all edges
+        # Wiggle all edges
         edges = VGroup(*it.chain(*self.network_mob.edge_groups))
         reversed_edges = VGroup(*reversed(edges))
         self.play(LaggedStartMap(
             ApplyFunction, edges,
-            lambda edge : (
-                lambda m : m.rotate_in_place(np.pi/12).set_color(YELLOW),
+            lambda edge: (
+                lambda m: m.rotate_in_place(np.pi/12).set_color(YELLOW),
                 edge,
             ),
-            rate_func = lambda t : wiggle(t, 4),
-            run_time = 3,
+            rate_func=lambda t: wiggle(t, 4),
+            run_time=3,
         ))
 
-        #Show all, then adjust
+        # Show all, then adjust
         words = TextMobject(
             "Each step \\\\ uses every \\\\ example\\\\",
             "$\\dots$theoretically",
-            alignment = ""
+            alignment=""
         )
         words.set_color(YELLOW)
         words.scale(0.8)
@@ -509,9 +520,9 @@ class ShowAveragingCost(PreviewLearning):
                 self.wait(self.time_per_example)
             self.play(LaggedStartMap(
                 ApplyMethod, reversed_edges,
-                lambda m : (m.rotate_in_place, np.pi),
-                run_time = 1,
-                lag_ratio = 0.2,
+                lambda m: (m.rotate_in_place, np.pi),
+                run_time=1,
+                lag_ratio=0.2,
             ))
             if x >= 2:
                 self.wait()
@@ -525,27 +536,30 @@ class ShowAveragingCost(PreviewLearning):
         image.set_height(self.image_height)
         image.next_to(
             self.network_mob.layers[0].neurons, UP,
-            aligned_edge = LEFT
+            aligned_edge=LEFT
         )
         self.add(image)
         self.network_mob.activate_layers(train_in)
 
         index = np.argmax(train_out)
-        self.last_layer_copy.neurons.set_fill(opacity = 0)
-        self.last_layer_copy.neurons[index].set_fill(WHITE, opacity = 1)
+        self.last_layer_copy.neurons.set_fill(opacity=0)
+        self.last_layer_copy.neurons[index].set_fill(WHITE, opacity=1)
         self.add(self.last_layer_copy)
 
         self.curr_image = image
+
 
 class FocusOnOneExample(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Focus on just \\\\ one example")
         self.wait(2)
 
+
 class WalkThroughTwoExample(ShowAveragingCost):
     CONFIG = {
-        "random_seed" : 0,
+        "random_seed": 0,
     }
+
     def setup(self):
         np.random.seed(self.random_seed)
         random.seed(self.random_seed)
@@ -574,7 +588,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         two_out[2] = 1.0
         self.show_one_example(two_vect, two_out)
         for layer in self.network_mob.layers:
-            layer.neurons.set_fill(opacity = 0)
+            layer.neurons.set_fill(opacity=0)
 
         self.activate_network(two_vect)
         self.wait()
@@ -584,15 +598,16 @@ class WalkThroughTwoExample(ShowAveragingCost):
         two.save_state()
 
         edge_groups = self.network_mob.edge_groups
+
         def adjust_edge_group_anim(edge_group):
             return LaggedStartMap(
                 ApplyFunction, edge_group,
-                lambda edge : (
-                    lambda m : m.rotate_in_place(np.pi/12).set_color(YELLOW),
+                lambda edge: (
+                    lambda m: m.rotate_in_place(np.pi/12).set_color(YELLOW),
                     edge
                 ),
-                rate_func = wiggle,
-                run_time = 1,
+                rate_func=wiggle,
+                run_time=1,
             )
 
         self.play(
@@ -602,14 +617,14 @@ class WalkThroughTwoExample(ShowAveragingCost):
         self.play(
             ApplyMethod(
                 two.next_to, edge_groups[1].get_corner(UP+RIGHT), UP,
-                path_arc = np.pi/6,
+                path_arc=np.pi/6,
             ),
             adjust_edge_group_anim(VGroup(*reversed(edge_groups[1])))
         )
         self.play(
             ApplyMethod(
                 two.next_to, edge_groups[2].get_corner(DOWN+RIGHT), DOWN,
-                path_arc = -np.pi/6,
+                path_arc=-np.pi/6,
             ),
             adjust_edge_group_anim(edge_groups[2])
         )
@@ -624,8 +639,8 @@ class WalkThroughTwoExample(ShowAveragingCost):
         edges = self.network_mob.edge_groups[-1]
 
         movers = VGroup(
-            neurons, alt_neurons, 
-            output_labels, alt_output_labels, 
+            neurons, alt_neurons,
+            output_labels, alt_output_labels,
             *edges
         )
         to_fade = VGroup(self.brace, self.cost_words, self.double_arrow)
@@ -637,11 +652,12 @@ class WalkThroughTwoExample(ShowAveragingCost):
 
         neurons.target.to_edge(DOWN, MED_LARGE_BUFF)
         output_labels.target.next_to(neurons.target, RIGHT, MED_SMALL_BUFF)
-        alt_neurons.target.next_to(neurons.target, RIGHT, buff = 2)
-        alt_output_labels.target.next_to(alt_neurons.target, RIGHT, MED_SMALL_BUFF)
+        alt_neurons.target.next_to(neurons.target, RIGHT, buff=2)
+        alt_output_labels.target.next_to(
+            alt_neurons.target, RIGHT, MED_SMALL_BUFF)
 
         n_pairs = it.product(
-            self.network_mob.layers[-2].neurons, 
+            self.network_mob.layers[-2].neurons,
             neurons.target
         )
         for edge, (n1, n2) in zip(edges, n_pairs):
@@ -664,21 +680,22 @@ class WalkThroughTwoExample(ShowAveragingCost):
         )
         self.show_decimals(neurons)
         self.cannot_directly_affect_activations()
-        self.show_desired_activation_nudges(neurons, output_labels, alt_output_labels)
+        self.show_desired_activation_nudges(
+            neurons, output_labels, alt_output_labels)
         self.focus_on_one_neuron(movers)
 
     def show_decimals(self, neurons):
         decimals = VGroup()
         for neuron in neurons:
             activation = neuron.get_fill_opacity()
-            decimal = DecimalNumber(activation, num_decimal_places = 1)
+            decimal = DecimalNumber(activation, num_decimal_places=1)
             decimal.set_width(0.7*neuron.get_width())
             decimal.move_to(neuron)
             if activation > 0.8:
                 decimal.set_color(BLACK)
             decimals.add(decimal)
 
-        self.play(Write(decimals, run_time = 2))
+        self.play(Write(decimals, run_time=2))
         self.wait()
         self.decimals = decimals
 
@@ -686,7 +703,8 @@ class WalkThroughTwoExample(ShowAveragingCost):
         words = TextMobject("You can only adjust weights and biases")
         words.next_to(self.curr_image, RIGHT, MED_SMALL_BUFF, UP)
 
-        edges = VGroup(*self.network_mob.edge_groups.family_members_with_points())
+        edges = VGroup(
+            *self.network_mob.edge_groups.family_members_with_points())
         random.shuffle(edges.submobjects)
         for edge in edges:
             edge.generate_target()
@@ -698,11 +716,11 @@ class WalkThroughTwoExample(ShowAveragingCost):
         self.play(
             LaggedStartMap(
                 Transform, edges,
-                lambda e : (e, e.target),
-                run_time = 4, 
-                rate_func = there_and_back,
+                lambda e: (e, e.target),
+                run_time=4,
+                rate_func=there_and_back,
             ),
-            Write(words, run_time = 2)
+            Write(words, run_time=2)
         )
         self.play(FadeOut(words))
 
@@ -715,7 +733,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             diff = abs(activation - target_val)
             arrow = Arrow(
                 ORIGIN, diff*neuron.get_height()*DOWN,
-                color = RED,
+                color=RED,
             )
             arrow.move_to(neuron.get_right())
             arrow.shift(0.175*RIGHT)
@@ -733,14 +751,15 @@ class WalkThroughTwoExample(ShowAveragingCost):
 
         self.play(
             output_labels.shift, SMALL_BUFF*RIGHT,
-            LaggedStartMap(GrowArrow, arrows, run_time = 1)
+            LaggedStartMap(GrowArrow, arrows, run_time=1)
         )
         self.wait()
 
-        #Show changing activations
+        # Show changing activations
         anims = []
+
         def get_decimal_update(start, end):
-            return lambda a : interpolate(start, end, a)
+            return lambda a: interpolate(start, end, a)
         for i in range(10):
             target = 1.0 if i == 2 else 0.01
             anims += [neurons[i].set_fill, WHITE, target]
@@ -748,17 +767,17 @@ class WalkThroughTwoExample(ShowAveragingCost):
             anims.append(ChangingDecimal(
                 decimal,
                 get_decimal_update(decimal.number, target),
-                num_decimal_places = 1
+                num_decimal_places=1
             ))
             anims.append(UpdateFromFunc(
                 self.decimals[i],
-                lambda m : m.set_fill(WHITE if m.number < 0.8 else BLACK)
+                lambda m: m.set_fill(WHITE if m.number < 0.8 else BLACK)
             ))
 
         self.play(
             *anims,
-            run_time = 3,
-            rate_func = there_and_back
+            run_time=3,
+            rate_func=there_and_back
         )
 
         two_rect = rects[2]
@@ -769,14 +788,14 @@ class WalkThroughTwoExample(ShowAveragingCost):
         self.remove(two_rect)
         self.play(ReplacementTransform(two_rect.copy(), non_two_rects))
         self.wait()
-        self.play(LaggedStartMap(FadeOut, non_two_rects, run_time = 1))
+        self.play(LaggedStartMap(FadeOut, non_two_rects, run_time=1))
         self.play(LaggedStartMap(
             ApplyFunction, arrows,
-            lambda arrow : (
-                lambda m : m.scale_in_place(0.5).set_color(YELLOW),
+            lambda arrow: (
+                lambda m: m.scale_in_place(0.5).set_color(YELLOW),
                 arrow,
             ),
-            rate_func = wiggle
+            rate_func=wiggle
         ))
         self.play(ShowCreation(two_rect))
         self.wait()
@@ -842,7 +861,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         w_terms = rhs.get_parts_by_tex("w_")
         a_terms = rhs.get_parts_by_tex("a_")
         plus_terms = rhs.get_parts_by_tex("+")
-        b = rhs.get_part_by_tex("b", substring = False)
+        b = rhs.get_part_by_tex("b", substring=False)
         dots = rhs.get_part_by_tex("dots")
 
         w_terms.set_color(BLUE)
@@ -852,7 +871,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         rhs.to_corner(UP+RIGHT)
         sigma.save_state()
         sigma.shift(DOWN)
-        sigma.set_fill(opacity = 0)
+        sigma.set_fill(opacity=0)
 
         prev_neurons = self.network_mob.layers[-2].neurons
         edges = self.two_neuron.edges_in
@@ -871,12 +890,12 @@ class WalkThroughTwoExample(ShowAveragingCost):
             ReplacementTransform(edges.copy(), w_terms),
             Write(VGroup(*plus_terms[:-1])),
             Write(dots),
-            run_time = 1.5
+            run_time=1.5
         )
         self.wait()
         self.play(ReplacementTransform(
             prev_neurons.copy(), a_terms,
-            path_arc = np.pi/2
+            path_arc=np.pi/2
         ))
         self.wait()
         self.play(
@@ -889,15 +908,15 @@ class WalkThroughTwoExample(ShowAveragingCost):
         for mob in b, w_terms, a_terms:
             self.play(
                 mob.shift, MED_SMALL_BUFF*DOWN,
-                rate_func = there_and_back,
-                lag_ratio = 0.5,
-                run_time = 1.5
+                rate_func=there_and_back,
+                lag_ratio=0.5,
+                run_time=1.5
             )
         self.wait()
 
         self.set_variables_as_attrs(
             rhs, w_terms, a_terms, b,
-            lhs = neuron_copy
+            lhs=neuron_copy
         )
 
     def three_ways_to_increase(self):
@@ -911,20 +930,20 @@ class WalkThroughTwoExample(ShowAveragingCost):
         )
         for words in increase_words:
             words.set_color_by_tex_to_color_map({
-                "b" : b.get_color(),
-                "w_" : w_terms.get_color(),
-                "a_" : a_terms.get_color(),
+                "b": b.get_color(),
+                "w_": w_terms.get_color(),
+                "a_": a_terms.get_color(),
             })
         increase_words.arrange(
-            DOWN, aligned_edge = LEFT,
-            buff = LARGE_BUFF
+            DOWN, aligned_edge=LEFT,
+            buff=LARGE_BUFF
         )
         increase_words.to_edge(LEFT)
 
         mobs = [b, w_terms[0], a_terms[0]]
         for words, mob in zip(increase_words, mobs):
             self.play(
-                Write(words[0], run_time = 1),
+                Write(words[0], run_time=1),
                 ReplacementTransform(mob.copy(), words[1])
             )
             self.wait()
@@ -938,7 +957,8 @@ class WalkThroughTwoExample(ShowAveragingCost):
         prev_neurons = self.network_mob.layers[-2].neurons
         edges = self.two_neuron.edges_in
 
-        prev_activations = np.array([n.get_fill_opacity() for n in prev_neurons])
+        prev_activations = np.array([n.get_fill_opacity()
+                                     for n in prev_neurons])
         sorted_indices = np.argsort(prev_activations.flatten())
         bright_neurons = VGroup()
         dim_neurons = VGroup()
@@ -953,23 +973,23 @@ class WalkThroughTwoExample(ShowAveragingCost):
 
         added_words = TextMobject("in proportion to $a_i$")
         added_words.next_to(
-            increase_words[1], DOWN, 
+            increase_words[1], DOWN,
             1.5*SMALL_BUFF, LEFT
         )
         added_words.set_color(YELLOW)
 
         terms_rect = SurroundingRectangle(
             VGroup(w_terms[0], a_terms[0]),
-            color = WHITE
+            color=WHITE
         )
 
         self.play(LaggedStartMap(
             ApplyFunction, edges,
-            lambda edge : (
-                lambda m : m.rotate_in_place(np.pi/12).set_stroke(YELLOW),
+            lambda edge: (
+                lambda m: m.rotate_in_place(np.pi/12).set_stroke(YELLOW),
                 edge
             ),
-            rate_func = wiggle
+            rate_func=wiggle
         ))
         self.wait()
         self.play(
@@ -978,8 +998,8 @@ class WalkThroughTwoExample(ShowAveragingCost):
         )
         self.play(LaggedStartMap(
             ApplyMethod, bright_neurons,
-            lambda m : (m.shift, MED_LARGE_BUFF*LEFT),
-            rate_func = there_and_back
+            lambda m: (m.shift, MED_LARGE_BUFF*LEFT),
+            rate_func=there_and_back
         ))
         self.wait()
         self.play(
@@ -989,18 +1009,19 @@ class WalkThroughTwoExample(ShowAveragingCost):
         )
         self.wait()
         for x in range(2):
-            self.play(LaggedStartMap(ShowCreationThenDestruction, bright_edges))
+            self.play(LaggedStartMap(
+                ShowCreationThenDestruction, bright_edges))
         self.play(LaggedStartMap(ShowCreation, bright_edges))
         self.play(LaggedStartMap(
             ApplyMethod, dim_neurons,
-            lambda m : (m.shift, MED_LARGE_BUFF*LEFT),
-            rate_func = there_and_back
+            lambda m: (m.shift, MED_LARGE_BUFF*LEFT),
+            rate_func=there_and_back
         ))
         self.play(FadeOut(terms_rect))
         self.wait()
         self.play(
             self.curr_image.shift, MED_LARGE_BUFF*RIGHT,
-            rate_func = wiggle
+            rate_func=wiggle
         )
         self.wait()
         self.play(Write(added_words))
@@ -1008,7 +1029,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
 
         self.set_variables_as_attrs(
             bright_neurons, bright_edges,
-            in_proportion_to_a = added_words
+            in_proportion_to_a=added_words
         )
 
     def fire_together_wire_together(self):
@@ -1021,7 +1042,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         def get_edge_animation():
             return LaggedStartMap(
                 ShowCreationThenDestruction, bright_edges,
-                lag_ratio = 0.7
+                lag_ratio=0.7
             )
         neuron_arrows = VGroup(*[
             Vector(MED_LARGE_BUFF*RIGHT).next_to(n, LEFT)
@@ -1075,26 +1096,26 @@ class WalkThroughTwoExample(ShowAveragingCost):
             ApplyMethod(two_neuron.set_fill, WHITE, 1),
             ChangingDecimal(
                 two_decimal,
-                lambda a : interpolate(two_activation, 1, a),
-                num_decimal_places = 1,
+                lambda a: interpolate(two_activation, 1, a),
+                num_decimal_places=1,
             ),
             UpdateFromFunc(
                 two_decimal,
-                lambda m : m.set_color(WHITE if m.number < 0.8 else BLACK),
+                lambda m: m.set_color(WHITE if m.number < 0.8 else BLACK),
             ),
             LaggedStartMap(ShowCreation, bright_edges),
-            run_time = 2,
+            run_time=2,
         )
         self.wait()
         self.play(
             LaggedStartMap(ShowCreation, neuron_rects),
-            Write(seeing_words, run_time = 2),
+            Write(seeing_words, run_time=2),
             morty.change, "thinking", seeing_words
         )
         self.wait()
         self.play(
             ShowCreation(two_neuron_rect),
-            Write(thinking_words, run_time = 2),
+            Write(thinking_words, run_time=2),
             morty.look_at, thinking_words
         )
         self.wait()
@@ -1103,18 +1124,18 @@ class WalkThroughTwoExample(ShowAveragingCost):
             seeing_words, thinking_words,
             words, morty,
             neuron_arrows, two_neuron_arrow,
-            bright_edges, 
+            bright_edges,
         )))
         self.play(
             ApplyMethod(two_neuron.set_fill, WHITE, two_activation),
             ChangingDecimal(
                 two_decimal,
-                lambda a : interpolate(1, two_activation, a),
-                num_decimal_places = 1,
+                lambda a: interpolate(1, two_activation, a),
+                num_decimal_places=1,
             ),
             UpdateFromFunc(
                 two_decimal,
-                lambda m : m.set_color(WHITE if m.number < 0.8 else BLACK),
+                lambda m: m.set_color(WHITE if m.number < 0.8 else BLACK),
             ),
         )
 
@@ -1148,7 +1169,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 negative_neurons.add(neuron)
         for s_edges in positive_edges, negative_edges:
             s_edges.alt_position = VGroup(*[
-                Line(LEFT, RIGHT, color = s_edge.get_color())
+                Line(LEFT, RIGHT, color=s_edge.get_color())
                 for s_edge in s_edges
             ])
             s_edges.alt_position.arrange(DOWN, MED_SMALL_BUFF)
@@ -1158,16 +1179,16 @@ class WalkThroughTwoExample(ShowAveragingCost):
         added_words.set_color(self.w_terms.get_color())
         added_words.next_to(
             increase_words[-1], DOWN,
-            SMALL_BUFF, aligned_edge = LEFT
+            SMALL_BUFF, aligned_edge=LEFT
         )
 
         self.play(LaggedStartMap(
             ApplyFunction, prev_neurons,
-            lambda neuron : (
-                lambda m : m.scale_in_place(0.5).set_color(YELLOW),
+            lambda neuron: (
+                lambda m: m.scale_in_place(0.5).set_color(YELLOW),
                 neuron
             ),
-            rate_func = wiggle
+            rate_func=wiggle
         ))
         self.wait()
         for positive in [True, False]:
@@ -1191,34 +1212,34 @@ class WalkThroughTwoExample(ShowAveragingCost):
             )
             self.play(ApplyMethod(
                 neurons.set_fill, color, 1,
-                rate_func = there_and_back,
+                rate_func=there_and_back,
             ))
         self.wait()
         self.play(
             two_neuron.set_fill, None, 0.8,
             ChangingDecimal(
                 two_decimal,
-                lambda a : two_neuron.get_fill_opacity()
+                lambda a: two_neuron.get_fill_opacity()
             ),
-            run_time = 3,
-            rate_func = there_and_back
+            run_time=3,
+            rate_func=there_and_back
         )
         self.wait()
         self.play(*[
             ApplyMethod(
                 edge.set_stroke, None, 3*edge.get_stroke_width(),
-                rate_func = there_and_back, 
-                run_time = 2
+                rate_func=there_and_back,
+                run_time=2
             )
             for edge in edges
         ])
         self.wait()
-        self.play(Write(added_words, run_time = 1))
+        self.play(Write(added_words, run_time=1))
         self.play(prev_neurons.set_stroke, WHITE, 2)
 
         self.set_variables_as_attrs(
-            in_proportion_to_w = added_words,
-            prev_neuron_arrows = all_arrows,
+            in_proportion_to_w=added_words,
+            prev_neuron_arrows=all_arrows,
         )
 
     def only_keeping_track_of_changes(self):
@@ -1237,7 +1258,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         self.play(Write(words1))
         self.play(LaggedStartMap(
             Indicate, prev_neurons,
-            rate_func = wiggle
+            rate_func=wiggle
         ))
         self.wait()
         self.play(LaggedStartMap(
@@ -1293,7 +1314,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             )
             self.play(
                 ReplacementTransform(neuron.edges_in.copy(), new_arrows),
-                Write(plusses, run_time = 2)
+                Write(plusses, run_time=2)
             )
 
             arrows_to_fade.add(new_arrows, plusses)
@@ -1316,7 +1337,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 FadeIn, VGroup(*[n.edges_in for n in neurons[5:]])
             ),
             Write(all_dots_plus),
-            run_time = 3,
+            run_time=3,
         )
         self.wait(2)
 
@@ -1372,13 +1393,12 @@ class WalkThroughTwoExample(ShowAveragingCost):
             self.play(ShowCreationThenDestruction(edge_copies))
             self.remove(edge_copies)
 
-
     ####
 
     def get_neuron_nudge_arrow(self, edge):
         value = self.get_edge_value(edge)
         height = np.sign(value)*0.1 + 0.1*value
-        arrow = Vector(height*UP, color = edge.get_color())
+        arrow = Vector(height*UP, color=edge.get_color())
         return arrow
 
     def get_edge_value(self, edge):
@@ -1387,6 +1407,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             value *= -1
         return value
 
+
 class WriteHebbian(Scene):
     def construct(self):
         words = TextMobject("Hebbian theory")
@@ -1394,6 +1415,7 @@ class WriteHebbian(Scene):
         words.to_edge(UP)
         self.play(Write(words))
         self.wait()
+
 
 class NotANeuroScientist(TeacherStudentsScene):
     def construct(self):
@@ -1404,7 +1426,7 @@ class NotANeuroScientist(TeacherStudentsScene):
         asterisks.next_to(quote.get_corner(UP+RIGHT), RIGHT, SMALL_BUFF)
         asterisks.set_color(BLUE)
 
-        brain = SVGMobject(file_name = "brain")
+        brain = SVGMobject(file_name="brain")
         brain.set_height(1.5)
         self.add(brain)
         double_arrow = DoubleArrow(LEFT, RIGHT)
@@ -1412,17 +1434,17 @@ class NotANeuroScientist(TeacherStudentsScene):
         q_marks = TextMobject("???")
         q_marks.next_to(double_arrow, UP)
 
-        network = NetworkMobject(Network(sizes = [6, 4, 4, 5]))
+        network = NetworkMobject(Network(sizes=[6, 4, 4, 5]))
         network.set_height(1.5)
         network.next_to(double_arrow, RIGHT)
 
         group = VGroup(brain, double_arrow, q_marks, network)
-        group.next_to(self.students, UP, buff = 1.5)
+        group.next_to(self.students, UP, buff=1.5)
         self.add(group)
         self.add(ContinualEdgeUpdate(
             network,
-            stroke_width_exp = 0.5,
-            color = [BLUE, RED],
+            stroke_width_exp=0.5,
+            color=[BLUE, RED],
         ))
 
         rect = SurroundingRectangle(group)
@@ -1431,12 +1453,12 @@ class NotANeuroScientist(TeacherStudentsScene):
         no_claim_words.set_color(YELLOW)
 
         brain_outline = brain.copy()
-        brain_outline.set_fill(opacity = 0)
+        brain_outline.set_fill(opacity=0)
         brain_outline.set_stroke(BLUE, 3)
         brain_anim = ShowCreationThenDestruction(brain_outline)
 
         words = TextMobject("Definitely not \\\\ a neuroscientist")
-        words.next_to(self.teacher, UP, buff = 1.5)
+        words.next_to(self.teacher, UP, buff=1.5)
         words.shift_onto_screen()
         arrow = Arrow(words.get_bottom(), self.teacher.get_top())
 
@@ -1444,29 +1466,31 @@ class NotANeuroScientist(TeacherStudentsScene):
             Write(words),
             GrowArrow(arrow),
             self.teacher.change, "guilty", words,
-            run_time = 1,
+            run_time=1,
         )
         self.change_student_modes(*3*["sassy"])
         self.play(
             ShowCreation(rect),
-            Write(no_claim_words, run_time = 1),
+            Write(no_claim_words, run_time=1),
             brain_anim
         )
         self.wait()
         self.play(brain_anim)
         self.play(FocusOn(asterisks))
-        self.play(Write(asterisks, run_time = 1))
+        self.play(Write(asterisks, run_time=1))
         for x in range(2):
             self.play(brain_anim)
             self.wait()
 
+
 class ConstructGradientFromAllTrainingExamples(Scene):
-    CONFIG = { 
-        "image_height" : 0.9,
-        "eyes_height" : 0.25,
-        "n_examples" : 6,
-        "change_scale_val" : 0.8,
+    CONFIG = {
+        "image_height": 0.9,
+        "eyes_height": 0.25,
+        "n_examples": 6,
+        "change_scale_val": 0.8,
     }
+
     def construct(self):
         self.setup_grid()
         self.setup_weights()
@@ -1480,18 +1504,18 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             Line(LEFT, RIGHT).scale(0.85*FRAME_X_RADIUS)
             for x in range(6)
         ])
-        h_lines.arrange(DOWN, buff = 1)
+        h_lines.arrange(DOWN, buff=1)
         h_lines.set_stroke(LIGHT_GREY, 2)
-        h_lines.to_edge(DOWN, buff = MED_LARGE_BUFF)
-        h_lines.to_edge(LEFT, buff = 0)
+        h_lines.to_edge(DOWN, buff=MED_LARGE_BUFF)
+        h_lines.to_edge(LEFT, buff=0)
 
         v_lines = VGroup(*[
             Line(UP, DOWN).scale(FRAME_Y_RADIUS - MED_LARGE_BUFF)
             for x in range(self.n_examples + 1)
         ])
-        v_lines.arrange(RIGHT, buff = 1.4)
+        v_lines.arrange(RIGHT, buff=1.4)
         v_lines.set_stroke(LIGHT_GREY, 2)
-        v_lines.to_edge(LEFT, buff = 2)
+        v_lines.to_edge(LEFT, buff=2)
 
         # self.add(h_lines, v_lines)
         self.h_lines = h_lines
@@ -1503,7 +1527,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         ])))
         for i, weight in enumerate(weights):
             weight.move_to(self.get_grid_position(i, 0))
-        weights.to_edge(LEFT, buff = MED_SMALL_BUFF)
+        weights.to_edge(LEFT, buff=MED_SMALL_BUFF)
 
         brace = Brace(weights, RIGHT)
         weights_words = brace.get_text("All weights and biases")
@@ -1511,7 +1535,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         self.add(weights, brace, weights_words)
         self.set_variables_as_attrs(
             weights, brace, weights_words,
-            dots = weights[-2]
+            dots=weights[-2]
         )
 
     def show_two_requesting_changes(self):
@@ -1525,13 +1549,13 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             bubble, change = self.get_requested_change_bubble(two)
             weight.save_state()
             weight.generate_target()
-            weight.target.next_to(two, RIGHT, aligned_edge = DOWN)
+            weight.target.next_to(two, RIGHT, aligned_edge=DOWN)
 
             self.play(
                 MoveToTarget(weight),
                 two.eyes.look_at_anim(weight.target),
                 FadeIn(bubble),
-                Write(change, run_time = 1),
+                Write(change, run_time=1),
             )
             if random.random() < 0.5:
                 self.play(two.eyes.blink_anim())
@@ -1602,9 +1626,9 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             LaggedStartMap(ShowCreation, self.h_lines),
             LaggedStartMap(ShowCreation, self.v_lines),
             Write(
-                h_dots, 
-                run_time = 2, 
-                rate_func = squish_rate_func(smooth, 0.7, 1)
+                h_dots,
+                run_time=2,
+                rate_func=squish_rate_func(smooth, 0.7, 1)
             )
         )
         self.play(
@@ -1646,7 +1670,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             arrow.next_to(rect, RIGHT)
             rect.arrow = arrow
             average = self.get_colored_decimal(3*np.mean([
-                m.number for m in row 
+                m.number for m in row
                 if isinstance(m, DecimalNumber)
             ]))
             average.scale(self.change_scale_val)
@@ -1662,7 +1686,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         words.to_corner(UP+RIGHT)
         arrow_to_averages = Arrow(
             words.get_bottom(), averages.get_top(),
-            color = WHITE
+            color=WHITE
         )
 
         dots = self.dots.copy()
@@ -1670,7 +1694,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
 
         look_at_anims = self.get_look_at_anims
 
-        self.play(Write(words, run_time = 1), *look_at_anims(words))
+        self.play(Write(words, run_time=1), *look_at_anims(words))
         self.play(ShowCreation(rects[0]), *look_at_anims(rects[0]))
         self.play(
             ReplacementTransform(rects[0].copy(), arrows[0]),
@@ -1689,14 +1713,14 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         self.play(
             LaggedStartMap(
                 ReplacementTransform, VGroup(*rects[1:]).copy(),
-                lambda m : (m, m.arrow),
-                lag_ratio = 0.7,
+                lambda m: (m, m.arrow),
+                lag_ratio=0.7,
             ),
             VGroup(*rects[1:]).set_stroke, WHITE, 1,
             LaggedStartMap(
                 ReplacementTransform, VGroup(*self.change_rows[1:]).copy(),
-                lambda m : (m, m.target),
-                lag_ratio = 0.7,
+                lambda m: (m, m.target),
+                lag_ratio=0.7,
             ),
             Write(dots),
             *look_at_anims(averages[1])
@@ -1717,7 +1741,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         brackets.stretch_to_fit_height(1.2*averages.get_height())
         lb.next_to(averages, LEFT, SMALL_BUFF)
         rb.next_to(averages, RIGHT, SMALL_BUFF)
-        brackets.set_fill(opacity = 0)
+        brackets.set_fill(opacity=0)
 
         shift_vect = 2*LEFT
 
@@ -1738,7 +1762,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         to_fade = VGroup(*it.chain(
             self.h_lines, self.v_lines,
             self.more_h_dots, self.more_v_dots,
-            self.change_rows, 
+            self.change_rows,
             self.first_column_dots,
             self.rects,
             self.arrows,
@@ -1753,8 +1777,8 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             Transform(arrow, Arrow(
                 arrow.get_start(),
                 arrow.get_end() + shift_vect,
-                buff = 0,
-                color = arrow.get_color(),
+                buff=0,
+                color=arrow.get_color(),
             )),
             FadeIn(VGroup(*lhs[:3])),
             FadeIn(VGroup(*lhs[-2:])),
@@ -1778,11 +1802,11 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         result = MNistMobject(in_vect)
         result.set_height(self.image_height)
 
-        eyes = Eyes(result, height = self.eyes_height)
+        eyes = Eyes(result, height=self.eyes_height)
         result.eyes = eyes
         result.add(eyes)
         result.move_to(self.get_grid_position(0, index))
-        result.to_edge(UP, buff = LARGE_BUFF)
+        result.to_edge(UP, buff=LARGE_BUFF)
         return result
 
     def get_grid_position(self, i, j):
@@ -1797,12 +1821,12 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         change.save_state()
         content = VGroup(words, change)
 
-        bubble = SpeechBubble(height = 1.5, width = 3)
+        bubble = SpeechBubble(height=1.5, width=3)
         bubble.add_content(content)
         group = VGroup(bubble, content)
         group.shift(
-            example_mob.get_right() + SMALL_BUFF*RIGHT \
-            -bubble.get_corner(DOWN+LEFT)
+            example_mob.get_right() + SMALL_BUFF*RIGHT
+            - bubble.get_corner(DOWN+LEFT)
         )
 
         return VGroup(bubble, words), change
@@ -1830,20 +1854,22 @@ class ConstructGradientFromAllTrainingExamples(Scene):
         for x in range(n):
             self.play(random.choice(self.all_eyes).blink_anim())
 
+
 class WatchPreviousScene(TeacherStudentsScene):
     def construct(self):
-        screen = ScreenRectangle(height = 4.5)
+        screen = ScreenRectangle(height=4.5)
         screen.to_corner(UP+LEFT)
 
         self.play(
             self.teacher.change, "raise_right_hand", screen,
             self.get_student_changes(
                 *["thinking"]*3,
-                look_at_arg = screen
+                look_at_arg=screen
             ),
             ShowCreation(screen)
         )
         self.wait(10)
+
 
 class OpenCloseSGD(Scene):
     def construct(self):
@@ -1865,13 +1891,15 @@ class OpenCloseSGD(Scene):
         self.play(Transform(term[0], alt_term0))
         self.wait(2)
 
+
 class OrganizeDataIntoMiniBatches(Scene):
     CONFIG = {
-        "n_rows" : 5,
-        "n_cols" : 12,
-        "example_height" : 1,
-        "random_seed" : 0,
+        "n_rows": 5,
+        "n_cols": 12,
+        "example_height": 1,
+        "random_seed": 0,
     }
+
     def construct(self):
         self.seed_random_libraries()
         self.add_examples()
@@ -1895,8 +1923,8 @@ class OrganizeDataIntoMiniBatches(Scene):
 
         self.play(LaggedStartMap(
             FadeIn, alt_order_examples,
-            lag_ratio = 0.2,
-            run_time = 4
+            lag_ratio=0.2,
+            run_time=4
         ))
         self.wait()
 
@@ -1905,16 +1933,16 @@ class OrganizeDataIntoMiniBatches(Scene):
     def shuffle_examples(self):
         self.play(LaggedStartMap(
             ApplyMethod, self.examples,
-            lambda m : (m.restore,),
-            lag_ratio = 0.3,
-            run_time = 3,
-            path_arc = np.pi/3,
+            lambda m: (m.restore,),
+            lag_ratio=0.3,
+            run_time=3,
+            path_arc=np.pi/3,
         ))
         self.wait()
 
     def divide_into_minibatches(self):
         examples = self.examples
-        examples.sort(lambda p : -p[1])
+        examples.sort(lambda p: -p[1])
         rows = Group(*[
             Group(*examples[i*self.n_cols:(i+1)*self.n_cols])
             for i in range(self.n_rows)
@@ -1927,22 +1955,22 @@ class OrganizeDataIntoMiniBatches(Scene):
         self.play(
             rows.space_out_submobjects, 1.5,
             rows.to_edge, UP, 1.5,
-            Write(mini_batches_words, run_time = 1)
+            Write(mini_batches_words, run_time=1)
         )
 
         rects = VGroup(*[
             SurroundingRectangle(
-                row, 
-                stroke_width = 0,
-                fill_color = YELLOW,
-                fill_opacity = 0.25,
+                row,
+                stroke_width=0,
+                fill_color=YELLOW,
+                fill_opacity=0.25,
             )
             for row in rows
         ])
         self.play(LaggedStartMap(
             FadeIn, rects,
-            lag_ratio = 0.7,
-            rate_func = there_and_back
+            lag_ratio=0.7,
+            rate_func=there_and_back
         ))
         self.wait()
 
@@ -1950,26 +1978,27 @@ class OrganizeDataIntoMiniBatches(Scene):
 
     def one_step_per_batch(self):
         rows = self.rows
-        brace = Brace(rows[0], UP, buff = SMALL_BUFF)
+        brace = Brace(rows[0], UP, buff=SMALL_BUFF)
         text = brace.get_text(
             "Compute gradient descent step (using backprop)",
-            buff = SMALL_BUFF
+            buff=SMALL_BUFF
         )
+
         def indicate_row(row):
-            row.sort(lambda p : p[0])
+            row.sort(lambda p: p[0])
             return LaggedStartMap(
                 ApplyFunction, row,
-                lambda row : (
-                    lambda m : m.scale_in_place(0.75).set_color(YELLOW),
+                lambda row: (
+                    lambda m: m.scale_in_place(0.75).set_color(YELLOW),
                     row
                 ),
-                rate_func = wiggle
+                rate_func=wiggle
             )
 
         self.play(
             FadeOut(self.mini_batches_words),
             GrowFromCenter(brace),
-            Write(text, run_time = 2),
+            Write(text, run_time=2),
         )
         self.play(indicate_row(rows[0]))
         brace.add(text)
@@ -1981,7 +2010,6 @@ class OrganizeDataIntoMiniBatches(Scene):
             self.play(indicate_row(row))
         self.wait()
 
-
     ###
 
     def get_examples(self):
@@ -1991,13 +2019,13 @@ class OrganizeDataIntoMiniBatches(Scene):
         return Group(*[
             MNistMobject(
                 t[0],
-                rect_kwargs = {"stroke_width" : 2}
+                rect_kwargs={"stroke_width": 2}
             ).set_height(height)
             for t in training_data[:n_examples]
         ])
         # return Group(*[
         #     Square(
-        #         color = BLUE, 
+        #         color = BLUE,
         #         stroke_width = 2
         #     ).set_height(height)
         #     for x in range(n_examples)
@@ -2005,15 +2033,18 @@ class OrganizeDataIntoMiniBatches(Scene):
 
     def arrange_examples_in_grid(self, examples):
         examples.arrange_in_grid(
-            n_rows = self.n_rows,
-            buff = SMALL_BUFF
+            n_rows=self.n_rows,
+            buff=SMALL_BUFF
         )
+
 
 class SGDSteps(ExternallyAnimatedScene):
     pass
 
+
 class GradientDescentSteps(ExternallyAnimatedScene):
     pass
+
 
 class SwimmingInTerms(TeacherStudentsScene):
     def construct(self):
@@ -2038,8 +2069,10 @@ class SwimmingInTerms(TeacherStudentsScene):
         )
         self.wait()
 
+
 class BackpropCode(ExternallyAnimatedScene):
     pass
+
 
 class BackpropCodeAddOn(PiCreatureScene):
     def construct(self):
@@ -2058,47 +2091,51 @@ class BackpropCodeAddOn(PiCreatureScene):
             self.play(morty.look, LEFT)
             self.wait(2)
 
+
 class CannotFollowCode(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "I...er...can't follow\\\\ that code at all.",
-            target_mode = "confused",
-            student_index = 1
+            target_mode="confused",
+            student_index=1
         )
         self.play(self.students[1].change, "sad")
         self.change_student_modes(
             "angry", "sad", "angry",
-            look_at_arg = self.teacher.eyes
+            look_at_arg=self.teacher.eyes
         )
         self.play(self.teacher.change, "hesitant")
         self.wait(2)
         self.teacher_says(
             "Let's get to the \\\\ calculus then",
-            target_mode = "hooray",
-            added_anims = [self.get_student_changes(*3*["plain"])],
-            run_time = 1
+            target_mode="hooray",
+            added_anims=[self.get_student_changes(*3*["plain"])],
+            run_time=1
         )
         self.wait(2)
+
 
 class EOCWrapper(Scene):
     def construct(self):
         title = TextMobject("Essence of calculus")
         title.to_edge(UP)
-        screen = ScreenRectangle(height = 6)
+        screen = ScreenRectangle(height=6)
         screen.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(screen))
         self.wait()
 
+
 class SimplestNetworkExample(PreviewLearning):
     CONFIG = {
-        "random_seed" : 6,
-        "z_color" : GREEN,
-        "cost_color" : RED,
-        "desired_output_color" : YELLOW,
-        "derivative_scale_val" : 0.85,
+        "random_seed": 6,
+        "z_color": GREEN,
+        "cost_color": RED,
+        "desired_output_color": YELLOW,
+        "derivative_scale_val": 0.85,
     }
+
     def construct(self):
         self.seed_random_libraries()
         self.collapse_ordinary_network()
@@ -2140,12 +2177,12 @@ class SimplestNetworkExample(PreviewLearning):
         config = dict(self.network_mob_config)
         config.pop("include_output_labels")
         config.update({
-            "edge_stroke_width" : 3,
-            "edge_propogation_color" : YELLOW,
-            "edge_propogation_time" : 1,
-            "neuron_radius" : 0.3,
+            "edge_stroke_width": 3,
+            "edge_propogation_color": YELLOW,
+            "edge_propogation_time": 1,
+            "neuron_radius": 0.3,
         })
-        simple_network = Network(sizes = [1, 1, 1, 1])
+        simple_network = Network(sizes=[1, 1, 1, 1])
         simple_network_mob = NetworkMobject(simple_network, **config)
         self.color_network_edges()
         s_edges = simple_network_mob.edge_groups
@@ -2159,7 +2196,7 @@ class SimplestNetworkExample(PreviewLearning):
             return [
                 ApplyMethod(
                     e.put_start_and_end_on_with_projection,
-                    left_attachment_target.get_right(), 
+                    left_attachment_target.get_right(),
                     e.get_end()
                 )
                 for e in edges
@@ -2195,11 +2232,11 @@ class SimplestNetworkExample(PreviewLearning):
         network_mob = self.network_mob
         edges = VGroup(*[eg[0] for eg in network_mob.edge_groups])
         neurons = VGroup(*[
-            layer.neurons[0] 
+            layer.neurons[0]
             for layer in network_mob.layers[1:]
         ])
         expression = TexMobject(
-            "C", "(", 
+            "C", "(",
             "w_1", ",", "b_1", ",",
             "w_2", ",", "b_2", ",",
             "w_3", ",", "b_3",
@@ -2223,8 +2260,8 @@ class SimplestNetworkExample(PreviewLearning):
         for x in range(2):
             self.play(LaggedStartMap(
                 Indicate, variables,
-                rate_func = wiggle,
-                run_time = 4,
+                rate_func=wiggle,
+                run_time=4,
             ))
         self.wait()
         self.play(
@@ -2243,7 +2280,7 @@ class SimplestNetworkExample(PreviewLearning):
             mob.save_state()
         self.play(LaggedStartMap(
             ApplyMethod, to_fade,
-            lambda m : (m.fade, 0.9)
+            lambda m: (m.fade, 0.9)
         ))
         self.wait()
 
@@ -2261,18 +2298,18 @@ class SimplestNetworkExample(PreviewLearning):
         superscript_rects = VGroup()
         for neuron, superscript in zip(neurons, superscripts):
             decimal = self.get_neuron_activation_decimal(neuron)
-            label = TexMobject("a^{(%s)}"%superscript)
-            label.next_to(neuron, DOWN, buff = LARGE_BUFF)
+            label = TexMobject("a^{(%s)}" % superscript)
+            label.next_to(neuron, DOWN, buff=LARGE_BUFF)
             superscript_rect = SurroundingRectangle(VGroup(*label[1:]))
             arrow = Arrow(
                 label[0].get_top(),
                 neuron.get_bottom(),
-                buff = SMALL_BUFF,
-                color = WHITE
+                buff=SMALL_BUFF,
+                color=WHITE
             )
 
             decimal.save_state()
-            decimal.set_fill(opacity = 0)
+            decimal.set_fill(opacity=0)
             decimal.move_to(label)
 
             decimals.add(decimal)
@@ -2281,7 +2318,7 @@ class SimplestNetworkExample(PreviewLearning):
             superscript_rects.add(superscript_rect)
 
             self.play(
-                Write(label, run_time = 1),
+                Write(label, run_time=1),
                 GrowArrow(arrow),
             )
             self.play(decimal.restore)
@@ -2289,15 +2326,15 @@ class SimplestNetworkExample(PreviewLearning):
             self.play(
                 neuron.set_fill, None, 0,
                 ChangingDecimal(
-                    decimal, 
-                    lambda a : interpolate(opacity, 0.01, a)
+                    decimal,
+                    lambda a: interpolate(opacity, 0.01, a)
                 ),
                 UpdateFromFunc(
                     decimal,
-                    lambda d : d.set_fill(WHITE if d.number < 0.8 else BLACK)
+                    lambda d: d.set_fill(WHITE if d.number < 0.8 else BLACK)
                 ),
-                run_time = 2,
-                rate_func = there_and_back,
+                run_time=2,
+                rate_func=there_and_back,
             )
             self.wait()
 
@@ -2308,22 +2345,22 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(
             LaggedStartMap(
                 ShowCreation, superscript_rects,
-                lag_ratio = 0.8, run_time = 1.5
+                lag_ratio=0.8, run_time=1.5
             ),
-            Write(not_exponents, run_time = 2)
+            Write(not_exponents, run_time=2)
         )
         self.wait()
         self.play(*list(map(FadeOut, [not_exponents, superscript_rects])))
 
         self.set_variables_as_attrs(
             a_labels, a_label_arrows, decimals,
-            last_neurons = neurons
+            last_neurons=neurons
         )
 
     def show_desired_output(self):
         neuron = self.network_mob.layers[-1].neurons[0].copy()
         neuron.shift(2*RIGHT)
-        neuron.set_fill(opacity = 1)
+        neuron.set_fill(opacity=1)
         decimal = self.get_neuron_activation_decimal(neuron)
 
         rect = SurroundingRectangle(neuron)
@@ -2334,30 +2371,30 @@ class SimplestNetworkExample(PreviewLearning):
         y_label.next_to(neuron, DOWN, LARGE_BUFF)
         y_label.align_to(self.a_labels, DOWN)
         y_label_arrow = Arrow(
-            y_label, neuron, 
-            color = WHITE,
-            buff = SMALL_BUFF
+            y_label, neuron,
+            color=WHITE,
+            buff=SMALL_BUFF
         )
         VGroup(words, rect, y_label).set_color(self.desired_output_color)
 
         self.play(*list(map(FadeIn, [neuron, decimal])))
         self.play(
             ShowCreation(rect),
-            Write(words, run_time = 1)
+            Write(words, run_time=1)
         )
         self.wait()
         self.play(
-            Write(y_label, run_time = 1),
+            Write(y_label, run_time=1),
             GrowArrow(y_label_arrow)
         )
         self.wait()
 
         self.set_variables_as_attrs(
             y_label, y_label_arrow,
-            desired_output_neuron = neuron,
-            desired_output_decimal = decimal,
-            desired_output_rect = rect,
-            desired_output_words = words,
+            desired_output_neuron=neuron,
+            desired_output_decimal=decimal,
+            desired_output_rect=rect,
+            desired_output_words=words,
         )
 
     def show_cost(self):
@@ -2379,7 +2416,7 @@ class SimplestNetworkExample(PreviewLearning):
         cost_word.next_to(C0[0], LEFT, LARGE_BUFF)
         cost_arrow = Arrow(
             cost_word, C0,
-            buff = SMALL_BUFF
+            buff=SMALL_BUFF
         )
         VGroup(C0, cost_word, cost_arrow).set_color(self.cost_color)
 
@@ -2389,14 +2426,14 @@ class SimplestNetworkExample(PreviewLearning):
         )
         numbers = expression.get_parts_by_tex("0.00")
         non_numbers = VGroup(*[m for m in expression if m not in numbers])
-        expression.next_to(cost_equation, DOWN, aligned_edge = RIGHT)
+        expression.next_to(cost_equation, DOWN, aligned_edge=RIGHT)
         decimals = VGroup(
             self.decimals[0],
             self.desired_output_decimal
         ).copy()
         decimals.generate_target()
         for d, n in zip(decimals.target, numbers):
-            d.replace(n, dim_to_match = 1)
+            d.replace(n, dim_to_match=1)
             d.set_color(n.get_color())
 
         self.play(
@@ -2412,10 +2449,10 @@ class SimplestNetworkExample(PreviewLearning):
         )
         self.wait()
         self.play(
-            Write(cost_word, run_time = 1),
+            Write(cost_word, run_time=1),
             GrowArrow(cost_arrow)
         )
-        self.play(C0.shift, MED_SMALL_BUFF*UP, rate_func = wiggle)
+        self.play(C0.shift, MED_SMALL_BUFF*UP, rate_func=wiggle)
         self.wait()
         self.play(*list(map(FadeOut, [decimals, non_numbers])))
 
@@ -2440,7 +2477,7 @@ class SimplestNetworkExample(PreviewLearning):
         bias_label = bL.copy()
         sigma_group = VGroup(sigma, lp, rp)
         sigma_group.save_state()
-        sigma_group.set_fill(opacity = 0)
+        sigma_group.set_fill(opacity=0)
         sigma_group.shift(DOWN)
 
         self.play(
@@ -2453,7 +2490,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.wait()
         self.play(ReplacementTransform(pre_aLm1, aLm1))
         self.wait()
-        self.play(Write(VGroup(plus, bL), run_time = 1))
+        self.play(Write(VGroup(plus, bL), run_time=1))
         self.wait()
         self.play(sigma_group.restore)
         self.wait()
@@ -2467,9 +2504,9 @@ class SimplestNetworkExample(PreviewLearning):
         terms = self.weighted_sum_terms
         terms.generate_target()
         terms.target.next_to(
-            self.formula, UP, 
-            buff = MED_LARGE_BUFF,
-            aligned_edge = RIGHT
+            self.formula, UP,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=RIGHT
         )
         terms.target.shift(MED_LARGE_BUFF*RIGHT)
         equals = TexMobject("=")
@@ -2521,28 +2558,28 @@ class SimplestNetworkExample(PreviewLearning):
             mob.generate_target()
             targets.add(mob.target)
         y.generate_target()
-        top_terms.target.arrange(RIGHT, buff = MED_LARGE_BUFF)
-        targets.arrange(DOWN, buff = LARGE_BUFF)
+        top_terms.target.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        targets.arrange(DOWN, buff=LARGE_BUFF)
         targets.center().to_corner(DOWN+LEFT)
         y.target.next_to(aL.target, LEFT, LARGE_BUFF, DOWN)
 
         top_lines = VGroup(*[
             Line(
-                term.get_bottom(), 
-                zL.target.get_top(), 
-                buff = SMALL_BUFF
+                term.get_bottom(),
+                zL.target.get_top(),
+                buff=SMALL_BUFF
             )
             for term in top_terms.target
         ])
         z_to_a_line, a_to_c_line, y_to_c_line = all_lines = [
             Line(
-                m1.target.get_bottom(), 
-                m2.target.get_top(), 
-                buff = SMALL_BUFF
+                m1.target.get_bottom(),
+                m2.target.get_top(),
+                buff=SMALL_BUFF
             )
             for m1, m2 in [
-                (zL, aL), 
-                (aL, C0), 
+                (zL, aL),
+                (aL, C0),
                 (y, C0)
             ]
         ]
@@ -2554,7 +2591,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.wait()
         self.play(MoveToTarget(zL))
         self.play(
-            ShowCreation(top_lines, lag_ratio = 0),
+            ShowCreation(top_lines, lag_ratio=0),
             top_lines.flash
         )
         self.wait()
@@ -2633,7 +2670,7 @@ class SimplestNetworkExample(PreviewLearning):
             ),
             UpdateFromAlphaFunc(
                 new_terms,
-                lambda m, a : m.set_fill(opacity = a)
+                lambda m, a: m.set_fill(opacity=a)
             ),
             MoveToTarget(comp_graph),
             rect.shift, shift_vect
@@ -2665,10 +2702,10 @@ class SimplestNetworkExample(PreviewLearning):
         C0.val = (aL.val - 1)**2
 
         number_line = UnitInterval(
-            unit_size = 2,
-            stroke_width = 2,
-            tick_size = 0.075,
-            color = LIGHT_GREY,
+            unit_size=2,
+            stroke_width=2,
+            tick_size=0.075,
+            color=LIGHT_GREY,
         )
 
         for mob in wL, zL, aL, C0:
@@ -2681,7 +2718,7 @@ class SimplestNetworkExample(PreviewLearning):
                 mob.number_line.x_max = 0.5
                 for tick_mark in mob.number_line.tick_marks[1::2]:
                     mob.number_line.tick_marks.remove(tick_mark)
-            mob.dot = Dot(color = mob.get_color())
+            mob.dot = Dot(color=mob.get_color())
             mob.dot.move_to(
                 mob.number_line.number_to_point(mob.val)
             )
@@ -2699,22 +2736,22 @@ class SimplestNetworkExample(PreviewLearning):
                 tip_length = 0.2
             mob.arrow = Arrow(
                 mob_spot, dot_spot,
-                path_arc = path_arc,
-                tip_length = tip_length,
-                buff = SMALL_BUFF,
+                path_arc=path_arc,
+                tip_length=tip_length,
+                buff=SMALL_BUFF,
             )
             mob.arrow.set_color(mob.get_color())
-            mob.arrow.set_stroke(width = 5)
+            mob.arrow.set_stroke(width=5)
 
             self.play(ShowCreation(
-                mob.number_line, 
-                lag_ratio = 0.5
+                mob.number_line,
+                lag_ratio=0.5
             ))
             self.play(
                 ShowCreation(mob.arrow),
                 ReplacementTransform(
                     mob.copy(), mob.dot,
-                    path_arc = path_arc
+                    path_arc=path_arc
                 )
             )
         self.wait()
@@ -2727,12 +2764,12 @@ class SimplestNetworkExample(PreviewLearning):
         aLm1_val = self.last_neurons[1].get_fill_opacity()
         bL_val = self.network.biases[-1][0]
 
-        get_wL_val = lambda : wL.number_line.point_to_number(
+        def get_wL_val(): return wL.number_line.point_to_number(
             wL.dot.get_center()
         )
-        get_zL_val = lambda : get_wL_val()*aLm1_val+bL_val
-        get_aL_val = lambda : sigmoid(get_zL_val())
-        get_C0_val = lambda : (get_aL_val() - 1)**2
+        def get_zL_val(): return get_wL_val()*aLm1_val+bL_val
+        def get_aL_val(): return sigmoid(get_zL_val())
+        def get_C0_val(): return (get_aL_val() - 1)**2
 
         def generate_dot_update(term, val_func):
             def update_dot(dot):
@@ -2749,34 +2786,35 @@ class SimplestNetworkExample(PreviewLearning):
             ]
         ]
 
-        def shake_dot(run_time = 2, rate_func = there_and_back):
+        def shake_dot(run_time=2, rate_func=there_and_back):
             self.play(
                 ApplyMethod(
-                    wL.dot.shift, LEFT, 
-                    rate_func = rate_func, 
-                    run_time = run_time
+                    wL.dot.shift, LEFT,
+                    rate_func=rate_func,
+                    run_time=run_time
                 ),
                 *dot_update_anims
-            )        
+            )
 
         wL_line = Line(wL.dot.get_center(), wL.dot.get_center()+LEFT)
         del_wL = TexMobject("\\partial w^{(L)}")
         del_wL.scale(self.derivative_scale_val)
-        del_wL.brace = Brace(wL_line, UP, buff = SMALL_BUFF)
+        del_wL.brace = Brace(wL_line, UP, buff=SMALL_BUFF)
         del_wL.set_color(wL.get_color())
         del_wL.next_to(del_wL.brace, UP, SMALL_BUFF)
 
-        C0_line = Line(C0.dot.get_center(), C0.dot.get_center()+MED_SMALL_BUFF*RIGHT)
+        C0_line = Line(C0.dot.get_center(),
+                       C0.dot.get_center()+MED_SMALL_BUFF*RIGHT)
         del_C0 = TexMobject("\\partial C_0")
         del_C0.scale(self.derivative_scale_val)
-        del_C0.brace = Brace(C0_line, UP, buff = SMALL_BUFF)
+        del_C0.brace = Brace(C0_line, UP, buff=SMALL_BUFF)
         del_C0.set_color(C0.get_color())
         del_C0.next_to(del_C0.brace, UP, SMALL_BUFF)
 
         for sym in del_wL, del_C0:
             self.play(
                 GrowFromCenter(sym.brace),
-                Write(sym, run_time = 1)
+                Write(sym, run_time=1)
             )
             shake_dot()
         self.wait()
@@ -2799,7 +2837,7 @@ class SimplestNetworkExample(PreviewLearning):
         dC_dw[0].set_color(del_C0.get_color())
         dC_dw[2].set_color(del_wL.get_color())
         dC_dw.scale(self.derivative_scale_val)
-        dC_dw.to_edge(UP, buff = MED_SMALL_BUFF)
+        dC_dw.to_edge(UP, buff=MED_SMALL_BUFF)
         dC_dw.shift(3.5*LEFT)
 
         full_rect = SurroundingRectangle(dC_dw)
@@ -2814,23 +2852,23 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(
             ReplacementTransform(del_C0.copy(), dC_dw[0]),
             ReplacementTransform(del_wL.copy(), dC_dw[2]),
-            Write(dC_dw[1], run_time = 1)
+            Write(dC_dw[1], run_time=1)
         )
         self.play(
             FadeOut(cost_word),
             FadeOut(cost_arrow),
             ShowCreation(full_rect),
-            Write(words, run_time = 1),
+            Write(words, run_time=1),
         )
         self.wait(2)
         self.play(
             FadeOut(words),
             ReplacementTransform(full_rect, denom_rect)
         )
-        self.play(Transform(dC_dw[2].copy(), del_wL, remover = True))
+        self.play(Transform(dC_dw[2].copy(), del_wL, remover=True))
         shake_dot()
         self.play(ReplacementTransform(denom_rect, numer_rect))
-        self.play(Transform(dC_dw[0].copy(), del_C0, remover = True))
+        self.play(Transform(dC_dw[0].copy(), del_C0, remover=True))
         shake_dot()
         self.wait()
         self.play(ReplacementTransform(numer_rect, full_rect_copy))
@@ -2852,13 +2890,13 @@ class SimplestNetworkExample(PreviewLearning):
         zL_line.shift(zL.dot.get_center())
         del_zL = TexMobject("\\partial z^{(L)}")
         del_zL.set_color(zL.get_color())
-        del_zL.brace = Brace(zL_line, DOWN, buff = SMALL_BUFF)
+        del_zL.brace = Brace(zL_line, DOWN, buff=SMALL_BUFF)
 
         aL_line = Line(ORIGIN, MED_SMALL_BUFF*LEFT)
         aL_line.shift(aL.dot.get_center())
         del_aL = TexMobject("\\partial a^{(L)}")
         del_aL.set_color(aL.get_color())
-        del_aL.brace = Brace(aL_line, DOWN, buff = SMALL_BUFF)
+        del_aL.brace = Brace(aL_line, DOWN, buff=SMALL_BUFF)
 
         for sym in del_zL, del_aL:
             sym.scale(self.derivative_scale_val)
@@ -2866,8 +2904,8 @@ class SimplestNetworkExample(PreviewLearning):
                 0.5, 1, sym.brace.get_top(),
             )
             sym.shift(
-                sym.brace.get_bottom()+SMALL_BUFF*DOWN \
-                -sym[0].get_corner(UP+RIGHT)
+                sym.brace.get_bottom()+SMALL_BUFF*DOWN
+                - sym[0].get_corner(UP+RIGHT)
             )
 
         syms = [del_wL, del_zL, del_aL, del_C0]
@@ -2876,7 +2914,7 @@ class SimplestNetworkExample(PreviewLearning):
                 ReplacementTransform(s1.copy(), s2),
                 ReplacementTransform(s1.brace.copy(), s2.brace),
             )
-            self.shake_dot(run_time = 1.5)
+            self.shake_dot(run_time=1.5)
             self.wait(0.5)
         self.wait()
 
@@ -2911,14 +2949,14 @@ class SimplestNetworkExample(PreviewLearning):
             y = mob[1].get_center()[1]
             mob.shift((target_y - y)*UP)
 
-        self.play(Write(equals, run_time = 1))
+        self.play(Write(equals, run_time=1))
         for frac, top_sym, bot_sym in zip(group[1:], del_syms[1:], del_syms):
-            self.play(Indicate(top_sym, rate_func = wiggle))
+            self.play(Indicate(top_sym, rate_func=wiggle))
             self.play(
                 ReplacementTransform(top_sym.copy(), frac[0]),
                 FadeIn(frac[1]),
             )
-            self.play(Indicate(bot_sym, rate_func = wiggle))
+            self.play(Indicate(bot_sym, rate_func=wiggle))
             self.play(ReplacementTransform(
                 bot_sym.copy(), frac[2]
             ))
@@ -2942,7 +2980,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(ShowCreation(rect))
         self.play(
             MoveToTarget(group),
-            Write(words, run_time = 1),
+            Write(words, run_time=1),
             graph_parts.scale, 0.7, graph_parts.get_bottom()
         )
         self.wait(2)
@@ -2950,12 +2988,13 @@ class SimplestNetworkExample(PreviewLearning):
 
     def indicate_everything_on_screen(self):
         everything = VGroup(*self.get_top_level_mobjects())
-        everything = VGroup(*[m for m in everything.family_members_with_points() if not m.is_subpath])
+        everything = VGroup(
+            *[m for m in everything.family_members_with_points() if not m.is_subpath])
         self.play(LaggedStartMap(
             Indicate, everything,
-            rate_func = wiggle,
-            lag_ratio = 0.2,
-            run_time = 5
+            rate_func=wiggle,
+            lag_ratio=0.2,
+            run_time=5
         ))
         self.wait()
 
@@ -3000,20 +3039,19 @@ class SimplestNetworkExample(PreviewLearning):
         for deriv in derivs:
             deriv.generate_target()
             deriv_targets.add(deriv.target)
-        deriv_targets.arrange(DOWN, buff = MED_LARGE_BUFF)
+        deriv_targets.arrange(DOWN, buff=MED_LARGE_BUFF)
         deriv_targets.next_to(dC_dw, DOWN, LARGE_BUFF)
         for deriv in derivs:
             deriv.equals = TexMobject("=")
             deriv.equals.next_to(deriv.target, RIGHT)
 
-
-        #dC_da
+        # dC_da
         self.play(
             MoveToTarget(dC_da),
             Write(dC_da.equals)
         )
         index = 4
-        cost_rhs = VGroup(*cost_equation[index+1:])       
+        cost_rhs = VGroup(*cost_equation[index+1:])
         dC_da.rhs = cost_rhs.copy()
         two = dC_da.rhs[-1]
         two.scale(1.5)
@@ -3029,20 +3067,20 @@ class SimplestNetworkExample(PreviewLearning):
         self.wait()
         self.play(ReplacementTransform(
             cost_rhs.copy(), dC_da.rhs,
-            path_arc = np.pi/2,
+            path_arc=np.pi/2,
         ))
         self.wait()
         self.play(cost_equation.restore)
         self.wait()
 
-        #show_difference
+        # show_difference
         neuron = self.last_neurons[0]
         decimal = self.decimals[0]
         double_arrow = DoubleArrow(
             neuron.get_right(),
             self.desired_output_neuron.get_left(),
-            buff = SMALL_BUFF,
-            color = RED
+            buff=SMALL_BUFF,
+            color=RED
         )
 
         moving_decimals = VGroup(
@@ -3052,15 +3090,15 @@ class SimplestNetworkExample(PreviewLearning):
         minus = TexMobject("-")
         minus.move_to(moving_decimals)
         minus.scale(0.7)
-        minus.set_fill(opacity = 0)
+        minus.set_fill(opacity=0)
         moving_decimals.submobjects.insert(1, minus)
-        moving_decimals.generate_target(use_deepcopy = True)
-        moving_decimals.target.arrange(RIGHT, buff = SMALL_BUFF)
+        moving_decimals.generate_target(use_deepcopy=True)
+        moving_decimals.target.arrange(RIGHT, buff=SMALL_BUFF)
         moving_decimals.target.scale(1.5)
         moving_decimals.target.next_to(
-            dC_da.rhs, DOWN, 
-            buff = MED_LARGE_BUFF,
-            aligned_edge = RIGHT,
+            dC_da.rhs, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=RIGHT,
         )
         moving_decimals.target.set_fill(WHITE, 1)
 
@@ -3075,13 +3113,13 @@ class SimplestNetworkExample(PreviewLearning):
             self.play(
                 neuron.set_fill, None, target_o,
                 *[
-                    ChangingDecimal(d, lambda a : neuron.get_fill_opacity())
+                    ChangingDecimal(d, lambda a: neuron.get_fill_opacity())
                     for d in (decimal, moving_decimals[0])
                 ]
             )
         self.play(*list(map(FadeOut, [double_arrow, moving_decimals])))
 
-        #da_dz
+        # da_dz
         self.play(
             MoveToTarget(da_dz),
             Write(da_dz.equals)
@@ -3107,7 +3145,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(aL_formula.restore)
         self.wait()
 
-        #dz_dw
+        # dz_dw
         self.play(
             MoveToTarget(dz_dw),
             Write(dz_dw.equals)
@@ -3119,7 +3157,7 @@ class SimplestNetworkExample(PreviewLearning):
         zL_formula.save_state()
         self.play(
             zL_formula.next_to, dz_dw.rhs,
-                DOWN, MED_LARGE_BUFF, LEFT,
+            DOWN, MED_LARGE_BUFF, LEFT,
         )
         self.wait()
         rect = SurroundingRectangle(VGroup(*zL_formula[2:4]))
@@ -3161,10 +3199,10 @@ class SimplestNetworkExample(PreviewLearning):
 
         def get_decimal_anims():
             return [
-                ChangingDecimal(decimal, lambda a : neuron.get_fill_opacity()),
+                ChangingDecimal(decimal, lambda a: neuron.get_fill_opacity()),
                 UpdateFromFunc(
-                    decimal, lambda m : m.set_color(
-                        WHITE if neuron.get_fill_opacity() < 0.8 \
+                    decimal, lambda m: m.set_color(
+                        WHITE if neuron.get_fill_opacity() < 0.8
                         else BLACK
                     )
                 )
@@ -3177,11 +3215,11 @@ class SimplestNetworkExample(PreviewLearning):
         )
         self.play(
             edge.set_stroke, None, 10,
-            rate_func = wiggle,
-            run_time = 3,
+            rate_func=wiggle,
+            run_time=3,
         )
         self.wait()
-        self.play(rhs.shift, MED_LARGE_BUFF*UP, rate_func = wiggle)
+        self.play(rhs.shift, MED_LARGE_BUFF*UP, rate_func=wiggle)
         self.play(
             rhs_copy.move_to, neuron,
             rhs_copy.set_fill, None, 0
@@ -3190,20 +3228,20 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(
             neuron.set_fill, None, 0,
             *get_decimal_anims(),
-            run_time = 3,
-            rate_func = there_and_back
+            run_time=3,
+            rate_func=there_and_back
         )
         self.wait()
 
-        #Fire together wire together
+        # Fire together wire together
         opacity = neuron.get_fill_opacity()
         self.play(
-            neuron.set_fill, None, 0.99, 
+            neuron.set_fill, None, 0.99,
             *get_decimal_anims()
         )
         self.play(edge.set_stroke, None, 8)
         self.play(
-            neuron.set_fill, None, opacity, 
+            neuron.set_fill, None, opacity,
             *get_decimal_anims()
         )
         self.play(edge.restore, FadeOut(del_wL))
@@ -3219,7 +3257,7 @@ class SimplestNetworkExample(PreviewLearning):
         equals.next_to(chain_rule_equation, RIGHT)
 
         rhs_group.generate_target()
-        rhs_group.target.arrange(RIGHT, buff = SMALL_BUFF)
+        rhs_group.target.arrange(RIGHT, buff=SMALL_BUFF)
         rhs_group.target.next_to(equals, RIGHT)
         rhs_group.target.shift(SMALL_BUFF*UP)
 
@@ -3234,7 +3272,7 @@ class SimplestNetworkExample(PreviewLearning):
         )
 
         self.play(
-            MoveToTarget(rhs_group, path_arc = np.pi/2),
+            MoveToTarget(rhs_group, path_arc=np.pi/2),
             Write(equals),
             FadeOut(fracs),
             FadeOut(equals_group),
@@ -3253,8 +3291,8 @@ class SimplestNetworkExample(PreviewLearning):
             "{\\partial C_k", "\\over", "\\partial w^{(L)}}"
         )
         full_derivative.set_color_by_tex_to_color_map({
-            "partial C" : self.cost_color,
-            "partial w" : self.del_wL.get_color()
+            "partial C": self.cost_color,
+            "partial w": self.del_wL.get_color()
         })
         full_derivative.to_edge(LEFT)
 
@@ -3271,17 +3309,17 @@ class SimplestNetworkExample(PreviewLearning):
 
         mover = dC0_dw.copy()
         self.play(Transform(mover, dCk_dw))
-        self.play(Write(full_derivative, run_time = 2))
+        self.play(Write(full_derivative, run_time=2))
         self.remove(mover)
         for brace, text in (rhs_brace, rhs_text), (lhs_brace, lhs_text):
             self.play(
                 GrowFromCenter(brace),
-                Write(text, run_time = 2),
+                Write(text, run_time=2),
             )
             self.wait(2)
         self.cycle_through_altnernate_training_examples()
         self.play(*list(map(FadeOut, [
-            VGroup(*full_derivative[3:]), 
+            VGroup(*full_derivative[3:]),
             lhs_brace, lhs_text,
             rhs_brace, rhs_text,
         ])))
@@ -3303,12 +3341,12 @@ class SimplestNetworkExample(PreviewLearning):
                 o = np.random.random()
                 if n is self.desired_output_neuron:
                     o = np.round(o)
-                n.set_fill(opacity = o)
+                n.set_fill(opacity=o)
                 Transform(
                     d, self.get_neuron_activation_decimal(n)
                 ).update(1)
             self.wait(0.2)
-        self.play(group.restore, run_time = 0.2)
+        self.play(group.restore, run_time=0.2)
 
     def show_gradient(self):
         dC_dw = self.dC_dw
@@ -3323,27 +3361,27 @@ class SimplestNetworkExample(PreviewLearning):
         for term in terms:
             if isinstance(term, TexMobject):
                 term.set_color_by_tex_to_color_map({
-                    "partial C" : RED,
-                    "partial w" : BLUE,
-                    "partial b" : MAROON_B,
+                    "partial C": RED,
+                    "partial w": BLUE,
+                    "partial b": MAROON_B,
                 })
-        terms.arrange(DOWN, buff = MED_LARGE_BUFF)
+        terms.arrange(DOWN, buff=MED_LARGE_BUFF)
         lb, rb = brackets = TexMobject("[]")
         brackets.scale(3)
         brackets.stretch_to_fit_height(1.1*terms.get_height())
-        lb.next_to(terms, LEFT, buff = SMALL_BUFF)
-        rb.next_to(terms, RIGHT, buff = SMALL_BUFF)
+        lb.next_to(terms, LEFT, buff=SMALL_BUFF)
+        rb.next_to(terms, RIGHT, buff=SMALL_BUFF)
         vect = VGroup(lb, terms, rb)
         vect.set_height(5)
         lhs = TexMobject("\\nabla C", "=")
         lhs[0].set_color(RED)
         lhs.next_to(vect, LEFT)
-        VGroup(lhs, vect).to_corner(DOWN+LEFT, buff = LARGE_BUFF)
+        VGroup(lhs, vect).to_corner(DOWN+LEFT, buff=LARGE_BUFF)
         terms.remove(dC_dw.target)
 
         self.play(
             MoveToTarget(dC_dw),
-            Write(vect, run_time = 1)
+            Write(vect, run_time=1)
         )
         terms.add(dC_dw)
         self.play(Write(lhs))
@@ -3353,7 +3391,7 @@ class SimplestNetworkExample(PreviewLearning):
     def transition_to_derivative_wrt_b(self):
         all_comp_graph_parts = self.all_comp_graph_parts
         all_comp_graph_parts.scale(
-            1.3, about_point = all_comp_graph_parts.get_bottom()
+            1.3, about_point=all_comp_graph_parts.get_bottom()
         )
         comp_graph = self.comp_graph
         wL, bL, zL, aL, C0 = [
@@ -3372,10 +3410,10 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(FadeIn(comp_graph), FadeOut(rect))
         for x in range(2):
             self.play(LaggedStartMap(
-                Indicate, path_to_C, 
-                rate_func = there_and_back,
-                run_time = 1.5,
-                lag_ratio = 0.7,
+                Indicate, path_to_C,
+                rate_func=there_and_back,
+                run_time=1.5,
+                lag_ratio=0.7,
             ))
         self.wait()
 
@@ -3396,8 +3434,8 @@ class SimplestNetworkExample(PreviewLearning):
             "{\\partial z^{(L)}", "\\over", "\\partial b^{(L)}}"
         )
         dz_db.set_color_by_tex_to_color_map({
-            "partial z" : self.z_color,
-            "partial b" : MAROON_B
+            "partial z": self.z_color,
+            "partial b": MAROON_B
         })
         dz_db.replace(dz_dw)
 
@@ -3406,22 +3444,23 @@ class SimplestNetworkExample(PreviewLearning):
         arrow = Arrow(
             dz_db.get_bottom(),
             one.get_bottom(),
-            path_arc = np.pi/2,
-            color = WHITE,
+            path_arc=np.pi/2,
+            color=WHITE,
         )
-        arrow.set_stroke(width = 2)
+        arrow.set_stroke(width=2)
 
         wL, bL, zL, aL, C0 = [
             getattr(comp_graph, attr)
             for attr in ["wL", "bL", "zL", "aL", "C0"]
         ]
         path_to_C = VGroup(bL, zL, aL, C0)
+
         def get_path_animation():
             return LaggedStartMap(
-                Indicate, path_to_C, 
-                rate_func = there_and_back,
-                run_time = 1.5,
-                lag_ratio = 0.7,
+                Indicate, path_to_C,
+                rate_func=there_and_back,
+                run_time=1.5,
+                lag_ratio=0.7,
             )
 
         zL_formula = self.zL_formula
@@ -3455,7 +3494,7 @@ class SimplestNetworkExample(PreviewLearning):
             ShowCreation(arrow),
             ReplacementTransform(
                 dz_db.copy(), one,
-                path_arc = arrow.path_arc
+                path_arc=arrow.path_arc
             )
         )
         self.wait(2)
@@ -3482,8 +3521,8 @@ class SimplestNetworkExample(PreviewLearning):
 
         arrow = Arrow(
             dz_daLm1.get_bottom(), wL.get_bottom(),
-            path_arc = np.pi/2,
-            color = WHITE,
+            path_arc=np.pi/2,
+            color=WHITE,
         )
 
         comp_graph = self.comp_graph
@@ -3491,12 +3530,13 @@ class SimplestNetworkExample(PreviewLearning):
             getattr(comp_graph, attr)
             for attr in ["aLm1", "zL", "aL", "C0"]
         ])
+
         def get_path_animation():
             return LaggedStartMap(
-                Indicate, path_to_C, 
-                rate_func = there_and_back,
-                run_time = 1.5,
-                lag_ratio = 0.7,
+                Indicate, path_to_C,
+                rate_func=there_and_back,
+                run_time=1.5,
+                lag_ratio=0.7,
             )
 
         zL_formula = self.zL_formula
@@ -3530,7 +3570,7 @@ class SimplestNetworkExample(PreviewLearning):
             ShowCreation(arrow),
             ReplacementTransform(
                 dz_daLm1.copy(), wL,
-                path_arc = arrow.path_arc
+                path_arc=arrow.path_arc
             )
         )
         self.wait(2)
@@ -3551,12 +3591,12 @@ class SimplestNetworkExample(PreviewLearning):
         )
         for mob in prev_layer:
             mob.restore()
-        prev_layer.next_to(self.last_neurons, LEFT, buff = 0)
+        prev_layer.next_to(self.last_neurons, LEFT, buff=0)
         self.remove(prev_layer)
 
-        self.play(LaggedStartMap(FadeOut, to_fade, run_time = 1))
+        self.play(LaggedStartMap(FadeOut, to_fade, run_time=1))
         self.play(
-            ShowCreation(prev_comp_subgraph, run_time = 1),
+            ShowCreation(prev_comp_subgraph, run_time=1),
             self.chain_rule_equation.to_edge, RIGHT
         )
         self.play(FadeIn(prev_layer))
@@ -3572,10 +3612,10 @@ class SimplestNetworkExample(PreviewLearning):
         )
 
         self.play(
-            Write(a_label, run_time = 1),
-            Write(decimal, run_time = 1),
+            Write(a_label, run_time=1),
+            Write(decimal, run_time=1),
             GrowArrow(arrow),
-        )        
+        )
 
     def animate_long_path(self):
         comp_graph = self.comp_graph
@@ -3588,10 +3628,10 @@ class SimplestNetworkExample(PreviewLearning):
         )
         for x in range(2):
             self.play(LaggedStartMap(
-                Indicate, path_to_C, 
-                rate_func = there_and_back,
-                run_time = 1.5,
-                lag_ratio = 0.4,
+                Indicate, path_to_C,
+                rate_func=there_and_back,
+                run_time=1.5,
+                lag_ratio=0.4,
             ))
         self.wait(2)
 
@@ -3599,7 +3639,7 @@ class SimplestNetworkExample(PreviewLearning):
 
     def get_neuron_activation_decimal(self, neuron):
         opacity = neuron.get_fill_opacity()
-        decimal = DecimalNumber(opacity, num_decimal_places = 2)
+        decimal = DecimalNumber(opacity, num_decimal_places=2)
         decimal.set_width(0.85*neuron.get_width())
         if decimal.number > 0.8:
             decimal.set_fill(BLACK)
@@ -3620,12 +3660,13 @@ class SimplestNetworkExample(PreviewLearning):
         self.all_comp_graph_parts = result
         return result
 
+
 class IsntThatOverSimplified(TeacherStudentsScene):
     def construct(self):
         self.student_says(
-            "Isn't that over-simplified?", 
-            target_mode = "raise_right_hand",
-            run_time = 1
+            "Isn't that over-simplified?",
+            target_mode="raise_right_hand",
+            run_time=1
         )
         self.change_student_modes(
             "pondering", "raise_right_hand", "pondering"
@@ -3633,23 +3674,25 @@ class IsntThatOverSimplified(TeacherStudentsScene):
         self.wait()
         self.teacher_says(
             "Not that much, actually!",
-            run_time = 1,
-            target_mode = "hooray"
+            run_time=1,
+            target_mode="hooray"
         )
         self.wait(2)
 
+
 class GeneralFormulas(SimplestNetworkExample):
     CONFIG = {
-        "layer_sizes" : [3, 3, 2],
-        "network_mob_config" : {
-            "include_output_labels" : False,
-            "neuron_to_neuron_buff" : LARGE_BUFF,
-            "neuron_radius" : 0.3,
+        "layer_sizes": [3, 3, 2],
+        "network_mob_config": {
+            "include_output_labels": False,
+            "neuron_to_neuron_buff": LARGE_BUFF,
+            "neuron_radius": 0.3,
         },
-        "edge_stroke_width" : 4,
-        "stroke_width_exp" : 0.2,
-        "random_seed" : 9,
+        "edge_stroke_width": 4,
+        "stroke_width_exp": 0.2,
+        "random_seed": 9,
     }
+
     def setup(self):
         self.seed_random_libraries()
         self.setup_bases()
@@ -3695,9 +3738,9 @@ class GeneralFormulas(SimplestNetworkExample):
                 arrow = Arrow(ORIGIN, vect)
                 arrow.next_to(neuron, -vect)
                 arrow.set_fill(WHITE)
-                label = TexMobject("a^{(%s)}_%d"%(s, i))
+                label = TexMobject("a^{(%s)}_%d" % (s, i))
                 label.next_to(arrow, -vect, SMALL_BUFF)
-                rect = SurroundingRectangle(label[-1], buff = 0.5*SMALL_BUFF)
+                rect = SurroundingRectangle(label[-1], buff=0.5*SMALL_BUFF)
                 decimal = self.get_neuron_activation_decimal(neuron)
                 neuron.arrow = arrow
                 neuron.label = label
@@ -3731,7 +3774,7 @@ class GeneralFormulas(SimplestNetworkExample):
         self.play(LaggedStartMap(
             ShowCreationThenDestruction,
             VGroup(*all_subscript_rects.family_members_with_points()),
-            lag_ratio = 0.7
+            lag_ratio=0.7
         ))
         self.wait()
 
@@ -3756,8 +3799,8 @@ class GeneralFormulas(SimplestNetworkExample):
                     self.chosen_neurons.add(neuron)
                     labels_to_change.add(neuron.label)
                     rects.add(SurroundingRectangle(
-                        neuron.label.target[-1], 
-                        buff = 0.5*SMALL_BUFF
+                        neuron.label.target[-1],
+                        buff=0.5*SMALL_BUFF
                     ))
                 else:
                     labels_to_fade.add(neuron.label)
@@ -3766,7 +3809,7 @@ class GeneralFormulas(SimplestNetworkExample):
         self.play(
             LaggedStartMap(FadeOut, labels_to_fade),
             LaggedStartMap(FadeOut, arrows_to_fade),
-            run_time = 1
+            run_time=1
         )
         for neuron, rect in zip(self.chosen_neurons, rects):
             self.play(
@@ -3785,19 +3828,19 @@ class GeneralFormulas(SimplestNetworkExample):
         arrows = VGroup()
         labels = VGroup()
         for i, neuron in enumerate(desired_output.neurons):
-            neuron.set_fill(opacity = i)
+            neuron.set_fill(opacity=i)
             decimal = self.get_neuron_activation_decimal(neuron)
             neuron.decimal = decimal
-            neuron.arrow = Arrow(ORIGIN, LEFT, color = WHITE)
+            neuron.arrow = Arrow(ORIGIN, LEFT, color=WHITE)
             neuron.arrow.next_to(neuron, RIGHT)
-            neuron.label = TexMobject("y_%d"%i)
+            neuron.label = TexMobject("y_%d" % i)
             neuron.label.next_to(neuron.arrow, RIGHT)
             neuron.label.set_color(self.desired_output_color)
 
             desired_output_decimals.add(decimal)
             arrows.add(neuron.arrow)
             labels.add(neuron.label)
-        rect = SurroundingRectangle(desired_output, buff = 0.5*SMALL_BUFF)
+        rect = SurroundingRectangle(desired_output, buff=0.5*SMALL_BUFF)
         words = TextMobject("Desired output")
         words.next_to(rect, DOWN)
         VGroup(words, rect).set_color(self.desired_output_color)
@@ -3817,8 +3860,8 @@ class GeneralFormulas(SimplestNetworkExample):
         self.set_variables_as_attrs(
             desired_output,
             desired_output_decimals,
-            desired_output_rect = rect,
-            desired_output_words = words,
+            desired_output_rect=rect,
+            desired_output_words=words,
         )
 
     def show_cost(self):
@@ -3834,7 +3877,8 @@ class GeneralFormulas(SimplestNetworkExample):
         aj.target = cost_equation.get_part_by_tex("a^{(L)}_j")
         yj.target = cost_equation.get_part_by_tex("y_j")
         yj.target.set_color(self.desired_output_color)
-        to_fade_in = VGroup(*[m for m in cost_equation if m not in [aj.target, yj.target]])
+        to_fade_in = VGroup(
+            *[m for m in cost_equation if m not in [aj.target, yj.target]])
         sum_part = cost_equation.get_part_by_tex("sum")
 
         self.play(*[
@@ -3845,7 +3889,7 @@ class GeneralFormulas(SimplestNetworkExample):
         self.wait(2)
         self.play(LaggedStartMap(
             Indicate, sum_part,
-            rate_func = wiggle,
+            rate_func=wiggle,
         ))
         self.wait()
         for mob in aj.target, yj.target, cost_equation[-1]:
@@ -3882,11 +3926,11 @@ class GeneralFormulas(SimplestNetworkExample):
         self.play(MoveToTarget(edges))
         self.play(LaggedStartMap(
             ApplyFunction, edges,
-            lambda e : (
-                lambda m : m.rotate_in_place(np.pi/12).set_color(YELLOW),
+            lambda e: (
+                lambda m: m.rotate_in_place(np.pi/12).set_color(YELLOW),
                 e
             ),
-            rate_func = wiggle
+            rate_func=wiggle
         ))
         self.play(edges.restore)
         self.play(faded_edges.fade, 0.9)
@@ -3903,24 +3947,24 @@ class GeneralFormulas(SimplestNetworkExample):
 
     def show_values_between_weight_and_cost(self):
         z_formula = TexMobject(
-            "z^{(L)}_j", "=", 
+            "z^{(L)}_j", "=",
             "w^{(L)}_{j0}", "a^{(L-1)}_0", "+",
             "w^{(L)}_{j1}", "a^{(L-1)}_1", "+",
-            "w^{(L)}_{j2}", "a^{(L-1)}_2", "+", 
+            "w^{(L)}_{j2}", "a^{(L-1)}_2", "+",
             "b^{(L)}_j"
         )
         compact_z_formula = TexMobject(
-            "z^{(L)}_j", "=", 
-            "\\cdots", "", "+" 
-            "w^{(L)}_{jk}", "a^{(L-1)}_k", "+", 
+            "z^{(L)}_j", "=",
+            "\\cdots", "", "+"
+            "w^{(L)}_{jk}", "a^{(L-1)}_k", "+",
             "\\cdots", "", "", "",
         )
         for expression in z_formula, compact_z_formula:
             expression.to_corner(UP+RIGHT)
             expression.set_color_by_tex_to_color_map({
-                "z^" : self.z_color,
-                "w^" : self.w_label.get_color(),
-                "b^" : MAROON_B,
+                "z^": self.z_color,
+                "w^": self.w_label.get_color(),
+                "b^": MAROON_B,
             })
         w_part = z_formula.get_parts_by_tex("w^")[1]
         aLm1_part = z_formula.get_parts_by_tex("a^{(L-1)}")[1]
@@ -3950,11 +3994,12 @@ class GeneralFormulas(SimplestNetworkExample):
             self.cost_equation.to_edge, RIGHT,
             ReplacementTransform(self.w_label[1].copy(), w_part),
             ReplacementTransform(
-                self.chosen_neurons[0].label.copy(), 
+                self.chosen_neurons[0].label.copy(),
                 aLm1_part
             ),
         )
-        self.play(Write(VGroup(*[m for m in z_formula if m not in [w_part, aLm1_part]])))
+        self.play(
+            Write(VGroup(*[m for m in z_formula if m not in [w_part, aLm1_part]])))
         self.wait()
         self.play(ReplacementTransform(
             self.chosen_neurons[1].label.copy(),
@@ -3981,10 +4026,10 @@ class GeneralFormulas(SimplestNetworkExample):
         )
         terms = VGroup(*[
             VGroup(*chain_rule[i:i+3])
-            for i in range(4,len(chain_rule), 3)
+            for i in range(4, len(chain_rule), 3)
         ])
         rects = VGroup(*[
-            SurroundingRectangle(term, buff = 0.5*SMALL_BUFF)
+            SurroundingRectangle(term, buff=0.5*SMALL_BUFF)
             for term in terms
         ])
         rects.set_color_by_gradient(GREEN, WHITE, RED)
@@ -3996,8 +4041,8 @@ class GeneralFormulas(SimplestNetworkExample):
         self.wait()
         self.play(LaggedStartMap(
             ShowCreationThenDestruction, rects,
-            lag_ratio = 0.7,
-            run_time = 3
+            lag_ratio=0.7,
+            run_time=3
         ))
         self.wait()
 
@@ -4007,7 +4052,7 @@ class GeneralFormulas(SimplestNetworkExample):
         chain_rule = self.get_chain_rule(
             "{\\partial C_0", "\\over", "\\partial a^{(L-1)}_k}",
             "=",
-            "\\sum_{j=0}^{n_L - 1}", 
+            "\\sum_{j=0}^{n_L - 1}",
             "{\\partial z^{(L)}_j", "\\over", "\\partial a^{(L-1)}_k}",
             "{\\partial a^{(L)}_j", "\\over", "\\partial z^{(L)}_j}",
             "{\\partial C_0", "\\over", "\\partial a^{(L)}_j}",
@@ -4018,7 +4063,7 @@ class GeneralFormulas(SimplestNetworkExample):
         self.play(ReplacementTransform(
             self.chain_rule, VGroup(*chain_rule[:n] + chain_rule[n+1:])
         ))
-        self.play(Write(chain_rule[n], run_time = 1))
+        self.play(Write(chain_rule[n], run_time=1))
         self.wait()
 
         self.set_variables_as_attrs(chain_rule)
@@ -4061,8 +4106,8 @@ class GeneralFormulas(SimplestNetworkExample):
 
         chain_rule = self.chain_rule
         n = chain_rule.index_of_part_by_tex("sum")
-        brace = Brace(VGroup(*chain_rule[n:]), DOWN, buff = SMALL_BUFF)
-        words = brace.get_text("Sum over layer L", buff = SMALL_BUFF)
+        brace = Brace(VGroup(*chain_rule[n:]), DOWN, buff=SMALL_BUFF)
+        words = brace.get_text("Sum over layer L", buff=SMALL_BUFF)
 
         cost_aL = self.cost_equation.get_part_by_tex("a^{(L)}")
 
@@ -4077,8 +4122,8 @@ class GeneralFormulas(SimplestNetworkExample):
             anims = [
                 ShowCreationThenDestruction(
                     path_line,
-                    run_time = 1.5,
-                    time_width = 0.5,
+                    run_time=1.5,
+                    time_width=0.5,
                 )
                 for path_line in path_lines
             ]
@@ -4094,8 +4139,8 @@ class GeneralFormulas(SimplestNetworkExample):
             self.play(
                 LaggedStartMap(
                     Indicate, path,
-                    rate_func = wiggle,
-                    run_time = 1,
+                    rate_func=wiggle,
+                    run_time=1,
                 ),
                 ShowCreation(path_line),
                 Animation(label)
@@ -4103,8 +4148,8 @@ class GeneralFormulas(SimplestNetworkExample):
             self.wait()
             group = VGroup(label, cost_aL)
             self.play(
-                group.shift, MED_SMALL_BUFF*UP, 
-                rate_func = wiggle
+                group.shift, MED_SMALL_BUFF*UP,
+                rate_func=wiggle
             )
             self.play(FadeOut(path_line))
         self.wait()
@@ -4130,18 +4175,18 @@ class GeneralFormulas(SimplestNetworkExample):
         deriv = VGroup(*self.chain_rule[:3])
         deriv_rect = SurroundingRectangle(deriv)
         mid_neuron_outlines = mid_neurons.copy()
-        mid_neuron_outlines.set_fill(opacity = 0)
+        mid_neuron_outlines.set_fill(opacity=0)
         mid_neuron_outlines.set_stroke(YELLOW, 5)
 
         def get_neurons_decimal_anims(neuron):
             return [
                 ChangingDecimal(
                     neuron.decimal,
-                    lambda a : neuron.get_fill_opacity(),
+                    lambda a: neuron.get_fill_opacity(),
                 ),
                 UpdateFromFunc(
                     neuron.decimal,
-                    lambda m : m.set_fill(
+                    lambda m: m.set_fill(
                         WHITE if neuron.get_fill_opacity() < 0.8 else BLACK
                     )
                 )
@@ -4149,7 +4194,7 @@ class GeneralFormulas(SimplestNetworkExample):
 
         self.play(ShowCreation(deriv_rect))
         self.play(LaggedStartMap(
-            ShowCreationThenDestruction, 
+            ShowCreationThenDestruction,
             mid_neuron_outlines
         ))
         self.play(*it.chain(*[
@@ -4157,12 +4202,12 @@ class GeneralFormulas(SimplestNetworkExample):
                 ApplyMethod(n.set_fill, None, random.random()),
             ] + get_neurons_decimal_anims(n)
             for n in mid_neurons
-        ]), run_time = 4, rate_func = there_and_back)
+        ]), run_time=4, rate_func=there_and_back)
         self.play(faded_edges.restore)
         self.play(
             LaggedStartMap(
                 GrowFromCenter, layer.neurons,
-                run_time = 1
+                run_time=1
             ),
             LaggedStartMap(ShowCreation, edges),
             FadeOut(to_fade)
@@ -4177,7 +4222,7 @@ class GeneralFormulas(SimplestNetworkExample):
     def replace_subscript(self, label, tex):
         subscript = label[-1]
         new_subscript = TexMobject(tex)[0]
-        new_subscript.replace(subscript, dim_to_match = 1)
+        new_subscript.replace(subscript, dim_to_match=1)
         label.remove(subscript)
         label.add(new_subscript)
         return label
@@ -4187,38 +4232,42 @@ class GeneralFormulas(SimplestNetworkExample):
         chain_rule.scale(0.8)
         chain_rule.to_corner(UP+LEFT)
         chain_rule.set_color_by_tex_to_color_map({
-            "C_0" : self.cost_color,
-            "z^" : self.z_color,
-            "w^" : self.w_label.get_color()
+            "C_0": self.cost_color,
+            "z^": self.z_color,
+            "w^": self.w_label.get_color()
         })
         return chain_rule
+
 
 class ThatsPrettyMuchIt(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "That's pretty \\\\ much it!",
-            target_mode = "hooray",
-            run_time = 1,
+            target_mode="hooray",
+            run_time=1,
         )
         self.wait(2)
+
 
 class PatYourselfOnTheBack(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "Pat yourself on \\\\ the back!",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(*["hooray"]*3)
         self.wait(3)
+
 
 class ThatsALotToThinkAbout(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "That's a lot to \\\\ think about!",
-            target_mode = "surprised"
+            target_mode="surprised"
         )
         self.change_student_modes(*["thinking"]*3)
         self.wait(4)
+
 
 class LayersOfComplexity(Scene):
     def construct(self):
@@ -4226,7 +4275,7 @@ class LayersOfComplexity(Scene):
         chain_rule_equations.to_corner(UP+RIGHT)
 
         brace = Brace(chain_rule_equations, LEFT)
-        arrow = Vector(LEFT, color = RED)
+        arrow = Vector(LEFT, color=RED)
         arrow.next_to(brace, LEFT)
         gradient = TexMobject("\\nabla C")
         gradient.scale(2)
@@ -4239,7 +4288,6 @@ class LayersOfComplexity(Scene):
         self.play(Write(gradient))
         self.wait()
 
-
     def get_chain_rule_equations(self):
         w_deriv = TexMobject(
             "{\\partial C", "\\over", "\\partial w^{(l)}_{jk}}",
@@ -4250,7 +4298,7 @@ class LayersOfComplexity(Scene):
         )
         lil_rect = SurroundingRectangle(
             VGroup(*w_deriv[-3:]),
-            buff = 0.5*SMALL_BUFF
+            buff=0.5*SMALL_BUFF
         )
         a_deriv = TexMobject(
             "\\sum_{j = 0}^{n_{l+1} - 1}",
@@ -4267,7 +4315,7 @@ class LayersOfComplexity(Scene):
 
         big_rect = SurroundingRectangle(VGroup(a_deriv, last_a_deriv))
         arrow = Arrow(
-            lil_rect.get_corner(DOWN+LEFT), 
+            lil_rect.get_corner(DOWN+LEFT),
             big_rect.get_top(),
         )
 
@@ -4277,35 +4325,36 @@ class LayersOfComplexity(Scene):
         )
         for expression in w_deriv, a_deriv, last_a_deriv:
             expression.set_color_by_tex_to_color_map({
-                "C" : RED,
-                "z^" : GREEN,
-                "w^" : BLUE,
-                "b^" : MAROON_B,
+                "C": RED,
+                "z^": GREEN,
+                "w^": BLUE,
+                "b^": MAROON_B,
             })
         return result
+
 
 class SponsorFrame(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
-        screen = ScreenRectangle(height = 5)
+        screen = ScreenRectangle(height=5)
         screen.to_corner(UP+LEFT)
         url = TextMobject("http://3b1b.co/crowdflower")
         url.move_to(screen, UP+LEFT)
         screen.shift(LARGE_BUFF*DOWN)
-        arrow = Arrow(LEFT, RIGHT, color = WHITE)
+        arrow = Arrow(LEFT, RIGHT, color=WHITE)
         arrow.next_to(url, RIGHT)
 
         t_shirt_words = TextMobject("Free T-Shirt")
         t_shirt_words.scale(1.5)
         t_shirt_words.set_color(YELLOW)
-        t_shirt_words.next_to(morty, UP, aligned_edge = RIGHT)
+        t_shirt_words.next_to(morty, UP, aligned_edge=RIGHT)
 
         human_in_the_loop = TextMobject("Human-in-the-loop approach")
         human_in_the_loop.next_to(screen, DOWN)
 
         self.play(
             morty.change, "hooray", t_shirt_words,
-            Write(t_shirt_words, run_time = 2)
+            Write(t_shirt_words, run_time=2)
         )
         self.wait()
         self.play(
@@ -4326,7 +4375,7 @@ class SponsorFrame(PiCreatureScene):
         self.play(morty.look_at, screen)
         self.wait(7)
         t_shirt_words_outline = t_shirt_words.copy()
-        t_shirt_words_outline.set_fill(opacity = 0)
+        t_shirt_words_outline.set_fill(opacity=0)
         t_shirt_words_outline.set_stroke(GREEN, 3)
         self.play(
             morty.change, "hooray", t_shirt_words,
@@ -4335,15 +4384,16 @@ class SponsorFrame(PiCreatureScene):
         self.play(FadeOut(t_shirt_words_outline))
         self.play(LaggedStartMap(
             Indicate, url,
-            rate_func = wiggle,
-            color = PINK,
-            run_time = 3
+            rate_func=wiggle,
+            color=PINK,
+            run_time=3
         ))
         self.wait(3)
 
+
 class NN3PatreonThanks(PatreonThanks):
     CONFIG = {
-        "specific_patrons" : [
+        "specific_patrons": [
             "Randall Hunt",
             "Burt Humburg",
             "CrypticSwarm",
@@ -4408,46 +4458,48 @@ class NN3PatreonThanks(PatreonThanks):
             "Achille Brighton",
             "Ripta Pasay",
         ],
-        "max_patron_group_size" : 25,
-        "patron_scale_val" : 0.7,
+        "max_patron_group_size": 25,
+        "patron_scale_val": 0.7,
     }
+
 
 class Thumbnail(PreviewLearning):
     CONFIG = {
-        "layer_sizes" : [8, 6, 6, 4],
-        "network_mob_config" : {
-            "neuron_radius" : 0.3,
-            "neuron_to_neuron_buff" : MED_SMALL_BUFF,
-            "include_output_labels" : False,
+        "layer_sizes": [8, 6, 6, 4],
+        "network_mob_config": {
+            "neuron_radius": 0.3,
+            "neuron_to_neuron_buff": MED_SMALL_BUFF,
+            "include_output_labels": False,
         },
-        "stroke_width_exp" : 1,
-        "max_stroke_width" : 5,
-        "title" : "Backpropagation",
-        "network_scale_val" : 0.8,
+        "stroke_width_exp": 1,
+        "max_stroke_width": 5,
+        "title": "Backpropagation",
+        "network_scale_val": 0.8,
     }
+
     def construct(self):
         self.color_network_edges()
         network_mob = self.network_mob
         network_mob.scale(
-            self.network_scale_val, 
-            about_point = network_mob.get_bottom()
+            self.network_scale_val,
+            about_point=network_mob.get_bottom()
         )
         network_mob.activate_layers(np.random.random(self.layer_sizes[0]))
 
         for edge in it.chain(*network_mob.edge_groups):
             arrow = Arrow(
-                edge.get_end(), edge.get_start(), 
-                buff = 0,
-                tip_length = 0.1,
-                color = edge.get_color()
+                edge.get_end(), edge.get_start(),
+                buff=0,
+                tip_length=0.1,
+                color=edge.get_color()
             )
             network_mob.add(arrow.tip)
 
         arrow = Vector(
-            3*LEFT, 
-            tip_length = 0.75, 
-            rectangular_stem_width = 0.2,
-            color = BLUE,
+            3*LEFT,
+            tip_length=0.75,
+            rectangular_stem_width=0.2,
+            color=BLUE,
         )
         arrow.next_to(network_mob.edge_groups[1], UP, MED_LARGE_BUFF)
 
@@ -4459,14 +4511,16 @@ class Thumbnail(PreviewLearning):
         title.to_edge(UP)
         self.add(title)
 
+
 class SupplementThumbnail(Thumbnail):
     CONFIG = {
-        "title" : "Backpropagation \\\\ calculus",
-        "network_scale_val" : 0.7,
+        "title": "Backpropagation \\\\ calculus",
+        "network_scale_val": 0.7,
     }
+
     def construct(self):
         Thumbnail.construct(self)
-        self.network_mob.to_edge(DOWN, buff = MED_SMALL_BUFF)
+        self.network_mob.to_edge(DOWN, buff=MED_SMALL_BUFF)
 
         for layer in self.network_mob.layers:
             for neuron in layer.neurons:
@@ -4474,23 +4528,3 @@ class SupplementThumbnail(Thumbnail):
                 partial.move_to(neuron)
                 self.remove(neuron)
                 self.add(partial)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

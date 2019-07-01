@@ -1,27 +1,29 @@
 from manimlib.imports import *
 
 ##########
-#force_skipping
-#revert_to_original_skipping_status
+# force_skipping
+# revert_to_original_skipping_status
 
 ##########
 
+
 class Slider(NumberLine):
     CONFIG = {
-        "color" : WHITE,
-        "x_min" : -1,
-        "x_max" : 1,
-        "unit_size" : 2,
-        "center_value" : 0,
-        "number_scale_val" : 0.75,
-        "label_scale_val" : 1,
-        "numbers_with_elongated_ticks" : [],
-        "line_to_number_vect" : LEFT,
-        "line_to_number_buff" : MED_LARGE_BUFF,
-        "dial_radius" : 0.1,
-        "dial_color" : YELLOW,
-        "include_real_estate_ticks" : True,
+        "color": WHITE,
+        "x_min": -1,
+        "x_max": 1,
+        "unit_size": 2,
+        "center_value": 0,
+        "number_scale_val": 0.75,
+        "label_scale_val": 1,
+        "numbers_with_elongated_ticks": [],
+        "line_to_number_vect": LEFT,
+        "line_to_number_buff": MED_LARGE_BUFF,
+        "dial_radius": 0.1,
+        "dial_color": YELLOW,
+        "include_real_estate_ticks": True,
     }
+
     def __init__(self, **kwargs):
         NumberLine.__init__(self, **kwargs)
         self.rotate(np.pi/2)
@@ -31,12 +33,12 @@ class Slider(NumberLine):
 
     def init_dial(self):
         dial = Dot(
-            radius = self.dial_radius,
-            color = self.dial_color,
+            radius=self.dial_radius,
+            color=self.dial_color,
         )
         dial.move_to(self.number_to_point(self.center_value))
         re_dial = dial.copy()
-        re_dial.set_fill(opacity = 0)
+        re_dial.set_fill(opacity=0)
         self.add(dial, re_dial)
 
         self.dial = dial
@@ -52,17 +54,17 @@ class Slider(NumberLine):
         self.label = label
 
     def add_real_estate_ticks(
-        self, 
-        re_per_tick = 0.05,
-        colors = [BLUE, RED],
-        max_real_estate = 1,
-        ):
-        self.real_estate_ticks = VGroup(*[   
+        self,
+        re_per_tick=0.05,
+        colors=[BLUE, RED],
+        max_real_estate=1,
+    ):
+        self.real_estate_ticks = VGroup(*[
             self.get_tick(self.center_value + u*np.sqrt(x + re_per_tick))
             for x in np.arange(0, max_real_estate, re_per_tick)
             for u in [-1, 1]
         ])
-        self.real_estate_ticks.set_stroke(width = 3)
+        self.real_estate_ticks.set_stroke(width=3)
         self.real_estate_ticks.set_color_by_gradient(*colors)
         self.add(self.real_estate_ticks)
         self.add(self.dial)
@@ -97,7 +99,7 @@ class Slider(NumberLine):
     def get_dial_supplement_animation(self):
         return UpdateFromFunc(self.dial, self.update_dial_by_re_dial)
 
-    def update_dial_by_re_dial(self, dial = None):
+    def update_dial_by_re_dial(self, dial=None):
         dial = dial or self.dial
         re = self.get_real_estate()
         sign = np.sign(self.get_value() - self.center_value)
@@ -118,32 +120,34 @@ class Slider(NumberLine):
     def copy(self):
         return self.deepcopy()
 
+
 class SliderScene(Scene):
     CONFIG = {
-        "n_sliders" : 4,
-        "slider_spacing" : MED_LARGE_BUFF,
-        "slider_config" : {},
-        "center_point" : None,
-        "total_real_estate" : 1,
-        "ambiently_change_sliders" : False,
-        "ambient_velocity_magnitude" : 1.0,
-        "ambient_acceleration_magnitude" : 1.0,
-        "ambient_jerk_magnitude" : 1.0/2,
+        "n_sliders": 4,
+        "slider_spacing": MED_LARGE_BUFF,
+        "slider_config": {},
+        "center_point": None,
+        "total_real_estate": 1,
+        "ambiently_change_sliders": False,
+        "ambient_velocity_magnitude": 1.0,
+        "ambient_acceleration_magnitude": 1.0,
+        "ambient_jerk_magnitude": 1.0/2,
     }
+
     def setup(self):
         if self.center_point is None:
             self.center_point = np.zeros(self.n_sliders)
         sliders = VGroup(*[
-            Slider(center_value = cv, **self.slider_config)
+            Slider(center_value=cv, **self.slider_config)
             for cv in self.center_point
         ])
-        sliders.arrange(RIGHT, buff = self.slider_spacing)
+        sliders.arrange(RIGHT, buff=self.slider_spacing)
         sliders[0].add_numbers()
         sliders[0].set_value(
             self.center_point[0] + np.sqrt(self.total_real_estate)
         )
         self.sliders = sliders
-        
+
         self.add_labels_to_sliders()
         self.add(sliders)
 
@@ -155,13 +159,15 @@ class SliderScene(Scene):
                 slider.label.align_to(self.sliders[0].label, UP)
         else:
             for i, slider in enumerate(self.sliders):
-                slider.add_label("x_{%d}"%(i+1))
+                slider.add_label("x_{%d}" % (i+1))
         return self
 
-    def reset_dials(self, values, run_time = 1, **kwargs):
-        target_vector = self.get_target_vect_from_subset_of_values(values, **kwargs)
+    def reset_dials(self, values, run_time=1, **kwargs):
+        target_vector = self.get_target_vect_from_subset_of_values(
+            values, **kwargs)
 
         radius = np.sqrt(self.total_real_estate)
+
         def update_sliders(sliders):
             curr_vect = self.get_vector()
             curr_vect -= self.center_point
@@ -175,14 +181,14 @@ class SliderScene(Scene):
             for value, slider in zip(target_vector, self.sliders)
         ] + [
             UpdateFromFunc(self.sliders, update_sliders)
-        ], run_time = run_time)
+        ], run_time=run_time)
 
-    def get_target_vect_from_subset_of_values(self, values, fixed_indices = None):
-        if fixed_indices is None: 
+    def get_target_vect_from_subset_of_values(self, values, fixed_indices=None):
+        if fixed_indices is None:
             fixed_indices = []
         curr_vector = self.get_vector()
-        target_vector = np.array(self.center_point, dtype = 'float')
-        unspecified_vector = np.array(self.center_point, dtype = 'float')
+        target_vector = np.array(self.center_point, dtype='float')
+        unspecified_vector = np.array(self.center_point, dtype='float')
         unspecified_indices = []
         for i in range(len(curr_vector)):
             if i < len(values) and values[i] is not None:
@@ -245,14 +251,14 @@ class SliderScene(Scene):
                 self.ambient_jerk_magnitude,
             ]
         ]
-        ##Ensure counterclockwise rotations in 2D
+        # Ensure counterclockwise rotations in 2D
         if len(self.ambient_velocity) == 2:
             cross = np.cross(self.get_vector(), self.ambient_velocity)
             if cross < 0:
                 self.ambient_velocity *= -1
         self.add_foreground_mobjects(self.sliders)
 
-    def wind_down_ambient_movement(self, time = 1, wait = True):
+    def wind_down_ambient_movement(self, time=1, wait=True):
         self.ambient_change_end_time = self.ambient_change_time + time
         if wait:
             self.wait(time)
@@ -260,7 +266,7 @@ class SliderScene(Scene):
                 self.ambient_change_time += time
 
     def ambient_slider_movement_update(self):
-        #Set velocity_magnitude based on start up or wind down
+        # Set velocity_magnitude based on start up or wind down
         velocity_magnitude = float(self.ambient_velocity_magnitude)
         if self.ambient_change_time <= 1:
             velocity_magnitude *= smooth(self.ambient_change_time)
@@ -303,13 +309,14 @@ class SliderScene(Scene):
             self.ambient_slider_movement_update()
         Scene.update_frame(self, *args, **kwargs)
 
-    def wait(self, time = 1):
+    def wait(self, time=1):
         if self.ambiently_change_sliders:
-            self.play(Animation(self.sliders, run_time = time))
+            self.play(Animation(self.sliders, run_time=time))
         else:
-            Scene.wait(self,time)
+            Scene.wait(self, time)
 
 ##########
+
 
 class MathIsATease(Scene):
     def construct(self):
@@ -320,21 +327,20 @@ class MathIsATease(Scene):
                 lash = Line(ORIGIN, RIGHT)
                 lash.set_stroke(DARK_GREY, 2)
                 lash.set_width(0.27)
-                lash.next_to(ORIGIN, RIGHT, buff = 0)
+                lash.next_to(ORIGIN, RIGHT, buff=0)
                 lash.rotate(angle + np.pi/2)
                 lash.shift(eye.get_center())
                 lashes.add(lash)
         lashes.do_in_place(lashes.stretch, 0.8, 1)
         lashes.shift(0.04*DOWN)
 
-
         fan = SVGMobject(
-            file_name = "fan",
-            fill_opacity = 1,
-            fill_color = YELLOW,
-            stroke_width = 2,
-            stroke_color = YELLOW,
-            height = 0.7,
+            file_name="fan",
+            fill_opacity=1,
+            fill_color=YELLOW,
+            stroke_width=2,
+            stroke_color=YELLOW,
+            height=0.7,
         )
         VGroup(*fan[-12:]).set_fill(YELLOW_E)
         fan.rotate(-np.pi/4)
@@ -343,7 +349,7 @@ class MathIsATease(Scene):
 
         self.add(randy)
         self.play(
-            ShowCreation(lashes, lag_ratio = 0),
+            ShowCreation(lashes, lag_ratio=0),
             randy.change, "tease",
             randy.look, OUT,
         )
@@ -351,40 +357,42 @@ class MathIsATease(Scene):
         eye_bottom_y = randy.eyes.get_bottom()[1]
         self.play(
             ApplyMethod(
-                lashes.apply_function, 
-                lambda p : [p[0], eye_bottom_y, p[2]],
-                rate_func = Blink.CONFIG["rate_func"],
+                lashes.apply_function,
+                lambda p: [p[0], eye_bottom_y, p[2]],
+                rate_func=Blink.CONFIG["rate_func"],
             ),
             Blink(randy),
             DrawBorderThenFill(fan),
         )
         self.play(
             ApplyMethod(
-                lashes.apply_function, 
-                lambda p : [p[0], eye_bottom_y, p[2]],
-                rate_func = Blink.CONFIG["rate_func"],
+                lashes.apply_function,
+                lambda p: [p[0], eye_bottom_y, p[2]],
+                rate_func=Blink.CONFIG["rate_func"],
             ),
             Blink(randy),
         )
         self.wait()
 
+
 class TODODeterminants(TODOStub):
     CONFIG = {
-        "message" : "Determinants clip"
+        "message": "Determinants clip"
     }
+
 
 class CircleToPairsOfPoints(Scene):
     def construct(self):
-        plane = NumberPlane(written_coordinate_height = 0.3)
+        plane = NumberPlane(written_coordinate_height=0.3)
         plane.scale(2)
-        plane.add_coordinates(y_vals = [-1, 1])
+        plane.add_coordinates(y_vals=[-1, 1])
         background_plane = plane.copy()
         background_plane.set_color(GREY)
         background_plane.fade()
-        circle = Circle(radius = 2, color = YELLOW)
+        circle = Circle(radius=2, color=YELLOW)
 
         x, y = [np.sqrt(2)/2]*2
-        dot = Dot(2*x*RIGHT + 2*y*UP, color = LIGHT_GREY)
+        dot = Dot(2*x*RIGHT + 2*y*UP, color=LIGHT_GREY)
 
         equation = TexMobject("x", "^2", "+", "y", "^2", "=", "1")
         equation.set_color_by_tex("x", GREEN)
@@ -392,27 +400,26 @@ class CircleToPairsOfPoints(Scene):
         equation.to_corner(UP+LEFT)
         equation.add_background_rectangle()
 
-        coord_pair = TexMobject("(", "-%.02f"%x, ",", "-%.02f"%y, ")") 
+        coord_pair = TexMobject("(", "-%.02f" % x, ",", "-%.02f" % y, ")")
         fixed_numbers = coord_pair.get_parts_by_tex("-")
-        fixed_numbers.set_fill(opacity = 0)
+        fixed_numbers.set_fill(opacity=0)
         coord_pair.add_background_rectangle()
         coord_pair.next_to(dot, UP+RIGHT, SMALL_BUFF)
         numbers = VGroup(*[
-            DecimalNumber(val).replace(num, dim_to_match = 1)
+            DecimalNumber(val).replace(num, dim_to_match=1)
             for val, num in zip([x, y], fixed_numbers)
         ])
         numbers[0].set_color(GREEN)
         numbers[1].set_color(RED)
 
         def get_update_func(i):
-            return lambda t : dot.get_center()[i]/2.0
-
+            return lambda t: dot.get_center()[i]/2.0
 
         self.add(background_plane, plane)
         self.play(ShowCreation(circle))
         self.play(
             FadeIn(coord_pair),
-            Write(numbers, run_time = 1),
+            Write(numbers, run_time=1),
             ShowCreation(dot),
         )
         self.play(
@@ -421,22 +428,22 @@ class CircleToPairsOfPoints(Scene):
                 Transform(
                     number.copy(),
                     equation.get_parts_by_tex(tex),
-                    remover = True
+                    remover=True
                 )
                 for tex, number in zip("xy", numbers)
             ]
         )
-        self.play(FocusOn(dot, run_time = 1))
+        self.play(FocusOn(dot, run_time=1))
         self.play(
             Rotating(
-                dot, run_time = 7, in_place = False,
-                rate_func = smooth,
+                dot, run_time=7, in_place=False,
+                rate_func=smooth,
             ),
             MaintainPositionRelativeTo(coord_pair, dot),
             *[
                 ChangingDecimal(
                     num, get_update_func(i),
-                    tracked_mobject = fixed_num
+                    tracked_mobject=fixed_num
                 )
                 for num, i, fixed_num in zip(
                     numbers, (0, 1), fixed_numbers
@@ -463,13 +470,13 @@ class CircleToPairsOfPoints(Scene):
 
         arrow = Arrow(
             words.get_left(), rot_equation.get_bottom(),
-            path_arc = -np.pi/6
+            path_arc=-np.pi/6
         )
-        randy = Randolph(color = GREY_BROWN)
+        randy = Randolph(color=GREY_BROWN)
         randy.to_corner(DOWN+LEFT)
 
         self.play(
-            Write(rot_equation, run_time = 2),
+            Write(rot_equation, run_time=2),
             FadeOut(coord_pair),
             FadeOut(numbers),
             FadeOut(dot),
@@ -478,16 +485,16 @@ class CircleToPairsOfPoints(Scene):
         self.play(randy.change, "confused", rot_equation)
         self.play(Blink(randy))
         self.play(
-            Write(words, run_time = 1),
+            Write(words, run_time=1),
             ShowCreation(arrow),
             randy.look_at, words
         )
         plane.remove(*plane.coordinate_labels)
         self.play(
             Rotate(
-                plane, np.pi/3, 
-                run_time = 4,
-                rate_func = there_and_back
+                plane, np.pi/3,
+                run_time=4,
+                rate_func=there_and_back
             ),
             Animation(equation),
             Animation(rot_equation),
@@ -498,26 +505,29 @@ class CircleToPairsOfPoints(Scene):
         )
         self.wait()
 
+
 class GreatSourceOfMaterial(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "It's a great source \\\\ of material.",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(*["happy"]*3)
         self.wait(3)
 
+
 class CirclesSpheresSumsSquares(ExternallyAnimatedScene):
     pass
+
 
 class BackAndForth(Scene):
     def construct(self):
         analytic = TextMobject("Analytic")
         analytic.shift(FRAME_X_RADIUS*LEFT/2)
-        analytic.to_edge(UP, buff = MED_SMALL_BUFF)
+        analytic.to_edge(UP, buff=MED_SMALL_BUFF)
         geometric = TextMobject("Geometric")
         geometric.shift(FRAME_X_RADIUS*RIGHT/2)
-        geometric.to_edge(UP, buff = MED_SMALL_BUFF)
+        geometric.to_edge(UP, buff=MED_SMALL_BUFF)
         h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.to_edge(UP, LARGE_BUFF)
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
@@ -534,26 +544,27 @@ class BackAndForth(Scene):
             mob.arrow = arrow
         circle_eq = TexMobject("x", "^2", "+", "y", "^2", "=", "1")
         circle_eq.move_to(pair)
-        sphere_eq = TexMobject("x", "^2", "+", "y", "^2", "+", "z", "^2", "=", "1")
+        sphere_eq = TexMobject("x", "^2", "+", "y", "^2",
+                               "+", "z", "^2", "=", "1")
         sphere_eq.move_to(triplet)
 
-        plane = NumberPlane(x_unit_size = 2, y_unit_size = 2)
-        circle = Circle(radius = 2, color = YELLOW)
+        plane = NumberPlane(x_unit_size=2, y_unit_size=2)
+        circle = Circle(radius=2, color=YELLOW)
         plane_group = VGroup(plane, circle)
         plane_group.scale(0.4)
         plane_group.next_to(h_line, DOWN, SMALL_BUFF)
         plane_group.shift(FRAME_X_RADIUS*RIGHT/2)
 
-
         self.play(Write(pair))
         # self.play(ShowCreation(pair.arrow))
-        self.play(ShowCreation(plane, run_time = 3))
+        self.play(ShowCreation(plane, run_time=3))
         self.play(Write(triplet))
         # self.play(ShowCreation(triplet.arrow))
         self.wait(3)
         for tup, eq, to_draw in (pair, circle_eq, circle), (triplet, sphere_eq, VMobject()):
             for mob in tup, eq:
-                mob.xyz = VGroup(*[sm for sm in map(mob.get_part_by_tex, "xyz") if sm is not None])
+                mob.xyz = VGroup(
+                    *[sm for sm in map(mob.get_part_by_tex, "xyz") if sm is not None])
             self.play(
                 ReplacementTransform(tup.xyz, eq.xyz),
                 FadeOut(VGroup(*[sm for sm in tup if sm not in tup.xyz])),
@@ -564,8 +575,10 @@ class BackAndForth(Scene):
             )
         self.wait(3)
 
+
 class SphereForming(ExternallyAnimatedScene):
     pass
+
 
 class PreviousVideos(Scene):
     def construct(self):
@@ -574,8 +587,8 @@ class PreviousVideos(Scene):
             "Visualizing all possible pythagorean triples",
             "Borsuk-Ulam theorem",
         ])))
-        titles.to_edge(UP, buff = MED_SMALL_BUFF)
-        screen = ScreenRectangle(height = 6)
+        titles.to_edge(UP, buff=MED_SMALL_BUFF)
+        screen = ScreenRectangle(height=6)
         screen.next_to(titles, DOWN)
 
         title = titles[0]
@@ -585,15 +598,17 @@ class PreviousVideos(Scene):
             self.play(Transform(title, new_title))
             self.wait(2)
 
+
 class TODOTease(TODOStub):
     CONFIG = {
-        "message" : "Tease"
+        "message": "Tease"
     }
+
 
 class AskAboutLongerLists(TeacherStudentsScene):
     def construct(self):
         question = TextMobject(
-            "What about \\\\", 
+            "What about \\\\",
             "$(x_1, x_2, x_3, x_4)?$"
         )
         tup = question[1]
@@ -602,7 +617,7 @@ class AskAboutLongerLists(TeacherStudentsScene):
             "$(x_1, x_2, \\dots, x_{99}, x_{100})?$"
         ]))
 
-        self.student_says(question, run_time = 1)
+        self.student_says(question, run_time=1)
         self.wait()
         for alt_tup in alt_tups:
             alt_tup.move_to(tup)
@@ -615,25 +630,29 @@ class AskAboutLongerLists(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["confused"]*3,
-            look_at_arg = self.teacher.get_top() + 2*UP
+            look_at_arg=self.teacher.get_top() + 2*UP
         )
         self.play(self.teacher.look, UP)
         self.wait(5)
         self.student_says(
             "I...don't see it.",
-            target_mode = "maybe",
-            student_index = 0
+            target_mode="maybe",
+            student_index=0
         )
         self.wait(3)
+
 
 class FourDCubeRotation(ExternallyAnimatedScene):
     pass
 
+
 class HypersphereRotation(ExternallyAnimatedScene):
     pass
 
+
 class FourDSurfaceRotating(ExternallyAnimatedScene):
     pass
+
 
 class Professionals(PiCreatureScene):
     def construct(self):
@@ -653,13 +672,13 @@ class Professionals(PiCreatureScene):
             self.play(
                 Animation(VectorizedPoint(pi.eyes.get_center())),
                 FadeIn(pi),
-                Write(title, run_time = 1),
+                Write(title, run_time=1),
             )
         self.wait()
 
     def add_equation(self):
         quaternion = TexMobject(
-            "\\frac{1}{2}", "+", 
+            "\\frac{1}{2}", "+",
             "0", "\\textbf{i}", "+",
             "\\frac{\\sqrt{6}}{4}", "\\textbf{j}", "+",
             "\\frac{\\sqrt{6}}{4}", "\\textbf{k}",
@@ -667,9 +686,9 @@ class Professionals(PiCreatureScene):
         quaternion.scale(0.7)
         quaternion.next_to(self.mathy, UP)
         quaternion.set_color_by_tex_to_color_map({
-            "i" : RED,
-            "j" : GREEN,
-            "k" : BLUE,
+            "i": RED,
+            "j": GREEN,
+            "k": BLUE,
         })
 
         array = TexMobject("[a_1, a_2, \\dots, a_{100}]")
@@ -682,16 +701,15 @@ class Professionals(PiCreatureScene):
             "|\\!\\downarrow\\rangle"
         )
         kets.set_color_by_tex_to_color_map({
-            "\\alpha" : GREEN,
-            "\\beta" : RED,
+            "\\alpha": GREEN,
+            "\\beta": RED,
         })
         kets.next_to(self.physy, UP)
-
 
         terms = VGroup(quaternion, array, kets)
         for term, pi in zip(terms, self.pi_creatures):
             self.play(
-                Write(term, run_time = 1),
+                Write(term, run_time=1),
                 pi.change, "pondering", term
             )
         self.wait(2)
@@ -701,16 +719,16 @@ class Professionals(PiCreatureScene):
     def analogies(self):
         examples = VGroup()
         plane = ComplexPlane(
-            x_radius = 2.5,
-            y_radius = 1.5,
+            x_radius=2.5,
+            y_radius=1.5,
         )
         plane.add_coordinates()
-        plane.add(Circle(color = YELLOW))
+        plane.add(Circle(color=YELLOW))
         plane.scale(0.75)
         examples.add(plane)
         examples.add(Circle())
-        examples.arrange(RIGHT, buff = 2)
-        examples.to_edge(UP, buff = LARGE_BUFF)
+        examples.arrange(RIGHT, buff=2)
+        examples.to_edge(UP, buff=LARGE_BUFF)
         labels = VGroup(*list(map(TextMobject, ["2D", "3D"])))
 
         title = TextMobject("Fly by instruments")
@@ -721,7 +739,7 @@ class Professionals(PiCreatureScene):
             label.next_to(example, DOWN)
             self.play(
                 ShowCreation(example),
-                Write(label, run_time = 1)
+                Write(label, run_time=1)
             )
             example.add(label)
             self.wait()
@@ -729,16 +747,16 @@ class Professionals(PiCreatureScene):
         self.play(
             FadeOut(examples),
             self.terms.shift, UP,
-            Write(title, run_time = 2)
+            Write(title, run_time=2)
         )
         self.play(*[
             ApplyMethod(
                 pi.change, mode, self.terms.get_left(),
-                run_time = 2,
-                rate_func = squish_rate_func(smooth, a, a+0.5)
+                run_time=2,
+                rate_func=squish_rate_func(smooth, a, a+0.5)
             )
             for pi, mode, a in zip(
-                self.pi_creatures, 
+                self.pi_creatures,
                 ["confused", "sassy", "erm"],
                 np.linspace(0, 0.5, len(self.pi_creatures))
             )
@@ -751,19 +769,21 @@ class Professionals(PiCreatureScene):
 
     def create_pi_creatures(self):
         self.mathy = Mathematician()
-        self.physy = PiCreature(color = PINK)
-        self.compy = PiCreature(color = PURPLE)
+        self.physy = PiCreature(color=PINK)
+        self.compy = PiCreature(color=PURPLE)
         pi_creatures = VGroup(self.mathy, self.compy, self.physy)
         for pi in pi_creatures:
             pi.scale(0.7)
-        pi_creatures.arrange(RIGHT, buff = 3)
-        pi_creatures.to_edge(DOWN, buff = LARGE_BUFF)
+        pi_creatures.arrange(RIGHT, buff=3)
+        pi_creatures.to_edge(DOWN, buff=LARGE_BUFF)
         return pi_creatures
+
 
 class OfferAHybrid(SliderScene):
     CONFIG = {
-        "n_sliders" : 3,
+        "n_sliders": 3,
     }
+
     def construct(self):
         self.remove(self.sliders)
         titles = self.get_titles()
@@ -785,7 +805,7 @@ class OfferAHybrid(SliderScene):
         self.add(titles, h_line, v_lines, equation)
         self.wait()
         self.play(*list(map(MoveToTarget, [titles, v_lines, equation])))
-        self.play(Write(self.sliders, run_time = 1))
+        self.play(Write(self.sliders, run_time=1))
         self.initialize_ambiant_slider_movement()
         self.wait(10)
         self.wind_down_ambient_movement()
@@ -805,26 +825,30 @@ class OfferAHybrid(SliderScene):
         titles.target[2].shift(FRAME_WIDTH*RIGHT/3)
         return titles
 
+
 class TODOBoxExample(TODOStub):
     CONFIG = {
-        "message" : "Box Example"
+        "message": "Box Example"
     }
+
 
 class RotatingSphereWithWanderingPoint(ExternallyAnimatedScene):
     pass
 
+
 class DismissProjection(PiCreatureScene):
-    CONFIG = { 
-        "screen_rect_color" : WHITE,
-        "example_vect" : np.array([0.52, 0.26, 0.53, 0.60]),
+    CONFIG = {
+        "screen_rect_color": WHITE,
+        "example_vect": np.array([0.52, 0.26, 0.53, 0.60]),
     }
+
     def construct(self):
         self.remove(self.pi_creature)
         self.show_all_spheres()
         self.discuss_4d_sphere_definition()
         self.talk_through_animation()
         self.transition_to_next_scene()
-        
+
     def show_all_spheres(self):
         equations = VGroup(*list(map(TexMobject, [
             "x^2 + y^2 = 1",
@@ -843,7 +867,7 @@ class DismissProjection(PiCreatureScene):
             self.get_sphere_screen(equations[1], DOWN),
             self.get_sphere_screen(equations[2], DOWN),
         )
-        
+
         for equation, sphere in zip(equations, spheres):
             self.play(
                 Write(equation),
@@ -857,10 +881,10 @@ class DismissProjection(PiCreatureScene):
     def get_circle(self, equation):
         result = VGroup(
             NumberPlane(
-                x_radius = 2.5,
-                y_radius = 2,
+                x_radius=2.5,
+                y_radius=2,
             ).fade(0.4),
-            Circle(color = YELLOW, radius = 1),
+            Circle(color=YELLOW, radius=1),
         )
         result.scale(0.7)
         result.next_to(equation, DOWN)
@@ -879,36 +903,36 @@ class DismissProjection(PiCreatureScene):
         equation = self.equations[-1]
 
         sphere_words = TextMobject("``4-dimensional sphere''")
-        sphere_words.next_to(sphere, DOWN+LEFT, buff = LARGE_BUFF)
+        sphere_words.next_to(sphere, DOWN+LEFT, buff=LARGE_BUFF)
         arrow = Arrow(
-            sphere_words.get_right(), sphere.get_bottom(), 
-            path_arc = np.pi/3, 
-            color = BLUE
+            sphere_words.get_right(), sphere.get_bottom(),
+            path_arc=np.pi/3,
+            color=BLUE
         )
         descriptor = TexMobject(
-            "\\text{Just lists of numbers like }", 
-            "(%.02f \\,, %.02f \\,, %.02f \\,, %.02f \\,)"%tuple(self.example_vect)
+            "\\text{Just lists of numbers like }",
+            "(%.02f \\,, %.02f \\,, %.02f \\,, %.02f \\,)" % tuple(self.example_vect)
         )
         descriptor[1].set_color(BLUE)
         descriptor.next_to(sphere_words, DOWN)
         dot = Dot(descriptor[1].get_top())
-        dot.set_fill(WHITE, opacity = 0.75)
+        dot.set_fill(WHITE, opacity=0.75)
 
         self.play(
             Write(sphere_words),
             ShowCreation(
                 arrow,
-                rate_func = squish_rate_func(smooth, 0.5, 1)
+                rate_func=squish_rate_func(smooth, 0.5, 1)
             ),
-            run_time = 3,
+            run_time=3,
         )
         self.wait()
-        self.play(Write(descriptor, run_time = 2))
+        self.play(Write(descriptor, run_time=2))
         self.wait()
         self.play(
             dot.move_to, equation.get_left(),
             dot.set_fill, None, 0,
-            path_arc = -np.pi/12
+            path_arc=-np.pi/12
         )
         self.wait(2)
 
@@ -969,20 +993,23 @@ class DismissProjection(PiCreatureScene):
     def create_pi_creature(self):
         return Mortimer().scale(0.8).to_corner(DOWN+RIGHT)
 
+
 class RotatingSphere(ExternallyAnimatedScene):
     pass
 
+
 class Introduce4DSliders(SliderScene):
     CONFIG = {
-        "slider_config" : {
-            "include_real_estate_ticks" : False,
-            "numbers_with_elongated_ticks" : [-1, 0, 1],
-            "tick_frequency" : 0.25,
-            "tick_size" : 0.05,
-            "dial_color" : YELLOW,
+        "slider_config": {
+            "include_real_estate_ticks": False,
+            "numbers_with_elongated_ticks": [-1, 0, 1],
+            "tick_frequency": 0.25,
+            "tick_size": 0.05,
+            "dial_color": YELLOW,
         },
-        "slider_spacing" : LARGE_BUFF,
+        "slider_spacing": LARGE_BUFF,
     }
+
     def construct(self):
         self.match_last_scene()
         self.introduce_sliders()
@@ -995,10 +1022,10 @@ class Introduce4DSliders(SliderScene):
         equation = TexMobject("x^2 + y^2 + z^2 + w^2 = 1")
         x, y, z, w = self.start_vect
         tup = TexMobject(
-            "(", "%.02f \\,"%x, 
-            ",", "%.02f \\,"%y, 
-            ",", "%.02f \\,"%z, 
-            ",", "%.02f \\,"%w, ")"
+            "(", "%.02f \\," % x,
+            ",", "%.02f \\," % y,
+            ",", "%.02f \\," % z,
+            ",", "%.02f \\," % w, ")"
         )
         equation.center().to_edge(UP)
         equation.set_color(BLUE)
@@ -1019,29 +1046,29 @@ class Introduce4DSliders(SliderScene):
         self.tup.remove(*numbers)
         dials = VGroup(*[slider.dial for slider in self.sliders])
         dial_copies = dials.copy()
-        dials.set_fill(opacity = 0)
+        dials.set_fill(opacity=0)
 
         self.play(LaggedStartMap(FadeIn, self.sliders))
         self.play(*[
             Transform(
                 num, dial,
-                run_time = 3,
-                rate_func = squish_rate_func(smooth, a, a+0.5),
-                remover = True
+                run_time=3,
+                rate_func=squish_rate_func(smooth, a, a+0.5),
+                remover=True
             )
             for num, dial, a in zip(
-                numbers, dial_copies, 
+                numbers, dial_copies,
                 np.linspace(0, 0.5, len(numbers))
             )
         ])
-        dials.set_fill(opacity = 1)
+        dials.set_fill(opacity=1)
         self.initialize_ambiant_slider_movement()
         self.play(FadeOut(self.tup))
         self.wait(10)
 
     def ask_about_constraint(self):
         equation = self.equation
-        rect = SurroundingRectangle(equation, color = GREEN)
+        rect = SurroundingRectangle(equation, color=GREEN)
         randy = Randolph().scale(0.5)
         randy.next_to(rect, DOWN+LEFT, LARGE_BUFF)
 
@@ -1055,10 +1082,12 @@ class Introduce4DSliders(SliderScene):
             self.wait()
         self.wait()
 
+
 class TwoDimensionalCase(Introduce4DSliders):
     CONFIG = {
-        "n_sliders" : 2,
+        "n_sliders": 2,
     }
+
     def setup(self):
         SliderScene.setup(self)
         self.sliders.shift(RIGHT)
@@ -1070,8 +1099,8 @@ class TwoDimensionalCase(Introduce4DSliders):
             ]))
 
         plane = NumberPlane(
-            x_radius = 2.5,
-            y_radius = 2.5,
+            x_radius=2.5,
+            y_radius=2.5,
         )
         plane.fade(0.25)
         plane.axes.set_color(GREY)
@@ -1079,10 +1108,10 @@ class TwoDimensionalCase(Introduce4DSliders):
         plane.to_edge(LEFT)
         origin = plane.coords_to_point(0, 0)
 
-        circle = Circle(radius = 1, color = WHITE)
+        circle = Circle(radius=1, color=WHITE)
         circle.move_to(plane.coords_to_point(*self.center_point))
 
-        dot = Dot(color = YELLOW)
+        dot = Dot(color=YELLOW)
         dot.move_to(plane.coords_to_point(1, 0))
 
         equation = TexMobject("x^2 + y^2 = 1")
@@ -1106,7 +1135,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         self.add_tick_marks()
         self.write_distance_squared()
 
-    def let_values_wander(self, total_time = 5):
+    def let_values_wander(self, total_time=5):
         self.initialize_ambiant_slider_movement()
         self.wait(total_time - 1)
         self.wind_down_ambient_movement()
@@ -1119,10 +1148,10 @@ class TwoDimensionalCase(Introduce4DSliders):
         rects = VGroup(x_rect, y_rect)
 
         decimals = VGroup(*[
-            DecimalNumber(num**2) 
+            DecimalNumber(num**2)
             for num in self.get_vector()
         ])
-        decimals.arrange(RIGHT, buff = LARGE_BUFF)
+        decimals.arrange(RIGHT, buff=LARGE_BUFF)
         decimals.next_to(rects, DOWN, LARGE_BUFF)
 
         real_estate_word = TextMobject("``Real estate''")
@@ -1136,7 +1165,7 @@ class TwoDimensionalCase(Introduce4DSliders):
             decimal.set_color(color)
             arrow = Arrow(
                 rect.get_bottom()+SMALL_BUFF*UP, decimal.get_top(),
-                tip_length = 0.2,
+                tip_length=0.2,
             )
             arrow.set_color(color)
             arrows.add(arrow)
@@ -1149,8 +1178,9 @@ class TwoDimensionalCase(Introduce4DSliders):
             self.wait()
 
         sliders = self.sliders
+
         def create_update_func(i):
-            return lambda alpha : sliders[i].get_real_estate()
+            return lambda alpha: sliders[i].get_real_estate()
 
         self.add_foreground_mobjects(decimals)
         self.decimals = decimals
@@ -1167,10 +1197,10 @@ class TwoDimensionalCase(Introduce4DSliders):
             for x1, x2 in (-0.5, 0.5), (0.75, 1.0), (-1.0, -0.75):
                 p1, p2 = list(map(slider.number_to_point, [x1, x2]))
                 rect = Rectangle(
-                    stroke_width = 0,
-                    fill_opacity = 0.5,
-                    width = 0.25,
-                    height = (p2-p1)[1]
+                    stroke_width=0,
+                    fill_opacity=0.5,
+                    width=0.25,
+                    height=(p2-p1)[1]
                 )
                 rect.move_to((p1+p2)/2)
                 if np.mean([x1, x2]) == 0:
@@ -1210,7 +1240,7 @@ class TwoDimensionalCase(Introduce4DSliders):
             for slider, vect in zip(self.sliders, [LEFT, RIGHT])
         ]
         x_text = x_brace.get_tex("0.9")
-        y_text = y_brace.get_tex("%.02f"%self.sliders[1].get_value())
+        y_text = y_brace.get_tex("%.02f" % self.sliders[1].get_value())
 
         self.play(
             GrowFromCenter(x_brace),
@@ -1226,8 +1256,8 @@ class TwoDimensionalCase(Introduce4DSliders):
         )
         self.wait(2)
         self.play(FadeIn(self.real_estate_rects))
-        self.reset_dials([1, 0], run_time = 1)
-        self.reset_dials([0.9, -np.sqrt(0.19)], run_time = 2)
+        self.reset_dials([1, 0], run_time=1)
+        self.reset_dials([0.9, -np.sqrt(0.19)], run_time=2)
         self.play(FadeOut(self.real_estate_rects))
         self.play(*list(map(FadeOut, [x_brace, y_brace, x_text, y_text])))
         self.wait()
@@ -1238,13 +1268,13 @@ class TwoDimensionalCase(Introduce4DSliders):
             self.plane.coords_to_point(1.5, -1),
         )
         rect = Rectangle(
-            stroke_width = 0,
-            fill_color = BLUE,
-            fill_opacity = 0.5,
+            stroke_width=0,
+            fill_color=BLUE,
+            fill_opacity=0.5,
         )
-        rect.replace(line, stretch = True)
+        rect.replace(line, stretch=True)
 
-        self.play(DrawBorderThenFill(rect, stroke_color = YELLOW))
+        self.play(DrawBorderThenFill(rect, stroke_color=YELLOW))
         for x, u in (1, 1), (0.8, 1), (1, 1), (0.8, -1), (1, 1):
             self.reset_dials([x, u*np.sqrt(1 - x**2)])
         self.play(FadeOut(rect))
@@ -1263,7 +1293,7 @@ class TwoDimensionalCase(Introduce4DSliders):
 
         self.play(
             FadeOut(old_ticks),
-            ShowCreation(all_ticks, run_time = 3),
+            ShowCreation(all_ticks, run_time=3),
             Animation(VGroup(*[slider.dial for slider in self.sliders])),
         )
         self.add_foreground_mobjects(self.sliders)
@@ -1271,7 +1301,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         for x in np.arange(0.95, 0.05, -0.05):
             self.reset_dials(
                 [np.sqrt(x), np.sqrt(1-x)],
-                run_time = 0.5
+                run_time=0.5
             )
             self.wait(0.5)
         self.initialize_ambiant_slider_movement()
@@ -1296,21 +1326,24 @@ class TwoDimensionalCase(Introduce4DSliders):
                 anim.update(0)
         SliderScene.update_frame(self, *args, **kwargs)
 
+
 class TwoDimensionalCaseIntro(TwoDimensionalCase):
     def construct(self):
         self.initialize_ambiant_slider_movement()
         self.wait(10)
 
+
 class ThreeDCase(TwoDimensionalCase):
-    CONFIG = { 
-        "n_sliders" : 3,
-        "slider_config" : {
-            "include_real_estate_ticks" : True,
-            "numbers_with_elongated_ticks" : [],
-            "tick_frequency" : 1,
-            "tick_size" : 0.1,
+    CONFIG = {
+        "n_sliders": 3,
+        "slider_config": {
+            "include_real_estate_ticks": True,
+            "numbers_with_elongated_ticks": [],
+            "tick_frequency": 1,
+            "tick_size": 0.1,
         },
     }
+
     def setup(self):
         SliderScene.setup(self)
         self.equation = TexMobject(
@@ -1342,7 +1375,7 @@ class ThreeDCase(TwoDimensionalCase):
             DecimalNumber(num**2)
             for num in self.get_vector()
         ])
-        decimals.arrange(RIGHT, buff = LARGE_BUFF)
+        decimals.arrange(RIGHT, buff=LARGE_BUFF)
         decimals.next_to(rects, DOWN, LARGE_BUFF)
 
         colors = [GREEN, RED, BLUE]
@@ -1352,16 +1385,17 @@ class ThreeDCase(TwoDimensionalCase):
             decimal.set_color(color)
             arrow = Arrow(
                 rect.get_bottom()+SMALL_BUFF*UP, decimal.get_top(),
-                tip_length = 0.2,
-                color = color
+                tip_length=0.2,
+                color=color
             )
             arrows.add(arrow)
         real_estate_word = TextMobject("``Real estate''")
         real_estate_word.next_to(decimals, DOWN, MED_LARGE_BUFF)
 
         sliders = self.sliders
+
         def create_update_func(i):
-            return lambda alpha : sliders[i].get_real_estate()
+            return lambda alpha: sliders[i].get_real_estate()
         self.add_foreground_mobjects(decimals)
         self.decimals = decimals
         self.decimal_update_anims = [
@@ -1381,11 +1415,11 @@ class ThreeDCase(TwoDimensionalCase):
         self.wait(8)
 
     def hold_x_at(self, x_val, wait_time):
-        #Save these
+        # Save these
         all_sliders = self.sliders
         original_total_real_estate = self.total_real_estate
 
-        self.reset_dials([x_val], run_time = 3)
+        self.reset_dials([x_val], run_time=3)
         self.sliders = VGroup(*self.sliders[1:])
         self.total_real_estate = self.total_real_estate-x_val**2
         self.initialize_ambiant_slider_movement()
@@ -1397,40 +1431,49 @@ class ThreeDCase(TwoDimensionalCase):
 
     ####
 
+
 class ThreeDCaseInsert(ThreeDCase):
     def construct(self):
         self.add_real_estate_decimals()
-        self.reset_dials([0.85, np.sqrt(1-0.85**2)], run_time = 0)
-        self.reset_dials([1], run_time = 3)
+        self.reset_dials([0.85, np.sqrt(1-0.85**2)], run_time=0)
+        self.reset_dials([1], run_time=3)
         self.wait()
+
 
 class SphereAtRest(ExternallyAnimatedScene):
     pass
+
 
 class BugOnASurface(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("You're a bug \\\\ on a surface")
         self.wait(3)
 
+
 class SphereWithWanderingDotAtX0point5(ExternallyAnimatedScene):
     pass
+
 
 class MoveSphereSliceFromPoint5ToPoint85(ExternallyAnimatedScene):
     pass
 
+
 class SphereWithWanderingDotAtX0point85(ExternallyAnimatedScene):
     pass
+
 
 class MoveSphereSliceFromPoint85To1(ExternallyAnimatedScene):
     pass
 
+
 class BugOnTheSurfaceSlidersPart(ThreeDCase):
     CONFIG = {
-        "run_time" : 30
+        "run_time": 30
     }
+
     def construct(self):
         self.add_real_estate_decimals()
-        self.reset_dials([0.9], run_time = 0)
+        self.reset_dials([0.9], run_time=0)
         time_range = np.arange(0, self.run_time, self.frame_duration)
         for time in ProgressDisplay(time_range):
             t = 0.3*np.sin(2*np.pi*time/7.0) + 1
@@ -1442,8 +1485,10 @@ class BugOnTheSurfaceSlidersPart(ThreeDCase):
             ])
             self.wait(self.frame_duration)
 
+
 class BugOnTheSurfaceSpherePart(ExternallyAnimatedScene):
     pass
+
 
 class FourDCase(SliderScene, TeacherStudentsScene):
     def setup(self):
@@ -1461,8 +1506,8 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         self.set_aside_sliders()
 
     def show_initial_exchange(self):
-        dot = Dot(fill_opacity = 0)
-        dot.to_corner(UP+LEFT, buff = 2)
+        dot = Dot(fill_opacity=0)
+        dot.to_corner(UP+LEFT, buff=2)
         self.play(Animation(dot))
         self.wait()
         self.play(
@@ -1471,19 +1516,19 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         )
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = self.sliders
+            look_at_arg=self.sliders
         )
         self.wait(4)
 
     def fix_one_slider(self):
         x_slider = self.sliders[0]
         dial = x_slider.dial
-        self.wind_down_ambient_movement(wait = False)
+        self.wind_down_ambient_movement(wait=False)
         self.play(self.teacher.change, "speaking")
         self.sliders.remove(x_slider)
         self.total_real_estate = get_norm(self.get_vector())**2
         self.initialize_ambiant_slider_movement()
-        arrow = Arrow(LEFT, RIGHT, color = GREEN)
+        arrow = Arrow(LEFT, RIGHT, color=GREEN)
         arrow.next_to(dial, LEFT)
         self.play(
             ShowCreation(arrow),
@@ -1491,8 +1536,8 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         )
         self.change_student_modes(
             "erm", "confused", "hooray",
-            look_at_arg = self.sliders,
-            added_anims = [self.teacher.change, "plain"]
+            look_at_arg=self.sliders,
+            added_anims=[self.teacher.change, "plain"]
         )
         self.wait(5)
 
@@ -1502,13 +1547,13 @@ class FourDCase(SliderScene, TeacherStudentsScene):
     def ask_now_what(self):
         self.student_says(
             "Okay...now what?",
-            target_mode = "raise_left_hand",
-            student_index = 0,
-            added_anims = [self.teacher.change, "plain"]
+            target_mode="raise_left_hand",
+            student_index=0,
+            added_anims=[self.teacher.change, "plain"]
         )
         self.change_student_modes(
             None, "pondering", "pondering",
-            look_at_arg = self.students[0].bubble,
+            look_at_arg=self.students[0].bubble,
         )
         self.wait(4)
         self.play(RemovePiCreatureBubble(self.students[0]))
@@ -1524,13 +1569,14 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         )
         self.teacher_says(
             "Time for some \\\\ high-dimensional \\\\ strangeness!",
-            target_mode = "hooray",
+            target_mode="hooray",
         )
         self.wait(7)
 
     #####
-    def non_blink_wait(self, time = 1):
+    def non_blink_wait(self, time=1):
         SliderScene.wait(self, time)
+
 
 class TwoDBoxExample(Scene):
     def setup(self):
@@ -1549,12 +1595,12 @@ class TwoDBoxExample(Scene):
         self.compute_radius()
 
     def add_box(self):
-        box = Square(color = RED, stroke_width = 6)
+        box = Square(color=RED, stroke_width=6)
         line = Line(
             self.plane.coords_to_point(-1, -1),
             self.plane.coords_to_point(1, 1),
         )
-        box.replace(line, stretch = True)
+        box.replace(line, stretch=True)
         self.play(ShowCreation(box))
         self.wait()
 
@@ -1563,8 +1609,8 @@ class TwoDBoxExample(Scene):
         coords_group = VGroup()
         for x, y in it.product(*[[1, -1]]*2):
             point = self.plane.coords_to_point(x, y)
-            dot = Dot(point, color = WHITE)
-            coords = TexMobject("(%d, %d)"%(x, y))
+            dot = Dot(point, color=WHITE)
+            coords = TexMobject("(%d, %d)" % (x, y))
             coords.add_background_rectangle()
             coords.next_to(point, point, SMALL_BUFF)
             corner_dots.add(dot)
@@ -1572,7 +1618,7 @@ class TwoDBoxExample(Scene):
 
             self.play(
                 ShowCreation(dot),
-                Write(coords, run_time = 1)
+                Write(coords, run_time=1)
             )
 
         self.add_foreground_mobjects(coords_group)
@@ -1584,8 +1630,8 @@ class TwoDBoxExample(Scene):
             self.plane.coords_to_point(-1, 0),
             self.plane.coords_to_point(1, 0),
         )
-        circle = Circle(color = YELLOW)
-        circle.replace(line, dim_to_match = 0)
+        circle = Circle(color=YELLOW)
+        circle.replace(line, dim_to_match=0)
         circles = VGroup(*[
             circle.copy().move_to(dot)
             for dot in self.corner_dots
@@ -1610,10 +1656,10 @@ class TwoDBoxExample(Scene):
         )
         for angle in -np.pi/4, -np.pi/2, 3*np.pi/4:
             self.play(Rotating(
-                radius, about_point = c0_center,
-                radians = angle,
-                run_time = 1,
-                rate_func = smooth,
+                radius, about_point=c0_center,
+                radians=angle,
+                run_time=1,
+                rate_func=smooth,
             ))
             self.wait(0.5)
         self.play(*list(map(FadeOut, [radius, r_equals_1])))
@@ -1626,18 +1672,18 @@ class TwoDBoxExample(Scene):
         r = np.sqrt(2) - 1
         radius = Line(ORIGIN, self.plane.coords_to_point(r, 0))
         radius.set_stroke(WHITE)
-        circle = Circle(color = GREEN)
+        circle = Circle(color=GREEN)
         circle.replace(
             VGroup(radius, radius.copy().rotate(np.pi)),
-            dim_to_match = 0
+            dim_to_match=0
         )
         radius.rotate(np.pi/4)
         r_equals_q = TexMobject("r", "= ???")
         r_equals_q[1].add_background_rectangle()
-        r_equals_q.next_to(radius, RIGHT, buff = -SMALL_BUFF)
+        r_equals_q.next_to(radius, RIGHT, buff=-SMALL_BUFF)
 
-        self.play(GrowFromCenter(circle, run_time = 2))
-        self.play(circle.scale, 1.2, rate_func = wiggle)
+        self.play(GrowFromCenter(circle, run_time=2))
+        self.play(circle.scale, 1.2, rate_func=wiggle)
         self.play(ShowCreation(radius))
         self.play(Write(r_equals_q))
         self.wait(2)
@@ -1649,13 +1695,13 @@ class TwoDBoxExample(Scene):
 
     def compute_radius(self):
         triangle = Polygon(
-            ORIGIN, 
+            ORIGIN,
             self.plane.coords_to_point(1, 0),
             self.plane.coords_to_point(1, 1),
-            fill_color = BLUE,
-            fill_opacity = 0.5,
-            stroke_width = 6,
-            stroke_color = WHITE,
+            fill_color=BLUE,
+            fill_opacity=0.5,
+            stroke_width=6,
+            stroke_color=WHITE,
         )
         bottom_one = TexMobject("1")
         bottom_one.next_to(triangle.get_bottom(), UP, SMALL_BUFF)
@@ -1682,7 +1728,7 @@ class TwoDBoxExample(Scene):
 
         corner_radius = self.corner_radius
         c0_center = self.corner_circles[0].get_center()
-        corner_radius.rotate(-np.pi/2, about_point = c0_center)
+        corner_radius.rotate(-np.pi/2, about_point=c0_center)
 
         rhs = TexMobject("=", "\\sqrt", "{2}", "-1")
         rhs.next_to(self.inner_r, RIGHT, SMALL_BUFF, DOWN)
@@ -1697,15 +1743,15 @@ class TwoDBoxExample(Scene):
         self.wait(2)
         self.play(ReplacementTransform(sqrt_1_plus_1, sqrt_2))
         self.play(
-            Write(root_2_value, run_time = 1),
+            Write(root_2_value, run_time=1),
             *list(map(FadeOut, [bottom_one, side_one]))
         )
         self.wait()
         self.play(ShowCreation(corner_radius))
         self.play(Rotating(
-            corner_radius, about_point = c0_center,
-            run_time = 2,
-            rate_func = smooth
+            corner_radius, about_point=c0_center,
+            run_time=2,
+            rate_func=smooth
         ))
         self.play(FadeOut(triangle), Animation(corner_radius))
         self.wait()
@@ -1716,37 +1762,40 @@ class TwoDBoxExample(Scene):
         self.play(Write(root_2_minus_1_value))
         self.wait(2)
 
+
 class ThreeDBoxExample(ExternallyAnimatedScene):
     pass
+
 
 class ThreeDCubeCorners(Scene):
     def construct(self):
         coordinates = VGroup(*[
-            TexMobject("(%d,\\, %d,\\, %d)"%(x, y, z))
+            TexMobject("(%d,\\, %d,\\, %d)" % (x, y, z))
             for x, y, z in it.product(*3*[[1, -1]])
         ])
-        coordinates.arrange(DOWN, aligned_edge = LEFT)
+        coordinates.arrange(DOWN, aligned_edge=LEFT)
         name = TextMobject("Corners: ")
         name.next_to(coordinates[0], LEFT)
         group = VGroup(name, coordinates)
         group.set_height(FRAME_HEIGHT - 1)
         group.to_edge(LEFT)
 
-        self.play(Write(name, run_time = 2))
-        self.play(LaggedStartMap(FadeIn, coordinates, run_time = 3))
+        self.play(Write(name, run_time=2))
+        self.play(LaggedStartMap(FadeIn, coordinates, run_time=3))
         self.wait()
+
 
 class ShowDistanceFormula(TeacherStudentsScene):
     def construct(self):
         rule = TexMobject(
-            "||(", "x_1", ", ", "x_2", "\\dots, ", "x_n", ")||", 
-            "=", 
+            "||(", "x_1", ", ", "x_2", "\\dots, ", "x_n", ")||",
+            "=",
             "\\sqrt", "{x_1^2", " + ", "x_2^2", " +\\cdots", "x_n^2", "}"
         )
         rule.set_color_by_tex_to_color_map({
-            "x_1" : GREEN,
-            "x_2" : RED,
-            "x_n" : BLUE,
+            "x_1": GREEN,
+            "x_2": RED,
+            "x_n": BLUE,
         })
         for part in rule.get_parts_by_tex("x_"):
             if len(part) > 2:
@@ -1757,33 +1806,34 @@ class ShowDistanceFormula(TeacherStudentsScene):
 
         rule.save_state()
         rule.shift(2*DOWN)
-        rule.set_fill(opacity = 0)
+        rule.set_fill(opacity=0)
 
         self.play(
             rule.restore,
             self.teacher.change, "raise_right_hand",
         )
         self.wait(3)
-        self.student_says("Why?", student_index = 0)
+        self.student_says("Why?", student_index=0)
         self.play(self.teacher.change, "thinking")
         self.wait(3)
+
 
 class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
     def construct(self):
         tex_to_color_map = {
-            "x" : GREEN,
-            "y" : RED,
-            "z" : BLUE,
+            "x": GREEN,
+            "y": RED,
+            "z": BLUE,
         }
         rect = Rectangle(
-            height = 4, width = 5,
-            fill_color = WHITE,
-            fill_opacity = 0.2,
+            height=4, width=5,
+            fill_color=WHITE,
+            fill_opacity=0.2,
         )
         diag = Line(
             rect.get_corner(DOWN+LEFT),
             rect.get_corner(UP+RIGHT),
-            color = YELLOW
+            color=YELLOW
         )
         bottom = Line(rect.get_left(), rect.get_right())
         bottom.move_to(rect.get_bottom())
@@ -1807,7 +1857,7 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
         for line, tex in (bottom, x), (side, y), (diag, hyp):
             self.play(
                 ShowCreation(line),
-                Write(tex, run_time = 1)
+                Write(tex, run_time=1)
             )
         self.wait()
         self.play(
@@ -1828,18 +1878,19 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
         self.play(
             ShowCreation(z_line),
             ShowCreation(dot),
-            Write(z, run_time = 1)
+            Write(z, run_time=1)
         )
         self.play(ShowCreation(three_d_diag))
         self.wait()
 
         full_group = VGroup(group, z_line, z, three_d_diag, dot)
         self.play(Rotating(
-            full_group, radians = -np.pi/6,
-            axis = UP, 
-            run_time = 10,
+            full_group, radians=-np.pi/6,
+            axis=UP,
+            run_time=10,
         ))
         self.wait()
+
 
 class ThreeDBoxFormulas(Scene):
     def construct(self):
@@ -1867,6 +1918,7 @@ class ThreeDBoxFormulas(Scene):
         self.play(Write(inner_r))
         self.wait(2)
 
+
 class AskAboutHigherDimensions(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
@@ -1876,43 +1928,47 @@ class AskAboutHigherDimensions(TeacherStudentsScene):
         self.wait(2)
         self.student_thinks(
             "$\\sqrt{N} - 1$",
-            target_mode = "happy",
-            student_index = 1
+            target_mode="happy",
+            student_index=1
         )
         self.wait()
         pi = self.students[1]
         self.play(pi.change, "confused", pi.bubble)
         self.wait(3)
 
+
 class TenSliders(SliderScene):
     CONFIG = {
-        "n_sliders" : 10,
+        "n_sliders": 10,
         "run_time": 30,
-        "slider_spacing" : 0.75,
-        "ambient_acceleration_magnitude" : 2.0,
+        "slider_spacing": 0.75,
+        "ambient_acceleration_magnitude": 2.0,
     }
+
     def construct(self):
         self.initialize_ambiant_slider_movement()
         self.wait(self.run_time)
         self.wind_down_ambient_movement()
 
+
 class TwoDBoxWithSliders(TwoDimensionalCase):
     CONFIG = {
-        "slider_config" : {
-            "include_real_estate_ticks" : True,
-            "tick_frequency" : 1,
-            "numbers_with_elongated_ticks" : [],
-            "tick_size" : 0.1,
-            "dial_color" : YELLOW,
-            "x_min" : -2,
-            "x_max" : 2,
-            "unit_size" : 1.5,
+        "slider_config": {
+            "include_real_estate_ticks": True,
+            "tick_frequency": 1,
+            "numbers_with_elongated_ticks": [],
+            "tick_size": 0.1,
+            "dial_color": YELLOW,
+            "x_min": -2,
+            "x_max": 2,
+            "unit_size": 1.5,
         },
-        "center_point" : [1, -1],
+        "center_point": [1, -1],
     }
+
     def setup(self):
         TwoDimensionalCase.setup(self)
-        ##Correct from previous setup
+        # Correct from previous setup
         self.remove(self.equation)
         self.sliders.shift(RIGHT)
         VGroup(*self.get_top_level_mobjects()).shift(RIGHT)
@@ -1920,12 +1976,12 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         for number in x_slider.numbers:
             value = int(number.get_tex_string())
             number.next_to(
-                x_slider.number_to_point(value), 
+                x_slider.number_to_point(value),
                 LEFT, MED_SMALL_BUFF
             )
         self.plane.axes.set_color(BLUE)
 
-        ##Add box material
+        # Add box material
         corner_circles = VGroup(*[
             self.circle.copy().move_to(
                 self.plane.coords_to_point(*coords)
@@ -1936,8 +1992,8 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             self.plane.coords_to_point(-1, -1),
             self.plane.coords_to_point(1, 1),
         )
-        box = Square(color = RED)
-        box.replace(line, stretch = True)
+        box = Square(color=RED)
+        box.replace(line, stretch=True)
 
         self.add(box, corner_circles)
         self.box = box
@@ -1974,7 +2030,8 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             *[
                 ApplyMethod(
                     mob.shift,
-                    slider.number_to_point(0)-slider.number_to_point(slider.center_value)
+                    slider.number_to_point(
+                        0)-slider.number_to_point(slider.center_value)
                 )
                 for slider in self.sliders
                 for mob in [slider.real_estate_ticks, slider.dial]
@@ -1987,8 +2044,8 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.wait(7)
         self.wind_down_ambient_movement()
         self.play(
-            self.circle.move_to, 
-                self.plane.coords_to_point(*original_center_point),
+            self.circle.move_to,
+            self.plane.coords_to_point(*original_center_point),
             Animation(self.sliders),
             *[
                 ApplyMethod(
@@ -2032,7 +2089,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             Transform(x_brace, y_brace)
         )
         self.wait(5)
-        self.wind_down_ambient_movement(wait = False)
+        self.wind_down_ambient_movement(wait=False)
         self.play(*list(map(FadeOut, [x_brace, phrases[0]])))
 
     def swap_with_top_right_circle(self):
@@ -2061,11 +2118,11 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         radius = get_norm(
             self.plane.coords_to_point(np.sqrt(2)-1, 0) - origin
         )
-        circle = Circle(radius = radius, color = GREEN)
+        circle = Circle(radius=radius, color=GREEN)
         circle.move_to(origin)
 
         self.play(FocusOn(circle))
-        self.play(GrowFromCenter(circle, run_time = 2))
+        self.play(GrowFromCenter(circle, run_time=2))
         self.wait(3)
 
     def describe_tangent_point(self):
@@ -2099,7 +2156,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.re_line = re_line
 
     def perterb_point(self):
-        #Perturb dials
+        # Perturb dials
         target_vector = np.array([
             1 - np.sqrt(0.7),
             1 - np.sqrt(0.3),
@@ -2108,13 +2165,13 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             slider.dial.copy()
             for slider in self.sliders
         ])
-        ghost_dials.set_fill(WHITE, opacity = 0.75)
+        ghost_dials.set_fill(WHITE, opacity=0.75)
 
         self.add_foreground_mobjects(ghost_dials)
         self.reset_dials(target_vector)
         self.wait()
 
-        #Comment on real estate exchange
+        # Comment on real estate exchange
         x_words = TextMobject("Gain expensive \\\\", "real estate")
         y_words = TextMobject("Give up cheap \\\\", "real estate")
         VGroup(x_words, y_words).scale(0.8)
@@ -2126,7 +2183,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         x_arrow, y_arrow = [
             Arrow(
                 words[1].get_edge_center(vect), self.sliders[i].dial,
-                tip_length = 0.15,
+                tip_length=0.15,
             )
             for i, words, vect in zip(
                 (0, 1), [x_words, y_words], [RIGHT, LEFT]
@@ -2134,18 +2191,18 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         ]
 
         self.play(
-            Write(x_words, run_time = 2),
+            Write(x_words, run_time=2),
             ShowCreation(x_arrow)
         )
         self.wait()
         self.play(FadeOut(self.evenly_shared_words))
         self.play(
-            Write(y_words, run_time = 2),
+            Write(y_words, run_time=2),
             ShowCreation(y_arrow)
         )
         self.wait(2)
 
-        #Swap perspective
+        # Swap perspective
         word_starts = VGroup(y_words[0], x_words[0])
         crosses = VGroup()
         new_words = VGroup()
@@ -2171,13 +2228,13 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         )
         self.wait(3)
 
-        #Return to original position
+        # Return to original position
         target_vector = np.array(2*[1-np.sqrt(0.5)])
         self.play(LaggedStartMap(FadeOut, VGroup(*[
-            ghost_dials, 
-            x_words, y_words, 
-            x_arrow, y_arrow, 
-            crosses, new_words, 
+            ghost_dials,
+            x_words, y_words,
+            x_arrow, y_arrow,
+            crosses, new_words,
         ])))
         self.remove_foreground_mobjects(ghost_dials)
         self.reset_dials(target_vector)
@@ -2224,34 +2281,38 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.play(Write(rhs))
         self.wait(3)
 
+
 class AskWhy(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "Wait, why?",
-            target_mode = "confused"
+            target_mode="confused"
         )
         self.wait(3)
+
 
 class MentionComparisonToZeroPointFive(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
-            "Comparing to $0.5$ will \\\\"+\
+            "Comparing to $0.5$ will \\\\" +
             "be surprisingly useful!",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(*["happy"]*3)
         self.wait(3)
 
+
 class ThreeDBoxExampleWithSliders(SliderScene):
     CONFIG = {
-        "n_sliders" : 3,
-        "slider_config" : {
-            "x_min" : -2,
-            "x_max" : 2,
-            "unit_size" : 1.5,
+        "n_sliders": 3,
+        "slider_config": {
+            "x_min": -2,
+            "x_max": 2,
+            "unit_size": 1.5,
         },
-        "center_point" : np.ones(3),
+        "center_point": np.ones(3),
     }
+
     def setup(self):
         SliderScene.setup(self)
         self.sliders.shift(2*RIGHT)
@@ -2273,13 +2334,13 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         sphere_name.to_corner(UP+LEFT)
         arrow = Arrow(
             sphere_name, VGroup(*self.sliders[0].numbers[-2:]),
-            color = BLUE
+            color=BLUE
         )
 
         self.play(
             LaggedStartMap(FadeIn, sphere_name,),
-            ShowCreation(arrow, rate_func = squish_rate_func(smooth, 0.7, 1)),
-            run_time = 3
+            ShowCreation(arrow, rate_func=squish_rate_func(smooth, 0.7, 1)),
+            run_time=3
         )
         self.wait(5)
 
@@ -2300,7 +2361,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         ])
         new_arrow = Arrow(
             re_words.get_corner(DOWN+RIGHT), re_line.get_left(),
-            color = BLUE
+            color=BLUE
         )
 
         self.wind_down_ambient_movement()
@@ -2344,7 +2405,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
 
         self.play(
             FadeOut(self.arrow),
-            Write(half_label, run_time = 1),
+            Write(half_label, run_time=1),
             ShowCreation(half_line)
         )
         self.wait()
@@ -2389,7 +2450,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
             FadeOut(self.re_words),
             LaggedStartMap(
                 ApplyMethod, all_re_ticks,
-                lambda m : (m.shift, shift_vect)
+                lambda m: (m.shift, shift_vect)
             )
         )
         self.initialize_ambiant_slider_movement()
@@ -2422,14 +2483,17 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         self.initialize_ambiant_slider_movement()
         self.wait(15)
 
+
 class Rotating3DCornerSphere(ExternallyAnimatedScene):
     pass
 
+
 class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
     CONFIG = {
-        "n_sliders" : 4,
-        "center_point" : np.ones(4),
+        "n_sliders": 4,
+        "center_point": np.ones(4),
     }
+
     def construct(self):
         self.list_corner_coordinates()
         self.show_16_corner_spheres()
@@ -2448,10 +2512,10 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
 
         coordinates = list(it.product(*4*[[1, -1]]))
         coordinate_mobs = VGroup(*[
-            TexMobject("(%d, %d, %d, %d)"%tup)
+            TexMobject("(%d, %d, %d, %d)" % tup)
             for tup in coordinates
         ])
-        coordinate_mobs.arrange(DOWN, aligned_edge = LEFT)
+        coordinate_mobs.arrange(DOWN, aligned_edge=LEFT)
         coordinate_mobs.scale(0.8)
         left_column = VGroup(*coordinate_mobs[:8])
         right_column = VGroup(*coordinate_mobs[8:])
@@ -2537,17 +2601,17 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         re_rects = VGroup()
         for slider in self.sliders:
             rect = Rectangle(
-                width = 2*slider.tick_size,
-                height = 0.5*slider.unit_size,
-                stroke_width = 0,
-                fill_color = MAROON_B,
-                fill_opacity = 0.75,
+                width=2*slider.tick_size,
+                height=0.5*slider.unit_size,
+                stroke_width=0,
+                fill_color=MAROON_B,
+                fill_opacity=0.75,
             )
             rect.move_to(slider.number_to_point(0.75))
             re_rects.add(rect)
 
         self.play(FadeIn(re_words))
-        self.play(LaggedStartMap(DrawBorderThenFill, re_rects, run_time = 3))
+        self.play(LaggedStartMap(DrawBorderThenFill, re_rects, run_time=3))
         self.wait(2)
 
         self.re_words = re_words
@@ -2559,29 +2623,29 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         sphere_words.target.shift(2*DOWN)
         old_coords = sphere_words.target[1]
         new_coords = TexMobject("(0, 0, 0, 0)")
-        new_coords.replace(old_coords, dim_to_match = 1)
+        new_coords.replace(old_coords, dim_to_match=1)
         new_coords.set_color(old_coords.get_color())
         Transform(old_coords, new_coords).update(1)
 
         self.play(Animation(self.sliders), *[
             ApplyMethod(
                 s.real_estate_ticks.move_to, s.number_to_point(0),
-                run_time = 2,
-                rate_func = squish_rate_func(smooth, a, a+0.5)
+                run_time=2,
+                rate_func=squish_rate_func(smooth, a, a+0.5)
             )
             for s, a in zip(self.sliders, np.linspace(0, 0.5, 4))
         ])
         self.play(
             MoveToTarget(sphere_words),
             self.re_words.next_to, sphere_words.target, UP, MED_LARGE_BUFF,
-            path_arc = np.pi
+            path_arc=np.pi
         )
         self.wait(2)
         re_shift_vect = 0.5*self.sliders[0].unit_size*DOWN
         self.play(LaggedStartMap(
             ApplyMethod, self.re_rects,
-            lambda m : (m.shift, re_shift_vect),
-            path_arc = np.pi
+            lambda m: (m.shift, re_shift_vect),
+            path_arc=np.pi
         ))
         self.wait()
         re_words_rect = SurroundingRectangle(self.re_words)
@@ -2596,7 +2660,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
 
     def compute_inner_radius_numerically(self):
         computation = TexMobject(
-            "R_\\text{Inner}", 
+            "R_\\text{Inner}",
             "&= ||(1, 1, 1, 1)|| - 1 \\\\",
             # "&= \\sqrt{1^2 + 1^2 + 1^2 + 1^2} - 1 \\\\",
             "&= \\sqrt{4} - 1 \\\\",
@@ -2607,12 +2671,12 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         computation.shift(DOWN)
         brace = Brace(VGroup(*computation[1][1:-2]), UP)
         brace_text = brace.get_text("Distance to corner")
-        brace_text.scale(0.8, about_point = brace_text.get_bottom())
+        brace_text.scale(0.8, about_point=brace_text.get_bottom())
         VGroup(brace, brace_text).set_color(RED)
 
-        self.play(LaggedStartMap(FadeIn, computation, run_time = 3))
+        self.play(LaggedStartMap(FadeIn, computation, run_time=3))
         self.play(GrowFromCenter(brace))
-        self.play(Write(brace_text, run_time = 2))
+        self.play(Write(brace_text, run_time=2))
         self.wait(16)
 
         computation.add(brace, brace_text)
@@ -2628,12 +2692,13 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         arrow.set_color(BLUE)
         arrow.shift(touching_words.get_bottom())
 
-        self.wind_down_ambient_movement(wait = False)
+        self.wind_down_ambient_movement(wait=False)
         self.play(FadeOut(self.computation))
         self.reset_dials([1])
         self.play(Write(touching_words))
         self.play(ShowCreation(arrow))
         self.wait(2)
+
 
 class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
     def setup(self):
@@ -2647,8 +2712,8 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
     def construct(self):
         little_inner_circle, big_inner_circle = [
             Circle(
-                radius = radius*self.plane.x_unit_size,
-                color = GREEN
+                radius=radius*self.plane.x_unit_size,
+                color=GREEN
             ).move_to(self.plane.coords_to_point(0, 0))
             for radius in (np.sqrt(2)-1, 1)
         ]
@@ -2677,7 +2742,7 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
         self.wait()
         self.play(LaggedStartMap(
             DrawBorderThenFill, tangency_points,
-            rate_func = double_smooth
+            rate_func=double_smooth
         ))
         self.play(randy.change, "maybe")
         self.play(randy.look_at, self.circle)
@@ -2691,11 +2756,13 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
         self.randy = Randolph().flip()
         return self.randy
 
+
 class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
     CONFIG = {
-        "n_sliders" : 5,
-        "center_point" : np.ones(5),
+        "n_sliders": 5,
+        "center_point": np.ones(5),
     }
+
     def setup(self):
         FourDBoxExampleWithSliders.setup(self)
         self.sliders.center()
@@ -2757,24 +2824,24 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         re_rects = VGroup()
         for slider in self.sliders:
             rect = Rectangle(
-                width = 2*slider.tick_size,
-                height = (1-target_x)*slider.unit_size,
-                stroke_width = 0,
-                fill_color = GREEN,
-                fill_opacity = 0.75,
+                width=2*slider.tick_size,
+                height=(1-target_x)*slider.unit_size,
+                stroke_width=0,
+                fill_color=GREEN,
+                fill_opacity=0.75,
             )
             rect.move_to(slider.number_to_point(1), UP)
             re_rects.add(rect)
-        
+
         self.wind_down_ambient_movement()
         self.reset_dials(5*[target_x])
         self.play(
             ShowCreation(re_line),
-            Write(re_words, run_time = 2)
+            Write(re_words, run_time=2)
         )
         self.play(LaggedStartMap(
             DrawBorderThenFill, re_rects,
-            rate_func = double_smooth
+            rate_func=double_smooth
         ))
         self.wait()
 
@@ -2839,7 +2906,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         self.sphere_words.generate_target()
         old_coords = self.sphere_words.target[1]
         new_coords = TexMobject(str(tuple(5*[0])))
-        new_coords.replace(old_coords, dim_to_match = 1)
+        new_coords.replace(old_coords, dim_to_match=1)
         new_coords.set_color(old_coords.get_color())
         Transform(old_coords, new_coords).update(1)
 
@@ -2854,17 +2921,17 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             Animation(self.sliders),
             LaggedStartMap(
                 ApplyMethod, re_ticks,
-                lambda m : (m.shift, shift_vect),
-                path_arc = np.pi
+                lambda m: (m.shift, shift_vect),
+                path_arc=np.pi
             ),
             MoveToTarget(self.sphere_words),
         )
         self.play(
             MoveToTarget(
-                re_rects, 
-                run_time = 2,
-                lag_ratio = 0.5,
-                path_arc = np.pi
+                re_rects,
+                run_time=2,
+                lag_ratio=0.5,
+                path_arc=np.pi
             ),
             MoveToTarget(self.re_words),
         )
@@ -2882,7 +2949,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         )
         computation.to_corner(UP+LEFT)
 
-        self.play(Write(computation, run_time = 2))
+        self.play(Write(computation, run_time=2))
         self.wait(12)
 
     def poke_out_of_box(self):
@@ -2895,8 +2962,8 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         arrow = Arrow(
             words.get_top(),
             self.sliders[0].dial,
-            path_arc = -np.pi/3,
-            color = words.get_color()
+            path_arc=-np.pi/3,
+            color=words.get_color()
         )
 
         self.play(
@@ -2905,24 +2972,27 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         )
         self.wait(2)
 
+
 class SkipAheadTo10(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "Let's skip ahead \\\\ to 10 dimensions",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(
             "pleading", "confused", "horrified"
         )
         self.wait(3)
 
+
 class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
     CONFIG = {
-        "n_sliders" : 10,
-        "center_point" : np.ones(10),
-        "ambient_velocity_magnitude" : 2.0,
-        "ambient_acceleration_magnitude" : 3.0,
+        "n_sliders": 10,
+        "center_point": np.ones(10),
+        "ambient_velocity_magnitude": 2.0,
+        "ambient_acceleration_magnitude": 3.0,
     }
+
     def setup(self):
         FourDBoxExampleWithSliders.setup(self)
         self.sliders.to_edge(RIGHT)
@@ -2949,21 +3019,21 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         re_rects = VGroup()
         for slider in self.sliders:
             rect = Rectangle(
-                width = 2*slider.tick_size,
-                height = (1-target_x)*slider.unit_size,
-                stroke_width = 0,
-                fill_color = GREEN,
-                fill_opacity = 0.75,
+                width=2*slider.tick_size,
+                height=(1-target_x)*slider.unit_size,
+                stroke_width=0,
+                fill_color=GREEN,
+                fill_opacity=0.75,
             )
             rect.move_to(slider.number_to_point(1), UP)
             re_rects.add(rect)
-        
+
         self.wind_down_ambient_movement()
         self.reset_dials(self.n_sliders*[target_x])
         self.play(ShowCreation(re_line))
         self.play(LaggedStartMap(
             DrawBorderThenFill, re_rects,
-            rate_func = double_smooth
+            rate_func=double_smooth
         ))
         self.wait(2)
 
@@ -2989,16 +3059,16 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
             Animation(self.sliders),
             LaggedStartMap(
                 ApplyMethod, re_ticks,
-                lambda m : (m.shift, shift_vect),
-                path_arc = np.pi
+                lambda m: (m.shift, shift_vect),
+                path_arc=np.pi
             ),
         )
         self.play(
             MoveToTarget(
-                re_rects, 
-                run_time = 2,
-                lag_ratio = 0.5,
-                path_arc = np.pi
+                re_rects,
+                run_time=2,
+                lag_ratio=0.5,
+                path_arc=np.pi
             ),
         )
         self.wait(2)
@@ -3015,7 +3085,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         )
         computation.to_corner(UP+LEFT)
 
-        self.play(Write(computation, run_time = 2))
+        self.play(Write(computation, run_time=2))
 
     def wander_on_inner_sphere(self):
         self.wait(10)
@@ -3031,16 +3101,17 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         words.to_edge(LEFT)
         words.set_color(RED)
         arrow = Arrow(
-            words.get_top(), 
+            words.get_top(),
             self.sliders[0].dial,
-            path_arc = -np.pi/3,
-            color = words.get_color()
+            path_arc=-np.pi/3,
+            color=words.get_color()
         )
         self.play(
-            Write(words, run_time = 2),
+            Write(words, run_time=2),
             ShowCreation(arrow)
         )
         self.wait(3)
+
 
 class TwoDOuterBox(TwoDInnerSphereTouchingBox):
     def construct(self):
@@ -3051,9 +3122,9 @@ class TwoDOuterBox(TwoDInnerSphereTouchingBox):
             self.plane.coords_to_point(-2, -2),
             self.plane.coords_to_point(2, 2),
         )
-        box = Square(color = words.get_color())
-        box.replace(line, stretch = True)
-        box.set_stroke(width = 8)
+        box = Square(color=words.get_color())
+        box.replace(line, stretch=True)
+        box.set_stroke(width=8)
 
         self.play(
             Write(words),
@@ -3064,8 +3135,10 @@ class TwoDOuterBox(TwoDInnerSphereTouchingBox):
 
         self.outer_box = box
 
+
 class ThreeDOuterBoundingBox(ExternallyAnimatedScene):
     pass
+
 
 class ThreeDOuterBoundingBoxWords(Scene):
     def construct(self):
@@ -3080,6 +3153,7 @@ class ThreeDOuterBoundingBoxWords(Scene):
         self.play(Write(words))
         self.wait(4)
 
+
 class FaceDistanceDoesntDependOnDimension(TwoDOuterBox):
     def construct(self):
         self.force_skipping()
@@ -3090,9 +3164,9 @@ class FaceDistanceDoesntDependOnDimension(TwoDOuterBox):
         line = Line(
             self.plane.coords_to_point(0, 0),
             self.outer_box.get_right(),
-            buff = 0,
-            stroke_width = 6,
-            color = YELLOW
+            buff=0,
+            stroke_width=6,
+            color=YELLOW
         )
         length_words = TextMobject("Always 2, in all dimensions")
         length_words.next_to(self.plane, RIGHT, MED_LARGE_BUFF, UP)
@@ -3106,10 +3180,12 @@ class FaceDistanceDoesntDependOnDimension(TwoDOuterBox):
         self.play(self.randy.change, "thinking")
         self.wait(3)
 
+
 class TenDCornerIsVeryFarAway(TenDBoxExampleWithSliders):
     CONFIG = {
-        "center_point" : np.zeros(10)
+        "center_point": np.zeros(10)
     }
+
     def construct(self):
         self.show_re_rects()
 
@@ -3117,11 +3193,11 @@ class TenDCornerIsVeryFarAway(TenDBoxExampleWithSliders):
         re_rects = VGroup()
         for slider in self.sliders:
             rect = Rectangle(
-                width = 2*slider.tick_size,
-                height = slider.unit_size,
-                stroke_width = 0,
-                fill_color = GREEN,
-                fill_opacity = 0.75,
+                width=2*slider.tick_size,
+                height=slider.unit_size,
+                stroke_width=0,
+                fill_color=GREEN,
+                fill_opacity=0.75,
             )
             rect.move_to(slider.number_to_point(0), DOWN)
             re_rects.add(rect)
@@ -3133,17 +3209,18 @@ class TenDCornerIsVeryFarAway(TenDBoxExampleWithSliders):
         self.play(
             LaggedStartMap(
                 ApplyMethod, re_rects,
-                lambda m : (m.restore,),
-                lag_ratio = 0.3,
+                lambda m: (m.restore,),
+                lag_ratio=0.3,
             ),
             LaggedStartMap(
                 ApplyMethod, self.sliders,
-                lambda m : (m.set_value, 1),
-                lag_ratio = 0.3,
+                lambda m: (m.set_value, 1),
+                lag_ratio=0.3,
             ),
-            run_time = 10,
+            run_time=10,
         )
         self.wait()
+
 
 class InnerRadiusIsUnbounded(TeacherStudentsScene):
     def construct(self):
@@ -3151,20 +3228,22 @@ class InnerRadiusIsUnbounded(TeacherStudentsScene):
         self.change_student_modes(*["erm"]*3)
         self.wait(3)
 
+
 class ProportionOfSphereInBox(GraphScene):
     CONFIG = {
-        "x_axis_label" : "Dimension",
-        "y_axis_label" : "",
-        "y_max" : 1.5,
-        "y_min" : 0,
-        "y_tick_frequency" : 0.25,
-        "y_labeled_nums" : np.linspace(0.25, 1, 4),
-        "x_min" : 0,
-        "x_max" : 50,
-        "x_tick_frequency" : 5,
-        "x_labeled_nums" : list(range(10, 50, 10)),
-        "num_graph_anchor_points" : 100,
+        "x_axis_label": "Dimension",
+        "y_axis_label": "",
+        "y_max": 1.5,
+        "y_min": 0,
+        "y_tick_frequency": 0.25,
+        "y_labeled_nums": np.linspace(0.25, 1, 4),
+        "x_min": 0,
+        "x_max": 50,
+        "x_tick_frequency": 5,
+        "x_labeled_nums": list(range(10, 50, 10)),
+        "num_graph_anchor_points": 100,
     }
+
     def construct(self):
         self.setup_axes()
         title = TextMobject(
@@ -3173,9 +3252,9 @@ class ProportionOfSphereInBox(GraphScene):
         title.next_to(self.y_axis, RIGHT, MED_SMALL_BUFF, UP)
         self.add(title)
 
-        graph = self.get_graph(lambda x : np.exp(0.1*(9-x)))
+        graph = self.get_graph(lambda x: np.exp(0.1*(9-x)))
         max_y = self.coords_to_point(0, 1)[1]
-        too_high = graph.points[:,1] > max_y
+        too_high = graph.points[:, 1] > max_y
         graph.points[too_high, 1] = max_y
 
         footnote = TextMobject("""
@@ -3193,17 +3272,19 @@ class ProportionOfSphereInBox(GraphScene):
         )
         footnote.set_color(YELLOW)
 
-        self.play(ShowCreation(graph, run_time = 5, rate_func=linear))
+        self.play(ShowCreation(graph, run_time=5, rate_func=linear))
         self.wait()
         self.add(footnote)
         self.wait(0.25)
 
+
 class ShowingToFriend(PiCreatureScene, SliderScene):
     CONFIG = {
-        "n_sliders" : 10,
-        "ambient_acceleration_magnitude" : 3.0,
-        "seconds_to_blink" : 4,
+        "n_sliders": 10,
+        "ambient_acceleration_magnitude": 3.0,
+        "seconds_to_blink": 4,
     }
+
     def setup(self):
         PiCreatureScene.setup(self)
         SliderScene.setup(self)
@@ -3232,35 +3313,37 @@ class ShowingToFriend(PiCreatureScene, SliderScene):
         self.randy.to_edge(DOWN).shift(4*LEFT)
         return VGroup(self.morty, self.randy)
 
-    def non_blink_wait(self, time = 1):
+    def non_blink_wait(self, time=1):
         SliderScene.wait(self, time)
+
 
 class QuestionsFromStudents(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "Is 10-dimensional \\\\ space real?",
-            target_mode = "sassy",
-            run_time = 2,
+            target_mode="sassy",
+            run_time=2,
         )
         self.wait()
         self.teacher_says(
             "No less real \\\\ than reals",
-            target_mode = "shruggie",
-            content_introduction_class = FadeIn,
+            target_mode="shruggie",
+            content_introduction_class=FadeIn,
         )
         self.wait(2)
         self.student_says(
             "How do you think \\\\ about volume?",
-            student_index = 0,
-            content_introduction_class = FadeIn,
+            student_index=0,
+            content_introduction_class=FadeIn,
         )
         self.wait()
         self.student_says(
             "How do cubes work?",
-            student_index = 2,
-            run_time = 2,
+            student_index=2,
+            run_time=2,
         )
         self.wait(2)
+
 
 class FunHighDSpherePhenomena(Scene):
     def construct(self):
@@ -3280,45 +3363,48 @@ class FunHighDSpherePhenomena(Scene):
             "$\\cdot$ Sphere packing in 24 dimensions",
         ])))
         items.arrange(
-            DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
+            DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT
         )
         items.next_to(h_line, DOWN)
 
         for item in items:
-            self.play(LaggedStartMap(FadeIn, item, run_time = 2))
+            self.play(LaggedStartMap(FadeIn, item, run_time=2))
         self.wait()
+
 
 class TODOBugOnSurface(TODOStub):
     CONFIG = {
-        "message" : "Bug on surface"
+        "message": "Bug on surface"
     }
+
 
 class CoordinateFree(PiCreatureScene):
     def construct(self):
-        plane = NumberPlane(x_radius = 2.5, y_radius = 2.5)
+        plane = NumberPlane(x_radius=2.5, y_radius=2.5)
         plane.add_coordinates()
         plane.to_corner(UP+LEFT)
         self.add(plane)
 
         circles = VGroup(*[
-            Circle(color = YELLOW).move_to(
+            Circle(color=YELLOW).move_to(
                 plane.coords_to_point(*coords)
             )
             for coords in it.product(*2*[[-1, 1]])
         ])
         inner_circle = Circle(
-            radius = np.sqrt(2)-1,
-            color = GREEN
+            radius=np.sqrt(2)-1,
+            color=GREEN
         ).move_to(plane.coords_to_point(0, 0))
 
         self.add_foreground_mobjects(circles, inner_circle)
 
         self.play(PiCreatureSays(
             self.pi_creature, "Lose the \\\\ coordinates!",
-            target_mode = "hooray"
+            target_mode="hooray"
         ))
-        self.play(FadeOut(plane, run_time = 2))
+        self.play(FadeOut(plane, run_time=2))
         self.wait(3)
+
 
 class Skeptic(TeacherStudentsScene, SliderScene):
     def setup(self):
@@ -3326,7 +3412,7 @@ class Skeptic(TeacherStudentsScene, SliderScene):
         TeacherStudentsScene.setup(self)
 
         self.sliders.scale(0.7)
-        self.sliders.next_to(self.teacher, UP, aligned_edge = LEFT)
+        self.sliders.next_to(self.teacher, UP, aligned_edge=LEFT)
         self.sliders.to_edge(UP)
         self.initialize_ambiant_slider_movement()
 
@@ -3350,16 +3436,16 @@ class Skeptic(TeacherStudentsScene, SliderScene):
             for slider in self.sliders
         ]))
 
-        box = Square(color = RED)
+        box = Square(color=RED)
         box.next_to(self.sliders, LEFT)
         line = Line(box.get_center(), box.get_corner(UP+RIGHT))
         line.set_color(YELLOW)
 
         self.student_says(
             analytic_thought,
-            student_index = 0,
-            target_mode = "sassy",
-            added_anims = [self.teacher.change, "guilty"]
+            student_index=0,
+            target_mode="sassy",
+            added_anims=[self.teacher.change, "guilty"]
         )
         self.wait(2)
         equation.remove(*variables)
@@ -3367,13 +3453,13 @@ class Skeptic(TeacherStudentsScene, SliderScene):
         self.play(
             self.teacher.change, "pondering", slider_labels,
             RemovePiCreatureBubble(
-                self.students[0], target_mode = "hesitant"
+                self.students[0], target_mode="hesitant"
             ),
         )
         self.wait(4)
         bubble = self.teacher.get_bubble(
             "It's much \\\\ more playful!",
-            bubble_class = SpeechBubble
+            bubble_class=SpeechBubble
         )
         bubble.resize_to_content()
         VGroup(bubble, bubble.content).next_to(self.teacher, UP+LEFT)
@@ -3385,8 +3471,8 @@ class Skeptic(TeacherStudentsScene, SliderScene):
         self.wait(3)
         self.play(
             RemovePiCreatureBubble(
-                self.teacher, target_mode = "raise_right_hand",
-                look_at_arg = self.sliders
+                self.teacher, target_mode="raise_right_hand",
+                look_at_arg=self.sliders
             ),
             *[
                 ApplyMethod(pi.change, "pondering")
@@ -3395,10 +3481,10 @@ class Skeptic(TeacherStudentsScene, SliderScene):
         )
         self.play(Animation(self.sliders), LaggedStartMap(
             ApplyMethod, all_real_estate_ticks,
-            lambda m : (m.shift, SMALL_BUFF*LEFT),
-            rate_func = wiggle,
-            lag_ratio = 0.3,
-            run_time = 4,
+            lambda m: (m.shift, SMALL_BUFF*LEFT),
+            rate_func=wiggle,
+            lag_ratio=0.3,
+            run_time=4,
         ))
         self.play(
             ShowCreation(box),
@@ -3408,13 +3494,15 @@ class Skeptic(TeacherStudentsScene, SliderScene):
         self.wait(3)
 
     #####
-    def non_blink_wait(self, time = 1):
+    def non_blink_wait(self, time=1):
         SliderScene.wait(self, time)
+
 
 class ClipFrom4DBoxExampleTODO(TODOStub):
     CONFIG = {
-        "message" : "Clip from 4d box example"
+        "message": "Clip from 4d box example"
     }
+
 
 class JustBecauseYouCantVisualize(Scene):
     def construct(self):
@@ -3429,15 +3517,16 @@ class JustBecauseYouCantVisualize(Scene):
         for part in phrase_mob:
             self.play(LaggedStartMap(
                 FadeIn, part,
-                run_time = 0.05*len(part)
+                run_time=0.05*len(part)
             ))
         self.wait(2)
+
 
 class Announcements(TeacherStudentsScene):
     def construct(self):
         title = TextMobject("Announcements")
         title.scale(1.5)
-        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
         h_line = Line(LEFT, RIGHT).scale(3)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
@@ -3446,28 +3535,30 @@ class Announcements(TeacherStudentsScene):
             "$\\cdot$ Where to learn more",
             "$\\cdot$ Q\\&A Followup (podcast!)",
         ])))
-        items.arrange(DOWN, aligned_edge = LEFT)
+        items.arrange(DOWN, aligned_edge=LEFT)
         items.next_to(h_line, DOWN)
 
         self.play(
-            Write(items[0], run_time = 2),
+            Write(items[0], run_time=2),
         )
         self.play(*[
             ApplyMethod(pi.change, "hooray", items)
             for pi in self.pi_creatures
         ])
-        self.play(Write(items[1], run_time = 2))
+        self.play(Write(items[1], run_time=2))
         self.wait(2)
+
 
 class Promotion(PiCreatureScene):
     CONFIG = {
-        "seconds_to_blink" : 5,
+        "seconds_to_blink": 5,
     }
+
     def construct(self):
         url = TextMobject("https://brilliant.org/3b1b/")
         url.to_corner(UP+LEFT)
 
-        rect = Rectangle(height = 9, width = 16)
+        rect = Rectangle(height=9, width=16)
         rect.set_height(5.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
@@ -3496,11 +3587,14 @@ class Promotion(PiCreatureScene):
         self.play(FadeOut(url_rect))
         self.wait(3)
 
+
 class BrilliantGeometryQuiz(ExternallyAnimatedScene):
     pass
 
+
 class BrilliantScrollThroughCourses(ExternallyAnimatedScene):
     pass
+
 
 class Podcast(TeacherStudentsScene):
     def construct(self):
@@ -3516,8 +3610,8 @@ class Podcast(TeacherStudentsScene):
         self.play(
             LaggedStartMap(
                 ApplyMethod, self.pi_creatures,
-                lambda pi : (pi.change, "hooray", title)
-            ), 
+                lambda pi: (pi.change, "hooray", title)
+            ),
             Write(title)
         )
         self.wait(5)
@@ -3527,9 +3621,10 @@ class Podcast(TeacherStudentsScene):
         )
         self.wait(4)
 
+
 class HighDPatreonThanks(PatreonThanks):
     CONFIG = {
-        "specific_patrons" : [
+        "specific_patrons": [
             "Desmos",
             "Burt Humburg",
             "CrypticSwarm",
@@ -3589,10 +3684,12 @@ class HighDPatreonThanks(PatreonThanks):
         ]
     }
 
+
 class Thumbnail(SliderScene):
     CONFIG = {
-        "n_sliders" : 10,
+        "n_sliders": 10,
     }
+
     def construct(self):
         for slider in self.sliders:
             self.remove(slider.label)
@@ -3605,24 +3702,3 @@ class Thumbnail(SliderScene):
         title.scale(2)
         title.to_edge(UP)
         self.add(title)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -53,7 +53,7 @@ class TipableVMobject(VMobject):
             "stroke_width": 0,
         }
     }
-    
+
     # Adding, Creating, Modifying tips
 
     def add_tip(self, tip_length=None, at_start=False):
@@ -140,7 +140,6 @@ class TipableVMobject(VMobject):
     def has_start_tip(self):
         return hasattr(self, "start_tip") and self.start_tip in self
 
-
     # Getters
 
     def pop_tips(self):
@@ -200,8 +199,6 @@ class TipableVMobject(VMobject):
     def get_length(self):
         start, end = self.get_start_and_end()
         return get_norm(start - end)
-
-
 
 
 class Arc(TipableVMobject):

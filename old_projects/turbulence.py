@@ -128,7 +128,8 @@ class Chaos(Eddy):
         ])
 
     def get_line(self, y):
-        frequencies = [0] + list(2 + 2 * np.random.random(self.n_midpoints)) + [0]
+        frequencies = [0] + \
+            list(2 + 2 * np.random.random(self.n_midpoints)) + [0]
         rect = self.rect
         line = Line(
             y * UP, y * UP + self.width * RIGHT,
@@ -588,7 +589,8 @@ class CarefulWithLasers(TeacherStudentsScene):
             )
         laser.add_updater(update_laser)
 
-        self.play(LaggedStartMap(FadeInFromDown, self.pi_creatures, run_time=1))
+        self.play(LaggedStartMap(FadeInFromDown,
+                                 self.pi_creatures, run_time=1))
         self.add(self.pi_creatures, laser)
         for pi in self.pi_creatures:
             pi.add_updater(lambda p: p.look_at(laser[1]))

@@ -2,6 +2,7 @@ from manimlib.imports import *
 
 NEW_BLUE = "#68a8e1"
 
+
 class Thumbnail(GraphScene):
     CONFIG = {
         "y_max": 8,
@@ -13,13 +14,14 @@ class Thumbnail(GraphScene):
 
     def show_function_graph(self):
         self.setup_axes(animate=False)
+
         def func(x):
             return 0.1 * (x + 3-5) * (x - 3-5) * (x-5) + 5
 
         def rect(x):
             return 2.775*(x-1.5)+3.862
-        recta = self.get_graph(rect,x_min=-1,x_max=5)
-        graph = self.get_graph(func,x_min=0.2,x_max=9)
+        recta = self.get_graph(rect, x_min=-1, x_max=5)
+        graph = self.get_graph(func, x_min=0.2, x_max=9)
         graph.set_color(NEW_BLUE)
         input_tracker_p1 = ValueTracker(1.5)
         input_tracker_p2 = ValueTracker(3.5)
@@ -44,22 +46,22 @@ class Thumbnail(GraphScene):
 
         def get_h_line(input_tracker):
             return DashedLine(get_graph_point(input_tracker), get_y_point(input_tracker), stroke_width=2)
-        # 
+        #
         input_triangle_p1 = RegularPolygon(n=3, start_angle=TAU / 4)
         output_triangle_p1 = RegularPolygon(n=3, start_angle=0)
         for triangle in input_triangle_p1, output_triangle_p1:
             triangle.set_fill(WHITE, 1)
             triangle.set_stroke(width=0)
             triangle.scale(0.1)
-        # 
+        #
         input_triangle_p2 = RegularPolygon(n=3, start_angle=TAU / 4)
         output_triangle_p2 = RegularPolygon(n=3, start_angle=0)
         for triangle in input_triangle_p2, output_triangle_p2:
             triangle.set_fill(WHITE, 1)
             triangle.set_stroke(width=0)
             triangle.scale(0.1)
-        
-        # 
+
+        #
         x_label_p1 = TexMobject("a")
         output_label_p1 = TexMobject("f(a)")
         x_label_p2 = TexMobject("b")
@@ -82,7 +84,6 @@ class Thumbnail(GraphScene):
         output_triangle_p2.next_to(h_line_p2, LEFT, buff=0)
         graph_dot_p1.move_to(get_graph_point(input_tracker_p1))
         graph_dot_p2.move_to(get_graph_point(input_tracker_p2))
-
 
         #
         self.play(
@@ -119,21 +120,20 @@ class Thumbnail(GraphScene):
         )
         ###################
         pendiente_recta = self.get_secant_slope_group(
-            1.9, recta, dx = 1.4,
-            df_label = None,
-            dx_label = None,
-            dx_line_color = PURPLE,
-            df_line_color= ORANGE,
-            )
-        grupo_secante = self.get_secant_slope_group(
-            1.5, graph, dx = 2,
-            df_label = None,
-            dx_label = None,
-            dx_line_color = "#942357",
-            df_line_color= "#3f7d5c",
-            secant_line_color = RED,
+            1.9, recta, dx=1.4,
+            df_label=None,
+            dx_label=None,
+            dx_line_color=PURPLE,
+            df_line_color=ORANGE,
         )
-
+        grupo_secante = self.get_secant_slope_group(
+            1.5, graph, dx=2,
+            df_label=None,
+            dx_label=None,
+            dx_line_color="#942357",
+            df_line_color="#3f7d5c",
+            secant_line_color=RED,
+        )
 
         self.add(
             input_triangle_p2,
@@ -145,25 +145,24 @@ class Thumbnail(GraphScene):
         self.play(FadeIn(grupo_secante))
 
         kwargs = {
-            "x_min" : 4,
-            "x_max" : 9,
-            "fill_opacity" : 0.75,
-            "stroke_width" : 0.25,
+            "x_min": 4,
+            "x_max": 9,
+            "fill_opacity": 0.75,
+            "stroke_width": 0.25,
         }
-        self.graph=graph
-        iteraciones=6
-
+        self.graph = graph
+        iteraciones = 6
 
         self.rect_list = self.get_riemann_rectangles_list(
-            graph, iteraciones,start_color=PURPLE,end_color=ORANGE, **kwargs
+            graph, iteraciones, start_color=PURPLE, end_color=ORANGE, **kwargs
         )
         flat_rects = self.get_riemann_rectangles(
-            self.get_graph(lambda x : 0), dx = 0.5,start_color=invert_color(PURPLE),end_color=invert_color(ORANGE),**kwargs
+            self.get_graph(lambda x: 0), dx=0.5, start_color=invert_color(PURPLE), end_color=invert_color(ORANGE), **kwargs
         )
         rects = self.rect_list[0]
         self.transform_between_riemann_rects(
-            flat_rects, rects, 
-            replace_mobject_with_target_in_scene = True,
+            flat_rects, rects,
+            replace_mobject_with_target_in_scene=True,
             run_time=0.9
         )
 

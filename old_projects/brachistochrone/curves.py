@@ -3,15 +3,15 @@ from manimlib.imports import *
 RANDY_SCALE_FACTOR = 0.3
 
 
-
 class Cycloid(ParametricFunction):
     CONFIG = {
-        "point_a"       : 6*LEFT+3*UP,
-        "radius"        : 2,
-        "end_theta"     : 3*np.pi/2,
-        "density"       : 5*DEFAULT_POINT_DENSITY_1D,
-        "color"         : YELLOW
+        "point_a": 6*LEFT+3*UP,
+        "radius": 2,
+        "end_theta": 3*np.pi/2,
+        "density": 5*DEFAULT_POINT_DENSITY_1D,
+        "color": YELLOW
     }
+
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         ParametricFunction.__init__(self, self.pos_func, **kwargs)
@@ -24,13 +24,16 @@ class Cycloid(ParametricFunction):
             0
         ])
 
+
 class LoopTheLoop(ParametricFunction):
     CONFIG = {
-        "color" : YELLOW_D,
-        "density" : 10*DEFAULT_POINT_DENSITY_1D
+        "color": YELLOW_D,
+        "density": 10*DEFAULT_POINT_DENSITY_1D
     }
+
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
+
         def func(t):
             t = (6*np.pi/2)*(t-0.5)
             return (t/2-np.sin(t))*RIGHT + \
@@ -39,12 +42,13 @@ class LoopTheLoop(ParametricFunction):
 
 
 class SlideWordDownCycloid(Animation):
-    CONFIG = { 
-        "rate_func" : None,
-        "run_time"  : 8
+    CONFIG = {
+        "rate_func": None,
+        "run_time": 8
     }
+
     def __init__(self, word, **kwargs):
-        self.path = Cycloid(end_theta = np.pi)        
+        self.path = Cycloid(end_theta=np.pi)
         word_mob = TextMobject(list(word))
         end_word = word_mob.copy()
         end_word.shift(-end_word.get_bottom())
@@ -67,7 +71,7 @@ class SlideWordDownCycloid(Animation):
         ]
         for letter, time, end_letter in zip(
             self.mobject.split(), virtual_times, self.end_letters
-            ):
+        ):
             time = max(time, 0)
             time = min(time, 1)
             if time < cut_offs[0]:
@@ -85,7 +89,7 @@ class SlideWordDownCycloid(Animation):
                 position = self.path.points[index]
                 try:
                     angle = angle_of_vector(
-                        self.path.points[index+1] - \
+                        self.path.points[index+1] -
                         self.path.points[index]
                     )
                 except:
@@ -115,17 +119,17 @@ class BrachistochroneWordSliding(Scene):
         )
 
 
-
 class PathSlidingScene(Scene):
     CONFIG = {
-        "gravity" : 3,
-        "delta_t" : 0.05,
-        "wait_and_add" : True,
-        "show_time" : True,
+        "gravity": 3,
+        "delta_t": 0.05,
+        "wait_and_add": True,
+        "show_time": True,
     }
-    def slide(self, mobject, path, roll = False, ceiling = None):
+
+    def slide(self, mobject, path, roll=False, ceiling=None):
         points = path.points
-        time_slices = self.get_time_slices(points, ceiling = ceiling)
+        time_slices = self.get_time_slices(points, ceiling=ceiling)
         curr_t = 0
         last_index = 0
         curr_index = 1
@@ -160,7 +164,7 @@ class PathSlidingScene(Scene):
         else:
             return self.slider
 
-    def get_time_slices(self, points, ceiling = None):
+    def get_time_slices(self, points, ceiling=None):
         dt_list = np.zeros(len(points))
         ds_list = np.apply_along_axis(
             get_norm,
@@ -169,7 +173,7 @@ class PathSlidingScene(Scene):
         )
         if ceiling is None:
             ceiling = points[0, 1]
-        delta_y_list = np.abs(ceiling - points[1:,1])
+        delta_y_list = np.abs(ceiling - points[1:, 1])
         delta_y_list += 0.001*(delta_y_list == 0)
         v_list = self.gravity*np.sqrt(delta_y_list)
         dt_list[1:] = ds_list / v_list
@@ -192,10 +196,10 @@ class PathSlidingScene(Scene):
     def write_time(self, time):
         if hasattr(self, "time_mob"):
             self.remove(self.time_mob)
-        digits = list(map(TexMobject, "%.2f"%time))
-        digits[0].next_to(self.t_equals, buff = 0.1)
+        digits = list(map(TexMobject, "%.2f" % time))
+        digits[0].next_to(self.t_equals, buff=0.1)
         for left, right in zip(digits, digits[1:]):
-            right.next_to(left, buff = 0.1, aligned_edge = DOWN)
+            right.next_to(left, buff=0.1, aligned_edge=DOWN)
         self.time_mob = Mobject(*digits)
         self.add(self.time_mob)
 
@@ -218,7 +222,7 @@ class TryManyPaths(PathSlidingScene):
     def construct(self):
         randy = Randolph()
         randy.shift(-randy.get_bottom())
-        self.slider = randy.copy()  
+        self.slider = randy.copy()
         randy.scale(RANDY_SCALE_FACTOR)
         paths = self.get_paths()
         point_a = Dot(paths[0].points[0])
@@ -229,7 +233,7 @@ class TryManyPaths(PathSlidingScene):
             self.play(ShowCreation(point))
             self.play(ShimmerIn(tex))
             self.wait()
-        curr_path = None        
+        curr_path = None
         for path in paths:
             new_slider = self.adjust_mobject_to_index(
                 randy.copy(), 1, path.points
@@ -251,8 +255,8 @@ class TryManyPaths(PathSlidingScene):
         for path in paths:
             self.play(Transform(
                 curr_path, path,
-                path_func = path_along_arc(np.pi/2),
-                run_time = 3
+                path_func=path_along_arc(np.pi/2),
+                run_time=3
             ))
 
     def get_text(self):
@@ -261,26 +265,26 @@ class TryManyPaths(PathSlidingScene):
     def get_paths(self):
         sharp_corner = Mobject(
             Line(3*UP+LEFT, LEFT),
-            Arc(angle = np.pi/2, start_angle = np.pi),
+            Arc(angle=np.pi/2, start_angle=np.pi),
             Line(DOWN, DOWN+3*RIGHT)
         ).ingest_submobjects().set_color(GREEN)
         paths = [
             Arc(
-                angle = np.pi/2, 
-                radius = 3, 
-                start_angle = 4
+                angle=np.pi/2,
+                radius=3,
+                start_angle=4
             ),
-            LoopTheLoop(),            
-            Line(7*LEFT, 7*RIGHT, color = RED_D),
+            LoopTheLoop(),
+            Line(7*LEFT, 7*RIGHT, color=RED_D),
             sharp_corner,
             FunctionGraph(
-                lambda x : 0.05*(x**2)+0.1*np.sin(2*x)
+                lambda x: 0.05*(x**2)+0.1*np.sin(2*x)
             ),
             FunctionGraph(
-                lambda x : x**2, 
-                x_min = -3, 
-                x_max = 2,
-                density = 3*DEFAULT_POINT_DENSITY_1D
+                lambda x: x**2,
+                x_min=-3,
+                x_max=2,
+                density=3*DEFAULT_POINT_DENSITY_1D
             )
         ]
         cycloid = Cycloid()
@@ -299,42 +303,42 @@ class RollingRandolph(PathSlidingScene):
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
-        self.add_cycloid_end_points()        
-        self.slide(randy, self.cycloid, roll = True)
-
+        self.add_cycloid_end_points()
+        self.slide(randy, self.cycloid, roll=True)
 
 
 class NotTheCircle(PathSlidingScene):
     def construct(self):
         self.add_cycloid_end_points()
         start = self.point_a.get_center()
-        end   = self.point_b.get_center()
+        end = self.point_b.get_center()
         angle = 2*np.pi/3
-        path = Arc(angle, radius = 3)
+        path = Arc(angle, radius=3)
         path.set_color_by_gradient(RED_D, WHITE)
         radius = Line(ORIGIN, path.points[0])
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         randy_copy = randy.copy()
-        words = TextMobject("Circular paths are good, \\\\ but still not the best")
+        words = TextMobject(
+            "Circular paths are good, \\\\ but still not the best")
         words.shift(UP)
 
         self.play(
             ShowCreation(path),
             ApplyMethod(
-                radius.rotate, 
+                radius.rotate,
                 angle,
-                path_func = path_along_arc(angle)
+                path_func=path_along_arc(angle)
             )
         )
         self.play(FadeOut(radius))
         self.play(
             ApplyMethod(
                 path.put_start_and_end_on, start, end,
-                path_func = path_along_arc(-angle)
+                path_func=path_along_arc(-angle)
             ),
-            run_time = 3
+            run_time=3
         )
         self.adjust_mobject_to_index(randy_copy, 1, path.points)
         self.play(FadeIn(randy_copy))
@@ -363,29 +367,29 @@ class TransitionAwayFromSlide(PathSlidingScene):
         everything = Mobject(*self.mobjects)
         self.play(ApplyMethod(
             everything.shift, 4*FRAME_X_RADIUS*LEFT,
-            run_time = 2,
-            rate_func = rush_into
+            run_time=2,
+            rate_func=rush_into
         ))
-        
+
 
 class MinimalPotentialEnergy(Scene):
     def construct(self):
         horiz_radius = 5
         vert_radius = 3
 
-        vert_axis = NumberLine(numerical_radius = vert_radius)
+        vert_axis = NumberLine(numerical_radius=vert_radius)
         vert_axis.rotate(np.pi/2)
         vert_axis.shift(horiz_radius*LEFT)
         horiz_axis = NumberLine(
-            numerical_radius = 5,
-            numbers_with_elongated_ticks = []
+            numerical_radius=5,
+            numbers_with_elongated_ticks=[]
         )
         axes = Mobject(horiz_axis, vert_axis)
         graph = FunctionGraph(
-            lambda x : 0.4*(x-2)*(x+2)+3,
-            x_min = -2,
-            x_max = 2,
-            density = 3*DEFAULT_POINT_DENSITY_1D
+            lambda x: 0.4*(x-2)*(x+2)+3,
+            x_min=-2,
+            x_max=2,
+            density=3*DEFAULT_POINT_DENSITY_1D
         )
         graph.stretch_to_fit_width(2*horiz_radius)
         graph.set_color(YELLOW)
@@ -395,8 +399,8 @@ class MinimalPotentialEnergy(Scene):
         nature_finds.set_color(GREEN)
         nature_finds.shift(2*RIGHT+3*UP)
         arrow = Arrow(
-            nature_finds.get_bottom(), min_point, 
-            color = GREEN
+            nature_finds.get_bottom(), min_point,
+            color=GREEN
         )
 
         side_words_start = TextMobject("Parameter describing")
@@ -420,7 +424,7 @@ class MinimalPotentialEnergy(Scene):
             words.set_color(RED)
 
         self.add(
-            axes, top_words[0], side_words_start, 
+            axes, top_words[0], side_words_start,
             last_side_words[0]
         )
         self.play(ShowCreation(graph))
@@ -431,22 +435,21 @@ class MinimalPotentialEnergy(Scene):
         )
         self.wait()
         self.play(
-            FadeOut(top_words[0]), 
+            FadeOut(top_words[0]),
             FadeOut(last_side_words[0]),
-            GrowFromCenter(top_words[1]), 
+            GrowFromCenter(top_words[1]),
             GrowFromCenter(last_side_words[1])
         )
         self.wait(3)
 
 
-
-
 class WhatGovernsSpeed(PathSlidingScene):
     CONFIG = {
-        "num_pieces" : 6,
-        "wait_and_add" : False,
-        "show_time" : False,
+        "num_pieces": 6,
+        "wait_and_add": False,
+        "show_time": False,
     }
+
     def construct(self):
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)
@@ -472,7 +475,7 @@ class WhatGovernsSpeed(PathSlidingScene):
             vect = points[-1] - points[-2]
             magnitude = np.sqrt(ceiling - points[-1, 1])
             vect = magnitude*vect/get_norm(vect)
-            slider = self.slide(randy, path, ceiling = ceiling)
+            slider = self.slide(randy, path, ceiling=ceiling)
             vector = Vector(slider.get_center(), vect)
             self.add(slider, vector)
             sliders.append(slider)
@@ -495,7 +498,7 @@ class WhatGovernsSpeed(PathSlidingScene):
         vert_brace = Brace(
             Mobject(Point(ceil_point), Point(slider.get_center())),
             RIGHT,
-            buff = 0.5
+            buff=0.5
         )
         vect_brace = Brace(slider)
         vect_brace.stretch_to_fit_width(vector.get_length())
@@ -528,7 +531,7 @@ class WhatGovernsSpeed(PathSlidingScene):
         potential = TexMobject("m g y".split())
         potential.next_to(loss_in_potential)
         kinetic = TexMobject([
-            "\\dfrac{1}{2}","m","v","^2","="
+            "\\dfrac{1}{2}", "m", "v", "^2", "="
         ])
         kinetic.next_to(potential, LEFT)
         nudge = 0.1*UP
@@ -562,20 +565,18 @@ class WhatGovernsSpeed(PathSlidingScene):
         self.play(ApplyMethod(ms.shift, 5*UP))
         self.wait()
         self.play(Transform(
-            half, two, 
-            path_func = counterclockwise_path()
+            half, two,
+            path_func=counterclockwise_path()
         ))
         self.wait()
         self.play(
             Transform(
-                squared, sqrt, 
-                path_func = clockwise_path()
+                squared, sqrt,
+                path_func=clockwise_path()
             ),
             Transform(equals, new_eq)
         )
         self.wait(2)
-
-
 
 
 class ThetaTInsteadOfXY(Scene):
@@ -589,14 +590,14 @@ class ThetaTInsteadOfXY(Scene):
         vect_mob = Vector(point, vect)
         dot = Dot(point)
         xy = TexMobject("\\big( x(t), y(t) \\big)")
-        xy.next_to(dot, UP+RIGHT, buff = 0.1)
+        xy.next_to(dot, UP+RIGHT, buff=0.1)
         vert_line = Line(2*DOWN, 2*UP)
         vert_line.shift(point)
         angle = vect_mob.get_angle() + np.pi/2
-        arc = Arc(angle, radius = 1, start_angle = -np.pi/2)
+        arc = Arc(angle, radius=1, start_angle=-np.pi/2)
         arc.shift(point)
         theta = TexMobject("\\theta(t)")
-        theta.next_to(arc, DOWN, buff = 0.1, aligned_edge = LEFT)
+        theta.next_to(arc, DOWN, buff=0.1, aligned_edge=LEFT)
         theta.shift(0.2*RIGHT)
 
         self.play(ShowCreation(cycloid))
@@ -617,7 +618,7 @@ class ThetaTInsteadOfXY(Scene):
 
 class DefineCurveWithKnob(PathSlidingScene):
     def construct(self):
-        self.knob = Circle(color = BLUE_D)
+        self.knob = Circle(color=BLUE_D)
         self.knob.add_line(UP, DOWN)
         self.knob.to_corner(UP+RIGHT)
         self.knob.shift(0.5*DOWN)
@@ -629,7 +630,7 @@ class DefineCurveWithKnob(PathSlidingScene):
         self.path = self.get_path()
         self.path.shift(1.5*DOWN)
         self.path.show()
-        self.path.set_color(BLACK)        
+        self.path.set_color(BLACK)
 
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)
@@ -644,33 +645,31 @@ class DefineCurveWithKnob(PathSlidingScene):
         self.slide(randy, self.path)
         self.wait()
 
-
     def get_path(self):
-        return Cycloid(end_theta = 2*np.pi)
+        return Cycloid(end_theta=2*np.pi)
 
     def midslide_action(self, point, angle):
         d_angle = angle-self.last_angle
         self.knob.rotate_in_place(d_angle)
         self.last_angle = angle
-        self.path.set_color(BLUE_D, lambda p : p[0] < point[0])
-
+        self.path.set_color(BLUE_D, lambda p: p[0] < point[0])
 
 
 class WonkyDefineCurveWithKnob(DefineCurveWithKnob):
     def get_path(self):
         return ParametricFunction(
-            lambda t : t*RIGHT + (-0.2*t-np.sin(2*np.pi*t/6))*UP,
-            start = -7, 
-            end = 10
+            lambda t: t*RIGHT + (-0.2*t-np.sin(2*np.pi*t/6))*UP,
+            start=-7,
+            end=10
         )
 
 
 class SlowDefineCurveWithKnob(DefineCurveWithKnob):
     def get_path(self):
         return ParametricFunction(
-            lambda t : t*RIGHT + (np.exp(-(t+2)**2)-0.2*np.exp(t-2)),
-            start = -4, 
-            end = 4
+            lambda t: t*RIGHT + (np.exp(-(t+2)**2)-0.2*np.exp(t-2)),
+            start=-4,
+            end=4
         )
 
 
@@ -678,22 +677,9 @@ class BumpyDefineCurveWithKnob(DefineCurveWithKnob):
     def get_path(self):
 
         result = FunctionGraph(
-            lambda x : 0.05*(x**2)+0.1*np.sin(2*x)
+            lambda x: 0.05*(x**2)+0.1*np.sin(2*x)
         )
         result.rotate(-np.pi/20)
         result.scale(0.7)
         result.shift(DOWN)
         return result
-
-
-
-
-
-
-
-
-
-
-
-
-

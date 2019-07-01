@@ -45,7 +45,7 @@ def stage_scenes(module_name):
     animation_dir = os.path.join(
         consts.VIDEO_DIR, "ode", "part3", "1440p60"
     )
-    # 
+    #
     files = os.listdir(animation_dir)
     sorted_files = []
     for scene_class in scene_classes:

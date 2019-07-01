@@ -6,6 +6,7 @@ VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 
+
 def initialize_directories(config):
     global MEDIA_DIR
     global VIDEO_DIR
@@ -46,6 +47,7 @@ def initialize_directories(config):
     for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR]:
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
+
 
 TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"

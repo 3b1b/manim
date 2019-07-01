@@ -1,15 +1,17 @@
 from manimlib.imports import *
 from functools import reduce
 
+
 class Jewel(VMobject):
     CONFIG = {
-        "color" : WHITE,
-        "fill_opacity" : 0.75,
-        "stroke_width" : 0,
-        "height" : 0.5,
-        "num_equator_points" : 5,
-        "sun_vect" : OUT+LEFT+UP,
+        "color": WHITE,
+        "fill_opacity": 0.75,
+        "stroke_width": 0,
+        "height": 0.5,
+        "num_equator_points": 5,
+        "sun_vect": OUT+LEFT+UP,
     }
+
     def generate_points(self):
         for vect in OUT, IN:
             compass_vects = list(compass_directions(self.num_equator_points))
@@ -18,20 +20,22 @@ class Jewel(VMobject):
             for vect_pair in adjacent_pairs(compass_vects):
                 self.add(Polygon(vect, *vect_pair))
         self.set_height(self.height)
-        self.rotate(-np.pi/2-np.pi/24, RIGHT)        
+        self.rotate(-np.pi/2-np.pi/24, RIGHT)
         self.rotate(-np.pi/12, UP)
         self.submobjects.sort(
             key=lambda m: -m1.get_center()[2]
         )
         return self
 
+
 class Necklace(VMobject):
     CONFIG = {
-        "width" : FRAME_WIDTH - 1,
-        "jewel_buff" : MED_SMALL_BUFF,
-        "chain_color" : GREY,
-        "default_colors" : [(4, BLUE), (6, WHITE), (4, GREEN)]
+        "width": FRAME_WIDTH - 1,
+        "jewel_buff": MED_SMALL_BUFF,
+        "chain_color": GREY,
+        "default_colors": [(4, BLUE), (6, WHITE), (4, GREEN)]
     }
+
     def __init__(self, *colors, **kwargs):
         digest_config(self, kwargs, locals())
         if len(colors) == 0:
@@ -48,18 +52,18 @@ class Necklace(VMobject):
 
     def generate_points(self):
         jewels = VGroup(*[
-            Jewel(color = color)
+            Jewel(color=color)
             for color in self.colors
         ])
-        jewels.arrange(buff = self.jewel_buff)
+        jewels.arrange(buff=self.jewel_buff)
         jewels.set_width(self.width)
         jewels.center()
         j_to_j_dist = (jewels[1].get_center()-jewels[0].get_center())[0]
 
         chain = Line(
-            jewels[0].get_center() + j_to_j_dist*LEFT/2, 
-            jewels[-1].get_center() + j_to_j_dist*RIGHT/2, 
-            color = self.chain_color,
+            jewels[0].get_center() + j_to_j_dist*LEFT/2,
+            jewels[-1].get_center() + j_to_j_dist*RIGHT/2,
+            color=self.chain_color,
         )
         self.add(chain, *jewels)
         self.chain = chain
@@ -67,9 +71,10 @@ class Necklace(VMobject):
 
 ################
 
+
 class FromPreviousTopologyVideo(Scene):
     def construct(self):
-        rect = Rectangle(height = 9, width = 16)
+        rect = Rectangle(height=9, width=16)
         rect.set_height(FRAME_HEIGHT-2)
         title = TextMobject("From original ``Who cares about topology'' video")
         title.to_edge(UP)
@@ -79,20 +84,22 @@ class FromPreviousTopologyVideo(Scene):
         self.play(ShowCreation(rect))
         self.wait()
 
+
 class CheckOutMathologer(PiCreatureScene):
     CONFIG = {
-        "logo_height" : 1.5,
-        "screen_height" : 5,
-        "channel_name" : "Mathologer",
-        "logo_file" : "mathologer_logo",
-        "logo_color" : None,
+        "logo_height": 1.5,
+        "screen_height": 5,
+        "channel_name": "Mathologer",
+        "logo_file": "mathologer_logo",
+        "logo_color": None,
     }
+
     def construct(self):
         logo = self.get_logo()
         name = TextMobject(self.channel_name)
         name.next_to(logo, RIGHT)
 
-        rect = Rectangle(height = 9, width = 16)
+        rect = Rectangle(height=9, width=16)
         rect.set_height(self.screen_height)
         rect.next_to(logo, DOWN)
         rect.to_edge(LEFT)
@@ -124,15 +131,17 @@ class CheckOutMathologer(PiCreatureScene):
         logo.set_color(BLACK)
         return ApplyMethod(logo.restore)
 
+
 class IntroduceStolenNecklaceProblem(ThreeDScene):
     CONFIG = {
-        "jewel_colors" : [BLUE, GREEN, WHITE, RED],
-        "num_per_jewel" : [8, 10, 4, 6],
-        "num_shuffles" : 1,
-        "necklace_center" : UP,
-        "random_seed" : 2,
-        "forced_binary_choices" : (0, 1, 0, 1, 0),
+        "jewel_colors": [BLUE, GREEN, WHITE, RED],
+        "num_per_jewel": [8, 10, 4, 6],
+        "num_shuffles": 1,
+        "necklace_center": UP,
+        "random_seed": 2,
+        "forced_binary_choices": (0, 1, 0, 1, 0),
     }
+
     def construct(self):
         random.seed(self.random_seed)
         self.add_thieves()
@@ -148,7 +157,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             Randolph(),
             Mortimer()
         )
-        thieves.arrange(RIGHT, buff = 4*LARGE_BUFF)
+        thieves.arrange(RIGHT, buff=4*LARGE_BUFF)
         thieves.to_edge(DOWN)
         thieves[0].make_eye_contact(thieves[1])
 
@@ -179,14 +188,14 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             jewel_copy.next_to(num_mob)
             label = VGroup(num_mob, jewel_copy)
             enumeration_labels.add(label)
-        enumeration_labels.arrange(RIGHT, buff = LARGE_BUFF)
+        enumeration_labels.arrange(RIGHT, buff=LARGE_BUFF)
         enumeration_labels.to_edge(UP)
 
         self.play(
             FadeIn(
                 necklace,
-                lag_ratio = 0.5,
-                run_time = 3
+                lag_ratio=0.5,
+                run_time=3
             ),
             *it.chain(*[
                 [pi.change_mode, "conniving", pi.look_at, necklace]
@@ -195,8 +204,8 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         )
         self.play(*[
             ApplyMethod(
-                jewel.rotate_in_place, np.pi/6, UP, 
-                rate_func = there_and_back
+                jewel.rotate_in_place, np.pi/6, UP,
+                rate_func=there_and_back
             )
             for jewel in jewels
         ])
@@ -204,7 +213,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         for jewel_type in jewel_types:
             self.play(
                 jewel_type.shift, 0.2*UP,
-                rate_func = wiggle
+                rate_func=wiggle
             )
         self.wait()
         for x in range(self.num_shuffles):
@@ -220,7 +229,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             jewel_type.target.scale(2)
             jewel_type.target.move_to(2*UP)
             self.play(
-                MoveToTarget(jewel_type), 
+                MoveToTarget(jewel_type),
                 Write(label)
             )
             self.play(jewel_type.restore)
@@ -250,18 +259,19 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             half_labels.arrange(DOWN)
             half_labels.set_height(thief.get_height())
             half_labels.next_to(
-                thief, vect, 
-                buff = MED_LARGE_BUFF,
-                aligned_edge = DOWN
+                thief, vect,
+                buff=MED_LARGE_BUFF,
+                aligned_edge=DOWN
             )
             both_half_labels.add(half_labels)
 
         for half_labels in both_half_labels:
             self.play(ReplacementTransform(
-                enumeration_labels.copy(), 
+                enumeration_labels.copy(),
                 half_labels
             ))
-        self.play(*[ApplyMethod(pi.change_mode, "pondering") for pi in thieves])
+        self.play(*[ApplyMethod(pi.change_mode, "pondering")
+                    for pi in thieves])
         self.wait()
 
         for type_index, jewel_type in enumerate(jewel_types):
@@ -275,9 +285,9 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             for half, thief, vect in zip(halves, thieves, [RIGHT, LEFT]):
                 half.arrange(DOWN)
                 half.next_to(
-                    thief, vect, 
-                    buff = SMALL_BUFF + type_index*half.get_width(),
-                    aligned_edge = DOWN
+                    thief, vect,
+                    buff=SMALL_BUFF + type_index*half.get_width(),
+                    aligned_edge=DOWN
                 )
             self.play(
                 Transform(jewel_type, jewel_type_copy),
@@ -301,32 +311,33 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         ]))
 
     def divvy_with_n_cuts(
-        self, 
-        with_thieves = True, 
-        highlight_groups = True,
-        show_matching_after_divvying = True,
-        ):
+        self,
+        with_thieves=True,
+        highlight_groups=True,
+        show_matching_after_divvying=True,
+    ):
         necklace = self.necklace
         jewel_types = self.jewel_types
         jewels = sorted(
-            necklace.jewels, 
-            lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+            necklace.jewels,
+            lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0])
         )
-        slice_indices, binary_choices = self.find_slice_indices(jewels, jewel_types)
+        slice_indices, binary_choices = self.find_slice_indices(
+            jewels, jewel_types)
         subgroups = [
             VGroup(*jewels[i1:i2])
             for i1, i2 in zip(slice_indices, slice_indices[1:])
         ]
         buff = (jewels[1].get_left()[0]-jewels[0].get_right()[0])/2
         v_lines = VGroup(*[
-            DashedLine(UP, DOWN).next_to(group, RIGHT, buff = buff)
+            DashedLine(UP, DOWN).next_to(group, RIGHT, buff=buff)
             for group in subgroups[:-1]
         ])
         strand_groups = [VGroup(), VGroup()]
         for group, choice in zip(subgroups, binary_choices):
             strand = Line(
                 group[0].get_center(), group[-1].get_center(),
-                color = necklace.chain.get_color()
+                color=necklace.chain.get_color()
             )
             strand.add(*group)
             strand_groups[choice].add(strand)
@@ -358,11 +369,11 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         if highlight_groups:
             for group in strand_groups:
                 box = Rectangle(
-                    width = group.get_width()+2*SMALL_BUFF,
-                    height = group.get_height()+2*SMALL_BUFF,
-                    stroke_width = 0,
-                    fill_color = YELLOW,
-                    fill_opacity = 0.3,
+                    width=group.get_width()+2*SMALL_BUFF,
+                    height=group.get_height()+2*SMALL_BUFF,
+                    stroke_width=0,
+                    fill_color=YELLOW,
+                    fill_opacity=0.3,
                 )
                 box.move_to(group)
                 self.play(FadeIn(box))
@@ -377,8 +388,8 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                         ApplyMethod(jewel.scale_in_place, 1.5)
                         for jewel in jewel_type
                     ],
-                    rate_func = there_and_back,
-                    run_time = 2
+                    rate_func=there_and_back,
+                    run_time=2
                 )
             self.wait()
         self.play(
@@ -408,7 +419,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
             for color in map(Color, self.jewel_colors)
         ]
 
-    def shuffle_jewels(self, jewels, run_time = 2, path_arc = np.pi/2, **kwargs):
+    def shuffle_jewels(self, jewels, run_time=2, path_arc=np.pi/2, **kwargs):
         shuffled_indices = list(range(len(jewels)))
         random.shuffle(shuffled_indices)
         target_group = VGroup(*[
@@ -417,8 +428,8 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
         ])
         self.play(Transform(
             jewels, target_group,
-            run_time = run_time,            
-            path_arc = path_arc,
+            run_time=run_time,
+            path_arc=path_arc,
             **kwargs
         ))
 
@@ -454,7 +465,6 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                 flat_left_set = np.array(list(it.chain(*left_sets)))
                 flat_right_set = np.array(list(it.chain(*right_sets)))
 
-
                 match_array = [
                     sum(flat_left_set == n) == sum(flat_right_set == n)
                     for n in range(n_types)
@@ -462,6 +472,7 @@ class IntroduceStolenNecklaceProblem(ThreeDScene):
                 if np.all(match_array):
                     return slice_indices, binary_choices
         raise Exception("No fair division found")
+
 
 class ThingToProve(PiCreatureScene):
     def construct(self):
@@ -475,28 +486,30 @@ class ThingToProve(PiCreatureScene):
         bottom_words.next_to(arrow, DOWN)
 
         self.play(
-            Write(top_words, run_time = 2),
+            Write(top_words, run_time=2),
             self.pi_creature.change_mode, "raise_right_hand"
         )
         self.play(ShowCreation(arrow))
         self.play(
-            Write(bottom_words, run_time = 2),
+            Write(bottom_words, run_time=2),
             self.pi_creature.change_mode, "pondering"
         )
         self.wait(3)
 
+
 class FiveJewelCase(IntroduceStolenNecklaceProblem):
     CONFIG = {
-        "jewel_colors" : [BLUE, GREEN, WHITE, RED, YELLOW],
-        "num_per_jewel" : [6, 4, 4, 2, 8],
-        "forced_binary_choices" : (0, 1, 0, 1, 0, 1),
+        "jewel_colors": [BLUE, GREEN, WHITE, RED, YELLOW],
+        "num_per_jewel": [6, 4, 4, 2, 8],
+        "forced_binary_choices": (0, 1, 0, 1, 0, 1),
     }
+
     def construct(self):
         random.seed(self.random_seed)
         self.add(self.get_necklace())
         jewels = self.necklace.jewels
-        self.shuffle_jewels(jewels, run_time = 0)
-        self.jewel_types = self.get_jewels_organized_by_type(jewels)     
+        self.shuffle_jewels(jewels, run_time=0)
+        self.jewel_types = self.get_jewels_organized_by_type(jewels)
         self.add_title()
         self.add_thieves()
         for thief in self.thieves:
@@ -507,17 +520,19 @@ class FiveJewelCase(IntroduceStolenNecklaceProblem):
     def add_title(self):
         n_cuts = len(self.jewel_colors)
         title = TextMobject(
-            "%d jewel types, %d cuts"%(n_cuts, n_cuts)
+            "%d jewel types, %d cuts" % (n_cuts, n_cuts)
         )
         title.to_edge(UP)
         self.add(title)
 
+
 class SixJewelCase(FiveJewelCase):
     CONFIG = {
-        "jewel_colors" : [BLUE, GREEN, WHITE, RED, YELLOW, MAROON_B],
-        "num_per_jewel" : [6, 4, 4, 2, 2, 6],
-        "forced_binary_choices" : (0, 1, 0, 1, 0, 1, 0),
+        "jewel_colors": [BLUE, GREEN, WHITE, RED, YELLOW, MAROON_B],
+        "num_per_jewel": [6, 4, 4, 2, 2, 6],
+        "forced_binary_choices": (0, 1, 0, 1, 0, 1, 0),
     }
+
 
 class DiscussApplicability(TeacherStudentsScene):
     def construct(self):
@@ -528,24 +543,27 @@ class DiscussApplicability(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.wait(2)
 
+
 class ThreeJewelCase(FiveJewelCase):
     CONFIG = {
-        "jewel_colors" : [BLUE, GREEN, WHITE],
-        "num_per_jewel" : [6, 4, 8],
-        "forced_binary_choices" : (0, 1, 0, 1),
+        "jewel_colors": [BLUE, GREEN, WHITE],
+        "num_per_jewel": [6, 4, 8],
+        "forced_binary_choices": (0, 1, 0, 1),
     }
+
 
 class RepeatedShuffling(IntroduceStolenNecklaceProblem):
     CONFIG = {
-        "num_shuffles" : 5,
-        "random_seed" : 3,
-        "show_matching_after_divvying" : False,
+        "num_shuffles": 5,
+        "random_seed": 3,
+        "show_matching_after_divvying": False,
     }
+
     def construct(self):
         random.seed(self.random_seed)
         self.add(self.get_necklace())
         jewels = self.necklace.jewels
-        self.jewel_types = self.get_jewels_organized_by_type(jewels)     
+        self.jewel_types = self.get_jewels_organized_by_type(jewels)
         self.add_thieves()
         for thief in self.thieves:
             ApplyMethod(thief.change_mode, "pondering").update(1)
@@ -554,8 +572,9 @@ class RepeatedShuffling(IntroduceStolenNecklaceProblem):
         for x in range(self.num_shuffles):
             self.shuffle_jewels(jewels)
             self.divvy_with_n_cuts(
-                show_matching_after_divvying = False
+                show_matching_after_divvying=False
             )
+
 
 class NowForTheTopology(TeacherStudentsScene):
     def construct(self):
@@ -563,21 +582,26 @@ class NowForTheTopology(TeacherStudentsScene):
         self.change_student_modes(*["hooray"]*3)
         self.wait(3)
 
+
 class ExternallyAnimatedScene(Scene):
     def construct(self):
         raise Exception("Don't actually run this class.")
 
+
 class SphereOntoPlaneIn3D(ExternallyAnimatedScene):
     pass
+
 
 class DiscontinuousSphereOntoPlaneIn3D(ExternallyAnimatedScene):
     pass
 
+
 class WriteWords(Scene):
     CONFIG = {
-        "words" : "",
-        "color" : WHITE,
+        "words": "",
+        "color": WHITE,
     }
+
     def construct(self):
         words = TextMobject(self.words)
         words.set_color(self.color)
@@ -586,43 +610,54 @@ class WriteWords(Scene):
         self.play(Write(words))
         self.wait(2)
 
+
 class WriteNotAllowed(WriteWords):
     CONFIG = {
-        "words" : "Not allowed",
-        "color" : RED,
+        "words": "Not allowed",
+        "color": RED,
     }
+
 
 class NonAntipodalCollisionIn3D(ExternallyAnimatedScene):
     pass
 
+
 class AntipodalCollisionIn3D(ExternallyAnimatedScene):
     pass
 
+
 class WriteBorsukUlam(WriteWords):
     CONFIG = {
-        "words" : "Borsuk-Ulam Theorem",
+        "words": "Borsuk-Ulam Theorem",
     }
+
 
 class WriteAntipodal(WriteWords):
     CONFIG = {
-        "words" : "``Antipodal''",
-        "color" : MAROON_B,
+        "words": "``Antipodal''",
+        "color": MAROON_B,
     }
+
 
 class ProjectOntoEquatorIn3D(ExternallyAnimatedScene):
     pass
 
+
 class ProjectOntoEquatorWithPolesIn3D(ExternallyAnimatedScene):
     pass
+
 
 class ProjectAntipodalNonCollisionIn3D(ExternallyAnimatedScene):
     pass
 
+
 class ShearThenProjectnOntoEquatorPolesMissIn3D(ExternallyAnimatedScene):
     pass
 
+
 class ShearThenProjectnOntoEquatorAntipodalCollisionIn3D(ExternallyAnimatedScene):
     pass
+
 
 class ClassicExample(TeacherStudentsScene):
     def construct(self):
@@ -630,22 +665,26 @@ class ClassicExample(TeacherStudentsScene):
         self.change_student_modes(*["happy"]*3)
         self.wait(2)
 
+
 class AntipodalEarthPoints(ExternallyAnimatedScene):
     pass
+
 
 class RotatingEarth(ExternallyAnimatedScene):
     pass
 
+
 class TemperaturePressurePlane(GraphScene):
     CONFIG = {
-        "x_labeled_nums" : [],
-        "y_labeled_nums" : [],
-        "x_axis_label" : "Temperature",
-        "y_axis_label" : "Pressure",
-        "graph_origin" : 2.5*DOWN + 2*LEFT,
-        "corner_square_width" : 4,
-        "example_point_coords" : (2, 5),
+        "x_labeled_nums": [],
+        "y_labeled_nums": [],
+        "x_axis_label": "Temperature",
+        "y_axis_label": "Pressure",
+        "graph_origin": 2.5*DOWN + 2*LEFT,
+        "corner_square_width": 4,
+        "example_point_coords": (2, 5),
     }
+
     def construct(self):
         self.setup_axes()
         self.draw_arrow()
@@ -654,14 +693,14 @@ class TemperaturePressurePlane(GraphScene):
 
     def draw_arrow(self):
         square = Square(
-            side_length = self.corner_square_width,
-            stroke_color = WHITE,
-            stroke_width = 0,
+            side_length=self.corner_square_width,
+            stroke_color=WHITE,
+            stroke_width=0,
         )
-        square.to_corner(UP+LEFT, buff = 0)
+        square.to_corner(UP+LEFT, buff=0)
 
         arrow = Arrow(
-            square.get_right(), 
+            square.get_right(),
             self.coords_to_point(*self.example_point_coords)
         )
 
@@ -671,7 +710,7 @@ class TemperaturePressurePlane(GraphScene):
         dot = Dot(self.coords_to_point(*self.example_point_coords))
         dot.set_color(YELLOW)
         tex = TexMobject("(25^\\circ\\text{C}, 101 \\text{ kPa})")
-        tex.next_to(dot, UP+RIGHT, buff = SMALL_BUFF)
+        tex.next_to(dot, UP+RIGHT, buff=SMALL_BUFF)
 
         self.play(ShowCreation(dot))
         self.play(Write(tex))
@@ -689,14 +728,17 @@ class TemperaturePressurePlane(GraphScene):
 
         path.set_color(GREEN)
 
-        self.play(ShowCreation(path, run_time = 10, rate_func=linear))
+        self.play(ShowCreation(path, run_time=10, rate_func=linear))
         self.wait()
+
 
 class AlternateSphereSquishing(ExternallyAnimatedScene):
     pass
 
+
 class AlternateAntipodalCollision(ExternallyAnimatedScene):
     pass
+
 
 class AskWhy(TeacherStudentsScene):
     def construct(self):
@@ -705,18 +747,20 @@ class AskWhy(TeacherStudentsScene):
         self.play(self.get_teacher().change_mode, "happy")
         self.wait(3)
 
+
 class PointOutVSauce(CheckOutMathologer):
     CONFIG = {
-        "channel_name" : "",
-        "logo_file" : "Vsauce_logo",
-        "logo_height" : 1,
-        "logo_color" : GREY,
+        "channel_name": "",
+        "logo_file": "Vsauce_logo",
+        "logo_height": 1,
+        "logo_color": GREY,
     }
+
     def get_logo(self):
-        logo = SVGMobject(file_name = self.logo_file)
+        logo = SVGMobject(file_name=self.logo_file)
         logo.set_height(self.logo_height)
         logo.to_corner(UP+LEFT)
-        logo.set_stroke(width = 0)
+        logo.set_stroke(width=0)
         logo.set_fill(GREEN)
         logo.sort()
         return logo
@@ -724,18 +768,20 @@ class PointOutVSauce(CheckOutMathologer):
     def get_logo_intro_animation(self, logo):
         return DrawBorderThenFill(
             logo,
-            run_time = 2,
+            run_time=2,
         )
+
 
 class WalkEquatorPostTransform(GraphScene):
     CONFIG = {
-        "x_labeled_nums" : [],
-        "y_labeled_nums" : [],
-        "graph_origin" : 2.5*DOWN + 2*LEFT,
-        "curved_arrow_color" : WHITE,
-        "curved_arrow_radius" : 3,
-        "num_great_arcs" : 10,
+        "x_labeled_nums": [],
+        "y_labeled_nums": [],
+        "graph_origin": 2.5*DOWN + 2*LEFT,
+        "curved_arrow_color": WHITE,
+        "curved_arrow_radius": 3,
+        "num_great_arcs": 10,
     }
+
     def construct(self):
         self.setup_axes()
         self.add_curved_arrow()
@@ -748,9 +794,9 @@ class WalkEquatorPostTransform(GraphScene):
 
     def add_curved_arrow(self):
         arc = Arc(
-            start_angle = 2*np.pi/3, angle = -np.pi/2, 
-            radius = self.curved_arrow_radius,
-            color = self.curved_arrow_color
+            start_angle=2*np.pi/3, angle=-np.pi/2,
+            radius=self.curved_arrow_radius,
+            color=self.curved_arrow_color
         )
         arc.add_tip()
         arc.move_to(self.coords_to_point(0, 7))
@@ -764,9 +810,9 @@ class WalkEquatorPostTransform(GraphScene):
         dot_movement = self.get_arc_walk_dot_movement(equator, dots)
         dot_movement.update(0)
 
-        self.play(ShowCreation(equator, run_time = 3))
+        self.play(ShowCreation(equator, run_time=3))
         self.play(FadeIn(dots[0]))
-        dots[1].set_fill(opacity = 0)
+        dots[1].set_fill(opacity=0)
         self.play(dot_movement)
         self.play(dots[1].set_fill, None, 1)
         self.play(dot_movement)
@@ -775,7 +821,7 @@ class WalkEquatorPostTransform(GraphScene):
         proportion = equator.collision_point_proportion
         self.play(self.get_arc_walk_dot_movement(
             equator, dots,
-            rate_func = lambda t : 2*proportion*smooth(t)
+            rate_func=lambda t: 2*proportion*smooth(t)
         ))
         v_line = DashedLine(FRAME_Y_RADIUS*UP, FRAME_Y_RADIUS*DOWN)
         v_line.shift(dots.get_center()[0]*RIGHT)
@@ -809,7 +855,7 @@ class WalkEquatorPostTransform(GraphScene):
         proportion = tilted_eq.collision_point_proportion
         self.play(self.get_arc_walk_dot_movement(
             tilted_eq, dots,
-            rate_func = lambda t : 2*proportion*smooth(t)
+            rate_func=lambda t: 2*proportion*smooth(t)
         ))
         v_line = DashedLine(FRAME_Y_RADIUS*UP, FRAME_Y_RADIUS*DOWN)
         v_line.shift(dots.get_center()[0]*RIGHT)
@@ -852,10 +898,10 @@ class WalkEquatorPostTransform(GraphScene):
         ])
 
         self.play(
-            ShowCreation(transverse_curve, lag_ratio = 0),
+            ShowCreation(transverse_curve, lag_ratio=0),
             equator_transform,
             dots_transform,
-            run_time = 10,
+            run_time=10,
             rate_func=linear,
         )
         self.wait(2)
@@ -872,17 +918,17 @@ class WalkEquatorPostTransform(GraphScene):
         for x in range(2):
             self.play(
                 UpdateFromAlphaFunc(dots, dot_update),
-                run_time = 4
+                run_time=4
             )
         self.play(
             UpdateFromAlphaFunc(dots, dot_update),
-            run_time = 4,
-            rate_func = lambda t : 0.455*smooth(t)
+            run_time=4,
+            rate_func=lambda t: 0.455*smooth(t)
         )
         self.play(
             dots.set_color, YELLOW,
             dots.scale_in_place, 1.2,
-            rate_func = there_and_back
+            rate_func=there_and_back
         )
         self.wait()
 
@@ -905,7 +951,7 @@ class WalkEquatorPostTransform(GraphScene):
             0
         ])
 
-    def sphere_point(self, portion_around_equator, equator_tilt = 0):
+    def sphere_point(self, portion_around_equator, equator_tilt=0):
         theta = portion_around_equator*2*np.pi
         point = np.cos(theta)*RIGHT + np.sin(theta)*UP
         phi = equator_tilt*np.pi
@@ -914,7 +960,7 @@ class WalkEquatorPostTransform(GraphScene):
     def get_great_arc_images(self):
         curves = VGroup(*[
             ParametricFunction(
-                lambda t : self.sphere_point(t, s)
+                lambda t: self.sphere_point(t, s)
             ).apply_function(self.sphere_to_plane)
             for s in np.arange(0, 1, 1./self.num_great_arcs)
             # for s in [0]
@@ -922,10 +968,10 @@ class WalkEquatorPostTransform(GraphScene):
         curves.set_color(YELLOW)
         curves[0].set_color(RED)
         for curve in curves:
-            antipodal_x_diff = lambda x : \
-                curve.point_from_proportion(x+0.5)[0]-\
+            def antipodal_x_diff(x): return \
+                curve.point_from_proportion(x+0.5)[0] -\
                 curve.point_from_proportion(x)[0]
-            last_x = 0                
+            last_x = 0
             last_sign = np.sign(antipodal_x_diff(last_x))
             for x in np.linspace(0, 0.5, 100):
                 sign = np.sign(antipodal_x_diff(x))
@@ -949,7 +995,7 @@ class WalkEquatorPostTransform(GraphScene):
             ]
             for i in (0, 1)
         ]))
-        full_curve = VMobject(close_new_points = True)
+        full_curve = VMobject(close_new_points=True)
         full_curve.set_points_smoothly(points + [points[0]])
         full_curve.set_color(MAROON_B)
         first_half = full_curve.copy().pointwise_become_partial(
@@ -959,21 +1005,26 @@ class WalkEquatorPostTransform(GraphScene):
         broken_curve = VGroup(first_half, second_half)
         return broken_curve
 
+
 class WalkAroundEquatorPreimage(ExternallyAnimatedScene):
     pass
+
 
 class WalkTiltedEquatorPreimage(ExternallyAnimatedScene):
     pass
 
+
 class FormLoopTransverseToEquator(ExternallyAnimatedScene):
     pass
+
 
 class AntipodalWalkAroundTransverseLoop(ExternallyAnimatedScene):
     pass
 
+
 class MentionGenerality(TeacherStudentsScene, ThreeDScene):
     def construct(self):
-        necklace = Necklace(width = FRAME_X_RADIUS)
+        necklace = Necklace(width=FRAME_X_RADIUS)
         necklace.shift(2*UP)
         necklace.to_edge(RIGHT)
         arrow = TexMobject("\\Leftrightarrow")
@@ -984,15 +1035,15 @@ class MentionGenerality(TeacherStudentsScene, ThreeDScene):
         arrow.add(q_marks)
 
         formula = TexMobject("f(\\textbf{x}) = f(-\\textbf{x})")
-        formula.next_to(self.get_students(), UP, buff = LARGE_BUFF)
-        formula.to_edge(LEFT, buff = LARGE_BUFF)
+        formula.next_to(self.get_students(), UP, buff=LARGE_BUFF)
+        formula.to_edge(LEFT, buff=LARGE_BUFF)
 
         self.play(
             self.teacher.change_mode, "raise_right_hand",
             self.teacher.look_at, arrow
         )
         self.play(
-            FadeIn(necklace, run_time = 2, lag_ratio = 0.5),
+            FadeIn(necklace, run_time=2, lag_ratio=0.5),
             Write(arrow),
             *[
                 ApplyMethod(pi.look_at, arrow)
@@ -1008,19 +1059,22 @@ class MentionGenerality(TeacherStudentsScene, ThreeDScene):
         self.play(Write(formula))
         self.wait(3)
 
+
 class SimpleSphere(ExternallyAnimatedScene):
     pass
+
 
 class PointsIn3D(Scene):
     CONFIG = {
         # "colors" : [RED, GREEN, BLUE],
-        "colors" : color_gradient([GREEN, BLUE], 3),
+        "colors": color_gradient([GREEN, BLUE], 3),
     }
+
     def construct(self):
         sphere_def = TextMobject(
-            "\\doublespacing Sphere in 3D: All", "$(x_1, x_2, x_3)$\\\\", 
+            "\\doublespacing Sphere in 3D: All", "$(x_1, x_2, x_3)$\\\\",
             "such that", "$x_1^2 + x_2^2 + x_3^2 = 1$",
-            alignment = "",
+            alignment="",
         )
         sphere_def.next_to(ORIGIN, DOWN)
         for index, subindex_list in (1, [1, 2, 4, 5, 7, 8]), (3, [0, 2, 4, 6, 8, 10]):
@@ -1029,16 +1083,16 @@ class PointsIn3D(Scene):
                 sphere_def[index][subindex].set_color(color)
 
         point_ex = TextMobject(
-            "For example, ", 
+            "For example, ",
             "(", "0.41", ", ", "-0.58", ", ", "0.71", ")",
-            arg_separator = ""
+            arg_separator=""
         )
         for index, color in zip([2, 4, 6], self.colors):
             point_ex[index].set_color(color)
         point_ex.scale(0.8)
         point_ex.next_to(
             sphere_def[1], UP+RIGHT,
-            buff = 1.5*LARGE_BUFF
+            buff=1.5*LARGE_BUFF
         )
         point_ex.shift_onto_screen()
         arrow = Arrow(sphere_def[1].get_top(), point_ex.get_bottom())
@@ -1048,39 +1102,41 @@ class PointsIn3D(Scene):
         self.play(Write(point_ex))
         self.wait()
         self.play(
-            Animation(sphere_def[1].copy(), remover = True),
+            Animation(sphere_def[1].copy(), remover=True),
             Write(sphere_def),
         )
         self.wait()
 
+
 class AntipodalPairToBeGivenCoordinates(ExternallyAnimatedScene):
     pass
 
+
 class WritePointCoordinates(Scene):
     CONFIG = {
-        "colors" : color_gradient([GREEN, BLUE], 3),
-        "corner" : DOWN+RIGHT,
+        "colors": color_gradient([GREEN, BLUE], 3),
+        "corner": DOWN+RIGHT,
     }
+
     def construct(self):
         coords = self.get_coords()
         arrow = Arrow(
-            -self.corner, self.corner, 
-            stroke_width = 8,
-            color = MAROON_B
+            -self.corner, self.corner,
+            stroke_width=8,
+            color=MAROON_B
         )
         x_component = self.corner[0]*RIGHT
         y_component = self.corner[1]*UP
         arrow.next_to(
-            coords.get_edge_center(y_component), 
-            y_component, 
-            aligned_edge = -x_component,
-            buff = MED_SMALL_BUFF
+            coords.get_edge_center(y_component),
+            y_component,
+            aligned_edge=-x_component,
+            buff=MED_SMALL_BUFF
         )
 
         group = VGroup(coords, arrow)
-        group.scale(2)        
+        group.scale(2)
         group.to_corner(self.corner)
-
 
         self.play(FadeIn(coords))
         self.play(ShowCreation(arrow))
@@ -1089,35 +1145,38 @@ class WritePointCoordinates(Scene):
     def get_coords(self):
         coords = TexMobject(
             "(", "0.41", ", ", "-0.58", ", ", "0.71", ")",
-            arg_separator = ""
+            arg_separator=""
         )
         for index, color in zip([1, 3, 5], self.colors):
             coords[index].set_color(color)
         return coords
 
+
 class WriteAntipodalCoordinates(WritePointCoordinates):
     CONFIG = {
-        "corner" : UP+LEFT,
-        "sign_color" : RED,
+        "corner": UP+LEFT,
+        "sign_color": RED,
     }
 
     def get_coords(self):
         coords = TexMobject(
             "(", "-", "0.41", ", ", "+", "0.58", ", ", "-", "0.71", ")",
-            arg_separator = ""
+            arg_separator=""
         )
         for index, color in zip([2, 5, 8], self.colors):
             coords[index].set_color(color)
             coords[index-1].set_color(self.sign_color)
         return coords
 
+
 class GeneralizeBorsukUlam(Scene):
     CONFIG = {
-        "n_dims" : 3,
-        "boundary_colors" : [GREEN_B, BLUE],
-        "output_boundary_color" : [MAROON_B, YELLOW],
-        "negative_color" : RED,
+        "n_dims": 3,
+        "boundary_colors": [GREEN_B, BLUE],
+        "output_boundary_color": [MAROON_B, YELLOW],
+        "negative_color": RED,
     }
+
     def setup(self):
         self.colors = color_gradient(self.boundary_colors, self.n_dims)
 
@@ -1132,7 +1191,7 @@ class GeneralizeBorsukUlam(Scene):
         arrow.next_to(sphere_set, RIGHT)
         f.next_to(arrow, UP)
         output_space.next_to(arrow, RIGHT)
-        equation.next_to(sphere_set, DOWN, buff = LARGE_BUFF)
+        equation.next_to(sphere_set, DOWN, buff=LARGE_BUFF)
         equation.to_edge(RIGHT)
         lhs = VGroup(*equation[:2])
         eq = equation[2]
@@ -1155,7 +1214,7 @@ class GeneralizeBorsukUlam(Scene):
 
     def get_condition(self):
         squares = list(map(TexMobject, [
-            "x_%d^2"%d
+            "x_%d^2" % d
             for d in range(1, 1+self.n_dims)
         ]))
         for square, color in zip(squares, self.colors):
@@ -1170,10 +1229,10 @@ class GeneralizeBorsukUlam(Scene):
 
     def get_tuple(self):
         mid_parts = list(it.chain(*[
-            ["x_%d"%d, ","]
+            ["x_%d" % d, ","]
             for d in range(1, self.n_dims)
         ]))
-        tup = TexMobject(*["("] + mid_parts + ["x_%d"%self.n_dims, ")"])
+        tup = TexMobject(*["("] + mid_parts + ["x_%d" % self.n_dims, ")"])
         for index, color in zip(it.count(1, 2), self.colors):
             tup[index].set_color(color)
 
@@ -1181,10 +1240,10 @@ class GeneralizeBorsukUlam(Scene):
 
     def get_negative_tuple(self):
         mid_parts = list(it.chain(*[
-            ["-", "x_%d"%d, ","]
+            ["-", "x_%d" % d, ","]
             for d in range(1, self.n_dims)
         ]))
-        tup = TexMobject(*["("] + mid_parts + ["-", "x_%d"%self.n_dims, ")"])
+        tup = TexMobject(*["("] + mid_parts + ["-", "x_%d" % self.n_dims, ")"])
         for index, color in zip(it.count(1, 3), self.colors):
             tup[index].set_color(self.negative_color)
             tup[index+1].set_color(color)
@@ -1192,7 +1251,7 @@ class GeneralizeBorsukUlam(Scene):
         return tup
 
     def get_output_space(self):
-        return TextMobject("%dD space"%(self.n_dims-1))
+        return TextMobject("%dD space" % (self.n_dims-1))
         # n_dims = self.n_dims-1
         # colors = color_gradient(self.output_boundary_color, n_dims)
         # mid_parts = list(it.chain(*[
@@ -1211,7 +1270,7 @@ class GeneralizeBorsukUlam(Scene):
         f1, f2 = [TexMobject("f") for x in range(2)]
         equals = TexMobject("=")
         equation = VGroup(f1, tup, equals, f2, neg_tup)
-        equation.arrange(RIGHT, buff = SMALL_BUFF)
+        equation.arrange(RIGHT, buff=SMALL_BUFF)
 
         return equation
 
@@ -1221,9 +1280,9 @@ class GeneralizeBorsukUlam(Scene):
         such_that.next_to(tup, RIGHT)
         condition = self.get_condition()
         condition.next_to(
-            tup, DOWN, 
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT
+            tup, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
         )
         group = VGroup(tup, such_that, condition)
         l_brace = Brace(group, LEFT)
@@ -1237,6 +1296,7 @@ class GeneralizeBorsukUlam(Scene):
 #         "n_dims" : 5,
 #     }
 
+
 class MentionMakingNecklaceProblemContinuous(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("""
@@ -1246,18 +1306,20 @@ class MentionMakingNecklaceProblemContinuous(TeacherStudentsScene):
         self.change_student_modes("confused", "pondering", "erm")
         self.wait(3)
 
+
 class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
     CONFIG = {
-        "jewel_colors" : [BLUE, GREEN],
-        "num_per_jewel" : [8, 10],
-        "random_seed" : 2,
-        "forced_binary_choices" : (0, 1, 0),
-        "show_matching_after_divvying" : True,
-        "necklace_center" : ORIGIN,
-        "necklace_width" : FRAME_WIDTH - 3,
-        "random_seed" : 0,
-        "num_continuous_division_searches" : 4,
+        "jewel_colors": [BLUE, GREEN],
+        "num_per_jewel": [8, 10],
+        "random_seed": 2,
+        "forced_binary_choices": (0, 1, 0),
+        "show_matching_after_divvying": True,
+        "necklace_center": ORIGIN,
+        "necklace_width": FRAME_WIDTH - 3,
+        "random_seed": 0,
+        "num_continuous_division_searches": 4,
     }
+
     def construct(self):
         random.seed(self.random_seed)
         self.introduce_necklace()
@@ -1272,11 +1334,11 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
 
     def introduce_necklace(self):
         self.get_necklace(
-            width = self.necklace_width,
+            width=self.necklace_width,
         )
         self.play(FadeIn(
             self.necklace,
-            lag_ratio = 0.5
+            lag_ratio=0.5
         ))
         self.shuffle_jewels(self.necklace.jewels)
         jewel_types = self.get_jewels_organized_by_type(
@@ -1297,40 +1359,40 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
             jewel_copy.next_to(num_mob)
             label = VGroup(num_mob, jewel_copy)
             enumeration_labels.add(label)
-        enumeration_labels.arrange(RIGHT, buff = LARGE_BUFF)
+        enumeration_labels.arrange(RIGHT, buff=LARGE_BUFF)
         enumeration_labels.to_edge(UP)
 
         for jewel_type, label in zip(jewel_types, enumeration_labels):
             jewel_type.sort_submobjects()
-         
+
             jewel_type.save_state()
             jewel_type.generate_target()
             jewel_type.target.arrange()
             jewel_type.target.move_to(2*UP)
             self.play(
-                MoveToTarget(jewel_type), 
+                MoveToTarget(jewel_type),
                 Write(label)
             )
             self.play(jewel_type.restore)
 
     def divvy_with_n_cuts(self):
         IntroduceStolenNecklaceProblem.divvy_with_n_cuts(
-            self, 
-            with_thieves = False, 
-            highlight_groups = False,
-            show_matching_after_divvying = True,
+            self,
+            with_thieves=False,
+            highlight_groups=False,
+            show_matching_after_divvying=True,
         )
 
     def identify_necklace_with_unit_interval(self):
         interval = UnitInterval(
-            tick_frequency = 1./sum(self.num_per_jewel),
-            tick_size = 0.2,
-            numbers_with_elongated_ticks = [],
+            tick_frequency=1./sum(self.num_per_jewel),
+            tick_size=0.2,
+            numbers_with_elongated_ticks=[],
         )
         interval.stretch_to_fit_width(self.necklace.get_width())
         interval.move_to(self.necklace)
         tick_marks = interval.tick_marks
-        tick_marks.set_stroke(WHITE, width = 2)
+        tick_marks.set_stroke(WHITE, width=2)
 
         brace = Brace(interval)
         brace_text = brace.get_text("Length = 1")
@@ -1374,15 +1436,15 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         ])
 
         for group in segment_types:
-            length_tex = TexMobject("\\frac{%d}{%d}"%(
+            length_tex = TexMobject("\\frac{%d}{%d}" % (
                 len(group),
                 len(jewels)
-             ))
+            ))
             length_tex.next_to(group, UP)
             length_tex.shift(UP)
             self.play(
                 group.shift, UP,
-                Write(length_tex, run_time = 1),
+                Write(length_tex, run_time=1),
             )
             self.wait()
             self.play(
@@ -1405,7 +1467,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
             Line(
                 chain.point_from_proportion(index/float(n_jewels)),
                 chain.point_from_proportion((index+1)/float(n_jewels)),
-                color = jewel.get_color()
+                color=jewel.get_color()
             )
             for index, jewel in zip(indices, jewels)
         ])
@@ -1415,8 +1477,8 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.play(jewels.shift, jewels.get_height()*UP)
         self.play(ReplacementTransform(
             jewels, segments,
-            lag_ratio = 0.5,
-            run_time = 2
+            lag_ratio=0.5,
+            run_time=2
         ))
         self.wait()
         return segments
@@ -1485,26 +1547,26 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         boxes = VGroup()
         for group in top_group, bottom_group:
             box = Rectangle(
-                width = FRAME_WIDTH-2,
-                height = group.get_height()+SMALL_BUFF,
-                stroke_width = 0,
-                fill_color = WHITE,
-                fill_opacity = 0.25,
+                width=FRAME_WIDTH-2,
+                height=group.get_height()+SMALL_BUFF,
+                stroke_width=0,
+                fill_color=WHITE,
+                fill_opacity=0.25,
             )
             box.shift(group.get_center()[1]*UP)
             boxes.add(box)
 
         weight_description = VGroup(*[
             VGroup(
-                TexMobject("\\frac{%d}{%d}"%(
+                TexMobject("\\frac{%d}{%d}" % (
                     len(jewel_type)/2, len(self.segments)
                 )),
-                Jewel(color = jewel_type[0].get_color())
+                Jewel(color=jewel_type[0].get_color())
             ).arrange()
             for jewel_type in self.jewel_types
         ])
-        weight_description.arrange(buff = LARGE_BUFF)
-        weight_description.next_to(boxes, UP, aligned_edge = LEFT)
+        weight_description.arrange(buff=LARGE_BUFF)
+        weight_description.next_to(boxes, UP, aligned_edge=LEFT)
 
         self.play(FadeIn(boxes))
         self.play(Write(weight_description))
@@ -1520,12 +1582,12 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         morty.shift(LEFT)
         self.play(FadeIn(morty))
         self.play(PiCreatureSays(
-            morty, 
+            morty,
             """This is equivalent to
             the discrete case. """,
-            bubble_kwargs = {
-                "height" : 3, 
-                "direction" : LEFT,
+            bubble_kwargs={
+                "height": 3,
+                "direction": LEFT,
             }
         ))
         self.play(Blink(morty))
@@ -1533,7 +1595,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.play(*list(map(FadeOut, [
             morty, morty.bubble, morty.bubble.content
         ])))
-        
+
     def shift_divide_off_tick_marks(self):
         groups = self.groups
         slice_indices = self.slice_indices
@@ -1553,7 +1615,8 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
             )
             self.remove(mob)
             self.add(mob.parts)
-        restorers = [left_segment.parts, left_tick, right_segment.parts, right_tick]
+        restorers = [left_segment.parts, left_tick,
+                     right_segment.parts, right_tick]
         for mob in restorers:
             mob.save_state()
 
@@ -1598,7 +1661,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         brace = Brace(emerald_segments.target, DOWN)
         label = VGroup(
             TexMobject("5\\left( 1/18 \\right)"),
-            Jewel(color = self.jewel_colors[1])
+            Jewel(color=self.jewel_colors[1])
         ).arrange()
         label.next_to(brace, DOWN)
         self.play(MoveToTarget(emerald_segments))
@@ -1633,6 +1696,7 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         self.remove(left_segment.parts, right_segment.parts)
         self.add(left_segment, right_segment)
 
+
 class ThinkAboutTheChoices(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("""
@@ -1641,17 +1705,19 @@ class ThinkAboutTheChoices(TeacherStudentsScene):
         """)
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = FRAME_X_RADIUS*RIGHT+FRAME_Y_RADIUS*DOWN
+            look_at_arg=FRAME_X_RADIUS*RIGHT+FRAME_Y_RADIUS*DOWN
         )
         self.wait(3)
 
+
 class ChoicesInNecklaceCutting(ReconfigurableScene):
     CONFIG = {
-        "num_continuous_division_searches" : 4,
-        "denoms" : [6, 3, 2],
-        "necklace_center" : DOWN,
-        "thief_box_offset" : 1.2,
+        "num_continuous_division_searches": 4,
+        "denoms": [6, 3, 2],
+        "necklace_center": DOWN,
+        "thief_box_offset": 1.2,
     }
+
     def construct(self):
         self.add_necklace()
         self.choose_places_to_cut()
@@ -1666,34 +1732,34 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
             ]
         ]
         color_list = list(it.chain(*[
-            num*[color] 
+            num*[color]
             for num, color in zip(num_per_color, colors)
         ]))
         random.shuffle(color_list)
 
         interval = UnitInterval(
-            tick_frequency = 1./sum(num_per_color),
-            tick_size = 0.2,
-            numbers_with_elongated_ticks = [],
+            tick_frequency=1./sum(num_per_color),
+            tick_size=0.2,
+            numbers_with_elongated_ticks=[],
         )
         interval.stretch_to_fit_width(width)
         interval.shift(self.necklace_center)
         tick_marks = interval.tick_marks
-        tick_marks.set_stroke(WHITE, width = 2)
+        tick_marks.set_stroke(WHITE, width=2)
 
         segments = VGroup()
         for l_tick, r_tick, color in zip(tick_marks, tick_marks[1:], color_list):
             segment = Line(
                 l_tick.get_center(),
                 r_tick.get_center(),
-                color = color
+                color=color
             )
             segments.add(segment)
 
         self.necklace = VGroup(segments, tick_marks)
         self.add(self.necklace)
 
-        self.interval = interval        
+        self.interval = interval
 
     def choose_places_to_cut(self):
         v_lines = VGroup(*[DashedLine(UP, DOWN) for x in range(2)])
@@ -1708,7 +1774,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
             list(map(self.interval.number_to_point, num_pair))
             for num_pair in num_pairs
         ]
-        
+
         for line, point in zip(v_lines, point_pairs[0]):
             line.move_to(point)
         self.play(ShowCreation(v_lines))
@@ -1735,8 +1801,8 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
             for p1, p2 in zip(points, points[1:])
         ]
         for char, denom, brace in zip("abc", self.denoms, braces):
-            brace.label = brace.get_text("$%s$"%char)
-            brace.concrete_label = brace.get_text("$\\frac{1}{%d}$"%denom)
+            brace.label = brace.get_text("$%s$" % char)
+            brace.concrete_label = brace.get_text("$\\frac{1}{%d}$" % denom)
             VGroup(
                 brace.label,
                 brace.concrete_label
@@ -1762,7 +1828,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         self.wait()
         self.wiggle_v_lines()
         self.wait()
-        self.transition_to_alt_config(denoms = [3, 3, 3])
+        self.transition_to_alt_config(denoms=[3, 3, 3])
         self.wait()
         self.play(*list(map(FadeOut, list(braces) + [
             brace.concrete_label for brace in braces
@@ -1776,9 +1842,9 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         arrow_pairs, curr_arrows = self.get_choice_arrow_pairs(groups)
         words = TextMobject("2) Make a binary choice for each segment")
         words.next_to(
-            self.choice_one_words, DOWN, 
-            buff = MED_LARGE_BUFF, 
-            aligned_edge = LEFT
+            self.choice_one_words, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
         )
 
         self.play(Write(words))
@@ -1790,7 +1856,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
             ] + [
                 Transform(
                     curr_arrow, arrow_pair[choice],
-                    path_arc = np.pi
+                    path_arc=np.pi
                 )
                 for curr_arrow, arrow_pair, choice in zip(
                     curr_arrows, arrow_pairs, binary_choices
@@ -1800,7 +1866,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
 
     ######
 
-    def get_groups(self, indices = None):
+    def get_groups(self, indices=None):
         segments, tick_marks = self.necklace
         if indices is None:
             n_segments = len(segments)
@@ -1827,11 +1893,11 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
 
     def get_boxes_and_labels(self):
         box = Rectangle(
-            height = self.necklace.get_height()+SMALL_BUFF,
-            width = self.necklace.get_width()+2*SMALL_BUFF,
-            stroke_width = 0,
-            fill_color = WHITE,
-            fill_opacity = 0.25
+            height=self.necklace.get_height()+SMALL_BUFF,
+            width=self.necklace.get_width()+2*SMALL_BUFF,
+            stroke_width=0,
+            fill_color=WHITE,
+            fill_opacity=0.25
         )
         box.move_to(self.necklace)
 
@@ -1841,8 +1907,8 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         ])
         labels = VGroup(*[
             TextMobject(
-                "Thief %d"%(i+1)
-            ).next_to(box, UP, aligned_edge = RIGHT)
+                "Thief %d" % (i+1)
+            ).next_to(box, UP, aligned_edge=RIGHT)
             for i, box in enumerate(boxes)
         ])
         return boxes, labels
@@ -1872,8 +1938,9 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
                 ]
                 for line, vect in zip(self.v_lines, [OUT, IN])
             ]),
-            rate_func = wiggle
+            rate_func=wiggle
         )
+
 
 class CompareThisToSphereChoice(TeacherStudentsScene):
     def construct(self):
@@ -1883,12 +1950,14 @@ class CompareThisToSphereChoice(TeacherStudentsScene):
         """)
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = FRAME_X_RADIUS*RIGHT+FRAME_Y_RADIUS*DOWN
+            look_at_arg=FRAME_X_RADIUS*RIGHT+FRAME_Y_RADIUS*DOWN
         )
         self.wait(3)
 
+
 class SimpleRotatingSphereWithPoint(ExternallyAnimatedScene):
     pass
+
 
 class ChoicesForSpherePoint(GeneralizeBorsukUlam):
     def construct(self):
@@ -1934,9 +2003,9 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             "2) Make a binary choice for each one"
         )
         choice_two_words.next_to(
-            choice_one_words, DOWN, 
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT
+            choice_one_words, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
         )
 
         self.choice_one_words = choice_one_words
@@ -1952,9 +2021,9 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             ])
         ])
         choices.arrange(
-            DOWN, 
-            buff = LARGE_BUFF,
-            aligned_edge = LEFT
+            DOWN,
+            buff=LARGE_BUFF,
+            aligned_edge=LEFT
         )
         choices.set_height(FRAME_Y_RADIUS)
         choices.to_edge(LEFT)
@@ -1962,8 +2031,8 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
 
         self.play(FadeIn(
             choices,
-            run_time = 2,
-            lag_ratio = 0.5
+            run_time=2,
+            lag_ratio=0.5
         ))
         self.wait()
 
@@ -1975,38 +2044,40 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
             frac_tex = choice.expression_parts[2]
             sqrts = VGroup(*[
                 TexMobject(
-                    var_tex + "=" + sign + \
-                    "\\sqrt{%s}"%frac_tex)
+                    var_tex + "=" + sign +
+                    "\\sqrt{%s}" % frac_tex)
                 for sign in ["+", "-"]
             ])
             for sqrt in sqrts:
                 sqrt.scale(0.6)
             sqrts.arrange(DOWN)
-            sqrts.next_to(choice, RIGHT, buff = LARGE_BUFF)
+            sqrts.next_to(choice, RIGHT, buff=LARGE_BUFF)
             sqrts.set_color(choice.get_color())
 
             arrows = VGroup(*[
                 Arrow(
-                    choice.get_right(), sqrt.get_left(), 
-                    color = WHITE,
-                    tip_length = 0.1,
-                    buff = SMALL_BUFF
+                    choice.get_right(), sqrt.get_left(),
+                    color=WHITE,
+                    tip_length=0.1,
+                    buff=SMALL_BUFF
                 )
                 for sqrt in sqrts
             ])
 
             self.play(ShowCreation(arrows))
-            self.play(FadeIn(sqrts, lag_ratio = 0.5))
+            self.play(FadeIn(sqrts, lag_ratio=0.5))
         self.play(Write(self.choice_two_words))
         self.wait()
 
+
 class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
     CONFIG = {
-        "xyz_colors" : color_gradient([GREEN_B, BLUE], 3),
-        "necklace_center" : DOWN,
-        "thief_box_offset" : 1.6,
-        "denoms" : [6, 3, 2],
+        "xyz_colors": color_gradient([GREEN_B, BLUE], 3),
+        "necklace_center": DOWN,
+        "thief_box_offset": 1.6,
+        "denoms": [6, 3, 2],
     }
+
     def construct(self):
         self.add_necklace()
         self.add_sphere_point_label()
@@ -2028,12 +2099,12 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
         label.to_corner(UP+RIGHT)
 
         ghost_sphere_point = VectorizedPoint()
-        ghost_sphere_point.to_corner(UP+LEFT, buff = LARGE_BUFF)
+        ghost_sphere_point.to_corner(UP+LEFT, buff=LARGE_BUFF)
         ghost_sphere_point.shift(2*RIGHT)
 
         arrow = Arrow(
             label.get_left(), ghost_sphere_point,
-            color = WHITE
+            color=WHITE
         )
 
         self.add(label, arrow)
@@ -2051,14 +2122,14 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
         ]
         for char, brace, color, denom in zip("xyz", braces, self.xyz_colors, self.denoms):
             brace.label = brace.get_text(
-                "$%s^2$"%char, "$= 1/%d$"%denom,
-                buff = SMALL_BUFF
+                "$%s^2$" % char, "$= 1/%d$" % denom,
+                buff=SMALL_BUFF
             )
             brace.label.set_color(color)
             if brace.label.get_right()[0] > brace.get_right()[0]:
                 brace.label.next_to(
-                    brace, UP, buff = SMALL_BUFF,
-                    aligned_edge = RIGHT
+                    brace, UP, buff=SMALL_BUFF,
+                    aligned_edge=RIGHT
                 )
 
         self.play(*it.chain(
@@ -2083,7 +2154,7 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
             char = brace.label.args[0][1]
             choices = [
                 TexMobject(
-                    char, "=", sign, "\\sqrt{\\frac{1}{%d}}"%denom
+                    char, "=", sign, "\\sqrt{\\frac{1}{%d}}" % denom
                 )
                 for sign in ("+", "-")
             ]
@@ -2093,12 +2164,13 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
                 choice.scale(0.8)
                 choice.move_to(group)
                 if choice.get_width() > 0.8*group.get_width():
-                    choice.next_to(group.get_right(), LEFT, buff = MED_SMALL_BUFF)
+                    choice.next_to(group.get_right(), LEFT,
+                                   buff=MED_SMALL_BUFF)
             original_choices = [m.copy() for m in choices]
 
             self.play(
                 ReplacementTransform(
-                    VGroup(brace.label[0], brace, brace.label[1]), 
+                    VGroup(brace.label[0], brace, brace.label[1]),
                     choices[0]
                 ),
                 group.move_to, group.target_points[0]
@@ -2126,7 +2198,7 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
         antipodal_tex = TexMobject(
             "(x, y, z) \\rightarrow (-x, -y, -z)"
         )
-        antipodal_tex.next_to(question, DOWN, aligned_edge = LEFT)
+        antipodal_tex.next_to(question, DOWN, aligned_edge=LEFT)
 
         self.play(FadeOut(self.sphere_point_label))
         self.play(FadeIn(question))
@@ -2138,14 +2210,17 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
         self.play(*self.swapping_anims)
         self.wait()
 
+
 class SimpleRotatingSphereWithAntipodes(ExternallyAnimatedScene):
     pass
 
+
 class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScene):
     CONFIG = {
-        "random_seed" : 1,
-        "thief_box_offset" : 1.2,
+        "random_seed": 1,
+        "thief_box_offset": 1.2,
     }
+
     def construct(self):
         random.seed(self.random_seed)
         self.add_necklace()
@@ -2214,24 +2289,25 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
         bottom_segments = self.groups[1][0]
         for color in color_types:
             monochrome_groups = [
-                VGroup(*[segment for segment in segment_group if segment.get_color() == color])
+                VGroup(
+                    *[segment for segment in segment_group if segment.get_color() == color])
                 for segment_group in (top_segments, bottom_segments)
             ]
             labels = VGroup()
             for i, group in enumerate(monochrome_groups):
                 group.save_state()
                 group.generate_target()
-                group.target.arrange(buff = SMALL_BUFF)
+                group.target.arrange(buff=SMALL_BUFF)
                 brace = Brace(group.target, UP)
                 label = VGroup(
-                    TextMobject("Thief %d"%(i+1)),
-                    Jewel(color = group[0].get_color())
+                    TextMobject("Thief %d" % (i+1)),
+                    Jewel(color=group[0].get_color())
                 )
                 label.arrange()
                 label.next_to(brace, UP)
                 full_group = VGroup(group.target, brace, label)
                 vect = LEFT if i == 0 else RIGHT
-                full_group.next_to(ORIGIN, vect, buff = MED_LARGE_BUFF)
+                full_group.next_to(ORIGIN, vect, buff=MED_LARGE_BUFF)
                 full_group.to_edge(UP)
                 labels.add(VGroup(brace, label))
             equals = TexMobject("=")
@@ -2262,11 +2338,12 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
             ])
             self.wait()
 
+
 class ExclaimBorsukUlam(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "Borsuk-Ulam!",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.play(*[
             ApplyMethod(pi.change_mode, "hooray")
@@ -2274,13 +2351,15 @@ class ExclaimBorsukUlam(TeacherStudentsScene):
         ])
         self.wait(3)
 
+
 class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     CONFIG = {
-        "necklace_center" : ORIGIN,
-        "camera_class" : ThreeDCamera,
-        "thief_box_offset" : 0.3,
-        "make_up_fair_division_indices" : False,
+        "necklace_center": ORIGIN,
+        "camera_class": ThreeDCamera,
+        "thief_box_offset": 0.3,
+        "make_up_fair_division_indices": False,
     }
+
     def construct(self):
         self.add_necklace()
         self.add_number_pair()
@@ -2291,8 +2370,8 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
         random.seed(self.random_seed)
         ChoicesInNecklaceCutting.add_necklace(self)
         self.necklace.set_width(FRAME_X_RADIUS-1)
-        self.necklace.to_edge(UP, buff = LARGE_BUFF)
-        self.necklace.to_edge(LEFT, buff = SMALL_BUFF)
+        self.necklace.to_edge(UP, buff=LARGE_BUFF)
+        self.necklace.to_edge(LEFT, buff=SMALL_BUFF)
         self.add(self.necklace)
 
         self.find_fair_division()
@@ -2300,8 +2379,8 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     def add_number_pair(self):
         plane_classes = [
             JewelPairPlane(
-                skip_animations = True, 
-                thief_number = x
+                skip_animations=True,
+                thief_number=x
             )
             for x in (1, 2)
         ]
@@ -2314,9 +2393,9 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
         self.example_coords = plane_classes[0].example_coords[0]
 
         arrow = Arrow(
-            self.necklace.get_corner(DOWN+RIGHT), 
+            self.necklace.get_corner(DOWN+RIGHT),
             self.example_coords,
-            color = YELLOW
+            color=YELLOW
         )
 
         self.play(ShowCreation(arrow))
@@ -2326,17 +2405,17 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
         self.clear()
         self.add(*clean_state)
         self.transition_to_alt_config(
-            make_up_fair_division_indices = True
+            make_up_fair_division_indices=True
         )
         self.wait()
         t1_plane.save_state()
         self.play(
-            Transform(*planes, path_arc = np.pi),
+            Transform(*planes, path_arc=np.pi),
             Animation(arrow)
         )
         self.wait(2)
         self.play(
-            ApplyMethod(t1_plane.restore, path_arc = np.pi),
+            ApplyMethod(t1_plane.restore, path_arc=np.pi),
             Animation(arrow)
         )
         self.wait()
@@ -2353,12 +2432,12 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
         up_down_arrow = TexMobject("\\updownarrow")
         up_down_arrow.scale(1.5)
         up_down_arrow.set_color(YELLOW)
-        up_down_arrow.next_to(self.necklace, DOWN, buff = LARGE_BUFF)
+        up_down_arrow.next_to(self.necklace, DOWN, buff=LARGE_BUFF)
 
         to_plane_arrow = Arrow(
             up_down_arrow.get_bottom() + DOWN+RIGHT,
             self.example_coords,
-            color = YELLOW
+            color=YELLOW
         )
 
         self.play(Write(up_down_arrow))
@@ -2372,35 +2451,38 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
         else:
             return TotalLengthOfEachJewelEquals.get_fair_division_indices(self, *args)
 
+
 class JewelPairPlane(GraphScene):
     CONFIG = {
-        "camera_class" : ThreeDCamera,
-        "x_labeled_nums" : [],
-        "y_labeled_nums" : [],
-        "thief_number" : 1,
-        "colors" : [BLUE, GREEN],
+        "camera_class": ThreeDCamera,
+        "x_labeled_nums": [],
+        "y_labeled_nums": [],
+        "thief_number": 1,
+        "colors": [BLUE, GREEN],
     }
+
     def construct(self):
         self.setup_axes()
         point = self.coords_to_point(4, 5)
-        dot = Dot(point, color = WHITE)
+        dot = Dot(point, color=WHITE)
         coord_pair = TexMobject(
-            "\\big(", 
-            "\\text{Thief %d }"%self.thief_number, "X", ",", 
-            "\\text{Thief %d }"%self.thief_number, "X", 
+            "\\big(",
+            "\\text{Thief %d }" % self.thief_number, "X", ",",
+            "\\text{Thief %d }" % self.thief_number, "X",
             "\\big)"
         )
         # coord_pair.scale(1.5)
         to_replace = [coord_pair[i] for i in [2, 5]]
         for mob, color in zip(to_replace, self.colors):
-            jewel = Jewel(color = color)
+            jewel = Jewel(color=color)
             jewel.replace(mob)
             coord_pair.remove(mob)
             coord_pair.add(jewel)
-        coord_pair.next_to(dot, UP+RIGHT, buff = 0)
+        coord_pair.next_to(dot, UP+RIGHT, buff=0)
 
         self.example_coords = VGroup(dot, coord_pair)
         self.add(self.example_coords)
+
 
 class WhatThisMappingActuallyLooksLikeWords(Scene):
     def construct(self):
@@ -2410,6 +2492,7 @@ class WhatThisMappingActuallyLooksLikeWords(Scene):
 
         self.play(Write(words))
         self.wait()
+
 
 class WhatAboutGeneralCase(TeacherStudentsScene):
     def construct(self):
@@ -2423,24 +2506,27 @@ class WhatAboutGeneralCase(TeacherStudentsScene):
         self.wait()
         self.teacher_says(
             """Use Borsuk-Ulam for
-            higher-dimensional spheres """, 
-            target_mode = "hooray"
+            higher-dimensional spheres """,
+            target_mode="hooray"
         )
         self.change_student_modes(*["confused"]*3)
         self.wait(2)
 
+
 class Simple3DSpace(ExternallyAnimatedScene):
     pass
 
+
 class FourDBorsukUlam(GeneralizeBorsukUlam, PiCreatureScene):
     CONFIG = {
-        "n_dims" : 4,
-        "use_morty" : False,
+        "n_dims": 4,
+        "use_morty": False,
     }
+
     def setup(self):
         GeneralizeBorsukUlam.setup(self)
         PiCreatureScene.setup(self)
-        self.pi_creature.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
+        self.pi_creature.to_corner(DOWN+LEFT, buff=MED_SMALL_BUFF)
 
     def construct(self):
         sphere_set = self.get_sphere_set()
@@ -2453,7 +2539,7 @@ class FourDBorsukUlam(GeneralizeBorsukUlam, PiCreatureScene):
         arrow.next_to(sphere_set, RIGHT)
         f.next_to(arrow, UP)
         output_space.next_to(arrow, RIGHT)
-        equation.next_to(sphere_set, DOWN, buff = LARGE_BUFF)
+        equation.next_to(sphere_set, DOWN, buff=LARGE_BUFF)
         equation.to_edge(RIGHT)
         lhs = VGroup(*equation[:2])
         eq = equation[2]
@@ -2501,25 +2587,26 @@ class FourDBorsukUlam(GeneralizeBorsukUlam, PiCreatureScene):
         sphere_set.add(brace, text)
         return sphere_set
 
+
 class CircleToSphereToQMarks(Scene):
     def construct(self):
         pi_groups = VGroup()
         modes = ["happy", "pondering", "pleading"]
         shapes = [
-            Circle(color = BLUE, radius = 0.5), 
-            VectorizedPoint(), 
+            Circle(color=BLUE, radius=0.5),
+            VectorizedPoint(),
             TexMobject("???")
         ]
         for d, mode, shape in zip(it.count(2), modes, shapes):
-            randy = Randolph(mode = mode)
+            randy = Randolph(mode=mode)
             randy.scale(0.7)
             bubble = randy.get_bubble(
-                height = 3, width = 4,
-                direction = LEFT
+                height=3, width=4,
+                direction=LEFT
             )
             bubble.pin_to(randy)
             bubble.position_mobject_inside(shape)
-            title = TextMobject("%dD"%d)
+            title = TextMobject("%dD" % d)
             title.next_to(randy, UP)
             arrow = Arrow(LEFT, RIGHT)
             arrow.next_to(randy.get_corner(UP+RIGHT))
@@ -2528,16 +2615,17 @@ class CircleToSphereToQMarks(Scene):
             ))
 
         pi_groups[-1].remove(pi_groups[-1][-1])
-        pi_groups.arrange(buff = -1)
+        pi_groups.arrange(buff=-1)
         for mob in pi_groups:
             self.play(FadeIn(mob))
         self.wait(2)
         self.play(pi_groups[-1][0].change_mode, "thinking")
         self.wait(2)
 
+
 class BorsukPatreonThanks(PatreonThanks):
     CONFIG = {
-        "specific_patrons" : [
+        "specific_patrons": [
             "Ali  Yahya",
             "Meshal  Alshammari",
             "CrypticSwarm    ",
@@ -2568,6 +2656,7 @@ class BorsukPatreonThanks(PatreonThanks):
         ]
     }
 
+
 class MortyLookingAtRectangle(Scene):
     def construct(self):
         morty = Mortimer()
@@ -2575,7 +2664,7 @@ class MortyLookingAtRectangle(Scene):
         url = TextMobject("www.thegreatcoursesplus.com/3blue1brown")
         url.scale(0.75)
         url.to_corner(UP+LEFT)
-        rect = Rectangle(height = 9, width = 16)
+        rect = Rectangle(height=9, width=16)
         rect.set_height(5)
         rect.next_to(url, DOWN)
         rect.shift_onto_screen()
@@ -2604,23 +2693,26 @@ class MortyLookingAtRectangle(Scene):
             self.play(Blink(morty))
             self.wait(2)
 
+
 class RotatingThreeDSphereProjection(Scene):
     CONFIG = {
-        "camera_class" : ThreeDCamera,
+        "camera_class": ThreeDCamera,
     }
+
     def construct(self):
         sphere = VGroup(*[
-            Circle(radius = np.sin(t)).shift(np.cos(t)*OUT)
+            Circle(radius=np.sin(t)).shift(np.cos(t)*OUT)
             for t in np.linspace(0, np.pi, 20)
         ])
-        sphere.set_stroke(BLUE, width = 2)
+        sphere.set_stroke(BLUE, width=2)
         # sphere.set_fill(BLUE, opacity = 0.1)
 
         self.play(Rotating(
-            sphere, axis = RIGHT+OUT,
-            run_time = 10
+            sphere, axis=RIGHT+OUT,
+            run_time=10
         ))
         self.repeat_frames(4)
+
 
 class FourDSphereProjectTo4D(ExternallyAnimatedScene):
     pass
@@ -2628,8 +2720,9 @@ class FourDSphereProjectTo4D(ExternallyAnimatedScene):
 
 class Test(Scene):
     CONFIG = {
-        "camera_class" : ThreeDCamera,
+        "camera_class": ThreeDCamera,
     }
+
     def construct(self):
         randy = Randolph()
         necklace = Necklace()
@@ -2641,16 +2734,3 @@ class Test(Scene):
         necklace.move_to(randy)
 
         self.add(randy, necklace)
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,24 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from nn.part1 import *
+from nn.network import *
+from manimlib.imports import *
+from constants import *
 import sys
 import os.path
 from functools import reduce
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from constants import *
-
-from manimlib.imports import *
-
-from nn.network import *
-from nn.part1 import *
 
 
 class Test(Scene):
     def construct(self):
         network = get_pretrained_network()
         training_data, validation_data, test_data = load_data_wrapper()
-        self.show_weight_rows(network, index = 0)
+        self.show_weight_rows(network, index=0)
         # self.show_maximizing_inputs(network)
         # self.show_all_activation_images(network, test_data)
 
@@ -37,7 +35,6 @@ class Test(Scene):
         # group.arrange(DOWN)
         # group.set_height(FRAME_HEIGHT - 1)
         # self.add(group)
-
 
     def show_random_results(self):
         group = Group(*[
@@ -59,7 +56,7 @@ class Test(Scene):
             for n, pixel in zip(row, mob):
                 color = GREEN if n > 0 else RED
                 opacity = 2*(sigmoid(abs(n)) - 0.5)
-                pixel.set_fill(color, opacity = opacity)
+                pixel.set_fill(color, opacity=opacity)
             group.add(mob)
         group.arrange_in_grid()
         group.set_height(FRAME_HEIGHT - 1)
@@ -71,14 +68,14 @@ class Test(Scene):
             for digit in range(10)
         ])
         image_samples.arrange_in_grid(
-            n_rows = 2, buff = LARGE_BUFF
+            n_rows=2, buff=LARGE_BUFF
         )
         image_samples.set_height(FRAME_HEIGHT - 1)
         self.add(image_samples)
 
-    def get_activation_images(self, digit, network, test_data, n_examples = 8):
+    def get_activation_images(self, digit, network, test_data, n_examples=8):
         input_vectors = [
-            data[0] 
+            data[0]
             for data in test_data
             if data[1] == digit
         ]
@@ -126,7 +123,7 @@ class Test(Scene):
             for test in test_data[3:20]
             if test[1] in [4, 9]
         ])
-        group.arrange(DOWN, buff = MED_LARGE_BUFF)
+        group.arrange(DOWN, buff=MED_LARGE_BUFF)
         group.set_height(FRAME_HEIGHT - 1)
         self.play(FadeIn(group))
 
@@ -134,7 +131,7 @@ class Test(Scene):
         test_in, test_out = test
         activations = network.get_activation_of_all_layers(test_in)
         group = Group(*list(map(MNistMobject, activations)))
-        group.arrange(RIGHT, buff = LARGE_BUFF)
+        group.arrange(RIGHT, buff=LARGE_BUFF)
         return group
 
     # def show_frame(self):
@@ -144,35 +141,3 @@ class Test(Scene):
 if __name__ == "__main__":
     save_pretrained_network()
     test_network()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

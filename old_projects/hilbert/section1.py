@@ -10,19 +10,21 @@ from hilbert.curves import \
 from constants import *
 
 
-
 def get_grid():
     return Grid(64, 64)
 
+
 def get_freq_line():
-    return UnitInterval().shift(2*DOWN) ##Change?
+    return UnitInterval().shift(2*DOWN)  # Change?
+
 
 def get_mathy_and_bubble():
     mathy = Mathematician()
     mathy.to_edge(DOWN).shift(4*LEFT)
-    bubble = SpeechBubble(initial_width = 8)
+    bubble = SpeechBubble(initial_width=8)
     bubble.pin_to(mathy)
     return mathy, bubble
+
 
 class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
     @staticmethod
@@ -60,10 +62,10 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
         ]).scale(2).split()
         infinity = TexMobject("\\infty").scale(2)
         local_mobjects = list(filter(
-            lambda m : isinstance(m, Mobject),
+            lambda m: isinstance(m, Mobject),
             list(locals().values()),
         ))
-        for mob in local_mobjects:    
+        for mob in local_mobjects:
             mob.sort_points(get_norm)
 
         self.play(ShimmerIn(infinity))
@@ -108,7 +110,6 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
         self.wait()
 
 
-
 class PostponePhilosophizing(Scene):
     def construct(self):
         abstract, arrow, concrete = TextMobject([
@@ -120,7 +121,7 @@ class PostponePhilosophizing(Scene):
         self.play(*[
             ApplyMethod(
                 word1.replace, word2,
-                path_func = path_along_arc(np.pi/2)
+                path_func=path_along_arc(np.pi/2)
             )
             for word1, word2 in it.permutations([abstract, concrete])
         ])
@@ -129,18 +130,18 @@ class PostponePhilosophizing(Scene):
 
 class GrowHilbertWithName(Scene):
     def construct(self):
-        curve = HilbertCurve(order = 1)
+        curve = HilbertCurve(order=1)
         words = TextMobject("``Hilbert Curve''")
-        words.to_edge(UP, buff = 0.2)
+        words.to_edge(UP, buff=0.2)
         self.play(
             ShimmerIn(words),
-            Transform(curve, HilbertCurve(order = 2)),
-            run_time = 2
+            Transform(curve, HilbertCurve(order=2)),
+            run_time=2
         )
         for n in range(3, 8):
             self.play(
-                Transform(curve, HilbertCurve(order = n)),
-                run_time = 5. /n
+                Transform(curve, HilbertCurve(order=n)),
+                run_time=5. / n
             )
 
 
@@ -149,38 +150,39 @@ class SectionOne(Scene):
         self.add(TextMobject("Section 1: Seeing with your ears"))
         self.wait()
 
-class WriteSomeSoftware(Scene):
-    pass #Done viea screen capture, written here for organization
 
+class WriteSomeSoftware(Scene):
+    pass  # Done viea screen capture, written here for organization
 
 
 class ImageToSound(Scene):
     def construct(self):
-        string = Vibrate(color = BLUE_D, run_time = 5)
-        picture = ImageMobject("lion", invert = False)
+        string = Vibrate(color=BLUE_D, run_time=5)
+        picture = ImageMobject("lion", invert=False)
         picture.scale(0.8)
         picture_copy = picture.copy()
         picture.sort_points(get_norm)
-        string.mobject.sort_points(lambda p : -get_norm(p))
+        string.mobject.sort_points(lambda p: -get_norm(p))
 
         self.add(picture)
         self.wait()
         self.play(Transform(
             picture, string.mobject,
-            run_time = 3,
-            rate_func = rush_into
+            run_time=3,
+            rate_func=rush_into
         ))
         self.remove(picture)
         self.play(string)
 
         for mob in picture_copy, string.mobject:
-            mob.sort_points(lambda p : get_norm(p)%1)
+            mob.sort_points(lambda p: get_norm(p) % 1)
 
         self.play(Transform(
             string.mobject, picture_copy,
-            run_time = 5,
-            rate_func = rush_from
+            run_time=5,
+            rate_func=rush_from
         ))
+
 
 class LinksInDescription(Scene):
     def construct(self):
@@ -195,19 +197,19 @@ class LinksInDescription(Scene):
 
 class ImageDataIsTwoDimensional(Scene):
     def construct(self):
-        image = ImageMobject("lion", invert = False)
+        image = ImageMobject("lion", invert=False)
         image.scale(0.5)
         image.shift(2*LEFT)
 
         self.add(image)
         for vect, num in zip([DOWN, RIGHT], [1, 2]):
             brace = Brace(image, vect)
-            words_mob = TextMobject("Dimension %d"%num)
-            words_mob.next_to(image, vect, buff = 1)
+            words_mob = TextMobject("Dimension %d" % num)
+            words_mob.next_to(image, vect, buff=1)
             self.play(
                 Transform(Point(brace.get_center()), brace),
-                ShimmerIn(words_mob), 
-                run_time = 2
+                ShimmerIn(words_mob),
+                run_time=2
             )
         self.wait()
 
@@ -216,13 +218,13 @@ class SoundDataIsOneDimensional(Scene):
     def construct(self):
         overtones = 5
         floor = 2*DOWN
-        main_string = Vibrate(color = BLUE_D)
+        main_string = Vibrate(color=BLUE_D)
         component_strings = [
             Vibrate(
-                num_periods = k+1,
-                overtones = 1,
-                color = color,
-                center = 2*DOWN + UP*k
+                num_periods=k+1,
+                overtones=1,
+                color=color,
+                center=2*DOWN + UP*k
             )
             for k, color in zip(
                 list(range(overtones)),
@@ -232,7 +234,7 @@ class SoundDataIsOneDimensional(Scene):
         dots = [
             Dot(
                 string.mobject.get_center(),
-                color = string.mobject.get_color()
+                color=string.mobject.get_color()
             )
             for string in component_strings
         ]
@@ -244,12 +246,11 @@ class SoundDataIsOneDimensional(Scene):
         words = TextMobject("Range of frequency values")
         words.next_to(brace, UP)
 
-
         self.play(*[
             TransformAnimations(
                 main_string.copy(),
                 string,
-                run_time = 5
+                run_time=5
             )
             for string in component_strings
         ])
@@ -270,23 +271,24 @@ class SoundDataIsOneDimensional(Scene):
                 Transform(
                     dot,
                     dot.copy().scale(2).rotate(-np.pi/2).shift(floor),
-                    path_func = path_along_arc(np.pi/3)
+                    path_func=path_along_arc(np.pi/3)
                 )
                 for dot in dots
             ]
         )
         self.wait(0.5)
 
+
 class GridOfPixels(Scene):
     def construct(self):
-        low_res = ImageMobject("low_resolution_lion", invert = False)
-        high_res = ImageMobject("Lion", invert = False)
+        low_res = ImageMobject("low_resolution_lion", invert=False)
+        high_res = ImageMobject("Lion", invert=False)
         grid = get_grid().scale(0.8)
         for mob in low_res, high_res:
-            mob.replace(grid, stretch = True)
+            mob.replace(grid, stretch=True)
         side_brace = Brace(low_res, LEFT)
         top_brace = Brace(low_res, UP)
-        top_words = TextMobject("256 Px", size = "\\normal")
+        top_words = TextMobject("256 Px", size="\\normal")
         side_words = top_words.copy().rotate(np.pi/2)
         top_words.next_to(top_brace, UP)
         side_words.next_to(side_brace, LEFT)
@@ -326,13 +328,12 @@ class ShowFrequencySpace(Scene):
         self.wait()
 
 
-
 class AssociatePixelWithFrequency(Scene):
     def construct(self):
         big_grid_dim = 20.
         small_grid_dim = 6.
-        big_grid = Grid(64, 64, height = big_grid_dim, width = big_grid_dim)
-        big_grid.to_corner(UP+RIGHT, buff = 2)
+        big_grid = Grid(64, 64, height=big_grid_dim, width=big_grid_dim)
+        big_grid.to_corner(UP+RIGHT, buff=2)
         small_grid = big_grid.copy()
         small_grid.scale(small_grid_dim/big_grid_dim)
         small_grid.center()
@@ -347,20 +348,20 @@ class AssociatePixelWithFrequency(Scene):
         pixel.set_color(WHITE)
         pixel_width = big_grid.width/big_grid.columns
         pixel.set_width(pixel_width)
-        pixel.to_corner(UP+RIGHT, buff = 2)
+        pixel.to_corner(UP+RIGHT, buff=2)
         pixel.shift(5*pixel_width*(2*LEFT+DOWN))
 
         freq_line = get_freq_line()
         dot = Dot()
         dot.shift(freq_line.get_center() + 2*RIGHT)
-        string = Line(LEFT, RIGHT, color = GREEN)
+        string = Line(LEFT, RIGHT, color=GREEN)
         arrow = Arrow(dot, string.get_center())
         vibration_config = {
-            "overtones"      : 1,
-            "spatial_period" : 2,
+            "overtones": 1,
+            "spatial_period": 2,
         }
         vibration, loud_vibration, quiet_vibration = [
-            Vibrate(string.copy(), amplitude = a, **vibration_config)
+            Vibrate(string.copy(), amplitude=a, **vibration_config)
             for a in [0.5, 1., 0.25]
         ]
 
@@ -372,7 +373,7 @@ class AssociatePixelWithFrequency(Scene):
         self.play(FadeIn(pixel))
         self.wait()
         self.play(
-            FadeOut(small_grid),            
+            FadeOut(small_grid),
             ShowCreation(freq_line)
         )
         self.remove(small_grid)
@@ -383,7 +384,7 @@ class AssociatePixelWithFrequency(Scene):
         self.play(ShowCreation(arrow))
         self.play(loud_vibration)
         self.play(
-            TransformAnimations(loud_vibration, quiet_vibration),            
+            TransformAnimations(loud_vibration, quiet_vibration),
             ApplyMethod(dot.fade, 0.9)
         )
         self.clear()
@@ -394,36 +395,37 @@ class AssociatePixelWithFrequency(Scene):
 class ListenToAllPixels(Scene):
     def construct(self):
         grid = get_grid()
-        grid.sort_points(get_norm)        
+        grid.sort_points(get_norm)
         freq_line = get_freq_line()
-        freq_line.sort_points(lambda p : p[0])
+        freq_line.sort_points(lambda p: p[0])
         red, blue = Color(RED), Color(BLUE)
         freq_line.set_color_by_gradient(red, blue)
 
         colors = [
-            Color(rgb = interpolate(
+            Color(rgb=interpolate(
                 np.array(red.rgb),
                 np.array(blue.rgb),
                 alpha
             ))
             for alpha in np.arange(4)/3.
         ]
-        string = Line(3*LEFT, 3*RIGHT, color = colors[1])
+        string = Line(3*LEFT, 3*RIGHT, color=colors[1])
         vibration = Vibrate(string)
         vibration_copy = vibration.copy()
         vibration_copy.mobject.stroke_width = 1
         sub_vibrations = [
             Vibrate(
                 string.copy().shift((n-1)*UP).set_color(colors[n]),
-                overtones = 1,
-                spatial_period = 6./(n+1),
-                temporal_period = 1./(n+1),
-                amplitude = 0.5/(n+1)
+                overtones=1,
+                spatial_period=6./(n+1),
+                temporal_period=1./(n+1),
+                amplitude=0.5/(n+1)
             )
             for n in range(4)
         ]
-        words = TexMobject("&\\vdots \\\\ \\text{thousands }& \\text{of frequencies} \\\\ &\\vdots")
-        words.to_edge(UP, buff = 0.1)
+        words = TexMobject(
+            "&\\vdots \\\\ \\text{thousands }& \\text{of frequencies} \\\\ &\\vdots")
+        words.to_edge(UP, buff=0.1)
 
         self.add(grid)
         self.wait()
@@ -435,10 +437,10 @@ class ListenToAllPixels(Scene):
         self.play(
             ShimmerIn(
                 words,
-                rate_func = squish_rate_func(smooth, 0, 0.2)
+                rate_func=squish_rate_func(smooth, 0, 0.2)
             ),
             *sub_vibrations,
-            run_time = 5
+            run_time=5
         )
         self.play(
             *[
@@ -466,8 +468,8 @@ class LayAsideSpeculation(Scene):
             grid, freq_line, Arrow(grid, freq_line)
         )
         mapping.ingest_submobjects()
-        lower_left = Point().to_corner(DOWN+LEFT, buff = 0)
-        lower_right = Point().to_corner(DOWN+RIGHT, buff = 0)
+        lower_left = Point().to_corner(DOWN+LEFT, buff=0)
+        lower_right = Point().to_corner(DOWN+RIGHT, buff=0)
 
         self.add(words)
         self.wait()
@@ -490,7 +492,7 @@ class RandomMapping(Scene):
         #     indices = np.arange(mob.get_num_points())
         #     random.shuffle(indices)
         #     mob.points = mob.points[indices]
-        stars = Stars(stroke_width = grid.stroke_width)
+        stars = Stars(stroke_width=grid.stroke_width)
 
         self.add(grid)
         targets = [stars, freq_line]
@@ -498,26 +500,23 @@ class RandomMapping(Scene):
         for target, rate_func in zip(targets, alphas):
             self.play(Transform(
                 grid, target,
-                run_time = 3,
-                rate_func = rate_func,
-                path_func = path_along_arc(-np.pi/2)
+                run_time=3,
+                rate_func=rate_func,
+                path_func=path_along_arc(-np.pi/2)
             ))
         self.wait()
-        
 
 
 class DataScrambledAnyway(Scene):
     def construct(self):
         self.add(TextMobject("Data is scrambled anyway, right?"))
         self.wait()
-        
+
 
 class LeverageExistingIntuitions(Scene):
     def construct(self):
         self.add(TextMobject("Leverage existing intuitions"))
         self.wait()
-
-
 
 
 class ThinkInTermsOfReverseMapping(Scene):
@@ -528,16 +527,16 @@ class ThinkInTermsOfReverseMapping(Scene):
         freq_line = get_freq_line()
         freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
-        arrow =  Arrow(grid, freq_line)
+        arrow = Arrow(grid, freq_line)
 
         color1, color2 = YELLOW_C, RED
         square_length = 0.01
-        dot1 = Dot(color = color1)
+        dot1 = Dot(color=color1)
         dot1.shift(3*RIGHT)
-        dot2 = Dot(color = color2)
+        dot2 = Dot(color=color2)
         dot2.shift(3.1*RIGHT)
-        arrow1 = Arrow(2*RIGHT+UP, dot1, color = color1, buff = 0.1)
-        arrow2 = Arrow(4*RIGHT+UP, dot2, color = color2, buff = 0.1)
+        arrow1 = Arrow(2*RIGHT+UP, dot1, color=color1, buff=0.1)
+        arrow2 = Arrow(4*RIGHT+UP, dot2, color=color2, buff=0.1)
         dot3, arrow3 = [
             mob.copy().shift(5*LEFT+UP)
             for mob in (dot1, arrow1)
@@ -550,8 +549,8 @@ class ThinkInTermsOfReverseMapping(Scene):
         self.add(grid, freq_line, arrow)
         self.wait()
         self.play(ApplyMethod(
-            arrow.rotate, np.pi, 
-            path_func = clockwise_path()
+            arrow.rotate, np.pi,
+            path_func=clockwise_path()
         ))
         self.wait()
         self.play(ShowCreation(arrow1))
@@ -577,28 +576,28 @@ class WeaveLineThroughPixels(Scene):
     @staticmethod
     def args_to_string(order):
         return str(order)
-        
+
     @staticmethod
     def string_to_args(order_str):
         return int(order_str)
 
     def construct(self, order):
         start_color, end_color = RED, GREEN
-        curve = HilbertCurve(order = order)
+        curve = HilbertCurve(order=order)
         line = Line(5*LEFT, 5*RIGHT)
         for mob in curve, line:
             mob.set_color_by_gradient(start_color, end_color)
         freq_line = get_freq_line()
-        freq_line.replace(line, stretch = True)
+        freq_line.replace(line, stretch=True)
 
-        unit = 6./(2**order) #sidelength of pixel
+        unit = 6./(2**order)  # sidelength of pixel
         up = unit*UP
         right = unit*RIGHT
         lower_left = 3*(LEFT+DOWN)
         squares = Mobject(*[
             Square(
-                side_length = unit, 
-                color = WHITE
+                side_length=unit,
+                color=WHITE
             ).shift(x*right+y*up)
             for x, y in it.product(list(range(2**order)), list(range(2**order)))
         ])
@@ -607,29 +606,29 @@ class WeaveLineThroughPixels(Scene):
         for square in squares.submobjects:
             center = square.get_center()
             distances = np.apply_along_axis(
-                lambda p : get_norm(p-center),
+                lambda p: get_norm(p-center),
                 1,
                 curve.points
             )
             index_along_curve = np.argmin(distances)
-            fraction_along_curve = index_along_curve/float(curve.get_num_points())
+            fraction_along_curve = index_along_curve / \
+                float(curve.get_num_points())
             target = square.copy().center().scale(0.8/(2**order))
             line_index = int(fraction_along_curve*line.get_num_points())
             target.shift(line.points[line_index])
             targets.add(target)
 
-
         self.add(squares)
         self.play(ShowCreation(
             curve,
-            run_time = 5, 
+            run_time=5,
             rate_func=linear
         ))
         self.wait()
         self.play(
             Transform(curve, line),
             Transform(squares, targets),
-            run_time = 3
+            run_time=3
         )
         self.wait()
         self.play(ShowCreation(freq_line))
@@ -639,14 +638,14 @@ class WeaveLineThroughPixels(Scene):
 class WellPlayedGameOfSnake(Scene):
     def construct(self):
         grid = Grid(16, 16).fade()
-        snake_curve = SnakeCurve(order = 4)
+        snake_curve = SnakeCurve(order=4)
         words = TextMobject("``Snake Curve''")
         words.next_to(grid, UP)
 
         self.add(grid)
         self.play(ShowCreation(
             snake_curve,
-            run_time = 7, 
+            run_time=7,
             rate_func=linear
         ))
         self.wait()
@@ -659,18 +658,20 @@ class TellMathematicianFriend(Scene):
         mathy, bubble = get_mathy_and_bubble()
         squiggle_mouth = mathy.mouth.copy()
         squiggle_mouth.apply_function(
-            lambda x_y_z : (x_y_z[0], x_y_z[1]+0.02*np.sin(50*x_y_z[0]), x_y_z[2])
+            lambda x_y_z: (x_y_z[0], x_y_z[1]+0.02 *
+                           np.sin(50*x_y_z[0]), x_y_z[2])
         )
-        bubble.ingest_submobjects()        
+        bubble.ingest_submobjects()
         bubble.write("Why not use a Hilbert curve \\textinterrobang ")
         words1 = bubble.content
-        bubble.write("So, it's not one curve but an infinite family of curves \\dots")
+        bubble.write(
+            "So, it's not one curve but an infinite family of curves \\dots")
         words2 = bubble.content
         bubble.write("Well, no, it \\emph{is} just one thing, but I need \\\\ \
                       to tell you about a certain infinite family first.")
-        words3 =  bubble.content
-        description = TextMobject("Mathematician friend", size = "\\small")
-        description.next_to(mathy, buff = 2)
+        words3 = bubble.content
+        description = TextMobject("Mathematician friend", size="\\small")
+        description.next_to(mathy, buff=2)
         arrow = Arrow(description, mathy)
 
         self.add(mathy)
@@ -700,12 +701,12 @@ class TellMathematicianFriend(Scene):
         self.wait(2)
         self.play(
             ApplyPointwiseFunction(
-                lambda p : 15*p/get_norm(p),
+                lambda p: 15*p/get_norm(p),
                 bubble
             ),
             ApplyMethod(mathy.shift, 5*(DOWN+LEFT)),
             FadeOut(words3),
-            run_time = 3
+            run_time=3
         )
 
 
@@ -713,22 +714,22 @@ class Order1PseudoHilbertCurve(Scene):
     def construct(self):
         words, s = TextMobject(["Pseudo-Hilbert Curve", "s"]).split()
         pre_words = TextMobject("Order 1")
-        pre_words.next_to(words, LEFT, buff = 0.5)
-        s.next_to(words, RIGHT, buff = 0.05, aligned_edge = DOWN)
+        pre_words.next_to(words, LEFT, buff=0.5)
+        s.next_to(words, RIGHT, buff=0.05, aligned_edge=DOWN)
         cluster = Mobject(pre_words, words, s)
         cluster.center()
         cluster.scale(0.7)
-        cluster.to_edge(UP, buff = 0.3)
+        cluster.to_edge(UP, buff=0.3)
         cluster.set_color(GREEN)
         grid1 = Grid(1, 1)
         grid2 = Grid(2, 2)
-        curve = HilbertCurve(order = 1)
+        curve = HilbertCurve(order=1)
 
         self.add(words, s)
         self.wait()
         self.play(Transform(
-            s, pre_words, 
-            path_func = path_along_arc(-np.pi/3)
+            s, pre_words,
+            path_func=path_along_arc(-np.pi/3)
         ))
         self.wait()
         self.play(ShowCreation(grid1))
@@ -736,26 +737,27 @@ class Order1PseudoHilbertCurve(Scene):
         self.play(ShowCreation(grid2))
         self.wait()
         kwargs = {
-            "run_time" : 5,
-            "rate_func" : None
+            "run_time": 5,
+            "rate_func": None
         }
         self.play(ShowCreation(curve, **kwargs))
         self.wait()
 
+
 class Order2PseudoHilbertCurve(Scene):
     def construct(self):
         words = TextMobject("Order 2 Pseudo-Hilbert Curve")
-        words.to_edge(UP, buff = 0.3)
+        words.to_edge(UP, buff=0.3)
         words.set_color(GREEN)
         grid2 = Grid(2, 2)
-        grid4 = Grid(4, 4, stroke_width = 2)
+        grid4 = Grid(4, 4, stroke_width=2)
         # order_1_curve = HilbertCurve(order = 1)
         # squaggle_curve = order_1_curve.copy().apply_function(
         #     lambda (x, y, z) : (x + np.cos(3*y), y + np.sin(3*x), z)
         # )
         # squaggle_curve.show()
         mini_curves = [
-            HilbertCurve(order = 1).scale(0.5).shift(1.5*vect)
+            HilbertCurve(order=1).scale(0.5).shift(1.5*vect)
             for vect in [
                 LEFT+DOWN,
                 LEFT+UP,
@@ -771,7 +773,7 @@ class Order2PseudoHilbertCurve(Scene):
             last_curve = mini_curve
         naive_curve.ingest_submobjects()
         naive_curve.set_color_by_gradient(RED, GREEN)
-        order_2_curve = HilbertCurve(order = 2)
+        order_2_curve = HilbertCurve(order=2)
 
         self.add(words, grid2)
         self.wait()
@@ -781,7 +783,7 @@ class Order2PseudoHilbertCurve(Scene):
             for mini_curve in mini_curves
         ])
         self.wait()
-        self.play(ShowCreation(naive_curve, run_time = 5))
+        self.play(ShowCreation(naive_curve, run_time=5))
         self.remove(*mini_curves)
         self.wait()
         self.play(Transform(naive_curve, order_2_curve))
@@ -795,12 +797,12 @@ class Order3PseudoHilbertCurve(Scene):
         words.to_edge(UP)
         grid4 = Mobject(
             Grid(2, 2),
-            Grid(4, 4, stroke_width = 2)
+            Grid(4, 4, stroke_width=2)
         )
-        grid8 = Grid(8, 8, stroke_width = 1)
-        order_3_curve = HilbertCurve(order = 3)
+        grid8 = Grid(8, 8, stroke_width=1)
+        order_3_curve = HilbertCurve(order=3)
         mini_curves = [
-            HilbertCurve(order = 2).scale(0.5).shift(1.5*vect)
+            HilbertCurve(order=2).scale(0.5).shift(1.5*vect)
             for vect in [
                 LEFT+DOWN,
                 LEFT+UP,
@@ -824,17 +826,17 @@ class Order3PseudoHilbertCurve(Scene):
                 (mini_curves[3], UP+LEFT)
             ]
         ])
-        self.play(ShowCreation(order_3_curve, run_time = 5))
+        self.play(ShowCreation(order_3_curve, run_time=5))
         self.wait()
+
 
 class GrowToOrder8PseudoHilbertCurve(Scene):
     def construct(self):
-        self.curve = HilbertCurve(order = 1)
+        self.curve = HilbertCurve(order=1)
         self.add(self.curve)
         self.wait()
         while self.curve.order < 8:
             self.increase_order()
-
 
     def increase_order(self):
         mini_curves = [
@@ -864,8 +866,8 @@ class GrowToOrder8PseudoHilbertCurve(Scene):
                 (mini_curves[3], UP+LEFT)
             ]
         ])
-        self.curve = HilbertCurve(order = self.curve.order+1)
-        self.play(ShowCreation(self.curve, run_time = 2))
+        self.curve = HilbertCurve(order=self.curve.order+1)
+        self.play(ShowCreation(self.curve, run_time=2))
         self.remove(*mini_curves)
         self.wait()
 
@@ -876,8 +878,8 @@ class UseOrder8(Scene):
         bubble.write("For a 256x256 pixel array...")
         words = TextMobject("Order 8 Pseudo-Hilbert Curve")
         words.set_color(GREEN)
-        words.to_edge(UP, buff = 0.3)
-        curve = HilbertCurve(order = 8)
+        words.to_edge(UP, buff=0.3)
+        curve = HilbertCurve(order=8)
 
         self.add(mathy, bubble)
         self.play(ShimmerIn(bubble.content))
@@ -885,17 +887,16 @@ class UseOrder8(Scene):
         self.clear()
         self.add(words)
         self.play(ShowCreation(
-            curve, run_time = 7, rate_func=linear
+            curve, run_time=7, rate_func=linear
         ))
         self.wait()
-
 
 
 class HilbertBetterThanSnakeQ(Scene):
     def construct(self):
         hilbert_curves, snake_curves = [
             [
-                CurveClass(order = n)
+                CurveClass(order=n)
                 for n in range(2, 7)
             ]
             for CurveClass in (HilbertCurve, SnakeCurve)
@@ -947,7 +948,7 @@ class IncreaseResolution(Scene):
         grids = [
             Grid(
                 2**order, 2**order,
-                stroke_width = 1
+                stroke_width=1
             ).shift(0.3*DOWN)
             for order in (6, 7)
         ]
@@ -959,7 +960,7 @@ class IncreaseResolution(Scene):
         side_words = top_words.copy()
         new_side_words = new_top_words.copy()
         for words in top_words, new_top_words:
-            words.next_to(top_brace, UP, buff = 0.1)
+            words.next_to(top_brace, UP, buff=0.1)
         for words in side_words, new_side_words:
             words.next_to(side_brace, LEFT)
 
@@ -981,13 +982,13 @@ class IncreaseResolution(Scene):
 
 class IncreasingResolutionWithSnakeCurve(Scene):
     def construct(self):
-        start_curve = SnakeCurve(order = 6)
-        end_curve = SnakeCurve(order = 7)
+        start_curve = SnakeCurve(order=6)
+        end_curve = SnakeCurve(order=7)
         start_dots, end_dots = [
             Mobject(*[
                 Dot(
                     curve.points[int(x*curve.get_num_points())],
-                    color = color
+                    color=color
                 )
                 for x, color in [
                     (0.202, GREEN),
@@ -1000,7 +1001,7 @@ class IncreasingResolutionWithSnakeCurve(Scene):
         self.add(start_curve)
         self.wait()
         self.play(
-            ShowCreation(start_dots, run_time = 2),
+            ShowCreation(start_dots, run_time=2),
             ApplyMethod(start_curve.fade)
         )
         end_curve.fade()
@@ -1012,12 +1013,13 @@ class IncreasingResolutionWithSnakeCurve(Scene):
 
 
 class TrackSpecificCurvePoint(Scene):
-    CURVE_CLASS = None #Fillin
+    CURVE_CLASS = None  # Fillin
+
     def construct(self):
         line = get_freq_line().center()
-        line.sort_points(lambda p : p[0])
+        line.sort_points(lambda p: p[0])
         curves = [
-            self.CURVE_CLASS(order = order)
+            self.CURVE_CLASS(order=order)
             for order in range(3, 10)
         ]
         alpha = 0.48
@@ -1060,6 +1062,3 @@ class NeedToRelearn(Scene):
 
 class TrackSpecificHilbertCurvePoint(TrackSpecificCurvePoint):
     CURVE_CLASS = HilbertCurve
-
-
-

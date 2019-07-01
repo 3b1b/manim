@@ -1,11 +1,12 @@
 from manimlib.imports import *
 from old_projects.hilbert.curves import *
 
+
 class Intro(TransformOverIncreasingOrders):
     @staticmethod
     def args_to_string(*args):
         return ""
-        
+
     @staticmethod
     def string_to_args(string):
         raise Exception("string_to_args Not Implemented!")
@@ -19,7 +20,7 @@ class Intro(TransformOverIncreasingOrders):
         )
         words2.scale(0.8)
         for words in words1, words2:
-            words.to_edge(UP, buff = 0.2)
+            words.to_edge(UP, buff=0.2)
 
         self.setup(HilbertCurve)
         self.play(ShimmerIn(words1))
@@ -31,7 +32,6 @@ class Intro(TransformOverIncreasingOrders):
         )
         for x in range(4):
             self.increase_order()
-
 
 
 class BringInPeano(Intro):
@@ -70,7 +70,7 @@ class FillOtherShapes(Intro):
             in a style reflective of a Hilbert curve.
         """)
         words1.to_edge(UP)
-        words2.scale(0.8).to_edge(UP, buff = 0.2)
+        words2.scale(0.8).to_edge(UP, buff=0.2)
 
         self.setup(TriangleFillingCurve)
         self.play(ShimmerIn(words1))
@@ -81,10 +81,12 @@ class FillOtherShapes(Intro):
         for x in range(5):
             self.increase_order()
 
+
 class SmallerFlowSnake(FlowSnake):
     CONFIG = {
-        "radius" : 4
+        "radius": 4
     }
+
 
 class MostDelightfulName(Intro):
     def construct(self):
@@ -110,7 +112,6 @@ class MostDelightfulName(Intro):
             self.increase_order()
         self.remove(words2)
         self.play(ShimmerIn(words3))
-
 
 
 class SurpriseFractal(Intro):
@@ -153,26 +154,29 @@ class IntroduceKoch(Intro):
         self.add(words[2])
         self.wait(6)
 
+
 class StraightKoch(KochCurve):
     CONFIG = {
-        "axiom" : "A"
+        "axiom": "A"
     }
+
 
 class SharperKoch(StraightKoch):
     CONFIG = {
-        "angle" : 0.9*np.pi/2,
+        "angle": 0.9*np.pi/2,
     }
+
 
 class DullerKoch(StraightKoch):
     CONFIG = {
-        "angle" : np.pi/6,
+        "angle": np.pi/6,
     }
+
 
 class SpaceFillingKoch(StraightKoch):
     CONFIG = {
-        "angle" : np.pi/2,
+        "angle": np.pi/2,
     }
-
 
 
 class FromKochToSpaceFilling(Scene):
@@ -182,7 +186,6 @@ class FromKochToSpaceFilling(Scene):
         self.revisit_koch()
         self.show_angles()
         self.show_change_side_by_side()
-
 
     def revisit_koch(self):
         words = list(map(TextMobject, [
@@ -195,11 +198,11 @@ class FromKochToSpaceFilling(Scene):
             text.to_edge(UP)
 
         self.add(words[0])
-        curve = StraightKoch(order = self.max_order)
+        curve = StraightKoch(order=self.max_order)
         self.play(Transform(
             curve,
-            StraightKoch(order = 1),
-            run_time = 5
+            StraightKoch(order=1),
+            run_time=5
         ))
         self.remove(words[0])
         self.add(words[1])
@@ -210,15 +213,13 @@ class FromKochToSpaceFilling(Scene):
         for order in range(2, self.max_order):
             self.play(Transform(
                 curve,
-                StraightKoch(order = order)
+                StraightKoch(order=order)
             ))
             if order == 2:
                 self.wait(2)
             elif order == 3:
                 self.wait()
         self.clear()
-
-
 
     def show_angles(self):
         words = TextMobject("""
@@ -227,14 +228,14 @@ class FromKochToSpaceFilling(Scene):
         """)
         words.to_edge(UP)
         koch, sharper_koch, duller_koch = curves = [
-            CurveClass(order = 1)
+            CurveClass(order=1)
             for CurveClass in (StraightKoch, SharperKoch, DullerKoch)
         ]
         arcs = [
             Arc(
                 2*(np.pi/2 - curve.angle),
-                radius = r,
-                start_angle = np.pi+curve.angle
+                radius=r,
+                start_angle=np.pi+curve.angle
             ).shift(curve.points[curve.get_num_points()/2])
             for curve, r in zip(curves, [0.6, 0.7, 0.4])
         ]
@@ -258,7 +259,7 @@ class FromKochToSpaceFilling(Scene):
             Transform(koch, sharper_koch),
             Transform(arcs[0], arcs[1]),
         )
-        self.clear()        
+        self.clear()
 
     def show_change_side_by_side(self):
 
@@ -275,17 +276,17 @@ class FromKochToSpaceFilling(Scene):
         for text in words:
             text.to_edge(UP)
         sharper, duller, space_filling = [
-            CurveClass(order = 1).shift(3*LEFT)
+            CurveClass(order=1).shift(3*LEFT)
             for CurveClass in (SharperKoch, DullerKoch, SpaceFillingKoch)
         ]
         shaper_f, duller_f, space_filling_f = [
-            CurveClass(order = self.max_order).shift(3*RIGHT)
+            CurveClass(order=self.max_order).shift(3*RIGHT)
             for CurveClass in (SharperKoch, DullerKoch, SpaceFillingKoch)
         ]
 
         self.add(words[0])
-        left_curve = SharperKoch(order = 1)
-        right_curve = SharperKoch(order = 1)
+        left_curve = SharperKoch(order=1)
+        right_curve = SharperKoch(order=1)
         self.play(
             Transform(left_curve, sharper),
             ApplyMethod(right_curve.shift, 3*RIGHT),
@@ -293,7 +294,7 @@ class FromKochToSpaceFilling(Scene):
         self.play(
             Transform(
                 right_curve,
-                SharperKoch(order = 2).shift(3*RIGHT)
+                SharperKoch(order=2).shift(3*RIGHT)
             ),
             ShimmerIn(seed),
             ShimmerIn(fractal)
@@ -301,12 +302,12 @@ class FromKochToSpaceFilling(Scene):
         for order in range(3, self.max_order):
             self.play(Transform(
                 right_curve,
-                SharperKoch(order = order).shift(3*RIGHT)
+                SharperKoch(order=order).shift(3*RIGHT)
             ))
         self.remove(words[0])
         self.add(words[1])
         kwargs = {
-            "run_time" : 4,
+            "run_time": 4,
         }
         self.play(
             Transform(left_curve, duller, **kwargs),
@@ -324,15 +325,3 @@ class FromKochToSpaceFilling(Scene):
         self.remove(words[2])
         self.add(words[3])
         self.wait()
-
-
-
-
-
-
-
-
-
-
-
-

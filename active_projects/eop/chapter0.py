@@ -1,11 +1,12 @@
 from manimlib.imports import *
 
+
 class Introduction(TeacherStudentsScene):
 
     CONFIG = {
         "default_pi_creature_kwargs": {
-        "color": MAROON_E,
-        "flip_at_start": True,
+            "color": MAROON_E,
+            "flip_at_start": True,
         },
     }
 
@@ -14,16 +15,15 @@ class Introduction(TeacherStudentsScene):
         self.show_examples()
 
     def show_series(self):
-        series = VideoSeries(num_videos = 11)
+        series = VideoSeries(num_videos=11)
         series.to_edge(UP)
         this_video = series[0]
         this_video.set_color(YELLOW)
         this_video.save_state()
-        this_video.set_fill(opacity = 0)
+        this_video.set_fill(opacity=0)
         this_video.center()
         this_video.set_height(FRAME_HEIGHT)
         self.this_video = this_video
-
 
         words = TextMobject(
             "Welcome to \\\\",
@@ -35,24 +35,24 @@ class Introduction(TeacherStudentsScene):
         self.play(
             FadeIn(
                 series,
-                lag_ratio = 0.5,
-                run_time = 2
+                lag_ratio=0.5,
+                run_time=2
             ),
             Blink(self.get_teacher())
         )
-        self.teacher_says(words, target_mode = "hooray")
+        self.teacher_says(words, target_mode="hooray")
         self.change_student_modes(
             *["hooray"]*3,
-            look_at_arg = series[1].get_left(),
-            added_anims = [
-                ApplyMethod(this_video.restore, run_time = 3),
+            look_at_arg=series[1].get_left(),
+            added_anims=[
+                ApplyMethod(this_video.restore, run_time=3),
             ]
         )
         self.play(*[
             ApplyMethod(
                 video.shift, 0.5*video.get_height()*DOWN,
-                run_time = 3,
-                rate_func = squish_rate_func(
+                run_time=3,
+                rate_func=squish_rate_func(
                     there_and_back, alpha, alpha+0.3
                 )
             )
@@ -74,7 +74,6 @@ class Introduction(TeacherStudentsScene):
         self.wait()
 
         self.series = series
-
 
     def show_examples(self):
 

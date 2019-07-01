@@ -5,19 +5,20 @@ from active_projects.eop.independence import *
 
 import itertools as it
 
+
 class RandyFlipsAndStacks(Scene):
 
     def construct(self):
 
-        randy = CoinFlippingPiCreature(color = MAROON_E)
+        randy = CoinFlippingPiCreature(color=MAROON_E)
         randy.scale(0.5).to_edge(LEFT + DOWN)
 
         heads = tails = 0
-        tally = TallyStack(heads, tails, anchor = ORIGIN)
+        tally = TallyStack(heads, tails, anchor=ORIGIN)
 
         nb_flips = 10
 
-        flips = np.random.randint(2, size = nb_flips)
+        flips = np.random.randint(2, size=nb_flips)
 
         for i in range(nb_flips):
 
@@ -32,7 +33,7 @@ class RandyFlipsAndStacks(Scene):
             else:
                 raise Exception("That side does not exist on this coin")
 
-            new_tally = TallyStack(heads, tails, anchor = ORIGIN)
+            new_tally = TallyStack(heads, tails, anchor=ORIGIN)
 
             if tally.nb_heads == 0 and new_tally.nb_heads == 1:
                 self.play(FadeIn(new_tally.heads_stack))
@@ -44,27 +45,22 @@ class RandyFlipsAndStacks(Scene):
             tally = new_tally
 
 
-
 class TwoDiceTableScene(Scene):
 
     def construct(self):
 
-        table = TwoDiceTable(cell_size = 1)
+        table = TwoDiceTable(cell_size=1)
 
         table.center()
         self.add(table)
 
 
-
-
-
 class VisualCovariance(Scene):
-
 
     def construct(self):
 
         size = 4
-        square = Square(side_length = size)
+        square = Square(side_length=size)
         n_points = 30
         cloud = VGroup(*[
             Dot((x + 0.8*y) * RIGHT + y * UP).set_fill(WHITE, 1)
@@ -75,18 +71,15 @@ class VisualCovariance(Scene):
         ])
         self.add_foreground_mobject(cloud)
 
-        x_axis = Vector(8*RIGHT, color = WHITE).move_to(2.5*DOWN)
-        y_axis = Vector(5*UP, color = WHITE).move_to(4*LEFT)
+        x_axis = Vector(8*RIGHT, color=WHITE).move_to(2.5*DOWN)
+        y_axis = Vector(5*UP, color=WHITE).move_to(4*LEFT)
 
         self.add(x_axis, y_axis)
 
-
-        random_pairs = [ (p1, p2) for (p1, p2) in
-            it.combinations(cloud, 2)
-        ]
+        random_pairs = [(p1, p2) for (p1, p2) in
+                        it.combinations(cloud, 2)
+                        ]
         np.random.shuffle(random_pairs)
-
-
 
         for (p1, p2) in random_pairs:
             c1, c2 = p1.get_center(), p2.get_center()
@@ -97,20 +90,18 @@ class VisualCovariance(Scene):
                 # make a red rect
                 color = RED
                 opacity = 0.1
-               
+
             elif y2 < y1:
                 # make a blue rect
                 color = BLUE
                 opacity = 0.2
 
-            rect = Rectangle(width = x2 - x1, height = abs(y2 - y1))
-            rect.set_fill(color = color, opacity = opacity)
-            rect.set_stroke(width = 0)
+            rect = Rectangle(width=x2 - x1, height=abs(y2 - y1))
+            rect.set_fill(color=color, opacity=opacity)
+            rect.set_stroke(width=0)
             rect.move_to((c1+c2)/2)
 
-            self.play(FadeIn(rect), run_time = 0.05)
-
-
+            self.play(FadeIn(rect), run_time=0.05)
 
 
 class BinaryChoices(Scene):
@@ -121,8 +112,8 @@ class BinaryChoices(Scene):
         example2 = BinaryOption(Male(), Female())
         example3 = BinaryOption(Checkmark(), Xmark())
 
-        example2.next_to(example1, DOWN, buff = MED_LARGE_BUFF)
-        example3.next_to(example2, DOWN, buff = MED_LARGE_BUFF)
+        example2.next_to(example1, DOWN, buff=MED_LARGE_BUFF)
+        example3.next_to(example2, DOWN, buff=MED_LARGE_BUFF)
 
         all = VGroup(example1, example2, example3)
         all = all.scale(2)

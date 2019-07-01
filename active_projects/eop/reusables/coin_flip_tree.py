@@ -2,6 +2,7 @@ from mobject.geometry import *
 from active_projects.eop.reusables.eop_helpers import *
 from active_projects.eop.reusables.eop_constants import *
 
+
 class CoinFlipTree(VGroup):
     CONFIG = {
         "total_width": 12,
@@ -17,10 +18,9 @@ class CoinFlipTree(VGroup):
         self.rows = []
         for n in range(self.nb_levels + 1):
             if n <= self.sort_until_level:
-                self.create_row(n, sorted = True)
+                self.create_row(n, sorted=True)
             else:
-                self.create_row(n, sorted = False)
-            
+                self.create_row(n, sorted=False)
 
         for row in self.rows:
             for leaf in row:
@@ -31,19 +31,16 @@ class CoinFlipTree(VGroup):
                     line_color = COLOR_HEADS
                 else:
                     line_color = COLOR_TAILS
-                line.set_stroke(color = line_color)
+                line.set_stroke(color=line_color)
                 group = VGroup()
                 group.add(dot)
                 group.add_to_back(line)
                 self.add(group)
 
-
-
-
-    def create_row(self, level, sorted = True):
+    def create_row(self, level, sorted=True):
 
         if level == 0:
-            new_row = [[ORIGIN,0,ORIGIN]] # is its own parent
+            new_row = [[ORIGIN, 0, ORIGIN]]  # is its own parent
             self.rows.append(new_row)
             return
 
@@ -55,9 +52,10 @@ class CoinFlipTree(VGroup):
         for root in previous_row:
             root_point = root[0]
             root_tally = root[1]
-            for i in range(2): # 0 = heads = left, 1 = tails = right
+            for i in range(2):  # 0 = heads = left, 1 = tails = right
                 leaf = x * RIGHT + y * UP
-                new_row.append([leaf, root_tally + i, root_point]) # leaf and its parent
+                # leaf and its parent
+                new_row.append([leaf, root_tally + i, root_point])
                 x += dx
 
         if sorted:

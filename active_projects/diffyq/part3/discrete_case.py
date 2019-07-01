@@ -217,7 +217,7 @@ class ShowNewRuleAtDiscreteBoundary(DiscreteSetup):
             x0, x1, x2 = [p[0] for p in points]
             dx = x1 - x0
             y0, y1, y2 = [p[1] for p in points]
-            
+
             self.update_dot(
                 dot=ds[1],
                 dt=dt,

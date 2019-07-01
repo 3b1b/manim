@@ -9,8 +9,8 @@ from manimlib.imports import *
 from functools import reduce
 
 DEFAULT_PLANE_CONFIG = {
-    "stroke_width" : 2*DEFAULT_STROKE_WIDTH
-    }
+    "stroke_width": 2*DEFAULT_STROKE_WIDTH
+}
 
 
 class SuccessiveComplexMultiplications(ComplexMultiplication):
@@ -21,7 +21,7 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
 
     @staticmethod
     def args_to_string(*multipliers):
-        return "_".join([str(m)[1:-1] for m in  multipliers])
+        return "_".join([str(m)[1:-1] for m in multipliers])
 
     @staticmethod
     def string_to_args(arg_string):
@@ -32,10 +32,10 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
         norm = abs(reduce(op.mul, multipliers, 1))
         shrink_factor = FRAME_X_RADIUS/max(FRAME_X_RADIUS, norm)
         plane_config = {
-            "density" : norm*DEFAULT_POINT_DENSITY_1D,
-            "unit_to_spatial_width" : shrink_factor,
-            "x_radius" : shrink_factor*FRAME_X_RADIUS,
-            "y_radius" : shrink_factor*FRAME_Y_RADIUS,
+            "density": norm*DEFAULT_POINT_DENSITY_1D,
+            "unit_to_spatial_width": shrink_factor,
+            "x_radius": shrink_factor*FRAME_X_RADIUS,
+            "y_radius": shrink_factor*FRAME_Y_RADIUS,
         }
         ComplexMultiplication.construct(self, multipliers[0], **plane_config)
 
@@ -48,7 +48,7 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
             elif np.conj(multiplier) == multipliers[0]:
                 tex = "\\bar z"
             else:
-                tex = "z_%d"%count
+                tex = "z_%d" % count
             self.draw_dot(tex, multiplier)
 
         for multiplier in multipliers:
@@ -56,7 +56,6 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
             self.apply_multiplication()
             new_one = deepcopy(one_dot_copy)
             self.mobjects_to_move_without_molding.append(new_one)
-
 
 
 class ShowComplexPower(SuccessiveComplexMultiplications):
@@ -74,7 +73,7 @@ class ShowComplexPower(SuccessiveComplexMultiplications):
     @staticmethod
     def args_to_string(multiplier, num_repeats):
         start = ComplexMultiplication.args_to_string(multiplier)
-        return start + "ToThe%d"%num_repeats
+        return start + "ToThe%d" % num_repeats
 
     @staticmethod
     def string_to_args(arg_string):
@@ -104,13 +103,15 @@ class ComplexDivision(ComplexMultiplication):
         self.draw_dot("z", num, True)
         self.apply_multiplication()
 
+
 class ConjugateDivisionExample(ComplexMultiplication):
     args_list = [
         complex(1, 2),
     ]
 
     def construct(self, num):
-        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*FRAME_X_RADIUS)
+        ComplexMultiplication.construct(
+            self, np.conj(num), radius=2.5*FRAME_X_RADIUS)
         self.draw_dot("1", 1, True)
         self.draw_dot("\\bar z", self.multiplier)
         self.apply_multiplication()
@@ -118,6 +119,7 @@ class ConjugateDivisionExample(ComplexMultiplication):
         self.anim_config["path_func"] = straight_path
         self.apply_multiplication()
         self.wait()
+
 
 class DrawSolutionsToZToTheNEqualsW(Scene):
     @staticmethod
@@ -139,8 +141,8 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
         plane_config["unit_to_spatial_width"] = zoom_value
         plane = ComplexPlane(**plane_config)
         circle = Circle(
-            radius = radius*zoom_value,
-            stroke_width = plane.stroke_width
+            radius=radius*zoom_value,
+            stroke_width=plane.stroke_width
         )
         solutions = [
             radius*np.exp(complex(0, 1)*(2*np.pi*k + theta)/n)
@@ -148,7 +150,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
         ]
         points = list(map(plane.number_to_point, solutions))
         dots = [
-            Dot(point, color = BLUE_B, radius = 0.1)
+            Dot(point, color=BLUE_B, radius=0.1)
             for point in points
         ]
         lines = [Line(*pair) for pair in adjacent_pairs(points)]
@@ -160,23 +162,24 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
 class DrawComplexAngleAndMagnitude(Scene):
     args_list = [
         (
-            ("1+i\\sqrt{3}", complex(1, np.sqrt(3)) ),
-            ("\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i", complex(np.sqrt(3)/2, -1./2)),
+            ("1+i\\sqrt{3}", complex(1, np.sqrt(3))),
+            ("\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i",
+             complex(np.sqrt(3)/2, -1./2)),
         ),
         (("1+i", complex(1, 1)),),
     ]
     @staticmethod
     def args_to_string(*reps_and_nums):
         return "--".join([
-            complex_string(num) 
+            complex_string(num)
             for rep, num in reps_and_nums
         ])
 
     def construct(self, *reps_and_nums):
         radius = max([abs(n.imag) for r, n in reps_and_nums]) + 1
         plane_config = {
-            "color" : "grey",
-            "unit_to_spatial_width" : FRAME_Y_RADIUS / radius,
+            "color": "grey",
+            "unit_to_spatial_width": FRAME_Y_RADIUS / radius,
         }
         plane_config.update(DEFAULT_PLANE_CONFIG)
         self.plane = ComplexPlane(**plane_config)
@@ -203,11 +206,10 @@ class DrawComplexAngleAndMagnitude(Scene):
 
         self.add_mobjects_among(list(locals().values()))
 
-
     def add_angle_label(self, number):
         arc = Arc(
-            np.log(number).imag, 
-            radius = 0.2
+            np.log(number).imag,
+            radius=0.2
         )
 
         self.add_mobjects_among(list(locals().values()))
@@ -217,8 +219,8 @@ class DrawComplexAngleAndMagnitude(Scene):
         x_line, y_line, num_line = [
             Line(
                 start, end,
-                color = color, 
-                stroke_width = self.plane.stroke_width
+                color=color,
+                stroke_width=self.plane.stroke_width
             )
             for start, end, color in zip(
                 [ORIGIN, point[0]*RIGHT, ORIGIN],
@@ -241,10 +243,9 @@ class DrawComplexAngleAndMagnitude(Scene):
         if point[1] > 0:
             brace.rotate(np.pi, RIGHT)
         brace.rotate(np.log(number).imag)
-        norm_label = TexMobject("%.1f"%abs(number))
+        norm_label = TexMobject("%.1f" % abs(number))
         norm_label.scale(0.5)
         axis = OUT if point[1] > 0 else IN
         norm_label.next_to(brace, rotate_vector(point, np.pi/2, axis))
 
         self.add_mobjects_among(list(locals().values()))
-

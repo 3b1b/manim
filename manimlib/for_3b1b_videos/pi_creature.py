@@ -67,7 +67,8 @@ class PiCreature(SVGMobject):
                 FILE_DIR,
                 "PiCreatures_plain.svg",
             )
-            SVGMobject.__init__(self, mode="plain", file_name=svg_file, **kwargs)
+            SVGMobject.__init__(self, mode="plain",
+                                file_name=svg_file, **kwargs)
 
         if self.flip_at_start:
             self.flip()

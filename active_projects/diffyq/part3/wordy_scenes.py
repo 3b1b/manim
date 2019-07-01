@@ -897,7 +897,6 @@ class WorryAboutGenerality(TeacherStudentsScene, WriteHeatEquationTemplate):
         )
         self.wait(4)
 
-
     # def get_d1_equation(self):
     #     result = super().get_d1_equation()
     #     lp, rp = parens = TexMobject("(", ")")

@@ -2,10 +2,11 @@ from manimlib.imports import *
 
 from old_projects.crypto import sha256_tex_mob, bit_string_to_mobject, BitcoinLogo
 
+
 def get_google_logo():
     result = SVGMobject(
-        file_name = "google_logo",
-        height = 0.75
+        file_name="google_logo",
+        height=0.75
     )
     blue, red, yellow, green = [
         "#4885ed", "#db3236", "#f4c20d", "#3cba54"
@@ -14,18 +15,20 @@ def get_google_logo():
     result.set_color_by_gradient(*colors)
     return result
 
+
 class LastVideo(Scene):
     def construct(self):
-        title = TextMobject("Crypto", "currencies", arg_separator = "")
+        title = TextMobject("Crypto", "currencies", arg_separator="")
         title[0].set_color(YELLOW)
         title.scale(1.5)
         title.to_edge(UP)
-        screen_rect = ScreenRectangle(height = 6)
+        screen_rect = ScreenRectangle(height=6)
         screen_rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(screen_rect))
         self.wait()
+
 
 class BreakUp2To256(PiCreatureScene):
     def construct(self):
@@ -39,7 +42,7 @@ class BreakUp2To256(PiCreatureScene):
         bits = bit_string_to_mobject("")
         bits.to_corner(UP+LEFT)
         one = TexMobject("1")[0]
-        one.replace(bits[0], dim_to_match = 1)
+        one.replace(bits[0], dim_to_match=1)
         self.add(bits)
         self.add_foreground_mobject(VGroup(*bits[-15:]))
         self.number = 0
@@ -62,7 +65,7 @@ class BreakUp2To256(PiCreatureScene):
         self.play(
             self.pi_creature.change, "raise_right_hand",
             GrowFromCenter(brace),
-            Write(expression, run_time = 1)
+            Write(expression, run_time=1)
         )
         self.wait()
         self.play(
@@ -107,7 +110,6 @@ class BreakUp2To256(PiCreatureScene):
         self.play(self.pi_creature.change, "pondering")
         self.wait()
 
-
         self.subexpressions = subexpressions
 
     def break_up_as_four_billions(self):
@@ -123,8 +125,8 @@ class BreakUp2To256(PiCreatureScene):
         self.play(
             Transform(
                 self.subexpressions, new_subexpressions,
-                run_time = 2,
-                lag_ratio = 0.5,
+                run_time=2,
+                lag_ratio=0.5,
             ),
             FadeOut(self.pi_creature)
         )
@@ -134,11 +136,11 @@ class BreakUp2To256(PiCreatureScene):
         target = VGroup(*[
             TextMobject(
                 "$\\big($", "4 Billion", "$\\big)$",
-                arg_separator = ""
+                arg_separator=""
             )
             for x in range(8)
         ])
-        target.arrange(RIGHT, buff = SMALL_BUFF)
+        target.arrange(RIGHT, buff=SMALL_BUFF)
         target.to_edge(UP)
         target.set_width(FRAME_WIDTH - LARGE_BUFF)
         parens = VGroup(*it.chain(*[
@@ -161,8 +163,8 @@ class BreakUp2To256(PiCreatureScene):
 
     ######
 
-    def wait(self, time = 1):
-        self.play(Animation(self.bits, run_time = time))
+    def wait(self, time=1):
+        self.play(Animation(self.bits, run_time=time))
 
     def update_frame(self, *args, **kwargs):
         self.number += 1
@@ -174,9 +176,10 @@ class BreakUp2To256(PiCreatureScene):
                 new_mob = self.zero.copy()
             else:
                 new_mob = self.one.copy()
-            new_mob.replace(bit_mob, dim_to_match = 1)
+            new_mob.replace(bit_mob, dim_to_match=1)
             Transform(bit_mob, new_mob).update(1)
         Scene.update_frame(self, *args, **kwargs)
+
 
 class ShowTwoTo32(Scene):
     def construct(self):
@@ -185,11 +188,13 @@ class ShowTwoTo32(Scene):
         self.add(mob)
         self.wait()
 
+
 class MainBreakdown(Scene):
     CONFIG = {
-        "n_group_rows" : 8,
-        "n_group_cols" : 8,
+        "n_group_rows": 8,
+        "n_group_cols": 8,
     }
+
     def construct(self):
         self.add_four_billions()
         self.gpu_packed_computer()
@@ -206,11 +211,11 @@ class MainBreakdown(Scene):
         for x in range(8):
             mob = TextMobject(
                 "$\\big($", "4 Billion", "$\\big)$",
-                arg_separator = ""
+                arg_separator=""
             )
             top_line.add(mob)
             four_billions.add(mob[1])
-        top_line.arrange(RIGHT, buff = SMALL_BUFF)
+        top_line.arrange(RIGHT, buff=SMALL_BUFF)
         top_line.set_width(FRAME_WIDTH - LARGE_BUFF)
         top_line.to_edge(UP)
         four_billions.set_color(YELLOW)
@@ -225,9 +230,9 @@ class MainBreakdown(Scene):
 
     def show_gpu(self):
         gpu = SVGMobject(
-            file_name = "gpu",
-            height = 1,
-            fill_color = LIGHT_GREY,
+            file_name="gpu",
+            height=1,
+            fill_color=LIGHT_GREY,
         )
         name = TextMobject("Graphics", "Processing", "Unit")
         for word in name:
@@ -239,17 +244,17 @@ class MainBreakdown(Scene):
             TextMobject("hash")
             for x in range(10)
         ])
-        hash_names.arrange(DOWN, buff = MED_SMALL_BUFF)
-        hash_names.next_to(name, RIGHT, buff = 2)
+        hash_names.arrange(DOWN, buff=MED_SMALL_BUFF)
+        hash_names.next_to(name, RIGHT, buff=2)
 
         paths = VGroup()
         for hash_name in hash_names:
-            hash_name.add_background_rectangle(opacity = 0.5)
+            hash_name.add_background_rectangle(opacity=0.5)
             path = VMobject()
             start_point = name.get_right() + SMALL_BUFF*RIGHT
             end_point = start_point + (4+hash_name.get_width())*RIGHT
             path.set_points([
-                start_point, 
+                start_point,
                 start_point+RIGHT,
                 hash_name.get_left()+LEFT,
                 hash_name.get_left(),
@@ -261,14 +266,15 @@ class MainBreakdown(Scene):
                 end_point,
             ])
             paths.add(path)
-        paths.set_stroke(width = 3)
+        paths.set_stroke(width=3)
         paths.set_color_by_gradient(BLUE, GREEN)
+
         def get_passing_flash():
             return ShowPassingFlash(
                 paths,
-                lag_ratio = 0,
-                time_width = 0.7,
-                run_time = 2,
+                lag_ratio=0,
+                time_width=0.7,
+                run_time=2,
             )
         rate_words = TextMobject(
             "$<$ 1 Billion", "Hashes/sec"
@@ -287,7 +293,7 @@ class MainBreakdown(Scene):
                 Animation(hash_names)
             )
         self.play(
-            Write(rate_words, run_time = 2),
+            Write(rate_words, run_time=2),
             get_passing_flash(),
             Animation(hash_names)
         )
@@ -325,7 +331,7 @@ class MainBreakdown(Scene):
         self.play(
             Transform(
                 four_billion.copy(), new_rate_words[0],
-                remover = True,
+                remover=True,
             ),
             Transform(rate_words, new_rate_words)
         )
@@ -333,18 +339,18 @@ class MainBreakdown(Scene):
         self.play(
             LaggedStartMap(
                 ApplyFunction, gpus,
-                lambda g : (
-                    lambda m : m.scale(0.01).move_to(laptop),
+                lambda g: (
+                    lambda m: m.scale(0.01).move_to(laptop),
                     g
                 ),
-                remover = True
+                remover=True
             )
         )
         self.wait()
         self.play(
             Transform(
                 rate_words[0], four_billion.copy().set_color(BLUE),
-                remover = True,
+                remover=True,
             ),
             four_billion.set_color, BLUE,
             Transform(rate_words[1], hps),
@@ -360,15 +366,15 @@ class MainBreakdown(Scene):
         google = self.get_google_logo()
         google.next_to(
             self.group_of_four_billion_things, UP,
-            buff = LARGE_BUFF,
-            aligned_edge = LEFT
+            buff=LARGE_BUFF,
+            aligned_edge=LEFT
         )
         google.shift(RIGHT)
         millions = TextMobject("$\\sim$ Millions of servers")
         millions.next_to(google, RIGHT)
         plus_plus = TexMobject("++")
         plus_plus.next_to(google, RIGHT, SMALL_BUFF)
-        plus_plus.set_stroke(width = 2)
+        plus_plus.set_stroke(width=2)
         kilo = TextMobject("Kilo")
         kilo.scale(1.5)
         kilo.next_to(google[-1], LEFT, SMALL_BUFF, DOWN)
@@ -386,9 +392,9 @@ class MainBreakdown(Scene):
         self.wait(2)
         self.play(LaggedStartMap(
             Indicate, self.group_of_four_billion_things,
-            run_time = 4,
-            rate_func = there_and_back,
-            lag_ratio = 0.25,
+            run_time=4,
+            rate_func=there_and_back,
+            lag_ratio=0.25,
         ))
         self.play(FadeOut(millions), FadeIn(plus_plus))
         self.play(Write(kilo))
@@ -413,7 +419,7 @@ class MainBreakdown(Scene):
         group.shift(RIGHT)
 
         kg, h_line, target_earth = self.get_fraction(
-            2, self.get_kilogoogle(), self.get_earth(), 
+            2, self.get_kilogoogle(), self.get_earth(),
         )
 
         self.play(
@@ -439,7 +445,7 @@ class MainBreakdown(Scene):
         )
         milky_way = ImageMobject("milky_way")
         milky_way.set_height(3)
-        milky_way.to_edge(LEFT, buff = 0)
+        milky_way.to_edge(LEFT, buff=0)
         milky_way.shift(DOWN)
 
         n_stars_estimate = TextMobject("100 to 400 \\\\ billion stars")
@@ -456,9 +462,9 @@ class MainBreakdown(Scene):
         self.wait()
         self.play(LaggedStartMap(
             Indicate, self.group_of_four_billion_things,
-            rate_func = there_and_back,
-            lag_ratio = 0.2,
-            run_time = 3,
+            rate_func=there_and_back,
+            lag_ratio=0.2,
+            run_time=3,
         ))
         self.wait()
         self.play(
@@ -482,7 +488,7 @@ class MainBreakdown(Scene):
 
         name = TextMobject(
             "Giga", "Galactic \\\\", " Super", " Computer",
-            arg_separator = ""
+            arg_separator=""
         )
         for word in name:
             word[0].set_color(BLUE)
@@ -494,8 +500,8 @@ class MainBreakdown(Scene):
             self.four_billions[4].restore,
             ReplacementTransform(
                 self.group_of_four_billion_things, VGroup(num),
-                run_time = 2,
-                lag_ratio = 0.5
+                run_time=2,
+                lag_ratio=0.5
             ),
             ShowCreation(h_line),
             ReplacementTransform(
@@ -509,22 +515,23 @@ class MainBreakdown(Scene):
         seconds_to_years = TextMobject("seconds $\\approx$ 126.8 years")
         seconds_to_years.shift(LEFT)
         years_to_eons = TextMobject(
-            "$\\times$ 126.8 years", "$\\approx$ 507 Billion years", 
+            "$\\times$ 126.8 years", "$\\approx$ 507 Billion years",
         )
         years_to_eons.next_to(
-            seconds_to_years, DOWN, 
-            aligned_edge = LEFT,
+            seconds_to_years, DOWN,
+            aligned_edge=LEFT,
         )
-        universe_lifetimes = TextMobject("$\\approx 37 \\times$ Age of universe")
+        universe_lifetimes = TextMobject(
+            "$\\approx 37 \\times$ Age of universe")
         universe_lifetimes.next_to(
-            years_to_eons[1], DOWN, 
-            aligned_edge = LEFT
+            years_to_eons[1], DOWN,
+            aligned_edge=LEFT
         )
 
         for fb, words in (fb1, seconds_to_years), (fb2, years_to_eons):
             self.play(
                 fb.scale, 1.3,
-                fb.next_to, words, LEFT, 
+                fb.next_to, words, LEFT,
                 fb.set_color, BLUE,
                 Write(words)
             )
@@ -538,7 +545,7 @@ class MainBreakdown(Scene):
             "1 in ", "4 Billion\\\\",
             "chance of success"
         )
-        words.next_to(four_billion, DOWN, buff = MED_LARGE_BUFF)
+        words.next_to(four_billion, DOWN, buff=MED_LARGE_BUFF)
         words.to_edge(RIGHT)
         words[1].set_color(BLUE)
 
@@ -547,7 +554,6 @@ class MainBreakdown(Scene):
             Transform(four_billion, words[1])
         )
         self.wait()
-
 
     ############
 
@@ -560,13 +566,13 @@ class MainBreakdown(Scene):
             VGroup(*[
                 mobject.copy().set_height(0.25)
                 for x in range(self.n_group_rows)
-            ]).arrange(DOWN, buff = SMALL_BUFF)
+            ]).arrange(DOWN, buff=SMALL_BUFF)
             for y in range(self.n_group_cols-1)
         ])
         dots = TexMobject("\\dots")
         group.add(dots)
         group.add(*[group[0].copy() for x in range(2)])
-        group.arrange(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff=SMALL_BUFF)
         group.set_height(FRAME_Y_RADIUS)
         max_width = 1.25*FRAME_X_RADIUS
         if group.get_width() > max_width:
@@ -582,8 +588,8 @@ class MainBreakdown(Scene):
             GrowFromCenter(brace),
             LaggedStartMap(
                 FadeIn, group,
-                run_time = 3,
-                lag_ratio = 0.2
+                run_time=3,
+                lag_ratio=0.2
             )
         )
         self.wait()
@@ -620,21 +626,21 @@ class MainBreakdown(Scene):
         kilo.scale(1.5)
         kilo.next_to(G[-1], LEFT, SMALL_BUFF, DOWN)
         plus_plus = TexMobject("++")
-        plus_plus.set_stroke(width = 1)
+        plus_plus.set_stroke(width=1)
         plus_plus.next_to(G, RIGHT, SMALL_BUFF)
         return VGroup(kilo, G, plus_plus)
 
     def get_earth(self):
         earth = SVGMobject(
-            file_name = "earth",
-            height = 1.5,
-            fill_color = BLACK,
+            file_name="earth",
+            height=1.5,
+            fill_color=BLACK,
         )
         circle = Circle(
-            stroke_width = 3,
-            stroke_color = GREEN,
-            fill_opacity = 1,
-            fill_color = BLUE_C,
+            stroke_width=3,
+            stroke_color=GREEN,
+            fill_opacity=1,
+            fill_color=BLUE_C,
         )
         circle.replace(earth)
         earth.add_to_back(circle)
@@ -642,13 +648,14 @@ class MainBreakdown(Scene):
 
     def get_galaxy(self):
         return SVGMobject(
-            file_name = "galaxy",
-            fill_opacity = 0,
-            stroke_width = 3,
-            stroke_color = WHITE,
-            height = 1,
+            file_name="galaxy",
+            fill_opacity=0,
+            stroke_width=3,
+            stroke_color=WHITE,
+            height=1,
         )
-        
+
+
 class WriteTWoTo160(Scene):
     def construct(self):
         mob = TextMobject("$2^{160}$ ", "Hashes/sec")
@@ -656,6 +663,7 @@ class WriteTWoTo160(Scene):
         mob.scale(2)
         self.play(Write(mob))
         self.wait()
+
 
 class StateOfBitcoin(TeacherStudentsScene):
     def construct(self):
@@ -667,7 +675,7 @@ class StateOfBitcoin(TeacherStudentsScene):
         title.remove(title[1])
 
         rate = TextMobject(
-            "5 Billion Billion", 
+            "5 Billion Billion",
             "$\\frac{\\text{Hashes}}{\\text{Second}}$"
         )
         rate.next_to(title, DOWN, MED_LARGE_BUFF)
@@ -684,14 +692,14 @@ class StateOfBitcoin(TeacherStudentsScene):
 
         rate.save_state()
         rate.shift(DOWN)
-        rate.set_fill(opacity = 0)
+        rate.set_fill(opacity=0)
 
         all_text = VGroup(title, bitcoin_logo, rate, kilogoogle)
 
         gpu = SVGMobject(
-            file_name = "gpu",
-            height = 1,
-            fill_color = LIGHT_GREY,
+            file_name="gpu",
+            height=1,
+            fill_color=LIGHT_GREY,
         )
         gpu.shift(0.5*FRAME_X_RADIUS*RIGHT)
         gpu_name = TextMobject("GPU")
@@ -711,9 +719,9 @@ class StateOfBitcoin(TeacherStudentsScene):
         asic.to_edge(UP)
         asic.shift(LEFT)
         circuit = SVGMobject(
-            file_name = "circuit",
-            height = asic.get_height(),
-            fill_color = WHITE,
+            file_name="circuit",
+            height=asic.get_height(),
+            fill_color=WHITE,
         )
         random.shuffle(circuit.submobjects)
         circuit.set_color_by_gradient(WHITE, GREY)
@@ -736,11 +744,11 @@ class StateOfBitcoin(TeacherStudentsScene):
         self.wait()
         self.change_student_modes(
             *["plain"]*3,
-            added_anims = [
+            added_anims=[
                 all_text.to_edge, LEFT,
                 self.teacher.change_mode, "happy"
             ],
-            look_at_arg = gpu
+            look_at_arg=gpu
         )
         self.play(
             Write(gpu_name),
@@ -756,14 +764,15 @@ class StateOfBitcoin(TeacherStudentsScene):
 
         self.change_student_modes(
             *["pondering"]*3,
-            added_anims = [Write(asic_rate)]
+            added_anims=[Write(asic_rate)]
         )
         self.play(LaggedStartMap(
             FadeIn, circuit,
-            run_time = 3,
-            lag_ratio = 0.2,
+            run_time=3,
+            lag_ratio=0.2,
         ))
         self.wait()
+
 
 class QAndA(PiCreatureScene):
     def construct(self):
@@ -781,7 +790,7 @@ class QAndA(PiCreatureScene):
         q_and_a.next_to(self.pi_creature.get_corner(UP+LEFT), UP)
         q_and_a.save_state()
         q_and_a.shift(DOWN)
-        q_and_a.set_fill(opacity = 0)
+        q_and_a.set_fill(opacity=0)
 
         reddit = TextMobject("reddit.com/r/3blue1brown")
         reddit.next_to(num_subscriber_words, DOWN, LARGE_BUFF)
@@ -811,15 +820,15 @@ class QAndA(PiCreatureScene):
         dots = VGroup(*[
             VGroup(*[
                 Dot() for x in range(rows)
-            ]).arrange(DOWN, buff = SMALL_BUFF)
+            ]).arrange(DOWN, buff=SMALL_BUFF)
             for y in range(cols)
-        ]).arrange(RIGHT, buff = SMALL_BUFF)
+        ]).arrange(RIGHT, buff=SMALL_BUFF)
         dots.set_width(FRAME_WIDTH - 2*LARGE_BUFF)
         dots.next_to(self.pi_creature, UP)
         dots = VGroup(*it.chain(*dots))
         top = dots.get_top()
         dots.sort(
-            lambda p : get_norm(p-top)
+            lambda p: get_norm(p-top)
         )
 
         powers_of_two = VGroup(*[
@@ -838,10 +847,10 @@ class QAndA(PiCreatureScene):
                 continue
             power_of_two.to_edge(UP)
             self.play(
-                FadeIn(VGroup(*dots[2**(i-1) : 2**i])),
+                FadeIn(VGroup(*dots[2**(i-1): 2**i])),
                 Transform(
                     curr_power, power_of_two,
-                    rate_func = squish_rate_func(smooth, 0, 0.5)
+                    rate_func=squish_rate_func(smooth, 0, 0.5)
                 )
             )
         self.wait()
@@ -850,6 +859,7 @@ class QAndA(PiCreatureScene):
             FadeOut(powers_of_two)
         )
 
+
 class Thumbnail(Scene):
     def construct(self):
         num = TexMobject("2^{256}")
@@ -857,7 +867,7 @@ class Thumbnail(Scene):
         num.set_color(BLUE_C)
         num.set_stroke(BLUE_B, 3)
         num.shift(MED_SMALL_BUFF*UP)
-        num.add_background_rectangle(opacity = 1)
+        num.add_background_rectangle(opacity=1)
         num.background_rectangle.scale_in_place(1.5)
         self.add(num)
 
@@ -868,11 +878,11 @@ class Thumbnail(Scene):
             new_str += char
             # if i%3 == 1:
             #     new_str += "{,}"
-            if i%(n_chars/4) == 0:
+            if i % (n_chars/4) == 0:
                 new_str += " \\\\ "
         background_num = TexMobject(new_str)
         background_num.set_width(FRAME_WIDTH - LARGE_BUFF)
-        background_num.set_fill(opacity = 0.2)
+        background_num.set_fill(opacity=0.2)
 
         secure = TextMobject("Secure?")
         secure.scale(4)
@@ -881,32 +891,9 @@ class Thumbnail(Scene):
         secure.set_stroke(RED_A, 3)
 
         lock = SVGMobject(
-            file_name = "shield_locked",
-            fill_color = WHITE,
+            file_name="shield_locked",
+            fill_color=WHITE,
         )
         lock.set_height(6)
 
         self.add(background_num, num)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -3,27 +3,28 @@ from manimlib.imports import *
 
 class TrigAnimation(Animation):
     CONFIG = {
-        "rate_func" : None,
-        "run_time"  : 5,
-        "sin_color" : BLUE,
-        "cos_color" : RED,
-        "tan_color" : GREEN
+        "rate_func": None,
+        "run_time": 5,
+        "sin_color": BLUE,
+        "cos_color": RED,
+        "tan_color": GREEN
     }
+
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         x_axis = NumberLine(
-            x_min = -3, 
-            x_max = 3,
-            color = BLUE_E
+            x_min=-3,
+            x_max=3,
+            color=BLUE_E
         )
         y_axis = x_axis.copy().rotate(np.pi/2)
-        circle = Circle(color = WHITE)
+        circle = Circle(color=WHITE)
         self.trig_lines = [
-            Line(ORIGIN, RIGHT, color = color)
+            Line(ORIGIN, RIGHT, color=color)
             for color in (self.sin_color, self.cos_color, self.tan_color)
         ]
         mobject = VMobject(
-            x_axis, y_axis, circle, 
+            x_axis, y_axis, circle,
             *self.trig_lines
         )
         mobject.to_edge(RIGHT)
@@ -46,7 +47,6 @@ class TrigAnimation(Animation):
             line.set_points_as_corners([circle_point, point])
 
 
-
 class Notation(Scene):
     def construct(self):
         self.introduce_notation()
@@ -54,18 +54,18 @@ class Notation(Scene):
         self.shift_to_visuals()
         self.swipe_left()
 
-
     def introduce_notation(self):
         notation = TextMobject("Notation")
         notation.to_edge(UP)
 
         self.sum1 = TexMobject("\\sum_{n=1}^\\infty \\dfrac{1}{n}")
-        self.prod1 = TexMobject("\\prod_{p\\text{ prime}}\\left(1-p^{-s}\\right)")
+        self.prod1 = TexMobject(
+            "\\prod_{p\\text{ prime}}\\left(1-p^{-s}\\right)")
         self.trigs1 = TexMobject([
             ["\\sin", "(x)"],
             ["\\cos", "(x)"],
             ["\\tan", "(x)"],
-        ], next_to_direction = DOWN)
+        ], next_to_direction=DOWN)
         self.func1 = TexMobject("f(x) = y")
         symbols = [self.sum1, self.prod1, self.trigs1, self.func1]
         for sym, vect in zip(symbols, compass_directions(4, UP+LEFT)):
@@ -78,8 +78,6 @@ class Notation(Scene):
         self.play(Write(self.symbols))
         self.wait()
         self.add(notation, self.symbols)
-
-
 
     def shift_to_good_and_back(self):
         sum2 = self.sum1.copy()
@@ -125,20 +123,19 @@ class Notation(Scene):
         good_symbols = VMobject(sum2, prod2, trigs2, func2)
         bad_symbols = self.symbols.copy()
         self.play(Transform(
-            self.symbols, good_symbols, 
-            path_arc = np.pi
+            self.symbols, good_symbols,
+            path_arc=np.pi
         ))
         self.wait(3)
         self.play(Transform(
             self.symbols, bad_symbols,
-            path_arc = np.pi
+            path_arc=np.pi
         ))
         self.wait()
 
-
     def shift_to_visuals(self):
         sigma, prod, trig, func = self.symbols.split()
-        new_trig = trig.copy()        
+        new_trig = trig.copy()
         sin, cos, tan = [
             trig_part.split()[0]
             for trig_part in new_trig.split()
@@ -158,7 +155,7 @@ class Notation(Scene):
                 (func.shift, 5*UP),
             ])
         )
-        sum_lines.next_to(sigma, DOWN)        
+        sum_lines.next_to(sigma, DOWN)
         self.remove(prod, func)
         self.play(
             trig_anim,
@@ -171,22 +168,21 @@ class Notation(Scene):
         result = VMobject()
         for n in range(1, 8):
             big_line = NumberLine(
-                x_min = 0,
-                x_max = 1.01,
-                tick_frequency = 1./n,
-                numbers_with_elongated_ticks = [],
-                color = WHITE
+                x_min=0,
+                x_max=1.01,
+                tick_frequency=1./n,
+                numbers_with_elongated_ticks=[],
+                color=WHITE
             )
             little_line = Line(
                 big_line.number_to_point(0),
                 big_line.number_to_point(1./n),
-                color = RED
+                color=RED
             )
             big_line.add(little_line)
             big_line.shift(0.5*n*DOWN)
             result.add(big_line)
         return result
-
 
     def swipe_left(self):
         everyone = VMobject(*self.mobjects)
@@ -197,10 +193,10 @@ class ButDots(Scene):
     def construct(self):
         but = TextMobject("but")
         dots = TexMobject("\\dots")
-        dots.next_to(but, aligned_edge = DOWN)
+        dots.next_to(but, aligned_edge=DOWN)
         but.shift(20*RIGHT)
         self.play(ApplyMethod(but.shift, 20*LEFT))
-        self.play(Write(dots, run_time = 5))
+        self.play(Write(dots, run_time=5))
         self.wait()
 
 
@@ -219,9 +215,9 @@ class ThreesomeOfNotation(Scene):
         vars3 = VMobject(x3, y3, z3)
 
         self.play(Write(exp))
-        self.play(Transform(vars1, vars2, path_arc = -np.pi))
+        self.play(Transform(vars1, vars2, path_arc=-np.pi))
         self.play(Write(log))
-        self.play(Transform(vars1, vars3, path_arc = -np.pi))
+        self.play(Transform(vars1, vars3, path_arc=-np.pi))
         self.play(Write(rad))
         self.wait()
 
@@ -237,28 +233,28 @@ class TwoThreeEightExample(Scene):
         start = TexMobject("2 \\cdot 2 \\cdot 2 = 8")
         two1, dot1, two2, dot2, two3, eq, eight = start.split()
         brace = Brace(VMobject(two1, two3), DOWN)
-        three = TexMobject("3").next_to(brace, DOWN, buff = 0.2)
+        three = TexMobject("3").next_to(brace, DOWN, buff=0.2)
         rogue_two = two1.copy()
 
         self.add(two1)
         self.play(
             Transform(rogue_two, two2),
             Write(dot1),
-            run_time = 0.5
+            run_time=0.5
         )
         self.add(two2)
         self.play(
             Transform(rogue_two, two3),
             Write(dot2),
-            run_time = 0.5
+            run_time=0.5
         )
         self.add(two3)
         self.remove(rogue_two)
         self.play(
-            Write(eq), Write(eight), 
+            Write(eq), Write(eight),
             GrowFromCenter(brace),
             Write(three),
-            run_time = 1
+            run_time=1
         )
         self.wait()
 
@@ -270,7 +266,7 @@ class TwoThreeEightExample(Scene):
             Transform(
                 VMobject(two1, dot1, two2, dot2, brace, three),
                 exp_three,
-                path_arc = -np.pi/2
+                path_arc=-np.pi/2
             ),
             Transform(two3, base_two)
         )
@@ -281,7 +277,7 @@ class TwoThreeEightExample(Scene):
         rad_three, rad1, rad2, rad_eight, rad_eq, rad_two = \
             TexMobject("\\sqrt[3]{8} = 2").split()
         self.play(*[
-            Transform(*pair, path_arc = np.pi/2)
+            Transform(*pair, path_arc=np.pi/2)
             for pair in [
                 (exp_three, rad_three),
                 (VMobject(), rad1),
@@ -294,8 +290,8 @@ class TwoThreeEightExample(Scene):
         self.wait()
         self.play(ApplyMethod(
             VMobject(rad1, rad2).set_color, RED,
-            rate_func = there_and_back,
-            run_time = 2
+            rate_func=there_and_back,
+            run_time=2
         ))
         self.remove(rad1, rad2)
         self.wait()
@@ -304,7 +300,7 @@ class TwoThreeEightExample(Scene):
             TexMobject("\\log_2(8) = 3").split()
         self.clear()
         self.play(*[
-            Transform(*pair, path_arc = np.pi/2)
+            Transform(*pair, path_arc=np.pi/2)
             for pair in [
                 (rad1, l),
                 (rad2, o),
@@ -320,16 +316,17 @@ class TwoThreeEightExample(Scene):
         self.wait()
         self.play(ApplyMethod(
             VMobject(l, o, g).set_color, RED,
-            rate_func = there_and_back,
-            run_time = 2
+            rate_func=there_and_back,
+            run_time=2
         ))
         self.wait()
+
 
 class WhatTheHell(Scene):
     def construct(self):
         randy = Randolph()
         randy.to_corner(DOWN+LEFT)
-        exp, rad, log = list(map(TexMobject,[
+        exp, rad, log = list(map(TexMobject, [
             "2^3 = 8",
             "\\sqrt[3]{8} = 2",
             "\\log_2(8) = 3",
@@ -354,7 +351,7 @@ class WhatTheHell(Scene):
         phrases = [
             TextMobject(
                 ["Communicate with", words]
-            ).next_to(mob, LEFT, buff = 1)
+            ).next_to(mob, LEFT, buff=1)
             for words, mob in [
                 ("position", exp),
                 ("a new symbol", rad),
@@ -375,6 +372,7 @@ class WhatTheHell(Scene):
         self.remove(randy)
         self.play(Write(VMobject(*phrases)))
         self.wait()
+
 
 class Countermathematical(Scene):
     def construct(self):
@@ -427,11 +425,11 @@ class LogarithmProperties(Scene):
         randy.to_corner()
         bubble = ThoughtBubble().pin_to(randy)
         props = [
-            TexMobject("\\log_a(x) = \\dfrac{\\log_b(a)}{\\log_b(x)}"),        
+            TexMobject("\\log_a(x) = \\dfrac{\\log_b(a)}{\\log_b(x)}"),
             TexMobject("\\log_a(x) = \\dfrac{\\log_b(x)}{\\log_b(a)}"),
             TexMobject("\\log_a(x) = \\log_b(x) - \\log_b(a)"),
             TexMobject("\\log_a(x) = \\log_b(x) + \\log_b(a)"),
-            TexMobject("\\log_a(x) = \\dfrac{\\log_b(x)}{\\log_b(a)}"),            
+            TexMobject("\\log_a(x) = \\dfrac{\\log_b(x)}{\\log_b(a)}"),
         ]
         bubble.add_content(props[0])
         words = TextMobject("What was it again?")
@@ -447,7 +445,7 @@ class LogarithmProperties(Scene):
         self.show_frame()
         for i, prop in enumerate(props[1:]):
             self.play(ApplyMethod(bubble.add_content, prop))
-            if i%2 == 0:
+            if i % 2 == 0:
                 self.play(Blink(randy))
             else:
                 self.wait()
@@ -462,28 +460,19 @@ class HaveToShare(Scene):
             w2.next_to(w1, DOWN)
         VMobject(*words).center()
         left_dot, top_dot, bottom_dot = [
-            Dot(point, radius = 0.1)
+            Dot(point, radius=0.1)
             for point in (ORIGIN, RIGHT+0.5*UP, RIGHT+0.5*DOWN)
         ]
         line1, line2 = [
-            Line(left_dot.get_center(), dot.get_center(), buff = 0)
+            Line(left_dot.get_center(), dot.get_center(), buff=0)
             for dot in (top_dot, bottom_dot)
         ]
         share = VMobject(left_dot, top_dot, bottom_dot, line1, line2)
-        share.next_to(words[1], RIGHT, buff = 1)
+        share.next_to(words[1], RIGHT, buff=1)
         share.set_color(RED)
 
         for word in words:
             self.play(FadeIn(word))
         self.wait()
-        self.play(Write(share, run_time = 1))
+        self.play(Write(share, run_time=1))
         self.wait()
-
-
-
-
-
-
-
-
-

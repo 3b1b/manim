@@ -11,14 +11,16 @@ def get_projection(vector_to_project, stable_vector):
     v1, v2 = stable_vector, vector_to_project
     return v1*np.dot(v1, v2)/(get_norm(v1)**2)
 
+
 def get_vect_mob_projection(vector_to_project, stable_vector):
     return Vector(
         get_projection(
-            vector_to_project.get_end(),            
+            vector_to_project.get_end(),
             stable_vector.get_end()
         ),
-        color = vector_to_project.get_color()
+        color=vector_to_project.get_color()
     ).fade()
+
 
 class OpeningQuote(Scene):
     def construct(self):
@@ -27,7 +29,7 @@ class OpeningQuote(Scene):
             "You know, I don't think math is a science, I think it's a religion.",
             "\\\\Hobbes:",
             "A religion?",
-            "\\\\Calvin:" ,
+            "\\\\Calvin:",
             "Yeah. All these equations are like miracles."
             "You take two numbers and when you add them, "
             "they magically become one NEW number! "
@@ -42,13 +44,14 @@ class OpeningQuote(Scene):
 
         for i in range(3):
             speaker, quote = words[2*i:2*i+2]
-            self.play(FadeIn(speaker, run_time = 0.5))
+            self.play(FadeIn(speaker, run_time=0.5))
             rt = max(1, len(quote.split())/18)
             self.play(Write(
-                quote, 
-                run_time = rt,
+                quote,
+                run_time=rt,
             ))
         self.wait(2)
+
 
 class TraditionalOrdering(RandolphScene):
     def construct(self):
@@ -63,19 +66,20 @@ class TraditionalOrdering(RandolphScene):
             "(everything else)",
             "\\vdots",
         ])))
-        topics.arrange(DOWN, aligned_edge = LEFT, buff = SMALL_BUFF)
+        topics.arrange(DOWN, aligned_edge=LEFT, buff=SMALL_BUFF)
         # topics.next_to(title, DOWN+RIGHT)
 
         self.play(
-            Write(title, run_time = 1),
+            Write(title, run_time=1),
             FadeIn(
-                topics, 
-                run_time = 3,
-                lag_ratio = 0.5
+                topics,
+                run_time=3,
+                lag_ratio=0.5
             ),
         )
         self.play(topics[1].set_color, PINK)
         self.wait()
+
 
 class ThisSeriesOrdering(RandolphScene):
     def construct(self):
@@ -83,9 +87,9 @@ class ThisSeriesOrdering(RandolphScene):
         self.randy.rotate(np.pi, UP)
         title.scale(1.2).set_color(BLUE)
         title.to_corner(UP+LEFT)
-        line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT, color = WHITE)
-        line.next_to(title, DOWN, buff = SMALL_BUFF)
-        line.to_edge(LEFT, buff = 0)
+        line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT, color=WHITE)
+        line.next_to(title, DOWN, buff=SMALL_BUFF)
+        line.to_edge(LEFT, buff=0)
 
         chapters = VMobject(*[
             TextMobject("\\small " + text)
@@ -104,10 +108,10 @@ class ThisSeriesOrdering(RandolphScene):
             ]
         ])
         chapters.arrange(
-            DOWN, buff = SMALL_BUFF, aligned_edge = LEFT
+            DOWN, buff=SMALL_BUFF, aligned_edge=LEFT
         )
         chapters.set_height(1.5*FRAME_Y_RADIUS)
-        chapters.next_to(line, DOWN, buff = SMALL_BUFF)
+        chapters.next_to(line, DOWN, buff=SMALL_BUFF)
         chapters.to_edge(RIGHT)
 
         self.add(title)
@@ -116,9 +120,9 @@ class ThisSeriesOrdering(RandolphScene):
         )
         self.play(
             FadeIn(
-                chapters, 
-                lag_ratio = 0.5,
-                run_time = 3
+                chapters,
+                lag_ratio=0.5,
+                run_time=3
             ),
             self.randy.change_mode, "sassy"
         )
@@ -126,10 +130,11 @@ class ThisSeriesOrdering(RandolphScene):
         self.play(chapters[6].set_color, PINK)
         self.wait(6)
 
+
 class OneMustViewThroughTransformations(TeacherStudentsScene):
     def construct(self):
         words = TextMobject(
-            "Only with" , "transformations",
+            "Only with", "transformations",
             "\n can we truly understand",
         )
         words.set_color_by_tex("transformations", BLUE)
@@ -143,23 +148,25 @@ class OneMustViewThroughTransformations(TeacherStudentsScene):
         words = TextMobject(
             "First, the ",
             "standard view...",
-            arg_separator = "\n"
+            arg_separator="\n"
         )
         self.teacher_says(words)
         self.random_blink(2)
 
+
 class ShowNumericalDotProduct(Scene):
     CONFIG = {
-        "v1" : [2, 7, 1],
-        "v2" : [8, 2, 8],
-        "write_dot_product_words" : True,
+        "v1": [2, 7, 1],
+        "v2": [8, 2, 8],
+        "write_dot_product_words": True,
     }
+
     def construct(self):
         v1 = Matrix(self.v1)
         v2 = Matrix(self.v2)
         inter_array_dot = TexMobject("\\cdot").scale(1.5)
         dot_product = VGroup(v1, inter_array_dot, v2)
-        dot_product.arrange(RIGHT, buff = MED_SMALL_BUFF/2)
+        dot_product.arrange(RIGHT, buff=MED_SMALL_BUFF/2)
         dot_product.to_edge(LEFT)
         pairs = list(zip(v1.get_entries(), v2.get_entries()))
 
@@ -170,12 +177,11 @@ class ShowNumericalDotProduct(Scene):
         products = VGroup(*[
             VGroup(
                 p1.copy(), dot.copy(), p2.copy()
-            ).arrange(RIGHT, buff = SMALL_BUFF)
+            ).arrange(RIGHT, buff=SMALL_BUFF)
             for p1, p2 in pairs
         ])
-        products.arrange(DOWN, buff = LARGE_BUFF)
-        products.next_to(dot_product, RIGHT, buff = LARGE_BUFF)
-
+        products.arrange(DOWN, buff=LARGE_BUFF)
+        products.next_to(dot_product, RIGHT, buff=LARGE_BUFF)
 
         products.target = products.copy()
         plusses = ["+"]*(len(self.v1)-1)
@@ -183,7 +189,7 @@ class ShowNumericalDotProduct(Scene):
         final_sum = VGroup(*it.chain(*list(zip(
             symbols, products.target
         ))))
-        final_sum.arrange(RIGHT, buff = SMALL_BUFF)
+        final_sum.arrange(RIGHT, buff=SMALL_BUFF)
         final_sum.next_to(dot_product, RIGHT)
 
         title = TextMobject("Two vectors of the same dimension")
@@ -206,14 +212,14 @@ class ShowNumericalDotProduct(Scene):
             self.play(
                 inter_array_dot.set_color, YELLOW,
                 ShowCreation(arrow),
-                Write(dot_product_words, run_time = 2)
+                Write(dot_product_words, run_time=2)
             )
             self.wait()
         self.play(Transform(
             VGroup(*it.starmap(Group, pairs)).copy(),
             products,
-            path_arc = -np.pi/2,
-            run_time = 2 
+            path_arc=-np.pi/2,
+            run_time=2
         ))
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(products)
@@ -221,31 +227,35 @@ class ShowNumericalDotProduct(Scene):
 
         self.play(
             Write(symbols),
-            Transform(products, products.target, path_arc = np.pi/2)
+            Transform(products, products.target, path_arc=np.pi/2)
         )
         self.wait()
 
+
 class TwoDDotProductExample(ShowNumericalDotProduct):
     CONFIG = {
-        "v1" : [1, 2],
-        "v2" : [3, 4],
+        "v1": [1, 2],
+        "v2": [3, 4],
     }
+
 
 class FourDDotProductExample(ShowNumericalDotProduct):
     CONFIG = {
-        "v1" : [6, 2, 8, 3],
-        "v2" : [1, 8, 5, 3],
-        "write_dot_product_words" : False,
+        "v1": [6, 2, 8, 3],
+        "v2": [1, 8, 5, 3],
+        "write_dot_product_words": False,
     }
+
 
 class GeometricInterpretation(VectorScene):
     CONFIG = {
-        "v_coords" : [4, 1],
-        "w_coords" : [2, -1],
-        "v_color" : V_COLOR,
-        "w_color" : W_COLOR,
-        "project_onto_v" : True,
+        "v_coords": [4, 1],
+        "w_coords": [2, -1],
+        "v_color": V_COLOR,
+        "w_color": W_COLOR,
+        "project_onto_v": True,
     }
+
     def construct(self):
         self.lock_in_faded_grid()
         self.add_symbols()
@@ -255,7 +265,6 @@ class GeometricInterpretation(VectorScene):
         self.show_lengths()
         self.handle_possible_negative()
 
-
     def add_symbols(self):
         v = matrix_to_mobject(self.v_coords).set_color(self.v_color)
         w = matrix_to_mobject(self.w_coords).set_color(self.w_color)
@@ -263,33 +272,32 @@ class GeometricInterpretation(VectorScene):
         w.add_background_rectangle()
         dot = TexMobject("\\cdot")
         eq = VMobject(v, dot, w)
-        eq.arrange(RIGHT, buff = SMALL_BUFF)
+        eq.arrange(RIGHT, buff=SMALL_BUFF)
         eq.to_corner(UP+LEFT)
-        self.play(Write(eq), run_time = 1)
+        self.play(Write(eq), run_time=1)
         for array, char in zip([v, w], ["v", "w"]):
             brace = Brace(array, DOWN)
-            label = brace.get_text("$\\vec{\\textbf{%s}}$"%char)
+            label = brace.get_text("$\\vec{\\textbf{%s}}$" % char)
             label.set_color(array.get_color())
             self.play(
                 GrowFromCenter(brace),
                 Write(label),
-                run_time = 1
+                run_time=1
             )
         self.dot_product = eq
 
-
     def add_vectors(self):
-        self.v = Vector(self.v_coords, color = self.v_color)
-        self.w = Vector(self.w_coords, color = self.w_color)
+        self.v = Vector(self.v_coords, color=self.v_color)
+        self.w = Vector(self.w_coords, color=self.w_color)
         self.play(ShowCreation(self.v))
         self.play(ShowCreation(self.w))
         for vect, char, direction in zip(
             [self.v, self.w], ["v", "w"], [DOWN+RIGHT, DOWN]
-            ):
-            label = TexMobject("\\vec{\\textbf{%s}}"%char)
+        ):
+            label = TexMobject("\\vec{\\textbf{%s}}" % char)
             label.next_to(vect.get_end(), direction)
             label.set_color(vect.get_color())
-            self.play(Write(label, run_time = 1))
+            self.play(Write(label, run_time=1))
         self.stable_vect = self.v if self.project_onto_v else self.w
         self.proj_vect = self.w if self.project_onto_v else self.v
 
@@ -309,11 +317,11 @@ class GeometricInterpretation(VectorScene):
             self.stable_vect.get_end()*dot_product/(
                 self.stable_vect.get_length()**2
             ),
-            color = self.proj_vect.get_color()
+            color=self.proj_vect.get_color()
         )
         projection_line = Line(
             self.proj_vect.get_end(), projected.get_end(),
-            color = GREY
+            color=GREY
         )
 
         self.play(ShowCreation(projection_line))
@@ -325,14 +333,14 @@ class GeometricInterpretation(VectorScene):
         stable_char = "v" if self.project_onto_v else "w"
         proj_char = "w" if self.project_onto_v else "v"
         product = TextMobject(
-            "=", 
+            "=",
             "(",
-            "Length of projected $\\vec{\\textbf{%s}}$"%proj_char,
+            "Length of projected $\\vec{\\textbf{%s}}$" % proj_char,
             ")",
             "(",
-            "Length of $\\vec{\\textbf{%s}}$"%stable_char,
+            "Length of $\\vec{\\textbf{%s}}$" % stable_char,
             ")",
-            arg_separator = ""
+            arg_separator=""
         )
         product.scale(0.9)
         product.next_to(self.dot_product, RIGHT)
@@ -360,7 +368,7 @@ class GeometricInterpretation(VectorScene):
 
         self.play(
             GrowFromCenter(proj_brace),
-            Write(proj_words.start, run_time = 2)
+            Write(proj_words.start, run_time=2)
         )
         self.wait()
         self.play(
@@ -369,7 +377,7 @@ class GeometricInterpretation(VectorScene):
         )
         self.play(
             GrowFromCenter(stable_brace),
-            Write(stable_words.start, run_time = 2),
+            Write(stable_words.start, run_time=2),
             Animation(self.stable_vect)
         )
         self.wait()
@@ -390,13 +398,13 @@ class GeometricInterpretation(VectorScene):
         words = TextMobject("Should be negative")
         words.set_color(RED)
         words.next_to(
-            VMobject(*self.product[2:]), 
-            DOWN, 
-            buff = LARGE_BUFF,
-            aligned_edge = LEFT
+            VMobject(*self.product[2:]),
+            DOWN,
+            buff=LARGE_BUFF,
+            aligned_edge=LEFT
         )
         words.add_background_rectangle()
-        arrow = Arrow(words.get_left(), neg, color = RED)
+        arrow = Arrow(words.get_left(), neg, color=RED)
 
         self.play(
             Write(neg),
@@ -406,13 +414,15 @@ class GeometricInterpretation(VectorScene):
         )
         self.wait()
 
+
 class GeometricInterpretationNegative(GeometricInterpretation):
     CONFIG = {
-        "v_coords" : [3, 1],
-        "w_coords" : [-1, -2],
-        "v_color" : YELLOW,
-        "w_color" : MAROON_B,
+        "v_coords": [3, 1],
+        "w_coords": [-1, -2],
+        "v_color": YELLOW,
+        "w_color": MAROON_B,
     }
+
 
 class ShowQualitativeDotProductValues(VectorScene):
     def construct(self):
@@ -438,23 +448,22 @@ class ShowQualitativeDotProductValues(VectorScene):
         ]))
         for word, sym in zip(words, [comp, equals, less_than]):
             word.add_background_rectangle()
-            word.next_to(sym, DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+            word.next_to(sym, DOWN, aligned_edge=LEFT, buff=MED_SMALL_BUFF)
             word.set_color(sym.get_color())
 
-        v = Vector([1.5, 1.5], color = V_COLOR)
-        w = Vector([2, 2], color = W_COLOR)
+        v = Vector([1.5, 1.5], color=V_COLOR)
+        w = Vector([2, 2], color=W_COLOR)
         w.rotate(-np.pi/6)
         shadow = Vector(
             v.get_end()*np.dot(v.get_end(), w.get_end())/(v.get_length()**2),
-            color = MAROON_E,
-            preserve_tip_size_when_scaling = False
+            color=MAROON_E,
+            preserve_tip_size_when_scaling=False
         )
         shadow_opposite = shadow.copy().scale(-1)
-        line = Line(LEFT, RIGHT, color = WHITE)
+        line = Line(LEFT, RIGHT, color=WHITE)
         line.scale(FRAME_X_RADIUS)
         line.rotate(v.get_angle())
-        proj_line = Line(w.get_end(), shadow.get_end(), color = GREY)
-
+        proj_line = Line(w.get_end(), shadow.get_end(), color=GREY)
 
         word = words[0]
 
@@ -469,7 +478,7 @@ class ShowQualitativeDotProductValues(VectorScene):
         self.add(shadow)
         self.play(FadeOut(proj_line))
 
-        self.play(Write(word, run_time = 1))
+        self.play(Write(word, run_time=1))
         self.wait()
         self.play(
             Rotate(w, -np.pi/3),
@@ -490,6 +499,7 @@ class ShowQualitativeDotProductValues(VectorScene):
         )
         self.wait()
 
+
 class AskAboutSymmetry(TeacherStudentsScene):
     def construct(self):
         v, w = "\\vec{\\textbf{v}}", "\\vec{\\textbf{w}}",
@@ -502,7 +512,7 @@ class AskAboutSymmetry(TeacherStudentsScene):
         VMobject(question[3], question[5]).set_color(W_COLOR)
         self.student_says(
             question,
-            target_mode = "raise_left_hand"
+            target_mode="raise_left_hand"
         )
         self.change_student_modes("confused")
         self.play(self.get_teacher().change_mode, "pondering")
@@ -510,26 +520,29 @@ class AskAboutSymmetry(TeacherStudentsScene):
         self.play(self.get_teacher().look, LEFT)
         self.random_blink()
 
+
 class GeometricInterpretationSwapVectors(GeometricInterpretation):
     CONFIG = {
-        "project_onto_v" : False,
+        "project_onto_v": False,
     }
+
 
 class SymmetricVAndW(VectorScene):
     def construct(self):
         self.lock_in_faded_grid()
-        v = Vector([3, 1], color = V_COLOR)
-        w = Vector([1, 3], color = W_COLOR)
+        v = Vector([3, 1], color=V_COLOR)
+        w = Vector([1, 3], color=W_COLOR)
         for vect, char in zip([v, w], ["v", "w"]):
-            vect.label = TexMobject("\\vec{\\textbf{%s}}"%char)
+            vect.label = TexMobject("\\vec{\\textbf{%s}}" % char)
             vect.label.set_color(vect.get_color())
             vect.label.next_to(vect.get_end(), DOWN+RIGHT)
         for v1, v2 in (v, w), (w, v):
             v1.proj = get_vect_mob_projection(v1, v2)
             v1.proj_line = Line(
-                v1.get_end(), v1.proj.get_end(), color = GREY
+                v1.get_end(), v1.proj.get_end(), color=GREY
             )
-        line_of_symmetry = DashedLine(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
+        line_of_symmetry = DashedLine(
+            FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         line_of_symmetry.rotate(np.mean([v.get_angle(), w.get_angle()]))
         line_of_symmetry_words = TextMobject("Line of symmetry")
         line_of_symmetry_words.add_background_rectangle()
@@ -538,19 +551,19 @@ class SymmetricVAndW(VectorScene):
 
         for vect in v, w:
             self.play(ShowCreation(vect))
-            self.play(Write(vect.label, run_time = 1))
+            self.play(Write(vect.label, run_time=1))
         self.wait()
         angle = (v.get_angle()-w.get_angle())/2
         self.play(
-            Rotate(w, angle), 
+            Rotate(w, angle),
             Rotate(v, -angle),
-            rate_func = there_and_back,
-            run_time = 2
+            rate_func=there_and_back,
+            run_time=2
         )
         self.wait()
         self.play(
             ShowCreation(line_of_symmetry),
-            Write(line_of_symmetry_words, run_time = 1)
+            Write(line_of_symmetry_words, run_time=1)
         )
         self.wait(0.5)
         self.remove(line_of_symmetry_words)
@@ -562,7 +575,7 @@ class SymmetricVAndW(VectorScene):
             self.remove(vect_copy)
             self.add(vect.proj)
             self.wait()
-        self.play(*list(map(FadeOut,[
+        self.play(*list(map(FadeOut, [
             v.proj, v.proj_line, w.proj, w.proj_line
         ])))
         self.show_doubling(v, w)
@@ -571,16 +584,16 @@ class SymmetricVAndW(VectorScene):
         scalar = 2
         new_v = v.copy().scale(scalar)
         new_v.label = VMobject(TexMobject("2"), v.label.copy())
-        new_v.label.arrange(aligned_edge = DOWN)
+        new_v.label.arrange(aligned_edge=DOWN)
         new_v.label.next_to(new_v.get_end(), DOWN+RIGHT)
         new_v.proj = v.proj.copy().scale(scalar)
         new_v.proj.fade()
         new_v.proj_line = Line(
             new_v.get_end(), new_v.proj.get_end(),
-            color = GREY
+            color=GREY
         )
 
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in ("v", "w")]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}" % c for c in ("v", "w")]
         equation = TexMobject(
             "(", "2", v_tex, ")", "\\cdot", w_tex,
             "=",
@@ -600,14 +613,14 @@ class SymmetricVAndW(VectorScene):
         self.play(Transform(*[
             VGroup(mob, mob.label)
             for mob in (v, new_v)
-        ]), run_time = 2)
-        last_mob = self.get_mobjects_from_last_animation()[0] 
+        ]), run_time=2)
+        last_mob = self.get_mobjects_from_last_animation()[0]
         self.remove(last_mob)
-        self.add(*last_mob)       
+        self.add(*last_mob)
         Transform(
             VGroup(v.proj, v.proj_line),
             VGroup(new_v.proj, new_v.proj_line)
-        ).update(1)##Hacky
+        ).update(1)  # Hacky
 
         self.play(Write(words))
         self.wait()
@@ -634,13 +647,14 @@ class SymmetricVAndW(VectorScene):
                 v_parts += [v.proj, v.proj_line]
             self.play(
                 *[v_part.restore for v_part in v_parts],
-                rate_func = there_and_back,
-                run_time = 2
+                rate_func=there_and_back,
+                run_time=2
             )
             self.wait()
             self.play(*list(map(FadeOut, [
                 projector.proj, projector.proj_line
             ])))
+
 
 class LurkingQuestion(TeacherStudentsScene):
     def construct(self):
@@ -662,37 +676,40 @@ class LurkingQuestion(TeacherStudentsScene):
         answer = TextMobject("""
             The most satisfactory
             answer comes from""",
-            "duality"
-        )
+                             "duality"
+                             )
         answer[-1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(answer)
         self.random_blink(2)
         self.teacher_thinks("")
         everything = VMobject(*self.get_mobjects())
         self.play(ApplyPointwiseFunction(
-            lambda p : 10*(p+2*DOWN)/get_norm(p+2*DOWN),
+            lambda p: 10*(p+2*DOWN)/get_norm(p+2*DOWN),
             everything
         ))
 
+
 class TwoDToOneDScene(LinearTransformationScene):
     CONFIG = {
-        "include_background_plane" : False,
-        "foreground_plane_kwargs" : {
-            "x_radius" : FRAME_X_RADIUS,
-            "y_radius" : FRAME_Y_RADIUS,
-            "secondary_line_ratio" : 1
+        "include_background_plane": False,
+        "foreground_plane_kwargs": {
+            "x_radius": FRAME_X_RADIUS,
+            "y_radius": FRAME_Y_RADIUS,
+            "secondary_line_ratio": 1
         },
-        "t_matrix" : [[2, 0], [1, 0]]
+        "t_matrix": [[2, 0], [1, 0]]
     }
+
     def setup(self):
         self.number_line = NumberLine()
         self.add(self.number_line)
         LinearTransformationScene.setup(self)
 
+
 class Introduce2Dto1DLinearTransformations(TwoDToOneDScene):
     def construct(self):
         number_line_words = TextMobject("Number line")
-        number_line_words.next_to(self.number_line, UP, buff = MED_SMALL_BUFF)
+        number_line_words.next_to(self.number_line, UP, buff=MED_SMALL_BUFF)
         numbers = VMobject(*self.number_line.get_number_mobjects())
 
         self.remove(self.number_line)
@@ -704,19 +721,20 @@ class Introduce2Dto1DLinearTransformations(TwoDToOneDScene):
         self.play(*list(map(Write, [numbers, number_line_words])))
         self.wait()
 
+
 class Symbolic2To1DTransform(Scene):
     def construct(self):
         func = TexMobject("L(", "\\vec{\\textbf{v}}", ")")
         input_array = Matrix([2, 7])
         input_array.set_color(YELLOW)
-        in_arrow = Arrow(LEFT, RIGHT, color = input_array.get_color())
+        in_arrow = Arrow(LEFT, RIGHT, color=input_array.get_color())
         func[1].set_color(input_array.get_color())
         output_array = Matrix([1.8])
         output_array.set_color(PINK)
-        out_arrow = Arrow(LEFT, RIGHT, color = output_array.get_color())
+        out_arrow = Arrow(LEFT, RIGHT, color=output_array.get_color())
         VMobject(
             input_array, in_arrow, func, out_arrow, output_array
-        ).arrange(RIGHT, buff = SMALL_BUFF)
+        ).arrange(RIGHT, buff=SMALL_BUFF)
 
         input_brace = Brace(input_array, DOWN)
         input_words = input_brace.get_text("2d input")
@@ -729,7 +747,6 @@ class Symbolic2To1DTransform(Scene):
         special_words.set_color_by_tex("Linear", BLUE)
         special_words.to_edge(UP)
 
-
         self.add(func, input_array)
         self.play(
             GrowFromCenter(input_brace),
@@ -739,14 +756,14 @@ class Symbolic2To1DTransform(Scene):
         self.play(
             Transform(mover, Dot().move_to(func)),
             ShowCreation(in_arrow),
-            rate_func = rush_into,
-            run_time = 0.5
+            rate_func=rush_into,
+            run_time=0.5
         )
         self.play(
             Transform(mover, output_array),
             ShowCreation(out_arrow),
-            rate_func = rush_from,
-            run_time = 0.5
+            rate_func=rush_from,
+            run_time=0.5
         )
         self.play(
             GrowFromCenter(output_brace),
@@ -756,6 +773,7 @@ class Symbolic2To1DTransform(Scene):
         self.play(Write(special_words))
         self.wait()
 
+
 class RecommendChapter3(Scene):
     def construct(self):
         title = TextMobject("""
@@ -763,13 +781,14 @@ class RecommendChapter3(Scene):
             if you haven't already
         """)
         title.to_edge(UP)
-        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect = Rectangle(width=16, height=9, color=BLUE)
         rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.wait()  
+        self.wait()
+
 
 class OkayToIgnoreFormalProperties(Scene):
     def construct(self):
@@ -777,7 +796,7 @@ class OkayToIgnoreFormalProperties(Scene):
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in ("v", "w")]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}" % s for s in ("v", "w")]
         additivity = TexMobject(
             "L(", v_tex, "+", w_tex, ") = ",
             "L(", v_tex, ") + L(", w_tex, ")",
@@ -789,11 +808,11 @@ class OkayToIgnoreFormalProperties(Scene):
             tex_mob.set_color_by_tex(v_tex, V_COLOR)
             tex_mob.set_color_by_tex(w_tex, W_COLOR)
             tex_mob.set_color_by_tex("c", GREEN)
-        additivity.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
-        scaling.next_to(additivity, DOWN, buff = MED_SMALL_BUFF)
+        additivity.next_to(h_line, DOWN, buff=MED_SMALL_BUFF)
+        scaling.next_to(additivity, DOWN, buff=MED_SMALL_BUFF)
         words = TextMobject("We'll ignore these")
         words.set_color(RED)
-        arrow = Arrow(DOWN, UP, color = RED)
+        arrow = Arrow(DOWN, UP, color=RED)
         arrow.next_to(scaling, DOWN)
         words.next_to(arrow, DOWN)
 
@@ -803,7 +822,7 @@ class OkayToIgnoreFormalProperties(Scene):
         self.add(randy, morty, title)
         self.play(ShowCreation(h_line))
         for tex_mob in additivity, scaling:
-            self.play(Write(tex_mob, run_time = 2))
+            self.play(Write(tex_mob, run_time=2))
         self.play(
             FadeIn(words),
             ShowCreation(arrow),
@@ -813,6 +832,7 @@ class OkayToIgnoreFormalProperties(Scene):
             morty.look, RIGHT,
         )
         self.wait()
+
 
 class FormalVsVisual(Scene):
     def construct(self):
@@ -828,7 +848,7 @@ class FormalVsVisual(Scene):
         formal.next_to(line, DOWN).shift(FRAME_X_RADIUS*LEFT/2)
         visual.next_to(line, DOWN).shift(FRAME_X_RADIUS*RIGHT/2)
 
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in ("v", "w")]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}" % c for c in ("v", "w")]
         additivity = TexMobject(
             "L(", v_tex, "+", w_tex, ") = ",
             "L(", v_tex, ")+", "L(", w_tex, ")"
@@ -848,27 +868,28 @@ class FormalVsVisual(Scene):
         visual_statement.set_submobject_colors_by_gradient(YELLOW, MAROON_B)
 
         properties = VMobject(additivity, scaling)
-        properties.arrange(DOWN, buff = MED_SMALL_BUFF)
-        
+        properties.arrange(DOWN, buff=MED_SMALL_BUFF)
+
         for text, mob in (formal, properties), (visual, visual_statement):
             mob.scale(0.75)
-            mob.next_to(text, DOWN, buff = MED_SMALL_BUFF)
+            mob.next_to(text, DOWN, buff=MED_SMALL_BUFF)
 
         self.add(title)
         self.play(*list(map(ShowCreation, [line, v_line])))
         for mob in formal, visual, additivity, scaling, visual_statement:
-            self.play(Write(mob, run_time = 2))
+            self.play(Write(mob, run_time=2))
             self.wait()
+
 
 class AdditivityProperty(TwoDToOneDScene):
     CONFIG = {
-        "show_basis_vectors" : False,
-        "sum_before" : True
+        "show_basis_vectors": False,
+        "sum_before": True
     }
-    def construct(self):
-        v = Vector([2, 1], color = V_COLOR)
-        w = Vector([-1, 1], color = W_COLOR)
 
+    def construct(self):
+        v = Vector([2, 1], color=V_COLOR)
+        w = Vector([-1, 1], color=W_COLOR)
 
         L, sum_tex, r_paren = symbols = self.get_symbols()
         symbols.shift(4*RIGHT+2*UP)
@@ -878,8 +899,8 @@ class AdditivityProperty(TwoDToOneDScene):
         if self.sum_before:
             sum_vect = self.play_sum(v, w)
         else:
-            self.add_vector(v, animate = False)
-            self.add_vector(w, animate = False)
+            self.add_vector(v, animate=False)
+            self.add_vector(w, animate=False)
         self.apply_transposed_matrix(self.t_matrix)
         if not self.sum_before:
             sum_vect = self.play_sum(v, w)
@@ -889,30 +910,30 @@ class AdditivityProperty(TwoDToOneDScene):
         self.wait()
 
     def play_sum(self, v, w):
-        sum_vect = Vector(v.get_end()+w.get_end(), color = SUM_COLOR)
-        self.play(w.shift, v.get_end(), path_arc = np.pi/4)
+        sum_vect = Vector(v.get_end()+w.get_end(), color=SUM_COLOR)
+        self.play(w.shift, v.get_end(), path_arc=np.pi/4)
         self.play(ShowCreation(sum_vect))
         for vect in v, w:
             vect.target = vect.copy()
-            vect.target.set_fill(opacity = 0)
-            vect.target.set_stroke(width = 0)
+            vect.target.set_fill(opacity=0)
+            vect.target.set_stroke(width=0)
         sum_vect.target = sum_vect
         self.play(*[
             Transform(mob, mob.target)
             for mob in (v, w, sum_vect)
         ])
-        self.add_vector(sum_vect, animate = False)
+        self.add_vector(sum_vect, animate=False)
         return sum_vect
 
     def get_symbols(self):
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in ("v", "w")]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}" % c for c in ("v", "w")]
         if self.sum_before:
             tex_mob = TexMobject(
                 "L(", v_tex, "+", w_tex, ")"
             )
             result = VGroup(
-                tex_mob[0], 
-                VGroup(*tex_mob[1:4]), 
+                tex_mob[0],
+                VGroup(*tex_mob[1:4]),
                 tex_mob[4]
             )
         else:
@@ -926,27 +947,30 @@ class AdditivityProperty(TwoDToOneDScene):
             )
         tex_mob.set_color_by_tex(v_tex, V_COLOR)
         tex_mob.set_color_by_tex(w_tex, W_COLOR)
-        result[1].add_to_back(BackgroundRectangle(result[1]))        
+        result[1].add_to_back(BackgroundRectangle(result[1]))
         return result
+
 
 class AdditivityPropertyPart2(AdditivityProperty):
     CONFIG = {
-        "sum_before" : False
+        "sum_before": False
     }
+
 
 class ScalingProperty(TwoDToOneDScene):
     CONFIG = {
-        "show_basis_vectors" : False,
-        "scale_before" : True,
-        "scalar" : 2,
+        "show_basis_vectors": False,
+        "scale_before": True,
+        "scalar": 2,
     }
+
     def construct(self):
-        v = Vector([-1, 1], color = V_COLOR)
+        v = Vector([-1, 1], color=V_COLOR)
 
         self.play(ShowCreation(v))
         if self.scale_before:
             scaled_vect = self.show_scaling(v)
-        self.add_vector(v, animate = False)
+        self.add_vector(v, animate=False)
         self.apply_transposed_matrix(self.t_matrix)
         if not self.scale_before:
             scaled_vect = self.show_scaling(v)
@@ -954,7 +978,7 @@ class ScalingProperty(TwoDToOneDScene):
         self.write_symbols(scaled_vect)
 
     def show_scaling(self, v):
-        self.add_vector(v.copy().fade(), animate = False)
+        self.add_vector(v.copy().fade(), animate=False)
         self.play(v.scale, self.scalar)
         return v
 
@@ -976,13 +1000,16 @@ class ScalingProperty(TwoDToOneDScene):
         self.play(Write(tex_mob))
         self.wait()
 
+
 class ScalingPropertyPart2(ScalingProperty):
     CONFIG = {
-        "scale_before" : False
+        "scale_before": False
     }
+
 
 class ThisTwoDTo1DTransformWithDots(TwoDTo1DTransformWithDots):
     pass
+
 
 class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
     def construct(self):
@@ -991,16 +1018,16 @@ class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
         offset = LEFT+DOWN
         vect = 2*RIGHT+UP
         dots = VMobject(*[
-             Dot(offset + a*vect, radius = 0.075)
-             for a in np.linspace(-2, 3, 18)
+            Dot(offset + a*vect, radius=0.075)
+            for a in np.linspace(-2, 3, 18)
         ])
         dots.set_submobject_colors_by_gradient(YELLOW_B, YELLOW_C)
-        func = lambda p : (p[0]**2 - p[1]**2)*RIGHT
+        def func(p): return (p[0]**2 - p[1]**2)*RIGHT
         new_dots = VMobject(*[
             Dot(
-                func(dot.get_center()), 
-                color = dot.get_color(),
-                radius = dot.radius
+                func(dot.get_center()),
+                color=dot.get_color(),
+                radius=dot.radius
             )
             for dot in dots
         ])
@@ -1008,10 +1035,10 @@ class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
             "Line of dots", "do not", "remain evenly spaced"
         )
         words.set_color_by_tex("do not", RED)
-        words.next_to(line, UP, buff = MED_SMALL_BUFF)
+        words.next_to(line, UP, buff=MED_SMALL_BUFF)
         array_tex = matrix_to_tex_string(["x", "y"])
         equation = TexMobject(
-            "f", "\\left(%s \\right)"%array_tex, " = x^2 - y^2"
+            "f", "\\left(%s \\right)" % array_tex, " = x^2 - y^2"
         )
         for part in equation:
             part.add_to_back(BackgroundRectangle(part))
@@ -1021,14 +1048,15 @@ class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
         self.play(Write(dots))
         self.apply_nonlinear_transformation(
             func,
-            added_anims = [Transform(dots, new_dots)]
+            added_anims=[Transform(dots, new_dots)]
         )
         self.play(Write(words))
         self.wait()
 
+
 class AlwaysfollowIHatJHat(TeacherStudentsScene):
     def construct(self):
-        i_tex, j_tex = ["$\\hat{\\%smath}$"%c for c in ("i", "j")]
+        i_tex, j_tex = ["$\\hat{\\%smath}$" % c for c in ("i", "j")]
         words = TextMobject(
             "Always follow", i_tex, "and", j_tex
         )
@@ -1042,10 +1070,11 @@ class AlwaysfollowIHatJHat(TeacherStudentsScene):
         ])
         self.play(Transform(
             students, ponderers,
-            lag_ratio = 0.5,
-            run_time = 2
+            lag_ratio=0.5,
+            run_time=2
         ))
         self.random_blink(2)
+
 
 class ShowMatrix(TwoDToOneDScene):
     def construct(self):
@@ -1056,11 +1085,11 @@ class ShowMatrix(TwoDToOneDScene):
     def show_matrix(self):
         for vect, char in zip([self.i_hat, self.j_hat], ["i", "j"]):
             vect.words = TextMobject(
-                "$\\hat\\%smath$ lands on"%char,
+                "$\\hat\\%smath$ lands on" % char,
                 str(int(vect.get_end()[0]))
             )
             direction = UP if vect is self.i_hat else DOWN
-            vect.words.next_to(vect.get_end(), direction, buff = LARGE_BUFF)
+            vect.words.next_to(vect.get_end(), direction, buff=LARGE_BUFF)
             vect.words.set_color(vect.get_color())
         matrix = Matrix([[1, 2]])
         matrix_words = TextMobject("Transformation matrix: ")
@@ -1070,29 +1099,32 @@ class ShowMatrix(TwoDToOneDScene):
         entries = matrix.get_entries()
 
         self.play(
-            Write(matrix_words), 
+            Write(matrix_words),
             Write(matrix.get_brackets()),
-            run_time = 1
+            run_time=1
         )
         for i, vect in enumerate([self.i_hat, self.j_hat]):
             self.play(
-                Write(vect.words, run_time = 1),
-                ApplyMethod(vect.shift, 0.5*UP, rate_func = there_and_back)
+                Write(vect.words, run_time=1),
+                ApplyMethod(vect.shift, 0.5*UP, rate_func=there_and_back)
             )
             self.wait()
             self.play(vect.words[1].copy().move_to, entries[i])
             self.wait()
 
+
 class FollowVectorViaCoordinates(TwoDToOneDScene):
     CONFIG = {
-        "t_matrix" : [[1, 0], [-2, 0]],
-        "v_coords" : [3, 3],
-        "written_v_coords" : ["x", "y"],
-        "concrete" : False,
+        "t_matrix": [[1, 0], [-2, 0]],
+        "v_coords": [3, 3],
+        "written_v_coords": ["x", "y"],
+        "concrete": False,
     }
+
     def construct(self):
         v = Vector(self.v_coords)
-        array = Matrix(self.v_coords if self.concrete else self.written_v_coords)
+        array = Matrix(
+            self.v_coords if self.concrete else self.written_v_coords)
         array.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         array.add_to_back(BackgroundRectangle(array))
         v_label = TexMobject("\\vec{\\textbf{v}}", "=")
@@ -1102,7 +1134,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
         array.next_to(v_label, RIGHT)
 
         bases = self.i_hat, self.j_hat
-        basis_labels = self.get_basis_vector_labels(direction = "right")
+        basis_labels = self.get_basis_vector_labels(direction="right")
         scaling_anim_tuples = self.get_scaling_anim_tuples(
             basis_labels, array, [DOWN, RIGHT]
         )
@@ -1114,7 +1146,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
             Write(v_label)
         )
         self.add_foreground_mobject(v_label, array)
-        self.add_vector(v, animate = False)
+        self.add_vector(v, animate=False)
         self.wait()
         to_fade = basis_labels
         for i, anim_tuple in enumerate(scaling_anim_tuples):
@@ -1135,22 +1167,22 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
         )
 
         self.apply_transposed_matrix(self.t_matrix)
-        self.play(Write(self.number_line.get_numbers(), run_time = 1))
+        self.play(Write(self.number_line.get_numbers(), run_time=1))
         self.play(
             self.i_hat.shift, 0.5*UP,
             self.j_hat.shift, DOWN,
         )
         if self.concrete:
             new_labels = [
-                TexMobject("(%d)"%num)
-                for num in self.t_matrix[:,0]
+                TexMobject("(%d)" % num)
+                for num in self.t_matrix[:, 0]
             ]
         else:
             new_labels = [
-                TexMobject("L(\\hat{\\%smath})"%char)
+                TexMobject("L(\\hat{\\%smath})" % char)
                 for char in ("i", "j")
             ]
-            
+
         new_labels[0].set_color(X_COLOR)
         new_labels[1].set_color(Y_COLOR)
 
@@ -1178,14 +1210,13 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
             self.play(Transform(new_labels[-1], final_label))
             self.wait()
 
-
     def get_scaling_anim_tuples(self, labels, array, directions):
         scaling_anim_tuples = []
         bases = self.i_hat, self.j_hat
         quints = list(zip(
-            bases, self.v_coords, labels, 
+            bases, self.v_coords, labels,
             array.get_entries(), directions
-        ))        
+        ))
         for basis, scalar, label, entry, direction in quints:
             basis.save_state()
             basis.scaled = basis.copy().scale(scalar)
@@ -1205,24 +1236,27 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
             ))
         return scaling_anim_tuples
 
+
 class FollowVectorViaCoordinatesConcrete(FollowVectorViaCoordinates):
     CONFIG = {
-        "v_coords" : [4, 3],
-        "concrete" : True
+        "v_coords": [4, 3],
+        "concrete": True
     }
+
 
 class TwoDOneDMatrixMultiplication(Scene):
     CONFIG = {
-        "matrix" : [[1, -2]],
-        "vector" : [4, 3],
-        "order_left_to_right" : False,
+        "matrix": [[1, -2]],
+        "vector": [4, 3],
+        "order_left_to_right": False,
     }
+
     def construct(self):
         matrix = Matrix(self.matrix)
         matrix.label = "Transform"
         vector = Matrix(self.vector)
         vector.label = "Vector"
-        matrix.next_to(vector, LEFT, buff = 0.2)
+        matrix.next_to(vector, LEFT, buff=0.2)
         self.color_matrix_and_vector(matrix, vector)
         for m, vect in zip([matrix, vector], [UP, DOWN]):
             m.brace = Brace(m, vect)
@@ -1235,7 +1269,7 @@ class TwoDOneDMatrixMultiplication(Scene):
             self.play(
                 GrowFromCenter(m.brace),
                 Write(m.label),
-                run_time = 1
+                run_time=1
             )
             self.wait()
         self.show_product(matrix, vector)
@@ -1252,15 +1286,15 @@ class TwoDOneDMatrixMultiplication(Scene):
         ]
         symbols = list(map(TexMobject, ["=", "+"]))
         equation = VMobject(*it.chain(*list(zip(symbols, pairs))))
-        equation.arrange(align_using_submobjects = True)
+        equation.arrange(align_using_submobjects=True)
         equation.next_to(vector, RIGHT)
 
         self.play(Write(VMobject(*symbols)))
         for starter_pair, pair in zip(starter_pairs, pairs):
             self.play(Transform(
-                VMobject(*starter_pair).copy(), 
-                pair, 
-                path_arc = -np.pi/2
+                VMobject(*starter_pair).copy(),
+                pair,
+                path_arc=-np.pi/2
             ))
         self.wait()
 
@@ -1270,22 +1304,24 @@ class TwoDOneDMatrixMultiplication(Scene):
             x.set_color(X_COLOR)
             y.set_color(Y_COLOR)
 
+
 class AssociationBetweenMatricesAndVectors(Scene):
     CONFIG = {
-        "matrices" : [
+        "matrices": [
             [[2, 7]],
             [[1, -2]]
         ]
     }
+
     def construct(self):
         matrices_words = TextMobject("$1\\times 2$ matrices")
         matrices_words.set_color(BLUE)
         vectors_words = TextMobject("2d vectors")
         vectors_words.set_color(YELLOW)
-        arrow = DoubleArrow(LEFT, RIGHT, color = WHITE)
+        arrow = DoubleArrow(LEFT, RIGHT, color=WHITE)
         VGroup(
             matrices_words, arrow, vectors_words
-        ).arrange(buff = MED_SMALL_BUFF)
+        ).arrange(buff=MED_SMALL_BUFF)
 
         matrices = VGroup(*list(map(Matrix, self.matrices)))
         vectors = VGroup(*list(map(Matrix, [m[0] for m in self.matrices])))
@@ -1297,7 +1333,7 @@ class AssociationBetweenMatricesAndVectors(Scene):
         vectors.words = vectors_words
         for group in matrices, vectors:
             for m, direction in zip(group, [UP, DOWN]):
-                m.next_to(group.words, direction, buff = MED_SMALL_BUFF)
+                m.next_to(group.words, direction, buff=MED_SMALL_BUFF)
 
         self.play(*list(map(Write, [matrices_words, vectors_words])))
         self.play(ShowCreation(arrow))
@@ -1306,52 +1342,55 @@ class AssociationBetweenMatricesAndVectors(Scene):
         vectors.save_state()
         self.wait()
         self.play(Transform(
-            vectors, matrices, 
-            path_arc = np.pi/2,
-            lag_ratio = 0.5,
-            run_time = 2,
+            vectors, matrices,
+            path_arc=np.pi/2,
+            lag_ratio=0.5,
+            run_time=2,
         ))
         self.wait()
         self.play(
-            vectors.restore, 
-            path_arc = -np.pi/2,
-            lag_ratio = 0.5,
-            run_time = 2
+            vectors.restore,
+            path_arc=-np.pi/2,
+            lag_ratio=0.5,
+            run_time=2
         )
         self.wait()
+
 
 class WhatAboutTheGeometricView(TeacherStudentsScene):
     def construct(self):
         self.student_says("""
             What does this association
             mean geometrically? 
-            """, 
-            target_mode = "raise_right_hand"
-        )
+            """,
+                          target_mode="raise_right_hand"
+                          )
         self.change_student_modes("pondering", "raise_right_hand", "pondering")
         self.random_blink(2)
 
+
 class SomeKindOfConnection(Scene):
     CONFIG = {
-        "v_coords" : [2, 3]
+        "v_coords": [2, 3]
     }
+
     def construct(self):
         width = FRAME_X_RADIUS-1
-        plane = NumberPlane(x_radius = 4, y_radius = 6)
+        plane = NumberPlane(x_radius=4, y_radius=6)
         squish_plane = plane.copy()
-        i_hat = Vector([1, 0], color = X_COLOR)
-        j_hat = Vector([0, 1], color = Y_COLOR)
-        vect = Vector(self.v_coords, color = YELLOW)
+        i_hat = Vector([1, 0], color=X_COLOR)
+        j_hat = Vector([0, 1], color=Y_COLOR)
+        vect = Vector(self.v_coords, color=YELLOW)
         plane.add(vect, i_hat, j_hat)
         plane.set_width(FRAME_X_RADIUS)
-        plane.to_edge(LEFT, buff = 0)
+        plane.to_edge(LEFT, buff=0)
         plane.remove(vect, i_hat, j_hat)
 
         squish_plane.apply_function(
-            lambda p : np.dot(p, [4, 1, 0])*RIGHT
+            lambda p: np.dot(p, [4, 1, 0])*RIGHT
         )
-        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
-        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))        
+        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color=Y_COLOR))
+        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color=X_COLOR))
         squish_plane.scale(width/(FRAME_WIDTH))
         plane.add(j_hat, i_hat)
 
@@ -1362,11 +1401,11 @@ class SomeKindOfConnection(Scene):
         numbers = number_line.get_numbers(*list(range(-6, 8, 2)))
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_color(GREY)
-        v_line.set_stroke(width = 10)
+        v_line.set_stroke(width=10)
 
         matrix = Matrix([self.v_coords])
         matrix.set_column_colors(X_COLOR, Y_COLOR)
-        matrix.next_to(number_line, UP, buff = LARGE_BUFF)
+        matrix.next_to(number_line, UP, buff=LARGE_BUFF)
         v_coords = Matrix(self.v_coords)
         v_coords.set_column_colors(YELLOW)
         v_coords.scale(0.75)
@@ -1374,31 +1413,32 @@ class SomeKindOfConnection(Scene):
         for array in matrix, v_coords:
             array.add_to_back(BackgroundRectangle(array))
 
-
         self.play(*list(map(ShowCreation, [
             plane, number_line, v_line
         ]))+[
-            Write(numbers, run_time = 2)
+            Write(numbers, run_time=2)
         ])
-        self.play(Write(matrix, run_time = 1))
+        self.play(Write(matrix, run_time=1))
         mover = plane.copy()
         interim = plane.copy().scale(0.8).move_to(number_line)
         for target in interim, squish_plane:
             self.play(
                 Transform(mover, target),
                 Animation(plane),
-                run_time = 1,
+                run_time=1,
             )
         self.wait()
         self.play(ShowCreation(vect))
         self.play(Transform(matrix.copy(), v_coords))
         self.wait()
 
+
 class AnExampleWillClarify(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("An example will clarify...")
         self.change_student_modes(*["happy"]*3)
         self.random_blink(3)
+
 
 class ImagineYouDontKnowThis(Scene):
     def construct(self):
@@ -1408,19 +1448,21 @@ class ImagineYouDontKnowThis(Scene):
         self.play(Write(words))
         self.wait()
 
+
 class ProjectOntoUnitVectorNumberline(VectorScene):
     CONFIG = {
-        "randomize_dots" : True,
-        "animate_setup" : True,
-        "zoom_factor" : 1,
-        "u_hat_color" : YELLOW,
-        "tilt_angle" : np.pi/6,
+        "randomize_dots": True,
+        "animate_setup": True,
+        "zoom_factor": 1,
+        "u_hat_color": YELLOW,
+        "tilt_angle": np.pi/6,
     }
+
     def setup(self):
         plane = self.add_plane()
         plane.fade()
 
-        u_hat = Vector([1, 0], color = self.u_hat_color)
+        u_hat = Vector([1, 0], color=self.u_hat_color)
         u_brace = Brace(u_hat, UP)
         u_hat.rotate(self.tilt_angle)
         u_hat.label = TexMobject("\\hat{\\textbf{u}}")
@@ -1432,20 +1474,20 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         u_brace.rotate(u_hat.get_angle())
         one.rotate_in_place(-u_hat.get_angle())
 
-        number_line = NumberLine(x_min = -9, x_max = 9)
+        number_line = NumberLine(x_min=-9, x_max=9)
         numbers = number_line.get_numbers()
         VGroup(number_line, numbers).rotate(u_hat.get_angle())
         if self.animate_setup:
             self.play(
                 ShowCreation(number_line),
                 Write(numbers),
-                run_time = 3 
+                run_time=3
             )
             self.wait()
             self.play(ShowCreation(u_hat))
             self.play(FadeIn(u_brace))
             self.play(FadeOut(u_brace))
-            self.play(Write(u_hat.label))            
+            self.play(Write(u_hat.label))
             self.wait()
         else:
             self.add(number_line, numbers, u_hat)
@@ -1466,32 +1508,30 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
             self.wait()
         self.number_line, self.numbers, self.u_hat = number_line, numbers, u_hat
 
-
     def construct(self):
-        vectors = self.get_vectors(randomize = self.randomize_dots)
+        vectors = self.get_vectors(randomize=self.randomize_dots)
         dots = self.get_dots(vectors)
         proj_dots = self.get_proj_dots(dots)
         proj_lines = self.get_proj_lines(dots, proj_dots)
 
         self.wait()
-        self.play(FadeIn(vectors, lag_ratio = 0.5))
+        self.play(FadeIn(vectors, lag_ratio=0.5))
         self.wait()
         self.play(Transform(vectors, dots))
         self.wait()
         self.play(ShowCreation(proj_lines))
         self.wait()
         self.play(
-            self.number_line.set_stroke, None, 2, 
+            self.number_line.set_stroke, None, 2,
             Transform(vectors, proj_dots),
             Transform(proj_lines, proj_dots),
             Animation(self.u_hat),
-            lag_ratio = 0.5,
-            run_time = 2
+            lag_ratio=0.5,
+            run_time=2
         )
         self.wait()
 
-
-    def get_vectors(self, num_vectors = 10, randomize = True):
+    def get_vectors(self, num_vectors=10, randomize=True):
         x_max = FRAME_X_RADIUS - 1
         y_max = FRAME_Y_RADIUS - 1
         x_vals = np.linspace(-x_max, x_max, num_vectors)
@@ -1507,9 +1547,9 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
 
     def get_dots(self, vectors):
         return VGroup(*[
-            Dot(v.get_end(), color = v.get_color(), radius = 0.075)
+            Dot(v.get_end(), color=v.get_color(), radius=0.075)
             for v in vectors
-        ]) 
+        ])
 
     def get_proj_dots(self, dots):
         return VGroup(*[
@@ -1522,18 +1562,19 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
     def get_proj_lines(self, dots, proj_dots):
         return VGroup(*[
             DashedLine(
-                d1.get_center(), d2.get_center(), 
-                buff = 0, color = d1.get_color(),
-                dash_length = 0.15
+                d1.get_center(), d2.get_center(),
+                buff=0, color=d1.get_color(),
+                dash_length=0.15
             )
             for d1, d2 in zip(dots, proj_dots)
         ])
+
 
 class ProjectionFunctionSymbol(Scene):
     def construct(self):
         v_tex = "\\vec{\\textbf{v}}"
         equation = TexMobject(
-            "P(", v_tex, ")=", 
+            "P(", v_tex, ")=",
             "\\text{number }", v_tex, "\\text{ lands on}"
         )
         equation.set_color_by_tex(v_tex, YELLOW)
@@ -1543,8 +1584,8 @@ class ProjectionFunctionSymbol(Scene):
         )
         words.set_color_by_tex("linear", BLUE)
         arrow = Arrow(
-            words.get_top(), equation[0].get_bottom(), 
-            color = BLUE
+            words.get_top(), equation[0].get_bottom(),
+            color=BLUE
         )
 
         self.add(VGroup(*equation[:3]))
@@ -1553,18 +1594,21 @@ class ProjectionFunctionSymbol(Scene):
         self.play(Write(words), ShowCreation(arrow))
         self.wait()
 
+
 class ProjectLineOfDots(ProjectOntoUnitVectorNumberline):
     CONFIG = {
-        "randomize_dots" : False,
-        "animate_setup" : False,
+        "randomize_dots": False,
+        "animate_setup": False,
     }
+
 
 class ProjectSingleVectorOnUHat(ProjectOntoUnitVectorNumberline):
     CONFIG = {
-        "animate_setup" : False
+        "animate_setup": False
     }
+
     def construct(self):
-        v = Vector([-3, 1], color = PINK)
+        v = Vector([-3, 1], color=PINK)
         v.proj = get_vect_mob_projection(v, self.u_hat)
         v.proj_line = DashedLine(v.get_end(), v.proj.get_end())
         v.proj_line.set_color(v.get_color())
@@ -1576,7 +1620,7 @@ class ProjectSingleVectorOnUHat(ProjectOntoUnitVectorNumberline):
         dot_product = TexMobject(v_tex, "\\cdot", u_tex)
         dot_product.set_color_by_tex(v_tex, v.get_color())
         dot_product.set_color_by_tex(u_tex, self.u_hat.get_color())
-        dot_product.next_to(ORIGIN, UP, buff = MED_SMALL_BUFF)
+        dot_product.next_to(ORIGIN, UP, buff=MED_SMALL_BUFF)
         dot_product.rotate(self.tilt_angle)
         dot_product.shift(v.proj.get_end())
         dot_product.add_background_rectangle()
@@ -1600,23 +1644,24 @@ class ProjectSingleVectorOnUHat(ProjectOntoUnitVectorNumberline):
         )
         self.wait()
 
+
 class AskAboutProjectionMatrix(Scene):
     def construct(self):
         matrix = Matrix([["?", "?"]])
         matrix.set_column_colors(X_COLOR, Y_COLOR)
         words = TextMobject("Projection matrix:")
-        VMobject(words, matrix).arrange(buff = MED_SMALL_BUFF).shift(UP)
+        VMobject(words, matrix).arrange(buff=MED_SMALL_BUFF).shift(UP)
         basis_words = [
-            TextMobject("Where", "$\\hat{\\%smath}$"%char, "lands")
+            TextMobject("Where", "$\\hat{\\%smath}$" % char, "lands")
             for char in ("i", "j")
         ]
         for b_words, q_mark, direction in zip(basis_words, matrix.get_entries(), [UP, DOWN]):
-            b_words.next_to(q_mark, direction, buff = 1.5)
-            b_words.arrow = Arrow(b_words, q_mark, color = q_mark.get_color())
+            b_words.next_to(q_mark, direction, buff=1.5)
+            b_words.arrow = Arrow(b_words, q_mark, color=q_mark.get_color())
             b_words.set_color(q_mark.get_color())
 
         self.play(
-            Write(words), 
+            Write(words),
             Write(matrix)
         )
         self.wait()
@@ -1627,13 +1672,15 @@ class AskAboutProjectionMatrix(Scene):
             )
         self.wait()
 
+
 class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
     CONFIG = {
-        "animate_setup" : False,
-        "zoom_factor" : 3,
-        "u_hat_color" : YELLOW,
-        "tilt_angle" : np.pi/5,
+        "animate_setup": False,
+        "zoom_factor": 3,
+        "u_hat_color": YELLOW,
+        "tilt_angle": np.pi/5,
     }
+
     def construct(self):
         basis_vectors = self.get_basis_vectors()
         i_hat, j_hat = basis_vectors
@@ -1649,7 +1696,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
             for vector in basis_vectors
         ])
 
-        i_tex, j_tex = ["$\\hat{\\%smath}$"%char for char in ("i", "j")]
+        i_tex, j_tex = ["$\\hat{\\%smath}$" % char for char in ("i", "j")]
         question = TextMobject(
             "Where do", i_tex, "and", j_tex, "land?"
         )
@@ -1658,33 +1705,32 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         question.add_background_rectangle()
         matrix = Matrix([["u_x", "u_y"]])
         VGroup(question, matrix).arrange(DOWN).to_corner(
-            UP+LEFT, buff = MED_SMALL_BUFF/2
+            UP+LEFT, buff=MED_SMALL_BUFF/2
         )
         matrix_rect = BackgroundRectangle(matrix)
-
 
         i_label = TexMobject(i_tex[1:-1])
         j_label = TexMobject(j_tex[1:-1])
         u_label = TexMobject("\\hat{\\textbf{u}}")
         trips = list(zip(
-            (i_label, j_label, u_label), 
+            (i_label, j_label, u_label),
             (i_hat, j_hat, self.u_hat),
             (DOWN+RIGHT, UP+LEFT, UP),
         ))
         for label, vect, direction in trips:
             label.set_color(vect.get_color())
             label.scale(1.2)
-            label.next_to(vect.get_end(), direction, buff = MED_SMALL_BUFF/2)
+            label.next_to(vect.get_end(), direction, buff=MED_SMALL_BUFF/2)
 
-        self.play(Write(u_label, run_time = 1))
+        self.play(Write(u_label, run_time=1))
         self.play(*list(map(ShowCreation, basis_vectors)))
-        self.play(*list(map(Write, [i_label, j_label])), run_time = 1)
+        self.play(*list(map(Write, [i_label, j_label])), run_time=1)
         self.play(ShowCreation(proj_lines))
         self.play(
-            Write(question), 
-            ShowCreation(matrix_rect),            
+            Write(question),
+            ShowCreation(matrix_rect),
             Write(matrix.get_brackets()),
-            run_time = 2,
+            run_time=2,
         )
         to_remove = [proj_lines]
         quads = list(zip(basis_vectors, proj_basis, proj_lines, proj_dots))
@@ -1696,7 +1742,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
 
         # self.show_u_coords(u_label)
         u_x, u_y = [
-            TexMobject("u_%s"%c).set_color(self.u_hat.get_color())
+            TexMobject("u_%s" % c).set_color(self.u_hat.get_color())
             for c in ("x", "y")
         ]
         matrix_x, matrix_y = matrix.get_entries()
@@ -1730,18 +1776,18 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         VGroup(line, words).rotate(angle)
 
         self.play(ShowCreation(line))
-        if vect.get_end()[0] > 0.1:#is ihat
-            self.play(Write(words, run_time = 1))
+        if vect.get_end()[0] > 0.1:  # is ihat
+            self.play(Write(words, run_time=1))
 
         vect.proj = get_vect_mob_projection(vect, self.u_hat)
         self.u_hat.proj = get_vect_mob_projection(self.u_hat, vect)
         for v in vect, self.u_hat:
             v.proj_line = DashedLine(
-                v.get_end(), v.proj.get_end(), 
-                color = v.get_color()
+                v.get_end(), v.proj.get_end(),
+                color=v.get_color()
             )
             v.proj_line.fade()
-            v.tick = Line(0.1*DOWN, 0.1*UP, color = WHITE)
+            v.tick = Line(0.1*DOWN, 0.1*UP, color=WHITE)
             v.tick.rotate(v.proj.get_angle())
             v.tick.shift(v.proj.get_end())
             v.q_mark = TextMobject("?")
@@ -1772,16 +1818,18 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         ]
         self.play(*list(map(FadeOut, added_mobjects)))
 
+
 class ShowSingleProjection(ProjectBasisVectors):
     CONFIG = {
-        "zoom_factor" : 1
+        "zoom_factor": 1
     }
+
     def construct(self):
-        vector = Vector([5, - 1], color = MAROON_B)
+        vector = Vector([5, - 1], color=MAROON_B)
         proj = get_vect_mob_projection(vector, self.u_hat)
         proj_line = DashedLine(
-            vector.get_end(), proj.get_end(), 
-            color = vector.get_color()
+            vector.get_end(), proj.get_end(),
+            color=vector.get_color()
         )
         coords = Matrix(["x", "y"])
         coords.get_entries().set_color(vector.get_color())
@@ -1803,16 +1851,19 @@ class ShowSingleProjection(ProjectBasisVectors):
         )
         self.wait()
 
+
 class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
     CONFIG = {
-        "matrix" : [["u_x", "u_y"]],
-        "vector" : ["x", "y"],
-        "order_left_to_right" : True,
+        "matrix": [["u_x", "u_y"]],
+        "vector": ["x", "y"],
+        "order_left_to_right": True,
     }
+
     def construct(self):
         TwoDOneDMatrixMultiplication.construct(self)
         everything = VGroup(*self.get_mobjects())
-        to_fade = [m for m in everything if isinstance(m, Brace) or isinstance(m, TextMobject)]
+        to_fade = [m for m in everything if isinstance(
+            m, Brace) or isinstance(m, TextMobject)]
 
         u = Matrix(self.matrix[0])
         v = Matrix(self.vector)
@@ -1830,8 +1881,6 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
         words.arrange(DOWN)
         words.to_edge(LEFT)
 
-
-
         self.play(
             everything.to_corner, UP+RIGHT,
             *list(map(FadeOut, to_fade))
@@ -1840,11 +1889,9 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
         self.add(*everything)
         self.remove(*to_fade)
 
-        self.play(Write(words, run_time = 2))        
+        self.play(Write(words, run_time=2))
         self.play(ShowCreation(dot_product))
         self.show_product(u, v)
-
-
 
     def color_matrix_and_vector(self, matrix, vector):
         colors = [X_COLOR, Y_COLOR]
@@ -1852,6 +1899,7 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
             coord[0].set_color(YELLOW)
             coord[1].set_color(color)
         vector.get_entries().set_color(MAROON_B)
+
 
 class UHatIsTransformInDisguise(Scene):
     def construct(self):
@@ -1869,21 +1917,24 @@ class UHatIsTransformInDisguise(Scene):
         self.play(Write(words))
         self.wait()
 
+
 class AskAboutNonUnitVectors(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "What about \\\\ non-unit vectors",
-            target_mode = "raise_left_hand"
+            target_mode="raise_left_hand"
         )
         self.random_blink(2)
 
-class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
+
+class ScaleUpUHat(ProjectOntoUnitVectorNumberline):
     CONFIG = {
-        "animate_setup" : False,
-        "u_hat_color" : YELLOW,
-        "tilt_angle" : np.pi/6,
-        "scalar" : 3,
+        "animate_setup": False,
+        "u_hat_color": YELLOW,
+        "tilt_angle": np.pi/6,
+        "scalar": 3,
     }
+
     def construct(self):
         self.scale_u_hat()
         self.show_matrix()
@@ -1894,8 +1945,8 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
         self.u_hat.coords = Matrix(["u_x", "u_y"])
         new_u = self.u_hat.copy().scale(self.scalar)
         new_u.coords = Matrix([
-            "%du_x"%self.scalar,
-            "%du_y"%self.scalar,
+            "%du_x" % self.scalar,
+            "%du_y" % self.scalar,
         ])
         for v in self.u_hat, new_u:
             v.coords.get_entries().set_color(YELLOW)
@@ -1915,7 +1966,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
         matrix.add_to_back(BackgroundRectangle(matrix))
         brace = Brace(matrix)
         words = TextMobject(
-            "\\centering Associated\\\\", 
+            "\\centering Associated\\\\",
             "transformation"
         )
         words.set_color_by_tex("transformation", BLUE)
@@ -1928,7 +1979,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
         ))
         self.play(
             GrowFromCenter(brace),
-            Write(words, run_time = 2)
+            Write(words, run_time=2)
         )
         self.wait()
         self.matrix_words = words
@@ -1940,12 +1991,12 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             b.proj = get_vect_mob_projection(b, self.u_hat)
             b.proj_line = DashedLine(
                 b.get_end(), b.proj.get_end(),
-                dash_length = 0.05
+                dash_length=0.05
             )
-            b.proj.label = TexMobject("u_%s"%char)
+            b.proj.label = TexMobject("u_%s" % char)
             b.proj.label.set_color(b.get_color())
             b.scaled_proj = b.proj.copy().scale(self.scalar)
-            b.scaled_proj.label = TexMobject("3u_%s"%char)
+            b.scaled_proj.label = TexMobject("3u_%s" % char)
             b.scaled_proj.label.set_color(b.get_color())
             for v, direction in zip([b.proj, b.scaled_proj], [UP, UP+LEFT]):
                 v.label.add_background_rectangle()
@@ -1976,13 +2027,13 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
         )
         project, then_scale = words.split()
         words.add_background_rectangle()
-        words.move_to(self.matrix_words, aligned_edge = UP)
+        words.move_to(self.matrix_words, aligned_edge=UP)
 
-        v = Vector([3, -1], color = MAROON_B)
+        v = Vector([3, -1], color=MAROON_B)
         proj = get_vect_mob_projection(v, self.u_hat)
         proj_line = DashedLine(
             v.get_end(), proj.get_end(),
-            color = v.get_color()
+            color=v.get_color()
         )
         mover = v.copy()
 
@@ -2000,6 +2051,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
         )
         self.wait()
 
+
 class NoticeWhatHappenedHere(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("""
@@ -2009,34 +2061,37 @@ class NoticeWhatHappenedHere(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.random_blink()
 
+
 class AbstractNumericAssociation(AssociationBetweenMatricesAndVectors):
     CONFIG = {
-        "matrices" : [
+        "matrices": [
             [["u_x", "u_y"]]
         ]
     }
 
+
 class TwoDOneDTransformationSeparateSpace(Scene):
     CONFIG = {
-        "v_coords" : [4, 1]
+        "v_coords": [4, 1]
     }
+
     def construct(self):
         width = FRAME_X_RADIUS-1
-        plane = NumberPlane(x_radius = 6, y_radius = 7)
+        plane = NumberPlane(x_radius=6, y_radius=7)
         squish_plane = plane.copy()
-        i_hat = Vector([1, 0], color = X_COLOR)
-        j_hat = Vector([0, 1], color = Y_COLOR)
-        vect = Vector(self.v_coords, color = YELLOW)
+        i_hat = Vector([1, 0], color=X_COLOR)
+        j_hat = Vector([0, 1], color=Y_COLOR)
+        vect = Vector(self.v_coords, color=YELLOW)
         plane.add(vect, i_hat, j_hat)
         plane.set_width(FRAME_X_RADIUS)
-        plane.to_edge(LEFT, buff = 0)
+        plane.to_edge(LEFT, buff=0)
         plane.remove(vect, i_hat, j_hat)
 
         squish_plane.apply_function(
-            lambda p : np.dot(p, [4, 1, 0])*RIGHT
+            lambda p: np.dot(p, [4, 1, 0])*RIGHT
         )
-        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))
-        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
+        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color=X_COLOR))
+        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color=Y_COLOR))
         squish_plane.scale(width/(FRAME_WIDTH))
         plane.add(i_hat, j_hat)
 
@@ -2047,11 +2102,11 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         numbers = number_line.get_numbers(*list(range(-6, 8, 2)))
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_color(GREY)
-        v_line.set_stroke(width = 10)
+        v_line.set_stroke(width=10)
 
         matrix = Matrix([self.v_coords])
         matrix.set_column_colors(X_COLOR, Y_COLOR)
-        matrix.next_to(number_line, UP, buff = LARGE_BUFF)
+        matrix.next_to(number_line, UP, buff=LARGE_BUFF)
         v_coords = Matrix(self.v_coords)
         v_coords.set_column_colors(YELLOW)
         v_coords.scale(0.75)
@@ -2070,16 +2125,16 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         for words in start_words, end_words:
             words.add_background_rectangle()
             words.scale(0.8)
-        start_words.next_to(ORIGIN, RIGHT, buff = MED_SMALL_BUFF).to_edge(UP)
-        end_words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF/2)
+        start_words.next_to(ORIGIN, RIGHT, buff=MED_SMALL_BUFF).to_edge(UP)
+        end_words.next_to(ORIGIN, DOWN+LEFT, buff=MED_SMALL_BUFF/2)
 
         self.play(*list(map(ShowCreation, [
             plane, number_line, v_line
         ]))+[
-            Write(numbers, run_time = 2)
+            Write(numbers, run_time=2)
         ])
-        self.play(Write(start_words, run_time = 2))
-        self.play(Write(matrix, run_time = 1))
+        self.play(Write(start_words, run_time=2))
+        self.play(Write(matrix, run_time=1))
         mover = plane.copy()
         interim = plane.copy().scale(0.8).move_to(number_line)
         for target in interim, squish_plane:
@@ -2087,7 +2142,7 @@ class TwoDOneDTransformationSeparateSpace(Scene):
                 Transform(mover, target),
                 Animation(plane),
                 Animation(start_words),
-                run_time = 1,
+                run_time=1,
             )
         self.wait()
         self.play(Transform(start_words.copy(), end_words))
@@ -2095,12 +2150,13 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         self.play(Transform(matrix.copy(), v_coords))
         self.wait()
 
+
 class IsntThisBeautiful(TeacherStudentsScene):
     def construct(self):
         self.teacher.look(DOWN+LEFT)
         self.teacher_says(
             "Isn't this", "beautiful",
-            target_mode = "surprised"
+            target_mode="surprised"
         )
         for student in self.get_students():
             self.play(student.change_mode, "happy")
@@ -2111,6 +2167,7 @@ class IsntThisBeautiful(TeacherStudentsScene):
         duality_words[1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(duality_words)
         self.random_blink()
+
 
 class RememberGraphDuality(Scene):
     def construct(self):
@@ -2123,6 +2180,7 @@ class RememberGraphDuality(Scene):
         self.play(Write(words))
         self.wait()
 
+
 class LooseDualityDescription(Scene):
     def construct(self):
         duality = TextMobject("Duality")
@@ -2130,32 +2188,38 @@ class LooseDualityDescription(Scene):
         arrow = TexMobject("\\Leftrightarrow")
         words = TextMobject("Natural-but-surprising", "correspondence")
         words[1].set_color_by_gradient(BLUE, YELLOW)
-        VGroup(duality, arrow, words).arrange(buff = MED_SMALL_BUFF)
+        VGroup(duality, arrow, words).arrange(buff=MED_SMALL_BUFF)
 
         self.add(duality)
         self.play(Write(arrow))
         self.play(Write(words))
         self.wait()
 
+
 class DualOfAVector(ScaleUpUHat):
-    pass #Exact copy
+    pass  # Exact copy
+
 
 class DualOfATransform(TwoDOneDTransformationSeparateSpace):
-    pass #Exact copy
+    pass  # Exact copy
+
 
 class UnderstandingProjection(ProjectOntoUnitVectorNumberline):
-    pass ##Copy
+    pass  # Copy
+
 
 class ShowQualitativeDotProductValuesCopy(ShowQualitativeDotProductValues):
     pass
 
+
 class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
     CONFIG = {
-        "order_left_to_right" : True,
+        "order_left_to_right": True,
     }
+
     def construct(self):
         v1, v2 = [
-            Matrix(["x_%d"%n, "y_%d"%n])
+            Matrix(["x_%d" % n, "y_%d" % n])
             for n in (1, 2)
         ]
         v1.set_column_colors(V_COLOR)
@@ -2189,8 +2253,10 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
         self.show_product(v1, v2)
         self.wait()
 
+
 class NumericalAssociationSilliness(GeneralTwoDOneDMatrixMultiplication):
-    pass #copy
+    pass  # copy
+
 
 class YouMustKnowPersonality(TeacherStudentsScene):
     def construct(self):
@@ -2204,27 +2270,29 @@ class YouMustKnowPersonality(TeacherStudentsScene):
         self.change_student_modes("pondering", "plain", "pondering")
         self.random_blink()
 
+
 class WhatTheVectorWantsToBe(Scene):
     CONFIG = {
-        "v_coords" : [2, 4]
+        "v_coords": [2, 4]
     }
+
     def construct(self):
         width = FRAME_X_RADIUS-1
-        plane = NumberPlane(x_radius = 6, y_radius = 7)
+        plane = NumberPlane(x_radius=6, y_radius=7)
         squish_plane = plane.copy()
-        i_hat = Vector([1, 0], color = X_COLOR)
-        j_hat = Vector([0, 1], color = Y_COLOR)
-        vect = Vector(self.v_coords, color = YELLOW)
+        i_hat = Vector([1, 0], color=X_COLOR)
+        j_hat = Vector([0, 1], color=Y_COLOR)
+        vect = Vector(self.v_coords, color=YELLOW)
         plane.add(vect, i_hat, j_hat)
         plane.set_width(FRAME_X_RADIUS)
-        plane.to_edge(LEFT, buff = 0)
+        plane.to_edge(LEFT, buff=0)
         plane.remove(vect, i_hat, j_hat)
 
         squish_plane.apply_function(
-            lambda p : np.dot(p, [4, 1, 0])*RIGHT
+            lambda p: np.dot(p, [4, 1, 0])*RIGHT
         )
-        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
-        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))        
+        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color=Y_COLOR))
+        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color=X_COLOR))
         squish_plane.scale(width/(FRAME_WIDTH))
         plane.add(j_hat, i_hat)
 
@@ -2235,11 +2303,11 @@ class WhatTheVectorWantsToBe(Scene):
         numbers = number_line.get_numbers(*list(range(-6, 8, 2)))
         v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         v_line.set_color(GREY)
-        v_line.set_stroke(width = 10)
+        v_line.set_stroke(width=10)
 
         matrix = Matrix([self.v_coords])
         matrix.set_column_colors(X_COLOR, Y_COLOR)
-        matrix.next_to(number_line, UP, buff = LARGE_BUFF)
+        matrix.next_to(number_line, UP, buff=LARGE_BUFF)
         v_coords = Matrix(self.v_coords)
         v_coords.set_column_colors(YELLOW)
         v_coords.scale(0.75)
@@ -2253,7 +2321,7 @@ class WhatTheVectorWantsToBe(Scene):
             "to be"
         )
         words[1].set_color(BLUE)
-        words.next_to(matrix, UP, buff = MED_SMALL_BUFF)
+        words.next_to(matrix, UP, buff=MED_SMALL_BUFF)
 
         self.add(plane, v_line, number_line, numbers)
         self.play(ShowCreation(vect))
@@ -2264,16 +2332,17 @@ class WhatTheVectorWantsToBe(Scene):
             Write(words)
         )
         self.play(
-            Transform(plane.copy(), squish_plane, run_time = 3),
+            Transform(plane.copy(), squish_plane, run_time=3),
             *list(map(Animation, [
                 words,
                 matrix,
                 plane,
-                vect, 
+                vect,
                 v_coords
             ]))
         )
         self.wait()
+
 
 class NextVideo(Scene):
     def construct(self):
@@ -2282,8 +2351,8 @@ class NextVideo(Scene):
             light of linear transformations
         """)
         title.set_height(1.2)
-        title.to_edge(UP, buff = MED_SMALL_BUFF/2)
-        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        title.to_edge(UP, buff=MED_SMALL_BUFF/2)
+        rect = Rectangle(width=16, height=9, color=BLUE)
         rect.set_height(6)
         rect.next_to(title, DOWN)
         VGroup(title, rect).show()
@@ -2291,20 +2360,3 @@ class NextVideo(Scene):
         self.add(title)
         self.play(ShowCreation(rect))
         self.wait()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

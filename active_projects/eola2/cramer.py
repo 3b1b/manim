@@ -401,7 +401,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
         ))
         self.play(FadeOut(unknown_circles))
         self.play(LaggedStartMap(ShowCreation, row_rects,
-                              run_time=1, lag_ratio=0.8))
+                                 run_time=1, lag_ratio=0.8))
         self.play(FadeOut(row_rects))
         self.wait()
         if self.compare_to_big_system:
@@ -411,7 +411,8 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
             # Oh yeah, super readable line...
             cutoff = 3 * dim - 1
             self.play(*[
-                ReplacementTransform(big_system[i][:cutoff], system[i][:cutoff])
+                ReplacementTransform(
+                    big_system[i][:cutoff], system[i][:cutoff])
                 for i in range(dim)
             ] + [
                 ReplacementTransform(big_system[i][-2:], system[i][-2:])
@@ -1086,7 +1087,8 @@ class LookAtDotProducts(SetupSimpleSystemOfEquations):
 
         # Show rectangles
         self.play(
-            LaggedStartMap(ShowCreation, transformed_input_rects, lag_ratio=0.8),
+            LaggedStartMap(
+                ShowCreation, transformed_input_rects, lag_ratio=0.8),
             ShowCreation(self.output_vect_label.rect),
         )
         for tbr, column_mob in zip(transformed_basis_rects, self.column_mobs):
@@ -1518,7 +1520,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
             rectangular_stem_width=0.025,
             tip_length=0.2,
         )
-        area_arrow.shift(ip.get_center() - area_arrow.get_end() + SMALL_BUFF * DL)
+        area_arrow.shift(ip.get_center() -
+                         area_arrow.get_end() + SMALL_BUFF * DL)
         area_words = TexMobject(
             "\\text{Area}", "=", "1", "\\times",
             ["x", "y"][index]
@@ -1552,11 +1555,13 @@ class TransformingAreasYCoord(LinearTransformationScene):
             Animation(VGroup(basis_vectors, input_vect_mob))
         )
         self.play(
-            ShowCreationThenDestruction(SurroundingRectangle(basis_labels[non_index])),
+            ShowCreationThenDestruction(
+                SurroundingRectangle(basis_labels[non_index])),
             GrowArrow(self.basis_vectors[non_index].copy(), remover=True)
         )
         self.play(
-            ShowCreationThenDestruction(SurroundingRectangle(input_vect_label)),
+            ShowCreationThenDestruction(
+                SurroundingRectangle(input_vect_label)),
             GrowArrow(input_vect_mob.copy(), remover=True),
         )
         self.wait()
@@ -1584,7 +1589,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
             area_words[:3].get_width() + SMALL_BUFF, {"about_edge": LEFT},
             FadeOut(area_words[2:4]),
             area_words[4].shift,
-            (area_words[2].get_left()[0] - area_words[4].get_left()[0]) * RIGHT,
+            (area_words[2].get_left()[0] -
+             area_words[4].get_left()[0]) * RIGHT,
             Animation(area_words[:2]),
         )
         area_words.remove(*area_words[2:4])
@@ -1600,7 +1606,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
         self.play(randy.change, "confused", ip)
         self.play(Blink(randy), FadeIn(morty))
         self.play(
-            PiCreatureSays(morty, "Run with \\\\ me here...", look_at_arg=randy.eyes),
+            PiCreatureSays(morty, "Run with \\\\ me here...",
+                           look_at_arg=randy.eyes),
             randy.look_at, morty.eyes,
         )
         self.play(Blink(morty))
@@ -1627,14 +1634,16 @@ class TransformingAreasYCoord(LinearTransformationScene):
         )
         self.play(
             UpdateFromFunc(
-                ip, lambda m: Transform(m, self.get_input_parallelogram(input_vect_mob)).update(1)
+                ip, lambda m: Transform(
+                    m, self.get_input_parallelogram(input_vect_mob)).update(1)
             ),
             input_vect_mob.rotate, np.pi, {"about_point": origin},
             Animation(self.basis_vectors),
             UpdateFromFunc(brace_group, update_brace_group),
             UpdateFromFunc(
                 input_vect_label,
-                lambda ivl: self.set_input_vect_label_position(input_vect_mob, ivl)
+                lambda ivl: self.set_input_vect_label_position(
+                    input_vect_mob, ivl)
             ),
             MaintainPositionRelativeTo(area_arrow, ip),
             MaintainPositionRelativeTo(area_words.rect, area_arrow),
@@ -1674,7 +1683,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
         matrix_brace = Brace(matrix_mobject, DOWN, buff=SMALL_BUFF)
         matrix_label = matrix_brace.get_tex("A")
         matrix_label.add_background_rectangle()
-        apply_group = VGroup(apply_words, matrix_mobject, matrix_brace, matrix_label)
+        apply_group = VGroup(apply_words, matrix_mobject,
+                             matrix_brace, matrix_label)
         apply_group.to_corner(UL, buff=MED_SMALL_BUFF)
 
         area_scale_words = TextMobject("All areas get scaled by", "$\\det(A)$")
@@ -1684,7 +1694,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
 
         blobs = VGroup(
             Circle(radius=0.5).move_to(2 * LEFT + UP),
-            Square(side_length=1).rotate(TAU / 12).move_to(2 * UP + 0.5 * RIGHT),
+            Square(side_length=1).rotate(
+                TAU / 12).move_to(2 * UP + 0.5 * RIGHT),
             TexMobject("\\pi").scale(3).move_to(3 * RIGHT)
         )
         blobs.set_stroke(YELLOW, 3)
@@ -1764,7 +1775,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
         )
         self.wait()
         self.play(
-            ReplacementTransform(matrix_label.copy(), transformed_input_vect_label[0]),
+            ReplacementTransform(matrix_label.copy(),
+                                 transformed_input_vect_label[0]),
             FadeIn(transformed_input_vect_label[1])
         )
         self.wait(2)
@@ -1852,7 +1864,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
         top_matrix_mobject = IntegerMatrix(new_matrix)
         top_matrix_mobject.set_height(frac_matrix_height)
         top_matrix_mobject.set_column_colors(X_COLOR, Y_COLOR)
-        VGroup(*top_matrix_mobject.mob_matrix[:, self.index]).set_color(MAROON_B)
+        VGroup(
+            *top_matrix_mobject.mob_matrix[:, self.index]).set_color(MAROON_B)
         top_matrix_mobject.add_background_rectangle()
         num_det_text = get_det_text(top_matrix_mobject)
         rhs_h_line = Line(LEFT, RIGHT)
@@ -1872,7 +1885,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
         output_vect_label.elements.match_color(self.input_vect_mob)
         output_vect_label.scale(self.array_scale_factor)
         output_vect_label.add_background_rectangle()
-        self.set_input_vect_label_position(self.input_vect_mob, output_vect_label)
+        self.set_input_vect_label_position(
+            self.input_vect_mob, output_vect_label)
 
         matrix_mobject.generate_target()
         system_input = Matrix(["x", "y"])
@@ -1925,7 +1939,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
             FadeIn(system_input),
             FadeIn(system_eq),
             MoveToTarget(system_output),
-            area_words.rect.stretch_to_fit_width, self.area_words[1:].get_width(),
+            area_words.rect.stretch_to_fit_width, self.area_words[1:].get_width(
+            ),
             {"about_edge": RIGHT},
             Animation(self.area_words[1:]),
             FadeOut(self.area_words[0]),
@@ -1934,7 +1949,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
         replaced_column = VGroup(*top_matrix_mobject.mob_matrix[:, self.index])
         replaced_column.set_fill(opacity=0)
         self.play(
-            ReplacementTransform(matrix_mobject_copy.copy(), top_matrix_mobject),
+            ReplacementTransform(
+                matrix_mobject_copy.copy(), top_matrix_mobject),
             ReplacementTransform(denom_det_text.copy(), num_det_text),
         )
         self.wiggle_vector(self.basis_vectors[non_index])
@@ -1969,7 +1985,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
     # Helpers
 
     def get_input_parallelogram(self, input_vect_mob):
-        input_vect = np.array(self.plane.point_to_coords(input_vect_mob.get_end()))
+        input_vect = np.array(
+            self.plane.point_to_coords(input_vect_mob.get_end()))
         matrix = self.matrix
         dim = matrix.shape[0]
         # Transofmration from unit square to input parallelogram
@@ -2001,7 +2018,8 @@ class TransformingAreasYCoord(LinearTransformationScene):
 
     def set_input_vect_label_position(self, input_vect_mob, input_vect_label):
         direction = np.sign(input_vect_mob.get_vector())
-        input_vect_label.next_to(input_vect_mob.get_end(), direction, buff=SMALL_BUFF)
+        input_vect_label.next_to(
+            input_vect_mob.get_end(), direction, buff=SMALL_BUFF)
         return input_vect_label
 
     def wiggle_vector(self, vector_mob):
@@ -2244,7 +2262,8 @@ class AreYouPausingAndPondering(TeacherStudentsScene):
         self.change_all_student_modes(
             "thinking",
             added_anims=[
-                RemovePiCreatureBubble(self.teacher, target_mode="raise_right_hand")
+                RemovePiCreatureBubble(
+                    self.teacher, target_mode="raise_right_hand")
             ],
             look_at_arg=self.screen
         )

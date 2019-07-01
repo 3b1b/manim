@@ -107,7 +107,8 @@ class FlashThroughClass(Animation):
 
     def __init__(self, mobject, mode="linear", **kwargs):
         if not isinstance(mobject, PiCreatureClass):
-            raise Exception("FlashThroughClass mobject must be a PiCreatureClass")
+            raise Exception(
+                "FlashThroughClass mobject must be a PiCreatureClass")
         digest_config(self, kwargs)
         self.indices = list(range(mobject.height * mobject.width))
         if mode == "random":

@@ -63,7 +63,7 @@ def tex_to_dvi(tex_file):
             log_file = tex_file.replace(".tex", ".log")
             raise Exception(
                 ("Latex error converting to dvi. " if not TEX_USE_CTEX
-                else "Xelatex error converting to xdv. ") +
+                 else "Xelatex error converting to xdv. ") +
                 "See log output above or the log file: %s" % log_file)
     return result
 

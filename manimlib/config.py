@@ -245,7 +245,8 @@ def get_camera_configuration(args):
     elif args.high_quality:
         camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
     else:
-        camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
+        camera_config.update(
+            manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
 
     # If the resolution was passed in via -r
     if args.resolution:

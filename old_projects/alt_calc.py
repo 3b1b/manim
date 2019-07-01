@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from manimlib.imports import *
 
 
@@ -135,7 +135,8 @@ class NumberlineTransformationScene(ZoomedScene):
     def get_local_sample_dots(self, x, sample_radius=None, **kwargs):
         zoom_factor = self.get_zoom_factor()
         delta_x = kwargs.get("delta_x", self.default_delta_x * zoom_factor)
-        dot_radius = kwargs.get("dot_radius", self.default_sample_dot_radius * zoom_factor)
+        dot_radius = kwargs.get(
+            "dot_radius", self.default_sample_dot_radius * zoom_factor)
 
         if sample_radius is None:
             unrounded_radius = self.zoomed_camera.frame.get_width() / 2
@@ -417,7 +418,7 @@ class ExampleNumberlineTransformationScene(NumberlineTransformationScene):
     }
 
     def construct(self):
-        func = lambda x: x**2
+        def func(x): return x**2
         x = 3
         dx = 0.05
 
@@ -561,7 +562,8 @@ class StartingCalc101(PiCreatureScene):
         rects.center()
         rects.set_height(FRAME_HEIGHT - 1)
         # image = rects.get_image()
-        open_cv_image = cv2.imread(get_full_raster_image_path("alt_calc_hidden_image"))
+        open_cv_image = cv2.imread(
+            get_full_raster_image_path("alt_calc_hidden_image"))
         blurry_iamge = cv2.blur(open_cv_image, (50, 50))
         array = np.array(blurry_iamge)[:, :, ::-1]
         im_mob = ImageMobject(array)
@@ -1422,7 +1424,8 @@ class IntroduceTransformationView(NumberlineTransformationScene):
         stretch_factor = DecimalNumber(0, color=YELLOW)
         stretch_factor_anim = ChangingDecimal(
             stretch_factor, lambda a: lower_brace.get_width() / upper_brace.get_width(),
-            position_update_func=lambda m: m.next_to(lower_brace, UP, SMALL_BUFF)
+            position_update_func=lambda m: m.next_to(
+                lower_brace, UP, SMALL_BUFF)
         )
 
         self.play(
@@ -1470,7 +1473,8 @@ class IntroduceTransformationView(NumberlineTransformationScene):
             self.func,
             sample_dots=self.sample_dots,
             local_sample_dots=local_sample_dots,
-            target_coordinate_values=self.get_local_coordinate_values(self.func(x))
+            target_coordinate_values=self.get_local_coordinate_values(
+                self.func(x))
         )
         self.wait()
 
@@ -1659,7 +1663,8 @@ class ZoomInOnXSquaredNearOne(TalkThroughXSquaredExample):
         self.play(
             Write(new_local_coordinates),
             Write(new_local_sample_dots),
-            one_group.scale, extra_zoom_factor, {"about_point": self.get_input_point(1)},
+            one_group.scale, extra_zoom_factor, {
+                "about_point": self.get_input_point(1)},
             FadeOut(all_other_coordinates),
             *[
                 ApplyMethod(dot.scale, extra_zoom_factor)
@@ -1705,7 +1710,8 @@ class ZoomInOnXSquaredNearThree(ZoomInOnXSquaredNearOne):
         x = 3
         local_sample_dots = self.get_local_sample_dots(x)
         local_coordinate_values = self.get_local_coordinate_values(x, dx=0.1)
-        target_coordinate_values = self.get_local_coordinate_values(self.func(x), dx=0.1)
+        target_coordinate_values = self.get_local_coordinate_values(
+            self.func(x), dx=0.1)
 
         color = self.sample_dots[len(self.sample_dots) / 2].get_color()
         sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
@@ -1760,7 +1766,8 @@ class ZoomInOnXSquaredNearOneFourth(ZoomInOnXSquaredNearOne):
 
         color = RED
         sample_dot_ghost_copies = self.sample_dot_ghosts.copy()
-        stretch_words = self.get_stretch_words("1/2", color, less_than_one=True)
+        stretch_words = self.get_stretch_words(
+            "1/2", color, less_than_one=True)
         deriv_equation = self.get_deriv_equation("1/4", "1/2", color)
 
         one_fourth_point = self.get_input_point(x)
@@ -1806,7 +1813,8 @@ class ZoomInOnXSquaredNearZero(ZoomInOnXSquaredNearOne):
 
     def construct(self):
         zoom_words = TextMobject(
-            "Zoomed %sx \\\\ near 0" % "{:,}".format(int(1.0 / self.zoom_factor))
+            "Zoomed %sx \\\\ near 0" % "{:,}".format(
+                int(1.0 / self.zoom_factor))
         )
         zoom_words.next_to(self.zoomed_display, DOWN)
 
@@ -2198,9 +2206,11 @@ class GraphOnePlusOneOverX(GraphScene):
     def setup_axes(self):
         GraphScene.setup_axes(self)
         step = 2
-        self.x_axis.add_numbers(*list(range(-6, 0, step)) + list(range(step, 7, step)))
+        self.x_axis.add_numbers(
+            *list(range(-6, 0, step)) + list(range(step, 7, step)))
         self.y_axis.label_direction = RIGHT
-        self.y_axis.add_numbers(*list(range(-2, 0, step)) + list(range(step, 4, step)))
+        self.y_axis.add_numbers(
+            *list(range(-2, 0, step)) + list(range(step, 4, step)))
 
     def draw_graphs(self, animate=True):
         lower_func_graph, upper_func_graph = func_graph = VGroup(*[
@@ -2424,7 +2434,8 @@ class ThinkAboutWithRepeatedApplication(IntroduceContinuedFractionPuzzle):
         for n_terms in range(5):
             lhs = get_nested_f(n_terms, arg="c")
             equals = TexMobject("=")
-            rhs = get_nested_one_plus_one_over_x(n_terms, bottom_term=value_str)
+            rhs = get_nested_one_plus_one_over_x(
+                n_terms, bottom_term=value_str)
             equals.next_to(rhs[0], LEFT)
             lhs.next_to(equals, LEFT)
             lines.add(VGroup(lhs, equals, rhs))
@@ -3059,7 +3070,8 @@ class AnalyzeFunctionWithTransformations(NumberlineTransformationScene):
             "tip_length": 0.2,
         }
         phi_arrow = Arrow(phi_tick, output_phi_point, **arrow_kwargs)
-        phi_bro_arrow = Arrow(phi_bro_tick, output_phi_bro_point, **arrow_kwargs)
+        phi_bro_arrow = Arrow(
+            phi_bro_tick, output_phi_bro_point, **arrow_kwargs)
 
         def fade_arrow(arrow):
             # arrow.set_stroke(DARK_GREY, 0.5)
@@ -3241,7 +3253,8 @@ class StabilityAndInstability(AnalyzeFunctionWithTransformations):
 
         arrow_groups = VGroup()
         for point in phi_point, phi_bro_point:
-            arrows = VGroup(*[a for a in self.all_arrows if get_norm(a.get_start() - point) < 0.75]).copy()
+            arrows = VGroup(
+                *[a for a in self.all_arrows if get_norm(a.get_start() - point) < 0.75]).copy()
             arrows.set_fill(PINK, 1)
             arrows.set_stroke(PINK, 3)
             arrows.second_anim = LaggedStartMap(

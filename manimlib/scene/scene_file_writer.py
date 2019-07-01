@@ -213,7 +213,8 @@ class SceneFileWriter(object):
 
     def open_movie_pipe(self):
         file_path = self.get_next_partial_movie_path()
-        temp_file_path = os.path.splitext(file_path)[0] + '_temp' + self.movie_file_extension
+        temp_file_path = os.path.splitext(
+            file_path)[0] + '_temp' + self.movie_file_extension
 
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
@@ -252,7 +253,8 @@ class SceneFileWriter(object):
                 command += ['rtmp://live.twitch.tv/app/' + self.twitch_key]
             else:
                 command += ['-f', 'mpegts']
-                command += [STREAMING_PROTOCOL + '://' + STREAMING_IP + ':' + STREAMING_PORT]
+                command += [STREAMING_PROTOCOL + '://' +
+                            STREAMING_IP + ':' + STREAMING_PORT]
         else:
             command += [temp_file_path]
         self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
@@ -313,16 +315,16 @@ class SceneFileWriter(object):
             '-safe', '0',
             '-i', file_list,
             '-loglevel', 'error',
-            
+
         ]
         if not self.save_as_gif:
-            commands +=[
+            commands += [
                 '-c', 'copy',
                 movie_file_path
             ]
         if self.save_as_gif:
-            movie_file_path=self.gif_file_path
-            commands +=[
+            movie_file_path = self.gif_file_path
+            commands += [
                 movie_file_path,
             ]
         if not self.includes_sound:

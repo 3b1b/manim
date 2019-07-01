@@ -1,11 +1,12 @@
+from nn.network import *
+import warnings
+from manimlib.imports import *
 import sys
 import os.path
 import cv2
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from manimlib.imports import *
 
-import warnings
 warnings.warn("""
     Warning: This file makes use of
     ContinualAnimation, which has since
@@ -13,42 +14,42 @@ warnings.warn("""
 """)
 
 
-from nn.network import *
-
-#force_skipping
-#revert_to_original_skipping_status
+# force_skipping
+# revert_to_original_skipping_status
 
 
 DEFAULT_GAUSS_BLUR_CONFIG = {
-    "ksize"  : (5, 5), 
-    "sigmaX" : 10, 
-    "sigmaY" : 10,
+    "ksize": (5, 5),
+    "sigmaX": 10,
+    "sigmaY": 10,
 }
 
 DEFAULT_CANNY_CONFIG = {
-    "threshold1" : 100,
-    "threshold2" : 200,
+    "threshold1": 100,
+    "threshold2": 200,
 }
 
 
 def get_edges(image_array):
     blurred = cv2.GaussianBlur(
-        image_array, 
+        image_array,
         **DEFAULT_GAUSS_BLUR_CONFIG
     )
     edges = cv2.Canny(
-        blurred, 
+        blurred,
         **DEFAULT_CANNY_CONFIG
     )
     return edges
 
+
 class WrappedImage(Group):
     CONFIG = {
-        "rect_kwargs" : {
-            "color" : BLUE,
-            "buff" : SMALL_BUFF,
+        "rect_kwargs": {
+            "color": BLUE,
+            "buff": SMALL_BUFF,
         }
     }
+
     def __init__(self, image_mobject, **kwargs):
         Group.__init__(self, **kwargs)
         rect = SurroundingRectangle(
@@ -56,57 +57,63 @@ class WrappedImage(Group):
         )
         self.add(rect, image_mobject)
 
+
 class PixelsAsSquares(VGroup):
     CONFIG = {
-        "height" : 2,
+        "height": 2,
     }
+
     def __init__(self, image_mobject, **kwargs):
         VGroup.__init__(self, **kwargs)
         for row in image_mobject.pixel_array:
             for rgba in row:
                 square = Square(
-                    stroke_width = 0, 
-                    fill_opacity = rgba[3]/255.0,
-                    fill_color = rgba_to_color(rgba/255.0),
+                    stroke_width=0,
+                    fill_opacity=rgba[3]/255.0,
+                    fill_color=rgba_to_color(rgba/255.0),
                 )
                 self.add(square)
         self.arrange_in_grid(
             *image_mobject.pixel_array.shape[:2],
-            buff = 0
+            buff=0
         )
         self.replace(image_mobject)
+
 
 class PixelsFromVect(PixelsAsSquares):
     def __init__(self, vect, **kwargs):
         PixelsAsSquares.__init__(self,
-            ImageMobject(layer_to_image_array(vect)),
-            **kwargs
-        )
+                                 ImageMobject(layer_to_image_array(vect)),
+                                 **kwargs
+                                 )
+
 
 class MNistMobject(WrappedImage):
     def __init__(self, vect, **kwargs):
-        WrappedImage.__init__(self, 
-            ImageMobject(layer_to_image_array(vect)),
-            **kwargs
-        )
+        WrappedImage.__init__(self,
+                              ImageMobject(layer_to_image_array(vect)),
+                              **kwargs
+                              )
+
 
 class NetworkMobject(VGroup):
     CONFIG = {
-        "neuron_radius" : 0.15,
-        "neuron_to_neuron_buff" : MED_SMALL_BUFF,
-        "layer_to_layer_buff" : LARGE_BUFF,
-        "neuron_stroke_color" : BLUE,
-        "neuron_stroke_width" : 3,
-        "neuron_fill_color" : GREEN,
-        "edge_color" : LIGHT_GREY,
-        "edge_stroke_width" : 2,
-        "edge_propogation_color" : YELLOW,
-        "edge_propogation_time" : 1,
-        "max_shown_neurons" : 16,
-        "brace_for_large_layers" : True,
-        "average_shown_activation_of_large_layer" : True,
-        "include_output_labels" : False,
+        "neuron_radius": 0.15,
+        "neuron_to_neuron_buff": MED_SMALL_BUFF,
+        "layer_to_layer_buff": LARGE_BUFF,
+        "neuron_stroke_color": BLUE,
+        "neuron_stroke_width": 3,
+        "neuron_fill_color": GREEN,
+        "edge_color": LIGHT_GREY,
+        "edge_stroke_width": 2,
+        "edge_propogation_color": YELLOW,
+        "edge_propogation_time": 1,
+        "max_shown_neurons": 16,
+        "brace_for_large_layers": True,
+        "average_shown_activation_of_large_layer": True,
+        "include_output_labels": False,
     }
+
     def __init__(self, neural_network, **kwargs):
         VGroup.__init__(self, **kwargs)
         self.neural_network = neural_network
@@ -119,7 +126,7 @@ class NetworkMobject(VGroup):
             self.get_layer(size)
             for size in self.layer_sizes
         ])
-        layers.arrange(RIGHT, buff = self.layer_to_layer_buff)
+        layers.arrange(RIGHT, buff=self.layer_to_layer_buff)
         self.layers = layers
         self.add(self.layers)
         if self.include_output_labels:
@@ -132,16 +139,16 @@ class NetworkMobject(VGroup):
             n_neurons = self.max_shown_neurons
         neurons = VGroup(*[
             Circle(
-                radius = self.neuron_radius,
-                stroke_color = self.neuron_stroke_color,
-                stroke_width = self.neuron_stroke_width,
-                fill_color = self.neuron_fill_color,
-                fill_opacity = 0,
+                radius=self.neuron_radius,
+                stroke_color=self.neuron_stroke_color,
+                stroke_width=self.neuron_stroke_width,
+                fill_color=self.neuron_fill_color,
+                fill_opacity=0,
             )
             for x in range(n_neurons)
-        ])   
+        ])
         neurons.arrange(
-            DOWN, buff = self.neuron_to_neuron_buff
+            DOWN, buff=self.neuron_to_neuron_buff
         )
         for neuron in neurons:
             neuron.edges_in = VGroup()
@@ -185,9 +192,9 @@ class NetworkMobject(VGroup):
         return Line(
             neuron1.get_center(),
             neuron2.get_center(),
-            buff = self.neuron_radius,
-            stroke_color = self.edge_color,
-            stroke_width = self.edge_stroke_width,
+            buff=self.neuron_radius,
+            stroke_color=self.edge_color,
+            stroke_width=self.edge_stroke_width,
         )
 
     def get_active_layer(self, layer_index, activation_vector):
@@ -198,6 +205,7 @@ class NetworkMobject(VGroup):
     def activate_layer(self, layer, activation_vector):
         n_neurons = len(layer.neurons)
         av = activation_vector
+
         def arr_to_num(arr):
             return (np.sum(arr > 0.1) / float(len(arr)))**(1./3)
 
@@ -218,13 +226,14 @@ class NetworkMobject(VGroup):
                 )
         for activation, neuron in zip(av, layer.neurons):
             neuron.set_fill(
-                color = self.neuron_fill_color,
-                opacity = activation
+                color=self.neuron_fill_color,
+                opacity=activation
             )
         return layer
 
     def activate_layers(self, input_vector):
-        activations = self.neural_network.get_activation_of_all_layers(input_vector)
+        activations = self.neural_network.get_activation_of_all_layers(
+            input_vector)
         for activation, layer in zip(activations, self.layers):
             self.activate_layer(layer, activation)
 
@@ -233,19 +242,19 @@ class NetworkMobject(VGroup):
             layer.neurons
             for layer in self.layers
         ]))
-        all_neurons.set_fill(opacity = 0)
+        all_neurons.set_fill(opacity=0)
         return self
 
     def get_edge_propogation_animations(self, index):
         edge_group_copy = self.edge_groups[index].copy()
         edge_group_copy.set_stroke(
             self.edge_propogation_color,
-            width = 1.5*self.edge_stroke_width
+            width=1.5*self.edge_stroke_width
         )
         return [ShowCreationThenDestruction(
-            edge_group_copy, 
-            run_time = self.edge_propogation_time,
-            lag_ratio = 0.5
+            edge_group_copy,
+            run_time=self.edge_propogation_time,
+            lag_ratio=0.5
         )]
 
     def add_output_labels(self):
@@ -258,35 +267,38 @@ class NetworkMobject(VGroup):
             self.output_labels.add(label)
         self.add(self.output_labels)
 
+
 class MNistNetworkMobject(NetworkMobject):
     CONFIG = {
-        "neuron_to_neuron_buff" : SMALL_BUFF,
-        "layer_to_layer_buff" : 1.5,
-        "edge_stroke_width" : 1,
-        "include_output_labels" : True,
+        "neuron_to_neuron_buff": SMALL_BUFF,
+        "layer_to_layer_buff": 1.5,
+        "edge_stroke_width": 1,
+        "include_output_labels": True,
     }
 
     def __init__(self, **kwargs):
         network = get_pretrained_network()
         NetworkMobject.__init__(self, network, **kwargs)
 
+
 class NetworkScene(Scene):
     CONFIG = {
-        "layer_sizes" : [8, 6, 6, 4],
-        "network_mob_config" : {},
+        "layer_sizes": [8, 6, 6, 4],
+        "network_mob_config": {},
     }
+
     def setup(self):
         self.add_network()
 
     def add_network(self):
-        self.network = Network(sizes = self.layer_sizes)
+        self.network = Network(sizes=self.layer_sizes)
         self.network_mob = NetworkMobject(
             self.network,
             **self.network_mob_config
         )
         self.add(self.network_mob)
 
-    def feed_forward(self, input_vector, false_confidence = False, added_anims = None):
+    def feed_forward(self, input_vector, false_confidence=False, added_anims=None):
         if added_anims is None:
             added_anims = []
         activations = self.network.get_activation_of_all_layers(
@@ -300,7 +312,7 @@ class NetworkScene(Scene):
             self.show_activation_of_layer(i, activation, added_anims)
             added_anims = []
 
-    def show_activation_of_layer(self, layer_index, activation_vector, added_anims = None):
+    def show_activation_of_layer(self, layer_index, activation_vector, added_anims=None):
         if added_anims is None:
             added_anims = []
         layer = self.network_mob.layers[layer_index]
@@ -315,22 +327,24 @@ class NetworkScene(Scene):
         anims += added_anims
         self.play(*anims)
 
-    def remove_random_edges(self, prop = 0.9):
+    def remove_random_edges(self, prop=0.9):
         for edge_group in self.network_mob.edge_groups:
             for edge in list(edge_group):
                 if np.random.random() < prop:
                     edge_group.remove(edge)
 
+
 def make_transparent(image_mob):
     alpha_vect = np.array(
-        image_mob.pixel_array[:,:,0],
-        dtype = 'uint8'
+        image_mob.pixel_array[:, :, 0],
+        dtype='uint8'
     )
     image_mob.set_color(WHITE)
-    image_mob.pixel_array[:,:,3] = alpha_vect
+    image_mob.pixel_array[:, :, 3] = alpha_vect
     return image_mob
 
 ###############################
+
 
 class ExampleThrees(PiCreatureScene):
     def construct(self):
@@ -345,7 +359,7 @@ class ExampleThrees(PiCreatureScene):
         self.three_mobs = self.get_three_mobs()
         three_mob = self.three_mobs[0]
         three_mob_copy = three_mob[1].copy()
-        three_mob_copy.sort(lambda p : np.dot(p, DOWN+RIGHT))
+        three_mob_copy.sort(lambda p: np.dot(p, DOWN+RIGHT))
 
         braces = VGroup(*[Brace(three_mob, v) for v in (LEFT, UP)])
         brace_labels = VGroup(*[
@@ -353,11 +367,11 @@ class ExampleThrees(PiCreatureScene):
             for brace in braces
         ])
 
-        bubble = randy.get_bubble(height = 4, width = 6)
+        bubble = randy.get_bubble(height=4, width=6)
         three_mob.generate_target()
         three_mob.target.set_height(1)
         three_mob.target.next_to(bubble[-1].get_left(), RIGHT, LARGE_BUFF)
-        arrow = Arrow(LEFT, RIGHT, color = BLUE)
+        arrow = Arrow(LEFT, RIGHT, color=BLUE)
         arrow.next_to(three_mob.target, RIGHT)
         real_three = TexMobject("3")
         real_three.set_height(0.8)
@@ -371,9 +385,9 @@ class ExampleThrees(PiCreatureScene):
         self.play(
             LaggedStartMap(
                 DrawBorderThenFill, three_mob_copy,
-                run_time = 3,
-                stroke_color = WHITE,
-                remover = True,
+                run_time=3,
+                stroke_color=WHITE,
+                remover=True,
             ),
             randy.change, "sassy",
             *it.chain(
@@ -404,13 +418,13 @@ class ExampleThrees(PiCreatureScene):
 
         three = self.three_mobs[0]
         three.generate_target()
-        three.target[0].set_fill(opacity = 0, family = False)
+        three.target[0].set_fill(opacity=0, family=False)
         for square in three.target[1]:
             yellow_rgb = color_to_rgb(YELLOW)
             square_rgb = color_to_rgb(square.get_fill_color())
             square.set_fill(
                 rgba_to_color(yellow_rgb*square_rgb),
-                opacity = 0.5
+                opacity=0.5
             )
 
         alt_threes = VGroup(*self.three_mobs[1:])
@@ -433,17 +447,17 @@ class ExampleThrees(PiCreatureScene):
         for moving_three in three, alt_threes[1]:
             moving_three.generate_target()
             moving_three.target.next_to(alt_threes, LEFT, LARGE_BUFF)
-            moving_three.target[0].set_stroke(width = 0)
+            moving_three.target[0].set_stroke(width=0)
             moving_three.target[1].space_out_submobjects(1.5)
             self.play(MoveToTarget(
-                moving_three, lag_ratio = 0.5
+                moving_three, lag_ratio=0.5
             ))
             self.play(
                 Animation(randy),
                 moving_three.replace, randy.eyes[1],
                 moving_three.scale_in_place, 0.7,
-                run_time = 2,
-                lag_ratio = 0.5,
+                run_time=2,
+                lag_ratio=0.5,
             )
             self.play(
                 Animation(randy),
@@ -485,8 +499,8 @@ class ExampleThrees(PiCreatureScene):
         alt_mobs = [
             WrappedImage(
                 PixelsAsSquares(ImageMobject(layer_to_image_array(arr))),
-                color = LIGHT_GREY,
-                buff = 0
+                color=LIGHT_GREY,
+                buff=0
             ).replace(three)
             for arr in arrays
         ]
@@ -512,24 +526,25 @@ class ExampleThrees(PiCreatureScene):
         for three_array in three_arrays:
             im_mob = ImageMobject(
                 layer_to_image_array(three_array),
-                height = 4,
+                height=4,
             )
             pixel_mob = PixelsAsSquares(im_mob)
             three_mob = WrappedImage(
                 pixel_mob,
-                color = LIGHT_GREY,
-                buff = 0
+                color=LIGHT_GREY,
+                buff=0
             )
             three_mobs.add(three_mob)
         return three_mobs
 
+
 class BrainAndHow(Scene):
     def construct(self):
-        brain = SVGMobject(file_name = "brain")
+        brain = SVGMobject(file_name="brain")
         brain.set_height(2)
         brain.set_fill(LIGHT_GREY)
         brain_outline = brain.copy()
-        brain_outline.set_fill(opacity = 0)
+        brain_outline.set_fill(opacity=0)
         brain_outline.set_stroke(BLUE_B, 3)
 
         how = TextMobject("How?!?")
@@ -541,25 +556,26 @@ class BrainAndHow(Scene):
         for x in range(2):
             self.play(
                 ShowPassingFlash(
-                    brain_outline, 
-                    time_width = 0.5,
-                    run_time = 2
+                    brain_outline,
+                    time_width=0.5,
+                    run_time=2
                 )
             )
         self.wait()
+
 
 class WriteAProgram(Scene):
     def construct(self):
         three_array = get_organized_images()[3][0]
         im_mob = ImageMobject(layer_to_image_array(three_array))
         three = PixelsAsSquares(im_mob)
-        three.sort(lambda p : np.dot(p, DOWN+RIGHT))
+        three.sort(lambda p: np.dot(p, DOWN+RIGHT))
         three.set_height(6)
         three.next_to(ORIGIN, LEFT)
         three_rect = SurroundingRectangle(
-            three, 
-            color = BLUE,
-            buff = SMALL_BUFF
+            three,
+            color=BLUE,
+            buff=SMALL_BUFF
         )
 
         numbers = VGroup()
@@ -567,16 +583,16 @@ class WriteAProgram(Scene):
             rgb = square.fill_rgb
             num = DecimalNumber(
                 square.fill_rgb[0],
-                num_decimal_places = 1
+                num_decimal_places=1
             )
-            num.set_stroke(width = 1)
+            num.set_stroke(width=1)
             color = rgba_to_color(1 - (rgb + 0.2)/1.2)
             num.set_color(color)
             num.set_width(0.7*square.get_width())
             num.move_to(square)
             numbers.add(num)
 
-        arrow = Arrow(LEFT, RIGHT, color = BLUE)
+        arrow = Arrow(LEFT, RIGHT, color=BLUE)
         arrow.next_to(three, RIGHT)
 
         choices = VGroup(*[TexMobject(str(n)) for n in range(10)])
@@ -594,7 +610,7 @@ class WriteAProgram(Scene):
             LaggedStartMap(FadeIn, choices),
         )
 
-        rect = SurroundingRectangle(choices[0], buff = SMALL_BUFF)
+        rect = SurroundingRectangle(choices[0], buff=SMALL_BUFF)
         q_mark = TexMobject("?")
         q_mark.next_to(rect, RIGHT)
         self.play(ShowCreation(rect))
@@ -608,12 +624,13 @@ class WriteAProgram(Scene):
         choices.remove(choice)
         choice.add(rect)
         self.play(
-            choice.scale, 1.5, 
+            choice.scale, 1.5,
             choice.next_to, arrow, RIGHT,
             FadeOut(choices),
             FadeOut(q_mark),
         )
         self.wait(2)
+
 
 class LayOutPlan(TeacherStudentsScene, NetworkScene):
     def setup(self):
@@ -652,7 +669,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         )
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = words
+            look_at_arg=words
         )
         self.play(words.to_corner, UP+RIGHT)
 
@@ -669,15 +686,15 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             ),
             self.get_student_changes(
                 *["confused"]*3,
-                lag_ratio = 0
+                lag_ratio=0
             ),
             self.teacher.change, "plain",
-            run_time = 1
+            run_time=1
         )
         self.play(ShowCreation(
             network_mob.edge_groups,
-            lag_ratio = 0.5,
-            run_time = 2,
+            lag_ratio=0.5,
+            run_time=2,
             rate_func=linear,
         ))
         in_vect = np.random.random(self.network.sizes[0])
@@ -685,18 +702,18 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
 
     def show_math(self):
         equation = TexMobject(
-            "\\textbf{a}_{l+1}", "=",  
+            "\\textbf{a}_{l+1}", "=",
             "\\sigma(",
-                "W_l", "\\textbf{a}_l", "+", "b_l",
+            "W_l", "\\textbf{a}_l", "+", "b_l",
             ")"
         )
         equation.set_color_by_tex_to_color_map({
-            "\\textbf{a}" : GREEN,
+            "\\textbf{a}": GREEN,
         })
         equation.move_to(self.network_mob.get_corner(UP+RIGHT))
         equation.to_edge(UP)
 
-        self.play(Write(equation, run_time = 2))
+        self.play(Write(equation, run_time=2))
         self.wait()
 
         self.equation = equation
@@ -704,15 +721,15 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
     def ask_about_layers(self):
         self.student_says(
             "Why the layers?",
-            student_index = 2,
-            bubble_kwargs = {"direction" : LEFT}
+            student_index=2,
+            bubble_kwargs={"direction": LEFT}
         )
         self.wait()
         self.play(RemovePiCreatureBubble(self.students[2]))
 
     def show_learning(self):
         word = self.words[0][1].copy()
-        rect = SurroundingRectangle(word, color = YELLOW)
+        rect = SurroundingRectangle(word, color=YELLOW)
         self.network_mob.neuron_fill_color = YELLOW
 
         layer = self.network_mob.layers[-1]
@@ -725,7 +742,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         word_group.generate_target()
         word_group.target.move_to(self.equation, LEFT)
         word_group.target[0].set_color(YELLOW)
-        word_group.target[1].set_stroke(width = 0)
+        word_group.target[1].set_stroke(width=0)
 
         self.play(ShowCreation(rect))
         self.play(
@@ -737,8 +754,8 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             edge_group.generate_target()
             for edge in edge_group.target:
                 edge.set_stroke(
-                    YELLOW, 
-                    width = 4*np.random.random()**2
+                    YELLOW,
+                    width=4*np.random.random()**2
                 )
             self.play(MoveToTarget(edge_group))
         self.wait()
@@ -755,7 +772,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             for x in range(2)
         ])
         videos.set_height(1.5)
-        videos.arrange(RIGHT, buff = LARGE_BUFF)
+        videos.arrange(RIGHT, buff=LARGE_BUFF)
         videos.next_to(self.students, UP, LARGE_BUFF)
 
         network_mob.generate_target()
@@ -780,13 +797,15 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         self.play(DrawBorderThenFill(videos[1]))
         self.wait()
 
+
 class PreviewMNistNetwork(NetworkScene):
     CONFIG = {
-        "n_examples" : 15,
-        "network_mob_config" : {},
+        "n_examples": 15,
+        "network_mob_config": {},
     }
+
     def construct(self):
-        self.remove_random_edges(0.7) #Remove?
+        self.remove_random_edges(0.7)  # Remove?
 
         training_data, validation_data, test_data = load_data_wrapper()
         for data in test_data[:self.n_examples]:
@@ -796,13 +815,13 @@ class PreviewMNistNetwork(NetworkScene):
         image = PixelsFromVect(in_vect)
         image.next_to(self.network_mob, LEFT, LARGE_BUFF, UP)
         image.shift_onto_screen()
-        image_rect = SurroundingRectangle(image, color = BLUE)
+        image_rect = SurroundingRectangle(image, color=BLUE)
         start_neurons = self.network_mob.layers[0].neurons.copy()
-        start_neurons.set_stroke(WHITE, width = 0)
+        start_neurons.set_stroke(WHITE, width=0)
         start_neurons.set_fill(WHITE, 0)
 
         self.play(FadeIn(image), FadeIn(image_rect))
-        self.feed_forward(in_vect, added_anims = [
+        self.feed_forward(in_vect, added_anims=[
             self.get_image_to_layer_one_animation(image, start_neurons)
         ])
         n = np.argmax([
@@ -831,9 +850,9 @@ class PreviewMNistNetwork(NetworkScene):
             if pixel.fill_rgb[0] > 0.1
         ])
         return Transform(
-            image_mover, start_neurons, 
-            remover = True,
-            run_time = 1,
+            image_mover, start_neurons,
+            remover=True,
+            run_time=1,
         )
 
     ###
@@ -842,6 +861,7 @@ class PreviewMNistNetwork(NetworkScene):
         self.network_mob = MNistNetworkMobject(**self.network_mob_config)
         self.network = self.network_mob.neural_network
         self.add(self.network_mob)
+
 
 class AlternateNeuralNetworks(PiCreatureScene):
     def construct(self):
@@ -857,7 +877,7 @@ class AlternateNeuralNetworks(PiCreatureScene):
             )
         )
         for ex in examples:
-            arrow = Arrow(LEFT, RIGHT, color = BLUE)
+            arrow = Arrow(LEFT, RIGHT, color=BLUE)
             ex[0].next_to(arrow, LEFT)
             ex[1].next_to(arrow, RIGHT)
             ex.submobjects.insert(1, arrow)
@@ -871,13 +891,13 @@ class AlternateNeuralNetworks(PiCreatureScene):
         maybe_words.set_color(YELLOW)
 
         self.play(
-            Write(examples[0], run_time = 2),
+            Write(examples[0], run_time=2),
             morty.change, "raise_right_hand"
         )
         self.wait()
         self.play(
             examples[0].shift, MED_LARGE_BUFF*UP,
-            FadeIn(examples[1], lag_ratio = 0.5),
+            FadeIn(examples[1], lag_ratio=0.5),
         )
         self.wait()
         self.play(
@@ -886,6 +906,7 @@ class AlternateNeuralNetworks(PiCreatureScene):
             morty.change, "maybe"
         )
         self.wait(2)
+
 
 class PlainVanillaWrapper(Scene):
     def construct(self):
@@ -897,14 +918,15 @@ class PlainVanillaWrapper(Scene):
 
         self.add(title)
         self.wait(2)
-        self.play(Write(subtitle, run_time = 2))
+        self.play(Write(subtitle, run_time=2))
         self.wait(2)
+
 
 class NotPerfectAddOn(Scene):
     def construct(self):
         words = TextMobject("Not perfect!")
         words.scale(1.5)
-        arrow = Arrow(UP+RIGHT, DOWN+LEFT, color = RED)
+        arrow = Arrow(UP+RIGHT, DOWN+LEFT, color=RED)
         words.set_color(RED)
         arrow.to_corner(DOWN+LEFT)
         words.next_to(arrow, UP+RIGHT)
@@ -912,18 +934,20 @@ class NotPerfectAddOn(Scene):
         self.play(
             Write(words),
             ShowCreation(arrow),
-            run_time = 1
+            run_time=1
         )
         self.wait(2)
+
 
 class MoreAThanI(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "More \\\\ A than I",
-            target_mode = "hesitant"
+            target_mode="hesitant"
         )
         self.change_student_modes("sad", "erm", "tired")
         self.wait(2)
+
 
 class BreakDownName(Scene):
     def construct(self):
@@ -935,20 +959,20 @@ class BreakDownName(Scene):
         name.to_edge(UP)
         q1 = TextMobject(
             "What are \\\\ the ", "neuron", "s?",
-            arg_separator = ""
+            arg_separator=""
         )
         q2 = TextMobject("How are \\\\ they connected?")
-        q1.next_to(name[0].get_bottom(), DOWN, buff = LARGE_BUFF)
-        q2.next_to(name[1].get_bottom(), DOWN+RIGHT, buff = LARGE_BUFF)
+        q1.next_to(name[0].get_bottom(), DOWN, buff=LARGE_BUFF)
+        q2.next_to(name[1].get_bottom(), DOWN+RIGHT, buff=LARGE_BUFF)
         a1 = Arrow(q1.get_top(), name[0].get_bottom())
         a2 = Arrow(q2.get_top(), name.get_corner(DOWN+RIGHT))
         VGroup(q1, a1).set_color(BLUE)
         VGroup(q2, a2).set_color(YELLOW)
 
         randy = Randolph().to_corner(DOWN+LEFT)
-        brain = SVGMobject(file_name = "brain")
-        brain.set_fill(LIGHT_GREY, opacity = 0)
-        brain.replace(randy.eyes, dim_to_match = 1)
+        brain = SVGMobject(file_name="brain")
+        brain.set_fill(LIGHT_GREY, opacity=0)
+        brain.replace(randy.eyes, dim_to_match=1)
 
         self.add(name)
         self.play(randy.change, "pondering")
@@ -959,31 +983,31 @@ class BreakDownName(Scene):
             randy.look, UP
         )
         brain_outline = brain.copy()
-        brain_outline.set_fill(opacity = 0)
+        brain_outline.set_fill(opacity=0)
         brain_outline.set_stroke(BLUE_B, 3)
         self.play(
             ShowPassingFlash(
-                brain_outline, 
-                time_width = 0.5,
-                run_time = 2
+                brain_outline,
+                time_width=0.5,
+                run_time=2
             )
         )
         self.play(Blink(randy))
         self.wait()
         self.play(
-            Write(q1, run_time = 1),
+            Write(q1, run_time=1),
             ShowCreation(a1),
             name[0].set_color, q1.get_color(),
         )
         self.play(
-            Write(q2, run_time = 1),
+            Write(q2, run_time=1),
             ShowCreation(a2),
             name[1].set_color, q2.get_color()
         )
         self.wait(2)
 
         self.play(*list(map(FadeOut, [
-            name, randy, brain, 
+            name, randy, brain,
             q2, a1, a2,
             q1[0], q1[2]
         ])))
@@ -1000,14 +1024,14 @@ class BreakDownName(Scene):
         neuron_word.shift(0.5*SMALL_BUFF*UP)
         description.next_to(arrow, RIGHT)
 
-        neuron = Circle(radius = 0.35, color = BLUE)
+        neuron = Circle(radius=0.35, color=BLUE)
         neuron.next_to(neuron_word, UP, MED_LARGE_BUFF)
         num = TexMobject("0.2")
         num.set_width(0.7*neuron.get_width())
         num.move_to(neuron)
         num.save_state()
         num.move_to(description.get_right())
-        num.set_fill(opacity = 1)
+        num.set_fill(opacity=1)
 
         self.play(
             ReplacementTransform(self.neuron_word, neuron_word),
@@ -1015,7 +1039,7 @@ class BreakDownName(Scene):
         )
         self.play(
             ShowCreation(arrow),
-            Write(description, run_time = 1)
+            Write(description, run_time=1)
         )
         self.wait()
         self.play(
@@ -1032,17 +1056,19 @@ class BreakDownName(Scene):
             )
             self.wait()
 
+
 class IntroduceEachLayer(PreviewMNistNetwork):
     CONFIG = {
-        "network_mob_config" : {
-            "neuron_stroke_color" : WHITE,
-            "neuron_stroke_width" : 2,
-            "neuron_fill_color" : WHITE,
-            "average_shown_activation_of_large_layer" : False,
-            "edge_propogation_color" : YELLOW,
-            "edge_propogation_time" : 2,
+        "network_mob_config": {
+            "neuron_stroke_color": WHITE,
+            "neuron_stroke_width": 2,
+            "neuron_fill_color": WHITE,
+            "average_shown_activation_of_large_layer": False,
+            "edge_propogation_color": YELLOW,
+            "edge_propogation_time": 2,
         }
     }
+
     def construct(self):
         self.setup_network_mob()
         self.break_up_image_as_neurons()
@@ -1061,14 +1087,14 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         image_mob = PixelsFromVect(image)
         image_mob.set_height(4)
         image_mob.next_to(ORIGIN, LEFT)
-        rect = SurroundingRectangle(image_mob, color = BLUE)
+        rect = SurroundingRectangle(image_mob, color=BLUE)
         neurons = VGroup()
         for pixel in image_mob:
-            pixel.set_fill(WHITE, opacity = pixel.fill_rgb[0])
+            pixel.set_fill(WHITE, opacity=pixel.fill_rgb[0])
             neuron = Circle(
-                color = WHITE,
-                stroke_width = 1,
-                radius = pixel.get_width()/2
+                color=WHITE,
+                stroke_width=1,
+                radius=pixel.get_width()/2
             )
             neuron.move_to(pixel)
             neuron.set_fill(WHITE, pixel.get_fill_opacity())
@@ -1079,7 +1105,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
 
         braces = VGroup(*[Brace(neurons, vect) for vect in (LEFT, UP)])
         labels = VGroup(*[
-            brace.get_tex("28", buff = SMALL_BUFF) 
+            brace.get_tex("28", buff=SMALL_BUFF)
             for brace in braces
         ])
 
@@ -1120,7 +1146,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         example_num = None
         for neuron in neurons:
             o = neuron.get_fill_opacity()
-            num = DecimalNumber(o, num_decimal_places = 1)
+            num = DecimalNumber(o, num_decimal_places=1)
             num.set_width(0.7*neuron.get_width())
             num.move_to(neuron)
             if o > 0.8:
@@ -1144,11 +1170,11 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 example_neuron.set_fill, None, num,
                 ChangingDecimal(
                     example_num,
-                    lambda a : example_neuron.get_fill_opacity(),
+                    lambda a: example_neuron.get_fill_opacity(),
                 ),
                 UpdateFromFunc(
                     example_num,
-                    lambda m : m.set_fill(
+                    lambda m: m.set_fill(
                         BLACK if example_neuron.get_fill_opacity() > 0.8 else WHITE
                     )
                 )
@@ -1165,12 +1191,12 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             change_activation(num)
             self.wait()
 
-        rect = SurroundingRectangle(example_num, color = YELLOW)
+        rect = SurroundingRectangle(example_num, color=YELLOW)
         activation = TextMobject("``Activation''")
         activation.next_to(example_neuron, RIGHT)
         activation.set_color(rect.get_color())
         self.play(ShowCreation(rect))
-        self.play(Write(activation, run_time = 1))
+        self.play(Write(activation, run_time=1))
         self.wait()
         change_activation(1.0)
         self.wait()
@@ -1208,21 +1234,21 @@ class IntroduceEachLayer(PreviewMNistNetwork):
 
         self.play(rows.space_out_submobjects, 1.2)
         self.play(
-            rows.arrange, RIGHT, buff = SMALL_BUFF,
-            path_arc = np.pi/2,
-            run_time = 2
+            rows.arrange, RIGHT, buff=SMALL_BUFF,
+            path_arc=np.pi/2,
+            run_time=2
         )
         self.play(
             ReplacementTransform(
-                VGroup(*neurons[:n]), 
+                VGroup(*neurons[:n]),
                 VGroup(*layer.neurons[:n]),
             ),
             ReplacementTransform(
-                VGroup(*neurons[n:-n]), 
+                VGroup(*neurons[n:-n]),
                 layer.dots,
             ),
             ReplacementTransform(
-                VGroup(*neurons[-n:]), 
+                VGroup(*neurons[-n:]),
                 VGroup(*layer.neurons[-n:]),
             ),
         )
@@ -1237,7 +1263,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         self.wait()
         for edge_group, layer in zip(network_mob.edge_groups, network_mob.layers[1:]):
             self.play(
-                LaggedStartMap(FadeIn, layer, run_time = 1),
+                LaggedStartMap(FadeIn, layer, run_time=1),
                 ShowCreation(edge_group),
             )
         self.wait()
@@ -1267,11 +1293,11 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 neuron.set_fill, None, num,
                 ChangingDecimal(
                     activation,
-                    lambda a : neuron.get_fill_opacity(),
+                    lambda a: neuron.get_fill_opacity(),
                 ),
                 UpdateFromFunc(
                     activation,
-                    lambda m : m.set_fill(
+                    lambda m: m.set_fill(
                         BLACK if neuron.get_fill_opacity() > 0.8 else WHITE
                     )
                 )
@@ -1299,7 +1325,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
 
     def show_hidden_layers(self):
         hidden_layers = VGroup(*self.network_mob.layers[1:3])
-        rect = SurroundingRectangle(hidden_layers, color = YELLOW)
+        rect = SurroundingRectangle(hidden_layers, color=YELLOW)
         name = TextMobject("``Hidden layers''")
         name.next_to(rect, UP, SMALL_BUFF)
         name.set_color(YELLOW)
@@ -1333,14 +1359,15 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         self.remove_random_edges(0.7)
         self.feed_forward(self.image_vect)
 
+
 class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
     def construct(self):
         network_mob = MNistNetworkMobject(
-            layer_to_layer_buff = 2.5,
-            neuron_stroke_color = WHITE,
+            layer_to_layer_buff=2.5,
+            neuron_stroke_color=WHITE,
         )
         network_mob.set_height(4)
-        network_mob.to_edge(UP, buff = LARGE_BUFF)
+        network_mob.to_edge(UP, buff=LARGE_BUFF)
         layers = VGroup(*network_mob.layers[1:3])
         rects = VGroup(*list(map(SurroundingRectangle, layers)))
         self.add(network_mob)
@@ -1353,16 +1380,16 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
             words.next_to(rects, UP)
 
         neurons_anim = LaggedStartMap(
-            Indicate, 
+            Indicate,
             VGroup(*it.chain(*[layer.neurons for layer in layers])),
-            rate_func = there_and_back,
-            scale_factor = 2,
-            color = MAROON_B,
+            rate_func=there_and_back,
+            scale_factor=2,
+            color=MAROON_B,
         )
 
         self.play(
             ShowCreation(rects),
-            Write(two_words, run_time = 1),
+            Write(two_words, run_time=1),
             self.teacher.change, "raise_right_hand",
         )
         self.wait()
@@ -1377,31 +1404,33 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
         self.wait()
         self.student_says(
             "Why 2 \\\\ layers?",
-            student_index = 1,
-            bubble_kwargs = {"direction" : RIGHT},
-            run_time = 1,
-            target_mode = "raise_left_hand",
+            student_index=1,
+            bubble_kwargs={"direction": RIGHT},
+            run_time=1,
+            target_mode="raise_left_hand",
         )
         self.play(self.teacher.change, "happy")
         self.wait()
         self.student_says(
             "Why 16?",
-            student_index = 0,
-            run_time = 1,
+            student_index=0,
+            run_time=1,
         )
-        self.play(neurons_anim, run_time = 3)
+        self.play(neurons_anim, run_time=3)
         self.play(
             self.teacher.change, "shruggie",
             RemovePiCreatureBubble(self.students[0]),
         )
         self.wait()
 
+
 class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
     CONFIG = {
-        "network_mob_config" : {
-            "edge_propogation_time" : 1.5,
+        "network_mob_config": {
+            "edge_propogation_time": 1.5,
         }
     }
+
     def construct(self):
         PreviewMNistNetwork.construct(self)
 
@@ -1409,11 +1438,11 @@ class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
         neurons = VGroup()
         for pixel in image:
             neuron = Circle(
-                radius = pixel.get_width()/2,
-                stroke_width = 1,
-                stroke_color = WHITE,
-                fill_color = WHITE,
-                fill_opacity = pixel.fill_rgb[0]
+                radius=pixel.get_width()/2,
+                stroke_width=1,
+                stroke_color=WHITE,
+                fill_color=WHITE,
+                fill_opacity=pixel.fill_rgb[0]
             )
             neuron.move_to(pixel)
             neurons.add(neuron)
@@ -1429,26 +1458,28 @@ class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
         mover = image.copy()
         self.play(Transform(mover, neurons))
         return Transform(
-            mover, target, 
-            run_time = 2,
-            lag_ratio = 0.5,
-            remover = True
+            mover, target,
+            run_time=2,
+            lag_ratio=0.5,
+            remover=True
         )
+
 
 class AskAboutPropogationAndTraining(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "How does one layer \\\\ influence the next?",
-            student_index = 0,
-            run_time = 1
+            student_index=0,
+            run_time=1
         )
         self.wait()
         self.student_says(
             "How does \\\\ training work?",
-            student_index = 2,
-            run_time = 1
+            student_index=2,
+            run_time=1
         )
         self.wait(3)
+
 
 class AskAboutLayers(PreviewMNistNetwork):
     def construct(self):
@@ -1473,27 +1504,29 @@ class AskAboutLayers(PreviewMNistNetwork):
         rects = list(map(SurroundingRectangle, neuron_groups[1:3]))
 
         self.play(
-            Write(question, run_time = 1),
+            Write(question, run_time=1),
             LaggedStartMap(
                 GrowFromPoint, arrows,
-                lambda a : (a, a.get_start()),
-                run_time = 2
+                lambda a: (a, a.get_start()),
+                run_time=2
             )
         )
         self.wait()
         self.play(*list(map(ShowCreation, rects)))
         self.wait()
 
+
 class BreakUpMacroPatterns(IntroduceEachLayer):
     CONFIG = {
-        "camera_config" : {"background_opacity" : 1},
-        "prefixes" : [
+        "camera_config": {"background_opacity": 1},
+        "prefixes": [
             "nine", "eight", "four",
             "upper_loop", "right_line",
             "lower_loop", "horizontal_line",
             "upper_left_line"
         ]
     }
+
     def construct(self):
         self.setup_network_mob()
         self.setup_needed_patterns()
@@ -1510,7 +1543,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         vects = [
             np.array(Image.open(
                 get_full_raster_image_path("handwritten_" + p),
-            ))[:,:,0].flatten()/255.0
+            ))[:, :, 0].flatten()/255.0
             for p in prefixes
         ]
         mobjects = list(map(MNistMobject, vects))
@@ -1531,9 +1564,9 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
             for i, j in it.product([0, 14], [0, 14]):
                 pattern = mob.deepcopy()
                 pa = pattern[1].pixel_array
-                temp = np.array(pa[i:i+14,j:j+14,:], dtype = 'uint8')
-                pa[:,:] = 0
-                pa[i:i+14,j:j+14,:] = temp
+                temp = np.array(pa[i:i+14, j:j+14, :], dtype='uint8')
+                pa[:, :] = 0
+                pa[i:i+14, j:j+14, :] = temp
                 self.make_transparent(pattern[1])
                 pattern[1].set_color(random_bright_color())
                 self.added_patterns.add(pattern)
@@ -1552,7 +1585,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
             mob.set_color(color)
             mob.save_state()
             mob.move_to(nine)
-        right_line[1].pixel_array[:14,:,3] = 0
+        right_line[1].pixel_array[:14, :, 3] = 0
 
         self.play(FadeIn(nine))
         self.wait()
@@ -1611,9 +1644,10 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         horizontal_line = self.horizontal_line
         horizontal_line[1].set_color(MAROON_B)
         right_line = self.right_line.deepcopy()
-        equation = self.get_equation(four, right_line, upper_left_line, horizontal_line)
+        equation = self.get_equation(
+            four, right_line, upper_left_line, horizontal_line)
         equation.next_to(
-            self.eight_equation, DOWN, aligned_edge = LEFT
+            self.eight_equation, DOWN, aligned_edge=LEFT
         )
 
         self.play(
@@ -1646,7 +1680,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         )
         for pattern in patterns:
             pattern.add_to_back(
-                pattern[1].copy().set_color(BLACK, alpha = 1)
+                pattern[1].copy().set_color(BLACK, alpha=1)
             )
         everything.remove(*patterns)
         network_mob = self.network_mob
@@ -1662,8 +1696,8 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         self.play(
             FadeIn(
                 network_mob,
-                lag_ratio = 0.5,
-                run_time = 3,
+                lag_ratio=0.5,
+                run_time=3,
             ),
             MoveToTarget(patterns)
         )
@@ -1687,7 +1721,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         nine.add(upper_loop)
         nine.to_corner(UP+LEFT)
         self.remove_random_edges(0.7)
-        self.network.get_activation_of_all_layers = lambda v : [
+        self.network.get_activation_of_all_layers = lambda v: [
             np.zeros(784),
             sigmoid(6*(np.random.random(16)-0.5)),
             np.array([1, 0, 1] + 13*[0]),
@@ -1709,7 +1743,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         for x in range(3):
             self.play(LaggedStartMap(
                 ShowCreationThenDestruction, edge_group,
-                run_time = 3
+                run_time=3
             ))
             self.wait()
 
@@ -1729,12 +1763,13 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
     def make_transparent(self, image_mob):
         return make_transparent(image_mob)
         alpha_vect = np.array(
-            image_mob.pixel_array[:,:,0],
-            dtype = 'uint8'
+            image_mob.pixel_array[:, :, 0],
+            dtype='uint8'
         )
         image_mob.set_color(WHITE)
-        image_mob.pixel_array[:,:,3] = alpha_vect
+        image_mob.pixel_array[:, :, 3] = alpha_vect
         return image_mob
+
 
 class GenerallyLoopyPattern(Scene):
     def construct(self):
@@ -1750,21 +1785,23 @@ class GenerallyLoopyPattern(Scene):
             self.wait(0.2)
             self.remove(image)
 
+
 class HowWouldYouRecognizeSubcomponent(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "Okay, but recognizing loops \\\\",
             "is just as hard!",
-            target_mode = "sassy"
+            target_mode="sassy"
         )
         self.play(
             self.teacher.change, "guilty"
         )
         self.wait()
 
+
 class BreakUpMicroPatterns(BreakUpMacroPatterns):
     CONFIG = {
-        "prefixes" : [
+        "prefixes": [
             "loop",
             "loop_edge1",
             "loop_edge2",
@@ -1777,6 +1814,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             "right_line_edge3",
         ]
     }
+
     def construct(self):
         self.setup_network_mob()
         self.setup_needed_patterns()
@@ -1788,7 +1826,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         loop = self.loop
         loop[0].set_color(WHITE)
         edges = Group(*[
-            getattr(self, "loop_edge%d"%d)
+            getattr(self, "loop_edge%d" % d)
             for d in range(1, 6)
         ])
         colors = color_gradient([BLUE, YELLOW, RED], 5)
@@ -1798,7 +1836,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         loop.generate_target()
         edges.generate_target()
         for edge in edges:
-            edge[0].set_stroke(width = 0)
+            edge[0].set_stroke(width=0)
             edge.save_state()
             edge[1].set_opacity(0)
         equation = self.get_equation(loop.target, *edges.target)
@@ -1818,13 +1856,13 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         self.wait()
         self.play(LaggedStartMap(
             ApplyMethod, edges,
-            lambda e : (e.restore,),
-            run_time = 4
+            lambda e: (e.restore,),
+            run_time=4
         ))
         self.wait()
         self.play(
-            MoveToTarget(loop, run_time = 2),
-            MoveToTarget(edges, run_time = 2),
+            MoveToTarget(loop, run_time=2),
+            MoveToTarget(edges, run_time=2),
             Write(symbols),
             randy.change, "happy", equation,
         )
@@ -1838,7 +1876,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         line = self.right_line
         line[0].set_color(WHITE)
         edges = Group(*[
-            getattr(self, "right_line_edge%d"%d)
+            getattr(self, "right_line_edge%d" % d)
             for d in range(1, 4)
         ])
         colors = Color(MAROON_B).range_to(PURPLE, 3)
@@ -1872,16 +1910,18 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         )
         self.wait(3)
 
+
 class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
     CONFIG = {
-        "camera_config" : {
-            "background_opacity" : 1,
+        "camera_config": {
+            "background_opacity": 1,
         },
-        "network_mob_config" : {
-            "layer_to_layer_buff" : 2,
-            "edge_propogation_color" : YELLOW,
+        "network_mob_config": {
+            "layer_to_layer_buff": 2,
+            "edge_propogation_color": YELLOW,
         }
     }
+
     def construct(self):
         self.setup_network_mob()
         self.setup_activations_and_nines()
@@ -1898,11 +1938,11 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
     def setup_activations_and_nines(self):
         layers = self.network_mob.layers
         nine_im, loop_im, line_im = images = [
-            Image.open(get_full_raster_image_path("handwritten_%s"%s))
+            Image.open(get_full_raster_image_path("handwritten_%s" % s))
             for s in ("nine", "upper_loop", "right_line")
         ]
         nine_array, loop_array, line_array = [
-            np.array(im)[:,:,0]/255.0
+            np.array(im)[:, :, 0]/255.0
             for im in images
         ]
         self.nine = MNistMobject(nine_array.flatten())
@@ -1916,21 +1956,20 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         )
         self.activations[-2] = np.array([1, 0, 1] + 13*[0])
 
-
         self.edge_colored_nine = Group()
         nine_pa = self.nine[1].pixel_array
         n, k = 6, 4
         colors = color_gradient([BLUE, YELLOW, RED, MAROON_B, GREEN], 10)
         for i, j in it.product(list(range(n)), list(range(k))):
-            mob = ImageMobject(np.zeros((28, 28, 4), dtype = 'uint8'))
+            mob = ImageMobject(np.zeros((28, 28, 4), dtype='uint8'))
             mob.replace(self.nine[1])
             pa = mob.pixel_array
-            color = colors[(k*i + j)%(len(colors))]
+            color = colors[(k*i + j) % (len(colors))]
             rgb = (255*color_to_rgb(color)).astype('uint8')
-            pa[:,:,:3] = rgb
+            pa[:, :, :3] = rgb
             i0, i1 = 1+(28/n)*i, 1+(28/n)*(i+1)
             j0, j1 = (28/k)*j, (28/k)*(j+1)
-            pa[i0:i1,j0:j1,3] = nine_pa[i0:i1,j0:j1,3]
+            pa[i0:i1, j0:j1, 3] = nine_pa[i0:i1, j0:j1, 3]
             self.edge_colored_nine.add(mob)
         self.edge_colored_nine.next_to(layers[1], UP)
 
@@ -1942,7 +1981,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             make_transparent(mob)
             mob.set_color(color)
             mob.replace(self.nine[1])
-        line.pixel_array[:14,:,:] = 0
+        line.pixel_array[:14, :, :] = 0
 
         self.pattern_colored_nine = Group(loop, line)
         self.pattern_colored_nine.next_to(layers[2], UP)
@@ -1959,7 +1998,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
 
         self.play(
             ShowCreation(rect),
-            Write(words, run_time = 2)
+            Write(words, run_time=2)
         )
         self.wait()
         self.play(*list(map(FadeOut, [rect, words])))
@@ -1978,11 +2017,11 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         neurons = VGroup()
         for pixel in v_nine:
             neuron = Circle(
-                radius = pixel.get_width()/2,
-                stroke_color = WHITE,
-                stroke_width = 1,
-                fill_color = WHITE,
-                fill_opacity = pixel.get_fill_opacity(),
+                radius=pixel.get_width()/2,
+                stroke_color=WHITE,
+                stroke_width=1,
+                fill_color=WHITE,
+                fill_opacity=pixel.get_fill_opacity(),
             )
             neuron.rotate(3*np.pi/4)
             neuron.move_to(pixel)
@@ -2009,20 +2048,19 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             self.play(
                 ShowCreationThenDestruction(
                     edge_groups[i-1],
-                    run_time = 2,
-                    lag_ratio = 0.5
+                    run_time=2,
+                    lag_ratio=0.5
                 ),
                 FadeIn(active_layers[i])
             )
-
 
         self.play(FadeIn(nine))
         self.play(ReplacementTransform(v_nine, neurons))
         self.play(MoveToTarget(
             neurons,
-            remover = True,
-            lag_ratio = 0.5,
-            run_time = 2
+            remover=True,
+            lag_ratio=0.5,
+            run_time=2
         ))
 
         activate_layer(1)
@@ -2048,7 +2086,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         arrow = Arrow(later.get_bottom(), question.get_top())
         arrow.set_color(BLUE)
 
-        self.play(Write(question, run_time = 2))
+        self.play(Write(question, run_time=2))
         self.wait()
         self.play(
             FadeIn(later),
@@ -2081,15 +2119,17 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             im.shift(MED_SMALL_BUFF*vect)
         self.play(MoveToTarget(
             image_group,
-            rate_func = there_and_back,
-            lag_ratio = 0.5,
-            run_time = 2,
+            rate_func=there_and_back,
+            lag_ratio=0.5,
+            run_time=2,
         ))
+
 
 class EdgeDetection(Scene):
     CONFIG = {
-        "camera_config" : {"background_opacity" : 1}
+        "camera_config": {"background_opacity": 1}
     }
+
     def construct(self):
         lion = ImageMobject("Lion")
         edges_array = get_edges(lion.pixel_array)
@@ -2101,8 +2141,9 @@ class EdgeDetection(Scene):
 
         self.play(FadeIn(lion))
         self.play(lion_copy.move_to, edges)
-        self.play(Transform(lion_copy, edges, run_time = 3))
+        self.play(Transform(lion_copy, edges, run_time=3))
         self.wait(2)
+
 
 class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
     def construct(self):
@@ -2114,12 +2155,13 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
         ]))
         word = TextMobject(
             "re", "cognition",
-            arg_separator = ""
+            arg_separator=""
         )
         word[1].set_color(BLUE)
         arrows = VGroup()
+
         def get_arrow():
-            arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
+            arrow = Arrow(ORIGIN, RIGHT, color=BLUE)
             arrows.add(arrow)
             return arrow
         sequence = VGroup(
@@ -2169,17 +2211,17 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
         self.wait()
         self.play(
             GrowFromPoint(arrows[1], arrows[1].get_start()),
-            LaggedStartMap(FadeIn, syllables, run_time = 1)
+            LaggedStartMap(FadeIn, syllables, run_time=1)
         )
         self.wait()
         self.play(
             GrowFromPoint(arrows[2], arrows[2].get_start()),
-            LaggedStartMap(FadeIn, word, run_time = 1)
+            LaggedStartMap(FadeIn, word, run_time=1)
         )
         self.wait()
 
     def get_wave_form(self):
-        func = lambda x : abs(sum([
+        def func(x): return abs(sum([
             (1./n)*np.sin((n+3)*x)
             for n in range(1, 5)
         ]))
@@ -2187,18 +2229,20 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             Line(func(x)*DOWN, func(x)*UP)
             for x in np.arange(0, 4, 0.1)
         ])
-        result.set_stroke(width = 2)
-        result.arrange(RIGHT, buff = MED_SMALL_BUFF)
+        result.set_stroke(width=2)
+        result.arrange(RIGHT, buff=MED_SMALL_BUFF)
         result.set_height(1)
 
         return result
 
+
 class AskAboutWhatEdgesAreDoing(IntroduceEachLayer):
     CONFIG = {
-        "network_mob_config" : {
-            "layer_to_layer_buff" : 2,
+        "network_mob_config": {
+            "layer_to_layer_buff": 2,
         }
     }
+
     def construct(self):
         self.add_question()
         self.show_propogation()
@@ -2233,11 +2277,13 @@ class AskAboutWhatEdgesAreDoing(IntroduceEachLayer):
         self.feed_forward(in_vect)
         self.wait()
 
+
 class IntroduceWeights(IntroduceEachLayer):
     CONFIG = {
-        "weights_color" : GREEN,
-        "negative_weights_color" : RED,
+        "weights_color": GREEN,
+        "negative_weights_color": RED,
     }
+
     def construct(self):
         self.zoom_in_on_one_neuron()
         self.show_desired_pixel_region()
@@ -2261,8 +2307,8 @@ class IntroduceWeights(IntroduceEachLayer):
             FadeOut(self.network_mob.output_labels),
             Animation(neuron),
             neuron.edges_in.set_stroke, None, 2,
-            lag_ratio = 0.5,
-            run_time = 2
+            lag_ratio=0.5,
+            run_time=2
         )
 
         self.neuron = neuron
@@ -2274,26 +2320,26 @@ class IntroduceWeights(IntroduceEachLayer):
         pixels = PixelsAsSquares(ImageMobject(
             np.zeros((d, d, 4))
         ))
-        pixels.set_stroke(width = 0.5)
+        pixels.set_stroke(width=0.5)
         pixels.set_fill(WHITE, 0)
         pixels.set_height(4)
         pixels.next_to(neuron, RIGHT, LARGE_BUFF)
-        rect = SurroundingRectangle(pixels, color = BLUE)
+        rect = SurroundingRectangle(pixels, color=BLUE)
 
         pixels_to_detect = self.get_pixels_to_detect(pixels)
 
         self.play(
             FadeIn(rect),
             ShowCreation(
-                pixels, 
-                lag_ratio = 0.5,
-                run_time = 2,
+                pixels,
+                lag_ratio=0.5,
+                run_time=2,
             )
         )
         self.play(
             pixels_to_detect.set_fill, WHITE, 1,
-            lag_ratio = 0.5,
-            run_time = 2
+            lag_ratio=0.5,
+            run_time=2
         )
         self.wait(2)
 
@@ -2313,21 +2359,21 @@ class IntroduceWeights(IntroduceEachLayer):
         arrow = Arrow(
             parameter_word.get_bottom(),
             neuron.edges_in[0].get_center(),
-            color = self.weights_color
+            color=self.weights_color
         )
 
         p_labels = VGroup(*[
-            TexMobject("p_%d\\!:"%(i+1)).set_color(self.weights_color)
+            TexMobject("p_%d\\!:" % (i+1)).set_color(self.weights_color)
             for i in range(8)
         ] + [TexMobject("\\vdots")])
-        p_labels.arrange(DOWN, aligned_edge = LEFT)
+        p_labels.arrange(DOWN, aligned_edge=LEFT)
         p_labels.next_to(parameter_word, DOWN, LARGE_BUFF)
         p_labels[-1].shift(SMALL_BUFF*RIGHT)
 
-        def get_alpha_func(i, start = 0):
+        def get_alpha_func(i, start=0):
             # m = int(5*np.sin(2*np.pi*i/128.))
             m = random.randint(1, 10)
-            return lambda a : start + (1-2*start)*np.sin(np.pi*a*m)**2
+            return lambda a: start + (1-2*start)*np.sin(np.pi*a*m)**2
 
         decimals = VGroup()
         changing_decimals = []
@@ -2343,13 +2389,13 @@ class IntroduceWeights(IntroduceEachLayer):
         pixel_updates = [
             UpdateFromAlphaFunc(
                 pixel,
-                lambda p, a : p.set_fill(opacity = p.func(a))
+                lambda p, a: p.set_fill(opacity=p.func(a))
             )
             for pixel in pixels
         ]
 
         self.play(
-            Write(question, run_time = 2),
+            Write(question, run_time=2),
             GrowFromPoint(arrow, arrow.get_start()),
             pixels_group.set_height, 3,
             pixels_group.to_edge, RIGHT,
@@ -2359,7 +2405,7 @@ class IntroduceWeights(IntroduceEachLayer):
         self.wait()
         self.play(
             *changing_decimals + pixel_updates,
-            run_time = 5,
+            run_time=5,
             rate_func=linear
         )
 
@@ -2394,8 +2440,9 @@ class IntroduceWeights(IntroduceEachLayer):
         edges.generate_target()
         random_numbers = 1.5*np.random.random(len(edges))-0.5
         self.make_edges_weighted(edges.target, random_numbers)
+
         def get_alpha_func(r):
-            return lambda a : (4*r)*a
+            return lambda a: (4*r)*a
 
         self.play(
             FadeOut(question),
@@ -2414,9 +2461,9 @@ class IntroduceWeights(IntroduceEachLayer):
         )
         self.play(LaggedStartMap(
             ApplyMethod, edges,
-            lambda m : (m.rotate_in_place, np.pi/24),
-            rate_func = wiggle,
-            run_time = 2
+            lambda m: (m.rotate_in_place, np.pi/24),
+            rate_func=wiggle,
+            run_time=2
         ))
         self.wait()
 
@@ -2437,7 +2484,7 @@ class IntroduceWeights(IntroduceEachLayer):
         active_layer = self.network_mob.get_active_layer(0, a_vect)
 
         a_labels = VGroup(*[
-            TexMobject("a_%d"%d)
+            TexMobject("a_%d" % d)
             for d in range(1, 5)
         ])
 
@@ -2451,7 +2498,7 @@ class IntroduceWeights(IntroduceEachLayer):
             TexMobject("w_n").set_color(self.weights_color),
             TexMobject("a_n")
         )
-        weighted_sum.arrange(RIGHT, buff = SMALL_BUFF)
+        weighted_sum.arrange(RIGHT, buff=SMALL_BUFF)
         weighted_sum.to_edge(UP)
 
         self.play(Transform(layer, active_layer))
@@ -2466,14 +2513,14 @@ class IntroduceWeights(IntroduceEachLayer):
                 for n in layer.neurons[4:-1]
             ] + [
                 ReplacementTransform(
-                    layer.neurons[-1].copy(), 
+                    layer.neurons[-1].copy(),
                     weighted_sum[-1]
                 )
             ] + [
                 Write(weighted_sum[i])
                 for i in list(range(2, 12, 3)) + [-4, -3]
             ],
-            run_time = 1.5
+            run_time=1.5
         )
         self.wait()
         self.play(*[
@@ -2486,7 +2533,7 @@ class IntroduceWeights(IntroduceEachLayer):
             ReplacementTransform(
                 self.w_labels[-1].copy(), weighted_sum[-2]
             )
-        ], run_time = 2)
+        ], run_time=2)
         self.wait(2)
 
         self.weighted_sum = weighted_sum
@@ -2508,14 +2555,14 @@ class IntroduceWeights(IntroduceEachLayer):
                 color = self.weights_color
             else:
                 color = self.negative_weights_color
-            pixel.set_fill(color, opacity = abs(weight))
+            pixel.set_fill(color, opacity=abs(weight))
 
         self.play(FadeOut(w_labels))
         self.play(
             FadeIn(
                 VGroup(*weight_grid[len(decimals):]),
-                lag_ratio = 0.5,
-                run_time = 3
+                lag_ratio=0.5,
+                run_time=3
             ),
             *[
                 ReplacementTransform(decimal, pixel)
@@ -2544,14 +2591,14 @@ class IntroduceWeights(IntroduceEachLayer):
 
         self.play(MoveToTarget(
             weight_grid,
-            run_time = 2,
-            lag_ratio = 0.5
+            run_time=2,
+            lag_ratio=0.5
         ))
         self.wait()
         self.play(Transform(
             pixels, digit,
-            run_time = 2,
-            lag_ratio = 0.5
+            run_time=2,
+            lag_ratio=0.5
         ))
         self.wait()
         self.play(weight_grid.move_to, pixels)
@@ -2560,8 +2607,8 @@ class IntroduceWeights(IntroduceEachLayer):
             ReplacementTransform(
                 self.pixels_to_detect.copy(),
                 self.weighted_sum,
-                run_time = 3,
-                lag_ratio = 0.5
+                run_time=3,
+                lag_ratio=0.5
             ),
             Animation(weight_grid),
         )
@@ -2574,7 +2621,7 @@ class IntroduceWeights(IntroduceEachLayer):
         self.play(weight_grid.next_to, pixels, LEFT)
         self.play(*[
             ApplyMethod(
-                weight_grid[28*y + x].set_fill, 
+                weight_grid[28*y + x].set_fill,
                 self.negative_weights_color,
                 0.5
             )
@@ -2590,30 +2637,31 @@ class IntroduceWeights(IntroduceEachLayer):
     def get_digit(self):
         digit_vect = get_organized_images()[7][4]
         digit = PixelsFromVect(digit_vect)
-        digit.set_stroke(width = 0.5)
+        digit.set_stroke(width=0.5)
         return digit
 
     def get_pixels_to_detect(self, pixels):
         d = int(np.sqrt(len(pixels)))
         return VGroup(*it.chain(*[
-            pixels[d*n + d/2 - 4 : d*n + d/2 + 4]
+            pixels[d*n + d/2 - 4: d*n + d/2 + 4]
             for n in range(7, 10)
         ]))
 
     def get_surrounding_pixels_for_edge(self, pixels):
         d = int(np.sqrt(len(pixels)))
         return VGroup(*it.chain(*[
-            pixels[d*n + d/2 - 4 : d*n + d/2 + 4]
+            pixels[d*n + d/2 - 4: d*n + d/2 + 4]
             for n in (6, 10)
         ]))
 
     def make_edges_weighted(self, edges, weights):
         for edge, r in zip(edges, weights):
             if r > 0:
-                color = self.weights_color 
+                color = self.weights_color
             else:
                 color = self.negative_weights_color
             edge.set_stroke(color, 6*abs(r))
+
 
 class MotivateSquishing(Scene):
     def construct(self):
@@ -2624,7 +2672,7 @@ class MotivateSquishing(Scene):
 
     def add_weighted_sum(self):
         weighted_sum = TexMobject(*it.chain(*[
-            ["w_%d"%d, "a_%d"%d, "+"]
+            ["w_%d" % d, "a_%d" % d, "+"]
             for d in range(1, 5)
         ] + [
             ["\\cdots", "+", "w_n", "a_n"]
@@ -2636,7 +2684,7 @@ class MotivateSquishing(Scene):
 
     def show_real_number_line(self):
         weighted_sum = self.weighted_sum
-        number_line = NumberLine(unit_size = 1.5)
+        number_line = NumberLine(unit_size=1.5)
         number_line.add_numbers()
         number_line.shift(UP)
         arrow1, arrow2 = [
@@ -2651,8 +2699,8 @@ class MotivateSquishing(Scene):
         self.play(GrowFromPoint(arrow1, arrow1.get_start()))
         self.play(Transform(
             arrow1, arrow2,
-            run_time = 5,
-            rate_func = there_and_back
+            run_time=5,
+            rate_func=there_and_back
         ))
         self.play(FadeOut(arrow1))
 
@@ -2666,10 +2714,10 @@ class MotivateSquishing(Scene):
         interval = Line(
             lower_number_line.number_to_point(0),
             lower_number_line.number_to_point(1),
-            color = YELLOW,
-            stroke_width = 5
+            color=YELLOW,
+            stroke_width=5
         )
-        brace = Brace(interval, DOWN, buff = 0.7)
+        brace = Brace(interval, DOWN, buff=0.7)
         words = TextMobject("Activations should be in this range")
         words.next_to(brace, DOWN, SMALL_BUFF)
 
@@ -2680,7 +2728,7 @@ class MotivateSquishing(Scene):
             GrowFromCenter(brace),
             GrowFromCenter(interval),
         )
-        self.play(Write(words, run_time = 2))
+        self.play(Write(words, run_time=2))
         self.wait()
 
         self.lower_number_line = lower_number_line
@@ -2697,14 +2745,14 @@ class MotivateSquishing(Scene):
         line.generate_target()
         u = line.unit_size
         line.target.apply_function(
-            lambda p : np.array([u*sigmoid(p[0])]+list(p[1:]))
+            lambda p: np.array([u*sigmoid(p[0])]+list(p[1:]))
         )
         line.target.move_to(lower_line.number_to_point(0.5))
 
         arrow = Arrow(
             line.numbers.get_bottom(),
             line.target.get_top(),
-            color = YELLOW
+            color=YELLOW
         )
 
         self.play(
@@ -2713,18 +2761,20 @@ class MotivateSquishing(Scene):
         )
         self.wait(2)
 
+
 class IntroduceSigmoid(GraphScene):
     CONFIG = {
-        "x_min" : -5,
-        "x_max" : 5,
-        "x_axis_width" : 12,
-        "y_min" : -1,
-        "y_max" : 2,
-        "y_axis_label" : "",
-        "graph_origin" : DOWN,
-        "x_labeled_nums" : list(range(-4, 5)),
-        "y_labeled_nums" : list(range(-1, 3)),
+        "x_min": -5,
+        "x_max": 5,
+        "x_axis_width": 12,
+        "y_min": -1,
+        "y_max": 2,
+        "y_axis_label": "",
+        "graph_origin": DOWN,
+        "x_labeled_nums": list(range(-4, 5)),
+        "y_labeled_nums": list(range(-1, 3)),
     }
+
     def construct(self):
         self.setup_axes()
         self.add_title()
@@ -2739,7 +2789,7 @@ class IntroduceSigmoid(GraphScene):
         name.to_edge(UP)
         char = self.x_axis_label.replace("$", "")
         equation = TexMobject(
-            "\\sigma(%s) = \\frac{1}{1+e^{-%s}}"%(char, char)
+            "\\sigma(%s) = \\frac{1}{1+e^{-%s}}" % (char, char)
         )
         equation.next_to(name, DOWN)
         self.add(equation, name)
@@ -2749,8 +2799,8 @@ class IntroduceSigmoid(GraphScene):
 
     def add_graph(self):
         graph = self.get_graph(
-            lambda x : 1./(1+np.exp(-x)),
-            color = YELLOW
+            lambda x: 1./(1+np.exp(-x)),
+            color=YELLOW
         )
 
         self.play(ShowCreation(graph))
@@ -2764,17 +2814,18 @@ class IntroduceSigmoid(GraphScene):
         line, graph_part = [
             self.get_graph(
                 func,
-                x_min = x_min, 
-                x_max = x_max,
-                color = color,
-            ).set_stroke(width = 4)
-            for func in (lambda x : 0, sigmoid)
+                x_min=x_min,
+                x_max=x_max,
+                color=color,
+            ).set_stroke(width=4)
+            for func in (lambda x: 0, sigmoid)
         ]
 
         self.play(ShowCreation(line))
         self.wait()
         self.play(Transform(line, graph_part))
         self.wait()
+
 
 class IncludeBias(IntroduceWeights):
     def construct(self):
@@ -2827,14 +2878,14 @@ class IncludeBias(IntroduceWeights):
         name.to_edge(UP, SMALL_BUFF)
 
         arrow = Arrow(
-            name.get_bottom(), sigma.get_top(), 
-            buff = SMALL_BUFF,
-            use_rectangular_stem = False,
-            max_tip_length_to_length_ratio = 0.3
+            name.get_bottom(), sigma.get_top(),
+            buff=SMALL_BUFF,
+            use_rectangular_stem=False,
+            max_tip_length_to_length_ratio=0.3
         )
 
         self.play(
-            Write(name), 
+            Write(name),
             ShowCreation(arrow),
         )
         self.sigmoid_name = name
@@ -2880,12 +2931,12 @@ class IncludeBias(IntroduceWeights):
         words.set_color_by_tex("weighted", GREEN)
         words.next_to(neuron, RIGHT)
 
-        self.play(Write(words, run_time = 2))
+        self.play(Write(words, run_time=2))
         self.play(ApplyMethod(
             colored_pixels.shift, MED_LARGE_BUFF*UP,
-            rate_func = there_and_back,
-            run_time = 2,
-            lag_ratio = 0.5
+            rate_func=there_and_back,
+            run_time=2,
+            lag_ratio=0.5
         ))
         self.wait()
 
@@ -2899,7 +2950,7 @@ class IncludeBias(IntroduceWeights):
         rp.generate_target()
         rp.target.next_to(bias, RIGHT, SMALL_BUFF)
 
-        rect = SurroundingRectangle(bias, buff = 0.5*SMALL_BUFF)
+        rect = SurroundingRectangle(bias, buff=0.5*SMALL_BUFF)
         name = TextMobject("``bias''")
         name.next_to(rect, DOWN)
         VGroup(rect, name).set_color(BLUE)
@@ -2907,7 +2958,7 @@ class IncludeBias(IntroduceWeights):
         self.play(
             ReplacementTransform(
                 self.gt_ten.copy(), bias,
-                run_time = 2
+                run_time=2
             ),
             MoveToTarget(rp),
         )
@@ -2926,13 +2977,13 @@ class IncludeBias(IntroduceWeights):
 
         self.play(LaggedStartMap(
             ApplyMethod, weight_grid,
-            lambda p : (p.set_fill, 
-                random.choice([GREEN, GREEN, RED]),
-                random.random()
-            ),
-            rate_func = there_and_back,
-            lag_ratio = 0.4,
-            run_time = 4
+            lambda p: (p.set_fill,
+                       random.choice([GREEN, GREEN, RED]),
+                       random.random()
+                       ),
+            rate_func=there_and_back,
+            lag_ratio=0.4,
+            run_time=4
         ))
         self.wait()
         self.play(Indicate(bias_name))
@@ -2943,7 +2994,7 @@ class IncludeBias(IntroduceWeights):
     def get_weighted_sum(self):
         args = ["\\sigma \\big("]
         for d in range(1, 4):
-            args += ["w_%d"%d, "a_%d"%d, "+"]
+            args += ["w_%d" % d, "a_%d" % d, "+"]
         args += ["\\cdots", "+", "w_n", "a_n"]
         args += ["\\big)"]
         weighted_sum = TexMobject(*args)
@@ -2953,6 +3004,7 @@ class IncludeBias(IntroduceWeights):
         weighted_sum.shift(RIGHT)
 
         return weighted_sum
+
 
 class BiasForInactiviyWords(Scene):
     def construct(self):
@@ -2964,13 +3016,15 @@ class BiasForInactiviyWords(Scene):
         self.play(Write(words))
         self.wait(3)
 
+
 class ContinualEdgeUpdate(VGroup):
     CONFIG = {
-        "max_stroke_width" : 3,
-        "stroke_width_exp" : 7,
-        "n_cycles" : 5,
-        "colors" : [GREEN, GREEN, GREEN, RED],
+        "max_stroke_width": 3,
+        "stroke_width_exp": 7,
+        "n_cycles": 5,
+        "colors": [GREEN, GREEN, GREEN, RED],
     }
+
     def __init__(self, network_mob, **kwargs):
         VGroup.__init__(self, **kwargs)
         self.internal_time = 0
@@ -3006,12 +3060,14 @@ class ContinualEdgeUpdate(VGroup):
             return
         for edge in self.edges:
             t = (self.internal_time-1)/edge.cycle_time
-            alpha = ((self.internal_time-1)%edge.cycle_time)/edge.cycle_time
-            low_n = int(t)%len(edge.colors)
-            high_n = int(t+1)%len(edge.colors)
-            color = interpolate_color(edge.colors[low_n], edge.colors[high_n], alpha)
+            alpha = ((self.internal_time-1) % edge.cycle_time)/edge.cycle_time
+            low_n = int(t) % len(edge.colors)
+            high_n = int(t+1) % len(edge.colors)
+            color = interpolate_color(
+                edge.colors[low_n], edge.colors[high_n], alpha)
             width = interpolate(edge.widths[low_n], edge.widths[high_n], alpha)
             edge.set_stroke(color, width)
+
 
 class ShowRemainingNetwork(IntroduceWeights):
     def construct(self):
@@ -3046,12 +3102,12 @@ class ShowRemainingNetwork(IntroduceWeights):
                 added_anims += [
                     last_edges.set_stroke, None, 1
                 ]
-            edges.set_stroke(width = 2)
+            edges.set_stroke(width=2)
             self.play(
-                ShowCreation(edges, lag_ratio = 0.5),
+                ShowCreation(edges, lag_ratio=0.5),
                 FadeIn(neuron),
                 *added_anims,
-                run_time = 1.5
+                run_time=1.5
             )
             last_edges = edges
         self.play(
@@ -3059,11 +3115,11 @@ class ShowRemainingNetwork(IntroduceWeights):
                 ShowCreation, VGroup(*[
                     n.edges_in for n in neurons[7:]
                 ]),
-                run_time = 3,
+                run_time=3,
             ),
             LaggedStartMap(
                 FadeIn, VGroup(*neurons[7:]),
-                run_time = 3,
+                run_time=3,
             ),
             VGroup(*last_edges[1:]).set_stroke, None, 1
         )
@@ -3073,13 +3129,13 @@ class ShowRemainingNetwork(IntroduceWeights):
 
     def count_in_biases(self):
         neurons = self.network_mob.layers[1].neurons
-        words = TextMobject("One", "bias","for each")
-        words.next_to(neurons, RIGHT, buff = 2)
+        words = TextMobject("One", "bias", "for each")
+        words.next_to(neurons, RIGHT, buff=2)
         arrows = VGroup(*[
             Arrow(
                 words.get_left(),
                 neuron.get_center(),
-                color = BLUE
+                color=BLUE
             )
             for neuron in neurons
         ])
@@ -3087,9 +3143,9 @@ class ShowRemainingNetwork(IntroduceWeights):
         self.play(
             FadeIn(words),
             LaggedStartMap(
-                GrowArrow, arrows, 
-                run_time = 3,
-                lag_ratio = 0.3,
+                GrowArrow, arrows,
+                run_time=3,
+                lag_ratio=0.3,
             )
         )
         self.wait()
@@ -3160,17 +3216,17 @@ class ShowRemainingNetwork(IntroduceWeights):
         self.play(
             MoveToTarget(weights_count),
             MoveToTarget(bias_count),
-            Write(added_weights, run_time = 1),
-            Write(added_biases, run_time = 1),
+            Write(added_weights, run_time=1),
+            Write(added_biases, run_time=1),
             LaggedStartMap(
                 ShowCreation, edges,
-                run_time = 4,
-                lag_ratio = 0.3,
+                run_time=4,
+                lag_ratio=0.3,
             ),
             LaggedStartMap(
                 FadeIn, neurons,
-                run_time = 4,
-                lag_ratio = 0.3,
+                run_time=4,
+                lag_ratio=0.3,
             )
         )
         self.wait(2)
@@ -3185,7 +3241,7 @@ class ShowRemainingNetwork(IntroduceWeights):
         )
         group.generate_target()
         group.target.scale_in_place(0.8)
-        rect = SurroundingRectangle(group.target, buff = MED_SMALL_BUFF)
+        rect = SurroundingRectangle(group.target, buff=MED_SMALL_BUFF)
         num_mob = TexMobject("13{,}002")
         num_mob.scale(1.5)
         num_mob.next_to(rect, DOWN)
@@ -3220,17 +3276,18 @@ class ShowRemainingNetwork(IntroduceWeights):
         for edge in edges:
             edge.generate_target()
             edge.target.set_stroke(
-                color = random.choice([GREEN, GREEN, GREEN, RED]),
-                width = 3*random.random()**7
+                color=random.choice([GREEN, GREEN, GREEN, RED]),
+                width=3*random.random()**7
             )
         self.play(
             LaggedStartMap(
                 MoveToTarget, edges,
-                lag_ratio = 0.6,
-                run_time = 2,
+                lag_ratio=0.6,
+                run_time=2,
             ),
             *added_anims
         )
+
 
 class ImagineSettingByHand(Scene):
     def construct(self):
@@ -3240,8 +3297,8 @@ class ImagineSettingByHand(Scene):
 
         bubble = randy.get_bubble()
         network_mob = NetworkMobject(
-            Network(sizes = [8, 6, 6, 4]),
-            neuron_stroke_color = WHITE
+            Network(sizes=[8, 6, 6, 4]),
+            neuron_stroke_color=WHITE
         )
         network_mob.scale(0.7)
         network_mob.move_to(bubble.get_bubble_center())
@@ -3257,10 +3314,12 @@ class ImagineSettingByHand(Scene):
         self.play(Blink(randy))
         self.wait(10)
 
+
 class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
     CONFIG = {
-        "network_mob_config" : {"layer_to_layer_buff" : 2}
+        "network_mob_config": {"layer_to_layer_buff": 2}
     }
+
     def construct(self):
         self.setup_network_mob()
         self.black_box()
@@ -3276,15 +3335,15 @@ class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
         layers = VGroup(*network_mob.layers[1:3])
         box = SurroundingRectangle(
             layers,
-            stroke_color = WHITE,
-            fill_color = BLACK,
-            fill_opacity = 0.8,
+            stroke_color=WHITE,
+            fill_color=BLACK,
+            fill_opacity=0.8,
         )
         words = TextMobject("...rather than treating this as a black box")
         words.next_to(box, UP, LARGE_BUFF)
 
         self.play(
-            Write(words, run_time = 2),
+            Write(words, run_time=2),
             DrawBorderThenFill(box)
         )
         self.wait()
@@ -3302,7 +3361,7 @@ class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
         wrong = TextMobject("Wrong!")
         wrong.set_color(RED)
         wrong.next_to(self.network_mob.layers[-1], UP+RIGHT)
-        self.play(Write(wrong, run_time = 1))
+        self.play(Write(wrong, run_time=1))
 
     def ask_about_weights(self):
         question = TextMobject(
@@ -3315,11 +3374,11 @@ class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
         self.play(Write(question))
         self.wait(10)
 
-
     ###
 
     def reset_display(self, *args):
         pass
+
 
 class EvenWhenItWorks(TeacherStudentsScene):
     def construct(self):
@@ -3330,16 +3389,18 @@ class EvenWhenItWorks(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.wait(7)
 
+
 class IntroduceWeightMatrix(NetworkScene):
     CONFIG = {
-        "network_mob_config" : {
-            "neuron_stroke_color" : WHITE,
-            "neuron_fill_color" : WHITE,
-            "neuron_radius" : 0.35,
-            "layer_to_layer_buff" : 2,
+        "network_mob_config": {
+            "neuron_stroke_color": WHITE,
+            "neuron_fill_color": WHITE,
+            "neuron_radius": 0.35,
+            "layer_to_layer_buff": 2,
         },
-        "layer_sizes" : [8, 6],
+        "layer_sizes": [8, 6],
     }
+
     def construct(self):
         self.setup_network_mob()
         self.show_weighted_sum()
@@ -3352,7 +3413,7 @@ class IntroduceWeightMatrix(NetworkScene):
         self.write_clean_final_expression()
 
     def setup_network_mob(self):
-        self.network_mob.to_edge(LEFT, buff = LARGE_BUFF)
+        self.network_mob.to_edge(LEFT, buff=LARGE_BUFF)
         self.network_mob.layers[1].neurons.shift(0.02*RIGHT)
 
     def show_weighted_sum(self):
@@ -3385,7 +3446,7 @@ class IntroduceWeightMatrix(NetworkScene):
         activations = 0.7*np.random.random(len(layer.neurons))
         active_layer = self.network_mob.get_active_layer(0, activations)
         a_labels = VGroup(*[
-            TexMobject("a^{(0)}_%d"%d)
+            TexMobject("a^{(0)}_%d" % d)
             for d in range(len(layer.neurons))
         ])
         for label, neuron in zip(a_labels, layer.neurons):
@@ -3394,7 +3455,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
         self.play(
             Transform(layer, active_layer),
-            Write(a_labels, run_time = 2)
+            Write(a_labels, run_time=2)
         )
 
         self.a_labels = a_labels
@@ -3404,14 +3465,14 @@ class IntroduceWeightMatrix(NetworkScene):
         a_labels = VGroup(*self.a_labels[:2]).copy()
         a_labels.generate_target()
         w_labels = VGroup(*[
-            TexMobject("w_{0, %d}"%d)
+            TexMobject("w_{0, %d}" % d)
             for d in range(len(a_labels))
         ])
         weighted_sum = VGroup()
         symbols = VGroup()
         for a_label, w_label in zip(a_labels.target, w_labels):
             a_label.scale(1./0.75)
-            plus =  TexMobject("+")
+            plus = TexMobject("+")
             weighted_sum.add(w_label, a_label, plus)
             symbols.add(plus)
         weighted_sum.add(
@@ -3435,7 +3496,7 @@ class IntroduceWeightMatrix(NetworkScene):
         a_labels.target.add(VectorizedPoint(weighted_sum[-4].get_center()))
 
         VGroup(a1_label, equals, weighted_sum).scale(
-            0.75, about_point = a1_label.get_left()
+            0.75, about_point=a1_label.get_left()
         )
 
         w_labels.set_color(GREEN)
@@ -3443,12 +3504,12 @@ class IntroduceWeightMatrix(NetworkScene):
         a_labels.target.shift(0.5*SMALL_BUFF*UP)
 
         self.play(
-            Write(a1_label), 
+            Write(a1_label),
             Write(equals),
             neuron.set_fill, None, 0.3,
-            run_time = 1
+            run_time=1
         )
-        self.play(MoveToTarget(a_labels, run_time = 1.5))
+        self.play(MoveToTarget(a_labels, run_time=1.5))
         self.play(
             Write(w_labels),
             Write(symbols),
@@ -3470,7 +3531,7 @@ class IntroduceWeightMatrix(NetworkScene):
         name = TextMobject("Bias")
         name.scale(0.75)
         name.next_to(bias, DOWN, MED_LARGE_BUFF)
-        arrow = Arrow(name, bias, buff = SMALL_BUFF)
+        arrow = Arrow(name, bias, buff=SMALL_BUFF)
         VGroup(name, arrow, bias).set_color(BLUE)
 
         self.play(
@@ -3497,7 +3558,7 @@ class IntroduceWeightMatrix(NetworkScene):
 
         name = TextMobject("Sigmoid")
         name.next_to(sigma, UP, MED_LARGE_BUFF)
-        arrow = Arrow(name, sigma, buff = SMALL_BUFF)
+        arrow = Arrow(name, sigma, buff=SMALL_BUFF)
         sigmoid_name = VGroup(name, arrow)
         VGroup(sigmoid_name, mob).set_color(YELLOW)
 
@@ -3537,22 +3598,22 @@ class IntroduceWeightMatrix(NetworkScene):
 
         pre_brackets = self.get_brackets(a_labels)
         post_bracketes = self.get_brackets(column)
-        pre_brackets.set_fill(opacity = 0)
+        pre_brackets.set_fill(opacity=0)
 
         self.play(FocusOn(self.a_labels[0]))
         self.play(LaggedStartMap(
             Indicate, self.a_labels,
-            rate_func = there_and_back,
-            run_time = 1
+            rate_func=there_and_back,
+            run_time=1
         ))
         self.play(
             MoveToTarget(a_labels),
             Transform(pre_brackets, post_bracketes),
-            run_time = 2
+            run_time=2
         )
         self.wait()
         self.play(*[
-            LaggedStartMap(Indicate, mob, rate_func = there_and_back)
+            LaggedStartMap(Indicate, mob, rate_func=there_and_back)
             for mob in (a_labels, a_labels_in_sum)
         ])
         self.wait()
@@ -3573,16 +3634,16 @@ class IntroduceWeightMatrix(NetworkScene):
         )
         w_labels.generate_target()
         w_labels.target.arrange(RIGHT)
-        w_labels.target.next_to(a_column[0], LEFT, buff = 0.8)
+        w_labels.target.next_to(a_column[0], LEFT, buff=0.8)
         lwb.next_to(w_labels.target, LEFT, SMALL_BUFF)
         lwb.align_to(rwb, UP)
 
         row_1, row_k = [
             VGroup(*list(map(TexMobject, [
-                "w_{%s, 0}"%i,
-                "w_{%s, 1}"%i,
+                "w_{%s, 0}" % i,
+                "w_{%s, 1}" % i,
                 "\\cdots",
-                "w_{%s, n}"%i,
+                "w_{%s, n}" % i,
             ])))
             for i in ("1", "k")
         ]
@@ -3598,17 +3659,17 @@ class IntroduceWeightMatrix(NetworkScene):
                 mover.move_to(target)
                 if "w" in mover.get_tex_string():
                     mover.set_color(GREEN)
-            row.next_to(last_row, DOWN, buff = 0.45)
+            row.next_to(last_row, DOWN, buff=0.45)
             last_row = row
 
         self.play(
             MoveToTarget(w_labels),
-            Write(w_brackets, run_time = 1)
+            Write(w_brackets, run_time=1)
         )
         self.play(FadeIn(
             lower_rows,
-            run_time = 3,
-            lag_ratio = 0.5,
+            run_time=3,
+            lag_ratio=0.5,
         ))
         self.wait()
 
@@ -3620,13 +3681,13 @@ class IntroduceWeightMatrix(NetworkScene):
         row = self.top_matrix_row
         edges = self.network_mob.layers[1].neurons[0].edges_in.copy()
         edges.set_stroke(GREEN, 5)
-        rect = SurroundingRectangle(row, color = GREEN_B)
+        rect = SurroundingRectangle(row, color=GREEN_B)
 
         self.play(ShowCreation(rect))
         for x in range(2):
             self.play(LaggedStartMap(
                 ShowCreationThenDestruction, edges,
-                lag_ratio = 0.8
+                lag_ratio=0.8
             ))
         self.wait()
 
@@ -3658,8 +3719,8 @@ class IntroduceWeightMatrix(NetworkScene):
         )
         arrow = Arrow(
             brace.get_bottom(),
-            result_terms[0].get_top(), 
-            buff = SMALL_BUFF 
+            result_terms[0].get_top(),
+            buff=SMALL_BUFF
         )
 
         self.play(
@@ -3705,8 +3766,8 @@ class IntroduceWeightMatrix(NetworkScene):
             self.play(LaggedStartMap(
                 ShowCreationThenDestruction,
                 neuron.edges_in.copy().set_stroke(GREEN, 5),
-                lag_ratio = 0.7,
-                run_time = 1,
+                lag_ratio=0.7,
+                run_time=1,
             ))
 
         self.play(
@@ -3750,7 +3811,7 @@ class IntroduceWeightMatrix(NetworkScene):
             "b_0", "b_1", "\\vdots", "b_n",
         ])))
         b_column.scale(0.85)
-        b_column.arrange(DOWN, buff = 0.35)
+        b_column.arrange(DOWN, buff=0.35)
         b_column.move_to(a_column)
         b_column.set_color(BLUE)
         plus.next_to(a_column_brackets, RIGHT)
@@ -3764,7 +3825,7 @@ class IntroduceWeightMatrix(NetworkScene):
             Write(plus),
             Write(b_brackets),
             Transform(self.bias[1].copy(), b_column[0]),
-            run_time = 1
+            run_time=1
         )
         self.play(LaggedStartMap(
             FadeIn, VGroup(*b_column[1:])
@@ -3802,21 +3863,21 @@ class IntroduceWeightMatrix(NetworkScene):
     def write_clean_final_expression(self):
         self.fade_weighted_sum()
         expression = TexMobject(
-            "\\textbf{a}^{(1)}", 
+            "\\textbf{a}^{(1)}",
             "=",
-            "\\sigma", 
-            "\\big(", 
-            "\\textbf{W}", 
+            "\\sigma",
+            "\\big(",
+            "\\textbf{W}",
             "\\textbf{a}^{(0)}",
-            "+", 
-            "\\textbf{b}", 
+            "+",
+            "\\textbf{b}",
             "\\big)",
         )
         expression.set_color_by_tex_to_color_map({
-            "sigma" : YELLOW,
-            "big" : YELLOW,
-            "W" : GREEN,
-            "\\textbf{b}" : BLUE
+            "sigma": YELLOW,
+            "big": YELLOW,
+            "W": GREEN,
+            "\\textbf{b}": BLUE
         })
         expression.next_to(self.big_sigma_group, UP, LARGE_BUFF)
         a1, equals, sigma, lp, W, a0, plus, b, rp = expression
@@ -3838,7 +3899,7 @@ class IntroduceWeightMatrix(NetworkScene):
                 self.top_matrix_row, self.lower_matrix_rows,
                 self.matrix_brackets
             ).copy(),
-            VGroup(W), 
+            VGroup(W),
         ))
         self.play(ReplacementTransform(
             VGroup(self.a_column, self.a_column_brackets).copy(),
@@ -3858,7 +3919,7 @@ class IntroduceWeightMatrix(NetworkScene):
             VGroup(sigma, lp, rp)
         ))
         self.wait()
-        self.play(*neuron_anims, run_time = 2)
+        self.play(*neuron_anims, run_time=2)
         self.play(
             ReplacementTransform(neurons.copy(), a1),
             FadeIn(equals)
@@ -3868,12 +3929,11 @@ class IntroduceWeightMatrix(NetworkScene):
     def fade_weighted_sum(self):
         self.play(*list(map(FadeOut, [
             self.a1_label, self.a1_equals,
-            self.sigma, self.sigma_parens, 
+            self.sigma, self.sigma_parens,
             self.weighted_sum,
             self.bias_name,
             self.sigmoid_name,
         ])))
-
 
     ###
 
@@ -3884,6 +3944,7 @@ class IntroduceWeightMatrix(NetworkScene):
         lb.next_to(mob, LEFT, SMALL_BUFF)
         rb.next_to(mob, RIGHT, SMALL_BUFF)
         return both
+
 
 class HorrifiedMorty(Scene):
     def construct(self):
@@ -3898,6 +3959,7 @@ class HorrifiedMorty(Scene):
             )
             self.play(Blink(morty))
             self.wait(2)
+
 
 class SigmoidAppliedToVector(Scene):
     def construct(self):
@@ -3924,12 +3986,13 @@ class SigmoidAppliedToVector(Scene):
         self.add(tex)
         self.wait()
 
+
 class EoLA3Wrapper(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
-        rect = ScreenRectangle(height = 5)
+        rect = ScreenRectangle(height=5)
         rect.next_to(morty, UP+LEFT)
-        rect.to_edge(UP, buff = LARGE_BUFF)
+        rect.to_edge(UP, buff=LARGE_BUFF)
         title = TextMobject("Essence of linear algebra")
         title.next_to(rect, UP)
 
@@ -3940,15 +4003,18 @@ class EoLA3Wrapper(PiCreatureScene):
         )
         self.wait(4)
 
+
 class FeedForwardCode(ExternallyAnimatedScene):
     pass
 
+
 class NeuronIsFunction(MoreHonestMNistNetworkPreview):
-    CONFIG  = {
-        "network_mob_config" : {
-            "layer_to_layer_buff" : 2
+    CONFIG = {
+        "network_mob_config": {
+            "layer_to_layer_buff": 2
         }
     }
+
     def construct(self):
         self.setup_network_mob()
         self.activate_network()
@@ -3960,7 +4026,6 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
         self.network_is_a_function()
         self.feed_in_new_image(9, 4)
         self.wait(2)
-
 
     def setup_network_mob(self):
         self.network_mob.scale(0.7)
@@ -3985,11 +4050,11 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
 
     def write_neuron_holds_a_number(self):
         neuron_word = TextMobject("Neuron")
-        arrow = Arrow(ORIGIN, DOWN, color = BLUE)
+        arrow = Arrow(ORIGIN, DOWN, color=BLUE)
         thing_words = TextMobject("Thing that holds \\\\ a number")
         group = VGroup(neuron_word, arrow, thing_words)
         group.arrange(DOWN)
-        group.to_corner(UP+RIGHT, buff = LARGE_BUFF)
+        group.to_corner(UP+RIGHT, buff=LARGE_BUFF)
 
         neuron = self.network_mob.layers[2].neurons[2]
         decimal = DecimalNumber(neuron.get_fill_opacity())
@@ -3997,7 +4062,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
         decimal.move_to(neuron)
         neuron_group = VGroup(neuron, decimal)
         neuron_group.save_state()
-        decimal.set_fill(opacity = 0)
+        decimal.set_fill(opacity=0)
 
         self.play(
             neuron_group.restore,
@@ -4006,8 +4071,8 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             FadeIn(neuron_word),
             GrowArrow(arrow),
             FadeIn(
-                thing_words, run_time = 2,
-                rate_func = squish_rate_func(smooth, 0.3, 1)
+                thing_words, run_time=2,
+                rate_func=squish_rate_func(smooth, 0.3, 1)
             )
         )
         self.wait()
@@ -4054,7 +4119,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
         edges = neuron.edges_in.copy()
         prev_layer = self.network_mob.layers[1].copy()
 
-        arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
+        arrow = Arrow(ORIGIN, RIGHT, color=BLUE)
         arrow.next_to(neuron, RIGHT, SMALL_BUFF)
         decimal = DecimalNumber(neuron.get_fill_opacity())
         decimal.next_to(arrow, RIGHT)
@@ -4064,7 +4129,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             *list(map(Animation, [neuron, edges, prev_layer]))
         )
         self.play(LaggedStartMap(
-            ShowCreationThenDestruction, 
+            ShowCreationThenDestruction,
             edges.copy().set_stroke(YELLOW, 4),
         ))
         self.play(
@@ -4081,9 +4146,9 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
     def fade_network_back_in(self):
         anims = [
             FadeIn(
-                mob, 
-                run_time = 2, 
-                lag_ratio = 0.5
+                mob,
+                run_time=2,
+                lag_ratio=0.5
             )
             for mob in (self.network_mob.layers, self.network_mob.edge_groups)
         ]
@@ -4121,30 +4186,33 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
     ###
 
     def reset_display(self, answer_rect, image, image_rect):
-        #Don't do anything, just record these args
+        # Don't do anything, just record these args
         self.answer_rect = answer_rect
         self.curr_image = image
         self.image_rect = image_rect
         return
 
+
 class ComplicationIsReassuring(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "It kind of has to \\\\ be complicated, right?",
-            target_mode = "speaking",
-            student_index = 0
+            target_mode="speaking",
+            student_index=0
         )
         self.play(self.teacher.change, "happy")
         self.wait(4)
 
+
 class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
     CONFIG = {
-        "network_mob_config" : {
-            "neuron_stroke_color" : WHITE,
-            "layer_to_layer_buff" : 2.5,
-            "brace_for_large_layers" : False,
+        "network_mob_config": {
+            "neuron_stroke_color": WHITE,
+            "layer_to_layer_buff": 2.5,
+            "brace_for_large_layers": False,
         }
     }
+
     def setup(self):
         MoreHonestMNistNetworkPreview.setup(self)
         PiCreatureScene.setup(self)
@@ -4170,10 +4238,10 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
         for vect, num in test_data[:30]:
             image = MNistMobject(vect)
             image.set_height(0.7)
-            arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
+            arrow = Arrow(ORIGIN, RIGHT, color=BLUE)
             num_mob = TexMobject(str(num))
             group = Group(image, arrow, num_mob)
-            group.arrange(RIGHT, buff = SMALL_BUFF)
+            group.arrange(RIGHT, buff=SMALL_BUFF)
             group.next_to(ORIGIN, RIGHT)
             data_mobs.add(group)
 
@@ -4200,7 +4268,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
         video.next_to(morty, UP+LEFT)
 
         rect = SurroundingRectangle(video)
-        rect.set_stroke(width = 0)
+        rect.set_stroke(width=0)
         rect.set_fill(BLACK, 0.5)
 
         words = TextMobject("On learning")
@@ -4227,22 +4295,21 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
         morty.generate_target()
         morty.target.change("hooray")
         morty.target.rotate(
-            np.pi, axis = UP, about_point = morty.get_left()
+            np.pi, axis=UP, about_point=morty.get_left()
         )
         morty.target.shift(LEFT)
         video = self.video
 
-
         subscribe_word = TextMobject(
             "Subscribe", "!",
-            arg_separator = ""
+            arg_separator=""
         )
         bang = subscribe_word[1]
         subscribe_word.to_corner(DOWN+RIGHT)
         subscribe_word.shift(3*UP)
         q_mark = TextMobject("?")
         q_mark.move_to(bang, LEFT)
-        arrow = Arrow(ORIGIN, DOWN, color = RED, buff = 0)
+        arrow = Arrow(ORIGIN, DOWN, color=RED, buff=0)
         arrow.next_to(subscribe_word, DOWN)
         arrow.shift(MED_LARGE_BUFF * RIGHT)
 
@@ -4261,14 +4328,14 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
         morty = self.pi_creature
 
         network_mob, rect, video, words = self.video
-        network_mob.generate_target(use_deepcopy = True)
+        network_mob.generate_target(use_deepcopy=True)
         network_mob.target.set_height(5)
         network_mob.target.to_corner(UP+LEFT)
         neurons = VGroup(*network_mob.target.layers[-1].neurons[:2])
-        neurons.set_stroke(width = 0)
+        neurons.set_stroke(width=0)
 
         video.generate_target()
-        video.target.set_fill(opacity = 1)
+        video.target.set_fill(opacity=1)
         video.target.set_height(neurons.get_height())
         video.target.move_to(neurons, LEFT)
 
@@ -4291,16 +4358,17 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
 
         self.play(LaggedStartMap(
             MoveToTarget, neuron_pairs,
-            run_time = 3
+            run_time=3
         ))
         self.play(morty.change, "shruggie")
         self.wait(10)
 
     ###
 
+
 class NNPatreonThanks(PatreonThanks):
     CONFIG = {
-        "specific_patrons" : [
+        "specific_patrons": [
             "Desmos",
             "Burt Humburg",
             "CrypticSwarm",
@@ -4357,6 +4425,7 @@ class NNPatreonThanks(PatreonThanks):
         ]
     }
 
+
 class PiCreatureGesture(PiCreatureScene):
     def construct(self):
         self.play(self.pi_creature.change, "raise_right_hand")
@@ -4364,10 +4433,12 @@ class PiCreatureGesture(PiCreatureScene):
         self.play(self.pi_creature.change, "happy")
         self.wait(4)
 
+
 class IntroduceReLU(IntroduceSigmoid):
     CONFIG = {
-        "x_axis_label" : "$a$"
+        "x_axis_label": "$a$"
     }
+
     def construct(self):
         self.setup_axes()
         self.add_title()
@@ -4387,30 +4458,30 @@ class IntroduceReLU(IntroduceSigmoid):
         old_school.to_corner(UP+RIGHT)
         old_school.set_color(RED)
         arrow = Arrow(
-            old_school.get_bottom(), 
+            old_school.get_bottom(),
             self.equation.get_right(),
-            color = RED
+            color=RED
         )
 
         self.play(ShowCreation(cross))
         self.play(
-            Write(old_school, run_time = 1),
+            Write(old_school, run_time=1),
             GrowArrow(arrow)
         )
         self.wait(2)
         self.play(
             ApplyMethod(
-                VGroup(cross, sigmoid_title).shift, 
+                VGroup(cross, sigmoid_title).shift,
                 FRAME_X_RADIUS*RIGHT,
-                rate_func = running_start
+                rate_func=running_start
             ),
             FadeOut(old_school),
             FadeOut(arrow),
         )
         self.play(ShowCreation(
             self.sigmoid_graph,
-            rate_func = lambda t : smooth(1-t),
-            remover = True
+            rate_func=lambda t: smooth(1-t),
+            remover=True
         ))
 
     def show_ReLU(self):
@@ -4426,7 +4497,7 @@ class IntroduceReLU(IntroduceSigmoid):
         )
         graph.set_color(YELLOW)
         char = self.x_axis_label.replace("$", "")
-        equation = TextMobject("ReLU($%s$) = max$(0, %s)$"%(char, char))
+        equation = TextMobject("ReLU($%s$) = max$(0, %s)$" % (char, char))
         equation.shift(FRAME_X_RADIUS*LEFT/2)
         equation.to_edge(UP)
         equation.add_background_rectangle()
@@ -4466,13 +4537,14 @@ class IntroduceReLU(IntroduceSigmoid):
         self.play(Write(pos_words))
         self.wait(2)
 
+
 class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
     def construct(self):
         morty, lisha = self.morty, self.lisha
         sigmoid_graph = FunctionGraph(
             sigmoid,
-            x_min = -5,
-            x_max = 5,
+            x_min=-5,
+            x_max=5,
         )
         sigmoid_graph.stretch_to_fit_width(3)
         sigmoid_graph.set_color(YELLOW)
@@ -4501,13 +4573,13 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
         relu_graph.add(relu_name)
 
         network_mob = NetworkMobject(Network(
-            sizes = [6, 4, 5, 4, 3, 5, 2]
+            sizes=[6, 4, 5, 4, 3, 5, 2]
         ))
         network_mob.scale(0.8)
-        network_mob.to_edge(UP, buff = MED_SMALL_BUFF)
+        network_mob.to_edge(UP, buff=MED_SMALL_BUFF)
         network_mob.shift(RIGHT)
         edge_update = ContinualEdgeUpdate(
-            network_mob, stroke_width_exp = 1,
+            network_mob, stroke_width_exp=1,
         )
 
         self.play(
@@ -4517,7 +4589,7 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
             morty.change, "pondering"
         )
         self.play(
-            Write(slow_learner, run_time = 1),
+            Write(slow_learner, run_time=1),
             GrowArrow(slow_arrow)
         )
         self.wait()
@@ -4531,21 +4603,21 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
         self.add(edge_update)
         self.wait(10)
 
-
-
     ###
+
     def create_pi_creatures(self):
         morty = Mortimer()
         morty.shift(FRAME_X_RADIUS*RIGHT/2).to_edge(DOWN)
-        lisha = PiCreature(color = BLUE_C)
+        lisha = PiCreature(color=BLUE_C)
         lisha.shift(FRAME_X_RADIUS*LEFT/2).to_edge(DOWN)
         self.morty, self.lisha = morty, lisha
         return morty, lisha
 
+
 class ShowAmplify(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
-        rect = ScreenRectangle(height = 5)
+        rect = ScreenRectangle(height=5)
         rect.to_corner(UP+LEFT)
         rect.shift(DOWN)
         email = TextMobject("3blue1brown@amplifypartners.com")
@@ -4560,18 +4632,20 @@ class ShowAmplify(PiCreatureScene):
         self.play(morty.change, "happy", rect)
         self.wait(10)
 
+
 class Thumbnail(NetworkScene):
     CONFIG = {
-        "network_mob_config" : {
-            'neuron_stroke_color' : WHITE,
+        "network_mob_config": {
+            'neuron_stroke_color': WHITE,
             'layer_to_layer_buff': 1.25,
         },
     }
+
     def construct(self):
         network_mob = self.network_mob
         network_mob.set_height(FRAME_HEIGHT - 1)
         for layer in network_mob.layers:
-            layer.neurons.set_stroke(width = 5)
+            layer.neurons.set_stroke(width=5)
 
         network_mob.set_height(5)
         network_mob.to_edge(DOWN)
@@ -4592,8 +4666,8 @@ class Thumbnail(NetworkScene):
 
         edge_update = ContinualEdgeUpdate(
             network_mob,
-            max_stroke_width = 10,
-            stroke_width_exp = 4,
+            max_stroke_width=10,
+            stroke_width_exp=4,
         )
         edge_update.internal_time = 3
         edge_update.update(0)
@@ -4602,7 +4676,6 @@ class Thumbnail(NetworkScene):
             if mob.get_stroke_width() < 2:
                 mob.set_stroke(width=2)
 
-
         title = TextMobject("Neural Networks")
         title.scale(3)
         title.to_edge(UP)
@@ -4610,17 +4683,3 @@ class Thumbnail(NetworkScene):
         self.add(network_mob)
         self.add(subtitle)
         self.add(title)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

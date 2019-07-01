@@ -5,9 +5,10 @@ import os
 from manimlib.imports import *
 from old_projects.brachistochrone.drawing_images import sort_by_color
 
+
 class Intro(Scene):
     def construct(self):
-        logo = ImageMobject("LogoGeneration", invert = False)
+        logo = ImageMobject("LogoGeneration", invert=False)
         name_mob = TextMobject("3Blue1Brown").center()
         name_mob.set_color("grey")
         name_mob.shift(2*DOWN)
@@ -29,7 +30,7 @@ class Intro(Scene):
             DelayByOrder(Transform(logo, Point())),
             FadeOut(with_word),
             FadeOut(name_mob),
-            run_time = 3
+            run_time=3
         )
 
 
@@ -42,7 +43,7 @@ class IntroduceSteve(Scene):
         books_word = TextMobject("Books")
         books_word.scale(0.5).to_edge(LEFT).shift(2*UP)
         radio_lab, sci_fri, cornell, book2, book3, book4 = [
-            ImageMobject(filename, invert = False, filter_color = WHITE)
+            ImageMobject(filename, invert=False, filter_color=WHITE)
             for filename in [
                 "radio_lab",
                 "science_friday",
@@ -52,13 +53,13 @@ class IntroduceSteve(Scene):
                 "strogatz_book4",
             ]
         ]
-        book1 = ImageMobject("strogatz_book1", invert = False)
+        book1 = ImageMobject("strogatz_book1", invert=False)
         nyt = ImageMobject("new_york_times")
         logos = [radio_lab, nyt, sci_fri]
         books = [book1, book2, book3, book4]
 
-        sample_size = Square(side_length = 2)
-        last = contributions        
+        sample_size = Square(side_length=2)
+        last = contributions
         for image in logos:
             image.replace(sample_size)
             image.next_to(last, DOWN)
@@ -86,16 +87,17 @@ class IntroduceSteve(Scene):
             self.play(FadeIn(logo))
         self.wait()
 
+
 class ShowTweets(Scene):
     def construct(self):
         tweets = [
-            ImageMobject("tweet%d"%x, invert = False)
+            ImageMobject("tweet%d" % x, invert=False)
             for x in range(1, 4)
         ]
         for tweet in tweets:
             tweet.scale(0.4)
         tweets[0].to_corner(UP+LEFT)
-        tweets[1].next_to(tweets[0], RIGHT, aligned_edge = UP)
+        tweets[1].next_to(tweets[0], RIGHT, aligned_edge=UP)
         tweets[2].next_to(tweets[1], DOWN)
 
         self.play(GrowFromCenter(tweets[0]))
@@ -105,6 +107,7 @@ class ShowTweets(Scene):
                 Animation(tweets[x-1])
             )
         self.wait()
+
 
 class LetsBeHonest(Scene):
     def construct(self):
@@ -130,9 +133,9 @@ class DisectBrachistochroneWord(Scene):
         dots = []
         for part in word.split():
             if dots:
-                part.next_to(dots[-1], buff = 0.06)
+                part.next_to(dots[-1], buff=0.06)
             dot = TexMobject("\\cdot")
-            dot.next_to(part, buff = 0.06)
+            dot.next_to(part, buff=0.06)
             dots.append(dot)
         dots = Mobject(*dots[:-1])
         dots.shift(0.1*DOWN)
@@ -154,9 +157,9 @@ class DisectBrachistochroneWord(Scene):
         chrono_example.shift(2*UP)
         chrono_example.set_color(BLUE_D)
         chrono_arrow = Arrow(
-            word.get_right(), 
-            chrono_example.get_bottom(), 
-            color = BLUE_D
+            word.get_right(),
+            chrono_example.get_bottom(),
+            color=BLUE_D
         )
         brachy_example = TextMobject("As in . . . brachydactyly?")
         brachy_example.scale(0.5)
@@ -165,13 +168,14 @@ class DisectBrachistochroneWord(Scene):
         brachy_example.set_color(GREEN)
         brachy_arrow = Arrow(
             word.get_left(),
-            brachy_example.get_top(), 
-            color = GREEN
+            brachy_example.get_top(),
+            color=GREEN
         )
 
-        pronunciation = TextMobject(["/br", "e", "kist","e","kr$\\bar{o}$n/"])
+        pronunciation = TextMobject(
+            ["/br", "e", "kist", "e", "kr$\\bar{o}$n/"])
         pronunciation.split()[1].rotate_in_place(np.pi)
-        pronunciation.split()[3].rotate_in_place(np.pi) 
+        pronunciation.split()[3].rotate_in_place(np.pi)
         pronunciation.scale(0.7)
         pronunciation.shift(DOWN)
 
@@ -179,7 +183,7 @@ class DisectBrachistochroneWord(Scene):
         greek = TextMobject(list("Greek"))
         for mob in latin, greek:
             mob.to_edge(LEFT)
-        question_mark = TextMobject("?").next_to(greek, buff = 0.1)
+        question_mark = TextMobject("?").next_to(greek, buff=0.1)
         stars = Stars().set_color(BLACK)
         stars.scale(0.5).shift(question_mark.get_center())
 
@@ -195,7 +199,7 @@ class DisectBrachistochroneWord(Scene):
         self.play(FadeIn(question_mark))
         self.play(Transform(
             latin, greek,
-            path_func = counterclockwise_path()
+            path_func=counterclockwise_path()
         ))
         self.wait()
         self.play(Transform(question_mark, stars))
@@ -210,13 +214,14 @@ class DisectBrachistochroneWord(Scene):
             )
         self.wait()
 
+
 class OneSolutionTwoInsights(Scene):
     def construct(self):
         one_solution = TextMobject(["One ", "solution"])
         two_insights = TextMobject(["Two ", " insights"])
-        two, insights = two_insights.split()        
-        johann = ImageMobject("Johann_Bernoulli2", invert = False)
-        mark = ImageMobject("Mark_Levi", invert = False)
+        two, insights = two_insights.split()
+        johann = ImageMobject("Johann_Bernoulli2", invert=False)
+        mark = ImageMobject("Mark_Levi", invert=False)
         for mob in johann, mark:
             mob.scale(0.4)
         johann.next_to(insights, LEFT)
@@ -226,13 +231,13 @@ class OneSolutionTwoInsights(Scene):
         self.play(*list(map(ShimmerIn, one_solution.split())))
         self.wait()
         for pair in zip(one_solution.split(), two_insights.split()):
-            self.play(Transform(*pair, path_func = path_along_arc(np.pi)))
+            self.play(Transform(*pair, path_func=path_along_arc(np.pi)))
         self.wait()
         self.clear()
         self.add(two, insights)
         for word, man in [(two, johann), (insights, mark)]:
             self.play(
-                Transform(word, Point(word.get_left())),                
+                Transform(word, Point(word.get_left())),
                 GrowFromCenter(man)
             )
             self.wait()
@@ -240,6 +245,7 @@ class OneSolutionTwoInsights(Scene):
         self.play(ApplyMethod(mark.center))
         self.play(ShimmerIn(name))
         self.wait()
+
 
 class CircleOfIdeas(Scene):
     def construct(self):
@@ -266,9 +272,9 @@ class CircleOfIdeas(Scene):
         self.play(*[
             Transform(
                 word, word.copy().set_color(BLACK).center().scale(0.1),
-                path_func = path_along_arc(np.pi),
+                path_func=path_along_arc(np.pi),
                 rate_func=linear,
-                run_time = 2
+                run_time=2
             )
             for word in displayed_words
         ]+[
@@ -276,7 +282,7 @@ class CircleOfIdeas(Scene):
         ])
         self.wait()
 
-    def get_spinning_anims(self, words, angle = np.pi/6):
+    def get_spinning_anims(self, words, angle=np.pi/6):
         anims = []
         for word in words:
             old_center = word.get_center()
@@ -284,7 +290,7 @@ class CircleOfIdeas(Scene):
             vect = new_center-old_center
             anims.append(ApplyMethod(
                 word.shift, vect,
-                path_func = path_along_arc(angle), 
+                path_func=path_along_arc(angle),
                 rate_func=linear
             ))
         return anims
@@ -316,10 +322,10 @@ class FermatsPrincipleStatement(Scene):
 
         Mobject(everything, words).show()
 
-        everything.sort_points(get_norm)        
+        everything.sort_points(get_norm)
         self.add(words)
         self.play(
-            DelayByOrder(FadeIn(everything, run_time = 3)),
+            DelayByOrder(FadeIn(everything, run_time=3)),
             Animation(words)
         )
         self.play(
@@ -327,13 +333,14 @@ class FermatsPrincipleStatement(Scene):
         )
         self.wait()
 
+
 class VideoProgression(Scene):
     def construct(self):
         spacing = 2*UP
         brachy, optics, light_in_two, snells, multi = words = [
             TextMobject(text)
             for text in [
-                "Brachistochrone", 
+                "Brachistochrone",
                 "Optics",
                 "Light in two media",
                 "Snell's Law",
@@ -356,7 +363,7 @@ class VideoProgression(Scene):
         arrow1 = Arrow(optics, brachy)
         self.play(ShowCreation(arrow1))
         self.wait()
-        arrow2 = Arrow(light_in_two, optics)        
+        arrow2 = Arrow(light_in_two, optics)
         self.play(
             ShowCreation(arrow2),
             ShimmerIn(light_in_two)
@@ -380,9 +387,6 @@ class VideoProgression(Scene):
         self.wait()
 
 
-
-
-
 class BalanceCompetingFactors(Scene):
     args_list = [
         ("Short", "Steep"),
@@ -392,16 +396,16 @@ class BalanceCompetingFactors(Scene):
     @staticmethod
     def args_to_string(*words):
         return "".join([word.split(" ")[0] for word in words])
-        
+
     def construct(self, *words):
         factor1, factor2 = [
-            TextMobject("Factor %d"%x).set_color(c)
+            TextMobject("Factor %d" % x).set_color(c)
             for x, c in [
                 (1, RED_D),
                 (2, BLUE_D)
             ]
         ]
-        real_factor1, real_factor2 = list(map(TextMobject, words))  
+        real_factor1, real_factor2 = list(map(TextMobject, words))
         for word in factor1, factor2, real_factor1, real_factor2:
             word.shift(0.2*UP-word.get_bottom())
         for f1 in factor1, real_factor1:
@@ -409,7 +413,7 @@ class BalanceCompetingFactors(Scene):
             f1.shift(2*LEFT)
         for f2 in factor2, real_factor2:
             f2.set_color(BLUE_D)
-            f2.shift(2*RIGHT)      
+            f2.shift(2*RIGHT)
         line = Line(
             factor1.get_left(),
             factor2.get_right()
@@ -419,21 +423,21 @@ class BalanceCompetingFactors(Scene):
         self.hidden_balancers = Mobject(real_factor1, real_factor2)
 
         triangle = Polygon(RIGHT, np.sqrt(3)*UP, LEFT)
-        triangle.next_to(line, DOWN, buff = 0)
+        triangle.next_to(line, DOWN, buff=0)
 
         self.add(triangle, self.balancers)
         self.rotate(1)
         self.rotate(-2)
         self.wait()
         self.play(Transform(
-            factor1, real_factor1, 
-            path_func = path_along_arc(np.pi/4)
+            factor1, real_factor1,
+            path_func=path_along_arc(np.pi/4)
         ))
         self.rotate(2)
         self.wait()
         self.play(Transform(
             factor2, real_factor2,
-            path_func = path_along_arc(np.pi/4)
+            path_func=path_along_arc(np.pi/4)
         ))
         self.rotate(-2)
         self.wait()
@@ -442,13 +446,11 @@ class BalanceCompetingFactors(Scene):
     def rotate(self, factor):
         angle = np.pi/11
         self.play(Rotate(
-            self.balancers, 
+            self.balancers,
             factor*angle,
-            run_time = abs(factor)
+            run_time=abs(factor)
         ))
         self.hidden_balancers.rotate(factor*angle)
-
-
 
 
 class Challenge(Scene):
@@ -463,20 +465,19 @@ class Challenge(Scene):
         self.wait()
 
 
-
 class Section1(Scene):
     def construct(self):
         self.add(TextMobject("Section 1: Johann Bernoulli's insight"))
         self.wait()
 
+
 class Section2(Scene):
     def construct(self):
         self.add(TextMobject(
             "Section 2: Mark Levi's insight, and a challenge",
-            size = "\\large"
+            size="\\large"
         ))
         self.wait()
-
 
 
 class NarratorInterjection(Scene):
@@ -509,8 +510,10 @@ class MyOwnChallenge(Scene):
 
 class WarmupChallenge(Scene):
     def construct(self):
-        self.add(TextMobject("\\large Warm-up challenge: Confirm this for yourself"))
+        self.add(TextMobject(
+            "\\large Warm-up challenge: Confirm this for yourself"))
         self.wait()
+
 
 class FindAnotherSolution(Scene):
     def construct(self):
@@ -538,17 +541,6 @@ class CondensedVersion(Scene):
         self.add(snells)
         self.wait()
         self.play(DelayByOrder(
-            Transform(snells, condensed, run_time = 2)
+            Transform(snells, condensed, run_time=2)
         ))
         self.wait()
-
-
-
-
-
-
-
-
-
-
-

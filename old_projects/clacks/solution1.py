@@ -1887,7 +1887,8 @@ class InscribedAngleTheorem(Scene):
         two_theta_label.update()
         self.play(
             TransformFromCopy(lines.copy().clear_updaters(), center_lines),
-            TransformFromCopy(theta_label.copy().clear_updaters(), two_theta_label),
+            TransformFromCopy(
+                theta_label.copy().clear_updaters(), two_theta_label),
         )
         self.wait()
 

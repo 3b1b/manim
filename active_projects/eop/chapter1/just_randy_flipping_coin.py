@@ -2,11 +2,13 @@
 from manimlib.imports import *
 from active_projects.eop.reusable_imports import *
 
+
 class JustFlipping(Scene):
 
     def construct(self):
 
-        randy = CoinFlippingPiCreature(color = MAROON_E, flip_height = 1).shift(2 * DOWN)
+        randy = CoinFlippingPiCreature(
+            color=MAROON_E, flip_height=1).shift(2 * DOWN)
         self.add(randy)
 
         self.wait(2)
@@ -16,12 +18,12 @@ class JustFlipping(Scene):
             self.play(FlipCoin(randy))
 
 
-
 class JustFlippingWithResults(Scene):
 
     def construct(self):
 
-        randy = CoinFlippingPiCreature(color = MAROON_E, flip_height = 1).shift(2 * DOWN)
+        randy = CoinFlippingPiCreature(
+            color=MAROON_E, flip_height=1).shift(2 * DOWN)
         self.add(randy)
 
         self.wait(2)
@@ -36,4 +38,3 @@ class JustFlippingWithResults(Scene):
                 coin = UprightTails().scale(3)
             coin.move_to(2 * UP + 2.5 * LEFT + i * 0.6 * RIGHT)
             self.play(FadeIn(coin))
-

@@ -3,16 +3,17 @@ from manimlib.imports import *
 
 class TrigRepresentationsScene(Scene):
     CONFIG = {
-        "unit_length" : 1.5,
-        "arc_radius" : 0.5,
-        "axes_color" : WHITE,
-        "circle_color" : RED,
-        "theta_color" : YELLOW,
-        "theta_height" : 0.3,
-        "theta_value" : np.pi/5,
-        "x_line_colors" : MAROON_B,
-        "y_line_colors" : BLUE,
+        "unit_length": 1.5,
+        "arc_radius": 0.5,
+        "axes_color": WHITE,
+        "circle_color": RED,
+        "theta_color": YELLOW,
+        "theta_height": 0.3,
+        "theta_value": np.pi/5,
+        "x_line_colors": MAROON_B,
+        "y_line_colors": BLUE,
     }
+
     def setup(self):
         self.init_axes()
         self.init_circle()
@@ -20,15 +21,15 @@ class TrigRepresentationsScene(Scene):
 
     def init_axes(self):
         self.axes = Axes(
-            unit_size = self.unit_length,
+            unit_size=self.unit_length,
         )
         self.axes.set_color(self.axes_color)
         self.add(self.axes)
 
     def init_circle(self):
         self.circle = Circle(
-            radius = self.unit_length,
-            color = self.circle_color
+            radius=self.unit_length,
+            color=self.circle_color
         )
         self.add(self.circle)
 
@@ -45,37 +46,37 @@ class TrigRepresentationsScene(Scene):
 
     def get_theta_group(self):
         arc = Arc(
-            self.theta_value, 
-            radius = self.arc_radius,
-            color = self.theta_color,
+            self.theta_value,
+            radius=self.arc_radius,
+            color=self.theta_color,
         )
         theta = TexMobject("\\theta")
         theta.shift(1.5*arc.point_from_proportion(0.5))
         theta.set_color(self.theta_color)
         theta.set_height(self.theta_height)
         line = Line(ORIGIN, self.get_circle_point())
-        dot = Dot(line.get_end(), radius = 0.05)
+        dot = Dot(line.get_end(), radius=0.05)
         return VGroup(line, arc, theta, dot)
 
     def get_circle_point(self):
         return rotate_vector(self.unit_length*RIGHT, self.theta_value)
 
-    def get_trig_line(self, func_name = "sin", color = None):
+    def get_trig_line(self, func_name="sin", color=None):
         assert(func_name in ["sin", "tan", "sec", "cos", "cot", "csc"])
         is_co = func_name in ["cos", "cot", "csc"]
         if color is None:
             if is_co:
-                color = self.y_line_colors 
+                color = self.y_line_colors
             else:
                 color = self.x_line_colors
 
-        #Establish start point
+        # Establish start point
         if func_name in ["sin", "cos", "tan", "cot"]:
             start_point = self.get_circle_point()
         else:
             start_point = ORIGIN
 
-        #Establish end point
+        # Establish end point
         if func_name is "sin":
             end_point = start_point[0]*RIGHT
         elif func_name is "cos":
@@ -84,17 +85,19 @@ class TrigRepresentationsScene(Scene):
             end_point = (1./np.cos(self.theta_value))*self.unit_length*RIGHT
         elif func_name in ["cot", "csc"]:
             end_point = (1./np.sin(self.theta_value))*self.unit_length*UP
-        return Line(start_point, end_point, color = color)
+        return Line(start_point, end_point, color=color)
+
 
 class Introduce(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "Something different today!",
-            target_mode = "hooray",
-            run_time = 2
+            target_mode="hooray",
+            run_time=2
         )
         self.change_student_modes("thinking", "happy", "sassy")
         self.random_blink(2)
+
 
 class ReactionsToTattoo(PiCreatureScene):
     def construct(self):
@@ -123,24 +126,25 @@ class ReactionsToTattoo(PiCreatureScene):
         self.change_mode("happy")
         self.wait(2)
 
-
     def create_pi_creature(self):
         randy = Randolph()
         randy.next_to(ORIGIN, DOWN)
         return randy
 
+
 class IntroduceCSC(TrigRepresentationsScene):
     def construct(self):
         self.clear()
         Cam_S_C = TextMobject("Cam", "S.", "C.")
-        CSC = TextMobject("C", "S", "C", arg_separator = "")
-        csc_of_theta = TextMobject("c", "s", "c", "(\\theta)", arg_separator = "")
+        CSC = TextMobject("C", "S", "C", arg_separator="")
+        csc_of_theta = TextMobject(
+            "c", "s", "c", "(\\theta)", arg_separator="")
         csc, of_theta = VGroup(*csc_of_theta[:3]), csc_of_theta[-1]
         of_theta[1].set_color(YELLOW)
         CSC.move_to(csc, DOWN)
 
         csc_line = self.get_trig_line("csc")
-        csc_line.set_stroke(width = 8)
+        csc_line.set_stroke(width=8)
         cot_line = self.get_trig_line("cot")
         cot_line.set_color(WHITE)
         brace = Brace(csc_line, LEFT)
@@ -159,18 +163,19 @@ class IntroduceCSC(TrigRepresentationsScene):
         self.play(
             ShowCreation(self.axes),
             ShowCreation(self.circle),
-            GrowFromCenter(brace),            
+            GrowFromCenter(brace),
             csc_of_theta.rotate, np.pi/2,
             csc_of_theta.next_to, brace, LEFT,
-            path_arc = np.pi/2,
+            path_arc=np.pi/2,
         )
-        self.play(Write(self.theta_group, run_time = 1))
+        self.play(Write(self.theta_group, run_time=1))
         self.play(ShowCreation(cot_line))
         self.play(
             ShowCreation(csc_line),
             csc.set_color, csc_line.get_color(),
         )
         self.wait(3)
+
 
 class TeachObscureTrigFunctions(TeacherStudentsScene):
     def construct(self):
@@ -183,12 +188,13 @@ class TeachObscureTrigFunctions(TeacherStudentsScene):
         self.change_student_modes(*["confused"]*3)
         self.student_says(
             "But why?",
-            target_mode = "pleading",
-            added_anims = [content.to_corner, UP+RIGHT]
+            target_mode="pleading",
+            added_anims=[content.to_corner, UP+RIGHT]
         )
         self.wait()
         self.play(self.get_teacher().change_mode, "pondering")
         self.wait(3)
+
 
 class CanYouExplainTheTattoo(TeacherStudentsScene):
     def construct(self):
@@ -200,11 +206,13 @@ class CanYouExplainTheTattoo(TeacherStudentsScene):
         self.play(self.get_teacher().change_mode, "hooray")
         self.wait()
 
+
 class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
     CONFIG = {
-        "use_morty" : False,
-        "alt_theta_val" : 2*np.pi/5,
+        "use_morty": False,
+        "alt_theta_val": 2*np.pi/5,
     }
+
     def setup(self):
         PiCreatureScene.setup(self)
         TrigRepresentationsScene.setup(self)
@@ -222,16 +230,16 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.remove(self.theta_group)
         line, arc, theta, dot = self.theta_group
         line.rotate(-self.theta_value)
-        brace = Brace(line, UP, buff = SMALL_BUFF)
-        one = brace.get_text("1", buff = SMALL_BUFF)
+        brace = Brace(line, UP, buff=SMALL_BUFF)
+        one = brace.get_text("1", buff=SMALL_BUFF)
         VGroup(line, brace, one).rotate(self.theta_value)
         one.rotate_in_place(-self.theta_value)
         self.circle.rotate(self.theta_value)
 
         words = TextMobject("Corresponding point")
-        words.next_to(dot, UP+RIGHT, buff = 1.5*LARGE_BUFF)
+        words.next_to(dot, UP+RIGHT, buff=1.5*LARGE_BUFF)
         words.shift_onto_screen()
-        arrow = Arrow(words.get_bottom(), dot, buff = SMALL_BUFF)
+        arrow = Arrow(words.get_bottom(), dot, buff=SMALL_BUFF)
 
         self.play(
             ShowCreation(line),
@@ -241,8 +249,8 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.play(self.pi_creature.change_mode, "pondering")
         self.play(
             ShowCreation(self.circle),
-            Rotating(line, rate_func = smooth, in_place = False),
-            run_time = 2
+            Rotating(line, rate_func=smooth, in_place=False),
+            run_time=2
         )
         self.play(
             Write(words),
@@ -261,8 +269,10 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.radial_line_label = VGroup(brace, one)
 
     def show_sine_and_cosine(self):
-        sin_line, sin_brace, sin_text = sin_group = self.get_line_brace_text("sin")
-        cos_line, cos_brace, cos_text = cos_group = self.get_line_brace_text("cos")
+        sin_line, sin_brace, sin_text = sin_group = self.get_line_brace_text(
+            "sin")
+        cos_line, cos_brace, cos_text = cos_group = self.get_line_brace_text(
+            "cos")
 
         self.play(ShowCreation(sin_line))
         self.play(
@@ -297,8 +307,8 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
                 Transform(mover, target, rate_func=linear)
                 for target in targets
             ],
-            run_time = 5, 
-            rate_func = there_and_back
+            run_time=5,
+            rate_func=there_and_back
         ))
         self.theta_value = thetas[0]
 
@@ -314,7 +324,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         line.rotate(self.theta_value)
         line.move_to(self.theta_group[-1])
-        line.set_stroke(width = 2)
+        line.set_stroke(width=2)
 
         sin_tex = "{\\sin(\\theta)}"
         cos_tex = "{\\cos(\\theta)}"
@@ -323,7 +333,6 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         tan_frac.to_corner(UP+LEFT)
         tan_frac.shift(2*RIGHT)
         cot_frac.next_to(tan_frac, DOWN)
-
 
         self.change_mode("pondering")
         for frac, text in (tan_frac, tan_text), (cot_frac, cot_text):
@@ -375,9 +384,9 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             *[
                 Transform(mover, target, rate_func=linear)
                 for target in targets
-            ], 
-            run_time = 5, 
-            rate_func = there_and_back
+            ],
+            run_time=5,
+            rate_func=there_and_back
         ))
         self.theta_value = thetas[0]
 
@@ -403,7 +412,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         csc_frac.next_to(sec_frac, DOWN)
 
         sec_dot, csc_dot = [
-            Dot(line.get_end(), color = line.get_color())
+            Dot(line.get_end(), color=line.get_color())
             for line in (sec_line, csc_line)
         ]
         sec_group.add(sec_dot)
@@ -425,7 +434,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             line, brace, text, dot = group
             dot.save_state()
             dot.move_to(text)
-            dot.set_fill(opacity = 0)
+            dot.set_fill(opacity=0)
             self.play(dot.restore)
             self.wait()
             self.play(
@@ -451,7 +460,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             for group in new_sec_group, new_csc_group:
                 line = group[0]
                 group.add(
-                    Dot(line.get_end(), color = line.get_color())
+                    Dot(line.get_end(), color=line.get_color())
                 )
             targets.append(VGroup(
                 new_sec_group,
@@ -463,9 +472,9 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             *[
                 Transform(mover, target, rate_func=linear)
                 for target in targets
-            ], 
-            run_time = 5, 
-            rate_func = there_and_back
+            ],
+            run_time=5,
+            rate_func=there_and_back
         ))
         self.theta_value = thetas[0]
 
@@ -476,7 +485,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             sec_group, sec_frac
         ])))
         self.csc_group = csc_group
-        self.csc_frac =csc_frac
+        self.csc_frac = csc_frac
 
     def explain_cosecant(self):
         sin_group = self.get_line_brace_text("sin")
@@ -493,13 +502,13 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
 
         tri1 = Polygon(
             ORIGIN, radial_line.get_end(), sin_line.get_end(),
-            color = GREEN,
-            stroke_width = 8,
+            color=GREEN,
+            stroke_width=8,
         )
         tri2 = Polygon(
             csc_line.get_end(), ORIGIN, radial_line.get_end(),
-            color = GREEN,
-            stroke_width = 8,
+            color=GREEN,
+            stroke_width=8,
         )
 
         opp_over_hyp = TexMobject(
@@ -525,16 +534,16 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
 
         self.play(ShowCreation(tri1))
         self.play(
-            ApplyMethod(tri1.rotate_in_place, np.pi/12, rate_func = wiggle),
+            ApplyMethod(tri1.rotate_in_place, np.pi/12, rate_func=wiggle),
             self.pi_creature.change_mode, "thinking"
         )
         self.wait()
         tri1.save_state()
-        self.play(Transform(tri1, tri2, path_arc = np.pi/2))
+        self.play(Transform(tri1, tri2, path_arc=np.pi/2))
         self.play(Write(arc_theta))
         self.play(ApplyMethod(
-            tri1.rotate_in_place, np.pi/12, 
-            rate_func = wiggle
+            tri1.rotate_in_place, np.pi/12,
+            rate_func=wiggle
         ))
         self.wait(2)
         self.play(
@@ -544,7 +553,6 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         )
         self.wait(2)
         self.play(*list(map(FadeOut, [question, arrow])))
-
 
         self.play(Write(opp_over_hyp))
         self.wait()
@@ -569,7 +577,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         )
         self.play(
             radial_line.rotate_in_place, np.pi/12,
-            rate_func = wiggle
+            rate_func=wiggle
         )
         self.wait()
         self.play(csc_subgroup.restore)
@@ -603,7 +611,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             dem1.move_to, num1,
             num2.move_to, dem2,
             dem2.move_to, num2,
-            path_arc = np.pi
+            path_arc=np.pi
         )
         self.wait()
         self.play(
@@ -618,7 +626,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.play(*it.chain(*[
             [mob.scale, scale_factor]
             for mob in [
-                self.circle, self.axes, 
+                self.circle, self.axes,
                 theta_subgroup, self.tangent_line
             ]
         ]))
@@ -638,16 +646,16 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
                 text.scale(0.75)
                 text.rotate(angle)
                 text.move_to(target)
-                line.set_stroke(width = 6)
+                line.set_stroke(width=6)
                 self.play(
                     ShowCreation(line),
-                    Write(text, run_time = 1)
+                    Write(text, run_time=1)
                 )
             else:
                 self.play(
                     ShowCreation(line),
                     GrowFromCenter(brace),
-                    Write(text, run_time = 1)
+                    Write(text, run_time=1)
                 )
             if func_name in ["sec", "csc", "cot"]:
                 to_fade.add(*self.get_mobjects_from_last_animation())
@@ -663,7 +671,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         )
         self.wait(2)
 
-    def get_line_brace_text(self, func_name = "sin"):
+    def get_line_brace_text(self, func_name="sin"):
         line = self.get_trig_line(func_name)
         angle = line.get_angle()
         vect = rotate_vector(UP, angle)
@@ -675,25 +683,26 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             Line(
                 line.get_length()*LEFT/2,
                 line.get_length()*RIGHT/2,
-            ), 
+            ),
             UP
         )
         brace.rotate(angle)
         brace.shift(line.get_center())
         brace.set_color(line.get_color())
-        text = TexMobject("\\%s(\\theta)"%func_name)
+        text = TexMobject("\\%s(\\theta)" % func_name)
         text.scale(0.75)
         text[-2].set_color(self.theta_color)
         text.add_background_rectangle()
-        text.next_to(brace.get_center_of_mass(), vect, buff = 1.2*MED_SMALL_BUFF)
+        text.next_to(brace.get_center_of_mass(), vect, buff=1.2*MED_SMALL_BUFF)
         return VGroup(line, brace, text)
 
     def get_tangent_line(self):
         return Line(
             self.unit_length*(1./np.sin(self.theta_value))*UP,
             self.unit_length*(1./np.cos(self.theta_value))*RIGHT,
-            color = GREY
+            color=GREY
         )
+
 
 class RenameAllInTermsOfSine(Scene):
     def construct(self):
@@ -757,7 +766,7 @@ class RenameAllInTermsOfSine(Scene):
         self.wait()
 
         new_rhs_mobs = [
-            TexMobject("=\\frac{1}{\\%s(\\theta)}"%s).set_color(color)
+            TexMobject("=\\frac{1}{\\%s(\\theta)}" % s).set_color(color)
             for s, color in [
                 ("cos", cos.target_color),
                 ("tan", tan.target_color),
@@ -776,6 +785,7 @@ class RenameAllInTermsOfSine(Scene):
         self.play(*anims)
         self.wait(2)
 
+
 class MisMatchOfCoPrefix(TeacherStudentsScene):
     def construct(self):
         eq1 = TexMobject(
@@ -786,7 +796,7 @@ class MisMatchOfCoPrefix(TeacherStudentsScene):
         )
         eq1.to_corner(UP+LEFT)
         eq1.to_edge(LEFT)
-        eq2.next_to(eq1, DOWN, buff = LARGE_BUFF)
+        eq2.next_to(eq1, DOWN, buff=LARGE_BUFF)
         eqs = VGroup(eq1, eq2)
 
         self.play(
@@ -808,29 +818,30 @@ class MisMatchOfCoPrefix(TeacherStudentsScene):
         )
         self.random_blink(2)
 
+
 class Credit(Scene):
     def construct(self):
         morty = Mortimer()
         morty.next_to(ORIGIN, DOWN)
         morty.to_edge(RIGHT)
 
-        headphones = Headphones(height = 1)
-        headphones.move_to(morty.eyes, aligned_edge = DOWN)
+        headphones = Headphones(height=1)
+        headphones.move_to(morty.eyes, aligned_edge=DOWN)
         headphones.shift(0.1*DOWN)
 
         url = TextMobject("www.audibletrial.com/3blue1brown")
         url.scale(0.8)
-        url.to_corner(UP+RIGHT, buff = LARGE_BUFF)
+        url.to_corner(UP+RIGHT, buff=LARGE_BUFF)
 
         book = ImageMobject("zen_and_motorcycles")
         book.set_height(5)
-        book.to_edge(DOWN, buff = LARGE_BUFF)
-        border = Rectangle(color = WHITE)
-        border.replace(book, stretch = True)
+        book.to_edge(DOWN, buff=LARGE_BUFF)
+        border = Rectangle(color=WHITE)
+        border.replace(book, stretch=True)
 
         self.play(PiCreatureSays(
             morty, "Book recommendation!",
-            target_mode = "surprised"
+            target_mode="surprised"
         ))
         self.play(Blink(morty))
         self.play(
@@ -866,33 +877,3 @@ class Credit(Scene):
         self.play(Blink(morty))
         self.wait(4)
         self.play(Blink(morty))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,10 +1,12 @@
 from manimlib.imports import *
 from old_projects.brachistochrone.curves import *
 
+
 class RollAlongVector(Animation):
     CONFIG = {
-        "rotation_vector" : OUT,
+        "rotation_vector": OUT,
     }
+
     def __init__(self, mobject, vector, **kwargs):
         radius = mobject.get_width()/2
         radians = get_norm(vector)/radius
@@ -16,7 +18,7 @@ class RollAlongVector(Animation):
         d_alpha = alpha - self.last_alpha
         self.last_alpha = alpha
         self.mobject.rotate_in_place(
-            d_alpha*self.radians, 
+            d_alpha*self.radians,
             self.rotation_vector
         )
         self.mobject.shift(d_alpha*self.vector)
@@ -24,10 +26,11 @@ class RollAlongVector(Animation):
 
 class CycloidScene(Scene):
     CONFIG = {
-        "point_a"   : 6*LEFT+3*UP,
-        "radius"    : 2,
-        "end_theta" : 2*np.pi
+        "point_a": 6*LEFT+3*UP,
+        "radius": 2,
+        "end_theta": 2*np.pi
     }
+
     def construct(self):
         self.generate_cycloid()
         self.generate_circle()
@@ -41,13 +44,13 @@ class CycloidScene(Scene):
 
     def generate_cycloid(self):
         self.cycloid = Cycloid(
-            point_a = self.point_a,
-            radius = self.radius,
-            end_theta = self.end_theta
+            point_a=self.point_a,
+            radius=self.radius,
+            end_theta=self.end_theta
         )
 
     def generate_circle(self, **kwargs):
-        self.circle = Circle(radius = self.radius, **kwargs)
+        self.circle = Circle(radius=self.radius, **kwargs)
         self.circle.shift(self.point_a - self.circle.get_top())
         radial_line = Line(
             self.circle.get_center(), self.point_a
@@ -58,7 +61,7 @@ class CycloidScene(Scene):
         self.ceiling = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         self.ceiling.shift(self.cycloid.get_top()[1]*UP)
 
-    def draw_cycloid(self, run_time = 3, *anims, **kwargs):
+    def draw_cycloid(self, run_time=3, *anims, **kwargs):
         kwargs["run_time"] = run_time
         self.play(
             RollAlongVector(
@@ -70,18 +73,18 @@ class CycloidScene(Scene):
             *anims
         )
 
-    def roll_back(self, run_time = 3, *anims, **kwargs):
+    def roll_back(self, run_time=3, *anims, **kwargs):
         kwargs["run_time"] = run_time
         self.play(
             RollAlongVector(
                 self.circle,
                 self.cycloid.points[0]-self.cycloid.points[- 1],
-                rotation_vector = IN,
+                rotation_vector=IN,
                 **kwargs
             ),
             ShowCreation(
-                self.cycloid, 
-                rate_func = lambda t : smooth(1-t),
+                self.cycloid,
+                rate_func=lambda t: smooth(1-t),
                 **kwargs
             ),
             *anims
@@ -99,7 +102,7 @@ class IntroduceCycloid(CycloidScene):
         ])
         sin_sqrt, const = equation.split()
         new_eq = equation.copy()
-        new_eq.to_edge(UP, buff = 1.3)
+        new_eq.to_edge(UP, buff=1.3)
         cycloid_word = TextMobject("Cycloid")
         arrow = Arrow(2*UP, cycloid_word)
         arrow.reverse_points()
@@ -125,13 +128,13 @@ class IntroduceCycloid(CycloidScene):
         self.remove(*extra_terms)
         self.roll_back()
         q_marks, arrows = self.get_q_marks_and_arrows(sin_sqrt)
-        self.draw_cycloid(3, 
-            ShowCreation(q_marks),
-            ShowCreation(arrows)
-        )
+        self.draw_cycloid(3,
+                          ShowCreation(q_marks),
+                          ShowCreation(arrows)
+                          )
         self.wait()
 
-    def get_q_marks_and_arrows(self, mob, n_marks = 10):
+    def get_q_marks_and_arrows(self, mob, n_marks=10):
         circle = Circle().replace(mob)
         q_marks, arrows = result = [Mobject(), Mobject()]
         for x in range(n_marks):
@@ -141,7 +144,7 @@ class IntroduceCycloid(CycloidScene):
             start_point = circle.get_boundary_point(vect)
             arrow = Arrow(
                 start_point, q_point,
-                color = BLUE_E
+                color=BLUE_E
             )
 
             q_marks.add(TextMobject("?").shift(q_point))
@@ -153,8 +156,9 @@ class IntroduceCycloid(CycloidScene):
 
 class LeviSolution(CycloidScene):
     CONFIG = {
-        "cycloid_fraction" : 0.25,
+        "cycloid_fraction": 0.25,
     }
+
     def construct(self):
         CycloidScene.construct(self)
         self.add(self.ceiling)
@@ -175,7 +179,6 @@ class LeviSolution(CycloidScene):
             method()
             self.wait()
 
-
     def generate_points(self):
         index = int(self.cycloid_fraction*self.cycloid.get_num_points())
         p_point = self.cycloid.points[index]
@@ -193,12 +196,12 @@ class LeviSolution(CycloidScene):
         self.play(RollAlongVector(
             self.circle,
             (1-self.cycloid_fraction)*self.radius*2*np.pi*LEFT,
-            rotation_vector = IN,
-            run_time = 2
+            rotation_vector=IN,
+            run_time=2
         ))
 
     def draw_p_and_c(self):
-        radial_line = self.circle.submobjects[0] ##Hacky
+        radial_line = self.circle.submobjects[0]  # Hacky
         self.play(Transform(radial_line, self.p_dot))
         self.remove(radial_line)
         self.add(self.p_dot)
@@ -207,14 +210,14 @@ class LeviSolution(CycloidScene):
         self.play(Transform(self.ceiling.copy(), self.c_dot))
         self.play(ShimmerIn(self.c_label))
 
-    def show_pendulum(self, arc_angle = np.pi, arc_color = GREEN):
+    def show_pendulum(self, arc_angle=np.pi, arc_color=GREEN):
         words = TextMobject(": Instantaneous center of rotation")
         words.next_to(self.c_label)
         line = Line(self.p_point, self.c_point)
         line_angle = line.get_angle()+np.pi
         line_length = line.get_length()
         line.add(self.p_dot.copy())
-        line.get_center = lambda : self.c_point
+        line.get_center = lambda: self.c_point
         tangent_line = Line(3*LEFT, 3*RIGHT)
         tangent_line.rotate(line_angle-np.pi/2)
         tangent_line.shift(self.p_point)
@@ -230,7 +233,7 @@ class LeviSolution(CycloidScene):
         self.play(ShowCreation(line))
         self.play(ShimmerIn(words))
         self.wait()
-        pairs = [    
+        pairs = [
             (line_angle, arc_angle/2),
             (line_angle+arc_angle/2, -arc_angle),
             (line_angle-arc_angle/2, arc_angle/2),
@@ -238,20 +241,20 @@ class LeviSolution(CycloidScene):
         arcs = []
         for start, angle in pairs:
             arc = Arc(
-                angle = angle,
-                radius = line_length,
-                start_angle = start,
-                color = GREEN
+                angle=angle,
+                radius=line_length,
+                start_angle=start,
+                color=GREEN
             )
             arc.shift(self.c_point)
             self.play(
                 ShowCreation(arc),
                 ApplyMethod(
-                    line.rotate_in_place, 
+                    line.rotate_in_place,
                     angle,
-                    path_func = path_along_arc(angle)
+                    path_func=path_along_arc(angle)
                 ),
-                run_time = 2
+                run_time=2
             )
             arcs.append(arc)
         self.wait()
@@ -267,7 +270,7 @@ class LeviSolution(CycloidScene):
 
     def show_diameter(self):
         exceptions = [
-            self.circle, 
+            self.circle,
             self.tangent_line,
             self.pc_line,
             self.right_angle_symbol
@@ -304,13 +307,13 @@ class LeviSolution(CycloidScene):
         self.add(*everything)
 
         self.d_mob = d_mob
-        self.bottom_point = bottom_point        
+        self.bottom_point = bottom_point
 
-    def show_theta(self, radius = 1):
+    def show_theta(self, radius=1):
         arc = Arc(
-            angle = self.tangent_line.get_angle()-np.pi/2,
-            radius = radius,
-            start_angle = np.pi/2
+            angle=self.tangent_line.get_angle()-np.pi/2,
+            radius=radius,
+            start_angle=np.pi/2
         )
 
         theta = TexMobject("\\theta")
@@ -321,32 +324,32 @@ class LeviSolution(CycloidScene):
             ShowCreation(arc),
             ShimmerIn(theta)
         )
-        self.arc = arc 
+        self.arc = arc
         self.theta = theta
 
     def show_similar_triangles(self):
         y_point = np.array(self.p_point)
         y_point[1] = self.point_a[1]
         new_arc = Arc(
-            angle = self.tangent_line.get_angle()-np.pi/2,
-            radius = 0.5,
-            start_angle = np.pi
+            angle=self.tangent_line.get_angle()-np.pi/2,
+            radius=0.5,
+            start_angle=np.pi
         )
         new_arc.shift(self.c_point)
         new_theta = self.theta.copy()
         new_theta.next_to(new_arc, LEFT)
         new_theta.shift(0.1*DOWN)
         kwargs = {
-            "stroke_width" : 2*DEFAULT_STROKE_WIDTH,
+            "stroke_width": 2*DEFAULT_STROKE_WIDTH,
         }
         triangle1 = Polygon(
             self.p_point, self.c_point, self.bottom_point,
-            color = MAROON,
+            color=MAROON,
             **kwargs
         )
         triangle2 = Polygon(
             y_point, self.p_point, self.c_point,
-            color = WHITE,
+            color=WHITE,
             **kwargs
         )
         y_line = Line(self.p_point, y_point)
@@ -354,7 +357,7 @@ class LeviSolution(CycloidScene):
         self.play(
             Transform(self.arc.copy(), new_arc),
             Transform(self.theta.copy(), new_theta),
-            run_time = 3
+            run_time=3
         )
         self.wait()
         self.play(FadeIn(triangle1))
@@ -384,7 +387,7 @@ class LeviSolution(CycloidScene):
             trig_mob.rotate(line.get_angle())
             trig_mob.shift(line.get_center())
             if line is self.y_line:
-                trig_mob.shift(0.1*UP) 
+                trig_mob.shift(0.1*UP)
 
             self.play(Transform(mob, trig_mob))
             self.add(trig_mob)
@@ -392,7 +395,6 @@ class LeviSolution(CycloidScene):
 
         self.remove(mob)
         self.d_sin_squared_theta = trig_mob
-
 
     def show_y(self):
         y_equals = TexMobject(["y", "="])
@@ -421,7 +423,7 @@ class LeviSolution(CycloidScene):
         self.y_expression = y_expression
 
     def rearrange(self):
-        sqrt_nudge = 0.2*LEFT        
+        sqrt_nudge = 0.2*LEFT
         y, equals = self.y_equals.split()
         d, sin, squared, theta = self.y_expression.split()
         y_sqrt = TexMobject("\\sqrt{\\phantom{y}}")
@@ -433,7 +435,7 @@ class LeviSolution(CycloidScene):
             ShimmerIn(y_sqrt),
             ShimmerIn(d_sqrt),
             ApplyMethod(squared.shift, 4*UP),
-            ApplyMethod(theta.shift, 1.5* squared.get_width()*LEFT)
+            ApplyMethod(theta.shift, 1.5 * squared.get_width()*LEFT)
         )
         self.wait()
         y_sqrt.add(y)
@@ -456,13 +458,13 @@ class LeviSolution(CycloidScene):
             ShimmerIn(one_over),
             ApplyMethod(
                 d_sqrt.next_to, one_over, DOWN,
-                path_func = path_along_arc(-np.pi)
+                path_func=path_along_arc(-np.pi)
             ),
             ApplyMethod(
                 y_sqrt.next_to, sin_over, DOWN,
-                path_func = path_along_arc(-np.pi)
+                path_func=path_along_arc(-np.pi)
             ),
-            run_time = 2
+            run_time=2
         )
         self.wait()
 
@@ -476,8 +478,6 @@ class LeviSolution(CycloidScene):
         )
 
 
-
-
 class EquationsForCycloid(CycloidScene):
     def construct(self):
         CycloidScene.construct(self)
@@ -488,17 +488,18 @@ class EquationsForCycloid(CycloidScene):
         top, bottom = equations.split()
         bottom.next_to(top, DOWN)
         equations.center()
-        equations.to_edge(UP, buff = 1.3)
+        equations.to_edge(UP, buff=1.3)
 
         self.play(ShimmerIn(equations))
         self.grow_parts()
-        self.draw_cycloid(rate_func=linear, run_time = 5)
+        self.draw_cycloid(rate_func=linear, run_time=5)
         self.wait()
+
 
 class SlidingObject(CycloidScene, PathSlidingScene):
     CONFIG = {
-        "show_time" : False,
-        "wait_and_add" : False
+        "show_time": False,
+        "wait_and_add": False
     }
 
     args_list = [(True,), (False,)]
@@ -506,7 +507,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
     @staticmethod
     def args_to_string(with_words):
         return "WithWords" if with_words else "WithoutWords"
-        
+
     @staticmethod
     def string_to_args(string):
         return string == "WithWords"
@@ -525,12 +526,13 @@ class SlidingObject(CycloidScene, PathSlidingScene):
         if with_words:
             words1 = TextMobject("Trajectory due to gravity")
             arrow = TexMobject("\\leftrightarrow")
-            words2 = TextMobject("Trajectory due \\emph{constantly} rotating wheel")
+            words2 = TextMobject(
+                "Trajectory due \\emph{constantly} rotating wheel")
             words1.next_to(arrow, LEFT)
             words2.next_to(arrow, RIGHT)
             words = Mobject(words1, arrow, words2)
             words.set_width(FRAME_WIDTH-1)
-            words.to_edge(UP, buff = 0.2)
+            words.to_edge(UP, buff=0.2)
             words.to_edge(LEFT)
 
         self.play(ShowCreation(self.cycloid.copy()))
@@ -549,22 +551,21 @@ class SlidingObject(CycloidScene, PathSlidingScene):
         self.wait()
         self.remove(self.circle)
         start_time = len(self.frames)*self.frame_duration
-        self.remove(self.slider)        
+        self.remove(self.slider)
         self.slide(central_randy, self.cycloid)
         end_time = len(self.frames)*self.frame_duration
         self.play_over_time_range(
             start_time,
             end_time,
             RollAlongVector(
-                self.circle, 
+                self.circle,
                 self.cycloid.points[-1]-self.cycloid.points[0],
-                run_time = end_time-start_time,
+                run_time=end_time-start_time,
                 rate_func=linear
             )
         )
         self.add(self.circle, self.slider)
         self.wait()
-
 
 
 class RotateWheel(CycloidScene):
@@ -574,17 +575,7 @@ class RotateWheel(CycloidScene):
 
         self.play(Rotating(
             self.circle,
-            axis = OUT,
-            run_time = 5,
-            rate_func = smooth
+            axis=OUT,
+            run_time=5,
+            rate_func=smooth
         ))
-
-
-
-
-
-
-
-
-
-

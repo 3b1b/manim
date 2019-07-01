@@ -186,7 +186,8 @@ class AskAboutShadowRelation(SpecialThreeDScene):
         R_label.next_to(radial_line, DOWN, SMALL_BUFF)
         shadow.add(radial_line, R_label)
         shadow.move_to(
-            self.camera.transform_points_pre_display(sphere, [sphere.get_center()])[0]
+            self.camera.transform_points_pre_display(
+                sphere, [sphere.get_center()])[0]
         )
 
         shadows = VGroup(*[shadow.copy() for x in range(4)])

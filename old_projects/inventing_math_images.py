@@ -11,22 +11,21 @@ from script_wrapper import command_line_create_scene
 from .inventing_math import divergent_sum, draw_you
 
 
-
 class SimpleText(Scene):
     args_list = [
-         ("Build the foundation of what we know",),
-         ("What would that feel like?",),
-         ("Arbitrary decisions hinder generality",),
-         ("Section 1: Discovering and Defining Infinite Sums",),
-         ("Section 2: Seeking Generality",),
-         ("Section 3: Redefining Distance",),
-         ("``Approach''?",),
-         ("Rigor would dictate you ignore these",),
-         ("dist($A$, $B$) = dist($A+x$, $B+x$) \\quad for all $x$",),
-         ("How does a useful distance function differ from a random function?",),
-         ("Pause now, if you like, and see if you can invent your own distance function from this.",),
-         ("$p$-adic metrics \\\\ ($p$ is any prime number)",),
-         ("This is not meant to match the history of discoveries",),
+        ("Build the foundation of what we know",),
+        ("What would that feel like?",),
+        ("Arbitrary decisions hinder generality",),
+        ("Section 1: Discovering and Defining Infinite Sums",),
+        ("Section 2: Seeking Generality",),
+        ("Section 3: Redefining Distance",),
+        ("``Approach''?",),
+        ("Rigor would dictate you ignore these",),
+        ("dist($A$, $B$) = dist($A+x$, $B+x$) \\quad for all $x$",),
+        ("How does a useful distance function differ from a random function?",),
+        ("Pause now, if you like, and see if you can invent your own distance function from this.",),
+        ("$p$-adic metrics \\\\ ($p$ is any prime number)",),
+        ("This is not meant to match the history of discoveries",),
     ]
     @staticmethod
     def args_to_string(text):
@@ -89,7 +88,8 @@ class OneMinusOnePoem(Scene):
             "1-1+1-1+\\cdots = \\frac{1}{2}"
         )
         self.add(verse1, verse2, equation)
-        
+
+
 class DivergentSum(Scene):
     def construct(self):
         self.add(divergent_sum().scale(0.75))
@@ -125,8 +125,4 @@ class FinalSlide(Scene):
             they should converge in the 2-adic metric, but don't converge 
             to a rational number? Go on!  Search!  Invent!
             \\end{flushleft}
-        """, size = "\\small"))
-
-
-
-
+        """, size="\\small"))

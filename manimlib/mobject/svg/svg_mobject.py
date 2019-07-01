@@ -51,8 +51,10 @@ class SVGMobject(VMobject):
             raise Exception("Must specify file for SVGMobject")
         possible_paths = [
             os.path.join(os.path.join("assets", "svg_images"), self.file_name),
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".svg"),
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".xdv"),
+            os.path.join(os.path.join("assets", "svg_images"),
+                         self.file_name + ".svg"),
+            os.path.join(os.path.join("assets", "svg_images"),
+                         self.file_name + ".xdv"),
             self.file_name,
         ]
         for path in possible_paths:
@@ -265,7 +267,8 @@ class SVGMobject(VMobject):
             scale_values = string_to_numbers(transform)
             if len(scale_values) == 2:
                 scale_x, scale_y = scale_values
-                mobject.scale(np.array([scale_x, scale_y, 1]), about_point=ORIGIN)
+                mobject.scale(
+                    np.array([scale_x, scale_y, 1]), about_point=ORIGIN)
             elif len(scale_values) == 1:
                 scale = scale_values[0]
                 mobject.scale(np.array([scale, scale, 1]), about_point=ORIGIN)

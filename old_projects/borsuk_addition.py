@@ -999,7 +999,8 @@ class FunctionGOutputSpace(FunctionGInputSpace):
         self.play(
             UpdateFromAlphaFunc(
                 equator,
-                lambda m, a: m.become(self.get_lat_line(a * PI / 2)).set_stroke(width=0),
+                lambda m, a: m.become(self.get_lat_line(
+                    a * PI / 2)).set_stroke(width=0),
                 run_time=16
             ),
             UpdateFromFunc(
@@ -1051,7 +1052,7 @@ class RotationOfEquatorGraphInOuputSpace(FunctionGOutputSpace):
             Rotate(
                 VGroup(flat_eq, vector),
                 PI, about_point=ORIGIN, run_time=5
-        ))
+            ))
         self.play(FadeOut(vector), FadeOut(vector_copy))
 
 

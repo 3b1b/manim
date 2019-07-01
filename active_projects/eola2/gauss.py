@@ -140,7 +140,8 @@ class ShowRowReduction(Scene):
         self.play(FadeIn(scalar_mob))
         for elem, new_elem in zip(row, new_row):
             self.play(scalar_mob.next_to, elem, DR, SMALL_BUFF)
-            self.play(ReplacementTransform(elem, new_elem, path_arc=30 * DEGREES))
+            self.play(ReplacementTransform(
+                elem, new_elem, path_arc=30 * DEGREES))
         self.play(FadeOut(scalar_mob))
         self.play(new_row.set_color, WHITE)
         self.play(FadeOut(label))

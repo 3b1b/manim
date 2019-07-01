@@ -381,7 +381,8 @@ class ShowDerivativeAtExamplePoint(Scene):
     def get_result_vector(self, x, y):
         result_vector = Matrix([
             ["e^{-%s^2 + \\cos(2\\cdot %s)} (-2\\cdot %s)" % (x, y, x)],
-            ["e^{-%s^2 + \\cos(2\\cdot %s)} \\big(-\\sin(2\\cdot %s) \\cdot 2\\big)" % (x, y, y)],
+            ["e^{-%s^2 + \\cos(2\\cdot %s)} \\big(-\\sin(2\\cdot %s) \\cdot 2\\big)" %
+             (x, y, y)],
         ], v_buff=1.2, element_alignment_corner=ORIGIN)
 
         x_terms = VGroup(

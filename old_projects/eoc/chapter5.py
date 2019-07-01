@@ -1,18 +1,20 @@
 from manimlib.imports import *
 from old_projects.eoc.chapter4 import ThreeLinesChainRule
 
+
 class ExpFootnoteOpeningQuote(OpeningQuote):
     CONFIG = {
-        "quote" : [
-        "Who has not been amazed to learn that the function",
-        "$y = e^x$,", "like a phoenix rising again from its own",
-        "ashes, is its own derivative?",
+        "quote": [
+            "Who has not been amazed to learn that the function",
+            "$y = e^x$,", "like a phoenix rising again from its own",
+            "ashes, is its own derivative?",
         ],
-        "highlighted_quote_terms" : {
-            "$y = e^x$" : MAROON_B
+        "highlighted_quote_terms": {
+            "$y = e^x$": MAROON_B
         },
-        "author" : "Francois le Lionnais"
+        "author": "Francois le Lionnais"
     }
+
 
 class LastVideo(TeacherStudentsScene):
     def construct(self):
@@ -27,7 +29,7 @@ class LastVideo(TeacherStudentsScene):
             "\\frac{d(\\sin(x))}{dx} = \\cos(x)",
         ])))
         known_formulas.arrange(
-            DOWN, buff = MED_LARGE_BUFF,
+            DOWN, buff=MED_LARGE_BUFF,
         )
         known_formulas.set_height(2.5)
         exp_question = TexMobject("2^x", ", 7^x, ", "e^x", " ???")
@@ -37,7 +39,7 @@ class LastVideo(TeacherStudentsScene):
         known_formulas.shift(MED_LARGE_BUFF*LEFT)
         last_video_brace.save_state()
         last_video_brace.shift(3*LEFT)
-        last_video_brace.set_fill(opacity = 0)
+        last_video_brace.set_fill(opacity=0)
 
         self.add(series)
         self.play(
@@ -48,8 +50,8 @@ class LastVideo(TeacherStudentsScene):
         self.play(Write(known_formulas))
         self.wait()
         self.student_says(
-            exp_question, student_index = 1,
-            added_anims = [self.get_teacher().change_mode, "pondering"]
+            exp_question, student_index=1,
+            added_anims=[self.get_teacher().change_mode, "pondering"]
         )
         self.wait(3)
         e_to_x = exp_question.get_part_by_tex("e^x")
@@ -61,17 +63,19 @@ class LastVideo(TeacherStudentsScene):
         )
         self.wait(2)
 
+
 class PopulationSizeGraphVsPopulationMassGraph(Scene):
     def construct(self):
         pass
 
+
 class DoublingPopulation(PiCreatureScene):
     CONFIG = {
-        "time_color" : YELLOW,
-        "pi_creature_grid_dimensions" : (8, 8),
-        "pi_creature_grid_height" : 6,
+        "time_color": YELLOW,
+        "pi_creature_grid_dimensions": (8, 8),
+        "pi_creature_grid_height": 6,
     }
-    
+
     def construct(self):
         self.remove(self.get_pi_creatures())
         self.introduce_expression()
@@ -103,7 +107,7 @@ class DoublingPopulation(PiCreatureScene):
             for function in (P_t, M_t)
         ]
         for brace, word in (pop_brace, "size"), (mass_brace, "mass"):
-            text = brace.get_text("Population %s"%word)
+            text = brace.get_text("Population %s" % word)
             text.to_edge(LEFT)
             brace.text = text
 
@@ -113,14 +117,14 @@ class DoublingPopulation(PiCreatureScene):
             Transform(f_x, f_t),
             FadeIn(
                 t_expression,
-                run_time = 2,
-                lag_ratio = 0.5
+                run_time=2,
+                lag_ratio=0.5
             )
         )
         self.play(Transform(f_x, P_t))
         self.play(
             GrowFromCenter(pop_brace),
-            Write(pop_brace.text, run_time = 2)
+            Write(pop_brace.text, run_time=2)
         )
         self.wait(2)
 
@@ -148,7 +152,7 @@ class DoublingPopulation(PiCreatureScene):
         for x in range(total_num_days-num_start_days):
             self.let_one_day_pass()
             self.wait()
-        self.joint_blink(shuffle = False)
+        self.joint_blink(shuffle=False)
         self.wait()
 
     def count_through_days(self):
@@ -169,7 +173,7 @@ class DoublingPopulation(PiCreatureScene):
     def ask_about_dM_dt(self):
         dM_dt_question = TexMobject("{dM", "\\over dt}", "=", "???")
         dM, dt, equals, q_marks = dM_dt_question
-        dM_dt_question.next_to(self.function, DOWN, buff = LARGE_BUFF)
+        dM_dt_question.next_to(self.function, DOWN, buff=LARGE_BUFF)
         dM_dt_question.to_edge(LEFT)
 
         self.play(
@@ -210,11 +214,11 @@ class DoublingPopulation(PiCreatureScene):
             *self.get_on_screen_pi_creatures()[-num_new_creatures:]
         )
         rect = Rectangle(
-            color = GREEN,
-            fill_color = BLUE,
-            fill_opacity = 0.3,
+            color=GREEN,
+            fill_color=BLUE,
+            fill_opacity=0.3,
         )
-        rect.replace(new_creatures, stretch = True)
+        rect.replace(new_creatures, stretch=True)
         rect.stretch_to_fit_height(rect.get_height()+MED_SMALL_BUFF)
         rect.stretch_to_fit_width(rect.get_width()+MED_SMALL_BUFF)
         self.play(DrawBorderThenFill(rect))
@@ -233,7 +237,7 @@ class DoublingPopulation(PiCreatureScene):
             "{ {2^{t+dt} - 2^t} \\over", "dt}", "= \\, ???"
         )
         VGroup(
-            false_deriv[0][3], 
+            false_deriv[0][3],
             false_deriv[2][-1],
             difference_eq[0][1],
             difference_eq[0][-2],
@@ -259,9 +263,9 @@ class DoublingPopulation(PiCreatureScene):
         ]
         for expression, text_args in zip(expressions, text_arg_list):
             expression.next_to(
-                self.function, DOWN, 
-                buff = LARGE_BUFF,
-                aligned_edge = LEFT,
+                self.function, DOWN,
+                buff=LARGE_BUFF,
+                aligned_edge=LEFT,
             )
             expression.brace = Brace(expression, DOWN)
             expression.brace_text = expression.brace.get_text(*text_args)
@@ -271,7 +275,6 @@ class DoublingPopulation(PiCreatureScene):
         new_time.move_to(time, LEFT)
 
         fading_creatures = VGroup(*self.get_on_screen_pi_creatures()[8:])
-
 
         self.play(*list(map(FadeIn, [
             false_deriv, false_deriv.brace, false_deriv.brace_text
@@ -283,7 +286,7 @@ class DoublingPopulation(PiCreatureScene):
         )
         self.wait()
         for x in range(3):
-            self.let_one_day_pass(run_time = 2)
+            self.let_one_day_pass(run_time=2)
             self.wait(2)
 
         for expression in difference_eq, real_deriv:
@@ -299,7 +302,7 @@ class DoublingPopulation(PiCreatureScene):
             self.let_one_day_pass()
         self.wait()
 
-        rect = Rectangle(color = YELLOW)
+        rect = Rectangle(color=YELLOW)
         rect.replace(real_deriv)
         rect.stretch_to_fit_width(rect.get_width()+MED_SMALL_BUFF)
         rect.stretch_to_fit_height(rect.get_height()+MED_SMALL_BUFF)
@@ -309,10 +312,10 @@ class DoublingPopulation(PiCreatureScene):
         self.play(ShowCreation(rect))
         self.play(*[
             ApplyFunction(
-                lambda pi : pi.change_mode("pondering").look_at(real_deriv),
+                lambda pi: pi.change_mode("pondering").look_at(real_deriv),
                 pi,
-                run_time = 2,
-                rate_func = squish_rate_func(smooth, a, a+0.5)
+                run_time=2,
+                rate_func=squish_rate_func(smooth, a, a+0.5)
             )
             for pi in self.get_pi_creatures()
             for a in [0.5*random.random()]
@@ -325,11 +328,11 @@ class DoublingPopulation(PiCreatureScene):
         width, height = self.pi_creature_grid_dimensions
         creature_array = VGroup(*[
             VGroup(*[
-                PiCreature(mode = "plain")
+                PiCreature(mode="plain")
                 for y in range(height)
-            ]).arrange(UP, buff = MED_LARGE_BUFF)
+            ]).arrange(UP, buff=MED_LARGE_BUFF)
             for x in range(width)
-        ]).arrange(RIGHT, buff = MED_LARGE_BUFF)
+        ]).arrange(RIGHT, buff=MED_LARGE_BUFF)
         creatures = VGroup(*it.chain(*creature_array))
         creatures.set_height(self.pi_creature_grid_height)
         creatures.to_corner(DOWN+RIGHT)
@@ -352,7 +355,7 @@ class DoublingPopulation(PiCreatureScene):
         self.play(*list(map(FadeIn, [first_creature, new_time])))
         self.t_expression.submobjects[-1] = new_time
 
-    def let_one_day_pass(self, run_time = 2):
+    def let_one_day_pass(self, run_time=2):
         all_creatures = self.get_pi_creatures()
         on_screen_creatures = self.get_on_screen_pi_creatures()
         low_i = len(on_screen_creatures)
@@ -364,21 +367,21 @@ class DoublingPopulation(PiCreatureScene):
         for old_pi, pi in zip(on_screen_creatures, new_creatures):
             pi.save_state()
             child = pi.copy()
-            child.scale(0.25, about_point = child.get_bottom())
-            child.eyes.scale(1.5, about_point = child.eyes.get_bottom())
+            child.scale(0.25, about_point=child.get_bottom())
+            child.eyes.scale(1.5, about_point=child.eyes.get_bottom())
             pi.move_to(old_pi)
-            pi.set_fill(opacity = 0)
+            pi.set_fill(opacity=0)
 
             index = list(new_creatures).index(pi)
             prop = float(index)/len(new_creatures)
-            alpha  = np.clip(len(new_creatures)/8.0, 0, 0.5)
+            alpha = np.clip(len(new_creatures)/8.0, 0, 0.5)
             rate_func = squish_rate_func(
                 smooth, alpha*prop, alpha*prop+(1-alpha)
             )
 
-            to_child_anim = Transform(pi, child, rate_func = rate_func)
+            to_child_anim = Transform(pi, child, rate_func=rate_func)
             to_child_anim.update(1)
-            growing_anim = ApplyMethod(pi.restore, rate_func = rate_func)
+            growing_anim = ApplyMethod(pi.restore, rate_func=rate_func)
             to_child_anim.update(0)
 
             to_children_anims.append(to_child_anim)
@@ -391,9 +394,9 @@ class DoublingPopulation(PiCreatureScene):
 
         growing_anims.append(Transform(time, new_time))
 
-        self.play(*to_children_anims, run_time = run_time/2.0)
-        self.play(*growing_anims, run_time = run_time/2.0)
-        
+        self.play(*to_children_anims, run_time=run_time/2.0)
+        self.play(*growing_anims, run_time=run_time/2.0)
+
     def get_num_pi_creatures_on_screen(self):
         mobjects = self.get_mobjects()
         return sum([
@@ -405,8 +408,8 @@ class DoublingPopulation(PiCreatureScene):
         brace = Brace(on_screen_creatures, LEFT)
         n = len(on_screen_creatures)
         label = brace.get_text(
-            "$2^%d$"%int(np.log2(n)),
-            "$=%d$"%n,
+            "$2^%d$" % int(np.log2(n)),
+            "$=%d$" % n,
         )
         brace.add(label)
         return brace
@@ -421,14 +424,14 @@ class DoublingPopulation(PiCreatureScene):
     def get_from_day_to_day_label(self):
         curr_day = self.get_curr_day()
         top_words = TextMobject(
-            "From day", str(curr_day), 
+            "From day", str(curr_day),
             "to", str(curr_day+1), ":"
         )
         top_words.set_width(4)
         top_words.next_to(
             self.function, DOWN,
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT,
         )
         top_words[1].set_color(GREEN)
 
@@ -437,41 +440,43 @@ class DoublingPopulation(PiCreatureScene):
             "\\text{ creatures}", "\\over {1 \\text{ day}}"
         )
         bottom_words[0].set_color(GREEN)
-        bottom_words.next_to(top_words, DOWN, buff = MED_LARGE_BUFF)
+        bottom_words.next_to(top_words, DOWN, buff=MED_LARGE_BUFF)
 
         return top_words, bottom_words
 
+
 class GraphOfTwoToT(GraphScene):
     CONFIG = {
-        "x_axis_label" : "$t$",
-        "y_axis_label" : "$M$",
-        "x_labeled_nums" : list(range(1, 7)),
-        "y_labeled_nums" : list(range(8, 40, 8)),
-        "x_max" : 6,
-        "y_min" : 0,
-        "y_max" : 32,
-        "y_tick_frequency" : 2,
-        "graph_origin" : 2.5*DOWN + 5*LEFT,
+        "x_axis_label": "$t$",
+        "y_axis_label": "$M$",
+        "x_labeled_nums": list(range(1, 7)),
+        "y_labeled_nums": list(range(8, 40, 8)),
+        "x_max": 6,
+        "y_min": 0,
+        "y_max": 32,
+        "y_tick_frequency": 2,
+        "graph_origin": 2.5*DOWN + 5*LEFT,
     }
+
     def construct(self):
         self.setup_axes()
         example_t = 3
-        graph = self.get_graph(lambda t : 2**t, color = BLUE_C)
+        graph = self.get_graph(lambda t: 2**t, color=BLUE_C)
         self.graph = graph
         graph_label = self.get_graph_label(
             graph, "M(t) = 2^t",
-            direction = LEFT,
+            direction=LEFT,
         )
         label_group = self.get_label_group(example_t)
         v_line, brace, height_label, ss_group, slope_label = label_group
         self.animate_secant_slope_group_change(
             ss_group,
-            target_dx = 1,
-            run_time = 0
+            target_dx=1,
+            run_time=0
         )
         self.remove(ss_group)
 
-        #Draw graph and revert to tangent
+        # Draw graph and revert to tangent
         self.play(ShowCreation(graph))
         self.play(Write(graph_label))
         self.wait()
@@ -480,23 +485,23 @@ class GraphOfTwoToT(GraphScene):
         for target_dx in 0.01, 1, 0.01:
             self.animate_secant_slope_group_change(
                 ss_group,
-                target_dx = target_dx
+                target_dx=target_dx
             )
             self.wait()
 
-        #Mark up with values
+        # Mark up with values
 
         self.play(ShowCreation(v_line))
         self.play(
             GrowFromCenter(brace),
-            Write(height_label, run_time = 1)
+            Write(height_label, run_time=1)
         )
         self.wait()
         self.play(
             FadeIn(
-                slope_label, 
-                run_time = 4,
-                lag_ratio = 0.5
+                slope_label,
+                run_time=4,
+                lag_ratio=0.5
             ),
             ReplacementTransform(
                 height_label.copy(),
@@ -505,7 +510,7 @@ class GraphOfTwoToT(GraphScene):
         )
         self.wait()
 
-        #Vary value
+        # Vary value
         threes = VGroup(height_label[1], slope_label[2][1])
         ts = VGroup(*[
             TexMobject("t").set_color(YELLOW).scale(0.75).move_to(three)
@@ -514,6 +519,7 @@ class GraphOfTwoToT(GraphScene):
         self.play(Transform(threes, ts))
 
         alt_example_t = example_t+1
+
         def update_label_group(group, alpha):
             t = interpolate(example_t, alt_example_t, alpha)
             new_group = self.get_label_group(t)
@@ -525,12 +531,12 @@ class GraphOfTwoToT(GraphScene):
 
         self.play(UpdateFromAlphaFunc(
             label_group, update_label_group,
-            run_time = 3,
+            run_time=3,
         ))
         self.play(UpdateFromAlphaFunc(
             label_group, update_label_group,
-            run_time = 3,
-            rate_func = lambda t : 1 - 1.5*smooth(t)
+            run_time=3,
+            rate_func=lambda t: 1 - 1.5*smooth(t)
         ))
 
     def get_label_group(self, t):
@@ -538,27 +544,27 @@ class GraphOfTwoToT(GraphScene):
 
         v_line = self.get_vertical_line_to_graph(
             t, graph,
-            color = YELLOW,
+            color=YELLOW,
         )
         brace = Brace(v_line, RIGHT)
-        height_label = brace.get_text("$2^%d$"%t)
+        height_label = brace.get_text("$2^%d$" % t)
 
         ss_group = self.get_secant_slope_group(
-            t, graph, dx = 0.01,
-            df_label = "dM",
-            dx_label = "dt",
-            dx_line_color = GREEN,
-            secant_line_color = RED,
+            t, graph, dx=0.01,
+            df_label="dM",
+            dx_label="dt",
+            dx_line_color=GREEN,
+            secant_line_color=RED,
         )
         slope_label = TexMobject(
-            "\\text{Slope}", "=", 
-            "2^%d"%t,
-            "(%.7f\\dots)"%np.log(2)
+            "\\text{Slope}", "=",
+            "2^%d" % t,
+            "(%.7f\\dots)" % np.log(2)
         )
         slope_label.next_to(
             ss_group.secant_line.point_from_proportion(0.65),
             DOWN+RIGHT,
-            buff = 0
+            buff=0
         )
         slope_label.set_color_by_tex("Slope", RED)
         return VGroup(
@@ -566,14 +572,16 @@ class GraphOfTwoToT(GraphScene):
             ss_group, slope_label
         )
 
+
 class SimpleGraphOfTwoToT(GraphOfTwoToT):
     CONFIG = {
-        "x_axis_label" : "",
-        "y_axis_label" : "",
+        "x_axis_label": "",
+        "y_axis_label": "",
     }
+
     def construct(self):
         self.setup_axes()
-        func = lambda t : 2**t
+        def func(t): return 2**t
         graph = self.get_graph(func)
         line_pairs = VGroup()
         for x in 1, 2, 3, 4, 5:
@@ -585,21 +593,21 @@ class SimpleGraphOfTwoToT(GraphOfTwoToT):
                 DashedLine(y_axis_point, point),
             ))
 
-
-        self.play(ShowCreation(graph, run_time = 2))
+        self.play(ShowCreation(graph, run_time=2))
         for pair in line_pairs:
             self.play(ShowCreation(pair))
         self.wait()
 
+
 class FakeDiagram(TeacherStudentsScene):
     def construct(self):
-        gs = GraphScene(skip_animations = True)
+        gs = GraphScene(skip_animations=True)
         gs.setup_axes()
         background_graph, foreground_graph = graphs = VGroup(*[
             gs.get_graph(
-                lambda t : np.log(2)*2**t,
-                x_min = -8,
-                x_max = 2 + dx
+                lambda t: np.log(2)*2**t,
+                x_min=-8,
+                x_max=2 + dx
             )
             for dx in (0.25, 0)
         ])
@@ -609,11 +617,11 @@ class FakeDiagram(TeacherStudentsScene):
             for alpha in np.linspace(0, 1, 20):
                 point = interpolate(axis_point, graph.points[0], alpha)
                 graph.add_line_to(point)
-            graph.set_stroke(width = 1)
-            graph.set_fill(opacity = 1)
+            graph.set_stroke(width=1)
+            graph.set_fill(opacity=1)
             graph.set_color(BLUE_D)
         background_graph.set_color(YELLOW)
-        background_graph.set_stroke(width = 0.5)
+        background_graph.set_stroke(width=0.5)
 
         graphs.next_to(self.teacher, UP+LEFT, LARGE_BUFF)
         two_to_t = TexMobject("2^t")
@@ -624,14 +632,14 @@ class FakeDiagram(TeacherStudentsScene):
             graph.get_corner(DOWN+RIGHT)
             for graph in graphs
         ])
-        dt_brace = Brace(corner_line, DOWN, buff = SMALL_BUFF)
+        dt_brace = Brace(corner_line, DOWN, buff=SMALL_BUFF)
         dt = dt_brace.get_text("$dt$")
 
-        side_brace = Brace(graphs, RIGHT, buff = SMALL_BUFF)
+        side_brace = Brace(graphs, RIGHT, buff=SMALL_BUFF)
         deriv = side_brace.get_text("$\\frac{d(2^t)}{dt}$")
 
-        circle = Circle(color = RED)
-        circle.replace(deriv, stretch = True)
+        circle = Circle(color=RED)
+        circle.replace(deriv, stretch=True)
         circle.scale_in_place(1.5)
 
         words = TextMobject("Not a real explanation")
@@ -640,7 +648,7 @@ class FakeDiagram(TeacherStudentsScene):
         arrow.set_color(WHITE)
 
         diagram = VGroup(
-            graphs, two_to_t, dt_brace, dt, 
+            graphs, two_to_t, dt_brace, dt,
             side_brace, deriv, circle,
             words, arrow
         )
@@ -663,7 +671,7 @@ class FakeDiagram(TeacherStudentsScene):
             Write(dt)
         )
         self.play(GrowFromCenter(side_brace))
-        self.play(Write(deriv, run_time = 2))
+        self.play(Write(deriv, run_time=2))
         self.wait()
 
         self.play(
@@ -691,21 +699,23 @@ class FakeDiagram(TeacherStudentsScene):
 
         self.diagram = diagram
 
+
 class AnalyzeExponentRatio(PiCreatureScene):
     CONFIG = {
-        "base" : 2,
-        "base_str" : "2",
+        "base": 2,
+        "base_str": "2",
     }
+
     def construct(self):
         base_str = self.base_str
 
-        func_def = TexMobject("M(", "t", ")", "= ", "%s^"%base_str, "t")
+        func_def = TexMobject("M(", "t", ")", "= ", "%s^" % base_str, "t")
         func_def.to_corner(UP+LEFT)
         self.add(func_def)
 
         ratio = TexMobject(
-            "{ {%s^"%base_str, "{t", "+", "dt}", "-", 
-            "%s^"%base_str, "t}",
+            "{ {%s^" % base_str, "{t", "+", "dt}", "-",
+            "%s^" % base_str, "t}",
             "\\over \\,", "dt}"
         )
         ratio.shift(UP+LEFT)
@@ -713,12 +723,11 @@ class AnalyzeExponentRatio(PiCreatureScene):
         lhs = TexMobject("{dM", "\\over \\,", "dt}", "(", "t", ")", "=")
         lhs.next_to(ratio, LEFT)
 
-
         two_to_t_plus_dt = VGroup(*ratio[:4])
         two_to_t = VGroup(*ratio[5:7])
         two_to_t_two_to_dt = TexMobject(
-            "%s^"%base_str, "t", 
-            "%s^"%base_str, "{dt}"
+            "%s^" % base_str, "t",
+            "%s^" % base_str, "{dt}"
         )
         two_to_t_two_to_dt.move_to(two_to_t_plus_dt, DOWN+LEFT)
         exp_prop_brace = Brace(two_to_t_two_to_dt, UP)
@@ -728,21 +737,21 @@ class AnalyzeExponentRatio(PiCreatureScene):
         lp, rp = parens = TexMobject("()")
         parens.stretch(1.3, 1)
         parens.set_height(ratio.get_height())
-        lp.next_to(ratio, LEFT, buff = 0)
-        rp.next_to(ratio, RIGHT, buff = 0)
+        lp.next_to(ratio, LEFT, buff=0)
+        rp.next_to(ratio, RIGHT, buff=0)
 
-        extracted_two_to_t = TexMobject("%s^"%base_str, "t")
-        extracted_two_to_t.next_to(lp, LEFT, buff = SMALL_BUFF)
+        extracted_two_to_t = TexMobject("%s^" % base_str, "t")
+        extracted_two_to_t.next_to(lp, LEFT, buff=SMALL_BUFF)
 
         expressions = [
-            ratio, two_to_t_two_to_dt, 
+            ratio, two_to_t_two_to_dt,
             extracted_two_to_t, lhs, func_def
         ]
         for expression in expressions:
             expression.set_color_by_tex("t", YELLOW)
             expression.set_color_by_tex("dt", GREEN)
 
-        #Apply exponential property
+        # Apply exponential property
         self.play(
             Write(ratio), Write(lhs),
             self.pi_creature.change_mode, "raise_right_hand"
@@ -755,18 +764,18 @@ class AnalyzeExponentRatio(PiCreatureScene):
         self.play(
             ReplacementTransform(
                 two_to_t_plus_dt.copy(), two_to_t_two_to_dt,
-                run_time = 2,
-                path_arc = np.pi,
+                run_time=2,
+                path_arc=np.pi,
             ),
             FadeIn(exp_prop_brace)
         )
         self.wait(2)
 
-        #Talk about exponential property
+        # Talk about exponential property
         add_exp_rect, mult_rect = rects = [
             Rectangle(
-                stroke_color = BLUE,
-                stroke_width = 2,
+                stroke_color=BLUE,
+                stroke_width=2,
             ).replace(mob).scale_in_place(1.1)
             for mob in [
                 VGroup(*two_to_t_plus_dt[1:]),
@@ -779,9 +788,9 @@ class AnalyzeExponentRatio(PiCreatureScene):
         ])
         words[0].move_to(words[1], LEFT)
         words.set_color(BLUE)
-        words.next_to(two_to_t_plus_dt, RIGHT, buff = 1.5*LARGE_BUFF)
+        words.next_to(two_to_t_plus_dt, RIGHT, buff=1.5*LARGE_BUFF)
         arrows = VGroup(*[
-            Arrow(word.get_left(), rect, color = words.get_color())
+            Arrow(word.get_left(), rect, color=words.get_color())
             for word, rect in zip(words, rects)
         ])
 
@@ -792,7 +801,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
         ))
         self.wait()
         self.change_mode("happy")
-        self.play(Write(words[0], run_time = 2))
+        self.play(Write(words[0], run_time=2))
         self.play(ShowCreation(arrows[0]))
         self.wait()
         self.play(
@@ -805,19 +814,19 @@ class AnalyzeExponentRatio(PiCreatureScene):
             two_to_t_plus_dt, exp_prop_brace,
         ])))
 
-        #Factor out 2^t
+        # Factor out 2^t
         self.play(*[
             FadeIn(
                 mob,
-                run_time = 2,
-                rate_func = squish_rate_func(smooth, 0.5, 1)
+                run_time=2,
+                rate_func=squish_rate_func(smooth, 0.5, 1)
             )
             for mob in (one, lp, rp)
         ] + [
             ReplacementTransform(
                 mob, extracted_two_to_t,
-                path_arc = np.pi/2,
-                run_time = 2,
+                path_arc=np.pi/2,
+                run_time=2,
             )
             for mob in (two_to_t, VGroup(*two_to_t_two_to_dt[:2]))
         ] + [
@@ -832,7 +841,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
         )
         self.wait(2)
 
-        #Ask about dt -> 0
+        # Ask about dt -> 0
         brace = Brace(VGroup(extracted_two_to_t, ratio), DOWN)
         alt_brace = Brace(parens, DOWN)
         dt_to_zero = TexMobject("dt", "\\to 0")
@@ -843,7 +852,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
         self.play(Write(dt_to_zero))
         self.wait(2)
 
-        #Who cares
+        # Who cares
         randy = Randolph()
         randy.scale(0.7)
         randy.to_edge(DOWN)
@@ -853,9 +862,9 @@ class AnalyzeExponentRatio(PiCreatureScene):
             self.pi_creature.change_mode, "plain",
         )
         self.play(PiCreatureSays(
-            randy, "Who cares?", 
-            bubble_kwargs = {"direction" : LEFT},
-            target_mode = "angry",
+            randy, "Who cares?",
+            bubble_kwargs={"direction": LEFT},
+            target_mode="angry",
         ))
         self.wait(2)
         self.play(
@@ -870,14 +879,14 @@ class AnalyzeExponentRatio(PiCreatureScene):
         )
         self.wait()
 
-        #Highlight separation
+        # Highlight separation
         rects = [
             Rectangle(
-                stroke_color = color,
-                stroke_width = 2,
-            ).replace(mob, stretch = True).scale_in_place(1.1)
+                stroke_color=color,
+                stroke_width=2,
+            ).replace(mob, stretch=True).scale_in_place(1.1)
             for mob, color in [
-                (VGroup(parens, dt_to_zero), GREEN), 
+                (VGroup(parens, dt_to_zero), GREEN),
                 (extracted_two_to_t, YELLOW),
             ]
         ]
@@ -888,11 +897,11 @@ class AnalyzeExponentRatio(PiCreatureScene):
         self.wait()
         self.play(*list(map(FadeOut, rects)))
 
-        #Plug in specific values
+        # Plug in specific values
         static_constant = self.try_specific_dt_values()
         constant = static_constant.copy()
 
-        #Replace with actual constant
+        # Replace with actual constant
         limit_term = VGroup(
             brace, dt_to_zero, ratio[4], one, rects[0],
             *ratio[7:]+two_to_t_two_to_dt[2:]
@@ -913,21 +922,21 @@ class AnalyzeExponentRatio(PiCreatureScene):
         self.change_mode("confused")
         self.wait()
 
-        #Indicate distinction between dt group and t group again
+        # Indicate distinction between dt group and t group again
         for mob in limit_term, extracted_two_to_t:
             self.play(FocusOn(mob))
             self.play(Indicate(mob))
         self.wait()
 
-        #hold_final_value
+        # hold_final_value
         derivative = VGroup(
             lhs, extracted_two_to_t, parens, constant
         )
         func_def_rhs = VGroup(*func_def[-2:]).copy()
         func_lp, func_rp = func_parens = TexMobject("()")
-        func_parens.set_fill(opacity = 0)
-        func_lp.next_to(func_def_rhs[0], LEFT, buff = 0)
-        func_rp.next_to(func_lp, RIGHT, buff = func_def_rhs.get_width())
+        func_parens.set_fill(opacity=0)
+        func_lp.next_to(func_def_rhs[0], LEFT, buff=0)
+        func_rp.next_to(func_lp, RIGHT, buff=func_def_rhs.get_width())
         func_def_rhs.add(func_parens)
         M = lhs[0][1]
 
@@ -955,11 +964,11 @@ class AnalyzeExponentRatio(PiCreatureScene):
             dt_str = "0." + num_zeros*"0" + "1"
             dt_num = float(dt_str)
             output_num = (self.base**dt_num - 1) / dt_num
-            output_str = "%.7f\\dots"%output_num
+            output_str = "%.7f\\dots" % output_num
 
             expression = TexMobject(
-                "{%s^"%self.base_str, "{%s}"%dt_str, "-1", 
-                "\\over \\,", "%s}"%dt_str, 
+                "{%s^" % self.base_str, "{%s}" % dt_str, "-1",
+                "\\over \\,", "%s}" % dt_str,
                 "=", output_str
             )
             expression.set_color_by_tex(dt_str, GREEN)
@@ -978,29 +987,34 @@ class AnalyzeExponentRatio(PiCreatureScene):
             self.wait(2)
         return curr_expression[-1]
 
+
 class ExponentRatioWithThree(AnalyzeExponentRatio):
     CONFIG = {
-        "base" : 3,
-        "base_str" : "3",
+        "base": 3,
+        "base_str": "3",
     }
+
 
 class ExponentRatioWithSeven(AnalyzeExponentRatio):
     CONFIG = {
-        "base" : 7,
-        "base_str" : "7",
+        "base": 7,
+        "base_str": "7",
     }
+
 
 class ExponentRatioWithEight(AnalyzeExponentRatio):
     CONFIG = {
-        "base" : 8,
-        "base_str" : "8",
+        "base": 8,
+        "base_str": "8",
     }
+
 
 class ExponentRatioWithE(AnalyzeExponentRatio):
     CONFIG = {
-        "base" : np.exp(1),
-        "base_str" : "e",
+        "base": np.exp(1),
+        "base_str": "e",
     }
+
 
 class CompareTwoConstantToEightConstant(PiCreatureScene):
     def construct(self):
@@ -1010,7 +1024,7 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
         ])
 
         derivs.arrange(
-            DOWN, buff = 1.5, aligned_edge = LEFT
+            DOWN, buff=1.5, aligned_edge=LEFT
         )
         derivs.to_edge(LEFT, LARGE_BUFF).shift(UP)
         arrow = Arrow(*[deriv[-2] for deriv in derivs])
@@ -1048,14 +1062,14 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
 
     def get_derivative_expression(self, base):
         base_str = str(base)
-        const_str = "%.4f\\dots"%np.log(base)
+        const_str = "%.4f\\dots" % np.log(base)
         result = TexMobject(
-            "{d(", base_str, "^t", ")", "\\over", "dt}", 
+            "{d(", base_str, "^t", ")", "\\over", "dt}",
             "=", base_str, "^t", "(", const_str, ")"
         )
         tex_color_paris = [
-            ("t", YELLOW), 
-            ("dt", GREEN), 
+            ("t", YELLOW),
+            ("dt", GREEN),
             (const_str, BLUE)
         ]
         for tex, color in tex_color_paris:
@@ -1067,10 +1081,11 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
         self.pi_creature.to_edge(DOWN).shift(3*RIGHT)
         return self.pi_creature
 
+
 class AskAboutConstantOne(TeacherStudentsScene):
     def construct(self):
         note = TexMobject(
-            "{ d(a^", "t", ")", "\\over \\,", "dt}", 
+            "{ d(a^", "t", ")", "\\over \\,", "dt}",
             "=", "a^", "t", "(\\text{Some constant})"
         )
         note.set_color_by_tex("t", YELLOW)
@@ -1088,24 +1103,25 @@ class AskAboutConstantOne(TeacherStudentsScene):
             # look_at_arg = self.get_students()[1].bubble
         )
         self.wait(2)
-        self.play(FadeOut(note[-1], run_time = 3))
+        self.play(FadeOut(note[-1], run_time=3))
         self.wait()
 
         self.teacher_says(
             "There is!\\\\",
             "$e = 2.71828\\dots$",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(*["confused"]*3)
         self.wait(3)
 
+
 class WhyPi(PiCreatureScene):
     def construct(self):
-        circle = Circle(radius = 1, color = MAROON_B)
+        circle = Circle(radius=1, color=MAROON_B)
         circle.rotate(np.pi/2)
         circle.to_edge(UP)
         ghost_circle = circle.copy()
-        ghost_circle.set_stroke(width = 1)
+        ghost_circle.set_stroke(width=1)
         diam = Line(circle.get_left(), circle.get_right())
         diam.set_color(YELLOW)
         one = TexMobject("1")
@@ -1123,14 +1139,13 @@ class WhyPi(PiCreatureScene):
 
         self.add(ghost_circle, circle, diam, one)
         self.wait()
-        self.play(Transform(circle, circum, run_time = 2))
+        self.play(Transform(circle, circum, run_time=2))
         self.play(
             Write(pi),
             Write(why),
             self.pi_creature.change_mode, "confused",
         )
         self.wait(3)
-
 
     #######
 
@@ -1139,18 +1154,20 @@ class WhyPi(PiCreatureScene):
         self.pi_creature.to_corner(DOWN+LEFT)
         return self.pi_creature
 
+
 class GraphOfExp(GraphScene):
     CONFIG = {
-        "x_min" : -3,
-        "x_max" : 3,
-        "x_tick_frequency" : 1,
-        "x_axis_label" : "t",
-        "x_labeled_nums" : list(range(-3, 4)),
-        "x_axis_width" : 11,
-        "graph_origin" : 2*DOWN + LEFT,
-        "example_inputs" : [1, 2],
-        "small_dx" : 0.01,
+        "x_min": -3,
+        "x_max": 3,
+        "x_tick_frequency": 1,
+        "x_axis_label": "t",
+        "x_labeled_nums": list(range(-3, 4)),
+        "x_axis_width": 11,
+        "graph_origin": 2*DOWN + LEFT,
+        "example_inputs": [1, 2],
+        "small_dx": 0.01,
     }
+
     def construct(self):
         self.setup_axes()
         self.show_slopes()
@@ -1158,41 +1175,41 @@ class GraphOfExp(GraphScene):
     def show_slopes(self):
         graph = self.get_graph(np.exp)
         graph_label = self.get_graph_label(
-            graph, "e^t", direction = LEFT
+            graph, "e^t", direction=LEFT
         )
         graph_label.shift(MED_SMALL_BUFF*LEFT)
 
         start_input, target_input = self.example_inputs
         ss_group = self.get_secant_slope_group(
             start_input, graph,
-            dx = self.small_dx,
-            dx_label = "dt",
-            df_label = "d(e^t)",
-            secant_line_color = YELLOW,
+            dx=self.small_dx,
+            dx_label="dt",
+            df_label="d(e^t)",
+            secant_line_color=YELLOW,
         )
         v_lines = [
             self.get_vertical_line_to_graph(
-                x, graph, 
-                color = WHITE,
+                x, graph,
+                color=WHITE,
             )
             for x in self.example_inputs
         ]
         height_labels = [
-            TexMobject("e^%d"%x).next_to(vl, RIGHT, SMALL_BUFF)
+            TexMobject("e^%d" % x).next_to(vl, RIGHT, SMALL_BUFF)
             for vl, x in zip(v_lines, self.example_inputs)
         ]
         slope_labels = [
             TextMobject(
-                "Slope = $e^%d$"%x
+                "Slope = $e^%d$" % x
             ).next_to(vl.get_top(), UP+RIGHT).shift(0.7*RIGHT/x)
-           for vl, x in zip(v_lines, self.example_inputs)
+            for vl, x in zip(v_lines, self.example_inputs)
         ]
 
         self.play(
-            ShowCreation(graph, run_time = 2),
+            ShowCreation(graph, run_time=2),
             Write(
-                graph_label, 
-                rate_func = squish_rate_func(smooth, 0.5, 1),
+                graph_label,
+                rate_func=squish_rate_func(smooth, 0.5, 1),
             )
         )
         self.wait()
@@ -1203,13 +1220,13 @@ class GraphOfExp(GraphScene):
         self.wait(2)
         self.animate_secant_slope_group_change(
             ss_group,
-            target_x = target_input,
-            run_time = 2,
-            added_anims = [
+            target_x=target_input,
+            run_time=2,
+            added_anims=[
                 Transform(
-                    *pair, 
-                    path_arc = np.pi/6,
-                    run_time = 2
+                    *pair,
+                    path_arc=np.pi/6,
+                    run_time=2
                 )
                 for pair in [
                     slope_labels,
@@ -1223,17 +1240,19 @@ class GraphOfExp(GraphScene):
         self.graph = graph
         self.ss_group = ss_group
 
+
 class Chapter4Wrapper(Scene):
     def construct(self):
         title = TextMobject("Chapter 4 chain rule intuition")
         title.to_edge(UP)
-        rect = Rectangle(width = 16, height = 9)
+        rect = Rectangle(width=16, height=9)
         rect.set_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(rect))
         self.wait(3)
+
 
 class ApplyChainRule(TeacherStudentsScene):
     def construct(self):
@@ -1246,8 +1265,8 @@ class ApplyChainRule(TeacherStudentsScene):
         deriv_equation.set_color_by_tex("3", BLUE)
         deriv = VGroup(*deriv_equation[:7])
         exponent = VGroup(*deriv_equation[-2:])
-        circle = Circle(color = YELLOW)
-        circle.replace(exponent, stretch = True)
+        circle = Circle(color=YELLOW)
+        circle.replace(exponent, stretch=True)
         circle.scale_in_place(1.5)
 
         self.teacher_says("Think of the \\\\ chain rule")
@@ -1256,17 +1275,17 @@ class ApplyChainRule(TeacherStudentsScene):
             Write(deriv),
             RemovePiCreatureBubble(
                 self.teacher,
-                target_mode = "raise_right_hand"
+                target_mode="raise_right_hand"
             ),
         )
         self.wait(2)
         self.play(*[
             Transform(
                 *deriv_equation.get_parts_by_tex(
-                    tex, substring = False
+                    tex, substring=False
                 ).copy()[:2],
-                path_arc = -np.pi,
-                run_time = 2
+                path_arc=-np.pi,
+                run_time=2
             )
             for tex in ("e^", "{3", "t}")
         ] + [
@@ -1281,63 +1300,66 @@ class ApplyChainRule(TeacherStudentsScene):
         self.play(FadeOut(circle))
         self.wait(3)
 
+
 class ChainRuleIntuition(ThreeLinesChainRule):
     CONFIG = {
-        "line_configs" : [
+        "line_configs": [
             {
-                "func" : lambda t : t,
-                "func_label" : "t",
-                "triangle_color" : WHITE,
-                "center_y" : 3,
-                "x_min" : 0,
-                "x_max" : 3,
-                "numbers_to_show" : list(range(4)),
-                "numbers_with_elongated_ticks" : list(range(4)),
-                "tick_frequency" : 1,
+                "func": lambda t: t,
+                "func_label": "t",
+                "triangle_color": WHITE,
+                "center_y": 3,
+                "x_min": 0,
+                "x_max": 3,
+                "numbers_to_show": list(range(4)),
+                "numbers_with_elongated_ticks": list(range(4)),
+                "tick_frequency": 1,
             },
             {
-                "func" : lambda t : 3*t,
-                "func_label" : "3t",
-                "triangle_color" : GREEN,
-                "center_y" : 0.5,
-                "x_min" : 0,
-                "x_max" : 3,
-                "numbers_to_show" : list(range(0, 4)),
-                "numbers_with_elongated_ticks" : list(range(4)),
-                "tick_frequency" : 1,
+                "func": lambda t: 3*t,
+                "func_label": "3t",
+                "triangle_color": GREEN,
+                "center_y": 0.5,
+                "x_min": 0,
+                "x_max": 3,
+                "numbers_to_show": list(range(0, 4)),
+                "numbers_with_elongated_ticks": list(range(4)),
+                "tick_frequency": 1,
             },
             {
-                "func" : lambda t : np.exp(3*t),
-                "func_label" : "e^{3t}",
-                "triangle_color" : BLUE,
-                "center_y" : -2,
-                "x_min" : 0,
-                "x_max" : 10,
-                "numbers_to_show" : list(range(0, 11, 3)),
-                "numbers_with_elongated_ticks" : list(range(11)),
-                "tick_frequency" : 1,
+                "func": lambda t: np.exp(3*t),
+                "func_label": "e^{3t}",
+                "triangle_color": BLUE,
+                "center_y": -2,
+                "x_min": 0,
+                "x_max": 10,
+                "numbers_to_show": list(range(0, 11, 3)),
+                "numbers_with_elongated_ticks": list(range(11)),
+                "tick_frequency": 1,
             },
         ],
-        "example_x" : 0.4,
-        "start_x" : 0.4,
-        "max_x" : 0.6,
-        "min_x" : 0.2,
+        "example_x": 0.4,
+        "start_x": 0.4,
+        "max_x": 0.6,
+        "min_x": 0.2,
     }
+
     def construct(self):
         self.introduce_line_group()
         self.nudge_x()
 
     def nudge_x(self):
         lines, labels = self.line_group
+
         def get_value_points():
             return [
                 label[0].get_bottom()
                 for label in labels
             ]
         starts = get_value_points()
-        self.animate_x_change(self.example_x + self.dx, run_time = 0)
+        self.animate_x_change(self.example_x + self.dx, run_time=0)
         ends = get_value_points()
-        self.animate_x_change(self.example_x, run_time = 0)
+        self.animate_x_change(self.example_x, run_time=0)
 
         nudge_lines = VGroup()
         braces = VGroup()
@@ -1345,15 +1367,15 @@ class ChainRuleIntuition(ThreeLinesChainRule):
         for start, end, line, label, config in zip(starts, ends, lines, labels, self.line_configs):
             color = label[0].get_color()
             nudge_line = Line(start, end)
-            nudge_line.set_stroke(color, width = 6)
-            brace = Brace(nudge_line, DOWN, buff = SMALL_BUFF)
+            nudge_line.set_stroke(color, width=6)
+            brace = Brace(nudge_line, DOWN, buff=SMALL_BUFF)
             brace.set_color(color)
             func_label = config["func_label"]
             if len(func_label) == 1:
-                text = "$d%s$"%func_label
+                text = "$d%s$" % func_label
             else:
-                text = "$d(%s)$"%func_label
-            brace.text = brace.get_text(text, buff = SMALL_BUFF)
+                text = "$d(%s)$" % func_label
+            brace.text = brace.get_text(text, buff=SMALL_BUFF)
             brace.text.set_color(color)
             brace.add(brace.text)
 
@@ -1369,10 +1391,11 @@ class ChainRuleIntuition(ThreeLinesChainRule):
         for count in range(3):
             for dx in self.dx, 0:
                 self.animate_x_change(
-                    self.example_x + dx, 
-                    run_time = 2
+                    self.example_x + dx,
+                    run_time=2
                 )
         self.wait()
+
 
 class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
     def construct(self):
@@ -1385,9 +1408,9 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
 
         self.play(
             FadeIn(
-                exp_c, 
-                run_time = 2, 
-                lag_ratio = 0.5
+                exp_c,
+                run_time=2,
+                lag_ratio=0.5
             ),
             self.teacher.change, "raise_right_hand"
         )
@@ -1412,7 +1435,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         log_words_arrow = Arrow(
             log_words.get_right(),
             equation.get_part_by_tex("ln(2)").get_corner(UP+LEFT),
-            color = BLUE,
+            color=BLUE,
         )
 
         derivative = TexMobject(
@@ -1422,7 +1445,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         for tex_mob in equation, derivative:
             tex_mob.set_color_by_tex("ln(2)", BLUE)
             tex_mob.set_color_by_tex("t", YELLOW)
-        derivative_arrow = Arrow(1.5*UP, ORIGIN, buff = 0)
+        derivative_arrow = Arrow(1.5*UP, ORIGIN, buff=0)
         derivative_arrow.set_color(WHITE)
         derivative_arrow.next_to(
             derivative.get_parts_by_tex("="), UP
@@ -1439,31 +1462,31 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         self.play(
             Write(log_words),
             ShowCreation(
-                log_words_arrow, 
-                run_time = 2,
-                rate_func = squish_rate_func(smooth, 0.5, 1)
+                log_words_arrow,
+                run_time=2,
+                rate_func=squish_rate_func(smooth, 0.5, 1)
             )
         )
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = log_words
+            look_at_arg=log_words
         )
         self.wait(2)
 
         t_group.save_state()
         t_group.shift(UP)
-        t_group.set_fill(opacity = 0)
+        t_group.set_fill(opacity=0)
         self.play(
             ApplyMethod(
                 t_group.restore,
-                run_time = 2,
-                lag_ratio = 0.5,
+                run_time=2,
+                lag_ratio=0.5,
             ),
             self.teacher.change_mode, "speaking"
         )
         self.wait(2)
         self.play(FocusOn(self.exp_c))
-        self.play(Indicate(self.exp_c, scale_factor = 1.05))
+        self.play(Indicate(self.exp_c, scale_factor=1.05))
         self.wait(2)
 
         self.play(
@@ -1483,7 +1506,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
 
         student = self.get_students()[1]
         ln = derivative.get_part_by_tex("ln(2)").copy()
-        rhs = TexMobject("=%s"%self.get_log_str(2))
+        rhs = TexMobject("=%s" % self.get_log_str(2))
         self.play(
             ln.next_to, student, UP+LEFT, MED_LARGE_BUFF,
             student.change_mode, "raise_left_hand",
@@ -1492,14 +1515,13 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         self.play(Write(rhs))
         self.wait(2)
 
-
     ######
 
     def get_exp_C(self, C):
         C_str = str(C)
         result = TexMobject(
-            "{d(", "e^", "{%s"%C_str, "t}", ")", "\\over", "dt}",
-            "=", C_str, "e^", "{%s"%C_str, "t}",
+            "{d(", "e^", "{%s" % C_str, "t}", ")", "\\over", "dt}",
+            "=", C_str, "e^", "{%s" % C_str, "t}",
         )
         result.set_color_by_tex(C_str, BLUE)
         result.C_str = C_str
@@ -1516,19 +1538,21 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         return result
 
     def get_log_str(self, a):
-        return "%.4f\\dots"%np.log(float(a))
+        return "%.4f\\dots" % np.log(float(a))
+
 
 class CompareWaysToWriteExponentials(GraphScene):
     CONFIG = {
-        "y_max" : 50,
-        "y_tick_frequency" : 5,
-        "x_max" : 7,
+        "y_max": 50,
+        "y_tick_frequency": 5,
+        "x_max": 7,
     }
+
     def construct(self):
         self.setup_axes()
         bases = list(range(2, 7))
         graphs = [
-            self.get_graph(lambda t : base**t, color = GREEN)
+            self.get_graph(lambda t: base**t, color=GREEN)
             for base in bases
         ]
         graph = graphs[0]
@@ -1538,7 +1562,7 @@ class CompareWaysToWriteExponentials(GraphScene):
 
         cross = TexMobject("\\times")
         cross.set_color(RED)
-        cross.replace(a_to_t, stretch = True)
+        cross.replace(a_to_t, stretch=True)
         e_to_ct = TexMobject("e^", "{c", "t}")
         e_to_ct.set_color_by_tex("c", BLUE)
         e_to_ct.scale(1.5)
@@ -1546,10 +1570,10 @@ class CompareWaysToWriteExponentials(GraphScene):
 
         equations = VGroup()
         for base in bases:
-            log_str =  "%.4f\\dots"%np.log(base)
+            log_str = "%.4f\\dots" % np.log(base)
             equation = TexMobject(
                 str(base), "^t", "=",
-                "e^", "{(%s)"%log_str, "t}", 
+                "e^", "{(%s)" % log_str, "t}",
             )
             equation.set_color_by_tex(log_str, BLUE)
             equation.scale(1.2)
@@ -1562,12 +1586,12 @@ class CompareWaysToWriteExponentials(GraphScene):
             ShowCreation(graph),
             Write(
                 a_to_t,
-                rate_func = squish_rate_func(smooth, 0.5, 1) 
+                rate_func=squish_rate_func(smooth, 0.5, 1)
             ),
-            run_time = 2
+            run_time=2
         )
-        self.play(Write(cross, run_time = 2))
-        self.play(Write(e_to_ct, run_time = 2))
+        self.play(Write(cross, run_time=2))
+        self.play(Write(e_to_ct, run_time=2))
         self.wait(2)
         self.play(Write(equation))
         self.wait(2)
@@ -1579,11 +1603,12 @@ class CompareWaysToWriteExponentials(GraphScene):
             self.wait(2)
         self.wait()
 
+
 class ManyExponentialForms(TeacherStudentsScene):
     def construct(self):
         lhs = TexMobject("2", "^t")
         rhs_list = [
-            TexMobject("=", "%s^"%tex, "{(%.5f\\dots)"%log, "t}")
+            TexMobject("=", "%s^" % tex, "{(%.5f\\dots)" % log, "t}")
             for tex, log in [
                 ("e", np.log(2)),
                 ("\\pi", np.log(2)/np.log(np.pi)),
@@ -1601,7 +1626,7 @@ class ManyExponentialForms(TeacherStudentsScene):
                 const.set_color(BLUE)
                 brace = Brace(const, UP)
                 log = brace.get_text(
-                    "$\\log_{%s}(2)$"%part[1].get_tex_string()[:-1]
+                    "$\\log_{%s}(2)$" % part[1].get_tex_string()[:-1]
                 )
                 log.set_color(BLUE)
                 part.add(brace, log)
@@ -1612,9 +1637,9 @@ class ManyExponentialForms(TeacherStudentsScene):
         self.wait()
         for rhs in rhs_list[1:]:
             self.play(FadeIn(
-                rhs, 
-                run_time = 2,
-                lag_ratio = 0.5,
+                rhs,
+                run_time=2,
+                lag_ratio=0.5,
             ))
             self.wait(2)
         self.wait()
@@ -1625,41 +1650,44 @@ class ManyExponentialForms(TeacherStudentsScene):
         )
         self.play(*[
             ApplyFunction(
-                lambda m : m.shift(SMALL_BUFF*UP).set_color(RED),
+                lambda m: m.shift(SMALL_BUFF*UP).set_color(RED),
                 part,
-                run_time = 2,
-                rate_func = squish_rate_func(there_and_back, a, a+0.3)
+                run_time=2,
+                rate_func=squish_rate_func(there_and_back, a, a+0.3)
             )
             for part, a in zip(exp[1], np.linspace(0, 0.7, len(exp[1])))
         ])
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = exp
+            look_at_arg=exp
         )
         self.wait(3)
+
 
 class TooManySymbols(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "Too symbol heavy!",
-            target_mode = "pleading"
+            target_mode="pleading"
         )
         self.play(self.teacher.change_mode, "guilty")
         self.wait(3)
 
+
 class TemperatureOverTimeOfWarmWater(GraphScene):
     CONFIG = {
-        "x_min" : 0,
-        "x_axis_label" : "$t$",
-        "y_axis_label" : "Temperature",
-        "T_room" : 4,
-        "include_solution" : False,
+        "x_min": 0,
+        "x_axis_label": "$t$",
+        "y_axis_label": "Temperature",
+        "T_room": 4,
+        "include_solution": False,
     }
+
     def construct(self):
         self.setup_axes()
         graph = self.get_graph(
-            lambda t : 3*np.exp(-0.3*t) + self.T_room,
-            color = RED
+            lambda t: 3*np.exp(-0.3*t) + self.T_room,
+            color=RED
         )
         h_line = DashedLine(*[
             self.coords_to_point(x, self.T_room)
@@ -1683,6 +1711,7 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
         delta_T_brace = Brace(graph, RIGHT)
         delta_T_label = TexMobject("\\Delta T")
         delta_T_group = VGroup(delta_T_brace, delta_T_label)
+
         def update_delta_T_group(group):
             brace, label = group
             v_line = Line(
@@ -1700,7 +1729,7 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
         self.add(ode)
         self.play(
             Write(T_room_label),
-            ShowCreation(h_line, run_time = 2)
+            ShowCreation(h_line, run_time=2)
         )
         if self.include_solution:
             self.play(Write(solution))
@@ -1712,13 +1741,15 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
             GrowFromCenter(delta_T_brace),
             Write(delta_T_label),
         )
-        self.play(graph_growth, delta_T_group_update, run_time = 15)
+        self.play(graph_growth, delta_T_group_update, run_time=15)
         self.wait(2)
+
 
 class TemperatureOverTimeOfWarmWaterWithSolution(TemperatureOverTimeOfWarmWater):
     CONFIG = {
-        "include_solution" : True
+        "include_solution": True
     }
+
 
 class InvestedMoney(Scene):
     def construct(self):
@@ -1732,7 +1763,7 @@ class InvestedMoney(Scene):
         equation.next_to(ORIGIN, LEFT)
         equation.to_edge(UP)
 
-        arrow = Arrow(LEFT, RIGHT, color = WHITE)
+        arrow = Arrow(LEFT, RIGHT, color=WHITE)
         arrow.next_to(equation)
 
         solution = TexMobject(
@@ -1745,7 +1776,7 @@ class InvestedMoney(Scene):
         cash = TexMobject("\\$")
         cash_pile = VGroup(*[
             cash.copy().shift(
-                x*(1+MED_SMALL_BUFF)*cash.get_width()*RIGHT +\
+                x*(1+MED_SMALL_BUFF)*cash.get_width()*RIGHT +
                 y*(1+MED_SMALL_BUFF)*cash.get_height()*UP
             )
             for x in range(40)
@@ -1768,35 +1799,36 @@ class InvestedMoney(Scene):
                 np.clip(prop+0.5/run_time, 0, 1),
             )
             anims.append(GrowFromCenter(
-                cash, rate_func = rate_func,
+                cash, rate_func=rate_func,
             ))
 
         self.add(equation)
-        self.play(*anims, run_time = run_time)
+        self.play(*anims, run_time=run_time)
         self.wait()
         self.play(ShowCreation(arrow))
-        self.play(Write(solution, run_time = 2))
+        self.play(Write(solution, run_time=2))
         self.wait()
         self.play(FadeOut(cash_pile))
-        self.play(*anims, run_time = run_time)
+        self.play(*anims, run_time=run_time)
         self.wait()
+
 
 class NaturalLog(Scene):
     def construct(self):
         expressions = VGroup(*list(map(self.get_expression, [2, 3, 7])))
-        expressions.arrange(DOWN, buff = MED_SMALL_BUFF)
+        expressions.arrange(DOWN, buff=MED_SMALL_BUFF)
         expressions.to_edge(LEFT)
 
         self.play(FadeIn(
-            expressions, 
-            run_time = 3, 
-            lag_ratio = 0.5
+            expressions,
+            run_time=3,
+            lag_ratio=0.5
         ))
         self.wait()
         self.play(
             expressions.set_fill, None, 1,
-            run_time = 2,
-            lag_ratio = 0.5
+            run_time=2,
+            lag_ratio=0.5
         )
         self.wait()
         for i in 0, 2, 1:
@@ -1810,7 +1842,7 @@ class NaturalLog(Scene):
         log_equals, exp_equals = list(map(TexMobject, "=="))
 
         ln = TexMobject("\\ln(2)")
-        log_base.move_to(ln[-2])        
+        log_base.move_to(ln[-2])
         ln.remove(ln[-2])
         log_equals.next_to(ln, LEFT)
         log_constant.next_to(log_equals, LEFT)
@@ -1820,11 +1852,11 @@ class NaturalLog(Scene):
 
         e = TexMobject("e")
         exp_constant.scale(0.7)
-        exp_constant.next_to(e, UP+RIGHT, buff = 0)
+        exp_constant.next_to(e, UP+RIGHT, buff=0)
         exp_base.next_to(exp_equals, RIGHT)
         VGroup(exp_base, exp_equals).next_to(
-            VGroup(e, exp_constant), RIGHT, 
-            aligned_edge = DOWN
+            VGroup(e, exp_constant), RIGHT,
+            aligned_edge=DOWN
         )
         exp_expression = VGroup(
             e, exp_constant, exp_equals, exp_base
@@ -1837,7 +1869,7 @@ class NaturalLog(Scene):
         self.play(
             ReplacementTransform(base.copy(), log_base),
             ReplacementTransform(constant.copy(), log_constant),
-            run_time = 2
+            run_time=2
         )
         self.play(Write(ln), Write(log_equals))
         self.wait()
@@ -1845,7 +1877,7 @@ class NaturalLog(Scene):
             ReplacementTransform(
                 log_expression.copy(),
                 exp_expression,
-                run_time = 2,
+                run_time=2,
             )
         )
         self.wait(2)
@@ -1863,20 +1895,21 @@ class NaturalLog(Scene):
 
     def get_expression(self, base):
         expression = TexMobject(
-            "{d(", "%d^"%base, "t", ")", "\\over \\,", "dt}",
-            "=", "%d^"%base, "t", "(%.4f\\dots)"%np.log(base),
+            "{d(", "%d^" % base, "t", ")", "\\over \\,", "dt}",
+            "=", "%d^" % base, "t", "(%.4f\\dots)" % np.log(base),
         )
         expression.set_color_by_tex("t", YELLOW)
         expression.set_color_by_tex("dt", GREEN)
         expression.set_color_by_tex("\\dots", BLUE)
 
         brace = Brace(expression.get_part_by_tex("\\dots"), UP)
-        brace_text = brace.get_text("$\\ln(%d)$"%base)
+        brace_text = brace.get_text("$\\ln(%d)$" % base)
         for mob in brace, brace_text:
-            mob.set_fill(opacity = 0)
+            mob.set_fill(opacity=0)
 
         expression.add(brace, brace_text)
         return expression
+
 
 class NextVideo(TeacherStudentsScene):
     def construct(self):
@@ -1901,14 +1934,14 @@ class NextVideo(TeacherStudentsScene):
         next_tex.arrange(DOWN)
         next_tex.next_to(brace, DOWN)
         next_tex.shift(
-            next_video.get_center()[0]*RIGHT\
-            -next_tex.get_center()[0]*RIGHT
+            next_video.get_center()[0]*RIGHT
+            - next_tex.get_center()[0]*RIGHT
         )
 
         self.add(series, brace, *this_tex[:3])
         self.change_student_modes(
             "confused", "pondering", "erm",
-            look_at_arg = this_tex
+            look_at_arg=this_tex
         )
         self.play(ReplacementTransform(
             this_tex[1].copy(), this_tex[3]
@@ -1919,8 +1952,8 @@ class NextVideo(TeacherStudentsScene):
             ReplacementTransform(
                 this_tex[3][0].copy(),
                 this_tex[4][3],
-                path_arc = np.pi,
-                remover = True
+                path_arc=np.pi,
+                remover=True
             )
         )
         self.wait(2)
@@ -1935,19 +1968,20 @@ class NextVideo(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = next_tex
+            look_at_arg=next_tex
         )
         self.wait(3)
 
+
 class ExpPatreonThanks(PatreonThanks):
     CONFIG = {
-        "specific_patrons" : [
+        "specific_patrons": [
             "Ali  Yahya",
             "Meshal  Alshammari",
             "CrypticSwarm    ",
             "Kathryn Schmiedicke",
             "Nathan Pellegrin",
-            "Karan Bhargava", 
+            "Karan Bhargava",
             "Justin Helps",
             "Ankit   Agarwal",
             "Yu  Jun",
@@ -1981,17 +2015,19 @@ class ExpPatreonThanks(PatreonThanks):
         ]
     }
 
+
 class Thumbnail(GraphOfTwoToT):
     CONFIG = {
-        "x_axis_label" : "",
-        "y_axis_label" : "",
-        "x_labeled_nums" : None,
-        "y_labeled_nums" : None,
-        "y_max" : 32,
-        "y_tick_frequency" : 4,
-        "graph_origin" : 3*DOWN + 5*LEFT,
-        "x_axis_width" : 12,
+        "x_axis_label": "",
+        "y_axis_label": "",
+        "x_labeled_nums": None,
+        "y_labeled_nums": None,
+        "y_max": 32,
+        "y_tick_frequency": 4,
+        "graph_origin": 3*DOWN + 5*LEFT,
+        "x_axis_width": 12,
     }
+
     def construct(self):
         derivative = TexMobject(
             "\\frac{d(a^t)}{dt} =", "a^t \\ln(a)"
@@ -2003,7 +2039,7 @@ class Thumbnail(GraphOfTwoToT):
         derivative[1][5].set_color(BLUE)
         derivative.scale(2)
         derivative.add_background_rectangle()
-        derivative.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
+        derivative.to_corner(DOWN+RIGHT, buff=MED_SMALL_BUFF)
 
         # brace = Brace(Line(LEFT, RIGHT), UP)
         # brace.set_width(derivative[1].get_width())
@@ -2019,7 +2055,7 @@ class Thumbnail(GraphOfTwoToT):
 
         question = TextMobject("What is $e\\,$?")
         e = question[-2]
-        e.scale(1.2, about_point = e.get_bottom())
+        e.scale(1.2, about_point=e.get_bottom())
         e.set_color(BLUE)
         question.scale(3)
         question.add_background_rectangle()
@@ -2031,31 +2067,3 @@ class Thumbnail(GraphOfTwoToT):
         graph.set_stroke(YELLOW, 8)
 
         self.add(graph, question, derivative)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

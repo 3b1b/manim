@@ -87,7 +87,8 @@ class Mobject(Container):
         Ensures all attributes which are mobjects are included
         in the submobjects list.
         """
-        mobject_attrs = [x for x in list(self.__dict__.values()) if isinstance(x, Mobject)]
+        mobject_attrs = [x for x in list(
+            self.__dict__.values()) if isinstance(x, Mobject)]
         self.submobjects = list_update(self.submobjects, mobject_attrs)
         return self
 
@@ -961,7 +962,7 @@ class Mobject(Container):
 
     def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
         if submob_func is None:
-            submob_func = lambda m: point_to_num_func(m.get_center())
+            def submob_func(m): return point_to_num_func(m.get_center())
         self.submobjects.sort(key=submob_func)
         return self
 

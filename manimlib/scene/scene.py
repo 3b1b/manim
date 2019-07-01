@@ -495,7 +495,8 @@ class Scene(Container):
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.should_update_mobjects():
-            time_progression = self.get_wait_time_progression(duration, stop_condition)
+            time_progression = self.get_wait_time_progression(
+                duration, stop_condition)
             # TODO, be smart about setting a static image
             # the same way Scene.play does
             last_t = 0

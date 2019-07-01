@@ -40,7 +40,8 @@ def start_livestream(to_twitch=False, twitch_key=None):
     if not to_twitch:
         FNULL = open(os.devnull, 'w')
         subprocess.Popen(
-            [manimlib.constants.STREAMING_CLIENT, manimlib.constants.STREAMING_URL],
+            [manimlib.constants.STREAMING_CLIENT,
+                manimlib.constants.STREAMING_URL],
             stdout=FNULL,
             stderr=FNULL)
         sleep(3)

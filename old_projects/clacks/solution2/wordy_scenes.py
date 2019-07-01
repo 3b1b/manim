@@ -130,7 +130,8 @@ class ConnectionToOptics(Scene):
             light.pointwise_become_partial(
                 speed_light_template, max(a, 0), min(b, 1)
             )
-            opacity = speed_label.family_members_with_points()[0].get_fill_opacity()
+            opacity = speed_label.family_members_with_points()[
+                0].get_fill_opacity()
             light.set_stroke(YELLOW, width=3, opacity=opacity)
             # light.stretch(0.5, 0)
             # point = speed_light_template.point_from_proportion(0.25)

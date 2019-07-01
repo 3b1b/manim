@@ -413,7 +413,8 @@ class FeynmanFame(Scene):
 
         feynman_diagram = self.get_feynman_diagram()
         feynman_diagram.next_to(ORIGIN, RIGHT)
-        fd_parts = VGroup(*reversed(feynman_diagram.family_members_with_points()))
+        fd_parts = VGroup(
+            *reversed(feynman_diagram.family_members_with_points()))
 
         # As a physicist
         self.play(self.get_book_intro(books[0]))
@@ -863,7 +864,8 @@ class AskAboutEllipses(TheMotionOfPlanets):
         self.radius_measurement = radius_measurement
 
     def comment_on_imperfections(self):
-        planets, ellipses, orbits = self.get_planets_ellipses_and_orbits(self.sun)
+        planets, ellipses, orbits = self.get_planets_ellipses_and_orbits(
+            self.sun)
         orbits.pop(-1)
         ellipses.submobjects.pop(-1)
         planets.submobjects.pop(-1)
@@ -2659,7 +2661,8 @@ class AngularMomentumArgument(KeplersSecondLaw):
             self.play(
                 LaggedStartMap(
                     ApplyFunction, vector_field,
-                    lambda mob: (lambda m: m.scale(1.1).set_fill(opacity=1), mob),
+                    lambda mob: (lambda m: m.scale(
+                        1.1).set_fill(opacity=1), mob),
                     rate_func=there_and_back,
                     run_time=1
                 ),

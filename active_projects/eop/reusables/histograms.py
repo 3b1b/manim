@@ -1,8 +1,9 @@
 from manimlib.imports import *
 from random import *
 
-def text_range(start,stop,step): # a range as a list of strings
-    numbers = np.arange(start,stop,step)
+
+def text_range(start, stop, step):  # a range as a list of strings
+    numbers = np.arange(start, stop, step)
     labels = []
     for x in numbers:
         labels.append(str(x))
@@ -12,22 +13,22 @@ def text_range(start,stop,step): # a range as a list of strings
 class Histogram(VMobject):
 
     CONFIG = {
-        "start_color" : RED,
-        "end_color" : BLUE,
-        "x_scale" : 1.0,
-        "y_scale" : 1.0,
-        "x_labels" : "auto", # widths, mids, auto, none, [...]
-        "y_labels" : "auto", # auto, none, [...]
-        "y_label_position" : "top", # "center"
-        "x_min" : 0,
-        "bar_stroke_width" : 5,
-        "outline_stroke_width" : 0,
-        "stroke_color" : WHITE
+        "start_color": RED,
+        "end_color": BLUE,
+        "x_scale": 1.0,
+        "y_scale": 1.0,
+        "x_labels": "auto",  # widths, mids, auto, none, [...]
+        "y_labels": "auto",  # auto, none, [...]
+        "y_label_position": "top",  # "center"
+        "x_min": 0,
+        "bar_stroke_width": 5,
+        "outline_stroke_width": 0,
+        "stroke_color": WHITE
     }
 
-    def __init__(self, x_values, y_values, mode = "widths", **kwargs):
+    def __init__(self, x_values, y_values, mode="widths", **kwargs):
         # mode = "widths" : x_values means the widths of the bars
-        # mode = "posts"  : x_values means the delimiters btw the bars 
+        # mode = "posts"  : x_values means the delimiters btw the bars
 
         digest_config(self, kwargs)
 
@@ -36,14 +37,12 @@ class Histogram(VMobject):
         elif mode == "posts" and len(x_values) != len(y_values) + 1:
             raise Exception("Array lengths do not match up!")
 
-
         self.y_values = y_values
         self.x_values = x_values
         self.mode = mode
         self.process_values()
 
         VMobject.__init__(self, **kwargs)
-        
 
     def process_values(self):
 
@@ -73,8 +72,6 @@ class Histogram(VMobject):
 
         self.y_values_scaled = self.y_scale * self.y_values
 
-
-
     def generate_points(self):
 
         self.process_values()
@@ -87,7 +84,7 @@ class Histogram(VMobject):
                 arr.append("")
             return arr
 
-        def num_arr_to_string_arr(arr): # converts number array to string array
+        def num_arr_to_string_arr(arr):  # converts number array to string array
             ret_arr = []
             for x in arr:
                 if x == np.floor(x):
@@ -117,16 +114,13 @@ class Histogram(VMobject):
         elif self.y_labels == "none":
             self.y_labels = empty_string_array(len(self.y_values))
 
-
-
-
-        for (i,x) in enumerate(self.x_mids):
+        for (i, x) in enumerate(self.x_mids):
 
             bar = Rectangle(
-                width = self.widths_scaled[i],
-                height = self.y_values_scaled[i],
-                stroke_width = self.bar_stroke_width,
-                stroke_color = self.stroke_color,
+                width=self.widths_scaled[i],
+                height=self.y_values_scaled[i],
+                stroke_width=self.bar_stroke_width,
+                stroke_color=self.stroke_color,
             )
             if bar.height == 0:
                 bar.height = 0.01
@@ -138,13 +132,13 @@ class Histogram(VMobject):
                 self.end_color,
                 t
             )
-            bar.set_fill(color = bar_color, opacity = 1)
-            bar.next_to(previous_bar,RIGHT,buff = 0, aligned_edge = DOWN)
-            
+            bar.set_fill(color=bar_color, opacity=1)
+            bar.next_to(previous_bar, RIGHT, buff=0, aligned_edge=DOWN)
+
             self.bars.add(bar)
 
             x_label = TextMobject(self.x_labels[i])
-            x_label.next_to(bar,DOWN)
+            x_label.next_to(bar, DOWN)
             self.x_labels_group.add(x_label)
 
             y_label = TextMobject(self.y_labels[i])
@@ -168,19 +162,19 @@ class Histogram(VMobject):
         # close the outline
             # lower right
         outline_points.append(bar.get_anchors()[2])
-            # lower left
+        # lower left
         outline_points.append(outline_points[0])
 
         self.outline = Polygon(*outline_points,
-            stroke_width = self.outline_stroke_width,
-            stroke_color = self.stroke_color)
-        self.add(self.bars, self.x_labels_group, self.y_labels_group, self.outline)
+                               stroke_width=self.outline_stroke_width,
+                               stroke_color=self.stroke_color)
+        self.add(self.bars, self.x_labels_group,
+                 self.y_labels_group, self.outline)
 
         self.move_to(ORIGIN)
 
     def get_lower_left_point(self):
         return self.bars[0].get_anchors()[-2]
-
 
 
 class BuildUpHistogram(Animation):
@@ -189,32 +183,27 @@ class BuildUpHistogram(Animation):
         self.histogram = hist
 
 
-
-
-
-
-
 class FlashThroughHistogram(Animation):
     CONFIG = {
-        "cell_color" : WHITE,
-        "cell_opacity" : 0.8,
-        "hist_opacity" : 0.2
+        "cell_color": WHITE,
+        "cell_opacity": 0.8,
+        "hist_opacity": 0.2
     }
 
     def __init__(self, mobject,
-        direction = "horizontal",
-        mode = "random",
-        **kwargs):
+                 direction="horizontal",
+                 mode="random",
+                 **kwargs):
 
         digest_config(self, kwargs)
 
         self.cell_height = mobject.y_scale
         self.prototype_cell = Rectangle(
-            width = 1,
-            height = self.cell_height,
-            fill_color = self.cell_color,
-            fill_opacity = self.cell_opacity,
-            stroke_width = 0,
+            width=1,
+            height=self.cell_height,
+            fill_color=self.cell_color,
+            fill_opacity=self.cell_opacity,
+            stroke_width=0,
         )
 
         x_values = mobject.x_values
@@ -223,15 +212,13 @@ class FlashThroughHistogram(Animation):
         self.mode = mode
         self.direction = direction
 
-        self.generate_cell_indices(x_values,y_values)
-        Animation.__init__(self,mobject,**kwargs)
+        self.generate_cell_indices(x_values, y_values)
+        Animation.__init__(self, mobject, **kwargs)
 
-
-
-    def generate_cell_indices(self,x_values,y_values):
+    def generate_cell_indices(self, x_values, y_values):
 
         self.cell_indices = []
-        for (i,x) in enumerate(x_values):
+        for (i, x) in enumerate(x_values):
 
             nb_cells = int(np.floor(y_values[i]))
             for j in range(nb_cells):
@@ -241,8 +228,7 @@ class FlashThroughHistogram(Animation):
         if self.mode == "random":
             shuffle(self.reordered_cell_indices)
 
-
-    def cell_for_index(self,i,j):
+    def cell_for_index(self, i, j):
 
         if self.direction == "vertical":
             width = self.mobject.x_scale
@@ -250,7 +236,7 @@ class FlashThroughHistogram(Animation):
             x = (i + 0.5) * self.mobject.x_scale
             y = (j + 0.5) * self.mobject.y_scale
             center = self.mobject.get_lower_left_point() + x * RIGHT + y * UP
-        
+
         elif self.direction == "horizontal":
             width = self.mobject.x_scale / self.mobject.y_values[i]
             height = self.mobject.y_scale * self.mobject.y_values[i]
@@ -258,29 +244,27 @@ class FlashThroughHistogram(Animation):
             y = height / 2
             center = self.mobject.get_lower_left_point() + x * RIGHT + y * UP
 
-        cell = Rectangle(width = width, height = height)
+        cell = Rectangle(width=width, height=height)
         cell.move_to(center)
         return cell
 
-
-    def interpolate_mobject(self,t):
+    def interpolate_mobject(self, t):
 
         if t == 0:
             self.mobject.add(self.prototype_cell)
 
         flash_nb = int(t * (len(self.cell_indices))) - 1
-        (i,j) = self.reordered_cell_indices[flash_nb]
-        cell = self.cell_for_index(i,j)
+        (i, j) = self.reordered_cell_indices[flash_nb]
+        cell = self.cell_for_index(i, j)
         self.prototype_cell.width = cell.get_width()
         self.prototype_cell.height = cell.get_height()
         self.prototype_cell.generate_points()
         self.prototype_cell.move_to(cell.get_center())
 
         if t == 1:
-           self.mobject.remove(self.prototype_cell)
+            self.mobject.remove(self.prototype_cell)
 
-
-    def clean_up_from_scene(self, scene = None):
+    def clean_up_from_scene(self, scene=None):
         Animation.clean_up_from_scene(self, scene)
         self.update(1)
         if scene is not None:
@@ -289,7 +273,6 @@ class FlashThroughHistogram(Animation):
             else:
                 scene.add(self.prototype_cell)
         return self
-
 
 
 class OutlineableBars(VGroup):
@@ -302,15 +285,15 @@ class OutlineableBars(VGroup):
     # We use this to morph a row of bricks into a histogram.
 
     CONFIG = {
-        "outline_stroke_width" : 3,
-        "stroke_color" : WHITE
+        "outline_stroke_width": 3,
+        "stroke_color": WHITE
     }
-    def create_outline(self, animated = False, **kwargs):
+    def create_outline(self, animated=False, **kwargs):
 
         outline_points = []
 
         for (i, bar) in enumerate(self.submobjects):
-            
+
             if i == 0:
                 # start with the lower left
                 outline_points.append(bar.get_corner(DOWN + LEFT))
@@ -323,26 +306,13 @@ class OutlineableBars(VGroup):
         # close the outline
             # lower right
         outline_points.append(previous_bar.get_corner(DOWN + RIGHT))
-            # lower left
+        # lower left
         outline_points.append(outline_points[0])
 
         self.outline = Polygon(*outline_points,
-            stroke_width = self.outline_stroke_width,
-            stroke_color = self.stroke_color)
+                               stroke_width=self.outline_stroke_width,
+                               stroke_color=self.stroke_color)
 
         if animated:
             self.play(FadeIn(self.outline, **kwargs))
         return self.outline
-
-
-
-
-
-
-
-
-
-
-
-
-

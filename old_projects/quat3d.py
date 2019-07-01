@@ -436,7 +436,8 @@ class ShowSeveralQuaternionRotations(SpecialThreeDScene):
                 self.q_tracker.get_value()
             ))
         )
-        right_q_label.add_updater(lambda m: self.add_fixed_in_frame_mobjects(m))
+        right_q_label.add_updater(
+            lambda m: self.add_fixed_in_frame_mobjects(m))
 
     def setup_camera_position(self):
         self.set_camera_orientation(

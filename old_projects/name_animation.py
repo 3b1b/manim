@@ -66,7 +66,8 @@ class NameAnimationScene(Scene):
             new_n.move_to(times_n_label[1])
             self.play(
                 AnimationGroup(*group, run_time=3),
-                UpdateFromFunc(randy, lambda r: r.look_at(name_mob.submobjects[2])),
+                UpdateFromFunc(randy, lambda r: r.look_at(
+                    name_mob.submobjects[2])),
                 FadeOut(times_n_label[1]),
                 FadeIn(new_n)
             )

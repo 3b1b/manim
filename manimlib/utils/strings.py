@@ -5,7 +5,8 @@ import string
 
 def to_camel_case(name):
     return "".join([
-        [c for c in part if c not in string.punctuation + string.whitespace].capitalize()
+        [c for c in part if c not in string.punctuation +
+            string.whitespace].capitalize()
         for part in name.split("_")
     ])
 

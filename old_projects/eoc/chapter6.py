@@ -2,21 +2,23 @@ from manimlib.imports import *
 
 SPACE_UNIT_TO_PLANE_UNIT = 0.75
 
+
 class Chapter6OpeningQuote(OpeningQuote):
     CONFIG = {
-        "quote" : [
+        "quote": [
             "Do not ask whether a ",
             "statement is true until",
             "you know what it means."
         ],
-        "author" : "Errett Bishop"
+        "author": "Errett Bishop"
     }
+
 
 class ThisWasConfusing(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Implicit differentiation")
         words.move_to(self.get_teacher().get_corner(UP+LEFT), DOWN+RIGHT)
-        words.set_fill(opacity = 0)
+        words.set_fill(opacity=0)
 
         self.play(
             self.get_teacher().change_mode, "raise_right_hand",
@@ -25,8 +27,8 @@ class ThisWasConfusing(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["confused"]*3,
-            look_at_arg = words,
-            added_anims = [Animation(self.get_teacher())]
+            look_at_arg=words,
+            added_anims=[Animation(self.get_teacher())]
         )
         self.wait()
         self.play(
@@ -35,22 +37,24 @@ class ThisWasConfusing(TeacherStudentsScene):
         )
         self.wait(3)
 
+
 class SlopeOfCircleExample(ZoomedScene):
     CONFIG = {
-        "plane_kwargs" : {
-            "x_radius" : FRAME_X_RADIUS/SPACE_UNIT_TO_PLANE_UNIT,
-            "y_radius" : FRAME_Y_RADIUS/SPACE_UNIT_TO_PLANE_UNIT,
-            "space_unit_to_x_unit" : SPACE_UNIT_TO_PLANE_UNIT,
-            "space_unit_to_y_unit" : SPACE_UNIT_TO_PLANE_UNIT,
+        "plane_kwargs": {
+            "x_radius": FRAME_X_RADIUS/SPACE_UNIT_TO_PLANE_UNIT,
+            "y_radius": FRAME_Y_RADIUS/SPACE_UNIT_TO_PLANE_UNIT,
+            "space_unit_to_x_unit": SPACE_UNIT_TO_PLANE_UNIT,
+            "space_unit_to_y_unit": SPACE_UNIT_TO_PLANE_UNIT,
         },
-        "example_point" : (3, 4),
-        "circle_radius" : 5,
-        "circle_color" : YELLOW,
-        "example_color" : MAROON_B,
-        "zoom_factor" : 20,
-        "zoomed_canvas_corner" : UP+LEFT,
-        "zoomed_canvas_corner_buff" : MED_SMALL_BUFF,
+        "example_point": (3, 4),
+        "circle_radius": 5,
+        "circle_color": YELLOW,
+        "example_color": MAROON_B,
+        "zoom_factor": 20,
+        "zoomed_canvas_corner": UP+LEFT,
+        "zoomed_canvas_corner_buff": MED_SMALL_BUFF,
     }
+
     def construct(self):
         self.setup_plane()
         self.introduce_circle()
@@ -73,18 +77,18 @@ class SlopeOfCircleExample(ZoomedScene):
 
     def introduce_circle(self):
         circle = Circle(
-            radius = self.circle_radius*SPACE_UNIT_TO_PLANE_UNIT,
-            color = self.circle_color,
+            radius=self.circle_radius*SPACE_UNIT_TO_PLANE_UNIT,
+            color=self.circle_color,
         )
         equation = TexMobject("x^2 + y^2 = 5^2")
         equation.add_background_rectangle()
         equation.next_to(
-            circle.point_from_proportion(1./8), 
+            circle.point_from_proportion(1./8),
             UP+RIGHT
         )
         equation.to_edge(RIGHT)
 
-        self.play(ShowCreation(circle, run_time = 2))
+        self.play(ShowCreation(circle, run_time=2))
         self.play(Write(equation))
         self.wait()
 
@@ -94,11 +98,11 @@ class SlopeOfCircleExample(ZoomedScene):
     def talk_through_pythagorean_theorem(self):
         point = self.plane.num_pair_to_point(self.example_point)
         x_axis_point = point[0]*RIGHT
-        dot = Dot(point, color = self.example_color)
+        dot = Dot(point, color=self.example_color)
 
-        x_line = Line(ORIGIN, x_axis_point, color = GREEN)
-        y_line = Line(x_axis_point, point, color = RED)
-        radial_line = Line(ORIGIN, point, color = self.example_color)
+        x_line = Line(ORIGIN, x_axis_point, color=GREEN)
+        y_line = Line(x_axis_point, point, color=RED)
+        radial_line = Line(ORIGIN, point, color=self.example_color)
         lines = VGroup(radial_line, x_line, y_line)
         labels = VGroup()
 
@@ -108,9 +112,9 @@ class SlopeOfCircleExample(ZoomedScene):
             label.set_color(line.get_color())
             label.add_background_rectangle()
             label.next_to(
-                line.get_center(), 
+                line.get_center(),
                 rotate_vector(UP, line.get_angle()),
-                buff = SMALL_BUFF
+                buff=SMALL_BUFF
             )
             self.play(
                 ShowCreation(line),
@@ -122,6 +126,7 @@ class SlopeOfCircleExample(ZoomedScene):
         start_angle = angle_of_vector(point)
         end_angle = np.pi/12
         spatial_radius = get_norm(point)
+
         def update_full_group(group, alpha):
             dot, lines, labels = group
             angle = interpolate(start_angle, end_angle, alpha)
@@ -135,20 +140,20 @@ class SlopeOfCircleExample(ZoomedScene):
             radial_line.put_start_and_end_on(ORIGIN, new_point)
             for line, label in zip(lines, labels):
                 label.next_to(
-                    line.get_center(), 
+                    line.get_center(),
                     rotate_vector(UP, line.get_angle()),
-                    buff = SMALL_BUFF
+                    buff=SMALL_BUFF
                 )
             return group
 
         self.play(UpdateFromAlphaFunc(
             full_group, update_full_group,
-            rate_func = there_and_back,
-            run_time = 5,
+            rate_func=there_and_back,
+            run_time=5,
         ))
         self.wait(2)
 
-        #Move labels to equation
+        # Move labels to equation
         movers = labels.copy()
         pairs = list(zip(
             [movers[1], movers[2], movers[0]],
@@ -176,10 +181,10 @@ class SlopeOfCircleExample(ZoomedScene):
         line.move_to(point)
 
         word = TextMobject("Slope?")
-        word.next_to(line.get_start(), UP, aligned_edge = LEFT)
+        word.next_to(line.get_start(), UP, aligned_edge=LEFT)
         word.add_background_rectangle()
 
-        coords = TexMobject("(%d, %d)"%self.example_point)
+        coords = TexMobject("(%d, %d)" % self.example_point)
         coords.add_background_rectangle()
         coords.scale(0.7)
         coords.next_to(point, LEFT)
@@ -198,14 +203,14 @@ class SlopeOfCircleExample(ZoomedScene):
 
     def show_perpendicular_radius(self):
         point = self.example_point_dot.get_center()
-        radial_line = Line(ORIGIN, point, color = RED)
+        radial_line = Line(ORIGIN, point, color=RED)
 
         perp_mark = VGroup(
             Line(UP, UP+RIGHT),
             Line(UP+RIGHT, RIGHT),
         )
         perp_mark.scale(0.2)
-        perp_mark.set_stroke(width = 2)
+        perp_mark.set_stroke(width=2)
         perp_mark.rotate(radial_line.get_angle()+np.pi)
         perp_mark.shift(point)
 
@@ -214,13 +219,13 @@ class SlopeOfCircleExample(ZoomedScene):
         self.wait()
         self.play(Indicate(perp_mark))
         self.wait()
-        
-        morty =  Mortimer().flip().to_corner(DOWN+LEFT)
+
+        morty = Mortimer().flip().to_corner(DOWN+LEFT)
         self.play(FadeIn(morty))
         self.play(PiCreatureBubbleIntroduction(
             morty, "Suppose you \\\\ don't know this.",
         ))
-        to_fade =self.get_mobjects_from_last_animation()
+        to_fade = self.get_mobjects_from_last_animation()
         self.play(Blink(morty))
         self.wait()
 
@@ -238,7 +243,7 @@ class SlopeOfCircleExample(ZoomedScene):
         step_line = Line(ORIGIN, LEFT)
         step_line.set_color(WHITE)
         brace = Brace(step_line, DOWN)
-        step_text = brace.get_text("Step", buff = SMALL_BUFF)
+        step_text = brace.get_text("Step", buff=SMALL_BUFF)
         step_group = VGroup(step_line, brace, step_text)
         step_group.rotate(angle_of_vector(point) - np.pi/2)
         step_group.scale(1./self.zoom_factor)
@@ -257,7 +262,7 @@ class SlopeOfCircleExample(ZoomedScene):
             )
             label.next_to(
                 line, next_to_vect,
-                buff = MED_SMALL_BUFF/self.zoom_factor
+                buff=MED_SMALL_BUFF/self.zoom_factor
             )
             label.set_color(line.get_color())
             line.label = label
@@ -266,11 +271,11 @@ class SlopeOfCircleExample(ZoomedScene):
         self.little_rectangle.move_to(step_line.get_center())
         self.little_rectangle.save_state()
         self.little_rectangle.scale_in_place(self.zoom_factor)
-        self.wait()        
+        self.wait()
         self.play(
             self.little_rectangle.restore,
             dot.scale_in_place, 1./self.zoom_factor,
-            run_time = 2
+            run_time=2
         )
         self.wait()
         self.play(ShowCreation(step_line))
@@ -313,13 +318,13 @@ class SlopeOfCircleExample(ZoomedScene):
         brace = Brace(equation, DOWN)
         brace_text = brace.get_text(
             "Not $y = f(x)$",
-            buff = SMALL_BUFF
+            buff=SMALL_BUFF
         )
         brace_text.set_color(RED)
         alt_brace_text = brace.get_text("Implicit curve")
         for text in brace_text, alt_brace_text:
             text.add_background_rectangle()
-            text.to_edge(RIGHT, buff = MED_SMALL_BUFF)
+            text.to_edge(RIGHT, buff=MED_SMALL_BUFF)
 
         new_circle = self.circle.copy()
         new_circle.set_color(BLUE)
@@ -336,7 +341,7 @@ class SlopeOfCircleExample(ZoomedScene):
         self.play(Transform(brace_text, alt_brace_text))
         self.wait()
         self.play(
-            ShowCreation(new_circle, run_time = 2),
+            ShowCreation(new_circle, run_time=2),
             Animation(brace_text)
         )
         self.play(new_circle.set_stroke, None, 0)
@@ -349,18 +354,18 @@ class SlopeOfCircleExample(ZoomedScene):
         morty = Mortimer()
         morty.flip()
         morty.next_to(ORIGIN, LEFT)
-        morty.to_edge(DOWN, buff = SMALL_BUFF)
+        morty.to_edge(DOWN, buff=SMALL_BUFF)
         q_marks = TexMobject("???")
         q_marks.next_to(morty, UP)
 
         rect = Rectangle(
-            width = FRAME_X_RADIUS - SMALL_BUFF, 
-            height = FRAME_Y_RADIUS - SMALL_BUFF,
-            stroke_width = 0,
-            fill_color = BLACK,
-            fill_opacity = 0.8,
+            width=FRAME_X_RADIUS - SMALL_BUFF,
+            height=FRAME_Y_RADIUS - SMALL_BUFF,
+            stroke_width=0,
+            fill_color=BLACK,
+            fill_opacity=0.8,
         )
-        rect.to_corner(DOWN+RIGHT, buff = 0)
+        rect.to_corner(DOWN+RIGHT, buff=0)
 
         derivative = TexMobject("2x\\,dx + 2y\\,dy = 0")
         dx = VGroup(*derivative[2:4])
@@ -368,11 +373,9 @@ class SlopeOfCircleExample(ZoomedScene):
         dx.set_color(GREEN)
         dy.set_color(RED)
 
-
-
         self.play(
             FadeIn(rect),
-            FadeIn(morty),            
+            FadeIn(morty),
             equation.next_to, ORIGIN, DOWN, MED_LARGE_BUFF,
             equation.shift, FRAME_X_RADIUS*RIGHT/2,
         )
@@ -383,12 +386,11 @@ class SlopeOfCircleExample(ZoomedScene):
         self.play(Blink(morty))
         derivative.next_to(equation, DOWN)
         derivative.shift(
-            equation[1][-3].get_center()[0]*RIGHT - \
+            equation[1][-3].get_center()[0]*RIGHT -
             derivative[-2].get_center()[0]*RIGHT
         )
 
-
-        #Differentiate
+        # Differentiate
         self.play(
             morty.look_at, derivative[0],
             *[
@@ -399,7 +401,7 @@ class SlopeOfCircleExample(ZoomedScene):
                 for i, j in ((1, 0), (0, 1))
             ]
         )
-        self.play(Write(dx, run_time = 1))
+        self.play(Write(dx, run_time=1))
         self.wait()
         self.play(*[
             ReplacementTransform(
@@ -408,8 +410,8 @@ class SlopeOfCircleExample(ZoomedScene):
             )
             for i, j in ((2, 4), (3, 6), (4, 5))
         ])
-        self.play(Write(dy, run_time = 1))
-        self.play(Blink(morty)) 
+        self.play(Write(dy, run_time=1))
+        self.play(Blink(morty))
         self.play(*[
             ReplacementTransform(
                 equation[1][i].copy(),
@@ -419,7 +421,7 @@ class SlopeOfCircleExample(ZoomedScene):
         ])
         self.wait()
 
-        #React
+        # React
         self.play(morty.change_mode, "erm")
         self.play(Blink(morty))
         self.play(Write(q_marks))
@@ -437,7 +439,7 @@ class SlopeOfCircleExample(ZoomedScene):
             morty.look_at, derivative,
         )
 
-        #Rearrange
+        # Rearrange
         x, y, eq = np.array(derivative)[[1, 6, 9]]
         final_form = TexMobject(
             "\\frac{dy}{dx} = \\frac{-x}{y}"
@@ -454,18 +456,17 @@ class SlopeOfCircleExample(ZoomedScene):
         final_form.next_to(derivative, DOWN)
         final_form.shift((eq.get_center()[0]-new_eq.get_center()[0])*RIGHT)
 
-
         self.play(*[
             ReplacementTransform(
                 mover.copy(), target,
-                run_time = 2,
-                path_arc = np.pi/2,
+                run_time=2,
+                path_arc=np.pi/2,
             )
             for mover, target in [
-                (dy, new_dy), 
-                (dx, new_dx), 
-                (eq, new_eq), 
-                (x, new_x), 
+                (dy, new_dy),
+                (dx, new_dx),
+                (eq, new_eq),
+                (x, new_x),
                 (y, new_y)
             ]
         ] + [
@@ -480,7 +481,7 @@ class SlopeOfCircleExample(ZoomedScene):
         morty = self.morty
         dy_dx = self.dy_dx
         coords = self.example_point_coords_mob
-        x, y = coords[1][1].copy(), coords[1][3].copy()        
+        x, y = coords[1][1].copy(), coords[1][3].copy()
 
         frac = self.neg_x_over_y.copy()
         frac.generate_target()
@@ -496,7 +497,7 @@ class SlopeOfCircleExample(ZoomedScene):
             MoveToTarget(frac),
             Write(eq),
             morty.look_at, rect,
-            run_time = 2,
+            run_time=2,
         )
         self.wait()
         self.play(FocusOn(coords), morty.look_at, coords)
@@ -513,10 +514,11 @@ class SlopeOfCircleExample(ZoomedScene):
             y.shift, SMALL_BUFF*UP,
             FadeOut(frac[3]),
             morty.look_at, frac,
-            run_time = 2
+            run_time=2
         )
         self.wait()
         self.play(Blink(morty))
+
 
 class NameImplicitDifferentation(TeacherStudentsScene):
     def construct(self):
@@ -528,7 +530,7 @@ class NameImplicitDifferentation(TeacherStudentsScene):
         )
         VGroup(*derivative[0][2:]).set_color(GREEN)
         VGroup(*derivative[2][2:]).set_color(RED)
-        arrow = Arrow(ORIGIN, DOWN, buff = SMALL_BUFF)
+        arrow = Arrow(ORIGIN, DOWN, buff=SMALL_BUFF)
         group = VGroup(title, equation, arrow, derivative)
         group.arrange(DOWN)
         group.to_edge(UP)
@@ -540,13 +542,13 @@ class NameImplicitDifferentation(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["confused"]*3,
-            look_at_arg = derivative,
-            added_anims = [ReplacementTransform(equation.copy(), derivative)]
+            look_at_arg=derivative,
+            added_anims=[ReplacementTransform(equation.copy(), derivative)]
         )
         self.wait(2)
         self.teacher_says(
             "Don't worry...",
-            added_anims = [
+            added_anims=[
                 group.scale, 0.7,
                 group.to_corner, UP+LEFT,
             ]
@@ -554,12 +556,14 @@ class NameImplicitDifferentation(TeacherStudentsScene):
         self.change_student_modes(*["happy"]*3)
         self.wait(3)
 
+
 class Ladder(VMobject):
     CONFIG = {
-        "height" : 4,
-        "width" : 1,
-        "n_rungs" : 7,
+        "height": 4,
+        "width": 1,
+        "n_rungs": 7,
     }
+
     def generate_points(self):
         left_line, right_line = [
             Line(ORIGIN, self.height*UP).shift(self.width*vect/2.0)
@@ -575,14 +579,16 @@ class Ladder(VMobject):
         self.add(left_line, right_line, *rungs)
         self.center()
 
+
 class RelatedRatesExample(ThreeDScene):
     CONFIG = {
-        "start_x" : 3.0,
-        "start_y" : 4.0,
-        "wall_dimensions" : [0.3, 5, 5],
-        "wall_color" : color_gradient([GREY_BROWN, BLACK], 4)[1],
-        "wall_center" : 1.5*LEFT+0.5*UP,
+        "start_x": 3.0,
+        "start_y": 4.0,
+        "wall_dimensions": [0.3, 5, 5],
+        "wall_color": color_gradient([GREY_BROWN, BLACK], 4)[1],
+        "wall_center": 1.5*LEFT+0.5*UP,
     }
+
     def construct(self):
         self.introduce_ladder()
         self.write_related_rates()
@@ -600,12 +606,12 @@ class RelatedRatesExample(ThreeDScene):
         self.write_final_solution()
 
     def introduce_ladder(self):
-        ladder = Ladder(height = self.get_ladder_length())
+        ladder = Ladder(height=self.get_ladder_length())
 
         wall = Prism(
-            dimensions = self.wall_dimensions,
-            fill_color = self.wall_color,
-            fill_opacity = 1,
+            dimensions=self.wall_dimensions,
+            fill_color=self.wall_color,
+            fill_opacity=1,
         )
         wall.rotate(np.pi/12, UP)
         wall.shift(self.wall_center)
@@ -617,18 +623,17 @@ class RelatedRatesExample(ThreeDScene):
         for ladder_copy in ladder.target, ladder.fallen:
             ladder_copy.rotate(-5*np.pi/12, UP)
             ladder_copy.next_to(wall, LEFT, 0, DOWN)
-            ladder_copy.shift(0.8*RIGHT) ##BAD!
-
+            ladder_copy.shift(0.8*RIGHT)  # BAD!
 
         self.play(
-            ShowCreation(ladder, run_time = 2)
+            ShowCreation(ladder, run_time=2)
         )
         self.wait()
 
         self.play(
             DrawBorderThenFill(wall),
             MoveToTarget(ladder),
-            run_time = 2
+            run_time=2
         )
         self.wait()
 
@@ -649,11 +654,11 @@ class RelatedRatesExample(ThreeDScene):
         x_and_y_lines = self.get_x_and_y_lines(ladder)
         x_line, y_line = x_and_y_lines
 
-        y_label = TexMobject("%dm"%int(self.start_y))
-        y_label.next_to(y_line, LEFT, buff = SMALL_BUFF)
+        y_label = TexMobject("%dm" % int(self.start_y))
+        y_label.next_to(y_line, LEFT, buff=SMALL_BUFF)
         y_label.set_color(y_line.get_color())
 
-        x_label = TexMobject("%dm"%int(self.start_x))
+        x_label = TexMobject("%dm" % int(self.start_x))
         x_label.next_to(x_line, UP)
         x_label.set_color(x_line.get_color())
 
@@ -676,7 +681,7 @@ class RelatedRatesExample(ThreeDScene):
         x_line, y_line = x_and_y_lines
 
         down_arrow, left_arrow = [
-            Arrow(ORIGIN, vect, color = YELLOW, buff = 0)
+            Arrow(ORIGIN, vect, color=YELLOW, buff=0)
             for vect in (DOWN, LEFT)
         ]
         down_arrow.shift(y_line.get_start()+MED_SMALL_BUFF*RIGHT)
@@ -684,11 +689,10 @@ class RelatedRatesExample(ThreeDScene):
 
         # speed_label = TexMobject("1 \\text{m}/\\text{s}")
         speed_label = TexMobject("1 \\frac{\\text{m}}{\\text{s}}")
-        speed_label.next_to(down_arrow, RIGHT, buff = SMALL_BUFF)
+        speed_label.next_to(down_arrow, RIGHT, buff=SMALL_BUFF)
 
         q_marks = TexMobject("???")
-        q_marks.next_to(left_arrow, DOWN, buff = SMALL_BUFF)
-
+        q_marks.next_to(left_arrow, DOWN, buff=SMALL_BUFF)
 
         added_anims = [
             UpdateFromFunc(brace, self.update_brace),
@@ -714,7 +718,7 @@ class RelatedRatesExample(ThreeDScene):
         self.dx_label = q_marks
 
     def ponder_question(self):
-        randy = Randolph(mode = "pondering")
+        randy = Randolph(mode="pondering")
         randy.flip()
         randy.to_corner(DOWN+RIGHT)
 
@@ -746,8 +750,8 @@ class RelatedRatesExample(ThreeDScene):
         )
         equation[0].set_color(GREEN)
         equation[3].set_color(RED)
-        equation.next_to(self.related_rates_words, DOWN, buff = MED_LARGE_BUFF)
-        equation.to_edge(RIGHT, buff = LARGE_BUFF)
+        equation.next_to(self.related_rates_words, DOWN, buff=MED_LARGE_BUFF)
+        equation.to_edge(RIGHT, buff=LARGE_BUFF)
 
         self.play(Write(y_label))
         self.wait()
@@ -755,8 +759,8 @@ class RelatedRatesExample(ThreeDScene):
             self.ladder,
             y_label.shift, self.start_y*DOWN/2,
             *self.get_added_anims_for_ladder_fall()[:-1],
-            rate_func = lambda t : 0.2*there_and_back(t),
-            run_time = 3
+            rate_func=lambda t: 0.2*there_and_back(t),
+            run_time=3
         )
         self.play(FocusOn(x_label))
         self.play(Write(x_label))
@@ -770,8 +774,8 @@ class RelatedRatesExample(ThreeDScene):
         self.let_ladder_fall(
             self.ladder,
             *self.get_added_anims_for_ladder_fall(),
-            rate_func = there_and_back,
-            run_time = 6
+            rate_func=there_and_back,
+            run_time=6
         )
         self.wait()
 
@@ -783,32 +787,32 @@ class RelatedRatesExample(ThreeDScene):
         )
         alt_equation[0].set_color(GREEN)
         alt_equation[4].set_color(RED)
-        alt_equation.next_to(self.equation, DOWN, buff = MED_LARGE_BUFF)
+        alt_equation.next_to(self.equation, DOWN, buff=MED_LARGE_BUFF)
         alt_equation.to_edge(RIGHT)
 
         randy = Randolph()
         randy.next_to(
-            alt_equation, DOWN, 
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT,
+            alt_equation, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT,
         )
         randy.look_at(alt_equation)
 
         find_dx_dt = TexMobject("\\text{Find } \\,", "\\frac{dx}{dt}")
-        find_dx_dt.next_to(randy, RIGHT, aligned_edge = UP)
+        find_dx_dt.next_to(randy, RIGHT, aligned_edge=UP)
         find_dx_dt[1].set_color(GREEN)
 
         self.play(FadeIn(randy))
         self.play(
-            randy.change_mode, "raise_right_hand", 
+            randy.change_mode, "raise_right_hand",
             randy.look_at, alt_equation,
             *[
                 ReplacementTransform(
-                    self.equation[i].copy(), 
+                    self.equation[i].copy(),
                     alt_equation[j],
-                    path_arc = np.pi/2,
-                    run_time = 3,
-                    rate_func = squish_rate_func(
+                    path_arc=np.pi/2,
+                    run_time=3,
+                    rate_func=squish_rate_func(
                         smooth, j/12.0, (j+6)/12.0
                     )
                 )
@@ -824,8 +828,8 @@ class RelatedRatesExample(ThreeDScene):
         )
         self.let_ladder_fall(
             self.ladder, *self.get_added_anims_for_ladder_fall(),
-            run_time = 8,
-            rate_func = there_and_back
+            run_time=8,
+            rate_func=there_and_back
         )
         self.play(*list(map(FadeOut, [
             randy, find_dx_dt, alt_equation
@@ -849,9 +853,9 @@ class RelatedRatesExample(ThreeDScene):
         derivative = TexMobject(
             "\\frac{d\\left(x(t)^2 + y(t)^2 \\right)}{dt}"
         )
-        derivative.next_to(equation, DOWN, buff = MED_LARGE_BUFF)
-        derivative.shift( ##Align x terms
-            equation[0][0].get_center()[0]*RIGHT-\
+        derivative.next_to(equation, DOWN, buff=MED_LARGE_BUFF)
+        derivative.shift(  # Align x terms
+            equation[0][0].get_center()[0]*RIGHT -\
             derivative[2].get_center()[0]*RIGHT
         )
         derivative_interior = lhs.copy()
@@ -868,8 +872,8 @@ class RelatedRatesExample(ThreeDScene):
         self.play(Write(constant_words))
         self.let_ladder_fall(
             self.ladder, *self.get_added_anims_for_ladder_fall(),
-            run_time = 6,
-            rate_func = lambda t : 0.5*there_and_back(t)
+            run_time=6,
+            rate_func=lambda t: 0.5*there_and_back(t)
         )
         self.wait()
         self.play(*list(map(FadeOut, [
@@ -890,8 +894,8 @@ class RelatedRatesExample(ThreeDScene):
         dt_words.to_corner(UP+LEFT)
         dt = dt_words[1]
         dt.set_color(YELLOW)
-        dt_brace = Brace(dt, buff = SMALL_BUFF)
-        dt_brace_text = dt_brace.get_text("Think 0.01", buff = SMALL_BUFF)
+        dt_brace = Brace(dt, buff=SMALL_BUFF)
+        dt_brace_text = dt_brace.get_text("Think 0.01", buff=SMALL_BUFF)
         dt_brace_text.set_color(dt.get_color())
 
         shadow_ladder = self.ladder.copy()
@@ -901,32 +905,32 @@ class RelatedRatesExample(ThreeDScene):
         y_top = y_line.get_start()
         x_left = x_line.get_start()
 
-        self.play(Write(dt_words, run_time = 2))
+        self.play(Write(dt_words, run_time=2))
         self.play(
             GrowFromCenter(dt_brace),
-            Write(dt_brace_text, run_time = 2)
+            Write(dt_brace_text, run_time=2)
         )
         self.play(*list(map(FadeOut, [
-            self.dy_arrow, self.dy_label, 
-            self.dx_arrow, self.dx_label, 
+            self.dy_arrow, self.dy_label,
+            self.dx_arrow, self.dx_label,
         ])))
         self.add(shadow_ladder)
         self.let_ladder_fall(
             self.ladder, *self.get_added_anims_for_ladder_fall(),
-            rate_func = lambda t : 0.1*smooth(t),
-            run_time = 1
+            rate_func=lambda t: 0.1*smooth(t),
+            run_time=1
         )
 
         new_y_top = y_line.get_start()
         new_x_left = x_line.get_start()
 
         dy_line = Line(y_top, new_y_top)
-        dy_brace = Brace(dy_line, RIGHT, buff = SMALL_BUFF)
-        dy_label = dy_brace.get_text("$dy$", buff = SMALL_BUFF)
+        dy_brace = Brace(dy_line, RIGHT, buff=SMALL_BUFF)
+        dy_label = dy_brace.get_text("$dy$", buff=SMALL_BUFF)
         dy_label.set_color(RED)
 
         dx_line = Line(x_left, new_x_left)
-        dx_brace = Brace(dx_line, DOWN, buff = SMALL_BUFF)
+        dx_brace = Brace(dx_line, DOWN, buff=SMALL_BUFF)
         dx_label = dx_brace.get_text("$dx$")
         dx_label.set_color(GREEN)
 
@@ -937,7 +941,7 @@ class RelatedRatesExample(ThreeDScene):
                 ShowCreation(line),
                 GrowFromCenter(brace),
                 Write(label),
-                run_time = 1
+                run_time=1
             )
         self.wait()
         self.play(Indicate(self.derivative[1]))
@@ -960,13 +964,13 @@ class RelatedRatesExample(ThreeDScene):
         self.play(Indicate(rhs))
         self.wait()
         self.reset_ladder(
-            self.ladder, 
+            self.ladder,
             *self.get_added_anims_for_ladder_fall()+[
                 Animation(self.dy_group),
                 Animation(self.dx_group),
             ],
-            rate_func = there_and_back,
-            run_time = 3
+            rate_func=there_and_back,
+            run_time=3
         )
         self.wait()
 
@@ -986,21 +990,22 @@ class RelatedRatesExample(ThreeDScene):
         VGroup(*lhs_derivative[6][:2]).set_color(RED)
         lhs_derivative.next_to(
             derivative_scaffold, DOWN,
-            aligned_edge = RIGHT,
-            buff = MED_LARGE_BUFF
+            aligned_edge=RIGHT,
+            buff=MED_LARGE_BUFF
         )
         equals_zero_copy.next_to(lhs_derivative, RIGHT)
 
         pairs = [
-            (0, 1), (1, 0), #x^2 -> 2x
-            (2, 3), (3, 5), (4, 4), #+y^2 -> +2y
+            (0, 1), (1, 0),  # x^2 -> 2x
+            (2, 3), (3, 5), (4, 4),  # +y^2 -> +2y
         ]
+
         def perform_replacement(index_pairs):
             self.play(*[
                 ReplacementTransform(
                     equation[i].copy(), lhs_derivative[j],
-                    path_arc = np.pi/2,
-                    run_time = 2
+                    path_arc=np.pi/2,
+                    run_time=2
                 )
                 for i, j in index_pairs
             ])
@@ -1010,10 +1015,10 @@ class RelatedRatesExample(ThreeDScene):
         self.wait()
         self.play(Indicate(
             VGroup(
-                *list(lhs_derivative[:2])+\
+                *list(lhs_derivative[:2]) +
                 list(lhs_derivative[2][:2])
             ),
-            run_time = 2
+            run_time=2
         ))
         self.play(Indicate(VGroup(*lhs_derivative[2][3:])))
         self.wait(2)
@@ -1037,8 +1042,8 @@ class RelatedRatesExample(ThreeDScene):
             self.dy_arrow, self.dy_label,
             self.dx_arrow, self.dx_label,
         )
-        ladder_fall_args = [self.ladder] + self.get_added_anims_for_ladder_fall()
-
+        ladder_fall_args = [self.ladder] + \
+            self.get_added_anims_for_ladder_fall()
 
         self.reset_ladder(*ladder_fall_args + [
             FadeOut(dx_dy_group),
@@ -1058,8 +1063,8 @@ class RelatedRatesExample(ThreeDScene):
         num_x_label, num_y_label = self.numerical_x_and_y_labels
 
         new_lhs_derivative = TexMobject(
-            "2", "(%d)"%int(self.start_x), "\\frac{dx}{dt}", "+",
-            "2", "(%d)"%int(self.start_y), "(-1)",
+            "2", "(%d)" % int(self.start_x), "\\frac{dx}{dt}", "+",
+            "2", "(%d)" % int(self.start_y), "(-1)",
             "= 0"
         )
         new_lhs_derivative[1].set_color(GREEN)
@@ -1067,15 +1072,16 @@ class RelatedRatesExample(ThreeDScene):
         new_lhs_derivative[5].set_color(RED)
         new_lhs_derivative.next_to(
             self.lhs_derivative, DOWN,
-            buff = MED_LARGE_BUFF,
-            aligned_edge = RIGHT
+            buff=MED_LARGE_BUFF,
+            aligned_edge=RIGHT
         )
+
         def fill_in_equation_part(*indices):
             self.play(*[
                 ReplacementTransform(
                     self.lhs_derivative[i].copy(),
                     new_lhs_derivative[i],
-                    run_time = 2
+                    run_time=2
                 )
                 for i in indices
             ])
@@ -1099,11 +1105,11 @@ class RelatedRatesExample(ThreeDScene):
         solution[-3].set_color(RED)
         solution.next_to(
             self.new_lhs_derivative, DOWN,
-            buff = MED_LARGE_BUFF,
-            aligned_edge = RIGHT
+            buff=MED_LARGE_BUFF,
+            aligned_edge=RIGHT
         )
 
-        box = Rectangle(color = YELLOW)
+        box = Rectangle(color=YELLOW)
         box.replace(solution)
         box.scale_in_place(1.5)
 
@@ -1160,10 +1166,10 @@ class RelatedRatesExample(ThreeDScene):
 
     def get_ladder_brace(self, ladder):
         vect = rotate_vector(LEFT, -self.get_ladder_angle())
-        brace = Brace(ladder, vect)        
-        length_string = "%dm"%int(self.get_ladder_length())
+        brace = Brace(ladder, vect)
+        length_string = "%dm" % int(self.get_ladder_length())
         length_label = brace.get_text(
-            length_string, use_next_to = False
+            length_string, use_next_to=False
         )
         brace.add(length_label)
         brace.length_label = length_label
@@ -1174,11 +1180,11 @@ class RelatedRatesExample(ThreeDScene):
 
         x_label = TexMobject("x(t)")
         x_label.set_color(x_line.get_color())
-        x_label.next_to(x_line, DOWN, buff = SMALL_BUFF)
+        x_label.next_to(x_line, DOWN, buff=SMALL_BUFF)
 
         y_label = TexMobject("y(t)")
         y_label.set_color(y_line.get_color())
-        y_label.next_to(y_line, LEFT, buff = SMALL_BUFF)
+        y_label.next_to(y_line, LEFT, buff=SMALL_BUFF)
 
         return VGroup(x_label, y_label)
 
@@ -1205,25 +1211,29 @@ class RelatedRatesExample(ThreeDScene):
     def get_ladder_length(self):
         return get_norm([self.start_x, self.start_y])
 
+
 class LightweightLadderScene(RelatedRatesExample):
     CONFIG = {
-        "skip_animations" : True
+        "skip_animations": True
     }
+
     def construct(self):
         self.introduce_ladder()
         self.measure_ladder()
         self.add(self.numerical_x_and_y_labels)
 
+
 class LightweightCircleExample(SlopeOfCircleExample):
     CONFIG = {
-        "skip_animations" : True,
-        "plane_kwargs" : {
-            "x_radius" : 5,
-            "y_radius" : 5,
-            "space_unit_to_x_unit" : SPACE_UNIT_TO_PLANE_UNIT,
-            "space_unit_to_y_unit" : SPACE_UNIT_TO_PLANE_UNIT,
+        "skip_animations": True,
+        "plane_kwargs": {
+            "x_radius": 5,
+            "y_radius": 5,
+            "space_unit_to_x_unit": SPACE_UNIT_TO_PLANE_UNIT,
+            "space_unit_to_y_unit": SPACE_UNIT_TO_PLANE_UNIT,
         },
     }
+
     def construct(self):
         self.setup_plane()
         self.introduce_circle()
@@ -1233,9 +1243,10 @@ class LightweightCircleExample(SlopeOfCircleExample):
         self.remove(self.circle_equation)
         self.remove(self.slope_word)
         self.example_point_coords_mob.scale(
-            1.5, about_point = self.example_point_coords_mob.get_corner(UP+RIGHT)
+            1.5, about_point=self.example_point_coords_mob.get_corner(UP+RIGHT)
         )
         self.plane.axis_labels[0].shift(3*LEFT)
+
 
 class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
     def construct(self):
@@ -1253,8 +1264,8 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             mobs.set_height(FRAME_Y_RADIUS-MED_LARGE_BUFF)
             mobs.next_to(
                 self.pi_creature.get_corner(UP+vect), UP,
-                buff = SMALL_BUFF,
-                aligned_edge = -vect
+                buff=SMALL_BUFF,
+                aligned_edge=-vect
             )
 
         ladder_mobs.save_state()
@@ -1263,12 +1274,12 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
         self.play(
             self.pi_creature.change_mode, "raise_right_hand",
             self.pi_creature.look_at, ladder_mobs,
-            ApplyMethod(ladder_mobs.restore, run_time = 2)
+            ApplyMethod(ladder_mobs.restore, run_time=2)
         )
         self.play(
             self.pi_creature.change_mode, "raise_left_hand",
             self.pi_creature.look_at, circle_mobs,
-            Write(circle_mobs, run_time = 2)
+            Write(circle_mobs, run_time=2)
         )
         self.wait(2)
         self.play(
@@ -1286,7 +1297,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
         self.color_equations(equation, derivative)
         equation.to_edge(UP)
         equation.shift(MED_LARGE_BUFF*LEFT)
-        derivative.next_to(equation, DOWN, buff = MED_LARGE_BUFF)
+        derivative.next_to(equation, DOWN, buff=MED_LARGE_BUFF)
 
         self.play(
             Write(equation),
@@ -1297,7 +1308,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
         self.play(*[
             ReplacementTransform(
                 equation[i].copy(), derivative[j],
-                path_arc = np.pi/2
+                path_arc=np.pi/2
             )
             for i, j in enumerate([1, 0, 3, 5, 4, 7])
         ]+[
@@ -1321,7 +1332,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             "x(t)", "^2", "+", "y(t)", "^2", "= 5^2"
         )
         time_derivative = TexMobject(
-            "2", "x(t)", "\\frac{dx}{dt}", "+", 
+            "2", "x(t)", "\\frac{dx}{dt}", "+",
             "2", "y(t)", "\\frac{dy}{dt}", "=0"
         )
         self.color_equations(time_equation, time_derivative)
@@ -1358,8 +1369,8 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
 
         for mob in dx, dy:
             brace = Brace(mob)
-            brace.next_to(mob[0], DOWN, buff = SMALL_BUFF, aligned_edge = LEFT)
-            text = brace.get_text("No $dt$", buff = SMALL_BUFF)
+            brace.next_to(mob[0], DOWN, buff=SMALL_BUFF, aligned_edge=LEFT)
+            text = brace.get_text("No $dt$", buff=SMALL_BUFF)
             text.set_color(YELLOW)
 
             self.play(
@@ -1386,11 +1397,13 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
         for mob in equation[3], derivative[5]:
             mob.set_color(RED)
 
+
 class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
     CONFIG = {
-        "zoomed_canvas_corner" : DOWN+RIGHT,
-        "zoomed_canvas_frame_shape" : (3, 4),
+        "zoomed_canvas_corner": DOWN+RIGHT,
+        "zoomed_canvas_frame_shape": (3, 4),
     }
+
     def construct(self):
         self.setup_plane()
         self.write_equation()
@@ -1410,19 +1423,18 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         equation = TexMobject("x", "^2", "+", "y", "^2")
         equation.add_background_rectangle()
 
-        brace = Brace(equation, UP, buff = SMALL_BUFF)
+        brace = Brace(equation, UP, buff=SMALL_BUFF)
         s_expression = self.get_s_expression("x", "y")
         s_rect, s_of_xy = s_expression
         s, xy = s_of_xy
-        s_expression.next_to(brace, UP, buff = SMALL_BUFF)
+        s_expression.next_to(brace, UP, buff=SMALL_BUFF)
 
         group = VGroup(equation, s_expression, brace)
         group.shift(FRAME_WIDTH*LEFT/3)
-        group.to_edge(UP, buff = MED_SMALL_BUFF)
+        group.to_edge(UP, buff=MED_SMALL_BUFF)
 
         s.save_state()
         s.next_to(brace, UP)
-
 
         self.play(Write(equation))
         self.play(GrowFromCenter(brace))
@@ -1430,7 +1442,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         self.wait()
         self.play(
             FadeIn(s_rect),
-            s.restore, 
+            s.restore,
             GrowFromCenter(xy)
         )
         self.wait()
@@ -1440,18 +1452,19 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
 
     def show_example_point(self):
         point = self.plane.num_pair_to_point(self.example_point)
-        dot = Dot(point, color = self.example_color)
+        dot = Dot(point, color=self.example_color)
         new_s_expression = self.get_s_expression(*self.example_point)
-        new_s_expression.next_to(dot, UP+RIGHT, buff = 0)
+        new_s_expression.next_to(dot, UP+RIGHT, buff=0)
         new_s_expression.set_color(self.example_color)
-        equals_25 = TexMobject("=%d"%int(get_norm(self.example_point)**2))
+        equals_25 = TexMobject("=%d" % int(get_norm(self.example_point)**2))
         equals_25.set_color(YELLOW)
-        equals_25.next_to(new_s_expression, RIGHT, align_using_submobjects = True)
+        equals_25.next_to(new_s_expression, RIGHT,
+                          align_using_submobjects=True)
         equals_25.add_background_rectangle()
 
         circle = Circle(
-            radius = self.circle_radius*self.plane.space_unit_to_x_unit,
-            color = self.circle_color,
+            radius=self.circle_radius*self.plane.space_unit_to_x_unit,
+            color=self.circle_color,
         )
 
         self.play(
@@ -1473,13 +1486,13 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
     def shift_example_point(self, coords):
         point = self.plane.num_pair_to_point(coords)
         s_expression = self.get_s_expression(*coords)
-        s_expression.next_to(point, UP+RIGHT, buff = SMALL_BUFF)
+        s_expression.next_to(point, UP+RIGHT, buff=SMALL_BUFF)
         s_expression.set_color(self.example_color)
         result = coords[0]**2 + coords[1]**2
-        rhs = TexMobject("=%d"%int(result))
+        rhs = TexMobject("=%d" % int(result))
         rhs.add_background_rectangle()
         rhs.set_color(YELLOW)
-        rhs.next_to(s_expression, RIGHT, align_using_submobjects = True)
+        rhs.next_to(s_expression, RIGHT, align_using_submobjects=True)
         point_label = VGroup(s_expression, rhs)
 
         self.play(
@@ -1495,7 +1508,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         )
         derivative[2].set_color(GREEN)
         derivative[6].set_color(RED)
-        derivative.next_to(equation, DOWN, buff = MED_LARGE_BUFF)
+        derivative.next_to(equation, DOWN, buff=MED_LARGE_BUFF)
         derivative.add_background_rectangle()
         derivative.to_edge(LEFT)
 
@@ -1513,9 +1526,9 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         self.play(*[
             ReplacementTransform(
                 equation[1][i].copy(), derivative[1][j],
-                path_arc = np.pi/2,
-                run_time = 2,
-                rate_func = squish_rate_func(smooth, (j-1)/12., (j+6)/12.)
+                path_arc=np.pi/2,
+                run_time=2,
+                rate_func=squish_rate_func(smooth, (j-1)/12., (j+6)/12.)
             )
             for i, j in enumerate([2, 1, 4, 6, 5])
         ])
@@ -1534,21 +1547,21 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         new_point = point + vect*0.6/self.zoom_factor
         interim_point = new_point[0]*RIGHT + point[1]*UP
 
-        dx_line = Line(point, interim_point, color = GREEN)
-        dy_line = Line(interim_point, new_point, color = RED)
+        dx_line = Line(point, interim_point, color=GREEN)
+        dy_line = Line(interim_point, new_point, color=RED)
         for line, tex, vect in (dx_line, "dx", UP), (dy_line, "dy", LEFT):
             label = TexMobject(tex)
             label.set_color(line.get_color())
-            label.next_to(line, vect, buff = SMALL_BUFF)
+            label.next_to(line, vect, buff=SMALL_BUFF)
             label.add_background_rectangle()
             label.scale(
-                1./self.zoom_factor, 
-                about_point = line.get_center()
+                1./self.zoom_factor,
+                about_point=line.get_center()
             )
             line.label = label
 
         self.activate_zooming()
-        lil_rect = self.little_rectangle        
+        lil_rect = self.little_rectangle
         lil_rect.move_to(dot)
         lil_rect.shift(0.05*lil_rect.get_width()*LEFT)
         lil_rect.shift(0.2*lil_rect.get_height()*DOWN)
@@ -1562,27 +1575,27 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             dot.scale, 1./self.zoom_factor, point,
             s_label.scale, 1./self.zoom_factor, point,
             lil_rect.restore,
-            run_time = 2
+            run_time=2
         )
         self.wait()
         for line in dx_line, dy_line:
             self.play(ShowCreation(line))
-            self.play(Write(line.label, run_time = 1))
+            self.play(Write(line.label, run_time=1))
             self.wait()
 
-        new_dot = Dot(color = dot.get_color())
+        new_dot = Dot(color=dot.get_color())
         new_s_label = self.get_s_expression(
-            "%d + dx"%int(self.example_point[0]),
-            "%d + dy"%int(self.example_point[1]),
+            "%d + dx" % int(self.example_point[0]),
+            "%d + dy" % int(self.example_point[1]),
         )
         new_dot.set_height(dot.get_height())
         new_dot.move_to(new_point)
         new_s_label.set_height(s_label.get_height())
         new_s_label.scale(0.8)
         new_s_label.next_to(
-            new_dot, DOWN, 
-            buff = SMALL_BUFF/self.zoom_factor, 
-            aligned_edge = LEFT
+            new_dot, DOWN,
+            buff=SMALL_BUFF/self.zoom_factor,
+            aligned_edge=LEFT
         )
         new_s_label.shift(MED_LARGE_BUFF*LEFT/self.zoom_factor)
         new_s_label.set_color(self.example_color)
@@ -1613,15 +1626,15 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         deriv_example[6].set_color(RED)
         deriv_example.add_background_rectangle()
         deriv_example.scale(0.8)
-        deriv_example.next_to(ORIGIN, UP, buff = SMALL_BUFF)
-        deriv_example.to_edge(LEFT, buff = MED_SMALL_BUFF)
+        deriv_example.next_to(ORIGIN, UP, buff=SMALL_BUFF)
+        deriv_example.to_edge(LEFT, buff=MED_SMALL_BUFF)
 
         def add_example_parts(*indices):
             self.play(*[
                 ReplacementTransform(
                     self.derivative[1][i].copy(),
                     deriv_example[1][i],
-                    run_time = 2
+                    run_time=2
                 )
                 for i in indices
             ])
@@ -1636,7 +1649,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         add_example_parts(7)
         self.wait()
 
-        #React
+        # React
         randy = Randolph()
         randy.next_to(ORIGIN, LEFT)
         randy.to_edge(DOWN)
@@ -1661,7 +1674,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         self.wait(2)
         self.play(PiCreatureSays(
             randy, "Approximately",
-            target_mode = "sassy"
+            target_mode="sassy"
         ))
         self.wait()
         self.play(RemovePiCreatureBubble(randy))
@@ -1709,25 +1722,25 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         interim_point = point[0]*RIGHT + new_point[1]*UP
         new_dot = dot.copy().move_to(new_point)
 
-        step_line = Line(point, new_point, color = WHITE)
-        dy_line = Line(point, interim_point, color = RED)
-        dx_line = Line(interim_point, new_point, color = GREEN)
+        step_line = Line(point, new_point, color=WHITE)
+        dy_line = Line(point, interim_point, color=RED)
+        dx_line = Line(interim_point, new_point, color=GREEN)
 
         s_label = TexMobject("S = 25")
         s_label.set_color(self.example_color)
         s_label.next_to(
             point, DOWN,
-            buff = MED_LARGE_BUFF,
-            aligned_edge = RIGHT
+            buff=MED_LARGE_BUFF,
+            aligned_edge=RIGHT
         )
-        s_label.scale(1./self.zoom_factor, about_point = point)
+        s_label.scale(1./self.zoom_factor, about_point=point)
         arrow1, arrow2 = [
             Arrow(
                 s_label.get_top(), mob,
-                preserve_tip_size_when_scaling = False,
-                color = self.example_color,
-                buff = SMALL_BUFF/self.zoom_factor,
-                tip_length = 0.15/self.zoom_factor
+                preserve_tip_size_when_scaling=False,
+                color=self.example_color,
+                buff=SMALL_BUFF/self.zoom_factor,
+                tip_length=0.15/self.zoom_factor
             )
             for mob in (dot, new_dot)
         ]
@@ -1737,8 +1750,8 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             label.set_color(line.get_color())
             label.next_to(line, vect)
             label.scale(
-                1./self.zoom_factor, 
-                about_point = line.get_center()
+                1./self.zoom_factor,
+                about_point=line.get_center()
             )
             line.label = label
 
@@ -1767,7 +1780,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             FocusOn(equals_zero),
             self.randy.look_at, equals_zero
         )
-        self.play(Indicate(equals_zero, color = RED))
+        self.play(Indicate(equals_zero, color=RED))
         self.play(Blink(randy))
         self.play(randy.change_mode, "happy")
         self.play(randy.look_at, self.big_rectangle)
@@ -1792,27 +1805,27 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         self.wait(2)
         self.play(
             self.little_rectangle.scale_in_place, self.zoom_factor/2,
-            run_time = 4,
-            rate_func = there_and_back
+            run_time=4,
+            rate_func=there_and_back
         )
         self.wait(2)
 
     ############
 
     def get_s_expression(self, x, y):
-        result = TexMobject("S", "(%s, %s)"%(str(x), str(y)))
+        result = TexMobject("S", "(%s, %s)" % (str(x), str(y)))
         result.add_background_rectangle()
         return result
+
 
 class TryOtherExamples(TeacherStudentsScene):
     def construct(self):
         formula = TexMobject("\\sin(x)y^2 = x")
         formula.next_to(
             self.get_teacher().get_corner(UP+LEFT), UP,
-            buff = MED_LARGE_BUFF,
-            aligned_edge = RIGHT
+            buff=MED_LARGE_BUFF,
+            aligned_edge=RIGHT
         )
-
 
         self.teacher_says(
             """Nothing special
@@ -1821,22 +1834,24 @@ class TryOtherExamples(TeacherStudentsScene):
         self.wait()
         self.play(RemovePiCreatureBubble(
             self.get_teacher(),
-            target_mode = "raise_right_hand"
+            target_mode="raise_right_hand"
         ))
-        self.play(Write(formula, run_time = 1))
+        self.play(Write(formula, run_time=1))
         self.change_student_modes(*["pondering"]*3)
         self.wait(2)
         self.play(formula.to_corner, UP+LEFT)
         self.wait()
 
+
 class AlternateExample(ZoomedScene):
     CONFIG = {
-        "example_color" : MAROON_B,
-        "zoom_factor" : 10,
-        "zoomed_canvas_corner" : DOWN+RIGHT,
-        "zoomed_canvas_frame_shape" : (3, 4),
+        "example_color": MAROON_B,
+        "zoom_factor": 10,
+        "zoomed_canvas_corner": DOWN+RIGHT,
+        "zoomed_canvas_frame_shape": (3, 4),
     }
-    def construct(self): 
+
+    def construct(self):
         self.add_plane()
         self.draw_graph()
         self.emphasize_meaning_of_points()
@@ -1855,14 +1870,14 @@ class AlternateExample(ZoomedScene):
         formula.add_background_rectangle()
 
         plane = NumberPlane(
-            space_unit_to_x_unit = 0.75,
-            x_radius = FRAME_WIDTH,
+            space_unit_to_x_unit=0.75,
+            x_radius=FRAME_WIDTH,
         )
         plane.fade()
         plane.add_coordinates()
 
         self.add(formula)
-        self.play(Write(plane, run_time = 2), Animation(formula))
+        self.play(Write(plane, run_time=2), Animation(formula))
         self.wait()
 
         self.plane = plane
@@ -1873,10 +1888,10 @@ class AlternateExample(ZoomedScene):
     def draw_graph(self):
         graphs = VGroup(*[
             FunctionGraph(
-                lambda x : u*np.sqrt(x/np.sin(x)),
-                num_steps = 200,
-                x_min = x_min+0.1,
-                x_max = x_max-0.1,
+                lambda x: u*np.sqrt(x/np.sin(x)),
+                num_steps=200,
+                x_min=x_min+0.1,
+                x_max=x_max-0.1,
             )
             for u in [-1, 1]
             for x_min, x_max in [
@@ -1885,13 +1900,13 @@ class AlternateExample(ZoomedScene):
                 (2*np.pi, 4*np.pi),
             ]
         ])
-        graphs.stretch(self.plane.space_unit_to_x_unit, dim = 0)
+        graphs.stretch(self.plane.space_unit_to_x_unit, dim=0)
 
         self.play(
             ShowCreation(
-                graphs, 
-                run_time = 3, 
-                lag_ratio = 0
+                graphs,
+                run_time=3,
+                lag_ratio=0
             ),
             Animation(self.formula)
         )
@@ -1901,7 +1916,7 @@ class AlternateExample(ZoomedScene):
 
     def emphasize_meaning_of_points(self):
         graph = self.graphs[4]
-        dot = Dot(color = self.example_color)
+        dot = Dot(color=self.example_color)
         label = TexMobject("(x, y)")
         label.add_background_rectangle()
         label.set_color(self.example_color)
@@ -1927,19 +1942,19 @@ class AlternateExample(ZoomedScene):
         self.play(
             ShowCreation(dot),
             Write(label),
-            run_time = 1
+            run_time=1
         )
         self.play(
             UpdateFromAlphaFunc(dot, update_dot),
             UpdateFromFunc(label, update_label),
-            run_time = 3,
+            run_time=3,
         )
         self.wait()
         self.play(*[
             ApplyMethod(
                 label[1][i].copy().move_to, self.formula[1][j],
-                run_time = 3,
-                rate_func = squish_rate_func(smooth, count/6., count/6.+2./3)
+                run_time=3,
+                rate_func=squish_rate_func(smooth, count/6., count/6.+2./3)
             )
             for count, (i, j) in enumerate([(1, 4), (1, 9), (3, 6)])
         ])
@@ -1948,12 +1963,12 @@ class AlternateExample(ZoomedScene):
         self.play(
             UpdateFromAlphaFunc(dot, update_dot),
             UpdateFromFunc(label, update_label),
-            run_time = 3,
-            rate_func = lambda t : 1-smooth(t)
+            run_time=3,
+            rate_func=lambda t: 1-smooth(t)
         )
         self.wait()
         self.play(*[
-            ApplyMethod(mover.set_fill, None, 0, remover = True)
+            ApplyMethod(mover.set_fill, None, 0, remover=True)
             for mover in movers
         ])
 
@@ -1972,8 +1987,8 @@ class AlternateExample(ZoomedScene):
             self.play(
                 ApplyMethod(
                     mob.scale, 1./self.zoom_factor,
-                    method_kwargs = {"about_point" : dot.get_center()},
-                    run_time = 1,
+                    method_kwargs={"about_point": dot.get_center()},
+                    run_time=1,
                 )
             )
         self.wait()
@@ -1986,26 +2001,26 @@ class AlternateExample(ZoomedScene):
         new_point = point + step_vect
         interim_point = new_point[0]*RIGHT + point[1]*UP
 
-        dx_line = Line(point, interim_point, color = GREEN)
-        dy_line = Line(interim_point, new_point, color = RED)
+        dx_line = Line(point, interim_point, color=GREEN)
+        dy_line = Line(interim_point, new_point, color=RED)
         for line, tex, vect in (dx_line, "dx", DOWN), (dy_line, "dy", LEFT):
             label = TexMobject(tex)
-            label.next_to(line, vect, buff = SMALL_BUFF)
+            label.next_to(line, vect, buff=SMALL_BUFF)
             label.set_color(line.get_color())
-            label.scale(1./self.zoom_factor, about_point = line.get_center())
+            label.scale(1./self.zoom_factor, about_point=line.get_center())
             label.add_background_rectangle()
             line.label = label
 
         arrow = Arrow(
-            point, new_point, buff = 0,
-            tip_length = 0.15/self.zoom_factor,
-            color = WHITE
+            point, new_point, buff=0,
+            tip_length=0.15/self.zoom_factor,
+            color=WHITE
         )
 
         self.play(ShowCreation(arrow))
         for line in dx_line, dy_line:
             self.play(ShowCreation(line), Animation(arrow))
-            self.play(Write(line.label, run_time = 1))
+            self.play(Write(line.label, run_time=1))
         self.wait()
 
         self.step_group = VGroup(
@@ -2020,7 +2035,7 @@ class AlternateExample(ZoomedScene):
         word.add_background_rectangle()
         word.next_to(
             Line(lhs.get_center(), rhs.get_center()),
-            DOWN, buff = 1.5*LARGE_BUFF
+            DOWN, buff=1.5*LARGE_BUFF
         )
 
         arrows = VGroup(*[
@@ -2039,17 +2054,17 @@ class AlternateExample(ZoomedScene):
     def differentiate_lhs(self):
         formula = self.formula
         lhs = self.lhs
-        brace = Brace(lhs, DOWN, buff = SMALL_BUFF)
+        brace = Brace(lhs, DOWN, buff=SMALL_BUFF)
         sine_x = VGroup(*lhs[:6])
         sine_rect = BackgroundRectangle(sine_x)
         y_squared = VGroup(*lhs[6:])
 
         mnemonic = TextMobject(
-            "``", 
+            "``",
             "Left", " d-Right", " + ",
             "Right",  " d-Left"
             "''",
-            arg_separator = ""
+            arg_separator=""
         )
         mnemonic.set_color_by_tex("d-Right", RED)
         mnemonic.set_color_by_tex("d-Left", GREEN)
@@ -2059,22 +2074,22 @@ class AlternateExample(ZoomedScene):
         mnemonic.to_edge(LEFT)
 
         derivative = TexMobject(
-            "\\sin(x)", "(2y\\,dy)", "+", 
+            "\\sin(x)", "(2y\\,dy)", "+",
             "y^2", "(\\cos(x)\\,dx)",
         )
         derivative.set_color_by_tex("dx", GREEN)
         derivative.set_color_by_tex("dy", RED)
         derivative.set_width(FRAME_X_RADIUS - 2*MED_LARGE_BUFF)
         derivative.next_to(
-            brace, DOWN, 
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT
+            brace, DOWN,
+            buff=MED_LARGE_BUFF,
+            aligned_edge=LEFT
         )
         derivative_rects = [
             BackgroundRectangle(VGroup(*subset))
             for subset in (derivative[:2], derivative[2:])
         ]
-        derivative_rects[1].stretch(1.05, dim = 0)
+        derivative_rects[1].stretch(1.05, dim=0)
 
         self.play(GrowFromCenter(brace))
         self.play(Write(mnemonic))
@@ -2090,7 +2105,7 @@ class AlternateExample(ZoomedScene):
         ]
         for pairs_subset in pairs[:3], pairs[3:]:
             self.play(*[
-                ReplacementTransform(m1.copy(), m2, path_arc = np.pi/2)
+                ReplacementTransform(m1.copy(), m2, path_arc=np.pi/2)
                 for m1, m2 in pairs_subset
             ])
             self.wait()
@@ -2111,9 +2126,9 @@ class AlternateExample(ZoomedScene):
         equals_dx.scale(0.9)
         equals_dx.set_color_by_tex("dx", GREEN)
         equals_dx.add_background_rectangle()
-        equals_dx.next_to(lhs_derivative, RIGHT, buff = SMALL_BUFF)
+        equals_dx.next_to(lhs_derivative, RIGHT, buff=SMALL_BUFF)
 
-        circle = Circle(color = GREEN)
+        circle = Circle(color=GREEN)
         circle.replace(self.rhs)
         circle.scale_in_place(1.7)
 
@@ -2134,14 +2149,14 @@ class AlternateExample(ZoomedScene):
         graph = self.graphs[4]
         arrow, dx_line, dx_line.label, dy_line, dy_line.label = self.step_group
 
-        #Find graph point at right x_val
+        # Find graph point at right x_val
         arrow_end = arrow.get_end()
         graph_points = [
             graph.point_from_proportion(alpha)
             for alpha in np.linspace(0, 1, 1000)
         ]
         distances = np.apply_along_axis(
-            lambda p : np.abs(p[0] - arrow_end[0]),
+            lambda p: np.abs(p[0] - arrow_end[0]),
             1, graph_points
         )
         index = np.argmin(distances)
@@ -2150,11 +2165,11 @@ class AlternateExample(ZoomedScene):
         lil_rect = self.little_rectangle
         self.play(
             arrow.put_start_and_end_on, point, new_end_point,
-            dy_line.put_start_and_end_on, 
-                dy_line.get_start(), new_end_point,
+            dy_line.put_start_and_end_on,
+            dy_line.get_start(), new_end_point,
             MaintainPositionRelativeTo(dy_line.label, dy_line),
             lil_rect.shift, lil_rect.get_height()*DOWN/3,
-            run_time = 2
+            run_time=2
         )
         self.wait(2)
 
@@ -2169,10 +2184,10 @@ class AlternateExample(ZoomedScene):
         full_derivative = VGroup(
             self.lhs_derivative, self.equals_dx
         )
-        brace = Brace(full_derivative, DOWN, buff = SMALL_BUFF)
+        brace = Brace(full_derivative, DOWN, buff=SMALL_BUFF)
         words = brace.get_text(
             "Commonly, solve for", "$dy/dx$",
-            buff = SMALL_BUFF
+            buff=SMALL_BUFF
         )
         VGroup(*words[1][:2]).set_color(RED)
         VGroup(*words[1][3:]).set_color(GREEN)
@@ -2194,6 +2209,7 @@ class AlternateExample(ZoomedScene):
         self.play(Blink(randy))
         self.wait()
 
+
 class AskAboutNaturalLog(TeacherStudentsScene):
     def construct(self):
         exp_deriv = TexMobject("\\frac{d(e^x)}{dx} = e^x")
@@ -2208,12 +2224,12 @@ class AskAboutNaturalLog(TeacherStudentsScene):
         self.teacher_says(
             """We can find
             new derivatives""",
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(*["happy"]*3)
         self.play(RemovePiCreatureBubble(
             self.get_teacher(),
-            target_mode = "raise_right_hand"
+            target_mode="raise_right_hand"
         ))
         self.play(Write(exp_deriv))
         self.wait()
@@ -2227,12 +2243,14 @@ class AskAboutNaturalLog(TeacherStudentsScene):
         )
         self.wait(3)
 
+
 class DerivativeOfNaturalLog(ZoomedScene):
     CONFIG = {
-        "zoom_factor" : 10,
-        "zoomed_canvas_corner" : DOWN+RIGHT,
-        "example_color" : MAROON_B,
+        "zoom_factor": 10,
+        "zoomed_canvas_corner": DOWN+RIGHT,
+        "example_color": MAROON_B,
     }
+
     def construct(self):
         should_skip_animations = self.skip_animations
         self.skip_animations = True
@@ -2258,13 +2276,13 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
     def draw_graph(self):
         graph = FunctionGraph(
-            np.log, 
-            x_min = 0.01, 
-            x_max = FRAME_X_RADIUS,
-            num_steps = 100
+            np.log,
+            x_min=0.01,
+            x_max=FRAME_X_RADIUS,
+            num_steps=100
         )
         formula = TexMobject("y = \\ln(x)")
-        formula.next_to(ORIGIN, LEFT, buff = MED_LARGE_BUFF)
+        formula.next_to(ORIGIN, LEFT, buff=MED_LARGE_BUFF)
         formula.to_edge(UP)
         formula.add_background_rectangle()
 
@@ -2276,10 +2294,10 @@ class DerivativeOfNaturalLog(ZoomedScene):
         self.graph = graph
 
     def describe_as_implicit_curve(self):
-        formula = self.formula #y = ln(x)
+        formula = self.formula  # y = ln(x)
         graph = self.graph
 
-        dot = Dot(color = self.example_color)
+        dot = Dot(color=self.example_color)
         label = TexMobject("(x, y)")
         label.add_background_rectangle()
         label.set_color(self.example_color)
@@ -2305,7 +2323,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         self.play(
             UpdateFromAlphaFunc(dot, update_dot),
             UpdateFromFunc(label, update_label),
-            run_time = 3,
+            run_time=3,
         )
         self.wait()
         xy_start = VGroup(label[1][1], label[1][3]).copy()
@@ -2313,14 +2331,14 @@ class DerivativeOfNaturalLog(ZoomedScene):
         xy_end.set_color(self.example_color)
         self.play(Transform(
             xy_start, xy_end,
-            run_time = 2,
+            run_time=2,
         ))
         self.wait()
         self.play(
             UpdateFromAlphaFunc(dot, update_dot),
             UpdateFromFunc(label, update_label),
-            run_time = 3,
-            rate_func = lambda t : 1-0.6*smooth(t),
+            run_time=3,
+            rate_func=lambda t: 1-0.6*smooth(t),
         )
         self.play(*list(map(FadeOut, [xy_start, label])))
 
@@ -2336,8 +2354,8 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
         new_point = line.point_from_proportion(0.6)
         interim_point = point[0]*RIGHT + new_point[1]*UP
-        dy_line = Line(point, interim_point, color = RED)
-        dx_line = Line(interim_point, new_point, color = GREEN)
+        dy_line = Line(point, interim_point, color=RED)
+        dx_line = Line(interim_point, new_point, color=GREEN)
 
         equation = TexMobject(
             "\\text{Slope} = ",
@@ -2354,8 +2372,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
             part.add_to_back(rect)
         equation.scale(0.8)
         equation.next_to(ORIGIN, RIGHT)
-        equation.to_edge(UP, buff = MED_SMALL_BUFF)
-
+        equation.to_edge(UP, buff=MED_SMALL_BUFF)
 
         self.play(
             GrowFromCenter(line),
@@ -2363,7 +2380,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         )
         self.play(ShowCreation(VGroup(dy_line, dx_line)))
         for part in equation:
-            self.play(Write(part, run_time = 2))
+            self.play(Write(part, run_time=2))
         self.wait()
 
         self.dx_line, self.dy_line = dx_line, dy_line
@@ -2379,13 +2396,13 @@ class DerivativeOfNaturalLog(ZoomedScene):
         new_formula = TexMobject("e", "^y", "=", "x")
         e, new_y, new_eq, new_x = new_formula
         new_formula.next_to(
-            formula, DOWN, 
-            buff = MED_LARGE_BUFF,
+            formula, DOWN,
+            buff=MED_LARGE_BUFF,
         )
         rect = BackgroundRectangle(new_formula)
 
         y = new_y.copy().replace(y)
-        self.play(Indicate(formula, scale_factor = 1))
+        self.play(Indicate(formula, scale_factor=1))
         self.play(ReplacementTransform(ln.copy(), e))
         self.play(ReplacementTransform(y, new_y))
         self.play(ReplacementTransform(eq.copy(), new_eq))
@@ -2438,11 +2455,11 @@ class DerivativeOfNaturalLog(ZoomedScene):
         for line, tex, vect in (dx_line, "dx", UP), (dy_line, "dy", LEFT):
             label = TexMobject(tex)
             label.add_background_rectangle()
-            label.next_to(line, vect, buff = SMALL_BUFF)
+            label.next_to(line, vect, buff=SMALL_BUFF)
             label.set_color(line.get_color())
             label.scale(
-                1./self.zoom_factor, 
-                about_point = line.get_center()
+                1./self.zoom_factor,
+                about_point=line.get_center()
             )
             line.label = label
 
@@ -2482,9 +2499,9 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
         self.play(*[
             ReplacementTransform(
-                m1, m2, 
-                run_time = 2,
-                path_arc = -np.pi/2,
+                m1, m2,
+                run_time=2,
+                path_arc=-np.pi/2,
             )
             for m1, m2 in [
                 (original_rect, new_rect),
@@ -2497,7 +2514,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         ])
         self.wait()
 
-        #Change denominator
+        # Change denominator
         e, y, eq, x = self.new_formula
         ey_group = VGroup(e, y).copy()
         ey_group.set_color(YELLOW)
@@ -2516,13 +2533,13 @@ class DerivativeOfNaturalLog(ZoomedScene):
             new_eq, one_over, x_copy
         ).copy()
         rect = BackgroundRectangle(equals_one_over_x)
-        rect.stretch_in_place(1.1, dim = 0)
+        rect.stretch_in_place(1.1, dim=0)
         equals_one_over_x.add_to_back(rect)
 
         self.play(
-            equals_one_over_x.next_to, 
+            equals_one_over_x.next_to,
             self.slope_equation, RIGHT, 0,
-            run_time = 2
+            run_time=2
         )
         self.wait()
 
@@ -2531,11 +2548,11 @@ class DerivativeOfNaturalLog(ZoomedScene):
         start_x = line.get_center()[0]
         target_x = 0.2
         graph = FunctionGraph(
-            lambda x : 1./x, 
-            x_min = 0.1,
-            x_max = FRAME_X_RADIUS,
-            num_steps = 100,
-            color = PINK,
+            lambda x: 1./x,
+            x_min=0.1,
+            x_max=FRAME_X_RADIUS,
+            num_steps=100,
+            color=PINK,
         )
 
         def update_line(line, alpha):
@@ -2547,18 +2564,19 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
         self.play(UpdateFromAlphaFunc(
             line, update_line,
-            rate_func = there_and_back,
-            run_time = 6
+            rate_func=there_and_back,
+            run_time=6
         ))
         self.wait()
-        self.play(ShowCreation(graph, run_time = 3))
+        self.play(ShowCreation(graph, run_time=3))
         self.wait()
         self.play(UpdateFromAlphaFunc(
             line, update_line,
-            rate_func = there_and_back,
-            run_time = 6
+            rate_func=there_and_back,
+            run_time=6
         ))
         self.wait()
+
 
 class FinalWords(TeacherStudentsScene):
     def construct(self):
@@ -2579,12 +2597,12 @@ class FinalWords(TeacherStudentsScene):
             mvc.to_corner, UP+LEFT,
             self.teacher.change_mode, "raise_right_hand",
             self.teacher.look_at, formula,
-            Write(formula, run_time = 2),
+            Write(formula, run_time=2),
         )
         self.change_student_modes("pondering", "confused", "thinking")
         self.wait(3)
 
-        ##Show series
+        # Show series
         series = VideoSeries()
         series.to_edge(UP)
         video = series[5]
@@ -2594,8 +2612,8 @@ class FinalWords(TeacherStudentsScene):
             FadeOut(formula),
             self.teacher.change_mode, "plain",
             FadeIn(
-                series, run_time = 2,
-                lag_ratio = 0.5,
+                series, run_time=2,
+                lag_ratio=0.5,
             ),
         )
         self.play(
@@ -2612,14 +2630,15 @@ class FinalWords(TeacherStudentsScene):
         )
         self.wait(3)
 
+
 class Chapter6PatreonThanks(PatreonThanks):
     CONFIG = {
-        "specific_patrons" : [
+        "specific_patrons": [
             "Ali  Yahya",
             "Meshal  Alshammari",
             "CrypticSwarm    ",
             "Nathan Pellegrin",
-            "Karan Bhargava", 
+            "Karan Bhargava",
             "Justin Helps",
             "Ankit   Agarwal",
             "Yu  Jun",
@@ -2652,6 +2671,7 @@ class Chapter6PatreonThanks(PatreonThanks):
         ]
     }
 
+
 class Thumbnail(AlternateExample):
     def construct(self):
         title = VGroup(*list(map(TextMobject, [
@@ -2666,6 +2686,6 @@ class Thumbnail(AlternateExample):
 
         self.add_plane()
         self.draw_graph()
-        self.graphs.set_stroke(width = 8)
+        self.graphs.set_stroke(width=8)
         self.remove(self.formula)
         self.add(title)

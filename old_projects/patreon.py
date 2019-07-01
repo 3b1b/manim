@@ -18,7 +18,7 @@ class SideGigToFullTime(Scene):
         side_project.next_to(rect, UP)
         dollar_sign = TexMobject("\\$")
         cross = VGroup(*[
-            Line(vect, -vect, color = RED)
+            Line(vect, -vect, color=RED)
             for vect in (UP+RIGHT, UP+LEFT)
         ])
         cross.set_height(dollar_sign.get_height())
@@ -47,13 +47,13 @@ class SideGigToFullTime(Scene):
             TexMobject("\\$")
             for x in range(10)
         ])
-        dollar_signs.arrange(RIGHT, buff = LARGE_BUFF)
+        dollar_signs.arrange(RIGHT, buff=LARGE_BUFF)
         dollar_signs.set_color(BLACK)
-        dollar_signs.next_to(morty.eyes, RIGHT, buff = 2*LARGE_BUFF)
+        dollar_signs.next_to(morty.eyes, RIGHT, buff=2*LARGE_BUFF)
 
         self.play(
             morty.change_mode, "happy",
-            morty.look_at, dollar_signs, 
+            morty.look_at, dollar_signs,
             dollar_signs.shift, LEFT,
             dollar_signs.set_color, GREEN
         )
@@ -67,9 +67,9 @@ class SideGigToFullTime(Scene):
         random.shuffle(dollar_signs.submobjects)
         self.play(
             ApplyMethod(
-                dollar_signs.shift, 
+                dollar_signs.shift,
                 (FRAME_Y_RADIUS+1)*DOWN,
-                lag_ratio = 0.5
+                lag_ratio=0.5
             ),
             morty.change_mode, "guilty",
             morty.look, DOWN+RIGHT
@@ -98,18 +98,20 @@ class SideGigToFullTime(Scene):
         self.play(Blink(morty))
         self.wait()
 
+
 class TakesTime(Scene):
     def construct(self):
-        rect = PictureInPictureFrame(height = 4)
-        rect.to_edge(RIGHT, buff = LARGE_BUFF)
+        rect = PictureInPictureFrame(height=4)
+        rect.to_edge(RIGHT, buff=LARGE_BUFF)
         clock = Clock()
         clock.hour_hand.set_color(BLUE_C)
         clock.minute_hand.set_color(BLUE_D)
-        clock.next_to(rect, LEFT, buff = LARGE_BUFF)
+        clock.next_to(rect, LEFT, buff=LARGE_BUFF)
         self.add(rect)
         self.play(ShowCreation(clock))
         for x in range(3):
             self.play(ClockPassesTime(clock))
+
 
 class GrowingToDoList(Scene):
     def construct(self):
@@ -138,9 +140,9 @@ class GrowingToDoList(Scene):
             "Understanding entropy",
         ])))
         lines.scale(0.65)
-        lines.arrange(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        lines.arrange(DOWN, buff=MED_SMALL_BUFF, aligned_edge=LEFT)
         lines.set_color_by_gradient(BLUE_C, YELLOW)
-        lines.next_to(title, DOWN, buff = LARGE_BUFF/2.)
+        lines.next_to(title, DOWN, buff=LARGE_BUFF/2.)
         lines.to_edge(RIGHT)
 
         self.play(
@@ -148,15 +150,15 @@ class GrowingToDoList(Scene):
             morty.look_at, title
         )
         self.play(
-            Write(lines[0]), 
+            Write(lines[0]),
             morty.change_mode, "erm",
-            run_time = 1
+            run_time=1
         )
         for line in lines[1:3]:
             self.play(
-                Write(line), 
+                Write(line),
                 morty.look_at, line,
-                run_time = 1
+                run_time=1
             )
         self.play(
             morty.change_mode, "pleading",
@@ -165,6 +167,7 @@ class GrowingToDoList(Scene):
                 VGroup(*lines[3:]),
             )
         )
+
 
 class TwoTypesOfVideos(Scene):
     def construct(self):
@@ -175,11 +178,11 @@ class TwoTypesOfVideos(Scene):
         series = TextMobject("Series")
         series.shift(FRAME_X_RADIUS*RIGHT/2)
         series.to_edge(UP)
-        box = Rectangle(width = 16, height = 9, color = WHITE)
+        box = Rectangle(width=16, height=9, color=WHITE)
         box.set_height(3)
         box.next_to(stand_alone, DOWN)
-        series_list = VGroup(*[  
-            TextMobject("Essence of %s"%s)
+        series_list = VGroup(*[
+            TextMobject("Essence of %s" % s)
             for s in [
                 "linear algebra",
                 "calculus",
@@ -189,9 +192,9 @@ class TwoTypesOfVideos(Scene):
                 "ODEs",
             ]
         ])
-        series_list.arrange(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+        series_list.arrange(DOWN, aligned_edge=LEFT, buff=MED_SMALL_BUFF)
         series_list.set_width(FRAME_X_RADIUS-2)
-        series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
+        series_list.next_to(series, DOWN, buff=MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
 
         fridays = TextMobject("Every other friday")
@@ -199,27 +202,27 @@ class TwoTypesOfVideos(Scene):
         for words, vect in (fridays, LEFT), (when_done, RIGHT):
             words.set_color(YELLOW)
             words.next_to(
-                morty, vect, 
-                buff = MED_SMALL_BUFF, 
-                aligned_edge = UP
+                morty, vect,
+                buff=MED_SMALL_BUFF,
+                aligned_edge=UP
             )
         unless = TextMobject("""
             Unless you're
             a patron \\dots
         """)
-        unless.next_to(when_done, DOWN, buff = MED_SMALL_BUFF)
+        unless.next_to(when_done, DOWN, buff=MED_SMALL_BUFF)
 
         self.add(morty)
         self.play(Blink(morty))
         self.play(
             morty.change_mode, "raise_right_hand",
             morty.look_at, stand_alone,
-            Write(stand_alone, run_time = 2),
+            Write(stand_alone, run_time=2),
         )
         self.play(
             morty.change_mode, "raise_left_hand",
             morty.look_at, series,
-            Write(series, run_time = 2),
+            Write(series, run_time=2),
         )
         self.play(Blink(morty))
         self.wait()
@@ -230,13 +233,13 @@ class TwoTypesOfVideos(Scene):
         )
         for x in range(3):
             self.wait(2)
-            self.play(Blink(morty))            
+            self.play(Blink(morty))
         self.play(
             morty.change_mode, "raise_left_hand",
             morty.look_at, series
         )
         for i, words in enumerate(series_list):
-            self.play(Write(words), run_time = 1)
+            self.play(Write(words), run_time=1)
         self.play(Blink(morty))
         self.wait()
         self.play(series_list[1].set_color, BLUE)
@@ -244,8 +247,8 @@ class TwoTypesOfVideos(Scene):
         self.play(Blink(morty))
         self.wait()
         pairs = [
-            (fridays, "speaking"), 
-            (when_done, "wave_2") ,
+            (fridays, "speaking"),
+            (when_done, "wave_2"),
             (unless, "surprised"),
         ]
         for words, mode in pairs:
@@ -256,10 +259,11 @@ class TwoTypesOfVideos(Scene):
             )
             self.wait()
 
+
 class ClassWatching(TeacherStudentsScene):
     def construct(self):
-        rect = PictureInPictureFrame(height = 4)
-        rect.next_to(self.get_teacher(), UP, buff = LARGE_BUFF/2.)
+        rect = PictureInPictureFrame(height=4)
+        rect.next_to(self.get_teacher(), UP, buff=LARGE_BUFF/2.)
         rect.to_edge(RIGHT)
         self.add(rect)
         for pi in self.get_students():
@@ -268,11 +272,12 @@ class ClassWatching(TeacherStudentsScene):
         self.random_blink(5)
         self.change_student_modes(
             "raise_left_hand",
-            "raise_right_hand",            
+            "raise_right_hand",
             "sassy",
         )
         self.play(self.get_teacher().change_mode, "pondering")
         self.random_blink(3)
+
 
 class RandolphWatching(Scene):
     def construct(self):
@@ -291,15 +296,18 @@ class RandolphWatching(Scene):
         self.play(Blink(randy))
         self.wait()
 
+
 class RandolphWatchingWithLaptop(Scene):
     pass
 
+
 class GrowRonaksSierpinski(Scene):
     CONFIG = {
-        "colors" : [BLUE, YELLOW, BLUE_C, BLUE_E],
-        "dot_radius" : 0.08,
-        "n_layers" : 64,
+        "colors": [BLUE, YELLOW, BLUE_C, BLUE_E],
+        "dot_radius": 0.08,
+        "n_layers": 64,
     }
+
     def construct(self):
         sierp = self.get_ronaks_sierpinski(self.n_layers)
         dots = self.get_dots(self.n_layers)
@@ -316,11 +324,11 @@ class GrowRonaksSierpinski(Scene):
             self.play(
                 ShowCreation(sierp_layer, lag_ratio=1),
                 Animation(last_dot_layer),
-                run_time = run_time
+                run_time=run_time
             )
             self.play(ShowCreation(
                 dot_layer,
-                run_time = run_time,
+                run_time=run_time,
                 lag_ratio=1,
             ))
             # if n == 2:
@@ -348,7 +356,7 @@ class GrowRonaksSierpinski(Scene):
         self.add(shown_mobs_copy)
         top = shown_mobs.get_top()
         self.triangle.scale(0.5)
-        self.triangle.move_to(top, aligned_edge = UP)
+        self.triangle.move_to(top, aligned_edge=UP)
         self.play(Transform(shown_mobs_copy, shown_mobs))
         self.remove(shown_mobs_copy)
         self.add(shown_mobs)
@@ -359,7 +367,7 @@ class GrowRonaksSierpinski(Scene):
     def get_lines_at_layer(self, n):
         lines = VGroup()
         for k in range(n+1):
-            if choose(n, k)%2 == 1:
+            if choose(n, k) % 2 == 1:
                 p1 = self.get_pascal_point(n, k)
                 p2 = self.get_pascal_point(n+1, k)
                 p3 = self.get_pascal_point(n+1, k+1)
@@ -370,9 +378,9 @@ class GrowRonaksSierpinski(Scene):
         dots = VGroup()
         for k in range(n+1):
             p = self.get_pascal_point(n, k)
-            dot = Dot(p, radius = self.dot_radius)
-            if choose(n, k)%2 == 0:
-                if choose(n-1, k)%2 == 0:
+            dot = Dot(p, radius=self.dot_radius)
+            if choose(n, k) % 2 == 0:
+                if choose(n-1, k) % 2 == 0:
                     continue
                 dot.set_color(PINK)
             else:
@@ -385,14 +393,15 @@ class GrowRonaksSierpinski(Scene):
         for n in range(n_layers):
             ronaks_sierpinski.add(self.get_lines_at_layer(n))
         ronaks_sierpinski.set_color_by_gradient(*self.colors)
-        ronaks_sierpinski.set_stroke(width = 0)##TODO
+        ronaks_sierpinski.set_stroke(width=0)  # TODO
         return ronaks_sierpinski
 
     def get_dots(self, n_layers):
-        dots = VGroup()        
+        dots = VGroup()
         for n in range(n_layers+1):
             dots.add(self.get_dot_layer(n))
         return dots
+
 
 class PatreonLogo(Scene):
     def construct(self):
@@ -412,54 +421,56 @@ class PatreonLogo(Scene):
         self.play(Transform(words1, words2))
         self.wait(2)
 
+
 class PatreonLogin(Scene):
     pass
+
 
 class PythagoreanTransformation(Scene):
     def construct(self):
         tri1 = VGroup(
-            Line(ORIGIN, 2*RIGHT, color = BLUE),
-            Line(2*RIGHT, 3*UP, color = YELLOW),
-            Line(3*UP, ORIGIN, color = MAROON_B),
+            Line(ORIGIN, 2*RIGHT, color=BLUE),
+            Line(2*RIGHT, 3*UP, color=YELLOW),
+            Line(3*UP, ORIGIN, color=MAROON_B),
         )
         tri1.shift(2.5*(DOWN+LEFT))
         tri2, tri3, tri4 = copies = [
             tri1.copy().rotate(-i*np.pi/2)
             for i in range(1, 4)
         ]
-        a = TexMobject("a").next_to(tri1[0], DOWN, buff = MED_SMALL_BUFF)
-        b = TexMobject("b").next_to(tri1[2], LEFT, buff = MED_SMALL_BUFF)
+        a = TexMobject("a").next_to(tri1[0], DOWN, buff=MED_SMALL_BUFF)
+        b = TexMobject("b").next_to(tri1[2], LEFT, buff=MED_SMALL_BUFF)
         c = TexMobject("c").next_to(tri1[1].get_center(), UP+RIGHT)
 
         c_square = Polygon(*[
             tri[1].get_end()
             for tri in [tri1] + copies
         ])
-        c_square.set_stroke(width = 0)
-        c_square.set_fill(color = YELLOW, opacity = 0.5)
+        c_square.set_stroke(width=0)
+        c_square.set_fill(color=YELLOW, opacity=0.5)
         c_square_tex = TexMobject("c^2")
         big_square = Polygon(*[
             tri[0].get_start()
             for tri in [tri1] + copies
         ])
         big_square.set_color(WHITE)
-        a_square = Square(side_length = 2)
+        a_square = Square(side_length=2)
         a_square.shift(1.5*(LEFT+UP))
-        a_square.set_stroke(width = 0)
-        a_square.set_fill(color = BLUE, opacity = 0.5)
+        a_square.set_stroke(width=0)
+        a_square.set_fill(color=BLUE, opacity=0.5)
         a_square_tex = TexMobject("a^2")
         a_square_tex.move_to(a_square)
-        b_square = Square(side_length = 3)
+        b_square = Square(side_length=3)
         b_square.move_to(
             a_square.get_corner(DOWN+RIGHT),
-            aligned_edge = UP+LEFT
+            aligned_edge=UP+LEFT
         )
-        b_square.set_stroke(width = 0)
-        b_square.set_fill(color = MAROON_B, opacity = 0.5)
+        b_square.set_stroke(width=0)
+        b_square.set_fill(color=MAROON_B, opacity=0.5)
         b_square_tex = TexMobject("b^2")
         b_square_tex.move_to(b_square)
 
-        self.play(ShowCreation(tri1, run_time = 2))
+        self.play(ShowCreation(tri1, run_time=2))
         self.play(*list(map(Write, [a, b, c])))
         self.wait()
         self.play(
@@ -472,7 +483,7 @@ class PythagoreanTransformation(Scene):
         for copy in copies:
             self.play(Transform(
                 mover, copy,
-                path_arc = -np.pi/2
+                path_arc=-np.pi/2
             ))
             self.add(copy)
         self.remove(mover)
@@ -481,7 +492,7 @@ class PythagoreanTransformation(Scene):
         self.play(*list(map(FadeOut, [a, b, c, c_square])))
         self.play(
             tri3.shift,
-            tri1.get_corner(UP+LEFT) -\
+            tri1.get_corner(UP+LEFT) -
             tri3.get_corner(UP+LEFT)
         )
         self.play(tri2.shift, 2*RIGHT)
@@ -493,27 +504,29 @@ class PythagoreanTransformation(Scene):
         self.play(Write(b_square_tex))
         self.wait(2)
 
+
 class KindWordsOnEoLA(TeacherStudentsScene):
     def construct(self):
-        rect = Rectangle(width = 16, height = 9, color = WHITE)
+        rect = Rectangle(width=16, height=9, color=WHITE)
         rect.set_height(4)
         title = TextMobject("Essence of linear algebra")
         title.to_edge(UP)
         rect.next_to(title, DOWN)
         self.play(
-            Write(title), 
+            Write(title),
             ShowCreation(rect),
             *[
                 ApplyMethod(pi.look_at, rect)
                 for pi in self.get_pi_creatures()
             ],
-            run_time = 2
+            run_time=2
         )
         self.random_blink()
         self.change_student_modes(*["hooray"]*3)
         self.random_blink()
         self.play(self.get_teacher().change_mode, "happy")
         self.random_blink()
+
 
 class MakeALotOfPiCreaturesHappy(Scene):
     def construct(self):
@@ -523,9 +536,9 @@ class MakeALotOfPiCreaturesHappy(Scene):
             VGroup(*[
                 Randolph()
                 for x in range(7)
-            ]).arrange(RIGHT, buff = MED_LARGE_BUFF)
+            ]).arrange(RIGHT, buff=MED_LARGE_BUFF)
             for x in range(4)
-        ]).arrange(DOWN, buff = MED_LARGE_BUFF)
+        ]).arrange(DOWN, buff=MED_LARGE_BUFF)
 
         pi_list = list(it.chain(*[
             layer.submobjects
@@ -548,8 +561,8 @@ class MakeALotOfPiCreaturesHappy(Scene):
         self.play(
             MoveToTarget(
                 pis,
-                run_time = 2,
-                lag_ratio = 0.5,
+                run_time=2,
+                lag_ratio=0.5,
             )
         )
         for x in range(10):
@@ -559,22 +572,22 @@ class MakeALotOfPiCreaturesHappy(Scene):
 
 class IntegrationByParts(Scene):
     def construct(self):
-        rect = Rectangle(width = 5, height = 3)
+        rect = Rectangle(width=5, height=3)
         # f = lambda t : 4*np.sin(t*np.pi/2)
-        f = lambda t : 4*t
-        g = lambda t : 3*smooth(t)
-        curve = ParametricFunction(lambda t : f(t)*RIGHT + g(t)*DOWN)
+        def f(t): return 4*t
+        def g(t): return 3*smooth(t)
+        curve = ParametricFunction(lambda t: f(t)*RIGHT + g(t)*DOWN)
         curve.set_color(YELLOW)
         curve.center()
         rect = Rectangle()
-        rect.replace(curve, stretch = True)
+        rect.replace(curve, stretch=True)
 
         regions = []
         for vect, color in (UP+RIGHT, BLUE), (DOWN+LEFT, GREEN):
             region = curve.copy()
             region.add_line_to(rect.get_corner(vect))
-            region.set_stroke(width = 0)
-            region.set_fill(color = color, opacity = 0.5)
+            region.set_stroke(width=0)
+            region.set_fill(color=color, opacity=0.5)
             regions.append(region)
         upper_right, lower_left = regions
 
@@ -589,7 +602,7 @@ class IntegrationByParts(Scene):
         h_lines.set_color(GREEN_E)
 
         equation = TexMobject(
-            "\\int_0^1 g\\,df", 
+            "\\int_0^1 g\\,df",
             "+\\int_0^1 f\\,dg",
             "= \\big(fg \\big)_0^1"
         )
@@ -616,7 +629,7 @@ class IntegrationByParts(Scene):
         self.play(
             ShowCreation(
                 v_lines,
-                run_time = 2
+                run_time=2
             ),
             Animation(curve),
             Animation(rect)
@@ -627,7 +640,7 @@ class IntegrationByParts(Scene):
         self.play(
             ShowCreation(
                 h_lines,
-                run_time = 2
+                run_time=2
             ),
             Animation(curve),
             Animation(rect)
@@ -642,21 +655,22 @@ class IntegrationByParts(Scene):
             "\\big(f(", "t", "), g(", "t", ")\\big)"
         )
         coords.set_color_by_tex("0.00", BLACK)
-        dot = Dot(radius = 0.1)
+        dot = Dot(radius=0.1)
         dot.move_to(curve.points[0])
         coords.next_to(dot, UP+RIGHT)
         self.play(
             ShowCreation(curve),
             UpdateFromFunc(
                 dot,
-                lambda d : d.move_to(curve.points[-1])
+                lambda d: d.move_to(curve.points[-1])
             ),
             MaintainPositionRelativeTo(coords, dot),
-            run_time = 5,
+            run_time=5,
             rate_func=linear
         )
         self.wait()
         self.play(*list(map(FadeOut, [coords, dot])))
+
 
 class EndScreen(TeacherStudentsScene):
     def construct(self):
@@ -665,38 +679,7 @@ class EndScreen(TeacherStudentsScene):
             See you every 
             other friday!
             """,
-            target_mode = "hooray"
+            target_mode="hooray"
         )
         self.change_student_modes(*["happy"]*3)
         self.random_blink()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

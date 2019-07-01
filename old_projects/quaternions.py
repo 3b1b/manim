@@ -228,7 +228,8 @@ class StereoProjectedSphere(Sphere):
         max_depth = kwargs.get("max_depth", self.max_depth)
         for submob in self.submobjects:
             violations = [
-                np.any(np.apply_along_axis(get_norm, 1, submob.get_anchors()) > max_r),
+                np.any(np.apply_along_axis(
+                    get_norm, 1, submob.get_anchors()) > max_r),
                 submob.get_width() > max_width,
                 submob.get_height() > max_height,
                 submob.get_depth() > max_depth
@@ -428,7 +429,8 @@ class ManyNumberSystems(Scene):
             ("Quaternions", [0, 2, 0], PINK, "2 + 7i + 1j + 8k"),
             ("Rationals", [3, -2, 0], RED, "1 \\over 3"),
             ("p-adic numbers", [-2, -2, 0], GREEN, "\\overline{142857}2"),
-            ("Octonions", [-3, 0, 0], LIGHT_GREY, "3e_1 - 2.3e_2 + \\dots + 1.6e_8"),
+            ("Octonions", [-3, 0, 0], LIGHT_GREY,
+             "3e_1 - 2.3e_2 + \\dots + 1.6e_8"),
         ]
         systems = VGroup()
         for name, location, color, ex in name_location_color_example_tuples:
@@ -1468,7 +1470,8 @@ class DefineComplexNumbersPurelyAlgebraically(Scene):
             buff=MED_LARGE_BUFF,
             aligned_edge=LEFT,
         )
-        i_def_rect = SurroundingRectangle(i_def, color=YELLOW, buff=MED_SMALL_BUFF)
+        i_def_rect = SurroundingRectangle(
+            i_def, color=YELLOW, buff=MED_SMALL_BUFF)
         definition_label = TextMobject("Definition")
         definition_label.next_to(i_def_rect, DOWN)
         definition_label.match_color(i_def_rect)

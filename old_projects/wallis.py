@@ -390,11 +390,10 @@ class SourcesOfOriginality(TeacherStudentsScene):
 class Six(Scene):
     def construct(self):
         six = TexMobject("6")
-        six.add_background_rectangle(opacity = 1)
+        six.add_background_rectangle(opacity=1)
         six.background_rectangle.stretch(1.5, 0)
         six.set_height(7)
         self.add(six)
-
 
 
 class SridharWatchingScene(PiCreatureScene):
@@ -518,7 +517,8 @@ class ShowProduct(Scene):
         decimal.next_to(brace, DOWN)
 
         self.add(brace, decimal, dots[0], parts[0])
-        tuples = list(zip(parts[1:], lines, dots[1:], partial_products[1:], braces[1:]))
+        tuples = list(zip(parts[1:], lines, dots[1:],
+                          partial_products[1:], braces[1:]))
         for part, line, dot, prod, new_brace in tuples:
             self.play(
                 FadeIn(part),
@@ -528,7 +528,8 @@ class ShowProduct(Scene):
                     position_update_func=lambda m: m.next_to(brace, DOWN)
                 ),
                 ShowCreation(line),
-                GrowFromCenter(dot, rate_func=squish_rate_func(smooth, 0.5, 1)),
+                GrowFromCenter(
+                    dot, rate_func=squish_rate_func(smooth, 0.5, 1)),
                 run_time=0.5,
             )
             self.wait(0.5)
@@ -679,7 +680,8 @@ class ShowProduct(Scene):
         ])
 
         brace = braces[0].copy()
-        decimal = DecimalNumber(next(partial_products_iter), num_decimal_places=4)
+        decimal = DecimalNumber(
+            next(partial_products_iter), num_decimal_places=4)
         decimal.next_to(brace, DOWN)
 
         self.play(*list(map(FadeIn, [brace, decimal, dots[0]])))
@@ -692,7 +694,8 @@ class ShowProduct(Scene):
                     position_update_func=lambda m: m.next_to(brace, DOWN)
                 ),
                 ShowCreation(line),
-                GrowFromCenter(dot, rate_func=squish_rate_func(smooth, 0.5, 1)),
+                GrowFromCenter(
+                    dot, rate_func=squish_rate_func(smooth, 0.5, 1)),
                 run_time=0.5,
             )
             self.wait(0.5)
@@ -1131,7 +1134,8 @@ class IntroduceDistanceProduct(DistanceProductScene):
         d_terms.set_color(YELLOW)
         plusses = sum_of_inverse_squares.get_parts_by_tex("+")
         last_term = sum_of_inverse_squares[-6:]
-        non_d_terms = VGroup(*[m for m in sum_of_inverse_squares if m not in d_terms and m not in last_term])
+        non_d_terms = VGroup(
+            *[m for m in sum_of_inverse_squares if m not in d_terms and m not in last_term])
 
         brace = Brace(sum_of_inverse_squares, DOWN)
         brace_text = brace.get_text("Total intensity of light")
@@ -1378,7 +1382,8 @@ class Lemma1(DistanceProductScene):
             ))
 
         def update_distance_lines(lines):
-            new_lines = self.get_distance_lines(start_point=self.get_observer_point())
+            new_lines = self.get_distance_lines(
+                start_point=self.get_observer_point())
             lines.submobjects = new_lines.submobjects
 
         def update_numeric_distance_labels(labels):
@@ -1403,8 +1408,10 @@ class Lemma1(DistanceProductScene):
             UpdateFromFunc(self.observer_dot, update_dot),
             MaintainPositionRelativeTo(self.observer, self.observer_dot),
             UpdateFromFunc(self.distance_lines, update_distance_lines),
-            UpdateFromFunc(self.numeric_distance_labels, update_numeric_distance_labels),
-            UpdateFromFunc(self.distance_product_column, update_distance_product_column),
+            UpdateFromFunc(self.numeric_distance_labels,
+                           update_numeric_distance_labels),
+            UpdateFromFunc(self.distance_product_column,
+                           update_distance_product_column),
             run_time=5
         )
         self.distance_product_column[-1].set_color(BLUE).scale_in_place(1.05)
@@ -1909,7 +1916,8 @@ class FromGeometryToAlgebra(DistanceProductScene):
             L1_rhs, self.outer_arrows, self.L_labels, self.outer_arrow,
             self.angle_line, self.ghost_angle_line
         ))))
-        self.play(LaggedStartMap(SwitchOn, new_lights), morty.look_at, new_lights)
+        self.play(LaggedStartMap(SwitchOn, new_lights),
+                  morty.look_at, new_lights)
         self.play(Transform(sevens, n_terms))
         self.wait()
         self.play(Blink(morty))
@@ -2952,7 +2960,7 @@ class LocalMathematician(PiCreatureScene):
         self.play(
             Animation(screen),
             RemovePiCreatureBubble(
-                randy, 
+                randy,
                 target_mode="raise_right_hand",
                 look_at_arg=screen,
             )
@@ -3378,9 +3386,9 @@ class KeeperAndSailor(DistanceProductScene, PiCreatureScene):
         self.play(
             LaggedStartMap(FadeIn, product_parts),
             LaggedStartMap(FadeIn, sailor_lines,
-                        rate_func=there_and_back, remover=True),
+                           rate_func=there_and_back, remover=True),
             LaggedStartMap(FadeIn, keeper_lines,
-                        rate_func=there_and_back, remover=True),
+                           rate_func=there_and_back, remover=True),
         )
         sailor_lines.restore()
         keeper_lines.restore()
@@ -4357,7 +4365,6 @@ class NonCommunitingLimitsExample(Scene):
         )
         self.wait()
 
-
     def get_row(self, seven_index):
         terms = [1] * (self.num_terms_per_row)
         if seven_index < len(terms):
@@ -4779,8 +4786,10 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
         )
         product.next_to(limits, DOWN, LARGE_BUFF)
         product_lines = VGroup(
-            DashedLine(full_limits_group.get_corner(DL), product.get_corner(UL)),
-            DashedLine(full_limits_group.get_corner(DR), product.get_corner(UR)),
+            DashedLine(full_limits_group.get_corner(
+                DL), product.get_corner(UL)),
+            DashedLine(full_limits_group.get_corner(
+                DR), product.get_corner(UR)),
         )
         product_lines.set_color(YELLOW)
 
@@ -4887,7 +4896,8 @@ class KeeperAndSailorForSineProduct(KeeperAndSailor):
                 path_arc=180 * DEGREES,
                 run_time=3,
             ),
-            product_lines[1].scale, 0.9, {"about_point": product_lines[1].get_start()},
+            product_lines[1].scale, 0.9, {
+                "about_point": product_lines[1].get_start()},
             product_lines[1].shift, SMALL_BUFF * UP
         )
         self.wait()
@@ -5253,55 +5263,14 @@ class Thumbnail(DistanceProductScene):
                 dot = Dot(color=BLUE)
                 dot.move_to(light)
                 light.add_to_back(dot)
-                light.move_to(self.get_circle_point_at_proportion(u * frac - 0.25))
+                light.move_to(
+                    self.get_circle_point_at_proportion(u * frac - 0.25))
                 lights.add(light)
                 line = DashedLine(dot.get_center(), circle.get_bottom())
                 lines.add(line)
-
 
         self.add(circle)
         self.add(lights)
         self.add(product)
         # self.add(new_proof)
         self.add(bottom_dot, observer)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

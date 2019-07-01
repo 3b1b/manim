@@ -10,7 +10,7 @@ and omits many desirable features.
 """
 
 
-#### Libraries
+# Libraries
 # Standard library
 import os
 import pickle
@@ -25,7 +25,8 @@ from nn.mnist_loader import load_data_wrapper
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 # PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_80")
 # PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_ReLU")
-PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases")
+PRETRAINED_DATA_FILE = os.path.join(
+    NN_DIRECTORY, "pretrained_weights_and_biases")
 IMAGE_MAP_DATA_FILE = os.path.join(NN_DIRECTORY, "image_map")
 # PRETRAINED_DATA_FILE = "/Users/grant/cs/manim/nn/pretrained_weights_and_biases_on_zero"
 # DEFAULT_LAYER_SIZES = [28**2, 80, 10]
@@ -38,7 +39,7 @@ except NameError:
 
 
 class Network(object):
-    def __init__(self, sizes, non_linearity = "sigmoid"):
+    def __init__(self, sizes, non_linearity="sigmoid"):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -69,7 +70,7 @@ class Network(object):
             a = self.non_linearity(np.dot(w, a)+b)
         return a
 
-    def get_activation_of_all_layers(self, input_a, n_layers = None):
+    def get_activation_of_all_layers(self, input_a, n_layers=None):
         if n_layers is None:
             n_layers = self.num_layers
         activations = [input_a.reshape((input_a.size, 1))]
@@ -90,7 +91,8 @@ class Network(object):
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
-        if test_data: n_test = len(test_data)
+        if test_data:
+            n_test = len(test_data)
         n = len(training_data)
         for j in range(epochs):
             random.shuffle(training_data)
@@ -130,8 +132,8 @@ class Network(object):
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
         activation = x
-        activations = [x] # list to store all the activations, layer by layer
-        zs = [] # list to store all the z vectors, layer by layer
+        activations = [x]  # list to store all the activations, layer by layer
+        zs = []  # list to store all the z vectors, layer by layer
         for b, w in zip(self.biases, self.weights):
             z = np.dot(w, activation)+b
             zs.append(z)
@@ -170,14 +172,18 @@ class Network(object):
         \\partial a for the output activations."""
         return (output_activations-y)
 
-#### Miscellaneous functions
+# Miscellaneous functions
+
+
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
 
+
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
+
 
 def sigmoid_inverse(z):
     # z = 0.998*z + 0.001
@@ -187,13 +193,16 @@ def sigmoid_inverse(z):
         1.0, (np.true_divide(1.0, z) - 1)
     ))
 
+
 def ReLU(z):
     result = np.array(z)
     result[result < 0] = 0
     return result
 
+
 def ReLU_prime(z):
     return (np.array(z) > 0).astype('int')
+
 
 def get_pretrained_network():
     data_file = open(PRETRAINED_DATA_FILE, 'rb')
@@ -205,14 +214,16 @@ def get_pretrained_network():
     network.biases = biases
     return network
 
-def save_pretrained_network(epochs = 30, mini_batch_size = 10, eta = 3.0):
-    network = Network(sizes = DEFAULT_LAYER_SIZES)
+
+def save_pretrained_network(epochs=30, mini_batch_size=10, eta=3.0):
+    network = Network(sizes=DEFAULT_LAYER_SIZES)
     training_data, validation_data, test_data = load_data_wrapper()
     network.SGD(training_data, epochs, mini_batch_size, eta)
     weights_and_biases = (network.weights, network.biases)
-    data_file = open(PRETRAINED_DATA_FILE, mode = 'w')
+    data_file = open(PRETRAINED_DATA_FILE, mode='w')
     pickle.dump(weights_and_biases, data_file)
     data_file.close()
+
 
 def test_network():
     network = get_pretrained_network()
@@ -225,6 +236,7 @@ def test_network():
             n_wrong += 1
     print((n_right, n_wrong, float(n_right)/(n_right + n_wrong)))
 
+
 def layer_to_image_array(layer):
     w = int(np.ceil(np.sqrt(len(layer))))
     if len(layer) < w**2:
@@ -233,7 +245,8 @@ def layer_to_image_array(layer):
     # return Image.fromarray((255*layer).astype('uint8'))
     return (255*layer).astype('int')
 
-def maximizing_input(network, layer_index, layer_vect, n_steps = 100, seed_guess = None):
+
+def maximizing_input(network, layer_index, layer_vect, n_steps=100, seed_guess=None):
     pre_sig_layer_vect = sigmoid_inverse(layer_vect)
     weights, biases = network.weights, network.biases
     # guess = np.random.random(weights[0].shape[1])
@@ -266,7 +279,8 @@ def maximizing_input(network, layer_index, layer_vect, n_steps = 100, seed_guess
     print("")
     return sigmoid(pre_sig_guess)
 
-def save_organized_images(n_images_per_number = 10):
+
+def save_organized_images(n_images_per_number=10):
     training_data, validation_data, test_data = load_data_wrapper()
     image_map = dict([(k, []) for k in range(10)])
     for im, output_arr in training_data:
@@ -276,12 +290,13 @@ def save_organized_images(n_images_per_number = 10):
         if len(image_map[value]) >= n_images_per_number:
             continue
         image_map[value].append(im)
-    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'wb')
+    data_file = open(IMAGE_MAP_DATA_FILE, mode='wb')
     pickle.dump(image_map, data_file)
     data_file.close()
 
+
 def get_organized_images():
-    data_file = open(IMAGE_MAP_DATA_FILE, mode = 'r')
+    data_file = open(IMAGE_MAP_DATA_FILE, mode='r')
     image_map = pickle.load(data_file, encoding='latin1')
     data_file.close()
     return image_map
