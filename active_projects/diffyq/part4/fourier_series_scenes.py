@@ -1840,6 +1840,7 @@ class DE4Thumbnail(ComplexFourierSeriesExample):
         subname = TextMobject("a.k.a ``everything is rotations''")
         subname.match_width(name)
         subname.next_to(name, DOWN)
+        VGroup(name, subname).to_edge(DOWN)
 
         self.add(name)
         self.add(subname)
@@ -1858,18 +1859,19 @@ class DE4Thumbnail(ComplexFourierSeriesExample):
             for n in ns
         ])
         approxs.arrange(RIGHT, buff=2.5)
-        approxs.set_height(4)
-        approxs.to_edge(DOWN, buff=LARGE_BUFF)
+        approxs.set_height(3.75)
+        approxs.to_edge(UP, buff=1.25)
         for a, c, w in zip(approxs, [BLUE, GREEN, YELLOW], [4, 3, 2]):
             a.set_stroke(c, w)
+            a.set_stroke(WHITE, w + w / 2, background=True)
 
         labels = VGroup()
         for n, approx in zip(ns, approxs):
             label = TexMobject("n = ", str(n))
             label[1].match_color(approx)
             label.scale(2)
-            label.next_to(approx, DOWN)
-            label.to_edge(DOWN, buff=MED_SMALL_BUFF)
+            label.next_to(approx, UP)
+            label.to_edge(UP, buff=MED_SMALL_BUFF)
             labels.add(label)
 
         self.add(approxs)
@@ -1889,163 +1891,3 @@ class DE4Thumbnail(ComplexFourierSeriesExample):
         self.add(path, self.circles, self.vectors)
 
         self.update_mobjects(0)
-
-# Pure fourier series with zooming.
-# Note to self, put out a single video with nothing
-# but these?
-
-class FourierSeriesExampleWithRectForZoom(ComplexFourierSeriesExample):
-    CONFIG = {
-        "n_vectors": 100,
-        "slow_factor": 0.01,
-        "rect_scale_factor": 0.1,
-        "start_drawn": True,
-        "drawing_height": 7,
-        "rect_stroke_width": 1,
-    }
-
-    def construct(self):
-        self.add_vectors_circles_path()
-        self.circles.set_stroke(opacity=0.5)
-        rect = self.get_rect()
-        rect.set_height(self.rect_scale_factor * FRAME_HEIGHT)
-        rect.add_updater(lambda m: m.move_to(
-            self.get_rect_center()
-        ))
-        self.add(rect)
-        self.run_one_cycle()
-
-    def get_rect_center(self):
-        return center_of_mass([
-            v.get_end()
-            for v in self.vectors
-        ])
-
-    def get_rect(self):
-        return ScreenRectangle(
-            color=BLUE,
-            stroke_width=self.rect_stroke_width,
-        )
-
-
-class ZoomedInFourierSeriesExample(FourierSeriesExampleWithRectForZoom, MovingCameraScene):
-    CONFIG = {
-        "vector_config": {
-            "max_tip_length_to_length_ratio": 0.15,
-            "tip_length": 0.05,
-        },
-        "parametric_function_step_size": 0.001,
-    }
-
-    def setup(self):
-        ComplexFourierSeriesExample.setup(self)
-        MovingCameraScene.setup(self)
-
-    def get_rect(self):
-        return self.camera_frame
-
-    def add_vectors_circles_path(self):
-        super().add_vectors_circles_path()
-        for v in self.vectors:
-            if v.get_stroke_width() < 1:
-                v.set_stroke(width=1)
-
-
-class ZoomedInFourierSeriesExample100x(ZoomedInFourierSeriesExample):
-    CONFIG = {
-        "vector_config": {
-            "max_tip_length_to_length_ratio": 0.15 * 0.4,
-            "tip_length": 0.05 * 0.2,
-            "max_stroke_width_to_length_ratio": 80,
-            "stroke_width": 3,
-        },
-        "max_circle_stroke_width": 0.5,
-        "rect_scale_factor": 0.01,
-        # "parametric_function_step_size": 0.01,
-    }
-
-    def get_rect_center(self):
-        return self.vectors[-1].get_end()
-
-    # def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
-    #     return self.get_path_end(vectors, stroke_width, **kwargs)
-
-
-class TrebleClefFourierSeriesExampleWithRectForZoom(FourierSeriesExampleWithRectForZoom):
-    CONFIG = {
-        "file_name": "TrebleClef",
-    }
-
-
-class TrebleClefZoomedInFourierSeriesExample(ZoomedInFourierSeriesExample):
-    CONFIG = {
-        "file_name": "TrebleClef",
-    }
-
-
-class NailAndGearFourierSeriesExampleWithRectForZoom(FourierSeriesExampleWithRectForZoom):
-    CONFIG = {
-        "file_name": "Nail_And_Gear",
-        "n_vectors": 200,
-        "drawn_path_color": "#39FF14",
-    }
-
-
-class NailAndGearZoomedInFourierSeriesExample(ZoomedInFourierSeriesExample):
-    CONFIG = {
-        "file_name": "Nail_And_Gear",
-        "n_vectors": 200,
-        "drawn_path_color": "#39FF14",
-    }
-
-
-class SigmaFourierSeriesExampleWithRectForZoom(FourierSeriesExampleWithRectForZoom):
-    CONFIG = {
-        "n_vectors": 200,
-        "drawn_path_color": PINK,
-        "rect_stroke_width": 0,
-    }
-
-    def get_shape(self):
-        return TexMobject("\\Sigma")
-
-
-class SigmaZoomedInFourierSeriesExample(SigmaFourierSeriesExampleWithRectForZoom, ZoomedInFourierSeriesExample):
-    pass
-
-
-class FourierOfFourier(FourierSeriesExampleWithRectForZoom):
-    CONFIG = {
-        "file_name": "FourierOneLine",
-        "n_vectors": 300,
-        "rect_stroke_width": 1,
-    }
-
-
-class FourierOfFourierZoomedIn(ZoomedInFourierSeriesExample):
-    CONFIG = {
-        "file_name": "FourierOneLine",
-        "max_circle_stroke_width": 0.3,
-        "n_vectors": 300,
-    }
-
-
-class FourierOfFourier100xZoom(ZoomedInFourierSeriesExample100x):
-    CONFIG = {
-        "file_name": "FourierOneLine",
-        "max_circle_stroke_width": 0.3,
-        "n_vectors": 300,
-        "slow_factor": 0.001,
-    }
-
-    def run_one_cycle(self):
-        self.vector_clock.set_value(0.3)
-        self.wait(40)
-
-
-class FourierOfFourierOneLineArtsy(FourierSeriesExampleWithRectForZoom):
-    CONFIG = {
-        "file_name": "JosephFourierOneLineArtsy",
-        "n_vectors": 100,
-        "rect_stroke_width": 1,
-    }

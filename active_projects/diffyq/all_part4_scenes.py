@@ -4,6 +4,7 @@ from active_projects.diffyq.part4.pi_creature_scenes import *
 from active_projects.diffyq.part4.three_d_graphs import *
 from active_projects.diffyq.part4.temperature_scenes import *
 from active_projects.diffyq.part4.complex_functions import *
+from active_projects.diffyq.part4.long_fourier_scenes import *
 
 from active_projects.diffyq.part3.staging import *
 
