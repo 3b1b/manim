@@ -564,9 +564,9 @@ class WriteAProgram(Scene):
 
         numbers = VGroup()
         for square in three:
-            rgb = square.fill_rgb
+            rgb = square.fill_rgbas
             num = DecimalNumber(
-                square.fill_rgb[0],
+                square.fill_rgbas[0],
                 num_decimal_places = 1
             )
             num.set_stroke(width = 1)
@@ -828,7 +828,7 @@ class PreviewMNistNetwork(NetworkScene):
         image_mover = VGroup(*[
             pixel.copy()
             for pixel in image
-            if pixel.fill_rgb[0] > 0.1
+            if pixel.fill_opacity > 0.1
         ])
         return Transform(
             image_mover, start_neurons, 
@@ -1064,7 +1064,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         rect = SurroundingRectangle(image_mob, color = BLUE)
         neurons = VGroup()
         for pixel in image_mob:
-            pixel.set_fill(WHITE, opacity = pixel.fill_rgb[0])
+            pixel.set_fill(WHITE, opacity = pixel.fill_rgbas[0])
             neuron = Circle(
                 color = WHITE,
                 stroke_width = 1,
@@ -1413,7 +1413,7 @@ class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
                 stroke_width = 1,
                 stroke_color = WHITE,
                 fill_color = WHITE,
-                fill_opacity = pixel.fill_rgb[0]
+                fill_opacity = pixel.fill_opacity
             )
             neuron.move_to(pixel)
             neurons.add(neuron)

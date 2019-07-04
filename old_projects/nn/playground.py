@@ -6,7 +6,7 @@ import os.path
 from functools import reduce
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from constants import *
+from manimlib.constants import *
 
 from manimlib.imports import *
 
@@ -19,24 +19,24 @@ class Test(Scene):
         network = get_pretrained_network()
         training_data, validation_data, test_data = load_data_wrapper()
         self.show_weight_rows(network, index = 0)
-        # self.show_maximizing_inputs(network)
-        # self.show_all_activation_images(network, test_data)
+        self.show_maximizing_inputs(network)
+        self.show_all_activation_images(network, test_data)
 
-        # group = Group()
-        # for k in range(10):
-        #     v = np.zeros((10, 1))
-        #     v[k] = 1
-        #     h_group = Group()
-        #     for W, b in reversed(zip(network.weights, network.biases)):
-        #         h_group.add(MNistMobject(v))
-        #         v = np.dot(W.T, sigmoid_inverse(v) - b)
-        #         v = sigmoid(v)
-        #     h_group.add(MNistMobject(v))
-        #     h_group.arrange(LEFT)
-        #     group.add(h_group)
-        # group.arrange(DOWN)
-        # group.set_height(FRAME_HEIGHT - 1)
-        # self.add(group)
+        group = Group()
+        for k in range(10):
+            v = np.zeros((10, 1))
+            v[k] = 1
+            h_group = Group()
+            for W, b in reversed(list(zip(network.weights, network.biases))):
+                h_group.add(MNistMobject(v))
+                v = np.dot(W.T, sigmoid_inverse(v) - b)
+                v = sigmoid(v)
+            h_group.add(MNistMobject(v))
+            h_group.arrange(LEFT)
+            group.add(h_group)
+        group.arrange(DOWN)
+        group.set_height(FRAME_HEIGHT - 1)
+        self.add(group)
 
 
     def show_random_results(self):
@@ -56,7 +56,7 @@ class Test(Scene):
         group = VGroup()
         for row in network.weights[index]:
             mob = PixelsFromVect(np.zeros(row.size))
-            for n, pixel in zip(row, mob):
+            for n, pixel in list(zip(row, mob)):
                 color = GREEN if n > 0 else RED
                 opacity = 2*(sigmoid(abs(n)) - 0.5)
                 pixel.set_fill(color, opacity = opacity)

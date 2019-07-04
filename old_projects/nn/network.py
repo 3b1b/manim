@@ -20,7 +20,7 @@ import random
 import numpy as np
 from PIL import Image
 from nn.mnist_loader import load_data_wrapper
-# from utils.space_ops import get_norm
+from manimlib.utils.space_ops import get_norm
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 # PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_80")
@@ -53,7 +53,7 @@ class Network(object):
         self.sizes = sizes
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
         self.weights = [np.random.randn(y, x)
-                        for x, y in zip(sizes[:-1], sizes[1:])]
+                        for x, y in list(zip(sizes[:-1], sizes[1:]))]
         if non_linearity == "sigmoid":
             self.non_linearity = sigmoid
             self.d_non_linearity = sigmoid_prime
@@ -65,7 +65,7 @@ class Network(object):
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
-        for b, w in zip(self.biases, self.weights):
+        for b, w in list(zip(self.biases, self.weights)):
             a = self.non_linearity(np.dot(w, a)+b)
         return a
 
@@ -73,7 +73,7 @@ class Network(object):
         if n_layers is None:
             n_layers = self.num_layers
         activations = [input_a.reshape((input_a.size, 1))]
-        for bias, weight in zip(self.biases, self.weights)[:n_layers]:
+        for bias, weight in list(zip(self.biases, self.weights))[:n_layers]:
             last_a = activations[-1]
             new_a = self.non_linearity(np.dot(weight, last_a) + bias)
             new_a = new_a.reshape((new_a.size, 1))
@@ -114,12 +114,12 @@ class Network(object):
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         for x, y in mini_batch:
             delta_nabla_b, delta_nabla_w = self.backprop(x, y)
-            nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
-            nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+            nabla_b = [nb+dnb for nb, dnb in list(zip(nabla_b, delta_nabla_b))]
+            nabla_w = [nw+dnw for nw, dnw in list(zip(nabla_w, delta_nabla_w))]
         self.weights = [w-(eta/len(mini_batch))*nw
-                        for w, nw in zip(self.weights, nabla_w)]
+                        for w, nw in list(zip(self.weights, nabla_w))]
         self.biases = [b-(eta/len(mini_batch))*nb
-                       for b, nb in zip(self.biases, nabla_b)]
+                       for b, nb in list(zip(self.biases, nabla_b))]
 
     def backprop(self, x, y):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
@@ -132,7 +132,7 @@ class Network(object):
         activation = x
         activations = [x] # list to store all the activations, layer by layer
         zs = [] # list to store all the z vectors, layer by layer
-        for b, w in zip(self.biases, self.weights):
+        for b, w in list(zip(self.biases, self.weights)):
             z = np.dot(w, activation)+b
             zs.append(z)
             activation = self.non_linearity(z)
@@ -247,7 +247,7 @@ def maximizing_input(network, layer_index, layer_vect, n_steps = 100, seed_guess
             sigmoid(pre_sig_guess), layer_index
         )
         jacobian = np.diag(sigmoid_prime(pre_sig_guess).flatten())
-        for W, a, b in zip(weights, activations, biases):
+        for W, a, b in list(zip(weights, activations, biases)):
             jacobian = np.dot(W, jacobian)
             a = a.reshape((a.size, 1))
             sp = sigmoid_prime(np.dot(W, a) + b)

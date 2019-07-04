@@ -39,7 +39,7 @@ def load_data():
     That's done in the wrapper function ``load_data_wrapper()``, see
     below.
     """
-    f = gzip.open('/Users/grant/cs/neural-networks-and-deep-learning/data/mnist.pkl.gz', 'rb')
+    f = gzip.open('/path/to/https://github.com/mnielsen/neural-networks-and-deep-learning/data/mnist.pkl.gz', 'rb')
     u = pickle._Unpickler(f)
     u.encoding = 'latin1'
     # p = u.load()
