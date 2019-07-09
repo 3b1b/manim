@@ -3,13 +3,26 @@ import os
 
 MEDIA_DIR = ""
 VIDEO_DIR = ""
+VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 
 def initialize_directories(config):
     global MEDIA_DIR
     global VIDEO_DIR
+    global VIDEO_OUTPUT_DIR
     global TEX_DIR
-    if not (config["video_dir"] and config["tex_dir"]):
+
+    video_path_specified = config["video_dir"] or config["video_output_dir"]
+    if not video_path_specified:
+        VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
+    elif config["video_output_dir"]:
+        VIDEO_OUTPUT_DIR = config["video_output_dir"]
+    else:
+        VIDEO_DIR = config["video_dir"]
+
+    TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
+
+    if not (video_path_specified and config["tex_dir"]):
         if config["media_dir"]:
             MEDIA_DIR = config["media_dir"]
         else:
@@ -26,14 +39,12 @@ def initialize_directories(config):
     else:
         if config["media_dir"]:
             print(
-                "Ignoring --media_dir, since --video_dir and --tex_dir were "
-                "both passed"
+                "Ignoring --media_dir, since both --tex_dir and a video "
+                "directory were both passed"
             )
-    VIDEO_DIR  = config["video_dir"] or os.path.join(MEDIA_DIR, "videos")
-    TEX_DIR    = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
 
-    for folder in [VIDEO_DIR, TEX_DIR]:
-        if not os.path.exists(folder):
+    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR]:
+        if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
 
 TEX_USE_CTEX = False
