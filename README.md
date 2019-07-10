@@ -120,7 +120,7 @@ Look through the `old_projects` folder to see the code for previous 3b1b videos.
 While developing a scene, the `-sp` flags are helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the `-n` flag to skip over some number of animations.
 
 ### Documentation
-Documentation is in progress at [manim.readthedocs.io](https://manim.readthedocs.io).
+Documentation is in progress at [eulertour.com/learn/manim](https://www.eulertour.com/learn/manim/).
 
 ### Walkthrough
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on python 3.7.
