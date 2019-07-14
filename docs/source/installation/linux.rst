@@ -24,7 +24,6 @@ OR Install manim via the git repository with venv::
     $ source bin/activate
     $ pip3 install -r requirement.txt
 
-For Arch Linux users, install python-manimlib_:sup:`AUR` package.
 
 To use manim in virtual environment you need to activate the environment with
 the ``activate`` binary by doing ``source bin/activate``, to exit use the ``deactivate`` command.
@@ -42,4 +41,25 @@ the ``activate`` binary by doing ``source bin/activate``, to exit use the ``deac
             texlive texlive-latex-extra texlive-fonts-extra
             texlive-latex-recommended texlive-science texlive-fonts-extra tipa
 
+Arch Linux
+----------
+Install system libraries::
+
+    # pacman -S cairo ffmpeg opencv sox
+
+Install Latex distribution::
+
+    # pacman -S texlive-most
+
+OR install python-manimlib_:sup:`AUR` package::
+
+    $ git clone https://aur.archlinux.org/python-manimlib.git
+    $ cd python-manimlib
+    $ makepkg -si
+
+You can use AUR helpers such as yay_:sup:`AUR`::
+
+    $ yay -S python-manimlib
+
 .. _python-manimlib: https://aur.archlinux.org/packages/python-manimlib/
+.. _yay: https://aur.archlinux.org/packages/yay/
