@@ -2,7 +2,7 @@
 *.bak
 .DS_Store
 homeless.py
-
+playground.py
 cairo_test.py
 mayavi_test.py
 random_scenes/

@@ -64,8 +64,6 @@ def is_child_scene(obj, module):
         return False
     if obj == Scene:
         return False
-    if not obj.__module__.startswith(module.__name__): 
-        return False
     return True
 
 
@@ -116,9 +114,8 @@ def get_scenes_to_render(scene_classes, config):
             )
     if result:
         return result
-    #if there is only one scene in the file then straight to render without asking user.
-    return [scene_classes[0]] if len(scene_classes) == 1 else prompt_user_for_choice(scene_classes)
-
+    return prompt_user_for_choice(scene_classes)
+    
 
 def get_scene_classes_from_module(module):
     return [

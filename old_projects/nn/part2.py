@@ -2843,7 +2843,7 @@ class TestPerformance(PreviewLearning):
         self.add(arrow, guess_word)
 
         from tqdm import tqdm as ProgressDisplay
-        for test_in, test_out in ProgressDisplay(list(self.test_data), ascii=True):
+        for test_in, test_out in ProgressDisplay(list(self.test_data)):
             self.total += 1
 
             activations = self.activate_layers(test_in)
