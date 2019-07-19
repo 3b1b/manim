@@ -8,5 +8,5 @@ Mac come preinstalled with python2, but to use manim, python3 is required
 2. Install Cairo: ``brew install cairo``
 3. Install Sox: ``brew install sox``
 4. Install ffmpeg: ``brew install ffmpeg``
-5. Install latex (MiKTeX): https://miktex.org/howto/install-miktex-mac
+5. Install latex (MacTeX): ``brew cask install mactex``
 6. Install manimlib ``pip install manimlib`` (or ``pip install --user manimlib`` to just yourself)
