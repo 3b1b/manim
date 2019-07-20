@@ -157,7 +157,8 @@ class TexMobject(SingleStringTexMobject):
         split_list = split_string_list_to_isolate_substrings(
             tex_strings, *substrings_to_isolate
         )
-        split_list = [str(x).strip() for x in split_list]
+        if self.arg_separator == ' ':
+            split_list = [str(x).strip() for x in split_list]
         #split_list = list(map(str.strip, split_list))
         split_list = [s for s in split_list if s != '']
         return split_list
@@ -242,6 +243,7 @@ class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "\\centering",
+        "arg_separator": "",
     }
 
 
