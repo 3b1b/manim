@@ -81,7 +81,7 @@ class SVGMobject(VMobject):
             self.update_ref_to_element(element)
         elif element.tagName == 'style':
             pass  # TODO, handle style
-        elif element.tagName in ['g', 'svg']:
+        elif element.tagName in ['g', 'svg', 'symbol']:
             result += it.chain(*[
                 self.get_mobjects_from(child)
                 for child in element.childNodes
@@ -284,11 +284,36 @@ class SVGMobject(VMobject):
             pass
         # TODO, ...
 
+    def flatten(self, input_list):
+        output_list = []
+        while True:
+            if input_list == []:
+                break
+            for index, i in enumerate(input_list):
+                if type(i)== list:
+                    input_list = i + input_list[index+1:]
+                    break
+                else:
+                    output_list.append(i)
+                    input_list.pop(index)
+                    break
+        return output_list
+
+    def get_all_childNodes_has_id(self, element):
+        all_childNodes_has_id = []
+        if not isinstance(element, minidom.Element):
+            return
+        if element.hasAttribute('id'):
+            return element
+        for e in element.childNodes:
+            all_childNodes_has_id.append(self.get_all_childNodes_has_id(e))
+        return all_childNodes_has_id
+
     def update_ref_to_element(self, defs):
         new_refs = dict([
-            (element.getAttribute('id'), element)
-            for element in defs.childNodes
-            if isinstance(element, minidom.Element) and element.hasAttribute('id')
+            (e.getAttribute('id'), e) 
+            for e in self.flatten(self.get_all_childNodes_has_id(defs)) 
+            if e
         ])
         self.ref_to_element.update(new_refs)
 
