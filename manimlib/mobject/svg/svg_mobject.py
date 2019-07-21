@@ -299,21 +299,20 @@ class SVGMobject(VMobject):
                     break
         return output_list
 
-    def get_all_childNodes_has_id(self, element):
-        all_childNodes_has_id = []
+    def get_all_childNodes_have_id(self, element):
+        all_childNodes_have_id = []
         if not isinstance(element, minidom.Element):
             return
         if element.hasAttribute('id'):
             return element
         for e in element.childNodes:
-            all_childNodes_has_id.append(self.get_all_childNodes_has_id(e))
-        return all_childNodes_has_id
+            all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
+        return self.flatten([e for e in all_childNodes_have_id if e])
 
     def update_ref_to_element(self, defs):
         new_refs = dict([
             (e.getAttribute('id'), e) 
-            for e in self.flatten(self.get_all_childNodes_has_id(defs)) 
-            if e
+            for e in self.get_all_childNodes_have_id(defs)
         ])
         self.ref_to_element.update(new_refs)
 
