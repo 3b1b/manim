@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from active_projects.ode.part1.staging import TourOfDifferentialEquations
+from active_projects.diffyq.part1.staging import TourOfDifferentialEquations
 
 
 class PartTwoOfTour(TourOfDifferentialEquations):
@@ -210,7 +210,7 @@ class BlackScholes(AltBrownianMotion):
         self.wait(self.wait_time)
 
     def add_title(self):
-        title = TextMobject("Black-Sholes equations")
+        title = TextMobject("Black-Scholes equations")
         title.scale(1.5)
         title.next_to(2 * UP, UP)
 

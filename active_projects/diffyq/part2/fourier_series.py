@@ -29,6 +29,8 @@ class FourierCirclesScene(Scene):
         "slow_factor": 0.25,
         "center_point": ORIGIN,
         "parametric_function_step_size": 0.001,
+        "drawn_path_color": YELLOW,
+        "drawn_path_stroke_width": 2,
     }
 
     def setup(self):
@@ -95,7 +97,6 @@ class FourierCirclesScene(Scene):
             phase = np.log(coefficient).imag
         vector.rotate(phase, about_point=ORIGIN)
         vector.freq = freq
-        vector.phase = phase
         vector.coefficient = coefficient
         vector.center_func = center_func
         vector.add_updater(self.update_vector)
@@ -103,12 +104,13 @@ class FourierCirclesScene(Scene):
 
     def update_vector(self, vector, dt):
         time = self.get_vector_time()
-        vector.set_angle(
-            vector.phase + time * vector.freq * TAU
-        )
-        vector.shift(
-            vector.center_func() - vector.get_start()
-        )
+        coef = vector.coefficient
+        freq = vector.freq
+        phase = np.log(coef).imag
+
+        vector.set_length(abs(coef))
+        vector.set_angle(phase + time * freq * TAU)
+        vector.shift(vector.center_func() - vector.get_start())
         return vector
 
     def get_circles(self, vectors):
@@ -155,14 +157,19 @@ class FourierCirclesScene(Scene):
         return path
 
     # TODO, this should be a general animated mobect
-    def get_drawn_path(self, vectors, stroke_width=2, **kwargs):
+    def get_drawn_path_alpha(self):
+        return self.get_vector_time()
+
+    def get_drawn_path(self, vectors, stroke_width=None, **kwargs):
+        if stroke_width is None:
+            stroke_width = self.drawn_path_stroke_width
         path = self.get_vector_sum_path(vectors, **kwargs)
         broken_path = CurvesAsSubmobjects(path)
         broken_path.curr_time = 0
 
         def update_path(path, dt):
             # alpha = path.curr_time * self.get_slow_factor()
-            alpha = self.get_vector_time()
+            alpha = self.get_drawn_path_alpha()
             n_curves = len(path)
             for a, sp in zip(np.linspace(0, 1, n_curves), path):
                 b = alpha - a
@@ -174,7 +181,7 @@ class FourierCirclesScene(Scene):
             path.curr_time += dt
             return path
 
-        broken_path.set_color(YELLOW)
+        broken_path.set_color(self.drawn_path_color)
         broken_path.add_updater(update_path)
         return broken_path
 
@@ -372,6 +379,7 @@ class FourierOfName(FourierOfPiSymbol):
         "name_text": "Abc",
         "time_per_symbol": 5,
         "slow_factor": 1 / 5,
+        "parametric_function_step_size": 0.01,
     }
 
     def construct(self):
@@ -382,31 +390,49 @@ class FourierOfName(FourierOfPiSymbol):
         if name.get_height() > max_height:
             name.set_height(max_height)
 
+        vectors = VGroup(VectorizedPoint())
         circles = VGroup(VectorizedPoint())
         for path in name.family_members_with_points():
             for subpath in path.get_subpaths():
                 sp_mob = VMobject()
                 sp_mob.set_points(subpath)
                 coefs = self.get_coefficients_of_path(sp_mob)
-                new_circles = self.get_circles(
+                new_vectors = self.get_rotating_vectors(
                     coefficients=coefs
                 )
+                new_circles = self.get_circles(new_vectors)
                 self.set_decreasing_stroke_widths(new_circles)
-                drawn_path = self.get_drawn_path(new_circles)
+
+                drawn_path = self.get_drawn_path(new_vectors)
                 drawn_path.clear_updaters()
                 drawn_path.set_stroke(self.name_color, 3)
 
-                new_circles.suspend_updating()
-                self.play(ReplacementTransform(circles, new_circles))
-                new_circles.resume_updating()
-                circles = new_circles
+                static_vectors = VMobject().become(new_vectors)
+                static_circles = VMobject().become(new_circles)
+                # static_circles = new_circles.deepcopy()
+                # static_vectors.clear_updaters()
+                # static_circles.clear_updaters()
+
+                self.play(
+                    Transform(vectors, static_vectors, remover=True),
+                    Transform(circles, static_circles, remover=True),
+                )
+
+                self.add(new_vectors, new_circles)
+                self.vector_clock.set_value(0)
                 self.play(
                     ShowCreation(drawn_path),
                     rate_func=linear,
                     run_time=self.time_per_symbol
                 )
-                circles.suspend_updating()
-        self.play(FadeOut(circles))
+                self.remove(new_vectors, new_circles)
+                self.add(static_vectors, static_circles)
+
+                vectors = static_vectors
+                circles = static_circles
+        self.play(
+            FadeOut(vectors)
+        )
         self.wait(3)
 
 

@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from active_projects.ode.part2.shared_constructs import *
+from active_projects.diffyq.part2.shared_constructs import *
 
 
 class TwoDBodyWithManyTemperatures(ThreeDScene):
@@ -164,8 +164,12 @@ class BringTwoRodsTogether(Scene):
                 "tick_frequency": 10,
             },
         },
+        "y_labels": range(20, 100, 20),
         "graph_x_min": 0,
         "graph_x_max": 10,
+        "midpoint": 5,
+        "max_temp": 90,
+        "min_temp": 10,
         "wait_time": 30,
         "default_n_rod_pieces": 20,
         "alpha": 1.0,
@@ -187,9 +191,7 @@ class BringTwoRodsTogether(Scene):
         y_label.to_edge(UP)
         axes.y_axis.label = y_label
         axes.y_axis.add(y_label)
-        axes.y_axis.add_numbers(
-            *range(20, 100, 20)
-        )
+        axes.y_axis.add_numbers(*self.y_labels)
 
         self.axes = axes
         self.y_label = y_label
@@ -200,7 +202,7 @@ class BringTwoRodsTogether(Scene):
             x_min=self.graph_x_min,
             x_max=self.graph_x_max,
             step_size=self.step_size,
-            discontinuities=[5],
+            discontinuities=[self.midpoint],
         )
         graph.color_using_background_image("VerticalTempGradient")
 
@@ -315,20 +317,27 @@ class BringTwoRodsTogether(Scene):
         rods.add_updater(self.update_rods)
 
         self.play(
-            ClockPassesTime(
-                self.clock,
-                run_time=self.wait_time,
-                hours_passed=self.wait_time,
-            ),
+            self.get_clock_anim(self.wait_time),
             FadeOut(labels)
         )
 
     #
+    def get_clock_anim(self, time, **kwargs):
+        config = {
+            "run_time": time,
+            "hours_passed": time,
+        }
+        config.update(kwargs)
+        return ClockPassesTime(self.clock, **config)
+
     def initial_function(self, x):
-        if x <= 5:
-            return 90
+        epsilon = 1e-10
+        if x < self.midpoint - epsilon:
+            return self.max_temp
+        elif x > self.midpoint + epsilon:
+            return self.min_temp
         else:
-            return 10
+            return (self.min_temp + self.max_temp) / 2
 
     def update_graph(self, graph, dt, alpha=None, n_mini_steps=500):
         if alpha is None:
@@ -432,7 +441,10 @@ class BringTwoRodsTogether(Scene):
         )
 
     def y_to_color(self, y):
-        return temperature_to_color((y - 45) / 45)
+        y_max = self.max_temp
+        y_min = self.min_temp
+        alpha = inverse_interpolate(y_min, y_max, y)
+        return temperature_to_color(interpolate(-0.8, 0.8, alpha))
 
     def rod_point_to_color(self, point):
         return self.y_to_color(

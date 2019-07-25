@@ -43,7 +43,9 @@ def stage_scenes(module_name):
     # }
     # TODO, fix this
     animation_dir = os.path.join(
-        consts.VIDEO_DIR, "ode", "part3", "1440p60"
+        os.path.expanduser('~'),
+        "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder/videos",
+        "diffyq", "part5", "1440p60"
     )
     # 
     files = os.listdir(animation_dir)

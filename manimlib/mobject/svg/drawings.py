@@ -436,7 +436,7 @@ class Bubble(SVGMobject):
         self.stretch_to_fit_height(self.height)
         self.stretch_to_fit_width(self.width)
         if self.direction[0] > 0:
-            Mobject.flip(self)
+            self.flip()
         self.direction_was_specified = ("direction" in kwargs)
         self.content = Mobject()
 
@@ -457,7 +457,7 @@ class Bubble(SVGMobject):
 
     def flip(self, axis=UP):
         Mobject.flip(self, axis=axis)
-        if abs(axis[0]) > 0:
+        if abs(axis[1]) > 0:
             self.direction = -np.array(self.direction)
         return self
 

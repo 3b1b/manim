@@ -148,8 +148,8 @@ class PatreonThanks(Scene):
 
 class PatreonEndScreen(PatreonThanks, PiCreatureScene):
     CONFIG = {
-        "n_patron_columns": 3,
-        "max_patron_width": 3.5,
+        "n_patron_columns": 4,
+        "max_patron_width": 5,
         "run_time": 20,
         "randomize_order": True,
         "capitalize": True,
@@ -236,10 +236,11 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             RIGHT, buff=LARGE_BUFF,
             aligned_edge=UP,
         )
-        if columns.get_width() > self.max_patron_width:
-            columns.set_width(total_width - 1)
-
-        thanks.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+        max_width = FRAME_WIDTH - 1
+        if columns.get_width() > max_width:
+            columns.set_width(max_width)
+        underline.match_width(columns)
+        # thanks.to_edge(RIGHT, buff=MED_SMALL_BUFF)
         columns.next_to(underline, DOWN, buff=2)
 
         columns.generate_target()
@@ -257,8 +258,11 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         self.wait(wait_time)
 
     def modify_patron_name(self, name):
-        if name == "RedAgent14":
+        if name.lower() == "RedAgent14".lower():
             return "Brian Shepetofsky"
+        elif name.lower() == "DeathByShrimp".lower():
+            return "Henry Bresnahan"
+
         return name
 
 
