@@ -7,6 +7,7 @@ cairo_test.py
 mayavi_test.py
 random_scenes/
 files/
+assets/
 ben_playground.py
 ben_cairo_test.py
 .floo

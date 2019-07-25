@@ -2012,11 +2012,18 @@ class ManyStepsFromDifferentStartingPoints(TakeManyTinySteps):
 class Thumbnail(IntroduceVectorField):
     CONFIG = {
         "vector_field_config": {
-            "delta_x": 0.5,
-            "delta_y": 0.5,
+            # "delta_x": 0.5,
+            # "delta_y": 0.5,
+            # "max_magnitude": 5,
+            # "length_func": lambda norm: 0.5 * sigmoid(norm),
+            "delta_x": 1,
+            "delta_y": 1,
             "max_magnitude": 5,
-            "length_func": lambda norm: 0.5 * sigmoid(norm),
-        }
+            "length_func": lambda norm: 0.9 * sigmoid(norm),
+        },
+        "big_pendulum_config": {
+            "damping": 0.4,
+        },
     }
 
     def construct(self):
@@ -2027,7 +2034,7 @@ class Thumbnail(IntroduceVectorField):
         field = self.vector_field
         field.set_stroke(width=5)
         for vector in field:
-            vector.set_stroke(width=3)
+            vector.set_stroke(width=8)
             vector.tip.set_stroke(width=0)
             vector.tip.scale(1.5, about_point=vector.get_last_point())
             vector.set_opacity(1)
@@ -2063,17 +2070,43 @@ class Thumbnail(IntroduceVectorField):
                 new_mob.set_stroke(width=0)
                 black_parts.add(new_mob)
 
-        for vect in field:
-            for mob in title.family_members_with_points():
-                for p in [vect.get_start(), vect.get_end()]:
-                    x, y = p[:2]
-                    x0, y0 = mob.get_corner(DL)[:2]
-                    x1, y1 = mob.get_corner(UR)[:2]
-                    if x0 < x < x1 and y0 < y < y1:
-                        vect.set_opacity(0.25)
-                        vect.tip.set_stroke(width=0)
+        # for vect in field:
+        #     for mob in title.family_members_with_points():
+        #         for p in [vect.get_start(), vect.get_end()]:
+        #             x, y = p[:2]
+        #             x0, y0 = mob.get_corner(DL)[:2]
+        #             x1, y1 = mob.get_corner(UR)[:2]
+        #             if x0 < x < x1 and y0 < y < y1:
+        #                 vect.set_opacity(0.25)
+        #                 vect.tip.set_stroke(width=0)
 
         self.add(self.plane)
         self.add(field)
-        self.add(black_parts)
-        self.add(title)
+        # self.add(black_parts)
+        # self.add(title)
+
+        self.add_line(self.plane)
+
+    def add_line(self, axes):
+        func = self.vector_field_func
+
+        line = VMobject()
+        line.start_new_path(axes.c2p(-TAU, 3.5))
+
+        dt = 0.1
+        t = 0
+        total_time = 40
+
+        while t < total_time:
+            t += dt
+            last_point = line.get_last_point()
+            new_point = last_point + dt * func(last_point)
+            if new_point[0] > FRAME_WIDTH / 2:
+                new_point = last_point + FRAME_WIDTH * LEFT
+                line.start_new_path(new_point)
+            else:
+                line.add_smooth_curve_to(new_point)
+
+        line.set_stroke(WHITE, 6)
+        line.make_smooth()
+        self.add(line)
