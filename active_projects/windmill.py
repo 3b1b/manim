@@ -229,6 +229,9 @@ class IntroduceIMO(Scene):
 
 class ShowTest(Scene):
     def construct(self):
+        self.introduce_test()
+
+    def introduce_test(self):
         test = self.get_test()
         test.generate_target()
         test.target.to_edge(UP)
@@ -321,6 +324,13 @@ class ShowTest(Scene):
             ], lag_ratio=0, rate_func=rush_into)
         )
         self.wait()
+
+        self.scores = scores
+        self.proof_arrows = proof_arrows
+        self.proof_words = proof_words
+        self.problem_rects = problem_rects
+        self.test = test
+        self.time_labels = time_labels
 
     def get_test(self):
         group = Group(
@@ -604,6 +614,154 @@ class USProcess(IntroduceIMO):
         return result
 
 
+class AskWhatsOnTest(ShowTest, MovingCameraScene):
+    def construct(self):
+        self.force_skipping()
+        self.introduce_test()
+        self.revert_to_original_skipping_status()
+
+        self.ask_about_questions()
+
+    def ask_about_questions(self):
+        scores = self.scores
+        arrows = self.proof_arrows
+        proof_words = self.proof_words
+
+        question = TextMobject("What kind \\\\ of problems?")
+        question.scale(1.5)
+        question.move_to(proof_words, LEFT)
+
+        research = TextMobject("Research-lite")
+        research.scale(1.5)
+        research.move_to(question, LEFT)
+        research.shift(MED_SMALL_BUFF * RIGHT)
+        research.set_color(BLUE)
+
+        arrows.generate_target()
+        for arrow in arrows.target:
+            end = arrow.get_end()
+            start = arrow.get_start()
+            arrow.put_start_and_end_on(
+                interpolate(question.get_left(), start, 0.1),
+                end
+            )
+
+        self.play(
+            FadeOut(scores),
+            FadeOut(proof_words),
+            MoveToTarget(arrows),
+            Write(question),
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(research, DOWN),
+            question.shift, 2 * UP,
+        )
+        self.wait()
+
+        # Experience
+        randy = Randolph(height=2)
+        randy.move_to(research.get_corner(UL), DL)
+        randy.shift(SMALL_BUFF * RIGHT)
+        clock = Clock()
+        clock.set_height(1)
+        clock.next_to(randy, UR)
+
+        self.play(
+            FadeOut(question),
+            FadeIn(randy),
+            FadeInFromDown(clock),
+        )
+        self.play(
+            randy.change, "pondering",
+            ClockPassesTime(clock, run_time=5, hours_passed=5),
+        )
+        self.play(
+            ClockPassesTime(clock, run_time=2, hours_passed=2),
+            VFadeOut(clock),
+            Blink(randy),
+            VFadeOut(randy),
+            LaggedStartMap(
+                FadeOut,
+                VGroup(
+                    research,
+                    *arrows,
+                    *self.problem_rects,
+                    self.time_labels[0]
+                )
+            ),
+        )
+
+        # Second part
+        big_rect = FullScreenFadeRectangle()
+        lil_rect = self.problem_rects[1].copy()
+        lil_rect.reverse_points()
+        big_rect.append_vectorized_mobject(lil_rect)
+        frame = self.camera_frame
+        frame.generate_target()
+        frame.target.scale(0.35)
+        frame.target.move_to(lil_rect)
+
+        self.play(
+            FadeInFromDown(self.test[1]),
+        )
+        self.wait()
+        self.play(
+            FadeIn(big_rect),
+            MoveToTarget(frame, run_time=3),
+        )
+        self.wait()
+
+
+class ReadQuestions(Scene):
+    def construct(self):
+        background = ImageMobject("AskWhatsOnTest_final_image")
+        background.set_height(FRAME_HEIGHT)
+        self.add(background)
+
+        lines = SVGMobject("imo_2011_2_underline-01")
+        lines.set_width(FRAME_WIDTH - 1)
+        lines.move_to(0.1 * DOWN)
+        lines.set_stroke(TEAL, 3)
+
+        clump_sizes = [1, 2, 3, 2, 1, 2]
+        partial_sums = list(np.cumsum(clump_sizes))
+        clumps = VGroup(*[
+            lines[i:j]
+            for i, j in zip(
+                [0] + partial_sums,
+                partial_sums,
+            )
+        ])
+
+        faders = []
+        for clump in clumps:
+            rects = VGroup()
+            for line in clump:
+                rect = Rectangle()
+                rect.set_stroke(width=0)
+                rect.set_fill(TEAL, 0.25)
+                rect.set_width(line.get_width() + SMALL_BUFF)
+                rect.set_height(0.35, stretch=True)
+                rect.move_to(line, DOWN)
+                rects.add(rect)
+
+            self.play(
+                ShowCreation(clump, run_time=2),
+                FadeIn(rects),
+                *faders,
+            )
+            self.wait()
+            faders = [
+                FadeOut(clump),
+                FadeOut(rects),
+            ]
+        self.play(*faders)
+        self.wait()
+
+
+# Windmill scenes
+
 class WindmillScene(Scene):
     CONFIG = {
         "dot_config": {
@@ -619,8 +777,10 @@ class WindmillScene(Scene):
             "background_stroke_color": BLACK,
         },
         "windmill_length": FRAME_WIDTH + FRAME_HEIGHT,
-        # "windmill_rotation_speed": 0.25,
-        "windmill_rotation_speed": 0.5,
+        "windmill_rotation_speed": 0.25,
+        # "windmill_rotation_speed": 0.5,
+        # "hit_sound": "pen_click.wav",
+        "hit_sound": "pen_click.wav",
     }
 
     def get_random_point_set(self, n_points=11, width=6, height=6):
@@ -680,7 +840,7 @@ class WindmillScene(Scene):
 
     def rotate_to_next_pivot(self, windmill, max_time=None, added_anims=None):
         """
-        Returns animations to play following the contact
+        Returns animations to play following the contact, and total run time
         """
         new_pivot, angle = self.next_pivot_and_angle(windmill)
         change_pivot_at_end = True
@@ -697,42 +857,297 @@ class WindmillScene(Scene):
         else:
             rate_func = linear
 
+        for anim in added_anims:
+            if anim.run_time > run_time:
+                anim.run_time = run_time
+
         self.play(
             Rotate(
                 windmill,
                 -angle,
-                run_time=run_time,
                 rate_func=rate_func,
+                run_time=run_time,
             ),
             *added_anims,
         )
 
         if change_pivot_at_end:
             windmill.pivot = new_pivot
+            self.add_sound(self.hit_sound)
+
+        # Return animations to play
+        return [self.get_hit_flash(new_pivot)], run_time
 
     def let_windmill_run(self, windmill, time):
-        start_time = self.get_time()
-        end_time = start_time + time
-        curr_time = start_time
-        while curr_time < end_time:
-            self.rotate_to_next_pivot(
+        # start_time = self.get_time()
+        # end_time = start_time + time
+        # curr_time = start_time
+        anims_from_last_hit = []
+        while time > 0:
+            anims_from_last_hit, last_run_time = self.rotate_to_next_pivot(
                 windmill,
-                max_time=(end_time - curr_time)
+                max_time=time,
+                added_anims=anims_from_last_hit,
             )
-            curr_time = self.get_time()
+            time -= last_run_time
+            # curr_time = self.get_time()
+
+    def add_dot_color_updater(self, dots, windmill, **kwargs):
+        for dot in dots:
+            dot.add_updater(lambda d: self.update_dot_color(
+                d, windmill, **kwargs
+            ))
+
+    def update_dot_color(self, dot, windmill, color1=BLUE, color2=GREY_BROWN):
+        perp = rotate_vector(windmill.get_vector(), TAU / 4)
+        dot_product = np.dot(perp, dot.get_center() - windmill.pivot)
+        if dot_product > 0:
+            dot.set_color(color1)
+        elif dot_product < 0:
+            dot.set_color(color2)
+        else:
+            dot.set_color(WHITE)
+
+        dot.set_stroke(
+            interpolate_color(dot.get_fill_color(), WHITE, 0.5),
+            width=1,
+        )
+
+    def get_hit_flash(self, point):
+        flash = Flash(
+            point,
+            line_length=0.1,
+            flash_radius=0.2,
+            run_time=0.5,
+            remover=True,
+        )
+        flash_mob = flash.mobject
+        for submob in flash_mob:
+            submob.reverse_points()
+        return Uncreate(
+            flash.mobject,
+            run_time=0.25,
+            lag_ratio=0,
+        )
+
+    def add_pivot_counters(self, windmill, points):
+        pass
+
+
+class IntroduceWindmill(WindmillScene):
+    def construct(self):
+        self.add_points()
+        self.exclude_colinear()
+        self.add_line()
+        self.switch_pivots()
+        self.continue_and_count()
+
+    def add_points(self):
+        points = self.get_random_point_set(8)
+        points[-1] = midpoint(points[0], points[1])
+        dots = self.get_dots(points)
+        dots.set_color(YELLOW)
+        dots.set_height(3)
+        braces = VGroup(
+            Brace(dots, LEFT),
+            Brace(dots, RIGHT),
+        )
+
+        group = VGroup(dots, braces)
+        group.set_height(4)
+        group.center().to_edge(DOWN)
+
+        S, eq = S_eq = TexMobject("\\mathcal{S}", "=")
+        S_eq.scale(2)
+        S_eq.next_to(braces, LEFT)
+
+        self.play(
+            FadeIn(S_eq),
+            FadeInFrom(braces[0], RIGHT),
+            FadeInFrom(braces[1], LEFT),
+        )
+        self.play(
+            LaggedStartMap(FadeInFromLarge, dots)
+        )
+        self.wait()
+        self.play(
+            S.next_to, dots, LEFT,
+            {"buff": 2, "aligned_edge": UP},
+            FadeOut(braces),
+            FadeOut(eq),
+        )
+
+        self.S_label = S
+        self.dots = dots
+
+    def exclude_colinear(self):
+        dots = self.dots
+
+        line = Line(dots[0].get_center(), dots[1].get_center())
+        line.scale(1.5)
+        line.set_stroke(WHITE)
+
+        words = TextMobject("Not allowed!")
+        words.scale(2)
+        words.set_color(RED)
+        words.next_to(line.get_center(), RIGHT)
+
+        self.add(line, dots)
+        self.play(ShowCreation(line))
+        self.play(
+            FadeInFrom(words, LEFT),
+            dots[-1].set_color, RED,
+        )
+        self.wait()
+        self.play(
+            FadeOut(line),
+            FadeOut(words),
+        )
+        self.play(
+            FadeOutAndShift(
+                dots[-1], 3 * RIGHT,
+                path_arc=-PI / 4,
+                rate_func=running_start,
+            )
+        )
+        dots.remove(dots[-1])
+        self.wait()
+
+    def add_line(self):
+        dots = self.dots
+        points = np.array(list(map(Mobject.get_center, dots)))
+        p0 = points[0]
+
+        windmill = self.get_windmill(points, p0, theta=60 * DEGREES)
+        pivot_dot = self.get_pivot_dot(windmill)
+
+        l_label = TexMobject("\\ell")
+        l_label.scale(1.5)
+        p_label = TexMobject("P")
+
+        l_label.next_to(
+            p0 + 2 * normalize(windmill.get_vector()),
+            RIGHT,
+        )
+        l_label.match_color(windmill)
+        p_label.next_to(p0, RIGHT)
+        p_label.match_color(pivot_dot)
+
+        arcs = VGroup(*[
+            Arc(angle=-45 * DEGREES, radius=1.5)
+            for x in range(2)
+        ])
+        arcs[1].rotate(PI, about_point=ORIGIN)
+        for arc in arcs:
+            arc.add_tip(tip_length=0.2)
+        arcs.rotate(windmill.get_angle())
+        arcs.shift(p0)
+
+        self.add(windmill, dots)
+        self.play(
+            GrowFromCenter(windmill),
+            FadeInFrom(l_label, LEFT),
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(p_label, LEFT),
+            GrowFromCenter(pivot_dot),
+            dots.set_color, WHITE,
+        )
+        self.wait()
+        self.play(*map(ShowCreation, arcs))
+        self.wait()
+
+        # Rotate to next pivot
+        next_pivot, angle = self.next_pivot_and_angle(windmill)
+        self.play(
+            *[
+                Rotate(
+                    mob, -0.99 * angle,
+                    about_point=p0,
+                    rate_func=linear,
+                )
+                for mob in [windmill, arcs, l_label]
+            ],
+            VFadeOut(l_label),
+        )
+        self.add_sound(self.hit_sound)
+        self.play(
+            self.get_hit_flash(next_pivot)
+        )
+        self.wait()
+
+        self.pivot2 = next_pivot
+        self.pivot_dot = pivot_dot
+        self.windmill = windmill
+        self.p_label = p_label
+        self.arcs = arcs
+
+    def switch_pivots(self):
+        windmill = self.windmill
+        pivot2 = self.pivot2
+        p_label = self.p_label
+        arcs = self.arcs
+
+        q_label = TexMobject("Q")
+        q_label.set_color(YELLOW)
+        q_label.next_to(pivot2, DR, buff=SMALL_BUFF)
+
+        self.rotate_to_next_pivot(windmill)
+        self.play(
+            FadeInFrom(q_label, LEFT),
+            FadeOut(p_label),
+            FadeOut(arcs),
+        )
+        self.wait()
+        flashes, run_time = self.rotate_to_next_pivot(windmill)
+        self.remove(q_label)
+        self.wait()
+        self.let_windmill_run(windmill, 10)
+
+    def continue_and_count(self):
+        windmill = self.windmill
+        pivot_dot = self.pivot_dot
+
+        p_label = TexMobject("P")
+        p_label.match_color(pivot_dot)
+        p_label.next_to(pivot_dot, DR, buff=0)
+
+        l_label = TexMobject("\\ell")
+        l_label.scale(1.5)
+        l_label.match_color(windmill)
+        l_label.next_to(
+            windmill.get_center() + -3 * normalize(windmill.get_vector()),
+            DR,
+            buff=SMALL_BUFF,
+        )
+
+        self.play(FadeInFrom(p_label, UL))
+        self.play(FadeInFrom(l_label, LEFT))
+        self.wait()
+
+        self.add(
+            windmill.copy().fade(0.75),
+            pivot_dot.copy().fade(0.75),
+        )
+        self.add_pivot_counters()
+        windmill.rot_speed *= 2
+
+        self.let_windmill_run(windmill, 10)
 
 
 class WindmillTest(WindmillScene):
     def construct(self):
-        points = self.get_random_point_set()
+        points = self.get_random_point_set(11)
         # points = np.array(list(sorted(points, key=lambda p: p[0])))
 
         dots = self.get_dots(points)
         windmill = self.get_windmill(points)
         pivot_dot = self.get_pivot_dot(windmill)
+        self.add_dot_color_updater(dots, windmill)
 
         self.add(windmill)
         self.add(dots)
         self.add(pivot_dot)
 
-        self.let_windmill_run(windmill, 10)
+        self.let_windmill_run(windmill, 20)
