@@ -799,10 +799,10 @@ class WindmillScene(Scene):
             for point in points
         ])
 
-    def get_windmill(self, points, pivot=None, theta=TAU / 4):
+    def get_windmill(self, points, pivot=None, angle=TAU / 4):
         line = Line(LEFT, RIGHT)
         line.set_length(self.windmill_length)
-        line.set_angle(theta)
+        line.set_angle(angle)
         line.set_style(**self.windmill_style)
 
         line.point_set = points
@@ -834,7 +834,13 @@ class WindmillScene(Scene):
             -(angle_of_vector(point - pivot) - curr_angle) % PI
             for point in non_pivots
         ])
-        angles[angles < 1e-6] = np.inf
+
+        # Edge case for 2 points
+        tiny_indices = angles < 1e-6
+        if np.all(tiny_indices):
+            return non_pivots[0], PI
+
+        angles[tiny_indices] = np.inf
         index = np.argmin(angles)
         return non_pivots[index], angles[index]
 
@@ -930,11 +936,35 @@ class WindmillScene(Scene):
             lag_ratio=0,
         )
 
-    def add_pivot_counters(self, windmill, points):
-        pass
+    def get_pivot_counters(self, windmill, counter_height=0.25, buff=0.2, color=WHITE):
+        points = windmill.point_set
+        counters = VGroup()
+        for point in points:
+            counter = Integer(0)
+            counter.set_color(color)
+            counter.set_height(counter_height)
+            counter.next_to(point, UP, buff=buff)
+            counter.point = point
+            counter.windmill = windmill
+            counter.is_pivot = False
+            counter.add_updater(self.update_counter)
+            counters.add(counter)
+        return counters
+
+    def update_counter(self, counter):
+        dist = get_norm(counter.point - counter.windmill.pivot)
+        counter.will_be_pivot = (dist < 1e-6)
+        if (not counter.is_pivot) and counter.will_be_pivot:
+            counter.increment_value()
+        counter.is_pivot = counter.will_be_pivot
 
 
 class IntroduceWindmill(WindmillScene):
+    CONFIG = {
+        "final_run_time": 60,
+        "windmill_rotation_speed": 0.5,
+    }
+
     def construct(self):
         self.add_points()
         self.exclude_colinear()
@@ -993,8 +1023,8 @@ class IntroduceWindmill(WindmillScene):
         words.next_to(line.get_center(), RIGHT)
 
         self.add(line, dots)
-        self.play(ShowCreation(line))
         self.play(
+            ShowCreation(line),
             FadeInFrom(words, LEFT),
             dots[-1].set_color, RED,
         )
@@ -1018,7 +1048,7 @@ class IntroduceWindmill(WindmillScene):
         points = np.array(list(map(Mobject.get_center, dots)))
         p0 = points[0]
 
-        windmill = self.get_windmill(points, p0, theta=60 * DEGREES)
+        windmill = self.get_windmill(points, p0, angle=60 * DEGREES)
         pivot_dot = self.get_pivot_dot(windmill)
 
         l_label = TexMobject("\\ell")
@@ -1046,11 +1076,11 @@ class IntroduceWindmill(WindmillScene):
         self.add(windmill, dots)
         self.play(
             GrowFromCenter(windmill),
-            FadeInFrom(l_label, LEFT),
+            FadeInFrom(l_label, DL),
         )
         self.wait()
         self.play(
-            FadeInFrom(p_label, LEFT),
+            TransformFromCopy(pivot_dot, p_label),
             GrowFromCenter(pivot_dot),
             dots.set_color, WHITE,
         )
@@ -1102,6 +1132,8 @@ class IntroduceWindmill(WindmillScene):
         self.wait()
         flashes, run_time = self.rotate_to_next_pivot(windmill)
         self.remove(q_label)
+        self.add_sound(self.hit_sound)
+        self.play(*flashes)
         self.wait()
         self.let_windmill_run(windmill, 10)
 
@@ -1130,24 +1162,147 @@ class IntroduceWindmill(WindmillScene):
             windmill.copy().fade(0.75),
             pivot_dot.copy().fade(0.75),
         )
-        self.add_pivot_counters()
+        pivot_counters = self.get_pivot_counters(windmill)
+        self.add(pivot_counters)
         windmill.rot_speed *= 2
 
-        self.let_windmill_run(windmill, 10)
+        self.let_windmill_run(windmill, self.final_run_time)
 
 
-class WindmillTest(WindmillScene):
+# TODO
+class ContrastToOtherOlympiadProblems(Scene):
     def construct(self):
-        points = self.get_random_point_set(11)
-        # points = np.array(list(sorted(points, key=lambda p: p[0])))
+        pass
+
+
+class WindmillExample30Points(WindmillScene):
+    CONFIG = {
+        "random_seed": 0,
+        "run_time": 60,
+    }
+
+    def construct(self):
+        points = self.get_random_point_set(30)
+        sorted_points = sorted(list(points), key=lambda p: p[1])
+        sorted_points[4] += RIGHT
 
         dots = self.get_dots(points)
-        windmill = self.get_windmill(points)
+        windmill = self.get_windmill(points, sorted_points[5], angle=PI / 4)
         pivot_dot = self.get_pivot_dot(windmill)
-        self.add_dot_color_updater(dots, windmill)
+        # self.add_dot_color_updater(dots, windmill)
 
         self.add(windmill)
         self.add(dots)
         self.add(pivot_dot)
+        self.add(self.get_pivot_counters(
+            windmill,
+            counter_height=0.15,
+            buff=0.1,
+        ))
 
-        self.let_windmill_run(windmill, 20)
+        self.let_windmill_run(windmill, run_time)
+
+
+class TryOutSimplestExamples(WindmillScene):
+    CONFIG = {
+        "windmill_rotation_speed": TAU / 8,
+    }
+
+    def construct(self):
+        self.two_points()
+        self.add_third_point()
+        self.add_fourth_point()
+        self.move_starting_line()
+
+    def two_points(self):
+        points = [1.5 * LEFT, 1.5 * RIGHT]
+        dots = self.dots = self.get_dots(points)
+        windmill = self.windmill = self.get_windmill(points, angle=TAU / 8)
+        pivot_dot = self.pivot_dot = self.get_pivot_dot(windmill)
+
+        self.play(
+            ShowCreation(windmill),
+            LaggedStartMap(
+                FadeInFromLarge, dots,
+                scale_factor=10,
+                run_time=1,
+                lag_ratio=0.4,
+            ),
+            GrowFromCenter(pivot_dot),
+        )
+        self.let_windmill_run(windmill, 8)
+
+    def add_third_point(self):
+        windmill = self.windmill
+
+        new_point = 2 * DOWN
+        new_dot = self.get_dots([new_point])
+        windmill.point_set.append(new_point)
+
+        self.add(new_dot, self.pivot_dot)
+        self.play(FadeInFromLarge(new_dot, scale_factor=10))
+        self.let_windmill_run(windmill, 8)
+
+    def add_fourth_point(self):
+        windmill = self.windmill
+        dot = self.get_dots([ORIGIN])
+        dot.move_to(DOWN + 2 * RIGHT)
+        words = TextMobject("Never hit!")
+        words.set_color(RED)
+        words.scale(0.75)
+        words.move_to(0.7 * DOWN, DOWN)
+
+        self.add(dot, self.pivot_dot)
+        self.play(
+            FadeInFromLarge(dot, scale_factor=10)
+        )
+        windmill.point_set.append(dot.get_center())
+        windmill.rot_speed = TAU / 4
+        self.let_windmill_run(windmill, 4)
+
+        # Shift point
+        self.play(
+            dot.next_to, words, DOWN,
+            FadeInFrom(words, RIGHT),
+        )
+        windmill.point_set[3] = dot.get_center()
+        self.let_windmill_run(windmill, 4)
+        self.wait()
+
+        self.dots.add(dot)
+        self.never_hit_words = words
+
+    def move_starting_line(self):
+        windmill = self.windmill
+        dots = self.dots
+
+        windmill.suspend_updating()
+        self.play(
+            windmill.move_to, dots[-1],
+            FadeOut(self.never_hit_words),
+        )
+        windmill.pivot = dots[-1].get_center()
+        windmill.resume_updating()
+
+        counters = self.get_pivot_counters(windmill)
+        self.play(
+            LaggedStart(*[
+                FadeInFrom(counter, DOWN)
+                for counter in counters
+            ])
+        )
+        self.wait()
+
+        windmill.rot_speed = TAU / 8
+        self.let_windmill_run(windmill, 8)
+        highlight = windmill.copy()
+        highlight.set_stroke(YELLOW, 4)
+        self.play(
+            ShowCreationThenDestruction(highlight),
+        )
+        self.let_windmill_run(windmill, 8)
+
+
+class FearedCase(WindmillScene):
+    def construct(self):
+        pass
